@@ -1,0 +1,59 @@
+[tool.poetry]
+name = "gpt-trader"
+version = "0.1.0"
+description = "Equities-first trading bot scaffold with adapter-based data, backtesting, and paper trading hooks."
+authors = ["RJ + GPT-5"]
+readme = "README.md"
+packages = [{ include = "bot", from = "src" }]
+
+
+[tool.poetry.dependencies]
+python = ">=3.12,<3.13"
+pandas = "^2.2.2"
+numpy = "^1.26.4"
+pydantic = "^2.7.4"
+python-dotenv = "^1.0.1"
+requests = "^2.32.3"
+yfinance = "^0.2.40"
+websockets = "^14.0"
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.5.6"
+black = "^24.4.2"
+mypy = "^1.10.0"
+pytest = "^8.2.0"
+pre-commit = "^3.7.1"
+types-requests = "^2.32.0.20240712"
+pandas-stubs = "^2.2.2.240603"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 100
+target-version = ["py312"]
+
+[tool.ruff]
+line-length = 100
+lint.select = ["E","F","I","UP","B","ANN","S","W"]
+lint.ignore = ["ANN101","ANN102","S101"]  # allow prints in CLI for now
+target-version = "py312"
+extend-exclude = ["data"]
+
+[tool.mypy]
+python_version = "3.12"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+no_implicit_optional = true
+strict_optional = true
+ignore_missing_imports = true
+explicit_package_bases = true
+mypy_path = "src"
+
+
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

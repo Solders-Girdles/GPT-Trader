@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import os
+from collections.abc import Iterable, Iterator
 from datetime import datetime
 from pathlib import Path
-from typing import Literal
+from typing import Literal, TypeVar
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -16,7 +17,31 @@ from bot.metrics.report import perf_metrics
 from bot.portfolio.allocator import PortfolioRules, allocate_signals
 from bot.strategy.base import Strategy
 
+T = TypeVar("T")
 logger = get_logger("backtest")
+
+
+def _iter_progress_old1(seq: Iterable[T], desc: str = "backtest") -> Iterator[T]:
+    """Yield items from `seq` with a tqdm progress bar if available."""
+    try:
+        from tqdm import tqdm  # type: ignore
+
+        it = tqdm(seq, desc=desc)
+    except Exception:
+        it = seq
+    # ruff UP028: prefer yield from
+    yield from it
+
+
+def _iter_progress(seq: Iterable[T], desc: str = "backtest") -> Iterator[T]:
+    """Yield items from `seq` with a tqdm progress bar if available."""
+    try:
+        from tqdm import tqdm  # type: ignore
+
+        it = tqdm(seq, desc=desc)
+    except Exception:
+        it = seq
+    yield from it
 
 
 def _warn(msg: str) -> None:
@@ -211,7 +236,7 @@ def run_backtest(
     equity_series.loc[first_dt] = equity
 
     # 5) Daily loop
-    for i in range(1, len(dates)):
+    for i in _iter_progress(range(1, len(dates)), desc="days"):
         is_rebalance_day = (cadence == "daily") or (dates[i].weekday() == 0)
         dt = dates[i]
         prev_dt = dates[i - 1]
@@ -513,6 +538,7 @@ def run_backtest(
             costs=total_costs,
         )
     )
+    logger.info("Backtest complete.")
 
 
 def validate_indicators(df: pd.DataFrame, symbol: str, atr_col: str = "ATR") -> None:

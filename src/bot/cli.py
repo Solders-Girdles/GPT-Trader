@@ -1,14 +1,17 @@
 from __future__ import annotations
 
 import argparse
+import sys
 from datetime import datetime
 
-from bot.backtest.engine import run_backtest as run_backtest_single
 from bot.backtest.engine_portfolio import run_backtest as run_backtest_port
+from bot.logging import get_logger
 from bot.portfolio.allocator import PortfolioRules
 from bot.strategy.base import Strategy
 from bot.strategy.demo_ma import DemoMAStrategy
 from bot.strategy.trend_breakout import TrendBreakoutParams, TrendBreakoutStrategy
+
+log = get_logger("cli")
 
 
 def _parse_date(s: str) -> datetime:
@@ -16,6 +19,7 @@ def _parse_date(s: str) -> datetime:
 
 
 def main() -> None:
+    log.info("CLI starting…")
     parser = argparse.ArgumentParser(prog="bot", description="GPT-Trader CLI")
     sub = parser.add_subparsers(dest="command")
 
@@ -99,6 +103,16 @@ def main() -> None:
         default="strict",
         help="Data validation: strict=raise on bad OHLC, repair=attempt bounded fixes",
     )
+    # --- parse & dispatch ---
+    args = parser.parse_args()
+    # Map --data-strict into a boolean strict_mode flag expected by engines
+    args.strict_mode = getattr(args, "data_strict", "strict") == "strict"
+    if not hasattr(args, "func"):
+        parser.print_help()
+        sys.exit(1)
+    log.info("Dispatching to %s", getattr(args.func, "__name__", "<handler>"))
+    args.func(args)
+    log.info("CLI completed.")
 
 
 def _handle_backtest(args: argparse.Namespace) -> None:
@@ -125,35 +139,25 @@ def _handle_backtest(args: argparse.Namespace) -> None:
         max_positions=args.max_positions,
         cost_bps=args.cost_bps,
     )
-
-    # Choose engine based on whether a list was supplied
-    if args.symbol and not args.symbol_list:
-        # single-symbol simple engine (no debug flag here)
-        run_backtest_single(
-            symbol=args.symbol,
-            start=_parse_date(args.start),
-            end=_parse_date(args.end),
-            strategy=strategy,
-        )
-    else:
-        # portfolio engine (supports debug + regime filter)
-        run_backtest_port(
-            symbol=args.symbol,
-            symbol_list_csv=args.symbol_list,
-            start=_parse_date(args.start),
-            end=_parse_date(args.end),
-            strategy=strategy,
-            rules=rules,
-            regime_on=(args.regime == "on"),
-            regime_symbol=args.regime_symbol,
-            regime_window=args.regime_window,
-            debug=args.debug,
-            exit_mode=args.exit_mode,
-            cadence=args.cadence,
-            cooldown=args.cooldown,
-            entry_confirm=args.entry_confirm,
-            min_rebalance_pct=args.min_rebalance_pct,
-        )
+    # Always use the portfolio engine (supports single symbol or universe list)
+    run_backtest_port(
+        symbol=args.symbol,
+        symbol_list_csv=args.symbol_list,
+        start=_parse_date(args.start),
+        end=_parse_date(args.end),
+        strategy=strategy,
+        rules=rules,
+        regime_on=(args.regime == "on"),
+        regime_symbol=args.regime_symbol,
+        regime_window=args.regime_window,
+        debug=args.debug,
+        exit_mode=args.exit_mode,
+        cadence=args.cadence,
+        cooldown=args.cooldown,
+        entry_confirm=args.entry_confirm,
+        min_rebalance_pct=args.min_rebalance_pct,
+        strict_mode=args.strict_mode,
+    )
 
 
 if __name__ == "__main__":

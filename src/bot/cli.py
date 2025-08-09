@@ -56,6 +56,37 @@ def main() -> None:
     )
     p.add_argument("--regime-symbol", default="SPY", help="Regime symbol")
     p.add_argument("--regime-window", type=int, default=200, help="Regime SMA window")
+    p.add_argument("--debug", action="store_true", help="Write per-day debug CSVs")
+    p.add_argument(
+        "--entry-confirm",
+        type=int,
+        default=1,
+        help="Require N consecutive buy signals before a new entry (1=off)",
+    )
+    p.add_argument(
+        "--min-rebalance-pct",
+        type=float,
+        default=0.0,
+        help="Skip trades if |Δnotional| < pct of equity (e.g., 0.002 = 0.2%)",
+    )
+    p.add_argument(
+        "--cadence",
+        choices=["daily", "weekly"],
+        default="daily",
+        help="Rebalance frequency (daily or Mondays only)",
+    )
+    p.add_argument(
+        "--cooldown",
+        type=int,
+        default=0,
+        help="Bars to wait after an exit before re-entry (0 = off)",
+    )
+    p.add_argument(
+        "--exit-mode",
+        choices=["signal", "stop"],
+        default="signal",
+        help="Exit on signal/regime (signal) or hold until ATR stop (stop)",
+    )
 
     p.set_defaults(func=_handle_backtest)
 
@@ -71,8 +102,9 @@ def main() -> None:
 
 
 def _handle_backtest(args: argparse.Namespace) -> None:
+    strategy: Strategy  # This tells mypy "this can be any Strategy subclass"
+
     # Build strategy
-    strategy: Strategy
     if args.strategy == "demo_ma":
         strategy = DemoMAStrategy()
     elif args.strategy == "trend_breakout":
@@ -84,10 +116,9 @@ def _handle_backtest(args: argparse.Namespace) -> None:
             )
         )
     else:
-        print("Unknown strategy. Options: demo_ma, trend_breakout")
-        sys.exit(1)
+        raise ValueError(f"Unknown strategy: {args.strategy}")
 
-    # Build portfolio rules
+    # Common portfolio rules
     rules = PortfolioRules(
         per_trade_risk_pct=args.risk_pct / 100.0,
         atr_k=args.atr_k,
@@ -95,9 +126,9 @@ def _handle_backtest(args: argparse.Namespace) -> None:
         cost_bps=args.cost_bps,
     )
 
-    # Route: single vs portfolio engine
-    if args.symbol and not args.symbol_list and args.strategy == "demo_ma":
-        # simple single-symbol demo uses the single engine
+    # Choose engine based on whether a list was supplied
+    if args.symbol and not args.symbol_list:
+        # single-symbol simple engine (no debug flag here)
         run_backtest_single(
             symbol=args.symbol,
             start=_parse_date(args.start),
@@ -105,7 +136,7 @@ def _handle_backtest(args: argparse.Namespace) -> None:
             strategy=strategy,
         )
     else:
-        # portfolio engine (supports both single & list; regime/costs honored)
+        # portfolio engine (supports debug + regime filter)
         run_backtest_port(
             symbol=args.symbol,
             symbol_list_csv=args.symbol_list,
@@ -116,6 +147,12 @@ def _handle_backtest(args: argparse.Namespace) -> None:
             regime_on=(args.regime == "on"),
             regime_symbol=args.regime_symbol,
             regime_window=args.regime_window,
+            debug=args.debug,
+            exit_mode=args.exit_mode,
+            cadence=args.cadence,
+            cooldown=args.cooldown,
+            entry_confirm=args.entry_confirm,
+            min_rebalance_pct=args.min_rebalance_pct,
         )
 
 

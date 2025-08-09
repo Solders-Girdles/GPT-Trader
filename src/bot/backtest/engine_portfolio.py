@@ -2,10 +2,13 @@ from __future__ import annotations
 
 import os
 from datetime import datetime
+from pathlib import Path
+from typing import Literal
 
 import matplotlib.pyplot as plt
 import pandas as pd
 from bot.dataflow.sources.yfinance_source import YFinanceSource
+from bot.exec.ledger import Ledger
 from bot.logging import get_logger
 from bot.metrics.report import perf_metrics
 from bot.portfolio.allocator import PortfolioRules, allocate_signals
@@ -28,16 +31,14 @@ def _read_universe_csv(path: str) -> list[str]:
 
 
 def _safe_float(x: pd.Series | float | int) -> float:
-    # Robustly extract a float from pandas scalars/1-elt Series or plain numbers.
     if hasattr(x, "item"):
-        return float(x.item())  # pandas scalar
+        return float(x.item())
     if hasattr(x, "iloc"):
-        return float(x.iloc[0])  # 1-element Series
+        return float(x.iloc[0])
     return float(x)
 
 
 def _strict_sma(series: pd.Series, window: int) -> pd.Series:
-    # SMA that is only "valid" after full lookback (no early start).
     return series.rolling(window=window, min_periods=window).mean()
 
 
@@ -51,14 +52,22 @@ def run_backtest(
     regime_on: bool = False,
     regime_symbol: str = "SPY",
     regime_window: int = 200,
+    debug: bool = False,
+    exit_mode: Literal["signal", "stop"] = "signal",
+    cadence: Literal["daily", "weekly"] = "daily",
+    cooldown: int = 0,
+    entry_confirm: int = 1,
+    min_rebalance_pct: float = 0.0,
 ) -> None:
     """
-    v1.5 timing model:
-    - Signals are computed on data up to D-1 (prev close).
+    v1.5 timing model + ATR trailing exits:
+    - Signals use data through D-1.
     - Trades execute at D open (price + costs at Open[D]).
-    - PnL includes (a) overnight prev Close -> Open[D] on prior holdings,
-      then (b) intraday Open[D] -> Close[D] on new holdings.
-    - Strict regime filter (SPY > 200DMA with min_periods=window) is evaluated at D-1.
+    - PnL = overnight (Close[D-1]→Open[D]) on old holdings
+      + intraday (Open[D]→Close[D]) on new holdings.
+    - Regime filter (SPY > 200DMA) evaluated at D-1 (strict SMA).
+    - ATR trailing stop: computed from D-1 Close/ATR, ratchets up only.
+      If breached at D-1, exit at D open.
     """
     logger.info(f"Backtesting {strategy.name} from {start.date()} to {end.date()}")
     outdir = os.path.join("data", "backtests")
@@ -73,7 +82,7 @@ def run_backtest(
     else:
         raise ValueError("Provide --symbol or --symbol-list")
 
-    # Load data for all symbols (must include Open/High/Low/Close/Volume)
+    # 1) Load data
     data_map: dict[str, pd.DataFrame] = {}
     for sym in symbols:
         try:
@@ -82,19 +91,17 @@ def run_backtest(
                 start=start.strftime("%Y-%m-%d"),
                 end=end.strftime("%Y-%m-%d"),
             )
-            # Ensure Open exists; if not, fallback to Close for open/close ops
             if "Open" not in df.columns:
                 df["Open"] = df["Close"]
             data_map[sym] = df
-        except Exception as e:  # pragma: no cover - defensive
+        except Exception as e:
             logger.warning(f"Skipping {sym}: {e}")
 
     if not data_map:
         logger.error("No data loaded; aborting.")
         return
 
-    # Regime (SPY > 200DMA) if enabled — strict (valid only after full lookback)
-    # We'll consult regime at D-1 when deciding trades for D.
+    # 2) Regime series (optional)
     regime_ok: pd.Series | None = None
     if regime_on:
         try:
@@ -105,38 +112,52 @@ def run_backtest(
             )
             ma = _strict_sma(mkt["Close"], regime_window)
             regime_ok = (mkt["Close"] > ma).astype(bool)
-        except Exception as e:  # pragma: no cover - defensive
+        except Exception as e:
             logger.warning(f"Regime fetch failed ({regime_symbol}): {e}")
             regime_ok = None
 
-    # Signals/indicators per symbol (join onto OHLCV)
+    # 3) Signals per symbol
     sigs: dict[str, pd.DataFrame] = {}
     for sym, df in data_map.items():
         s = strategy.generate_signals(df)
         sigs[sym] = df.join(s, how="left")
 
-    # Trading calendar
     dates = sorted(set().union(*[d.index for d in data_map.values()]))
     if len(dates) < 2:
         logger.error("Not enough dates to run a next-open backtest.")
         return
 
+    # 4) State
     equity0 = 100_000.0
     equity_series = pd.Series(index=pd.Index(dates, name="Date"), dtype=float)
     equity = equity0
     holdings: dict[str, int] = {}
-    total_costs = 0.0
+    # ensure name exists for static checkers; populated each loop
+    desired: dict[str, int] = {}
 
-    # initialize first day (no trades at first date)
+    total_costs = 0.0
+    ledger = Ledger()
+
+    # track last exit date (decision date prev_dt) per symbol for cooldown
+    last_exit_ts: dict[str, datetime] = {}
+
+    stamp = datetime.now().strftime("%Y%m%d-%H%M%S")  # reuse for all outputs
+    debug_rows: dict[str, list[dict]] = {} if debug else {}
+    if debug:
+        Path("data/backtests/debug").mkdir(parents=True, exist_ok=True)
+    # ATR trailing stop per symbol (float)
+    trail_stop: dict[str, float] = {}
+
     first_dt = dates[0]
     equity_series.loc[first_dt] = equity
 
-    # Main loop starts at second date to allow next-open execution
+    # 5) Daily loop
     for i in range(1, len(dates)):
+        is_rebalance_day = (cadence == "daily") or (dates[i].weekday() == 0)
         dt = dates[i]
         prev_dt = dates[i - 1]
 
-        # 1) Overnight PnL on existing holdings: Close[prev] -> Open[dt]
+        # 5a) Overnight PnL: Close[prev] -> Open[dt] on old holdings
         pnl_overnight = 0.0
         for sym, qty in holdings.items():
             df = data_map.get(sym)
@@ -147,12 +168,11 @@ def run_backtest(
             pnl_overnight += qty * (open_px - prev_close)
         equity += pnl_overnight
 
-        # 2) Build per-symbol snapshot up to prev_dt (signals at D-1)
+        # 5b) Snapshot through prev_dt (signals at D-1, regime veto at D-1)
         todays_prev: dict[str, pd.DataFrame] = {}
         for sym, df in sigs.items():
             if prev_dt in df.index:
                 snap = df.loc[:prev_dt].tail(200).copy()
-                # Regime veto at D-1 (zero the last signal if regime says off)
                 if (
                     regime_ok is not None
                     and prev_dt in regime_ok.index
@@ -162,24 +182,102 @@ def run_backtest(
                     snap.iloc[-1, snap.columns.get_loc("signal")] = 0
                 todays_prev[sym] = snap
 
-        # 3) Compute desired positions from D-1 signals using current equity
-        desired_raw = allocate_signals(todays_prev, equity, rules)
+        # 5c) Update/initialize ATR trailing stops with D-1 values; detect breaches
+        breached: set[str] = set()
+        for sym, qty in holdings.items():
+            if qty <= 0:
+                continue
+            snap = todays_prev.get(sym)
+            if snap is None or snap.empty:
+                continue
+            close_prev = float(snap["Close"].iloc[-1])
+            atr_prev = float(snap["atr"].iloc[-1]) if "atr" in snap.columns else 0.0
 
-        # 4) Enforce exact gross exposure cap at Open[dt]
-        #    Scale quantities proportionally if cap exceeded.
+            # initialize if missing
+            if sym not in trail_stop or trail_stop[sym] <= 0.0:
+                trail_stop[sym] = close_prev - rules.atr_k * atr_prev
+            else:
+                # ratchet up only
+                new_stop = close_prev - rules.atr_k * atr_prev
+                if new_stop > trail_stop[sym]:
+                    trail_stop[sym] = new_stop
+
+            # breach at D-1 close => exit next open
+            if close_prev <= trail_stop[sym]:
+                breached.add(sym)
+
+        # 5d) Desired positions from D-1 signals (before enforcing breaches)
+        if is_rebalance_day:
+            desired_raw = allocate_signals(todays_prev, equity, rules)
+        else:
+            # no rebalance today: carry current holdings
+            desired_raw = {s: holdings.get(s, 0) for s in symbols}
+
+        # 5e) Force exits for breached symbols
+        for sym in breached:
+            desired_raw[sym] = 0
+
+        # Exit policy: if exit_mode == 'stop', ignore sell signals while in a position.
+        # Keep prev position unless a stop was breached; new entries still require buy signals.
+        if exit_mode == "stop":
+            for sym, prev_qty in list(holdings.items()):
+                if prev_qty > 0 and sym not in breached:
+                    if desired_raw.get(sym, 0) <= 0:
+                        desired_raw[sym] = prev_qty
+
+        # Entry confirmation: require N consecutive buy signals before *new* entries
+        if entry_confirm > 1:
+            for sym in list(desired_raw.keys()):
+                prev_q = holdings.get(sym, 0)
+                if prev_q == 0 and desired_raw.get(sym, 0) > 0:
+                    snap = todays_prev.get(sym)
+                    ok = False
+                    if snap is not None and not snap.empty and "signal" in snap.columns:
+                        # look at last N rows (<= prev_dt) and require strictly positive signals
+                        lastN = snap["signal"].tail(entry_confirm)
+                        ok = (len(lastN) == entry_confirm) and (lastN > 0).all()
+                    if not ok:
+                        desired_raw[sym] = 0
+
+        # cooldown: block new entries for N bars after an exit
+        if cooldown > 0:
+            for sym, qty in list(desired_raw.items()):
+                # only consider *new* longs (prev 0 -> >0)
+                if holdings.get(sym, 0) == 0 and qty > 0:
+                    last = last_exit_ts.get(sym)
+                    if last is not None:
+                        bars_since = (prev_dt - last).days
+                        if bars_since < cooldown:
+                            desired_raw[sym] = 0
+
+        # 5f) Enforce gross exposure cap at Open[dt]
         gross_notional = 0.0
         for sym, qty in desired_raw.items():
             df = data_map.get(sym)
             if df is None or dt not in df.index:
                 continue
             px_open = _safe_float(df.loc[dt, "Open"])
+            # skip micro rebalances by notional threshold
+            prev_qty = holdings.get(sym, 0)
+            new_qty = desired.get(sym, 0)
+            if new_qty == prev_qty:
+                continue
+            delta = abs(new_qty - prev_qty)
+            notional_change = delta * px_open
+            if min_rebalance_pct > 0.0 and notional_change < (min_rebalance_pct * equity):
+                continue
+            delta = abs(new_qty - prev_qty)
+            notional_change = delta * px_open
+            if min_rebalance_pct > 0.0 and notional_change < (min_rebalance_pct * equity):
+                continue
             gross_notional += abs(qty) * px_open
         cap_notional = rules.max_gross_exposure_pct * equity
-        scale = 1.0
         if cap_notional > 0 and gross_notional > cap_notional:
             scale = cap_notional / gross_notional
+        else:
+            scale = 1.0
 
-        desired: dict[str, int] = {}
+        desired = {}
         if scale < 1.0:
             for sym, qty in desired_raw.items():
                 scaled = int(abs(qty) * scale)
@@ -187,11 +285,67 @@ def run_backtest(
         else:
             desired = desired_raw
 
-        # 5) Transaction costs on quantity changes at Open[dt], then set holdings
-        #    (In v1.5, we assume instant fills at Open[dt].)
+        # ---- DEBUG ROW CAPTURE (D-1 snapshot driving D open actions) ----
+        if debug:
+            for sym in symbols:
+                prev_qty = holdings.get(sym, 0)
+                new_qty = desired.get(sym, 0)
+
+                snap = todays_prev.get(sym)
+                if snap is not None and not snap.empty:
+                    close_prev = float(snap["Close"].iloc[-1])
+                    atr_prev = (
+                        float(snap["atr"].iloc[-1]) if "atr" in snap.columns else float("nan")
+                    )
+                    sig_prev = (
+                        float(snap["signal"].iloc[-1]) if "signal" in snap.columns else float("nan")
+                    )
+                else:
+                    close_prev = float("nan")
+                    atr_prev = float("nan")
+                    sig_prev = float("nan")
+
+                regime_prev = (
+                    bool(regime_ok.loc[prev_dt])
+                    if (regime_ok is not None and prev_dt in regime_ok.index)
+                    else True
+                )
+
+                # if the ATR trailing set flagged a breach earlier this loop
+                breached_flag = sym in locals().get("breached", set())
+
+                row = {
+                    "date": prev_dt,  # decision basis date (D-1)
+                    "close_prev": close_prev,
+                    "atr_prev": atr_prev,
+                    "trail_stop_prev": float(trail_stop.get(sym, float("nan"))),
+                    "signal_prev": sig_prev,
+                    "prev_qty": int(prev_qty),
+                    "new_qty": int(new_qty),
+                    "breached_stop": bool(breached_flag),
+                    "regime_ok_prev": bool(regime_prev),
+                }
+                debug_rows.setdefault(sym, []).append(row)
+        # ---- /DEBUG ROW CAPTURE ----
+
+        # 5g) Compute transaction costs at Open[dt] for quantity deltas
         cost = 0.0
         all_syms = set(holdings) | set(desired)
         for sym in all_syms:
+            # skip micro rebalances
+            # compute notional change at open
+            df = data_map.get(sym)
+            if df is None or dt not in df.index:
+                continue
+            px_open = _safe_float(df.loc[dt, "Open"])
+            prev_qty = holdings.get(sym, 0)
+            new_qty = desired.get(sym, 0)
+            delta = abs(new_qty - prev_qty)
+            notional_change = delta * px_open
+            if min_rebalance_pct > 0.0 and notional_change < (min_rebalance_pct * equity):
+                continue
+
+            # (cost computation continues below)
             prev_qty = holdings.get(sym, 0)
             new_qty = desired.get(sym, 0)
             delta = abs(new_qty - prev_qty)
@@ -204,11 +358,45 @@ def run_backtest(
             cost += (rules.cost_bps / 10_000.0) * px_open * delta
         if cost:
             total_costs += cost
-            equity -= cost
+            equity -= cost  # deduct globally
 
+        # 5h) Post synthetic market fills at Open[dt] into the ledger
+        for sym in all_syms:
+            df = data_map.get(sym)
+            if df is None or dt not in df.index:
+                continue
+            px_open = _safe_float(df.loc[dt, "Open"])
+            prev_qty = holdings.get(sym, 0)
+            new_qty = desired.get(sym, 0)
+            if new_qty == prev_qty:
+                continue
+
+            if prev_qty > 0 and new_qty == 0 and sym in breached:
+                reason = "atr_trail_stop"
+            else:
+                reason = "rebalance"
+
+            ledger.submit_and_fill(
+                symbol=sym,
+                new_qty=new_qty,
+                price=px_open,
+                ts=dt.to_pydatetime(),
+                reason=reason,
+                cost_usd=0.0,  # cost already deducted globally
+            )
+
+            # initialize trailing stop on first entry (using D-1)
+            if prev_qty == 0 and new_qty > 0:
+                snap = todays_prev.get(sym)
+                if snap is not None and not snap.empty:
+                    close_prev = float(snap["Close"].iloc[-1])
+                    atr_prev = float(snap["atr"].iloc[-1]) if "atr" in snap.columns else 0.0
+                    trail_stop[sym] = close_prev - rules.atr_k * atr_prev
+
+        # 5i) Commit new holdings
         holdings = desired
 
-        # 6) Intraday PnL on new holdings: Open[dt] -> Close[dt]
+        # 5j) Intraday PnL: Open[dt] -> Close[dt] on new holdings
         pnl_intraday = 0.0
         for sym, qty in holdings.items():
             df = data_map.get(sym)
@@ -219,12 +407,9 @@ def run_backtest(
             pnl_intraday += qty * (close_px - open_px)
         equity += pnl_intraday
 
-        # 7) Record equity
         equity_series.loc[dt] = equity
 
-    # Outputs
-    stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-    outdir = os.path.join("data", "backtests")
+    # 6) Outputs
     os.makedirs(outdir, exist_ok=True)
 
     port_outfile = os.path.join(outdir, f"PORT_{strategy.name}_{stamp}.csv")
@@ -245,19 +430,23 @@ def run_backtest(
         "regime_window": float(regime_window),
     }
 
-    # Plot equity curve
     plt.figure()
     equity_series.plot(title=f"Equity Curve - {strategy.name}")
     plot_path = os.path.join(outdir, f"PORT_{strategy.name}_{stamp}.png")
     plt.savefig(plot_path, bbox_inches="tight")
     plt.close()
 
-    # Summary CSV
     summary_path = os.path.join(outdir, f"PORT_{strategy.name}_{stamp}_summary.csv")
     pd.Series(summary).to_csv(summary_path, header=False)
 
+    # Trades export from ledger
+    trades_df = ledger.to_trades_dataframe()
+    trades_path = os.path.join(outdir, f"PORT_{strategy.name}_{stamp}_trades.csv")
+    trades_df.to_csv(trades_path, index=False)
+
     logger.info(f"Portfolio results saved to {port_outfile} and {plot_path}")
     logger.info(f"Summary saved to {summary_path}")
+    logger.info(f"Trades saved to {trades_path}")
     logger.info(
         "Total: {total:.2%} | CAGR~: {cagr:.2%} | Sharpe: {sharpe:.2f} | "
         "MaxDD: {mdd:.2%} | Costs: ${costs:,.2f}".format(

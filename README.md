@@ -1,69 +1,138 @@
-# GPT-Trader (v1 scaffold)
+# GPT-Trader
 
-Architecture-first scaffold for an equities-only trading bot with:
-- Adapter-based data layer (free now, swappable to real-time later)
-- Backtest engine + demo MA strategy
-- Config via `.env` and Pydantic
-- Lint/format/type checks with Ruff, Black, Mypy
-- Tests with Pytest
-- Pre-commit hooks
+Algorithmic trading research framework in Python, designed for **rapid iteration**, **backtesting**, and **parameter optimization**.
 
-## Quick start
+---
 
-```bash
-# From your project root (where pyproject.toml lives)
-poetry install
-pre-commit install
+## 🚀 Features
 
-# Copy .env.example to .env and fill values (Alpaca keys optional for v1)
-cp .env.example .env
+### Strategies
+- Modular architecture — easily add new strategies (e.g., `trend_breakout`)
+- Configurable parameters for entry confirmation, ATR multipliers, position sizing, and rebalancing thresholds
 
-# Run a demo backtest
-poetry run python -m bot.cli backtest --strategy demo_ma --symbol AAPL --start 2023-01-01 --end 2023-06-30
-```
+### Backtesting
+- ATR-based position sizing
+- Risk % control & maximum open positions
+- Optional entry confirmation rules
 
-## Commands
+### Regime Filters
+- Market regime detection for conditional strategy activation
 
-```bash
-# Backtest
-poetry run python -m src.bot.cli backtest --strategy demo_ma --symbol AAPL --start 2023-01-01 --end 2023-06-30
+### Exits
+- Signal-based exits
+- ATR stop-based exits
 
-# (placeholder) Paper trading - wired later
-poetry run python -m src.bot.cli paper --strategy demo_ma
-```
+### Optimization
+- Parameter grid search with **sharding** for parallel execution
+- In-sample (IS) vs out-of-sample (OOS) testing workflows
+- Quick top-IS preview
 
-## Layout
+### Data
+- Historical data via [`yfinance`](https://pypi.org/project/yfinance/)
+- Outputs to `.csv`, `.png`, and `.txt` summary formats in `data/backtests/` and `data/opt/`
 
-```
-src/bot/
-  config.py        # Pydantic settings
-  logging.py       # Logger setup
-  cli.py           # Entrypoints: backtest, paper (stub), live (stub)
+### Tooling & QA
+- Poetry for dependency management
+- Ruff, Black, MyPy for linting, formatting, and type checking
+- Pytest for testing
+- `pre-commit` hooks to enforce standards
 
-  dataflow/        # Data adapters
-    base.py
-    sources/yfinance_source.py
+---
 
-  strategy/        # Strategies
-    base.py
-    demo_ma.py
+## 📦 Installation
 
-  risk/            # Risk rules
-    basic.py
+    poetry install
+    pre-commit install
 
-  backtest/        # Backtest engine
-    engine.py
+---
 
-  exec/            # Broker adapters (stubs for now)
-    base.py
-    alpaca_paper.py
+## 📊 Usage
 
-  monitor/         # Alerts/health (stubs)
-    alerts.py
-```
+1. **Backtest a single run**
 
-## Notes
+       poetry run python -m bot.cli backtest \
+         --strategy trend_breakout \
+         --symbol-list data/universe/sp100.csv \
+         --start 2019-01-01 --end 2020-12-31 \
+         --regime on \
+         --cost-bps 5 \
+         --exit-mode stop \
+         --entry-confirm 2 \
+         --min-rebalance-pct 0.002 \
+         --atr-k 2.3
 
-- We start with `yfinance` for historical bars; later we can plug in Polygon/IEX/etc.
-- SQLite not required for v1; the backtest emits CSV into `./data/backtests`. We'll add DB once needed.
-- PyCharm CE is sufficient.
+2. **Grid Search Optimization**
+
+       poetry run python scripts/run_is_oos.py \
+         --is-start 2010-01-01 --is-end 2018-12-31 \
+         --oos-start 2019-01-01 --oos-end 2024-12-31
+
+3. **Parallel Grid Search (Sharded)**
+
+       mkdir -p logs
+       for k in 0 1 2 3; do
+         poetry run python scripts/run_is_oos.py \
+           --chunks 4 --chunk $k \
+           --is-start 2010-01-01 --is-end 2018-12-31 \
+           --oos-start 2019-01-01 --oos-end 2024-12-31 \
+           > logs/is_part_$k.log 2>&1 &
+       done
+
+---
+
+## 📂 Project Layout
+
+    src/bot/
+      cli.py                  # Entrypoints for backtest
+      config.py               # Global settings
+      logging.py              # Logging setup
+
+      backtest/
+        engine.py             # Core backtest logic
+        engine_portfolio.py   # Portfolio simulation
+
+      dataflow/
+        base.py
+        sources/
+          yfinance_source.py  # Historical data loader
+
+      strategy/
+        base.py
+        trend_breakout.py     # ATR + Donchian channel breakout
+
+      risk/
+        basic.py              # Risk management rules
+
+      exec/
+        base.py
+        alpaca_paper.py
+
+    scripts/
+      run_is_oos.py           # IS/OOS grid search runner
+      ...
+
+---
+
+## 📈 Outputs
+
+Example backtest output files:
+- `PORT_<strategy>_<timestamp>.csv` — equity curve & positions
+- `PORT_<strategy>_<timestamp>.png` — performance chart
+- `PORT_<strategy>_<timestamp>_summary.csv` — performance metrics
+- `PORT_<strategy>_<timestamp>_trades.csv` — trade-by-trade log
+
+---
+
+## 🤝 Contributing
+
+1. Fork the repo
+2. Create a branch (`git checkout -b feature/my-feature`)
+3. Commit changes (`git commit -m 'Add my feature'`)
+4. Push to branch (`git push origin feature/my-feature`)
+5. Open a Pull Request
+
+---
+
+## 📜 License
+
+MIT License. See `LICENSE` for details.

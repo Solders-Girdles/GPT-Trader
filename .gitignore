@@ -1,6 +1,19 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Logs
+logs/
+*.log
+
+# Local dev artifacts
+*.tmp
+*.swp
+*.swo
+
+# macOS
 .DS_Store
-.idea/
-.venv/
+
+# Backtest outputs
 data/backtests/
-*.png
-*.csv

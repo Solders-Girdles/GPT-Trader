@@ -13,3 +13,10 @@ repos:
     rev: v1.10.0
     hooks:
       - id: mypy
+  -   repo: local
+      hooks:
+      -   id: forbid-close-in-sizing
+          name: Forbid Close in sizing
+          entry: bash -c '(! grep -nE "=\s*int\([^)]*Close[^)]*\)" src/bot/backtest/engine_portfolio.py)'
+          language: system
+          pass_filenames: false

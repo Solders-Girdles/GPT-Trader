@@ -164,6 +164,7 @@ def run_backtest(
             if df is None or prev_dt not in df.index or dt not in df.index:
                 continue
             prev_close = _safe_float(df.loc[prev_dt, "Close"])
+            # Execution & sizing use Open[dt] (next open) to avoid Close→Open mismatch.
             open_px = _safe_float(df.loc[dt, "Open"])
             pnl_overnight += qty * (open_px - prev_close)
         equity += pnl_overnight

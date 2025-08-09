@@ -1,0 +1,65 @@
+Running in-sample grid: 60 permutations (IS: 2010-01-01 → 2018-12-31) | shard 2/4
+[1/60] {'atr_k': 2.3, 'risk_pct': 0.35, 'max_positions': 8, 'entry_confirm': 1, 'min_rebalance_pct': 0.002}
+[2/60] {'atr_k': 2.3, 'risk_pct': 0.35, 'max_positions': 10, 'entry_confirm': 1, 'min_rebalance_pct': 0.002}
+[3/60] {'atr_k': 2.3, 'risk_pct': 0.35, 'max_positions': 12, 'entry_confirm': 1, 'min_rebalance_pct': 0.002}
+[4/60] {'atr_k': 2.3, 'risk_pct': 0.4, 'max_positions': 8, 'entry_confirm': 1, 'min_rebalance_pct': 0.002}
+[5/60] {'atr_k': 2.3, 'risk_pct': 0.4, 'max_positions': 10, 'entry_confirm': 1, 'min_rebalance_pct': 0.002}
+[6/60] {'atr_k': 2.3, 'risk_pct': 0.4, 'max_positions': 12, 'entry_confirm': 1, 'min_rebalance_pct': 0.002}
+[7/60] {'atr_k': 2.3, 'risk_pct': 0.45, 'max_positions': 8, 'entry_confirm': 1, 'min_rebalance_pct': 0.002}
+[8/60] {'atr_k': 2.3, 'risk_pct': 0.45, 'max_positions': 10, 'entry_confirm': 1, 'min_rebalance_pct': 0.002}
+[9/60] {'atr_k': 2.3, 'risk_pct': 0.45, 'max_positions': 12, 'entry_confirm': 1, 'min_rebalance_pct': 0.002}
+[10/60] {'atr_k': 2.3, 'risk_pct': 0.5, 'max_positions': 8, 'entry_confirm': 1, 'min_rebalance_pct': 0.002}
+[11/60] {'atr_k': 2.3, 'risk_pct': 0.5, 'max_positions': 10, 'entry_confirm': 1, 'min_rebalance_pct': 0.002}
+[12/60] {'atr_k': 2.3, 'risk_pct': 0.5, 'max_positions': 12, 'entry_confirm': 1, 'min_rebalance_pct': 0.002}
+[13/60] {'atr_k': 2.4, 'risk_pct': 0.35, 'max_positions': 8, 'entry_confirm': 1, 'min_rebalance_pct': 0.002}
+[14/60] {'atr_k': 2.4, 'risk_pct': 0.35, 'max_positions': 10, 'entry_confirm': 1, 'min_rebalance_pct': 0.002}
+[15/60] {'atr_k': 2.4, 'risk_pct': 0.35, 'max_positions': 12, 'entry_confirm': 1, 'min_rebalance_pct': 0.002}
+[16/60] {'atr_k': 2.4, 'risk_pct': 0.4, 'max_positions': 8, 'entry_confirm': 1, 'min_rebalance_pct': 0.002}
+[17/60] {'atr_k': 2.4, 'risk_pct': 0.4, 'max_positions': 10, 'entry_confirm': 1, 'min_rebalance_pct': 0.002}
+[18/60] {'atr_k': 2.4, 'risk_pct': 0.4, 'max_positions': 12, 'entry_confirm': 1, 'min_rebalance_pct': 0.002}
+[19/60] {'atr_k': 2.4, 'risk_pct': 0.45, 'max_positions': 8, 'entry_confirm': 1, 'min_rebalance_pct': 0.002}
+[20/60] {'atr_k': 2.4, 'risk_pct': 0.45, 'max_positions': 10, 'entry_confirm': 1, 'min_rebalance_pct': 0.002}
+[21/60] {'atr_k': 2.4, 'risk_pct': 0.45, 'max_positions': 12, 'entry_confirm': 1, 'min_rebalance_pct': 0.002}
+[22/60] {'atr_k': 2.4, 'risk_pct': 0.5, 'max_positions': 8, 'entry_confirm': 1, 'min_rebalance_pct': 0.002}
+[23/60] {'atr_k': 2.4, 'risk_pct': 0.5, 'max_positions': 10, 'entry_confirm': 1, 'min_rebalance_pct': 0.002}
+[24/60] {'atr_k': 2.4, 'risk_pct': 0.5, 'max_positions': 12, 'entry_confirm': 1, 'min_rebalance_pct': 0.002}
+[25/60] {'atr_k': 2.5, 'risk_pct': 0.35, 'max_positions': 8, 'entry_confirm': 1, 'min_rebalance_pct': 0.002}
+[26/60] {'atr_k': 2.5, 'risk_pct': 0.35, 'max_positions': 10, 'entry_confirm': 1, 'min_rebalance_pct': 0.002}
+[27/60] {'atr_k': 2.5, 'risk_pct': 0.35, 'max_positions': 12, 'entry_confirm': 1, 'min_rebalance_pct': 0.002}
+[28/60] {'atr_k': 2.5, 'risk_pct': 0.4, 'max_positions': 8, 'entry_confirm': 1, 'min_rebalance_pct': 0.002}
+[29/60] {'atr_k': 2.5, 'risk_pct': 0.4, 'max_positions': 10, 'entry_confirm': 1, 'min_rebalance_pct': 0.002}
+[30/60] {'atr_k': 2.5, 'risk_pct': 0.4, 'max_positions': 12, 'entry_confirm': 1, 'min_rebalance_pct': 0.002}
+[31/60] {'atr_k': 2.5, 'risk_pct': 0.45, 'max_positions': 8, 'entry_confirm': 1, 'min_rebalance_pct': 0.002}
+[32/60] {'atr_k': 2.5, 'risk_pct': 0.45, 'max_positions': 10, 'entry_confirm': 1, 'min_rebalance_pct': 0.002}
+[33/60] {'atr_k': 2.5, 'risk_pct': 0.45, 'max_positions': 12, 'entry_confirm': 1, 'min_rebalance_pct': 0.002}
+[34/60] {'atr_k': 2.5, 'risk_pct': 0.5, 'max_positions': 8, 'entry_confirm': 1, 'min_rebalance_pct': 0.002}
+[35/60] {'atr_k': 2.5, 'risk_pct': 0.5, 'max_positions': 10, 'entry_confirm': 1, 'min_rebalance_pct': 0.002}
+[36/60] {'atr_k': 2.5, 'risk_pct': 0.5, 'max_positions': 12, 'entry_confirm': 1, 'min_rebalance_pct': 0.002}
+[37/60] {'atr_k': 2.6, 'risk_pct': 0.35, 'max_positions': 8, 'entry_confirm': 1, 'min_rebalance_pct': 0.002}
+[38/60] {'atr_k': 2.6, 'risk_pct': 0.35, 'max_positions': 10, 'entry_confirm': 1, 'min_rebalance_pct': 0.002}
+[39/60] {'atr_k': 2.6, 'risk_pct': 0.35, 'max_positions': 12, 'entry_confirm': 1, 'min_rebalance_pct': 0.002}
+[40/60] {'atr_k': 2.6, 'risk_pct': 0.4, 'max_positions': 8, 'entry_confirm': 1, 'min_rebalance_pct': 0.002}
+[41/60] {'atr_k': 2.6, 'risk_pct': 0.4, 'max_positions': 10, 'entry_confirm': 1, 'min_rebalance_pct': 0.002}
+[42/60] {'atr_k': 2.6, 'risk_pct': 0.4, 'max_positions': 12, 'entry_confirm': 1, 'min_rebalance_pct': 0.002}
+[43/60] {'atr_k': 2.6, 'risk_pct': 0.45, 'max_positions': 8, 'entry_confirm': 1, 'min_rebalance_pct': 0.002}
+[44/60] {'atr_k': 2.6, 'risk_pct': 0.45, 'max_positions': 10, 'entry_confirm': 1, 'min_rebalance_pct': 0.002}
+[45/60] {'atr_k': 2.6, 'risk_pct': 0.45, 'max_positions': 12, 'entry_confirm': 1, 'min_rebalance_pct': 0.002}
+[46/60] {'atr_k': 2.6, 'risk_pct': 0.5, 'max_positions': 8, 'entry_confirm': 1, 'min_rebalance_pct': 0.002}
+[47/60] {'atr_k': 2.6, 'risk_pct': 0.5, 'max_positions': 10, 'entry_confirm': 1, 'min_rebalance_pct': 0.002}
+[48/60] {'atr_k': 2.6, 'risk_pct': 0.5, 'max_positions': 12, 'entry_confirm': 1, 'min_rebalance_pct': 0.002}
+[49/60] {'atr_k': 2.7, 'risk_pct': 0.35, 'max_positions': 8, 'entry_confirm': 1, 'min_rebalance_pct': 0.002}
+[50/60] {'atr_k': 2.7, 'risk_pct': 0.35, 'max_positions': 10, 'entry_confirm': 1, 'min_rebalance_pct': 0.002}
+[51/60] {'atr_k': 2.7, 'risk_pct': 0.35, 'max_positions': 12, 'entry_confirm': 1, 'min_rebalance_pct': 0.002}
+[52/60] {'atr_k': 2.7, 'risk_pct': 0.4, 'max_positions': 8, 'entry_confirm': 1, 'min_rebalance_pct': 0.002}
+[53/60] {'atr_k': 2.7, 'risk_pct': 0.4, 'max_positions': 10, 'entry_confirm': 1, 'min_rebalance_pct': 0.002}
+[54/60] {'atr_k': 2.7, 'risk_pct': 0.4, 'max_positions': 12, 'entry_confirm': 1, 'min_rebalance_pct': 0.002}
+[55/60] {'atr_k': 2.7, 'risk_pct': 0.45, 'max_positions': 8, 'entry_confirm': 1, 'min_rebalance_pct': 0.002}
+[56/60] {'atr_k': 2.7, 'risk_pct': 0.45, 'max_positions': 10, 'entry_confirm': 1, 'min_rebalance_pct': 0.002}
+[57/60] {'atr_k': 2.7, 'risk_pct': 0.45, 'max_positions': 12, 'entry_confirm': 1, 'min_rebalance_pct': 0.002}
+[58/60] {'atr_k': 2.7, 'risk_pct': 0.5, 'max_positions': 8, 'entry_confirm': 1, 'min_rebalance_pct': 0.002}
+[59/60] {'atr_k': 2.7, 'risk_pct': 0.5, 'max_positions': 10, 'entry_confirm': 1, 'min_rebalance_pct': 0.002}
+[60/60] {'atr_k': 2.7, 'risk_pct': 0.5, 'max_positions': 12, 'entry_confirm': 1, 'min_rebalance_pct': 0.002}
+
+Wrote in-sample grid to data/opt/is_grid_20250809-012930_part2-of-4.csv
+
+(No rows passed filters on this shard.)

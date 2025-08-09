@@ -2,6 +2,11 @@
 from __future__ import annotations
 
 import argparse
+
+try:
+    from tqdm.auto import tqdm
+except Exception:
+    tqdm = None
 import csv
 import itertools
 import re
@@ -118,7 +123,11 @@ def run_one(
 
     summary_path = m.group(1)
     try:
-        sr = pd.read_csv(summary_path, header=None, index_col=0, squeeze=True)  # type: ignore[arg-type]
+        sr = pd.read_csv(
+            summary_path,
+            header=None,
+            index_col=0,
+        )  # type: ignore[arg-type]
         d: dict[str, Any] = sr.to_dict()
     except Exception as e:  # pragma: no cover
         print(f"[run_one] Failed reading summary '{summary_path}': {e}", flush=True)
@@ -224,7 +233,10 @@ def main() -> None:
     )
 
     rows: list[dict[str, Any]] = []
-    for idx, pp in enumerate(shard, 1):
+    _iterable = shard
+    if tqdm is not None:
+        _iterable = tqdm(shard, total=len(shard), desc="IS shard", leave=False)
+    for idx, pp in enumerate(_iterable, 1):
         print(f"[{idx}/{len(shard)}] {pp.as_dict()}", flush=True)
         res = run_one(pp, args.is_start, args.is_end)
         if res is not None:

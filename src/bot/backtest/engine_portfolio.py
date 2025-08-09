@@ -23,7 +23,7 @@ def _warn(msg: str) -> None:
     logger.warning(msg)
 
 
-def validate_ohlc(df: pd.DataFrame, symbol: str) -> None:
+def validate_ohlc(df: pd.DataFrame, symbol: str, strict_mode: bool = True) -> pd.DataFrame:
     if df.empty:
         raise ValueError(f"{symbol}: empty DataFrame after load/adjust")
 
@@ -64,6 +64,8 @@ def validate_ohlc(df: pd.DataFrame, symbol: str) -> None:
             _warn(f"{symbol}: non-positive values found in {col}")
     if "Volume" in df.columns and (df["Volume"] < 0).any():
         _warn(f"{symbol}: negative Volume values found")
+
+    return df
 
 
 def _read_universe_csv(path: str) -> list[str]:
@@ -107,6 +109,7 @@ def run_backtest(
     cooldown: int = 0,
     entry_confirm: int = 1,
     min_rebalance_pct: float = 0.0,
+    strict_mode: bool = True,
 ) -> None:
     """
     v1.5 timing model + ATR trailing exits:
@@ -119,6 +122,7 @@ def run_backtest(
       If breached at D-1, exit at D open.
     """
     logger.info(f"Backtesting {strategy.name} from {start.date()} to {end.date()}")
+    logger.info(f"Data strict mode: {'strict' if strict_mode else 'repair'}")
     outdir = os.path.join("data", "backtests")
     os.makedirs(outdir, exist_ok=True)
 
@@ -143,7 +147,7 @@ def run_backtest(
             # --- Data adjustments & validation ---
             df_adj, did_adj = adjust_to_adjclose(df)
             # Validate after adjustment to catch gaps/NaNs/bounds
-            validate_ohlc(df_adj, sym)
+            df_adj = validate_ohlc(df_adj, sym, strict_mode=strict_mode)
             if did_adj:
                 logger.info(f"{sym}: applied OHLC adjustment using Adj Close factors")
             validate_daily_bars(df_adj, sym)
@@ -324,8 +328,6 @@ def run_backtest(
                 continue
             delta = abs(new_qty - prev_qty)
             notional_change = delta * px_open
-            if min_rebalance_pct > 0.0 and notional_change < (min_rebalance_pct * equity):
-                continue
             gross_notional += abs(qty) * px_open
         cap_notional = rules.max_gross_exposure_pct * equity
         if cap_notional > 0 and gross_notional > cap_notional:
@@ -398,8 +400,6 @@ def run_backtest(
             new_qty = desired.get(sym, 0)
             delta = abs(new_qty - prev_qty)
             notional_change = delta * px_open
-            if min_rebalance_pct > 0.0 and notional_change < (min_rebalance_pct * equity):
-                continue
 
             # (cost computation continues below)
             prev_qty = holdings.get(sym, 0)
@@ -513,3 +513,16 @@ def run_backtest(
             costs=total_costs,
         )
     )
+
+
+def validate_indicators(df: pd.DataFrame, symbol: str, atr_col: str = "ATR") -> None:
+    """
+    Soft validation for indicators. If ATR is present, ensure all positive (no zeros/negatives)
+    to avoid division-by-zero or nonsensical sizing.
+    Raises ValueError if ATR exists and has non-positive values.
+    """
+    if atr_col in df.columns:
+        # Consider most recent ATR values; if any nonpositive present, raise
+        atr_vals = df[atr_col].astype(float)
+        if (atr_vals <= 0).any():
+            raise ValueError(f"{symbol}: non-positive ATR detected")

@@ -2,9 +2,37 @@ from __future__ import annotations
 
 import time
 from dataclasses import dataclass
+from pathlib import Path
 
 import pandas as pd
 import yfinance as yf
+
+
+# --- Local Parquet cache for yfinance ---
+def _cache_dir() -> Path:
+    d = Path("data/cache/yf")
+    d.mkdir(parents=True, exist_ok=True)
+    return d
+
+
+def _cache_path(symbol: str) -> Path:
+    return _cache_dir() / f"{symbol.upper()}.parquet"
+
+
+def _read_parquet_safe(path: Path) -> pd.DataFrame | None:
+    try:
+        return pd.read_parquet(path)
+    except Exception:
+        return None
+
+
+def _write_parquet_safe(df: pd.DataFrame, path: Path) -> None:
+    try:
+        df.to_parquet(path, index=True)
+    except Exception:
+        # Fall back to CSV if parquet engine not available
+        path_csv = path.with_suffix(".csv")
+        df.to_csv(path_csv, index=True)
 
 
 def _normalize_symbol(sym: str) -> str:

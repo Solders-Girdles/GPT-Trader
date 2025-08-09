@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import argparse
-import sys
 from datetime import datetime
 
 from bot.backtest.engine import run_backtest as run_backtest_single
@@ -94,11 +93,12 @@ def main() -> None:
     sub.add_parser("paper", help="Run paper trading (stub)")
     sub.add_parser("live", help="Run live trading (stub)")
 
-    args = parser.parse_args()
-    if not hasattr(args, "func"):
-        parser.print_help()
-        sys.exit(1)
-    args.func(args)
+    parser.add_argument(
+        "--data-strict",
+        choices=["strict", "repair"],
+        default="strict",
+        help="Data validation: strict=raise on bad OHLC, repair=attempt bounded fixes",
+    )
 
 
 def _handle_backtest(args: argparse.Namespace) -> None:

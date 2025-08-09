@@ -50,7 +50,7 @@ def allocate_signals(
         if int(_to_float(sig)) <= 0:
             continue
 
-        price = _to_float(df["Close"].iloc[-1])
+        price = _to_float(df["Open"].iloc[-1] if "Open" in df.columns else df["Close"].iloc[-1])
         atr_val = _to_float(df.get("atr", pd.Series([0.0])).iloc[-1])
         qty = position_size(equity, atr_val, price, rules)
         if qty <= 0:

@@ -21,3 +21,6 @@ data/backtests/
 # Universe data files (keep only sample file)
 data/universe/*
 !data/universe/sample_universe.csv
+
+# Local data cache
+data/cache/

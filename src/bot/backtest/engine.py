@@ -47,6 +47,10 @@ def run_backtest(symbol: str, start: datetime, end: datetime, strategy: Strategy
     total_ret = data["equity"].iloc[-1] / equity0 - 1
     cagr = (1 + total_ret) ** (252 / max(1, len(data))) - 1  # rough
     max_dd = ((data["equity"].cummax() - data["equity"]) / data["equity"].cummax()).max()
-
-    logger.info(f"Results saved to {outfile}")
+    # QoL: rough trade count based on position changes
+    trade_count = int((data["position"] != data["position_shift"]).sum())
+    logger.info("Bars: %d | Trades: %d", len(data), trade_count)
+    logger.info(f"Results saved to {outfile} (final_equity={data['equity'].iloc[-1]:.2f})")
     logger.info(f"Total return: {total_ret:.2%} | CAGR~: {cagr:.2%} | Max DD: {max_dd:.2%}")
+
+    logger.info("Backtest complete.")

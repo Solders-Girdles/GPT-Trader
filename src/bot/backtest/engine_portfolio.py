@@ -6,8 +6,10 @@ from pathlib import Path
 from typing import Literal
 
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 from bot.dataflow.sources.yfinance_source import YFinanceSource
+from bot.dataflow.validate import adjust_to_adjclose, validate_daily_bars
 from bot.exec.ledger import Ledger
 from bot.logging import get_logger
 from bot.metrics.report import perf_metrics
@@ -15,6 +17,53 @@ from bot.portfolio.allocator import PortfolioRules, allocate_signals
 from bot.strategy.base import Strategy
 
 logger = get_logger("backtest")
+
+
+def _warn(msg: str) -> None:
+    logger.warning(msg)
+
+
+def validate_ohlc(df: pd.DataFrame, symbol: str) -> None:
+    if df.empty:
+        raise ValueError(f"{symbol}: empty DataFrame after load/adjust")
+
+    if not isinstance(df.index, pd.DatetimeIndex):
+        raise TypeError(f"{symbol}: index must be DatetimeIndex, got {type(df.index)}")
+    if not df.index.is_monotonic_increasing:
+        raise ValueError(f"{symbol}: DatetimeIndex is not sorted ascending")
+
+    required = ["Open", "High", "Low", "Close"]
+    missing = [c for c in required if c not in df.columns]
+    if missing:
+        raise KeyError(f"{symbol}: missing required columns: {missing}")
+
+    nan_ct = int(df[required].isna().sum().sum())
+    if nan_ct > 0:
+        raise ValueError(f"{symbol}: NaNs in OHLC ({nan_ct})")
+
+    o = df["Open"].astype(float)
+    h = df["High"].astype(float)
+    low = df["Low"].astype(float)
+    c = df["Close"].astype(float)
+    max_oc = np.maximum(o.values, c.values)
+    min_oc = np.minimum(o.values, c.values)
+    if bool((h.values < max_oc).any()) or bool((low.values > min_oc).any()):
+        raise ValueError(f"{symbol}: invalid OHLC bounds")
+
+    gaps = df.index.to_series().diff().dt.days.dropna()
+    long_gaps = gaps[gaps > 7]
+    if len(long_gaps) > 0:
+        _warn(f"{symbol}: detected long date gap (first gap {int(long_gaps.iloc[0])} days)")
+
+    non_bday = df.index[~df.index.to_series().dt.dayofweek.isin(range(5))]
+    if len(non_bday) > 0:
+        _warn(f"{symbol}: {len(non_bday)} rows on non-business days")
+
+    for col in required:
+        if (df[col] <= 0).any():
+            _warn(f"{symbol}: non-positive values found in {col}")
+    if "Volume" in df.columns and (df["Volume"] < 0).any():
+        _warn(f"{symbol}: negative Volume values found")
 
 
 def _read_universe_csv(path: str) -> list[str]:
@@ -91,8 +140,14 @@ def run_backtest(
                 start=start.strftime("%Y-%m-%d"),
                 end=end.strftime("%Y-%m-%d"),
             )
-            if "Open" not in df.columns:
-                df["Open"] = df["Close"]
+            # --- Data adjustments & validation ---
+            df_adj, did_adj = adjust_to_adjclose(df)
+            # Validate after adjustment to catch gaps/NaNs/bounds
+            validate_ohlc(df_adj, sym)
+            if did_adj:
+                logger.info(f"{sym}: applied OHLC adjustment using Adj Close factors")
+            validate_daily_bars(df_adj, sym)
+            df = df_adj
             data_map[sym] = df
         except Exception as e:
             logger.warning(f"Skipping {sym}: {e}")

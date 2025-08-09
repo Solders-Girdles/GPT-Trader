@@ -50,17 +50,35 @@ def allocate_signals(
         if int(_to_float(sig)) <= 0:
             continue
 
-        price = _to_float(df["Close"].iloc[-1])
+        price = _to_float(df["Open"].iloc[-1] if "Open" in df.columns else df["Close"].iloc[-1])
         atr_val = _to_float(df.get("atr", pd.Series([0.0])).iloc[-1])
         qty = position_size(equity, atr_val, price, rules)
         if qty <= 0:
             continue
 
-        upper_prev = df["donchian_upper"].shift(1).dropna()
-        if upper_prev.empty:
-            continue
+        # Donchian-aware strength if available; otherwise a generic signal/ATR score.
 
-        strength = (price - float(upper_prev.iloc[-1])) / max(price, 1e-9)
+        if "donchian_upper" in df.columns:
+            upper_prev = df["donchian_upper"].shift(1).dropna()
+
+            if upper_prev.empty:
+                continue
+
+            strength = (price - float(upper_prev.iloc[-1])) / max(price, 1e-9)
+
+        else:
+            # Generic strength: prefer higher signal and lower ATR.
+
+            # Avoid div-by-zero; if ATR missing, treat as 1.
+
+            atr_for_rank = float(df["atr"].iloc[-1]) if "atr" in df.columns else 1.0
+
+            # If signal missing, treat as 0 (won't get here because we gate on sig>0 above).
+
+            sig_val = float(df["signal"].iloc[-1]) if "signal" in df.columns else 0.0
+
+            strength = sig_val / max(atr_for_rank, 1e-9)
+
         candidates.append((sym, strength, qty))
 
     candidates.sort(key=lambda x: x[1], reverse=True)

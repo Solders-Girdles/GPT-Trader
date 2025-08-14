@@ -1,11 +1,11 @@
 """
 GPT-Trader Architecture Migration Demo
 
-Demonstrates the complete migration process from legacy architecture 
+Demonstrates the complete migration process from legacy architecture
 to the new unified system:
 
 1. Initialize new architecture components
-2. Migrate data from legacy databases  
+2. Migrate data from legacy databases
 3. Refactor components to use new patterns
 4. Validate migration success
 5. Show before/after comparison
@@ -14,12 +14,10 @@ This script can be used as a template for actual production migration.
 """
 
 import logging
-from pathlib import Path
-from decimal import Decimal
 
 # Import new architecture components
-from bot.core.config import initialize_config, Environment, SystemConfig
-from bot.core.database import initialize_database, DatabaseConfig
+from bot.core.config import Environment, initialize_config
+from bot.core.database import DatabaseConfig, initialize_database
 from bot.core.migration import ArchitectureMigrationManager
 from bot.monitor.live_risk_monitor_v2 import create_live_risk_monitor_v2
 
@@ -43,7 +41,8 @@ def demonstrate_architecture_migration():
         logger.info("📋 Step 1: Initializing new configuration system...")
 
         config_manager = initialize_config(
-            config_file=None, environment=Environment.DEVELOPMENT  # Use defaults for demo
+            config_file=None,
+            environment=Environment.DEVELOPMENT,  # Use defaults for demo
         )
 
         system_config = config_manager.get_config()
@@ -109,7 +108,7 @@ def demonstrate_architecture_migration():
 
         # Start the component
         risk_monitor.start()
-        logger.info(f"   🚀 Risk Monitor V2 started successfully")
+        logger.info("   🚀 Risk Monitor V2 started successfully")
         logger.info(f"   💚 Health Status: {risk_monitor.get_health_status().value}")
 
         # Get component status
@@ -128,7 +127,7 @@ def demonstrate_architecture_migration():
         logger.info(f"   ⚙️ Config Management: {config_summary}")
 
         # Show component integration
-        logger.info(f"   🔗 Component Integration: Standardized interfaces and lifecycle")
+        logger.info("   🔗 Component Integration: Standardized interfaces and lifecycle")
 
         # Step 7: Performance Comparison
         logger.info("⚡ Step 7: Architecture improvement summary...")
@@ -213,13 +212,13 @@ if __name__ == "__main__":
         """
     🚀 GPT-Trader Architecture Migration Demo
     =========================================
-    
+
     This demo will:
     1. Initialize the new unified architecture
     2. Migrate data from legacy databases
     3. Show refactored components in action
     4. Demonstrate architectural improvements
-    
+
     """
     )
 
@@ -231,13 +230,13 @@ if __name__ == "__main__":
             show_migration_benefits()
 
             print(
-                f"""
+                """
     📋 Next Steps:
     1. Review migration logs: migration_demo.log
-    2. Examine unified database: data/gpt_trader_unified.db  
+    2. Examine unified database: data/gpt_trader_unified.db
     3. Explore new component architecture in bot/core/
     4. Begin migrating additional components using the patterns shown
-    
+
     🎯 The new architecture is ready for production deployment!
             """
             )

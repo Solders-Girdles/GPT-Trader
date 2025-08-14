@@ -1,29 +1,24 @@
 """Unit tests for the unified configuration system."""
 
 import os
-import json
-import pytest
-from pathlib import Path
 from decimal import Decimal
-from unittest.mock import patch, MagicMock
-from datetime import datetime
+from pathlib import Path
+from unittest.mock import MagicMock, patch
 
+import pytest
 from bot.config import (
-    TradingConfig,
-    FinancialConfig,
-    Environment,
-    DataConfig,
-    LoggingConfig,
     AlpacaConfig,
+    DataConfig,
+    Environment,
+    FinancialConfig,
+    LoggingConfig,
     OptimizationConfig,
+    TradingConfig,
     get_config,
     set_config,
 )
 from bot.config.financial_config import (
     CapitalAllocation,
-    TradingLimits,
-    RiskParameters,
-    TransactionCosts,
     OptimizationParameters,
 )
 

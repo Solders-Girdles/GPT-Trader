@@ -6,10 +6,10 @@ and validation criteria for systematic strategy assessment and ranking.
 """
 
 import logging
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Callable, Any
 
 import numpy as np
 import pandas as pd

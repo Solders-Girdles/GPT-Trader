@@ -1,9 +1,9 @@
 # 24-Week Development Master Plan - Sprint Overview
 
-**Total Duration:** 24 weeks (6 months)  
-**Sprint Count:** 12 sprints (2 weeks each)  
-**Total Story Points:** 240+  
-**Estimated Hours:** 960+ hours  
+**Total Duration:** 24 weeks (6 months)
+**Sprint Count:** 12 sprints (2 weeks each)
+**Total Story Points:** 240+
+**Estimated Hours:** 960+ hours
 
 ## Sprint Overview Matrix
 
@@ -23,7 +23,7 @@
 
 #### Epic 1: Test Infrastructure Enhancement (8 SP)
 - **Task 1.1:** Advanced Test Configuration Setup (8h)
-- **Task 1.2:** Test Data Management System (6h)  
+- **Task 1.2:** Test Data Management System (6h)
 - **Task 1.3:** Continuous Integration Test Pipeline (10h)
 
 #### Epic 2: Critical Module Testing (7 SP)
@@ -40,7 +40,7 @@
 - `/Users/rj/PycharmProjects/GPT-Trader/tests/` (comprehensive expansion)
 - `/Users/rj/PycharmProjects/GPT-Trader/scripts/coverage_analysis.py`
 
-### Sprint 2: Architecture Refactoring  
+### Sprint 2: Architecture Refactoring
 **Duration:** Weeks 3-4 | **Story Points:** 22
 
 #### Epic 1: Core Architecture Cleanup (8 SP)

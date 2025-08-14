@@ -7,20 +7,21 @@ automatic reconnection, and data validation.
 """
 
 import asyncio
-import logging
-from typing import Dict, List, Optional, Callable, Any
-from datetime import datetime, time, timedelta
-from dataclasses import dataclass, field
-from enum import Enum
 import json
-from decimal import Decimal
-import pandas as pd
-import numpy as np
-from collections import deque
-import websocket
+import logging
 import threading
-from queue import Queue, Empty
+from collections import deque
+from collections.abc import Callable
+from dataclasses import dataclass, field
+from datetime import datetime, time, timedelta
+from decimal import Decimal
+from enum import Enum
+from queue import Empty, Queue
+from typing import Any
+
+import numpy as np
 import pytz
+import websocket
 
 from ..database.database_manager import get_db_manager
 from ..database.models import SystemMetric
@@ -56,14 +57,14 @@ class MarketData:
     symbol: str
     timestamp: datetime
     price: Decimal
-    bid: Optional[Decimal] = None
-    ask: Optional[Decimal] = None
-    bid_size: Optional[int] = None
-    ask_size: Optional[int] = None
-    volume: Optional[int] = None
-    source: Optional[DataSource] = None
+    bid: Decimal | None = None
+    ask: Decimal | None = None
+    bid_size: int | None = None
+    ask_size: int | None = None
+    volume: int | None = None
+    source: DataSource | None = None
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         return {
             "symbol": self.symbol,
             "timestamp": self.timestamp.isoformat(),
@@ -82,7 +83,7 @@ class DataFeedConfig:
     """Data feed configuration"""
 
     primary_source: DataSource = DataSource.ALPACA
-    fallback_sources: List[DataSource] = field(
+    fallback_sources: list[DataSource] = field(
         default_factory=lambda: [DataSource.POLYGON, DataSource.YAHOO]
     )
     reconnect_interval: int = 5  # seconds
@@ -129,7 +130,7 @@ class MarketCalendar:
         self.market_close = time(16, 0)  # 4:00 PM ET
         self.after_hours_close = time(20, 0)  # 8:00 PM ET
 
-    def get_market_status(self, timestamp: Optional[datetime] = None) -> MarketStatus:
+    def get_market_status(self, timestamp: datetime | None = None) -> MarketStatus:
         """Get current market status"""
         if timestamp is None:
             timestamp = datetime.now(self.tz)
@@ -162,16 +163,16 @@ class MarketCalendar:
         else:
             return MarketStatus.MARKET_CLOSED
 
-    def is_market_open(self, timestamp: Optional[datetime] = None) -> bool:
+    def is_market_open(self, timestamp: datetime | None = None) -> bool:
         """Check if regular market is open"""
         return self.get_market_status(timestamp) == MarketStatus.MARKET_OPEN
 
-    def is_extended_hours(self, timestamp: Optional[datetime] = None) -> bool:
+    def is_extended_hours(self, timestamp: datetime | None = None) -> bool:
         """Check if in extended hours (pre-market or after-hours)"""
         status = self.get_market_status(timestamp)
         return status in [MarketStatus.PRE_MARKET, MarketStatus.AFTER_HOURS]
 
-    def next_market_open(self, timestamp: Optional[datetime] = None) -> datetime:
+    def next_market_open(self, timestamp: datetime | None = None) -> datetime:
         """Get next market open time"""
         if timestamp is None:
             timestamp = datetime.now(self.tz)
@@ -190,7 +191,7 @@ class MarketCalendar:
 
         return next_day
 
-    def get_trading_hours(self, date: datetime) -> Dict[str, datetime]:
+    def get_trading_hours(self, date: datetime) -> dict[str, datetime]:
         """Get trading hours for a specific date"""
         if date.tzinfo is None:
             date = self.tz.localize(date)
@@ -213,12 +214,12 @@ class DataValidator:
     """
 
     def __init__(self):
-        self.price_history: Dict[str, deque] = {}
-        self.volume_history: Dict[str, deque] = {}
+        self.price_history: dict[str, deque] = {}
+        self.volume_history: dict[str, deque] = {}
         self.max_history = 1000
         self.anomaly_threshold = 5  # Standard deviations
 
-    def validate_market_data(self, data: MarketData) -> tuple[bool, Optional[str]]:
+    def validate_market_data(self, data: MarketData) -> tuple[bool, str | None]:
         """
         Validate market data
 
@@ -351,27 +352,27 @@ class RealtimeDataFeed:
     - Performance monitoring
     """
 
-    def __init__(self, config: Optional[DataFeedConfig] = None):
+    def __init__(self, config: DataFeedConfig | None = None):
         self.config = config or DataFeedConfig()
         self.calendar = MarketCalendar()
         self.validator = DataValidator()
 
         # WebSocket connections
-        self.ws_connections: Dict[DataSource, Any] = {}
-        self.ws_threads: Dict[DataSource, threading.Thread] = {}
+        self.ws_connections: dict[DataSource, Any] = {}
+        self.ws_threads: dict[DataSource, threading.Thread] = {}
 
         # Data buffers
         self.data_buffer = Queue(maxsize=self.config.buffer_size)
         self.error_buffer = deque(maxlen=1000)
 
         # Callbacks
-        self.data_callbacks: List[Callable[[MarketData], None]] = []
-        self.error_callbacks: List[Callable[[str], None]] = []
+        self.data_callbacks: list[Callable[[MarketData], None]] = []
+        self.error_callbacks: list[Callable[[str], None]] = []
 
         # State
         self.is_running = False
         self.subscribed_symbols: set = set()
-        self.reconnect_counts: Dict[DataSource, int] = {}
+        self.reconnect_counts: dict[DataSource, int] = {}
 
         # Metrics
         self.metrics = {
@@ -387,7 +388,7 @@ class RealtimeDataFeed:
 
         logger.info("RealtimeDataFeed initialized")
 
-    def start(self, symbols: List[str]):
+    def start(self, symbols: list[str]):
         """Start the data feed with specified symbols"""
         if self.is_running:
             logger.warning("Data feed already running")
@@ -546,7 +547,7 @@ class RealtimeDataFeed:
             logger.error(f"Failed to connect to Polygon: {e}")
             self._try_fallback_source(DataSource.POLYGON)
 
-    def _handle_alpaca_message(self, message: Dict):
+    def _handle_alpaca_message(self, message: dict):
         """Process Alpaca WebSocket message"""
         try:
             self.metrics["messages_received"] += 1
@@ -580,7 +581,7 @@ class RealtimeDataFeed:
         except Exception as e:
             logger.error(f"Error processing Alpaca message: {e}")
 
-    def _handle_polygon_message(self, message: Dict):
+    def _handle_polygon_message(self, message: dict):
         """Process Polygon WebSocket message"""
         try:
             self.metrics["messages_received"] += 1
@@ -738,6 +739,6 @@ class RealtimeDataFeed:
         """Get current market status"""
         return self.calendar.get_market_status()
 
-    def get_metrics(self) -> Dict:
+    def get_metrics(self) -> dict:
         """Get current metrics"""
         return self.metrics.copy()

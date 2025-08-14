@@ -472,7 +472,10 @@ class FinancialValidator:
         )
 
     def validate_return(
-        self, return_value: float, period: str = "daily", max_return: float = 10.0  # 1000% return
+        self,
+        return_value: float,
+        period: str = "daily",
+        max_return: float = 10.0,  # 1000% return
     ) -> ValidationResult:
         """Validate a return value.
 

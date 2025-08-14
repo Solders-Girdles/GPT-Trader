@@ -193,7 +193,6 @@ class LiveTradingEngine:
         initial_capital: float = 100000.0,
         enable_live_trading: bool = False,
     ) -> None:
-
         self.trading_dir = Path(trading_dir)
         self.trading_dir.mkdir(parents=True, exist_ok=True)
 

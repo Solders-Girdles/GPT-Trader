@@ -5,27 +5,23 @@ Phase 2.5 - Day 4
 Exports application metrics to Prometheus for monitoring.
 """
 
-import logging
-from typing import Dict, Any, Optional
-from datetime import datetime
 import asyncio
+import logging
+from datetime import datetime
 from decimal import Decimal
 
+import psutil
 from prometheus_client import (
+    CollectorRegistry,
     Counter,
     Gauge,
     Histogram,
-    Summary,
-    start_http_server,
     generate_latest,
-    CONTENT_TYPE_LATEST,
-    CollectorRegistry,
+    start_http_server,
 )
-from prometheus_client.core import GaugeMetricFamily, CounterMetricFamily
-import psutil
 
 from ..database.database_manager import get_db_manager
-from ..database.models import SystemMetric, Position, Order
+from ..database.models import Position, SystemMetric
 
 logger = logging.getLogger(__name__)
 

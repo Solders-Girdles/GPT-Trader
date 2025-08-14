@@ -39,25 +39,25 @@ metrics:
     threshold_warning: 0.55
     threshold_critical: 0.52
     check_interval: 5m
-    
+
   sharpe_ratio:
     description: "Risk-adjusted return metric"
     threshold_warning: 0.8
     threshold_critical: 0.5
     check_interval: 15m
-    
+
   portfolio_drawdown:
     description: "Current drawdown from peak"
     threshold_warning: 0.10
     threshold_critical: 0.15
     check_interval: 1m
-    
+
   daily_return:
     description: "Daily portfolio return"
     threshold_warning: -0.03
     threshold_critical: -0.05
     check_interval: 5m
-    
+
   win_rate:
     description: "Percentage of profitable trades"
     threshold_warning: 0.48
@@ -74,25 +74,25 @@ metrics:
     threshold_warning: 500ms
     threshold_critical: 1000ms
     check_interval: 30s
-    
+
   prediction_latency:
     description: "Model inference time"
     threshold_warning: 100ms
     threshold_critical: 500ms
     check_interval: 1m
-    
+
   database_connections:
     description: "Active database connections"
     threshold_warning: 80
     threshold_critical: 95
     check_interval: 30s
-    
+
   memory_usage:
     description: "System memory utilization"
     threshold_warning: 80%
     threshold_critical: 90%
     check_interval: 30s
-    
+
   cpu_usage:
     description: "CPU utilization"
     threshold_warning: 70%
@@ -236,7 +236,7 @@ def daily_performance_review():
         'max_drawdown': get_max_drawdown(),
         'model_accuracy': get_model_accuracy()
     }
-    
+
     # Check against thresholds
     issues = []
     if metrics['win_rate'] < 0.48:
@@ -245,11 +245,11 @@ def daily_performance_review():
         issues.append(f"Low Sharpe ratio: {metrics['sharpe']:.2f}")
     if metrics['model_accuracy'] < 0.55:
         issues.append(f"Low model accuracy: {metrics['model_accuracy']:.2%}")
-    
+
     # Generate report
     report = generate_performance_report(metrics, issues)
     send_report(report)
-    
+
     return len(issues) == 0
 ```
 
@@ -257,7 +257,7 @@ def daily_performance_review():
 
 ```sql
 -- Query for model performance metrics
-SELECT 
+SELECT
     DATE(prediction_time) as date,
     model_id,
     COUNT(*) as predictions,
@@ -277,7 +277,7 @@ ORDER BY date DESC;
 ```python
 def monitor_position_risk():
     positions = get_open_positions()
-    
+
     risk_metrics = {
         'total_exposure': sum(p.value for p in positions),
         'largest_position': max(p.value for p in positions),
@@ -285,7 +285,7 @@ def monitor_position_risk():
         'var_95': calculate_var(0.95),
         'expected_shortfall': calculate_cvar(0.95)
     }
-    
+
     # Check risk limits
     violations = []
     if risk_metrics['total_exposure'] > MAX_EXPOSURE:
@@ -294,11 +294,11 @@ def monitor_position_risk():
         violations.append("Position size limit exceeded")
     if risk_metrics['var_95'] > MAX_VAR:
         violations.append("VaR limit exceeded")
-    
+
     if violations:
         trigger_risk_alert(violations)
         reduce_positions()
-    
+
     return risk_metrics
 ```
 
@@ -310,17 +310,17 @@ class CircuitBreaker:
         self.daily_loss_limit = 0.05
         self.consecutive_losses = 5
         self.drawdown_limit = 0.20
-    
+
     def check_triggers(self):
         if self.get_daily_loss() > self.daily_loss_limit:
             self.trigger_daily_loss_breaker()
-        
+
         if self.get_consecutive_losses() >= self.consecutive_losses:
             self.trigger_loss_streak_breaker()
-        
+
         if self.get_current_drawdown() > self.drawdown_limit:
             self.trigger_drawdown_breaker()
-    
+
     def trigger_daily_loss_breaker(self):
         logger.critical("Daily loss limit breached - stopping trading")
         stop_all_trading()
@@ -382,12 +382,12 @@ def detailed_health():
             'active_connections': get_connection_count()
         }
     }
-    
+
     overall_health = all(
-        component['healthy'] 
+        component['healthy']
         for component in health_status['components'].values()
     )
-    
+
     return jsonify(health_status), 200 if overall_health else 503
 ```
 
@@ -536,21 +536,21 @@ route:
   group_interval: 5m
   repeat_interval: 12h
   receiver: 'default'
-  
+
   routes:
     - match:
         severity: critical
       receiver: pagerduty
       continue: true
-      
+
     - match:
         severity: high
       receiver: slack-urgent
-      
+
     - match:
         severity: medium
       receiver: slack-dev
-      
+
     - match:
         severity: low
       receiver: email
@@ -559,12 +559,12 @@ receivers:
   - name: pagerduty
     pagerduty_configs:
       - service_key: 'your-pagerduty-key'
-      
+
   - name: slack-urgent
     slack_configs:
       - api_url: 'your-slack-webhook'
         channel: '#alerts-urgent'
-        
+
   - name: email
     email_configs:
       - to: 'team@company.com'

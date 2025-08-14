@@ -100,7 +100,6 @@ class ValidationPipeline:
         min_sharpe_ratio: float = 0.3,
         max_drawdown: float = 0.20,
     ) -> None:
-
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -213,7 +212,6 @@ class ValidationPipeline:
                 TimeRemainingColumn(),
                 console=console,
             ) as progress:
-
                 # Step 1: Data Preparation
                 data_task = progress.add_task("📊 Preparing data...", total=1)
                 datasets = self._prepare_validation_data(symbols, days, result)

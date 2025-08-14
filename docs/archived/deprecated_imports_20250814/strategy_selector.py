@@ -354,7 +354,7 @@ class RealTimeStrategySelector:
 
     async def _get_current_market_data(self) -> pd.DataFrame:
         """Get current market data for regime detection.
-        
+
         Note: This method requires integration with LiveDataManager.
         Currently returns empty DataFrame as placeholder.
         See LiveDataManager class for implementation details.

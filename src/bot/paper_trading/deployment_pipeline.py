@@ -150,7 +150,6 @@ class PaperTradingDeploymentPipeline:
         deployment_dir: str = "data/paper_trading_deployments",
         portfolio_constructor: PortfolioConstructor = None,
     ) -> None:
-
         self.deployment_dir = Path(deployment_dir)
         self.deployment_dir.mkdir(parents=True, exist_ok=True)
 
@@ -442,7 +441,6 @@ class PaperTradingDeploymentPipeline:
                 BarColumn(),
                 console=console,
             ) as progress:
-
                 # Step 1: Risk Validation
                 validation_task = progress.add_task("🔍 Validating portfolio...", total=1)
                 risk_checks = self.validate_portfolio_for_deployment(

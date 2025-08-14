@@ -148,7 +148,6 @@ class LivePerformanceDashboard:
         update_interval: float = 1.0,
         max_alerts: int = 100,
     ) -> None:
-
         self.dashboard_dir = Path(dashboard_dir)
         self.dashboard_dir.mkdir(parents=True, exist_ok=True)
 

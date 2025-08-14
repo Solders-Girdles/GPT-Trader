@@ -1,7 +1,7 @@
 # Database Schema Audit & PostgreSQL Migration Plan
 
-**Date:** 2025-08-14  
-**Phase:** 2.5 - Day 1  
+**Date:** 2025-08-14
+**Phase:** 2.5 - Day 1
 **Status:** In Progress
 
 ## Current SQLite Database Structure

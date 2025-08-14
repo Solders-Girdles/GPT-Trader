@@ -255,7 +255,6 @@ class StreamingDataManager:
         data_dir: str = "data/streaming",
         primary_provider: DataProvider = DataProvider.SIMULATED,
     ) -> None:
-
         self.data_dir = Path(data_dir)
         self.data_dir.mkdir(parents=True, exist_ok=True)
 

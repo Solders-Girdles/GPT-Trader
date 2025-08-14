@@ -273,7 +273,9 @@ class ContinuousLearningPipeline:
             "volume_profile": (
                 1.0
                 if current_regime.volume_profile == "high"
-                else 0.5 if current_regime.volume_profile == "medium" else 0.0
+                else 0.5
+                if current_regime.volume_profile == "medium"
+                else 0.0
             ),
             "price_change": (recent_data["close"].iloc[-1] / recent_data["close"].iloc[0]) - 1,
             "volume_change": (

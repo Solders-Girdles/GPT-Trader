@@ -3,7 +3,7 @@ Real-World Scenario Tests for Phase 4 User Acceptance Testing.
 
 This module tests the system behavior in realistic market scenarios including:
 - Bull Market Scenario: Trending market with high volatility
-- Bear Market Scenario: Declining market with crisis conditions  
+- Bear Market Scenario: Declining market with crisis conditions
 - Sideways Market Scenario: Range-bound market with low volatility
 - Crisis Scenario: Extreme volatility and correlation breakdown
 """

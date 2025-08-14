@@ -9,29 +9,6 @@ This module provides:
 """
 
 # Import from enhanced_exceptions
-from .enhanced_exceptions import (
-    # Base exceptions
-    GPTTraderException,
-    RecoverableError,
-    CriticalError,
-    RetryableError,
-    # Specific exceptions
-    DataIntegrityError,
-    NetworkError,
-    TradingException,
-    InsufficientCapitalError,
-    OrderRejectedError,
-    RiskLimitError,
-    # Context and enums
-    ErrorContext,
-    ErrorSeverity,
-    RecoveryStrategy,
-    # Handler and circuit breaker
-    ExceptionHandler,
-    CircuitBreaker,
-    get_exception_handler,
-)
-
 # Import decorators
 from .decorators import (
     handle_exceptions,
@@ -41,6 +18,28 @@ from .decorators import (
     with_circuit_breaker,
     with_recovery,
     with_retry,
+)
+from .enhanced_exceptions import (
+    CircuitBreaker,
+    CriticalError,
+    # Specific exceptions
+    DataIntegrityError,
+    # Context and enums
+    ErrorContext,
+    ErrorSeverity,
+    # Handler and circuit breaker
+    ExceptionHandler,
+    # Base exceptions
+    GPTTraderException,
+    InsufficientCapitalError,
+    NetworkError,
+    OrderRejectedError,
+    RecoverableError,
+    RecoveryStrategy,
+    RetryableError,
+    RiskLimitError,
+    TradingException,
+    get_exception_handler,
 )
 
 # Legacy exception names for backward compatibility

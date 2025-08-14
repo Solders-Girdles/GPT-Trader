@@ -3,16 +3,17 @@ Performance benchmarks for Phase 1.5
 Compares performance of consolidated architecture
 """
 
-import sys
-import time
-import tempfile
-import psutil
-import pandas as pd
-import numpy as np
-from pathlib import Path
-from datetime import datetime, timedelta
-from typing import Dict, Any
 import json
+import sys
+import tempfile
+import time
+from datetime import datetime
+from pathlib import Path
+from typing import Any
+
+import numpy as np
+import pandas as pd
+import psutil
 
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
@@ -32,7 +33,7 @@ class PerformanceBenchmark:
         # Reset memory tracking
         self.process.memory_info()
 
-    def end_benchmark(self, name: str) -> Dict[str, Any]:
+    def end_benchmark(self, name: str) -> dict[str, Any]:
         """End benchmark and record results"""
         elapsed = time.perf_counter() - self.start_time
         memory = self.process.memory_info().rss / 1024 / 1024  # MB
@@ -124,7 +125,7 @@ class PerformanceBenchmark:
 
     def benchmark_data_pipeline(self):
         """Benchmark data pipeline operations"""
-        from bot.data.unified_pipeline import UnifiedDataPipeline, DataConfig
+        from bot.data.unified_pipeline import DataConfig, UnifiedDataPipeline
 
         print("\nBenchmarking data pipeline...")
 
@@ -213,7 +214,7 @@ class PerformanceBenchmark:
 
     def benchmark_monitoring(self):
         """Benchmark monitoring system"""
-        from bot.monitoring.monitor import UnifiedMonitor, MonitorConfig
+        from bot.monitoring.monitor import MonitorConfig, UnifiedMonitor
 
         print("\nBenchmarking monitoring system...")
 

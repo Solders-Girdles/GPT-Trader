@@ -1,7 +1,9 @@
 """Performance test fixtures."""
 
-import pytest
 import time
+
+import pytest
+
 from ..fixtures.conftest import *  # Import shared fixtures
 
 

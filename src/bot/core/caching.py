@@ -867,7 +867,9 @@ def cached(cache_name: str = "default", ttl_seconds: int = 3600, key_func: Calla
                 key_parts = [func.__name__]
                 key_parts.extend([str(arg) for arg in args])
                 key_parts.extend([f"{k}={v}" for k, v in sorted(kwargs.items())])
-                cache_key = hashlib.sha256("|".join(key_parts).encode()).hexdigest()[:16]  # Use first 16 chars for brevity
+                cache_key = hashlib.sha256("|".join(key_parts).encode()).hexdigest()[
+                    :16
+                ]  # Use first 16 chars for brevity
 
             # Try cache first
             result = cache.get(cache_key)

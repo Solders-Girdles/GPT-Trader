@@ -19,7 +19,6 @@ import pytest
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
-from bot.config import get_config
 from bot.optimization.deployment_pipeline import (
     DeploymentConfig,
     DeploymentPipeline,

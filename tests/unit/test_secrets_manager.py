@@ -1,14 +1,13 @@
 """Unit tests for the SecretManager."""
 
 import os
-import pytest
-from unittest.mock import patch, MagicMock
-from pathlib import Path
+from unittest.mock import patch
 
+import pytest
 from bot.security.secrets_manager import (
-    SecretManager,
-    SecretConfig,
     ConfigurationError,
+    SecretConfig,
+    SecretManager,
     get_secret_manager,
 )
 

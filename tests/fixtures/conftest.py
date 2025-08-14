@@ -1,11 +1,8 @@
 """Shared fixtures for test suite."""
 
 import pytest
-import pandas as pd
-import numpy as np
-from datetime import datetime, timedelta
 
-from .factories import MarketDataFactory, StrategyFactory, PortfolioFactory, TradeFactory
+from .factories import MarketDataFactory, PortfolioFactory, StrategyFactory, TradeFactory
 
 
 @pytest.fixture

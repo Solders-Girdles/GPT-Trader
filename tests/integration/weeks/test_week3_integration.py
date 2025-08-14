@@ -3,7 +3,7 @@
 Week 3 Integration Test - Strategy Development Workflow
 
 Comprehensive test of the complete Week 3 strategy development workflow:
-1. Strategy Creation CLI (templates, code generation)  
+1. Strategy Creation CLI (templates, code generation)
 2. Validation Pipeline Integration (automated end-to-end testing)
 3. Integration Testing (full workflow verification)
 
@@ -11,18 +11,15 @@ Tests the entire pipeline from strategy creation to deployment readiness.
 """
 
 import logging
-import tempfile
-from datetime import datetime
-from pathlib import Path
 import sys
-import os
+import tempfile
+from pathlib import Path
 
 # Add src to path for imports
 sys.path.insert(0, "src")
 
 # Week 3 imports
 from bot.cli.strategy_development import StrategyDevelopmentWorkflow
-from bot.strategy.validation_pipeline import create_validation_pipeline
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
@@ -65,7 +62,7 @@ class Week3IntegrationTest:
             "warnings": [],
         }
 
-        print(f"🧪 Week 3 Integration Test initialized")
+        print("🧪 Week 3 Integration Test initialized")
         print(f"   Test Directory: {self.test_dir}")
         print(f"   Workflow Directory: {self.workflow_dir}")
 
@@ -77,7 +74,7 @@ class Week3IntegrationTest:
 
         try:
             # Phase 1: Test Strategy Creation CLI
-            print(f"\n📋 PHASE 1: Strategy Creation CLI Testing")
+            print("\n📋 PHASE 1: Strategy Creation CLI Testing")
             print("-" * 50)
 
             if not self._test_strategy_creation_cli():
@@ -85,7 +82,7 @@ class Week3IntegrationTest:
                 return False
 
             # Phase 2: Test Validation Pipeline Integration
-            print(f"\n🤖 PHASE 2: Validation Pipeline Integration Testing")
+            print("\n🤖 PHASE 2: Validation Pipeline Integration Testing")
             print("-" * 50)
 
             if not self._test_validation_pipeline_integration():
@@ -93,7 +90,7 @@ class Week3IntegrationTest:
                 return False
 
             # Phase 3: End-to-End Workflow Verification
-            print(f"\n🎯 PHASE 3: End-to-End Workflow Verification")
+            print("\n🎯 PHASE 3: End-to-End Workflow Verification")
             print("-" * 50)
 
             if not self._test_end_to_end_workflow():
@@ -101,7 +98,7 @@ class Week3IntegrationTest:
                 return False
 
             # Phase 4: Integration Results Analysis
-            print(f"\n📊 PHASE 4: Integration Results Analysis")
+            print("\n📊 PHASE 4: Integration Results Analysis")
             print("-" * 50)
 
             self._analyze_integration_results()
@@ -110,12 +107,12 @@ class Week3IntegrationTest:
             self.test_results["integration_success"] = self._verify_integration_success()
 
             if self.test_results["integration_success"]:
-                print(f"\n✅ WEEK 3 INTEGRATION TEST: SUCCESS")
+                print("\n✅ WEEK 3 INTEGRATION TEST: SUCCESS")
                 print("=" * 50)
                 self._display_success_summary()
                 return True
             else:
-                print(f"\n❌ WEEK 3 INTEGRATION TEST: FAILED")
+                print("\n❌ WEEK 3 INTEGRATION TEST: FAILED")
                 print("=" * 50)
                 self._display_failure_summary()
                 return False
@@ -152,7 +149,7 @@ class Week3IntegrationTest:
                     return False
 
                 # Verify strategy file contains expected content
-                with open(strategy_file, "r") as f:
+                with open(strategy_file) as f:
                     content = f.read()
 
                 # Check for essential elements

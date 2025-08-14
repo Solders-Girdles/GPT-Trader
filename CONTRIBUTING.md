@@ -132,7 +132,7 @@ def optimize_portfolio(
 ) -> np.ndarray:
     """
     Optimize portfolio allocation using specified method.
-    
+
     Args:
         returns: DataFrame of asset returns with assets as columns
         constraints: Dictionary of portfolio constraints
@@ -143,14 +143,14 @@ def optimize_portfolio(
             - 'mean-variance': Markowitz optimization
             - 'risk-parity': Equal risk contribution
             - 'equal-weight': Simple equal weighting
-    
+
     Returns:
         Array of optimal portfolio weights
-        
+
     Raises:
         ValueError: If constraints are invalid or infeasible
         OptimizationError: If optimization fails to converge
-        
+
     Examples:
         >>> returns = pd.DataFrame(...)
         >>> weights = optimize_portfolio(
@@ -204,22 +204,22 @@ class OrderType(Enum):
 ```python
 class Strategy(ABC):
     """Base strategy class."""
-    
+
     def __init__(self, config: StrategyConfig) -> None:
         """Initialize strategy with configuration."""
         self.config = config
         self._is_initialized = False
-        
+
     @property
     def name(self) -> str:
         """Get strategy name."""
         return self.config.name
-    
+
     @abstractmethod
     def generate_signals(self, data: pd.DataFrame) -> pd.Series:
         """Generate trading signals from data."""
         pass
-        
+
     def _validate_data(self, data: pd.DataFrame) -> None:
         """Validate input data (private method)."""
         pass
@@ -378,18 +378,18 @@ from bot.strategy import MomentumStrategy
 
 class TestMomentumStrategy:
     """Test momentum strategy implementation."""
-    
+
     @pytest.fixture
     def strategy(self):
         """Create strategy instance."""
         return MomentumStrategy(lookback=20)
-    
+
     def test_signal_generation(self, strategy, sample_data):
         """Test signal generation logic."""
         signals = strategy.generate_signals(sample_data)
         assert len(signals) == len(sample_data)
         assert signals.isin([-1, 0, 1]).all()
-    
+
     @pytest.mark.parametrize("lookback", [10, 20, 50])
     def test_different_lookbacks(self, lookback, sample_data):
         """Test strategy with different lookback periods."""

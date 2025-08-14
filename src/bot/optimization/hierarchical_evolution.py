@@ -269,7 +269,6 @@ class StrategyCompositionEngine:
         for entry_comp in entry_components[:3]:  # Top 3 entry components
             for exit_comp in exit_components[:3]:  # Top 3 exit components
                 for risk_comp in risk_components[:3]:  # Top 3 risk components
-
                     # Create composition
                     composition = StrategyComposition(
                         entry_component=entry_comp,

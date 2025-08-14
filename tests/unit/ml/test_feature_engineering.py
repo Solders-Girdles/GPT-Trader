@@ -2,11 +2,12 @@
 Test suite for ML feature engineering components
 """
 
-import pytest
-import pandas as pd
-import numpy as np
-from datetime import datetime, timedelta
 import warnings
+from datetime import datetime
+
+import numpy as np
+import pandas as pd
+import pytest
 
 warnings.filterwarnings("ignore")
 

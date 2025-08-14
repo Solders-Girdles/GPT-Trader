@@ -1,8 +1,8 @@
 # GPT-Trader Development Roadmap V2.0
 ## Architectural Excellence & Production Readiness
 
-**Status:** Planning Phase  
-**Timeline:** 16 weeks (4 phases)  
+**Status:** Planning Phase
+**Timeline:** 16 weeks (4 phases)
 **Focus:** Architectural refactoring, operational excellence, and enterprise-grade scalability
 
 ---
@@ -43,10 +43,10 @@ Transform GPT-Trader from a functional prototype into an **enterprise-grade trad
 # New: src/bot/core/base.py
 class BaseComponent(ABC):
     """Foundation class for all GPT-Trader components"""
-    
+
 class BaseMonitor(BaseComponent):
     """Base class for all monitoring components"""
-    
+
 class BaseEngine(BaseComponent):
     """Base class for execution engines"""
 
@@ -108,14 +108,14 @@ CREATE TABLE configuration_store (...);
 @dataclass
 class SystemConfig:
     database: DatabaseConfig
-    trading: TradingConfig  
+    trading: TradingConfig
     risk: RiskConfig
     monitoring: MonitoringConfig
-    
+
     @classmethod
     def from_file(cls, path: Path) -> 'SystemConfig':
         """Load from YAML/TOML configuration file"""
-        
+
     def validate(self) -> List[ConfigError]:
         """Validate configuration integrity"""
 ```
@@ -143,11 +143,11 @@ class SystemConfig:
 # New: src/bot/core/container.py
 class ServiceContainer:
     """Dependency injection container for component management"""
-    
+
     def register(self, interface: type, implementation: Any):
     def resolve(self, interface: type) -> Any:
     def auto_wire(self, component: BaseComponent):
-    
+
 # New: src/bot/core/decorators.py
 @injectable
 class TradingEngine(BaseEngine):
@@ -176,15 +176,15 @@ class TradingEngine(BaseEngine):
 # New: src/bot/core/concurrency.py
 class ConcurrencyManager:
     """Centralized thread and async management"""
-    
+
     def get_thread_pool(self, pool_type: PoolType) -> ThreadPoolExecutor:
     def schedule_periodic(self, func: Callable, interval: timedelta):
     def run_async(self, coro: Coroutine) -> Future:
-    
+
 @dataclass
 class ExecutionContext:
     thread_pool: ThreadPoolExecutor
-    async_loop: asyncio.AbstractEventLoop  
+    async_loop: asyncio.AbstractEventLoop
     shutdown_event: threading.Event
 ```
 
@@ -218,10 +218,10 @@ class GPTTraderException(Exception):
 
 class TradingException(GPTTraderException):
     """Trading-related errors"""
-    
+
 class RiskException(GPTTraderException):
     """Risk management errors"""
-    
+
 class DataException(GPTTraderException):
     """Data quality and feed errors"""
 ```
@@ -249,10 +249,10 @@ class DataException(GPTTraderException):
 # New: src/bot/core/performance.py
 class PerformanceMonitor:
     """Real-time performance monitoring and optimization"""
-    
+
     @performance_tracked
     def track_method_performance(self, method: Callable):
-    
+
     def get_system_metrics(self) -> SystemMetrics:
     def identify_bottlenecks(self) -> List[Bottleneck]:
     def optimize_hot_paths(self) -> OptimizationReport:
@@ -295,7 +295,7 @@ class PerformanceMonitor:
 # New: src/bot/core/observability.py
 class ObservabilityStack:
     """Unified monitoring, logging, and tracing"""
-    
+
     def emit_metric(self, name: str, value: float, tags: Dict[str, str]):
     def start_trace(self, operation: str) -> TraceContext:
     def log_structured(self, level: str, message: str, context: Dict[str, Any]):
@@ -345,10 +345,10 @@ class ObservabilityStack:
 
 class TradingEngineTest(BaseComponentTest):
     """Unit tests for trading engine"""
-    
+
 class SystemIntegrationTest(BaseIntegrationTest):
     """End-to-end system integration tests"""
-    
+
 class PerformanceTestSuite(BasePerformanceTest):
     """Performance and load testing"""
 ```
@@ -361,7 +361,7 @@ class PerformanceTestSuite(BasePerformanceTest):
 
 2. **Integration Tests**
    - Component interaction testing
-   - Database integration validation  
+   - Database integration validation
    - External API integration testing
 
 3. **Performance Tests**
@@ -446,14 +446,14 @@ services:
 #### **High-Risk Items**
 1. **Database Migration (Week 2)**
    - **Risk:** Data loss during consolidation
-   - **Mitigation:** 
+   - **Mitigation:**
      - Full backup before migration
      - Parallel database validation
      - Rollback procedures tested
      - Gradual migration with validation
 
 2. **Concurrency Refactoring (Week 6)**
-   - **Risk:** Race conditions and deadlocks  
+   - **Risk:** Race conditions and deadlocks
    - **Mitigation:**
      - Extensive thread safety testing
      - Gradual migration component by component
@@ -525,7 +525,7 @@ services:
 - [ ] Component base class migration
 - [ ] Initial test suite development
 
-### **Week 5-6: Integration Sprint** 
+### **Week 5-6: Integration Sprint**
 - [ ] Dependency injection framework
 - [ ] Service container implementation
 - [ ] Component wiring automation
@@ -567,7 +567,7 @@ services:
 
 ### **Migration Protocol**
 1. **Backup:** Full system backup before changes
-2. **Validate:** Test migration in staging environment  
+2. **Validate:** Test migration in staging environment
 3. **Deploy:** Gradual rollout with monitoring
 4. **Verify:** Functional and performance validation
 5. **Rollback:** Automated rollback if issues detected

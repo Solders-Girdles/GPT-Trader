@@ -4,11 +4,11 @@ Tests for tasks MON-001 to MON-008
 This version runs without full project dependencies
 """
 
+import os
+import sys
+
 import numpy as np
 import pandas as pd
-from datetime import datetime, timedelta
-import sys
-import os
 
 # Add src to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src", "bot", "ml"))
@@ -37,7 +37,7 @@ class TestAdvancedDegradationDetectorStandalone:
         ks_stat_diff, p_value_diff = stats.ks_2samp(dist1, dist2_different)
         assert p_value_diff < 0.05  # Should detect difference
 
-        print(f"✅ MON-001: KS test implementation verified")
+        print("✅ MON-001: KS test implementation verified")
         print(f"  Same dist: KS={ks_stat_same:.3f}, p={p_value_same:.3f}")
         print(f"  Diff dist: KS={ks_stat_diff:.3f}, p={p_value_diff:.3f}")
 
@@ -81,7 +81,7 @@ class TestAdvancedDegradationDetectorStandalone:
             triggered = True  # Accept accumulation as success
             print(f"  CUSUM accumulating: {cusum_neg:.2f}")
 
-        print(f"✅ MON-002: CUSUM implementation verified")
+        print("✅ MON-002: CUSUM implementation verified")
         print(f"  Final CUSUM-: {cusum_neg:.2f} (threshold: {h})")
 
     def test_confidence_tracking(self):
@@ -107,7 +107,7 @@ class TestAdvancedDegradationDetectorStandalone:
 
         assert decay_detected  # Should detect confidence decay
 
-        print(f"✅ MON-003: Confidence tracking verified")
+        print("✅ MON-003: Confidence tracking verified")
         print(f"  Older mean: {older_mean:.3f}")
         print(f"  Recent mean: {recent_mean:.3f}")
         print(f"  Decay detected: {decay_detected}")
@@ -151,7 +151,7 @@ class TestAdvancedDegradationDetectorStandalone:
 
         assert clustered_clustering > random_clustering
 
-        print(f"✅ MON-004: Error pattern analysis verified")
+        print("✅ MON-004: Error pattern analysis verified")
         print(f"  Random pattern: {random_runs} runs, clustering={random_clustering:.3f}")
         print(f"  Clustered pattern: {clustered_runs} runs, clustering={clustered_clustering:.3f}")
 
@@ -192,7 +192,7 @@ class TestAdvancedDegradationDetectorStandalone:
         assert metrics.degradation_score >= 0
         assert metrics.status in detector_module.DegradationType
 
-        print(f"✅ MON-005: Complete detector integration verified")
+        print("✅ MON-005: Complete detector integration verified")
         print(f"  Degradation score: {metrics.degradation_score:.3f}")
         print(f"  Status: {metrics.status.value}")
         print(f"  Features monitored: {len(detector.baseline_distributions)}")

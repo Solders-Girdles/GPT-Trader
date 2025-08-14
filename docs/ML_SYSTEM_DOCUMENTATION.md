@@ -84,7 +84,7 @@ from src.bot.ml import AdvancedFeatureSelector, SelectionMethod
 
 selector = AdvancedFeatureSelector()
 selected_features, importance = selector.select_features(
-    X, y, 
+    X, y,
     method=SelectionMethod.ENSEMBLE,
     n_features=50
 )
@@ -256,19 +256,19 @@ ml_pipeline:
   features:
     max_features: 50
     correlation_threshold: 0.7
-  
+
   model:
     type: XGBClassifier
     params:
       n_estimators: 100
       max_depth: 5
       learning_rate: 0.1
-  
+
   validation:
     walk_forward: true
     train_window: 504
     test_window: 126
-  
+
   monitoring:
     degradation_check: true
     retraining_threshold: 0.05

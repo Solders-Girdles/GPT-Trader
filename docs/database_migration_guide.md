@@ -1,6 +1,6 @@
 # Database Migration Guide - SQLite to PostgreSQL
 
-**Phase 2.5 - Day 2**  
+**Phase 2.5 - Day 2**
 **Status:** Ready for Migration
 
 ## Prerequisites
@@ -81,7 +81,7 @@ position = db.get_one(Position, symbol="AAPL")
 positions = db.get_many(Position, status="open", limit=10)
 
 # Create record
-new_position = db.create(Position, 
+new_position = db.create(Position,
     symbol="TSLA",
     quantity=100,
     entry_price=250.50
@@ -285,13 +285,13 @@ git checkout -- src/bot/database/
 
 ## Success Criteria
 
-✅ All schemas created  
-✅ Data migrated without errors  
-✅ Application connects successfully  
-✅ Queries execute < 50ms  
-✅ 1000+ QPS achieved  
-✅ Connection pool working  
-✅ Cache hit rate > 50%  
+✅ All schemas created
+✅ Data migrated without errors
+✅ Application connects successfully
+✅ Queries execute < 50ms
+✅ 1000+ QPS achieved
+✅ Connection pool working
+✅ Cache hit rate > 50%
 
 ## Next Steps
 
@@ -327,7 +327,7 @@ EXPLAIN ANALYZE SELECT * FROM trading.positions WHERE symbol = 'AAPL';
 
 **Migration Complete!** The system is now using PostgreSQL with:
 - 1000x better concurrency
-- 10x faster queries  
+- 10x faster queries
 - Production-ready connection pooling
 - Redis caching layer
 - Comprehensive monitoring

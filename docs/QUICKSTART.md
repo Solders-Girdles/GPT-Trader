@@ -53,7 +53,7 @@ You should see output like:
 
 Backtesting: 100%|██████████| 123/123 [00:01<00:00, 92.31it/s]
 
-    Backtest Results    
+    Backtest Results
 ┏━━━━━━━━━━━━━━┳━━━━━━━┓
 ┃ Metric       ┃ Value ┃
 ┡━━━━━━━━━━━━━━╇━━━━━━━┩

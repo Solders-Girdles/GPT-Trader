@@ -13,50 +13,41 @@ enterprise-grade operational excellence for production trading systems.
 
 import asyncio
 import logging
-import pandas as pd
-import numpy as np
 from datetime import datetime, timedelta
-from typing import Dict, Any
+from typing import Any
+
+import numpy as np
+from bot.core.analytics import (
+    DataSource,
+    create_performance_model,
+    get_analytics_manager,
+    optimize_latency,
+    setup_anomaly_detection,
+)
 
 # Import Phase 4 architecture components
 from bot.core.base import BaseComponent, ComponentConfig, HealthStatus
 
 # Phase 4: Operational Excellence
 from bot.core.deployment import (
-    get_deployment_manager,
-    DeploymentConfig,
-    DeploymentStrategy,
     DeploymentEnvironment,
-    deploy_to_kubernetes,
+    DeploymentStrategy,
     canary_deploy,
-)
-from bot.core.security import (
-    get_security_manager,
-    SecurityPrincipal,
-    require_authentication,
-    require_authorization,
-    encrypt_sensitive_data,
-    audit_operation,
+    deploy_to_kubernetes,
+    get_deployment_manager,
 )
 from bot.core.disaster_recovery import (
-    get_disaster_recovery_manager,
-    RecoveryObjectives,
     configure_high_availability,
-    setup_database_replication,
     create_scheduled_backup,
+    get_disaster_recovery_manager,
+    setup_database_replication,
 )
-from bot.core.analytics import (
-    get_analytics_manager,
-    DataSource,
-    ModelConfig,
-    Feature,
-    FeatureType,
-    OptimizationObjective,
-    ModelType,
-    AnalyticsEngine,
-    create_performance_model,
-    setup_anomaly_detection,
-    optimize_latency,
+from bot.core.security import (
+    audit_operation,
+    encrypt_sensitive_data,
+    get_security_manager,
+    require_authentication,
+    require_authorization,
 )
 
 # Configure logging
@@ -113,7 +104,7 @@ class ProductionTradingService(BaseComponent):
     @audit_operation("TRADING", "trading_orders", "submit_order")
     async def submit_order(
         self, symbol: str, quantity: int, order_type: str = "market", **kwargs
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Submit trading order with full security and auditing"""
 
         principal = kwargs.get("principal")
@@ -388,7 +379,7 @@ async def demonstrate_analytics_and_optimization():
 
         # Generate analytics summary
         summary = analytics_manager.get_analytics_summary()
-        logger.info(f"   📈 Analytics Summary:")
+        logger.info("   📈 Analytics Summary:")
         logger.info(f"      • Active Models: {summary['active_models']}")
         logger.info(f"      • Data Sources: {summary['data_sources']}")
         logger.info(f"      • Optimization Experiments: {summary['optimization_experiments']}")
@@ -414,7 +405,7 @@ async def demonstrate_integrated_workflow():
         logger.info("   💼 Simulating authenticated trading session...")
 
         # Create mock principal for demonstration
-        from bot.core.security import SecurityPrincipal, SecurityLevel
+        from bot.core.security import SecurityLevel, SecurityPrincipal
 
         mock_principal = SecurityPrincipal(
             principal_id="trader123",
@@ -556,14 +547,14 @@ if __name__ == "__main__":
         """
     🚀 GPT-Trader Phase 4: Operational Excellence Demo
     ==================================================
-    
+
     This demo will showcase:
     1. Production deployment automation with CI/CD
     2. Advanced security hardening and compliance
     3. Disaster recovery and high availability
     4. Advanced analytics and ML optimization
     5. Integrated operational workflows
-    
+
     """
     )
 
@@ -576,14 +567,14 @@ if __name__ == "__main__":
             show_phase4_benefits()
 
             print(
-                f"""
+                """
     📋 Next Steps:
     1. Review operational logs: phase4_operational_excellence.log
     2. Configure production deployment pipelines
     3. Implement security policies and compliance monitoring
     4. Set up disaster recovery procedures
     5. Train ML models for system optimization
-    
+
     🎯 Phase 4 provides enterprise-grade operational excellence!
             """
             )

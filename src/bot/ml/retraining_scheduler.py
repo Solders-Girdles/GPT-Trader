@@ -6,35 +6,36 @@ Advanced scheduling system for automated retraining with intelligent
 scheduling, resource optimization, and priority management.
 """
 
+import heapq
 import logging
 import threading
 import time
-from typing import Dict, List, Optional, Callable, Any, Union
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from enum import Enum
 from datetime import datetime, timedelta
-from pathlib import Path
-import json
-import heapq
-import cron_descriptor
-from croniter import croniter
+from enum import Enum
+from typing import Any
+
 import pytz
+from croniter import croniter
 
 logger = logging.getLogger(__name__)
 
 
 class ScheduleType(Enum):
     """Types of retraining schedules"""
-    CRON = "cron"                    # Cron expression
-    INTERVAL = "interval"            # Fixed interval
-    PERFORMANCE = "performance"      # Performance-based
-    DRIFT = "drift"                 # Drift-based
-    MANUAL = "manual"               # Manual trigger
-    ADAPTIVE = "adaptive"           # Adaptive scheduling
+
+    CRON = "cron"  # Cron expression
+    INTERVAL = "interval"  # Fixed interval
+    PERFORMANCE = "performance"  # Performance-based
+    DRIFT = "drift"  # Drift-based
+    MANUAL = "manual"  # Manual trigger
+    ADAPTIVE = "adaptive"  # Adaptive scheduling
 
 
 class TaskPriority(Enum):
     """Task priority levels"""
+
     LOW = 1
     MEDIUM = 3
     HIGH = 7
@@ -44,6 +45,7 @@ class TaskPriority(Enum):
 
 class TaskStatus(Enum):
     """Task execution status"""
+
     PENDING = "pending"
     SCHEDULED = "scheduled"
     RUNNING = "running"
@@ -56,6 +58,7 @@ class TaskStatus(Enum):
 @dataclass
 class ScheduleConfig:
     """Configuration for a scheduled task"""
+
     task_id: str
     schedule_type: ScheduleType
     name: str
@@ -63,17 +66,17 @@ class ScheduleConfig:
     priority: TaskPriority = TaskPriority.MEDIUM
 
     # Cron scheduling
-    cron_expression: Optional[str] = None
+    cron_expression: str | None = None
     timezone: str = "UTC"
 
     # Interval scheduling
-    interval_minutes: Optional[int] = None
-    start_time: Optional[datetime] = None
-    end_time: Optional[datetime] = None
+    interval_minutes: int | None = None
+    start_time: datetime | None = None
+    end_time: datetime | None = None
 
     # Performance-based scheduling
-    performance_threshold: Optional[float] = None
-    performance_window: Optional[int] = None
+    performance_threshold: float | None = None
+    performance_window: int | None = None
 
     # Resource constraints
     max_execution_time: int = 7200  # 2 hours
@@ -87,13 +90,13 @@ class ScheduleConfig:
     exponential_backoff: bool = True
 
     # Dependencies
-    depends_on: List[str] = field(default_factory=list)
-    blocks: List[str] = field(default_factory=list)
+    depends_on: list[str] = field(default_factory=list)
+    blocks: list[str] = field(default_factory=list)
 
     # Execution window
-    allowed_hours: Optional[List[int]] = None  # [0-23]
-    blocked_hours: Optional[List[int]] = None
-    allowed_days: Optional[List[int]] = None   # [0-6] Monday=0
+    allowed_hours: list[int] | None = None  # [0-23]
+    blocked_hours: list[int] | None = None
+    allowed_days: list[int] | None = None  # [0-6] Monday=0
 
     # Adaptive parameters
     min_interval_hours: int = 6
@@ -102,7 +105,7 @@ class ScheduleConfig:
     failure_factor: float = 0.8
 
     # Metadata
-    tags: Dict[str, str] = field(default_factory=dict)
+    tags: dict[str, str] = field(default_factory=dict)
     created_at: datetime = field(default_factory=datetime.now)
     created_by: str = "system"
 
@@ -110,6 +113,7 @@ class ScheduleConfig:
 @dataclass
 class ScheduledTask:
     """A scheduled retraining task"""
+
     task_id: str
     config: ScheduleConfig
     callback: Callable[..., Any]
@@ -118,22 +122,22 @@ class ScheduledTask:
 
     # Execution tracking
     created_at: datetime = field(default_factory=datetime.now)
-    scheduled_at: Optional[datetime] = None
-    started_at: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
+    scheduled_at: datetime | None = None
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
 
     # Results
-    result: Optional[Any] = None
-    error: Optional[str] = None
-    execution_time: Optional[float] = None
+    result: Any | None = None
+    error: str | None = None
+    execution_time: float | None = None
 
     # Retry tracking
     retry_count: int = 0
-    last_retry_at: Optional[datetime] = None
+    last_retry_at: datetime | None = None
 
     # Dependencies
     dependencies_met: bool = False
-    blocking_tasks: List[str] = field(default_factory=list)
+    blocking_tasks: list[str] = field(default_factory=list)
 
     def __lt__(self, other):
         """Compare tasks for priority queue"""
@@ -145,14 +149,15 @@ class ScheduledTask:
 @dataclass
 class ExecutionResult:
     """Result of task execution"""
+
     task_id: str
     success: bool
     started_at: datetime
     completed_at: datetime
     execution_time: float
-    result: Optional[Any] = None
-    error: Optional[str] = None
-    resource_usage: Optional[Dict[str, float]] = None
+    result: Any | None = None
+    error: str | None = None
+    resource_usage: dict[str, float] | None = None
 
 
 class RetrainingScheduler:
@@ -178,23 +183,23 @@ class RetrainingScheduler:
         self.timezone = pytz.timezone(timezone)
 
         # Task management
-        self.schedules: Dict[str, ScheduleConfig] = {}
-        self.task_queue: List[ScheduledTask] = []  # Priority queue
-        self.running_tasks: Dict[str, ScheduledTask] = {}
-        self.completed_tasks: List[ExecutionResult] = []
+        self.schedules: dict[str, ScheduleConfig] = {}
+        self.task_queue: list[ScheduledTask] = []  # Priority queue
+        self.running_tasks: dict[str, ScheduledTask] = {}
+        self.completed_tasks: list[ExecutionResult] = []
 
         # State management
         self.is_running = False
-        self.scheduler_thread: Optional[threading.Thread] = None
-        self.executor_thread: Optional[threading.Thread] = None
+        self.scheduler_thread: threading.Thread | None = None
+        self.executor_thread: threading.Thread | None = None
         self.stop_event = threading.Event()
 
         # Performance tracking
-        self.performance_history: Dict[str, List[float]] = {}
-        self.execution_stats: Dict[str, Dict[str, float]] = {}
+        self.performance_history: dict[str, list[float]] = {}
+        self.execution_stats: dict[str, dict[str, float]] = {}
 
         # Resource monitoring
-        self.resource_usage: Dict[str, float] = {}
+        self.resource_usage: dict[str, float] = {}
         self.max_concurrent_tasks = 3
 
         logger.info("Initialized retraining scheduler")
@@ -210,17 +215,13 @@ class RetrainingScheduler:
 
         # Start scheduler thread
         self.scheduler_thread = threading.Thread(
-            target=self._scheduler_loop,
-            name="RetrainingScheduler",
-            daemon=True
+            target=self._scheduler_loop, name="RetrainingScheduler", daemon=True
         )
         self.scheduler_thread.start()
 
         # Start executor thread
         self.executor_thread = threading.Thread(
-            target=self._executor_loop,
-            name="TaskExecutor",
-            daemon=True
+            target=self._executor_loop, name="TaskExecutor", daemon=True
         )
         self.executor_thread.start()
 
@@ -244,9 +245,7 @@ class RetrainingScheduler:
 
         logger.info("Stopped retraining scheduler")
 
-    def add_schedule(self,
-                     config: ScheduleConfig,
-                     callback: Callable[..., Any]) -> bool:
+    def add_schedule(self, config: ScheduleConfig, callback: Callable[..., Any]) -> bool:
         """Add a new schedule
 
         Args:
@@ -273,7 +272,7 @@ class RetrainingScheduler:
                     config=config,
                     callback=callback,
                     next_run=next_run,
-                    scheduled_at=datetime.now()
+                    scheduled_at=datetime.now(),
                 )
 
                 # Add to queue
@@ -309,9 +308,7 @@ class RetrainingScheduler:
 
         return False
 
-    def update_schedule(self,
-                        task_id: str,
-                        config: ScheduleConfig) -> bool:
+    def update_schedule(self, task_id: str, config: ScheduleConfig) -> bool:
         """Update an existing schedule
 
         Args:
@@ -336,9 +333,7 @@ class RetrainingScheduler:
 
         return False
 
-    def trigger_immediate(self,
-                          task_id: str,
-                          priority: TaskPriority = TaskPriority.HIGH) -> bool:
+    def trigger_immediate(self, task_id: str, priority: TaskPriority = TaskPriority.HIGH) -> bool:
         """Trigger immediate execution of a task
 
         Args:
@@ -371,14 +366,14 @@ class RetrainingScheduler:
             schedule_type=ScheduleType.MANUAL,
             name=f"Immediate {config.name}",
             description=f"Immediate execution of {config.description}",
-            priority=priority
+            priority=priority,
         )
 
         task = ScheduledTask(
             task_id=immediate_config.task_id,
             config=immediate_config,
             callback=callback,
-            next_run=datetime.now()
+            next_run=datetime.now(),
         )
 
         heapq.heappush(self.task_queue, task)
@@ -395,8 +390,7 @@ class RetrainingScheduler:
 
                 # Check for ready tasks
                 ready_tasks = []
-                while (self.task_queue and
-                       self.task_queue[0].next_run <= current_time):
+                while self.task_queue and self.task_queue[0].next_run <= current_time:
                     task = heapq.heappop(self.task_queue)
                     ready_tasks.append(task)
 
@@ -433,7 +427,8 @@ class RetrainingScheduler:
             try:
                 # Get tasks ready for execution
                 executable_tasks = [
-                    task for task in self.running_tasks.values()
+                    task
+                    for task in self.running_tasks.values()
                     if task.status == TaskStatus.SCHEDULED
                 ]
 
@@ -441,10 +436,13 @@ class RetrainingScheduler:
                 executable_tasks.sort(key=lambda x: x.config.priority.value, reverse=True)
 
                 # Execute tasks (up to max concurrent)
-                current_running = len([
-                    task for task in self.running_tasks.values()
-                    if task.status == TaskStatus.RUNNING
-                ])
+                current_running = len(
+                    [
+                        task
+                        for task in self.running_tasks.values()
+                        if task.status == TaskStatus.RUNNING
+                    ]
+                )
 
                 available_slots = self.max_concurrent_tasks - current_running
 
@@ -462,6 +460,7 @@ class RetrainingScheduler:
 
     def _execute_task(self, task: ScheduledTask):
         """Execute a scheduled task"""
+
         def execute_in_thread():
             task.status = TaskStatus.RUNNING
             task.started_at = datetime.now()
@@ -490,12 +489,14 @@ class RetrainingScheduler:
                     started_at=task.started_at,
                     completed_at=task.completed_at,
                     execution_time=task.execution_time,
-                    result=result
+                    result=result,
                 )
 
                 self.completed_tasks.append(exec_result)
 
-                logger.info(f"Task {task.task_id} completed successfully in {task.execution_time:.1f}s")
+                logger.info(
+                    f"Task {task.task_id} completed successfully in {task.execution_time:.1f}s"
+                )
 
             except Exception as e:
                 logger.error(f"Task {task.task_id} failed: {e}")
@@ -518,7 +519,7 @@ class RetrainingScheduler:
                         started_at=task.started_at,
                         completed_at=task.completed_at,
                         execution_time=0,
-                        error=str(e)
+                        error=str(e),
                     )
 
                     self.completed_tasks.append(exec_result)
@@ -530,9 +531,7 @@ class RetrainingScheduler:
 
         # Start execution in separate thread
         thread = threading.Thread(
-            target=execute_in_thread,
-            name=f"TaskExec_{task.task_id}",
-            daemon=True
+            target=execute_in_thread, name=f"TaskExec_{task.task_id}", daemon=True
         )
         thread.start()
 
@@ -544,14 +543,16 @@ class RetrainingScheduler:
         # Calculate retry delay
         delay_minutes = task.config.retry_delay_minutes
         if task.config.exponential_backoff:
-            delay_minutes *= (2 ** (task.retry_count - 1))
+            delay_minutes *= 2 ** (task.retry_count - 1)
 
         task.next_run = datetime.now() + timedelta(minutes=delay_minutes)
         task.status = TaskStatus.PENDING
 
         heapq.heappush(self.task_queue, task)
 
-        logger.info(f"Scheduled retry {task.retry_count} for task {task.task_id} in {delay_minutes} minutes")
+        logger.info(
+            f"Scheduled retry {task.retry_count} for task {task.task_id} in {delay_minutes} minutes"
+        )
 
     def _can_execute_task(self, task: ScheduledTask) -> bool:
         """Check if task can be executed"""
@@ -560,10 +561,9 @@ class RetrainingScheduler:
             return False
 
         # Check concurrent limit
-        current_running = len([
-            t for t in self.running_tasks.values()
-            if t.status == TaskStatus.RUNNING
-        ])
+        current_running = len(
+            [t for t in self.running_tasks.values() if t.status == TaskStatus.RUNNING]
+        )
 
         if current_running >= self.max_concurrent_tasks:
             return False
@@ -581,9 +581,11 @@ class RetrainingScheduler:
             # Check if dependency completed successfully
             dep_completed = False
             for result in self.completed_tasks:
-                if (result.task_id.startswith(dep_id) and
-                    result.success and
-                    result.completed_at > task.created_at):
+                if (
+                    result.task_id.startswith(dep_id)
+                    and result.success
+                    and result.completed_at > task.created_at
+                ):
                     dep_completed = True
                     break
 
@@ -631,7 +633,7 @@ class RetrainingScheduler:
 
         return True
 
-    def _calculate_next_run(self, config: ScheduleConfig) -> Optional[datetime]:
+    def _calculate_next_run(self, config: ScheduleConfig) -> datetime | None:
         """Calculate next run time for a schedule"""
         now = datetime.now(self.timezone)
 
@@ -681,8 +683,9 @@ class RetrainingScheduler:
                         base_interval *= config.failure_factor
 
             # Ensure within bounds
-            base_interval = max(config.min_interval_hours,
-                               min(base_interval, config.max_interval_hours))
+            base_interval = max(
+                config.min_interval_hours, min(base_interval, config.max_interval_hours)
+            )
 
             return now + timedelta(hours=base_interval)
 
@@ -691,10 +694,16 @@ class RetrainingScheduler:
     def _reschedule_recurring_tasks(self):
         """Reschedule recurring tasks"""
         for task_id, config in self.schedules.items():
-            if config.schedule_type in [ScheduleType.CRON, ScheduleType.INTERVAL, ScheduleType.ADAPTIVE]:
+            if config.schedule_type in [
+                ScheduleType.CRON,
+                ScheduleType.INTERVAL,
+                ScheduleType.ADAPTIVE,
+            ]:
                 # Check if task needs to be rescheduled
-                has_pending = any(task.task_id == task_id and task.status == TaskStatus.PENDING
-                                 for task in self.task_queue)
+                has_pending = any(
+                    task.task_id == task_id and task.status == TaskStatus.PENDING
+                    for task in self.task_queue
+                )
 
                 has_running = task_id in self.running_tasks
 
@@ -717,7 +726,7 @@ class RetrainingScheduler:
                             task_id=f"{task_id}_{int(datetime.now().timestamp())}",
                             config=config,
                             callback=callback,
-                            next_run=next_run
+                            next_run=next_run,
                         )
 
                         heapq.heappush(self.task_queue, new_task)
@@ -755,7 +764,7 @@ class RetrainingScheduler:
                 "total_executions": 0,
                 "successful_executions": 0,
                 "total_time": 0.0,
-                "avg_time": 0.0
+                "avg_time": 0.0,
             }
 
         stats = self.execution_stats[task_id]
@@ -783,7 +792,7 @@ class RetrainingScheduler:
 
     # Public API methods
 
-    def get_schedule_status(self) -> Dict[str, Any]:
+    def get_schedule_status(self) -> dict[str, Any]:
         """Get current scheduler status"""
         return {
             "is_running": self.is_running,
@@ -791,37 +800,41 @@ class RetrainingScheduler:
             "queued_tasks": len(self.task_queue),
             "running_tasks": len(self.running_tasks),
             "completed_tasks": len(self.completed_tasks),
-            "next_task": self.task_queue[0].next_run.isoformat() if self.task_queue else None
+            "next_task": self.task_queue[0].next_run.isoformat() if self.task_queue else None,
         }
 
-    def get_task_history(self, task_id: str) -> List[ExecutionResult]:
+    def get_task_history(self, task_id: str) -> list[ExecutionResult]:
         """Get execution history for a task"""
-        return [result for result in self.completed_tasks
-                if result.task_id.startswith(task_id)]
+        return [result for result in self.completed_tasks if result.task_id.startswith(task_id)]
 
-    def get_performance_summary(self) -> Dict[str, Dict[str, float]]:
+    def get_performance_summary(self) -> dict[str, dict[str, float]]:
         """Get performance summary for all tasks"""
         summary = {}
 
         for task_id, stats in self.execution_stats.items():
-            success_rate = (stats["successful_executions"] / stats["total_executions"]
-                           if stats["total_executions"] > 0 else 0.0)
+            success_rate = (
+                stats["successful_executions"] / stats["total_executions"]
+                if stats["total_executions"] > 0
+                else 0.0
+            )
 
             summary[task_id] = {
                 "success_rate": success_rate,
                 "avg_execution_time": stats["avg_time"],
-                "total_executions": stats["total_executions"]
+                "total_executions": stats["total_executions"],
             }
 
         return summary
 
 
 # Helper functions
-def create_cron_schedule(task_id: str,
-                        name: str,
-                        cron_expression: str,
-                        priority: TaskPriority = TaskPriority.MEDIUM,
-                        **kwargs) -> ScheduleConfig:
+def create_cron_schedule(
+    task_id: str,
+    name: str,
+    cron_expression: str,
+    priority: TaskPriority = TaskPriority.MEDIUM,
+    **kwargs,
+) -> ScheduleConfig:
     """Create a cron-based schedule"""
     return ScheduleConfig(
         task_id=task_id,
@@ -830,15 +843,17 @@ def create_cron_schedule(task_id: str,
         description=f"Cron schedule: {cron_expression}",
         priority=priority,
         cron_expression=cron_expression,
-        **kwargs
+        **kwargs,
     )
 
 
-def create_interval_schedule(task_id: str,
-                           name: str,
-                           interval_minutes: int,
-                           priority: TaskPriority = TaskPriority.MEDIUM,
-                           **kwargs) -> ScheduleConfig:
+def create_interval_schedule(
+    task_id: str,
+    name: str,
+    interval_minutes: int,
+    priority: TaskPriority = TaskPriority.MEDIUM,
+    **kwargs,
+) -> ScheduleConfig:
     """Create an interval-based schedule"""
     return ScheduleConfig(
         task_id=task_id,
@@ -847,16 +862,18 @@ def create_interval_schedule(task_id: str,
         description=f"Interval schedule: every {interval_minutes} minutes",
         priority=priority,
         interval_minutes=interval_minutes,
-        **kwargs
+        **kwargs,
     )
 
 
-def create_adaptive_schedule(task_id: str,
-                           name: str,
-                           min_interval_hours: int = 6,
-                           max_interval_hours: int = 168,
-                           priority: TaskPriority = TaskPriority.MEDIUM,
-                           **kwargs) -> ScheduleConfig:
+def create_adaptive_schedule(
+    task_id: str,
+    name: str,
+    min_interval_hours: int = 6,
+    max_interval_hours: int = 168,
+    priority: TaskPriority = TaskPriority.MEDIUM,
+    **kwargs,
+) -> ScheduleConfig:
     """Create an adaptive schedule"""
     return ScheduleConfig(
         task_id=task_id,
@@ -866,7 +883,7 @@ def create_adaptive_schedule(task_id: str,
         priority=priority,
         min_interval_hours=min_interval_hours,
         max_interval_hours=max_interval_hours,
-        **kwargs
+        **kwargs,
     )
 
 
@@ -877,7 +894,7 @@ DAILY_RETRAINING_SCHEDULE = create_cron_schedule(
     cron_expression="0 2 * * *",  # 2 AM daily
     priority=TaskPriority.HIGH,
     max_execution_time=7200,  # 2 hours
-    allowed_hours=[1, 2, 3, 4, 5]  # Early morning hours
+    allowed_hours=[1, 2, 3, 4, 5],  # Early morning hours
 )
 
 WEEKLY_RETRAINING_SCHEDULE = create_cron_schedule(
@@ -886,7 +903,7 @@ WEEKLY_RETRAINING_SCHEDULE = create_cron_schedule(
     cron_expression="0 1 * * 0",  # 1 AM Sunday
     priority=TaskPriority.MEDIUM,
     max_execution_time=14400,  # 4 hours
-    allowed_days=[6]  # Sunday only
+    allowed_days=[6],  # Sunday only
 )
 
 PERFORMANCE_ADAPTIVE_SCHEDULE = create_adaptive_schedule(
@@ -894,5 +911,5 @@ PERFORMANCE_ADAPTIVE_SCHEDULE = create_adaptive_schedule(
     name="Performance-Based Adaptive Retraining",
     min_interval_hours=6,
     max_interval_hours=72,
-    priority=TaskPriority.HIGH
+    priority=TaskPriority.HIGH,
 )

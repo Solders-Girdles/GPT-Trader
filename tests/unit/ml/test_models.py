@@ -2,14 +2,15 @@
 Test suite for ML models (regime detector, strategy selector)
 """
 
-import pytest
-import pandas as pd
-import numpy as np
-from datetime import datetime, timedelta
 import tempfile
-from pathlib import Path
-import joblib
 import warnings
+from datetime import datetime
+from pathlib import Path
+
+import joblib
+import numpy as np
+import pandas as pd
+import pytest
 
 warnings.filterwarnings("ignore")
 
@@ -316,8 +317,8 @@ class TestMLIntegration:
 
     def test_ml_enhanced_strategy(self):
         """Test ML-enhanced strategy wrapper"""
-        from src.bot.strategy.ml_enhanced import MLEnhancedStrategy
         from src.bot.strategy.base import Strategy
+        from src.bot.strategy.ml_enhanced import MLEnhancedStrategy
 
         # Create mock strategies
         class MockStrategy(Strategy):

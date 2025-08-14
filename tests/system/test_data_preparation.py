@@ -5,18 +5,17 @@ Test script for Data Preparation Pipeline
 Tests the integration of Historical Data Manager and Data Quality Framework
 """
 
-import asyncio
 import logging
-from datetime import datetime, timedelta
-from pathlib import Path
 
 # Add src to path for imports
 import sys
+from datetime import datetime, timedelta
+from pathlib import Path
 
 sys.path.insert(0, "src")
 
-from bot.dataflow.historical_data_manager import create_historical_data_manager, DataFrequency
 from bot.dataflow.data_quality_framework import create_data_quality_framework
+from bot.dataflow.historical_data_manager import DataFrequency, create_historical_data_manager
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
@@ -107,7 +106,7 @@ def test_data_preparation():
         usable_datasets = [symbol for symbol, report in quality_reports.items() if report.is_usable]
         quality_scores = [report.quality_score for report in quality_reports.values()]
 
-        print(f"\n🎯 RESULTS SUMMARY")
+        print("\n🎯 RESULTS SUMMARY")
         print(f"   Symbols Requested: {len(test_symbols)}")
         print(f"   Data Downloaded: {len(datasets)}")
         print(f"   Usable Datasets: {len(usable_datasets)}")
@@ -115,7 +114,7 @@ def test_data_preparation():
         print(f"   Average Quality Score: {sum(quality_scores)/len(quality_scores):.1f}/100")
 
         # Step 6: Save Test Results
-        print(f"\n💾 Step 6: Saving Test Results...")
+        print("\n💾 Step 6: Saving Test Results...")
         results_dir = output_dir / "test_results"
         results_dir.mkdir(exist_ok=True)
 
@@ -127,13 +126,13 @@ def test_data_preparation():
 
         # Cache info
         cache_info = data_manager.get_cache_info()
-        print(f"\n💾 Cache Information:")
+        print("\n💾 Cache Information:")
         print(f"   • Cached Datasets: {cache_info['cached_datasets']}")
         print(f"   • Cache Size: {cache_info['total_cache_size_mb']:.1f} MB")
 
-        print(f"\n✅ TEST COMPLETED SUCCESSFULLY!")
+        print("\n✅ TEST COMPLETED SUCCESSFULLY!")
         print(f"   Ready to prepare datasets for {len(usable_datasets)} symbols")
-        print(f"   Next step: Use prepare-datasets CLI for full universe")
+        print("   Next step: Use prepare-datasets CLI for full universe")
 
         return True
 

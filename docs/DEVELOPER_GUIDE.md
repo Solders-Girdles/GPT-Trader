@@ -139,15 +139,15 @@ class TestMyStrategy:
         strategy = MyStrategy(param1=10, param2=20)
         assert strategy.param1 == 10
         assert strategy.param2 == 20
-    
+
     def test_signal_generation(self, sample_data):
         """Test signal generation."""
         strategy = MyStrategy()
         signals = strategy.generate_signals(sample_data)
-        
+
         assert len(signals) == len(sample_data)
         assert signals.dtype == bool
-        
+
     @pytest.mark.parametrize("param1,param2,expected", [
         (10, 20, True),
         (5, 30, False),
@@ -171,7 +171,7 @@ def test_full_backtest_workflow():
     """Test complete backtest workflow."""
     # Setup
     strategy = DemoMAStrategy(window=20)
-    
+
     # Run backtest
     results = run_backtest(
         strategy=strategy,
@@ -179,7 +179,7 @@ def test_full_backtest_workflow():
         start="2024-01-01",
         end="2024-03-31"
     )
-    
+
     # Verify results
     assert results is not None
     assert "total_return" in results
@@ -228,20 +228,20 @@ import pandas as pd
 
 class MyStrategy(Strategy):
     """My custom trading strategy."""
-    
+
     def __init__(self, param1: int = 10, param2: float = 0.5):
         super().__init__()
         self.param1 = param1
         self.param2 = param2
-        
+
     def generate_signals(self, data: pd.DataFrame) -> pd.Series:
         """Generate trading signals."""
         # Your strategy logic here
         signals = pd.Series(False, index=data.index)
-        
+
         # Example: Simple condition
         signals[data["close"] > data["close"].rolling(self.param1).mean()] = True
-        
+
         return signals
 ```
 
@@ -290,10 +290,10 @@ def add_subparser(subparsers):
         help="Description of my command",
         description="Detailed description",
     )
-    
+
     parser.add_argument("--option", help="Command option")
     parser.set_defaults(func=run_my_command)
-    
+
 def run_my_command(args: argparse.Namespace) -> None:
     """Execute my command."""
     console.print("[bold]Running my command![/bold]")
@@ -321,15 +321,15 @@ def calculate_returns(
     method: str = "simple"
 ) -> pd.Series:
     """Calculate returns over specified period.
-    
+
     Args:
         prices: Price series
         period: Number of periods for return calculation
         method: Calculation method ('simple' or 'log')
-        
+
     Returns:
         Series of returns
-        
+
     Raises:
         ValueError: If method is not supported
     """

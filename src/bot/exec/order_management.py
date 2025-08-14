@@ -169,7 +169,6 @@ class OrderManagementSystem:
     def __init__(
         self, oms_dir: str = "data/order_management", streaming_manager: StreamingDataManager = None
     ) -> None:
-
         self.oms_dir = Path(oms_dir)
         self.oms_dir.mkdir(parents=True, exist_ok=True)
 

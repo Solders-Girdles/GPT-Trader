@@ -182,7 +182,7 @@ ValueError: invalid literal for int()
 # New error:
 ❌ Error: Invalid date format
    Code: VALIDATION_ERROR
-   
+
 💡 Suggestions:
    1. Use format YYYY-MM-DD for dates
    2. Example: --start 2024-01-01 --end 2024-12-31

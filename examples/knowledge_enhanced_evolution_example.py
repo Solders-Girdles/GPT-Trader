@@ -10,32 +10,29 @@ This example demonstrates the next steps for expanding the strategy discovery sy
 """
 
 import sys
-import os
 from pathlib import Path
 
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from datetime import datetime
-import pandas as pd
-import numpy as np
 
-from bot.optimization.enhanced_evolution_with_knowledge import KnowledgeEnhancedEvolutionEngine
-from bot.knowledge.strategy_knowledge_base import (
-    StrategyKnowledgeBase,
-    StrategyContext,
-    StrategyPerformance,
-    StrategyMetadata,
-)
-from bot.meta_learning.strategy_transfer import StrategyTransferEngine, AssetCharacteristics
-from bot.optimization.config import OptimizationConfig, StrategyConfig
-from bot.strategy.enhanced_trend_breakout import (
-    EnhancedTrendBreakoutStrategy,
-    EnhancedTrendBreakoutParams,
-)
 from bot.backtest.engine_portfolio import run_backtest
-from bot.portfolio.allocator import PortfolioRules
+from bot.knowledge.strategy_knowledge_base import (
+    StrategyContext,
+    StrategyKnowledgeBase,
+    StrategyMetadata,
+    StrategyPerformance,
+)
 from bot.logging import get_logger
+from bot.meta_learning.strategy_transfer import AssetCharacteristics, StrategyTransferEngine
+from bot.optimization.config import OptimizationConfig, StrategyConfig
+from bot.optimization.enhanced_evolution_with_knowledge import KnowledgeEnhancedEvolutionEngine
+from bot.portfolio.allocator import PortfolioRules
+from bot.strategy.enhanced_trend_breakout import (
+    EnhancedTrendBreakoutParams,
+    EnhancedTrendBreakoutStrategy,
+)
 
 logger = get_logger("knowledge_enhanced_example")
 
@@ -88,8 +85,8 @@ def create_evaluation_function(symbols, start_date, end_date):
             )
 
             # Create a temporary CSV file with symbols
-            import tempfile
             import csv
+            import tempfile
 
             with tempfile.NamedTemporaryFile(mode="w", suffix=".csv", delete=False) as f:
                 writer = csv.writer(f)
@@ -491,7 +488,7 @@ def demonstrate_knowledge_persistence():
             discovery_date=datetime.now(),
             last_updated=datetime.now(),
             tags=["sample", context.market_regime],
-            notes=f"Sample strategy for demonstration",
+            notes="Sample strategy for demonstration",
         )
 
         knowledge_base.add_strategy(strategy_metadata)
@@ -563,12 +560,12 @@ def demonstrate_strategy_transfer(knowledge_base):
         source_strategy, target_context, target_asset
     )
 
-    print(f"\n--- Strategy Transfer Results ---")
+    print("\n--- Strategy Transfer Results ---")
     print(f"Confidence Score: {transfer_result['confidence_score']:.3f}")
     print(f"Adaptation Notes: {transfer_result['adaptation_notes']}")
 
     # Show adapted parameters
-    print(f"\n--- Adapted Parameters ---")
+    print("\n--- Adapted Parameters ---")
     adapted_params = transfer_result["adapted_parameters"]
     for param, value in adapted_params.items():
         if param in source_strategy.parameters:
@@ -636,26 +633,26 @@ def demonstrate_enhanced_evolution_with_knowledge():
     # Initialize knowledge-enhanced evolution engine
     engine = KnowledgeEnhancedEvolutionEngine(config=opt_config, strategy_config=strategy_config)
 
-    print(f"Starting knowledge-enhanced evolution...")
+    print("Starting knowledge-enhanced evolution...")
     print(f"Knowledge base contains {len(engine.knowledge_base.strategies)} strategies")
 
     # Run evolution
     results = engine.evolve(evaluate_func, 20, 15, context)
 
-    print(f"\n--- Evolution Results ---")
+    print("\n--- Evolution Results ---")
     print(f"Best Fitness: {results.get('best_fitness', 'N/A')}")
     print(f"Generations Completed: {results.get('generations_completed', 'N/A')}")
     print(f"New Strategies Discovered: {len(engine.discovered_strategies)}")
 
     # Show knowledge insights
     knowledge_insights = results.get("knowledge_insights", {})
-    print(f"\n--- Knowledge Insights ---")
+    print("\n--- Knowledge Insights ---")
     print(f"Total Strategies in KB: {knowledge_insights.get('total_strategies', 0)}")
     print(f"Strategy Families: {list(knowledge_insights.get('strategy_families', {}).keys())}")
 
     # Get strategy recommendations
     recommendations = engine.get_strategy_recommendations(context, 3)
-    print(f"\n--- Strategy Recommendations for Current Context ---")
+    print("\n--- Strategy Recommendations for Current Context ---")
     for i, rec in enumerate(recommendations):
         print(
             f"  {i+1}. {rec.strategy_id} (Sharpe: {rec.performance.sharpe_ratio:.4f}, Type: {rec.strategy_type})"
@@ -708,7 +705,7 @@ def demonstrate_next_steps_roadmap():
         for item in items:
             print(f"  {item}")
 
-    print(f"\n" + "=" * 60)
+    print("\n" + "=" * 60)
     print("IMPLEMENTATION PRIORITIES")
     print("=" * 60)
 
@@ -746,7 +743,7 @@ def main():
         # Show roadmap
         demonstrate_next_steps_roadmap()
 
-        print(f"\n" + "=" * 60)
+        print("\n" + "=" * 60)
         print("SUMMARY")
         print("=" * 60)
         print("✅ Knowledge persistence system working")

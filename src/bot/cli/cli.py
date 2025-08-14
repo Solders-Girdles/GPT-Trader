@@ -7,19 +7,18 @@ Main entry point for all command-line operations
 import argparse
 import sys
 from pathlib import Path
-from typing import Optional
 
+from .cli_utils import get_version, print_banner, setup_logging
 from .commands import (
     BacktestCommand,
-    OptimizeCommand,
-    LiveCommand,
-    PaperCommand,
-    MonitorCommand,
     DashboardCommand,
+    LiveCommand,
+    MonitorCommand,
+    OptimizeCommand,
+    PaperCommand,
     WizardCommand,
 )
-from .ml_commands import MLTrainCommand, AutoTradeCommand
-from .cli_utils import setup_logging, print_banner, get_version
+from .ml_commands import AutoTradeCommand, MLTrainCommand
 
 
 def create_parser() -> argparse.ArgumentParser:
@@ -71,7 +70,7 @@ For more help on a specific command:
     return parser
 
 
-def main(args: Optional[list] = None) -> int:
+def main(args: list | None = None) -> int:
     """Main CLI entry point"""
     parser = create_parser()
     parsed_args = parser.parse_args(args)

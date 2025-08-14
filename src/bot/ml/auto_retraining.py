@@ -17,39 +17,36 @@ Features:
 """
 
 import logging
-import asyncio
+import threading
 import time
-from typing import Dict, List, Optional, Tuple, Any, Union, Callable
+from collections import deque
 from dataclasses import dataclass, field
-from enum import Enum
 from datetime import datetime, timedelta
-from pathlib import Path
-import json
+from enum import Enum
+from typing import Any
+
 import numpy as np
 import pandas as pd
-from collections import deque
-import threading
-import hashlib
-import resource
 import psutil
 import schedule
 
-# Local imports
-from .online_learning import OnlineLearningPipeline, OnlineLearningConfig
-from .drift_detector import ConceptDriftDetector, DriftDetectorConfig, DriftDetection
-from .model_promotion import ModelPromotion, ModelStage, ModelVersion
-from .shadow_mode import ShadowModePredictor
-from .model_validation import ModelValidator, ModelPerformance
-from .integrated_pipeline import IntegratedMLPipeline
 from ..database.postgres_manager import DatabaseManager
 from ..performance import PerformanceMonitor
-from ..utils.serialization import save_json, load_json, SerializationError
+from .drift_detector import ConceptDriftDetector
+from .integrated_pipeline import IntegratedMLPipeline
+from .model_promotion import ModelPromotion
+from .model_validation import ModelPerformance, ModelValidator
+
+# Local imports
+from .online_learning import OnlineLearningPipeline
+from .shadow_mode import ShadowModePredictor
 
 logger = logging.getLogger(__name__)
 
 
 class RetrainingTrigger(Enum):
     """Types of retraining triggers"""
+
     PERFORMANCE_DEGRADATION = "performance_degradation"
     SCHEDULED = "scheduled"
     DATA_DRIFT = "data_drift"
@@ -62,6 +59,7 @@ class RetrainingTrigger(Enum):
 
 class RetrainingStatus(Enum):
     """Status of retraining operations"""
+
     IDLE = "idle"
     QUEUED = "queued"
     RUNNING = "running"
@@ -75,6 +73,7 @@ class RetrainingStatus(Enum):
 
 class EmergencyLevel(Enum):
     """Emergency levels for rapid response"""
+
     LOW = "low"
     MEDIUM = "medium"
     HIGH = "high"
@@ -84,19 +83,21 @@ class EmergencyLevel(Enum):
 @dataclass
 class RetrainingCost:
     """Cost tracking for retraining operations"""
+
     computational_cost: float  # $ cost
     time_cost: float  # hours
     opportunity_cost: float  # potential loss
-    resource_usage: Dict[str, float]  # CPU, memory, disk
+    resource_usage: dict[str, float]  # CPU, memory, disk
     estimated_total: float
-    actual_total: Optional[float] = None
-    roi_estimate: Optional[float] = None
-    roi_actual: Optional[float] = None
+    actual_total: float | None = None
+    roi_estimate: float | None = None
+    roi_actual: float | None = None
 
 
 @dataclass
 class RetrainingConfig:
     """Configuration for automated retraining"""
+
     # Performance triggers
     min_accuracy_threshold: float = 0.55
     min_precision_threshold: float = 0.55
@@ -143,7 +144,7 @@ class RetrainingConfig:
     shadow_mode_duration_hours: int = 24
     min_shadow_samples: int = 1000
     validation_performance_threshold: float = 0.02  # 2% improvement
-    gradual_rollout_steps: List[float] = field(default_factory=lambda: [0.1, 0.25, 0.5, 1.0])
+    gradual_rollout_steps: list[float] = field(default_factory=lambda: [0.1, 0.25, 0.5, 1.0])
 
     # Safety features
     require_manual_approval: bool = True  # First week requires approval
@@ -155,55 +156,57 @@ class RetrainingConfig:
 @dataclass
 class RetrainingRequest:
     """Request for model retraining"""
+
     trigger: RetrainingTrigger
     priority: int  # 1-10, 10 highest
     requested_at: datetime
     requested_by: str
     model_id: str
     reason: str
-    metadata: Dict[str, Any] = field(default_factory=dict)
-    estimated_cost: Optional[RetrainingCost] = None
-    emergency_level: Optional[EmergencyLevel] = None
+    metadata: dict[str, Any] = field(default_factory=dict)
+    estimated_cost: RetrainingCost | None = None
+    emergency_level: EmergencyLevel | None = None
     approval_required: bool = True
     approved: bool = False
-    approved_by: Optional[str] = None
-    approved_at: Optional[datetime] = None
+    approved_by: str | None = None
+    approved_at: datetime | None = None
 
 
 @dataclass
 class RetrainingResult:
     """Result of retraining operation"""
+
     request_id: str
     status: RetrainingStatus
     started_at: datetime
-    completed_at: Optional[datetime] = None
-    duration_seconds: Optional[float] = None
+    completed_at: datetime | None = None
+    duration_seconds: float | None = None
 
     # Model information
     old_model_id: str
-    new_model_id: Optional[str] = None
-    new_model_version: Optional[str] = None
+    new_model_id: str | None = None
+    new_model_version: str | None = None
 
     # Performance metrics
-    old_performance: Optional[ModelPerformance] = None
-    new_performance: Optional[ModelPerformance] = None
-    performance_improvement: Optional[float] = None
+    old_performance: ModelPerformance | None = None
+    new_performance: ModelPerformance | None = None
+    performance_improvement: float | None = None
 
     # Cost tracking
-    actual_cost: Optional[RetrainingCost] = None
+    actual_cost: RetrainingCost | None = None
 
     # Validation results
-    shadow_mode_results: Optional[Dict[str, Any]] = None
-    rollout_results: Optional[Dict[str, Any]] = None
+    shadow_mode_results: dict[str, Any] | None = None
+    rollout_results: dict[str, Any] | None = None
 
     # Error information
-    error_message: Optional[str] = None
-    traceback: Optional[str] = None
+    error_message: str | None = None
+    traceback: str | None = None
 
     # Resource usage
-    peak_memory_usage: Optional[float] = None
-    peak_cpu_usage: Optional[float] = None
-    total_compute_time: Optional[float] = None
+    peak_memory_usage: float | None = None
+    peak_cpu_usage: float | None = None
+    total_compute_time: float | None = None
 
 
 class AutoRetrainingSystem:
@@ -217,12 +220,14 @@ class AutoRetrainingSystem:
     - Validation and rollback capabilities
     """
 
-    def __init__(self,
-                 config: RetrainingConfig,
-                 ml_pipeline: IntegratedMLPipeline,
-                 db_manager: DatabaseManager,
-                 online_learner: Optional[OnlineLearningPipeline] = None,
-                 drift_detector: Optional[ConceptDriftDetector] = None):
+    def __init__(
+        self,
+        config: RetrainingConfig,
+        ml_pipeline: IntegratedMLPipeline,
+        db_manager: DatabaseManager,
+        online_learner: OnlineLearningPipeline | None = None,
+        drift_detector: ConceptDriftDetector | None = None,
+    ):
         """Initialize automated retraining system
 
         Args:
@@ -246,27 +251,27 @@ class AutoRetrainingSystem:
 
         # State management
         self.is_running = False
-        self.current_retrainings: Dict[str, RetrainingResult] = {}
+        self.current_retrainings: dict[str, RetrainingResult] = {}
         self.retraining_queue: deque = deque()
-        self.retraining_history: List[RetrainingResult] = []
+        self.retraining_history: list[RetrainingResult] = []
         self.performance_history: deque = deque(maxlen=config.performance_window)
 
         # Cost tracking
-        self.daily_costs: Dict[str, float] = {}  # date -> cost
-        self.monthly_costs: Dict[str, float] = {}  # month -> cost
+        self.daily_costs: dict[str, float] = {}  # date -> cost
+        self.monthly_costs: dict[str, float] = {}  # month -> cost
 
         # Threading
-        self.monitor_thread: Optional[threading.Thread] = None
-        self.retraining_thread: Optional[threading.Thread] = None
+        self.monitor_thread: threading.Thread | None = None
+        self.retraining_thread: threading.Thread | None = None
         self.stop_event = threading.Event()
 
         # Scheduling
         self._setup_scheduling()
 
         # Performance baseline
-        self.performance_baseline: Optional[ModelPerformance] = None
-        self.last_drift_detection: Optional[datetime] = None
-        self.last_retraining: Optional[datetime] = None
+        self.performance_baseline: ModelPerformance | None = None
+        self.last_drift_detection: datetime | None = None
+        self.last_retraining: datetime | None = None
 
         logger.info("Initialized automated retraining system")
 
@@ -281,17 +286,13 @@ class AutoRetrainingSystem:
 
         # Start monitoring thread
         self.monitor_thread = threading.Thread(
-            target=self._monitoring_loop,
-            name="RetrainingMonitor",
-            daemon=True
+            target=self._monitoring_loop, name="RetrainingMonitor", daemon=True
         )
         self.monitor_thread.start()
 
         # Start retraining processing thread
         self.retraining_thread = threading.Thread(
-            target=self._retraining_loop,
-            name="RetrainingProcessor",
-            daemon=True
+            target=self._retraining_loop, name="RetrainingProcessor", daemon=True
         )
         self.retraining_thread.start()
 
@@ -424,8 +425,8 @@ class AutoRetrainingSystem:
 
         # Check if drift was recently detected
         drift_stats = self.drift_detector.get_statistics()
-        if drift_stats.get('total_drifts_detected', 0) > 0:
-            last_drift_time = drift_stats.get('last_drift_time')
+        if drift_stats.get("total_drifts_detected", 0) > 0:
+            last_drift_time = drift_stats.get("last_drift_time")
             if last_drift_time and self.last_drift_detection != last_drift_time:
                 self.last_drift_detection = datetime.fromisoformat(last_drift_time)
                 self._trigger_drift_retraining()
@@ -446,10 +447,14 @@ class AutoRetrainingSystem:
             performance_drop = baseline_accuracy - latest_accuracy
 
             if performance_drop > self.config.emergency_performance_drop:
-                emergency_level = EmergencyLevel.HIGH if performance_drop > 0.3 else EmergencyLevel.MEDIUM
+                emergency_level = (
+                    EmergencyLevel.HIGH if performance_drop > 0.3 else EmergencyLevel.MEDIUM
+                )
                 self._trigger_emergency_retraining(performance_drop, emergency_level)
 
-    def _trigger_performance_retraining(self, accuracy_drop: float, recent_acc: float, historical_acc: float):
+    def _trigger_performance_retraining(
+        self, accuracy_drop: float, recent_acc: float, historical_acc: float
+    ):
         """Trigger retraining due to performance degradation"""
         request = RetrainingRequest(
             trigger=RetrainingTrigger.PERFORMANCE_DEGRADATION,
@@ -461,8 +466,8 @@ class AutoRetrainingSystem:
             metadata={
                 "accuracy_drop": accuracy_drop,
                 "recent_accuracy": recent_acc,
-                "historical_accuracy": historical_acc
-            }
+                "historical_accuracy": historical_acc,
+            },
         )
 
         self._add_retraining_request(request)
@@ -477,13 +482,17 @@ class AutoRetrainingSystem:
             model_id=self._get_current_model_id(),
             reason="Data drift detected by drift detection system",
             metadata={
-                "drift_detection_time": self.last_drift_detection.isoformat() if self.last_drift_detection else None
-            }
+                "drift_detection_time": (
+                    self.last_drift_detection.isoformat() if self.last_drift_detection else None
+                )
+            },
         )
 
         self._add_retraining_request(request)
 
-    def _trigger_emergency_retraining(self, performance_drop: float, emergency_level: EmergencyLevel):
+    def _trigger_emergency_retraining(
+        self, performance_drop: float, emergency_level: EmergencyLevel
+    ):
         """Trigger emergency retraining"""
         request = RetrainingRequest(
             trigger=RetrainingTrigger.EMERGENCY,
@@ -496,8 +505,8 @@ class AutoRetrainingSystem:
             approval_required=False,  # Emergency bypasses approval
             metadata={
                 "performance_drop": performance_drop,
-                "emergency_level": emergency_level.value
-            }
+                "emergency_level": emergency_level.value,
+            },
         )
 
         self._add_retraining_request(request)
@@ -511,9 +520,7 @@ class AutoRetrainingSystem:
             requested_by="ScheduledRetraining",
             model_id=self._get_current_model_id(),
             reason=f"Scheduled {schedule_type} retraining",
-            metadata={
-                "schedule_type": schedule_type
-            }
+            metadata={"schedule_type": schedule_type},
         )
 
         self._add_retraining_request(request)
@@ -540,19 +547,24 @@ class AutoRetrainingSystem:
 
         # Add to queue (sort by priority)
         self.retraining_queue.append(request)
-        self.retraining_queue = deque(sorted(
-            self.retraining_queue,
-            key=lambda x: x.priority,
-            reverse=True
-        ))
+        self.retraining_queue = deque(
+            sorted(self.retraining_queue, key=lambda x: x.priority, reverse=True)
+        )
 
-        logger.info(f"Added retraining request: {request.trigger.value} (priority: {request.priority})")
+        logger.info(
+            f"Added retraining request: {request.trigger.value} (priority: {request.priority})"
+        )
 
     def _can_start_retraining(self) -> bool:
         """Check if we can start a new retraining"""
         # Check concurrent limit
-        active_retrainings = len([r for r in self.current_retrainings.values()
-                                 if r.status in [RetrainingStatus.RUNNING, RetrainingStatus.VALIDATING]])
+        active_retrainings = len(
+            [
+                r
+                for r in self.current_retrainings.values()
+                if r.status in [RetrainingStatus.RUNNING, RetrainingStatus.VALIDATING]
+            ]
+        )
 
         if active_retrainings >= self.config.max_concurrent_retrainings:
             return False
@@ -571,7 +583,7 @@ class AutoRetrainingSystem:
             request_id=request_id,
             status=RetrainingStatus.RUNNING,
             started_at=datetime.now(),
-            old_model_id=request.model_id
+            old_model_id=request.model_id,
         )
 
         self.current_retrainings[request_id] = result
@@ -594,9 +606,9 @@ class AutoRetrainingSystem:
             new_model_result = self._perform_retraining(request, result)
 
             if new_model_result:
-                result.new_model_id = new_model_result['model_id']
-                result.new_model_version = new_model_result['version']
-                result.new_performance = new_model_result['performance']
+                result.new_model_id = new_model_result["model_id"]
+                result.new_model_version = new_model_result["version"]
+                result.new_performance = new_model_result["performance"]
 
                 # Validate in shadow mode
                 if self._validate_new_model(result):
@@ -642,7 +654,9 @@ class AutoRetrainingSystem:
                 self.retraining_history.append(result)
                 del self.current_retrainings[request_id]
 
-    def _perform_retraining(self, request: RetrainingRequest, result: RetrainingResult) -> Optional[Dict[str, Any]]:
+    def _perform_retraining(
+        self, request: RetrainingRequest, result: RetrainingResult
+    ) -> dict[str, Any] | None:
         """Perform the actual model retraining"""
         try:
             # Get training data
@@ -652,8 +666,8 @@ class AutoRetrainingSystem:
                 return None
 
             # Train new model
-            X = training_data.drop(['target', 'timestamp'], axis=1, errors='ignore')
-            y = training_data['target']
+            X = training_data.drop(["target", "timestamp"], axis=1, errors="ignore")
+            y = training_data["target"]
 
             # Use the integrated ML pipeline for training
             model_performance = self.ml_pipeline.train_and_validate_model(
@@ -661,13 +675,15 @@ class AutoRetrainingSystem:
             )
 
             if model_performance.accuracy < self.config.min_accuracy_threshold:
-                logger.warning(f"New model accuracy {model_performance.accuracy:.3f} below threshold")
+                logger.warning(
+                    f"New model accuracy {model_performance.accuracy:.3f} below threshold"
+                )
                 return None
 
             return {
-                'model_id': f"model_{int(datetime.now().timestamp())}",
-                'version': datetime.now().strftime("%Y%m%d_%H%M%S"),
-                'performance': model_performance
+                "model_id": f"model_{int(datetime.now().timestamp())}",
+                "version": datetime.now().strftime("%Y%m%d_%H%M%S"),
+                "performance": model_performance,
             }
 
         except Exception as e:
@@ -687,13 +703,13 @@ class AutoRetrainingSystem:
             shadow_results = self.shadow_predictor.run_shadow_mode(
                 result.new_model_id,
                 duration=shadow_duration,
-                min_samples=self.config.min_shadow_samples
+                min_samples=self.config.min_shadow_samples,
             )
 
             result.shadow_mode_results = shadow_results
 
             # Check if shadow mode performance is acceptable
-            if shadow_results and shadow_results.get('performance_improvement', 0) > 0:
+            if shadow_results and shadow_results.get("performance_improvement", 0) > 0:
                 return True
 
             return False
@@ -720,12 +736,14 @@ class AutoRetrainingSystem:
 
                 rollout_results[f"step_{step}"] = {
                     "traffic_percentage": traffic_percentage,
-                    "performance": step_performance
+                    "performance": step_performance,
                 }
 
                 # Check if performance degraded significantly
                 if step_performance and step_performance < 0.5:  # Severe degradation
-                    logger.error(f"Severe performance degradation at {traffic_percentage:.0%} traffic")
+                    logger.error(
+                        f"Severe performance degradation at {traffic_percentage:.0%} traffic"
+                    )
                     return False
 
                 # Wait between steps
@@ -738,7 +756,7 @@ class AutoRetrainingSystem:
             logger.error(f"Gradual deployment failed: {e}")
             return False
 
-    def _monitor_rollout_step(self, model_id: str, traffic_percentage: float) -> Optional[float]:
+    def _monitor_rollout_step(self, model_id: str, traffic_percentage: float) -> float | None:
         """Monitor performance during rollout step"""
         # Simulate performance monitoring
         # In real implementation, this would collect actual metrics
@@ -757,7 +775,7 @@ class AutoRetrainingSystem:
 
         result.status = RetrainingStatus.ROLLBACK
 
-    def _get_training_data(self) -> Optional[pd.DataFrame]:
+    def _get_training_data(self) -> pd.DataFrame | None:
         """Get training data for retraining"""
         try:
             # In real implementation, this would fetch from database
@@ -769,9 +787,9 @@ class AutoRetrainingSystem:
             X = np.random.randn(n_samples, n_features)
             y = (X[:, 0] + X[:, 1] + np.random.randn(n_samples) * 0.1) > 0
 
-            data = pd.DataFrame(X, columns=[f'feature_{i}' for i in range(n_features)])
-            data['target'] = y.astype(int)
-            data['timestamp'] = pd.date_range(start='2024-01-01', periods=n_samples, freq='1min')
+            data = pd.DataFrame(X, columns=[f"feature_{i}" for i in range(n_features)])
+            data["target"] = y.astype(int)
+            data["timestamp"] = pd.date_range(start="2024-01-01", periods=n_samples, freq="1min")
 
             return data
 
@@ -807,10 +825,10 @@ class AutoRetrainingSystem:
             resource_usage={
                 "cpu_hours": computational_hours,
                 "memory_gb_hours": computational_hours * 4.0,
-                "disk_gb": 10.0
+                "disk_gb": 10.0,
             },
             estimated_total=computational_cost + opportunity_cost,
-            roi_estimate=2.0  # 200% ROI estimate
+            roi_estimate=2.0,  # 200% ROI estimate
         )
 
     def _calculate_actual_cost(self, result: RetrainingResult) -> RetrainingCost:
@@ -825,10 +843,10 @@ class AutoRetrainingSystem:
             resource_usage={
                 "cpu_hours": hours,
                 "memory_gb_hours": hours * (result.peak_memory_usage or 4.0),
-                "disk_gb": 10.0
+                "disk_gb": 10.0,
             },
             estimated_total=computational_cost,
-            actual_total=computational_cost
+            actual_total=computational_cost,
         )
 
     def _is_within_cost_limits(self, cost: RetrainingCost) -> bool:
@@ -853,7 +871,9 @@ class AutoRetrainingSystem:
         current_month = datetime.now().strftime("%Y-%m")
 
         self.daily_costs[today] = self.daily_costs.get(today, 0.0) + (cost.actual_total or 0.0)
-        self.monthly_costs[current_month] = self.monthly_costs.get(current_month, 0.0) + (cost.actual_total or 0.0)
+        self.monthly_costs[current_month] = self.monthly_costs.get(current_month, 0.0) + (
+            cost.actual_total or 0.0
+        )
 
     def _is_in_cooldown(self) -> bool:
         """Check if system is in cooldown period"""
@@ -866,10 +886,13 @@ class AutoRetrainingSystem:
     def _exceeds_daily_limits(self) -> bool:
         """Check if daily retraining limits are exceeded"""
         today = datetime.now().date()
-        today_retrainings = len([
-            r for r in self.retraining_history
-            if r.started_at.date() == today and r.status == RetrainingStatus.COMPLETED
-        ])
+        today_retrainings = len(
+            [
+                r
+                for r in self.retraining_history
+                if r.started_at.date() == today and r.status == RetrainingStatus.COMPLETED
+            ]
+        )
 
         return today_retrainings >= self.config.max_retrainings_per_day
 
@@ -916,10 +939,9 @@ class AutoRetrainingSystem:
 
     # Public API methods
 
-    def request_manual_retraining(self,
-                                  reason: str,
-                                  priority: int = 5,
-                                  requested_by: str = "manual") -> str:
+    def request_manual_retraining(
+        self, reason: str, priority: int = 5, requested_by: str = "manual"
+    ) -> str:
         """Request manual retraining
 
         Args:
@@ -937,7 +959,7 @@ class AutoRetrainingSystem:
             requested_by=requested_by,
             model_id=self._get_current_model_id(),
             reason=reason,
-            approval_required=True
+            approval_required=True,
         )
 
         self._add_retraining_request(request)
@@ -946,7 +968,7 @@ class AutoRetrainingSystem:
     def approve_retraining(self, request_id: str, approved_by: str):
         """Approve a pending retraining request"""
         for request in self.retraining_queue:
-            if hasattr(request, 'request_id') and request.request_id == request_id:
+            if hasattr(request, "request_id") and request.request_id == request_id:
                 request.approved = True
                 request.approved_by = approved_by
                 request.approved_at = datetime.now()
@@ -955,7 +977,7 @@ class AutoRetrainingSystem:
 
         logger.warning(f"Retraining request {request_id} not found for approval")
 
-    def get_retraining_status(self) -> Dict[str, Any]:
+    def get_retraining_status(self) -> dict[str, Any]:
         """Get current retraining system status"""
         today = datetime.now().date().isoformat()
         current_month = datetime.now().strftime("%Y-%m")
@@ -969,33 +991,41 @@ class AutoRetrainingSystem:
             "last_retraining": self.last_retraining.isoformat() if self.last_retraining else None,
             "in_cooldown": self._is_in_cooldown(),
             "total_retrainings": len(self.retraining_history),
-            "successful_retrainings": len([r for r in self.retraining_history if r.status == RetrainingStatus.COMPLETED])
+            "successful_retrainings": len(
+                [r for r in self.retraining_history if r.status == RetrainingStatus.COMPLETED]
+            ),
         }
 
-    def get_cost_summary(self) -> Dict[str, Any]:
+    def get_cost_summary(self) -> dict[str, Any]:
         """Get cost summary and optimization recommendations"""
         total_daily = sum(self.daily_costs.values())
         total_monthly = sum(self.monthly_costs.values())
 
         # Calculate ROI
-        successful_retrainings = [r for r in self.retraining_history if r.status == RetrainingStatus.COMPLETED]
-        total_cost = sum([r.actual_cost.actual_total for r in successful_retrainings if r.actual_cost])
+        successful_retrainings = [
+            r for r in self.retraining_history if r.status == RetrainingStatus.COMPLETED
+        ]
+        total_cost = sum(
+            [r.actual_cost.actual_total for r in successful_retrainings if r.actual_cost]
+        )
 
         return {
             "total_daily_cost": total_daily,
             "total_monthly_cost": total_monthly,
             "total_lifetime_cost": total_cost,
-            "cost_per_retraining": total_cost / len(successful_retrainings) if successful_retrainings else 0,
+            "cost_per_retraining": (
+                total_cost / len(successful_retrainings) if successful_retrainings else 0
+            ),
             "successful_retrainings": len(successful_retrainings),
-            "cost_efficiency": "good" if total_cost < 500 else "review_needed"
+            "cost_efficiency": "good" if total_cost < 500 else "review_needed",
         }
 
 
 # Factory functions
 def create_auto_retraining_system(
-    config_dict: Optional[Dict[str, Any]] = None,
-    ml_pipeline: Optional[IntegratedMLPipeline] = None,
-    db_manager: Optional[DatabaseManager] = None
+    config_dict: dict[str, Any] | None = None,
+    ml_pipeline: IntegratedMLPipeline | None = None,
+    db_manager: DatabaseManager | None = None,
 ) -> AutoRetrainingSystem:
     """Factory function to create auto-retraining system"""
 
@@ -1012,11 +1042,7 @@ def create_auto_retraining_system(
         # Create default database manager
         db_manager = DatabaseManager()
 
-    return AutoRetrainingSystem(
-        config=config,
-        ml_pipeline=ml_pipeline,
-        db_manager=db_manager
-    )
+    return AutoRetrainingSystem(config=config, ml_pipeline=ml_pipeline, db_manager=db_manager)
 
 
 # Predefined configurations
@@ -1025,7 +1051,7 @@ CONSERVATIVE_RETRAINING_CONFIG = RetrainingConfig(
     cooldown_period_hours=12,
     require_manual_approval=True,
     min_accuracy_threshold=0.58,
-    max_daily_retraining_cost=5.0
+    max_daily_retraining_cost=5.0,
 )
 
 AGGRESSIVE_RETRAINING_CONFIG = RetrainingConfig(
@@ -1034,7 +1060,7 @@ AGGRESSIVE_RETRAINING_CONFIG = RetrainingConfig(
     require_manual_approval=False,
     min_accuracy_threshold=0.55,
     max_daily_retraining_cost=20.0,
-    emergency_response_timeout=180
+    emergency_response_timeout=180,
 )
 
 PRODUCTION_RETRAINING_CONFIG = RetrainingConfig(
@@ -1044,5 +1070,5 @@ PRODUCTION_RETRAINING_CONFIG = RetrainingConfig(
     min_accuracy_threshold=0.57,
     max_daily_retraining_cost=10.0,
     shadow_mode_duration_hours=48,
-    auto_rollback_enabled=True
+    auto_rollback_enabled=True,
 )

@@ -1003,7 +1003,6 @@ class ObservabilityEngine(BaseComponent):
                     and time_since_escalation > rule.escalation_threshold
                     and alert.status == AlertStatus.OPEN
                 ):
-
                     alert.escalate()
 
                     # Send escalated notification

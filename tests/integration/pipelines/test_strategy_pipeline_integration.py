@@ -5,39 +5,37 @@ Integration Test for Strategy Development Pipeline
 Tests the complete integration of:
 1. Historical Data Manager + Data Quality Framework (Week 1)
 2. Strategy Training Framework (Week 2)
-3. Strategy Validation Engine (Week 2) 
+3. Strategy Validation Engine (Week 2)
 4. Strategy Persistence System (Week 2)
 """
 
-import asyncio
 import logging
-import numpy as np
-from datetime import datetime, timedelta
-from pathlib import Path
 
 # Add src to path for imports
 import sys
+from datetime import datetime, timedelta
+from pathlib import Path
+
+import numpy as np
 
 sys.path.insert(0, "src")
 
 # Week 1 imports
-from bot.dataflow.historical_data_manager import create_historical_data_manager, DataFrequency
+import pandas as pd
 from bot.dataflow.data_quality_framework import create_data_quality_framework
+from bot.dataflow.historical_data_manager import DataFrequency, create_historical_data_manager
+
+# Strategy base import
+from bot.strategy.base import Strategy
+from bot.strategy.persistence import StrategyMetadata, create_filesystem_persistence
 
 # Week 2 imports
 from bot.strategy.training_pipeline import (
     TrainingConfig,
-    create_strategy_training_pipeline,
     ValidationMethod,
-    OptimizationObjective,
-    VersionType,
+    create_strategy_training_pipeline,
 )
 from bot.strategy.validation_engine import create_strategy_validator
-from bot.strategy.persistence import create_filesystem_persistence, StrategyMetadata, StrategyStatus
-
-# Strategy base import
-from bot.strategy.base import Strategy
-import pandas as pd
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
@@ -102,7 +100,7 @@ def test_strategy_pipeline_integration():
     output_dir = Path("data/integration_test")
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    print(f"Test Configuration:")
+    print("Test Configuration:")
     print(f"   Symbols: {test_symbols}")
     print(f"   Date Range: {start_date.date()} to {end_date.date()}")
     print(f"   Output Directory: {output_dir}")
@@ -111,7 +109,7 @@ def test_strategy_pipeline_integration():
         # =================================================================
         # STEP 1: DATA PREPARATION (Week 1 Components)
         # =================================================================
-        print(f"\n📊 STEP 1: Data Preparation (Week 1)")
+        print("\n📊 STEP 1: Data Preparation (Week 1)")
         print("-" * 40)
 
         # Initialize data components
@@ -150,12 +148,12 @@ def test_strategy_pipeline_integration():
             quality_reports[symbol] = quality_report
             print(f"      • {symbol}: Quality score {quality_report.quality_score:.1f}/100")
 
-        print(f"   ✅ Data preparation completed")
+        print("   ✅ Data preparation completed")
 
         # =================================================================
         # STEP 2: STRATEGY TRAINING (Week 2 - Training Framework)
         # =================================================================
-        print(f"\n🎯 STEP 2: Strategy Training (Week 2)")
+        print("\n🎯 STEP 2: Strategy Training (Week 2)")
         print("-" * 40)
 
         # Create training configuration
@@ -171,7 +169,7 @@ def test_strategy_pipeline_integration():
             test_split_ratio=0.2,
         )
 
-        print(f"   Training Configuration:")
+        print("   Training Configuration:")
         print(f"      • Validation Method: {training_config.validation_method.value}")
         print(f"      • Training Window: {training_config.training_window_months} months")
         print(f"      • Max Iterations: {training_config.max_optimization_iterations}")
@@ -202,7 +200,7 @@ def test_strategy_pipeline_integration():
             strategy_id="test_ma_strategy_001",
         )
 
-        print(f"   ✅ Training completed:")
+        print("   ✅ Training completed:")
         print(f"      • Strategy ID: {training_result.strategy_id}")
         print(f"      • Training Duration: {training_result.training_duration}")
         print(f"      • Is Robust: {'Yes' if training_result.is_robust else 'No'}")
@@ -211,7 +209,7 @@ def test_strategy_pipeline_integration():
         # =================================================================
         # STEP 3: STRATEGY VALIDATION (Week 2 - Validation Engine)
         # =================================================================
-        print(f"\n🔍 STEP 3: Strategy Validation (Week 2)")
+        print("\n🔍 STEP 3: Strategy Validation (Week 2)")
         print("-" * 40)
 
         # Initialize validation engine
@@ -239,7 +237,7 @@ def test_strategy_pipeline_integration():
             returns=returns, strategy_id=training_result.strategy_id
         )
 
-        print(f"   ✅ Validation completed:")
+        print("   ✅ Validation completed:")
         print(f"      • Overall Score: {validation_result.overall_score:.1f}/100")
         print(f"      • Validation Grade: {validation_result.validation_grade}")
         print(f"      • Is Validated: {'Yes' if validation_result.is_validated else 'No'}")
@@ -254,7 +252,7 @@ def test_strategy_pipeline_integration():
         # =================================================================
         # STEP 4: STRATEGY PERSISTENCE (Week 2 - Persistence System)
         # =================================================================
-        print(f"\n💾 STEP 4: Strategy Persistence (Week 2)")
+        print("\n💾 STEP 4: Strategy Persistence (Week 2)")
         print("-" * 40)
 
         # Initialize persistence manager
@@ -289,7 +287,7 @@ def test_strategy_pipeline_integration():
             initial_parameters=training_result.best_parameters,
         )
 
-        print(f"   ✅ Strategy registered:")
+        print("   ✅ Strategy registered:")
         print(f"      • Strategy ID: {strategy_record.strategy_id}")
         print(f"      • Version: {strategy_record.current_version.version}")
         print(f"      • Status: {strategy_record.status.value}")
@@ -305,7 +303,7 @@ def test_strategy_pipeline_integration():
         print("   Testing strategy loading...")
         loaded_strategy, loaded_record = persistence.load_strategy(training_result.strategy_id)
 
-        print(f"   ✅ Strategy loaded successfully:")
+        print("   ✅ Strategy loaded successfully:")
         print(f"      • Loaded Strategy Type: {type(loaded_strategy).__name__}")
         print(
             f"      • Parameters Match: {loaded_strategy.fast_period == test_strategy.fast_period}"
@@ -317,7 +315,7 @@ def test_strategy_pipeline_integration():
         print("   Generating strategy summary...")
         summary = persistence.get_strategy_summary(training_result.strategy_id)
 
-        print(f"   📋 Strategy Summary:")
+        print("   📋 Strategy Summary:")
         print(f"      • Name: {summary['strategy_name']}")
         print(f"      • Current Version: {summary['current_version']}")
         print(f"      • Validation Status: {summary['validation_status']}")
@@ -327,7 +325,7 @@ def test_strategy_pipeline_integration():
         # =================================================================
         # FINAL INTEGRATION VERIFICATION
         # =================================================================
-        print(f"\n🎉 INTEGRATION VERIFICATION")
+        print("\n🎉 INTEGRATION VERIFICATION")
         print("=" * 40)
 
         # Verify all components work together
@@ -345,7 +343,7 @@ def test_strategy_pipeline_integration():
 
         all_successful = all(success_indicators.values())
 
-        print(f"Integration Test Results:")
+        print("Integration Test Results:")
         for component, success in success_indicators.items():
             status = "✅ PASS" if success else "❌ FAIL"
             print(f"   {component}: {status}")
@@ -353,14 +351,14 @@ def test_strategy_pipeline_integration():
         print(f"\nOverall Integration Test: {'✅ SUCCESS' if all_successful else '❌ FAILED'}")
 
         if all_successful:
-            print(f"\n🚀 COMPLETE STRATEGY PIPELINE IS OPERATIONAL!")
-            print(f"   • Week 1: Data pipeline with quality validation ✅")
-            print(f"   • Week 2: Training with walk-forward validation ✅")
-            print(f"   • Week 2: Risk-adjusted strategy validation ✅")
-            print(f"   • Week 2: Strategy persistence with versioning ✅")
-            print(f"   • Integration: End-to-end pipeline working ✅")
+            print("\n🚀 COMPLETE STRATEGY PIPELINE IS OPERATIONAL!")
+            print("   • Week 1: Data pipeline with quality validation ✅")
+            print("   • Week 2: Training with walk-forward validation ✅")
+            print("   • Week 2: Risk-adjusted strategy validation ✅")
+            print("   • Week 2: Strategy persistence with versioning ✅")
+            print("   • Integration: End-to-end pipeline working ✅")
 
-            print(f"\n📊 Pipeline Performance:")
+            print("\n📊 Pipeline Performance:")
             print(
                 f"   • Data Quality: {np.mean([r.quality_score for r in quality_reports.values()]):.1f}/100"
             )

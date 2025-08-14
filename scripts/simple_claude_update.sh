@@ -16,7 +16,7 @@ TIME=$(date +"%H:%M")
 mark_complete() {
     TASK_ID=$1
     echo -e "${GREEN}✅ Marking $TASK_ID as complete${NC}"
-    
+
     # Simple sed replacement - works with multiple formats
     sed -i.bak "s/\[ \] $TASK_ID/[x] $TASK_ID/g" CLAUDE.md
     sed -i.bak "s/🟡 $TASK_ID/✅ $TASK_ID/g" CLAUDE.md
@@ -28,9 +28,9 @@ add_completed() {
     TASK_ID=$1
     DESC=$2
     TIME_SPENT=$3
-    
+
     echo -e "${GREEN}✅ Adding completed: $TASK_ID${NC}"
-    
+
     # Find the completed section and append
     sed -i.bak "/### ✅ Completed/a\\
 - ✅ $TASK_ID: $DESC (${TIME_SPENT}m)" CLAUDE.md
@@ -41,17 +41,17 @@ update_progress() {
     COMPLETED=$1
     TOTAL=$2
     PERCENT=$((COMPLETED * 100 / TOTAL))
-    
+
     # Create progress bar
     FILLED=$((PERCENT / 5))
     EMPTY=$((20 - FILLED))
     BAR=""
-    
+
     for i in $(seq 1 $FILLED); do BAR="${BAR}█"; done
     for i in $(seq 1 $EMPTY); do BAR="${BAR}░"; done
-    
+
     echo -e "${YELLOW}📊 Progress: $BAR $PERCENT% ($COMPLETED/$TOTAL)${NC}"
-    
+
     # Update in file
     sed -i.bak "s/Progress:.*tasks)/Progress: $BAR $PERCENT% ($COMPLETED\/$TOTAL tasks)/g" CLAUDE.md
 }
@@ -60,9 +60,9 @@ update_progress() {
 add_issue() {
     SEVERITY=$1
     DESC=$2
-    
+
     echo -e "${RED}🐛 Adding issue: $DESC${NC}"
-    
+
     # Add to issues section
     sed -i.bak "/### 🔴 Blocked\/Issues/a\\
 - 🐛 [$SEVERITY] $DESC (Added $TIME)" CLAUDE.md
@@ -71,9 +71,9 @@ add_issue() {
 # Function to add learning
 add_learning() {
     LEARNING=$1
-    
+
     echo -e "${GREEN}💡 Adding learning: $LEARNING${NC}"
-    
+
     # Add to learnings section
     sed -i.bak "/## 💡 Key Learnings/a\\
 - **$DATE**: $LEARNING" CLAUDE.md
@@ -83,9 +83,9 @@ add_learning() {
 update_focus() {
     CURRENT=$1
     NEXT=$2
-    
+
     echo -e "${YELLOW}🎯 Updating focus${NC}"
-    
+
     sed -i.bak "s/\*\*Now Working On\*\*:.*/\*\*Now Working On\*\*: $CURRENT/g" CLAUDE.md
     sed -i.bak "s/\*\*Next Up\*\*:.*/\*\*Next Up\*\*: $NEXT/g" CLAUDE.md
 }
@@ -139,11 +139,11 @@ case "$1" in
         echo "---" >> CLAUDE.md
         echo "## Daily Summary: $DATE" >> CLAUDE.md
         echo "**Generated:** $TIME" >> CLAUDE.md
-        
+
         # Count tasks
         COMPLETED=$(grep -c "✅" CLAUDE.md)
         echo "**Tasks Completed Today:** $COMPLETED" >> CLAUDE.md
-        
+
         echo -e "${GREEN}✅ Daily summary added${NC}"
         ;;
     *)

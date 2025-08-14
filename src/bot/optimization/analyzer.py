@@ -258,7 +258,9 @@ class ResultAnalyzer:
                         "sensitivity": (
                             "high"
                             if abs(correlation) > 0.3
-                            else "medium" if abs(correlation) > 0.1 else "low"
+                            else "medium"
+                            if abs(correlation) > 0.1
+                            else "low"
                         ),
                     }
                 except (ValueError, np.linalg.LinAlgError, TypeError) as e:

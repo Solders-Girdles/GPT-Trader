@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 from numba import njit
 
-warnings.filterwarnings('ignore', category=RuntimeWarning)
+warnings.filterwarnings("ignore", category=RuntimeWarning)
 
 
 # Numba-optimized helper functions
@@ -29,15 +29,14 @@ def _ewma_numba(values: np.ndarray, alpha: float) -> np.ndarray:
 
 
 @njit(cache=True)
-def _rolling_window_minmax(values: np.ndarray, window: int,
-                          mode: str = 'max') -> np.ndarray:
+def _rolling_window_minmax(values: np.ndarray, window: int, mode: str = "max") -> np.ndarray:
     """Rolling min/max using numba."""
     n = len(values)
     result = np.full(n, np.nan)
 
     for i in range(window - 1, n):
-        window_vals = values[i - window + 1:i + 1]
-        if mode == 'max':
+        window_vals = values[i - window + 1 : i + 1]
+        if mode == "max":
             result[i] = np.max(window_vals)
         else:
             result[i] = np.min(window_vals)
@@ -49,8 +48,7 @@ class OptimizedIndicators:
     """Optimized technical indicator calculations."""
 
     @staticmethod
-    def sma(data: pd.Series | np.ndarray,
-            period: int) -> pd.Series | np.ndarray:
+    def sma(data: pd.Series | np.ndarray, period: int) -> pd.Series | np.ndarray:
         """
         Simple Moving Average - Vectorized implementation.
 
@@ -59,10 +57,7 @@ class OptimizedIndicators:
         if isinstance(data, pd.Series):
             values = data.values
             index = data.index
-            return pd.Series(
-                OptimizedIndicators._sma_numpy(values, period),
-                index=index
-            )
+            return pd.Series(OptimizedIndicators._sma_numpy(values, period), index=index)
         else:
             return OptimizedIndicators._sma_numpy(data, period)
 
@@ -88,9 +83,9 @@ class OptimizedIndicators:
         return result
 
     @staticmethod
-    def ema(data: pd.Series | np.ndarray,
-            period: int,
-            adjust: bool = True) -> pd.Series | np.ndarray:
+    def ema(
+        data: pd.Series | np.ndarray, period: int, adjust: bool = True
+    ) -> pd.Series | np.ndarray:
         """
         Exponential Moving Average - Vectorized implementation.
 
@@ -101,16 +96,12 @@ class OptimizedIndicators:
         if isinstance(data, pd.Series):
             values = data.values
             index = data.index
-            return pd.Series(
-                _ewma_numba(values, alpha),
-                index=index
-            )
+            return pd.Series(_ewma_numba(values, alpha), index=index)
         else:
             return _ewma_numba(data, alpha)
 
     @staticmethod
-    def rsi(close: pd.Series | np.ndarray,
-            period: int = 14) -> pd.Series | np.ndarray:
+    def rsi(close: pd.Series | np.ndarray, period: int = 14) -> pd.Series | np.ndarray:
         """
         Relative Strength Index - Vectorized implementation.
 
@@ -165,10 +156,12 @@ class OptimizedIndicators:
         return result
 
     @staticmethod
-    def macd(close: pd.Series | np.ndarray,
-             fast_period: int = 12,
-             slow_period: int = 26,
-             signal_period: int = 9) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    def macd(
+        close: pd.Series | np.ndarray,
+        fast_period: int = 12,
+        slow_period: int = 26,
+        signal_period: int = 9,
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         """
         MACD - Vectorized implementation.
 
@@ -196,15 +189,15 @@ class OptimizedIndicators:
             return (
                 pd.Series(macd_line, index=close.index),
                 pd.Series(signal_line, index=close.index),
-                pd.Series(histogram, index=close.index)
+                pd.Series(histogram, index=close.index),
             )
         else:
             return macd_line, signal_line, histogram
 
     @staticmethod
-    def bollinger_bands(close: pd.Series | np.ndarray,
-                       period: int = 20,
-                       std_dev: float = 2.0) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    def bollinger_bands(
+        close: pd.Series | np.ndarray, period: int = 20, std_dev: float = 2.0
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         """
         Bollinger Bands - Vectorized implementation.
 
@@ -231,7 +224,7 @@ class OptimizedIndicators:
             return (
                 pd.Series(upper, index=index),
                 pd.Series(middle, index=index),
-                pd.Series(lower, index=index)
+                pd.Series(lower, index=index),
             )
         else:
             return upper, middle, lower
@@ -244,23 +237,23 @@ class OptimizedIndicators:
         result = np.full(n, np.nan)
 
         for i in range(period - 1, n):
-            window = values[i - period + 1:i + 1]
+            window = values[i - period + 1 : i + 1]
             result[i] = np.std(window)
 
         return result
 
     @staticmethod
-    def stochastic(high: np.ndarray, low: np.ndarray, close: np.ndarray,
-                   k_period: int = 14,
-                   d_period: int = 3) -> tuple[np.ndarray, np.ndarray]:
+    def stochastic(
+        high: np.ndarray, low: np.ndarray, close: np.ndarray, k_period: int = 14, d_period: int = 3
+    ) -> tuple[np.ndarray, np.ndarray]:
         """
         Stochastic Oscillator - Vectorized implementation.
 
         Returns: (k_line, d_line)
         """
         # Calculate rolling max and min
-        high_max = _rolling_window_minmax(high, k_period, 'max')
-        low_min = _rolling_window_minmax(low, k_period, 'min')
+        high_max = _rolling_window_minmax(high, k_period, "max")
+        low_min = _rolling_window_minmax(low, k_period, "min")
 
         # Calculate %K
         denominator = high_max - low_min
@@ -274,8 +267,7 @@ class OptimizedIndicators:
         return k_line, d_line
 
     @staticmethod
-    def atr(high: np.ndarray, low: np.ndarray, close: np.ndarray,
-            period: int = 14) -> np.ndarray:
+    def atr(high: np.ndarray, low: np.ndarray, close: np.ndarray, period: int = 14) -> np.ndarray:
         """
         Average True Range - Vectorized implementation.
 
@@ -285,8 +277,7 @@ class OptimizedIndicators:
 
     @staticmethod
     @njit(cache=True)
-    def _atr_numpy(high: np.ndarray, low: np.ndarray,
-                   close: np.ndarray, period: int) -> np.ndarray:
+    def _atr_numpy(high: np.ndarray, low: np.ndarray, close: np.ndarray, period: int) -> np.ndarray:
         """Numba-optimized ATR calculation."""
         n = len(high)
         tr = np.empty(n)
@@ -313,8 +304,7 @@ class OptimizedIndicators:
         return atr
 
     @staticmethod
-    def vwap(price: np.ndarray, volume: np.ndarray,
-             period: int | None = None) -> np.ndarray:
+    def vwap(price: np.ndarray, volume: np.ndarray, period: int | None = None) -> np.ndarray:
         """
         Volume Weighted Average Price - Vectorized implementation.
         """
@@ -330,15 +320,14 @@ class OptimizedIndicators:
 
     @staticmethod
     @njit(cache=True)
-    def _rolling_vwap_numpy(price: np.ndarray, volume: np.ndarray,
-                           period: int) -> np.ndarray:
+    def _rolling_vwap_numpy(price: np.ndarray, volume: np.ndarray, period: int) -> np.ndarray:
         """Numba-optimized rolling VWAP."""
         n = len(price)
         result = np.full(n, np.nan)
 
         for i in range(period - 1, n):
-            window_price = price[i - period + 1:i + 1]
-            window_volume = volume[i - period + 1:i + 1]
+            window_price = price[i - period + 1 : i + 1]
+            window_volume = volume[i - period + 1 : i + 1]
 
             pv_sum = np.sum(window_price * window_volume)
             v_sum = np.sum(window_volume)
@@ -363,8 +352,7 @@ class OptimizedIndicators:
         return obv
 
     @staticmethod
-    def adx(high: np.ndarray, low: np.ndarray, close: np.ndarray,
-            period: int = 14) -> np.ndarray:
+    def adx(high: np.ndarray, low: np.ndarray, close: np.ndarray, period: int = 14) -> np.ndarray:
         """
         Average Directional Index - Vectorized implementation.
         """
@@ -372,8 +360,7 @@ class OptimizedIndicators:
 
     @staticmethod
     @njit(cache=True)
-    def _adx_numpy(high: np.ndarray, low: np.ndarray,
-                   close: np.ndarray, period: int) -> np.ndarray:
+    def _adx_numpy(high: np.ndarray, low: np.ndarray, close: np.ndarray, period: int) -> np.ndarray:
         """Numba-optimized ADX calculation."""
         n = len(high)
 
@@ -408,8 +395,12 @@ class OptimizedIndicators:
             minus_dm_smooth[period - 1] = np.sum(minus_dm[:period])
 
             for i in range(period, n):
-                plus_dm_smooth[i] = plus_dm_smooth[i - 1] - plus_dm_smooth[i - 1] / period + plus_dm[i]
-                minus_dm_smooth[i] = minus_dm_smooth[i - 1] - minus_dm_smooth[i - 1] / period + minus_dm[i]
+                plus_dm_smooth[i] = (
+                    plus_dm_smooth[i - 1] - plus_dm_smooth[i - 1] / period + plus_dm[i]
+                )
+                minus_dm_smooth[i] = (
+                    minus_dm_smooth[i - 1] - minus_dm_smooth[i - 1] / period + minus_dm[i]
+                )
 
             # Calculate DI
             for i in range(period - 1, n):
@@ -424,7 +415,7 @@ class OptimizedIndicators:
 
             # Calculate ADX
             if n >= 2 * period - 1:
-                adx[2 * period - 2] = np.mean(dx[period - 1:2 * period - 1])
+                adx[2 * period - 2] = np.mean(dx[period - 1 : 2 * period - 1])
 
                 for i in range(2 * period - 1, n):
                     adx[i] = (adx[i - 1] * (period - 1) + dx[i]) / period
@@ -445,12 +436,7 @@ def benchmark_indicators(data_size: int = 10000):
     volume = np.random.randint(1000000, 10000000, data_size).astype(float)
 
     # Create pandas versions
-    df = pd.DataFrame({
-        'close': close,
-        'high': high,
-        'low': low,
-        'volume': volume
-    })
+    df = pd.DataFrame({"close": close, "high": high, "low": low, "volume": volume})
 
     indicators = OptimizedIndicators()
 
@@ -460,7 +446,7 @@ def benchmark_indicators(data_size: int = 10000):
     print("\n1. Simple Moving Average (SMA)")
 
     start = time.perf_counter()
-    df['close'].rolling(20).mean()
+    df["close"].rolling(20).mean()
     pandas_time = time.perf_counter() - start
 
     start = time.perf_counter()
@@ -475,7 +461,7 @@ def benchmark_indicators(data_size: int = 10000):
     print("\n2. Exponential Moving Average (EMA)")
 
     start = time.perf_counter()
-    df['close'].ewm(span=20, adjust=True).mean()
+    df["close"].ewm(span=20, adjust=True).mean()
     pandas_time = time.perf_counter() - start
 
     start = time.perf_counter()
@@ -506,12 +492,7 @@ def benchmark_indicators(data_size: int = 10000):
 
     print("\n✓ Benchmark complete")
 
-    return {
-        'sma': sma_optimized,
-        'ema': ema_optimized,
-        'rsi': rsi_optimized,
-        'atr': atr_optimized
-    }
+    return {"sma": sma_optimized, "ema": ema_optimized, "rsi": rsi_optimized, "atr": atr_optimized}
 
 
 if __name__ == "__main__":

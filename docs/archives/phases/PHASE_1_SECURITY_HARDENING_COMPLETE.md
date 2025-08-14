@@ -57,7 +57,7 @@ sql_patterns = ["select ", "insert ", "update ", "delete ", "drop "]
 - **Secret Generation**: Secure random generation commands
 - **Rotation Policies**: 90-day rotation schedule
 - **Development Setup**: Safe .env file usage
-- **Production Deployment**: 
+- **Production Deployment**:
   - Docker Secrets integration
   - Kubernetes Secrets configuration
   - AWS Secrets Manager examples
@@ -169,13 +169,13 @@ headers = {
 ### Validation Commands:
 ```bash
 # Test input validation
-python -c "from bot.security.input_validation import get_validator; 
-v = get_validator(); 
+python -c "from bot.security.input_validation import get_validator;
+v = get_validator();
 print(v.validate_symbol('AAPL'))"
 
 # Verify security configuration
-python -c "from bot.security.config import get_security_config; 
-c = get_security_config(); 
+python -c "from bot.security.config import get_security_config;
+c = get_security_config();
 print(f'Security Level: {c.security_level.value}')"
 
 # Check for hardcoded secrets

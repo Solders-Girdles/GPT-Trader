@@ -39,14 +39,14 @@ spec:
                 - |
                   DATE=$(date +%Y%m%d_%H%M%S)
                   BACKUP_FILE="gpt_trader_backup_${DATE}.sql.gz"
-                  
+
                   echo "Starting database backup..."
                   pg_dump -h postgresql -U gpt_trader gpt_trader | gzip > /tmp/${BACKUP_FILE}
-                  
+
                   echo "Uploading to S3..."
                   apk add --no-cache aws-cli
                   aws s3 cp /tmp/${BACKUP_FILE} s3://${S3_BUCKET}/postgres/${BACKUP_FILE}
-                  
+
                   echo "Backup completed successfully"
               resources:
                 requests:
@@ -92,10 +92,10 @@ spec:
                 - -c
                 - |
                   DATE=$(date +%Y%m%d_%H%M%S)
-                  
+
                   echo "Starting model backup..."
                   aws s3 sync /app/models s3://${S3_BUCKET}/models/${DATE}/ --exclude "*.tmp"
-                  
+
                   echo "Model backup completed successfully"
               volumeMounts:
                 - name: models
@@ -141,22 +141,22 @@ spec:
                 - -c
                 - |
                   echo "Cleaning up old data..."
-                  
+
                   # Delete performance metrics older than 90 days
                   psql -h postgresql -U gpt_trader -d gpt_trader -c \
                     "DELETE FROM performance_metrics WHERE timestamp < NOW() - INTERVAL '90 days';"
-                  
+
                   # Delete acknowledged alerts older than 30 days
                   psql -h postgresql -U gpt_trader -d gpt_trader -c \
                     "DELETE FROM alerts WHERE acknowledged = true AND created_at < NOW() - INTERVAL '30 days';"
-                  
+
                   # Delete closed positions older than 180 days
                   psql -h postgresql -U gpt_trader -d gpt_trader -c \
                     "DELETE FROM positions WHERE closed_at IS NOT NULL AND closed_at < NOW() - INTERVAL '180 days';"
-                  
+
                   # Vacuum and analyze
                   psql -h postgresql -U gpt_trader -d gpt_trader -c "VACUUM ANALYZE;"
-                  
+
                   echo "Cleanup completed successfully"
               resources:
                 requests:

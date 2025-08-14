@@ -173,7 +173,9 @@ class StrategyTransferEngine:
             "risk_level": (
                 "high"
                 if perf.max_drawdown > 0.2
-                else "medium" if perf.max_drawdown > 0.1 else "low"
+                else "medium"
+                if perf.max_drawdown > 0.1
+                else "low"
             ),
             "consistency": perf.consistency_score,
             "trade_frequency": (
@@ -332,7 +334,9 @@ class StrategyTransferEngine:
             (
                 1.0
                 if target_asset.liquidity == "high"
-                else 0.5 if target_asset.liquidity == "medium" else 0.0
+                else 0.5
+                if target_asset.liquidity == "medium"
+                else 0.0
             ),
             # Parameter complexity
             len(source_strategy.parameters),

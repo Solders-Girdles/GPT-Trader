@@ -4,12 +4,12 @@ Test data factories for generating realistic test data.
 Provides factories for creating market data, strategies, portfolios, and trades.
 """
 
+import random
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any
+from typing import Any
+
 import numpy as np
 import pandas as pd
-from dataclasses import dataclass, field
-import random
 
 
 class MarketDataFactory:
@@ -24,7 +24,7 @@ class MarketDataFactory:
         initial_price: float = 100.0,
         drift: float = 0.0005,
         volatility: float = 0.02,
-        seed: Optional[int] = None,
+        seed: int | None = None,
     ) -> pd.DataFrame:
         """Generate OHLCV data with specified characteristics."""
         if seed is not None:
@@ -113,8 +113,8 @@ class StrategyFactory:
     def create_strategy(
         name: str = "test_strategy",
         strategy_type: str = "trend_following",
-        parameters: Optional[Dict] = None,
-    ) -> Dict[str, Any]:
+        parameters: dict | None = None,
+    ) -> dict[str, Any]:
         """Create a test strategy configuration."""
         default_params = {
             "trend_following": {
@@ -154,7 +154,7 @@ class StrategyFactory:
     @staticmethod
     def create_signal(
         signal_type: str = "BUY", confidence: float = 0.8, price: float = 100.0
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Create a test trading signal."""
         return {
             "timestamp": datetime.now(),
@@ -173,8 +173,8 @@ class PortfolioFactory:
 
     @staticmethod
     def create_portfolio(
-        cash: float = 100000.0, positions: Optional[List[Dict]] = None
-    ) -> Dict[str, Any]:
+        cash: float = 100000.0, positions: list[dict] | None = None
+    ) -> dict[str, Any]:
         """Create a test portfolio."""
         if positions is None:
             positions = [
@@ -200,8 +200,8 @@ class PortfolioFactory:
 
     @staticmethod
     def create_allocation(
-        symbols: List[str] = None, allocation_method: str = "equal_weight"
-    ) -> Dict[str, float]:
+        symbols: list[str] = None, allocation_method: str = "equal_weight"
+    ) -> dict[str, float]:
         """Create portfolio allocation weights."""
         if symbols is None:
             symbols = ["AAPL", "GOOGL", "MSFT", "AMZN", "TSLA"]
@@ -214,13 +214,13 @@ class PortfolioFactory:
             # Simulate market cap weights
             caps = np.random.exponential(1, n_symbols)
             caps = caps / caps.sum()
-            weights = {symbol: cap for symbol, cap in zip(symbols, caps)}
+            weights = {symbol: cap for symbol, cap in zip(symbols, caps, strict=False)}
         elif allocation_method == "risk_parity":
             # Simulate risk parity weights
             vols = np.random.uniform(0.15, 0.35, n_symbols)
             inv_vols = 1.0 / vols
             inv_vols = inv_vols / inv_vols.sum()
-            weights = {symbol: weight for symbol, weight in zip(symbols, inv_vols)}
+            weights = {symbol: weight for symbol, weight in zip(symbols, inv_vols, strict=False)}
         else:
             weights = {symbol: 1.0 / n_symbols for symbol in symbols}
 
@@ -236,8 +236,8 @@ class TradeFactory:
         trade_type: str = "BUY",
         quantity: int = 100,
         price: float = 100.0,
-        timestamp: Optional[datetime] = None,
-    ) -> Dict[str, Any]:
+        timestamp: datetime | None = None,
+    ) -> dict[str, Any]:
         """Create a test trade."""
         if timestamp is None:
             timestamp = datetime.now()
@@ -259,8 +259,8 @@ class TradeFactory:
 
     @staticmethod
     def create_trade_history(
-        n_trades: int = 10, symbols: Optional[List[str]] = None, start_date: str = "2023-01-01"
-    ) -> List[Dict[str, Any]]:
+        n_trades: int = 10, symbols: list[str] | None = None, start_date: str = "2023-01-01"
+    ) -> list[dict[str, Any]]:
         """Create a history of trades."""
         if symbols is None:
             symbols = ["AAPL", "GOOGL", "MSFT"]
@@ -294,8 +294,8 @@ class RiskMetricsFactory:
 
     @staticmethod
     def create_metrics(
-        returns: Optional[pd.Series] = None, benchmark_returns: Optional[pd.Series] = None
-    ) -> Dict[str, float]:
+        returns: pd.Series | None = None, benchmark_returns: pd.Series | None = None
+    ) -> dict[str, float]:
         """Create test risk metrics."""
         if returns is None:
             dates = pd.date_range(start="2023-01-01", end="2023-12-31", freq="D")

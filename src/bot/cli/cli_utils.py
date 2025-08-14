@@ -4,16 +4,15 @@ Shared utility functions for CLI operations
 """
 
 import logging
-import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Any, List, Optional
+from typing import Any
+
 from rich.console import Console
-from rich.table import Table
+from rich.logging import RichHandler
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
-from rich.logging import RichHandler
-
+from rich.table import Table
 
 # Initialize Rich console
 console = Console()
@@ -90,7 +89,7 @@ def confirm_action(prompt: str, default: bool = False) -> bool:
     return response in ["y", "yes"]
 
 
-def print_table(headers: List[str], rows: List[List[Any]], title: Optional[str] = None) -> None:
+def print_table(headers: list[str], rows: list[list[Any]], title: str | None = None) -> None:
     """Print a formatted table"""
     table = Table(title=title, show_header=True, header_style="bold magenta")
 
@@ -157,7 +156,7 @@ def parse_date(date_str: str) -> datetime:
     raise ValueError(f"Could not parse date: {date_str}")
 
 
-def parse_symbols(symbol_str: str) -> List[str]:
+def parse_symbols(symbol_str: str) -> list[str]:
     """Parse symbol string or file"""
     # Check if it's a file path
     path = Path(symbol_str)
@@ -263,7 +262,7 @@ class Timer:
             print_error(f"{self.description} failed after {format_timedelta(elapsed)}")
 
 
-def create_backup(file_path: Path, backup_dir: Optional[Path] = None) -> Path:
+def create_backup(file_path: Path, backup_dir: Path | None = None) -> Path:
     """Create backup of a file"""
     if not file_path.exists():
         raise FileNotFoundError(f"File not found: {file_path}")

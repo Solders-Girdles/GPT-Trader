@@ -908,7 +908,9 @@ class Phase3IntegrationTester:
                 "framework_performance_grade": (
                     "A"
                     if np.mean(execution_times) <= 1.0
-                    else "B" if np.mean(execution_times) <= 3.0 else "C"
+                    else "B"
+                    if np.mean(execution_times) <= 3.0
+                    else "C"
                 ),
             },
         }

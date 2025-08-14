@@ -15,40 +15,37 @@ import asyncio
 import logging
 import random
 import time
-from datetime import datetime, timedelta
+from datetime import datetime
 from decimal import Decimal
-from typing import Optional, Dict, Any
+from typing import Any
 
 # Import Phase 3 architecture components
 from bot.core.base import BaseComponent, ComponentConfig, HealthStatus
-from bot.core.config import get_config
-from bot.core.database import get_database
 
 # Phase 3: Performance & Observability
-from bot.core.caching import get_cache_manager, CacheConfig, cached, cache_invalidate
+from bot.core.caching import CacheConfig, cached, get_cache_manager
 from bot.core.metrics import (
+    MetricLabels,
+    count_calls,
     get_metrics_collector,
     get_metrics_registry,
-    track_execution_time,
-    count_calls,
-    MetricLabels,
     metrics_context,
-)
-from bot.core.performance import (
-    get_performance_optimizer,
-    create_profiler,
-    profile_performance,
-    performance_context,
+    track_execution_time,
 )
 from bot.core.observability import (
-    get_observability_engine,
+    AlertRule,
+    AlertSeverity,
     create_alert,
+    get_observability_engine,
+    observability_context,
     start_trace,
     trace_operation,
-    AlertSeverity,
-    AlertRule,
-    LogNotificationChannel,
-    observability_context,
+)
+from bot.core.performance import (
+    create_profiler,
+    get_performance_optimizer,
+    performance_context,
+    profile_performance,
 )
 
 # Configure logging
@@ -67,7 +64,7 @@ logger = logging.getLogger(__name__)
 class ObservableMarketDataService(BaseComponent):
     """Market data service with comprehensive observability"""
 
-    def __init__(self, config: Optional[ComponentConfig] = None):
+    def __init__(self, config: ComponentConfig | None = None):
         if not config:
             config = ComponentConfig(
                 component_id="observable_market_data_service", component_type="market_data_service"
@@ -98,7 +95,7 @@ class ObservableMarketDataService(BaseComponent):
 
         # Market data state
         self.subscribed_symbols = set()
-        self.price_data: Dict[str, Dict] = {}
+        self.price_data: dict[str, dict] = {}
 
         logger.info(f"Observable market data service initialized: {self.component_id}")
 
@@ -254,7 +251,7 @@ class ObservableMarketDataService(BaseComponent):
     @cached(cache_name="market_data_cache", ttl_seconds=60)
     @trace_operation("get_price")
     @track_execution_time()
-    def get_price(self, symbol: str) -> Optional[Decimal]:
+    def get_price(self, symbol: str) -> Decimal | None:
         """Get price with caching and observability"""
 
         # Check if already cached (cache decorator handles this, but we want to track metrics)
@@ -319,7 +316,7 @@ class ObservableMarketDataService(BaseComponent):
 
             time.sleep(1)  # Update every second
 
-    def get_performance_summary(self) -> Dict[str, Any]:
+    def get_performance_summary(self) -> dict[str, Any]:
         """Get component performance summary"""
         cache_stats = self.price_cache.get_statistics()
         profiler_stats = self.profiler.get_performance_summary()
@@ -339,7 +336,7 @@ class ObservableMarketDataService(BaseComponent):
 class OptimizedTradingEngine(BaseComponent):
     """Trading engine with automated performance optimization"""
 
-    def __init__(self, config: Optional[ComponentConfig] = None):
+    def __init__(self, config: ComponentConfig | None = None):
         if not config:
             config = ComponentConfig(
                 component_id="optimized_trading_engine", component_type="trading_engine"
@@ -355,8 +352,8 @@ class OptimizedTradingEngine(BaseComponent):
         self.observability_engine = get_observability_engine()
 
         # Trading state
-        self.orders: Dict[str, Dict] = {}
-        self.positions: Dict[str, Dict] = {}
+        self.orders: dict[str, dict] = {}
+        self.positions: dict[str, dict] = {}
 
         logger.info(f"Optimized trading engine initialized: {self.component_id}")
 
@@ -553,7 +550,7 @@ async def demonstrate_phase3_observability():
 
         # Cache statistics
         cache_stats = cache_manager.get_system_statistics()
-        logger.info(f"   💾 Cache System:")
+        logger.info("   💾 Cache System:")
         logger.info(f"      • Total Caches: {cache_stats['global_statistics']['total_caches']}")
         logger.info(
             f"      • Global Hit Rate: {cache_stats['global_statistics']['global_hit_rate']:.1f}%"
@@ -563,13 +560,13 @@ async def demonstrate_phase3_observability():
         # Performance statistics
         perf_issues = performance_optimizer.get_current_issues()
         perf_results = performance_optimizer.get_optimization_results()
-        logger.info(f"   ⚡ Performance System:")
+        logger.info("   ⚡ Performance System:")
         logger.info(f"      • Issues Detected: {len(perf_issues)}")
         logger.info(f"      • Optimizations Applied: {len(perf_results)}")
 
         # Component performance
         market_data_perf = market_data_service.get_performance_summary()
-        logger.info(f"   📡 Market Data Service:")
+        logger.info("   📡 Market Data Service:")
         logger.info(f"      • Subscribed Symbols: {market_data_perf['subscribed_symbols']}")
         logger.info(
             f"      • Cache Hit Rate: {market_data_perf['cache_performance']['hit_rate']:.1f}%"
@@ -636,14 +633,14 @@ if __name__ == "__main__":
         """
     🚀 GPT-Trader Phase 3: Performance & Observability Demo
     =======================================================
-    
+
     This demo will showcase:
     1. Intelligent caching with multi-tier architecture
     2. Comprehensive metrics collection and analysis
     3. Automated performance optimization
     4. Advanced observability with distributed tracing
     5. Intelligent alerting and health monitoring
-    
+
     """
     )
 
@@ -656,14 +653,14 @@ if __name__ == "__main__":
             show_phase3_benefits()
 
             print(
-                f"""
+                """
     📋 Next Steps:
     1. Review observability logs: phase3_observability.log
     2. Examine cache performance and hit rates
     3. Analyze performance optimization results
     4. Review distributed traces and alert correlations
     5. Begin implementing Phase 3 patterns in production components
-    
+
     🎯 Phase 3 implementation provides enterprise-grade observability!
             """
             )

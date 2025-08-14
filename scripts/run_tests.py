@@ -7,12 +7,9 @@ Provides easy access to run different types of tests with useful output.
 import argparse
 import subprocess
 import sys
-import os
-from pathlib import Path
-from typing import List, Optional
 
 
-def run_command(command: List[str], description: str) -> bool:
+def run_command(command: list[str], description: str) -> bool:
     """Run a command and return success status."""
     print(f"\n{'='*60}")
     print(f"Running: {description}")
@@ -224,10 +221,10 @@ def run_all_tests(verbose: bool = False, coverage: bool = True) -> bool:
     print(f"Failed: {failed}")
 
     if coverage:
-        print(f"\n📈 Coverage reports available in htmlcov/ directory")
+        print("\n📈 Coverage reports available in htmlcov/ directory")
 
     if failed == 0:
-        print(f"\n🎉 All tests passed! The system is ready for production.")
+        print("\n🎉 All tests passed! The system is ready for production.")
         return True
     else:
         print(f"\n⚠️  {failed} test(s) failed. Please review and fix issues before proceeding.")

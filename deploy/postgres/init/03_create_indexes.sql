@@ -89,32 +89,32 @@ CREATE INDEX idx_pending_orders ON trading.orders(symbol, submitted_at) WHERE st
 CREATE INDEX idx_open_positions ON trading.positions(symbol, opened_at) WHERE status = 'open';
 
 -- Add check constraints
-ALTER TABLE ml.feature_values ADD CONSTRAINT check_quality_score 
+ALTER TABLE ml.feature_values ADD CONSTRAINT check_quality_score
     CHECK (quality_score >= 0 AND quality_score <= 1);
 
-ALTER TABLE ml.predictions ADD CONSTRAINT check_confidence 
+ALTER TABLE ml.predictions ADD CONSTRAINT check_confidence
     CHECK (confidence >= 0 AND confidence <= 1);
 
-ALTER TABLE ml.market_regimes ADD CONSTRAINT check_regime_confidence 
+ALTER TABLE ml.market_regimes ADD CONSTRAINT check_regime_confidence
     CHECK (confidence >= 0 AND confidence <= 1);
 
-ALTER TABLE ml.strategy_selections ADD CONSTRAINT check_selection_confidence 
+ALTER TABLE ml.strategy_selections ADD CONSTRAINT check_selection_confidence
     CHECK (confidence >= 0 AND confidence <= 1);
 
-ALTER TABLE portfolio.rebalancing_events ADD CONSTRAINT check_urgency_score 
+ALTER TABLE portfolio.rebalancing_events ADD CONSTRAINT check_urgency_score
     CHECK (urgency_score >= 0 AND urgency_score <= 1);
 
 -- Add foreign key constraints with CASCADE options
-ALTER TABLE trading.trades 
-    ADD CONSTRAINT fk_trades_order 
-    FOREIGN KEY (order_id) 
-    REFERENCES trading.orders(order_id) 
+ALTER TABLE trading.trades
+    ADD CONSTRAINT fk_trades_order
+    FOREIGN KEY (order_id)
+    REFERENCES trading.orders(order_id)
     ON DELETE CASCADE;
 
-ALTER TABLE trading.trades 
-    ADD CONSTRAINT fk_trades_position 
-    FOREIGN KEY (position_id) 
-    REFERENCES trading.positions(position_id) 
+ALTER TABLE trading.trades
+    ADD CONSTRAINT fk_trades_position
+    FOREIGN KEY (position_id)
+    REFERENCES trading.positions(position_id)
     ON DELETE SET NULL;
 
 -- Create triggers for updated_at timestamps

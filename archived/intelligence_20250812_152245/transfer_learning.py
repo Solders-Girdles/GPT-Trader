@@ -321,7 +321,9 @@ class FineTuningTransferLearner(BaseTransferLearner):
         if similarity > self.config.similarity_threshold:
             # High similarity: light fine-tuning
             self.target_model = RandomForestRegressor(
-                n_estimators=50, max_depth=8, random_state=self.config.random_state  # Fewer trees
+                n_estimators=50,
+                max_depth=8,
+                random_state=self.config.random_state,  # Fewer trees
             )
         else:
             # Low similarity: more extensive training

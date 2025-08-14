@@ -87,10 +87,10 @@ data = joblib.load(file)
 
 1. **Existing pickle files**: Old saved models/strategies in pickle format
    - **Solution**: Create migration script to convert existing files
-   
+
 2. **Performance**: Joblib may be slightly slower for small objects
    - **Impact**: Negligible for trading system use cases
-   
+
 3. **Dependencies**: Requires joblib package
    - **Status**: Already in requirements (dependency of scikit-learn)
 
@@ -111,8 +111,8 @@ grep -r "pickle\." src/ --include="*.py" | grep -v "__pycache__" | grep -v "#"
 python test_joblib_migration.py
 
 # Convert old pickle files (if needed)
-python -c "import joblib, pickle; 
-with open('old.pkl', 'rb') as f: data = pickle.load(f); 
+python -c "import joblib, pickle;
+with open('old.pkl', 'rb') as f: data = pickle.load(f);
 joblib.dump(data, 'new.joblib')"
 ```
 

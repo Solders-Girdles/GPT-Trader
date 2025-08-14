@@ -31,7 +31,10 @@ try:
     SKLEARN_AVAILABLE = True
 except ImportError:
     SKLEARN_AVAILABLE = False
-    warnings.warn("Scikit-learn not available. Some correlation modeling features will be limited.", stacklevel=2)
+    warnings.warn(
+        "Scikit-learn not available. Some correlation modeling features will be limited.",
+        stacklevel=2,
+    )
 
 try:
     import networkx as nx
@@ -39,7 +42,9 @@ try:
     NETWORKX_AVAILABLE = True
 except ImportError:
     NETWORKX_AVAILABLE = False
-    warnings.warn("NetworkX not available. Network analysis features will be limited.", stacklevel=2)
+    warnings.warn(
+        "NetworkX not available. Network analysis features will be limited.", stacklevel=2
+    )
 
 try:
     from arch import arch_model

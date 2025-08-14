@@ -252,18 +252,18 @@ def validate_required_secrets() -> bool:
         'ALPACA_API_KEY',
         'ALPACA_SECRET_KEY'
     ]
-    
+
     missing = [key for key in required if not os.environ.get(key)]
-    
+
     if missing:
         logger.error(f"Missing required secrets: {missing}")
         return False
-    
+
     # Validate secret strength
     if len(os.environ.get('JWT_SECRET_KEY', '')) < 32:
         logger.error("JWT_SECRET_KEY too short (min 32 chars)")
         return False
-    
+
     return True
 ```
 
@@ -324,7 +324,7 @@ def test_secrets_not_logged():
     """Ensure secrets are not logged"""
     with self.assertLogs() as logs:
         process_sensitive_operation()
-        
+
     for log in logs.output:
         self.assertNotIn(os.environ['JWT_SECRET_KEY'], log)
         self.assertNotIn(os.environ['ADMIN_PASSWORD'], log)
@@ -337,7 +337,7 @@ def test_secret_rotation():
     old_secret = get_current_secret()
     rotate_secret('JWT_SECRET_KEY')
     new_secret = get_current_secret()
-    
+
     self.assertNotEqual(old_secret, new_secret)
     self.assertTrue(validate_secret_strength(new_secret))
 ```

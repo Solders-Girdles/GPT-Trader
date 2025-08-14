@@ -10,18 +10,16 @@ Tests core Week 3 functionality without heavy dependencies:
 Focuses on verifying the Week 3 deliverables work together properly.
 """
 
+import json
 import sys
 import tempfile
 from pathlib import Path
-import json
-from datetime import datetime
 
 # Add src to path
 sys.path.insert(0, "src")
 
 # Direct imports to avoid heavy dependencies
-from bot.strategy.base import Strategy
-from bot.cli.strategy_development import StrategyDevelopmentWorkflow, STRATEGY_TEMPLATES
+from bot.cli.strategy_development import STRATEGY_TEMPLATES, StrategyDevelopmentWorkflow
 
 
 def test_week3_strategy_development():
@@ -79,7 +77,7 @@ def test_week3_strategy_development():
                     # Verify config file exists
                     config_file = Path(strategy_file).parent / "strategy_config.json"
                     if config_file.exists():
-                        with open(config_file, "r") as f:
+                        with open(config_file) as f:
                             config = json.load(f)
                         print(f"      ✅ Config created: {config['strategy_name']}")
 
@@ -91,9 +89,9 @@ def test_week3_strategy_development():
                             }
                         )
                     else:
-                        print(f"      ❌ Config file missing")
+                        print("      ❌ Config file missing")
                 else:
-                    print(f"      ❌ Strategy file not created")
+                    print("      ❌ Strategy file not created")
 
             except Exception as e:
                 print(f"      ❌ Strategy creation failed: {str(e)}")
@@ -118,7 +116,7 @@ def test_week3_strategy_development():
 
         for strategy in created_strategies:
             strategy_file = strategy["file"]
-            with open(strategy_file, "r") as f:
+            with open(strategy_file) as f:
                 content = f.read()
 
             # Check for essential code elements
@@ -246,7 +244,7 @@ def test_week3_strategy_development():
         success = overall_score >= 75  # 75% threshold for success
 
         if success:
-            print(f"\n✅ WEEK 3 INTEGRATION TEST: SUCCESS")
+            print("\n✅ WEEK 3 INTEGRATION TEST: SUCCESS")
             print("   • Strategy Development CLI operational ✅")
             print("   • Template system working ✅")
             print("   • Code generation functional ✅")
@@ -254,7 +252,7 @@ def test_week3_strategy_development():
             print("\n🎉 Week 3 Strategy Development Workflow is READY!")
             print("   Ready for automated pipeline testing and deployment!")
         else:
-            print(f"\n⚠️  WEEK 3 INTEGRATION TEST: NEEDS IMPROVEMENT")
+            print("\n⚠️  WEEK 3 INTEGRATION TEST: NEEDS IMPROVEMENT")
             print("   Some components need attention before production use")
 
         return success
@@ -269,7 +267,7 @@ def test_week3_strategy_development():
 
         try:
             shutil.rmtree(test_dir)
-            print(f"\n🧹 Test cleanup completed")
+            print("\n🧹 Test cleanup completed")
         except Exception as e:
             print(f"⚠️  Cleanup warning: {str(e)}")
 

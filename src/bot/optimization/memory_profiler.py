@@ -25,6 +25,7 @@ import psutil
 @dataclass
 class MemorySnapshot:
     """Memory usage snapshot."""
+
     timestamp: datetime
     rss_mb: float  # Resident Set Size
     vms_mb: float  # Virtual Memory Size
@@ -60,10 +61,7 @@ class MemoryProfiler:
         python_objects = len(gc.get_objects())
 
         # GC stats
-        gc_stats = {
-            f"generation_{i}": gc.get_count()[i]
-            for i in range(gc.get_count().__len__())
-        }
+        gc_stats = {f"generation_{i}": gc.get_count()[i] for i in range(gc.get_count().__len__())}
 
         # Top object types
         type_counts = defaultdict(int)
@@ -80,7 +78,7 @@ class MemoryProfiler:
         top_types = sorted(
             [(k, v, type_sizes[k]) for k, v in type_counts.items()],
             key=lambda x: x[2],
-            reverse=True
+            reverse=True,
         )[:10]
 
         snapshot = MemorySnapshot(
@@ -91,7 +89,7 @@ class MemoryProfiler:
             percent_used=mem_percent,
             python_objects=python_objects,
             gc_stats=gc_stats,
-            top_types=top_types
+            top_types=top_types,
         )
 
         self.snapshots.append((label, snapshot))
@@ -129,7 +127,7 @@ class MemoryProfiler:
             if count2 - count1 != 0:
                 type_changes[type_name] = {
                     "count_change": count2 - count1,
-                    "size_change": size2 - size1
+                    "size_change": size2 - size1,
                 }
 
         comparison["type_changes"] = type_changes
@@ -148,20 +146,21 @@ class MemoryProfiler:
 
         # Simple leak detection: consistent growth
         growth_count = sum(
-            1 for i in range(1, len(memory_values))
-            if memory_values[i] > memory_values[i-1]
+            1 for i in range(1, len(memory_values)) if memory_values[i] > memory_values[i - 1]
         )
 
         if growth_count > len(memory_values) * 0.8:  # 80% growth
             total_growth = memory_values[-1] - memory_values[0]
 
             if total_growth > threshold_mb:
-                leaks.append({
-                    "type": "consistent_growth",
-                    "total_growth_mb": total_growth,
-                    "snapshots": len(self.snapshots),
-                    "severity": "high" if total_growth > threshold_mb * 5 else "medium"
-                })
+                leaks.append(
+                    {
+                        "type": "consistent_growth",
+                        "total_growth_mb": total_growth,
+                        "snapshots": len(self.snapshots),
+                        "severity": "high" if total_growth > threshold_mb * 5 else "medium",
+                    }
+                )
 
         # Check for specific object accumulation
         if len(self.snapshots) >= 3:
@@ -176,15 +175,17 @@ class MemoryProfiler:
 
                 if len(counts) >= 3:
                     # Check for consistent increase
-                    increases = sum(1 for i in range(1, len(counts)) if counts[i] > counts[i-1])
+                    increases = sum(1 for i in range(1, len(counts)) if counts[i] > counts[i - 1])
 
                     if increases >= len(counts) - 1:
-                        leaks.append({
-                            "type": "object_leak",
-                            "object_type": type_name,
-                            "count_increase": counts[-1] - counts[0],
-                            "severity": "medium"
-                        })
+                        leaks.append(
+                            {
+                                "type": "object_leak",
+                                "object_type": type_name,
+                                "count_increase": counts[-1] - counts[0],
+                                "severity": "medium",
+                            }
+                        )
 
         return leaks
 
@@ -193,15 +194,17 @@ class MemoryProfiler:
         data = []
 
         for label, snap in self.snapshots:
-            data.append({
-                "label": label,
-                "timestamp": snap.timestamp,
-                "rss_mb": snap.rss_mb,
-                "vms_mb": snap.vms_mb,
-                "available_mb": snap.available_mb,
-                "percent_used": snap.percent_used,
-                "python_objects": snap.python_objects,
-            })
+            data.append(
+                {
+                    "label": label,
+                    "timestamp": snap.timestamp,
+                    "rss_mb": snap.rss_mb,
+                    "vms_mb": snap.vms_mb,
+                    "available_mb": snap.available_mb,
+                    "percent_used": snap.percent_used,
+                    "python_objects": snap.python_objects,
+                }
+            )
 
         return pd.DataFrame(data)
 
@@ -209,13 +212,10 @@ class MemoryProfiler:
         """Optimize DataFrame memory usage."""
         original_memory = df.memory_usage(deep=True).sum() / 1024 / 1024
 
-        optimizations = {
-            "original_memory_mb": original_memory,
-            "optimizations": []
-        }
+        optimizations = {"original_memory_mb": original_memory, "optimizations": []}
 
         # Optimize numeric columns
-        for col in df.select_dtypes(include=['int']).columns:
+        for col in df.select_dtypes(include=["int"]).columns:
             col_min = df[col].min()
             col_max = df[col].max()
 
@@ -242,23 +242,25 @@ class MemoryProfiler:
                     optimizations["optimizations"].append(f"{col}: int64 -> int32")
 
         # Optimize float columns
-        for col in df.select_dtypes(include=['float']).columns:
-            df[col] = pd.to_numeric(df[col], downcast='float')
+        for col in df.select_dtypes(include=["float"]).columns:
+            df[col] = pd.to_numeric(df[col], downcast="float")
             optimizations["optimizations"].append(f"{col}: float64 -> float32")
 
         # Convert object columns to category if appropriate
-        for col in df.select_dtypes(include=['object']).columns:
+        for col in df.select_dtypes(include=["object"]).columns:
             num_unique = df[col].nunique()
             num_total = len(df[col])
 
             if num_unique / num_total < 0.5:  # Less than 50% unique
-                df[col] = df[col].astype('category')
+                df[col] = df[col].astype("category")
                 optimizations["optimizations"].append(f"{col}: object -> category")
 
         final_memory = df.memory_usage(deep=True).sum() / 1024 / 1024
         optimizations["final_memory_mb"] = final_memory
         optimizations["savings_mb"] = original_memory - final_memory
-        optimizations["savings_percent"] = ((original_memory - final_memory) / original_memory) * 100
+        optimizations["savings_percent"] = (
+            (original_memory - final_memory) / original_memory
+        ) * 100
 
         return df, optimizations
 
@@ -281,7 +283,8 @@ class MemoryProfiler:
             "memory_used_mb": comparison["memory_change_mb"],
             "objects_created": comparison["object_change"],
             "execution_time": comparison["time_diff"],
-            "memory_per_second": comparison["memory_change_mb"] / max(comparison["time_diff"], 0.001),
+            "memory_per_second": comparison["memory_change_mb"]
+            / max(comparison["time_diff"], 0.001),
         }
 
         return result, profile
@@ -390,10 +393,7 @@ def demo_memory_profiling():
 
     # Create some data
     print("\nCreating large DataFrame...")
-    data = {
-        f"col_{i}": np.random.randn(100000)
-        for i in range(50)
-    }
+    data = {f"col_{i}": np.random.randn(100000) for i in range(50)}
     df = pd.DataFrame(data)
     profiler.take_snapshot("after_dataframe")
 

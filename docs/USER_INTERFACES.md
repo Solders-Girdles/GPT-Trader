@@ -291,7 +291,7 @@ gpt-trader backtest --profile aggressive
    ```bash
    # Check installation
    gpt-trader --version
-   
+
    # Run system check
    gpt-trader check
    ```

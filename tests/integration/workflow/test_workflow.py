@@ -4,12 +4,13 @@ Simple workflow test to validate our strategy evolution pipeline.
 Tests the core components without heavy dependencies.
 """
 
-import sys
-import os
-import pandas as pd
-import numpy as np
-from datetime import datetime, timedelta
 import logging
+import os
+import sys
+from datetime import datetime, timedelta
+
+import numpy as np
+import pandas as pd
 
 # Add src to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
@@ -110,8 +111,8 @@ def test_enhanced_trend_breakout():
     try:
         # This will likely fail due to missing enhanced indicators, but let's try
         from bot.strategy.enhanced_trend_breakout import (
-            EnhancedTrendBreakoutStrategy,
             EnhancedTrendBreakoutParams,
+            EnhancedTrendBreakoutStrategy,
         )
 
         # Generate sample data
@@ -157,7 +158,7 @@ def test_basic_performance_metrics():
         drawdown = (cumulative - running_max) / running_max
         max_drawdown = np.min(drawdown)
 
-        logger.info(f"Performance Metrics:")
+        logger.info("Performance Metrics:")
         logger.info(f"  Annual Return: {annual_return:.2%}")
         logger.info(f"  Volatility: {volatility:.2%}")
         logger.info(f"  Sharpe Ratio: {sharpe:.3f}")
@@ -230,9 +231,10 @@ def analyze_system_performance():
     logger.info("Analyzing system performance")
 
     try:
-        import time
-        import psutil
         import os
+        import time
+
+        import psutil
 
         # Memory usage
         process = psutil.Process(os.getpid())
@@ -251,7 +253,7 @@ def analyze_system_performance():
         data["SMA_200"] = data["Close"].rolling(200).mean()
         indicator_time = time.time() - start_time
 
-        logger.info(f"System Performance Analysis:")
+        logger.info("System Performance Analysis:")
         logger.info(f"  Memory Usage: {memory_mb:.1f} MB")
         logger.info(f"  CPU Usage: {cpu_percent:.1f}%")
         logger.info(f"  Data Generation (1000 days): {generation_time:.3f}s")

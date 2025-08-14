@@ -4,38 +4,33 @@ Week 4 Integration Test - Strategy Portfolio Construction
 
 Comprehensive test of the complete Week 4 strategy portfolio system:
 1. Strategy Collection - library management and curation
-2. Portfolio Construction - multi-strategy portfolio optimization  
+2. Portfolio Construction - multi-strategy portfolio optimization
 3. Paper Trading Pipeline - automated deployment
 
 Tests the entire pipeline from strategy collection to paper trading deployment.
 """
 
 import logging
-import tempfile
-from datetime import datetime, timedelta
-from pathlib import Path
 import sys
-import os
-import json
+import tempfile
+from pathlib import Path
 
 # Add src to path for imports
 sys.path.insert(0, "src")
 
 # Week 4 imports
-from bot.strategy.strategy_collection import (
-    StrategyCollection,
-    StrategyCategory,
-    PerformanceTier,
-    StrategyMetrics,
+from bot.paper_trading.deployment_pipeline import (
+    DeploymentConfiguration,
+    PaperTradingDeploymentPipeline,
 )
 from bot.portfolio.portfolio_constructor import (
+    PortfolioConstraints,
     PortfolioConstructor,
     PortfolioObjective,
-    PortfolioConstraints,
 )
-from bot.paper_trading.deployment_pipeline import (
-    PaperTradingDeploymentPipeline,
-    DeploymentConfiguration,
+from bot.strategy.strategy_collection import (
+    StrategyCategory,
+    StrategyCollection,
 )
 
 # Set up logging
@@ -69,7 +64,7 @@ class Week4IntegrationTest:
             "warnings": [],
         }
 
-        print(f"🧪 Week 4 Integration Test initialized")
+        print("🧪 Week 4 Integration Test initialized")
         print(f"   Test Directory: {self.test_dir}")
 
     def run_complete_integration_test(self) -> bool:
@@ -80,7 +75,7 @@ class Week4IntegrationTest:
 
         try:
             # Phase 1: Test Strategy Collection
-            print(f"\n📚 PHASE 1: Strategy Collection Testing")
+            print("\n📚 PHASE 1: Strategy Collection Testing")
             print("-" * 50)
 
             if not self._test_strategy_collection():
@@ -88,7 +83,7 @@ class Week4IntegrationTest:
                 return False
 
             # Phase 2: Test Portfolio Construction
-            print(f"\n🏗️  PHASE 2: Portfolio Construction Testing")
+            print("\n🏗️  PHASE 2: Portfolio Construction Testing")
             print("-" * 50)
 
             if not self._test_portfolio_construction():
@@ -96,7 +91,7 @@ class Week4IntegrationTest:
                 return False
 
             # Phase 3: Test Paper Trading Pipeline
-            print(f"\n🚀 PHASE 3: Paper Trading Pipeline Testing")
+            print("\n🚀 PHASE 3: Paper Trading Pipeline Testing")
             print("-" * 50)
 
             if not self._test_deployment_pipeline():
@@ -104,7 +99,7 @@ class Week4IntegrationTest:
                 return False
 
             # Phase 4: End-to-End Integration
-            print(f"\n🎯 PHASE 4: End-to-End Integration Testing")
+            print("\n🎯 PHASE 4: End-to-End Integration Testing")
             print("-" * 50)
 
             if not self._test_end_to_end_integration():
@@ -115,12 +110,12 @@ class Week4IntegrationTest:
             self.test_results["integration_success"] = self._verify_integration_success()
 
             if self.test_results["integration_success"]:
-                print(f"\n✅ WEEK 4 INTEGRATION TEST: SUCCESS")
+                print("\n✅ WEEK 4 INTEGRATION TEST: SUCCESS")
                 print("=" * 50)
                 self._display_success_summary()
                 return True
             else:
-                print(f"\n❌ WEEK 4 INTEGRATION TEST: FAILED")
+                print("\n❌ WEEK 4 INTEGRATION TEST: FAILED")
                 print("=" * 50)
                 self._display_failure_summary()
                 return False
@@ -431,7 +426,7 @@ class Week4IntegrationTest:
 
             return any(databases_exist)
 
-        except Exception as e:
+        except Exception:
             return False
 
     def _create_mock_strategies(self):

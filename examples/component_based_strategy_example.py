@@ -5,31 +5,30 @@ Demonstrates building strategies from reusable, tested components.
 
 import logging
 import sys
+from datetime import datetime
 from pathlib import Path
-from datetime import datetime, timedelta
 
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from bot.strategy.components import (
-    ComponentBasedStrategy,
-    ComponentRegistry,
-    ComponentConfig,
-    DonchianBreakoutEntry,
-    RSIEntry,
-    VolumeBreakoutEntry,
-    FixedTargetExit,
-    TrailingStopExit,
-    TimeBasedExit,
-    PositionSizingRisk,
-    CorrelationFilterRisk,
-    RegimeFilter,
-    VolatilityFilter,
-    BollingerFilter,
-    TimeFilter,
-)
 from bot.backtest.engine_portfolio import run_backtest
-from bot.dataflow.sources.enhanced_yfinance_source import EnhancedYFinanceSource
+from bot.strategy.components import (
+    BollingerFilter,
+    ComponentBasedStrategy,
+    ComponentConfig,
+    ComponentRegistry,
+    CorrelationFilterRisk,
+    DonchianBreakoutEntry,
+    FixedTargetExit,
+    PositionSizingRisk,
+    RegimeFilter,
+    RSIEntry,
+    TimeBasedExit,
+    TimeFilter,
+    TrailingStopExit,
+    VolatilityFilter,
+    VolumeBreakoutEntry,
+)
 
 # Configure logging
 logging.basicConfig(
@@ -233,7 +232,7 @@ def test_strategy_performance(
     strategy: ComponentBasedStrategy, symbols: list[str], start_date: datetime, end_date: datetime
 ) -> dict:
     """Test strategy performance."""
-    logger.info(f"Testing strategy performance...")
+    logger.info("Testing strategy performance...")
 
     try:
         # Create portfolio rules
@@ -395,7 +394,7 @@ def main():
     for component in base_strategy.components:
         if isinstance(component, DonchianBreakoutEntry):
             component.parameters["lookback"] = 30  # Change from 55 to 30
-            logger.info(f"Modified Donchian lookback from 55 to 30")
+            logger.info("Modified Donchian lookback from 55 to 30")
             break
 
     # Test modified strategy

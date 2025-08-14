@@ -60,7 +60,6 @@ class GPTTraderException(Exception):
         recoverable: bool = True,
         recovery_suggestions: list | None = None,
     ) -> None:
-
         super().__init__(message)
 
         self.message = message
@@ -125,7 +124,9 @@ class ConfigurationException(GPTTraderException):
 class ValidationException(GPTTraderException):
     """Data validation errors"""
 
-    def __init__(self, message: str, field: str | None = None, value: Any = None, **kwargs: Any) -> None:
+    def __init__(
+        self, message: str, field: str | None = None, value: Any = None, **kwargs: Any
+    ) -> None:
         context = kwargs.get("context", {})
         if field:
             context["field"] = field
@@ -178,7 +179,11 @@ class RiskException(GPTTraderException):
     """Risk management errors"""
 
     def __init__(
-        self, message: str, risk_type: str | None = None, threshold: float | None = None, **kwargs: Any
+        self,
+        message: str,
+        risk_type: str | None = None,
+        threshold: float | None = None,
+        **kwargs: Any,
     ) -> None:
         context = kwargs.get("context", {})
         if risk_type:
@@ -259,7 +264,11 @@ class NetworkException(GPTTraderException):
     """Network and connectivity errors"""
 
     def __init__(
-        self, message: str, endpoint: str | None = None, status_code: int | None = None, **kwargs: Any
+        self,
+        message: str,
+        endpoint: str | None = None,
+        status_code: int | None = None,
+        **kwargs: Any,
     ) -> None:
         context = kwargs.get("context", {})
         if endpoint:

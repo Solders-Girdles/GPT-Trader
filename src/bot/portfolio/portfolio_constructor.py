@@ -147,7 +147,6 @@ class PortfolioConstructor:
     def __init__(
         self, portfolio_dir: str = "data/portfolios", strategy_collection: StrategyCollection = None
     ) -> None:
-
         self.portfolio_dir = Path(portfolio_dir)
         self.portfolio_dir.mkdir(parents=True, exist_ok=True)
 
@@ -263,7 +262,6 @@ class PortfolioConstructor:
                 BarColumn(),
                 console=console,
             ) as progress:
-
                 # Step 1: Strategy Selection
                 selection_task = progress.add_task("🎯 Selecting strategies...", total=1)
                 candidate_strategies = self._select_candidate_strategies(

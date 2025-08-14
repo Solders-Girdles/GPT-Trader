@@ -207,7 +207,7 @@ def is_market_open() -> bool:
 
 def main() -> None:
     """Enhanced main entry point."""
-    
+
     # Load environment variables from .env.local first
     env_local = Path(".env.local")
     if env_local.exists():

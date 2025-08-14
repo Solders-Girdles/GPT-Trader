@@ -2,11 +2,12 @@
 Test suite for portfolio optimization and rebalancing
 """
 
-import pytest
-import pandas as pd
-import numpy as np
-from datetime import datetime, timedelta
 import warnings
+from datetime import datetime, timedelta
+
+import numpy as np
+import pandas as pd
+import pytest
 
 warnings.filterwarnings("ignore")
 
@@ -245,7 +246,7 @@ class TestRebalancingEngine:
 
     def test_transaction_costs(self, mock_positions):
         """Test transaction cost calculations"""
-        from src.bot.rebalancing.costs import TransactionCostModel, CostParameters
+        from src.bot.rebalancing.costs import CostParameters, TransactionCostModel
 
         params = CostParameters(
             commission_per_trade=1.0, bid_ask_spread=0.001, slippage_rate=0.0005
@@ -284,8 +285,8 @@ class TestRebalancingEngine:
 
     def test_rebalancing_decision(self, mock_positions, mock_market_data):
         """Test rebalancing decision logic"""
-        from src.bot.rebalancing.engine import RebalancingEngine, RebalancingConfig
         from src.bot.rebalancing.costs import TransactionCostModel
+        from src.bot.rebalancing.engine import RebalancingConfig, RebalancingEngine
 
         config = RebalancingConfig(
             weight_tolerance=0.05, min_rebalance_value=1000, cost_benefit_ratio=2.0

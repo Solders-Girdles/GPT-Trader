@@ -1,8 +1,8 @@
 # CLAUDE.md Maintenance Workflow
 
-**Purpose:** Establish systematic processes for keeping CLAUDE.md as the single source of truth throughout GPT-Trader's development lifecycle.  
-**Last Updated:** 2025-08-14  
-**Status:** Active Process Document  
+**Purpose:** Establish systematic processes for keeping CLAUDE.md as the single source of truth throughout GPT-Trader's development lifecycle.
+**Last Updated:** 2025-08-14
+**Status:** Active Process Document
 
 ## 🎯 Why CLAUDE.md Matters
 
@@ -190,11 +190,11 @@ import re
 
 def update_claude_md():
     """Update CLAUDE.md with daily progress"""
-    
+
     # Read current CLAUDE.md
     with open('CLAUDE.md', 'r') as f:
         content = f.read()
-    
+
     # Update date
     today = datetime.date.today().isoformat()
     content = re.sub(
@@ -202,22 +202,22 @@ def update_claude_md():
         f'Last Updated: {today}',
         content
     )
-    
+
     # Get completed tasks from git commits
     completed_tasks = get_completed_tasks_from_git()
-    
+
     # Update task checklist
     for task in completed_tasks:
         content = content.replace(f'- [ ] {task}', f'- [x] {task}')
-    
+
     # Add today's summary
     summary = generate_daily_summary()
     content = add_section(content, "Daily Progress", summary)
-    
+
     # Write updated content
     with open('CLAUDE.md', 'w') as f:
         f.write(content)
-    
+
     print(f"✅ CLAUDE.md updated for {today}")
 
 def get_completed_tasks_from_git():
@@ -241,23 +241,23 @@ if __name__ == "__main__":
 
 def add_issue_to_roadmap(issue_id, description, tasks, priority="medium"):
     """Add new issue and its tasks to the roadmap"""
-    
+
     # Read current roadmap
     with open('docs/PHASE_3_TASK_BREAKDOWN.md', 'r') as f:
         roadmap = f.read()
-    
+
     # Find appropriate week based on priority
     week = determine_week_for_priority(priority)
-    
+
     # Generate new task IDs
     new_tasks = generate_task_ids(tasks, week)
-    
+
     # Insert tasks into roadmap
     roadmap = insert_tasks_into_week(roadmap, week, new_tasks)
-    
+
     # Update CLAUDE.md with issue
     update_claude_md_with_issue(issue_id, description, new_tasks)
-    
+
     print(f"✅ Issue #{issue_id} integrated into Week {week}")
     print(f"📝 New tasks: {', '.join(new_tasks)}")
 
@@ -515,7 +515,7 @@ read
 
 This workflow ensures CLAUDE.md remains the living heart of the project, providing:
 - **Immediate context** for every session
-- **Clear progress tracking** 
+- **Clear progress tracking**
 - **Issue management** integration
 - **Decision documentation**
 - **Metric visibility**
@@ -524,7 +524,7 @@ By following these workflows, the development team maintains focus, tracks progr
 
 ---
 
-**Document Status:** Active  
-**Review Frequency:** Weekly  
-**Owner:** Development Team  
+**Document Status:** Active
+**Review Frequency:** Weekly
+**Owner:** Development Team
 **Last Review:** 2025-08-14

@@ -602,7 +602,6 @@ def test(strategy, symbols, days, output_dir) -> None:
             TimeRemainingColumn(),
             console=console,
         ) as progress:
-
             # Prepare data
             data_task = progress.add_task("📊 Preparing training data...", total=1)
             datasets = workflow.prepare_training_data(symbol_list, days)
@@ -684,7 +683,6 @@ def validate(strategy, symbols, days, output_dir, generate_report) -> None:
             TimeRemainingColumn(),
             console=console,
         ) as progress:
-
             # Prepare comprehensive dataset
             data_task = progress.add_task("📊 Preparing validation dataset...", total=1)
             datasets = workflow.prepare_training_data(symbol_list, days)

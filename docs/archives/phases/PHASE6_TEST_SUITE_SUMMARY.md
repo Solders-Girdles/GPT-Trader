@@ -6,7 +6,7 @@
 
 #### 1. Fixed Circular Import in Exceptions Module
 **Problem:** `bot/exceptions/__init__.py` had circular import with `bot/exceptions.py`
-**Solution:** 
+**Solution:**
 - Rewrote exceptions/__init__.py to import from enhanced_exceptions module
 - Added backward compatibility aliases for legacy exception names
 - Properly exported all exception classes and decorators

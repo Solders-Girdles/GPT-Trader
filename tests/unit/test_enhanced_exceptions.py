@@ -1,37 +1,32 @@
 """Unit tests for enhanced exception system."""
 
 import time
-import pytest
 from datetime import datetime, timedelta
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 
+import pytest
 from bot.exceptions import (
-    # Enhanced exceptions
-    GPTTraderException,
-    RecoverableError,
+    CircuitBreaker,
     CriticalError,
-    RetryableError,
-    DataIntegrityError,
-    NetworkError,
-    InsufficientCapitalError,
-    OrderRejectedError,
-    RiskLimitError,
-    # Context and enums
     ErrorContext,
     ErrorSeverity,
-    RecoveryStrategy,
     # Handler and circuit breaker
     ExceptionHandler,
-    CircuitBreaker,
+    # Enhanced exceptions
+    GPTTraderException,
+    InsufficientCapitalError,
+    OrderRejectedError,
+    RecoverableError,
+    RecoveryStrategy,
+    RetryableError,
+    RiskLimitError,
     get_exception_handler,
+    monitor_performance,
+    safe_execution,
+    validate_inputs,
+    with_recovery,
     # Decorators
     with_retry,
-    with_recovery,
-    with_circuit_breaker,
-    handle_exceptions,
-    safe_execution,
-    monitor_performance,
-    validate_inputs,
 )
 
 
@@ -191,7 +186,9 @@ class TestRetryableError:
     def test_wait_and_retry(self):
         """Test wait and retry logic."""
         error = RetryableError(
-            "Network error", backoff_base=2.0, backoff_factor=0.01  # Very short for testing
+            "Network error",
+            backoff_base=2.0,
+            backoff_factor=0.01,  # Very short for testing
         )
 
         # Should be able to retry

@@ -418,19 +418,19 @@ class MyCustomStrategy(BaseStrategy):
         super().__init__()
         self.model = model
         self.threshold = threshold
-    
+
     def generate_signals(self, data):
         # Generate features
         features = self.prepare_features(data)
-        
+
         # Get predictions
         probabilities = self.model.predict_proba(features)[:, 1]
-        
+
         # Generate signals
         signals = np.where(probabilities > self.threshold, 1, 0)
-        
+
         return signals
-    
+
     def calculate_position_size(self, signal, probability, capital):
         # Kelly criterion with safety
         kelly_fraction = 0.25

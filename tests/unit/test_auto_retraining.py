@@ -31,7 +31,7 @@ from bot.ml.model_versioning import (
 
 class TestAutoRetrainingSystem:
     """Test cases for AutoRetrainingSystem"""
-    
+
     @pytest.fixture
     def mock_ml_pipeline(self):
         """Mock ML pipeline"""
@@ -44,12 +44,12 @@ class TestAutoRetrainingSystem:
             roc_auc=0.70
         )
         return pipeline
-    
+
     @pytest.fixture
     def mock_db_manager(self):
         """Mock database manager"""
         return Mock()
-    
+
     @pytest.fixture
     def config(self):
         """Test configuration"""
@@ -60,7 +60,7 @@ class TestAutoRetrainingSystem:
             require_manual_approval=False,  # Disable for automated testing
             max_daily_retraining_cost=50.0
         )
-    
+
     @pytest.fixture
     def retraining_system(self, config, mock_ml_pipeline, mock_db_manager):
         """Create retraining system for testing"""
@@ -69,23 +69,23 @@ class TestAutoRetrainingSystem:
             ml_pipeline=mock_ml_pipeline,
             db_manager=mock_db_manager
         )
-    
+
     def test_initialization(self, retraining_system):
         """Test system initialization"""
         assert not retraining_system.is_running
         assert len(retraining_system.retraining_queue) == 0
         assert len(retraining_system.current_retrainings) == 0
-        
+
     def test_start_stop(self, retraining_system):
         """Test starting and stopping the system"""
         # Start system
         retraining_system.start()
         assert retraining_system.is_running
-        
+
         # Stop system
         retraining_system.stop()
         assert not retraining_system.is_running
-    
+
     def test_manual_retraining_request(self, retraining_system):
         """Test manual retraining request"""
         request_id = retraining_system.request_manual_retraining(
@@ -93,15 +93,15 @@ class TestAutoRetrainingSystem:
             priority=8,
             requested_by="test_user"
         )
-        
+
         assert request_id.startswith("manual_")
         assert len(retraining_system.retraining_queue) == 1
-        
+
         request = retraining_system.retraining_queue[0]
         assert request.trigger == RetrainingTrigger.MANUAL
         assert request.priority == 8
         assert request.reason == "Test manual retraining"
-    
+
     def test_performance_degradation_trigger(self, retraining_system):
         """Test performance degradation trigger"""
         # Add performance history that shows degradation
@@ -109,20 +109,20 @@ class TestAutoRetrainingSystem:
             # Historical good performance
             performance = Mock(accuracy=0.65 + np.random.normal(0, 0.01))
             retraining_system.performance_history.append(performance)
-        
+
         for i in range(50):
             # Recent poor performance
             performance = Mock(accuracy=0.50 + np.random.normal(0, 0.01))
             retraining_system.performance_history.append(performance)
-        
+
         # Trigger check
         retraining_system._check_performance_degradation()
-        
+
         # Should have created a retraining request
         assert len(retraining_system.retraining_queue) > 0
         request = retraining_system.retraining_queue[0]
         assert request.trigger == RetrainingTrigger.PERFORMANCE_DEGRADATION
-    
+
     def test_emergency_retraining_trigger(self, retraining_system):
         """Test emergency retraining trigger"""
         # Add performance history with sudden drop
@@ -132,17 +132,17 @@ class TestAutoRetrainingSystem:
             else:
                 performance = Mock(accuracy=0.40)  # Sudden drop
             retraining_system.performance_history.append(performance)
-        
+
         # Trigger check
         retraining_system._check_emergency_conditions()
-        
+
         # Should have created an emergency request
         assert len(retraining_system.retraining_queue) > 0
         request = retraining_system.retraining_queue[0]
         assert request.trigger == RetrainingTrigger.EMERGENCY
         assert request.priority == 10
         assert not request.approval_required  # Emergency bypasses approval
-    
+
     def test_cost_estimation(self, retraining_system):
         """Test cost estimation"""
         request = RetrainingRequest(
@@ -153,15 +153,15 @@ class TestAutoRetrainingSystem:
             model_id="test_model",
             reason="test"
         )
-        
+
         cost = retraining_system._estimate_retraining_cost(request)
-        
+
         assert isinstance(cost, RetrainingCost)
         assert cost.computational_cost > 0
         assert cost.time_cost > 0
         assert cost.estimated_total > 0
         assert cost.roi_estimate > 0
-    
+
     def test_cost_limits(self, retraining_system):
         """Test cost limit enforcement"""
         # Create expensive request
@@ -172,10 +172,10 @@ class TestAutoRetrainingSystem:
             resource_usage={},
             estimated_total=150.0
         )
-        
+
         # Should exceed daily limits
         assert not retraining_system._is_within_cost_limits(expensive_cost)
-        
+
         # Create affordable request
         affordable_cost = RetrainingCost(
             computational_cost=5.0,
@@ -184,24 +184,24 @@ class TestAutoRetrainingSystem:
             resource_usage={},
             estimated_total=7.0
         )
-        
+
         # Should be within limits
         assert retraining_system._is_within_cost_limits(affordable_cost)
-    
+
     def test_cooldown_period(self, retraining_system):
         """Test cooldown period enforcement"""
         # Set recent retraining time
         retraining_system.last_retraining = datetime.now() - timedelta(minutes=30)
-        
+
         # Should be in cooldown (config has 1 hour cooldown)
         assert retraining_system._is_in_cooldown()
-        
+
         # Set old retraining time
         retraining_system.last_retraining = datetime.now() - timedelta(hours=2)
-        
+
         # Should not be in cooldown
         assert not retraining_system._is_in_cooldown()
-    
+
     def test_daily_limits(self, retraining_system):
         """Test daily retraining limits"""
         # Add completed retrainings for today
@@ -214,20 +214,20 @@ class TestAutoRetrainingSystem:
                 old_model_id="test"
             )
             retraining_system.retraining_history.append(result)
-        
+
         # Should exceed daily limits
         assert retraining_system._exceeds_daily_limits()
-    
+
     def test_status_reporting(self, retraining_system):
         """Test status reporting"""
         status = retraining_system.get_retraining_status()
-        
+
         assert "is_running" in status
         assert "queue_length" in status
         assert "active_retrainings" in status
         assert "daily_cost" in status
         assert "monthly_cost" in status
-    
+
     def test_cost_summary(self, retraining_system):
         """Test cost summary"""
         # Add some completed retrainings with costs
@@ -240,7 +240,7 @@ class TestAutoRetrainingSystem:
                 estimated_total=5.0,
                 actual_total=5.0
             )
-            
+
             result = RetrainingResult(
                 request_id=f"test_{i}",
                 status=RetrainingStatus.COMPLETED,
@@ -249,9 +249,9 @@ class TestAutoRetrainingSystem:
                 actual_cost=cost
             )
             retraining_system.retraining_history.append(result)
-        
+
         summary = retraining_system.get_cost_summary()
-        
+
         assert "total_lifetime_cost" in summary
         assert "cost_per_retraining" in summary
         assert "successful_retrainings" in summary
@@ -260,33 +260,33 @@ class TestAutoRetrainingSystem:
 
 class TestRetrainingScheduler:
     """Test cases for RetrainingScheduler"""
-    
+
     @pytest.fixture
     def scheduler(self):
         """Create scheduler for testing"""
         return RetrainingScheduler()
-    
+
     @pytest.fixture
     def test_callback(self):
         """Test callback function"""
         def callback():
             return "callback_executed"
         return callback
-    
+
     def test_initialization(self, scheduler):
         """Test scheduler initialization"""
         assert not scheduler.is_running
         assert len(scheduler.schedules) == 0
         assert len(scheduler.task_queue) == 0
-    
+
     def test_start_stop(self, scheduler):
         """Test starting and stopping scheduler"""
         scheduler.start()
         assert scheduler.is_running
-        
+
         scheduler.stop()
         assert not scheduler.is_running
-    
+
     def test_add_cron_schedule(self, scheduler, test_callback):
         """Test adding cron schedule"""
         config = ScheduleConfig(
@@ -296,12 +296,12 @@ class TestRetrainingScheduler:
             description="Test cron schedule",
             cron_expression="0 2 * * *"  # 2 AM daily
         )
-        
+
         success = scheduler.add_schedule(config, test_callback)
         assert success
         assert "test_cron" in scheduler.schedules
         assert len(scheduler.task_queue) == 1
-    
+
     def test_add_interval_schedule(self, scheduler, test_callback):
         """Test adding interval schedule"""
         config = ScheduleConfig(
@@ -311,11 +311,11 @@ class TestRetrainingScheduler:
             description="Test interval schedule",
             interval_minutes=60
         )
-        
+
         success = scheduler.add_schedule(config, test_callback)
         assert success
         assert "test_interval" in scheduler.schedules
-    
+
     def test_remove_schedule(self, scheduler, test_callback):
         """Test removing schedule"""
         config = ScheduleConfig(
@@ -325,14 +325,14 @@ class TestRetrainingScheduler:
             description="Test removal",
             interval_minutes=30
         )
-        
+
         scheduler.add_schedule(config, test_callback)
         assert "test_remove" in scheduler.schedules
-        
+
         success = scheduler.remove_schedule("test_remove")
         assert success
         assert "test_remove" not in scheduler.schedules
-    
+
     def test_trigger_immediate(self, scheduler, test_callback):
         """Test immediate task triggering"""
         config = ScheduleConfig(
@@ -342,15 +342,15 @@ class TestRetrainingScheduler:
             description="Test immediate execution",
             interval_minutes=60
         )
-        
+
         scheduler.add_schedule(config, test_callback)
-        
+
         success = scheduler.trigger_immediate("test_immediate")
         assert success
-        
+
         # Should have added immediate task to queue
         assert len(scheduler.task_queue) == 2  # Original + immediate
-    
+
     def test_schedule_validation(self, scheduler, test_callback):
         """Test schedule validation"""
         # Invalid cron expression
@@ -361,10 +361,10 @@ class TestRetrainingScheduler:
             description="Invalid cron expression",
             cron_expression="invalid_cron"
         )
-        
+
         success = scheduler.add_schedule(invalid_config, test_callback)
         assert not success
-        
+
         # Missing interval
         invalid_interval = ScheduleConfig(
             task_id="invalid_interval",
@@ -372,14 +372,14 @@ class TestRetrainingScheduler:
             name="Invalid Interval",
             description="Missing interval"
         )
-        
+
         success = scheduler.add_schedule(invalid_interval, test_callback)
         assert not success
-    
+
     def test_get_status(self, scheduler):
         """Test status reporting"""
         status = scheduler.get_schedule_status()
-        
+
         assert "is_running" in status
         assert "total_schedules" in status
         assert "queued_tasks" in status
@@ -388,14 +388,14 @@ class TestRetrainingScheduler:
 
 class TestModelVersioning:
     """Test cases for ModelVersioning"""
-    
+
     @pytest.fixture
     def temp_dir(self):
         """Create temporary directory for testing"""
         temp_dir = tempfile.mkdtemp()
         yield temp_dir
         shutil.rmtree(temp_dir)
-    
+
     @pytest.fixture
     def versioning(self, temp_dir):
         """Create model versioning system for testing"""
@@ -404,7 +404,7 @@ class TestModelVersioning:
             enable_git_tracking=False,  # Disable Git for testing
             max_versions_per_model=5
         )
-    
+
     @pytest.fixture
     def test_model(self):
         """Create test model"""
@@ -412,7 +412,7 @@ class TestModelVersioning:
         model = Mock()
         model.predict = Mock(return_value=np.array([1, 0, 1]))
         return model
-    
+
     @pytest.fixture
     def test_metadata(self):
         """Create test metadata"""
@@ -437,14 +437,14 @@ class TestModelVersioning:
             feature_set_version="1.0",
             created_by="test_user"
         )
-    
+
     def test_initialization(self, versioning, temp_dir):
         """Test versioning system initialization"""
         assert versioning.base_path == Path(temp_dir)
         assert (Path(temp_dir) / "metadata").exists()
         assert (Path(temp_dir) / "models").exists()
         assert (Path(temp_dir) / "archive").exists()
-    
+
     def test_create_version(self, versioning, test_model, test_metadata):
         """Test creating new model version"""
         version = versioning.create_version(
@@ -452,12 +452,12 @@ class TestModelVersioning:
             model_object=test_model,
             metadata=test_metadata
         )
-        
+
         assert version == "1.0.0"
         assert "test_model" in versioning.models
         assert len(versioning.models["test_model"]) == 1
         assert versioning.current_versions["test_model"] == "1.0.0"
-    
+
     def test_version_promotion(self, versioning, test_model, test_metadata):
         """Test version promotion"""
         # Create version
@@ -466,7 +466,7 @@ class TestModelVersioning:
             model_object=test_model,
             metadata=test_metadata
         )
-        
+
         # Promote to testing
         success = versioning.promote_version(
             model_id="test_model",
@@ -474,12 +474,12 @@ class TestModelVersioning:
             target_stage=ModelStage.TESTING,
             promoted_by="test_user"
         )
-        
+
         assert success
         metadata = versioning.get_version_metadata("test_model", version)
         assert metadata.stage == ModelStage.TESTING
         assert metadata.promoted_by == "test_user"
-    
+
     def test_model_loading(self, versioning, test_model, test_metadata):
         """Test loading model"""
         # Create version
@@ -488,11 +488,11 @@ class TestModelVersioning:
             model_object=test_model,
             metadata=test_metadata
         )
-        
+
         # Load model
         loaded_model = versioning.load_model("test_model", version)
         assert loaded_model is not None
-    
+
     def test_version_comparison(self, versioning, test_model):
         """Test version comparison"""
         # Create two versions with different performance
@@ -517,7 +517,7 @@ class TestModelVersioning:
             feature_set_version="1.0",
             created_by="test_user"
         )
-        
+
         metadata2 = ModelMetadata(
             model_id="test_model",
             version="2.0.0",
@@ -539,18 +539,18 @@ class TestModelVersioning:
             feature_set_version="1.0",
             created_by="test_user"
         )
-        
+
         versioning.create_version("test_model", test_model, metadata1)
         versioning.create_version("test_model", test_model, metadata2, VersionType.MAJOR)
-        
+
         # Compare versions
         comparison = versioning.compare_versions("test_model", "1.0.0", "2.0.0")
-        
+
         assert comparison.accuracy_improvement == 0.05
         assert comparison.precision_improvement == 0.05
         assert comparison.recall_improvement == 0.05
         assert comparison.f1_improvement == 0.05
-    
+
     def test_rollback(self, versioning, test_model, test_metadata):
         """Test model rollback"""
         # Create and promote to production
@@ -559,14 +559,14 @@ class TestModelVersioning:
             model_object=test_model,
             metadata=test_metadata
         )
-        
+
         # Promote through stages to production
         versioning.promote_version("test_model", version1, ModelStage.TESTING, "test")
         versioning.promote_version("test_model", version1, ModelStage.STAGING, "test")
         versioning.promote_version("test_model", version1, ModelStage.SHADOW, "test")
         versioning.promote_version("test_model", version1, ModelStage.CANDIDATE, "test")
         versioning.promote_version("test_model", version1, ModelStage.PRODUCTION, "test")
-        
+
         # Create second version
         test_metadata.version = "2.0.0"
         version2 = versioning.create_version(
@@ -575,14 +575,14 @@ class TestModelVersioning:
             metadata=test_metadata,
             version_type=VersionType.MAJOR
         )
-        
+
         # Promote to production
         versioning.promote_version("test_model", version2, ModelStage.TESTING, "test")
         versioning.promote_version("test_model", version2, ModelStage.STAGING, "test")
         versioning.promote_version("test_model", version2, ModelStage.SHADOW, "test")
         versioning.promote_version("test_model", version2, ModelStage.CANDIDATE, "test")
         versioning.promote_version("test_model", version2, ModelStage.PRODUCTION, "test")
-        
+
         # Rollback to version1
         success = versioning.rollback_to_version(
             model_id="test_model",
@@ -590,10 +590,10 @@ class TestModelVersioning:
             rollback_by="test_user",
             reason="Performance degradation"
         )
-        
+
         assert success
         assert versioning.get_production_version("test_model") == version1
-    
+
     def test_archival_and_cleanup(self, versioning, test_model, test_metadata):
         """Test version archival and cleanup"""
         # Create multiple versions
@@ -608,28 +608,28 @@ class TestModelVersioning:
                 custom_version=f"{i+1}.0.0"
             )
             versions.append(version)
-        
+
         # Cleanup old versions
         cleanup_stats = versioning.cleanup_old_versions("test_model")
-        
+
         assert cleanup_stats["archived"] > 0
-    
+
     def test_list_operations(self, versioning, test_model, test_metadata):
         """Test listing operations"""
         # Create versions
         versioning.create_version("test_model", test_model, test_metadata)
-        
+
         test_metadata.model_id = "another_model"
         versioning.create_version("another_model", test_model, test_metadata)
-        
+
         # Test listing
         models = versioning.list_models()
         assert "test_model" in models
         assert "another_model" in models
-        
+
         versions = versioning.list_versions("test_model")
         assert len(versions) == 1
-        
+
         latest = versioning.get_latest_version("test_model")
         assert latest is not None
 
@@ -639,14 +639,14 @@ def sample_training_data():
     """Create sample training data"""
     n_samples = 1000
     n_features = 10
-    
+
     X = np.random.randn(n_samples, n_features)
     y = (X[:, 0] + X[:, 1] + np.random.randn(n_samples) * 0.1) > 0
-    
+
     data = pd.DataFrame(X, columns=[f'feature_{i}' for i in range(n_features)])
     data['target'] = y.astype(int)
     data['timestamp'] = pd.date_range(start='2024-01-01', periods=n_samples, freq='1min')
-    
+
     return data
 
 
@@ -657,7 +657,7 @@ def test_integration_auto_retraining_with_scheduler():
         cooldown_period_hours=0,  # No cooldown for testing
         max_retrainings_per_day=10
     )
-    
+
     mock_pipeline = Mock()
     mock_pipeline.train_and_validate_model.return_value = Mock(
         accuracy=0.65,
@@ -666,17 +666,17 @@ def test_integration_auto_retraining_with_scheduler():
         f1_score=0.65,
         roc_auc=0.70
     )
-    
+
     # Create system
     system = AutoRetrainingSystem(
         config=config,
         ml_pipeline=mock_pipeline,
         db_manager=Mock()
     )
-    
+
     # Create scheduler
     scheduler = RetrainingScheduler()
-    
+
     # Add scheduled retraining
     schedule_config = ScheduleConfig(
         task_id="test_retraining",
@@ -684,12 +684,12 @@ def test_integration_auto_retraining_with_scheduler():
         name="Test Retraining",
         description="Test scheduled retraining"
     )
-    
+
     def retraining_callback():
         return system.request_manual_retraining("Scheduled retraining")
-    
+
     scheduler.add_schedule(schedule_config, retraining_callback)
-    
+
     # Trigger immediate execution
     success = scheduler.trigger_immediate("test_retraining")
     assert success
@@ -697,4 +697,3 @@ def test_integration_auto_retraining_with_scheduler():
 
 if __name__ == "__main__":
     pytest.main([__file__])
-EOF < /dev/null

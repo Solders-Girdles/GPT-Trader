@@ -206,7 +206,7 @@ ml:
     n_heads: 8
     n_layers: 6
     batch_size: 32
-  
+
   reinforcement:
     algorithm: "ppo"
     episodes: 1000
@@ -218,7 +218,7 @@ realtime:
       symbols: ["AAPL", "GOOGL", "MSFT"]
     - type: "polygon"
       symbols: ["SPY", "QQQ"]
-  
+
   buffer_size: 100000
   redis_ttl: 3600
 
@@ -321,7 +321,7 @@ pipeline = RealtimePipeline(configs)
 # Start streaming
 async def stream():
     await pipeline.start()
-    
+
     # Get live data
     while True:
         data = pipeline.get_live_data("AAPL")
@@ -373,7 +373,7 @@ scaler.start()
 # Feed market data
 for price, volume in market_stream:
     scaler.update_market_data(price, volume)
-    
+
     # Check status
     status = scaler.get_status()
     print(f"Market: {status['market_condition']}")

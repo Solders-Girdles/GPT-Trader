@@ -147,7 +147,9 @@ async def execute_selection_cycle(orchestrator: Any) -> None:
     try:
         threshold = None
         try:
-            threshold = getattr(orchestrator, "performance_monitor", None).thresholds.min_transition_smoothness  # type: ignore[attr-defined]
+            threshold = getattr(
+                orchestrator, "performance_monitor", None
+            ).thresholds.min_transition_smoothness  # type: ignore[attr-defined]
         except Exception:
             threshold = None
         if threshold is None:

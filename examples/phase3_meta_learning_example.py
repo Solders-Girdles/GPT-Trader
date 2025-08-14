@@ -8,27 +8,26 @@ Demonstrates comprehensive meta-learning capabilities including:
 
 import logging
 import sys
+from datetime import datetime, timedelta
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
-from pathlib import Path
-from datetime import datetime, timedelta
 
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from bot.meta_learning.regime_detection import RegimeDetector, MarketRegime
-from bot.meta_learning.temporal_adaptation import TemporalAdaptationEngine
-from bot.meta_learning.continuous_learning import ContinuousLearningPipeline
-from bot.knowledge.strategy_knowledge_base import (
-    StrategyKnowledgeBase,
-    StrategyContext,
-    StrategyPerformance,
-    StrategyMetadata,
-)
-from bot.meta_learning.strategy_transfer import StrategyTransferEngine, AssetCharacteristics
 from bot.dataflow.sources.enhanced_yfinance_source import EnhancedYFinanceSource
-from bot.backtest.engine_portfolio import run_backtest
-from bot.strategy.enhanced_trend_breakout import EnhancedTrendBreakoutStrategy
+from bot.knowledge.strategy_knowledge_base import (
+    StrategyContext,
+    StrategyKnowledgeBase,
+    StrategyMetadata,
+    StrategyPerformance,
+)
+from bot.meta_learning.continuous_learning import ContinuousLearningPipeline
+from bot.meta_learning.regime_detection import MarketRegime, RegimeDetector
+from bot.meta_learning.strategy_transfer import AssetCharacteristics, StrategyTransferEngine
+from bot.meta_learning.temporal_adaptation import TemporalAdaptationEngine
 
 # Configure logging
 logging.basicConfig(
@@ -252,7 +251,7 @@ def demonstrate_temporal_adaptation(
     adaptation_result = temporal_adaptation.adapt_strategy(strategy, market_data, current_regime)
 
     if adaptation_result["adapted"]:
-        print(f"\n--- Adaptation Results ---")
+        print("\n--- Adaptation Results ---")
         print(f"Adaptation Reason: {adaptation_result['reason']}")
         print(f"Confidence: {adaptation_result['confidence']:.3f}")
 
@@ -260,7 +259,7 @@ def demonstrate_temporal_adaptation(
         original_params = strategy.parameters
         adapted_params = adaptation_result["adapted_parameters"]
 
-        print(f"\n--- Parameter Changes ---")
+        print("\n--- Parameter Changes ---")
         for param, value in adapted_params.items():
             if param in original_params and original_params[param] != value:
                 print(f"  {param}: {original_params[param]:.3f} → {value:.3f}")
@@ -268,7 +267,7 @@ def demonstrate_temporal_adaptation(
         # Show adaptation rules
         adaptation_rules = adaptation_result.get("adaptation_rules", [])
         if adaptation_rules:
-            print(f"\n--- Applied Adaptation Rules ---")
+            print("\n--- Applied Adaptation Rules ---")
             for rule in adaptation_rules:
                 print(f"  {rule['reason']} (confidence: {rule['confidence']:.2f})")
     else:
@@ -307,14 +306,14 @@ def demonstrate_continuous_learning(
     # Get learning analytics
     analytics = continuous_learning.get_learning_analytics()
 
-    print(f"\n--- Learning Analytics ---")
+    print("\n--- Learning Analytics ---")
     print(f"Total Drift Events: {analytics['total_drift_events']}")
     print(f"Total Learning Updates: {analytics['total_learning_updates']}")
     print(f"Active Models: {len(analytics['active_models'])}")
 
     # Show recent drift events
     if analytics["recent_drift_events"]:
-        print(f"\n--- Recent Drift Events ---")
+        print("\n--- Recent Drift Events ---")
         for event in analytics["recent_drift_events"][:3]:
             print(f"  {event['date']}: {event['type']} drift (magnitude: {event['magnitude']:.3f})")
 
@@ -363,12 +362,12 @@ def demonstrate_strategy_transfer(
         source_strategy, target_context, target_asset
     )
 
-    print(f"\n--- Transfer Results ---")
+    print("\n--- Transfer Results ---")
     print(f"Confidence Score: {transfer_result['confidence_score']:.3f}")
     print(f"Adaptation Notes: {transfer_result['adaptation_notes']}")
 
     # Show adapted parameters
-    print(f"\n--- Adapted Parameters ---")
+    print("\n--- Adapted Parameters ---")
     adapted_params = transfer_result["adapted_parameters"]
     for param, value in adapted_params.items():
         if param in source_strategy.parameters:

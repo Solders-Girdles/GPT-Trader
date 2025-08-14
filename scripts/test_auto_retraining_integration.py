@@ -438,7 +438,7 @@ def main():
     logger.info(f"\nOverall: {passed}/{total} tests passed")
 
     if passed == total:
-        logger.info(r"🎉 All tests passed\! Automated retraining system is ready.")
+        logger.info("🎉 All tests passed! Automated retraining system is ready.")
         return 0
     else:
         logger.error(f"❌ {total - passed} tests failed. Review implementation.")

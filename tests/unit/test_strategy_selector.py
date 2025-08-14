@@ -128,7 +128,6 @@ class TestStrategySelector:
             patch("bot.live.strategy_selector.StrategyDecompositionAnalyzer") as mock_decomp,
             patch("bot.live.strategy_selector.PerformanceAttributionAnalyzer") as mock_attr,
         ):
-
             mock_adaptation.return_value.check_adaptation_needed.return_value = False
             mock_adaptation.return_value.calculate_adaptation_quality.return_value = 0.9
 

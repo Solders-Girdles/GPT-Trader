@@ -182,7 +182,7 @@ Deprecation cleanup is complete when:
 
 ---
 
-**Next Steps:** 
+**Next Steps:**
 1. Review this report with team
 2. Prioritize critical security issues
 3. Create tickets for tracked work

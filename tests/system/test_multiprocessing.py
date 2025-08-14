@@ -9,12 +9,13 @@ Tests parallel optimization capabilities:
 4. Memory and CPU efficiency
 """
 
+import logging
 import sys
 import time
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
-import logging
-from pathlib import Path
 
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent / "src"))
@@ -24,8 +25,8 @@ def test_parallel_optimization():
     """Test basic parallel parameter optimization"""
     print("🧪 Testing Parallel Parameter Optimization...")
 
-    from bot.optimization.parallel_optimizer import ParallelOptimizer, OptimizationConfig
-    from bot.strategy.talib_optimized_ma import TALibOptimizedMAStrategy, TALibMAParams
+    from bot.optimization.parallel_optimizer import OptimizationConfig, ParallelOptimizer
+    from bot.strategy.talib_optimized_ma import TALibMAParams
 
     # Generate test data
     np.random.seed(42)
@@ -88,7 +89,7 @@ def test_parallel_optimization():
 
     if results:
         best = results[0]
-        print(f"   🏆 Best result:")
+        print("   🏆 Best result:")
         print(f"      📊 Parameters: {best.parameters}")
         print(f"      📈 Sharpe ratio: {best.sharpe_ratio:.3f}")
         print(f"      💰 Total return: {best.total_return:.2%}")
@@ -102,8 +103,8 @@ def test_parallelization_scaling():
     """Test how performance scales with worker count"""
     print("\n🧪 Testing Parallelization Scaling...")
 
-    from bot.optimization.parallel_optimizer import ParallelOptimizer, OptimizationConfig
-    from bot.strategy.talib_optimized_ma import TALibOptimizedMAStrategy, TALibMAParams
+    from bot.optimization.parallel_optimizer import OptimizationConfig, ParallelOptimizer
+    from bot.strategy.talib_optimized_ma import TALibMAParams
 
     # Generate larger test data for scaling test
     np.random.seed(42)
@@ -171,7 +172,7 @@ def test_parallelization_scaling():
         print(f"      ✅ Valid results: {len(results)}")
 
     # Analyze scaling efficiency
-    print(f"\n   📊 SCALING ANALYSIS:")
+    print("\n   📊 SCALING ANALYSIS:")
     for workers, metrics in scaling_results.items():
         print(
             f"      {workers} workers: {metrics['throughput']:.1f} comb/sec | "
@@ -186,8 +187,8 @@ def test_adaptive_optimization():
     """Test adaptive grid refinement"""
     print("\n🧪 Testing Adaptive Grid Optimization...")
 
-    from bot.optimization.parallel_optimizer import ParallelOptimizer, OptimizationConfig
-    from bot.strategy.talib_optimized_ma import TALibOptimizedMAStrategy, TALibMAParams
+    from bot.optimization.parallel_optimizer import OptimizationConfig, ParallelOptimizer
+    from bot.strategy.talib_optimized_ma import TALibMAParams
 
     # Generate test data with trend for better optimization results
     np.random.seed(42)
@@ -240,13 +241,13 @@ def test_adaptive_optimization():
     standard_results = optimizer.optimize_parameters(config)
     standard_time = time.time() - start_time
 
-    print(f"   📊 Standard optimization:")
+    print("   📊 Standard optimization:")
     print(f"      ⏱️  Time: {standard_time:.2f}s")
     print(f"      ✅ Valid results: {len(standard_results)}")
     if standard_results:
         print(f"      🏆 Best Sharpe: {standard_results[0].sharpe_ratio:.3f}")
 
-    print(f"   🔄 Adaptive optimization:")
+    print("   🔄 Adaptive optimization:")
     print(f"      ⏱️  Time: {adaptive_time:.2f}s")
     print(f"      ✅ Valid results: {len(adaptive_results)}")
     if adaptive_results:
@@ -264,11 +265,11 @@ def test_memory_efficiency():
     """Test memory efficiency of parallel optimization"""
     print("\n🧪 Testing Memory Efficiency...")
 
-    import psutil
     import os
 
-    from bot.optimization.parallel_optimizer import ParallelOptimizer, OptimizationConfig
-    from bot.strategy.talib_optimized_ma import TALibOptimizedMAStrategy, TALibMAParams
+    import psutil
+    from bot.optimization.parallel_optimizer import OptimizationConfig, ParallelOptimizer
+    from bot.strategy.talib_optimized_ma import TALibMAParams
 
     process = psutil.Process(os.getpid())
     initial_memory = process.memory_info().rss / 1024 / 1024  # MB
@@ -368,18 +369,18 @@ def main():
         memory_results = test_memory_efficiency()
 
         # Summary
-        print(f"\n📊 MULTIPROCESSING TEST SUMMARY:")
+        print("\n📊 MULTIPROCESSING TEST SUMMARY:")
         print(f"   ✅ Basic optimization: PASSED ({len(optimization_results)} results)")
         print(f"   ✅ Scaling analysis: PASSED ({len(scaling_results)} worker configs)")
-        print(f"   ✅ Adaptive optimization: PASSED")
-        print(f"   ✅ Memory efficiency: PASSED")
+        print("   ✅ Adaptive optimization: PASSED")
+        print("   ✅ Memory efficiency: PASSED")
 
         # Key metrics
         max_workers = max(scaling_results.keys())
         best_throughput = scaling_results[max_workers]["throughput"]
         max_speedup = scaling_results[max_workers]["speedup"]
 
-        print(f"\n🚀 KEY METRICS:")
+        print("\n🚀 KEY METRICS:")
         print(f"   ⚡ Best throughput: {best_throughput:.1f} combinations/sec")
         print(f"   📈 Maximum speedup: {max_speedup:.1f}x")
         print(f"   💾 Memory efficiency: {memory_results['memory_efficiency']:.1f} combinations/MB")
@@ -397,7 +398,7 @@ def main():
 
         print(f"   📊 Performance grade: {grade}")
 
-        print(f"\n✅ Multiprocessing optimization ready for production!")
+        print("\n✅ Multiprocessing optimization ready for production!")
 
         return True
 

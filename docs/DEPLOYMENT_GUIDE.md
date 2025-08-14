@@ -311,7 +311,7 @@ class ABTestingEngine:
         self.model_a = load_model('models/current/model_a.pkl')
         self.model_b = load_model('models/staging/model_b.pkl')
         self.traffic_split = 0.9  # 90% to A, 10% to B
-    
+
     def predict(self, features):
         if random.random() < self.traffic_split:
             prediction = self.model_a.predict(features)
@@ -373,13 +373,13 @@ groups:
         for: 5m
         annotations:
           summary: "Model accuracy below threshold"
-          
+
       - alert: HighDrawdown
         expr: portfolio_drawdown > 0.15
         for: 1m
         annotations:
           summary: "Portfolio drawdown exceeds 15%"
-          
+
       - alert: SystemDown
         expr: up{job="gpt-trader"} == 0
         for: 1m
@@ -400,10 +400,10 @@ class SecureConfig:
     def __init__(self):
         self.key = os.environ.get('ENCRYPTION_KEY')
         self.cipher = Fernet(self.key)
-    
+
     def encrypt_api_key(self, api_key):
         return self.cipher.encrypt(api_key.encode())
-    
+
     def decrypt_api_key(self, encrypted_key):
         return self.cipher.decrypt(encrypted_key).decode()
 ```
@@ -532,7 +532,7 @@ python scripts/evaluate_model_performance.py
 
 # Clean old predictions
 psql -U gpttrader -c "
-DELETE FROM performance.predictions 
+DELETE FROM performance.predictions
 WHERE timestamp < NOW() - INTERVAL '90 days';
 "
 
@@ -621,7 +621,7 @@ def check_health():
         'redis': 'http://localhost:8000/cache/health',
         'model': 'http://localhost:8000/model/health'
     }
-    
+
     failures = []
     for name, url in checks.items():
         try:
@@ -630,10 +630,10 @@ def check_health():
                 failures.append(f"{name}: {response.status_code}")
         except Exception as e:
             failures.append(f"{name}: {str(e)}")
-    
+
     if failures:
         send_alert("Health check failures: " + ", ".join(failures))
-    
+
     return len(failures) == 0
 
 if __name__ == "__main__":

@@ -289,7 +289,6 @@ class DatasetPreparer:
             TaskProgressColumn(),
             console=console,
         ) as progress:
-
             # Step 1: Download historical data
             download_task = progress.add_task(
                 "📡 Downloading historical data...", total=len(symbols)

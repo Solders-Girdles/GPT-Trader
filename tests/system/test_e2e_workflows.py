@@ -474,7 +474,10 @@ class TestEndToEndWorkflows:
 
         # Test risk alert
         await orchestrator.alert_manager.send_risk_alert(
-            "portfolio_risk", 0.025, 0.02, AlertSeverity.WARNING  # Current VaR  # Limit
+            "portfolio_risk",
+            0.025,
+            0.02,
+            AlertSeverity.WARNING,  # Current VaR  # Limit
         )
 
         # Test system alert

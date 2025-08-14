@@ -14,24 +14,20 @@ Features:
 - Training material generation
 """
 
-import json
 import logging
-import os
 import subprocess
 import time
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
-
-import yaml
-from jinja2 import Template
+from typing import Any
 
 # Import GPT-Trader components
 try:
-    from ..monitoring import get_logger, traced_operation
     from ..core.exceptions import GPTTraderException
+    from ..monitoring import get_logger, traced_operation
+
     GPT_TRADER_AVAILABLE = True
 except ImportError:
     GPT_TRADER_AVAILABLE = False
@@ -42,6 +38,7 @@ logger = get_logger(__name__) if GPT_TRADER_AVAILABLE else logging.getLogger(__n
 
 class RunbookCategory(Enum):
     """Runbook categories"""
+
     INCIDENT_RESPONSE = "incident_response"
     MAINTENANCE = "maintenance"
     DEPLOYMENT = "deployment"
@@ -53,14 +50,16 @@ class RunbookCategory(Enum):
 
 class IncidentSeverity(Enum):
     """Incident severity levels"""
+
     P0_CRITICAL = "p0_critical"  # System down, trading stopped
-    P1_HIGH = "p1_high"          # Major functionality impaired
-    P2_MEDIUM = "p2_medium"      # Minor functionality impaired
-    P3_LOW = "p3_low"            # Cosmetic or nice-to-have
+    P1_HIGH = "p1_high"  # Major functionality impaired
+    P2_MEDIUM = "p2_medium"  # Minor functionality impaired
+    P3_LOW = "p3_low"  # Cosmetic or nice-to-have
 
 
 class ExecutionStatus(Enum):
     """Step execution status"""
+
     PENDING = "pending"
     IN_PROGRESS = "in_progress"
     COMPLETED = "completed"
@@ -71,204 +70,201 @@ class ExecutionStatus(Enum):
 @dataclass
 class RunbookStep:
     """Individual runbook step"""
+
     id: str
     title: str
     description: str
-    command: Optional[str] = None
-    expected_output: Optional[str] = None
+    command: str | None = None
+    expected_output: str | None = None
     timeout_seconds: int = 300
     required: bool = True
     automated: bool = False
     status: ExecutionStatus = ExecutionStatus.PENDING
-    execution_time: Optional[datetime] = None
-    output: Optional[str] = None
-    error: Optional[str] = None
+    execution_time: datetime | None = None
+    output: str | None = None
+    error: str | None = None
 
 
 @dataclass
 class Runbook:
     """Complete runbook with metadata and steps"""
+
     id: str
     title: str
     description: str
     category: RunbookCategory
-    severity: Optional[IncidentSeverity] = None
+    severity: IncidentSeverity | None = None
     estimated_duration: str = "15 minutes"
-    prerequisites: List[str] = field(default_factory=list)
-    steps: List[RunbookStep] = field(default_factory=list)
-    tags: List[str] = field(default_factory=list)
+    prerequisites: list[str] = field(default_factory=list)
+    steps: list[RunbookStep] = field(default_factory=list)
+    tags: list[str] = field(default_factory=list)
     version: str = "1.0"
     last_updated: datetime = field(default_factory=datetime.now)
-    success_criteria: List[str] = field(default_factory=list)
+    success_criteria: list[str] = field(default_factory=list)
 
 
 class RunbookExecutor:
     """Executes runbooks with logging and state tracking"""
-    
+
     def __init__(self, dry_run: bool = False):
         self.dry_run = dry_run
         self.logger = logger
-        self.execution_log: List[Dict[str, Any]] = []
-    
-    def execute_runbook(self, runbook: Runbook) -> Dict[str, Any]:
+        self.execution_log: list[dict[str, Any]] = []
+
+    def execute_runbook(self, runbook: Runbook) -> dict[str, Any]:
         """Execute a complete runbook"""
         execution_id = f"exec_{runbook.id}_{int(time.time())}"
         start_time = datetime.now()
-        
-        self.logger.info(f"Starting runbook execution: {runbook.title}", extra={
-            'runbook_id': runbook.id,
-            'execution_id': execution_id,
-            'dry_run': self.dry_run
-        })
-        
+
+        self.logger.info(
+            f"Starting runbook execution: {runbook.title}",
+            extra={"runbook_id": runbook.id, "execution_id": execution_id, "dry_run": self.dry_run},
+        )
+
         results = {
-            'execution_id': execution_id,
-            'runbook_id': runbook.id,
-            'start_time': start_time,
-            'status': 'in_progress',
-            'completed_steps': 0,
-            'failed_steps': 0,
-            'skipped_steps': 0,
-            'step_results': []
+            "execution_id": execution_id,
+            "runbook_id": runbook.id,
+            "start_time": start_time,
+            "status": "in_progress",
+            "completed_steps": 0,
+            "failed_steps": 0,
+            "skipped_steps": 0,
+            "step_results": [],
         }
-        
+
         try:
             for step in runbook.steps:
                 step_result = self.execute_step(step, execution_id)
-                results['step_results'].append(step_result)
-                
-                if step_result['status'] == 'completed':
-                    results['completed_steps'] += 1
-                elif step_result['status'] == 'failed':
-                    results['failed_steps'] += 1
+                results["step_results"].append(step_result)
+
+                if step_result["status"] == "completed":
+                    results["completed_steps"] += 1
+                elif step_result["status"] == "failed":
+                    results["failed_steps"] += 1
                     if step.required:
-                        results['status'] = 'failed'
+                        results["status"] = "failed"
                         break
-                elif step_result['status'] == 'skipped':
-                    results['skipped_steps'] += 1
-            
-            if results['status'] != 'failed':
-                results['status'] = 'completed'
-                
+                elif step_result["status"] == "skipped":
+                    results["skipped_steps"] += 1
+
+            if results["status"] != "failed":
+                results["status"] = "completed"
+
         except Exception as e:
-            self.logger.error(f"Runbook execution failed: {e}", extra={
-                'execution_id': execution_id,
-                'error': str(e)
-            })
-            results['status'] = 'failed'
-            results['error'] = str(e)
-        
-        results['end_time'] = datetime.now()
-        results['duration'] = (results['end_time'] - start_time).total_seconds()
-        
+            self.logger.error(
+                f"Runbook execution failed: {e}",
+                extra={"execution_id": execution_id, "error": str(e)},
+            )
+            results["status"] = "failed"
+            results["error"] = str(e)
+
+        results["end_time"] = datetime.now()
+        results["duration"] = (results["end_time"] - start_time).total_seconds()
+
         self.execution_log.append(results)
         return results
-    
-    def execute_step(self, step: RunbookStep, execution_id: str) -> Dict[str, Any]:
+
+    def execute_step(self, step: RunbookStep, execution_id: str) -> dict[str, Any]:
         """Execute a single runbook step"""
         start_time = datetime.now()
         step.execution_time = start_time
         step.status = ExecutionStatus.IN_PROGRESS
-        
-        self.logger.info(f"Executing step: {step.title}", extra={
-            'step_id': step.id,
-            'execution_id': execution_id,
-            'automated': step.automated
-        })
-        
+
+        self.logger.info(
+            f"Executing step: {step.title}",
+            extra={"step_id": step.id, "execution_id": execution_id, "automated": step.automated},
+        )
+
         result = {
-            'step_id': step.id,
-            'title': step.title,
-            'start_time': start_time,
-            'status': 'in_progress',
-            'automated': step.automated
+            "step_id": step.id,
+            "title": step.title,
+            "start_time": start_time,
+            "status": "in_progress",
+            "automated": step.automated,
         }
-        
+
         try:
             if self.dry_run:
-                result['output'] = f"[DRY RUN] Would execute: {step.command or 'Manual step'}"
-                result['status'] = 'completed'
+                result["output"] = f"[DRY RUN] Would execute: {step.command or 'Manual step'}"
+                result["status"] = "completed"
                 step.status = ExecutionStatus.COMPLETED
             elif step.automated and step.command:
-                result['output'] = self._execute_command(step.command, step.timeout_seconds)
-                result['status'] = 'completed'
+                result["output"] = self._execute_command(step.command, step.timeout_seconds)
+                result["status"] = "completed"
                 step.status = ExecutionStatus.COMPLETED
             else:
                 # Manual step - require confirmation
-                result['output'] = "Manual step - requires operator action"
-                result['status'] = 'completed'  # Assume completed for now
+                result["output"] = "Manual step - requires operator action"
+                result["status"] = "completed"  # Assume completed for now
                 step.status = ExecutionStatus.COMPLETED
-                
+
         except Exception as e:
-            self.logger.error(f"Step execution failed: {e}", extra={
-                'step_id': step.id,
-                'error': str(e)
-            })
-            result['error'] = str(e)
-            result['status'] = 'failed'
+            self.logger.error(
+                f"Step execution failed: {e}", extra={"step_id": step.id, "error": str(e)}
+            )
+            result["error"] = str(e)
+            result["status"] = "failed"
             step.status = ExecutionStatus.FAILED
             step.error = str(e)
-        
-        result['end_time'] = datetime.now()
-        result['duration'] = (result['end_time'] - start_time).total_seconds()
-        
+
+        result["end_time"] = datetime.now()
+        result["duration"] = (result["end_time"] - start_time).total_seconds()
+
         return result
-    
+
     def _execute_command(self, command: str, timeout: int) -> str:
         """Execute a shell command with timeout"""
         try:
             result = subprocess.run(
-                command,
-                shell=True,
-                capture_output=True,
-                text=True,
-                timeout=timeout
+                command, shell=True, capture_output=True, text=True, timeout=timeout
             )
-            
+
             if result.returncode == 0:
                 return result.stdout.strip()
             else:
-                raise RuntimeError(f"Command failed with exit code {result.returncode}: {result.stderr}")
-                
+                raise RuntimeError(
+                    f"Command failed with exit code {result.returncode}: {result.stderr}"
+                )
+
         except subprocess.TimeoutExpired:
             raise RuntimeError(f"Command timed out after {timeout} seconds")
 
 
 class RunbookLibrary:
     """Library of operational runbooks"""
-    
+
     def __init__(self):
-        self.runbooks: Dict[str, Runbook] = {}
+        self.runbooks: dict[str, Runbook] = {}
         self.logger = logger
         self._initialize_runbooks()
-    
+
     def _initialize_runbooks(self):
         """Initialize the runbook library with standard procedures"""
-        
+
         # System Health Check Runbook
         self._add_system_health_runbook()
-        
+
         # Model Degradation Response Runbook
         self._add_model_degradation_runbook()
-        
+
         # High VaR Alert Response Runbook
         self._add_high_var_runbook()
-        
+
         # Database Performance Issue Runbook
         self._add_database_performance_runbook()
-        
+
         # Data Feed Outage Runbook
         self._add_data_feed_outage_runbook()
-        
+
         # Trading Engine Stop Runbook
         self._add_trading_engine_stop_runbook()
-        
+
         # System Deployment Runbook
         self._add_deployment_runbook()
-        
+
         # Performance Tuning Runbook
         self._add_performance_tuning_runbook()
-    
+
     def _add_system_health_runbook(self):
         """System health check runbook"""
         runbook = Runbook(
@@ -282,50 +278,50 @@ class RunbookLibrary:
                 "All services are running",
                 "Database connections are healthy",
                 "ML pipeline is operational",
-                "Data feeds are active"
+                "Data feeds are active",
             ],
-            tags=["health", "monitoring", "system"]
+            tags=["health", "monitoring", "system"],
         )
-        
+
         runbook.steps = [
             RunbookStep(
                 id="check_services",
                 title="Check Core Services",
                 description="Verify all core services are running",
                 command="systemctl status postgresql redis-server",
-                automated=True
+                automated=True,
             ),
             RunbookStep(
                 id="check_database",
                 title="Check Database Connectivity",
                 description="Test database connection and query performance",
                 command="python -c \"from src.bot.database import PostgresManager; pm = PostgresManager(); print('DB OK' if pm.health_check() else 'DB FAIL')\"",
-                automated=True
+                automated=True,
             ),
             RunbookStep(
                 id="check_ml_pipeline",
                 title="Check ML Pipeline",
                 description="Verify ML pipeline is healthy and processing",
                 command="python -c \"from src.bot.ml import IntegratedMLPipeline; print('ML OK')\"",
-                automated=True
+                automated=True,
             ),
             RunbookStep(
                 id="check_data_feeds",
                 title="Check Data Feeds",
                 description="Verify market data feeds are active and recent",
                 command="python -c \"from src.bot.dataflow import RealtimeFeed; rf = RealtimeFeed(); print('Feed OK' if rf.is_healthy() else 'Feed FAIL')\"",
-                automated=True
+                automated=True,
             ),
             RunbookStep(
                 id="review_alerts",
                 title="Review Active Alerts",
                 description="Check for any active critical alerts",
-                automated=False
-            )
+                automated=False,
+            ),
         ]
-        
+
         self.runbooks[runbook.id] = runbook
-    
+
     def _add_model_degradation_runbook(self):
         """Model degradation response runbook"""
         runbook = Runbook(
@@ -339,49 +335,49 @@ class RunbookLibrary:
             success_criteria=[
                 "Model performance restored above threshold",
                 "Degradation root cause identified",
-                "Preventive measures implemented"
+                "Preventive measures implemented",
             ],
-            tags=["ml", "degradation", "incident"]
+            tags=["ml", "degradation", "incident"],
         )
-        
+
         runbook.steps = [
             RunbookStep(
                 id="assess_degradation",
                 title="Assess Degradation Severity",
                 description="Check model performance metrics and degradation extent",
                 command="python scripts/check_model_performance.py --detailed",
-                automated=True
+                automated=True,
             ),
             RunbookStep(
                 id="switch_to_backup",
                 title="Switch to Backup Model",
                 description="Activate backup model to maintain trading operations",
-                command="python -c \"from src.bot.ml import ModelPromotionManager; mpm = ModelPromotionManager(); mpm.emergency_rollback()\"",
-                automated=True
+                command='python -c "from src.bot.ml import ModelPromotionManager; mpm = ModelPromotionManager(); mpm.emergency_rollback()"',
+                automated=True,
             ),
             RunbookStep(
                 id="analyze_root_cause",
                 title="Analyze Root Cause",
                 description="Investigate data drift, feature changes, or market regime shifts",
-                automated=False
+                automated=False,
             ),
             RunbookStep(
                 id="trigger_retraining",
                 title="Trigger Model Retraining",
                 description="Start retraining process with recent data",
                 command="python scripts/trigger_retraining.py --emergency",
-                automated=True
+                automated=True,
             ),
             RunbookStep(
                 id="validate_new_model",
                 title="Validate New Model",
                 description="Test new model in shadow mode before deployment",
-                automated=False
-            )
+                automated=False,
+            ),
         ]
-        
+
         self.runbooks[runbook.id] = runbook
-    
+
     def _add_high_var_runbook(self):
         """High VaR alert response runbook"""
         runbook = Runbook(
@@ -395,48 +391,48 @@ class RunbookLibrary:
             success_criteria=[
                 "VaR reduced below limit",
                 "Positions reviewed and adjusted",
-                "Risk exposure documented"
+                "Risk exposure documented",
             ],
-            tags=["risk", "var", "trading"]
+            tags=["risk", "var", "trading"],
         )
-        
+
         runbook.steps = [
             RunbookStep(
                 id="calculate_current_var",
                 title="Calculate Current VaR",
                 description="Get current VaR calculation and breakdown",
                 command="python -c \"from src.bot.risk import RiskMetricsEngine; rme = RiskMetricsEngine(); print(f'VaR: ${rme.calculate_var():.0f}')\"",
-                automated=True
+                automated=True,
             ),
             RunbookStep(
                 id="identify_high_risk_positions",
                 title="Identify High Risk Positions",
                 description="Find positions contributing most to VaR",
-                automated=False
+                automated=False,
             ),
             RunbookStep(
                 id="reduce_position_sizes",
                 title="Reduce Position Sizes",
                 description="Scale down high-risk positions to reduce VaR",
-                automated=False
+                automated=False,
             ),
             RunbookStep(
                 id="verify_var_reduction",
                 title="Verify VaR Reduction",
                 description="Confirm VaR is now within acceptable limits",
                 command="python -c \"from src.bot.risk import RiskMetricsEngine; rme = RiskMetricsEngine(); print(f'New VaR: ${rme.calculate_var():.0f}')\"",
-                automated=True
+                automated=True,
             ),
             RunbookStep(
                 id="document_actions",
                 title="Document Actions Taken",
                 description="Record all actions and rationale for audit",
-                automated=False
-            )
+                automated=False,
+            ),
         ]
-        
+
         self.runbooks[runbook.id] = runbook
-    
+
     def _add_database_performance_runbook(self):
         """Database performance issue runbook"""
         runbook = Runbook(
@@ -450,50 +446,50 @@ class RunbookLibrary:
             success_criteria=[
                 "Query response times improved",
                 "Connection pool optimized",
-                "Performance bottlenecks identified"
+                "Performance bottlenecks identified",
             ],
-            tags=["database", "performance", "optimization"]
+            tags=["database", "performance", "optimization"],
         )
-        
+
         runbook.steps = [
             RunbookStep(
                 id="check_connection_pool",
                 title="Check Connection Pool Status",
                 description="Review database connection pool metrics",
-                command="python -c \"from src.bot.database import PostgresManager; pm = PostgresManager(); print(pm.get_pool_stats())\"",
-                automated=True
+                command='python -c "from src.bot.database import PostgresManager; pm = PostgresManager(); print(pm.get_pool_stats())"',
+                automated=True,
             ),
             RunbookStep(
                 id="analyze_slow_queries",
                 title="Analyze Slow Queries",
                 description="Identify and analyze slow-running queries",
-                command="psql -d gpt_trader -c \"SELECT query, mean_time, calls FROM pg_stat_statements ORDER BY mean_time DESC LIMIT 10;\"",
-                automated=True
+                command='psql -d gpt_trader -c "SELECT query, mean_time, calls FROM pg_stat_statements ORDER BY mean_time DESC LIMIT 10;"',
+                automated=True,
             ),
             RunbookStep(
                 id="check_table_stats",
                 title="Check Table Statistics",
                 description="Review table size and index usage statistics",
-                command="psql -d gpt_trader -c \"SELECT schemaname, tablename, n_tup_ins, n_tup_upd, n_tup_del FROM pg_stat_user_tables ORDER BY n_tup_ins DESC;\"",
-                automated=True
+                command='psql -d gpt_trader -c "SELECT schemaname, tablename, n_tup_ins, n_tup_upd, n_tup_del FROM pg_stat_user_tables ORDER BY n_tup_ins DESC;"',
+                automated=True,
             ),
             RunbookStep(
                 id="optimize_indexes",
                 title="Optimize Database Indexes",
                 description="Review and optimize database indexes",
-                automated=False
+                automated=False,
             ),
             RunbookStep(
                 id="update_statistics",
                 title="Update Table Statistics",
                 description="Run ANALYZE to update table statistics",
-                command="psql -d gpt_trader -c \"ANALYZE;\"",
-                automated=True
-            )
+                command='psql -d gpt_trader -c "ANALYZE;"',
+                automated=True,
+            ),
         ]
-        
+
         self.runbooks[runbook.id] = runbook
-    
+
     def _add_data_feed_outage_runbook(self):
         """Data feed outage runbook"""
         runbook = Runbook(
@@ -507,48 +503,48 @@ class RunbookLibrary:
             success_criteria=[
                 "Data feed restored or alternative activated",
                 "Trading operations maintained",
-                "Data quality verified"
+                "Data quality verified",
             ],
-            tags=["data", "feed", "outage", "critical"]
+            tags=["data", "feed", "outage", "critical"],
         )
-        
+
         runbook.steps = [
             RunbookStep(
                 id="verify_outage",
                 title="Verify Data Feed Outage",
                 description="Confirm the data feed is actually down",
                 command="python -c \"from src.bot.dataflow import RealtimeFeed; rf = RealtimeFeed(); print('UP' if rf.is_connected() else 'DOWN')\"",
-                automated=True
+                automated=True,
             ),
             RunbookStep(
                 id="check_alternative_sources",
                 title="Check Alternative Data Sources",
                 description="Verify status of backup data sources",
-                automated=False
+                automated=False,
             ),
             RunbookStep(
                 id="switch_to_backup",
                 title="Switch to Backup Data Source",
                 description="Activate backup data feed",
-                command="python -c \"from src.bot.dataflow import DataSourceManager; dsm = DataSourceManager(); dsm.switch_to_backup()\"",
-                automated=True
+                command='python -c "from src.bot.dataflow import DataSourceManager; dsm = DataSourceManager(); dsm.switch_to_backup()"',
+                automated=True,
             ),
             RunbookStep(
                 id="verify_data_quality",
                 title="Verify Data Quality",
                 description="Check that backup data meets quality standards",
-                automated=False
+                automated=False,
             ),
             RunbookStep(
                 id="notify_stakeholders",
                 title="Notify Stakeholders",
                 description="Inform relevant parties of data source change",
-                automated=False
-            )
+                automated=False,
+            ),
         ]
-        
+
         self.runbooks[runbook.id] = runbook
-    
+
     def _add_trading_engine_stop_runbook(self):
         """Trading engine emergency stop runbook"""
         runbook = Runbook(
@@ -562,49 +558,49 @@ class RunbookLibrary:
             success_criteria=[
                 "All trading operations stopped",
                 "Open positions documented",
-                "Risk exposure assessed"
+                "Risk exposure assessed",
             ],
-            tags=["trading", "emergency", "stop"]
+            tags=["trading", "emergency", "stop"],
         )
-        
+
         runbook.steps = [
             RunbookStep(
                 id="assess_situation",
                 title="Assess Emergency Situation",
                 description="Understand the reason for emergency stop",
-                automated=False
+                automated=False,
             ),
             RunbookStep(
                 id="stop_new_orders",
                 title="Stop New Order Placement",
                 description="Disable new order generation",
-                command="python -c \"from src.bot.exec import TradingEngine; te = TradingEngine(); te.disable_trading()\"",
-                automated=True
+                command='python -c "from src.bot.exec import TradingEngine; te = TradingEngine(); te.disable_trading()"',
+                automated=True,
             ),
             RunbookStep(
                 id="cancel_pending_orders",
                 title="Cancel Pending Orders",
                 description="Cancel all pending orders",
-                command="python -c \"from src.bot.exec import TradingEngine; te = TradingEngine(); te.cancel_all_orders()\"",
-                automated=True
+                command='python -c "from src.bot.exec import TradingEngine; te = TradingEngine(); te.cancel_all_orders()"',
+                automated=True,
             ),
             RunbookStep(
                 id="document_positions",
                 title="Document Current Positions",
                 description="Record all current positions and their status",
-                automated=False
+                automated=False,
             ),
             RunbookStep(
                 id="calculate_exposure",
                 title="Calculate Risk Exposure",
                 description="Calculate current risk exposure",
                 command="python -c \"from src.bot.risk import RiskMetricsEngine; rme = RiskMetricsEngine(); print(f'Total Exposure: ${rme.get_total_exposure():.0f}')\"",
-                automated=True
-            )
+                automated=True,
+            ),
         ]
-        
+
         self.runbooks[runbook.id] = runbook
-    
+
     def _add_deployment_runbook(self):
         """System deployment runbook"""
         runbook = Runbook(
@@ -617,64 +613,64 @@ class RunbookLibrary:
             success_criteria=[
                 "New version deployed successfully",
                 "All tests passing",
-                "Rollback plan ready"
+                "Rollback plan ready",
             ],
-            tags=["deployment", "update", "release"]
+            tags=["deployment", "update", "release"],
         )
-        
+
         runbook.steps = [
             RunbookStep(
                 id="pre_deployment_checks",
                 title="Pre-deployment Checks",
                 description="Verify system health before deployment",
-                automated=False
+                automated=False,
             ),
             RunbookStep(
                 id="backup_database",
                 title="Backup Database",
                 description="Create database backup before deployment",
                 command="pg_dump gpt_trader > backups/pre_deploy_$(date +%Y%m%d_%H%M%S).sql",
-                automated=True
+                automated=True,
             ),
             RunbookStep(
                 id="stop_services",
                 title="Stop Services",
                 description="Gracefully stop application services",
                 command="systemctl stop gpt-trader",
-                automated=True
+                automated=True,
             ),
             RunbookStep(
                 id="deploy_code",
                 title="Deploy New Code",
                 description="Deploy new application version",
                 command="git pull origin main && poetry install",
-                automated=True
+                automated=True,
             ),
             RunbookStep(
                 id="run_migrations",
                 title="Run Database Migrations",
                 description="Apply any database schema changes",
                 command="python scripts/run_migrations.py",
-                automated=True
+                automated=True,
             ),
             RunbookStep(
                 id="start_services",
                 title="Start Services",
                 description="Start application services",
                 command="systemctl start gpt-trader",
-                automated=True
+                automated=True,
             ),
             RunbookStep(
                 id="verify_deployment",
                 title="Verify Deployment",
                 description="Run post-deployment verification tests",
                 command="python scripts/verify_deployment.py",
-                automated=True
-            )
+                automated=True,
+            ),
         ]
-        
+
         self.runbooks[runbook.id] = runbook
-    
+
     def _add_performance_tuning_runbook(self):
         """Performance tuning runbook"""
         runbook = Runbook(
@@ -687,93 +683,95 @@ class RunbookLibrary:
             success_criteria=[
                 "Performance bottlenecks identified",
                 "Optimizations implemented",
-                "Performance improvements measured"
+                "Performance improvements measured",
             ],
-            tags=["performance", "optimization", "tuning"]
+            tags=["performance", "optimization", "tuning"],
         )
-        
+
         runbook.steps = [
             RunbookStep(
                 id="baseline_performance",
                 title="Establish Performance Baseline",
                 description="Measure current system performance metrics",
                 command="python scripts/performance_benchmark.py --baseline",
-                automated=True
+                automated=True,
             ),
             RunbookStep(
                 id="profile_ml_pipeline",
                 title="Profile ML Pipeline",
                 description="Profile ML pipeline for bottlenecks",
                 command="python scripts/profile_ml_pipeline.py",
-                automated=True
+                automated=True,
             ),
             RunbookStep(
                 id="analyze_database_performance",
                 title="Analyze Database Performance",
                 description="Review database query performance",
-                automated=False
+                automated=False,
             ),
             RunbookStep(
                 id="optimize_caching",
                 title="Optimize Caching Strategy",
                 description="Review and optimize caching configuration",
-                automated=False
+                automated=False,
             ),
             RunbookStep(
                 id="tune_parameters",
                 title="Tune System Parameters",
                 description="Adjust system parameters for optimal performance",
-                automated=False
+                automated=False,
             ),
             RunbookStep(
                 id="measure_improvements",
                 title="Measure Performance Improvements",
                 description="Re-run performance tests to measure improvements",
                 command="python scripts/performance_benchmark.py --compare",
-                automated=True
-            )
+                automated=True,
+            ),
         ]
-        
+
         self.runbooks[runbook.id] = runbook
-    
-    def get_runbook(self, runbook_id: str) -> Optional[Runbook]:
+
+    def get_runbook(self, runbook_id: str) -> Runbook | None:
         """Get a runbook by ID"""
         return self.runbooks.get(runbook_id)
-    
-    def list_runbooks(self, category: Optional[RunbookCategory] = None) -> List[Runbook]:
+
+    def list_runbooks(self, category: RunbookCategory | None = None) -> list[Runbook]:
         """List runbooks, optionally filtered by category"""
         runbooks = list(self.runbooks.values())
         if category:
             runbooks = [rb for rb in runbooks if rb.category == category]
         return sorted(runbooks, key=lambda x: x.title)
-    
-    def search_runbooks(self, query: str) -> List[Runbook]:
+
+    def search_runbooks(self, query: str) -> list[Runbook]:
         """Search runbooks by title, description, or tags"""
         query = query.lower()
         results = []
-        
+
         for runbook in self.runbooks.values():
-            if (query in runbook.title.lower() or 
-                query in runbook.description.lower() or
-                any(query in tag.lower() for tag in runbook.tags)):
+            if (
+                query in runbook.title.lower()
+                or query in runbook.description.lower()
+                or any(query in tag.lower() for tag in runbook.tags)
+            ):
                 results.append(runbook)
-        
+
         return sorted(results, key=lambda x: x.title)
 
 
 class TrainingMaterialGenerator:
     """Generates training materials and documentation"""
-    
+
     def __init__(self):
         self.logger = logger
         self.templates_dir = Path(__file__).parent / "templates"
         self.output_dir = Path(__file__).parent.parent.parent.parent / "docs" / "training"
         self.output_dir.mkdir(parents=True, exist_ok=True)
-    
+
     def generate_all_materials(self):
         """Generate all training materials"""
         self.logger.info("Generating training materials")
-        
+
         # Generate different types of training materials
         self._generate_quick_reference()
         self._generate_troubleshooting_guide()
@@ -783,7 +781,7 @@ class TrainingMaterialGenerator:
         self._generate_performance_guide()
         self._generate_security_guide()
         self._generate_onboarding_checklist()
-    
+
     def _generate_quick_reference(self):
         """Generate quick reference guide"""
         content = """# GPT-Trader Quick Reference Guide
@@ -854,10 +852,10 @@ python scripts/check_model_performance.py
 - **Application Dashboard**: http://localhost:8501
 - **Database Admin**: http://localhost:5050
 """
-        
+
         with open(self.output_dir / "quick_reference.md", "w") as f:
             f.write(content)
-    
+
     def _generate_troubleshooting_guide(self):
         """Generate comprehensive troubleshooting guide"""
         content = """# GPT-Trader Troubleshooting Guide
@@ -934,13 +932,13 @@ python -c "from src.bot.risk import RiskMetricsEngine; rme = RiskMetricsEngine()
 SELECT count(*) FROM pg_stat_activity;
 
 -- Find slow queries
-SELECT query, mean_time, calls 
-FROM pg_stat_statements 
+SELECT query, mean_time, calls
+FROM pg_stat_statements
 ORDER BY mean_time DESC LIMIT 10;
 
 -- Check table sizes
 SELECT schemaname, tablename, pg_size_pretty(pg_total_relation_size(schemaname||'.'||tablename)) as size
-FROM pg_tables 
+FROM pg_tables
 ORDER BY pg_total_relation_size(schemaname||'.'||tablename) DESC;
 ```
 
@@ -1004,10 +1002,10 @@ python -c "from src.bot.dataflow import RealtimeFeed; rf = RealtimeFeed(); print
 - [ ] Replay missed transactions
 - [ ] Validate system state
 """
-        
+
         with open(self.output_dir / "troubleshooting_guide.md", "w") as f:
             f.write(content)
-    
+
     def _generate_alert_response_guide(self):
         """Generate alert response playbook"""
         content = """# Alert Response Playbook
@@ -1196,7 +1194,7 @@ Follow-up Actions:
 - Quarterly alert strategy assessment
 - Annual playbook updates
 """
-        
+
         with open(self.output_dir / "alert_response_playbook.md", "w") as f:
             f.write(content)
 
@@ -1206,10 +1204,10 @@ def main():
     library = RunbookLibrary()
     executor = RunbookExecutor(dry_run=True)
     generator = TrainingMaterialGenerator()
-    
+
     # Generate training materials
     generator.generate_all_materials()
-    
+
     # Example: Execute system health check
     health_runbook = library.get_runbook("system_health_check")
     if health_runbook:

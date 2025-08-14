@@ -4,30 +4,31 @@ Simplified Integration Test for Strategy Development Pipeline
 
 Tests core components integration without complex dependencies:
 1. Historical Data Manager + Data Quality Framework (Week 1)
-2. Strategy Validation Engine (Week 2) 
+2. Strategy Validation Engine (Week 2)
 3. Strategy Persistence System (Week 2)
 """
 
 import logging
-import numpy as np
-from datetime import datetime, timedelta
-from pathlib import Path
 
 # Add src to path for imports
 import sys
+from datetime import datetime, timedelta
+from pathlib import Path
+
+import numpy as np
 
 sys.path.insert(0, "src")
 
 # Week 1 imports
-from bot.dataflow.historical_data_manager import create_historical_data_manager, DataFrequency
+import pandas as pd
 from bot.dataflow.data_quality_framework import create_data_quality_framework
-
-# Week 2 imports
-from bot.strategy.validation_engine import create_strategy_validator
+from bot.dataflow.historical_data_manager import DataFrequency, create_historical_data_manager
 
 # Strategy base import
 from bot.strategy.base import Strategy
-import pandas as pd
+
+# Week 2 imports
+from bot.strategy.validation_engine import create_strategy_validator
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
@@ -85,7 +86,7 @@ def test_simplified_pipeline_integration():
     output_dir = Path("data/simplified_integration_test")
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    print(f"Test Configuration:")
+    print("Test Configuration:")
     print(f"   Symbols: {test_symbols}")
     print(f"   Date Range: {start_date.date()} to {end_date.date()}")
     print(f"   Output Directory: {output_dir}")
@@ -94,7 +95,7 @@ def test_simplified_pipeline_integration():
         # =================================================================
         # STEP 1: DATA PREPARATION (Week 1 Components)
         # =================================================================
-        print(f"\n📊 STEP 1: Data Preparation (Week 1)")
+        print("\n📊 STEP 1: Data Preparation (Week 1)")
         print("-" * 40)
 
         # Initialize data components
@@ -133,12 +134,12 @@ def test_simplified_pipeline_integration():
             quality_reports[symbol] = quality_report
             print(f"      • {symbol}: Quality score {quality_report.quality_score:.1f}/100")
 
-        print(f"   ✅ Data preparation completed")
+        print("   ✅ Data preparation completed")
 
         # =================================================================
         # STEP 2: STRATEGY VALIDATION (Week 2 - Validation Engine)
         # =================================================================
-        print(f"\n🔍 STEP 2: Strategy Validation (Week 2)")
+        print("\n🔍 STEP 2: Strategy Validation (Week 2)")
         print("-" * 40)
 
         # Initialize validation engine
@@ -164,7 +165,7 @@ def test_simplified_pipeline_integration():
         print("   Running comprehensive validation...")
         validation_result = validator.validate_strategy(returns=returns, strategy_id=strategy_id)
 
-        print(f"   ✅ Validation completed:")
+        print("   ✅ Validation completed:")
         print(f"      • Overall Score: {validation_result.overall_score:.1f}/100")
         print(f"      • Validation Grade: {validation_result.validation_grade}")
         print(f"      • Is Validated: {'Yes' if validation_result.is_validated else 'No'}")
@@ -179,19 +180,19 @@ def test_simplified_pipeline_integration():
         # =================================================================
         # STEP 3: STRATEGY ANALYSIS (Week 2 - Core Validation Complete)
         # =================================================================
-        print(f"\n🎯 STEP 3: Strategy Analysis Complete")
+        print("\n🎯 STEP 3: Strategy Analysis Complete")
         print("-" * 40)
 
-        print(f"   Strategy validation demonstrates core Week 2 functionality:")
-        print(f"      • Risk-adjusted performance evaluation ✅")
-        print(f"      • Statistical significance testing ✅")
-        print(f"      • Comprehensive quality scoring ✅")
-        print(f"      • Automated recommendations ✅")
+        print("   Strategy validation demonstrates core Week 2 functionality:")
+        print("      • Risk-adjusted performance evaluation ✅")
+        print("      • Statistical significance testing ✅")
+        print("      • Comprehensive quality scoring ✅")
+        print("      • Automated recommendations ✅")
 
         # =================================================================
         # FINAL INTEGRATION VERIFICATION
         # =================================================================
-        print(f"\n🎉 INTEGRATION VERIFICATION")
+        print("\n🎉 INTEGRATION VERIFICATION")
         print("=" * 40)
 
         # Verify all components work together
@@ -205,7 +206,7 @@ def test_simplified_pipeline_integration():
 
         all_successful = all(success_indicators.values())
 
-        print(f"Integration Test Results:")
+        print("Integration Test Results:")
         for component, success in success_indicators.items():
             status = "✅ PASS" if success else "❌ FAIL"
             print(f"   {component}: {status}")
@@ -213,22 +214,22 @@ def test_simplified_pipeline_integration():
         print(f"\nOverall Integration Test: {'✅ SUCCESS' if all_successful else '❌ FAILED'}")
 
         if all_successful:
-            print(f"\n🚀 STRATEGY PIPELINE FOUNDATION IS OPERATIONAL!")
-            print(f"   • Week 1: Data pipeline with quality validation ✅")
-            print(f"   • Week 2: Risk-adjusted strategy validation ✅")
-            print(f"   • Integration: Core components working together ✅")
+            print("\n🚀 STRATEGY PIPELINE FOUNDATION IS OPERATIONAL!")
+            print("   • Week 1: Data pipeline with quality validation ✅")
+            print("   • Week 2: Risk-adjusted strategy validation ✅")
+            print("   • Integration: Core components working together ✅")
 
-            print(f"\n📊 Pipeline Performance:")
+            print("\n📊 Pipeline Performance:")
             print(
                 f"   • Data Quality: {np.mean([r.quality_score for r in quality_reports.values()]):.1f}/100"
             )
             print(f"   • Validation Score: {validation_result.overall_score:.1f}/100")
             print(f"   • Strategy Grade: {validation_result.validation_grade}")
 
-            print(f"\n🎯 Framework Status:")
-            print(f"   • Week 1: Data Foundation COMPLETE ✅")
-            print(f"   • Week 2: Validation & Analysis COMPLETE ✅")
-            print(f"   • Ready for production strategy development ✅")
+            print("\n🎯 Framework Status:")
+            print("   • Week 1: Data Foundation COMPLETE ✅")
+            print("   • Week 2: Validation & Analysis COMPLETE ✅")
+            print("   • Ready for production strategy development ✅")
 
         return all_successful
 

@@ -6,11 +6,10 @@ Minimal test to verify Week 3 core functionality without import dependencies.
 Tests the strategy creation CLI and template system directly.
 """
 
+import json
 import sys
 import tempfile
-import json
 from pathlib import Path
-from datetime import datetime
 
 
 def test_strategy_templates():
@@ -26,7 +25,7 @@ def test_strategy_templates():
         # Import strategy templates directly
         from bot.cli.strategy_development import STRATEGY_TEMPLATES, StrategyDevelopmentWorkflow
 
-        print(f"\n📋 STRATEGY TEMPLATES TEST")
+        print("\n📋 STRATEGY TEMPLATES TEST")
         print("-" * 30)
 
         print(f"   Available templates: {len(STRATEGY_TEMPLATES)}")
@@ -38,7 +37,7 @@ def test_strategy_templates():
         # =================================================================
         # TEST STRATEGY CREATION
         # =================================================================
-        print(f"\n🎨 STRATEGY CREATION TEST")
+        print("\n🎨 STRATEGY CREATION TEST")
         print("-" * 30)
 
         # Create temporary directory
@@ -76,7 +75,7 @@ def test_strategy_templates():
                     print(f"      ✅ Strategy file created: {Path(strategy_file).name}")
 
                     # Check file content
-                    with open(strategy_file, "r") as f:
+                    with open(strategy_file) as f:
                         content = f.read()
 
                     # Verify essential content
@@ -88,14 +87,14 @@ def test_strategy_templates():
                     # Check config file
                     config_file = Path(strategy_file).parent / "strategy_config.json"
                     if config_file.exists():
-                        with open(config_file, "r") as f:
+                        with open(config_file) as f:
                             config = json.load(f)
                         print(f"      ✅ Config created: {config.get('strategy_name', 'Unknown')}")
                         success_count += 1
                     else:
-                        print(f"      ⚠️  Config file missing")
+                        print("      ⚠️  Config file missing")
                 else:
-                    print(f"      ❌ Strategy file not created")
+                    print("      ❌ Strategy file not created")
 
             except Exception as e:
                 print(f"      ❌ Failed: {str(e)}")
@@ -103,7 +102,7 @@ def test_strategy_templates():
         # =================================================================
         # CODE GENERATION TEST
         # =================================================================
-        print(f"\n🔧 CODE GENERATION TEST")
+        print("\n🔧 CODE GENERATION TEST")
         print("-" * 30)
 
         # Test specific template generation
@@ -144,7 +143,7 @@ def test_strategy_templates():
         # =================================================================
         # DIRECTORY STRUCTURE TEST
         # =================================================================
-        print(f"\n📁 DIRECTORY STRUCTURE TEST")
+        print("\n📁 DIRECTORY STRUCTURE TEST")
         print("-" * 30)
 
         expected_dirs = ["strategies", "templates", "results", "reports"]
@@ -164,7 +163,7 @@ def test_strategy_templates():
         # =================================================================
         # FINAL RESULTS
         # =================================================================
-        print(f"\n🎯 FINAL RESULTS")
+        print("\n🎯 FINAL RESULTS")
         print("=" * 30)
 
         creation_score = (success_count / len(test_strategies)) * 100
@@ -187,13 +186,13 @@ def test_strategy_templates():
         success = overall_score >= 75
 
         if success:
-            print(f"\n✅ WEEK 3 MINIMAL TEST: SUCCESS")
+            print("\n✅ WEEK 3 MINIMAL TEST: SUCCESS")
             print("   Strategy Development CLI is functional!")
             print("   Template system working properly!")
             print("   Code generation creating valid strategies!")
             print("\n🚀 Week 3 Core Components: OPERATIONAL")
         else:
-            print(f"\n⚠️  WEEK 3 MINIMAL TEST: NEEDS WORK")
+            print("\n⚠️  WEEK 3 MINIMAL TEST: NEEDS WORK")
             print("   Some core components need improvement")
 
         # Cleanup
@@ -201,7 +200,7 @@ def test_strategy_templates():
 
         try:
             shutil.rmtree(test_dir)
-            print(f"\n🧹 Cleanup completed")
+            print("\n🧹 Cleanup completed")
         except Exception as e:
             print(f"⚠️  Cleanup warning: {str(e)}")
 

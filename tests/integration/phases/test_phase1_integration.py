@@ -10,12 +10,13 @@ Comprehensive test demonstrating all Phase 1 optimizations working together:
 5. Intelligent caching (2-10x speedup for repeated operations)
 """
 
+import logging
 import sys
 import time
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
-import logging
-from pathlib import Path
 
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent / "src"))
@@ -29,10 +30,9 @@ def test_complete_optimization_workflow():
     # Test 1: Import system works correctly
     print("\n1️⃣ Testing Import System...")
     try:
-        from bot import run_backtest, Strategy
-        from bot.strategy.talib_optimized_ma import TALibOptimizedMAStrategy, TALibMAParams
-        from bot.optimization.parallel_optimizer import ParallelOptimizer, OptimizationConfig
-        from bot.optimization.intelligent_cache import IntelligentCache, cached
+        from bot.optimization.intelligent_cache import IntelligentCache
+        from bot.optimization.parallel_optimizer import OptimizationConfig, ParallelOptimizer
+        from bot.strategy.talib_optimized_ma import TALibMAParams, TALibOptimizedMAStrategy
 
         print("   ✅ All imports successful - no conflicts detected")
     except Exception as e:
@@ -188,8 +188,9 @@ def test_complete_optimization_workflow():
     # Test 6: Memory efficiency and system integration
     print("\n6️⃣ Testing System Integration & Memory Efficiency...")
 
-    import psutil
     import os
+
+    import psutil
 
     process = psutil.Process(os.getpid())
     initial_memory = process.memory_info().rss / 1024 / 1024
@@ -243,7 +244,7 @@ def test_complete_optimization_workflow():
 
     overall_score = sum(scores.values()) / len(scores)
 
-    print(f"   📊 PERFORMANCE SCORES:")
+    print("   📊 PERFORMANCE SCORES:")
     for metric, score in scores.items():
         print(f"      {metric.replace('_', ' ').title()}: {score:.1f}/100")
 
@@ -264,8 +265,8 @@ def test_complete_optimization_workflow():
     print(f"   📈 Performance Grade: {grade}")
 
     # Final summary
-    print(f"\n📊 PHASE 1 INTEGRATION SUMMARY:")
-    print(f"   ✅ Import system: WORKING")
+    print("\n📊 PHASE 1 INTEGRATION SUMMARY:")
+    print("   ✅ Import system: WORKING")
     print(f"   ⚡ TA-Lib speed: {avg_throughput:,.0f} rows/sec")
     print(f"   🔥 Cache speedup: {cache_speedup:.1f}x")
     print(f"   🚀 Parallel optimization: {optimization_throughput:.1f} combinations/sec")
@@ -293,12 +294,12 @@ def main():
         results = test_complete_optimization_workflow()
 
         if results["overall_score"] >= 60:
-            print(f"\n✅ Phase 1 optimization integration SUCCESSFUL!")
-            print(f"   System ready for Phase 2 implementation")
+            print("\n✅ Phase 1 optimization integration SUCCESSFUL!")
+            print("   System ready for Phase 2 implementation")
             return True
         else:
-            print(f"\n⚠️  Phase 1 optimization integration needs improvement")
-            print(f"   Consider optimizing components with low scores")
+            print("\n⚠️  Phase 1 optimization integration needs improvement")
+            print("   Consider optimizing components with low scores")
             return False
 
     except Exception as e:

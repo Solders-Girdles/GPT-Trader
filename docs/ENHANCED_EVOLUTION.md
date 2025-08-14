@@ -18,7 +18,7 @@ The enhanced system includes **25+ parameters** compared to the original 3-4 par
 
 #### Core Trend Parameters
 - `donchian_lookback`: 5-200 periods
-- `atr_period`: 5-50 periods  
+- `atr_period`: 5-50 periods
 - `atr_k`: 0.5-5.0 multiplier
 
 #### Volume-Based Features
@@ -189,7 +189,7 @@ results = engine.evolve(evaluate_func, generations=100, population_size=50)
 The system automatically categorizes discovered strategies:
 
 1. **Trend Following**: Long-term trend strategies
-2. **Mean Reversion**: Short-term reversal strategies  
+2. **Mean Reversion**: Short-term reversal strategies
 3. **Momentum**: High-frequency momentum strategies
 4. **Volatility**: Volatility breakout strategies
 5. **Multi-timeframe**: Strategies using multiple timeframes

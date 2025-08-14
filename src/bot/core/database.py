@@ -23,12 +23,13 @@ This module consolidates data from:
 import logging
 import sqlite3
 import threading
+from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
-from typing import Any, Generator, Optional
+from typing import Any
 
 from .exceptions import ConfigurationException, DatabaseException, raise_config_error
 
@@ -745,7 +746,7 @@ class SchemaManager:
             )
         """
         )
-        
+
         # Rebalancing Log
         conn.execute(
             """
@@ -895,7 +896,7 @@ class DatabaseManager:
     _instance = None
     _lock = threading.Lock()
 
-    def __new__(cls, config: Optional[DatabaseConfig] = None) -> 'DatabaseManager':
+    def __new__(cls, config: DatabaseConfig | None = None) -> "DatabaseManager":
         """Singleton pattern for database manager"""
         with cls._lock:
             if cls._instance is None:

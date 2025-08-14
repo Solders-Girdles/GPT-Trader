@@ -167,7 +167,6 @@ class ProductionAlertingSystem:
     def __init__(
         self, alerts_dir: str = "data/alerts", max_queue_size: int = 1000, worker_threads: int = 3
     ) -> None:
-
         self.alerts_dir = Path(alerts_dir)
         self.alerts_dir.mkdir(parents=True, exist_ok=True)
 

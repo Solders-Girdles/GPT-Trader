@@ -12,32 +12,31 @@ and identify optimization opportunities.
 """
 
 import logging
-import pandas as pd
-import numpy as np
 from datetime import datetime, timedelta
+
+import pandas as pd
+from bot.analytics.alpha_analysis import AlphaGenerationAnalyzer
+from bot.analytics.attribution import PerformanceAttributionAnalyzer
 
 # Import analytics modules
 from bot.analytics.decomposition import StrategyDecompositionAnalyzer
-from bot.analytics.attribution import PerformanceAttributionAnalyzer
 from bot.analytics.risk_decomposition import RiskDecompositionAnalyzer
-from bot.analytics.alpha_analysis import AlphaGenerationAnalyzer
+
+# Import data source
+from bot.dataflow.sources.enhanced_yfinance_source import EnhancedYFinanceSource
 
 # Import strategy components
 from bot.strategy.components import (
     ComponentBasedStrategy,
     ComponentConfig,
-    ComponentRegistry,
     DonchianBreakoutEntry,
-    RSIEntry,
     FixedTargetExit,
-    TrailingStopExit,
     PositionSizingRisk,
     RegimeFilter,
+    RSIEntry,
+    TrailingStopExit,
     VolatilityFilter,
 )
-
-# Import data source
-from bot.dataflow.sources.enhanced_yfinance_source import EnhancedYFinanceSource
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -293,7 +292,7 @@ def run_comprehensive_analysis():
     print(f"Analysis Period: {data.index[0].date()} to {data.index[-1].date()}")
     print(f"Data Points: {len(data)}")
 
-    print(f"\nKey Metrics:")
+    print("\nKey Metrics:")
     print(f"  - Total Alpha: {alpha_result.total_alpha:.4f}")
     print(f"  - Alpha Quality: {alpha_result.alpha_quality:.3f}")
     print(f"  - Alpha Persistence: {alpha_result.alpha_persistence:.3f}")
@@ -303,7 +302,7 @@ def run_comprehensive_analysis():
     print(f"  - Attribution Quality: {attribution_result.attribution_quality:.3f}")
 
     # Overall assessment
-    print(f"\nOverall Assessment:")
+    print("\nOverall Assessment:")
 
     # Alpha assessment
     if alpha_result.alpha_quality > 0.7:
@@ -337,7 +336,7 @@ def run_comprehensive_analysis():
     else:
         print("  ❌ Performance attribution needs improvement")
 
-    print(f"\nPhase 4 Analytics Complete!")
+    print("\nPhase 4 Analytics Complete!")
     print(f"Generated {len(alpha_result.alpha_sources)} alpha sources")
     print(f"Identified {len(risk_result.risk_components)} risk components")
     print(f"Analyzed {len(decomposition_result.component_contributions)} strategy components")

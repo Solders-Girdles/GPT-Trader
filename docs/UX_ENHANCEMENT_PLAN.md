@@ -253,7 +253,7 @@ class NotificationManager:
         'push': FCMProvider(),
         'desktop': DesktopProvider()
     }
-    
+
     def send(self, alert, channels=['email']):
         # Route based on severity
         # Apply throttling rules

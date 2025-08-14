@@ -128,7 +128,9 @@ def _true_range(df: pd.DataFrame) -> pd.Series:
     low = df.get("Low").astype(float)
     close = df.get("Close").astype(float)
     prev_close = close.shift(1)
-    tr = pd.concat([(high - low).abs(), (high - prev_close).abs(), (low - prev_close).abs()], axis=1).max(axis=1)
+    tr = pd.concat(
+        [(high - low).abs(), (high - prev_close).abs(), (low - prev_close).abs()], axis=1
+    ).max(axis=1)
     return tr.fillna(0.0)
 
 
@@ -236,7 +238,9 @@ def build_microstructure_features(df: pd.DataFrame) -> pd.DataFrame:
     )
     prev_close = close.shift(1)
     out["feature_gap_pct"] = (
-        ((open_price - prev_close) / prev_close.replace(0, np.nan)).replace([np.inf, -np.inf], 0.0).fillna(0.0)
+        ((open_price - prev_close) / prev_close.replace(0, np.nan))
+        .replace([np.inf, -np.inf], 0.0)
+        .fillna(0.0)
     )
     out["feature_hc_gap"] = (
         ((high - close) / close.replace(0, np.nan)).replace([np.inf, -np.inf], 0.0).fillna(0.0)

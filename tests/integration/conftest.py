@@ -1,6 +1,7 @@
 """Integration test fixtures."""
 
 import pytest
+
 from ..fixtures.conftest import *  # Import shared fixtures
 
 

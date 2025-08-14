@@ -25,6 +25,7 @@ import psutil
 
 class HealthStatus(Enum):
     """Health check status levels."""
+
     HEALTHY = "healthy"
     DEGRADED = "degraded"
     UNHEALTHY = "unhealthy"
@@ -34,6 +35,7 @@ class HealthStatus(Enum):
 @dataclass
 class HealthCheck:
     """Individual health check result."""
+
     name: str
     status: HealthStatus
     message: str = ""
@@ -49,13 +51,14 @@ class HealthCheck:
             "message": self.message,
             "details": self.details,
             "timestamp": self.timestamp.isoformat(),
-            "duration_ms": self.duration_ms
+            "duration_ms": self.duration_ms,
         }
 
 
 @dataclass
 class SystemHealth:
     """Overall system health status."""
+
     status: HealthStatus
     checks: list[HealthCheck]
     timestamp: datetime = field(default_factory=datetime.now)
@@ -69,7 +72,7 @@ class SystemHealth:
             "timestamp": self.timestamp.isoformat(),
             "version": self.version,
             "uptime_seconds": self.uptime_seconds,
-            "checks": [check.to_dict() for check in self.checks]
+            "checks": [check.to_dict() for check in self.checks],
         }
 
 
@@ -115,10 +118,7 @@ class HealthChecker:
     def start(self):
         """Start background health checking."""
         if self._check_thread is None:
-            self._check_thread = threading.Thread(
-                target=self._background_check,
-                daemon=True
-            )
+            self._check_thread = threading.Thread(target=self._background_check, daemon=True)
             self._check_thread.start()
 
     def stop(self):
@@ -158,7 +158,7 @@ class HealthChecker:
                     name=name,
                     status=HealthStatus.UNHEALTHY,
                     message=f"Check failed: {str(e)}",
-                    duration_ms=(time.perf_counter() - start_time) * 1000
+                    duration_ms=(time.perf_counter() - start_time) * 1000,
                 )
 
     def run_all_checks(self) -> SystemHealth:
@@ -184,9 +184,7 @@ class HealthChecker:
             overall_status = HealthStatus.UNKNOWN
 
         return SystemHealth(
-            status=overall_status,
-            checks=checks,
-            uptime_seconds=time.time() - self.start_time
+            status=overall_status, checks=checks, uptime_seconds=time.time() - self.start_time
         )
 
     def get_status(self) -> SystemHealth:
@@ -211,33 +209,33 @@ class HealthChecker:
                 name="system_resources",
                 status=HealthStatus.UNHEALTHY,
                 message=f"High CPU usage: {cpu_percent}%",
-                details=details
+                details=details,
             )
         elif cpu_percent > 75 or memory_percent > 85:
             return HealthCheck(
                 name="system_resources",
                 status=HealthStatus.DEGRADED,
                 message="Elevated resource usage",
-                details=details
+                details=details,
             )
         else:
             return HealthCheck(
                 name="system_resources",
                 status=HealthStatus.HEALTHY,
                 message="Resources within normal range",
-                details=details
+                details=details,
             )
 
     def _check_disk_space(self) -> HealthCheck:
         """Check available disk space."""
-        disk_usage = psutil.disk_usage('/')
+        disk_usage = psutil.disk_usage("/")
         percent_used = disk_usage.percent
-        free_gb = disk_usage.free / (1024 ** 3)
+        free_gb = disk_usage.free / (1024**3)
 
         details = {
             "percent_used": percent_used,
             "free_gb": round(free_gb, 2),
-            "total_gb": round(disk_usage.total / (1024 ** 3), 2)
+            "total_gb": round(disk_usage.total / (1024**3), 2),
         }
 
         if percent_used > 95 or free_gb < 1:
@@ -245,21 +243,21 @@ class HealthChecker:
                 name="disk_space",
                 status=HealthStatus.UNHEALTHY,
                 message=f"Critical disk space: {percent_used}% used",
-                details=details
+                details=details,
             )
         elif percent_used > 85 or free_gb < 5:
             return HealthCheck(
                 name="disk_space",
                 status=HealthStatus.DEGRADED,
                 message=f"Low disk space: {free_gb:.1f}GB free",
-                details=details
+                details=details,
             )
         else:
             return HealthCheck(
                 name="disk_space",
                 status=HealthStatus.HEALTHY,
                 message=f"Adequate disk space: {free_gb:.1f}GB free",
-                details=details
+                details=details,
             )
 
     def _check_memory(self) -> HealthCheck:
@@ -268,9 +266,9 @@ class HealthChecker:
 
         details = {
             "percent_used": memory.percent,
-            "available_gb": round(memory.available / (1024 ** 3), 2),
-            "total_gb": round(memory.total / (1024 ** 3), 2),
-            "swap_percent": psutil.swap_memory().percent
+            "available_gb": round(memory.available / (1024**3), 2),
+            "total_gb": round(memory.total / (1024**3), 2),
+            "swap_percent": psutil.swap_memory().percent,
         }
 
         if memory.percent > 95:
@@ -278,21 +276,21 @@ class HealthChecker:
                 name="memory",
                 status=HealthStatus.UNHEALTHY,
                 message=f"Critical memory usage: {memory.percent}%",
-                details=details
+                details=details,
             )
         elif memory.percent > 85:
             return HealthCheck(
                 name="memory",
                 status=HealthStatus.DEGRADED,
                 message=f"High memory usage: {memory.percent}%",
-                details=details
+                details=details,
             )
         else:
             return HealthCheck(
                 name="memory",
                 status=HealthStatus.HEALTHY,
                 message=f"Memory usage normal: {memory.percent}%",
-                details=details
+                details=details,
             )
 
     def _check_process(self) -> HealthCheck:
@@ -305,7 +303,7 @@ class HealthChecker:
             "memory_mb": round(process.memory_info().rss / (1024 * 1024), 2),
             "threads": process.num_threads(),
             "open_files": len(process.open_files()),
-            "connections": len(process.connections())
+            "connections": len(process.connections()),
         }
 
         if details["cpu_percent"] > 90 or details["memory_mb"] > 2048:
@@ -313,21 +311,21 @@ class HealthChecker:
                 name="process",
                 status=HealthStatus.UNHEALTHY,
                 message="Process resource usage critical",
-                details=details
+                details=details,
             )
         elif details["cpu_percent"] > 75 or details["memory_mb"] > 1024:
             return HealthCheck(
                 name="process",
                 status=HealthStatus.DEGRADED,
                 message="Process resource usage elevated",
-                details=details
+                details=details,
             )
         else:
             return HealthCheck(
                 name="process",
                 status=HealthStatus.HEALTHY,
                 message="Process healthy",
-                details=details
+                details=details,
             )
 
 
@@ -349,40 +347,37 @@ class ServiceHealthChecker(HealthChecker):
             # Simulated database check
             # In production, would execute a simple query
             import random
+
             latency_ms = random.uniform(1, 50)
 
-            details = {
-                "latency_ms": round(latency_ms, 2),
-                "connections": 5,
-                "pool_size": 10
-            }
+            details = {"latency_ms": round(latency_ms, 2), "connections": 5, "pool_size": 10}
 
             if latency_ms > 100:
                 return HealthCheck(
                     name="database",
                     status=HealthStatus.UNHEALTHY,
                     message="Database response time critical",
-                    details=details
+                    details=details,
                 )
             elif latency_ms > 50:
                 return HealthCheck(
                     name="database",
                     status=HealthStatus.DEGRADED,
                     message="Database response time elevated",
-                    details=details
+                    details=details,
                 )
             else:
                 return HealthCheck(
                     name="database",
                     status=HealthStatus.HEALTHY,
                     message="Database responding normally",
-                    details=details
+                    details=details,
                 )
         except Exception as e:
             return HealthCheck(
                 name="database",
                 status=HealthStatus.UNHEALTHY,
-                message=f"Database connection failed: {str(e)}"
+                message=f"Database connection failed: {str(e)}",
             )
 
     def _check_api(self) -> HealthCheck:
@@ -390,13 +385,14 @@ class ServiceHealthChecker(HealthChecker):
         try:
             # Simulated API check
             import random
+
             response_time = random.uniform(10, 200)
             error_rate = random.uniform(0, 5)
 
             details = {
                 "response_time_ms": round(response_time, 2),
                 "error_rate_percent": round(error_rate, 2),
-                "requests_per_second": random.randint(10, 100)
+                "requests_per_second": random.randint(10, 100),
             }
 
             if response_time > 1000 or error_rate > 10:
@@ -404,27 +400,25 @@ class ServiceHealthChecker(HealthChecker):
                     name="api",
                     status=HealthStatus.UNHEALTHY,
                     message="API performance critical",
-                    details=details
+                    details=details,
                 )
             elif response_time > 500 or error_rate > 5:
                 return HealthCheck(
                     name="api",
                     status=HealthStatus.DEGRADED,
                     message="API performance degraded",
-                    details=details
+                    details=details,
                 )
             else:
                 return HealthCheck(
                     name="api",
                     status=HealthStatus.HEALTHY,
                     message="API operating normally",
-                    details=details
+                    details=details,
                 )
         except Exception as e:
             return HealthCheck(
-                name="api",
-                status=HealthStatus.UNHEALTHY,
-                message=f"API check failed: {str(e)}"
+                name="api", status=HealthStatus.UNHEALTHY, message=f"API check failed: {str(e)}"
             )
 
     def _check_data_feed(self) -> HealthCheck:
@@ -432,6 +426,7 @@ class ServiceHealthChecker(HealthChecker):
         try:
             # Simulated data feed check
             import random
+
             last_update = datetime.now() - timedelta(seconds=random.randint(1, 120))
             lag_seconds = (datetime.now() - last_update).total_seconds()
 
@@ -439,7 +434,7 @@ class ServiceHealthChecker(HealthChecker):
                 "last_update": last_update.isoformat(),
                 "lag_seconds": lag_seconds,
                 "symbols_tracked": 50,
-                "updates_per_second": random.randint(10, 100)
+                "updates_per_second": random.randint(10, 100),
             }
 
             if lag_seconds > 60:
@@ -447,27 +442,27 @@ class ServiceHealthChecker(HealthChecker):
                     name="data_feed",
                     status=HealthStatus.UNHEALTHY,
                     message=f"Data feed stale: {lag_seconds}s behind",
-                    details=details
+                    details=details,
                 )
             elif lag_seconds > 30:
                 return HealthCheck(
                     name="data_feed",
                     status=HealthStatus.DEGRADED,
                     message=f"Data feed lagging: {lag_seconds}s behind",
-                    details=details
+                    details=details,
                 )
             else:
                 return HealthCheck(
                     name="data_feed",
                     status=HealthStatus.HEALTHY,
                     message="Data feed up to date",
-                    details=details
+                    details=details,
                 )
         except Exception as e:
             return HealthCheck(
                 name="data_feed",
                 status=HealthStatus.UNHEALTHY,
-                message=f"Data feed check failed: {str(e)}"
+                message=f"Data feed check failed: {str(e)}",
             )
 
 
@@ -481,14 +476,14 @@ def create_health_endpoint(checker: HealthChecker):
         "timestamp": health.timestamp.isoformat(),
         "version": health.version,
         "uptime": health.uptime_seconds,
-        "checks": {}
+        "checks": {},
     }
 
     for check in health.checks:
         response["checks"][check.name] = {
             "status": check.status.value,
             "message": check.message,
-            "duration_ms": check.duration_ms
+            "duration_ms": check.duration_ms,
         }
 
         if check.details:
@@ -523,7 +518,13 @@ def demo_health_monitoring():
 
     print("\nIndividual Checks:")
     for check in health.checks:
-        status_icon = "✓" if check.status == HealthStatus.HEALTHY else "⚠" if check.status == HealthStatus.DEGRADED else "✗"
+        status_icon = (
+            "✓"
+            if check.status == HealthStatus.HEALTHY
+            else "⚠"
+            if check.status == HealthStatus.DEGRADED
+            else "✗"
+        )
         print(f"  {status_icon} {check.name}: {check.status.value}")
         if check.message:
             print(f"     {check.message}")

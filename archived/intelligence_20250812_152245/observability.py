@@ -54,7 +54,9 @@ class EvaluationHarness:
         self.log_dir = Path(log_dir)
         self.test_window = test_window
 
-    def replay_fixed_window(self, model_versions: list[str], test_data) -> dict[str, dict[str, float]]:  # type: ignore[no-untyped-def]
+    def replay_fixed_window(
+        self, model_versions: list[str], test_data
+    ) -> dict[str, dict[str, float]]:  # type: ignore[no-untyped-def]
         results: dict[str, dict[str, float]] = {}
         for version in model_versions:
             predictions = self.run_inference(self.load_model_artifacts(version), test_data)

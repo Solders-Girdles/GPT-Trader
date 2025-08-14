@@ -155,26 +155,26 @@ config = OptimizationConfig(
     # Basic settings
     name="my_optimization",
     description="Optimization run description",
-    
+
     # Data settings
     symbols=["AAPL", "MSFT", "GOOGL"],
     start_date="2022-01-01",
     end_date="2022-12-31",
-    
+
     # Walk-forward settings
     walk_forward=True,
     train_months=12,
     test_months=6,
     step_months=6,
-    
+
     # Optimization settings
     method="both",  # grid, evolutionary, or both
     max_workers=4,  # Parallel processing
-    
+
     # Grid search settings
     grid_search=True,
     grid_sample_size=100,  # Random sampling
-    
+
     # Evolutionary settings
     evolutionary=True,
     generations=50,
@@ -182,23 +182,23 @@ config = OptimizationConfig(
     elite_size=4,
     mutation_rate=0.3,
     crossover_rate=0.7,
-    
+
     # Early stopping
     early_stopping=True,
     patience=10,
     min_improvement=0.001,
-    
+
     # Evaluation settings
     primary_metric="sharpe",
     min_trades=10,
     min_sharpe=0.5,
     max_drawdown=0.25,
-    
+
     # Output settings
     output_dir="data/optimization/my_run",
     save_intermediate=True,
     create_plots=True,
-    
+
     parameter_space=parameter_space,
 )
 ```

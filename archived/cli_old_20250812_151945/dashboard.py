@@ -86,7 +86,6 @@ class TradingDashboard:
             TimeRemainingColumn(),
             console=self.console,
         ) as progress:
-
             # Main task
             main_task = progress.add_task("Overall Progress", total=100)
 

@@ -4,15 +4,13 @@ Minimal workflow test using only standard library.
 Tests core architecture patterns without external dependencies.
 """
 
-import sys
-import os
-import json
-import time
 import logging
-import random
 import math
+import random
+import sys
+import time
+from collections import defaultdict
 from datetime import datetime, timedelta
-from collections import defaultdict, deque
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -207,7 +205,7 @@ def test_technical_indicators():
         valid_sma_20 = sum(1 for x in sma_20 if x is not None)
         valid_atr = sum(1 for x in atr if x is not None)
 
-        logger.info(f"✅ Technical indicators calculated")
+        logger.info("✅ Technical indicators calculated")
         logger.info(f"   Valid SMA(20): {valid_sma_20}/{len(sma_20)}")
         logger.info(f"   Valid ATR(14): {valid_atr}/{len(atr)}")
         return True
@@ -247,7 +245,7 @@ def test_simple_strategy():
             if signals[i] != signals[i - 1]:
                 signal_changes += 1
 
-        logger.info(f"✅ Simple MA strategy tested")
+        logger.info("✅ Simple MA strategy tested")
         logger.info(
             f"   Buy signals: {buy_signals}/{len(signals)} ({100*buy_signals/len(signals):.1f}%)"
         )
@@ -306,7 +304,7 @@ def test_performance_calculation():
             drawdown = (peak - cum_ret) / peak
             max_dd = max(max_dd, drawdown)
 
-        logger.info(f"✅ Performance metrics calculated")
+        logger.info("✅ Performance metrics calculated")
         logger.info(f"   Total Return: {total_return:.2%}")
         logger.info(f"   Annual Return: {annual_return:.2%}")
         logger.info(f"   Annual Volatility: {annual_vol:.2%}")
@@ -372,7 +370,7 @@ def test_architecture_patterns():
         total_operations = sum(comp.metrics["operations"] for comp in components)
         total_errors = sum(comp.metrics["errors"] for comp in components)
 
-        logger.info(f"✅ Architecture patterns validated")
+        logger.info("✅ Architecture patterns validated")
         logger.info(f"   Healthy components: {healthy_components}/{len(components)}")
         logger.info(f"   Total operations: {total_operations}")
         logger.info(f"   Total errors: {total_errors}")
@@ -421,7 +419,7 @@ def benchmark_performance():
         # Memory usage estimation (rough)
         data_size_mb = (len(closes) * 8 * 5) / (1024 * 1024)  # 5 columns * 8 bytes each
 
-        logger.info(f"✅ Performance benchmark completed")
+        logger.info("✅ Performance benchmark completed")
         logger.info(f"   Data generation (1000 days): {data_gen_time:.3f}s")
         logger.info(f"   Indicator calculation: {indicator_time:.3f}s")
         logger.info(f"   Strategy execution: {strategy_time:.3f}s")
@@ -495,7 +493,7 @@ def analyze_workflow_bottlenecks():
             ]
         )
 
-        logger.info(f"✅ Workflow analysis completed")
+        logger.info("✅ Workflow analysis completed")
         logger.info(f"   Identified {len(bottlenecks)} potential bottlenecks")
         logger.info(f"   Generated {len(recommendations)} recommendations")
 
@@ -541,7 +539,7 @@ def main():
             logger.error(f"💥 {test_name}: CRASHED - {e}")
 
     # Run workflow analysis
-    logger.info(f"\n📋 Running: Workflow Analysis")
+    logger.info("\n📋 Running: Workflow Analysis")
     logger.info("-" * 40)
     analysis = analyze_workflow_bottlenecks()
 
@@ -555,16 +553,16 @@ def main():
 
     # Workflow Analysis Results
     if analysis:
-        logger.info(f"\n🔍 WORKFLOW BOTTLENECKS IDENTIFIED:")
+        logger.info("\n🔍 WORKFLOW BOTTLENECKS IDENTIFIED:")
         for i, bottleneck in enumerate(analysis["bottlenecks"][:5], 1):
             logger.info(f"   {i}. {bottleneck}")
 
-        logger.info(f"\n💡 TOP OPTIMIZATION RECOMMENDATIONS:")
+        logger.info("\n💡 TOP OPTIMIZATION RECOMMENDATIONS:")
         for i, rec in enumerate(analysis["recommendations"][:5], 1):
             logger.info(f"   {i}. {rec}")
 
     # Next Steps
-    logger.info(f"\n🎯 IMMEDIATE NEXT STEPS:")
+    logger.info("\n🎯 IMMEDIATE NEXT STEPS:")
 
     if passed >= 4:  # Most tests passing
         logger.info("✅ Core workflow is functional")

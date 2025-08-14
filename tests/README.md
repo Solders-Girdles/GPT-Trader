@@ -131,12 +131,12 @@ from src.bot.strategy.demo_ma import DemoMAStrategy
 
 class TestDemoMAStrategy:
     """Test suite for DemoMAStrategy."""
-    
+
     def test_initialization(self):
         """Test strategy initialization."""
         strategy = DemoMAStrategy(window=20)
         assert strategy.window == 20
-    
+
     def test_signal_generation(self, sample_data):
         """Test signal generation logic."""
         strategy = DemoMAStrategy()

@@ -10,26 +10,22 @@ This example shows how to:
 """
 
 import sys
-import os
 from pathlib import Path
 
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from datetime import datetime
-import pandas as pd
-import numpy as np
 
-from bot.optimization.enhanced_evolution import EnhancedEvolutionEngine, EnhancedStrategyParams
-from bot.optimization.config import OptimizationConfig, StrategyConfig
-from bot.strategy.enhanced_trend_breakout import (
-    EnhancedTrendBreakoutStrategy,
-    EnhancedTrendBreakoutParams,
-)
 from bot.backtest.engine_portfolio import run_backtest
-from bot.portfolio.allocator import PortfolioRules
-from bot.dataflow.sources.enhanced_yfinance_source import EnhancedYFinanceSource
 from bot.logging import get_logger
+from bot.optimization.config import OptimizationConfig, StrategyConfig
+from bot.optimization.enhanced_evolution import EnhancedEvolutionEngine
+from bot.portfolio.allocator import PortfolioRules
+from bot.strategy.enhanced_trend_breakout import (
+    EnhancedTrendBreakoutParams,
+    EnhancedTrendBreakoutStrategy,
+)
 
 logger = get_logger("enhanced_example")
 
@@ -82,8 +78,8 @@ def create_evaluation_function(symbols, start_date, end_date):
             )
 
             # Create a temporary CSV file with symbols
-            import tempfile
             import csv
+            import tempfile
 
             with tempfile.NamedTemporaryFile(mode="w", suffix=".csv", delete=False) as f:
                 writer = csv.writer(f)

@@ -35,7 +35,7 @@ app = typer.Typer(
     name="gpt-trader",
     help="🚀 Professional Trading Platform with Beautiful CLI",
     add_completion=True,
-    rich_markup_mode="rich"
+    rich_markup_mode="rich",
 )
 
 # Color scheme for consistent styling
@@ -46,7 +46,7 @@ COLORS = {
     "info": "cyan",
     "header": "bold magenta",
     "success": "bold green",
-    "error": "bold red"
+    "error": "bold red",
 }
 
 
@@ -65,7 +65,7 @@ class TradingCLI:
             "[bold cyan]GPT-Trader[/bold cyan] 🚀\n"
             "[dim]Professional Algorithmic Trading Platform[/dim]",
             border_style="cyan",
-            padding=(1, 2)
+            padding=(1, 2),
         )
         self.console.print(header)
 
@@ -76,7 +76,7 @@ class TradingCLI:
             show_header=True,
             header_style="bold magenta",
             border_style="cyan",
-            show_lines=True
+            show_lines=True,
         )
 
         table.add_column("Symbol", style="cyan", width=10)
@@ -111,7 +111,7 @@ class TradingCLI:
                 f"${current:.2f}",
                 f"${value:,.2f}",
                 f"[{pnl_color}]${pnl:+,.2f}[/{pnl_color}]",
-                f"[{pnl_color}]{pnl_pct:+.2f}%[/{pnl_color}]"
+                f"[{pnl_color}]{pnl_pct:+.2f}%[/{pnl_color}]",
             )
 
         # Add totals row
@@ -125,7 +125,7 @@ class TradingCLI:
             f"[bold]${total_value:,.2f}[/bold]",
             f"[bold {total_pnl_color}]${total_pnl:+,.2f}[/bold {total_pnl_color}]",
             "",
-            style="bold"
+            style="bold",
         )
 
         return table
@@ -140,7 +140,13 @@ class TradingCLI:
 
         # Color code metrics
         returns_color = COLORS["profit"] if returns >= 0 else COLORS["loss"]
-        sharpe_color = COLORS["profit"] if sharpe >= 1 else COLORS["warning"] if sharpe >= 0 else COLORS["loss"]
+        sharpe_color = (
+            COLORS["profit"]
+            if sharpe >= 1
+            else COLORS["warning"]
+            if sharpe >= 0
+            else COLORS["loss"]
+        )
 
         content = f"""
 [bold]Performance Metrics[/bold]
@@ -158,7 +164,7 @@ class TradingCLI:
             content.strip(),
             title="📊 Performance Summary",
             border_style="green" if returns >= 0 else "red",
-            padding=(1, 2)
+            padding=(1, 2),
         )
 
     def show_strategy_tree(self, strategies: list[str]):
@@ -169,7 +175,7 @@ class TradingCLI:
             "Trend Following": ["trend_breakout", "moving_average_crossover"],
             "Mean Reversion": ["bollinger_bands", "rsi_oversold"],
             "Momentum": ["momentum_breakout", "relative_strength"],
-            "Machine Learning": ["random_forest", "neural_network"]
+            "Machine Learning": ["random_forest", "neural_network"],
         }
 
         for category, strats in categories.items():
@@ -186,29 +192,20 @@ class TradingCLI:
         """Create live monitoring display with real-time updates."""
         layout = Layout()
         layout.split_column(
-            Layout(name="header", size=3),
-            Layout(name="main"),
-            Layout(name="footer", size=3)
+            Layout(name="header", size=3), Layout(name="main"), Layout(name="footer", size=3)
         )
 
-        layout["main"].split_row(
-            Layout(name="portfolio"),
-            Layout(name="metrics")
-        )
+        layout["main"].split_row(Layout(name="portfolio"), Layout(name="metrics"))
 
         # Header
         layout["header"].update(
-            Panel(
-                "[bold cyan]Live Trading Monitor[/bold cyan] 🔴",
-                border_style="cyan"
-            )
+            Panel("[bold cyan]Live Trading Monitor[/bold cyan] 🔴", border_style="cyan")
         )
 
         # Footer with timestamp
         layout["footer"].update(
             Panel(
-                f"Last Update: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
-                border_style="dim"
+                f"Last Update: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", border_style="dim"
             )
         )
 
@@ -226,7 +223,7 @@ class TradingCLI:
                 layout["footer"].update(
                     Panel(
                         f"Last Update: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
-                        border_style="dim"
+                        border_style="dim",
                     )
                 )
 
@@ -238,7 +235,7 @@ class TradingCLI:
         return {
             "AAPL": {"quantity": 100, "entry_price": 150.00, "current_price": 155.50},
             "GOOGL": {"quantity": 10, "entry_price": 2800.00, "current_price": 2850.00},
-            "MSFT": {"quantity": 50, "entry_price": 300.00, "current_price": 295.00}
+            "MSFT": {"quantity": 50, "entry_price": 300.00, "current_price": 295.00},
         }
 
     def get_current_metrics(self) -> dict[str, float]:
@@ -250,7 +247,7 @@ class TradingCLI:
             "max_drawdown": -0.0820,
             "win_rate": 0.58,
             "total_trades": 42,
-            "avg_hold_days": 3.2
+            "avg_hold_days": 3.2,
         }
 
 
@@ -264,7 +261,7 @@ def backtest(
     symbols: str = typer.Option("AAPL,GOOGL,MSFT", help="Comma-separated symbols"),
     start: str = typer.Option("2023-01-01", help="Start date (YYYY-MM-DD)"),
     end: str = typer.Option("2023-12-31", help="End date (YYYY-MM-DD)"),
-    capital: float = typer.Option(100000.0, help="Starting capital")
+    capital: float = typer.Option(100000.0, help="Starting capital"),
 ):
     """
     🎯 Run a backtest with beautiful progress tracking and results display.
@@ -281,9 +278,8 @@ def backtest(
         BarColumn(),
         TaskProgressColumn(),
         TimeRemainingColumn(),
-        console=console
+        console=console,
     ) as progress:
-
         # Task 1: Load data
         task1 = progress.add_task("[cyan]Loading market data...", total=len(symbol_list))
 
@@ -318,7 +314,7 @@ def backtest(
             f"Strategy: [cyan]{strategy}[/cyan]\n"
             f"Period: {start} to {end}\n"
             f"Initial Capital: ${capital:,.2f}",
-            border_style="green"
+            border_style="green",
         )
     )
 
@@ -334,7 +330,7 @@ def live():
         Panel(
             "[bold yellow]Starting live trading monitor...[/bold yellow]\n"
             "[dim]Press Ctrl+C to stop[/dim]",
-            border_style="yellow"
+            border_style="yellow",
         )
     )
 
@@ -367,7 +363,7 @@ def risk():
         title="⚠️ Risk Management Status",
         show_header=True,
         header_style="bold red",
-        border_style="yellow"
+        border_style="yellow",
     )
 
     table.add_column("Metric", style="cyan")
@@ -381,7 +377,7 @@ def risk():
         ("Portfolio Beta", "0.95", "1.20", "✅"),
         ("Leverage", "1.0x", "2.0x", "✅"),
         ("Concentration Risk", "28%", "30%", "⚠️"),
-        ("Daily Loss", "-1.2%", "-3%", "✅")
+        ("Daily Loss", "-1.2%", "-3%", "✅"),
     ]
 
     for metric, current, limit, status in risk_metrics:
@@ -396,7 +392,7 @@ def risk():
             "All risk metrics within acceptable limits.\n"
             "[dim]Last updated: " + datetime.now().strftime("%H:%M:%S") + "[/dim]",
             border_style="green",
-            padding=(1, 2)
+            padding=(1, 2),
         )
     )
 
@@ -404,7 +400,7 @@ def risk():
 @app.command()
 def config(
     show: bool = typer.Option(False, "--show", help="Show current configuration"),
-    edit: bool = typer.Option(False, "--edit", help="Edit configuration interactively")
+    edit: bool = typer.Option(False, "--edit", help="Edit configuration interactively"),
 ):
     """
     ⚙️ Manage trading configuration.
@@ -435,11 +431,7 @@ def config(
 
         # Data source
         console.print("\n[bold yellow]Data Source:[/bold yellow]")
-        Prompt.ask(
-            "Data Provider",
-            choices=["yfinance", "alpaca", "polygon"],
-            default="yfinance"
-        )
+        Prompt.ask("Data Provider", choices=["yfinance", "alpaca", "polygon"], default="yfinance")
 
         # Save confirmation
         if Confirm.ask("\n[bold]Save configuration?[/bold]"):
@@ -459,7 +451,7 @@ def config(
 @app.command()
 def report(
     format: str = typer.Option("html", help="Report format (html/pdf/email)"),
-    output: str = typer.Option("./reports", help="Output directory")
+    output: str = typer.Option("./reports", help="Output directory"),
 ):
     """
     📊 Generate beautiful trading reports.
@@ -469,6 +461,7 @@ def report(
     with console.status("[bold yellow]Generating report...[/bold yellow]") as status:
         # Simulate report generation
         import time
+
         time.sleep(2)
 
         status.update("[bold green]Report generated successfully![/bold green]")
@@ -485,7 +478,7 @@ def report(
             f"📈 Charts: 12 interactive visualizations\n"
             f"📝 Pages: 15",
             title="📊 Report Summary",
-            border_style="green"
+            border_style="green",
         )
     )
 
@@ -493,7 +486,7 @@ def report(
 @app.callback()
 def main(
     version: bool = typer.Option(False, "--version", "-v", help="Show version"),
-    verbose: bool = typer.Option(False, "--verbose", help="Verbose output")
+    verbose: bool = typer.Option(False, "--verbose", help="Verbose output"),
 ):
     """
     🚀 GPT-Trader: Professional Algorithmic Trading Platform

@@ -91,7 +91,7 @@ CREATE TABLE ml.feature_values (
 );
 
 -- Convert to TimescaleDB hypertable for time-series optimization
-SELECT create_hypertable('ml.feature_values', 'timestamp', 
+SELECT create_hypertable('ml.feature_values', 'timestamp',
     chunk_time_interval => INTERVAL '1 day',
     if_not_exists => TRUE);
 

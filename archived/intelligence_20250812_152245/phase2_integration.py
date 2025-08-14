@@ -414,7 +414,8 @@ class Phase2ComponentTester:
 
             # Generate test data
             data = DataGenerator.create_financial_time_series(
-                500, random_state=self.config.random_state  # Smaller dataset for RL
+                500,
+                random_state=self.config.random_state,  # Smaller dataset for RL
             )
 
             # Train RL strategy (simplified)

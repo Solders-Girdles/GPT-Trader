@@ -173,7 +173,6 @@ class RealTimeRiskMonitor:
         trading_engine: LiveTradingEngine = None,
         streaming_manager: StreamingDataManager = None,
     ) -> None:
-
         self.risk_dir = Path(risk_dir)
         self.risk_dir.mkdir(parents=True, exist_ok=True)
 
@@ -792,7 +791,6 @@ class RealTimeRiskMonitor:
         if (
             limit.last_breach is None or (datetime.now() - limit.last_breach).total_seconds() > 300
         ):  # 5 min cooldown
-
             event_id = f"risk_event_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{limit.limit_name}"
 
             breach_amount = abs(limit.current_value) - abs(

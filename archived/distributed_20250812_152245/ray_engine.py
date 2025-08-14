@@ -617,7 +617,8 @@ def benchmark_ray_distributed():
 
     # Initialize distributed engine
     config = DistributedConfig(
-        num_workers=4, include_dashboard=False  # Dashboard requires ray[default]
+        num_workers=4,
+        include_dashboard=False,  # Dashboard requires ray[default]
     )
 
     engine = RayDistributedEngine(config)

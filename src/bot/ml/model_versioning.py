@@ -6,32 +6,38 @@ Comprehensive model versioning system with automatic version management,
 rollback capabilities, and A/B testing support for GPT-Trader.
 """
 
-import logging
-import shutil
 import hashlib
 import json
-import os
-from typing import Dict, List, Optional, Tuple, Any, Union
+import logging
+import shutil
 from dataclasses import dataclass, field
-from enum import Enum
 from datetime import datetime, timedelta
+from enum import Enum
 from pathlib import Path
-import semver
+from typing import Any
+
 import git
-from abc import ABC, abstractmethod
 
 # Database and serialization
-import joblib
-import pandas as pd
 import numpy as np
+import pandas as pd
+import semver
 from scipy import stats
-from src.bot.utils.serialization import save_model, load_model as load_secure_model, SerializationError
+
+from src.bot.utils.serialization import (
+    SerializationError,
+    save_model,
+)
+from src.bot.utils.serialization import (
+    load_model as load_secure_model,
+)
 
 logger = logging.getLogger(__name__)
 
 
 class ModelStage(Enum):
     """Model lifecycle stages"""
+
     DEVELOPMENT = "development"
     TESTING = "testing"
     STAGING = "staging"
@@ -45,14 +51,16 @@ class ModelStage(Enum):
 
 class VersionType(Enum):
     """Semantic version types"""
-    MAJOR = "major"      # Breaking changes
-    MINOR = "minor"      # New features
-    PATCH = "patch"      # Bug fixes
-    HOTFIX = "hotfix"    # Emergency fixes
+
+    MAJOR = "major"  # Breaking changes
+    MINOR = "minor"  # New features
+    PATCH = "patch"  # Bug fixes
+    HOTFIX = "hotfix"  # Emergency fixes
 
 
 class ModelFormat(Enum):
     """Supported model formats"""
+
     JOBLIB = "joblib"
     # PICKLE format removed for security reasons - use JOBLIB instead
     ONNX = "onnx"
@@ -64,6 +72,7 @@ class ModelFormat(Enum):
 @dataclass
 class ModelMetadata:
     """Comprehensive model metadata"""
+
     model_id: str
     version: str
     stage: ModelStage
@@ -79,7 +88,7 @@ class ModelMetadata:
     training_start_time: datetime
     training_end_time: datetime
     training_duration_seconds: float
-    training_config: Dict[str, Any]
+    training_config: dict[str, Any]
 
     # Performance metrics
     validation_accuracy: float
@@ -89,32 +98,32 @@ class ModelMetadata:
     validation_roc_auc: float
 
     # Trading metrics
-    backtest_sharpe_ratio: Optional[float] = None
-    backtest_max_drawdown: Optional[float] = None
-    backtest_total_return: Optional[float] = None
+    backtest_sharpe_ratio: float | None = None
+    backtest_max_drawdown: float | None = None
+    backtest_total_return: float | None = None
 
     # Dependencies
     feature_set_version: str
-    dependencies: Dict[str, str] = field(default_factory=dict)
+    dependencies: dict[str, str] = field(default_factory=dict)
 
     # Lifecycle tracking
     created_by: str
     created_at: datetime = field(default_factory=datetime.now)
-    promoted_by: Optional[str] = None
-    promoted_at: Optional[datetime] = None
-    deprecated_at: Optional[datetime] = None
-    archived_at: Optional[datetime] = None
+    promoted_by: str | None = None
+    promoted_at: datetime | None = None
+    deprecated_at: datetime | None = None
+    archived_at: datetime | None = None
 
     # Deployment information
-    deployment_config: Dict[str, Any] = field(default_factory=dict)
-    resource_requirements: Dict[str, float] = field(default_factory=dict)
+    deployment_config: dict[str, Any] = field(default_factory=dict)
+    resource_requirements: dict[str, float] = field(default_factory=dict)
 
     # Tags and annotations
-    tags: Dict[str, str] = field(default_factory=dict)
-    annotations: Dict[str, str] = field(default_factory=dict)
+    tags: dict[str, str] = field(default_factory=dict)
+    annotations: dict[str, str] = field(default_factory=dict)
 
     # Rollback information
-    parent_version: Optional[str] = None
+    parent_version: str | None = None
     rollback_safe: bool = True
     rollback_tested: bool = False
 
@@ -122,6 +131,7 @@ class ModelMetadata:
 @dataclass
 class VersionComparisonResult:
     """Result of version comparison"""
+
     old_version: str
     new_version: str
     comparison_type: str
@@ -133,14 +143,14 @@ class VersionComparisonResult:
     f1_improvement: float
 
     # Trading performance
-    sharpe_improvement: Optional[float] = None
-    drawdown_improvement: Optional[float] = None
-    return_improvement: Optional[float] = None
+    sharpe_improvement: float | None = None
+    drawdown_improvement: float | None = None
+    return_improvement: float | None = None
 
     # Statistical significance
     is_statistically_significant: bool = False
-    p_value: Optional[float] = None
-    confidence_interval: Optional[Tuple[float, float]] = None
+    p_value: float | None = None
+    confidence_interval: tuple[float, float] | None = None
 
     # Recommendation
     recommended_action: str = "hold"  # promote, hold, rollback
@@ -161,11 +171,13 @@ class ModelVersioning:
     - Automated cleanup
     """
 
-    def __init__(self,
-                 base_path: Union[str, Path] = "models",
-                 enable_git_tracking: bool = True,
-                 max_versions_per_model: int = 10,
-                 retention_days: int = 90):
+    def __init__(
+        self,
+        base_path: str | Path = "models",
+        enable_git_tracking: bool = True,
+        max_versions_per_model: int = 10,
+        retention_days: int = 90,
+    ):
         """Initialize model versioning system
 
         Args:
@@ -186,9 +198,9 @@ class ModelVersioning:
         (self.base_path / "archive").mkdir(exist_ok=True)
 
         # Model registry
-        self.models: Dict[str, List[ModelMetadata]] = {}
-        self.current_versions: Dict[str, str] = {}  # model_id -> current version
-        self.production_versions: Dict[str, str] = {}  # model_id -> production version
+        self.models: dict[str, list[ModelMetadata]] = {}
+        self.current_versions: dict[str, str] = {}  # model_id -> current version
+        self.production_versions: dict[str, str] = {}  # model_id -> production version
 
         # Git repository (if enabled)
         self.git_repo = None
@@ -211,7 +223,7 @@ class ModelVersioning:
                 # Create .gitignore
                 gitignore_path = self.base_path / ".gitignore"
                 if not gitignore_path.exists():
-                    with open(gitignore_path, 'w') as f:
+                    with open(gitignore_path, "w") as f:
                         f.write("*.pyc\n__pycache__/\n.DS_Store\n*.log\n")
 
                 # Initial commit
@@ -230,7 +242,7 @@ class ModelVersioning:
 
         for metadata_file in metadata_dir.glob("*.json"):
             try:
-                with open(metadata_file, 'r') as f:
+                with open(metadata_file) as f:
                     metadata_dict = json.load(f)
 
                 metadata = ModelMetadata(**metadata_dict)
@@ -244,23 +256,27 @@ class ModelVersioning:
                 if metadata.stage == ModelStage.PRODUCTION:
                     self.production_versions[metadata.model_id] = metadata.version
 
-                if (metadata.model_id not in self.current_versions or
-                    self._is_newer_version(metadata.version,
-                                          self.current_versions[metadata.model_id])):
+                if metadata.model_id not in self.current_versions or self._is_newer_version(
+                    metadata.version, self.current_versions[metadata.model_id]
+                ):
                     self.current_versions[metadata.model_id] = metadata.version
 
             except Exception as e:
                 logger.error(f"Failed to load metadata from {metadata_file}: {e}")
 
-        logger.info(f"Loaded {len(self.models)} model families with "
-                   f"{sum(len(versions) for versions in self.models.values())} total versions")
+        logger.info(
+            f"Loaded {len(self.models)} model families with "
+            f"{sum(len(versions) for versions in self.models.values())} total versions"
+        )
 
-    def create_version(self,
-                      model_id: str,
-                      model_object: Any,
-                      metadata: ModelMetadata,
-                      version_type: VersionType = VersionType.MINOR,
-                      custom_version: Optional[str] = None) -> str:
+    def create_version(
+        self,
+        model_id: str,
+        model_object: Any,
+        metadata: ModelMetadata,
+        version_type: VersionType = VersionType.MINOR,
+        custom_version: str | None = None,
+    ) -> str:
         """Create a new model version
 
         Args:
@@ -315,12 +331,14 @@ class ModelVersioning:
             logger.error(f"Failed to create model version: {e}")
             raise
 
-    def promote_version(self,
-                       model_id: str,
-                       version: str,
-                       target_stage: ModelStage,
-                       promoted_by: str,
-                       validation_results: Optional[Dict[str, Any]] = None) -> bool:
+    def promote_version(
+        self,
+        model_id: str,
+        version: str,
+        target_stage: ModelStage,
+        promoted_by: str,
+        validation_results: dict[str, Any] | None = None,
+    ) -> bool:
         """Promote a model version to a higher stage
 
         Args:
@@ -369,22 +387,23 @@ class ModelVersioning:
             # Git commit
             if self.enable_git_tracking:
                 self._git_commit_version(
-                    model_id, version,
-                    f"Promote {model_id}:{version} from {old_stage.value} to {target_stage.value}"
+                    model_id,
+                    version,
+                    f"Promote {model_id}:{version} from {old_stage.value} to {target_stage.value}",
                 )
 
-            logger.info(f"Promoted {model_id}:{version} from {old_stage.value} to {target_stage.value}")
+            logger.info(
+                f"Promoted {model_id}:{version} from {old_stage.value} to {target_stage.value}"
+            )
             return True
 
         except Exception as e:
             logger.error(f"Failed to promote version: {e}")
             return False
 
-    def rollback_to_version(self,
-                           model_id: str,
-                           target_version: str,
-                           rollback_by: str,
-                           reason: str) -> bool:
+    def rollback_to_version(
+        self, model_id: str, target_version: str, rollback_by: str, reason: str
+    ) -> bool:
         """Rollback to a previous model version
 
         Args:
@@ -432,8 +451,9 @@ class ModelVersioning:
             # Git commit
             if self.enable_git_tracking:
                 self._git_commit_version(
-                    model_id, target_version,
-                    f"Rollback {model_id} to version {target_version}: {reason}"
+                    model_id,
+                    target_version,
+                    f"Rollback {model_id} to version {target_version}: {reason}",
                 )
 
             logger.info(f"Rolled back {model_id} to version {target_version}")
@@ -443,11 +463,9 @@ class ModelVersioning:
             logger.error(f"Failed to rollback version: {e}")
             return False
 
-    def compare_versions(self,
-                        model_id: str,
-                        version1: str,
-                        version2: str,
-                        test_data: Optional[pd.DataFrame] = None) -> VersionComparisonResult:
+    def compare_versions(
+        self, model_id: str, version1: str, version2: str, test_data: pd.DataFrame | None = None
+    ) -> VersionComparisonResult:
         """Compare two model versions
 
         Args:
@@ -477,14 +495,20 @@ class ModelVersioning:
             drawdown_improvement = None
             return_improvement = None
 
-            if (metadata1.backtest_sharpe_ratio and metadata2.backtest_sharpe_ratio):
-                sharpe_improvement = metadata2.backtest_sharpe_ratio - metadata1.backtest_sharpe_ratio
+            if metadata1.backtest_sharpe_ratio and metadata2.backtest_sharpe_ratio:
+                sharpe_improvement = (
+                    metadata2.backtest_sharpe_ratio - metadata1.backtest_sharpe_ratio
+                )
 
-            if (metadata1.backtest_max_drawdown and metadata2.backtest_max_drawdown):
-                drawdown_improvement = metadata1.backtest_max_drawdown - metadata2.backtest_max_drawdown
+            if metadata1.backtest_max_drawdown and metadata2.backtest_max_drawdown:
+                drawdown_improvement = (
+                    metadata1.backtest_max_drawdown - metadata2.backtest_max_drawdown
+                )
 
-            if (metadata1.backtest_total_return and metadata2.backtest_total_return):
-                return_improvement = metadata2.backtest_total_return - metadata1.backtest_total_return
+            if metadata1.backtest_total_return and metadata2.backtest_total_return:
+                return_improvement = (
+                    metadata2.backtest_total_return - metadata1.backtest_total_return
+                )
 
             # Statistical significance (if test data provided)
             is_significant = False
@@ -498,8 +522,7 @@ class ModelVersioning:
 
             # Generate recommendation
             recommendation = self._generate_recommendation(
-                accuracy_improvement, f1_improvement, sharpe_improvement,
-                is_significant
+                accuracy_improvement, f1_improvement, sharpe_improvement, is_significant
             )
 
             return VersionComparisonResult(
@@ -517,17 +540,16 @@ class ModelVersioning:
                 p_value=p_value,
                 confidence_interval=confidence_interval,
                 recommended_action=recommendation["action"],
-                recommendation_confidence=recommendation["confidence"]
+                recommendation_confidence=recommendation["confidence"],
             )
 
         except Exception as e:
             logger.error(f"Failed to compare versions: {e}")
             raise
 
-    def archive_version(self,
-                       model_id: str,
-                       version: str,
-                       archive_reason: str = "automated_cleanup") -> bool:
+    def archive_version(
+        self, model_id: str, version: str, archive_reason: str = "automated_cleanup"
+    ) -> bool:
         """Archive a model version
 
         Args:
@@ -567,8 +589,7 @@ class ModelVersioning:
             # Git commit
             if self.enable_git_tracking:
                 self._git_commit_version(
-                    model_id, version,
-                    f"Archive {model_id}:{version}: {archive_reason}"
+                    model_id, version, f"Archive {model_id}:{version}: {archive_reason}"
                 )
 
             logger.info(f"Archived {model_id}:{version}")
@@ -578,10 +599,7 @@ class ModelVersioning:
             logger.error(f"Failed to archive version: {e}")
             return False
 
-    def delete_version(self,
-                      model_id: str,
-                      version: str,
-                      force: bool = False) -> bool:
+    def delete_version(self, model_id: str, version: str, force: bool = False) -> bool:
         """Permanently delete a model version
 
         Args:
@@ -630,9 +648,7 @@ class ModelVersioning:
 
             # Remove from registry
             if model_id in self.models:
-                self.models[model_id] = [
-                    m for m in self.models[model_id] if m.version != version
-                ]
+                self.models[model_id] = [m for m in self.models[model_id] if m.version != version]
 
                 if not self.models[model_id]:
                     del self.models[model_id]
@@ -652,9 +668,7 @@ class ModelVersioning:
             logger.error(f"Failed to delete version: {e}")
             return False
 
-    def load_model(self,
-                   model_id: str,
-                   version: Optional[str] = None) -> Optional[Any]:
+    def load_model(self, model_id: str, version: str | None = None) -> Any | None:
         """Load a model from storage
 
         Args:
@@ -692,9 +706,7 @@ class ModelVersioning:
             logger.error(f"Failed to load model {model_id}:{version}: {e}")
             return None
 
-    def get_version_metadata(self,
-                           model_id: str,
-                           version: str) -> Optional[ModelMetadata]:
+    def get_version_metadata(self, model_id: str, version: str) -> ModelMetadata | None:
         """Get metadata for a specific version"""
         if model_id in self.models:
             for metadata in self.models[model_id]:
@@ -702,27 +714,27 @@ class ModelVersioning:
                     return metadata
         return None
 
-    def list_models(self) -> List[str]:
+    def list_models(self) -> list[str]:
         """List all model IDs"""
         return list(self.models.keys())
 
-    def list_versions(self, model_id: str) -> List[str]:
+    def list_versions(self, model_id: str) -> list[str]:
         """List all versions for a model"""
         if model_id in self.models:
             return [metadata.version for metadata in self.models[model_id]]
         return []
 
-    def get_production_version(self, model_id: str) -> Optional[str]:
+    def get_production_version(self, model_id: str) -> str | None:
         """Get current production version for a model"""
         return self.production_versions.get(model_id)
 
-    def get_latest_version(self, model_id: str) -> Optional[str]:
+    def get_latest_version(self, model_id: str) -> str | None:
         """Get latest version for a model"""
         return self.current_versions.get(model_id)
 
-    def cleanup_old_versions(self,
-                           model_id: Optional[str] = None,
-                           dry_run: bool = False) -> Dict[str, int]:
+    def cleanup_old_versions(
+        self, model_id: str | None = None, dry_run: bool = False
+    ) -> dict[str, int]:
         """Clean up old model versions
 
         Args:
@@ -744,9 +756,7 @@ class ModelVersioning:
 
     # Private helper methods
 
-    def _generate_version_number(self,
-                                model_id: str,
-                                version_type: VersionType) -> str:
+    def _generate_version_number(self, model_id: str, version_type: VersionType) -> str:
         """Generate semantic version number"""
         current_version = self.current_versions.get(model_id, "0.0.0")
 
@@ -783,10 +793,7 @@ class ModelVersioning:
         """Get path for model storage"""
         return self.base_path / "models" / model_id / version
 
-    def _save_model(self,
-                   model_object: Any,
-                   model_path: Path,
-                   model_format: ModelFormat):
+    def _save_model(self, model_object: Any, model_path: Path, model_format: ModelFormat):
         """Save model to disk using secure serialization"""
         model_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -822,17 +829,15 @@ class ModelVersioning:
 
     def _save_metadata(self, metadata: ModelMetadata):
         """Save metadata to disk"""
-        metadata_path = (self.base_path / "metadata" /
-                        f"{metadata.model_id}_{metadata.version}.json")
+        metadata_path = self.base_path / "metadata" / f"{metadata.model_id}_{metadata.version}.json"
 
         # Convert to serializable format
         metadata_dict = {
-            k: v.isoformat() if isinstance(v, datetime) else
-               v.value if isinstance(v, Enum) else v
+            k: v.isoformat() if isinstance(v, datetime) else v.value if isinstance(v, Enum) else v
             for k, v in metadata.__dict__.items()
         }
 
-        with open(metadata_path, 'w') as f:
+        with open(metadata_path, "w") as f:
             json.dump(metadata_dict, f, indent=2, default=str)
 
     def _calculate_model_hash(self, model_path: Path) -> str:
@@ -841,15 +846,13 @@ class ModelVersioning:
 
         for file_path in model_path.rglob("*"):
             if file_path.is_file():
-                with open(file_path, 'rb') as f:
+                with open(file_path, "rb") as f:
                     for chunk in iter(lambda: f.read(4096), b""):
                         hasher.update(chunk)
 
         return hasher.hexdigest()
 
-    def _validate_promotion(self,
-                           metadata: ModelMetadata,
-                           target_stage: ModelStage) -> bool:
+    def _validate_promotion(self, metadata: ModelMetadata, target_stage: ModelStage) -> bool:
         """Validate if promotion is allowed"""
         current_stage = metadata.stage
 
@@ -860,7 +863,7 @@ class ModelVersioning:
             ModelStage.STAGING: [ModelStage.SHADOW, ModelStage.CANDIDATE],
             ModelStage.SHADOW: [ModelStage.CANDIDATE, ModelStage.PRODUCTION],
             ModelStage.CANDIDATE: [ModelStage.PRODUCTION, ModelStage.STAGING],
-            ModelStage.PRODUCTION: [ModelStage.DEPRECATED, ModelStage.ROLLBACK_READY]
+            ModelStage.PRODUCTION: [ModelStage.DEPRECATED, ModelStage.ROLLBACK_READY],
         }
 
         return target_stage in allowed_promotions.get(current_stage, [])
@@ -894,7 +897,7 @@ class ModelVersioning:
         except Exception as e:
             logger.warning(f"Git commit failed: {e}")
 
-    def _cleanup_old_versions(self, model_id: str, dry_run: bool = False) -> Dict[str, int]:
+    def _cleanup_old_versions(self, model_id: str, dry_run: bool = False) -> dict[str, int]:
         """Clean up old versions for a specific model"""
         stats = {"archived": 0, "deleted": 0}
 
@@ -943,11 +946,9 @@ class ModelVersioning:
 
         return stats
 
-    def _test_statistical_significance(self,
-                                     model_id: str,
-                                     version1: str,
-                                     version2: str,
-                                     test_data: pd.DataFrame) -> Tuple[bool, float, Tuple[float, float]]:
+    def _test_statistical_significance(
+        self, model_id: str, version1: str, version2: str, test_data: pd.DataFrame
+    ) -> tuple[bool, float, tuple[float, float]]:
         """Test statistical significance between model versions"""
         # This is a simplified implementation
         # In practice, you'd use proper statistical tests
@@ -960,8 +961,8 @@ class ModelVersioning:
             return False, 1.0, (0.0, 0.0)
 
         # Make predictions
-        X = test_data.drop(['target'], axis=1, errors='ignore')
-        y = test_data['target']
+        X = test_data.drop(["target"], axis=1, errors="ignore")
+        y = test_data["target"]
 
         pred1 = model1.predict(X)
         pred2 = model2.predict(X)
@@ -986,11 +987,13 @@ class ModelVersioning:
 
         return False, 1.0, (0.0, 0.0)
 
-    def _generate_recommendation(self,
-                               accuracy_improvement: float,
-                               f1_improvement: float,
-                               sharpe_improvement: Optional[float],
-                               is_significant: bool) -> Dict[str, Any]:
+    def _generate_recommendation(
+        self,
+        accuracy_improvement: float,
+        f1_improvement: float,
+        sharpe_improvement: float | None,
+        is_significant: bool,
+    ) -> dict[str, Any]:
         """Generate deployment recommendation"""
 
         # Calculate overall improvement score
@@ -1012,12 +1015,10 @@ class ModelVersioning:
 
 
 # Factory functions
-def create_model_versioning(base_path: str = "models",
-                          enable_git: bool = True,
-                          max_versions: int = 10) -> ModelVersioning:
+def create_model_versioning(
+    base_path: str = "models", enable_git: bool = True, max_versions: int = 10
+) -> ModelVersioning:
     """Create model versioning system"""
     return ModelVersioning(
-        base_path=base_path,
-        enable_git_tracking=enable_git,
-        max_versions_per_model=max_versions
+        base_path=base_path, enable_git_tracking=enable_git, max_versions_per_model=max_versions
     )

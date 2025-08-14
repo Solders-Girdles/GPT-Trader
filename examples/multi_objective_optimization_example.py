@@ -5,18 +5,17 @@ Demonstrates Pareto front identification, non-dominated sorting, and multi-objec
 
 import logging
 import sys
+from datetime import datetime
 from pathlib import Path
-from datetime import datetime, timedelta
 
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
+from bot.backtest.engine_portfolio import run_backtest
+from bot.optimization.config import OptimizationConfig, StrategyConfig
 from bot.optimization.multi_objective import MultiObjectiveEvolution
 from bot.optimization.multi_objective_visualizer import MultiObjectiveVisualizer
-from bot.optimization.config import OptimizationConfig, StrategyConfig
 from bot.strategy.enhanced_trend_breakout import EnhancedTrendBreakoutStrategy
-from bot.backtest.engine_portfolio import run_backtest
-from bot.dataflow.sources.enhanced_yfinance_source import EnhancedYFinanceSource
 
 # Configure logging
 logging.basicConfig(
@@ -252,7 +251,6 @@ def main():
 
     # Save detailed results
     import json
-    from datetime import datetime
 
     # Convert results to serializable format
     serializable_results = {

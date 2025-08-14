@@ -7,18 +7,16 @@ This script:
 3. Reports on changes made
 """
 
-import os
 import re
 import sys
 from pathlib import Path
-from typing import List, Tuple
 
 # Add project root to path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 
-def find_hardcoded_values(directory: Path) -> List[Tuple[Path, int, str]]:
+def find_hardcoded_values(directory: Path) -> list[tuple[Path, int, str]]:
     """Find files with hardcoded financial values.
 
     Args:
@@ -47,7 +45,7 @@ def find_hardcoded_values(directory: Path) -> List[Tuple[Path, int, str]]:
             continue
 
         try:
-            with open(py_file, "r") as f:
+            with open(py_file) as f:
                 lines = f.readlines()
                 for i, line in enumerate(lines, 1):
                     if re.search(combined_pattern, line):
@@ -58,7 +56,7 @@ def find_hardcoded_values(directory: Path) -> List[Tuple[Path, int, str]]:
     return results
 
 
-def generate_migration_report(results: List[Tuple[Path, int, str]]) -> str:
+def generate_migration_report(results: list[tuple[Path, int, str]]) -> str:
     """Generate a migration report.
 
     Args:
@@ -92,14 +90,14 @@ def generate_migration_report(results: List[Tuple[Path, int, str]]) -> str:
         """
 1. Files that need imports:
    from bot.config import get_config
-   
+
 2. Replace hardcoded values:
    100000 -> get_config().financial.capital.initial_capital
    10000  -> get_config().financial.capital.deployment_budget
-   
+
 3. For class defaults, use None and load in __post_init__:
    initial_capital: float = None
-   
+
    def __post_init__(self):
        if self.initial_capital is None:
            config = get_config()
@@ -163,7 +161,7 @@ def main():
     initial_capital_count = sum(1 for _, _, c in results if "100000" in c or "100_000" in c)
     deployment_count = sum(1 for _, _, c in results if "10000" in c)
 
-    print(f"\nSummary:")
+    print("\nSummary:")
     print(f"  Initial capital values: {initial_capital_count}")
     print(f"  Deployment budget values: {deployment_count}")
     print(f"  Total: {len(results)}")

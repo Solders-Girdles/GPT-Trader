@@ -8,7 +8,7 @@ This directory contains documentation files that have been archived as they are 
 - `PHASE3_COMPLETION_SUMMARY.md` - Individual Phase 3 summary (superseded)
 - `PHASE5_COMPLETION_SUMMARY.md` - References non-existent Phase 5
 
-### Reason: Outdated Planning/Implementation Guides  
+### Reason: Outdated Planning/Implementation Guides
 - `PHASE1_IMPLEMENTATION_GUIDE.md` - Implementation guide for completed phase
 - `PHASE1_RISK_MITIGATION.md` - Risk mitigation for completed phase
 - `NEXT_STEPS_ROADMAP.md` - Contains outdated roadmap information
@@ -28,7 +28,7 @@ All information from archived files has been consolidated into the current docum
 
 # Code Files Archive (SOT Program Phase 1)
 
-**Last Updated**: 2025-08-14  
+**Last Updated**: 2025-08-14
 **SoT Tasks Completed**: SOT-010, SOT-011
 
 ## Archived Module Directories (Previously Archived)
@@ -37,7 +37,7 @@ All information from archived files has been consolidated into the current docum
 - **Location**: `../archived/intelligence_20250812_152245/`
 - **Archive Date**: 2025-08-12
 - **Reason**: Deprecated intelligence module - functionality migrated to `src/bot/ml/` and `src/bot/monitoring/`
-- **Replacement**: 
+- **Replacement**:
   - ML functionality → `src/bot/ml/integrated_pipeline.py`
   - Monitoring functionality → `src/bot/monitoring/`
 - **Files Count**: 19 Python files

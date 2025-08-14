@@ -91,7 +91,7 @@ async def run_paper_trading():
         api_key="your_api_key",
         secret_key="your_secret_key"
     )
-    
+
     # Initialize strategy
     strategy = TrendBreakoutStrategy(
         TrendBreakoutParams(
@@ -100,7 +100,7 @@ async def run_paper_trading():
             atr_k=2.0,
         )
     )
-    
+
     # Initialize portfolio rules
     rules = PortfolioRules(
         per_trade_risk_pct=0.005,  # 0.5%
@@ -109,7 +109,7 @@ async def run_paper_trading():
         max_gross_exposure_pct=0.60,
         cost_bps=5.0,
     )
-    
+
     # Initialize trading engine
     engine = LiveTradingEngine(
         broker=broker,
@@ -119,7 +119,7 @@ async def run_paper_trading():
         rebalance_interval=300,  # 5 minutes
         max_positions=10,
     )
-    
+
     # Start trading
     await engine.start()
 

@@ -180,14 +180,14 @@ Migration Strategy:
 
 1. Files that need imports:
    from bot.config import get_config
-   
+
 2. Replace hardcoded values:
    100000 -> get_config().financial.capital.initial_capital
    10000  -> get_config().financial.capital.deployment_budget
-   
+
 3. For class defaults, use None and load in __post_init__:
    initial_capital: float = None
-   
+
    def __post_init__(self):
        if self.initial_capital is None:
            config = get_config()

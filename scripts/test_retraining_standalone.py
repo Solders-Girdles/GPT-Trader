@@ -1,30 +1,28 @@
-#\!/usr/bin/env python3
+# \!/usr/bin/env python3
 """
 Standalone Test for Automated Retraining System
 Tests the core retraining functionality without complex dependencies
 """
 
-import sys
 import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
+import sys
 
-import time
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
+
 import logging
-import numpy as np
-import pandas as pd
-from datetime import datetime, timedelta
-from unittest.mock import Mock
-from dataclasses import dataclass
-from enum import Enum
-from typing import Dict, List, Optional, Any
+import time
 from collections import deque
-import threading
-import tempfile
-import shutil
+from dataclasses import dataclass
+from datetime import datetime, timedelta
+from enum import Enum
+from typing import Any
+
+import numpy as np
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
+
 
 # Minimal implementation test - core retraining logic without complex dependencies
 class TestRetrainingTrigger(Enum):
@@ -33,6 +31,7 @@ class TestRetrainingTrigger(Enum):
     MANUAL = "manual"
     EMERGENCY = "emergency"
 
+
 class TestRetrainingStatus(Enum):
     IDLE = "idle"
     QUEUED = "queued"
@@ -40,12 +39,14 @@ class TestRetrainingStatus(Enum):
     COMPLETED = "completed"
     FAILED = "failed"
 
+
 @dataclass
 class TestRetrainingConfig:
     min_accuracy_threshold: float = 0.55
     max_retrainings_per_day: int = 2
     cooldown_period_hours: int = 6
     max_daily_cost: float = 10.0
+
 
 @dataclass
 class TestRetrainingRequest:
@@ -55,14 +56,16 @@ class TestRetrainingRequest:
     reason: str
     model_id: str = "test_model"
 
+
 @dataclass
 class TestRetrainingResult:
     request_id: str
     status: TestRetrainingStatus
     started_at: datetime
-    completed_at: Optional[datetime] = None
+    completed_at: datetime | None = None
     old_model_id: str = "test_model"
-    new_model_id: Optional[str] = None
+    new_model_id: str | None = None
+
 
 class TestAutoRetrainingCore:
     """Core retraining logic without external dependencies"""
@@ -89,7 +92,7 @@ class TestAutoRetrainingCore:
             trigger=TestRetrainingTrigger.MANUAL,
             priority=priority,
             requested_at=datetime.now(),
-            reason=reason
+            reason=reason,
         )
 
         self.retraining_queue.append(request)
@@ -119,7 +122,7 @@ class TestAutoRetrainingCore:
                 trigger=TestRetrainingTrigger.PERFORMANCE_DEGRADATION,
                 priority=7,
                 requested_at=datetime.now(),
-                reason=f"Performance degradation: {accuracy_drop:.3f} drop, current: {recent_accuracy:.3f}"
+                reason=f"Performance degradation: {accuracy_drop:.3f} drop, current: {recent_accuracy:.3f}",
             )
             self.retraining_queue.append(request)
             logger.info("Triggered performance-based retraining")
@@ -134,20 +137,24 @@ class TestAutoRetrainingCore:
     def _exceeds_daily_limits(self) -> bool:
         """Check daily limits"""
         today = datetime.now().date()
-        today_retrainings = len([
-            r for r in self.retraining_history
-            if r.started_at.date() == today and r.status == TestRetrainingStatus.COMPLETED
-        ])
+        today_retrainings = len(
+            [
+                r
+                for r in self.retraining_history
+                if r.started_at.date() == today and r.status == TestRetrainingStatus.COMPLETED
+            ]
+        )
         return today_retrainings >= self.config.max_retrainings_per_day
 
-    def get_status(self) -> Dict[str, Any]:
+    def get_status(self) -> dict[str, Any]:
         """Get system status"""
         return {
             "queue_length": len(self.retraining_queue),
             "performance_samples": len(self.performance_history),
             "total_retrainings": len(self.retraining_history),
-            "in_cooldown": self._is_in_cooldown()
+            "in_cooldown": self._is_in_cooldown(),
         }
+
 
 def test_core_retraining_logic():
     """Test core retraining logic"""
@@ -158,7 +165,7 @@ def test_core_retraining_logic():
         config = TestRetrainingConfig(
             min_accuracy_threshold=0.55,
             max_retrainings_per_day=5,
-            cooldown_period_hours=0  # No cooldown for testing
+            cooldown_period_hours=0,  # No cooldown for testing
         )
 
         # Create system
@@ -195,6 +202,7 @@ def test_core_retraining_logic():
         logger.error(f"✗ Core retraining logic test failed: {e}")
         return False
 
+
 def test_scheduling_logic():
     """Test basic scheduling logic"""
     logger.info("Testing scheduling logic...")
@@ -203,7 +211,7 @@ def test_scheduling_logic():
         from datetime import timedelta
 
         # Test cron-like scheduling
-        def is_time_to_run(last_run: Optional[datetime], interval_hours: int) -> bool:
+        def is_time_to_run(last_run: datetime | None, interval_hours: int) -> bool:
             if not last_run:
                 return True
             return datetime.now() - last_run >= timedelta(hours=interval_hours)
@@ -227,24 +235,22 @@ def test_scheduling_logic():
         logger.error(f"✗ Scheduling logic test failed: {e}")
         return False
 
+
 def test_cost_calculation():
     """Test cost calculation logic"""
     logger.info("Testing cost calculation...")
 
     try:
+
         def estimate_retraining_cost(trigger_type: str, model_size: str = "medium") -> float:
             base_costs = {
                 "manual": 5.0,
                 "scheduled": 7.5,
                 "performance_degradation": 6.0,
-                "emergency": 3.0  # Faster, less thorough
+                "emergency": 3.0,  # Faster, less thorough
             }
 
-            size_multipliers = {
-                "small": 0.5,
-                "medium": 1.0,
-                "large": 2.0
-            }
+            size_multipliers = {"small": 0.5, "medium": 1.0, "large": 2.0}
 
             base_cost = base_costs.get(trigger_type, 5.0)
             size_multiplier = size_multipliers.get(model_size, 1.0)
@@ -275,6 +281,7 @@ def test_cost_calculation():
     except Exception as e:
         logger.error(f"✗ Cost calculation test failed: {e}")
         return False
+
 
 def test_model_versioning_logic():
     """Test basic model versioning logic"""
@@ -328,6 +335,7 @@ def test_model_versioning_logic():
         logger.error(f"✗ Model versioning logic test failed: {e}")
         return False
 
+
 def test_performance_characteristics():
     """Test performance characteristics"""
     logger.info("Testing performance characteristics...")
@@ -356,7 +364,7 @@ def test_performance_characteristics():
         calc_time = time.time() - start_time
         assert calc_time < 0.01, f"Calculation time too slow: {calc_time:.3f}s"
 
-        logger.info(f"✓ Performance tests passed:")
+        logger.info("✓ Performance tests passed:")
         logger.info(f"  - 100 decisions: {decision_time*1000:.1f}ms")
         logger.info(f"  - 1000 calculations: {calc_time*1000:.1f}ms")
 
@@ -366,6 +374,7 @@ def test_performance_characteristics():
         logger.error(f"✗ Performance test failed: {e}")
         return False
 
+
 def test_integration_workflow():
     """Test complete workflow integration"""
     logger.info("Testing integration workflow...")
@@ -373,9 +382,7 @@ def test_integration_workflow():
     try:
         # Create system
         config = TestRetrainingConfig(
-            min_accuracy_threshold=0.55,
-            max_retrainings_per_day=10,
-            cooldown_period_hours=0
+            min_accuracy_threshold=0.55, max_retrainings_per_day=10, cooldown_period_hours=0
         )
         system = TestAutoRetrainingCore(config)
 
@@ -409,6 +416,7 @@ def test_integration_workflow():
         logger.error(f"✗ Integration workflow test failed: {e}")
         return False
 
+
 def main():
     """Run all standalone tests"""
     logger.info("Starting Automated Retraining System Standalone Tests")
@@ -420,7 +428,7 @@ def main():
         ("Cost Calculation", test_cost_calculation),
         ("Model Versioning", test_model_versioning_logic),
         ("Performance", test_performance_characteristics),
-        ("Integration", test_integration_workflow)
+        ("Integration", test_integration_workflow),
     ]
 
     results = {}
@@ -448,7 +456,7 @@ def main():
     logger.info(f"\nOverall: {passed}/{total} tests passed")
 
     if passed == total:
-        logger.info("🎉 All core retraining logic tests passed\!")
+        logger.info("🎉 All core retraining logic tests passed!")
         logger.info("\nKey capabilities validated:")
         logger.info("- Performance degradation detection")
         logger.info("- Manual retraining requests")
@@ -461,6 +469,6 @@ def main():
         logger.error(f"❌ {total - passed} tests failed. Review implementation.")
         return 1
 
+
 if __name__ == "__main__":
     exit(main())
-EOF < /dev/null

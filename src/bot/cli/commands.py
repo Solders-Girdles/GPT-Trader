@@ -4,24 +4,21 @@ All command implementations in one place
 """
 
 import argparse
-import sys
 import subprocess
-from datetime import datetime, timedelta
+import sys
+from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 from ..backtest import run_backtest
 from ..optimization import run_optimization
-from ..core.database import get_database
-from .ml_commands import MLTrainCommand, AutoTradeCommand
 from .cli_utils import (
-    print_table,
-    print_success,
-    print_error,
-    print_warning,
     confirm_action,
-    format_currency,
     format_percentage,
+    print_error,
+    print_success,
+    print_table,
+    print_warning,
 )
 
 
@@ -113,7 +110,7 @@ class BacktestCommand(BaseCommand):
             print_error(f"Backtest failed: {e}")
             return 1
 
-    def _display_results(self, results: Dict[str, Any]) -> None:
+    def _display_results(self, results: dict[str, Any]) -> None:
         """Display backtest results"""
         metrics = [
             ["Total Return", format_percentage(results.get("total_return", 0))],
@@ -126,7 +123,7 @@ class BacktestCommand(BaseCommand):
         print("\nBacktest Results:")
         print_table(["Metric", "Value"], metrics)
 
-    def _save_results(self, results: Dict[str, Any], output_dir: Path) -> None:
+    def _save_results(self, results: dict[str, Any], output_dir: Path) -> None:
         """Save results to file"""
         output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -472,7 +469,7 @@ class WizardCommand(BaseCommand):
             print_error(f"Setup failed: {e}")
             return 1
 
-    def _configure_api(self) -> Dict[str, str]:
+    def _configure_api(self) -> dict[str, str]:
         """Configure API settings"""
         config = {}
 
@@ -499,7 +496,7 @@ class WizardCommand(BaseCommand):
 
         return config
 
-    def _configure_strategy(self) -> Dict[str, Any]:
+    def _configure_strategy(self) -> dict[str, Any]:
         """Configure strategy settings"""
         config = {}
 
@@ -516,7 +513,7 @@ class WizardCommand(BaseCommand):
 
         return config
 
-    def _configure_risk(self) -> Dict[str, Any]:
+    def _configure_risk(self) -> dict[str, Any]:
         """Configure risk parameters"""
         config = {}
 
@@ -528,7 +525,7 @@ class WizardCommand(BaseCommand):
 
         return config
 
-    def _save_config(self, config: Dict[str, Any]) -> None:
+    def _save_config(self, config: dict[str, Any]) -> None:
         """Save configuration to file"""
         import json
 

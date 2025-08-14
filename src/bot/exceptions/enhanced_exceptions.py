@@ -431,7 +431,8 @@ class ExceptionHandler:
                 name: breaker.get_state() for name, breaker in self.circuit_breakers.items()
             },
             "recent_errors": [
-                error.to_dict() for error in self.error_history[-10:]  # Last 10 errors
+                error.to_dict()
+                for error in self.error_history[-10:]  # Last 10 errors
             ],
         }
 

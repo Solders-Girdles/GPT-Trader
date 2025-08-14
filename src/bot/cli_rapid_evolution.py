@@ -138,7 +138,8 @@ def main() -> None:
 
     # Create rapid evolution engine
     engine = RapidEvolutionEngine(
-        config=None, strategy_config=strategy_config  # Not needed for rapid evolution
+        config=None,
+        strategy_config=strategy_config,  # Not needed for rapid evolution
     )
 
     # Run evolution

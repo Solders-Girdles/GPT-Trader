@@ -3,7 +3,7 @@
 Comprehensive TA-Lib Integration Test
 
 Tests the complete workflow with TA-Lib optimized strategy:
-1. Strategy signal generation 
+1. Strategy signal generation
 2. Backtest engine integration
 3. Performance validation
 4. Memory efficiency
@@ -11,9 +11,10 @@ Tests the complete workflow with TA-Lib optimized strategy:
 
 import sys
 import time
-import pandas as pd
-import numpy as np
 from pathlib import Path
+
+import numpy as np
+import pandas as pd
 
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent / "src"))
@@ -23,7 +24,7 @@ def test_talib_strategy_generation():
     """Test TA-Lib strategy signal generation"""
     print("🧪 Testing TA-Lib Strategy Signal Generation...")
 
-    from bot.strategy.talib_optimized_ma import TALibOptimizedMAStrategy, TALibMAParams
+    from bot.strategy.talib_optimized_ma import TALibMAParams, TALibOptimizedMAStrategy
 
     # Generate test data
     np.random.seed(42)
@@ -71,7 +72,7 @@ def test_backtest_integration():
 
     try:
         from bot import run_backtest
-        from bot.strategy.talib_optimized_ma import TALibOptimizedMAStrategy, TALibMAParams
+        from bot.strategy.talib_optimized_ma import TALibMAParams, TALibOptimizedMAStrategy
 
         # Create test data
         np.random.seed(42)
@@ -120,7 +121,7 @@ def test_backtest_integration():
 
     except Exception as e:
         print(f"   ⚠️  Backtest integration test failed: {e}")
-        print(f"   💡 This is expected if backtest engine has dependencies not available")
+        print("   💡 This is expected if backtest engine has dependencies not available")
         return None
 
 
@@ -128,8 +129,8 @@ def test_performance_comparison():
     """Test performance comparison between strategies"""
     print("\n🧪 Testing Performance Comparison...")
 
-    from bot.strategy.talib_optimized_ma import TALibOptimizedMAStrategy, TALibMAParams
-    from bot.strategy.optimized_ma import OptimizedMAStrategy, OptimizedMAParams
+    from bot.strategy.optimized_ma import OptimizedMAParams, OptimizedMAStrategy
+    from bot.strategy.talib_optimized_ma import TALibMAParams, TALibOptimizedMAStrategy
 
     # Generate larger test dataset
     np.random.seed(42)
@@ -189,10 +190,10 @@ def test_memory_efficiency():
     """Test memory efficiency of TA-Lib strategy"""
     print("\n🧪 Testing Memory Efficiency...")
 
-    import psutil
     import os
 
-    from bot.strategy.talib_optimized_ma import TALibOptimizedMAStrategy, TALibMAParams
+    import psutil
+    from bot.strategy.talib_optimized_ma import TALibMAParams, TALibOptimizedMAStrategy
 
     # Monitor memory usage
     process = psutil.Process(os.getpid())
@@ -275,22 +276,22 @@ def main():
         memory_result = test_memory_efficiency()
 
         # Summary
-        print(f"\n📊 INTEGRATION TEST SUMMARY:")
-        print(f"   ✅ Signal generation: PASSED")
+        print("\n📊 INTEGRATION TEST SUMMARY:")
+        print("   ✅ Signal generation: PASSED")
         print(
             f"   {'✅' if backtest_result else '⚠️ '} Backtest integration: {'PASSED' if backtest_result else 'SKIPPED'}"
         )
-        print(f"   ✅ Performance comparison: PASSED")
-        print(f"   ✅ Memory efficiency: PASSED")
+        print("   ✅ Performance comparison: PASSED")
+        print("   ✅ Memory efficiency: PASSED")
 
-        print(f"\n🚀 KEY METRICS:")
+        print("\n🚀 KEY METRICS:")
         print(f"   ⚡ TA-Lib speedup: {perf_result['speedup']:.1f}x")
         print(f"   📈 TA-Lib throughput: {perf_result['talib_throughput']:,.0f} rows/sec")
         print(f"   🎯 Signal accuracy: {perf_result['signal_correlation']:.3f} correlation")
         print(f"   💾 Memory efficiency: {memory_result['memory_efficiency']:,.0f} rows/MB")
 
-        print(f"\n✅ TA-Lib integration successful!")
-        print(f"   Ready for production deployment")
+        print("\n✅ TA-Lib integration successful!")
+        print("   Ready for production deployment")
 
         return True
 

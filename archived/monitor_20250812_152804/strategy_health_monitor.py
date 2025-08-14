@@ -192,7 +192,6 @@ class StrategyHealthMonitor:
         check_interval: timedelta = timedelta(minutes=15),
         min_trades_for_analysis: int = 10,
     ) -> None:
-
         self.monitoring_dir = Path(monitoring_dir)
         self.monitoring_dir.mkdir(parents=True, exist_ok=True)
 

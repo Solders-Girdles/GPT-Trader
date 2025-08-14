@@ -525,7 +525,9 @@ class Phase4ComponentTester:
         try:
             # Create event bus
             event_bus = create_event_driven_system(
-                max_buffer_size=1000, enable_persistence=False, batch_size=50  # Disable for testing
+                max_buffer_size=1000,
+                enable_persistence=False,
+                batch_size=50,  # Disable for testing
             )
 
             await event_bus.start(num_workers=2)

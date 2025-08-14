@@ -20,6 +20,7 @@ from typing import Any
 @dataclass
 class CacheEntry:
     """Individual cache entry with metadata."""
+
     key: str
     value: Any
     size: int
@@ -516,9 +517,9 @@ class AdaptivePolicy(EvictionPolicy):
         self.lfu.remove(key)
 
 
-def benchmark_eviction_policies(data_size: int = 1000,
-                               cache_size: int = 100,
-                               access_pattern: str = "zipf") -> dict[str, dict[str, float]]:
+def benchmark_eviction_policies(
+    data_size: int = 1000, cache_size: int = 100, access_pattern: str = "zipf"
+) -> dict[str, dict[str, float]]:
     """Benchmark different eviction policies."""
     import numpy as np
 
@@ -569,7 +570,7 @@ def benchmark_eviction_policies(data_size: int = 1000,
                     value=f"value_{item_id}",
                     size=1,
                     created_at=time.time(),
-                    last_accessed=time.time()
+                    last_accessed=time.time(),
                 )
 
                 evict_key = policy.add(key, entry)
@@ -604,18 +605,15 @@ if __name__ == "__main__":
         print("-" * 30)
 
         results = benchmark_eviction_policies(
-            data_size=1000,
-            cache_size=100,
-            access_pattern=pattern
+            data_size=1000, cache_size=100, access_pattern=pattern
         )
 
         # Sort by hit rate
-        sorted_results = sorted(results.items(),
-                              key=lambda x: x[1]["hit_rate"],
-                              reverse=True)
+        sorted_results = sorted(results.items(), key=lambda x: x[1]["hit_rate"], reverse=True)
 
         for policy, metrics in sorted_results:
-            print(f"{policy:10} Hit Rate: {metrics['hit_rate']:.3f} "
-                  f"Time: {metrics['time']:.4f}s")
+            print(
+                f"{policy:10} Hit Rate: {metrics['hit_rate']:.3f} " f"Time: {metrics['time']:.4f}s"
+            )
 
     print("\n✓ Eviction policy benchmarks complete")

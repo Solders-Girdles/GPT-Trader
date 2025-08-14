@@ -8,8 +8,8 @@ import logging
 import sys
 from pathlib import Path
 
-from bot.security.secrets_manager import ConfigurationError, get_secret_manager
 from bot.config.demo_mode import DemoModeConfig, setup_demo_mode
+from bot.security.secrets_manager import ConfigurationError, get_secret_manager
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +38,7 @@ def validate_startup(raise_on_failure: bool = True) -> bool:
             logger.info("Demo mode activated - using mock credentials")
             if sys.stdout.isatty():  # Only show in interactive terminals
                 print(DemoModeConfig.get_demo_warning())
-        
+
         # Validate secrets
         secret_manager = get_secret_manager()
         validation_results = secret_manager.validate_startup_secrets(

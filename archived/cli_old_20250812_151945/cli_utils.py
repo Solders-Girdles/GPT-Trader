@@ -7,10 +7,11 @@ import os
 import shutil
 import sys
 import time
+from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Generator
+from typing import Any
 
 import yaml
 from rich.console import Console
@@ -233,7 +234,7 @@ def setup_logging() -> logging.Logger:
     root = logging.getLogger()
     for handler in root.handlers[:]:
         root.removeHandler(handler)
-    
+
     # Add a single Rich handler
     logging.basicConfig(
         level=logging.WARNING,

@@ -11,8 +11,8 @@ This script:
 import os
 import shutil
 import sys
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
 # Add project root to path
 project_root = Path(__file__).parent.parent

@@ -9,7 +9,6 @@ This script shows how to:
 4. Analyze and visualize results
 """
 
-
 from bot.optimization.config import OptimizationConfig, ParameterSpace, get_trend_breakout_config
 from bot.optimization.engine import OptimizationEngine
 

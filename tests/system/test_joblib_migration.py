@@ -3,9 +3,9 @@
 Test script to verify pickle to joblib migration
 """
 
-import tempfile
-import sys
 import os
+import sys
+import tempfile
 
 sys.path.insert(0, "src")
 

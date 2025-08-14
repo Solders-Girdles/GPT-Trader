@@ -679,9 +679,10 @@ class DatabaseStorage(StrategyStorage):
 
             # Calculate hashes for strategy and parameters
             import hashlib
+
             strategy_hash = hashlib.sha256(strategy_id.encode()).hexdigest()[:16]
             params_hash = hashlib.sha256(str(version_row[0]).encode()).hexdigest()[:16]
-            
+
             current_version = StrategyVersion(
                 version=version_row[0],
                 version_type=VersionType(version_row[1]),

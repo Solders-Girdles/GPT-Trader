@@ -148,20 +148,20 @@ tests/
   - `create_ohlcv()`: Generate realistic OHLCV data
   - `create_multi_asset_data()`: Correlated multi-asset data
   - `create_intraday_data()`: Minute-level intraday data
-  
+
 - **StrategyFactory**:
   - `create_strategy_config()`: Strategy configurations by type
   - `create_signals()`: Trading signal generation
-  
+
 - **PortfolioFactory**:
   - `create_holdings()`: Portfolio holdings with various concentrations
   - `create_trades()`: Trade history generation
-  
+
 - **RiskFactory**:
   - `create_risk_metrics()`: Risk metric generation
   - `create_stress_scenario()`: Stress test scenarios
   - `create_correlation_matrix()`: Correlation matrices
-  
+
 - **BacktestFactory**:
   - `create_backtest_results()`: Backtest result generation
   - `create_equity_curve()`: Equity curve simulation
@@ -177,7 +177,7 @@ python_files = test_*.py
 python_classes = Test*
 python_functions = test_*
 
-addopts = 
+addopts =
     --verbose
     --tb=short
     --strict-markers

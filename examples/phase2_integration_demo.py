@@ -3,7 +3,7 @@ Phase 2: Component Integration Demo
 
 Demonstrates the integration of all Phase 2 architecture components:
 - Dependency injection framework
-- Unified concurrency framework  
+- Unified concurrency framework
 - Advanced error handling and recovery
 - Service container lifecycle management
 - Message queues and inter-component communication
@@ -17,47 +17,41 @@ import logging
 import time
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Optional, Dict, Any
+from typing import Any
 
 # Import Phase 2 architecture components
 from bot.core.base import BaseComponent, BaseMonitor, ComponentConfig, HealthStatus
-from bot.core.config import get_config, SystemConfig
-from bot.core.database import get_database
-from bot.core.container import (
-    get_container,
-    ServiceContainer,
-    ServiceLifetime,
-    injectable,
-    component,
-    configure_services,
-)
 from bot.core.concurrency import (
+    IMessageHandler,
+    TaskPriority,
+    create_message_queue,
     get_concurrency_manager,
     initialize_concurrency,
-    submit_io_task,
-    submit_monitoring_task,
     schedule_recurring_task,
-    create_message_queue,
-    IMessageHandler,
-    ThreadPoolType,
-    TaskPriority,
+    submit_io_task,
 )
+from bot.core.container import (
+    ServiceContainer,
+    ServiceLifetime,
+    component,
+    configure_services,
+    get_container,
+    injectable,
+)
+from bot.core.database import get_database
 from bot.core.error_handling import (
-    get_error_manager,
-    handle_errors,
-    with_circuit_breaker,
+    CircuitBreakerConfig,
     RetryConfig,
     RetryStrategy,
-    CircuitBreakerConfig,
     error_handling_context,
+    get_error_manager,
+    handle_errors,
     report_error,
+    with_circuit_breaker,
 )
 from bot.core.exceptions import (
-    TradingException,
-    DataException,
-    ComponentException,
-    raise_trading_error,
     raise_data_error,
+    raise_trading_error,
 )
 
 # Configure logging
@@ -77,7 +71,7 @@ logger = logging.getLogger(__name__)
 class MarketDataService(BaseComponent):
     """Market data service using dependency injection"""
 
-    def __init__(self, config: Optional[ComponentConfig] = None):
+    def __init__(self, config: ComponentConfig | None = None):
         if not config:
             config = ComponentConfig(
                 component_id="market_data_service", component_type="data_service"
@@ -90,7 +84,7 @@ class MarketDataService(BaseComponent):
 
         # Market data state
         self.subscribed_symbols = set()
-        self.current_prices: Dict[str, Decimal] = {}
+        self.current_prices: dict[str, Decimal] = {}
 
         # Message queue for price updates
         self.price_queue = create_message_queue("price_updates", maxsize=1000)
@@ -175,12 +169,12 @@ class MarketDataService(BaseComponent):
             self.logger.error(f"Error fetching price updates: {str(e)}")
             self.record_operation(success=False, error_message=str(e))
 
-    def handle_message(self, message: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def handle_message(self, message: dict[str, Any]) -> dict[str, Any] | None:
         """Handle incoming messages"""
         # This service publishes but doesn't need to handle messages
         return None
 
-    def get_current_price(self, symbol: str) -> Optional[Decimal]:
+    def get_current_price(self, symbol: str) -> Decimal | None:
         """Get current price for symbol"""
         return self.current_prices.get(symbol)
 
@@ -193,9 +187,8 @@ class IntegratedTradingStrategy(BaseComponent):
     """Trading strategy demonstrating full integration"""
 
     def __init__(
-        self, market_data_service: MarketDataService, config: Optional[ComponentConfig] = None
+        self, market_data_service: MarketDataService, config: ComponentConfig | None = None
     ):
-
         if not config:
             config = ComponentConfig(
                 component_id="integrated_trading_strategy", component_type="trading_strategy"
@@ -209,8 +202,8 @@ class IntegratedTradingStrategy(BaseComponent):
         self.concurrency_manager = get_concurrency_manager()
 
         # Strategy state
-        self.positions: Dict[str, Dict[str, Any]] = {}
-        self.active_orders: Dict[str, Dict[str, Any]] = {}
+        self.positions: dict[str, dict[str, Any]] = {}
+        self.active_orders: dict[str, dict[str, Any]] = {}
 
         # Message handling
         self.signal_queue = create_message_queue("trading_signals")
@@ -285,7 +278,7 @@ class IntegratedTradingStrategy(BaseComponent):
             self.record_operation(success=False, error_message=str(e))
             report_error(e, component=self.component_id)
 
-    def _generate_signal(self, symbol: str, current_price: Decimal) -> Optional[Dict[str, Any]]:
+    def _generate_signal(self, symbol: str, current_price: Decimal) -> dict[str, Any] | None:
         """Generate trading signal"""
         # Simple price-based signal (for demonstration)
         if current_price > Decimal("105.00"):
@@ -313,7 +306,7 @@ class IntegratedTradingStrategy(BaseComponent):
             }
 
     @with_circuit_breaker("order_submission", CircuitBreakerConfig(failure_threshold=3))
-    def _process_trading_signal(self, signal: Dict[str, Any]):
+    def _process_trading_signal(self, signal: dict[str, Any]):
         """Process trading signal with error handling"""
         try:
             symbol = signal["symbol"]
@@ -405,7 +398,7 @@ class IntegratedTradingStrategy(BaseComponent):
             # Get positions from database
             positions = self.db_manager.fetch_all(
                 """
-                SELECT * FROM positions 
+                SELECT * FROM positions
                 WHERE closed_at IS NULL AND component_id = ?
             """,
                 (self.component_id,),
@@ -421,12 +414,12 @@ class IntegratedTradingStrategy(BaseComponent):
             self.logger.error(f"Position monitoring error: {str(e)}")
             report_error(e, component=self.component_id)
 
-    def _check_position_risk(self, position: Dict[str, Any]):
+    def _check_position_risk(self, position: dict[str, Any]):
         """Check individual position risk"""
         # Risk checking logic would go here
         pass
 
-    def handle_message(self, message: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def handle_message(self, message: dict[str, Any]) -> dict[str, Any] | None:
         """Handle incoming messages"""
         if message.get("type") == "price_update":
             # React to price updates
@@ -444,7 +437,7 @@ class IntegratedTradingStrategy(BaseComponent):
 class IntegratedPerformanceMonitor(BaseMonitor, IMessageHandler):
     """Performance monitor demonstrating monitoring patterns"""
 
-    def __init__(self, config: Optional[ComponentConfig] = None):
+    def __init__(self, config: ComponentConfig | None = None):
         if not config:
             config = ComponentConfig(
                 component_id="integrated_performance_monitor", component_type="performance_monitor"
@@ -457,7 +450,7 @@ class IntegratedPerformanceMonitor(BaseMonitor, IMessageHandler):
         self.error_manager = get_error_manager()
 
         # Performance tracking
-        self.performance_metrics: Dict[str, Any] = {}
+        self.performance_metrics: dict[str, Any] = {}
 
         # Subscribe to all message queues for monitoring
         self.monitored_queues = []
@@ -543,7 +536,7 @@ class IntegratedPerformanceMonitor(BaseMonitor, IMessageHandler):
             self.logger.error(f"Error collecting performance metrics: {str(e)}")
             report_error(e, component=self.component_id)
 
-    def _store_performance_metrics(self, metrics: Dict[str, Any]):
+    def _store_performance_metrics(self, metrics: dict[str, Any]):
         """Store performance metrics in database"""
         try:
             self.db_manager.insert_record(
@@ -588,7 +581,7 @@ class IntegratedPerformanceMonitor(BaseMonitor, IMessageHandler):
         except Exception as e:
             self.logger.error(f"System health check error: {str(e)}")
 
-    def handle_message(self, message: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def handle_message(self, message: dict[str, Any]) -> dict[str, Any] | None:
         """Handle messages for monitoring"""
         message_type = message.get("type", "unknown")
         self.logger.debug(f"Monitoring message: {message_type}")
@@ -601,7 +594,7 @@ class IntegratedPerformanceMonitor(BaseMonitor, IMessageHandler):
 
         return None
 
-    def get_current_metrics(self) -> Dict[str, Any]:
+    def get_current_metrics(self) -> dict[str, Any]:
         """Get current performance metrics"""
         return self.performance_metrics.copy()
 
@@ -687,7 +680,7 @@ async def demonstrate_phase2_integration():
         # Get current performance metrics
         current_metrics = performance_monitor.get_current_metrics()
         if current_metrics:
-            logger.info(f"   💡 Performance Monitoring: Active")
+            logger.info("   💡 Performance Monitoring: Active")
             logger.info(f"   🎯 Components Monitored: {current_metrics.get('component_count', 0)}")
 
         # Step 5: Demonstrate error handling and recovery
@@ -777,14 +770,14 @@ if __name__ == "__main__":
         """
     🚀 GPT-Trader Phase 2: Component Integration Demo
     =================================================
-    
+
     This demo will showcase:
     1. Dependency injection and service container
     2. Unified concurrency and thread management
     3. Advanced error handling and recovery
     4. Service integration and communication
     5. Performance monitoring and health checks
-    
+
     """
     )
 
@@ -797,14 +790,14 @@ if __name__ == "__main__":
             show_integration_benefits()
 
             print(
-                f"""
+                """
     📋 Next Steps:
     1. Review integration logs: phase2_integration.log
     2. Examine service container health and statistics
-    3. Test error scenarios and recovery mechanisms  
+    3. Test error scenarios and recovery mechanisms
     4. Monitor thread pool utilization and performance
     5. Begin migrating existing components to new patterns
-    
+
     🎯 Phase 2 integration is ready for production deployment!
             """
             )

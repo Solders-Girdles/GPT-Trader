@@ -7,8 +7,8 @@ from .strategy_selector import StrategyMetaSelector
 from .training_utils import ModelTrainer, RegimeAnalyzer
 
 __all__ = [
-    'MarketRegimeDetector',
-    'StrategyMetaSelector',
-    'ModelTrainer',
-    'RegimeAnalyzer',
+    "MarketRegimeDetector",
+    "StrategyMetaSelector",
+    "ModelTrainer",
+    "RegimeAnalyzer",
 ]

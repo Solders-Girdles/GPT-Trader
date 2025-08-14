@@ -2,7 +2,6 @@
 """Test script for verifying all new user interfaces."""
 
 import sys
-import time
 from pathlib import Path
 
 # Add src to path
@@ -176,7 +175,7 @@ def test_cli_integration():
                 console.print(f"  ✗ Missing commands: {missing}", style="red")
                 return False
             else:
-                console.print(f"  ✓ All new commands registered")
+                console.print("  ✓ All new commands registered")
 
         return True
     except Exception as e:

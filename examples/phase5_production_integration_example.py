@@ -1,32 +1,29 @@
 """
 Phase 5 Production Integration Example
-Demonstrates the complete Phase 5 system: real-time strategy selection, portfolio optimization, 
+Demonstrates the complete Phase 5 system: real-time strategy selection, portfolio optimization,
 risk management, and performance monitoring working together.
 """
 
 import asyncio
 import logging
 from datetime import datetime, timedelta
-from typing import Dict, List, Any
 
-import pandas as pd
 import numpy as np
-
-from bot.live.production_orchestrator import (
-    ProductionOrchestrator,
-    OrchestratorConfig,
-    OrchestrationMode,
-)
-from bot.live.strategy_selector import SelectionMethod
-from bot.portfolio.optimizer import OptimizationMethod
+from bot.exec.alpaca_paper import AlpacaPaperBroker
 from bot.knowledge.strategy_knowledge_base import (
+    StrategyContext,
     StrategyKnowledgeBase,
     StrategyMetadata,
-    StrategyContext,
     StrategyPerformance,
 )
+from bot.live.production_orchestrator import (
+    OrchestrationMode,
+    OrchestratorConfig,
+    ProductionOrchestrator,
+)
+from bot.live.strategy_selector import SelectionMethod
 from bot.monitor.alerts import AlertConfig, AlertSeverity
-from bot.exec.alpaca_paper import AlpacaPaperBroker
+from bot.portfolio.optimizer import OptimizationMethod
 
 # Configure logging
 logging.basicConfig(
@@ -347,7 +344,7 @@ async def demonstrate_system_integration(orchestrator: ProductionOrchestrator):
     # Get system status
     system_status = orchestrator.get_system_status()
     if system_status:
-        logger.info(f"System Status:")
+        logger.info("System Status:")
         logger.info(f"  Mode: {system_status.mode.value}")
         logger.info(f"  Running: {system_status.is_running}")
         logger.info(f"  Current Regime: {system_status.current_regime}")
@@ -457,7 +454,7 @@ async def demonstrate_alert_system():
     """Demonstrate the alert system capabilities."""
     logger.info("=== Demonstrating Alert System ===")
 
-    from bot.monitor.alerts import AlertManager, AlertConfig, AlertSeverity, AlertType
+    from bot.monitor.alerts import AlertManager
 
     # Create alert configuration
     alert_config = AlertConfig(

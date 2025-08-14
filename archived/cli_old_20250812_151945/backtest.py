@@ -309,18 +309,17 @@ def _handle_enhanced(args: argparse.Namespace) -> None:
 
 def display_backtest_results(summary_path: Path) -> None:
     """Display backtest results in a formatted table."""
-    import pandas as pd
 
     try:
         # Read the summary file - it's in key-value format
-        with open(summary_path, 'r') as f:
+        with open(summary_path) as f:
             lines = f.readlines()
-        
+
         # Parse key-value pairs (taking the last occurrence if duplicates exist)
         metrics_dict = {}
         for line in lines:
-            if ',' in line:
-                key, value = line.strip().split(',', 1)
+            if "," in line:
+                key, value = line.strip().split(",", 1)
                 try:
                     metrics_dict[key] = float(value)
                 except ValueError:

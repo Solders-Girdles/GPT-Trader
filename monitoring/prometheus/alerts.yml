@@ -10,7 +10,7 @@ groups:
         annotations:
           summary: "High database query latency"
           description: "P99 query latency is {{ $value }}s (threshold: 100ms)"
-      
+
       - alert: DatabaseConnectionPoolExhausted
         expr: postgres_connections_active / (postgres_connections_active + postgres_connections_idle) > 0.9
         for: 5m
@@ -19,7 +19,7 @@ groups:
         annotations:
           summary: "Database connection pool nearly exhausted"
           description: "{{ $value | humanizePercentage }} of connections in use"
-      
+
       - alert: DatabaseDown
         expr: up{job="postgresql"} == 0
         for: 1m
@@ -40,7 +40,7 @@ groups:
         annotations:
           summary: "High data rejection rate"
           description: "{{ $value | humanizePercentage }} of messages being rejected"
-      
+
       - alert: DataSourceFailure
         expr: datasource_status{status="unavailable"} == 1
         for: 5m
@@ -49,7 +49,7 @@ groups:
         annotations:
           summary: "Data source {{ $labels.source }} is unavailable"
           description: "Data source has been unavailable for 5 minutes"
-      
+
       - alert: AllDataSourcesDown
         expr: count(datasource_status{status="active"}) == 0
         for: 1m
@@ -58,7 +58,7 @@ groups:
         annotations:
           summary: "All data sources are down"
           description: "No active data sources available"
-      
+
       - alert: LowCacheHitRate
         expr: redis_cache_hit_rate < 0.3
         for: 10m
@@ -79,7 +79,7 @@ groups:
         annotations:
           summary: "High memory usage"
           description: "Process using {{ $value }}MB of memory (threshold: 2GB)"
-      
+
       - alert: HighCPUUsage
         expr: rate(process_cpu_seconds_total[5m]) > 0.8
         for: 5m
@@ -88,7 +88,7 @@ groups:
         annotations:
           summary: "High CPU usage"
           description: "CPU usage at {{ $value | humanizePercentage }}"
-      
+
       - alert: LowThroughput
         expr: rate(datafeed_messages_received_total[5m]) < 10
         for: 10m
@@ -109,7 +109,7 @@ groups:
         annotations:
           summary: "Model {{ $labels.model_name }} accuracy degraded"
           description: "Model accuracy is {{ $value | humanizePercentage }} (threshold: 50%)"
-      
+
       - alert: ModelPredictionFailures
         expr: rate(ml_prediction_errors_total[5m]) > 1
         for: 5m
@@ -118,7 +118,7 @@ groups:
         annotations:
           summary: "High ML prediction error rate"
           description: "{{ $value }} prediction errors per second"
-      
+
       - alert: ModelNotUpdated
         expr: (time() - ml_model_last_updated_timestamp) / 3600 > 24
         for: 1h
@@ -139,7 +139,7 @@ groups:
         annotations:
           summary: "High risk position detected"
           description: "Position {{ $labels.symbol }} has risk score {{ $value }}"
-      
+
       - alert: OrderExecutionFailures
         expr: rate(order_execution_failures_total[5m]) > 0.1
         for: 5m
@@ -148,7 +148,7 @@ groups:
         annotations:
           summary: "High order execution failure rate"
           description: "{{ $value }} order failures per second"
-      
+
       - alert: PortfolioDrawdown
         expr: portfolio_drawdown_percent > 10
         for: 5m
@@ -169,7 +169,7 @@ groups:
         annotations:
           summary: "Service {{ $labels.job }} is down"
           description: "{{ $labels.job }} has been down for more than 1 minute"
-      
+
       - alert: HighErrorRate
         expr: rate(errors_total[5m]) > 5
         for: 5m
@@ -178,7 +178,7 @@ groups:
         annotations:
           summary: "High system error rate"
           description: "{{ $value }} errors per second"
-      
+
       - alert: DiskSpaceLow
         expr: node_filesystem_free_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"} < 0.1
         for: 5m

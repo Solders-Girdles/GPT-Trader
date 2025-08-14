@@ -217,9 +217,9 @@ pipeline.profile_prediction()
 SELECT count(*) FROM pg_stat_activity;
 
 -- Find long-running queries
-SELECT pid, age(clock_timestamp(), query_start), query 
-FROM pg_stat_activity 
-WHERE state != 'idle' 
+SELECT pid, age(clock_timestamp(), query_start), query
+FROM pg_stat_activity
+WHERE state != 'idle'
 ORDER BY query_start;
 ```
 

@@ -126,7 +126,7 @@ from .shared_enhanced import EnhancedResultsProcessor
 
 # Process and display results
 results = EnhancedResultsProcessor.process_backtest_results(
-    summary_path, 
+    summary_path,
     export_formats=["json", "csv"]
 )
 
@@ -393,7 +393,7 @@ export GPT_TRADER_DATA_STRICT="repair"
    ```bash
    # Old way (still works)
    gpt-trader backtest --symbol AAPL --start 2023-01-01 --end 2023-12-31
-   
+
    # New way (enhanced)
    gpt-trader bt --symbol AAPL --start 2023-01-01 --end 2023-12-31 --verbose
    ```

@@ -135,7 +135,6 @@ class CircuitBreakerSystem:
         initial_capital: Decimal = Decimal("100000"),
         enable_auto_liquidation: bool = True,
     ) -> None:
-
         self.risk_dir = Path(risk_dir)
         self.risk_dir.mkdir(parents=True, exist_ok=True)
 

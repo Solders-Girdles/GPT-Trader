@@ -2,11 +2,11 @@
 ML-enhanced portfolio management components
 """
 
-from .optimizer import MarkowitzOptimizer, OptimizationConstraints
 from .allocator import MLEnhancedAllocator
+from .optimizer import MarkowitzOptimizer, OptimizationConstraints
 
 __all__ = [
-    'MarkowitzOptimizer',
-    'OptimizationConstraints', 
-    'MLEnhancedAllocator',
+    "MarkowitzOptimizer",
+    "OptimizationConstraints",
+    "MLEnhancedAllocator",
 ]

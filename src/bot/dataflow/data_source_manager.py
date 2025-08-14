@@ -5,24 +5,23 @@ Phase 2.5 - Day 3
 Manages multiple data sources with automatic failover and quality monitoring.
 """
 
-import logging
-from typing import Dict, List, Optional, Any, Callable
-from datetime import datetime, timedelta
-from dataclasses import dataclass, field
-from enum import Enum
 import asyncio
+import builtins
+import logging
+import time
+from concurrent.futures import ThreadPoolExecutor, TimeoutError
+from dataclasses import dataclass
+from datetime import datetime
+from decimal import Decimal
+from enum import Enum
+from typing import Any
+
 import aiohttp
 import pandas as pd
-import numpy as np
-from decimal import Decimal
-import json
 import yfinance as yf
-from concurrent.futures import ThreadPoolExecutor, TimeoutError
-import time
 
-from .realtime_feed import DataSource, MarketData, DataValidator
 from ..database.database_manager import get_db_manager
-from ..database.models import SystemMetric
+from .realtime_feed import DataSource, DataValidator, MarketData
 
 logger = logging.getLogger(__name__)
 
@@ -46,8 +45,8 @@ class DataSourceStatus:
     quality: DataQuality
     latency_ms: float
     error_rate: float
-    last_success: Optional[datetime]
-    last_error: Optional[str]
+    last_success: datetime | None
+    last_error: str | None
     consecutive_errors: int
     data_points_received: int
 
@@ -88,7 +87,7 @@ class DataSourceManager:
     - Automatic recovery attempts
     """
 
-    def __init__(self, config: Optional[DataSourceConfig] = None):
+    def __init__(self, config: DataSourceConfig | None = None):
         self.config = config or DataSourceConfig()
         self.validator = DataValidator()
 
@@ -101,7 +100,7 @@ class DataSourceManager:
         ]
 
         # Source status tracking
-        self.source_status: Dict[DataSource, DataSourceStatus] = {}
+        self.source_status: dict[DataSource, DataSourceStatus] = {}
         for source in self.source_priority:
             self.source_status[source] = DataSourceStatus(
                 source=source,
@@ -135,8 +134,8 @@ class DataSourceManager:
         logger.info(f"DataSourceManager initialized with {len(self.source_priority)} sources")
 
     async def fetch_market_data(
-        self, symbol: str, timeout: Optional[float] = None
-    ) -> Optional[MarketData]:
+        self, symbol: str, timeout: float | None = None
+    ) -> MarketData | None:
         """
         Fetch market data with automatic failover.
 
@@ -189,7 +188,7 @@ class DataSourceManager:
 
     async def fetch_historical_data(
         self, symbol: str, start_date: datetime, end_date: datetime
-    ) -> Optional[pd.DataFrame]:
+    ) -> pd.DataFrame | None:
         """
         Fetch historical data with failover.
 
@@ -224,8 +223,8 @@ class DataSourceManager:
         return None
 
     async def _fetch_from_source(
-        self, source: DataSource, symbol: str, timeout: Optional[float] = None
-    ) -> Optional[MarketData]:
+        self, source: DataSource, symbol: str, timeout: float | None = None
+    ) -> MarketData | None:
         """Fetch data from specific source"""
 
         if source == DataSource.ALPACA:
@@ -240,8 +239,8 @@ class DataSourceManager:
             return None
 
     async def _fetch_alpaca_quote(
-        self, symbol: str, timeout: Optional[float] = None
-    ) -> Optional[MarketData]:
+        self, symbol: str, timeout: float | None = None
+    ) -> MarketData | None:
         """Fetch quote from Alpaca API"""
         try:
             url = f"{self.config.alpaca_base_url}/stocks/{symbol}/quotes/latest"
@@ -277,8 +276,8 @@ class DataSourceManager:
             return None
 
     async def _fetch_polygon_quote(
-        self, symbol: str, timeout: Optional[float] = None
-    ) -> Optional[MarketData]:
+        self, symbol: str, timeout: float | None = None
+    ) -> MarketData | None:
         """Fetch quote from Polygon API"""
         try:
             import os
@@ -314,8 +313,8 @@ class DataSourceManager:
             return None
 
     async def _fetch_iex_quote(
-        self, symbol: str, timeout: Optional[float] = None
-    ) -> Optional[MarketData]:
+        self, symbol: str, timeout: float | None = None
+    ) -> MarketData | None:
         """Fetch quote from IEX Cloud"""
         try:
             import os
@@ -351,8 +350,8 @@ class DataSourceManager:
             return None
 
     async def _fetch_yahoo_quote(
-        self, symbol: str, timeout: Optional[float] = None
-    ) -> Optional[MarketData]:
+        self, symbol: str, timeout: float | None = None
+    ) -> MarketData | None:
         """Fetch quote from Yahoo Finance"""
         try:
             # Use yfinance in thread pool to avoid blocking
@@ -380,7 +379,7 @@ class DataSourceManager:
             try:
                 result = await asyncio.wait_for(future, timeout=timeout_val)
                 return result
-            except asyncio.TimeoutError:
+            except builtins.TimeoutError:
                 raise TimeoutError("Yahoo request timeout")
 
         except Exception as e:
@@ -389,7 +388,7 @@ class DataSourceManager:
 
     async def _fetch_yahoo_historical(
         self, symbol: str, start_date: datetime, end_date: datetime
-    ) -> Optional[pd.DataFrame]:
+    ) -> pd.DataFrame | None:
         """Fetch historical data from Yahoo Finance"""
         try:
             loop = asyncio.get_event_loop()
@@ -412,7 +411,7 @@ class DataSourceManager:
 
     async def _fetch_alpaca_historical(
         self, symbol: str, start_date: datetime, end_date: datetime
-    ) -> Optional[pd.DataFrame]:
+    ) -> pd.DataFrame | None:
         """Fetch historical data from Alpaca"""
         try:
             import os
@@ -460,7 +459,7 @@ class DataSourceManager:
 
     async def _fetch_polygon_historical(
         self, symbol: str, start_date: datetime, end_date: datetime
-    ) -> Optional[pd.DataFrame]:
+    ) -> pd.DataFrame | None:
         """Fetch historical data from Polygon"""
         try:
             import os
@@ -498,7 +497,7 @@ class DataSourceManager:
             logger.error(f"Polygon historical error: {e}")
             return None
 
-    def _get_active_sources(self) -> List[DataSource]:
+    def _get_active_sources(self) -> list[DataSource]:
         """Get list of active sources in priority order"""
         active_sources = []
 
@@ -626,11 +625,11 @@ class DataSourceManager:
 
         self.recovery_task = asyncio.create_task(check_recovery())
 
-    def get_source_status(self) -> Dict[DataSource, DataSourceStatus]:
+    def get_source_status(self) -> dict[DataSource, DataSourceStatus]:
         """Get current status of all data sources"""
         return self.source_status.copy()
 
-    def get_metrics(self) -> Dict[str, Any]:
+    def get_metrics(self) -> dict[str, Any]:
         """Get performance metrics"""
         success_rate = self.success_count / max(1, self.request_count)
 

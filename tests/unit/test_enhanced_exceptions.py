@@ -151,7 +151,7 @@ class TestCriticalError:
 
     def test_critical_error_with_alerts(self):
         """Test critical error with alert channels."""
-        with patch("src.bot.exceptions.enhanced_exceptions.logger") as mock_logger:
+        with patch("bot.exceptions.enhanced_exceptions.logger") as mock_logger:
             error = CriticalError("Critical failure", alert_channels=["email", "slack"])
 
             # Check that alerts were sent
@@ -367,7 +367,7 @@ class TestDecorators:
 
     def test_monitor_performance_decorator(self):
         """Test performance monitoring decorator."""
-        with patch("src.bot.exceptions.decorators.logger") as mock_logger:
+        with patch("bot.exceptions.decorators.logger") as mock_logger:
 
             @monitor_performance(slow_threshold_seconds=0.01)
             def slow_function():

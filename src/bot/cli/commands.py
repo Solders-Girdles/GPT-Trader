@@ -67,7 +67,7 @@ class BacktestCommand(BaseCommand):
         )
 
         # Risk parameters
-        parser.add_argument("--risk-pct", type=float, default=0.5, help="Risk per trade (%)")
+        parser.add_argument("--risk-pct", type=float, default=0.5, help="Risk per trade (percent)")
         parser.add_argument(
             "--max-positions", type=int, default=10, help="Max concurrent positions"
         )

@@ -13,4 +13,4 @@ def test_config_defaults() -> None:
 
     # Test financial config
     assert config.financial.capital.backtesting_capital > 0
-    assert config.financial.capital.live_trading_capital > 0
+    assert config.financial.capital.paper_trading_capital > 0

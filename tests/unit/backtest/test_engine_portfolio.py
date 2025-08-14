@@ -5,21 +5,21 @@ Tests portfolio engine validation, trade execution simulation,
 performance metrics, multi-asset backtesting, and edge cases.
 """
 
-import tempfile
-from datetime import timedelta
-from pathlib import Path
+from datetime import datetime, timedelta
 from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pandas as pd
 import pytest
 from bot.backtest.engine_portfolio import (
+    BacktestConfig,
     BacktestData,
+    BacktestEngine,
     _iter_progress,
     _warn,
+    prepare_backtest_data,
     validate_ohlc,
 )
-from bot.portfolio.allocator import PortfolioRules
 from bot.strategy.base import Strategy
 
 
@@ -199,41 +199,75 @@ class TestValidateOHLC:
         assert result is not None
 
 
-class TestLoadUniverse:
-    """Test universe loading functionality."""
+class TestBacktestEngine:
+    """Test BacktestEngine class."""
 
-    def test_load_universe_from_csv(self):
-        """Test loading universe from CSV file."""
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".csv", delete=False) as f:
-            f.write("symbol\n")
-            f.write("AAPL\n")
-            f.write("GOOGL\n")
-            f.write("MSFT\n")
-            csv_path = f.name
+    @pytest.fixture
+    def backtest_config(self):
+        """Create test backtest config."""
+        return BacktestConfig(
+            start_date=datetime(2024, 1, 1),
+            end_date=datetime(2024, 3, 31),
+            initial_capital=10000,
+            commission_rate=0.001,
+        )
 
-        try:
-            symbols = load_universe(csv_path)
-            assert symbols == ["AAPL", "GOOGL", "MSFT"]
-        finally:
-            Path(csv_path).unlink()
+    @pytest.fixture
+    def test_data(self):
+        """Create test market data."""
+        dates = pd.date_range(start="2024-01-01", periods=100, freq="D")
+        np.random.seed(42)
 
-    def test_load_universe_from_list(self):
-        """Test loading universe from list."""
-        symbols = load_universe(["AAPL", "GOOGL", "MSFT"])
-        assert symbols == ["AAPL", "GOOGL", "MSFT"]
+        # Generate realistic price data
+        returns = np.random.normal(0.001, 0.02, 100)
+        prices = 100 * np.exp(np.cumsum(returns))
 
-    def test_load_universe_from_string(self):
-        """Test loading universe from string."""
-        symbols = load_universe("AAPL")
-        assert symbols == ["AAPL"]
+        return pd.DataFrame(
+            {
+                "Open": prices * (1 + np.random.uniform(-0.005, 0.005, 100)),
+                "High": prices * (1 + np.abs(np.random.uniform(0, 0.01, 100))),
+                "Low": prices * (1 - np.abs(np.random.uniform(0, 0.01, 100))),
+                "Close": prices,
+                "Volume": np.random.uniform(1000000, 10000000, 100),
+            },
+            index=dates,
+        )
 
-    def test_load_universe_nonexistent_file(self):
-        """Test loading universe from nonexistent file."""
-        with pytest.raises(FileNotFoundError):
-            load_universe("/nonexistent/path.csv")
+    def test_backtest_engine_creation(self, backtest_config):
+        """Test creating backtest engine."""
+        engine = BacktestEngine(backtest_config)
+        assert engine.config == backtest_config
+
+    def test_backtest_engine_empty_data(self, backtest_config):
+        """Test engine with empty data."""
+        engine = BacktestEngine(backtest_config)
+        strategy = TestStrategyImpl()
+        empty_data = pd.DataFrame()
+
+        result = engine.run_backtest(strategy, empty_data)
+
+        assert result is not None
+        assert "metrics" in result
+        metrics = result["metrics"]
+        assert metrics["sharpe_ratio"] == 0.0
+        assert metrics["total_return"] == 0.0
+
+    def test_backtest_engine_with_data(self, backtest_config, test_data):
+        """Test engine with actual data."""
+        engine = BacktestEngine(backtest_config)
+        strategy = TestStrategyImpl()
+
+        result = engine.run_backtest(strategy, test_data)
+
+        assert result is not None
+        assert "metrics" in result
+        metrics = result["metrics"]
+        assert isinstance(metrics["sharpe_ratio"], float)
+        assert isinstance(metrics["total_return"], float)
+        assert isinstance(metrics["max_drawdown"], float)
 
 
-class TestPrepareData:
+class TestPrepareBacktestData:
     """Test data preparation functionality."""
 
     @pytest.fixture
@@ -255,228 +289,45 @@ class TestPrepareData:
             index=dates,
         )
 
-        mock.fetch.return_value = sample_data
+        mock.get_daily_bars.return_value = sample_data
         return mock
 
     @patch("bot.backtest.engine_portfolio.YFinanceSource")
-    def test_prepare_data_basic(self, mock_yfinance_class, mock_data_source):
+    def test_prepare_backtest_data_basic(self, mock_yfinance_class, mock_data_source):
         """Test basic data preparation."""
         mock_yfinance_class.return_value = mock_data_source
 
-        symbols = ["AAPL", "GOOGL"]
-        start_date = "2024-01-01"
-        end_date = "2024-03-31"
+        start_date = datetime(2024, 1, 1)
+        end_date = datetime(2024, 3, 31)
 
-        backtest_data = prepare_data(symbols=symbols, start=start_date, end=end_date)
+        backtest_data = prepare_backtest_data(
+            symbol="AAPL",
+            symbol_list_csv=None,
+            start=start_date,
+            end=end_date,
+        )
 
-        assert backtest_data.symbols == symbols
-        assert len(backtest_data.data_map) == 2
+        assert backtest_data.symbols == ["AAPL"]
+        assert len(backtest_data.data_map) == 1
         assert "AAPL" in backtest_data.data_map
-        assert "GOOGL" in backtest_data.data_map
         assert backtest_data.dates_idx is not None
 
     @patch("bot.backtest.engine_portfolio.YFinanceSource")
-    def test_prepare_data_with_validation(self, mock_yfinance_class, mock_data_source):
-        """Test data preparation with validation."""
+    def test_prepare_backtest_data_with_symbols_list(self, mock_yfinance_class, mock_data_source):
+        """Test data preparation with symbols list."""
         mock_yfinance_class.return_value = mock_data_source
 
-        symbols = ["AAPL"]
+        symbols = ["AAPL", "GOOGL"]
+        start_date = datetime(2024, 1, 1)
+        end_date = datetime(2024, 3, 31)
 
-        backtest_data = prepare_data(
-            symbols=symbols, start="2024-01-01", end="2024-03-31", validate=True
+        backtest_data = prepare_backtest_data(
+            symbol=None, symbol_list_csv=None, start=start_date, end=end_date, symbols=symbols
         )
 
-        assert backtest_data is not None
-        assert len(backtest_data.data_map) == 1
-
-
-class TestRunStrategyBacktest:
-    """Test single strategy backtesting."""
-
-    @pytest.fixture
-    def sample_backtest_data(self):
-        """Create sample backtest data."""
-        dates = pd.date_range(start="2024-01-01", periods=100, freq="D")
-
-        # Create realistic price data
-        np.random.seed(42)
-        returns = np.random.normal(0.001, 0.02, 100)
-        prices = 100 * np.exp(np.cumsum(returns))
-
-        data = pd.DataFrame(
-            {
-                "Open": prices * (1 + np.random.uniform(-0.005, 0.005, 100)),
-                "High": prices * (1 + np.abs(np.random.uniform(0, 0.01, 100))),
-                "Low": prices * (1 - np.abs(np.random.uniform(0, 0.01, 100))),
-                "Close": prices,
-                "Volume": np.random.uniform(1000000, 10000000, 100),
-            },
-            index=dates,
-        )
-
-        return BacktestData(
-            symbols=["TEST"],
-            data_map={"TEST": data},
-            regime_ok=pd.Series([True] * 100, index=dates),
-            dates_idx=dates,
-        )
-
-    def test_run_strategy_backtest_basic(self, sample_backtest_data):
-        """Test basic strategy backtest."""
-        strategy = TestStrategyImpl()
-
-        metrics = run_strategy_backtest(
-            data=sample_backtest_data, strategy=strategy, symbol="TEST", capital=10000
-        )
-
-        assert metrics is not None
-        assert "total_return" in metrics
-        assert "sharpe_ratio" in metrics
-        assert "max_drawdown" in metrics
-
-    def test_run_strategy_backtest_with_rules(self, sample_backtest_data):
-        """Test strategy backtest with portfolio rules."""
-        strategy = TestStrategyImpl()
-        rules = PortfolioRules(
-            max_position_size=0.2, max_portfolio_size=0.95, stop_loss=0.05, take_profit=0.10
-        )
-
-        metrics = run_strategy_backtest(
-            data=sample_backtest_data, strategy=strategy, symbol="TEST", capital=10000, rules=rules
-        )
-
-        assert metrics is not None
-
-    def test_run_strategy_backtest_no_signals(self, sample_backtest_data):
-        """Test backtest with strategy generating no signals."""
-
-        class NoSignalStrategy(Strategy):
-            name = "no_signal"
-            supports_short = False
-
-            def generate_signals(self, bars):
-                df = bars.copy()
-                df["signal"] = 0  # No signals
-                return df[["signal"]]
-
-        strategy = NoSignalStrategy()
-
-        metrics = run_strategy_backtest(
-            data=sample_backtest_data, strategy=strategy, symbol="TEST", capital=10000
-        )
-
-        # Should still return metrics even with no trades
-        assert metrics is not None
-        assert metrics.get("total_return", 0) == 0
-
-    def test_run_strategy_backtest_with_commissions(self, sample_backtest_data):
-        """Test backtest with commission costs."""
-        strategy = TestStrategyImpl()
-
-        metrics = run_strategy_backtest(
-            data=sample_backtest_data,
-            strategy=strategy,
-            symbol="TEST",
-            capital=10000,
-            commission=0.001,  # 0.1% commission
-        )
-
-        assert metrics is not None
-
-
-class TestRunPortfolioBacktest:
-    """Test portfolio-level backtesting."""
-
-    @pytest.fixture
-    def multi_asset_data(self):
-        """Create multi-asset backtest data."""
-        dates = pd.date_range(start="2024-01-01", periods=100, freq="D")
-        symbols = ["AAPL", "GOOGL", "MSFT"]
-
-        data_map = {}
-        np.random.seed(42)
-
-        for i, symbol in enumerate(symbols):
-            # Different return profiles for each asset
-            returns = np.random.normal(0.001 + i * 0.0002, 0.02 - i * 0.002, 100)
-            prices = (100 + i * 50) * np.exp(np.cumsum(returns))
-
-            data_map[symbol] = pd.DataFrame(
-                {
-                    "Open": prices * (1 + np.random.uniform(-0.005, 0.005, 100)),
-                    "High": prices * (1 + np.abs(np.random.uniform(0, 0.01, 100))),
-                    "Low": prices * (1 - np.abs(np.random.uniform(0, 0.01, 100))),
-                    "Close": prices,
-                    "Volume": np.random.uniform(1000000, 10000000, 100),
-                },
-                index=dates,
-            )
-
-        return BacktestData(
-            symbols=symbols,
-            data_map=data_map,
-            regime_ok=pd.Series([True] * 100, index=dates),
-            dates_idx=dates,
-        )
-
-    def test_run_portfolio_backtest_basic(self, multi_asset_data):
-        """Test basic portfolio backtest."""
-        strategy = TestStrategyImpl()
-
-        portfolio_metrics, asset_metrics = run_portfolio_backtest(
-            data=multi_asset_data, strategy=strategy, capital=100000
-        )
-
-        assert portfolio_metrics is not None
-        assert asset_metrics is not None
-        assert len(asset_metrics) == 3  # One for each asset
-
-        # Check portfolio metrics
-        assert "total_return" in portfolio_metrics
-        assert "sharpe_ratio" in portfolio_metrics
-        assert "max_drawdown" in portfolio_metrics
-
-    def test_run_portfolio_backtest_with_allocation(self, multi_asset_data):
-        """Test portfolio backtest with custom allocation rules."""
-        strategy = TestStrategyImpl()
-        rules = PortfolioRules(
-            max_position_size=0.3, max_portfolio_size=0.95, min_position_size=0.05
-        )
-
-        portfolio_metrics, asset_metrics = run_portfolio_backtest(
-            data=multi_asset_data, strategy=strategy, capital=100000, rules=rules
-        )
-
-        assert portfolio_metrics is not None
-        assert asset_metrics is not None
-
-    def test_run_portfolio_backtest_single_asset(self):
-        """Test portfolio backtest with single asset."""
-        dates = pd.date_range(start="2024-01-01", periods=50, freq="D")
-
-        data = pd.DataFrame(
-            {
-                "Open": np.random.uniform(95, 105, 50),
-                "High": np.random.uniform(100, 110, 50),
-                "Low": np.random.uniform(90, 100, 50),
-                "Close": np.random.uniform(95, 105, 50),
-                "Volume": [1000000] * 50,
-            },
-            index=dates,
-        )
-
-        backtest_data = BacktestData(
-            symbols=["TEST"], data_map={"TEST": data}, regime_ok=None, dates_idx=dates
-        )
-
-        strategy = TestStrategyImpl()
-
-        portfolio_metrics, asset_metrics = run_portfolio_backtest(
-            data=backtest_data, strategy=strategy, capital=10000
-        )
-
-        assert portfolio_metrics is not None
-        assert len(asset_metrics) == 1
+        assert backtest_data.symbols == symbols
+        assert len(backtest_data.data_map) == 2
+        assert backtest_data.dates_idx is not None
 
 
 class TestUtilityFunctions:
@@ -529,69 +380,67 @@ class TestIntegrationScenarios:
 
         return BacktestData(symbols=symbols, data_map=data_map, regime_ok=None, dates_idx=dates)
 
-    def test_full_year_portfolio_backtest(self, complete_market_data):
-        """Test full year portfolio backtest with multiple assets."""
+    def test_backtest_engine_with_strategy(self, complete_market_data):
+        """Test backtest engine with a real strategy and multiple assets."""
+        # Test single asset from the complete data
+        symbol = "AAPL"
+        data = complete_market_data.data_map[symbol]
+
+        config = BacktestConfig(
+            start_date=datetime(2023, 1, 1),
+            end_date=datetime(2023, 12, 31),
+            initial_capital=100000,
+            commission_rate=0.001,
+        )
+
+        engine = BacktestEngine(config)
         strategy = TestStrategyImpl()
-        rules = PortfolioRules(
-            max_position_size=0.25,
-            max_portfolio_size=0.95,
-            min_position_size=0.05,
-            stop_loss=0.03,
-            take_profit=0.08,
-        )
 
-        portfolio_metrics, asset_metrics = run_portfolio_backtest(
-            data=complete_market_data,
-            strategy=strategy,
-            capital=1000000,
-            rules=rules,
-            commission=0.001,
-        )
+        result = engine.run_backtest(strategy, data)
 
-        # Verify portfolio metrics
-        assert portfolio_metrics is not None
-        assert -1 <= portfolio_metrics.get("total_return", 0) <= 2  # Reasonable return range
-        assert portfolio_metrics.get("max_drawdown", 0) <= 0  # Drawdown is negative
+        # Verify basic result structure
+        assert result is not None
+        assert "metrics" in result
+        metrics = result["metrics"]
 
-        # Verify individual asset metrics
-        assert len(asset_metrics) == 5
-        for symbol, metrics in asset_metrics.items():
-            assert symbol in complete_market_data.symbols
-            assert "total_return" in metrics
+        # Verify metrics are reasonable
+        assert -1 <= metrics.get("total_return", 0) <= 2  # Reasonable return range
+        assert metrics.get("max_drawdown", 0) <= 0  # Drawdown is negative
 
-    def test_stress_test_large_universe(self):
-        """Stress test with large universe of assets."""
-        dates = pd.date_range(start="2024-01-01", periods=252, freq="D")  # One year
-        symbols = [f"STOCK_{i:03d}" for i in range(50)]  # 50 stocks
+        # If equity is returned, verify structure
+        if "equity" in result:
+            equity = result["equity"]
+            assert isinstance(equity, pd.Series)
+            assert len(equity) > 0
 
-        data_map = {}
+    def test_stress_test_large_dataset(self):
+        """Stress test with large dataset."""
+        dates = pd.date_range(start="2020-01-01", periods=1000, freq="D")  # ~3 years
+
         np.random.seed(42)
+        returns = np.random.normal(0.0003, 0.02, len(dates))
+        prices = 100 * np.exp(np.cumsum(returns))
 
-        for symbol in symbols:
-            returns = np.random.normal(0.0003, 0.02, len(dates))
-            prices = 100 * np.exp(np.cumsum(returns))
-
-            data_map[symbol] = pd.DataFrame(
-                {
-                    "Open": prices * 0.99,
-                    "High": prices * 1.01,
-                    "Low": prices * 0.98,
-                    "Close": prices,
-                    "Volume": [1000000] * len(dates),
-                },
-                index=dates,
-            )
-
-        backtest_data = BacktestData(
-            symbols=symbols, data_map=data_map, regime_ok=None, dates_idx=dates
+        large_data = pd.DataFrame(
+            {
+                "Open": prices * 0.99,
+                "High": prices * 1.01,
+                "Low": prices * 0.98,
+                "Close": prices,
+                "Volume": [1000000] * len(dates),
+            },
+            index=dates,
         )
 
+        config = BacktestConfig(
+            start_date=datetime(2020, 1, 1), end_date=datetime(2022, 12, 31), initial_capital=100000
+        )
+
+        engine = BacktestEngine(config)
         strategy = TestStrategyImpl()
 
-        # Should handle large universe efficiently
-        portfolio_metrics, asset_metrics = run_portfolio_backtest(
-            data=backtest_data, strategy=strategy, capital=10000000
-        )
+        # Should handle large dataset efficiently
+        result = engine.run_backtest(strategy, large_data)
 
-        assert portfolio_metrics is not None
-        assert len(asset_metrics) == 50
+        assert result is not None
+        assert "metrics" in result

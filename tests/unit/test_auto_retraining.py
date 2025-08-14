@@ -3,29 +3,37 @@ Tests for Automated Retraining System
 Phase 3, Week 5-6: ADAPT-009 through ADAPT-016
 """
 
-import pytest
+import shutil
+import tempfile
+from datetime import datetime, timedelta
+from pathlib import Path
+from unittest.mock import Mock
+
 import numpy as np
 import pandas as pd
-from datetime import datetime, timedelta
-from unittest.mock import Mock, patch, MagicMock
-import tempfile
-import shutil
-from pathlib import Path
+import pytest
 
 # Import the modules we're testing
-import sys
-import os
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'src'))
-
 from bot.ml.auto_retraining import (
-    AutoRetrainingSystem, RetrainingConfig, RetrainingRequest, RetrainingResult,
-    RetrainingTrigger, RetrainingStatus, EmergencyLevel, RetrainingCost
-)
-from bot.ml.retraining_scheduler import (
-    RetrainingScheduler, ScheduleConfig, ScheduleType, TaskPriority
+    AutoRetrainingSystem,
+    RetrainingConfig,
+    RetrainingCost,
+    RetrainingRequest,
+    RetrainingResult,
+    RetrainingStatus,
+    RetrainingTrigger,
 )
 from bot.ml.model_versioning import (
-    ModelVersioning, ModelMetadata, ModelStage, VersionType, ModelFormat
+    ModelFormat,
+    ModelMetadata,
+    ModelStage,
+    ModelVersioning,
+    VersionType,
+)
+from bot.ml.retraining_scheduler import (
+    RetrainingScheduler,
+    ScheduleConfig,
+    ScheduleType,
 )
 
 
@@ -37,11 +45,7 @@ class TestAutoRetrainingSystem:
         """Mock ML pipeline"""
         pipeline = Mock()
         pipeline.train_and_validate_model.return_value = Mock(
-            accuracy=0.65,
-            precision=0.63,
-            recall=0.67,
-            f1_score=0.65,
-            roc_auc=0.70
+            accuracy=0.65, precision=0.63, recall=0.67, f1_score=0.65, roc_auc=0.70
         )
         return pipeline
 
@@ -58,16 +62,14 @@ class TestAutoRetrainingSystem:
             max_retrainings_per_day=2,
             cooldown_period_hours=1,  # Short for testing
             require_manual_approval=False,  # Disable for automated testing
-            max_daily_retraining_cost=50.0
+            max_daily_retraining_cost=50.0,
         )
 
     @pytest.fixture
     def retraining_system(self, config, mock_ml_pipeline, mock_db_manager):
         """Create retraining system for testing"""
         return AutoRetrainingSystem(
-            config=config,
-            ml_pipeline=mock_ml_pipeline,
-            db_manager=mock_db_manager
+            config=config, ml_pipeline=mock_ml_pipeline, db_manager=mock_db_manager
         )
 
     def test_initialization(self, retraining_system):
@@ -89,9 +91,7 @@ class TestAutoRetrainingSystem:
     def test_manual_retraining_request(self, retraining_system):
         """Test manual retraining request"""
         request_id = retraining_system.request_manual_retraining(
-            reason="Test manual retraining",
-            priority=8,
-            requested_by="test_user"
+            reason="Test manual retraining", priority=8, requested_by="test_user"
         )
 
         assert request_id.startswith("manual_")
@@ -151,7 +151,7 @@ class TestAutoRetrainingSystem:
             requested_at=datetime.now(),
             requested_by="test",
             model_id="test_model",
-            reason="test"
+            reason="test",
         )
 
         cost = retraining_system._estimate_retraining_cost(request)
@@ -170,7 +170,7 @@ class TestAutoRetrainingSystem:
             time_cost=10.0,
             opportunity_cost=50.0,
             resource_usage={},
-            estimated_total=150.0
+            estimated_total=150.0,
         )
 
         # Should exceed daily limits
@@ -182,7 +182,7 @@ class TestAutoRetrainingSystem:
             time_cost=1.0,
             opportunity_cost=2.0,
             resource_usage={},
-            estimated_total=7.0
+            estimated_total=7.0,
         )
 
         # Should be within limits
@@ -211,7 +211,7 @@ class TestAutoRetrainingSystem:
                 request_id=f"test_{i}",
                 status=RetrainingStatus.COMPLETED,
                 started_at=datetime.combine(today, datetime.min.time()),
-                old_model_id="test"
+                old_model_id="test",
             )
             retraining_system.retraining_history.append(result)
 
@@ -238,7 +238,7 @@ class TestAutoRetrainingSystem:
                 opportunity_cost=0.0,
                 resource_usage={},
                 estimated_total=5.0,
-                actual_total=5.0
+                actual_total=5.0,
             )
 
             result = RetrainingResult(
@@ -246,7 +246,7 @@ class TestAutoRetrainingSystem:
                 status=RetrainingStatus.COMPLETED,
                 started_at=datetime.now(),
                 old_model_id="test",
-                actual_cost=cost
+                actual_cost=cost,
             )
             retraining_system.retraining_history.append(result)
 
@@ -269,8 +269,10 @@ class TestRetrainingScheduler:
     @pytest.fixture
     def test_callback(self):
         """Test callback function"""
+
         def callback():
             return "callback_executed"
+
         return callback
 
     def test_initialization(self, scheduler):
@@ -294,7 +296,7 @@ class TestRetrainingScheduler:
             schedule_type=ScheduleType.CRON,
             name="Test Cron",
             description="Test cron schedule",
-            cron_expression="0 2 * * *"  # 2 AM daily
+            cron_expression="0 2 * * *",  # 2 AM daily
         )
 
         success = scheduler.add_schedule(config, test_callback)
@@ -309,7 +311,7 @@ class TestRetrainingScheduler:
             schedule_type=ScheduleType.INTERVAL,
             name="Test Interval",
             description="Test interval schedule",
-            interval_minutes=60
+            interval_minutes=60,
         )
 
         success = scheduler.add_schedule(config, test_callback)
@@ -323,7 +325,7 @@ class TestRetrainingScheduler:
             schedule_type=ScheduleType.INTERVAL,
             name="Test Remove",
             description="Test removal",
-            interval_minutes=30
+            interval_minutes=30,
         )
 
         scheduler.add_schedule(config, test_callback)
@@ -340,7 +342,7 @@ class TestRetrainingScheduler:
             schedule_type=ScheduleType.INTERVAL,
             name="Test Immediate",
             description="Test immediate execution",
-            interval_minutes=60
+            interval_minutes=60,
         )
 
         scheduler.add_schedule(config, test_callback)
@@ -359,7 +361,7 @@ class TestRetrainingScheduler:
             schedule_type=ScheduleType.CRON,
             name="Invalid Cron",
             description="Invalid cron expression",
-            cron_expression="invalid_cron"
+            cron_expression="invalid_cron",
         )
 
         success = scheduler.add_schedule(invalid_config, test_callback)
@@ -370,7 +372,7 @@ class TestRetrainingScheduler:
             task_id="invalid_interval",
             schedule_type=ScheduleType.INTERVAL,
             name="Invalid Interval",
-            description="Missing interval"
+            description="Missing interval",
         )
 
         success = scheduler.add_schedule(invalid_interval, test_callback)
@@ -402,7 +404,7 @@ class TestModelVersioning:
         return ModelVersioning(
             base_path=temp_dir,
             enable_git_tracking=False,  # Disable Git for testing
-            max_versions_per_model=5
+            max_versions_per_model=5,
         )
 
     @pytest.fixture
@@ -435,7 +437,7 @@ class TestModelVersioning:
             validation_f1=0.85,
             validation_roc_auc=0.90,
             feature_set_version="1.0",
-            created_by="test_user"
+            created_by="test_user",
         )
 
     def test_initialization(self, versioning, temp_dir):
@@ -448,9 +450,7 @@ class TestModelVersioning:
     def test_create_version(self, versioning, test_model, test_metadata):
         """Test creating new model version"""
         version = versioning.create_version(
-            model_id="test_model",
-            model_object=test_model,
-            metadata=test_metadata
+            model_id="test_model", model_object=test_model, metadata=test_metadata
         )
 
         assert version == "1.0.0"
@@ -462,9 +462,7 @@ class TestModelVersioning:
         """Test version promotion"""
         # Create version
         version = versioning.create_version(
-            model_id="test_model",
-            model_object=test_model,
-            metadata=test_metadata
+            model_id="test_model", model_object=test_model, metadata=test_metadata
         )
 
         # Promote to testing
@@ -472,7 +470,7 @@ class TestModelVersioning:
             model_id="test_model",
             version=version,
             target_stage=ModelStage.TESTING,
-            promoted_by="test_user"
+            promoted_by="test_user",
         )
 
         assert success
@@ -484,9 +482,7 @@ class TestModelVersioning:
         """Test loading model"""
         # Create version
         version = versioning.create_version(
-            model_id="test_model",
-            model_object=test_model,
-            metadata=test_metadata
+            model_id="test_model", model_object=test_model, metadata=test_metadata
         )
 
         # Load model
@@ -515,7 +511,7 @@ class TestModelVersioning:
             validation_f1=0.80,
             validation_roc_auc=0.85,
             feature_set_version="1.0",
-            created_by="test_user"
+            created_by="test_user",
         )
 
         metadata2 = ModelMetadata(
@@ -537,7 +533,7 @@ class TestModelVersioning:
             validation_f1=0.85,
             validation_roc_auc=0.90,
             feature_set_version="1.0",
-            created_by="test_user"
+            created_by="test_user",
         )
 
         versioning.create_version("test_model", test_model, metadata1)
@@ -555,9 +551,7 @@ class TestModelVersioning:
         """Test model rollback"""
         # Create and promote to production
         version1 = versioning.create_version(
-            model_id="test_model",
-            model_object=test_model,
-            metadata=test_metadata
+            model_id="test_model", model_object=test_model, metadata=test_metadata
         )
 
         # Promote through stages to production
@@ -573,7 +567,7 @@ class TestModelVersioning:
             model_id="test_model",
             model_object=test_model,
             metadata=test_metadata,
-            version_type=VersionType.MAJOR
+            version_type=VersionType.MAJOR,
         )
 
         # Promote to production
@@ -588,7 +582,7 @@ class TestModelVersioning:
             model_id="test_model",
             target_version=version1,
             rollback_by="test_user",
-            reason="Performance degradation"
+            reason="Performance degradation",
         )
 
         assert success
@@ -600,12 +594,12 @@ class TestModelVersioning:
         versions = []
         for i in range(7):  # More than max_versions_per_model (5)
             test_metadata.version = f"{i+1}.0.0"
-            test_metadata.created_at = datetime.now() - timedelta(days=i*10)
+            test_metadata.created_at = datetime.now() - timedelta(days=i * 10)
             version = versioning.create_version(
                 model_id="test_model",
                 model_object=test_model,
                 metadata=test_metadata,
-                custom_version=f"{i+1}.0.0"
+                custom_version=f"{i+1}.0.0",
             )
             versions.append(version)
 
@@ -643,9 +637,9 @@ def sample_training_data():
     X = np.random.randn(n_samples, n_features)
     y = (X[:, 0] + X[:, 1] + np.random.randn(n_samples) * 0.1) > 0
 
-    data = pd.DataFrame(X, columns=[f'feature_{i}' for i in range(n_features)])
-    data['target'] = y.astype(int)
-    data['timestamp'] = pd.date_range(start='2024-01-01', periods=n_samples, freq='1min')
+    data = pd.DataFrame(X, columns=[f"feature_{i}" for i in range(n_features)])
+    data["target"] = y.astype(int)
+    data["timestamp"] = pd.date_range(start="2024-01-01", periods=n_samples, freq="1min")
 
     return data
 
@@ -655,24 +649,16 @@ def test_integration_auto_retraining_with_scheduler():
     config = RetrainingConfig(
         require_manual_approval=False,
         cooldown_period_hours=0,  # No cooldown for testing
-        max_retrainings_per_day=10
+        max_retrainings_per_day=10,
     )
 
     mock_pipeline = Mock()
     mock_pipeline.train_and_validate_model.return_value = Mock(
-        accuracy=0.65,
-        precision=0.63,
-        recall=0.67,
-        f1_score=0.65,
-        roc_auc=0.70
+        accuracy=0.65, precision=0.63, recall=0.67, f1_score=0.65, roc_auc=0.70
     )
 
     # Create system
-    system = AutoRetrainingSystem(
-        config=config,
-        ml_pipeline=mock_pipeline,
-        db_manager=Mock()
-    )
+    system = AutoRetrainingSystem(config=config, ml_pipeline=mock_pipeline, db_manager=Mock())
 
     # Create scheduler
     scheduler = RetrainingScheduler()
@@ -682,7 +668,7 @@ def test_integration_auto_retraining_with_scheduler():
         task_id="test_retraining",
         schedule_type=ScheduleType.MANUAL,  # For immediate execution
         name="Test Retraining",
-        description="Test scheduled retraining"
+        description="Test scheduled retraining",
     )
 
     def retraining_callback():

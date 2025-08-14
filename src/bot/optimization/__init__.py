@@ -13,6 +13,24 @@ from .walk_forward_validator import (
     run_walk_forward_validation,
 )
 
+
+def run_optimization(
+    symbol: str,
+    start_date: str,
+    end_date: str,
+    strategy: str,
+    parameters: list | None = None,
+    metric: str = "sharpe",
+    method: str = "grid",
+) -> dict:
+    """Stub function for CLI compatibility.
+
+    This is a temporary implementation to make the CLI work.
+    TODO: Implement proper optimization functionality.
+    """
+    return {"best_score": 0.0, "best_params": {}, "message": "Optimization not yet implemented"}
+
+
 __all__ = [
     "OptimizationConfig",
     "ParameterSpace",
@@ -29,4 +47,5 @@ __all__ = [
     "WalkForwardConfig",
     "WalkForwardValidator",
     "run_walk_forward_validation",
+    "run_optimization",
 ]

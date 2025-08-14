@@ -4,19 +4,16 @@ Phase 3, Week 3: RISK-008
 Comprehensive test suite for risk calculations
 """
 
-import pytest
+from unittest.mock import Mock, patch
+
 import numpy as np
 import pandas as pd
-from datetime import datetime, timedelta
-from unittest.mock import Mock, patch, MagicMock
-from typing import List, Dict, Any
+import pytest
 
 from src.bot.risk.risk_metrics_engine import (
-    RiskMetricsEngine,
     CalculationMethod,
     RiskMetrics,
-    Position,
-    VaRCalculator
+    RiskMetricsEngine,
 )
 
 
@@ -29,18 +26,20 @@ class TestRiskMetricsEngine:
         np.random.seed(42)
         # Generate returns with known properties
         returns = np.random.normal(0.001, 0.02, 252)  # Daily returns for 1 year
-        return pd.Series(returns, index=pd.date_range('2024-01-01', periods=252))
+        return pd.Series(returns, index=pd.date_range("2024-01-01", periods=252))
 
     @pytest.fixture
     def sample_positions(self):
         """Create sample position data"""
-        return pd.DataFrame({
-            'symbol': ['AAPL', 'GOOGL', 'MSFT', 'AMZN', 'TSLA'],
-            'quantity': [100, 50, 75, 25, 40],
-            'entry_price': [150.0, 2800.0, 300.0, 3200.0, 800.0],
-            'current_price': [155.0, 2850.0, 310.0, 3150.0, 820.0],
-            'sector': ['Tech', 'Tech', 'Tech', 'Consumer', 'Auto']
-        })
+        return pd.DataFrame(
+            {
+                "symbol": ["AAPL", "GOOGL", "MSFT", "AMZN", "TSLA"],
+                "quantity": [100, 50, 75, 25, 40],
+                "entry_price": [150.0, 2800.0, 300.0, 3200.0, 800.0],
+                "current_price": [155.0, 2850.0, 310.0, 3150.0, 820.0],
+                "sector": ["Tech", "Tech", "Tech", "Consumer", "Auto"],
+            }
+        )
 
     @pytest.fixture
     def engine(self):
@@ -57,9 +56,7 @@ class TestRiskMetricsEngine:
     def test_historical_var_calculation(self, engine, sample_returns):
         """Test Historical VaR calculation"""
         var = engine.calculate_var(
-            returns=sample_returns,
-            method=CalculationMethod.HISTORICAL,
-            confidence=0.95
+            returns=sample_returns, method=CalculationMethod.HISTORICAL, confidence=0.95
         )
 
         # VaR should be negative (loss)
@@ -73,9 +70,7 @@ class TestRiskMetricsEngine:
     def test_parametric_var_calculation(self, engine, sample_returns):
         """Test Parametric VaR calculation"""
         var = engine.calculate_var(
-            returns=sample_returns,
-            method=CalculationMethod.PARAMETRIC,
-            confidence=0.95
+            returns=sample_returns, method=CalculationMethod.PARAMETRIC, confidence=0.95
         )
 
         # Calculate expected parametric VaR
@@ -93,15 +88,13 @@ class TestRiskMetricsEngine:
             returns=sample_returns,
             method=CalculationMethod.MONTE_CARLO,
             confidence=0.95,
-            n_simulations=10000
+            n_simulations=10000,
         )
 
         assert var < 0
         # Monte Carlo should be close to historical
         historical_var = engine.calculate_var(
-            returns=sample_returns,
-            method=CalculationMethod.HISTORICAL,
-            confidence=0.95
+            returns=sample_returns, method=CalculationMethod.HISTORICAL, confidence=0.95
         )
         # Allow for some Monte Carlo variance
         assert abs(var - historical_var) < 0.01
@@ -110,23 +103,21 @@ class TestRiskMetricsEngine:
         """Test Cornish-Fisher VaR with skewness and kurtosis"""
         # Create returns with known skewness and excess kurtosis
         np.random.seed(42)
-        returns = np.concatenate([
-            np.random.normal(0.001, 0.01, 200),  # Normal returns
-            np.random.normal(-0.05, 0.03, 52)    # Tail events
-        ])
+        returns = np.concatenate(
+            [
+                np.random.normal(0.001, 0.01, 200),  # Normal returns
+                np.random.normal(-0.05, 0.03, 52),  # Tail events
+            ]
+        )
         returns = pd.Series(returns)
 
         var = engine.calculate_var(
-            returns=returns,
-            method=CalculationMethod.CORNISH_FISHER,
-            confidence=0.95
+            returns=returns, method=CalculationMethod.CORNISH_FISHER, confidence=0.95
         )
 
         # CF VaR should account for fat tails
         parametric_var = engine.calculate_var(
-            returns=returns,
-            method=CalculationMethod.PARAMETRIC,
-            confidence=0.95
+            returns=returns, method=CalculationMethod.PARAMETRIC, confidence=0.95
         )
 
         # CF VaR should be more conservative (more negative)
@@ -135,16 +126,10 @@ class TestRiskMetricsEngine:
     def test_cvar_calculation(self, engine, sample_returns):
         """Test Conditional VaR (Expected Shortfall) calculation"""
         var = engine.calculate_var(
-            returns=sample_returns,
-            method=CalculationMethod.HISTORICAL,
-            confidence=0.95
+            returns=sample_returns, method=CalculationMethod.HISTORICAL, confidence=0.95
         )
 
-        cvar = engine.calculate_cvar(
-            returns=sample_returns,
-            var=var,
-            confidence=0.95
-        )
+        cvar = engine.calculate_cvar(returns=sample_returns, var=var, confidence=0.95)
 
         # CVaR should be more extreme than VaR
         assert cvar < var
@@ -158,10 +143,10 @@ class TestRiskMetricsEngine:
         metrics = engine.calculate_exposure_metrics(sample_positions)
 
         assert metrics is not None
-        assert hasattr(metrics, 'gross_exposure')
-        assert hasattr(metrics, 'net_exposure')
-        assert hasattr(metrics, 'concentration_ratio')
-        assert hasattr(metrics, 'sector_exposure')
+        assert hasattr(metrics, "gross_exposure")
+        assert hasattr(metrics, "net_exposure")
+        assert hasattr(metrics, "concentration_ratio")
+        assert hasattr(metrics, "sector_exposure")
 
         # Check calculations
         total_value = (sample_positions["quantity"] * sample_positions["current_price"]).sum()
@@ -175,13 +160,10 @@ class TestRiskMetricsEngine:
 
     def test_sharpe_ratio_calculation(self, engine, sample_returns):
         """Test Sharpe ratio calculation"""
-        sharpe = engine.calculate_sharpe_ratio(
-            returns=sample_returns,
-            risk_free_rate=0.02
-        )
+        sharpe = engine.calculate_sharpe_ratio(returns=sample_returns, risk_free_rate=0.02)
 
         # Check calculation
-        excess_returns = sample_returns - 0.02/252  # Daily risk-free rate
+        excess_returns = sample_returns - 0.02 / 252  # Daily risk-free rate
         expected_sharpe = (excess_returns.mean() / excess_returns.std()) * np.sqrt(252)
 
         assert abs(sharpe - expected_sharpe) < 0.1
@@ -189,16 +171,11 @@ class TestRiskMetricsEngine:
     def test_sortino_ratio_calculation(self, engine, sample_returns):
         """Test Sortino ratio calculation"""
         sortino = engine.calculate_sortino_ratio(
-            returns=sample_returns,
-            risk_free_rate=0.02,
-            target_return=0
+            returns=sample_returns, risk_free_rate=0.02, target_return=0
         )
 
         # Sortino should typically be higher than Sharpe
-        sharpe = engine.calculate_sharpe_ratio(
-            returns=sample_returns,
-            risk_free_rate=0.02
-        )
+        sharpe = engine.calculate_sharpe_ratio(returns=sample_returns, risk_free_rate=0.02)
 
         # This assumes we have some positive returns
         if sample_returns.mean() > 0:
@@ -236,32 +213,17 @@ class TestRiskMetricsEngine:
 
     def test_var_with_different_confidence_levels(self, engine, sample_returns):
         """Test VaR at different confidence levels"""
-        var_90 = engine.calculate_var(
-            returns=sample_returns,
-            confidence=0.90
-        )
-        var_95 = engine.calculate_var(
-            returns=sample_returns,
-            confidence=0.95
-        )
-        var_99 = engine.calculate_var(
-            returns=sample_returns,
-            confidence=0.99
-        )
+        var_90 = engine.calculate_var(returns=sample_returns, confidence=0.90)
+        var_95 = engine.calculate_var(returns=sample_returns, confidence=0.95)
+        var_99 = engine.calculate_var(returns=sample_returns, confidence=0.99)
 
         # Higher confidence should give more extreme VaR
         assert var_99 < var_95 < var_90
 
     def test_var_with_different_time_horizons(self, engine, sample_returns):
         """Test VaR scaling for different time horizons"""
-        var_1day = engine.calculate_var(
-            returns=sample_returns,
-            time_horizon=1
-        )
-        var_10day = engine.calculate_var(
-            returns=sample_returns,
-            time_horizon=10
-        )
+        var_1day = engine.calculate_var(returns=sample_returns, time_horizon=1)
+        var_10day = engine.calculate_var(returns=sample_returns, time_horizon=10)
 
         # 10-day VaR should be approximately sqrt(10) times 1-day VaR
         # (under normal distribution assumption)
@@ -288,7 +250,7 @@ class TestRiskMetricsEngine:
         metrics = engine.calculate_exposure_metrics(sample_positions)
 
         # Tech sector should have highest concentration
-        tech_exposure = metrics.sector_exposure.get('Tech', 0)
+        tech_exposure = metrics.sector_exposure.get("Tech", 0)
         total_exposure = metrics.gross_exposure
         tech_concentration = tech_exposure / total_exposure
 
@@ -299,8 +261,8 @@ class TestRiskMetricsEngine:
         """Test position limit violation detection"""
         # Set position limits
         limits = {
-            'max_position_size': 0.25,  # 25% max per position
-            'max_sector_concentration': 0.60  # 60% max per sector
+            "max_position_size": 0.25,  # 25% max per position
+            "max_sector_concentration": 0.60,  # 60% max per sector
         }
 
         violations = engine.check_position_limits(sample_positions, limits)
@@ -310,8 +272,8 @@ class TestRiskMetricsEngine:
 
         # Check if violations are properly formatted
         for violation in violations:
-            assert 'type' in violation
-            assert 'details' in violation
+            assert "type" in violation
+            assert "details" in violation
 
     def test_incremental_var_calculation(self, engine, sample_returns):
         """Test incremental VaR for new positions"""
@@ -348,10 +310,9 @@ class TestRiskMetricsEngine:
         n_assets = 3
         n_days = 252
 
-        returns = pd.DataFrame({
-            f'Asset{i}': np.random.normal(0.001, 0.02, n_days)
-            for i in range(n_assets)
-        })
+        returns = pd.DataFrame(
+            {f"Asset{i}": np.random.normal(0.001, 0.02, n_days) for i in range(n_assets)}
+        )
         weights = np.array([0.4, 0.3, 0.3])
 
         portfolio_returns = (returns * weights).sum(axis=1)
@@ -369,9 +330,7 @@ class TestRiskMetricsEngine:
     def test_risk_metrics_aggregation(self, engine, sample_returns, sample_positions):
         """Test aggregation of all risk metrics"""
         metrics = engine.calculate_all_metrics(
-            returns=sample_returns,
-            positions=sample_positions,
-            confidence=0.95
+            returns=sample_returns, positions=sample_positions, confidence=0.95
         )
 
         # Check all metrics are present
@@ -388,20 +347,17 @@ class TestRiskMetricsEngine:
         """Test caching of expensive calculations"""
         # First calculation
         import time
+
         start = time.time()
         var1 = engine.calculate_var(
-            returns=sample_returns,
-            method=VaRMethod.MONTE_CARLO,
-            n_simulations=10000
+            returns=sample_returns, method=VaRMethod.MONTE_CARLO, n_simulations=10000
         )
         first_time = time.time() - start
 
         # Second calculation (should be cached)
         start = time.time()
         var2 = engine.calculate_var(
-            returns=sample_returns,
-            method=VaRMethod.MONTE_CARLO,
-            n_simulations=10000
+            returns=sample_returns, method=VaRMethod.MONTE_CARLO, n_simulations=10000
         )
         second_time = time.time() - start
 
@@ -419,22 +375,23 @@ class TestRiskMetricsEngine:
             sharpe_ratio=1.2,
             sortino_ratio=1.5,
             calmar_ratio=0.8,
-            max_drawdown=-0.15
+            max_drawdown=-0.15,
         )
 
         # Convert to dict
         metrics_dict = metrics.to_dict()
         assert isinstance(metrics_dict, dict)
-        assert metrics_dict['var_historical'] == -0.05
+        assert metrics_dict["var_historical"] == -0.05
 
         # Convert to JSON
         import json
+
         metrics_json = json.dumps(metrics_dict)
         assert isinstance(metrics_json, str)
 
         # Deserialize
         loaded_dict = json.loads(metrics_json)
-        assert loaded_dict['var_historical'] == -0.05
+        assert loaded_dict["var_historical"] == -0.05
 
     def test_error_handling_invalid_inputs(self, engine):
         """Test error handling for invalid inputs"""
@@ -444,24 +401,16 @@ class TestRiskMetricsEngine:
 
         # Invalid confidence level
         with pytest.raises(ValueError):
-            engine.calculate_var(
-                returns=pd.Series([0.01, 0.02]),
-                confidence=1.5
-            )
+            engine.calculate_var(returns=pd.Series([0.01, 0.02]), confidence=1.5)
 
         # Invalid method
         with pytest.raises(ValueError):
-            engine.calculate_var(
-                returns=pd.Series([0.01, 0.02]),
-                method="invalid_method"
-            )
+            engine.calculate_var(returns=pd.Series([0.01, 0.02]), method="invalid_method")
 
     def test_extreme_market_conditions(self, engine):
         """Test calculations under extreme market conditions"""
         # Create extreme returns
-        extreme_returns = pd.Series(
-            [-0.20, -0.15, -0.10, 0.30, -0.25]  # Extreme volatility
-        )
+        extreme_returns = pd.Series([-0.20, -0.15, -0.10, 0.30, -0.25])  # Extreme volatility
 
         # Should still calculate without errors
         var = engine.calculate_var(returns=extreme_returns)
@@ -482,30 +431,26 @@ class TestRiskMetricsEngine:
         # Base return series
         base = np.random.normal(0, 0.01, n_days)
 
-        returns = pd.DataFrame({
-            'Asset1': base + np.random.normal(0, 0.005, n_days),
-            'Asset2': base * 0.8 + np.random.normal(0, 0.008, n_days),
-            'Asset3': -base * 0.5 + np.random.normal(0, 0.01, n_days)
-        })
+        returns = pd.DataFrame(
+            {
+                "Asset1": base + np.random.normal(0, 0.005, n_days),
+                "Asset2": base * 0.8 + np.random.normal(0, 0.008, n_days),
+                "Asset3": -base * 0.5 + np.random.normal(0, 0.01, n_days),
+            }
+        )
 
         corr_matrix = engine.calculate_correlation_matrix(returns)
 
         # Check matrix properties
         assert corr_matrix.shape == (3, 3)
         # Diagonal should be 1
-        np.testing.assert_array_almost_equal(
-            np.diag(corr_matrix),
-            np.ones(3)
-        )
+        np.testing.assert_array_almost_equal(np.diag(corr_matrix), np.ones(3))
         # Should be symmetric
-        np.testing.assert_array_almost_equal(
-            corr_matrix,
-            corr_matrix.T
-        )
+        np.testing.assert_array_almost_equal(corr_matrix, corr_matrix.T)
         # Asset1 and Asset2 should be positively correlated
-        assert corr_matrix.loc['Asset1', 'Asset2'] > 0.5
+        assert corr_matrix.loc["Asset1", "Asset2"] > 0.5
         # Asset1 and Asset3 should be negatively correlated
-        assert corr_matrix.loc['Asset1', 'Asset3'] < 0
+        assert corr_matrix.loc["Asset1", "Asset3"] < 0
 
 
 class TestRiskMetricsIntegration:
@@ -515,10 +460,12 @@ class TestRiskMetricsIntegration:
     def mock_data_source(self):
         """Mock data source for integration tests"""
         mock = Mock()
-        mock.get_historical_data.return_value = pd.DataFrame({
-            'close': np.random.normal(100, 10, 252),
-            'volume': np.random.randint(1000000, 5000000, 252)
-        })
+        mock.get_historical_data.return_value = pd.DataFrame(
+            {
+                "close": np.random.normal(100, 10, 252),
+                "volume": np.random.randint(1000000, 5000000, 252),
+            }
+        )
         return mock
 
     @pytest.fixture
@@ -526,8 +473,8 @@ class TestRiskMetricsIntegration:
         """Mock position manager"""
         mock = Mock()
         mock.get_positions.return_value = [
-            {'symbol': 'AAPL', 'quantity': 100, 'current_price': 150},
-            {'symbol': 'GOOGL', 'quantity': 50, 'current_price': 2800}
+            {"symbol": "AAPL", "quantity": 100, "current_price": 150},
+            {"symbol": "GOOGL", "quantity": 50, "current_price": 2800},
         ]
         return mock
 
@@ -536,7 +483,7 @@ class TestRiskMetricsIntegration:
         engine = RiskMetricsEngine(data_source=mock_data_source)
 
         # Should fetch data and calculate metrics
-        metrics = engine.calculate_metrics_for_symbol('AAPL')
+        metrics = engine.calculate_metrics_for_symbol("AAPL")
 
         assert mock_data_source.get_historical_data.called
         assert metrics is not None
@@ -551,7 +498,7 @@ class TestRiskMetricsIntegration:
         assert mock_position_manager.get_positions.called
         assert portfolio_metrics is not None
 
-    @patch('src.bot.risk.risk_metrics_engine.send_alert')
+    @patch("src.bot.risk.risk_metrics_engine.send_alert")
     def test_alert_on_var_breach(self, mock_alert):
         """Test alert generation on VaR breach"""
         engine = RiskMetricsEngine()
@@ -565,7 +512,7 @@ class TestRiskMetricsIntegration:
         # Should trigger alert
         assert mock_alert.called
         alert_data = mock_alert.call_args[0][0]
-        assert 'VaR breach' in alert_data['message']
+        assert "VaR breach" in alert_data["message"]
 
 
 if __name__ == "__main__":

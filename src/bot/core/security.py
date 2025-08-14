@@ -500,8 +500,21 @@ class JWTAuthenticationProvider(IAuthenticationProvider):
     async def _verify_credentials(self, username: str, password: str) -> bool:
         """Verify user credentials (placeholder)"""
         # In real implementation, verify against secure storage
-        # For demo purposes, use environment variable for admin password
-        admin_password = os.environ.get("ADMIN_PASSWORD", "change_me_in_production")
+        # Get password from environment variable with validation
+        admin_password = os.environ.get("ADMIN_PASSWORD")
+
+        if not admin_password:
+            raise ValueError("ADMIN_PASSWORD environment variable must be set")
+
+        # Additional production validation
+        env = os.environ.get("ENVIRONMENT", "development")
+        if env.lower() in ["production", "prod"] and admin_password in [
+            "change_me_in_production",
+            "admin123",
+            "password",
+        ]:
+            raise ValueError("Production environment requires a strong admin password")
+
         return username == "admin" and password == admin_password
 
     def _generate_jwt_token(self, principal: SecurityPrincipal) -> str:

@@ -168,9 +168,23 @@ class SecurityManager:
         self.logger = logging.getLogger(__name__)
 
         # Mock user database (in production, use proper database)
-        # Use environment variables for default passwords
-        admin_password = os.environ.get("ADMIN_PASSWORD", "change_admin_password")
-        trader_password = os.environ.get("TRADER_PASSWORD", "change_trader_password")
+        # Get passwords from environment variables with validation
+        admin_password = os.environ.get("ADMIN_PASSWORD")
+        trader_password = os.environ.get("TRADER_PASSWORD")
+
+        # Validate that passwords are set for security
+        if not admin_password:
+            raise ValueError("ADMIN_PASSWORD environment variable must be set")
+        if not trader_password:
+            raise ValueError("TRADER_PASSWORD environment variable must be set")
+
+        # Additional validation for production environments
+        env = os.environ.get("ENVIRONMENT", "development")
+        if env.lower() in ["production", "prod"]:
+            if admin_password in ["change_admin_password", "admin123", "password"]:
+                raise ValueError("Production environment requires a strong admin password")
+            if trader_password in ["change_trader_password", "trader123", "password"]:
+                raise ValueError("Production environment requires a strong trader password")
 
         self.users = {
             "admin": {
@@ -675,8 +689,9 @@ if __name__ == "__main__":
     print("   REST API: http://localhost:8000")
     print("   WebSocket: ws://localhost:8000/ws/market/{symbol}")
     print("   Docs: http://localhost:8000/docs")
-    print("\n🔑 Default Credentials:")
-    print("   Admin: admin/admin123")
-    print("   Trader: trader/trader123")
+    # Don't print actual credentials for security
+    print("\n🔑 Authentication:")
+    print("   Set ADMIN_PASSWORD and TRADER_PASSWORD environment variables")
+    print("   Default users: admin, trader")
 
     gateway.run()

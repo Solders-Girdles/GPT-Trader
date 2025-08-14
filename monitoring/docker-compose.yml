@@ -28,7 +28,7 @@ services:
       - ./grafana/dashboards:/var/lib/grafana/dashboards
     environment:
       - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=gpt_trader_monitoring
+      - GF_SECURITY_ADMIN_PASSWORD=${ADMIN_PASSWORD}
       - GF_INSTALL_PLUGINS=redis-datasource,postgres-datasource
     ports:
       - "3000:3000"
@@ -72,7 +72,7 @@ services:
     image: prometheuscommunity/postgres-exporter:latest
     container_name: gpt-trader-postgres-exporter
     environment:
-      DATA_SOURCE_NAME: "postgresql://trader:trader_password_dev@host.docker.internal:5432/gpt_trader?sslmode=disable"
+      DATA_SOURCE_NAME: "postgresql://trader:${DATABASE_PASSWORD}@host.docker.internal:5432/gpt_trader?sslmode=disable"
     ports:
       - "9187:9187"
     networks:

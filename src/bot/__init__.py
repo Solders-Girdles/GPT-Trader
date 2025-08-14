@@ -14,6 +14,9 @@ Key Features:
 
 from typing import Any
 
+# Import core exception classes - these should always exist
+from .exceptions import ConfigurationError, DataError, GPTTraderError, StrategyError
+
 # Import lightweight components immediately
 from .strategy.base import Strategy
 
@@ -43,24 +46,6 @@ settings = None  # Will be set lazily
 def _get_run_backtest() -> Any:
     """Get run_backtest function with lazy loading"""
     return _lazy_import_backtest()
-
-
-# Import other utility modules that don't conflict
-try:
-    from .exceptions import ConfigurationError, DataError, GPTTraderError, StrategyError
-except ImportError:
-    # Graceful fallback if modules aren't available
-    class GPTTraderError(Exception):
-        pass
-
-    class ConfigurationError(GPTTraderError):
-        pass
-
-    class DataError(GPTTraderError):
-        pass
-
-    class StrategyError(GPTTraderError):
-        pass
 
 
 # Try to import other components gracefully

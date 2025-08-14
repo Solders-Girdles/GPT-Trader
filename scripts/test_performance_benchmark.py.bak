@@ -6,34 +6,38 @@ Phase 2.5 - Day 9
 Comprehensive testing of the performance benchmarking system.
 """
 
-import os
 import sys
+import os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+))
 
 import logging
-import time
-import warnings
-from datetime import datetime
-from pathlib import Path
-
 import pandas as pd
+import numpy as np
+from datetime import datetime
+import time
 import yfinance as yf
-from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
+from pathlib import Path
+import matplotlib.pyplot as plt
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from xgboost import XGBClassifier
-
-warnings.filterwarnings("ignore")
+import warnings
+warnings.filterwarnings('ignore')
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
 
 # Import our benchmarking components
+from src.bot.ml.performance_benchmark import (
+    create_benchmark, BenchmarkConfig
+)
 from src.bot.ml.baseline_models import get_baseline_models
 from src.bot.ml.efficiency_analyzer import create_efficiency_analyzer
-from src.bot.ml.performance_benchmark import BenchmarkConfig, create_benchmark
 
 
 def prepare_data():
@@ -45,47 +49,41 @@ def prepare_data():
     data = ticker.history(period="3y")
 
     # Create features
-    data["returns"] = data["Close"].pct_change()
-    data["sma_20"] = data["Close"].rolling(20).mean()
-    data["sma_50"] = data["Close"].rolling(50).mean()
-    data["rsi"] = 100 - (
-        100
-        / (
-            1
-            + data["Close"].diff().clip(lower=0).rolling(14).mean()
-            / data["Close"].diff().clip(upper=0).abs().rolling(14).mean()
-        )
-    )
-    data["volume_ratio"] = data["Volume"] / data["Volume"].rolling(20).mean()
+    data['returns'] = data['Close'].pct_change()
+    data['sma_20'] = data['Close'].rolling(20).mean()
+    data['sma_50'] = data['Close'].rolling(50).mean()
+    data['rsi'] = 100 - (100 / (1 + data['Close'].diff().clip(lower=0).rolling(14).mean() /
+                                data['Close'].diff().clip(upper=0).abs().rolling(14).mean()))
+    data['volume_ratio'] = data['Volume'] / data['Volume'].rolling(20).mean()
 
     # Create feature matrix
     X = pd.DataFrame(index=data.index)
-    X["returns"] = data["returns"]
-    X["volume_ratio"] = data["volume_ratio"]
-    X["price_to_sma20"] = data["Close"] / data["sma_20"]
-    X["price_to_sma50"] = data["Close"] / data["sma_50"]
-    X["rsi"] = data["rsi"]
-    X["volatility"] = data["returns"].rolling(20).std()
+    X['returns'] = data['returns']
+    X['volume_ratio'] = data['volume_ratio']
+    X['price_to_sma20'] = data['Close'] / data['sma_20']
+    X['price_to_sma50'] = data['Close'] / data['sma_50']
+    X['rsi'] = data['rsi']
+    X['volatility'] = data['returns'].rolling(20).std()
 
     # Add more features for comprehensive testing
-    X["momentum"] = data["Close"].pct_change(10)
-    X["volume_change"] = data["Volume"].pct_change()
-    X["high_low_ratio"] = data["High"] / data["Low"]
-    X["close_to_high"] = data["Close"] / data["High"]
+    X['momentum'] = data['Close'].pct_change(10)
+    X['volume_change'] = data['Volume'].pct_change()
+    X['high_low_ratio'] = data['High'] / data['Low']
+    X['close_to_high'] = data['Close'] / data['High']
 
     # Add price columns for baseline models
-    X["close"] = data["Close"]
-    X["volume"] = data["Volume"]
-    X["price"] = data["Close"]  # Alias for compatibility
+    X['close'] = data['Close']
+    X['volume'] = data['Volume']
+    X['price'] = data['Close']  # Alias for compatibility
 
     X = X.dropna()
 
     # Create target
-    y = (data["Close"].shift(-1) > data["Close"]).astype(int)
+    y = (data['Close'].shift(-1) > data['Close']).astype(int)
     y = y.loc[X.index]
 
     # Get prices for backtesting
-    prices = data["Close"].loc[X.index]
+    prices = data['Close'].loc[X.index]
 
     logger.info(f"Data prepared: {len(X)} samples, {X.shape[1]} features")
 
@@ -94,24 +92,33 @@ def prepare_data():
 
 def test_ml_models_benchmark():
     """Test ML models benchmarking"""
-    logger.info("\n" + "=" * 60)
+    logger.info("\n" + "="*60)
     logger.info("Testing ML Models Benchmarking")
-    logger.info("=" * 60)
+    logger.info("="*60)
 
     # Prepare data
     X, y, prices = prepare_data()
 
     # ML models to benchmark
     ml_models = {
-        "RandomForest": RandomForestClassifier(
-            n_estimators=100, max_depth=10, n_jobs=-1, random_state=42
+        'RandomForest': RandomForestClassifier(
+            n_estimators=100,
+            max_depth=10,
+            n_jobs=-1,
+            random_state=42
         ),
-        "GradientBoosting": GradientBoostingClassifier(
-            n_estimators=100, max_depth=5, random_state=42
+        'GradientBoosting': GradientBoostingClassifier(
+            n_estimators=100,
+            max_depth=5,
+            random_state=42
         ),
-        "XGBoost": XGBClassifier(
-            n_estimators=100, max_depth=5, n_jobs=-1, random_state=42, eval_metric="logloss"
-        ),
+        'XGBoost': XGBClassifier(
+            n_estimators=100,
+            max_depth=5,
+            n_jobs=-1,
+            random_state=42,
+            eval_metric='logloss'
+        )
     }
 
     # Configure benchmark
@@ -120,7 +127,7 @@ def test_ml_models_benchmark():
         test_splits=3,
         include_baselines=False,
         track_memory=True,
-        track_cpu=True,
+        track_cpu=True
     )
 
     # Create and run benchmark
@@ -129,7 +136,9 @@ def test_ml_models_benchmark():
     logger.info("\nBenchmarking ML models...")
     start_time = time.time()
 
-    results = benchmark.run_comprehensive_benchmark(ml_models, X, y, prices)
+    results = benchmark.run_comprehensive_benchmark(
+        ml_models, X, y, prices
+    )
 
     elapsed = time.time() - start_time
     logger.info(f"ML benchmark completed in {elapsed:.2f}s")
@@ -151,9 +160,9 @@ def test_ml_models_benchmark():
 
 def test_baseline_comparison():
     """Test baseline model comparison"""
-    logger.info("\n" + "=" * 60)
+    logger.info("\n" + "="*60)
     logger.info("Testing Baseline Model Comparison")
-    logger.info("=" * 60)
+    logger.info("="*60)
 
     # Prepare data
     X, y, prices = prepare_data()
@@ -163,18 +172,18 @@ def test_baseline_comparison():
 
     # Select a subset for testing
     test_baselines = {
-        "buy_hold": baseline_models["buy_hold"],
-        "sma_cross": baseline_models["sma_cross"],
-        "mean_reversion": baseline_models["mean_reversion"],
-        "momentum": baseline_models["momentum"],
-        "ensemble": baseline_models["ensemble"],
+        'buy_hold': baseline_models['buy_hold'],
+        'sma_cross': baseline_models['sma_cross'],
+        'mean_reversion': baseline_models['mean_reversion'],
+        'momentum': baseline_models['momentum'],
+        'ensemble': baseline_models['ensemble']
     }
 
     # Configure benchmark
     config = BenchmarkConfig(
         test_splits=3,
         include_baselines=False,  # We're testing baselines directly
-        track_memory=True,
+        track_memory=True
     )
 
     # Create benchmark
@@ -197,7 +206,9 @@ def test_baseline_comparison():
 
     # Sort by Sharpe ratio
     sorted_baselines = sorted(
-        baseline_results.items(), key=lambda x: x[1].sharpe_ratio, reverse=True
+        baseline_results.items(),
+        key=lambda x: x[1].sharpe_ratio,
+        reverse=True
     )
 
     for name, metrics in sorted_baselines:
@@ -212,9 +223,9 @@ def test_baseline_comparison():
 
 def test_efficiency_analysis():
     """Test computational efficiency analysis"""
-    logger.info("\n" + "=" * 60)
+    logger.info("\n" + "="*60)
     logger.info("Testing Efficiency Analysis")
-    logger.info("=" * 60)
+    logger.info("="*60)
 
     # Prepare smaller dataset for efficiency testing
     X, y, _ = prepare_data()
@@ -224,11 +235,16 @@ def test_efficiency_analysis():
 
     # Models to analyze
     models = {
-        "RandomForest_small": RandomForestClassifier(n_estimators=50, max_depth=5, n_jobs=1),
-        "RandomForest_large": RandomForestClassifier(n_estimators=200, max_depth=20, n_jobs=-1),
-        "XGBoost_optimized": XGBClassifier(
-            n_estimators=100, max_depth=5, n_jobs=-1, tree_method="hist", eval_metric="logloss"
+        'RandomForest_small': RandomForestClassifier(
+            n_estimators=50, max_depth=5, n_jobs=1
         ),
+        'RandomForest_large': RandomForestClassifier(
+            n_estimators=200, max_depth=20, n_jobs=-1
+        ),
+        'XGBoost_optimized': XGBClassifier(
+            n_estimators=100, max_depth=5, n_jobs=-1,
+            tree_method='hist', eval_metric='logloss'
+        )
     }
 
     # Create analyzer
@@ -240,7 +256,9 @@ def test_efficiency_analysis():
         logger.info(f"\nAnalyzing efficiency of {name}...")
 
         try:
-            metrics = analyzer.analyze_model_efficiency(model, X_train, y_train, X_test)
+            metrics = analyzer.analyze_model_efficiency(
+                model, X_train, y_train, X_test
+            )
             efficiency_results[name] = metrics
 
             logger.info(f"  Training Time: {metrics.training_time:.3f}s")
@@ -265,23 +283,30 @@ def test_efficiency_analysis():
 
 def test_ml_vs_baseline():
     """Test ML models vs baselines"""
-    logger.info("\n" + "=" * 60)
+    logger.info("\n" + "="*60)
     logger.info("Testing ML vs Baseline Comparison")
-    logger.info("=" * 60)
+    logger.info("="*60)
 
     # Prepare data
     X, y, prices = prepare_data()
 
     # Best ML model
     ml_model = XGBClassifier(
-        n_estimators=100, max_depth=5, n_jobs=-1, random_state=42, eval_metric="logloss"
+        n_estimators=100,
+        max_depth=5,
+        n_jobs=-1,
+        random_state=42,
+        eval_metric='logloss'
     )
 
     # Best baseline
-    baseline_model = get_baseline_models()["ensemble"]
+    baseline_model = get_baseline_models()['ensemble']
 
     # Combined models
-    all_models = {"XGBoost": ml_model, "EnsembleBaseline": baseline_model}
+    all_models = {
+        'XGBoost': ml_model,
+        'EnsembleBaseline': baseline_model
+    }
 
     # Configure comprehensive benchmark
     config = BenchmarkConfig(
@@ -289,12 +314,14 @@ def test_ml_vs_baseline():
         include_baselines=True,
         track_memory=True,
         significance_level=0.05,
-        n_bootstrap=500,
+        n_bootstrap=500
     )
 
     # Run benchmark
     benchmark = create_benchmark(config)
-    results = benchmark.run_comprehensive_benchmark(all_models, X[:2000], y[:2000], prices[:2000])
+    results = benchmark.run_comprehensive_benchmark(
+        all_models, X[:2000], y[:2000], prices[:2000]
+    )
 
     # Display comparison
     logger.info("\nML vs Baseline Results:")
@@ -302,18 +329,18 @@ def test_ml_vs_baseline():
 
     df = results.to_dataframe()
 
-    # Use itertuples for better performance
-    for row in df.itertuples():
-        logger.info(f"\n{row.model_name}:")
-        logger.info(f"  Accuracy: {row.accuracy:.3f}")
-        logger.info(f"  Sharpe Ratio: {row.sharpe_ratio:.2f}")
-        logger.info(f"  Training Time: {row.training_time:.3f}s")
-        logger.info(f"  Annual Return: {row.annual_return:.1%}")
+    for _, row in df.iterrows():
+        logger.info(f"\n{row['model_name']}:")
+        logger.info(f"  Accuracy: {row['accuracy']:.3f}")
+        logger.info(f"  Sharpe Ratio: {row['sharpe_ratio']:.2f}")
+        logger.info(f"  Training Time: {row['training_time']:.3f}s")
+        logger.info(f"  Annual Return: {row['annual_return']:.1%}")
+
     # Statistical significance
     if results.statistical_tests:
         logger.info("\nStatistical Significance:")
         for model, test in results.statistical_tests.items():
-            if test["significant"]:
+            if test['significant']:
                 logger.info(f"  {model} significantly better than {test['vs_baseline']}")
                 logger.info(f"    p-value: {test['p_value']:.4f}")
                 logger.info(f"    Improvement: {test['improvement']:.3f}")
@@ -326,18 +353,15 @@ def test_ml_vs_baseline():
 
 def generate_benchmark_report(all_results):
     """Generate comprehensive benchmark report"""
-    logger.info("\n" + "=" * 60)
+    logger.info("\n" + "="*60)
     logger.info("Generating Benchmark Report")
-    logger.info("=" * 60)
+    logger.info("="*60)
 
-    report = (
-        """
+    report = """
 PERFORMANCE BENCHMARKING REPORT
 ================================
 Phase 2.5 - Day 9
-Generated: """
-        + str(datetime.now())
-        + """
+Generated: """ + str(datetime.now()) + """
 
 EXECUTIVE SUMMARY
 -----------------
@@ -424,11 +448,10 @@ baseline strategies, with XGBoost emerging as the optimal choice for
 production deployment. The 42% improvement in Sharpe ratio justifies
 the additional computational requirements.
 """
-    )
 
     # Save report
     report_path = Path("benchmark_report.txt")
-    with open(report_path, "w") as f:
+    with open(report_path, 'w') as f:
         f.write(report)
 
     logger.info(f"Report saved to {report_path}")
@@ -438,10 +461,10 @@ the additional computational requirements.
 
 def main():
     """Run all benchmark tests"""
-    logger.info("=" * 60)
+    logger.info("="*60)
     logger.info("Performance Benchmarking Test Suite")
     logger.info("Phase 2.5 - Day 9")
-    logger.info("=" * 60)
+    logger.info("="*60)
 
     all_results = {}
     all_tests_passed = True
@@ -449,7 +472,7 @@ def main():
     # Test 1: ML Models Benchmark
     try:
         ml_results = test_ml_models_benchmark()
-        all_results["ml_models"] = ml_results
+        all_results['ml_models'] = ml_results
     except Exception as e:
         logger.error(f"ML models benchmark failed: {e}")
         all_tests_passed = False
@@ -457,7 +480,7 @@ def main():
     # Test 2: Baseline Comparison
     try:
         baseline_results = test_baseline_comparison()
-        all_results["baselines"] = baseline_results
+        all_results['baselines'] = baseline_results
     except Exception as e:
         logger.error(f"Baseline comparison failed: {e}")
         all_tests_passed = False
@@ -465,7 +488,7 @@ def main():
     # Test 3: Efficiency Analysis
     try:
         efficiency_results = test_efficiency_analysis()
-        all_results["efficiency"] = efficiency_results
+        all_results['efficiency'] = efficiency_results
     except Exception as e:
         logger.error(f"Efficiency analysis failed: {e}")
         all_tests_passed = False
@@ -473,7 +496,7 @@ def main():
     # Test 4: ML vs Baseline
     try:
         comparison_results = test_ml_vs_baseline()
-        all_results["comparison"] = comparison_results
+        all_results['comparison'] = comparison_results
     except Exception as e:
         logger.error(f"ML vs baseline comparison failed: {e}")
         all_tests_passed = False
@@ -485,9 +508,9 @@ def main():
         logger.error(f"Report generation failed: {e}")
 
     # Summary
-    logger.info("\n" + "=" * 60)
+    logger.info("\n" + "="*60)
     logger.info("Test Summary")
-    logger.info("=" * 60)
+    logger.info("="*60)
 
     if all_tests_passed:
         logger.info("✅ All benchmark tests passed!")

@@ -6,21 +6,20 @@ Integrates feature engineering, selection, validation, and tracking.
 Provides a unified interface for the ML components.
 """
 
-import json
 import logging
-from datetime import datetime
-from pathlib import Path
-from typing import Any
-
-import joblib
-import numpy as np
+from typing import Dict, List, Optional, Tuple, Any, Union
 import pandas as pd
+import numpy as np
+from datetime import datetime, timedelta
+from pathlib import Path
+import joblib
+import json
 
 # Import our ML components
-from .feature_engineering_v2 import FeatureConfig, OptimizedFeatureEngineer
+from .feature_engineering_v2 import OptimizedFeatureEngineer, FeatureConfig
 from .feature_selector import AdvancedFeatureSelector, FeatureSelectionConfig, SelectionMethod
-from .model_validation import ModelPerformance, ModelValidator, ValidationConfig
-from .performance_tracker import PerformanceMetrics, PerformanceTracker
+from .model_validation import ModelValidator, ValidationConfig, ModelPerformance
+from .performance_tracker import PerformanceTracker, PerformanceMetrics
 
 logger = logging.getLogger(__name__)
 
@@ -38,13 +37,12 @@ class IntegratedMLPipeline:
     This ensures seamless integration with existing codebase.
     """
 
-    def __init__(
-        self,
-        feature_config: FeatureConfig | None = None,
-        selection_config: FeatureSelectionConfig | None = None,
-        validation_config: ValidationConfig | None = None,
-        tracking_db_path: str = "model_performance.db",
-    ):
+    def __init__(self,
+                 feature_config: Optional[FeatureConfig] = None,
+                 selection_config: Optional[FeatureSelectionConfig] = None,
+                 validation_config: Optional[ValidationConfig] = None,
+                 tracking_db_path: str = "model_performance.db"):
+
         # Initialize components
         self.feature_engineer = OptimizedFeatureEngineer(feature_config)
         self.feature_selector = AdvancedFeatureSelector(selection_config)
@@ -52,16 +50,17 @@ class IntegratedMLPipeline:
         self.performance_tracker = PerformanceTracker(tracking_db_path)
 
         # Pipeline state
-        self.current_features: pd.DataFrame | None = None
-        self.selected_feature_names: list[str] | None = None
+        self.current_features: Optional[pd.DataFrame] = None
+        self.selected_feature_names: Optional[List[str]] = None
         self.current_model = None
         self.pipeline_config = {}
 
         logger.info("IntegratedMLPipeline initialized with all components")
 
-    def prepare_features(
-        self, raw_data: pd.DataFrame, target: pd.Series | None = None, use_selection: bool = True
-    ) -> pd.DataFrame:
+    def prepare_features(self,
+                        raw_data: pd.DataFrame,
+                        target: Optional[pd.Series] = None,
+                        use_selection: bool = True) -> pd.DataFrame:
         """
         Prepare features from raw OHLCV data.
 
@@ -91,7 +90,9 @@ class IntegratedMLPipeline:
 
             # Select features using ensemble method
             selected_features, scores = self.feature_selector.select_features(
-                features_aligned, target_aligned, method=SelectionMethod.ENSEMBLE
+                features_aligned,
+                target_aligned,
+                method=SelectionMethod.ENSEMBLE
             )
 
             # Keep only selected features
@@ -110,16 +111,14 @@ class IntegratedMLPipeline:
 
         return self.current_features
 
-    def train_and_validate(
-        self,
-        model_class: Any,
-        X_train: pd.DataFrame,
-        y_train: pd.Series,
-        X_test: pd.DataFrame,
-        y_test: pd.Series,
-        model_params: dict | None = None,
-        model_name: str = "model",
-    ) -> ModelPerformance:
+    def train_and_validate(self,
+                          model_class: Any,
+                          X_train: pd.DataFrame,
+                          y_train: pd.Series,
+                          X_test: pd.DataFrame,
+                          y_test: pd.Series,
+                          model_params: Optional[Dict] = None,
+                          model_name: str = "model") -> ModelPerformance:
         """
         Train model with validation and performance tracking.
 
@@ -150,7 +149,8 @@ class IntegratedMLPipeline:
 
         # Validate model
         performance = self.model_validator.validate_model(
-            model, X_train, y_train, X_test, y_test, model_name=model_name
+            model, X_train, y_train, X_test, y_test,
+            model_name=model_name
         )
         performance.training_time = training_time
 
@@ -162,14 +162,12 @@ class IntegratedMLPipeline:
 
         return performance
 
-    def walk_forward_validation(
-        self,
-        model_class: Any,
-        X: pd.DataFrame,
-        y: pd.Series,
-        model_params: dict | None = None,
-        model_name: str = "model",
-    ) -> list[ModelPerformance]:
+    def walk_forward_validation(self,
+                              model_class: Any,
+                              X: pd.DataFrame,
+                              y: pd.Series,
+                              model_params: Optional[Dict] = None,
+                              model_name: str = "model") -> List[ModelPerformance]:
         """
         Perform walk-forward validation.
 
@@ -185,7 +183,9 @@ class IntegratedMLPipeline:
         """
         logger.info(f"Starting walk-forward validation for {model_name}")
 
-        results = self.model_validator.walk_forward_analysis(model_class, X, y, model_params)
+        results = self.model_validator.walk_forward_analysis(
+            model_class, X, y, model_params
+        )
 
         # Track each period's performance
         for i, performance in enumerate(results):
@@ -194,14 +194,12 @@ class IntegratedMLPipeline:
 
         # Log summary statistics
         accuracies = [p.accuracy for p in results]
-        logger.info(
-            f"Walk-forward results: Mean accuracy={np.mean(accuracies):.3f}, "
-            f"Std={np.std(accuracies):.3f}"
-        )
+        logger.info(f"Walk-forward results: Mean accuracy={np.mean(accuracies):.3f}, "
+                   f"Std={np.std(accuracies):.3f}")
 
         return results
 
-    def check_model_health(self, model_id: str) -> dict[str, Any]:
+    def check_model_health(self, model_id: str) -> Dict[str, Any]:
         """
         Check model health and drift status.
 
@@ -218,22 +216,23 @@ class IntegratedMLPipeline:
             needs_retraining = self.performance_tracker.check_retraining_needed(model_id)
 
             return {
-                "model_id": model_id,
-                "status": health.status.value,
-                "current_accuracy": health.current_accuracy,
-                "baseline_accuracy": health.baseline_accuracy,
-                "trend": health.performance_trend,
-                "drift_detected": health.drift_detected,
-                "needs_retraining": needs_retraining,
-                "confidence": health.confidence_score,
-                "last_update": health.last_update.isoformat(),
+                'model_id': model_id,
+                'status': health.status.value,
+                'current_accuracy': health.current_accuracy,
+                'baseline_accuracy': health.baseline_accuracy,
+                'trend': health.performance_trend,
+                'drift_detected': health.drift_detected,
+                'needs_retraining': needs_retraining,
+                'confidence': health.confidence_score,
+                'last_update': health.last_update.isoformat()
             }
 
-        return {"model_id": model_id, "status": "not_found"}
+        return {'model_id': model_id, 'status': 'not_found'}
 
-    def detect_feature_drift(
-        self, current_data: pd.DataFrame, reference_data: pd.DataFrame, model_id: str
-    ) -> tuple[bool, float]:
+    def detect_feature_drift(self,
+                            current_data: pd.DataFrame,
+                            reference_data: pd.DataFrame,
+                            model_id: str) -> Tuple[bool, float]:
         """
         Detect feature drift between current and reference data.
 
@@ -260,10 +259,8 @@ class IntegratedMLPipeline:
         )
 
         if drift_detected:
-            logger.warning(
-                f"Feature drift detected for {model_id}: "
-                f"type={drift_type.value}, score={drift_score:.3f}"
-            )
+            logger.warning(f"Feature drift detected for {model_id}: "
+                         f"type={drift_type.value}, score={drift_score:.3f}")
 
         return drift_detected, drift_score
 
@@ -279,34 +276,42 @@ class IntegratedMLPipeline:
 
         # Save feature engineering config
         feature_config = {
-            "selected_features": self.feature_engineer.selected_features,
-            "feature_importance": self.feature_engineer.feature_importance,
-            "config": {
-                "max_features": self.feature_engineer.config.max_features,
-                "correlation_threshold": self.feature_engineer.config.correlation_threshold,
-            },
+            'selected_features': self.feature_engineer.selected_features,
+            'feature_importance': self.feature_engineer.feature_importance,
+            'config': {
+                'max_features': self.feature_engineer.config.max_features,
+                'correlation_threshold': self.feature_engineer.config.correlation_threshold
+            }
         }
-        with open(dir_path / "feature_config.json", "w") as f:
+        with open(dir_path / 'feature_config.json', 'w') as f:
             json.dump(feature_config, f, indent=2)
 
         # Save feature selection config
-        self.feature_selector.save_selection_config(str(dir_path / "selection_config.json"))
+        self.feature_selector.save_selection_config(
+            str(dir_path / 'selection_config.json')
+        )
 
         # Save scaler if exists
         if self.feature_engineer.scaler:
-            joblib.dump(self.feature_engineer.scaler, dir_path / "feature_scaler.joblib")
+            joblib.dump(
+                self.feature_engineer.scaler,
+                dir_path / 'feature_scaler.joblib'
+            )
 
         # Save current model if exists
         if self.current_model:
-            joblib.dump(self.current_model, dir_path / "model.joblib")
+            joblib.dump(
+                self.current_model,
+                dir_path / 'model.joblib'
+            )
 
         # Save pipeline config
         self.pipeline_config = {
-            "n_features": len(self.selected_feature_names) if self.selected_feature_names else 0,
-            "feature_names": self.selected_feature_names,
-            "timestamp": datetime.now().isoformat(),
+            'n_features': len(self.selected_feature_names) if self.selected_feature_names else 0,
+            'feature_names': self.selected_feature_names,
+            'timestamp': datetime.now().isoformat()
         }
-        with open(dir_path / "pipeline_config.json", "w") as f:
+        with open(dir_path / 'pipeline_config.json', 'w') as f:
             json.dump(self.pipeline_config, f, indent=2)
 
         logger.info(f"Pipeline saved to {directory}")
@@ -321,28 +326,30 @@ class IntegratedMLPipeline:
         dir_path = Path(directory)
 
         # Load feature config
-        with open(dir_path / "feature_config.json") as f:
+        with open(dir_path / 'feature_config.json', 'r') as f:
             feature_config = json.load(f)
-            self.feature_engineer.selected_features = feature_config["selected_features"]
-            self.feature_engineer.feature_importance = feature_config["feature_importance"]
+            self.feature_engineer.selected_features = feature_config['selected_features']
+            self.feature_engineer.feature_importance = feature_config['feature_importance']
 
         # Load selection config
-        self.feature_selector.load_selection_config(str(dir_path / "selection_config.json"))
+        self.feature_selector.load_selection_config(
+            str(dir_path / 'selection_config.json')
+        )
 
         # Load scaler
-        scaler_path = dir_path / "feature_scaler.joblib"
+        scaler_path = dir_path / 'feature_scaler.joblib'
         if scaler_path.exists():
             self.feature_engineer.scaler = joblib.load(scaler_path)
 
         # Load model
-        model_path = dir_path / "model.joblib"
+        model_path = dir_path / 'model.joblib'
         if model_path.exists():
             self.current_model = joblib.load(model_path)
 
         # Load pipeline config
-        with open(dir_path / "pipeline_config.json") as f:
+        with open(dir_path / 'pipeline_config.json', 'r') as f:
             self.pipeline_config = json.load(f)
-            self.selected_feature_names = self.pipeline_config.get("feature_names")
+            self.selected_feature_names = self.pipeline_config.get('feature_names')
 
         logger.info(f"Pipeline loaded from {directory}")
 
@@ -358,7 +365,7 @@ class IntegratedMLPipeline:
             f1_score=performance.f1_score,
             roc_auc=performance.roc_auc,
             n_predictions=performance.n_samples_test or 0,
-            n_features=len(self.selected_feature_names) if self.selected_feature_names else 0,
+            n_features=len(self.selected_feature_names) if self.selected_feature_names else 0
         )
 
         self.performance_tracker.update_performance(model_id, metrics)
@@ -370,45 +377,36 @@ class IntegratedMLPipeline:
             top_features = scores.head(10)
 
             logger.info("Top 10 features by importance:")
-            # Use vectorized logging instead of iterrows
-            if "feature" in top_features.columns:
-                feature_names = top_features["feature"]
-                scores_values = top_features.drop("feature", axis=1).max(axis=1)
-            else:
-                feature_names = top_features.index
-                scores_values = top_features.max(axis=1)
+            for i, row in top_features.iterrows():
+                if isinstance(row, pd.Series):
+                    feature_name = row.get('feature', i)
+                    score = row.drop('feature').max() if 'feature' in row else row.max()
+                    logger.info(f"  {feature_name}: {score:.4f}")
 
-            for feature_name, score in zip(feature_names, scores_values, strict=False):
-                logger.info(f"  {feature_name}: {score:.4f}")
-
-    def get_pipeline_summary(self) -> dict[str, Any]:
+    def get_pipeline_summary(self) -> Dict[str, Any]:
         """Get summary of pipeline configuration and performance"""
         summary = {
-            "feature_engineering": {
-                "total_features_engineered": (
-                    len(self.feature_engineer.selected_features)
-                    if hasattr(self.feature_engineer, "selected_features")
-                    else 0
-                ),
-                "features_after_selection": (
-                    len(self.selected_feature_names) if self.selected_feature_names else 0
-                ),
-                "correlation_threshold": self.feature_selector.config.correlation_threshold,
-                "selection_method": self.feature_selector.config.primary_method.value,
+            'feature_engineering': {
+                'total_features_engineered': len(self.feature_engineer.selected_features)
+                    if hasattr(self.feature_engineer, 'selected_features') else 0,
+                'features_after_selection': len(self.selected_feature_names)
+                    if self.selected_feature_names else 0,
+                'correlation_threshold': self.feature_selector.config.correlation_threshold,
+                'selection_method': self.feature_selector.config.primary_method.value
             },
-            "validation": {
-                "cv_folds": self.model_validator.config.n_splits,
-                "test_size": self.model_validator.config.test_size,
-                "primary_metric": self.model_validator.config.primary_metric,
+            'validation': {
+                'cv_folds': self.model_validator.config.n_splits,
+                'test_size': self.model_validator.config.test_size,
+                'primary_metric': self.model_validator.config.primary_metric
             },
-            "performance_tracking": {
-                "models_tracked": len(self.performance_tracker.models),
-                "database_path": self.performance_tracker.db_path,
+            'performance_tracking': {
+                'models_tracked': len(self.performance_tracker.models),
+                'database_path': self.performance_tracker.db_path
             },
-            "current_model": {
-                "loaded": self.current_model is not None,
-                "type": type(self.current_model).__name__ if self.current_model else None,
-            },
+            'current_model': {
+                'loaded': self.current_model is not None,
+                'type': type(self.current_model).__name__ if self.current_model else None
+            }
         }
 
         return summary
@@ -442,16 +440,19 @@ if __name__ == "__main__":
     data.columns = [c.lower() for c in data.columns]
 
     # Create target (next day return direction)
-    target = (data["close"].pct_change().shift(-1) > 0).astype(int)
+    target = (data['close'].pct_change().shift(-1) > 0).astype(int)
 
     # Create pipeline with aggressive feature selection
     pipeline = create_integrated_pipeline(
         selection_config=FeatureSelectionConfig(
             n_features_target=50,
             correlation_threshold=0.7,  # Aggressive
-            primary_method=SelectionMethod.ENSEMBLE,
+            primary_method=SelectionMethod.ENSEMBLE
         ),
-        validation_config=ValidationConfig(n_splits=5, primary_metric="f1"),
+        validation_config=ValidationConfig(
+            n_splits=5,
+            primary_metric='f1'
+        )
     )
 
     # Prepare features
@@ -467,34 +468,25 @@ if __name__ == "__main__":
 
     # Train and validate models
     models = {
-        "RandomForest": (RandomForestClassifier, {"n_estimators": 100, "random_state": 42}),
-        "XGBoost": (
-            XGBClassifier,
-            {"n_estimators": 100, "random_state": 42, "eval_metric": "logloss"},
-        ),
+        'RandomForest': (RandomForestClassifier, {'n_estimators': 100, 'random_state': 42}),
+        'XGBoost': (XGBClassifier, {'n_estimators': 100, 'random_state': 42, 'eval_metric': 'logloss'})
     }
 
     for model_name, (model_class, params) in models.items():
         print(f"\nTraining {model_name}...")
         performance = pipeline.train_and_validate(
-            model_class,
-            X_train,
-            y_train,
-            X_test,
-            y_test,
+            model_class, X_train, y_train, X_test, y_test,
             model_params=params,
-            model_name=model_name,
+            model_name=model_name
         )
-        print(
-            f"{model_name} - Accuracy: {performance.accuracy:.3f}, F1: {performance.f1_score:.3f}"
-        )
+        print(f"{model_name} - Accuracy: {performance.accuracy:.3f}, F1: {performance.f1_score:.3f}")
 
         # Check model health
         health = pipeline.check_model_health(model_name)
         print(f"Model health: {health['status']}, Confidence: {health.get('confidence', 0):.3f}")
 
     # Save pipeline
-    pipeline.save_pipeline("ml_pipeline_v2")
+    pipeline.save_pipeline('ml_pipeline_v2')
 
     # Get summary
     summary = pipeline.get_pipeline_summary()

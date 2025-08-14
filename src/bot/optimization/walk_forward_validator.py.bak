@@ -302,15 +302,15 @@ class WalkForwardValidator:
         validated_results = []
         top_strategies = results_df.nlargest(50, "sharpe")  # Top 50 by Sharpe
 
-        # Use itertuples for better performance
-        for row in top_strategies.itertuples():
+        for idx, row in top_strategies.iterrows():
             try:
                 # Extract parameters
                 parameters = {}
-                for col in row._fields:
+                for col in row.index:
                     if col.startswith("param_"):
                         param_name = col.replace("param_", "")
-                        parameters[param_name] = getattr(row, col)
+                        parameters[param_name] = row[col]
+
                 if not parameters:
                     continue
 

@@ -349,13 +349,11 @@ class HistoricalStressTester:
 
         # Calculate losses
         portfolio_loss = portfolio_value * abs(scenario_data["market_shock"])
-        position_losses = dict(
-            zip(
-                positions["symbol"],
-                positions["value"] * abs(scenario_data["market_shock"]),
-                strict=False,
-            )
-        )
+        position_losses = {
+            row["symbol"]: row["value"] * abs(scenario_data["market_shock"])
+            for _, row in positions.iterrows()
+        }
+
         # Create result
         result = StressTestResult(
             scenario=scenario,

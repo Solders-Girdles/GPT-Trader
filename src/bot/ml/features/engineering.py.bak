@@ -2,23 +2,23 @@
 Main feature engineering pipeline for ML models
 """
 
+import pandas as pd
+import numpy as np
+from typing import Dict, List, Optional, Tuple, Any
 import logging
 from datetime import datetime
-from typing import Any
+import json
 
-import numpy as np
-import pandas as pd
-
-from ...core.base import ComponentConfig
-from ..base import FeatureEngineer
-from .market_regime import MarketRegimeFeatures
 from .technical import TechnicalFeatureEngineer
+from .market_regime import MarketRegimeFeatures
+from ..base import FeatureEngineer
+from ...core.base import ComponentConfig
 
 
 class FeatureEngineeringPipeline(FeatureEngineer):
     """Main pipeline for generating and managing ML features"""
 
-    def __init__(self, config: ComponentConfig | None = None, db_manager=None):
+    def __init__(self, config: Optional[ComponentConfig] = None, db_manager=None):
         """Initialize feature engineering pipeline
 
         Args:
@@ -27,7 +27,8 @@ class FeatureEngineeringPipeline(FeatureEngineer):
         """
         if config is None:
             config = ComponentConfig(
-                component_id="feature_pipeline", component_type="feature_engineer"
+                component_id='feature_pipeline',
+                component_type='feature_engineer'
             )
         super().__init__(config)
 
@@ -40,20 +41,20 @@ class FeatureEngineeringPipeline(FeatureEngineer):
 
         # Feature configuration
         self.feature_config = {
-            "technical": True,
-            "regime": True,
-            "interactions": True,
-            "lags": [1, 2, 5],
-            "rolling_windows": [5, 10, 20],
+            'technical': True,
+            'regime': True,
+            'interactions': True,
+            'lags': [1, 2, 5],
+            'rolling_windows': [5, 10, 20]
         }
 
         # Feature metadata
         self.feature_metadata = {}
         self.feature_importance = {}
 
-    def generate_features(
-        self, data: pd.DataFrame, symbol: str | None = None, store_features: bool = True
-    ) -> pd.DataFrame:
+    def generate_features(self, data: pd.DataFrame,
+                        symbol: Optional[str] = None,
+                        store_features: bool = True) -> pd.DataFrame:
         """Generate all features from raw data
 
         Args:
@@ -70,30 +71,30 @@ class FeatureEngineeringPipeline(FeatureEngineer):
         features = pd.DataFrame(index=data.index)
 
         # Generate base features
-        if self.feature_config["technical"]:
+        if self.feature_config['technical']:
             technical_features = self.technical_engineer.generate_features(data)
             features = pd.concat([features, technical_features], axis=1)
             self.logger.debug(f"Generated {len(technical_features.columns)} technical features")
 
-        if self.feature_config["regime"]:
+        if self.feature_config['regime']:
             regime_features = self.regime_engineer.generate_features(data)
             features = pd.concat([features, regime_features], axis=1)
             self.logger.debug(f"Generated {len(regime_features.columns)} regime features")
 
         # Generate interaction features
-        if self.feature_config["interactions"]:
+        if self.feature_config['interactions']:
             interaction_features = self._generate_interaction_features(features)
             features = pd.concat([features, interaction_features], axis=1)
             self.logger.debug(f"Generated {len(interaction_features.columns)} interaction features")
 
         # Generate lag features
-        if self.feature_config["lags"]:
+        if self.feature_config['lags']:
             lag_features = self._generate_lag_features(features)
             features = pd.concat([features, lag_features], axis=1)
             self.logger.debug(f"Generated {len(lag_features.columns)} lag features")
 
         # Generate rolling features
-        if self.feature_config["rolling_windows"]:
+        if self.feature_config['rolling_windows']:
             rolling_features = self._generate_rolling_features(features)
             features = pd.concat([features, rolling_features], axis=1)
             self.logger.debug(f"Generated {len(rolling_features.columns)} rolling features")
@@ -128,32 +129,30 @@ class FeatureEngineeringPipeline(FeatureEngineer):
 
         # Define key interactions
         interaction_pairs = [
-            ("rsi_14", "volatility_20d"),
-            ("macd", "volume_ratio"),
-            ("adx", "returns_20d"),
-            ("bb_percent_20", "volume_ratio_20d"),
-            ("momentum_composite", "high_vol_regime"),
-            ("trend_consistency", "efficiency_ratio"),
+            ('rsi_14', 'volatility_20d'),
+            ('macd', 'volume_ratio'),
+            ('adx', 'returns_20d'),
+            ('bb_percent_20', 'volume_ratio_20d'),
+            ('momentum_composite', 'high_vol_regime'),
+            ('trend_consistency', 'efficiency_ratio')
         ]
 
         for feat1, feat2 in interaction_pairs:
             if feat1 in features.columns and feat2 in features.columns:
                 # Multiplicative interaction
-                interactions[f"{feat1}_x_{feat2}"] = features[feat1] * features[feat2]
+                interactions[f'{feat1}_x_{feat2}'] = features[feat1] * features[feat2]
 
                 # Ratio interaction
                 denominator = features[feat2].replace(0, np.nan)
-                interactions[f"{feat1}_div_{feat2}"] = features[feat1] / denominator
+                interactions[f'{feat1}_div_{feat2}'] = features[feat1] / denominator
 
         # Cross-sectional features
-        if "volatility_20d" in features.columns and "returns_20d" in features.columns:
-            interactions["sharpe_20d"] = features["returns_20d"] / (
-                features["volatility_20d"] + 1e-10
-            )
+        if 'volatility_20d' in features.columns and 'returns_20d' in features.columns:
+            interactions['sharpe_20d'] = features['returns_20d'] / (features['volatility_20d'] + 1e-10)
 
-        if "high_vol_regime" in features.columns and "ma_trend_20_50" in features.columns:
-            interactions["regime_trend_interaction"] = (
-                features["high_vol_regime"] * features["ma_trend_20_50"]
+        if 'high_vol_regime' in features.columns and 'ma_trend_20_50' in features.columns:
+            interactions['regime_trend_interaction'] = (
+                features['high_vol_regime'] * features['ma_trend_20_50']
             )
 
         return interactions
@@ -171,25 +170,20 @@ class FeatureEngineeringPipeline(FeatureEngineer):
 
         # Select important features to lag
         important_features = [
-            "rsi_14",
-            "macd",
-            "volatility_20d",
-            "returns_5d",
-            "volume_ratio",
-            "ma_trend_20_50",
-            "momentum_composite",
+            'rsi_14', 'macd', 'volatility_20d', 'returns_5d',
+            'volume_ratio', 'ma_trend_20_50', 'momentum_composite'
         ]
 
         available_features = [f for f in important_features if f in features.columns]
 
         for feature in available_features:
-            for lag in self.feature_config["lags"]:
-                lag_features[f"{feature}_lag{lag}"] = features[feature].shift(lag)
+            for lag in self.feature_config['lags']:
+                lag_features[f'{feature}_lag{lag}'] = features[feature].shift(lag)
 
                 # Difference from lagged value
-                lag_features[f"{feature}_diff_lag{lag}"] = features[feature] - features[
-                    feature
-                ].shift(lag)
+                lag_features[f'{feature}_diff_lag{lag}'] = (
+                    features[feature] - features[feature].shift(lag)
+                )
 
         return lag_features
 
@@ -206,36 +200,33 @@ class FeatureEngineeringPipeline(FeatureEngineer):
 
         # Select features for rolling calculations
         rolling_candidates = [
-            "returns_1d",
-            "volatility_20d",
-            "volume_ratio",
-            "rsi_14",
-            "momentum_composite",
+            'returns_1d', 'volatility_20d', 'volume_ratio',
+            'rsi_14', 'momentum_composite'
         ]
 
         available_features = [f for f in rolling_candidates if f in features.columns]
 
         for feature in available_features:
-            for window in self.feature_config["rolling_windows"]:
+            for window in self.feature_config['rolling_windows']:
                 # Rolling statistics
-                rolling_features[f"{feature}_roll_mean_{window}"] = (
+                rolling_features[f'{feature}_roll_mean_{window}'] = (
                     features[feature].rolling(window).mean()
                 )
-                rolling_features[f"{feature}_roll_std_{window}"] = (
+                rolling_features[f'{feature}_roll_std_{window}'] = (
                     features[feature].rolling(window).std()
                 )
-                rolling_features[f"{feature}_roll_min_{window}"] = (
+                rolling_features[f'{feature}_roll_min_{window}'] = (
                     features[feature].rolling(window).min()
                 )
-                rolling_features[f"{feature}_roll_max_{window}"] = (
+                rolling_features[f'{feature}_roll_max_{window}'] = (
                     features[feature].rolling(window).max()
                 )
 
                 # Z-score
-                mean = rolling_features[f"{feature}_roll_mean_{window}"]
-                std = rolling_features[f"{feature}_roll_std_{window}"]
-                rolling_features[f"{feature}_zscore_{window}"] = (features[feature] - mean) / (
-                    std + 1e-10
+                mean = rolling_features[f'{feature}_roll_mean_{window}']
+                std = rolling_features[f'{feature}_roll_std_{window}']
+                rolling_features[f'{feature}_zscore_{window}'] = (
+                    (features[feature] - mean) / (std + 1e-10)
                 )
 
         return rolling_features
@@ -289,42 +280,29 @@ class FeatureEngineeringPipeline(FeatureEngineer):
         records = []
         batch_size = 1000
 
-        # Use vectorized operations instead of iterrows
-        feature_melted = features.reset_index().melt(
-            id_vars=[features.index.name or "timestamp"],
-            var_name="feature_name",
-            value_name="feature_value",
-        )
+        for timestamp, row in features.iterrows():
+            for feature_name, value in row.items():
+                if pd.notna(value) and np.isfinite(value):
+                    records.append({
+                        'symbol': symbol,
+                        'feature_date': timestamp,
+                        'feature_name': feature_name,
+                        'feature_value': float(value),
+                        'feature_group': self._get_feature_group(feature_name)
+                    })
 
-        # Filter out NaN and non-finite values
-        feature_melted = feature_melted[
-            pd.notna(feature_melted["feature_value"]) & np.isfinite(feature_melted["feature_value"])
-        ]
+            # Batch insert
+            if len(records) >= batch_size:
+                self._batch_insert_features(records)
+                records = []
 
-        # Add metadata columns
-        feature_melted["symbol"] = symbol
-        feature_melted["feature_date"] = feature_melted[features.index.name or "timestamp"]
-        feature_melted["feature_group"] = feature_melted["feature_name"].apply(
-            self._get_feature_group
-        )
-        feature_melted["feature_value"] = feature_melted["feature_value"].astype(float)
-
-        # Convert to records for batch insertion
-        records = feature_melted[
-            ["symbol", "feature_date", "feature_name", "feature_value", "feature_group"]
-        ].to_dict("records")
-
-        # Batch insert in chunks
-        for i in range(0, len(records), batch_size):
-            batch = records[i : i + batch_size]
-            self._batch_insert_features(batch)
         # Insert remaining records
         if records:
             self._batch_insert_features(records)
 
         self.logger.info(f"Stored {len(features.columns) * len(features)} features for {symbol}")
 
-    def _batch_insert_features(self, records: list[dict]):
+    def _batch_insert_features(self, records: List[Dict]):
         """Batch insert features into database
 
         Args:
@@ -337,13 +315,8 @@ class FeatureEngineeringPipeline(FeatureEngineer):
                     """INSERT OR REPLACE INTO feature_store
                        (symbol, feature_date, feature_name, feature_value, feature_group)
                        VALUES (?, ?, ?, ?, ?)""",
-                    (
-                        record["symbol"],
-                        record["feature_date"],
-                        record["feature_name"],
-                        record["feature_value"],
-                        record.get("feature_group", "misc"),
-                    ),
+                    (record['symbol'], record['feature_date'], record['feature_name'],
+                     record['feature_value'], record.get('feature_group', 'misc'))
                 )
         except Exception as e:
             self.logger.error(f"Error storing features: {e}")
@@ -357,26 +330,26 @@ class FeatureEngineeringPipeline(FeatureEngineer):
         Returns:
             Feature group name
         """
-        if any(ind in feature_name for ind in ["rsi", "macd", "stoch", "williams"]):
-            return "momentum"
-        elif any(ind in feature_name for ind in ["sma", "ema", "ma_", "adx", "trend"]):
-            return "trend"
-        elif any(ind in feature_name for ind in ["volatility", "atr", "bb_", "vol_"]):
-            return "volatility"
-        elif any(ind in feature_name for ind in ["volume", "obv", "ad", "mfi"]):
-            return "volume"
-        elif any(ind in feature_name for ind in ["returns", "momentum", "roc"]):
-            return "returns"
-        elif any(ind in feature_name for ind in ["regime", "entropy", "hurst"]):
-            return "regime"
-        elif "_x_" in feature_name or "_div_" in feature_name:
-            return "interaction"
-        elif "lag" in feature_name:
-            return "lag"
-        elif "roll_" in feature_name or "zscore" in feature_name:
-            return "rolling"
+        if any(ind in feature_name for ind in ['rsi', 'macd', 'stoch', 'williams']):
+            return 'momentum'
+        elif any(ind in feature_name for ind in ['sma', 'ema', 'ma_', 'adx', 'trend']):
+            return 'trend'
+        elif any(ind in feature_name for ind in ['volatility', 'atr', 'bb_', 'vol_']):
+            return 'volatility'
+        elif any(ind in feature_name for ind in ['volume', 'obv', 'ad', 'mfi']):
+            return 'volume'
+        elif any(ind in feature_name for ind in ['returns', 'momentum', 'roc']):
+            return 'returns'
+        elif any(ind in feature_name for ind in ['regime', 'entropy', 'hurst']):
+            return 'regime'
+        elif '_x_' in feature_name or '_div_' in feature_name:
+            return 'interaction'
+        elif 'lag' in feature_name:
+            return 'lag'
+        elif 'roll_' in feature_name or 'zscore' in feature_name:
+            return 'rolling'
         else:
-            return "misc"
+            return 'misc'
 
     def _update_metadata(self, features: pd.DataFrame):
         """Update feature metadata
@@ -385,21 +358,21 @@ class FeatureEngineeringPipeline(FeatureEngineer):
             features: DataFrame with features
         """
         self.feature_metadata = {
-            "n_features": len(features.columns),
-            "feature_names": list(features.columns),
-            "feature_groups": {},
-            "generation_time": datetime.now().isoformat(),
-            "data_points": len(features),
+            'n_features': len(features.columns),
+            'feature_names': list(features.columns),
+            'feature_groups': {},
+            'generation_time': datetime.now().isoformat(),
+            'data_points': len(features)
         }
 
         # Count features by group
         for feature in features.columns:
             group = self._get_feature_group(feature)
-            self.feature_metadata["feature_groups"][group] = (
-                self.feature_metadata["feature_groups"].get(group, 0) + 1
+            self.feature_metadata['feature_groups'][group] = (
+                self.feature_metadata['feature_groups'].get(group, 0) + 1
             )
 
-    def get_feature_metadata(self) -> dict[str, Any]:
+    def get_feature_metadata(self) -> Dict[str, Any]:
         """Get feature metadata
 
         Returns:
@@ -439,16 +412,20 @@ class FeatureEngineeringPipeline(FeatureEngineer):
         df = pd.DataFrame(results)
 
         # Pivot to wide format
-        features = df.pivot(index="feature_date", columns="feature_name", values="feature_value")
+        features = df.pivot(
+            index='feature_date',
+            columns='feature_name',
+            values='feature_value'
+        )
 
         # Convert index to datetime
         features.index = pd.to_datetime(features.index)
 
         return features
 
-    def select_features(
-        self, features: pd.DataFrame, method: str = "importance", n_features: int = 50
-    ) -> list[str]:
+    def select_features(self, features: pd.DataFrame,
+                       method: str = 'importance',
+                       n_features: int = 50) -> List[str]:
         """Select most important features
 
         Args:
@@ -459,12 +436,12 @@ class FeatureEngineeringPipeline(FeatureEngineer):
         Returns:
             List of selected feature names
         """
-        if method == "variance":
+        if method == 'variance':
             # Select features with highest variance
             variances = features.var()
             selected = variances.nlargest(n_features).index.tolist()
 
-        elif method == "correlation":
+        elif method == 'correlation':
             # Select features with low correlation to each other
             corr_matrix = features.corr().abs()
             selected = []
@@ -490,6 +467,6 @@ class FeatureEngineeringPipeline(FeatureEngineer):
                 selected = importance_df.nlargest(n_features).index.tolist()
             else:
                 # Fallback to variance
-                return self.select_features(features, method="variance", n_features=n_features)
+                return self.select_features(features, method='variance', n_features=n_features)
 
         return selected

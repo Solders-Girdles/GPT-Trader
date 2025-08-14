@@ -4,14 +4,15 @@ Comprehensive workflow test with full dependencies.
 Tests the complete trading workflow and identifies optimization opportunities.
 """
 
-import logging
-import os
 import sys
-import time
-from datetime import datetime, timedelta
-
-import numpy as np
+import os
 import pandas as pd
+import numpy as np
+import time
+import logging
+from datetime import datetime, timedelta
+from typing import Dict, Any, List, Tuple
+import asyncio
 
 # Add src to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
@@ -119,7 +120,7 @@ def test_pandas_performance():
         # Memory usage
         memory_mb = df.memory_usage(deep=True).sum() / 1024 / 1024
 
-        logger.info("✅ Pandas performance test completed")
+        logger.info(f"✅ Pandas performance test completed")
         logger.info(f"   Data generation (5000 days): {generation_time:.3f}s")
         logger.info(f"   Indicator calculation: {indicator_time:.3f}s")
         logger.info(f"   Signal generation: {signal_time:.3f}s")
@@ -171,7 +172,7 @@ def calculate_atr_vectorized(df: pd.DataFrame, period: int = 14) -> pd.Series:
 
 def calculate_bollinger_bands(
     prices: pd.Series, period: int = 20, std_dev: float = 2.0
-) -> tuple[pd.Series, pd.Series]:
+) -> Tuple[pd.Series, pd.Series]:
     """Calculate Bollinger Bands"""
     sma = prices.rolling(period).mean()
     std = prices.rolling(period).std()
@@ -223,7 +224,7 @@ def test_demo_ma_strategy_performance():
                 }
             )
 
-        logger.info("✅ Demo MA strategy performance test completed")
+        logger.info(f"✅ Demo MA strategy performance test completed")
         for i, result in enumerate(results):
             logger.info(f"   Config {i+1}: {result['params']}")
             logger.info(f"      Execution time: {result['execution_time']:.3f}s")
@@ -258,48 +259,43 @@ def test_backtest_performance():
         # Simulate trade execution
         start_time = time.time()
 
-        returns = []
         trades = []
         position = 0
         entry_price = 0
 
-        # Use itertuples for better performance
-        for row in df.itertuples():
-            if row.Position == 1 and position == 0:  # Entry
+        for idx, row in df.iterrows():
+            if row["Position"] == 1 and position == 0:  # Entry
                 position = 1
-                entry_price = row.Close
+                entry_price = row["Close"]
                 trades.append(
                     {
-                        "entry_date": row.Index,
+                        "entry_date": idx,
                         "entry_price": entry_price,
                         "exit_date": None,
                         "exit_price": None,
-                        "pnl": None,
                         "return": None,
                     }
                 )
-            elif row.Position == 0 and position == 1:  # Exit
+            elif row["Position"] == -1 and position == 1:  # Exit
                 position = 0
-                exit_price = row.Close
-                if trades:
-                    trades[-1]["exit_date"] = row.Index
-                    trades[-1]["exit_price"] = exit_price
-                    pnl = exit_price - entry_price
-                    trades[-1]["pnl"] = pnl
-                    trades[-1]["return"] = pnl / entry_price
-                    returns.append(pnl / entry_price)
+                exit_price = row["Close"]
+                trades[-1]["exit_date"] = idx
+                trades[-1]["exit_price"] = exit_price
+                trades[-1]["return"] = (exit_price - entry_price) / entry_price
 
-        # Calculate final statistics after loop
         backtest_time = time.time() - start_time
-        total_trades = len(trades)
-        if returns:
-            win_rate = sum(1 for r in returns if r > 0) / len(returns)
-            avg_return = np.mean(returns)
-            total_return = np.prod([1 + r for r in returns]) - 1
-        else:
-            win_rate = avg_return = total_return = 0.0
 
-        logger.info("✅ Backtest performance simulation completed")
+        # Calculate performance metrics
+        if trades:
+            returns = [t["return"] for t in trades if t["return"] is not None]
+            total_trades = len(returns)
+            win_rate = sum(1 for r in returns if r > 0) / total_trades if total_trades > 0 else 0
+            avg_return = np.mean(returns) if returns else 0
+            total_return = np.prod([1 + r for r in returns]) - 1 if returns else 0
+        else:
+            total_trades = win_rate = avg_return = total_return = 0
+
+        logger.info(f"✅ Backtest performance simulation completed")
         logger.info(f"   Backtest time: {backtest_time:.3f}s")
         logger.info(f"   Total trades: {total_trades}")
         logger.info(f"   Win rate: {win_rate:.1%}")
@@ -365,7 +361,7 @@ def test_optimization_simulation():
         # Find best parameters
         best_result = max(results, key=lambda x: x["sharpe"])
 
-        logger.info("✅ Optimization simulation completed")
+        logger.info(f"✅ Optimization simulation completed")
         logger.info(f"   Optimization time: {optimization_time:.3f}s")
         logger.info(f"   Combinations tested: {len(combinations)}")
         logger.info(f"   Time per combination: {optimization_time/len(combinations)*1000:.1f}ms")
@@ -435,7 +431,7 @@ def analyze_workflow_scalability():
             large_result["size"] / small_result["size"]
         )
 
-        logger.info("✅ Scalability analysis completed")
+        logger.info(f"✅ Scalability analysis completed")
         logger.info(f"   Data generation scaling factor: {data_scaling:.2f} (1.0 = linear)")
         logger.info(f"   Indicator calculation scaling factor: {indicator_scaling:.2f}")
         logger.info(f"   Memory usage scaling factor: {memory_scaling:.2f}")
@@ -549,7 +545,7 @@ def main():
             logger.error(f"💥 {test_name}: CRASHED - {e}")
 
     # Generate optimization priorities
-    logger.info("\n📋 Running: Optimization Analysis")
+    logger.info(f"\n📋 Running: Optimization Analysis")
     logger.info("-" * 50)
     priorities = identify_optimization_priorities()
 
@@ -563,7 +559,7 @@ def main():
         logger.warning(f"⚠️  {len(tests) - passed} test(s) failed - investigation needed")
 
     # Performance Analysis
-    logger.info("\n⚡ PERFORMANCE ANALYSIS:")
+    logger.info(f"\n⚡ PERFORMANCE ANALYSIS:")
 
     if "Pandas Performance" in results:
         perf = results["Pandas Performance"]
@@ -585,7 +581,7 @@ def main():
         )
 
     # Optimization Roadmap
-    logger.info("\n🛣️  OPTIMIZATION ROADMAP:")
+    logger.info(f"\n🛣️  OPTIMIZATION ROADMAP:")
     logger.info("   Phase 1 (Immediate - High Impact):")
     logger.info("   ├─ Vectorize strategy calculations")
     logger.info("   ├─ Install TA-Lib for indicators")
@@ -602,7 +598,7 @@ def main():
     logger.info("   └─ Advanced ML for parameter selection")
 
     # Next Steps
-    logger.info("\n🎯 IMMEDIATE NEXT STEPS:")
+    logger.info(f"\n🎯 IMMEDIATE NEXT STEPS:")
 
     if passed >= len(tests) - 1:
         logger.info("✅ System is ready for optimization!")

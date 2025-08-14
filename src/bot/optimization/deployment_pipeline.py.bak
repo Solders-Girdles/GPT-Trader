@@ -168,22 +168,20 @@ class DeploymentPipeline:
             & (results_df["cagr"] >= self.config.min_cagr)
         ].copy()
 
-        # Use itertuples for better performance
-        for row in filtered.itertuples():
+        for _, row in filtered.iterrows():
             candidate = StrategyCandidate(
                 strategy_name="trend_breakout",
                 parameters=self._extract_parameters(row),
                 performance_metrics={
-                    "sharpe": row.sharpe,
-                    "cagr": row.cagr,
-                    "max_drawdown": row.max_drawdown,
-                    "total_return": getattr(row, "total_return", 0),
-                    "win_rate": getattr(row, "win_rate", 0.5),
-                    "profit_factor": getattr(row, "profit_factor", 1.0),
-                    "n_trades": row.n_trades,
+                    "sharpe": row["sharpe"],
+                    "cagr": row["cagr"],
+                    "max_drawdown": row["max_drawdown"],
+                    "total_return": row.get("total_return", 0),
+                    "n_trades": row["n_trades"],
                 },
-                validation_date=datetime.now(),
-                rank=row.Index + 1,
+                robustness_metrics={},
+                walk_forward_results=[],
+                rank_score=0.0,
             )
             self.candidates.append(candidate)
 

@@ -164,7 +164,10 @@ class TestRiskMetricsEngine:
         assert hasattr(metrics, 'sector_exposure')
 
         # Check calculations
-        total_value = (sample_positions["quantity"] * sample_positions["current_price"]).sum()
+        total_value = sum(
+            row['quantity'] * row['current_price']
+            for _, row in sample_positions.iterrows()
+        )
         assert metrics.gross_exposure == total_value
 
         # All positions are long, so net = gross

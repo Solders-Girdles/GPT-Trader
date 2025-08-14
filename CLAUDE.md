@@ -1,7 +1,419 @@
 # Claude Code Assistant Guide for GPT-Trader
 
-## Project Overview
-GPT-Trader is an advanced ML-powered autonomous portfolio management system for algorithmic trading. It predicts market movements and executes trades with disciplined risk management.
+## ⚠️ CRITICAL PROJECT STATUS - MUST READ
+
+**Actual Completion: 35-45%** (NOT the 90%+ claimed in README)
+**Current State: BROKEN** - CLI doesn't work, tests failing, no live trading
+
+### What's Actually Working:
+- Individual ML components (src/bot/ml/)
+- Basic strategy framework (2 strategies)
+- Some backtesting functionality
+- Data download from yfinance
+
+### What's BROKEN (Critical):
+- **CLI completely broken** - ImportError: cannot import name 'BacktestEngine'
+- **Test suite failing** - 76% of tests have errors
+- **No production orchestrator** - File claimed in README doesn't exist
+- **Modules disconnected** - Components exist but don't integrate
+
+### False Claims to Ignore:
+- ❌ "Production-ready" - FALSE
+- ❌ "Phase 4 Complete" - FALSE
+- ❌ "85%+ test success rate" - FALSE (actually 24%)
+- ❌ "Real-time execution infrastructure" - MISSING
+
+## Agent Instructions
+
+**PRIORITY**: We are executing a 30-day recovery plan to bring the system from 35% to 65-75% functional.
+
+**CURRENT PHASE**: Emergency Fixes (Week 1)
+**ACTIVE BRANCH**: fix/critical-cli-imports
+
+### How to Choose Tasks:
+1. Check the Recovery Task List below
+2. Find the first task marked [ ] (unchecked)
+3. Work on that task using the context provided
+4. Check it off [x] when complete
+5. Commit with format: `[TASK-ID] type: description`
+
+### Critical Context for Agents:
+- **DO NOT TRUST README.md** - It contains false claims
+- **TEST EVERYTHING** - Assume nothing works until proven
+- **USE CORRECT IMPORTS** - BacktestEngine doesn't exist, use PortfolioBacktestEngine
+- **CHECK ERROR LOGS** - Most features fail silently
+
+---
+
+## 🚨 30-Day Recovery Plan Task List
+
+### Week 1: Emergency Fixes (Branch: fix/critical-cli-imports)
+**Goal: Make the system minimally runnable**
+
+#### Fix CLI Import Errors (CRITICAL)
+- [ ] **CLI-001**: Find correct BacktestEngine class
+  - Context: Check src/bot/backtest/engine_portfolio.py for PortfolioBacktestEngine
+  - Error: ImportError in src/bot/cli.py line 10
+  - Test: `python -c "from bot.cli import main"`
+
+- [ ] **CLI-002**: Fix import in src/bot/cli.py
+  - Current: `from bot.backtest.engine import BacktestEngine`
+  - Fix to: `from bot.backtest.engine_portfolio import PortfolioBacktestEngine`
+  - Verify: `poetry run gpt-trader --help` should work
+
+- [ ] **CLI-003**: Audit all CLI module imports
+  - Files: src/bot/cli/*.py
+  - Test each: `python -c "from bot.cli.{module} import *"`
+
+- [ ] **CLI-004**: Test each CLI command
+  - Commands: backtest, optimize, paper, live
+  - Document which work/fail
+
+- [ ] **CLI-005**: Create CLI smoke test
+  - File: scripts/test_cli_smoke.py
+  - Add to CI pipeline
+
+#### Repair Test Suite
+- [ ] **TEST-001**: Fix test fixture imports
+  - Files: tests/conftest.py, tests/factories.py
+  - Current: 16 import errors during collection
+
+- [ ] **TEST-002**: Fix unit test errors
+  - Run: `pytest -v 2>&1 | grep ImportError`
+  - Fix each systematically
+
+- [ ] **TEST-003**: Fix integration tests
+  - Focus: Database, ML pipeline, strategies
+
+- [ ] **TEST-004**: Create minimal baseline
+  - 20 critical tests that MUST pass
+
+- [ ] **TEST-005**: Configure pytest properly
+  - Update pytest.ini with markers
+
+#### Create Working Demo
+- [ ] **DEMO-001**: Fix standalone_demo.py
+  - Current: Import errors
+  - Goal: Runs end-to-end
+
+- [ ] **DEMO-002**: Simple backtest demo
+  - One strategy, one symbol, 30 days
+  - Clear profit/loss output
+
+- [ ] **DEMO-003**: Data download demo
+  - Download AAPL, MSFT, GOOGL
+  - Save to data/historical/
+
+- [ ] **DEMO-004**: Document requirements
+  - Create demos/README.md
+  - Include .env.example
+
+### Week 2: Core Integration (Branch: fix/core-integration)
+**Goal: Connect the disconnected modules**
+
+#### Create Production Orchestrator
+- [ ] **ORCH-001**: Design architecture
+  - File: docs/architecture/orchestrator_design.md
+  - Define component interactions
+
+- [ ] **ORCH-002**: Implement skeleton
+  - File: src/bot/live/production_orchestrator.py
+  - Basic event loop and registration
+
+- [ ] **ORCH-003**: Wire data pipeline
+  - Connect market data sources
+  - Add validation and caching
+
+- [ ] **ORCH-004**: Integrate strategies
+  - Connect ML predictions to selection
+  - Add performance tracking
+
+- [ ] **ORCH-005**: Add risk management
+  - Position limits, drawdown protection
+  - Stop-loss logic
+
+- [ ] **ORCH-006**: Connect execution
+  - Order management
+  - Trade tracking
+
+- [ ] **ORCH-007**: Add monitoring
+  - Health checks, metrics
+  - Alert triggers
+
+#### Fix Module Integration
+- [ ] **INT-001**: Create event bus
+  - File: src/bot/core/event_bus.py
+  - Pub/sub pattern for modules
+
+- [ ] **INT-002**: ML → Strategy connection
+  - Predictions influence selection
+  - Add confidence scoring
+
+- [ ] **INT-003**: Strategy → Portfolio
+  - Signals become positions
+  - Apply constraints
+
+- [ ] **INT-004**: Portfolio → Risk
+  - Validate all changes
+  - Continuous monitoring
+
+- [ ] **INT-005**: Risk → Execution
+  - Modify/block orders
+  - Emergency controls
+
+#### Database Integration
+- [ ] **DB-001**: Design schema
+  - Tables: trades, positions, performance, models
+  - File: migrations/001_initial_schema.sql
+
+- [ ] **DB-002**: Implement models
+  - SQLAlchemy + Pydantic
+  - File: src/bot/database/models.py
+
+- [ ] **DB-003**: Data access layer
+  - CRUD operations
+  - File: src/bot/database/repository.py
+
+- [ ] **DB-004**: Utilities
+  - Backup, cleanup, monitoring scripts
+
+### Week 3: Make It Usable (Branch: feature/working-strategies)
+**Goal: Create actual user value**
+
+#### Complete Working Strategies
+- [ ] **STRAT-001**: Fix demo_ma
+  - Signal generation errors
+  - Add position sizing
+
+- [ ] **STRAT-002**: Fix trend_breakout
+  - ATR calculations
+  - Entry/exit logic
+
+- [ ] **STRAT-003**: Create momentum
+  - RSI + volume strategy
+  - New implementation
+
+- [ ] **STRAT-004**: Validation framework
+  - Test all strategies work
+
+#### Paper Trading Pipeline
+- [ ] **PAPER-001**: Alpaca integration
+  - Fix authentication
+  - Test order placement
+
+- [ ] **PAPER-002**: Paper mode
+  - Configuration switch
+  - Simulated execution
+
+- [ ] **PAPER-003**: Deployment
+  - Script: deploy_paper.py
+  - Auto-restart logic
+
+- [ ] **PAPER-004**: Dashboard
+  - Show positions, P&L
+  - Trade history
+
+#### Basic Monitoring
+- [ ] **MON-001**: Core metrics
+  - Returns, drawdown, Sharpe
+  - Trade statistics
+
+- [ ] **MON-002**: Alerting
+  - Email, Slack integration
+  - Critical event notifications
+
+- [ ] **MON-003**: Dashboard
+  - Streamlit UI
+  - Real-time updates
+
+- [ ] **MON-004**: Logging
+  - Structured JSON logs
+  - Rotation and search
+
+### Week 4: Documentation Reality (Branch: docs/reality-update)
+**Goal: Align docs with reality**
+
+#### Update README
+- [ ] **DOC-001**: Remove false claims
+  - Remove "production-ready"
+  - Fix percentages
+
+- [ ] **DOC-002**: Document capabilities
+  - What actually works
+  - Known issues
+
+- [ ] **DOC-003**: Realistic roadmap
+  - Achievable timeline
+  - Resource requirements
+
+#### Fix Examples
+- [ ] **EX-001**: Audit examples
+  - Test each one
+  - Document failures
+
+- [ ] **EX-002**: Fix working ones
+  - Update imports
+  - Add error handling
+
+- [ ] **EX-003**: Archive broken
+  - Move to archived/
+  - Add deprecation notes
+
+- [ ] **EX-004**: Create new
+  - Simple, working examples
+  - Clear progression
+
+#### Status Report
+- [ ] **STAT-001**: Current state
+  - Module percentages
+  - Dependency tree
+
+- [ ] **STAT-002**: Issues list
+  - Categorized by severity
+  - Reproduction steps
+
+- [ ] **STAT-003**: Success metrics
+  - Clear "done" criteria
+  - Quality targets
+
+---
+
+## 🔧 Critical Quick Reference for Agents
+
+### Correct Imports (Use These!)
+```python
+# WRONG (causes ImportError):
+from bot.backtest.engine import BacktestEngine
+
+# CORRECT:
+from bot.backtest.engine_portfolio import PortfolioBacktestEngine
+
+# WRONG:
+from bot.live.production_orchestrator import ProductionOrchestrator
+
+# CORRECT (file doesn't exist yet):
+# Need to create this file first!
+```
+
+### Working File Locations
+```
+✅ WORKING:
+- src/bot/ml/integrated_pipeline.py (ML orchestration)
+- src/bot/ml/auto_retraining.py (retraining system)
+- src/bot/strategy/demo_ma.py (simple strategy)
+- src/bot/strategy/trend_breakout.py (breakout strategy)
+
+❌ BROKEN/MISSING:
+- src/bot/live/production_orchestrator.py (DOESN'T EXIST)
+- src/bot/cli.py (import errors)
+- Most tests in tests/ (76% failing)
+- All examples in examples/ (import errors)
+```
+
+### Common Errors & Fixes
+| Error | Cause | Fix |
+|-------|-------|-----|
+| `ImportError: cannot import name 'BacktestEngine'` | Class doesn't exist | Use PortfolioBacktestEngine |
+| `ModuleNotFoundError: No module named 'bot'` | Python path issue | Add `sys.path.insert(0, 'src')` |
+| `pytest: 16 errors` | Test fixtures broken | Fix imports in conftest.py |
+| `No production_orchestrator` | File missing | Create it (ORCH-002) |
+
+### Testing Commands
+```bash
+# Check if CLI works (currently broken):
+poetry run gpt-trader --help
+
+# Test specific import:
+python -c "from bot.backtest.engine_portfolio import PortfolioBacktestEngine; print('Success')"
+
+# Run tests (expect failures):
+pytest -v 2>&1 | grep -E "passed|failed|error"
+
+# Test data download (should work):
+python -c "from bot.dataflow.sources.yfinance_source import YFinanceSource; print('Import OK')"
+```
+
+### Git Workflow for Recovery
+```bash
+# Start work on emergency fixes:
+git checkout -b fix/critical-cli-imports
+
+# Commit format:
+git commit -m "[CLI-001] fix: locate BacktestEngine class"
+
+# After completing Week 1 tasks:
+git push origin fix/critical-cli-imports
+# Create PR titled: "Emergency Fixes - Make System Runnable"
+```
+
+---
+
+## 📊 Success Criteria by Phase
+
+### Week 1 Success (Emergency Fixes)
+**Must achieve ALL of these:**
+- [ ] CLI loads without import errors
+- [ ] At least 50% of tests pass (up from 24%)
+- [ ] One demo runs completely end-to-end
+- [ ] Can run: `poetry run gpt-trader backtest --help`
+
+### Week 2 Success (Core Integration)
+**Must achieve:**
+- [ ] Orchestrator file exists and runs
+- [ ] 3+ modules communicate via event bus
+- [ ] Database stores at least one trade
+- [ ] Can run basic backtest via CLI
+
+### Week 3 Success (User Features)
+**Must achieve:**
+- [ ] 3 strategies complete backtests
+- [ ] Paper trading places mock orders
+- [ ] Dashboard displays some metrics
+- [ ] Monitoring shows system health
+
+### Week 4 Success (Documentation)
+**Must achieve:**
+- [ ] README honest about state
+- [ ] 3+ examples run without errors
+- [ ] Clear roadmap published
+- [ ] Status report accurate
+
+### Overall Recovery Success
+**Target: 65-75% functional** (up from 35-45%)
+- Working CLI with 5+ commands
+- 3 validated strategies
+- Paper trading operational
+- 80%+ tests passing
+- Honest documentation
+
+---
+
+## Project Structure (ACTUAL vs CLAIMED)
+
+```
+GPT-Trader/
+├── src/bot/
+│   ├── ml/                              ✅ 85% (WORKING)
+│   │   ├── integrated_pipeline.py       ✅ Exists, complex
+│   │   ├── auto_retraining.py          ✅ Exists, 1074 lines
+│   │   └── deep_learning/              ✅ Exists, untested
+│   ├── live/                            ⚠️  45% (PARTIAL)
+│   │   ├── production_orchestrator.py  ❌ MISSING (claimed to exist)
+│   │   ├── strategy_selector.py        ✅ Exists
+│   │   └── trading_engine.py           ✅ Exists, not integrated
+│   ├── strategy/                        ⚠️  75% (2 WORKING)
+│   │   ├── demo_ma.py                  ✅ Works
+│   │   ├── trend_breakout.py           ✅ Works
+│   │   └── [others]                    ❌ Stubs/broken
+│   ├── cli/                            ❌ 15% (BROKEN)
+│   │   └── *.py                        ❌ Import errors
+│   └── dashboard/                       ⚠️  25% (MINIMAL)
+│       └── streamlit_app.py            ⚠️  UI only, no data
+├── tests/                               ❌ 24% passing
+│   └── 21 files with 16 errors
+└── examples/                            ❌ 0% (ALL BROKEN)
+    └── All have import errors
+```
 
 ---
 
@@ -14,160 +426,130 @@ GPT-Trader is an advanced ML-powered autonomous portfolio management system for 
 
 ---
 
-## Agentic Playbook (mechanical)
-**Explore (read-only)**
-Read {paths}. Do not write code. Output: 10-bullet architecture summary, 5 risks, smallest viable change. If unknowns → `planner`.
-
-**Plan**
-`planner`: For **{TASK-ID}**, output ≤8 steps, affected files, test names, perf checks, rollback.
-
-**Implement**
-Do **step 1 only**. Keep edits ≤5 files or ≤200 LOC.
-Run `test-runner`. If failing, call `debugger` for root cause + minimal patch; apply fix.
-Repeat until step 1 passes, then **STOP** and report.
-
-**Review**
-`agentic-code-reviewer`: Review diff for **{TASK-ID}**. Return CRITICAL/HIGH/NICE-TO-HAVE with file:line. Apply only CRITICAL/HIGH now.
-
-**Doc & PR**
-Update touched docs. Open PR:
-- **Title**: `{TASK-ID}: {summary}`
-- **Body**: goals, changes, tests, risks, rollback, `git diff --stat`.
-Pause for human approval.
-
----
-
 ## Command Registry
 # SoT & drift
 - `python scripts/generate_filemap.py`
 - `rg -n "src/bot/|python -m src\.bot|docker-compose|pytest" docs CLAUDE.md`
 - `python scripts/doc_check.py --files CLAUDE.md docs/**/*.md`
 
-# Test / perf
-- `pytest -q`
-- `pytest tests/performance/benchmark_consolidated.py -q`
+# Test / perf (MOSTLY BROKEN)
+- `pytest -q` (76% failing)
+- `pytest tests/performance/benchmark_consolidated.py -q` (untested)
 
-# Ops
-- `python -m src.bot.cli dashboard`
-- `python -m src.bot.cli backtest --symbol AAPL --start 2024-01-01 --end 2024-06-30 --strategy trend_breakout`
-- `docker-compose -f deploy/postgres/docker-compose.yml up -d`
-
----
-
-## Project Structure
-
-GPT-Trader/
-├── src/bot/
-│   ├── ml/
-│   │   ├── integrated_pipeline.py
-│   │   ├── auto_retraining.py
-│   │   └── deep_learning/
-│   │       ├── lstm_architecture.py
-│   │       ├── lstm_data_pipeline.py
-│   │       ├── lstm_training.py
-│   │       ├── attention_mechanisms.py
-│   │       ├── transformer_models.py
-│   │       └── integrated_lstm_pipeline.py
-│   ├── monitoring/
-│   ├── risk/
-│   ├── data/
-│   │   └── sentiment/         # Planned
-│   └── strategy/              # Planned
-│       ├── multi_asset/
-│       └── options/
-├── docs/
-│   ├── PHASE_3_COMPLETION_REPORT.md
-│   ├── PHASE_4_TASK_BREAKDOWN.md
-│   └── OPERATIONS_RUNBOOK.md
-└── tests/
+# Ops (BROKEN)
+- `python -m src.bot.cli dashboard` (import errors)
+- `python -m src.bot.cli backtest --symbol AAPL --start 2024-01-01 --end 2024-06-30 --strategy trend_breakout` (broken)
+- `docker-compose -f deploy/postgres/docker-compose.yml up -d` (database only)
 
 ---
 
-## Core Agents (registered)
-| Agent | Purpose | Tools |
-|---|---|---|
-| `planner` | Turn a request into a ≤8-step plan w/ files & tests | `read`, `grep` |
-| `repo-structure-guardian` | SoT scans, drift reports, doc/path checks | `read`, `grep`, `shell` |
-| `test-runner` | Run tests, summarize failures, suggest smallest next fix | `read`, `shell` |
-| `debugger` | Localize root cause; propose minimal patch hunks | `read`, `grep` |
-| `agentic-code-reviewer` | Review diffs for correctness/security/perf/tests | `read`, `grep`, `git_diff` |
-| `trading-strategy-consultant` | Validate strategy logic & risk; outline tests | `read`, `grep` |
-| `performance-optimizer` | Run perf suites; pinpoint hotspots; suggest fixes | `read`, `grep`, `shell` |
+## 🤖 Agent-Specific Instructions
+
+### For backend-developer Agent
+**Focus**: Fix Python imports and module integration
+**Priority Files**:
+1. src/bot/cli.py (fix BacktestEngine import)
+2. src/bot/live/production_orchestrator.py (create this)
+3. tests/conftest.py (fix test fixtures)
+
+### For python-pro Agent
+**Focus**: Fix Python path issues and imports
+**Key Tasks**:
+- CLI-001 through CLI-005
+- TEST-001 through TEST-005
+**Known Issues**: Circular imports, missing __init__.py files
+
+### For code-archaeologist Agent
+**Focus**: Understand why system is broken
+**Investigate**:
+- When/why was BacktestEngine removed?
+- What's the actual architecture?
+- Which modules actually connect?
+
+### For test-automator Agent
+**Focus**: Fix test suite
+**Current State**: 76% failing
+**Goal**: 80% passing
+**Start with**: tests/conftest.py
+
+### For documentation-specialist Agent
+**Focus**: Update docs to reality
+**Priority**:
+1. Fix README.md false claims
+2. Update examples to working code
+3. Create honest status report
+
+### For performance-optimizer Agent
+**Note**: DO NOT OPTIMIZE YET
+**Reason**: System doesn't work at all
+**When ready**: After Week 3 completion
+
+### For trading-strategy-consultant Agent
+**Focus**: Validate existing strategies
+**Check**:
+- src/bot/strategy/demo_ma.py
+- src/bot/strategy/trend_breakout.py
+**Create**: STRAT-003 momentum strategy
+
+## ⚠️ Common Agent Pitfalls to Avoid
+
+1. **Don't trust README.md** - It lies about capabilities
+2. **Don't assume imports work** - Test everything
+3. **Don't create complex features** - Fix basics first
+4. **Don't optimize performance** - Make it work first
+5. **Don't add new dependencies** - Fix with what exists
+6. **Don't trust "Phase 4 Complete"** - It's not even Phase 1 complete
 
 ---
 
-## Routing Matrix (GPT-Trader tasks)
-| Task prefix | Primary route | Secondary |
-|---|---|---|
-| **DL-\*** | `planner → trading-strategy-consultant → implement (main) → test-runner → agentic-code-reviewer` | `performance-optimizer` (if slow) |
-| **RL-\*** | `planner → trading-strategy-consultant → implement → test-runner` | `performance-optimizer` |
-| **SENT-/MICRO-\*** | `planner → implement → test-runner` | `repo-structure-guardian` (schemas/paths) |
-| **MULTI-/OPT-\*** | `planner → trading-strategy-consultant → implement → test-runner → agentic-code-reviewer` | — |
-| **SOT-\*** | `repo-structure-guardian` | `agentic-code-reviewer` (Phase 5) |
+## 📝 Recovery Command Reference
+
+### Diagnostic Commands
+```bash
+# Find the real BacktestEngine class:
+grep -r "class.*BacktestEngine" src/
+
+# See what's actually in backtest module:
+ls -la src/bot/backtest/
+
+# Check all import errors:
+python -c "from bot.cli import main" 2>&1
+
+# See which tests fail:
+pytest --collect-only 2>&1 | grep ERROR
+
+# Check if examples work:
+for f in examples/*.py; do echo "=== $f ==="; python "$f" 2>&1 | head -5; done
+```
+
+### Fix Verification Commands
+```bash
+# After fixing CLI imports:
+poetry run gpt-trader --help
+
+# After fixing a strategy:
+python -c "from bot.strategy.demo_ma import DemoMAStrategy; print('Import OK')"
+
+# After fixing tests:
+pytest tests/unit/test_config.py -v
+
+# After creating orchestrator:
+python -c "from bot.live.production_orchestrator import ProductionOrchestrator"
+```
+
+### Progress Tracking
+```bash
+# Count completed tasks:
+grep -c "\[x\]" CLAUDE.md
+
+# See remaining CLI tasks:
+grep "CLI-" CLAUDE.md | grep "\[ \]"
+
+# Check test pass rate:
+pytest --tb=no | tail -1
+```
 
 ---
-
-## Repository Cleanup & Single-Source-of-Truth (SoT) Program
-
-### Overarching Goals
-- Make this `CLAUDE.md` the authoritative SoT for agents.
-- Purge or fix deprecated/drifted content across code and docs.
-- Add guardrails to keep docs and code in sync.
-
-### How agents use this list
-- Pick the highest-priority unchecked task in the current phase, execute it, then check it off and commit with the task ID.
-- Prefer CLI/commands shown here; avoid ad-hoc scripts.
-- Include task IDs in PR titles and commit messages (e.g., "SOT-021: Align Phase 4 deliverables filenames").
-
-### Phase 0 (Day 1): Baseline Inventory
-- [x] **SOT-001**: Generate current file map.
-  - Command: `python scripts/generate_filemap.py`
-- [x] **SOT-002**: Scan docs for path/command references; collect invalid ones.
-  - Command: `rg -n "src/bot/|python -m src\\.bot|docker-compose|pytest" docs CLAUDE.md`
-- [x] **SOT-003**: Scan code for absolute imports/paths that may drift.
-  - Command: `rg -n "from\\s+src\\.|import\\s+src\\." src`
-- [x] **SOT-004**: Emit drift report artifact at `docs/reports/doc_drift.json`.
-
-### Phase 1 (Day 2): Deprecation Sweep
-- [x] **SOT-010**: Identify orphaned/unused files (>60d) and archive to `docs/archived/` with reason/date.
-- [x] **SOT-011**: Update `docs/archived/DEPRECATED_FILES_LIST.md`.
-- [x] **SOT-012**: Remove `CLAUDE.md.bak` after verifying parity.
-
-### Phase 2 (Day 3): Normalize Structure & References
-- [x] **SOT-020**: Standardize references to `src/bot/strategy/` (singular) across docs.
-- [x] **SOT-021**: Align Phase 4 deliverables filenames in `docs/PHASE_4_TASK_BREAKDOWN.md` to actual files:
-  - `lstm_architecture.py`, `lstm_data_pipeline.py`, `lstm_training.py`, `attention_mechanisms.py`, `transformer_models.py`.
-- [x] **SOT-022**: Refresh `docs/ARCHITECTURE_FILEMAP.md` from generated file map.
-- [x] **SOT-023**: Fix monitoring/risk module paths in docs to match `src/bot/monitoring/*` and `src/bot/risk/*`.
-
-### Phase 3 (Day 4): Automate SoT Generation
-- [ ] **SOT-030**: Extend `scripts/update_claude_md.py` to auto-populate:
-  - Project Structure (from file map) and validated Commands.
-- [ ] **SOT-031**: Generator validates imports/commands before insertion; skip invalid entries.
-- [ ] **SOT-032**: Add `--dry-run` and `--diff` flags; write out only on success.
-- [ ] **SOT-033**: Add auto-generated markers in `CLAUDE.md` sections.
-
-### Phase 4 (Day 5): Validation Guards
-- [ ] **SOT-040**: Create `scripts/doc_check.py` to parse `CLAUDE.md`/`docs/*.md`, verify file paths, `python -m` commands, and imports.
-- [ ] **SOT-041**: Add a pre-commit hook to run `doc_check.py` on changed docs.
-- [ ] **SOT-042**: Add CI step to run `doc_check.py` and tests.
-  - Example: `python scripts/doc_check.py --files CLAUDE.md docs/**/*.md && pytest -q`
-- [ ] **SOT-043**: Optional: nightly job to run generator + doc check and open a PR on drift.
-
-### Phase 5 (Day 6-7): Finalization & Lock
-- [ ] **SOT-050**: Run all commands from `CLAUDE.md` top-to-bottom; fix residual issues.
-- [ ] **SOT-051**: Mark auto-generated blocks with "Do not edit manually" notes.
-- [ ] **SOT-052**: Document the SoT process in `docs/OPERATIONS_RUNBOOK.md`.
-- [ ] **SOT-053**: Update `CHANGELOG.md` with doc cleanup and SoT adoption summary.
-
-### Agent runbook for this program
-- **Selection**: Start at the current phase; choose the first unchecked task.
-- **Execution**: Use the listed commands; prefer CLI over direct scripts.
-- **Validation**: If a command fails, fix the root cause or open an issue linking the task ID.
-- **Completion**: Check off the task in `CLAUDE.md` and reference the task ID in commits/PRs.
-
-
-## Important Technical Details
 
 ## AI Subagent Reference Guide
 
@@ -198,725 +580,92 @@ This section documents all available AI subagents, their specialized expertise, 
 - **When to use**: MUST BE USED for server-side code when no framework-specific agent exists. Use PROACTIVELY for production-ready features
 - **Tools**: Full access
 
-#### 5. **rails-backend-expert**
-- **Expertise**: Ruby on Rails backend development
-- **When to use**: MUST BE USED for Rails backend tasks, ActiveRecord models, controllers, or Rails-specific implementation
-- **Tools**: Full access
-
-#### 6. **rails-api-developer**
-- **Expertise**: Rails API development (RESTful and GraphQL)
-- **When to use**: MUST BE USED for Rails API development, API controllers, serializers, or GraphQL implementations
-- **Tools**: Full access
-
-#### 7. **rails-activerecord-expert**
-- **Expertise**: Rails ActiveRecord ORM and database optimization
-- **When to use**: Complex queries, database performance, migrations in Rails projects
-- **Tools**: Full access
-
-#### 8. **laravel-backend-expert**
-- **Expertise**: Laravel backend architecture (MVC, Inertia.js, Livewire, API-only)
-- **When to use**: MUST BE USED for Laravel backend tasks, controllers, services, or Eloquent models
-- **Tools**: Full access
-
-#### 9. **laravel-eloquent-expert**
-- **Expertise**: Laravel Eloquent ORM, schemas, migrations, query optimization
-- **When to use**: MUST BE USED for data modeling, persistence, or query optimization in Laravel projects
-- **Tools**: Read, Grep, Glob, LS, Bash, WebFetch
-
-#### 10. **django-backend-expert**
-- **Expertise**: Django backend development (models, views, services)
-- **When to use**: MUST BE USED for Django backend development tasks following Django best practices
-- **Tools**: Full access
-
-#### 11. **django-orm-expert**
-- **Expertise**: Django ORM optimization and database performance
-- **When to use**: Complex queries, database design, migrations for Django applications
-- **Tools**: Full access
-
-#### 12. **django-api-developer**
-- **Expertise**: Django REST Framework and GraphQL APIs
-- **When to use**: MUST BE USED for Django API development, DRF serializers, viewsets, or GraphQL schemas
-- **Tools**: Full access
-
-### Frontend Development Agents
-
-#### 13. **frontend-developer**
-- **Expertise**: Responsive, accessible, high-performance UIs (vanilla JS/TS, React, Vue, Angular, Svelte)
-- **When to use**: MUST BE USED for user-facing code when no framework-specific agent exists. Use PROACTIVELY for UI requirements
-- **Tools**: LS, Read, Grep, Glob, Bash, Write, Edit, WebFetch
-
-#### 14. **react-component-architect**
-- **Expertise**: Modern React patterns, hooks, component design
-- **When to use**: MUST BE USED for React component development, hooks implementation, or React architecture decisions
-- **Tools**: Full access
-
-#### 15. **react-nextjs-expert**
-- **Expertise**: Next.js framework (SSR, SSG, ISR, full-stack React)
-- **When to use**: Next.js applications requiring SSR, SSG, or ISR implementation
-- **Tools**: Full access
-
-#### 16. **vue-component-architect**
-- **Expertise**: Vue 3 Composition API, scalable component architecture
-- **When to use**: MUST BE USED for Vue components, composables, or Vue architecture decisions
-- **Tools**: Full access
-
-#### 17. **vue-nuxt-expert**
-- **Expertise**: Nuxt.js framework (SSR, SSG, full-stack Vue)
-- **When to use**: Nuxt applications requiring SSR, SSG, or full-stack Vue solutions
-- **Tools**: Full access
-
-#### 18. **tailwind-frontend-expert**
-- **Expertise**: Tailwind CSS styling, utility-first CSS, responsive components
-- **When to use**: MUST BE USED for Tailwind CSS styling, utility-first refactors, or responsive component work. Use PROACTIVELY for UI tasks involving Tailwind
-- **Tools**: LS, Read, Grep, Glob, Bash, Write, Edit, MultiEdit, WebFetch
-
-### API & Architecture Agents
-
-#### 19. **api-architect**
-- **Expertise**: RESTful design, GraphQL schemas, API contracts (OpenAPI/GraphQL specs)
-- **When to use**: MUST BE USED PROACTIVELY for new or revised API contracts. Produces resource models, specs, and guidance on auth, versioning, pagination
-- **Tools**: Read, Grep, Glob, Write, WebFetch, WebSearch
+#### 5. **python-pro**
+- **Expertise**: Modern Python 3.11+ with type safety, async programming, data science, web frameworks
+- **When to use**: Python development requiring Pythonic patterns and production-ready code quality
+- **Tools**: Read, Write, MultiEdit, Bash, pip, pytest, black, mypy, poetry, ruff, bandit
 
 ### Quality & Documentation Agents
 
-#### 20. **documentation-specialist**
+#### 6. **documentation-specialist**
 - **Expertise**: Project documentation (READMEs, API specs, architecture guides)
 - **When to use**: MUST BE USED for documentation. Use PROACTIVELY after major features, API changes, or when onboarding developers
 - **Tools**: LS, Read, Grep, Glob, Bash, Write
 
-#### 21. **code-reviewer**
+#### 7. **code-reviewer**
 - **Expertise**: Security-aware code review
 - **When to use**: MUST BE USED after every feature, bug-fix, or pull-request. Use PROACTIVELY before merging to main
 - **Tools**: LS, Read, Grep, Glob, Bash
 
-#### 22. **agentic-code-reviewer**
+#### 8. **agentic-code-reviewer**
 - **Expertise**: Detecting AI-assisted development pitfalls (over-engineering, incomplete implementations, unnecessary complexity)
 - **When to use**: After logical chunks of AI-generated code or when reviewing architectural decisions
 - **Tools**: Full access
 
 ### Performance & Analysis Agents
 
-#### 23. **performance-optimizer**
+#### 9. **performance-optimizer**
 - **Expertise**: System performance optimization, bottleneck identification
 - **When to use**: MUST BE USED for slowness, high cloud costs, or scaling concerns. Use PROACTIVELY before traffic spikes
 - **Tools**: LS, Read, Grep, Glob, Bash
 
-#### 24. **code-archaeologist**
+#### 10. **code-archaeologist**
 - **Expertise**: Legacy/complex codebase exploration and documentation
 - **When to use**: MUST BE USED for unfamiliar, legacy, or complex codebases. Use PROACTIVELY before refactors, onboarding, audits
 - **Tools**: LS, Read, Grep, Glob, Bash
 
 ### Specialized Agents
 
-#### 25. **repo-structure-guardian**
+#### 11. **repo-structure-guardian**
 - **Expertise**: Project organization standards and file placement verification
 - **When to use**: When adding new components, moving files, adding tests/documentation, or reviewing project organization
 - **Tools**: Full access
 
-#### 26. **trading-strategy-consultant**
+#### 12. **trading-strategy-consultant**
 - **Expertise**: Financial trading strategies, risk management, trading tools
 - **When to use**: For trading strategy validation, tool recommendations, technical indicators, portfolio management, or backtesting methodologies
 - **Tools**: Full access
 
-### Hybrid Agents
+### Testing & Quality Agents
 
-#### 27. **gemini-gpt-hybrid**
-- **Expertise**: Analysis using Gemini and GPT models, returning insights to Claude
-- **When to use**: Complex problem identification requiring multiple AI perspectives
-- **Tools**: Read, Edit, Bash, Grep, Glob
-
-#### 28. **gemini-gpt-hybrid-hard**
-- **Expertise**: AGGRESSIVE code generation using Gemini and GPT
-- **When to use**: Rapid development and automation tasks
-- **Tools**: Bash
-
-### Language-Specific Agents
-
-#### 29. **python-pro**
-- **Expertise**: Modern Python 3.11+ with type safety, async programming, data science, web frameworks
-- **When to use**: Python development requiring Pythonic patterns and production-ready code quality
-- **Tools**: Read, Write, MultiEdit, Bash, pip, pytest, black, mypy, poetry, ruff, bandit
-
-#### 30. **javascript-pro**
-- **Expertise**: Modern ES2023+ features, async programming, full-stack JavaScript
-- **When to use**: JavaScript development for browser APIs and Node.js with emphasis on performance
-- **Tools**: Read, Write, MultiEdit, Bash, node, npm, eslint, prettier, jest, webpack, rollup
-
-#### 31. **typescript-pro**
-- **Expertise**: Advanced TypeScript type system, full-stack development, build optimization
-- **When to use**: Type-safe patterns for frontend and backend with developer experience focus
-- **Tools**: Read, Write, MultiEdit, Bash, tsc, eslint, prettier, jest, webpack, vite, tsx
-
-#### 32. **rust-engineer**
-- **Expertise**: Systems programming, memory safety, zero-cost abstractions
-- **When to use**: Mission-critical applications requiring ownership patterns and async programming
-- **Tools**: Read, Write, MultiEdit, Bash, cargo, rustc, clippy, rustfmt, miri, rust-analyzer
-
-#### 33. **golang-pro**
-- **Expertise**: High-performance systems, concurrent programming, cloud-native microservices
-- **When to use**: Idiomatic Go patterns with emphasis on simplicity and efficiency
-- **Tools**: Read, Write, MultiEdit, Bash, go, gofmt, golint, delve, golangci-lint
-
-#### 34. **java-architect**
-- **Expertise**: Enterprise-grade applications, Spring ecosystem, cloud-native development
-- **When to use**: Modern Java features, reactive programming, microservices patterns
-- **Tools**: Read, Write, MultiEdit, Bash, maven, gradle, javac, junit, spotbugs, jmh, spring-cli
-
-#### 35. **csharp-developer**
-- **Expertise**: Modern .NET development, ASP.NET Core, cloud-native applications
-- **When to use**: C# 12 features, Blazor, cross-platform development with clean architecture
-- **Tools**: Read, Write, MultiEdit, Bash, dotnet, msbuild, nuget, xunit, resharper, dotnet-ef
-
-#### 36. **php-pro**
-- **Expertise**: Modern PHP 8.3+ with strong typing, async programming, enterprise frameworks
-- **When to use**: Laravel, Symfony, modern PHP patterns with performance focus
-- **Tools**: Read, Write, MultiEdit, Bash, php, composer, phpunit, phpstan, php-cs-fixer, psalm
-
-#### 37. **swift-expert**
-- **Expertise**: Swift 5.9+ with async/await, SwiftUI, protocol-oriented programming
-- **When to use**: Apple platforms development, server-side Swift with safety emphasis
-- **Tools**: Read, Write, MultiEdit, Bash, swift, swiftc, xcodebuild, instruments, swiftlint, swift-format
-
-#### 38. **kotlin-specialist**
-- **Expertise**: Coroutines, multiplatform development, Android applications
-- **When to use**: Functional programming patterns, DSL design, modern Kotlin features
-- **Tools**: Read, Write, MultiEdit, Bash, kotlin, gradle, detekt, ktlint, junit5, kotlinx-coroutines
-
-#### 39. **cpp-pro**
-- **Expertise**: Modern C++20/23, systems programming, high-performance computing
-- **When to use**: Template metaprogramming, zero-overhead abstractions, low-level optimization
-- **Tools**: Read, Write, MultiEdit, Bash, g++, clang++, cmake, make, gdb, valgrind, clang-tidy
-
-#### 40. **sql-pro**
-- **Expertise**: Complex query optimization across PostgreSQL, MySQL, SQL Server, Oracle
-- **When to use**: Advanced SQL features, indexing strategies, data warehousing patterns
-- **Tools**: Read, Write, MultiEdit, Bash, psql, mysql, sqlite3, sqlplus, explain, analyze
-
-### Framework-Specific Agents
-
-#### 41. **spring-boot-engineer**
-- **Expertise**: Spring Boot 3+ with cloud-native patterns, microservices, reactive programming
-- **When to use**: Spring Cloud integration, enterprise Java solutions
-- **Tools**: maven, gradle, spring-cli, docker, kubernetes, intellij, git, postgresql
-
-#### 42. **nextjs-developer**
-- **Expertise**: Next.js 14+ with App Router, server components, full-stack features
-- **When to use**: Server components, server actions, performance optimization, production deployment
-- **Tools**: next, vercel, turbo, prisma, playwright, npm, typescript, tailwind
-
-#### 43. **dotnet-core-expert**
-- **Expertise**: .NET 8 with modern C# features, cross-platform development
-- **When to use**: Minimal APIs, cloud-native applications, microservices
-- **Tools**: dotnet-cli, nuget, xunit, docker, azure-cli, visual-studio, git, sql-server
-
-#### 44. **angular-architect**
-- **Expertise**: Angular 15+ with enterprise patterns, RxJS, NgRx state management
-- **When to use**: Micro-frontend architecture, performance optimization for enterprise apps
-- **Tools**: angular-cli, nx, jest, cypress, webpack, rxjs, npm, typescript
-
-#### 45. **flutter-expert**
-- **Expertise**: Flutter 3+ with modern architecture patterns, cross-platform development
-- **When to use**: Custom animations, native integrations, performance optimization
-- **Tools**: flutter, dart, android-studio, xcode, firebase, fastlane, git, vscode
-
-#### 46. **react-specialist**
-- **Expertise**: React 18+ with modern patterns, performance optimization, server components
-- **When to use**: Advanced hooks, production-ready architectures, scalable applications
-- **Tools**: vite, webpack, jest, cypress, storybook, react-devtools, npm, typescript
-
-#### 47. **vue-expert**
-- **Expertise**: Vue 3 with Composition API, reactivity system, performance optimization
-- **When to use**: Nuxt 3 development, enterprise patterns, elegant reactive applications
-- **Tools**: vite, vue-cli, vitest, cypress, vue-devtools, npm, typescript, pinia
-
-#### 48. **rails-expert**
-- **Expertise**: Rails 7+ with modern conventions, Hotwire/Turbo, Action Cable
-- **When to use**: Convention over configuration, rapid application development
-- **Tools**: rails, rspec, sidekiq, redis, postgresql, bundler, git, rubocop
-
-#### 49. **django-developer**
-- **Expertise**: Django 4+ with modern Python practices, scalable web applications
-- **When to use**: REST API development, async views, enterprise patterns
-- **Tools**: django-admin, pytest, celery, redis, postgresql, docker, git, python
-
-#### 50. **laravel-specialist**
-- **Expertise**: Laravel 10+ with modern PHP practices, Eloquent ORM, queue systems
-- **When to use**: Enterprise features, scalable web applications and APIs
-- **Tools**: artisan, composer, pest, redis, mysql, docker, git, php
-
-### Data & ML Agents
-
-#### 51. **data-scientist**
-- **Expertise**: Statistical analysis, machine learning, business insights
-- **When to use**: Exploratory data analysis, predictive modeling, data storytelling
-- **Tools**: python, jupyter, pandas, sklearn, matplotlib, statsmodels
-
-#### 52. **data-engineer**
-- **Expertise**: Scalable data pipelines, ETL/ELT processes, data infrastructure
-- **When to use**: Big data technologies, cloud platforms, reliable data platforms
-- **Tools**: spark, airflow, dbt, kafka, snowflake, databricks
-
-#### 53. **data-analyst**
-- **Expertise**: Business intelligence, data visualization, statistical analysis
-- **When to use**: SQL, Python, BI tools for actionable insights and business impact
-- **Tools**: Read, Write, MultiEdit, Bash, sql, python, tableau, powerbi, looker, dbt, excel
-
-#### 54. **ml-engineer**
-- **Expertise**: ML model lifecycle, production deployment, system optimization
-- **When to use**: Traditional ML and deep learning for scalable, reliable ML systems
-- **Tools**: mlflow, kubeflow, tensorflow, sklearn, optuna
-
-#### 55. **machine-learning-engineer**
-- **Expertise**: Production model deployment, serving infrastructure, scalable ML systems
-- **When to use**: Model optimization, real-time inference, edge deployment
-- **Tools**: Read, Write, MultiEdit, Bash, tensorflow, pytorch, onnx, triton, bentoml, ray, vllm
-
-#### 56. **mlops-engineer**
-- **Expertise**: ML infrastructure, platform engineering, operational excellence
-- **When to use**: CI/CD for ML, model versioning, scalable ML platforms
-- **Tools**: mlflow, kubeflow, airflow, docker, prometheus, grafana
-
-#### 57. **ai-engineer**
-- **Expertise**: AI system design, model implementation, production deployment
-- **When to use**: Multiple AI frameworks for scalable, efficient, ethical AI solutions
-- **Tools**: python, jupyter, tensorflow, pytorch, huggingface, wandb
-
-#### 58. **nlp-engineer**
-- **Expertise**: Natural language processing, transformer models, text pipelines
-- **When to use**: Multilingual support, real-time NLP performance
-- **Tools**: Read, Write, MultiEdit, Bash, transformers, spacy, nltk, huggingface, gensim, fasttext
-
-#### 59. **llm-architect**
-- **Expertise**: Large language model architecture, deployment, optimization
-- **When to use**: LLM system design, fine-tuning strategies, production serving
-- **Tools**: transformers, langchain, llamaindex, vllm, wandb
-
-#### 60. **prompt-engineer**
-- **Expertise**: Prompt design, optimization, and management for LLMs
-- **When to use**: Prompt architecture, evaluation frameworks, production prompt systems
-- **Tools**: openai, anthropic, langchain, promptflow, jupyter
-
-### Database & Infrastructure Agents
-
-#### 61. **database-administrator**
-- **Expertise**: High-availability systems, performance optimization, disaster recovery
-- **When to use**: PostgreSQL, MySQL, MongoDB, Redis operational excellence
-- **Tools**: Read, Write, MultiEdit, Bash, psql, mysql, mongosh, redis-cli, pg_dump, percona-toolkit, pgbench
-
-#### 62. **database-optimizer**
-- **Expertise**: Query optimization, performance tuning, scalability
-- **When to use**: Execution plan analysis, index strategies, peak database performance
-- **Tools**: explain, analyze, pgbench, mysqltuner, redis-cli
-
-#### 63. **postgres-pro**
-- **Expertise**: PostgreSQL administration, performance optimization, high availability
-- **When to use**: PostgreSQL internals, advanced features, enterprise deployment
-- **Tools**: psql, pg_dump, pgbench, pg_stat_statements, pgbadger
-
-### DevOps & Cloud Agents
-
-#### 64. **devops-engineer**
-- **Expertise**: CI/CD, containerization, cloud platforms, automation
-- **When to use**: Bridging development and operations with culture and collaboration focus
-- **Tools**: Read, Write, MultiEdit, Bash, docker, kubernetes, terraform, ansible, prometheus, jenkins
-
-#### 65. **sre-engineer**
-- **Expertise**: Site Reliability Engineering, SLOs, automation, operational excellence
-- **When to use**: Reliability engineering, chaos testing, toil reduction
-- **Tools**: Read, Write, MultiEdit, Bash, prometheus, grafana, terraform, kubectl, python, go, pagerduty
-
-#### 66. **platform-engineer**
-- **Expertise**: Internal developer platforms, self-service infrastructure
-- **When to use**: Platform APIs, GitOps workflows, golden path templates
-- **Tools**: Read, Write, MultiEdit, Bash, kubectl, helm, argocd, crossplane, backstage, terraform, flux
-
-#### 67. **cloud-architect**
-- **Expertise**: Multi-cloud strategies, scalable architectures, cost-effective solutions
-- **When to use**: AWS, Azure, GCP with security, performance, compliance focus
-- **Tools**: Read, Write, MultiEdit, Bash, aws-cli, azure-cli, gcloud, terraform, kubectl, draw.io
-
-#### 68. **kubernetes-specialist**
-- **Expertise**: Container orchestration, cluster management, cloud-native architectures
-- **When to use**: Production-grade deployments, security hardening, performance optimization
-- **Tools**: Read, Write, MultiEdit, Bash, kubectl, helm, kustomize, kubeadm, k9s, stern, kubectx
-
-#### 69. **terraform-engineer**
-- **Expertise**: Infrastructure as code, multi-cloud provisioning, modular architecture
-- **When to use**: Terraform best practices, state management, enterprise patterns
-- **Tools**: Read, Write, MultiEdit, Bash, terraform, terragrunt, tflint, terraform-docs, checkov, infracost
-
-#### 70. **deployment-engineer**
-- **Expertise**: CI/CD pipelines, release automation, deployment strategies
-- **When to use**: Blue-green, canary, rolling deployments with zero-downtime releases
-- **Tools**: Read, Write, MultiEdit, Bash, ansible, jenkins, gitlab-ci, github-actions, argocd, spinnaker
-
-### Security & Testing Agents
-
-#### 71. **security-engineer**
-- **Expertise**: DevSecOps, cloud security, compliance frameworks
-- **When to use**: Security automation, vulnerability management, zero-trust architecture
-- **Tools**: Read, Write, MultiEdit, Bash, nmap, metasploit, burp, vault, trivy, falco, terraform
-
-#### 72. **security-auditor**
-- **Expertise**: Security assessments, compliance validation, risk management
-- **When to use**: Security frameworks, audit methodologies, regulatory adherence
-- **Tools**: Read, Grep, nessus, qualys, openvas, prowler, scout, suite, compliance, checker
-
-#### 73. **penetration-tester**
-- **Expertise**: Ethical hacking, vulnerability assessment, security testing
-- **When to use**: Offensive security techniques, exploit development, security assessments
-- **Tools**: Read, Grep, nmap, metasploit, burpsuite, sqlmap, wireshark, nikto, hydra
-
-#### 74. **compliance-auditor**
-- **Expertise**: Regulatory frameworks, data privacy laws, security standards
-- **When to use**: GDPR, HIPAA, PCI DSS, SOC 2, ISO certifications
-- **Tools**: Read, Write, MultiEdit, Bash, prowler, scout, checkov, terrascan, cloudsploit, lynis
-
-#### 75. **qa-expert**
-- **Expertise**: Comprehensive quality assurance, test strategy, quality metrics
-- **When to use**: Manual and automated testing, test planning, quality processes
-- **Tools**: Read, Grep, selenium, cypress, playwright, postman, jira, testrail, browserstack
-
-#### 76. **test-automator**
+#### 13. **test-automator**
 - **Expertise**: Test frameworks, CI/CD integration, comprehensive test coverage
 - **When to use**: Maintainable, scalable, efficient automated testing solutions
 - **Tools**: Read, Write, selenium, cypress, playwright, pytest, jest, appium, k6, jenkins
 
-#### 77. **accessibility-tester**
-- **Expertise**: WCAG compliance, inclusive design, universal access
-- **When to use**: Screen reader compatibility, keyboard navigation, assistive technology
-- **Tools**: Read, Write, MultiEdit, Bash, axe, wave, nvda, jaws, voiceover, lighthouse, pa11y
-
-### Performance & Debugging Agents
-
-#### 78. **performance-engineer**
-- **Expertise**: System optimization, bottleneck identification, scalability engineering
-- **When to use**: Performance testing, profiling, tuning for optimal response times
-- **Tools**: Read, Grep, jmeter, gatling, locust, newrelic, datadog, prometheus, perf, flamegraph
-
-#### 79. **performance-monitor**
-- **Expertise**: System-wide metrics collection, analysis, optimization
-- **When to use**: Real-time monitoring, anomaly detection, performance insights
-- **Tools**: Read, Write, MultiEdit, Bash, prometheus, grafana, datadog, elasticsearch, statsd
-
-#### 80. **debugger**
-- **Expertise**: Complex issue diagnosis, root cause analysis, systematic problem-solving
-- **When to use**: Debugging tools and techniques across multiple languages/environments
-- **Tools**: Read, Grep, Glob, gdb, lldb, chrome-devtools, vscode-debugger, strace, tcpdump
-
-#### 81. **error-detective**
-- **Expertise**: Complex error pattern analysis, correlation, root cause discovery
-- **When to use**: Distributed system debugging, error tracking, anomaly detection
-- **Tools**: Read, Grep, Glob, elasticsearch, datadog, sentry, loggly, splunk
-
-#### 82. **error-coordinator**
-- **Expertise**: Distributed error handling, failure recovery, system resilience
-- **When to use**: Error correlation, cascade prevention, automated recovery strategies
-- **Tools**: Read, Write, MultiEdit, Bash, sentry, pagerduty, error-tracking, circuit-breaker
-
-#### 83. **chaos-engineer**
-- **Expertise**: Controlled failure injection, resilience testing, antifragile systems
-- **When to use**: Chaos experiments, game day planning, continuous resilience improvement
-- **Tools**: Read, Write, MultiEdit, Bash, chaostoolkit, litmus, gremlin, pumba, powerfulseal, chaosblade
-
-### Business & Product Agents
-
-#### 84. **product-manager**
-- **Expertise**: Product strategy, user-centric development, business outcomes
-- **When to use**: Roadmap planning, feature prioritization, cross-functional leadership
-- **Tools**: jira, productboard, amplitude, mixpanel, figma, slack
-
-#### 85. **business-analyst**
-- **Expertise**: Requirements gathering, process improvement, data-driven decisions
-- **When to use**: Stakeholder management, business process modeling, solution design
-- **Tools**: excel, sql, tableau, powerbi, jira, confluence, miro
-
-#### 86. **sales-engineer**
-- **Expertise**: Technical pre-sales, solution architecture, proof of concepts
-- **When to use**: Technical demonstrations, competitive positioning, business value translation
-- **Tools**: Read, Write, MultiEdit, Bash, salesforce, demo-tools, docker, postman, zoom
-
-#### 87. **customer-success-manager**
-- **Expertise**: Customer retention, growth, and advocacy
-- **When to use**: Account health monitoring, strategic relationship building, value realization
-- **Tools**: Read, Write, MultiEdit, Bash, salesforce, zendesk, intercom, gainsight, mixpanel
-
-#### 88. **content-marketer**
-- **Expertise**: Content strategy, SEO optimization, engagement-driven marketing
-- **When to use**: Multi-channel content creation, analytics, conversion optimization
-- **Tools**: wordpress, hubspot, buffer, canva, semrush, analytics
-
-#### 89. **scrum-master**
-- **Expertise**: Agile transformation, team facilitation, continuous improvement
-- **When to use**: Scrum framework implementation, impediment removal, high-performing teams
-- **Tools**: Read, Write, MultiEdit, Bash, jira, confluence, miro, slack, zoom, azure-devops
-
-#### 90. **project-manager**
-- **Expertise**: Project planning, execution, and delivery
-- **When to use**: Resource management, risk mitigation, stakeholder communication
-- **Tools**: jira, asana, monday, ms-project, slack, zoom
-
-### Specialized Domain Agents
-
-#### 91. **fintech-engineer**
-- **Expertise**: Financial systems, regulatory compliance, secure transaction processing
-- **When to use**: Banking integrations, payment systems, regulatory requirements
-- **Tools**: Read, Write, MultiEdit, Bash, python, java, kafka, redis, postgresql, kubernetes
-
-#### 92. **blockchain-developer**
-- **Expertise**: Smart contract development, DApp architecture, DeFi protocols
-- **When to use**: Solidity, Web3 integration, blockchain security
-- **Tools**: truffle, hardhat, web3, ethers, solidity, foundry
-
-#### 93. **payment-integration**
-- **Expertise**: Payment gateway integration, PCI compliance, transaction processing
-- **When to use**: Secure payment flows, multi-currency support, fraud prevention
-- **Tools**: stripe, paypal, square, razorpay, braintree
-
-#### 94. **iot-engineer**
-- **Expertise**: Connected device architectures, edge computing, IoT platforms
-- **When to use**: IoT protocols, device management, data pipelines
-- **Tools**: mqtt, aws-iot, azure-iot, node-red, mosquitto
-
-#### 95. **embedded-systems**
-- **Expertise**: Microcontroller programming, RTOS development, hardware optimization
-- **When to use**: Low-level programming, real-time constraints, resource-limited environments
-- **Tools**: gcc-arm, platformio, arduino, esp-idf, stm32cube
-
-#### 96. **game-developer**
-- **Expertise**: Game engine programming, graphics optimization, multiplayer systems
-- **When to use**: Game design patterns, performance optimization, cross-platform development
-- **Tools**: unity, unreal, godot, phaser, pixi, three.js
-
-### Financial & Analytics Agents
-
-#### 97. **risk-manager**
-- **Expertise**: Risk assessment, mitigation strategies, compliance frameworks
-- **When to use**: Risk modeling, stress testing, regulatory compliance
-- **Tools**: python, R, matlab, excel, sas, sql, tableau
-
-#### 98. **quant-analyst**
-- **Expertise**: Financial modeling, algorithmic trading, risk analytics
-- **When to use**: Statistical methods, derivatives pricing, high-frequency trading
-- **Tools**: python, numpy, pandas, quantlib, zipline, backtrader
-
-### Mobile & Cross-Platform Agents
-
-#### 99. **mobile-developer**
-- **Expertise**: Cross-platform mobile development with React Native and Flutter
-- **When to use**: Optimized mobile applications with platform-specific excellence
-- **Tools**: Read, Write, MultiEdit, Bash, adb, xcode, gradle, cocoapods, fastlane
-
-#### 100. **mobile-app-developer**
-- **Expertise**: Native and cross-platform development for iOS and Android
-- **When to use**: Performance optimization, platform guidelines, exceptional mobile experiences
-- **Tools**: Read, Write, MultiEdit, Bash, xcode, android-studio, flutter, react-native, fastlane
-
-#### 101. **electron-pro**
-- **Expertise**: Desktop application development with Electron
-- **When to use**: Cross-platform desktop apps with native OS integration
-- **Tools**: Read, Write, MultiEdit, Bash, electron-forge, electron-builder, node-gyp, codesign, notarytool
-
-### Developer Tools & Workflow Agents
-
-#### 102. **dx-optimizer**
-- **Expertise**: Build performance, tooling efficiency, workflow automation
-- **When to use**: Development environment optimization, reducing friction, maximizing productivity
-- **Tools**: webpack, vite, turbo, nx, rush, lerna, bazel
-
-#### 103. **git-workflow-manager**
-- **Expertise**: Branching strategies, automation, team collaboration
-- **When to use**: Git workflows, merge conflict resolution, repository management
-- **Tools**: git, github-cli, gitlab, gitflow, pre-commit
-
-#### 104. **cli-developer**
-- **Expertise**: Command-line interface design, developer tools, terminal applications
-- **When to use**: User experience, cross-platform compatibility, CLI tools
-- **Tools**: Read, Write, MultiEdit, Bash, commander, yargs, inquirer, chalk, ora, blessed
-
-#### 105. **dependency-manager**
-- **Expertise**: Package management, security auditing, version conflict resolution
-- **When to use**: Dependency optimization, supply chain security, automated updates
-- **Tools**: npm, yarn, pip, maven, gradle, cargo, bundler, composer
-
-#### 106. **build-engineer**
-- **Expertise**: Build system optimization, compilation strategies, developer productivity
-- **When to use**: Modern build tools, caching mechanisms, fast build pipelines
-- **Tools**: Read, Write, MultiEdit, Bash, webpack, vite, rollup, esbuild, turbo, nx, bazel
-
-#### 107. **tooling-engineer**
-- **Expertise**: Developer tool creation, CLI development, productivity enhancement
-- **When to use**: Tool architecture, plugin systems, user experience design
-- **Tools**: node, python, go, rust, webpack, rollup, esbuild
-
-### Documentation & Writing Agents
-
-#### 108. **technical-writer**
-- **Expertise**: Clear, accurate documentation and content creation
-- **When to use**: API documentation, user guides, technical content
-- **Tools**: markdown, asciidoc, confluence, gitbook, mkdocs
-
-#### 109. **documentation-engineer**
-- **Expertise**: Technical documentation systems, API documentation
-- **When to use**: Documentation-as-code, automated generation, maintainable documentation
-- **Tools**: Read, Write, MultiEdit, Bash, markdown, asciidoc, sphinx, mkdocs, docusaurus, swagger
-
-#### 110. **api-documenter**
-- **Expertise**: Comprehensive, developer-friendly API documentation
-- **When to use**: OpenAPI/Swagger specifications, interactive documentation portals
-- **Tools**: swagger, openapi, postman, insomnia, redoc, slate
-
-### Architecture & Design Agents
-
-#### 111. **architect-reviewer**
-- **Expertise**: System design validation, architectural patterns, technical decisions
-- **When to use**: Scalability analysis, technology stack evaluation, evolutionary architecture
-- **Tools**: Read, plantuml, structurizr, archunit, sonarqube
-
-#### 112. **microservices-architect**
-- **Expertise**: Distributed systems, scalable microservice ecosystems
-- **When to use**: Service boundaries, communication patterns, operational excellence
-- **Tools**: Read, Write, MultiEdit, Bash, kubernetes, istio, consul, kafka, prometheus
-
-#### 113. **api-designer**
-- **Expertise**: Scalable, developer-friendly API interfaces
-- **When to use**: REST and GraphQL APIs with comprehensive documentation
-- **Tools**: Read, Write, MultiEdit, Bash, openapi-generator, graphql-codegen, postman, swagger-ui, spectral
-
-#### 114. **fullstack-developer**
-- **Expertise**: End-to-end feature development across entire stack
-- **When to use**: Complete solutions from database to UI
-- **Tools**: Read, Write, MultiEdit, Bash, Docker, database, redis, postgresql, magic, context7, playwright
-
-#### 115. **graphql-architect**
-- **Expertise**: GraphQL schema design, efficient API graphs
-- **When to use**: Federation, subscriptions, query optimization, type safety
-- **Tools**: Read, Write, MultiEdit, Bash, apollo-rover, graphql-codegen, dataloader, graphql-inspector, federation-tools
-
-#### 116. **websocket-engineer**
-- **Expertise**: Real-time communication, scalable WebSocket architectures
-- **When to use**: Bidirectional protocols, event-driven systems, low-latency messaging
-- **Tools**: Read, Write, MultiEdit, Bash, socket.io, ws, redis-pubsub, rabbitmq, centrifugo
-
-### Network & Infrastructure Agents
-
-#### 117. **network-engineer**
-- **Expertise**: Cloud and hybrid network architectures, security, performance
-- **When to use**: Network design, troubleshooting, automation, zero-trust principles
-- **Tools**: Read, Write, MultiEdit, Bash, tcpdump, wireshark, nmap, iperf, netcat, dig, traceroute
-
-#### 118. **incident-responder**
-- **Expertise**: Security and operational incident management
-- **When to use**: Evidence collection, forensic analysis, coordinated response
-- **Tools**: Read, Write, MultiEdit, Bash, pagerduty, opsgenie, victorops, slack, jira, statuspage
-
-#### 119. **devops-incident-responder**
-- **Expertise**: Rapid detection, diagnosis, resolution of production issues
-- **When to use**: Observability tools, root cause analysis, automated remediation
-- **Tools**: Read, Write, MultiEdit, Bash, pagerduty, slack, datadog, kubectl, aws-cli, jq, grafana
-
-### Research & Analysis Agents
-
-#### 120. **market-researcher**
-- **Expertise**: Market analysis, consumer insights, competitive intelligence
-- **When to use**: Market sizing, segmentation, trend analysis
-- **Tools**: Read, Write, WebSearch, survey-tools, analytics, statista, similarweb
-
-#### 121. **search-specialist**
-- **Expertise**: Advanced information retrieval, query optimization, knowledge discovery
-- **When to use**: Finding needle-in-haystack information across diverse sources
-- **Tools**: Read, Write, WebSearch, Grep, elasticsearch, google-scholar, specialized-databases
-
-#### 122. **trend-analyst**
-- **Expertise**: Identifying emerging patterns, forecasting developments, strategic foresight
-- **When to use**: Trend detection, impact analysis, scenario planning
-- **Tools**: Read, Write, WebSearch, google-trends, social-listening, data-visualization
-
-#### 123. **competitive-analyst**
-- **Expertise**: Competitor intelligence, strategic analysis, market positioning
-- **When to use**: Competitive benchmarking, SWOT analysis, strategic recommendations
-- **Tools**: Read, Write, WebSearch, WebFetch, similarweb, semrush, crunchbase
-
-#### 124. **data-researcher**
-- **Expertise**: Discovering, collecting, analyzing diverse data sources
-- **When to use**: Data mining, statistical analysis, pattern recognition
-- **Tools**: Read, Write, sql, python, pandas, WebSearch, api-tools
-
-#### 125. **research-analyst**
-- **Expertise**: Comprehensive information gathering, synthesis, insight generation
-- **When to use**: Research methodologies, data analysis, report creation
-- **Tools**: Read, Write, WebSearch, WebFetch, Grep
-
-### Legal & Compliance Agents
-
-#### 126. **legal-advisor**
-- **Expertise**: Technology law, compliance, risk mitigation
-- **When to use**: Contract drafting, intellectual property, data privacy, regulatory compliance
-- **Tools**: markdown, latex, docusign, contract-tools
-
-### UX & Design Agents
-
-#### 127. **ux-researcher**
-- **Expertise**: User insights, usability testing, data-driven design decisions
-- **When to use**: Qualitative and quantitative research methods for user needs validation
-- **Tools**: Read, Write, MultiEdit, Bash, figma, miro, usertesting, hotjar, maze, airtable
-
-### Code Refactoring & Legacy Agents
-
-#### 128. **refactoring-specialist**
-- **Expertise**: Safe code transformation, design pattern application
-- **When to use**: Improving code structure, reducing complexity, enhancing maintainability
-- **Tools**: ast-grep, semgrep, eslint, prettier, jscodeshift
-
-#### 129. **legacy-modernizer**
-- **Expertise**: Incremental migration strategies, risk-free modernization
-- **When to use**: Transforming legacy systems into modern architectures
-- **Tools**: ast-grep, jscodeshift, rector, rubocop, modernizr
-
-### Multi-Agent Coordination Agents
-
-#### 130. **agent-organizer**
-- **Expertise**: Multi-agent orchestration, team assembly, workflow optimization
-- **When to use**: Task decomposition, agent selection, coordination strategies
-- **Tools**: Read, Write, agent-registry, task-queue, monitoring
-
-#### 131. **workflow-orchestrator**
-- **Expertise**: Complex process design, state machine implementation, business process automation
-- **When to use**: Workflow patterns, error compensation, transaction management
-- **Tools**: Read, Write, workflow-engine, state-machine, bpmn
-
-#### 132. **multi-agent-coordinator**
-- **Expertise**: Complex workflow orchestration, inter-agent communication, distributed coordination
-- **When to use**: Parallel execution, dependency management, fault tolerance
-- **Tools**: Read, Write, message-queue, pubsub, workflow-engine
-
-#### 133. **task-distributor**
-- **Expertise**: Intelligent work allocation, load balancing, queue management
-- **When to use**: Priority scheduling, capacity tracking, fair distribution
-- **Tools**: Read, Write, task-queue, load-balancer, scheduler
-
-#### 134. **context-manager**
-- **Expertise**: Information storage, retrieval, synchronization across multi-agent systems
-- **When to use**: State management, version control, data lifecycle
-- **Tools**: Read, Write, redis, elasticsearch, vector-db
-
-#### 135. **knowledge-synthesizer**
-- **Expertise**: Extracting insights from multi-agent interactions, pattern identification
-- **When to use**: Cross-agent learning, best practice extraction, continuous improvement
-- **Tools**: Read, Write, MultiEdit, Bash, vector-db, nlp-tools, graph-db, ml-pipeline
+#### 14. **qa-expert**
+- **Expertise**: Comprehensive quality assurance, test strategy, quality metrics
+- **When to use**: Manual and automated testing, test planning, quality processes
+- **Tools**: Read, Grep, selenium, cypress, playwright, postman, jira, testrail, browserstack
+
+### Database & Infrastructure Agents
+
+#### 15. **database-administrator**
+- **Expertise**: High-availability systems, performance optimization, disaster recovery
+- **When to use**: PostgreSQL, MySQL, MongoDB, Redis operational excellence
+- **Tools**: Read, Write, MultiEdit, Bash, psql, mysql, mongosh, redis-cli, pg_dump, percona-toolkit, pgbench
+
+### DevOps & Cloud Agents
+
+#### 16. **devops-engineer**
+- **Expertise**: CI/CD, containerization, cloud platforms, automation
+- **When to use**: Bridging development and operations with culture and collaboration focus
+- **Tools**: Read, Write, MultiEdit, Bash, docker, kubernetes, terraform, ansible, prometheus, jenkins
 
 ### Agent Selection Best Practices
 
-1. **Use framework-specific agents** when available (e.g., rails-backend-expert for Rails, django-backend-expert for Django)
+1. **Use framework-specific agents** when available
 2. **Chain agents appropriately**: project-analyst → team-configurator → tech-lead-orchestrator → specific implementation agents
 3. **Use PROACTIVELY** when agent descriptions indicate proactive use
 4. **Launch multiple agents concurrently** when tasks are independent
 5. **Trust agent outputs** - they are optimized for their specific domains
 6. **For this GPT-Trader project specifically**:
-   - Use backend-developer for Python ML/trading logic
+   - Use backend-developer or python-pro for Python ML/trading logic
    - Use trading-strategy-consultant for strategy validation
-   - Use performance-optimizer for backtest optimization
-   - Use code-archaeologist before major refactors
+   - Use test-automator for fixing test suite
+   - Use code-archaeologist to understand why system is broken
+
+---
 
 ## Code Style & Best Practices
 
@@ -924,12 +673,94 @@ This section documents all available AI subagents, their specialized expertise, 
 2. **Document with docstrings** (Google style)
 3. **Handle errors gracefully** with try/except blocks
 4. **Log important events** using structured logging
-5. **Write comprehensive tests** (target 90% coverage)
-6. **Use task IDs** for tracking (e.g., DL-001, RL-015)
+5. **Write comprehensive tests** (target 90% coverage - currently 24%)
+6. **Use task IDs** for tracking (e.g., CLI-001, TEST-002)
 7. **Implement in phases** with validation checkpoints
-8. **Shadow mode first** before production deployment
+8. **Fix basics first** before adding features
 
+---
 
-### Repository Cleanup & Single-Source-of-Truth (SoT) Program Focus
+## 🚀 Making Changes - Integration Guide
 
-**Current Priority**: Before continuing Phase 4 ML development, the repository requires systematic cleanup and standardization through the SoT Program (SOT-001 to SOT-053).
+### Before Starting Any Task
+1. Read this entire CLAUDE.md first
+2. Check which tasks are already done [x]
+3. Choose the next unchecked task [ ]
+4. Read the context for that task
+5. Test current state before changing
+
+### Branch Strategy
+```bash
+# Week 1 (current):
+git checkout -b fix/critical-cli-imports
+
+# Week 2:
+git checkout -b fix/core-integration
+
+# Week 3:
+git checkout -b feature/working-strategies
+
+# Week 4:
+git checkout -b docs/reality-update
+```
+
+### Commit Message Format
+```
+[TASK-ID] type: short description
+
+Context: Why this change is needed
+Impact: What this fixes/enables
+Testing: How to verify
+
+Example:
+[CLI-001] fix: resolve BacktestEngine import error
+
+Context: CLI is completely broken due to missing import
+Impact: Enables all CLI commands to load
+Testing: Run 'poetry run gpt-trader --help'
+```
+
+### Testing Your Changes
+Always test in this order:
+1. **Import Test**: `python -c "from module import Class"`
+2. **Unit Test**: `pytest tests/unit/test_relevant.py`
+3. **Integration Test**: Run the actual command
+4. **Smoke Test**: `python scripts/test_cli_smoke.py`
+
+### When You Complete a Task
+1. Check it off in this file: `- [x] **TASK-ID**: Description`
+2. Commit with proper format
+3. Update progress tracking
+4. Move to next unchecked task
+
+---
+
+## 🎯 Remember: Goal is 65-75% Functional in 30 Days
+
+We're not trying to build a perfect system. We're trying to:
+1. Make it actually run (Week 1)
+2. Connect the pieces (Week 2)
+3. Provide user value (Week 3)
+4. Be honest about it (Week 4)
+
+**Current Week: 1 - Emergency Fixes**
+**Current Priority: Make CLI work**
+**Success Metric: User can run a backtest**
+
+---
+
+## Important Technical Details
+
+### Repository Cleanup & Single-Source-of-Truth (SoT) Program (ON HOLD)
+
+**Status**: SoT program is ON HOLD until recovery plan completes. The system must work before we can standardize documentation.
+
+Phase 0-2 completed:
+- [x] SOT-001 through SOT-023 completed
+- [ ] SOT-030 through SOT-053 deferred until system works
+
+---
+
+**Last Updated**: January 2025 - Recovery Plan Initiated
+**True State**: 35-45% complete, major fixes needed
+**Target State**: 65-75% functional in 30 days

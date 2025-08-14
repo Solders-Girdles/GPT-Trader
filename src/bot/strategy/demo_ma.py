@@ -2,22 +2,23 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
+from bot.indicators.atr import atr
 
 from .base import Strategy
 
 
-def _wilder_atr(df: pd.DataFrame, period: int) -> pd.Series:
-    # True range components
-    hl = (df["High"] - df["Low"]).abs()
-    hc = (df["High"] - df["Close"].shift(1)).abs()
-    lc = (df["Low"] - df["Close"].shift(1)).abs()
-    tr = pd.concat([hl, hc, lc], axis=1).max(axis=1)
-    # Simple rolling mean is fine for now (Wilder's RMA could be added later)
-    return tr.rolling(window=period, min_periods=period).mean()
+def _safe_atr(df: pd.DataFrame, period: int) -> pd.Series:
+    # Graceful fallback if High/Low missing
+    work = df.copy()
+    if "High" not in work.columns or "Low" not in work.columns:
+        work["High"] = work["Close"].astype(float)
+        work["Low"] = work["Close"].astype(float)
+    return atr(work, period=period, method="wilder")
 
 
 class DemoMAStrategy(Strategy):
     name = "demo_ma"
+    supports_short = False
 
     def __init__(self, fast: int = 10, slow: int = 20, atr_period: int = 14) -> None:
         self.fast = int(fast)
@@ -34,14 +35,14 @@ class DemoMAStrategy(Strategy):
         # Long-only version (flip to 1/0). If you want long/short, remove the clip.
         sig = np.clip(sig, 0, 1)
 
-        atr = _wilder_atr(df, self.atr_period)
+        atr_series = _safe_atr(df, self.atr_period)
 
         out = pd.DataFrame(
             {
                 "signal": sig,
                 "sma_fast": sma_fast,
                 "sma_slow": sma_slow,
-                "atr": atr,
+                "atr": atr_series,
             },
             index=df.index,
         )

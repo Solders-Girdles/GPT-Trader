@@ -1,18 +1,67 @@
 # Claude Code Assistant Guide for GPT-Trader
 
 ## Project Overview
+GPT-Trader is an advanced ML-powered autonomous portfolio management system for algorithmic trading. It predicts market movements and executes trades with disciplined risk management.
 
-GPT-Trader is an advanced ML-powered autonomous portfolio management system designed for algorithmic trading. The system uses machine learning models to predict market movements and execute trades with sophisticated risk management.
+---
+
+## Context Budget Policy
+- **Main thread**: goals, current step, brief status, tiny diffs (<40 lines).
+- **Subagents**: heavy reads, logs, wide diffs, repo scans.
+  - Return a **10-bullet digest** + file paths + artifact links.
+- Never paste >200 lines into main; summarize and reference paths.
+- If a task lacks a clear 5–8 step plan, call **`planner`** first.
+
+---
+
+## Agentic Playbook (mechanical)
+**Explore (read-only)**  
+Read {paths}. Do not write code. Output: 10-bullet architecture summary, 5 risks, smallest viable change. If unknowns → `planner`.
+
+**Plan**  
+`planner`: For **{TASK-ID}**, output ≤8 steps, affected files, test names, perf checks, rollback.
+
+**Implement**  
+Do **step 1 only**. Keep edits ≤5 files or ≤200 LOC.  
+Run `test-runner`. If failing, call `debugger` for root cause + minimal patch; apply fix.  
+Repeat until step 1 passes, then **STOP** and report.
+
+**Review**  
+`agentic-code-reviewer`: Review diff for **{TASK-ID}**. Return CRITICAL/HIGH/NICE-TO-HAVE with file:line. Apply only CRITICAL/HIGH now.
+
+**Doc & PR**  
+Update touched docs. Open PR:
+- **Title**: `{TASK-ID}: {summary}`
+- **Body**: goals, changes, tests, risks, rollback, `git diff --stat`.
+Pause for human approval.
+
+---
+
+## Command Registry
+# SoT & drift
+- `python scripts/generate_filemap.py`
+- `rg -n "src/bot/|python -m src\.bot|docker-compose|pytest" docs CLAUDE.md`
+- `python scripts/doc_check.py --files CLAUDE.md docs/**/*.md`
+
+# Test / perf
+- `pytest -q`
+- `pytest tests/performance/benchmark_consolidated.py -q`
+
+# Ops
+- `python -m src.bot.cli dashboard`
+- `python -m src.bot.cli backtest --symbol AAPL --start 2024-01-01 --end 2024-06-30 --strategy trend_breakout`
+- `docker-compose -f deploy/postgres/docker-compose.yml up -d`
+
+---
 
 ## Project Structure
 
-```
 GPT-Trader/
 ├── src/bot/
-│   ├── ml/                              # ML components
-│   │   ├── integrated_pipeline.py       # Phase 2.5 orchestrator (exists)
-│   │   ├── auto_retraining.py           # Phase 3 (exists)
-│   │   └── deep_learning/               # Phase 4 Month 1 (exists)
+│   ├── ml/
+│   │   ├── integrated_pipeline.py
+│   │   ├── auto_retraining.py
+│   │   └── deep_learning/
 │   │       ├── lstm_architecture.py
 │   │       ├── lstm_data_pipeline.py
 │   │       ├── lstm_training.py
@@ -20,18 +69,10 @@ GPT-Trader/
 │   │       ├── transformer_models.py
 │   │       └── integrated_lstm_pipeline.py
 │   ├── monitoring/
-│   │   ├── structured_logger.py
-│   │   ├── intelligent_alerts.py
-│   │   └── ops_dashboard.py
 │   ├── risk/
-│   │   ├── risk_metrics_engine.py
-│   │   ├── stress_testing.py
-│   │   ├── correlation_monitor.py
-│   │   ├── greeks_calculator.py
-│   │   └── risk_limit_monitor.py
 │   ├── data/
-│   │   └── sentiment/                   # Planned (Month 2)
-│   └── strategy/                        # Planned (Month 3)
+│   │   └── sentiment/         # Planned
+│   └── strategy/              # Planned
 │       ├── multi_asset/
 │       └── options/
 ├── docs/
@@ -39,8 +80,32 @@ GPT-Trader/
 │   ├── PHASE_4_TASK_BREAKDOWN.md
 │   └── OPERATIONS_RUNBOOK.md
 └── tests/
-    └── ...
-```
+
+---
+
+## Core Agents (registered)
+| Agent | Purpose | Tools |
+|---|---|---|
+| `planner` | Turn a request into a ≤8-step plan w/ files & tests | `read`, `grep` |
+| `repo-structure-guardian` | SoT scans, drift reports, doc/path checks | `read`, `grep`, `shell` |
+| `test-runner` | Run tests, summarize failures, suggest smallest next fix | `read`, `shell` |
+| `debugger` | Localize root cause; propose minimal patch hunks | `read`, `grep` |
+| `agentic-code-reviewer` | Review diffs for correctness/security/perf/tests | `read`, `grep`, `git_diff` |
+| `trading-strategy-consultant` | Validate strategy logic & risk; outline tests | `read`, `grep` |
+| `performance-optimizer` | Run perf suites; pinpoint hotspots; suggest fixes | `read`, `grep`, `shell` |
+
+---
+
+## Routing Matrix (GPT-Trader tasks)
+| Task prefix | Primary route | Secondary |
+|---|---|---|
+| **DL-\*** | `planner → trading-strategy-consultant → implement (main) → test-runner → agentic-code-reviewer` | `performance-optimizer` (if slow) |
+| **RL-\*** | `planner → trading-strategy-consultant → implement → test-runner` | `performance-optimizer` |
+| **SENT-/MICRO-\*** | `planner → implement → test-runner` | `repo-structure-guardian` (schemas/paths) |
+| **MULTI-/OPT-\*** | `planner → trading-strategy-consultant → implement → test-runner → agentic-code-reviewer` | — |
+| **SOT-\*** | `repo-structure-guardian` | `agentic-code-reviewer` (Phase 5) |
+
+---
 
 ## Repository Cleanup & Single-Source-of-Truth (SoT) Program
 
@@ -69,11 +134,11 @@ GPT-Trader/
 - [ ] **SOT-012**: Remove `CLAUDE.md.bak` after verifying parity.
 
 ### Phase 2 (Day 3): Normalize Structure & References
-- [ ] **SOT-020**: Standardize references to `src/bot/strategy/` (singular) across docs.
-- [ ] **SOT-021**: Align Phase 4 deliverables filenames in `docs/PHASE_4_TASK_BREAKDOWN.md` to actual files:
+- [x] **SOT-020**: Standardize references to `src/bot/strategy/` (singular) across docs.
+- [x] **SOT-021**: Align Phase 4 deliverables filenames in `docs/PHASE_4_TASK_BREAKDOWN.md` to actual files:
   - `lstm_architecture.py`, `lstm_data_pipeline.py`, `lstm_training.py`, `attention_mechanisms.py`, `transformer_models.py`.
-- [ ] **SOT-022**: Refresh `docs/ARCHITECTURE_FILEMAP.md` from generated file map.
-- [ ] **SOT-023**: Fix monitoring/risk module paths in docs to match `src/bot/monitoring/*` and `src/bot/risk/*`.
+- [x] **SOT-022**: Refresh `docs/ARCHITECTURE_FILEMAP.md` from generated file map.
+- [x] **SOT-023**: Fix monitoring/risk module paths in docs to match `src/bot/monitoring/*` and `src/bot/risk/*`.
 
 ### Phase 3 (Day 4): Automate SoT Generation
 - [ ] **SOT-030**: Extend `scripts/update_claude_md.py` to auto-populate:

@@ -18,6 +18,7 @@ class TrendBreakoutParams:
 
 class TrendBreakoutStrategy(Strategy):
     name = "trend_breakout"
+    supports_short = False
 
     def __init__(self, params: TrendBreakoutParams | None = None) -> None:
         self.params = params or TrendBreakoutParams()
@@ -25,7 +26,7 @@ class TrendBreakoutStrategy(Strategy):
     def generate_signals(self, bars: pd.DataFrame) -> pd.DataFrame:
         df = bars.copy()
         upper, lower = donchian_channels(df, self.params.donchian_lookback)
-        a = atr(df, self.params.atr_period)
+        a = atr(df, self.params.atr_period, method="wilder")
 
         # Long when close breaks above prior-day upper channel
         df["breakout_long"] = (df["Close"] > upper.shift(1)).astype(int)

@@ -1,0 +1,70 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: gpt-trader
+
+resources:
+  - namespace.yaml
+  - configmap.yaml
+  - secrets.yaml
+  - redis.yaml
+  - postgresql.yaml
+  - api-gateway.yaml
+  - trading-engine.yaml
+  - data-pipeline.yaml
+  - ml-inference.yaml
+  - monitoring.yaml
+  - autoscaler.yaml
+  - ingress.yaml
+  - backup-cronjob.yaml
+  - network-policies.yaml
+
+images:
+  - name: gpt-trader/api-gateway
+    newTag: latest
+  - name: gpt-trader/trading-engine
+    newTag: latest
+  - name: gpt-trader/data-pipeline
+    newTag: latest
+  - name: gpt-trader/ml-inference
+    newTag: latest
+  - name: gpt-trader/autoscaler
+    newTag: latest
+
+configMapGenerator:
+  - name: gpt-trader-config
+    behavior: merge
+    files:
+      - configs/trading.yaml
+      - configs/models.yaml
+      - configs/monitoring.yaml
+      - configs/scaling.yaml
+
+secretGenerator:
+  - name: gpt-trader-secrets
+    behavior: merge
+    envs:
+      - secrets/.env.production
+
+patchesStrategicMerge:
+  - patches/production-resources.yaml
+
+replicas:
+  - name: api-gateway
+    count: 3
+  - name: trading-engine
+    count: 2
+  - name: data-pipeline
+    count: 3
+  - name: ml-inference
+    count: 2
+
+commonLabels:
+  app.kubernetes.io/name: gpt-trader
+  app.kubernetes.io/instance: production
+  app.kubernetes.io/component: trading
+  app.kubernetes.io/part-of: gpt-trader
+  app.kubernetes.io/managed-by: kustomize
+
+commonAnnotations:
+  app.kubernetes.io/version: "4.0.0"

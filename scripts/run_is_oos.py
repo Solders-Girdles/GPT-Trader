@@ -73,9 +73,9 @@ def run_one(
     Returns None if the summary file could not be found/parsed.
     """
     cmd = [
-        "python",
-        "-m",
-        "bot.cli",
+        "poetry",
+        "run",
+        "gpt-trader",
         "backtest",
         "--strategy",
         "trend_breakout",

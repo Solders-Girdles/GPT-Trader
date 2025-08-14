@@ -25,7 +25,7 @@ for atrk in "${ATR_KS[@]}"; do
       for ec in "${ENTRY_CONFIRMS[@]}"; do
         for rp in "${REBAL_PCTS[@]}"; do
           echo ">>> Run: atr_k=${atrk}, risk=${risk}, max_pos=${mp}, entry_confirm=${ec}, min_rebal=${rp}"
-          poetry run python -m bot.cli backtest \
+          poetry run gpt-trader backtest \
             $COMMON $SYMS $DATES \
             --atr-k "$atrk" --risk-pct "$risk" --max-positions "$mp" \
             --entry-confirm "$ec" --min-rebalance-pct "$rp" >/dev/null

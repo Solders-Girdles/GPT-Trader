@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
+from bot.utils.validation import DataFrameValidator
 
 
 def adjust_to_adjclose(df: pd.DataFrame) -> tuple[pd.DataFrame, bool]:
@@ -35,28 +36,10 @@ def validate_daily_bars(df: pd.DataFrame, symbol: str) -> None:
     Lightweight sanity checks for daily bars.
     Raises ValueError on hard failures; prints warnings for soft issues.
     """
-    if df.empty:
-        raise ValueError(f"{symbol}: empty price frame")
+    # Use consolidated validation
+    DataFrameValidator.validate_daily_bars(df, symbol)
 
-    if not isinstance(df.index, pd.DatetimeIndex):
-        raise ValueError(f"{symbol}: index must be DatetimeIndex")
-
-    if not df.index.is_monotonic_increasing:
-        raise ValueError(f"{symbol}: index not sorted ascending")
-
-    if df.index.has_duplicates:
-        dup_ct = int(df.index.duplicated().sum())
-        raise ValueError(f"{symbol}: duplicate dates detected ({dup_ct})")
-
-    needed = [c for c in ("Open", "High", "Low", "Close") if c in df.columns]
-    if not needed:
-        raise ValueError(f"{symbol}: missing price columns")
-
-    if df[needed].isna().any().any():
-        n = int(df[needed].isna().sum().sum())
-        raise ValueError(f"{symbol}: NaNs in OHLC ({n})")
-
-    # Soft checks (warn only) — Long gaps: > 7 calendar days between rows
+    # Additional soft checks (warn only) — Long gaps: > 7 calendar days between rows
     gaps = df.index.to_series().diff().dt.days.dropna()
     long_gaps = gaps[gaps > 7]
     if len(long_gaps) > 0:

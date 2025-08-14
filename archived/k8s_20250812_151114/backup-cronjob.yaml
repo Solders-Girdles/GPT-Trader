@@ -1,0 +1,167 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: database-backup
+  namespace: gpt-trader
+spec:
+  schedule: "0 2 * * *"  # Daily at 2 AM UTC
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: postgres-backup
+              image: postgres:15-alpine
+              env:
+                - name: PGPASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: gpt-trader-secrets
+                      key: POSTGRES_PASSWORD
+                - name: S3_BUCKET
+                  value: "gpt-trader-backups"
+                - name: AWS_ACCESS_KEY_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: aws-credentials
+                      key: access_key_id
+                - name: AWS_SECRET_ACCESS_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: aws-credentials
+                      key: secret_access_key
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  DATE=$(date +%Y%m%d_%H%M%S)
+                  BACKUP_FILE="gpt_trader_backup_${DATE}.sql.gz"
+                  
+                  echo "Starting database backup..."
+                  pg_dump -h postgresql -U gpt_trader gpt_trader | gzip > /tmp/${BACKUP_FILE}
+                  
+                  echo "Uploading to S3..."
+                  apk add --no-cache aws-cli
+                  aws s3 cp /tmp/${BACKUP_FILE} s3://${S3_BUCKET}/postgres/${BACKUP_FILE}
+                  
+                  echo "Backup completed successfully"
+              resources:
+                requests:
+                  memory: "256Mi"
+                  cpu: "100m"
+                limits:
+                  memory: "1Gi"
+                  cpu: "500m"
+
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: model-backup
+  namespace: gpt-trader
+spec:
+  schedule: "0 4 * * 0"  # Weekly on Sunday at 4 AM UTC
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 2
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: model-backup
+              image: amazon/aws-cli:latest
+              env:
+                - name: S3_BUCKET
+                  value: "gpt-trader-backups"
+                - name: AWS_ACCESS_KEY_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: aws-credentials
+                      key: access_key_id
+                - name: AWS_SECRET_ACCESS_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: aws-credentials
+                      key: secret_access_key
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  DATE=$(date +%Y%m%d_%H%M%S)
+                  
+                  echo "Starting model backup..."
+                  aws s3 sync /app/models s3://${S3_BUCKET}/models/${DATE}/ --exclude "*.tmp"
+                  
+                  echo "Model backup completed successfully"
+              volumeMounts:
+                - name: models
+                  mountPath: /app/models
+              resources:
+                requests:
+                  memory: "512Mi"
+                  cpu: "200m"
+                limits:
+                  memory: "2Gi"
+                  cpu: "1000m"
+          volumes:
+            - name: models
+              persistentVolumeClaim:
+                claimName: ml-models-pvc
+
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: cleanup-old-data
+  namespace: gpt-trader
+spec:
+  schedule: "0 3 * * *"  # Daily at 3 AM UTC
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: cleanup
+              image: postgres:15-alpine
+              env:
+                - name: PGPASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: gpt-trader-secrets
+                      key: POSTGRES_PASSWORD
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  echo "Cleaning up old data..."
+                  
+                  # Delete performance metrics older than 90 days
+                  psql -h postgresql -U gpt_trader -d gpt_trader -c \
+                    "DELETE FROM performance_metrics WHERE timestamp < NOW() - INTERVAL '90 days';"
+                  
+                  # Delete acknowledged alerts older than 30 days
+                  psql -h postgresql -U gpt_trader -d gpt_trader -c \
+                    "DELETE FROM alerts WHERE acknowledged = true AND created_at < NOW() - INTERVAL '30 days';"
+                  
+                  # Delete closed positions older than 180 days
+                  psql -h postgresql -U gpt_trader -d gpt_trader -c \
+                    "DELETE FROM positions WHERE closed_at IS NOT NULL AND closed_at < NOW() - INTERVAL '180 days';"
+                  
+                  # Vacuum and analyze
+                  psql -h postgresql -U gpt_trader -d gpt_trader -c "VACUUM ANALYZE;"
+                  
+                  echo "Cleanup completed successfully"
+              resources:
+                requests:
+                  memory: "128Mi"
+                  cpu: "50m"
+                limits:
+                  memory: "512Mi"
+                  cpu: "200m"

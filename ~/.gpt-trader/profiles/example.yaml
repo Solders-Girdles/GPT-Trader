@@ -1,0 +1,22 @@
+# Example GPT-Trader Configuration Profile
+# This profile demonstrates how to save common settings
+
+# Strategy defaults
+strategy: trend_breakout
+donchian: 55
+atr: 20
+atr_k: 2.0
+
+# Risk management
+risk_pct: 0.5
+max_positions: 10
+cost_bps: 5.0
+
+# Data validation
+data_strict: repair
+
+# Common symbols
+symbols: AAPL,MSFT,GOOGL,SPY,QQQ
+
+# Verbosity
+verbose: 1

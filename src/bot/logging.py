@@ -16,6 +16,9 @@ def _ensure_root_config() -> None:
     set LOG_FORCE=1 to override.
     """
     root = logging.getLogger()
+    
+    # Check if we already have a handler configured (by CLI or elsewhere)
+    # This prevents duplicate handlers
     if root.handlers and os.getenv("LOG_FORCE", "0") != "1":
         return
 
@@ -24,18 +27,35 @@ def _ensure_root_config() -> None:
         for h in list(root.handlers):
             root.removeHandler(h)
 
-    level_name = os.getenv("LOG_LEVEL", "INFO").upper()
-    level = getattr(logging, level_name, logging.INFO)
+    # Use centralized config if available; fall back to env
+    try:
+        from bot.config.unified_config import get_config  # local import to avoid cycles
 
-    handler = logging.StreamHandler(stream=sys.stdout)
-    handler.setFormatter(logging.Formatter(_FMT))
+        level_name = getattr(get_config().logging, "level", "INFO")
+        level = getattr(logging, str(level_name).upper(), logging.INFO)
+    except Exception:
+        # Fallback to environment variable for bootstrap scenarios
+        level_name = os.getenv("LOG_LEVEL", "INFO").upper()
+        level = getattr(logging, level_name, logging.INFO)
 
-    root.addHandler(handler)
+    # Only add handler if none exist
+    if not root.handlers:
+        handler = logging.StreamHandler(stream=sys.stdout)
+        handler.setFormatter(logging.Formatter(_FMT))
+        root.addHandler(handler)
+    
     root.setLevel(level)
 
 
 def get_logger(name: str) -> logging.Logger:
     _ensure_root_config()
     logger = logging.getLogger(name)
+    
+    # Use propagation to root logger, don't add individual handlers
+    # This prevents duplicate logging
     logger.propagate = True
+    
+    # Don't add handlers to child loggers - let them propagate to root
+    # This is the key fix for duplicate logging
+    
     return logger

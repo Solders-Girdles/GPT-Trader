@@ -4,6 +4,7 @@ import math
 from dataclasses import dataclass
 
 import pandas as pd
+from bot.validation import get_math_validator
 
 
 @dataclass
@@ -12,7 +13,11 @@ class PortfolioRules:
     atr_k: float = 2.0
     max_positions: int = 10
     max_gross_exposure_pct: float = 0.60
-    cost_bps: float = 0.0  # one-way
+    cost_bps: float = 0.0  # one-way transaction cost (bps)
+    # Phase 2: execution cost hooks and turnover guard
+    cost_adjusted_sizing: bool = False  # if true, reduce risk by expected costs
+    slippage_bps: float = 0.0  # estimated one-way slippage (bps)
+    max_turnover_per_rebalance: float | None = None  # optional turnover cap at execution (0-1)
 
 
 def _to_float(x: pd.Series | float | int) -> float:
@@ -25,6 +30,10 @@ def _to_float(x: pd.Series | float | int) -> float:
 
 def position_size(equity: float, atr_value: float, price: float, rules: PortfolioRules) -> int:
     risk_usd = equity * rules.per_trade_risk_pct
+    if rules.cost_adjusted_sizing:
+        # Reduce available risk by expected entry cost and slippage (conservative)
+        total_cost_rate = max(0.0, (rules.cost_bps + rules.slippage_bps) / 10_000.0)
+        risk_usd = max(0.0, risk_usd * (1.0 - total_cost_rate))
     stop_dist = rules.atr_k * atr_value
     if stop_dist <= 0 or price <= 0:
         return 0
@@ -77,7 +86,11 @@ def allocate_signals(
 
             sig_val = float(df["signal"].iloc[-1]) if "signal" in df.columns else 0.0
 
-            strength = sig_val / max(atr_for_rank, 1e-9)
+            # Use safe division to prevent division by zero
+            math_validator = get_math_validator()
+            strength = math_validator.safe_divide(
+                sig_val, atr_for_rank, default=0.0, name=f"signal_strength_{sym}"
+            )
 
         candidates.append((sym, strength, qty))
 

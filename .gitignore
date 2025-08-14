@@ -15,12 +15,28 @@ logs/
 # macOS
 .DS_Store
 
-# Backtest outputs
-data/backtests/
+# Generated artifacts
+*.png
+*.csv
+logs/
 
-# Universe data files (keep only sample file)
-data/universe/*
+# Data outputs (keep sample universe only)
+data/**
+!data/universe/
 !data/universe/sample_universe.csv
+!data/experiments/**/run.json
+!data/optimization/config.json
 
 # Local data cache
 data/cache/
+
+# Security - NEVER remove these entries
+.env
+.env.*
+!.env.template
+*.pem
+*.key
+*.crt
+*.p12
+secrets/
+credentials/

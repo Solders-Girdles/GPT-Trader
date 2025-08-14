@@ -896,3 +896,4 @@ PERFORMANCE_ADAPTIVE_SCHEDULE = create_adaptive_schedule(
     max_interval_hours=72,
     priority=TaskPriority.HIGH
 )
+EOF < /dev/null

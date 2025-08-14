@@ -58,12 +58,11 @@ repos:
         language: system
         pass_filenames: false
 
-      # TEMPORARILY DISABLED - Will be re-enabled after SOT-PRE-001
-      # - id: no-pickle-usage
-      #   name: Check for pickle usage
-      #   entry: bash -c '! grep -r "import pickle\|from pickle import\|pickle\." src/ --include="*.py" | grep -v "#"'
-      #   language: system
-      #   pass_filenames: false
+      - id: no-pickle-usage
+        name: Check for pickle usage
+        entry: bash -c '! grep -r "import pickle\|from pickle import\|pickle\." src/ --include="*.py" | grep -v "src/bot/utils/serialization.py" | grep -v "#"'
+        language: system
+        pass_filenames: false
 
       # TEMPORARILY DISABLED - Will be re-enabled after SOT-PRE-002
       # - id: no-hardcoded-secrets

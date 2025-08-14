@@ -1046,3 +1046,4 @@ PRODUCTION_RETRAINING_CONFIG = RetrainingConfig(
     shadow_mode_duration_hours=48,
     auto_rollback_enabled=True
 )
+EOF < /dev/null

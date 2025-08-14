@@ -235,7 +235,7 @@ class IntelligentCache:
             # Clear disk cache if requested
             if not memory_only and self.enable_disk_cache:
                 try:
-                    for cache_file in self.cache_dir.glob("cache_*.pkl"):
+                    for cache_file in self.cache_dir.glob("cache_*.joblib"):
                         cache_file.unlink()
                     self._disk_cache_keys.clear()
                 except Exception as e:
@@ -446,7 +446,7 @@ class IntelligentCache:
 
     def _get_disk_path(self, key: str) -> Path:
         """Get disk path for cache key"""
-        return self.cache_dir / f"cache_{key}.pkl"
+        return self.cache_dir / f"cache_{key}.joblib"
 
     def _evict_memory_entry(self) -> bool:
         """Evict least valuable entry from memory cache"""
@@ -535,7 +535,7 @@ class IntelligentCache:
 
         total_size = 0
         try:
-            for cache_file in self.cache_dir.glob("cache_*.pkl"):
+            for cache_file in self.cache_dir.glob("cache_*.joblib"):
                 total_size += cache_file.stat().st_size
         except Exception:
             pass
@@ -565,12 +565,12 @@ class IntelligentCache:
 
         try:
             # Calculate initial size
-            for cache_file in self.cache_dir.glob("cache_*.pkl"):
+            for cache_file in self.cache_dir.glob("cache_*.joblib"):
                 initial_size += cache_file.stat().st_size
 
             # Remove old or oversized files
             files_by_age = []
-            for cache_file in self.cache_dir.glob("cache_*.pkl"):
+            for cache_file in self.cache_dir.glob("cache_*.joblib"):
                 try:
                     stat = cache_file.stat()
                     files_by_age.append((cache_file, stat.st_mtime, stat.st_size))
@@ -602,7 +602,7 @@ class IntelligentCache:
                     continue
 
             # Calculate final size
-            for cache_file in self.cache_dir.glob("cache_*.pkl"):
+            for cache_file in self.cache_dir.glob("cache_*.joblib"):
                 final_size += cache_file.stat().st_size
 
         except Exception as e:

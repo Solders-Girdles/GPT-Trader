@@ -576,7 +576,7 @@ class HistoricalDataManager:
     ) -> None:
         """Save dataset to cache"""
         try:
-            cache_file = self.cache_dir / f"{cache_key}.pkl"
+            cache_file = self.cache_dir / f"{cache_key}.joblib"
             joblib.dump(data, cache_file)
             logger.debug(f"Dataset cached: {cache_key}")
         except Exception as e:
@@ -587,7 +587,7 @@ class HistoricalDataManager:
     ) -> tuple[dict[str, pd.DataFrame], DatasetMetadata] | None:
         """Load dataset from cache"""
         try:
-            cache_file = self.cache_dir / f"{cache_key}.pkl"
+            cache_file = self.cache_dir / f"{cache_key}.joblib"
 
             if not cache_file.exists():
                 return None
@@ -628,7 +628,7 @@ class HistoricalDataManager:
 
     def get_cache_info(self) -> dict[str, Any]:
         """Get cache statistics"""
-        cache_files = list(self.cache_dir.glob("*.pkl"))
+        cache_files = list(self.cache_dir.glob("*.joblib"))
         total_size = sum(f.stat().st_size for f in cache_files)
 
         return {
@@ -646,7 +646,7 @@ class HistoricalDataManager:
 
     def clear_cache(self, older_than_hours: int | None = None):
         """Clear cached data"""
-        cache_files = list(self.cache_dir.glob("*.pkl"))
+        cache_files = list(self.cache_dir.glob("*.joblib"))
 
         if older_than_hours is not None:
             cutoff_time = datetime.now() - timedelta(hours=older_than_hours)

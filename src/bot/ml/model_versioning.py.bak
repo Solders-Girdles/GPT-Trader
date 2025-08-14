@@ -1021,3 +1021,4 @@ def create_model_versioning(base_path: str = "models",
         enable_git_tracking=enable_git,
         max_versions_per_model=max_versions
     )
+EOF < /dev/null

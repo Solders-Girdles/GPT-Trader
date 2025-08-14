@@ -15,21 +15,21 @@ GPT-Trader is an advanced ML-powered autonomous portfolio management system for 
 ---
 
 ## Agentic Playbook (mechanical)
-**Explore (read-only)**  
+**Explore (read-only)**
 Read {paths}. Do not write code. Output: 10-bullet architecture summary, 5 risks, smallest viable change. If unknowns → `planner`.
 
-**Plan**  
+**Plan**
 `planner`: For **{TASK-ID}**, output ≤8 steps, affected files, test names, perf checks, rollback.
 
-**Implement**  
-Do **step 1 only**. Keep edits ≤5 files or ≤200 LOC.  
-Run `test-runner`. If failing, call `debugger` for root cause + minimal patch; apply fix.  
+**Implement**
+Do **step 1 only**. Keep edits ≤5 files or ≤200 LOC.
+Run `test-runner`. If failing, call `debugger` for root cause + minimal patch; apply fix.
 Repeat until step 1 passes, then **STOP** and report.
 
-**Review**  
+**Review**
 `agentic-code-reviewer`: Review diff for **{TASK-ID}**. Return CRITICAL/HIGH/NICE-TO-HAVE with file:line. Apply only CRITICAL/HIGH now.
 
-**Doc & PR**  
+**Doc & PR**
 Update touched docs. Open PR:
 - **Title**: `{TASK-ID}: {summary}`
 - **Body**: goals, changes, tests, risks, rollback, `git diff --stat`.
@@ -129,9 +129,9 @@ GPT-Trader/
 - [x] **SOT-004**: Emit drift report artifact at `docs/reports/doc_drift.json`.
 
 ### Phase 1 (Day 2): Deprecation Sweep
-- [ ] **SOT-010**: Identify orphaned/unused files (>60d) and archive to `docs/archived/` with reason/date.
-- [ ] **SOT-011**: Update `docs/archived/DEPRECATED_FILES_LIST.md`.
-- [ ] **SOT-012**: Remove `CLAUDE.md.bak` after verifying parity.
+- [x] **SOT-010**: Identify orphaned/unused files (>60d) and archive to `docs/archived/` with reason/date.
+- [x] **SOT-011**: Update `docs/archived/DEPRECATED_FILES_LIST.md`.
+- [x] **SOT-012**: Remove `CLAUDE.md.bak` after verifying parity.
 
 ### Phase 2 (Day 3): Normalize Structure & References
 - [x] **SOT-020**: Standardize references to `src/bot/strategy/` (singular) across docs.

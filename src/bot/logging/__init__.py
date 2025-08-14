@@ -13,6 +13,21 @@ import logging
 import os
 import sys
 
+# Import enhanced logging components
+from .log_aggregator import (
+    LogAggregator,
+    LogEntry,
+)
+from .structured_logger import (
+    LogContext,
+    LogFormat,
+    PerformanceLogger,
+    StructuredFormatter,
+    StructuredLogger,
+    TradeLogger,
+    get_structured_logger,
+)
+
 _FMT = "%(asctime)s | %(name)s | %(levelname)s | %(message)s"
 
 
@@ -35,7 +50,7 @@ def _ensure_root_config() -> None:
 
     # Use centralized config if available; fall back to env
     try:
-        from bot.config.unified_config import get_config  # local import to avoid cycles
+        from bot.config import get_config  # local import to avoid cycles
 
         level_name = getattr(get_config().logging, "level", "INFO")
         level = getattr(logging, str(level_name).upper(), logging.INFO)
@@ -64,21 +79,7 @@ def get_logger(name: str) -> logging.Logger:
         logger.addHandler(handler)
 
     return logger
-from .log_aggregator import (
-    LogAggregator,
-    LogEntry,
-)
 
-# Import enhanced logging components
-from .structured_logger import (
-    LogContext,
-    LogFormat,
-    PerformanceLogger,
-    StructuredFormatter,
-    StructuredLogger,
-    TradeLogger,
-    get_structured_logger,
-)
 
 __all__ = [
     # Backward compatibility

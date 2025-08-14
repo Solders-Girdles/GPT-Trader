@@ -14,6 +14,15 @@ Key Features:
 
 from typing import Any
 
+# Import lightweight components immediately
+from .strategy.base import Strategy
+
+# Import consolidated config - use try/except for fallback
+try:
+    from .config import TradingConfig, get_config
+except ImportError:
+    from .config.unified_config import TradingConfig, get_config
+
 __version__ = "2.0.0"
 __author__ = "RJ + GPT-5"
 
@@ -26,12 +35,8 @@ def _lazy_import_backtest() -> Any:
     return run_backtest
 
 
-# Import lightweight components immediately
-from .config import TradingConfig, get_config
-from .strategy.base import Strategy
-
 # Create a compatibility alias for old code
-settings = get_config()
+settings = None  # Will be set lazily
 
 
 # Lazy imports for heavy components

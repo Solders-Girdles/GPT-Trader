@@ -15,9 +15,172 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 
-from bot.config.financial_config import FinancialConfig
-from bot.security.secrets_manager import get_secret_manager
+try:
+    from bot.security.secrets_manager import get_secret_manager
+except ImportError:
+    # Fallback for testing or minimal setups
+    class MockSecretManager:
+        def get_secret(self, key: str, default: str = "") -> str:
+            return os.environ.get(key, default)
+
+    def get_secret_manager() -> MockSecretManager:
+        return MockSecretManager()
+
+
+# Import financial config inline to avoid circular imports
+from decimal import Decimal
+
 from pydantic import BaseModel, Field, field_validator, model_validator
+
+
+# Financial Configuration Classes (consolidated from financial_config.py)
+class TradingLimits(BaseModel):
+    """Trading position and risk limits."""
+
+    max_position_size: Decimal = Field(
+        default=Decimal("1000000.0"), description="Maximum position size in USD", gt=0
+    )
+    max_order_value: Decimal = Field(
+        default=Decimal("100000.0"), description="Maximum order value in USD", gt=0
+    )
+    max_portfolio_positions: int = Field(
+        default=20, description="Maximum concurrent positions", gt=0
+    )
+    max_leverage: float = Field(
+        default=1.0, description="Maximum leverage multiplier", ge=1.0, le=4.0
+    )
+    min_position_size: Decimal = Field(
+        default=Decimal("100.0"), description="Minimum position size in USD", gt=0
+    )
+    position_size_increment: Decimal = Field(
+        default=Decimal("0.01"), description="Minimum position sizing increment", gt=0
+    )
+
+
+class RiskParameters(BaseModel):
+    """Risk management parameters."""
+
+    max_portfolio_risk: float = Field(
+        default=0.02, description="Maximum portfolio risk per trade (2%)", gt=0, le=0.1
+    )
+    max_daily_loss: Decimal = Field(
+        default=Decimal("5000.0"), description="Maximum daily loss limit in USD", gt=0
+    )
+    max_drawdown_percent: float = Field(
+        default=0.20, description="Maximum acceptable drawdown (20%)", gt=0, le=0.5
+    )
+    stop_loss_percent: float = Field(
+        default=0.02, description="Default stop loss percentage (2%)", gt=0, le=0.1
+    )
+    take_profit_percent: float = Field(
+        default=0.05, description="Default take profit percentage (5%)", gt=0, le=0.5
+    )
+    risk_free_rate: float = Field(
+        default=0.05, description="Annual risk-free rate for Sharpe ratio", ge=0, le=0.2
+    )
+    confidence_level: float = Field(
+        default=0.95, description="Confidence level for VaR calculations", gt=0.9, lt=1.0
+    )
+
+
+class TransactionCosts(BaseModel):
+    """Transaction cost configuration."""
+
+    commission_per_share: Decimal = Field(
+        default=Decimal("0.005"), description="Commission per share in USD", ge=0
+    )
+    commission_minimum: Decimal = Field(
+        default=Decimal("1.0"), description="Minimum commission per trade in USD", ge=0
+    )
+    commission_rate_bps: float = Field(
+        default=10.0, description="Commission rate in basis points", ge=0, le=100
+    )
+    slippage_bps: float = Field(
+        default=5.0, description="Expected slippage in basis points", ge=0, le=100
+    )
+    market_impact_bps: float = Field(
+        default=2.0, description="Expected market impact in basis points", ge=0, le=100
+    )
+
+    @property
+    def commission_rate_decimal(self) -> float:
+        """Convert commission rate from basis points to decimal."""
+        return self.commission_rate_bps / 10000.0
+
+    @property
+    def slippage_decimal(self) -> float:
+        """Convert slippage from basis points to decimal."""
+        return self.slippage_bps / 10000.0
+
+    @property
+    def total_cost_bps(self) -> float:
+        """Total transaction cost in basis points."""
+        return self.commission_rate_bps + self.slippage_bps + self.market_impact_bps
+
+
+class CapitalAllocation(BaseModel):
+    """Capital allocation configuration."""
+
+    initial_capital: Decimal = Field(
+        default=Decimal("100000.0"), description="Initial trading capital in USD", gt=0
+    )
+    paper_trading_capital: Decimal = Field(
+        default=Decimal("100000.0"), description="Paper trading capital in USD", gt=0
+    )
+    backtesting_capital: Decimal = Field(
+        default=Decimal("100000.0"), description="Backtesting capital in USD", gt=0
+    )
+    deployment_budget: Decimal = Field(
+        default=Decimal("10000.0"), description="Strategy deployment budget in USD", gt=0
+    )
+    reserve_capital_percent: float = Field(
+        default=0.20, description="Percentage of capital in reserve (20%)", ge=0, le=0.5
+    )
+    max_capital_per_strategy: Decimal = Field(
+        default=Decimal("50000.0"), description="Maximum capital per strategy in USD", gt=0
+    )
+    min_capital_per_strategy: Decimal = Field(
+        default=Decimal("1000.0"), description="Minimum capital per strategy in USD", gt=0
+    )
+
+    @field_validator("initial_capital", "paper_trading_capital", "backtesting_capital")
+    @classmethod
+    def validate_capital_amounts(cls, v: Decimal) -> Decimal:
+        """Validate capital amounts are reasonable."""
+        if v < 1000:
+            raise ValueError(f"Capital must be at least $1,000, got ${v}")
+        if v > 100_000_000:
+            raise ValueError(f"Capital exceeds maximum limit of $100M, got ${v}")
+        return v
+
+    @property
+    def available_trading_capital(self) -> Decimal:
+        """Calculate available trading capital after reserves."""
+        return self.initial_capital * Decimal(str(1 - self.reserve_capital_percent))
+
+
+class FinancialConfig(BaseModel):
+    """Comprehensive financial configuration."""
+
+    capital: CapitalAllocation = Field(default_factory=CapitalAllocation)
+    limits: TradingLimits = Field(default_factory=TradingLimits)
+    risk: RiskParameters = Field(default_factory=RiskParameters)
+    costs: TransactionCosts = Field(default_factory=TransactionCosts)
+    base_currency: str = Field(default="USD", description="Base currency for calculations")
+    decimal_precision: int = Field(
+        default=2, description="Decimal precision for calculations", ge=0, le=8
+    )
+    market_open_hour: int = Field(
+        default=9, description="Market open hour (24-hour format)", ge=0, lt=24
+    )
+    market_open_minute: int = Field(default=30, description="Market open minute", ge=0, lt=60)
+    market_close_hour: int = Field(
+        default=16, description="Market close hour (24-hour format)", ge=0, lt=24
+    )
+    market_close_minute: int = Field(default=0, description="Market close minute", ge=0, lt=60)
+    max_historical_days: int = Field(
+        default=730, description="Maximum days of historical data (2 years)", gt=30
+    )
 
 
 class Environment(str, Enum):
@@ -332,7 +495,7 @@ class TradingConfig(BaseModel):
         import json
         from decimal import Decimal
 
-        def default_serializer(obj):
+        def default_serializer(obj: Any) -> str:
             if isinstance(obj, Path | Decimal):
                 return str(obj)
             if isinstance(obj, Enum):

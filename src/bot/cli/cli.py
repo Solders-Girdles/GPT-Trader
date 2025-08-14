@@ -16,20 +16,17 @@ from .commands import (
     PaperCommand,
     MonitorCommand,
     DashboardCommand,
-    WizardCommand
+    WizardCommand,
 )
-from .ml_commands import (
-    MLTrainCommand,
-    AutoTradeCommand
-)
-from .utils import setup_logging, print_banner, get_version
+from .ml_commands import MLTrainCommand, AutoTradeCommand
+from .cli_utils import setup_logging, print_banner, get_version
 
 
 def create_parser() -> argparse.ArgumentParser:
     """Create the main argument parser"""
     parser = argparse.ArgumentParser(
-        prog='gpt-trader',
-        description='GPT-Trader: Autonomous Portfolio Management System',
+        prog="gpt-trader",
+        description="GPT-Trader: Autonomous Portfolio Management System",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -41,49 +38,25 @@ Examples:
 
 For more help on a specific command:
   gpt-trader <command> --help
-        """
+        """,
     )
-    
+
     # Global options
+    parser.add_argument("--version", action="version", version=f"GPT-Trader {get_version()}")
+
     parser.add_argument(
-        '--version', 
-        action='version',
-        version=f'GPT-Trader {get_version()}'
+        "-v", "--verbose", action="count", default=0, help="Increase verbosity (-vv for debug)"
     )
-    
-    parser.add_argument(
-        '-v', '--verbose',
-        action='count',
-        default=0,
-        help='Increase verbosity (-vv for debug)'
-    )
-    
-    parser.add_argument(
-        '-q', '--quiet',
-        action='store_true',
-        help='Suppress non-essential output'
-    )
-    
-    parser.add_argument(
-        '--config',
-        type=Path,
-        help='Path to configuration file'
-    )
-    
-    parser.add_argument(
-        '--data-dir',
-        type=Path,
-        default=Path('data'),
-        help='Data directory path'
-    )
-    
+
+    parser.add_argument("-q", "--quiet", action="store_true", help="Suppress non-essential output")
+
+    parser.add_argument("--config", type=Path, help="Path to configuration file")
+
+    parser.add_argument("--data-dir", type=Path, default=Path("data"), help="Data directory path")
+
     # Subcommands
-    subparsers = parser.add_subparsers(
-        title='Commands',
-        dest='command',
-        help='Available commands'
-    )
-    
+    subparsers = parser.add_subparsers(title="Commands", dest="command", help="Available commands")
+
     # Register commands
     BacktestCommand.add_parser(subparsers)
     OptimizeCommand.add_parser(subparsers)
@@ -94,7 +67,7 @@ For more help on a specific command:
     WizardCommand.add_parser(subparsers)
     MLTrainCommand.add_parser(subparsers)
     AutoTradeCommand.add_parser(subparsers)
-    
+
     return parser
 
 
@@ -102,42 +75,42 @@ def main(args: Optional[list] = None) -> int:
     """Main CLI entry point"""
     parser = create_parser()
     parsed_args = parser.parse_args(args)
-    
+
     # Setup logging based on verbosity
     if parsed_args.quiet:
-        log_level = 'ERROR'
+        log_level = "ERROR"
     elif parsed_args.verbose >= 2:
-        log_level = 'DEBUG'
+        log_level = "DEBUG"
     elif parsed_args.verbose == 1:
-        log_level = 'INFO'
+        log_level = "INFO"
     else:
-        log_level = 'WARNING'
-    
+        log_level = "WARNING"
+
     setup_logging(log_level)
-    
+
     # Show banner unless quiet
     if not parsed_args.quiet and not parsed_args.command:
         print_banner()
         parser.print_help()
         return 0
-    
+
     # Execute command
     if not parsed_args.command:
         parser.print_help()
         return 0
-    
+
     try:
         # Import command classes and execute
         command_map = {
-            'backtest': BacktestCommand,
-            'optimize': OptimizeCommand,
-            'live': LiveCommand,
-            'paper': PaperCommand,
-            'monitor': MonitorCommand,
-            'dashboard': DashboardCommand,
-            'wizard': WizardCommand,
+            "backtest": BacktestCommand,
+            "optimize": OptimizeCommand,
+            "live": LiveCommand,
+            "paper": PaperCommand,
+            "monitor": MonitorCommand,
+            "dashboard": DashboardCommand,
+            "wizard": WizardCommand,
         }
-        
+
         command_class = command_map.get(parsed_args.command)
         if command_class:
             command = command_class(parsed_args)
@@ -145,18 +118,19 @@ def main(args: Optional[list] = None) -> int:
         else:
             print(f"Unknown command: {parsed_args.command}")
             return 1
-            
+
     except KeyboardInterrupt:
         print("\n\nOperation cancelled by user")
         return 130
     except Exception as e:
         if parsed_args.verbose >= 2:
             import traceback
+
             traceback.print_exc()
         else:
             print(f"Error: {e}")
         return 1
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

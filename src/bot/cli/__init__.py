@@ -11,13 +11,10 @@ from .commands import (
     PaperCommand,
     MonitorCommand,
     DashboardCommand,
-    WizardCommand
+    WizardCommand,
 )
-from .ml_commands import (
-    MLTrainCommand,
-    AutoTradeCommand
-)
-from .utils import (
+from .ml_commands import MLTrainCommand, AutoTradeCommand
+from .cli_utils import (
     setup_logging,
     print_banner,
     print_success,
@@ -27,29 +24,29 @@ from .utils import (
     confirm_action,
     format_currency,
     format_percentage,
-    format_number
+    format_number,
 )
 
-__version__ = '2.0.0'
+__version__ = "2.0.0"
 __all__ = [
-    'main',
-    'BacktestCommand',
-    'OptimizeCommand', 
-    'LiveCommand',
-    'PaperCommand',
-    'MonitorCommand',
-    'DashboardCommand',
-    'WizardCommand',
-    'MLTrainCommand',
-    'AutoTradeCommand',
-    'setup_logging',
-    'print_banner',
-    'print_success',
-    'print_error',
-    'print_warning',
-    'print_info',
-    'confirm_action',
-    'format_currency',
-    'format_percentage',
-    'format_number'
+    "main",
+    "BacktestCommand",
+    "OptimizeCommand",
+    "LiveCommand",
+    "PaperCommand",
+    "MonitorCommand",
+    "DashboardCommand",
+    "WizardCommand",
+    "MLTrainCommand",
+    "AutoTradeCommand",
+    "setup_logging",
+    "print_banner",
+    "print_success",
+    "print_error",
+    "print_warning",
+    "print_info",
+    "confirm_action",
+    "format_currency",
+    "format_percentage",
+    "format_number",
 ]

@@ -130,9 +130,7 @@ This document is auto-generated. Run `python scripts/generate_filemap.py` to ref
   - performance_tracker.py
   - phase4_integration.py
   - portfolio_manager.py
-  - production_orchestrator.py
   - risk_monitor.py
-  - strategy_selector.py
   - trading_engine.py
 
 - logging/
@@ -233,7 +231,6 @@ This document is auto-generated. Run `python scripts/generate_filemap.py` to ref
   - deployment_pipeline.py
   - engine.py
   - enhanced_evolution.py
-  - enhanced_evolution_with_knowledge.py
   - evolutionary.py
   - grid.py
   - hierarchical_evolution.py

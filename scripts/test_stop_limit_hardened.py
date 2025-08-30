@@ -13,6 +13,7 @@ import asyncio
 from pathlib import Path
 from decimal import Decimal
 from datetime import datetime, timedelta
+from typing import Dict
 import logging
 
 # Add project root to path

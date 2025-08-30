@@ -19,6 +19,13 @@ from pathlib import Path
 from typing import Dict, List, Any, Optional
 import signal
 
+class DecimalEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, Decimal):
+            return float(obj)
+        return super(DecimalEncoder, self).default(obj)
+
+
 # Add project root to path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
@@ -48,11 +55,11 @@ class Stage3Runner:
     Stage 3 multi-asset production runner with comprehensive monitoring.
     """
     
-    def __init__(self):
+    def __init__(self, duration_minutes: Optional[int] = None):
         self.symbols = ['BTC-PERP', 'ETH-PERP', 'SOL-PERP', 'XRP-PERP']
         self.max_impact_bps = Decimal('50')  # 50bps impact cap
         self.stop_pct = Decimal('2')  # 2% stop distance
-        self.run_duration = timedelta(hours=24)
+        self.run_duration = timedelta(minutes=duration_minutes) if duration_minutes else timedelta(hours=24)
         self.artifacts_dir = Path('artifacts/stage3')
         self.artifacts_dir.mkdir(parents=True, exist_ok=True)
         
@@ -115,7 +122,7 @@ class Stage3Runner:
         self.orchestrator = PerpetualOrchestrator(config)
         await self.orchestrator.initialize()
         
-        logger.info(f"Orchestrator initialized with config: {json.dumps(config, indent=2)}")
+        logger.info(f"Orchestrator initialized with config: {json.dumps(config, indent=2, cls=DecimalEncoder)}")
         
     async def run_preflight_checks(self):
         """Run comprehensive preflight checks."""
@@ -140,10 +147,10 @@ class Stage3Runner:
         
         # Check margin windows
         logger.info("Checking margin windows...")
-        current_window = self.margin_monitor.get_current_window()
+        current_window = self.margin_monitor.policy.determine_current_window()
         preflight_results['checks']['margin_window'] = {
             'current': current_window.name,
-            'leverage': float(self.margin_monitor.get_max_leverage(current_window))
+            'leverage': float(self.margin_monitor.policy.get_requirements(current_window).max_leverage)
         }
         
         # Save preflight results
@@ -517,9 +524,18 @@ class Stage3Runner:
 
 async def main():
     """Main entry point."""
-    runner = Stage3Runner()
+    parser = argparse.ArgumentParser(description="Stage 3 Production Runner")
+    parser.add_argument(
+        "--duration-minutes",
+        type=int,
+        help="Set the run duration in minutes for short tests."
+    )
+    args = parser.parse_args()
+    
+    runner = Stage3Runner(duration_minutes=args.duration_minutes)
     await runner.run()
 
 
 if __name__ == "__main__":
+    import argparse
     asyncio.run(main())

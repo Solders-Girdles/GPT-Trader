@@ -209,7 +209,11 @@ class StopLimitTester:
             'BTC-USD': Decimal('0.001'),
             'ETH-USD': Decimal('0.01'),
             'SOL-USD': Decimal('1'),
-            'XRP-USD': Decimal('20')
+            'XRP-USD': Decimal('20'),
+            'BTC-PERP': Decimal('0.001'),
+            'ETH-PERP': Decimal('0.01'),
+            'SOL-PERP': Decimal('1'),
+            'XRP-PERP': Decimal('20')
         }
         return sizes.get(symbol, Decimal('0.001'))
     

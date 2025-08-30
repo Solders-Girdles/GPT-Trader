@@ -4,7 +4,12 @@ import time
 
 import pytest
 
-from ..fixtures.conftest import *  # Import shared fixtures
+# Import shared fixtures using absolute import
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+
+from fixtures.conftest import *
 
 
 @pytest.fixture

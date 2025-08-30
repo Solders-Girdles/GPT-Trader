@@ -1,6 +1,5 @@
 """Basic integration test to verify fixtures work."""
 
-import pytest
 import pandas as pd
 
 
@@ -16,9 +15,9 @@ def test_sample_market_data_fixture(sample_market_data):
         assert data.index.name is None or isinstance(data.index, pd.DatetimeIndex)
 
         # Verify OHLC relationships
-        assert (data["High"] >= data["Close"]).all()
-        assert (data["Low"] <= data["Close"]).all()
-        assert (data["High"] >= data["Low"]).all()
+        assert (data["high"] >= data["close"]).all()
+        assert (data["low"] <= data["close"]).all()
+        assert (data["high"] >= data["low"]).all()
 
 
 def test_strategy_fixture(test_strategy):

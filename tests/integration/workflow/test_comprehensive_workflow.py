@@ -97,21 +97,21 @@ def test_pandas_performance():
 
         # Test vectorized operations
         start_time = time.time()
-        df["SMA_20"] = df["Close"].rolling(20).mean()
-        df["SMA_50"] = df["Close"].rolling(50).mean()
-        df["SMA_200"] = df["Close"].rolling(200).mean()
-        df["RSI"] = calculate_rsi_vectorized(df["Close"])
+        df["SMA_20"] = df["close"].rolling(20).mean()
+        df["SMA_50"] = df["close"].rolling(50).mean()
+        df["SMA_200"] = df["close"].rolling(200).mean()
+        df["RSI"] = calculate_rsi_vectorized(df["close"])
         df["ATR"] = calculate_atr_vectorized(df)
-        df["Bollinger_Upper"], df["Bollinger_Lower"] = calculate_bollinger_bands(df["Close"])
+        df["Bollinger_Upper"], df["Bollinger_Lower"] = calculate_bollinger_bands(df["close"])
         indicator_time = time.time() - start_time
 
         # Test strategy signals
         start_time = time.time()
         df["MA_Signal"] = np.where(df["SMA_20"] > df["SMA_50"], 1, 0)
         df["BB_Signal"] = np.where(
-            df["Close"] > df["Bollinger_Upper"],
+            df["close"] > df["Bollinger_Upper"],
             -1,
-            np.where(df["Close"] < df["Bollinger_Lower"], 1, 0),
+            np.where(df["close"] < df["Bollinger_Lower"], 1, 0),
         )
         df["RSI_Signal"] = np.where(df["RSI"] < 30, 1, np.where(df["RSI"] > 70, -1, 0))
         signal_time = time.time() - start_time
@@ -160,9 +160,9 @@ def calculate_rsi_vectorized(prices: pd.Series, period: int = 14) -> pd.Series:
 
 def calculate_atr_vectorized(df: pd.DataFrame, period: int = 14) -> pd.Series:
     """Vectorized ATR calculation"""
-    high_low = df["High"] - df["Low"]
-    high_close = np.abs(df["High"] - df["Close"].shift())
-    low_close = np.abs(df["Low"] - df["Close"].shift())
+    high_low = df["high"] - df["low"]
+    high_close = np.abs(df["high"] - df["close"].shift())
+    low_close = np.abs(df["low"] - df["close"].shift())
 
     true_range = np.maximum(high_low, np.maximum(high_close, low_close))
     atr = true_range.rolling(window=period).mean()
@@ -250,8 +250,8 @@ def test_backtest_performance():
         df = generate_realistic_data(days=2000)
 
         # Create simple strategy signals
-        df["SMA_Fast"] = df["Close"].rolling(20).mean()
-        df["SMA_Slow"] = df["Close"].rolling(50).mean()
+        df["SMA_Fast"] = df["close"].rolling(20).mean()
+        df["SMA_Slow"] = df["close"].rolling(50).mean()
         df["Signal"] = np.where(df["SMA_Fast"] > df["SMA_Slow"], 1, 0)
         df["Position"] = df["Signal"].diff()
 
@@ -349,12 +349,12 @@ def test_optimization_simulation():
 
         for params in combinations:
             # Simulate strategy evaluation
-            fast_ma = df["Close"].rolling(params["fast_period"]).mean()
-            slow_ma = df["Close"].rolling(params["slow_period"]).mean()
+            fast_ma = df["close"].rolling(params["fast_period"]).mean()
+            slow_ma = df["close"].rolling(params["slow_period"]).mean()
             signals = np.where(fast_ma > slow_ma, 1, 0)
 
             # Simple performance calculation
-            returns = df["Close"].pct_change() * np.roll(signals, 1)
+            returns = df["close"].pct_change() * np.roll(signals, 1)
             total_return = (1 + returns).prod() - 1
             sharpe = returns.mean() / returns.std() * np.sqrt(252) if returns.std() > 0 else 0
 
@@ -402,9 +402,9 @@ def analyze_workflow_scalability():
 
             # Indicator calculation
             start_time = time.time()
-            df["SMA_20"] = df["Close"].rolling(20).mean()
-            df["SMA_50"] = df["Close"].rolling(50).mean()
-            df["RSI"] = calculate_rsi_vectorized(df["Close"])
+            df["SMA_20"] = df["close"].rolling(20).mean()
+            df["SMA_50"] = df["close"].rolling(50).mean()
+            df["RSI"] = calculate_rsi_vectorized(df["close"])
             indicator_time = time.time() - start_time
 
             # Memory usage

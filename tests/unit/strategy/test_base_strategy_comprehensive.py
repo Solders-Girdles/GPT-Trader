@@ -30,8 +30,8 @@ class ConcreteStrategy(Strategy):
 
         # Calculate indicators
         bars = bars.copy()
-        bars["sma_fast"] = bars["Close"].rolling(window=5, min_periods=1).mean()
-        bars["sma_slow"] = bars["Close"].rolling(window=20, min_periods=1).mean()
+        bars["sma_fast"] = bars["close"].rolling(window=5, min_periods=1).mean()
+        bars["sma_slow"] = bars["close"].rolling(window=20, min_periods=1).mean()
 
         # Generate signals
         bars["signal"] = 0
@@ -40,7 +40,7 @@ class ConcreteStrategy(Strategy):
 
         # Add additional columns for testing
         bars["confidence"] = np.random.uniform(0.5, 1.0, len(bars))
-        bars["atr"] = bars["Close"].rolling(window=14, min_periods=1).std()
+        bars["atr"] = bars["close"].rolling(window=14, min_periods=1).std()
 
         return bars
 
@@ -243,10 +243,10 @@ class TestStrategyBase:
         result = strategy.generate_signals(sample_data)
 
         # Verify SMA calculations
-        expected_sma_fast = sample_data["Close"].rolling(window=5, min_periods=1).mean()
+        expected_sma_fast = sample_data["close"].rolling(window=5, min_periods=1).mean()
         pd.testing.assert_series_equal(result["sma_fast"], expected_sma_fast, check_names=False)
 
-        expected_sma_slow = sample_data["Close"].rolling(window=20, min_periods=1).mean()
+        expected_sma_slow = sample_data["close"].rolling(window=20, min_periods=1).mean()
         pd.testing.assert_series_equal(result["sma_slow"], expected_sma_slow, check_names=False)
 
     def test_signal_consistency(self, strategy, sample_data):
@@ -307,8 +307,8 @@ class TestStrategyBase:
 
             def generate_signals(self, bars: pd.DataFrame) -> pd.DataFrame:
                 bars = bars.copy()
-                bars["sma"] = bars["Close"].rolling(window=window_size, min_periods=1).mean()
-                bars["signal"] = (bars["Close"] > bars["sma"]).astype(int)
+                bars["sma"] = bars["close"].rolling(window=window_size, min_periods=1).mean()
+                bars["signal"] = (bars["close"] > bars["sma"]).astype(int)
                 return bars
 
         strategy = ParameterizedStrategy()

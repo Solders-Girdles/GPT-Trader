@@ -210,7 +210,7 @@ class TestTrendBreakoutStrategy:
             assert (valid_atr >= 0).all()
 
             # ATR should be reasonable relative to price movements
-            price_range = sample_data["High"] - sample_data["Low"]
+            price_range = sample_data["high"] - sample_data["low"]
             assert (valid_atr <= price_range.max() * 3).all()
 
     def test_no_lookahead_bias(self, strategy, sample_data):

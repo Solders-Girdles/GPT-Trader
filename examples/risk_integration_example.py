@@ -6,7 +6,6 @@ into a typical trading workflow.
 """
 
 import sys
-from datetime import datetime, timedelta
 from pathlib import Path
 
 # Add src to path for imports (in real usage, this would be installed)
@@ -155,7 +154,7 @@ def demonstrate_risk_integration():
     risk_config = MockRiskConfig()
     risk_integration = MockRiskIntegration(risk_config)
 
-    print(f"Risk Configuration:")
+    print("Risk Configuration:")
     print(f"  Max Position Size: {risk_config.max_position_size:.1%}")
     print(f"  Max Portfolio Exposure: {risk_config.max_portfolio_exposure:.1%}")
     print(f"  Default Stop Loss: {risk_config.default_stop_loss_pct:.1%}")
@@ -179,7 +178,7 @@ def demonstrate_risk_integration():
     portfolio_value = 200000.0  # $200k portfolio
 
     print(f"Portfolio Value: ${portfolio_value:,.0f}")
-    print(f"\nProposed Allocations:")
+    print("\nProposed Allocations:")
     total_proposed = 0
     for symbol, shares in allocations.items():
         value = shares * current_prices[symbol]
@@ -204,11 +203,11 @@ def demonstrate_risk_integration():
     print(f"Validation Result: {'PASSED' if result.passed_validation else 'FAILED'}")
 
     if result.warnings:
-        print(f"\nRisk Adjustments Made:")
+        print("\nRisk Adjustments Made:")
         for symbol, warning in result.warnings.items():
             print(f"  {symbol}: {warning}")
 
-    print(f"\nFinal Allocations:")
+    print("\nFinal Allocations:")
     total_final = 0
     for symbol, shares in result.adjusted_allocations.items():
         value = shares * current_prices[symbol]
@@ -256,7 +255,7 @@ def demonstrate_risk_integration():
             f"P&L: ${pos['unrealized_pnl']:+,.0f} ({pos['unrealized_pnl_pct']:+.1%})"
         )
 
-    print(f"\nPortfolio Summary:")
+    print("\nPortfolio Summary:")
     print(f"  Total Value: ${total_value:,.0f}")
     print(f"  Total P&L: ${total_pnl:+,.0f} ({total_pnl/total_value:+.1%})")
 
@@ -278,11 +277,11 @@ def demonstrate_risk_integration():
         )
 
     if alerts:
-        print(f"\nRisk Alerts:")
+        print("\nRisk Alerts:")
         for alert in alerts:
             print(f"  {alert}")
     else:
-        print(f"\n✅ All risk limits within acceptable ranges")
+        print("\n✅ All risk limits within acceptable ranges")
 
     # 6. Risk Metrics
     print("\n6. PORTFOLIO RISK METRICS")
@@ -297,7 +296,7 @@ def demonstrate_risk_integration():
 
     total_risk = sum(pos["total_risk"] for pos in positions.values())
 
-    print(f"Risk Metrics:")
+    print("Risk Metrics:")
     print(f"  Number of Positions: {len(positions)}")
     print(f"  Largest Position: {largest_position_pct:.1%}")
     print(f"  Concentration Ratio: {concentration_ratio:.3f}")
@@ -305,7 +304,7 @@ def demonstrate_risk_integration():
     print(f"  Average Position Size: {(total_value/len(positions))/total_value:.1%}")
 
     # Risk limit utilization
-    print(f"\nRisk Limit Utilization:")
+    print("\nRisk Limit Utilization:")
     print(f"  Position Size: {largest_position_pct/risk_config.max_position_size:.1%} of limit")
     print(
         f"  Portfolio Exposure: {(total_value/(total_value/0.85))/risk_config.max_portfolio_exposure:.1%} of limit"

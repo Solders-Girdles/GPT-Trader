@@ -36,11 +36,11 @@ class TestStrategyImpl(Strategy):
 
         # Simple MA crossover
         if len(df) >= 20:
-            sma_fast = df["Close"].rolling(5).mean()
-            sma_slow = df["Close"].rolling(20).mean()
+            sma_fast = df["close"].rolling(5).mean()
+            sma_slow = df["close"].rolling(20).mean()
             df.loc[sma_fast > sma_slow, "signal"] = 1
 
-        df["atr"] = df["Close"].rolling(14).std()
+        df["atr"] = df["close"].rolling(14).std()
         return df[["signal", "atr"]]
 
 

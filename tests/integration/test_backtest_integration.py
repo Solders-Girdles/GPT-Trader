@@ -90,7 +90,7 @@ class TestBacktestIntegration:
     def test_data_pipeline_integration(self, backtest_engine):
         """Test data loading and preprocessing pipeline."""
         with patch(
-            "src.bot.dataflow.sources.yfinance_source.YFinanceSource.fetch_data"
+            "src.bot.dataflow.sources.yfinance_source.YFinanceSource.get_daily_bars"
         ) as mock_fetch:
             # Setup mock data
             mock_data = pd.DataFrame(

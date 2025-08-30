@@ -21,7 +21,7 @@ class ConcreteStrategy(Strategy):
 
     def calculate_indicators(self, data: pd.DataFrame) -> pd.DataFrame:
         """Calculate test indicators."""
-        data["test_indicator"] = data["Close"].rolling(window=5).mean()
+        data["test_indicator"] = data["close"].rolling(window=5).mean()
         return data
 
 
@@ -82,7 +82,7 @@ class TestStrategy:
         strategy.validate_data(sample_data)
 
         # Test with missing columns
-        invalid_data = sample_data.drop(columns=["Close"])
+        invalid_data = sample_data.drop(columns=["close"])
         with pytest.raises(ValueError, match="Missing required columns"):
             strategy.validate_data(invalid_data)
 

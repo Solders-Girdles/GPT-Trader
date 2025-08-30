@@ -4,21 +4,18 @@ These tests validate that all components work together properly in the
 integrated orchestrator, ensuring the complete data flow works end-to-end.
 """
 
-import pytest
-from datetime import datetime, timedelta
+from datetime import datetime
 from unittest.mock import Mock, patch
 
-import pandas as pd
 import numpy as np
-
+import pandas as pd
+import pytest
 from bot.integration.orchestrator import (
-    IntegratedOrchestrator,
     BacktestConfig,
     BacktestResults,
+    IntegratedOrchestrator,
     run_integrated_backtest,
 )
-from bot.portfolio.allocator import PortfolioRules
-from bot.risk.integration import RiskConfig
 from bot.strategy.demo_ma import DemoMAStrategy
 
 
@@ -36,7 +33,7 @@ class MockStrategy:
         signals.iloc[::10] = 1  # Buy every 10th day
 
         return pd.DataFrame(
-            {"signal": signals, "atr": pd.Series(data["Close"] * 0.02, index=data.index)}  # 2% ATR
+            {"signal": signals, "atr": pd.Series(data["close"] * 0.02, index=data.index)}  # 2% ATR
         )
 
 
@@ -348,7 +345,7 @@ class TestIntegrationFlow:
 
         # Test with valid strategy
         orchestrator = IntegratedOrchestrator(config)
-        strategy = DemoMAStrategy(name="TestMA", ma_window=20)
+        strategy = DemoMAStrategy(fast=10, slow=20, atr_period=14)
 
         # Mock successful data loading
         with patch.object(orchestrator, "_load_market_data") as mock_load:

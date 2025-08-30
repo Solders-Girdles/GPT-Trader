@@ -1,0 +1,171 @@
+{
+  "test_mapping": {
+    "data_pipeline": {
+      "unit_tests": [
+        "tests/unit/dataflow/test_pipeline.py",
+        "tests/unit/dataflow/test_pipeline_multisource.py"
+      ],
+      "integration_tests": [
+        "tests/integration/test_data_pipeline_integration.py"
+      ],
+      "quick_check": "python -c 'from bot.dataflow.pipeline import DataPipeline; DataPipeline()'",
+      "full_test": "poetry run pytest tests/unit/dataflow/ -v",
+      "specific_tests": {
+        "test_fetch_data": "tests/unit/dataflow/test_pipeline.py::TestDataPipeline::test_fetch_symbol_data_success",
+        "test_cache": "tests/unit/dataflow/test_pipeline.py::TestDataPipeline::test_fetch_symbol_data_with_cache",
+        "test_validation": "tests/unit/dataflow/test_pipeline.py::TestDataPipeline::test_validate_symbols_valid_input"
+      }
+    },
+    "strategies": {
+      "unit_tests": [
+        "tests/unit/strategy/test_base_strategy.py",
+        "tests/unit/strategy/test_demo_ma.py",
+        "tests/unit/strategy/test_trend_breakout.py",
+        "tests/unit/strategy/test_base_strategy_comprehensive.py"
+      ],
+      "integration_tests": [
+        "tests/integration/pipelines/test_strategy_pipeline_integration.py",
+        "tests/integration/pipelines/test_strategy_pipeline_simplified.py"
+      ],
+      "quick_check": "python -c 'from bot.strategy import AVAILABLE_STRATEGIES; print(len(AVAILABLE_STRATEGIES))'",
+      "full_test": "poetry run pytest tests/unit/strategy/ -v",
+      "specific_tests": {
+        "test_demo_ma_signals": "tests/unit/strategy/test_demo_ma.py::TestDemoMAStrategy::test_calculate_signals",
+        "test_trend_breakout": "tests/unit/strategy/test_trend_breakout.py::TestTrendBreakoutStrategy",
+        "test_strategy_factory": "tests/unit/strategy/test_base_strategy.py::test_strategy_factory"
+      }
+    },
+    "risk_management": {
+      "unit_tests": [
+        "tests/unit/risk/test_integration.py",
+        "tests/unit/risk/test_simple_risk_manager.py",
+        "tests/unit/risk/test_safety_systems.py"
+      ],
+      "integration_tests": [],
+      "quick_check": "python -c 'from bot.risk.config import RiskConfig; RiskConfig()'",
+      "full_test": "poetry run pytest tests/unit/risk/ -v",
+      "specific_tests": {
+        "test_risk_config": "tests/unit/risk/test_integration.py::TestRiskConfig",
+        "test_position_limits": "tests/unit/risk/test_simple_risk_manager.py::test_position_limits",
+        "test_circuit_breaker": "tests/unit/risk/test_safety_systems.py::test_circuit_breaker"
+      }
+    },
+    "portfolio": {
+      "unit_tests": [
+        "tests/unit/portfolio/test_allocator.py"
+      ],
+      "integration_tests": [
+        "tests/integration/test_strategy_allocator_bridge.py"
+      ],
+      "quick_check": "python -c 'from bot.portfolio.allocator import PortfolioAllocator'",
+      "full_test": "poetry run pytest tests/unit/portfolio/ -v",
+      "specific_tests": {
+        "test_allocation": "tests/unit/portfolio/test_allocator.py::TestPortfolioAllocator::test_allocate_capital",
+        "test_position_sizing": "tests/unit/portfolio/test_allocator.py::TestPortfolioAllocator::test_position_sizing"
+      }
+    },
+    "backtesting": {
+      "unit_tests": [
+        "tests/unit/backtest/test_engine_portfolio.py"
+      ],
+      "integration_tests": [
+        "tests/integration/test_backtest_integration.py",
+        "tests/integration/test_orchestrator.py"
+      ],
+      "quick_check": "python -c 'from bot.backtest.engine import BacktestEngine'",
+      "full_test": "poetry run pytest tests/unit/backtest/ tests/integration/test_backtest_integration.py -v",
+      "specific_tests": {
+        "test_engine": "tests/unit/backtest/test_engine_portfolio.py::TestEnhancedBacktestEngine",
+        "test_orchestrator": "tests/integration/test_orchestrator.py::TestIntegratedOrchestrator"
+      }
+    },
+    "ml_pipeline": {
+      "unit_tests": [
+        "tests/unit/ml/"
+      ],
+      "integration_tests": [
+        "tests/integration/test_ml_integration.py"
+      ],
+      "quick_check": "python -c 'from bot.ml import models'",
+      "full_test": "poetry run pytest tests/unit/ml/ -v",
+      "specific_tests": {
+        "test_model_import": "python -c 'from bot.ml.models.strategy_selector import StrategySelector'"
+      }
+    },
+    "paper_trading": {
+      "unit_tests": [],
+      "integration_tests": [
+        "tests/integration/test_alpaca_integration.py"
+      ],
+      "quick_check": "python -c 'import alpaca_py; print(\"Alpaca installed\")'",
+      "full_test": "poetry run python demos/alpaca_paper_trading_demo.py",
+      "specific_tests": {
+        "test_demo": "poetry run python demos/alpaca_paper_trading_demo.py"
+      }
+    },
+    "dashboard": {
+      "unit_tests": [],
+      "integration_tests": [],
+      "quick_check": "python -c 'import streamlit; print(streamlit.__version__)'",
+      "full_test": "timeout 5 poetry run gpt-trader dashboard || echo 'Dashboard started'",
+      "specific_tests": {
+        "test_import": "python -c 'from bot.dashboard.app import main'"
+      }
+    }
+  },
+  "test_commands": {
+    "all_unit_tests": "poetry run pytest tests/unit/ -v",
+    "all_integration_tests": "poetry run pytest tests/integration/ -v",
+    "quick_smoke_test": "poetry run pytest tests/unit/strategy/test_demo_ma.py tests/unit/dataflow/test_pipeline.py -v",
+    "minimal_validation": "poetry run pytest tests/minimal_baseline/ -v",
+    "specific_component": "poetry run pytest tests/unit/{component}/ -v",
+    "with_coverage": "poetry run pytest tests/unit/{component}/ --cov=bot.{component} --cov-report=term-missing",
+    "fast_fail": "poetry run pytest tests/unit/{component}/ -x",
+    "parallel": "poetry run pytest tests/unit/ -n auto"
+  },
+  "fixture_locations": {
+    "main_fixtures": "tests/fixtures/factories.py",
+    "unit_conftest": "tests/unit/conftest.py",
+    "integration_conftest": "tests/integration/conftest.py",
+    "common_fixtures": [
+      "sample_data",
+      "mock_strategy",
+      "risk_config",
+      "portfolio_rules"
+    ]
+  },
+  "test_patterns": {
+    "naming": "test_{component}_{functionality}.py",
+    "class_pattern": "Test{ComponentName}",
+    "method_pattern": "test_{specific_behavior}",
+    "fixture_pattern": "mock_{component_name}"
+  },
+  "coverage_targets": {
+    "data_pipeline": 80,
+    "strategies": 85,
+    "risk_management": 90,
+    "portfolio": 85,
+    "backtesting": 75,
+    "ml_pipeline": 70,
+    "overall": 80
+  },
+  "test_dependencies": {
+    "requires_market_data": [
+      "tests/integration/test_data_pipeline_integration.py",
+      "tests/integration/test_backtest_integration.py"
+    ],
+    "requires_api_keys": [
+      "tests/integration/test_alpaca_integration.py",
+      "demos/alpaca_paper_trading_demo.py"
+    ],
+    "requires_trained_models": [
+      "tests/integration/test_ml_integration.py"
+    ]
+  },
+  "troubleshooting": {
+    "import_error": "Check IMPORTS.md and ensure __init__.py files exist",
+    "fixture_not_found": "Check tests/fixtures/factories.py and conftest.py",
+    "test_collection_error": "Usually missing imports - run quick_check for component",
+    "timeout": "Use timeout command or run with -x flag for fast fail"
+  }
+}

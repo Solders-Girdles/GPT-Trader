@@ -2,21 +2,20 @@
 
 from __future__ import annotations
 
-import pytest
-import pandas as pd
-from datetime import datetime
-from unittest.mock import Mock, patch, MagicMock
-from pathlib import Path
-import tempfile
 import os
+import tempfile
+from datetime import datetime
+from unittest.mock import Mock, patch
 
-from src.bot.dataflow.pipeline import (
+import pandas as pd
+import pytest
+
+from bot.dataflow.pipeline import (
+    CSVFileSource,
     DataPipeline,
-    PipelineConfig,
-    MultiSourceConfig,
     DataSourceConfig,
     DataSourceType,
-    CSVFileSource,
+    MultiSourceConfig,
 )
 
 
@@ -198,7 +197,7 @@ class TestMultiSourceDataPipeline:
             ]
         )
 
-        with patch("src.bot.dataflow.pipeline.YFinanceSource") as mock_yf:
+        with patch("bot.dataflow.pipeline.YFinanceSource") as mock_yf:
             pipeline = DataPipeline(multi_source_config=config)
 
             # Should have attempted to initialize YFinance source
@@ -219,20 +218,20 @@ class TestMultiSourceDataPipeline:
         )
 
         # Mock first source to fail, second to succeed
-        with patch("src.bot.dataflow.pipeline.YFinanceSource") as mock_yf_class:
+        with patch("bot.dataflow.pipeline.YFinanceSource") as mock_yf_class:
             mock_primary = Mock()
             mock_primary.get_daily_bars.side_effect = Exception("Primary failed")
 
             mock_fallback = Mock()
             mock_fallback.get_daily_bars.return_value = pd.DataFrame(
                 {
-                    "Open": [100.0],
-                    "High": [105.0],
-                    "Low": [95.0],
-                    "Close": [102.0],
-                    "Volume": [1000],
+                    "Open": [100.0, 101.0, 102.0, 103.0, 104.0, 105.0, 106.0, 107.0, 108.0, 109.0, 110.0],
+                    "High": [105.0, 106.0, 107.0, 108.0, 109.0, 110.0, 111.0, 112.0, 113.0, 114.0, 115.0],
+                    "Low": [95.0, 96.0, 97.0, 98.0, 99.0, 100.0, 101.0, 102.0, 103.0, 104.0, 105.0],
+                    "Close": [102.0, 103.0, 104.0, 105.0, 106.0, 107.0, 108.0, 109.0, 110.0, 111.0, 112.0],
+                    "Volume": [1000, 1100, 1200, 1300, 1400, 1500, 1600, 1700, 1800, 1900, 2000],
                 },
-                index=pd.DatetimeIndex(["2023-01-01"]),
+                index=pd.DatetimeIndex([f"2023-01-{i:02d}" for i in range(1, 12)]),
             )
 
             # Configure the mock to return different instances
@@ -246,8 +245,8 @@ class TestMultiSourceDataPipeline:
                 DataSourceType.ENHANCED_YFINANCE: mock_fallback,
             }
 
-            with patch("src.bot.dataflow.validate.validate_daily_bars"):
-                with patch("src.bot.dataflow.validate.adjust_to_adjclose") as mock_adjust:
+            with patch("bot.dataflow.pipeline.validate_daily_bars"):
+                with patch("bot.dataflow.pipeline.adjust_to_adjclose") as mock_adjust:
                     mock_adjust.return_value = (mock_fallback.get_daily_bars.return_value, False)
 
                     # This should succeed using the fallback source
@@ -267,7 +266,7 @@ class TestMultiSourceDataPipeline:
             sources=[DataSourceConfig(DataSourceType.YFINANCE, priority=1)], failover_enabled=False
         )
 
-        with patch("src.bot.dataflow.pipeline.YFinanceSource") as mock_yf_class:
+        with patch("bot.dataflow.pipeline.YFinanceSource") as mock_yf_class:
             mock_source = Mock()
             mock_source.get_daily_bars.side_effect = Exception("Source failed")
             mock_yf_class.return_value = mock_source
@@ -312,7 +311,7 @@ class TestMultiSourceDataPipeline:
             parallel_fetch=False,
         )
 
-        with patch("src.bot.dataflow.pipeline.YFinanceSource"):
+        with patch("bot.dataflow.pipeline.YFinanceSource"):
             pipeline = DataPipeline(multi_source_config=config)
 
             info = pipeline.get_source_info()
@@ -338,13 +337,14 @@ class TestMultiSourceDataPipeline:
         """Test integration of CSV source with pipeline."""
         # Create temporary CSV file
         data = {
-            "Date": ["2023-01-01", "2023-01-02"],
-            "Open": [100.0, 101.0],
-            "High": [105.0, 106.0],
-            "Low": [95.0, 96.0],
-            "Close": [102.0, 103.0],
-            "Volume": [1000, 1100],
-            "Symbol": ["TEST", "TEST"],
+            "Date": ["2023-01-01", "2023-01-02", "2023-01-03", "2023-01-04", "2023-01-05", 
+                     "2023-01-06", "2023-01-07", "2023-01-08", "2023-01-09", "2023-01-10", "2023-01-11"],
+            "Open": [100.0, 101.0, 102.0, 103.0, 104.0, 105.0, 106.0, 107.0, 108.0, 109.0, 110.0],
+            "High": [105.0, 106.0, 107.0, 108.0, 109.0, 110.0, 111.0, 112.0, 113.0, 114.0, 115.0],
+            "Low": [95.0, 96.0, 97.0, 98.0, 99.0, 100.0, 101.0, 102.0, 103.0, 104.0, 105.0],
+            "Close": [102.0, 103.0, 104.0, 105.0, 106.0, 107.0, 108.0, 109.0, 110.0, 111.0, 112.0],
+            "Volume": [1000, 1100, 1200, 1300, 1400, 1500, 1600, 1700, 1800, 1900, 2000],
+            "Symbol": ["TEST"] * 11,
         }
         df = pd.DataFrame(data)
 
@@ -364,12 +364,12 @@ class TestMultiSourceDataPipeline:
 
             pipeline = DataPipeline(multi_source_config=config)
 
-            with patch("src.bot.dataflow.validate.validate_daily_bars"):
-                with patch("src.bot.dataflow.validate.adjust_to_adjclose") as mock_adjust:
+            with patch("bot.dataflow.pipeline.validate_daily_bars"):
+                with patch("bot.dataflow.pipeline.adjust_to_adjclose") as mock_adjust:
                     mock_adjust.return_value = (df.set_index("Date"), False)
 
                     data = pipeline.fetch_and_validate(
-                        ["TEST"], datetime(2023, 1, 1), datetime(2023, 1, 2)
+                        ["TEST"], datetime(2023, 1, 1), datetime(2023, 1, 11)
                     )
 
                     assert len(data) == 1
@@ -392,7 +392,7 @@ class TestMultiSourceDataPipeline:
         )
 
         # Create a pipeline and check that sources are ordered correctly
-        with patch("src.bot.dataflow.pipeline.YFinanceSource"):
+        with patch("bot.dataflow.pipeline.YFinanceSource"):
             pipeline = DataPipeline(multi_source_config=config)
 
             # Check that sources are in priority order

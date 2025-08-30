@@ -160,14 +160,14 @@ def test_data_generation():
         assert "Volume" in data.columns, "Missing Volume column"
 
         # Validate data integrity
-        closes = data["Close"]
-        highs = data["High"]
-        lows = data["Low"]
+        closes = data["close"]
+        highs = data["high"]
+        lows = data["low"]
 
         for i in range(len(data)):
             assert highs[i] >= closes[i], f"High < Close at index {i}"
             assert lows[i] <= closes[i], f"Low > Close at index {i}"
-            assert data["Volume"][i] > 0, f"Non-positive volume at index {i}"
+            assert data["volume"][i] > 0, f"Non-positive volume at index {i}"
 
         logger.info(f"✅ Generated {len(data)} rows of valid OHLCV data")
         logger.info(f"   Price range: ${min(closes):.2f} - ${max(closes):.2f}")
@@ -184,9 +184,9 @@ def test_technical_indicators():
 
     try:
         data = generate_sample_data(days=100)
-        closes = data["Close"]
-        highs = data["High"]
-        lows = data["Low"]
+        closes = data["close"]
+        highs = data["high"]
+        lows = data["low"]
 
         # Test SMA calculation
         sma_20 = calculate_sma(closes, 20)
@@ -221,7 +221,7 @@ def test_simple_strategy():
 
     try:
         data = generate_sample_data(days=200)
-        closes = data["Close"]
+        closes = data["close"]
 
         # Calculate moving averages
         fast_ma = calculate_sma(closes, 10)
@@ -398,7 +398,7 @@ def benchmark_performance():
         data_gen_time = time.time() - start_time
 
         # Test indicator calculation speed
-        closes = large_data["Close"]
+        closes = large_data["close"]
         start_time = time.time()
         sma_50 = calculate_sma(closes, 50)
         sma_200 = calculate_sma(closes, 200)
@@ -455,7 +455,7 @@ def analyze_workflow_bottlenecks():
         for size in sizes:
             start_time = time.time()
             data = generate_sample_data(days=size)
-            closes = data["Close"]
+            closes = data["close"]
             sma = calculate_sma(closes, 20)
             generation_time = time.time() - start_time
             times.append(generation_time)

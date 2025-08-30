@@ -193,17 +193,17 @@ def test_data_pipeline():
 
         # Validate data integrity
         assert len(data) == 100, f"Expected 100 rows, got {len(data)}"
-        assert data["High"].ge(data["Low"]).all(), "High prices should be >= Low prices"
-        assert data["High"].ge(data["Close"]).all(), "High prices should be >= Close prices"
-        assert data["Low"].le(data["Close"]).all(), "Low prices should be <= Close prices"
-        assert data["Volume"].gt(0).all(), "Volume should be positive"
+        assert data["high"].ge(data["low"]).all(), "High prices should be >= Low prices"
+        assert data["high"].ge(data["close"]).all(), "High prices should be >= Close prices"
+        assert data["low"].le(data["close"]).all(), "Low prices should be <= Close prices"
+        assert data["volume"].gt(0).all(), "Volume should be positive"
 
         # Test basic technical indicators
-        data["SMA_20"] = data["Close"].rolling(20).mean()
-        data["RSI"] = calculate_rsi(data["Close"], period=14)
+        data["SMA_20"] = data["close"].rolling(20).mean()
+        data["RSI"] = calculate_rsi(data["close"], period=14)
 
         logger.info(f"Generated data with {len(data)} rows")
-        logger.info(f"Price range: ${data['Close'].min():.2f} - ${data['Close'].max():.2f}")
+        logger.info(f"Price range: ${data['close'].min():.2f} - ${data['close'].max():.2f}")
         logger.info("✅ Data pipeline test passed")
         return True
 
@@ -249,8 +249,8 @@ def analyze_system_performance():
         generation_time = time.time() - start_time
 
         start_time = time.time()
-        data["SMA_50"] = data["Close"].rolling(50).mean()
-        data["SMA_200"] = data["Close"].rolling(200).mean()
+        data["SMA_50"] = data["close"].rolling(50).mean()
+        data["SMA_200"] = data["close"].rolling(200).mean()
         indicator_time = time.time() - start_time
 
         logger.info("System Performance Analysis:")

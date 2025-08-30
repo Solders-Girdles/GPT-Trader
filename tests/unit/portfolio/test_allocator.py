@@ -473,7 +473,7 @@ class TestIntegrationScenarios:
 
         # Check position sizes are reasonable
         for symbol, qty in allocations.items():
-            position_value = qty * market_data[symbol]["Close"].iloc[-1]
+            position_value = qty * market_data[symbol]["close"].iloc[-1]
             position_pct = position_value / equity
 
             # Position should be reasonable size

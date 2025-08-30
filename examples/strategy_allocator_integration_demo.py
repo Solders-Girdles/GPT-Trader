@@ -7,8 +7,6 @@ trading strategies with portfolio allocation in a production-like setup.
 
 import pandas as pd
 import yfinance as yf
-from datetime import datetime, timedelta
-
 from bot.integration.strategy_allocator_bridge import StrategyAllocatorBridge
 from bot.portfolio.allocator import PortfolioRules
 from bot.strategy.demo_ma import DemoMAStrategy
@@ -53,7 +51,7 @@ def main():
     symbols = ["AAPL", "MSFT", "GOOGL", "TSLA", "NVDA"]
     portfolio_equity = 100000.0  # $100k portfolio
 
-    print(f"Portfolio Setup:")
+    print("Portfolio Setup:")
     print(f"  Symbols: {', '.join(symbols)}")
     print(f"  Equity: ${portfolio_equity:,.2f}")
     print()

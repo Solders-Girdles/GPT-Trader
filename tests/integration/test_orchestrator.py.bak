@@ -1,0 +1,425 @@
+"""Integration tests for the main orchestrator.
+
+These tests validate that all components work together properly in the
+integrated orchestrator, ensuring the complete data flow works end-to-end.
+"""
+
+from datetime import datetime
+from unittest.mock import Mock, patch
+
+import numpy as np
+import pandas as pd
+import pytest
+from bot.integration.orchestrator import (
+    BacktestConfig,
+    BacktestResults,
+    IntegratedOrchestrator,
+    run_integrated_backtest,
+)
+from bot.strategy.demo_ma import DemoMAStrategy
+
+
+class MockStrategy:
+    """Mock strategy for testing."""
+
+    def __init__(self, name="MockStrategy"):
+        self.name = name
+        self.supports_short = False
+
+    def generate_signals(self, data: pd.DataFrame) -> pd.DataFrame:
+        """Generate mock signals."""
+        # Simple mock: buy signal every 10th day
+        signals = pd.Series(0, index=data.index)
+        signals.iloc[::10] = 1  # Buy every 10th day
+
+        return pd.DataFrame(
+            {"signal": signals, "atr": pd.Series(data["Close"] * 0.02, index=data.index)}  # 2% ATR
+        )
+
+
+@pytest.fixture
+def sample_config():
+    """Create sample backtest configuration."""
+    return BacktestConfig(
+        start_date=datetime(2023, 1, 1),
+        end_date=datetime(2023, 6, 30),
+        initial_capital=100_000.0,
+        use_cache=False,  # Don't use cache in tests
+        quiet_mode=True,  # Suppress logging in tests
+        save_trades=False,  # Don't save files in tests
+        save_portfolio=False,
+        save_metrics=False,
+        generate_plot=False,
+        show_progress=False,
+    )
+
+
+@pytest.fixture
+def mock_market_data():
+    """Create mock market data for testing."""
+    # Generate 6 months of daily data
+    dates = pd.date_range(start="2022-07-01", end="2023-06-30", freq="B")  # Business days
+
+    data = {}
+    for symbol in ["AAPL", "GOOGL", "MSFT"]:
+        # Generate realistic OHLCV data
+        np.random.seed(42)  # For reproducible tests
+
+        close_prices = 100 * np.exp(np.cumsum(np.random.normal(0.0005, 0.02, len(dates))))
+        high_prices = close_prices * (1 + np.random.uniform(0.001, 0.03, len(dates)))
+        low_prices = close_prices * (1 - np.random.uniform(0.001, 0.03, len(dates)))
+        open_prices = close_prices * (1 + np.random.normal(0, 0.01, len(dates)))
+        volume = np.random.randint(1000000, 10000000, len(dates))
+
+        df = pd.DataFrame(
+            {
+                "Open": open_prices,
+                "High": high_prices,
+                "Low": low_prices,
+                "Close": close_prices,
+                "Volume": volume,
+            },
+            index=dates,
+        )
+
+        data[symbol] = df
+
+    return data
+
+
+class TestIntegratedOrchestrator:
+    """Test the integrated orchestrator functionality."""
+
+    def test_orchestrator_initialization(self, sample_config):
+        """Test orchestrator initialization."""
+        orchestrator = IntegratedOrchestrator(sample_config)
+
+        assert orchestrator.config == sample_config
+        assert orchestrator.current_equity == sample_config.initial_capital
+        assert orchestrator.current_positions == {}
+        assert orchestrator.data_pipeline is not None
+        assert orchestrator.risk_integration is not None
+        assert orchestrator.ledger is not None
+
+    def test_config_defaults(self):
+        """Test that config defaults are set properly."""
+        config = BacktestConfig(start_date=datetime(2023, 1, 1), end_date=datetime(2023, 12, 31))
+
+        assert config.initial_capital == 1_000_000.0
+        assert config.risk_config is not None
+        assert config.portfolio_rules is not None
+        assert config.use_cache == True
+        assert config.output_dir == "data/backtests"
+
+    @patch("bot.integration.orchestrator.DataPipeline")
+    def test_health_check(self, mock_pipeline_class, sample_config):
+        """Test orchestrator health check."""
+        # Mock the pipeline health check
+        mock_pipeline = Mock()
+        mock_pipeline.health_check.return_value = {"status": "healthy"}
+        mock_pipeline_class.return_value = mock_pipeline
+
+        orchestrator = IntegratedOrchestrator(sample_config)
+        health = orchestrator.health_check()
+
+        assert health["status"] in ["healthy", "degraded"]
+        assert "components" in health
+        assert "data_pipeline" in health["components"]
+
+    def test_get_trading_dates(self, sample_config, mock_market_data):
+        """Test trading date extraction from market data."""
+        orchestrator = IntegratedOrchestrator(sample_config)
+        trading_dates = orchestrator._get_trading_dates(mock_market_data)
+
+        assert len(trading_dates) > 0
+        assert isinstance(trading_dates[0], datetime)
+        assert trading_dates == sorted(trading_dates)
+
+        # Should only include dates in backtest range
+        for date in trading_dates:
+            assert sample_config.start_date <= date <= sample_config.end_date
+
+    def test_update_current_prices(self, sample_config, mock_market_data):
+        """Test current price updates."""
+        orchestrator = IntegratedOrchestrator(sample_config)
+        orchestrator._update_current_prices(mock_market_data)
+
+        assert len(orchestrator.current_prices) == len(mock_market_data)
+        for symbol in mock_market_data:
+            assert symbol in orchestrator.current_prices
+            assert orchestrator.current_prices[symbol] > 0
+
+    def test_execute_trades_basic(self, sample_config):
+        """Test basic trade execution."""
+        orchestrator = IntegratedOrchestrator(sample_config)
+        orchestrator.current_prices = {"AAPL": 150.0, "GOOGL": 2500.0}
+
+        # Test buy trades
+        target_allocations = {"AAPL": 100, "GOOGL": 50}
+        trade_date = datetime(2023, 3, 15)
+
+        trades_executed = orchestrator._execute_trades(target_allocations, trade_date)
+
+        assert trades_executed == 2
+        assert orchestrator.current_positions["AAPL"] == 100
+        assert orchestrator.current_positions["GOOGL"] == 50
+
+    def test_execute_trades_sell(self, sample_config):
+        """Test selling positions."""
+        orchestrator = IntegratedOrchestrator(sample_config)
+        orchestrator.current_prices = {"AAPL": 150.0, "GOOGL": 2500.0}
+        orchestrator.current_positions = {"AAPL": 100, "GOOGL": 50}
+
+        # Test sell trades
+        target_allocations = {"AAPL": 0, "GOOGL": 25}  # Sell all AAPL, reduce GOOGL
+        trade_date = datetime(2023, 3, 15)
+
+        trades_executed = orchestrator._execute_trades(target_allocations, trade_date)
+
+        assert trades_executed == 2
+        assert "AAPL" not in orchestrator.current_positions  # Should be removed when 0
+        assert orchestrator.current_positions["GOOGL"] == 25
+
+    def test_calculate_intraday_pnl(self, sample_config):
+        """Test intraday P&L calculation."""
+        orchestrator = IntegratedOrchestrator(sample_config)
+        orchestrator.current_positions = {"AAPL": 100}
+
+        # Create mock daily data with open/close prices
+        daily_data = {
+            "AAPL": pd.DataFrame({"Open": [150.0], "Close": [155.0]}, index=[datetime(2023, 3, 15)])
+        }
+
+        pnl = orchestrator._calculate_intraday_pnl(daily_data)
+
+        # Should be 100 shares * $5 price increase = $500
+        assert pnl == 500.0
+
+    @patch.object(IntegratedOrchestrator, "_load_market_data")
+    @patch.object(IntegratedOrchestrator, "_get_trading_dates")
+    @patch.object(IntegratedOrchestrator, "_run_daily_trading_loop")
+    @patch.object(IntegratedOrchestrator, "_calculate_performance_metrics")
+    @patch.object(IntegratedOrchestrator, "_generate_outputs")
+    def test_run_backtest_flow(
+        self, mock_outputs, mock_metrics, mock_loop, mock_dates, mock_data, sample_config
+    ):
+        """Test the complete backtest flow."""
+        # Mock all the sub-methods
+        mock_data.return_value = {"AAPL": Mock(), "GOOGL": Mock()}
+        mock_dates.return_value = [datetime(2023, 1, 1), datetime(2023, 1, 2)]
+        mock_loop.return_value = None
+        mock_metrics.return_value = None
+        mock_outputs.return_value = None
+
+        orchestrator = IntegratedOrchestrator(sample_config)
+        strategy = MockStrategy()
+        symbols = ["AAPL", "GOOGL"]
+
+        results = orchestrator.run_backtest(strategy, symbols)
+
+        assert isinstance(results, BacktestResults)
+        assert results.symbols_traded == symbols
+        assert results.start_date == sample_config.start_date
+        assert results.end_date == sample_config.end_date
+
+        # Verify all steps were called
+        mock_data.assert_called_once()
+        mock_dates.assert_called_once()
+        mock_loop.assert_called_once()
+        mock_metrics.assert_called_once()
+        mock_outputs.assert_called_once()
+
+
+class TestConvenienceFunction:
+    """Test the convenience function for running backtests."""
+
+    @patch("bot.integration.orchestrator.IntegratedOrchestrator")
+    def test_run_integrated_backtest(self, mock_orchestrator_class):
+        """Test the convenience function."""
+        # Mock the orchestrator and its methods
+        mock_orchestrator = Mock()
+        mock_results = BacktestResults()
+        mock_orchestrator.run_backtest.return_value = mock_results
+        mock_orchestrator_class.return_value = mock_orchestrator
+
+        strategy = MockStrategy()
+        symbols = ["AAPL", "GOOGL"]
+        start_date = datetime(2023, 1, 1)
+        end_date = datetime(2023, 12, 31)
+
+        results = run_integrated_backtest(
+            strategy=strategy,
+            symbols=symbols,
+            start_date=start_date,
+            end_date=end_date,
+            initial_capital=500_000.0,
+        )
+
+        assert results == mock_results
+        mock_orchestrator_class.assert_called_once()
+        mock_orchestrator.run_backtest.assert_called_once_with(strategy, symbols)
+
+        # Check that config was created properly
+        config_arg = mock_orchestrator_class.call_args[0][0]
+        assert config_arg.start_date == start_date
+        assert config_arg.end_date == end_date
+        assert config_arg.initial_capital == 500_000.0
+
+
+class TestBacktestResults:
+    """Test BacktestResults functionality."""
+
+    def test_results_initialization(self):
+        """Test results object initialization."""
+        results = BacktestResults()
+
+        assert results.total_return == 0.0
+        assert results.total_trades == 0
+        assert results.symbols_traded == []
+        assert results.warnings == []
+        assert results.errors == []
+
+    def test_results_to_dict(self):
+        """Test conversion to dictionary."""
+        results = BacktestResults(
+            total_return=0.15, sharpe_ratio=1.2, total_trades=50, win_rate=0.6
+        )
+
+        results_dict = results.to_dict()
+
+        assert "performance" in results_dict
+        assert "trading" in results_dict
+        assert "risk" in results_dict
+        assert "execution" in results_dict
+        assert "issues" in results_dict
+
+        assert results_dict["performance"]["total_return"] == 0.15
+        assert results_dict["performance"]["sharpe_ratio"] == 1.2
+        assert results_dict["trading"]["total_trades"] == 50
+        assert results_dict["trading"]["win_rate"] == 0.6
+
+
+class TestIntegrationFlow:
+    """Test the complete integration flow with real components."""
+
+    def test_minimal_integration(self):
+        """Test minimal integration with mocked data."""
+        # Create minimal config for quick test
+        config = BacktestConfig(
+            start_date=datetime(2023, 1, 1),
+            end_date=datetime(2023, 1, 31),
+            initial_capital=100_000.0,
+            quiet_mode=True,
+            save_trades=False,
+            save_portfolio=False,
+            save_metrics=False,
+            generate_plot=False,
+            show_progress=False,
+        )
+
+        orchestrator = IntegratedOrchestrator(config)
+
+        # Mock the data loading to return empty data
+        with patch.object(orchestrator, "_load_market_data") as mock_load:
+            mock_load.return_value = {}  # No data loaded
+
+            strategy = MockStrategy()
+            results = orchestrator.run_backtest(strategy, ["AAPL"])
+
+            # Should handle empty data gracefully
+            assert isinstance(results, BacktestResults)
+            assert len(results.errors) > 0  # Should have error about no data
+
+    def test_strategy_validation_integration(self):
+        """Test that strategy validation works in integration."""
+        config = BacktestConfig(
+            start_date=datetime(2023, 1, 1),
+            end_date=datetime(2023, 1, 31),
+            initial_capital=100_000.0,
+            quiet_mode=True,
+            save_trades=False,
+            save_portfolio=False,
+            save_metrics=False,
+            generate_plot=False,
+        )
+
+        # Test with valid strategy
+        orchestrator = IntegratedOrchestrator(config)
+        strategy = DemoMAStrategy(fast=10, slow=20, atr_period=14)
+
+        # Mock successful data loading
+        with patch.object(orchestrator, "_load_market_data") as mock_load:
+            # Return some mock data
+            mock_data = {
+                "AAPL": pd.DataFrame(
+                    {
+                        "Open": [150.0, 151.0],
+                        "High": [152.0, 153.0],
+                        "Low": [149.0, 150.0],
+                        "Close": [151.0, 152.0],
+                        "Volume": [1000000, 1100000],
+                    },
+                    index=[datetime(2023, 1, 1), datetime(2023, 1, 2)],
+                )
+            }
+            mock_load.return_value = mock_data
+
+            results = orchestrator.run_backtest(strategy, ["AAPL"])
+
+            # Should complete without major errors
+            assert isinstance(results, BacktestResults)
+            # Should have minimal errors (maybe data issues, but not validation)
+            validation_errors = [e for e in results.errors if "validation" in e.lower()]
+            assert len(validation_errors) == 0
+
+
+class TestErrorHandling:
+    """Test error handling in the orchestrator."""
+
+    def test_exception_handling_in_backtest(self, sample_config):
+        """Test that exceptions are handled gracefully."""
+        orchestrator = IntegratedOrchestrator(sample_config)
+
+        # Mock data loading to raise exception
+        with patch.object(orchestrator, "_load_market_data") as mock_load:
+            mock_load.side_effect = Exception("Data loading failed")
+
+            strategy = MockStrategy()
+            results = orchestrator.run_backtest(strategy, ["AAPL"])
+
+            assert len(results.errors) > 0
+            assert any("failed" in error.lower() for error in results.errors)
+
+    def test_empty_symbol_list(self, sample_config):
+        """Test handling of empty symbol list."""
+        orchestrator = IntegratedOrchestrator(sample_config)
+        strategy = MockStrategy()
+
+        # This should handle empty symbols gracefully
+        results = orchestrator.run_backtest(strategy, [])
+
+        assert isinstance(results, BacktestResults)
+        # Should have error about no symbols or no data
+        assert len(results.errors) > 0
+
+    def test_invalid_date_range(self):
+        """Test handling of invalid date range."""
+        # Start date after end date
+        config = BacktestConfig(
+            start_date=datetime(2023, 12, 31),
+            end_date=datetime(2023, 1, 1),  # Before start date
+            initial_capital=100_000.0,
+        )
+
+        orchestrator = IntegratedOrchestrator(config)
+        strategy = MockStrategy()
+
+        # This should be handled gracefully
+        results = orchestrator.run_backtest(strategy, ["AAPL"])
+
+        assert isinstance(results, BacktestResults)
+
+
+if __name__ == "__main__":
+    # Run basic tests
+    pytest.main([__file__, "-v"])

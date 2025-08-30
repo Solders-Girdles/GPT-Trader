@@ -63,10 +63,10 @@ def test_complete_optimization_workflow():
 
     print(f"   📊 Generated {len(market_data):,} days of market data")
     print(
-        f"   📈 Price range: ${market_data['Close'].min():.2f} - ${market_data['Close'].max():.2f}"
+        f"   📈 Price range: ${market_data['close'].min():.2f} - ${market_data['close'].max():.2f}"
     )
     print(
-        f"   📊 Total return: {(market_data['Close'].iloc[-1] / market_data['Close'].iloc[0] - 1):.2%}"
+        f"   📊 Total return: {(market_data['close'].iloc[-1] / market_data['close'].iloc[0] - 1):.2%}"
     )
 
     # Test 3: Benchmark individual strategy performance (TA-Lib optimization)

@@ -19,16 +19,15 @@ from pathlib import Path
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from bot.config import get_config
 from bot.integration.orchestrator import (
-    IntegratedOrchestrator,
     BacktestConfig,
+    IntegratedOrchestrator,
     run_integrated_backtest,
 )
+from bot.logging import get_logger
 from bot.portfolio.allocator import PortfolioRules
 from bot.risk.integration import RiskConfig
 from bot.strategy.demo_ma import DemoMAStrategy
-from bot.logging import get_logger
 
 logger = get_logger("demo")
 
@@ -47,7 +46,7 @@ def run_basic_integration_demo():
 
     print(f"Universe: {', '.join(symbols)}")
     print(f"Period: {start_date.date()} to {end_date.date()}")
-    print(f"Initial Capital: $1,000,000\n")
+    print("Initial Capital: $1,000,000\n")
 
     # Create strategy with reasonable parameters
     strategy = DemoMAStrategy(fast=10, slow=20, atr_period=14)
@@ -160,7 +159,7 @@ def run_advanced_integration_demo():
         generate_plot=True,
     )
 
-    print(f"\nAdvanced Configuration:")
+    print("\nAdvanced Configuration:")
     print(f"  - Initial Capital: ${config.initial_capital:,.0f}")
     print(f"  - Max Position Size: {risk_config.max_position_size:.1%}")
     print(f"  - Max Positions: {portfolio_rules.max_positions}")
@@ -257,8 +256,8 @@ def run_component_validation():
     try:
         from bot.dataflow.pipeline import DataPipeline
         from bot.integration.strategy_allocator_bridge import StrategyAllocatorBridge
-        from bot.risk.integration import RiskIntegration
         from bot.portfolio.allocator import PortfolioRules
+        from bot.risk.integration import RiskIntegration
 
         # Test data pipeline
         print("✓ Data Pipeline import OK")

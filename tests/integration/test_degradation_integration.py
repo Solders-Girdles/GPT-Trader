@@ -12,7 +12,7 @@ import pandas as pd
 # Add src to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from src.bot.ml.degradation_integration import (
+from bot.ml.degradation_integration import (
     DegradationIntegrator,
     IntegratedDegradationReport,
     create_integrated_monitor,

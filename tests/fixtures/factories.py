@@ -39,21 +39,21 @@ class MarketDataFactory:
 
         # Generate OHLCV
         data = pd.DataFrame(index=dates)
-        data["Close"] = prices
+        data["close"] = prices
 
         # Open is close from previous day with small gap
-        data["Open"] = data["Close"].shift(1) * (1 + np.random.normal(0, 0.002, n_periods))
-        data["Open"].iloc[0] = initial_price
+        data["open"] = data["close"].shift(1) * (1 + np.random.normal(0, 0.002, n_periods))
+        data["open"].iloc[0] = initial_price
 
         # High/Low based on daily range
         daily_range = np.abs(np.random.normal(0, volatility / 2, n_periods))
-        data["High"] = np.maximum(data["Open"], data["Close"]) * (1 + daily_range)
-        data["Low"] = np.minimum(data["Open"], data["Close"]) * (1 - daily_range)
+        data["high"] = np.maximum(data["open"], data["close"]) * (1 + daily_range)
+        data["low"] = np.minimum(data["open"], data["close"]) * (1 - daily_range)
 
         # Volume correlated with volatility
         base_volume = 10000000
         volume_mult = 1 + np.abs(returns) * 10
-        data["Volume"] = (base_volume * volume_mult).astype(int)
+        data["volume"] = (base_volume * volume_mult).astype(int)
 
         return data
 

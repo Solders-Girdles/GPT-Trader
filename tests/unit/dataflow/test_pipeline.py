@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-import pytest
-import pandas as pd
 from datetime import datetime, timedelta
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 
-from src.bot.dataflow.pipeline import DataPipeline, PipelineConfig, DataQualityMetrics
+import pandas as pd
+import pytest
+
+from bot.dataflow.pipeline import DataPipeline, DataQualityMetrics, PipelineConfig
 
 
 class TestDataQualityMetrics:
@@ -184,8 +185,8 @@ class TestDataPipeline:
         with pytest.raises(ValueError, match="Start date .* cannot be in the future"):
             pipeline._validate_date_range(start, end)
 
-    @patch("src.bot.dataflow.validate.validate_daily_bars")
-    @patch("src.bot.dataflow.validate.adjust_to_adjclose")
+    @patch("bot.dataflow.pipeline.validate_daily_bars")
+    @patch("bot.dataflow.pipeline.adjust_to_adjclose")
     def test_fetch_symbol_data_success(
         self, mock_adjust, mock_validate, pipeline, sample_dataframe
     ):
@@ -219,8 +220,8 @@ class TestDataPipeline:
 
         assert result is None
 
-    @patch("src.bot.dataflow.validate.validate_daily_bars")
-    @patch("src.bot.dataflow.validate.adjust_to_adjclose")
+    @patch("bot.dataflow.pipeline.validate_daily_bars")
+    @patch("bot.dataflow.pipeline.adjust_to_adjclose")
     def test_fetch_symbol_data_with_cache(
         self, mock_adjust, mock_validate, pipeline, sample_dataframe
     ):
@@ -246,8 +247,8 @@ class TestDataPipeline:
         # Results should be identical
         pd.testing.assert_frame_equal(result1, result2)
 
-    @patch("src.bot.dataflow.validate.validate_daily_bars")
-    @patch("src.bot.dataflow.validate.adjust_to_adjclose")
+    @patch("bot.dataflow.pipeline.validate_daily_bars")
+    @patch("bot.dataflow.pipeline.adjust_to_adjclose")
     def test_fetch_and_validate_single_symbol(
         self, mock_adjust, mock_validate, pipeline, sample_dataframe
     ):
@@ -271,8 +272,8 @@ class TestDataPipeline:
         assert pipeline.metrics.symbols_loaded_successfully == 1
         assert pipeline.metrics.symbols_failed == 0
 
-    @patch("src.bot.dataflow.validate.validate_daily_bars")
-    @patch("src.bot.dataflow.validate.adjust_to_adjclose")
+    @patch("bot.dataflow.pipeline.validate_daily_bars")
+    @patch("bot.dataflow.pipeline.adjust_to_adjclose")
     def test_fetch_and_validate_multiple_symbols(
         self, mock_adjust, mock_validate, pipeline, sample_dataframe
     ):
@@ -311,8 +312,8 @@ class TestDataPipeline:
 
         pipeline.source.get_daily_bars.side_effect = mock_get_daily_bars
 
-        with patch("src.bot.dataflow.validate.validate_daily_bars"):
-            with patch("src.bot.dataflow.validate.adjust_to_adjclose") as mock_adjust:
+        with patch("bot.dataflow.pipeline.validate_daily_bars"):
+            with patch("bot.dataflow.pipeline.adjust_to_adjclose") as mock_adjust:
                 mock_adjust.return_value = (sample_dataframe, False)
 
                 start_date = datetime(2023, 1, 1)
@@ -356,8 +357,8 @@ class TestDataPipeline:
 
         pipeline.source.get_daily_bars.side_effect = mock_get_daily_bars
 
-        with patch("src.bot.dataflow.validate.validate_daily_bars"):
-            with patch("src.bot.dataflow.validate.adjust_to_adjclose") as mock_adjust:
+        with patch("bot.dataflow.pipeline.validate_daily_bars"):
+            with patch("bot.dataflow.pipeline.adjust_to_adjclose") as mock_adjust:
                 mock_adjust.return_value = (sample_dataframe, False)
 
                 start_date = datetime(2023, 1, 1)
@@ -416,8 +417,8 @@ class TestDataPipeline:
         with pytest.raises(ValueError, match="unrealistically high prices"):
             pipeline._perform_quality_checks(unrealistic_df, "TEST")
 
-    @patch("src.bot.dataflow.validate.validate_daily_bars")
-    @patch("src.bot.dataflow.validate.adjust_to_adjclose")
+    @patch("bot.dataflow.pipeline.validate_daily_bars")
+    @patch("bot.dataflow.pipeline.adjust_to_adjclose")
     def test_warm_cache(self, mock_adjust, mock_validate, pipeline, sample_dataframe):
         """Test cache warming functionality."""
         # Setup mocks
@@ -487,8 +488,8 @@ class TestDataPipeline:
         metrics = pipeline.get_metrics()
         assert isinstance(metrics, DataQualityMetrics)
 
-    @patch("src.bot.dataflow.validate.validate_daily_bars")
-    @patch("src.bot.dataflow.validate.adjust_to_adjclose")
+    @patch("bot.dataflow.pipeline.validate_daily_bars")
+    @patch("bot.dataflow.pipeline.adjust_to_adjclose")
     def test_health_check_success(self, mock_adjust, mock_validate, pipeline, sample_dataframe):
         """Test successful health check."""
         # Setup mocks
@@ -515,7 +516,7 @@ class TestDataPipeline:
         assert health["tests"]["data_fetch"]["success"] is False
         assert "error" in health["tests"]["data_fetch"]
 
-    @patch("src.bot.dataflow.validate.validate_daily_bars")
+    @patch("bot.dataflow.pipeline.validate_daily_bars")
     def test_health_check_validation_failure(self, mock_validate, pipeline, sample_dataframe):
         """Test health check with validation failure."""
         # Setup mock to fail validation on test data

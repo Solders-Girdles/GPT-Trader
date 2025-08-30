@@ -60,8 +60,8 @@ class TestMovingAverageStrategy(Strategy):
             return result
 
         # Calculate moving averages
-        fast_ma = bars["Close"].rolling(window=self.fast_period).mean()
-        slow_ma = bars["Close"].rolling(window=self.slow_period).mean()
+        fast_ma = bars["close"].rolling(window=self.fast_period).mean()
+        slow_ma = bars["close"].rolling(window=self.slow_period).mean()
 
         # Generate signals: 1 for buy, -1 for sell, 0 for hold
         signals = pd.Series(0, index=bars.index)

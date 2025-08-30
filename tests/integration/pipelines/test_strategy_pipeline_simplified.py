@@ -53,8 +53,8 @@ class TestMovingAverageStrategy(Strategy):
             return result
 
         # Calculate moving averages
-        fast_ma = bars["Close"].rolling(window=self.fast_period).mean()
-        slow_ma = bars["Close"].rolling(window=self.slow_period).mean()
+        fast_ma = bars["close"].rolling(window=self.fast_period).mean()
+        slow_ma = bars["close"].rolling(window=self.slow_period).mean()
 
         # Generate signals: 1 for buy, -1 for sell, 0 for hold
         signals = pd.Series(0, index=bars.index)
@@ -155,7 +155,7 @@ def test_simplified_pipeline_integration():
         sample_data = cleaned_datasets[list(cleaned_datasets.keys())[0]]  # Use first dataset
 
         # Simple return calculation
-        returns = sample_data["Close"].pct_change().dropna()
+        returns = sample_data["close"].pct_change().dropna()
 
         # Create test strategy
         test_strategy = TestMovingAverageStrategy(fast_period=10, slow_period=20)

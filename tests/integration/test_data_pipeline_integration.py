@@ -116,12 +116,12 @@ class TestDataPipelineIntegration:
         transformed = mock_raw_data.copy()
 
         # Add moving averages
-        transformed["SMA_20"] = transformed["Close"].rolling(20).mean()
-        transformed["SMA_50"] = transformed["Close"].rolling(50).mean()
+        transformed["SMA_20"] = transformed["close"].rolling(20).mean()
+        transformed["SMA_50"] = transformed["close"].rolling(50).mean()
 
         # Add ATR
         transformed["ATR"] = calculate_atr(
-            transformed["High"], transformed["Low"], transformed["Close"], period=14
+            transformed["high"], transformed["low"], transformed["close"], period=14
         )
 
         # Verify transformations
@@ -190,7 +190,7 @@ class TestDataPipelineIntegration:
         filled_data = data_validator.fill_gaps(data_with_gaps, method="forward_fill")
 
         assert len(filled_data) > len(data_with_gaps)
-        assert not filled_data["Close"].isna().any()
+        assert not filled_data["close"].isna().any()
 
     def test_real_time_data_streaming(self):
         """Test real-time data streaming integration."""
@@ -245,7 +245,7 @@ class TestDataPipelineIntegration:
         # Verify aggregations
         assert len(aggregations["5min"]) == len(minute_data) // 5
         assert len(aggregations["1h"]) == 24
-        assert aggregations["1d"]["Volume"].iloc[0] == minute_data["Volume"].sum()
+        assert aggregations["1d"]["volume"].iloc[0] == minute_data["volume"].sum()
 
     def test_multi_source_data_fusion(self):
         """Test combining data from multiple sources."""
@@ -322,7 +322,7 @@ class TestDataPipelineIntegration:
         historical_manager.store_versioned(symbol, v1_data, version=1)
 
         v2_data = mock_raw_data.copy()
-        v2_data["Close"] = v2_data["Close"] * 1.1
+        v2_data["close"] = v2_data["close"] * 1.1
         v2_data["version"] = 2
         historical_manager.store_versioned(symbol, v2_data, version=2)
 
@@ -332,7 +332,7 @@ class TestDataPipelineIntegration:
 
         assert retrieved_v1["version"].iloc[0] == 1
         assert retrieved_v2["version"].iloc[0] == 2
-        assert not np.allclose(retrieved_v1["Close"], retrieved_v2["Close"])
+        assert not np.allclose(retrieved_v1["close"], retrieved_v2["close"])
 
     def test_error_recovery_pipeline(self, data_source):
         """Test error recovery in data pipeline."""

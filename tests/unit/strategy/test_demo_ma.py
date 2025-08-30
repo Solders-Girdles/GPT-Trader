@@ -126,8 +126,8 @@ class TestDemoMAStrategy:
         result = strategy.generate_signals(sample_data)
 
         # Calculate expected MAs
-        expected_fast = sample_data["Close"].rolling(10, min_periods=10).mean()
-        expected_slow = sample_data["Close"].rolling(20, min_periods=20).mean()
+        expected_fast = sample_data["close"].rolling(10, min_periods=10).mean()
+        expected_slow = sample_data["close"].rolling(20, min_periods=20).mean()
 
         # Compare (allowing for small numerical differences)
         pd.testing.assert_series_equal(
@@ -191,7 +191,7 @@ class TestDemoMAStrategy:
         assert (result["atr"] >= 0).all() or result["atr"].isna().all()
 
         # ATR should have reasonable values
-        price_range = sample_data["High"] - sample_data["Low"]
+        price_range = sample_data["high"] - sample_data["low"]
         max_atr = price_range.max() * 2  # Conservative upper bound
 
         valid_atr = result["atr"].dropna()

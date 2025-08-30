@@ -1,10 +1,10 @@
 """Tests for StrategyAllocatorBridge."""
 
-import pytest
-import pandas as pd
-import numpy as np
 from unittest.mock import Mock, patch
 
+import numpy as np
+import pandas as pd
+import pytest
 from bot.integration.strategy_allocator_bridge import StrategyAllocatorBridge
 from bot.portfolio.allocator import PortfolioRules
 from bot.strategy.demo_ma import DemoMAStrategy
@@ -239,7 +239,7 @@ class TestStrategyAllocatorBridge:
         assert strategy_info["name"] == "demo_ma"
         assert rules_info["max_positions"] == 5
 
-        print(f"Integration test results:")
+        print("Integration test results:")
         print(f"  - Processed {len(market_data)} symbols")
         print(f"  - Generated {active_positions} active positions")
         print(f"  - Allocations: {allocations}")

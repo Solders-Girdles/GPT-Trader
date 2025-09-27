@@ -41,7 +41,7 @@ python-dotenv==1.0.0  # Also in main requirements
 
 # Monitoring & Metrics (Development)
 prometheus-client==0.19.0
-psutil==5.9.6
+psutil==7.1.0
 rich==13.7.0  # Better console output
 
 # Mock & Test Data

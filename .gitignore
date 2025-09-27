@@ -68,3 +68,8 @@ coordination/orchestration/*
 *.sqlite
 *.sqlite-journal
 *.sqlite-wal
+
+# Local tooling outputs
+.benchmarks/
+.swarm/
+.mcp.json

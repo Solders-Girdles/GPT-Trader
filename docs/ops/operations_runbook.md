@@ -2,7 +2,7 @@
 
 ---
 status: current
-last-updated: 2025-01-01
+last-updated: 2025-09-27
 consolidates:
   - RUNBOOK_PERPS.md
   - LIVE_MONITORING_GUIDE.md
@@ -16,11 +16,11 @@ Complete operational procedures for GPT-Trader. The bot operates **spot-first**;
 ## Daily Operations
 
 ### Morning Checklist
-- [ ] Check system health: `python scripts/preflight_check.py`
-- [ ] Verify WebSocket connections active
-- [ ] Review overnight PnL and positions
-- [ ] Check error logs for issues
-- [ ] Validate market data freshness
+- [ ] Run preflight checks: `poetry run python scripts/production_preflight.py --profile canary`
+- [ ] Confirm streaming telemetry is updating (latest timestamps in `var/logs/perps_bot.log`)
+- [ ] Review overnight PnL and positions via `poetry run perps-bot --account-snapshot`
+- [ ] Scan `var/logs/perps_bot.log` for new ERROR/CRITICAL entries
+- [ ] Verify recent market heartbeat metrics in `scripts/perps_dashboard.py`
 
 ### System Monitoring
 
@@ -34,19 +34,19 @@ Complete operational procedures for GPT-Trader. The bot operates **spot-first**;
 #### Monitoring Commands
 ```bash
 # System health check
-python scripts/preflight_check.py
+poetry run python scripts/production_preflight.py --profile canary
 
-# Check WebSocket connectivity
-python scripts/ws_probe.py
+# Single-cycle smoke of the bot loop
+poetry run perps-bot --profile dev --dev-fast
 
-# View current positions
-python -c "from bot_v2.cli import show_positions; show_positions()"
+# Account snapshot (balances, permissions, fee schedule)
+poetry run perps-bot --account-snapshot
 
 # Check recent errors
-tail -n 100 logs/perps_bot.log | grep ERROR
+tail -n 100 var/logs/perps_bot.log | grep ERROR
 
-# Monitor PnL in real-time
-tail -f logs/perps_bot.log | grep "PnL"
+# Live telemetry dashboard
+poetry run python scripts/perps_dashboard.py --profile dev --refresh 5
 ```
 
 ## Advanced Order Management
@@ -58,19 +58,24 @@ tail -f logs/perps_bot.log | grep "PnL"
 - **Good Till Date (GTD)**: Orders with expiration
 - **Reduce-Only Orders**: Can only reduce position size
 
-### Order Placement Examples (Spot)
+### Order Tooling Examples (Spot)
 ```bash
-# Market buy order
-poetry run perps-bot place-order --symbol BTC-USD --side buy --type market --size 0.01
+# Preview a market buy
+poetry run perps-bot --preview-order \
+  --order-symbol BTC-USD --order-side buy --order-type market --order-qty 0.01
 
-# Limit sell order
-poetry run perps-bot place-order --symbol BTC-USD --side sell --type limit --size 0.01 --price 65000
+# Preview a limit sell with a client ID
+poetry run perps-bot --preview-order \
+  --order-symbol BTC-USD --order-side sell --order-type limit \
+  --order-qty 0.01 --order-price 65000 --order-client-id demo-001
 
-# Stop-loss order
-poetry run perps-bot place-order --symbol BTC-USD --side sell --type stop --size 0.01 --stop-price 60000 --reduce-only
+# Apply an edit using the preview id returned above
+poetry run perps-bot --apply-order-edit "ORDER_ID:PREVIEW_ID"
 
-# Good-till-date order
-poetry run perps-bot place-order --symbol BTC-USD --side buy --type limit --size 0.01 --price 63000 --gtd "2025-12-31T23:59:59Z"
+# Preview a reduce-only stop exit
+poetry run perps-bot --preview-order \
+  --order-symbol BTC-USD --order-side sell --order-type stop_limit \
+  --order-qty 0.01 --order-price 60000 --order-stop 59500 --order-reduce-only
 ```
 
 > **Derivatives:** Swap the symbol to `*-PERP` only after INTX approval and derivatives are enabled.
@@ -79,10 +84,10 @@ poetry run perps-bot place-order --symbol BTC-USD --side buy --type limit --size
 
 ### Real-time Dashboard
 ```bash
-# Launch monitoring dashboard
-python scripts/dashboard_server.py --port 8080
+# Launch terminal metrics dashboard (reads EventStore + health.json)
+poetry run python scripts/perps_dashboard.py --profile dev --refresh 5 --window-min 15
 
-# Access at: http://localhost:8080
+# Access metrics via the console; Prometheus scraping remains unchanged.
 ```
 
 ### Alert Thresholds
@@ -96,13 +101,13 @@ python scripts/dashboard_server.py --port 8080
 ### Log Analysis
 ```bash
 # Real-time error monitoring
-tail -f logs/perps_bot.log | grep -E "ERROR|CRITICAL"
+tail -f var/logs/perps_bot.log | grep -E "ERROR|CRITICAL"
 
 # PnL tracking
-grep "PnL" logs/perps_bot.log | tail -20
+grep "PnL" var/logs/perps_bot.log | tail -20
 
 # Order execution analysis
-grep "order.*filled" logs/perps_bot.log | tail -10
+grep "order.*filled" var/logs/perps_bot.log | tail -10
 ```
 
 ## Incident Response
@@ -112,7 +117,7 @@ grep "order.*filled" logs/perps_bot.log | tail -10
 #### 1. Emergency Stop
 ```bash
 # Immediate halt of all trading
-export RISK_KILL_SWITCH=1
+export RISK_KILL_SWITCH_ENABLED=1
 pkill -f perps-bot
 ```
 
@@ -125,7 +130,9 @@ export RISK_REDUCE_ONLY_MODE=1
 #### 3. Position Emergency Close
 ```bash
 # Close all positions immediately
-python scripts/emergency_close_positions.py --confirm
+export RISK_REDUCE_ONLY_MODE=1
+# Submit closing orders via Coinbase UI or manual CLI previews.
+echo "Issue market exits to flatten exposure while reduce-only is active."
 ```
 
 ### Common Issues
@@ -204,10 +211,10 @@ python scripts/emergency_close_positions.py --confirm
 cp .env /backup/env_$(date +%Y%m%d)
 
 # Backup logs
-tar -czf /backup/logs_$(date +%Y%m%d).tar.gz logs/
+tar -czf /backup/logs_$(date +%Y%m%d).tar.gz var/logs/
 
 # Backup results
-cp -r results/ /backup/results_$(date +%Y%m%d)/
+cp -r var/data/perps_bot/ /backup/perps_data_$(date +%Y%m%d)/
 ```
 
 ### Disaster Recovery
@@ -227,6 +234,6 @@ cp -r results/ /backup/results_$(date +%Y%m%d)/
 
 ### Resources
 - API Documentation: https://docs.cdp.coinbase.com/
-- System Logs: `logs/perps_bot.log`
+- System Logs: `var/logs/perps_bot.log`
 - Configuration: `.env`
 - Status Page: [Internal status page]

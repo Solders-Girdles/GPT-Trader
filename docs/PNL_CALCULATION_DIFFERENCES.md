@@ -158,12 +158,14 @@ May provide aggregated P&L across all positions.
 - Test our calculations with deterministic data
 - Verify calculation correctness independent of Coinbase
 
-### Integration Tests  
+### Integration Tests
 - Mock Coinbase responses with realistic data
 - Test reconciliation logic with known differences
 
 ### Live Reconciliation
-- Run `scripts/reconcile_pnl_with_coinbase.py` periodically
+- Periodically reconcile PnL against Coinbase statements using the EventStore
+  snapshots. (The historical `scripts/reconcile_pnl_with_coinbase.py` helper
+  was removed during the 2025 cleanup.)
 - Monitor for unexpected discrepancies
 - Alert if differences exceed thresholds
 

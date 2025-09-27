@@ -7,7 +7,7 @@ last-updated: 2025-03-01
 consolidates:
   - docs/QUICK_START.md
   - docs/guides/api_key_setup.md
-  - .env.template
+  - config/environments/.env.template
   - Various scattered setup instructions
 ---
 
@@ -44,7 +44,7 @@ This guide provides the complete setup process for GPT-Trader. The bot ships **s
    ```bash
    # Install Poetry if not present
    curl -sSL https://install.python-poetry.org | python3 -
-   
+
    # Verify installation
    poetry --version
    ```
@@ -86,7 +86,7 @@ poetry run python -c "from bot_v2 import cli; print('✅ Installation successful
 ### Step 1: Create Environment File
 ```bash
 # Copy the template
-cp .env.template .env
+cp config/environments/.env.template .env
 
 # Edit with your preferred editor
 nano .env  # or vim, code, etc.
@@ -191,14 +191,10 @@ GPT-Trader includes three trading profiles:
 
 ### Step 1: Run Preflight Checks
 ```bash
-# Verify system configuration
-poetry run python scripts/preflight_check.py
+# Verify environment, credentials, and risk settings
+poetry run python scripts/production_preflight.py --profile canary
 
-# Expected output:
-# ✅ Python version: 3.12.1
-# ✅ Dependencies installed
-# ✅ Environment configured
-# ✅ API connection available
+# Expected output: Python version, dependency checks, credential status, and risk toggle summary
 ```
 
 ### Step 2: Test with Development Profile
@@ -230,27 +226,29 @@ poetry run perps-bot --profile canary
 ### Run Test Suite
 ```bash
 # Discover active tests (markers deselect optional suites)
-poetry run pytest --collect-only
-# Expected: 480 collected / 422 selected / 58 deselected
+poetry run pytest --collect-only -q
+# Expected: 452 collected / 445 selected / 7 deselected / 1 skipped
 
 # Quick targeted run for spot orchestration
-poetry run pytest tests/unit/bot_v2 tests/unit/test_foundation.py -q
+poetry run pytest -q
 ```
 
-### Check WebSocket Connection
+### Check Streaming Health
 ```bash
-# Test market data reception
-poetry run python scripts/ws_probe.py
+# Smoke test the trading loop (mock broker)
+poetry run perps-bot --profile dev --dev-fast
 
-# Should show live price updates
+# Inspect heartbeat metrics and mark timestamps
+poetry run python scripts/perps_dashboard.py --profile dev --refresh 5 --window-min 5
 ```
 
 ### Monitor System Health
 ```bash
-# Check all components
-poetry run python scripts/capability_probe.py
+# Validate credentials, env, and risk settings
+poetry run python scripts/production_preflight.py --profile canary
 
-# Displays status of all system capabilities
+# Export Prometheus-compatible metrics
+poetry run python scripts/monitoring/export_metrics.py --metrics-file var/data/perps_bot/prod/metrics.json
 ```
 
 ## Troubleshooting
@@ -275,7 +273,7 @@ poetry shell  # Activate environment
 **Solutions**:
 - Check network connectivity
 - Verify firewall allows WSS connections
-- Test with: `poetry run python scripts/ws_probe.py`
+- Confirm heartbeat metrics advance in `scripts/perps_dashboard.py`
 
 #### 4. No Market Data
 **Solutions**:
@@ -296,25 +294,22 @@ poetry shell  # Activate environment
 # Check environment variables
 poetry run python -c "import os; print(os.getenv('COINBASE_API_KEY')[:20])"
 
-# Test API connectivity
-poetry run python scripts/check_sandbox_balance.py
-
 # Monitor real-time logs
-tail -f logs/perps_bot.log
+tail -f var/logs/perps_bot.log
 
 # Emergency stop
-export RISK_KILL_SWITCH=1
+export RISK_KILL_SWITCH_ENABLED=1 && pkill -f perps-bot
 ```
 
 ### Getting Help
 
 1. **Check Documentation**:
    - [Coinbase Integration Guide](../reference/coinbase_complete.md)
-   - [Architecture Overview](../../src/bot_v2/ARCHITECTURE.md)
+   - [Architecture Overview](../ARCHITECTURE.md)
    - [Trading Operations](../reference/trading_logic_perps.md)
 
 2. **Review Logs**:
-   - Main log: `logs/perps_bot.log`
+   - Main log: `var/logs/perps_bot.log`
    - Error details with: `--log-level DEBUG`
 
 3. **Community Support**:
@@ -326,7 +321,7 @@ export RISK_KILL_SWITCH=1
 After successful setup:
 
 1. **Learn the System**:
-   - Read [Architecture Documentation](../../src/bot_v2/ARCHITECTURE.md)
+   - Read [Architecture Documentation](../ARCHITECTURE.md)
    - Understand [Spot Trading Logic](../reference/trading_logic_perps.md) (perps sections apply once INTX is enabled)
    - Review [Risk Management](../reference/coinbase_complete.md#order-types--compatibility)
 
@@ -336,8 +331,8 @@ After successful setup:
    - Gradually increase position sizes once telemetry looks healthy
 
 3. **Monitor Performance**:
-   - Use metrics exporter: `poetry run python scripts/monitoring/export_metrics.py --metrics-file data/perps_bot/prod/metrics.json`
-   - Track logs in `logs/perps_bot.log`
+   - Use metrics exporter: `poetry run python scripts/monitoring/export_metrics.py --metrics-file var/data/perps_bot/prod/metrics.json`
+   - Track logs in `var/logs/perps_bot.log`
    - Schedule regular performance and risk reviews
 
 ---

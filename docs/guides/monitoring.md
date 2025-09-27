@@ -14,8 +14,8 @@ This pulls in `flask` so the exporter can run.
 
 ```bash
 poetry run python scripts/monitoring/export_metrics.py \
-  --metrics-file data/perps_bot/prod/metrics.json \
-  --events-file results/managed/events.jsonl \
+  --metrics-file var/data/perps_bot/prod/metrics.json \
+  --events-file var/data/perps_bot/prod/events.jsonl \
   --host 0.0.0.0 --port 9000
 ```
 
@@ -43,7 +43,9 @@ scrape_configs:
 
 ## 5. Shipping events to Loki (optional)
 
-Use the Promtail config template (`scripts/monitoring/promtail-config.yml.example`) to tail `results/managed/events.jsonl` into Loki. Key event types to monitor:
+If you override `EVENT_STORE_ROOT`, point it at the parent directory (for example `/srv/gpt-trader-runtime`). The bot automatically creates `perps_bot/<profile>` beneath that location so you do not need to append the profile yourself.
+
+Use the Promtail config template (`scripts/monitoring/promtail-config.yml.example`) to tail `var/data/perps_bot/prod/events.jsonl` into Loki. Key event types to monitor:
 
 - `order_preview`, `order_submit`, `order_reject`
 - `account_snapshot`

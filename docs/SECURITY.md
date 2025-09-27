@@ -33,8 +33,10 @@ All hardcoded secrets have been successfully eliminated from the codebase and re
    - `monitoring/docker-compose.yml`: Updated to use environment variables
 
 5. **Scripts**
-   - `scripts/migrate_to_postgres.py`: Updated to use environment variables
-   - `scripts/test_postgres_connection.py`: Updated to use environment variables
+   - Legacy helpers such as `scripts/migrate_to_postgres.py` and
+     `scripts/test_postgres_connection.py` were removed in the 2025 cleanup. Use
+     your infrastructure-as-code or database tooling to manage migrations and
+     connection tests.
 
 ## 🔐 Required Environment Variables
 
@@ -50,8 +52,8 @@ ADMIN_PASSWORD=your-secure-admin-password
 TRADER_PASSWORD=your-secure-trader-password
 
 # API credentials
-ALPACA_API_KEY_ID=your-alpaca-api-key
-ALPACA_API_SECRET_KEY=your-alpaca-secret-key
+COINBASE_API_KEY=your-coinbase-api-key
+COINBASE_API_SECRET=your-coinbase-secret
 ```
 
 ### Optional Configuration Variables
@@ -106,7 +108,7 @@ When `ENVIRONMENT=production`, the system validates that passwords are not:
 
 1. Copy the environment template:
    ```bash
-   cp .env.template .env.local
+   cp config/environments/.env.template .env.local
    ```
 
 2. Fill in your actual values in `.env.local`
@@ -164,14 +166,14 @@ When `ENVIRONMENT=production`, the system validates that passwords are not:
 
 ### Automated Security Scanning
 
-Use the provided security validation scripts:
+Use the following checks during reviews:
 
 ```bash
-# Scan for hardcoded secrets
-python3 scripts/validate_security.py
+# Security-focused unit tests
+poetry run pytest tests/unit/bot_v2/security -q
 
-# Test security fixes
-python3 scripts/test_security_fixes.py
+# Repository-wide secret scan (requires detect-secrets)
+detect-secrets scan
 ```
 
 ### Manual Security Checklist

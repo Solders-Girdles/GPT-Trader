@@ -51,7 +51,7 @@ COINBASE_PASSPHRASE=your_sandbox_passphrase
 
 1. **Copy template**:
 ```bash
-cp .env.template .env
+cp config/environments/.env.template .env
 ```
 
 2. **Configure for your environment**:
@@ -111,7 +111,7 @@ if os.getenv("COINBASE_SANDBOX"):
 # Production (Advanced Trade v3)
 BASE_URL = "https://api.coinbase.com/api/v3/brokerage"
 WS_URL = "wss://advanced-trade-ws.coinbase.com"
-# Sandbox (spot only) 
+# Sandbox (spot only)
 BASE_URL = "https://api-sandbox.coinbase.com/api/v2"
 WS_URL = "wss://ws-feed-sandbox.exchange.coinbase.com"
 ```
@@ -241,20 +241,20 @@ Notes:
 2. Check current bid/ask prices
 3. Disable post-only for aggressive orders
 
-### Debug Commands
+### Debug Workflow
 
 ```bash
-# Check API connectivity
-python scripts/check_sandbox_balance.py
+# Validate environment + credentials
+poetry run python scripts/production_preflight.py --profile canary
 
-# Test WebSocket connection
-python scripts/ws_probe.py --sandbox
+# Smoke test the trading loop (mock broker)
+poetry run perps-bot --profile dev --dev-fast
 
-# Diagnose CDP keys
-python scripts/diagnose_cdp_key.py
+# Inspect streaming telemetry
+poetry run python scripts/perps_dashboard.py --profile dev --refresh 5 --window-min 5
 
-# Validate order execution
-python scripts/validate_week3_orders.py
+# Export Prometheus-compatible metrics
+poetry run python scripts/monitoring/export_metrics.py --metrics-file var/data/perps_bot/prod/metrics.json
 ```
 
 ## Testing & Development
@@ -345,26 +345,26 @@ If migrating from older equities-based system:
 - [API Status](https://status.coinbase.com/)
 
 ### Internal Resources
-- Logs: `logs/perps_bot.log`
-- Configuration: `.env`
-- Debug scripts: `scripts/`
+- Logs: `var/logs/perps_bot.log`
+- EventStore metrics: `var/data/perps_bot/<profile>/metrics.json`
+- Configuration templates: `config/environments/`
 
 ## Quick Reference
 
 ### Essential Commands
 
 ```bash
-# Run perpetuals bot
+# Run spot bot in production profile
 poetry run perps-bot --profile prod
 
 # Check system health
-python scripts/preflight_check.py
+poetry run python scripts/production_preflight.py --profile canary
 
-# Monitor positions
-python scripts/monitor_positions.py
+# Account snapshot (balances, permissions, fee schedule)
+poetry run perps-bot --account-snapshot
 
 # Emergency stop
-export RISK_KILL_SWITCH=1
+export RISK_KILL_SWITCH_ENABLED=1 && pkill -f perps-bot
 ```
 
 ### Key Files
@@ -372,7 +372,7 @@ export RISK_KILL_SWITCH=1
 - Main entry: `src/bot_v2/cli.py`
 - Coinbase client: `src/bot_v2/features/brokerages/coinbase/client.py`
 - WebSocket handler: `src/bot_v2/features/brokerages/coinbase/ws.py`
-- Configuration: `.env.template`
+- Configuration: `config/environments/.env.template`
 
 ---
 

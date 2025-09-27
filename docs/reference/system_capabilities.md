@@ -1,6 +1,6 @@
 # Current System State - December 2024 (Archived)
 
-> **Archived Reference:** This report reflects the perps-first posture from December 2024. For the current spot-first/INTX-gated status, see `README.md`, `docs/ARCHITECTURE.md`, and `docs/reference/coinbase_complete.md`.
+> **Archived Reference:** This report reflects the perps-first posture from December 2024. For the current spot-first/INTX-gated status, see `README.md`, `docs/ARCHITECTURE.md`, and `docs/reference/coinbase_complete.md`. Command examples below reference the 2024 script layout; substitute modern equivalents (e.g. `scripts/production_preflight.py`) when running them today.
 
 ## Executive Summary (Historical)
 
@@ -110,7 +110,7 @@ RISK_MAX_LEVERAGE=5
 poetry install
 
 # Run active tests (100% pass)
-poetry run pytest tests/unit/bot_v2 tests/unit/test_foundation.py
+poetry run pytest -q
 
 # Run perpetuals bot
 poetry run perps-bot --profile dev --dev-fast
@@ -119,8 +119,8 @@ poetry run perps-bot --profile dev --dev-fast
 ### Key Commands
 ```bash
 # Validation
-poetry run python scripts/preflight_check.py
-poetry run python scripts/capability_probe.py
+poetry run python scripts/production_preflight.py --profile canary
+poetry run python scripts/perps_dashboard.py --profile dev --refresh 5 --window-min 5
 
 # Testing
 poetry run pytest tests/unit/bot_v2/ -v
@@ -141,7 +141,7 @@ poetry run perps-bot --profile prod
 ### Documentation
 - **README.md**: Updated with current metrics
 - **TESTING_GUIDE.md**: Comprehensive testing documentation
-- **CLAUDE.md**: AI assistant context
+- **docs/agents/CLAUDE.md**: AI assistant context
 - **CONTRIBUTING.md**: Development guidelines
 
 ## Next Development Priorities
@@ -172,7 +172,7 @@ poetry run perps-bot --profile prod
 ### Key Files
 - Entry Point: `src/bot_v2/cli.py`
 - Main Bot: `src/bot_v2/orchestration/perps_bot.py`
-- Configuration: `.env.template`
+- Configuration: `config/environments/.env.template`
 - Tests: `tests/unit/bot_v2/`
 
 ## Conclusion

@@ -236,11 +236,11 @@ CMD ["poetry", "run", "perps-bot", "--profile", "prod"]
 # Install test dependencies
 poetry install --with dev
 
-# Run compatibility tests
-poetry run pytest tests/compatibility/
+# Run core unit suite
+poetry run pytest -q
 
-# Check environment
-poetry run python scripts/environment_check.py
+# Check environment and credentials
+poetry run python scripts/production_preflight.py --profile canary
 ```
 
 ### CI/CD Pipeline Support
@@ -260,19 +260,19 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.12", "3.13"]
-    
+
     steps:
     - uses: actions/checkout@v3
     - uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
-    
+
     - name: Install Poetry
       run: pip install poetry
-    
+
     - name: Install dependencies
       run: poetry install
-    
+
     - name: Run tests
       run: poetry run pytest
 ```
@@ -292,15 +292,15 @@ jobs:
 
 ### Diagnostic Commands
 ```bash
-# Full system check
-python scripts/compatibility_check.py
+# Full system check (env + credentials)
+poetry run python scripts/production_preflight.py --profile canary
 
 # Check specific component
 python -c "import sys; print(sys.version)"
 python -c "import pandas; print(pandas.__version__)"
 
 # Test Coinbase connectivity
-python scripts/connectivity_test.py
+poetry run perps-bot --profile dev --dev-fast
 ```
 
 ### Support Resources

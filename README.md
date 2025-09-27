@@ -24,12 +24,12 @@ An ML-driven Coinbase trading system with market regime detection, built on a cl
     and apply edits with `poetry run perps-bot --apply-order-edit ORDER_ID:PREVIEW_ID`
 - Coinbase adapter: `src/bot_v2/features/brokerages/coinbase/`
   - Tests: `pytest tests/unit/bot_v2/features/brokerages/coinbase/test_*.py -q`
-- CLI entrypoints: `src/bot_v2/cli.py`, `src/bot_v2/__main__.py`
+- CLI entrypoint: `src/bot_v2/cli.py`
   - Run: `poetry run perps-bot ...` or `poetry run gpt-trader ...`
 - Stage 3 runner: `scripts/stage3_runner.py` (delegates to `perps-bot` for legacy workflows)
 
 Experimental (kept for demos, not in the perps critical path):
-- `features/backtest/*`, `features/ml_strategy/*`, `features/market_regime/*`, `workflows/*`, `monitoring/monitoring_dashboard.py`
+- `features/backtest/*`, `features/ml_strategy/*`, `features/market_regime/*`, `monitoring/monitoring_dashboard.py`
   - These modules are tagged with `__experimental__ = True` and their heavy deps are now optional extras.
   - Install extras as needed, e.g.: `poetry install -E ml -E research -E api`
 
@@ -45,8 +45,8 @@ poetry run perps-bot --profile dev --dev-fast
 # Run with derivatives (requires COINBASE_ENABLE_DERIVATIVES=1 + CDP creds)
 # COINBASE_ENABLE_DERIVATIVES=1 poetry run perps-bot --profile canary
 
-# Run tests (selected spot suite)
-poetry run pytest tests/unit/bot_v2 tests/unit/test_foundation.py -q
+# Run tests (full spot suite)
+poetry run pytest -q
 
 # Stage 3 multi-asset runner
 poetry run python scripts/stage3_runner.py --duration-minutes 60
@@ -62,7 +62,7 @@ poetry run python scripts/stage3_runner.py --duration-minutes 60
 - **Vertical Architecture**: Feature slices under `src/bot_v2/features/` with per-slice tests
 - **Risk Management**: Daily loss guard, liquidation buffers, volatility circuit breakers, correlation checks
 - **Operational Telemetry**: Account snapshots, cycle metrics, Prometheus exporter
-- **Test Coverage**: 430 active tests selected during collection (`poetry run pytest --collect-only`)
+- **Test Coverage**: 445 active tests selected during collection (`poetry run pytest --collect-only -q`)
 
 ### 🚨 Production vs Sandbox
 
@@ -81,7 +81,7 @@ poetry run python scripts/stage3_runner.py --duration-minutes 60
 - Tiny positions for testing
 - Extensive logging
 
-### Canary (`--profile canary`) 
+### Canary (`--profile canary`)
 - Ultra-safe production testing
 - 0.01 BTC max positions
 - $10 daily loss limit
@@ -100,7 +100,7 @@ poetry run python scripts/stage3_runner.py --duration-minutes 60
 - **[AI Agent Guide](docs/guides/agents.md)** - For AI development
 - **[Production Guide](docs/guides/production.md)** - Deployment guide
 - **[Monitoring Guide](docs/guides/monitoring.md)** - Exporter, Prometheus/Grafana, and alerting setup
-- **Monitoring Exporter**: `poetry run python scripts/monitoring/export_metrics.py --metrics-file data/perps_bot/prod/metrics.json`
+- **Monitoring Exporter**: `poetry run python scripts/monitoring/export_metrics.py --metrics-file var/data/perps_bot/prod/metrics.json`
   - Serves `/metrics` (Prometheus) and `/metrics.json` (raw snapshot); requires the optional `flask` extra (`poetry install -E monitoring`).
   - Sample stack: `scripts/monitoring/docker-compose.yml.example` (Prometheus, Grafana, Loki, Promtail)
 
@@ -120,9 +120,14 @@ src/bot_v2/
     └── perps_bot.py         # Main orchestrator
 ```
 
+### Workspace highlights
+- `config/environments/` – versioned environment templates and guidance
+- `docs/agents/` – shared playbooks for CLAUDE, Gemini, and the agent roster
+- `var/` – local runtime artifacts (logs, metrics, event store); created automatically and ignored by git
+
 ## 🧪 Test Status
 
-- **Active Code**: 430 tests collected after deselection ✅
+- **Active Code**: 445 tests collected after deselection ✅
 - **Legacy/archived**: Additional tests skipped/deselected by markers
 - **Command**: `poetry run pytest --collect-only` (run `poetry install` first for new deps like `pyotp`)
 
@@ -130,7 +135,7 @@ src/bot_v2/
 
 ```bash
 # Copy template
-cp .env.template .env
+cp config/environments/.env.template .env
 
 # Required for perpetuals (production)
 COINBASE_PROD_CDP_API_KEY=your_key
@@ -142,7 +147,7 @@ COINBASE_PROD_CDP_PRIVATE_KEY=your_private_key
 
 ## 🤝 Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for development workflow and [AGENTS.md](AGENTS.md) for AI-specific guidelines.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development workflow and [AGENTS.md](docs/agents/Agents.md) for AI-specific guidelines.
 
 ## 📈 Performance Metrics
 

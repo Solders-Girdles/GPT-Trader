@@ -103,12 +103,12 @@ This document captures the architecture and trading flow for the Coinbase Perpet
    - Account equity
    - Target leverage
    - Product constraints (min size, increments)
-   
+
 2. Quantize order parameters:
    - Round size to step_size
    - Round price to price_increment
    - Ensure min_notional compliance
-   
+
 3. Generate client order ID (UUID)
 
 4. Submit order with:
@@ -153,9 +153,10 @@ BotConfig(
     profile=Profile.DEV,
     mock_broker=True,
     mock_fills=True,
-    max_position_size=Decimal("100"),
-    max_spread_bps=Decimal('20'),
-    min_depth_l1=Decimal('10000')
+    dry_run=True,
+    max_position_size=Decimal("10000"),
+    target_leverage=1,
+    reduce_only_mode=True,
 )
 ```
 
@@ -163,10 +164,10 @@ BotConfig(
 ```python
 BotConfig(
     profile=Profile.DEMO,
-    max_position_size=Decimal("500"),
-    reduce_only_mode=False,
+    max_position_size=Decimal("100"),
     max_leverage=1,
-    enable_shorts=False
+    enable_shorts=False,
+    mock_broker=True,
 )
 ```
 
@@ -177,7 +178,7 @@ BotConfig(
     max_position_size=Decimal("5000"),
     max_leverage=3,
     enable_shorts=True,
-    require_rsi_confirmation=True
+    reduce_only_mode=False,
 )
 ```
 
@@ -229,11 +230,11 @@ risk_management:
 
 ### Runtime Validations
 ```bash
-# Sandbox validation
-RUN_SANDBOX_VALIDATIONS=1 python scripts/validate_perps_client_week1.py
+# Sandbox validation (archived helper — recover from git history if needed)
+# RUN_SANDBOX_VALIDATIONS=1 python scripts/validate_perps_client_week1.py
 
-# WebSocket validation
-RUN_SANDBOX_VALIDATIONS=1 python scripts/validate_ws_week1.py
+# WebSocket validation (archived helper)
+# RUN_SANDBOX_VALIDATIONS=1 python scripts/validate_ws_week1.py
 
 # Full cycle test
 python scripts/run_perps_bot.py --profile dev --dry-run --dev-fast
@@ -289,6 +290,7 @@ rejection_counts = {
 8. ✅ Review position size calculations
 
 ### Monitoring Setup
+`EVENT_STORE_ROOT` should point to the parent runtime directory (for example `/srv/gpt-trader-runtime`). The bot automatically creates `perps_bot/{profile}` underneath it, so do not append the profile when exporting the variable.
 ```bash
 # Health status location
 $EVENT_STORE_ROOT/perps_bot/{profile}/health.json

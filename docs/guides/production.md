@@ -2,7 +2,7 @@
 
 ---
 status: current
-last-updated: 2025-03-01
+last-updated: 2025-09-27
 consolidates:
   - PRODUCTION_LAUNCH_CHECKLIST.md
   - PRODUCTION_DEPLOYMENT_RUNBOOK.md
@@ -46,20 +46,20 @@ cd GPT-Trader
 poetry install
 
 # Configure environment
-cp .env.template .env
+cp config/environments/.env.template .env
 # Edit `.env` with production spot values (set COINBASE_ENABLE_DERIVATIVES=0 unless INTX approved)
 ```
 
 ### 2. Pre-flight Validation
 ```bash
-# Run comprehensive checks
-poetry run python scripts/preflight_check.py
+# Run comprehensive checks (env, credentials, risk toggles)
+poetry run python scripts/production_preflight.py --profile canary
 
-# Test WebSocket connectivity
-python scripts/ws_probe.py
+# Smoke test the trading loop
+poetry run perps-bot --profile dev --dev-fast
 
-# Verify API authentication
-python scripts/diagnose_cdp_key.py
+# Inspect streaming telemetry
+poetry run python scripts/perps_dashboard.py --profile dev --refresh 5 --window-min 5
 ```
 
 ### 3. Canary Deployment
@@ -68,7 +68,7 @@ python scripts/diagnose_cdp_key.py
 poetry run perps-bot --profile canary --dry-run
 
 # Monitor for 24 hours
-# Check logs: tail -f logs/perps_bot.log
+# Check logs: tail -f var/logs/perps_bot.log
 
 # If successful, enable live spot trading
 poetry run perps-bot --profile canary
@@ -77,9 +77,9 @@ poetry run perps-bot --profile canary
 ### 4. Production Rollout
 ```bash
 # Gradual scaling approach (spot)
-poetry run perps-bot --profile prod --position-scale 0.1  # 10% size
-poetry run perps-bot --profile prod --position-scale 0.5  # 50% size
-poetry run perps-bot --profile prod                       # Full size
+poetry run perps-bot --profile prod --dry-run             # Validate config under prod settings
+poetry run perps-bot --profile prod --reduce-only         # Warm start with exits only
+poetry run perps-bot --profile prod                       # Full trading once stable
 ```
 
 ## Phased Rollout Plan
@@ -109,7 +109,7 @@ poetry run perps-bot --profile prod                       # Full size
 ## Production Readiness Requirements
 
 ### Technical Requirements
-- ✅ 100% pass rate on required spot test suite (`poetry run pytest tests/unit/bot_v2 tests/unit/test_foundation.py -q`)
+- ✅ 100% pass rate on required spot test suite (`poetry run pytest -q`)
 - ✅ WebSocket reconnection logic
 - ✅ Rate limiting implementation
 - ✅ Error handling and recovery
@@ -150,13 +150,14 @@ If issues arise:
 export RISK_REDUCE_ONLY_MODE=1
 
 # 2. Close all positions
-poetry run python scripts/emergency_close_positions.py
+export RISK_REDUCE_ONLY_MODE=1
+# Submit market exits via Coinbase UI or CLI previews while reduce-only is active.
 
 # 3. Stop the bot
 pkill -f perps-bot
 
 # 4. Review logs and diagnose
-tail -n 1000 logs/perps_bot.log | grep ERROR
+tail -n 1000 var/logs/perps_bot.log | grep ERROR
 ```
 
 ## Verification

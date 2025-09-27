@@ -17,49 +17,48 @@
 ```bash
 # STOP ALL TRADING IMMEDIATELY
 export RISK_KILL_SWITCH_ENABLED=1
-poetry run perps-bot --kill-switch
+pkill -f perps-bot
 
-# Or directly in running process:
-# Press Ctrl+C twice rapidly
+# If running in foreground, press Ctrl+C twice rapidly.
 ```
 
 ### 2. CLOSE ALL POSITIONS
 ```bash
-# Enable reduce-only mode to close positions
+# Enable reduce-only mode to prevent new exposure
 export RISK_REDUCE_ONLY_MODE=1
-poetry run perps-bot --profile canary --reduce-only
 
-# Manual position closure via API:
-poetry run python scripts/emergency_close_positions.py
+# Submit market exits via Coinbase UI or CLI previews while reduce-only is active.
+poetry run perps-bot --preview-order \
+  --order-symbol BTC-USD --order-side sell --order-type market --order-qty CURRENT_SIZE
 ```
 
 ### 3. CHECK SYSTEM STATUS
 ```bash
-# View current positions and P&L
-poetry run python scripts/check_positions.py
+# Account snapshot with balances, permissions, and fee schedule
+poetry run perps-bot --account-snapshot
 
-# Check recent orders
-poetry run python scripts/check_recent_orders.py
+# System health check (env, broker access, risk settings)
+poetry run python scripts/production_preflight.py --profile canary
 
-# System health check
-poetry run python scripts/health_check.py
+# Stream metrics and guard telemetry
+poetry run python scripts/perps_dashboard.py --profile dev --refresh 5
 ```
 
 ## 📊 MONITORING & ALERTS
 
 ### Real-Time Monitoring Commands
 ```bash
-# Monitor live P&L
-watch -n 5 'poetry run python scripts/show_pnl.py'
+# Metrics dashboard (EventStore + health.json)
+poetry run python scripts/perps_dashboard.py --profile dev --refresh 5
 
-# Monitor positions
-watch -n 10 'poetry run python scripts/show_positions.py'
+# Quick bot smoke test
+poetry run perps-bot --profile dev --dev-fast
 
-# Monitor system metrics
-poetry run python scripts/monitor_metrics.py
+# Account telemetry on demand
+poetry run perps-bot --account-snapshot
 
-# Check error logs
-tail -f logs/perps_bot.log | grep ERROR
+# Check error logs in real time
+tail -f var/logs/perps_bot.log | grep ERROR
 ```
 
 ### Key Metrics to Monitor
@@ -75,15 +74,15 @@ tail -f logs/perps_bot.log | grep ERROR
 ### Issue: Excessive Losses
 **Symptoms**: Daily loss approaching or exceeding limit
 **Actions**:
-1. Check if daily loss limit is triggered automatically
-2. Review recent trades: `poetry run python scripts/analyze_trades.py --today`
+1. Check if the daily loss guard tripped (log message `daily_loss_limit_reached`)
+2. Review recent fills in `var/logs/perps_bot.log` or the EventStore snapshot
 3. Reduce position sizes or halt trading
 4. Review strategy parameters
 
 ### Issue: API Authentication Failures
 **Symptoms**: 401/403 errors, "unauthorized" messages
 **Actions**:
-1. Verify credentials: `poetry run python scripts/testing/prod_perps_preflight.py`
+1. Run preflight checks: `poetry run python scripts/production_preflight.py --profile canary`
 2. Check API key permissions in Coinbase portal
 3. Regenerate JWT token
 4. Verify system time sync: `timedatectl status`
@@ -109,8 +108,8 @@ tail -f logs/perps_bot.log | grep ERROR
 **Actions**:
 1. Check order size limits and increments
 2. Verify account balance and margin
-3. Check if in reduce-only mode
-4. Review order parameters: `poetry run python scripts/debug_order.py`
+3. Check if reduce-only mode is active
+4. Dry-run the order with CLI preview: `poetry run perps-bot --preview-order --order-symbol BTC-PERP ...`
 
 ### Issue: High Leverage Warning
 **Symptoms**: Leverage approaching maximum
@@ -127,14 +126,14 @@ tail -f logs/perps_bot.log | grep ERROR
 # 1. Run comprehensive preflight
 poetry run python scripts/production_preflight.py --profile canary
 
-# 2. Test in dry-run mode
-poetry run perps-bot --profile canary --dry-run --run-once
+# 2. Test a single cycle in mock mode
+poetry run perps-bot --profile dev --dev-fast
 
 # 3. Verify risk limits
 cat .env | grep RISK_
 
 # 4. Check account status
-poetry run python scripts/check_account_status.py
+poetry run perps-bot --account-snapshot
 ```
 
 ### Production Startup Sequence
@@ -146,7 +145,7 @@ export COINBASE_SANDBOX=0
 export COINBASE_ENABLE_DERIVATIVES=1
 
 # 2. Start with canary profile (minimal risk)
-poetry run perps-bot --profile canary
+poetry run perps-bot --profile canary --reduce-only
 
 # 3. Monitor for first hour
 # - Check first 10 trades manually
@@ -168,16 +167,14 @@ poetry run perps-bot --profile canary
    - Market conditions
 
 2. **Document the incident**
-   ```bash
-   poetry run python scripts/generate_incident_report.py
-   ```
+   - Capture timestamps, log excerpts, and guard triggers in the shared incident template.
 
 3. **Close or manage positions**
    - Decide whether to close immediately or manage down
    - Consider market impact and slippage
 
 4. **Root cause analysis**
-   - Review logs: `logs/perps_bot_YYYYMMDD.log`
+   - Review logs: `var/logs/perps_bot_YYYYMMDD.log`
    - Check event store: `events/`
    - Analyze trade history
 
@@ -185,6 +182,7 @@ poetry run perps-bot --profile canary
    - Update configuration if needed
    - Fix any code issues
    - Update risk parameters
+   - Record changes in VERSION/CHANGELOG as applicable
 
 6. **Gradual restart**
    - Start with paper trading
@@ -209,28 +207,17 @@ poetry run perps-bot --profile canary
 ## 📝 LOGGING & DEBUGGING
 
 ### Log Locations
-- Main log: `logs/perps_bot.log`
-- Error log: `logs/errors.log`
-- Trade log: `logs/trades.log`
+- Main log: `var/logs/perps_bot.log`
+- Error log: `var/logs/errors.log`
+- Trade log: `var/logs/trades.log`
 - Event store: `events/`
 
-### Debug Commands
-```bash
-# Enable debug logging
-export LOG_LEVEL=DEBUG
-
-# Trace specific order
-poetry run python scripts/trace_order.py --order-id <ID>
-
-# Analyze P&L discrepancy
-poetry run python scripts/analyze_pnl.py --date <YYYY-MM-DD>
-
-# Debug WebSocket issues
-poetry run python scripts/debug_websocket.py
-
-# Test specific strategy
-poetry run python scripts/test_strategy.py --strategy momentum
-```
+### Debug Workflow
+1. Increase verbosity when needed: `export LOG_LEVEL=DEBUG` before restarting the bot.
+2. Inspect recent activity in `var/logs/perps_bot.log` and the EventStore metrics.
+3. Reproduce issues with the dev profile: `poetry run perps-bot --profile dev --dev-fast`.
+4. Capture telemetry snapshots via `poetry run perps-bot --account-snapshot` for audit trails.
+5. Use `poetry run pytest tests/unit/bot_v2 -k <keyword>` to target suspect components.
 
 ## 🔍 PERFORMANCE ANALYSIS
 
@@ -243,16 +230,9 @@ poetry run python scripts/test_strategy.py --strategy momentum
 - [ ] Risk limit usage
 
 ### Weekly Review
-```bash
-# Generate weekly report
-poetry run python scripts/generate_weekly_report.py
-
-# Analyze strategy performance
-poetry run python scripts/analyze_strategy_performance.py
-
-# Review risk metrics
-poetry run python scripts/analyze_risk_metrics.py
-```
+- Summarize weekly P&L, drawdowns, and guard activations in the shared spreadsheet.
+- Review risk metrics captured in EventStore snapshots (`var/data/perps_bot/<profile>/metrics.json`).
+- Re-run the core validation suite: `poetry run python scripts/validation/verify_core.py`.
 
 ## 🚀 SCALING PROCEDURES
 
@@ -281,14 +261,11 @@ poetry run python scripts/analyze_risk_metrics.py
 ## 🔐 SECURITY PROCEDURES
 
 ### Key Rotation
-```bash
-# 1. Generate new API key in Coinbase
-# 2. Update .env with new credentials
-# 3. Test authentication
-poetry run python scripts/test_new_credentials.py
-# 4. Deploy new credentials
-# 5. Revoke old key after confirming
-```
+1. Generate a new API key in Coinbase.
+2. Update `.env` with the new credentials.
+3. Run `poetry run python scripts/production_preflight.py --profile canary` to validate authentication.
+4. Deploy the updated environment and monitor for an hour.
+5. Revoke the old key once production is stable.
 
 ### Security Audit
 - Review API permissions monthly
@@ -325,17 +302,11 @@ poetry run python scripts/test_new_credentials.py
 ## 🔄 MAINTENANCE WINDOWS
 
 ### Planned Maintenance
-```bash
-# 1. Announce maintenance 24h in advance
-# 2. Close or reduce positions
-# 3. Enable reduce-only mode
-# 4. Stop bot gracefully
-poetry run perps-bot --shutdown-graceful
-
-# 5. Perform maintenance
-# 6. Run tests
-# 7. Restart with canary profile
-```
+1. Announce maintenance 24h in advance.
+2. Close or reduce positions and enable reduce-only mode.
+3. Stop the bot gracefully with Ctrl+C (or `pkill -f perps-bot`).
+4. Perform maintenance and run `poetry run pytest -q`.
+5. Restart with the canary profile and monitor.
 
 ### Coinbase Maintenance
 - Monitor https://status.coinbase.com/
@@ -357,20 +328,20 @@ PERPS_PAPER=1                        # Paper trading mode
 
 ### Common Commands
 ```bash
-# Start trading
+# Start trading (spot)
 poetry run perps-bot --profile canary
 
 # Dry run test
-poetry run perps-bot --profile canary --dry-run
+poetry run perps-bot --profile dev --dry-run
 
 # Single cycle test
-poetry run perps-bot --profile dev --run-once
+poetry run perps-bot --profile dev --dev-fast
 
-# Check status
-poetry run python scripts/bot_status.py
+# Account snapshot
+poetry run perps-bot --account-snapshot
 
 # Emergency stop
-poetry run perps-bot --kill-switch
+export RISK_KILL_SWITCH_ENABLED=1 && pkill -f perps-bot
 ```
 
 ### Profile Summary
@@ -393,6 +364,6 @@ poetry run perps-bot --kill-switch
 
 ---
 
-**Last Updated**: December 2024
-**Version**: 1.0.0
+**Last Updated**: September 2025
+**Version**: 1.1.0
 **Next Review**: Monthly or after any major incident

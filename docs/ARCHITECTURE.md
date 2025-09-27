@@ -21,7 +21,7 @@ GPT-Trader V2 is a production-ready Coinbase **spot** trading system that retain
 
 ### Vertical Slice Design
 
-The system is organized into vertical feature slices under `src/bot_v2/features/`. Production-critical slices (e.g., `live_trade`, `brokerages`, `position_sizing`) ship with full test coverage, while research/demo slices (`backtest`, `ml_strategy`, `market_regime`, `workflows`, `monitoring_dashboard`) are tagged `__experimental__` and excluded from the core trading loop.
+The system is organized into vertical feature slices under `src/bot_v2/features/`. Production-critical slices (e.g., `live_trade`, `brokerages`, `position_sizing`) ship with full test coverage, while research/demo slices (`backtest`, `ml_strategy`, `market_regime`, `monitoring_dashboard`) are tagged `__experimental__` and excluded from the core trading loop. The former workflow engine was removed; recover it from repository history if you need a reference.
 
 ```
 src/bot_v2/features/
@@ -45,6 +45,16 @@ src/bot_v2/features/
 3. **Type Safety**: Shared interfaces defined in `features/brokerages/core/interfaces.py`.
 4. **Environment Separation**: `perps_bot` normalizes symbols to spot unless INTX derivatives access is detected.
 
+### Orchestration Infrastructure
+
+- `orchestration/session_guard.py` and `orchestration/market_monitor.py` encapsulate trading window enforcement and market-data freshness so `perps_bot` stays focused on orchestration glue.
+- `features/live_trade/indicators.py`, `features/live_trade/risk_calculations.py`, and `features/live_trade/risk_runtime.py` centralize indicator math plus leverage/MMR/risk guard helpers, giving strategies and the risk manager shared, tested primitives.
+- `orchestration/configuration.py` centralizes profile-aware defaults (`BotConfig`, `ConfigManager`) and is now covered by unit tests (`tests/unit/bot_v2/orchestration/test_configuration.py`).
+- `orchestration/service_registry.py` provides an explicit container for runtime dependencies so the main bot can accept a prepared bundle instead of instantiating stores/brokers inline. Future phases will wire this into the CLI bootstrapper.
+- Legacy status reports that used to live under `src/bot_v2/*.md` were removed;
+  pull them from repository history if you need to review them.
+- Historical V1/V2 integration and system tests depending on the legacy `bot.*` package lived under `archived/legacy_tests/` before the cleanup. Recover them from git history if you need a reference. The active pytest suite now focuses exclusively on the `bot_v2` stack and passes via `poetry run pytest`.
+
 ## What's Actually Working
 
 ### ✅ Fully Operational
@@ -52,7 +62,7 @@ src/bot_v2/features/
 - Order placement/management through `LiveExecutionEngine`
 - Account telemetry snapshots and cycle metrics persisted for monitoring
 - Runtime safety rails: daily loss guard, liquidation buffer enforcement, mark staleness detection, volatility circuit breaker, correlation checks
-- 430 active tests selected at collection time (`poetry run pytest --collect-only`)
+- 446 active tests selected at collection time (`poetry run pytest --collect-only`)
 
 ### ⚠️ Partially Working / Future Activation
 - Perpetual futures execution: code paths compile and tests run, but live trading remains disabled without INTX
@@ -121,17 +131,16 @@ monitoring: real-time
 
 ## Performance & Observability
 
-- **Cycle Metrics**: persisted to `data/perps_bot/<profile>/metrics.json` and exposed via Prometheus exporter (`scripts/monitoring/export_metrics.py`)
+- **Cycle Metrics**: persisted to `var/data/perps_bot/<profile>/metrics.json` and exposed via Prometheus exporter (`scripts/monitoring/export_metrics.py`)
 - **Account Snapshots**: periodic telemetry via `CoinbaseAccountManager` with fee/limit tracking
 - **System Footprint**: bot process typically <50MB RSS with sub-100ms WebSocket latency in spot mode
-- **Test Discovery**: 488 collected / 430 selected / 58 deselected (markers)
+- **Test Discovery**: 455 collected / 446 selected / 9 deselected
 
 ## Verification Path
 
-1. **Unit Tests**: `poetry run pytest tests/unit/bot_v2 tests/unit/test_foundation.py`
-2. **Integration**: `poetry run pytest -m integration tests/integration/bot_v2 -q`
-3. **Smoke Test**: `poetry run perps-bot --profile dev --dev-fast`
-4. **Validation**: `python scripts/validation/verify_core.py --check all`
+1. **Regression Suite**: `poetry run pytest -q`
+2. **Smoke Test**: `poetry run perps-bot --profile dev --dev-fast`
+3. **Validation**: `python scripts/validation/verify_core.py --check all`
 
 ## Dependencies
 

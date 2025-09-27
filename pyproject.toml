@@ -3,7 +3,7 @@ name = "gpt-trader"
 version = "0.1.0"
 description = "Equities-first trading bot scaffold with adapter-based data, backtesting, and paper trading hooks."
 readme = "README.md"
-authors = [{ name = "RJ + GPT-5" }]
+authors = [{name = "RJ + GPT-5"}]
 requires-python = ">=3.12,<3.13"
 dependencies = [
     "coinbase-advanced-py>=1.0.0,<2.0.0",
@@ -47,9 +47,7 @@ deep-learning = [
     "tensorflow>=2.13.0,<3.0.0",
     "tensorboard>=2.14.0,<3.0.0",
 ]
-market-data = [
-    "yfinance>=0.2.40,<0.3.0",
-]
+market-data = ["yfinance>=0.2.40,<0.3.0"]
 api = [
     "fastapi>=0.115.4,<0.116.0",
     "uvicorn>=0.32.0,<0.33.0",
@@ -75,18 +73,12 @@ research = [
     "seaborn>=0.13.0,<0.14.0",
     "plotly>=6.2.0,<7.0.0",
 ]
-optimization = [
-    "cvxpy>=1.7.1,<2.0.0",
-]
-ui = [
-    "streamlit>=1.48.0,<2.0.0",
-]
-equities = [
-    "alpaca-py>=0.20.0,<0.21.0",
-]
+optimization = ["cvxpy>=1.7.1,<2.0.0"]
+ui = ["streamlit>=1.48.0,<2.0.0"]
+equities = ["alpaca-py>=0.20.0,<0.21.0"]
 
 [project.scripts]
-gpt-trader = "bot_v2.__main__:main"
+gpt-trader = "bot_v2.cli:main"
 perps-bot = "bot_v2.cli:main"
 
 [tool.poetry]
@@ -136,21 +128,21 @@ extend-exclude = [
 
 [tool.ruff.lint]
 select = [
-    "E",    # pycodestyle errors
-    "F",    # pyflakes
-    "I",    # isort
-    "UP",   # pyupgrade
-    "B",    # flake8-bugbear
-    "ANN",  # flake8-annotations
-    "S",    # flake8-bandit
-    "W",    # pycodestyle warnings
+    "E",
+    "F",
+    "I",
+    "UP",
+    "B",
+    "ANN",
+    "S",
+    "W",
 ]
 ignore = [
-    "ANN101",  # Missing type annotation for self
-    "ANN102",  # Missing type annotation for cls
-    "S101",    # Use of assert (common in tests)
-    "E501",    # Line too long (handled by formatter)
-    "ANN401",  # Dynamically typed expressions (Any)
+    "ANN101",
+    "ANN102",
+    "S101",
+    "E501",
+    "ANN401",
 ]
 
 [tool.ruff.lint.per-file-ignores]

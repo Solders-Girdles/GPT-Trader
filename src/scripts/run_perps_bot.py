@@ -5,14 +5,14 @@ from datetime import datetime, time
 from decimal import Decimal
 from typing import List, Optional
 
-from bot_v2.orchestration.perps_bot import BotConfig as _CoreBotConfig, Profile
+from bot_v2.orchestration.configuration import BotConfig as _CoreBotConfig, Profile
 
 
 @dataclass
 class BotConfig:
     profile: str
     dry_run: bool = False
-    symbols: Optional[List[str]] = None
+    symbols: list[str] | None = None
     update_interval: int = 5
     short_ma: int = 5
     long_ma: int = 20
@@ -24,18 +24,18 @@ class BotConfig:
     reduce_only_mode: bool = False
     mock_broker: bool = False
     mock_fills: bool = False
-    trading_window_start: Optional[time] = None
-    trading_window_end: Optional[time] = None
-    trading_days: Optional[List[str]] = None
+    trading_window_start: time | None = None
+    trading_window_end: time | None = None
+    trading_days: list[str] | None = None
     daily_loss_limit: Decimal = Decimal("0")
     time_in_force: str = "GTC"
 
     @classmethod
-    def from_profile(cls, profile: str, **overrides) -> "BotConfig":
+    def from_profile(cls, profile: str, **overrides) -> BotConfig:
         core = _CoreBotConfig.from_profile(profile, **overrides)
-        ProfileShim = type('ProfileShim', (), {})
+        ProfileShim = type("ProfileShim", (), {})
         p = ProfileShim()
-        setattr(p, 'value', core.profile.value)
+        setattr(p, "value", core.profile.value)
         return cls(
             profile=p,  # type: ignore[assignment]
             dry_run=core.dry_run,
@@ -68,10 +68,14 @@ class TradingBot:
         return datetime.now()
 
     def is_within_trading_window(self) -> bool:
-        if not self.config.trading_window_start or not self.config.trading_window_end or not self.config.trading_days:
+        if (
+            not self.config.trading_window_start
+            or not self.config.trading_window_end
+            or not self.config.trading_days
+        ):
             return True
         now = self._now()
-        day = now.strftime('%A').lower()
+        day = now.strftime("%A").lower()
         if day not in [d.lower() for d in self.config.trading_days or []]:
             return False
         cur_t = now.time()

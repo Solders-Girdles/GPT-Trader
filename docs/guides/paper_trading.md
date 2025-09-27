@@ -57,7 +57,7 @@ poetry run perps-bot --profile dev
 poetry run perps-bot --profile dev --dev-fast
 
 # Monitor performance
-tail -f logs/perps_bot.log | grep "PnL"
+tail -f var/logs/perps_bot.log | grep "PnL"
 ```
 
 ### Advanced Configuration

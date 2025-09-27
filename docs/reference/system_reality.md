@@ -24,6 +24,5 @@ This document captures what’s actually working versus what’s scaffolded.
 - Partial fill handling in mock (market fills are immediate)
 
 ## Verification Path
-1. `pytest tests/unit/test_foundation.py -q` exercises mock spot trade placement, mark updates, and reduce-only enforcement
-2. `pytest tests/unit/bot_v2/features/brokerages/coinbase/test_order_payloads.py -q` validates adapter-side quantisation and payloads
-3. Add sandbox integration once credentials and environment are stable (networked tests remain opt-in)
+1. `poetry run pytest -q` exercises the full spot regression suite (mock trades, risk guards, orchestration glue)
+2. Add sandbox integration once credentials and environment are stable (networked tests remain opt-in)

@@ -1,25 +1,16 @@
-"""
-Bot V2 Orchestration Layer
+"""Modern orchestration exports for the spot-focused stack."""
 
-This module provides the core orchestration functionality to connect
-all 11 feature slices into a unified trading system.
-
-Components:
-- orchestrator.py: Core TradingOrchestrator class
-- registry.py: Dynamic slice discovery and management
-- adapters.py: Interface adapters for slice standardization
-- types.py: Type definitions for orchestration
-- config.py: Configuration management
-"""
-
-from .orchestrator import TradingOrchestrator, OrchestratorConfig, TradingMode
-from .registry import SliceRegistry
-from .adapters import AdapterFactory
+from .bootstrap import bot_from_profile, build_bot
+from .configuration import BotConfig, ConfigManager, Profile
+from .perps_bot import PerpsBot
+from .service_registry import ServiceRegistry
 
 __all__ = [
-    'TradingOrchestrator',
-    'OrchestratorConfig', 
-    'TradingMode',
-    'SliceRegistry',
-    'AdapterFactory'
+    "build_bot",
+    "bot_from_profile",
+    "BotConfig",
+    "ConfigManager",
+    "Profile",
+    "ServiceRegistry",
+    "PerpsBot",
 ]

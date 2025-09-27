@@ -26,7 +26,7 @@ poetry run perps-bot --convert USD:USDC:1000
 poetry run perps-bot --move-funds portfolio_a:portfolio_b:50
 
 # Metrics exporter (Prometheus + JSON)
-poetry run python scripts/monitoring/export_metrics.py --metrics-file data/perps_bot/prod/metrics.json
+poetry run python scripts/monitoring/export_metrics.py --metrics-file var/data/perps_bot/prod/metrics.json
 
 # Tests (see notes below)
 poetry run pytest --collect-only
@@ -44,12 +44,12 @@ poetry run pytest --collect-only
 
 ## Perps & Experimental Modules
 - Perps code paths should stay intact but **never assume live connectivity**. Document INTX gating in every perps-related change.
-- Modules flagged `__experimental__ = True` (backtest, ml_strategy, market_regime, monitoring dashboard, workflows) are off the production path. Touch them only when requested and keep their optional dependencies isolated.
+- Modules flagged `__experimental__ = True` (backtest, ml_strategy, market_regime, monitoring dashboard) are off the production path. The old workflow engine was removed; reach back in git history if you truly need it. Touch these slices only when requested and keep optional dependencies isolated.
 
 ## Testing & Dependencies
-- `poetry run pytest --collect-only` currently discovers 486 tests (428 selected after deselection). Run `poetry install` after pulling so new dependencies (e.g., `pyotp`) are available for the suite.
+- `poetry run pytest --collect-only` currently discovers 455 tests (446 selected after deselection). Run `poetry install` after pulling so new dependencies (e.g., `pyotp`) are available for the suite.
 - Add regression tests for any changes to risk guards, telemetry, or CLI helpers.
-- Keep integration tests under `tests/integration/bot_v2/` aligned with orchestration changes.
+- Legacy integration suites were retired; add any new cross-slice checks under `tests/unit/bot_v2/` (or build focussed fixtures alongside the components you touch).
 
 ## Safety & Operational Checks
 - Risk controls live in `LiveExecutionEngine`: daily loss guard, liquidation distance, mark staleness, volatility circuit breaker, correlation risk.
@@ -60,7 +60,7 @@ poetry run pytest --collect-only
 Whenever your change affects behavior:
 1. Update `README.md` (commands, quick start).
 2. Update `docs/ARCHITECTURE.md` (system overview).
-3. Sync `Agents.md`, this file, and `Gemini.md`.
+3. Sync `docs/agents/Agents.md`, this file, and `docs/agents/Gemini.md`.
 4. Note the INTX dependency anywhere perps functionality is mentioned.
 
 ## Workflow Tips for Claude

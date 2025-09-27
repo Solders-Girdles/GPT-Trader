@@ -14,6 +14,8 @@ import logging.handlers
 import os
 from pathlib import Path
 
+from .system_paths import LOG_DIR, ensure_directories
+
 
 def _env_flag(name: str, default: str = "0") -> bool:
     return os.getenv(name, default).strip().lower() in ("1", "true", "yes", "on")
@@ -22,15 +24,16 @@ def _env_flag(name: str, default: str = "0") -> bool:
 def configure_logging() -> None:
     """Configure rotating file logging and debug levels.
 
-    - General text log: logs/perps_trading.log (INFO+)
-    - Critical text log: logs/critical_events.log (WARNING+)
+    - General text log: var/logs/perps_trading.log (INFO+)
+    - Critical text log: var/logs/critical_events.log (WARNING+)
     - JSON logs (message-only):
-        - logs/perps_trading.jsonl (DEBUG+)
-        - logs/critical_events.jsonl (WARNING+)
+        - var/logs/perps_trading.jsonl (DEBUG+)
+        - var/logs/critical_events.jsonl (WARNING+)
     - Debug mode via PERPS_DEBUG=1
     - sizes configurable via env vars
     """
-    log_dir = Path(os.getenv("PERPS_LOG_DIR", "logs"))
+    ensure_directories((LOG_DIR,))
+    log_dir = Path(os.getenv("PERPS_LOG_DIR", str(LOG_DIR)))
     log_dir.mkdir(parents=True, exist_ok=True)
 
     # Root logger and console
@@ -38,13 +41,17 @@ def configure_logging() -> None:
     root.setLevel(logging.INFO)
 
     # Avoid duplicate handlers if called multiple times
-    existing_targets = {getattr(h, "baseFilename", None) for h in root.handlers if hasattr(h, "baseFilename")}
+    existing_targets = {
+        getattr(h, "baseFilename", None) for h in root.handlers if hasattr(h, "baseFilename")
+    }
 
     # Console handler (only add if not present)
     if not any(isinstance(h, logging.StreamHandler) for h in root.handlers):
         console = logging.StreamHandler()
         console.setLevel(logging.INFO)
-        console.setFormatter(logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s"))
+        console.setFormatter(
+            logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+        )
         root.addHandler(console)
 
     # File sizes
@@ -60,7 +67,9 @@ def configure_logging() -> None:
             general_path, maxBytes=general_max_bytes, backupCount=general_backups
         )
         general_handler.setLevel(logging.INFO)
-        general_handler.setFormatter(logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s"))
+        general_handler.setFormatter(
+            logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+        )
         root.addHandler(general_handler)
 
     # Critical file handler (text)
@@ -70,7 +79,9 @@ def configure_logging() -> None:
             critical_path, maxBytes=critical_max_bytes, backupCount=critical_backups
         )
         critical_handler.setLevel(logging.WARNING)
-        critical_handler.setFormatter(logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s"))
+        critical_handler.setFormatter(
+            logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+        )
         root.addHandler(critical_handler)
 
     # JSON loggers: dedicated logger that writes message-only JSON lines
@@ -78,7 +89,9 @@ def configure_logging() -> None:
     json_logger.setLevel(logging.DEBUG)
     json_logger.propagate = False
 
-    existing_json_targets = {getattr(h, "baseFilename", None) for h in json_logger.handlers if hasattr(h, "baseFilename")}
+    existing_json_targets = {
+        getattr(h, "baseFilename", None) for h in json_logger.handlers if hasattr(h, "baseFilename")
+    }
     json_formatter = logging.Formatter("%(message)s")  # message is pre-formatted JSON
 
     json_general_path = str(log_dir / "perps_trading.jsonl")
@@ -104,4 +117,3 @@ def configure_logging() -> None:
         # Raise root console/file logs to DEBUG for targeted packages
         logging.getLogger("bot_v2.features.brokerages.coinbase").setLevel(logging.DEBUG)
         logging.getLogger("bot_v2.orchestration").setLevel(logging.DEBUG)
-

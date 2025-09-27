@@ -13,7 +13,7 @@ Usage:
   python scripts/perps_dashboard.py --profile dev --refresh 5 --window-min 5
 
 Env overrides:
-  EVENT_STORE_ROOT: base directory for events/health (defaults to data/perps_bot/<profile>)
+  EVENT_STORE_ROOT: base directory for events/health (defaults to var/data/perps_bot/<profile>)
 """
 
 from __future__ import annotations
@@ -28,17 +28,24 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Deque, Dict, Optional
 
+REPO_ROOT = Path(__file__).resolve().parents[1]
+SRC_PATH = REPO_ROOT / "src"
+if str(SRC_PATH) not in sys.path:
+    sys.path.append(str(SRC_PATH))
+
+from bot_v2.system_paths import RUNTIME_DATA_DIR
+
 
 def clear():
-    os.system('clear' if os.name == 'posix' else 'cls')
+    os.system("clear" if os.name == "posix" else "cls")
 
 
-def load_events(path: Path, max_lines: int = 5000) -> Deque[Dict]:
-    events: Deque[Dict] = deque(maxlen=max_lines)
+def load_events(path: Path, max_lines: int = 5000) -> Deque[dict]:
+    events: Deque[dict] = deque(maxlen=max_lines)
     if not path.exists():
         return events
     try:
-        with path.open('r') as f:
+        with path.open("r") as f:
             for line in f:
                 line = line.strip()
                 if not line:
@@ -53,16 +60,16 @@ def load_events(path: Path, max_lines: int = 5000) -> Deque[Dict]:
     return events
 
 
-def parse_time(s: Optional[str]) -> Optional[datetime]:
+def parse_time(s: str | None) -> datetime | None:
     if not s:
         return None
     try:
-        return datetime.fromisoformat(s.replace('Z', '+00:00'))
+        return datetime.fromisoformat(s.replace("Z", "+00:00"))
     except Exception:
         return None
 
 
-def summarize(events: Deque[Dict], window: timedelta) -> Dict[str, float | int]:
+def summarize(events: Deque[dict], window: timedelta) -> dict[str, float | int]:
     now = datetime.utcnow().astimezone()
     cutoff = now - window
     success = 0
@@ -70,52 +77,52 @@ def summarize(events: Deque[Dict], window: timedelta) -> Dict[str, float | int]:
     drift = 0
     pos_drift = 0
     for evt in events:
-        ts = parse_time(evt.get('time'))
+        ts = parse_time(evt.get("time"))
         if ts is None or ts < cutoff:
             continue
-        etype = str(evt.get('type', '')).lower()
-        if etype == 'order_success':
+        etype = str(evt.get("type", "")).lower()
+        if etype == "order_success":
             success += 1
-        elif etype == 'order_failed':
+        elif etype == "order_failed":
             failed += 1
-        elif etype == 'order_drift':
+        elif etype == "order_drift":
             drift += 1
-        elif etype == 'position_drift':
+        elif etype == "position_drift":
             pos_drift += 1
     total = success + failed
     acceptance = (success / total * 100.0) if total > 0 else 0.0
     return {
-        'success': success,
-        'failed': failed,
-        'total': total,
-        'acceptance_rate': acceptance,
-        'drift_events': drift,
-        'position_drift_events': pos_drift,
+        "success": success,
+        "failed": failed,
+        "total": total,
+        "acceptance_rate": acceptance,
+        "drift_events": drift,
+        "position_drift_events": pos_drift,
     }
 
 
-def load_health(health_path: Path) -> Dict:
+def load_health(health_path: Path) -> dict:
     if not health_path.exists():
-        return {'ok': False, 'message': 'health.json not found'}
+        return {"ok": False, "message": "health.json not found"}
     try:
-        with health_path.open('r') as f:
+        with health_path.open("r") as f:
             return json.load(f)
     except Exception as e:
-        return {'ok': False, 'message': f'error reading health: {e}'}
+        return {"ok": False, "message": f"error reading health: {e}"}
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Perps Metrics Dashboard')
-    parser.add_argument('--profile', choices=['dev', 'demo', 'prod', 'canary'], default='dev')
-    parser.add_argument('--refresh', type=int, default=5, help='Refresh interval seconds')
-    parser.add_argument('--window-min', type=int, default=5, help='Sliding window in minutes')
+    parser = argparse.ArgumentParser(description="Perps Metrics Dashboard")
+    parser.add_argument("--profile", choices=["dev", "demo", "prod", "canary"], default="dev")
+    parser.add_argument("--refresh", type=int, default=5, help="Refresh interval seconds")
+    parser.add_argument("--window-min", type=int, default=5, help="Sliding window in minutes")
     args = parser.parse_args()
 
     # Resolve base dir for this profile (aligns with PerpsBot EventStore root)
-    default_root = Path('data') / f'perps_bot/{args.profile}'
-    base_dir = Path(os.getenv('EVENT_STORE_ROOT', str(default_root)))
-    events_path = base_dir / 'events.jsonl'
-    health_path = base_dir / 'health.json'
+    default_root = RUNTIME_DATA_DIR / "perps_bot" / args.profile
+    base_dir = Path(os.getenv("EVENT_STORE_ROOT", str(default_root)))
+    events_path = base_dir / "events.jsonl"
+    health_path = base_dir / "health.json"
 
     # Load once, then loop
     window = timedelta(minutes=args.window_min)
@@ -123,62 +130,66 @@ def main():
     try:
         while True:
             clear()
-            print('=' * 80)
-            print(f'🚀 Perps Metrics Dashboard  |  Profile: {args.profile}  |  Window: {args.window_min}m')
-            print('=' * 80)
+            print("=" * 80)
+            print(
+                f"🚀 Perps Metrics Dashboard  |  Profile: {args.profile}  |  Window: {args.window_min}m"
+            )
+            print("=" * 80)
 
             events = load_events(events_path)
             summary = summarize(events, window)
             health = load_health(health_path)
 
             # Health
-            ok_icon = '✅' if health.get('ok') else '❌'
-            print('\n🩺 Health')
-            print('-' * 40)
-            print(f"Status: {ok_icon}  |  Message: {health.get('message','')}  |  Error: {health.get('error','')}")
+            ok_icon = "✅" if health.get("ok") else "❌"
+            print("\n🩺 Health")
+            print("-" * 40)
+            print(
+                f"Status: {ok_icon}  |  Message: {health.get('message','')}  |  Error: {health.get('error','')}"
+            )
             print(f"Time:   {health.get('timestamp', '')}")
 
             # Orders
-            print('\n📊 Orders (last {:d} min)'.format(args.window_min))
-            print('-' * 40)
+            print(f"\n📊 Orders (last {args.window_min:d} min)")
+            print("-" * 40)
             print(f"Total:     {summary['total']}")
             print(f"Successful:{summary['success']}")
             print(f"Failed:    {summary['failed']}")
             print(f"Acceptance:{summary['acceptance_rate']:.1f}%")
 
             # Drift
-            print('\n🔁 Reconciliation')
-            print('-' * 40)
+            print("\n🔁 Reconciliation")
+            print("-" * 40)
             print(f"order_drift events:    {summary['drift_events']}")
             print(f"position_drift events: {summary['position_drift_events']}")
 
             # Tail last few events for context
             tail = list(events)[-10:]
             if tail:
-                print('\n🧾 Recent Events')
-                print('-' * 40)
+                print("\n🧾 Recent Events")
+                print("-" * 40)
                 for e in tail:
-                    t = e.get('time', '')
-                    et = e.get('type', '')
-                    sym = e.get('symbol') or e.get('product_id') or ''
-                    msg = ''
-                    if et == 'order_success':
+                    t = e.get("time", "")
+                    et = e.get("type", "")
+                    sym = e.get("symbol") or e.get("product_id") or ""
+                    msg = ""
+                    if et == "order_success":
                         msg = f"{et} {sym} {e.get('side','')} qty={e.get('qty','')}"
-                    elif et == 'order_failed':
+                    elif et == "order_failed":
                         msg = et
-                    elif et == 'order_drift':
+                    elif et == "order_drift":
                         msg = f"{et} local={e.get('local_count')} exch={e.get('exchange_count')}"
                     else:
                         msg = et
                     print(f"{t}  {msg}")
 
-            print('\n' + '=' * 80)
-            print(f'Events: {events_path}  |  Health: {health_path}')
-            print('Press Ctrl+C to exit')
+            print("\n" + "=" * 80)
+            print(f"Events: {events_path}  |  Health: {health_path}")
+            print("Press Ctrl+C to exit")
             time.sleep(args.refresh)
     except KeyboardInterrupt:
-        print('\nBye!')
+        print("\nBye!")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

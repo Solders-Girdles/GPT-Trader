@@ -3,12 +3,12 @@ from __future__ import annotations
 import asyncio
 from decimal import Decimal
 
-from bot_v2.orchestration.perps_bot import (
+from bot_v2.orchestration.configuration import (
     BotConfig,
-    PerpsBot,
     Profile,
     DEFAULT_SPOT_SYMBOLS,
 )
+from bot_v2.orchestration.bootstrap import build_bot
 
 
 def test_spot_profile_uses_top_volume_symbols(monkeypatch, tmp_path):
@@ -20,7 +20,7 @@ def test_spot_profile_uses_top_volume_symbols(monkeypatch, tmp_path):
     cfg = BotConfig.from_profile(Profile.SPOT.value)
     assert cfg.symbols == DEFAULT_SPOT_SYMBOLS
 
-    bot = PerpsBot(cfg)
+    bot, _registry = build_bot(cfg)
     try:
         risk_cfg = bot.risk_manager.config
         assert risk_cfg.max_leverage == 1

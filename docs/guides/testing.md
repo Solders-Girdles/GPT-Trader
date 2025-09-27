@@ -7,14 +7,15 @@ This codebase targets a **100% pass rate** on the actively maintained spot tradi
 ## Current Test Metrics
 
 ### Active Test Suites (Maintained)
-- **Collection Snapshot**: 480 collected / 58 deselected / 422 selected (`poetry run pytest --collect-only`)
+- **Collection Snapshot**: 455 collected / 9 deselected / 446 selected (`poetry run pytest --collect-only`)
 - **Pass Target**: **100%** ✅ for the selected suites
 - **Coverage Focus**: Spot trading orchestration, Coinbase integration, risk controls
 
 ### Legacy Context
-- Legacy v1 suites remain skipped/deselected by default
-- Integration and real-API tests require explicit markers and credentials
-- Perpetuals-only metrics have been superseded by the spot-first counts above
+- V1/v1.5 test suites have been removed from the active tree; fetch them from
+  repository history if needed.
+- Real-API and performance harnesses were archived alongside the legacy code in
+  git history.
 
 ## Running Tests
 
@@ -24,25 +25,16 @@ This codebase targets a **100% pass rate** on the actively maintained spot tradi
 # Discover suites & verify dependency setup
 poetry run pytest --collect-only
 
-# Run primary spot suites (must pass)
-poetry run pytest tests/unit/bot_v2 tests/unit/test_foundation.py -q
+# Run primary regression suite (must pass)
+poetry run pytest -q
 
-# Run specific component tests
-poetry run pytest tests/unit/bot_v2/features/live_trade/ -v  # Perps trading
-poetry run pytest tests/unit/bot_v2/orchestration/ -v         # Bot orchestration
-poetry run pytest tests/unit/bot_v2/features/brokerages/ -v   # Exchange integration
+# Component-focused slices (optional, targeted)
+poetry run pytest tests/unit/bot_v2/features/live_trade/ -v
+poetry run pytest tests/unit/bot_v2/orchestration/ -v
+poetry run pytest tests/unit/bot_v2/features/brokerages/ -v
 
 # Run with coverage
 poetry run pytest --cov=bot_v2 --cov-report=term-missing tests/unit/bot_v2
-
-# Run integration tests (explicit marker overrides default skip)
-poetry run pytest -m integration tests/integration/bot_v2 -q
-
-# Run real API connectivity tests (opt-in; requires credentials)
-poetry run pytest -m real_api tests/integration/real_api -q
-
-# Canonical CDP auth + endpoints test
-poetry run pytest -q tests/integration/test_cdp_comprehensive.py -m integration
 ```
 
 ## Test Organization
@@ -69,17 +61,11 @@ poetry run pytest -q tests/integration/test_cdp_comprehensive.py -m integration
 - **Coverage**: Basic data flow, configuration, initialization
 - **Status**: 4/4 passing (100%)
 
-### Legacy Test Suites (Skipped)
+### Legacy Test Suites
 
-These tests are from v1 architecture and are intentionally skipped:
-
-- `test_engine_broker_shim.py` - Legacy v1 broker interface
-- `test_week1_core_components.py` - Superseded by bot_v2
-- `test_week2_filters_guards.py` - Superseded by bot_v2
-- `test_week3_execution.py` - Replaced by execution_v3
-- `test_paper_trading_offline.py` - Legacy paper engine v1
-- `test_coinbase_paper_integration.py` - Old paper trade v1
-- `test_paper_engine_decoupling.py` - Legacy scaffolding
+Legacy V1/V1.5 suites (backtest, portfolio, risk, strategy, performance, etc.)
+have been removed from the active repository. Historical copies remain
+available in version control history for reference.
 
 ## Writing Tests
 
@@ -93,7 +79,7 @@ from bot_v2.features.live_trade.risk import LiveRiskManager
 
 class TestRiskValidation:
     """Test risk management validation."""
-    
+
     @pytest.fixture
     def risk_manager(self):
         """Create risk manager with test config."""
@@ -102,7 +88,7 @@ class TestRiskValidation:
             daily_loss_limit=Decimal("100")
         )
         return LiveRiskManager(config)
-    
+
     def test_leverage_validation(self, risk_manager):
         """Test leverage limits are enforced."""
         # Test implementation
@@ -121,7 +107,7 @@ Located in `src/bot_v2/features/utils/quantization.py`:
 - `MockBroker` (src/bot_v2/orchestration/mock_broker.py): Deprecated for automated tests; still used in DEV profile and certain legacy tests. Marked via `@pytest.mark.uses_mock_broker` and skipped by default.
 - `ReduceOnlyStubBroker`: Specialized for reduce-only testing (if present).
 
-Note: Real API integration tests live under `tests/integration/real_api/` and are opt-in via environment (`BROKER=coinbase`, `COINBASE_SANDBOX=1`, sandbox keys). Run with the explicit marker: `pytest -m real_api tests/integration/real_api -q`.
+Note: Real-API and sandbox integration harnesses were removed with the legacy suites. Recreate targeted coverage inside `tests/unit/bot_v2/` when new external behavior needs validation.
 
 ## Continuous Integration
 
@@ -181,7 +167,7 @@ pre-commit run --all-files
 poetry run pytest -xvs tests/unit/bot_v2/features/live_trade/
 
 # Run specific test
-poetry run pytest tests/unit/bot_v2/features/live_trade/test_risk_comprehensive.py::TestBasicRiskValidation::test_position_size_validation
+poetry run pytest tests/unit/bot_v2/features/live_trade/test_risk_validation.py::TestBasicRiskValidation::test_leverage_validation
 
 # Drop into debugger on failure
 poetry run pytest --pdb tests/unit/bot_v2/

@@ -10,7 +10,7 @@ Short, actionable readiness checklist. Complete each section before increasing s
 - Small test transfer to derivatives wallet completed
 
 ## 2) Environment & Keys
-- `.env` copied from `.env.template` and filled
+- `.env` copied from `config/environments/.env.template` and filled
 - `BROKER=coinbase`, `COINBASE_SANDBOX=0`, `COINBASE_ENABLE_DERIVATIVES=1`
 - Advanced Trade JWT present: `COINBASE_PROD_CDP_API_KEY` + `COINBASE_PROD_CDP_PRIVATE_KEY`
 - Optional HMAC keys present for spot/dev smoke tests
@@ -27,7 +27,7 @@ Short, actionable readiness checklist. Complete each section before increasing s
 ## 4) Dry Runs
 - Dev mock: `python -m bot_v2.cli --profile dev --dry-run --symbols BTC-PERP` runs one cycle
 - Canary smoke (reduce‑only): `python -m bot_v2.cli --profile canary --symbols BTC-PERP --reduce-only` with tiny limits
-- Logs created under `logs/` and event store under `data/perps_bot/{profile}`
+- Logs created under `var/logs/` and event store under `var/data/perps_bot/{profile}`
 
 ## 5) Funding & Costs Sanity
 - Maker/taker tier confirmed; fee schedule understood
@@ -51,7 +51,7 @@ Short, actionable readiness checklist. Complete each section before increasing s
 Commands reference
 - Runner: `python -m bot_v2.cli --profile canary --symbols BTC-PERP --reduce-only`
 - Kill switch: export `RISK_KILL_SWITCH_ENABLED=1` (then restart) to halt; set `0` to resume
-- Logs: `logs/perps_trading.log`, JSONL at `logs/perps_trading.jsonl`
-- Health: `data/perps_bot/{profile}/health.json`
+- Logs: `var/logs/perps_trading.log`, JSONL at `var/logs/perps_trading.jsonl`
+- Health: `var/data/perps_bot/{profile}/health.json`
 
 Non‑advice disclaimer: Perpetual futures are high risk; you may lose all posted collateral.

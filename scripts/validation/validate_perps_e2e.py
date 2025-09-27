@@ -17,12 +17,13 @@ from pathlib import Path
 import tempfile
 
 # Add repo root to sys.path BEFORE any project imports
-repo_root = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(repo_root))
+REPO_ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(REPO_ROOT))
+sys.path.insert(0, str(REPO_ROOT / "src"))
 
 # Set temp dir for EventStore in tests
-if 'EVENT_STORE_ROOT' not in os.environ:
-    os.environ['EVENT_STORE_ROOT'] = tempfile.mkdtemp()
+if "EVENT_STORE_ROOT" not in os.environ:
+    os.environ["EVENT_STORE_ROOT"] = tempfile.mkdtemp()
 
 
 def ok(msg: str):
@@ -35,28 +36,31 @@ def fail(msg: str):
 
 
 def check_files():
-    repo_root = Path(__file__).resolve().parents[1]
-    runner = repo_root / 'scripts' / 'run_perps_bot.py'
-    runbook = repo_root / 'docs' / 'RUNBOOK_PERPS.md'
+    runner = REPO_ROOT / "scripts" / "run_perps_bot.py"
+    runbook = REPO_ROOT / "docs" / "ops" / "operations_runbook.md"
     if not runner.exists():
         fail(f"Runner not found: {runner}")
     if not runbook.exists():
-        fail(f"Runbook not found: {runbook}")
-    ok("Runner and runbook present")
+        fail(f"Operations runbook not found: {runbook}")
+    ok("Runner and operations runbook present")
 
 
 def check_cli_command():
     from subprocess import run, PIPE
-    repo_root = Path(__file__).resolve().parents[1]
-    cli = repo_root / 'src' / 'bot_v2' / 'simple_cli.py'
-    if not cli.exists():
-        fail("simple_cli.py not found")
-    p = run([sys.executable, str(cli), '--help'], stdout=PIPE, stderr=PIPE, text=True)
+
+    runner = REPO_ROOT / "scripts" / "run_perps_bot.py"
+    if not runner.exists():
+        fail(f"Runner not found: {runner}")
+    env = os.environ.copy()
+    existing = env.get("PYTHONPATH")
+    src_path = str(REPO_ROOT / "src")
+    env["PYTHONPATH"] = src_path if not existing else f"{src_path}{os.pathsep}{existing}"
+    p = run([sys.executable, str(runner), "--help"], capture_output=True, text=True, env=env)
     if p.returncode != 0:
-        fail(f"CLI help failed: {p.stderr}")
-    if 'perps' not in p.stdout:
-        fail("CLI missing 'perps' command")
-    ok("CLI exposes 'perps' command")
+        fail(f"Runner help failed: {p.stderr}")
+    if "--profile" not in p.stdout:
+        fail("Runner help missing --profile flag")
+    ok("Runner exposes CLI help")
 
 
 def check_quantization_helper():
@@ -74,7 +78,7 @@ def check_quantization_helper():
         step_size=Decimal("0.001"),
         min_size=Decimal("0.001"),
         price_increment=Decimal("0.01"),
-        min_notional=Decimal("10")
+        min_notional=Decimal("10"),
     )
 
     qty, price = enforce_perp_rules(product, Decimal("1.23456789"), Decimal("50123.4567"))
@@ -87,21 +91,23 @@ def run_minimal_cycle():
     """Instantiate PerpsBot (dev) and run a small cycle to ensure wiring works."""
     try:
         import asyncio
-        from scripts.run_perps_bot import PerpsBot, BotConfig
+        from bot_v2.orchestration.bootstrap import build_bot
+        from bot_v2.orchestration.configuration import BotConfig
     except ImportError as e:
-        fail(f"Import failed: {e}\nEnsure scripts/run_perps_bot.py exists")
+        fail(f"Import failed: {e}\nEnsure orchestration modules are importable")
 
     # Dev profile, but disable dry_run to exercise more code paths (still mocked broker)
-    config = BotConfig.from_profile('dev', dry_run=False, symbols=["BTC-PERP"], update_interval=1)
-    bot = PerpsBot(config)
+    config = BotConfig.from_profile("dev", dry_run=False, symbols=["BTC-PERP"], update_interval=1)
+    bot, _registry = build_bot(config)
+    symbol = bot.config.symbols[0]
 
     async def one_cycle():
         # Prime marks
         await bot.update_marks()
         # Process the symbol once (may hold if no signal, but should not error)
-        await bot.process_symbol("BTC-PERP")
+        await bot.process_symbol(symbol)
         # We expect a decision entry to exist
-        assert "BTC-PERP" in bot.last_decisions, "No decision recorded for BTC-PERP"
+        assert symbol in bot.last_decisions, f"No decision recorded for {symbol}"
 
     asyncio.run(one_cycle())
     ok("PerpsBot runs a minimal cycle in dev mode")
@@ -116,5 +122,5 @@ def main():
     print("\n✅ E2E validation completed successfully")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

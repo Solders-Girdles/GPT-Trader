@@ -32,7 +32,7 @@ That's it! Now, every time you run `git commit`, the pre-commit hooks will run a
 
 ### Current Standards
 - **Active Code**: Must maintain 100% test pass rate
-- **New Features**: Must include comprehensive tests  
+- **New Features**: Must include comprehensive tests
 - **Legacy Code**: Properly skip with documented reasons
 
 ### Running Tests Locally
@@ -50,7 +50,7 @@ poetry run pytest --cov=bot_v2 --cov-report=term-missing
 poetry run pytest tests/unit/bot_v2/features/live_trade/ -v
 
 # Coinbase brokerage smoke (lint + mypy + unit tests)
-scripts/testing/run_coinbase_core_checks.sh
+poetry run python scripts/validation/validate_perps_e2e.py
 
 # Full suite including legacy (69% overall is expected)
 poetry run pytest -q
@@ -111,7 +111,7 @@ The repository follows a standardized organization optimized for both human deve
 #### Source Code & Configuration
 - `/src/bot_v2/` - Active trading system (vertical slice architecture)
 - `/tests/` - Test files organized by component
-- `/config/` - Configuration files, trading profiles, and templates  
+- `/config/` - Configuration files, trading profiles, and templates
 - `/scripts/` - Utility scripts organized in 11 categories:
   - `core/` - Essential operational scripts (7 files)
   - `testing/` - Test runners and validation (20 files)
@@ -135,13 +135,13 @@ The repository follows a standardized organization optimized for both human deve
 
 #### New Documentation
 - **Tutorials/Guides**: `/docs/guides/`
-- **API Reference**: `/docs/reference/`  
+- **API Reference**: `/docs/reference/`
 - **Operations**: `/docs/ops/`
 - **Never**: Root directory or legacy locations
 
-#### New Scripts  
+#### New Scripts
 - **Core Operations**: `/scripts/core/`
-- **Testing/Validation**: `/scripts/testing/` or `/scripts/validation/`
+- **Testing/Validation**: `/scripts/validation/`
 - **Monitoring**: `/scripts/monitoring/`
 - **General Utilities**: `/scripts/utils/`
 
@@ -157,7 +157,7 @@ The repository follows a standardized organization optimized for both human deve
 
 ### Link Maintenance
 - All documentation links must be functional
-- Use relative paths within repository  
+- Use relative paths within repository
 - Update references when moving files
 - Test links before submitting PRs
 
@@ -165,7 +165,7 @@ The repository follows a standardized organization optimized for both human deve
 - Keep README.md updated with current state
 - Document breaking changes
 - Include examples for complex features
-- Update CLAUDE.md for AI context
+- Update docs/agents/CLAUDE.md for AI context
 
 ## Pre-commit Hook Configuration
 

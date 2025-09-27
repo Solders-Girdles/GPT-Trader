@@ -21,7 +21,7 @@ The project targets Python 3.12+. If you manage Python with `pyenv`, run
 Copy the template if you plan to store credentials locally:
 
 ```bash
-cp .env.template .env
+cp config/environments/.env.template .env
 ```
 
 For the dev profile nothing else is required—the mock broker and deterministic
@@ -38,7 +38,7 @@ What to expect:
 - Mark prices are fetched via REST quotes for the top-ten USD spot markets (`BTC`, `ETH`, `SOL`, `XRP`, `LTC`, `ADA`, `DOGE`, `BCH`, `AVAX`, `LINK`).
 - Orders are routed through the enhanced `MockBroker`, so no live trades are
   placed.
-- Metrics land under `data/perps_bot/dev/` for inspection.
+- Metrics land under `var/data/perps_bot/dev/` for inspection.
 
 ## 4. Enable Real Spot Trading (optional)
 
@@ -75,11 +75,8 @@ placement is disabled by design.
 ## 6. Recommended Local Checks
 
 ```bash
-# Core foundation test (mock spot trades, risk guards)
-poetry run pytest tests/unit/test_foundation.py -q
-
-# Coinbase adapter payload validation
-poetry run pytest tests/unit/bot_v2/features/brokerages/coinbase/test_order_payloads.py -q
+# Full regression suite (spot + orchestration)
+poetry run pytest -q
 
 # Optional: offline verification bundle
 poetry run python scripts/validation/verify_core.py --check all

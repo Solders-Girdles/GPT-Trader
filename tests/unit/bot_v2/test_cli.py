@@ -59,11 +59,16 @@ def test_cli_dev_fast_runs_with_overrides(monkeypatch):
             ran["called"] = True
             ran["single_cycle"] = single_cycle
 
+    def fake_build_bot(config):
+        dummy = DummyBot(config)
+        return dummy, SimpleNamespace()
+
     # Patch imports inside cli module
     import importlib
+
     cli = importlib.import_module("bot_v2.cli")
     monkeypatch.setattr(cli, "BotConfig", SimpleNamespace(from_profile=fake_from_profile))
-    monkeypatch.setattr(cli, "PerpsBot", DummyBot)
+    monkeypatch.setattr(cli, "build_bot", fake_build_bot)
 
     # Patch sys.argv for argparse
     monkeypatch.setattr("sys.argv", argv)
@@ -79,4 +84,3 @@ def test_cli_dev_fast_runs_with_overrides(monkeypatch):
     assert created_configs["profile"] == "dev"
     assert created_configs["overrides"]["symbols"] == ["BTC-PERP", "ETH-PERP"]
     assert created_configs["overrides"]["interval"] == 3
-

@@ -24,11 +24,17 @@ import asyncio
 import sys
 from decimal import Decimal
 from pathlib import Path
+from typing import TYPE_CHECKING
 
-# Ensure src on path
-sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+REPO_ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(REPO_ROOT))
+sys.path.insert(0, str(REPO_ROOT / "src"))
 
-from bot_v2.orchestration.perps_bot import PerpsBot, BotConfig
+from bot_v2.orchestration.configuration import BotConfig
+from bot_v2.orchestration.bootstrap import bot_from_profile
+
+if TYPE_CHECKING:
+    from bot_v2.orchestration.perps_bot import PerpsBot
 from bot_v2.features.brokerages.core.interfaces import OrderSide, OrderType, OrderStatus
 
 
@@ -110,21 +116,28 @@ async def check_position_math(bot: PerpsBot) -> bool:
     try:
         sym = bot.config.symbols[0]
         # Ensure deterministic starting mark
-        bot.broker.set_mark(sym, Decimal("50000"))  # type: ignore[attr-defined]
+        gain = Decimal("10")
+        price = Decimal("50000")
+        qty = gain / Decimal("100")  # 0.1 BTC
+        bot.broker.set_mark(sym, price)  # type: ignore[attr-defined]
         order_id = bot.exec_engine.place_order(
             symbol=sym,
             side=OrderSide.BUY,
             order_type=OrderType.MARKET,
-            qty=Decimal("1"),
+            qty=qty,
         )
         assert order_id is not None
         # Move mark to 51k and revalue
-        bot.broker.set_mark(sym, Decimal("51000"))  # type: ignore[attr-defined]
+        bot.broker.set_mark(sym, price + Decimal("100"))  # type: ignore[attr-defined]
         pos = next((p for p in bot.broker.list_positions() if p.symbol == sym), None)
         assert pos is not None
-        unrealized = (pos.mark_price - pos.entry_price) * pos.qty if pos.side == 'long' else (pos.entry_price - pos.mark_price) * pos.qty
-        assert unrealized == Decimal("1000")
-        ok("Position P&L math (long +$1k)")
+        unrealized = (
+            (pos.mark_price - pos.entry_price) * pos.qty
+            if pos.side == "long"
+            else (pos.entry_price - pos.mark_price) * pos.qty
+        )
+        assert unrealized == gain
+        ok("Position P&L math (long +$10)")
         return True
     except Exception as e:
         fail("Position P&L math", e)
@@ -133,7 +146,9 @@ async def check_position_math(bot: PerpsBot) -> bool:
 
 async def check_risk_reduce_only(bot: PerpsBot) -> bool:
     try:
-        bot.risk_manager.config.reduce_only_mode = True
+        previous = bot.risk_manager.is_reduce_only_mode()
+        bot.risk_manager.set_reduce_only_mode(True, reason="verify_core_reduce_only")
+        bot.config.reduce_only_mode = True
         raised = False
         try:
             bot.exec_engine.place_order(
@@ -150,6 +165,9 @@ async def check_risk_reduce_only(bot: PerpsBot) -> bool:
     except Exception as e:
         fail("Risk limit enforcement", e)
         return False
+    finally:
+        bot.risk_manager.set_reduce_only_mode(previous, reason="verify_core_restore")
+        bot.config.reduce_only_mode = previous
 
 
 async def check_state_persistence(bot: PerpsBot) -> bool:
@@ -165,20 +183,21 @@ async def check_state_persistence(bot: PerpsBot) -> bool:
 
 async def main():
     parser = argparse.ArgumentParser(description="Verify core bot foundation")
-    parser.add_argument("--check", choices=[
-        "all",
-        "broker",
-        "market_data",
-        "streaming",
-        "orders",
-        "positions",
-        "risk",
-        "state",
-    ], default="all")
+    parser.add_argument(
+        "--check",
+        choices=[
+            "all",
+            "broker",
+            "market_data",
+            "streaming",
+            "orders",
+            "positions",
+            "risk",
+            "state",
+        ],
+        default="all",
+    )
     args = parser.parse_args()
-
-    print("1. Starting bot (dev/mock)...")
-    bot = PerpsBot(BotConfig.from_profile("dev"))
 
     tasks = {
         "broker": check_broker,
@@ -195,10 +214,22 @@ async def main():
     else:
         order = [args.check]
 
+    async def run_single(check: str) -> bool:
+        print("\n1. Starting bot (dev/mock)...")
+        bot, _registry = bot_from_profile("dev")
+        bot.risk_manager.set_reduce_only_mode(False, reason="verify_core_initial")
+        bot.config.reduce_only_mode = False
+        try:
+            return await tasks[check](bot)
+        finally:
+            try:
+                await bot.shutdown()
+            except Exception:
+                pass
+
     overall = True
     for key in order:
-        ok_label = key.replace("_", " ").title()
-        res = await tasks[key](bot)
+        res = await run_single(key)
         overall = overall and res
 
     print("\nDone." if overall else "\nCompleted with failures.")

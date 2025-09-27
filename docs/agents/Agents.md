@@ -31,21 +31,20 @@ Treat these modules as **experimental** (documented with `__experimental__ = Tru
 - `src/bot_v2/features/ml_strategy/`
 - `src/bot_v2/features/market_regime/`
 - `src/bot_v2/monitoring/monitoring_dashboard.py`
-- `src/bot_v2/workflows/`
 
-Only touch them when specifically asked. Everything else in `features/` is either production-critical or demo-supporting.
+The retired workflow engine was removed; retrieve it from git history if needed. Only touch the remaining experimental slices when specifically asked. Everything else in `features/` is either production-critical or demo-supporting.
 
 ## 5. Operational Tooling
 - **Account telemetry:** `poetry run perps-bot --account-snapshot` (dumps permissions, fee schedule, and limits).
 - **Treasury helpers:**
   - `poetry run perps-bot --convert USD:USDC:1000`
   - `poetry run perps-bot --move-funds from_portfolio_uuid:to_portfolio_uuid:50`
-- **Metrics:** `poetry run python scripts/monitoring/export_metrics.py --metrics-file data/perps_bot/prod/metrics.json` exposes `/metrics` (Prometheus) and `/metrics.json`.
+- **Metrics:** `poetry run python scripts/monitoring/export_metrics.py --metrics-file var/data/perps_bot/prod/metrics.json` exposes `/metrics` (Prometheus) and `/metrics.json`.
 - **Risk guards (runtime):** Daily PnL stops, liquidation-buffer checks, mark staleness, volatility circuit breakers, and correlation checks all live inside `LiveExecutionEngine`.
 
 ## 6. Testing Expectations
-- **Command:** `poetry run pytest --collect-only` currently discovers 478 tests (420 selected after marker filtering).
-- **Dependencies:** `pyotp` is now part of the base Poetry environment; run `poetry install` after pulling to ensure the security tests pass.
+- **Command:** `poetry run pytest --collect-only` currently discovers 455 tests (446 selected after deselection).
+- **Dependencies:** `pyotp` remains part of the base Poetry environment; run `poetry install` after pulling to ensure security tests pass.
 - Keep unit tests under `tests/unit/bot_v2/` up to date, and add coverage for new risk or telemetry paths.
 
 ## 7. Common Workflows for Agents
@@ -57,7 +56,7 @@ Only touch them when specifically asked. Everything else in `features/` is eithe
    - Reproduce with the dev profile (`--dev-fast` is useful).
    - Add or adjust regression tests before patching.
 3. **Documentation pass:**
-   - Sync this guide, `CLAUDE.md`, and `Gemini.md` whenever the architecture or operations change.
+   - Sync this guide, `docs/agents/CLAUDE.md`, and `docs/agents/Gemini.md` whenever the architecture or operations change.
 
 ## 8. Source of Truth Checklist
 Whenever you ship a change, confirm:

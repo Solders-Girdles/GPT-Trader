@@ -19,8 +19,9 @@ poetry run perps-bot --profile dev --dev-fast    # spot dev run
 poetry run perps-bot --account-snapshot          # dump Coinbase limits/fees
 poetry run perps-bot --convert USD:USDC:1000     # convert helper
 poetry run perps-bot --move-funds a:b:50         # treasury helper
-poetry run python scripts/monitoring/export_metrics.py --metrics-file data/perps_bot/prod/metrics.json
+poetry run python scripts/monitoring/export_metrics.py --metrics-file var/data/perps_bot/prod/metrics.json
 poetry run pytest --collect-only                 # current test discovery
+poetry run pytest -q                             # full regression suite
 ```
 
 ## Spot vs Perps Guidance
@@ -33,16 +34,15 @@ These directories are tagged `__experimental__` and sit outside the production p
 - `src/bot_v2/features/ml_strategy/`
 - `src/bot_v2/features/market_regime/`
 - `src/bot_v2/monitoring/monitoring_dashboard.py`
-- `src/bot_v2/workflows/`
-Only modify them when explicitly instructed.
+The retired workflow engine has been removed from the repo; if you need it, pull it from git history. Only modify the remaining experimental modules when explicitly instructed.
 
 ## Testing Notes
-- `pytest --collect-only` yields 478 tests (420 selected after deselection). Run `poetry install` to pull in the latest dependencies (including `pyotp`) before running the suite.
+- `pytest --collect-only` yields 455 tests (446 selected after deselection). Run `poetry install` to pull in the latest dependencies (including `pyotp`) before running the suite.
 - Add tests whenever adjusting risk guards, telemetry, or CLI surface area.
 
 ## Operational Checklist
 1. Ensure README + `docs/ARCHITECTURE.md` match code changes.
-2. Update `Agents.md`, `CLAUDE.md`, and this file with any new workflows.
+2. Update `docs/agents/Agents.md`, `docs/agents/CLAUDE.md`, and this file with any new workflows.
 3. Document spot/perps impacts and note the INTX gate for perps.
 4. Confirm metrics serialization (`metrics.json`) still works if you add fields.
 
@@ -50,4 +50,3 @@ Only modify them when explicitly instructed.
 - Use `rg`/`fd` for quick navigation (`rg --files -g '*.py' src/bot_v2` shows scope).
 - Keep changeset responses explicit about testing (call out the `pyotp` caveat).
 - Mention safety mechanisms when altering execution or risk code.
-- Coordinate doc updates alongside code to keep agent knowledge in sync.

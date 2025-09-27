@@ -37,6 +37,7 @@ data/**
 !data/universe/sample_universe.csv
 !data/experiments/**/run.json
 !data/optimization/config.json
+data_storage/
 
 # Local data cache
 data/cache/
@@ -45,6 +46,7 @@ data/cache/
 .env
 .env.*
 !.env.template
+!config/environments/.env.template
 *.pem
 *.key
 *.crt
@@ -72,4 +74,7 @@ coordination/orchestration/*
 # Local tooling outputs
 .benchmarks/
 .swarm/
+.coverage
+.claude-flow/
 .mcp.json
+var/

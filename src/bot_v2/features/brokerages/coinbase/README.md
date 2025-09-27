@@ -95,7 +95,7 @@ export COINBASE_API_SECRET=your-sandbox-secret
 export COINBASE_API_PASSPHRASE=your-sandbox-passphrase
 
 # Run smoke test (spot)
-python -m bot_v2.simple_cli broker --broker coinbase --sandbox --symbol BTC-USD
+poetry run perps-bot --profile dev --symbols BTC-USD --dry-run --dev-fast
 ```
 
 ### WebSocket Streaming

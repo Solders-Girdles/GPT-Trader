@@ -1,81 +1,23 @@
 """
-Lightweight runner and config facade for Perps Bot canary/testing.
+Thin facade that re-exports the production BotConfig and bootstrap helpers.
 
-Provides a BotConfig wrapper compatible with integration tests and a
-TradingBot helper exposing is_within_trading_window().
+Tests and smoke scripts import from here to avoid reaching into internal
+modules while still constructing the modern PerpsBot wiring.
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from datetime import datetime, time
-from decimal import Decimal
-from typing import List, Optional
+from datetime import datetime
+import sys
 
-from bot_v2.orchestration.perps_bot import BotConfig as _CoreBotConfig, Profile
-
-
-@dataclass
-class BotConfig:
-    """Public BotConfig wrapper used by tests and scripts.
-
-    - Accepts string profile for convenience
-    - Exposes a subset of fields used by tests
-    """
-
-    profile: str
-    dry_run: bool = False
-    symbols: Optional[List[str]] = None
-    update_interval: int = 5
-    short_ma: int = 5
-    long_ma: int = 20
-    target_leverage: int = 2
-    trailing_stop_pct: float = 0.01
-    enable_shorts: bool = False
-    max_position_size: Decimal = Decimal("1000")
-    max_leverage: int = 3
-    reduce_only_mode: bool = False
-    mock_broker: bool = False
-    mock_fills: bool = False
-    # Trading session controls
-    trading_window_start: Optional[time] = None
-    trading_window_end: Optional[time] = None
-    trading_days: Optional[List[str]] = None
-    # Risk extras
-    daily_loss_limit: Decimal = Decimal("0")
-    time_in_force: str = "GTC"
-
-    @classmethod
-    def from_profile(cls, profile: str, **overrides) -> "BotConfig":
-        core = _CoreBotConfig.from_profile(profile, **overrides)
-        # Create a light shim to mimic enum-like access (profile.value)
-        ProfileShim = type('ProfileShim', (), {})
-        profile_obj = ProfileShim()
-        setattr(profile_obj, 'value', core.profile.value)
-        return cls(
-            profile=profile_obj,  # type: ignore[assignment]
-            dry_run=core.dry_run,
-            symbols=core.symbols,
-            update_interval=core.update_interval,
-            short_ma=core.short_ma,
-            long_ma=core.long_ma,
-            target_leverage=core.target_leverage,
-            trailing_stop_pct=core.trailing_stop_pct,
-            enable_shorts=core.enable_shorts,
-            max_position_size=core.max_position_size,
-            max_leverage=core.max_leverage,
-            reduce_only_mode=core.reduce_only_mode,
-            mock_broker=core.mock_broker,
-            mock_fills=core.mock_fills,
-            trading_window_start=core.trading_window_start,
-            trading_window_end=core.trading_window_end,
-            trading_days=core.trading_days,
-            daily_loss_limit=core.daily_loss_limit,
-            time_in_force=core.time_in_force,
-        )
+from bot_v2.orchestration.bootstrap import build_bot, bot_from_profile
+from bot_v2.orchestration.configuration import BotConfig, Profile
+from bot_v2.cli import main as _perps_main
 
 
 class TradingBot:
+    """Helper used by legacy tests to reason about trading windows."""
+
     def __init__(self, config: BotConfig):
         self.config = config
 
@@ -84,17 +26,34 @@ class TradingBot:
         return datetime.now()
 
     def is_within_trading_window(self) -> bool:
-        # If no explicit controls, allow trading
-        if not self.config.trading_window_start or not self.config.trading_window_end or not self.config.trading_days:
+        start = self.config.trading_window_start
+        end = self.config.trading_window_end
+        days = self.config.trading_days
+
+        if not start or not end or not days:
             return True
 
         now = self._now()
-        day = now.strftime('%A').lower()
-        if day not in [d.lower() for d in self.config.trading_days or []]:
+        if now.strftime("%A").lower() not in [d.lower() for d in days]:
             return False
         cur_t = now.time()
-        return self.config.trading_window_start <= cur_t <= self.config.trading_window_end
+        return start <= cur_t <= end
 
 
-# Convenience re-exports
-__all__ = ["BotConfig", "TradingBot", "Profile"]
+__all__ = [
+    "BotConfig",
+    "TradingBot",
+    "Profile",
+    "build_bot",
+    "bot_from_profile",
+]
+
+
+def main() -> int:
+    """Delegate to the canonical CLI entry point."""
+
+    return _perps_main()
+
+
+if __name__ == "__main__":  # pragma: no cover - manual entry point
+    sys.exit(main())

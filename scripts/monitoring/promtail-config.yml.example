@@ -14,7 +14,7 @@ scrape_configs:
       - targets: [localhost]
         labels:
           job: gpt_trader
-          __path__: /path/to/repo/results/managed/events.jsonl
+          __path__: /path/to/repo/var/data/perps_bot/prod/events.jsonl
     pipeline_stages:
       - json:
           expressions:

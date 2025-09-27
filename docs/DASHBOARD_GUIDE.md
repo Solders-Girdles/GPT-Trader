@@ -1,171 +1,41 @@
-# GPT-Trader Dashboard Guide
+# GPT-Trader Monitoring Surfaces
 
-## Quick Start
+The Streamlit dashboard and launcher scripts shipped with the v1 stack have
+been retired. Runtime visibility now comes from telemetry emitted by the
+`perps-bot` orchestrator and the Prometheus-compatible exporter. If you need
+the old UI assets, retrieve them from repository history.
 
-The GPT-Trader dashboard is now fully functional and can be launched in multiple ways:
+## Runtime Telemetry
 
-### Method 1: Direct Streamlit Command
+- `var/data/perps_bot/<profile>/metrics.json` captures the latest cycle metrics for
+  each profile. Use standard tooling (`jq`, spreadsheets) for quick reviews.
+- Application logs stream to stdout; redirect to your logging stack of choice.
+- `poetry run perps-bot --account-snapshot` prints balances, fee tiers, and
+  permissions without executing the trading loop.
+
+## Prometheus Exporter
+
 ```bash
-poetry run streamlit run src/bot/dashboard/app.py
+poetry run python scripts/monitoring/export_metrics.py \
+  --metrics-file var/data/perps_bot/prod/metrics.json \
+  --port 9102
 ```
 
-### Method 2: Using the Launcher Script
-```bash
-python launch_dashboard.py
-```
+- Exposes `/metrics` for Prometheus and `/metrics.json` for JSON polling.
+- Use separate processes per profile if you publish multiple metric files.
+- The exporter reads files written by the bot; ensure `metrics.json` updates are
+  enabled in your deployment configuration.
 
-### Method 3: Custom Port/Headless Mode
-```bash
-# Custom port
-poetry run streamlit run src/bot/dashboard/app.py --server.port 8502
+## Alerting Hooks
 
-# Headless mode (no browser)
-poetry run streamlit run src/bot/dashboard/app.py --server.headless true
+- Integrate exporter endpoints with Grafana, PagerDuty, or Slack via your
+  existing observability stack.
+- Risk guard breaches raise structured log events
+  (`risk.guards.<name>.*`). Tail logs or ship them to your log aggregator for
+  alerting rules.
 
-# Using launcher with options
-python launch_dashboard.py --port 8502 --no-browser
-```
+## Legacy UI
 
-## Dashboard Features
-
-### 📊 Portfolio Overview
-- Real-time portfolio value and P&L
-- Daily performance metrics
-- Risk-adjusted performance indicators
-- Interactive performance charts
-
-### 📦 Positions & Allocation
-- Current positions with real-time P&L
-- Portfolio allocation breakdown
-- Position-level analytics and filters
-- Interactive visualizations
-
-### 🎯 Strategy Performance
-- Strategy-by-strategy performance metrics
-- Comparative analysis charts
-- Risk-return profiles
-- Strategy allocation insights
-
-### 📝 Trade History
-- Recent trades with detailed analysis
-- Trade filtering and sorting
-- Performance distribution charts
-- Execution quality metrics
-
-### ⚠️ Risk Dashboard
-- Comprehensive risk metrics (VaR, Sharpe, Sortino)
-- Risk contribution analysis
-- Stress test scenarios
-- Automated risk alerts
-
-### 💚 System Health
-- Component status monitoring
-- Real-time system metrics
-- Alert management
-- Performance indicators
-
-## Data Sources
-
-The dashboard intelligently handles different data availability scenarios:
-
-### With Real Data Components
-When position tracking, P&L calculation, and other bot components are available:
-- Live portfolio data
-- Real trade history
-- Actual performance metrics
-- Dynamic risk calculations
-
-### Fallback Mode
-When real components aren't available or accessible:
-- Realistic mock data
-- Simulated portfolio performance
-- Representative trade patterns
-- Calculated risk metrics
-
-## Technical Details
-
-### Dependencies
-All required packages are automatically installed via Poetry:
-- `streamlit` - Web dashboard framework
-- `plotly` - Interactive charts
-- `pandas` - Data manipulation
-- `numpy` - Numerical computations
-
-### Architecture
-- **Data Provider Layer**: `PerformanceDashboardData` class handles data fetching
-- **Visualization Layer**: Modular rendering functions for each dashboard section
-- **Fallback System**: Graceful degradation to mock data when components unavailable
-- **Caching**: Performance optimization with configurable cache timeouts
-
-### Configuration
-The dashboard automatically detects available components and adapts accordingly:
-- Position tracking integration
-- P&L calculation services
-- Risk management systems
-- Trade execution monitoring
-
-## Troubleshooting
-
-### Import Errors
-If you see import errors:
-```bash
-# Ensure Poetry environment is activated
-poetry install
-poetry run streamlit run src/bot/dashboard/app.py
-```
-
-### Port Conflicts
-If port 8501 is busy:
-```bash
-# Use a different port
-poetry run streamlit run src/bot/dashboard/app.py --server.port 8502
-```
-
-### Performance Issues
-For better performance:
-```bash
-# Install watchdog (optional)
-pip install watchdog
-
-# Use headless mode for server deployment
-poetry run streamlit run src/bot/dashboard/app.py --server.headless true
-```
-
-## Development
-
-### Adding New Features
-1. Create visualization functions in `src/bot/dashboard/performance_dashboard.py`
-2. Add data methods to `PerformanceDashboardData` class
-3. Integrate into main dashboard navigation
-
-### Customizing Mock Data
-Edit the `_initialize_mock_data()` method in `PerformanceDashboardData` to customize fallback data.
-
-### Testing
-```bash
-# Run basic import test
-poetry run python -c "from src.bot.dashboard.app import create_dashboard; print('✓ Dashboard ready')"
-
-# Test server functionality
-poetry run streamlit run src/bot/dashboard/app.py --server.headless true &
-curl http://localhost:8501
-```
-
-## Security Notes
-
-- Dashboard runs locally by default
-- For network access, configure `--server.address 0.0.0.0` carefully
-- Consider authentication for production deployments
-- Mock data is safe for demonstration purposes
-
-## Success Criteria ✅
-
-All requirements have been met:
-- ✅ Dashboard launches without import errors
-- ✅ Basic pages/views are accessible  
-- ✅ Mock data displays when real data unavailable
-- ✅ Can run: `streamlit run src/bot/dashboard/app.py`
-- ✅ Minimally functional with comprehensive features
-- ✅ Graceful fallback for missing dependencies
-- ✅ Interactive charts and real-time updates
-- ✅ Multiple launch methods available
+The deprecated Streamlit interface depended on modules removed from the current
+code base. Avoid resurrecting those scripts; pull them from git history only if
+you need to study the legacy implementation.

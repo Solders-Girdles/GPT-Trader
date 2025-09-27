@@ -1,0 +1,335 @@
+{
+  "summary": {
+    "momentum": {
+      "avg_return": 3.7838371560476554,
+      "avg_sharpe": 0.206904203140117,
+      "avg_drawdown": NaN,
+      "avg_trades": 0.8,
+      "avg_win_rate": 0.0
+    },
+    "mean_reversion": {
+      "avg_return": -10.164209620120676,
+      "avg_sharpe": -0.2989321554916694,
+      "avg_drawdown": NaN,
+      "avg_trades": 22.6,
+      "avg_win_rate": 17.921446675115057
+    },
+    "breakout": {
+      "avg_return": -8.516563269013442,
+      "avg_sharpe": -0.24199990397479146,
+      "avg_drawdown": NaN,
+      "avg_trades": 30.6,
+      "avg_win_rate": 12.37992023582452
+    },
+    "ma_crossover": {
+      "avg_return": -10.324897794609072,
+      "avg_sharpe": -0.33030676251084823,
+      "avg_drawdown": NaN,
+      "avg_trades": 41.8,
+      "avg_win_rate": 11.411088823581244
+    },
+    "volatility": {
+      "avg_return": -25.49444766118158,
+      "avg_sharpe": -0.8153421079892865,
+      "avg_drawdown": NaN,
+      "avg_trades": 71.6,
+      "avg_win_rate": 4.8336984175319
+    }
+  },
+  "detailed_results": [
+    {
+      "strategy": "momentum",
+      "symbol": "BTC-USD",
+      "days": 30,
+      "total_return": 0.0,
+      "sharpe_ratio": 0,
+      "max_drawdown": 0.0,
+      "num_trades": 0,
+      "win_rate": 0,
+      "final_equity": 10000
+    },
+    {
+      "strategy": "momentum",
+      "symbol": "ETH-USD",
+      "days": 30,
+      "total_return": 3.8846180299769912,
+      "sharpe_ratio": 0.31321679821362497,
+      "max_drawdown": -3.6568990776532044,
+      "num_trades": 1,
+      "win_rate": 0.0,
+      "final_equity": 10388.4618029977
+    },
+    {
+      "strategy": "momentum",
+      "symbol": "SOL-USD",
+      "days": 30,
+      "total_return": 8.410889416523295,
+      "sharpe_ratio": 0.5843382547201095,
+      "max_drawdown": -3.1482713331532572,
+      "num_trades": 1,
+      "win_rate": 0.0,
+      "final_equity": 10841.08894165233
+    },
+    {
+      "strategy": "momentum",
+      "symbol": "LINK-USD",
+      "days": 30,
+      "total_return": 6.623678333737989,
+      "sharpe_ratio": 0.1369659627668508,
+      "max_drawdown": -11.688821021807309,
+      "num_trades": 2,
+      "win_rate": 0.0,
+      "final_equity": 10662.367833373799
+    },
+    {
+      "strategy": "momentum",
+      "symbol": "MATIC-USD",
+      "days": 30,
+      "total_return": 0.0,
+      "sharpe_ratio": 0,
+      "max_drawdown": NaN,
+      "num_trades": 0,
+      "win_rate": 0,
+      "final_equity": 10000
+    },
+    {
+      "strategy": "mean_reversion",
+      "symbol": "BTC-USD",
+      "days": 30,
+      "total_return": -17.32378458816671,
+      "sharpe_ratio": -0.8441526517149949,
+      "max_drawdown": -19.03255376452879,
+      "num_trades": 28,
+      "win_rate": 9.090909090909092,
+      "final_equity": 8267.62154118333
+    },
+    {
+      "strategy": "mean_reversion",
+      "symbol": "ETH-USD",
+      "days": 30,
+      "total_return": -7.299160475288299,
+      "sharpe_ratio": -0.1480725011380704,
+      "max_drawdown": -15.626927060610788,
+      "num_trades": 29,
+      "win_rate": 25.862068965517242,
+      "final_equity": 9270.08395247117
+    },
+    {
+      "strategy": "mean_reversion",
+      "symbol": "SOL-USD",
+      "days": 30,
+      "total_return": -11.400283677887419,
+      "sharpe_ratio": -0.2398939393637046,
+      "max_drawdown": -23.253151823810157,
+      "num_trades": 32,
+      "win_rate": 31.25,
+      "final_equity": 8859.971632211258
+    },
+    {
+      "strategy": "mean_reversion",
+      "symbol": "LINK-USD",
+      "days": 30,
+      "total_return": -14.797819359260957,
+      "sharpe_ratio": -0.26254168524157745,
+      "max_drawdown": -19.44949323884314,
+      "num_trades": 24,
+      "win_rate": 23.404255319148938,
+      "final_equity": 8520.218064073904
+    },
+    {
+      "strategy": "mean_reversion",
+      "symbol": "MATIC-USD",
+      "days": 30,
+      "total_return": 0.0,
+      "sharpe_ratio": 0,
+      "max_drawdown": NaN,
+      "num_trades": 0,
+      "win_rate": 0,
+      "final_equity": 10000
+    },
+    {
+      "strategy": "breakout",
+      "symbol": "BTC-USD",
+      "days": 30,
+      "total_return": -17.55021208645292,
+      "sharpe_ratio": -0.7937855614878,
+      "max_drawdown": -17.792964591258063,
+      "num_trades": 38,
+      "win_rate": 7.894736842105263,
+      "final_equity": 8244.978791354708
+    },
+    {
+      "strategy": "breakout",
+      "symbol": "ETH-USD",
+      "days": 30,
+      "total_return": -5.336228563946861,
+      "sharpe_ratio": -0.09180070684635099,
+      "max_drawdown": -12.868389544110533,
+      "num_trades": 37,
+      "win_rate": 19.17808219178082,
+      "final_equity": 9466.377143605314
+    },
+    {
+      "strategy": "breakout",
+      "symbol": "SOL-USD",
+      "days": 30,
+      "total_return": -10.56007709598549,
+      "sharpe_ratio": -0.20864858621502802,
+      "max_drawdown": -17.478626560183805,
+      "num_trades": 40,
+      "win_rate": 17.72151898734177,
+      "final_equity": 8943.992290401451
+    },
+    {
+      "strategy": "breakout",
+      "symbol": "LINK-USD",
+      "days": 30,
+      "total_return": -9.13629859868195,
+      "sharpe_ratio": -0.11576466532477814,
+      "max_drawdown": -19.548886813135457,
+      "num_trades": 38,
+      "win_rate": 17.105263157894736,
+      "final_equity": 9086.370140131805
+    },
+    {
+      "strategy": "breakout",
+      "symbol": "MATIC-USD",
+      "days": 30,
+      "total_return": 0.0,
+      "sharpe_ratio": 0,
+      "max_drawdown": NaN,
+      "num_trades": 0,
+      "win_rate": 0,
+      "final_equity": 10000
+    },
+    {
+      "strategy": "ma_crossover",
+      "symbol": "BTC-USD",
+      "days": 30,
+      "total_return": -19.982512550321825,
+      "sharpe_ratio": -0.9561802443519175,
+      "max_drawdown": -20.78689245181293,
+      "num_trades": 51,
+      "win_rate": 8.823529411764707,
+      "final_equity": 8001.748744967817
+    },
+    {
+      "strategy": "ma_crossover",
+      "symbol": "ETH-USD",
+      "days": 30,
+      "total_return": -2.910934211316235,
+      "sharpe_ratio": -0.038642699406902674,
+      "max_drawdown": -11.22066323344052,
+      "num_trades": 49,
+      "win_rate": 18.556701030927837,
+      "final_equity": 9708.906578868377
+    },
+    {
+      "strategy": "ma_crossover",
+      "symbol": "SOL-USD",
+      "days": 30,
+      "total_return": -26.00615068963657,
+      "sharpe_ratio": -0.6425946377108536,
+      "max_drawdown": -30.263186459492896,
+      "num_trades": 59,
+      "win_rate": 13.675213675213676,
+      "final_equity": 7399.384931036343
+    },
+    {
+      "strategy": "ma_crossover",
+      "symbol": "LINK-USD",
+      "days": 30,
+      "total_return": -2.724891521770733,
+      "sharpe_ratio": -0.01411623108456722,
+      "max_drawdown": -16.708916702052903,
+      "num_trades": 50,
+      "win_rate": 16.0,
+      "final_equity": 9727.510847822927
+    },
+    {
+      "strategy": "ma_crossover",
+      "symbol": "MATIC-USD",
+      "days": 30,
+      "total_return": 0.0,
+      "sharpe_ratio": 0,
+      "max_drawdown": NaN,
+      "num_trades": 0,
+      "win_rate": 0,
+      "final_equity": 10000
+    },
+    {
+      "strategy": "volatility",
+      "symbol": "BTC-USD",
+      "days": 30,
+      "total_return": -40.021553589141575,
+      "sharpe_ratio": -1.7981825122555584,
+      "max_drawdown": -40.021553589141575,
+      "num_trades": 82,
+      "win_rate": 1.2195121951219512,
+      "final_equity": 5997.844641085842
+    },
+    {
+      "strategy": "volatility",
+      "symbol": "ETH-USD",
+      "days": 30,
+      "total_return": -30.75500668312036,
+      "sharpe_ratio": -0.8280358538602289,
+      "max_drawdown": -35.88575745032,
+      "num_trades": 98,
+      "win_rate": 7.6923076923076925,
+      "final_equity": 6924.499331687964
+    },
+    {
+      "strategy": "volatility",
+      "symbol": "SOL-USD",
+      "days": 30,
+      "total_return": -37.17785707299067,
+      "sharpe_ratio": -1.1344066206261205,
+      "max_drawdown": -39.361161717938245,
+      "num_trades": 96,
+      "win_rate": 7.329842931937172,
+      "final_equity": 6282.214292700933
+    },
+    {
+      "strategy": "volatility",
+      "symbol": "LINK-USD",
+      "days": 30,
+      "total_return": -19.5178209606553,
+      "sharpe_ratio": -0.31608555320452497,
+      "max_drawdown": -35.66040890565974,
+      "num_trades": 82,
+      "win_rate": 7.926829268292683,
+      "final_equity": 8048.21790393447
+    },
+    {
+      "strategy": "volatility",
+      "symbol": "MATIC-USD",
+      "days": 30,
+      "total_return": 0.0,
+      "sharpe_ratio": 0,
+      "max_drawdown": NaN,
+      "num_trades": 0,
+      "win_rate": 0,
+      "final_equity": 10000
+    }
+  ],
+  "metadata": {
+    "strategies": [
+      "momentum",
+      "mean_reversion",
+      "breakout",
+      "ma_crossover",
+      "volatility"
+    ],
+    "symbols": [
+      "BTC-USD",
+      "ETH-USD",
+      "SOL-USD",
+      "LINK-USD",
+      "MATIC-USD"
+    ],
+    "days": 30,
+    "elapsed_seconds": 3.3002889156341553,
+    "timestamp": "2025-08-24T05:31:38.051739"
+  }
+}

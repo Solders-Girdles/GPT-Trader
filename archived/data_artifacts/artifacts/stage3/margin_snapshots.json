@@ -1,0 +1,322 @@
+[
+  {
+    "timestamp": "2025-08-30T16:31:41.616931",
+    "window": "PRE_FUNDING",
+    "leverage": 0.0,
+    "margin_used": 0.0,
+    "margin_available": 0.0,
+    "utilization": 0.0
+  },
+  {
+    "timestamp": "2025-08-30T16:32:41.617572",
+    "window": "PRE_FUNDING",
+    "leverage": 0.0,
+    "margin_used": 0.0,
+    "margin_available": 0.0,
+    "utilization": 0.0
+  },
+  {
+    "timestamp": "2025-08-30T16:33:41.618196",
+    "window": "PRE_FUNDING",
+    "leverage": 0.0,
+    "margin_used": 0.0,
+    "margin_available": 0.0,
+    "utilization": 0.0
+  },
+  {
+    "timestamp": "2025-08-30T16:34:41.618813",
+    "window": "PRE_FUNDING",
+    "leverage": 0.0,
+    "margin_used": 0.0,
+    "margin_available": 0.0,
+    "utilization": 0.0
+  },
+  {
+    "timestamp": "2025-08-30T16:35:41.619428",
+    "window": "PRE_FUNDING",
+    "leverage": 0.0,
+    "margin_used": 0.0,
+    "margin_available": 0.0,
+    "utilization": 0.0
+  },
+  {
+    "timestamp": "2025-08-30T16:36:41.619252",
+    "window": "PRE_FUNDING",
+    "leverage": 0.0,
+    "margin_used": 0.0,
+    "margin_available": 0.0,
+    "utilization": 0.0
+  },
+  {
+    "timestamp": "2025-08-30T16:37:41.620050",
+    "window": "PRE_FUNDING",
+    "leverage": 0.0,
+    "margin_used": 0.0,
+    "margin_available": 0.0,
+    "utilization": 0.0
+  },
+  {
+    "timestamp": "2025-08-30T16:38:41.621484",
+    "window": "PRE_FUNDING",
+    "leverage": 0.0,
+    "margin_used": 0.0,
+    "margin_available": 0.0,
+    "utilization": 0.0
+  },
+  {
+    "timestamp": "2025-08-30T16:39:41.622125",
+    "window": "PRE_FUNDING",
+    "leverage": 0.0,
+    "margin_used": 0.0,
+    "margin_available": 0.0,
+    "utilization": 0.0
+  },
+  {
+    "timestamp": "2025-08-30T16:40:41.622782",
+    "window": "PRE_FUNDING",
+    "leverage": 0.0,
+    "margin_used": 0.0,
+    "margin_available": 0.0,
+    "utilization": 0.0
+  },
+  {
+    "timestamp": "2025-08-30T16:41:41.623185",
+    "window": "PRE_FUNDING",
+    "leverage": 0.0,
+    "margin_used": 0.0,
+    "margin_available": 0.0,
+    "utilization": 0.0
+  },
+  {
+    "timestamp": "2025-08-30T16:42:41.630716",
+    "window": "PRE_FUNDING",
+    "leverage": 0.0,
+    "margin_used": 0.0,
+    "margin_available": 0.0,
+    "utilization": 0.0
+  },
+  {
+    "timestamp": "2025-08-30T16:43:41.631855",
+    "window": "PRE_FUNDING",
+    "leverage": 0.0,
+    "margin_used": 0.0,
+    "margin_available": 0.0,
+    "utilization": 0.0
+  },
+  {
+    "timestamp": "2025-08-30T16:44:41.632607",
+    "window": "PRE_FUNDING",
+    "leverage": 0.0,
+    "margin_used": 0.0,
+    "margin_available": 0.0,
+    "utilization": 0.0
+  },
+  {
+    "timestamp": "2025-08-30T16:45:41.633352",
+    "window": "PRE_FUNDING",
+    "leverage": 0.0,
+    "margin_used": 0.0,
+    "margin_available": 0.0,
+    "utilization": 0.0
+  },
+  {
+    "timestamp": "2025-08-30T16:46:41.633999",
+    "window": "PRE_FUNDING",
+    "leverage": 0.0,
+    "margin_used": 0.0,
+    "margin_available": 0.0,
+    "utilization": 0.0
+  },
+  {
+    "timestamp": "2025-08-30T16:47:41.634732",
+    "window": "PRE_FUNDING",
+    "leverage": 0.0,
+    "margin_used": 0.0,
+    "margin_available": 0.0,
+    "utilization": 0.0
+  },
+  {
+    "timestamp": "2025-08-30T16:48:41.635480",
+    "window": "PRE_FUNDING",
+    "leverage": 0.0,
+    "margin_used": 0.0,
+    "margin_available": 0.0,
+    "utilization": 0.0
+  },
+  {
+    "timestamp": "2025-08-30T16:49:41.636247",
+    "window": "PRE_FUNDING",
+    "leverage": 0.0,
+    "margin_used": 0.0,
+    "margin_available": 0.0,
+    "utilization": 0.0
+  },
+  {
+    "timestamp": "2025-08-30T16:50:41.636990",
+    "window": "PRE_FUNDING",
+    "leverage": 0.0,
+    "margin_used": 0.0,
+    "margin_available": 0.0,
+    "utilization": 0.0
+  },
+  {
+    "timestamp": "2025-08-30T16:51:41.637676",
+    "window": "PRE_FUNDING",
+    "leverage": 0.0,
+    "margin_used": 0.0,
+    "margin_available": 0.0,
+    "utilization": 0.0
+  },
+  {
+    "timestamp": "2025-08-30T16:52:41.638428",
+    "window": "PRE_FUNDING",
+    "leverage": 0.0,
+    "margin_used": 0.0,
+    "margin_available": 0.0,
+    "utilization": 0.0
+  },
+  {
+    "timestamp": "2025-08-30T16:53:41.640168",
+    "window": "PRE_FUNDING",
+    "leverage": 0.0,
+    "margin_used": 0.0,
+    "margin_available": 0.0,
+    "utilization": 0.0
+  },
+  {
+    "timestamp": "2025-08-30T16:54:41.642751",
+    "window": "PRE_FUNDING",
+    "leverage": 0.0,
+    "margin_used": 0.0,
+    "margin_available": 0.0,
+    "utilization": 0.0
+  },
+  {
+    "timestamp": "2025-08-30T16:55:41.643522",
+    "window": "PRE_FUNDING",
+    "leverage": 0.0,
+    "margin_used": 0.0,
+    "margin_available": 0.0,
+    "utilization": 0.0
+  },
+  {
+    "timestamp": "2025-08-30T16:56:41.644190",
+    "window": "PRE_FUNDING",
+    "leverage": 0.0,
+    "margin_used": 0.0,
+    "margin_available": 0.0,
+    "utilization": 0.0
+  },
+  {
+    "timestamp": "2025-08-30T16:57:41.644977",
+    "window": "PRE_FUNDING",
+    "leverage": 0.0,
+    "margin_used": 0.0,
+    "margin_available": 0.0,
+    "utilization": 0.0
+  },
+  {
+    "timestamp": "2025-08-30T16:58:41.645723",
+    "window": "PRE_FUNDING",
+    "leverage": 0.0,
+    "margin_used": 0.0,
+    "margin_available": 0.0,
+    "utilization": 0.0
+  },
+  {
+    "timestamp": "2025-08-30T16:59:41.646485",
+    "window": "PRE_FUNDING",
+    "leverage": 0.0,
+    "margin_used": 0.0,
+    "margin_available": 0.0,
+    "utilization": 0.0
+  },
+  {
+    "timestamp": "2025-08-30T17:00:41.648233",
+    "window": "PRE_FUNDING",
+    "leverage": 0.0,
+    "margin_used": 0.0,
+    "margin_available": 0.0,
+    "utilization": 0.0
+  },
+  {
+    "timestamp": "2025-08-30T17:01:41.649945",
+    "window": "OVERNIGHT",
+    "leverage": 0.0,
+    "margin_used": 0.0,
+    "margin_available": 0.0,
+    "utilization": 0.0
+  },
+  {
+    "timestamp": "2025-08-30T17:02:41.651711",
+    "window": "OVERNIGHT",
+    "leverage": 0.0,
+    "margin_used": 0.0,
+    "margin_available": 0.0,
+    "utilization": 0.0
+  },
+  {
+    "timestamp": "2025-08-30T17:03:41.653496",
+    "window": "OVERNIGHT",
+    "leverage": 0.0,
+    "margin_used": 0.0,
+    "margin_available": 0.0,
+    "utilization": 0.0
+  },
+  {
+    "timestamp": "2025-08-30T17:04:41.655254",
+    "window": "OVERNIGHT",
+    "leverage": 0.0,
+    "margin_used": 0.0,
+    "margin_available": 0.0,
+    "utilization": 0.0
+  },
+  {
+    "timestamp": "2025-08-30T17:05:41.656005",
+    "window": "OVERNIGHT",
+    "leverage": 0.0,
+    "margin_used": 0.0,
+    "margin_available": 0.0,
+    "utilization": 0.0
+  },
+  {
+    "timestamp": "2025-08-30T17:06:41.656699",
+    "window": "OVERNIGHT",
+    "leverage": 0.0,
+    "margin_used": 0.0,
+    "margin_available": 0.0,
+    "utilization": 0.0
+  },
+  {
+    "timestamp": "2025-08-30T17:07:41.657434",
+    "window": "OVERNIGHT",
+    "leverage": 0.0,
+    "margin_used": 0.0,
+    "margin_available": 0.0,
+    "utilization": 0.0
+  },
+  {
+    "timestamp": "2025-08-30T17:08:41.658175",
+    "window": "OVERNIGHT",
+    "leverage": 0.0,
+    "margin_used": 0.0,
+    "margin_available": 0.0,
+    "utilization": 0.0
+  },
+  {
+    "timestamp": "2025-08-30T17:09:41.658927",
+    "window": "OVERNIGHT",
+    "leverage": 0.0,
+    "margin_used": 0.0,
+    "margin_available": 0.0,
+    "utilization": 0.0
+  },
+  {
+    "timestamp": "2025-08-30T17:10:41.659694",
+    "window": "OVERNIGHT",
+    "leverage": 0.0,
+    "margin_used": 0.0,
+    "margin_available": 0.0,
+    "utilization": 0.0
+  }
+]

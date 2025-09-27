@@ -1,0 +1,26 @@
+{
+  "momentum": {
+    "strategy": "momentum",
+    "final_equity": 10000,
+    "returns": 0.0,
+    "total_trades": 0,
+    "duration_seconds": 60,
+    "timestamp": "2025-08-24T05:35:36.750988"
+  },
+  "mean_reversion": {
+    "strategy": "mean_reversion",
+    "final_equity": 10000,
+    "returns": 0.0,
+    "total_trades": 0,
+    "duration_seconds": 60,
+    "timestamp": "2025-08-24T05:35:35.888955"
+  },
+  "breakout": {
+    "strategy": "breakout",
+    "final_equity": 10000,
+    "returns": 0.0,
+    "total_trades": 0,
+    "duration_seconds": 60,
+    "timestamp": "2025-08-24T05:35:36.668370"
+  }
+}

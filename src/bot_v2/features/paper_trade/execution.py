@@ -52,7 +52,7 @@ class PaperExecutor:
         Execute a trading signal.
         
         Args:
-            symbol: Stock symbol
+            symbol: Trading symbol
             signal: 1 (buy), -1 (sell), 0 (hold)
             current_price: Current market price
             timestamp: Current time

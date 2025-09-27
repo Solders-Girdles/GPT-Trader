@@ -1,0 +1,25 @@
+{
+  "timestamp": "2025-08-30T16:11:24-07:00",
+  "preflight_pass": false,
+  "environment": {
+    "sandbox": "0",
+    "api_mode": "advanced",
+    "max_impact_bps": "default",
+    "cdp_key_present": true,
+    "cdp_private_key": true,
+    "jwt_auth": true,
+    "derivatives_enabled": false
+  },
+  "artifacts": {
+    "financial_reconciliation": true,
+    "sized_down_event": true,
+    "tif_validation": true
+  },
+  "components": {
+    "portfolio_valuation": "ready",
+    "fees_engine": "ready",
+    "margin_monitor": "ready",
+    "liquidity_service": "ready",
+    "order_policy": "ready"
+  }
+}

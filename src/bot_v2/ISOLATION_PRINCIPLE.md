@@ -1,5 +1,8 @@
 # 🔒 The Isolation Principle
 
+> ARCHIVED NOTE: This document is historical and not part of the
+> active perps trading path. See README section "What's Active Today".
+
 ## **Core Rule: One Slice = One Context = Complete Feature**
 
 ### ❌ **What We Must Avoid**

@@ -1,0 +1,926 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="ce78414b-4eb7-446d-8e2e-6f50fac0e8f3" name="Changes" comment="Add portfolio backtesting modules, metrics, and indicators">
+      <change afterPath="$PROJECT_DIR$/.claude/agents/adversarial-dummy.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/ALL_SLICES_COMPLETE.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/ARCHITECTURE.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/COMPLETE_ISOLATION_ACHIEVED.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/COMPREHENSIVE_CLEANUP_AUDIT.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/COMPREHENSIVE_CLEANUP_COMPLETE.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/DEPRECATED_FILES_CLEANUP.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/ISOLATION_PRINCIPLE.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/NEXT_STEPS_DECISION.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/PHASE_1_COMPLETE.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/PROGRESS_REPORT.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/PROJECT_STATUS.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/SLICES.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/SYSTEM_COMPLETE.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/VERTICAL_SLICE_SUCCESS.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/WEEK_1_2_COMPLETE.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/WEEK_3_COMPLETE.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/WEEK_3_PLAN.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/debug_breakout.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/debug_comprehensive.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/debug_momentum.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/demo.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/demo_intelligent_vs_basic.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/demo_ml_intelligence.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/example_portfolio_optimization.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/features/analyze/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/features/analyze/analyze.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/features/analyze/indicators.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/features/analyze/patterns.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/features/analyze/strategies.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/features/analyze/types.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/features/backtest/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/features/backtest/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/features/backtest/backtest.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/features/backtest/data.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/features/backtest/execution.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/features/backtest/metrics.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/features/backtest/signals.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/features/backtest/strategies.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/features/backtest/types.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/features/backtest/validation.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/features/data/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/features/data/cache.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/features/data/data.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/features/data/quality.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/features/data/storage.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/features/data/types.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/features/live_trade/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/features/live_trade/brokers.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/features/live_trade/execution.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/features/live_trade/live_trade.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/features/live_trade/risk.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/features/live_trade/types.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/features/market_regime/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/features/market_regime/data.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/features/market_regime/features.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/features/market_regime/market_regime.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/features/market_regime/models.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/features/market_regime/transitions.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/features/market_regime/types.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/features/ml_strategy/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/features/ml_strategy/backtest_integration.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/features/ml_strategy/data.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/features/ml_strategy/evaluation.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/features/ml_strategy/features.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/features/ml_strategy/market_data.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/features/ml_strategy/ml_strategy.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/features/ml_strategy/model.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/features/ml_strategy/types.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/features/monitor/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/features/monitor/alerting.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/features/monitor/collectors.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/features/monitor/monitor.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/features/monitor/types.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/features/optimize/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/features/optimize/backtester.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/features/optimize/optimize.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/features/optimize/strategies.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/features/optimize/types.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/features/paper_trade/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/features/paper_trade/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/features/paper_trade/data.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/features/paper_trade/execution.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/features/paper_trade/paper_trade.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/features/paper_trade/risk.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/features/paper_trade/strategies.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/features/paper_trade/types.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/features/position_sizing/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/features/position_sizing/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/features/position_sizing/confidence.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/features/position_sizing/kelly.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/features/position_sizing/position_sizing.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/features/position_sizing/regime.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/features/position_sizing/types.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/test_all.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/test_all_slices.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/test_all_strategies.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/test_backtester.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/test_breakout_strategy.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/test_complete_system.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/test_component_system.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/test_conservative_momentum.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/test_data_provider.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/test_factory.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/test_market_regime.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/test_mean_reversion.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/test_ml_intelligence_integration.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/test_ml_strategy.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/test_momentum.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/test_strategy_base.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/test_vertical_slice.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/test_volatility_strategy.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/bot_v2/validate_calculations.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.github/pull_request_template.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.github/workflows/ci.yml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.github/workflows/test.yml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/GPT-Trader.iml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.pre-commit-config.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.secrets.baseline" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/ARCHIVE_INVENTORY.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/CLAUDE.md" beforeDir="false" afterPath="$PROJECT_DIR$/CLAUDE.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/CONTRIBUTING.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/CRITICAL_FIXES_COMPLETE.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DEPRECATION_AUDIT_REPORT.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DEPRECATION_CLEANUP_COMPLETE.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/DEVELOPER_EXPERIENCE_IMPROVEMENTS.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/INTEGRATION_COMPLETE.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/ONLINE_LEARNING_IMPLEMENTATION_REPORT.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/PERFORMANCE_REPORT_AUTO_RETRAINING.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/PERFORMANCE_REPORT_ITERROWS_OPTIMIZATION.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/PICKLE_REMOVAL_REPORT.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/RISK_INTEGRATION_IMPLEMENTATION_COMPLETE.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/SECURITY_AUDIT_COMPLETE.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/USER_EXPERIENCE_REPORT.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/WEEK_7_IMPLEMENTATION_REPORT.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/cli_old_20250812_151945/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/cli_old_20250812_151945/__main__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/cli_old_20250812_151945/backtest.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/cli_old_20250812_151945/cli_utils.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/cli_old_20250812_151945/dashboard.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/cli_old_20250812_151945/deploy.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/cli_old_20250812_151945/enhanced_cli.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/cli_old_20250812_151945/enhanced_evolution.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/cli_old_20250812_151945/help_system.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/cli_old_20250812_151945/interactive.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/cli_old_20250812_151945/live.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/cli_old_20250812_151945/main_menu.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/cli_old_20250812_151945/monitor.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/cli_old_20250812_151945/optimize.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/cli_old_20250812_151945/paper.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/cli_old_20250812_151945/prepare_datasets.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/cli_old_20250812_151945/rapid_evolution.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/cli_old_20250812_151945/setup_wizard.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/cli_old_20250812_151945/shared.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/cli_old_20250812_151945/shared_enhanced.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/cli_old_20250812_151945/shortcuts.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/cli_old_20250812_151945/strategy_development.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/cli_old_20250812_151945/walk_forward.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/distributed_20250812_152245/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/distributed_20250812_152245/ray_engine.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/intelligence_20250812_152245/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/intelligence_20250812_152245/adaptive_model_selection.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/intelligence_20250812_152245/bayesian_optimization.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/intelligence_20250812_152245/confidence_intervals.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/intelligence_20250812_152245/continual_learning.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/intelligence_20250812_152245/data_pipeline.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/intelligence_20250812_152245/deep_learning.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/intelligence_20250812_152245/enhanced_features.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/intelligence_20250812_152245/ensemble_models.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/intelligence_20250812_152245/facade.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/intelligence_20250812_152245/feature_selection.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/intelligence_20250812_152245/integration_tests.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/intelligence_20250812_152245/meta_learning.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/intelligence_20250812_152245/metrics_registry.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/intelligence_20250812_152245/model_comparison.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/intelligence_20250812_152245/observability.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/intelligence_20250812_152245/online_learning.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/intelligence_20250812_152245/order_simulator.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/intelligence_20250812_152245/phase2_integration.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/intelligence_20250812_152245/phase3_integration.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/intelligence_20250812_152245/regime_labeling.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/intelligence_20250812_152245/reinforcement_learning.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/intelligence_20250812_152245/safety_rails.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/intelligence_20250812_152245/selection_metrics.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/intelligence_20250812_152245/transfer_learning.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/intelligence_20250812_152245/transition_metrics.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/k8s_20250812_151114/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/k8s_20250812_151114/api-gateway.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/k8s_20250812_151114/autoscaler.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/k8s_20250812_151114/backup-cronjob.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/k8s_20250812_151114/configmap.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/k8s_20250812_151114/data-pipeline.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/k8s_20250812_151114/ingress.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/k8s_20250812_151114/kustomization.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/k8s_20250812_151114/ml-inference.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/k8s_20250812_151114/monitoring.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/k8s_20250812_151114/namespace.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/k8s_20250812_151114/network-policies.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/k8s_20250812_151114/postgresql.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/k8s_20250812_151114/redis.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/k8s_20250812_151114/secrets.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/k8s_20250812_151114/trading-engine.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/knowledge_20250812_152245/strategy_knowledge_base.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/meta_learning_20250812_152245/continuous_learning.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/meta_learning_20250812_152245/regime_detection.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/meta_learning_20250812_152245/strategy_transfer.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/meta_learning_20250812_152245/temporal_adaptation.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/ml_20250812_152245/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/ml_20250812_152245/gpu_accelerator.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/ml_20250812_152245/reinforcement_learning.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/ml_20250812_152245/transformer_models.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/monitor_20250812_152804/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/monitor_20250812_152804/alerting_system.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/monitor_20250812_152804/alerts.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/monitor_20250812_152804/live_dashboard.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/monitor_20250812_152804/performance_monitor.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/monitor_20250812_152804/strategy_health_monitor.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/monitoring_20250812_152804/health_checker.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/monitoring_20250812_152804/metrics_collector.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/monitoring_20250812_152804/production_monitor.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/realtime_20250812_152936/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/realtime_20250812_152936/data_pipeline.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/scaling_20250812_152245/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/archived/scaling_20250812_152245/auto_scaler.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/awesome-claude-agents" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/benchmark_results/benchmark_report.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/benchmarks/serialization_benchmark.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config/database.yaml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/opt/is_grid_20250808-235212.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/opt/is_grid_20250809-012930_part1-of-4.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/opt/is_grid_20250809-012930_part2-of-4.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/opt/is_grid_20250809-012930_part3-of-4.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/opt/is_grid_20250809-012930_part4-of-4.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/opt/is_grid_20250809-021552_part1-of-4.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/opt/is_grid_20250809-032830_part1-of-4.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/opt/is_grid_20250809-032830_part2-of-4.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/opt/is_grid_20250809-032830_part3-of-4.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/opt/is_grid_20250809-032830_part4-of-4.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/universe/sample_universe.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/demo_online_learning.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/demos/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/demos/download_data.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/demos/integrated_backtest.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/demos/mean_reversion_demo.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/demos/simple_backtest.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/demos/test_trend_breakout.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/demos/working_strategy_demo.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/deploy/docker/Dockerfile" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/deploy/docker/docker-compose.yml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/deploy/postgres/docker-compose.yml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/deploy/postgres/init/01_create_schemas.sql" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/deploy/postgres/init/02_create_tables.sql" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/deploy/postgres/init/03_create_indexes.sql" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/deploy/scripts/deploy.sh" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/24_WEEK_SPRINT_MASTER_PLAN.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/ARCHITECTURE_FILEMAP.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/AUTONOMOUS_PORTFOLIO_ROADMAP.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/AUTONOMOUS_QUICK_REFERENCE.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/CLAUDE_MD_ENHANCED_WORKFLOW.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/CLAUDE_MD_WORKFLOW.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/CLI_REFERENCE.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/COMPLETE_PIPELINE.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/DEPLOYMENT_GUIDE.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/DEVELOPER_GUIDE.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/DEVELOPMENT_GUIDELINES.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/DEVELOPMENT_ROADMAP_V2.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/DEVELOPMENT_STATUS.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/DOCUMENTATION_ORGANIZATION_SUMMARY.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/ENHANCED_CLI.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/ENHANCED_EVOLUTION.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/INTEGRATION_BRIDGE_IMPLEMENTATION.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/INTEGRATION_ORCHESTRATOR.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/ML_SYSTEM_DOCUMENTATION.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/MONITORING_PLAYBOOK.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/OPERATIONS_RUNBOOK.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/OPTIMIZATION.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/OPTIMIZATION_IMPROVEMENTS.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/ORGANIZATION_MAINTENANCE.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/PAPER_TRADING.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/PHASE_2_5_SUBTASK_BREAKDOWN.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/PHASE_3_COMPLETION_REPORT.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/PHASE_3_IMPLEMENTATION_PLAN.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/PHASE_3_READINESS_ASSESSMENT.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/PHASE_3_TASK_BREAKDOWN.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/PHASE_3_VISION_ALIGNMENT.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/PHASE_3_WEEK_1_COMPLETE.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/PHASE_3_WEEK_1_PROGRESS.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/PHASE_4_DEEP_LEARNING_IMPLEMENTATION.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/PHASE_4_TASK_BREAKDOWN.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/QOL_IMPROVEMENTS.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/QUALITY_IMPROVEMENT_ROADMAP.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/QUICKSTART.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/RECOVERY_STATUS.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/RISK_INTEGRATION_GUIDE.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/SECURITY.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/SPRINT_1_TASK_BREAKDOWN.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/SPRINT_2_TASK_BREAKDOWN.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/STRATEGY_VALIDATION_REPORT.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/TESTING_ITERATION_ROADMAP.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/TRADING_STRATEGY_DEVELOPMENT_ROADMAP.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/TRAINING_GUIDE.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/TROUBLESHOOTING.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/USAGE.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/USER_INTERFACES.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/UX_ENHANCEMENT_PLAN.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/WEEK_2_COMPLETION_REPORT.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/WORKFLOW_IMPROVEMENTS_SUMMARY.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/archived/DEPRECATED_FILES_LIST.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/archived/DOCUMENTATION_CLEANUP_SUMMARY.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/archived/ML_FOUNDATION_IMPROVEMENT_PLAN.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/archived/NEXT_STEPS_ROADMAP.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/archived/PHASE1_IMPLEMENTATION_GUIDE.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/archived/PHASE1_RISK_MITIGATION.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/archived/PHASE3_COMPLETION_SUMMARY.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/archived/PHASE5_COMPLETION_SUMMARY.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/archived/SYSTEMATIC_IMPROVEMENTS_SUMMARY.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/archived/deprecated_imports_20250814/enhanced_evolution_with_knowledge.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/archived/deprecated_imports_20250814/production_orchestrator.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/archived/deprecated_imports_20250814/strategy_selector.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/archives/phases/CRITICAL_FIXES_SUMMARY.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/archives/phases/PHASE1_COMPLETION_SUMMARY.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/archives/phases/PHASE1_FOUNDATION_COMPLETE.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/archives/phases/PHASE2_INTEGRATION_COMPLETE.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/archives/phases/PHASE2_SUMMARY.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/archives/phases/PHASE2_TYPE_ANNOTATIONS_SUMMARY.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/archives/phases/PHASE3_4_COMPLETION_SUMMARY.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/archives/phases/PHASE3_COMPLETE_SUMMARY.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/archives/phases/PHASE3_OBSERVABILITY_COMPLETE.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/archives/phases/PHASE3_SECURITY_IMPROVEMENTS_SUMMARY.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/archives/phases/PHASE4_CODE_QUALITY_SUMMARY.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/archives/phases/PHASE4_OPERATIONAL_EXCELLENCE_COMPLETE.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/archives/phases/PHASE5_TYPE_ANNOTATIONS_SUMMARY.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/archives/phases/PHASE6_IMPORT_FIXES_COMPLETE.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/archives/phases/PHASE6_TEST_SUITE_SUMMARY.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/archives/phases/PHASE_0.3_FORMATTING_COMPLETE.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/archives/phases/PHASE_0.4_TYPE_FIXES_COMPLETE.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/archives/phases/PHASE_0.5_SECURITY_QUALITY_COMPLETE.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/archives/phases/PHASE_1_SECURITY_HARDENING_COMPLETE.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/archives/phases/PHASE_2_CODE_QUALITY_COMPLETE.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/archives/phases/PHASE_3_TESTING_INFRASTRUCTURE_COMPLETE.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/archives/phases/PHASE_4_PERFORMANCE_OPTIMIZATION_COMPLETE.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/archives/phases/PHASE_5_OPERATIONAL_EXCELLENCE_COMPLETE.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/archives/weeks/WEEK3_COMPLETION_SUMMARY.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/archives/weeks/WEEK4_COMPLETION_SUMMARY.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/database_audit.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/database_migration_guide.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/reports/BASELINE_METRICS.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/reports/PHASE_2.5_COMPLETION_REPORT.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/reports/PICKLE_MIGRATION_REPORT.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/reports/SECOND_PASS_AUDIT_REPORT.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/reports/SECRETS_MANAGEMENT.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/reports/TECHNICAL_DEBT_ROADMAP.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/reports/WORKFLOW_ANALYSIS_REPORT.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/reports/doc_drift.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/reports/memory_profile_report.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/reports/migration_report_financial.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/examples/architecture_migration_demo.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/examples/complete_pipeline_example.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/examples/component_based_strategy_example.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/examples/demo_enhanced_cli.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/examples/enhanced_evolution_example.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/examples/hierarchical_evolution_example.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/examples/knowledge_enhanced_evolution_example.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/examples/multi_objective_optimization_example.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/examples/optimization_example.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/examples/paper_trading_example.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/examples/phase2_integration_demo.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/examples/phase3_meta_learning_example.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/examples/phase3_observability_demo.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/examples/phase4_advanced_analytics_example.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/examples/phase4_operational_excellence_demo.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/examples/phase5_production_integration_example.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/examples/pipeline_demo.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/examples/rapid_evolution_real.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/examples/rapid_evolution_test.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/examples/risk_integration_example.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/examples/strategy_allocator_integration_demo.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/examples/structured_logging_demo.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/github/workflows/ci.yml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/logs/is_part_0.log" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/logs/is_part_1.log" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/logs/is_part_2.log" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/logs/is_part_3.log" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/monitoring/docker-compose.yml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/monitoring/grafana/dashboards/system_overview.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/monitoring/prometheus/alerts.yml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/monitoring/prometheus/prometheus.yml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/poetry.lock" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pyproject.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pytest.ini" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/requirements-optional.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/requirements-test.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/README_cleanup_backtests.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/analyze_grid.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/cleanup_backtests.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/cleanup_backtests_cron.sh" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/cli_smoke_test.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/consolidate_databases.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/dashboard.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/generate_filemap.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/migrate_financial_constants.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/migrate_pickle_files.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/migrate_secrets.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/migrate_to_postgres.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/run_grid.sh" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/run_is_oos.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/run_tests.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/run_tests_parallel.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/simple_claude_update.sh" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/test_auto_retraining_integration.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/test_database_stress.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/test_integration_bridge.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/test_ml_integration.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/test_model_calibration.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/test_performance_benchmark.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/test_pipeline_performance.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/test_postgres_connection.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/test_production_orchestrator.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/test_realtime_data.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/test_retraining_standalone.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/test_security_fixes.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/test_structured_logging_performance.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/test_walk_forward_integration.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/update_claude_md.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/validate_security.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/analytics/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/analytics/alpha_analysis.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/analytics/attribution.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/analytics/correlation_modeling.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/analytics/decomposition.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/analytics/risk_decomposition.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/api/gateway.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/backtest/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/backtest/engine.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/backtest/engine_portfolio.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/backtest/realistic_backtester.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/cli.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/cli/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/cli/__main__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/cli/base.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/cli/cli.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/cli/cli_utils.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/cli/commands.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/cli/ml_commands.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/cli_rapid_evolution.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/config.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/config/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/config/demo_mode.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/config/financial_config.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/config/unified_config.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/core/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/core/analytics.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/core/base.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/core/caching.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/core/concurrency.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/core/config.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/core/container.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/core/database.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/core/deployment.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/core/disaster_recovery.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/core/error_handling.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/core/exceptions.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/core/metrics.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/core/migration.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/core/observability.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/core/performance.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/core/security.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/dashboard/app.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/dashboard/ml_dashboard.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/dashboard/ml_pages.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/data/unified_pipeline.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/database/database_manager.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/database/models.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/dataflow/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/dataflow/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/dataflow/alternative_data.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/dataflow/base.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/dataflow/data_quality_framework.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/dataflow/data_source_manager.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/dataflow/historical_data_manager.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/dataflow/pipeline.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/dataflow/realtime_feed.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/dataflow/sources/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/dataflow/sources/enhanced_yfinance_source.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/dataflow/sources/yfinance_source.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/dataflow/streaming_data.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/dataflow/validate.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/exceptions.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/exceptions/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/exceptions/decorators.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/exceptions/enhanced_exceptions.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/exceptions/examples.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/exceptions/user_friendly.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/exec/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/exec/alpaca_paper.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/exec/base.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/exec/ledger.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/exec/order_management.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/health.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/indicators/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/indicators/atr.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/indicators/donchian.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/indicators/enhanced.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/indicators/optimized.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/indicators/sma.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/integration/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/integration/orchestrator.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/integration/strategy_allocator_bridge.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/live/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/live/audit.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/live/cycles/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/live/cycles/performance.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/live/cycles/risk.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/live/cycles/selection.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/live/data_manager.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/live/event_driven_architecture.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/live/events.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/live/market_data_pipeline.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/live/order_management.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/live/performance_tracker.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/live/phase4_integration.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/live/portfolio_manager.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/live/production_orchestrator.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/live/risk_monitor.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/live/trading_engine.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/logging.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/logging/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/logging/log_aggregator.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/logging/structured_logger.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/metrics/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/metrics/report.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/ml/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/ml/ab_testing_framework.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/ml/advanced_degradation_detector.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/ml/auto_retraining.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/ml/base.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/ml/baseline_models.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/ml/deep_learning/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/ml/deep_learning/attention_mechanisms.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/ml/deep_learning/deep_ensemble.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/ml/deep_learning/distributed_training.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/ml/deep_learning/gpu_optimization.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/ml/deep_learning/integrated_lstm_pipeline.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/ml/deep_learning/lstm_architecture.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/ml/deep_learning/lstm_data_pipeline.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/ml/deep_learning/lstm_training.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/ml/deep_learning/model_compression.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/ml/deep_learning/positional_encoding.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/ml/deep_learning/simple_test.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/ml/deep_learning/test_deep_learning.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/ml/deep_learning/transfer_learning.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/ml/deep_learning/transformer_architecture.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/ml/deep_learning/transformer_models.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/ml/degradation_dashboard.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/ml/degradation_integration.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/ml/drift_detector.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/ml/efficiency_analyzer.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/ml/ensemble_manager.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/ml/feature_engineering_v2.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/ml/feature_evolution.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/ml/feature_selector.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/ml/features/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/ml/features/engineering.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/ml/features/market_regime.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/ml/features/technical.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/ml/integrated_pipeline.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/ml/learning_scheduler.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/ml/model_calibrator.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/ml/model_comparison_report.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/ml/model_degradation_monitor.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/ml/model_promotion.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/ml/model_validation.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/ml/model_versioning.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/ml/models/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/ml/models/portfolio_optimizer.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/ml/models/regime_detector.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/ml/models/strategy_selector.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/ml/models/training_utils.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/ml/online_learning.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/ml/performance_benchmark.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/ml/performance_metrics_collector.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/ml/performance_targets.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/ml/performance_tracker.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/ml/portfolio/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/ml/portfolio/allocator.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/ml/portfolio/optimizer.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/ml/reinforcement_learning/actor_critic.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/ml/reinforcement_learning/deep_q_network.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/ml/reinforcement_learning/multi_agent.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/ml/reinforcement_learning/policy_gradient.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/ml/reinforcement_learning/ppo.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/ml/reinforcement_learning/q_learning.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/ml/retraining_scheduler.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/ml/shadow_mode.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/ml/statistical_analyzer.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/ml/threshold_optimizer.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/ml/validation_reporter.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/ml/walk_forward_validator.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/monitoring/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/monitoring/intelligent_alerts.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/monitoring/metrics_exporter.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/monitoring/ml_logging_integration.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/monitoring/monitor.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/monitoring/ops_dashboard.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/monitoring/ops_runbooks.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/monitoring/structured_logger.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/optimization/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/optimization/analyzer.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/optimization/cache_eviction_policies.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/optimization/cli.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/optimization/config.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/optimization/deployment_pipeline.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/optimization/engine.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/optimization/enhanced_evolution.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/optimization/evolutionary.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/optimization/grid.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/optimization/hierarchical_evolution.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/optimization/intelligent_cache.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/optimization/memory_profiler.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/optimization/multi_objective.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/optimization/multi_objective_visualizer.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/optimization/parallel_evaluator.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/optimization/parallel_optimizer.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/optimization/rapid_evolution.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/optimization/report.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/optimization/strategy_diversity.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/optimization/visualizer.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/optimization/walk_forward_validator.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/paper_trading/deployment_pipeline.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/paper_trading/ml_paper_trader.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/performance.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/portfolio/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/portfolio/allocator.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/portfolio/dynamic_allocation.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/portfolio/optimizer.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/portfolio/portfolio_constructor.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/portfolio/portfolio_optimization.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/rebalancing/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/rebalancing/costs.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/rebalancing/engine.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/rebalancing/triggers.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/risk/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/risk/advanced_optimization.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/risk/anomaly_alert_system.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/risk/anomaly_detector.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/risk/basic.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/risk/circuit_breakers.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/risk/config.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/risk/correlation_monitor.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/risk/dashboard.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/risk/greeks_calculator.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/risk/integration.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/risk/live_risk_monitor.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/risk/lstm_anomaly_detector.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/risk/realtime_websocket.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/risk/risk_dashboard.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/risk/risk_limit_monitor.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/risk/risk_manager.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/risk/risk_metrics_engine.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/risk/simple_risk_manager.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/risk/stress_testing.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/risk/stress_testing/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/risk/stress_testing/framework.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/risk/stress_testing/historical.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/risk/stress_testing/monte_carlo.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/risk/stress_testing/sensitivity.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/risk/stress_testing/types.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/risk/utils.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/security/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/security/config.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/security/input_validation.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/security/secrets_manager.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/startup_validation.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/strategy/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/strategy/base.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/strategy/components.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/strategy/demo_ma.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/strategy/enhanced_trend_breakout.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/strategy/mean_reversion.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/strategy/ml_enhanced.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/strategy/multi_instrument.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/strategy/optimized_ma.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/strategy/persistence.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/strategy/strategy_collection.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/strategy/talib_optimized_ma.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/strategy/training_pipeline.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/strategy/trend_breakout.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/strategy/validation_engine.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/strategy/validation_pipeline.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/utils/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/utils/base.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/utils/config.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/utils/lazy_imports.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/utils/paths.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/utils/serialization.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/utils/settings.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/utils/validation.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/validation/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/bot/validation/framework.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/standalone_demo.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/acceptance/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/acceptance/test_paper_trading_validation.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/acceptance/test_real_world_scenarios.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/conftest.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/conftest_full.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/fixtures/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/fixtures/conftest.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/fixtures/factories.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/conftest.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/phases/test_phase1_integration.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/pipelines/test_strategy_pipeline_integration.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/pipelines/test_strategy_pipeline_simplified.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/test_backtest_integration.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/test_basic_fixtures.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/test_cli_integration.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/test_component_integration.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/test_consolidated_architecture.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/test_data_flow.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/test_data_pipeline_integration.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/test_degradation_integration.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/test_error_handling.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/test_orchestrator.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/test_phase3_monitoring.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/test_strategy_verification.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/weeks/test_week3_integration.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/weeks/test_week3_integration_simple.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/weeks/test_week3_minimal.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/weeks/test_week4_integration.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/workflow/test_comprehensive_workflow.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/workflow/test_minimal_workflow.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/integration/workflow/test_workflow.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/performance/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/performance/conftest.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/performance/test_benchmark_consolidated.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/performance/test_load_performance.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/performance/test_memory_usage.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/performance/test_optimizer_sla.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/performance/test_stress_performance.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/production/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/production/test_deployment.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/production/test_monitoring_observability.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/production/test_production_readiness.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/system/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/system/conftest.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/system/test_data_preparation.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/system/test_e2e_workflows.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/system/test_joblib_migration.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/system/test_multiprocessing.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/system/test_paper_trading_setup.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/system/test_phase3_monitoring_standalone.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/system/test_system_startup_shutdown.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/system/test_talib_integration.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/system/test_trading_cycles.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/system/test_user_interfaces.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/unit/backtest/test_engine_portfolio.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/unit/backtest/test_ledger.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/unit/conftest.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/unit/dataflow/test_pipeline.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/unit/dataflow/test_pipeline_multisource.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/unit/integration/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/unit/integration/test_strategy_allocator_bridge.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/unit/ml/test_ensemble_and_evolution.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/unit/ml/test_feature_engineering.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/unit/ml/test_models.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/unit/ml/test_online_learning.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/unit/ml/test_online_learning_standalone.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/unit/ml/test_portfolio_optimization.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/unit/monitoring/test_structured_logger.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/unit/portfolio/test_allocator.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/unit/portfolio/test_portfolio_manager.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/unit/risk/test_anomaly_basic.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/unit/risk/test_anomaly_detection.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/unit/risk/test_greeks_calculator.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/unit/risk/test_integration.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/unit/risk/test_risk_components.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/unit/risk/test_risk_limit_monitor.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/unit/risk/test_risk_manager.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/unit/risk/test_risk_metrics_engine.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/unit/risk/test_week4_components.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/unit/strategy/test_base_strategy.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/unit/strategy/test_base_strategy_comprehensive.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/unit/strategy/test_demo_ma.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/unit/strategy/test_trend_breakout.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/unit/test_alert_manager.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/unit/test_audit_records.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/unit/test_audit_summary.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/unit/test_auto_retraining.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/unit/test_config.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/unit/test_enhanced_exceptions.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/unit/test_performance_monitor.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/unit/test_portfolio_optimizer.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/unit/test_secrets_manager.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/unit/test_sizing_price.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/unit/test_strategy_selector.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/unit/test_structured_logging.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/unit/test_unified_config.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/tests/unit/test_validation_framework.py" beforeDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
+  "lastFilter": {
+    "state": "OPEN",
+    "assignee": "Solders-Girdles"
+  }
+}]]></component>
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/Solders-Girdles/GPT-Trader.git",
+    "accountId": "d8f39ba0-31af-403e-b2dd-d91d76121bc1"
+  }
+}]]></component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "associatedIndex": 5
+}]]></component>
+  <component name="ProjectId" id="30zekiEO9joKCto69repNEJJq2z" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ASKED_SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "git-widget-placeholder": "#6 on feat/qol-progress-logging",
+    "settings.editor.selected.configurable": "promo.remoteSsh"
+  }
+}]]></component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/data/params/" />
+    </key>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-python-sdk-a5bc9544c897-aa17d162503b-com.jetbrains.pycharm.community.sharedIndexes.bundled-PC-243.23654.177" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="SvnConfiguration">
+    <configuration>$USER_HOME$/.subversion</configuration>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="ce78414b-4eb7-446d-8e2e-6f50fac0e8f3" name="Changes" comment="" />
+      <created>1754634973892</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1754634973892</updated>
+    </task>
+    <task id="LOCAL-00001" summary="Add portfolio backtesting modules, metrics, and indicators">
+      <option name="closed" value="true" />
+      <created>1754708990232</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1754708990232</updated>
+    </task>
+    <task id="LOCAL-00002" summary="Add portfolio backtesting modules, metrics, and indicators">
+      <option name="closed" value="true" />
+      <created>1754732887474</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1754732887474</updated>
+    </task>
+    <task id="LOCAL-00003" summary="Add portfolio backtesting modules, metrics, and indicators">
+      <option name="closed" value="true" />
+      <created>1754735444869</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1754735444869</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
+    <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="refactor: rename l -&gt; low in validate_ohlc to avoid ambiguity" />
+    <MESSAGE value="Add portfolio backtesting modules, metrics, and indicators" />
+    <option name="LAST_COMMIT_MESSAGE" value="Add portfolio backtesting modules, metrics, and indicators" />
+  </component>
+</project>

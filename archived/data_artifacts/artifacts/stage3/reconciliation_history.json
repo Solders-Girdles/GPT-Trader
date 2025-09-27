@@ -1,0 +1,722 @@
+[
+  {
+    "timestamp": "2025-08-30T16:31:41.616924",
+    "total_equity": 0.0,
+    "cash_balance": 0.0,
+    "positions_value": 0.0,
+    "by_symbol": {},
+    "totals": {
+      "realized_pnl": 0,
+      "unrealized_pnl": 0,
+      "funding_paid": 0,
+      "fees_paid": 0.0
+    },
+    "verification": {
+      "expected_change": 0.0,
+      "actual_equity": 0.0,
+      "reconciled": true
+    }
+  },
+  {
+    "timestamp": "2025-08-30T16:32:41.617561",
+    "total_equity": 0.0,
+    "cash_balance": 0.0,
+    "positions_value": 0.0,
+    "by_symbol": {},
+    "totals": {
+      "realized_pnl": 0,
+      "unrealized_pnl": 0,
+      "funding_paid": 0,
+      "fees_paid": 0.0
+    },
+    "verification": {
+      "expected_change": 0.0,
+      "actual_equity": 0.0,
+      "reconciled": true
+    }
+  },
+  {
+    "timestamp": "2025-08-30T16:33:41.618186",
+    "total_equity": 0.0,
+    "cash_balance": 0.0,
+    "positions_value": 0.0,
+    "by_symbol": {},
+    "totals": {
+      "realized_pnl": 0,
+      "unrealized_pnl": 0,
+      "funding_paid": 0,
+      "fees_paid": 0.0
+    },
+    "verification": {
+      "expected_change": 0.0,
+      "actual_equity": 0.0,
+      "reconciled": true
+    }
+  },
+  {
+    "timestamp": "2025-08-30T16:34:41.618803",
+    "total_equity": 0.0,
+    "cash_balance": 0.0,
+    "positions_value": 0.0,
+    "by_symbol": {},
+    "totals": {
+      "realized_pnl": 0,
+      "unrealized_pnl": 0,
+      "funding_paid": 0,
+      "fees_paid": 0.0
+    },
+    "verification": {
+      "expected_change": 0.0,
+      "actual_equity": 0.0,
+      "reconciled": true
+    }
+  },
+  {
+    "timestamp": "2025-08-30T16:35:41.619418",
+    "total_equity": 0.0,
+    "cash_balance": 0.0,
+    "positions_value": 0.0,
+    "by_symbol": {},
+    "totals": {
+      "realized_pnl": 0,
+      "unrealized_pnl": 0,
+      "funding_paid": 0,
+      "fees_paid": 0.0
+    },
+    "verification": {
+      "expected_change": 0.0,
+      "actual_equity": 0.0,
+      "reconciled": true
+    }
+  },
+  {
+    "timestamp": "2025-08-30T16:36:41.619243",
+    "total_equity": 0.0,
+    "cash_balance": 0.0,
+    "positions_value": 0.0,
+    "by_symbol": {},
+    "totals": {
+      "realized_pnl": 0,
+      "unrealized_pnl": 0,
+      "funding_paid": 0,
+      "fees_paid": 0.0
+    },
+    "verification": {
+      "expected_change": 0.0,
+      "actual_equity": 0.0,
+      "reconciled": true
+    }
+  },
+  {
+    "timestamp": "2025-08-30T16:37:41.620039",
+    "total_equity": 0.0,
+    "cash_balance": 0.0,
+    "positions_value": 0.0,
+    "by_symbol": {},
+    "totals": {
+      "realized_pnl": 0,
+      "unrealized_pnl": 0,
+      "funding_paid": 0,
+      "fees_paid": 0.0
+    },
+    "verification": {
+      "expected_change": 0.0,
+      "actual_equity": 0.0,
+      "reconciled": true
+    }
+  },
+  {
+    "timestamp": "2025-08-30T16:38:41.621473",
+    "total_equity": 0.0,
+    "cash_balance": 0.0,
+    "positions_value": 0.0,
+    "by_symbol": {},
+    "totals": {
+      "realized_pnl": 0,
+      "unrealized_pnl": 0,
+      "funding_paid": 0,
+      "fees_paid": 0.0
+    },
+    "verification": {
+      "expected_change": 0.0,
+      "actual_equity": 0.0,
+      "reconciled": true
+    }
+  },
+  {
+    "timestamp": "2025-08-30T16:39:41.622114",
+    "total_equity": 0.0,
+    "cash_balance": 0.0,
+    "positions_value": 0.0,
+    "by_symbol": {},
+    "totals": {
+      "realized_pnl": 0,
+      "unrealized_pnl": 0,
+      "funding_paid": 0,
+      "fees_paid": 0.0
+    },
+    "verification": {
+      "expected_change": 0.0,
+      "actual_equity": 0.0,
+      "reconciled": true
+    }
+  },
+  {
+    "timestamp": "2025-08-30T16:40:41.622771",
+    "total_equity": 0.0,
+    "cash_balance": 0.0,
+    "positions_value": 0.0,
+    "by_symbol": {},
+    "totals": {
+      "realized_pnl": 0,
+      "unrealized_pnl": 0,
+      "funding_paid": 0,
+      "fees_paid": 0.0
+    },
+    "verification": {
+      "expected_change": 0.0,
+      "actual_equity": 0.0,
+      "reconciled": true
+    }
+  },
+  {
+    "timestamp": "2025-08-30T16:41:41.623177",
+    "total_equity": 0.0,
+    "cash_balance": 0.0,
+    "positions_value": 0.0,
+    "by_symbol": {},
+    "totals": {
+      "realized_pnl": 0,
+      "unrealized_pnl": 0,
+      "funding_paid": 0,
+      "fees_paid": 0.0
+    },
+    "verification": {
+      "expected_change": 0.0,
+      "actual_equity": 0.0,
+      "reconciled": true
+    }
+  },
+  {
+    "timestamp": "2025-08-30T16:42:41.630706",
+    "total_equity": 0.0,
+    "cash_balance": 0.0,
+    "positions_value": 0.0,
+    "by_symbol": {},
+    "totals": {
+      "realized_pnl": 0,
+      "unrealized_pnl": 0,
+      "funding_paid": 0,
+      "fees_paid": 0.0
+    },
+    "verification": {
+      "expected_change": 0.0,
+      "actual_equity": 0.0,
+      "reconciled": true
+    }
+  },
+  {
+    "timestamp": "2025-08-30T16:43:41.631844",
+    "total_equity": 0.0,
+    "cash_balance": 0.0,
+    "positions_value": 0.0,
+    "by_symbol": {},
+    "totals": {
+      "realized_pnl": 0,
+      "unrealized_pnl": 0,
+      "funding_paid": 0,
+      "fees_paid": 0.0
+    },
+    "verification": {
+      "expected_change": 0.0,
+      "actual_equity": 0.0,
+      "reconciled": true
+    }
+  },
+  {
+    "timestamp": "2025-08-30T16:44:41.632596",
+    "total_equity": 0.0,
+    "cash_balance": 0.0,
+    "positions_value": 0.0,
+    "by_symbol": {},
+    "totals": {
+      "realized_pnl": 0,
+      "unrealized_pnl": 0,
+      "funding_paid": 0,
+      "fees_paid": 0.0
+    },
+    "verification": {
+      "expected_change": 0.0,
+      "actual_equity": 0.0,
+      "reconciled": true
+    }
+  },
+  {
+    "timestamp": "2025-08-30T16:45:41.633341",
+    "total_equity": 0.0,
+    "cash_balance": 0.0,
+    "positions_value": 0.0,
+    "by_symbol": {},
+    "totals": {
+      "realized_pnl": 0,
+      "unrealized_pnl": 0,
+      "funding_paid": 0,
+      "fees_paid": 0.0
+    },
+    "verification": {
+      "expected_change": 0.0,
+      "actual_equity": 0.0,
+      "reconciled": true
+    }
+  },
+  {
+    "timestamp": "2025-08-30T16:46:41.633991",
+    "total_equity": 0.0,
+    "cash_balance": 0.0,
+    "positions_value": 0.0,
+    "by_symbol": {},
+    "totals": {
+      "realized_pnl": 0,
+      "unrealized_pnl": 0,
+      "funding_paid": 0,
+      "fees_paid": 0.0
+    },
+    "verification": {
+      "expected_change": 0.0,
+      "actual_equity": 0.0,
+      "reconciled": true
+    }
+  },
+  {
+    "timestamp": "2025-08-30T16:47:41.634722",
+    "total_equity": 0.0,
+    "cash_balance": 0.0,
+    "positions_value": 0.0,
+    "by_symbol": {},
+    "totals": {
+      "realized_pnl": 0,
+      "unrealized_pnl": 0,
+      "funding_paid": 0,
+      "fees_paid": 0.0
+    },
+    "verification": {
+      "expected_change": 0.0,
+      "actual_equity": 0.0,
+      "reconciled": true
+    }
+  },
+  {
+    "timestamp": "2025-08-30T16:48:41.635471",
+    "total_equity": 0.0,
+    "cash_balance": 0.0,
+    "positions_value": 0.0,
+    "by_symbol": {},
+    "totals": {
+      "realized_pnl": 0,
+      "unrealized_pnl": 0,
+      "funding_paid": 0,
+      "fees_paid": 0.0
+    },
+    "verification": {
+      "expected_change": 0.0,
+      "actual_equity": 0.0,
+      "reconciled": true
+    }
+  },
+  {
+    "timestamp": "2025-08-30T16:49:41.636226",
+    "total_equity": 0.0,
+    "cash_balance": 0.0,
+    "positions_value": 0.0,
+    "by_symbol": {},
+    "totals": {
+      "realized_pnl": 0,
+      "unrealized_pnl": 0,
+      "funding_paid": 0,
+      "fees_paid": 0.0
+    },
+    "verification": {
+      "expected_change": 0.0,
+      "actual_equity": 0.0,
+      "reconciled": true
+    }
+  },
+  {
+    "timestamp": "2025-08-30T16:50:41.636980",
+    "total_equity": 0.0,
+    "cash_balance": 0.0,
+    "positions_value": 0.0,
+    "by_symbol": {},
+    "totals": {
+      "realized_pnl": 0,
+      "unrealized_pnl": 0,
+      "funding_paid": 0,
+      "fees_paid": 0.0
+    },
+    "verification": {
+      "expected_change": 0.0,
+      "actual_equity": 0.0,
+      "reconciled": true
+    }
+  },
+  {
+    "timestamp": "2025-08-30T16:51:41.637667",
+    "total_equity": 0.0,
+    "cash_balance": 0.0,
+    "positions_value": 0.0,
+    "by_symbol": {},
+    "totals": {
+      "realized_pnl": 0,
+      "unrealized_pnl": 0,
+      "funding_paid": 0,
+      "fees_paid": 0.0
+    },
+    "verification": {
+      "expected_change": 0.0,
+      "actual_equity": 0.0,
+      "reconciled": true
+    }
+  },
+  {
+    "timestamp": "2025-08-30T16:52:41.638417",
+    "total_equity": 0.0,
+    "cash_balance": 0.0,
+    "positions_value": 0.0,
+    "by_symbol": {},
+    "totals": {
+      "realized_pnl": 0,
+      "unrealized_pnl": 0,
+      "funding_paid": 0,
+      "fees_paid": 0.0
+    },
+    "verification": {
+      "expected_change": 0.0,
+      "actual_equity": 0.0,
+      "reconciled": true
+    }
+  },
+  {
+    "timestamp": "2025-08-30T16:53:41.640157",
+    "total_equity": 0.0,
+    "cash_balance": 0.0,
+    "positions_value": 0.0,
+    "by_symbol": {},
+    "totals": {
+      "realized_pnl": 0,
+      "unrealized_pnl": 0,
+      "funding_paid": 0,
+      "fees_paid": 0.0
+    },
+    "verification": {
+      "expected_change": 0.0,
+      "actual_equity": 0.0,
+      "reconciled": true
+    }
+  },
+  {
+    "timestamp": "2025-08-30T16:54:41.642739",
+    "total_equity": 0.0,
+    "cash_balance": 0.0,
+    "positions_value": 0.0,
+    "by_symbol": {},
+    "totals": {
+      "realized_pnl": 0,
+      "unrealized_pnl": 0,
+      "funding_paid": 0,
+      "fees_paid": 0.0
+    },
+    "verification": {
+      "expected_change": 0.0,
+      "actual_equity": 0.0,
+      "reconciled": true
+    }
+  },
+  {
+    "timestamp": "2025-08-30T16:55:41.643509",
+    "total_equity": 0.0,
+    "cash_balance": 0.0,
+    "positions_value": 0.0,
+    "by_symbol": {},
+    "totals": {
+      "realized_pnl": 0,
+      "unrealized_pnl": 0,
+      "funding_paid": 0,
+      "fees_paid": 0.0
+    },
+    "verification": {
+      "expected_change": 0.0,
+      "actual_equity": 0.0,
+      "reconciled": true
+    }
+  },
+  {
+    "timestamp": "2025-08-30T16:56:41.644180",
+    "total_equity": 0.0,
+    "cash_balance": 0.0,
+    "positions_value": 0.0,
+    "by_symbol": {},
+    "totals": {
+      "realized_pnl": 0,
+      "unrealized_pnl": 0,
+      "funding_paid": 0,
+      "fees_paid": 0.0
+    },
+    "verification": {
+      "expected_change": 0.0,
+      "actual_equity": 0.0,
+      "reconciled": true
+    }
+  },
+  {
+    "timestamp": "2025-08-30T16:57:41.644966",
+    "total_equity": 0.0,
+    "cash_balance": 0.0,
+    "positions_value": 0.0,
+    "by_symbol": {},
+    "totals": {
+      "realized_pnl": 0,
+      "unrealized_pnl": 0,
+      "funding_paid": 0,
+      "fees_paid": 0.0
+    },
+    "verification": {
+      "expected_change": 0.0,
+      "actual_equity": 0.0,
+      "reconciled": true
+    }
+  },
+  {
+    "timestamp": "2025-08-30T16:58:41.645713",
+    "total_equity": 0.0,
+    "cash_balance": 0.0,
+    "positions_value": 0.0,
+    "by_symbol": {},
+    "totals": {
+      "realized_pnl": 0,
+      "unrealized_pnl": 0,
+      "funding_paid": 0,
+      "fees_paid": 0.0
+    },
+    "verification": {
+      "expected_change": 0.0,
+      "actual_equity": 0.0,
+      "reconciled": true
+    }
+  },
+  {
+    "timestamp": "2025-08-30T16:59:41.646476",
+    "total_equity": 0.0,
+    "cash_balance": 0.0,
+    "positions_value": 0.0,
+    "by_symbol": {},
+    "totals": {
+      "realized_pnl": 0,
+      "unrealized_pnl": 0,
+      "funding_paid": 0,
+      "fees_paid": 0.0
+    },
+    "verification": {
+      "expected_change": 0.0,
+      "actual_equity": 0.0,
+      "reconciled": true
+    }
+  },
+  {
+    "timestamp": "2025-08-30T17:00:41.648223",
+    "total_equity": 0.0,
+    "cash_balance": 0.0,
+    "positions_value": 0.0,
+    "by_symbol": {},
+    "totals": {
+      "realized_pnl": 0,
+      "unrealized_pnl": 0,
+      "funding_paid": 0,
+      "fees_paid": 0.0
+    },
+    "verification": {
+      "expected_change": 0.0,
+      "actual_equity": 0.0,
+      "reconciled": true
+    }
+  },
+  {
+    "timestamp": "2025-08-30T17:01:41.649935",
+    "total_equity": 0.0,
+    "cash_balance": 0.0,
+    "positions_value": 0.0,
+    "by_symbol": {},
+    "totals": {
+      "realized_pnl": 0,
+      "unrealized_pnl": 0,
+      "funding_paid": 0,
+      "fees_paid": 0.0
+    },
+    "verification": {
+      "expected_change": 0.0,
+      "actual_equity": 0.0,
+      "reconciled": true
+    }
+  },
+  {
+    "timestamp": "2025-08-30T17:02:41.651699",
+    "total_equity": 0.0,
+    "cash_balance": 0.0,
+    "positions_value": 0.0,
+    "by_symbol": {},
+    "totals": {
+      "realized_pnl": 0,
+      "unrealized_pnl": 0,
+      "funding_paid": 0,
+      "fees_paid": 0.0
+    },
+    "verification": {
+      "expected_change": 0.0,
+      "actual_equity": 0.0,
+      "reconciled": true
+    }
+  },
+  {
+    "timestamp": "2025-08-30T17:03:41.653486",
+    "total_equity": 0.0,
+    "cash_balance": 0.0,
+    "positions_value": 0.0,
+    "by_symbol": {},
+    "totals": {
+      "realized_pnl": 0,
+      "unrealized_pnl": 0,
+      "funding_paid": 0,
+      "fees_paid": 0.0
+    },
+    "verification": {
+      "expected_change": 0.0,
+      "actual_equity": 0.0,
+      "reconciled": true
+    }
+  },
+  {
+    "timestamp": "2025-08-30T17:04:41.655243",
+    "total_equity": 0.0,
+    "cash_balance": 0.0,
+    "positions_value": 0.0,
+    "by_symbol": {},
+    "totals": {
+      "realized_pnl": 0,
+      "unrealized_pnl": 0,
+      "funding_paid": 0,
+      "fees_paid": 0.0
+    },
+    "verification": {
+      "expected_change": 0.0,
+      "actual_equity": 0.0,
+      "reconciled": true
+    }
+  },
+  {
+    "timestamp": "2025-08-30T17:05:41.655995",
+    "total_equity": 0.0,
+    "cash_balance": 0.0,
+    "positions_value": 0.0,
+    "by_symbol": {},
+    "totals": {
+      "realized_pnl": 0,
+      "unrealized_pnl": 0,
+      "funding_paid": 0,
+      "fees_paid": 0.0
+    },
+    "verification": {
+      "expected_change": 0.0,
+      "actual_equity": 0.0,
+      "reconciled": true
+    }
+  },
+  {
+    "timestamp": "2025-08-30T17:06:41.656690",
+    "total_equity": 0.0,
+    "cash_balance": 0.0,
+    "positions_value": 0.0,
+    "by_symbol": {},
+    "totals": {
+      "realized_pnl": 0,
+      "unrealized_pnl": 0,
+      "funding_paid": 0,
+      "fees_paid": 0.0
+    },
+    "verification": {
+      "expected_change": 0.0,
+      "actual_equity": 0.0,
+      "reconciled": true
+    }
+  },
+  {
+    "timestamp": "2025-08-30T17:07:41.657424",
+    "total_equity": 0.0,
+    "cash_balance": 0.0,
+    "positions_value": 0.0,
+    "by_symbol": {},
+    "totals": {
+      "realized_pnl": 0,
+      "unrealized_pnl": 0,
+      "funding_paid": 0,
+      "fees_paid": 0.0
+    },
+    "verification": {
+      "expected_change": 0.0,
+      "actual_equity": 0.0,
+      "reconciled": true
+    }
+  },
+  {
+    "timestamp": "2025-08-30T17:08:41.658164",
+    "total_equity": 0.0,
+    "cash_balance": 0.0,
+    "positions_value": 0.0,
+    "by_symbol": {},
+    "totals": {
+      "realized_pnl": 0,
+      "unrealized_pnl": 0,
+      "funding_paid": 0,
+      "fees_paid": 0.0
+    },
+    "verification": {
+      "expected_change": 0.0,
+      "actual_equity": 0.0,
+      "reconciled": true
+    }
+  },
+  {
+    "timestamp": "2025-08-30T17:09:41.658917",
+    "total_equity": 0.0,
+    "cash_balance": 0.0,
+    "positions_value": 0.0,
+    "by_symbol": {},
+    "totals": {
+      "realized_pnl": 0,
+      "unrealized_pnl": 0,
+      "funding_paid": 0,
+      "fees_paid": 0.0
+    },
+    "verification": {
+      "expected_change": 0.0,
+      "actual_equity": 0.0,
+      "reconciled": true
+    }
+  },
+  {
+    "timestamp": "2025-08-30T17:10:41.659683",
+    "total_equity": 0.0,
+    "cash_balance": 0.0,
+    "positions_value": 0.0,
+    "by_symbol": {},
+    "totals": {
+      "realized_pnl": 0,
+      "unrealized_pnl": 0,
+      "funding_paid": 0,
+      "fees_paid": 0.0
+    },
+    "verification": {
+      "expected_change": 0.0,
+      "actual_equity": 0.0,
+      "reconciled": true
+    }
+  }
+]

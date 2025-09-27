@@ -1,0 +1,239 @@
+# Active Epic Tracking - UPDATED
+# GPT-Trader Bot_v2 Vertical Slice Architecture
+# Critical Update: Added EPIC-002.5 for System Integration
+
+# Current Epic Status
+current_epic:
+  id: "EPIC-002.5"
+  title: "System Integration & Orchestration"
+  status: "ready_to_start"
+  start_date: "2025-08-19"
+  priority: "CRITICAL"
+  
+# Epic Registry
+epics:
+  EPIC-001:
+    title: "V2 Architecture & Agent Setup"
+    description: "Established bot_v2 vertical slice architecture with 45-agent workforce"
+    status: "complete"
+    completion_date: "2025-08-17"
+    
+    achievements:
+      - vertical_slices: "11 feature slices operational"
+      - ml_intelligence: "75% complete (Weeks 1-5)"
+      - agent_workforce: "45 agents configured with V2 context"
+      - data_abstraction: "Clean provider pattern implemented"
+      - architecture_decision: "Vertical slices confirmed as primary"
+
+  EPIC-002:
+    title: "ML Intelligence Enhancement"
+    description: "Enhance existing ML slices with production-grade features"
+    status: "paused"
+    priority: "high"
+    pause_reason: "Discovered slices not integrated - need orchestrator first"
+    location: "src/bot_v2/features/"
+    estimated_duration_weeks: 2
+    
+    objectives:
+      - confidence_scoring: "Add confidence metrics to ml_strategy slice"
+      - real_time_adaptation: "Implement live regime transition detection"
+      - unified_pipeline: "Create integrated ML pipeline across slices" # NOT IMPLEMENTED
+      - performance_monitoring: "Add ML performance dashboard"
+      - ab_testing: "Implement A/B testing framework" # NOT IMPLEMENTED
+      - auto_retraining: "Create automated model retraining" # NOT IMPLEMENTED
+    
+    actual_status:
+      confidence_scoring: "Partially exists in position_sizing/confidence.py"
+      regime_transitions: "Exists in market_regime/transitions.py"
+      unified_pipeline: "NOT IMPLEMENTED - Critical gap"
+      ab_testing: "NOT IMPLEMENTED"
+      auto_retraining: "NOT IMPLEMENTED"
+
+  EPIC-002.5:
+    title: "System Integration & Orchestration"
+    description: "Connect 11 isolated slices into unified trading system"
+    status: "ready_to_start"
+    priority: "CRITICAL"
+    dependencies: []
+    estimated_duration_weeks: 2
+    justification: "Discovered all slices work in isolation but have no orchestration"
+    
+    objectives:
+      core_orchestration: "Central coordinator for all slices"
+      event_system: "Pub/sub for slice communication"
+      state_management: "Centralized state across sessions"
+      workflow_engine: "Defined trading workflows"
+      configuration: "Unified config management"
+      main_entry: "CLI and API entry points"
+      integration_testing: "End-to-end validation"
+      performance: "Optimized slice communication"
+    
+    sprints:
+      sprint_1:
+        name: "Core Orchestration"
+        days: 1-3
+        deliverables:
+          - "src/bot_v2/orchestration/orchestrator.py"
+          - "Basic workflow execution"
+          - "Slice registry"
+          
+      sprint_2:
+        name: "Event System"
+        days: 4-6
+        deliverables:
+          - "Event bus implementation"
+          - "Slice adapters"
+          - "Async communication"
+          
+      sprint_3:
+        name: "State Management"
+        days: 7-9
+        deliverables:
+          - "State manager"
+          - "Session persistence"
+          - "Recovery system"
+          
+      sprint_4:
+        name: "Production Features"
+        days: 10-14
+        deliverables:
+          - "Advanced workflows"
+          - "CLI/API layer"
+          - "Performance optimization"
+          - "Integration tests"
+
+  EPIC-003:
+    title: "Production Deployment Preparation"
+    description: "Prepare bot_v2 system for production deployment"
+    status: "paused"
+    priority: "high"
+    dependencies: ["EPIC-002.5"]  # Now depends on integration
+    estimated_duration_weeks: 2
+    pause_reason: "Paused Sprint 3 Day 2 to build orchestrator first"
+    
+    progress:
+      completed:
+        - structured_logging: "Added to monitor/ slice"
+        - circuit_breakers: "Implemented in live_trade/"
+        - docker_config: "Created Dockerfile and docker-compose"
+      
+      remaining:
+        - grafana_dashboards: "Monitoring visualization"
+        - kubernetes: "K8s deployment manifests"
+        - security_hardening: "Secrets management"
+        - integration_testing: "With orchestrator"
+
+  EPIC-004:
+    title: "Paper Trading Validation"
+    description: "Validate system with real-time paper trading"
+    status: "blocked"
+    priority: "medium"
+    dependencies: ["EPIC-002.5", "EPIC-003"]  # Needs orchestrator
+    estimated_duration_weeks: 3
+    blocker: "Cannot paper trade without orchestrated system"
+    
+    objectives:
+      - alpaca_integration: "Connect to Alpaca paper trading"
+      - parallel_testing: "Run paper trades alongside backtests"
+      - performance_comparison: "Validate against historical results"
+      - parameter_tuning: "Fine-tune based on live market data"
+
+  EPIC-005:
+    title: "Live Trading Deployment"
+    description: "Deploy to production with real capital"
+    status: "planned"
+    priority: "medium"
+    dependencies: ["EPIC-004"]
+    estimated_duration_weeks: 4
+    
+    objectives:
+      - broker_integration: "Production broker API"
+      - safety_validation: "Multi-layer safety checks"
+      - gradual_rollout: "Staged capital deployment"
+      - monitoring: "24/7 monitoring and alerts"
+
+# Sprint Timeline Adjustment
+timeline:
+  original_plan:
+    week_1: "EPIC-002 Sprint 1"
+    week_2: "EPIC-002 Sprint 2"
+    week_3: "EPIC-003 Sprint 1"
+    week_4: "EPIC-003 Sprint 2"
+    
+  revised_plan:
+    week_1: "EPIC-002.5 Sprint 1-2 (Core + Events)"
+    week_2: "EPIC-002.5 Sprint 3-4 (State + Production)"
+    week_3: "EPIC-003 Sprint 1 (Resume production prep)"
+    week_4: "EPIC-003 Sprint 2 (Complete production prep)"
+    week_5: "EPIC-004 Sprint 1 (Paper trading)"
+
+# Risk Assessment
+risks:
+  without_orchestration:
+    severity: "CRITICAL"
+    impact:
+      - "Cannot run complete trading workflows"
+      - "Docker has no entry point"
+      - "Paper trading impossible"
+      - "Production deployment meaningless"
+      - "Testing limited to unit tests"
+    
+  with_orchestration:
+    delay: "2 weeks"
+    benefits:
+      - "Complete system functional"
+      - "End-to-end testing possible"
+      - "Docker deployment viable"
+      - "Paper trading enabled"
+      - "Production deployment meaningful"
+
+# Current Work Status
+current_status:
+  paused:
+    - epic: "EPIC-003"
+      sprint: "Sprint 3 Day 2"
+      reason: "Need orchestrator before continuing"
+      completed_day_1:
+        - "Structured logging"
+        - "Circuit breakers"
+        - "Docker configuration"
+  
+  next_action: "Begin EPIC-002.5 Sprint 1"
+  
+  blocked_items:
+    - "Paper trading"
+    - "Live deployment"
+    - "End-to-end testing"
+    - "Performance benchmarking"
+
+# Decision Log
+decisions:
+  - date: "2025-08-19"
+    decision: "Pause EPIC-003 to create EPIC-002.5"
+    rationale: "Discovered slices not integrated, orchestration critical"
+    impact: "2-week delay but enables all future work"
+    approved_by: "System architect review"
+
+# Success Criteria
+success_metrics:
+  epic_002_5:
+    must_have:
+      - "Can run: python -m bot_v2 --mode backtest"
+      - "All 11 slices connected"
+      - "Docker container runs"
+      - "Basic workflows execute"
+    
+    nice_to_have:
+      - "WebSocket API"
+      - "Advanced workflows"
+      - "Performance < 100ms"
+      - "Hot reload support"
+
+# Notes
+notes:
+  - "Critical discovery: Sprint 2 unified pipeline was never built"
+  - "All slices work independently but cannot work together"
+  - "Orchestration is the keystone that makes everything valuable"
+  - "Without orchestration, we're building parts that can't be assembled"
+  - "This should have been discovered earlier in EPIC-002"
+  - "Better to fix now than continue building on sand"

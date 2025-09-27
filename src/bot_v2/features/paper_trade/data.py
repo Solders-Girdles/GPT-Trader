@@ -6,9 +6,12 @@ Completely self-contained - no external dependencies.
 
 from datetime import datetime, timedelta
 from typing import Optional, Dict, List
+import logging
 import pandas as pd
-import yfinance as yf
-import time
+from ...data_providers import get_data_provider
+
+
+logger = logging.getLogger(__name__)
 
 
 class DataFeed:
@@ -38,16 +41,20 @@ class DataFeed:
         
         for symbol in self.symbols:
             try:
-                ticker = yf.Ticker(symbol)
-                data = ticker.history(start=start, end=end, interval='1d')
+                provider = get_data_provider()
+                data = provider.get_historical_data(
+                    symbol, 
+                    start=start.strftime('%Y-%m-%d'),
+                    end=end.strftime('%Y-%m-%d')
+                )
                 
                 if not data.empty:
                     # Standardize columns
                     data.columns = data.columns.str.lower()
                     self.data_cache[symbol] = data
                     self.last_update[symbol] = datetime.now()
-            except Exception as e:
-                print(f"Warning: Could not load {symbol}: {e}")
+            except Exception as exc:
+                logger.warning("Unable to load historical data for %s: %s", symbol, exc, exc_info=True)
                 self.data_cache[symbol] = pd.DataFrame()
     
     def get_latest_price(self, symbol: str) -> Optional[float]:
@@ -66,13 +73,13 @@ class DataFeed:
         # During market hours, fetch real-time quote
         if self._is_market_hours():
             try:
-                ticker = yf.Ticker(symbol)
-                info = ticker.info
-                return info.get('regularMarketPrice', 
-                               info.get('currentPrice',
-                                       self.data_cache[symbol]['close'].iloc[-1]))
-            except:
-                pass
+                provider = get_data_provider()
+                price = provider.get_current_price(symbol)
+                if price:
+                    return price
+                return self.data_cache[symbol]['close'].iloc[-1]
+            except Exception as exc:
+                logger.debug("Realtime price fetch failed for %s: %s", symbol, exc, exc_info=True)
         
         # Return last close price
         return float(self.data_cache[symbol]['close'].iloc[-1])
@@ -114,11 +121,15 @@ class DataFeed:
             
             try:
                 # Fetch latest data
-                ticker = yf.Ticker(sym)
+                provider = get_data_provider()
                 end = datetime.now()
                 start = end - timedelta(days=1)
                 
-                new_data = ticker.history(start=start, end=end, interval='1m')
+                new_data = provider.get_historical_data(
+                    sym, 
+                    start=start.strftime('%Y-%m-%d'),
+                    end=end.strftime('%Y-%m-%d')
+                )
                 
                 if not new_data.empty:
                     # Aggregate to daily if needed
@@ -140,8 +151,8 @@ class DataFeed:
                     
                     self.last_update[sym] = datetime.now()
                     
-            except Exception as e:
-                print(f"Warning: Could not update {sym}: {e}")
+            except Exception as exc:
+                logger.warning("Unable to update data for %s: %s", sym, exc, exc_info=True)
     
     def _is_market_hours(self) -> bool:
         """

@@ -1,0 +1,100 @@
+🚀 PREFLIGHT CHECKLIST
+============================================================
+Timestamp: 2025-08-30T13:51:47.097155+00:00
+Environment: PRODUCTION
+============================================================
+
+[1/10] Environment Variables
+----------------------------------------
+❌ FAIL
+  missing:
+    - COINBASE_API_MODE
+  incorrect:
+    - COINBASE_ENABLE_DERIVATIVES=0 (expected: 1)
+  configured:
+    - COINBASE_AUTH_TYPE=JWT
+    - COINBASE_CDP_API_KEY=***configured***
+    - COINBASE_CDP_PRIVATE_KEY=***configured***
+    - COINBASE_SANDBOX=0
+
+[2/10] API Authentication
+----------------------------------------
+❌ FAIL
+  error: JWT generation failed: No module named 'src.bot_v2.features.brokerages.coinbase.auth'
+
+[3/10] Derivatives Configuration
+----------------------------------------
+❌ FAIL
+  error: Derivatives not enabled
+
+[4/10] Safety Parameters
+----------------------------------------
+✅ PASS
+  parameters:
+    max_position_size: 0.01
+    daily_loss_limit: 0.02
+    max_impact_bps: 15
+    kill_switch: enabled
+    quiet_period_min: 30
+
+[5/10] Network Connectivity
+----------------------------------------
+❌ FAIL
+  environment: production
+  endpoints:
+    api: ✅ reachable
+    websocket: ❌ unreachable
+
+[6/10] Clock Synchronization
+----------------------------------------
+✅ PASS
+  system_time: 2025-08-30T13:51:47.832020+00:00
+  note: Could not verify NTP sync
+
+[7/10] Disk Space
+----------------------------------------
+✅ PASS
+  used: 14Gi
+  available: 87Gi
+  percent_used: 14%
+
+[8/10] Process Limits
+----------------------------------------
+✅ PASS
+  limits:
+    file_descriptors: {'soft': 9223372036854775807, 'hard': 9223372036854775807}
+    processes: {'soft': 6000, 'hard': 9000}
+
+[9/10] Dependencies
+----------------------------------------
+❌ FAIL
+  installed:
+    - coinbase
+    - websockets
+    - pandas
+    - numpy
+  missing:
+    - python-dotenv
+
+[10/10] Secrets Security
+----------------------------------------
+⚠️ WARNING
+  warnings:
+    - Private key in environment (use file instead)
+    - .env file permissions 644 (should be 600 or 400)
+
+============================================================
+📊 PREFLIGHT SUMMARY
+============================================================
+✅ Passed: 4/10
+⚠️  Warnings: 1/10
+❌ Failed: 5/10
+
+❌ FAILED CHECKS:
+  - Environment Variables
+  - API Authentication
+  - Derivatives Configuration
+  - Network Connectivity
+  - Dependencies
+
+🔴 PREFLIGHT FAILED - Do not proceed with deployment

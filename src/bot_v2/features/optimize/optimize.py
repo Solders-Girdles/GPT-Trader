@@ -9,7 +9,7 @@ from typing import Dict, List, Any, Optional, Tuple
 import pandas as pd
 import numpy as np
 import time
-import yfinance as yf
+from ...data_providers import get_data_provider
 
 from .types import (
     OptimizationResult, ParameterGrid, BacktestMetrics,
@@ -291,8 +291,12 @@ def walk_forward_analysis(
 
 def fetch_data(symbol: str, start: datetime, end: datetime) -> pd.DataFrame:
     """Fetch historical data for optimization."""
-    ticker = yf.Ticker(symbol)
-    data = ticker.history(start=start, end=end)
+    provider = get_data_provider()
+    data = provider.get_historical_data(
+        symbol, 
+        start=start.strftime('%Y-%m-%d'),
+        end=end.strftime('%Y-%m-%d')
+    )
     
     if data.empty:
         raise ValueError(f"No data available for {symbol}")

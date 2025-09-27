@@ -4,53 +4,54 @@ version = "0.1.0"
 description = "Equities-first trading bot scaffold with adapter-based data, backtesting, and paper trading hooks."
 authors = ["RJ + GPT-5"]
 readme = "README.md"
-packages = [{ include = "bot", from = "src" }]
+packages = [{ include = "bot_v2", from = "src" }]
 
 
 [tool.poetry.dependencies]
 python = ">=3.12,<3.13"
+coinbase-advanced-py = "^1.0.0"
 pandas = "^2.2.2"
 numpy = "^1.26.4"
 pydantic = "^2.7.4"
 python-dotenv = "^1.0.1"
 requests = "^2.32.3"
-yfinance = "^0.2.40"
+yfinance = { version = "^0.2.40", optional = true }
 websockets = "^14.0"
 tqdm = "^4.67.1"
 scipy = "^1.14.0"
-matplotlib = "^3.9.0"
-seaborn = "^0.13.0"
-alpaca-py = "^0.20.0"
+matplotlib = { version = "^3.9.0", optional = true }
+seaborn = { version = "^0.13.0", optional = true }
+alpaca-py = { version = "^0.20.0", optional = true }
 rich = "^13.7.0"
 pytz = "^2024.1"
 pyyaml = "^6.0.1"
 psutil = "^6.0.0"
 aiohttp = "^3.12.15"
 ta-lib = "^0.6.5"
-ray = "^2.48.0"
-numba = "^0.61.2"
+ray = { version = "^2.48.0", optional = true }
+numba = { version = "^0.61.2", optional = true }
 typer = "^0.16.0"
 click-completion = "^0.5.2"
-plotly = "^6.2.0"
+plotly = { version = "^6.2.0", optional = true }
 toml = "^0.10.2"
-xgboost = "^3.0.4"
-scikit-learn = "^1.7.1"
-lightgbm = "^4.0.0"
-hmmlearn = "^0.3.3"
-optuna = "^4.4.0"
-cvxpy = "^1.7.1"
-streamlit = "^1.48.0"
+xgboost = { version = "^3.0.4", optional = true }
+scikit-learn = { version = "^1.7.1", optional = true }
+lightgbm = { version = "^4.0.0", optional = true }
+hmmlearn = { version = "^0.3.3", optional = true }
+optuna = { version = "^4.4.0", optional = true }
+cvxpy = { version = "^1.7.1", optional = true }
+streamlit = { version = "^1.48.0", optional = true }
 
 # FastAPI and API dependencies
-fastapi = "^0.115.4"
-uvicorn = "^0.32.0"
-python-multipart = "^0.0.12"
-python-jose = "^3.3.0"
-passlib = "^1.7.4"
-bcrypt = "^4.0.1"
-websocket-client = "^1.8.0"
-flask = "^3.0.0"
-flask-cors = "^5.0.0"
+fastapi = { version = "^0.115.4", optional = true }
+uvicorn = { version = "^0.32.0", optional = true }
+python-multipart = { version = "^0.0.12", optional = true }
+python-jose = { version = "^3.3.0", optional = true }
+passlib = { version = "^1.7.4", optional = true }
+bcrypt = { version = "^4.0.1", optional = true }
+websocket-client = { version = "^1.8.0", optional = true }
+flask = { version = "^3.0.0", optional = true }
+flask-cors = { version = "^5.0.0", optional = true }
 
 # Phase 4 - Deep Learning (optional dependencies)
 torch = { version = "^2.0.0", optional = true }
@@ -59,6 +60,7 @@ tensorflow = { version = "^2.13.0", optional = true }
 schedule = "^1.2.2"
 redis = { version = "^5.1.0", extras = ["hiredis"] }
 cryptography = "^43.0.0"
+pyotp = "^2.9.0"
 pyzmq = "^26.0.0"
 networkx = "^3.5"
 semver = "^3.0.4"
@@ -67,6 +69,35 @@ semver = "^3.0.4"
 torch = ["torch", "tensorboard"]
 tensorflow = ["tensorflow", "tensorboard"]
 deep-learning = ["torch", "tensorflow", "tensorboard"]
+market-data = ["yfinance"]
+api = [
+    "fastapi",
+    "uvicorn",
+    "python-multipart",
+    "python-jose",
+    "passlib",
+    "bcrypt",
+    "flask",
+    "flask-cors",
+    "websocket-client",
+]
+ml = [
+    "scikit-learn",
+    "xgboost",
+    "lightgbm",
+    "hmmlearn",
+    "optuna",
+    "ray",
+    "numba",
+]
+research = [
+    "matplotlib",
+    "seaborn",
+    "plotly",
+]
+optimization = ["cvxpy"]
+ui = ["streamlit"]
+equities = ["alpaca-py"]
 
 [tool.poetry.group.dev.dependencies]
 # Code quality tools
@@ -74,6 +105,7 @@ ruff = "^0.5.6"
 black = "^24.4.2"
 mypy = "^1.10.0"
 pre-commit = "^3.7.1"
+yfinance = "^0.2.40"
 
 # Type stubs
 types-requests = "^2.32.0.20240712"
@@ -98,7 +130,8 @@ responses = "^0.23.0"
 coverage = "^7.0.0"
 
 [tool.poetry.scripts]
-gpt-trader = "bot.cli.__main__:main"
+gpt-trader = "bot_v2.__main__:main"
+perps-bot = "bot_v2.cli:main"
 
 [build-system]
 requires = ["poetry-core"]
@@ -111,7 +144,15 @@ target-version = ["py312"]
 [tool.ruff]
 line-length = 100
 target-version = "py312"
-extend-exclude = ["data", "scripts/pickle_scanner.py", "scripts/pickle_to_joblib.py"]
+extend-exclude = [
+    "data",
+    "scripts/pickle_scanner.py",
+    "scripts/pickle_to_joblib.py",
+    "archived",
+    "demos",
+    "scripts",
+    "tests",
+]
 
 [tool.ruff.lint]
 select = [
@@ -131,6 +172,9 @@ ignore = [
     "E501",    # Line too long (handled by formatter)
     "ANN401",  # Dynamically typed expressions (Any)
 ]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["ANN"]
 
 [tool.mypy]
 python_version = "3.12"

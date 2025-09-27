@@ -1,0 +1,430 @@
+name: Bot V2 CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+      - staging
+      - develop
+    tags:
+      - 'v*'
+  pull_request:
+    branches:
+      - main
+      - staging
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - development
+          - staging
+          - production
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}/bot-v2
+  PYTHON_VERSION: '3.12'
+
+jobs:
+  # Code Quality Checks
+  quality-checks:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: 1.8.2
+
+      - name: Cache Poetry virtualenv
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pypoetry/virtualenvs
+          key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-poetry-
+
+      - name: Install dependencies
+        run: poetry install --no-interaction --no-root
+
+      - name: Run Black formatter check
+        run: poetry run black --check src/bot_v2/
+
+      - name: Run Ruff linter
+        run: poetry run ruff check src/bot_v2/
+
+      - name: Run MyPy type checker
+        run: poetry run mypy src/bot_v2/ --ignore-missing-imports
+        continue-on-error: true
+
+      - name: Run Bandit security checker
+        run: poetry run bandit -r src/bot_v2/ -f json -o bandit-report.json
+
+      - name: Check for security vulnerabilities
+        run: poetry run safety check --json
+
+      - name: Upload security reports
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: security-reports
+          path: |
+            bandit-report.json
+            safety-report.json
+
+  # Unit Tests
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    needs: quality-checks
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: trader
+          POSTGRES_PASSWORD: trader123
+          POSTGRES_DB: trading_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      redis:
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: 1.8.2
+
+      - name: Cache Poetry virtualenv
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pypoetry/virtualenvs
+          key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-poetry-
+
+      - name: Install dependencies
+        run: poetry install --no-interaction --no-root
+
+      - name: Run unit tests with coverage
+        env:
+          DATABASE_URL: postgresql://trader:trader123@localhost:5432/trading_test
+          REDIS_URL: redis://localhost:6379/0
+          ENV: test
+        run: |
+          poetry run pytest tests/unit/bot_v2/ \
+            --cov=src/bot_v2 \
+            --cov-report=xml \
+            --cov-report=html \
+            --cov-report=term-missing \
+            -v
+
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+
+      - name: Upload coverage HTML report
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-report
+          path: htmlcov/
+
+  # Integration Tests
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: unit-tests
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: trader
+          POSTGRES_PASSWORD: trader123
+          POSTGRES_DB: trading_integration
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      redis:
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+      rabbitmq:
+        image: rabbitmq:3.12-management
+        env:
+          RABBITMQ_DEFAULT_USER: trader
+          RABBITMQ_DEFAULT_PASS: trader123
+        ports:
+          - 5672:5672
+          - 15672:15672
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: 1.8.2
+
+      - name: Cache Poetry virtualenv
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pypoetry/virtualenvs
+          key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-poetry-
+
+      - name: Install dependencies
+        run: poetry install --no-interaction --no-root
+
+      - name: Run integration tests
+        env:
+          DATABASE_URL: postgresql://trader:trader123@localhost:5432/trading_integration
+          REDIS_URL: redis://localhost:6379/0
+          RABBITMQ_URL: amqp://trader:trader123@localhost:5672/
+          ENV: test
+        run: |
+          poetry run pytest tests/integration/bot_v2/ -v --tb=short
+
+  # Build Docker Image
+  build-image:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    needs: [unit-tests, integration-tests]
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image-tag: ${{ steps.meta.outputs.tags }}
+      image-digest: ${{ steps.build.outputs.digest }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push Docker image
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: src/bot_v2/deployment/docker/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64,linux/arm64
+          target: production
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  # Deploy to Staging
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: build-image
+    if: github.ref == 'refs/heads/staging' || github.event.inputs.environment == 'staging'
+    environment:
+      name: staging
+      url: https://staging.trading.example.com
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Update kubeconfig
+        run: |
+          aws eks update-kubeconfig --name trading-staging --region us-east-1
+
+      - name: Deploy to Kubernetes
+        run: |
+          kubectl set image deployment/trading-bot \
+            trading-bot=${{ needs.build-image.outputs.image-tag }} \
+            -n trading-system
+          kubectl rollout status deployment/trading-bot -n trading-system
+
+      - name: Run smoke tests
+        run: |
+          sleep 30
+          curl -f https://staging.trading.example.com/health || exit 1
+
+  # Deploy to Production
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [build-image, deploy-staging]
+    if: github.ref == 'refs/heads/main' || github.event.inputs.environment == 'production'
+    environment:
+      name: production
+      url: https://trading.example.com
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.PROD_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PROD_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Update kubeconfig
+        run: |
+          aws eks update-kubeconfig --name trading-production --region us-east-1
+
+      - name: Blue-Green Deployment
+        run: |
+          # Create new deployment (green)
+          kubectl apply -f src/bot_v2/deployment/kubernetes/deployment.yaml \
+            -n trading-system \
+            --dry-run=client -o yaml | \
+            sed 's/trading-bot/trading-bot-green/g' | \
+            kubectl apply -f -
+          
+          # Update green deployment with new image
+          kubectl set image deployment/trading-bot-green \
+            trading-bot=${{ needs.build-image.outputs.image-tag }} \
+            -n trading-system
+          
+          # Wait for green deployment to be ready
+          kubectl rollout status deployment/trading-bot-green -n trading-system
+          
+          # Switch traffic to green
+          kubectl patch service trading-bot-service \
+            -p '{"spec":{"selector":{"deployment":"green"}}}' \
+            -n trading-system
+          
+          # Wait and monitor
+          sleep 60
+          
+          # If successful, remove blue deployment
+          kubectl delete deployment trading-bot -n trading-system || true
+          kubectl label deployment trading-bot-green deployment=blue -n trading-system
+
+      - name: Run production tests
+        run: |
+          curl -f https://trading.example.com/health || exit 1
+          curl -f https://api.trading.example.com/ready || exit 1
+
+      - name: Send deployment notification
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          text: 'Production deployment completed for version ${{ needs.build-image.outputs.image-tag }}'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+        if: always()
+
+  # Rollback Job (Manual Trigger)
+  rollback:
+    name: Rollback Deployment
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'rollback'
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.PROD_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PROD_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Rollback to previous version
+        run: |
+          aws eks update-kubeconfig --name trading-production --region us-east-1
+          kubectl rollout undo deployment/trading-bot -n trading-system
+          kubectl rollout status deployment/trading-bot -n trading-system
+
+      - name: Notify rollback
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          text: 'Rollback completed for trading-bot deployment'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}

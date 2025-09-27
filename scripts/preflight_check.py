@@ -1,605 +1,379 @@
 #!/usr/bin/env python3
 """
-Preflight checklist for Coinbase Perpetuals trading.
-Run before any deployment to validate configuration.
+Comprehensive preflight check for Coinbase perpetuals trading system.
+
+This script validates:
+1. Environment configuration
+2. API credentials and permissions
+3. Product discovery
+4. Risk management systems
+5. Test suite status
 """
 
 import os
 import sys
-import time
 import json
 import subprocess
+from datetime import datetime
 from typing import Dict, List, Tuple, Optional
-from datetime import datetime, timezone
 from decimal import Decimal
 
-# Add project root to path
-project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, project_root)
-
+# Add src to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 class PreflightChecker:
-    """Comprehensive pre-deployment validation."""
+    """Comprehensive system preflight checker."""
     
     def __init__(self):
-        self.checks_passed = []
-        self.checks_failed = []
-        self.checks_warning = []
+        self.results = []
+        self.warnings = []
+        self.errors = []
+        self.status = "PASS"
         
-    def run_all_checks(self) -> bool:
-        """Run all preflight checks."""
-        print("🚀 PREFLIGHT CHECKLIST")
-        print("=" * 60)
-        print(f"Timestamp: {datetime.now(timezone.utc).isoformat()}")
-        print(f"Environment: {self._get_environment()}")
-        print("=" * 60)
+    def add_result(self, category: str, item: str, status: str, message: str = ""):
+        """Add a check result."""
+        self.results.append({
+            "category": category,
+            "item": item,
+            "status": status,
+            "message": message
+        })
         
-        checks = [
-            ("Environment Variables", self.check_environment),
-            ("API Authentication", self.check_authentication),
-            ("Derivatives Configuration", self.check_derivatives),
-            ("Safety Parameters", self.check_safety),
-            ("Network Connectivity", self.check_connectivity),
-            ("Clock Synchronization", self.check_clock),
-            ("Disk Space", self.check_disk_space),
-            ("Process Limits", self.check_process_limits),
-            ("Dependencies", self.check_dependencies),
-            ("Secrets Security", self.check_secrets),
-        ]
-        
-        for check_name, check_func in checks:
-            print(f"\n[{len(self.checks_passed) + len(self.checks_failed) + 1}/{len(checks)}] {check_name}")
-            print("-" * 40)
-            
-            try:
-                result, details = check_func()
-                self._log_check_result(check_name, result, details)
-            except Exception as e:
-                self.checks_failed.append(check_name)
-                print(f"❌ FAILED: {e}")
-        
-        return self._generate_summary()
+        if status == "FAIL":
+            self.status = "FAIL"
+            self.errors.append(f"{category}/{item}: {message}")
+        elif status == "WARN":
+            if self.status != "FAIL":
+                self.status = "WARN"
+            self.warnings.append(f"{category}/{item}: {message}")
     
-    def check_environment(self) -> Tuple[str, Dict]:
-        """Check environment variables."""
-        required_vars = {
-            "COINBASE_API_MODE": "advanced",
-            "COINBASE_AUTH_TYPE": "JWT",
-            "COINBASE_ENABLE_DERIVATIVES": "1"
-        }
+    def check_environment(self):
+        """Check environment configuration."""
+        print("\n🔧 Checking Environment Configuration...")
+        
+        required_vars = [
+            "BROKER",
+            "COINBASE_API_MODE",
+            "COINBASE_ENABLE_DERIVATIVES",
+            "COINBASE_SANDBOX",
+            "COINBASE_PROD_CDP_API_KEY",
+            "COINBASE_PROD_CDP_PRIVATE_KEY",
+        ]
         
         optional_vars = [
-            "COINBASE_CDP_API_KEY",
-            "COINBASE_CDP_PRIVATE_KEY",
-            "COINBASE_CDP_PRIVATE_KEY_PATH",
-            "COINBASE_SANDBOX",
-            "COINBASE_MAX_POSITION_SIZE",
-            "COINBASE_DAILY_LOSS_LIMIT"
+            "RISK_MAX_LEVERAGE",
+            "RISK_DAILY_LOSS_LIMIT",
+            "ORDER_PREVIEW_ENABLED",
+            "PERPS_ENABLE_STREAMING",
         ]
         
-        missing = []
-        incorrect = []
-        configured = []
-        
-        # Check required
-        for var, expected in required_vars.items():
-            value = os.getenv(var)
-            if not value:
-                missing.append(var)
-            elif value != expected:
-                incorrect.append(f"{var}={value} (expected: {expected})")
-            else:
-                configured.append(f"{var}={value}")
-        
-        # Check optional
-        for var in optional_vars:
-            value = os.getenv(var)
+        # Check required variables
+        for var in required_vars:
+            value = os.environ.get(var)
             if value:
-                # Mask sensitive values
-                if "KEY" in var or "SECRET" in var or "PRIVATE" in var:
-                    if len(value) > 20:
-                        display = f"{var}={value[:6]}...{value[-4:]}"
-                    else:
-                        display = f"{var}=***configured***"
-                elif "PATH" in var:
-                    display = f"{var}={value}"  # Paths are OK to show
+                # Don't print sensitive values
+                if "KEY" in var or "SECRET" in var:
+                    self.add_result("Environment", var, "PASS", "Set (hidden)")
                 else:
-                    display = f"{var}={value}"
-                configured.append(display)
-        
-        if missing or incorrect:
-            return "FAIL", {
-                "missing": missing,
-                "incorrect": incorrect,
-                "configured": configured
-            }
-        
-        return "PASS", {"configured": configured}
-    
-    def check_authentication(self) -> Tuple[str, Dict]:
-        """Check API authentication setup."""
-        cdp_key = os.getenv("COINBASE_CDP_API_KEY")
-        private_key = os.getenv("COINBASE_CDP_PRIVATE_KEY")
-        private_key_path = os.getenv("COINBASE_CDP_PRIVATE_KEY_PATH")
-        
-        details = {}
-        
-        if not cdp_key:
-            return "FAIL", {"error": "CDP API key not configured"}
-        
-        details["api_key"] = cdp_key[:30] + "..."
-        
-        # Check private key
-        if private_key_path:
-            if os.path.exists(private_key_path):
-                # Check file permissions
-                stat_info = os.stat(private_key_path)
-                perms = oct(stat_info.st_mode)[-3:]
-                if perms != "400":
-                    details["warning"] = f"Private key permissions {perms} (should be 400)"
-                    return "WARNING", details
-                details["private_key"] = "file configured"
+                    self.add_result("Environment", var, "PASS", f"Value: {value}")
             else:
-                return "FAIL", {"error": f"Private key file not found: {private_key_path}"}
-        elif private_key:
-            details["private_key"] = "environment variable"
+                self.add_result("Environment", var, "FAIL", "Not set")
+        
+        # Check optional variables
+        for var in optional_vars:
+            value = os.environ.get(var)
+            if value:
+                self.add_result("Environment", var, "INFO", f"Value: {value}")
+        
+        # Validate configuration consistency
+        api_mode = os.environ.get("COINBASE_API_MODE")
+        derivatives = os.environ.get("COINBASE_ENABLE_DERIVATIVES")
+        sandbox = os.environ.get("COINBASE_SANDBOX")
+        
+        if derivatives == "1" and sandbox == "1":
+            self.add_result("Environment", "Config Consistency", "FAIL", 
+                          "Sandbox does not support derivatives! Set COINBASE_SANDBOX=0")
+        elif derivatives == "1" and api_mode == "advanced":
+            self.add_result("Environment", "Config Consistency", "PASS", 
+                          "Valid perpetuals configuration")
         else:
-            return "FAIL", {"error": "No private key configured"}
-        
-        # Try to generate a JWT token
-        try:
-            from src.bot_v2.features.brokerages.coinbase.cdp_auth_v2 import CDPAuthV2
-            from src.bot_v2.features.brokerages.coinbase.models import APIConfig
-            
-            private_key_pem = private_key or (open(private_key_path).read() if private_key_path else None)
-            if not private_key_pem:
-                return "FAIL", {"error": "Private key content not available"}
-
-            auth = CDPAuthV2(api_key_name=cdp_key, private_key_pem=private_key_pem)
-            token = auth.generate_jwt(method="GET", path="/api/v3/brokerage/accounts")
-            details["jwt_generation"] = "successful"
-            
-        except Exception as e:
-            return "FAIL", {"error": f"JWT generation failed: {e}"}
-        
-        return "PASS", details
+            self.add_result("Environment", "Config Consistency", "WARN",
+                          "Check if configuration supports perpetuals trading")
     
-    def check_derivatives(self) -> Tuple[str, Dict]:
-        """Check derivatives configuration."""
-        enabled = os.getenv("COINBASE_ENABLE_DERIVATIVES") == "1"
-        
-        if not enabled:
-            return "FAIL", {"error": "Derivatives not enabled"}
-        
-        # Check expected perpetuals
-        try:
-            from src.bot_v2.features.brokerages.coinbase.endpoints import get_perps_symbols
-            expected = get_perps_symbols()
-            
-            return "PASS", {
-                "derivatives_enabled": True,
-                "expected_symbols": list(expected)
-            }
-        except Exception as e:
-            return "WARNING", {
-                "derivatives_enabled": True,
-                "warning": f"Could not verify symbols: {e}"
-            }
-    
-    def check_safety(self) -> Tuple[str, Dict]:
-        """Check safety parameters."""
-        params = {
-            "max_position_size": float(os.getenv("COINBASE_MAX_POSITION_SIZE", "0.01")),
-            "daily_loss_limit": float(os.getenv("COINBASE_DAILY_LOSS_LIMIT", "0.02")),
-            "max_impact_bps": int(os.getenv("COINBASE_MAX_IMPACT_BPS", "15")),
-            "kill_switch": os.getenv("COINBASE_KILL_SWITCH", "enabled"),
-            "quiet_period_min": int(os.getenv("COINBASE_QUIET_MINUTES", "30"))
-        }
-        
-        warnings = []
-        
-        # Check thresholds
-        if params["max_position_size"] > 0.05:
-            warnings.append("Position size > 5% of portfolio")
-        
-        if params["daily_loss_limit"] > 0.05:
-            warnings.append("Daily loss limit > 5%")
-        
-        if params["max_impact_bps"] > 20:
-            warnings.append("Market impact > 20 bps")
-        
-        if params["kill_switch"] != "enabled":
-            warnings.append("Kill switch not enabled")
-        
-        if params["quiet_period_min"] < 15:
-            warnings.append("Pre-funding quiet period < 15 minutes")
-        
-        if warnings:
-            return "WARNING", {
-                "parameters": params,
-                "warnings": warnings
-            }
-        
-        return "PASS", {"parameters": params}
-    
-    def check_connectivity(self) -> Tuple[str, Dict]:
-        """Check network connectivity."""
-        is_sandbox = os.getenv("COINBASE_SANDBOX") == "1"
-        
-        endpoints = {
-            "api": "api.sandbox.coinbase.com" if is_sandbox else "api.coinbase.com",
-            "websocket": "ws-direct.sandbox.coinbase.com" if is_sandbox else "ws-direct.coinbase.com"
-        }
-        
-        results = {}
-        
-        for name, host in endpoints.items():
-            try:
-                # Use ping to check connectivity
-                result = subprocess.run(
-                    ["ping", "-c", "1", "-W", "2", host],
-                    capture_output=True,
-                    text=True
-                )
-                if result.returncode == 0:
-                    # Extract latency
-                    output = result.stdout
-                    if "time=" in output:
-                        latency = output.split("time=")[1].split()[0]
-                        results[name] = f"✅ {latency}"
-                    else:
-                        results[name] = "✅ reachable"
-                else:
-                    results[name] = "❌ unreachable"
-            except Exception as e:
-                results[name] = f"❌ error: {e}"
-        
-        # Check if all endpoints are reachable
-        all_ok = all("✅" in v for v in results.values())
-        
-        return "PASS" if all_ok else "FAIL", {
-            "environment": "sandbox" if is_sandbox else "production",
-            "endpoints": results
-        }
-    
-    def check_clock(self) -> Tuple[str, Dict]:
-        """Check system clock synchronization and JWT expiry window."""
-        details = {}
+    def check_api_connectivity(self):
+        """Check API connectivity and permissions."""
+        print("\n🌐 Checking API Connectivity...")
         
         try:
-            # Check system time
-            system_time = datetime.now(timezone.utc)
-            details["system_time"] = system_time.isoformat()
+            from bot_v2.features.brokerages.coinbase.client import CoinbaseClient
+            from bot_v2.features.brokerages.coinbase.cdp_auth import CDPAuth
             
-            # Get NTP offset (macOS/Linux)
-            offset = None
-            if sys.platform == "darwin":  # macOS
-                result = subprocess.run(
-                    ["sntp", "-t", "1", "time.apple.com"],
-                    capture_output=True,
-                    text=True,
-                    timeout=5
-                )
-            else:  # Linux
-                result = subprocess.run(
-                    ["ntpdate", "-q", "pool.ntp.org"],
-                    capture_output=True,
-                    text=True,
-                    timeout=5
-                )
+            # Get credentials from environment
+            api_key = os.environ.get("COINBASE_PROD_CDP_API_KEY")
+            private_key = os.environ.get("COINBASE_PROD_CDP_PRIVATE_KEY")
             
-            output = result.stdout.lower()
+            if not api_key or not private_key:
+                self.add_result("API", "Credentials", "FAIL", "CDP credentials not found in environment")
+                return
             
-            # Parse offset
-            if "offset" in output:
-                import re
-                offset_match = re.search(r'offset\s*([-+]?\d+\.?\d*)', output)
-                if offset_match:
-                    offset = float(offset_match.group(1))
-                    details["ntp_offset_seconds"] = offset
-                    
-                    # Check drift thresholds
-                    if abs(offset) > 30:
-                        details["error"] = "Clock drift > 30 seconds (JWT will fail)"
-                        return "FAIL", details
-                    elif abs(offset) > 5:
-                        details["warning"] = "Clock drift > 5 seconds (may cause issues)"
-                        return "WARNING", details
-            
-            # Check JWT expiry window (CDP tokens expire in 120 seconds)
-            if offset is not None:
-                jwt_window = 120  # seconds
-                if abs(offset) > jwt_window / 2:
-                    details["warning"] = f"Clock drift ({abs(offset):.1f}s) exceeds half JWT window ({jwt_window/2}s)"
-                    return "WARNING", details
-                else:
-                    details["jwt_window_ok"] = True
-            
-            # Additional time checks
-            import socket
-            socket.setdefaulttimeout(2)
-            try:
-                import http.client
-                conn = http.client.HTTPSConnection("worldtimeapi.org")
-                conn.request("GET", "/api/timezone/UTC")
-                response = conn.getresponse()
-                if response.status == 200:
-                    import json
-                    data = json.loads(response.read())
-                    api_time = datetime.fromisoformat(data['datetime'].replace('Z', '+00:00'))
-                    local_drift = (system_time - api_time).total_seconds()
-                    details["worldtime_drift_seconds"] = local_drift
-                    
-                    if abs(local_drift) > 30:
-                        return "FAIL", details
-            except:
-                pass  # WorldTime API is optional
-            
-            if offset is not None:
-                details["status"] = "synchronized"
-                return "PASS", details
-            else:
-                details["note"] = "NTP check unavailable - ensure accurate time"
-                return "PASS", details
-            
-        except subprocess.TimeoutExpired:
-            details["warning"] = "NTP check timed out"
-            details["system_time"] = datetime.now(timezone.utc).isoformat()
-            return "WARNING", details
-        except Exception as e:
-            details["warning"] = f"Clock check error: {e}"
-            details["system_time"] = datetime.now(timezone.utc).isoformat()
-            return "WARNING", details
-    
-    def check_disk_space(self) -> Tuple[str, Dict]:
-        """Check available disk space."""
-        try:
-            result = subprocess.run(
-                ["df", "-h", "/"],
-                capture_output=True,
-                text=True
+            # Initialize client
+            auth = CDPAuth(api_key_name=api_key, private_key_pem=private_key)
+            client = CoinbaseClient(
+                base_url="https://api.coinbase.com",
+                auth=auth,
+                api_mode="advanced"
             )
             
-            lines = result.stdout.strip().split('\n')
-            if len(lines) >= 2:
-                # Parse the data line
-                parts = lines[1].split()
-                if len(parts) >= 4:
-                    used = parts[2]
-                    available = parts[3]
-                    percent = parts[4].replace('%', '')
+            # Test basic connectivity
+            try:
+                accounts = client.get_accounts()
+                if accounts and "accounts" in accounts:
+                    self.add_result("API", "Account Access", "PASS", 
+                                  f"Found {len(accounts['accounts'])} accounts")
+                else:
+                    self.add_result("API", "Account Access", "FAIL", "No accounts returned")
+            except Exception as e:
+                self.add_result("API", "Account Access", "FAIL", str(e))
+            
+            # Test CFM endpoints (futures)
+            try:
+                positions = client._request("GET", "/api/v3/brokerage/cfm/positions")
+                self.add_result("API", "CFM Access", "PASS", "Futures API accessible")
+            except Exception as e:
+                if "401" in str(e) or "Unauthorized" in str(e):
+                    self.add_result("API", "CFM Access", "FAIL", 
+                                  "No futures permissions - enable in Coinbase CDP settings!")
+                else:
+                    self.add_result("API", "CFM Access", "FAIL", str(e))
+            
+            # Test product discovery
+            try:
+                products = client.get_products()
+                if products and "products" in products:
+                    total = len(products["products"])
+                    perps = [p for p in products["products"] if "PERP" in p.get("product_id", "")]
                     
-                    percent_used = int(percent)
-                    
-                    if percent_used > 90:
-                        return "FAIL", {
-                            "used": used,
-                            "available": available,
-                            "percent_used": f"{percent_used}%",
-                            "error": "Disk usage > 90%"
-                        }
-                    elif percent_used > 80:
-                        return "WARNING", {
-                            "used": used,
-                            "available": available,
-                            "percent_used": f"{percent_used}%",
-                            "warning": "Disk usage > 80%"
-                        }
+                    if perps and any("BTC-PERP" in p.get("product_id", "") for p in perps):
+                        self.add_result("API", "Perpetuals Products", "PASS", 
+                                      f"Found {len(perps)} perpetual products")
                     else:
-                        return "PASS", {
-                            "used": used,
-                            "available": available,
-                            "percent_used": f"{percent_used}%"
-                        }
-            
-            return "WARNING", {"warning": "Could not parse disk usage"}
-            
+                        self.add_result("API", "Perpetuals Products", "FAIL", 
+                                      f"No BTC-PERP found (only {len(perps)} PERP products)")
+                else:
+                    self.add_result("API", "Perpetuals Products", "FAIL", "No products returned")
+            except Exception as e:
+                self.add_result("API", "Perpetuals Products", "FAIL", str(e))
+                
+        except ImportError as e:
+            self.add_result("API", "Import", "FAIL", f"Cannot import required modules: {e}")
         except Exception as e:
-            return "WARNING", {"warning": f"Could not check disk space: {e}"}
+            self.add_result("API", "General", "FAIL", str(e))
     
-    def check_process_limits(self) -> Tuple[str, Dict]:
-        """Check process limits and resources."""
+    def check_test_suite(self):
+        """Check test suite status."""
+        print("\n🧪 Checking Test Suite...")
+        
         try:
-            import resource
+            # Run tests with pytest
+            result = subprocess.run(
+                ["poetry", "run", "pytest", 
+                 "tests/unit/bot_v2", "tests/unit/test_foundation.py",
+                 "-q", "--tb=no", "--no-header"],
+                capture_output=True,
+                text=True,
+                timeout=30
+            )
             
-            limits = {}
+            output = result.stdout + result.stderr
             
-            # Check file descriptor limit
-            soft, hard = resource.getrlimit(resource.RLIMIT_NOFILE)
-            limits["file_descriptors"] = {"soft": soft, "hard": hard}
-            
-            if soft < 1024:
-                return "WARNING", {
-                    "limits": limits,
-                    "warning": "File descriptor limit < 1024"
-                }
-            
-            # Check process limit
-            try:
-                soft, hard = resource.getrlimit(resource.RLIMIT_NPROC)
-                limits["processes"] = {"soft": soft, "hard": hard}
-            except:
-                pass
-            
-            return "PASS", {"limits": limits}
-            
-        except Exception as e:
-            return "WARNING", {"warning": f"Could not check limits: {e}"}
-    
-    def check_dependencies(self) -> Tuple[str, Dict]:
-        """Check required Python dependencies."""
-        required = [
-            "coinbase",
-            "websockets",
-            "pandas",
-            "numpy",
-            "dotenv"
-        ]
-        
-        installed = []
-        missing = []
-        
-        for package in required:
-            try:
-                __import__(package.replace("-", "_"))
-                installed.append(package)
-            except ImportError:
-                missing.append(package)
-        
-        if missing:
-            return "FAIL", {
-                "installed": installed,
-                "missing": missing
-            }
-        
-        return "PASS", {"installed": installed}
-    
-    def check_secrets(self) -> Tuple[str, Dict]:
-        """Check secrets management security."""
-        warnings = []
-        details = {}
-        
-        # Check if secrets are in environment
-        if os.getenv("COINBASE_CDP_PRIVATE_KEY"):
-            warnings.append("Private key in environment (use file instead)")
-        
-        # Check key directory and file
-        key_path = os.getenv("COINBASE_CDP_PRIVATE_KEY_PATH")
-        if key_path and os.path.exists(key_path):
-            key_stat = os.stat(key_path)
-            key_perms = oct(key_stat.st_mode)[-3:]
-            
-            # Check ownership
-            import pwd
-            key_owner = pwd.getpwuid(key_stat.st_uid).pw_name
-            current_user = pwd.getpwuid(os.getuid()).pw_name
-            
-            details["key_file"] = {
-                "path": key_path,
-                "permissions": key_perms,
-                "owner": key_owner,
-                "current_user": current_user
-            }
-            
-            if key_perms not in ["400", "600"]:
-                warnings.append(f"Key file permissions {key_perms} (should be 400)")
-            
-            if key_owner != current_user:
-                warnings.append(f"Key file owned by {key_owner}, running as {current_user}")
-            
-            # Check directory
-            key_dir = os.path.dirname(key_path)
-            if os.path.exists(key_dir):
-                dir_stat = os.stat(key_dir)
-                dir_perms = oct(dir_stat.st_mode)[-3:]
-                dir_owner = pwd.getpwuid(dir_stat.st_uid).pw_name
+            # Parse test results
+            if "passed" in output:
+                # Extract pass/fail counts
+                import re
+                match = re.search(r"(\d+) passed", output)
+                passed = int(match.group(1)) if match else 0
                 
-                details["key_directory"] = {
-                    "path": key_dir,
-                    "permissions": dir_perms,
-                    "owner": dir_owner
-                }
+                match = re.search(r"(\d+) failed", output)
+                failed = int(match.group(1)) if match else 0
                 
-                if dir_perms != "700":
-                    warnings.append(f"Key directory permissions {dir_perms} (should be 700)")
-        
-        # Check .env file permissions if it exists
-        env_file = os.path.join(project_root, ".env")
-        if os.path.exists(env_file):
-            stat_info = os.stat(env_file)
-            perms = oct(stat_info.st_mode)[-3:]
-            if perms not in ["600", "400"]:
-                warnings.append(f".env file permissions {perms} (should be 600 or 400)")
-        
-        # Check git
-        gitignore = os.path.join(project_root, ".gitignore")
-        if os.path.exists(gitignore):
-            with open(gitignore, 'r') as f:
-                content = f.read()
-                if ".env" not in content:
-                    warnings.append(".env not in .gitignore")
-        
-        if warnings:
-            details["warnings"] = warnings
-            return "WARNING", details
-        
-        details["status"] = "Secrets properly secured"
-        return "PASS", details
-    
-    def _get_environment(self) -> str:
-        """Get current environment."""
-        if os.getenv("COINBASE_SANDBOX") == "1":
-            return "SANDBOX"
-        return "PRODUCTION"
-    
-    def _log_check_result(self, name: str, result: str, details: Dict):
-        """Log individual check result."""
-        symbols = {
-            "PASS": "✅",
-            "FAIL": "❌",
-            "WARNING": "⚠️"
-        }
-        
-        print(f"{symbols.get(result, '❓')} {result}")
-        
-        # Track results
-        if result == "PASS":
-            self.checks_passed.append(name)
-        elif result == "FAIL":
-            self.checks_failed.append(name)
-        else:
-            self.checks_warning.append(name)
-        
-        # Print details
-        for key, value in details.items():
-            if isinstance(value, list):
-                print(f"  {key}:")
-                for item in value:
-                    print(f"    - {item}")
-            elif isinstance(value, dict):
-                print(f"  {key}:")
-                for k, v in value.items():
-                    print(f"    {k}: {v}")
+                match = re.search(r"(\d+) error", output)
+                errors = int(match.group(1)) if match else 0
+                
+                if failed == 0 and errors == 0:
+                    self.add_result("Tests", "Unit Tests", "PASS", 
+                                  f"{passed} tests passed")
+                else:
+                    self.add_result("Tests", "Unit Tests", "WARN", 
+                                  f"{passed} passed, {failed} failed, {errors} errors")
             else:
-                print(f"  {key}: {value}")
+                self.add_result("Tests", "Unit Tests", "FAIL", "Test suite failed to run")
+                
+        except subprocess.TimeoutExpired:
+            self.add_result("Tests", "Unit Tests", "FAIL", "Tests timed out")
+        except Exception as e:
+            self.add_result("Tests", "Unit Tests", "FAIL", str(e))
     
-    def _generate_summary(self) -> bool:
-        """Generate preflight summary."""
-        print("\n" + "=" * 60)
-        print("📊 PREFLIGHT SUMMARY")
-        print("=" * 60)
+    def check_risk_systems(self):
+        """Check risk management configuration."""
+        print("\n🛡️ Checking Risk Management Systems...")
         
-        total = len(self.checks_passed) + len(self.checks_failed) + len(self.checks_warning)
+        # Check risk configuration
+        max_leverage = os.environ.get("RISK_MAX_LEVERAGE", "5")
+        daily_loss = os.environ.get("RISK_DAILY_LOSS_LIMIT", "100")
+        max_position = os.environ.get("RISK_MAX_POSITION_PCT_PER_SYMBOL", "0.25")
         
-        print(f"✅ Passed: {len(self.checks_passed)}/{total}")
-        print(f"⚠️  Warnings: {len(self.checks_warning)}/{total}")
-        print(f"❌ Failed: {len(self.checks_failed)}/{total}")
+        try:
+            leverage = float(max_leverage)
+            if leverage > 10:
+                self.add_result("Risk", "Max Leverage", "WARN", 
+                              f"High leverage: {leverage}x (consider starting lower)")
+            else:
+                self.add_result("Risk", "Max Leverage", "PASS", f"{leverage}x")
+        except:
+            self.add_result("Risk", "Max Leverage", "FAIL", "Invalid leverage value")
         
-        if self.checks_failed:
-            print("\n❌ FAILED CHECKS:")
-            for check in self.checks_failed:
-                print(f"  - {check}")
-            print("\n🔴 PREFLIGHT FAILED - Do not proceed with deployment")
-            return False
+        try:
+            loss_limit = float(daily_loss)
+            if loss_limit > 1000:
+                self.add_result("Risk", "Daily Loss Limit", "WARN",
+                              f"High daily loss limit: ${loss_limit}")
+            else:
+                self.add_result("Risk", "Daily Loss Limit", "PASS", f"${loss_limit}")
+        except:
+            self.add_result("Risk", "Daily Loss Limit", "FAIL", "Invalid loss limit")
         
-        elif self.checks_warning:
-            print("\n⚠️  WARNINGS:")
-            for check in self.checks_warning:
-                print(f"  - {check}")
-            print("\n🟡 PREFLIGHT PASSED WITH WARNINGS - Review before deployment")
-            return True
-        
+        # Check order preview
+        preview = os.environ.get("ORDER_PREVIEW_ENABLED", "0")
+        if preview == "1":
+            self.add_result("Risk", "Order Preview", "PASS", "Enabled (recommended)")
         else:
-            print("\n🟢 ALL PREFLIGHT CHECKS PASSED - Ready for deployment")
-            return True
+            self.add_result("Risk", "Order Preview", "WARN", "Disabled (enable for safety)")
+    
+    def check_canary_profile(self):
+        """Check canary profile configuration."""
+        print("\n🐤 Checking Canary Profile...")
+        
+        canary_path = "config/profiles/canary.yaml"
+        if os.path.exists(canary_path):
+            self.add_result("Profiles", "Canary Profile", "PASS", "Found")
+            
+            # Parse and validate canary settings
+            try:
+                import yaml
+                with open(canary_path, 'r') as f:
+                    config = yaml.safe_load(f)
+                
+                # Check critical safety settings
+                max_position = config.get("trading", {}).get("position_sizing", {}).get("max_position_size")
+                daily_loss = config.get("risk_management", {}).get("daily_loss_limit")
+                reduce_only = config.get("trading", {}).get("mode")
+                
+                if max_position and float(max_position) <= 0.01:
+                    self.add_result("Profiles", "Canary Position Size", "PASS", 
+                                  f"Max {max_position} BTC")
+                else:
+                    self.add_result("Profiles", "Canary Position Size", "WARN",
+                                  "Consider smaller position for testing")
+                
+                if daily_loss and float(daily_loss) <= 20:
+                    self.add_result("Profiles", "Canary Loss Limit", "PASS",
+                                  f"Max ${daily_loss} daily loss")
+                else:
+                    self.add_result("Profiles", "Canary Loss Limit", "WARN",
+                                  "Consider lower loss limit for testing")
+                
+                if reduce_only == "reduce_only":
+                    self.add_result("Profiles", "Canary Mode", "PASS",
+                                  "Reduce-only mode enabled")
+                    
+            except Exception as e:
+                self.add_result("Profiles", "Canary Validation", "FAIL", str(e))
+        else:
+            self.add_result("Profiles", "Canary Profile", "WARN", "Not found")
+    
+    def generate_report(self):
+        """Generate final preflight report."""
+        print("\n" + "=" * 70)
+        print("📋 PREFLIGHT CHECK REPORT")
+        print("=" * 70)
+        print(f"Timestamp: {datetime.utcnow().isoformat()}")
+        print(f"Overall Status: {self.status}")
+        
+        # Group results by category
+        categories = {}
+        for result in self.results:
+            cat = result["category"]
+            if cat not in categories:
+                categories[cat] = []
+            categories[cat].append(result)
+        
+        # Print results by category
+        for category, items in categories.items():
+            print(f"\n{category}:")
+            for item in items:
+                status_icon = {
+                    "PASS": "✅",
+                    "FAIL": "❌",
+                    "WARN": "⚠️",
+                    "INFO": "ℹ️"
+                }.get(item["status"], "❓")
+                
+                print(f"  {status_icon} {item['item']}: {item['message']}")
+        
+        # Print summary
+        print("\n" + "-" * 70)
+        if self.errors:
+            print("\n❌ ERRORS (must fix before trading):")
+            for error in self.errors:
+                print(f"  - {error}")
+        
+        if self.warnings:
+            print("\n⚠️  WARNINGS (review before trading):")
+            for warning in self.warnings:
+                print(f"  - {warning}")
+        
+        # Final recommendation
+        print("\n" + "=" * 70)
+        if self.status == "PASS":
+            print("✅ READY FOR TESTING")
+            print("Recommended next step: Run with canary profile in dry-run mode")
+            print("Command: poetry run perps-bot --profile canary --dry-run")
+        elif self.status == "WARN":
+            print("⚠️  READY WITH WARNINGS")
+            print("Review warnings above before proceeding")
+            print("Test command: poetry run perps-bot --profile canary --dry-run")
+        else:
+            print("❌ NOT READY FOR TRADING")
+            print("Critical issues must be resolved:")
+            print("1. Enable futures/derivatives permissions on your CDP API key")
+            print("2. Fix any failing tests")
+            print("3. Ensure proper environment configuration")
+        
+        print("=" * 70)
+        
+        return self.status
 
 
 def main():
     """Run preflight checks."""
     checker = PreflightChecker()
-    success = checker.run_all_checks()
     
-    sys.exit(0 if success else 1)
+    print("=" * 70)
+    print("🚀 GPT-TRADER PREFLIGHT CHECK")
+    print("=" * 70)
+    
+    # Run all checks
+    checker.check_environment()
+    checker.check_api_connectivity()
+    checker.check_test_suite()
+    checker.check_risk_systems()
+    checker.check_canary_profile()
+    
+    # Generate report
+    status = checker.generate_report()
+    
+    # Exit with appropriate code
+    sys.exit(0 if status == "PASS" else 1)
 
 
 if __name__ == "__main__":

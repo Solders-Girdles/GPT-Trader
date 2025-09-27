@@ -8,8 +8,13 @@ No external dependencies - all calculations local to this slice.
 import math
 from typing import Optional, List, Tuple
 import numpy as np
+import logging
 
+from ...errors import ValidationError, log_error
+from ...validation import PercentageValidator, RangeValidator
 from .types import ConfidenceAdjustment, RiskParameters
+
+logger = logging.getLogger(__name__)
 
 
 def confidence_adjusted_size(base_size: float, confidence: float,
@@ -28,8 +33,17 @@ def confidence_adjusted_size(base_size: float, confidence: float,
     Returns:
         Tuple of (adjusted_size, explanation)
     """
-    if confidence < 0 or confidence > 1:
-        return 0.0, f"Invalid confidence score: {confidence}"
+    try:
+        # Validate inputs
+        PercentageValidator(as_decimal=True)(confidence, "confidence")
+        RangeValidator(min_value=0.0)(base_size, "base_size")
+        
+        if not isinstance(adjustment, ConfidenceAdjustment):
+            raise ValidationError("Invalid adjustment parameters", field="adjustment")
+            
+    except ValidationError as e:
+        log_error(e)
+        return 0.0, f"Validation error: {e.message}"
         
     # Below minimum confidence threshold
     if confidence < adjustment.min_confidence:
@@ -266,23 +280,65 @@ def confidence_risk_budget(confidence: float, total_risk_budget: float) -> float
 
 def validate_confidence_inputs(confidence: float, adjustment: ConfidenceAdjustment) -> List[str]:
     """
-    Validate confidence adjustment inputs.
+    Validate confidence adjustment inputs using new validation framework.
     
     Returns:
         List of validation error messages (empty if valid)
     """
     errors = []
     
-    if not (0 <= confidence <= 1):
-        errors.append(f"Confidence must be between 0 and 1, got {confidence}")
+    try:
+        PercentageValidator(as_decimal=True)(confidence, "confidence")
+    except ValidationError as e:
+        errors.append(e.message)
+    
+    try:
+        RangeValidator(min_value=0.0, max_value=1.0, inclusive=False)(adjustment.min_confidence, "min_confidence")
+    except ValidationError as e:
+        errors.append(e.message)
         
-    if not (0 < adjustment.min_confidence < 1):
-        errors.append(f"Min confidence must be between 0 and 1, got {adjustment.min_confidence}")
-        
-    if adjustment.max_adjustment <= 0:
-        errors.append(f"Max adjustment must be positive, got {adjustment.max_adjustment}")
+    try:
+        RangeValidator(min_value=0.0, inclusive=False)(adjustment.max_adjustment, "max_adjustment")
+    except ValidationError as e:
+        errors.append(e.message)
         
     if adjustment.adjustment_curve not in ["linear", "exponential", "sigmoid"]:
         errors.append(f"Invalid adjustment curve: {adjustment.adjustment_curve}")
         
     return errors
+
+
+def safe_confidence_calculation(confidences: List[float], weights: Optional[List[float]] = None) -> float:
+    """
+    Safely combine confidence scores with input validation.
+    
+    Args:
+        confidences: List of confidence scores from different models
+        weights: Optional weights for each model
+        
+    Returns:
+        Combined confidence score (0-1)
+    """
+    try:
+        if not confidences:
+            return 0.0
+        
+        # Validate all confidence scores
+        for i, conf in enumerate(confidences):
+            PercentageValidator(as_decimal=True)(conf, f"confidence[{i}]")
+        
+        if weights is not None:
+            if len(weights) != len(confidences):
+                logger.warning("Weight count mismatch, using equal weights")
+                weights = None
+            else:
+                # Validate weights are positive
+                for i, weight in enumerate(weights):
+                    RangeValidator(min_value=0.0)(weight, f"weight[{i}]")
+        
+        return multi_model_confidence(confidences, weights)
+        
+    except ValidationError as e:
+        log_error(e)
+        logger.warning("Confidence calculation failed, using conservative default")
+        return 0.5  # Conservative default

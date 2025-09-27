@@ -7,14 +7,19 @@ No external dependencies - all logic local to this slice.
 
 from typing import Dict, List, Optional, Tuple
 import numpy as np
+import logging
 
+from ...errors import ValidationError, log_error
+from ...validation import RangeValidator, ChoiceValidator
 from .types import RegimeMultipliers, RiskParameters
+
+logger = logging.getLogger(__name__)
 
 
 def regime_adjusted_size(base_size: float, market_regime: str,
                         multipliers: RegimeMultipliers) -> Tuple[float, str]:
     """
-    Adjust position size based on current market regime.
+    Adjust position size based on current market regime with validation.
     
     Different market regimes require different position sizing approaches:
     - Bull markets: Can afford larger positions
@@ -28,16 +33,51 @@ def regime_adjusted_size(base_size: float, market_regime: str,
         
     Returns:
         Tuple of (adjusted_size, explanation)
-    """
-    if not market_regime:
-        return base_size, "No regime data available, using base size"
         
-    multiplier = multipliers.get_multiplier(market_regime)
-    adjusted_size = base_size * multiplier
-    
-    explanation = f"Regime '{market_regime}' → {multiplier:.2f}x multiplier"
-    
-    return adjusted_size, explanation
+    Raises:
+        ValidationError: If inputs are invalid
+    """
+    try:
+        # Validate inputs
+        RangeValidator(min_value=0.0)(base_size, "base_size")
+        
+        if not market_regime:
+            logger.warning("No regime data provided, using base size")
+            return base_size, "No regime data available, using base size"
+        
+        # Validate regime
+        valid_regimes = [
+            'bull_quiet', 'bull_volatile', 'bear_quiet', 'bear_volatile',
+            'sideways_quiet', 'sideways_volatile', 'crisis'
+        ]
+        ChoiceValidator(valid_regimes)(market_regime, "market_regime")
+        
+        if not multipliers:
+            raise ValidationError("Regime multipliers required", field="multipliers")
+        
+        # Get multiplier with validation
+        multiplier = multipliers.get_multiplier(market_regime)
+        
+        # Validate multiplier bounds
+        if multiplier < 0 or multiplier > 5.0:
+            logger.warning(f"Extreme multiplier {multiplier:.2f} for regime {market_regime}")
+            multiplier = max(0.1, min(3.0, multiplier))  # Clamp to reasonable bounds
+        
+        adjusted_size = base_size * multiplier
+        
+        # Ensure adjusted size doesn't become negative or extreme
+        adjusted_size = max(0.0, min(1.0, adjusted_size))
+        
+        explanation = f"Regime '{market_regime}' → {multiplier:.2f}x multiplier"
+        
+        return adjusted_size, explanation
+        
+    except ValidationError:
+        raise
+    except Exception as e:
+        error = ValidationError(f"Regime adjustment failed: {e}", field="regime_adjustment")
+        log_error(error)
+        raise error
 
 
 def dynamic_regime_multipliers(regime_history: List[Tuple[str, float]], 
@@ -305,7 +345,7 @@ def regime_volatility_scaling(regime: str, realized_volatility: float,
 
 def validate_regime_inputs(regime: str, multipliers: RegimeMultipliers) -> List[str]:
     """
-    Validate regime-based position sizing inputs.
+    Validate regime-based position sizing inputs using new validation framework.
     
     Returns:
         List of validation error messages (empty if valid)
@@ -317,10 +357,13 @@ def validate_regime_inputs(regime: str, multipliers: RegimeMultipliers) -> List[
         'sideways_quiet', 'sideways_volatile', 'crisis'
     ]
     
-    if regime and regime not in valid_regimes:
-        errors.append(f"Unknown regime: {regime}. Valid regimes: {valid_regimes}")
+    try:
+        if regime:  # Only validate if regime is provided
+            ChoiceValidator(valid_regimes)(regime, "regime")
+    except ValidationError as e:
+        errors.append(e.message)
         
-    # Check multiplier ranges
+    # Check multiplier ranges using validation framework
     multiplier_checks = [
         ('bull_quiet', multipliers.bull_quiet),
         ('bull_volatile', multipliers.bull_volatile),
@@ -332,7 +375,48 @@ def validate_regime_inputs(regime: str, multipliers: RegimeMultipliers) -> List[
     ]
     
     for regime_name, multiplier in multiplier_checks:
-        if multiplier < 0 or multiplier > 5.0:
-            errors.append(f"Multiplier for {regime_name} out of range [0, 5.0]: {multiplier}")
+        try:
+            RangeValidator(min_value=0.0, max_value=5.0)(multiplier, f"{regime_name}_multiplier")
+        except ValidationError as e:
+            errors.append(e.message)
             
     return errors
+
+
+def safe_regime_calculation(regime: str, base_multiplier: float, 
+                          confidence: float = 1.0) -> float:
+    """
+    Safely calculate regime multiplier with bounds checking.
+    
+    Args:
+        regime: Market regime identifier
+        base_multiplier: Base multiplier for the regime
+        confidence: Confidence in regime detection (0-1)
+        
+    Returns:
+        Safe regime multiplier
+    """
+    try:
+        # Validate inputs
+        valid_regimes = [
+            'bull_quiet', 'bull_volatile', 'bear_quiet', 'bear_volatile',
+            'sideways_quiet', 'sideways_volatile', 'crisis'
+        ]
+        
+        if regime not in valid_regimes:
+            logger.warning(f"Unknown regime {regime}, using neutral multiplier")
+            return 1.0
+        
+        RangeValidator(min_value=0.0, max_value=5.0)(base_multiplier, "base_multiplier")
+        RangeValidator(min_value=0.0, max_value=1.0)(confidence, "confidence")
+        
+        # Apply confidence adjustment
+        adjusted_multiplier = base_multiplier * confidence + (1.0 - confidence)
+        
+        # Apply safety bounds
+        return max(0.1, min(3.0, adjusted_multiplier))
+        
+    except ValidationError as e:
+        log_error(e)
+        logger.warning("Regime calculation failed, using conservative multiplier")
+        return 0.8  # Conservative default

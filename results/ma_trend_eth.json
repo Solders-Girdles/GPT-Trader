@@ -1,0 +1,74 @@
+[
+  {
+    "window": 5,
+    "min_slope": 0.0005,
+    "total_return": 0.6330409855566044,
+    "sharpe": 0.23032359593382082,
+    "drawdown": -0.21954332335055987,
+    "trades": 252
+  },
+  {
+    "window": 5,
+    "min_slope": 0.001,
+    "total_return": 0.6330409855566044,
+    "sharpe": 0.23032359593382082,
+    "drawdown": -0.21954332335055987,
+    "trades": 252
+  },
+  {
+    "window": 5,
+    "min_slope": 0.002,
+    "total_return": 0.6330409855566044,
+    "sharpe": 0.23032359593382082,
+    "drawdown": -0.21954332335055987,
+    "trades": 252
+  },
+  {
+    "window": 10,
+    "min_slope": 0.0005,
+    "total_return": 0.6680100377354647,
+    "sharpe": 0.2381547791262244,
+    "drawdown": -0.24931568505102034,
+    "trades": 282
+  },
+  {
+    "window": 10,
+    "min_slope": 0.001,
+    "total_return": 0.6680100377354647,
+    "sharpe": 0.2381547791262244,
+    "drawdown": -0.24931568505102034,
+    "trades": 282
+  },
+  {
+    "window": 10,
+    "min_slope": 0.002,
+    "total_return": 0.6519852445198295,
+    "sharpe": 0.23437277254601607,
+    "drawdown": -0.24811824760134202,
+    "trades": 282
+  },
+  {
+    "window": 20,
+    "min_slope": 0.0005,
+    "total_return": 0.6351702231734997,
+    "sharpe": 0.23107396081311662,
+    "drawdown": -0.2470614101186635,
+    "trades": 262
+  },
+  {
+    "window": 20,
+    "min_slope": 0.001,
+    "total_return": 0.6370600582633303,
+    "sharpe": 0.2315327205843612,
+    "drawdown": -0.24619120762425342,
+    "trades": 262
+  },
+  {
+    "window": 20,
+    "min_slope": 0.002,
+    "total_return": 0.6977821555765302,
+    "sharpe": 0.24547940994816275,
+    "drawdown": -0.241975339956032,
+    "trades": 258
+  }
+]

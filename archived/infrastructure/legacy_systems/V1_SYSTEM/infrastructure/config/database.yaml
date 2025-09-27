@@ -1,0 +1,83 @@
+# Database Configuration
+# Phase 2.5 - PostgreSQL Production Configuration
+
+database:
+  # Connection settings
+  host: ${DB_HOST:-localhost}
+  port: ${DB_PORT:-5432}
+  name: ${DB_NAME:-gpt_trader}
+  username: ${DB_USER:-trader}
+  password: ${DATABASE_PASSWORD}
+
+  # Connection pool settings
+  pool_size: 20              # Base pool size
+  max_overflow: 40           # Maximum overflow connections
+  pool_timeout: 30           # Timeout waiting for connection (seconds)
+  pool_recycle: 3600        # Recycle connections after 1 hour
+  pool_pre_ping: true       # Test connections before use
+
+  # Query settings
+  statement_timeout: 30000   # 30 seconds
+  lock_timeout: 10000       # 10 seconds
+
+  # Performance settings
+  enable_query_cache: true
+  query_cache_size: 1000
+
+  # Migration settings
+  auto_migrate: false
+  migration_dir: migrations/
+
+# Redis cache configuration
+redis:
+  host: ${REDIS_HOST:-localhost}
+  port: ${REDIS_PORT:-6379}
+  db: ${REDIS_DB:-0}
+  password: ${REDIS_PASSWORD:-}
+
+  # Cache settings
+  cache_ttl: 3600          # 1 hour default TTL
+  max_connections: 50
+
+  # Cache prefixes
+  prefixes:
+    features: "features:"
+    predictions: "predictions:"
+    models: "models:"
+    metrics: "metrics:"
+
+# Connection strings for different environments
+environments:
+  development:
+    database:
+      host: localhost
+      port: 5432
+      name: gpt_trader_dev
+      username: trader
+      password: ${DATABASE_PASSWORD}
+
+  testing:
+    database:
+      host: localhost
+      port: 5432
+      name: gpt_trader_test
+      username: trader
+      password: ${DATABASE_PASSWORD}
+      pool_size: 5
+      max_overflow: 10
+
+  production:
+    database:
+      host: ${PROD_DB_HOST}
+      port: ${PROD_DB_PORT:-5432}
+      name: ${PROD_DB_NAME}
+      username: ${PROD_DB_USER}
+      password: ${PROD_DB_PASSWORD}
+      pool_size: 50
+      max_overflow: 100
+
+# Monitoring
+monitoring:
+  slow_query_threshold: 1000  # Log queries slower than 1 second
+  enable_metrics: true
+  metrics_interval: 60        # Collect metrics every minute

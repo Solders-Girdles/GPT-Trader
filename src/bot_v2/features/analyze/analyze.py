@@ -6,9 +6,10 @@ Complete isolation - everything needed is local.
 
 from datetime import datetime, timedelta
 from typing import List, Dict, Optional
+import logging
 import pandas as pd
 import numpy as np
-import yfinance as yf
+from ...data_providers import get_data_provider
 
 from .types import (
     AnalysisResult, TechnicalIndicators, MarketRegime,
@@ -23,6 +24,9 @@ from .indicators import (
 )
 from .patterns import detect_patterns
 from .strategies import analyze_with_strategies
+
+
+logger = logging.getLogger(__name__)
 
 
 def analyze_symbol(
@@ -190,11 +194,11 @@ def compare_strategies(
 
 def fetch_data(symbol: str, lookback_days: int) -> pd.DataFrame:
     """Fetch historical data for analysis."""
-    end = datetime.now()
-    start = end - timedelta(days=lookback_days)
-    
-    ticker = yf.Ticker(symbol)
-    data = ticker.history(start=start, end=end)
+    provider = get_data_provider()
+    data = provider.get_historical_data(
+        symbol, 
+        period=f"{lookback_days}d"
+    )
     
     # Standardize columns
     data.columns = data.columns.str.lower()
@@ -401,18 +405,18 @@ def generate_recommendation(
 
 def calculate_correlations(symbols: List[str], lookback_days: int) -> pd.DataFrame:
     """Calculate correlation matrix for symbols."""
-    end = datetime.now()
-    start = end - timedelta(days=lookback_days)
-    
     prices = pd.DataFrame()
     for symbol in symbols:
         try:
-            ticker = yf.Ticker(symbol)
-            data = ticker.history(start=start, end=end)
+            provider = get_data_provider()
+            data = provider.get_historical_data(
+                symbol,
+                period=f"{lookback_days}d"
+            )
             if not data.empty:
                 prices[symbol] = data['Close']
-        except:
-            pass
+        except Exception as exc:
+            logger.warning("Failed to load historical data for %s: %s", symbol, exc, exc_info=True)
     
     if prices.empty:
         return pd.DataFrame()

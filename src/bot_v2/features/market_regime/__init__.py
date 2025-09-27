@@ -1,8 +1,8 @@
 """
 Market Regime Detection feature slice - intelligent market condition classification.
 
-Complete isolation - no external dependencies.
-Week 3 of Path B: Smart Money implementation.
+EXPERIMENTAL: Self-contained, uses synthetic/local data. Intended for
+experimentation and demos; not used by the perps production path.
 """
 
 from .market_regime import (
@@ -46,3 +46,6 @@ __all__ = [
     'RegimeHistory',
     'RegimeFeatures'
 ]
+
+# Marker used by tooling and documentation
+__experimental__ = True

@@ -1,0 +1,30 @@
+{
+  "timestamp": "2025-08-30T16:31:41.616006",
+  "checks": {
+    "connectivity": "PASS",
+    "BTC-PERP_capabilities": {
+      "limit": true,
+      "stop_limit": true,
+      "gtd_gated": true
+    },
+    "ETH-PERP_capabilities": {
+      "limit": true,
+      "stop_limit": true,
+      "gtd_gated": true
+    },
+    "SOL-PERP_capabilities": {
+      "limit": true,
+      "stop_limit": true,
+      "gtd_gated": true
+    },
+    "XRP-PERP_capabilities": {
+      "limit": true,
+      "stop_limit": true,
+      "gtd_gated": true
+    },
+    "margin_window": {
+      "current": "PRE_FUNDING",
+      "leverage": 4.0
+    }
+  }
+}

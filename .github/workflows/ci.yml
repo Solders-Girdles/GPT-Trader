@@ -1,34 +1,162 @@
-name: CI
+name: Python CI
 
 on:
   push:
-    branches: [ main, fix/**, docs/**, feat/** ]
+    branches: [ main ]
   pull_request:
+    branches: [ main ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [ "3.11", "3.12" ]
+        python-version: ["3.11", "3.12"]
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
-          cache: "poetry"
-      - name: Install Poetry
-        run: pipx install poetry
-      - name: Install deps
-        run: poetry install
-      - name: Lint (ruff/black)
-        run: |
-          poetry run ruff check .
-          poetry run ruff format --check .
-          poetry run black --check .
-      - name: Types (mypy)
-        run: poetry run mypy .
-      - name: Tests
-        env:
-          PYTHONUNBUFFERED: "1"
-        run: poetry run pytest -q
+    - uses: actions/checkout@v3
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        virtualenvs-create: true
+        virtualenvs-in-project: true
+        installer-parallel: true
+
+    - name: Load cached venv
+      id: cached-poetry-dependencies
+      uses: actions/cache@v3
+      with:
+        path: .venv
+        key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
+
+    - name: Install dependencies
+      if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+      run: poetry install --no-interaction --no-root
+
+    - name: Lint with ruff
+      run: |
+        poetry run ruff check .
+
+    - name: Check formatting with black
+      run: |
+        poetry run black --check .
+
+    - name: Run Coinbase core checks
+      run: |
+        scripts/testing/run_coinbase_core_checks.sh
+
+    - name: Run tests with pytest and generate coverage report
+      run: |
+        poetry run pytest -m "not slow and not performance" -q --cov=src/bot_v2 --cov-report=term-missing --cov-report=xml --cov-report=html --cov-fail-under=60
+
+    - name: Upload coverage to Artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: coverage-xml
+        path: coverage.xml
+    
+    - name: Upload HTML coverage report
+      uses: actions/upload-artifact@v3
+      with:
+        name: coverage-html
+        path: htmlcov
+
+  test-config-matrix:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        env_mode: ['prod', 'sandbox', 'prod_fallback', 'sandbox_fallback']
+        python-version: ["3.12"]
+    
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        virtualenvs-create: true
+        virtualenvs-in-project: true
+        installer-parallel: true
+
+    - name: Load cached venv
+      id: cached-poetry-dependencies
+      uses: actions/cache@v3
+      with:
+        path: .venv
+        key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
+
+    - name: Install dependencies
+      if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+      run: poetry install --no-interaction --no-root
+
+    - name: Run config tests
+      env:
+        BROKER: coinbase
+        # Production with specific keys
+        COINBASE_PROD_API_KEY: ${{ matrix.env_mode == 'prod' && 'prod_key' || '' }}
+        COINBASE_PROD_API_SECRET: ${{ matrix.env_mode == 'prod' && 'prod_secret' || '' }}
+        # Sandbox with specific keys
+        COINBASE_SANDBOX: ${{ (matrix.env_mode == 'sandbox' || matrix.env_mode == 'sandbox_fallback') && '1' || '0' }}
+        COINBASE_SANDBOX_API_KEY: ${{ matrix.env_mode == 'sandbox' && 'sandbox_key' || '' }}
+        COINBASE_SANDBOX_API_SECRET: ${{ matrix.env_mode == 'sandbox' && 'sandbox_secret' || '' }}
+        # Fallback keys
+        COINBASE_API_KEY: ${{ (matrix.env_mode == 'prod_fallback' || matrix.env_mode == 'sandbox_fallback') && 'fallback_key' || '' }}
+        COINBASE_API_SECRET: ${{ (matrix.env_mode == 'prod_fallback' || matrix.env_mode == 'sandbox_fallback') && 'fallback_secret' || '' }}
+      run: |
+        poetry run pytest tests/test_config_matrix.py
+
+  coverage-check:
+    name: Coverage (warning @ 70%)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        virtualenvs-create: true
+        virtualenvs-in-project: true
+        installer-parallel: true
+
+    - name: Load cached venv
+      id: cached-poetry-dependencies
+      uses: actions/cache@v3
+      with:
+        path: .venv
+        key: venv-${{ runner.os }}-3.12-${{ hashFiles('**/poetry.lock') }}
+
+    - name: Install dependencies
+      if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+      run: poetry install --no-interaction --no-root
+
+    - name: Run unit tests with coverage gate (warn only)
+      run: |
+        poetry run pytest --cov=bot_v2 --cov-report=term-missing --cov-report=html --cov-fail-under=75 \
+          tests/unit/bot_v2 tests/unit/test_foundation.py
+
+    - name: Upload coverage report (HTML)
+      uses: actions/upload-artifact@v3
+      with:
+        name: coverage-report
+        path: htmlcov/

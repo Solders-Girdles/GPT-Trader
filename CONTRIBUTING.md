@@ -1,460 +1,176 @@
 # Contributing to GPT-Trader
 
-Thank you for your interest in contributing to GPT-Trader! This guide will help you understand our development process, code standards, and how to submit contributions.
+We use a set of automated tools to ensure code quality and consistency. Please follow these steps for your development environment to ensure your contributions pass our automated checks.
 
-## Table of Contents
-- [Code of Conduct](#code-of-conduct)
-- [Getting Started](#getting-started)
-- [Development Setup](#development-setup)
-- [Code Style Guide](#code-style-guide)
-- [Commit Guidelines](#commit-guidelines)
-- [Pull Request Process](#pull-request-process)
-- [Testing Guidelines](#testing-guidelines)
-- [Documentation Standards](#documentation-standards)
-- [Security Guidelines](#security-guidelines)
+## One-Time Setup
 
-## Code of Conduct
+### 1. Install `pre-commit`
 
-We are committed to providing a welcoming and inclusive environment. Please:
-- Be respectful and considerate
-- Welcome newcomers and help them get started
-- Focus on constructive criticism
-- Report any unacceptable behavior to the maintainers
+We use `pre-commit` to run checks before you commit your code. This helps catch issues early. You can install it using `pipx` (recommended) or `pip`.
 
-## Getting Started
-
-1. **Fork the Repository**: Create your own fork of the GPT-Trader repository
-2. **Clone Your Fork**: `git clone https://github.com/your-username/GPT-Trader.git`
-3. **Add Upstream Remote**: `git remote add upstream https://github.com/original/GPT-Trader.git`
-4. **Create a Branch**: `git checkout -b feature/your-feature-name`
-
-## Development Setup
-
-### Prerequisites
-- Python 3.12+
-- Poetry for dependency management
-- Pre-commit hooks installed
-
-### Installation
+**With `pipx` (Recommended):**
 ```bash
-# Install Poetry
-curl -sSL https://install.python-poetry.org | python3 -
-
-# Install dependencies
-poetry install
-
-# Install pre-commit hooks
-poetry run pre-commit install
-
-# Verify installation
-poetry run gpt-trader --version
+pipx install pre-commit
 ```
 
-### Environment Configuration
+**With `pip`:**
 ```bash
-# Copy environment template
-cp .env.template .env
-
-# Edit with your configuration
-nano .env
+pip install pre-commit
 ```
 
-## Code Style Guide
+### 2. Install the Git Hooks
 
-### Python Code Standards
+After installing `pre-commit`, you need to install the hooks into your local git repository.
 
-We use automated tools to enforce consistent code style:
-- **Black**: Code formatting (line length: 100)
-- **Ruff**: Linting and import sorting
-- **MyPy**: Type checking
-
-### Style Principles
-
-#### 1. Formatting
-```python
-# Line length: 100 characters max
-# Use Black formatter - it's non-negotiable
-
-# Good: Black will format this automatically
-def calculate_portfolio_return(
-    prices: pd.DataFrame,
-    weights: np.ndarray,
-    start_date: datetime,
-    end_date: datetime,
-) -> float:
-    """Calculate portfolio return for given period."""
-    pass
-```
-
-#### 2. Imports
-```python
-# Order: standard library, third-party, local
-# Ruff will sort these automatically
-
-# Standard library
-import os
-from datetime import datetime
-from typing import Optional, List, Dict
-
-# Third-party
-import numpy as np
-import pandas as pd
-from pydantic import BaseModel
-
-# Local imports
-from bot.core import Strategy
-from bot.utils import calculate_sharpe
-```
-
-#### 3. Type Annotations
-```python
-# Always use type hints for function signatures
-def process_data(
-    data: pd.DataFrame,
-    symbol: str,
-    lookback: int = 20,
-) -> tuple[pd.Series, float]:
-    """Process market data and return signals."""
-    pass
-
-# Use Optional for nullable types
-def find_strategy(name: str) -> Optional[Strategy]:
-    """Find strategy by name."""
-    pass
-```
-
-#### 4. Docstrings
-```python
-def optimize_portfolio(
-    returns: pd.DataFrame,
-    constraints: Dict[str, float],
-    method: str = "mean-variance",
-) -> np.ndarray:
-    """
-    Optimize portfolio allocation using specified method.
-
-    Args:
-        returns: DataFrame of asset returns with assets as columns
-        constraints: Dictionary of portfolio constraints
-            - 'min_weight': Minimum weight per asset (default: 0.0)
-            - 'max_weight': Maximum weight per asset (default: 1.0)
-            - 'target_return': Target portfolio return (optional)
-        method: Optimization method to use
-            - 'mean-variance': Markowitz optimization
-            - 'risk-parity': Equal risk contribution
-            - 'equal-weight': Simple equal weighting
-
-    Returns:
-        Array of optimal portfolio weights
-
-    Raises:
-        ValueError: If constraints are invalid or infeasible
-        OptimizationError: If optimization fails to converge
-
-    Examples:
-        >>> returns = pd.DataFrame(...)
-        >>> weights = optimize_portfolio(
-        ...     returns,
-        ...     {'min_weight': 0.05, 'max_weight': 0.40}
-        ... )
-        >>> assert np.isclose(weights.sum(), 1.0)
-    """
-    pass
-```
-
-#### 5. Error Handling
-```python
-# Use specific exceptions with context
-from bot.core.exceptions import DataException, ValidationException
-
-def validate_price(price: float, symbol: str) -> float:
-    """Validate price data."""
-    if price <= 0:
-        raise ValidationException(
-            f"Invalid price for {symbol}: {price}",
-            field="price",
-            value=price,
-        )
-    return price
-
-# Always use exception chaining
-try:
-    data = load_data(filepath)
-except IOError as e:
-    raise DataException(f"Failed to load data from {filepath}") from e
-```
-
-#### 6. Constants and Configuration
-```python
-# Use UPPER_CASE for module-level constants
-DEFAULT_LOOKBACK_PERIOD = 20
-MAX_POSITION_SIZE = 100000
-RISK_FREE_RATE = 0.02
-
-# Use Enums for fixed choices
-from enum import Enum
-
-class OrderType(Enum):
-    MARKET = "market"
-    LIMIT = "limit"
-    STOP = "stop"
-```
-
-#### 7. Class Design
-```python
-class Strategy(ABC):
-    """Base strategy class."""
-
-    def __init__(self, config: StrategyConfig) -> None:
-        """Initialize strategy with configuration."""
-        self.config = config
-        self._is_initialized = False
-
-    @property
-    def name(self) -> str:
-        """Get strategy name."""
-        return self.config.name
-
-    @abstractmethod
-    def generate_signals(self, data: pd.DataFrame) -> pd.Series:
-        """Generate trading signals from data."""
-        pass
-
-    def _validate_data(self, data: pd.DataFrame) -> None:
-        """Validate input data (private method)."""
-        pass
-```
-
-### Security Standards
-
-#### Never Do This:
-```python
-# NEVER hardcode secrets
-API_KEY = "sk-1234567890abcdef"  # WRONG!
-
-# NEVER use pickle for serialization
-import pickle  # WRONG!
-pickle.dump(data, file)
-
-# NEVER build SQL queries with string formatting
-query = f"SELECT * FROM {table}"  # WRONG!
-
-# NEVER accept unvalidated user input
-symbol = request.args.get('symbol')  # WRONG!
-execute_trade(symbol)
-```
-
-#### Always Do This:
-```python
-# Use environment variables for secrets
-import os
-API_KEY = os.environ.get("API_KEY")
-
-# Use joblib for serialization
-import joblib
-joblib.dump(data, file)
-
-# Use parameterized queries or whitelisting
-ALLOWED_TABLES = ["trades", "positions"]
-if table in ALLOWED_TABLES:
-    query = f"SELECT * FROM {table}"
-
-# Validate all user input
-from bot.security.input_validation import validate_trading_symbol
-symbol = validate_trading_symbol(request.args.get('symbol'))
-```
-
-## Commit Guidelines
-
-### Commit Message Format
-```
-<type>(<scope>): <subject>
-
-<body>
-
-<footer>
-```
-
-### Types
-- **feat**: New feature
-- **fix**: Bug fix
-- **docs**: Documentation changes
-- **style**: Code style changes (formatting, etc.)
-- **refactor**: Code refactoring
-- **perf**: Performance improvements
-- **test**: Test additions or fixes
-- **chore**: Build process or auxiliary tool changes
-- **security**: Security improvements
-
-### Examples
 ```bash
-# Feature
-git commit -m "feat(strategy): add momentum trading strategy"
-
-# Bug fix
-git commit -m "fix(backtest): correct position sizing calculation"
-
-# Documentation
-git commit -m "docs(api): update REST API documentation"
-
-# Security fix
-git commit -m "security(auth): implement rate limiting for login attempts"
+pre-commit install
 ```
 
-## Pull Request Process
+That's it! Now, every time you run `git commit`, the pre-commit hooks will run automatically. If they find any issues (like formatting errors), they may fix the files and abort the commit. In that case, just `git add` the modified files and run `git commit` again.
 
-### Before Submitting
+## Testing Requirements
 
-1. **Update from upstream**:
+### Current Standards
+- **Active Code**: Must maintain 100% test pass rate
+- **New Features**: Must include comprehensive tests  
+- **Legacy Code**: Properly skip with documented reasons
+
+### Running Tests Locally
+
+Before submitting a pull request, ensure all active tests pass:
+
 ```bash
-git fetch upstream
-git rebase upstream/main
+# Run active tests only (MUST be 100% pass)
+poetry run pytest tests/unit/bot_v2 tests/unit/test_foundation.py -q
+
+# Run with coverage report
+poetry run pytest --cov=bot_v2 --cov-report=term-missing
+
+# Run specific component tests
+poetry run pytest tests/unit/bot_v2/features/live_trade/ -v
+
+# Coinbase brokerage smoke (lint + mypy + unit tests)
+scripts/testing/run_coinbase_core_checks.sh
+
+# Full suite including legacy (69% overall is expected)
+poetry run pytest -q
 ```
 
-2. **Run quality checks**:
+### Test Metrics (December 2024)
+- **Active Tests**: 220 tests - 100% pass rate ✅
+- **Coverage Goal**: >90% on new code
+- **Integration Tests**: Required for exchange interactions
+
+## Running the Bot Locally
+
+To run the perpetuals trading bot for development, use the `perps-bot` command:
+
 ```bash
-# Format code
-poetry run black src/
-
-# Run linting
-poetry run ruff check src/ --fix
-
-# Type checking
-poetry run mypy src/
-
-# Run tests
-poetry run pytest
-
-# Run pre-commit hooks
-poetry run pre-commit run --all-files
+poetry run perps-bot --profile dev --dev-fast
 ```
 
-3. **Update documentation** if needed
+## Development Workflow
 
-### PR Guidelines
+1. **Fork** the repository
+2. **Create a feature branch** (`git checkout -b feature/amazing-feature`)
+3. **Write tests** for your changes
+   - Unit tests required for all new functions
+   - Integration tests for API interactions
+   - Must maintain 100% pass rate on active tests
+4. **Run the test suite** to ensure nothing is broken
+   - `poetry run pytest tests/unit/bot_v2 -q` must pass
+   - No new test failures allowed
+5. **Follow repository organization standards**
+   - Place files in correct directories (see Repository Organization below)
+   - Update documentation using consolidated structure
+   - Add new documentation to appropriate `/docs` subdirectories
+6. **Commit your changes** (`git commit -m 'Add amazing feature'`)
+7. **Push to your fork** (`git push origin feature/amazing-feature`)
+8. **Open a Pull Request**
 
-1. **Title**: Use the same format as commit messages
-2. **Description**: Clearly describe:
-   - What changes were made
-   - Why they were necessary
-   - Any breaking changes
-   - Related issues
+## Quality Standards
 
-3. **Testing**: Include:
-   - Unit tests for new features
-   - Integration tests if applicable
-   - Performance benchmarks for optimizations
+### Code Quality
+- Clean, readable code with meaningful variable names
+- Comprehensive docstrings for public functions
+- Type hints where beneficial
+- Maximum line length: 100 characters
 
-### PR Template
-```markdown
-## Description
-Brief description of changes
+### Test Quality
+- Descriptive test names that explain what's being tested
+- One assertion per test when possible
+- Use fixtures for shared setup
+- Mock external dependencies
 
-## Type of Change
-- [ ] Bug fix
-- [ ] New feature
-- [ ] Breaking change
-- [ ] Documentation update
+## Repository Organization
 
-## Testing
-- [ ] Unit tests pass
-- [ ] Integration tests pass
-- [ ] Manual testing completed
+### Directory Structure Standards
 
-## Checklist
-- [ ] Code follows style guidelines
-- [ ] Self-review completed
-- [ ] Documentation updated
-- [ ] No security vulnerabilities introduced
-```
+The repository follows a standardized organization optimized for both human developers and AI agents:
 
-## Testing Guidelines
+#### Source Code & Configuration
+- `/src/bot_v2/` - Active trading system (vertical slice architecture)
+- `/tests/` - Test files organized by component
+- `/config/` - Configuration files, trading profiles, and templates  
+- `/scripts/` - Utility scripts organized in 11 categories:
+  - `core/` - Essential operational scripts (7 files)
+  - `testing/` - Test runners and validation (20 files)
+  - `validation/` - System validation scripts (21 files)
+  - `monitoring/` - Monitoring and dashboards (10 files)
+  - `utils/` - General utilities (27 files)
 
-### Test Structure
-```python
-# tests/unit/test_strategy.py
-import pytest
-from bot.strategy import MomentumStrategy
+#### Documentation Standards
+- `/docs/guides/` - How-to guides and tutorials
+- `/docs/reference/` - Technical reference documentation
+- `/docs/ops/` - Operations and maintenance procedures
+- `/docs/ARCHIVE/` - Historical documentation (read-only)
 
-class TestMomentumStrategy:
-    """Test momentum strategy implementation."""
+#### Archive Management
+- `/archived/2025/` - Current year development artifacts
+- `/archived/experiments/` - Research and exploration work
+- `/archived/infrastructure/` - Legacy system architectures
+- `/archived/HISTORICAL/` - Long-term preserved data
 
-    @pytest.fixture
-    def strategy(self):
-        """Create strategy instance."""
-        return MomentumStrategy(lookback=20)
+### File Placement Guidelines
 
-    def test_signal_generation(self, strategy, sample_data):
-        """Test signal generation logic."""
-        signals = strategy.generate_signals(sample_data)
-        assert len(signals) == len(sample_data)
-        assert signals.isin([-1, 0, 1]).all()
+#### New Documentation
+- **Tutorials/Guides**: `/docs/guides/`
+- **API Reference**: `/docs/reference/`  
+- **Operations**: `/docs/ops/`
+- **Never**: Root directory or legacy locations
 
-    @pytest.mark.parametrize("lookback", [10, 20, 50])
-    def test_different_lookbacks(self, lookback, sample_data):
-        """Test strategy with different lookback periods."""
-        strategy = MomentumStrategy(lookback=lookback)
-        signals = strategy.generate_signals(sample_data)
-        assert signals is not None
-```
+#### New Scripts  
+- **Core Operations**: `/scripts/core/`
+- **Testing/Validation**: `/scripts/testing/` or `/scripts/validation/`
+- **Monitoring**: `/scripts/monitoring/`
+- **General Utilities**: `/scripts/utils/`
 
-### Coverage Requirements
-- Minimum 80% coverage for new code
-- Critical paths must have 100% coverage
-- Use `pytest-cov` to measure coverage
+#### Deprecated Content
+- Move to appropriate `/archived/` subdirectory
+- Create redirect stub if high-traffic
+- Update all internal references
 
-## Documentation Standards
+### Naming Conventions
+- **Documentation**: `category_topic.md` (lowercase, underscores)
+- **Scripts**: `action_target.py` (clear purpose indication)
+- **Directories**: `lowercase_names/` (descriptive, single purpose)
 
-### Code Documentation
-- All public functions must have docstrings
-- Complex algorithms should have inline comments
-- Use type hints consistently
+### Link Maintenance
+- All documentation links must be functional
+- Use relative paths within repository  
+- Update references when moving files
+- Test links before submitting PRs
 
-### User Documentation
-- Update README.md for significant features
-- Add examples to `examples/` directory
-- Update API documentation if endpoints change
+### Documentation Quality
+- Keep README.md updated with current state
+- Document breaking changes
+- Include examples for complex features
+- Update CLAUDE.md for AI context
 
-### Architecture Documentation
-- Update `docs/ARCHITECTURE.md` for structural changes
-- Document design decisions in `docs/decisions/`
-- Keep dependency documentation current
+## Pre-commit Hook Configuration
 
-## Security Guidelines
-
-### Security Checklist
-- [ ] No hardcoded secrets
-- [ ] Input validation implemented
-- [ ] SQL injection prevention
-- [ ] XSS prevention (if applicable)
-- [ ] Rate limiting considered
-- [ ] Error messages don't leak sensitive info
-- [ ] Dependencies are up-to-date
-
-### Reporting Security Issues
-**DO NOT** create public issues for security vulnerabilities. Instead:
-1. Email security@gpt-trader.com
-2. Include detailed description
-3. Wait for response before disclosure
-
-## Getting Help
-
-### Resources
-- [Documentation](docs/)
-- [API Reference](docs/api/)
-- [Examples](examples/)
-- [Issue Tracker](https://github.com/GPT-Trader/issues)
-
-### Communication Channels
-- GitHub Issues: Bug reports and feature requests
-- Discussions: General questions and ideas
-- Email: dev@gpt-trader.com
-
-## Recognition
-
-Contributors will be recognized in:
-- CONTRIBUTORS.md file
-- Release notes
-- Project documentation
-
-Thank you for contributing to GPT-Trader! 🚀
+Our pre-commit hooks enforce:
+- **Black**: Code formatting (line length 100)
+- **Ruff**: Fast Python linting
+- **MyPy**: Type checking (optional types)
+- **Poetry Check**: Dependency validation

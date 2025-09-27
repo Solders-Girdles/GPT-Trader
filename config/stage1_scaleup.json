@@ -1,0 +1,53 @@
+{
+  "stage": "stage1_scaleup",
+  "timestamp": "2025-08-30T19:55:00Z",
+  "git_commit": "c261b6001e4ff4085b45a7c641dfa866fca270c7",
+  "requirements_hash": "f30c2e482c0366fe3b5f76587a75ca21ed7d4135002c9977ff3a6f4fbeb7aae3",
+  
+  "symbols": {
+    "BTC-PERP": {
+      "enabled": true,
+      "size": "0.0001",
+      "min_notional": 5.0
+    },
+    "ETH-PERP": {
+      "enabled": true,
+      "size": "0.0001", 
+      "min_notional": 5.0
+    }
+  },
+  
+  "filters": {
+    "spread_filter_bps": 18,
+    "depth_requirement": 50000,
+    "max_impact_bps": 12,
+    "rsi_confirmation": true,
+    "volatility_filter": "CONSERVATIVE"
+  },
+  
+  "sizing": {
+    "mode": "CONSERVATIVE",
+    "max_position_size": "0.0001",
+    "daily_loss_limit": 50
+  },
+  
+  "time_in_force": {
+    "allowed": ["GTC", "IOC"],
+    "gated": ["GTD"]
+  },
+  
+  "safety": {
+    "pre_funding_quiet_minutes": 30,
+    "kill_switch_enabled": true,
+    "max_daily_loss": 50
+  },
+  
+  "targets": {
+    "effective_acceptance": 90,
+    "latency_p50_ms": 200,
+    "latency_p95_ms": 500,
+    "ws_reconnects_per_30m": 3,
+    "ws_staleness_per_hour": 3
+  }
+}
+

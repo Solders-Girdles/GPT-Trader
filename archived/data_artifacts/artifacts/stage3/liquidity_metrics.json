@@ -1,0 +1,1442 @@
+[
+  {
+    "timestamp": "2025-08-30T16:31:41.616942",
+    "symbol": "BTC-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:31:41.616944",
+    "symbol": "ETH-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:31:41.616945",
+    "symbol": "SOL-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:31:41.616946",
+    "symbol": "XRP-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:32:41.617600",
+    "symbol": "BTC-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:32:41.617602",
+    "symbol": "ETH-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:32:41.617603",
+    "symbol": "SOL-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:32:41.617604",
+    "symbol": "XRP-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:33:41.618212",
+    "symbol": "BTC-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:33:41.618214",
+    "symbol": "ETH-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:33:41.618215",
+    "symbol": "SOL-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:33:41.618217",
+    "symbol": "XRP-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:34:41.618832",
+    "symbol": "BTC-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:34:41.618834",
+    "symbol": "ETH-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:34:41.618835",
+    "symbol": "SOL-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:34:41.618836",
+    "symbol": "XRP-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:35:41.619445",
+    "symbol": "BTC-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:35:41.619446",
+    "symbol": "ETH-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:35:41.619448",
+    "symbol": "SOL-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:35:41.619449",
+    "symbol": "XRP-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:36:41.619269",
+    "symbol": "BTC-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:36:41.619271",
+    "symbol": "ETH-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:36:41.619272",
+    "symbol": "SOL-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:36:41.619273",
+    "symbol": "XRP-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:37:41.620073",
+    "symbol": "BTC-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:37:41.620076",
+    "symbol": "ETH-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:37:41.620077",
+    "symbol": "SOL-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:37:41.620078",
+    "symbol": "XRP-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:38:41.621508",
+    "symbol": "BTC-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:38:41.621510",
+    "symbol": "ETH-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:38:41.621511",
+    "symbol": "SOL-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:38:41.621512",
+    "symbol": "XRP-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:39:41.622145",
+    "symbol": "BTC-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:39:41.622147",
+    "symbol": "ETH-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:39:41.622148",
+    "symbol": "SOL-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:39:41.622149",
+    "symbol": "XRP-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:40:41.622804",
+    "symbol": "BTC-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:40:41.622809",
+    "symbol": "ETH-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:40:41.622810",
+    "symbol": "SOL-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:40:41.622811",
+    "symbol": "XRP-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:41:41.623202",
+    "symbol": "BTC-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:41:41.623204",
+    "symbol": "ETH-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:41:41.623205",
+    "symbol": "SOL-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:41:41.623206",
+    "symbol": "XRP-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:42:41.630735",
+    "symbol": "BTC-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:42:41.630737",
+    "symbol": "ETH-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:42:41.630738",
+    "symbol": "SOL-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:42:41.630739",
+    "symbol": "XRP-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:43:41.631873",
+    "symbol": "BTC-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:43:41.631874",
+    "symbol": "ETH-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:43:41.631875",
+    "symbol": "SOL-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:43:41.631877",
+    "symbol": "XRP-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:44:41.632624",
+    "symbol": "BTC-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:44:41.632626",
+    "symbol": "ETH-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:44:41.632627",
+    "symbol": "SOL-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:44:41.632628",
+    "symbol": "XRP-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:45:41.633384",
+    "symbol": "BTC-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:45:41.633386",
+    "symbol": "ETH-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:45:41.633388",
+    "symbol": "SOL-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:45:41.633389",
+    "symbol": "XRP-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:46:41.634015",
+    "symbol": "BTC-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:46:41.634017",
+    "symbol": "ETH-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:46:41.634018",
+    "symbol": "SOL-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:46:41.634019",
+    "symbol": "XRP-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:47:41.634750",
+    "symbol": "BTC-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:47:41.634752",
+    "symbol": "ETH-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:47:41.634753",
+    "symbol": "SOL-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:47:41.634754",
+    "symbol": "XRP-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:48:41.635496",
+    "symbol": "BTC-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:48:41.635498",
+    "symbol": "ETH-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:48:41.635499",
+    "symbol": "SOL-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:48:41.635500",
+    "symbol": "XRP-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:49:41.636265",
+    "symbol": "BTC-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:49:41.636267",
+    "symbol": "ETH-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:49:41.636268",
+    "symbol": "SOL-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:49:41.636269",
+    "symbol": "XRP-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:50:41.637006",
+    "symbol": "BTC-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:50:41.637009",
+    "symbol": "ETH-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:50:41.637010",
+    "symbol": "SOL-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:50:41.637011",
+    "symbol": "XRP-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:51:41.637693",
+    "symbol": "BTC-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:51:41.637695",
+    "symbol": "ETH-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:51:41.637696",
+    "symbol": "SOL-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:51:41.637697",
+    "symbol": "XRP-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:52:41.638446",
+    "symbol": "BTC-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:52:41.638448",
+    "symbol": "ETH-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:52:41.638449",
+    "symbol": "SOL-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:52:41.638450",
+    "symbol": "XRP-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:53:41.640185",
+    "symbol": "BTC-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:53:41.640187",
+    "symbol": "ETH-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:53:41.640188",
+    "symbol": "SOL-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:53:41.640189",
+    "symbol": "XRP-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:54:41.642771",
+    "symbol": "BTC-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:54:41.642775",
+    "symbol": "ETH-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:54:41.642776",
+    "symbol": "SOL-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:54:41.642777",
+    "symbol": "XRP-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:55:41.643538",
+    "symbol": "BTC-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:55:41.643540",
+    "symbol": "ETH-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:55:41.643541",
+    "symbol": "SOL-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:55:41.643542",
+    "symbol": "XRP-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:56:41.644207",
+    "symbol": "BTC-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:56:41.644209",
+    "symbol": "ETH-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:56:41.644210",
+    "symbol": "SOL-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:56:41.644211",
+    "symbol": "XRP-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:57:41.644998",
+    "symbol": "BTC-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:57:41.645000",
+    "symbol": "ETH-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:57:41.645002",
+    "symbol": "SOL-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:57:41.645003",
+    "symbol": "XRP-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:58:41.645739",
+    "symbol": "BTC-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:58:41.645752",
+    "symbol": "ETH-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:58:41.645754",
+    "symbol": "SOL-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:58:41.645755",
+    "symbol": "XRP-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:59:41.646502",
+    "symbol": "BTC-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:59:41.646504",
+    "symbol": "ETH-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:59:41.646505",
+    "symbol": "SOL-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T16:59:41.646506",
+    "symbol": "XRP-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T17:00:41.648251",
+    "symbol": "BTC-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T17:00:41.648253",
+    "symbol": "ETH-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T17:00:41.648254",
+    "symbol": "SOL-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T17:00:41.648255",
+    "symbol": "XRP-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T17:01:41.649963",
+    "symbol": "BTC-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T17:01:41.649965",
+    "symbol": "ETH-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T17:01:41.649966",
+    "symbol": "SOL-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T17:01:41.649967",
+    "symbol": "XRP-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T17:02:41.651729",
+    "symbol": "BTC-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T17:02:41.651731",
+    "symbol": "ETH-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T17:02:41.651732",
+    "symbol": "SOL-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T17:02:41.651733",
+    "symbol": "XRP-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T17:03:41.653514",
+    "symbol": "BTC-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T17:03:41.653517",
+    "symbol": "ETH-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T17:03:41.653518",
+    "symbol": "SOL-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T17:03:41.653519",
+    "symbol": "XRP-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T17:04:41.655270",
+    "symbol": "BTC-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T17:04:41.655272",
+    "symbol": "ETH-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T17:04:41.655274",
+    "symbol": "SOL-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T17:04:41.655275",
+    "symbol": "XRP-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T17:05:41.656023",
+    "symbol": "BTC-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T17:05:41.656025",
+    "symbol": "ETH-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T17:05:41.656026",
+    "symbol": "SOL-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T17:05:41.656027",
+    "symbol": "XRP-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T17:06:41.656717",
+    "symbol": "BTC-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T17:06:41.656719",
+    "symbol": "ETH-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T17:06:41.656720",
+    "symbol": "SOL-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T17:06:41.656721",
+    "symbol": "XRP-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T17:07:41.657451",
+    "symbol": "BTC-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T17:07:41.657453",
+    "symbol": "ETH-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T17:07:41.657454",
+    "symbol": "SOL-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T17:07:41.657455",
+    "symbol": "XRP-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T17:08:41.658192",
+    "symbol": "BTC-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T17:08:41.658194",
+    "symbol": "ETH-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T17:08:41.658196",
+    "symbol": "SOL-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T17:08:41.658197",
+    "symbol": "XRP-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T17:09:41.658944",
+    "symbol": "BTC-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T17:09:41.658946",
+    "symbol": "ETH-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T17:09:41.658947",
+    "symbol": "SOL-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T17:09:41.658948",
+    "symbol": "XRP-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T17:10:41.659714",
+    "symbol": "BTC-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T17:10:41.659716",
+    "symbol": "ETH-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T17:10:41.659717",
+    "symbol": "SOL-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  },
+  {
+    "timestamp": "2025-08-30T17:10:41.659718",
+    "symbol": "XRP-PERP",
+    "spread_bps": 2.0,
+    "depth_usd_1pct": 100000,
+    "depth_usd_5pct": 500000,
+    "condition": "good",
+    "liquidity_score": 85
+  }
+]

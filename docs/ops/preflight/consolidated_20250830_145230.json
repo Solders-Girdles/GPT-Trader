@@ -1,0 +1,100 @@
+{
+  "version": "2.0.0",
+  "timestamp": "2025-08-30T21:52:31.136969Z",
+  "environment": "demo",
+  "sandbox": false,
+  "system": {
+    "user": "rj",
+    "host": "MacBook-Pro.local",
+    "platform": "Darwin",
+    "python_version": "3.12.4"
+  },
+  "network": {
+    "egress_ip": "2a09:bac3:5fef:27e1::3f9:2d",
+    "proxy": "none",
+    "no_proxy": "not_set"
+  },
+  "security": {
+    "key_file": {
+      "path": "/Users/rj/.coinbase/keys/cdp_private_key.pem",
+      "owner": "rj",
+      "permissions": "400",
+      "size_bytes": 30
+    },
+    "key_directory": {
+      "path": "/Users/rj/.coinbase/keys",
+      "owner": "rj",
+      "permissions": "700"
+    },
+    "runtime_user": "rj"
+  },
+  "capabilities": {
+    "order_types": [
+      "market",
+      "limit",
+      "stop",
+      "stop_limit"
+    ],
+    "time_in_force": [
+      "GTC",
+      "IOC",
+      "GTD"
+    ],
+    "special_flags": [
+      "reduce_only",
+      "post_only",
+      "client_order_id"
+    ],
+    "derivatives_enabled": false,
+    "jwt_auth": false,
+    "products": [
+      "XRP-PERP",
+      "BTC-PERP",
+      "SOL-PERP",
+      "ETH-PERP"
+    ]
+  },
+  "websocket": {
+    "auth_success": false,
+    "reconnect_count": 0,
+    "staleness_threshold_ms": 5000,
+    "endpoints_tested": 6
+  },
+  "checks": {
+    "environment_setup": true,
+    "dependencies": true,
+    "websocket": true,
+    "capabilities": true,
+    "preflight": true,
+    "clock_drift_seconds": null,
+    "security": true,
+    "jwt_auth": false,
+    "derivatives_enabled": false
+  },
+  "metrics": {
+    "failed_checks": 0,
+    "ready_for_demo": true,
+    "capability_matrix": {
+      "order_types": [
+        "market",
+        "limit",
+        "stop",
+        "stop_limit"
+      ],
+      "time_in_force": [
+        "GTC",
+        "IOC",
+        "GTD"
+      ],
+      "special_flags": [
+        "reduce_only",
+        "post_only",
+        "client_order_id"
+      ]
+    }
+  },
+  "summary": {
+    "status": "READY",
+    "message": "All preflight checks passed - ready for demo trading"
+  }
+}

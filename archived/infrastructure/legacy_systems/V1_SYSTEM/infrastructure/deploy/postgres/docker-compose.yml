@@ -1,0 +1,117 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: timescale/timescaledb:latest-pg15
+    container_name: gpt-trader-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: trader
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}  # Set via environment variable
+      POSTGRES_DB: gpt_trader
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=en_US.UTF-8"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init:/docker-entrypoint-initdb.d
+      - ./backups:/backups
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U trader -d gpt_trader"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    command: >
+      postgres
+      -c shared_buffers=256MB
+      -c max_connections=200
+      -c effective_cache_size=1GB
+      -c maintenance_work_mem=64MB
+      -c checkpoint_completion_target=0.9
+      -c wal_buffers=16MB
+      -c default_statistics_target=100
+      -c random_page_cost=1.1
+      -c effective_io_concurrency=200
+      -c work_mem=4MB
+      -c min_wal_size=1GB
+      -c max_wal_size=2GB
+      -c max_worker_processes=8
+      -c max_parallel_workers_per_gather=4
+      -c max_parallel_workers=8
+      -c max_parallel_maintenance_workers=4
+      -c log_statement=all
+      -c log_duration=on
+      -c log_line_prefix='%t [%p]: [%l-1] user=%u,db=%d,app=%a,client=%h '
+      -c log_checkpoints=on
+      -c log_connections=on
+      -c log_disconnections=on
+      -c log_lock_waits=on
+      -c log_temp_files=0
+      -c log_autovacuum_min_duration=0
+      -c log_error_verbosity=default
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: gpt-trader-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@gpt-trader.local
+      PGADMIN_DEFAULT_PASSWORD: ${ADMIN_PASSWORD}  # Set via environment variable
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      - postgres
+
+  pgbouncer:
+    image: edoburu/pgbouncer:latest
+    container_name: gpt-trader-pgbouncer
+    restart: unless-stopped
+    environment:
+      DATABASES_HOST: postgres
+      DATABASES_PORT: 5432
+      DATABASES_DBNAME: gpt_trader
+      DATABASES_USER: trader
+      DATABASES_PASSWORD: ${DATABASE_PASSWORD}
+      POOL_MODE: transaction
+      MAX_CLIENT_CONN: 1000
+      DEFAULT_POOL_SIZE: 25
+      MIN_POOL_SIZE: 5
+      RESERVE_POOL_SIZE: 5
+      RESERVE_POOL_TIMEOUT: 3
+      SERVER_LIFETIME: 3600
+      SERVER_IDLE_TIMEOUT: 600
+    ports:
+      - "6432:5432"
+    depends_on:
+      - postgres
+
+  redis:
+    image: redis:7-alpine
+    container_name: gpt-trader-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: >
+      redis-server
+      --appendonly yes
+      --maxmemory 512mb
+      --maxmemory-policy allkeys-lru
+
+volumes:
+  postgres_data:
+    driver: local
+  pgadmin_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  default:
+    name: gpt-trader-network
+    driver: bridge

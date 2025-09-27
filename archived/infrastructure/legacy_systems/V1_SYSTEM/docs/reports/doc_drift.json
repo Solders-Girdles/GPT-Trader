@@ -1,0 +1,117 @@
+{
+  "metadata": {
+    "generated_at": "2025-08-14",
+    "sot_phase": "Phase 0 - Baseline Inventory",
+    "tasks_completed": ["SOT-001", "SOT-002", "SOT-003", "SOT-004"]
+  },
+  "file_structure": {
+    "file_map_generated": true,
+    "file_map_location": "docs/ARCHITECTURE_FILEMAP.md",
+    "total_source_files": 245
+  },
+  "documentation_references": {
+    "total_references_scanned": 486,
+    "unique_file_paths": 245,
+    "valid_file_paths": 115,
+    "invalid_file_paths": 130,
+    "invalid_path_percentage": "53%",
+    "unique_commands": 35,
+    "valid_commands": 31,
+    "invalid_commands": 4,
+    "major_issues": [
+      {
+        "category": "Phase 4 Documentation Drift",
+        "description": "Many planned Phase 4 deliverables are referenced as existing files",
+        "affected_files": 32
+      },
+      {
+        "category": "Deprecated Module References",
+        "description": "References to old src/bot/intelligence/* and src/bot/meta_learning/* modules",
+        "affected_references": 24
+      },
+      {
+        "category": "Naming Inconsistencies",
+        "description": "Mixed usage of /strategy/ vs /strategies/ and /monitor/ vs /monitoring/",
+        "occurrences": 2
+      }
+    ]
+  },
+  "code_imports": {
+    "absolute_imports_found": 27,
+    "affected_files": [
+      "src/bot/paper_trading/ml_paper_trader.py",
+      "src/bot/monitoring/ops_runbooks.py",
+      "src/bot/ml/deep_learning/test_deep_learning.py"
+    ],
+    "import_patterns": {
+      "from_src_bot": 26,
+      "import_src": 1
+    },
+    "risk_level": "moderate",
+    "recommendation": "Convert to relative imports to prevent drift"
+  },
+  "invalid_references": {
+    "missing_files": {
+      "cli_components": [
+        "src/bot/cli/enhanced_cli.py",
+        "src/bot/cli/live.py",
+        "src/bot/cli/ml_cli.py",
+        "src/bot/cli/demo.py",
+        "src/bot/cli/optimize.py",
+        "src/bot/cli/paper.py",
+        "src/bot/cli/train.py",
+        "src/bot/cli/validate.py"
+      ],
+      "phase_4_planned": [
+        "src/bot/ml/reinforcement_learning.py",
+        "src/bot/ml/transformer_models.py",
+        "src/bot/ml/gpu_accelerator.py",
+        "src/bot/data/sentiment/*",
+        "src/bot/strategy/multi_asset/*",
+        "src/bot/strategy/options/*"
+      ],
+      "deprecated_modules": [
+        "src/bot/intelligence/*",
+        "src/bot/meta_learning/*",
+        "src/bot/distributed/*",
+        "src/bot/scaling/*",
+        "src/bot/knowledge/*"
+      ]
+    },
+    "invalid_commands": [
+      "pytest tests/performance/benchmark_consolidated.py",
+      "pytest src/bot/ml/deep_learning/test_deep_learning.py",
+      "python -m src.bot.cli.demo",
+      "python -m src.bot.cli.optimize"
+    ]
+  },
+  "recommendations": {
+    "immediate_actions": [
+      "Update CLAUDE.md to remove invalid references",
+      "Fix broken command examples in documentation",
+      "Standardize naming conventions (/strategy/, /monitoring/)"
+    ],
+    "phase_1_actions": [
+      "Archive deprecated module references to docs/archived/",
+      "Update deprecated file lists",
+      "Remove CLAUDE.md.bak after verification"
+    ],
+    "phase_2_actions": [
+      "Standardize all path references",
+      "Align Phase 4 deliverable filenames",
+      "Refresh architecture documentation"
+    ],
+    "phase_3_actions": [
+      "Implement automated validation",
+      "Add pre-commit hooks for documentation",
+      "Create CI/CD checks for reference validity"
+    ]
+  },
+  "artifacts_created": [
+    "/tmp/doc_references.txt",
+    "/tmp/sot_002_doc_drift_report.json",
+    "/tmp/SOT-002_COMPREHENSIVE_ANALYSIS_REPORT.md",
+    "/tmp/analyze_doc_references.py",
+    "docs/reports/doc_drift.json"
+  ]
+}

@@ -1,213 +1,70 @@
-# GPT-Trader V2 Control Center
+# CLAUDE.md
 
-## 🎯 System Status: CLEAN & INTELLIGENT
+Guidance for Claude Code agents working inside GPT-Trader V2. Read this before planning or editing.
 
-**Architecture**: Vertical Slice + ML Intelligence (Path B: 50% Complete)  
-**Repository**: Ultra-clean structure (76MB+ archived files purged)  
-**Knowledge Layer**: Current only - no deprecated references  
-**Navigation**: Use `src/bot_v2/SLICES.md` for development  
+## Project Snapshot
+- **Live mode:** Coinbase **spot** trading. Perpetual futures logic remains compiled but Coinbase now gates INTX access; treat perps paths as future-ready only.
+- **Primary entry point:** `poetry run perps-bot --profile dev --dev-fast` (Stage 3 runner simply forwards here).
+- **Architecture:** Vertical slices under `src/bot_v2/features/`, orchestrated by `src/bot_v2/orchestration/perps_bot.py`. The codebase has grown beyond the original 500-token slices—expect cross-file work.
 
-## 📁 Current Reality (Post-Cleanup)
-
-### ✅ What We Have: Clean Trading System
-```
-src/bot_v2/                   # ONLY active system (8K lines)
-├── features/                 # 9 feature slices (complete isolation)
-│   ├── backtest/            ✅ Historical testing
-│   ├── paper_trade/         ✅ Simulated trading
-│   ├── analyze/             ✅ Market analysis
-│   ├── optimize/            ✅ Parameter optimization
-│   ├── live_trade/          ✅ Broker integration
-│   ├── monitor/             ✅ Health monitoring
-│   ├── data/                ✅ Data management
-│   ├── ml_strategy/         ✅ ML strategy selection (Week 1-2)
-│   └── market_regime/       ✅ Regime detection (Week 3)
-└── test_*.py                ✅ Integration tests
-```
-
-### 🧠 Intelligence Components (Path B: Smart Money)
-
-**Week 1-2: ML Strategy Selection ✅ COMPLETE**
-- Dynamic strategy switching based on conditions
-- Confidence scoring for predictions
-- 35% return improvement in backtesting
-
-**Week 3: Market Regime Detection ✅ COMPLETE**  
-- 7 regime types (Bull/Bear/Sideways × Quiet/Volatile + Crisis)
-- Real-time monitoring with transition prediction
-- Regime-aware strategy recommendations
-
-**Week 4: Intelligent Position Sizing 🎯 NEXT**
-- Kelly Criterion implementation
-- Confidence-based allocation
-- Regime-adjusted sizing
-
-## 🏗️ Architecture Principles
-
-### Complete Isolation (For Optimal Token Efficiency)
-- **Each slice is self-contained** (~500 tokens to load)
-- **No shared dependencies** between slices
-- **Local implementations** of everything needed
-- **Duplication preferred** over cross-slice imports
-
-### Vertical Slice Organization
-```
-Task: "Run backtest" → Load ONLY features/backtest/ 
-Task: "Detect regime" → Load ONLY features/market_regime/
-Task: "ML strategy selection" → Load ONLY features/ml_strategy/
-```
-
-## 🚀 Quick Commands
-
+## Core Commands
 ```bash
-# Test specific slice
-poetry run python src/bot_v2/test_backtest.py
+# Install / update environment
+poetry install
 
-# Run ML strategy selection
-poetry run python -c "from src.bot_v2.features.ml_strategy import predict_best_strategy; print(predict_best_strategy('AAPL'))"
+# Spot trading (mock fills, dev profile)
+poetry run perps-bot --profile dev --dev-fast
 
-# Detect market regime
-poetry run python -c "from src.bot_v2.features.market_regime import detect_regime; print(detect_regime('AAPL'))"
+# Canary/production dry-run (spot)
+poetry run perps-bot --profile canary --dry-run
+
+# Account telemetry snapshot
+poetry run perps-bot --account-snapshot
+
+# Treasury helpers
+poetry run perps-bot --convert USD:USDC:1000
+poetry run perps-bot --move-funds portfolio_a:portfolio_b:50
+
+# Metrics exporter (Prometheus + JSON)
+poetry run python scripts/monitoring/export_metrics.py --metrics-file data/perps_bot/prod/metrics.json
+
+# Tests (see notes below)
+poetry run pytest --collect-only
 ```
 
-## ⚠️ What's Archived (Don't Use)
+## Production Components (Spot)
+| Area | Role |
+|------|------|
+| `src/bot_v2/orchestration/perps_bot.py` | Main loop, risk guards, telemetry, per-symbol decisions, INTX checks. |
+| `src/bot_v2/cli.py` | Profiles, flag parsing, account snapshot/treasury commands. |
+| `src/bot_v2/features/brokerages/coinbase/adapter.py` | Coinbase Advanced Trade integration (spot + dormant perps). |
+| `src/bot_v2/features/brokerages/coinbase/account_manager.py` | Fee/limit snapshots, convert, move funds. |
+| `src/bot_v2/orchestration/live_execution.py` | Runtime safety rails (PnL caps, liquidation buffer, volatility CB, correlation checks). |
+| `scripts/monitoring/export_metrics.py` | Prometheus/JSON metrics service.
 
-```
-archived/                              # Minimal historical reference (~1.2MB total)
-├── bot_v2_horizontal_20250817/       # Old horizontal architecture (428KB)  
-├── old_plans/                        # Historical planning docs (412KB)
-├── old_reports/                      # Historical analysis reports (368KB)
-├── benchmarks/                       # Performance baselines (8KB)
-└── legacy-v1/                        # Empty legacy directory
-```
+## Perps & Experimental Modules
+- Perps code paths should stay intact but **never assume live connectivity**. Document INTX gating in every perps-related change.
+- Modules flagged `__experimental__ = True` (backtest, ml_strategy, market_regime, monitoring dashboard, workflows) are off the production path. Touch them only when requested and keep their optional dependencies isolated.
 
-## 🎯 Current Status
+## Testing & Dependencies
+- `poetry run pytest --collect-only` currently discovers 486 tests (428 selected after deselection). Run `poetry install` after pulling so new dependencies (e.g., `pyotp`) are available for the suite.
+- Add regression tests for any changes to risk guards, telemetry, or CLI helpers.
+- Keep integration tests under `tests/integration/bot_v2/` aligned with orchestration changes.
 
-| Component | Status | Notes |
-|-----------|--------|-------|
-| Core Slices | ✅ Complete | 9 slices operational |
-| ML Strategy | ✅ Complete | Weeks 1-2 finished |
-| Market Regime | ✅ Complete | Week 3 finished |
-| Position Sizing | 🎯 Next | Week 4 in progress |
-| Archive Purge | ✅ Complete | 76MB+ deprecated files removed |
+## Safety & Operational Checks
+- Risk controls live in `LiveExecutionEngine`: daily loss guard, liquidation distance, mark staleness, volatility circuit breaker, correlation risk.
+- Account telemetry runs asynchronously; if you add new metrics, ensure `metrics.json` serialization remains stable.
+- The bot defaults to mock trading when derivatives are disabled. Validate `COINBASE_ENABLE_DERIVATIVES` before enabling features that rely on perps endpoints.
 
-## ⚠️ Knowledge Layer Warnings
+## Documentation Expectations
+Whenever your change affects behavior:
+1. Update `README.md` (commands, quick start).
+2. Update `docs/ARCHITECTURE.md` (system overview).
+3. Sync `Agents.md`, this file, and `Gemini.md`.
+4. Note the INTX dependency anywhere perps functionality is mentioned.
 
-**DEPRECATED DOCS (Don't Trust):**
-- `docs/SYSTEM_ARCHITECTURE.md` - References old V1 paths
-- Most files in `docs/` - Written for old horizontal architecture
-- Any documentation mentioning `src/bot/` paths
-
-**CURRENT DOCS (Use These):**
-- `CLAUDE.md` (this file) - Current control center
-- `src/bot_v2/SLICES.md` - Agent navigation guide
-- `src/bot_v2/README.md` - Current architecture overview
-- `README.md` - Updated V2 system description
-
-## 🔄 Session Continuity Protocols
-
-### Starting a New Session: Context Recovery
-1. **Check Current Progress**: Read the todo list (always displayed at session start)
-2. **Review Recent History**: Read `src/bot_v2/WEEK_*_COMPLETE.md` files for project milestones
-3. **Identify Active Work**: Look for "in_progress" tasks to understand current context
-4. **Check Project State**: Review relevant slice documentation in `src/bot_v2/features/`
-
-### Multi-Session Task Management
-```bash
-# Essential reads for context recovery:
-1. Todo list (system provides automatically)
-2. src/bot_v2/WEEK_3_COMPLETE.md (latest milestone) 
-3. src/bot_v2/SLICES.md (current architecture)
-4. This CLAUDE.md file (system status)
-```
-
-### Detecting Continuation Scenarios
-- **"Continue with Week X"** → Read `WEEK_X_PLAN.md` or `WEEK_X_COMPLETE.md`
-- **"Fix the issue we discussed"** → Check recent project files for context clues
-- **"Where were we?"** → Review in_progress todos and recent completion dates
-
-## 📚 Knowledge Layer Usage Guide
-
-### When to Check `docs/knowledge/`
-- **Complex Task Decomposition**: Use `TASK_TEMPLATES.md` for agent delegation
-- **Agent Coordination Issues**: Reference `AGENT_WORKFLOW.md` for best practices
-- **Workflow Problems**: Check `KNOWLEDGE_LAYER_MAINTENANCE.md` for automation
-
-### Essential Knowledge Files
-- **`docs/knowledge/TASK_TEMPLATES.md`**: Copy-paste templates for agent delegation
-- **`docs/knowledge/AGENT_WORKFLOW.md`**: Advanced coordination principles
-- **`docs/knowledge/AGENT_DELEGATION_GUIDE.md`**: When and how to use Task tool
-
-### Navigation Priority
-```
-1st: Todo list (immediate priorities)
-2nd: src/bot_v2/SLICES.md (architecture navigation)  
-3rd: docs/knowledge/ (workflow guidance)
-4th: src/bot_v2/WEEK_*.md (project history)
-```
-
-## 🎯 Complex Task Management Protocols
-
-### Large Task Decomposition
-1. **Assess Scope**: If task requires >3 steps, consider using Task tool
-2. **Check Templates**: Look in `docs/knowledge/TASK_TEMPLATES.md` for relevant patterns
-3. **Break Into Phases**: Use todo list to track multi-phase work
-4. **Document Progress**: Create or update WEEK_*.md files for significant milestones
-
-### Agent Delegation Decision Matrix
-```
-Use Task tool when:
-✅ Task requires >500 tokens of context
-✅ Specialized expertise needed (architecture, ML, testing)
-✅ Multi-file changes across different domains
-✅ Template exists in TASK_TEMPLATES.md
-
-Handle directly when:
-❌ Simple edits to current files
-❌ Reading and analysis tasks
-❌ Todo list management
-❌ Navigation and status checks
-```
-
-### Progress Tracking Best Practices
-- **Update todos in real-time** as work progresses
-- **Mark completion immediately** when tasks finish
-- **Create WEEK_*.md** for major milestones (>1 week effort)
-- **Keep CLAUDE.md current** with system status updates
-
-## 🧠 Meta-Workflow Intelligence
-
-### Session Type Detection
-- **Continuation Session**: User references previous work → Use context recovery protocols
-- **New Feature Session**: User requests new capability → Plan using vertical slice principles  
-- **Debugging Session**: User reports issues → Use diagnostic protocols from knowledge layer
-- **Cleanup Session**: User wants organization → Follow architectural consistency guidelines
-
-### Cross-Session Coordination
-```bash
-# For complex multi-session work:
-1. Create clear todos with specific next steps
-2. Document any architectural decisions made
-3. Update relevant WEEK_*.md files with progress
-4. Ensure SLICES.md reflects any new components
-```
-
-### Knowledge Layer Maintenance
-- **After major changes**: Update relevant documentation
-- **After completing milestones**: Create or update WEEK_*.md files
-- **After architectural decisions**: Update SLICES.md or ARCHITECTURE.md
-- **Before complex work**: Check docs/knowledge/ for applicable guidance
-
-## 📊 Next Steps
-
-**Immediate**: Continue Week 4 - Intelligent Position Sizing
-**Week 5**: Performance Prediction models
-**Week 6**: Integration & Testing of all ML components
-
----
-
-**Last Updated**: August 17, 2025  
-**Repository Status**: Clean (root Python files archived)  
-**Architecture**: Vertical Slice with Complete Isolation  
-**Intelligence**: 50% complete (2 of 4 ML components)  
-**Meta-Workflow**: Enhanced with session continuity and complex task management protocols
+## Workflow Tips for Claude
+1. Start by reading the relevant slice README/tests; they stay authoritative for local logic.
+2. Use `rg` for navigation—repo size makes `grep` slow.
+3. Favor incremental commits and keep doc updates with code changes when practical.
+4. Highlight risk impacts and testing instructions in your responses to users.

@@ -1,37 +1,40 @@
 """
 Local types for live trading.
 
-Complete isolation - no external dependencies.
+Re-exports core types with deprecation warning.
+Only defines types not present in core.
 """
 
+import warnings
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Dict, List, Optional, Literal
 from enum import Enum
 
+# Re-export core types with deprecation warning
+from ..brokerages.core.interfaces import (
+    Order,
+    Position,
+    Quote,
+    OrderType,
+    OrderSide,
+    OrderStatus,
+    TimeInForce
+)
 
-class OrderStatus(Enum):
-    """Order status enumeration."""
-    PENDING = "pending"
-    SUBMITTED = "submitted"
-    FILLED = "filled"
-    PARTIALLY_FILLED = "partially_filled"
-    CANCELLED = "cancelled"
-    REJECTED = "rejected"
+# Emit deprecation warning when this module is imported
+warnings.warn(
+    "live_trade.types is deprecated for core types; use brokerages.core.interfaces directly",
+    DeprecationWarning,
+    stacklevel=2
+)
 
-
-class OrderType(Enum):
-    """Order type enumeration."""
-    MARKET = "market"
-    LIMIT = "limit"
-    STOP = "stop"
-    STOP_LIMIT = "stop_limit"
-
-
-class OrderSide(Enum):
-    """Order side enumeration."""
-    BUY = "buy"
-    SELL = "sell"
+__all__ = [
+    # Re-exported from core
+    'Order', 'Position', 'Quote', 'OrderType', 'OrderSide', 'OrderStatus', 'TimeInForce',
+    # Local-only types
+    'BrokerConnection', 'AccountInfo', 'MarketHours', 'Bar', 'ExecutionReport'
+]
 
 
 @dataclass
@@ -46,48 +49,7 @@ class BrokerConnection:
     base_url: Optional[str]
 
 
-@dataclass
-class Order:
-    """Order information."""
-    order_id: str
-    symbol: str
-    side: OrderSide
-    order_type: OrderType
-    quantity: int
-    price: Optional[float]  # For limit orders
-    stop_price: Optional[float]  # For stop orders
-    status: OrderStatus
-    submitted_at: datetime
-    filled_at: Optional[datetime]
-    filled_qty: int
-    avg_fill_price: Optional[float]
-    commission: float
-    
-    def is_filled(self) -> bool:
-        """Check if order is completely filled."""
-        return self.status == OrderStatus.FILLED
-    
-    def is_active(self) -> bool:
-        """Check if order is still active."""
-        return self.status in [OrderStatus.PENDING, OrderStatus.SUBMITTED, OrderStatus.PARTIALLY_FILLED]
-
-
-@dataclass
-class Position:
-    """Current position information."""
-    symbol: str
-    quantity: int
-    side: Literal['long', 'short']
-    avg_cost: float
-    current_price: float
-    market_value: float
-    unrealized_pnl: float
-    unrealized_pnl_pct: float
-    realized_pnl: float
-    
-    def get_value(self) -> float:
-        """Get current position value."""
-        return self.market_value
+# Local-only types (not in core interfaces)
 
 
 @dataclass
@@ -116,21 +78,6 @@ class MarketHours:
     open_time: Optional[datetime]
     close_time: Optional[datetime]
     extended_hours_open: bool
-
-
-@dataclass
-class Quote:
-    """Real-time quote data."""
-    symbol: str
-    bid: float
-    ask: float
-    last: float
-    volume: int
-    timestamp: datetime
-    
-    def get_mid(self) -> float:
-        """Get mid price."""
-        return (self.bid + self.ask) / 2
 
 
 @dataclass

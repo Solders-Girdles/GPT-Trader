@@ -157,19 +157,19 @@ echo "----------------------------------------"
 # Quick component imports
 echo "Checking component imports..."
 
-python3 -c "from src.bot_v2.features.live_trade.portfolio_valuation import PortfolioValuationService" 2>/dev/null
+python3 -c "from bot_v2.features.live_trade.portfolio_valuation import PortfolioValuationService" 2>/dev/null
 check_status $? "PortfolioValuationService"
 
-python3 -c "from src.bot_v2.features.live_trade.fees_engine import FeesEngine" 2>/dev/null
+python3 -c "from bot_v2.features.live_trade.fees_engine import FeesEngine" 2>/dev/null
 check_status $? "FeesEngine"
 
-python3 -c "from src.bot_v2.features.live_trade.margin_monitor import MarginStateMonitor" 2>/dev/null
+python3 -c "from bot_v2.features.live_trade.margin_monitor import MarginStateMonitor" 2>/dev/null
 check_status $? "MarginStateMonitor"
 
-python3 -c "from src.bot_v2.features.live_trade.liquidity_service import LiquidityService" 2>/dev/null
+python3 -c "from bot_v2.features.live_trade.liquidity_service import LiquidityService" 2>/dev/null
 check_status $? "LiquidityService"
 
-python3 -c "from src.bot_v2.features.live_trade.order_policy import OrderPolicyMatrix" 2>/dev/null
+python3 -c "from bot_v2.features.live_trade.order_policy import OrderPolicyMatrix" 2>/dev/null
 check_status $? "OrderPolicyMatrix"
 
 echo ""

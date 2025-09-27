@@ -1,0 +1,76 @@
+name: Nightly Validation
+
+on:
+  schedule:
+    # Run at 2 AM UTC every night
+    - cron: '0 2 * * *'
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  quick-validation:
+    runs-on: ubuntu-latest
+    name: Quick Routing Validation
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    
+    - name: Install minimal dependencies
+      run: |
+        python -m pip install --upgrade pip
+        # Only install what's needed for validation scripts
+        pip install websocket-client
+    
+    - name: Run endpoint routing validation
+      run: |
+        echo "🔍 Validating endpoint routing..."
+        python scripts/validate_critical_fixes_v2.py
+    
+    - name: Verify specific method fixes
+      run: |
+        echo "🔍 Verifying three critical methods..."
+        python scripts/verify_final_fixes.py
+    
+    - name: Quick WebSocket check
+      run: |
+        echo "🔍 Checking WebSocket transport..."
+        python -c "
+        from src.bot_v2.features.brokerages.coinbase.ws import CoinbaseWebSocket, SequenceGuard
+        import sys, types
+        
+        # Mock websocket
+        mock_ws = types.ModuleType('websocket')
+        mock_ws.create_connection = lambda url: None
+        sys.modules['websocket'] = mock_ws
+        
+        # Test WebSocket
+        ws = CoinbaseWebSocket('wss://test')
+        ws.connect()
+        assert ws._transport is not None
+        print('✅ WebSocket transport OK')
+        
+        # Test SequenceGuard
+        guard = SequenceGuard()
+        msg = guard.annotate({'sequence': 1})
+        assert 'gap_detected' not in msg
+        msg = guard.annotate({'sequence': 3})
+        assert msg.get('gap_detected') == True
+        print('✅ SequenceGuard OK')
+        "
+    
+    - name: Report status
+      if: failure()
+      uses: actions/github-script@v6
+      with:
+        script: |
+          github.rest.issues.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: '🚨 Nightly validation failed - Coinbase routing regression',
+            body: 'The nightly validation detected a regression in Coinbase endpoint routing. Check the [workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details.',
+            labels: ['bug', 'coinbase', 'critical']
+          })

@@ -1,0 +1,124 @@
+{
+  "generated": "2025-08-30T14:52:15.959341",
+  "reports": [
+    {
+      "filename": "api_clarification.json",
+      "timestamp": "",
+      "version": "unknown",
+      "environment": "unknown",
+      "size_bytes": 868
+    },
+    {
+      "filename": "capability_probe.json",
+      "timestamp": "2025-08-30T20:38:07.230846+00:00",
+      "version": "1.0.0",
+      "environment": "sandbox",
+      "size_bytes": 3566
+    },
+    {
+      "filename": "consolidated_20250830_072240.json",
+      "timestamp": "2025-08-30T14:22:40.714908Z",
+      "version": "2.0.0",
+      "environment": "demo",
+      "size_bytes": 1698
+    },
+    {
+      "filename": "consolidated_20250830_072314.json",
+      "timestamp": "2025-08-30T14:23:14.684487Z",
+      "version": "2.0.0",
+      "environment": "demo",
+      "size_bytes": 1662
+    },
+    {
+      "filename": "consolidated_20250830_073129.json",
+      "timestamp": "2025-08-30T14:31:29.684995Z",
+      "version": "2.0.0",
+      "environment": "demo",
+      "size_bytes": 1662
+    },
+    {
+      "filename": "consolidated_20250830_075053.json",
+      "timestamp": "2025-08-30T14:50:54.148415Z",
+      "version": "2.0.0",
+      "environment": "demo",
+      "size_bytes": 1660
+    },
+    {
+      "filename": "consolidated_20250830_075919.json",
+      "timestamp": "2025-08-30T14:59:20.004884Z",
+      "version": "2.0.0",
+      "environment": "demo",
+      "size_bytes": 1662
+    },
+    {
+      "filename": "consolidated_20250830_121403.json",
+      "timestamp": "2025-08-30T19:14:03.567645Z",
+      "version": "2.0.0",
+      "environment": "demo",
+      "size_bytes": 1665
+    },
+    {
+      "filename": "consolidated_20250830_130346.json",
+      "timestamp": "2025-08-30T20:03:46.827434Z",
+      "version": "2.0.0",
+      "environment": "demo",
+      "size_bytes": 1665
+    },
+    {
+      "filename": "consolidated_20250830_130845.json",
+      "timestamp": "2025-08-30T20:08:45.609357Z",
+      "version": "2.0.0",
+      "environment": "demo",
+      "size_bytes": 1664
+    },
+    {
+      "filename": "consolidated_20250830_133808.json",
+      "timestamp": "2025-08-30T20:38:09.077219Z",
+      "version": "2.0.0",
+      "environment": "demo",
+      "size_bytes": 1665
+    },
+    {
+      "filename": "dry_run_snapshot_20250830_142846.json",
+      "timestamp": "",
+      "version": "1.0.0",
+      "environment": "sandbox",
+      "size_bytes": 31761
+    },
+    {
+      "filename": "dry_run_snapshot_20250830_191922.json",
+      "timestamp": "",
+      "version": "1.0.0",
+      "environment": "sandbox",
+      "size_bytes": 34257
+    },
+    {
+      "filename": "dry_run_snapshot_20250830_201358.json",
+      "timestamp": "",
+      "version": "1.0.0",
+      "environment": "sandbox",
+      "size_bytes": 36224
+    },
+    {
+      "filename": "dry_run_snapshot_20250830_204323.json",
+      "timestamp": "",
+      "version": "1.0.0",
+      "environment": "sandbox",
+      "size_bytes": 38750
+    },
+    {
+      "filename": "tif_validation.json",
+      "timestamp": "2025-08-30T14:38:20.970814",
+      "version": "unknown",
+      "environment": "unknown",
+      "size_bytes": 2958
+    },
+    {
+      "filename": "ws_probe_report.json",
+      "timestamp": "2025-08-30T20:38:06.484364+00:00",
+      "version": "unknown",
+      "environment": "sandbox",
+      "size_bytes": 664
+    }
+  ]
+}

@@ -1,133 +1,101 @@
-# GPT-Trader Documentation
+# Documentation Index
 
-## ⚠️ **Documentation Status Warning**
+---
+status: current
+last-updated: 2025-03-01
+organization-updated: 2025-03-01
+---
 
-**Last Updated: January 14, 2025**
+## 📍 Quick Links
 
-**Important**: Many documentation files in this directory reference features that are **not yet operational**. The system is currently 75% functional and in active recovery. Please verify functionality before relying on examples or guides.
+- **[Complete Setup Guide](guides/complete_setup_guide.md)** - Full installation and configuration
+- **[Coinbase Reference](reference/coinbase_complete.md)** - Complete integration documentation
+- **[Coinbase API Links (Lite)](reference/coinbase_api_links.md)** - Fast links for agents
+- **[Architecture](ARCHITECTURE.md)** - System design and capabilities
+- **[AI Agent Guide](guides/agents.md)** - For AI agents and automation
 
-**Working Documentation**:
-- Architecture and file structure descriptions are accurate
-- Development guidelines and standards are current
-- Basic usage patterns are correct (with caveats)
-
-**Documentation Issues**:
-- Example code may have import path issues
-- Feature descriptions may overstate capabilities
-- Integration guides may reference missing components
-
-## 📚 Documentation Structure
-
-### Core Documentation
-- [Usage Guide](USAGE.md) - Basic usage (⚠️ verify examples)
-- [Architecture Overview](ARCHITECTURE_REVIEW.md) - System design and components (✅ accurate)
-- [Architecture Filemap](ARCHITECTURE_FILEMAP.md) - Complete file structure map (✅ accurate)
-- [Development Guidelines](DEVELOPMENT_GUIDELINES.md) - Coding standards and practices (✅ current)
-- [Troubleshooting](TROUBLESHOOTING.md) - Common issues and solutions (✅ useful)
-
-### Development & Roadmaps
-- [Development Roadmap v2](DEVELOPMENT_ROADMAP_V2.md) - Current development plan (⚠️ may be optimistic)
-- [Development Status](DEVELOPMENT_STATUS.md) - Current progress (⚠️ may overstate completion)
-- [Quality Improvement Roadmap](QUALITY_IMPROVEMENT_ROADMAP.md) - Quality enhancement plans
-- [Testing Iteration Roadmap](TESTING_ITERATION_ROADMAP.md) - Testing strategy (⚠️ tests currently failing)
-- [Trading Strategy Development](TRADING_STRATEGY_DEVELOPMENT_ROADMAP.md) - Strategy implementation plans
-- [Autonomous Portfolio Roadmap](AUTONOMOUS_PORTFOLIO_ROADMAP.md) - Portfolio automation plans (⚠️ orchestrator missing)
-
-### Features & Enhancements
-- [Enhanced CLI](ENHANCED_CLI.md) - Command-line interface features (⚠️ parameter issues exist)
-- [QOL Improvements](QOL_IMPROVEMENTS.md) - Quality of life improvements
-- [UX Enhancement Plan](UX_ENHANCEMENT_PLAN.md) - User experience improvements
-- [User Interfaces](USER_INTERFACES.md) - Available interfaces
-- [Paper Trading](PAPER_TRADING.md) - Paper trading setup and usage (⚠️ integration incomplete)
-- [Optimization](OPTIMIZATION.md) - Performance optimization guide
-
-### Sprint Planning
-- [24 Week Sprint Master Plan](24_WEEK_SPRINT_MASTER_PLAN.md) - Long-term sprint planning
-- [Sprint 1 Task Breakdown](SPRINT_1_TASK_BREAKDOWN.md) - Sprint 1 tasks
-- [Sprint 2 Task Breakdown](SPRINT_2_TASK_BREAKDOWN.md) - Sprint 2 tasks
-
-### Technical Reports
-Reports on specific technical analyses and migrations are available in [reports/](reports/).
-
-### Archives
-Historical documentation including phase completions and weekly reports are archived in:
-- [Phase Archives](archives/phases/) - Phase completion documentation
-- [Weekly Archives](archives/weeks/) - Weekly progress reports
-- [General Archives](archived/) - Other archived documentation
-
-## 🔍 Quick Links
+## 📚 Core Documentation
 
 ### Getting Started
-1. **Start Here**: Read the main [README.md](../README.md) for current system status
-2. Review [Development Guidelines](DEVELOPMENT_GUIDELINES.md) (reliable)
-3. Check [Troubleshooting](TROUBLESHOOTING.md) for common issues (useful)
-4. **Verify Examples**: Test code snippets before using
+- [Complete Setup Guide](guides/complete_setup_guide.md) - Everything from installation to first trade
+- [Testing Guide](guides/testing.md) - Running and writing tests
 
-### For Developers
-1. [Architecture Overview](ARCHITECTURE_REVIEW.md) (structure accurate)
-2. Main [README.md](../README.md) for honest capability assessment
-3. **Test Infrastructure**: Expect 35+ test collection errors
+### Architecture & Design
+- [System Architecture](ARCHITECTURE.md) - Component overview
+- [Perpetuals Trading Logic](reference/trading_logic_perps.md) - Future-ready INTX implementation details
+- [Vertical Slice Architecture](../src/bot_v2/SLICES.md) - Modular design
 
-### For Trading Strategy Development
-1. **Current Reality**: Only 2 strategies operational (trend_breakout, demo_ma)
-2. [Trading Strategy Roadmap](TRADING_STRATEGY_DEVELOPMENT_ROADMAP.md) (aspirational)
-3. Paper trading infrastructure incomplete
+### Trading Operations
+- [Production Deployment](guides/production.md) - Deployment guide (spot-first, INTX-gated perps)
+- [Stage 3 Runner](../scripts/stage3_runner.py) - Legacy entry that forwards to `perps-bot`
+- [Operations Runbook](ops/operations_runbook.md) - Operational procedures
 
-## 📂 Directory Structure
+### Development
+- [AI Agent Guide](guides/agents.md) - For Claude and other AI agents
+- [Repository Organization](guides/repository_organization.md) - Structure and maintenance standards
+- [Contributing Guidelines](../CONTRIBUTING.md) - Development workflow
+- [Performance Optimization](guides/performance_optimization.md) - Performance tuning
 
-```
-docs/
-├── README.md                 # This file - documentation index with reality check
-├── archives/                 # Historical documentation
-│   ├── phases/              # Phase completion reports (may overstate progress)
-│   └── weeks/               # Weekly progress reports
-├── reports/                 # Technical analysis reports
-└── archived/                # Other archived documentation
-```
+## 🔧 Configuration & Setup
 
-## 🔄 Documentation Maintenance
+### API Configuration  
+- [Coinbase Complete Reference](reference/coinbase_complete.md) - All Coinbase integration documentation
+- [Environment Template](../.env.template) - Environment variables template
 
-**Current Priority**: Aligning documentation with actual system capabilities
+### Trading Profiles
+- **Development** - Mock broker, deterministic fills
+- **Canary** - Ultra-safe production testing
+- **Production** - Full trading capabilities
 
-### Documentation Recovery Tasks
-1. **Audit all guides** for feature claims vs reality
-2. **Fix example code** with correct import paths
-3. **Update capability statements** to reflect 75% functional status
-4. **Mark speculative content** as future roadmap items
+## 📊 Reports & Analysis
 
-### For Contributors
-- **Test all examples** before committing documentation
-- **Use working import paths**: `from src.bot.` (with poetry run)
-- **Be honest about capabilities** in all documentation
-- **Mark incomplete features** clearly
+### Implementation Status
+- [Production Readiness](guides/production.md#production-readiness-requirements)
+- [System Capabilities](reference/system_capabilities.md) - Current state overview
+- [System Reality](reference/system_reality.md) - Honest current state assessment
+- [Compatibility & Troubleshooting](reference/compatibility_troubleshooting.md) - Technical requirements
+- [Repository Standardization Audit](REPOSITORY_STANDARDIZATION_AUDIT.md) - Documentation consolidation progress
 
-## ✅ Verified Documentation Status
+### Performance & Operations
+- [Operations Runbook](ops/operations_runbook.md) - Daily operations and monitoring
+- [Performance Optimization](guides/performance_optimization.md) - Tuning guidelines
 
-| Document | Status | Notes |
-|----------|--------|-------|
-| Main README.md | ✅ Updated | Honest 75% functional assessment |
-| Architecture guides | ✅ Accurate | File structure and design correct |
-| Development Guidelines | ✅ Current | Standards and practices valid |
-| Usage examples | ⚠️ Mixed | Many have import path issues |
-| Feature guides | ⚠️ Overstated | May claim non-operational features |
-| Roadmaps | ⚠️ Optimistic | Timeline and completion claims inflated |
+## 🗄️ Archive
 
-## 🎯 Documentation Reality Check
+### Legacy Documentation
+- [2024 Legacy Docs](ARCHIVE/2024_legacy/) - Pre-perpetuals era
+- [2024 Implementation Archive](ARCHIVE/2024_implementation/) - Historical implementation docs
 
-**What Works in Documentation**:
-- System architecture descriptions
-- File organization and structure
-- Development standards and practices
-- Basic conceptual explanations
+### Archived Reports
+- [2025 Development Reports](../archived/2025_reports/) - Current year archives
+- [Historical Archives](../archived/HISTORICAL/) - Long-term preserved data
+- [Perps Runbooks (archived)](archive_2025/) - Legacy INTX/perps go-live guides
 
-**What Needs Fixing**:
-- Feature capability claims
-- Example code import paths
-- Integration tutorials
-- Completion percentage statements
+## 🚨 Important Notes
 
-For the most accurate information about current capabilities, refer to the main [README.md](../README.md) which provides an honest assessment of the system's 75% functional status.
+### Production vs Sandbox
+
+| Environment | Products | API | Authentication |
+|------------|----------|-----|----------------|
+| **Production (default)** | Spot (BTC-USD, ETH-USD, …) | Advanced Trade v3 (HMAC) | API key/secret |
+| **Production (perps)** | Perpetuals (INTX-gated) | Advanced Trade v3 | CDP (JWT) + `COINBASE_ENABLE_DERIVATIVES=1` |
+| **Sandbox** | Not used for live trading (API diverges) | — | Use only with `PERPS_PAPER=1` |
+
+**Critical:** Sandbox does **not** support perpetuals. The bot defaults to spot trading and only enables perps when INTX access plus derivatives flag are detected.
+
+### Current Focus
+- **Primary**: Coinbase spot trading (perps code paths kept future-ready)
+- **Architecture**: Vertical slice design (production vs experimental slices clearly marked)
+- **ML**: Strategy selection, regime detection, Kelly sizing (experimental slices)
+- **Testing**: 480 collected / 422 selected tests (`poetry run pytest --collect-only`)
+
+## 📞 Getting Help
+
+- **Quick Questions**: Check [QUICK_START.md](QUICK_START.md)
+- **Architecture**: Review [ARCHITECTURE.md](ARCHITECTURE.md)
+- **AI Development**: See [guides/agents.md](guides/agents.md)
+- **Issues**: GitHub Issues page
 
 ---
 
-*Last updated: January 14, 2025 - Documentation reality alignment in progress*
+*Last validated: March 2025 (spot-first refresh)*

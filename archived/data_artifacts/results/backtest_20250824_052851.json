@@ -1,0 +1,107 @@
+{
+  "summary": {
+    "momentum": {
+      "avg_return": 1.9750736438537568,
+      "avg_sharpe": 0.3288480807540019,
+      "avg_drawdown": -1.8284495388266022,
+      "avg_trades": 0.5,
+      "avg_win_rate": 0.0
+    },
+    "mean_reversion": {
+      "avg_return": -3.2933430296163535,
+      "avg_sharpe": -0.4440242360784278,
+      "avg_drawdown": -7.570379561806414,
+      "avg_trades": 7.0,
+      "avg_win_rate": 14.835164835164836
+    },
+    "breakout": {
+      "avg_return": -4.873296613181401,
+      "avg_sharpe": -0.6648102063042187,
+      "avg_drawdown": -6.836227587240931,
+      "avg_trades": 9.0,
+      "avg_win_rate": 8.660130718954248
+    }
+  },
+  "detailed_results": [
+    {
+      "strategy": "momentum",
+      "symbol": "BTC-USD",
+      "days": 7,
+      "total_return": 0.0,
+      "sharpe_ratio": 0,
+      "max_drawdown": 0.0,
+      "num_trades": 0,
+      "win_rate": 0,
+      "final_equity": 10000
+    },
+    {
+      "strategy": "momentum",
+      "symbol": "ETH-USD",
+      "days": 7,
+      "total_return": 3.9501472877075137,
+      "sharpe_ratio": 0.6576961615080038,
+      "max_drawdown": -3.6568990776532044,
+      "num_trades": 1,
+      "win_rate": 0.0,
+      "final_equity": 10395.014728770751
+    },
+    {
+      "strategy": "mean_reversion",
+      "symbol": "BTC-USD",
+      "days": 7,
+      "total_return": -5.680007508596227,
+      "sharpe_ratio": -0.8507999045128699,
+      "max_drawdown": -5.733677619646165,
+      "num_trades": 7,
+      "win_rate": 15.384615384615385,
+      "final_equity": 9431.999249140377
+    },
+    {
+      "strategy": "mean_reversion",
+      "symbol": "ETH-USD",
+      "days": 7,
+      "total_return": -0.9066785506364795,
+      "sharpe_ratio": -0.037248567643985604,
+      "max_drawdown": -9.407081503966664,
+      "num_trades": 7,
+      "win_rate": 14.285714285714285,
+      "final_equity": 9909.332144936352
+    },
+    {
+      "strategy": "breakout",
+      "symbol": "BTC-USD",
+      "days": 7,
+      "total_return": -6.378895720300716,
+      "sharpe_ratio": -1.095745025638029,
+      "max_drawdown": -6.475160490083458,
+      "num_trades": 9,
+      "win_rate": 5.555555555555555,
+      "final_equity": 9362.110427969928
+    },
+    {
+      "strategy": "breakout",
+      "symbol": "ETH-USD",
+      "days": 7,
+      "total_return": -3.367697506062086,
+      "sharpe_ratio": -0.23387538697040838,
+      "max_drawdown": -7.197294684398403,
+      "num_trades": 9,
+      "win_rate": 11.76470588235294,
+      "final_equity": 9663.230249393791
+    }
+  ],
+  "metadata": {
+    "strategies": [
+      "momentum",
+      "mean_reversion",
+      "breakout"
+    ],
+    "symbols": [
+      "BTC-USD",
+      "ETH-USD"
+    ],
+    "days": 7,
+    "elapsed_seconds": 1.4830589294433594,
+    "timestamp": "2025-08-24T05:28:51.270420"
+  }
+}

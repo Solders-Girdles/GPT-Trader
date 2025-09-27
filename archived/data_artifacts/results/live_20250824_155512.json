@@ -1,0 +1,288 @@
+{
+  "session_name": "live_20250824_155512",
+  "start_time": "2025-08-24T15:55:12.532425",
+  "initial_capital": 10000.0,
+  "strategy": "volatility",
+  "symbols": [
+    "BTC-USD",
+    "ETH-USD",
+    "SOL-USD",
+    "LINK-USD",
+    "MATIC-USD",
+    "AVAX-USD"
+  ],
+  "metrics": {
+    "equity": 10000.0,
+    "cash": 10000.0,
+    "positions_value": 0.0,
+    "total_return": 0.0,
+    "drawdown": 0.0,
+    "num_trades": 0,
+    "num_positions": 0,
+    "win_rate": 0,
+    "total_pnl": 0,
+    "avg_pnl": 0,
+    "duration": "0:11:23"
+  },
+  "signal_stats": {
+    "iterations": 58,
+    "buy_signals": 0,
+    "sell_signals": 0,
+    "hold_signals": 348,
+    "trades_executed": 0,
+    "blocked_max_positions": 0,
+    "blocked_has_position": 0,
+    "blocked_no_position": 0,
+    "no_quote": 0
+  },
+  "trades": [],
+  "positions": {},
+  "equity_history": [
+    {
+      "timestamp": "2025-08-24T15:55:12.532435",
+      "equity": 10000.0
+    },
+    {
+      "timestamp": "2025-08-24T15:55:46.848970",
+      "equity": 10000.0
+    },
+    {
+      "timestamp": "2025-08-24T15:55:58.103711",
+      "equity": 10000.0
+    },
+    {
+      "timestamp": "2025-08-24T15:56:09.395161",
+      "equity": 10000.0
+    },
+    {
+      "timestamp": "2025-08-24T15:56:20.670574",
+      "equity": 10000.0
+    },
+    {
+      "timestamp": "2025-08-24T15:56:31.847518",
+      "equity": 10000.0
+    },
+    {
+      "timestamp": "2025-08-24T15:56:43.297699",
+      "equity": 10000.0
+    },
+    {
+      "timestamp": "2025-08-24T15:56:54.916920",
+      "equity": 10000.0
+    },
+    {
+      "timestamp": "2025-08-24T15:57:06.229854",
+      "equity": 10000.0
+    },
+    {
+      "timestamp": "2025-08-24T15:57:17.522497",
+      "equity": 10000.0
+    },
+    {
+      "timestamp": "2025-08-24T15:57:28.814401",
+      "equity": 10000.0
+    },
+    {
+      "timestamp": "2025-08-24T15:57:40.163957",
+      "equity": 10000.0
+    },
+    {
+      "timestamp": "2025-08-24T15:57:51.735035",
+      "equity": 10000.0
+    },
+    {
+      "timestamp": "2025-08-24T15:58:03.188316",
+      "equity": 10000.0
+    },
+    {
+      "timestamp": "2025-08-24T15:58:14.442685",
+      "equity": 10000.0
+    },
+    {
+      "timestamp": "2025-08-24T15:58:25.628732",
+      "equity": 10000.0
+    },
+    {
+      "timestamp": "2025-08-24T15:58:36.997503",
+      "equity": 10000.0
+    },
+    {
+      "timestamp": "2025-08-24T15:58:48.382116",
+      "equity": 10000.0
+    },
+    {
+      "timestamp": "2025-08-24T15:58:59.533253",
+      "equity": 10000.0
+    },
+    {
+      "timestamp": "2025-08-24T15:59:10.715387",
+      "equity": 10000.0
+    },
+    {
+      "timestamp": "2025-08-24T15:59:22.284627",
+      "equity": 10000.0
+    },
+    {
+      "timestamp": "2025-08-24T15:59:33.521125",
+      "equity": 10000.0
+    },
+    {
+      "timestamp": "2025-08-24T15:59:44.690955",
+      "equity": 10000.0
+    },
+    {
+      "timestamp": "2025-08-24T15:59:56.102667",
+      "equity": 10000.0
+    },
+    {
+      "timestamp": "2025-08-24T16:00:07.564163",
+      "equity": 10000.0
+    },
+    {
+      "timestamp": "2025-08-24T16:00:19.381084",
+      "equity": 10000.0
+    },
+    {
+      "timestamp": "2025-08-24T16:00:30.789993",
+      "equity": 10000.0
+    },
+    {
+      "timestamp": "2025-08-24T16:00:42.032585",
+      "equity": 10000.0
+    },
+    {
+      "timestamp": "2025-08-24T16:00:53.381494",
+      "equity": 10000.0
+    },
+    {
+      "timestamp": "2025-08-24T16:01:04.785042",
+      "equity": 10000.0
+    },
+    {
+      "timestamp": "2025-08-24T16:01:16.595994",
+      "equity": 10000.0
+    },
+    {
+      "timestamp": "2025-08-24T16:01:28.365356",
+      "equity": 10000.0
+    },
+    {
+      "timestamp": "2025-08-24T16:01:39.590828",
+      "equity": 10000.0
+    },
+    {
+      "timestamp": "2025-08-24T16:01:51.217510",
+      "equity": 10000.0
+    },
+    {
+      "timestamp": "2025-08-24T16:02:02.839729",
+      "equity": 10000.0
+    },
+    {
+      "timestamp": "2025-08-24T16:02:14.031509",
+      "equity": 10000.0
+    },
+    {
+      "timestamp": "2025-08-24T16:02:25.212413",
+      "equity": 10000.0
+    },
+    {
+      "timestamp": "2025-08-24T16:02:36.484234",
+      "equity": 10000.0
+    },
+    {
+      "timestamp": "2025-08-24T16:02:47.678821",
+      "equity": 10000.0
+    },
+    {
+      "timestamp": "2025-08-24T16:02:59.131159",
+      "equity": 10000.0
+    },
+    {
+      "timestamp": "2025-08-24T16:03:10.621124",
+      "equity": 10000.0
+    },
+    {
+      "timestamp": "2025-08-24T16:03:21.835808",
+      "equity": 10000.0
+    },
+    {
+      "timestamp": "2025-08-24T16:03:33.020721",
+      "equity": 10000.0
+    },
+    {
+      "timestamp": "2025-08-24T16:03:44.396774",
+      "equity": 10000.0
+    },
+    {
+      "timestamp": "2025-08-24T16:03:55.593911",
+      "equity": 10000.0
+    },
+    {
+      "timestamp": "2025-08-24T16:04:07.542104",
+      "equity": 10000.0
+    },
+    {
+      "timestamp": "2025-08-24T16:04:18.950878",
+      "equity": 10000.0
+    },
+    {
+      "timestamp": "2025-08-24T16:04:30.567254",
+      "equity": 10000.0
+    },
+    {
+      "timestamp": "2025-08-24T16:04:41.999409",
+      "equity": 10000.0
+    },
+    {
+      "timestamp": "2025-08-24T16:04:53.457632",
+      "equity": 10000.0
+    },
+    {
+      "timestamp": "2025-08-24T16:05:05.159965",
+      "equity": 10000.0
+    },
+    {
+      "timestamp": "2025-08-24T16:05:16.478213",
+      "equity": 10000.0
+    },
+    {
+      "timestamp": "2025-08-24T16:05:27.641457",
+      "equity": 10000.0
+    },
+    {
+      "timestamp": "2025-08-24T16:05:38.853895",
+      "equity": 10000.0
+    },
+    {
+      "timestamp": "2025-08-24T16:05:50.253728",
+      "equity": 10000.0
+    },
+    {
+      "timestamp": "2025-08-24T16:06:01.566146",
+      "equity": 10000.0
+    },
+    {
+      "timestamp": "2025-08-24T16:06:12.979808",
+      "equity": 10000.0
+    },
+    {
+      "timestamp": "2025-08-24T16:06:24.211467",
+      "equity": 10000.0
+    },
+    {
+      "timestamp": "2025-08-24T16:06:35.731960",
+      "equity": 10000.0
+    }
+  ],
+  "config": {
+    "signal_mode": "conservative",
+    "max_position_size": 0.2,
+    "max_positions": 5,
+    "stop_loss": 0.05,
+    "take_profit": 0.1,
+    "commission_rate": 0.006,
+    "slippage_rate": 0.001,
+    "strategy_overrides": {}
+  }
+}

@@ -1,0 +1,297 @@
+# Main Trading Bot Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: trading-bot-service
+  namespace: trading-system
+  labels:
+    app: trading-bot
+    component: orchestrator
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
+spec:
+  type: ClusterIP
+  selector:
+    app: trading-bot
+  ports:
+  - name: http
+    port: 8080
+    targetPort: 8080
+    protocol: TCP
+  - name: https
+    port: 8443
+    targetPort: 8443
+    protocol: TCP
+  - name: metrics
+    port: 9090
+    targetPort: 9090
+    protocol: TCP
+  sessionAffinity: ClientIP
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 10800
+
+---
+# External Load Balancer Service (Production)
+apiVersion: v1
+kind: Service
+metadata:
+  name: trading-bot-external
+  namespace: trading-system
+  labels:
+    app: trading-bot
+    component: load-balancer
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-ssl-cert: "arn:aws:acm:region:account-id:certificate/cert-id"
+    service.beta.kubernetes.io/aws-load-balancer-backend-protocol: "http"
+    service.beta.kubernetes.io/aws-load-balancer-ssl-ports: "https"
+spec:
+  type: LoadBalancer
+  selector:
+    app: trading-bot
+  ports:
+  - name: http
+    port: 80
+    targetPort: 8080
+    protocol: TCP
+  - name: https
+    port: 443
+    targetPort: 8443
+    protocol: TCP
+  sessionAffinity: ClientIP
+
+---
+# Headless Service for StatefulSet Communication
+apiVersion: v1
+kind: Service
+metadata:
+  name: trading-bot-headless
+  namespace: trading-system
+  labels:
+    app: trading-bot
+    component: headless
+spec:
+  type: ClusterIP
+  clusterIP: None
+  selector:
+    app: trading-bot
+  ports:
+  - name: http
+    port: 8080
+    targetPort: 8080
+
+---
+# PostgreSQL Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-service
+  namespace: trading-system
+  labels:
+    app: postgres
+    component: database
+spec:
+  type: ClusterIP
+  selector:
+    app: postgres
+  ports:
+  - name: postgres
+    port: 5432
+    targetPort: 5432
+    protocol: TCP
+
+---
+# Redis Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-service
+  namespace: trading-system
+  labels:
+    app: redis
+    component: cache
+spec:
+  type: ClusterIP
+  selector:
+    app: redis
+  ports:
+  - name: redis
+    port: 6379
+    targetPort: 6379
+    protocol: TCP
+
+---
+# RabbitMQ Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: rabbitmq-service
+  namespace: trading-system
+  labels:
+    app: rabbitmq
+    component: message-broker
+spec:
+  type: ClusterIP
+  selector:
+    app: rabbitmq
+  ports:
+  - name: amqp
+    port: 5672
+    targetPort: 5672
+    protocol: TCP
+  - name: management
+    port: 15672
+    targetPort: 15672
+    protocol: TCP
+
+---
+# Prometheus Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus-service
+  namespace: trading-system
+  labels:
+    app: prometheus
+    component: monitoring
+spec:
+  type: ClusterIP
+  selector:
+    app: prometheus
+  ports:
+  - name: web
+    port: 9090
+    targetPort: 9090
+    protocol: TCP
+
+---
+# Grafana Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana-service
+  namespace: trading-system
+  labels:
+    app: grafana
+    component: monitoring
+spec:
+  type: ClusterIP
+  selector:
+    app: grafana
+  ports:
+  - name: web
+    port: 3000
+    targetPort: 3000
+    protocol: TCP
+
+---
+# Ingress Configuration
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: trading-bot-ingress
+  namespace: trading-system
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, OPTIONS"
+    nginx.ingress.kubernetes.io/cors-allow-headers: "DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization"
+spec:
+  tls:
+  - hosts:
+    - trading.example.com
+    - api.trading.example.com
+    - monitor.trading.example.com
+    secretName: trading-tls-secret
+  rules:
+  - host: trading.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: trading-bot-service
+            port:
+              number: 8080
+  - host: api.trading.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: trading-bot-service
+            port:
+              number: 8443
+  - host: monitor.trading.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: grafana-service
+            port:
+              number: 3000
+
+---
+# Service Monitor for Prometheus
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: trading-bot-monitor
+  namespace: trading-system
+  labels:
+    app: trading-bot
+    prometheus: kube-prometheus
+spec:
+  selector:
+    matchLabels:
+      app: trading-bot
+  endpoints:
+  - port: metrics
+    interval: 30s
+    path: /metrics
+    scheme: http
+    relabelings:
+    - sourceLabels: [__meta_kubernetes_pod_name]
+      targetLabel: pod
+    - sourceLabels: [__meta_kubernetes_pod_node_name]
+      targetLabel: node
+
+---
+# Endpoints for External Database (if needed)
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: external-postgres
+  namespace: trading-system
+subsets:
+  - addresses:
+    - ip: 10.0.1.100  # Replace with actual DB IP
+    ports:
+    - port: 5432
+      name: postgres
+
+---
+# Service for External Database
+apiVersion: v1
+kind: Service
+metadata:
+  name: external-postgres-service
+  namespace: trading-system
+spec:
+  type: ClusterIP
+  ports:
+  - port: 5432
+    targetPort: 5432
+    name: postgres

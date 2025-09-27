@@ -7,10 +7,10 @@ Complete isolation - everything needed is local.
 from datetime import datetime, timedelta
 from typing import List, Dict, Optional, Any
 import pandas as pd
-import yfinance as yf
 import pickle
 import json
 import os
+from ...data_providers import get_data_provider
 
 from .types import (
     DataRecord, DataQuery, CacheEntry, StorageStats,
@@ -272,9 +272,13 @@ def download_from_yahoo(
     
     for symbol in symbols:
         try:
-            print(f"📥 Downloading {symbol} from Yahoo Finance...")
-            ticker = yf.Ticker(symbol)
-            data = ticker.history(start=start, end=end, interval=interval)
+            print(f"📥 Downloading {symbol} using data provider...")
+            provider = get_data_provider()
+            data = provider.get_historical_data(
+                symbol, 
+                start=start.strftime('%Y-%m-%d') if start else None,
+                end=end.strftime('%Y-%m-%d') if end else None
+            )
             
             if not data.empty:
                 # Standardize columns

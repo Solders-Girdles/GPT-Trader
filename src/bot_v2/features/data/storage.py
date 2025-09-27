@@ -6,11 +6,15 @@ Complete isolation - no external dependencies.
 
 from datetime import datetime
 from typing import Dict, List, Optional, Any
+import logging
 import pandas as pd
 import pickle
 import os
 import json
 from .types import DataQuery, DataType, DataSource
+
+
+logger = logging.getLogger(__name__)
 
 
 class DataStorage:
@@ -116,8 +120,21 @@ class DataStorage:
                         
                         if not filtered_data.empty:
                             results.append(filtered_data)
-                    except:
-                        continue
+                    except (FileNotFoundError, pickle.UnpicklingError, ValueError, OSError) as exc:
+                        logger.warning(
+                            "Failed to load %s for %s (%s): %s",
+                            filepath,
+                            symbol,
+                            query.data_type.value,
+                            exc,
+                            exc_info=True,
+                        )
+                    except Exception as exc:
+                        logger.exception(
+                            "Unexpected error loading %s for %s",
+                            filepath,
+                            symbol,
+                        )
         
         if results:
             # Combine results
@@ -161,8 +178,10 @@ class DataStorage:
                         keys_to_remove = [k for k, v in self.index.items() if v == filepath]
                         for key in keys_to_remove:
                             del self.index[key]
-            except:
-                continue
+            except (FileNotFoundError, pickle.UnpicklingError, ValueError, OSError) as exc:
+                logger.warning("Failed to prune %s: %s", filepath, exc, exc_info=True)
+            except Exception as exc:
+                logger.exception("Unexpected error pruning %s", filepath)
         
         # Save updated index
         self._save_index()
@@ -202,8 +221,10 @@ class DataStorage:
                 symbol = filename.split('_')[0]
                 symbols.add(symbol)
                 
-            except:
-                continue
+            except (FileNotFoundError, pickle.UnpicklingError, ValueError, OSError) as exc:
+                logger.warning("Failed to load %s for stats: %s", filepath, exc, exc_info=True)
+            except Exception as exc:
+                logger.exception("Unexpected error collecting stats from %s", filepath)
         
         return {
             'total_records': total_records,

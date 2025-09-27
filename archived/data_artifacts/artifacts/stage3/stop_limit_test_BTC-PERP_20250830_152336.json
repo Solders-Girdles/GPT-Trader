@@ -1,0 +1,5 @@
+{
+  "success": false,
+  "error": "Live authentication failed",
+  "message": "Fix authentication before attempting orders"
+}

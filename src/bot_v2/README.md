@@ -1,5 +1,12 @@
 # GPT-Trader V2: Vertical Slice Architecture
 
+Important: This document describes the equities baseline slices used earlier in the project (backtests, paper/live trading via generic brokers, and yfinance-driven data). The active focus of this repository is Coinbase Perpetual Futures. For the current perps bot and operations, see:
+- docs/reference/coinbase.md
+- docs/reference/trading_logic_perps.md
+- src/bot_v2/cli.py (entrypoint for the perps bot)
+
+Legacy content below remains as a reference for the slice architecture and equities workflows.
+
 ## What This Is
 
 An intelligent trading system built on **vertical slice architecture** optimized for AI development:
@@ -23,6 +30,10 @@ features/                    # ONLY source of truth
 └── market_regime/          # Regime detection ✅
 ```
 
+## Type System
+
+**Important**: The `live_trade` module uses core broker interfaces exclusively. Local types are retained only for non-core structures (AccountInfo, MarketHours, Bar, ExecutionReport). All Order, Position, and Quote types come from `brokerages.core.interfaces`.
+
 ## Key Principles
 
 1. **Complete Isolation** - Each slice is self-contained (~500 tokens)
@@ -34,11 +45,13 @@ features/                    # ONLY source of truth
 ## Quick Start
 
 ```bash
-# Run tests (should be 100% pass)
-python test_all.py
+# Run integration tests for vertical slices
+pytest -m integration tests/integration/bot_v2 -q
 
-# Run demo with real data
-python demo.py
+# Run focused slice checks
+pytest tests/integration/bot_v2/test_slice_isolation.py -q
+pytest tests/integration/bot_v2/test_vertical_slice.py -q
+pytest tests/integration/bot_v2/test_workflows.py -q
 ```
 
 ## Example Results

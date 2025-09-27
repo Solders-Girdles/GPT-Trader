@@ -1,0 +1,1039 @@
+{
+  "version": "1.0.0",
+  "mode": "dry_run",
+  "environment": "sandbox",
+  "start_time": "2025-08-30T14:23:46.616603+00:00",
+  "duration_seconds": 300,
+  "signals": [
+    {
+      "timestamp": "2025-08-30T14:23:53.624053+00:00",
+      "symbol": "SOL-PERP",
+      "action": "sell",
+      "price": "45301.27866639718",
+      "confidence": 0.878241205333486,
+      "indicators": {
+        "rsi": 47.15625928261953,
+        "macd": -94.58524902062433,
+        "volume": 5152.557685438801
+      }
+    },
+    {
+      "timestamp": "2025-08-30T14:24:10.633979+00:00",
+      "symbol": "SOL-PERP",
+      "action": "sell",
+      "price": "47332.593968933485",
+      "confidence": 0.863102515905638,
+      "indicators": {
+        "rsi": 45.89719771349409,
+        "macd": -90.88041317577067,
+        "volume": 7722.353608144209
+      }
+    },
+    {
+      "timestamp": "2025-08-30T14:24:17.639520+00:00",
+      "symbol": "BTC-PERP",
+      "action": "buy",
+      "price": "45565.56032026279",
+      "confidence": 0.9491110071979709,
+      "indicators": {
+        "rsi": 49.59256950312036,
+        "macd": -25.341181628573864,
+        "volume": 3307.488296304754
+      }
+    },
+    {
+      "timestamp": "2025-08-30T14:24:27.648175+00:00",
+      "symbol": "BTC-PERP",
+      "action": "buy",
+      "price": "45676.24732526539",
+      "confidence": 0.8013173783810178,
+      "indicators": {
+        "rsi": 31.946462926485502,
+        "macd": -32.119373068163924,
+        "volume": 2992.4293169000607
+      }
+    },
+    {
+      "timestamp": "2025-08-30T14:24:58.681012+00:00",
+      "symbol": "BTC-PERP",
+      "action": "sell",
+      "price": "41150.76664514219",
+      "confidence": 0.7088638201081894,
+      "indicators": {
+        "rsi": 29.982152737295138,
+        "macd": 25.33653121464856,
+        "volume": 2324.8615243337695
+      }
+    },
+    {
+      "timestamp": "2025-08-30T14:25:04.686764+00:00",
+      "symbol": "SOL-PERP",
+      "action": "buy",
+      "price": "45500.4383815499",
+      "confidence": 0.7465325546877357,
+      "indicators": {
+        "rsi": 43.09628857458975,
+        "macd": 15.531650643545177,
+        "volume": 7876.571531094584
+      }
+    },
+    {
+      "timestamp": "2025-08-30T14:25:06.688949+00:00",
+      "symbol": "ETH-PERP",
+      "action": "sell",
+      "price": "40858.74502228983",
+      "confidence": 0.7189104020934346,
+      "indicators": {
+        "rsi": 47.39035859378134,
+        "macd": 60.64520717202316,
+        "volume": 2556.9827072600174
+      }
+    },
+    {
+      "timestamp": "2025-08-30T14:25:19.702857+00:00",
+      "symbol": "BTC-PERP",
+      "action": "buy",
+      "price": "41139.612490117695",
+      "confidence": 0.9460624437755178,
+      "indicators": {
+        "rsi": 38.402958775850166,
+        "macd": 7.8860259665434,
+        "volume": 4600.172031367928
+      }
+    },
+    {
+      "timestamp": "2025-08-30T14:25:21.705008+00:00",
+      "symbol": "SOL-PERP",
+      "action": "sell",
+      "price": "43231.708454423184",
+      "confidence": 0.914962828150691,
+      "indicators": {
+        "rsi": 62.07782037088505,
+        "macd": 26.938254077585427,
+        "volume": 4354.417264474561
+      }
+    },
+    {
+      "timestamp": "2025-08-30T14:25:30.714653+00:00",
+      "symbol": "SOL-PERP",
+      "action": "buy",
+      "price": "48755.02254231692",
+      "confidence": 0.9404429764026527,
+      "indicators": {
+        "rsi": 43.369388038053195,
+        "macd": -73.82496712765044,
+        "volume": 9318.243060405346
+      }
+    },
+    {
+      "timestamp": "2025-08-30T14:25:38.723216+00:00",
+      "symbol": "SOL-PERP",
+      "action": "sell",
+      "price": "44084.35359936354",
+      "confidence": 0.7518101818969063,
+      "indicators": {
+        "rsi": 35.635722379546934,
+        "macd": 89.45929505912193,
+        "volume": 9104.719867126383
+      }
+    },
+    {
+      "timestamp": "2025-08-30T14:25:45.730706+00:00",
+      "symbol": "SOL-PERP",
+      "action": "buy",
+      "price": "44983.35736065686",
+      "confidence": 0.5903145086962488,
+      "indicators": {
+        "rsi": 65.10513558232826,
+        "macd": -74.53553795591654,
+        "volume": 4424.4880902540335
+      }
+    },
+    {
+      "timestamp": "2025-08-30T14:25:55.740537+00:00",
+      "symbol": "BTC-PERP",
+      "action": "sell",
+      "price": "42321.59431750833",
+      "confidence": 0.6728694238873576,
+      "indicators": {
+        "rsi": 65.97332024287145,
+        "macd": -14.96629269375336,
+        "volume": 3937.5806493420423
+      }
+    },
+    {
+      "timestamp": "2025-08-30T14:25:57.742655+00:00",
+      "symbol": "ETH-PERP",
+      "action": "buy",
+      "price": "46743.62899752404",
+      "confidence": 0.7933812940532956,
+      "indicators": {
+        "rsi": 60.60321112322736,
+        "macd": -98.05241606927227,
+        "volume": 8237.359046422771
+      }
+    },
+    {
+      "timestamp": "2025-08-30T14:26:01.746157+00:00",
+      "symbol": "ETH-PERP",
+      "action": "sell",
+      "price": "40739.47246621896",
+      "confidence": 0.6211602416303154,
+      "indicators": {
+        "rsi": 48.086625129757344,
+        "macd": -35.72147713931062,
+        "volume": 6169.066479682139
+      }
+    },
+    {
+      "timestamp": "2025-08-30T14:26:14.760150+00:00",
+      "symbol": "SOL-PERP",
+      "action": "buy",
+      "price": "40189.04633084584",
+      "confidence": 0.5339459325037719,
+      "indicators": {
+        "rsi": 72.86952312086909,
+        "macd": 61.360290147117155,
+        "volume": 6615.130144800019
+      }
+    },
+    {
+      "timestamp": "2025-08-30T14:26:22.768291+00:00",
+      "symbol": "BTC-PERP",
+      "action": "buy",
+      "price": "48625.96384472862",
+      "confidence": 0.8997266111180032,
+      "indicators": {
+        "rsi": 50.15048223253221,
+        "macd": 39.679166108125884,
+        "volume": 8572.470893529091
+      }
+    },
+    {
+      "timestamp": "2025-08-30T14:26:25.771409+00:00",
+      "symbol": "ETH-PERP",
+      "action": "buy",
+      "price": "43751.55014597741",
+      "confidence": 0.67370949199595,
+      "indicators": {
+        "rsi": 59.77684059717677,
+        "macd": -65.85421587940493,
+        "volume": 9420.668683565158
+      }
+    },
+    {
+      "timestamp": "2025-08-30T14:26:35.781919+00:00",
+      "symbol": "ETH-PERP",
+      "action": "buy",
+      "price": "41315.8061697882",
+      "confidence": 0.8064741334635648,
+      "indicators": {
+        "rsi": 50.79036692272,
+        "macd": -50.096579792376076,
+        "volume": 7526.621354322274
+      }
+    },
+    {
+      "timestamp": "2025-08-30T14:26:46.793737+00:00",
+      "symbol": "ETH-PERP",
+      "action": "sell",
+      "price": "41258.00656429743",
+      "confidence": 0.9427674036700362,
+      "indicators": {
+        "rsi": 56.19957462157022,
+        "macd": 0.9271720054656782,
+        "volume": 2650.099177367245
+      }
+    },
+    {
+      "timestamp": "2025-08-30T14:26:53.801120+00:00",
+      "symbol": "BTC-PERP",
+      "action": "sell",
+      "price": "41554.33958219323",
+      "confidence": 0.6546753702492055,
+      "indicators": {
+        "rsi": 45.524599554837835,
+        "macd": 84.89796386133952,
+        "volume": 6054.753602330639
+      }
+    },
+    {
+      "timestamp": "2025-08-30T14:26:56.804404+00:00",
+      "symbol": "BTC-PERP",
+      "action": "buy",
+      "price": "40282.93638340592",
+      "confidence": 0.8857727142622831,
+      "indicators": {
+        "rsi": 64.48487221562496,
+        "macd": -86.74678371619085,
+        "volume": 8919.576798252961
+      }
+    },
+    {
+      "timestamp": "2025-08-30T14:27:32.841978+00:00",
+      "symbol": "SOL-PERP",
+      "action": "buy",
+      "price": "46646.803687079504",
+      "confidence": 0.6770395220051664,
+      "indicators": {
+        "rsi": 44.464716713087626,
+        "macd": -95.20546835386175,
+        "volume": 6235.616137421381
+      }
+    },
+    {
+      "timestamp": "2025-08-30T14:27:53.863922+00:00",
+      "symbol": "ETH-PERP",
+      "action": "buy",
+      "price": "47854.035244578845",
+      "confidence": 0.5322876843712879,
+      "indicators": {
+        "rsi": 71.29232842609011,
+        "macd": 90.07675329761292,
+        "volume": 3851.0280259631804
+      }
+    },
+    {
+      "timestamp": "2025-08-30T14:27:59.870492+00:00",
+      "symbol": "SOL-PERP",
+      "action": "sell",
+      "price": "49915.04697997168",
+      "confidence": 0.7472390059355131,
+      "indicators": {
+        "rsi": 38.93274231599591,
+        "macd": 53.400151915980416,
+        "volume": 9129.308804572935
+      }
+    },
+    {
+      "timestamp": "2025-08-30T14:28:36.908590+00:00",
+      "symbol": "BTC-PERP",
+      "action": "buy",
+      "price": "43003.61939363728",
+      "confidence": 0.7141391351093289,
+      "indicators": {
+        "rsi": 45.040635162709016,
+        "macd": -27.63785709042881,
+        "volume": 7454.060925631655
+      }
+    }
+  ],
+  "would_place_orders": [
+    {
+      "timestamp": "2025-08-30T14:23:53.624096+00:00",
+      "symbol": "SOL-PERP",
+      "side": "sell",
+      "type": "limit",
+      "size": "0.0001",
+      "price": "45301.27866639718",
+      "confidence": 0.878241205333486,
+      "virtual": true,
+      "reason": "dry_run_snapshot"
+    },
+    {
+      "timestamp": "2025-08-30T14:24:10.634014+00:00",
+      "symbol": "SOL-PERP",
+      "side": "sell",
+      "type": "limit",
+      "size": "0.0001",
+      "price": "47332.593968933485",
+      "confidence": 0.863102515905638,
+      "virtual": true,
+      "reason": "dry_run_snapshot"
+    },
+    {
+      "timestamp": "2025-08-30T14:25:04.686790+00:00",
+      "symbol": "SOL-PERP",
+      "side": "buy",
+      "type": "limit",
+      "size": "0.0001",
+      "price": "45500.4383815499",
+      "confidence": 0.7465325546877357,
+      "virtual": true,
+      "reason": "dry_run_snapshot"
+    },
+    {
+      "timestamp": "2025-08-30T14:25:06.688969+00:00",
+      "symbol": "ETH-PERP",
+      "side": "sell",
+      "type": "limit",
+      "size": "0.0001",
+      "price": "40858.74502228983",
+      "confidence": 0.7189104020934346,
+      "virtual": true,
+      "reason": "dry_run_snapshot"
+    },
+    {
+      "timestamp": "2025-08-30T14:25:19.702881+00:00",
+      "symbol": "BTC-PERP",
+      "side": "buy",
+      "type": "limit",
+      "size": "0.0001",
+      "price": "41139.612490117695",
+      "confidence": 0.9460624437755178,
+      "virtual": true,
+      "reason": "dry_run_snapshot"
+    },
+    {
+      "timestamp": "2025-08-30T14:25:21.705026+00:00",
+      "symbol": "SOL-PERP",
+      "side": "sell",
+      "type": "limit",
+      "size": "0.0001",
+      "price": "43231.708454423184",
+      "confidence": 0.914962828150691,
+      "virtual": true,
+      "reason": "dry_run_snapshot"
+    },
+    {
+      "timestamp": "2025-08-30T14:25:30.714676+00:00",
+      "symbol": "SOL-PERP",
+      "side": "buy",
+      "type": "limit",
+      "size": "0.0001",
+      "price": "48755.02254231692",
+      "confidence": 0.9404429764026527,
+      "virtual": true,
+      "reason": "dry_run_snapshot"
+    },
+    {
+      "timestamp": "2025-08-30T14:25:57.742677+00:00",
+      "symbol": "ETH-PERP",
+      "side": "buy",
+      "type": "limit",
+      "size": "0.0001",
+      "price": "46743.62899752404",
+      "confidence": 0.7933812940532956,
+      "virtual": true,
+      "reason": "dry_run_snapshot"
+    },
+    {
+      "timestamp": "2025-08-30T14:26:35.781941+00:00",
+      "symbol": "ETH-PERP",
+      "side": "buy",
+      "type": "limit",
+      "size": "0.0001",
+      "price": "41315.8061697882",
+      "confidence": 0.8064741334635648,
+      "virtual": true,
+      "reason": "dry_run_snapshot"
+    },
+    {
+      "timestamp": "2025-08-30T14:26:56.804432+00:00",
+      "symbol": "BTC-PERP",
+      "side": "buy",
+      "type": "limit",
+      "size": "0.0001",
+      "price": "40282.93638340592",
+      "confidence": 0.8857727142622831,
+      "virtual": true,
+      "reason": "dry_run_snapshot"
+    },
+    {
+      "timestamp": "2025-08-30T14:27:59.870513+00:00",
+      "symbol": "SOL-PERP",
+      "side": "sell",
+      "type": "limit",
+      "size": "0.0001",
+      "price": "49915.04697997168",
+      "confidence": 0.7472390059355131,
+      "virtual": true,
+      "reason": "dry_run_snapshot"
+    },
+    {
+      "timestamp": "2025-08-30T14:28:36.908617+00:00",
+      "symbol": "BTC-PERP",
+      "side": "buy",
+      "type": "limit",
+      "size": "0.0001",
+      "price": "43003.61939363728",
+      "confidence": 0.7141391351093289,
+      "virtual": true,
+      "reason": "dry_run_snapshot"
+    }
+  ],
+  "risk_blocks": [
+    {
+      "type": "daily_loss",
+      "timestamp": "2025-08-30T14:23:48.620751+00:00",
+      "message": "Daily loss limit would be breached"
+    },
+    {
+      "type": "position_limit",
+      "timestamp": "2025-08-30T14:23:50.621851+00:00",
+      "message": "Position size would exceed limit"
+    },
+    {
+      "type": "position_limit",
+      "timestamp": "2025-08-30T14:24:38.645850+00:00",
+      "message": "Position size would exceed limit"
+    },
+    {
+      "type": "position_limit",
+      "timestamp": "2025-08-30T14:25:04.659700+00:00",
+      "message": "Position size would exceed limit"
+    },
+    {
+      "type": "position_limit",
+      "timestamp": "2025-08-30T14:25:08.661863+00:00",
+      "message": "Position size would exceed limit"
+    },
+    {
+      "type": "position_limit",
+      "timestamp": "2025-08-30T14:25:30.673128+00:00",
+      "message": "Position size would exceed limit"
+    },
+    {
+      "type": "position_limit",
+      "timestamp": "2025-08-30T14:25:42.679622+00:00",
+      "message": "Position size would exceed limit"
+    },
+    {
+      "type": "daily_loss",
+      "timestamp": "2025-08-30T14:26:36.706984+00:00",
+      "message": "Daily loss limit would be breached"
+    },
+    {
+      "type": "staleness",
+      "timestamp": "2025-08-30T14:26:44.711371+00:00",
+      "message": "Market data is stale"
+    },
+    {
+      "type": "daily_loss",
+      "timestamp": "2025-08-30T14:26:48.713543+00:00",
+      "message": "Daily loss limit would be breached"
+    },
+    {
+      "type": "position_limit",
+      "timestamp": "2025-08-30T14:27:00.719615+00:00",
+      "message": "Position size would exceed limit"
+    },
+    {
+      "type": "staleness",
+      "timestamp": "2025-08-30T14:27:06.722887+00:00",
+      "message": "Market data is stale"
+    },
+    {
+      "type": "daily_loss",
+      "timestamp": "2025-08-30T14:27:36.737650+00:00",
+      "message": "Daily loss limit would be breached"
+    },
+    {
+      "type": "position_limit",
+      "timestamp": "2025-08-30T14:28:16.759305+00:00",
+      "message": "Position size would exceed limit"
+    },
+    {
+      "type": "staleness",
+      "timestamp": "2025-08-30T14:28:34.769157+00:00",
+      "message": "Market data is stale"
+    },
+    {
+      "type": "position_limit",
+      "timestamp": "2025-08-30T14:28:40.772441+00:00",
+      "message": "Position size would exceed limit"
+    }
+  ],
+  "market_conditions": [
+    {
+      "timestamp": "2025-08-30T14:23:46.619636+00:00",
+      "spread_bps": 6.764990972831123,
+      "depth_imbalance": 0.06409814995619612,
+      "volatility": 54.22647315199258,
+      "volume": 1493725.9596427483,
+      "funding_rate": -0.0006477321502796499
+    },
+    {
+      "timestamp": "2025-08-30T14:23:51.620763+00:00",
+      "spread_bps": 6.958696302953994,
+      "depth_imbalance": 0.1535463166806762,
+      "volatility": 44.785803091451214,
+      "volume": 5844158.450254566,
+      "funding_rate": 0.0005677722849743556
+    },
+    {
+      "timestamp": "2025-08-30T14:23:56.621900+00:00",
+      "spread_bps": 11.076572943734345,
+      "depth_imbalance": 0.3666378260003659,
+      "volatility": 59.4442794681154,
+      "volume": 7075409.656993931,
+      "funding_rate": -0.00042843873777416853
+    },
+    {
+      "timestamp": "2025-08-30T14:24:01.623024+00:00",
+      "spread_bps": 24.147548688749083,
+      "depth_imbalance": 0.0024071794469978647,
+      "volatility": 15.066708176207452,
+      "volume": 2681906.2449411605,
+      "funding_rate": -0.0002299860037463748
+    },
+    {
+      "timestamp": "2025-08-30T14:24:06.624232+00:00",
+      "spread_bps": 12.876508650789996,
+      "depth_imbalance": -0.09070371601309979,
+      "volatility": 13.83546723091419,
+      "volume": 2305047.6376069654,
+      "funding_rate": -0.000606708653036673
+    },
+    {
+      "timestamp": "2025-08-30T14:24:11.625385+00:00",
+      "spread_bps": 21.9837666487427,
+      "depth_imbalance": -0.0757942365922174,
+      "volatility": 53.63804063238661,
+      "volume": 1404167.3374798007,
+      "funding_rate": 0.0006438369640216757
+    },
+    {
+      "timestamp": "2025-08-30T14:24:16.626530+00:00",
+      "spread_bps": 24.43026460526944,
+      "depth_imbalance": -0.05761165574943006,
+      "volatility": 10.088495168173186,
+      "volume": 6300353.434505363,
+      "funding_rate": -0.0009565799441403884
+    },
+    {
+      "timestamp": "2025-08-30T14:24:21.627667+00:00",
+      "spread_bps": 20.743289382638743,
+      "depth_imbalance": -0.036421285876479415,
+      "volatility": 11.108617947100143,
+      "volume": 8711961.500424735,
+      "funding_rate": 0.0009713032545799892
+    },
+    {
+      "timestamp": "2025-08-30T14:24:26.628800+00:00",
+      "spread_bps": 27.835534220131496,
+      "depth_imbalance": -0.06536297490498122,
+      "volatility": 52.68414914374195,
+      "volume": 3694471.515150708,
+      "funding_rate": 0.000447687804045012
+    },
+    {
+      "timestamp": "2025-08-30T14:24:31.629817+00:00",
+      "spread_bps": 9.45913118169568,
+      "depth_imbalance": 0.049592335742096205,
+      "volatility": 15.164439340268046,
+      "volume": 9478173.702571245,
+      "funding_rate": 0.0009609486508382913
+    },
+    {
+      "timestamp": "2025-08-30T14:24:36.630955+00:00",
+      "spread_bps": 9.318619637486261,
+      "depth_imbalance": 0.3210339403915319,
+      "volatility": 48.16324604514598,
+      "volume": 6968058.601435661,
+      "funding_rate": 0.00035114753751945625
+    },
+    {
+      "timestamp": "2025-08-30T14:24:41.632086+00:00",
+      "spread_bps": 12.493109980199286,
+      "depth_imbalance": 0.048702970589483585,
+      "volatility": 11.409205189196355,
+      "volume": 5827259.164243689,
+      "funding_rate": -0.0006567733605830575
+    },
+    {
+      "timestamp": "2025-08-30T14:24:46.633212+00:00",
+      "spread_bps": 26.964471218093603,
+      "depth_imbalance": 0.14937279554053062,
+      "volatility": 12.769456950138826,
+      "volume": 9717061.059196977,
+      "funding_rate": 0.0008361485473928579
+    },
+    {
+      "timestamp": "2025-08-30T14:24:51.634355+00:00",
+      "spread_bps": 22.575181709902537,
+      "depth_imbalance": -0.2770616278193243,
+      "volatility": 28.4892278456624,
+      "volume": 2513797.627764802,
+      "funding_rate": 0.00041112568760638007
+    },
+    {
+      "timestamp": "2025-08-30T14:24:56.635490+00:00",
+      "spread_bps": 26.390679698639474,
+      "depth_imbalance": -0.04279568937279765,
+      "volatility": 27.072849642906775,
+      "volume": 9999290.95317606,
+      "funding_rate": 0.00043903079590350085
+    },
+    {
+      "timestamp": "2025-08-30T14:25:01.636623+00:00",
+      "spread_bps": 21.114547684259442,
+      "depth_imbalance": -0.19427196915321843,
+      "volatility": 28.466943177456198,
+      "volume": 4034748.7802510993,
+      "funding_rate": -0.0001914992053181952
+    },
+    {
+      "timestamp": "2025-08-30T14:25:06.637757+00:00",
+      "spread_bps": 11.06988442606874,
+      "depth_imbalance": 0.4621473427724415,
+      "volatility": 58.436456976390275,
+      "volume": 8301233.309402216,
+      "funding_rate": 0.0007634791127915726
+    },
+    {
+      "timestamp": "2025-08-30T14:25:11.638896+00:00",
+      "spread_bps": 22.455416130337525,
+      "depth_imbalance": -0.40738535945574583,
+      "volatility": 52.81203525566387,
+      "volume": 8628196.667336378,
+      "funding_rate": -0.0002719792598478803
+    },
+    {
+      "timestamp": "2025-08-30T14:25:16.640032+00:00",
+      "spread_bps": 29.427350647502912,
+      "depth_imbalance": -0.03688067401996442,
+      "volatility": 55.94624433825706,
+      "volume": 7627876.7038880475,
+      "funding_rate": -0.00015729115095505656
+    },
+    {
+      "timestamp": "2025-08-30T14:25:21.641170+00:00",
+      "spread_bps": 9.864211802198307,
+      "depth_imbalance": 0.00287884066150923,
+      "volatility": 42.122638613229164,
+      "volume": 2183903.542905527,
+      "funding_rate": -7.743544233062736e-05
+    },
+    {
+      "timestamp": "2025-08-30T14:25:26.642312+00:00",
+      "spread_bps": 24.53939065815941,
+      "depth_imbalance": 0.29551332187254875,
+      "volatility": 47.29719089326785,
+      "volume": 7916931.436610053,
+      "funding_rate": 0.000637863831674406
+    },
+    {
+      "timestamp": "2025-08-30T14:25:31.643470+00:00",
+      "spread_bps": 7.104903567723321,
+      "depth_imbalance": -0.1803536155396277,
+      "volatility": 34.18880506489906,
+      "volume": 3572274.858964262,
+      "funding_rate": 0.0009406966499411452
+    },
+    {
+      "timestamp": "2025-08-30T14:25:36.644603+00:00",
+      "spread_bps": 29.834558342014393,
+      "depth_imbalance": 0.29151646650718266,
+      "volatility": 15.88053775538211,
+      "volume": 6252414.730824434,
+      "funding_rate": 0.000275939304946179
+    },
+    {
+      "timestamp": "2025-08-30T14:25:41.645723+00:00",
+      "spread_bps": 6.350511155477258,
+      "depth_imbalance": 0.4580913648222278,
+      "volatility": 42.747508002551676,
+      "volume": 3080345.703694049,
+      "funding_rate": -0.0005158304469354894
+    },
+    {
+      "timestamp": "2025-08-30T14:25:46.646849+00:00",
+      "spread_bps": 23.029823808269395,
+      "depth_imbalance": 0.1710112744543466,
+      "volatility": 59.06342554959136,
+      "volume": 3898283.4217291772,
+      "funding_rate": 0.00013129897640559935
+    },
+    {
+      "timestamp": "2025-08-30T14:25:51.647971+00:00",
+      "spread_bps": 28.880886164443737,
+      "depth_imbalance": -0.29998158445789336,
+      "volatility": 10.964213407855874,
+      "volume": 3177796.228379028,
+      "funding_rate": -0.00039124404950600033
+    },
+    {
+      "timestamp": "2025-08-30T14:25:56.649103+00:00",
+      "spread_bps": 22.35225703322128,
+      "depth_imbalance": 0.47480953466105347,
+      "volatility": 24.494244435590012,
+      "volume": 2757787.48505576,
+      "funding_rate": -3.500668706868783e-05
+    },
+    {
+      "timestamp": "2025-08-30T14:26:01.649998+00:00",
+      "spread_bps": 29.998736389032242,
+      "depth_imbalance": 0.41441161155027983,
+      "volatility": 54.55422920578746,
+      "volume": 6903806.983240529,
+      "funding_rate": 0.0003591613729896086
+    },
+    {
+      "timestamp": "2025-08-30T14:26:06.651143+00:00",
+      "spread_bps": 25.12175929924844,
+      "depth_imbalance": -0.28876614058863315,
+      "volatility": 33.273663501708334,
+      "volume": 2893570.314231391,
+      "funding_rate": 0.000442735746390234
+    },
+    {
+      "timestamp": "2025-08-30T14:26:11.652281+00:00",
+      "spread_bps": 10.662951760849264,
+      "depth_imbalance": 0.24763554598994963,
+      "volatility": 55.20952295090486,
+      "volume": 9240390.011898499,
+      "funding_rate": 8.928723352322459e-05
+    },
+    {
+      "timestamp": "2025-08-30T14:26:16.653421+00:00",
+      "spread_bps": 25.40926513428242,
+      "depth_imbalance": 0.0025841539111779444,
+      "volatility": 42.804987760792116,
+      "volume": 1522141.616367831,
+      "funding_rate": -0.00015306820487906263
+    },
+    {
+      "timestamp": "2025-08-30T14:26:21.654566+00:00",
+      "spread_bps": 10.81307581070319,
+      "depth_imbalance": -0.10438647411606061,
+      "volatility": 10.008839107564901,
+      "volume": 6521613.303113293,
+      "funding_rate": -0.0006390802695907205
+    },
+    {
+      "timestamp": "2025-08-30T14:26:26.655701+00:00",
+      "spread_bps": 10.870803671399017,
+      "depth_imbalance": -0.2663954574848548,
+      "volatility": 15.769216271739946,
+      "volume": 7762188.373075537,
+      "funding_rate": -7.782735008716492e-05
+    },
+    {
+      "timestamp": "2025-08-30T14:26:31.656828+00:00",
+      "spread_bps": 24.514087111652316,
+      "depth_imbalance": 0.017063201673567452,
+      "volatility": 33.962361492481435,
+      "volume": 2699598.7240204206,
+      "funding_rate": 0.0007941361614283043
+    },
+    {
+      "timestamp": "2025-08-30T14:26:36.657965+00:00",
+      "spread_bps": 28.238796922496128,
+      "depth_imbalance": 0.004140984027929506,
+      "volatility": 25.029144328331583,
+      "volume": 2792338.8997124014,
+      "funding_rate": 0.0005058065237300692
+    },
+    {
+      "timestamp": "2025-08-30T14:26:41.659115+00:00",
+      "spread_bps": 13.923792719441465,
+      "depth_imbalance": -0.24572847660871355,
+      "volatility": 13.513431908217369,
+      "volume": 4932412.223218745,
+      "funding_rate": -0.0004654261488483242
+    },
+    {
+      "timestamp": "2025-08-30T14:26:46.660251+00:00",
+      "spread_bps": 14.304421799240012,
+      "depth_imbalance": -0.2746721919394236,
+      "volatility": 47.093668248785924,
+      "volume": 5247620.229113908,
+      "funding_rate": 0.0009827983156949533
+    },
+    {
+      "timestamp": "2025-08-30T14:26:51.661390+00:00",
+      "spread_bps": 8.991228486806992,
+      "depth_imbalance": 0.24351218554963272,
+      "volatility": 46.926640115113294,
+      "volume": 5189635.202807922,
+      "funding_rate": -0.00020377645046159372
+    },
+    {
+      "timestamp": "2025-08-30T14:26:56.662292+00:00",
+      "spread_bps": 16.57399652390374,
+      "depth_imbalance": 0.39105131099109947,
+      "volatility": 56.71902285215956,
+      "volume": 1075203.7687271843,
+      "funding_rate": -0.00023492477813379532
+    },
+    {
+      "timestamp": "2025-08-30T14:27:01.663436+00:00",
+      "spread_bps": 5.106400120207756,
+      "depth_imbalance": 0.2070094271526628,
+      "volatility": 34.52556590194233,
+      "volume": 2310219.87784613,
+      "funding_rate": -0.0009690360029723457
+    },
+    {
+      "timestamp": "2025-08-30T14:27:06.664572+00:00",
+      "spread_bps": 15.219313306758476,
+      "depth_imbalance": 0.37458224708967836,
+      "volatility": 27.090834583292903,
+      "volume": 9656841.155465111,
+      "funding_rate": 1.5603242827710948e-05
+    },
+    {
+      "timestamp": "2025-08-30T14:27:11.665702+00:00",
+      "spread_bps": 13.043731409862378,
+      "depth_imbalance": 0.3380868348823629,
+      "volatility": 55.724752326097864,
+      "volume": 9660443.006069895,
+      "funding_rate": 0.0007836325151406849
+    },
+    {
+      "timestamp": "2025-08-30T14:27:16.666833+00:00",
+      "spread_bps": 15.60392227029903,
+      "depth_imbalance": -0.3949641777702939,
+      "volatility": 48.10641060374962,
+      "volume": 7549458.0404823115,
+      "funding_rate": -0.0009507610952074268
+    },
+    {
+      "timestamp": "2025-08-30T14:27:21.667978+00:00",
+      "spread_bps": 29.482171088510025,
+      "depth_imbalance": 0.21751044300955125,
+      "volatility": 15.31807690028183,
+      "volume": 9430044.793726947,
+      "funding_rate": 0.00011129803846486315
+    },
+    {
+      "timestamp": "2025-08-30T14:27:26.669110+00:00",
+      "spread_bps": 20.80864373956374,
+      "depth_imbalance": -0.37939186281800985,
+      "volatility": 59.349615884063056,
+      "volume": 5523440.988481861,
+      "funding_rate": 0.0003091351648578382
+    },
+    {
+      "timestamp": "2025-08-30T14:27:31.670244+00:00",
+      "spread_bps": 21.491972540286127,
+      "depth_imbalance": 0.2504891098212644,
+      "volatility": 46.714223565340156,
+      "volume": 1775140.311851363,
+      "funding_rate": -0.00019451394111497274
+    },
+    {
+      "timestamp": "2025-08-30T14:27:36.671381+00:00",
+      "spread_bps": 22.034288396328627,
+      "depth_imbalance": 0.2447510764596006,
+      "volatility": 34.00387976839443,
+      "volume": 4982420.389517725,
+      "funding_rate": -0.00048740840041449967
+    },
+    {
+      "timestamp": "2025-08-30T14:27:41.672525+00:00",
+      "spread_bps": 19.800413273177714,
+      "depth_imbalance": -0.4796616358292881,
+      "volatility": 13.68839364756361,
+      "volume": 7820467.716291003,
+      "funding_rate": 0.0004380338612507801
+    },
+    {
+      "timestamp": "2025-08-30T14:27:46.673660+00:00",
+      "spread_bps": 10.467792171841477,
+      "depth_imbalance": -0.06354483987436976,
+      "volatility": 14.023997973093108,
+      "volume": 4766879.542246668,
+      "funding_rate": -0.0006891508927616998
+    },
+    {
+      "timestamp": "2025-08-30T14:27:51.674784+00:00",
+      "spread_bps": 17.558098495759886,
+      "depth_imbalance": -0.04708675122100425,
+      "volatility": 57.09088412347523,
+      "volume": 3196957.1525534587,
+      "funding_rate": -0.00033248097126409304
+    },
+    {
+      "timestamp": "2025-08-30T14:27:56.675909+00:00",
+      "spread_bps": 12.56367458198337,
+      "depth_imbalance": -0.49163749035151294,
+      "volatility": 46.137894554868495,
+      "volume": 4259897.857689725,
+      "funding_rate": -0.0009370426999027544
+    },
+    {
+      "timestamp": "2025-08-30T14:28:01.677087+00:00",
+      "spread_bps": 9.229301141265633,
+      "depth_imbalance": 0.2863191872557509,
+      "volatility": 13.560308705894428,
+      "volume": 8726417.186219875,
+      "funding_rate": -0.0004691227441170874
+    },
+    {
+      "timestamp": "2025-08-30T14:28:06.678235+00:00",
+      "spread_bps": 27.614897443798107,
+      "depth_imbalance": 0.23751799400910034,
+      "volatility": 15.871258835020276,
+      "volume": 5270510.389442958,
+      "funding_rate": 0.00042997800358418625
+    },
+    {
+      "timestamp": "2025-08-30T14:28:11.679403+00:00",
+      "spread_bps": 15.512961118331758,
+      "depth_imbalance": -0.22380110081843974,
+      "volatility": 33.76925231307895,
+      "volume": 5337206.003728637,
+      "funding_rate": 0.0002835002442264105
+    },
+    {
+      "timestamp": "2025-08-30T14:28:16.680583+00:00",
+      "spread_bps": 16.31169012321354,
+      "depth_imbalance": -0.33958891580531136,
+      "volatility": 51.08727884248054,
+      "volume": 8978862.080399133,
+      "funding_rate": -0.0003526803032470689
+    },
+    {
+      "timestamp": "2025-08-30T14:28:21.681739+00:00",
+      "spread_bps": 15.004780176069838,
+      "depth_imbalance": 0.13147089068907802,
+      "volatility": 25.77788486495467,
+      "volume": 2998821.341231203,
+      "funding_rate": -0.00024110331235966623
+    },
+    {
+      "timestamp": "2025-08-30T14:28:26.682884+00:00",
+      "spread_bps": 20.705973154236766,
+      "depth_imbalance": -0.4357724454661147,
+      "volatility": 21.084477212173482,
+      "volume": 1520648.430101836,
+      "funding_rate": -0.0003139457798376282
+    },
+    {
+      "timestamp": "2025-08-30T14:28:31.684013+00:00",
+      "spread_bps": 25.650833557257787,
+      "depth_imbalance": -0.4976398196842067,
+      "volatility": 15.641169396108797,
+      "volume": 6342790.576626778,
+      "funding_rate": -8.44109237186976e-05
+    },
+    {
+      "timestamp": "2025-08-30T14:28:36.685158+00:00",
+      "spread_bps": 8.379925599845423,
+      "depth_imbalance": -0.45869040958143326,
+      "volatility": 55.378908098476906,
+      "volume": 6960004.516412625,
+      "funding_rate": -0.0003102330286869602
+    },
+    {
+      "timestamp": "2025-08-30T14:28:41.686307+00:00",
+      "spread_bps": 17.043504048237242,
+      "depth_imbalance": 0.320149276432519,
+      "volatility": 45.887348812040926,
+      "volume": 5755697.433142708,
+      "funding_rate": -5.9068280157795736e-05
+    }
+  ],
+  "metrics": {
+    "high_volatility_events": 16,
+    "snapshot_duration": 299.301752,
+    "total_signals": 26,
+    "would_place_orders": 12,
+    "daily_loss_blocks": 4,
+    "position_limit_blocks": 9,
+    "high_spread_events": 28,
+    "staleness_blocks": 3
+  },
+  "end_time": "2025-08-30T14:28:46.620979+00:00",
+  "actual_duration": 300.004388,
+  "summary": {
+    "total_signals": 26,
+    "would_place_orders": 12,
+    "conversion_rate": "46.2%",
+    "risk_blocks": 16,
+    "high_spread_events": 28,
+    "high_volatility_events": 16
+  }
+}

@@ -1,0 +1,50 @@
+Secure Environment Configuration
+================================
+Generated: Sat Aug 30 14:43:36 MST 2025
+User: rj
+Host: MacBook-Pro.local
+Environment: development
+
+Environment Variables:
+----------------------
+COINBASE_API_MODE=advanced
+COINBASE_AUTH_TYPE=JWT
+COINBASE_ENABLE_DERIVATIVES=1
+COINBASE_SANDBOX=0
+COINBASE_CDP_API_KEY=organi...e60a
+COINBASE_CDP_PRIVATE_KEY_PATH=/Users/rj/.coinbase/keys/cdp_private_key.pem
+
+Security:
+---------
+Key Directory: /Users/rj/.coinbase/keys
+Directory Permissions: 700
+Private Key Location: /Users/rj/.coinbase/keys/cdp_private_key.pem
+Private Key Permissions: 400
+.env Permissions: 600
+
+Network:
+--------
+Egress IP: 2a09:bac3:5fe9:27e1::3f9:33
+DNS Resolution: OK
+Proxy: 
+NO_PROXY: 
+
+System:
+-------
+Date/Time: 2025-08-30 21:43:36 UTC
+Timezone: MST
+Clock Drift: not_checkeds
+
+Dependencies:
+-------------
+python-dotenv: Version: 1.1.1
+websockets: Version: 13.1
+coinbase: Version: 2.1.0
+PyJWT: Version: 2.10.1
+cryptography: Version: 45.0.6
+
+Safety Parameters:
+------------------
+Max Position Size: 0.01
+Daily Loss Limit: 0.02
+Max Impact BPS: 15

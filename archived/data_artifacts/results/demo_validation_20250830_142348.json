@@ -1,0 +1,172 @@
+{
+  "timestamp": "2025-08-30T14:24:48.684232+00:00",
+  "duration": 60.001475,
+  "results": {
+    "dry_run": "FAIL: APIConfig.__init__() missing 2 required positional arguments: 'passphrase' and 'base_url'",
+    "post_only": "PASS",
+    "market_orders": "PASS",
+    "stop_orders": "PASS"
+  },
+  "metrics": {
+    "orders_placed": [
+      {
+        "id": "test_post_only_001",
+        "symbol": "BTC-PERP",
+        "side": "buy",
+        "type": "limit",
+        "size": "0.0001",
+        "price": "40000",
+        "post_only": true,
+        "client_id": "demo_post_only"
+      },
+      {
+        "id": "test_market_entry_001",
+        "symbol": "BTC-PERP",
+        "side": "buy",
+        "type": "market",
+        "size": "0.0001",
+        "client_id": "demo_market_entry"
+      },
+      {
+        "id": "test_reduce_only_001",
+        "symbol": "BTC-PERP",
+        "side": "sell",
+        "type": "market",
+        "size": "0.0001",
+        "reduce_only": true,
+        "client_id": "demo_reduce_exit"
+      },
+      {
+        "id": "test_stop_limit_001",
+        "symbol": "BTC-PERP",
+        "side": "sell",
+        "type": "stop_limit",
+        "size": "0.0001",
+        "stop_price": "40000",
+        "limit_price": "39900",
+        "client_id": "demo_stop_limit"
+      }
+    ],
+    "rejections": [
+      {
+        "reason": "POST_ONLY_WOULD_CROSS",
+        "timestamp": "2025-08-30T14:23:50.943684+00:00"
+      }
+    ],
+    "fills": [
+      {
+        "order_id": "test_market_entry_001",
+        "price": "45000",
+        "size": "0.0001",
+        "timestamp": "2025-08-30T14:23:50.943712+00:00"
+      },
+      {
+        "order_id": "test_reduce_only_001",
+        "price": "45010",
+        "size": "0.0001",
+        "timestamp": "2025-08-30T14:23:50.943718+00:00"
+      }
+    ],
+    "pnl": [
+      0.001
+    ],
+    "orders_cancelled": [
+      "test_stop_limit_001"
+    ],
+    "placed_count": [
+      4,
+      4,
+      4,
+      4,
+      4,
+      4,
+      4,
+      4,
+      4,
+      4,
+      4,
+      4
+    ],
+    "cancelled_count": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "rejection_count": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "latency_ms": [
+      173.31696551126402,
+      105.63272820567181,
+      176.76654172340193,
+      166.27796117532137,
+      98.96994838461654,
+      83.11888250658491,
+      177.46020018462374,
+      109.19750161088191,
+      107.68051415235801,
+      99.00000718873576,
+      53.05982452976386,
+      77.1186075779647
+    ],
+    "acceptance_rate": [
+      75.0,
+      75.0,
+      75.0,
+      75.0,
+      75.0,
+      75.0,
+      75.0,
+      75.0,
+      75.0,
+      75.0,
+      75.0,
+      75.0
+    ],
+    "total_pnl": [
+      0.001,
+      0.001,
+      0.001,
+      0.001,
+      0.001,
+      0.001,
+      0.001,
+      0.001,
+      0.001,
+      0.001,
+      0.001,
+      0.001
+    ]
+  },
+  "issues": [
+    "Dry run: APIConfig.__init__() missing 2 required positional arguments: 'passphrase' and 'base_url'"
+  ],
+  "criteria": {
+    "Entry/Exit Complete": true,
+    "Post-Only Rejections": true,
+    "SIZED_DOWN Events": false,
+    "PnL Tracked": true,
+    "No Critical Errors": true
+  },
+  "passed": false
+}

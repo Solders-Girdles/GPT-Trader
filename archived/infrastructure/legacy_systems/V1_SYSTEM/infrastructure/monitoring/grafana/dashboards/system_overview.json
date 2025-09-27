@@ -1,0 +1,171 @@
+{
+  "dashboard": {
+    "title": "GPT-Trader System Overview",
+    "tags": ["production", "overview"],
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Database Performance",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "rate(postgres_queries_total[5m])",
+            "legendFormat": "QPS"
+          },
+          {
+            "expr": "histogram_quantile(0.99, rate(postgres_query_duration_seconds_bucket[5m]))",
+            "legendFormat": "P99 Latency"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Connection Pool Status",
+        "type": "stat",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+        "targets": [
+          {
+            "expr": "postgres_connections_active",
+            "legendFormat": "Active Connections"
+          },
+          {
+            "expr": "postgres_connections_idle",
+            "legendFormat": "Idle Connections"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Data Pipeline Throughput",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+        "targets": [
+          {
+            "expr": "rate(datafeed_messages_received_total[5m])",
+            "legendFormat": "Messages/sec"
+          },
+          {
+            "expr": "rate(datafeed_messages_validated_total[5m])",
+            "legendFormat": "Validated/sec"
+          },
+          {
+            "expr": "rate(datafeed_messages_rejected_total[5m])",
+            "legendFormat": "Rejected/sec"
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Data Source Status",
+        "type": "table",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+        "targets": [
+          {
+            "expr": "datasource_status",
+            "format": "table",
+            "instant": true
+          }
+        ],
+        "transformations": [
+          {
+            "id": "organize",
+            "options": {
+              "excludeByName": {},
+              "indexByName": {},
+              "renameByName": {
+                "source": "Data Source",
+                "is_active": "Active",
+                "latency_ms": "Latency (ms)",
+                "error_rate": "Error Rate"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Cache Performance",
+        "type": "gauge",
+        "gridPos": {"h": 8, "w": 8, "x": 0, "y": 16},
+        "targets": [
+          {
+            "expr": "redis_cache_hit_rate",
+            "legendFormat": "Cache Hit Rate"
+          }
+        ],
+        "thresholds": {
+          "mode": "absolute",
+          "steps": [
+            {"color": "red", "value": 0},
+            {"color": "yellow", "value": 0.5},
+            {"color": "green", "value": 0.7}
+          ]
+        }
+      },
+      {
+        "id": 6,
+        "title": "System Memory Usage",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 8, "x": 8, "y": 16},
+        "targets": [
+          {
+            "expr": "process_resident_memory_bytes / 1024 / 1024",
+            "legendFormat": "Memory (MB)"
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Error Rate",
+        "type": "stat",
+        "gridPos": {"h": 8, "w": 8, "x": 16, "y": 16},
+        "targets": [
+          {
+            "expr": "rate(errors_total[5m])",
+            "legendFormat": "Errors/sec"
+          }
+        ],
+        "thresholds": {
+          "mode": "absolute",
+          "steps": [
+            {"color": "green", "value": 0},
+            {"color": "yellow", "value": 1},
+            {"color": "red", "value": 5}
+          ]
+        }
+      },
+      {
+        "id": 8,
+        "title": "ML Model Performance",
+        "type": "table",
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 24},
+        "targets": [
+          {
+            "expr": "ml_model_accuracy",
+            "format": "table"
+          }
+        ],
+        "transformations": [
+          {
+            "id": "organize",
+            "options": {
+              "renameByName": {
+                "model_name": "Model",
+                "accuracy": "Accuracy",
+                "predictions_count": "Predictions",
+                "last_updated": "Last Updated"
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "refresh": "10s",
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    }
+  }
+}

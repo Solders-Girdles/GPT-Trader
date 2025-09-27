@@ -1,0 +1,139 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "panels": [
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PROM_DS"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "expr": "gpt_trader_equity",
+          "legendFormat": "Equity",
+          "refId": "A"
+        },
+        {
+          "expr": "gpt_trader_account_limit_remaining",
+          "legendFormat": "Remaining trading limit",
+          "refId": "B"
+        }
+      ],
+      "title": "Equity & Limit",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PROM_DS"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "targets": [
+        {
+          "expr": "gpt_trader_open_orders",
+          "legendFormat": "Open Orders",
+          "refId": "A"
+        },
+        {
+          "expr": "gpt_trader_order_preview_failures_total",
+          "legendFormat": "Preview Failures",
+          "refId": "B"
+        }
+      ],
+      "title": "Orders & Preview",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PROM_DS"
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "id": 3,
+      "options": {
+        "content": "${account_snapshot}",
+        "mode": "json"
+      },
+      "targets": [
+        {
+          "expr": "label_replace(gpt_trader_fee_tier, \"tier\", \"$1\", \"tier\", \"(.*)\")",
+          "format": "table",
+          "instant": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Account Snapshot",
+      "type": "stat"
+    }
+  ],
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": ["gpt-trader"],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timezone": "browser",
+  "title": "GPT-Trader Overview",
+  "version": 1
+}

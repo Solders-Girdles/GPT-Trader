@@ -8,6 +8,14 @@ confidence adjustments, and regime-based scaling. Complete isolation maintained.
 from typing import Dict, List, Optional, Tuple
 from datetime import datetime
 import numpy as np
+import logging
+
+from ...errors import ValidationError, RiskLimitExceeded, log_error
+from ...validation import (
+    PositiveNumberValidator, PercentageValidator, 
+    RangeValidator, validate_inputs
+)
+from ...config import get_config
 
 from .types import (
     PositionSizeRequest, PositionSizeResponse, PositionSizingResult,
@@ -25,7 +33,55 @@ from .regime import (
     regime_adjusted_size, validate_regime_inputs
 )
 
+logger = logging.getLogger(__name__)
 
+
+def _validate_position_request(request: PositionSizeRequest, field_name: str) -> PositionSizeRequest:
+    """Validate position sizing request with comprehensive checks"""
+    if not isinstance(request, PositionSizeRequest):
+        raise ValidationError(f"{field_name} must be PositionSizeRequest", field=field_name)
+    
+    # Validate basic fields
+    if not request.symbol:
+        raise ValidationError("Symbol is required", field="symbol")
+    
+    PositiveNumberValidator()(request.current_price, "current_price")
+    PositiveNumberValidator()(request.portfolio_value, "portfolio_value")
+    PositiveNumberValidator()(request.strategy_multiplier, "strategy_multiplier")
+    
+    # Validate Kelly inputs if provided
+    if _has_kelly_data(request):
+        try:
+            validate_kelly_inputs(request.win_rate, request.avg_win, request.avg_loss)
+        except Exception as e:
+            raise ValidationError(f"Kelly validation failed: {e}", field="kelly_inputs")
+    
+    # Validate confidence if provided
+    if request.confidence is not None:
+        PercentageValidator(as_decimal=True)(request.confidence, "confidence")
+    
+    return request
+
+
+def _validate_kelly_safety(win_rate: float, avg_win: float, avg_loss: float):
+    """Additional Kelly safety validations"""
+    # Check for division by zero
+    if abs(avg_loss) < 1e-10:
+        raise ValidationError("Average loss too close to zero - division by zero risk", field="avg_loss")
+    
+    # Check for reasonable win rate
+    if win_rate < 0.01 or win_rate > 0.99:
+        raise ValidationError(f"Win rate {win_rate} outside reasonable bounds [0.01, 0.99]", field="win_rate")
+    
+    # Check expected value is positive
+    expected_value = win_rate * avg_win + (1 - win_rate) * avg_loss
+    if expected_value <= 0:
+        raise ValidationError(f"Strategy has negative expected value: {expected_value:.6f}", field="expected_value")
+
+
+@validate_inputs(
+    request=_validate_position_request
+)
 def calculate_position_size(request: PositionSizeRequest) -> PositionSizeResponse:
     """
     Calculate intelligent position size using all available information.
@@ -41,10 +97,22 @@ def calculate_position_size(request: PositionSizeRequest) -> PositionSizeRespons
     Returns:
         Position sizing response with recommendation and details
     """
-    # Validate inputs
-    validation_errors = _validate_request(request)
-    if validation_errors:
-        return _create_error_response(request, validation_errors)
+    try:
+        # Get configuration with defaults
+        config = get_config('position_sizing')
+        
+        # Apply configuration overrides to risk parameters if needed
+        if hasattr(request.risk_params, '__dict__'):
+            for key, value in config.items():
+                if hasattr(request.risk_params, key) and getattr(request.risk_params, key) is None:
+                    setattr(request.risk_params, key, value)
+        
+        logger.info(f"Calculating position size for {request.symbol} using {request.method.value}")
+        
+    except Exception as e:
+        error = ValidationError(f"Configuration error: {e}", field="config")
+        log_error(error)
+        return _create_error_response(request, [str(error)])
     
     # Calculate base position size using requested method
     if request.method == SizingMethod.INTELLIGENT:
@@ -68,56 +136,103 @@ def _calculate_intelligent_size(request: PositionSizeRequest) -> PositionSizeRes
     notes = []
     warnings = []
     
-    # Start with base Kelly sizing if statistics available
-    if _has_kelly_data(request):
-        base_size = fractional_kelly(
-            request.win_rate, 
-            request.avg_win, 
-            request.avg_loss,
-            request.risk_params.kelly_fraction
-        )
-        notes.append(f"Base Kelly sizing: {base_size:.4f}")
-    else:
-        # Fallback to fixed sizing
-        base_size = request.risk_params.max_position_size * 0.5
-        notes.append(f"No trade statistics, using conservative fixed size: {base_size:.4f}")
-        warnings.append("No historical trade data available for Kelly calculation")
+    try:
+        # Start with base Kelly sizing if statistics available
+        if _has_kelly_data(request):
+            # Additional validation for Kelly inputs
+            _validate_kelly_safety(request.win_rate, request.avg_win, request.avg_loss)
+            
+            base_size = fractional_kelly(
+                request.win_rate, 
+                request.avg_win, 
+                request.avg_loss,
+                request.risk_params.kelly_fraction
+            )
+            
+            # Safety check for extreme Kelly values
+            if base_size > request.risk_params.max_position_size:
+                warnings.append(f"Kelly fraction {base_size:.4f} exceeds max position size, capping at {request.risk_params.max_position_size:.4f}")
+                base_size = request.risk_params.max_position_size
+            
+            notes.append(f"Base Kelly sizing: {base_size:.4f}")
+        else:
+            # Fallback to fixed sizing
+            base_size = request.risk_params.max_position_size * 0.5
+            notes.append(f"No trade statistics, using conservative fixed size: {base_size:.4f}")
+            warnings.append("No historical trade data available for Kelly calculation")
+            
+    except Exception as e:
+        error = ValidationError(f"Kelly calculation failed: {e}", field="kelly_inputs")
+        log_error(error)
+        warnings.append(str(error))
+        base_size = request.risk_params.max_position_size * 0.1  # Very conservative fallback
     
     # Apply confidence adjustment if available
     confidence_adjustment = 1.0
     if request.confidence is not None:
-        if request.confidence >= request.risk_params.confidence_threshold:
-            adj_params = ConfidenceAdjustment(confidence=request.confidence)
-            adjusted_size, conf_explanation = confidence_adjusted_size(base_size, request.confidence, adj_params)
-            confidence_adjustment = adjusted_size / base_size if base_size > 0 else 1.0
-            base_size = adjusted_size
-            notes.append(f"Confidence adjustment: {conf_explanation}")
-        else:
-            confidence_adjustment = 0.0
-            base_size = 0.0
-            warnings.append(f"Confidence {request.confidence:.2f} below threshold {request.risk_params.confidence_threshold:.2f}")
+        try:
+            # Validate confidence score
+            PercentageValidator(as_decimal=True)(request.confidence, "confidence")
+            
+            if request.confidence >= request.risk_params.confidence_threshold:
+                adj_params = ConfidenceAdjustment(confidence=request.confidence)
+                adjusted_size, conf_explanation = confidence_adjusted_size(base_size, request.confidence, adj_params)
+                confidence_adjustment = adjusted_size / base_size if base_size > 0 else 1.0
+                base_size = adjusted_size
+                notes.append(f"Confidence adjustment: {conf_explanation}")
+            else:
+                confidence_adjustment = 0.0
+                base_size = 0.0
+                warnings.append(f"Confidence {request.confidence:.2f} below threshold {request.risk_params.confidence_threshold:.2f}")
+                
+        except ValidationError as e:
+            log_error(e)
+            warnings.append(f"Invalid confidence score: {e.message}")
+            # Continue with no confidence adjustment
     
     # Apply regime adjustment if available
     regime_adjustment = 1.0
     if request.market_regime:
-        multipliers = RegimeMultipliers()
-        adjusted_size, regime_explanation = regime_adjusted_size(base_size, request.market_regime, multipliers)
-        regime_adjustment = adjusted_size / base_size if base_size > 0 else 1.0
-        base_size = adjusted_size
-        notes.append(f"Regime adjustment: {regime_explanation}")
+        try:
+            multipliers = RegimeMultipliers()
+            adjusted_size, regime_explanation = regime_adjusted_size(base_size, request.market_regime, multipliers)
+            regime_adjustment = adjusted_size / base_size if base_size > 0 else 1.0
+            base_size = adjusted_size
+            notes.append(f"Regime adjustment: {regime_explanation}")
+        except Exception as e:
+            error = ValidationError(f"Regime adjustment failed: {e}", field="market_regime")
+            log_error(error)
+            warnings.append(f"Regime adjustment failed: {e}")
     
     # Apply strategy-specific multiplier
     base_size *= request.strategy_multiplier
     if request.strategy_multiplier != 1.0:
         notes.append(f"Strategy multiplier: {request.strategy_multiplier:.2f}x")
     
+    # Final safety checks before position calculation
+    if base_size < 0:
+        raise ValidationError("Position size cannot be negative", field="base_size", value=base_size)
+    
+    if base_size > request.risk_params.max_position_size:
+        raise RiskLimitExceeded(
+            "Position size exceeds maximum allowed",
+            limit_type="max_position_size",
+            limit_value=request.risk_params.max_position_size,
+            current_value=base_size
+        )
+    
     # Convert to actual position
-    position_value, share_count = kelly_position_value(
-        request.portfolio_value,
-        base_size,
-        request.current_price,
-        request.risk_params
-    )
+    try:
+        position_value, share_count = kelly_position_value(
+            request.portfolio_value,
+            base_size,
+            request.current_price,
+            request.risk_params
+        )
+    except Exception as e:
+        error = ValidationError(f"Position value calculation failed: {e}", field="position_calculation")
+        log_error(error)
+        raise error
     
     # Calculate final metrics
     position_size_pct = position_value / request.portfolio_value
@@ -380,40 +495,23 @@ def _estimate_position_risk(request: PositionSizeRequest, position_size_pct: flo
         return position_size_pct * 0.05  # Default 5% risk estimate
 
 
-def _validate_request(request: PositionSizeRequest) -> List[str]:
-    """Validate position sizing request."""
-    errors = []
-    
-    if not request.symbol:
-        errors.append("Symbol is required")
-    
-    if request.current_price <= 0:
-        errors.append("Current price must be positive")
-    
-    if request.portfolio_value <= 0:
-        errors.append("Portfolio value must be positive")
-    
-    if request.strategy_multiplier <= 0:
-        errors.append("Strategy multiplier must be positive")
-    
-    # Validate Kelly inputs if provided
-    if _has_kelly_data(request):
-        kelly_errors = validate_kelly_inputs(request.win_rate, request.avg_win, request.avg_loss)
-        errors.extend(kelly_errors)
-    
-    # Validate confidence if provided
-    if request.confidence is not None:
-        conf_adj = ConfidenceAdjustment(confidence=request.confidence)
-        conf_errors = validate_confidence_inputs(request.confidence, conf_adj)
-        errors.extend(conf_errors)
-    
-    # Validate regime if provided
-    if request.market_regime:
-        regime_multipliers = RegimeMultipliers()
-        regime_errors = validate_regime_inputs(request.market_regime, regime_multipliers)
-        errors.extend(regime_errors)
-    
-    return errors
+def _estimate_portfolio_risk(position_size_pct: float, avg_loss: Optional[float], 
+                           volatility: Optional[float]) -> float:
+    """Estimate portfolio risk with bounds checking"""
+    try:
+        if avg_loss:
+            risk = position_size_pct * abs(avg_loss)
+        elif volatility:
+            risk = position_size_pct * volatility * 1.5  # Conservative estimate
+        else:
+            risk = position_size_pct * 0.05  # Default 5% risk estimate
+        
+        # Safety bounds
+        return max(0.0, min(1.0, risk))
+        
+    except Exception as e:
+        logger.warning(f"Risk estimation failed: {e}, using conservative default")
+        return position_size_pct * 0.05
 
 
 def _create_error_response(request: PositionSizeRequest, errors: List[str]) -> PositionSizeResponse:

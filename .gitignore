@@ -1,3 +1,9 @@
+# Virtual Environment - NEVER commit
+.venv/
+venv/
+env/
+ENV/
+
 # Python cache
 __pycache__/
 *.py[cod]
@@ -45,3 +51,20 @@ data/cache/
 *.p12
 secrets/
 credentials/
+
+# Claude settings
+.claude/settings.local.json
+.mcp.json
+memory/sessions/*
+!memory/sessions/README.md
+memory/agents/*
+!memory/agents/README.md
+coordination/memory_bank/*
+coordination/subtasks/*
+coordination/orchestration/*
+*.db
+*.db-journal
+*.db-wal
+*.sqlite
+*.sqlite-journal
+*.sqlite-wal

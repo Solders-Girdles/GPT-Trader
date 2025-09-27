@@ -1,5 +1,8 @@
 # GPT-Trader V2 Architecture
 
+> ARCHIVED NOTE: This document is historical and not part of the
+> active perps trading path. See README section "What's Active Today".
+
 ## 🎯 Design Philosophy
 
 **Build for the future, avoid past mistakes.**
@@ -91,7 +94,7 @@ Change components without touching others:
 ```python
 # Swap data providers
 registry.remove("data_provider")
-registry.register_component("data_provider", AlpacaDataProvider())
+registry.register_component("data_provider", CoinbaseDataProvider())
 # Everything else continues working
 
 # Swap strategies
@@ -181,7 +184,7 @@ registry.initialize_all()
 - ✅ Strategy adapter (connects existing strategies)
 
 ### **Ready to Build:**
-- 🔨 Data providers (YFinance, Alpaca, etc.)
+- 🔨 Data providers (YFinance, Coinbase, etc.)
 - 🔨 Risk managers (position limits, stop loss, etc.)
 - 🔨 Portfolio allocators (equal weight, Kelly, etc.)
 - 🔨 Executors (paper trading, live trading)

@@ -1,0 +1,46 @@
+name: derivatives-phase6
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  validate-derivatives-phase6:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Phase 6 strategy validation
+        env:
+          PYTHONPATH: src
+        run: python scripts/validation/validate_derivatives_phase6_strategy.py
+
+      - name: Run Coinbase adapter smoke tests
+        env:
+          PYTHONPATH: src
+        run: pytest -q tests/bot_v2/features/brokerages/coinbase/test_adapter.py tests/unit/bot_v2/features/brokerages/coinbase/test_close_position.py
+
+      - name: Run unit tightening tests
+        env:
+          PYTHONPATH: src
+        run: |
+          pytest -q \
+            tests/unit/bot_v2/features/live_trade/test_reduce_only_guard.py \
+            tests/unit/bot_v2/features/brokerages/coinbase/test_quantization_rules.py \
+            tests/unit/bot_v2/features/live_trade/test_trailing_stop_decision.py \
+            tests/unit/bot_v2/features/live_trade/test_leverage_cap.py \
+            tests/unit/bot_v2/orchestration/test_marks_fallback.py
+

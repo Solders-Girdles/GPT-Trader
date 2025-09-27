@@ -1,0 +1,45 @@
+{
+  "args": {
+    "atr": 20,
+    "atr_k": 2.0,
+    "cadence": "daily",
+    "command": "backtest",
+    "cooldown": 0,
+    "cost_bps": 0.0,
+    "data_strict": "strict",
+    "debug": false,
+    "donchian": 55,
+    "end": "2022-12-31",
+    "entry_confirm": 1,
+    "exit_mode": "stop",
+    "max_positions": 10,
+    "min_rebalance_pct": 0.0,
+    "mirror": true,
+    "no_plot": true,
+    "param_scope": "global",
+    "params_file": "",
+    "profile": false,
+    "profile_out": "",
+    "regime": "on",
+    "regime_symbol": "SPY",
+    "regime_window": 200,
+    "risk_pct": 0.5,
+    "run_dir": "",
+    "run_tag": "sanity",
+    "start": "2022-01-01",
+    "strategy": "trend_breakout",
+    "strict_mode": true,
+    "symbol": "AAPL",
+    "symbol_list": null
+  },
+  "created_at": "2025-08-10 13:50:59",
+  "env": {
+    "YF_CACHE": "",
+    "YF_CACHE_TTL_DAYS": ""
+  },
+  "git_commit": "c3dcc43",
+  "strategy": "trend_breakout",
+  "symbols": [
+    "AAPL"
+  ]
+}

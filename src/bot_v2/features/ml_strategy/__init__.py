@@ -1,8 +1,8 @@
 """
 ML Strategy Selection feature slice - intelligent strategy selection.
 
-Complete isolation - no external dependencies.
-Week 1-2 of Path B: Smart Money implementation.
+EXPERIMENTAL: Self-contained, uses synthetic/local data and local models.
+Useful for experimentation, not in the perps critical path.
 """
 
 from .ml_strategy import (
@@ -38,3 +38,6 @@ __all__ = [
     'ModelPerformance',
     'TrainingResult'
 ]
+
+# Marker used by tooling and documentation
+__experimental__ = True

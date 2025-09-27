@@ -1,17 +1,36 @@
 """
-Local broker implementations for live trading.
+Local broker implementations for live trading (legacy equities templates).
 
-Complete isolation - no external dependencies.
-NOTE: These are templates - actual implementation requires broker APIs.
+Note: Coinbase Perpetual Futures is the primary, production focus for live trading.
+These Alpaca/IBKR classes are retained as templates and for legacy tests only.
+Actual integrations require broker APIs and credentials.
 """
 
 from datetime import datetime
 from typing import List, Optional, Dict
 import random
-from .types import (
-    Order, Position, AccountInfo, Quote, MarketHours,
-    OrderStatus, OrderType, OrderSide, Bar
+import logging
+# Import core interfaces instead of local types
+from ..brokerages.core.interfaces import (
+    Order, Position, Quote, 
+    OrderType, OrderSide, TimeInForce,
+    Balance, IBrokerage, InvalidRequestError, 
+    InsufficientFunds, BrokerageError
 )
+
+# Import core types with proper status enum
+from ..brokerages.core.interfaces import OrderStatus as CoreOrderStatus
+
+# Keep local types that don't exist in core
+from .types import (
+    AccountInfo, MarketHours, Bar
+)
+from ...errors import NetworkError, ExecutionError, ValidationError, handle_error, log_error
+from ...errors.handler import get_error_handler, with_error_handling, RecoveryStrategy
+from ...validation import SymbolValidator, PositiveNumberValidator
+from ...config import get_config
+
+logger = logging.getLogger(__name__)
 
 
 class BrokerInterface:
@@ -19,6 +38,10 @@ class BrokerInterface:
     
     def connect(self) -> bool:
         """Connect to broker."""
+        raise NotImplementedError
+    
+    def validate_connection(self) -> bool:
+        """Validate broker connection is active."""
         raise NotImplementedError
     
     def disconnect(self):
@@ -71,12 +94,51 @@ class AlpacaBroker(BrokerInterface):
     
     def connect(self) -> bool:
         """Connect to Alpaca."""
-        # In real implementation, would authenticate with API
-        if self.api_key and self.api_secret:
-            self.connected = True
-            self.account_id = "ALPACA_" + ("PAPER" if self.is_paper else "LIVE")
-            return True
-        return False
+        try:
+            # Validate configuration
+            if not self.api_key or not self.api_secret:
+                raise ValidationError(
+                    "API key and secret are required for Alpaca connection",
+                    field="api_credentials"
+                )
+            
+            # In real implementation, would authenticate with API
+            error_handler = get_error_handler()
+            
+            def _authenticate():
+                # Simulate API authentication
+                if self.api_key and self.api_secret:
+                    return True
+                raise NetworkError("Authentication failed")
+            
+            success = error_handler.with_retry(
+                _authenticate,
+                recovery_strategy=RecoveryStrategy.RETRY
+            )
+            
+            if success:
+                self.connected = True
+                self.account_id = "ALPACA_" + ("PAPER" if self.is_paper else "LIVE")
+                logger.info(f"Connected to Alpaca ({'paper' if self.is_paper else 'live'} mode)")
+                return True
+            
+            return False
+            
+        except Exception as e:
+            network_error = NetworkError(
+                "Failed to connect to Alpaca",
+                url=self.base_url,
+                context={'is_paper': self.is_paper, 'original_error': str(e)}
+            )
+            log_error(network_error)
+            logger.error(f"Alpaca connection failed: {network_error.message}")
+            return False
+    
+    def validate_connection(self) -> bool:
+        """Validate Alpaca connection is active."""
+        if not self.connected:
+            raise NetworkError("Not connected to Alpaca", url=self.base_url)
+        return True
     
     def disconnect(self):
         """Disconnect from Alpaca."""
@@ -86,24 +148,34 @@ class AlpacaBroker(BrokerInterface):
         """Get account ID."""
         return self.account_id or ""
     
+    @with_error_handling(recovery_strategy=RecoveryStrategy.RETRY)
     def get_account(self) -> AccountInfo:
         """Get account information from Alpaca."""
-        # Template implementation
+        self.validate_connection()
+        
+        # In real implementation, would make API call
+        # Template implementation with rate limiting consideration
+        config = get_config('live_trade')
+        
         return AccountInfo(
             account_id=self.account_id or "",
-            cash=100000.0,
-            portfolio_value=100000.0,
-            buying_power=200000.0,  # 2x margin
+            cash=config.get('initial_capital', 100000.0),
+            portfolio_value=config.get('initial_capital', 100000.0),
+            buying_power=config.get('initial_capital', 100000.0) * 2,  # 2x margin
             positions_value=0.0,
             margin_used=0.0,
             pattern_day_trader=False,
             day_trades_remaining=3,
-            equity=100000.0,
-            last_equity=100000.0
+            equity=config.get('initial_capital', 100000.0),
+            last_equity=config.get('initial_capital', 100000.0)
         )
     
+    @with_error_handling(recovery_strategy=RecoveryStrategy.RETRY)
     def get_positions(self) -> List[Position]:
         """Get positions from Alpaca."""
+        self.validate_connection()
+        
+        # In real implementation, would make API call
         # Template implementation
         return []
     
@@ -118,52 +190,134 @@ class AlpacaBroker(BrokerInterface):
         time_in_force: str = "day"
     ) -> Order:
         """Place order through Alpaca."""
-        # Template implementation
-        order_id = f"ALPACA_{datetime.now().strftime('%Y%m%d%H%M%S')}"
+        self.validate_connection()
         
-        return Order(
-            order_id=order_id,
-            symbol=symbol,
-            side=side,
-            order_type=order_type,
-            quantity=quantity,
-            price=limit_price,
-            stop_price=stop_price,
-            status=OrderStatus.SUBMITTED,
-            submitted_at=datetime.now(),
-            filled_at=None,
-            filled_qty=0,
-            avg_fill_price=None,
-            commission=0.0
-        )
+        # Validate inputs
+        SymbolValidator().validate(symbol, "symbol")
+        PositiveNumberValidator(allow_zero=False).validate(quantity, "quantity")
+        
+        error_handler = get_error_handler()
+        
+        def _submit_order():
+            # In real implementation, would make API call
+            # Simulate potential network issues
+            order_id = f"ALPACA_{datetime.now().strftime('%Y%m%d%H%M%S%f')[:17]}"
+            
+            # Check for rate limiting
+            config = get_config('live_trade')
+            if hasattr(self, '_last_order_time'):
+                min_interval = config.get('min_order_interval', 1.0)  # seconds
+                time_since_last = (datetime.now() - self._last_order_time).total_seconds()
+                if time_since_last < min_interval:
+                    raise NetworkError(
+                        "Rate limit exceeded - too many orders",
+                        url=self.base_url,
+                        status_code=429
+                    )
+            
+            self._last_order_time = datetime.now()
+            
+            # Create and return core Order directly
+            from decimal import Decimal
+            from .adapters import to_core_tif
+            
+            return Order(
+                id=order_id,
+                client_id=None,
+                symbol=symbol,
+                side=side,
+                type=order_type,
+                qty=Decimal(str(quantity)),
+                price=Decimal(str(limit_price)) if limit_price else None,
+                stop_price=Decimal(str(stop_price)) if stop_price else None,
+                tif=to_core_tif(time_in_force),
+                status=CoreOrderStatus.SUBMITTED,
+                filled_qty=Decimal('0'),
+                avg_fill_price=None,
+                submitted_at=datetime.now(),
+                updated_at=datetime.now()
+            )
+        
+        try:
+            return error_handler.with_retry(
+                _submit_order,
+                recovery_strategy=RecoveryStrategy.RETRY
+            )
+            
+        except Exception as e:
+            execution_error = ExecutionError(
+                f"Failed to place order with Alpaca",
+                context={
+                    'symbol': symbol,
+                    'side': side.value,
+                    'quantity': quantity,
+                    'broker': 'alpaca',
+                    'original_error': str(e)
+                }
+            )
+            log_error(execution_error)
+            raise execution_error
     
+    @with_error_handling(recovery_strategy=RecoveryStrategy.RETRY)
     def cancel_order(self, order_id: str) -> bool:
         """Cancel order through Alpaca."""
+        self.validate_connection()
+        
+        if not order_id:
+            raise ValidationError("Order ID is required", field="order_id", value=order_id)
+        
+        # In real implementation, would make API call
         # Template implementation
+        logger.info(f"Cancelled order {order_id} with Alpaca")
         return True
     
+    @with_error_handling(recovery_strategy=RecoveryStrategy.RETRY)
     def get_orders(self, status: str = "open") -> List[Order]:
         """Get orders from Alpaca."""
+        self.validate_connection()
+        
+        # Validate status parameter
+        valid_statuses = ['open', 'closed', 'all']
+        if status not in valid_statuses:
+            raise ValidationError(
+                f"Invalid order status: {status}",
+                field="status",
+                value=status
+            )
+        
+        # In real implementation, would make API call
         # Template implementation
         return []
     
+    @with_error_handling(recovery_strategy=RecoveryStrategy.RETRY)
     def get_quote(self, symbol: str) -> Quote:
         """Get quote from Alpaca."""
+        self.validate_connection()
+        
+        # Validate symbol
+        SymbolValidator().validate(symbol, "symbol")
+        
+        # In real implementation, would make API call
         # Template implementation - random prices
         base_price = 100.0
         spread = 0.01
         
+        # Return core Quote directly
+        from decimal import Decimal
         return Quote(
             symbol=symbol,
-            bid=base_price - spread/2,
-            ask=base_price + spread/2,
-            last=base_price,
-            volume=1000000,
-            timestamp=datetime.now()
+            bid=Decimal(str(base_price - spread/2)),
+            ask=Decimal(str(base_price + spread/2)),
+            last=Decimal(str(base_price)),
+            ts=datetime.now()
         )
     
+    @with_error_handling(recovery_strategy=RecoveryStrategy.RETRY)
     def get_market_hours(self) -> MarketHours:
         """Get market hours from Alpaca."""
+        self.validate_connection()
+        
+        # In real implementation, would make API call
         now = datetime.now()
         is_weekday = now.weekday() < 5
         hour = now.hour
@@ -191,12 +345,49 @@ class IBKRBroker(BrokerInterface):
     
     def connect(self) -> bool:
         """Connect to IBKR."""
-        # Template implementation
-        if self.api_key:
-            self.connected = True
-            self.account_id = "IBKR_" + ("PAPER" if self.is_paper else "LIVE")
-            return True
-        return False
+        try:
+            # Validate configuration
+            if not self.api_key:
+                raise ValidationError(
+                    "API key is required for IBKR connection",
+                    field="api_key"
+                )
+            
+            # Template implementation with error handling
+            error_handler = get_error_handler()
+            
+            def _authenticate():
+                if self.api_key:
+                    return True
+                raise NetworkError("IBKR authentication failed")
+            
+            success = error_handler.with_retry(
+                _authenticate,
+                recovery_strategy=RecoveryStrategy.RETRY
+            )
+            
+            if success:
+                self.connected = True
+                self.account_id = "IBKR_" + ("PAPER" if self.is_paper else "LIVE")
+                logger.info(f"Connected to IBKR ({'paper' if self.is_paper else 'live'} mode)")
+                return True
+            
+            return False
+            
+        except Exception as e:
+            network_error = NetworkError(
+                "Failed to connect to IBKR",
+                context={'is_paper': self.is_paper, 'original_error': str(e)}
+            )
+            log_error(network_error)
+            logger.error(f"IBKR connection failed: {network_error.message}")
+            return False
+    
+    def validate_connection(self) -> bool:
+        """Validate IBKR connection is active."""
+        if not self.connected:
+            raise NetworkError("Not connected to IBKR")
+        return True
     
     def disconnect(self):
         """Disconnect from IBKR."""
@@ -261,7 +452,18 @@ class SimulatedBroker(BrokerInterface):
     
     def connect(self) -> bool:
         """Connect to simulated broker."""
-        self.connected = True
+        try:
+            self.connected = True
+            logger.info("Connected to simulated broker")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to connect to simulated broker: {e}")
+            return False
+    
+    def validate_connection(self) -> bool:
+        """Validate simulated broker connection is active."""
+        if not self.connected:
+            raise NetworkError("Not connected to simulated broker")
         return True
     
     def disconnect(self):
@@ -312,20 +514,25 @@ class SimulatedBroker(BrokerInterface):
         if order_type == OrderType.MARKET:
             fill_price = 100.0 + random.uniform(-5, 5)  # Random price
             
+            # Create and return core Order directly
+            from decimal import Decimal
+            from .adapters import to_core_tif
+            
             order = Order(
-                order_id=order_id,
+                id=order_id,
+                client_id=None,
                 symbol=symbol,
                 side=side,
-                order_type=order_type,
-                quantity=quantity,
-                price=limit_price,
-                stop_price=stop_price,
-                status=OrderStatus.FILLED,
+                type=order_type,
+                qty=Decimal(str(quantity)),
+                price=Decimal(str(limit_price)) if limit_price else None,
+                stop_price=Decimal(str(stop_price)) if stop_price else None,
+                tif=to_core_tif(time_in_force),
+                status=CoreOrderStatus.FILLED,
+                filled_qty=Decimal(str(quantity)),
+                avg_fill_price=Decimal(str(fill_price)),
                 submitted_at=datetime.now(),
-                filled_at=datetime.now(),
-                filled_qty=quantity,
-                avg_fill_price=fill_price,
-                commission=quantity * 0.01  # $0.01 per share
+                updated_at=datetime.now()
             )
             
             # Update positions
@@ -337,18 +544,19 @@ class SimulatedBroker(BrokerInterface):
                     pos.quantity = new_qty
                     pos.avg_cost = new_cost
                 else:
+                    # Create core Position directly
+                    from decimal import Decimal
                     self.positions[symbol] = Position(
                         symbol=symbol,
-                        quantity=quantity,
-                        side='long',
-                        avg_cost=fill_price,
-                        current_price=fill_price,
-                        market_value=fill_price * quantity,
-                        unrealized_pnl=0,
-                        unrealized_pnl_pct=0,
-                        realized_pnl=0
+                        qty=Decimal(str(quantity)),
+                        entry_price=Decimal(str(fill_price)),
+                        mark_price=Decimal(str(fill_price)),
+                        unrealized_pnl=Decimal('0'),
+                        realized_pnl=Decimal('0'),
+                        leverage=None,
+                        side='long'
                     )
-                self.cash -= (fill_price * quantity + order.commission)
+                self.cash -= (fill_price * quantity + quantity * 0.01)  # Include commission
             
             elif side == OrderSide.SELL:
                 if symbol in self.positions:
@@ -365,20 +573,24 @@ class SimulatedBroker(BrokerInterface):
                     self.cash += (fill_price * quantity - order.commission)
         else:
             # Limit/stop orders stay pending
+            from decimal import Decimal
+            from .adapters import to_core_tif
+            
             order = Order(
-                order_id=order_id,
+                id=order_id,
+                client_id=None,
                 symbol=symbol,
                 side=side,
-                order_type=order_type,
-                quantity=quantity,
-                price=limit_price,
-                stop_price=stop_price,
-                status=OrderStatus.SUBMITTED,
-                submitted_at=datetime.now(),
-                filled_at=None,
-                filled_qty=0,
+                type=order_type,
+                qty=Decimal(str(quantity)),
+                price=Decimal(str(limit_price)) if limit_price else None,
+                stop_price=Decimal(str(stop_price)) if stop_price else None,
+                tif=to_core_tif(time_in_force),
+                status=CoreOrderStatus.SUBMITTED,
+                filled_qty=Decimal('0'),
                 avg_fill_price=None,
-                commission=0
+                submitted_at=datetime.now(),
+                updated_at=datetime.now()
             )
         
         self.orders.append(order)
@@ -387,17 +599,17 @@ class SimulatedBroker(BrokerInterface):
     def cancel_order(self, order_id: str) -> bool:
         """Cancel simulated order."""
         for order in self.orders:
-            if order.order_id == order_id and order.is_active():
-                order.status = OrderStatus.CANCELLED
+            if order.id == order_id and order.status in [CoreOrderStatus.PENDING, CoreOrderStatus.SUBMITTED, CoreOrderStatus.PARTIALLY_FILLED]:
+                order.status = CoreOrderStatus.CANCELLED
                 return True
         return False
     
     def get_orders(self, status: str = "open") -> List[Order]:
         """Get simulated orders."""
         if status == "open":
-            return [o for o in self.orders if o.is_active()]
+            return [o for o in self.orders if o.status in [CoreOrderStatus.PENDING, CoreOrderStatus.SUBMITTED, CoreOrderStatus.PARTIALLY_FILLED]]
         elif status == "closed":
-            return [o for o in self.orders if not o.is_active()]
+            return [o for o in self.orders if o.status in [CoreOrderStatus.FILLED, CoreOrderStatus.CANCELLED, CoreOrderStatus.REJECTED]]
         else:
             return self.orders
     
@@ -406,13 +618,14 @@ class SimulatedBroker(BrokerInterface):
         base_price = 100.0 + random.uniform(-10, 10)
         spread = 0.02
         
+        # Return core Quote directly
+        from decimal import Decimal
         return Quote(
             symbol=symbol,
-            bid=base_price - spread/2,
-            ask=base_price + spread/2,
-            last=base_price,
-            volume=random.randint(100000, 10000000),
-            timestamp=datetime.now()
+            bid=Decimal(str(base_price - spread/2)),
+            ask=Decimal(str(base_price + spread/2)),
+            last=Decimal(str(base_price)),
+            ts=datetime.now()
         )
     
     def get_market_hours(self) -> MarketHours:

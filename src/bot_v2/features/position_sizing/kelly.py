@@ -8,13 +8,20 @@ All math and utilities implemented locally within this slice.
 import math
 from typing import Optional, Tuple, List
 import numpy as np
+import logging
 
+from ...errors import ValidationError, RiskLimitExceeded, log_error
+from ...validation import (
+    PercentageValidator, RangeValidator, PositiveNumberValidator
+)
 from .types import KellyParameters, TradeStatistics, RiskParameters
+
+logger = logging.getLogger(__name__)
 
 
 def kelly_criterion(win_rate: float, avg_win: float, avg_loss: float) -> float:
     """
-    Calculate Kelly Criterion optimal fraction.
+    Calculate Kelly Criterion optimal fraction with comprehensive validation.
     
     Formula: f* = (bp - q) / b
     Where:
@@ -30,22 +37,49 @@ def kelly_criterion(win_rate: float, avg_win: float, avg_loss: float) -> float:
         
     Returns:
         Kelly fraction (0-1), 0 if negative expected value
+        
+    Raises:
+        ValidationError: If inputs are invalid
     """
-    if win_rate <= 0 or win_rate >= 1:
-        return 0.0
+    try:
+        # Validate inputs
+        RangeValidator(min_value=0.01, max_value=0.99)(win_rate, "win_rate")
+        PositiveNumberValidator()(avg_win, "avg_win")
         
-    if avg_win <= 0 or avg_loss >= 0:
-        return 0.0
+        if avg_loss >= 0:
+            raise ValidationError("Average loss must be negative", field="avg_loss", value=avg_loss)
         
-    # Calculate odds ratio (b)
-    odds_ratio = abs(avg_win / avg_loss)
-    
-    # Calculate Kelly fraction: f* = (bp - q) / b
-    # Simplified: f* = p - q/b = p - (1-p)/b
-    kelly_fraction = win_rate - (1 - win_rate) / odds_ratio
-    
-    # Kelly fraction should not be negative (negative expected value)
-    return max(0.0, kelly_fraction)
+        # Check for division by zero risk
+        if abs(avg_loss) < 1e-10:
+            raise ValidationError("Average loss too close to zero", field="avg_loss", value=avg_loss)
+        
+        # Calculate odds ratio (b) safely
+        odds_ratio = abs(avg_win / avg_loss)
+        
+        # Check for reasonable odds ratio
+        if odds_ratio > 100:  # Extreme odds ratio
+            logger.warning(f"Extreme odds ratio {odds_ratio:.2f}, capping Kelly calculation")
+            odds_ratio = 100
+        
+        # Calculate Kelly fraction: f* = (bp - q) / b
+        # Simplified: f* = p - q/b = p - (1-p)/b
+        kelly_fraction = win_rate - (1 - win_rate) / odds_ratio
+        
+        # Kelly fraction should not be negative (negative expected value)
+        kelly_fraction = max(0.0, kelly_fraction)
+        
+        # Cap extreme Kelly values for safety
+        if kelly_fraction > 0.5:
+            logger.warning(f"High Kelly fraction {kelly_fraction:.4f}, consider using fractional Kelly")
+        
+        return kelly_fraction
+        
+    except ValidationError:
+        raise
+    except Exception as e:
+        error = ValidationError(f"Kelly calculation failed: {e}", field="kelly_calculation")
+        log_error(error)
+        raise error
 
 
 def fractional_kelly(win_rate: float, avg_win: float, avg_loss: float, 
@@ -189,7 +223,7 @@ def simulate_kelly_growth(returns: List[float], kelly_fraction: float,
 def kelly_position_value(portfolio_value: float, kelly_fraction: float,
                         price_per_share: float, risk_params: RiskParameters) -> Tuple[float, int]:
     """
-    Convert Kelly fraction to actual position value and share count.
+    Convert Kelly fraction to actual position value and share count with safety checks.
     
     Args:
         portfolio_value: Total portfolio value
@@ -199,25 +233,73 @@ def kelly_position_value(portfolio_value: float, kelly_fraction: float,
         
     Returns:
         Tuple of (position_value, share_count)
+        
+    Raises:
+        ValidationError: If inputs are invalid
+        RiskLimitExceeded: If position exceeds risk limits
     """
-    # Calculate raw Kelly position value
-    raw_position_value = portfolio_value * kelly_fraction
-    
-    # Apply position size limits
-    max_position_value = portfolio_value * risk_params.max_position_size
-    min_position_value = portfolio_value * risk_params.min_position_size
-    
-    # Clamp to risk limits
-    position_value = max(min_position_value, 
-                        min(max_position_value, raw_position_value))
-    
-    # Convert to share count
-    share_count = int(position_value / price_per_share)
-    
-    # Recalculate actual position value based on whole shares
-    actual_position_value = share_count * price_per_share
-    
-    return actual_position_value, share_count
+    try:
+        # Validate inputs
+        PositiveNumberValidator()(portfolio_value, "portfolio_value")
+        PositiveNumberValidator()(price_per_share, "price_per_share")
+        RangeValidator(min_value=0.0, max_value=1.0)(kelly_fraction, "kelly_fraction")
+        
+        if not risk_params:
+            raise ValidationError("Risk parameters required", field="risk_params")
+        
+        # Calculate raw Kelly position value
+        raw_position_value = portfolio_value * kelly_fraction
+        
+        # Apply position size limits
+        max_position_value = portfolio_value * risk_params.max_position_size
+        min_position_value = portfolio_value * risk_params.min_position_size
+        
+        # Validate risk parameters
+        if max_position_value <= 0:
+            raise ValidationError("Max position value must be positive", field="max_position_size")
+        
+        if min_position_value < 0:
+            raise ValidationError("Min position value cannot be negative", field="min_position_size")
+        
+        if min_position_value > max_position_value:
+            raise ValidationError("Min position size exceeds max position size", field="position_limits")
+        
+        # Check if raw position exceeds max limit
+        if raw_position_value > max_position_value:
+            logger.warning(f"Kelly position ${raw_position_value:.2f} exceeds max ${max_position_value:.2f}")
+        
+        # Clamp to risk limits
+        position_value = max(min_position_value, 
+                            min(max_position_value, raw_position_value))
+        
+        # Ensure we can afford at least one share
+        if position_value < price_per_share:
+            logger.warning(f"Position value ${position_value:.2f} less than share price ${price_per_share:.2f}")
+            return 0.0, 0
+        
+        # Convert to share count
+        share_count = int(position_value / price_per_share)
+        
+        # Recalculate actual position value based on whole shares
+        actual_position_value = share_count * price_per_share
+        
+        # Final safety check
+        if actual_position_value > portfolio_value:
+            raise RiskLimitExceeded(
+                "Position value exceeds portfolio value",
+                limit_type="portfolio_value",
+                limit_value=portfolio_value,
+                current_value=actual_position_value
+            )
+        
+        return actual_position_value, share_count
+        
+    except (ValidationError, RiskLimitExceeded):
+        raise
+    except Exception as e:
+        error = ValidationError(f"Position value calculation failed: {e}", field="position_calculation")
+        log_error(error)
+        raise error
 
 
 def kelly_risk_metrics(kelly_fraction: float, avg_loss: float, 

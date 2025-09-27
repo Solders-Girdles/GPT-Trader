@@ -12,7 +12,7 @@ aiohttp==3.9.1
 urllib3==2.0.7
 
 # Data Processing
-pytz==2023.3
+pytz==2025.2
 python-dateutil==2.8.2
 
 # Security

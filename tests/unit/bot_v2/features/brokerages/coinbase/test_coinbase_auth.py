@@ -49,8 +49,20 @@ def test_auth_inherits_client_api_mode_and_json_body(monkeypatch):
 @pytest.mark.parametrize(
     "config_kwargs,expected_auth_type",
     [
-        ({"cdp_api_key": "key", "cdp_private_key": "secret"}, CDPJWTAuth),
-        ({"api_key": "key", "api_secret": "secret", "passphrase": "p"}, CoinbaseAuth),
+        (
+            {
+                "api_key": "",
+                "api_secret": "",
+                "passphrase": None,
+                "cdp_api_key": "key",
+                "cdp_private_key": "secret",
+            },
+            CDPJWTAuth,
+        ),
+        (
+            {"api_key": "key", "api_secret": "secret", "passphrase": "p"},
+            CoinbaseAuth,
+        ),
     ],
 )
 def test_broker_auth_selection(config_kwargs, expected_auth_type):
@@ -58,6 +70,7 @@ def test_broker_auth_selection(config_kwargs, expected_auth_type):
         base_url="https://api.coinbase.com",
         sandbox=True,
         api_mode="advanced",
+        enable_derivatives=True,
         **config_kwargs,
     )
     broker = CoinbaseBrokerage(config)

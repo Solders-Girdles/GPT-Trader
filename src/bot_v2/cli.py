@@ -11,24 +11,23 @@ import signal
 import sys
 from dataclasses import asdict
 from decimal import Decimal
+from types import FrameType
 
-# Load environment variables from .env file
+from bot_v2.features.brokerages.core.interfaces import OrderSide, OrderType, TimeInForce
+from bot_v2.logging import configure_logging
+from bot_v2.orchestration.bootstrap import build_bot
+from bot_v2.orchestration.configuration import BotConfig
 from dotenv import load_dotenv
 
 # Preserve host-provided secrets; only fill gaps from .env
 load_dotenv()
-
-from bot_v2.features.brokerages.core.interfaces import OrderSide, OrderType, TimeInForce
-from bot_v2.logging_setup import configure_logging
-from bot_v2.orchestration.bootstrap import build_bot
-from bot_v2.orchestration.configuration import BotConfig
 
 # Configure logging (rotating files + console)
 configure_logging()
 logger = logging.getLogger(__name__)
 
 
-def main():
+def main() -> int:
     """Main entry point for the CLI."""
     parser = argparse.ArgumentParser(description="Perpetuals Trading Bot")
 
@@ -276,7 +275,7 @@ def main():
         return 0
 
     # Set up signal handlers for graceful shutdown
-    def signal_handler(sig, frame):
+    def signal_handler(sig: int, frame: FrameType | None) -> None:
         logger.info("Signal received, shutting down...")
         bot.running = False
 

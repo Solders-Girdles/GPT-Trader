@@ -7,9 +7,8 @@ from bot_v2.features.brokerages.coinbase import models
 from bot_v2.features.brokerages.coinbase import adapter as adapter_mod
 from bot_v2.features.brokerages.coinbase import client as client_mod
 from bot_v2.features.brokerages.core.interfaces import MarketType
-from bot_v2.features.brokerages.coinbase.utils import quantize_to_increment
+from bot_v2.features.brokerages.coinbase.utilities import quantize_to_increment
 from bot_v2.features.brokerages.coinbase.models import to_product
-from bot_v2.features.brokerages.coinbase import utils as utils_mod
 import pytest
 from bot_v2.errors import ValidationError
 
@@ -56,8 +55,12 @@ def test_place_order_applies_rounding_and_builds_payload(monkeypatch):
             "product_id": payload["product_id"],
             "side": payload["side"],
             "type": "limit",
-            "size": payload.get("order_configuration", {}).get("limit_limit_gtc", {}).get("base_size", "0"),
-            "price": payload.get("order_configuration", {}).get("limit_limit_gtc", {}).get("limit_price"),
+            "size": payload.get("order_configuration", {})
+            .get("limit_limit_gtc", {})
+            .get("base_size", "0"),
+            "price": payload.get("order_configuration", {})
+            .get("limit_limit_gtc", {})
+            .get("limit_price"),
             "status": "open",
             "filled_size": "0",
             "created_at": "2024-01-01T00:00:00",
@@ -93,7 +96,9 @@ def test_min_notional_enforced(monkeypatch):
         "quote_increment": "0.1",
         "min_notional": "50",
     }
-    monkeypatch.setattr(client_mod.CoinbaseClient, "get_products", lambda self: {"products": [product_payload]})
+    monkeypatch.setattr(
+        client_mod.CoinbaseClient, "get_products", lambda self: {"products": [product_payload]}
+    )
 
     with pytest.raises(ValidationError):
         broker.place_order(

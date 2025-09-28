@@ -7,12 +7,10 @@ from __future__ import annotations
 
 import json
 import logging
-from dataclasses import dataclass, field, asdict
-from datetime import datetime
-from decimal import Decimal
-from pathlib import Path
-from typing import Dict, List, Optional
 import threading
+from dataclasses import asdict, dataclass
+from datetime import datetime
+from pathlib import Path
 
 from ..features.brokerages.core.interfaces import Order, OrderStatus
 from ..features.monitor import get_logger
@@ -23,19 +21,33 @@ logger = logging.getLogger(__name__)
 @dataclass
 class StoredOrder:
     """A simplified, serializable representation of an order."""
+
     order_id: str
     client_id: str
     symbol: str
     side: str
     order_type: str
     qty: str
-    price: Optional[str]
+    price: str | None
     status: str
     created_at: str
     updated_at: str
     # Partial fill tracking
-    filled_qty: Optional[str] = None
-    avg_fill_price: Optional[str] = None
+    filled_qty: str | None = None
+    avg_fill_price: str | None = None
+    quantity: str | None = None
+    filled_quantity: str | None = None
+
+    def __post_init__(self) -> None:
+        if self.quantity is None and self.qty is not None:
+            self.quantity = self.qty
+        if self.qty is None and self.quantity is not None:
+            self.qty = self.quantity
+
+        if self.filled_quantity is None and self.filled_qty is not None:
+            self.filled_quantity = self.filled_qty
+        if self.filled_qty is None and self.filled_quantity is not None:
+            self.filled_qty = self.filled_quantity
 
     @staticmethod
     def from_order(order: Order) -> StoredOrder:
@@ -45,52 +57,72 @@ class StoredOrder:
             symbol=order.symbol,
             side=order.side.value,
             order_type=order.type.value,
-            qty=str(order.qty),
+            qty=str(order.quantity),
             price=str(order.price) if order.price else None,
             status=order.status.value,
-            created_at=order.submitted_at.isoformat() if order.submitted_at else datetime.utcnow().isoformat(),
-            updated_at=order.updated_at.isoformat() if order.updated_at else datetime.utcnow().isoformat(),
-            filled_qty=str(order.filled_qty) if getattr(order, 'filled_qty', None) is not None else None,
-            avg_fill_price=str(order.avg_fill_price) if getattr(order, 'avg_fill_price', None) is not None else None,
+            created_at=(
+                order.submitted_at.isoformat()
+                if order.submitted_at
+                else datetime.utcnow().isoformat()
+            ),
+            updated_at=(
+                order.updated_at.isoformat() if order.updated_at else datetime.utcnow().isoformat()
+            ),
+            filled_qty=(
+                str(order.filled_quantity)
+                if getattr(order, "filled_quantity", None) is not None
+                else None
+            ),
+            avg_fill_price=(
+                str(order.avg_fill_price)
+                if getattr(order, "avg_fill_price", None) is not None
+                else None
+            ),
+            quantity=str(order.quantity),
+            filled_quantity=(
+                str(order.filled_quantity)
+                if getattr(order, "filled_quantity", None) is not None
+                else None
+            ),
         )
 
 
 class OrdersStore:
     """Manages durable storage of orders to prevent state loss."""
 
-    def __init__(self, storage_path: Path):
+    def __init__(self, storage_path: Path) -> None:
         self.storage_path = storage_path
         self.orders_file = storage_path / "orders.jsonl"
-        self._orders: Dict[str, StoredOrder] = {}
-        self._client_id_map: Dict[str, str] = {}
+        self._orders: dict[str, StoredOrder] = {}
+        self._client_id_map: dict[str, str] = {}
         self._lock = threading.RLock()
 
         self.storage_path.mkdir(parents=True, exist_ok=True)
         self._load()
 
-    def _load(self):
+    def _load(self) -> None:
         """Load orders from the JSONL file."""
         if not self.orders_file.exists():
             return
-        
-        with self.orders_file.open('r') as f:
+
+        with self.orders_file.open("r") as f:
             for line in f:
                 try:
                     data = json.loads(line)
                     # Backward compatibility for older records
-                    if 'filled_qty' not in data:
-                        data['filled_qty'] = None
-                    if 'avg_fill_price' not in data:
-                        data['avg_fill_price'] = None
+                    if "filled_qty" not in data:
+                        data["filled_qty"] = None
+                    if "avg_fill_price" not in data:
+                        data["avg_fill_price"] = None
                     order = StoredOrder(**data)
                     self._orders[order.order_id] = order
                     self._client_id_map[order.client_id] = order.order_id
                 except (json.JSONDecodeError, TypeError) as e:
                     logger.warning(f"Could not load order record: {line.strip()} - Error: {e}")
-        
+
         logger.info(f"Loaded {len(self._orders)} orders from {self.orders_file}")
 
-    def upsert(self, order: Order):
+    def upsert(self, order: Order) -> None:
         """Update or insert an order."""
         with self._lock:
             prev = self._orders.get(order.id)
@@ -102,8 +134,8 @@ class OrdersStore:
             if order.client_id:
                 self._client_id_map[order.client_id] = order.id
             # Append to file for durability
-            with self.orders_file.open('a') as f:
-                f.write(json.dumps(asdict(stored_order)) + '\n')
+            with self.orders_file.open("a") as f:
+                f.write(json.dumps(asdict(stored_order)) + "\n")
 
             # Emit status change and round-trip metrics
             try:
@@ -115,7 +147,9 @@ class OrdersStore:
                         to_status=stored_order.status,
                     )
                 # Round-trip when entering FILLED from non-filled
-                if stored_order.status.upper() == OrderStatus.FILLED.value.upper() and (not prev_status or prev_status.upper() != OrderStatus.FILLED.value.upper()):
+                if stored_order.status.upper() == OrderStatus.FILLED.value.upper() and (
+                    not prev_status or prev_status.upper() != OrderStatus.FILLED.value.upper()
+                ):
                     try:
                         # Prefer true timestamps from Order object
                         t0 = order.submitted_at
@@ -132,22 +166,27 @@ class OrdersStore:
                                 submitted_ts=t0.isoformat(),
                                 filled_ts=t1.isoformat(),
                             )
-                    except Exception:
-                        pass
-            except Exception:
-                # Never break on logging
-                pass
+                    except Exception as exc:
+                        logger.debug(
+                            "Failed to log order round trip for %s: %s",
+                            stored_order.order_id,
+                            exc,
+                            exc_info=True,
+                        )
+            except Exception as exc:
+                # Never break on logging but surface for diagnostics
+                logger.debug("Order metrics logging failure: %s", exc, exc_info=True)
 
-    def get_by_id(self, order_id: str) -> Optional[StoredOrder]:
+    def get_by_id(self, order_id: str) -> StoredOrder | None:
         with self._lock:
             return self._orders.get(order_id)
 
-    def get_by_client_id(self, client_id: str) -> Optional[StoredOrder]:
+    def get_by_client_id(self, client_id: str) -> StoredOrder | None:
         with self._lock:
             order_id = self._client_id_map.get(client_id)
             return self._orders.get(order_id) if order_id else None
 
-    def get_open_orders(self) -> List[StoredOrder]:
+    def get_open_orders(self) -> list[StoredOrder]:
         """Get all orders that are not in a terminal state."""
         terminal_states = {"FILLED", "CANCELLED", "REJECTED", "EXPIRED"}
         with self._lock:

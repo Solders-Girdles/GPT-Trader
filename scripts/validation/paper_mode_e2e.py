@@ -34,7 +34,7 @@ async def main() -> int:
     )
     bot, _registry = build_bot(cfg)
 
-    # Run several single cycles; drive marks if using MockBroker to trigger signals
+    # Run several single cycles; drive marks if using DeterministicBroker to trigger signals
     pattern = [100, 99, 101, 103, 105, 104, 106, 108]
     for i, px in enumerate(pattern):
         try:

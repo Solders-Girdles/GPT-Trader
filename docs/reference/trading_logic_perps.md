@@ -151,7 +151,7 @@ This document captures the architecture and trading flow for the Coinbase Perpet
 ```python
 BotConfig(
     profile=Profile.DEV,
-    mock_broker=True,
+    mock_broker=True,  # toggles the DeterministicBroker stub
     mock_fills=True,
     dry_run=True,
     max_position_size=Decimal("10000"),
@@ -167,7 +167,7 @@ BotConfig(
     max_position_size=Decimal("100"),
     max_leverage=1,
     enable_shorts=False,
-    mock_broker=True,
+    mock_broker=True,  # toggles the DeterministicBroker stub
 )
 ```
 
@@ -181,6 +181,10 @@ BotConfig(
     reduce_only_mode=False,
 )
 ```
+
+Setting `mock_broker=True` in any profile now routes through the
+`DeterministicBroker` safety stub. This keeps development and demo runs free of
+real orders while exercising the same orchestration paths used in production.
 
 ### Canary Profile (Ultra-Safe Production)
 ```yaml

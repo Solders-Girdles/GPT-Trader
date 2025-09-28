@@ -14,7 +14,7 @@ An ML-driven Coinbase trading system with market regime detection, built on a cl
 
 - Coinbase trading stack (spot-first): `src/bot_v2/orchestration/perps_bot.py`
   - Run spot mode: `poetry run perps-bot --profile dev --dev-fast`
-    - The dev profile uses the built-in `MockBroker` for safety; enable real spot execution with `SPOT_FORCE_LIVE=1` plus Coinbase API keys.
+    - The dev profile uses the built-in `DeterministicBroker` for safety; enable real spot execution with `SPOT_FORCE_LIVE=1` plus Coinbase API keys.
     - Default universe: top-ten USD spot markets by Coinbase volume (`BTC`, `ETH`, `SOL`, `XRP`, `LTC`, `ADA`, `DOGE`, `BCH`, `AVAX`, `LINK`).
   - Optional perps (future-ready): requires INTX + `COINBASE_ENABLE_DERIVATIVES=1`
   - Adapter: `src/bot_v2/features/brokerages/coinbase/`

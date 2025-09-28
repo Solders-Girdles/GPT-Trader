@@ -16,7 +16,7 @@ Paper trading provides risk-free simulation of trading strategies using real mar
 
 ## Implementation
 
-### Mock Broker
+### Deterministic Broker
 The system uses a deterministic broker stub for paper trading that provides:
 - Deterministic fills for testing
 - Random walk price generation
@@ -29,7 +29,7 @@ The system uses a deterministic broker stub for paper trading that provides:
 poetry run perps-bot --profile dev
 
 # The dev profile automatically uses:
-# - Mock broker with simulated fills
+# - Deterministic broker with simulated fills
 # - Tiny positions (0.001 BTC)
 # - Extensive logging
 # - No real money at risk
@@ -124,14 +124,12 @@ tail -f var/logs/perps_bot.log | grep "PnL"
 ### Advanced Configuration
 ```python
 # Custom paper trading settings
-config = {
-    "mock_broker": {
-        "initial_balance": 100000,
-        "spread_bps": 10,
-        "slippage_bps": 5,
-        "fill_probability": 0.95
-    }
-}
+from decimal import Decimal
+from bot_v2.orchestration.deterministic_broker import DeterministicBroker
+
+broker = DeterministicBroker(equity=Decimal("100000"))
+broker.set_mark("BTC-PERP", Decimal("50000"))
+# Inject `broker` into a custom ServiceRegistry or patch `PerpsBot` during tests
 ```
 
 ## Transition to Live Trading

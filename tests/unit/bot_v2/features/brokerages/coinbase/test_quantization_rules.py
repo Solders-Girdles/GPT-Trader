@@ -1,7 +1,7 @@
 from decimal import Decimal
 import pytest
 
-from bot_v2.features.brokerages.coinbase.utils import enforce_perp_rules, InvalidRequestError
+from bot_v2.features.brokerages.coinbase.utilities import enforce_perp_rules, InvalidRequestError
 from bot_v2.features.brokerages.core.interfaces import Product, MarketType
 
 

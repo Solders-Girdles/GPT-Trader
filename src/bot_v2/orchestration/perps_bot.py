@@ -61,9 +61,9 @@ from bot_v2.orchestration.configuration import (
     ConfigValidationError,
     Profile,
 )
+from bot_v2.orchestration.deterministic_broker import DeterministicBroker
 from bot_v2.orchestration.live_execution import LiveExecutionEngine
 from bot_v2.orchestration.market_monitor import MarketActivityMonitor
-from bot_v2.orchestration.mock_broker import MockBroker
 from bot_v2.orchestration.perps_bootstrap import prepare_perps_bot
 from bot_v2.orchestration.service_registry import ServiceRegistry
 from bot_v2.orchestration.session_guard import TradingSessionGuard
@@ -71,10 +71,40 @@ from bot_v2.orchestration.session_guard import TradingSessionGuard
 logger = logging.getLogger(__name__)
 
 
+def _quantity_from(source: Any) -> Decimal:
+    """Normalize quantity/qty fields across objects and dicts."""
+
+    if source is None:
+        return Decimal("0")
+
+    if isinstance(source, Decimal | int | float | str):
+        try:
+            return Decimal(str(source))
+        except Exception:
+            return Decimal("0")
+
+    raw = getattr(source, "quantity", None)
+    if raw is None:
+        raw = getattr(source, "qty", None)
+
+    if raw is None and isinstance(source, dict):
+        raw = source.get("quantity")
+        if raw is None:
+            raw = source.get("qty")
+
+    if raw is None:
+        return Decimal("0")
+
+    try:
+        return Decimal(str(raw))
+    except Exception:
+        return Decimal("0")
+
+
 class PerpsBot:
     """Main Coinbase trading bot (spot by default, perps optional)."""
 
-    def __init__(self, config: BotConfig, registry: ServiceRegistry | None = None):
+    def __init__(self, config: BotConfig, registry: ServiceRegistry | None = None) -> None:
         bootstrap = prepare_perps_bot(config, registry)
         self.config = bootstrap.config
         self.registry = bootstrap.registry
@@ -269,7 +299,7 @@ class PerpsBot:
             except Exception:
                 logger.exception("Failed to record WS stream exit metric")
 
-    async def _reconcile_state_on_startup(self):
+    async def _reconcile_state_on_startup(self) -> None:
         # Allow skipping in dry-run or when explicitly requested via env
         if self.config.dry_run or os.getenv("PERPS_SKIP_RECONCILE", "").lower() in (
             "1",
@@ -303,7 +333,8 @@ class PerpsBot:
                         except Exception:
                             exchange_open_orders = {}
                     break
-                except Exception:
+                except Exception as exc:
+                    logger.exception("Failed to fetch exchange open orders: %s", exc, exc_info=True)
                     continue
 
             logger.info(
@@ -359,17 +390,15 @@ class PerpsBot:
                                 symbol=local_order.symbol,
                                 side=OrderSide(local_order.side.lower()),
                                 type=OrderType(local_order.order_type.lower()),
-                                qty=Decimal(str(local_order.qty)),
+                                quantity=_quantity_from(local_order),
                                 price=(
                                     Decimal(str(local_order.price)) if local_order.price else None
                                 ),
                                 stop_price=None,
                                 tif=TimeInForce.GTC,
                                 status=OrderStatus.CANCELLED,
-                                filled_qty=(
-                                    Decimal(str(local_order.filled_qty))
-                                    if local_order.filled_qty
-                                    else Decimal("0")
+                                filled_quantity=_quantity_from(
+                                    getattr(local_order, "filled_quantity", local_order.filled_qty)
                                 ),
                                 avg_fill_price=(
                                     Decimal(str(local_order.avg_fill_price))
@@ -420,7 +449,8 @@ class PerpsBot:
                 positions = await asyncio.to_thread(self.broker.list_positions)
                 self._last_positions = {
                     p.symbol: {
-                        "qty": str(getattr(p, "qty", "0")),
+                        "quantity": str(_quantity_from(p)),
+                        "qty": str(_quantity_from(p)),
                         "side": str(getattr(p, "side", "")),
                     }
                     for p in (positions or [])
@@ -443,7 +473,7 @@ class PerpsBot:
             # Enter reduce-only mode as a safety fallback
             self._set_reduce_only_mode(True, reason="startup_reconcile_failed")
 
-    def _init_risk_manager(self):
+    def _init_risk_manager(self) -> None:
         if self.registry.risk_manager is not None:
             self.risk_manager = self.registry.risk_manager
             self.risk_manager.set_state_listener(self._on_risk_state_change)
@@ -549,7 +579,7 @@ class PerpsBot:
             return bool(self._reduce_only_mode_state or self.risk_manager.is_reduce_only_mode())
         return bool(self._reduce_only_mode_state)
 
-    def _init_strategy(self):
+    def _init_strategy(self) -> None:
         derivatives_enabled = os.environ.get("COINBASE_ENABLE_DERIVATIVES", "0") == "1"
         if self.config.profile == Profile.SPOT:
             self._load_spot_rules()
@@ -602,7 +632,7 @@ class PerpsBot:
                 config=StrategyConfig(**strategy_kwargs), risk_manager=self.risk_manager
             )
 
-    def _init_execution(self):
+    def _init_execution(self) -> None:
         # Optional per-symbol slippage multipliers (e.g., "BTC-PERP:0.0005,ETH-PERP:0.0007")
         slippage_env = os.environ.get("SLIPPAGE_MULTIPLIERS", "")
         slippage_map = {}
@@ -630,7 +660,7 @@ class PerpsBot:
         extras["execution_engine"] = self.exec_engine
         self.registry = self.registry.with_updates(extras=extras)
 
-    def _init_broker(self):
+    def _init_broker(self) -> None:
         if self.registry.broker is not None:
             self.broker = self.registry.broker
             logger.info("Using broker from service registry")
@@ -639,8 +669,8 @@ class PerpsBot:
         force_mock = os.environ.get("PERPS_FORCE_MOCK", "").lower() in ("1", "true", "yes")
         is_dev = self.config.profile == Profile.DEV
         if paper_env or force_mock or is_dev or self.config.mock_broker:
-            self.broker = MockBroker()
-            logger.info("Using mock broker (REST-first marks)")
+            self.broker = DeterministicBroker()
+            logger.info("Using deterministic broker (REST-first marks)")
         else:
             try:
                 self._validate_broker_environment()
@@ -658,7 +688,7 @@ class PerpsBot:
                 sys.exit(1)
         self.registry = self.registry.with_updates(broker=self.broker)
 
-    def _validate_broker_environment(self):
+    def _validate_broker_environment(self) -> None:
         import os
 
         # Allow safe paper/mock mode without any production credentials
@@ -767,7 +797,7 @@ class PerpsBot:
             min_notional=Decimal("10"),
         )
 
-    async def update_marks(self):
+    async def update_marks(self) -> None:
         for symbol in self.config.symbols:
             try:
                 quote = await asyncio.to_thread(self.broker.get_quote, symbol)
@@ -796,7 +826,7 @@ class PerpsBot:
         symbol: str,
         balances: Sequence[Balance] | None = None,
         position_map: dict[str, Position] | None = None,
-    ):
+    ) -> None:
         try:
             if balances is None:
                 balances = await asyncio.to_thread(self.broker.list_balances)
@@ -818,28 +848,29 @@ class PerpsBot:
                 positions_lookup = position_map
 
             position_state = None
-            position_qty = Decimal("0")
+            position_quantity = Decimal("0")
             if symbol in positions_lookup:
                 pos = positions_lookup[symbol]
-                qty_val = getattr(pos, "qty", Decimal("0"))
+                qty_val = _quantity_from(pos)
                 position_state = {
+                    "quantity": qty_val,
                     "qty": qty_val,
                     "side": getattr(pos, "side", "long"),
                     "entry": getattr(pos, "entry_price", None),
                 }
                 try:
-                    position_qty = Decimal(str(qty_val))
+                    position_quantity = Decimal(str(qty_val))
                 except Exception:
-                    position_qty = Decimal("0")
+                    position_quantity = Decimal("0")
 
             marks = self.mark_windows.get(symbol, [])
             if not marks:
                 logger.warning(f"No marks for {symbol}")
                 return
 
-            if position_qty and marks:
+            if position_quantity and marks:
                 try:
-                    equity += abs(position_qty) * marks[-1]
+                    equity += abs(position_quantity) * marks[-1]
                 except Exception as exc:
                     logger.debug(
                         "Failed to adjust equity for %s position: %s", symbol, exc, exc_info=True
@@ -907,26 +938,32 @@ class PerpsBot:
         mark: Decimal,
         product: Product,
         position_state: dict[str, Any] | None,
-    ):
+    ) -> None:
         try:
             assert product is not None, "Missing product metadata"
             assert mark is not None and mark > 0, f"Invalid mark: {mark}"
-            assert position_state is None or "qty" in position_state, "Position state missing qty"
+            assert position_state is None or any(
+                key in position_state for key in ("quantity", "qty")
+            ), "Position state missing quantity"
             if self.config.dry_run:
                 logger.info(f"DRY RUN: Would execute {decision.action.value} for {symbol}")
                 return
 
+            position_quantity = _quantity_from(position_state)
+
             if decision.action == Action.CLOSE:
-                if not position_state or position_state.get("qty", 0) == 0:
+                if not position_state or position_quantity == 0:
                     logger.warning(f"No position to close for {symbol}")
                     return
-                qty = abs(Decimal(str(position_state["qty"])))
-            elif decision.target_notional:
-                qty = decision.target_notional / mark
-            elif decision.qty:
-                qty = decision.qty
+                order_quantity = abs(position_quantity)
+            elif getattr(decision, "target_notional", None):
+                order_quantity = Decimal(str(decision.target_notional)) / mark
+            elif getattr(decision, "quantity", None) is not None:
+                order_quantity = Decimal(str(decision.quantity))
+            elif getattr(decision, "qty", None):
+                order_quantity = Decimal(str(decision.qty))
             else:
-                logger.warning(f"No qty or notional in decision for {symbol}")
+                logger.warning(f"No quantity or notional in decision for {symbol}")
                 return
 
             side = OrderSide.BUY if decision.action == Action.BUY else OrderSide.SELL
@@ -959,7 +996,7 @@ class PerpsBot:
             order = await self._place_order(
                 symbol=symbol,
                 side=side,
-                qty=qty,
+                quantity=order_quantity,
                 order_type=(
                     order_type
                     if isinstance(order_type, OrderType)
@@ -994,7 +1031,7 @@ class PerpsBot:
                 raise
         return self._order_lock
 
-    async def _place_order(self, **kwargs) -> Order | None:
+    async def _place_order(self, **kwargs: Any) -> Order | None:
         try:
             # Ensure single in-flight placement to avoid duplicate orders
             lock = self._ensure_order_lock()
@@ -1010,7 +1047,7 @@ class PerpsBot:
             self.order_stats["failed"] += 1
             return None
 
-    async def _place_order_inner(self, **kwargs) -> Order | None:
+    async def _place_order_inner(self, **kwargs: Any) -> Order | None:
         # Track attempts
         self.order_stats["attempted"] += 1
         order_id = await asyncio.to_thread(self.exec_engine.place_order, **kwargs)
@@ -1019,8 +1056,9 @@ class PerpsBot:
             if order:
                 self.orders_store.upsert(order)
                 self.order_stats["successful"] += 1
+                order_quantity = getattr(order, "quantity", getattr(order, "qty", Decimal("0")))
                 logger.info(
-                    f"Order recorded: {order.id} {order.side.value} {order.qty} {order.symbol}"
+                    f"Order recorded: {order.id} {order.side.value} {order_quantity} {order.symbol}"
                 )
                 return order
         # Failure path
@@ -1028,7 +1066,7 @@ class PerpsBot:
         logger.warning("Order attempt failed (no order_id returned)")
         return None
 
-    async def run_cycle(self):
+    async def run_cycle(self) -> None:
         logger.debug("Running update cycle")
         await self.update_marks()
         if not self._session_guard.should_trade():
@@ -1063,7 +1101,7 @@ class PerpsBot:
         await asyncio.gather(*tasks)
         await self.log_status()
 
-    async def log_status(self):
+    async def log_status(self) -> None:
         positions = []
         balances = []
         try:
@@ -1098,7 +1136,8 @@ class PerpsBot:
             "positions": [
                 {
                     "symbol": getattr(p, "symbol", ""),
-                    "qty": float(getattr(p, "qty", 0) or 0),
+                    "quantity": float(_quantity_from(p)),
+                    "qty": float(_quantity_from(p)),
                     "side": getattr(p, "side", ""),
                     "entry_price": float(getattr(p, "entry_price", 0) or 0),
                     "mark_price": float(getattr(p, "mark_price", 0) or 0),
@@ -1206,7 +1245,7 @@ class PerpsBot:
                 }
         return diff
 
-    async def run(self, single_cycle: bool = False):
+    async def run(self, single_cycle: bool = False) -> None:
         logger.info(f"Starting Perps Bot - Profile: {self.config.profile.value}")
         self.running = True
         background_tasks: list[asyncio.Task[Any]] = []
@@ -1253,7 +1292,7 @@ class PerpsBot:
                 await asyncio.gather(*background_tasks, return_exceptions=True)
             await self.shutdown()
 
-    async def _run_runtime_guards(self):
+    async def _run_runtime_guards(self) -> None:
         while self.running:
             try:
                 await asyncio.to_thread(self.exec_engine.run_runtime_guards)
@@ -1261,7 +1300,7 @@ class PerpsBot:
                 logger.error(f"Error in runtime guards: {e}", exc_info=True)
             await asyncio.sleep(60)
 
-    def write_health_status(self, ok: bool, message: str = "", error: str = ""):
+    def write_health_status(self, ok: bool, message: str = "", error: str = "") -> None:
         status = {
             "ok": ok,
             "timestamp": datetime.now().isoformat(),
@@ -1273,7 +1312,7 @@ class PerpsBot:
         with open(status_file, "w") as f:
             json.dump(status, f, indent=2)
 
-    async def shutdown(self):
+    async def shutdown(self) -> None:
         logger.info("Shutting down bot...")
         self.running = False
         # Stop WS streaming thread if running
@@ -1285,7 +1324,7 @@ class PerpsBot:
         except Exception as exc:
             logger.debug("Failed to stop WS thread cleanly: %s", exc, exc_info=True)
 
-    async def _run_order_reconciliation(self, interval_seconds: int = 45):
+    async def _run_order_reconciliation(self, interval_seconds: int = 45) -> None:
         """Periodically reconcile local order store with exchange to prevent drift."""
         while self.running:
             try:
@@ -1326,7 +1365,7 @@ class PerpsBot:
                         )
 
                 # For any locally open order missing on exchange, fetch final status and upsert
-                for oid, loc in local_open.items():
+                for oid, _local in local_open.items():
                     if oid not in exch_open:
                         try:
                             final = await asyncio.to_thread(self.broker.get_order, oid)
@@ -1359,7 +1398,7 @@ class PerpsBot:
         rules = self._spot_rules.get(symbol)
         if not rules or decision.action != Action.BUY:
             return decision
-        if position_state and Decimal(str(position_state.get("qty", "0"))) != Decimal("0"):
+        if position_state and _quantity_from(position_state) != Decimal("0"):
             return decision
 
         needs_data = False
@@ -1423,7 +1462,7 @@ class PerpsBot:
         # RSI momentum
         if isinstance(momentum_cfg, dict):
             window = int(momentum_cfg.get("window", 0))
-            overbought = _to_decimal(momentum_cfg.get("overbought", 70))
+            _overbought = _to_decimal(momentum_cfg.get("overbought", 70))
             oversold = _to_decimal(momentum_cfg.get("oversold", 30))
             if window > 0:
                 if len(closes) < window + 1:
@@ -1518,7 +1557,7 @@ class PerpsBot:
         except Exception:
             return Decimal("0")
 
-    async def _run_position_reconciliation(self, interval_seconds: int = 90):
+    async def _run_position_reconciliation(self, interval_seconds: int = 90) -> None:
         """Periodically reconcile positions to detect drift against the last known snapshot.
 
         Emits a 'position_drift' metric when symbols, side, or sizes change compared to baseline.
@@ -1537,10 +1576,20 @@ class PerpsBot:
                         sym = getattr(p, "symbol", None)
                         if not sym:
                             continue
-                        qty = getattr(p, "qty", Decimal("0"))
+                        qty = _quantity_from(p)
                         side = getattr(p, "side", "")
-                        current[str(sym)] = {"qty": str(qty), "side": str(side)}
-                    except Exception:
+                        current[str(sym)] = {
+                            "quantity": str(qty),
+                            "qty": str(qty),
+                            "side": str(side),
+                        }
+                    except Exception as exc:
+                        logger.exception(
+                            "Failed to normalize position for %s: %s",
+                            getattr(p, "symbol", "unknown"),
+                            exc,
+                            exc_info=True,
+                        )
                         continue
 
                 # Initialize baseline without emitting drift
@@ -1554,7 +1603,8 @@ class PerpsBot:
                         prev = self._last_positions.get(sym)
                         if (
                             not prev
-                            or prev.get("qty") != data.get("qty")
+                            or prev.get("quantity", prev.get("qty"))
+                            != data.get("quantity", data.get("qty"))
                             or prev.get("side") != data.get("side")
                         ):
                             changes[sym] = {"old": prev or {}, "new": data}
@@ -1570,7 +1620,7 @@ class PerpsBot:
                             for sym, change in changes.items():
                                 newd = change.get("new", {}) or {}
                                 sided = newd.get("side")
-                                qstr = newd.get("qty")
+                                qstr = newd.get("quantity") or newd.get("qty")
                                 sizef = float(qstr) if qstr not in (None, "") else 0.0
                                 plog.log_position_change(
                                     symbol=sym,
@@ -1593,7 +1643,7 @@ class PerpsBot:
                 logger.debug(f"Position reconciliation error: {e}", exc_info=True)
             await asyncio.sleep(interval_seconds)
 
-    async def _run_account_telemetry(self, interval_seconds: int = 300):
+    async def _run_account_telemetry(self, interval_seconds: int = 300) -> None:
         """Periodically emit account snapshots (fees, limits, permissions)."""
         if not self._account_snapshot_supported:
             collector = getattr(self._collect_account_snapshot, "__func__", None)

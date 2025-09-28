@@ -1,26 +1,16 @@
-"""
-DeterministicBroker: a minimal, predictable brokerage for tests.
-
-Purpose:
-- Provide a stable IBrokerage-compatible stub without market simulation.
-- Avoid false positives caused by complex mock behavior.
-
-Usage:
-- Prefer this deterministic stub in unit tests.
-- Exposes simple hooks to seed positions and marks deterministically.
-"""
+"""Deterministic IBrokerage implementation for development and tests."""
 
 from __future__ import annotations
 
+import warnings
+from collections.abc import Iterable, Sequence
 from datetime import datetime
 from decimal import Decimal
-from collections.abc import Iterable, Sequence
-import warnings
 
 from bot_v2.features.brokerages.core.interfaces import (
-    IBrokerage,
     Balance,
     Candle,
+    IBrokerage,
     MarketType,
     Order,
     OrderSide,
@@ -156,6 +146,8 @@ class DeterministicBroker(IBrokerage):
         *,
         context: str,
     ) -> Decimal:
+        """Normalize quantity inputs while retaining backward compatibility."""
+
         if quantity is None:
             if qty is None:
                 raise ValueError(f"{context} requires a quantity")
@@ -167,6 +159,7 @@ class DeterministicBroker(IBrokerage):
             quantity = qty
         elif qty is not None:
             raise TypeError(f"{context} received both 'quantity' and deprecated 'qty'")
+
         return quantity if isinstance(quantity, Decimal) else Decimal(str(quantity))
 
     def place_order(
@@ -183,11 +176,11 @@ class DeterministicBroker(IBrokerage):
         reduce_only: bool | None = None,
         leverage: int | None = None,
     ) -> Order:
+        order_quantity = self._resolve_quantity(quantity, qty, context="place_order")
         oid = client_id or f"det_{len(self._orders)}"
         now = datetime.utcnow()
         status = OrderStatus.SUBMITTED if order_type == OrderType.LIMIT else OrderStatus.FILLED
         avg_fill = None if status != OrderStatus.FILLED else self.marks.get(symbol, Decimal("1000"))
-        order_quantity = self._resolve_quantity(quantity, qty, context="place_order")
         order = Order(
             id=oid,
             client_id=oid,
@@ -211,40 +204,32 @@ class DeterministicBroker(IBrokerage):
         return order
 
     def cancel_order(self, order_id: str) -> bool:
-        for idx, o in enumerate(self._orders):
-            if o.id == order_id and o.status == OrderStatus.SUBMITTED:
+        for idx, existing in enumerate(self._orders):
+            if existing.id == order_id and existing.status == OrderStatus.SUBMITTED:
                 self._orders[idx] = Order(
-                    **{
-                        **o.__dict__,
-                        "status": OrderStatus.CANCELLED,
-                        "updated_at": datetime.utcnow(),
-                    }
+                    id=existing.id,
+                    client_id=existing.client_id,
+                    symbol=existing.symbol,
+                    side=existing.side,
+                    type=existing.type,
+                    price=existing.price,
+                    stop_price=existing.stop_price,
+                    tif=existing.tif,
+                    status=OrderStatus.CANCELLED,
+                    avg_fill_price=existing.avg_fill_price,
+                    submitted_at=existing.submitted_at,
+                    updated_at=datetime.utcnow(),
+                    quantity=existing.quantity,
+                    filled_quantity=existing.filled_quantity,
                 )
                 return True
         return False
 
-    def get_order(self, order_id: str) -> Order:
+    def get_order(self, order_id: str) -> Order | None:
         for o in self._orders:
             if o.id == order_id:
                 return o
-        # Fallback dummy
-        now = datetime.utcnow()
-        return Order(
-            id=order_id,
-            client_id=order_id,
-            symbol="UNKNOWN",
-            side=OrderSide.BUY,
-            type=OrderType.MARKET,
-            quantity=Decimal("0"),
-            price=None,
-            stop_price=None,
-            tif=TimeInForce.GTC,
-            status=OrderStatus.CANCELLED,
-            filled_quantity=Decimal("0"),
-            avg_fill_price=None,
-            submitted_at=now,
-            updated_at=now,
-        )
+        return None
 
     def list_orders(
         self, status: OrderStatus | None = None, symbol: str | None = None
@@ -309,11 +294,12 @@ class DeterministicBroker(IBrokerage):
 
     # Internal: apply a filled order to position state
     def _apply_fill(self, symbol: str, side: OrderSide, quantity: Decimal, price: Decimal) -> None:
+        position_quantity = quantity if isinstance(quantity, Decimal) else Decimal(str(quantity))
         existing = self._positions.get(symbol)
         if existing is None:
             self._positions[symbol] = Position(
                 symbol=symbol,
-                qty=quantity,
+                qty=position_quantity,
                 entry_price=price,
                 mark_price=price,
                 unrealized_pnl=Decimal("0"),
@@ -323,15 +309,16 @@ class DeterministicBroker(IBrokerage):
             )
             return
         base_quantity = existing.quantity
-        # Simplified netting: if same side, increase quantity with avg price; else reduce
         if (existing.side == "long" and side == OrderSide.BUY) or (
             existing.side == "short" and side == OrderSide.SELL
         ):
-            new_qty = base_quantity + quantity
-            new_entry = ((existing.entry_price * base_quantity) + (price * quantity)) / new_qty
+            new_quantity = base_quantity + position_quantity
+            new_entry = (
+                (existing.entry_price * base_quantity) + (price * position_quantity)
+            ) / new_quantity
             self._positions[symbol] = Position(
                 symbol=symbol,
-                qty=new_qty,
+                qty=new_quantity,
                 entry_price=new_entry,
                 mark_price=price,
                 unrealized_pnl=Decimal("0"),
@@ -340,9 +327,8 @@ class DeterministicBroker(IBrokerage):
                 side=existing.side,
             )
         else:
-            # Reduce position
-            reduce_qty = min(base_quantity, quantity)
-            remaining = base_quantity - reduce_qty
+            reduce_quantity = min(base_quantity, position_quantity)
+            remaining = base_quantity - reduce_quantity
             if remaining > 0:
                 self._positions[symbol] = Position(
                     symbol=symbol,
@@ -355,9 +341,9 @@ class DeterministicBroker(IBrokerage):
                     side=existing.side,
                 )
             else:
-                # Flip to the other side with leftover quantity
-                leftover = quantity - reduce_qty
+                leftover = position_quantity - reduce_quantity
                 if leftover > 0:
+                    new_side = "short" if existing.side == "long" else "long"
                     self._positions[symbol] = Position(
                         symbol=symbol,
                         qty=leftover,
@@ -366,7 +352,7 @@ class DeterministicBroker(IBrokerage):
                         unrealized_pnl=Decimal("0"),
                         realized_pnl=existing.realized_pnl,
                         leverage=None,
-                        side=("short" if existing.side == "long" else "long"),
+                        side=new_side,
                     )
                 else:
                     del self._positions[symbol]

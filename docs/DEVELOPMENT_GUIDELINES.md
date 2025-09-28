@@ -18,8 +18,8 @@ rules that referenced the monolithic `src/bot` package have been archived.
 - Type annotations for public interfaces; prefer `typing.Protocol` for guard or
   strategy contracts.
 - Prefer `pathlib.Path` for filesystem access.
-- Use structured logging via `bot_v2/logging_setup.py` helpers whenever a new
-  module emits logs.
+- Use structured logging via `bot_v2/logging` helpers (call `configure_logging`)
+  whenever a new module emits logs.
 
 ## Error Handling
 

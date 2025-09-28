@@ -33,7 +33,7 @@ SRC_PATH = REPO_ROOT / "src"
 if str(SRC_PATH) not in sys.path:
     sys.path.append(str(SRC_PATH))
 
-from bot_v2.system_paths import RUNTIME_DATA_DIR
+from bot_v2.config.path_registry import RUNTIME_DATA_DIR
 
 
 def clear():

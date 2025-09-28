@@ -8,7 +8,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from ..system_paths import DEFAULT_EVENT_STORE_DIR
+from ..config.path_registry import DEFAULT_EVENT_STORE_DIR
 
 
 class EventStore:

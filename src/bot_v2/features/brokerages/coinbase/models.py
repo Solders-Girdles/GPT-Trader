@@ -7,28 +7,40 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
-from typing import Optional, Literal
+from typing import Literal
 
-from ..core.interfaces import Candle, Order, OrderSide, OrderStatus, OrderType, Product, Quote, TimeInForce, MarketType
-from ..core.interfaces import Position
+from ..core.interfaces import (
+    Candle,
+    MarketType,
+    Order,
+    OrderSide,
+    OrderStatus,
+    OrderType,
+    Position,
+    Product,
+    Quote,
+    TimeInForce,
+)
 
 
 @dataclass
 class APIConfig:
     api_key: str
     api_secret: str
-    passphrase: Optional[str]
+    passphrase: str | None
     base_url: str
     sandbox: bool = False
-    ws_url: Optional[str] = None
+    ws_url: str | None = None
     enable_derivatives: bool = True
     # CDP (Coinbase Developer Platform) JWT auth fields
-    cdp_api_key: Optional[str] = None  # API key name from CDP
-    cdp_private_key: Optional[str] = None  # EC private key in PEM format
+    cdp_api_key: str | None = None  # API key name from CDP
+    cdp_private_key: str | None = None  # EC private key in PEM format
     auth_type: str = "HMAC"  # "HMAC" or "JWT"
     api_version: str = "2024-10-24"  # CB-VERSION header value (format: YYYY-MM-DD)
     # API mode determines endpoint paths and auth requirements
-    api_mode: Literal["advanced", "exchange"] = "advanced"  # "advanced" for AT v3, "exchange" for legacy
+    api_mode: Literal["advanced", "exchange"] = (
+        "advanced"  # "advanced" for AT v3, "exchange" for legacy
+    )
 
 
 def normalize_symbol(symbol: str) -> str:
@@ -43,7 +55,11 @@ def normalize_symbol(symbol: str) -> str:
 def to_product(payload: dict) -> Product:
     market_type = MarketType.SPOT
     if payload.get("contract_type") in {"future", "perpetual"}:
-        market_type = MarketType.PERPETUAL if payload.get("contract_type") == "perpetual" else MarketType.FUTURES
+        market_type = (
+            MarketType.PERPETUAL
+            if payload.get("contract_type") == "perpetual"
+            else MarketType.FUTURES
+        )
 
     # Parse funding time if available
     next_funding_time = None
@@ -59,14 +75,28 @@ def to_product(payload: dict) -> Product:
         quote_asset=payload.get("quote_currency") or payload.get("quote_asset") or "",
         market_type=market_type,
         min_size=Decimal(str(payload.get("base_min_size") or payload.get("min_size") or "0")),
-        step_size=Decimal(str(payload.get("base_increment") or payload.get("step_size") or "0.00000001")),
-        min_notional=Decimal(str(payload.get("min_notional") or "0")) if payload.get("min_notional") else None,
-        price_increment=Decimal(str(payload.get("quote_increment") or payload.get("price_increment") or "0.01")),
+        step_size=Decimal(
+            str(payload.get("base_increment") or payload.get("step_size") or "0.00000001")
+        ),
+        min_notional=(
+            Decimal(str(payload.get("min_notional") or "0"))
+            if payload.get("min_notional")
+            else None
+        ),
+        price_increment=Decimal(
+            str(payload.get("quote_increment") or payload.get("price_increment") or "0.01")
+        ),
         leverage_max=int(payload.get("max_leverage", 1)) if payload.get("max_leverage") else None,
         expiry=datetime.fromisoformat(payload["expiry"]) if payload.get("expiry") else None,
         # Perpetuals-specific fields
-        contract_size=Decimal(str(payload.get("contract_size", "1"))) if payload.get("contract_size") else None,
-        funding_rate=Decimal(str(payload.get("funding_rate", "0"))) if payload.get("funding_rate") else None,
+        contract_size=(
+            Decimal(str(payload.get("contract_size", "1")))
+            if payload.get("contract_size")
+            else None
+        ),
+        funding_rate=(
+            Decimal(str(payload.get("funding_rate", "0"))) if payload.get("funding_rate") else None
+        ),
         next_funding_time=next_funding_time,
     )
 
@@ -90,7 +120,9 @@ def to_quote(payload: dict) -> Quote:
             ts_raw = payload["trades"][0].get("time")
         except Exception:
             ts_raw = None
-    ts = datetime.fromisoformat(ts_raw.replace("Z", "+00:00") if isinstance(ts_raw, str) else datetime.utcnow().isoformat())
+    ts = datetime.fromisoformat(
+        ts_raw.replace("Z", "+00:00") if isinstance(ts_raw, str) else datetime.utcnow().isoformat()
+    )
 
     return Quote(symbol=symbol, bid=bid, ask=ask, last=last, ts=ts)
 
@@ -143,22 +175,33 @@ def to_order(payload: dict) -> Order:
     submitted = payload.get("created_at") or payload.get("submitted_at")
     updated = payload.get("updated_at") or submitted
 
-    return Order(
+    order = Order(
         id=str(payload.get("order_id") or payload.get("id") or ""),
         client_id=payload.get("client_order_id") or payload.get("client_id"),
         symbol=normalize_symbol(payload.get("product_id") or payload.get("symbol") or ""),
         side=side,
         type=otype,
-        qty=Decimal(str(payload.get("size") or payload.get("qty") or payload.get("quantity") or "0")),
+        qty=Decimal(
+            str(payload.get("size") or payload.get("qty") or payload.get("quantity") or "0")
+        ),
         price=Decimal(str(payload.get("price"))) if payload.get("price") else None,
         stop_price=Decimal(str(payload.get("stop_price"))) if payload.get("stop_price") else None,
         tif=tif,
         status=status,
         filled_qty=Decimal(str(payload.get("filled_size") or payload.get("filled_qty") or 0)),
-        avg_fill_price=Decimal(str(payload.get("average_filled_price") or payload.get("avg_fill_price") or 0)) if payload.get("average_filled_price") or payload.get("avg_fill_price") else None,
+        avg_fill_price=(
+            Decimal(str(payload.get("average_filled_price") or payload.get("avg_fill_price") or 0))
+            if payload.get("average_filled_price") or payload.get("avg_fill_price")
+            else None
+        ),
         submitted_at=datetime.fromisoformat(submitted) if submitted else datetime.utcnow(),
         updated_at=datetime.fromisoformat(updated) if updated else datetime.utcnow(),
     )
+
+    order.quantity = order.qty
+    order.filled_quantity = order.filled_qty
+
+    return order
 
 
 def to_position(payload: dict) -> Position:
@@ -174,7 +217,7 @@ def to_position(payload: dict) -> Position:
     rpnl = payload.get("realized_pnl") or payload.get("realizedPnl") or 0
     lev = payload.get("leverage") or payload.get("max_leverage")
 
-    return Position(
+    position = Position(
         symbol=normalize_symbol(payload.get("product_id") or payload.get("symbol") or ""),
         qty=Decimal(str(abs(qty))),
         entry_price=Decimal(str(entry)),
@@ -184,3 +227,6 @@ def to_position(payload: dict) -> Position:
         leverage=int(lev) if lev is not None else None,
         side=side,  # type: ignore[arg-type]
     )
+
+    position.quantity = position.qty
+    return position

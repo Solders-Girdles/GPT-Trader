@@ -17,6 +17,7 @@ from typing import Any
 import psutil
 from bot_v2.backtest.profile import load_profile as _load_spot_profile
 from bot_v2.config.live_trade_config import RiskConfig
+from bot_v2.config.path_registry import RUNTIME_DATA_DIR
 from bot_v2.errors import ExecutionError, ValidationError
 from bot_v2.features.brokerages.coinbase.account_manager import CoinbaseAccountManager
 from bot_v2.features.brokerages.core.interfaces import (
@@ -68,7 +69,6 @@ from bot_v2.orchestration.service_registry import ServiceRegistry, empty_registr
 from bot_v2.orchestration.session_guard import TradingSessionGuard
 from bot_v2.persistence.event_store import EventStore
 from bot_v2.persistence.orders_store import OrdersStore
-from bot_v2.system_paths import RUNTIME_DATA_DIR
 
 logger = logging.getLogger(__name__)
 

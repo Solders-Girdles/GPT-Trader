@@ -18,17 +18,16 @@ from .cdp_auth import CDPAuth, create_cdp_auth
 from .cdp_auth_v2 import CDPAuthV2, create_cdp_auth_v2
 from .endpoints import CoinbaseEndpoints
 from .models import APIConfig, normalize_symbol, to_candle, to_order, to_product, to_quote
-from .utils import (
+from .utilities import (
     ProductCatalog,
     quantize_to_increment,
     enforce_perp_rules,
     MarkCache,
     FundingCalculator,
-    PositionState
+    PositionState,
 )
-from .market_data_utils import RollingWindow
+from .market_data_features import RollingWindow
 from .ws import CoinbaseWebSocket, WSSubscription, SequenceGuard, normalize_market_message
-from .errors import InvalidRequestError
 from ....persistence.event_store import EventStore
 from ..core.interfaces import (
     Candle,
@@ -804,7 +803,7 @@ class CoinbaseBrokerage(IBrokerage):
         symbol: str,
         side: OrderSide,
         order_type: OrderType,
-        qty: Decimal,
+        quantity: Decimal,
         price: Optional[Decimal],
         stop_price: Optional[Decimal],
         tif: TimeInForce,
@@ -834,7 +833,7 @@ class CoinbaseBrokerage(IBrokerage):
         side_enum = _coerce_enum(OrderSide, side, "side")
         order_type_enum = _coerce_enum(OrderType, order_type, "order_type")
 
-        adjusted_qty = quantize_to_increment(qty, product.step_size)
+        adjusted_quantity = quantize_to_increment(quantity, product.step_size)
 
         adjusted_price = price
         if order_type_enum in (OrderType.LIMIT, OrderType.STOP_LIMIT):
@@ -846,9 +845,11 @@ class CoinbaseBrokerage(IBrokerage):
         if adjusted_stop is not None:
             adjusted_stop = quantize_to_increment(adjusted_stop, product.price_increment)
 
-        if adjusted_qty < product.min_size:
+        if adjusted_quantity < product.min_size:
             raise ValidationError(
-                f"qty {adjusted_qty} is below min_size {product.min_size}", field="qty", value=str(adjusted_qty)
+                f"quantity {adjusted_quantity} is below min_size {product.min_size}",
+                field="quantity",
+                value=str(adjusted_quantity),
             )
 
         gtd_requested = False
@@ -872,12 +873,12 @@ class CoinbaseBrokerage(IBrokerage):
             if reference_price is None:
                 quote = self.get_quote(pid)
                 reference_price = quote.last
-            notional = adjusted_qty * reference_price
+            notional = adjusted_quantity * reference_price
             if notional < product.min_notional:
                 raise ValidationError(
                     f"notional {notional} below min_notional {product.min_notional}",
-                    field="qty",
-                    value=str(adjusted_qty),
+                    field="quantity",
+                    value=str(adjusted_quantity),
                 )
 
         if order_type_enum == OrderType.LIMIT:
@@ -888,27 +889,27 @@ class CoinbaseBrokerage(IBrokerage):
             config_key = limit_map.get(tif_enum, "limit_limit_gtc")
             payload["order_configuration"] = {
                 config_key: {
-                    "base_size": str(adjusted_qty),
+                    "base_size": str(adjusted_quantity),
                     "limit_price": str(adjusted_price) if adjusted_price is not None else "0",
                 }
             }
         elif order_type_enum == OrderType.MARKET:
             payload["order_configuration"] = {
                 "market_market_ioc": {
-                    "base_size": str(adjusted_qty)
+                    "base_size": str(adjusted_quantity)
                 }
             }
         elif order_type_enum == OrderType.STOP_LIMIT and adjusted_stop is not None:
             payload["order_configuration"] = {
                 "stop_limit_stop_limit_gtc": {
-                    "base_size": str(adjusted_qty),
+                    "base_size": str(adjusted_quantity),
                     "limit_price": str(adjusted_price) if adjusted_price is not None else "0",
                     "stop_price": str(adjusted_stop),
                 }
             }
         else:
             payload["type"] = order_type_enum.value
-            payload["size"] = str(adjusted_qty)
+            payload["size"] = str(adjusted_quantity)
             payload["time_in_force"] = tif_enum.value
             if adjusted_price is not None:
                 payload["price"] = str(adjusted_price)
@@ -917,7 +918,7 @@ class CoinbaseBrokerage(IBrokerage):
 
         if "order_configuration" in payload:
             payload.setdefault("type", order_type_enum.value)
-            payload.setdefault("size", str(adjusted_qty))
+            payload.setdefault("size", str(adjusted_quantity))
             payload.setdefault("time_in_force", tif_enum.value)
             if adjusted_price is not None:
                 payload.setdefault("price", str(adjusted_price))
@@ -939,6 +940,10 @@ class CoinbaseBrokerage(IBrokerage):
             payload["post_only"] = True
         if leverage is not None:
             payload["leverage"] = leverage
+
+        payload["size"] = str(adjusted_quantity)
+        payload["quantity"] = str(adjusted_quantity)
+        payload["qty"] = str(adjusted_quantity)
 
         return payload
 
@@ -1015,7 +1020,8 @@ class CoinbaseBrokerage(IBrokerage):
         symbol: str,
         side: OrderSide,
         order_type: OrderType,
-        qty: Decimal,
+        quantity: Optional[Decimal] = None,
+        qty: Optional[Decimal] = None,
         price: Optional[Decimal] = None,
         stop_price: Optional[Decimal] = None,
         tif: TimeInForce = TimeInForce.GTC,
@@ -1023,11 +1029,14 @@ class CoinbaseBrokerage(IBrokerage):
         leverage: Optional[int] = None,
         post_only: bool = False,
     ) -> Dict[str, Any]:
+        order_quantity = quantity if quantity is not None else qty
+        if order_quantity is None:
+            raise ValueError("quantity must be provided when previewing an order")
         payload = self._build_order_payload(
             symbol=symbol,
             side=side,
             order_type=order_type,
-            qty=qty,
+            quantity=order_quantity,
             price=price,
             stop_price=stop_price,
             tif=tif,
@@ -1046,7 +1055,8 @@ class CoinbaseBrokerage(IBrokerage):
         symbol: str,
         side: OrderSide,
         order_type: OrderType,
-        qty: Decimal,
+        quantity: Optional[Decimal] = None,
+        qty: Optional[Decimal] = None,
         price: Optional[Decimal] = None,
         stop_price: Optional[Decimal] = None,
         tif: TimeInForce = TimeInForce.GTC,
@@ -1055,11 +1065,14 @@ class CoinbaseBrokerage(IBrokerage):
         leverage: Optional[int] = None,
         post_only: bool = False,
     ) -> Dict[str, Any]:
+        order_quantity = quantity if quantity is not None else qty
+        if order_quantity is None:
+            raise ValueError("quantity must be provided when editing an order preview")
         payload = self._build_order_payload(
             symbol=symbol,
             side=side,
             order_type=order_type,
-            qty=qty,
+            quantity=order_quantity,
             price=price,
             stop_price=stop_price,
             tif=tif,
@@ -1084,7 +1097,8 @@ class CoinbaseBrokerage(IBrokerage):
         symbol: str,
         side: OrderSide,
         order_type: OrderType,
-        qty: Decimal,
+        quantity: Optional[Decimal] = None,
+        qty: Optional[Decimal] = None,
         price: Optional[Decimal] = None,
         stop_price: Optional[Decimal] = None,
         tif: TimeInForce = TimeInForce.GTC,
@@ -1093,13 +1107,16 @@ class CoinbaseBrokerage(IBrokerage):
         leverage: Optional[int] = None,
         post_only: bool = False,
     ) -> Order:
+        order_quantity = quantity if quantity is not None else qty
+        if order_quantity is None:
+            raise ValueError("quantity must be provided when placing an order")
         final_client_id = client_id or f"perps_{uuid.uuid4().hex[:12]}"
 
         payload = self._build_order_payload(
             symbol=symbol,
             side=side,
             order_type=order_type,
-            qty=qty,
+            quantity=order_quantity,
             price=price,
             stop_price=stop_price,
             tif=tif,

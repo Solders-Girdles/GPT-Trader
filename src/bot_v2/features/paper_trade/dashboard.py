@@ -9,7 +9,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from ...system_paths import RESULTS_DIR
+from ...config.path_registry import RESULTS_DIR
 
 
 class PaperTradingDashboard:

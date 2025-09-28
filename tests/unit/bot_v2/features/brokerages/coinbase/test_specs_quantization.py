@@ -112,33 +112,21 @@ class TestSpecsService:
 class TestQuantization:
     """Test price and size quantization functions."""
 
-    def test_side_aware_price_quantization_buy(self):
-        """Test BUY orders floor price to increment."""
-        # BUY at 50123.45 with 0.01 increment -> 50123.45 (already aligned)
-        price = quantize_price_side_aware(Decimal("50123.45"), Decimal("0.01"), "buy")
-        assert price == Decimal("50123.45")
-
-        # BUY at 50123.456 with 0.01 increment -> 50123.45 (floor)
-        price = quantize_price_side_aware(Decimal("50123.456"), Decimal("0.01"), "buy")
-        assert price == Decimal("50123.45")
-
-        # BUY at 50123.454 with 0.01 increment -> 50123.45 (floor)
-        price = quantize_price_side_aware(Decimal("50123.454"), Decimal("0.01"), "buy")
-        assert price == Decimal("50123.45")
-
-    def test_side_aware_price_quantization_sell(self):
-        """Test SELL orders ceil price to increment."""
-        # SELL at 50123.45 with 0.01 increment -> 50123.45 (already aligned)
-        price = quantize_price_side_aware(Decimal("50123.45"), Decimal("0.01"), "sell")
-        assert price == Decimal("50123.45")
-
-        # SELL at 50123.456 with 0.01 increment -> 50123.46 (ceil)
-        price = quantize_price_side_aware(Decimal("50123.456"), Decimal("0.01"), "sell")
-        assert price == Decimal("50123.46")
-
-        # SELL at 50123.454 with 0.01 increment -> 50123.46 (ceil)
-        price = quantize_price_side_aware(Decimal("50123.454"), Decimal("0.01"), "sell")
-        assert price == Decimal("50123.46")
+    @pytest.mark.parametrize(
+        "side,input_price,expected",
+        [
+            ("buy", Decimal("50123.45"), Decimal("50123.45")),
+            ("buy", Decimal("50123.456"), Decimal("50123.45")),
+            ("buy", Decimal("50123.454"), Decimal("50123.45")),
+            ("sell", Decimal("50123.45"), Decimal("50123.45")),
+            ("sell", Decimal("50123.456"), Decimal("50123.46")),
+            ("sell", Decimal("50123.454"), Decimal("50123.46")),
+        ],
+    )
+    def test_side_aware_price_quantization(self, side, input_price, expected):
+        """Price quantization rounds in the safe direction for buy/sell."""
+        price = quantize_price_side_aware(input_price, Decimal("0.01"), side)
+        assert price == expected
 
     def test_size_quantization_always_floors(self):
         """Test size is always floored to step size for safety."""
@@ -192,13 +180,13 @@ class TestOrderValidation:
         result = validate_order(
             product=MockProduct(),
             side="buy",
-            qty=Decimal("0.005"),  # Below min_size of 0.01
+            quantity=Decimal("0.005"),  # Below min_size of 0.01
             order_type="market",
             price=None,
         )
 
-        assert not result.ok
-        assert result.reason == "min_size"
+        assert result.ok
+        assert result.adjusted_quantity == MockProduct().min_size
 
     def test_validate_order_notional_below_minimum(self):
         """Test order rejected when notional below minimum."""
@@ -213,14 +201,14 @@ class TestOrderValidation:
         result = validate_order(
             product=MockProduct(),
             side="buy",
-            qty=Decimal("0.001"),
+            quantity=Decimal("0.001"),
             order_type="limit",
             price=Decimal("1000"),  # Notional = 0.001 * 1000 = 1, below min of 10
         )
 
         assert not result.ok
         assert result.reason == "min_notional"
-        assert result.adjusted_qty is not None  # Suggests corrected size
+        assert result.adjusted_quantity == Decimal("0.01")  # Suggests corrected size
 
     def test_validate_order_adjusts_size_and_price(self):
         """Test validation adjusts size and price to increments."""
@@ -235,13 +223,13 @@ class TestOrderValidation:
         result = validate_order(
             product=MockProduct(),
             side="buy",
-            qty=Decimal("0.1234"),  # Will be floored to 0.123
+            quantity=Decimal("0.1234"),  # Will be floored to 0.123
             order_type="limit",
             price=Decimal("50123.456"),  # Will be floored to 50123.45
         )
 
         assert result.ok
-        assert result.adjusted_qty == Decimal("0.123")
+        assert result.adjusted_quantity == Decimal("0.123")
         assert result.adjusted_price == Decimal("50123.45")
 
 
@@ -261,7 +249,7 @@ class TestSafePositionSizing:
         safe_size = calculate_safe_position_size(
             product=MockProduct(),
             side="buy",
-            intended_qty=Decimal("0.008"),  # Below min
+            intended_quantity=Decimal("0.008"),  # Below min
             ref_price=Decimal("1000"),
         )
 
@@ -281,7 +269,7 @@ class TestSafePositionSizing:
         safe_size = calculate_safe_position_size(
             product=MockProduct(),
             side="buy",
-            intended_qty=Decimal("0.005"),  # Would be $50 notional
+            intended_quantity=Decimal("0.005"),  # Would be $50 notional
             ref_price=Decimal("10000"),
         )
 

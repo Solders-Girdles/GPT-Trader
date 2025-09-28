@@ -28,26 +28,22 @@ class TestSlippageGuard:
         )
         self.guard = SlippageGuard(config)
 
-    def test_max_quantity_calculation_buy(self):
-        """Test maximum quantity calculation for buy orders."""
-        depth = create_test_depth(l10_ask=1000.0)  # 1000 ask depth
-
-        # For 50 bps impact: max_quantity = (50/10000) * 1000 * 0.8 = 4.0
-        # (0.8 factor from 20% safety buffer)
-        max_quantity = self.guard.calculate_max_quantity_for_impact(depth, "buy", 50.0)
-
-        expected = Decimal("1000") * Decimal("0.005") * Decimal("0.8")  # 4.0
-        assert max_quantity is not None
-        assert abs(max_quantity - expected) < Decimal("0.01")
-
-    def test_max_quantity_calculation_sell(self):
-        """Test maximum quantity calculation for sell orders."""
-        depth = create_test_depth(l10_bid=2000.0)  # 2000 bid depth
-
-        # For 25 bps impact: max_quantity = (25/10000) * 2000 * 0.8 = 4.0
-        max_quantity = self.guard.calculate_max_quantity_for_impact(depth, "sell", 25.0)
-
-        expected = Decimal("2000") * Decimal("0.0025") * Decimal("0.8")  # 4.0
+    @pytest.mark.parametrize(
+        "side,depth_kwargs,bps,expected",
+        [
+            ("buy", {"l10_ask": 1000.0}, 50.0, Decimal("1000") * Decimal("0.005") * Decimal("0.8")),
+            (
+                "sell",
+                {"l10_bid": 2000.0},
+                25.0,
+                Decimal("2000") * Decimal("0.0025") * Decimal("0.8"),
+            ),
+        ],
+    )
+    def test_max_quantity_calculation(self, side, depth_kwargs, bps, expected):
+        """Max quantity respects depth and configured impact limits."""
+        depth = create_test_depth(**depth_kwargs)
+        max_quantity = self.guard.calculate_max_quantity_for_impact(depth, side, bps)
         assert max_quantity is not None
         assert abs(max_quantity - expected) < Decimal("0.01")
 

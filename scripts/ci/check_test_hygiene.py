@@ -10,7 +10,7 @@ from collections.abc import Sequence
 
 THRESHOLD = 240
 ALLOWLIST = {
-    "tests/unit/bot_v2/features/brokerages/coinbase/test_websocket_streaming.py",
+    "tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_websocket.py",
     "tests/unit/bot_v2/features/brokerages/coinbase/test_product_catalog.py",
     "tests/unit/bot_v2/features/brokerages/coinbase/test_specs_quantization.py",
     "tests/unit/bot_v2/features/brokerages/coinbase/test_api_permissions.py",

@@ -38,6 +38,48 @@ src/bot_v2/features/
 └── data/             # Data management
 ```
 
+### Feature Slice Reference
+
+#### Backtest (`features/backtest/`)
+- **Purpose:** Run historical strategy simulations with token-efficient helpers such as `run_backtest`.
+- **Usage:**
+    from features.backtest import run_backtest
+
+    result = run_backtest(
+        strategy="MomentumStrategy",
+        symbol="AAPL",
+        start=datetime(2024, 1, 1),
+        end=datetime(2024, 12, 31),
+        initial_capital=10_000,
+    )
+    print(result.summary())
+- **Outputs:** Returns `BacktestResult` objects with trade logs, equity curve, Sharpe/max drawdown, and win-rate metrics.
+
+#### Paper Trade (`features/paper_trade/`)
+- **Purpose:** Self-contained realtime simulation with local data feed, execution, risk, and metrics.
+- **Highlights:** Quick-start helpers `start_paper_trading`, `get_status`, and `stop_paper_trading` with configurable commission, slippage, and update intervals.
+- **Further reading:** See the [Paper Trading Guide](guides/paper_trading.md) for workflow, configuration, and performance tracking tips.
+
+#### Position Sizing (`features/position_sizing/`)
+- **Purpose:** Intelligent position sizing that combines Kelly Criterion math, confidence modifiers, and market-regime scaling while remaining slice-local.
+- **Usage:**
+    from features.position_sizing import PositionSizeRequest, calculate_position_size
+
+    recommendation = calculate_position_size(
+        PositionSizeRequest(
+            symbol="AAPL",
+            current_price=150,
+            portfolio_value=10_000,
+            strategy_name="momentum",
+            win_rate=0.65,
+            avg_win=0.08,
+            avg_loss=-0.04,
+            confidence=0.75,
+            market_regime="bull_quiet",
+        )
+    )
+- **Integration hooks:** Built to ingest ML strategy signals and market-regime detectors without cross-slice imports.
+
 ### Key Design Principles
 
 1. **Slice Isolation**: Production slices limit cross-dependencies; experimental ones stay sandboxed.
@@ -58,7 +100,7 @@ src/bot_v2/features/
 ## What's Actually Working
 
 ### ✅ Fully Operational
-- Coinbase spot trading via Advanced Trade (REST/WebSocket); dev profile defaults to the enhanced `MockBroker` and can be pointed at live APIs with `SPOT_FORCE_LIVE=1`
+- Coinbase spot trading via Advanced Trade (REST/WebSocket); dev profile defaults to the deterministic broker stub and can be pointed at live APIs with `SPOT_FORCE_LIVE=1`
 - Order placement/management through `LiveExecutionEngine`
 - Account telemetry snapshots and cycle metrics persisted for monitoring
 - Runtime safety rails: daily loss guard, liquidation buffer enforcement, mark staleness detection, volatility circuit breaker, correlation checks
@@ -70,7 +112,7 @@ src/bot_v2/features/
 - Durable restart state (OrdersStore/EventStore) needs production hardening
 
 ### ❌ Not Yet Implemented
-- Funding rate accrual in mock broker
+- Funding rate accrual in deterministic broker stub
 - Order modification/amend flows beyond cancel
 - Partial fill handling in mock (market fills remain immediate)
 
@@ -113,7 +155,7 @@ monitoring: real-time
 - Impact cost validation (<50bps)
 - Reduce-only mode enforcement
 
-> Spot profiles load `config/risk/spot_top10.json` by default, enforcing
+> Spot profiles load `config/risk/spot_top10.yaml` by default, enforcing
 > per-symbol notional caps and leverage=1 across the top-ten USD markets.
 
 ### Runtime Guards

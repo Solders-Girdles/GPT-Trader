@@ -1,52 +1,10 @@
-# Gemini.md
+# Gemini Agent Notes
 
-Reference sheet for Gemini agents assisting with GPT-Trader V2.
+`docs/agents/Agents.md` is the canonical reference—use it for architecture, commands, and workflows.
 
-## Quick Facts
-- **Live trading:** Coinbase **spot** only. Perpetuals logic is checked in but requires Coinbase INTX access; use it for analysis, not production execution.
-- **Main CLI:** `poetry run perps-bot --profile dev --dev-fast`. Stage 3 runner delegates to this command.
-- **Core files:**
-  - `src/bot_v2/orchestration/perps_bot.py` – orchestrator + risk guards + telemetry.
-  - `src/bot_v2/cli.py` – profiles, account snapshot, treasury helpers.
-  - `src/bot_v2/features/brokerages/coinbase/` – adapter, account manager, specs.
-  - `src/bot_v2/orchestration/live_execution.py` – runtime safety checks.
-  - `scripts/monitoring/export_metrics.py` – Prometheus/JSON exporter.
+## Gemini-Specific Tips
+- Keep responses concise and enumerate follow-up actions so the human maintainer can respond with a single number when possible.
+- Include the exact commands you ran (or recommend) with `rg`/`fd` snippets for context gathering; this keeps the assistant workflow reproducible.
+- Call out environment prerequisites (`poetry install`, credentials) whenever you suggest running tests or scripts.
 
-## Commands to Know
-```bash
-poetry install                                   # setup
-poetry run perps-bot --profile dev --dev-fast    # spot dev run
-poetry run perps-bot --account-snapshot          # dump Coinbase limits/fees
-poetry run perps-bot --convert USD:USDC:1000     # convert helper
-poetry run perps-bot --move-funds a:b:50         # treasury helper
-poetry run python scripts/monitoring/export_metrics.py --metrics-file var/data/perps_bot/prod/metrics.json
-poetry run pytest --collect-only                 # current test discovery
-poetry run pytest -q                             # full regression suite
-```
-
-## Spot vs Perps Guidance
-- Spot profiles normalize symbols to spot markets and fall back to the mock broker when derivatives are disabled.
-- When touching perps code paths, mention the INTX requirement and keep functionality behind `COINBASE_ENABLE_DERIVATIVES` checks.
-
-## Experimental Modules
-These directories are tagged `__experimental__` and sit outside the production path:
-- `src/bot_v2/features/backtest/`
-- `src/bot_v2/features/ml_strategy/`
-- `src/bot_v2/features/market_regime/`
-- `src/bot_v2/monitoring/monitoring_dashboard.py`
-The retired workflow engine has been removed from the repo; if you need it, pull it from git history. Only modify the remaining experimental modules when explicitly instructed.
-
-## Testing Notes
-- `pytest --collect-only` yields 455 tests (446 selected after deselection). Run `poetry install` to pull in the latest dependencies (including `pyotp`) before running the suite.
-- Add tests whenever adjusting risk guards, telemetry, or CLI surface area.
-
-## Operational Checklist
-1. Ensure README + `docs/ARCHITECTURE.md` match code changes.
-2. Update `docs/agents/Agents.md`, `docs/agents/CLAUDE.md`, and this file with any new workflows.
-3. Document spot/perps impacts and note the INTX gate for perps.
-4. Confirm metrics serialization (`metrics.json`) still works if you add fields.
-
-## Working Style Tips
-- Use `rg`/`fd` for quick navigation (`rg --files -g '*.py' src/bot_v2` shows scope).
-- Keep changeset responses explicit about testing (call out the `pyotp` caveat).
-- Mention safety mechanisms when altering execution or risk code.
+Check the Agent guide’s *Agent-Specific Notes* section for any new expectations that apply to all assistants.

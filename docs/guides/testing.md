@@ -4,6 +4,14 @@
 
 This codebase targets a **100% pass rate** on the actively maintained spot trading suites. Legacy code from v1 architecture is properly quarantined with skip markers.
 
+## Suite Layout
+
+- `tests/unit/bot_v2/` – orchestration, broker adapters, risk, CLI, and feature slices
+- `tests/unit/coinbase/` – Coinbase-specific utilities (quantisation, spec validation)
+- `tests/utils/` – reserved for shared fixtures when co-located fixtures are insufficient (currently minimal)
+
+Historical integration, performance, and experimental suites were archived in September 2025; pull them from git history if you need a reference.
+
 ## Current Test Metrics
 
 ### Active Test Suites (Maintained)
@@ -103,11 +111,17 @@ Located in `src/bot_v2/features/utils/quantization.py`:
 - `quantize_price()` - Round prices to tick size
 
 #### Broker Test Doubles
-- `DeterministicBroker` (tests/utils/deterministic_broker.py): Stable IBrokerage stub for unit tests (preferred).
-- `MockBroker` (src/bot_v2/orchestration/mock_broker.py): Deprecated for automated tests; still used in DEV profile and certain legacy tests. Marked via `@pytest.mark.uses_mock_broker` and skipped by default.
+- `DeterministicBroker` (src/bot_v2/orchestration/deterministic_broker.py): Stable IBrokerage stub for unit and orchestration tests.
 - `ReduceOnlyStubBroker`: Specialized for reduce-only testing (if present).
 
 Note: Real-API and sandbox integration harnesses were removed with the legacy suites. Recreate targeted coverage inside `tests/unit/bot_v2/` when new external behavior needs validation.
+
+## Test Conventions
+
+- Markers for `integration`, `real_api`, and `perf` remain defined in `pytest.ini` for forward compatibility, even though no tests currently use them.
+- Async tests should rely on `anyio` helpers and injected clocks (avoid `time.sleep`).
+- New tests belong beside the slice they exercise—co-locate fixtures in the nearest `conftest.py` to keep ownership clear.
+- The `test-hygiene` pre-commit hook checks for extremely long test modules and accidental `sleep` calls; keep the hook green or update it when the heuristics change.
 
 ## Continuous Integration
 

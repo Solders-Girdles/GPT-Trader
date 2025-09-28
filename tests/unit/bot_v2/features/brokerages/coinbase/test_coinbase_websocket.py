@@ -334,6 +334,7 @@ class TestReconnectAndLiveness:
 
         class StubWS:
             def __init__(self, url: str, **_):
+                self.url = url
                 created_urls.append(url)
 
             def connect(self):

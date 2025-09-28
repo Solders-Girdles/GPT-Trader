@@ -2,7 +2,7 @@
 
 ---
 status: current
-last-updated: 2025-01-01
+last-updated: 2025-03-01
 consolidates:
   - PAPER_TRADING_IMPLEMENTATION.md
   - PAPER_ENGINE_DECOUPLING.md
@@ -17,7 +17,7 @@ Paper trading provides risk-free simulation of trading strategies using real mar
 ## Implementation
 
 ### Mock Broker
-The system uses a mock broker for paper trading that provides:
+The system uses a deterministic broker stub for paper trading that provides:
 - Deterministic fills for testing
 - Random walk price generation
 - Configurable slippage simulation
@@ -34,6 +34,67 @@ poetry run perps-bot --profile dev
 # - Extensive logging
 # - No real money at risk
 ```
+
+### Slice Quick Start (Python API)
+
+Run the slice directly from Python when you do not need the full CLI profile:
+
+    from features.paper_trade import start_paper_trading, get_status, stop_paper_trading
+
+    start_paper_trading(
+        strategy="SimpleMAStrategy",
+        symbols=["AAPL", "MSFT", "GOOGL"],
+        initial_capital=100_000,
+        fast_period=10,
+        slow_period=30,
+    )
+
+    status = get_status()
+    print(status.summary())
+
+    results = stop_paper_trading()
+    print(results.summary())
+
+The module is completely self-contained: strategies, data adapters, execution, risk controls, and dataclasses all live inside the slice.
+
+### Module Layout
+
+    paper_trade/
+    ├── paper_trade.py   # Orchestration helpers
+    ├── strategies.py    # Local strategy implementations
+    ├── data.py          # Live/historical data adapters
+    ├── execution.py     # Commission/slippage-aware fills
+    ├── risk.py          # Position limits, drawdown guards
+    └── types.py         # Slice-local dataclasses and responses
+
+### Strategy Catalog
+
+Five built-in strategies ship with the slice:
+1. `SimpleMAStrategy` – moving-average crossover
+2. `MomentumStrategy` – momentum signal band
+3. `MeanReversionStrategy` – Bollinger-band mean reversion
+4. `VolatilityStrategy` – low-volatility filter
+5. `BreakoutStrategy` – breakout detector
+
+### Feature Highlights
+
+- Real-time data with configurable polling interval and market-hours awareness
+- Execution simulator supporting commission, slippage, maximum concurrent positions, and trade logging
+- Risk controls for position size, daily loss limits, drawdown guard, and cash reserve enforcement
+- Performance tracking with equity curve, trade log, and summary metrics
+
+### Configuration Example
+
+    start_paper_trading(
+        strategy="MomentumStrategy",
+        symbols=["SPY", "QQQ"],
+        initial_capital=50_000,
+        commission=0.001,
+        slippage=0.0005,
+        position_size=0.95,
+        max_positions=10,
+        update_interval=60,
+    )
 
 ## Features
 
@@ -53,7 +114,7 @@ poetry run perps-bot --profile dev
 
 ### Quick Start
 ```bash
-# Run with mock broker
+# Run with deterministic broker
 poetry run perps-bot --profile dev --dev-fast
 
 # Monitor performance

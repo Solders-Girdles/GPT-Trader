@@ -1,11 +1,11 @@
 Coinbase Perps Risk Config
 
 Overview
-- File `coinbase_perps.prod.json` provides production‑oriented risk limits for BTC/ETH/SOL/XRP.
+- File `coinbase_perps.prod.yaml` provides production‑oriented risk limits for BTC/ETH/SOL/XRP.
 - The bot loads this file when env var `RISK_CONFIG_PATH` points to it; otherwise it falls back to env defaults.
 
 How To Use
-- Set env: `RISK_CONFIG_PATH=config/risk/coinbase_perps.prod.json`
+- Set env: `RISK_CONFIG_PATH=config/risk/coinbase_perps.prod.yaml`
 - Optionally set symbols via env: `TRADING_SYMBOLS=BTC-PERP,ETH-PERP,SOL-PERP,XRP-PERP`
 - Or pass on CLI: `poetry run perps-bot --profile prod --symbols BTC-PERP ETH-PERP SOL-PERP XRP-PERP`
 
@@ -27,7 +27,7 @@ Suggested First‑Run Values
 - max_notional_per_symbol: tune after observing fill quality and funding.
 
 Notes
-- JSON can’t include comments. Keep rationale here and commit change history.
+- YAML supports inline comments—capture rationale directly in the file and keep this history updated.
 - Exchange rules (MMR, leverage) can change; these caps are your upper bounds.
 
 Related Env

@@ -538,10 +538,10 @@ class PreflightCheck:
             from bot_v2.orchestration.bootstrap import build_bot
             from bot_v2.orchestration.broker_factory import create_brokerage
 
-            # Create config
+            # Create config (mock_broker toggles the DeterministicBroker safety stub)
             config = BotConfig.from_profile(profile=self.profile, dry_run=True, mock_broker=True)
 
-            self.log_info(f"Config: {self.profile} profile, dry_run=True")
+            self.log_info(f"Config: {self.profile} profile, dry_run=True, deterministic broker")
 
             # Try to create broker
             try:

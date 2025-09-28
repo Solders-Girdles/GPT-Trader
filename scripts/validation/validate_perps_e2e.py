@@ -66,7 +66,7 @@ def check_cli_command():
 def check_quantization_helper():
     try:
         from bot_v2.features.brokerages.core.interfaces import Product, MarketType
-        from bot_v2.features.brokerages.coinbase.utils import enforce_perp_rules
+        from bot_v2.features.brokerages.coinbase.utilities import enforce_perp_rules
     except ImportError as e:
         fail(f"Import failed: {e}\nInstall project deps and run from repo root: pip install -e .")
 

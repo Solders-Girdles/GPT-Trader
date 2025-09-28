@@ -206,4 +206,4 @@ class TestCLIErrorHandling:
             assert result.returncode != 0
             assert "Symbols must be non-empty" in result.stderr
         # Invalid symbols might still start but should log warnings
-        # (MockBroker accepts any symbol for testing)
+        # (DeterministicBroker accepts any symbol for testing)

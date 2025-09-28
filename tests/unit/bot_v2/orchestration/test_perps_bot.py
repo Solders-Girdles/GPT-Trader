@@ -13,8 +13,14 @@ import time as _time
 import pytest
 
 from bot_v2.orchestration.perps_bot import PerpsBot, BotConfig, Profile
-from bot_v2.orchestration.mock_broker import MockBroker
-from bot_v2.features.brokerages.core.interfaces import OrderSide, OrderType, Order, OrderStatus, TimeInForce
+from bot_v2.orchestration.deterministic_broker import DeterministicBroker
+from bot_v2.features.brokerages.core.interfaces import (
+    OrderSide,
+    OrderType,
+    Order,
+    OrderStatus,
+    TimeInForce,
+)
 
 
 @pytest.mark.uses_mock_broker
@@ -27,12 +33,13 @@ def test_init_uses_mock_broker_in_dev(monkeypatch, tmp_path):
     cfg = BotConfig(profile=Profile.DEV, symbols=["BTC-PERP"], update_interval=1)
     bot = PerpsBot(cfg)
 
-    assert isinstance(bot.broker, MockBroker)
+    assert isinstance(bot.broker, DeterministicBroker)
 
 
 def test_calculate_spread_bps():
     # 100 bid, 101 ask => spread 1 over mid 100.5 => ~0.00995 * 10000 ≈ 99.5 bps
     from bot_v2.orchestration.perps_bot import PerpsBot as _PB  # alias to access staticmethod
+
     bps = _PB._calculate_spread_bps(Decimal("100"), Decimal("101"))
     assert bps > 0
     # Within a small tolerance around 99-100 bps
@@ -64,22 +71,22 @@ def test_collect_account_snapshot_uses_broker(monkeypatch, tmp_path):
     bot = PerpsBot(cfg)
 
     snapshot_data = {
-        'permissions': {'can_trade': True},
-        'fees': {'tier': 'Advanced'},
-        'limits': {'max_order': '10000'},
-        'summary': {'total': '123'}
+        "permissions": {"can_trade": True},
+        "fees": {"tier": "Advanced"},
+        "limits": {"max_order": "10000"},
+        "summary": {"total": "123"},
     }
-    bot.broker.get_key_permissions = lambda: snapshot_data['permissions']  # type: ignore[attr-defined]
-    bot.broker.get_fee_schedule = lambda: snapshot_data['fees']  # type: ignore[attr-defined]
-    bot.broker.get_account_limits = lambda: snapshot_data['limits']  # type: ignore[attr-defined]
-    bot.broker.get_transaction_summary = lambda: snapshot_data['summary']  # type: ignore[attr-defined]
+    bot.broker.get_key_permissions = lambda: snapshot_data["permissions"]  # type: ignore[attr-defined]
+    bot.broker.get_fee_schedule = lambda: snapshot_data["fees"]  # type: ignore[attr-defined]
+    bot.broker.get_account_limits = lambda: snapshot_data["limits"]  # type: ignore[attr-defined]
+    bot.broker.get_transaction_summary = lambda: snapshot_data["summary"]  # type: ignore[attr-defined]
     bot.broker.get_server_time = lambda: datetime(2024, 1, 1, tzinfo=timezone.utc)  # type: ignore[attr-defined]
 
     snap = bot._collect_account_snapshot()
-    assert snap['key_permissions'] == snapshot_data['permissions']
-    assert snap['fee_schedule'] == snapshot_data['fees']
-    assert snap['limits'] == snapshot_data['limits']
-    assert snap['transaction_summary'] == snapshot_data['summary']
+    assert snap["key_permissions"] == snapshot_data["permissions"]
+    assert snap["fee_schedule"] == snapshot_data["fees"]
+    assert snap["limits"] == snapshot_data["limits"]
+    assert snap["transaction_summary"] == snapshot_data["summary"]
     assert bot._latest_account_snapshot == snap
 
 
@@ -97,7 +104,7 @@ async def test_run_account_telemetry_emits_metrics(monkeypatch, tmp_path):
 
     def fake_collect():
         bot.running = False
-        return {'key_permissions': {}, 'fee_schedule': {}, 'limits': {}, 'transaction_summary': {}}
+        return {"key_permissions": {}, "fee_schedule": {}, "limits": {}, "transaction_summary": {}}
 
     bot._collect_account_snapshot = fake_collect  # type: ignore
     bot.running = True
@@ -106,7 +113,7 @@ async def test_run_account_telemetry_emits_metrics(monkeypatch, tmp_path):
     assert calls
     bot_id, metrics = calls[0]
     assert bot_id == bot.bot_id
-    assert metrics.get('event_type') == 'account_snapshot'
+    assert metrics.get("event_type") == "account_snapshot"
 
 
 @pytest.mark.asyncio
@@ -225,8 +232,8 @@ async def test_place_order_lock_serialises_calls(monkeypatch, tmp_path, fake_clo
 
     assert all(order is not None for order in results)
     assert exec_engine.max_active == 1
-    assert bot.order_stats['attempted'] == 6
-    assert bot.order_stats['successful'] == 6
+    assert bot.order_stats["attempted"] == 6
+    assert bot.order_stats["successful"] == 6
 
 
 def test_ws_failure_records_metrics_and_risk_listener(monkeypatch, tmp_path):
@@ -255,7 +262,11 @@ def test_ws_failure_records_metrics_and_risk_listener(monkeypatch, tmp_path):
     bot._ws_stop = None
     bot._run_stream_loop(["BTC-PERP"], level=1)
 
-    assert any(m.get('event_type') in {'ws_stream_error', 'ws_stream_exit'} for m in metric_records if isinstance(m, dict))
+    assert any(
+        m.get("event_type") in {"ws_stream_error", "ws_stream_exit"}
+        for m in metric_records
+        if isinstance(m, dict)
+    )
 
     # Ensure reduce-only listener still in effect after failure handling
     bot.risk_manager.set_reduce_only_mode(True, reason="ws_failure")

@@ -1,7 +1,7 @@
 # Quick Start
 
 This walkthrough gets the development profile running in a few minutes. It
-defaults to the safe `MockBroker`, but also covers the env toggles required to
+defaults to the safe `DeterministicBroker`, but also covers the env toggles required to
 hit real Coinbase endpoints when you are ready.
 
 ## 1. Install Dependencies
@@ -36,7 +36,7 @@ poetry run perps-bot --profile dev --dev-fast
 What to expect:
 
 - Mark prices are fetched via REST quotes for the top-ten USD spot markets (`BTC`, `ETH`, `SOL`, `XRP`, `LTC`, `ADA`, `DOGE`, `BCH`, `AVAX`, `LINK`).
-- Orders are routed through the enhanced `MockBroker`, so no live trades are
+- Orders are routed through the built-in `DeterministicBroker`, so no live trades are
   placed.
 - Metrics land under `var/data/perps_bot/dev/` for inspection.
 

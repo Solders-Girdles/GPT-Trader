@@ -39,7 +39,7 @@ Risk Guards → Coinbase Brokerage Adapter → Metrics + Telemetry
 
 - Metrics persisted to `var/data/perps_bot/<profile>/metrics.json`.
 - Optional Prometheus exporter (`scripts/monitoring/export_metrics.py`).
-- Logs routed through `bot_v2/logging_setup.py`.
+- Logs routed through `bot_v2/logging` (see `configure_logging`).
 
 ### Derivatives Gate
 

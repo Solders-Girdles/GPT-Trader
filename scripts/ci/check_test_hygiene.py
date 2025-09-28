@@ -12,6 +12,7 @@ THRESHOLD = 240
 ALLOWLIST = {
     "tests/unit/bot_v2/features/brokerages/coinbase/test_websocket_streaming.py",
     "tests/unit/bot_v2/features/brokerages/coinbase/test_product_catalog.py",
+    "tests/unit/bot_v2/features/brokerages/coinbase/test_specs_quantization.py",
     "tests/unit/bot_v2/features/brokerages/coinbase/test_api_permissions.py",
     "tests/unit/bot_v2/features/brokerages/coinbase/test_performance.py",
     "tests/unit/bot_v2/features/brokerages/coinbase/test_order_payloads.py",
@@ -20,8 +21,6 @@ ALLOWLIST = {
     "tests/unit/bot_v2/orchestration/test_perps_bot.py",
     "tests/unit/bot_v2/orchestration/test_live_execution.py",
     "tests/unit/bot_v2/test_broker_contract.py",
-    "tests/unit/coinbase/test_specs_quantization.py",
-    "tests/unit/coinbase/test_preflight_validation.py",
 }
 
 

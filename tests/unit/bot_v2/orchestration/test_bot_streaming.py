@@ -9,8 +9,8 @@ import pytest
 
 @pytest.mark.uses_mock_broker
 def test_background_ws_stream_updates_marks(fake_clock):
-    # Dev profile uses MockBroker which now exposes stream_trades
-    bot = PerpsBot(BotConfig.from_profile('dev'))
+    # Dev profile uses DeterministicBroker which now exposes stream_trades
+    bot = PerpsBot(BotConfig.from_profile("dev"))
     # Initially, windows may be empty until update or stream
     initial = {s: len(bot.mark_windows.get(s, [])) for s in bot.config.symbols}
 

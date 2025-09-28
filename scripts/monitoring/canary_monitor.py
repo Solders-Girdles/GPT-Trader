@@ -28,7 +28,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from bot_v2.system_paths import RESULTS_DIR
+from bot_v2.config.path_registry import RESULTS_DIR
 
 
 # Guard thresholds

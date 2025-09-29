@@ -49,6 +49,59 @@ class ValidationError(Exception):
 
 
 @dataclass
+class PositionSizingContext:
+    """Context for position sizing requests."""
+
+    symbol: str
+    side: str  # "buy" or "sell"
+    equity: Decimal
+    current_price: Decimal
+    strategy_name: str
+    method: str
+    target_leverage: Decimal
+    product: Product | None = None
+    current_position_quantity: Decimal = Decimal("0")
+    strategy_multiplier: float = 1.0
+
+
+@dataclass
+class PositionSizingAdvice:
+    """Advice from position sizing calculation."""
+
+    symbol: str
+    side: str
+    target_notional: Decimal
+    target_quantity: Decimal
+    used_dynamic: bool = False
+    reduce_only: bool = False
+    reason: str | None = None
+    fallback_used: bool = False
+
+
+@dataclass
+class ImpactRequest:
+    """Request for market impact assessment."""
+
+    symbol: str
+    side: str
+    quantity: Decimal
+    price: Decimal | None = None
+
+
+@dataclass
+class ImpactAssessment:
+    """Assessment of market impact for a trade."""
+
+    symbol: str
+    side: str
+    quantity: Decimal
+    estimated_impact_bps: Decimal
+    slippage_cost: Decimal
+    liquidity_sufficient: bool = True
+    reason: str | None = None
+
+
+@dataclass
 class RiskRuntimeState:
     reduce_only_mode: bool = False
     last_reduce_only_reason: str | None = None
@@ -67,6 +120,9 @@ class LiveRiskManager:
         config: RiskConfig | None = None,
         event_store: EventStore | None = None,
         risk_info_provider: Callable[[str], dict[str, Any]] | None = None,
+        position_size_estimator: (
+            Callable[[PositionSizingContext], PositionSizingAdvice] | None
+        ) = None,
     ):
         """
         Initialize risk manager with configuration.
@@ -74,10 +130,13 @@ class LiveRiskManager:
         Args:
             config: Risk configuration (defaults loaded from env)
             event_store: Event store for risk metrics/events
+            risk_info_provider: Provider for symbol-specific risk info
+            position_size_estimator: Optional dynamic position sizing calculator
         """
         self.config = config or RiskConfig.from_env()
         self.event_store = event_store or EventStore()
         self._risk_info_provider = risk_info_provider
+        self._position_size_estimator = position_size_estimator
 
         # Runtime state
         self.daily_pnl = Decimal("0")
@@ -149,6 +208,90 @@ class LiveRiskManager:
                 self._state_listener(self._state)
             except Exception:
                 logger.exception("Reduce-only state listener failed")
+
+    def size_position(self, context: PositionSizingContext) -> PositionSizingAdvice:
+        """
+        Calculate position size using dynamic estimator or fallback logic.
+
+        Args:
+            context: Position sizing context with symbol, equity, price, etc.
+
+        Returns:
+            Position sizing advice with target notional and quantity
+        """
+        # If reduce-only mode, return zero sizing
+        if self.is_reduce_only_mode():
+            advice = PositionSizingAdvice(
+                symbol=context.symbol,
+                side=context.side,
+                target_notional=Decimal("0"),
+                target_quantity=Decimal("0"),
+                reduce_only=True,
+                reason="reduce_only_mode",
+            )
+            self._record_sizing_metric(context, advice)
+            return advice
+
+        # Try dynamic estimator if available
+        if self._position_size_estimator is not None:
+            try:
+                advice = self._position_size_estimator(context)
+                self._record_sizing_metric(context, advice)
+                return advice
+            except Exception as exc:
+                logger.exception("Position size estimator failed for %s", context.symbol)
+                try:
+                    self.event_store.append_metric(
+                        bot_id="risk_engine",
+                        metrics={
+                            "event_type": "position_sizing_error",
+                            "symbol": context.symbol,
+                            "error": str(exc),
+                        },
+                    )
+                except Exception:
+                    pass
+
+        # Fallback: simple target_leverage-based sizing
+        target_notional = (
+            context.equity * context.target_leverage * Decimal(str(context.strategy_multiplier))
+        )
+        target_quantity = (
+            target_notional / context.current_price if context.current_price > 0 else Decimal("0")
+        )
+
+        advice = PositionSizingAdvice(
+            symbol=context.symbol,
+            side=context.side,
+            target_notional=target_notional,
+            target_quantity=target_quantity,
+            fallback_used=True,
+            reason="fallback",
+        )
+        self._record_sizing_metric(context, advice)
+        return advice
+
+    def _record_sizing_metric(
+        self, context: PositionSizingContext, advice: PositionSizingAdvice
+    ) -> None:
+        """Record position sizing metrics to event store."""
+        try:
+            self.event_store.append_metric(
+                bot_id="risk_engine",
+                metrics={
+                    "event_type": "position_sizing_advice",
+                    "symbol": context.symbol,
+                    "side": context.side,
+                    "target_notional": float(advice.target_notional),
+                    "target_quantity": float(advice.target_quantity),
+                    "used_dynamic": advice.used_dynamic,
+                    "reduce_only": advice.reduce_only,
+                    "fallback_used": advice.fallback_used,
+                    "reason": advice.reason,
+                },
+            )
+        except Exception:
+            logger.debug("Failed to record position sizing metric", exc_info=True)
 
     def pre_trade_validate(
         self,

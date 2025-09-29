@@ -5,8 +5,10 @@ from __future__ import annotations
 import math
 import statistics
 from collections.abc import Callable, Iterable, MutableMapping
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from decimal import Decimal
+from enum import Enum
 from typing import Any
 
 from .guard_errors import (
@@ -16,6 +18,73 @@ from .guard_errors import (
 
 AnyLogger = Any  # local alias for loose logger typing
 LogEventFn = Callable[[str, dict[str, str], str], None]
+
+
+class CircuitBreakerAction(Enum):
+    """Actions that circuit breaker can trigger."""
+
+    NONE = "none"
+    WARNING = "warning"
+    REDUCE_ONLY = "reduce_only"
+    KILL_SWITCH = "kill_switch"
+
+
+@dataclass
+class CircuitBreakerRule:
+    """Configuration for a circuit breaker rule."""
+
+    name: str
+    signal: str
+    window: int
+    warning_threshold: Decimal
+    reduce_only_threshold: Decimal
+    kill_switch_threshold: Decimal
+    cooldown: timedelta
+    enabled: bool = True
+
+
+@dataclass
+class CircuitBreakerOutcome:
+    """Result of circuit breaker check."""
+
+    triggered: bool
+    action: CircuitBreakerAction
+    reason: str | None = None
+    value: Decimal | None = None
+
+
+class CircuitBreakerState:
+    """Tracks state of circuit breakers across time."""
+
+    def __init__(self) -> None:
+        self._rules: dict[str, CircuitBreakerRule] = {}
+        self._triggers: dict[str, dict[str, tuple[CircuitBreakerAction, datetime]]] = {}
+
+    def register_rule(self, rule: CircuitBreakerRule) -> None:
+        """Register a circuit breaker rule."""
+        self._rules[rule.name] = rule
+        if rule.name not in self._triggers:
+            self._triggers[rule.name] = {}
+
+    def record(
+        self,
+        rule_name: str,
+        symbol: str,
+        action: CircuitBreakerAction,
+        triggered_at: datetime,
+    ) -> None:
+        """Record a circuit breaker trigger."""
+        if rule_name not in self._triggers:
+            self._triggers[rule_name] = {}
+        self._triggers[rule_name][symbol] = (action, triggered_at)
+
+    def get(self, rule_name: str, symbol: str) -> tuple[CircuitBreakerAction, datetime] | None:
+        """Get most recent trigger for a rule/symbol."""
+        return self._triggers.get(rule_name, {}).get(symbol)
+
+    def snapshot(self) -> dict[str, dict[str, tuple[CircuitBreakerAction, datetime]]]:
+        """Get all triggers."""
+        return self._triggers
 
 
 def check_mark_staleness(

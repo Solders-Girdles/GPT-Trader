@@ -42,6 +42,6 @@ Notes:
 - Main docs portal: https://docs.cloud.coinbase.com/
 
 ## See Also (Internal)
-- Integration overview: docs/reference/coinbase.md
 - Complete reference: docs/reference/coinbase_complete.md
 - Troubleshooting: docs/reference/compatibility_troubleshooting.md
+- Test coverage: docs/testing/coinbase_coverage_matrix.md

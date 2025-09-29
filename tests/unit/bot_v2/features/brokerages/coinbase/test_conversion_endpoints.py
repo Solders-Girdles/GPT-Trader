@@ -35,7 +35,7 @@ def test_convert_quote_posts_payload():
 
 
 def test_get_convert_trade_already_covered_in_system_tests():
-    # See tests/unit/bot_v2/features/brokerages/coinbase/test_system_endpoints.py
+    # See tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_integration.py::TestCoinbaseSystem
     # This placeholder ensures file cohesion without duplicating tests.
     assert True
 

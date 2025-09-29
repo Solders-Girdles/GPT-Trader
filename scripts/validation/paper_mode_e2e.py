@@ -25,14 +25,14 @@ async def main() -> int:
     )
 
     # Fast signals for demo: short MAs and quick interval
-    cfg = BotConfig.from_profile(
+    config = BotConfig.from_profile(
         "dev",
         symbols=["BTC-PERP"],
         update_interval=1,
         short_ma=3,
         long_ma=5,
     )
-    bot, _registry = build_bot(cfg)
+    bot, _registry = build_bot(config)
 
     # Run several single cycles; drive marks if using DeterministicBroker to trigger signals
     pattern = [100, 99, 101, 103, 105, 104, 106, 108]
@@ -46,13 +46,13 @@ async def main() -> int:
 
     # Print a brief summary
     print("\n=== Paper Mode E2E Summary ===")
-    print(f"Symbols: {cfg.symbols}")
+    print(f"Symbols: {config.symbols}")
     print(f"Order stats: {bot.order_stats}")
     try:
         positions = bot.broker.list_positions()
         print(f"Positions count: {len(positions)}")
         for p in positions:
-            print(f" - {p.symbol}: {p.side} {p.qty} @ {p.entry_price} (mark {p.mark_price})")
+            print(f" - {p.symbol}: {p.side} {p.quantity} @ {p.entry_price} (mark {p.mark_price})")
     except Exception:
         pass
     return 0

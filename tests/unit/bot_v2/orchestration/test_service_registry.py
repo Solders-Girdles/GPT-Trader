@@ -5,16 +5,16 @@ from bot_v2.orchestration.service_registry import ServiceRegistry, empty_registr
 
 
 def test_empty_registry_initialises_with_config():
-    cfg = BotConfig.from_profile("dev")
-    registry = empty_registry(cfg)
-    assert registry.config is cfg
+    config = BotConfig.from_profile("dev")
+    registry = empty_registry(config)
+    assert registry.config is config
     assert registry.event_store is None
     assert registry.orders_store is None
 
 
 def test_with_updates_returns_new_instance():
-    cfg = BotConfig.from_profile("dev")
-    registry = empty_registry(cfg)
+    config = BotConfig.from_profile("dev")
+    registry = empty_registry(config)
     updated = registry.with_updates(extras={"key": "value"})
     assert updated is not registry
     assert updated.extras == {"key": "value"}

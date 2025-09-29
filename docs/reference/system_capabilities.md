@@ -165,9 +165,9 @@ poetry run perps-bot --profile prod
 
 ### Documentation
 - [Perpetuals Trading Logic](trading_logic_perps.md)
-- [Testing Guide](docs/TESTING_GUIDE.md)
-- [Production Checklist](docs/PRODUCTION_LAUNCH_CHECKLIST.md)
-- [Coinbase Integration](docs/COINBASE_README.md)
+- [Testing Guide](../guides/testing.md)
+- [Production Checklist](../GO_LIVE_CHECKLIST.md)
+- [Coinbase Integration](coinbase_complete.md)
 
 ### Key Files
 - Entry Point: `src/bot_v2/cli.py`

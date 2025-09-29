@@ -27,13 +27,13 @@ def test_pre_trade_rejects_above_max_leverage():
     # Equity 10k; notional 1.02M → 102x > 5x, should be rejected
     equity = Decimal("10000")
     price = Decimal("51000")
-    qty = Decimal("20")  # notional = 1,020,000
+    quantity = Decimal("20")  # notional = 1,020,000
 
     with pytest.raises(ValidationError):
         risk.pre_trade_validate(
             symbol="BTC-PERP",
             side="buy",
-            qty=qty,
+            quantity=quantity,
             price=price,
             product=product,
             equity=equity,

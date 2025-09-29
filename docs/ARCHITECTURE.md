@@ -2,7 +2,7 @@
 
 ---
 status: current
-last-updated: 2025-03-01
+last-updated: 2025-09-29
 ---
 
 ## Current State
@@ -26,17 +26,80 @@ The system is organized into vertical feature slices under `src/bot_v2/features/
 ```
 src/bot_v2/features/
 ├── live_trade/          # Production trading engine
-├── paper_trade/         # Simulated trading
-├── backtest/           # Historical testing
-├── ml_strategy/        # ML-driven strategy selection
-├── market_regime/      # Market condition detection
-├── position_sizing/    # Kelly Criterion sizing
-├── adaptive_portfolio/ # Tier-based portfolio management
-├── analyze/           # Market analysis
-├── optimize/          # Parameter optimization
-├── monitor/           # System monitoring
-└── data/             # Data management
+├── paper_trade/         # Simulated trading harness
+├── backtest/            # Historical simulation utilities
+├── adaptive_portfolio/  # Tier-based portfolio management
+├── analyze/             # Market analytics helpers
+├── market_regime/       # Market condition detection
+├── position_sizing/     # Kelly & intelligent sizing utilities
+├── strategies/          # Baseline and experimental strategies
+├── strategy_tools/      # Shared helpers for strategy slices
+├── brokerages/          # Exchange integrations
+├── data/                # Data acquisition helpers
+└── optimize/            # Parameter optimisation experiments
 ```
+
+Additional cross-cutting packages now live at the top level:
+
+```
+src/bot_v2/
+├── monitoring/          # Runtime guards, alerting, system telemetry
+└── validation/          # Declarative validators and decorators
+```
+
+### High-Level Flow
+
+```
+CLI (perps-bot) → Config (BotConfig) → Service Registry → LiveExecutionEngine →
+Risk Guards → Coinbase Brokerage Adapter → Metrics + Telemetry
+```
+
+### Entry Point & Service Wiring
+
+- `poetry run perps-bot` invokes `bot_v2.cli:main`, producing a `BotConfig` from
+  CLI arguments and environment overrides.
+- `bot_v2/orchestration/bootstrap.py` hydrates the `ServiceRegistry`, wiring the
+  broker adapter, risk manager, execution engine, and telemetry surfaces before
+  handing the bundle to `PerpsBot`.
+
+### Core Subsystems
+
+| Module | Purpose |
+|--------|---------|
+| `bot_v2/features/live_trade` | Main control loop, position tracking, and order routing |
+| `bot_v2/features/brokerages/coinbase` | REST/WS integration for Coinbase Advanced Trade spot markets |
+| `bot_v2/features/brokerages/coinbase/client/` | Modular client package with mixins (accounts, orders, portfolio, market data) |
+| `bot_v2/features/position_sizing` | Kelly-style sizing with guardrails |
+| `bot_v2/monitoring` | Runtime guard orchestration, alert dispatch, system metrics |
+| `bot_v2/validation` | Predicate-based validators and input decorators |
+| `bot_v2/features/quantization.py` | Price and quantity rounding helpers |
+
+#### Coinbase Client Package
+
+The previous monolithic `client.py` was replaced with a composable package (`client/__init__.py`
+plus mixins). Each mixin owns a REST surface (accounts, orders, market data, portfolio), while the
+base class centralises retry, throttling, and auth wiring. Scripts and slices now import through
+`bot_v2.features.brokerages.coinbase.client import CoinbaseClient` to ensure consistent
+initialisation.
+
+#### Monitoring & Validation Framework
+
+- **Validators** (`bot_v2/validation`): the base `Validator` now accepts inline predicates and
+  optional value coercion, enabling concise one-off validations while keeping legacy subclasses.
+- **Runtime guards** (`bot_v2/monitoring/runtime_guards.py`): guard evaluation supports rich
+  comparison modes (`gt`, `lt`, `abs_gt`, etc.), warning bands, and contextual messaging to power
+  both orchestration checks and monitoring dashboards.
+- **Alerts** (`bot_v2/monitoring/alerts.py`): the base alert channel now degrades gracefully,
+  logging when no transport is configured instead of raising. Concrete channels (Slack, PagerDuty,
+  email, webhook) continue to extend `_send_impl`.
+- **Risk metrics aggregation** (`bot_v2/features/live_trade/risk_metrics.py`): periodic EventStore
+  snapshots feed into the monitoring stack for dashboards and analytics.
+
+### Derivatives Gate
+
+Perpetual futures remain behind `COINBASE_ENABLE_DERIVATIVES` and Coinbase INTX
+credentials. The code paths stay compiled, but runtime flags default to spot-only
+behaviour until the derivatives gate opens.
 
 ### Feature Slice Reference
 
@@ -90,12 +153,24 @@ src/bot_v2/features/
 ### Orchestration Infrastructure
 
 - `orchestration/session_guard.py` and `orchestration/market_monitor.py` encapsulate trading window enforcement and market-data freshness so `perps_bot` stays focused on orchestration glue.
-- `features/live_trade/indicators.py`, `features/live_trade/risk_calculations.py`, and `features/live_trade/risk_runtime.py` centralize indicator math plus leverage/MMR/risk guard helpers, giving strategies and the risk manager shared, tested primitives.
-- `orchestration/configuration.py` centralizes profile-aware defaults (`BotConfig`, `ConfigManager`) and is now covered by unit tests (`tests/unit/bot_v2/orchestration/test_configuration.py`).
-- `orchestration/service_registry.py` provides an explicit container for runtime dependencies so the main bot can accept a prepared bundle instead of instantiating stores/brokers inline. Future phases will wire this into the CLI bootstrapper.
-- Legacy status reports that used to live under `src/bot_v2/*.md` were removed;
-  pull them from repository history if you need to review them.
-- Historical V1/V2 integration and system tests depending on the legacy `bot.*` package lived under `archived/legacy_tests/` before the cleanup. Recover them from git history if you need a reference. The active pytest suite now focuses exclusively on the `bot_v2` stack and passes via `poetry run pytest`.
+- `features/live_trade/indicators.py`, `features/live_trade/risk_calculations.py`, and
+  `features/live_trade/risk_runtime.py` centralize indicator math plus leverage/MMR/risk guard
+  helpers, giving strategies and the risk manager shared, tested primitives. Runtime integrations
+  now call into `bot_v2/monitoring/runtime_guards.py` for consistent evaluation and alert routing.
+- `orchestration/configuration.py` plus the new `orchestration/config_controller.py` provide
+  profile-aware defaults (`BotConfig`, `ConfigManager`) with unit coverage
+  (`tests/unit/bot_v2/orchestration/test_configuration.py`). Adaptive portfolio config
+  serialisation helpers now live under `features/adaptive_portfolio/config_manager.py` with tests
+  to guarantee round-tripping.
+- `orchestration/service_registry.py` provides an explicit container for runtime dependencies so
+  the main bot can accept a prepared bundle instead of instantiating stores/brokers inline. Future
+  phases will wire this into the CLI bootstrapper.
+- Legacy status reports that used to live under `src/bot_v2/*.md` were removed; pull them from
+  repository history if you need a reference.
+- Historical V1/V2 integration and system tests depending on the legacy `bot.*` package lived under
+  `archived/legacy_tests/` before the cleanup. Recover them from git history if you need a
+  reference. The active pytest suite now focuses exclusively on the `bot_v2` stack and passes via
+  `poetry run pytest`.
 
 ## What's Actually Working
 
@@ -163,7 +238,11 @@ monitoring: real-time
 - Error rate monitoring (>50% triggers shutdown)
 - Stale data detection (30s timeout)
 - Drawdown protection (10% max)
-- Guard instrumentation raises structured `RiskGuard*Error` exceptions: recoverable failures emit `risk.guards.<name>.recoverable_failures` counters and log warnings, while critical failures escalate to reduce-only mode and emit `risk.guards.<name>.critical_failures`
+- Generic guard evaluation with configurable comparison operators (`gt`, `lt`, `abs_gt`, etc.),
+  warning thresholds, and contextual messaging. Guard instrumentation raises structured
+  `RiskGuard*Error` exceptions: recoverable failures emit `risk.guards.<name>.recoverable_failures`
+  counters and log warnings, while critical failures escalate to reduce-only mode and emit
+  `risk.guards.<name>.critical_failures`.
 
 ### Circuit Breakers
 - Consecutive loss protection
@@ -173,10 +252,16 @@ monitoring: real-time
 
 ## Performance & Observability
 
-- **Cycle Metrics**: persisted to `var/data/perps_bot/<profile>/metrics.json` and exposed via Prometheus exporter (`scripts/monitoring/export_metrics.py`)
-- **Account Snapshots**: periodic telemetry via `CoinbaseAccountManager` with fee/limit tracking
-- **System Footprint**: bot process typically <50MB RSS with sub-100ms WebSocket latency in spot mode
-- **Test Discovery**: 455 collected / 446 selected / 9 deselected
+- **Cycle Metrics**: persisted to `var/data/perps_bot/<profile>/metrics.json` and exposed via the
+  Prometheus exporter (`scripts/monitoring/export_metrics.py`). The live risk manager now emits
+  snapshot events consumed by dashboards and the monitoring stack.
+- **Account Snapshots**: periodic telemetry via `CoinbaseAccountManager` with fee/limit tracking.
+- **System Monitoring**: `bot_v2/monitoring/system/` provides resource telemetry collectors used by
+  the runtime guard manager and dashboards.
+- **System Footprint**: bot process typically <50 MB RSS with sub-100 ms WebSocket latency in spot
+  mode.
+- **Test Discovery** (`pytest --collect-only`): 476 discovered / 472 selected / 4 deselected /
+  4 skipped (a duplicate-named test file is tracked for follow-up).
 
 ## Verification Path
 

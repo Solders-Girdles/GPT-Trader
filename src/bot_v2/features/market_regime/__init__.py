@@ -6,45 +6,43 @@ experimentation and demos; not used by the perps production path.
 """
 
 from .market_regime import (
+    analyze_regime_stability,
     detect_regime,
-    monitor_regime_changes,
-    get_regime_history,
-    predict_regime_change,
     get_regime_features,
-    analyze_regime_stability
+    get_regime_history,
+    monitor_regime_changes,
+    predict_regime_change,
 )
-
 from .types import (
     MarketRegime,
-    VolatilityRegime,
-    TrendRegime,
-    RiskSentiment,
     RegimeAnalysis,
     RegimeChangePrediction,
-    RegimeTransition,
+    RegimeFeatures,
     RegimeHistory,
-    RegimeFeatures
+    RegimeTransition,
+    RiskSentiment,
+    TrendRegime,
+    VolatilityRegime,
 )
 
 __all__ = [
     # Core functions
-    'detect_regime',
-    'monitor_regime_changes',
-    'get_regime_history',
-    'predict_regime_change',
-    'get_regime_features',
-    'analyze_regime_stability',
-    
+    "detect_regime",
+    "monitor_regime_changes",
+    "get_regime_history",
+    "predict_regime_change",
+    "get_regime_features",
+    "analyze_regime_stability",
     # Types
-    'MarketRegime',
-    'VolatilityRegime', 
-    'TrendRegime',
-    'RiskSentiment',
-    'RegimeAnalysis',
-    'RegimeChangePrediction',
-    'RegimeTransition',
-    'RegimeHistory',
-    'RegimeFeatures'
+    "MarketRegime",
+    "VolatilityRegime",
+    "TrendRegime",
+    "RiskSentiment",
+    "RegimeAnalysis",
+    "RegimeChangePrediction",
+    "RegimeTransition",
+    "RegimeHistory",
+    "RegimeFeatures",
 ]
 
 # Marker used by tooling and documentation

@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Any, Mapping, MutableMapping
 import logging
+from collections.abc import Mapping, MutableMapping
+from dataclasses import dataclass
+from typing import Any
 
-from ...monitoring.metrics_collector import record_counter
 from ...monitoring.alerting_system import AlertingSystem, AlertLevel
+from ...monitoring.metrics_collector import record_counter
 
 logger = logging.getLogger(__name__)
 

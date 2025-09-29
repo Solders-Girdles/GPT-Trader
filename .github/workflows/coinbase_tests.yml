@@ -7,18 +7,20 @@ on:
       - 'src/bot_v2/features/brokerages/coinbase/**'
       - 'tests/unit/bot_v2/features/brokerages/coinbase/**'
       - '.github/workflows/coinbase_tests.yml'
+      - 'scripts/validation/**'
   pull_request:
     branches: [ main, develop ]
     paths:
       - 'src/bot_v2/features/brokerages/coinbase/**'
       - 'tests/unit/bot_v2/features/brokerages/coinbase/**'
+      - '.github/workflows/coinbase_tests.yml'
 
 jobs:
   test-matrix:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
-        python-version: [3.9, 3.10, 3.11]
         api-mode: [advanced, exchange]
         include:
           - api-mode: advanced
@@ -27,88 +29,103 @@ jobs:
           - api-mode: exchange
             base-url: https://api-public.sandbox.exchange.coinbase.com
             needs-passphrase: true
-    
-    name: Test Python ${{ matrix.python-version }} - ${{ matrix.api-mode }} mode
-    
+
     steps:
-    - uses: actions/checkout@v3
-    
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ matrix.python-version }}
-    
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install pytest pytest-cov
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-        if [ -f requirements-test.txt ]; then pip install -r requirements-test.txt; fi
-    
-    - name: Set environment for API mode
-      env:
-        COINBASE_API_MODE: ${{ matrix.api-mode }}
-        COINBASE_API_BASE: ${{ matrix.base-url }}
-        COINBASE_API_KEY: test-key
-        COINBASE_API_SECRET: test-secret
-        COINBASE_API_PASSPHRASE: ${{ matrix.needs-passphrase && 'test-pass' || '' }}
-      run: |
-        echo "Testing in ${{ matrix.api-mode }} mode"
-        echo "COINBASE_API_MODE=${{ matrix.api-mode }}" >> $GITHUB_ENV
-    
-    - name: Run Coinbase unit tests
-      run: |
-        pytest tests/unit/bot_v2/features/brokerages/coinbase/ -v \
-          --cov=src/bot_v2/features/brokerages/coinbase \
-          --cov-report=term-missing
-    
-    - name: Run validation script
-      run: |
-        python scripts/validate_critical_fixes_v2.py
-    
-    - name: Verify endpoint routing
-      run: |
-        python scripts/verify_final_fixes.py
-    
-    - name: Upload coverage reports
-      if: matrix.python-version == '3.10' && matrix.api-mode == 'advanced'
-      uses: codecov/codecov-action@v3
-      with:
-        file: ./coverage.xml
-        flags: coinbase
-        name: coinbase-coverage
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+          installer-parallel: true
+
+      - name: Load cached venv
+        id: cache-poetry
+        uses: actions/cache@v3
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-3.12-${{ hashFiles('**/poetry.lock') }}
+
+      - name: Install dependencies
+        if: steps.cache-poetry.outputs.cache-hit != 'true'
+        run: poetry install --no-interaction --no-root
+
+      - name: Configure API mode
+        run: |
+          echo "COINBASE_API_MODE=${{ matrix.api-mode }}" >> $GITHUB_ENV
+          echo "COINBASE_API_BASE=${{ matrix.base-url }}" >> $GITHUB_ENV
+          echo "COINBASE_API_KEY=test-key" >> $GITHUB_ENV
+          echo "COINBASE_API_SECRET=test-secret" >> $GITHUB_ENV
+          if [ "${{ matrix.needs-passphrase }}" = "true" ]; then
+            echo "COINBASE_API_PASSPHRASE=test-pass" >> $GITHUB_ENV
+          fi
+
+      - name: Run Coinbase unit tests
+        run: |
+          poetry run pytest tests/unit/bot_v2/features/brokerages/coinbase -v --maxfail=1 --durations=10
+
+      - name: Verify broker factory wiring
+        run: |
+          poetry run pytest tests/unit/bot_v2/orchestration/test_broker_factory.py -v
 
   integration-smoke:
     runs-on: ubuntu-latest
-    name: Integration Smoke Test
-    
+    needs: test-matrix
+
     steps:
-    - uses: actions/checkout@v3
-    
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.10'
-    
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install pytest
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-    
-    - name: Run adapter integration test
-      run: |
-        pytest tests/unit/bot_v2/features/brokerages/coinbase/test_adapter_integration.py -v
-    
-    - name: Test WebSocket transport initialization
-      run: |
-        python -c "
-        from src.bot_v2.features.brokerages.coinbase.ws import CoinbaseWebSocket
-        import sys, types
-        mock_ws = types.ModuleType('websocket')
-        sys.modules['websocket'] = mock_ws
-        ws = CoinbaseWebSocket('wss://test')
-        ws.connect()
-        assert ws._transport is not None
-        print('✅ WebSocket transport initialization confirmed')
-        "
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+          installer-parallel: true
+
+      - name: Load cached venv
+        id: cache-poetry
+        uses: actions/cache@v3
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-3.12-${{ hashFiles('**/poetry.lock') }}
+
+      - name: Install dependencies
+        if: steps.cache-poetry.outputs.cache-hit != 'true'
+        run: poetry install --no-interaction --no-root
+
+      - name: Run adapter integration test
+        run: |
+          poetry run pytest tests/unit/bot_v2/features/brokerages/coinbase/test_adapter_integration.py -v
+
+      - name: Quick WebSocket check
+        run: |
+          poetry run python - <<'PY'
+          from src.bot_v2.features.brokerages.coinbase.ws import CoinbaseWebSocket, SequenceGuard
+          import sys
+          import types
+
+          mock_ws = types.ModuleType('websocket')
+          mock_ws.create_connection = lambda url: None
+          sys.modules['websocket'] = mock_ws
+
+          ws = CoinbaseWebSocket('wss://test')
+          ws.connect()
+          assert ws._transport is not None
+
+          guard = SequenceGuard()
+          msg = guard.annotate({'sequence': 1})
+          assert 'gap_detected' not in msg
+          msg = guard.annotate({'sequence': 3})
+          assert msg.get('gap_detected') is True
+          PY

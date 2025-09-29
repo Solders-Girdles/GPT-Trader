@@ -18,7 +18,7 @@ from datetime import datetime
 from decimal import Decimal, InvalidOperation
 from typing import Any
 
-from bot_v2.features.monitor import LogLevel, get_logger
+from bot_v2.monitoring.system import LogLevel, get_logger
 
 from .transports import NoopTransport, RealTransport
 
@@ -62,16 +62,20 @@ class CoinbaseWebSocket:
     def connect(self, headers: dict[str, str] | None = None) -> None:
         logger.info(f"Connecting WS to {self.url}")
         try:
-            get_logger().log_event(level=LogLevel.INFO, event_type="ws_connect", message=f"Connecting to {self.url}")
+            get_logger().log_event(
+                level=LogLevel.INFO, event_type="ws_connect", message=f"Connecting to {self.url}"
+            )
         except Exception as exc:  # pragma: no cover - telemetry optional
             logger.debug("ws_connect event emit failed", exc_info=exc)
 
         # Initialize default transport if not set
         if self._transport is None:
             # Allow disabling streaming via env for tests/CI without import hacks
-            disable = os.getenv('DISABLE_WS_STREAMING')
-            enable_flag = os.getenv('PERPS_ENABLE_STREAMING')
-            streaming_disabled = (disable or '').lower() in ('1', 'true', 'yes', 'on') or (enable_flag or '').lower() in ('0', 'false', 'no', 'off')
+            disable = os.getenv("DISABLE_WS_STREAMING")
+            enable_flag = os.getenv("PERPS_ENABLE_STREAMING")
+            streaming_disabled = (disable or "").lower() in ("1", "true", "yes", "on") or (
+                enable_flag or ""
+            ).lower() in ("0", "false", "no", "off")
             if streaming_disabled:
                 self._transport = NoopTransport()
                 logger.info("Initialized NoopTransport (streaming disabled)")
@@ -81,8 +85,11 @@ class CoinbaseWebSocket:
 
         # Pass headers if transport supports it
         if hasattr(self._transport, "connect"):
-            if headers and hasattr(self._transport.connect, '__code__') and \
-               self._transport.connect.__code__.co_argcount > 2:
+            if (
+                headers
+                and hasattr(self._transport.connect, "__code__")
+                and self._transport.connect.__code__.co_argcount > 2
+            ):
                 self._transport.connect(self.url, headers)
             else:
                 self._transport.connect(self.url)
@@ -92,7 +99,9 @@ class CoinbaseWebSocket:
     def disconnect(self) -> None:
         logger.info("Disconnecting WS")
         try:
-            get_logger().log_event(level=LogLevel.WARNING, event_type="ws_disconnect", message="Disconnecting")
+            get_logger().log_event(
+                level=LogLevel.WARNING, event_type="ws_disconnect", message="Disconnecting"
+            )
         except Exception as exc:  # pragma: no cover
             logger.debug("ws_disconnect event emit failed", exc_info=exc)
         self.connected = False
@@ -147,16 +156,22 @@ class CoinbaseWebSocket:
                         logger.debug("sequence guard annotation failed", exc_info=exc)
                     # Emit latency metric in debug mode when message has timestamp
                     try:
-                        if os.getenv('PERPS_DEBUG') in ('1', 'true', 'yes', 'on'):
-                            ts = msg.get('time') or msg.get('timestamp')
+                        if os.getenv("PERPS_DEBUG") in ("1", "true", "yes", "on"):
+                            ts = msg.get("time") or msg.get("timestamp")
                             if isinstance(ts, str):
                                 # Normalize Z suffix
-                                ts_norm = ts.replace('Z', '+00:00') if ts.endswith('Z') else ts
+                                ts_norm = ts.replace("Z", "+00:00") if ts.endswith("Z") else ts
                                 try:
                                     tmsg = datetime.fromisoformat(ts_norm)
-                                    latency_ms = (datetime.utcnow() - tmsg.replace(tzinfo=None)).total_seconds() * 1000.0
-                                    get_logger().log_ws_latency(stream='coinbase_ws', latency_ms=latency_ms)
-                                except Exception as exc_latency:  # pragma: no cover - metrics optional
+                                    latency_ms = (
+                                        datetime.utcnow() - tmsg.replace(tzinfo=None)
+                                    ).total_seconds() * 1000.0
+                                    get_logger().log_ws_latency(
+                                        stream="coinbase_ws", latency_ms=latency_ms
+                                    )
+                                except (
+                                    Exception
+                                ) as exc_latency:  # pragma: no cover - metrics optional
                                     logger.debug("log_ws_latency failed", exc_info=exc_latency)
                     except Exception as exc_metrics:  # pragma: no cover - metrics optional
                         logger.debug("ws latency metric failed", exc_info=exc_metrics)
@@ -175,7 +190,11 @@ class CoinbaseWebSocket:
                 if attempt > self._max_retries:
                     logger.error(f"WS max retries exceeded: {e}")
                     try:
-                        get_logger().log_event(level=LogLevel.ERROR, event_type="ws_error", message=f"max retries exceeded: {e}")
+                        get_logger().log_event(
+                            level=LogLevel.ERROR,
+                            event_type="ws_error",
+                            message=f"max retries exceeded: {e}",
+                        )
                     except Exception as exc_event:  # pragma: no cover - telemetry optional
                         logger.debug("log_event ws_error failed", exc_info=exc_event)
                     break
@@ -183,13 +202,23 @@ class CoinbaseWebSocket:
                 delay = self._base_delay * (2 ** (attempt - 1))
                 logger.warning(f"WS error: {e}; reconnecting in {delay:.2f}s (attempt {attempt})")
                 try:
-                    get_logger().log_event(level=LogLevel.WARNING, event_type="ws_reconnect", message=f"{e}; in {delay:.2f}s (attempt {attempt})")
+                    get_logger().log_event(
+                        level=LogLevel.WARNING,
+                        event_type="ws_reconnect",
+                        message=f"{e}; in {delay:.2f}s (attempt {attempt})",
+                    )
                 except Exception as exc_event:  # pragma: no cover
                     logger.debug("log_event ws_reconnect failed", exc_info=exc_event)
                 # Emit reconnect attempt metric if provided
                 try:
                     if self._metrics_emitter:
-                        self._metrics_emitter({'event_type': 'ws_reconnect_attempt', 'attempt': attempt, 'reason': str(e)})
+                        self._metrics_emitter(
+                            {
+                                "event_type": "ws_reconnect_attempt",
+                                "attempt": attempt,
+                                "reason": str(e),
+                            }
+                        )
                 except Exception as exc_emit:  # pragma: no cover
                     logger.debug("ws_reconnect_attempt metric failed", exc_info=exc_emit)
                 time.sleep(delay)
@@ -205,7 +234,9 @@ class CoinbaseWebSocket:
                     # Emit reconnect success metric
                     try:
                         if self._metrics_emitter:
-                            self._metrics_emitter({'event_type': 'ws_reconnect_success', 'attempt': attempt})
+                            self._metrics_emitter(
+                                {"event_type": "ws_reconnect_success", "attempt": attempt}
+                            )
                     except Exception as exc_emit:  # pragma: no cover
                         logger.debug("ws_reconnect_success metric failed", exc_info=exc_emit)
                 except Exception as e2:
@@ -254,8 +285,20 @@ def normalize_market_message(msg: dict[str, Any]) -> dict[str, Any]:
     Ensures consistent timestamp field.
     """
     # Convert common price/size fields to Decimal
-    for key in ['price', 'size', 'best_bid', 'best_ask', 'bid', 'ask',
-                'last', 'volume', 'open', 'high', 'low', 'close']:
+    for key in [
+        "price",
+        "size",
+        "best_bid",
+        "best_ask",
+        "bid",
+        "ask",
+        "last",
+        "volume",
+        "open",
+        "high",
+        "low",
+        "close",
+    ]:
         if key in msg and msg[key] is not None:
             try:
                 value_str = str(msg[key])
@@ -265,7 +308,7 @@ def normalize_market_message(msg: dict[str, Any]) -> dict[str, Any]:
                 logger.debug("Failed to normalize %s field", key, exc_info=exc)
 
     # Ensure timestamp field exists
-    if 'timestamp' not in msg and 'time' in msg:
-        msg['timestamp'] = msg['time']
+    if "timestamp" not in msg and "time" in msg:
+        msg["timestamp"] = msg["time"]
 
     return msg

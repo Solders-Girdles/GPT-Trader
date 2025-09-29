@@ -81,10 +81,10 @@ def check_quantization_helper():
         min_notional=Decimal("10"),
     )
 
-    qty, price = enforce_perp_rules(product, Decimal("1.23456789"), Decimal("50123.4567"))
-    assert qty == Decimal("1.234"), f"Qty quantization mismatch: {qty}"
+    quantity, price = enforce_perp_rules(product, Decimal("1.23456789"), Decimal("50123.4567"))
+    assert quantity == Decimal("1.234"), f"Quantity quantization mismatch: {quantity}"
     assert price == Decimal("50123.45"), f"Price quantization mismatch: {price}"
-    ok("enforce_perp_rules quantizes qty/price correctly")
+    ok("enforce_perp_rules quantizes quantity/price correctly")
 
 
 def run_minimal_cycle():

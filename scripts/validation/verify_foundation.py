@@ -40,7 +40,7 @@ async def verify_data_flow() -> bool:
         symbol=bot.config.symbols[0],
         side=OrderSide.BUY,
         order_type=OrderType.MARKET,
-        qty=Decimal("0.001"),
+        quantity=Decimal("0.001"),
     )
     assert oid is not None
     await bot.shutdown()
@@ -58,7 +58,7 @@ async def verify_state_consistency() -> bool:
         symbol=bot.config.symbols[0],
         side=OrderSide.BUY,
         order_type=OrderType.MARKET,
-        qty=Decimal("0.001"),
+        quantity=Decimal("0.001"),
     )
     assert oid is not None
     # Verify presence across broker and store surfaces

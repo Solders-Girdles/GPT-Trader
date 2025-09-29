@@ -6,13 +6,15 @@ Complete isolation - no external dependencies.
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Dict, List, Optional, Literal
+from typing import Literal
+
 import pandas as pd
 
 
 @dataclass
 class TechnicalIndicators:
     """Collection of technical indicators."""
+
     sma_20: float
     sma_50: float
     sma_200: float
@@ -35,26 +37,29 @@ class TechnicalIndicators:
 @dataclass
 class MarketRegime:
     """Current market regime classification."""
-    trend: Literal['bullish', 'bearish', 'neutral']
-    volatility: Literal['low', 'medium', 'high']
-    momentum: Literal['strong_up', 'weak_up', 'neutral', 'weak_down', 'strong_down']
-    volume_profile: Literal['accumulation', 'distribution', 'neutral']
+
+    trend: Literal["bullish", "bearish", "neutral"]
+    volatility: Literal["low", "medium", "high"]
+    momentum: Literal["strong_up", "weak_up", "neutral", "weak_down", "strong_down"]
+    volume_profile: Literal["accumulation", "distribution", "neutral"]
     strength: float  # 0-100 score
 
 
 @dataclass
 class PricePattern:
     """Detected price pattern."""
+
     pattern_type: str
     confidence: float
-    target_price: Optional[float]
-    stop_loss: Optional[float]
+    target_price: float | None
+    stop_loss: float | None
     description: str
 
 
 @dataclass
 class SupportResistance:
     """Support and resistance levels."""
+
     immediate_support: float
     strong_support: float
     immediate_resistance: float
@@ -65,6 +70,7 @@ class SupportResistance:
 @dataclass
 class StrategySignals:
     """Signals from multiple strategies."""
+
     strategy_name: str
     signal: int  # 1=buy, -1=sell, 0=hold
     confidence: float
@@ -74,21 +80,22 @@ class StrategySignals:
 @dataclass
 class AnalysisResult:
     """Complete analysis result for a symbol."""
+
     symbol: str
     timestamp: datetime
     current_price: float
     indicators: TechnicalIndicators
     regime: MarketRegime
-    patterns: List[PricePattern]
+    patterns: list[PricePattern]
     levels: SupportResistance
-    strategy_signals: List[StrategySignals]
-    recommendation: Literal['strong_buy', 'buy', 'hold', 'sell', 'strong_sell']
+    strategy_signals: list[StrategySignals]
+    recommendation: Literal["strong_buy", "buy", "hold", "sell", "strong_sell"]
     confidence: float
-    
+
     def summary(self) -> str:
         """Generate analysis summary."""
-        signal_consensus = sum(s.signal for s in self.strategy_signals)
-        
+        sum(s.signal for s in self.strategy_signals)
+
         return f"""
 Analysis Summary for {self.symbol}
 =====================================
@@ -120,21 +127,24 @@ Confidence: {self.confidence:.1%}
 @dataclass
 class PortfolioAnalysis:
     """Portfolio-wide analysis."""
+
     timestamp: datetime
     total_value: float
-    symbol_analyses: Dict[str, AnalysisResult]
+    symbol_analyses: dict[str, AnalysisResult]
     correlation_matrix: pd.DataFrame
-    sector_allocation: Dict[str, float]
-    risk_metrics: Dict[str, float]
-    rebalance_suggestions: List[Dict]
-    
+    sector_allocation: dict[str, float]
+    risk_metrics: dict[str, float]
+    rebalance_suggestions: list[dict]
+
     def summary(self) -> str:
         """Generate portfolio summary."""
-        buy_signals = sum(1 for a in self.symbol_analyses.values() 
-                         if a.recommendation in ['buy', 'strong_buy'])
-        sell_signals = sum(1 for a in self.symbol_analyses.values()
-                          if a.recommendation in ['sell', 'strong_sell'])
-        
+        buy_signals = sum(
+            1 for a in self.symbol_analyses.values() if a.recommendation in ["buy", "strong_buy"]
+        )
+        sell_signals = sum(
+            1 for a in self.symbol_analyses.values() if a.recommendation in ["sell", "strong_sell"]
+        )
+
         return f"""
 Portfolio Analysis Summary
 ==========================
@@ -157,9 +167,10 @@ Rebalance Suggestions: {len(self.rebalance_suggestions)}
 @dataclass
 class StrategyComparison:
     """Comparison of multiple strategies."""
-    strategies: List[str]
+
+    strategies: list[str]
     period: str
-    metrics: Dict[str, Dict[str, float]]  # strategy -> metric -> value
-    rankings: Dict[str, int]  # strategy -> rank
+    metrics: dict[str, dict[str, float]]  # strategy -> metric -> value
+    rankings: dict[str, int]  # strategy -> rank
     best_strategy: str
     recommendation: str

@@ -6,29 +6,29 @@ Complete isolation - no external dependencies.
 
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Dict, List, Any, Optional, Tuple
-import pandas as pd
+from typing import Any
 
 
 @dataclass
 class ParameterGrid:
     """Grid of parameters to test."""
+
     strategy: str
-    parameters: Dict[str, List[Any]]
-    
-    def get_combinations(self) -> List[Dict[str, Any]]:
+    parameters: dict[str, list[Any]]
+
+    def get_combinations(self) -> list[dict[str, Any]]:
         """Generate all parameter combinations."""
         import itertools
-        
+
         keys = list(self.parameters.keys())
         values = [self.parameters[k] for k in keys]
-        
+
         combinations = []
         for combo in itertools.product(*values):
-            combinations.append(dict(zip(keys, combo)))
-        
+            combinations.append(dict(zip(keys, combo, strict=False)))
+
         return combinations
-    
+
     def total_combinations(self) -> int:
         """Count total combinations."""
         count = 1
@@ -40,6 +40,7 @@ class ParameterGrid:
 @dataclass
 class BacktestMetrics:
     """Metrics from a single backtest."""
+
     total_return: float
     sharpe_ratio: float
     max_drawdown: float
@@ -56,14 +57,15 @@ class BacktestMetrics:
 @dataclass
 class OptimizationResult:
     """Result from strategy optimization."""
+
     strategy: str
     symbol: str
-    period: Tuple[datetime, datetime]
-    best_params: Dict[str, Any]
+    period: tuple[datetime, datetime]
+    best_params: dict[str, Any]
     best_metrics: BacktestMetrics
-    all_results: List[Dict]  # All parameter combinations tested
+    all_results: list[dict]  # All parameter combinations tested
     optimization_time: float  # Seconds
-    
+
     def summary(self) -> str:
         """Generate optimization summary."""
         return f"""
@@ -84,7 +86,7 @@ Best Performance:
 - Win Rate: {self.best_metrics.win_rate:.2%}
 - Total Trades: {self.best_metrics.total_trades}
         """.strip()
-    
+
     def _format_params(self) -> str:
         """Format parameters nicely."""
         lines = []
@@ -96,14 +98,15 @@ Best Performance:
 @dataclass
 class WalkForwardWindow:
     """Single window in walk-forward analysis."""
+
     train_start: datetime
     train_end: datetime
     test_start: datetime
     test_end: datetime
-    best_params: Dict[str, Any]
+    best_params: dict[str, Any]
     train_metrics: BacktestMetrics
     test_metrics: BacktestMetrics
-    
+
     def get_efficiency(self) -> float:
         """Calculate walk-forward efficiency."""
         if self.train_metrics.total_return != 0:
@@ -114,18 +117,21 @@ class WalkForwardWindow:
 @dataclass
 class WalkForwardResult:
     """Result from walk-forward analysis."""
+
     strategy: str
     symbol: str
-    windows: List[WalkForwardWindow]
+    windows: list[WalkForwardWindow]
     avg_efficiency: float
     consistency_score: float  # 0-1, how consistent across windows
     robustness_score: float  # 0-1, overall robustness
-    
+
     def summary(self) -> str:
         """Generate walk-forward summary."""
-        avg_train_return = sum(w.train_metrics.total_return for w in self.windows) / len(self.windows)
+        avg_train_return = sum(w.train_metrics.total_return for w in self.windows) / len(
+            self.windows
+        )
         avg_test_return = sum(w.test_metrics.total_return for w in self.windows) / len(self.windows)
-        
+
         return f"""
 Walk-Forward Analysis for {self.strategy}
 ==========================================
@@ -141,12 +147,12 @@ Performance Summary:
 - Best Window: Window {self._best_window_idx() + 1}
 - Worst Window: Window {self._worst_window_idx() + 1}
         """.strip()
-    
+
     def _best_window_idx(self) -> int:
         """Find best performing window."""
         returns = [w.test_metrics.total_return for w in self.windows]
         return returns.index(max(returns))
-    
+
     def _worst_window_idx(self) -> int:
         """Find worst performing window."""
         returns = [w.test_metrics.total_return for w in self.windows]
@@ -156,9 +162,10 @@ Performance Summary:
 @dataclass
 class SensitivityAnalysis:
     """Parameter sensitivity analysis."""
+
     parameter: str
-    values: List[Any]
-    metrics: Dict[Any, BacktestMetrics]
+    values: list[Any]
+    metrics: dict[Any, BacktestMetrics]
     sensitivity_score: float  # How sensitive strategy is to this parameter
     optimal_value: Any
-    stable_range: Tuple[Any, Any]  # Range where performance is stable
+    stable_range: tuple[Any, Any]  # Range where performance is stable

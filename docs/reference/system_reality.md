@@ -14,7 +14,7 @@ This document captures what’s actually working versus what’s scaffolded.
 - WebSocket streaming integration in bot:
   - Dev: Mock broker provides `stream_trades` (random-walk ticks) to drive marks
   - Real: Adapter exposes streams; consumer threads run, but full user-event handling is minimal
-- Position tracking (mock): basic side/qty/entry updates; unrealized PnL derived in runtime guards
+- Position tracking (mock): basic side/quantity/entry updates; unrealized PnL derived in runtime guards
 - Risk guards: slippage and staleness checks are present; funding/liq buffers are simplified
 
 ## Not Working ❌

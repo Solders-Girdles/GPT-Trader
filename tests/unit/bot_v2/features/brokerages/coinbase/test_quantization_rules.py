@@ -23,10 +23,10 @@ def test_quantity_rounds_to_step_and_enforces_min_size():
     p = make_product()
     # Below min size should raise
     with pytest.raises(InvalidRequestError):
-        enforce_perp_rules(p, qty=Decimal("0.0005"), price=Decimal("50000"))
+        enforce_perp_rules(p, quantity=Decimal("0.0005"), price=Decimal("50000"))
 
     # Rounds down to nearest step
-    q, pr = enforce_perp_rules(p, qty=Decimal("1.234567"), price=Decimal("50000.1234"))
+    q, pr = enforce_perp_rules(p, quantity=Decimal("1.234567"), price=Decimal("50000.1234"))
     assert q == Decimal("1.234")
     assert pr == Decimal("50000.10")  # price increment 0.05 → rounds down
 
@@ -34,6 +34,6 @@ def test_quantity_rounds_to_step_and_enforces_min_size():
 @pytest.mark.perps
 def test_min_notional_enforced():
     p = make_product()
-    # Small qty with valid rounding but too small notional fails
+    # Small quantity with valid rounding but too small notional fails
     with pytest.raises(InvalidRequestError):
-        enforce_perp_rules(p, qty=Decimal("0.001"), price=Decimal("1000.00"))
+        enforce_perp_rules(p, quantity=Decimal("0.001"), price=Decimal("1000.00"))

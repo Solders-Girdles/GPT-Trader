@@ -3,7 +3,7 @@ import tempfile
 import pytest
 
 from bot_v2.orchestration.live_execution import LiveExecutionEngine
-from tests.utils.deterministic_broker import DeterministicBroker
+from tests.support.deterministic_broker import DeterministicBroker
 from bot_v2.features.live_trade.risk import LiveRiskManager, ValidationError
 from bot_v2.config.live_trade_config import RiskConfig
 from bot_v2.persistence.event_store import EventStore
@@ -18,7 +18,7 @@ def test_reduce_only_is_forced_in_execution():
     eng = LiveExecutionEngine(broker=broker, risk_manager=risk, event_store=EventStore())
 
     # Seed an existing long position so a SELL reduces
-    broker.seed_position("BTC-PERP", side="long", qty=Decimal("0.01"), price=Decimal("50000"))
+    broker.seed_position("BTC-PERP", side="long", quantity=Decimal("0.01"), price=Decimal("50000"))
 
     # Monkeypatch broker.place_order to capture reduce_only flag
     captured = {}
@@ -35,7 +35,7 @@ def test_reduce_only_is_forced_in_execution():
         symbol="BTC-PERP",
         side=OrderSide.SELL,  # reducing long
         order_type=OrderType.MARKET,
-        qty=Decimal("0.005"),
+        quantity=Decimal("0.005"),
     )
     assert order_id is not None
     assert captured.get("reduce_only") is True
@@ -47,16 +47,18 @@ def test_rejection_logs_metric_with_reason():
     tmp = tempfile.TemporaryDirectory()
     ev = EventStore(root=Path(tmp.name))
     risk = LiveRiskManager(config=RiskConfig(max_leverage=5, slippage_guard_bps=1_000_000))
-    eng = LiveExecutionEngine(broker=broker, risk_manager=risk, event_store=ev, bot_id="perps_test_bot")
+    eng = LiveExecutionEngine(
+        broker=broker, risk_manager=risk, event_store=ev, bot_id="perps_test_bot"
+    )
 
     broker.connect()
-    # Force huge qty → leverage rejection
+    # Force huge quantity → leverage rejection
     with pytest.raises(ValidationError):
         eng.place_order(
             symbol="BTC-PERP",
             side=OrderSide.BUY,
             order_type=OrderType.MARKET,
-            qty=Decimal("20"),  # notional >> equity
+            quantity=Decimal("20"),  # notional >> equity
         )
 
     # Tail events and ensure order_rejected logged

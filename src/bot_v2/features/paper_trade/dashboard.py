@@ -15,7 +15,7 @@ from ...config.path_registry import RESULTS_DIR
 class PaperTradingDashboard:
     """Console dashboard for paper trading monitoring."""
 
-    def __init__(self, engine: Any, refresh_interval: int = 5):
+    def __init__(self, engine: Any, refresh_interval: int = 5) -> None:
         """
         Initialize dashboard.
 

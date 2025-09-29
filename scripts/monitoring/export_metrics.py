@@ -137,6 +137,24 @@ def render_prometheus(metrics: dict[str, Any], events_path: Path) -> str:
     lines.append("# TYPE gpt_trader_memory_percent gauge")
     lines.append(f"gpt_trader_memory_percent {system.get('memory_percent', 0)}")
 
+    lines.append("# HELP gpt_trader_disk_percent Process disk usage percent")
+    lines.append("# TYPE gpt_trader_disk_percent gauge")
+    lines.append(f"gpt_trader_disk_percent {system.get('disk_percent', 0)}")
+
+    lines.append("# HELP gpt_trader_disk_used_gigabytes Disk usage (GB)")
+    lines.append("# TYPE gpt_trader_disk_used_gigabytes gauge")
+    lines.append(
+        f"gpt_trader_disk_used_gigabytes {system.get('disk_used_gb', system.get('disk_gb', 0))}"
+    )
+
+    lines.append("# HELP gpt_trader_network_sent_megabytes Total MB sent")
+    lines.append("# TYPE gpt_trader_network_sent_megabytes counter")
+    lines.append(f"gpt_trader_network_sent_megabytes {system.get('network_sent_mb', 0)}")
+
+    lines.append("# HELP gpt_trader_network_received_megabytes Total MB received")
+    lines.append("# TYPE gpt_trader_network_received_megabytes counter")
+    lines.append(f"gpt_trader_network_received_megabytes {system.get('network_recv_mb', 0)}")
+
     snapshot = metrics.get("account_snapshot") or {}
     fee_schedule = snapshot.get("fee_schedule") or {}
     limits = snapshot.get("limits") or {}

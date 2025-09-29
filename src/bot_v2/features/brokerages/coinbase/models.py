@@ -9,6 +9,8 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Literal
 
+from bot_v2.utilities.quantities import quantity_from
+
 from ..core.interfaces import (
     Candle,
     MarketType,
@@ -175,20 +177,37 @@ def to_order(payload: dict) -> Order:
     submitted = payload.get("created_at") or payload.get("submitted_at")
     updated = payload.get("updated_at") or submitted
 
+    raw_quantity = quantity_from(payload, default=None)
+    if raw_quantity is None:
+        fallback_size = (
+            payload.get("size")
+            or payload.get("contracts")
+            or payload.get("position_quantity")
+            or "0"
+        )
+        raw_quantity = Decimal(str(fallback_size))
+    quantity = Decimal(str(raw_quantity))
+
+    filled_raw = (
+        payload.get("filled_quantity")
+        or payload.get("filled_size")
+        or payload.get("filled_quantity")
+        or 0
+    )
+    filled_quantity = Decimal(str(filled_raw))
+
     order = Order(
         id=str(payload.get("order_id") or payload.get("id") or ""),
         client_id=payload.get("client_order_id") or payload.get("client_id"),
         symbol=normalize_symbol(payload.get("product_id") or payload.get("symbol") or ""),
         side=side,
         type=otype,
-        qty=Decimal(
-            str(payload.get("size") or payload.get("qty") or payload.get("quantity") or "0")
-        ),
+        quantity=quantity,
         price=Decimal(str(payload.get("price"))) if payload.get("price") else None,
         stop_price=Decimal(str(payload.get("stop_price"))) if payload.get("stop_price") else None,
         tif=tif,
         status=status,
-        filled_qty=Decimal(str(payload.get("filled_size") or payload.get("filled_qty") or 0)),
+        filled_quantity=filled_quantity,
         avg_fill_price=(
             Decimal(str(payload.get("average_filled_price") or payload.get("avg_fill_price") or 0))
             if payload.get("average_filled_price") or payload.get("avg_fill_price")
@@ -198,17 +217,22 @@ def to_order(payload: dict) -> Order:
         updated_at=datetime.fromisoformat(updated) if updated else datetime.utcnow(),
     )
 
-    order.quantity = order.qty
-    order.filled_quantity = order.filled_qty
-
     return order
 
 
 def to_position(payload: dict) -> Position:
-    # Derive side and qty
-    size = payload.get("size") or payload.get("position_qty") or payload.get("contracts") or 0
-    qty = Decimal(str(size))
-    raw_side = str(payload.get("side") or ("long" if qty >= 0 else "short"))
+    # Derive side and quantity
+    position_quantity = quantity_from(payload, default=None)
+    if position_quantity is None:
+        fallback_size = (
+            payload.get("size")
+            or payload.get("position_quantity")
+            or payload.get("contracts")
+            or "0"
+        )
+        position_quantity = Decimal(str(fallback_size))
+    quantity = Decimal(str(position_quantity))
+    raw_side = str(payload.get("side") or ("long" if quantity >= 0 else "short"))
     side = "long" if raw_side.lower().startswith("l") else "short"
 
     entry = payload.get("entry_price") or payload.get("avg_entry_price") or 0
@@ -219,7 +243,7 @@ def to_position(payload: dict) -> Position:
 
     position = Position(
         symbol=normalize_symbol(payload.get("product_id") or payload.get("symbol") or ""),
-        qty=Decimal(str(abs(qty))),
+        quantity=Decimal(str(abs(quantity))),
         entry_price=Decimal(str(entry)),
         mark_price=Decimal(str(mark)),
         unrealized_pnl=Decimal(str(upnl)),
@@ -228,5 +252,4 @@ def to_position(payload: dict) -> Position:
         side=side,  # type: ignore[arg-type]
     )
 
-    position.quantity = position.qty
     return position

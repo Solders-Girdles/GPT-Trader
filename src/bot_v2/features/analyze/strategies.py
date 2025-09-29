@@ -5,43 +5,42 @@ Complete duplication from other slices - intentional for isolation!
 """
 
 import pandas as pd
-import numpy as np
-from typing import List
+
 from .types import StrategySignals
 
 
-def analyze_with_strategies(data: pd.DataFrame) -> List[StrategySignals]:
+def analyze_with_strategies(data: pd.DataFrame) -> list[StrategySignals]:
     """
     Analyze data with multiple strategies.
-    
+
     Args:
         data: OHLC data
-        
+
     Returns:
         List of strategy signals
     """
     signals = []
-    
+
     # Simple MA Strategy
     if ma_signal := analyze_ma_strategy(data):
         signals.append(ma_signal)
-    
+
     # Momentum Strategy
     if momentum_signal := analyze_momentum_strategy(data):
         signals.append(momentum_signal)
-    
+
     # Mean Reversion Strategy
     if mean_rev_signal := analyze_mean_reversion_strategy(data):
         signals.append(mean_rev_signal)
-    
+
     # Volatility Strategy
     if vol_signal := analyze_volatility_strategy(data):
         signals.append(vol_signal)
-    
+
     # Breakout Strategy
     if breakout_signal := analyze_breakout_strategy(data):
         signals.append(breakout_signal)
-    
+
     return signals
 
 
@@ -49,22 +48,19 @@ def analyze_ma_strategy(data: pd.DataFrame, fast: int = 10, slow: int = 30) -> S
     """Analyze using MA crossover strategy."""
     if len(data) < slow:
         return StrategySignals(
-            strategy_name="Simple MA",
-            signal=0,
-            confidence=0.0,
-            reason="Insufficient data"
+            strategy_name="Simple MA", signal=0, confidence=0.0, reason="Insufficient data"
         )
-    
-    close = data['close']
+
+    close = data["close"]
     fast_ma = close.rolling(window=fast).mean()
     slow_ma = close.rolling(window=slow).mean()
-    
+
     # Current and previous values
     curr_fast = fast_ma.iloc[-1]
     curr_slow = slow_ma.iloc[-1]
     prev_fast = fast_ma.iloc[-2]
     prev_slow = slow_ma.iloc[-2]
-    
+
     # Detect crossover
     if curr_fast > curr_slow and prev_fast <= prev_slow:
         signal = 1
@@ -81,28 +77,24 @@ def analyze_ma_strategy(data: pd.DataFrame, fast: int = 10, slow: int = 30) -> S
         else:
             reason = f"Bearish: {fast}MA below {slow}MA"
         confidence = 0.4
-    
+
     return StrategySignals(
-        strategy_name="Simple MA",
-        signal=signal,
-        confidence=confidence,
-        reason=reason
+        strategy_name="Simple MA", signal=signal, confidence=confidence, reason=reason
     )
 
 
-def analyze_momentum_strategy(data: pd.DataFrame, lookback: int = 20, threshold: float = 0.02) -> StrategySignals:
+def analyze_momentum_strategy(
+    data: pd.DataFrame, lookback: int = 20, threshold: float = 0.02
+) -> StrategySignals:
     """Analyze using momentum strategy."""
     if len(data) < lookback + 1:
         return StrategySignals(
-            strategy_name="Momentum",
-            signal=0,
-            confidence=0.0,
-            reason="Insufficient data"
+            strategy_name="Momentum", signal=0, confidence=0.0, reason="Insufficient data"
         )
-    
-    close = data['close']
-    momentum = (close.iloc[-1] - close.iloc[-lookback-1]) / close.iloc[-lookback-1]
-    
+
+    close = data["close"]
+    momentum = (close.iloc[-1] - close.iloc[-lookback - 1]) / close.iloc[-lookback - 1]
+
     if momentum > threshold:
         signal = 1
         reason = f"Strong positive momentum: {momentum:.2%}"
@@ -115,36 +107,32 @@ def analyze_momentum_strategy(data: pd.DataFrame, lookback: int = 20, threshold:
         signal = 0
         reason = f"Neutral momentum: {momentum:.2%}"
         confidence = 0.3
-    
+
     return StrategySignals(
-        strategy_name="Momentum",
-        signal=signal,
-        confidence=confidence,
-        reason=reason
+        strategy_name="Momentum", signal=signal, confidence=confidence, reason=reason
     )
 
 
-def analyze_mean_reversion_strategy(data: pd.DataFrame, period: int = 20, num_std: float = 2.0) -> StrategySignals:
+def analyze_mean_reversion_strategy(
+    data: pd.DataFrame, period: int = 20, num_std: float = 2.0
+) -> StrategySignals:
     """Analyze using mean reversion strategy."""
     if len(data) < period:
         return StrategySignals(
-            strategy_name="Mean Reversion",
-            signal=0,
-            confidence=0.0,
-            reason="Insufficient data"
+            strategy_name="Mean Reversion", signal=0, confidence=0.0, reason="Insufficient data"
         )
-    
-    close = data['close'].iloc[-period:]
+
+    close = data["close"].iloc[-period:]
     mean = close.mean()
     std = close.std()
-    
+
     upper_band = mean + (std * num_std)
     lower_band = mean - (std * num_std)
     current_price = close.iloc[-1]
-    
+
     # Calculate position within bands
     band_position = (current_price - lower_band) / (upper_band - lower_band)
-    
+
     if current_price <= lower_band:
         signal = 1
         reason = f"Price at lower Bollinger Band ({band_position:.1%} position)"
@@ -157,28 +145,24 @@ def analyze_mean_reversion_strategy(data: pd.DataFrame, period: int = 20, num_st
         signal = 0
         reason = f"Price within Bollinger Bands ({band_position:.1%} position)"
         confidence = 0.4
-    
+
     return StrategySignals(
-        strategy_name="Mean Reversion",
-        signal=signal,
-        confidence=confidence,
-        reason=reason
+        strategy_name="Mean Reversion", signal=signal, confidence=confidence, reason=reason
     )
 
 
-def analyze_volatility_strategy(data: pd.DataFrame, period: int = 20, vol_threshold: float = 0.02) -> StrategySignals:
+def analyze_volatility_strategy(
+    data: pd.DataFrame, period: int = 20, vol_threshold: float = 0.02
+) -> StrategySignals:
     """Analyze using volatility strategy."""
     if len(data) < period + 1:
         return StrategySignals(
-            strategy_name="Volatility",
-            signal=0,
-            confidence=0.0,
-            reason="Insufficient data"
+            strategy_name="Volatility", signal=0, confidence=0.0, reason="Insufficient data"
         )
-    
-    returns = data['close'].pct_change()
+
+    returns = data["close"].pct_change()
     current_vol = returns.iloc[-period:].std()
-    
+
     # Check volatility regime
     if current_vol >= vol_threshold:
         signal = 0
@@ -186,8 +170,10 @@ def analyze_volatility_strategy(data: pd.DataFrame, period: int = 20, vol_thresh
         confidence = 0.7
     else:
         # Low volatility - use momentum
-        momentum = (data['close'].iloc[-1] - data['close'].iloc[-period]) / data['close'].iloc[-period]
-        
+        momentum = (data["close"].iloc[-1] - data["close"].iloc[-period]) / data["close"].iloc[
+            -period
+        ]
+
         if momentum > 0.01:
             signal = 1
             reason = f"Low volatility ({current_vol:.2%}) with positive momentum"
@@ -200,12 +186,9 @@ def analyze_volatility_strategy(data: pd.DataFrame, period: int = 20, vol_thresh
             signal = 0
             reason = f"Low volatility ({current_vol:.2%}) but no clear direction"
             confidence = 0.3
-    
+
     return StrategySignals(
-        strategy_name="Volatility",
-        signal=signal,
-        confidence=confidence,
-        reason=reason
+        strategy_name="Volatility", signal=signal, confidence=confidence, reason=reason
     )
 
 
@@ -213,18 +196,15 @@ def analyze_breakout_strategy(data: pd.DataFrame, lookback: int = 20) -> Strateg
     """Analyze using breakout strategy."""
     if len(data) < lookback + 1:
         return StrategySignals(
-            strategy_name="Breakout",
-            signal=0,
-            confidence=0.0,
-            reason="Insufficient data"
+            strategy_name="Breakout", signal=0, confidence=0.0, reason="Insufficient data"
         )
-    
+
     # Get recent high/low
-    recent_high = data['high'].iloc[-lookback-1:-1].max()
-    recent_low = data['low'].iloc[-lookback-1:-1].min()
-    current_price = data['close'].iloc[-1]
-    prev_price = data['close'].iloc[-2]
-    
+    recent_high = data["high"].iloc[-lookback - 1 : -1].max()
+    recent_low = data["low"].iloc[-lookback - 1 : -1].min()
+    current_price = data["close"].iloc[-1]
+    prev_price = data["close"].iloc[-2]
+
     # Check for breakout
     if current_price > recent_high and prev_price <= recent_high:
         signal = 1
@@ -242,10 +222,7 @@ def analyze_breakout_strategy(data: pd.DataFrame, lookback: int = 20) -> Strateg
         signal = 0
         reason = f"Within {lookback}-day range ({range_position:.1%} position)"
         confidence = 0.3
-    
+
     return StrategySignals(
-        strategy_name="Breakout",
-        signal=signal,
-        confidence=confidence,
-        reason=reason
+        strategy_name="Breakout", signal=signal, confidence=confidence, reason=reason
     )

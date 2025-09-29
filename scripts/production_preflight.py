@@ -206,8 +206,10 @@ class PreflightCheck:
         self.section_header("4. API CONNECTIVITY TEST")
 
         try:
-            from bot_v2.features.brokerages.coinbase.cdp_auth_v2 import CDPAuthV2
-            from bot_v2.features.brokerages.coinbase.client import CoinbaseClient
+            from bot_v2.features.brokerages.coinbase.client import (
+                CoinbaseClient,
+                create_cdp_jwt_auth,
+            )
 
             # Get credentials
             api_key = os.getenv("COINBASE_PROD_CDP_API_KEY") or os.getenv("COINBASE_CDP_API_KEY")
@@ -220,7 +222,11 @@ class PreflightCheck:
                 return False
 
             # Create auth
-            auth = CDPAuthV2(api_key_name=api_key, private_key_pem=private_key)
+            auth = create_cdp_jwt_auth(
+                api_key_name=api_key,
+                private_key_pem=private_key,
+                base_url="https://api.coinbase.com",
+            )
 
             # Test JWT generation
             try:
@@ -449,8 +455,10 @@ class PreflightCheck:
             system_time = datetime.now(timezone.utc)
 
             # Try to get server time from Coinbase
-            from bot_v2.features.brokerages.coinbase.client import CoinbaseClient
-            from bot_v2.features.brokerages.coinbase.cdp_auth_v2 import CDPAuthV2
+            from bot_v2.features.brokerages.coinbase.client import (
+                CoinbaseClient,
+                create_cdp_jwt_auth,
+            )
 
             api_key = os.getenv("COINBASE_PROD_CDP_API_KEY") or os.getenv("COINBASE_CDP_API_KEY")
             private_key = os.getenv("COINBASE_PROD_CDP_PRIVATE_KEY") or os.getenv(
@@ -458,7 +466,11 @@ class PreflightCheck:
             )
 
             if api_key and private_key:
-                auth = CDPAuthV2(api_key_name=api_key, private_key_pem=private_key)
+                auth = create_cdp_jwt_auth(
+                    api_key_name=api_key,
+                    private_key_pem=private_key,
+                    base_url="https://api.coinbase.com",
+                )
                 client = CoinbaseClient(
                     base_url="https://api.coinbase.com", auth=auth, api_mode="advanced"
                 )

@@ -79,8 +79,10 @@ class CanaryMonitor:
 
     def setup_client(self):
         """Initialize Coinbase client for monitoring"""
-        from bot_v2.features.brokerages.coinbase.cdp_auth_v2 import CDPAuthV2
-        from bot_v2.features.brokerages.coinbase.client import CoinbaseClient
+        from bot_v2.features.brokerages.coinbase.client import (
+            CoinbaseClient,
+            create_cdp_jwt_auth,
+        )
 
         api_key = os.getenv("COINBASE_PROD_CDP_API_KEY") or os.getenv("COINBASE_CDP_API_KEY")
         private_key = os.getenv("COINBASE_PROD_CDP_PRIVATE_KEY") or os.getenv(
@@ -90,7 +92,11 @@ class CanaryMonitor:
         if not api_key or not private_key:
             raise ValueError("Missing CDP credentials")
 
-        auth = CDPAuthV2(api_key_name=api_key, private_key_pem=private_key)
+        auth = create_cdp_jwt_auth(
+            api_key_name=api_key,
+            private_key_pem=private_key,
+            base_url="https://api.coinbase.com",
+        )
         self.client = CoinbaseClient(
             base_url="https://api.coinbase.com", auth=auth, api_mode="advanced"
         )

@@ -1,2 +1,0 @@
-"""Test utilities package."""
-

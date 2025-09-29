@@ -5,18 +5,20 @@ from __future__ import annotations
 from ..core.interfaces import (
     AuthError,
     BrokerageError,
-    NotFoundError,
-    RateLimitError,
-    InvalidRequestError,
     InsufficientFunds,
+    InvalidRequestError,
+    NotFoundError,
     PermissionDeniedError,
+    RateLimitError,
 )
 
 
 def map_http_error(status: int, code: str | None, message: str | None) -> BrokerageError:
     text = (message or code or "").lower()
     # Auth
-    if status in (401, 407) or (code and code.lower() in {"invalid_api_key", "invalid_signature", "authentication_error"}):
+    if status in (401, 407) or (
+        code and code.lower() in {"invalid_api_key", "invalid_signature", "authentication_error"}
+    ):
         return AuthError(message or code or "authentication failed")
     # Not found
     if status == 404:
@@ -34,20 +36,22 @@ def map_http_error(status: int, code: str | None, message: str | None) -> Broker
     if ("duplicate" in text and "client" in text) or "client_order_id" in text and "dup" in text:
         return InvalidRequestError(message or code or "duplicate client_order_id")
     # Specific invalid request variants for clearer diagnostics
-    if 'post only' in text and 'cross' in text:
-        return InvalidRequestError('post_only_would_cross')
-    if 'reduce only' in text:
-        return InvalidRequestError('reduce_only_violation')
-    if 'min size' in text or 'minimum size' in text:
-        return InvalidRequestError('min_size_violation')
-    if 'max size' in text or 'maximum size' in text:
-        return InvalidRequestError('max_size_violation')
-    if 'leverage' in text and ('exceed' in text or 'invalid' in text):
-        return InvalidRequestError('leverage_violation')
-    if 'invalid' in text and ('price' in text or 'size' in text):
-        return InvalidRequestError('invalid_price_or_size')
+    if "post only" in text and "cross" in text:
+        return InvalidRequestError("post_only_would_cross")
+    if "reduce only" in text:
+        return InvalidRequestError("reduce_only_violation")
+    if "min size" in text or "minimum size" in text:
+        return InvalidRequestError("min_size_violation")
+    if "max size" in text or "maximum size" in text:
+        return InvalidRequestError("max_size_violation")
+    if "leverage" in text and ("exceed" in text or "invalid" in text):
+        return InvalidRequestError("leverage_violation")
+    if "invalid" in text and ("price" in text or "size" in text):
+        return InvalidRequestError("invalid_price_or_size")
     # Generic invalid request / size / price
-    if status == 400 or any(k in text for k in ["invalid", "size", "price", "post only", "reduce only", "leverage"]):
+    if status == 400 or any(
+        k in text for k in ["invalid", "size", "price", "post only", "reduce only", "leverage"]
+    ):
         return InvalidRequestError(message or code or "invalid_request")
     # Fallback
     return BrokerageError(message or code or "unknown error")

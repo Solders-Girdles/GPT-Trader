@@ -20,7 +20,7 @@ class EventStore:
     var/data/perps_bot/<profile>/events.jsonl.
     """
 
-    def __init__(self, root: Path | None = None):
+    def __init__(self, root: Path | None = None) -> None:
         base = root or DEFAULT_EVENT_STORE_DIR
         base.mkdir(parents=True, exist_ok=True)
         self.path = base / "events.jsonl"
@@ -38,7 +38,7 @@ class EventStore:
 
     @staticmethod
     def _default(obj: Any) -> Any:
-        if is_dataclass(obj):
+        if is_dataclass(obj) and not isinstance(obj, type):
             return asdict(obj)
         if isinstance(obj, (datetime,)):
             return obj.isoformat()

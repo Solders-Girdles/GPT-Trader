@@ -20,7 +20,7 @@ An ML-driven Coinbase trading system with market regime detection, built on a cl
   - Adapter: `src/bot_v2/features/brokerages/coinbase/`
   - Account telemetry: `poetry run perps-bot --account-snapshot` (fees, limits, permissions)
   - Treasury helpers: `poetry run perps-bot --convert USD:USDC:1000` and `--move-funds pf-a:pf-b:50`
-  - Order tooling: preview without executing `poetry run perps-bot --preview-order --order-symbol BTC-PERP --order-side buy --order-type market --order-qty 0.1`
+  - Order tooling: preview without executing `poetry run perps-bot --preview-order --order-symbol BTC-PERP --order-side buy --order-type market --order-quantity 0.1`
     and apply edits with `poetry run perps-bot --apply-order-edit ORDER_ID:PREVIEW_ID`
 - Coinbase adapter: `src/bot_v2/features/brokerages/coinbase/`
   - Tests: `pytest tests/unit/bot_v2/features/brokerages/coinbase/test_*.py -q`

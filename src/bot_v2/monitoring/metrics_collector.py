@@ -4,7 +4,7 @@ import time
 from collections import defaultdict, deque
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import Any
+from typing import Any, Deque
 
 
 @dataclass
@@ -17,10 +17,10 @@ class MetricPoint:
 @dataclass
 class MetricSeries:
     name: str
-    points: deque
+    points: Deque[MetricPoint]
     max_points: int = 1000
 
-    def add_point(self, value: float, tags: dict | None = None):
+    def add_point(self, value: float, tags: dict[str, str] | None = None) -> None:
         point = MetricPoint(datetime.now(), value, tags or {})
         self.points.append(point)
 
@@ -28,7 +28,7 @@ class MetricSeries:
         if len(self.points) > self.max_points:
             self.points.popleft()
 
-    def get_stats(self) -> dict[str, float]:
+    def get_stats(self) -> dict[str, float | int]:
         if not self.points:
             return {}
 
@@ -45,27 +45,27 @@ class MetricSeries:
 
 
 class MetricsCollector:
-    def __init__(self):
-        self.metrics = {}
-        self.counters = defaultdict(int)
-        self.gauges = {}
-        self.histograms = defaultdict(list)
-        self.timers = {}
+    def __init__(self) -> None:
+        self.metrics: dict[str, MetricSeries] = {}
+        self.counters: defaultdict[str, int] = defaultdict(int)
+        self.gauges: dict[str, float] = {}
+        self.histograms: defaultdict[str, list[float]] = defaultdict(list)
+        self.timers: dict[str, float] = {}
         self._lock = threading.Lock()
         self.collection_interval = 60  # seconds
-        self._collection_thread = None
+        self._collection_thread: threading.Thread | None = None
         self._running = False
         self._last_collection = datetime.now()
         # Historical builds read agent counts from `.knowledge/STATE.json`. The
         # knowledge layer has been retired, so we fall back to fixed defaults to
         # keep legacy metrics stable without external dependencies.
-        self._agent_counts = {
+        self._agent_counts: dict[str, float] = {
             "available_count": 45,
             "custom_count": 21,
             "builtin_count": 24,
         }
 
-    def start_collection(self):
+    def start_collection(self) -> None:
         """Start background metrics collection."""
         if self._running:
             return
@@ -74,13 +74,13 @@ class MetricsCollector:
         self._collection_thread = threading.Thread(target=self._collect_loop, daemon=True)
         self._collection_thread.start()
 
-    def stop_collection(self):
+    def stop_collection(self) -> None:
         """Stop background metrics collection."""
         self._running = False
         if self._collection_thread:
             self._collection_thread.join(timeout=5)
 
-    def _collect_loop(self):
+    def _collect_loop(self) -> None:
         """Background collection loop."""
         while self._running:
             try:
@@ -91,9 +91,9 @@ class MetricsCollector:
                 pass
             time.sleep(self.collection_interval)
 
-    def collect_system_metrics(self):
+    def collect_system_metrics(self) -> None:
         """Collect system-level metrics."""
-        timestamp = datetime.now()
+        datetime.now()
 
         # System health metrics
         self.record_gauge("system.health.status", 1.0)
@@ -123,7 +123,7 @@ class MetricsCollector:
         self.record_histogram("performance.slice_load_time_ms", 50.0)
         self.record_histogram("performance.api_response_time_ms", 100.0)
 
-    def record_counter(self, name: str, increment: int = 1):
+    def record_counter(self, name: str, increment: int = 1) -> None:
         """Record a counter metric."""
         with self._lock:
             self.counters[name] += increment
@@ -131,9 +131,9 @@ class MetricsCollector:
             # Also track as time series
             if name not in self.metrics:
                 self.metrics[name] = MetricSeries(name, deque(maxlen=1000))
-            self.metrics[name].add_point(self.counters[name])
+            self.metrics[name].add_point(float(self.counters[name]))
 
-    def record_gauge(self, name: str, value: float):
+    def record_gauge(self, name: str, value: float) -> None:
         """Record a gauge metric."""
         with self._lock:
             self.gauges[name] = value
@@ -142,7 +142,7 @@ class MetricsCollector:
                 self.metrics[name] = MetricSeries(name, deque(maxlen=1000))
             self.metrics[name].add_point(value)
 
-    def record_histogram(self, name: str, value: float):
+    def record_histogram(self, name: str, value: float) -> None:
         """Record a histogram metric."""
         with self._lock:
             self.histograms[name].append(value)
@@ -171,14 +171,18 @@ class MetricsCollector:
                 return duration
         return 0.0
 
-    def record_trading_metrics(self, trades_executed: int, pnl: float, portfolio_value: float):
+    def record_trading_metrics(
+        self, trades_executed: int, pnl: float, portfolio_value: float
+    ) -> None:
         """Record trading-specific metrics."""
         self.record_counter("trading.trades_executed", trades_executed)
         self.record_gauge("trading.portfolio_value", portfolio_value)
         self.record_gauge("trading.pnl", pnl)
         self.record_histogram("trading.trade_pnl", pnl)
 
-    def record_slice_performance(self, slice_name: str, execution_time_ms: float, success: bool):
+    def record_slice_performance(
+        self, slice_name: str, execution_time_ms: float, success: bool
+    ) -> None:
         """Record performance metrics for individual slices."""
         self.record_histogram(f"slices.{slice_name}.execution_time_ms", execution_time_ms)
         self.record_counter(f"slices.{slice_name}.executions")
@@ -190,7 +194,7 @@ class MetricsCollector:
     def get_metrics_summary(self) -> dict[str, Any]:
         """Get a comprehensive summary of all metrics."""
         with self._lock:
-            summary = {
+            summary: dict[str, Any] = {
                 "timestamp": datetime.now().isoformat(),
                 "collection_interval": self.collection_interval,
                 "last_collection": self._last_collection.isoformat(),
@@ -227,10 +231,10 @@ class MetricsCollector:
         index = int(len(sorted_values) * (percentile / 100.0))
         return sorted_values[min(index, len(sorted_values) - 1)]
 
-    def export_metrics(self, window_minutes: int = 60) -> dict[str, list[dict]]:
+    def export_metrics(self, window_minutes: int = 60) -> dict[str, list[dict[str, Any]]]:
         """Export metrics data for a specific time window."""
         cutoff = datetime.now() - timedelta(minutes=window_minutes)
-        exported = {}
+        exported: dict[str, list[dict[str, Any]]] = {}
 
         with self._lock:
             for name, series in self.metrics.items():
@@ -265,12 +269,12 @@ class MetricsCollector:
                 "active_timers": len(self.timers),
             }
 
-    def reset_counters(self):
+    def reset_counters(self) -> None:
         """Reset all counter metrics."""
         with self._lock:
             self.counters.clear()
 
-    def reset_all(self):
+    def reset_all(self) -> None:
         """Reset all metrics data."""
         with self._lock:
             self.counters.clear()
@@ -294,17 +298,17 @@ def get_metrics_collector() -> MetricsCollector:
 
 
 # Convenience functions for easier usage
-def record_counter(name: str, increment: int = 1):
+def record_counter(name: str, increment: int = 1) -> None:
     """Convenience function to record a counter."""
     get_metrics_collector().record_counter(name, increment)
 
 
-def record_gauge(name: str, value: float):
+def record_gauge(name: str, value: float) -> None:
     """Convenience function to record a gauge."""
     get_metrics_collector().record_gauge(name, value)
 
 
-def record_histogram(name: str, value: float):
+def record_histogram(name: str, value: float) -> None:
     """Convenience function to record a histogram value."""
     get_metrics_collector().record_histogram(name, value)
 

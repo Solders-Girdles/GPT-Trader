@@ -3,4 +3,3 @@
 from .adapter import CoinbaseBrokerage
 
 __all__ = ["CoinbaseBrokerage"]
-

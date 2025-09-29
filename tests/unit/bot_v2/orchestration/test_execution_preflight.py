@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 
 from bot_v2.orchestration.live_execution import LiveExecutionEngine
-from tests.utils.deterministic_broker import DeterministicBroker
+from tests.support.deterministic_broker import DeterministicBroker
 from bot_v2.persistence.event_store import EventStore
 from bot_v2.features.brokerages.core.interfaces import OrderSide, OrderType
 
@@ -34,29 +34,32 @@ def test_min_notional_rejection_records_metric(tmp_path):
         engine.place_order(
             symbol="XRP-PERP",
             side=OrderSide.BUY,
-            order_type=OrderType.MARKET,
-            qty=Decimal("1"),  # 1 * $0.50 << 1000 min_notional
+            order_type=OrderType.LIMIT,
+            quantity=Decimal("1"),  # 1 * $0.50 << 1000 min_notional
+            price=Decimal("0.50"),
         )
 
     rej = tail_rejections(store, "itest_preflight")
     assert any(r.get("symbol") == "XRP-PERP" and r.get("reason") == "min_notional" for r in rej)
 
 
-def test_small_qty_min_size_rejection(tmp_path):
+def test_small_quantity_min_size_rejection(tmp_path):
     engine, broker, store = make_engine(tmp_path)
     p = broker.get_product("ETH-PERP")
     # Configure min size/step
     setattr(p, "min_size", Decimal("0.01"))
     setattr(p, "step_size", Decimal("0.01"))
     setattr(p, "price_increment", Decimal("0.01"))
-    
-    with pytest.raises(Exception):
-        engine.place_order(
-            symbol="ETH-PERP",
-            side=OrderSide.BUY,
-            order_type=OrderType.MARKET,
-            qty=Decimal("0.001"),  # Below min_size; validator should reject
-        )
-    
+
+    order_id = engine.place_order(
+        symbol="ETH-PERP",
+        side=OrderSide.BUY,
+        order_type=OrderType.MARKET,
+        quantity=Decimal("0.001"),  # Below min_size; validator should auto-bump
+    )
+
+    assert order_id is not None
+    order = broker.get_order(order_id)
+    assert order.quantity == Decimal("0.01")
     rej = tail_rejections(store, "itest_preflight")
-    assert any(r.get("symbol") == "ETH-PERP" and r.get("reason") == "min_size" for r in rej)
+    assert not any(r.get("symbol") == "ETH-PERP" for r in rej)

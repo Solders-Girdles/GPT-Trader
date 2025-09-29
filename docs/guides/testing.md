@@ -8,9 +8,9 @@ This codebase targets a **100% pass rate** on the actively maintained spot tradi
 
 - `tests/unit/bot_v2/` – orchestration, broker adapters, risk, CLI, and feature slices
 - `tests/unit/coinbase/` – Coinbase-specific utilities (quantisation, spec validation)
-- `tests/utils/` – reserved for shared fixtures when co-located fixtures are insufficient (currently minimal)
+- `tests/support/` – reserved for shared fixtures when co-located fixtures are insufficient (currently minimal)
 
-Historical integration, performance, and experimental suites were archived in September 2025; pull them from git history if you need a reference.
+Historical integration, performance, and experimental suites were archived in September 2024; pull them from git history if you need a reference.
 
 ## Current Test Metrics
 
@@ -106,7 +106,7 @@ class TestRiskValidation:
 ### Key Testing Utilities
 
 #### Quantization Helpers
-Located in `src/bot_v2/features/utils/quantization.py`:
+Located in `src/bot_v2/features/quantization.py`:
 - `quantize_size()` - Round order sizes to exchange requirements
 - `quantize_price()` - Round prices to tick size
 

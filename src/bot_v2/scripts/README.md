@@ -4,7 +4,8 @@
 V2-native utility scripts that work with the vertical slice architecture.
 
 ## V2 Architecture Requirements
-- All scripts must use V2 slice imports: `from bot_v2.features.[slice] import *`
+- Prefer explicit imports: `from bot_v2.features.[slice] import module`
+- Avoid wildcard imports; they complicate static analysis and tooling
 - No cross-slice dependencies allowed
 - Each script should target a specific slice
 - Scripts must respect slice isolation principles
@@ -17,11 +18,13 @@ V2-native utility scripts that work with the vertical slice architecture.
 #!/usr/bin/env python
 """V2 script for [purpose]"""
 
-from bot_v2.features.[slice] import *
+from bot_v2.features.[slice] import module_a, module_b
 
-def main():
+
+def main() -> None:
     # Script logic here
-    pass
+    module_a.do_work()
+
 
 if __name__ == "__main__":
     main()

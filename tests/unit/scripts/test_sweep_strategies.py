@@ -5,7 +5,7 @@ from decimal import Decimal
 import pandas as pd
 import pytest
 
-from bot_v2.backtest import load_candles_from_parquet
+from bot_v2.features.backtest.spot import load_candles_from_parquet
 
 
 @pytest.fixture
@@ -34,7 +34,9 @@ def test_sweep_script_smoke(tmp_path, strategy):
     parquet_path = tmp_path / "candles.parquet"
     df = pd.DataFrame(
         {
-            "timestamp": [datetime(2024, 1, 1, tzinfo=timezone.utc) + pd.Timedelta(hours=i) for i in range(30)],
+            "timestamp": [
+                datetime(2024, 1, 1, tzinfo=timezone.utc) + pd.Timedelta(hours=i) for i in range(30)
+            ],
             "open": list(range(100, 130)),
             "high": [v + 1 for v in range(100, 130)],
             "low": [v - 1 for v in range(100, 130)],
@@ -45,9 +47,9 @@ def test_sweep_script_smoke(tmp_path, strategy):
     df.to_parquet(parquet_path, index=False)
 
     output = tmp_path / f"results_{strategy}.csv"
-    argv_backup = list(__import__('sys').argv)
+    argv_backup = list(__import__("sys").argv)
     try:
-        __import__('sys').argv = [
+        __import__("sys").argv = [
             "sweep",
             str(parquet_path),
             "--strategy",
@@ -65,7 +67,7 @@ def test_sweep_script_smoke(tmp_path, strategy):
         ]
         sweep_main()
     finally:
-        __import__('sys').argv = argv_backup
+        __import__("sys").argv = argv_backup
 
     assert output.exists()
     with output.open() as fh:

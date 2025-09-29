@@ -30,17 +30,17 @@ def test_enforce_perp_rules_is_imported_and_called():
     )
 
     # Test quantization
-    qty = Decimal("1.23456789")
+    quantity = Decimal("1.23456789")
     price = Decimal("50123.456789")
 
-    quantized_qty, quantized_price = enforce_perp_rules(
+    quantized_quantity, quantized_price = enforce_perp_rules(
         product=product,
-        quantity=qty,
+        quantity=quantity,
         price=price,
     )
 
     # Verify quantization happened
-    assert quantized_qty == Decimal("1.234")  # Rounded to step_size (0.001)
+    assert quantized_quantity == Decimal("1.234")  # Rounded to step_size (0.001)
     assert quantized_price == Decimal("50123.45")  # Rounded to price_increment (0.01)
 
     print("✓ enforce_perp_rules imported and functioning")
@@ -66,9 +66,9 @@ def test_run_strategy_applies_quantization(monkeypatch):
             return Decision(action=Action.BUY, reason="test", target_notional=Decimal("1000"))
 
     # Patch the quantization helper to capture invocation and control return
-    expected_qty = Decimal("1000") / Decimal("50000")  # 0.02
+    expected_quantity = Decimal("1000") / Decimal("50000")  # 0.02
     with patch("bot_v2.features.brokerages.coinbase.utilities.enforce_perp_rules") as mock_enforce:
-        mock_enforce.return_value = (expected_qty, mark_cache[symbol])
+        mock_enforce.return_value = (expected_quantity, mark_cache[symbol])
 
         # Act
         decisions = live_trade.run_strategy(DummyStrategy(), [symbol], mark_cache=mark_cache)
@@ -77,7 +77,7 @@ def test_run_strategy_applies_quantization(monkeypatch):
         assert mock_enforce.called, "Quantization should be applied for actionable decisions"
         kwargs = mock_enforce.call_args.kwargs
         assert kwargs["product"].symbol == symbol
-        assert kwargs["quantity"] == expected_qty
+        assert kwargs["quantity"] == expected_quantity
         assert kwargs["price"] == mark_cache[symbol]
 
         # Sanity: decision produced for the symbol

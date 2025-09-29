@@ -21,7 +21,7 @@ together. Legacy material describing `src/bot/risk/*` has been archived.
    which wires:
    - `RiskEngine` (`features/live_trade/risk.py`)
    - Guard classes under `features/live_trade/guards/`
-   - Account exposure monitors (`features/live_trade/liquidation_monitor.py`)
+  - Account exposure monitors (`monitoring/domain/perps/liquidation.py`)
 
 ## Guard Highlights
 
@@ -42,7 +42,7 @@ instances defined in `features/live_trade/guard_errors.py`.
   per-symbol caps.
 - `features/live_trade/portfolio_valuation.py` keeps mark-to-market valuations
   current for guard calculations.
-- `features/live_trade/liquidation_monitor.py` enforces leverage and margin
+- `monitoring/domain/perps/liquidation.py` enforces leverage and margin
   buffers (spot mode keeps leverage at 1x).
 
 ## Telemetry

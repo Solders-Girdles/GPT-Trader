@@ -1,2 +1,1 @@
-"""Top-level tests package (enables imports like `from tests.utils ...`)."""
-
+"""Top-level tests package (enables imports like `from tests.support ...`)."""

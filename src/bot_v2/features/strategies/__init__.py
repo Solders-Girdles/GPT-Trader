@@ -1,9 +1,9 @@
-from .interfaces import IStrategy, StrategyBase, StrategyContext, StrategySignal
-from .scalp import ScalpStrategy
-from .momentum import MomentumStrategy
-from .mean_reversion import MeanReversionStrategy
 from .breakout import BreakoutStrategy
+from .interfaces import IStrategy, StrategyBase, StrategyContext, StrategySignal
 from .ma_crossover import MAStrategy
+from .mean_reversion import MeanReversionStrategy
+from .momentum import MomentumStrategy
+from .scalp import ScalpStrategy
 from .volatility import VolatilityStrategy
 
 __all__ = [
@@ -18,4 +18,3 @@ __all__ = [
     "MAStrategy",
     "VolatilityStrategy",
 ]
-

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from statistics import mean
-from typing import List
+from typing import Any
 
 from .interfaces import StrategyBase, StrategyContext, StrategySignal
 
@@ -9,14 +9,14 @@ from .interfaces import StrategyBase, StrategyContext, StrategySignal
 class MAStrategy(StrategyBase):
     name = "ma_crossover"
 
-    def __init__(self, **params):
+    def __init__(self, **params: Any) -> None:
         super().__init__(**params)
         self.fast_period = int(params.get("fast_period", 10))
         self.slow_period = int(params.get("slow_period", 30))
         self.lookback = max(self.fast_period, self.slow_period) + 2
 
-    def get_signals(self, ctx: StrategyContext) -> List[StrategySignal]:
-        out: List[StrategySignal] = []
+    def get_signals(self, ctx: StrategyContext) -> list[StrategySignal]:
+        out: list[StrategySignal] = []
         for sym in ctx.symbols:
             prices = self.price_history.get(sym) or []
             if len(prices) < self.slow_period + 1:
@@ -30,4 +30,3 @@ class MAStrategy(StrategyBase):
             elif prev_fast >= prev_slow and fast < slow:
                 out.append(StrategySignal(symbol=sym, side="sell", confidence=1.0))
         return out
-

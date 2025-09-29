@@ -29,7 +29,7 @@ export RISK_REDUCE_ONLY_MODE=1
 
 # Submit market exits via Coinbase UI or CLI previews while reduce-only is active.
 poetry run perps-bot --preview-order \
-  --order-symbol BTC-USD --order-side sell --order-type market --order-qty CURRENT_SIZE
+  --order-symbol BTC-USD --order-side sell --order-type market --order-quantity CURRENT_SIZE
 ```
 
 ### 3. CHECK SYSTEM STATUS

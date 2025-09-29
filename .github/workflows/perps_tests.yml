@@ -6,7 +6,7 @@ on:
       - 'src/bot_v2/features/live_trade/**'
       - 'src/bot_v2/features/brokerages/**'
       - 'scripts/run_perps_bot.py'
-      - 'scripts/validate_derivatives_*.py'
+      - 'scripts/validation/**'
       - 'tests/**/live_trade/**'
       - 'tests/**/perps/**'
       - '.github/workflows/perps_tests.yml'
@@ -15,121 +15,91 @@ on:
       - 'src/bot_v2/features/live_trade/**'
       - 'src/bot_v2/features/brokerages/**'
       - 'scripts/run_perps_bot.py'
-      - 'scripts/validate_derivatives_*.py'
+      - 'scripts/validation/**'
       - 'tests/**/live_trade/**'
       - 'tests/**/perps/**'
       - '.github/workflows/perps_tests.yml'
 
 jobs:
-  test:
+  tests:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ['3.10', '3.11']
-    
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ matrix.python-version }}
-    
-    - name: Cache pip packages
-      uses: actions/cache@v3
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt', '**/pyproject.toml') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-
-    
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-        if [ -f requirements-test.txt ]; then pip install -r requirements-test.txt; fi
-        # Install package in editable mode if setup.py or pyproject.toml exists
-        if [ -f setup.py ] || [ -f pyproject.toml ]; then pip install -e .; fi
-    
-    - name: Run unit tests for live_trade
-      env:
-        EVENT_STORE_ROOT: ${{ runner.temp }}/event_store_unit
-      run: |
-        mkdir -p $EVENT_STORE_ROOT
-        python -m pytest tests/unit/bot_v2/features/live_trade -q --tb=short
-    
-    - name: Run integration tests for perps
-      env:
-        EVENT_STORE_ROOT: ${{ runner.temp }}/event_store_integration
-      run: |
-        mkdir -p $EVENT_STORE_ROOT
-        python -m pytest tests/integration/bot_v2/perps -q --tb=short
-    
-    - name: Run Phase 6 validation
-      env:
-        EVENT_STORE_ROOT: ${{ runner.temp }}/event_store_validation
-      run: |
-        mkdir -p $EVENT_STORE_ROOT
-        python scripts/validate_derivatives_phase6_strategy.py
-    
-    - name: Run Phase 7 E2E validation
-      env:
-        EVENT_STORE_ROOT: ${{ runner.temp }}/event_store_e2e
-      run: |
-        mkdir -p $EVENT_STORE_ROOT
-        python scripts/validate_derivatives_phase7_e2e.py
-    
-    - name: Test CLI perps command
-      run: |
-        python -m src.bot_v2.simple_cli perps --help
-    
-    - name: Smoke test dev profile (single cycle)
-      env:
-        EVENT_STORE_ROOT: ${{ runner.temp }}/event_store_smoke
-      run: |
-        mkdir -p $EVENT_STORE_ROOT
-        # Run single cycle with dev-fast flag
-        python scripts/run_perps_bot.py --profile dev --dry-run --dev-fast --symbols BTC-PERP
-        # Check that health file was created
-        if [ -f "$EVENT_STORE_ROOT/perps_bot/dev/health.json" ]; then
-          echo "✅ Health file created successfully"
-          cat "$EVENT_STORE_ROOT/perps_bot/dev/health.json"
-        else
-          echo "❌ Health file not found"
-          exit 1
-        fi
-        # Check that state file was created
-        if [ -f "$EVENT_STORE_ROOT/perps_bot/dev/last_state.json" ]; then
-          echo "✅ State file created successfully"
-          cat "$EVENT_STORE_ROOT/perps_bot/dev/last_state.json"
-        else
-          echo "❌ State file not found"
-          exit 1
-        fi
-    
-    - name: Smoke test demo profile (mocked)
-      env:
-        EVENT_STORE_ROOT: ${{ runner.temp }}/event_store_demo
-        COINBASE_SANDBOX: "1"
-        PERPS_FORCE_MOCK: "1"
-      run: |
-        mkdir -p $EVENT_STORE_ROOT
-        # Run demo profile with mock broker forced for CI
-        python scripts/run_perps_bot.py --profile demo --dev-fast --reduce-only --symbols BTC-PERP
-        # Check that health file was created
-        if [ -f "$EVENT_STORE_ROOT/perps_bot/demo/health.json" ]; then
-          echo "✅ Demo health file created successfully"
-          cat "$EVENT_STORE_ROOT/perps_bot/demo/health.json"
-        else
-          echo "❌ Demo health file not found"
-          exit 1
-        fi
-        # Check that state file was created
-        if [ -f "$EVENT_STORE_ROOT/perps_bot/demo/last_state.json" ]; then
-          echo "✅ Demo state file created successfully"
-          cat "$EVENT_STORE_ROOT/perps_bot/demo/last_state.json"
-        else
-          echo "❌ Demo state file not found"
-          exit 1
-        fi
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+          installer-parallel: true
+
+      - name: Load cached venv
+        id: cache-poetry
+        uses: actions/cache@v3
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-3.12-${{ hashFiles('**/poetry.lock') }}
+
+      - name: Install dependencies
+        if: steps.cache-poetry.outputs.cache-hit != 'true'
+        run: poetry install --no-interaction --no-root
+
+      - name: Run live trade unit tests
+        env:
+          EVENT_STORE_ROOT: ${{ runner.temp }}/event_store_unit
+        run: |
+          mkdir -p "$EVENT_STORE_ROOT"
+          poetry run pytest tests/unit/bot_v2/features/live_trade -q --tb=short
+
+      - name: Run orchestration perps tests
+        env:
+          EVENT_STORE_ROOT: ${{ runner.temp }}/event_store_orchestration
+        run: |
+          mkdir -p "$EVENT_STORE_ROOT"
+          poetry run pytest \
+            tests/unit/bot_v2/orchestration/test_live_execution_perps.py \
+            tests/unit/bot_v2/features/live_trade/test_type_consolidation.py \
+            -q --tb=short
+
+      - name: Run perps validation harness
+        env:
+          EVENT_STORE_ROOT: ${{ runner.temp }}/event_store_validation
+        run: |
+          mkdir -p "$EVENT_STORE_ROOT"
+          poetry run python scripts/validation/validate_perps_e2e.py
+
+      - name: Run paper-mode smoke
+        env:
+          EVENT_STORE_ROOT: ${{ runner.temp }}/event_store_paper
+        run: |
+          mkdir -p "$EVENT_STORE_ROOT"
+          poetry run python scripts/validation/paper_mode_e2e.py
+
+      - name: CLI help check
+        run: |
+          poetry run python -m bot_v2.cli --help
+
+      - name: Smoke test dev profile (single cycle)
+        env:
+          EVENT_STORE_ROOT: ${{ runner.temp }}/event_store_dev
+        run: |
+          mkdir -p "$EVENT_STORE_ROOT"
+          poetry run python scripts/run_perps_bot.py --profile dev --dry-run --dev-fast --symbols BTC-PERP
+          test -f "$EVENT_STORE_ROOT/perps_bot/dev/health.json"
+          test -f "$EVENT_STORE_ROOT/perps_bot/dev/last_state.json"
+
+      - name: Smoke test demo profile (mocked)
+        env:
+          EVENT_STORE_ROOT: ${{ runner.temp }}/event_store_demo
+          COINBASE_SANDBOX: '1'
+          PERPS_FORCE_MOCK: '1'
+        run: |
+          mkdir -p "$EVENT_STORE_ROOT"
+          poetry run python scripts/run_perps_bot.py --profile demo --dev-fast --reduce-only --symbols BTC-PERP
+          test -f "$EVENT_STORE_ROOT/perps_bot/demo/health.json"
+          test -f "$EVENT_STORE_ROOT/perps_bot/demo/last_state.json"

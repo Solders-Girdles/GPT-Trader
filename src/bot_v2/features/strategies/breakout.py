@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import List
+from typing import Any
 
 from .interfaces import StrategyBase, StrategyContext, StrategySignal
 
@@ -8,13 +8,13 @@ from .interfaces import StrategyBase, StrategyContext, StrategySignal
 class BreakoutStrategy(StrategyBase):
     name = "breakout"
 
-    def __init__(self, **params):
+    def __init__(self, **params: Any) -> None:
         super().__init__(**params)
         self.breakout_period = int(params.get("breakout_period", 20))
         self.threshold_pct = float(params.get("threshold_pct", 0.01))
 
-    def get_signals(self, ctx: StrategyContext) -> List[StrategySignal]:
-        out: List[StrategySignal] = []
+    def get_signals(self, ctx: StrategyContext) -> list[StrategySignal]:
+        out: list[StrategySignal] = []
         for sym in ctx.symbols:
             prices = self.price_history.get(sym) or []
             if len(prices) < self.breakout_period:
@@ -31,4 +31,3 @@ class BreakoutStrategy(StrategyBase):
             elif curr < recent_low * (1 - self.threshold_pct):
                 out.append(StrategySignal(symbol=sym, side="sell", confidence=1.0))
         return out
-

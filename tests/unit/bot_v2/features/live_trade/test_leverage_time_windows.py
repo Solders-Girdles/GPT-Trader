@@ -12,18 +12,18 @@ from bot_v2.features.brokerages.core.interfaces import Product, MarketType
 def make_perp(symbol: str) -> Product:
     return Product(
         symbol=symbol,
-        base_asset=symbol.split('-')[0],
-        quote_asset='USD',
+        base_asset=symbol.split("-")[0],
+        quote_asset="USD",
         market_type=MarketType.PERPETUAL,
-        step_size=Decimal('0.001'),
-        min_size=Decimal('0.001'),
-        price_increment=Decimal('0.01'),
-        min_notional=Decimal('10'),
+        step_size=Decimal("0.001"),
+        min_size=Decimal("0.001"),
+        price_increment=Decimal("0.01"),
+        min_notional=Decimal("10"),
     )
 
 
 def test_day_vs_night_leverage_caps_enforced(monkeypatch):
-    cfg = RiskConfig(
+    config = RiskConfig(
         max_leverage=20,
         leverage_max_per_symbol={"BTC-PERP": 20},
         daytime_start_utc="09:00",
@@ -35,20 +35,20 @@ def test_day_vs_night_leverage_caps_enforced(monkeypatch):
         min_liquidation_buffer_pct=0.0,
         slippage_guard_bps=1_000_000,
     )
-    rm = LiveRiskManager(config=cfg)
+    rm = LiveRiskManager(config=config)
     product = make_perp("BTC-PERP")
 
     # Mock now into daytime
     rm._now_provider = lambda: datetime(2024, 1, 3, 10, 0)
 
     # 10x allowed in day
-    equity = Decimal('10000')
-    price = Decimal('5000')
-    qty = Decimal('20')  # 100k notional => 10x
+    equity = Decimal("10000")
+    price = Decimal("5000")
+    quantity = Decimal("20")  # 100k notional => 10x
     rm.pre_trade_validate(
         symbol="BTC-PERP",
         side="buy",
-        qty=qty,
+        quantity=quantity,
         price=price,
         product=product,
         equity=equity,
@@ -62,7 +62,7 @@ def test_day_vs_night_leverage_caps_enforced(monkeypatch):
         rm.pre_trade_validate(
             symbol="BTC-PERP",
             side="buy",
-            qty=qty,
+            quantity=quantity,
             price=price,
             product=product,
             equity=equity,
@@ -72,7 +72,7 @@ def test_day_vs_night_leverage_caps_enforced(monkeypatch):
 
 def test_day_vs_night_mmr_projection(monkeypatch):
     # Night MMR higher → projected buffer insufficient at night, OK in day
-    cfg = RiskConfig(
+    config = RiskConfig(
         max_leverage=20,
         leverage_max_per_symbol={"BTC-PERP": 20},
         daytime_start_utc="09:00",
@@ -85,19 +85,19 @@ def test_day_vs_night_mmr_projection(monkeypatch):
         max_exposure_pct=100.0,
         slippage_guard_bps=1_000_000,
     )
-    rm = LiveRiskManager(config=cfg)
+    rm = LiveRiskManager(config=config)
     product = make_perp("BTC-PERP")
 
-    equity = Decimal('10000')
-    price = Decimal('5000')
-    qty = Decimal('20.0')  # 100,000 notional
+    equity = Decimal("10000")
+    price = Decimal("5000")
+    quantity = Decimal("20.0")  # 100,000 notional
 
     # Daytime: low MMR → buffer OK
     rm._now_provider = lambda: datetime(2024, 1, 3, 10, 0)
     rm.pre_trade_validate(
         symbol="BTC-PERP",
         side="buy",
-        qty=qty,
+        quantity=quantity,
         price=price,
         product=product,
         equity=equity,
@@ -110,7 +110,7 @@ def test_day_vs_night_mmr_projection(monkeypatch):
         rm.pre_trade_validate(
             symbol="BTC-PERP",
             side="buy",
-            qty=qty,
+            quantity=quantity,
             price=price,
             product=product,
             equity=equity,

@@ -40,7 +40,7 @@ class BrokerContract(Protocol):
         symbol: str,
         side: OrderSide,
         order_type: OrderType,
-        qty: Decimal,
+        quantity: Decimal,
         price: Decimal | None = None,
         **kwargs,
     ) -> Order:
@@ -103,7 +103,10 @@ class BrokerContractTests:
         broker.connect()
 
         order = broker.place_order(
-            symbol="BTC-PERP", side=OrderSide.BUY, order_type=OrderType.MARKET, qty=Decimal("0.001")
+            symbol="BTC-PERP",
+            side=OrderSide.BUY,
+            order_type=OrderType.MARKET,
+            quantity=Decimal("0.001"),
         )
 
         assert order is not None
@@ -111,7 +114,7 @@ class BrokerContractTests:
         assert order.symbol == "BTC-PERP"
         assert order.side == OrderSide.BUY
         assert order.type == OrderType.MARKET
-        assert order.qty == Decimal("0.001")
+        assert order.quantity == Decimal("0.001")
         assert order.status in [OrderStatus.SUBMITTED, OrderStatus.FILLED]
 
     def test_place_limit_order_returns_order(self, broker):
@@ -126,7 +129,7 @@ class BrokerContractTests:
             symbol="BTC-PERP",
             side=OrderSide.BUY,
             order_type=OrderType.LIMIT,
-            qty=Decimal("0.001"),
+            quantity=Decimal("0.001"),
             price=limit_price,
         )
 
@@ -146,7 +149,7 @@ class BrokerContractTests:
             symbol="BTC-PERP",
             side=OrderSide.BUY,
             order_type=OrderType.LIMIT,
-            qty=Decimal("0.001"),
+            quantity=Decimal("0.001"),
             price=quote.bid * Decimal("0.5"),  # Very low price
         )
 
@@ -181,7 +184,10 @@ class BrokerContractTests:
 
         # Place an order
         order = broker.place_order(
-            symbol="ETH-PERP", side=OrderSide.SELL, order_type=OrderType.MARKET, qty=Decimal("0.01")
+            symbol="ETH-PERP",
+            side=OrderSide.SELL,
+            order_type=OrderType.MARKET,
+            quantity=Decimal("0.01"),
         )
 
         # List should include it
@@ -196,11 +202,14 @@ class BrokerContractTests:
         # Check initial positions
         initial_positions = broker.list_positions()
         btc_positions = [p for p in initial_positions if p.symbol == "BTC-PERP"]
-        initial_qty = sum(p.qty for p in btc_positions) if btc_positions else Decimal("0")
+        initial_quantity = sum(p.quantity for p in btc_positions) if btc_positions else Decimal("0")
 
         # Place a market order
         order = broker.place_order(
-            symbol="BTC-PERP", side=OrderSide.BUY, order_type=OrderType.MARKET, qty=Decimal("0.01")
+            symbol="BTC-PERP",
+            side=OrderSide.BUY,
+            order_type=OrderType.MARKET,
+            quantity=Decimal("0.01"),
         )
 
         # Should create or update position
@@ -209,8 +218,8 @@ class BrokerContractTests:
         assert len(btc_positions) > 0
 
         # Total quantity should have increased
-        total_qty = sum(p.qty for p in btc_positions)
-        assert total_qty > initial_qty
+        total_quantity = sum(p.quantity for p in btc_positions)
+        assert total_quantity > initial_quantity
 
     def test_opposite_orders_reduce_position(self, broker):
         """Test that opposite orders reduce positions."""
@@ -218,24 +227,30 @@ class BrokerContractTests:
 
         # Open a long position
         broker.place_order(
-            symbol="BTC-PERP", side=OrderSide.BUY, order_type=OrderType.MARKET, qty=Decimal("0.02")
+            symbol="BTC-PERP",
+            side=OrderSide.BUY,
+            order_type=OrderType.MARKET,
+            quantity=Decimal("0.02"),
         )
 
         positions = broker.list_positions()
         btc_positions = [p for p in positions if p.symbol == "BTC-PERP"]
         assert len(btc_positions) > 0
-        initial_qty = btc_positions[0].qty
+        initial_quantity = btc_positions[0].quantity
 
         # Reduce with opposite order
         broker.place_order(
-            symbol="BTC-PERP", side=OrderSide.SELL, order_type=OrderType.MARKET, qty=Decimal("0.01")
+            symbol="BTC-PERP",
+            side=OrderSide.SELL,
+            order_type=OrderType.MARKET,
+            quantity=Decimal("0.01"),
         )
 
         # Position should be reduced
         positions = broker.list_positions()
         btc_positions = [p for p in positions if p.symbol == "BTC-PERP"]
         if btc_positions:  # Might be closed completely
-            assert btc_positions[0].qty < initial_qty
+            assert btc_positions[0].quantity < initial_quantity
 
 
 class TestDeterministicBrokerContract(BrokerContractTests):
@@ -261,7 +276,7 @@ class TestBrokerBehaviorConsistency:
             symbol="BTC-PERP",
             side=OrderSide.BUY,
             order_type=OrderType.LIMIT,
-            qty=Decimal("0.001"),
+            quantity=Decimal("0.001"),
             price=quote.bid * Decimal("0.95"),
         )
 
@@ -282,7 +297,10 @@ class TestBrokerBehaviorConsistency:
 
         # Place a market order (should fill immediately)
         order = broker.place_order(
-            symbol="BTC-PERP", side=OrderSide.BUY, order_type=OrderType.MARKET, qty=Decimal("0.001")
+            symbol="BTC-PERP",
+            side=OrderSide.BUY,
+            order_type=OrderType.MARKET,
+            quantity=Decimal("0.001"),
         )
 
         # Try to cancel (should fail if filled)
@@ -302,29 +320,38 @@ class TestBrokerBehaviorConsistency:
 
         # Buy 0.03
         broker.place_order(
-            symbol="BTC-PERP", side=OrderSide.BUY, order_type=OrderType.MARKET, qty=Decimal("0.03")
+            symbol="BTC-PERP",
+            side=OrderSide.BUY,
+            order_type=OrderType.MARKET,
+            quantity=Decimal("0.03"),
         )
 
         positions = broker.list_positions()
         btc_positions = [p for p in positions if p.symbol == "BTC-PERP"]
         assert len(btc_positions) == 1
-        assert btc_positions[0].qty == Decimal("0.03")
+        assert btc_positions[0].quantity == Decimal("0.03")
 
         # Sell 0.01
         broker.place_order(
-            symbol="BTC-PERP", side=OrderSide.SELL, order_type=OrderType.MARKET, qty=Decimal("0.01")
+            symbol="BTC-PERP",
+            side=OrderSide.SELL,
+            order_type=OrderType.MARKET,
+            quantity=Decimal("0.01"),
         )
 
         positions = broker.list_positions()
         btc_positions = [p for p in positions if p.symbol == "BTC-PERP"]
         assert len(btc_positions) == 1
-        assert btc_positions[0].qty == Decimal("0.02")
+        assert btc_positions[0].quantity == Decimal("0.02")
 
         # Sell 0.02 (should close position)
         broker.place_order(
-            symbol="BTC-PERP", side=OrderSide.SELL, order_type=OrderType.MARKET, qty=Decimal("0.02")
+            symbol="BTC-PERP",
+            side=OrderSide.SELL,
+            order_type=OrderType.MARKET,
+            quantity=Decimal("0.02"),
         )
 
         positions = broker.list_positions()
         btc_positions = [p for p in positions if p.symbol == "BTC-PERP"]
-        assert len(btc_positions) == 0 or btc_positions[0].qty == Decimal("0")
+        assert len(btc_positions) == 0 or btc_positions[0].quantity == Decimal("0")

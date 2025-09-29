@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-import warnings
 from collections.abc import Iterable, Sequence
 from datetime import datetime
 from decimal import Decimal
+from typing import Literal
 
 from bot_v2.features.brokerages.core.interfaces import (
     Balance,
@@ -140,26 +140,9 @@ class DeterministicBroker(IBrokerage):
 
     # ---- Orders ----
     @staticmethod
-    def _resolve_quantity(
-        quantity: Decimal | None,
-        qty: Decimal | None,
-        *,
-        context: str,
-    ) -> Decimal:
-        """Normalize quantity inputs while retaining backward compatibility."""
-
+    def _require_quantity(quantity: Decimal | None, *, context: str) -> Decimal:
         if quantity is None:
-            if qty is None:
-                raise ValueError(f"{context} requires a quantity")
-            warnings.warn(
-                "'qty' is deprecated; use 'quantity' instead",
-                DeprecationWarning,
-                stacklevel=3,
-            )
-            quantity = qty
-        elif qty is not None:
-            raise TypeError(f"{context} received both 'quantity' and deprecated 'qty'")
-
+            raise ValueError(f"{context} requires a quantity")
         return quantity if isinstance(quantity, Decimal) else Decimal(str(quantity))
 
     def place_order(
@@ -168,7 +151,6 @@ class DeterministicBroker(IBrokerage):
         side: OrderSide,
         order_type: OrderType,
         quantity: Decimal | None = None,
-        qty: Decimal | None = None,
         price: Decimal | None = None,
         stop_price: Decimal | None = None,
         tif: TimeInForce = TimeInForce.GTC,
@@ -176,7 +158,7 @@ class DeterministicBroker(IBrokerage):
         reduce_only: bool | None = None,
         leverage: int | None = None,
     ) -> Order:
-        order_quantity = self._resolve_quantity(quantity, qty, context="place_order")
+        order_quantity = self._require_quantity(quantity, context="place_order")
         oid = client_id or f"det_{len(self._orders)}"
         now = datetime.utcnow()
         status = OrderStatus.SUBMITTED if order_type == OrderType.LIMIT else OrderStatus.FILLED
@@ -259,16 +241,15 @@ class DeterministicBroker(IBrokerage):
     def seed_position(
         self,
         symbol: str,
-        side: str,
+        side: Literal["long", "short"],
         quantity: Decimal | None = None,
-        qty: Decimal | None = None,
         price: Decimal = Decimal("0"),
     ) -> None:
         """Create or replace a position deterministically for tests."""
-        position_quantity = self._resolve_quantity(quantity, qty, context="seed_position")
+        position_quantity = self._require_quantity(quantity, context="seed_position")
         self._positions[symbol] = Position(
             symbol=symbol,
-            qty=position_quantity,
+            quantity=position_quantity,
             entry_price=Decimal(str(price)),
             mark_price=Decimal(str(price)),
             unrealized_pnl=Decimal("0"),
@@ -283,7 +264,7 @@ class DeterministicBroker(IBrokerage):
             p = self._positions[symbol]
             self._positions[symbol] = Position(
                 symbol=p.symbol,
-                qty=p.quantity,
+                quantity=p.quantity,
                 entry_price=p.entry_price,
                 mark_price=Decimal(str(price)),
                 unrealized_pnl=p.unrealized_pnl,
@@ -299,7 +280,7 @@ class DeterministicBroker(IBrokerage):
         if existing is None:
             self._positions[symbol] = Position(
                 symbol=symbol,
-                qty=position_quantity,
+                quantity=position_quantity,
                 entry_price=price,
                 mark_price=price,
                 unrealized_pnl=Decimal("0"),
@@ -318,7 +299,7 @@ class DeterministicBroker(IBrokerage):
             ) / new_quantity
             self._positions[symbol] = Position(
                 symbol=symbol,
-                qty=new_quantity,
+                quantity=new_quantity,
                 entry_price=new_entry,
                 mark_price=price,
                 unrealized_pnl=Decimal("0"),
@@ -332,7 +313,7 @@ class DeterministicBroker(IBrokerage):
             if remaining > 0:
                 self._positions[symbol] = Position(
                     symbol=symbol,
-                    qty=remaining,
+                    quantity=remaining,
                     entry_price=existing.entry_price,
                     mark_price=price,
                     unrealized_pnl=Decimal("0"),
@@ -343,10 +324,12 @@ class DeterministicBroker(IBrokerage):
             else:
                 leftover = position_quantity - reduce_quantity
                 if leftover > 0:
-                    new_side = "short" if existing.side == "long" else "long"
+                    new_side: Literal["long", "short"] = (
+                        "short" if existing.side == "long" else "long"
+                    )
                     self._positions[symbol] = Position(
                         symbol=symbol,
-                        qty=leftover,
+                        quantity=leftover,
                         entry_price=price,
                         mark_price=price,
                         unrealized_pnl=Decimal("0"),

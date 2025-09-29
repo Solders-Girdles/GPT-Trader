@@ -1,0 +1,76 @@
+"""Spot profile loading and rule lookups for strategy orchestration."""
+
+from __future__ import annotations
+
+import logging
+import os
+from collections.abc import Sequence
+from pathlib import Path
+from typing import Any
+
+from bot_v2.features.backtest.profile import load_profile as _load_spot_profile
+
+logger = logging.getLogger(__name__)
+
+
+class SpotProfileService:
+    """Loads spot strategy profiles and returns per-symbol rule dictionaries."""
+
+    def __init__(self, *, loader=_load_spot_profile) -> None:
+        self._loader = loader
+        self._rules: dict[str, dict[str, Any]] = {}
+        self._last_path: Path | None = None
+
+    # ------------------------------------------------------------------
+    def load(self, symbols: Sequence[str]) -> dict[str, dict[str, Any]]:
+        profile_path = Path(os.environ.get("SPOT_PROFILE_PATH", "config/profiles/spot.yaml"))
+        if not profile_path.exists():
+            logger.info("Spot profile %s not found; using default parameters", profile_path)
+            self._rules = {}
+            self._last_path = profile_path
+            return {}
+        try:
+            profile_doc = self._loader(profile_path)
+        except Exception as exc:
+            logger.warning("Failed to load spot profile %s: %s", profile_path, exc, exc_info=True)
+            self._rules = {}
+            self._last_path = profile_path
+            return {}
+
+        strategies = profile_doc.get("strategy", {}) if isinstance(profile_doc, dict) else {}
+        resolved: dict[str, dict[str, Any]] = {}
+        for symbol in symbols:
+            rule = self._resolve_rule_for_symbol(symbol, strategies, profile_path)
+            if rule is not None:
+                resolved[symbol] = rule
+        self._rules = resolved
+        self._last_path = profile_path
+        return dict(self._rules)
+
+    def get(self, symbol: str) -> dict[str, Any]:
+        return self._rules.get(symbol, {})
+
+    def all_rules(self) -> dict[str, dict[str, Any]]:
+        return dict(self._rules)
+
+    @property
+    def profile_path(self) -> Path | None:
+        return self._last_path
+
+    # ------------------------------------------------------------------
+    def _resolve_rule_for_symbol(
+        self, symbol: str, strategies: dict[str, Any], profile_path: Path
+    ) -> dict[str, Any] | None:
+        keys = [symbol, symbol.lower(), symbol.upper()]
+        if "-" in symbol:
+            base = symbol.split("-")[0]
+            keys.extend([base, base.lower(), base.upper()])
+        for key in keys:
+            if key in strategies:
+                return strategies.get(key) or {}
+        logger.warning(
+            "No strategy entry for %s in %s; defaults will be used",
+            symbol,
+            profile_path,
+        )
+        return None

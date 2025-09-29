@@ -12,6 +12,8 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 
+from bot_v2.orchestration.symbols import normalize_symbols
+
 # Top spot markets we enable by default (ordered by Coinbase USD volume).
 TOP_VOLUME_BASES = [
     "BTC",
@@ -84,7 +86,7 @@ class BotConfig:
 class ConfigValidationError(Exception):
     """Raised when configuration values fail validation."""
 
-    def __init__(self, errors: list[str]):
+    def __init__(self, errors: list[str]) -> None:
         self.errors = errors
         message = "; ".join(errors) if errors else "Invalid configuration"
         super().__init__(message)
@@ -292,7 +294,8 @@ class ConfigManager:
             config.enable_shorts = False
             config.max_leverage = 1
             config.reduce_only_mode = False
-            config.symbols = self._normalize_spot_symbols(config.symbols)
+            symbols, _ = normalize_symbols(Profile.SPOT, config.symbols)
+            config.symbols = symbols
             if os.getenv("SPOT_FORCE_LIVE", "").lower() not in {"1", "true"}:
                 import logging
 
@@ -369,21 +372,6 @@ class ConfigManager:
         if self.profile == Profile.CANARY:
             return [Path("config/profiles/canary.yaml")]
         return []
-
-    def _normalize_spot_symbols(self, symbols: Sequence[str] | None) -> list[str]:
-        normalized: list[str] = []
-        quote = os.getenv("COINBASE_DEFAULT_QUOTE", "USD").upper()
-        for sym in symbols or []:
-            if not sym:
-                continue
-            token = str(sym).upper()
-            if token.endswith("-PERP"):
-                base = token.split("-")[0]
-                normalized.append(f"{base}-{quote}")
-            else:
-                normalized.append(token)
-        normalized = list(dict.fromkeys(normalized))
-        return normalized or ["BTC-USD", "ETH-USD"]
 
     @staticmethod
     def _normalize_snapshot_value(value: Any) -> Any:

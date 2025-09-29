@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Literal, Protocol
+from typing import Any, Literal, Protocol
 
 
 class MarketType(Enum):
@@ -102,12 +102,12 @@ class Order:
     symbol: str
     side: OrderSide
     type: OrderType
-    qty: Decimal
+    quantity: Decimal
     price: Decimal | None
     stop_price: Decimal | None
     tif: TimeInForce
     status: OrderStatus
-    filled_qty: Decimal
+    filled_quantity: Decimal
     avg_fill_price: Decimal | None
     submitted_at: datetime
     updated_at: datetime
@@ -127,18 +127,9 @@ class Order:
         price: Decimal | None = None,
         stop_price: Decimal | None = None,
         avg_fill_price: Decimal | None = None,
-        quantity: Decimal | None = None,
-        qty: Decimal | None = None,
+        quantity: Decimal,
         filled_quantity: Decimal | None = None,
-        filled_qty: Decimal | None = None,
     ) -> None:
-        base_quantity = quantity if quantity is not None else qty
-        if base_quantity is None:
-            raise ValueError("Order requires a quantity")
-        base_filled = filled_quantity if filled_quantity is not None else filled_qty
-        if base_filled is None:
-            base_filled = Decimal("0")
-
         self.id = id
         self.client_id = client_id
         self.symbol = symbol
@@ -151,34 +142,17 @@ class Order:
         self.avg_fill_price = avg_fill_price
         self.submitted_at = submitted_at
         self.updated_at = updated_at
-        self.qty = Decimal(str(base_quantity))
-        self.filled_qty = Decimal(str(base_filled))
+        base_quantity = Decimal(str(quantity))
+        base_filled = Decimal(str(filled_quantity)) if filled_quantity is not None else Decimal("0")
 
-    @property
-    def quantity(self) -> Decimal:
-        """Preferred accessor for order size."""
-
-        return self.qty
-
-    @quantity.setter
-    def quantity(self, value: Decimal) -> None:
-        self.qty = Decimal(str(value))
-
-    @property
-    def filled_quantity(self) -> Decimal:
-        """Preferred accessor for filled size."""
-
-        return self.filled_qty
-
-    @filled_quantity.setter
-    def filled_quantity(self, value: Decimal) -> None:
-        self.filled_qty = Decimal(str(value))
+        self.quantity = base_quantity
+        self.filled_quantity = base_filled
 
 
-@dataclass
+@dataclass(init=False)
 class Position:
     symbol: str
-    qty: Decimal
+    quantity: Decimal
     entry_price: Decimal
     mark_price: Decimal
     unrealized_pnl: Decimal
@@ -186,15 +160,61 @@ class Position:
     leverage: int | None
     side: Literal["long", "short"]
 
-    @property
-    def quantity(self) -> Decimal:
-        """Preferred accessor for position size."""
+    def __init__(
+        self,
+        *args: Any,
+        symbol: str | None = None,
+        entry_price: Decimal | None = None,
+        mark_price: Decimal | None = None,
+        unrealized_pnl: Decimal | None = None,
+        realized_pnl: Decimal | None = None,
+        leverage: int | None = None,
+        side: Literal["long", "short"] | None = None,
+        quantity: Decimal | None = None,
+    ) -> None:
+        base_quantity = quantity
 
-        return self.qty
+        if args:
+            if len(args) != 8:
+                raise TypeError(
+                    "Position positional init expects 8 arguments: symbol, quantity, entry_price, mark_price,"
+                    " unrealized_pnl, realized_pnl, leverage, side"
+                )
+            (
+                symbol,
+                legacy_quantity,
+                entry_price,
+                mark_price,
+                unrealized_pnl,
+                realized_pnl,
+                leverage,
+                side,
+            ) = args
+            base_quantity = legacy_quantity if base_quantity is None else base_quantity
 
-    @quantity.setter
-    def quantity(self, value: Decimal) -> None:
-        self.qty = Decimal(str(value))
+        if (
+            symbol is None
+            or entry_price is None
+            or mark_price is None
+            or unrealized_pnl is None
+            or realized_pnl is None
+            or side is None
+        ):
+            raise TypeError(
+                "Position requires symbol, entry_price, mark_price, unrealized_pnl, realized_pnl, and side"
+            )
+
+        if base_quantity is None:
+            raise TypeError("Position requires 'quantity'")
+
+        self.symbol = str(symbol)
+        self.quantity = Decimal(str(base_quantity))
+        self.entry_price = Decimal(str(entry_price))
+        self.mark_price = Decimal(str(mark_price))
+        self.unrealized_pnl = Decimal(str(unrealized_pnl))
+        self.realized_pnl = Decimal(str(realized_pnl))
+        self.leverage = leverage
+        self.side = side
 
 
 class BrokerageError(Exception):
@@ -249,7 +269,7 @@ class IBrokerage(Protocol):
         symbol: str,
         side: OrderSide,
         order_type: OrderType,
-        qty: Decimal,
+        quantity: Decimal,
         price: Decimal | None = None,
         stop_price: Decimal | None = None,
         tif: TimeInForce = TimeInForce.GTC,

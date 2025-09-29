@@ -31,25 +31,38 @@ def test_side_aware_price_quantization_buy_sell():
 
 def test_validate_order_enforces_min_size_with_buffer():
     p = make_product("BTC-PERP")
-    # Intend size below min -> expect min_size buffer suggestion or rejection
-    vr = validate_order(product=p, side="buy", qty=Decimal("0.0001"), order_type="limit", price=Decimal("50000"))
-    # Validator does not auto-bump; it fails on min_size
-    assert vr.ok is False
-    assert vr.reason == "min_size"
+    # Intend size below min -> validator should bump to the minimum tradable size
+    vr = validate_order(
+        product=p,
+        side="buy",
+        quantity=Decimal("0.0001"),
+        order_type="limit",
+        price=Decimal("50000"),
+    )
+    assert vr.ok is True
+    assert vr.adjusted_quantity == p.min_size
 
 
 def test_validate_order_enforces_min_notional():
     p = make_product("ETH-PERP")
-    # Price * qty just below min_notional * 1.1 should be rejected with adjusted suggestion
-    vr = validate_order(product=p, side="buy", qty=Decimal("0.001"), order_type="limit", price=Decimal("9000"))
-    # Validator will suggest adjusted qty; does not auto-bump
+    # Price * quantity just below min_notional * 1.1 should be rejected with adjusted suggestion
+    vr = validate_order(
+        product=p,
+        side="buy",
+        quantity=Decimal("0.001"),
+        order_type="limit",
+        price=Decimal("9000"),
+    )
+    # Validator will suggest adjusted quantity; does not auto-bump
     assert vr.ok is False
     assert vr.reason == "min_notional"
-    assert vr.adjusted_qty is not None
+    assert vr.adjusted_quantity == Decimal("0.002")
 
 
 def test_calculate_safe_position_size_bumps_to_clear_thresholds():
     p = make_product("SOL-PERP")
     # Intended tiny size should be bumped to clear min_size and min_notional with buffer
-    safe = calculate_safe_position_size(product=p, side="buy", intended_qty=Decimal("0.0001"), ref_price=Decimal("100"))
+    safe = calculate_safe_position_size(
+        product=p, side="buy", intended_quantity=Decimal("0.0001"), ref_price=Decimal("100")
+    )
     assert safe >= p.min_size

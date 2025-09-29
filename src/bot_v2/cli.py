@@ -17,6 +17,7 @@ from bot_v2.features.brokerages.core.interfaces import OrderSide, OrderType, Tim
 from bot_v2.logging import configure_logging
 from bot_v2.orchestration.bootstrap import build_bot
 from bot_v2.orchestration.configuration import BotConfig
+from bot_v2.orchestration.perps_bot import PerpsBot
 from dotenv import load_dotenv
 
 # Preserve host-provided secrets; only fill gaps from .env
@@ -29,8 +30,28 @@ logger = logging.getLogger(__name__)
 
 def main() -> int:
     """Main entry point for the CLI."""
-    parser = argparse.ArgumentParser(description="Perpetuals Trading Bot")
+    parser = _setup_argument_parser()
+    args = _parse_and_validate_args(parser)
+    config = _build_bot_config(args)
+    bot, _registry = build_bot(config)
 
+    if args.account_snapshot:
+        return _handle_account_snapshot(bot)
+
+    if _order_tooling_requested(args):
+        return _handle_order_tooling(args, bot, parser)
+
+    if args.convert:
+        return _handle_convert(args.convert, bot, parser)
+
+    if args.move_funds:
+        return _handle_move_funds(args.move_funds, bot, parser)
+
+    return _run_main_bot(bot, args.dev_fast)
+
+
+def _setup_argument_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description="Perpetuals Trading Bot")
     parser.add_argument(
         "--profile",
         type=str,
@@ -44,14 +65,12 @@ def main() -> int:
     )
     parser.add_argument("--interval", type=int, help="Update interval in seconds")
     parser.add_argument("--leverage", dest="target_leverage", type=int, help="Target leverage")
-    # Map flag to BotConfig.reduce_only_mode so it takes effect
     parser.add_argument(
         "--reduce-only",
         dest="reduce_only_mode",
         action="store_true",
         help="Enable reduce-only mode",
     )
-    # Optional TIF override maps to BotConfig.time_in_force (validated later)
     parser.add_argument(
         "--tif",
         dest="time_in_force",
@@ -102,7 +121,10 @@ def main() -> int:
         help="Order type for preview/edit commands",
     )
     parser.add_argument(
-        "--order-qty", type=Decimal, help="Order quantity for preview/edit commands"
+        "--order-quantity",
+        dest="order_quantity",
+        type=Decimal,
+        help="Order quantity for preview/edit commands",
     )
     parser.add_argument("--order-price", type=Decimal, help="Limit price for preview/edit commands")
     parser.add_argument("--order-stop", type=Decimal, help="Stop price for preview/edit commands")
@@ -118,21 +140,25 @@ def main() -> int:
     parser.add_argument(
         "--order-leverage", type=int, help="Leverage override for preview/edit commands"
     )
+    return parser
 
+
+def _parse_and_validate_args(parser: argparse.ArgumentParser) -> argparse.Namespace:
     args = parser.parse_args()
 
-    # Validate symbol tokens (non-empty)
     if args.symbols:
-        empty = [s for s in args.symbols if not str(s).strip()]
+        empty = [sym for sym in args.symbols if not str(sym).strip()]
         if empty:
             parser.error("Symbols must be non-empty strings")
 
-    # Allow PERPS_DEBUG=1 to elevate verbosity for selected modules
     if os.getenv("PERPS_DEBUG") == "1":
         logging.getLogger("bot_v2.features.brokerages.coinbase").setLevel(logging.DEBUG)
         logging.getLogger("bot_v2.orchestration").setLevel(logging.DEBUG)
 
-    # Create config from parsed arguments
+    return args
+
+
+def _build_bot_config(args: argparse.Namespace) -> BotConfig:
     skip_keys = {
         "profile",
         "account_snapshot",
@@ -143,7 +169,7 @@ def main() -> int:
         "apply_order_edit",
         "order_side",
         "order_type",
-        "order_qty",
+        "order_quantity",
         "order_price",
         "order_stop",
         "order_tif",
@@ -152,129 +178,145 @@ def main() -> int:
         "order_leverage",
         "order_symbol",
     }
-    config_overrides = {k: v for k, v in vars(args).items() if v is not None and k not in skip_keys}
 
-    # Allow TRADING_SYMBOLS env to provide default symbols when --symbols not passed
-    # Example: TRADING_SYMBOLS="BTC-PERP,ETH-PERP,SOL-PERP,XRP-PERP"
+    config_overrides = {
+        key: value
+        for key, value in vars(args).items()
+        if value is not None and key not in skip_keys
+    }
+
     if "symbols" not in config_overrides or not config_overrides.get("symbols"):
-        env_syms = os.getenv("TRADING_SYMBOLS", "")
-        if env_syms:
-            syms = [s.strip() for s in env_syms.replace(";", ",").split(",") if s.strip()]
-            if syms:
-                config_overrides["symbols"] = syms
-    config = BotConfig.from_profile(args.profile, **config_overrides)
+        env_symbols = os.getenv("TRADING_SYMBOLS", "")
+        if env_symbols:
+            tokens = [
+                tok.strip() for tok in env_symbols.replace(";", ",").split(",") if tok.strip()
+            ]
+            if tokens:
+                config_overrides["symbols"] = tokens
 
-    order_tooling_requested = any(
-        [args.preview_order, args.edit_order_preview, args.apply_order_edit]
-    )
+    return BotConfig.from_profile(args.profile, **config_overrides)
 
-    # Create and run the bot
-    bot, _registry = build_bot(config)
 
-    if args.account_snapshot:
-        snapshot = bot._collect_account_snapshot()
-        print(json.dumps(snapshot, indent=2))
-        asyncio.run(bot.shutdown())
-        return 0
+def _order_tooling_requested(args: argparse.Namespace) -> bool:
+    return any([args.preview_order, args.edit_order_preview, args.apply_order_edit])
 
-    if order_tooling_requested:
-        symbol = args.order_symbol.strip() if args.order_symbol else None
-        if args.preview_order and not symbol:
-            parser.error("--preview-order requires --order-symbol")
-        if args.edit_order_preview and not symbol:
-            parser.error("--edit-order-preview requires --order-symbol")
 
-        try:
-            if args.preview_order:
-                if not args.order_side or not args.order_type or args.order_qty is None:
-                    parser.error(
-                        "--preview-order requires --order-side, --order-type, and --order-qty"
-                    )
-                side = OrderSide[args.order_side.upper()]
-                order_type = OrderType[args.order_type.upper()]
-                qty = Decimal(str(args.order_qty))
-                tif = TimeInForce[args.order_tif.upper()] if args.order_tif else TimeInForce.GTC
-                price = Decimal(str(args.order_price)) if args.order_price is not None else None
-                stop = Decimal(str(args.order_stop)) if args.order_stop is not None else None
-                data = bot.broker.preview_order(
-                    symbol=symbol,
-                    side=side,
-                    order_type=order_type,
-                    qty=qty,
-                    price=price,
-                    stop_price=stop,
-                    tif=tif,
-                    reduce_only=args.order_reduce_only,
-                    leverage=args.order_leverage,
-                    client_id=args.order_client_id,
+def _handle_account_snapshot(bot: PerpsBot) -> int:
+    telemetry = getattr(bot, "account_telemetry", None)
+    if telemetry is None or not telemetry.supports_snapshots():
+        raise RuntimeError("Account snapshot telemetry is not available for this broker")
+
+    snapshot = telemetry.collect_snapshot()
+    print(json.dumps(snapshot, indent=2, default=str))
+    asyncio.run(bot.shutdown())
+    return 0
+
+
+def _handle_order_tooling(
+    args: argparse.Namespace, bot: PerpsBot, parser: argparse.ArgumentParser
+) -> int:
+    symbol = args.order_symbol.strip() if args.order_symbol else None
+    if args.preview_order and not symbol:
+        parser.error("--preview-order requires --order-symbol")
+    if args.edit_order_preview and not symbol:
+        parser.error("--edit-order-preview requires --order-symbol")
+
+    try:
+        if args.preview_order:
+            if not args.order_side or not args.order_type or args.order_quantity is None:
+                parser.error(
+                    "--preview-order requires --order-side, --order-type, and --order-quantity"
                 )
-                print(json.dumps(data, indent=2, default=str))
-                return 0
+            side = OrderSide[args.order_side.upper()]
+            order_type = OrderType[args.order_type.upper()]
+            order_quantity = Decimal(str(args.order_quantity))
+            tif = TimeInForce[args.order_tif.upper()] if args.order_tif else TimeInForce.GTC
+            price = Decimal(str(args.order_price)) if args.order_price is not None else None
+            stop = Decimal(str(args.order_stop)) if args.order_stop is not None else None
+            data = bot.broker.preview_order(
+                symbol=symbol,
+                side=side,
+                order_type=order_type,
+                quantity=order_quantity,
+                price=price,
+                stop_price=stop,
+                tif=tif,
+                reduce_only=args.order_reduce_only,
+                leverage=args.order_leverage,
+                client_id=args.order_client_id,
+            )
+            print(json.dumps(data, indent=2, default=str))
+            return 0
 
-            if args.edit_order_preview:
-                if not args.order_side or not args.order_type or args.order_qty is None:
-                    parser.error(
-                        "--edit-order-preview requires --order-side, --order-type, and --order-qty"
-                    )
-                side = OrderSide[args.order_side.upper()]
-                order_type = OrderType[args.order_type.upper()]
-                qty = Decimal(str(args.order_qty))
-                tif = TimeInForce[args.order_tif.upper()] if args.order_tif else TimeInForce.GTC
-                price = Decimal(str(args.order_price)) if args.order_price is not None else None
-                stop = Decimal(str(args.order_stop)) if args.order_stop is not None else None
-                preview = bot.broker.edit_order_preview(
-                    order_id=args.edit_order_preview,
-                    symbol=symbol,
-                    side=side,
-                    order_type=order_type,
-                    qty=qty,
-                    price=price,
-                    stop_price=stop,
-                    tif=tif,
-                    new_client_id=args.order_client_id,
-                    reduce_only=args.order_reduce_only,
+        if args.edit_order_preview:
+            if not args.order_side or not args.order_type or args.order_quantity is None:
+                parser.error(
+                    "--edit-order-preview requires --order-side, --order-type, and --order-quantity"
                 )
-                print(json.dumps(preview, indent=2, default=str))
-                return 0
+            side = OrderSide[args.order_side.upper()]
+            order_type = OrderType[args.order_type.upper()]
+            order_quantity = Decimal(str(args.order_quantity))
+            tif = TimeInForce[args.order_tif.upper()] if args.order_tif else TimeInForce.GTC
+            price = Decimal(str(args.order_price)) if args.order_price is not None else None
+            stop = Decimal(str(args.order_stop)) if args.order_stop is not None else None
+            preview = bot.broker.edit_order_preview(
+                order_id=args.edit_order_preview,
+                symbol=symbol,
+                side=side,
+                order_type=order_type,
+                quantity=order_quantity,
+                price=price,
+                stop_price=stop,
+                tif=tif,
+                new_client_id=args.order_client_id,
+                reduce_only=args.order_reduce_only,
+            )
+            print(json.dumps(preview, indent=2, default=str))
+            return 0
 
-            if args.apply_order_edit:
-                try:
-                    order_id, preview_id = (
-                        part.strip() for part in args.apply_order_edit.split(":", 1)
-                    )
-                except ValueError:
-                    parser.error("--apply-order-edit requires ORDER_ID:PREVIEW_ID")
-                order = bot.broker.edit_order(order_id, preview_id)
-                print(json.dumps(asdict(order), indent=2, default=str))
-                return 0
+        if args.apply_order_edit:
+            try:
+                order_id, preview_id = (
+                    part.strip() for part in args.apply_order_edit.split(":", 1)
+                )
+            except ValueError:
+                parser.error("--apply-order-edit requires ORDER_ID:PREVIEW_ID")
+            order = bot.broker.edit_order(order_id, preview_id)
+            print(json.dumps(asdict(order), indent=2, default=str))
+            return 0
 
-            parser.error("Order tooling command provided but no action executed")
-        finally:
-            asyncio.run(bot.shutdown())
-
-    if args.convert:
-        try:
-            from_asset, to_asset, amount = (part.strip() for part in args.convert.split(":", 2))
-        except ValueError:
-            parser.error("--convert requires format FROM:TO:AMOUNT")
-        payload = {"from": from_asset, "to": to_asset, "amount": amount}
-        result = bot.account_manager.convert(payload, commit=True)
-        print(json.dumps(result, indent=2))
+        parser.error("Order tooling command provided but no action executed")
+    finally:
         asyncio.run(bot.shutdown())
-        return 0
 
-    if args.move_funds:
-        try:
-            from_uuid, to_uuid, amount = (part.strip() for part in args.move_funds.split(":", 2))
-        except ValueError:
-            parser.error("--move-funds requires format FROM_PORTFOLIO:TO_PORTFOLIO:AMOUNT")
-        payload = {"from_portfolio": from_uuid, "to_portfolio": to_uuid, "amount": amount}
-        result = bot.account_manager.move_funds(payload)
-        print(json.dumps(result, indent=2))
-        asyncio.run(bot.shutdown())
-        return 0
 
-    # Set up signal handlers for graceful shutdown
+def _handle_convert(convert_arg: str, bot: PerpsBot, parser: argparse.ArgumentParser) -> int:
+    try:
+        from_asset, to_asset, amount = (part.strip() for part in convert_arg.split(":", 2))
+    except ValueError:
+        parser.error("--convert requires format FROM:TO:AMOUNT")
+
+    payload = {"from": from_asset, "to": to_asset, "amount": amount}
+    result = bot.account_manager.convert(payload, commit=True)
+    print(json.dumps(result, indent=2, default=str))
+    asyncio.run(bot.shutdown())
+    return 0
+
+
+def _handle_move_funds(move_arg: str, bot: PerpsBot, parser: argparse.ArgumentParser) -> int:
+    try:
+        from_uuid, to_uuid, amount = (part.strip() for part in move_arg.split(":", 2))
+    except ValueError:
+        parser.error("--move-funds requires format FROM_PORTFOLIO:TO_PORTFOLIO:AMOUNT")
+
+    payload = {"from_portfolio": from_uuid, "to_portfolio": to_uuid, "amount": amount}
+    result = bot.account_manager.move_funds(payload)
+    print(json.dumps(result, indent=2, default=str))
+    asyncio.run(bot.shutdown())
+    return 0
+
+
+def _run_main_bot(bot: PerpsBot, dev_fast: bool) -> int:
     def signal_handler(sig: int, frame: FrameType | None) -> None:
         logger.info("Signal received, shutting down...")
         bot.running = False
@@ -283,7 +325,7 @@ def main() -> int:
     signal.signal(signal.SIGTERM, signal_handler)
 
     try:
-        asyncio.run(bot.run(single_cycle=args.dev_fast))
+        asyncio.run(bot.run(single_cycle=dev_fast))
     except KeyboardInterrupt:
         logger.info("Shutdown complete.")
 

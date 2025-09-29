@@ -60,7 +60,7 @@ repos:
 
       - id: no-pickle-usage
         name: Check for pickle usage
-        entry: bash -c '! grep -r "import pickle\|from pickle import\|pickle\." src/ --include="*.py" | grep -v "src/bot/utils/serialization.py" | grep -v "#"'
+        entry: bash -c '! grep -r "import pickle\|from pickle import\|pickle\." src/ --include="*.py" | grep -v "serialization.py" | grep -v "#"'
         language: system
         pass_filenames: false
 

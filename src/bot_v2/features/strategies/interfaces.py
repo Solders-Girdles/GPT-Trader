@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, List, Protocol, Optional
+from typing import Any, Protocol
 
 
 @dataclass
 class StrategyContext:
-    symbols: List[str]
+    symbols: list[str]
     # Add room for future context: balances, positions, market regime, etc.
 
 
@@ -20,19 +20,17 @@ class StrategySignal:
 class IStrategy(Protocol):
     name: str
 
-    def update_price(self, symbol: str, price: float) -> None:
-        ...
+    def update_price(self, symbol: str, price: float) -> None: ...
 
-    def get_signals(self, ctx: StrategyContext) -> List[StrategySignal]:
-        ...
+    def get_signals(self, ctx: StrategyContext) -> list[StrategySignal]: ...
 
 
 class StrategyBase:
     name: str = "base"
 
-    def __init__(self, **params):
+    def __init__(self, **params: Any) -> None:
         self.params = params
-        self.price_history: Dict[str, List[float]] = {}
+        self.price_history: dict[str, list[float]] = {}
 
     def update_price(self, symbol: str, price: float) -> None:
         history = self.price_history.setdefault(symbol, [])
@@ -41,6 +39,5 @@ class StrategyBase:
         if len(history) > int(self.params.get("lookback", 500)):
             del history[: len(history) - int(self.params.get("lookback", 500))]
 
-    def get_signals(self, ctx: StrategyContext) -> List[StrategySignal]:
+    def get_signals(self, ctx: StrategyContext) -> list[StrategySignal]:
         return []
-

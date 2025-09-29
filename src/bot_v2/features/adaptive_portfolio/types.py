@@ -5,15 +5,16 @@ All types are local to this slice - no external dependencies.
 """
 
 from dataclasses import dataclass
-from typing import List, Dict, Any, Optional, Tuple
 from datetime import datetime
 from enum import Enum
+from typing import Any
 
 
 class PortfolioTier(Enum):
     """Portfolio size tiers with different behaviors."""
+
     MICRO = "micro"
-    SMALL = "small" 
+    SMALL = "small"
     MEDIUM = "medium"
     LARGE = "large"
 
@@ -21,6 +22,7 @@ class PortfolioTier(Enum):
 @dataclass
 class RiskProfile:
     """Risk management parameters for a tier."""
+
     daily_limit_pct: float
     quarterly_limit_pct: float
     position_stop_loss_pct: float
@@ -30,6 +32,7 @@ class RiskProfile:
 @dataclass
 class PositionConstraints:
     """Position sizing constraints for a tier."""
+
     min_positions: int
     max_positions: int
     target_positions: int
@@ -39,6 +42,7 @@ class PositionConstraints:
 @dataclass
 class TradingRules:
     """Trading frequency and account rules for a tier."""
+
     max_trades_per_week: int
     account_type: str  # "cash" or "margin"
     settlement_days: int
@@ -48,11 +52,12 @@ class TradingRules:
 @dataclass
 class TierConfig:
     """Complete configuration for a portfolio tier."""
+
     name: str
-    range: Tuple[float, float]  # (min_capital, max_capital)
+    range: tuple[float, float]  # (min_capital, max_capital)
     positions: PositionConstraints
     min_position_size: float
-    strategies: List[str]
+    strategies: list[str]
     risk: RiskProfile
     trading: TradingRules
 
@@ -60,17 +65,19 @@ class TierConfig:
 @dataclass
 class MarketConstraints:
     """Market-wide constraints for all tiers."""
+
     min_share_price: float
     max_share_price: float
     min_daily_volume: int
-    excluded_sectors: List[str]
-    excluded_symbols: List[str]
+    excluded_sectors: list[str]
+    excluded_symbols: list[str]
     market_hours_only: bool
 
 
 @dataclass
 class CostStructure:
     """Trading cost assumptions."""
+
     commission_per_trade: float
     spread_estimate_pct: float
     slippage_pct: float
@@ -80,19 +87,21 @@ class CostStructure:
 @dataclass
 class PortfolioConfig:
     """Complete adaptive portfolio configuration."""
+
     version: str
     last_updated: str
     description: str
-    tiers: Dict[str, TierConfig]
+    tiers: dict[str, TierConfig]
     costs: CostStructure
     market_constraints: MarketConstraints
-    validation: Dict[str, Any]
-    rebalancing: Dict[str, Any]
+    validation: dict[str, Any]
+    rebalancing: dict[str, Any]
 
 
 @dataclass
 class PositionInfo:
     """Information about a single position."""
+
     symbol: str
     shares: int
     entry_price: float
@@ -101,27 +110,29 @@ class PositionInfo:
     unrealized_pnl: float
     unrealized_pnl_pct: float
     days_held: int
-    stop_loss_price: Optional[float] = None
+    stop_loss_price: float | None = None
 
 
 @dataclass
 class PortfolioSnapshot:
     """Current state of the portfolio."""
+
     total_value: float
     cash: float
-    positions: List[PositionInfo]
+    positions: list[PositionInfo]
     daily_pnl: float
     daily_pnl_pct: float
     quarterly_pnl_pct: float
     current_tier: PortfolioTier
     positions_count: int
     largest_position_pct: float
-    sector_exposures: Dict[str, float]
+    sector_exposures: dict[str, float]
 
 
 @dataclass
 class TradingSignal:
     """A trading signal with tier-appropriate sizing."""
+
     symbol: str
     action: str  # "BUY", "SELL", "HOLD"
     confidence: float  # 0.0 to 1.0
@@ -134,30 +145,33 @@ class TradingSignal:
 @dataclass
 class AdaptiveResult:
     """Result of adaptive portfolio analysis."""
+
     current_tier: PortfolioTier
     tier_config: TierConfig
     portfolio_snapshot: PortfolioSnapshot
-    signals: List[TradingSignal]
-    risk_metrics: Dict[str, float]
+    signals: list[TradingSignal]
+    risk_metrics: dict[str, float]
     tier_transition_needed: bool
-    tier_transition_target: Optional[PortfolioTier]
-    recommended_actions: List[str]
-    warnings: List[str]
+    tier_transition_target: PortfolioTier | None
+    recommended_actions: list[str]
+    warnings: list[str]
     timestamp: datetime
 
 
 @dataclass
 class ValidationResult:
     """Result of configuration validation."""
+
     is_valid: bool
-    errors: List[str]
-    warnings: List[str]
-    suggestions: List[str]
+    errors: list[str]
+    warnings: list[str]
+    suggestions: list[str]
 
 
 @dataclass
 class BacktestMetrics:
     """Metrics from adaptive backtesting."""
+
     total_return_pct: float
     annualized_return_pct: float
     max_drawdown_pct: float
@@ -167,4 +181,4 @@ class BacktestMetrics:
     total_trades: int
     tier_transitions: int
     final_tier: PortfolioTier
-    tier_performance: Dict[str, Dict[str, float]]
+    tier_performance: dict[str, dict[str, float]]

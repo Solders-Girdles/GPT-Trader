@@ -1,10 +1,12 @@
 import math
+from datetime import datetime, timedelta
 from decimal import Decimal
 
 import pytest
 
-from bot_v2.features.live_trade.risk import LiveRiskManager
 from bot_v2.config.live_trade_config import RiskConfig
+from bot_v2.features.live_trade.risk import LiveRiskManager
+from bot_v2.features.live_trade.risk_runtime import CircuitBreakerAction
 
 
 def generate_marks_with_volatility(target_annual_vol: float, n: int = 30) -> list[Decimal]:
@@ -25,13 +27,13 @@ def generate_marks_with_volatility(target_annual_vol: float, n: int = 30) -> lis
 
 
 def make_manager_with_thresholds(warn: float, reduce_only: float, kill: float) -> LiveRiskManager:
-    cfg = RiskConfig()
-    cfg.enable_volatility_circuit_breaker = True
-    cfg.volatility_warning_threshold = warn
-    cfg.volatility_reduce_only_threshold = reduce_only
-    cfg.volatility_kill_switch_threshold = kill
-    cfg.volatility_window_periods = 20
-    return LiveRiskManager(config=cfg)
+    config = RiskConfig()
+    config.enable_volatility_circuit_breaker = True
+    config.volatility_warning_threshold = warn
+    config.volatility_reduce_only_threshold = reduce_only
+    config.volatility_kill_switch_threshold = kill
+    config.volatility_window_periods = 20
+    return LiveRiskManager(config=config)
 
 
 def test_progressive_thresholds():
@@ -42,54 +44,68 @@ def test_progressive_thresholds():
     # Warning
     marks_warn = generate_marks_with_volatility(0.10, n=30)
     res = rm.check_volatility_circuit_breaker(sym, marks_warn)
-    assert res.get("triggered") is True
-    assert res.get("action") == "warning"
+    assert res.triggered is True
+    assert res.action is CircuitBreakerAction.WARNING
     assert rm.config.reduce_only_mode is False
     assert rm.config.kill_switch_enabled is False
 
     # Reduce-only
     marks_red = generate_marks_with_volatility(0.12, n=30)
-    # backdate cooldown
-    from datetime import datetime, timedelta
-    rm._cb_last_trigger[sym] = datetime.utcnow() - timedelta(minutes=rm.config.circuit_breaker_cooldown_minutes + 1)
+    rm.circuit_breaker_state.record(
+        "volatility_circuit_breaker",
+        sym,
+        CircuitBreakerAction.WARNING,
+        triggered_at=datetime.utcnow()
+        - timedelta(minutes=rm.config.circuit_breaker_cooldown_minutes + 1),
+    )
     res = rm.check_volatility_circuit_breaker(sym, marks_red)
-    assert res.get("triggered") is True
-    assert res.get("action") == "reduce_only"
+    assert res.triggered is True
+    assert res.action is CircuitBreakerAction.REDUCE_ONLY
     assert rm.config.reduce_only_mode is True
     assert rm.config.kill_switch_enabled is False
 
     # Kill switch
     marks_kill = generate_marks_with_volatility(0.15, n=30)
-    rm._cb_last_trigger[sym] = datetime.utcnow() - timedelta(minutes=rm.config.circuit_breaker_cooldown_minutes + 1)
+    rm.circuit_breaker_state.record(
+        "volatility_circuit_breaker",
+        sym,
+        CircuitBreakerAction.WARNING,
+        triggered_at=datetime.utcnow()
+        - timedelta(minutes=rm.config.circuit_breaker_cooldown_minutes + 1),
+    )
     res = rm.check_volatility_circuit_breaker(sym, marks_kill)
-    assert res.get("triggered") is True
-    assert res.get("action") == "kill_switch"
+    assert res.triggered is True
+    assert res.action is CircuitBreakerAction.KILL_SWITCH
     assert rm.config.kill_switch_enabled is True
 
 
 def test_cooldown_behavior():
-    cfg = RiskConfig()
-    cfg.enable_volatility_circuit_breaker = True
-    cfg.volatility_warning_threshold = 0.05
-    cfg.volatility_reduce_only_threshold = 0.06
-    cfg.volatility_kill_switch_threshold = 0.07
-    cfg.volatility_window_periods = 20
-    cfg.circuit_breaker_cooldown_minutes = 5
-    rm = LiveRiskManager(config=cfg)
+    config = RiskConfig()
+    config.enable_volatility_circuit_breaker = True
+    config.volatility_warning_threshold = 0.05
+    config.volatility_reduce_only_threshold = 0.06
+    config.volatility_kill_switch_threshold = 0.07
+    config.volatility_window_periods = 20
+    config.circuit_breaker_cooldown_minutes = 5
+    rm = LiveRiskManager(config=config)
 
     marks = generate_marks_with_volatility(0.16, n=30)
 
     # First trigger
     res1 = rm.check_volatility_circuit_breaker("BTC-PERP", marks)
-    assert res1.get("triggered") is True
+    assert res1.triggered is True
 
     # Second trigger within cooldown should be suppressed
     res2 = rm.check_volatility_circuit_breaker("BTC-PERP", marks)
-    assert res2.get("triggered") is False
+    assert res2.triggered is False
 
     # Advance cooldown by manually backdating last trigger
-    from datetime import datetime, timedelta
-
-    rm._cb_last_trigger["BTC-PERP"] = datetime.utcnow() - timedelta(minutes=cfg.circuit_breaker_cooldown_minutes + 1)
+    rm.circuit_breaker_state.record(
+        "volatility_circuit_breaker",
+        "BTC-PERP",
+        CircuitBreakerAction.WARNING,
+        triggered_at=datetime.utcnow()
+        - timedelta(minutes=config.circuit_breaker_cooldown_minutes + 1),
+    )
     res3 = rm.check_volatility_circuit_breaker("BTC-PERP", marks)
-    assert res3.get("triggered") is True
+    assert res3.triggered is True

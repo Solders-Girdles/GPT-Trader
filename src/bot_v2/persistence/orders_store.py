@@ -13,7 +13,7 @@ from datetime import datetime
 from pathlib import Path
 
 from ..features.brokerages.core.interfaces import Order, OrderStatus
-from ..features.monitor import get_logger
+from ..monitoring.system import get_logger
 
 logger = logging.getLogger(__name__)
 
@@ -27,27 +27,14 @@ class StoredOrder:
     symbol: str
     side: str
     order_type: str
-    qty: str
+    quantity: str
     price: str | None
     status: str
     created_at: str
     updated_at: str
     # Partial fill tracking
-    filled_qty: str | None = None
-    avg_fill_price: str | None = None
-    quantity: str | None = None
     filled_quantity: str | None = None
-
-    def __post_init__(self) -> None:
-        if self.quantity is None and self.qty is not None:
-            self.quantity = self.qty
-        if self.qty is None and self.quantity is not None:
-            self.qty = self.quantity
-
-        if self.filled_quantity is None and self.filled_qty is not None:
-            self.filled_quantity = self.filled_qty
-        if self.filled_qty is None and self.filled_quantity is not None:
-            self.filled_qty = self.filled_quantity
+    avg_fill_price: str | None = None
 
     @staticmethod
     def from_order(order: Order) -> StoredOrder:
@@ -57,7 +44,7 @@ class StoredOrder:
             symbol=order.symbol,
             side=order.side.value,
             order_type=order.type.value,
-            qty=str(order.quantity),
+            quantity=str(order.quantity),
             price=str(order.price) if order.price else None,
             status=order.status.value,
             created_at=(
@@ -68,17 +55,11 @@ class StoredOrder:
             updated_at=(
                 order.updated_at.isoformat() if order.updated_at else datetime.utcnow().isoformat()
             ),
-            filled_qty=(
-                str(order.filled_quantity)
-                if getattr(order, "filled_quantity", None) is not None
-                else None
-            ),
             avg_fill_price=(
                 str(order.avg_fill_price)
                 if getattr(order, "avg_fill_price", None) is not None
                 else None
             ),
-            quantity=str(order.quantity),
             filled_quantity=(
                 str(order.filled_quantity)
                 if getattr(order, "filled_quantity", None) is not None
@@ -109,9 +90,9 @@ class OrdersStore:
             for line in f:
                 try:
                     data = json.loads(line)
-                    # Backward compatibility for older records
-                    if "filled_qty" not in data:
-                        data["filled_qty"] = None
+                    legacy_filled_quantity = data.pop("filled_quantity", None)
+                    if "filled_quantity" not in data and legacy_filled_quantity is not None:
+                        data["filled_quantity"] = legacy_filled_quantity
                     if "avg_fill_price" not in data:
                         data["avg_fill_price"] = None
                     order = StoredOrder(**data)

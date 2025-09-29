@@ -1,7 +1,11 @@
 from decimal import Decimal
 import pytest
 
-from bot_v2.features.live_trade.strategies.perps_baseline import BaselinePerpsStrategy, StrategyConfig, Action
+from bot_v2.features.live_trade.strategies.perps_baseline import (
+    BaselinePerpsStrategy,
+    StrategyConfig,
+    Action,
+)
 from bot_v2.features.brokerages.core.interfaces import Product, MarketType
 
 
@@ -20,9 +24,11 @@ def make_product():
 
 @pytest.mark.perps
 def test_trailing_stop_emits_reduce_only_close():
-    strat = BaselinePerpsStrategy(config=StrategyConfig(short_ma_period=3, long_ma_period=5, trailing_stop_pct=0.01))
+    strat = BaselinePerpsStrategy(
+        config=StrategyConfig(short_ma_period=3, long_ma_period=5, trailing_stop_pct=0.01)
+    )
     product = make_product()
-    pos = {"qty": Decimal("1"), "side": "long", "entry": Decimal("50000")}
+    pos = {"quantity": Decimal("1"), "side": "long", "entry": Decimal("50000")}
 
     # Peak then drop beyond 1% triggers close
     for px in [Decimal("51000"), Decimal("50900"), Decimal("50400")]:

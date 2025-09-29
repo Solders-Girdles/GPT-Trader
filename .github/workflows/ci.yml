@@ -2,9 +2,9 @@ name: Python CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, develop ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, develop ]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -15,12 +15,15 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.11", "3.12"]
+        python-version: ["3.12"]
 
     steps:
     - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
 
     - name: Set up Python ${{ matrix.python-version }}
+      id: setup-python
       uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
@@ -43,6 +46,34 @@ jobs:
       if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
       run: poetry install --no-interaction --no-root
 
+    - name: Generate dependency artifacts
+      if: github.event_name == 'pull_request'
+      run: |
+        poetry run python scripts/analysis/dependency_map.py --tests "tests/**/*.py" --output dependency_report.json
+        poetry run python scripts/analysis/test_categorizer.py --output test_categories.json
+
+    - name: Run selective tests
+      if: github.event_name == 'pull_request'
+      env:
+        PYTEST_ADDOPTS: '-m "not slow and not performance" -q'
+      run: |
+        git fetch origin ${{ github.event.pull_request.base.ref }} --depth=1
+        CHANGED=$(git diff --name-only origin/${{ github.event.pull_request.base.ref }} HEAD -- '*.py' | tr '\n' ' ')
+        if [ -z "$CHANGED" ]; then
+          poetry run python scripts/testing/selective_runner.py \
+            --deps dependency_report.json \
+            --categories test_categories.json \
+            --max-selective-ratio 0.7 \
+            --auto-full-module bot_v2.features.brokerages.core.interfaces
+        else
+          poetry run python scripts/testing/selective_runner.py \
+            --deps dependency_report.json \
+            --categories test_categories.json \
+            --paths $CHANGED \
+            --max-selective-ratio 0.7 \
+            --auto-full-module bot_v2.features.brokerages.core.interfaces
+        fi
+
     - name: Lint with ruff
       run: |
         poetry run ruff check .
@@ -51,21 +82,28 @@ jobs:
       run: |
         poetry run black --check .
 
+    - name: Type-check with mypy
+      run: |
+        poetry run mypy src --ignore-missing-imports
+
     - name: Run Coinbase core checks
       run: |
-        scripts/testing/run_coinbase_core_checks.sh
+        poetry run pytest tests/unit/bot_v2/features/brokerages/coinbase -q
 
     - name: Run tests with pytest and generate coverage report
+      if: github.event_name != 'pull_request'
       run: |
         poetry run pytest -m "not slow and not performance" -q --cov=src/bot_v2 --cov-report=term-missing --cov-report=xml --cov-report=html --cov-fail-under=60
 
     - name: Upload coverage to Artifacts
+      if: github.event_name != 'pull_request'
       uses: actions/upload-artifact@v3
       with:
         name: coverage-xml
         path: coverage.xml
-    
+
     - name: Upload HTML coverage report
+      if: github.event_name != 'pull_request'
       uses: actions/upload-artifact@v3
       with:
         name: coverage-html
@@ -77,11 +115,12 @@ jobs:
       matrix:
         env_mode: ['prod', 'sandbox', 'prod_fallback', 'sandbox_fallback']
         python-version: ["3.12"]
-    
+
     steps:
     - uses: actions/checkout@v3
 
     - name: Set up Python ${{ matrix.python-version }}
+      id: setup-python
       uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
@@ -118,7 +157,7 @@ jobs:
         COINBASE_API_KEY: ${{ (matrix.env_mode == 'prod_fallback' || matrix.env_mode == 'sandbox_fallback') && 'fallback_key' || '' }}
         COINBASE_API_SECRET: ${{ (matrix.env_mode == 'prod_fallback' || matrix.env_mode == 'sandbox_fallback') && 'fallback_secret' || '' }}
       run: |
-        poetry run pytest tests/test_config_matrix.py
+        poetry run pytest tests/unit/bot_v2/orchestration/test_config_manager.py tests/unit/bot_v2/orchestration/test_configuration.py
 
   coverage-check:
     name: Coverage (warning @ 70%)

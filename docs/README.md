@@ -29,6 +29,7 @@ organization-updated: 2025-03-01
 
 ### Trading Operations
 - [Production Deployment](guides/production.md) - Deployment guide (spot-first, INTX-gated perps)
+- [Legacy Deployment Migration](guides/legacy_deployment_migration.md) - Steps to move from the archived Docker stack to bot_v2
 - [Stage 3 Runner](../scripts/stage3_runner.py) - Legacy entry that forwards to `perps-bot`
 - [Operations Runbook](ops/operations_runbook.md) - Operational procedures
 
@@ -88,7 +89,7 @@ Use git history if you need to recover earlier runbooks or reports.
 
 ## 📞 Getting Help
 
-- **Quick Questions**: Check [QUICK_START.md](QUICK_START.md)
+- **Quick Questions**: Check [QUICK_START.md](./QUICK_START.md)
 - **Architecture**: Review [ARCHITECTURE.md](ARCHITECTURE.md)
 - **AI Development**: See [guides/agents.md](guides/agents.md)
 - **Issues**: GitHub Issues page

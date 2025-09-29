@@ -5,59 +5,62 @@ on:
     paths:
       - 'src/bot_v2/features/live_trade/**'
       - 'src/bot_v2/features/brokerages/core/interfaces.py'
-      - 'tests/test_live_trade_type_consolidation.py'
+      - 'tests/unit/bot_v2/features/live_trade/test_type_consolidation.py'
   pull_request:
     paths:
       - 'src/bot_v2/features/live_trade/**'
       - 'src/bot_v2/features/brokerages/core/interfaces.py'
-      - 'tests/test_live_trade_type_consolidation.py'
+      - 'tests/unit/bot_v2/features/live_trade/test_type_consolidation.py'
 
 jobs:
   test-type-consolidation:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ['3.10', '3.11', '3.12']
-    
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ matrix.python-version }}
-    
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install pytest
-        pip install -e .
-    
-    - name: Run type consolidation tests
-      run: |
-        python -m pytest tests/test_live_trade_type_consolidation.py -v
-    
-    - name: Verify no duplicate type definitions
-      run: |
-        # Check that live_trade doesn't define types that exist in core
-        ! grep -E "^class (Order|Position|Quote|OrderType|OrderSide|OrderStatus)\s" src/bot_v2/features/live_trade/types.py
-    
-    - name: Verify imports use core interfaces
-      run: |
-        # Verify that main modules import from core interfaces
-        grep -q "from ..brokerages.core.interfaces import" src/bot_v2/features/live_trade/live_trade.py
-        grep -q "from ..brokerages.core.interfaces import" src/bot_v2/features/live_trade/brokers.py
-        grep -q "from ..brokerages.core.interfaces import" src/bot_v2/features/live_trade/execution.py
-    
-    - name: Verify no local type returns
-      run: |
-        # Check that brokers don't return local types
-        ! grep -E "return .*(LocalOrder|LocalQuote|LocalPosition)" src/bot_v2/features/live_trade/brokers.py
-        ! grep -E "core_to_local_(order|quote|position)" src/bot_v2/features/live_trade/
-    
-    - name: Verify no deprecated imports of core concepts
-      run: |
-        # Fail if importing core concepts from deprecated live_trade.types
-        ! rg -n "from .*live_trade\.types .*(Order\b|OrderSide\b|OrderType\b|Position\b|Quote\b)" -S
-        # Also check relative imports
-        ! rg -n "from \.types .*(Order\b|OrderSide\b|OrderType\b)" src/bot_v2/features/live_trade/ -S
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+          installer-parallel: true
+
+      - name: Load cached venv
+        id: cache-poetry
+        uses: actions/cache@v3
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-3.12-${{ hashFiles('**/poetry.lock') }}
+
+      - name: Install dependencies
+        if: steps.cache-poetry.outputs.cache-hit != 'true'
+        run: poetry install --no-interaction --no-root
+
+      - name: Run type consolidation tests
+        run: |
+          poetry run pytest tests/unit/bot_v2/features/live_trade/test_type_consolidation.py -v
+
+      - name: Verify no duplicate type definitions
+        run: |
+          ! grep -E "^class (Order|Position|Quote|OrderType|OrderSide|OrderStatus)\s" src/bot_v2/features/live_trade/types.py
+
+      - name: Verify imports use core interfaces
+        run: |
+          grep -q "from ..brokerages.core.interfaces import" src/bot_v2/features/live_trade/live_trade.py
+          grep -q "from ..brokerages.core.interfaces import" src/bot_v2/features/live_trade/brokers.py
+          grep -q "from ..brokerages.core.interfaces import" src/bot_v2/features/live_trade/execution.py
+
+      - name: Verify no local type returns
+        run: |
+          ! grep -E "return .*(LocalOrder|LocalQuote|LocalPosition)" src/bot_v2/features/live_trade/brokers.py
+          ! grep -E "core_to_local_(order|quote|position)" src/bot_v2/features/live_trade/
+
+      - name: Verify no deprecated imports of core concepts
+        run: |
+          ! rg -n "from .*live_trade\.types .*(Order\b|OrderSide\b|OrderType\b|Position\b|Quote\b)" -S
+          ! rg -n "from \.types .*(Order\b|OrderSide\b|OrderType\b)" src/bot_v2/features/live_trade/ -S

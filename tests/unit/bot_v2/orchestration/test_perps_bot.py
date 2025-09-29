@@ -30,8 +30,8 @@ def test_init_uses_mock_broker_in_dev(monkeypatch, tmp_path):
     monkeypatch.setenv("PERPS_FORCE_MOCK", "1")
     monkeypatch.setattr(PerpsBot, "_start_streaming_background", lambda self: None)
 
-    cfg = BotConfig(profile=Profile.DEV, symbols=["BTC-PERP"], update_interval=1)
-    bot = PerpsBot(cfg)
+    config = BotConfig(profile=Profile.DEV, symbols=["BTC-PERP"], update_interval=1)
+    bot = PerpsBot(config)
 
     assert isinstance(bot.broker, DeterministicBroker)
 
@@ -52,13 +52,13 @@ def test_update_mark_window_trims(monkeypatch, tmp_path):
     monkeypatch.setenv("PERPS_FORCE_MOCK", "1")
     monkeypatch.setattr(PerpsBot, "_start_streaming_background", lambda self: None)
 
-    cfg = BotConfig(profile=Profile.DEV, symbols=["BTC-PERP"], short_ma=2, long_ma=3)
-    bot = PerpsBot(cfg)
+    config = BotConfig(profile=Profile.DEV, symbols=["BTC-PERP"], short_ma=2, long_ma=3)
+    bot = PerpsBot(config)
 
     for i in range(50):
         bot._update_mark_window("BTC-PERP", Decimal(str(50000 + i)))
 
-    max_expected = max(cfg.short_ma, cfg.long_ma) + 5
+    max_expected = max(config.short_ma, config.long_ma) + 5
     assert len(bot.mark_windows["BTC-PERP"]) <= max_expected
 
 
@@ -67,27 +67,27 @@ def test_collect_account_snapshot_uses_broker(monkeypatch, tmp_path):
     monkeypatch.setenv("PERPS_FORCE_MOCK", "1")
     monkeypatch.setattr(PerpsBot, "_start_streaming_background", lambda self: None)
 
-    cfg = BotConfig(profile=Profile.DEV, symbols=["BTC-PERP"], update_interval=1)
-    bot = PerpsBot(cfg)
+    config = BotConfig(profile=Profile.DEV, symbols=["BTC-PERP"], update_interval=1)
+    bot = PerpsBot(config)
 
     snapshot_data = {
-        "permissions": {"can_trade": True},
-        "fees": {"tier": "Advanced"},
+        "key_permissions": {"can_trade": True},
+        "fee_schedule": {"tier": "Advanced"},
         "limits": {"max_order": "10000"},
-        "summary": {"total": "123"},
+        "transaction_summary": {"total": "123"},
     }
-    bot.broker.get_key_permissions = lambda: snapshot_data["permissions"]  # type: ignore[attr-defined]
-    bot.broker.get_fee_schedule = lambda: snapshot_data["fees"]  # type: ignore[attr-defined]
-    bot.broker.get_account_limits = lambda: snapshot_data["limits"]  # type: ignore[attr-defined]
-    bot.broker.get_transaction_summary = lambda: snapshot_data["summary"]  # type: ignore[attr-defined]
-    bot.broker.get_server_time = lambda: datetime(2024, 1, 1, tzinfo=timezone.utc)  # type: ignore[attr-defined]
 
-    snap = bot._collect_account_snapshot()
-    assert snap["key_permissions"] == snapshot_data["permissions"]
-    assert snap["fee_schedule"] == snapshot_data["fees"]
-    assert snap["limits"] == snapshot_data["limits"]
-    assert snap["transaction_summary"] == snapshot_data["summary"]
-    assert bot._latest_account_snapshot == snap
+    bot.account_manager.snapshot = lambda emit_metric=False: snapshot_data  # type: ignore[assignment]
+    bot.account_telemetry.supports_snapshots = lambda: True  # type: ignore[assignment]
+    bot.account_telemetry._broker.get_server_time = (  # type: ignore[attr-defined]
+        lambda: datetime(2024, 1, 1, tzinfo=timezone.utc)
+    )
+
+    snap = bot.account_telemetry.collect_snapshot()
+    for key, value in snapshot_data.items():
+        assert snap[key] == value
+    assert snap["server_time"].startswith("2024-01-01")
+    assert bot.account_telemetry.latest_snapshot == snap
 
 
 @pytest.mark.asyncio
@@ -96,24 +96,37 @@ async def test_run_account_telemetry_emits_metrics(monkeypatch, tmp_path):
     monkeypatch.setenv("PERPS_FORCE_MOCK", "1")
     monkeypatch.setattr(PerpsBot, "_start_streaming_background", lambda self: None)
 
-    cfg = BotConfig(profile=Profile.DEV, symbols=["BTC-PERP"], update_interval=1)
-    bot = PerpsBot(cfg)
+    config = BotConfig(profile=Profile.DEV, symbols=["BTC-PERP"], update_interval=1)
+    bot = PerpsBot(config)
 
-    calls = []
-    bot.event_store.append_metric = lambda bot_id, metrics=None, **kwargs: calls.append((bot_id, metrics))  # type: ignore
+    monkeypatch.setattr("bot_v2.orchestration.account_telemetry.RUNTIME_DATA_DIR", tmp_path)
 
-    def fake_collect():
-        bot.running = False
-        return {"key_permissions": {}, "fee_schedule": {}, "limits": {}, "transaction_summary": {}}
+    bot.account_manager.snapshot = lambda emit_metric=False: {
+        "key_permissions": {},
+        "fee_schedule": {},
+    }
+    bot.account_telemetry.supports_snapshots = lambda: True  # type: ignore[assignment]
+    bot.account_telemetry._broker.get_server_time = lambda: None  # type: ignore[attr-defined]
 
-    bot._collect_account_snapshot = fake_collect  # type: ignore
-    bot.running = True
-    await bot._run_account_telemetry(interval_seconds=0)
+    event = asyncio.Event()
+    calls: list[tuple[str, dict[str, object] | None]] = []
+
+    def fake_append_metric(bot_id, metrics=None, **kwargs):  # type: ignore[override]
+        calls.append((bot_id, metrics))
+        event.set()
+
+    bot.event_store.append_metric = fake_append_metric  # type: ignore
+
+    telemetry_task = asyncio.create_task(bot.account_telemetry.run(interval_seconds=0))
+    await asyncio.wait_for(event.wait(), timeout=1)
+    telemetry_task.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await telemetry_task
 
     assert calls
     bot_id, metrics = calls[0]
     assert bot_id == bot.bot_id
-    assert metrics.get("event_type") == "account_snapshot"
+    assert metrics and metrics.get("event_type") == "account_snapshot"
 
 
 @pytest.mark.asyncio
@@ -121,7 +134,7 @@ async def test_run_cycle_respects_trading_window(monkeypatch, tmp_path):
     monkeypatch.setenv("EVENT_STORE_ROOT", str(tmp_path))
     monkeypatch.setattr(PerpsBot, "_start_streaming_background", lambda self: None)
 
-    cfg = BotConfig(
+    config = BotConfig(
         profile=Profile.DEV,
         symbols=["BTC-PERP"],
         trading_window_start=time(10, 0),
@@ -130,7 +143,7 @@ async def test_run_cycle_respects_trading_window(monkeypatch, tmp_path):
         mock_broker=True,
     )
 
-    bot = PerpsBot(cfg)
+    bot = PerpsBot(config)
 
     async def noop_update():
         return None
@@ -165,8 +178,8 @@ async def test_place_order_lock_serialises_calls(monkeypatch, tmp_path, fake_clo
     monkeypatch.setenv("COINBASE_ENABLE_DERIVATIVES", "1")
     monkeypatch.setattr(PerpsBot, "_start_streaming_background", lambda self: None)
 
-    cfg = BotConfig(profile=Profile.DEV, symbols=["BTC-PERP"], update_interval=1)
-    bot = PerpsBot(cfg)
+    config = BotConfig(profile=Profile.DEV, symbols=["BTC-PERP"], update_interval=1)
+    bot = PerpsBot(config)
 
     product = bot.get_product("BTC-PERP")
 
@@ -200,12 +213,12 @@ async def test_place_order_lock_serialises_calls(monkeypatch, tmp_path, fake_clo
             symbol="BTC-PERP",
             side=OrderSide.BUY,
             type=OrderType.MARKET,
-            qty=Decimal("0.01"),
+            quantity=Decimal("0.01"),
             price=None,
             stop_price=None,
             tif=TimeInForce.GTC,
             status=OrderStatus.FILLED,
-            filled_qty=Decimal("0.01"),
+            filled_quantity=Decimal("0.01"),
             avg_fill_price=Decimal("50000"),
             submitted_at=now,
             updated_at=now,
@@ -217,7 +230,7 @@ async def test_place_order_lock_serialises_calls(monkeypatch, tmp_path, fake_clo
         return await bot._place_order(
             symbol="BTC-PERP",
             side=OrderSide.BUY,
-            qty=Decimal("0.01"),
+            quantity=Decimal("0.01"),
             order_type=OrderType.MARKET,
             product=product,
             reduce_only=False,
@@ -242,8 +255,8 @@ def test_ws_failure_records_metrics_and_risk_listener(monkeypatch, tmp_path):
     monkeypatch.setenv("COINBASE_ENABLE_DERIVATIVES", "1")
     monkeypatch.setattr(PerpsBot, "_start_streaming_background", lambda self: None)
 
-    cfg = BotConfig(profile=Profile.DEV, symbols=["BTC-PERP"], update_interval=1)
-    bot = PerpsBot(cfg)
+    config = BotConfig(profile=Profile.DEV, symbols=["BTC-PERP"], update_interval=1)
+    bot = PerpsBot(config)
 
     metric_records = []
 

@@ -3,14 +3,16 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Dict, Optional
+from pathlib import Path
+from typing import Any, cast
+from collections.abc import Mapping
 
 try:
     import yaml  # type: ignore
 except Exception:
-    yaml = None
+    yaml = cast(Any, None)
 
-from .alerts import AlertDispatcher, AlertSeverity, Alert, create_system_alert
+from .alerts import Alert, AlertDispatcher, AlertSeverity
 
 logger = logging.getLogger(__name__)
 
@@ -22,37 +24,48 @@ class AlertManager:
     dispatcher: AlertDispatcher
 
     @classmethod
-    def from_profile_yaml(cls, path: str = "config/profiles/canary.yaml") -> "AlertManager":
-        config: Dict = {}
+    def from_profile_yaml(cls, path: str | Path = "config/profiles/canary.yaml") -> AlertManager:
+        config: dict[str, Any] = {}
         if yaml is not None:
             try:
-                with open(path, 'r') as f:
-                    y = yaml.safe_load(f) or {}
-                alerts_cfg = (y.get('monitoring') or {}).get('alerts') or {}
+                path_obj = Path(path)
+                with path_obj.open() as f:
+                    loaded = yaml.safe_load(f) or {}
+                data = loaded if isinstance(loaded, dict) else {}
+                monitoring_section = data.get("monitoring")
+                alerts_config = (
+                    monitoring_section.get("alerts") if isinstance(monitoring_section, dict) else {}
+                )
                 # Map profile fields to dispatcher config format
-                mapped: Dict = {
-                    'slack_webhook_url': None,
-                    'slack_min_severity': 'WARNING',
-                    'pagerduty_api_key': None,
-                    'pagerduty_min_severity': 'ERROR',
+                mapped: dict[str, Any] = {
+                    "slack_webhook_url": None,
+                    "slack_min_severity": "WARNING",
+                    "pagerduty_api_key": None,
+                    "pagerduty_min_severity": "ERROR",
                 }
-                if isinstance(alerts_cfg, dict):
-                    chans = alerts_cfg.get('channels') or []
+                if isinstance(alerts_config, dict):
+                    chans = alerts_config.get("channels") or []
+                    if not isinstance(chans, list):
+                        chans = [chans]
                     for c in chans:
-                        ctype = (c.get('type') or '').lower()
-                        level = (c.get('level') or 'WARNING').upper()
-                        if ctype == 'slack' and not mapped['slack_webhook_url']:
-                            mapped['slack_webhook_url'] = c.get('webhook_url')
-                            mapped['slack_min_severity'] = level
-                        elif ctype == 'pagerduty' and not mapped['pagerduty_api_key']:
-                            mapped['pagerduty_api_key'] = c.get('api_key')
-                            mapped['pagerduty_min_severity'] = level
+                        if not isinstance(c, Mapping):
+                            continue
+                        ctype = str(c.get("type") or "").lower()
+                        level = str(c.get("level") or "WARNING").upper()
+                        if ctype == "slack" and not mapped["slack_webhook_url"]:
+                            mapped["slack_webhook_url"] = c.get("webhook_url")
+                            mapped["slack_min_severity"] = level
+                        elif ctype == "pagerduty" and not mapped["pagerduty_api_key"]:
+                            mapped["pagerduty_api_key"] = c.get("api_key")
+                            mapped["pagerduty_min_severity"] = level
                 config = mapped
             except Exception as e:
                 logger.debug(f"Failed to load alert config from YAML: {e}")
         return cls(dispatcher=AlertDispatcher.from_config(config))
 
-    async def send_alert(self, level: str, title: str, message: str, metrics: Optional[Dict] = None):
+    async def send_alert(
+        self, level: str, title: str, message: str, metrics: dict[str, Any] | None = None
+    ) -> None:
         sev = AlertSeverity[level.upper()] if level else AlertSeverity.WARNING
         alert = Alert(
             timestamp=datetime.utcnow(),
@@ -60,7 +73,6 @@ class AlertManager:
             severity=sev,
             title=title,
             message=message,
-            context=metrics or {},
+            context=dict(metrics or {}),
         )
         await self.dispatcher.dispatch(alert)
-

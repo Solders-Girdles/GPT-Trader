@@ -4,7 +4,7 @@
 status: current
 created: 2025-01-01
 consolidates:
-  - docs/reference/coinbase.md
+  - docs/reference/coinbase.md (retired)
   - docs/reference/coinbase_troubleshooting.md
   - src/bot_v2/features/brokerages/coinbase/README.md
   - src/bot_v2/features/brokerages/coinbase/COMPATIBILITY.md

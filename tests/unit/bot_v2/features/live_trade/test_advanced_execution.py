@@ -6,6 +6,7 @@ from typing import Optional
 
 import pytest
 
+from bot_v2.config.live_trade_config import RiskConfig
 from bot_v2.features.live_trade.advanced_execution import AdvancedExecutionEngine
 from bot_v2.features.brokerages.core.interfaces import (
     Product,
@@ -17,6 +18,7 @@ from bot_v2.features.brokerages.core.interfaces import (
     OrderStatus,
     Quote,
 )
+from bot_v2.features.live_trade.risk import PositionSizingAdvice
 
 
 class StubBroker:
@@ -77,8 +79,32 @@ class StubBroker:
             submitted_at=now,
             updated_at=now,
         )
+        order.reduce_only = kwargs.get("reduce_only", False)
         self.orders.append(order)
         return order
+
+
+class StubRiskManager:
+    def __init__(self, advice: PositionSizingAdvice, *, enable_dynamic: bool = True) -> None:
+        self.advice = advice
+        self.config = RiskConfig(
+            enable_dynamic_position_sizing=enable_dynamic,
+            position_sizing_method="intelligent",
+            position_sizing_multiplier=1.0,
+        )
+        self.positions: dict[str, dict[str, Decimal]] = {}
+        self.start_of_day_equity = Decimal("20000")
+        self.last_context = None
+
+    def size_position(self, context):  # type: ignore[override]
+        self.last_context = context
+        return self.advice
+
+    def pre_trade_validate(self, **kwargs):  # type: ignore[override]
+        return None
+
+    def is_reduce_only_mode(self) -> bool:  # type: ignore[override]
+        return False
 
 
 @pytest.mark.parametrize("order_type", [OrderType.STOP, OrderType.STOP_LIMIT])
@@ -122,3 +148,84 @@ def test_high_volume_stop_orders_trigger_and_cleanup():
     triggered = engine.check_stop_triggers({"BTC-PERP": Decimal("50")})
     assert len(triggered) == total_orders
     assert sum(1 for trigger in engine.stop_triggers.values() if trigger.triggered) == total_orders
+
+
+def test_dynamic_position_sizing_adjusts_quantity():
+    broker = StubBroker()
+    advice = PositionSizingAdvice(
+        symbol="BTC-PERP",
+        side="buy",
+        target_notional=Decimal("2000"),
+        target_quantity=Decimal("0.2"),
+        used_dynamic=True,
+        reduce_only=False,
+        reason="dynamic sizing",
+    )
+    risk = StubRiskManager(advice)
+    engine = AdvancedExecutionEngine(broker=broker, risk_manager=risk)
+
+    order = engine.place_order(
+        symbol="BTC-PERP",
+        side=OrderSide.BUY,
+        quantity=Decimal("0.1"),
+        order_type=OrderType.LIMIT,
+        limit_price=Decimal("100"),
+    )
+
+    assert order is not None
+    assert order.quantity == Decimal("0.2")
+    assert risk.last_context is not None
+    assert risk.last_context.symbol == "BTC-PERP"
+
+
+def test_dynamic_position_sizing_rejects_zero_quantity():
+    broker = StubBroker()
+    advice = PositionSizingAdvice(
+        symbol="BTC-PERP",
+        side="buy",
+        target_notional=Decimal("0"),
+        target_quantity=Decimal("0"),
+        used_dynamic=True,
+        reduce_only=False,
+        reason="no_notional",
+    )
+    risk = StubRiskManager(advice)
+    engine = AdvancedExecutionEngine(broker=broker, risk_manager=risk)
+
+    result = engine.place_order(
+        symbol="BTC-PERP",
+        side=OrderSide.BUY,
+        quantity=Decimal("0.1"),
+        order_type=OrderType.LIMIT,
+        limit_price=Decimal("100"),
+    )
+
+    assert result is None
+    assert engine.rejections_by_reason.get("position_sizing") == 1
+    assert not broker.orders
+
+
+def test_dynamic_position_sizing_sets_reduce_only_flag():
+    broker = StubBroker()
+    advice = PositionSizingAdvice(
+        symbol="BTC-PERP",
+        side="buy",
+        target_notional=Decimal("1200"),
+        target_quantity=Decimal("0.12"),
+        used_dynamic=True,
+        reduce_only=True,
+        reason="risk_reduce_only",
+    )
+    risk = StubRiskManager(advice)
+    engine = AdvancedExecutionEngine(broker=broker, risk_manager=risk)
+
+    order = engine.place_order(
+        symbol="BTC-PERP",
+        side=OrderSide.BUY,
+        quantity=Decimal("0.1"),
+        order_type=OrderType.LIMIT,
+        limit_price=Decimal("100"),
+    )
+
+    assert order is not None
+    assert broker.orders[-1].reduce_only is True

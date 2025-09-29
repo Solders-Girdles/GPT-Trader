@@ -11,7 +11,7 @@ from bot_v2.features.brokerages.core.interfaces import Product, MarketType
 def make_perp(symbol: str = "BTC-PERP") -> Product:
     return Product(
         symbol=symbol,
-        base_asset=symbol.split('-')[0],
+        base_asset=symbol.split("-")[0],
         quote_asset="USD",
         market_type=MarketType.PERPETUAL,
         step_size=Decimal("0.001"),
@@ -22,35 +22,42 @@ def make_perp(symbol: str = "BTC-PERP") -> Product:
 
 
 def test_total_exposure_breach_while_symbol_cap_ok():
-    cfg = RiskConfig(
+    config = RiskConfig(
         max_leverage=10,
         min_liquidation_buffer_pct=0.1,
         max_position_pct_per_symbol=0.5,  # 50% per symbol allowed
-        max_exposure_pct=0.8,             # 80% portfolio cap
+        max_exposure_pct=0.8,  # 80% portfolio cap
         slippage_guard_bps=1_000_000,
     )
-    rm = LiveRiskManager(config=cfg)
+    rm = LiveRiskManager(config=config)
     product = make_perp("BTC-PERP")
 
     equity = Decimal("100000")
     price = Decimal("50000")
 
     current_positions = {
-        "ETH-PERP": {"qty": Decimal("10"), "mark": Decimal("4000"), "price": Decimal("4000")},  # 40k
-        "SOL-PERP": {"qty": Decimal("500"), "mark": Decimal("60"), "price": Decimal("60")},     # 30k
+        "ETH-PERP": {
+            "quantity": Decimal("10"),
+            "mark": Decimal("4000"),
+            "price": Decimal("4000"),
+        },  # 40k
+        "SOL-PERP": {
+            "quantity": Decimal("500"),
+            "mark": Decimal("60"),
+            "price": Decimal("60"),
+        },  # 30k
     }  # total 70k (70%)
 
     # New order 15k (15%) keeps per-symbol under 50%, but total → 85% > 80%
-    qty = Decimal("0.3")  # 0.3 * 50k = 15k
+    quantity = Decimal("0.3")  # 0.3 * 50k = 15k
 
     with pytest.raises(ValidationError, match="Total exposure .* would exceed cap"):
         rm.pre_trade_validate(
             symbol="BTC-PERP",
             side="buy",
-            qty=qty,
+            quantity=quantity,
             price=price,
             product=product,
             equity=equity,
             current_positions=current_positions,
         )
-

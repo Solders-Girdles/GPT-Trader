@@ -72,19 +72,19 @@ class LiquidityFilter:
             return True, f"Incomplete market data for {snapshot.symbol}"
 
         # Check spread
-        if snapshot.spread_bps > self.gates.spread_bps_max:
+        if snapshot.spread_bps is not None and snapshot.spread_bps > self.gates.spread_bps_max:
             return True, f"Spread {snapshot.spread_bps:.1f}bps > {self.gates.spread_bps_max}bps"
 
         # Check L1 depth
-        if snapshot.depth_l1 < self.gates.l1_min:
+        if snapshot.depth_l1 is not None and snapshot.depth_l1 < self.gates.l1_min:
             return True, f"L1 depth {snapshot.depth_l1} < {self.gates.l1_min}"
 
         # Check L10 depth
-        if snapshot.depth_l10 < self.gates.l10_min:
+        if snapshot.depth_l10 is not None and snapshot.depth_l10 < self.gates.l10_min:
             return True, f"L10 depth {snapshot.depth_l10} < {self.gates.l10_min}"
 
         # Check volume
-        if snapshot.vol_1m < self.gates.vol_1m_min:
+        if snapshot.vol_1m is not None and snapshot.vol_1m < self.gates.vol_1m_min:
             return True, f"1m volume {snapshot.vol_1m} < {self.gates.vol_1m_min}"
 
         return False, "Liquidity gates passed"
@@ -179,7 +179,9 @@ class LiquidityStrategyFilter:
         self._per_symbol_gates = per_symbol_gates or {}
 
     def should_reject_entry(
-        self, signal_side: str, snapshot: MarketSnapshot  # "buy" or "sell"
+        self,
+        signal_side: str,
+        snapshot: MarketSnapshot,  # "buy" or "sell"
     ) -> tuple[bool, str]:
         """
         Comprehensive entry filtering with liquidity gates and RSI confirmation.

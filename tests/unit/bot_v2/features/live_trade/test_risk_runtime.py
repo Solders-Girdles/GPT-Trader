@@ -9,6 +9,9 @@ import pytest
 from bot_v2.config.live_trade_config import RiskConfig
 from bot_v2.features.live_trade.risk import LiveRiskManager
 from bot_v2.features.live_trade.risk_runtime import (
+    CircuitBreakerAction,
+    CircuitBreakerRule,
+    CircuitBreakerState,
     append_risk_metrics,
     check_correlation_risk,
     check_mark_staleness as runtime_check_mark_staleness,
@@ -103,7 +106,8 @@ class TestVolatilityCircuitBreaker:
             symbol="BTC-PERP",
             recent_marks=marks,
         )
-        assert result.get("triggered") is False
+        assert result.triggered is False
+        assert result.action is CircuitBreakerAction.NONE
 
     def test_high_volatility_triggers_warning(self, risk_manager):
         base = Decimal("50000")
@@ -116,70 +120,75 @@ class TestVolatilityCircuitBreaker:
             symbol="BTC-PERP",
             recent_marks=marks,
         )
-        assert result.get("triggered") is True
-        assert result.get("action") in {"warning", "reduce_only", "kill_switch"}
+        assert result.triggered is True
+        assert result.action in {
+            CircuitBreakerAction.WARNING,
+            CircuitBreakerAction.REDUCE_ONLY,
+            CircuitBreakerAction.KILL_SWITCH,
+        }
 
     def test_helper_reduce_only_flow(self):
-        class _Config:
-            enable_volatility_circuit_breaker = True
-            volatility_window_periods = 12
-            circuit_breaker_cooldown_minutes = 0
-            volatility_warning_threshold = 0.0
-            volatility_reduce_only_threshold = 0.0001
-            volatility_kill_switch_threshold = 0.5
-            kill_switch_enabled = False
-
-        config = _Config()
-        last_trigger = {}
-        events = []
-        actions = []
-
-        def log_event(event_type, details, *, guard):
-            events.append(event_type)
-
-        def set_reduce_only(enabled, reason):
-            actions.append((enabled, reason))
+        rule = CircuitBreakerRule(
+            name="volatility_circuit_breaker",
+            signal="annualized_volatility",
+            window=12,
+            warning_threshold=0.0,
+            reduce_only_threshold=0.0001,
+            kill_switch_threshold=0.5,
+            cooldown=timedelta(minutes=0),
+            enabled=True,
+        )
+        state = CircuitBreakerState()
+        state.register_rule(rule)
 
         logger = DummyLogger()
         marks = [Decimal(str(100 + (-1) ** i * 1.5)) for i in range(20)]
-        result = runtime_check_volatility(
+        outcome = runtime_check_volatility(
             symbol="BTC-USD",
             recent_marks=marks,
-            config=config,
+            rule=rule,
+            state=state,
             now=lambda: dt.datetime.utcnow(),
-            last_trigger=last_trigger,
-            set_reduce_only=set_reduce_only,
-            log_event=log_event,
             logger=logger,
         )
-        assert result["triggered"] is True
-        assert actions and actions[0][0] is True
-        assert "volatility_circuit_breaker" in events
+        assert outcome.triggered is True
+        assert outcome.action is CircuitBreakerAction.REDUCE_ONLY
+        snapshot = state.get(rule.name, "BTC-USD")
+        assert snapshot is not None
+        snapshots = state.snapshot()
+        assert rule.name in snapshots and "BTC-USD" in snapshots[rule.name]
 
     def test_helper_respects_cooldown(self):
-        class _Config:
-            enable_volatility_circuit_breaker = True
-            volatility_window_periods = 12
-            circuit_breaker_cooldown_minutes = 0
-            volatility_warning_threshold = 0.0
-            volatility_reduce_only_threshold = 0.0001
-            volatility_kill_switch_threshold = 0.5
-            kill_switch_enabled = False
-
-        config = _Config()
-        last_trigger = {"BTC-USD": dt.datetime.utcnow()}
+        rule = CircuitBreakerRule(
+            name="volatility_circuit_breaker",
+            signal="annualized_volatility",
+            window=12,
+            warning_threshold=0.0,
+            reduce_only_threshold=0.0001,
+            kill_switch_threshold=0.5,
+            cooldown=timedelta(minutes=1),
+            enabled=True,
+        )
+        state = CircuitBreakerState()
+        state.register_rule(rule)
+        state.record(
+            rule.name,
+            "BTC-USD",
+            CircuitBreakerAction.WARNING,
+            triggered_at=dt.datetime.utcnow(),
+        )
         logger = DummyLogger()
-        result = runtime_check_volatility(
+        outcome = runtime_check_volatility(
             symbol="BTC-USD",
             recent_marks=[Decimal("100")] * 6,
-            config=config,
+            rule=rule,
+            state=state,
             now=lambda: dt.datetime.utcnow(),
-            last_trigger=last_trigger,
-            set_reduce_only=lambda *args, **kwargs: None,
-            log_event=lambda *args, **kwargs: None,
             logger=logger,
         )
-        assert result["triggered"] is False
+        assert outcome.triggered is False
+        snapshots = state.snapshot()
+        assert rule.name in snapshots and "BTC-USD" in snapshots[rule.name]
 
 
 def test_append_risk_metrics_records_snapshot():

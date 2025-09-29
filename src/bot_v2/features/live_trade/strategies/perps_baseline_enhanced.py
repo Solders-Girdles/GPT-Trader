@@ -6,10 +6,9 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
-from enum import Enum
 from typing import Any
 
-from ....features.strategy import (
+from ....features.strategy_tools import (
     MarketConditionFilters,
     RiskGuards,
     StrategyEnhancements,
@@ -17,7 +16,8 @@ from ....features.strategy import (
     create_standard_risk_guards,
 )
 from ...brokerages.core.interfaces import Product
-from ..risk import LiveRiskManager
+from ..risk import LiveRiskManager, PositionSizingContext
+from .decisions import Action, Decision
 
 __all__ = [
     "Action",
@@ -30,31 +30,8 @@ __all__ = [
 logger = logging.getLogger(__name__)
 
 
-class Action(Enum):
-    """Trading action decisions."""
-
-    BUY = "buy"
-    SELL = "sell"
-    HOLD = "hold"
-    CLOSE = "close"
-
-
-@dataclass
-class Decision:
-    """Enhanced strategy decision with rejection tracking."""
-
-    action: Action
-    target_notional: Decimal | None = None
-    qty: Decimal | None = None
-    leverage: int | None = None
-    stop_params: dict[str, Any] | None = None
-    reduce_only: bool = False
-    reason: str = ""
-
-    # Rejection tracking
-    filter_rejected: bool = False
-    guard_rejected: bool = False
-    rejection_type: str | None = None  # 'spread', 'depth', 'volume', 'rsi', 'liq', 'slippage'
+def _to_decimal(value: Decimal | float | int) -> Decimal:
+    return value if isinstance(value, Decimal) else Decimal(str(value))
 
 
 @dataclass
@@ -134,6 +111,22 @@ class StrategyConfig:
             **{k: v for k, v in data.items() if k in cls.__annotations__},
             filters_config=filters_config,
         )
+
+
+@dataclass
+class SignalSnapshot:
+    """Summary of technical signals used for decisions."""
+
+    short_ma: Decimal
+    long_ma: Decimal
+    epsilon: Decimal
+    bullish_cross: bool
+    bearish_cross: bool
+    rsi: Decimal | None
+
+    @property
+    def ma_diff(self) -> Decimal:
+        return self.short_ma - self.long_ma
 
 
 class PerpsBaselineEnhancedStrategy:
@@ -222,237 +215,374 @@ class PerpsBaselineEnhancedStrategy:
         Returns:
             Enhanced decision with rejection tracking
         """
-        # Update mark window
-        if symbol not in self.mark_windows:
-            self.mark_windows[symbol] = []
+        marks = self._prepare_trading_data(symbol, recent_marks, current_mark)
 
-        self.mark_windows[symbol] = (recent_marks + [current_mark])[-50:]  # Keep last 50
-        marks = self.mark_windows[symbol]
+        early_decision = self._check_early_guards(
+            symbol=symbol,
+            is_stale=is_stale,
+            position_state=position_state,
+            marks=marks,
+        )
+        if early_decision:
+            return early_decision
 
-        # Check for stale data
+        signal = self._calculate_trading_signals(marks, current_mark)
+
+        exit_decision = self._evaluate_position_exits(
+            symbol=symbol,
+            signal=signal,
+            marks=marks,
+            current_mark=current_mark,
+            position_state=position_state,
+        )
+        if exit_decision:
+            return exit_decision
+
+        base_signal = self._determine_entry_signal(signal, position_state)
+
+        filter_decision = self._apply_market_filters(
+            symbol=symbol,
+            base_signal=base_signal,
+            rsi=signal.rsi,
+            market_snapshot=market_snapshot,
+        )
+        if filter_decision:
+            return filter_decision
+
+        entry_decision = self._process_entry_signal(
+            symbol=symbol,
+            base_signal=base_signal,
+            equity=equity,
+            current_mark=current_mark,
+            product=product,
+            market_snapshot=market_snapshot,
+            position_state=position_state,
+        )
+        if entry_decision:
+            return entry_decision
+
+        return self._build_hold_decision(signal)
+
+    def _prepare_trading_data(
+        self, symbol: str, recent_marks: list[Decimal], current_mark: Decimal
+    ) -> list[Decimal]:
+        """Maintain mark history and return the updated window."""
+        window = self.mark_windows.setdefault(symbol, [])
+        updated_window = (recent_marks + [current_mark])[-50:]
+        if window != updated_window:
+            self.mark_windows[symbol] = updated_window
+        return self.mark_windows[symbol]
+
+    def _check_early_guards(
+        self,
+        *,
+        symbol: str,
+        is_stale: bool,
+        position_state: dict[str, Any] | None,
+        marks: list[Decimal],
+    ) -> Decision | None:
+        """Run early exit checks before signal evaluation."""
         if is_stale:
             self._record_rejection("stale_data", symbol)
             if position_state:
-                # Allow reduce-only exits even with stale data
                 return Decision(
                     action=Action.HOLD,
                     reduce_only=True,
                     reason="Stale market data - reduce-only mode",
                 )
-            else:
-                return Decision(
-                    action=Action.HOLD,
-                    reason="Stale market data - no new entries",
-                    filter_rejected=True,
-                    rejection_type="stale",
-                )
+            return Decision(
+                action=Action.HOLD,
+                reason="Stale market data - no new entries",
+                filter_rejected=True,
+                rejection_type="stale",
+            )
 
-        # Disabled new entries check
         if self.config.disable_new_entries and not position_state:
             return Decision(action=Action.HOLD, reason="New entries disabled")
 
-        # Calculate MAs
         if len(marks) < self.config.long_ma_period:
             return Decision(action=Action.HOLD, reason=f"Need {self.config.long_ma_period} marks")
 
-        short_ma = sum(marks[-self.config.short_ma_period :]) / self.config.short_ma_period
-        long_ma = sum(marks[-self.config.long_ma_period :]) / self.config.long_ma_period
+        return None
 
-        # Robust crossover detection with epsilon tolerance
-        eps = current_mark * (self.config.ma_cross_epsilon_bps / Decimal("10000"))
-        cur_diff = short_ma - long_ma
+    def _calculate_trading_signals(
+        self, marks: list[Decimal], current_mark: Decimal
+    ) -> SignalSnapshot:
+        """Compute moving averages, crossovers, and supporting indicators."""
+        short_sum = sum(marks[-self.config.short_ma_period :], Decimal("0"))
+        long_sum = sum(marks[-self.config.long_ma_period :], Decimal("0"))
+        short_ma = short_sum / Decimal(self.config.short_ma_period)
+        long_ma = long_sum / Decimal(self.config.long_ma_period)
 
+        epsilon_rate = self.config.ma_cross_epsilon_bps / Decimal("10000")
+        epsilon = current_mark * epsilon_rate
         bullish_cross = False
         bearish_cross = False
 
         if len(marks) >= self.config.long_ma_period + 1:
             prev_marks = marks[:-1]
-            prev_short = (
-                sum(prev_marks[-self.config.short_ma_period :]) / self.config.short_ma_period
+            prev_short = sum(prev_marks[-self.config.short_ma_period :], Decimal("0")) / Decimal(
+                self.config.short_ma_period
             )
-            prev_long = sum(prev_marks[-self.config.long_ma_period :]) / self.config.long_ma_period
+            prev_long = sum(prev_marks[-self.config.long_ma_period :], Decimal("0")) / Decimal(
+                self.config.long_ma_period
+            )
             prev_diff = prev_short - prev_long
+            cur_diff = short_ma - long_ma
 
-            # Detect crosses with epsilon tolerance
-            bullish_cross = (prev_diff <= eps) and (cur_diff > eps)
-            bearish_cross = (prev_diff >= -eps) and (cur_diff < -eps)
+            bullish_cross = (prev_diff <= epsilon) and (cur_diff > epsilon)
+            bearish_cross = (prev_diff >= -epsilon) and (cur_diff < -epsilon)
 
-            # Debug logging for crossover detection
             if bullish_cross or bearish_cross:
                 cross_type = "Bullish" if bullish_cross else "Bearish"
                 logger.debug(
                     f"{cross_type} cross detected: prev_diff={prev_diff:.4f}, "
-                    f"cur_diff={cur_diff:.4f}, eps={eps:.4f}, "
+                    f"cur_diff={cur_diff:.4f}, eps={epsilon:.4f}, "
                     f"confirm_bars={self.config.ma_cross_confirm_bars}"
                 )
 
-            # Optional confirmation bars
             if self.config.ma_cross_confirm_bars > 0 and (bullish_cross or bearish_cross):
-                # Check if crossover persists for required bars
                 if len(marks) >= self.config.long_ma_period + self.config.ma_cross_confirm_bars + 1:
                     confirmed = True
                     for i in range(1, self.config.ma_cross_confirm_bars + 1):
                         check_marks = marks[:-i]
-                        check_short = (
-                            sum(check_marks[-self.config.short_ma_period :])
-                            / self.config.short_ma_period
-                        )
-                        check_long = (
-                            sum(check_marks[-self.config.long_ma_period :])
-                            / self.config.long_ma_period
-                        )
+                        check_short = sum(
+                            check_marks[-self.config.short_ma_period :], Decimal("0")
+                        ) / Decimal(self.config.short_ma_period)
+                        check_long = sum(
+                            check_marks[-self.config.long_ma_period :], Decimal("0")
+                        ) / Decimal(self.config.long_ma_period)
                         check_diff = check_short - check_long
 
-                        if bullish_cross and check_diff <= eps:
+                        if bullish_cross and check_diff <= epsilon:
                             confirmed = False
                             break
-                        elif bearish_cross and check_diff >= -eps:
+                        if bearish_cross and check_diff >= -epsilon:
                             confirmed = False
                             break
 
                     bullish_cross = bullish_cross and confirmed
                     bearish_cross = bearish_cross and confirmed
                 else:
-                    # Not enough history for confirmation
-                    bullish_cross = bearish_cross = False
+                    bullish_cross = False
+                    bearish_cross = False
 
-        # Calculate RSI if needed
         rsi = None
         if self.config.filters_config and self.config.filters_config.require_rsi_confirmation:
-            rsi = self.enhancements.calculate_rsi(marks)
+            rsi_raw = self.enhancements.calculate_rsi(marks)
+            rsi = Decimal(str(rsi_raw)) if rsi_raw is not None else None
 
-        # Generate base signal
-        base_signal = None
-        if bullish_cross and not position_state:
-            base_signal = "buy"
-        elif bearish_cross and self.config.enable_shorts and not position_state:
-            base_signal = "sell"
-        elif position_state:
-            # Check exit conditions with same robust crossover logic
-            # Recalculate crosses for exit (using same epsilon)
-            exit_bullish = False
-            exit_bearish = False
+        return SignalSnapshot(
+            short_ma=short_ma,
+            long_ma=long_ma,
+            epsilon=epsilon,
+            bullish_cross=bullish_cross,
+            bearish_cross=bearish_cross,
+            rsi=rsi,
+        )
 
-            if len(marks) >= self.config.long_ma_period + 1:
-                prev_marks = marks[:-1]
-                prev_short = (
-                    sum(prev_marks[-self.config.short_ma_period :]) / self.config.short_ma_period
-                )
-                prev_long = (
-                    sum(prev_marks[-self.config.long_ma_period :]) / self.config.long_ma_period
-                )
-                prev_diff = prev_short - prev_long
-                cur_diff = short_ma - long_ma
+    def _evaluate_position_exits(
+        self,
+        *,
+        symbol: str,
+        signal: SignalSnapshot,
+        marks: list[Decimal],
+        current_mark: Decimal,
+        position_state: dict[str, Any] | None,
+    ) -> Decision | None:
+        """Check exit crossovers and trailing stops for existing positions."""
+        if not position_state:
+            return None
 
-                exit_bullish = (prev_diff <= eps) and (cur_diff > eps)
-                exit_bearish = (prev_diff >= -eps) and (cur_diff < -eps)
+        exit_bullish = False
+        exit_bearish = False
 
-                # Debug logging for exit crossovers
-                if exit_bullish or exit_bearish:
-                    cross_type = "Bullish" if exit_bullish else "Bearish"
-                    logger.debug(
-                        f"Exit {cross_type} cross detected: prev_diff={prev_diff:.4f}, "
-                        f"cur_diff={cur_diff:.4f}, eps={eps:.4f}"
-                    )
+        if len(marks) >= self.config.long_ma_period + 1:
+            prev_marks = marks[:-1]
+            prev_short = sum(prev_marks[-self.config.short_ma_period :], Decimal("0")) / Decimal(
+                self.config.short_ma_period
+            )
+            prev_long = sum(prev_marks[-self.config.long_ma_period :], Decimal("0")) / Decimal(
+                self.config.long_ma_period
+            )
+            prev_diff = prev_short - prev_long
+            cur_diff = signal.short_ma - signal.long_ma
 
-            if position_state["side"] == "long" and exit_bearish:
-                return Decision(
-                    action=Action.CLOSE, reduce_only=True, reason="Bearish crossover exit"
-                )
-            elif position_state["side"] == "short" and exit_bullish:
-                return Decision(
-                    action=Action.CLOSE, reduce_only=True, reason="Bullish crossover exit"
-                )
+            exit_bullish = (prev_diff <= signal.epsilon) and (cur_diff > signal.epsilon)
+            exit_bearish = (prev_diff >= -signal.epsilon) and (cur_diff < -signal.epsilon)
 
-            # Check trailing stop
-            if self._check_trailing_stop(symbol, current_mark, position_state):
-                return Decision(action=Action.CLOSE, reduce_only=True, reason="Trailing stop hit")
-
-        # Apply market condition filters for new entries
-        if base_signal and market_snapshot:
-            # Check market conditions
-            if base_signal == "buy":
-                allow_entry, filter_reason = self.market_filters.should_allow_long_entry(
-                    market_snapshot, rsi
-                )
-            else:  # sell
-                allow_entry, filter_reason = self.market_filters.should_allow_short_entry(
-                    market_snapshot, rsi
+            if exit_bullish or exit_bearish:
+                cross_type = "Bullish" if exit_bullish else "Bearish"
+                logger.debug(
+                    "Exit %s cross detected: prev_diff=%.4f, cur_diff=%.4f, eps=%.4f",
+                    cross_type,
+                    float(prev_diff),
+                    float(cur_diff),
+                    float(signal.epsilon),
                 )
 
-            if not allow_entry:
-                # Determine rejection type
-                if "Spread" in filter_reason:
-                    rejection_type = "spread"
-                elif "depth" in filter_reason.lower():
-                    rejection_type = "depth"
-                elif "volume" in filter_reason.lower():
-                    rejection_type = "volume"
-                elif "RSI" in filter_reason:
-                    rejection_type = "rsi"
-                else:
-                    rejection_type = "filter"
+        side = position_state.get("side") if position_state else None
+        if side == "long" and exit_bearish:
+            return Decision(action=Action.CLOSE, reduce_only=True, reason="Bearish crossover exit")
+        if side == "short" and exit_bullish:
+            return Decision(action=Action.CLOSE, reduce_only=True, reason="Bullish crossover exit")
 
-                self._record_rejection(f"filter_{rejection_type}", symbol)
+        if position_state and self._check_trailing_stop(symbol, current_mark, position_state):
+            return Decision(action=Action.CLOSE, reduce_only=True, reason="Trailing stop hit")
 
-                return Decision(
-                    action=Action.HOLD,
-                    reason=f"Market filter rejected: {filter_reason}",
-                    filter_rejected=True,
-                    rejection_type=rejection_type,
-                )
+        return None
 
-        # Apply risk guards for new entries
-        if base_signal:
-            # Calculate position sizing
-            target_notional = self._calculate_position_size(equity, current_mark, product)
+    def _determine_entry_signal(
+        self, signal: SignalSnapshot, position_state: dict[str, Any] | None
+    ) -> str | None:
+        """Decide on potential entry direction when flat."""
+        if position_state:
+            return None
+        if signal.bullish_cross:
+            return "buy"
+        if signal.bearish_cross and self.config.enable_shorts:
+            return "sell"
+        return None
 
-            # Check liquidation distance
-            if product and market_snapshot:
-                safe_liq, liq_reason = self.risk_guards.check_liquidation_distance(
-                    entry_price=current_mark,
-                    position_size=target_notional / current_mark,
-                    leverage=Decimal(self.config.target_leverage),
-                    account_equity=equity,
-                )
+    def _apply_market_filters(
+        self,
+        *,
+        symbol: str,
+        base_signal: str | None,
+        rsi: Decimal | None,
+        market_snapshot: dict[str, Any] | None,
+    ) -> Decision | None:
+        """Apply market condition filters for prospective entries."""
+        if not base_signal or market_snapshot is None:
+            return None
 
-                if not safe_liq:
-                    self._record_rejection("guard_liquidation", symbol)
-                    return Decision(
-                        action=Action.HOLD,
-                        reason=f"Liquidation guard: {liq_reason}",
-                        guard_rejected=True,
-                        rejection_type="liquidation",
-                    )
-
-                # Check slippage impact
-                safe_slip, slip_reason = self.risk_guards.check_slippage_impact(
-                    order_size=target_notional, market_snapshot=market_snapshot
-                )
-
-                if not safe_slip:
-                    self._record_rejection("guard_slippage", symbol)
-                    return Decision(
-                        action=Action.HOLD,
-                        reason=f"Slippage guard: {slip_reason}",
-                        guard_rejected=True,
-                        rejection_type="slippage",
-                    )
-
-            # All checks passed - generate entry
-            self._record_acceptance(symbol)
-
-            return Decision(
-                action=Action.BUY if base_signal == "buy" else Action.SELL,
-                target_notional=target_notional,
-                leverage=self.config.target_leverage,
-                reason=f"{'Bullish' if base_signal == 'buy' else 'Bearish'} MA crossover with RSI confirmation",
+        if base_signal == "buy":
+            allow_entry, filter_reason = self.market_filters.should_allow_long_entry(
+                market_snapshot, rsi
+            )
+        else:
+            allow_entry, filter_reason = self.market_filters.should_allow_short_entry(
+                market_snapshot, rsi
             )
 
-        # Default hold with more detail
-        ma_diff = short_ma - long_ma
+        if allow_entry:
+            return None
+
+        if "Spread" in filter_reason:
+            rejection_type = "spread"
+        elif "depth" in filter_reason.lower():
+            rejection_type = "depth"
+        elif "volume" in filter_reason.lower():
+            rejection_type = "volume"
+        elif "RSI" in filter_reason:
+            rejection_type = "rsi"
+        else:
+            rejection_type = "filter"
+
+        self._record_rejection(f"filter_{rejection_type}", symbol)
+
         return Decision(
-            action=Action.HOLD, reason=f"No signal (MA diff: {ma_diff:.2f}, eps: {eps:.2f})"
+            action=Action.HOLD,
+            reason=f"Market filter rejected: {filter_reason}",
+            filter_rejected=True,
+            rejection_type=rejection_type,
+        )
+
+    def _process_entry_signal(
+        self,
+        *,
+        symbol: str,
+        base_signal: str | None,
+        equity: Decimal,
+        current_mark: Decimal,
+        product: Product | None,
+        market_snapshot: dict[str, Any] | None,
+        position_state: dict[str, Any] | None,
+    ) -> Decision | None:
+        """Run risk guards and size the position when an entry exists."""
+        if not base_signal:
+            return None
+
+        target_notional = self._calculate_position_size(equity, current_mark, product)
+
+        if self.risk_manager and base_signal:
+            context = PositionSizingContext(
+                symbol=symbol,
+                side=base_signal,
+                equity=equity,
+                current_price=current_mark,
+                strategy_name=self.__class__.__name__,
+                method=getattr(
+                    self.risk_manager.config,
+                    "position_sizing_method",
+                    "intelligent",
+                ),
+                current_position_quantity=(
+                    Decimal(str(position_state.get("quantity", "0")))
+                    if position_state
+                    else Decimal("0")
+                ),
+                target_leverage=Decimal(str(self.config.target_leverage)),
+                product=product,
+                strategy_multiplier=float(
+                    getattr(self.risk_manager.config, "position_sizing_multiplier", 1.0)
+                ),
+            )
+            advice = self.risk_manager.size_position(context)
+            target_notional = advice.target_notional
+            if advice.reduce_only and target_notional == 0:
+                self._record_rejection("risk_position_sizing", symbol)
+                return Decision(
+                    action=Action.HOLD,
+                    reason=advice.reason or "Position sizing prevented entry",
+                    guard_rejected=True,
+                    rejection_type="position_sizing",
+                )
+
+        if product and market_snapshot:
+            safe_liq, liq_reason = self.risk_guards.check_liquidation_distance(
+                entry_price=current_mark,
+                position_size=target_notional / current_mark,
+                leverage=Decimal(self.config.target_leverage),
+                account_equity=equity,
+            )
+
+            if not safe_liq:
+                self._record_rejection("guard_liquidation", symbol)
+                return Decision(
+                    action=Action.HOLD,
+                    reason=f"Liquidation guard: {liq_reason}",
+                    guard_rejected=True,
+                    rejection_type="liquidation",
+                )
+
+            safe_slip, slip_reason = self.risk_guards.check_slippage_impact(
+                order_size=target_notional, market_snapshot=market_snapshot
+            )
+
+            if not safe_slip:
+                self._record_rejection("guard_slippage", symbol)
+                return Decision(
+                    action=Action.HOLD,
+                    reason=f"Slippage guard: {slip_reason}",
+                    guard_rejected=True,
+                    rejection_type="slippage",
+                )
+
+        self._record_acceptance(symbol)
+
+        return Decision(
+            action=Action.BUY if base_signal == "buy" else Action.SELL,
+            target_notional=target_notional,
+            leverage=self.config.target_leverage,
+            reason=f"{'Bullish' if base_signal == 'buy' else 'Bearish'} MA crossover with RSI confirmation",
+        )
+
+    def _build_hold_decision(self, signal: SignalSnapshot) -> Decision:
+        """Produce the default hold decision with diagnostics."""
+        return Decision(
+            action=Action.HOLD,
+            reason=f"No signal (MA diff: {float(signal.ma_diff):.2f}, eps: {float(signal.epsilon):.2f})",
         )
 
     def _check_trailing_stop(
@@ -461,19 +591,21 @@ class PerpsBaselineEnhancedStrategy:
         """Check if trailing stop is hit."""
         if symbol not in self.trailing_stops:
             # Initialize trailing stop
+            trailing_pct = _to_decimal(self.config.trailing_stop_pct)
             self.trailing_stops[symbol] = (
                 current_price,
-                current_price * (1 - self.config.trailing_stop_pct),
+                current_price * (Decimal("1") - trailing_pct),
             )
             return False
 
         peak, stop_price = self.trailing_stops[symbol]
+        trailing_pct = _to_decimal(self.config.trailing_stop_pct)
 
         # Update peak and stop for long positions
         if position_state["side"] == "long":
             if current_price > peak:
                 peak = current_price
-                stop_price = peak * (1 - self.config.trailing_stop_pct)
+                stop_price = peak * (Decimal("1") - trailing_pct)
                 self.trailing_stops[symbol] = (peak, stop_price)
 
             return current_price <= stop_price
@@ -482,7 +614,7 @@ class PerpsBaselineEnhancedStrategy:
         if position_state["side"] == "short":
             if current_price < peak:
                 peak = current_price
-                stop_price = peak * (1 + self.config.trailing_stop_pct)
+                stop_price = peak * (Decimal("1") + trailing_pct)
                 self.trailing_stops[symbol] = (peak, stop_price)
 
             return current_price >= stop_price
@@ -498,7 +630,7 @@ class PerpsBaselineEnhancedStrategy:
             Target notional value in USD
         """
         # Base notional: fraction of equity with leverage
-        target_notional = equity * Decimal("0.1") * self.config.target_leverage
+        target_notional = equity * Decimal("0.1") * Decimal(str(self.config.target_leverage))
 
         # Apply product constraints if available
         if product and hasattr(product, "min_size"):

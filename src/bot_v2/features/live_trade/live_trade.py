@@ -1,22 +1,25 @@
 """
-Legacy live trading orchestration (equities-oriented template).
+Legacy live trading orchestration retained for compatibility demos.
 
-Important: The active production path is Coinbase Perpetual Futures via the perps bot
-(`bot_v2.orchestration.perps_bot` and CLI `perps-bot`). This module remains for
-legacy coverage and tests and uses template broker classes (Alpaca/IBKR/Simulated).
+Production trading is handled by the Coinbase-specific orchestration
+(`bot_v2.orchestration`).  This module now proxies exclusively to the
+``SimulatedBroker`` stub so that historical examples and tests continue to
+function without maintaining third-party integrations.
 """
 
 import logging
+from dataclasses import dataclass
 from decimal import Decimal
-from typing import Any
+from typing import Any, cast
+
+from bot_v2.types.trading import AccountSnapshot, TradingPosition
+from bot_v2.utilities.quantities import quantity_from
 
 from ...errors import ExecutionError, NetworkError, ValidationError, log_error
 from ...errors.handler import RecoveryStrategy, get_error_handler
 from ...validation import PositiveNumberValidator, SymbolValidator
 
-# Import core interfaces instead of local types
 from ..brokerages.core.interfaces import (
-    IBrokerage,
     Order,
     OrderSide,
     OrderType,
@@ -24,153 +27,73 @@ from ..brokerages.core.interfaces import (
     Quote,
     TimeInForce,
 )
-from .brokers import AlpacaBroker, IBKRBroker, SimulatedBroker
-from .execution import ExecutionEngine
-from .risk import LiveRiskManager
+from .broker_connection import (
+    connect_broker as _connect_broker,
+    disconnect as _disconnect,
+    get_broker_client,
+    get_connection,
+    get_execution_engine,
+    get_risk_manager,
+)
 from .strategies.perps_baseline import Action, BaselinePerpsStrategy, Decision
-
-# Keep local types that don't exist in core
-from .types import AccountInfo, BrokerConnection, MarketHours
+from .types import (
+    AccountInfo,
+    BrokerConnection,
+    MarketHours,
+    position_to_trading_position,
+)
 
 logger = logging.getLogger(__name__)
 
 
 def _quantity_from_position(position: Any | None) -> Decimal:
-    if position is None:
-        return Decimal("0")
+    """Resolve quantity regardless of legacy naming."""
 
-    raw = getattr(position, "quantity", None)
-    if raw is None:
-        raw = getattr(position, "qty", None)
-
-    try:
-        return Decimal(str(raw)) if raw is not None else Decimal("0")
-    except Exception:
-        return Decimal("0")
+    resolved = quantity_from(position, default=Decimal("0"))
+    return resolved if resolved is not None else Decimal("0")
 
 
-# Global broker connection
-_broker_connection: BrokerConnection | None = None
-_broker_client = None
-_risk_manager = None
-_execution_engine = None
+@dataclass
+class AccountContext:
+    equity: Decimal
+    position_map: dict[str, Position]
+
+
+@dataclass
+class SymbolContext:
+    symbol: str
+    current_mark: Decimal
+    equity: Decimal
+    position_state: dict[str, Any] | None
+    recent_marks: list[Decimal] | None
+    product: Any
 
 
 def connect_broker(
-    broker_name: str = "alpaca",
+    broker_name: str = "simulated",
     api_key: str = "",
     api_secret: str = "",
     is_paper: bool = True,
     base_url: str | None = None,
 ) -> BrokerConnection:
-    """
-    Connect to a broker.
+    """Connect to the simulated broker stub used by legacy demos."""
 
-    Args:
-        broker_name: Name of broker ('alpaca', 'ibkr', 'simulated')
-        api_key: API key
-        api_secret: API secret
-        is_paper: Use paper trading account
-        base_url: Optional base URL override
-
-    Returns:
-        BrokerConnection object
-
-    Raises:
-        ValidationError: If invalid broker configuration
-        NetworkError: If connection fails
-    """
-    global _broker_connection, _broker_client, _risk_manager, _execution_engine
-
-    try:
-        # Validate inputs
-        valid_brokers = ["alpaca", "ibkr", "simulated"]
-        if broker_name not in valid_brokers:
-            raise ValidationError(
-                f"Invalid broker name: {broker_name}", field="broker_name", value=broker_name
-            )
-
-        # Create connection
-        _broker_connection = BrokerConnection(
-            broker_name=broker_name,
-            api_key=api_key,
-            api_secret=api_secret,
-            is_paper=is_paper,
-            is_connected=False,
-            account_id=None,
-            base_url=base_url,
-        )
-
-        # Initialize broker client with error handling
-        error_handler = get_error_handler()
-
-        def _create_broker_client() -> IBrokerage:
-            if broker_name == "alpaca":
-                return AlpacaBroker(api_key, api_secret, is_paper, base_url)
-            elif broker_name == "ibkr":
-                return IBKRBroker(api_key, api_secret, is_paper)
-            else:
-                return SimulatedBroker()
-
-        _broker_client = _create_broker_client()
-
-        # Connect with retry logic
-        def _connect_with_validation() -> bool:
-            if not _broker_client.connect():
-                raise NetworkError(
-                    f"Failed to establish connection to {broker_name}",
-                    context={"broker": broker_name, "is_paper": is_paper},
-                )
-            return True
-
-        success = error_handler.with_retry(
-            _connect_with_validation, recovery_strategy=RecoveryStrategy.RETRY
-        )
-
-        if success:
-            _broker_connection.is_connected = True
-            _broker_connection.account_id = _broker_client.get_account_id()
-
-            # Initialize risk manager and execution engine
-            _risk_manager = LiveRiskManager()
-            _execution_engine = ExecutionEngine(_broker_client, _risk_manager)
-
-            logger.info(f"Connected to {broker_name} ({'paper' if is_paper else 'live'} mode)")
-            logger.info(f"Account ID: {_broker_connection.account_id}")
-            print(f"✅ Connected to {broker_name} ({'paper' if is_paper else 'live'} mode)")
-            print(f"   Account ID: {_broker_connection.account_id}")
-        else:
-            raise NetworkError(
-                f"Connection to {broker_name} failed",
-                context={"broker": broker_name, "is_paper": is_paper},
-            )
-
-        return _broker_connection
-
-    except Exception as e:
-        if isinstance(e, ValidationError | NetworkError):
-            log_error(e)
-            logger.error(f"Broker connection failed: {e.message}")
-            print(f"❌ Failed to connect to {broker_name}: {e.message}")
-            raise
-        else:
-            network_error = NetworkError(
-                f"Unexpected error connecting to {broker_name}",
-                context={"broker": broker_name, "original_error": str(e)},
-            )
-            log_error(network_error)
-            logger.error(f"Unexpected connection error: {network_error.message}")
-            print(f"❌ Failed to connect to {broker_name}: {network_error.message}")
-            raise network_error from e
+    return _connect_broker(
+        broker_name=broker_name,
+        api_key=api_key,
+        api_secret=api_secret,
+        is_paper=is_paper,
+        base_url=base_url,
+    )
 
 
 def place_order(
     symbol: str,
     side: OrderSide,
-    quantity: int,
+    quantity: Decimal | int,
     order_type: OrderType = OrderType.MARKET,
-    limit_price: float | None = None,
-    stop_price: float | None = None,
+    limit_price: Decimal | float | None = None,
+    stop_price: Decimal | float | None = None,
     time_in_force: TimeInForce = TimeInForce.GTC,
 ) -> Order | None:
     """
@@ -193,14 +116,15 @@ def place_order(
         ExecutionError: If order placement fails
         NetworkError: If broker connection issues
     """
+    connection = get_connection()
+    if not connection or not connection.is_connected:
+        raise NetworkError("Not connected to broker")
+
+    execution_engine = get_execution_engine()
+    if not execution_engine:
+        raise ExecutionError("Execution engine not initialized")
+
     try:
-        # Validate connection state
-        if not _broker_connection or not _broker_connection.is_connected:
-            raise NetworkError("Not connected to broker")
-
-        if not _execution_engine:
-            raise ExecutionError("Execution engine not initialized")
-
         # Validate inputs
         symbol_validator = SymbolValidator()
         symbol = symbol_validator.validate(symbol, "symbol")
@@ -214,7 +138,7 @@ def place_order(
             raise ExecutionError("Unable to retrieve account information")
 
         # Place order through execution engine (includes risk validation)
-        order = _execution_engine.place_order(
+        order = execution_engine.place_order(
             symbol=symbol,
             side=side,
             quantity=quantity,
@@ -270,28 +194,37 @@ def get_positions() -> list[Position]:
         NetworkError: If broker connection issues
     """
     try:
-        if not _broker_client:
+        broker = get_broker_client()
+        if broker is None:
             raise NetworkError("Broker client not initialized")
 
         error_handler = get_error_handler()
 
         def _get_positions_from_broker() -> list[Position]:
-            return _broker_client.get_positions()
+            return broker.get_positions()
 
-        positions = error_handler.with_retry(
-            _get_positions_from_broker, recovery_strategy=RecoveryStrategy.RETRY
+        positions = cast(
+            list[Position],
+            error_handler.with_retry(
+                _get_positions_from_broker, recovery_strategy=RecoveryStrategy.RETRY
+            ),
         )
 
         if positions:
             logger.info(f"Retrieved {len(positions)} positions")
             print("📊 Current Positions:")
             for pos in positions:
-                pnl_sign = "+" if pos.unrealized_pnl >= 0 else ""
-                print(f"   {pos.symbol}: {pos.quantity} shares @ ${pos.avg_cost:.2f}")
-                print(f"      Current: ${pos.current_price:.2f}")
-                print(
-                    f"      P&L: {pnl_sign}${pos.unrealized_pnl:.2f} ({pnl_sign}{pos.unrealized_pnl_pct:.2%})"
-                )
+                entry_price = float(pos.entry_price)
+                mark_price = float(pos.mark_price)
+                quantity = float(pos.quantity)
+                cost_basis = abs(float(pos.entry_price * pos.quantity))
+                print(f"   {pos.symbol}: {quantity:.4f} units @ ${entry_price:.2f}")
+                print(f"      Mark: ${mark_price:.2f}")
+
+                pnl_value = float(pos.unrealized_pnl)
+                pnl_sign = "+" if pnl_value >= 0 else "-"
+                pnl_pct = (pnl_value / cost_basis) * 100 if cost_basis else 0.0
+                print(f"      P&L: {pnl_sign}${abs(pnl_value):.2f} ({pnl_sign}{abs(pnl_pct):.2f}%)")
         else:
             logger.info("No open positions")
             print("📊 No open positions")
@@ -313,6 +246,12 @@ def get_positions() -> list[Position]:
         return []
 
 
+def get_positions_trading() -> list[TradingPosition]:
+    """Return current positions using the shared trading type schema."""
+
+    return [position_to_trading_position(pos) for pos in get_positions()]
+
+
 def get_account() -> AccountInfo | None:
     """
     Get account information.
@@ -324,16 +263,20 @@ def get_account() -> AccountInfo | None:
         NetworkError: If broker connection issues
     """
     try:
-        if not _broker_client:
+        broker = get_broker_client()
+        if broker is None:
             raise NetworkError("Broker client not initialized")
 
         error_handler = get_error_handler()
 
         def _get_account_from_broker() -> AccountInfo:
-            return _broker_client.get_account()
+            return broker.get_account()
 
-        account = error_handler.with_retry(
-            _get_account_from_broker, recovery_strategy=RecoveryStrategy.RETRY
+        account = cast(
+            AccountInfo,
+            error_handler.with_retry(
+                _get_account_from_broker, recovery_strategy=RecoveryStrategy.RETRY
+            ),
         )
 
         if account:
@@ -365,20 +308,21 @@ def get_account() -> AccountInfo | None:
         return None
 
 
+def get_account_snapshot() -> AccountSnapshot | None:
+    """Return the active account as a shared account snapshot."""
+
+    account = get_account()
+    return account.to_account_snapshot() if account else None
+
+
 def get_orders(status: str = "open") -> list[Order]:
-    """
-    Get orders.
+    """Get orders for the active broker session."""
 
-    Args:
-        status: 'open', 'closed', 'all'
-
-    Returns:
-        List of Order objects
-    """
-    if not _broker_client:
+    broker = get_broker_client()
+    if broker is None:
         return []
 
-    return _broker_client.get_orders(status)
+    return broker.get_orders(status)
 
 
 def cancel_order(order_id: str) -> bool:
@@ -402,16 +346,20 @@ def cancel_order(order_id: str) -> bool:
                 "Order ID must be a non-empty string", field="order_id", value=order_id
             )
 
-        if not _broker_client:
+        broker = get_broker_client()
+        if broker is None:
             raise NetworkError("Broker client not initialized")
 
         error_handler = get_error_handler()
 
         def _cancel_order_with_broker() -> bool:
-            return _broker_client.cancel_order(order_id)
+            return broker.cancel_order(order_id)
 
-        success = error_handler.with_retry(
-            _cancel_order_with_broker, recovery_strategy=RecoveryStrategy.RETRY
+        success = cast(
+            bool,
+            error_handler.with_retry(
+                _cancel_order_with_broker, recovery_strategy=RecoveryStrategy.RETRY
+            ),
         )
 
         if success:
@@ -441,34 +389,25 @@ def cancel_order(order_id: str) -> bool:
 
 
 def get_quote(symbol: str) -> Quote | None:
-    """
-    Get real-time quote.
+    """Get real-time quote for ``symbol``."""
 
-    Args:
-        symbol: Trading symbol
-
-    Returns:
-        Quote object or None
-    """
-    if not _broker_client:
+    broker = get_broker_client()
+    if broker is None:
         return None
 
-    return _broker_client.get_quote(symbol)
+    return broker.get_quote(symbol)
 
 
 def get_market_hours() -> MarketHours:
-    """
-    Get market hours information.
+    """Return market hours information from the active broker."""
 
-    Returns:
-        MarketHours object
-    """
-    if not _broker_client:
+    broker = get_broker_client()
+    if broker is None:
         return MarketHours(
             is_open=False, open_time=None, close_time=None, extended_hours_open=False
         )
 
-    return _broker_client.get_market_hours()
+    return broker.get_market_hours()
 
 
 def close_all_positions() -> bool:
@@ -496,14 +435,14 @@ def close_all_positions() -> bool:
         for position in positions:
             try:
                 # Determine side for closing
-                close_side = "sell" if position.side == "long" else "buy"
+                close_side = OrderSide.SELL if position.side == "long" else OrderSide.BUY
 
                 # Place market order to close
                 order = place_order(
                     symbol=position.symbol,
                     side=close_side,
                     quantity=abs(position.quantity),
-                    order_type="market",
+                    order_type=OrderType.MARKET,
                 )
 
                 if not order:
@@ -512,7 +451,7 @@ def close_all_positions() -> bool:
                     logger.error(f"Failed to close position: {position.symbol}")
                     print(f"❌ Failed to close {position.symbol}")
                 else:
-                    logger.info(f"Close order placed for {position.symbol}: {order.order_id}")
+                    logger.info(f"Close order placed for {position.symbol}: {order.id}")
 
             except Exception as e:
                 success = False
@@ -540,178 +479,218 @@ def close_all_positions() -> bool:
 
 
 def run_strategy(
-    strategy: BaselinePerpsStrategy,
     symbols: list[str],
+    strategy_name: str = "baseline_perps",
+    iterations: int = 3,
     mark_cache: dict[str, Decimal] | None = None,
     mark_windows: dict[str, list[Decimal]] | None = None,
-) -> dict[str, Decision]:
-    """
-    Run strategy for given symbols.
+) -> None:
+    """Run a basic trading strategy for demonstration purposes."""
 
-    Args:
-        strategy: Strategy instance
-        symbols: List of symbols to trade
-        mark_cache: Optional mark price cache (symbol -> price)
-        mark_windows: Optional mark price windows for MAs
+    broker = get_broker_client()
+    connection = get_connection()
+    risk_manager = get_risk_manager()
+    if not broker or not connection or not connection.is_connected or not risk_manager:
+        raise RuntimeError("Broker connection not initialized")
 
-    Returns:
-        Dict of symbol -> Decision
-    """
-    if not _broker_client:
-        logger.error("Broker not connected")
-        return {}
+    strategy = BaselinePerpsStrategy(environment="simulated", risk_manager=risk_manager)
 
-    decisions = {}
+    for _ in range(iterations):
+        account_info = get_account()
+        if not account_info:
+            break
 
-    try:
-        # Get account info
-        account = get_account()
-        if not account:
-            logger.error("Unable to get account info")
-            return {}
-
-        equity = Decimal(str(account.equity))
-
-        # Get current positions
-        positions = get_positions()
-        position_map = {pos.symbol: pos for pos in positions}
+        account_ctx = AccountContext(
+            equity=Decimal(str(account_info.equity)),
+            position_map={pos.symbol: pos for pos in broker.get_positions()},
+        )
 
         for symbol in symbols:
             try:
-                # Get current mark price
-                current_mark = None
-                if mark_cache and symbol in mark_cache:
-                    current_mark = mark_cache[symbol]
-                else:
-                    # Fall back to quote
-                    quote = get_quote(symbol)
-                    if quote:
-                        current_mark = Decimal(str(quote.last_price))
+                symbol_ctx = _prepare_symbol_context(
+                    symbol=symbol,
+                    account_context=account_ctx,
+                    mark_cache=mark_cache,
+                    mark_windows=mark_windows,
+                )
 
-                if not current_mark:
-                    logger.warning(f"No mark price for {symbol}")
+                if symbol_ctx is None:
                     continue
 
-                # Get position state
-                position_state = None
-                if symbol in position_map:
-                    pos = position_map[symbol]
-                    position_state = {
-                        "quantity": Decimal(str(_quantity_from_position(pos))),
-                        "qty": Decimal(str(_quantity_from_position(pos))),
-                        "side": pos.side,
-                        "entry": Decimal(str(pos.avg_cost)),
-                    }
+                decision = _generate_strategy_decision(strategy, symbol_ctx)
+                _execute_decision_if_actionable(decision, symbol_ctx)
+            except Exception as exc:
+                logger.error("Error processing %s: %s", symbol, exc)
 
-                # Get recent marks for MAs
-                recent_marks = None
-                if mark_windows and symbol in mark_windows:
-                    recent_marks = mark_windows[symbol]
 
-                # Generate decision
-                # Note: product would come from ProductCatalog in real implementation
-                from ..brokerages.core.interfaces import MarketType, Product
+def _validate_broker_connection() -> bool:
+    connection = get_connection()
+    broker = get_broker_client()
+    if connection and connection.is_connected and broker is not None:
+        return True
+    logger.error("Broker not connected")
+    return False
 
-                product = Product(
-                    symbol=symbol,
-                    base_asset=symbol.split("-")[0],
-                    quote_asset="USD",
-                    market_type=MarketType.PERPETUAL,
-                    step_size=Decimal("0.001"),
-                    min_size=Decimal("0.001"),
-                    price_increment=Decimal("0.01"),
-                    min_notional=Decimal("10"),
-                )
 
-                decision = strategy.decide(
-                    symbol=symbol,
-                    current_mark=current_mark,
-                    position_state=position_state,
-                    recent_marks=recent_marks,
-                    equity=equity,
-                    product=product,
-                )
+def _prepare_account_context() -> AccountContext | None:
+    account = get_account()
+    if not account:
+        logger.error("Unable to get account info")
+        return None
 
-                decisions[symbol] = decision
-                logger.info(f"{symbol} decision: {decision.action.value} - {decision.reason}")
+    equity = Decimal(str(account.equity))
+    positions = get_positions()
+    position_map = {pos.symbol: pos for pos in positions}
+    return AccountContext(equity=equity, position_map=position_map)
 
-                # Execute decision if actionable
-                if decision.action in [Action.BUY, Action.SELL]:
-                    # Entry order
-                    side = "buy" if decision.action == Action.BUY else "sell"
 
-                    quantity = decision.quantity
-                    if quantity is None and decision.target_notional:
-                        quantity = decision.target_notional / current_mark
+def _prepare_symbol_context(
+    *,
+    symbol: str,
+    account_context: AccountContext,
+    mark_cache: dict[str, Decimal] | None,
+    mark_windows: dict[str, list[Decimal]] | None,
+) -> SymbolContext | None:
+    current_mark = None
+    if mark_cache and symbol in mark_cache:
+        current_mark = mark_cache[symbol]
+    else:
+        quote = get_quote(symbol)
+        if quote:
+            current_mark = Decimal(str(quote.last))
 
-                    if quantity is not None:
-                        from ..brokerages.coinbase.utilities import enforce_perp_rules
+    if not current_mark:
+        logger.warning(f"No mark price for {symbol}")
+        return None
 
-                        quantized_qty, quantized_price = enforce_perp_rules(
-                            product=product,
-                            quantity=quantity,
-                            price=current_mark,
-                        )
+    position_state = None
+    if symbol in account_context.position_map:
+        position = account_context.position_map[symbol]
+        resolved_quantity = _quantity_from_position(position)
+        position_state = {
+            "quantity": Decimal(str(resolved_quantity)),
+            "side": position.side,
+            "entry": Decimal(str(position.entry_price)),
+        }
 
-                        logger.info(f"Would place {side} order: {quantized_qty} {symbol} @ market")
+    recent_marks = None
+    if mark_windows and symbol in mark_windows:
+        recent_marks = mark_windows[symbol]
 
-                elif decision.action == Action.CLOSE:
-                    if position_state:
-                        close_side = "sell" if position_state.get("side") == "long" else "buy"
-                        quantity = decision.quantity
-                        if quantity is None and decision.qty is not None:
-                            quantity = decision.qty
-                        if quantity is None:
-                            quantity = _quantity_from_position(position_state)
+    product = _build_template_product(symbol)
 
-                        if quantity is not None:
-                            from ..brokerages.coinbase.utilities import enforce_perp_rules
+    return SymbolContext(
+        symbol=symbol,
+        current_mark=current_mark,
+        equity=account_context.equity,
+        position_state=position_state,
+        recent_marks=recent_marks,
+        product=product,
+    )
 
-                            quantized_qty, quantized_price = enforce_perp_rules(
-                                product=product,
-                                quantity=quantity,
-                                price=current_mark,
-                            )
-                            logger.info(
-                                f"Would place reduce-only {close_side} order: {quantized_qty} {symbol}"
-                            )
-                        else:
-                            logger.info(
-                                f"Skipping close for {symbol}; no quantity resolved from decision/state"
-                            )
 
-            except Exception as e:
-                logger.error(f"Error processing {symbol}: {e}")
-                decisions[symbol] = Decision(action=Action.HOLD, reason=f"Error: {str(e)}")
+def _generate_strategy_decision(
+    strategy: BaselinePerpsStrategy, context: SymbolContext
+) -> Decision:
+    decision = strategy.decide(
+        symbol=context.symbol,
+        current_mark=context.current_mark,
+        position_state=context.position_state,
+        recent_marks=context.recent_marks,
+        equity=context.equity,
+        product=context.product,
+    )
+    logger.info(f"{context.symbol} decision: {decision.action.value} - {decision.reason}")
+    return decision
 
-    except Exception as e:
-        logger.error(f"Strategy runner error: {e}")
 
-    return decisions
+def _execute_decision_if_actionable(decision: Decision, context: SymbolContext) -> None:
+    symbol = context.symbol
+    current_mark = context.current_mark
+    product = context.product
+
+    if decision.action in (Action.BUY, Action.SELL):
+        side = "buy" if decision.action == Action.BUY else "sell"
+        quantity = decision.quantity
+        if quantity is None and decision.target_notional:
+            quantity = decision.target_notional / current_mark
+
+        if quantity is not None:
+            from ..brokerages.coinbase.utilities import enforce_perp_rules
+
+            quantized_quantity, _ = enforce_perp_rules(
+                product=product,
+                quantity=quantity,
+                price=current_mark,
+            )
+
+            logger.info(f"Would place {side} order: {quantized_quantity} {symbol} @ market")
+
+    elif decision.action == Action.CLOSE and context.position_state:
+        close_side = "sell" if context.position_state.get("side") == "long" else "buy"
+        quantity = decision.quantity
+        if quantity is None:
+            quantity = _quantity_from_position(context.position_state)
+
+        if quantity is not None:
+            from ..brokerages.coinbase.utilities import enforce_perp_rules
+
+            quantized_quantity, _ = enforce_perp_rules(
+                product=product,
+                quantity=quantity,
+                price=current_mark,
+            )
+            logger.info(
+                f"Would place reduce-only {close_side} order: {quantized_quantity} {symbol}"
+            )
+        else:
+            logger.info(f"Skipping close for {symbol}; no quantity resolved from decision/state")
+
+
+def _handle_symbol_error(symbol: str, exc: Exception) -> Decision:
+    logger.error(f"Error processing {symbol}: {exc}")
+    return Decision(action=Action.HOLD, reason=f"Error: {str(exc)}")
+
+
+def _build_template_product(symbol: str) -> Any:
+    from ..brokerages.core.interfaces import MarketType, Product
+
+    base_asset = symbol.split("-")[0]
+    return Product(
+        symbol=symbol,
+        base_asset=base_asset,
+        quote_asset="USD",
+        market_type=MarketType.PERPETUAL,
+        step_size=Decimal("0.001"),
+        min_size=Decimal("0.001"),
+        price_increment=Decimal("0.01"),
+        min_notional=Decimal("10"),
+    )
 
 
 def disconnect() -> None:
     """Disconnect from broker."""
-    global _broker_connection, _broker_client, _risk_manager, _execution_engine
-
     try:
-        if _broker_client:
-            _broker_client.disconnect()
-            logger.info("Disconnected from broker")
-
-        # Clean up global state
-        _broker_connection = None
-        _broker_client = None
-        _risk_manager = None
-        _execution_engine = None
-
+        _disconnect()
+        logger.info("Disconnected from broker")
         print("Disconnected from broker")
-
-    except Exception as e:
-        logger.warning(f"Error during disconnect: {e}")
-        # Force cleanup even if disconnect fails
-        _broker_connection = None
-        _broker_client = None
-        _risk_manager = None
-        _execution_engine = None
+    except Exception as exc:  # pragma: no cover - defensive guard
+        logger.warning("Error during disconnect: %s", exc)
         print("Force disconnected from broker")
+
+
+__all__ = [
+    "connect_broker",
+    "disconnect",
+    "place_order",
+    "cancel_order",
+    "get_orders",
+    "close_all_positions",
+    "get_positions",
+    "get_positions_trading",
+    "get_account",
+    "get_account_snapshot",
+    "get_quote",
+    "get_market_hours",
+    "run_strategy",
+]

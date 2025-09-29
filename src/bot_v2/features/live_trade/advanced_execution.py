@@ -9,7 +9,9 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any
+from typing import Any, cast
+from collections.abc import Mapping
+import inspect
 
 from ...errors import ExecutionError, ValidationError
 from ..brokerages.coinbase.specs import (
@@ -19,12 +21,14 @@ from ..brokerages.core.interfaces import (
     Order,
     OrderSide,
     OrderType,
+    Position,
     Product,
     Quote,
     TimeInForce,
 )
-from ..utils.quantization import quantize_price_side_aware
-from .risk import LiveRiskManager
+from ...utilities.quantization import quantize_price_side_aware
+from .risk import LiveRiskManager, PositionSizingAdvice, PositionSizingContext
+from bot_v2.utilities.quantities import quantity_from
 
 __all__ = [
     "SizingMode",
@@ -104,10 +108,10 @@ class AdvancedExecutionEngine:
 
     def __init__(
         self,
-        broker,
+        broker: Any,
         risk_manager: LiveRiskManager | None = None,
         config: OrderConfig | None = None,
-    ):
+    ) -> None:
         """
         Initialize enhanced execution engine.
 
@@ -137,6 +141,9 @@ class AdvancedExecutionEngine:
 
         # Track rejection reasons
         self.rejections_by_reason: dict[str, int] = {}
+
+        # Last sizing advice for diagnostics/tests
+        self._last_sizing_advice: PositionSizingAdvice | None = None
 
         # Optional per-symbol slippage multipliers for impact-aware sizing
         self.slippage_multipliers: dict[str, Decimal] = {}
@@ -171,181 +178,582 @@ class AdvancedExecutionEngine:
         """
         Place an order with advanced features, adhering to IBrokerage.
         """
-        # Generate idempotent client ID if not provided
-        client_id = (
-            client_id or f"{symbol}_{side.value}_{int(time.time() * 1000)}_{uuid.uuid4().hex[:8]}"
-        )
+        client_id = self._prepare_order_request(client_id, symbol, side)
 
-        if client_id in self.client_order_map:
-            logger.warning(f"Duplicate client_id {client_id}, returning existing order")
-            return self.pending_orders.get(self.client_order_map[client_id])
+        duplicate_order = self._check_duplicate_order(client_id)
+        if duplicate_order:
+            return duplicate_order
 
         try:
-            order_quantity = quantity if isinstance(quantity, Decimal) else Decimal(str(quantity))
+            order_quantity = self._normalize_quantity(quantity)
+            product, quote = self._fetch_market_data(
+                symbol=symbol,
+                order_type=order_type,
+                post_only=post_only,
+            )
 
-            # Pre-trade risk validation should run before spec validation
-            if self.risk_manager is not None:
-                try:
-                    self.risk_manager.pre_trade_validate(
-                        symbol=symbol,
-                        side=side,
-                        quantity=order_quantity,
-                        order_type=order_type,
-                        price=limit_price,
-                    )
-                except ValidationError as e:
-                    logger.warning(f"Risk validation failed for {symbol}: {e}")
-                    self.order_metrics["rejected"] += 1
-                    self.rejections_by_reason["risk"] = self.rejections_by_reason.get("risk", 0) + 1
-                    return None
-
-            # Fetch product for spec validation and quantization
-            product: Product | None = None
-            try:
-                product = self.broker.get_product(symbol)
-            except Exception:
-                product = None
-
-            quote: Quote | None = None
-
-            # Post-only validation for limit orders
-            if order_type == OrderType.LIMIT and post_only and self.config.reject_on_cross:
-                try:
-                    quote = self.broker.get_quote(symbol)
-                except Exception as exc:
-                    logger.error(
-                        "Failed to fetch quote for post-only validation on %s: %s", symbol, exc
-                    )
-                    raise ExecutionError(
-                        f"Could not get quote for post-only validation on {symbol}"
-                    ) from exc
-
-                if not quote:
-                    raise ExecutionError(
-                        f"Could not get quote for post-only validation on {symbol}"
-                    )
-
-                if side == OrderSide.BUY and limit_price and limit_price >= quote.ask:
-                    logger.warning(
-                        f"Post-only buy would cross at {limit_price:.2f} >= {quote.ask:.2f}"
-                    )
-                    self.order_metrics["post_only_rejected"] += 1
-                    return None
-                if side == OrderSide.SELL and limit_price and limit_price <= quote.bid:
-                    logger.warning(
-                        f"Post-only sell would cross at {limit_price:.2f} <= {quote.bid:.2f}"
-                    )
-                    self.order_metrics["post_only_rejected"] += 1
-                    return None
-
-            # Side-aware quantization for explicit limit/stop prices
-            if product is not None and product.price_increment:
-                if order_type == OrderType.LIMIT and limit_price is not None:
-                    limit_price = quantize_price_side_aware(
-                        Decimal(str(limit_price)), product.price_increment, side.value
-                    )
-                if order_type in (OrderType.STOP, OrderType.STOP_LIMIT) and stop_price is not None:
-                    stop_price = quantize_price_side_aware(
-                        Decimal(str(stop_price)), product.price_increment, side.value
-                    )
-                if order_type == OrderType.STOP_LIMIT and limit_price is not None:
-                    limit_price = quantize_price_side_aware(
-                        Decimal(str(limit_price)), product.price_increment, side.value
-                    )
-
-            # Stop orders require a trigger price
-            if order_type in (OrderType.STOP, OrderType.STOP_LIMIT):
-                if not self.config.enable_stop_orders:
-                    logger.warning("Stop orders disabled by configuration; rejecting %s", symbol)
-                    self.order_metrics["rejected"] += 1
-                    self.rejections_by_reason["stop_disabled"] = (
-                        self.rejections_by_reason.get("stop_disabled", 0) + 1
-                    )
-                    return None
-                if stop_price is None:
-                    logger.warning("Stop order for %s missing stop price", symbol)
-                    self.order_metrics["rejected"] += 1
-                    self.rejections_by_reason["invalid_stop"] = (
-                        self.rejections_by_reason.get("invalid_stop", 0) + 1
-                    )
-                    return None
-
-            # Exchange spec pre-flight validation (adopt adjusted values)
-            if product is not None:
-                vr = spec_validate_order(
-                    product=product,
-                    side=side.value,
-                    qty=Decimal(str(order_quantity)),
-                    order_type=order_type.value.lower(),
-                    price=(
-                        Decimal(str(limit_price))
-                        if (order_type == OrderType.LIMIT and limit_price is not None)
-                        else None
-                    ),
-                )
-                if not vr.ok:
-                    reason = vr.reason or "spec_violation"
-                    self.order_metrics["rejected"] += 1
-                    self.rejections_by_reason[reason] = self.rejections_by_reason.get(reason, 0) + 1
-                    logger.warning(f"Spec validation failed for {symbol}: {reason}")
-                    return None
-                if vr.adjusted_qty is not None:
-                    order_quantity = (
-                        vr.adjusted_qty
-                        if isinstance(vr.adjusted_qty, Decimal)
-                        else Decimal(str(vr.adjusted_qty))
-                    )
-                if vr.adjusted_price is not None and order_type == OrderType.LIMIT:
-                    limit_price = vr.adjusted_price
-
-            # Register stop trigger bookkeeping prior to placement so we can track even if broker call fails
-            if order_type in (OrderType.STOP, OrderType.STOP_LIMIT) and stop_price is not None:
-                trigger = StopTrigger(
-                    order_id=client_id,
-                    symbol=symbol,
-                    trigger_price=Decimal(str(stop_price)),
-                    side=side,
-                    quantity=order_quantity,
-                    limit_price=(
-                        Decimal(str(limit_price))
-                        if order_type == OrderType.STOP_LIMIT and limit_price is not None
-                        else None
-                    ),
-                )
-                self.stop_triggers[client_id] = trigger
-
-            # Directly call the broker's place_order method which follows IBrokerage
-            order = self.broker.place_order(
+            sizing_advice = self._maybe_apply_position_sizing(
                 symbol=symbol,
                 side=side,
                 order_type=order_type,
-                quantity=order_quantity,
-                price=limit_price,
+                order_quantity=order_quantity,
+                limit_price=limit_price,
+                product=product,
+                quote=quote,
+                leverage=leverage,
+            )
+
+            if sizing_advice is not None:
+                order_quantity = sizing_advice.target_quantity
+                if order_quantity <= 0:
+                    logger.info(
+                        "Dynamic sizing prevented new order for %s (%s)",
+                        symbol,
+                        sizing_advice.reason or "no reason provided",
+                    )
+                    self.order_metrics["rejected"] += 1
+                    self.rejections_by_reason["position_sizing"] = (
+                        self.rejections_by_reason.get("position_sizing", 0) + 1
+                    )
+                    return None
+                if sizing_advice.reason:
+                    logger.debug(
+                        "Dynamic sizing adjusted %s quantity to %s (%s)",
+                        symbol,
+                        order_quantity,
+                        sizing_advice.reason,
+                    )
+                reduce_only = reduce_only or sizing_advice.reduce_only
+
+            if not self._validate_post_only_constraints(
+                symbol=symbol,
+                order_type=order_type,
+                post_only=post_only,
+                side=side,
+                limit_price=limit_price,
+                quote=quote,
+            ):
+                return None
+
+            adjustment = self._apply_quantization_and_specs(
+                symbol=symbol,
+                product=product,
+                order_type=order_type,
+                side=side,
+                limit_price=limit_price,
                 stop_price=stop_price,
-                tif=time_in_force,
+                order_quantity=order_quantity,
+            )
+            if adjustment is None:
+                return None
+            limit_price, stop_price, order_quantity = adjustment
+
+            if not self._run_risk_validation(
+                symbol=symbol,
+                side=side,
+                order_quantity=order_quantity,
+                limit_price=limit_price,
+                order_type=order_type,
+                product=product,
+                quote=quote,
+            ):
+                return None
+
+            if not self._validate_stop_order_requirements(
+                symbol=symbol,
+                order_type=order_type,
+                stop_price=stop_price,
+            ):
+                return None
+
+            self._register_stop_trigger(
+                order_type=order_type,
+                client_id=client_id,
+                symbol=symbol,
+                stop_price=stop_price,
+                side=side,
+                order_quantity=order_quantity,
+                limit_price=limit_price,
+            )
+
+            return self._submit_order_to_broker(
+                symbol=symbol,
+                side=side,
+                order_type=order_type,
+                order_quantity=order_quantity,
+                limit_price=limit_price,
+                stop_price=stop_price,
+                time_in_force=time_in_force,
                 client_id=client_id,
                 reduce_only=reduce_only,
                 leverage=leverage,
             )
 
-            if order:
-                self.pending_orders[order.id] = order
-                self.client_order_map[client_id] = order.id
-                self.order_metrics["placed"] += 1
-                logger.info(f"Placed order {order.id}: {side.value} {order_quantity} {symbol}")
+        except Exception as exc:
+            return self._handle_order_error(
+                exc=exc,
+                order_type=order_type,
+                client_id=client_id,
+            )
 
-            return order
+    def _prepare_order_request(self, client_id: str | None, symbol: str, side: OrderSide) -> str:
+        return (
+            client_id or f"{symbol}_{side.value}_{int(time.time() * 1000)}_{uuid.uuid4().hex[:8]}"
+        )
 
-        except Exception as e:
-            logger.error(f"Failed to place order via AdvancedExecutionEngine: {e}", exc_info=True)
+    def _check_duplicate_order(self, client_id: str) -> Order | None:
+        if client_id in self.client_order_map:
+            logger.warning(f"Duplicate client_id {client_id}, returning existing order")
+            existing_id = self.client_order_map[client_id]
+            return self.pending_orders.get(existing_id)
+        return None
+
+    def _normalize_quantity(self, quantity: Decimal | int) -> Decimal:
+        return quantity if isinstance(quantity, Decimal) else Decimal(str(quantity))
+
+    def _run_risk_validation(
+        self,
+        *,
+        symbol: str,
+        side: OrderSide,
+        order_quantity: Decimal,
+        limit_price: Decimal | None,
+        order_type: OrderType,
+        product: Product | None,
+        quote: Quote | None,
+    ) -> bool:
+        if self.risk_manager is None:
+            return True
+        try:
+            validation_price = self._determine_reference_price(
+                symbol=symbol,
+                side=side,
+                order_type=order_type,
+                limit_price=limit_price,
+                quote=quote,
+                product=product,
+            )
+            equity = self._estimate_equity()
+            current_positions = getattr(self.risk_manager, "positions", {})
+            self.risk_manager.pre_trade_validate(
+                symbol=symbol,
+                side=side.value,
+                quantity=order_quantity,
+                price=validation_price,
+                product=product,
+                equity=equity,
+                current_positions=current_positions,
+            )
+            return True
+        except ValidationError as exc:
+            logger.warning(f"Risk validation failed for {symbol}: {exc}")
             self.order_metrics["rejected"] += 1
-            if (
-                order_type in (OrderType.STOP, OrderType.STOP_LIMIT)
-                and client_id in self.stop_triggers
-            ):
-                # Remove trigger when placement fails
-                self.stop_triggers.pop(client_id, None)
+            self.rejections_by_reason["risk"] = self.rejections_by_reason.get("risk", 0) + 1
+            return False
+
+    def _fetch_market_data(
+        self, *, symbol: str, order_type: OrderType, post_only: bool
+    ) -> tuple[Product | None, Quote | None]:
+        try:
+            product = cast(Product | None, self.broker.get_product(symbol))
+        except Exception:
+            product = None
+
+        quote: Quote | None = None
+        if order_type == OrderType.LIMIT and post_only and self.config.reject_on_cross:
+            try:
+                quote = cast(Quote | None, self.broker.get_quote(symbol))
+            except Exception as exc:
+                logger.error(
+                    "Failed to fetch quote for post-only validation on %s: %s", symbol, exc
+                )
+                raise ExecutionError(
+                    f"Could not get quote for post-only validation on {symbol}"
+                ) from exc
+
+            if quote is None:
+                raise ExecutionError(f"Could not get quote for post-only validation on {symbol}")
+
+        return product, quote
+
+    def _validate_post_only_constraints(
+        self,
+        *,
+        symbol: str,
+        order_type: OrderType,
+        post_only: bool,
+        side: OrderSide,
+        limit_price: Decimal | None,
+        quote: Quote | None,
+    ) -> bool:
+        if not (order_type == OrderType.LIMIT and post_only and self.config.reject_on_cross):
+            return True
+
+        if quote is None or limit_price is None:
+            return True
+
+        if side == OrderSide.BUY and limit_price >= quote.ask:
+            logger.warning(f"Post-only buy would cross at {limit_price:.2f} >= {quote.ask:.2f}")
+            self.order_metrics["post_only_rejected"] += 1
+            return False
+
+        if side == OrderSide.SELL and limit_price <= quote.bid:
+            logger.warning(f"Post-only sell would cross at {limit_price:.2f} <= {quote.bid:.2f}")
+            self.order_metrics["post_only_rejected"] += 1
+            return False
+
+        return True
+
+    def _maybe_apply_position_sizing(
+        self,
+        *,
+        symbol: str,
+        side: OrderSide,
+        order_type: OrderType,
+        order_quantity: Decimal,
+        limit_price: Decimal | None,
+        product: Product | None,
+        quote: Quote | None,
+        leverage: int | None,
+    ) -> PositionSizingAdvice | None:
+        if self.risk_manager is None:
             return None
+
+        config = getattr(self.risk_manager, "config", None)
+        if not config or not getattr(config, "enable_dynamic_position_sizing", False):
+            return None
+
+        reference_price = self._determine_reference_price(
+            symbol=symbol,
+            side=side,
+            order_type=order_type,
+            limit_price=limit_price,
+            quote=quote,
+            product=product,
+        )
+
+        if reference_price <= 0:
+            reference_price = Decimal(str(limit_price)) if limit_price is not None else Decimal("0")
+
+        equity = self._estimate_equity()
+        if equity <= 0 and reference_price > 0:
+            equity = reference_price * order_quantity
+
+        current_position_quantity = self._extract_position_quantity(symbol)
+
+        target_leverage = (
+            Decimal(str(leverage))
+            if leverage is not None and leverage > 0
+            else Decimal(str(getattr(config, "max_leverage", 1)))
+        )
+
+        context = PositionSizingContext(
+            symbol=symbol,
+            side=side.value,
+            equity=equity,
+            current_price=reference_price if reference_price > 0 else Decimal("0"),
+            strategy_name=self.__class__.__name__,
+            method=getattr(config, "position_sizing_method", "intelligent"),
+            current_position_quantity=current_position_quantity,
+            target_leverage=target_leverage,
+            strategy_multiplier=float(getattr(config, "position_sizing_multiplier", 1.0)),
+            product=product,
+        )
+
+        try:
+            advice = self.risk_manager.size_position(context)
+        except Exception:
+            logger.exception("Dynamic sizing failed for %s", symbol)
+            return None
+
+        self._last_sizing_advice = advice
+        return advice
+
+    def _determine_reference_price(
+        self,
+        *,
+        symbol: str,
+        side: OrderSide,
+        order_type: OrderType,
+        limit_price: Decimal | None,
+        quote: Quote | None,
+        product: Product | None,
+    ) -> Decimal:
+        if limit_price is not None:
+            try:
+                return Decimal(str(limit_price))
+            except Exception:
+                pass
+
+        if order_type == OrderType.MARKET and quote is not None:
+            price = quote.ask if side == OrderSide.BUY else quote.bid
+            if price is not None:
+                return Decimal(str(price))
+
+        if quote is not None and quote.last is not None:
+            return Decimal(str(quote.last))
+
+        if quote is None:
+            broker = getattr(self, "broker", None)
+            if broker is not None and hasattr(broker, "get_quote"):
+                try:
+                    fallback_quote = broker.get_quote(symbol)
+                except Exception:
+                    fallback_quote = None
+                if fallback_quote is not None:
+                    price = fallback_quote.ask if side == OrderSide.BUY else fallback_quote.bid
+                    if price is not None:
+                        try:
+                            return Decimal(str(price))
+                        except Exception:
+                            pass
+                    elif getattr(fallback_quote, "last", None) is not None:
+                        try:
+                            return Decimal(str(fallback_quote.last))
+                        except Exception:
+                            pass
+
+        if product is not None:
+            mark = getattr(product, "mark_price", None)
+            if mark is not None:
+                try:
+                    return Decimal(str(mark))
+                except Exception:
+                    pass
+        return Decimal("0")
+
+    def _estimate_equity(self) -> Decimal:
+        if self.risk_manager is not None:
+            start_equity = getattr(self.risk_manager, "start_of_day_equity", None)
+            if start_equity is not None:
+                try:
+                    value = Decimal(str(start_equity))
+                    if value > 0:
+                        return value
+                except Exception:
+                    pass
+
+        broker = getattr(self, "broker", None)
+        if broker is not None and hasattr(broker, "list_balances"):
+            try:
+                balances = broker.list_balances() or []
+                total = Decimal("0")
+                for bal in balances:
+                    amount = getattr(bal, "total", None)
+                    if amount is None:
+                        amount = getattr(bal, "available", None)
+                    if amount is not None:
+                        total += Decimal(str(amount))
+                if total > 0:
+                    return total
+            except Exception:
+                pass
+
+        return Decimal("0")
+
+    def _extract_position_quantity(self, symbol: str) -> Decimal:
+        positions = getattr(self.risk_manager, "positions", {}) if self.risk_manager else {}
+        pos = positions.get(symbol)
+        if not pos:
+            return Decimal("0")
+        try:
+            value = quantity_from(pos, default=Decimal("0"))
+            return value or Decimal("0")
+        except Exception:
+            return Decimal("0")
+
+    def _apply_quantization_and_specs(
+        self,
+        *,
+        symbol: str,
+        product: Product | None,
+        order_type: OrderType,
+        side: OrderSide,
+        limit_price: Decimal | None,
+        stop_price: Decimal | None,
+        order_quantity: Decimal,
+    ) -> tuple[Decimal | None, Decimal | None, Decimal] | None:
+        if product is not None and product.price_increment:
+            increment = product.price_increment
+            if order_type == OrderType.LIMIT and limit_price is not None:
+                limit_price = quantize_price_side_aware(
+                    Decimal(str(limit_price)), increment, side.value
+                )
+            if order_type in (OrderType.STOP, OrderType.STOP_LIMIT) and stop_price is not None:
+                stop_price = quantize_price_side_aware(
+                    Decimal(str(stop_price)), increment, side.value
+                )
+            if order_type == OrderType.STOP_LIMIT and limit_price is not None:
+                limit_price = quantize_price_side_aware(
+                    Decimal(str(limit_price)), increment, side.value
+                )
+
+        if product is None:
+            return limit_price, stop_price, order_quantity
+
+        validation = spec_validate_order(
+            product=product,
+            side=side.value,
+            quantity=Decimal(str(order_quantity)),
+            order_type=order_type.value.lower(),
+            price=(
+                Decimal(str(limit_price))
+                if (order_type == OrderType.LIMIT and limit_price is not None)
+                else None
+            ),
+        )
+
+        if not validation.ok:
+            reason = validation.reason or "spec_violation"
+            self.order_metrics["rejected"] += 1
+            self.rejections_by_reason[reason] = self.rejections_by_reason.get(reason, 0) + 1
+            logger.warning(f"Spec validation failed for {symbol}: {reason}")
+            return None
+
+        if validation.adjusted_quantity is not None:
+            order_quantity = (
+                validation.adjusted_quantity
+                if isinstance(validation.adjusted_quantity, Decimal)
+                else Decimal(str(validation.adjusted_quantity))
+            )
+
+        if validation.adjusted_price is not None and order_type == OrderType.LIMIT:
+            limit_price = validation.adjusted_price
+
+        return limit_price, stop_price, order_quantity
+
+    def _validate_stop_order_requirements(
+        self,
+        *,
+        symbol: str,
+        order_type: OrderType,
+        stop_price: Decimal | None,
+    ) -> bool:
+        if order_type not in (OrderType.STOP, OrderType.STOP_LIMIT):
+            return True
+
+        if not self.config.enable_stop_orders:
+            logger.warning("Stop orders disabled by configuration; rejecting %s", symbol)
+            self.order_metrics["rejected"] += 1
+            self.rejections_by_reason["stop_disabled"] = (
+                self.rejections_by_reason.get("stop_disabled", 0) + 1
+            )
+            return False
+
+        if stop_price is None:
+            logger.warning("Stop order for %s missing stop price", symbol)
+            self.order_metrics["rejected"] += 1
+            self.rejections_by_reason["invalid_stop"] = (
+                self.rejections_by_reason.get("invalid_stop", 0) + 1
+            )
+            return False
+
+        return True
+
+    def _register_stop_trigger(
+        self,
+        *,
+        order_type: OrderType,
+        client_id: str,
+        symbol: str,
+        stop_price: Decimal | None,
+        side: OrderSide,
+        order_quantity: Decimal,
+        limit_price: Decimal | None,
+    ) -> None:
+        if order_type not in (OrderType.STOP, OrderType.STOP_LIMIT) or stop_price is None:
+            return
+
+        trigger = StopTrigger(
+            order_id=client_id,
+            symbol=symbol,
+            trigger_price=Decimal(str(stop_price)),
+            side=side,
+            quantity=order_quantity,
+            limit_price=(
+                Decimal(str(limit_price))
+                if order_type == OrderType.STOP_LIMIT and limit_price is not None
+                else None
+            ),
+        )
+        self.stop_triggers[client_id] = trigger
+
+    def _submit_order_to_broker(
+        self,
+        *,
+        symbol: str,
+        side: OrderSide,
+        order_type: OrderType,
+        order_quantity: Decimal,
+        limit_price: Decimal | None,
+        stop_price: Decimal | None,
+        time_in_force: TimeInForce,
+        client_id: str,
+        reduce_only: bool,
+        leverage: int | None,
+    ) -> Order | None:
+        broker_place = getattr(self.broker, "place_order")
+        params = inspect.signature(broker_place).parameters
+
+        kwargs: dict[str, Any] = {
+            "symbol": symbol,
+            "side": side,
+            "order_type": order_type,
+            "quantity": order_quantity,
+            "client_id": client_id,
+            "reduce_only": reduce_only,
+            "leverage": leverage,
+        }
+
+        if "limit_price" in params:
+            kwargs["limit_price"] = limit_price
+        elif "price" in params:
+            kwargs["price"] = limit_price
+
+        if "stop_price" in params:
+            kwargs["stop_price"] = stop_price
+
+        if isinstance(time_in_force, TimeInForce):
+            tif_value_enum = time_in_force
+            tif_value_str = time_in_force.value
+        else:
+            try:
+                tif_value_enum = TimeInForce[str(time_in_force).upper()]
+            except Exception:
+                tif_value_enum = TimeInForce.GTC
+            tif_value_str = tif_value_enum.value
+
+        if "time_in_force" in params:
+            kwargs["time_in_force"] = tif_value_str
+        if "tif" in params:
+            kwargs["tif"] = tif_value_enum
+
+        order = cast(Order | None, broker_place(**kwargs))
+
+        if order:
+            self.pending_orders[order.id] = order
+            self.client_order_map[client_id] = order.id
+            self.order_metrics["placed"] += 1
+            logger.info(f"Placed order {order.id}: {side.value} {order_quantity} {symbol}")
+
+        return order
+
+    def _handle_order_error(
+        self,
+        *,
+        exc: Exception,
+        order_type: OrderType,
+        client_id: str,
+    ) -> Order | None:
+        logger.error(
+            "Failed to place order via AdvancedExecutionEngine: %s",
+            exc,
+            exc_info=True,
+        )
+        self.order_metrics["rejected"] += 1
+        if order_type in (OrderType.STOP, OrderType.STOP_LIMIT):
+            self.stop_triggers.pop(client_id, None)
+        return None
 
     def cancel_and_replace(
         self,
@@ -378,7 +786,7 @@ class AdvancedExecutionEngine:
         # Attempt cancel with retries
         for attempt in range(max_retries):
             try:
-                if self.broker.cancel_order(order_id):
+                if bool(self.broker.cancel_order(order_id)):
                     self.order_metrics["cancelled"] += 1
                     del self.pending_orders[order_id]
                     break
@@ -389,17 +797,35 @@ class AdvancedExecutionEngine:
                 time.sleep(0.5 * (2**attempt))  # Exponential backoff
 
         # Place replacement order
-        original_quantity = getattr(original, "quantity", original.quantity)
+        original_quantity = original.quantity
+        replacement_side = OrderSide.SELL if original.side == OrderSide.BUY else OrderSide.BUY
+        replacement_type = original.type
+        replacement_tif = original.tif
+
+        new_quantity = new_size if new_size is not None else original_quantity
+        new_quantity = self._normalize_quantity(new_quantity)
+
+        new_price_decimal = Decimal(str(new_price)) if new_price is not None else None
+
+        replacement_limit = (
+            new_price_decimal
+            if replacement_type in (OrderType.LIMIT, OrderType.STOP_LIMIT)
+            else original.price
+        )
+        replacement_stop = (
+            new_price_decimal
+            if replacement_type in (OrderType.STOP, OrderType.STOP_LIMIT)
+            else original.stop_price
+        )
+
         return self.place_order(
             symbol=original.symbol,
-            side="buy" if original.side == OrderSide.BUY else "sell",
-            quantity=new_size or original_quantity,
-            order_type="limit" if original.type == OrderType.LIMIT else "market",
-            limit_price=new_price if original.type == OrderType.LIMIT else None,
-            stop_price=(
-                new_price if original.type in [OrderType.STOP, OrderType.STOP_LIMIT] else None
-            ),
-            time_in_force="GTC",
+            side=replacement_side,
+            quantity=new_quantity,
+            order_type=replacement_type,
+            limit_price=replacement_limit,
+            stop_price=replacement_stop,
+            time_in_force=replacement_tif,
             reduce_only=False,
             client_id=replace_client_id,
         )
@@ -489,17 +915,16 @@ class AdvancedExecutionEngine:
             Close order or None
         """
         # Get current position
-        positions = self.broker.get_positions()
+        positions = cast(list[Position], self.broker.get_positions())
         position = next((p for p in positions if p.symbol == symbol), None)
 
-        position_quantity = getattr(position, "quantity", position.quantity)
-        if not position or position_quantity == 0:
+        if position is None or position.quantity == 0:
             logger.warning(f"No position to close for {symbol}")
             return None
 
         # Determine side (opposite of position)
-        side = "sell" if position_quantity > 0 else "buy"
-        quantity = abs(position_quantity)
+        side = OrderSide.SELL if position.quantity > 0 else OrderSide.BUY
+        quantity = abs(position.quantity)
 
         logger.info(f"Closing position: {side} {quantity} {symbol}")
 
@@ -507,7 +932,7 @@ class AdvancedExecutionEngine:
             symbol=symbol,
             side=side,
             quantity=quantity,
-            order_type="market",
+            order_type=OrderType.MARKET,
             reduce_only=reduce_only,
             client_id=f"close_{symbol}_{int(time.time() * 1000)}",
         )

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Sequence
 from decimal import ROUND_HALF_UP, Decimal
+from typing import Union
 
 __all__ = [
     "to_decimal",
@@ -13,7 +14,10 @@ __all__ = [
 ]
 
 
-def to_decimal(value) -> Decimal:
+NumberLike = Union[int, float, Decimal, str]
+
+
+def to_decimal(value: NumberLike | None) -> Decimal:
     if value is None:
         return Decimal("0")
     return Decimal(str(value))

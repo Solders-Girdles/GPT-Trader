@@ -72,9 +72,13 @@ coordination/orchestration/*
 *.sqlite-wal
 
 # Local tooling outputs
+**/.ruff_cache/
 .benchmarks/
 .swarm/
 .coverage
 .claude-flow/
 .mcp.json
 var/
+.claude/
+.mypy_cache/
+.pytest_cache/

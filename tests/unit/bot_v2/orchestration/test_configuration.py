@@ -12,33 +12,33 @@ from bot_v2.orchestration.configuration import (
 
 def test_dev_profile_defaults(monkeypatch):
     monkeypatch.delenv("SPOT_FORCE_LIVE", raising=False)
-    cfg = BotConfig.from_profile("dev")
-    assert cfg.profile is Profile.DEV
-    assert cfg.mock_broker is True
-    assert cfg.mock_fills is True
-    assert cfg.dry_run is True
+    config = BotConfig.from_profile("dev")
+    assert config.profile is Profile.DEV
+    assert config.mock_broker is True
+    assert config.mock_fills is True
+    assert config.dry_run is True
 
 
 def test_spot_profile_normalizes_perp_symbols(monkeypatch):
     monkeypatch.delenv("SPOT_FORCE_LIVE", raising=False)
-    cfg = BotConfig.from_profile("spot", symbols=["btc-perp", "ETH-USD"])
-    assert cfg.profile is Profile.SPOT
+    config = BotConfig.from_profile("spot", symbols=["btc-perp", "ETH-USD"])
+    assert config.profile is Profile.SPOT
     # BTC-PERP should be converted to BTC-USD while preserving existing spot entries
-    assert cfg.symbols == ["BTC-USD", "ETH-USD"]
-    assert cfg.enable_shorts is False
-    assert cfg.max_leverage == 1
+    assert config.symbols == ["BTC-USD", "ETH-USD"]
+    assert config.enable_shorts is False
+    assert config.max_leverage == 1
 
 
 def test_canary_overrides_honor_locks(monkeypatch):
     monkeypatch.delenv("SPOT_FORCE_LIVE", raising=False)
-    cfg = BotConfig.from_profile(
+    config = BotConfig.from_profile(
         "canary", max_leverage=5, time_in_force="GTC", reduce_only_mode=False
     )
     # Canary profile must remain IOC + reduce-only regardless of overrides
-    assert cfg.profile is Profile.CANARY
-    assert cfg.max_leverage == 1
-    assert cfg.reduce_only_mode is True
-    assert cfg.time_in_force == "IOC"
+    assert config.profile is Profile.CANARY
+    assert config.max_leverage == 1
+    assert config.reduce_only_mode is True
+    assert config.time_in_force == "IOC"
 
 
 def test_config_manager_detects_invalid_symbols(monkeypatch):

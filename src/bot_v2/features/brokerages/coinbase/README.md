@@ -116,13 +116,8 @@ for message in ws.stream_messages():
 
 ### Validation Script
 ```bash
-# Run comprehensive validation of fixes
-python scripts/validate_critical_fixes_v2.py
-
-# Expected output (all tests should pass):
-# Advanced Mode Results: 30 passed, 0 failed
-# Exchange Mode Results: 31 passed, 0 failed
-# ✅ ALL CRITICAL FIXES VALIDATED SUCCESSFULLY!
+# Run shared validation harness for brokerage safety checks
+python scripts/validation/verify_core.py --check all
 ```
 
 ### Unit Tests

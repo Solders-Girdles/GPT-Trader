@@ -86,7 +86,7 @@ annotations:
    ```bash
    poetry run perps-bot --profile spot --preview-order \
      --order-symbol BTC-USD --order-side sell --order-type market \
-     --order-qty 0.01 --order-reduce-only
+     --order-quantity 0.01 --order-reduce-only
    ```
 
 3. Keep trading halted until root cause (market regime, bug, configuration) is

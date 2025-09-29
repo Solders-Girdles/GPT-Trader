@@ -1,121 +1,140 @@
 from __future__ import annotations
 
-"""
-Market data utilities for Coinbase: ticker cache and WS-backed service.
-
-This module is optional and only used when explicitly enabled by the adapter.
-It keeps an in-memory cache of bid/ask/last with timestamps and provides
-basic staleness checks and a background streaming loop with reconnection
-inherited from CoinbaseWebSocket.
-"""
-
-from dataclasses import dataclass
-from datetime import datetime, timedelta
+from collections.abc import Iterable
+from datetime import datetime
 from decimal import Decimal
-from typing import Dict, Iterable, List, Optional, Callable
-import threading
-import logging
+from typing import Any
 
-from .ws import CoinbaseWebSocket, WSSubscription, normalize_market_message
-
-logger = logging.getLogger(__name__)
+from .market_data_features import RollingWindow
+from .utilities import MarkCache
 
 
-@dataclass
-class Ticker:
-    bid: Decimal
-    ask: Decimal
-    last: Decimal
-    ts: datetime
+class MarketDataService:
+    """Maintains cached market data, rolling metrics, and mark prices."""
 
+    def __init__(self) -> None:
+        self._market_data: dict[str, dict[str, Any]] = {}
+        self._rolling_windows: dict[str, dict[str, RollingWindow]] = {}
+        self._mark_cache = MarkCache()
 
-class TickerCache:
-    """In-memory cache of latest tickers by symbol."""
+    @property
+    def mark_cache(self) -> MarkCache:
+        return self._mark_cache
 
-    def __init__(self):
-        self._data: Dict[str, Ticker] = {}
-        self._lock = threading.RLock()
+    def initialise_symbols(self, symbols: Iterable[str]) -> None:
+        for symbol in symbols:
+            symbol = str(symbol)
+            if symbol not in self._market_data:
+                self._market_data[symbol] = {
+                    "mid": Decimal("0"),
+                    "spread_bps": 0.0,
+                    "depth_l1": Decimal("0"),
+                    "depth_l10": Decimal("0"),
+                    "last_update": None,
+                }
+            if symbol not in self._rolling_windows:
+                self._rolling_windows[symbol] = {
+                    "vol_1m": RollingWindow(60),
+                    "vol_5m": RollingWindow(300),
+                }
 
-    def update(self, symbol: str, bid: Decimal, ask: Decimal, last: Decimal, ts: datetime) -> None:
-        with self._lock:
-            self._data[symbol] = Ticker(bid=bid, ask=ask, last=last, ts=ts)
+    def has_symbol(self, symbol: str) -> bool:
+        return symbol in self._market_data
 
-    def get(self, symbol: str) -> Optional[Ticker]:
-        with self._lock:
-            return self._data.get(symbol)
-
-    def is_stale(self, symbol: str, threshold_seconds: int = 5) -> bool:
-        with self._lock:
-            t = self._data.get(symbol)
-            if not t:
-                return True
-            return (datetime.utcnow() - t.ts) > timedelta(seconds=threshold_seconds)
-
-
-class CoinbaseTickerService:
-    """WebSocket-backed ticker service with simple background loop.
-
-    - Subscribes to ticker channel for provided symbols
-    - Updates TickerCache on each message
-    - Reconnect/backoff handled by CoinbaseWebSocket
-    """
-
-    def __init__(
+    def update_ticker(
         self,
-        websocket_factory: Callable[[], CoinbaseWebSocket],
-        symbols: List[str],
-        cache: Optional[TickerCache] = None,
-        on_update: Optional[Callable[[str, Ticker], None]] = None,
-    ):
-        self._ws_factory = websocket_factory
-        self._symbols = symbols
-        self.cache = cache or TickerCache()
-        self.on_update = on_update
-        self._thread: Optional[threading.Thread] = None
-        self._stop = threading.Event()
+        symbol: str,
+        bid: Decimal | None,
+        ask: Decimal | None,
+        last: Decimal | None,
+        timestamp: datetime,
+    ) -> None:
+        data = self._market_data.setdefault(symbol, {})
+        if bid is not None and ask is not None:
+            data["bid"] = bid
+            data["ask"] = ask
+            data["mid"] = (bid + ask) / 2
+            if bid > 0:
+                data["spread_bps"] = float((ask - bid) / bid * 10000)
+        if last is not None:
+            data["last"] = last
+        data["last_update"] = timestamp
 
-    def _loop(self) -> None:
-        try:
-            ws = self._ws_factory()
-            if hasattr(ws, 'connect'):
-                ws.connect()
-            ws.subscribe(WSSubscription(channels=["ticker"], product_ids=list(self._symbols)))
-            for msg in ws.stream_messages():
-                if self._stop.is_set():
-                    break
-                try:
-                    norm = normalize_market_message(msg)
-                    pid = norm.get('product_id') or norm.get('symbol')
-                    if not pid:
-                        continue
-                    # Accept various field names for price fields
-                    bid = norm.get('best_bid') or norm.get('bid') or norm.get('price')
-                    ask = norm.get('best_ask') or norm.get('ask') or norm.get('price')
-                    last = norm.get('last') or norm.get('price') or bid or ask
-                    ts_str = norm.get('time') or norm.get('timestamp')
-                    ts = datetime.fromisoformat(ts_str) if isinstance(ts_str, str) else datetime.utcnow()
-                    if bid and ask and last:
-                        self.cache.update(pid, bid, ask, last, ts)
-                        if self.on_update:
-                            try:
-                                self.on_update(pid, self.cache.get(pid))  # type: ignore[arg-type]
-                            except Exception:
-                                pass
-                except Exception:
-                    continue
-        except Exception as e:
-            logger.debug(f"Ticker loop ended: {e}")
-
-    def start(self) -> None:
-        if self._thread and self._thread.is_alive():
+    def record_trade(self, symbol: str, size: Decimal, timestamp: datetime) -> None:
+        windows = self._rolling_windows.get(symbol)
+        if not windows:
             return
-        self._stop.clear()
-        self._thread = threading.Thread(target=self._loop, name="coinbase_ticker_ws", daemon=True)
-        self._thread.start()
+        for window in windows.values():
+            window.add(float(size), timestamp)
 
-    def stop(self) -> None:
-        self._stop.set()
-        if self._thread and self._thread.is_alive():
-            self._thread.join(timeout=2.0)
-        self._thread = None
+    def update_depth(self, symbol: str, changes: Iterable[Iterable[str]]) -> None:
+        bid_depth_usd = Decimal("0")
+        ask_depth_usd = Decimal("0")
+        bid_depth_l1_usd = Decimal("0")
+        ask_depth_l1_usd = Decimal("0")
 
+        bid_count = 0
+        ask_count = 0
+
+        for change in list(changes)[:10]:
+            if len(change) < 3:
+                continue
+            side, price_str, size_str = change
+            price = Decimal(price_str) if price_str else Decimal("0")
+            size = Decimal(size_str) if size_str and size_str != "0" else Decimal("0")
+            notional = price * size
+            if side == "buy":
+                bid_depth_usd += notional
+                if bid_count == 0:
+                    bid_depth_l1_usd = notional
+                bid_count += 1
+            elif side == "sell":
+                ask_depth_usd += notional
+                if ask_count == 0:
+                    ask_depth_l1_usd = notional
+                ask_count += 1
+
+        data = self._market_data.setdefault(symbol, {})
+        data["depth_l1"] = bid_depth_l1_usd + ask_depth_l1_usd
+        data["depth_l10"] = bid_depth_usd + ask_depth_usd
+
+    def is_stale(self, symbol: str, threshold_seconds: int = 10) -> bool:
+        data = self._market_data.get(symbol)
+        if not data:
+            return True
+        last_update = data.get("last_update")
+        if not last_update:
+            return True
+        return (datetime.utcnow() - last_update).total_seconds() > threshold_seconds
+
+    def get_cached_quote(self, symbol: str) -> dict[str, Any] | None:
+        data = self._market_data.get(symbol)
+        if not data:
+            return None
+        if not data.get("last_update"):
+            return None
+        return data
+
+    def get_snapshot(self, symbol: str) -> dict[str, Any]:
+        data = self._market_data.get(symbol)
+        if not data:
+            return {}
+        snapshot = dict(data)
+        windows = self._rolling_windows.get(symbol)
+        if windows:
+            snapshot.update(
+                {
+                    "vol_1m": windows.get("vol_1m", RollingWindow(60)).sum,
+                    "vol_5m": windows.get("vol_5m", RollingWindow(300)).sum,
+                }
+            )
+        return snapshot
+
+    def set_mark(self, symbol: str, price: Decimal) -> None:
+        self._mark_cache.set_mark(symbol, price)
+
+    def get_mark(self, symbol: str) -> Decimal | None:
+        return self._mark_cache.get_mark(symbol)
+
+    def rolling_windows(self, symbol: str) -> dict[str, RollingWindow]:
+        return self._rolling_windows.setdefault(symbol, {})

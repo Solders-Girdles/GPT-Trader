@@ -55,7 +55,7 @@ its ML workflows.
 
 ## Module 5 – Operational Awareness
 
-- Study `docs/OPERATIONS_RUNBOOK.md` and `docs/MONITORING_PLAYBOOK.md` for
+- Study `docs/ops/operations_runbook.md` and `docs/MONITORING_PLAYBOOK.md` for
   on-call expectations.
 - Manual tooling:
 

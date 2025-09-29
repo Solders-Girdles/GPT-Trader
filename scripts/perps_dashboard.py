@@ -111,6 +111,16 @@ def load_health(health_path: Path) -> dict:
         return {"ok": False, "message": f"error reading health: {e}"}
 
 
+def load_metrics(metrics_path: Path) -> dict:
+    if not metrics_path.exists():
+        return {}
+    try:
+        with metrics_path.open("r") as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+
 def main():
     parser = argparse.ArgumentParser(description="Perps Metrics Dashboard")
     parser.add_argument("--profile", choices=["dev", "demo", "prod", "canary"], default="dev")
@@ -123,6 +133,7 @@ def main():
     base_dir = Path(os.getenv("EVENT_STORE_ROOT", str(default_root)))
     events_path = base_dir / "events.jsonl"
     health_path = base_dir / "health.json"
+    metrics_path = base_dir / "metrics.json"
 
     # Load once, then loop
     window = timedelta(minutes=args.window_min)
@@ -139,6 +150,7 @@ def main():
             events = load_events(events_path)
             summary = summarize(events, window)
             health = load_health(health_path)
+            metrics = load_metrics(metrics_path)
 
             # Health
             ok_icon = "✅" if health.get("ok") else "❌"
@@ -148,6 +160,24 @@ def main():
                 f"Status: {ok_icon}  |  Message: {health.get('message','')}  |  Error: {health.get('error','')}"
             )
             print(f"Time:   {health.get('timestamp', '')}")
+
+            system_metrics = metrics.get("system") or {}
+            if system_metrics:
+                print("\n🖥️  System Resources")
+                print("-" * 40)
+                cpu = system_metrics.get("cpu_percent", 0)
+                mem_pct = system_metrics.get("memory_percent", 0)
+                mem_mb = system_metrics.get("memory_used_mb", system_metrics.get("memory_mb", 0))
+                disk_pct = system_metrics.get("disk_percent", 0)
+                disk_gb = system_metrics.get("disk_used_gb", system_metrics.get("disk_gb", 0))
+                net_tx = system_metrics.get("network_sent_mb", 0)
+                net_rx = system_metrics.get("network_recv_mb", 0)
+                threads = system_metrics.get("threads", system_metrics.get("system_threads", 0))
+                print(f"CPU:     {float(cpu):5.1f}%")
+                print(f"Memory:  {float(mem_pct):5.1f}% ({float(mem_mb):.0f} MB)")
+                print(f"Disk:    {float(disk_pct):5.1f}% ({float(disk_gb):.2f} GB used)")
+                print(f"Network: sent {float(net_tx):.1f} MB  recv {float(net_rx):.1f} MB")
+                print(f"Threads: {int(threads) if str(threads).isdigit() else threads}")
 
             # Orders
             print(f"\n📊 Orders (last {args.window_min:d} min)")
@@ -174,7 +204,7 @@ def main():
                     sym = e.get("symbol") or e.get("product_id") or ""
                     msg = ""
                     if et == "order_success":
-                        msg = f"{et} {sym} {e.get('side','')} qty={e.get('qty','')}"
+                        msg = f"{et} {sym} {e.get('side','')} quantity={e.get('quantity','')}"
                     elif et == "order_failed":
                         msg = et
                     elif et == "order_drift":

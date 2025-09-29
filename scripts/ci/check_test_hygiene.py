@@ -10,17 +10,11 @@ from collections.abc import Sequence
 
 THRESHOLD = 240
 ALLOWLIST = {
-    "tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_websocket.py",
     "tests/unit/bot_v2/features/brokerages/coinbase/test_product_catalog.py",
     "tests/unit/bot_v2/features/brokerages/coinbase/test_specs_quantization.py",
-    "tests/unit/bot_v2/features/brokerages/coinbase/test_api_permissions.py",
     "tests/unit/bot_v2/features/brokerages/coinbase/test_performance.py",
     "tests/unit/bot_v2/features/brokerages/coinbase/test_order_payloads.py",
-    "tests/unit/bot_v2/features/brokerages/coinbase/test_trading_endpoints.py",
-    "tests/unit/bot_v2/features/brokerages/coinbase/test_market_data_endpoints.py",
-    "tests/unit/bot_v2/features/brokerages/coinbase/test_account_endpoints.py",
-    "tests/unit/bot_v2/features/brokerages/coinbase/test_system_endpoints.py",
-    "tests/unit/bot_v2/features/live_trade/test_pnl_vs_coinbase.py",
+    "tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_integration.py",
     "tests/unit/bot_v2/features/live_trade/test_pnl_comprehensive.py",
     "tests/unit/bot_v2/features/live_trade/test_risk_core.py",
     "tests/unit/bot_v2/orchestration/test_perps_bot.py",

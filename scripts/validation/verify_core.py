@@ -100,7 +100,7 @@ async def check_order_placement(bot: PerpsBot) -> bool:
             symbol=bot.config.symbols[0],
             side=OrderSide.BUY,
             order_type=OrderType.MARKET,
-            qty=Decimal("0.001"),
+            quantity=Decimal("0.001"),
         )
         assert order_id is not None
         order = bot.broker.get_order(order_id)
@@ -118,13 +118,13 @@ async def check_position_math(bot: PerpsBot) -> bool:
         # Ensure deterministic starting mark
         gain = Decimal("10")
         price = Decimal("50000")
-        qty = gain / Decimal("100")  # 0.1 BTC
+        order_quantity = gain / Decimal("100")  # 0.1 BTC
         bot.broker.set_mark(sym, price)  # type: ignore[attr-defined]
         order_id = bot.exec_engine.place_order(
             symbol=sym,
             side=OrderSide.BUY,
             order_type=OrderType.MARKET,
-            qty=qty,
+            quantity=order_quantity,
         )
         assert order_id is not None
         # Move mark to 51k and revalue
@@ -132,9 +132,9 @@ async def check_position_math(bot: PerpsBot) -> bool:
         pos = next((p for p in bot.broker.list_positions() if p.symbol == sym), None)
         assert pos is not None
         unrealized = (
-            (pos.mark_price - pos.entry_price) * pos.qty
+            (pos.mark_price - pos.entry_price) * pos.quantity
             if pos.side == "long"
-            else (pos.entry_price - pos.mark_price) * pos.qty
+            else (pos.entry_price - pos.mark_price) * pos.quantity
         )
         assert unrealized == gain
         ok("Position P&L math (long +$10)")
@@ -155,7 +155,7 @@ async def check_risk_reduce_only(bot: PerpsBot) -> bool:
                 symbol=bot.config.symbols[0],
                 side=OrderSide.BUY,
                 order_type=OrderType.MARKET,
-                qty=Decimal("0.001"),
+                quantity=Decimal("0.001"),
             )
         except Exception:
             raised = True

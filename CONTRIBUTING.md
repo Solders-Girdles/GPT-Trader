@@ -112,12 +112,12 @@ The repository follows a standardized organization optimized for both human deve
 - `/src/bot_v2/` - Active trading system (vertical slice architecture)
 - `/tests/` - Test files organized by component
 - `/config/` - Configuration files, trading profiles, and templates
-- `/scripts/` - Utility scripts organized in 11 categories:
-  - `core/` - Essential operational scripts (7 files)
-  - `testing/` - Test runners and validation (20 files)
-  - `validation/` - System validation scripts (21 files)
-  - `monitoring/` - Monitoring and dashboards (10 files)
-  - `utils/` - General utilities (27 files)
+- `/scripts/` - Operational scripts organized by domain:
+  - `agents/` - Automation helpers and inventory tooling
+  - `analysis/` - Dependency and repository analysis utilities
+  - `monitoring/` - Monitoring and dashboards
+  - `testing/` - Test runners and fixtures
+  - `validation/` - System validation flows
 
 #### Documentation Standards
 - `/docs/guides/` - How-to guides and tutorials
@@ -143,7 +143,7 @@ The repository follows a standardized organization optimized for both human deve
 - **Core Operations**: `/scripts/core/`
 - **Testing/Validation**: `/scripts/validation/`
 - **Monitoring**: `/scripts/monitoring/`
-- **General Utilities**: `/scripts/utils/`
+- **Automation/Agents**: `/scripts/agents/`
 
 #### Deprecated Content
 - Move to appropriate `/archived/` subdirectory

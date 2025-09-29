@@ -54,7 +54,7 @@ poetry run perps-bot --profile spot \
   --order-symbol BTC-USD \
   --order-side buy \
   --order-type limit \
-  --order-qty 0.01 \
+  --order-quantity 0.01 \
   --order-price 42000 \
   --order-tif GTC
 ```

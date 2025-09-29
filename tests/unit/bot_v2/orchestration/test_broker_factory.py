@@ -26,19 +26,19 @@ def test_coinbase_sandbox_exchange_mode(monkeypatch):
     captured = {}
 
     class DummyBroker:
-        def __init__(self, cfg):
-            captured["cfg"] = cfg
+        def __init__(self, api_config):
+            captured["api_config"] = api_config
 
     monkeypatch.setattr(broker_factory, "CoinbaseBrokerage", DummyBroker)
 
     _ = broker_factory.create_brokerage()
-    cfg = captured["cfg"]
+    api_config = captured["api_config"]
 
-    assert cfg.sandbox is True
-    assert cfg.api_mode == "exchange"
-    assert cfg.base_url.startswith("https://api-public.sandbox.exchange.coinbase.com")
-    assert cfg.ws_url.startswith("wss://ws-feed-public.sandbox.exchange.coinbase.com")
-    assert cfg.auth_type == "HMAC"
+    assert api_config.sandbox is True
+    assert api_config.api_mode == "exchange"
+    assert api_config.base_url.startswith("https://api-public.sandbox.exchange.coinbase.com")
+    assert api_config.ws_url.startswith("wss://ws-feed-public.sandbox.exchange.coinbase.com")
+    assert api_config.auth_type == "HMAC"
 
 
 def test_coinbase_prod_advanced_jwt(monkeypatch):
@@ -56,18 +56,18 @@ def test_coinbase_prod_advanced_jwt(monkeypatch):
     captured = {}
 
     class DummyBroker:
-        def __init__(self, cfg):
-            captured["cfg"] = cfg
+        def __init__(self, api_config):
+            captured["api_config"] = api_config
 
     monkeypatch.setattr(broker_factory, "CoinbaseBrokerage", DummyBroker)
 
     _ = broker_factory.create_brokerage()
-    cfg = captured["cfg"]
-    assert cfg.sandbox is False
-    assert cfg.api_mode == "advanced"
-    assert cfg.base_url == "https://api.coinbase.com"
-    assert cfg.ws_url == "wss://advanced-trade-ws.coinbase.com"
-    assert cfg.auth_type == "JWT"
+    api_config = captured["api_config"]
+    assert api_config.sandbox is False
+    assert api_config.api_mode == "advanced"
+    assert api_config.base_url == "https://api.coinbase.com"
+    assert api_config.ws_url == "wss://advanced-trade-ws.coinbase.com"
+    assert api_config.auth_type == "JWT"
 
 
 def test_unsupported_broker_raises(monkeypatch):

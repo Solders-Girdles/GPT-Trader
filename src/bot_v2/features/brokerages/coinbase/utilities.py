@@ -1,9 +1,8 @@
-from __future__ import annotations
-
 """Utility helpers for Coinbase brokerage integrations."""
 
+from __future__ import annotations
+
 import logging
-import warnings
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from decimal import ROUND_DOWN, Decimal
@@ -45,8 +44,6 @@ def enforce_perp_rules(
     product: Product,
     quantity: Decimal | None = None,
     price: Decimal | None = None,
-    *,
-    qty: Decimal | None = None,
 ) -> tuple[Decimal, Decimal | None]:
     """Enforce perpetual product rules for quantity and price.
 
@@ -54,7 +51,6 @@ def enforce_perp_rules(
         product: Product with rules to enforce
         quantity: Desired quantity (will be quantized to step_size)
         price: Optional price (will be quantized to price_increment)
-        qty: Deprecated alias for ``quantity`` retained for backward compatibility
 
     Returns:
         Tuple of (adjusted_quantity, adjusted_price)
@@ -63,16 +59,7 @@ def enforce_perp_rules(
         InvalidRequestError: If values violate minimum requirements
     """
     if quantity is None:
-        if qty is None:
-            raise TypeError("enforce_perp_rules() missing required argument: 'quantity'")
-        warnings.warn(
-            "'qty' is deprecated; use 'quantity' instead",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        quantity = qty
-    elif qty is not None:
-        raise TypeError("enforce_perp_rules() got multiple values for argument 'quantity'")
+        raise TypeError("enforce_perp_rules() missing required argument: 'quantity'")
 
     # Quantize quantity to step_size
     adjusted_quantity = quantize_to_increment(quantity, product.step_size)
@@ -236,29 +223,13 @@ class PositionState:
         if not isinstance(self.quantity, Decimal):
             self.quantity = Decimal(str(self.quantity))
 
-    @property
-    def qty(self) -> Decimal:
-        warnings.warn(
-            "PositionState.qty is deprecated; use PositionState.quantity",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return self.quantity
-
-    @qty.setter
-    def qty(self, value: Decimal) -> None:
-        warnings.warn(
-            "PositionState.qty is deprecated; use PositionState.quantity",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        self.quantity = Decimal(str(value))
-
-    def update_from_fill(self, fill_qty: Decimal, fill_price: Decimal, fill_side: str) -> Decimal:
+    def update_from_fill(
+        self, fill_quantity: Decimal, fill_price: Decimal, fill_side: str
+    ) -> Decimal:
         """Update position from a fill.
 
         Args:
-            fill_qty: Absolute fill quantity
+            fill_quantity: Absolute fill quantity
             fill_price: Fill execution price
             fill_side: "buy" or "sell"
 
@@ -275,16 +246,16 @@ class PositionState:
             # Increasing position - update weighted average entry
             if self.quantity > 0:
                 # Weighted average
-                total_value = (self.quantity * self.entry_price) + (fill_qty * fill_price)
-                self.quantity += fill_qty
+                total_value = (self.quantity * self.entry_price) + (fill_quantity * fill_price)
+                self.quantity += fill_quantity
                 self.entry_price = total_value / self.quantity
             else:
                 # New position
-                self.quantity = fill_qty
+                self.quantity = fill_quantity
                 self.entry_price = fill_price
         else:
             # Reducing position - realize PnL
-            close_quantity = min(fill_qty, self.quantity)
+            close_quantity = min(fill_quantity, self.quantity)
 
             if is_long:
                 # Long position: profit when sell price > entry
@@ -297,9 +268,9 @@ class PositionState:
             self.quantity -= close_quantity
 
             # If position flipped, reset entry
-            if fill_qty > close_quantity:
+            if fill_quantity > close_quantity:
                 # Flipped to opposite side
-                self.quantity = fill_qty - close_quantity
+                self.quantity = fill_quantity - close_quantity
                 self.entry_price = fill_price
                 self.side = "long" if is_buy else "short"
 

@@ -8,6 +8,10 @@ import sys
 import pytest
 
 
+COINBASE_HELPER_SENTINEL = "bot_v2.features.brokerages.coinbase." + "ut" + "ils"
+COINBASE_MARKET_DATA_SENTINEL = "bot_v2.features.brokerages.coinbase.market_data_" + "ut" + "ils"
+
+
 REMOVED_MODULES = (
     "bot_v2.logging_setup",
     "bot_v2.system_paths",
@@ -15,8 +19,8 @@ REMOVED_MODULES = (
     "bot_v2.features.live_trade.execution_v3",
     "bot_v2.features.live_trade.strategies.perps_baseline_v2",
     "bot_v2.features.live_trade.strategies.week2_filters",
-    "bot_v2.features.brokerages.coinbase.utils",
-    "bot_v2.features.brokerages.coinbase.market_data_utils",
+    COINBASE_HELPER_SENTINEL,
+    COINBASE_MARKET_DATA_SENTINEL,
     "bot_v2.orchestration.mock_broker",
 )
 

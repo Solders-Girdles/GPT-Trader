@@ -8,12 +8,12 @@ and trading policy enforcement per symbol and environment.
 from __future__ import annotations
 
 import logging
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from decimal import Decimal, InvalidOperation
 from enum import Enum
 from typing import Any, TypedDict, cast
-from collections.abc import Mapping
 
 logger = logging.getLogger(__name__)
 

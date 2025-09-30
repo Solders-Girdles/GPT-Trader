@@ -8,7 +8,6 @@ from decimal import Decimal
 from typing import Literal, cast
 
 import pandas as pd
-
 from bot_v2.features.brokerages.core.interfaces import OrderSide
 from bot_v2.types.trading import (
     AccountSnapshot,

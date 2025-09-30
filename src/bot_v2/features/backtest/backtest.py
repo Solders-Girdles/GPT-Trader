@@ -10,7 +10,7 @@ from enum import Enum, auto
 from typing import TYPE_CHECKING, Any, cast
 
 if TYPE_CHECKING:
-    from ..monitor import LogLevel as LogLevelType
+    from bot_v2.features.monitor import LogLevel as LogLevelType
 else:
 
     class LogLevelType(Enum):
@@ -21,14 +21,18 @@ else:
 
 
 import pandas as pd
-
-from ...config import get_config
+from bot_v2.config import get_config
 
 # Import error handling and configuration
-from ...errors import BacktestError, DataError, StrategyError, TradingError, ValidationError
-from ...errors import log_error as error_log
-from ...errors.handler import RecoveryStrategy, get_error_handler
-from ...validation import (
+from bot_v2.errors import BacktestError, DataError, StrategyError, TradingError, ValidationError
+from bot_v2.errors import log_error as error_log
+from bot_v2.errors.handler import RecoveryStrategy, get_error_handler
+from bot_v2.features.backtest.data import fetch_historical_data
+from bot_v2.features.backtest.execution import simulate_trades
+from bot_v2.features.backtest.metrics import calculate_metrics
+from bot_v2.features.backtest.signals import generate_signals
+from bot_v2.features.backtest.types import BacktestMetrics, BacktestResult, TradeDict
+from bot_v2.validation import (
     DateValidator,
     PercentageValidator,
     PositiveNumberValidator,
@@ -36,15 +40,10 @@ from ...validation import (
     SymbolValidator,
     validate_inputs,
 )
-from .data import fetch_historical_data
-from .execution import simulate_trades
-from .metrics import calculate_metrics
-from .signals import generate_signals
-from .types import BacktestMetrics, BacktestResult, TradeDict
 
 # Import logging from monitor slice with proper fallback
 try:
-    from ..monitor import log_error, log_event, log_performance, set_correlation_id
+    from bot_v2.features.monitor import log_error, log_event, log_performance, set_correlation_id
 except ImportError:
     # Fallback if monitor slice not available
     logger = logging.getLogger(__name__)

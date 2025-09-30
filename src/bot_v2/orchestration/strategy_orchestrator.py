@@ -29,7 +29,7 @@ from bot_v2.orchestration.spot_profile_service import SpotProfileService
 from bot_v2.utilities.quantities import quantity_from
 
 if TYPE_CHECKING:  # pragma: no cover - type checking only
-    from .perps_bot import PerpsBot
+    from bot_v2.orchestration.perps_bot import PerpsBot
 
 logger = logging.getLogger(__name__)
 

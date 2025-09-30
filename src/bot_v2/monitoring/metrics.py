@@ -5,7 +5,7 @@ from datetime import date, datetime, timedelta
 from decimal import Decimal, InvalidOperation
 from typing import Any
 
-from ..persistence.event_store import EventStore
+from bot_v2.persistence.event_store import EventStore
 
 
 @dataclass

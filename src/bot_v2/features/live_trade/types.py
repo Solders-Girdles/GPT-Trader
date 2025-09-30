@@ -6,7 +6,7 @@ from decimal import Decimal
 from typing import cast
 
 # Re-export core types with deprecation warning
-from ..brokerages.core.interfaces import (
+from bot_v2.features.brokerages.core.interfaces import (
     Order,
     OrderSide,
     OrderStatus,

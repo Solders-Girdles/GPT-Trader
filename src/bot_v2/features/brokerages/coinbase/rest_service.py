@@ -2,19 +2,19 @@
 
 from __future__ import annotations
 
-from ....persistence.event_store import EventStore
-from .client import CoinbaseClient
-from .endpoints import CoinbaseEndpoints
-from .market_data_service import MarketDataService
-from .models import APIConfig
-from .rest import (
+from bot_v2.features.brokerages.coinbase.client import CoinbaseClient
+from bot_v2.features.brokerages.coinbase.endpoints import CoinbaseEndpoints
+from bot_v2.features.brokerages.coinbase.market_data_service import MarketDataService
+from bot_v2.features.brokerages.coinbase.models import APIConfig
+from bot_v2.features.brokerages.coinbase.rest import (
     CoinbaseRestServiceBase,
     OrderRestMixin,
     PnLRestMixin,
     PortfolioRestMixin,
     ProductRestMixin,
 )
-from .utilities import ProductCatalog
+from bot_v2.features.brokerages.coinbase.utilities import ProductCatalog
+from bot_v2.persistence.event_store import EventStore
 
 
 class CoinbaseRestService(

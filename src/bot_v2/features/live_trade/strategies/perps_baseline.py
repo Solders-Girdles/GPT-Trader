@@ -12,11 +12,10 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import Any
 
+from bot_v2.features.brokerages.core.interfaces import MarketType, Product
+from bot_v2.features.live_trade.risk import LiveRiskManager
+from bot_v2.features.live_trade.strategies.decisions import Action, Decision
 from bot_v2.utilities.quantities import quantity_from
-
-from ...brokerages.core.interfaces import MarketType, Product
-from ..risk import LiveRiskManager
-from .decisions import Action, Decision
 
 logger = logging.getLogger(__name__)
 
@@ -73,7 +72,10 @@ class BaselinePerpsStrategy:
     """
 
     def __init__(
-        self, config: StrategyConfig | None = None, risk_manager: LiveRiskManager | None = None
+        self,
+        config: StrategyConfig | None = None,
+        risk_manager: LiveRiskManager | None = None,
+        environment: str | None = None,
     ) -> None:
         """
         Initialize strategy with configuration.
@@ -81,16 +83,22 @@ class BaselinePerpsStrategy:
         Args:
             config: Strategy configuration
             risk_manager: Risk manager for constraint checks
+            environment: Optional label for logging/context (e.g., "live", "simulated")
         """
         self.config = config or StrategyConfig()
         self.risk_manager = risk_manager
+        self.environment = environment or "live"
 
         # In-memory state
         self.mark_windows: dict[str, list[Decimal]] = {}
         self.position_adds: dict[str, int] = {}  # Track adds per symbol
         self.trailing_stops: dict[str, tuple[Decimal, Decimal]] = {}  # symbol -> (peak, stop_price)
 
-        logger.info(f"BaselinePerpsStrategy initialized with config: {self.config}")
+        logger.info(
+            "BaselinePerpsStrategy initialized env=%s config=%s",
+            self.environment,
+            self.config,
+        )
 
     def decide(
         self,

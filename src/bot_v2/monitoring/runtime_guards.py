@@ -9,20 +9,19 @@ from __future__ import annotations
 
 import json
 import logging
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
 from decimal import Decimal, DecimalException, InvalidOperation
 from enum import Enum
-from typing import Any, TYPE_CHECKING
-from collections.abc import Mapping
+from typing import TYPE_CHECKING, Any
 
 # Import AlertSeverity from alerts module to avoid duplication
 if TYPE_CHECKING:  # pragma: no cover - import for type checking only
-    from .alerts import AlertSeverity
+    from bot_v2.monitoring.alerts import AlertSeverity
 else:
     try:
-        from .alerts import AlertSeverity
+        from bot_v2.monitoring.alerts import AlertSeverity
     except ImportError:
         # Fallback if alerts module not available
         class AlertSeverity(Enum):

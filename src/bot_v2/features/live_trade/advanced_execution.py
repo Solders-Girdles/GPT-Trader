@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import inspect
 import logging
 import time
 import uuid
@@ -10,14 +11,12 @@ from datetime import datetime
 from decimal import Decimal
 from enum import Enum
 from typing import Any, cast
-from collections.abc import Mapping
-import inspect
 
-from ...errors import ExecutionError, ValidationError
-from ..brokerages.coinbase.specs import (
+from bot_v2.errors import ExecutionError, ValidationError
+from bot_v2.features.brokerages.coinbase.specs import (
     validate_order as spec_validate_order,
 )
-from ..brokerages.core.interfaces import (
+from bot_v2.features.brokerages.core.interfaces import (
     Order,
     OrderSide,
     OrderType,
@@ -26,9 +25,13 @@ from ..brokerages.core.interfaces import (
     Quote,
     TimeInForce,
 )
-from ...utilities.quantization import quantize_price_side_aware
-from .risk import LiveRiskManager, PositionSizingAdvice, PositionSizingContext
+from bot_v2.features.live_trade.risk import (
+    LiveRiskManager,
+    PositionSizingAdvice,
+    PositionSizingContext,
+)
 from bot_v2.utilities.quantities import quantity_from
+from bot_v2.utilities.quantization import quantize_price_side_aware
 
 __all__ = [
     "SizingMode",

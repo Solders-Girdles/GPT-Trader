@@ -5,9 +5,8 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
-
-from .strategies import create_local_strategy
-from .types import BacktestMetrics
+from bot_v2.features.optimize.strategies import create_local_strategy
+from bot_v2.features.optimize.types import BacktestMetrics
 
 logger = logging.getLogger(__name__)
 

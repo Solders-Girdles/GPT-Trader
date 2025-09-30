@@ -5,7 +5,7 @@ Provides comprehensive state management with multi-tier storage,
 atomic checkpoints, automated recovery, and encrypted backups.
 """
 
-from .backup_manager import (
+from bot_v2.state.backup_manager import (
     BackupConfig,
     BackupManager,
     BackupMetadata,
@@ -15,7 +15,7 @@ from .backup_manager import (
     create_backup,
     restore_latest,
 )
-from .checkpoint_handler import (
+from bot_v2.state.checkpoint_handler import (
     Checkpoint,
     CheckpointConfig,
     CheckpointHandler,
@@ -24,7 +24,7 @@ from .checkpoint_handler import (
     create_checkpoint,
     restore_latest_checkpoint,
 )
-from .recovery_handler import (
+from bot_v2.state.recovery_handler import (
     FailureEvent,
     FailureType,
     RecoveryConfig,
@@ -34,7 +34,7 @@ from .recovery_handler import (
     RecoveryStatus,
     detect_and_recover,
 )
-from .state_manager import (
+from bot_v2.state.state_manager import (
     StateCategory,
     StateConfig,
     StateManager,

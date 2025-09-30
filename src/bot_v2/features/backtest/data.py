@@ -4,15 +4,14 @@ Data fetching and validation for backtesting.
 
 import logging
 from datetime import datetime
-
-import pandas as pd
 from typing import Any, cast
 
-from ...config import get_config
-from ...data_providers import get_data_provider
-from ...errors import DataError, NetworkError, TimeoutError
-from ...errors.handler import RecoveryStrategy, get_error_handler
-from ...validation import DateValidator, SymbolValidator, validate_inputs
+import pandas as pd
+from bot_v2.config import get_config
+from bot_v2.data_providers import get_data_provider
+from bot_v2.errors import DataError, NetworkError, TimeoutError
+from bot_v2.errors.handler import RecoveryStrategy, get_error_handler
+from bot_v2.validation import DateValidator, SymbolValidator, validate_inputs
 
 logger = logging.getLogger(__name__)
 
@@ -199,7 +198,7 @@ def _fetch_data_with_validation(
 
     # Validate data quality using local validation
     try:
-        from .validation import validate_data as validate_market_data
+        from bot_v2.features.backtest.validation import validate_data as validate_market_data
 
         if not validate_market_data(data):
             raise DataError(

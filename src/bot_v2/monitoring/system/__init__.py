@@ -1,7 +1,7 @@
 """System-level monitoring interfaces and helpers."""
 
-from ..interfaces import Alert, PerformanceMetrics, ResourceUsage, SystemHealth
-from .engine import (
+from bot_v2.monitoring.interfaces import Alert, PerformanceMetrics, ResourceUsage, SystemHealth
+from bot_v2.monitoring.system.engine import (
     MonitoringSystem,
     acknowledge_alert,
     get_active_alerts,
@@ -11,7 +11,7 @@ from .engine import (
     start_monitoring,
     stop_monitoring,
 )
-from .logger import (
+from bot_v2.monitoring.system.logger import (
     LogLevel,
     ProductionLogger,
     get_correlation_id,

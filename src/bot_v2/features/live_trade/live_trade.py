@@ -12,14 +12,9 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import Any, cast
 
-from bot_v2.types.trading import AccountSnapshot, TradingPosition
-from bot_v2.utilities.quantities import quantity_from
-
-from ...errors import ExecutionError, NetworkError, ValidationError, log_error
-from ...errors.handler import RecoveryStrategy, get_error_handler
-from ...validation import PositiveNumberValidator, SymbolValidator
-
-from ..brokerages.core.interfaces import (
+from bot_v2.errors import ExecutionError, NetworkError, ValidationError, log_error
+from bot_v2.errors.handler import RecoveryStrategy, get_error_handler
+from bot_v2.features.brokerages.core.interfaces import (
     Order,
     OrderSide,
     OrderType,
@@ -27,21 +22,32 @@ from ..brokerages.core.interfaces import (
     Quote,
     TimeInForce,
 )
-from .broker_connection import (
+from bot_v2.features.live_trade.broker_connection import (
     connect_broker as _connect_broker,
+)
+from bot_v2.features.live_trade.broker_connection import (
     disconnect as _disconnect,
+)
+from bot_v2.features.live_trade.broker_connection import (
     get_broker_client,
     get_connection,
     get_execution_engine,
     get_risk_manager,
 )
-from .strategies.perps_baseline import Action, BaselinePerpsStrategy, Decision
-from .types import (
+from bot_v2.features.live_trade.strategies.perps_baseline import (
+    Action,
+    BaselinePerpsStrategy,
+    Decision,
+)
+from bot_v2.features.live_trade.types import (
     AccountInfo,
     BrokerConnection,
     MarketHours,
     position_to_trading_position,
 )
+from bot_v2.types.trading import AccountSnapshot, TradingPosition
+from bot_v2.utilities.quantities import quantity_from
+from bot_v2.validation import PositiveNumberValidator, SymbolValidator
 
 logger = logging.getLogger(__name__)
 
@@ -484,6 +490,8 @@ def run_strategy(
     iterations: int = 3,
     mark_cache: dict[str, Decimal] | None = None,
     mark_windows: dict[str, list[Decimal]] | None = None,
+    *,
+    strategy_override: Any | None = None,
 ) -> None:
     """Run a basic trading strategy for demonstration purposes."""
 
@@ -493,7 +501,11 @@ def run_strategy(
     if not broker or not connection or not connection.is_connected or not risk_manager:
         raise RuntimeError("Broker connection not initialized")
 
-    strategy = BaselinePerpsStrategy(environment="simulated", risk_manager=risk_manager)
+    strategy = strategy_override or BaselinePerpsStrategy(
+        environment="simulated", risk_manager=risk_manager
+    )
+
+    decisions_accumulator: dict[str, Decision] = {}
 
     for _ in range(iterations):
         account_info = get_account()
@@ -518,9 +530,12 @@ def run_strategy(
                     continue
 
                 decision = _generate_strategy_decision(strategy, symbol_ctx)
+                decisions_accumulator[symbol] = decision
                 _execute_decision_if_actionable(decision, symbol_ctx)
             except Exception as exc:
                 logger.error("Error processing %s: %s", symbol, exc)
+
+    return decisions_accumulator
 
 
 def _validate_broker_connection() -> bool:
@@ -616,7 +631,7 @@ def _execute_decision_if_actionable(decision: Decision, context: SymbolContext) 
             quantity = decision.target_notional / current_mark
 
         if quantity is not None:
-            from ..brokerages.coinbase.utilities import enforce_perp_rules
+            from bot_v2.features.brokerages.coinbase.utilities import enforce_perp_rules
 
             quantized_quantity, _ = enforce_perp_rules(
                 product=product,
@@ -633,7 +648,7 @@ def _execute_decision_if_actionable(decision: Decision, context: SymbolContext) 
             quantity = _quantity_from_position(context.position_state)
 
         if quantity is not None:
-            from ..brokerages.coinbase.utilities import enforce_perp_rules
+            from bot_v2.features.brokerages.coinbase.utilities import enforce_perp_rules
 
             quantized_quantity, _ = enforce_perp_rules(
                 product=product,
@@ -653,7 +668,7 @@ def _handle_symbol_error(symbol: str, exc: Exception) -> Decision:
 
 
 def _build_template_product(symbol: str) -> Any:
-    from ..brokerages.core.interfaces import MarketType, Product
+    from bot_v2.features.brokerages.core.interfaces import MarketType, Product
 
     base_asset = symbol.split("-")[0]
     return Product(

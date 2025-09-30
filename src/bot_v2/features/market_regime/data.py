@@ -3,12 +3,10 @@ Data fetching and historical regime analysis - LOCAL to this slice.
 """
 
 from datetime import datetime, timedelta
-from typing import Optional
 
 import numpy as np
 import pandas as pd
-
-from .types import MarketRegime, RegimeAnalysis, RegimeTransition
+from bot_v2.features.market_regime.types import MarketRegime, RegimeAnalysis, RegimeTransition
 
 
 def fetch_market_data(symbol: str, lookback_days: int) -> pd.DataFrame:

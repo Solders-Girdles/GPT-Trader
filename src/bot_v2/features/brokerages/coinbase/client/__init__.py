@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from .....config import get_config
-from ..auth import (
+from bot_v2.config import get_config
+from bot_v2.features.brokerages.coinbase.auth import (
     AuthStrategy,
     CDPJWTAuth,
     CoinbaseAuth,
@@ -12,11 +12,11 @@ from ..auth import (
     create_cdp_auth,
     create_cdp_jwt_auth,
 )
-from .accounts import AccountClientMixin
-from .base import CoinbaseClientBase
-from .market import MarketDataClientMixin
-from .orders import OrderClientMixin
-from .portfolio import PortfolioClientMixin
+from bot_v2.features.brokerages.coinbase.client.accounts import AccountClientMixin
+from bot_v2.features.brokerages.coinbase.client.base import CoinbaseClientBase
+from bot_v2.features.brokerages.coinbase.client.market import MarketDataClientMixin
+from bot_v2.features.brokerages.coinbase.client.orders import OrderClientMixin
+from bot_v2.features.brokerages.coinbase.client.portfolio import PortfolioClientMixin
 
 
 class CoinbaseClient(

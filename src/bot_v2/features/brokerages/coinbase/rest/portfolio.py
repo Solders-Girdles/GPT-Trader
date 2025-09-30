@@ -5,10 +5,9 @@ from __future__ import annotations
 from decimal import Decimal, InvalidOperation
 from typing import Any
 
+from bot_v2.features.brokerages.coinbase.rest.base import logger
+from bot_v2.features.brokerages.core.interfaces import Balance, Position
 from bot_v2.utilities.quantities import quantity_from
-
-from ...core.interfaces import Balance, Position
-from .base import logger
 
 
 class PortfolioRestMixin:

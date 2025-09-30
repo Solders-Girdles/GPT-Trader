@@ -11,8 +11,7 @@ from datetime import date, datetime
 from typing import Any
 
 import pandas as pd
-
-from ..errors import ValidationError
+from bot_v2.errors import ValidationError
 
 
 # Base validators

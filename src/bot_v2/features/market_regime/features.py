@@ -4,8 +4,7 @@ Feature engineering for market regime detection - LOCAL to this slice.
 
 import numpy as np
 import pandas as pd
-
-from .types import RegimeFeatures
+from bot_v2.features.market_regime.types import RegimeFeatures
 
 
 def extract_regime_features(data: pd.DataFrame) -> RegimeFeatures:

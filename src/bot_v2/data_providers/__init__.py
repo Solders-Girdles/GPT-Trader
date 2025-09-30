@@ -297,7 +297,7 @@ def get_data_provider(provider_type: str = None) -> DataProvider:
         _provider_instance = MockProvider()
     elif provider_type == "coinbase":
         # Lazy import to avoid circular dependencies
-        from .coinbase_provider import CoinbaseDataProvider
+        from bot_v2.data_providers.coinbase_provider import CoinbaseDataProvider
 
         _provider_instance = CoinbaseDataProvider()
     else:

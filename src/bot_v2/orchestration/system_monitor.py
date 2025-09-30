@@ -21,7 +21,7 @@ from bot_v2.orchestration.configuration import ConfigValidationError
 from bot_v2.utilities.quantities import quantity_from
 
 if TYPE_CHECKING:  # pragma: no cover - type checking only
-    from .perps_bot import PerpsBot
+    from bot_v2.orchestration.perps_bot import PerpsBot
 
 logger = logging.getLogger(__name__)
 
@@ -200,7 +200,10 @@ class SystemMonitor:
         with open(status_file, "w") as f:
             json.dump(status, f, indent=2)
 
-    async def _run_position_reconciliation(self, interval_seconds: int = 90) -> None:
+    async def run_position_reconciliation(self, interval_seconds: int = 90) -> None:
+        await self._run_position_reconciliation_loop(interval_seconds=interval_seconds)
+
+    async def _run_position_reconciliation_loop(self, interval_seconds: int = 90) -> None:
         bot = self._bot
         while bot.running:
             try:

@@ -13,8 +13,16 @@ from collections.abc import Iterable, Sequence
 from decimal import Decimal
 from typing import Any
 
-from ....persistence.event_store import EventStore
-from ..core.interfaces import (
+from bot_v2.features.brokerages.coinbase.auth import build_rest_auth
+from bot_v2.features.brokerages.coinbase.client import CoinbaseClient
+from bot_v2.features.brokerages.coinbase.endpoints import CoinbaseEndpoints
+from bot_v2.features.brokerages.coinbase.market_data_service import MarketDataService
+from bot_v2.features.brokerages.coinbase.models import APIConfig
+from bot_v2.features.brokerages.coinbase.rest_service import CoinbaseRestService
+from bot_v2.features.brokerages.coinbase.utilities import ProductCatalog
+from bot_v2.features.brokerages.coinbase.websocket_handler import CoinbaseWebSocketHandler
+from bot_v2.features.brokerages.coinbase.ws import CoinbaseWebSocket
+from bot_v2.features.brokerages.core.interfaces import (
     Balance,
     IBrokerage,
     MarketType,
@@ -26,15 +34,7 @@ from ..core.interfaces import (
     Product,
     Quote,
 )
-from .auth import build_rest_auth
-from .client import CoinbaseClient
-from .endpoints import CoinbaseEndpoints
-from .market_data_service import MarketDataService
-from .models import APIConfig
-from .rest_service import CoinbaseRestService
-from .utilities import ProductCatalog
-from .websocket_handler import CoinbaseWebSocketHandler
-from .ws import CoinbaseWebSocket
+from bot_v2.persistence.event_store import EventStore
 
 logger = logging.getLogger(__name__)
 

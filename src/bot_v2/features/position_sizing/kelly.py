@@ -7,9 +7,9 @@ All math and utilities implemented locally within this slice.
 
 import logging
 
-from ...errors import RiskLimitExceeded, ValidationError, log_error
-from ...validation import PositiveNumberValidator, RangeValidator
-from .types import RiskParameters, TradeStatistics
+from bot_v2.errors import RiskLimitExceeded, ValidationError, log_error
+from bot_v2.features.position_sizing.types import RiskParameters, TradeStatistics
+from bot_v2.validation import PositiveNumberValidator, RangeValidator
 
 logger = logging.getLogger(__name__)
 

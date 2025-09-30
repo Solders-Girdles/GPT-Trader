@@ -5,16 +5,21 @@ EXPERIMENTAL: This slice is provided for demos and local experimentation.
 It is not part of the production perps trading path.
 """
 
-from .backtest import run_backtest
-from .profile import StrategySpec, build_strategy_spec, load_profile, run_profile_backtest
-from .spot import (
+from bot_v2.features.backtest.backtest import run_backtest
+from bot_v2.features.backtest.profile import (
+    StrategySpec,
+    build_strategy_spec,
+    load_profile,
+    run_profile_backtest,
+)
+from bot_v2.features.backtest.spot import (
     Bar,
-    StrategySignal,
     SpotBacktestConfig,
     SpotBacktester,
+    StrategySignal,
     load_candles_from_parquet,
 )
-from .types import BacktestMetrics, BacktestResult
+from bot_v2.features.backtest.types import BacktestMetrics, BacktestResult
 
 __all__ = [
     "run_backtest",

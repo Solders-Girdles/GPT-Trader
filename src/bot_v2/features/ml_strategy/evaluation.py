@@ -8,8 +8,7 @@ import numpy as np
 
 # Import error handling
 from bot_v2.errors import DataError, ValidationError
-
-from .types import ModelPerformance
+from bot_v2.features.ml_strategy.types import ModelPerformance
 
 logger = logging.getLogger(__name__)
 

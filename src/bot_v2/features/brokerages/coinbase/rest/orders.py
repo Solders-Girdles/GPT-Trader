@@ -7,10 +7,10 @@ from collections.abc import Callable, Sequence
 from decimal import Decimal
 from typing import Any
 
-from bot_v2.utilities.quantities import quantity_from
-
-from .....errors import ValidationError
-from ...core.interfaces import (
+from bot_v2.errors import ValidationError
+from bot_v2.features.brokerages.coinbase.models import normalize_symbol, to_order
+from bot_v2.features.brokerages.coinbase.rest.base import logger
+from bot_v2.features.brokerages.core.interfaces import (
     Order,
     OrderSide,
     OrderStatus,
@@ -18,8 +18,7 @@ from ...core.interfaces import (
     Position,
     TimeInForce,
 )
-from ..models import normalize_symbol, to_order
-from .base import logger
+from bot_v2.utilities.quantities import quantity_from
 
 
 class OrderRestMixin:

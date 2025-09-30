@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from .interfaces import StrategyBase, StrategyContext, StrategySignal
+from bot_v2.features.strategies.interfaces import StrategyBase, StrategyContext, StrategySignal
 
 
 class MomentumStrategy(StrategyBase):

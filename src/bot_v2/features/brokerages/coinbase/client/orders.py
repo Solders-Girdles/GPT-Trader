@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
-from ...core.interfaces import BrokerageError, NotFoundError
-from ..errors import InvalidRequestError
-
+from bot_v2.features.brokerages.coinbase.errors import InvalidRequestError
+from bot_v2.features.brokerages.core.interfaces import BrokerageError, NotFoundError
 
 if TYPE_CHECKING:
-    from ._typing import CoinbaseClientProtocol
+    from bot_v2.features.brokerages.coinbase.client._typing import CoinbaseClientProtocol
 
 
 class OrderClientMixin:

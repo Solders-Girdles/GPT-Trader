@@ -8,24 +8,28 @@ import logging
 from datetime import datetime
 from decimal import Decimal
 from typing import Any, cast
-from collections.abc import Callable
 
-from ...config import get_config
-from ...errors import ExecutionError, NetworkError, ValidationError, log_error
-from ...errors.handler import RecoveryStrategy, get_error_handler
-from ...validation import (
+from bot_v2.config import get_config
+from bot_v2.errors import ExecutionError, NetworkError, ValidationError, log_error
+from bot_v2.errors.handler import RecoveryStrategy, get_error_handler
+
+# Import core interfaces instead of local types
+from bot_v2.features.brokerages.core.interfaces import (
+    Order,
+    OrderSide,
+    OrderStatus,
+    OrderType,
+    TimeInForce,
+)
+from bot_v2.features.live_trade.risk import LiveRiskManager
+
+# Keep local types that don't exist in core
+from bot_v2.features.live_trade.types import ExecutionReport
+from bot_v2.validation import (
     ChoiceValidator,
     PositiveNumberValidator,
     SymbolValidator,
 )
-
-# Import core interfaces instead of local types
-from ..brokerages.core.interfaces import Order, OrderSide, OrderStatus, OrderType
-from ..brokerages.core.interfaces import TimeInForce
-from .risk import LiveRiskManager
-
-# Keep local types that don't exist in core
-from .types import ExecutionReport
 
 logger = logging.getLogger(__name__)
 

@@ -12,14 +12,13 @@ from typing import Optional
 
 import numpy as np
 import pandas as pd
-
-from .data import fetch_market_data, get_historical_regimes
-from .features import calculate_indicators, extract_regime_features
+from bot_v2.features.market_regime.data import fetch_market_data, get_historical_regimes
+from bot_v2.features.market_regime.features import calculate_indicators, extract_regime_features
 
 # LOCAL implementations
-from .models import RegimeEnsemble
-from .transitions import calculate_transition_matrix
-from .types import (
+from bot_v2.features.market_regime.models import RegimeEnsemble
+from bot_v2.features.market_regime.transitions import calculate_transition_matrix
+from bot_v2.features.market_regime.types import (
     MarketRegime,
     RegimeAlert,
     RegimeAnalysis,

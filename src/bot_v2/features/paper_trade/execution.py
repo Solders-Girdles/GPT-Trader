@@ -6,9 +6,8 @@ Complete isolation - no external dependencies.
 
 from datetime import datetime
 
+from bot_v2.features.paper_trade.types import AccountStatus, Position, TradeLog
 from bot_v2.types.trading import AccountSnapshot, TradeFill, TradingPosition
-
-from .types import AccountStatus, Position, TradeLog
 
 
 class PaperExecutor:

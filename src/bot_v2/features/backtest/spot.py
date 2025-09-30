@@ -43,6 +43,7 @@ class BacktestResult:
     metrics: BacktestMetrics
     equity_curve: pd.DataFrame
     trades: list[dict]
+    initial_capital: float | None = None
 
 
 @dataclass

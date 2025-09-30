@@ -9,9 +9,18 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any
 
-from .....errors import ValidationError
-from .....persistence.event_store import EventStore
-from ...core.interfaces import (
+from bot_v2.errors import ValidationError
+from bot_v2.features.brokerages.coinbase.client import CoinbaseClient
+from bot_v2.features.brokerages.coinbase.endpoints import CoinbaseEndpoints
+from bot_v2.features.brokerages.coinbase.market_data_service import MarketDataService
+from bot_v2.features.brokerages.coinbase.models import APIConfig, normalize_symbol, to_order
+from bot_v2.features.brokerages.coinbase.utilities import (
+    FundingCalculator,
+    PositionState,
+    ProductCatalog,
+    quantize_to_increment,
+)
+from bot_v2.features.brokerages.core.interfaces import (
     InsufficientFunds,
     InvalidRequestError,
     NotFoundError,
@@ -20,11 +29,7 @@ from ...core.interfaces import (
     OrderType,
     TimeInForce,
 )
-from ..client import CoinbaseClient
-from ..endpoints import CoinbaseEndpoints
-from ..market_data_service import MarketDataService
-from ..models import APIConfig, normalize_symbol, to_order
-from ..utilities import FundingCalculator, PositionState, ProductCatalog, quantize_to_increment
+from bot_v2.persistence.event_store import EventStore
 
 logger = logging.getLogger(__name__)
 

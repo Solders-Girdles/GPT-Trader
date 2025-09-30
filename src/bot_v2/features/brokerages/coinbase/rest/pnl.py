@@ -5,8 +5,8 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import Any
 
-from ..utilities import PositionState
-from .base import logger
+from bot_v2.features.brokerages.coinbase.rest.base import logger
+from bot_v2.features.brokerages.coinbase.utilities import PositionState
 
 
 class PnLRestMixin:

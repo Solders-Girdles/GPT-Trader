@@ -5,8 +5,7 @@ from decimal import Decimal
 from pathlib import Path
 
 import yaml
-
-from .spot import (
+from bot_v2.features.backtest.spot import (
     BollingerMeanReversionStrategy,
     MomentumOscillatorStrategy,
     MovingAverageCrossStrategy,

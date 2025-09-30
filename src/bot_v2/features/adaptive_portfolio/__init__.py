@@ -13,9 +13,18 @@ Key Features:
 - Realistic position sizing and cost modeling
 """
 
-from .adaptive_portfolio import get_current_tier, load_portfolio_config, run_adaptive_strategy
-from .config_manager import validate_portfolio_config
-from .types import AdaptiveResult, PortfolioTier, RiskProfile, TierConfig
+from bot_v2.features.adaptive_portfolio.adaptive_portfolio import (
+    get_current_tier,
+    load_portfolio_config,
+    run_adaptive_strategy,
+)
+from bot_v2.features.adaptive_portfolio.config_manager import validate_portfolio_config
+from bot_v2.features.adaptive_portfolio.types import (
+    AdaptiveResult,
+    PortfolioTier,
+    RiskProfile,
+    TierConfig,
+)
 
 __all__ = [
     "run_adaptive_strategy",

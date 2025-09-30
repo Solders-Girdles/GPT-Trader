@@ -5,9 +5,14 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import Any
 
-from ...core.interfaces import MarketType, Product, Quote
-from ..models import normalize_symbol, to_candle, to_product, to_quote
-from .base import logger
+from bot_v2.features.brokerages.coinbase.models import (
+    normalize_symbol,
+    to_candle,
+    to_product,
+    to_quote,
+)
+from bot_v2.features.brokerages.coinbase.rest.base import logger
+from bot_v2.features.brokerages.core.interfaces import MarketType, Product, Quote
 
 
 class ProductRestMixin:

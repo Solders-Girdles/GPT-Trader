@@ -6,7 +6,7 @@ import logging
 from pathlib import Path
 from typing import Any
 
-from .models import BackupConfig, BackupMetadata, StorageTier
+from bot_v2.state.backup.models import BackupConfig, BackupMetadata, StorageTier
 
 try:  # optional dependency for cloud storage
     import boto3

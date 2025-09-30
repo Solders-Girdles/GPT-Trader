@@ -5,12 +5,17 @@ from collections.abc import Iterable, Sequence
 from datetime import datetime
 from decimal import Decimal
 
-from .auth import build_ws_auth_provider
-from .market_data_service import MarketDataService
-from .models import APIConfig, normalize_symbol
-from .rest_service import CoinbaseRestService
-from .utilities import ProductCatalog
-from .ws import CoinbaseWebSocket, SequenceGuard, WSSubscription, normalize_market_message
+from bot_v2.features.brokerages.coinbase.auth import build_ws_auth_provider
+from bot_v2.features.brokerages.coinbase.market_data_service import MarketDataService
+from bot_v2.features.brokerages.coinbase.models import APIConfig, normalize_symbol
+from bot_v2.features.brokerages.coinbase.rest_service import CoinbaseRestService
+from bot_v2.features.brokerages.coinbase.utilities import ProductCatalog
+from bot_v2.features.brokerages.coinbase.ws import (
+    CoinbaseWebSocket,
+    SequenceGuard,
+    WSSubscription,
+    normalize_market_message,
+)
 
 logger = logging.getLogger(__name__)
 

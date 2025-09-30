@@ -21,7 +21,8 @@ from bot_v2.orchestration.live_execution import LiveExecutionEngine
 from bot_v2.utilities.quantities import quantity_from
 
 if TYPE_CHECKING:  # pragma: no cover - type checking only
-    from .perps_bot import PerpsBot
+    from bot_v2.orchestration.order_reconciler import OrderReconciler
+    from bot_v2.orchestration.perps_bot import PerpsBot
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +32,7 @@ class ExecutionCoordinator:
 
     def __init__(self, bot: PerpsBot) -> None:
         self._bot = bot
+        self._order_reconciler: OrderReconciler | None = None
 
     def init_execution(self) -> None:
         import os
@@ -318,7 +320,21 @@ class ExecutionCoordinator:
         logger.warning("Order attempt failed (no order returned)")
         return None
 
-    async def _run_runtime_guards(self) -> None:
+    def _get_order_reconciler(self) -> OrderReconciler:
+        if self._order_reconciler is None:
+            bot = self._bot
+            self._order_reconciler = OrderReconciler(
+                broker=bot.broker,
+                orders_store=bot.orders_store,
+                event_store=bot.event_store,
+                bot_id=bot.bot_id,
+            )
+        return self._order_reconciler
+
+    async def run_runtime_guards(self) -> None:
+        await self._run_runtime_guards_loop()
+
+    async def _run_runtime_guards_loop(self) -> None:
         bot = self._bot
         while bot.running:
             try:
@@ -327,7 +343,10 @@ class ExecutionCoordinator:
                 logger.error(f"Error in runtime guards: {e}", exc_info=True)
             await asyncio.sleep(60)
 
-    async def _run_order_reconciliation(self, interval_seconds: int = 45) -> None:
+    async def run_order_reconciliation(self, interval_seconds: int = 45) -> None:
+        await self._run_order_reconciliation_loop(interval_seconds=interval_seconds)
+
+    async def _run_order_reconciliation_loop(self, interval_seconds: int = 45) -> None:
         bot = self._bot
         while bot.running:
             try:

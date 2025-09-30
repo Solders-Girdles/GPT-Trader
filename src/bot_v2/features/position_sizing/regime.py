@@ -8,10 +8,9 @@ No external dependencies - all logic local to this slice.
 import logging
 
 import numpy as np
-
-from ...errors import ValidationError, log_error
-from ...validation import ChoiceValidator, RangeValidator
-from .types import RegimeMultipliers
+from bot_v2.errors import ValidationError, log_error
+from bot_v2.features.position_sizing.types import RegimeMultipliers
+from bot_v2.validation import ChoiceValidator, RangeValidator
 
 logger = logging.getLogger(__name__)
 

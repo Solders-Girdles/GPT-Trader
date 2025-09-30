@@ -9,8 +9,12 @@ from datetime import datetime
 from typing import Any
 
 import psutil
-
-from ..interfaces import ComponentHealth, ComponentStatus, PerformanceMetrics, ResourceUsage
+from bot_v2.monitoring.interfaces import (
+    ComponentHealth,
+    ComponentStatus,
+    PerformanceMetrics,
+    ResourceUsage,
+)
 
 
 class ResourceCollector:

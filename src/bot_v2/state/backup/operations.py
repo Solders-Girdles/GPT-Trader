@@ -665,7 +665,7 @@ class BackupManager:
     async def _restore_data_to_state(self, data: dict[str, Any]) -> bool:
         """Restore backup data to state manager"""
         try:
-            from .state_manager import StateCategory
+            from bot_v2.state.backup.state_manager import StateCategory
 
             restored_count = 0
 

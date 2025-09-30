@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from decimal import Decimal, InvalidOperation
 from typing import Any
-from collections.abc import Callable, Iterable
 
-from ...persistence.event_store import EventStore
+from bot_v2.persistence.event_store import EventStore
 
 
 @dataclass(frozen=True)

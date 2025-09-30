@@ -6,8 +6,7 @@ Complete isolation - no external dependencies.
 
 import numpy as np
 import pandas as pd
-
-from .types import PricePattern
+from bot_v2.features.analyze.types import PricePattern
 
 
 def detect_patterns(data: pd.DataFrame) -> list[PricePattern]:

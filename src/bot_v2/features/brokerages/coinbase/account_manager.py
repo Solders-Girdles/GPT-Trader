@@ -9,9 +9,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+from bot_v2.features.brokerages.coinbase.adapter import CoinbaseBrokerage
 from bot_v2.monitoring.system import LogLevel, get_logger
-
-from .adapter import CoinbaseBrokerage
 
 logger = get_logger()
 

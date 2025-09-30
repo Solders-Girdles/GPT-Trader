@@ -9,9 +9,8 @@ from datetime import datetime
 
 import numpy as np
 import pandas as pd
-
-from ...data_providers import get_data_provider
-from .indicators import (
+from bot_v2.data_providers import get_data_provider
+from bot_v2.features.analyze.indicators import (
     calculate_atr,
     calculate_bollinger_bands,
     calculate_ema,
@@ -24,9 +23,9 @@ from .indicators import (
     detect_trend,
     identify_support_resistance,
 )
-from .patterns import detect_patterns
-from .strategies import analyze_with_strategies
-from .types import (
+from bot_v2.features.analyze.patterns import detect_patterns
+from bot_v2.features.analyze.strategies import analyze_with_strategies
+from bot_v2.features.analyze.types import (
     AnalysisResult,
     MarketRegime,
     PortfolioAnalysis,

@@ -9,10 +9,9 @@ import time
 from collections.abc import Callable, Iterator
 from typing import Any, cast
 
+from bot_v2.features.brokerages.coinbase.auth import AuthStrategy, CDPJWTAuth, CoinbaseAuth
+from bot_v2.features.brokerages.coinbase.errors import InvalidRequestError, map_http_error
 from bot_v2.monitoring.system import get_logger
-
-from ..auth import AuthStrategy, CDPJWTAuth, CoinbaseAuth
-from ..errors import InvalidRequestError, map_http_error
 
 _ul: Any
 _ue: Any
@@ -32,7 +31,7 @@ def _load_system_config() -> dict[str, Any]:
     pkg = sys.modules.get("bot_v2.features.brokerages.coinbase.client")
     if pkg and hasattr(pkg, "get_config"):
         return cast(dict[str, Any], pkg.get_config("system"))  # type: ignore[attr-defined]
-    from .....config import get_config as fallback_get_config
+    from bot_v2.config import get_config as fallback_get_config
 
     return cast(dict[str, Any], fallback_get_config("system"))
 

@@ -1,5 +1,5 @@
 """Coinbase brokerage slice (Advanced Trade + derivatives scaffolding)."""
 
-from .adapter import CoinbaseBrokerage
+from bot_v2.features.brokerages.coinbase.adapter import CoinbaseBrokerage
 
 __all__ = ["CoinbaseBrokerage"]

@@ -5,8 +5,7 @@ Regime transition analysis - LOCAL to this slice.
 from datetime import datetime
 
 import numpy as np
-
-from .types import MarketRegime, RegimeTransition
+from bot_v2.features.market_regime.types import MarketRegime, RegimeTransition
 
 
 def calculate_transition_matrix(

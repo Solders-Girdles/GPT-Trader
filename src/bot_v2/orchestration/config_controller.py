@@ -28,6 +28,13 @@ class ConfigController:
         "reduce_only_mode",
         "time_in_force",
         "daily_loss_limit",
+        "derivatives_enabled",
+        "perps_enable_streaming",
+        "perps_stream_level",
+        "perps_paper_trading",
+        "perps_force_mock",
+        "perps_position_fraction",
+        "perps_skip_startup_reconcile",
     )
 
     def __init__(self, config: BotConfig) -> None:

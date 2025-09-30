@@ -6,8 +6,7 @@ proper libraries like sklearn, statsmodels, or specialized HMM packages.
 """
 
 import numpy as np
-
-from .types import MarketRegime, TrendRegime, VolatilityRegime
+from bot_v2.features.market_regime.types import MarketRegime, TrendRegime, VolatilityRegime
 
 
 class HMMRegimeDetector:

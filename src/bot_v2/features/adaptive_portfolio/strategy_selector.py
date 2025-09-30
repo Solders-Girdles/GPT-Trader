@@ -4,7 +4,16 @@ Strategy selection based on portfolio tier.
 Selects and configures appropriate trading strategies for each tier.
 """
 
+import logging
 from typing import TYPE_CHECKING, Any, TypeAlias
+
+from bot_v2.data_providers import DataProvider
+from bot_v2.features.adaptive_portfolio.types import (
+    PortfolioConfig,
+    PortfolioSnapshot,
+    TierConfig,
+    TradingSignal,
+)
 
 try:
     import pandas as pd
@@ -19,11 +28,6 @@ if TYPE_CHECKING:  # pragma: no cover - typing only
     DataFrame: TypeAlias = _PandasDataFrame
 else:
     DataFrame: TypeAlias = Any
-
-import logging
-
-from ...data_providers import DataProvider
-from .types import PortfolioConfig, PortfolioSnapshot, TierConfig, TradingSignal
 
 
 class StrategySelector:

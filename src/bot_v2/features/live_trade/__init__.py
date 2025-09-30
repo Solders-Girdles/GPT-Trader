@@ -9,8 +9,14 @@ so historical demos and thin wrappers keep functioning.
 from typing import Any
 
 # Import core types
-from ..brokerages.core.interfaces import Order, OrderSide, OrderStatus, OrderType, Position
-from .live_trade import (
+from bot_v2.features.brokerages.core.interfaces import (
+    Order,
+    OrderSide,
+    OrderStatus,
+    OrderType,
+    Position,
+)
+from bot_v2.features.live_trade.live_trade import (
     connect_broker,
     disconnect,
     get_account,
@@ -21,7 +27,7 @@ from .live_trade import (
 )
 
 # Keep local types that don't exist in core
-from .types import AccountInfo, BrokerConnection
+from bot_v2.features.live_trade.types import AccountInfo, BrokerConnection
 
 # Module-level broker connection (singleton pattern)
 _broker_connection: BrokerConnection | None = None

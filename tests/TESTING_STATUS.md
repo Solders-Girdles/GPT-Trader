@@ -17,6 +17,10 @@ Target: ≥90% pass rate across these active suites.
 Each skipped module includes a `pytest.mark.skip` with a reason string that documents the architectural evolution.
 
 ### Notes
-- Some integration checks (e.g., environment and “reality check”) remain informational and may be tolerant of drift.
-- If a legacy area is revived, remove the skip marker and realign tests with current interfaces.
+- `@pytest.mark.uses_mock_broker` suites remain opt-in (`-m uses_mock_broker`). They currently rely on legacy market-impact hooks that were removed from `LiveRiskManager`, so leave them out of CI until that guard is rebuilt.
+- The behavioral utilities walkthrough lives in `docs/testing/behavioral_scenarios_demo.md`; it was removed from the unit suite to avoid price anchoring on real markets.
+- Compatibility guards for removed alias modules are now tracked in `tests/fixtures/DEPRECATED.md` instead of a dedicated test file.
 
+### Fixture Organization
+- Shared data builders now live in `tests/fixtures/factories/` with modules per domain (market, portfolio, strategy, trade, risk) to keep responsibilities focused.
+- Suite-wide fixtures are registered via `pytest_plugins` in `tests/conftest.py`, so new fixtures can be added under `tests/fixtures/` without touching per-suite `conftest` modules.

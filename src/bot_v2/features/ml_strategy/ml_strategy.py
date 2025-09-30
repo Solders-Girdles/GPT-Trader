@@ -16,16 +16,15 @@ import numpy as np
 # Import error handling system
 from bot_v2.errors import DataError, StrategyError, ValidationError
 from bot_v2.errors.handler import RecoveryStrategy, get_error_handler, with_error_handling
-
-from .data import collect_training_data, prepare_datasets
-from .evaluation import evaluate_predictions
+from bot_v2.features.ml_strategy.data import collect_training_data, prepare_datasets
+from bot_v2.features.ml_strategy.evaluation import evaluate_predictions
 
 # LOCAL feature engineering
-from .features import extract_market_features
+from bot_v2.features.ml_strategy.features import extract_market_features
 
 # LOCAL model implementation
-from .model import ConfidenceScorer, StrategySelector
-from .types import (
+from bot_v2.features.ml_strategy.model import ConfidenceScorer, StrategySelector
+from bot_v2.features.ml_strategy.types import (
     MarketConditions,
     ModelPerformance,
     StrategyName,
@@ -330,7 +329,7 @@ def backtest_with_ml(
     print(f"🔄 Rebalance every {rebalance_frequency} days")
 
     # Import backtest functionality locally
-    from .backtest_integration import run_ml_backtest
+    from bot_v2.features.ml_strategy.backtest_integration import run_ml_backtest
 
     results = run_ml_backtest(
         symbol=symbol,
@@ -363,7 +362,7 @@ def get_model_performance() -> ModelPerformance | None:
 def _analyze_market_conditions(symbol: str, lookback_days: int) -> MarketConditions:
     """Analyze current market conditions for a symbol."""
     # Import data fetching locally
-    from .market_data import calculate_indicators, fetch_market_data
+    from bot_v2.features.ml_strategy.market_data import calculate_indicators, fetch_market_data
 
     # Get recent data
     data = fetch_market_data(symbol, lookback_days)

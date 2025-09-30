@@ -92,7 +92,7 @@ class RuntimeCoordinator:
         derivatives_enabled = bool(getattr(bot.config, "derivatives_enabled", False))
 
         if not derivatives_enabled:
-            for sym in bot.config.symbols:
+            for sym in bot.config.symbols or []:
                 if sym.upper().endswith("-PERP"):
                     raise RuntimeError(
                         f"Symbol {sym} is perpetual but COINBASE_ENABLE_DERIVATIVES is not enabled."

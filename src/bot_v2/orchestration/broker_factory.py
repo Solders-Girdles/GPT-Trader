@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import logging
 import os
+from typing import Literal, cast
 
 from bot_v2.config import get_config
 from bot_v2.features.brokerages.coinbase import CoinbaseBrokerage
@@ -34,16 +35,17 @@ def create_brokerage() -> IBrokerage:
       - COINBASE_SANDBOX ("1" enables sandbox base URL)
       - COINBASE_API_MODE ("advanced" or "exchange" - auto-detected if not set)
     """
-    broker = (_env("BROKER") or get_config("system").get("broker")).lower()
+    broker_value = _env("BROKER") or get_config("system").get("broker") or "coinbase"
+    broker = broker_value.lower()
 
     if broker == "coinbase":
         sandbox = _env("COINBASE_SANDBOX", "0") == "1"
 
         # Determine API mode - sandbox ALWAYS uses exchange mode
         if sandbox:
-            api_mode = "exchange"
+            api_mode: str = "exchange"
         else:
-            api_mode = _env("COINBASE_API_MODE", "advanced")
+            api_mode = _env("COINBASE_API_MODE") or "advanced"
 
         # If not explicitly set, determine based on sandbox and base URL
         if not api_mode:
@@ -93,11 +95,11 @@ def create_brokerage() -> IBrokerage:
         cdp_private_key = _env("COINBASE_CDP_PRIVATE_KEY")
 
         if api_mode == "exchange":
-            auth_type = "HMAC"
+            auth_type: str = "HMAC"
         elif cdp_api_key and cdp_private_key:
             auth_type = "JWT"
         else:
-            auth_type = _env("COINBASE_AUTH_TYPE", "HMAC")
+            auth_type = _env("COINBASE_AUTH_TYPE") or "HMAC"
 
         # Validate auth requirements for exchange mode
         if api_mode == "exchange" and not _env("COINBASE_API_PASSPHRASE"):
@@ -116,8 +118,8 @@ def create_brokerage() -> IBrokerage:
             )  # Sandbox does not support AT; keep for completeness
             cdp_private_key = _env("COINBASE_CDP_PRIVATE_KEY")
         else:
-            api_key = _env("COINBASE_PROD_API_KEY") or _env("COINBASE_API_KEY", "")
-            api_secret = _env("COINBASE_PROD_API_SECRET") or _env("COINBASE_API_SECRET", "")
+            api_key = _env("COINBASE_PROD_API_KEY") or _env("COINBASE_API_KEY") or ""
+            api_secret = _env("COINBASE_PROD_API_SECRET") or _env("COINBASE_API_SECRET") or ""
             passphrase = _env("COINBASE_PROD_API_PASSPHRASE") or _env("COINBASE_API_PASSPHRASE")
             cdp_api_key = _env("COINBASE_PROD_CDP_API_KEY") or _env("COINBASE_CDP_API_KEY")
             cdp_private_key = _env("COINBASE_PROD_CDP_PRIVATE_KEY") or _env(
@@ -125,8 +127,8 @@ def create_brokerage() -> IBrokerage:
             )
 
         api_config = APIConfig(
-            api_key=api_key,
-            api_secret=api_secret,
+            api_key=api_key or "",
+            api_secret=api_secret or "",
             passphrase=passphrase,
             base_url=base_url,
             sandbox=sandbox,
@@ -135,7 +137,7 @@ def create_brokerage() -> IBrokerage:
             cdp_api_key=cdp_api_key,
             cdp_private_key=cdp_private_key,
             auth_type=auth_type,
-            api_mode=api_mode,  # Pass the determined mode to config
+            api_mode=cast(Literal["advanced", "exchange"], api_mode),
         )
 
         logger.info(

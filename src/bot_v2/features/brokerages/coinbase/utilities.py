@@ -8,9 +8,9 @@ from datetime import datetime, timedelta
 from decimal import ROUND_DOWN, Decimal
 from typing import Any, Protocol
 
-from ..core.interfaces import MarketType, Product
-from .errors import InvalidRequestError, NotFoundError
-from .models import to_product
+from bot_v2.features.brokerages.coinbase.errors import InvalidRequestError, NotFoundError
+from bot_v2.features.brokerages.coinbase.models import to_product
+from bot_v2.features.brokerages.core.interfaces import MarketType, Product
 
 logger = logging.getLogger(__name__)
 

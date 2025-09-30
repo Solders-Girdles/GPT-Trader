@@ -9,9 +9,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Literal
 
-from bot_v2.utilities.quantities import quantity_from
-
-from ..core.interfaces import (
+from bot_v2.features.brokerages.core.interfaces import (
     Candle,
     MarketType,
     Order,
@@ -23,6 +21,7 @@ from ..core.interfaces import (
     Quote,
     TimeInForce,
 )
+from bot_v2.utilities.quantities import quantity_from
 
 
 @dataclass

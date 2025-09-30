@@ -5,7 +5,7 @@ EXPERIMENTAL: Self-contained, uses synthetic/local data. Intended for
 experimentation and demos; not used by the perps production path.
 """
 
-from .market_regime import (
+from bot_v2.features.market_regime.market_regime import (
     analyze_regime_stability,
     detect_regime,
     get_regime_features,
@@ -13,7 +13,7 @@ from .market_regime import (
     monitor_regime_changes,
     predict_regime_change,
 )
-from .types import (
+from bot_v2.features.market_regime.types import (
     MarketRegime,
     RegimeAnalysis,
     RegimeChangePrediction,

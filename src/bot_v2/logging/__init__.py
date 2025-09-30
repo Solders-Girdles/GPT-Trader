@@ -2,6 +2,6 @@
 
 from __future__ import annotations
 
-from .setup import configure_logging
+from bot_v2.logging.setup import configure_logging
 
 __all__ = ["configure_logging"]

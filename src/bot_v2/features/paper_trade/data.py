@@ -8,8 +8,7 @@ import logging
 from datetime import datetime, timedelta
 
 import pandas as pd
-
-from ...data_providers import get_data_provider
+from bot_v2.data_providers import get_data_provider
 
 logger = logging.getLogger(__name__)
 

@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from typing import Any, Protocol
 from urllib.parse import urlparse
 
-from .models import APIConfig
+from bot_v2.features.brokerages.coinbase.models import APIConfig
 
 logger = logging.getLogger(__name__)
 

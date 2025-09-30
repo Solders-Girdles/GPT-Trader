@@ -539,7 +539,7 @@ class CheckpointHandler:
     async def _restore_state_from_snapshot(self, state_snapshot: dict[str, Any]) -> bool:
         """Restore state from snapshot"""
         try:
-            from .state_manager import StateCategory
+            from bot_v2.state.state_manager import StateCategory
 
             # Restore positions
             for key, value in state_snapshot.get("positions", {}).items():

@@ -7,11 +7,11 @@ to core enums and Decimal values. No conversions back to local types.
 
 from decimal import Decimal
 
-from ..brokerages.core.interfaces import OrderSide as CoreOrderSide
+from bot_v2.features.brokerages.core.interfaces import OrderSide as CoreOrderSide
 
 # Import core interfaces
-from ..brokerages.core.interfaces import OrderType as CoreOrderType
-from ..brokerages.core.interfaces import TimeInForce as CoreTimeInForce
+from bot_v2.features.brokerages.core.interfaces import OrderType as CoreOrderType
+from bot_v2.features.brokerages.core.interfaces import TimeInForce as CoreTimeInForce
 
 
 def to_core_tif(tif_str: str | CoreTimeInForce) -> CoreTimeInForce:

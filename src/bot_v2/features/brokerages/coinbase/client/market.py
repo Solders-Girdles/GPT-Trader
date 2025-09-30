@@ -3,13 +3,12 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
-from ..errors import InvalidRequestError
-
+from bot_v2.features.brokerages.coinbase.errors import InvalidRequestError
 
 if TYPE_CHECKING:
-    from ._typing import CoinbaseClientProtocol
+    from bot_v2.features.brokerages.coinbase.client._typing import CoinbaseClientProtocol
 
 
 class MarketDataClientMixin:

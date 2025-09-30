@@ -7,7 +7,7 @@ Complete isolation - no external dependencies.
 import uuid
 from datetime import datetime, timedelta
 
-from ..interfaces import Alert, AlertLevel, MonitorConfig
+from bot_v2.monitoring.interfaces import Alert, AlertLevel, MonitorConfig
 
 
 class AlertManager:

@@ -4,8 +4,8 @@ Market analysis feature slice - technical and fundamental analysis.
 Complete isolation - no external dependencies.
 """
 
-from .analyze import analyze_portfolio, analyze_symbol, compare_strategies
-from .types import AnalysisResult, MarketRegime, TechnicalIndicators
+from bot_v2.features.analyze.analyze import analyze_portfolio, analyze_symbol, compare_strategies
+from bot_v2.features.analyze.types import AnalysisResult, MarketRegime, TechnicalIndicators
 
 __all__ = [
     "analyze_symbol",

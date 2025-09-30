@@ -71,7 +71,9 @@ def test_run_strategy_applies_quantization(monkeypatch):
         mock_enforce.return_value = (expected_quantity, mark_cache[symbol])
 
         # Act
-        decisions = live_trade.run_strategy(DummyStrategy(), [symbol], mark_cache=mark_cache)
+        decisions = live_trade.run_strategy(
+            [symbol], mark_cache=mark_cache, strategy_override=DummyStrategy()
+        )
 
         # Assert quantization helper was called with expected arguments
         assert mock_enforce.called, "Quantization should be applied for actionable decisions"

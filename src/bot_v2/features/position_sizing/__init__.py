@@ -5,16 +5,24 @@ Intelligent position sizing with Kelly Criterion, confidence-based adjustments,
 and market regime integration. Complete isolation maintained.
 """
 
-from .confidence import ConfidenceAdjustment, confidence_adjusted_size
-from .kelly import fractional_kelly, kelly_criterion
-from .types import KellyParameters
-from .position_sizing import (
+from bot_v2.features.position_sizing.confidence import (
+    ConfidenceAdjustment,
+    confidence_adjusted_size,
+)
+from bot_v2.features.position_sizing.kelly import fractional_kelly, kelly_criterion
+from bot_v2.features.position_sizing.position_sizing import (
     PositionSizingResult,
     calculate_portfolio_allocation,
     calculate_position_size,
 )
-from .regime import RegimeMultipliers, regime_adjusted_size
-from .types import PositionSizeRequest, PositionSizeResponse, RiskParameters, SizingMethod
+from bot_v2.features.position_sizing.regime import RegimeMultipliers, regime_adjusted_size
+from bot_v2.features.position_sizing.types import (
+    KellyParameters,
+    PositionSizeRequest,
+    PositionSizeResponse,
+    RiskParameters,
+    SizingMethod,
+)
 
 __all__ = [
     # Main interface

@@ -8,10 +8,10 @@ from typing import Any, cast
 
 import numpy as np
 import pandas as pd
-
-from ...config import get_config
-from ...errors import ExecutionError, InsufficientFundsError, ValidationError
-from ...validation import (
+from bot_v2.config import get_config
+from bot_v2.errors import ExecutionError, InsufficientFundsError, ValidationError
+from bot_v2.features.backtest.types import TradeDict
+from bot_v2.validation import (
     DataFrameValidator,
     PercentageValidator,
     PositiveNumberValidator,
@@ -19,7 +19,6 @@ from ...validation import (
     SeriesValidator,
     validate_inputs,
 )
-from .types import TradeDict
 
 DateLike = Hashable
 

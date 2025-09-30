@@ -5,8 +5,8 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any
 
-from .market_data_features import RollingWindow
-from .utilities import MarkCache
+from bot_v2.features.brokerages.coinbase.market_data_features import RollingWindow
+from bot_v2.features.brokerages.coinbase.utilities import MarkCache
 
 
 class MarketDataService:

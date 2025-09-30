@@ -7,11 +7,10 @@ No external dependencies - everything is local to maintain isolation.
 
 import logging
 from abc import ABC, abstractmethod
-from typing import Any, Type
+from typing import Any
 
 import pandas as pd
-
-from ...errors import StrategyError, ValidationError
+from bot_v2.errors import StrategyError, ValidationError
 
 logger = logging.getLogger(__name__)
 

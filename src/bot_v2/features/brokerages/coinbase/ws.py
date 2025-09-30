@@ -18,9 +18,8 @@ from datetime import datetime
 from decimal import Decimal, InvalidOperation
 from typing import Any
 
+from bot_v2.features.brokerages.coinbase.transports import NoopTransport, RealTransport
 from bot_v2.monitoring.system import LogLevel, get_logger
-
-from .transports import NoopTransport, RealTransport
 
 logger = logging.getLogger(__name__)
 

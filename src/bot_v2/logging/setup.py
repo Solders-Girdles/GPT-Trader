@@ -7,7 +7,7 @@ import logging.handlers
 import os
 from pathlib import Path
 
-from ..config.path_registry import LOG_DIR, ensure_directories
+from bot_v2.config.path_registry import LOG_DIR, ensure_directories
 
 
 def _env_flag(name: str, default: str = "0") -> bool:

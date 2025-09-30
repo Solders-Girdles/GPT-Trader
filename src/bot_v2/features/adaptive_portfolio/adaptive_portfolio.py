@@ -26,12 +26,15 @@ else:
 
 from datetime import datetime
 
-from ...data_providers import DataProvider, get_data_provider
-from .config_manager import get_current_tier, load_portfolio_config
-from .risk_manager import AdaptiveRiskManager
-from .strategy_selector import StrategySelector
-from .tier_manager import TierManager
-from .types import (
+from bot_v2.data_providers import DataProvider, get_data_provider
+from bot_v2.features.adaptive_portfolio.config_manager import (
+    get_current_tier,
+    load_portfolio_config,
+)
+from bot_v2.features.adaptive_portfolio.risk_manager import AdaptiveRiskManager
+from bot_v2.features.adaptive_portfolio.strategy_selector import StrategySelector
+from bot_v2.features.adaptive_portfolio.tier_manager import TierManager
+from bot_v2.features.adaptive_portfolio.types import (
     AdaptiveResult,
     BacktestMetrics,
     PortfolioSnapshot,

@@ -3,7 +3,12 @@
 import logging
 from typing import Any
 
-from .types import PortfolioConfig, PortfolioSnapshot, PortfolioTier, TierConfig
+from bot_v2.features.adaptive_portfolio.types import (
+    PortfolioConfig,
+    PortfolioSnapshot,
+    PortfolioTier,
+    TierConfig,
+)
 
 
 class TierManager:

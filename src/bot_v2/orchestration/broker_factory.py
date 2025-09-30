@@ -7,10 +7,10 @@ from __future__ import annotations
 import logging
 import os
 
-from ..config import get_config
-from ..features.brokerages.coinbase import CoinbaseBrokerage
-from ..features.brokerages.coinbase.models import APIConfig
-from ..features.brokerages.core.interfaces import IBrokerage
+from bot_v2.config import get_config
+from bot_v2.features.brokerages.coinbase import CoinbaseBrokerage
+from bot_v2.features.brokerages.coinbase.models import APIConfig
+from bot_v2.features.brokerages.core.interfaces import IBrokerage
 
 logger = logging.getLogger(__name__)
 

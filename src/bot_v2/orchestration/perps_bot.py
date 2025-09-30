@@ -29,12 +29,6 @@ from bot_v2.orchestration.service_registry import ServiceRegistry, empty_registr
 from bot_v2.orchestration.session_guard import TradingSessionGuard
 from bot_v2.orchestration.storage import StorageBootstrapper
 from bot_v2.orchestration.strategy_orchestrator import StrategyOrchestrator
-from bot_v2.orchestration.symbols import (
-    derivatives_enabled as _resolve_derivatives_enabled,
-)
-from bot_v2.orchestration.symbols import (
-    normalize_symbols,
-)
 from bot_v2.orchestration.system_monitor import SystemMonitor
 
 if TYPE_CHECKING:  # pragma: no cover - imports for type checking only
@@ -50,15 +44,28 @@ class PerpsBot:
     """Main Coinbase trading bot (spot by default, perps optional)."""
 
     def __init__(self, config: BotConfig, registry: ServiceRegistry | None = None) -> None:
-        self.config_controller = ConfigController(config)
-        self.config = self.config_controller.current
-        self.registry: ServiceRegistry = registry or empty_registry(self.config)
-        if self.registry.config is not self.config:
-            self.registry = self.registry.with_updates(config=self.config)
-
         self.bot_id = "perps_bot"
         self.start_time = datetime.now(UTC)
         self.running = False
+
+        self._init_configuration_state(config, registry)
+        self._init_runtime_state()
+        self._bootstrap_storage()
+        self._construct_services()
+        self.runtime_coordinator.bootstrap()
+        self._init_accounting_services()
+        self._init_market_services()
+        self._start_streaming_if_configured()
+
+    def _init_configuration_state(
+        self, config: BotConfig, registry: ServiceRegistry | None
+    ) -> None:
+        self.config_controller = ConfigController(config)
+        self.config = self.config_controller.current
+        base_registry = registry or empty_registry(self.config)
+        if base_registry.config is not self.config:
+            base_registry = base_registry.with_updates(config=self.config)
+        self.registry = base_registry
 
         self._session_guard = TradingSessionGuard(
             start=self.config.trading_window_start,
@@ -66,27 +73,12 @@ class PerpsBot:
             trading_days=self.config.trading_days,
         )
 
-        self._derivatives_enabled = False
-        try:
-            normalized_symbols, allow_derivatives = normalize_symbols(
-                self.config.profile, list(self.config.symbols or [])
-            )
-            self.symbols = list(normalized_symbols)
-            self._derivatives_enabled = allow_derivatives
-        except Exception as exc:
-            logger.warning("Failed to normalize symbol list: %s", exc, exc_info=True)
-            self._derivatives_enabled = _resolve_derivatives_enabled(self.config.profile)
-            self.symbols = list(self.config.symbols or [])
+        self.symbols = list(self.config.symbols or [])
         if not self.symbols:
-            self.symbols = list(self.config.symbols or [])
-        self.config.symbols = tuple(self.symbols)
-        self.config.derivatives_enabled = self._derivatives_enabled  # type: ignore[attr-defined]
+            logger.warning("No symbols configured; continuing with empty symbol list")
+        self._derivatives_enabled = bool(getattr(self.config, "derivatives_enabled", False))
 
-        storage_ctx = StorageBootstrapper(self.config, self.registry).bootstrap()
-        self.event_store = storage_ctx.event_store
-        self.orders_store = storage_ctx.orders_store
-        self.registry = storage_ctx.registry
-
+    def _init_runtime_state(self) -> None:
         self._product_map: dict[str, Product] = {}
         self.mark_windows: dict[str, list[Decimal]] = {s: [] for s in self.symbols}
         self.last_decisions: dict[str, Any] = {}
@@ -98,13 +90,19 @@ class PerpsBot:
         self.strategy: Any | None = None
         self._exec_engine: LiveExecutionEngine | AdvancedExecutionEngine | None = None
 
+    def _bootstrap_storage(self) -> None:
+        storage_ctx = StorageBootstrapper(self.config, self.registry).bootstrap()
+        self.event_store = storage_ctx.event_store
+        self.orders_store = storage_ctx.orders_store
+        self.registry = storage_ctx.registry
+
+    def _construct_services(self) -> None:
         self.strategy_orchestrator = StrategyOrchestrator(self)
         self.execution_coordinator = ExecutionCoordinator(self)
         self.system_monitor = SystemMonitor(self)
         self.runtime_coordinator = RuntimeCoordinator(self)
 
-        self.runtime_coordinator.bootstrap()
-
+    def _init_accounting_services(self) -> None:
         self.account_manager = CoinbaseAccountManager(self.broker, event_store=self.event_store)
         self.account_telemetry = AccountTelemetryService(
             broker=self.broker,
@@ -117,6 +115,7 @@ class PerpsBot:
             logger.info("Account snapshot telemetry disabled; broker lacks required endpoints")
         self.system_monitor.attach_account_telemetry(self.account_telemetry)
 
+    def _init_market_services(self) -> None:
         def _log_market_heartbeat(**payload: Any) -> None:
             try:
                 _get_plog().log_market_heartbeat(**payload)
@@ -133,8 +132,11 @@ class PerpsBot:
             heartbeat_logger=_log_market_heartbeat,
         )
 
-        enable_stream = os.getenv("PERPS_ENABLE_STREAMING", "").lower() in {"1", "true", "yes"}
-        if enable_stream and self.config.profile in {Profile.CANARY, Profile.PROD}:
+    def _start_streaming_if_configured(self) -> None:
+        if getattr(self.config, "perps_enable_streaming", False) and self.config.profile in {
+            Profile.CANARY,
+            Profile.PROD,
+        }:
             try:
                 self._start_streaming_background()
             except Exception:
@@ -147,12 +149,20 @@ class PerpsBot:
             raise RuntimeError("Broker is not configured in the service registry")
         return broker
 
+    @broker.setter
+    def broker(self, value: IBrokerage) -> None:
+        self.registry = self.registry.with_updates(broker=value)
+
     @property
     def risk_manager(self) -> LiveRiskManager:
         risk = self.registry.risk_manager
         if risk is None:
             raise RuntimeError("Risk manager is not configured in the service registry")
         return risk
+
+    @risk_manager.setter
+    def risk_manager(self, value: LiveRiskManager) -> None:
+        self.registry = self.registry.with_updates(risk_manager=value)
 
     @property
     def exec_engine(self) -> LiveExecutionEngine | AdvancedExecutionEngine:
@@ -174,13 +184,13 @@ class PerpsBot:
                 await self.runtime_coordinator.reconcile_state_on_startup()
                 if not single_cycle:
                     background_tasks.append(
-                        asyncio.create_task(self.execution_coordinator._run_runtime_guards())
+                        asyncio.create_task(self.execution_coordinator.run_runtime_guards())
                     )
                     background_tasks.append(
-                        asyncio.create_task(self.execution_coordinator._run_order_reconciliation())
+                        asyncio.create_task(self.execution_coordinator.run_order_reconciliation())
                     )
                     background_tasks.append(
-                        asyncio.create_task(self.system_monitor._run_position_reconciliation())
+                        asyncio.create_task(self.system_monitor.run_position_reconciliation())
                     )
                     if self.account_telemetry.supports_snapshots():
                         background_tasks.append(
@@ -278,7 +288,7 @@ class PerpsBot:
         return self.execution_coordinator._ensure_order_lock()
 
     async def _place_order(self, **kwargs: Any) -> Order | None:
-        return await self.execution_coordinator._place_order(**kwargs)
+        return await self.execution_coordinator._place_order(self.exec_engine, **kwargs)
 
     async def _place_order_inner(self, **kwargs: Any) -> Order | None:
         return await self.execution_coordinator._place_order_inner(**kwargs)
@@ -352,6 +362,8 @@ class PerpsBot:
     def apply_config_change(self, change: ConfigChange) -> None:
         logger.info("Applying configuration change diff=%s", change.diff)
         self.config = change.updated
+        self.symbols = list(self.config.symbols or [])
+        self._derivatives_enabled = bool(getattr(self.config, "derivatives_enabled", False))
         self.registry = self.registry.with_updates(config=self.config)
         self.config_controller.sync_with_risk_manager(self.risk_manager)
         self._session_guard = TradingSessionGuard(
@@ -364,6 +376,7 @@ class PerpsBot:
         for symbol in list(self.mark_windows.keys()):
             if symbol not in self.symbols:
                 del self.mark_windows[symbol]
+        self._init_market_services()
         self.strategy_orchestrator.init_strategy()
 
     # ------------------------------------------------------------------

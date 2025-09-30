@@ -7,11 +7,10 @@ import warnings
 
 import numpy as np
 import pandas as pd
-
-from ...config import get_config
-from ...errors import BacktestError, ValidationError
-from ...validation import PositiveNumberValidator, SeriesValidator, validate_inputs
-from .types import BacktestMetrics, TradeDict
+from bot_v2.config import get_config
+from bot_v2.errors import BacktestError, ValidationError
+from bot_v2.features.backtest.types import BacktestMetrics, TradeDict
+from bot_v2.validation import PositiveNumberValidator, SeriesValidator, validate_inputs
 
 logger = logging.getLogger(__name__)
 

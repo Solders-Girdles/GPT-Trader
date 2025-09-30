@@ -19,6 +19,7 @@ organization-updated: 2025-03-01
 ### Getting Started
 - [Complete Setup Guide](guides/complete_setup_guide.md) - Everything from installation to first trade
 - [Testing Guide](guides/testing.md) - Running and writing tests
+- [Behavioral Scenario Utilities](testing/behavioral_scenarios_demo.md) - Deterministic demos for docs/tutorials
 
 ### Architecture & Design
 - [System Architecture](ARCHITECTURE.md) - Component overview

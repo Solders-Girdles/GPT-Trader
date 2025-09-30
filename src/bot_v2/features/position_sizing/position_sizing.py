@@ -7,13 +7,17 @@ confidence adjustments, and regime-based scaling. Complete isolation maintained.
 
 import logging
 
-from ...config import get_config
-from ...errors import RiskLimitExceeded, ValidationError, log_error
-from ...validation import PercentageValidator, PositiveNumberValidator, validate_inputs
-from .confidence import confidence_adjusted_size
-from .kelly import fractional_kelly, kelly_criterion, kelly_position_value, validate_kelly_inputs
-from .regime import regime_adjusted_size
-from .types import (
+from bot_v2.config import get_config
+from bot_v2.errors import RiskLimitExceeded, ValidationError, log_error
+from bot_v2.features.position_sizing.confidence import confidence_adjusted_size
+from bot_v2.features.position_sizing.kelly import (
+    fractional_kelly,
+    kelly_criterion,
+    kelly_position_value,
+    validate_kelly_inputs,
+)
+from bot_v2.features.position_sizing.regime import regime_adjusted_size
+from bot_v2.features.position_sizing.types import (
     ConfidenceAdjustment,
     PositionSizeRequest,
     PositionSizeResponse,
@@ -21,6 +25,7 @@ from .types import (
     RegimeMultipliers,
     SizingMethod,
 )
+from bot_v2.validation import PercentageValidator, PositiveNumberValidator, validate_inputs
 
 logger = logging.getLogger(__name__)
 

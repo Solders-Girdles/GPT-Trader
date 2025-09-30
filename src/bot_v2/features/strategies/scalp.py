@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from .interfaces import StrategyBase, StrategyContext, StrategySignal
+from bot_v2.features.strategies.interfaces import StrategyBase, StrategyContext, StrategySignal
 
 
 @dataclass

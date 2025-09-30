@@ -6,13 +6,13 @@ Complete isolation - no external dependencies.
 
 from typing import Any
 
-from .paper_trade import (
+from bot_v2.features.paper_trade.paper_trade import (
     get_status,
     get_trading_session,
     start_paper_trading,
     stop_paper_trading,
 )
-from .types import PaperTradeResult, Position, TradeLog
+from bot_v2.features.paper_trade.types import PaperTradeResult, Position, TradeLog
 
 
 def execute_paper_trade(

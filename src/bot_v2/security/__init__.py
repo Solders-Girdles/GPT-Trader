@@ -8,7 +8,7 @@ Provides comprehensive security features including:
 - Rate limiting and suspicious activity detection
 """
 
-from .auth_handler import (
+from bot_v2.security.auth_handler import (
     AuthHandler,
     Role,
     TokenPair,
@@ -18,14 +18,14 @@ from .auth_handler import (
     get_auth_handler,
     validate_token,
 )
-from .secrets_manager import (
+from bot_v2.security.secrets_manager import (
     SecretsManager,
     get_api_key,
     get_secret,
     get_secrets_manager,
     store_secret,
 )
-from .security_validator import (
+from bot_v2.security.security_validator import (
     RateLimitConfig,
     SecurityValidator,
     ValidationResult,

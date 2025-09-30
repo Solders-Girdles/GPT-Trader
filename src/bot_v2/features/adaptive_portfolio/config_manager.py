@@ -8,7 +8,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from .types import (
+from bot_v2.features.adaptive_portfolio.types import (
     CostStructure,
     MarketConstraints,
     PortfolioConfig,

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from ..core.interfaces import (
+from bot_v2.features.brokerages.core.interfaces import (
     AuthError,
     BrokerageError,
     InsufficientFunds,

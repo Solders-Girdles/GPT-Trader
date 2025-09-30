@@ -16,7 +16,7 @@ from bot_v2.orchestration.order_reconciler import OrderReconciler
 from bot_v2.orchestration.symbols import derivatives_enabled as _resolve_derivatives_enabled
 
 if TYPE_CHECKING:  # pragma: no cover - type checking only
-    from .perps_bot import PerpsBot
+    from bot_v2.orchestration.perps_bot import PerpsBot
 
 
 logger = logging.getLogger(__name__)

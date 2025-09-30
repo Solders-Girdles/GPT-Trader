@@ -6,7 +6,12 @@ Provides tier-specific risk calculations and limits.
 
 import logging
 
-from .types import PortfolioConfig, PortfolioSnapshot, PositionInfo, TierConfig
+from bot_v2.features.adaptive_portfolio.types import (
+    PortfolioConfig,
+    PortfolioSnapshot,
+    PositionInfo,
+    TierConfig,
+)
 
 
 class AdaptiveRiskManager:

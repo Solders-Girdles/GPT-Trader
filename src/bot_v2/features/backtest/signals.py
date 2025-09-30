@@ -6,15 +6,14 @@ import logging
 from typing import Any
 
 import pandas as pd
-
-from ...errors import DataError, StrategyError
-from ...validation import (
+from bot_v2.errors import DataError, StrategyError
+from bot_v2.features.backtest.strategies import create_local_strategy
+from bot_v2.features.backtest.validation import validate_signals
+from bot_v2.validation import (
     DataFrameValidator,
     StrategyNameValidator,
     validate_inputs,
 )
-from .strategies import create_local_strategy
-from .validation import validate_signals
 
 logger = logging.getLogger(__name__)
 

@@ -7,7 +7,7 @@ from decimal import Decimal
 from enum import Enum
 from typing import Any
 
-from ...brokerages.core.interfaces import OrderType, TimeInForce
+from bot_v2.features.brokerages.core.interfaces import OrderType, TimeInForce
 
 
 class Action(Enum):

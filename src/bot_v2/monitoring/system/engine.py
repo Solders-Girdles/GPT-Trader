@@ -8,9 +8,7 @@ import threading
 import time
 from datetime import datetime
 
-from .alerting import AlertManager
-from .collectors import ComponentCollector, PerformanceCollector, ResourceCollector
-from ..interfaces import (
+from bot_v2.monitoring.interfaces import (
     Alert,
     AlertLevel,
     ComponentHealth,
@@ -20,6 +18,12 @@ from ..interfaces import (
     ResourceUsage,
     SystemHealth,
     TradeMetrics,
+)
+from bot_v2.monitoring.system.alerting import AlertManager
+from bot_v2.monitoring.system.collectors import (
+    ComponentCollector,
+    PerformanceCollector,
+    ResourceCollector,
 )
 
 

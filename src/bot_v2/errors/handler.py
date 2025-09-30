@@ -13,7 +13,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any
 
-from . import (
+from bot_v2.errors import (
     NetworkError,
     TimeoutError,
     TradingError,

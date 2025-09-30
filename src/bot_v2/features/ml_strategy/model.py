@@ -12,9 +12,8 @@ import numpy as np
 
 # Import error handling
 from bot_v2.errors import DataError, StrategyError, ValidationError
-
-from .features import get_feature_names
-from .types import StrategyName
+from bot_v2.features.ml_strategy.features import get_feature_names
+from bot_v2.features.ml_strategy.types import StrategyName
 
 logger = logging.getLogger(__name__)
 

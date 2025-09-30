@@ -7,8 +7,8 @@ from collections.abc import Mapping, MutableMapping
 from dataclasses import dataclass
 from typing import Any
 
-from ...monitoring.alerting_system import AlertingSystem, AlertLevel
-from ...monitoring.metrics_collector import record_counter
+from bot_v2.monitoring.alerting_system import AlertingSystem, AlertLevel
+from bot_v2.monitoring.metrics_collector import record_counter
 
 logger = logging.getLogger(__name__)
 

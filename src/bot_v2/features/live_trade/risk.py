@@ -14,32 +14,45 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any
 
-from ...config.live_trade_config import RiskConfig
-from ...persistence.event_store import EventStore
-from ..brokerages.core.interfaces import MarketType, Product
-from .guard_errors import (
+from bot_v2.config.live_trade_config import RiskConfig
+from bot_v2.features.brokerages.core.interfaces import MarketType, Product
+from bot_v2.features.live_trade.guard_errors import (
     RiskGuardComputationError,
     RiskGuardDataCorrupt,
     RiskGuardTelemetryError,
 )
-from .risk_calculations import (
+from bot_v2.features.live_trade.risk_calculations import (
     effective_mmr,
     effective_symbol_leverage_cap,
 )
-from .risk_runtime import (
+from bot_v2.features.live_trade.risk_runtime import (
+    CircuitBreakerOutcome,
+    CircuitBreakerState,
+)
+from bot_v2.features.live_trade.risk_runtime import (
     append_risk_metrics as runtime_append_risk_metrics,
 )
-from .risk_runtime import (
+from bot_v2.features.live_trade.risk_runtime import (
     check_correlation_risk as runtime_check_correlation_risk,
 )
-from .risk_runtime import (
+from bot_v2.features.live_trade.risk_runtime import (
     check_mark_staleness as runtime_check_mark_staleness,
 )
-from .risk_runtime import (
+from bot_v2.features.live_trade.risk_runtime import (
     check_volatility_circuit_breaker as runtime_check_volatility_circuit_breaker,
 )
+from bot_v2.persistence.event_store import EventStore
 
 logger = logging.getLogger(__name__)
+
+
+def _coalesce_quantity(*values: Decimal | None) -> Decimal:
+    """Pick the first non-``None`` quantity value."""
+
+    for value in values:
+        if value is not None:
+            return value
+    raise TypeError("quantity must be provided")
 
 
 class ValidationError(Exception):
@@ -99,6 +112,8 @@ class ImpactAssessment:
     slippage_cost: Decimal
     liquidity_sufficient: bool = True
     reason: str | None = None
+    recommended_slicing: bool | None = None
+    max_slice_size: Decimal | None = None
 
 
 @dataclass
@@ -123,6 +138,7 @@ class LiveRiskManager:
         position_size_estimator: (
             Callable[[PositionSizingContext], PositionSizingAdvice] | None
         ) = None,
+        impact_estimator: Callable[[ImpactRequest], ImpactAssessment] | None = None,
     ):
         """
         Initialize risk manager with configuration.
@@ -132,11 +148,13 @@ class LiveRiskManager:
             event_store: Event store for risk metrics/events
             risk_info_provider: Provider for symbol-specific risk info
             position_size_estimator: Optional dynamic position sizing calculator
+            impact_estimator: Optional callable returning market impact assessments
         """
         self.config = config or RiskConfig.from_env()
         self.event_store = event_store or EventStore()
         self._risk_info_provider = risk_info_provider
         self._position_size_estimator = position_size_estimator
+        self._impact_estimator = impact_estimator
 
         # Runtime state
         self.daily_pnl = Decimal("0")
@@ -145,6 +163,7 @@ class LiveRiskManager:
         self.positions: dict[str, dict[str, Any]] = {}  # Track for exposure
         # Circuit breaker state
         self._cb_last_trigger: dict[str, datetime] = {}
+        self.circuit_breaker_state = CircuitBreakerState()
         # Time provider for testability
         self._now_provider = lambda: datetime.utcnow()
         self._state = RiskRuntimeState(reduce_only_mode=bool(self.config.reduce_only_mode))
@@ -160,6 +179,13 @@ class LiveRiskManager:
 
     def set_state_listener(self, listener: Callable[[RiskRuntimeState], None] | None) -> None:
         self._state_listener = listener
+
+    def set_impact_estimator(
+        self, estimator: Callable[[ImpactRequest], ImpactAssessment] | None
+    ) -> None:
+        """Install or clear the market-impact estimator hook."""
+
+        self._impact_estimator = estimator
 
     def is_reduce_only_mode(self) -> bool:
         return self._state.reduce_only_mode or bool(getattr(self.config, "reduce_only_mode", False))
@@ -297,11 +323,13 @@ class LiveRiskManager:
         self,
         symbol: str,
         side: str,  # "buy" or "sell"
-        qty: Decimal,
-        price: Decimal,
-        product: Product,
-        equity: Decimal,
+        qty: Decimal | None = None,
+        price: Decimal | None = None,
+        product: Product | None = None,
+        equity: Decimal | None = None,
         current_positions: dict[str, Any] | None = None,
+        *,
+        quantity: Decimal | None = None,
     ) -> None:
         """
         Validate order against all risk limits before placement.
@@ -318,6 +346,11 @@ class LiveRiskManager:
         Raises:
             ValidationError: If any risk check fails
         """
+        if price is None or product is None or equity is None:
+            raise TypeError("price, product, and equity are required")
+
+        order_qty = _coalesce_quantity(qty, quantity)
+
         # Kill switch check
         if self.config.kill_switch_enabled:
             try:
@@ -353,10 +386,18 @@ class LiveRiskManager:
                     f"Reduce-only mode active - cannot increase position for {symbol}"
                 )
 
+        if getattr(self.config, "enable_market_impact_guard", False) and self._impact_estimator:
+            self._apply_market_impact_guard(
+                symbol=symbol,
+                side=side,
+                quantity=order_qty,
+                price=price,
+            )
+
         # Run all validation checks
-        self.validate_leverage(symbol, qty, price, product, equity)
-        self.validate_liquidation_buffer(symbol, qty, price, product, equity)
-        self.validate_exposure_limits(symbol, qty * price, equity, current_positions)
+        self.validate_leverage(symbol, order_qty, price, product, equity)
+        self.validate_liquidation_buffer(symbol, order_qty, price, product, equity)
+        self.validate_exposure_limits(symbol, order_qty * price, equity, current_positions)
 
         # Project post-trade liquidation buffer using MMR/liq data if enabled
         if (
@@ -366,7 +407,7 @@ class LiveRiskManager:
             projected = self._project_liquidation_distance(
                 symbol=symbol,
                 side=side,
-                qty=qty,
+                qty=order_qty,
                 price=price,
                 equity=equity,
                 current_positions=current_positions or {},
@@ -380,14 +421,21 @@ class LiveRiskManager:
         # Optional slippage guard if mark price available
         if symbol in self.last_mark_update:
             self.validate_slippage_guard(
-                symbol, side, qty, price, price
+                symbol, side, order_qty, price, price
             )  # Use price as mark for now
 
     def _now(self) -> datetime:
         return self._now_provider()
 
     def validate_leverage(
-        self, symbol: str, qty: Decimal, price: Decimal, product: Product, equity: Decimal
+        self,
+        symbol: str,
+        qty: Decimal | None = None,
+        price: Decimal | None = None,
+        product: Product | None = None,
+        equity: Decimal | None = None,
+        *,
+        quantity: Decimal | None = None,
     ) -> None:
         """
         Validate that order doesn't exceed leverage limits.
@@ -395,11 +443,16 @@ class LiveRiskManager:
         Raises:
             ValidationError: If leverage exceeds caps
         """
+        if price is None or product is None or equity is None:
+            raise TypeError("price, product, and equity are required")
+
+        order_qty = _coalesce_quantity(qty, quantity)
+
         if product.market_type != MarketType.PERPETUAL:
             return  # Only check leverage for perpetuals
 
         # Calculate notional value
-        notional = qty * price
+        notional = order_qty * price
 
         # Calculate implied leverage
         target_leverage = notional / equity if equity > 0 else float("inf")
@@ -430,7 +483,14 @@ class LiveRiskManager:
             )
 
     def validate_liquidation_buffer(
-        self, symbol: str, qty: Decimal, price: Decimal, product: Product, equity: Decimal
+        self,
+        symbol: str,
+        qty: Decimal | None = None,
+        price: Decimal | None = None,
+        product: Product | None = None,
+        equity: Decimal | None = None,
+        *,
+        quantity: Decimal | None = None,
     ) -> None:
         """
         Ensure adequate buffer from liquidation after trade.
@@ -438,12 +498,17 @@ class LiveRiskManager:
         Raises:
             ValidationError: If buffer would be too low
         """
+        if price is None or product is None or equity is None:
+            raise TypeError("price, product, and equity are required")
+
+        order_qty = _coalesce_quantity(qty, quantity)
+
         if product.market_type != MarketType.PERPETUAL:
             return
 
         # Simplified liquidation buffer check
         # In reality, would need liquidation price from exchange
-        notional = qty * price
+        notional = order_qty * price
 
         # Estimate margin required (inverse of max leverage)
         max_leverage = effective_symbol_leverage_cap(
@@ -506,10 +571,9 @@ class LiveRiskManager:
                         except Exception:
                             pos_notional = Decimal("0")
                     else:
-                        pos_notional = abs(
-                            Decimal(str(pos_data.get("qty", 0)))
-                            * Decimal(str(pos_data.get("mark", pos_data.get("price", 0))))
-                        )
+                        qty_value = pos_data.get("quantity", pos_data.get("qty", 0))
+                        price_value = pos_data.get("mark", pos_data.get("price", 0))
+                        pos_notional = abs(Decimal(str(qty_value)) * Decimal(str(price_value)))
                     total_exposure += pos_notional
 
         total_exposure_pct = total_exposure / equity if equity > 0 else float("inf")
@@ -520,8 +584,93 @@ class LiveRiskManager:
                 f"{self.config.max_exposure_pct:.1%} (new notional: {notional})"
             )
 
+    def _apply_market_impact_guard(
+        self, *, symbol: str, side: str, quantity: Decimal, price: Decimal
+    ) -> None:
+        """Evaluate market impact guard and raise if the order breaches limits."""
+
+        threshold_raw = getattr(self.config, "max_market_impact_bps", None)
+        if threshold_raw is None:
+            return
+
+        try:
+            threshold = Decimal(str(threshold_raw))
+        except Exception as exc:  # pragma: no cover - config validation elsewhere
+            logger.debug("Invalid market impact threshold %s", threshold_raw, exc_info=True)
+            raise ValidationError("Invalid market impact guard configuration") from exc
+
+        if threshold <= 0:
+            return
+
+        if self._impact_estimator is None:
+            return
+
+        try:
+            assessment = self._impact_estimator(
+                ImpactRequest(symbol=symbol, side=side, quantity=quantity, price=price)
+            )
+        except Exception as exc:
+            logger.exception("Impact estimator failed for %s", symbol)
+            raise ValidationError(f"Impact estimator failure for {symbol}: {exc}") from exc
+
+        if assessment is None:
+            raise ValidationError("Impact estimator returned no assessment")
+
+        status = "allowed"
+        reason: str | None = None
+
+        if assessment.estimated_impact_bps > threshold:
+            status = "blocked"
+            reason = "impact_exceeds_threshold"
+        elif assessment.liquidity_sufficient is False:
+            status = "blocked"
+            reason = "insufficient_liquidity"
+
+        metrics = {
+            "event_type": "market_impact_guard",
+            "symbol": symbol,
+            "side": side,
+            "impact_bps": float(assessment.estimated_impact_bps),
+            "threshold_bps": float(threshold),
+            "quantity": float(quantity),
+            "price": float(price),
+            "slippage_cost": float(assessment.slippage_cost),
+            "liquidity_sufficient": bool(assessment.liquidity_sufficient),
+            "status": status,
+        }
+
+        if assessment.recommended_slicing is not None:
+            metrics["recommended_slicing"] = bool(assessment.recommended_slicing)
+        if assessment.max_slice_size is not None:
+            try:
+                metrics["max_slice_size"] = float(assessment.max_slice_size)
+            except Exception:
+                metrics["max_slice_size"] = None
+
+        if reason:
+            metrics["reason"] = reason
+
+        try:
+            self.event_store.append_metric(bot_id="risk_engine", metrics=metrics)
+        except Exception:
+            logger.debug("Failed to record market impact guard metric", exc_info=True)
+
+        if status == "blocked":
+            if reason == "impact_exceeds_threshold":
+                raise ValidationError(
+                    f"Market impact {assessment.estimated_impact_bps} bps exceeds cap {threshold} bps"
+                )
+            raise ValidationError("Market impact guard blocked trade due to liquidity")
+
     def validate_slippage_guard(
-        self, symbol: str, side: str, qty: Decimal, expected_price: Decimal, mark_or_quote: Decimal
+        self,
+        symbol: str,
+        side: str,
+        qty: Decimal | None = None,
+        expected_price: Decimal | None = None,
+        mark_or_quote: Decimal | None = None,
+        *,
+        quantity: Decimal | None = None,
     ) -> None:
         """
         Optional slippage guard based on spread.
@@ -529,6 +678,11 @@ class LiveRiskManager:
         Raises:
             ValidationError: If expected slippage exceeds threshold
         """
+        if expected_price is None or mark_or_quote is None:
+            raise TypeError("expected_price and mark_or_quote are required")
+
+        _ = _coalesce_quantity(qty, quantity)
+
         if self.config.slippage_guard_bps <= 0:
             return  # Disabled
 
@@ -618,7 +772,7 @@ class LiveRiskManager:
         guard_name = "liquidation_buffer"
 
         try:
-            qty = Decimal(str(position_data.get("qty", 0)))
+            qty = Decimal(str(position_data.get("quantity", position_data.get("qty", 0))))
             mark = Decimal(str(position_data.get("mark", 0)))
         except Exception as exc:
             raise RiskGuardDataCorrupt(
@@ -726,7 +880,7 @@ class LiveRiskManager:
         try:
             # Determine post-trade absolute quantity and side
             pos = current_positions.get(symbol) or {}
-            cur_qty = abs(Decimal(str(pos.get("qty", 0))))
+            cur_qty = abs(Decimal(str(pos.get("quantity", pos.get("qty", 0)))))
             cur_side = str(pos.get("side", "")).lower()
             order_side = side.lower()
 
@@ -812,12 +966,14 @@ class LiveRiskManager:
 
     def check_volatility_circuit_breaker(
         self, symbol: str, recent_marks: list[Decimal]
-    ) -> dict[str, Any]:
+    ) -> CircuitBreakerOutcome:
         """Check rolling volatility and trigger progressive circuit breakers."""
-        return runtime_check_volatility_circuit_breaker(
+
+        outcome = runtime_check_volatility_circuit_breaker(
             symbol=symbol,
             recent_marks=recent_marks,
             config=self.config,
+            state=self.circuit_breaker_state,
             now=self._now,
             last_trigger=self._cb_last_trigger,
             set_reduce_only=lambda enabled, reason: self.set_reduce_only_mode(
@@ -826,6 +982,19 @@ class LiveRiskManager:
             log_event=self._log_risk_event,
             logger=logger,
         )
+
+        if outcome.triggered:
+            try:
+                self.circuit_breaker_state.record(
+                    "volatility_circuit_breaker",
+                    symbol,
+                    outcome.action,
+                    self._now(),
+                )
+            except Exception:
+                logger.debug("Failed to record circuit breaker snapshot", exc_info=True)
+
+        return outcome
 
     def _is_reducing_position(
         self, symbol: str, side: str, current_positions: dict[str, Any] | None = None

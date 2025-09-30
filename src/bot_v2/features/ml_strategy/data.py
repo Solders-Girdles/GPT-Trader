@@ -5,9 +5,12 @@ Data collection and preparation for ML strategy selection - LOCAL to this slice.
 from datetime import datetime, timedelta
 
 import numpy as np
-
-from .features import extract_market_features
-from .types import MarketConditions, StrategyName, StrategyPerformanceRecord
+from bot_v2.features.ml_strategy.features import extract_market_features
+from bot_v2.features.ml_strategy.types import (
+    MarketConditions,
+    StrategyName,
+    StrategyPerformanceRecord,
+)
 
 
 def collect_training_data(

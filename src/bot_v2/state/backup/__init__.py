@@ -1,6 +1,6 @@
 """Public API for the backup subsystem."""
 
-from .operations import (
+from bot_v2.state.backup.operations import (
     BackupConfig,
     BackupManager,
     BackupMetadata,

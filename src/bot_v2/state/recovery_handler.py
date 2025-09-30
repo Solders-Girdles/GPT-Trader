@@ -903,7 +903,7 @@ class RecoveryHandler:
                 value = await self.state_manager.get_state(key)
                 if value:
                     # Force write to ensure consistency
-                    from .state_manager import StateCategory
+                    from bot_v2.state.state_manager import StateCategory
 
                     await self.state_manager.set_state(key, value, StateCategory.HOT)
 

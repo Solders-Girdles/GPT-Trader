@@ -12,8 +12,8 @@ from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
 
-from ..features.brokerages.core.interfaces import Order, OrderStatus
-from ..monitoring.system import get_logger
+from bot_v2.features.brokerages.core.interfaces import Order, OrderStatus
+from bot_v2.monitoring.system import get_logger
 
 logger = logging.getLogger(__name__)
 

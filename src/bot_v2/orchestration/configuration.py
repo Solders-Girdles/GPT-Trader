@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import os
 from collections.abc import Sequence
 from copy import deepcopy
@@ -12,7 +13,14 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 
-from bot_v2.orchestration.symbols import normalize_symbols
+from bot_v2.orchestration.symbols import (
+    derivatives_enabled as _resolve_derivatives_enabled,
+)
+from bot_v2.orchestration.symbols import (
+    normalize_symbols,
+)
+
+logger = logging.getLogger(__name__)
 
 # Top spot markets we enable by default (ordered by Coinbase USD volume).
 TOP_VOLUME_BASES = [
@@ -50,6 +58,7 @@ class BotConfig:
     profile: Profile
     dry_run: bool = False
     symbols: Sequence[str] | None = None
+    derivatives_enabled: bool = False
     update_interval: int = 5
     short_ma: int = 5
     long_ma: int = 20
@@ -68,6 +77,12 @@ class BotConfig:
     trading_days: list[str] | None = None
     daily_loss_limit: Decimal = Decimal("0")
     time_in_force: str = "GTC"
+    perps_enable_streaming: bool = False
+    perps_stream_level: int = 1
+    perps_paper_trading: bool = False
+    perps_force_mock: bool = False
+    perps_position_fraction: float | None = None
+    perps_skip_startup_reconcile: bool = False
     metadata: dict[str, Any] = field(default_factory=dict, repr=False)
 
     def __post_init__(self) -> None:
@@ -99,7 +114,12 @@ class ConfigManager:
         "COINBASE_ENABLE_DERIVATIVES",
         "COINBASE_DEFAULT_QUOTE",
         "ORDER_PREVIEW_ENABLED",
+        "PERPS_ENABLE_STREAMING",
+        "PERPS_FORCE_MOCK",
+        "PERPS_PAPER",
         "PERPS_POSITION_FRACTION",
+        "PERPS_SKIP_RECONCILE",
+        "PERPS_STREAM_LEVEL",
         "SLIPPAGE_MULTIPLIERS",
         "SPOT_FORCE_LIVE",
     )
@@ -294,15 +314,12 @@ class ConfigManager:
             config.enable_shorts = False
             config.max_leverage = 1
             config.reduce_only_mode = False
-            symbols, _ = normalize_symbols(Profile.SPOT, config.symbols)
-            config.symbols = symbols
             if os.getenv("SPOT_FORCE_LIVE", "").lower() not in {"1", "true"}:
-                import logging
-
-                logging.getLogger(__name__).info(
-                    "Spot profile detected; falling back to mock broker for safety"
-                )
+                logger.info("Spot profile detected; falling back to mock broker for safety")
                 config.mock_broker = True
+
+        config = self._normalize_symbols(config)
+        config = self._apply_runtime_toggles(config)
 
         if (
             "enable_order_preview" not in self.overrides
@@ -345,6 +362,50 @@ class ConfigManager:
 
         if errors:
             raise ConfigValidationError(errors)
+
+    def _normalize_symbols(self, config: BotConfig) -> BotConfig:
+        try:
+            normalized, allow_derivatives = normalize_symbols(config.profile, config.symbols)
+        except Exception as exc:  # pragma: no cover - defensive logging
+            logger.warning("Failed to normalize symbol list: %s", exc, exc_info=True)
+            normalized = list(config.symbols or [])
+            allow_derivatives = _resolve_derivatives_enabled(config.profile)
+
+        config.symbols = tuple(normalized)
+        config.derivatives_enabled = bool(allow_derivatives)
+        return config
+
+    def _apply_runtime_toggles(self, config: BotConfig) -> BotConfig:
+        def _flag(name: str) -> bool:
+            return os.getenv(name, "").lower() in {"1", "true", "yes"}
+
+        config.perps_enable_streaming = _flag("PERPS_ENABLE_STREAMING")
+
+        stream_level_raw = os.getenv("PERPS_STREAM_LEVEL")
+        try:
+            config.perps_stream_level = int(stream_level_raw) if stream_level_raw else 1
+        except (TypeError, ValueError):
+            logger.warning("Invalid PERPS_STREAM_LEVEL=%s; defaulting to 1", stream_level_raw)
+            config.perps_stream_level = 1
+
+        config.perps_paper_trading = _flag("PERPS_PAPER")
+        config.perps_force_mock = _flag("PERPS_FORCE_MOCK")
+        config.perps_skip_startup_reconcile = _flag("PERPS_SKIP_RECONCILE")
+
+        position_fraction_raw = os.getenv("PERPS_POSITION_FRACTION")
+        if position_fraction_raw:
+            try:
+                config.perps_position_fraction = float(position_fraction_raw)
+            except (TypeError, ValueError):
+                logger.warning(
+                    "Invalid PERPS_POSITION_FRACTION=%s; ignoring override",
+                    position_fraction_raw,
+                )
+                config.perps_position_fraction = None
+        else:
+            config.perps_position_fraction = None
+
+        return config
 
     def _capture_snapshot(self) -> dict[str, Any]:
         env_snapshot = {key: os.getenv(key) for key in self.ENVIRONMENT_KEYS}

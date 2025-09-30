@@ -4,9 +4,8 @@ Local risk management for paper trading.
 Complete isolation - no external dependencies.
 """
 
+from bot_v2.features.paper_trade.types import AccountStatus
 from bot_v2.types.trading import AccountSnapshot
-
-from .types import AccountStatus
 
 
 class RiskManager:

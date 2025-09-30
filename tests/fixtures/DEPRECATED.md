@@ -10,3 +10,6 @@ Status:
 - Removed: `tests/fixtures/coinbase/*.json`, `tests/fixtures/mock_data.json`.
 - Retained: Python helpers under `tests/fixtures/behavioral/` used by PnL and
   behavioral tests.
+
+Updates 2025-03:
+- Removed test enforcement for deprecated module aliases (`tests/unit/bot_v2/test_removed_aliases.py`). If a compatibility layer reappears, document it here and add a targeted lint instead of a broad test.

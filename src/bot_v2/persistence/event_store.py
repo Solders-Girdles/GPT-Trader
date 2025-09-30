@@ -8,7 +8,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from ..config.path_registry import DEFAULT_EVENT_STORE_DIR
+from bot_v2.config.path_registry import DEFAULT_EVENT_STORE_DIR
 
 
 class EventStore:

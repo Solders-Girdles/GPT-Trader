@@ -7,8 +7,7 @@ from datetime import datetime
 
 import numpy as np
 import pandas as pd
-
-from .types import StrategyName, StrategyPrediction
+from bot_v2.features.ml_strategy.types import StrategyName, StrategyPrediction
 
 
 def run_ml_backtest(
@@ -26,7 +25,7 @@ def run_ml_backtest(
     Switches strategies based on ML predictions at rebalance intervals.
     """
     # Fetch historical data (simplified)
-    from .market_data import fetch_market_data
+    from bot_v2.features.ml_strategy.market_data import fetch_market_data
 
     lookback_days = (end_date - start_date).days
     data = fetch_market_data(symbol, lookback_days)

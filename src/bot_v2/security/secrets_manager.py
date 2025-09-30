@@ -37,7 +37,7 @@ class SecretsManager:
     """
 
     def __init__(self, vault_enabled: bool = True) -> None:
-        self._lock = threading.Lock()
+        self._lock = threading.RLock()  # RLock allows re-entrant locking for rotate_key
         self._cipher_suite = None
         self._secrets_cache = {}
         self._vault_client = None

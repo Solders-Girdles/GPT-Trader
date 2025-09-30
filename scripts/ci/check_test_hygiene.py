@@ -21,6 +21,8 @@ ALLOWLIST = {
     "tests/unit/bot_v2/orchestration/test_perps_bot.py",
     "tests/unit/bot_v2/orchestration/test_live_execution.py",
     "tests/unit/bot_v2/test_broker_behavioral_contract.py",  # 358 lines: broker contract validation suite
+    "tests/unit/bot_v2/security/test_secrets_manager.py",  # 482 lines: comprehensive security test suite (encryption, vault, threading)
+    "tests/unit/bot_v2/security/test_security_validator.py",  # 575 lines: comprehensive security validation (injection, rate limiting, trading limits)
 }
 
 

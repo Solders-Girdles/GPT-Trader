@@ -17,7 +17,6 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-
 from bot_v2.utilities.quantization import quantize_price_side_aware
 
 logger = logging.getLogger(__name__)

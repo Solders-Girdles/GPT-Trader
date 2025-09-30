@@ -4,10 +4,13 @@ Local types for data management.
 Complete isolation - no external dependencies.
 """
 
+from __future__ import annotations
+
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Dict, List, Optional, Any, Literal
 from enum import Enum
+from typing import Any, Literal
+
 import pandas as pd
 
 

@@ -9,7 +9,7 @@ import json
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 
@@ -47,8 +47,8 @@ except Exception:  # Fallback when tests append src/bot_v2 directly
 get_data_provider = _get_dp
 
 # Module state (simplified for isolation)
-_trained_model: Optional["StrategySelector"] = None
-_confidence_scorer: Optional["ConfidenceScorer"] = None
+_trained_model: "StrategySelector" | None = None
+_confidence_scorer: "ConfidenceScorer" | None = None
 _model_performance: ModelPerformance | None = None
 _config: dict | None = None
 

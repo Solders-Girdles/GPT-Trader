@@ -351,10 +351,7 @@ class PerpsBot:
         logger.info("Shutting down bot...")
         self.running = False
         try:
-            if hasattr(self, "_ws_stop") and self._ws_stop:
-                self._ws_stop.set()
-            if hasattr(self, "_ws_thread") and self._ws_thread and self._ws_thread.is_alive():
-                self._ws_thread.join(timeout=2.0)
+            self._stop_streaming_background()
         except Exception as exc:
             logger.debug("Failed to stop WS thread cleanly: %s", exc, exc_info=True)
 
@@ -365,6 +362,7 @@ class PerpsBot:
         self.symbols = list(self.config.symbols or [])
         self._derivatives_enabled = bool(getattr(self.config, "derivatives_enabled", False))
         self.registry = self.registry.with_updates(config=self.config)
+        self.execution_coordinator.reset_order_reconciler()
         self.config_controller.sync_with_risk_manager(self.risk_manager)
         self._session_guard = TradingSessionGuard(
             start=self.config.trading_window_start,
@@ -378,22 +376,58 @@ class PerpsBot:
                 del self.mark_windows[symbol]
         self._init_market_services()
         self.strategy_orchestrator.init_strategy()
+        self._restart_streaming_if_needed(change.diff)
 
     # ------------------------------------------------------------------
     def _start_streaming_background(self) -> None:  # pragma: no cover - gated by env/profile
         symbols = list(self.symbols)
         if not symbols:
             return
-        level = int(os.getenv("PERPS_STREAM_LEVEL", "1") or "1")
+        configured_level = getattr(self.config, "perps_stream_level", 1) or 1
+        try:
+            level = max(int(configured_level), 1)
+        except (TypeError, ValueError):
+            logger.warning("Invalid streaming level %s; defaulting to 1", configured_level)
+            level = 1
         try:
             self._ws_stop = threading.Event()
         except Exception:
             self._ws_stop = None
-        self._ws_thread = threading.Thread(
-            target=self._run_stream_loop, args=(symbols, level), daemon=True
-        )
-        self._ws_thread.start()
-        logger.info("Started WS streaming thread for symbols=%s level=%s", symbols, level)
+            self._ws_thread = threading.Thread(
+                target=self._run_stream_loop, args=(symbols, level), daemon=True
+            )
+            self._ws_thread.start()
+            logger.info("Started WS streaming thread for symbols=%s level=%s", symbols, level)
+
+    def _stop_streaming_background(self) -> None:
+        if not hasattr(self, "_ws_thread"):
+            return
+        try:
+            stop_event = getattr(self, "_ws_stop", None)
+            if stop_event:
+                stop_event.set()
+            thread = getattr(self, "_ws_thread", None)
+            if thread and thread.is_alive():
+                thread.join(timeout=2.0)
+        except Exception as exc:
+            logger.debug("Failed to stop WS streaming thread cleanly: %s", exc, exc_info=True)
+        finally:
+            self._ws_thread = None
+            self._ws_stop = None
+
+    def _restart_streaming_if_needed(self, diff: dict[str, Any]) -> None:
+        streaming_enabled = bool(getattr(self.config, "perps_enable_streaming", False))
+        toggle_changed = "perps_enable_streaming" in diff or "perps_stream_level" in diff
+
+        if not streaming_enabled:
+            if toggle_changed:
+                self._stop_streaming_background()
+            return
+
+        # For enabled streaming ensure we refresh when toggle flips or level changes.
+        if toggle_changed:
+            self._stop_streaming_background()
+        self._start_streaming_if_configured()
 
     def _run_stream_loop(self, symbols: list[str], level: int) -> None:
         try:

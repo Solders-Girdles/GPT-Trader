@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import logging
 import os
-import sys
 from typing import TYPE_CHECKING
 
 from bot_v2.config.live_trade_config import RiskConfig
@@ -13,13 +12,16 @@ from bot_v2.orchestration.broker_factory import create_brokerage
 from bot_v2.orchestration.configuration import DEFAULT_SPOT_RISK_PATH, Profile
 from bot_v2.orchestration.deterministic_broker import DeterministicBroker
 from bot_v2.orchestration.order_reconciler import OrderReconciler
-from bot_v2.orchestration.symbols import derivatives_enabled as _resolve_derivatives_enabled
 
 if TYPE_CHECKING:  # pragma: no cover - type checking only
     from bot_v2.orchestration.perps_bot import PerpsBot
 
 
 logger = logging.getLogger(__name__)
+
+
+class BrokerBootstrapError(RuntimeError):
+    """Raised when broker initialization fails."""
 
 
 class RuntimeCoordinator:
@@ -45,8 +47,8 @@ class RuntimeCoordinator:
             logger.info("Using broker from service registry")
             return
 
-        paper_env = os.getenv("PERPS_PAPER", "").lower() in {"1", "true", "yes"}
-        force_mock = os.getenv("PERPS_FORCE_MOCK", "").lower() in {"1", "true", "yes"}
+        paper_env = bool(getattr(bot.config, "perps_paper_trading", False))
+        force_mock = bool(getattr(bot.config, "perps_force_mock", False))
         is_dev = bot.config.profile == Profile.DEV
 
         if paper_env or force_mock or is_dev or bot.config.mock_broker:
@@ -65,15 +67,15 @@ class RuntimeCoordinator:
                         bot._product_map[product.symbol] = product
             except Exception as exc:  # pragma: no cover - fatal boot failure
                 logger.error("Failed to initialize real broker: %s", exc)
-                sys.exit(1)
+                raise BrokerBootstrapError("Broker initialization failed") from exc
 
         bot.registry = bot.registry.with_updates(broker=bot.broker)
 
     def _validate_broker_environment(self) -> None:
         bot = self._bot
 
-        paper_env = os.getenv("PERPS_PAPER", "").lower() in {"1", "true", "yes"}
-        force_mock = os.getenv("PERPS_FORCE_MOCK", "").lower() in {"1", "true", "yes"}
+        paper_env = bool(getattr(bot.config, "perps_paper_trading", False))
+        force_mock = bool(getattr(bot.config, "perps_force_mock", False))
         if paper_env or force_mock or bot.config.mock_broker or bot.config.profile == Profile.DEV:
             logger.info("Paper/mock mode enabled — skipping production env checks")
             return
@@ -87,7 +89,7 @@ class RuntimeCoordinator:
                 "COINBASE_SANDBOX=1 is not supported for live trading. Remove it or enable PERPS_PAPER=1."
             )
 
-        derivatives_enabled = _resolve_derivatives_enabled(bot.config.profile)
+        derivatives_enabled = bool(getattr(bot.config, "derivatives_enabled", False))
 
         if not derivatives_enabled:
             for sym in bot.config.symbols:
@@ -230,11 +232,7 @@ class RuntimeCoordinator:
     # ------------------------------------------------------------------
     async def reconcile_state_on_startup(self) -> None:
         bot = self._bot
-        if bot.config.dry_run or os.getenv("PERPS_SKIP_RECONCILE", "").lower() in {
-            "1",
-            "true",
-            "yes",
-        }:
+        if bot.config.dry_run or getattr(bot.config, "perps_skip_startup_reconcile", False):
             logger.info("Skipping startup reconciliation (dry-run or PERPS_SKIP_RECONCILE)")
             return
 

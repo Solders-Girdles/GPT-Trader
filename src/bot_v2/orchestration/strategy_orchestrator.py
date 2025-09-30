@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import os
 import time as _time
 from collections.abc import Sequence
 from datetime import datetime
@@ -61,9 +60,9 @@ class StrategyOrchestrator:
                     "trailing_stop_pct": bot.config.trailing_stop_pct,
                     "enable_shorts": False,
                 }
-                fraction_override = rule.get("position_fraction") or os.environ.get(
-                    "PERPS_POSITION_FRACTION"
-                )
+                fraction_override = rule.get("position_fraction")
+                if fraction_override is None:
+                    fraction_override = bot.config.perps_position_fraction
                 if fraction_override is not None:
                     try:
                         strategy_kwargs["position_fraction"] = float(fraction_override)
@@ -85,12 +84,11 @@ class StrategyOrchestrator:
                 "trailing_stop_pct": bot.config.trailing_stop_pct,
                 "enable_shorts": bot.config.enable_shorts if derivatives_enabled else False,
             }
-
-            fraction_override = os.environ.get("PERPS_POSITION_FRACTION")
-            if fraction_override:
+            fraction_override = bot.config.perps_position_fraction
+            if fraction_override is not None:
                 try:
                     strategy_kwargs["position_fraction"] = float(fraction_override)
-                except ValueError:
+                except (TypeError, ValueError):
                     logger.warning(
                         "Invalid PERPS_POSITION_FRACTION=%s; using default", fraction_override
                     )

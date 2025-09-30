@@ -18,10 +18,10 @@ from bot_v2.features.live_trade.advanced_execution import AdvancedExecutionEngin
 from bot_v2.features.live_trade.risk import ValidationError as RiskValidationError
 from bot_v2.features.live_trade.strategies.perps_baseline import Action
 from bot_v2.orchestration.live_execution import LiveExecutionEngine
+from bot_v2.orchestration.order_reconciler import OrderReconciler
 from bot_v2.utilities.quantities import quantity_from
 
 if TYPE_CHECKING:  # pragma: no cover - type checking only
-    from bot_v2.orchestration.order_reconciler import OrderReconciler
     from bot_v2.orchestration.perps_bot import PerpsBot
 
 logger = logging.getLogger(__name__)
@@ -331,6 +331,9 @@ class ExecutionCoordinator:
             )
         return self._order_reconciler
 
+    def reset_order_reconciler(self) -> None:
+        self._order_reconciler = None
+
     async def run_runtime_guards(self) -> None:
         await self._run_runtime_guards_loop()
 
@@ -350,49 +353,38 @@ class ExecutionCoordinator:
         bot = self._bot
         while bot.running:
             try:
-                local_open = {o.order_id: o for o in bot.orders_store.get_open_orders()}
-                try:
-                    all_orders = await asyncio.to_thread(bot.broker.list_orders)
-                except Exception:
-                    all_orders = []
-
-                from bot_v2.features.brokerages.core.interfaces import OrderStatus as _OS
-
-                open_statuses = {_OS.PENDING, _OS.SUBMITTED, _OS.PARTIALLY_FILLED}
-                exch_open = {
-                    o.id: o
-                    for o in (all_orders or [])
-                    if getattr(o, "status", None) in open_statuses
-                }
-
-                if len(local_open) != len(exch_open):
-                    logger.info(
-                        f"Order count mismatch: local={len(local_open)} exchange={len(exch_open)}"
-                    )
-
-                for oid, ex_order in exch_open.items():
-                    try:
-                        bot.orders_store.upsert(ex_order)
-                    except Exception as exc:
-                        logger.debug(
-                            "Failed to upsert exchange order %s during reconciliation: %s",
-                            oid,
-                            exc,
-                            exc_info=True,
-                        )
-
-                for oid, _local in local_open.items():
-                    if oid not in exch_open:
-                        try:
-                            final = await asyncio.to_thread(bot.broker.get_order, oid)
-                            if final:
-                                bot.orders_store.upsert(final)
-                                logger.info(f"Reconciled order {oid} → {final.status.value}")
-                        except Exception as exc:
-                            logger.debug(
-                                "Unable to reconcile order %s: %s", oid, exc, exc_info=True
-                            )
-                            continue
+                reconciler = self._get_order_reconciler()
+                await self._run_order_reconciliation_cycle(reconciler)
             except Exception as e:
                 logger.debug(f"Order reconciliation error: {e}", exc_info=True)
             await asyncio.sleep(interval_seconds)
+
+    async def _run_order_reconciliation_cycle(self, reconciler: OrderReconciler) -> None:
+        bot = self._bot
+        local_open = reconciler.fetch_local_open_orders()
+        exchange_open = await reconciler.fetch_exchange_open_orders()
+
+        if len(local_open) != len(exchange_open):
+            logger.info(
+                "Order count mismatch: local=%s exchange=%s",
+                len(local_open),
+                len(exchange_open),
+            )
+
+        diff = reconciler.diff_orders(local_open, exchange_open)
+        if diff.missing_on_exchange or diff.missing_locally:
+            await reconciler.reconcile_missing_on_exchange(diff)
+            reconciler.reconcile_missing_locally(diff)
+
+        for order in exchange_open.values():
+            try:
+                bot.orders_store.upsert(order)
+            except Exception as exc:
+                logger.debug(
+                    "Failed to upsert exchange order %s during reconciliation: %s",
+                    order.id,
+                    exc,
+                    exc_info=True,
+                )
+
+        await reconciler.record_snapshot(local_open, exchange_open)

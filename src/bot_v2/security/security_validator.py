@@ -13,8 +13,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
 from threading import Lock
-from typing import Any, DefaultDict
-from collections.abc import Callable
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -75,11 +74,11 @@ class SecurityValidator:
 
     def __init__(self) -> None:
         self._lock = Lock()
-        self._rate_limiters: DefaultDict[str, DefaultDict[str, deque[float]]] = defaultdict(
+        self._rate_limiters: defaultdict[str, defaultdict[str, deque[float]]] = defaultdict(
             lambda: defaultdict(deque)
         )
         self._blocked_ips: set[str] = set()
-        self._suspicious_activity: DefaultDict[str, int] = defaultdict(int)
+        self._suspicious_activity: defaultdict[str, int] = defaultdict(int)
 
     def sanitize_string(self, input_str: str, max_length: int = 255) -> ValidationResult:
         """

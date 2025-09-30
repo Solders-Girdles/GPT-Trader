@@ -724,38 +724,3 @@ Context:
             server.send_message(msg)
     except Exception as e:
         logger.error(f"Failed to send email alert: {e}")
-
-
-if __name__ == "__main__":
-    # Example usage
-    config = {
-        "risk_management": {
-            "daily_loss_limit": 10.0,
-            "max_drawdown_pct": 2.0,
-            "circuit_breakers": {"stale_mark_seconds": 60, "error_threshold": 3},
-        }
-    }
-
-    # Create manager with default guards
-    manager = create_default_guards(config)
-
-    # Add alert handlers
-    manager.add_alert_handler(log_alert_handler)
-
-    # Simulate runtime context
-    context = {
-        "pnl": -5.0,
-        "equity": 1000,
-        "symbol": "BTC-PERP",
-        "mark_timestamp": datetime.now() - timedelta(seconds=30),
-        "positions": {},
-        "error": False,
-    }
-
-    # Check guards
-    alerts = manager.check_all(context)
-    logger.info("Triggered %s alerts", len(alerts))
-
-    # Get status
-    status = manager.get_status()
-    logger.info("Guard status: %s", json.dumps(status, indent=2))

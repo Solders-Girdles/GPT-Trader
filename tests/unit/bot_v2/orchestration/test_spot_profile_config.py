@@ -18,7 +18,7 @@ def test_spot_profile_uses_top_volume_symbols(monkeypatch, tmp_path):
     monkeypatch.delenv("SPOT_FORCE_LIVE", raising=False)
 
     config = BotConfig.from_profile(Profile.SPOT.value)
-    assert config.symbols == DEFAULT_SPOT_SYMBOLS
+    assert tuple(config.symbols) == tuple(DEFAULT_SPOT_SYMBOLS)
 
     bot, _registry = build_bot(config)
     try:

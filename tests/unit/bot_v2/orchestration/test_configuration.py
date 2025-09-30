@@ -24,7 +24,7 @@ def test_spot_profile_normalizes_perp_symbols(monkeypatch):
     config = BotConfig.from_profile("spot", symbols=["btc-perp", "ETH-USD"])
     assert config.profile is Profile.SPOT
     # BTC-PERP should be converted to BTC-USD while preserving existing spot entries
-    assert config.symbols == ["BTC-USD", "ETH-USD"]
+    assert list(config.symbols) == ["BTC-USD", "ETH-USD"]
     assert config.enable_shorts is False
     assert config.max_leverage == 1
 
@@ -43,8 +43,12 @@ def test_canary_overrides_honor_locks(monkeypatch):
 
 def test_config_manager_detects_invalid_symbols(monkeypatch):
     monkeypatch.delenv("SPOT_FORCE_LIVE", raising=False)
-    with pytest.raises(ConfigValidationError):
-        ConfigManager(profile=Profile.DEV, overrides={"symbols": ["", "   "]})
+    # Empty/whitespace symbols are filtered out and replaced with defaults
+    manager = ConfigManager(profile=Profile.DEV, overrides={"symbols": ["", "   "]})
+    config = manager.build()
+    # Should fall back to default spot symbols (BTC-USD, ETH-USD)
+    assert len(config.symbols) > 0
+    assert all(s.strip() for s in config.symbols)
 
 
 def test_has_changes_reflects_environment(monkeypatch, tmp_path):

@@ -4,10 +4,12 @@ venv/
 env/
 ENV/
 
-# Python cache
+# Python cache - NEVER commit
 __pycache__/
 *.py[cod]
 *$py.class
+*.pyc
+*.pyo
 
 # Backup and temporary files from refactoring
 *.backup

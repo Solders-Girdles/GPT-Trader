@@ -19,8 +19,8 @@ poetry run python scripts/stage3_runner.py ...        # legacy wrapper → perps
 poetry run python scripts/monitoring/export_metrics.py --metrics-file var/data/perps_bot/prod/metrics.json
 
 # Tests
-poetry run pytest --collect-only                      # expect 455 collected / 446 selected
-poetry run pytest -q                                   # full bot_v2 regression suite
+poetry run pytest --collect-only                      # view current test count and selection
+poetry run pytest -q                                   # full bot_v2 regression suite (100% pass expected)
 ```
 
 Perps execution remains dormant until INTX access is approved and `COINBASE_ENABLE_DERIVATIVES=1` is set.
@@ -44,8 +44,8 @@ DRY_RUN=1
 
 ## Running Tests
 - Always run `poetry install` after pulling to pick up dependency changes (`pyotp` is required for security tests).
-- Use `poetry run pytest --collect-only` to confirm suite counts (455 collected / 446 selected / 9 deselected).
-- The enforcement suite is `poetry run pytest -q`.
+- Use `poetry run pytest --collect-only` to view current test counts and selection status.
+- The enforcement suite is `poetry run pytest -q` (100% pass rate expected on active code).
 - Real-API or integration flows are archived; build new coverage inside `tests/unit/bot_v2/` when adding features.
 
 ## Operational Notes

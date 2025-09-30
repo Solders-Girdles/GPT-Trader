@@ -15,8 +15,8 @@ Historical integration, performance, and experimental suites were archived in Se
 ## Current Test Metrics
 
 ### Active Test Suites (Maintained)
-- **Collection Snapshot**: 455 collected / 9 deselected / 446 selected (`poetry run pytest --collect-only`)
-- **Pass Target**: **100%** ✅ for the selected suites
+- **Collection**: Run `poetry run pytest --collect-only` to view current test counts and selection status
+- **Pass Target**: **100%** ✅ for all selected active suites
 - **Coverage Focus**: Spot trading orchestration, Coinbase integration, risk controls
 
 ### Legacy Context
@@ -106,7 +106,7 @@ class TestRiskValidation:
 ### Key Testing Utilities
 
 #### Quantization Helpers
-Located in `src/bot_v2/features/quantization.py`:
+Located in `src/bot_v2/utilities/quantization.py`:
 - `quantize_size()` - Round order sizes to exchange requirements
 - `quantize_price()` - Round prices to tick size
 

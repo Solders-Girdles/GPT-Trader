@@ -8,15 +8,21 @@ from collections.abc import Callable, Sequence
 from pathlib import Path
 from typing import Any
 
-from bot_v2.features.backtest.profile import load_profile as _load_spot_profile
+import yaml
 
 logger = logging.getLogger(__name__)
+
+
+def _default_yaml_loader(path: Path) -> dict[str, Any]:
+    """Simple YAML profile loader."""
+    with path.open("r") as fh:
+        return yaml.safe_load(fh) or {}
 
 
 class SpotProfileService:
     """Loads spot strategy profiles and returns per-symbol rule dictionaries."""
 
-    def __init__(self, *, loader: Callable[[Path], dict[str, Any]] = _load_spot_profile) -> None:
+    def __init__(self, *, loader: Callable[[Path], dict[str, Any]] = _default_yaml_loader) -> None:
         self._loader = loader
         self._rules: dict[str, dict[str, Any]] = {}
         self._last_path: Path | None = None

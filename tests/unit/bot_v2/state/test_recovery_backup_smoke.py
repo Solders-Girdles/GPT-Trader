@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from bot_v2.state.recovery_handler import (
+from bot_v2.state.recovery import (
     FailureEvent,
     FailureType,
     RecoveryConfig,
@@ -29,9 +29,10 @@ async def test_initiate_recovery_completes_successfully(monkeypatch) -> None:
     """Ensure initiate_recovery drives the happy-path execution flow."""
 
     handler = RecoveryHandler(state_manager=object(), checkpoint_handler=object())
-    handler._send_alert = AsyncMock()  # type: ignore[attr-defined]
+    # Mock the new structure - alerter, validator
+    handler.alerter.send_alert = AsyncMock()  # type: ignore[method-assign]
     handler._execute_recovery = AsyncMock(return_value=True)  # type: ignore[attr-defined]
-    handler._validate_recovery = AsyncMock(return_value=True)  # type: ignore[attr-defined]
+    handler.validator.validate_recovery = AsyncMock(return_value=True)  # type: ignore[method-assign]
     handler._cleanup_recovery_history = lambda: None  # type: ignore[assignment]
 
     event = FailureEvent(
@@ -45,9 +46,9 @@ async def test_initiate_recovery_completes_successfully(monkeypatch) -> None:
     operation = await handler.initiate_recovery(event, RecoveryMode.AUTOMATIC)
 
     assert operation.status is RecoveryStatus.COMPLETED
-    assert handler._send_alert.await_count == 2  # type: ignore[attr-defined]
+    assert handler.alerter.send_alert.await_count == 2  # type: ignore[attr-defined]
     handler._execute_recovery.assert_awaited()  # type: ignore[attr-defined]
-    handler._validate_recovery.assert_awaited()  # type: ignore[attr-defined]
+    handler.validator.validate_recovery.assert_awaited()  # type: ignore[attr-defined]
     assert handler._current_operation is None
     assert handler._recovery_in_progress is False
 
@@ -61,11 +62,12 @@ async def test_initiate_recovery_escalates_on_failure(monkeypatch) -> None:
         checkpoint_handler=object(),
         config=RecoveryConfig(max_retry_attempts=1),
     )
-    handler._send_alert = AsyncMock()  # type: ignore[attr-defined]
+    # Mock the new structure
+    handler.alerter.send_alert = AsyncMock()  # type: ignore[method-assign]
     handler._execute_recovery = AsyncMock(return_value=False)  # type: ignore[attr-defined]
-    handler._validate_recovery = AsyncMock(return_value=False)  # type: ignore[attr-defined]
+    handler.validator.validate_recovery = AsyncMock(return_value=False)  # type: ignore[method-assign]
     handler._cleanup_recovery_history = lambda: None  # type: ignore[assignment]
-    handler._escalate_recovery = AsyncMock()  # type: ignore[attr-defined]
+    handler.alerter.escalate_recovery = AsyncMock()  # type: ignore[method-assign]
 
     event = FailureEvent(
         failure_type=FailureType.POSTGRES_DOWN,
@@ -78,7 +80,7 @@ async def test_initiate_recovery_escalates_on_failure(monkeypatch) -> None:
     operation = await handler.initiate_recovery(event, RecoveryMode.AUTOMATIC)
 
     assert operation.status is RecoveryStatus.FAILED
-    handler._escalate_recovery.assert_awaited_once()  # type: ignore[attr-defined]
+    handler.alerter.escalate_recovery.assert_awaited_once()  # type: ignore[attr-defined]
 
 
 class _DummyStateManager:

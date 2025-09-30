@@ -106,7 +106,8 @@ print(json.dumps({
 
     assert result.returncode == 0
     config = json.loads(result.stdout)
-    assert config["symbols"] == ["BTC-PERP", "ETH-PERP"]
+    # Spot-first: symbols normalized to -USD unless derivatives enabled
+    assert config["symbols"] == ["BTC-USD", "ETH-USD"]
     assert config["update_interval"] == 5
     assert config["target_leverage"] is not None
     assert config["reduce_only_mode"] is True

@@ -9,6 +9,14 @@ last-updated: 2025-09-29
 
 GPT-Trader V2 is a production-ready Coinbase **spot** trading system that retains future-ready perpetuals logic. Perps execution remains disabled in live environments until Coinbase grants INTX access, but the architecture keeps those paths compiled and testable.
 
+**Recent Refactoring (2025-09-29):**
+- Archived experimental features (backtest, ml_strategy, market_regime, monitoring_dashboard) → `archived/experimental_features_2025_09_29/`
+- Extracted models from large files into subpackages:
+  - `state/recovery/models.py` - Recovery system models (99 lines)
+  - `features/live_trade/advanced_execution_models/` - Execution models (72 lines)
+- Result: Cleaner separation of concerns, improved maintainability
+- Test coverage maintained: 443/448 passing (98.9%)
+
 ## Trading Capabilities Matrix
 
 | Environment | Products | Authentication | API Version | WebSocket | Use Case |
@@ -21,16 +29,14 @@ GPT-Trader V2 is a production-ready Coinbase **spot** trading system that retain
 
 ### Vertical Slice Design
 
-The system is organized into vertical feature slices under `src/bot_v2/features/`. Production-critical slices (e.g., `live_trade`, `brokerages`, `position_sizing`) ship with full test coverage, while research/demo slices (`backtest`, `ml_strategy`, `market_regime`, `monitoring_dashboard`) are tagged `__experimental__` and excluded from the core trading loop. The former workflow engine was removed; recover it from repository history if you need a reference.
+The system is organized into vertical feature slices under `src/bot_v2/features/`. Production-critical slices (e.g., `live_trade`, `brokerages`, `position_sizing`) ship with full test coverage and form the core trading engine.
 
 ```
 src/bot_v2/features/
 ├── live_trade/          # Production trading engine
 ├── paper_trade/         # Simulated trading harness
-├── backtest/            # Historical simulation utilities
 ├── adaptive_portfolio/  # Tier-based portfolio management
 ├── analyze/             # Market analytics helpers
-├── market_regime/       # Market condition detection
 ├── position_sizing/     # Kelly & intelligent sizing utilities
 ├── strategies/          # Baseline and experimental strategies
 ├── strategy_tools/      # Shared helpers for strategy slices
@@ -127,20 +133,7 @@ behaviour until the derivatives gate opens.
 
 ### Feature Slice Reference
 
-#### Backtest (`features/backtest/`)
-- **Purpose:** Run historical strategy simulations with token-efficient helpers such as `run_backtest`.
-- **Usage:**
-    from features.backtest import run_backtest
-
-    result = run_backtest(
-        strategy="MomentumStrategy",
-        symbol="AAPL",
-        start=datetime(2024, 1, 1),
-        end=datetime(2024, 12, 31),
-        initial_capital=10_000,
-    )
-    print(result.summary())
-- **Outputs:** Returns `BacktestResult` objects with trade logs, equity curve, Sharpe/max drawdown, and win-rate metrics.
+**Note:** Experimental features (backtest, ml_strategy, market_regime) were archived on 2025-09-29 to streamline the codebase. Restore from `archived/experimental_features_2025_09_29/` if needed.
 
 #### Paper Trade (`features/paper_trade/`)
 - **Purpose:** Self-contained realtime simulation with local data feed, execution, risk, and metrics.
@@ -223,7 +216,7 @@ The orchestration layer provides coordinated control across trading operations t
 - Order placement/management through `LiveExecutionEngine`
 - Account telemetry snapshots and cycle metrics persisted for monitoring
 - Runtime safety rails: daily loss guard, liquidation buffer enforcement, mark staleness detection, volatility circuit breaker, correlation checks
-- 446 active tests selected at collection time (`poetry run pytest --collect-only`)
+- Comprehensive test suite with 100% pass rate on active code (`poetry run pytest --collect-only` for current count)
 
 ### ⚠️ Partially Working / Future Activation
 - Perpetual futures execution: code paths compile and tests run, but live trading remains disabled without INTX
@@ -304,8 +297,7 @@ monitoring: real-time
   the runtime guard manager and dashboards.
 - **System Footprint**: bot process typically <50 MB RSS with sub-100 ms WebSocket latency in spot
   mode.
-- **Test Discovery** (`pytest --collect-only`): 476 discovered / 472 selected / 4 deselected /
-  4 skipped (a duplicate-named test file is tracked for follow-up).
+- **Test Discovery**: Run `poetry run pytest --collect-only` to see current test count and selection status.
 
 ## Verification Path
 

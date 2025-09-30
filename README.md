@@ -28,10 +28,7 @@ An ML-driven Coinbase trading system with market regime detection, built on a cl
   - Run: `poetry run perps-bot ...` or `poetry run gpt-trader ...`
 - Stage 3 runner: `scripts/stage3_runner.py` (delegates to `perps-bot` for legacy workflows)
 
-Experimental (kept for demos, not in the perps critical path):
-- `features/backtest/*`, `features/ml_strategy/*`, `features/market_regime/*`, `monitoring/monitoring_dashboard.py`
-  - These modules are tagged with `__experimental__ = True` and their heavy deps are now optional extras.
-  - Install extras as needed, e.g.: `poetry install -E ml -E research -E api`
+**Note:** Experimental features (backtest, ml_strategy, market_regime, monitoring_dashboard) were archived on 2025-09-29 to streamline the codebase. They can be restored from `archived/experimental_features_2025_09_29/` or git history if needed.
 
 ## 🚀 Quick Start
 
@@ -62,7 +59,7 @@ poetry run python scripts/stage3_runner.py --duration-minutes 60
 - **Vertical Architecture**: Feature slices under `src/bot_v2/features/` with per-slice tests
 - **Risk Management**: Daily loss guard, liquidation buffers, volatility circuit breakers, correlation checks
 - **Operational Telemetry**: Account snapshots, cycle metrics, Prometheus exporter
-- **Test Coverage**: 445 active tests selected during collection (`poetry run pytest --collect-only -q`)
+- **Test Coverage**: Comprehensive test suite with 100% pass rate on active code (`poetry run pytest --collect-only` for current count)
 
 ### 🚨 Production vs Sandbox
 
@@ -127,9 +124,9 @@ src/bot_v2/
 
 ## 🧪 Test Status
 
-- **Active Code**: 445 tests collected after deselection ✅
+- **Active Code**: Full regression suite with 100% pass rate ✅
 - **Legacy/archived**: Additional tests skipped/deselected by markers
-- **Command**: `poetry run pytest --collect-only` (run `poetry install` first for new deps like `pyotp`)
+- **Command**: `poetry run pytest --collect-only` to see current test count (run `poetry install` first for new deps like `pyotp`)
 
 ## 🔧 Environment Setup
 

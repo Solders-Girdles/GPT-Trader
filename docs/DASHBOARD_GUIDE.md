@@ -61,9 +61,8 @@ poetry run python scripts/perps_dashboard.py \
 - **Validation framework** (`bot_v2/validation`): declarative validators with
   inline predicate support keep inputs clean before they reach monitoring
   surfaces.
-- **Monitoring dashboard module** (`bot_v2/monitoring/monitoring_dashboard.py`):
-  provides snapshot storage and helper utilities for CLI dashboards or future
-  UI integrations.
+- **Monitoring framework** (`bot_v2/monitoring`): provides metrics collection,
+  workflow tracking, and alerting system for CLI dashboards and integrations.
 
 ## Alerting Hooks
 

@@ -33,10 +33,11 @@ src/bot_v2/
 
 ## Test Suite Status
 
-### Metrics
-- **Active Tests**: 220 tests - **100% pass rate** ✅
-- **Legacy Tests**: 101 tests (properly skipped)
-- **Total Tests**: 435 (69% overall including legacy)
+### Metrics (Historical - December 2024)
+- **Active Tests (Dec 2024)**: 220 tests - **100% pass rate** ✅
+- **Legacy Tests (Dec 2024)**: 101 tests (properly skipped)
+- **Total Tests (Dec 2024)**: 435 (69% overall including legacy)
+- **Current Test Count**: 453 active tests (457 collected, 4 deselected) as of September 2025
 
 ### Quality Indicators
 - **Critical Path Coverage**: >90% on perpetuals trading

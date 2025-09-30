@@ -5,7 +5,7 @@ Complete implementation of Coinbase Advanced Trade API v3 and Legacy Exchange AP
 ## Features Implemented
 
 ### Core Components
-- ✅ **REST Client** (`client.py`): Full HTTP client with auth, retries, and rate limiting
+- ✅ **REST Client** (`client/`): Modular HTTP client package with auth, retries, and rate limiting (mixins architecture)
 - ✅ **WebSocket Streaming** (`ws.py`): Real-time data with auto-reconnect and transport abstraction
 - ✅ **Brokerage Adapter** (`adapter.py`): Implements `IBrokerage` interface for Coinbase
 - ✅ **Data Models** (`models.py`): Type-safe data mappers and helpers
@@ -169,8 +169,8 @@ pytest tests/unit/bot_v2/features/brokerages/coinbase/test_critical_fixes.py -v
 ## Development
 
 ### Adding New Endpoints
-1. Add to `ENDPOINT_MAP` in `client.py._get_endpoint_path()`
-2. Implement method in `CoinbaseClient`
+1. Add method to appropriate mixin in `client/` directory (e.g., `orders.py`, `market.py`, `portfolio.py`)
+2. Import and use in `CoinbaseClient` via mixin inheritance
 3. Add wrapper in `CoinbaseBrokerage` adapter
 4. Update tests
 

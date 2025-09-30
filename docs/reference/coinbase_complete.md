@@ -370,7 +370,7 @@ export RISK_KILL_SWITCH_ENABLED=1 && pkill -f perps-bot
 ### Key Files
 
 - Main entry: `src/bot_v2/cli.py`
-- Coinbase client: `src/bot_v2/features/brokerages/coinbase/client.py`
+- Coinbase client: `src/bot_v2/features/brokerages/coinbase/client/` (modular package with mixins)
 - WebSocket handler: `src/bot_v2/features/brokerages/coinbase/ws.py`
 - Configuration: `config/environments/.env.template`
 

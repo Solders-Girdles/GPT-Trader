@@ -62,7 +62,7 @@ The retired workflow engine was removed; retrieve it from git history if needed.
 - **Documentation templates:** Copy/paste matrices, interview outlines, and backlog seeds from `docs/archive/agents/templates.md` during Sprint 0 and ongoing maintenance.
 
 ## 7. Testing Expectations
-- **Command:** `poetry run pytest --collect-only` currently discovers 455 tests (446 selected after deselection).
+- **Command:** `poetry run pytest --collect-only` shows current test count and selection status (100% pass rate expected on active code).
 - **Dependencies:** `pyotp` remains part of the base Poetry environment; run `poetry install` after pulling to ensure security tests pass.
 - Keep unit tests under `tests/unit/bot_v2/` up to date, and add coverage for new risk or telemetry paths.
 

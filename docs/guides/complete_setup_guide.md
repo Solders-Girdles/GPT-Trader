@@ -227,7 +227,7 @@ poetry run perps-bot --profile canary
 ```bash
 # Discover active tests (markers deselect optional suites)
 poetry run pytest --collect-only -q
-# Expected: 452 collected / 445 selected / 7 deselected / 1 skipped
+# View current test counts and selection status (100% pass expected on active code)
 
 # Quick targeted run for spot orchestration
 poetry run pytest -q

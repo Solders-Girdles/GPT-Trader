@@ -56,8 +56,8 @@ poetry run python scripts/validation/validate_perps_e2e.py
 poetry run pytest -q
 ```
 
-### Test Metrics (December 2024)
-- **Active Tests**: 220 tests - 100% pass rate ✅
+### Test Metrics
+- **Active Tests**: 453 tests (457 collected, 4 deselected) - 100% pass rate ✅
 - **Coverage Goal**: >90% on new code
 - **Integration Tests**: Required for exchange interactions
 

@@ -15,7 +15,7 @@ from bot_v2.state.backup_manager import (
     create_backup,
     restore_latest,
 )
-from bot_v2.state.checkpoint_handler import (
+from bot_v2.state.checkpoint import (
     Checkpoint,
     CheckpointConfig,
     CheckpointHandler,
@@ -24,7 +24,7 @@ from bot_v2.state.checkpoint_handler import (
     create_checkpoint,
     restore_latest_checkpoint,
 )
-from bot_v2.state.recovery_handler import (
+from bot_v2.state.recovery import (
     FailureEvent,
     FailureType,
     RecoveryConfig,

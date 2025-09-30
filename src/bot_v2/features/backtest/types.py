@@ -8,7 +8,6 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
 import pandas as pd
-
 from bot_v2.features.brokerages.core.interfaces import OrderSide
 from bot_v2.types.trading import (
     AccountSnapshot,
@@ -71,9 +70,7 @@ class BacktestResult:
     ) -> TradingSessionResult:
         """Produce a shared trading session result for downstream consumers."""
 
-        resolved_initial = initial_capital or self.initial_capital or 0.0
         final_equity = Decimal(str(self.final_equity()))
-        initial_decimal = Decimal(str(resolved_initial))
         performance = self.to_performance_summary()
 
         account = AccountSnapshot(

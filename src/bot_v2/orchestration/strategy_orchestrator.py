@@ -48,8 +48,8 @@ class StrategyOrchestrator:
         bot = self._bot
         derivatives_enabled = bot.config.derivatives_enabled
         if bot.config.profile == Profile.SPOT:
-            rules = self._spot_profiles.load(bot.config.symbols)
-            for symbol in bot.config.symbols:
+            rules = self._spot_profiles.load(bot.config.symbols or [])
+            for symbol in bot.config.symbols or []:
                 rule = rules.get(symbol, {})
                 short = int(rule.get("short_window", bot.config.short_ma))
                 long = int(rule.get("long_window", bot.config.long_ma))
@@ -73,7 +73,7 @@ class StrategyOrchestrator:
                             symbol,
                         )
                 bot._symbol_strategies[symbol] = BaselinePerpsStrategy(
-                    config=StrategyConfig(**strategy_kwargs),
+                    config=StrategyConfig(**strategy_kwargs),  # type: ignore[arg-type]
                     risk_manager=bot.risk_manager,
                 )
         else:
@@ -94,7 +94,8 @@ class StrategyOrchestrator:
                     )
 
             bot.strategy = BaselinePerpsStrategy(
-                config=StrategyConfig(**strategy_kwargs), risk_manager=bot.risk_manager
+                config=StrategyConfig(**strategy_kwargs),  # type: ignore[arg-type]
+                risk_manager=bot.risk_manager,
             )
 
     def get_strategy(self, symbol: str) -> BaselinePerpsStrategy:
@@ -105,7 +106,7 @@ class StrategyOrchestrator:
                 strat = BaselinePerpsStrategy(risk_manager=bot.risk_manager)
                 bot._symbol_strategies[symbol] = strat
             return strat
-        return bot.strategy  # type: ignore[attr-defined]
+        return bot.strategy  # type: ignore[attr-defined,return-value]
 
     async def process_symbol(
         self,
@@ -219,7 +220,7 @@ class StrategyOrchestrator:
         bot = self._bot
         try:
             window = marks[-max(bot.config.long_ma, 20) :]
-            cb = bot.risk_manager.check_volatility_circuit_breaker(symbol, window)
+            cb = bot.risk_manager.check_volatility_circuit_breaker(symbol, list(window))
             if cb.triggered and cb.action is CircuitBreakerAction.KILL_SWITCH:
                 logger.warning(f"Kill switch tripped by volatility CB for {symbol}")
                 return False
@@ -251,7 +252,7 @@ class StrategyOrchestrator:
             symbol=symbol,
             current_mark=marks[-1],
             position_state=position_state,
-            recent_marks=marks[:-1] if len(marks) > 1 else [],
+            recent_marks=list(marks[:-1]) if len(marks) > 1 else [],
             equity=equity,
             product=bot.get_product(symbol),
         )

@@ -13,8 +13,10 @@ from bot_v2.monitoring.system import get_logger as _get_plog
 
 try:  # pragma: no cover - psutil optional
     from bot_v2.monitoring.system.collectors import ResourceCollector
+
+    ResourceCollectorType: type[ResourceCollector] | None = ResourceCollector
 except Exception:  # noqa: BLE001 - degrade gracefully when psutil missing
-    ResourceCollector = None  # type: ignore[assignment]
+    ResourceCollectorType = None  # type: ignore[misc]
 from bot_v2.orchestration.account_telemetry import AccountTelemetryService
 from bot_v2.orchestration.config_controller import ConfigController
 from bot_v2.orchestration.configuration import ConfigValidationError
@@ -75,7 +77,7 @@ class SystemMonitor:
         except Exception:
             open_orders_count = 0
 
-        metrics_payload = {
+        metrics_payload: dict[str, Any] = {
             "timestamp": datetime.now(UTC).isoformat(),
             "profile": bot.config.profile.value,
             "equity": float(equity) if isinstance(equity, Decimal) else equity,
@@ -108,7 +110,7 @@ class SystemMonitor:
         if self._resource_collector is not None:
             try:
                 usage = self._resource_collector.collect()
-                metrics_payload["system"] = {
+                system_metrics: dict[str, float] = {
                     "cpu_percent": usage.cpu_percent,
                     "memory_percent": usage.memory_percent,
                     "memory_used_mb": usage.memory_mb,
@@ -119,6 +121,7 @@ class SystemMonitor:
                     "open_files": usage.open_files,
                     "threads": usage.threads,
                 }
+                metrics_payload["system"] = system_metrics
             except Exception as exc:
                 logger.debug("Unable to collect system metrics: %s", exc, exc_info=True)
 
@@ -257,7 +260,7 @@ class SystemMonitor:
                                 newd = change.get("new", {}) or {}
                                 sided = newd.get("side")
                                 qstr = newd.get("quantity")
-                                sizef = float(qstr) if qstr not in (None, "") else 0.0
+                                sizef = float(qstr) if qstr and qstr not in ("", 0) else 0.0
                                 plog.log_position_change(
                                     symbol=sym,
                                     side=str(sided) if sided is not None else "",

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 import os
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from pathlib import Path
 from typing import Any
 
@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 class SpotProfileService:
     """Loads spot strategy profiles and returns per-symbol rule dictionaries."""
 
-    def __init__(self, *, loader=_load_spot_profile) -> None:
+    def __init__(self, *, loader: Callable[[Path], dict[str, Any]] = _load_spot_profile) -> None:
         self._loader = loader
         self._rules: dict[str, dict[str, Any]] = {}
         self._last_path: Path | None = None

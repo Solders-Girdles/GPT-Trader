@@ -20,11 +20,13 @@ def derivatives_enabled(profile: Profile) -> bool:
 
     try:  # Local import to avoid circular at module load time.
         from bot_v2.orchestration.configuration import Profile as _Profile
-    except Exception:  # pragma: no cover - defensive fallback
-        _Profile = None
 
-    if _Profile is not None and isinstance(profile, _Profile):
-        if profile == _Profile.SPOT:
+        _ProfileClass: type[Profile] | None = _Profile
+    except Exception:  # pragma: no cover - defensive fallback
+        _ProfileClass = None
+
+    if _ProfileClass is not None and isinstance(profile, _ProfileClass):
+        if profile == _ProfileClass.SPOT:
             return False
     else:
         profile_value = str(getattr(profile, "value", profile or "")).lower()
@@ -38,7 +40,7 @@ def normalize_symbols(
 ) -> tuple[list[str], bool]:
     """Normalize configured symbols, applying per-profile defaults and gating."""
 
-    quote_currency = (quote or os.getenv("COINBASE_DEFAULT_QUOTE", "USD")).upper()
+    quote_currency = (quote or os.getenv("COINBASE_DEFAULT_QUOTE") or "USD").upper()
     allow_derivatives = derivatives_enabled(profile)
     normalized: list[str] = []
 

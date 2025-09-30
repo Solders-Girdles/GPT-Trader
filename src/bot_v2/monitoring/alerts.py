@@ -11,11 +11,11 @@ import asyncio
 import importlib.util  # naming: allow
 import logging
 import os
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from typing import Any
-from collections.abc import Mapping
 
 # Optional imports
 try:
@@ -562,57 +562,3 @@ def create_system_alert(
         message=message,
         context=context,
     )
-
-
-if __name__ == "__main__":
-    # Example usage
-    import asyncio
-
-    async def test_alerts() -> None:
-        # Create dispatcher
-        dispatcher = AlertDispatcher()
-
-        # Add test Slack channel (would need real webhook URL)
-        slack_webhook = os.getenv("SLACK_WEBHOOK_URL")
-        if slack_webhook is not None:
-            dispatcher.add_channel("slack", SlackChannel(slack_webhook))
-
-        # Create test alerts
-        alerts = [
-            create_risk_alert(
-                "Daily Loss Warning",
-                "Daily loss approaching limit: $8.50 of $10.00",
-                AlertSeverity.WARNING,
-                current_loss=8.50,
-                limit=10.00,
-            ),
-            create_execution_alert(
-                "Order Filled",
-                "BTC-PERP buy order filled at $45,123.50",
-                AlertSeverity.INFO,
-                symbol="BTC-PERP",
-                side="buy",
-                price=45123.50,
-                size=0.01,
-            ),
-            create_system_alert(
-                "Connection Lost",
-                "WebSocket connection to Coinbase lost",
-                AlertSeverity.ERROR,
-                exchange="coinbase",
-                retry_count=3,
-            ),
-        ]
-
-        # Dispatch alerts
-        for alert in alerts:
-            results = await dispatcher.dispatch(alert)
-            logger.info("Alert '%s' dispatched: %s", alert.title, results)
-
-        # Get recent alerts
-        recent = dispatcher.get_recent_alerts(severity=AlertSeverity.WARNING)
-        logger.info("\nRecent warnings: %s", len(recent))
-        for alert in recent:
-            logger.info("  - %s: %s", alert.title, alert.message)
-
-    asyncio.run(test_alerts())

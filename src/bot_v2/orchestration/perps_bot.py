@@ -393,11 +393,11 @@ class PerpsBot:
             self._ws_stop = threading.Event()
         except Exception:
             self._ws_stop = None
-            self._ws_thread = threading.Thread(
-                target=self._run_stream_loop, args=(symbols, level), daemon=True
-            )
-            self._ws_thread.start()
-            logger.info("Started WS streaming thread for symbols=%s level=%s", symbols, level)
+        self._ws_thread = threading.Thread(
+            target=self._run_stream_loop, args=(symbols, level), daemon=True
+        )
+        self._ws_thread.start()
+        logger.info("Started WS streaming thread for symbols=%s level=%s", symbols, level)
 
     def _stop_streaming_background(self) -> None:
         if not hasattr(self, "_ws_thread"):

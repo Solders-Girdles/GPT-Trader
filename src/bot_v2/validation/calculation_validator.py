@@ -5,9 +5,6 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-import pandas as pd
-
-
 logger = logging.getLogger(__name__)
 
 
@@ -177,60 +174,3 @@ def manual_backtest_example() -> (
         "final_value": final_value,
         "return_pct": return_pct,
     }
-
-
-def verify_with_system() -> None:  # noqa: D401 - optional manual workflow
-    """Replay the manual scenario through the trading system for comparison."""
-
-    logger.info("\n" + "=" * 60)
-    logger.info("SYSTEM VERIFICATION")
-    logger.info("=" * 60)
-
-    from executor import SimpleExecutor
-    from ledger import TradeLedger
-
-    prices = [100, 98, 96, 97, 99, 102, 104, 103, 101, 100]
-
-    data = pd.DataFrame({"Close": prices}, index=pd.date_range("2024-01-01", periods=10))
-
-    strategy = SimpleMAStrategy(fast_period=3, slow_period=5)
-    signals = strategy.generate_signals(data)
-
-    executor = SimpleExecutor(10000)
-    ledger = TradeLedger()
-
-    for i, (date, row) in enumerate(data.iterrows()):
-        signal = signals.iloc[i]
-        price = row["Close"]
-
-        action = executor.process_signal("TEST", signal, price, date)
-
-        if action["type"] in ["buy", "sell"]:
-            ledger.record_transaction(
-                date,
-                "TEST",
-                action["type"],
-                action["quantity"],
-                price,
-            )
-
-    final_value = executor.get_portfolio_value({"TEST": prices[-1]})
-
-    logger.info("\nSystem final value: $%s", f"{final_value:.2f}")
-    logger.info("System transactions: %s", len(ledger.transactions))
-
-
-def validate() -> None:
-    """Run both manual and system validations."""
-
-    manual_results = manual_backtest_example()
-
-    logger.info("\nManual validation complete.")
-    logger.info("Final value: $%s", f"{manual_results['final_value']:.2f}")
-    logger.info("Return: %s%%", f"{manual_results['return_pct']:.2f}")
-
-    verify_with_system()
-
-
-if __name__ == "__main__":
-    validate()

@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict
+from typing import Any
 
 logger = logging.getLogger(__name__)
 

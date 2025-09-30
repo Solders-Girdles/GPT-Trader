@@ -3,6 +3,7 @@ Console dashboard for paper trading monitoring.
 Displays positions, equity, metrics in a clean format.
 """
 
+import logging
 import os
 import time
 from datetime import datetime
@@ -10,6 +11,8 @@ from pathlib import Path
 from typing import Any
 
 from bot_v2.config.path_registry import RESULTS_DIR
+
+logger = logging.getLogger(__name__)
 
 
 class PaperTradingDashboard:
@@ -95,33 +98,35 @@ class PaperTradingDashboard:
 
     def print_header(self) -> None:
         """Print dashboard header."""
-        print("=" * 80)
-        print("                        PAPER TRADING DASHBOARD")
-        print("=" * 80)
-        print(f"Bot ID: {self.engine.bot_id}")
-        print(f"Runtime: {datetime.now() - self.start_time}")
-        print(f"Updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-        print("-" * 80)
+        header = [
+            "=" * 80,
+            "                        PAPER TRADING DASHBOARD",
+            "=" * 80,
+            f"Bot ID: {self.engine.bot_id}",
+            f"Runtime: {datetime.now() - self.start_time}",
+            f"Updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+            "-" * 80,
+        ]
+        for line in header:
+            print(line)
+        logger.info("Dashboard header displayed for bot %s", self.engine.bot_id)
 
     def print_portfolio_summary(self, metrics: dict) -> None:
         """Print portfolio summary section."""
-        print("\n📊 PORTFOLIO SUMMARY")
-        print("-" * 40)
-
-        # Two column layout
-        print(
+        summary = [
+            "\n📊 PORTFOLIO SUMMARY",
+            "-" * 40,
             f"{'Equity:':<20} {self.format_currency(metrics['equity']):<20} "
-            f"{'Returns:':<15} {self.format_pct(metrics['returns_pct'])}"
-        )
-
-        print(
+            f"{'Returns:':<15} {self.format_pct(metrics['returns_pct'])}",
             f"{'Cash:':<20} {self.format_currency(metrics['cash']):<20} "
-            f"{'Drawdown:':<15} {self.format_pct(metrics['drawdown_pct'])}"
-        )
-
-        print(
+            f"{'Drawdown:':<15} {self.format_pct(metrics['drawdown_pct'])}",
             f"{'Positions Value:':<20} {self.format_currency(metrics['positions_value']):<20} "
-            f"{'Exposure:':<15} {self.format_pct(metrics['exposure_pct'])}"
+            f"{'Exposure:':<15} {self.format_pct(metrics['exposure_pct'])}",
+        ]
+        for line in summary:
+            print(line)
+        logger.debug(
+            "Portfolio summary: equity=%s, returns=%s%%", metrics["equity"], metrics["returns_pct"]
         )
 
     def print_positions(self) -> None:
@@ -131,6 +136,7 @@ class PaperTradingDashboard:
 
         if not self.engine.positions:
             print("No open positions")
+            logger.debug("No open positions")
         else:
             print(f"{'Symbol':<15} {'Qty':<12} {'Entry':<12} {'Current':<12} {'P&L':<12} {'P&L %'}")
             print("-" * 75)
@@ -145,16 +151,25 @@ class PaperTradingDashboard:
                     f"${pos.entry_price:<11.2f} ${current:<11.2f} "
                     f"${pnl:<11.2f} {self.format_pct(pnl_pct)}"
                 )
+            logger.debug("Displayed %d open positions", len(self.engine.positions))
 
     def print_performance(self, metrics: dict) -> None:
         """Print performance metrics."""
-        print("\n📈 PERFORMANCE METRICS")
-        print("-" * 40)
-
-        print(f"{'Total Trades:':<20} {metrics['total_trades']}")
-        print(f"{'Winning Trades:':<20} {metrics['winning_trades']}")
-        print(f"{'Losing Trades:':<20} {metrics['losing_trades']}")
-        print(f"{'Win Rate:':<20} {metrics['win_rate']:.1f}%")
+        performance = [
+            "\n📈 PERFORMANCE METRICS",
+            "-" * 40,
+            f"{'Total Trades:':<20} {metrics['total_trades']}",
+            f"{'Winning Trades:':<20} {metrics['winning_trades']}",
+            f"{'Losing Trades:':<20} {metrics['losing_trades']}",
+            f"{'Win Rate:':<20} {metrics['win_rate']:.1f}%",
+        ]
+        for line in performance:
+            print(line)
+        logger.debug(
+            "Performance metrics: win_rate=%s%%, total_trades=%d",
+            metrics["win_rate"],
+            metrics["total_trades"],
+        )
 
     def print_recent_trades(self, limit: int = 5) -> None:
         """Print recent trades."""
@@ -167,6 +182,7 @@ class PaperTradingDashboard:
 
         if not recent:
             print("No trades executed")
+            logger.debug("No trades executed")
         else:
             print(f"{'Time':<20} {'Symbol':<10} {'Side':<6} {'Qty':<10} {'Price':<10} {'P&L'}")
             print("-" * 66)
@@ -179,6 +195,7 @@ class PaperTradingDashboard:
                     f"{time_str:<20} {trade.symbol:<10} {trade.side:<6} "
                     f"{trade.quantity:<10.6f} ${trade.price:<9.2f} {pnl_str}"
                 )
+            logger.debug("Displayed %d recent trades", len(recent))
 
     def display_once(self) -> None:
         """Display dashboard once without clearing screen."""
@@ -215,6 +232,7 @@ class PaperTradingDashboard:
 
         except KeyboardInterrupt:
             print("\n\nDashboard stopped by user")
+            logger.info("Dashboard stopped by user")
 
     def generate_html_summary(self, output_path: str | None = None) -> str:
         """

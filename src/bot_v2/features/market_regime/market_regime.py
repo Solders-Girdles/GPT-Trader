@@ -6,9 +6,10 @@ strategy selection and risk management.
 Complete isolation - all logic is local to this slice.
 """
 
+from __future__ import annotations
+
 from collections.abc import Callable
 from datetime import datetime, timedelta
-from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -42,7 +43,7 @@ except Exception:
 
 
 # Module state
-_regime_detector: Optional["RegimeEnsemble"] = None
+_regime_detector: RegimeEnsemble | None = None
 _monitor_state: RegimeMonitorState | None = None
 _regime_history: dict[str, RegimeHistory] = {}
 

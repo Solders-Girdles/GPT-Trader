@@ -324,8 +324,9 @@ class PerpsBot:
             return self._product_map[symbol]
         base, _, quote = symbol.partition("-")
         quote = quote or os.getenv("COINBASE_DEFAULT_QUOTE", "USD").upper()
-        market_type = MarketType.PERPETUAL if symbol.upper().endswith("-PERP") else MarketType.SPOT
-        # Provide conservative defaults; execution will re-quantize via product catalog once populated
+        is_perp = symbol.upper().endswith("-PERP")
+        market_type = MarketType.PERPETUAL if is_perp else MarketType.SPOT
+        # Provide conservative defaults; execution will re-quantize via product catalog
         return Product(
             symbol=symbol,
             base_asset=base,

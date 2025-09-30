@@ -86,7 +86,10 @@ def execute_live_trade(
             "filled_price": result.get("filled_price", 0.0),
             "strategy": strategy_info.get("strategy", "unknown"),
             "confidence": strategy_info.get("confidence", 0.5),
-            "message": f"Live trade {'executed' if result.get('filled', False) else 'submitted'}: {action} {quantity} units of {symbol}",
+            "message": (
+                f"Live trade {'executed' if result.get('filled', False) else 'submitted'}: "
+                f"{action} {quantity} units of {symbol}"
+            ),
         }
 
     except Exception as e:

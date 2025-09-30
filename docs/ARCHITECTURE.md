@@ -67,12 +67,15 @@ Risk Guards → Coinbase Brokerage Adapter → Metrics + Telemetry
 | Module | Purpose |
 |--------|---------|
 | `bot_v2/features/live_trade` | Main control loop, position tracking, and order routing |
+| `bot_v2/features/live_trade/risk/` | Risk management subpackage: position sizing, pre-trade validation, runtime monitoring, state management |
+| `bot_v2/orchestration/` | Core orchestration layer: config management, execution/runtime/strategy coordination, telemetry, reconciliation |
+| `bot_v2/orchestration/execution/` | Execution subpackage: guards, validation, order submission, state collection |
 | `bot_v2/features/brokerages/coinbase` | REST/WS integration for Coinbase Advanced Trade spot markets |
 | `bot_v2/features/brokerages/coinbase/client/` | Modular client package with mixins (accounts, orders, portfolio, market data) |
+| `bot_v2/features/brokerages/coinbase/rest/` | REST service layer: orders, portfolio, products, P&L calculation |
 | `bot_v2/features/position_sizing` | Kelly-style sizing with guardrails |
 | `bot_v2/monitoring` | Runtime guard orchestration, alert dispatch, system metrics |
 | `bot_v2/validation` | Predicate-based validators and input decorators |
-| `bot_v2/features/quantization.py` | Price and quantity rounding helpers |
 
 #### Coinbase Client Package
 
@@ -81,6 +84,27 @@ plus mixins). Each mixin owns a REST surface (accounts, orders, market data, por
 base class centralises retry, throttling, and auth wiring. Scripts and slices now import through
 `bot_v2.features.brokerages.coinbase.client import CoinbaseClient` to ensure consistent
 initialisation.
+
+A parallel REST service layer (`rest/`) provides higher-level operations:
+- `rest/base.py` - Base REST service with shared utilities
+- `rest/orders.py` - Order management operations
+- `rest/portfolio.py` - Portfolio operations and conversions
+- `rest/products.py` - Product catalog and specifications
+- `rest/pnl.py` - P&L calculation and reconciliation
+
+This two-layer design separates low-level HTTP concerns (client/) from business logic (rest/).
+
+#### Risk Management Framework
+
+The `features/live_trade/risk/` subpackage provides comprehensive risk controls (refactored from 1,044-line monolith):
+
+- `manager.py` (351 lines) - `LiveRiskManager` facade delegating to specialized components
+- `position_sizing.py` (192 lines) - `PositionSizer` with Kelly Criterion and confidence modifiers
+- `pre_trade_checks.py` (522 lines) - `PreTradeValidator` for synchronous order validation
+- `runtime_monitoring.py` (314 lines) - `RuntimeMonitor` for async/periodic guard checks
+- `state_management.py` (119 lines) - `StateManager` for reduce-only mode and state tracking
+
+This modular design achieves 66% file size reduction with clear separation of concerns: sizing, validation, monitoring, and state management are independently testable.
 
 #### Monitoring & Validation Framework
 
@@ -152,19 +176,39 @@ behaviour until the derivatives gate opens.
 
 ### Orchestration Infrastructure
 
-- `orchestration/session_guard.py` and `orchestration/market_monitor.py` encapsulate trading window enforcement and market-data freshness so `perps_bot` stays focused on orchestration glue.
-- `features/live_trade/indicators.py`, `features/live_trade/risk_calculations.py`, and
-  `features/live_trade/risk_runtime.py` centralize indicator math plus leverage/MMR/risk guard
-  helpers, giving strategies and the risk manager shared, tested primitives. Runtime integrations
-  now call into `bot_v2/monitoring/runtime_guards.py` for consistent evaluation and alert routing.
-- `orchestration/configuration.py` plus the new `orchestration/config_controller.py` provide
-  profile-aware defaults (`BotConfig`, `ConfigManager`) with unit coverage
-  (`tests/unit/bot_v2/orchestration/test_configuration.py`). Adaptive portfolio config
-  serialisation helpers now live under `features/adaptive_portfolio/config_manager.py` with tests
-  to guarantee round-tripping.
-- `orchestration/service_registry.py` provides an explicit container for runtime dependencies so
-  the main bot can accept a prepared bundle instead of instantiating stores/brokers inline. Future
-  phases will wire this into the CLI bootstrapper.
+The orchestration layer provides coordinated control across trading operations through specialized modules:
+
+**Configuration & Symbol Management:**
+- `configuration.py` - Profile-aware defaults (`BotConfig`, `ConfigManager`) with validation
+- `config_controller.py` - Dynamic configuration management and hot-reloading
+- `symbols.py` - Symbol normalization, derivatives gating, and profile-specific defaults
+
+**Execution Coordination:**
+- `live_execution.py` - Main execution engine facade (395 lines, down from 1,063)
+- `execution/` subpackage:
+  - `guards.py` - Runtime guard management (368 lines)
+  - `validation.py` - Pre-trade validation (272 lines)
+  - `order_submission.py` - Order submission and recording (231 lines)
+  - `state_collection.py` - Account state collection (185 lines)
+
+**Strategy & Runtime Coordination:**
+- `strategy_orchestrator.py` - Strategy lifecycle management and symbol processing
+- `runtime_coordinator.py` - Runtime orchestration and derivatives validation
+- `execution_coordinator.py` - Execution flow coordination across strategies
+
+**Services & Telemetry:**
+- `spot_profile_service.py` - Spot trading profile loading and rule management
+- `account_telemetry.py` - Account metrics tracking and periodic snapshots
+- `order_reconciler.py` - Order state reconciliation on startup
+- `system_monitor.py` - System health monitoring and metrics publication
+
+**Infrastructure:**
+- `service_registry.py` - Explicit dependency container for runtime components
+- `storage.py` - Persistent storage abstraction for checkpoints and state
+- `broker_factory.py` - Broker instantiation with environment-based configuration
+- `session_guard.py` - Trading window enforcement
+- `market_monitor.py` - Market data freshness monitoring
+- `perps_bot.py` - Main orchestrator coordinating all components
 - Legacy status reports that used to live under `src/bot_v2/*.md` were removed; pull them from
   repository history if you need a reference.
 - Historical V1/V2 integration and system tests depending on the legacy `bot.*` package lived under

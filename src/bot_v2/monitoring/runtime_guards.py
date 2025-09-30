@@ -234,9 +234,18 @@ class RuntimeGuard:
             suffix = f" {units}" if units else ""
             message_templates = {
                 "matched": "{label} matched expected value {threshold}{suffix}",
-                "deviated from": "{label} deviated from expected value {threshold}{suffix} (current: {value}{suffix})",
-                "exceeded absolute limit": "{label} exceeded absolute limit {threshold}{suffix} (|current|: {value}{suffix})",
-                "reached absolute limit": "{label} reached absolute limit {threshold}{suffix} (|current|: {value}{suffix})",
+                "deviated from": (
+                    "{label} deviated from expected value {threshold}{suffix} "
+                    "(current: {value}{suffix})"
+                ),
+                "exceeded absolute limit": (
+                    "{label} exceeded absolute limit {threshold}{suffix} "
+                    "(|current|: {value}{suffix})"
+                ),
+                "reached absolute limit": (
+                    "{label} reached absolute limit {threshold}{suffix} "
+                    "(|current|: {value}{suffix})"
+                ),
             }
             template = message_templates.get(
                 descriptor,

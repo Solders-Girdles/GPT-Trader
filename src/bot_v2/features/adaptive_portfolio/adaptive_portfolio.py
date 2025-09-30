@@ -337,10 +337,8 @@ class AdaptivePortfolioManager:
 
         # Risk warnings
         if portfolio_snapshot.largest_position_pct > 25:
-            warnings.append(
-                f"Largest position is {portfolio_snapshot.largest_position_pct:.1f}% of portfolio - "
-                "consider diversifying"
-            )
+            pct = portfolio_snapshot.largest_position_pct
+            warnings.append(f"Largest position is {pct:.1f}% of portfolio - consider diversifying")
 
         if risk_metrics.get("daily_risk_pct", 0) > tier_config.risk.daily_limit_pct * 0.8:
             warnings.append("Approaching daily risk limit")

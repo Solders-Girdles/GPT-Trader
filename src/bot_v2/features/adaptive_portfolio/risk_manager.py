@@ -96,9 +96,10 @@ class AdaptiveRiskManager:
         """
         # Check minimum position size
         if position_value < tier_config.min_position_size:
+            min_size = tier_config.min_position_size
             return (
                 False,
-                f"Position too small: ${position_value:,.0f} < ${tier_config.min_position_size:,.0f} minimum",
+                f"Position too small: ${position_value:,.0f} < ${min_size:,.0f} minimum",
             )
 
         # Check maximum position percentage (general rule - 25% max)

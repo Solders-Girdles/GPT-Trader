@@ -121,9 +121,8 @@ class CoinbaseDataProvider(DataProvider):
         self._historical_cache: dict[str, tuple[pd.DataFrame, datetime]] = {}
         self._cache_duration = timedelta(seconds=cache_ttl)
 
-        logger.info(
-            f"CoinbaseDataProvider initialized (streaming={'enabled' if self.enable_streaming else 'disabled'})"
-        )
+        streaming_status = "enabled" if self.enable_streaming else "disabled"
+        logger.info(f"CoinbaseDataProvider initialized (streaming={streaming_status})")
 
     def _setup_streaming(self) -> None:
         """Setup WebSocket streaming for real-time data."""

@@ -11,6 +11,9 @@ rules that referenced the monolithic `src/bot` package have been archived.
   `bot_v2/orchestration/service_registry.py` instead of hidden imports.
 - **Configuration-first**: Extend `BotConfig` when new runtime options are
   required; expose overrides through the CLI when appropriate.
+- **Modular refactoring**: Extract large modules (>500 lines) into focused
+  subpackages with clear separation of concerns. See `orchestration/execution/`
+  and `features/live_trade/risk/` as examples of successful refactorings.
 
 ## Code Style
 
@@ -36,6 +39,10 @@ rules that referenced the monolithic `src/bot` package have been archived.
 - Run `poetry run pytest -q` locally before submitting a pull request.
 - Add regression coverage for new guard conditions, telemetry counters, or CLI
   flags.
+- **Subpackage testing**: When refactoring into subpackages, ensure each
+  submodule has independent test coverage. Maintain backward compatibility by
+  keeping facade modules (e.g., `risk/__init__.py`) that re-export the public
+  API.
 
 ## Documentation
 

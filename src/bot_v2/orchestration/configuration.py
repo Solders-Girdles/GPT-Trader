@@ -11,7 +11,7 @@ from datetime import time
 from decimal import Decimal
 from enum import Enum
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from bot_v2.orchestration.symbols import (
     derivatives_enabled as _resolve_derivatives_enabled,
@@ -130,7 +130,7 @@ class ConfigManager:
         self,
         profile: str | Profile,
         overrides: dict[str, Any] | None = None,
-        config_cls=BotConfig,
+        config_cls: type[BotConfig] = BotConfig,
         auto_build: bool = True,
     ) -> None:
         self.profile = profile if isinstance(profile, Profile) else Profile(profile)
@@ -196,35 +196,47 @@ class ConfigManager:
         if self.profile == Profile.CANARY:
             return self._build_canary_config()
         if self.profile == Profile.DEV:
-            return self._config_cls(
-                profile=self.profile,
-                mock_broker=True,
-                mock_fills=True,
-                max_position_size=Decimal("10000"),
-                dry_run=True,
+            return cast(
+                BotConfig,
+                self._config_cls(
+                    profile=self.profile,
+                    mock_broker=True,
+                    mock_fills=True,
+                    max_position_size=Decimal("10000"),
+                    dry_run=True,
+                ),
             )
         if self.profile == Profile.DEMO:
-            return self._config_cls(
-                profile=self.profile,
-                max_position_size=Decimal("100"),
-                max_leverage=1,
-                enable_shorts=False,
+            return cast(
+                BotConfig,
+                self._config_cls(
+                    profile=self.profile,
+                    max_position_size=Decimal("100"),
+                    max_leverage=1,
+                    enable_shorts=False,
+                ),
             )
         if self.profile == Profile.SPOT:
-            return self._config_cls(
-                profile=self.profile,
-                max_position_size=Decimal("50000"),
-                max_leverage=1,
-                enable_shorts=False,
-                mock_broker=False,
-                mock_fills=False,
+            return cast(
+                BotConfig,
+                self._config_cls(
+                    profile=self.profile,
+                    max_position_size=Decimal("50000"),
+                    max_leverage=1,
+                    enable_shorts=False,
+                    mock_broker=False,
+                    mock_fills=False,
+                ),
             )
         # Default to production profile (perps capable)
-        return self._config_cls(
-            profile=self.profile,
-            max_position_size=Decimal("50000"),
-            max_leverage=3,
-            enable_shorts=True,
+        return cast(
+            BotConfig,
+            self._config_cls(
+                profile=self.profile,
+                max_position_size=Decimal("50000"),
+                max_leverage=3,
+                enable_shorts=True,
+            ),
         )
 
     def _build_canary_config(self) -> BotConfig:
@@ -277,19 +289,22 @@ class ConfigManager:
                 logger = logging.getLogger(__name__)
                 logger.debug("Failed to load canary profile YAML: %s", exc, exc_info=True)
 
-        return self._config_cls(
-            profile=self.profile,
-            symbols=symbols,
-            reduce_only_mode=reduce_only,
-            max_leverage=max_leverage,
-            update_interval=update_interval,
-            dry_run=False,
-            max_position_size=Decimal("500"),
-            trading_window_start=trading_window_start,
-            trading_window_end=trading_window_end,
-            trading_days=trading_days,
-            daily_loss_limit=daily_loss_limit,
-            time_in_force=time_in_force,
+        return cast(
+            BotConfig,
+            self._config_cls(
+                profile=self.profile,
+                symbols=symbols,
+                reduce_only_mode=reduce_only,
+                max_leverage=max_leverage,
+                update_interval=update_interval,
+                dry_run=False,
+                max_position_size=Decimal("500"),
+                trading_window_start=trading_window_start,
+                trading_window_end=trading_window_end,
+                trading_days=trading_days,
+                daily_loss_limit=daily_loss_limit,
+                time_in_force=time_in_force,
+            ),
         )
 
     def _apply_overrides(self, config: BotConfig) -> BotConfig:

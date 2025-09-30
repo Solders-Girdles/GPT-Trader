@@ -9,6 +9,11 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Backup and temporary files from refactoring
+*.backup
+*_original.py
+*_old.py
+
 # Logs
 logs/
 *.log

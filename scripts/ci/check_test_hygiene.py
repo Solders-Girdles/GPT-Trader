@@ -17,9 +17,10 @@ ALLOWLIST = {
     "tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_integration.py",
     "tests/unit/bot_v2/features/live_trade/test_pnl_comprehensive.py",
     "tests/unit/bot_v2/features/live_trade/test_risk_core.py",
+    "tests/unit/bot_v2/features/live_trade/test_risk_runtime.py",  # 343 lines: comprehensive runtime guard tests
     "tests/unit/bot_v2/orchestration/test_perps_bot.py",
     "tests/unit/bot_v2/orchestration/test_live_execution.py",
-    "tests/unit/bot_v2/test_broker_contract.py",
+    "tests/unit/bot_v2/test_broker_behavioral_contract.py",  # 358 lines: broker contract validation suite
 }
 
 

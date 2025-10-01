@@ -2,6 +2,22 @@
 
 ## Unreleased
 
+### October 2025 - Major Repository Cleanup & Modular Refactoring
+- **Refactoring**: Split monolithic `cli.py` into modular structure (`cli/commands/`, `cli/handlers/`, `cli/parser.py`)
+- **Refactoring**: Decomposed `monitoring/runtime_guards.py` into modular package (base, builtins, manager)
+- **Refactoring**: Reorganized state management into `state/backup/services/` and `state/utils/`
+- **Refactoring**: Extracted live trading helpers (`dynamic_sizing_helper.py`, `stop_trigger_manager.py`)
+- **Cleanup**: Removed legacy live_trade facade layer (adapters, broker_connection, brokers, execution, live_trade)
+- **Cleanup**: Removed legacy monitoring modules (`alerting_system.py`, monolithic `runtime_guards.py`)
+- **Cleanup**: Deleted 12 outdated documentation files from `docs/archive/`
+- **Tests**: Added comprehensive test suites (+33K lines): data providers, adaptive portfolio, position sizing, paper trading, orchestration, state management
+- **Tests**: Added 121 test files with 335 test classes covering previously untested modules
+- **Docs**: Updated ARCHITECTURE.md and DASHBOARD_GUIDE.md to reflect new modular structure
+- **Docs**: Updated TRAINING_GUIDE.md to remove legacy facade references
+- **CI**: Applied black formatting and removed trailing whitespace across codebase
+- **Config**: Updated .gitignore to exclude entire `archived/` directory
+- Net impact: 172 files changed, +33K insertions, -5.5K deletions
+
 ### Naming Alignment: `qty` → `quantity`
 - Core brokerage interfaces now expose `quantity` exclusively; legacy `qty` aliases have been removed across serializers and dataclasses.
 - Coinbase adapter, live execution, deterministic broker stub, and strategy paths emit `quantity` only in logs and telemetry to keep downstream metrics consistent.

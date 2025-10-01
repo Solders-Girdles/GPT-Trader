@@ -11,7 +11,8 @@ import logging
 import os
 from dataclasses import dataclass, field
 from decimal import Decimal
-from typing import Any, Callable
+from typing import Any
+from collections.abc import Callable
 
 logger = logging.getLogger(__name__)
 
@@ -55,7 +56,9 @@ class EnvVarMapping:
 ENV_VAR_MAPPINGS: list[EnvVarMapping] = [
     # Leverage controls
     EnvVarMapping("RISK_MAX_LEVERAGE", "max_leverage", int),
-    EnvVarMapping("RISK_LEVERAGE_MAX_PER_SYMBOL", "leverage_max_per_symbol", _parse_symbol_dict_int),
+    EnvVarMapping(
+        "RISK_LEVERAGE_MAX_PER_SYMBOL", "leverage_max_per_symbol", _parse_symbol_dict_int
+    ),
     # Time-of-day schedule
     EnvVarMapping("RISK_DAYTIME_START_UTC", "daytime_start_utc", str),
     EnvVarMapping("RISK_DAYTIME_END_UTC", "daytime_end_utc", str),
@@ -90,7 +93,9 @@ ENV_VAR_MAPPINGS: list[EnvVarMapping] = [
     EnvVarMapping("RISK_MAX_TOTAL_EXPOSURE_PCT", "max_exposure_pct", float),
     EnvVarMapping("RISK_MAX_EXPOSURE_PCT", "max_exposure_pct", float),
     EnvVarMapping("RISK_MAX_POSITION_PCT_PER_SYMBOL", "max_position_pct_per_symbol", float),
-    EnvVarMapping("RISK_MAX_NOTIONAL_PER_SYMBOL", "max_notional_per_symbol", _parse_symbol_dict_decimal),
+    EnvVarMapping(
+        "RISK_MAX_NOTIONAL_PER_SYMBOL", "max_notional_per_symbol", _parse_symbol_dict_decimal
+    ),
     # Slippage protection
     EnvVarMapping("RISK_SLIPPAGE_GUARD_BPS", "slippage_guard_bps", int),
     # Emergency controls

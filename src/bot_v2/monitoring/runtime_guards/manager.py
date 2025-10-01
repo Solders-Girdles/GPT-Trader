@@ -24,7 +24,6 @@ from bot_v2.monitoring.runtime_guards.builtins import (
     StaleMarkGuard,
 )
 
-
 logger = logging.getLogger(__name__)
 
 

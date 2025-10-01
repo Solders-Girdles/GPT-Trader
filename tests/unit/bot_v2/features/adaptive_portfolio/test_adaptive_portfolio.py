@@ -183,9 +183,7 @@ class TestAdaptivePortfolioManagerInitialization:
 
     @patch("bot_v2.features.adaptive_portfolio.adaptive_portfolio.load_portfolio_config")
     @patch("bot_v2.features.adaptive_portfolio.adaptive_portfolio.get_data_provider")
-    def test_initializes_submodules(
-        self, mock_get_provider: Mock, mock_load_config: Mock
-    ) -> None:
+    def test_initializes_submodules(self, mock_get_provider: Mock, mock_load_config: Mock) -> None:
         """Initializes tier manager, risk manager, and strategy selector.
 
         All subsystems must be created and wired together.
@@ -280,9 +278,7 @@ class TestPortfolioAnalysis:
         manager.risk_manager.calculate_risk_metrics = Mock(return_value={})
         manager.strategy_selector.generate_signals = Mock(return_value=[])
 
-        result = manager.analyze_portfolio(
-            current_capital=5000.0, positions=sample_positions
-        )
+        result = manager.analyze_portfolio(current_capital=5000.0, positions=sample_positions)
 
         snapshot = result.portfolio_snapshot
         assert snapshot.total_value == 5000.0
@@ -474,9 +470,7 @@ class TestWarnings:
 
         # One large position (90% of portfolio)
         positions = [
-            PositionInfo(
-                "AAPL", 100, 150.0, 180.0, 18000.0, 3000.0, 20.0, 10
-            ),  # $18K position
+            PositionInfo("AAPL", 100, 150.0, 180.0, 18000.0, 3000.0, 20.0, 10),  # $18K position
         ]
 
         result = manager.analyze_portfolio(current_capital=20000.0, positions=positions)
@@ -518,9 +512,7 @@ class TestConvenienceFunctions:
     """Test convenience functions for external use."""
 
     @patch("bot_v2.features.adaptive_portfolio.adaptive_portfolio.AdaptivePortfolioManager")
-    def test_run_adaptive_strategy_convenience_function(
-        self, mock_manager_class: Mock
-    ) -> None:
+    def test_run_adaptive_strategy_convenience_function(self, mock_manager_class: Mock) -> None:
         """run_adaptive_strategy provides simple entry point.
 
         Convenience function for quick analysis without manager instantiation.
@@ -537,9 +529,7 @@ class TestConvenienceFunctions:
         assert result is mock_result
 
     @patch("bot_v2.features.adaptive_portfolio.adaptive_portfolio.AdaptivePortfolioManager")
-    def test_run_adaptive_backtest_convenience_function(
-        self, mock_manager_class: Mock
-    ) -> None:
+    def test_run_adaptive_backtest_convenience_function(self, mock_manager_class: Mock) -> None:
         """run_adaptive_backtest provides simple backtest entry point.
 
         Convenience function for quick backtesting.

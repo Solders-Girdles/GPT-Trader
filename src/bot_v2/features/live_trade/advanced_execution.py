@@ -9,7 +9,6 @@ import inspect
 import logging
 import time
 import uuid
-from datetime import datetime
 from decimal import Decimal
 from typing import Any, cast
 
@@ -35,10 +34,8 @@ from bot_v2.features.live_trade.dynamic_sizing_helper import DynamicSizingHelper
 from bot_v2.features.live_trade.risk import (
     LiveRiskManager,
     PositionSizingAdvice,
-    PositionSizingContext,
 )
 from bot_v2.features.live_trade.stop_trigger_manager import StopTriggerManager
-from bot_v2.utilities.quantities import quantity_from
 from bot_v2.utilities.quantization import quantize_price_side_aware
 
 __all__ = [

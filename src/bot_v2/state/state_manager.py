@@ -330,9 +330,7 @@ class StateManager:
 
         if self.s3_adapter:
             try:
-                self.s3_adapter.delete_object(
-                    bucket=self.config.s3_bucket, key=f"cold/{key}"
-                )
+                self.s3_adapter.delete_object(bucket=self.config.s3_bucket, key=f"cold/{key}")
             except Exception as exc:
                 success = False
                 logger.warning("Failed to delete %s from S3: %s", key, exc, exc_info=True)
@@ -388,9 +386,7 @@ class StateManager:
             return None
 
         try:
-            response = self.s3_adapter.get_object(
-                bucket=self.config.s3_bucket, key=f"cold/{key}"
-            )
+            response = self.s3_adapter.get_object(bucket=self.config.s3_bucket, key=f"cold/{key}")
             data = response["Body"].read().decode("utf-8")
             return json.loads(data)
         except Exception as e:

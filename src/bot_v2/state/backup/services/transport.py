@@ -305,9 +305,7 @@ class TransportService:
             return
 
         try:
-            self._s3_client.upload_file(
-                str(source_path), self.s3_bucket, f"{backup_id}.backup"
-            )
+            self._s3_client.upload_file(str(source_path), self.s3_bucket, f"{backup_id}.backup")
             logger.info(f"Uploaded {backup_id} to S3")
 
         except Exception as exc:

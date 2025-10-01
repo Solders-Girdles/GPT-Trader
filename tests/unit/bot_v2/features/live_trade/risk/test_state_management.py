@@ -161,9 +161,7 @@ class TestReduceOnlyMode:
         """
         assert state_manager.is_reduce_only_mode() is False
 
-    def test_enable_reduce_only_mode_sets_state(
-        self, state_manager: RiskStateManager
-    ) -> None:
+    def test_enable_reduce_only_mode_sets_state(self, state_manager: RiskStateManager) -> None:
         """Enabling reduce-only mode updates internal state.
 
         Critical: State must be updated before validation checks occur.
@@ -173,9 +171,7 @@ class TestReduceOnlyMode:
         assert state_manager._state.reduce_only_mode is True
         assert state_manager.is_reduce_only_mode() is True
 
-    def test_enable_reduce_only_mode_records_reason(
-        self, state_manager: RiskStateManager
-    ) -> None:
+    def test_enable_reduce_only_mode_records_reason(self, state_manager: RiskStateManager) -> None:
         """Enabling reduce-only mode records the reason for auditing.
 
         Operators need to know why reduce-only was triggered.
@@ -212,9 +208,7 @@ class TestReduceOnlyMode:
 
         assert state_manager._state.last_reduce_only_reason == "unspecified"
 
-    def test_enable_reduce_only_mode_is_idempotent(
-        self, state_manager: RiskStateManager
-    ) -> None:
+    def test_enable_reduce_only_mode_is_idempotent(self, state_manager: RiskStateManager) -> None:
         """Enabling reduce-only when already enabled is idempotent.
 
         Multiple triggers should not cause state corruption.
@@ -229,9 +223,7 @@ class TestReduceOnlyMode:
         assert state_manager.is_reduce_only_mode() is True
         # Timestamp may or may not update depending on implementation
 
-    def test_disable_reduce_only_mode_clears_state(
-        self, state_manager: RiskStateManager
-    ) -> None:
+    def test_disable_reduce_only_mode_clears_state(self, state_manager: RiskStateManager) -> None:
         """Disabling reduce-only mode clears trigger history.
 
         When resuming normal trading, clear the trigger metadata.
@@ -258,9 +250,7 @@ class TestReduceOnlyMode:
 class TestConfigMirroring:
     """Test config mirroring behavior."""
 
-    def test_set_reduce_only_mirrors_to_config(
-        self, state_manager: RiskStateManager
-    ) -> None:
+    def test_set_reduce_only_mirrors_to_config(self, state_manager: RiskStateManager) -> None:
         """Setting reduce-only mode mirrors change to config.
 
         Backward compatibility: Legacy code may read config.reduce_only_mode directly.
@@ -269,13 +259,12 @@ class TestConfigMirroring:
 
         assert state_manager.config.reduce_only_mode is True
 
-    def test_handles_immutable_config_gracefully(
-        self, event_store: EventStore
-    ) -> None:
+    def test_handles_immutable_config_gracefully(self, event_store: EventStore) -> None:
         """Handles config mirroring failure gracefully.
 
         If config object is immutable or frozen, should log but not crash.
         """
+
         # Create a config-like object that raises on attribute assignment
         class ImmutableConfig:
             def __init__(self):
@@ -314,9 +303,7 @@ class TestEventPersistence:
         # At minimum, should not crash
         assert True
 
-    def test_handles_event_store_failure_gracefully(
-        self, risk_config: RiskConfig
-    ) -> None:
+    def test_handles_event_store_failure_gracefully(self, risk_config: RiskConfig) -> None:
         """Handles event store persistence failure gracefully.
 
         If event store is unavailable, should log warning but not crash.
@@ -337,9 +324,7 @@ class TestEventPersistence:
 class TestStateListener:
     """Test state listener callback behavior."""
 
-    def test_state_listener_called_on_enable(
-        self, state_manager: RiskStateManager
-    ) -> None:
+    def test_state_listener_called_on_enable(self, state_manager: RiskStateManager) -> None:
         """State listener is called when reduce-only is enabled.
 
         Allows monitoring systems to react to state changes.
@@ -355,9 +340,7 @@ class TestStateListener:
         assert isinstance(state, RiskRuntimeState)
         assert state.reduce_only_mode is True
 
-    def test_state_listener_called_on_disable(
-        self, state_manager: RiskStateManager
-    ) -> None:
+    def test_state_listener_called_on_disable(self, state_manager: RiskStateManager) -> None:
         """State listener is called when reduce-only is disabled.
 
         Listeners should be notified of all state transitions.
@@ -429,9 +412,7 @@ class TestStateListener:
 class TestDailyTracking:
     """Test daily P&L tracking and resets."""
 
-    def test_reset_daily_tracking_sets_start_equity(
-        self, state_manager: RiskStateManager
-    ) -> None:
+    def test_reset_daily_tracking_sets_start_equity(self, state_manager: RiskStateManager) -> None:
         """reset_daily_tracking sets start_of_day_equity baseline.
 
         This baseline is used to calculate daily P&L percentage.
@@ -442,9 +423,7 @@ class TestDailyTracking:
 
         assert state_manager.start_of_day_equity == equity
 
-    def test_reset_daily_tracking_zeros_daily_pnl(
-        self, state_manager: RiskStateManager
-    ) -> None:
+    def test_reset_daily_tracking_zeros_daily_pnl(self, state_manager: RiskStateManager) -> None:
         """reset_daily_tracking zeros out daily_pnl.
 
         Fresh start for the new trading day.
@@ -455,9 +434,7 @@ class TestDailyTracking:
 
         assert state_manager.daily_pnl == Decimal("0")
 
-    def test_reset_daily_tracking_logs_correctly(
-        self, state_manager: RiskStateManager
-    ) -> None:
+    def test_reset_daily_tracking_logs_correctly(self, state_manager: RiskStateManager) -> None:
         """reset_daily_tracking logs the reset with equity value.
 
         Provides audit trail of daily resets.
@@ -470,9 +447,7 @@ class TestDailyTracking:
             assert "Reset daily tracking" in log_message
             assert "10000" in str(mock_logger.info.call_args)
 
-    def test_reset_daily_tracking_multiple_times(
-        self, state_manager: RiskStateManager
-    ) -> None:
+    def test_reset_daily_tracking_multiple_times(self, state_manager: RiskStateManager) -> None:
         """Can reset daily tracking multiple times without corruption.
 
         Handles multiple resets in same session (e.g., timezone changes).
@@ -483,9 +458,7 @@ class TestDailyTracking:
         assert state_manager.start_of_day_equity == Decimal("12000.00")
         assert state_manager.daily_pnl == Decimal("0")
 
-    def test_reset_daily_tracking_with_zero_equity(
-        self, state_manager: RiskStateManager
-    ) -> None:
+    def test_reset_daily_tracking_with_zero_equity(self, state_manager: RiskStateManager) -> None:
         """Handles reset with zero equity (edge case).
 
         Empty account or test scenario.
@@ -511,9 +484,7 @@ class TestDailyTracking:
 class TestEdgeCases:
     """Test edge cases and error handling."""
 
-    def test_is_reduce_only_handles_missing_config_attribute(
-        self, event_store: EventStore
-    ) -> None:
+    def test_is_reduce_only_handles_missing_config_attribute(self, event_store: EventStore) -> None:
         """is_reduce_only_mode handles missing reduce_only_mode on config gracefully.
 
         Defensive: Tests that is_reduce_only_mode uses getattr for defensive access.
@@ -537,9 +508,7 @@ class TestEdgeCases:
         # Should use state value since config.reduce_only_mode is missing
         assert result == manager._state.reduce_only_mode
 
-    def test_concurrent_reduce_only_modifications(
-        self, state_manager: RiskStateManager
-    ) -> None:
+    def test_concurrent_reduce_only_modifications(self, state_manager: RiskStateManager) -> None:
         """Concurrent reduce-only modifications don't corrupt state.
 
         Thread safety for high-frequency state changes.
@@ -578,9 +547,7 @@ class TestEdgeCases:
 class TestStateIntegration:
     """Test integration scenarios with state management."""
 
-    def test_enable_and_disable_cycle_complete(
-        self, state_manager: RiskStateManager
-    ) -> None:
+    def test_enable_and_disable_cycle_complete(self, state_manager: RiskStateManager) -> None:
         """Complete enable → disable cycle maintains consistency.
 
         Common pattern: Daily loss limit triggers reduce-only,
@@ -599,9 +566,7 @@ class TestStateIntegration:
         assert not state_manager.is_reduce_only_mode()
         assert state_manager._state.last_reduce_only_reason is None
 
-    def test_reduce_only_persists_across_daily_reset(
-        self, state_manager: RiskStateManager
-    ) -> None:
+    def test_reduce_only_persists_across_daily_reset(self, state_manager: RiskStateManager) -> None:
         """Reduce-only mode state persists across daily tracking reset.
 
         Daily reset shouldn't accidentally clear reduce-only flag.
@@ -611,9 +576,7 @@ class TestStateIntegration:
 
         assert state_manager.is_reduce_only_mode()
 
-    def test_state_and_config_stay_synchronized(
-        self, state_manager: RiskStateManager
-    ) -> None:
+    def test_state_and_config_stay_synchronized(self, state_manager: RiskStateManager) -> None:
         """State and config reduce_only_mode stay synchronized.
 
         Both access patterns should return consistent results.

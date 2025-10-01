@@ -43,9 +43,7 @@ class TestRiskGuardsInitialization:
 
     def test_initialization_disabled_guards(self):
         """Test initialization with disabled guards."""
-        guards = RiskGuards(
-            min_liquidation_buffer_pct=None, max_slippage_impact_bps=None
-        )
+        guards = RiskGuards(min_liquidation_buffer_pct=None, max_slippage_impact_bps=None)
 
         assert guards.min_liquidation_buffer_pct is None
         assert guards.max_slippage_impact_bps is None

@@ -112,9 +112,7 @@ class TestSimulateTrades:
         data = create_sample_data(100, trend="sideways")
         signals = create_simple_signals(100, pattern="multiple")
 
-        trades, equity_curve = simulate_trades(
-            signals, data, commission=0.001, slippage=0.0005
-        )
+        trades, equity_curve = simulate_trades(signals, data, commission=0.001, slippage=0.0005)
 
         # Should have 6 trades (3 buys, 3 sells)
         assert len(trades) == 6
@@ -128,9 +126,7 @@ class TestSimulateTrades:
         data = create_sample_data(100)
         signals = create_simple_signals(100, pattern="no_trades")
 
-        trades, equity_curve = simulate_trades(
-            signals, data, commission=0.001, slippage=0.0005
-        )
+        trades, equity_curve = simulate_trades(signals, data, commission=0.001, slippage=0.0005)
 
         # Should have no trades
         assert len(trades) == 0
@@ -143,12 +139,8 @@ class TestSimulateTrades:
         signals = create_simple_signals(100, pattern="buy_sell")
 
         # Run with and without commission
-        trades_with_comm, _ = simulate_trades(
-            signals, data, commission=0.01, slippage=0.0
-        )
-        trades_no_comm, _ = simulate_trades(
-            signals, data, commission=0.0, slippage=0.0
-        )
+        trades_with_comm, _ = simulate_trades(signals, data, commission=0.01, slippage=0.0)
+        trades_no_comm, _ = simulate_trades(signals, data, commission=0.0, slippage=0.0)
 
         # Buy with commission should cost more
         assert trades_with_comm[0]["value"] > trades_no_comm[0]["value"]
@@ -162,12 +154,8 @@ class TestSimulateTrades:
         signals = create_simple_signals(100, pattern="buy_sell")
 
         # Run with and without slippage
-        trades_with_slip, _ = simulate_trades(
-            signals, data, commission=0.0, slippage=0.01
-        )
-        trades_no_slip, _ = simulate_trades(
-            signals, data, commission=0.0, slippage=0.0
-        )
+        trades_with_slip, _ = simulate_trades(signals, data, commission=0.0, slippage=0.01)
+        trades_no_slip, _ = simulate_trades(signals, data, commission=0.0, slippage=0.0)
 
         # Buy with slippage should pay higher price
         assert trades_with_slip[0]["price"] > trades_no_slip[0]["price"]
@@ -196,9 +184,7 @@ class TestSimulateTrades:
         data = create_sample_data(100, trend="up")
         signals = create_simple_signals(100, pattern="buy_only")
 
-        trades, equity_curve = simulate_trades(
-            signals, data, commission=0.001, slippage=0.0005
-        )
+        trades, equity_curve = simulate_trades(signals, data, commission=0.001, slippage=0.0005)
 
         # Should have buy trade
         assert len(trades) >= 1
@@ -353,7 +339,13 @@ class TestCalculateMetrics:
             {"type": "buy", "price": 100, "shares": 10},
             {"type": "sell", "price": 120, "shares": 10, "pnl": 200, "pnl_pct": 0.2},  # Win $200
             {"type": "buy", "price": 120, "shares": 10},
-            {"type": "sell", "price": 110, "shares": 10, "pnl": -100, "pnl_pct": -0.08},  # Lose $100
+            {
+                "type": "sell",
+                "price": 110,
+                "shares": 10,
+                "pnl": -100,
+                "pnl_pct": -0.08,
+            },  # Lose $100
         ]
 
         equity_curve = pd.Series([10000, 10100, 10200, 10100, 10100])

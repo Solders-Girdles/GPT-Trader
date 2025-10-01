@@ -10,7 +10,6 @@ from bot_v2.state.utils import (
     AtomicFileStorage,
     calculate_data_hash,
     decompress_data,
-    deserialize_from_json,
 )
 
 logger = logging.getLogger(__name__)

@@ -38,7 +38,7 @@ class ShutdownHandler:
         signal.signal(signal.SIGTERM, self._signal_handler)
         logger.debug("Registered signal handlers for SIGINT and SIGTERM")
 
-    def _signal_handler(self, sig: int, frame: Optional[FrameType]) -> None:
+    def _signal_handler(self, sig: int, frame: FrameType | None) -> None:
         """
         Handle shutdown signals.
 

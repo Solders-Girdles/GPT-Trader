@@ -171,9 +171,7 @@ class TestFetchLocalOpenOrders:
 
         Critical: Reconciliation failures should not prevent bot startup.
         """
-        reconciler._orders_store.get_open_orders = Mock(
-            side_effect=Exception("Storage failure")
-        )
+        reconciler._orders_store.get_open_orders = Mock(side_effect=Exception("Storage failure"))
 
         result = reconciler.fetch_local_open_orders()
 
@@ -184,9 +182,7 @@ class TestFetchExchangeOpenOrders:
     """Test fetching exchange open orders."""
 
     @pytest.mark.asyncio
-    async def test_returns_empty_dict_when_no_orders(
-        self, reconciler: OrderReconciler
-    ) -> None:
+    async def test_returns_empty_dict_when_no_orders(self, reconciler: OrderReconciler) -> None:
         """Returns empty dict when no exchange orders exist."""
         result = await reconciler.fetch_exchange_open_orders()
 
@@ -258,9 +254,7 @@ class TestFetchExchangeOpenOrders:
 
         # First call raises TypeError (status param not supported)
         # Fallback call returns all orders
-        mock_broker.list_orders = Mock(
-            side_effect=[TypeError("Unexpected argument"), [order]]
-        )
+        mock_broker.list_orders = Mock(side_effect=[TypeError("Unexpected argument"), [order]])
 
         result = await reconciler.fetch_exchange_open_orders()
 
@@ -379,16 +373,12 @@ class TestRecordSnapshot:
         assert True  # Actual verification depends on EventStore implementation
 
     @pytest.mark.asyncio
-    async def test_handles_event_store_errors_gracefully(
-        self, reconciler: OrderReconciler
-    ) -> None:
+    async def test_handles_event_store_errors_gracefully(self, reconciler: OrderReconciler) -> None:
         """Handles event store failures without crashing reconciliation.
 
         Audit trail failures should not prevent reconciliation from completing.
         """
-        reconciler._event_store.append_metric = Mock(
-            side_effect=Exception("Storage error")
-        )
+        reconciler._event_store.append_metric = Mock(side_effect=Exception("Storage error"))
 
         # Should not raise
         await reconciler.record_snapshot({}, {})
@@ -409,9 +399,7 @@ class TestReconcileMissingOnExchange:
         final_order = create_test_order("order-1", status=OrderStatus.FILLED)
         mock_broker.get_order = Mock(return_value=final_order)
 
-        diff = OrderDiff(
-            missing_on_exchange={"order-1": local_order}, missing_locally={}
-        )
+        diff = OrderDiff(missing_on_exchange={"order-1": local_order}, missing_locally={})
 
         await reconciler.reconcile_missing_on_exchange(diff)
 
@@ -433,9 +421,7 @@ class TestReconcileMissingOnExchange:
 
         mock_broker.get_order = Mock(return_value=final_order)
 
-        diff = OrderDiff(
-            missing_on_exchange={"order-1": local_order}, missing_locally={}
-        )
+        diff = OrderDiff(missing_on_exchange={"order-1": local_order}, missing_locally={})
 
         await reconciler.reconcile_missing_on_exchange(diff)
 
@@ -457,9 +443,7 @@ class TestReconcileMissingOnExchange:
 
         mock_broker.get_order = Mock(return_value=None)
 
-        diff = OrderDiff(
-            missing_on_exchange={"order-1": local_order}, missing_locally={}
-        )
+        diff = OrderDiff(missing_on_exchange={"order-1": local_order}, missing_locally={})
 
         await reconciler.reconcile_missing_on_exchange(diff)
 
@@ -507,9 +491,7 @@ class TestReconcileMissingLocally:
         """
         exchange_order = create_test_order("order-1")
 
-        diff = OrderDiff(
-            missing_on_exchange={}, missing_locally={"order-1": exchange_order}
-        )
+        diff = OrderDiff(missing_on_exchange={}, missing_locally={"order-1": exchange_order})
 
         reconciler.reconcile_missing_locally(diff)
 
@@ -538,9 +520,7 @@ class TestReconcileMissingLocally:
         assert orders_store.get_by_id("order-1") is not None
         assert orders_store.get_by_id("order-2") is not None
 
-    def test_handles_storage_errors_gracefully(
-        self, reconciler: OrderReconciler
-    ) -> None:
+    def test_handles_storage_errors_gracefully(self, reconciler: OrderReconciler) -> None:
         """Handles storage failures without crashing reconciliation.
 
         Individual order failures should not prevent other orders from syncing.
@@ -548,9 +528,7 @@ class TestReconcileMissingLocally:
         reconciler._orders_store.upsert = Mock(side_effect=Exception("Storage error"))
 
         exchange_order = create_test_order("order-1")
-        diff = OrderDiff(
-            missing_on_exchange={}, missing_locally={"order-1": exchange_order}
-        )
+        diff = OrderDiff(missing_on_exchange={}, missing_locally={"order-1": exchange_order})
 
         # Should not raise
         reconciler.reconcile_missing_locally(diff)
@@ -560,9 +538,7 @@ class TestSnapshotPositions:
     """Test position snapshot capture."""
 
     @pytest.mark.asyncio
-    async def test_returns_empty_dict_when_no_positions(
-        self, reconciler: OrderReconciler
-    ) -> None:
+    async def test_returns_empty_dict_when_no_positions(self, reconciler: OrderReconciler) -> None:
         """Returns empty dict when no positions exist."""
         result = await reconciler.snapshot_positions()
 
@@ -715,9 +691,7 @@ class TestIntegration:
 class TestErrorHandling:
     """Test error handling and edge cases."""
 
-    def test_handles_malformed_local_order_data(
-        self, reconciler: OrderReconciler
-    ) -> None:
+    def test_handles_malformed_local_order_data(self, reconciler: OrderReconciler) -> None:
         """Handles malformed local order data without crashing.
 
         Defensive: Corrupted storage should not prevent reconciliation.

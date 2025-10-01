@@ -89,11 +89,7 @@ class TestMetricsCollector:
         """Test recording trading metrics"""
         collector = MetricsCollector()
 
-        collector.record_trading_metrics(
-            trades_executed=10,
-            pnl=1500.50,
-            portfolio_value=50000.0
-        )
+        collector.record_trading_metrics(trades_executed=10, pnl=1500.50, portfolio_value=50000.0)
 
         assert collector.counters["trading.trades_executed"] == 10
         assert collector.gauges["trading.portfolio_value"] == 50000.0

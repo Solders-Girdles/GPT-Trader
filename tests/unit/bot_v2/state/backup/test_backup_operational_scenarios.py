@@ -57,8 +57,10 @@ class TestTimezoneAwareness:
 
         # Should be UTC (or explicitly marked)
         # ISO format should end with Z or +00:00
-        assert timestamp_str.endswith("Z") or "+00:00" in timestamp_str or timestamp_str.endswith(
-            ".000000"
+        assert (
+            timestamp_str.endswith("Z")
+            or "+00:00" in timestamp_str
+            or timestamp_str.endswith(".000000")
         )
 
     async def test_handles_timezone_aware_datetimes(

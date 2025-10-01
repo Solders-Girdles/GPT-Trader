@@ -137,9 +137,7 @@ class TestGuardManager:
         assert len(state.balances) == 1
         assert len(state.positions) == 0
 
-    def test_collect_runtime_guard_state_with_positions(
-        self, guard_manager, mock_broker
-    ):
+    def test_collect_runtime_guard_state_with_positions(self, guard_manager, mock_broker):
         """Test state collection with positions"""
         balance = Mock(spec=Balance)
         balance.asset = "USD"
@@ -173,9 +171,7 @@ class TestGuardManager:
         """Test guard step with recoverable error"""
         from bot_v2.features.live_trade.guard_errors import RiskGuardTelemetryError
 
-        error = RiskGuardTelemetryError(
-            guard="test", message="Telemetry failed", details={}
-        )
+        error = RiskGuardTelemetryError(guard="test", message="Telemetry failed", details={})
         func = Mock(side_effect=error)
 
         # Should not raise for recoverable errors
@@ -185,9 +181,7 @@ class TestGuardManager:
         """Test guard step with fatal error"""
         from bot_v2.features.live_trade.guard_errors import RiskGuardDataCorrupt
 
-        error = RiskGuardDataCorrupt(
-            guard="test", message="Data corrupt", details={}
-        )
+        error = RiskGuardDataCorrupt(guard="test", message="Data corrupt", details={})
         error.recoverable = False
         func = Mock(side_effect=error)
 
@@ -391,7 +385,7 @@ class TestGuardManager:
         # Should reuse cached state
         assert state == cached_state
 
-    @patch('bot_v2.orchestration.execution.guards.get_logger')
+    @patch("bot_v2.orchestration.execution.guards.get_logger")
     def test_log_guard_telemetry(self, mock_get_logger, guard_manager):
         """Test P&L telemetry logging"""
         mock_logger = Mock()

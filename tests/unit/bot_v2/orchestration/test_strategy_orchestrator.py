@@ -156,12 +156,14 @@ class TestStrategyOrchestrator:
 
         orchestrator.get_strategy = Mock()
         mock_strategy = Mock()
-        mock_strategy.decide = Mock(return_value=Decision(
-            action=Action.BUY,
-            reason="test_signal",
-            target_notional=Decimal("1000"),
-            leverage=2,
-        ))
+        mock_strategy.decide = Mock(
+            return_value=Decision(
+                action=Action.BUY,
+                reason="test_signal",
+                target_notional=Decimal("1000"),
+                leverage=2,
+            )
+        )
         orchestrator.get_strategy.return_value = mock_strategy
 
         await orchestrator.process_symbol("BTC-USD")
@@ -169,9 +171,7 @@ class TestStrategyOrchestrator:
         mock_bot.execute_decision.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_process_symbol_no_marks(
-        self, orchestrator, mock_bot, sample_balances
-    ):
+    async def test_process_symbol_no_marks(self, orchestrator, mock_bot, sample_balances):
         """Test symbol processing with no market data"""
         mock_bot.mark_windows["BTC-USD"] = []
         mock_bot.broker.list_balances.return_value = sample_balances
@@ -182,9 +182,7 @@ class TestStrategyOrchestrator:
         mock_bot.execute_decision.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_process_symbol_kill_switch(
-        self, orchestrator, mock_bot, sample_balances
-    ):
+    async def test_process_symbol_kill_switch(self, orchestrator, mock_bot, sample_balances):
         """Test symbol processing with kill switch enabled"""
         mock_bot.risk_manager.config.kill_switch_enabled = True
         mock_bot.broker.list_balances.return_value = sample_balances
@@ -195,9 +193,7 @@ class TestStrategyOrchestrator:
         mock_bot.execute_decision.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_process_symbol_stale_data(
-        self, orchestrator, mock_bot, sample_balances
-    ):
+    async def test_process_symbol_stale_data(self, orchestrator, mock_bot, sample_balances):
         """Test symbol processing with stale market data"""
         mock_bot.mark_windows["BTC-USD"] = [Decimal("50000")]
         mock_bot.broker.list_balances.return_value = sample_balances
@@ -225,12 +221,14 @@ class TestStrategyOrchestrator:
 
         orchestrator.get_strategy = Mock()
         mock_strategy = Mock()
-        mock_strategy.decide = Mock(return_value=Decision(
-            action=Action.CLOSE,
-            reason="take_profit",
-            leverage=2,
-            reduce_only=True,
-        ))
+        mock_strategy.decide = Mock(
+            return_value=Decision(
+                action=Action.CLOSE,
+                reason="take_profit",
+                leverage=2,
+                reduce_only=True,
+            )
+        )
         orchestrator.get_strategy.return_value = mock_strategy
 
         await orchestrator.process_symbol("BTC-USD")
@@ -374,9 +372,7 @@ class TestStrategyOrchestrator:
     def test_run_risk_gates_pass(self, orchestrator, mock_bot):
         """Test risk gates passing"""
         marks = [Decimal(f"{50000 + i*100}") for i in range(30)]
-        mock_bot.risk_manager.check_volatility_circuit_breaker.return_value = Mock(
-            triggered=False
-        )
+        mock_bot.risk_manager.check_volatility_circuit_breaker.return_value = Mock(triggered=False)
         mock_bot.risk_manager.check_mark_staleness.return_value = False
 
         result = orchestrator._run_risk_gates("BTC-USD", marks)
@@ -408,9 +404,7 @@ class TestStrategyOrchestrator:
         assert mock_bot.last_decisions["BTC-USD"] == decision
 
     @pytest.mark.asyncio
-    async def test_process_symbol_exception_handling(
-        self, orchestrator, mock_bot, sample_balances
-    ):
+    async def test_process_symbol_exception_handling(self, orchestrator, mock_bot, sample_balances):
         """Test exception handling during symbol processing"""
         mock_bot.broker.list_balances.side_effect = Exception("API error")
 

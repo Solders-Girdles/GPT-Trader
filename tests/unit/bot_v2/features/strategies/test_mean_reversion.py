@@ -115,6 +115,7 @@ class TestMeanReversionStrategy:
 
         # Add highly volatile prices
         import random
+
         random.seed(42)
         base_price = 50000.0
         for i in range(25):

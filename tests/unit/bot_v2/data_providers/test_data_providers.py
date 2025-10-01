@@ -373,10 +373,8 @@ class TestYFinanceProviderMockData:
 
         # Compare values (ignore index timestamps which may differ by microseconds)
         import pandas as pd
-        pd.testing.assert_frame_equal(
-            data1.reset_index(drop=True),
-            data2.reset_index(drop=True)
-        )
+
+        pd.testing.assert_frame_equal(data1.reset_index(drop=True), data2.reset_index(drop=True))
 
     def test_mock_data_different_symbols(self):
         """Test that different symbols produce different mock data."""

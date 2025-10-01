@@ -101,9 +101,7 @@ class TestGuardConfig:
 class TestRuntimeGuardInitialization:
     """Test RuntimeGuard base class initialization."""
 
-    def test_initializes_as_healthy_when_enabled(
-        self, basic_guard_config: GuardConfig
-    ) -> None:
+    def test_initializes_as_healthy_when_enabled(self, basic_guard_config: GuardConfig) -> None:
         """Guard starts in HEALTHY status when enabled.
 
         Default starting state for active monitoring.
@@ -331,7 +329,7 @@ class TestDailyLossGuard:
         guard = DailyLossGuard(config)
 
         # Set to yesterday
-        guard.last_reset = (datetime.now().date() - timedelta(days=1))
+        guard.last_reset = datetime.now().date() - timedelta(days=1)
         guard.daily_pnl = Decimal("-150.0")
 
         # Check today
@@ -425,9 +423,7 @@ class TestErrorRateGuard:
 
         Only recent errors count toward threshold.
         """
-        config = GuardConfig(
-            name="error_rate", threshold=5.0, window_seconds=60
-        )
+        config = GuardConfig(name="error_rate", threshold=5.0, window_seconds=60)
         guard = ErrorRateGuard(config)
 
         for _ in range(3):
@@ -440,9 +436,7 @@ class TestErrorRateGuard:
 
         High error rates indicate system instability.
         """
-        config = GuardConfig(
-            name="error_rate", threshold=5.0, window_seconds=60
-        )
+        config = GuardConfig(name="error_rate", threshold=5.0, window_seconds=60)
         guard = ErrorRateGuard(config)
 
         for _ in range(5):
@@ -458,9 +452,7 @@ class TestErrorRateGuard:
 
         Sliding window - old errors don't count.
         """
-        config = GuardConfig(
-            name="error_rate", threshold=10.0, window_seconds=1  # 1 second window
-        )
+        config = GuardConfig(name="error_rate", threshold=10.0, window_seconds=1)  # 1 second window
         guard = ErrorRateGuard(config)
 
         # Add old error
@@ -612,9 +604,7 @@ class TestRuntimeGuardManager:
 
         assert "test_guard" in guard_manager.guards
 
-    def test_checks_all_guards_with_context(
-        self, guard_manager: RuntimeGuardManager
-    ) -> None:
+    def test_checks_all_guards_with_context(self, guard_manager: RuntimeGuardManager) -> None:
         """Checks all registered guards with provided context.
 
         Single call checks all guards simultaneously.
@@ -634,9 +624,7 @@ class TestRuntimeGuardManager:
         guard1.check.assert_called_once_with(context)
         guard2.check.assert_called_once_with(context)
 
-    def test_collects_alerts_from_all_guards(
-        self, guard_manager: RuntimeGuardManager
-    ) -> None:
+    def test_collects_alerts_from_all_guards(self, guard_manager: RuntimeGuardManager) -> None:
         """Collects and returns alerts from all triggered guards.
 
         Returns list of all active alerts for processing.
@@ -716,9 +704,7 @@ class TestRuntimeGuardManager:
 
         shutdown_callback.assert_called_once()
 
-    def test_handles_handler_errors_gracefully(
-        self, guard_manager: RuntimeGuardManager
-    ) -> None:
+    def test_handles_handler_errors_gracefully(self, guard_manager: RuntimeGuardManager) -> None:
         """Handles alert handler failures without crashing.
 
         Handler failures should not prevent other handlers from running.

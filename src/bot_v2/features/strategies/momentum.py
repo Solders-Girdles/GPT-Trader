@@ -26,9 +26,7 @@ class MomentumStrategy(StrategyBase):
             momentum = (curr - old) / old
             if momentum > self.threshold:
                 out.append(
-                    StrategySignal(
-                        symbol=sym, side="buy", confidence=momentum / self.threshold
-                    )
+                    StrategySignal(symbol=sym, side="buy", confidence=momentum / self.threshold)
                 )
             elif momentum < -self.threshold:
                 out.append(

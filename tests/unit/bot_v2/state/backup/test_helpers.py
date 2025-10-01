@@ -130,9 +130,7 @@ class TestHelperUtilities:
 
         assert corrupted["positions"]["AAPL"] == "CORRUPTED_DATA"
 
-    def test_assert_snapshot_structure_validates_directory(
-        self, temp_workspace: Path
-    ) -> None:
+    def test_assert_snapshot_structure_validates_directory(self, temp_workspace: Path) -> None:
         """assert_snapshot_structure validates snapshot directory structure."""
         snapshot_dir = temp_workspace / "snapshots" / "test_snapshot"
         snapshot_dir.mkdir(parents=True)
@@ -144,18 +142,14 @@ class TestHelperUtilities:
         # Should not raise
         assert_snapshot_structure(snapshot_dir)
 
-    def test_assert_snapshot_structure_fails_missing_directory(
-        self, temp_workspace: Path
-    ) -> None:
+    def test_assert_snapshot_structure_fails_missing_directory(self, temp_workspace: Path) -> None:
         """assert_snapshot_structure fails for missing directory."""
         missing_dir = temp_workspace / "nonexistent"
 
         with pytest.raises(AssertionError, match="Snapshot directory missing"):
             assert_snapshot_structure(missing_dir)
 
-    def test_assert_snapshot_structure_fails_missing_data_file(
-        self, temp_workspace: Path
-    ) -> None:
+    def test_assert_snapshot_structure_fails_missing_data_file(self, temp_workspace: Path) -> None:
         """assert_snapshot_structure fails when data file missing."""
         snapshot_dir = temp_workspace / "snapshots" / "incomplete"
         snapshot_dir.mkdir(parents=True)
@@ -164,9 +158,7 @@ class TestHelperUtilities:
         with pytest.raises(AssertionError, match="No data file found"):
             assert_snapshot_structure(snapshot_dir)
 
-    def test_assert_snapshot_structure_fails_missing_metadata(
-        self, temp_workspace: Path
-    ) -> None:
+    def test_assert_snapshot_structure_fails_missing_metadata(self, temp_workspace: Path) -> None:
         """assert_snapshot_structure fails when metadata missing."""
         snapshot_dir = temp_workspace / "snapshots" / "incomplete"
         snapshot_dir.mkdir(parents=True)

@@ -68,14 +68,12 @@ class TestOrderValidator:
         assert order_validator.risk_manager is not None
         assert order_validator.enable_order_preview is True
 
-    @patch('bot_v2.orchestration.execution.validation.spec_validate_order')
+    @patch("bot_v2.orchestration.execution.validation.spec_validate_order")
     def test_validate_exchange_rules_success(
         self, mock_spec_validate, order_validator, mock_product
     ):
         """Test successful exchange rules validation"""
-        mock_spec_validate.return_value = Mock(
-            ok=True, adjusted_quantity=None, adjusted_price=None
-        )
+        mock_spec_validate.return_value = Mock(ok=True, adjusted_quantity=None, adjusted_price=None)
 
         quantity, price = order_validator.validate_exchange_rules(
             symbol="BTC-USD",
@@ -90,7 +88,7 @@ class TestOrderValidator:
         assert quantity == Decimal("0.01")
         assert price is None
 
-    @patch('bot_v2.orchestration.execution.validation.spec_validate_order')
+    @patch("bot_v2.orchestration.execution.validation.spec_validate_order")
     def test_validate_exchange_rules_with_adjustments(
         self, mock_spec_validate, order_validator, mock_product
     ):
@@ -114,7 +112,7 @@ class TestOrderValidator:
         assert quantity == Decimal("0.02")
         assert price == Decimal("50000.50")
 
-    @patch('bot_v2.orchestration.execution.validation.spec_validate_order')
+    @patch("bot_v2.orchestration.execution.validation.spec_validate_order")
     def test_validate_exchange_rules_failure(
         self, mock_spec_validate, order_validator, mock_product
     ):
@@ -193,9 +191,7 @@ class TestOrderValidator:
                 effective_price=Decimal("50000"),
             )
 
-    def test_run_pre_trade_validation(
-        self, order_validator, mock_risk_manager, mock_product
-    ):
+    def test_run_pre_trade_validation(self, order_validator, mock_risk_manager, mock_product):
         """Test pre-trade validation"""
         order_validator.run_pre_trade_validation(
             symbol="BTC-USD",
@@ -272,9 +268,7 @@ class TestOrderValidator:
         call_args = mock_broker.preview_order.call_args[1]
         assert call_args["tif"] == TimeInForce.IOC
 
-    def test_maybe_preview_order_exception_handling(
-        self, order_validator, mock_broker
-    ):
+    def test_maybe_preview_order_exception_handling(self, order_validator, mock_broker):
         """Test preview order handles exceptions gracefully"""
         mock_broker.preview_order.side_effect = Exception("Preview failed")
 
@@ -291,9 +285,7 @@ class TestOrderValidator:
             leverage=None,
         )
 
-    def test_finalize_reduce_only_flag_normal(
-        self, order_validator, mock_risk_manager
-    ):
+    def test_finalize_reduce_only_flag_normal(self, order_validator, mock_risk_manager):
         """Test reduce-only flag finalization in normal mode"""
         mock_risk_manager.is_reduce_only_mode.return_value = False
 
@@ -301,9 +293,7 @@ class TestOrderValidator:
 
         assert result is False
 
-    def test_finalize_reduce_only_flag_forced(
-        self, order_validator, mock_risk_manager
-    ):
+    def test_finalize_reduce_only_flag_forced(self, order_validator, mock_risk_manager):
         """Test reduce-only flag finalization when mode is active"""
         mock_risk_manager.is_reduce_only_mode.return_value = True
 
@@ -311,9 +301,7 @@ class TestOrderValidator:
 
         assert result is True
 
-    def test_finalize_reduce_only_flag_already_true(
-        self, order_validator, mock_risk_manager
-    ):
+    def test_finalize_reduce_only_flag_already_true(self, order_validator, mock_risk_manager):
         """Test reduce-only flag when already true"""
         mock_risk_manager.is_reduce_only_mode.return_value = False
 
@@ -321,14 +309,12 @@ class TestOrderValidator:
 
         assert result is True
 
-    @patch('bot_v2.orchestration.execution.validation.spec_validate_order')
+    @patch("bot_v2.orchestration.execution.validation.spec_validate_order")
     def test_validate_limit_order_price_quantization(
         self, mock_spec_validate, order_validator, mock_product
     ):
         """Test limit order price is quantized"""
-        mock_spec_validate.return_value = Mock(
-            ok=True, adjusted_quantity=None, adjusted_price=None
-        )
+        mock_spec_validate.return_value = Mock(ok=True, adjusted_quantity=None, adjusted_price=None)
 
         quantity, price = order_validator.validate_exchange_rules(
             symbol="BTC-USD",
@@ -344,18 +330,14 @@ class TestOrderValidator:
         assert price is not None
         # Should be rounded to nearest 0.01
 
-    def test_ensure_mark_is_fresh_exception_handling(
-        self, order_validator, mock_risk_manager
-    ):
+    def test_ensure_mark_is_fresh_exception_handling(self, order_validator, mock_risk_manager):
         """Test mark freshness check handles non-ValidationError exceptions"""
         mock_risk_manager.check_mark_staleness.side_effect = RuntimeError("Test error")
 
         # Should not raise for non-ValidationError
         order_validator.ensure_mark_is_fresh("BTC-USD")
 
-    def test_enforce_slippage_guard_exception_handling(
-        self, order_validator, mock_broker
-    ):
+    def test_enforce_slippage_guard_exception_handling(self, order_validator, mock_broker):
         """Test slippage guard handles exceptions gracefully"""
         mock_broker.get_market_snapshot.side_effect = Exception("Snapshot failed")
 

@@ -52,10 +52,8 @@ class TestOrderSubmitter:
         assert order_submitter.event_store is not None
         assert order_submitter.bot_id == "test_bot"
 
-    @patch('bot_v2.orchestration.execution.order_submission.get_logger')
-    def test_record_preview_success(
-        self, mock_get_logger, order_submitter, mock_event_store
-    ):
+    @patch("bot_v2.orchestration.execution.order_submission.get_logger")
+    def test_record_preview_success(self, mock_get_logger, order_submitter, mock_event_store):
         """Test order preview recording"""
         mock_logger = Mock()
         mock_get_logger.return_value = mock_logger
@@ -90,10 +88,8 @@ class TestOrderSubmitter:
         # Should not record anything
         mock_event_store.append_metric.assert_not_called()
 
-    @patch('bot_v2.orchestration.execution.order_submission.get_logger')
-    def test_record_rejection(
-        self, mock_get_logger, order_submitter, mock_event_store
-    ):
+    @patch("bot_v2.orchestration.execution.order_submission.get_logger")
+    def test_record_rejection(self, mock_get_logger, order_submitter, mock_event_store):
         """Test order rejection recording"""
         mock_logger = Mock()
         mock_get_logger.return_value = mock_logger
@@ -111,7 +107,7 @@ class TestOrderSubmitter:
         assert call_args["type"] == "order_rejected"
         assert call_args["reason"] == "insufficient_funds"
 
-    @patch('bot_v2.orchestration.execution.order_submission.get_logger')
+    @patch("bot_v2.orchestration.execution.order_submission.get_logger")
     def test_submit_order_success(
         self,
         mock_get_logger,
@@ -151,9 +147,7 @@ class TestOrderSubmitter:
         assert "order_123" in open_orders_list
         mock_event_store.append_trade.assert_called_once()
 
-    def test_submit_order_failure(
-        self, order_submitter, mock_broker, mock_event_store
-    ):
+    def test_submit_order_failure(self, order_submitter, mock_broker, mock_event_store):
         """Test failed order submission"""
         mock_broker.place_order.return_value = None
 
@@ -174,9 +168,7 @@ class TestOrderSubmitter:
         assert order_id is None
         mock_event_store.append_error.assert_called_once()
 
-    def test_submit_order_with_custom_client_id(
-        self, order_submitter, mock_broker
-    ):
+    def test_submit_order_with_custom_client_id(self, order_submitter, mock_broker):
         """Test order submission with custom client order ID"""
         mock_order = Mock(spec=Order)
         mock_order.id = "order_123"
@@ -201,9 +193,7 @@ class TestOrderSubmitter:
         call_kwargs = mock_broker.place_order.call_args[1]
         assert call_kwargs["client_id"] == "custom_client_123"
 
-    def test_submit_order_generates_client_id(
-        self, order_submitter, mock_broker
-    ):
+    def test_submit_order_generates_client_id(self, order_submitter, mock_broker):
         """Test order submission generates client ID"""
         mock_order = Mock(spec=Order)
         mock_order.id = "order_123"
@@ -229,10 +219,8 @@ class TestOrderSubmitter:
         # Should generate client_id starting with bot_id
         assert call_kwargs["client_id"].startswith("test_bot_")
 
-    @patch('bot_v2.orchestration.execution.order_submission.get_logger')
-    def test_submit_order_reduce_only(
-        self, mock_get_logger, order_submitter, mock_broker
-    ):
+    @patch("bot_v2.orchestration.execution.order_submission.get_logger")
+    def test_submit_order_reduce_only(self, mock_get_logger, order_submitter, mock_broker):
         """Test reduce-only order submission"""
         mock_logger = Mock()
         mock_get_logger.return_value = mock_logger
@@ -343,9 +331,7 @@ class TestOrderSubmitter:
         assert trade_payload["order_id"] == "order_123"
         assert trade_payload["status"] == "FILLED"
 
-    def test_record_preview_exception_handling(
-        self, order_submitter, mock_event_store
-    ):
+    def test_record_preview_exception_handling(self, order_submitter, mock_event_store):
         """Test preview recording handles exceptions"""
         mock_event_store.append_metric.side_effect = Exception("Store error")
 
@@ -359,9 +345,7 @@ class TestOrderSubmitter:
             preview={"test": "data"},
         )
 
-    def test_record_rejection_exception_handling(
-        self, order_submitter, mock_event_store
-    ):
+    def test_record_rejection_exception_handling(self, order_submitter, mock_event_store):
         """Test rejection recording handles exceptions"""
         mock_event_store._write.side_effect = Exception("Store error")
 

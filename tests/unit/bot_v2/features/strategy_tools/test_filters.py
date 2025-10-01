@@ -184,9 +184,7 @@ class TestLongEntryFiltering:
 
         market_snapshot = {"spread_bps": 5}
 
-        allowed, reason = filters.should_allow_long_entry(
-            market_snapshot, rsi=Decimal("75")
-        )
+        allowed, reason = filters.should_allow_long_entry(market_snapshot, rsi=Decimal("75"))
 
         assert allowed is False
         assert "rsi too high" in reason.lower()
@@ -199,9 +197,7 @@ class TestLongEntryFiltering:
 
         market_snapshot = {"spread_bps": 5}
 
-        allowed, reason = filters.should_allow_long_entry(
-            market_snapshot, rsi=Decimal("50")
-        )
+        allowed, reason = filters.should_allow_long_entry(market_snapshot, rsi=Decimal("50"))
 
         assert allowed is True
 
@@ -211,9 +207,7 @@ class TestLongEntryFiltering:
 
         market_snapshot = {"spread_bps": 5}
 
-        allowed, reason = filters.should_allow_long_entry(
-            market_snapshot, rsi=Decimal("80")
-        )
+        allowed, reason = filters.should_allow_long_entry(market_snapshot, rsi=Decimal("80"))
 
         assert allowed is True
 
@@ -288,30 +282,22 @@ class TestShortEntryFiltering:
 
     def test_short_entry_rsi_too_low(self):
         """Test short entry rejection when RSI is too low."""
-        filters = MarketConditionFilters(
-            rsi_oversold=Decimal("30"), require_rsi_confirmation=True
-        )
+        filters = MarketConditionFilters(rsi_oversold=Decimal("30"), require_rsi_confirmation=True)
 
         market_snapshot = {"spread_bps": 5}
 
-        allowed, reason = filters.should_allow_short_entry(
-            market_snapshot, rsi=Decimal("25")
-        )
+        allowed, reason = filters.should_allow_short_entry(market_snapshot, rsi=Decimal("25"))
 
         assert allowed is False
         assert "rsi too low" in reason.lower()
 
     def test_short_entry_rsi_acceptable(self):
         """Test short entry allowed when RSI is acceptable."""
-        filters = MarketConditionFilters(
-            rsi_oversold=Decimal("30"), require_rsi_confirmation=True
-        )
+        filters = MarketConditionFilters(rsi_oversold=Decimal("30"), require_rsi_confirmation=True)
 
         market_snapshot = {"spread_bps": 5}
 
-        allowed, reason = filters.should_allow_short_entry(
-            market_snapshot, rsi=Decimal("50")
-        )
+        allowed, reason = filters.should_allow_short_entry(market_snapshot, rsi=Decimal("50"))
 
         assert allowed is True
 
@@ -321,9 +307,7 @@ class TestShortEntryFiltering:
 
         market_snapshot = {"spread_bps": 5}
 
-        allowed, reason = filters.should_allow_short_entry(
-            market_snapshot, rsi=Decimal("20")
-        )
+        allowed, reason = filters.should_allow_short_entry(market_snapshot, rsi=Decimal("20"))
 
         assert allowed is True
 
@@ -449,27 +433,19 @@ class TestEdgeCases:
         market_snapshot = {"spread_bps": 5}
 
         # RSI exactly at overbought threshold
-        allowed1, _ = filters.should_allow_long_entry(
-            market_snapshot, rsi=Decimal("70")
-        )
+        allowed1, _ = filters.should_allow_long_entry(market_snapshot, rsi=Decimal("70"))
         assert allowed1 is True  # <= not <
 
         # RSI slightly above threshold
-        allowed2, _ = filters.should_allow_long_entry(
-            market_snapshot, rsi=Decimal("70.1")
-        )
+        allowed2, _ = filters.should_allow_long_entry(market_snapshot, rsi=Decimal("70.1"))
         assert allowed2 is False
 
         # RSI exactly at oversold threshold
-        allowed3, _ = filters.should_allow_short_entry(
-            market_snapshot, rsi=Decimal("30")
-        )
+        allowed3, _ = filters.should_allow_short_entry(market_snapshot, rsi=Decimal("30"))
         assert allowed3 is True  # >= not >
 
         # RSI slightly below threshold
-        allowed4, _ = filters.should_allow_short_entry(
-            market_snapshot, rsi=Decimal("29.9")
-        )
+        allowed4, _ = filters.should_allow_short_entry(market_snapshot, rsi=Decimal("29.9"))
         assert allowed4 is False
 
     def test_rsi_extreme_values(self):
@@ -479,21 +455,15 @@ class TestEdgeCases:
         market_snapshot = {"spread_bps": 5}
 
         # RSI = 0
-        allowed1, _ = filters.should_allow_long_entry(
-            market_snapshot, rsi=Decimal("0")
-        )
+        allowed1, _ = filters.should_allow_long_entry(market_snapshot, rsi=Decimal("0"))
         assert allowed1 is True
 
         # RSI = 100
-        allowed2, _ = filters.should_allow_long_entry(
-            market_snapshot, rsi=Decimal("100")
-        )
+        allowed2, _ = filters.should_allow_long_entry(market_snapshot, rsi=Decimal("100"))
         assert allowed2 is False
 
         # RSI > 100 (invalid)
-        allowed3, _ = filters.should_allow_long_entry(
-            market_snapshot, rsi=Decimal("150")
-        )
+        allowed3, _ = filters.should_allow_long_entry(market_snapshot, rsi=Decimal("150"))
         assert allowed3 is False
 
     def test_custom_rsi_thresholds(self):
@@ -507,15 +477,11 @@ class TestEdgeCases:
         market_snapshot = {"spread_bps": 5}
 
         # RSI 75 should be ok for long (below 80)
-        allowed1, _ = filters.should_allow_long_entry(
-            market_snapshot, rsi=Decimal("75")
-        )
+        allowed1, _ = filters.should_allow_long_entry(market_snapshot, rsi=Decimal("75"))
         assert allowed1 is True
 
         # RSI 25 should be ok for short (above 20)
-        allowed2, _ = filters.should_allow_short_entry(
-            market_snapshot, rsi=Decimal("25")
-        )
+        allowed2, _ = filters.should_allow_short_entry(market_snapshot, rsi=Decimal("25"))
         assert allowed2 is True
 
     def test_all_filters_at_limits(self):
@@ -573,9 +539,7 @@ class TestIntegrationScenarios:
             "vol_5m": 1000000,
         }
 
-        allowed, _ = filters.should_allow_long_entry(
-            market_snapshot, rsi=Decimal("50")
-        )
+        allowed, _ = filters.should_allow_long_entry(market_snapshot, rsi=Decimal("50"))
 
         assert allowed is True
 
@@ -630,24 +594,16 @@ class TestIntegrationScenarios:
         }
 
         # Neutral RSI - both should pass
-        long_allowed, _ = filters.should_allow_long_entry(
-            market_snapshot, rsi=Decimal("50")
-        )
-        short_allowed, _ = filters.should_allow_short_entry(
-            market_snapshot, rsi=Decimal("50")
-        )
+        long_allowed, _ = filters.should_allow_long_entry(market_snapshot, rsi=Decimal("50"))
+        short_allowed, _ = filters.should_allow_short_entry(market_snapshot, rsi=Decimal("50"))
 
         assert long_allowed is True
         assert short_allowed is True
 
         # High RSI - long should fail
-        long_allowed, _ = filters.should_allow_long_entry(
-            market_snapshot, rsi=Decimal("75")
-        )
+        long_allowed, _ = filters.should_allow_long_entry(market_snapshot, rsi=Decimal("75"))
         assert long_allowed is False
 
         # Low RSI - short should fail
-        short_allowed, _ = filters.should_allow_short_entry(
-            market_snapshot, rsi=Decimal("25")
-        )
+        short_allowed, _ = filters.should_allow_short_entry(market_snapshot, rsi=Decimal("25"))
         assert short_allowed is False

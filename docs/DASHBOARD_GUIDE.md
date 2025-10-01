@@ -53,8 +53,9 @@ poetry run python scripts/perps_dashboard.py \
 
 ## Advanced Monitoring Components
 
-- **Runtime guards** (`bot_v2/monitoring/runtime_guards.py`): support comparison
-  modes (`gt`, `lt`, `abs_gt`, etc.), warning bands, and contextual messaging.
+- **Runtime guards** (`bot_v2/monitoring/runtime_guards/`): modular guard system
+  supporting comparison modes (`gt`, `lt`, `abs_gt`, etc.), warning bands, and
+  contextual messaging.
 - **Alert channels** (`bot_v2/monitoring/alerts.py`): Slack, PagerDuty, email,
   webhook, and a safe no-op fallback. Configure channels via your orchestration
   or deployment scripts.

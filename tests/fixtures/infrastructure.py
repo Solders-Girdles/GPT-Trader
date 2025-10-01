@@ -143,7 +143,12 @@ class FailingS3Adapter(S3Adapter):
         raise RuntimeError("s3 get failure")
 
     def put_object(
-        self, bucket: str, key: str, body: bytes, storage_class: str = "STANDARD", metadata: dict | None = None
+        self,
+        bucket: str,
+        key: str,
+        body: bytes,
+        storage_class: str = "STANDARD",
+        metadata: dict | None = None,
     ) -> dict:
         raise RuntimeError("s3 put failure")
 

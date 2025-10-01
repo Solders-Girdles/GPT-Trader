@@ -116,9 +116,9 @@ This modular design achieves 66% file size reduction with clear separation of co
 
 - **Validators** (`bot_v2/validation`): the base `Validator` now accepts inline predicates and
   optional value coercion, enabling concise one-off validations while keeping legacy subclasses.
-- **Runtime guards** (`bot_v2/monitoring/runtime_guards.py`): guard evaluation supports rich
-  comparison modes (`gt`, `lt`, `abs_gt`, etc.), warning bands, and contextual messaging to power
-  both orchestration checks and monitoring dashboards.
+- **Runtime guards** (`bot_v2/monitoring/runtime_guards/`): modular guard system with base classes,
+  built-in guards, and manager for evaluation. Supports rich comparison modes (`gt`, `lt`, `abs_gt`),
+  warning bands, and contextual messaging to power orchestration checks and monitoring dashboards.
 - **Alerts** (`bot_v2/monitoring/alerts.py`): the base alert channel now degrades gracefully,
   logging when no transport is configured instead of raising. Concrete channels (Slack, PagerDuty,
   email, webhook) continue to extend `_send_impl`.

@@ -115,13 +115,15 @@ class TestSimpleMAStrategy:
         # Days 41-44: Sharp rise (fast MA crosses above slow MA at the end)
         prices.extend([95.0, 100.0, 105.0, 110.0])
 
-        data = pd.DataFrame({
-            "open": prices,
-            "high": [p * 1.01 for p in prices],
-            "low": [p * 0.99 for p in prices],
-            "close": prices,
-            "volume": [1000000] * len(prices)
-        })
+        data = pd.DataFrame(
+            {
+                "open": prices,
+                "high": [p * 1.01 for p in prices],
+                "low": [p * 0.99 for p in prices],
+                "close": prices,
+                "volume": [1000000] * len(prices),
+            }
+        )
 
         signal = strategy.analyze(data)
 
@@ -142,13 +144,15 @@ class TestSimpleMAStrategy:
         # Days 41-44: Sharp drop (fast MA crosses below slow MA at the end)
         prices.extend([105.0, 100.0, 95.0, 90.0])
 
-        data = pd.DataFrame({
-            "open": prices,
-            "high": [p * 1.01 for p in prices],
-            "low": [p * 0.99 for p in prices],
-            "close": prices,
-            "volume": [1000000] * len(prices)
-        })
+        data = pd.DataFrame(
+            {
+                "open": prices,
+                "high": [p * 1.01 for p in prices],
+                "low": [p * 0.99 for p in prices],
+                "close": prices,
+                "volume": [1000000] * len(prices),
+            }
+        )
 
         signal = strategy.analyze(data)
 
@@ -241,13 +245,15 @@ class TestMomentumStrategy:
         prices = [100.0] * 15  # Flat start
         prices.extend([100.0 + i * 0.5 for i in range(1, 7)])  # Then rise 3%
 
-        data = pd.DataFrame({
-            "open": prices,
-            "high": [p * 1.01 for p in prices],
-            "low": [p * 0.99 for p in prices],
-            "close": prices,
-            "volume": [1000000] * len(prices)
-        })
+        data = pd.DataFrame(
+            {
+                "open": prices,
+                "high": [p * 1.01 for p in prices],
+                "low": [p * 0.99 for p in prices],
+                "close": prices,
+                "volume": [1000000] * len(prices),
+            }
+        )
 
         signal = strategy.analyze(data)
 
@@ -262,13 +268,15 @@ class TestMomentumStrategy:
         prices = [100.0] * 15  # Flat start
         prices.extend([100.0 - i * 0.5 for i in range(1, 7)])  # Then drop 3%
 
-        data = pd.DataFrame({
-            "open": prices,
-            "high": [p * 1.01 for p in prices],
-            "low": [p * 0.99 for p in prices],
-            "close": prices,
-            "volume": [1000000] * len(prices)
-        })
+        data = pd.DataFrame(
+            {
+                "open": prices,
+                "high": [p * 1.01 for p in prices],
+                "low": [p * 0.99 for p in prices],
+                "close": prices,
+                "volume": [1000000] * len(prices),
+            }
+        )
 
         signal = strategy.analyze(data)
 
@@ -365,13 +373,15 @@ class TestMeanReversionStrategy:
         prices = [100.0] * 15  # Flat for stable mean/std
         prices.append(85.0)  # Sharp drop well below 2 std
 
-        data = pd.DataFrame({
-            "open": prices,
-            "high": [p * 1.01 for p in prices],
-            "low": [p * 0.99 for p in prices],
-            "close": prices,
-            "volume": [1000000] * len(prices)
-        })
+        data = pd.DataFrame(
+            {
+                "open": prices,
+                "high": [p * 1.01 for p in prices],
+                "low": [p * 0.99 for p in prices],
+                "close": prices,
+                "volume": [1000000] * len(prices),
+            }
+        )
 
         signal = strategy.analyze(data)
 
@@ -440,13 +450,15 @@ class TestMeanReversionStrategy:
         # Add one very low price at the end
         prices.append(90.0)  # Well below 2 std from mean of 100
 
-        data = pd.DataFrame({
-            "open": prices,
-            "high": [p * 1.01 for p in prices],
-            "low": [p * 0.99 for p in prices],
-            "close": prices,
-            "volume": [1000000] * len(prices)
-        })
+        data = pd.DataFrame(
+            {
+                "open": prices,
+                "high": [p * 1.01 for p in prices],
+                "low": [p * 0.99 for p in prices],
+                "close": prices,
+                "volume": [1000000] * len(prices),
+            }
+        )
 
         signal = strategy.analyze(data)
 
@@ -503,13 +515,15 @@ class TestVolatilityStrategy:
         prices = [100.0] * 15  # Flat start for low volatility
         prices.extend([100.0 + i * 0.25 for i in range(1, 7)])  # Gentle rise to 101.5
 
-        data = pd.DataFrame({
-            "open": prices,
-            "high": [p * 1.001 for p in prices],  # Very tight range
-            "low": [p * 0.999 for p in prices],
-            "close": prices,
-            "volume": [1000000] * len(prices)
-        })
+        data = pd.DataFrame(
+            {
+                "open": prices,
+                "high": [p * 1.001 for p in prices],  # Very tight range
+                "low": [p * 0.999 for p in prices],
+                "close": prices,
+                "volume": [1000000] * len(prices),
+            }
+        )
 
         signal = strategy.analyze(data)
 
@@ -524,13 +538,15 @@ class TestVolatilityStrategy:
         prices = [100.0] * 15  # Flat start for low volatility
         prices.extend([100.0 - i * 0.25 for i in range(1, 7)])  # Gentle drop to 98.5
 
-        data = pd.DataFrame({
-            "open": prices,
-            "high": [p * 1.001 for p in prices],  # Very tight range
-            "low": [p * 0.999 for p in prices],
-            "close": prices,
-            "volume": [1000000] * len(prices)
-        })
+        data = pd.DataFrame(
+            {
+                "open": prices,
+                "high": [p * 1.001 for p in prices],  # Very tight range
+                "low": [p * 0.999 for p in prices],
+                "close": prices,
+                "volume": [1000000] * len(prices),
+            }
+        )
 
         signal = strategy.analyze(data)
 

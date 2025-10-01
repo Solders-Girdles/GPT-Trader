@@ -90,9 +90,7 @@ class TestRegimeAdjustment:
 
     def test_regime_custom_multipliers(self):
         """Test regime adjustment with custom multipliers."""
-        custom_multipliers = RegimeMultipliers(
-            bull_quiet=2.0, bear_volatile=0.1, crisis=0.05
-        )
+        custom_multipliers = RegimeMultipliers(bull_quiet=2.0, bear_volatile=0.1, crisis=0.05)
 
         bull_adjusted, _ = regime_adjusted_size(0.1, "bull_quiet", custom_multipliers)
         assert abs(bull_adjusted - 0.2) < 1e-10  # 2.0x (use approx for floating point)
@@ -560,9 +558,7 @@ class TestSafeRegimeCalculation:
         high_conf = safe_regime_calculation(
             regime="bull_quiet", base_multiplier=1.5, confidence=0.9
         )
-        low_conf = safe_regime_calculation(
-            regime="bull_quiet", base_multiplier=1.5, confidence=0.3
-        )
+        low_conf = safe_regime_calculation(regime="bull_quiet", base_multiplier=1.5, confidence=0.3)
 
         # Low confidence should produce more conservative multiplier
         assert low_conf < high_conf

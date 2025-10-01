@@ -313,9 +313,7 @@ class ExecutionCoordinator:
             order_quantity = quantity_from(order)
             # Normalize side to handle both enum and string
             side_str = getattr(order.side, "value", order.side)
-            logger.info(
-                f"Order recorded: {order.id} {side_str} {order_quantity} {order.symbol}"
-            )
+            logger.info(f"Order recorded: {order.id} {side_str} {order_quantity} {order.symbol}")
             return order
 
         bot.order_stats["failed"] += 1

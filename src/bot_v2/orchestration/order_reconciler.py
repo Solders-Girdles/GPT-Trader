@@ -199,7 +199,9 @@ class OrderReconciler:
             side = side_val if isinstance(side_val, OrderSide) else OrderSide(str(side_val).lower())
 
             type_val = getattr(local_order, "order_type", getattr(local_order, "type", "market"))
-            order_type = type_val if isinstance(type_val, OrderType) else OrderType(str(type_val).lower())
+            order_type = (
+                type_val if isinstance(type_val, OrderType) else OrderType(str(type_val).lower())
+            )
 
             cancelled_order = Order(
                 id=getattr(local_order, "order_id", getattr(local_order, "id", order_id)),

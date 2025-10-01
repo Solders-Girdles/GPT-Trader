@@ -185,8 +185,9 @@ class MarketFeedScenarios:
         return prices
 
     @staticmethod
-    def alternating_swings(base_price: float = 50000.0, swing_pct: float = 0.05,
-                           length: int = 30) -> list[Decimal]:
+    def alternating_swings(
+        base_price: float = 50000.0, swing_pct: float = 0.05, length: int = 30
+    ) -> list[Decimal]:
         """Alternating up/down swings of fixed percentage."""
         prices = [Decimal(str(base_price))]
         for i in range(length - 1):
@@ -363,9 +364,7 @@ class TestMarkStaleness:
 
         assert is_stale is False
 
-    def test_returns_false_for_fresh_data(
-        self, time_provider, mock_log_event, mock_logger
-    ) -> None:
+    def test_returns_false_for_fresh_data(self, time_provider, mock_log_event, mock_logger) -> None:
         """Returns False when mark data is within soft limit.
 
         Fresh data (age < soft_limit) should be accepted.
@@ -430,9 +429,7 @@ class TestMarkStaleness:
         assert len(mock_log_event.events) > 0
         assert mock_log_event.events[0]["type"] == "stale_mark_price"
 
-    def test_exact_soft_limit_boundary(
-        self, time_provider, mock_log_event, mock_logger
-    ) -> None:
+    def test_exact_soft_limit_boundary(self, time_provider, mock_log_event, mock_logger) -> None:
         """Exactly at soft limit should log but not halt."""
         # Age = exactly 30s = soft_limit
         last_mark_update = {"BTC-PERP": time_provider.now() - timedelta(seconds=30)}
@@ -448,9 +445,7 @@ class TestMarkStaleness:
 
         assert is_stale is False  # Boundary is inclusive for soft limit
 
-    def test_exact_hard_limit_boundary(
-        self, time_provider, mock_log_event, mock_logger
-    ) -> None:
+    def test_exact_hard_limit_boundary(self, time_provider, mock_log_event, mock_logger) -> None:
         """Exactly at hard limit should halt trading."""
         # Age = exactly 60s = hard_limit
         last_mark_update = {"BTC-PERP": time_provider.now() - timedelta(seconds=60)}
@@ -546,9 +541,7 @@ class TestVolatilityCircuitBreaker:
         assert outcome.triggered is False
         assert outcome.action == CircuitBreakerAction.NONE
 
-    def test_insufficient_data_returns_none(
-        self, time_provider, mock_logger
-    ) -> None:
+    def test_insufficient_data_returns_none(self, time_provider, mock_logger) -> None:
         """Insufficient price data returns NONE without error.
 
         Need at least `window` prices to calculate volatility.
@@ -571,9 +564,7 @@ class TestVolatilityCircuitBreaker:
         assert outcome.triggered is False
         assert outcome.action == CircuitBreakerAction.NONE
 
-    def test_stable_market_no_trigger(
-        self, time_provider, mock_logger, market_scenarios
-    ) -> None:
+    def test_stable_market_no_trigger(self, time_provider, mock_logger, market_scenarios) -> None:
         """Stable market with low volatility doesn't trigger."""
         config = Mock()
         config.enable_volatility_circuit_breaker = True
@@ -779,9 +770,7 @@ class TestVolatilityCircuitBreaker:
 
         assert isinstance(outcome, CircuitBreakerOutcome)
 
-    def test_single_price_returns_none(
-        self, time_provider, mock_logger
-    ) -> None:
+    def test_single_price_returns_none(self, time_provider, mock_logger) -> None:
         """Single price (no returns) returns NONE."""
         config = Mock()
         config.enable_volatility_circuit_breaker = True
@@ -798,9 +787,7 @@ class TestVolatilityCircuitBreaker:
         assert outcome.triggered is False
         assert outcome.action == CircuitBreakerAction.NONE
 
-    def test_annualized_volatility_calculation(
-        self, time_provider, mock_logger
-    ) -> None:
+    def test_annualized_volatility_calculation(self, time_provider, mock_logger) -> None:
         """Volatility is correctly annualized using sqrt(252)."""
         config = Mock()
         config.enable_volatility_circuit_breaker = True
@@ -832,9 +819,7 @@ class TestVolatilityCircuitBreaker:
         # Should be roughly 0.15-0.16
         assert Decimal("0.14") < outcome.value < Decimal("0.17")
 
-    def test_rule_based_circuit_breaker(
-        self, time_provider, mock_logger, market_scenarios
-    ) -> None:
+    def test_rule_based_circuit_breaker(self, time_provider, mock_logger, market_scenarios) -> None:
         """Circuit breaker with explicit rule configuration."""
         rule = CircuitBreakerRule(
             name="test_vol_cb",
@@ -864,9 +849,7 @@ class TestVolatilityCircuitBreaker:
             snapshot = state.get(rule.name, "BTC-PERP")
             assert snapshot is not None
 
-    def test_disabled_rule_returns_none(
-        self, time_provider, mock_logger, market_scenarios
-    ) -> None:
+    def test_disabled_rule_returns_none(self, time_provider, mock_logger, market_scenarios) -> None:
         """Disabled rule returns NONE even with high volatility."""
         rule = CircuitBreakerRule(
             name="test_vol_cb",
@@ -900,9 +883,7 @@ class TestVolatilityCircuitBreaker:
 class TestCorrelationRisk:
     """Test portfolio correlation and concentration risk detection."""
 
-    def test_single_position_returns_false(
-        self, mock_log_event, mock_logger
-    ) -> None:
+    def test_single_position_returns_false(self, mock_log_event, mock_logger) -> None:
         """Single position cannot have concentration risk.
 
         Need at least 2 positions for correlation/concentration.
@@ -917,9 +898,7 @@ class TestCorrelationRisk:
 
         assert triggered is False
 
-    def test_empty_positions_returns_false(
-        self, mock_log_event, mock_logger
-    ) -> None:
+    def test_empty_positions_returns_false(self, mock_log_event, mock_logger) -> None:
         """Empty positions dict returns False."""
         triggered = check_correlation_risk(
             positions={},
@@ -929,9 +908,7 @@ class TestCorrelationRisk:
 
         assert triggered is False
 
-    def test_well_diversified_portfolio_passes(
-        self, mock_log_event, mock_logger
-    ) -> None:
+    def test_well_diversified_portfolio_passes(self, mock_log_event, mock_logger) -> None:
         """Well-diversified portfolio (HHI < 0.4) passes check.
 
         3 equal positions: HHI = 3 * (1/3)^2 = 0.333 < 0.4
@@ -950,9 +927,7 @@ class TestCorrelationRisk:
 
         assert triggered is False
 
-    def test_concentrated_portfolio_triggers(
-        self, mock_log_event, mock_logger
-    ) -> None:
+    def test_concentrated_portfolio_triggers(self, mock_log_event, mock_logger) -> None:
         """Concentrated portfolio (HHI > 0.4) triggers warning.
 
         90/10 split: HHI = 0.9^2 + 0.1^2 = 0.82 > 0.4
@@ -973,9 +948,7 @@ class TestCorrelationRisk:
         assert mock_log_event.events[0]["type"] == "concentration_risk"
         assert "hhi" in mock_log_event.events[0]["details"]
 
-    def test_hhi_threshold_exactly_at_limit(
-        self, mock_log_event, mock_logger
-    ) -> None:
+    def test_hhi_threshold_exactly_at_limit(self, mock_log_event, mock_logger) -> None:
         """HHI exactly at 0.4 threshold triggers warning.
 
         Boundary case: HHI = 0.4 should trigger.
@@ -999,9 +972,7 @@ class TestCorrelationRisk:
         # HHI = 0.505 > 0.4, should trigger
         assert triggered is True
 
-    def test_handles_zero_notional_positions(
-        self, mock_log_event, mock_logger
-    ) -> None:
+    def test_handles_zero_notional_positions(self, mock_log_event, mock_logger) -> None:
         """Handles positions with zero notional gracefully.
 
         Zero qty or zero mark price should be filtered out.
@@ -1020,9 +991,7 @@ class TestCorrelationRisk:
 
         assert triggered is False
 
-    def test_uses_qty_field_fallback(
-        self, mock_log_event, mock_logger
-    ) -> None:
+    def test_uses_qty_field_fallback(self, mock_log_event, mock_logger) -> None:
         """Uses 'qty' field if 'quantity' is missing.
 
         Supports legacy position data format.
@@ -1041,9 +1010,7 @@ class TestCorrelationRisk:
 
         assert isinstance(triggered, bool)
 
-    def test_handles_invalid_position_data(
-        self, mock_log_event, mock_logger
-    ) -> None:
+    def test_handles_invalid_position_data(self, mock_log_event, mock_logger) -> None:
         """Handles invalid position data gracefully without crashing.
 
         Malformed data should be skipped (try/except continue pattern).
@@ -1062,9 +1029,7 @@ class TestCorrelationRisk:
         # Should return False since all positions were invalid/skipped
         assert triggered is False
 
-    def test_logs_hhi_value_on_trigger(
-        self, mock_log_event, mock_logger
-    ) -> None:
+    def test_logs_hhi_value_on_trigger(self, mock_log_event, mock_logger) -> None:
         """Logs HHI value when concentration risk triggers."""
         positions = {
             "BTC-PERP": {"quantity": Decimal("1.8"), "mark": Decimal("50000")},
@@ -1089,9 +1054,7 @@ class TestCorrelationRisk:
 class TestRiskMetricsTelemetry:
     """Test append_risk_metrics telemetry function."""
 
-    def test_persists_complete_risk_snapshot(
-        self, time_provider, event_store, mock_logger
-    ) -> None:
+    def test_persists_complete_risk_snapshot(self, time_provider, event_store, mock_logger) -> None:
         """Persists complete risk snapshot to event store."""
         append_risk_metrics(
             event_store=event_store,
@@ -1148,9 +1111,7 @@ class TestRiskMetricsTelemetry:
 
         assert True  # No crash
 
-    def test_handles_event_store_failure(
-        self, time_provider, mock_logger
-    ) -> None:
+    def test_handles_event_store_failure(self, time_provider, mock_logger) -> None:
         """Raises RiskGuardTelemetryError when event store fails."""
         mock_store = Mock()
         mock_store.append_metric.side_effect = Exception("Storage failure")
@@ -1196,9 +1157,7 @@ class TestRiskMetricsTelemetry:
         # Check debug log for max_lev
         assert len(mock_logger.debugs) > 0
 
-    def test_handles_missing_position_fields(
-        self, time_provider, event_store, mock_logger
-    ) -> None:
+    def test_handles_missing_position_fields(self, time_provider, event_store, mock_logger) -> None:
         """Handles positions with missing qty/mark fields gracefully."""
         # Should skip invalid positions without crashing
         append_risk_metrics(

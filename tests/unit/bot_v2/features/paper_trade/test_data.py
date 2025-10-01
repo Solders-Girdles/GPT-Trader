@@ -173,9 +173,7 @@ class TestLatestPriceFetching:
     def test_get_latest_price_during_market_hours(self, mock_get_provider):
         """Test getting latest price during market hours."""
         data = create_sample_data()
-        mock_provider = create_mock_provider(
-            historical_data=data, current_price=155.50
-        )
+        mock_provider = create_mock_provider(historical_data=data, current_price=155.50)
         mock_get_provider.return_value = mock_provider
 
         feed = DataFeed(symbols=["AAPL"])
@@ -461,9 +459,7 @@ class TestMarketHoursDetection:
         feed = DataFeed(symbols=["AAPL"])
 
         # Monday at 10:00 AM
-        with patch(
-            "bot_v2.features.paper_trade.data.datetime"
-        ) as mock_datetime:
+        with patch("bot_v2.features.paper_trade.data.datetime") as mock_datetime:
             mock_datetime.now.return_value = datetime(2024, 1, 8, 10, 0)  # Monday
             result = feed._is_market_hours()
 
@@ -478,9 +474,7 @@ class TestMarketHoursDetection:
         feed = DataFeed(symbols=["AAPL"])
 
         # Monday at 2:00 PM
-        with patch(
-            "bot_v2.features.paper_trade.data.datetime"
-        ) as mock_datetime:
+        with patch("bot_v2.features.paper_trade.data.datetime") as mock_datetime:
             mock_datetime.now.return_value = datetime(2024, 1, 8, 14, 0)  # Monday
             result = feed._is_market_hours()
 
@@ -495,9 +489,7 @@ class TestMarketHoursDetection:
         feed = DataFeed(symbols=["AAPL"])
 
         # Monday at 8:00 AM (before open)
-        with patch(
-            "bot_v2.features.paper_trade.data.datetime"
-        ) as mock_datetime:
+        with patch("bot_v2.features.paper_trade.data.datetime") as mock_datetime:
             mock_datetime.now.return_value = datetime(2024, 1, 8, 8, 0)  # Monday
             result = feed._is_market_hours()
 
@@ -512,9 +504,7 @@ class TestMarketHoursDetection:
         feed = DataFeed(symbols=["AAPL"])
 
         # Monday at 5:00 PM (after close)
-        with patch(
-            "bot_v2.features.paper_trade.data.datetime"
-        ) as mock_datetime:
+        with patch("bot_v2.features.paper_trade.data.datetime") as mock_datetime:
             mock_datetime.now.return_value = datetime(2024, 1, 8, 17, 0)  # Monday
             result = feed._is_market_hours()
 
@@ -529,9 +519,7 @@ class TestMarketHoursDetection:
         feed = DataFeed(symbols=["AAPL"])
 
         # Saturday at 10:00 AM
-        with patch(
-            "bot_v2.features.paper_trade.data.datetime"
-        ) as mock_datetime:
+        with patch("bot_v2.features.paper_trade.data.datetime") as mock_datetime:
             mock_datetime.now.return_value = datetime(2024, 1, 13, 10, 0)  # Saturday
             result = feed._is_market_hours()
 
@@ -546,9 +534,7 @@ class TestMarketHoursDetection:
         feed = DataFeed(symbols=["AAPL"])
 
         # Sunday at 10:00 AM
-        with patch(
-            "bot_v2.features.paper_trade.data.datetime"
-        ) as mock_datetime:
+        with patch("bot_v2.features.paper_trade.data.datetime") as mock_datetime:
             mock_datetime.now.return_value = datetime(2024, 1, 14, 10, 0)  # Sunday
             result = feed._is_market_hours()
 

@@ -45,7 +45,12 @@ def create_mock_engine(
     # Mock calculate_equity
     def calc_equity():
         positions_value = sum(
-            pos.quantity * (pos.current_price if hasattr(pos, "current_price") and pos.current_price > 0 else pos.entry_price)
+            pos.quantity
+            * (
+                pos.current_price
+                if hasattr(pos, "current_price") and pos.current_price > 0
+                else pos.entry_price
+            )
             for pos in engine.positions.values()
         )
         return engine.cash + positions_value
@@ -242,9 +247,7 @@ class TestMetricsCalculation:
             "AAPL": create_mock_position("AAPL", 100, 150.0, 155.0),
             "MSFT": create_mock_position("MSFT", 50, 300.0, 310.0),
         }
-        engine = create_mock_engine(
-            initial_capital=100000, cash=50000, positions=positions
-        )
+        engine = create_mock_engine(initial_capital=100000, cash=50000, positions=positions)
         dashboard = PaperTradingDashboard(engine)
 
         metrics = dashboard.calculate_metrics()
@@ -257,9 +260,7 @@ class TestMetricsCalculation:
     def test_calculate_metrics_exposure(self):
         """Test exposure calculation."""
         positions = {"AAPL": create_mock_position("AAPL", 100, 100.0, 100.0)}
-        engine = create_mock_engine(
-            initial_capital=100000, cash=90000, positions=positions
-        )
+        engine = create_mock_engine(initial_capital=100000, cash=90000, positions=positions)
         dashboard = PaperTradingDashboard(engine)
 
         metrics = dashboard.calculate_metrics()
@@ -482,9 +483,7 @@ class TestContinuousDisplay:
     @patch("time.sleep")
     @patch("builtins.print")
     @patch.object(PaperTradingDashboard, "clear_screen")
-    def test_display_continuous_with_duration(
-        self, mock_clear, mock_print, mock_sleep
-    ):
+    def test_display_continuous_with_duration(self, mock_clear, mock_print, mock_sleep):
         """Test continuous display with duration limit."""
         engine = create_mock_engine()
         dashboard = PaperTradingDashboard(engine, refresh_interval=1)
@@ -501,9 +500,7 @@ class TestContinuousDisplay:
     @patch("time.sleep", side_effect=KeyboardInterrupt)
     @patch("builtins.print")
     @patch.object(PaperTradingDashboard, "clear_screen")
-    def test_display_continuous_keyboard_interrupt(
-        self, mock_clear, mock_print, mock_sleep
-    ):
+    def test_display_continuous_keyboard_interrupt(self, mock_clear, mock_print, mock_sleep):
         """Test continuous display handles keyboard interrupt."""
         engine = create_mock_engine()
         dashboard = PaperTradingDashboard(engine)
@@ -549,7 +546,7 @@ class TestHTMLReportGeneration:
             output_path = str(Path(tmpdir) / "test_report.html")
             dashboard.generate_html_summary(output_path)
 
-            with open(output_path, "r") as f:
+            with open(output_path) as f:
                 content = f.read()
 
             # Should contain key elements
@@ -582,7 +579,7 @@ class TestHTMLReportGeneration:
             output_path = str(Path(tmpdir) / "test_report.html")
             dashboard.generate_html_summary(output_path)
 
-            with open(output_path, "r") as f:
+            with open(output_path) as f:
                 content = f.read()
 
             # Should handle empty state
@@ -598,7 +595,7 @@ class TestHTMLReportGeneration:
             output_path = str(Path(tmpdir) / "test_report.html")
             dashboard.generate_html_summary(output_path)
 
-            with open(output_path, "r") as f:
+            with open(output_path) as f:
                 content = f.read()
 
             # Should contain formatted currency
@@ -782,7 +779,7 @@ class TestIntegrationScenarios:
             output_path = str(Path(tmpdir) / "comprehensive_report.html")
             dashboard.generate_html_summary(output_path)
 
-            with open(output_path, "r") as f:
+            with open(output_path) as f:
                 content = f.read()
 
             # Verify comprehensive content

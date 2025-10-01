@@ -348,9 +348,7 @@ class TestConfigurationValidation:
 
     def test_accepts_valid_redis_config(self) -> None:
         """Accepts valid Redis configuration parameters."""
-        config = StateConfig(
-            redis_host="redis.example.com", redis_port=6380, redis_db=1
-        )
+        config = StateConfig(redis_host="redis.example.com", redis_port=6380, redis_db=1)
 
         assert config.redis_host == "redis.example.com"
         assert config.redis_port == 6380
@@ -482,9 +480,7 @@ class TestCacheConfiguration:
 class TestErrorHandling:
     """Test error handling and edge cases."""
 
-    def test_handles_postgres_table_creation_failure(
-        self, state_config: StateConfig
-    ) -> None:
+    def test_handles_postgres_table_creation_failure(self, state_config: StateConfig) -> None:
         """Handles PostgreSQL table creation failures gracefully.
 
         Should log error but not crash initialization.
@@ -501,9 +497,7 @@ class TestErrorHandling:
         assert manager.postgres_adapter is None
         mock_adapter.rollback.assert_called_once()
 
-    def test_handles_s3_bucket_verification_failure(
-        self, state_config: StateConfig
-    ) -> None:
+    def test_handles_s3_bucket_verification_failure(self, state_config: StateConfig) -> None:
         """Handles S3 bucket verification failures gracefully.
 
         Missing or inaccessible bucket should not crash initialization.

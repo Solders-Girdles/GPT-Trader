@@ -264,9 +264,7 @@ class TestKellyRiskMetrics:
 
     def test_risk_metrics_basic(self):
         """Test basic risk metrics calculation."""
-        metrics = kelly_risk_metrics(
-            kelly_fraction=0.2, avg_loss=-0.05, portfolio_value=10000.0
-        )
+        metrics = kelly_risk_metrics(kelly_fraction=0.2, avg_loss=-0.05, portfolio_value=10000.0)
 
         assert metrics["kelly_fraction"] == 0.2
         assert metrics["position_value"] == 2000.0
@@ -275,9 +273,7 @@ class TestKellyRiskMetrics:
 
     def test_risk_metrics_large_loss(self):
         """Test risk metrics with large average loss."""
-        metrics = kelly_risk_metrics(
-            kelly_fraction=0.15, avg_loss=-0.15, portfolio_value=50000.0
-        )
+        metrics = kelly_risk_metrics(kelly_fraction=0.15, avg_loss=-0.15, portfolio_value=50000.0)
 
         assert metrics["position_value"] == 7500.0
         assert metrics["max_expected_loss"] == 1125.0  # 7500 * 0.15

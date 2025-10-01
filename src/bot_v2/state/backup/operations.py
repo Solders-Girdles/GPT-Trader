@@ -7,14 +7,14 @@ and multi-tier storage for disaster recovery and compliance.
 
 import asyncio
 import hashlib
-import json
 import inspect
+import json
 import logging
 import os
 import threading
+from collections.abc import Coroutine
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from collections.abc import Coroutine
 from typing import Any, TypeVar
 
 T = TypeVar("T")
@@ -63,7 +63,9 @@ class BackupManager:
         # Initialize services
         backup_dir = Path(self.config.backup_dir)
         local_storage = Path(self.config.local_storage_path)
-        network_storage = Path(self.config.network_storage_path) if self.config.network_storage_path else None
+        network_storage = (
+            Path(self.config.network_storage_path) if self.config.network_storage_path else None
+        )
 
         self.encryption_service = EncryptionService(
             key_path=backup_dir / ".encryption_key",
@@ -237,9 +239,7 @@ class BackupManager:
 
                 logger.info(f"Creating {backup_type.value} backup {backup_id}")
 
-                backup_data = await self._collect_backup_data(
-                    backup_type, override=state_data
-                )
+                backup_data = await self._collect_backup_data(backup_type, override=state_data)
 
                 if not backup_data:
                     raise Exception("No data to backup")
@@ -252,7 +252,9 @@ class BackupManager:
                 )
                 state_original_size = len(state_serialized)
                 if self.config.enable_compression:
-                    _, _, state_compressed_size = self.compression_service.compress(state_serialized)
+                    _, _, state_compressed_size = self.compression_service.compress(
+                        state_serialized
+                    )
                 else:
                     state_compressed_size = 0
 
@@ -299,9 +301,11 @@ class BackupManager:
                     metadata.backup_duration_seconds,
                     state_original_size,
                     state_compressed_size,
-                    (state_compressed_size / state_original_size * 100)
-                    if state_original_size and state_compressed_size
-                    else 0.0,
+                    (
+                        (state_compressed_size / state_original_size * 100)
+                        if state_original_size and state_compressed_size
+                        else 0.0
+                    ),
                 )
 
                 return metadata
@@ -364,7 +368,9 @@ class BackupManager:
         if self.config.enable_compression and metadata.size_compressed:
             backup_bytes = self.compression_service.decompress(backup_bytes)
 
-        payload = json.loads(backup_bytes.decode() if isinstance(backup_bytes, bytes) else backup_bytes)
+        payload = json.loads(
+            backup_bytes.decode() if isinstance(backup_bytes, bytes) else backup_bytes
+        )
         state_payload = payload.get("state", payload)
         if not isinstance(state_payload, dict):
             raise ValueError("Restored payload is not a mapping")
@@ -509,7 +515,9 @@ class BackupManager:
                 last_backup = self._get_last_backup_time()
                 state_payload = await self._collect_changed_data(last_backup)
             elif backup_type == BackupType.DIFFERENTIAL:
-                last_full = self._last_full_backup or datetime.now(timezone.utc) - timedelta(days=30)
+                last_full = self._last_full_backup or datetime.now(timezone.utc) - timedelta(
+                    days=30
+                )
                 state_payload = await self._collect_changed_data(last_full)
             elif backup_type == BackupType.SNAPSHOT:
                 state_payload = await self._collect_snapshot_data()
@@ -522,7 +530,9 @@ class BackupManager:
 
         persisted_state = self._pending_state_snapshot
         if backup_type == BackupType.INCREMENTAL:
-            persisted_state = self._diff_state(self._last_backup_state, self._pending_state_snapshot)
+            persisted_state = self._diff_state(
+                self._last_backup_state, self._pending_state_snapshot
+            )
         elif backup_type == BackupType.DIFFERENTIAL:
             persisted_state = self._diff_state(self._last_full_state, self._pending_state_snapshot)
 
@@ -672,9 +682,7 @@ class BackupManager:
                 else:
                     category = StateCategory.HOT
 
-                result = await self._maybe_await(
-                    self.state_manager.set_state(key, value, category)
-                )
+                result = await self._maybe_await(self.state_manager.set_state(key, value, category))
                 if result:
                     restored_count += 1
 
@@ -730,16 +738,16 @@ class BackupManager:
                 if await self.transport_service.delete(metadata.backup_id, metadata.storage_tier):
                     self._backup_metadata.pop(metadata.backup_id, None)
                     self._backup_history = [
-                        entry for entry in self._backup_history if entry.backup_id != metadata.backup_id
+                        entry
+                        for entry in self._backup_history
+                        if entry.backup_id != metadata.backup_id
                     ]
                     removed_count += 1
                     logger.debug(f"Removed expired backup {metadata.backup_id}")
 
             # Cleanup metadata files
             expired_ids = [m.backup_id for m in expired_backups]
-            self.retention_service.cleanup_metadata_files(
-                Path(self.config.backup_dir), expired_ids
-            )
+            self.retention_service.cleanup_metadata_files(Path(self.config.backup_dir), expired_ids)
 
             if removed_count > 0:
                 logger.info(f"Cleaned up {removed_count} expired backups")

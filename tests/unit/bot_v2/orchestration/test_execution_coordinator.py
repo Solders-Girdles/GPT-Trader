@@ -80,7 +80,7 @@ class TestExecutionCoordinator:
         assert mock_bot.exec_engine is not None
         mock_bot.registry.with_updates.assert_called()
 
-    @patch.dict('os.environ', {'SLIPPAGE_MULTIPLIERS': 'BTC-USD:1.5,ETH-USD:2.0'})
+    @patch.dict("os.environ", {"SLIPPAGE_MULTIPLIERS": "BTC-USD:1.5,ETH-USD:2.0"})
     def test_init_execution_with_slippage(self, coordinator, mock_bot):
         """Test execution initialization with slippage multipliers"""
         coordinator.init_execution()
@@ -142,9 +142,7 @@ class TestExecutionCoordinator:
         assert call_kwargs["side"] == OrderSide.BUY
 
     @pytest.mark.asyncio
-    async def test_execute_decision_close_position(
-        self, coordinator, mock_bot, sample_product
-    ):
+    async def test_execute_decision_close_position(self, coordinator, mock_bot, sample_product):
         """Test CLOSE action execution"""
         close_decision = Decision(
             action=Action.CLOSE,
@@ -181,9 +179,7 @@ class TestExecutionCoordinator:
         assert call_kwargs["reduce_only"] is True
 
     @pytest.mark.asyncio
-    async def test_execute_decision_close_no_position(
-        self, coordinator, sample_product
-    ):
+    async def test_execute_decision_close_no_position(self, coordinator, sample_product):
         """Test CLOSE action with no position"""
         close_decision = Decision(
             action=Action.CLOSE,
@@ -206,9 +202,7 @@ class TestExecutionCoordinator:
         coordinator._place_order.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_execute_decision_missing_product(
-        self, coordinator, sample_decision
-    ):
+    async def test_execute_decision_missing_product(self, coordinator, sample_decision):
         """Test decision execution with missing product"""
         await coordinator.execute_decision(
             symbol="BTC-USD",
@@ -260,9 +254,7 @@ class TestExecutionCoordinator:
     @pytest.mark.asyncio
     async def test_place_order_validation_error(self, coordinator, mock_bot):
         """Test order placement with validation error"""
-        coordinator._place_order_inner = AsyncMock(
-            side_effect=ValidationError("Invalid quantity")
-        )
+        coordinator._place_order_inner = AsyncMock(side_effect=ValidationError("Invalid quantity"))
 
         with pytest.raises(ValidationError):
             await coordinator._place_order(
@@ -294,9 +286,7 @@ class TestExecutionCoordinator:
     @pytest.mark.asyncio
     async def test_place_order_generic_exception(self, coordinator, mock_bot):
         """Test order placement with generic exception"""
-        coordinator._place_order_inner = AsyncMock(
-            side_effect=Exception("Unexpected error")
-        )
+        coordinator._place_order_inner = AsyncMock(side_effect=Exception("Unexpected error"))
 
         result = await coordinator._place_order(
             mock_bot.exec_engine,
@@ -408,10 +398,12 @@ class TestExecutionCoordinator:
         mock_reconciler = Mock()
         mock_reconciler.fetch_local_open_orders = Mock(return_value={})
         mock_reconciler.fetch_exchange_open_orders = AsyncMock(return_value={})
-        mock_reconciler.diff_orders = Mock(return_value=Mock(
-            missing_on_exchange=[],
-            missing_locally=[],
-        ))
+        mock_reconciler.diff_orders = Mock(
+            return_value=Mock(
+                missing_on_exchange=[],
+                missing_locally=[],
+            )
+        )
         mock_reconciler.record_snapshot = AsyncMock()
 
         await coordinator._run_order_reconciliation_cycle(mock_reconciler)

@@ -4,7 +4,6 @@ Determines appropriate storage tier based on backup type and configuration.
 """
 
 import logging
-from typing import Any
 
 from bot_v2.state.backup.models import BackupType, StorageTier
 

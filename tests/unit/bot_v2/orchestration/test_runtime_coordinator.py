@@ -105,7 +105,7 @@ class TestRuntimeCoordinator:
 
         assert mock_bot.broker is not None
 
-    @patch('bot_v2.orchestration.runtime_coordinator.create_brokerage')
+    @patch("bot_v2.orchestration.runtime_coordinator.create_brokerage")
     def test_init_broker_real_production(
         self, mock_create_brokerage, runtime_coordinator, mock_bot
     ):
@@ -121,17 +121,20 @@ class TestRuntimeCoordinator:
         mock_broker.list_products = Mock(return_value=[])
         mock_create_brokerage.return_value = mock_broker
 
-        with patch.dict('os.environ', {
-            'BROKER': 'coinbase',
-            'COINBASE_API_KEY': 'test_key',
-            'COINBASE_API_SECRET': 'test_secret',
-        }):
+        with patch.dict(
+            "os.environ",
+            {
+                "BROKER": "coinbase",
+                "COINBASE_API_KEY": "test_key",
+                "COINBASE_API_SECRET": "test_secret",
+            },
+        ):
             runtime_coordinator._init_broker()
 
         assert mock_bot.broker == mock_broker
         mock_broker.connect.assert_called_once()
 
-    @patch('bot_v2.orchestration.runtime_coordinator.create_brokerage')
+    @patch("bot_v2.orchestration.runtime_coordinator.create_brokerage")
     def test_init_broker_connection_failure(
         self, mock_create_brokerage, runtime_coordinator, mock_bot
     ):
@@ -146,18 +149,19 @@ class TestRuntimeCoordinator:
         mock_broker.connect = Mock(return_value=False)
         mock_create_brokerage.return_value = mock_broker
 
-        with patch.dict('os.environ', {
-            'BROKER': 'coinbase',
-            'COINBASE_API_KEY': 'test',
-            'COINBASE_API_SECRET': 'test',
-        }):
+        with patch.dict(
+            "os.environ",
+            {
+                "BROKER": "coinbase",
+                "COINBASE_API_KEY": "test",
+                "COINBASE_API_SECRET": "test",
+            },
+        ):
             with pytest.raises(BrokerBootstrapError):
                 runtime_coordinator._init_broker()
 
-    @patch.dict('os.environ', {'BROKER': ''})
-    def test_validate_broker_environment_missing_broker(
-        self, runtime_coordinator, mock_bot
-    ):
+    @patch.dict("os.environ", {"BROKER": ""})
+    def test_validate_broker_environment_missing_broker(self, runtime_coordinator, mock_bot):
         """Test broker validation with missing BROKER env"""
         mock_bot.config.profile = Profile.PROD
         mock_bot.config.mock_broker = False
@@ -167,10 +171,8 @@ class TestRuntimeCoordinator:
         with pytest.raises(RuntimeError, match="BROKER must be set"):
             runtime_coordinator._validate_broker_environment()
 
-    @patch.dict('os.environ', {'BROKER': 'coinbase', 'COINBASE_SANDBOX': '1'})
-    def test_validate_broker_environment_sandbox_not_allowed(
-        self, runtime_coordinator, mock_bot
-    ):
+    @patch.dict("os.environ", {"BROKER": "coinbase", "COINBASE_SANDBOX": "1"})
+    def test_validate_broker_environment_sandbox_not_allowed(self, runtime_coordinator, mock_bot):
         """Test broker validation rejects sandbox in production"""
         mock_bot.config.profile = Profile.PROD
         mock_bot.config.mock_broker = False
@@ -180,24 +182,23 @@ class TestRuntimeCoordinator:
         with pytest.raises(RuntimeError, match="COINBASE_SANDBOX=1 is not supported"):
             runtime_coordinator._validate_broker_environment()
 
-    def test_validate_broker_environment_skip_in_dev(
-        self, runtime_coordinator, mock_bot
-    ):
+    def test_validate_broker_environment_skip_in_dev(self, runtime_coordinator, mock_bot):
         """Test broker validation skipped in DEV mode"""
         mock_bot.config.profile = Profile.DEV
 
         # Should not raise
         runtime_coordinator._validate_broker_environment()
 
-    @patch.dict('os.environ', {
-        'BROKER': 'coinbase',
-        'COINBASE_API_MODE': 'advanced',
-        'COINBASE_PROD_CDP_API_KEY': 'test_key',
-        'COINBASE_PROD_CDP_PRIVATE_KEY': 'test_private',
-    })
-    def test_validate_broker_environment_derivatives_success(
-        self, runtime_coordinator, mock_bot
-    ):
+    @patch.dict(
+        "os.environ",
+        {
+            "BROKER": "coinbase",
+            "COINBASE_API_MODE": "advanced",
+            "COINBASE_PROD_CDP_API_KEY": "test_key",
+            "COINBASE_PROD_CDP_PRIVATE_KEY": "test_private",
+        },
+    )
+    def test_validate_broker_environment_derivatives_success(self, runtime_coordinator, mock_bot):
         """Test broker validation for derivatives"""
         mock_bot.config.profile = Profile.PROD
         mock_bot.config.mock_broker = False
@@ -207,7 +208,7 @@ class TestRuntimeCoordinator:
         # Should not raise
         runtime_coordinator._validate_broker_environment()
 
-    @patch('bot_v2.orchestration.runtime_coordinator.RiskConfig')
+    @patch("bot_v2.orchestration.runtime_coordinator.RiskConfig")
     def test_init_risk_manager_from_env(
         self, mock_risk_config_class, runtime_coordinator, mock_bot
     ):
@@ -220,9 +221,7 @@ class TestRuntimeCoordinator:
         assert mock_bot.risk_manager is not None
         mock_bot.config_controller.sync_with_risk_manager.assert_called()
 
-    def test_init_risk_manager_from_registry(
-        self, runtime_coordinator, mock_bot
-    ):
+    def test_init_risk_manager_from_registry(self, runtime_coordinator, mock_bot):
         """Test risk manager from registry"""
         mock_risk_manager = Mock()
         mock_bot.registry.risk_manager = mock_risk_manager
@@ -231,9 +230,7 @@ class TestRuntimeCoordinator:
 
         assert mock_bot.risk_manager == mock_risk_manager
 
-    def test_set_reduce_only_mode_enabled(
-        self, runtime_coordinator, mock_bot
-    ):
+    def test_set_reduce_only_mode_enabled(self, runtime_coordinator, mock_bot):
         """Test enabling reduce-only mode"""
         runtime_coordinator.set_reduce_only_mode(True, reason="test")
 
@@ -241,9 +238,7 @@ class TestRuntimeCoordinator:
             True, reason="test", risk_manager=mock_bot.risk_manager
         )
 
-    def test_set_reduce_only_mode_disabled(
-        self, runtime_coordinator, mock_bot
-    ):
+    def test_set_reduce_only_mode_disabled(self, runtime_coordinator, mock_bot):
         """Test disabling reduce-only mode"""
         runtime_coordinator.set_reduce_only_mode(False, reason="test")
 
@@ -280,9 +275,7 @@ class TestRuntimeCoordinator:
         assert call_kwargs["metrics"]["reason"] == "test_reason"
 
     @pytest.mark.asyncio
-    async def test_reconcile_state_on_startup_dry_run(
-        self, runtime_coordinator, mock_bot
-    ):
+    async def test_reconcile_state_on_startup_dry_run(self, runtime_coordinator, mock_bot):
         """Test startup reconciliation skipped in dry-run"""
         mock_bot.config.dry_run = True
 
@@ -291,7 +284,7 @@ class TestRuntimeCoordinator:
         # Should skip reconciliation
 
     @pytest.mark.asyncio
-    @patch('bot_v2.orchestration.runtime_coordinator.OrderReconciler')
+    @patch("bot_v2.orchestration.runtime_coordinator.OrderReconciler")
     async def test_reconcile_state_on_startup_success(
         self, mock_reconciler_class, runtime_coordinator, mock_bot
     ):
@@ -305,10 +298,12 @@ class TestRuntimeCoordinator:
         mock_reconciler.fetch_local_open_orders = Mock(return_value={})
         mock_reconciler.fetch_exchange_open_orders = AsyncMock(return_value={})
         mock_reconciler.record_snapshot = AsyncMock()
-        mock_reconciler.diff_orders = Mock(return_value=Mock(
-            missing_on_exchange=[],
-            missing_locally=[],
-        ))
+        mock_reconciler.diff_orders = Mock(
+            return_value=Mock(
+                missing_on_exchange=[],
+                missing_locally=[],
+            )
+        )
         mock_reconciler.reconcile_missing_on_exchange = AsyncMock()
         mock_reconciler.reconcile_missing_locally = Mock()
         mock_reconciler.snapshot_positions = AsyncMock(return_value={})
@@ -319,7 +314,7 @@ class TestRuntimeCoordinator:
         mock_reconciler.fetch_local_open_orders.assert_called_once()
 
     @pytest.mark.asyncio
-    @patch('bot_v2.orchestration.runtime_coordinator.OrderReconciler')
+    @patch("bot_v2.orchestration.runtime_coordinator.OrderReconciler")
     async def test_reconcile_state_on_startup_failure(
         self, mock_reconciler_class, runtime_coordinator, mock_bot
     ):

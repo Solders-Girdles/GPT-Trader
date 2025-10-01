@@ -5,7 +5,8 @@ from __future__ import annotations
 import importlib
 import warnings
 from types import ModuleType
-from typing import Any, Iterable
+from typing import Any
+from collections.abc import Iterable
 
 _DELEGATE_MODULE = "archived.legacy_live_trade_facade.execution"
 

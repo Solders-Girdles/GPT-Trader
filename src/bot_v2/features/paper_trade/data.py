@@ -5,7 +5,7 @@ Completely self-contained - no external dependencies.
 """
 
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import pandas as pd
 from bot_v2.data_providers import get_data_provider

@@ -146,9 +146,7 @@ class TestBackupSmokeTest:
         checksum = backup_serializer.calculate_checksum(serialized)
         assert len(checksum) == 64
 
-    def test_handles_special_characters_in_data(
-        self, backup_serializer: BackupSerializer
-    ) -> None:
+    def test_handles_special_characters_in_data(self, backup_serializer: BackupSerializer) -> None:
         """Handles special characters in payload without corruption.
 
         Ensures proper encoding/escaping.
@@ -167,9 +165,7 @@ class TestBackupSmokeTest:
         assert deserialized["unicode"] == payload_with_special_chars["unicode"]
         assert deserialized["escape"] == payload_with_special_chars["escape"]
 
-    def test_nested_data_structures_preserved(
-        self, backup_serializer: BackupSerializer
-    ) -> None:
+    def test_nested_data_structures_preserved(self, backup_serializer: BackupSerializer) -> None:
         """Nested data structures preserved through serialization.
 
         Ensures deep data integrity.

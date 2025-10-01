@@ -97,9 +97,7 @@ class TestRecoveryOrchestrator:
     @pytest.mark.asyncio
     async def test_detect_failures_delegates_to_detector(self, orchestrator):
         """Test failure detection delegates to FailureDetector"""
-        orchestrator.detector.detect_failures = AsyncMock(
-            return_value=[FailureType.REDIS_DOWN]
-        )
+        orchestrator.detector.detect_failures = AsyncMock(return_value=[FailureType.REDIS_DOWN])
 
         failures = await orchestrator.detect_failures()
 
@@ -183,9 +181,7 @@ class TestRecoveryOrchestrator:
             error_message="Redis down",
         )
 
-        operation = orchestrator._create_recovery_operation(
-            failure_event, RecoveryMode.AUTOMATIC
-        )
+        operation = orchestrator._create_recovery_operation(failure_event, RecoveryMode.AUTOMATIC)
 
         mock_handler = AsyncMock(return_value=True)
         orchestrator._failure_handlers[FailureType.REDIS_DOWN] = mock_handler
@@ -207,9 +203,7 @@ class TestRecoveryOrchestrator:
             error_message="Redis down",
         )
 
-        operation = orchestrator._create_recovery_operation(
-            failure_event, RecoveryMode.AUTOMATIC
-        )
+        operation = orchestrator._create_recovery_operation(failure_event, RecoveryMode.AUTOMATIC)
 
         # Fail twice, succeed on third attempt
         mock_handler = AsyncMock(side_effect=[False, False, True])
@@ -231,9 +225,7 @@ class TestRecoveryOrchestrator:
             error_message="Redis down",
         )
 
-        operation = orchestrator._create_recovery_operation(
-            failure_event, RecoveryMode.AUTOMATIC
-        )
+        operation = orchestrator._create_recovery_operation(failure_event, RecoveryMode.AUTOMATIC)
 
         mock_handler = AsyncMock(return_value=False)
         orchestrator._failure_handlers[FailureType.REDIS_DOWN] = mock_handler
@@ -254,9 +246,7 @@ class TestRecoveryOrchestrator:
             error_message="Redis down",
         )
 
-        operation = orchestrator._create_recovery_operation(
-            failure_event, RecoveryMode.AUTOMATIC
-        )
+        operation = orchestrator._create_recovery_operation(failure_event, RecoveryMode.AUTOMATIC)
 
         # Remove handler
         del orchestrator._failure_handlers[FailureType.REDIS_DOWN]
@@ -276,9 +266,7 @@ class TestRecoveryOrchestrator:
             error_message="Redis down",
         )
 
-        operation = orchestrator._create_recovery_operation(
-            failure_event, RecoveryMode.AUTOMATIC
-        )
+        operation = orchestrator._create_recovery_operation(failure_event, RecoveryMode.AUTOMATIC)
 
         orchestrator.validator.validate_recovery = AsyncMock(return_value=True)
 
@@ -299,9 +287,7 @@ class TestRecoveryOrchestrator:
             error_message="Redis down",
         )
 
-        operation = orchestrator._create_recovery_operation(
-            failure_event, RecoveryMode.AUTOMATIC
-        )
+        operation = orchestrator._create_recovery_operation(failure_event, RecoveryMode.AUTOMATIC)
 
         orchestrator.validator.validate_recovery = AsyncMock(return_value=False)
 
@@ -320,9 +306,7 @@ class TestRecoveryOrchestrator:
             error_message="Redis down",
         )
 
-        operation = orchestrator._create_recovery_operation(
-            failure_event, RecoveryMode.AUTOMATIC
-        )
+        operation = orchestrator._create_recovery_operation(failure_event, RecoveryMode.AUTOMATIC)
 
         orchestrator.alerter.escalate_recovery = AsyncMock()
 
@@ -342,9 +326,7 @@ class TestRecoveryOrchestrator:
             error_message="Redis down",
         )
 
-        operation = orchestrator._create_recovery_operation(
-            failure_event, RecoveryMode.MANUAL
-        )
+        operation = orchestrator._create_recovery_operation(failure_event, RecoveryMode.MANUAL)
 
         orchestrator.alerter.escalate_recovery = AsyncMock()
 
@@ -461,16 +443,14 @@ class TestRecoveryOrchestrator:
             error_message="Redis down",
         )
 
-        operation = orchestrator._create_recovery_operation(
-            failure_event, RecoveryMode.AUTOMATIC
-        )
+        operation = orchestrator._create_recovery_operation(failure_event, RecoveryMode.AUTOMATIC)
 
         # Simulate long recovery time
         operation.recovery_time_seconds = 400  # > 5 minutes
 
         orchestrator.validator.validate_recovery = AsyncMock(return_value=True)
 
-        with patch('bot_v2.state.recovery.orchestrator.logger') as mock_logger:
+        with patch("bot_v2.state.recovery.orchestrator.logger") as mock_logger:
             await orchestrator._complete_recovery(operation)
 
             # Should log warning about RTO

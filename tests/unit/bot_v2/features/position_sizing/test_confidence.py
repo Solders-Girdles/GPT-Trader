@@ -102,9 +102,7 @@ class TestConfidenceAdjustment:
     def test_confidence_adjustment_caps_at_max(self):
         """Test that adjustment doesn't exceed max_adjustment."""
         base_size = 0.1
-        adjustment = ConfidenceAdjustment(
-            confidence=0.99, min_confidence=0.6, max_adjustment=1.5
-        )
+        adjustment = ConfidenceAdjustment(confidence=0.99, min_confidence=0.6, max_adjustment=1.5)
 
         adjusted, _ = confidence_adjusted_size(base_size, 0.99, adjustment)
 

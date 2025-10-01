@@ -110,9 +110,7 @@ class TestStorageRecoveryHandlers:
     @pytest.mark.asyncio
     async def test_recover_redis_pg_query_fails(self, storage_handlers, recovery_operation):
         """Test Redis recovery when PostgreSQL query fails"""
-        storage_handlers.state_manager.pg_conn.cursor.side_effect = Exception(
-            "Query failed"
-        )
+        storage_handlers.state_manager.pg_conn.cursor.side_effect = Exception("Query failed")
 
         success = await storage_handlers.recover_redis(recovery_operation)
 
@@ -143,17 +141,13 @@ class TestStorageRecoveryHandlers:
         assert success is True
 
     @pytest.mark.asyncio
-    async def test_recover_postgres_from_checkpoint(
-        self, storage_handlers, recovery_operation
-    ):
+    async def test_recover_postgres_from_checkpoint(self, storage_handlers, recovery_operation):
         """Test PostgreSQL recovery from checkpoint"""
         mock_checkpoint = Mock()
         mock_checkpoint.checkpoint_id = "CKPT_001"
         mock_checkpoint.timestamp = datetime.utcnow() - timedelta(seconds=30)
 
-        storage_handlers.checkpoint_handler.get_latest_checkpoint.return_value = (
-            mock_checkpoint
-        )
+        storage_handlers.checkpoint_handler.get_latest_checkpoint.return_value = mock_checkpoint
         storage_handlers.checkpoint_handler.restore_from_checkpoint.return_value = True
 
         success = await storage_handlers.recover_postgres(recovery_operation)
@@ -197,9 +191,7 @@ class TestStorageRecoveryHandlers:
         mock_checkpoint.checkpoint_id = "CKPT_001"
         mock_checkpoint.timestamp = datetime.utcnow()
 
-        storage_handlers.checkpoint_handler.get_latest_checkpoint.return_value = (
-            mock_checkpoint
-        )
+        storage_handlers.checkpoint_handler.get_latest_checkpoint.return_value = mock_checkpoint
         storage_handlers.checkpoint_handler.restore_from_checkpoint.return_value = False
 
         success = await storage_handlers.recover_postgres(recovery_operation)
@@ -227,17 +219,13 @@ class TestStorageRecoveryHandlers:
         assert success is False
 
     @pytest.mark.asyncio
-    async def test_recover_from_corruption_success(
-        self, storage_handlers, recovery_operation
-    ):
+    async def test_recover_from_corruption_success(self, storage_handlers, recovery_operation):
         """Test successful data corruption recovery"""
         mock_checkpoint = Mock()
         mock_checkpoint.checkpoint_id = "CKPT_VALID"
         mock_checkpoint.timestamp = datetime.utcnow() - timedelta(minutes=5)
 
-        storage_handlers.checkpoint_handler.find_valid_checkpoint.return_value = (
-            mock_checkpoint
-        )
+        storage_handlers.checkpoint_handler.find_valid_checkpoint.return_value = mock_checkpoint
         storage_handlers.checkpoint_handler.restore_from_checkpoint.return_value = True
 
         # Mock transaction replay
@@ -266,9 +254,7 @@ class TestStorageRecoveryHandlers:
     ):
         """Test corruption recovery when checkpoint restore fails"""
         mock_checkpoint = Mock()
-        storage_handlers.checkpoint_handler.find_valid_checkpoint.return_value = (
-            mock_checkpoint
-        )
+        storage_handlers.checkpoint_handler.find_valid_checkpoint.return_value = mock_checkpoint
         storage_handlers.checkpoint_handler.restore_from_checkpoint.return_value = False
 
         success = await storage_handlers.recover_from_corruption(recovery_operation)

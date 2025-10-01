@@ -100,9 +100,7 @@ def portfolio_snapshot() -> PortfolioSnapshot:
     return PortfolioSnapshot(
         total_value=3000.0,
         cash=2000.0,
-        positions=[
-            PositionInfo("AAPL", 10, 100.0, 100.0, 1000.0, 0.0, 0.0, 1)
-        ],
+        positions=[PositionInfo("AAPL", 10, 100.0, 100.0, 1000.0, 0.0, 0.0, 1)],
         daily_pnl=0.0,
         daily_pnl_pct=0.0,
         quarterly_pnl_pct=0.0,
@@ -152,9 +150,7 @@ class TestSignalGeneration:
         """
         tier_config = portfolio_config.tiers["micro"]
 
-        signals = strategy_selector.generate_signals(
-            tier_config, portfolio_snapshot
-        )
+        signals = strategy_selector.generate_signals(tier_config, portfolio_snapshot)
 
         assert isinstance(signals, list)
         # Should have signals for momentum strategy
@@ -178,9 +174,7 @@ class TestSignalGeneration:
             trading=TradingRules(5, "cash", 2, True),
         )
 
-        signals = strategy_selector.generate_signals(
-            tier_config, portfolio_snapshot
-        )
+        signals = strategy_selector.generate_signals(tier_config, portfolio_snapshot)
 
         # Should generate signals from both strategies
         sources = {s.strategy_source for s in signals}
@@ -202,9 +196,7 @@ class TestMomentumStrategy:
         """
         tier_config = portfolio_config.tiers["micro"]
 
-        signals = strategy_selector._momentum_strategy(
-            ["AAPL"], tier_config, portfolio_snapshot
-        )
+        signals = strategy_selector._momentum_strategy(["AAPL"], tier_config, portfolio_snapshot)
 
         # Uptrending mock data should generate buy signals
         if signals:
@@ -234,9 +226,7 @@ class TestSymbolUniverse:
             trading=TradingRules(5, "cash", 2, True),
         )
 
-        universe = strategy_selector._get_symbol_universe(
-            tier_config, portfolio_snapshot
-        )
+        universe = strategy_selector._get_symbol_universe(tier_config, portfolio_snapshot)
 
         assert len(universe) <= 8  # Limited for micro
 
@@ -251,7 +241,7 @@ class TestSymbolUniverse:
         """
         tier_config = TierConfig(
             name="Large Portfolio",
-            range=(100000, float('inf')),
+            range=(100000, float("inf")),
             positions=PositionConstraints(10, 30, 20, 1000.0),
             min_position_size=1000.0,
             strategies=["momentum", "mean_reversion", "trend_following", "ml_enhanced"],
@@ -259,9 +249,7 @@ class TestSymbolUniverse:
             trading=TradingRules(20, "margin", 0, False),
         )
 
-        universe = strategy_selector._get_symbol_universe(
-            tier_config, portfolio_snapshot
-        )
+        universe = strategy_selector._get_symbol_universe(tier_config, portfolio_snapshot)
 
         assert len(universe) > 15  # Larger universe
 
@@ -326,15 +314,10 @@ class TestSignalFiltering:
 
         # Create many signals
         signals = [
-            TradingSignal(
-                f"SYM{i}", "BUY", 0.7, 500.0, 5.0, "momentum", "test"
-            )
-            for i in range(20)
+            TradingSignal(f"SYM{i}", "BUY", 0.7, 500.0, 5.0, "momentum", "test") for i in range(20)
         ]
 
-        max_signals = strategy_selector._calculate_max_signals(
-            tier_config, portfolio_snapshot
-        )
+        max_signals = strategy_selector._calculate_max_signals(tier_config, portfolio_snapshot)
 
         assert max_signals <= tier_config.positions.max_positions
 
@@ -356,16 +339,12 @@ class TestErrorHandling:
         short_data = Mock()
         short_data.__len__ = Mock(return_value=5)  # Too short
         short_data.data = {"Close": [100.0] * 5}
-        strategy_selector.data_provider.get_historical_data = Mock(
-            return_value=short_data
-        )
+        strategy_selector.data_provider.get_historical_data = Mock(return_value=short_data)
 
         tier_config = portfolio_config.tiers["micro"]
 
         # Should not raise
-        signals = strategy_selector._momentum_strategy(
-            ["AAPL"], tier_config, portfolio_snapshot
-        )
+        signals = strategy_selector._momentum_strategy(["AAPL"], tier_config, portfolio_snapshot)
 
         assert isinstance(signals, list)
 
@@ -386,8 +365,6 @@ class TestErrorHandling:
         tier_config = portfolio_config.tiers["micro"]
 
         # Should not raise
-        signals = strategy_selector._momentum_strategy(
-            ["AAPL"], tier_config, portfolio_snapshot
-        )
+        signals = strategy_selector._momentum_strategy(["AAPL"], tier_config, portfolio_snapshot)
 
         assert signals == []

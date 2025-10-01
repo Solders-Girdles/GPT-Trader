@@ -75,6 +75,7 @@ def backup_config(temp_backup_dir: Path) -> BackupConfig:
 def mock_state_manager():
     """Create mock state manager."""
     from unittest.mock import AsyncMock
+
     state_manager = Mock()
     state_manager.get_keys_by_pattern = AsyncMock(return_value=["test:key1", "test:key2"])
     state_manager.get_state = AsyncMock(return_value={"test": "data"})
@@ -123,9 +124,7 @@ class TestBackupManagerInitialization:
 
         assert manager._encryption_enabled is True
 
-    def test_disables_encryption_when_config_false(
-        self, backup_config: BackupConfig
-    ) -> None:
+    def test_disables_encryption_when_config_false(self, backup_config: BackupConfig) -> None:
         """Disables encryption when config specifies.
 
         Allows faster backups in test environments.
@@ -153,9 +152,7 @@ class TestBackupManagerInitialization:
         # S3 client should be initialized
         assert manager._s3_client is not None or manager.transport_service._s3_client is not None
 
-    def test_handles_s3_unavailable_gracefully(
-        self, backup_config: BackupConfig
-    ) -> None:
+    def test_handles_s3_unavailable_gracefully(self, backup_config: BackupConfig) -> None:
         """Handles missing boto3 without crashing.
 
         System operates with local storage only.
@@ -202,9 +199,7 @@ class TestFullBackupCreation:
         assert metadata.status in [BackupStatus.COMPLETED, BackupStatus.VERIFIED]
         assert metadata.size_bytes > 0
 
-    def test_full_backup_contains_all_data(
-        self, backup_manager: BackupManager
-    ) -> None:
+    def test_full_backup_contains_all_data(self, backup_manager: BackupManager) -> None:
         """Full backup contains complete state snapshot.
 
         No data should be omitted from full backup.
@@ -216,26 +211,20 @@ class TestFullBackupCreation:
             "metadata": {"last_update": "2024-01-01T00:00:00Z"},
         }
 
-        metadata = backup_manager.create_backup(
-            state_data=state_data, backup_type=BackupType.FULL
-        )
+        metadata = backup_manager.create_backup(state_data=state_data, backup_type=BackupType.FULL)
 
         # Verify all keys preserved
         backup_file = Path(backup_manager.config.backup_dir) / f"{metadata.backup_id}.backup"
         assert backup_file.exists()
 
-    def test_full_backup_generates_checksum(
-        self, backup_manager: BackupManager
-    ) -> None:
+    def test_full_backup_generates_checksum(self, backup_manager: BackupManager) -> None:
         """Full backup generates checksum for integrity verification.
 
         Checksum detects corruption during storage/retrieval.
         """
         state_data = {"test": "data"}
 
-        metadata = backup_manager.create_backup(
-            state_data=state_data, backup_type=BackupType.FULL
-        )
+        metadata = backup_manager.create_backup(state_data=state_data, backup_type=BackupType.FULL)
 
         assert metadata.checksum is not None
         assert len(metadata.checksum) > 0
@@ -247,9 +236,7 @@ class TestFullBackupCreation:
         """
         state_data = {"large_data": "x" * 10000}
 
-        metadata = backup_manager.create_backup(
-            state_data=state_data, backup_type=BackupType.FULL
-        )
+        metadata = backup_manager.create_backup(state_data=state_data, backup_type=BackupType.FULL)
 
         assert metadata.size_bytes > 0
         if backup_manager.config.enable_compression:
@@ -261,9 +248,7 @@ class TestFullBackupCreation:
 class TestIncrementalBackup:
     """Test incremental backup creation."""
 
-    def test_creates_incremental_backup(
-        self, backup_manager: BackupManager
-    ) -> None:
+    def test_creates_incremental_backup(self, backup_manager: BackupManager) -> None:
         """Creates incremental backup containing only changes.
 
         Incremental backups optimize storage and time.
@@ -285,9 +270,7 @@ class TestIncrementalBackup:
         # if many fields changed or new data was added
         assert inc_metadata.size_bytes > 0
 
-    def test_incremental_requires_baseline(
-        self, backup_manager: BackupManager
-    ) -> None:
+    def test_incremental_requires_baseline(self, backup_manager: BackupManager) -> None:
         """Incremental backup requires previous full backup.
 
         Must fail gracefully if no baseline exists.
@@ -306,18 +289,14 @@ class TestIncrementalBackup:
 class TestDifferentialBackup:
     """Test differential backup creation."""
 
-    def test_creates_differential_backup(
-        self, backup_manager: BackupManager
-    ) -> None:
+    def test_creates_differential_backup(self, backup_manager: BackupManager) -> None:
         """Creates differential backup against last full backup.
 
         Differential contains all changes since last full backup.
         """
         # Create full backup
         initial_state = {"positions": {"AAPL": {"qty": 10}}}
-        backup_manager.create_backup(
-            state_data=initial_state, backup_type=BackupType.FULL
-        )
+        backup_manager.create_backup(state_data=initial_state, backup_type=BackupType.FULL)
 
         # Create differential
         changed_state = {"positions": {"AAPL": {"qty": 20}}}
@@ -331,9 +310,7 @@ class TestDifferentialBackup:
 class TestBackupCompression:
     """Test backup compression."""
 
-    def test_compresses_backup_when_enabled(
-        self, backup_manager: BackupManager
-    ) -> None:
+    def test_compresses_backup_when_enabled(self, backup_manager: BackupManager) -> None:
         """Compresses backup data when compression enabled.
 
         Reduces storage costs and transfer time.
@@ -342,15 +319,11 @@ class TestBackupCompression:
         # Highly compressible data
         state_data = {"repeated": "x" * 10000}
 
-        metadata = backup_manager.create_backup(
-            state_data=state_data, backup_type=BackupType.FULL
-        )
+        metadata = backup_manager.create_backup(state_data=state_data, backup_type=BackupType.FULL)
 
         assert metadata.size_compressed < metadata.size_bytes
 
-    def test_skips_compression_when_disabled(
-        self, backup_manager: BackupManager
-    ) -> None:
+    def test_skips_compression_when_disabled(self, backup_manager: BackupManager) -> None:
         """Skips compression when disabled in config.
 
         Faster backups when storage space not a concern.
@@ -358,9 +331,7 @@ class TestBackupCompression:
         backup_manager.config.enable_compression = False
         state_data = {"data": "test"}
 
-        metadata = backup_manager.create_backup(
-            state_data=state_data, backup_type=BackupType.FULL
-        )
+        metadata = backup_manager.create_backup(state_data=state_data, backup_type=BackupType.FULL)
 
         # Should have no compression or equal sizes
         assert metadata.size_compressed == 0 or metadata.size_compressed == metadata.size_bytes
@@ -369,9 +340,7 @@ class TestBackupCompression:
 class TestBackupEncryption:
     """Test backup encryption."""
 
-    def test_encrypts_backup_when_enabled(
-        self, backup_manager: BackupManager
-    ) -> None:
+    def test_encrypts_backup_when_enabled(self, backup_manager: BackupManager) -> None:
         """Encrypts backup data when encryption enabled.
 
         Critical for securing sensitive trading data.
@@ -386,16 +355,12 @@ class TestBackupEncryption:
 
         state_data = {"secret": "sensitive_data"}
 
-        metadata = backup_manager.create_backup(
-            state_data=state_data, backup_type=BackupType.FULL
-        )
+        metadata = backup_manager.create_backup(state_data=state_data, backup_type=BackupType.FULL)
 
         # Verify encryption was attempted
         assert metadata.encryption_key_id is not None
 
-    def test_skips_encryption_when_disabled(
-        self, backup_manager: BackupManager
-    ) -> None:
+    def test_skips_encryption_when_disabled(self, backup_manager: BackupManager) -> None:
         """Skips encryption when disabled in config.
 
         Faster backups in non-production environments.
@@ -405,9 +370,7 @@ class TestBackupEncryption:
         backup_manager._encryption_enabled = False
         state_data = {"data": "test"}
 
-        metadata = backup_manager.create_backup(
-            state_data=state_data, backup_type=BackupType.FULL
-        )
+        metadata = backup_manager.create_backup(state_data=state_data, backup_type=BackupType.FULL)
 
         assert metadata.encryption_key_id is None
 
@@ -435,17 +398,13 @@ class TestBackupRestoration:
 
         assert restored_state == original_state
 
-    def test_verifies_checksum_on_restore(
-        self, backup_manager: BackupManager
-    ) -> None:
+    def test_verifies_checksum_on_restore(self, backup_manager: BackupManager) -> None:
         """Verifies checksum when restoring backup.
 
         Detects corruption before using potentially invalid state.
         """
         state_data = {"test": "data"}
-        metadata = backup_manager.create_backup(
-            state_data=state_data, backup_type=BackupType.FULL
-        )
+        metadata = backup_manager.create_backup(state_data=state_data, backup_type=BackupType.FULL)
 
         # Corrupt the backup file
         backup_file = Path(backup_manager.config.backup_dir) / f"{metadata.backup_id}.backup"
@@ -455,9 +414,7 @@ class TestBackupRestoration:
         with pytest.raises(Exception):  # Should raise checksum validation error
             backup_manager.restore_from_backup(metadata.backup_id)
 
-    def test_handles_missing_backup_gracefully(
-        self, backup_manager: BackupManager
-    ) -> None:
+    def test_handles_missing_backup_gracefully(self, backup_manager: BackupManager) -> None:
         """Handles attempt to restore non-existent backup.
 
         Should raise clear error for missing backup.
@@ -465,9 +422,7 @@ class TestBackupRestoration:
         with pytest.raises(FileNotFoundError):
             backup_manager.restore_from_backup("nonexistent_backup_id")
 
-    def test_decrypts_backup_on_restore(
-        self, backup_manager: BackupManager
-    ) -> None:
+    def test_decrypts_backup_on_restore(self, backup_manager: BackupManager) -> None:
         """Decrypts backup data during restoration.
 
         Must decrypt to recover original state.
@@ -481,9 +436,7 @@ class TestBackupRestoration:
         backup_manager._cipher = mock_cipher
 
         state_data = {"secret": "data"}
-        metadata = backup_manager.create_backup(
-            state_data=state_data, backup_type=BackupType.FULL
-        )
+        metadata = backup_manager.create_backup(state_data=state_data, backup_type=BackupType.FULL)
 
         # Mock decrypt to return original data
         original_json = json.dumps({"state": state_data}).encode()
@@ -496,9 +449,7 @@ class TestBackupRestoration:
 class TestS3Operations:
     """Test S3 upload/download functionality."""
 
-    def test_uploads_backup_to_s3(
-        self, backup_manager: BackupManager
-    ) -> None:
+    def test_uploads_backup_to_s3(self, backup_manager: BackupManager) -> None:
         """Uploads backup to S3 cloud storage.
 
         Critical for off-site disaster recovery.
@@ -509,18 +460,14 @@ class TestS3Operations:
         backup_manager._s3_client = mock_s3
 
         state_data = {"test": "data"}
-        metadata = backup_manager.create_backup(
-            state_data=state_data, backup_type=BackupType.FULL
-        )
+        metadata = backup_manager.create_backup(state_data=state_data, backup_type=BackupType.FULL)
 
         # Verify S3 upload attempted
         if backup_manager._s3_client:
             backup_manager._upload_to_s3(metadata.backup_id)
             mock_s3.upload_file.assert_called()
 
-    def test_handles_s3_upload_failure_gracefully(
-        self, backup_manager: BackupManager
-    ) -> None:
+    def test_handles_s3_upload_failure_gracefully(self, backup_manager: BackupManager) -> None:
         """Handles S3 upload failures without crashing.
 
         Local backup should remain valid even if S3 fails.
@@ -534,9 +481,7 @@ class TestS3Operations:
         state_data = {"test": "data"}
 
         # Should not raise - local backup still succeeds
-        metadata = backup_manager.create_backup(
-            state_data=state_data, backup_type=BackupType.FULL
-        )
+        metadata = backup_manager.create_backup(state_data=state_data, backup_type=BackupType.FULL)
 
         assert metadata is not None
         assert metadata.status in [BackupStatus.COMPLETED, BackupStatus.VERIFIED]
@@ -545,9 +490,7 @@ class TestS3Operations:
 class TestBackupCleanup:
     """Test backup cleanup and retention policies."""
 
-    def test_deletes_old_backups_beyond_retention(
-        self, backup_manager: BackupManager
-    ) -> None:
+    def test_deletes_old_backups_beyond_retention(self, backup_manager: BackupManager) -> None:
         """Deletes backups older than retention period.
 
         Prevents unbounded storage growth.
@@ -588,9 +531,7 @@ class TestBackupCleanup:
 
         # Create recent backup
         state_data = {"recent": "data"}
-        metadata = backup_manager.create_backup(
-            state_data=state_data, backup_type=BackupType.FULL
-        )
+        metadata = backup_manager.create_backup(state_data=state_data, backup_type=BackupType.FULL)
 
         # Run cleanup
         backup_manager.cleanup_old_backups()
@@ -603,9 +544,7 @@ class TestBackupCleanup:
 class TestConcurrentBackups:
     """Test concurrent backup protection."""
 
-    def test_prevents_concurrent_backups(
-        self, backup_manager: BackupManager
-    ) -> None:
+    def test_prevents_concurrent_backups(self, backup_manager: BackupManager) -> None:
         """Prevents multiple backups running concurrently.
 
         Concurrent backups can corrupt state.
@@ -613,9 +552,7 @@ class TestConcurrentBackups:
         # Lock should be acquired during backup
         assert hasattr(backup_manager, "_backup_lock")
 
-    def test_releases_lock_after_backup(
-        self, backup_manager: BackupManager
-    ) -> None:
+    def test_releases_lock_after_backup(self, backup_manager: BackupManager) -> None:
         """Releases lock after backup completes.
 
         Must not deadlock on subsequent backups.
@@ -626,9 +563,7 @@ class TestConcurrentBackups:
         backup_manager.create_backup(state_data=state_data, backup_type=BackupType.FULL)
 
         # Second backup should succeed (lock released)
-        metadata = backup_manager.create_backup(
-            state_data=state_data, backup_type=BackupType.FULL
-        )
+        metadata = backup_manager.create_backup(state_data=state_data, backup_type=BackupType.FULL)
 
         assert metadata is not None
 
@@ -643,9 +578,7 @@ class TestErrorHandling:
         """
         empty_state = {}
 
-        metadata = backup_manager.create_backup(
-            state_data=empty_state, backup_type=BackupType.FULL
-        )
+        metadata = backup_manager.create_backup(state_data=empty_state, backup_type=BackupType.FULL)
 
         assert metadata is not None
         assert metadata.size_bytes >= 0
@@ -661,15 +594,11 @@ class TestErrorHandling:
         large_state = {"large_data": "x" * (2 * 1024 * 1024)}  # 2 MB
 
         # Should handle gracefully (warn, split, or compress)
-        metadata = backup_manager.create_backup(
-            state_data=large_state, backup_type=BackupType.FULL
-        )
+        metadata = backup_manager.create_backup(state_data=large_state, backup_type=BackupType.FULL)
 
         assert metadata is not None
 
-    def test_handles_disk_full_scenario(
-        self, backup_manager: BackupManager
-    ) -> None:
+    def test_handles_disk_full_scenario(self, backup_manager: BackupManager) -> None:
         """Handles disk full scenario gracefully.
 
         Should raise clear error when disk space exhausted.
@@ -679,9 +608,7 @@ class TestErrorHandling:
             state_data = {"test": "data"}
 
             with pytest.raises(OSError):
-                backup_manager.create_backup(
-                    state_data=state_data, backup_type=BackupType.FULL
-                )
+                backup_manager.create_backup(state_data=state_data, backup_type=BackupType.FULL)
 
 
 class TestMetadataPersistence:
@@ -693,17 +620,13 @@ class TestMetadataPersistence:
         Metadata must survive process restarts.
         """
         state_data = {"test": "data"}
-        metadata = backup_manager.create_backup(
-            state_data=state_data, backup_type=BackupType.FULL
-        )
+        metadata = backup_manager.create_backup(state_data=state_data, backup_type=BackupType.FULL)
 
         # Verify metadata file exists
         metadata_file = Path(backup_manager.config.backup_dir) / f"{metadata.backup_id}.meta"
         assert metadata_file.exists()
 
-    def test_loads_metadata_on_initialization(
-        self, backup_config: BackupConfig
-    ) -> None:
+    def test_loads_metadata_on_initialization(self, backup_config: BackupConfig) -> None:
         """Loads existing metadata on manager initialization.
 
         Must discover existing backups after restart.
@@ -711,9 +634,7 @@ class TestMetadataPersistence:
         # Create backup with first manager
         manager1 = BackupManager(state_manager=Mock(), config=backup_config)
         state_data = {"test": "data"}
-        metadata = manager1.create_backup(
-            state_data=state_data, backup_type=BackupType.FULL
-        )
+        metadata = manager1.create_backup(state_data=state_data, backup_type=BackupType.FULL)
 
         # Create new manager instance
         manager2 = BackupManager(state_manager=Mock(), config=backup_config)
@@ -725,17 +646,13 @@ class TestMetadataPersistence:
 class TestStorageTiers:
     """Test storage tier management."""
 
-    def test_assigns_storage_tier_to_backup(
-        self, backup_manager: BackupManager
-    ) -> None:
+    def test_assigns_storage_tier_to_backup(self, backup_manager: BackupManager) -> None:
         """Assigns appropriate storage tier to backup.
 
         Full backups typically go to durable storage.
         """
         state_data = {"test": "data"}
-        metadata = backup_manager.create_backup(
-            state_data=state_data, backup_type=BackupType.FULL
-        )
+        metadata = backup_manager.create_backup(state_data=state_data, backup_type=BackupType.FULL)
 
         assert metadata.storage_tier in [
             StorageTier.LOCAL,
@@ -743,9 +660,7 @@ class TestStorageTiers:
             StorageTier.CLOUD,
         ]
 
-    def test_emergency_backup_uses_fastest_tier(
-        self, backup_manager: BackupManager
-    ) -> None:
+    def test_emergency_backup_uses_fastest_tier(self, backup_manager: BackupManager) -> None:
         """Emergency backups use fastest available tier.
 
         Speed critical during system failures.

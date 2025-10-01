@@ -54,9 +54,7 @@ class TestTradingRecoveryHandlers:
     """Test suite for TradingRecoveryHandlers"""
 
     @pytest.mark.asyncio
-    async def test_recover_trading_engine_success(
-        self, trading_handlers, recovery_operation
-    ):
+    async def test_recover_trading_engine_success(self, trading_handlers, recovery_operation):
         """Test successful trading engine recovery"""
         # Mock pending orders
         trading_handlers.state_manager.get_keys_by_pattern.side_effect = [
@@ -149,13 +147,9 @@ class TestTradingRecoveryHandlers:
         trading_handlers.state_manager.delete_state.assert_called_once_with("position:ETH")
 
     @pytest.mark.asyncio
-    async def test_recover_trading_engine_exception(
-        self, trading_handlers, recovery_operation
-    ):
+    async def test_recover_trading_engine_exception(self, trading_handlers, recovery_operation):
         """Test trading engine recovery with exception"""
-        trading_handlers.state_manager.get_keys_by_pattern.side_effect = Exception(
-            "State error"
-        )
+        trading_handlers.state_manager.get_keys_by_pattern.side_effect = Exception("State error")
 
         success = await trading_handlers.recover_trading_engine(recovery_operation)
 
@@ -188,13 +182,9 @@ class TestTradingRecoveryHandlers:
         assert trading_handlers.state_manager.set_state.call_count >= 2
 
     @pytest.mark.asyncio
-    async def test_recover_ml_models_no_stable_version(
-        self, trading_handlers, recovery_operation
-    ):
+    async def test_recover_ml_models_no_stable_version(self, trading_handlers, recovery_operation):
         """Test ML model recovery without stable versions"""
-        trading_handlers.state_manager.get_keys_by_pattern.return_value = [
-            "ml_model:momentum"
-        ]
+        trading_handlers.state_manager.get_keys_by_pattern.return_value = ["ml_model:momentum"]
 
         async def mock_get_state(key):
             return {"current_version": "v2.0", "accuracy": 0.75}  # No last_stable_version
@@ -220,13 +210,9 @@ class TestTradingRecoveryHandlers:
         )
 
     @pytest.mark.asyncio
-    async def test_recover_ml_models_with_exception(
-        self, trading_handlers, recovery_operation
-    ):
+    async def test_recover_ml_models_with_exception(self, trading_handlers, recovery_operation):
         """Test ML model recovery with exception"""
-        trading_handlers.state_manager.get_keys_by_pattern.side_effect = Exception(
-            "State error"
-        )
+        trading_handlers.state_manager.get_keys_by_pattern.side_effect = Exception("State error")
 
         success = await trading_handlers.recover_ml_models(recovery_operation)
 

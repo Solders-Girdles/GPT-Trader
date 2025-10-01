@@ -35,9 +35,9 @@ class DataService:
 
     def __init__(
         self,
-        storage: Optional[DataStorage] = None,
-        cache: Optional[DataCache] = None,
-        quality_checker: Optional[DataQualityChecker] = None,
+        storage: DataStorage | None = None,
+        cache: DataCache | None = None,
+        quality_checker: DataQualityChecker | None = None,
     ):
         """
         Initialize data service with injected dependencies.
@@ -116,7 +116,6 @@ class DataService:
             )
             return False
 
-
     def fetch_data(self, query: DataQuery, use_cache: bool = True) -> pd.DataFrame | None:
         """
         Fetch data based on query.
@@ -175,7 +174,6 @@ class DataService:
 
         return None
 
-
     def cache_data(self, key: str, data: pd.DataFrame, ttl_seconds: int = 3600) -> bool:
         """
         Cache data with expiration.
@@ -201,7 +199,6 @@ class DataService:
             Cached data or None
         """
         return self.cache.get(key)
-
 
     def download_historical(
         self,
@@ -238,7 +235,6 @@ class DataService:
 
         return results
 
-
     def clean_old_data(self, days_to_keep: int = 365) -> int:
         """
         Clean data older than specified days.
@@ -254,7 +250,9 @@ class DataService:
         deleted = self.storage.delete_before(cutoff)
         self.cache.clear_expired()
 
-        logger.info("Cleaned old records", extra={"records_deleted": deleted, "days_to_keep": days_to_keep})
+        logger.info(
+            "Cleaned old records", extra={"records_deleted": deleted, "days_to_keep": days_to_keep}
+        )
         return deleted
 
     def get_storage_stats(self) -> StorageStats:
@@ -277,7 +275,6 @@ class DataService:
             cache_size_mb=cache_stats["size_mb"],
             cache_hit_rate=cache_stats["hit_rate"],
         )
-
 
     def _download_from_yahoo(
         self, symbols: list[str], start: datetime, end: datetime, interval: str = "1d"
@@ -326,7 +323,6 @@ class DataService:
 
         return results
 
-
     def export_data(self, query: DataQuery, format: str = "csv", path: str = "./exports") -> bool:
         """
         Export data to file.
@@ -361,7 +357,9 @@ class DataService:
                 logger.error("Unsupported export format", extra={"format": format})
                 return False
 
-            logger.info("Exported data successfully", extra={"filepath": filepath, "format": format})
+            logger.info(
+                "Exported data successfully", extra={"filepath": filepath, "format": format}
+            )
             return True
 
         except Exception as e:
@@ -371,7 +369,6 @@ class DataService:
                 exc_info=True,
             )
             return False
-
 
     def import_data(
         self,

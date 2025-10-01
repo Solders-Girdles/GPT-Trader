@@ -318,7 +318,7 @@ class TestDrawdownTracking:
             margin_used=0.0,
             day_trades_remaining=3,
             positions=[],
-            realized_pnl=0
+            realized_pnl=0,
         )
 
     def test_drawdown_within_limit(self):
@@ -423,7 +423,7 @@ class TestDailyLossLimits:
             margin_used=0.0,
             day_trades_remaining=3,
             positions=[],
-            realized_pnl=0
+            realized_pnl=0,
         )
 
     def test_daily_loss_within_limit(self):
@@ -734,7 +734,7 @@ class TestRiskManagerEdgeCases:
             margin_used=0.0,
             day_trades_remaining=3,
             positions=[],
-            realized_pnl=0
+            realized_pnl=0,
         )
 
     def test_very_small_equity(self):

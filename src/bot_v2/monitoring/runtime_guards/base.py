@@ -16,11 +16,10 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal, DecimalException, InvalidOperation
 from enum import Enum
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 # Import AlertSeverity from canonical alerts module
 from bot_v2.monitoring.alerts import AlertSeverity
-
 
 logger = logging.getLogger(__name__)
 

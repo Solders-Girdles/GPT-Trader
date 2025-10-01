@@ -128,7 +128,9 @@ class TestOptimizeStrategy:
         )
 
         # Higher commission should result in lower returns
-        assert result_high_comm.best_metrics.total_return <= result_low_comm.best_metrics.total_return
+        assert (
+            result_high_comm.best_metrics.total_return <= result_low_comm.best_metrics.total_return
+        )
 
     @patch("bot_v2.features.optimize.optimize.fetch_data")
     def test_optimize_with_slippage(self, mock_fetch):

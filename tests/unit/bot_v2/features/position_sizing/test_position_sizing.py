@@ -91,9 +91,7 @@ class TestIntelligentSizing:
 
         assert response.recommended_shares > 0
         assert len(response.warnings) > 0
-        assert any(
-            "No historical" in warn or "No trade" in warn for warn in response.warnings
-        )
+        assert any("No historical" in warn or "No trade" in warn for warn in response.warnings)
 
     def test_intelligent_confidence_below_threshold(self):
         """Test intelligent sizing rejects low confidence."""

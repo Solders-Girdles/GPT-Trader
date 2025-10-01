@@ -84,7 +84,9 @@ class TestFailureDetector:
     @pytest.mark.asyncio
     async def test_s3_health_check_success(self, detector):
         """Test successful S3 health check"""
-        detector.state_manager.s3_client.head_bucket.return_value = {"ResponseMetadata": {"HTTPStatusCode": 200}}
+        detector.state_manager.s3_client.head_bucket.return_value = {
+            "ResponseMetadata": {"HTTPStatusCode": 200}
+        }
 
         result = await detector.test_s3_health()
 
@@ -165,7 +167,7 @@ class TestFailureDetector:
         assert result is False
 
     @pytest.mark.asyncio
-    @patch('bot_v2.state.recovery.detection.psutil')
+    @patch("bot_v2.state.recovery.detection.psutil")
     async def test_memory_usage_check(self, mock_psutil, detector):
         """Test memory usage check"""
         mock_psutil.virtual_memory.return_value.percent = 85.5
@@ -177,13 +179,13 @@ class TestFailureDetector:
     @pytest.mark.asyncio
     async def test_memory_usage_check_no_psutil(self, detector):
         """Test memory usage check without psutil"""
-        with patch('bot_v2.state.recovery.detection.psutil', side_effect=ImportError):
+        with patch("bot_v2.state.recovery.detection.psutil", side_effect=ImportError):
             result = await detector.check_memory_usage()
 
         assert result == 0
 
     @pytest.mark.asyncio
-    @patch('bot_v2.state.recovery.detection.psutil')
+    @patch("bot_v2.state.recovery.detection.psutil")
     async def test_disk_usage_check(self, mock_psutil, detector):
         """Test disk usage check"""
         mock_psutil.disk_usage.return_value.percent = 92.3

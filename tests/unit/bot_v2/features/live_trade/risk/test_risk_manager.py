@@ -219,9 +219,7 @@ class TestReduceOnlyMode:
 class TestDailyTracking:
     """Test daily P&L tracking and resets."""
 
-    def test_reset_daily_tracking_sets_equity_baseline(
-        self, risk_manager: LiveRiskManager
-    ) -> None:
+    def test_reset_daily_tracking_sets_equity_baseline(self, risk_manager: LiveRiskManager) -> None:
         """Resetting daily tracking establishes equity baseline for P&L calculation.
 
         Called at start of each trading day to reset daily loss limits.
@@ -233,9 +231,7 @@ class TestDailyTracking:
         assert risk_manager.start_of_day_equity == initial_equity
         assert risk_manager.daily_pnl == Decimal("0")
 
-    def test_track_daily_pnl_calculates_correctly(
-        self, risk_manager: LiveRiskManager
-    ) -> None:
+    def test_track_daily_pnl_calculates_correctly(self, risk_manager: LiveRiskManager) -> None:
         """Daily P&L is calculated correctly from equity changes.
 
         Critical for daily loss limit enforcement.
@@ -250,9 +246,7 @@ class TestDailyTracking:
         assert not triggered  # Within limits
         assert risk_manager.daily_pnl == Decimal("500.00")
 
-    def test_track_daily_pnl_triggers_on_loss_limit(
-        self, risk_manager: LiveRiskManager
-    ) -> None:
+    def test_track_daily_pnl_triggers_on_loss_limit(self, risk_manager: LiveRiskManager) -> None:
         """Daily loss limit triggers reduce-only mode when breached.
 
         Critical safety: System must halt new positions when daily losses
@@ -269,9 +263,7 @@ class TestDailyTracking:
         assert triggered
         assert risk_manager.is_reduce_only_mode()
 
-    def test_initializes_start_equity_on_first_track(
-        self, risk_manager: LiveRiskManager
-    ) -> None:
+    def test_initializes_start_equity_on_first_track(self, risk_manager: LiveRiskManager) -> None:
         """First call to track_daily_pnl initializes baseline if not set.
 
         Handles case where daily reset wasn't explicitly called.
@@ -324,9 +316,7 @@ class TestPositionSizing:
             )
         )
 
-        manager = LiveRiskManager(
-            config=risk_config, position_size_estimator=custom_estimator
-        )
+        manager = LiveRiskManager(config=risk_config, position_size_estimator=custom_estimator)
 
         context = PositionSizingContext(
             symbol="BTC-PERP",
@@ -343,9 +333,7 @@ class TestPositionSizing:
         custom_estimator.assert_called_once()
         assert advice.target_quantity == Decimal("0.5")
 
-    def test_set_impact_estimator_updates_subsystems(
-        self, risk_manager: LiveRiskManager
-    ) -> None:
+    def test_set_impact_estimator_updates_subsystems(self, risk_manager: LiveRiskManager) -> None:
         """Setting impact estimator updates both sizer and validator.
 
         Ensures market impact considerations are consistent across all subsystems.
@@ -423,9 +411,7 @@ class TestPreTradeValidation:
                 equity=Decimal("10000.00"),  # 50000/10000 = 5x > 3x max
             )
 
-    def test_validate_exposure_limits_per_symbol(
-        self, risk_manager: LiveRiskManager
-    ) -> None:
+    def test_validate_exposure_limits_per_symbol(self, risk_manager: LiveRiskManager) -> None:
         """Validates per-symbol exposure limit (max_single_position_pct).
 
         Prevents concentration risk from oversized single positions.
@@ -484,9 +470,7 @@ class TestPreTradeValidation:
                 mark_or_quote=mark_price,
             )
 
-    def test_set_risk_info_provider_updates_validator(
-        self, risk_manager: LiveRiskManager
-    ) -> None:
+    def test_set_risk_info_provider_updates_validator(self, risk_manager: LiveRiskManager) -> None:
         """Setting risk info provider updates pre-trade validator.
 
         Allows dynamic risk info (e.g., liquidation prices from exchange)
@@ -502,9 +486,7 @@ class TestPreTradeValidation:
 class TestRuntimeMonitoring:
     """Test runtime monitoring delegation."""
 
-    def test_check_liquidation_buffer_triggers_warning(
-        self, risk_manager: LiveRiskManager
-    ) -> None:
+    def test_check_liquidation_buffer_triggers_warning(self, risk_manager: LiveRiskManager) -> None:
         """Liquidation buffer monitor triggers when position approaches liquidation.
 
         Critical safety: Early warning system before actual liquidation occurs.
@@ -519,17 +501,13 @@ class TestRuntimeMonitoring:
         equity = Decimal("10000.00")
 
         # Should trigger warning (price close to liquidation)
-        triggered = risk_manager.check_liquidation_buffer(
-            "BTC-PERP", position_data, equity
-        )
+        triggered = risk_manager.check_liquidation_buffer("BTC-PERP", position_data, equity)
 
         # Behavior depends on implementation - may or may not trigger
         # Just ensure it doesn't crash
         assert isinstance(triggered, bool)
 
-    def test_check_mark_staleness_detects_old_data(
-        self, risk_manager: LiveRiskManager
-    ) -> None:
+    def test_check_mark_staleness_detects_old_data(self, risk_manager: LiveRiskManager) -> None:
         """Mark staleness check detects outdated market data.
 
         Critical: Trading on stale prices can lead to bad fills and losses.
@@ -540,9 +518,7 @@ class TestRuntimeMonitoring:
 
         assert is_stale  # 61s old exceeds 30s threshold
 
-    def test_check_mark_staleness_passes_fresh_data(
-        self, risk_manager: LiveRiskManager
-    ) -> None:
+    def test_check_mark_staleness_passes_fresh_data(self, risk_manager: LiveRiskManager) -> None:
         """Fresh mark data passes staleness check.
 
         Recent data should be accepted for trading.
@@ -634,9 +610,7 @@ class TestRuntimeMonitoring:
 class TestIntegration:
     """Test integration between risk subsystems."""
 
-    def test_reduce_only_mode_affects_position_sizing(
-        self, risk_manager: LiveRiskManager
-    ) -> None:
+    def test_reduce_only_mode_affects_position_sizing(self, risk_manager: LiveRiskManager) -> None:
         """Position sizing respects reduce-only mode restrictions.
 
         When reduce-only is active, sizing should be constrained or prevented.
@@ -731,7 +705,9 @@ class TestTimeProviderInjection:
 class TestErrorHandling:
     """Test error handling and edge cases."""
 
-    def test_handles_missing_price_gracefully(self, risk_manager: LiveRiskManager, perp_products: dict[str, Product]) -> None:
+    def test_handles_missing_price_gracefully(
+        self, risk_manager: LiveRiskManager, perp_products: dict[str, Product]
+    ) -> None:
         """Validation handles missing price data gracefully.
 
         Should provide clear error rather than cryptic exception.
@@ -751,7 +727,9 @@ class TestErrorHandling:
             # Should raise clear error
             assert True
 
-    def test_handles_zero_equity_gracefully(self, risk_manager: LiveRiskManager, perp_products: dict[str, Product]) -> None:
+    def test_handles_zero_equity_gracefully(
+        self, risk_manager: LiveRiskManager, perp_products: dict[str, Product]
+    ) -> None:
         """Handles zero equity without division by zero.
 
         Edge case: Empty account should not crash validation.

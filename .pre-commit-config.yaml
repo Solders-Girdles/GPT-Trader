@@ -33,3 +33,8 @@ repos:
         language: python
         pass_filenames: true
         files: ^tests/.*\.py$
+    -   id: forbid-bytecode
+        name: forbid-bytecode
+        entry: Bytecode files must not be committed
+        language: fail
+        files: '(__pycache__|\.pyc$|\.pyo$)'

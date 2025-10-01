@@ -2,21 +2,15 @@
 Local types for system monitoring.
 
 Complete isolation - no external dependencies.
+
+Note: Alert and AlertLevel have been moved to bot_v2.monitoring.alerts
+for centralized alert management.
 """
 
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 from typing import Any, Literal
-
-
-class AlertLevel(Enum):
-    """Alert severity levels."""
-
-    INFO = "info"
-    WARNING = "warning"
-    ERROR = "error"
-    CRITICAL = "critical"
 
 
 class ComponentStatus(Enum):
@@ -122,30 +116,44 @@ Performance:
         """.strip()
 
 
-@dataclass
-class Alert:
-    """System alert."""
+# Backward compatibility: Import Alert and AlertLevel from canonical location
+# These were moved to bot_v2.monitoring.alerts for centralized management
+try:
+    from bot_v2.monitoring.alerts import Alert, AlertLevel
+except ImportError:
+    # Fallback if alerts module not available (shouldn't happen in practice)
+    class AlertLevel(Enum):  # type: ignore
+        """Alert severity levels."""
 
-    alert_id: str
-    level: AlertLevel
-    component: str
-    message: str
-    details: dict[str, Any]
-    created_at: datetime
-    resolved_at: datetime | None
-    acknowledged: bool
+        INFO = "info"
+        WARNING = "warning"
+        ERROR = "error"
+        CRITICAL = "critical"
 
-    def is_active(self) -> bool:
-        """Check if alert is still active."""
-        return self.resolved_at is None
+    @dataclass
+    class Alert:  # type: ignore
+        """System alert."""
 
-    def age_minutes(self) -> float:
-        """Get alert age in minutes."""
-        if self.resolved_at:
-            duration = self.resolved_at - self.created_at
-        else:
-            duration = datetime.now() - self.created_at
-        return duration.total_seconds() / 60
+        alert_id: str
+        level: AlertLevel  # type: ignore
+        component: str
+        message: str
+        details: dict[str, Any]
+        created_at: datetime
+        resolved_at: datetime | None
+        acknowledged: bool
+
+        def is_active(self) -> bool:
+            """Check if alert is still active."""
+            return self.resolved_at is None
+
+        def age_minutes(self) -> float:
+            """Get alert age in minutes."""
+            if self.resolved_at:
+                duration = self.resolved_at - self.created_at
+            else:
+                duration = datetime.now() - self.created_at
+            return duration.total_seconds() / 60
 
 
 @dataclass

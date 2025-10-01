@@ -23,29 +23,29 @@ class MarketConditionFilters:
     def should_allow_long_entry(
         self, market_snapshot: dict[str, Any], rsi: Decimal | None = None
     ) -> tuple[bool, str]:
-        if self.max_spread_bps and market_snapshot.get("spread_bps", 0) > self.max_spread_bps:
+        if self.max_spread_bps and market_snapshot.get("spread_bps", 0) >= self.max_spread_bps:
             return False, (
-                f"Spread too wide: {market_snapshot.get('spread_bps')} > {self.max_spread_bps} bps"
+                f"Spread too wide: {market_snapshot.get('spread_bps')} >= {self.max_spread_bps} bps"
             )
 
-        if self.min_depth_l1 and market_snapshot.get("depth_l1", 0) < self.min_depth_l1:
+        if self.min_depth_l1 and market_snapshot.get("depth_l1", 0) <= self.min_depth_l1:
             return False, (
-                f"L1 depth insufficient: {market_snapshot.get('depth_l1')} < {self.min_depth_l1}"
+                f"L1 depth insufficient: {market_snapshot.get('depth_l1')} <= {self.min_depth_l1}"
             )
 
-        if self.min_depth_l10 and market_snapshot.get("depth_l10", 0) < self.min_depth_l10:
+        if self.min_depth_l10 and market_snapshot.get("depth_l10", 0) <= self.min_depth_l10:
             return False, (
-                f"L10 depth insufficient: {market_snapshot.get('depth_l10')} < {self.min_depth_l10}"
+                f"L10 depth insufficient: {market_snapshot.get('depth_l10')} <= {self.min_depth_l10}"
             )
 
-        if self.min_volume_1m and market_snapshot.get("vol_1m", 0) < self.min_volume_1m:
+        if self.min_volume_1m and market_snapshot.get("vol_1m", 0) <= self.min_volume_1m:
             return False, (
-                f"1m volume too low: {market_snapshot.get('vol_1m')} < {self.min_volume_1m}"
+                f"1m volume too low: {market_snapshot.get('vol_1m')} <= {self.min_volume_1m}"
             )
 
-        if self.min_volume_5m and market_snapshot.get("vol_5m", 0) < self.min_volume_5m:
+        if self.min_volume_5m and market_snapshot.get("vol_5m", 0) <= self.min_volume_5m:
             return False, (
-                f"5m volume too low: {market_snapshot.get('vol_5m')} < {self.min_volume_5m}"
+                f"5m volume too low: {market_snapshot.get('vol_5m')} <= {self.min_volume_5m}"
             )
 
         if self.require_rsi_confirmation and rsi is not None:

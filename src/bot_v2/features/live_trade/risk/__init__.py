@@ -20,8 +20,11 @@ from bot_v2.features.live_trade.risk.pre_trade_checks import (
 from bot_v2.features.live_trade.risk.runtime_monitoring import RuntimeMonitor
 from bot_v2.features.live_trade.risk.state_management import (
     RiskRuntimeState,
-    StateManager,
+    RiskStateManager,
 )
+
+# Backward compatibility alias
+StateManager = RiskStateManager
 
 __all__ = [
     # Main facade
@@ -40,6 +43,7 @@ __all__ = [
     # Runtime Monitoring
     "RuntimeMonitor",
     # State Management
-    "StateManager",
+    "RiskStateManager",
+    "StateManager",  # Backward compatibility alias
     "RiskRuntimeState",
 ]

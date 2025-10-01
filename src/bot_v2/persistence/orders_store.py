@@ -71,9 +71,13 @@ class StoredOrder:
 class OrdersStore:
     """Manages durable storage of orders to prevent state loss."""
 
-    def __init__(self, storage_path: Path) -> None:
-        self.storage_path = storage_path
-        self.orders_file = storage_path / "orders.jsonl"
+    def __init__(self, storage_path: Path | None = None, storage_root: Path | None = None) -> None:
+        # Accept both parameter names for backward compatibility
+        if storage_path is None and storage_root is None:
+            raise ValueError("Either storage_path or storage_root must be provided")
+
+        self.storage_path = Path(storage_path or storage_root)
+        self.orders_file = self.storage_path / "orders.jsonl"
         self._orders: dict[str, StoredOrder] = {}
         self._client_id_map: dict[str, str] = {}
         self._lock = threading.RLock()

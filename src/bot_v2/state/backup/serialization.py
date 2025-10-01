@@ -1,13 +1,11 @@
 """Backup serialization, compression, and encryption"""
 
-import gzip
-import hashlib
-import json
 import logging
 from pathlib import Path
 from typing import Any
 
 from bot_v2.state.backup.models import BackupConfig
+from bot_v2.state.utils import compress_data, decompress_data, serialize_to_json
 
 # Optional encryption support
 try:
@@ -55,13 +53,15 @@ class BackupSerializer:
 
     def serialize_backup_data(self, backup_data: dict[str, Any]) -> bytes:
         """Serialize backup data to bytes"""
-        return json.dumps(backup_data, default=str, sort_keys=True).encode("utf-8")
+        # Use shared serialization utility
+        return serialize_to_json(backup_data)
 
     def prepare_compressed_payload(self, serialized: bytes) -> tuple[bytes, int, int]:
         """Compress serialized data if enabled"""
         original_size = len(serialized)
         if self.config.enable_compression:
-            compressed = gzip.compress(serialized, compresslevel=6)
+            # Use shared compression utility
+            compressed = compress_data(serialized, compression_level=6)
             return compressed, original_size, len(compressed)
         return serialized, original_size, original_size
 
@@ -89,13 +89,16 @@ class BackupSerializer:
     def decompress_payload(self, data: bytes) -> bytes:
         """Decompress backup data if needed"""
         try:
-            return gzip.decompress(data)
-        except gzip.BadGzipFile:
+            # Use shared decompression utility
+            return decompress_data(data)
+        except Exception:
             # Data not compressed
             return data
 
     def calculate_checksum(self, data: bytes) -> str:
         """Calculate SHA-256 checksum for data"""
+        import hashlib
+
         return hashlib.sha256(data).hexdigest()
 
     def verify_checksum(self, data: bytes, expected_checksum: str) -> bool:

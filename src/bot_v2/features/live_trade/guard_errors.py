@@ -7,25 +7,42 @@ from collections.abc import Mapping, MutableMapping
 from dataclasses import dataclass
 from typing import Any
 
-from bot_v2.monitoring.alerting_system import AlertingSystem, AlertLevel
+from bot_v2.monitoring.alerts import AlertLevel
 from bot_v2.monitoring.metrics_collector import record_counter
 
 logger = logging.getLogger(__name__)
 
-_alert_system: AlertingSystem | None = None
+# Simple AlertingSystem wrapper for backward compatibility
+_alert_system: Any | None = None
 
 
-def configure_guard_alert_system(system: AlertingSystem | None) -> None:
+class _SimpleAlertingSystem:
+    """Minimal AlertingSystem wrapper for guard_errors compatibility."""
+
+    def trigger_alert(
+        self, level: AlertLevel, category: str, message: str, metadata: dict[str, Any] | None = None
+    ) -> None:
+        """Trigger an alert (logs only for now, no dispatcher)."""
+        # For now, just log - can be enhanced to use AlertDispatcher if needed
+        log_method = {
+            AlertLevel.INFO: logger.info,
+            AlertLevel.WARNING: logger.warning,
+            AlertLevel.ERROR: logger.error,
+            AlertLevel.CRITICAL: logger.critical,
+        }.get(level, logger.info)
+        log_method(f"[{category}] {message}", extra={"metadata": metadata or {}})
+
+
+def configure_guard_alert_system(system: Any | None) -> None:
     """Override the alerting system used for guard failures (test hook)."""
-
     global _alert_system
     _alert_system = system
 
 
-def _get_alert_system() -> AlertingSystem:
+def _get_alert_system() -> Any:
     global _alert_system
     if _alert_system is None:
-        _alert_system = AlertingSystem()
+        _alert_system = _SimpleAlertingSystem()
     return _alert_system
 
 

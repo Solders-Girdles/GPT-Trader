@@ -142,6 +142,10 @@ class DeterministicBroker(IBrokerage):
             ts=datetime.utcnow(),
         )
 
+    def get_mark_price(self, symbol: str) -> Decimal | None:
+        """Return mark price for symbol from marks dict."""
+        return self.marks.get(symbol)
+
     def seed_order_book(
         self,
         symbol: str,

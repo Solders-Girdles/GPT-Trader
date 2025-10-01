@@ -9,7 +9,9 @@ its ML workflows.
 - **Architecture**: Review `docs/ARCHITECTURE.md` for the vertical slice layout
   under `src/bot_v2/`.
 - **Execution loop**: `LiveExecutionEngine` (in
-  `features/live_trade/live_trade.py`) coordinates guards, orders, and telemetry.
+  `features/live_trade/live_trade.py`) now proxies to
+  `archived/legacy_live_trade_facade/live_trade.py` for backwards compatibility while
+  the orchestration layer handles production flow.
 - **Brokerage**: `features/brokerages/coinbase` contains REST/WS adapters for
   Coinbase Advanced Trade spot markets.
 

@@ -5,6 +5,7 @@ Coordinates failure detection, handler execution, validation, and alerting.
 """
 
 import asyncio
+import inspect
 import logging
 import threading
 import uuid
@@ -105,13 +106,20 @@ class RecoveryOrchestrator:
     async def stop_monitoring(self) -> None:
         """Stop failure detection monitoring"""
         if self._monitoring_task:
-            self._monitoring_task.cancel()
+            task = self._monitoring_task
+
+            cancel = getattr(task, "cancel", None)
+            if callable(cancel):
+                cancel()
+
             try:
-                await self._monitoring_task
+                if isinstance(task, asyncio.Task) or inspect.isawaitable(task):
+                    await task
             except asyncio.CancelledError:
                 pass
-            self._monitoring_task = None
-            logger.info("Recovery monitoring stopped")
+            finally:
+                self._monitoring_task = None
+                logger.info("Recovery monitoring stopped")
 
     async def _monitoring_loop(self) -> None:
         """Continuous monitoring loop for failure detection"""
@@ -222,10 +230,12 @@ class RecoveryOrchestrator:
         operation.status = RecoveryStatus.VALIDATING
         if await self.validator.validate_recovery(operation):
             operation.status = RecoveryStatus.COMPLETED
-            operation.completed_at = datetime.utcnow()
-            operation.recovery_time_seconds = (
-                operation.completed_at - operation.started_at
-            ).total_seconds()
+            if not operation.completed_at:
+                operation.completed_at = datetime.utcnow()
+            if operation.recovery_time_seconds is None:
+                operation.recovery_time_seconds = (
+                    operation.completed_at - operation.started_at
+                ).total_seconds()
             logger.info(
                 "Recovery %s completed successfully in %.2f seconds",
                 operation.operation_id,

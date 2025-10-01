@@ -311,8 +311,10 @@ class ExecutionCoordinator:
             bot.orders_store.upsert(order)
             bot.order_stats["successful"] += 1
             order_quantity = quantity_from(order)
+            # Normalize side to handle both enum and string
+            side_str = getattr(order.side, "value", order.side)
             logger.info(
-                f"Order recorded: {order.id} {order.side.value} {order_quantity} {order.symbol}"
+                f"Order recorded: {order.id} {side_str} {order_quantity} {order.symbol}"
             )
             return order
 

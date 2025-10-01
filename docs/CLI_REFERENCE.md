@@ -67,8 +67,3 @@ poetry run perps-bot --profile spot \
   the global log level.
 - `COINBASE_ENABLE_DERIVATIVES=1` only activates derivatives after INTX access
   is confirmed; keep it unset for spot-only deployments.
-
-### Legacy Wrapper
-
-`scripts/stage3_runner.py` remains as a thin wrapper for compatibility. It now
-forwards directly to the CLI outlined above and should not be extended.

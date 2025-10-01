@@ -20,8 +20,11 @@ class EventStore:
     var/data/perps_bot/<profile>/events.jsonl.
     """
 
-    def __init__(self, root: Path | None = None) -> None:
-        base = root or DEFAULT_EVENT_STORE_DIR
+    def __init__(self, root: Path | None = None, storage_root: Path | None = None) -> None:
+        # Accept both parameter names for backward compatibility
+        base = root or storage_root or DEFAULT_EVENT_STORE_DIR
+        if isinstance(base, str):
+            base = Path(base)
         base.mkdir(parents=True, exist_ok=True)
         self.path = base / "events.jsonl"
         # Ensure file exists

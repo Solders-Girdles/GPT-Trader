@@ -4,6 +4,13 @@ import pytest
 
 from .factories import MarketDataFactory, PortfolioFactory, StrategyFactory, TradeFactory
 
+# Re-export infrastructure fixtures for state management
+pytest_plugins = [
+    "tests.fixtures.infrastructure",
+    "tests.fixtures.monitoring",
+    "tests.fixtures.orchestration",
+]
+
 
 @pytest.fixture
 def sample_market_data():

@@ -7,7 +7,7 @@ Note: MonitoringDashboard was archived as experimental. Use runtime_guards
 and alerts modules for production monitoring.
 """
 
-from bot_v2.monitoring.alerting_system import Alert, AlertingSystem, AlertLevel, AlertRule
+from bot_v2.monitoring.alerts import Alert, AlertDispatcher, AlertLevel, AlertSeverity
 from bot_v2.monitoring.metrics_collector import MetricsCollector
 from bot_v2.monitoring.workflow_tracker import WorkflowExecution, WorkflowStatus, WorkflowTracker
 
@@ -17,10 +17,10 @@ __all__ = [
     "WorkflowExecution",
     "WorkflowStatus",
     # Alerting
-    "AlertingSystem",
     "Alert",
     "AlertLevel",
-    "AlertRule",
+    "AlertSeverity",
+    "AlertDispatcher",
     # Metrics
     "MetricsCollector",
 ]

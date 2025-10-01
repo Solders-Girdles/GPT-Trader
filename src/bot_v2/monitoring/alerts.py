@@ -62,6 +62,10 @@ class AlertSeverity(Enum):
         return levels[self]
 
 
+# Backward compatibility alias
+AlertLevel = AlertSeverity
+
+
 @dataclass
 class Alert:
     """Alert data structure."""
@@ -72,10 +76,11 @@ class Alert:
     title: str
     message: str
     context: dict[str, Any] = field(default_factory=dict)
+    alert_id: str | None = None  # Optional ID for tracking
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization."""
-        return {
+        result = {
             "timestamp": self.timestamp.isoformat(),
             "source": self.source,
             "severity": self.severity.value,
@@ -83,6 +88,9 @@ class Alert:
             "message": self.message,
             "context": self.context,
         }
+        if self.alert_id:
+            result["alert_id"] = self.alert_id
+        return result
 
 
 class AlertChannel:

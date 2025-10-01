@@ -6,7 +6,6 @@ import pytest
 
 from bot_v2.orchestration.perps_bot import PerpsBot, BotConfig
 from bot_v2.features.brokerages.core.interfaces import OrderSide, OrderType, OrderStatus
-from bot_v2.features.live_trade.risk import ValidationError
 
 
 def test_market_data_actually_updates():
@@ -65,11 +64,11 @@ def test_position_math_is_correct():
     assert pnl == Decimal("100")
 
 
-def test_risk_limits_actually_stop_trading():
+def test_risk_limits_actually_stop_trading(validation_error_class):
     bot = PerpsBot(BotConfig.from_profile("dev"))
     bot.risk_manager.config.reduce_only_mode = True
 
-    with pytest.raises(ValidationError):
+    with pytest.raises(validation_error_class):
         bot.exec_engine.place_order(
             symbol=bot.config.symbols[0],
             side=OrderSide.BUY,

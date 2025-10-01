@@ -25,13 +25,17 @@ class RiskGuards:
         if not self.min_liquidation_buffer_pct:
             return True, "Liquidation guard disabled"
 
+        # Handle edge case of zero or negative entry price
+        if entry_price <= 0:
+            return False, f"Invalid entry price: {entry_price}"
+
         liquidation_price = entry_price * (1 - (1 / leverage) + maintenance_margin_rate)
         price_diff = abs(entry_price - liquidation_price)
         distance_pct = (price_diff / entry_price) * 100
 
-        if distance_pct < self.min_liquidation_buffer_pct:
+        if distance_pct <= self.min_liquidation_buffer_pct:
             return False, (
-                f"Too close to liquidation: {distance_pct:.1f}% < {self.min_liquidation_buffer_pct}%"
+                f"Too close to liquidation: {distance_pct:.1f}% <= {self.min_liquidation_buffer_pct}%"
             )
 
         return True, f"Safe liquidation distance: {distance_pct:.1f}%"

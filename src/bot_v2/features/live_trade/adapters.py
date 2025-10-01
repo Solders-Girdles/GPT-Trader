@@ -1,97 +1,37 @@
-"""
-Simplified adapters for normalizing inputs to core types.
+"""Compatibility shim for the legacy live-trade adapter helpers."""
 
-This module only provides helpers to convert strings and basic types
-to core enums and Decimal values. No conversions back to local types.
-"""
+from __future__ import annotations
 
-from decimal import Decimal
+import importlib
+import warnings
+from types import ModuleType
+from typing import Any, Iterable
 
-from bot_v2.features.brokerages.core.interfaces import OrderSide as CoreOrderSide
+_DELEGATE_MODULE = "archived.legacy_live_trade_facade.adapters"
 
-# Import core interfaces
-from bot_v2.features.brokerages.core.interfaces import OrderType as CoreOrderType
-from bot_v2.features.brokerages.core.interfaces import TimeInForce as CoreTimeInForce
+_delegate: ModuleType = importlib.import_module(_DELEGATE_MODULE)
 
+__doc__ = _delegate.__doc__
 
-def to_core_tif(tif_str: str | CoreTimeInForce) -> CoreTimeInForce:
-    """
-    Convert string or enum time-in-force to core enum.
+_exposed: Iterable[str] | None = getattr(_delegate, "__all__", None)
+if _exposed is None:
+    _exposed = [name for name in vars(_delegate) if not name.startswith("_")]
 
-    Args:
-        tif_str: String like 'day', 'gtc', 'ioc', 'fok' or CoreTimeInForce enum
+__all__ = tuple(_exposed)
 
-    Returns:
-        CoreTimeInForce enum value
-    """
-    # If already a CoreTimeInForce enum, return it
-    if isinstance(tif_str, CoreTimeInForce):
-        return tif_str
+globals().update({name: getattr(_delegate, name) for name in __all__})
 
-    # Handle string values
-    tif_map = {
-        "day": CoreTimeInForce.GTC,  # Map 'day' to GTC
-        "gtc": CoreTimeInForce.GTC,
-        "ioc": CoreTimeInForce.IOC,
-        "fok": CoreTimeInForce.FOK,
-    }
-
-    # Convert to string if it's another type of enum
-    tif_value = tif_str.value.lower() if hasattr(tif_str, "value") else str(tif_str).lower()
-    return tif_map.get(tif_value, CoreTimeInForce.GTC)
+warnings.warn(
+    "bot_v2.features.live_trade.adapters is deprecated; import adapter helpers"
+    " from archived.legacy_live_trade_facade.adapters instead.",
+    DeprecationWarning,
+    stacklevel=2,
+)
 
 
-def to_core_side(side: str | CoreOrderSide) -> CoreOrderSide:
-    """
-    Convert string or enum to core OrderSide.
-
-    Args:
-        side: String 'buy'/'sell' or CoreOrderSide enum
-
-    Returns:
-        CoreOrderSide enum value
-    """
-    if isinstance(side, CoreOrderSide):
-        return side
-
-    side_map = {"buy": CoreOrderSide.BUY, "sell": CoreOrderSide.SELL}
-    return side_map.get(side.lower(), CoreOrderSide.BUY)
+def __getattr__(name: str) -> Any:  # pragma: no cover - passthrough helper
+    return getattr(_delegate, name)
 
 
-def to_core_type(order_type: str | CoreOrderType) -> CoreOrderType:
-    """
-    Convert string or enum to core OrderType.
-
-    Args:
-        order_type: String like 'market', 'limit', etc. or CoreOrderType enum
-
-    Returns:
-        CoreOrderType enum value
-    """
-    if isinstance(order_type, CoreOrderType):
-        return order_type
-
-    type_map = {
-        "market": CoreOrderType.MARKET,
-        "limit": CoreOrderType.LIMIT,
-        "stop": CoreOrderType.STOP,
-        "stop_limit": CoreOrderType.STOP_LIMIT,
-    }
-    return type_map.get(order_type.lower(), CoreOrderType.MARKET)
-
-
-def to_decimal(value: str | int | float | Decimal | None) -> Decimal | None:
-    """
-    Convert various numeric types to Decimal for financial precision.
-
-    Args:
-        value: Numeric value or None
-
-    Returns:
-        Decimal value or None
-    """
-    if value is None:
-        return None
-    if isinstance(value, Decimal):
-        return value
-    return Decimal(str(value))
+def __dir__() -> list[str]:  # pragma: no cover - passthrough helper
+    return sorted(set(__all__) | set(dir(_delegate)))

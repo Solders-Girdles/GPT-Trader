@@ -40,14 +40,20 @@ class SimpleMAStrategy(OptimizableStrategy):
         fast_ma = data["close"].rolling(window=self.fast_period).mean()
         slow_ma = data["close"].rolling(window=self.slow_period).mean()
 
-        signals = pd.Series(index=data.index, dtype=int)
-        signals[:] = 0
+        # Initialize signals as zeros
+        signals = pd.Series(0, index=data.index, dtype=float)
+
+        # Detect crossovers
+        fast_above = fast_ma > slow_ma
+        fast_above_prev = fast_ma.shift(1) <= slow_ma.shift(1)
+        fast_below = fast_ma < slow_ma
+        fast_below_prev = fast_ma.shift(1) >= slow_ma.shift(1)
 
         # Crossover signals
-        signals[(fast_ma > slow_ma) & (fast_ma.shift(1) <= slow_ma.shift(1))] = 1
-        signals[(fast_ma < slow_ma) & (fast_ma.shift(1) >= slow_ma.shift(1))] = -1
+        signals[fast_above & fast_above_prev] = 1
+        signals[fast_below & fast_below_prev] = -1
 
-        return signals.fillna(0)
+        return signals.fillna(0).astype(int)
 
     def get_required_periods(self) -> int:
         return self.slow_period + 1

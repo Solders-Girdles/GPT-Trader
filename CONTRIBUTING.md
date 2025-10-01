@@ -31,17 +31,16 @@ That's it! Now, every time you run `git commit`, the pre-commit hooks will run a
 ## Testing Requirements
 
 ### Current Standards
-- **Active Code**: Must maintain 100% test pass rate
+- **All Code**: Must maintain 100% test pass rate
 - **New Features**: Must include comprehensive tests
-- **Legacy Code**: Properly skip with documented reasons
 
 ### Running Tests Locally
 
-Before submitting a pull request, ensure all active tests pass:
+Before submitting a pull request, ensure all tests pass:
 
 ```bash
-# Run active tests only (MUST be 100% pass)
-poetry run pytest tests/unit/bot_v2 tests/unit/test_foundation.py -q
+# Run all tests (MUST be 100% pass)
+poetry run pytest tests/unit/bot_v2 -q
 
 # Run with coverage report
 poetry run pytest --cov=bot_v2 --cov-report=term-missing
@@ -52,12 +51,12 @@ poetry run pytest tests/unit/bot_v2/features/live_trade/ -v
 # Coinbase brokerage smoke (lint + mypy + unit tests)
 poetry run python scripts/validation/validate_perps_e2e.py
 
-# Full suite including legacy (69% overall is expected)
+# Full test suite
 poetry run pytest -q
 ```
 
 ### Test Metrics
-- **Active Tests**: 453 tests (457 collected, 4 deselected) - 100% pass rate ✅
+- **All Tests**: Must maintain 100% pass rate ✅
 - **Coverage Goal**: >90% on new code
 - **Integration Tests**: Required for exchange interactions
 
@@ -76,7 +75,7 @@ poetry run perps-bot --profile dev --dev-fast
 3. **Write tests** for your changes
    - Unit tests required for all new functions
    - Integration tests for API interactions
-   - Must maintain 100% pass rate on active tests
+   - Must maintain 100% pass rate
 4. **Run the test suite** to ensure nothing is broken
    - `poetry run pytest tests/unit/bot_v2 -q` must pass
    - No new test failures allowed
@@ -165,7 +164,7 @@ The repository follows a standardized organization optimized for both human deve
 - Keep README.md updated with current state
 - Document breaking changes
 - Include examples for complex features
-- Update docs/agents/CLAUDE.md for AI context
+- Update AI agent context documentation when adding major features
 
 ## Pre-commit Hook Configuration
 

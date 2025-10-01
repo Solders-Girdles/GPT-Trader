@@ -6,6 +6,7 @@ from dataclasses import dataclass, field, replace
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:  # pragma: no cover - import guards for type checkers only
+    from bot_v2.data_providers import DataProvider
     from bot_v2.features.brokerages.core.interfaces import IBrokerage
     from bot_v2.features.live_trade.risk import LiveRiskManager
     from bot_v2.orchestration.configuration import BotConfig
@@ -29,6 +30,7 @@ class ServiceRegistry:
     orders_store: OrdersStore | None = None
     risk_manager: LiveRiskManager | None = None
     broker: IBrokerage | None = None
+    data_provider: DataProvider | None = None
     extras: dict[str, Any] = field(default_factory=dict)
 
     def with_updates(self, **overrides: Any) -> ServiceRegistry:

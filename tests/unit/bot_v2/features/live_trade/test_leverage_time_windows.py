@@ -40,6 +40,7 @@ def test_day_vs_night_leverage_caps_enforced(monkeypatch):
 
     # Mock now into daytime
     rm._now_provider = lambda: datetime(2024, 1, 3, 10, 0)
+    rm.pre_trade_validator._now_provider = rm._now_provider
 
     # 10x allowed in day
     equity = Decimal("10000")
@@ -57,6 +58,7 @@ def test_day_vs_night_leverage_caps_enforced(monkeypatch):
 
     # Mock now into nighttime
     rm._now_provider = lambda: datetime(2024, 1, 3, 20, 0)
+    rm.pre_trade_validator._now_provider = rm._now_provider
     # Same order → 10x exceeds night cap 5x
     with pytest.raises(ValidationError, match="exceeds BTC-PERP cap of 5x"):
         rm.pre_trade_validate(
@@ -94,6 +96,7 @@ def test_day_vs_night_mmr_projection(monkeypatch):
 
     # Daytime: low MMR → buffer OK
     rm._now_provider = lambda: datetime(2024, 1, 3, 10, 0)
+    rm.pre_trade_validator._now_provider = rm._now_provider
     rm.pre_trade_validate(
         symbol="BTC-PERP",
         side="buy",
@@ -106,6 +109,7 @@ def test_day_vs_night_mmr_projection(monkeypatch):
 
     # Nighttime: high MMR → buffer insufficient
     rm._now_provider = lambda: datetime(2024, 1, 3, 20, 0)
+    rm.pre_trade_validator._now_provider = rm._now_provider
     with pytest.raises(ValidationError, match="Projected liquidation buffer"):
         rm.pre_trade_validate(
             symbol="BTC-PERP",

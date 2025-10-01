@@ -4,13 +4,16 @@ Main monitoring orchestration - entry point for the slice.
 Complete isolation - everything needed is local.
 """
 
+from __future__ import annotations
+
+import logging
 import threading
 import time
 from datetime import datetime
 
+from bot_v2.monitoring.alerts_manager import AlertManager
 from bot_v2.monitoring.interfaces import (
     Alert,
-    AlertLevel,
     ComponentHealth,
     ComponentStatus,
     MonitorConfig,
@@ -19,12 +22,13 @@ from bot_v2.monitoring.interfaces import (
     SystemHealth,
     TradeMetrics,
 )
-from bot_v2.monitoring.system.alerting import AlertManager
 from bot_v2.monitoring.system.collectors import (
     ComponentCollector,
     PerformanceCollector,
     ResourceCollector,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class MonitoringSystem:
@@ -46,8 +50,12 @@ class MonitoringSystem:
         self.performance_collector = PerformanceCollector()
         self.component_collector = ComponentCollector()
 
-        # Alert manager
-        self.alert_manager = AlertManager(self.config)
+        # Alert manager - use from_profile_yaml or create with empty dispatcher
+        # For monitoring system, we use simplified config-based initialization
+        from bot_v2.monitoring.alerts import AlertDispatcher
+
+        dispatcher = AlertDispatcher.from_config({})
+        self.alert_manager = AlertManager(dispatcher=dispatcher)
 
         # Metrics history
         self.health_history: list[SystemHealth] = []
@@ -64,9 +72,13 @@ class MonitoringSystem:
         thread.start()
         self.thread = thread
 
-        print("✅ Monitoring system started")
-        print(f"   Check interval: {self.config.check_interval_seconds}s")
-        print(f"   Alerts enabled: {self.config.enable_notifications}")
+        logger.info(
+            "Monitoring system started",
+            extra={
+                "check_interval_seconds": self.config.check_interval_seconds,
+                "alerts_enabled": self.config.enable_notifications,
+            },
+        )
 
     def stop(self) -> None:
         """Stop monitoring."""
@@ -77,7 +89,7 @@ class MonitoringSystem:
         if self.thread:
             self.thread.join(timeout=5)
 
-        print("⏹️ Monitoring system stopped")
+        logger.info("Monitoring system stopped")
 
     def _monitoring_loop(self) -> None:
         """Main monitoring loop."""
@@ -98,7 +110,11 @@ class MonitoringSystem:
                 time.sleep(self.config.check_interval_seconds)
 
             except Exception as e:
-                print(f"Monitoring error: {e}")
+                logger.error(
+                    "Monitoring loop error",
+                    extra={"error": str(e)},
+                    exc_info=True,
+                )
                 time.sleep(self.config.check_interval_seconds)
 
     def _collect_health(self) -> SystemHealth:
@@ -158,6 +174,8 @@ class MonitoringSystem:
 
     def _check_alerts(self, health: SystemHealth) -> None:
         """Check for alert conditions."""
+        from bot_v2.monitoring.alerts import AlertLevel
+
         # Resource alerts
         if health.resource_usage.cpu_percent > self.config.alert_threshold_cpu:
             self.alert_manager.create_alert(
@@ -261,7 +279,7 @@ def start_monitoring(config: MonitorConfig | None = None) -> None:
     global _monitor
 
     if _monitor and _monitor.is_running:
-        print("Monitoring already running")
+        logger.warning("Monitoring already running")
         return
 
     _monitor = MonitoringSystem(config)

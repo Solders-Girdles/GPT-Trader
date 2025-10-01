@@ -112,17 +112,17 @@ class LiveExecutionEngine:
 
         # Initialize helper modules
         self.state_collector = StateCollector(broker)
-        self.order_submitter = OrderSubmitter(broker, event_store, bot_id, self.open_orders)
+        self.order_submitter = OrderSubmitter(broker, self.event_store, bot_id, self.open_orders)
         self.order_validator = OrderValidator(
             broker,
-            risk_manager,
+            self.risk_manager,  # Use self.risk_manager, not the parameter
             self.enable_order_preview,
             self.order_submitter.record_preview,
             self.order_submitter.record_rejection,
         )
         self.guard_manager = GuardManager(
             broker,
-            risk_manager,
+            self.risk_manager,  # Use self.risk_manager, not the parameter
             self.state_collector.calculate_equity_from_balances,
             self.cancel_all_orders,
             lambda: None,  # Cache invalidation handled by guard_manager itself

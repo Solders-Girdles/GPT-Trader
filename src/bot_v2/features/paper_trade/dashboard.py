@@ -52,8 +52,11 @@ class PaperTradingDashboard:
         """Calculate current metrics from engine state."""
         equity = self.engine.calculate_equity()
 
-        # Calculate returns
-        returns_pct = ((equity - self.initial_equity) / self.initial_equity) * 100
+        # Calculate returns (guard against zero initial equity)
+        if abs(self.initial_equity) < 1e-9:
+            returns_pct = 0.0
+        else:
+            returns_pct = round(((equity - self.initial_equity) / self.initial_equity) * 100, 2)
 
         # Calculate drawdown
         peak_equity = self.initial_equity

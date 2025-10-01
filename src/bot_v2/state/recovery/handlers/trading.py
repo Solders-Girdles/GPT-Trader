@@ -69,6 +69,13 @@ class TradingRecoveryHandlers:
 
             # Load last known good model states
             ml_keys = await self.state_manager.get_keys_by_pattern("ml_model:*")
+            if not ml_keys:
+                operation.actions_taken.append(
+                    "No ML models found, using baseline strategies"
+                )
+                await self.state_manager.set_state("system:ml_models_available", False)
+                return True
+
             recovered_models = 0
 
             for key in ml_keys:
@@ -84,7 +91,9 @@ class TradingRecoveryHandlers:
 
             # Fall back to baseline models if needed
             if recovered_models == 0:
-                operation.actions_taken.append("No ML models recovered, using baseline strategies")
+                operation.actions_taken.append(
+                    "No ML models recovered, using baseline strategies"
+                )
                 await self.state_manager.set_state("system:ml_models_available", False)
 
             return True  # System can operate without ML models

@@ -194,12 +194,19 @@ class OrderReconciler:
             filled_value = getattr(
                 local_order, "filled_quantity", getattr(local_order, "filled_quantity", None)
             )
+            # Extract side and type, handling both enum and string values
+            side_val = getattr(local_order, "side", "buy")
+            side = side_val if isinstance(side_val, OrderSide) else OrderSide(str(side_val).lower())
+
+            type_val = getattr(local_order, "order_type", getattr(local_order, "type", "market"))
+            order_type = type_val if isinstance(type_val, OrderType) else OrderType(str(type_val).lower())
+
             cancelled_order = Order(
-                id=getattr(local_order, "order_id", order_id),
+                id=getattr(local_order, "order_id", getattr(local_order, "id", order_id)),
                 client_id=getattr(local_order, "client_id", None),
                 symbol=getattr(local_order, "symbol", ""),
-                side=OrderSide(str(getattr(local_order, "side", "buy")).lower()),
-                type=OrderType(str(getattr(local_order, "order_type", "market")).lower()),
+                side=side,
+                type=order_type,
                 quantity=quantity_from(local_order),
                 price=(
                     Decimal(str(getattr(local_order, "price", "")))

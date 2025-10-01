@@ -15,6 +15,19 @@ consolidates:
 
 This is the complete, consolidated reference for Coinbase integration in GPT-Trader. The bot runs **spot trading by default** using Coinbase Advanced Trade, and keeps perpetual futures support in a **future-ready** state that activates only when Coinbase grants INTX access and `COINBASE_ENABLE_DERIVATIVES=1` is set.
 
+## Who Should Read This
+
+**Target Audience:**
+- Developers integrating Coinbase Advanced Trade APIs (spot or derivatives)
+- Teams troubleshooting connection, authentication, or WebSocket issues
+- Engineers preparing for INTX derivatives activation
+- Contributors maintaining the Coinbase brokerage adapter
+
+**Skip This If:**
+- You're looking for high-level system architecture (see [ARCHITECTURE.md](../ARCHITECTURE.md))
+- You need strategy development guidance (see [guides/](../guides/))
+- You're setting up the environment for the first time (see [Complete Setup Guide](../guides/complete_setup_guide.md))
+
 ## Table of Contents
 
 1. [Environment Configuration](#environment-configuration)

@@ -6,6 +6,20 @@
 
 This document captures the architecture and trading flow for the Coinbase Perpetuals (Perps) implementation that remains in the repository. While the code paths compile and are exercised by tests, live execution is disabled until INTX access is granted. Use this reference when preparing to activate derivatives or when maintaining the dormant perps modules.
 
+## Who Should Read This
+
+**Target Audience:**
+- Engineers activating INTX derivatives after Coinbase approval
+- Developers maintaining dormant perpetuals modules and test coverage
+- Teams understanding the risk management and execution flows for leveraged products
+- Contributors preparing for derivatives deployment and validation
+
+**Skip This If:**
+- You're running spot trading only (default configuration)
+- You need general Coinbase API integration help (see [coinbase_complete.md](coinbase_complete.md))
+- You're looking for system architecture overview (see [ARCHITECTURE.md](../ARCHITECTURE.md))
+- You're setting up the bot for the first time (see [Complete Setup Guide](../guides/complete_setup_guide.md))
+
 ## System Architecture Overview
 
 ### Core Components

@@ -54,13 +54,13 @@ class StrategyEnhancements:
             return False, "Insufficient price data for RSI calculation"
 
         if ma_signal == "buy":
-            if rsi > Decimal("70"):
-                return False, f"RSI too high for buy: {rsi} > 70"
+            if rsi >= Decimal("70"):
+                return False, f"RSI too high for buy: {rsi} >= 70"
             return True, f"RSI confirms buy signal: {rsi}"
 
         if ma_signal == "sell":
-            if rsi < Decimal("30"):
-                return False, f"RSI too low for sell: {rsi} < 30"
+            if rsi <= Decimal("30"):
+                return False, f"RSI too low for sell: {rsi} <= 30"
             return True, f"RSI confirms sell signal: {rsi}"
 
         return False, f"Unknown MA signal: {ma_signal}"

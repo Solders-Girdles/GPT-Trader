@@ -35,21 +35,22 @@ class DataFeed:
 
     def _initialize_historical(self) -> None:
         """Load initial historical data for all symbols."""
-        end = datetime.now()
-        start = end - timedelta(days=self.lookback_days)
-
         for symbol in self.symbols:
             try:
                 provider = get_data_provider()
+                # Use period/interval instead of start/end
                 data = provider.get_historical_data(
-                    symbol, start=start.strftime("%Y-%m-%d"), end=end.strftime("%Y-%m-%d")
+                    symbol, period=f"{self.lookback_days}d", interval="1d"
                 )
 
+                # Always initialize data_cache[symbol], even if empty
                 if not data.empty:
                     # Standardize columns
                     data.columns = data.columns.str.lower()
                     self.data_cache[symbol] = data
                     self.last_update[symbol] = datetime.now()
+                else:
+                    self.data_cache[symbol] = pd.DataFrame()
             except Exception as exc:
                 logger.warning(
                     "Unable to load historical data for %s: %s", symbol, exc, exc_info=True
@@ -119,15 +120,12 @@ class DataFeed:
                     continue
 
             try:
-                # Fetch latest data
+                # Fetch latest data using period/interval
                 provider = get_data_provider()
-                end = datetime.now()
-                start = end - timedelta(days=1)
 
-                new_data = provider.get_historical_data(
-                    sym, start=start.strftime("%Y-%m-%d"), end=end.strftime("%Y-%m-%d")
-                )
+                new_data = provider.get_historical_data(sym, period="1d", interval="1d")
 
+                # Always update cache, even if new_data is empty
                 if not new_data.empty:
                     # Aggregate to daily if needed
                     new_data.columns = new_data.columns.str.lower()
@@ -147,8 +145,12 @@ class DataFeed:
                             self.data_cache[sym] = self.data_cache[sym].iloc[-self.lookback_days :]
                     else:
                         self.data_cache[sym] = new_data
+                else:
+                    # Ensure cache exists even if no new data
+                    if sym not in self.data_cache:
+                        self.data_cache[sym] = pd.DataFrame()
 
-                    self.last_update[sym] = datetime.now()
+                self.last_update[sym] = datetime.now()
 
             except Exception as exc:
                 logger.warning("Unable to update data for %s: %s", sym, exc, exc_info=True)

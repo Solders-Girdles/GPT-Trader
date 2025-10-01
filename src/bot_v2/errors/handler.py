@@ -64,7 +64,12 @@ class CircuitBreakerState(Enum):
 
 @dataclass
 class CircuitBreaker:
-    """Circuit breaker implementation"""
+    """Generic circuit breaker implementation for fault tolerance.
+
+    This is a base implementation suitable for network/API calls.
+    For risk-specific circuit breakers with threshold-based actions,
+    see bot_v2.features.live_trade.risk_runtime.CircuitBreakerState.
+    """
 
     config: CircuitBreakerConfig
     state: CircuitBreakerState = CircuitBreakerState.CLOSED

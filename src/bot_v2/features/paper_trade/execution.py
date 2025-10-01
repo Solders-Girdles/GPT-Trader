@@ -90,6 +90,10 @@ class PaperExecutor:
         if len(self.positions) >= self.max_positions:
             return None
 
+        # Guard against zero or negative prices
+        if price <= 0:
+            return None
+
         # Apply slippage
         execution_price = price * (1 + self.slippage)
 

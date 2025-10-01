@@ -9,6 +9,11 @@ import logging
 
 from bot_v2.state.recovery.models import FailureType
 
+try:  # pragma: no cover - optional dependency
+    import psutil  # type: ignore[import-not-found]
+except ImportError:  # pragma: no cover
+    psutil = None  # type: ignore[assignment]
+
 logger = logging.getLogger(__name__)
 
 
@@ -131,9 +136,18 @@ class FailureDetector:
     async def check_memory_usage(self) -> float:
         """Check memory usage percentage"""
         try:
-            import psutil
+            if psutil is None:
+                raise ImportError
 
-            return psutil.virtual_memory().percent
+            virtual_memory = getattr(psutil, "virtual_memory", None)
+            if virtual_memory is None:
+                raise ImportError
+
+            memory_info = virtual_memory()
+            percent = getattr(memory_info, "percent", None)
+            if isinstance(percent, (int, float)):
+                return float(percent)
+            raise ValueError("psutil virtual_memory returned unexpected data")
         except ImportError:
             logger.debug("psutil not available; cannot check memory usage")
         except Exception as exc:
@@ -143,9 +157,18 @@ class FailureDetector:
     async def check_disk_usage(self) -> float:
         """Check disk usage percentage"""
         try:
-            import psutil
+            if psutil is None:
+                raise ImportError
 
-            return psutil.disk_usage("/").percent
+            disk_usage_fn = getattr(psutil, "disk_usage", None)
+            if disk_usage_fn is None:
+                raise ImportError
+
+            usage = disk_usage_fn("/")
+            percent = getattr(usage, "percent", None)
+            if isinstance(percent, (int, float)):
+                return float(percent)
+            raise ValueError("psutil disk_usage returned unexpected data")
         except ImportError:
             logger.debug("psutil not available; cannot check disk usage")
         except Exception as exc:

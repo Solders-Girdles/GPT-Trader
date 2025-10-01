@@ -1,8 +1,24 @@
 # Testing Guide
 
+---
+status: current
+last-updated: 2025-09-30
+---
+
 ## Overview
 
 This codebase targets a **100% pass rate** on the actively maintained spot trading suites. Legacy code from v1 architecture is properly quarantined with skip markers.
+
+### Major Test Suites at a Glance
+
+| Suite | Location | Focus | Status |
+|-------|----------|-------|--------|
+| **Persistence** | `tests/unit/bot_v2/persistence/` | Event storage, order tracking, config management | ✅ Passing |
+| **Recovery** | `tests/unit/bot_v2/state/recovery/` | Failure detection, recovery handlers, orchestration | ✅ Passing |
+| **Broker** | `tests/unit/bot_v2/orchestration/` | Broker adapters, factories, deterministic stubs | ✅ Passing |
+| **Orchestration** | `tests/unit/bot_v2/orchestration/` | Execution coordination, telemetry, reconciliation | ✅ Passing |
+| **Live Trade** | `tests/unit/bot_v2/features/live_trade/` | Order execution, risk management, PnL tracking | ✅ Passing |
+| **Paper Trade** | `tests/unit/bot_v2/features/paper_trade/` | Simulated trading harness | ✅ Passing |
 
 ## Suite Layout
 
@@ -83,25 +99,37 @@ available in version control history for reference.
 # Standard test structure for bot_v2
 import pytest
 from decimal import Decimal
-from bot_v2.features.live_trade.risk import LiveRiskManager
 
 class TestRiskValidation:
-    """Test risk management validation."""
-
-    @pytest.fixture
-    def risk_manager(self):
-        """Create risk manager with test config."""
-        config = RiskConfig(
-            max_leverage=5,
-            daily_loss_limit=Decimal("100")
-        )
-        return LiveRiskManager(config)
+    """Test risk management validation using orchestration fixtures."""
 
     def test_leverage_validation(self, risk_manager):
-        """Test leverage limits are enforced."""
-        # Test implementation
+        """Test leverage limits are enforced.
+
+        The risk_manager fixture is provided by tests.fixtures.orchestration
+        and is accessed via bot.risk_manager property, avoiding direct imports
+        from bot_v2.features.live_trade.
+        """
+        # Test implementation using the fixture
         assert risk_manager.validate_leverage(10) is False
+
+    def test_with_custom_bot(self, perps_bot):
+        """Test using the full bot instance.
+
+        The perps_bot fixture provides access to all orchestration components:
+        - perps_bot.risk_manager
+        - perps_bot.broker
+        - perps_bot.exec_engine
+        - perps_bot.config
+        """
+        assert perps_bot.config.profile.value == "canary"
+        assert perps_bot.risk_manager is not None
 ```
+
+**Migration Note:** Tests should use orchestration fixtures (`risk_manager`,
+`perps_bot`, `execution_engine`) instead of directly importing from
+`bot_v2.features.live_trade.*`. This provides better encapsulation and tests
+the public API rather than internal implementations.
 
 ### Key Testing Utilities
 

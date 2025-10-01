@@ -4,12 +4,15 @@ Main paper trading orchestration - entry point for the slice.
 Complete isolation - everything needed is local.
 """
 
+import logging
 import threading
 import time
 from datetime import datetime
 from typing import Any
 
 import pandas as pd
+
+logger = logging.getLogger(__name__)
 from bot_v2.features.paper_trade.data import DataFeed
 from bot_v2.features.paper_trade.execution import PaperExecutor
 from bot_v2.features.paper_trade.risk import RiskManager
@@ -148,32 +151,35 @@ class PaperTradingSession:
 
     def _process_symbol(self, symbol: str) -> None:
         """Process trading logic for a symbol."""
-        # Get historical data
-        data = self.data_feed.get_historical(symbol, self.strategy.get_required_periods())
+        try:
+            # Get historical data
+            data = self.data_feed.get_historical(symbol, self.strategy.get_required_periods())
 
-        if data.empty or len(data) < self.strategy.get_required_periods():
-            return
+            if data.empty or len(data) < self.strategy.get_required_periods():
+                return
 
-        # Generate signal
-        signal = self.strategy.analyze(data)
+            # Generate signal
+            signal = self.strategy.analyze(data)
 
-        # Check risk limits
-        if signal != 0:
-            current_price = self.data_feed.get_latest_price(symbol)
-            if current_price:
-                # Apply risk checks
-                account = self.executor.get_account_status()
-                if not self.risk_manager.check_trade(symbol, signal, current_price, account):
-                    return
+            # Check risk limits
+            if signal != 0:
+                current_price = self.data_feed.get_latest_price(symbol)
+                if current_price:
+                    # Apply risk checks
+                    account = self.executor.get_account_status()
+                    if not self.risk_manager.check_trade(symbol, signal, current_price, account):
+                        return
 
-                # Execute signal
-                self.executor.execute_signal(
-                    symbol=symbol,
-                    signal=signal,
-                    current_price=current_price,
-                    timestamp=datetime.now(),
-                    position_size=self.position_size,
-                )
+                    # Execute signal
+                    self.executor.execute_signal(
+                        symbol=symbol,
+                        signal=signal,
+                        current_price=current_price,
+                        timestamp=datetime.now(),
+                        position_size=self.position_size,
+                    )
+        except Exception as e:
+            logger.warning("Error processing symbol %s: %s", symbol, e, exc_info=True)
 
     def _build_result(self) -> PaperTradeResult:
         """Construct the current paper trading result snapshot."""
@@ -214,8 +220,12 @@ class PaperTradingSession:
         account = self.executor.get_account_status()
         trades = self.executor.trade_log
 
-        # Total return
-        total_return = (account.total_equity - self.initial_capital) / self.initial_capital
+        # Total return - use equity history if available, otherwise use current account equity
+        if self.equity_history:
+            final_equity = self.equity_history[-1]["equity"]
+            total_return = (final_equity - self.initial_capital) / self.initial_capital
+        else:
+            total_return = (account.total_equity - self.initial_capital) / self.initial_capital
 
         # Daily return (simplified)
         if self.equity_history and len(self.equity_history) > 1:

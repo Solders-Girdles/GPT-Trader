@@ -28,15 +28,12 @@ logs/
 # macOS
 .DS_Store
 
-# Archives (moved to external storage)
-archived/claudia_*/
-archived/claudia_20250812_151036/
-# Consider moving entire archived/ directory
+# Archives (moved to external storage or kept locally for reference)
+archived/
 
 # Generated artifacts
 *.png
 *.csv
-logs/
 
 # Data outputs (keep sample universe only)
 data/**

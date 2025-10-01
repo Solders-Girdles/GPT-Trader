@@ -311,7 +311,8 @@ class AdaptivePortfolioManager:
             )
 
         # Cash allocation
-        cash_pct = portfolio_snapshot.cash / portfolio_snapshot.total_value * 100
+        cash_pct = (portfolio_snapshot.cash / portfolio_snapshot.total_value * 100
+                    if portfolio_snapshot.total_value > 0 else 0)
         if cash_pct > 20:
             recommendations.append(
                 f"High cash allocation ({cash_pct:.1f}%) - consider deploying capital"

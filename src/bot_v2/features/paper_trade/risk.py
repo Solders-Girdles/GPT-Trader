@@ -87,7 +87,7 @@ class RiskManager:
             cash_after_trade = account.cash - (price * 100)  # Assume 100 shares
             min_cash_needed = account.total_equity * self.min_cash_reserve
 
-            if cash_after_trade < min_cash_needed:
+            if cash_after_trade <= min_cash_needed:
                 return False
 
             # Check position size limit
@@ -134,6 +134,10 @@ class RiskManager:
 
         current_equity = account.total_equity
 
+        # Update peak for drawdown calculation
+        if current_equity > self.peak_equity:
+            self.peak_equity = current_equity
+
         # Calculate metrics
         current_drawdown = (
             (self.peak_equity - current_equity) / self.peak_equity if self.peak_equity > 0 else 0
@@ -155,6 +159,7 @@ class RiskManager:
             "max_daily_loss_limit": self.max_daily_loss,
             "total_return": total_return,
             "cash_percentage": cash_percentage,
+            "total_equity": current_equity,
             "min_cash_reserve": self.min_cash_reserve,
             "risk_utilization": (
                 current_drawdown / self.max_drawdown if self.max_drawdown > 0 else 0

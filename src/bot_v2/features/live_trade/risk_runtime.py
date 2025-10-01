@@ -1,4 +1,12 @@
-"""Runtime guard helpers extracted from the live risk manager."""
+"""Runtime guard helpers extracted from the live risk manager.
+
+Note: This module implements risk-specific circuit breakers with threshold-based actions.
+For generic circuit breaker pattern (network/API calls), see bot_v2.errors.handler.CircuitBreaker.
+
+The key difference is that risk circuit breakers evaluate metrics against thresholds
+to determine graduated responses (WARNING → REDUCE_ONLY → KILL_SWITCH), while
+generic circuit breakers use simple failure counts for CLOSED → OPEN → HALF_OPEN states.
+"""
 
 from __future__ import annotations
 
@@ -21,7 +29,11 @@ LogEventFn = Callable[[str, dict[str, str], str], None]
 
 
 class CircuitBreakerAction(Enum):
-    """Actions that circuit breaker can trigger."""
+    """Actions that risk circuit breaker can trigger.
+
+    These are risk-specific actions based on threshold evaluation,
+    distinct from generic circuit breaker states (CLOSED/OPEN/HALF_OPEN).
+    """
 
     NONE = "none"
     WARNING = "warning"
@@ -72,7 +84,12 @@ class CircuitBreakerSnapshot:
 
 
 class CircuitBreakerState:
-    """Tracks state of circuit breakers across time."""
+    """Tracks state of risk-specific circuit breakers across time.
+
+    Unlike bot_v2.errors.handler.CircuitBreaker (which tracks failure counts),
+    this implementation evaluates risk metrics against configured thresholds
+    to determine graduated risk actions (WARNING/REDUCE_ONLY/KILL_SWITCH).
+    """
 
     def __init__(self) -> None:
         self._rules: dict[str, CircuitBreakerRule] = {}

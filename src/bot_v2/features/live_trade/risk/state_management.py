@@ -25,8 +25,11 @@ class RiskRuntimeState:
     last_reduce_only_at: datetime | None = None
 
 
-class StateManager:
-    """Manages risk system state and mode transitions."""
+class RiskStateManager:
+    """Manages risk system state and mode transitions.
+
+    Note: Renamed from StateManager to avoid confusion with bot_v2.state.state_manager.StateManager.
+    """
 
     def __init__(
         self,
@@ -35,7 +38,7 @@ class StateManager:
         now_provider: Callable[[], datetime] | None = None,
     ):
         """
-        Initialize state manager.
+        Initialize risk state manager.
 
         Args:
             config: Risk configuration

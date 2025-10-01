@@ -122,6 +122,9 @@ class AccountStatus:
     buying_power: float
     margin_used: float
     day_trades_remaining: int
+    # Optional fields for test compatibility
+    positions: list[Position] | None = None
+    realized_pnl: float = 0.0
 
     def to_account_snapshot(self, account_id: str | None = None) -> AccountSnapshot:
         """Convert local account status to shared snapshot."""

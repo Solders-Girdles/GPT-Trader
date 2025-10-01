@@ -6,13 +6,19 @@ module now offers only the yfinance-backed provider (with mock fallbacks) so
 older tutorials and tests can keep running without third-party dependencies.
 """
 
+from __future__ import annotations
+
 import json
 import logging
 import os
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
+from typing import TYPE_CHECKING
 
 import pandas as pd
+
+if TYPE_CHECKING:
+    from bot_v2.orchestration.service_registry import ServiceRegistry
 
 logger = logging.getLogger(__name__)
 
@@ -189,7 +195,10 @@ class MockProvider(DataProvider):
     ) -> pd.DataFrame:
         """Get mock historical data"""
         # Generate deterministic mock data
-        days = int(period.rstrip("d")) if "d" in period else 60
+        try:
+            days = int(period.rstrip("d")) if "d" in period else 60
+        except ValueError:
+            days = 60  # Default to 60 days if period is invalid
         # Use fixed end date for consistency in tests
         end_date = datetime(2024, 3, 1)
         dates = pd.date_range(end=end_date, periods=days, freq="D")
@@ -252,18 +261,30 @@ class MockProvider(DataProvider):
 _provider_instance = None
 
 
-def get_data_provider(provider_type: str = None) -> DataProvider:
+def get_data_provider(
+    provider_type: str | None = None, registry: ServiceRegistry | None = None
+) -> DataProvider:
     """
-    Factory function to get appropriate data provider
+    Factory function to get appropriate data provider.
+
+    Prefers service registry wiring when available; otherwise falls back
+    to module-level singleton for legacy compatibility.
 
     Args:
         provider_type: Optional provider type ('yfinance', 'mock', 'coinbase')
                       If None, auto-detects based on environment
+        registry: Optional service registry. If provided and already has
+                 a data_provider, returns it directly
 
     Returns:
         DataProvider instance
     """
     global _provider_instance
+
+    # Service registry takes precedence over singleton pattern
+    if registry is not None and registry.data_provider is not None:
+        logger.debug("Using data provider from service registry")
+        return registry.data_provider
 
     # If TESTING is explicitly enabled, always use a fresh MockProvider
     testing_mode = os.environ.get("TESTING", "").lower() == "true"

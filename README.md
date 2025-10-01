@@ -4,7 +4,6 @@
 
 [![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
 [![Poetry](https://img.shields.io/badge/poetry-1.0+-orange.svg)](https://python-poetry.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 An ML-driven Coinbase trading system with market regime detection, built on a clean vertical slice architecture optimized for AI development.
 
@@ -26,7 +25,6 @@ An ML-driven Coinbase trading system with market regime detection, built on a cl
   - Tests: `pytest tests/unit/bot_v2/features/brokerages/coinbase/test_*.py -q`
 - CLI entrypoint: `src/bot_v2/cli.py`
   - Run: `poetry run perps-bot ...` or `poetry run gpt-trader ...`
-- Stage 3 runner: `scripts/stage3_runner.py` (delegates to `perps-bot` for legacy workflows)
 
 **Note:** Experimental features (backtest, ml_strategy, market_regime, monitoring_dashboard) were archived on 2025-09-29 to streamline the codebase. They can be restored from `archived/experimental_features_2025_09_29/` or git history if needed.
 
@@ -44,9 +42,6 @@ poetry run perps-bot --profile dev --dev-fast
 
 # Run tests (full spot suite)
 poetry run pytest -q
-
-# Stage 3 multi-asset runner
-poetry run python scripts/stage3_runner.py --duration-minutes 60
 ```
 
 > Spot risk defaults (per-symbol caps and slippage guards) are loaded automatically from `config/risk/spot_top10.json` for dev/demo/spot profiles; adjust that file if you need different limits.
@@ -106,15 +101,25 @@ poetry run python scripts/stage3_runner.py --duration-minutes 60
 ```
 src/bot_v2/
 ├── cli.py                    # Main CLI entry point
-├── features/                 # Vertical slices (11 total)
+├── config/                   # Environment configs & settings
+├── data_providers/           # Market data adapters
+├── features/                 # Vertical slices (10 total)
+│   ├── adaptive_portfolio/  # Dynamic allocation
+│   ├── analyze/             # Analysis tools
+│   ├── brokerages/
+│   │   └── coinbase/        # API integration
+│   ├── data/                # Data management
 │   ├── live_trade/          # Production trading
-│   ├── ml_strategy/         # ML-driven selection
-│   ├── market_regime/       # Regime detection
+│   ├── optimize/            # Strategy optimization
+│   ├── paper_trade/         # Simulation engine
 │   ├── position_sizing/     # Kelly Criterion
-│   └── brokerages/
-│       └── coinbase/        # API integration
-└── orchestration/
-    └── perps_bot.py         # Main orchestrator
+│   ├── strategies/          # Trading strategies
+│   └── strategy_tools/      # Strategy utilities
+├── monitoring/              # Metrics & alerting
+├── orchestration/           # Execution coordination
+├── persistence/             # Event & order stores
+├── security/                # Secrets & validation
+└── state/                   # State management & recovery
 ```
 
 ### Workspace highlights
@@ -152,10 +157,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for development workflow and [AGENTS.md](
 - **Memory Usage**: <50MB typical
 - **WebSocket Latency**: <100ms
 - **Order Execution**: <500ms round-trip
-
-## 📄 License
-
-MIT License - see [LICENSE](LICENSE) for details.
 
 ---
 

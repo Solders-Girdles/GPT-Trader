@@ -31,11 +31,13 @@ from bot_v2.features.live_trade.advanced_execution_models.models import (
     SizingMode,
     StopTrigger,
 )
+from bot_v2.features.live_trade.dynamic_sizing_helper import DynamicSizingHelper
 from bot_v2.features.live_trade.risk import (
     LiveRiskManager,
     PositionSizingAdvice,
     PositionSizingContext,
 )
+from bot_v2.features.live_trade.stop_trigger_manager import StopTriggerManager
 from bot_v2.utilities.quantities import quantity_from
 from bot_v2.utilities.quantization import quantize_price_side_aware
 
@@ -81,9 +83,16 @@ class AdvancedExecutionEngine:
         self.risk_manager = risk_manager
         self.config = config or OrderConfig()
 
+        # Dedicated components
+        self.stop_trigger_manager = StopTriggerManager(config=self.config)
+        self.sizing_helper = DynamicSizingHelper(
+            broker=broker,
+            risk_manager=risk_manager,
+            config=self.config,
+        )
+
         # Order tracking
         self.pending_orders: dict[str, Order] = {}
-        self.stop_triggers: dict[str, StopTrigger] = {}
         self.client_order_map: dict[str, str] = {}  # client_id -> order_id
 
         # Metrics
@@ -93,28 +102,10 @@ class AdvancedExecutionEngine:
             "cancelled": 0,
             "rejected": 0,
             "post_only_rejected": 0,
-            "stop_triggered": 0,
         }
 
         # Track rejection reasons
         self.rejections_by_reason: dict[str, int] = {}
-
-        # Last sizing advice for diagnostics/tests
-        self._last_sizing_advice: PositionSizingAdvice | None = None
-
-        # Optional per-symbol slippage multipliers for impact-aware sizing
-        self.slippage_multipliers: dict[str, Decimal] = {}
-        try:
-            import os
-
-            env_val = os.getenv("SLIPPAGE_MULTIPLIERS", "")
-            if env_val:
-                for pair in env_val.split(","):
-                    if ":" in pair:
-                        sym, mult = pair.split(":", 1)
-                        self.slippage_multipliers[sym.strip()] = Decimal(str(mult.strip()))
-        except Exception:
-            pass
 
         logger.info(f"AdvancedExecutionEngine initialized with config: {self.config}")
 
@@ -149,7 +140,7 @@ class AdvancedExecutionEngine:
                 post_only=post_only,
             )
 
-            sizing_advice = self._maybe_apply_position_sizing(
+            sizing_advice = self.sizing_helper.maybe_apply_position_sizing(
                 symbol=symbol,
                 side=side,
                 order_type=order_type,
@@ -216,14 +207,20 @@ class AdvancedExecutionEngine:
             ):
                 return None
 
-            if not self._validate_stop_order_requirements(
+            is_valid, rejection_reason = self.stop_trigger_manager.validate_stop_order_requirements(
                 symbol=symbol,
                 order_type=order_type,
                 stop_price=stop_price,
-            ):
+            )
+            if not is_valid:
+                self.order_metrics["rejected"] += 1
+                if rejection_reason:
+                    self.rejections_by_reason[rejection_reason] = (
+                        self.rejections_by_reason.get(rejection_reason, 0) + 1
+                    )
                 return None
 
-            self._register_stop_trigger(
+            self.stop_trigger_manager.register_stop_trigger(
                 order_type=order_type,
                 client_id=client_id,
                 symbol=symbol,
@@ -282,7 +279,7 @@ class AdvancedExecutionEngine:
         if self.risk_manager is None:
             return True
         try:
-            validation_price = self._determine_reference_price(
+            validation_price = self.sizing_helper.determine_reference_price(
                 symbol=symbol,
                 side=side,
                 order_type=order_type,
@@ -290,7 +287,7 @@ class AdvancedExecutionEngine:
                 quote=quote,
                 product=product,
             )
-            equity = self._estimate_equity()
+            equity = self.sizing_helper.estimate_equity()
             current_positions = getattr(self.risk_manager, "positions", {})
             self.risk_manager.pre_trade_validate(
                 symbol=symbol,
@@ -361,164 +358,6 @@ class AdvancedExecutionEngine:
 
         return True
 
-    def _maybe_apply_position_sizing(
-        self,
-        *,
-        symbol: str,
-        side: OrderSide,
-        order_type: OrderType,
-        order_quantity: Decimal,
-        limit_price: Decimal | None,
-        product: Product | None,
-        quote: Quote | None,
-        leverage: int | None,
-    ) -> PositionSizingAdvice | None:
-        if self.risk_manager is None:
-            return None
-
-        config = getattr(self.risk_manager, "config", None)
-        if not config or not getattr(config, "enable_dynamic_position_sizing", False):
-            return None
-
-        reference_price = self._determine_reference_price(
-            symbol=symbol,
-            side=side,
-            order_type=order_type,
-            limit_price=limit_price,
-            quote=quote,
-            product=product,
-        )
-
-        if reference_price <= 0:
-            reference_price = Decimal(str(limit_price)) if limit_price is not None else Decimal("0")
-
-        equity = self._estimate_equity()
-        if equity <= 0 and reference_price > 0:
-            equity = reference_price * order_quantity
-
-        current_position_quantity = self._extract_position_quantity(symbol)
-
-        target_leverage = (
-            Decimal(str(leverage))
-            if leverage is not None and leverage > 0
-            else Decimal(str(getattr(config, "max_leverage", 1)))
-        )
-
-        context = PositionSizingContext(
-            symbol=symbol,
-            side=side.value,
-            equity=equity,
-            current_price=reference_price if reference_price > 0 else Decimal("0"),
-            strategy_name=self.__class__.__name__,
-            method=getattr(config, "position_sizing_method", "intelligent"),
-            current_position_quantity=current_position_quantity,
-            target_leverage=target_leverage,
-            strategy_multiplier=float(getattr(config, "position_sizing_multiplier", 1.0)),
-            product=product,
-        )
-
-        try:
-            advice = self.risk_manager.size_position(context)
-        except Exception:
-            logger.exception("Dynamic sizing failed for %s", symbol)
-            return None
-
-        self._last_sizing_advice = advice
-        return advice
-
-    def _determine_reference_price(
-        self,
-        *,
-        symbol: str,
-        side: OrderSide,
-        order_type: OrderType,
-        limit_price: Decimal | None,
-        quote: Quote | None,
-        product: Product | None,
-    ) -> Decimal:
-        if limit_price is not None:
-            try:
-                return Decimal(str(limit_price))
-            except Exception:
-                pass
-
-        if order_type == OrderType.MARKET and quote is not None:
-            price = quote.ask if side == OrderSide.BUY else quote.bid
-            if price is not None:
-                return Decimal(str(price))
-
-        if quote is not None and quote.last is not None:
-            return Decimal(str(quote.last))
-
-        if quote is None:
-            broker = getattr(self, "broker", None)
-            if broker is not None and hasattr(broker, "get_quote"):
-                try:
-                    fallback_quote = broker.get_quote(symbol)
-                except Exception:
-                    fallback_quote = None
-                if fallback_quote is not None:
-                    price = fallback_quote.ask if side == OrderSide.BUY else fallback_quote.bid
-                    if price is not None:
-                        try:
-                            return Decimal(str(price))
-                        except Exception:
-                            pass
-                    elif getattr(fallback_quote, "last", None) is not None:
-                        try:
-                            return Decimal(str(fallback_quote.last))
-                        except Exception:
-                            pass
-
-        if product is not None:
-            mark = getattr(product, "mark_price", None)
-            if mark is not None:
-                try:
-                    return Decimal(str(mark))
-                except Exception:
-                    pass
-        return Decimal("0")
-
-    def _estimate_equity(self) -> Decimal:
-        if self.risk_manager is not None:
-            start_equity = getattr(self.risk_manager, "start_of_day_equity", None)
-            if start_equity is not None:
-                try:
-                    value = Decimal(str(start_equity))
-                    if value > 0:
-                        return value
-                except Exception:
-                    pass
-
-        broker = getattr(self, "broker", None)
-        if broker is not None and hasattr(broker, "list_balances"):
-            try:
-                balances = broker.list_balances() or []
-                total = Decimal("0")
-                for bal in balances:
-                    amount = getattr(bal, "total", None)
-                    if amount is None:
-                        amount = getattr(bal, "available", None)
-                    if amount is not None:
-                        total += Decimal(str(amount))
-                if total > 0:
-                    return total
-            except Exception:
-                pass
-
-        return Decimal("0")
-
-    def _extract_position_quantity(self, symbol: str) -> Decimal:
-        positions = getattr(self.risk_manager, "positions", {}) if self.risk_manager else {}
-        pos = positions.get(symbol)
-        if not pos:
-            return Decimal("0")
-        try:
-            value = quantity_from(pos, default=Decimal("0"))
-            return value or Decimal("0")
-        except Exception:
-            return Decimal("0")
-
     def _apply_quantization_and_specs(
         self,
         *,
@@ -578,62 +417,6 @@ class AdvancedExecutionEngine:
             limit_price = validation.adjusted_price
 
         return limit_price, stop_price, order_quantity
-
-    def _validate_stop_order_requirements(
-        self,
-        *,
-        symbol: str,
-        order_type: OrderType,
-        stop_price: Decimal | None,
-    ) -> bool:
-        if order_type not in (OrderType.STOP, OrderType.STOP_LIMIT):
-            return True
-
-        if not self.config.enable_stop_orders:
-            logger.warning("Stop orders disabled by configuration; rejecting %s", symbol)
-            self.order_metrics["rejected"] += 1
-            self.rejections_by_reason["stop_disabled"] = (
-                self.rejections_by_reason.get("stop_disabled", 0) + 1
-            )
-            return False
-
-        if stop_price is None:
-            logger.warning("Stop order for %s missing stop price", symbol)
-            self.order_metrics["rejected"] += 1
-            self.rejections_by_reason["invalid_stop"] = (
-                self.rejections_by_reason.get("invalid_stop", 0) + 1
-            )
-            return False
-
-        return True
-
-    def _register_stop_trigger(
-        self,
-        *,
-        order_type: OrderType,
-        client_id: str,
-        symbol: str,
-        stop_price: Decimal | None,
-        side: OrderSide,
-        order_quantity: Decimal,
-        limit_price: Decimal | None,
-    ) -> None:
-        if order_type not in (OrderType.STOP, OrderType.STOP_LIMIT) or stop_price is None:
-            return
-
-        trigger = StopTrigger(
-            order_id=client_id,
-            symbol=symbol,
-            trigger_price=Decimal(str(stop_price)),
-            side=side,
-            quantity=order_quantity,
-            limit_price=(
-                Decimal(str(limit_price))
-                if order_type == OrderType.STOP_LIMIT and limit_price is not None
-                else None
-            ),
-        )
-        self.stop_triggers[client_id] = trigger
 
     def _submit_order_to_broker(
         self,
@@ -709,7 +492,7 @@ class AdvancedExecutionEngine:
         )
         self.order_metrics["rejected"] += 1
         if order_type in (OrderType.STOP, OrderType.STOP_LIMIT):
-            self.stop_triggers.pop(client_id, None)
+            self.stop_trigger_manager.unregister_stop_trigger(client_id)
         return None
 
     def cancel_and_replace(
@@ -798,6 +581,7 @@ class AdvancedExecutionEngine:
         Calculate position size that respects slippage constraints.
 
         Args:
+            symbol: Trading symbol
             target_notional: Target position size in USD
             market_snapshot: Market depth and liquidity data
             max_impact_bps: Maximum acceptable impact (overrides config)
@@ -805,60 +589,12 @@ class AdvancedExecutionEngine:
         Returns:
             (adjusted_notional, expected_impact_bps)
         """
-        max_impact = max_impact_bps or self.config.max_impact_bps
-
-        l1_depth = Decimal(str(market_snapshot.get("depth_l1", 0)))
-        l10_depth = Decimal(str(market_snapshot.get("depth_l10", 0)))
-
-        if not l1_depth or not l10_depth:
-            logger.warning("Insufficient depth data for impact calculation")
-            return Decimal("0"), Decimal("0")
-
-        # Binary search for max size within impact limit
-        low, high = Decimal("0"), min(target_notional, l10_depth)
-        best_size = Decimal("0")
-        best_impact = Decimal("0")
-        # Add per-symbol slippage multiplier as extra expected impact (bps)
-        extra_bps = Decimal("0")
-        if symbol and symbol in self.slippage_multipliers:
-            try:
-                extra_bps = Decimal("10000") * Decimal(str(self.slippage_multipliers[symbol]))
-            except Exception:
-                extra_bps = Decimal("0")
-
-        while high - low > Decimal("1"):  # $1 precision
-            mid = (low + high) / 2
-            impact = self._estimate_impact(mid, l1_depth, l10_depth) + extra_bps
-
-            if impact <= max_impact:
-                best_size = mid
-                best_impact = impact
-                low = mid
-            else:
-                high = mid
-
-        # Apply sizing mode
-        if self.config.sizing_mode == SizingMode.STRICT and best_size < target_notional:
-            logger.warning(
-                f"Strict mode: Cannot fit {target_notional} within {max_impact} bps impact"
-            )
-            return Decimal("0"), Decimal("0")
-        elif self.config.sizing_mode == SizingMode.AGGRESSIVE:
-            # Allow up to 2x the impact limit in aggressive mode
-            if target_notional <= l10_depth:
-                return (
-                    target_notional,
-                    self._estimate_impact(target_notional, l1_depth, l10_depth) + extra_bps,
-                )
-
-        # Conservative mode (default): use best size found
-        if best_size < target_notional:
-            logger.info(
-                f"SIZED_DOWN: Original=${target_notional:.0f} → Adjusted=${best_size:.0f} "
-                f"(Impact: {best_impact:.1f}bps, Limit: {max_impact}bps)"
-            )
-
-        return best_size, best_impact
+        return self.sizing_helper.calculate_impact_aware_size(
+            symbol=symbol,
+            target_notional=target_notional,
+            market_snapshot=market_snapshot,
+            max_impact_bps=max_impact_bps,
+        )
 
     def close_position(self, symbol: str, reduce_only: bool = True) -> Order | None:
         """
@@ -904,35 +640,17 @@ class AdvancedExecutionEngine:
         Returns:
             List of triggered order IDs
         """
-        triggered = []
+        return self.stop_trigger_manager.check_stop_triggers(current_prices)
 
-        for trigger_id, trigger in self.stop_triggers.items():
-            if trigger.triggered:
-                continue
+    @property
+    def stop_triggers(self) -> dict[str, StopTrigger]:
+        """Access to stop triggers for backward compatibility."""
+        return self.stop_trigger_manager.stop_triggers
 
-            price = current_prices.get(trigger.symbol)
-            if not price:
-                continue
-
-            # Check trigger condition
-            should_trigger = False
-            if trigger.side == OrderSide.BUY and price >= trigger.trigger_price:
-                should_trigger = True
-            elif trigger.side == OrderSide.SELL and price <= trigger.trigger_price:
-                should_trigger = True
-
-            if should_trigger:
-                trigger.triggered = True
-                trigger.triggered_at = datetime.now()
-                triggered.append(trigger_id)
-                self.order_metrics["stop_triggered"] += 1
-
-                logger.info(
-                    f"Stop trigger activated: {trigger.symbol} {trigger.side} "
-                    f"@ {trigger.trigger_price} (current: {price})"
-                )
-
-        return triggered
+    @property
+    def _last_sizing_advice(self) -> PositionSizingAdvice | None:
+        """Access to last sizing advice for diagnostics."""
+        return self.sizing_helper.last_sizing_advice
 
     def _validate_tif(self, tif: str) -> TimeInForce | None:
         """Validate and convert TIF string to enum."""
@@ -950,34 +668,12 @@ class AdvancedExecutionEngine:
             logger.error(f"Unsupported or disabled TIF: {tif}")
             return None
 
-    def _estimate_impact(
-        self, order_size: Decimal, l1_depth: Decimal, l10_depth: Decimal
-    ) -> Decimal:
-        """
-        Estimate market impact in basis points.
-
-        Uses square root model for realistic large order impact.
-        """
-        if order_size <= l1_depth:
-            # Linear impact within L1
-            return (order_size / l1_depth) * Decimal("5")
-        elif order_size <= l10_depth:
-            # Square root impact beyond L1
-            l1_impact = Decimal("5")
-            excess = order_size - l1_depth
-            excess_depth = l10_depth - l1_depth if l10_depth > l1_depth else l1_depth
-            excess_ratio = min(excess / excess_depth, Decimal("1"))
-            additional_impact = excess_ratio ** Decimal("0.5") * Decimal("20")
-            return l1_impact + additional_impact
-        else:
-            # Order exceeds L10 - very high impact
-            return Decimal("100")  # 100 bps = 1%
-
     def get_metrics(self) -> dict[str, Any]:
         """Get execution metrics."""
+        stop_metrics = self.stop_trigger_manager.get_metrics()
         return {
-            "orders": self.order_metrics.copy(),
+            "orders": {**self.order_metrics.copy(), **stop_metrics},
             "pending_count": len(self.pending_orders),
-            "stop_triggers": len(self.stop_triggers),
-            "active_stops": sum(1 for t in self.stop_triggers.values() if not t.triggered),
+            "stop_triggers": stop_metrics["stop_triggers"],
+            "active_stops": stop_metrics["active_stops"],
         }

@@ -1,25 +1,41 @@
 """
 Local alerting system for monitoring.
 
-Complete isolation - no external dependencies.
+DEPRECATED: This module is deprecated in favor of bot_v2.monitoring.alerts_manager.AlertManager,
+which provides the same functionality plus multi-channel dispatching and YAML configuration.
+
+For new code, use:
+    from bot_v2.monitoring.alerts_manager import AlertManager
+
+This module is kept temporarily for backward compatibility with system/engine.py.
 """
 
+from __future__ import annotations
+
+import logging
 import uuid
+import warnings
 from datetime import datetime, timedelta
 
-from bot_v2.monitoring.interfaces import Alert, AlertLevel, MonitorConfig
+from bot_v2.monitoring.alerts import Alert, AlertLevel
+from bot_v2.monitoring.interfaces import MonitorConfig
+
+logger = logging.getLogger(__name__)
 
 
 class AlertManager:
-    """Manages system alerts."""
+    """Manages system alerts.
+
+    DEPRECATED: Use bot_v2.monitoring.alerts_manager.AlertManager instead.
+    """
 
     def __init__(self, config: MonitorConfig) -> None:
-        """
-        Initialize alert manager.
-
-        Args:
-            config: Monitoring configuration
-        """
+        warnings.warn(
+            "bot_v2.monitoring.system.alerting.AlertManager is deprecated. "
+            "Use bot_v2.monitoring.alerts_manager.AlertManager instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         self.config = config
         self.alerts: dict[str, Alert] = {}
         self.alert_history: list[Alert] = []
@@ -52,17 +68,16 @@ class AlertManager:
                 # Duplicate alert within window, skip
                 return None
 
-        # Create alert
+        # Create alert using canonical Alert structure
         alert_id = str(uuid.uuid4())[:8]
         alert = Alert(
-            alert_id=alert_id,
-            level=level,
-            component=component,
+            timestamp=datetime.now(),
+            source=component,
+            severity=level,
+            title=f"{component} Alert",
             message=message,
-            details=details or {},
-            created_at=datetime.now(),
-            resolved_at=None,
-            acknowledged=False,
+            context=details or {},
+            alert_id=alert_id,
         )
 
         # Store alert
@@ -95,10 +110,9 @@ class AlertManager:
         Returns:
             True if acknowledged successfully
         """
-        if alert_id in self.alerts:
-            self.alerts[alert_id].acknowledged = True
-            return True
-        return False
+        # Note: Canonical Alert doesn't have acknowledged field
+        # This is a no-op for backward compatibility
+        return alert_id in self.alerts
 
     def resolve_alert(self, alert_id: str) -> bool:
         """
@@ -111,13 +125,17 @@ class AlertManager:
             True if resolved successfully
         """
         if alert_id in self.alerts:
+            # Remove from active alerts (history still kept)
             alert = self.alerts[alert_id]
-            alert.resolved_at = datetime.now()
-
-            # Move to history only
             del self.alerts[alert_id]
-
-            print(f"✅ Alert {alert_id} resolved")
+            logger.info(
+                "Alert resolved",
+                extra={
+                    "alert_id": alert_id,
+                    "source": alert.source,
+                    "severity": alert.severity.value,
+                },
+            )
             return True
         return False
 
@@ -139,7 +157,7 @@ class AlertManager:
         Returns:
             List of alerts with specified level
         """
-        return [a for a in self.alerts.values() if a.level == level]
+        return [a for a in self.alerts.values() if a.severity == level]
 
     def get_alerts_by_component(self, component: str) -> list[Alert]:
         """
@@ -151,11 +169,13 @@ class AlertManager:
         Returns:
             List of alerts for specified component
         """
-        return [a for a in self.alerts.values() if a.component == component]
+        return [a for a in self.alerts.values() if a.source == component]
 
     def clear_resolved_alerts(self) -> None:
         """Clear resolved alerts from history."""
-        self.alert_history = [a for a in self.alert_history if a.is_active()]
+        # Note: canonical Alert doesn't have is_active(), filter by active alerts dict
+        active_ids = set(self.alerts.keys())
+        self.alert_history = [a for a in self.alert_history if a.alert_id in active_ids]
 
     def get_alert_summary(self) -> dict:
         """Get summary of current alerts."""
@@ -163,12 +183,12 @@ class AlertManager:
 
         summary = {
             "total_active": len(active_alerts),
-            "critical": len([a for a in active_alerts if a.level == AlertLevel.CRITICAL]),
-            "error": len([a for a in active_alerts if a.level == AlertLevel.ERROR]),
-            "warning": len([a for a in active_alerts if a.level == AlertLevel.WARNING]),
-            "info": len([a for a in active_alerts if a.level == AlertLevel.INFO]),
-            "acknowledged": len([a for a in active_alerts if a.acknowledged]),
-            "components_affected": list({a.component for a in active_alerts}),
+            "critical": len([a for a in active_alerts if a.severity == AlertLevel.CRITICAL]),
+            "error": len([a for a in active_alerts if a.severity == AlertLevel.ERROR]),
+            "warning": len([a for a in active_alerts if a.severity == AlertLevel.WARNING]),
+            "info": len([a for a in active_alerts if a.severity == AlertLevel.INFO]),
+            "acknowledged": 0,  # Canonical Alert doesn't track acknowledged status
+            "components_affected": list({a.source for a in active_alerts}),
         }
 
         return summary
@@ -190,27 +210,33 @@ class AlertManager:
 
     def _print_alert(self, alert: Alert) -> None:
         """
-        Print alert to console.
+        Log alert using structured logging.
 
         Args:
-            alert: Alert to print
+            alert: Alert to log
         """
-        # Color coding by level
-        if alert.level == AlertLevel.CRITICAL:
-            prefix = "🚨 CRITICAL"
-        elif alert.level == AlertLevel.ERROR:
-            prefix = "❌ ERROR"
-        elif alert.level == AlertLevel.WARNING:
-            prefix = "⚠️  WARNING"
-        else:
-            prefix = "ℹ️  INFO"
+        # Map alert severity to logging level
+        log_level_map = {
+            AlertLevel.CRITICAL: logging.CRITICAL,
+            AlertLevel.ERROR: logging.ERROR,
+            AlertLevel.WARNING: logging.WARNING,
+            AlertLevel.INFO: logging.INFO,
+        }
+        log_level = log_level_map.get(alert.severity, logging.INFO)
 
-        print(f"\n{prefix} Alert [{alert.alert_id}]")
-        print(f"Component: {alert.component}")
-        print(f"Message: {alert.message}")
-        if alert.details:
-            print(f"Details: {alert.details}")
-        print(f"Time: {alert.created_at.strftime('%Y-%m-%d %H:%M:%S')}")
+        logger.log(
+            log_level,
+            "Alert created",
+            extra={
+                "alert_id": alert.alert_id,
+                "source": alert.source,
+                "severity": alert.severity.value,
+                "title": alert.title,
+                "message": alert.message,
+                "context": alert.context,
+                "timestamp": alert.timestamp.isoformat(),
+            },
+        )
 
     def cleanup_old_alerts(self) -> None:
         """Clean up old alerts based on retention policy."""
@@ -219,9 +245,10 @@ class AlertManager:
 
         cutoff = datetime.now() - timedelta(days=self.config.retention_days)
 
-        # Remove old resolved alerts
+        # Remove old resolved alerts (those not in active alerts dict)
+        active_ids = set(self.alerts.keys())
         self.alert_history = [
-            a for a in self.alert_history if a.is_active() or a.created_at > cutoff
+            a for a in self.alert_history if a.alert_id in active_ids or a.timestamp > cutoff
         ]
 
         # Clean up deduplication tracking

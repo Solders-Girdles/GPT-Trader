@@ -2,8 +2,8 @@
 
 ---
 status: current
-last-updated: 2025-03-01
-organization-updated: 2025-03-01
+last-updated: 2025-09-30
+organization-updated: 2025-09-30
 ---
 
 ## 📍 Quick Links
@@ -30,13 +30,11 @@ organization-updated: 2025-03-01
 
 ### Trading Operations
 - [Production Deployment](guides/production.md) - Deployment guide (spot-first, INTX-gated perps)
-- [Legacy Deployment Migration](guides/legacy_deployment_migration.md) - Steps to move from the archived Docker stack to bot_v2
-- [Stage 3 Runner](../scripts/stage3_runner.py) - Legacy entry that forwards to `perps-bot`
 - [Operations Runbook](ops/operations_runbook.md) - Operational procedures
 
 ### Development
 - [AI Agent Guide](guides/agents.md) - For Claude and other AI agents
-- [Development Guidelines](../DEVELOPMENT_GUIDELINES.md) - Standards for contributing
+- [Development Guidelines](DEVELOPMENT_GUIDELINES.md) - Standards for contributing
 - [Contributing Guidelines](../CONTRIBUTING.md) - Development workflow
 
 ## 🔧 Configuration & Setup
@@ -54,8 +52,7 @@ organization-updated: 2025-03-01
 
 ### Implementation Status
 - [Production Readiness](guides/production.md#production-readiness-requirements)
-- [System Capabilities](reference/system_capabilities.md) - Current state overview
-- [System Reality](reference/system_reality.md) - Honest current state assessment
+- [System Reality](reference/system_reality.md) - Current state assessment
 - [Compatibility & Troubleshooting](reference/compatibility_troubleshooting.md) - Technical requirements
 - Historical validation analysis is available in version control history.
 
@@ -97,4 +94,4 @@ Use git history if you need to recover earlier runbooks or reports.
 
 ---
 
-*Last validated: March 2025 (spot-first refresh)*
+*Last validated: September 2025*

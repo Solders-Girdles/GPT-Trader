@@ -3,9 +3,8 @@
 ---
 status: current
 created: 2025-01-01
-last-updated: 2025-03-01
+last-updated: 2025-09-30
 consolidates:
-  - docs/QUICK_START.md
   - docs/guides/api_key_setup.md
   - config/environments/.env.template
   - Various scattered setup instructions

@@ -28,7 +28,8 @@ docs/
 │
 ├── reference/                  # Technical reference docs
 │   ├── coinbase_complete.md
-│   ├── system_capabilities.md
+│   ├── system_reality.md
+│   ├── compatibility_troubleshooting.md
 │   └── trading_logic_perps.md
 │
 ├── testing/                    # Test documentation
@@ -193,7 +194,7 @@ One `ARCHITECTURE.md` with git history for versions.
 **Recent Changes (2025-09-29):**
 - Archived experimental features
 - Refactored large files into modules
-- Updated test coverage to 443/448 passing
+- Test coverage: 100% pass rate on active suites
 ```
 
 ### ❌ Bad: Temporary Document

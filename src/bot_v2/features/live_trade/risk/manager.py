@@ -31,7 +31,7 @@ from bot_v2.features.live_trade.risk.pre_trade_checks import (
 from bot_v2.features.live_trade.risk.runtime_monitoring import RuntimeMonitor
 from bot_v2.features.live_trade.risk.state_management import (
     RiskRuntimeState,
-    StateManager,
+    RiskStateManager,
 )
 from bot_v2.features.live_trade.risk_runtime import CircuitBreakerOutcome
 from bot_v2.persistence.event_store import EventStore
@@ -89,7 +89,7 @@ class LiveRiskManager:
         self.last_mark_update: dict[str, datetime] = {}
 
         # Initialize helper modules
-        self.state_manager = StateManager(
+        self.state_manager = RiskStateManager(
             config=self.config,
             event_store=self.event_store,
             now_provider=self._now_provider,

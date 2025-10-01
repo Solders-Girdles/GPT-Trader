@@ -7,9 +7,106 @@ Phase 5: Risk Engine configuration only.
 from __future__ import annotations
 
 import json
+import logging
 import os
 from dataclasses import dataclass, field
 from decimal import Decimal
+from typing import Any, Callable
+
+logger = logging.getLogger(__name__)
+
+
+# --- Table-driven configuration parsers ---
+
+
+def _parse_bool(value: str) -> bool:
+    """Parse boolean from string."""
+    return value.lower() in ("true", "1", "yes")
+
+
+def _parse_symbol_dict_int(value: str) -> dict[str, int]:
+    """Parse symbol:value dictionary (BTC-PERP:10,ETH-PERP:8)."""
+    return {k: int(v) for k, v in (pair.split(":") for pair in value.split(",") if ":" in pair)}
+
+
+def _parse_symbol_dict_float(value: str) -> dict[str, float]:
+    """Parse symbol:value dictionary with float values."""
+    return {k: float(v) for k, v in (pair.split(":") for pair in value.split(",") if ":" in pair)}
+
+
+def _parse_symbol_dict_decimal(value: str) -> dict[str, Decimal]:
+    """Parse symbol:value dictionary with Decimal values."""
+    return {
+        k: Decimal(str(v)) for k, v in (pair.split(":") for pair in value.split(",") if ":" in pair)
+    }
+
+
+@dataclass
+class EnvVarMapping:
+    """Maps an environment variable to a config field with type conversion."""
+
+    env_var: str
+    field_name: str
+    converter: Callable[[str], Any]
+    log_parse_errors: bool = True
+
+
+# Configuration mapping table - declarative approach for all env vars
+ENV_VAR_MAPPINGS: list[EnvVarMapping] = [
+    # Leverage controls
+    EnvVarMapping("RISK_MAX_LEVERAGE", "max_leverage", int),
+    EnvVarMapping("RISK_LEVERAGE_MAX_PER_SYMBOL", "leverage_max_per_symbol", _parse_symbol_dict_int),
+    # Time-of-day schedule
+    EnvVarMapping("RISK_DAYTIME_START_UTC", "daytime_start_utc", str),
+    EnvVarMapping("RISK_DAYTIME_END_UTC", "daytime_end_utc", str),
+    EnvVarMapping(
+        "RISK_DAY_LEVERAGE_MAX_PER_SYMBOL", "day_leverage_max_per_symbol", _parse_symbol_dict_int
+    ),
+    EnvVarMapping(
+        "RISK_NIGHT_LEVERAGE_MAX_PER_SYMBOL",
+        "night_leverage_max_per_symbol",
+        _parse_symbol_dict_int,
+    ),
+    EnvVarMapping("RISK_DAY_MMR_PER_SYMBOL", "day_mmr_per_symbol", _parse_symbol_dict_float),
+    EnvVarMapping("RISK_NIGHT_MMR_PER_SYMBOL", "night_mmr_per_symbol", _parse_symbol_dict_float),
+    # Liquidation safety
+    EnvVarMapping("RISK_MIN_LIQUIDATION_BUFFER_PCT", "min_liquidation_buffer_pct", float),
+    EnvVarMapping(
+        "RISK_ENABLE_PRE_TRADE_LIQ_PROJECTION", "enable_pre_trade_liq_projection", _parse_bool
+    ),
+    EnvVarMapping("RISK_DEFAULT_MMR", "default_maintenance_margin_rate", float),
+    # Market impact
+    EnvVarMapping("RISK_ENABLE_MARKET_IMPACT_GUARD", "enable_market_impact_guard", _parse_bool),
+    EnvVarMapping("RISK_MAX_MARKET_IMPACT_BPS", "max_market_impact_bps", Decimal),
+    # Dynamic position sizing
+    EnvVarMapping(
+        "RISK_ENABLE_DYNAMIC_POSITION_SIZING", "enable_dynamic_position_sizing", _parse_bool
+    ),
+    EnvVarMapping("RISK_POSITION_SIZING_METHOD", "position_sizing_method", str),
+    EnvVarMapping("RISK_POSITION_SIZING_MULTIPLIER", "position_sizing_multiplier", float),
+    # Loss limits
+    EnvVarMapping("RISK_DAILY_LOSS_LIMIT", "daily_loss_limit", Decimal),
+    # Exposure controls (including legacy alias)
+    EnvVarMapping("RISK_MAX_TOTAL_EXPOSURE_PCT", "max_exposure_pct", float),
+    EnvVarMapping("RISK_MAX_EXPOSURE_PCT", "max_exposure_pct", float),
+    EnvVarMapping("RISK_MAX_POSITION_PCT_PER_SYMBOL", "max_position_pct_per_symbol", float),
+    EnvVarMapping("RISK_MAX_NOTIONAL_PER_SYMBOL", "max_notional_per_symbol", _parse_symbol_dict_decimal),
+    # Slippage protection
+    EnvVarMapping("RISK_SLIPPAGE_GUARD_BPS", "slippage_guard_bps", int),
+    # Emergency controls
+    EnvVarMapping("RISK_KILL_SWITCH_ENABLED", "kill_switch_enabled", _parse_bool),
+    EnvVarMapping("RISK_REDUCE_ONLY_MODE", "reduce_only_mode", _parse_bool),
+    # Mark price staleness
+    EnvVarMapping("RISK_MAX_MARK_STALENESS_SECONDS", "max_mark_staleness_seconds", int),
+    # Circuit breakers
+    EnvVarMapping("RISK_ENABLE_VOLATILITY_CB", "enable_volatility_circuit_breaker", _parse_bool),
+    EnvVarMapping("RISK_MAX_INTRADAY_VOL", "max_intraday_volatility_threshold", float),
+    EnvVarMapping("RISK_VOL_WINDOW_PERIODS", "volatility_window_periods", int),
+    EnvVarMapping("RISK_CB_COOLDOWN_MIN", "circuit_breaker_cooldown_minutes", int),
+    EnvVarMapping("RISK_VOL_WARNING_THRESH", "volatility_warning_threshold", float),
+    EnvVarMapping("RISK_VOL_REDUCE_ONLY_THRESH", "volatility_reduce_only_threshold", float),
+    EnvVarMapping("RISK_VOL_KILL_SWITCH_THRESH", "volatility_kill_switch_threshold", float),
+]
 
 
 @dataclass
@@ -87,134 +184,24 @@ class RiskConfig:
 
     @classmethod
     def from_env(cls) -> RiskConfig:
-        """Load config from environment variables."""
+        """Load config from environment variables using table-driven approach."""
         config = cls()
 
-        # Load from env with defaults
-        if val := os.getenv("RISK_MAX_LEVERAGE"):
-            config.max_leverage = int(val)
+        # Table-driven parsing: iterate through all mappings
+        for mapping in ENV_VAR_MAPPINGS:
+            val = os.getenv(mapping.env_var)
+            if val is None:
+                continue
 
-        if val := os.getenv("RISK_LEVERAGE_MAX_PER_SYMBOL"):
-            # Format: BTC-PERP:10,ETH-PERP:8
-            config.leverage_max_per_symbol = {
-                k: int(v) for k, v in (pair.split(":") for pair in val.split(",") if ":" in pair)
-            }
-        # Time-of-day schedule (optional)
-        if val := os.getenv("RISK_DAYTIME_START_UTC"):
-            config.daytime_start_utc = val
-        if val := os.getenv("RISK_DAYTIME_END_UTC"):
-            config.daytime_end_utc = val
-        if val := os.getenv("RISK_DAY_LEVERAGE_MAX_PER_SYMBOL"):
-            # Format: BTC-PERP:10,ETH-PERP:8
             try:
-                config.day_leverage_max_per_symbol = {
-                    k: int(v)
-                    for k, v in (pair.split(":") for pair in val.split(",") if ":" in pair)
-                }
-            except Exception:
-                pass
-        if val := os.getenv("RISK_NIGHT_LEVERAGE_MAX_PER_SYMBOL"):
-            try:
-                config.night_leverage_max_per_symbol = {
-                    k: int(v)
-                    for k, v in (pair.split(":") for pair in val.split(",") if ":" in pair)
-                }
-            except Exception:
-                pass
-        if val := os.getenv("RISK_DAY_MMR_PER_SYMBOL"):
-            # Format: BTC-PERP:0.005,ETH-PERP:0.01
-            try:
-                config.day_mmr_per_symbol = {
-                    k: float(v)
-                    for k, v in (pair.split(":") for pair in val.split(",") if ":" in pair)
-                }
-            except Exception:
-                pass
-        if val := os.getenv("RISK_NIGHT_MMR_PER_SYMBOL"):
-            try:
-                config.night_mmr_per_symbol = {
-                    k: float(v)
-                    for k, v in (pair.split(":") for pair in val.split(",") if ":" in pair)
-                }
-            except Exception:
-                pass
-
-        if val := os.getenv("RISK_MIN_LIQUIDATION_BUFFER_PCT"):
-            config.min_liquidation_buffer_pct = float(val)
-        if val := os.getenv("RISK_ENABLE_PRE_TRADE_LIQ_PROJECTION"):
-            config.enable_pre_trade_liq_projection = val.lower() in ("true", "1", "yes")
-        if val := os.getenv("RISK_DEFAULT_MMR"):
-            config.default_maintenance_margin_rate = float(val)
-
-        if val := os.getenv("RISK_ENABLE_MARKET_IMPACT_GUARD"):
-            config.enable_market_impact_guard = val.lower() in ("true", "1", "yes")
-        if val := os.getenv("RISK_MAX_MARKET_IMPACT_BPS"):
-            try:
-                config.max_market_impact_bps = Decimal(val)
-            except Exception:
-                pass
-
-        if val := os.getenv("RISK_ENABLE_DYNAMIC_POSITION_SIZING"):
-            config.enable_dynamic_position_sizing = val.lower() in ("true", "1", "yes")
-        if val := os.getenv("RISK_POSITION_SIZING_METHOD"):
-            config.position_sizing_method = val
-        if val := os.getenv("RISK_POSITION_SIZING_MULTIPLIER"):
-            try:
-                config.position_sizing_multiplier = float(val)
-            except Exception:
-                pass
-
-        if val := os.getenv("RISK_DAILY_LOSS_LIMIT"):
-            config.daily_loss_limit = Decimal(val)
-        # Legacy env alias for exposure
-        if val := os.getenv("RISK_MAX_TOTAL_EXPOSURE_PCT"):
-            try:
-                config.max_exposure_pct = float(val)
-            except Exception:
-                pass
-
-        if val := os.getenv("RISK_MAX_EXPOSURE_PCT"):
-            config.max_exposure_pct = float(val)
-
-        if val := os.getenv("RISK_MAX_POSITION_PCT_PER_SYMBOL"):
-            config.max_position_pct_per_symbol = float(val)
-
-        if val := os.getenv("RISK_MAX_NOTIONAL_PER_SYMBOL"):
-            # Format: BTC-PERP:100000,ETH-PERP:50000
-            try:
-                config.max_notional_per_symbol = {
-                    k: Decimal(str(v))
-                    for k, v in (pair.split(":") for pair in val.split(",") if ":" in pair)
-                }
-            except Exception:
-                pass
-
-        if val := os.getenv("RISK_SLIPPAGE_GUARD_BPS"):
-            config.slippage_guard_bps = int(val)
-
-        if val := os.getenv("RISK_KILL_SWITCH_ENABLED"):
-            config.kill_switch_enabled = val.lower() in ("true", "1", "yes")
-
-        if val := os.getenv("RISK_REDUCE_ONLY_MODE"):
-            config.reduce_only_mode = val.lower() in ("true", "1", "yes")
-
-        if val := os.getenv("RISK_MAX_MARK_STALENESS_SECONDS"):
-            config.max_mark_staleness_seconds = int(val)
-        # Circuit breakers
-        if val := os.getenv("RISK_ENABLE_VOLATILITY_CB"):
-            config.enable_volatility_circuit_breaker = val.lower() in ("true", "1", "yes")
-        if val := os.getenv("RISK_MAX_INTRADAY_VOL"):
-            config.max_intraday_volatility_threshold = float(val)
-        if val := os.getenv("RISK_VOL_WINDOW_PERIODS"):
-            config.volatility_window_periods = int(val)
-        if val := os.getenv("RISK_CB_COOLDOWN_MIN"):
-            config.circuit_breaker_cooldown_minutes = int(val)
-        if val := os.getenv("RISK_VOL_WARNING_THRESH"):
-            config.volatility_warning_threshold = float(val)
-        if val := os.getenv("RISK_VOL_REDUCE_ONLY_THRESH"):
-            config.volatility_reduce_only_threshold = float(val)
-        if val := os.getenv("RISK_VOL_KILL_SWITCH_THRESH"):
-            config.volatility_kill_switch_threshold = float(val)
+                parsed_value = mapping.converter(val)
+                setattr(config, mapping.field_name, parsed_value)
+            except Exception as e:
+                if mapping.log_parse_errors:
+                    logger.warning(
+                        f"Failed to parse {mapping.env_var}={val!r} for field "
+                        f"{mapping.field_name}: {e.__class__.__name__}: {e}"
+                    )
 
         return config
 

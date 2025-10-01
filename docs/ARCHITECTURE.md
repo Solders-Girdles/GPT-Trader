@@ -72,7 +72,7 @@ Risk Guards → Coinbase Brokerage Adapter → Metrics + Telemetry
 
 | Module | Purpose |
 |--------|---------|
-| `bot_v2/features/live_trade` | Main control loop, position tracking, and order routing *(legacy facade exported from `archived/legacy_live_trade_facade`)* |
+| `bot_v2/features/live_trade` | Risk management, execution engines, strategies, and trading utilities |
 | `bot_v2/features/live_trade/risk/` | Risk management subpackage: position sizing, pre-trade validation, runtime monitoring, state management |
 | `bot_v2/orchestration/` | Core orchestration layer: config management, execution/runtime/strategy coordination, telemetry, reconciliation |
 | `bot_v2/orchestration/execution/` | Execution subpackage: guards, validation, order submission, state collection |

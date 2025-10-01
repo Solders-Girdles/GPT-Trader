@@ -30,7 +30,6 @@ TARGET_CATEGORIES = {
     },
     "pipeline_stage": {
         "bot_v2.features.backtest",
-        "bot_v2.features.live_trade.live_trade",
         "bot_v2.orchestration.perps_bot",
     },
     "integration": {

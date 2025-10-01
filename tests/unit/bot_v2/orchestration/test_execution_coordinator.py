@@ -144,6 +144,8 @@ class TestExecutionCoordinator:
     @pytest.mark.asyncio
     async def test_execute_decision_close_position(self, coordinator, mock_bot, sample_product):
         """Test CLOSE action execution"""
+        from bot_v2.features.live_trade.strategies.perps_baseline import Action, Decision
+
         close_decision = Decision(
             action=Action.CLOSE,
             reason="take_profit",
@@ -181,6 +183,8 @@ class TestExecutionCoordinator:
     @pytest.mark.asyncio
     async def test_execute_decision_close_no_position(self, coordinator, sample_product):
         """Test CLOSE action with no position"""
+        from bot_v2.features.live_trade.strategies.perps_baseline import Action, Decision
+
         close_decision = Decision(
             action=Action.CLOSE,
             reason="stop_loss",

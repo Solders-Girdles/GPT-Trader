@@ -109,3 +109,35 @@ explicit_package_bases = true
 mypy_path = "src"
 
 # Pytest configuration moved to pytest.ini for better organization
+
+[tool.coverage.run]
+source = ["src/bot_v2"]
+omit = [
+    "*/tests/*",
+    "*/__pycache__/*",
+    "*/archived/*",
+]
+
+[tool.coverage.report]
+# Global minimum coverage threshold (relaxed initially, will increase per phase)
+fail_under = 78
+show_missing = true
+skip_covered = false
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "@abstractmethod",
+]
+
+# Per-package coverage thresholds (enforced after Phase 3)
+# Phase 0 targets (quick wins): 85%
+# Phase 1 targets: 92%
+# Phase 2 targets: 97%
+# Phase 3 targets: 100%
+
+[tool.coverage.paths]
+source = ["src/bot_v2"]

@@ -15,9 +15,27 @@ poetry run perps-bot --profile dev --dev-fast
 
 # Run tests
 poetry run pytest -q
+
+# Verify Phase 0 coverage gates stay green
+pytest --cov=src/bot_v2 --cov-report=term --cov-report=json -q
+python scripts/check_package_coverage.py phase0
 ```
 
 For environment configuration, API setup, and production deployment, see the [Complete Setup Guide](guides/complete_setup_guide.md).
+
+## Contributor Test Suites
+
+- **Monitoring evaluations**: `pytest -m monitoring` (frozen-time flows, alert escalations)
+- **Brokerage adapters**: `pytest -m brokerages` (REST + websocket contracts)
+- **High impact CI slice**: `pytest -m high_impact` (fast regression guardrail)
+- **Coverage overview**: `python scripts/check_package_coverage.py --show-all`
+
+**Raised fail-under thresholds (Phase 0):**
+- `security` ≥ 88%
+- `config` ≥ 86%
+- `cli` ≥ 93%
+
+The coverage check script uses the JSON artifact produced by pytest-cov; re-run the two commands shown in the TL;DR after writing tests to refresh the numbers.
 
 ## When to Read Next
 

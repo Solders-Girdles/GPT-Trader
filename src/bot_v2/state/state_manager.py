@@ -20,6 +20,7 @@ from bot_v2.state.repositories import (
     S3StateRepository,
 )
 from bot_v2.state.storage_adapter_factory import StorageAdapterFactory
+from bot_v2.state.tier_promotion_policy import TierPromotionPolicy
 from bot_v2.state.utils.adapters import (
     PostgresAdapter,
     RedisAdapter,
@@ -142,6 +143,13 @@ class StateManager:
             S3StateRepository(self.s3_adapter, self.config.s3_bucket) if self.s3_adapter else None
         )
 
+        # Initialize tier promotion policy
+        self._promotion_policy = TierPromotionPolicy(
+            redis_repo=self._redis_repo,
+            postgres_repo=self._postgres_repo,
+            s3_repo=self._s3_repo,
+        )
+
     # Backwards compatibility properties for tests
     @property
     def _local_cache(self) -> dict[str, Any]:
@@ -195,18 +203,25 @@ class StateManager:
         # Try warm storage (PostgreSQL)
         value = await self._get_from_postgres(key)
         if value is not None:
-            if auto_promote:
+            if self._promotion_policy.should_auto_promote(StateCategory.WARM, auto_promote):
                 # Promote to hot storage
-                await self.set_state(key, value, StateCategory.HOT)
+                serialized = json.dumps(value, default=str)
+                await self._promotion_policy.promote_value(
+                    key, serialized, StateCategory.WARM, {"ttl_seconds": None}
+                )
             self._cache_manager.set(key, value)
             return value
 
         # Try cold storage (S3)
         value = await self._get_from_s3(key)
         if value is not None:
-            if auto_promote:
+            if self._promotion_policy.should_auto_promote(StateCategory.COLD, auto_promote):
                 # Promote to warm storage
-                await self.set_state(key, value, StateCategory.WARM)
+                serialized = json.dumps(value, default=str)
+                checksum = self._cache_manager.calculate_checksum(serialized)
+                await self._promotion_policy.promote_value(
+                    key, serialized, StateCategory.COLD, {"checksum": checksum}
+                )
             self._cache_manager.set(key, value)
             return value
 
@@ -362,22 +377,21 @@ class StateManager:
         """Manually promote state to hot tier"""
         value = await self.get_state(key, auto_promote=False)
         if value is not None:
-            return await self.set_state(key, value, StateCategory.HOT)
+            serialized = json.dumps(value, default=str)
+            return await self._promotion_policy.promote_to_hot(
+                key, serialized, {"ttl_seconds": None}
+            )
         return False
 
     async def demote_to_cold(self, key: str) -> bool:
         """Manually demote state to cold tier"""
         value = await self.get_state(key, auto_promote=False)
         if value is not None:
-            # Delete from hot/warm tiers
-            if self.redis_adapter:
-                self.redis_adapter.delete(key)
-            if self.postgres_adapter:
-                self.postgres_adapter.execute("DELETE FROM state_warm WHERE key = %s", (key,))
-                self.postgres_adapter.commit()
-
-            # Store in cold tier
-            return await self.set_state(key, value, StateCategory.COLD)
+            serialized = json.dumps(value, default=str)
+            checksum = self._cache_manager.calculate_checksum(serialized)
+            return await self._promotion_policy.demote_to_cold(
+                key, serialized, {"checksum": checksum}
+            )
         return False
 
     async def get_storage_stats(self) -> dict[str, Any]:

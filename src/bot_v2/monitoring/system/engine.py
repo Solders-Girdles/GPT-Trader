@@ -11,9 +11,9 @@ import threading
 import time
 from datetime import datetime
 
+from bot_v2.monitoring.alerts import Alert
 from bot_v2.monitoring.alerts_manager import AlertManager
 from bot_v2.monitoring.interfaces import (
-    Alert,
     ComponentHealth,
     ComponentStatus,
     MonitorConfig,
@@ -177,45 +177,45 @@ class MonitoringSystem:
         from bot_v2.monitoring.alerts import AlertLevel
 
         # Resource alerts
-        if health.resource_usage.cpu_percent > self.config.alert_threshold_cpu:
+        if health.resource_usage.cpu_percent >= self.config.alert_threshold_cpu:
             self.alert_manager.create_alert(
                 level=AlertLevel.WARNING,
-                component="System",
+                source="System",
                 message=f"High CPU usage: {health.resource_usage.cpu_percent:.1f}%",
-                details={"cpu_percent": health.resource_usage.cpu_percent},
+                context={"cpu_percent": health.resource_usage.cpu_percent},
             )
 
-        if health.resource_usage.memory_percent > self.config.alert_threshold_memory:
+        if health.resource_usage.memory_percent >= self.config.alert_threshold_memory:
             self.alert_manager.create_alert(
                 level=AlertLevel.WARNING,
-                component="System",
+                source="System",
                 message=f"High memory usage: {health.resource_usage.memory_percent:.1f}%",
-                details={"memory_percent": health.resource_usage.memory_percent},
+                context={"memory_percent": health.resource_usage.memory_percent},
             )
 
-        if health.resource_usage.disk_percent > self.config.alert_threshold_disk:
+        if health.resource_usage.disk_percent >= self.config.alert_threshold_disk:
             self.alert_manager.create_alert(
                 level=AlertLevel.ERROR,
-                component="System",
+                source="System",
                 message=f"High disk usage: {health.resource_usage.disk_percent:.1f}%",
-                details={"disk_percent": health.resource_usage.disk_percent},
+                context={"disk_percent": health.resource_usage.disk_percent},
             )
 
         # Performance alerts
         if health.performance.error_rate > self.config.alert_threshold_error_rate:
             self.alert_manager.create_alert(
                 level=AlertLevel.ERROR,
-                component="Performance",
+                source="Performance",
                 message=f"High error rate: {health.performance.error_rate:.2%}",
-                details={"error_rate": health.performance.error_rate},
+                context={"error_rate": health.performance.error_rate},
             )
 
         if health.performance.avg_response_time_ms > self.config.alert_threshold_response_time_ms:
             self.alert_manager.create_alert(
                 level=AlertLevel.WARNING,
-                component="Performance",
+                source="Performance",
                 message=f"Slow response time: {health.performance.avg_response_time_ms:.1f}ms",
-                details={"response_time_ms": health.performance.avg_response_time_ms},
+                context={"response_time_ms": health.performance.avg_response_time_ms},
             )
 
         # Component alerts
@@ -223,9 +223,9 @@ class MonitoringSystem:
             if component.status == ComponentStatus.UNHEALTHY:
                 self.alert_manager.create_alert(
                     level=AlertLevel.CRITICAL,
-                    component=name,
+                    source=name,
                     message=f"Component unhealthy: {name}",
-                    details=component.details,
+                    context=component.details,
                 )
 
     def get_current_health(self) -> SystemHealth | None:

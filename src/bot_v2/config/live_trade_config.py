@@ -9,10 +9,10 @@ from __future__ import annotations
 import json
 import logging
 import os
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from decimal import Decimal
 from typing import Any
-from collections.abc import Callable
 
 logger = logging.getLogger(__name__)
 
@@ -89,8 +89,7 @@ ENV_VAR_MAPPINGS: list[EnvVarMapping] = [
     EnvVarMapping("RISK_POSITION_SIZING_MULTIPLIER", "position_sizing_multiplier", float),
     # Loss limits
     EnvVarMapping("RISK_DAILY_LOSS_LIMIT", "daily_loss_limit", Decimal),
-    # Exposure controls (including legacy alias)
-    EnvVarMapping("RISK_MAX_TOTAL_EXPOSURE_PCT", "max_exposure_pct", float),
+    # Exposure controls
     EnvVarMapping("RISK_MAX_EXPOSURE_PCT", "max_exposure_pct", float),
     EnvVarMapping("RISK_MAX_POSITION_PCT_PER_SYMBOL", "max_position_pct_per_symbol", float),
     EnvVarMapping(
@@ -174,19 +173,6 @@ class RiskConfig:
     volatility_reduce_only_threshold: float = 0.20
     volatility_kill_switch_threshold: float = 0.25
 
-    # --- Legacy aliases (accepted for backward compatibility) ---
-    # These are accepted in constructor but not used directly. Where applicable,
-    # __post_init__ maps them into the canonical fields above.
-    max_total_exposure_pct: float | None = None  # alias for max_exposure_pct
-
-    def __post_init__(self) -> None:
-        # Map legacy alias to canonical exposure field, if provided
-        try:
-            if self.max_total_exposure_pct is not None:
-                self.max_exposure_pct = float(self.max_total_exposure_pct)
-        except Exception:
-            pass
-
     @classmethod
     def from_env(cls) -> RiskConfig:
         """Load config from environment variables using table-driven approach."""
@@ -234,9 +220,6 @@ class RiskConfig:
             data["max_exposure_pct"] = float(raw["max_exposure_pct"])
         if "max_position_pct_per_symbol" in raw:
             data["max_position_pct_per_symbol"] = float(raw["max_position_pct_per_symbol"])
-        # Legacy alias
-        if "max_total_exposure_pct" in raw:
-            data["max_exposure_pct"] = float(raw["max_total_exposure_pct"])
         if "slippage_guard_bps" in raw:
             data["slippage_guard_bps"] = int(raw["slippage_guard_bps"])
         if "kill_switch_enabled" in raw:

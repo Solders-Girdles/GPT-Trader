@@ -83,7 +83,7 @@ class RiskStateManager:
             self._state.last_reduce_only_reason = None
             self._state.last_reduce_only_at = None
 
-        # Mirror change onto config so legacy access patterns remain valid
+        # Mirror change onto config for runtime access
         try:
             self.config.reduce_only_mode = enabled
         except Exception as exc:

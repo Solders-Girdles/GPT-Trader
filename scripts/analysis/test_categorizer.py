@@ -20,7 +20,6 @@ TARGET_CATEGORIES = {
     "execution_helper": {
         "bot_v2.orchestration.live_execution",
         "bot_v2.features.live_trade.advanced_execution",
-        "bot_v2.features.live_trade.execution",
         "bot_v2.features.live_trade.order_policy",
     },
     "strategy_helper": {

@@ -13,7 +13,7 @@ try:
 except Exception:
     yaml = cast(Any, None)
 
-from bot_v2.monitoring.alerts import Alert, AlertDispatcher, AlertLevel, AlertSeverity
+from bot_v2.monitoring.alerts import Alert, AlertDispatcher, AlertLevel
 
 logger = logging.getLogger(__name__)
 
@@ -85,8 +85,6 @@ class AlertManager:
         message: str,
         title: str | None = None,
         context: dict[str, Any] | None = None,
-        component: str | None = None,  # Backward compatibility
-        details: dict[str, Any] | None = None,  # Backward compatibility
     ) -> Alert | None:
         """Create an alert with deduplication.
 
@@ -96,34 +94,31 @@ class AlertManager:
             message: Alert message
             title: Optional alert title (defaults to "{source} Alert")
             context: Additional context dictionary
-            component: (Deprecated) Alias for source
-            details: (Deprecated) Alias for context
 
         Returns:
             Alert object or None if deduplicated
         """
-        # Backward compatibility: component -> source, details -> context
-        if component is not None:
-            source = component
-        if details is not None:
-            context = details
-
         # Convert string level to AlertLevel
         if isinstance(level, str):
             level = AlertLevel[level.upper()]
 
+        current_time = datetime.now()
+
         # Check for duplicate alerts
         alert_key = f"{source}:{message}"
         if alert_key in self._recent_alerts:
-            time_since = (datetime.now() - self._recent_alerts[alert_key]).total_seconds()
-            if time_since < self.dedup_window_seconds:
+            time_since = (current_time - self._recent_alerts[alert_key]).total_seconds()
+            if time_since < 0:
+                # Clock moved backwards (e.g., FrozenTime), reset tracking entry
+                self._recent_alerts.pop(alert_key, None)
+            elif time_since <= self.dedup_window_seconds:
                 # Duplicate alert within window, skip
                 return None
 
         # Create alert
         alert_id = str(uuid.uuid4())[:8]
         alert = Alert(
-            timestamp=datetime.now(),
+            timestamp=current_time,
             source=source,
             severity=level,
             title=title or f"{source} Alert",
@@ -138,44 +133,9 @@ class AlertManager:
             self.alert_history.pop(0)
 
         # Update deduplication tracking
-        self._recent_alerts[alert_key] = datetime.now()
+        self._recent_alerts[alert_key] = current_time
 
         return alert
-
-    async def send_alert(
-        self,
-        level: str,
-        title: str,
-        message: str,
-        metrics: dict[str, Any] | None = None,
-        source: str = "perps_bot",
-    ) -> None:
-        """Send an alert through the dispatcher (async).
-
-        This is the legacy async method for backward compatibility.
-        For sync alert creation with deduplication, use create_alert().
-
-        Args:
-            level: Alert level as string
-            title: Alert title
-            message: Alert message
-            metrics: Optional metrics/context dict
-            source: Source component name
-        """
-        sev = AlertSeverity[level.upper()] if level else AlertSeverity.WARNING
-        alert = Alert(
-            timestamp=datetime.utcnow(),
-            source=source,
-            severity=sev,
-            title=title,
-            message=message,
-            context=dict(metrics or {}),
-        )
-        await self.dispatcher.dispatch(alert)
-        # Also add to history
-        self.alert_history.append(alert)
-        if len(self.alert_history) > self.max_history:
-            self.alert_history.pop(0)
 
     def get_recent_alerts(
         self, count: int = 10, severity: AlertLevel | None = None, source: str | None = None
@@ -226,15 +186,17 @@ class AlertManager:
         Args:
             retention_hours: Keep alerts newer than this many hours
         """
-        cutoff = datetime.now() - timedelta(hours=retention_hours)
-        self.alert_history = [a for a in self.alert_history if a.timestamp > cutoff]
+        current_time = datetime.now()
+        cutoff = current_time - timedelta(hours=retention_hours)
+        self.alert_history = [
+            alert for alert in self.alert_history if cutoff < alert.timestamp <= current_time
+        ]
 
         # Clean up deduplication tracking
-        current_time = datetime.now()
         self._recent_alerts = {
-            k: v
-            for k, v in self._recent_alerts.items()
-            if (current_time - v).total_seconds() < self.dedup_window_seconds
+            key: timestamp
+            for key, timestamp in self._recent_alerts.items()
+            if 0 <= (current_time - timestamp).total_seconds() <= self.dedup_window_seconds
         }
 
     # Backward compatibility methods for system/alerting.py API

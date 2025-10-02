@@ -94,11 +94,11 @@ class OrdersStore:
             for line in f:
                 try:
                     data = json.loads(line)
-                    legacy_filled_quantity = data.pop("filled_quantity", None)
-                    if "filled_quantity" not in data and legacy_filled_quantity is not None:
-                        data["filled_quantity"] = legacy_filled_quantity
+                    # Ensure optional fields have defaults
                     if "avg_fill_price" not in data:
                         data["avg_fill_price"] = None
+                    if "filled_quantity" not in data:
+                        data["filled_quantity"] = None
                     order = StoredOrder(**data)
                     self._orders[order.order_id] = order
                     self._client_id_map[order.client_id] = order.order_id

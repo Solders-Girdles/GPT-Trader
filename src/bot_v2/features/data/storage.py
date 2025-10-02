@@ -4,13 +4,14 @@ Local data storage implementation.
 Complete isolation - no external dependencies.
 """
 
-from datetime import datetime
-from typing import List, Optional, Any
-import logging
-import pandas as pd
-import pickle
-import os
 import json
+import logging
+import os
+import pickle
+from datetime import datetime
+
+import pandas as pd
+
 from bot_v2.features.data.types import DataQuery, DataType, DataSource
 
 
@@ -71,7 +72,9 @@ class DataStorage:
                 # Merge with new data (avoid duplicates)
                 data = pd.concat([existing_data, data])
                 data = data[~data.index.duplicated(keep="last")]
-                data.sort_index(inplace=True)
+
+            # Sort data before saving
+            data = data.sort_index()
 
             # Save data
             data.to_pickle(filepath)
@@ -140,7 +143,7 @@ class DataStorage:
             # Combine results
             combined = pd.concat(results)
             combined = combined[~combined.index.duplicated(keep="last")]
-            combined.sort_index(inplace=True)
+            combined = combined.sort_index()
             return combined
 
         return None
@@ -156,8 +159,10 @@ class DataStorage:
             Number of records deleted
         """
         deleted_count = 0
+        keys_to_remove = []
 
-        for filepath in self.index.values():
+        # Iterate over copy to avoid modification during iteration
+        for filepath in list(self.index.values()):
             try:
                 data = pd.read_pickle(filepath)
                 original_len = len(data)
@@ -174,14 +179,17 @@ class DataStorage:
                     else:
                         # Delete empty file
                         os.remove(filepath)
-                        # Remove from index
-                        keys_to_remove = [k for k, v in self.index.items() if v == filepath]
-                        for key in keys_to_remove:
-                            del self.index[key]
+                        # Collect keys to remove
+                        keys_to_remove.extend([k for k, v in self.index.items() if v == filepath])
             except (FileNotFoundError, pickle.UnpicklingError, ValueError, OSError) as exc:
                 logger.warning("Failed to prune %s: %s", filepath, exc, exc_info=True)
             except Exception as exc:
                 logger.exception("Unexpected error pruning %s", filepath)
+
+        # Remove deleted files from index
+        for key in keys_to_remove:
+            if key in self.index:
+                del self.index[key]
 
         # Save updated index
         self._save_index()

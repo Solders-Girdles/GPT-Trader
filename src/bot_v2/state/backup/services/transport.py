@@ -284,6 +284,122 @@ class TransportService:
             logger.error(f"Failed to delete backup: {e}")
             return False
 
+    async def batch_delete(
+        self, backup_ids: list[str], tier_map: dict[str, StorageTier]
+    ) -> dict[str, bool]:
+        """
+        Delete multiple backups efficiently using batch operations where supported.
+
+        Args:
+            backup_ids: List of backup identifiers to delete
+            tier_map: Mapping of backup_id -> storage tier
+
+        Returns:
+            Dictionary mapping backup_id -> success status
+        """
+        if not backup_ids:
+            return {}
+
+        results: dict[str, bool] = {}
+
+        # Group backups by tier for efficient batch processing
+        by_tier: dict[StorageTier, list[str]] = {}
+        for backup_id in backup_ids:
+            tier = tier_map.get(backup_id, StorageTier.LOCAL)
+            if tier not in by_tier:
+                by_tier[tier] = []
+            by_tier[tier].append(backup_id)
+
+        # Process each tier
+        for tier, ids in by_tier.items():
+            try:
+                if tier == StorageTier.LOCAL:
+                    for backup_id in ids:
+                        paths = [
+                            self.local_path / f"{backup_id}.backup",
+                            self.backup_path / f"{backup_id}.backup",
+                        ]
+                        # Treat "not present" as success - goal is for file to not exist
+                        success = True
+                        for file_path in paths:
+                            if file_path.exists():
+                                try:
+                                    file_path.unlink()
+                                except Exception as e:
+                                    logger.error(f"Failed to delete {file_path}: {e}")
+                                    success = False  # Only fail on actual deletion errors
+                        results[backup_id] = success
+
+                elif tier == StorageTier.NETWORK:
+                    if self.network_path:
+                        for backup_id in ids:
+                            file_path = self.network_path / f"{backup_id}.backup"
+                            try:
+                                # Treat "not present" as success
+                                if file_path.exists():
+                                    file_path.unlink()
+                                results[backup_id] = True
+                            except Exception as e:
+                                logger.error(f"Failed to delete {file_path}: {e}")
+                                results[backup_id] = False
+                    else:
+                        # No network storage configured - can't delete what doesn't exist
+                        for backup_id in ids:
+                            results[backup_id] = False
+
+                elif tier in [StorageTier.CLOUD, StorageTier.ARCHIVE]:
+                    if self._s3_client and self.s3_bucket:
+                        # Use S3 batch delete (up to 1000 objects per request)
+                        prefix = "archive" if tier == StorageTier.ARCHIVE else "backups"
+
+                        # Batch in chunks of 1000 (S3 limit)
+                        chunk_size = 1000
+                        for i in range(0, len(ids), chunk_size):
+                            chunk = ids[i : i + chunk_size]
+
+                            # Prepare delete request
+                            objects = [{"Key": f"{prefix}/{bid}.backup"} for bid in chunk]
+
+                            try:
+                                response = self._s3_client.delete_objects(
+                                    Bucket=self.s3_bucket,
+                                    Delete={"Objects": objects, "Quiet": True},
+                                )
+
+                                # Mark all as success unless explicitly in Errors
+                                errors = {
+                                    obj["Key"].split("/")[-1].replace(".backup", "")
+                                    for obj in response.get("Errors", [])
+                                }
+
+                                for backup_id in chunk:
+                                    results[backup_id] = backup_id not in errors
+
+                                if errors:
+                                    logger.warning(
+                                        f"S3 batch delete had {len(errors)} errors for tier {tier.value}"
+                                    )
+
+                            except Exception as e:
+                                logger.error(f"S3 batch delete failed: {e}")
+                                for backup_id in chunk:
+                                    results[backup_id] = False
+                    else:
+                        for backup_id in ids:
+                            results[backup_id] = False
+
+            except Exception as e:
+                logger.error(f"Batch delete failed for tier {tier.value}: {e}")
+                for backup_id in ids:
+                    if backup_id not in results:
+                        results[backup_id] = False
+
+        logger.info(
+            f"Batch deleted {sum(results.values())}/{len(results)} backups across {len(by_tier)} tiers"
+        )
+
+        return results
+
     def upload_to_s3(self, backup_id: str) -> None:
         """
         Upload existing local backup to S3.

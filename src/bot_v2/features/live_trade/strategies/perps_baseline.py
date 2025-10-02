@@ -39,15 +39,6 @@ class StrategyConfig:
     enable_shorts: bool = False
     max_adds: int = 0  # Disable pyramiding by default
     disable_new_entries: bool = False
-    # Advanced entries (deprecated/no-op in simplified baseline)
-    use_stop_entry: bool = False
-    use_post_only: bool = False
-    prefer_maker_orders: bool = False
-
-    # Funding-awareness (deprecated for baseline; retained for backward compat, not used)
-    funding_bias_bps: float = 0.0
-    funding_block_long_bps: float = 0.0
-    funding_block_short_bps: float = 0.0
 
     # Crossover robustness (optional)
     # Epsilon tolerance in basis points for crossover detection (0 = strict)

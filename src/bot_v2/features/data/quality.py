@@ -5,9 +5,10 @@ Complete isolation - no external dependencies.
 """
 
 from datetime import datetime, timedelta
-from typing import Dict, List
-import pandas as pd
+
 import numpy as np
+import pandas as pd
+
 from bot_v2.features.data.types import DataQuality
 
 

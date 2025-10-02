@@ -1,6 +1,7 @@
 """System-level monitoring interfaces and helpers."""
 
-from bot_v2.monitoring.interfaces import Alert, PerformanceMetrics, ResourceUsage, SystemHealth
+from bot_v2.monitoring.alerts import Alert
+from bot_v2.monitoring.interfaces import PerformanceMetrics, ResourceUsage, SystemHealth
 from bot_v2.monitoring.system.engine import (
     MonitoringSystem,
     acknowledge_alert,

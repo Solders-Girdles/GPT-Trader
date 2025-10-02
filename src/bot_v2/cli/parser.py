@@ -229,7 +229,11 @@ def parse_and_validate_args(parser: argparse.ArgumentParser) -> argparse.Namespa
     return args
 
 
-def build_bot_config_from_args(args: argparse.Namespace):
+def build_bot_config_from_args(
+    args: argparse.Namespace,
+    *,
+    config_cls=None,
+):
     """
     Build BotConfig from parsed CLI arguments.
 
@@ -239,7 +243,10 @@ def build_bot_config_from_args(args: argparse.Namespace):
     Returns:
         BotConfig instance configured from arguments
     """
-    from bot_v2.orchestration.configuration import BotConfig
+    if config_cls is None:
+        from bot_v2.orchestration.configuration import BotConfig as _ConfigFactory
+    else:
+        _ConfigFactory = config_cls
 
     # Arguments that should not be passed to BotConfig
     skip_keys = {
@@ -281,7 +288,7 @@ def build_bot_config_from_args(args: argparse.Namespace):
 
     logger.info("Building bot config with profile=%s, overrides=%s", args.profile, config_overrides)
 
-    return BotConfig.from_profile(args.profile, **config_overrides)
+    return _ConfigFactory.from_profile(args.profile, **config_overrides)
 
 
 def order_tooling_requested(args: argparse.Namespace) -> bool:

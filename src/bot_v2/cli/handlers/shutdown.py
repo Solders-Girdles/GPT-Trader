@@ -9,7 +9,6 @@ import asyncio
 import logging
 import signal
 from types import FrameType
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 

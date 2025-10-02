@@ -5,9 +5,9 @@ Complete isolation - no external dependencies.
 """
 
 from datetime import datetime, timedelta
-from typing import Dict, Any
+
 import pandas as pd
-import sys
+
 from bot_v2.features.data.types import CacheEntry
 
 

@@ -38,7 +38,7 @@ class ResourceUsage:
 
     def is_high_usage(self) -> bool:
         """Check if resource usage is high."""
-        return self.cpu_percent > 80 or self.memory_percent > 80 or self.disk_percent > 90
+        return self.cpu_percent >= 80 or self.memory_percent >= 80 or self.disk_percent >= 90
 
 
 @dataclass
@@ -114,46 +114,6 @@ Performance:
 - Error Rate: {self.performance.error_rate:.2%}
 - Success Rate: {self.performance.success_rate:.2%}
         """.strip()
-
-
-# Backward compatibility: Import Alert and AlertLevel from canonical location
-# These were moved to bot_v2.monitoring.alerts for centralized management
-try:
-    from bot_v2.monitoring.alerts import Alert, AlertLevel
-except ImportError:
-    # Fallback if alerts module not available (shouldn't happen in practice)
-    class AlertLevel(Enum):  # type: ignore
-        """Alert severity levels."""
-
-        INFO = "info"
-        WARNING = "warning"
-        ERROR = "error"
-        CRITICAL = "critical"
-
-    @dataclass
-    class Alert:  # type: ignore
-        """System alert."""
-
-        alert_id: str
-        level: AlertLevel  # type: ignore
-        component: str
-        message: str
-        details: dict[str, Any]
-        created_at: datetime
-        resolved_at: datetime | None
-        acknowledged: bool
-
-        def is_active(self) -> bool:
-            """Check if alert is still active."""
-            return self.resolved_at is None
-
-        def age_minutes(self) -> float:
-            """Get alert age in minutes."""
-            if self.resolved_at:
-                duration = self.resolved_at - self.created_at
-            else:
-                duration = datetime.now() - self.created_at
-            return duration.total_seconds() / 60
 
 
 @dataclass

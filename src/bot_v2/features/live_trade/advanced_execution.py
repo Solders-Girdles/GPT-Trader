@@ -1,6 +1,6 @@
 """Advanced execution engine with support for rich order workflows.
 
-Note: Models extracted to bot_v2.features.live_trade.execution.models for better organization.
+Note: Models extracted to bot_v2.features.live_trade.advanced_execution_models for better organization.
 """
 
 from __future__ import annotations

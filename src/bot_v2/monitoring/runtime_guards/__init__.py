@@ -10,6 +10,7 @@ This package provides:
 - Guard management and alert routing (manager module)
 """
 
+from bot_v2.monitoring.alerts import AlertSeverity
 from bot_v2.monitoring.runtime_guards.base import (
     Alert,
     GuardConfig,
@@ -34,6 +35,7 @@ from bot_v2.monitoring.runtime_guards.manager import (
 __all__ = [
     # Base types and classes
     "Alert",
+    "AlertSeverity",
     "GuardConfig",
     "GuardStatus",
     "RuntimeGuard",

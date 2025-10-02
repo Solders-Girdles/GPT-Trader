@@ -293,6 +293,9 @@ def get_data_provider(
         logger.info("Using mock data provider (TESTING=true)")
         return _provider_instance
 
+    if provider_type is not None:
+        provider_type = provider_type.lower()
+
     if _provider_instance is not None and provider_type is None:
         return _provider_instance
 
@@ -308,10 +311,9 @@ def get_data_provider(
         else:
             provider_type = "yfinance"
 
-    # Handle legacy aliases
-    if provider_type == "alpaca":
-        logger.warning("Alpaca data provider has been deprecated; falling back to yfinance")
-        provider_type = "yfinance"
+    valid_providers = {"mock", "coinbase", "yfinance"}
+    if provider_type not in valid_providers:
+        raise ValueError(f"Unsupported data provider '{provider_type}'.")
 
     # Create appropriate provider
     if provider_type == "mock":

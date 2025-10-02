@@ -17,8 +17,10 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, TypeVar
 
+from bot_v2.state.backup.metadata import BackupMetadataManager
 from bot_v2.state.backup.models import (
     BackupConfig,
+    BackupContext,
     BackupMetadata,
     BackupStatus,
     BackupType,
@@ -48,18 +50,23 @@ class BackupManager:
         self.state_manager = state_manager
         self.config = config or BackupConfig()
 
+        # Initialize shared context for backup operations
+        self.context = BackupContext()
+
         self._backup_lock = threading.Lock()
         self._async_lock: asyncio.Lock | None = None
         self._backup_in_progress = False
-        self._backup_history: list[BackupMetadata] = []
-        self._backup_metadata: dict[str, BackupMetadata] = {}
-        self._last_full_backup: datetime | None = None
-        self._last_differential_backup: datetime | None = None
-        self._last_full_state: dict[str, Any] | None = None
-        self._last_backup_state: dict[str, Any] | None = None
         self._pending_state_snapshot: dict[str, Any] | None = None
         self._scheduled_tasks: list[asyncio.Task] = []
-        self._last_restored_payload: dict[str, Any] | None = None
+
+        # Backwards compatibility - expose context attributes as instance attributes
+        self._backup_history = self.context.backup_history
+        self._backup_metadata = self.context.backup_metadata
+        self._last_full_backup = self.context.last_full_backup
+        self._last_differential_backup = self.context.last_differential_backup
+        self._last_full_state = self.context.last_full_state
+        self._last_backup_state = self.context.last_backup_state
+        self._last_restored_payload = self.context.last_restored_payload
 
         # Initialize services
         backup_dir = Path(self.config.backup_dir)
@@ -119,11 +126,12 @@ class BackupManager:
         # Initialize performance metrics for baseline tracking
         self._metrics = StatePerformanceMetrics(enabled=True)
 
-        # Load backup history
-        self._load_backup_history()
+        # Initialize metadata manager
+        self.metadata_manager = BackupMetadataManager(self.config, self.context)
+        self.metadata_manager.load_history()
 
         logger.info(
-            f"BackupManager initialized with {len(self._backup_history)} backups in history"
+            f"BackupManager initialized with {len(self.context.backup_history)} backups in history"
         )
 
     def _run_or_return(self, coro: Coroutine[Any, Any, T]) -> T | Coroutine[Any, Any, T]:
@@ -295,7 +303,7 @@ class BackupManager:
                         metadata.verification_status = "failed"
                         logger.warning(f"Backup {backup_id} verification failed")
 
-                self._update_history_after_backup(metadata, backup_type, start_time)
+                self.metadata_manager.add_to_history(metadata, backup_type, start_time)
                 if metadata.timestamp.tzinfo is not None:
                     metadata.timestamp = metadata.timestamp.replace(tzinfo=None)
 
@@ -353,7 +361,7 @@ class BackupManager:
     ) -> dict[str, Any]:
         logger.info(f"Restoring from backup {backup_id}")
 
-        metadata = self._find_backup_metadata(backup_id)
+        metadata = self.metadata_manager.find_metadata(backup_id)
         if not metadata:
             raise FileNotFoundError(f"Backup {backup_id} not found")
 
@@ -384,7 +392,7 @@ class BackupManager:
             if not applied:
                 raise RuntimeError("State restoration incomplete")
 
-        self._last_restored_payload = state_payload
+        self.context.last_restored_payload = state_payload
         logger.info(f"Successfully restored from backup {backup_id}")
         return state_payload
 
@@ -462,11 +470,11 @@ class BackupManager:
     ) -> None:
         self._backup_history.append(metadata)
         self._backup_metadata[metadata.backup_id] = metadata
-        self._save_backup_metadata(metadata)
+        self.metadata_manager.save_metadata(metadata)
         if backup_type == BackupType.FULL:
-            self._last_full_backup = start_time
+            self.context.last_full_backup = start_time
         elif backup_type == BackupType.DIFFERENTIAL:
-            self._last_differential_backup = start_time
+            self.context.last_differential_backup = start_time
 
     def _normalize_state_payload(self, payload: dict[str, Any]) -> dict[str, Any]:
         """Ensure payload is JSON serialisable for persistence."""
@@ -493,9 +501,9 @@ class BackupManager:
         return diff
 
     def _update_state_snapshots(self, backup_type: BackupType, snapshot: dict[str, Any]) -> None:
-        self._last_backup_state = snapshot
+        self.context.last_backup_state = snapshot
         if backup_type in {BackupType.FULL, BackupType.SNAPSHOT}:
-            self._last_full_state = snapshot
+            self.context.last_full_state = snapshot
 
     async def _collect_backup_data(
         self, backup_type: BackupType, override: dict[str, Any] | None = None
@@ -516,7 +524,7 @@ class BackupManager:
             if backup_type == BackupType.FULL:
                 state_payload = await self._collect_all_data()
             elif backup_type == BackupType.INCREMENTAL:
-                last_backup = self._get_last_backup_time()
+                last_backup = self.metadata_manager.get_last_backup_time()
                 state_payload = await self._collect_changed_data(last_backup)
             elif backup_type == BackupType.DIFFERENTIAL:
                 last_full = self._last_full_backup or datetime.now(timezone.utc) - timedelta(
@@ -927,9 +935,11 @@ class BackupManager:
                 # Update metadata for successful deletions
                 for backup_id, success in results.items():
                     if success:
-                        self._backup_metadata.pop(backup_id, None)
-                        self._backup_history = [
-                            entry for entry in self._backup_history if entry.backup_id != backup_id
+                        self.context.backup_metadata.pop(backup_id, None)
+                        self.context.backup_history = [
+                            entry
+                            for entry in self.context.backup_history
+                            if entry.backup_id != backup_id
                         ]
                         removed_count += 1
 
@@ -941,10 +951,10 @@ class BackupManager:
                     if await self.transport_service.delete(
                         metadata.backup_id, metadata.storage_tier
                     ):
-                        self._backup_metadata.pop(metadata.backup_id, None)
-                        self._backup_history = [
+                        self.context.backup_metadata.pop(metadata.backup_id, None)
+                        self.context.backup_history = [
                             entry
-                            for entry in self._backup_history
+                            for entry in self.context.backup_history
                             if entry.backup_id != metadata.backup_id
                         ]
                         removed_count += 1
@@ -1034,145 +1044,9 @@ class BackupManager:
         type_prefix = backup_type.value[:3].upper()
         return f"{type_prefix}_{timestamp}"
 
-    def _get_last_backup_time(self) -> datetime:
-        """Get timestamp of last successful backup"""
-        if not self._backup_history:
-            return datetime.now(timezone.utc) - timedelta(days=1)
-
-        successful = [
-            b
-            for b in self._backup_history
-            if b.status in [BackupStatus.COMPLETED, BackupStatus.VERIFIED]
-        ]
-
-        if successful:
-            return max(b.timestamp for b in successful)
-
-        return datetime.now(timezone.utc) - timedelta(days=1)
-
-    def _find_backup_metadata(self, backup_id: str) -> BackupMetadata | None:
-        """Find backup metadata by ID"""
-        cached = self._backup_metadata.get(backup_id)
-        if cached:
-            if self._metadata_file_exists(backup_id):
-                return cached
-            self._remove_metadata_from_history(backup_id)
-
-        for metadata in list(self._backup_history):
-            if metadata.backup_id == backup_id:
-                if self._metadata_file_exists(backup_id):
-                    return metadata
-                self._remove_metadata_from_history(backup_id)
-                break
-
-        # Try loading from disk
-        metadata_file = Path(self.config.backup_dir) / f"{backup_id}.meta"
-
-        if metadata_file.exists():
-            with open(metadata_file) as f:
-                data = json.load(f)
-                return BackupMetadata(
-                    backup_id=data["backup_id"],
-                    backup_type=BackupType(data["backup_type"]),
-                    timestamp=datetime.fromisoformat(data["timestamp"]),
-                    size_bytes=data["size_bytes"],
-                    size_compressed=data["size_compressed"],
-                    checksum=data["checksum"],
-                    encryption_key_id=data.get("encryption_key_id"),
-                    storage_tier=StorageTier(data["storage_tier"]),
-                    retention_days=data["retention_days"],
-                    status=BackupStatus(data["status"]),
-                )
-
-        return None
-
-    def _metadata_file_exists(self, backup_id: str) -> bool:
-        metadata_file = Path(self.config.backup_dir) / f"{backup_id}.meta"
-        return metadata_file.exists()
-
-    def _remove_metadata_from_history(self, backup_id: str) -> None:
-        self._backup_history = [
-            metadata for metadata in self._backup_history if metadata.backup_id != backup_id
-        ]
-        self._backup_metadata.pop(backup_id, None)
-
-    def _save_backup_metadata(self, metadata: BackupMetadata) -> None:
-        """Save backup metadata to disk"""
-        try:
-            metadata_file = Path(self.config.backup_dir) / f"{metadata.backup_id}.meta"
-
-            with open(metadata_file, "w") as f:
-                json.dump(metadata.to_dict(), f, indent=2)
-
-        except Exception as e:
-            logger.error(f"Failed to save backup metadata: {e}")
-
-    def _load_backup_history(self) -> None:
-        """Load backup history from metadata files"""
-        try:
-            metadata_dir = Path(self.config.backup_dir)
-
-            for meta_file in metadata_dir.glob("*.meta"):
-                with open(meta_file) as f:
-                    data = json.load(f)
-
-                    metadata = BackupMetadata(
-                        backup_id=data["backup_id"],
-                        backup_type=BackupType(data["backup_type"]),
-                        timestamp=datetime.fromisoformat(data["timestamp"]),
-                        size_bytes=data["size_bytes"],
-                        size_compressed=data["size_compressed"],
-                        checksum=data["checksum"],
-                        encryption_key_id=data.get("encryption_key_id"),
-                        storage_tier=StorageTier(data["storage_tier"]),
-                        retention_days=data["retention_days"],
-                        status=BackupStatus(data["status"]),
-                    )
-
-                    self._backup_history.append(metadata)
-                    self._backup_metadata[metadata.backup_id] = metadata
-
-            # Sort by timestamp
-            self._backup_history.sort(key=lambda b: b.timestamp)
-
-        except Exception as e:
-            logger.error(f"Failed to load backup history: {e}")
-
     def get_backup_stats(self) -> dict[str, Any]:
-        """Get backup statistics"""
-        if not self._backup_history:
-            return {"total_backups": 0, "total_size_bytes": 0, "compression_ratio": 0}
-
-        successful = [
-            b
-            for b in self._backup_history
-            if b.status in [BackupStatus.COMPLETED, BackupStatus.VERIFIED]
-        ]
-
-        total_original = sum(b.size_bytes for b in successful)
-        total_compressed = sum(b.size_compressed for b in successful)
-
-        return {
-            "total_backups": len(self._backup_history),
-            "successful_backups": len(successful),
-            "total_size_bytes": total_original,
-            "total_compressed_bytes": total_compressed,
-            "compression_ratio": (
-                (1 - total_compressed / total_original) * 100 if total_original > 0 else 0
-            ),
-            "last_full_backup": (
-                self._last_full_backup.isoformat() if self._last_full_backup else None
-            ),
-            "last_backup": self._get_last_backup_time().isoformat(),
-            "backups_by_type": {
-                backup_type.value: len([b for b in successful if b.backup_type == backup_type])
-                for backup_type in BackupType
-            },
-            "storage_distribution": {
-                tier.value: len([b for b in successful if b.storage_tier == tier])
-                for tier in StorageTier
-            },
-        }
+        """Get backup statistics."""
+        return self.metadata_manager.get_stats()
 
     def get_performance_metrics(self) -> dict[str, Any]:
         """Get performance metrics for backup operations.

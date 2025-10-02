@@ -77,9 +77,15 @@ def mock_state_manager():
     """Create mock state manager."""
     from unittest.mock import AsyncMock
 
+    async def mock_batch_set_state(items: dict) -> int:
+        """Mock batch_set_state that returns count of items."""
+        return len(items)
+
     state_manager = Mock()
     state_manager.get_keys_by_pattern = AsyncMock(return_value=["test:key1", "test:key2"])
     state_manager.get_state = AsyncMock(return_value={"test": "data"})
+    state_manager.set_state = AsyncMock(return_value=True)
+    state_manager.batch_set_state = AsyncMock(side_effect=mock_batch_set_state)
     return state_manager
 
 
@@ -955,13 +961,13 @@ class TestRestoreAsyncPaths:
     """Tests for async restoration paths."""
 
     @pytest.mark.asyncio
-    async def test_restore_from_backup_async_success(
-        self, backup_manager: BackupManager
-    ) -> None:
+    async def test_restore_from_backup_async_success(self, backup_manager: BackupManager) -> None:
         """restore_from_backup succeeds in async context."""
         # Create a backup first
         state_data = {"test": "async_restore"}
-        metadata = await backup_manager.create_backup(state_data=state_data, backup_type=BackupType.FULL)
+        metadata = await backup_manager.create_backup(
+            state_data=state_data, backup_type=BackupType.FULL
+        )
 
         # Restore in async context
         result = await backup_manager.restore_from_backup(metadata.backup_id)
@@ -975,15 +981,15 @@ class TestRestoreAsyncPaths:
         """restore_from_backup returns False on async error."""
         # Create a backup
         state_data = {"test": "data"}
-        metadata = await backup_manager.create_backup(state_data=state_data, backup_type=BackupType.FULL)
+        metadata = await backup_manager.create_backup(
+            state_data=state_data, backup_type=BackupType.FULL
+        )
 
         # Mock internal restore to fail
         async def failing_restore(*args, **kwargs):
             raise RuntimeError("Restore failed")
 
-        monkeypatch.setattr(
-            backup_manager, "_restore_from_backup_internal", failing_restore
-        )
+        monkeypatch.setattr(backup_manager, "_restore_from_backup_internal", failing_restore)
 
         # Should return False instead of raising
         result = await backup_manager.restore_from_backup(metadata.backup_id)
@@ -1019,9 +1025,7 @@ class TestRestoreLatestBackup:
         assert result is True
 
     @pytest.mark.asyncio
-    async def test_returns_false_when_no_backups_exist(
-        self, backup_manager: BackupManager
-    ) -> None:
+    async def test_returns_false_when_no_backups_exist(self, backup_manager: BackupManager) -> None:
         """Returns False when no valid backups found."""
         # No backups created
         result = await backup_manager.restore_latest_backup()

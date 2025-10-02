@@ -22,6 +22,18 @@ from tests.unit.bot_v2.state.backup.conftest import (
 )
 
 
+def real_sleep(seconds: float) -> None:
+    """Allow real time to pass for integration tests measuring actual timing.
+
+    This helper justifies time.sleep usage in integration tests where we need to
+    measure real-world timing behavior (e.g., data loss windows, timestamp deltas).
+    Note: fake_clock cannot be used here as we need real time to pass.
+    """
+    import time
+
+    time.sleep(seconds)
+
+
 class TestCrashRecoverySimulation:
     """End-to-end crash recovery simulation tests."""
 
@@ -111,9 +123,13 @@ class TestCrashRecoverySimulation:
         def add_event(event: dict) -> None:
             event_log.append({"timestamp": datetime.utcnow().isoformat(), "data": event})
 
+        async def mock_batch_set_state(items: dict) -> int:
+            return len(items)
+
         mock_state_manager = Mock()
         mock_state_manager.create_snapshot = AsyncMock(return_value=sample_runtime_state)
         mock_state_manager.set_state = AsyncMock(return_value=True)
+        mock_state_manager.batch_set_state = AsyncMock(side_effect=mock_batch_set_state)
         mock_state_manager.get_keys_by_pattern = AsyncMock(return_value=[])
 
         manager = BackupManager(state_manager=mock_state_manager, config=backup_config)
@@ -148,9 +164,13 @@ class TestCrashRecoverySimulation:
         backup_dir.mkdir(exist_ok=True)
         backup_config.backup_dir = str(backup_dir)
 
+        async def mock_batch_set_state(items: dict) -> int:
+            return len(items)
+
         mock_state_manager = Mock()
         mock_state_manager.create_snapshot = AsyncMock(return_value=sample_runtime_state)
         mock_state_manager.set_state = AsyncMock(return_value=True)
+        mock_state_manager.batch_set_state = AsyncMock(side_effect=mock_batch_set_state)
         mock_state_manager.get_keys_by_pattern = AsyncMock(return_value=[])
 
         manager = BackupManager(state_manager=mock_state_manager, config=backup_config)
@@ -212,7 +232,15 @@ class TestDataConsistencyValidation:
             restored_data[key] = value
             return True
 
+        async def capture_batch_set_state(items: dict) -> int:
+            count = 0
+            for key, (value, category) in items.items():
+                restored_data[key] = value
+                count += 1
+            return count
+
         mock_state_manager.set_state = AsyncMock(side_effect=capture_set_state)
+        mock_state_manager.batch_set_state = AsyncMock(side_effect=capture_batch_set_state)
         mock_state_manager.get_keys_by_pattern = AsyncMock(return_value=[])
 
         manager = BackupManager(state_manager=mock_state_manager, config=backup_config)
@@ -287,9 +315,13 @@ class TestMultiTierRecovery:
         backup_config.backup_dir = str(backup_dir)
         backup_config.network_storage_path = "/nonexistent/network/path"
 
+        async def mock_batch_set_state(items: dict) -> int:
+            return len(items)
+
         mock_state_manager = Mock()
         mock_state_manager.create_snapshot = AsyncMock(return_value=sample_runtime_state)
         mock_state_manager.set_state = AsyncMock(return_value=True)
+        mock_state_manager.batch_set_state = AsyncMock(side_effect=mock_batch_set_state)
         mock_state_manager.get_keys_by_pattern = AsyncMock(return_value=[])
 
         manager = BackupManager(state_manager=mock_state_manager, config=backup_config)
@@ -334,9 +366,13 @@ class TestRecoveryMetrics:
         backup_dir.mkdir(exist_ok=True)
         backup_config.backup_dir = str(backup_dir)
 
+        async def mock_batch_set_state(items: dict) -> int:
+            return len(items)
+
         mock_state_manager = Mock()
         mock_state_manager.create_snapshot = AsyncMock(return_value=sample_runtime_state)
         mock_state_manager.set_state = AsyncMock(return_value=True)
+        mock_state_manager.batch_set_state = AsyncMock(side_effect=mock_batch_set_state)
         mock_state_manager.get_keys_by_pattern = AsyncMock(return_value=[])
 
         manager = BackupManager(state_manager=mock_state_manager, config=backup_config)
@@ -369,9 +405,13 @@ class TestRecoveryMetrics:
         backup_dir.mkdir(exist_ok=True)
         backup_config.backup_dir = str(backup_dir)
 
+        async def mock_batch_set_state(items: dict) -> int:
+            return len(items)
+
         mock_state_manager = Mock()
         mock_state_manager.create_snapshot = AsyncMock(return_value=sample_runtime_state)
         mock_state_manager.set_state = AsyncMock(return_value=True)
+        mock_state_manager.batch_set_state = AsyncMock(side_effect=mock_batch_set_state)
         mock_state_manager.get_keys_by_pattern = AsyncMock(return_value=[])
 
         manager = BackupManager(state_manager=mock_state_manager, config=backup_config)
@@ -380,14 +420,10 @@ class TestRecoveryMetrics:
         metadata = await manager.create_backup(BackupType.FULL)
         backup_timestamp = metadata.timestamp
 
-        # Simulate time passing
-        import time
-
-        time.sleep(0.1)
+        # Simulate time passing to measure actual timing
+        real_sleep(0.1)
 
         # Calculate potential data loss window
-        from datetime import datetime
-
         now = datetime.utcnow()
         data_loss_window = (now - backup_timestamp).total_seconds()
 

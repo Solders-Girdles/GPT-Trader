@@ -26,6 +26,8 @@ ALLOWLIST = {
     "tests/unit/bot_v2/persistence/test_config_store.py",  # 421 lines: comprehensive persistence tests for bot config CRUD, thread safety, error recovery
     "tests/unit/bot_v2/persistence/test_event_store.py",  # 494 lines: comprehensive JSONL event store tests (trades, positions, metrics, errors, concurrency)
     "tests/unit/bot_v2/orchestration/test_broker_factory.py",  # 377 lines: comprehensive broker configuration tests (credential priority, auth detection, URL overrides)
+    "tests/unit/bot_v2/state/backup/test_backup_operations.py",  # 1046 lines: comprehensive backup operations test suite (creation, restoration, compression, encryption, S3, cleanup, concurrency, error handling, metadata, storage tiers, async scheduling)
+    "tests/unit/bot_v2/state/backup/test_backup_recovery_integration.py",  # 424 lines: integration test suite for backup and recovery workflows (batch operations, state coherence, error scenarios)
 }
 
 

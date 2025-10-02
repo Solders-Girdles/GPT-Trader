@@ -71,6 +71,19 @@ class BackupMetadata:
 
 
 @dataclass
+class BackupContext:
+    """Shared mutable state for backup operations."""
+
+    backup_history: list[BackupMetadata] = field(default_factory=list)
+    backup_metadata: dict[str, BackupMetadata] = field(default_factory=dict)
+    last_full_backup: datetime | None = None
+    last_differential_backup: datetime | None = None
+    last_full_state: dict[str, Any] | None = None
+    last_backup_state: dict[str, Any] | None = None
+    last_restored_payload: dict[str, Any] | None = None
+
+
+@dataclass
 class BackupConfig:
     backup_dir: str = "/tmp/bot_v2/backups"
     enable_encryption: bool = True

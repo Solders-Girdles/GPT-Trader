@@ -323,9 +323,16 @@ class DefaultPostgresAdapter(PostgresAdapter):
             columns = list(records[0].keys())
             col_names = ", ".join(columns)
             placeholders = ", ".join(["%s"] * len(columns))
-            update_clause = ", ".join(
-                [f"{col} = EXCLUDED.{col}" for col in columns if col != key_column]
-            )
+
+            # Build update clause excluding key column
+            update_parts = [f"{col} = EXCLUDED.{col}" for col in columns if col != key_column]
+
+            # Add critical fields for tier promotion and versioning
+            # (matches single-item store() behavior in repositories.py:293-294)
+            update_parts.append("last_accessed = CURRENT_TIMESTAMP")
+            update_parts.append(f"version = {table}.version + 1")
+
+            update_clause = ", ".join(update_parts)
 
             query = f"""
                 INSERT INTO {table} ({col_names})

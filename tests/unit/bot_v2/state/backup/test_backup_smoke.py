@@ -183,3 +183,234 @@ class TestBackupSmokeTest:
         # Verify deep nesting preserved
         assert deserialized["level1"]["level2"]["level3"]["deep_value"] == 12345
         assert deserialized["level1"]["list_of_dicts"][0]["a"] == 1
+
+
+class TestEncryptionBootstrap:
+    """Tests for encryption key initialization and management."""
+
+    def test_generates_new_encryption_key_when_none_exists(self, backup_config: BackupConfig) -> None:
+        """Generates new encryption key when key file doesn't exist.
+
+        Validates _init_encryption() creates new key.
+        """
+        from bot_v2.state.backup.serialization import ENCRYPTION_AVAILABLE
+
+        if not ENCRYPTION_AVAILABLE:
+            pytest.skip("Cryptography not available")
+
+        backup_config.enable_encryption = True
+        serializer = BackupSerializer(backup_config)
+
+        # Key should be generated
+        assert serializer._encryption_key is not None
+        assert len(serializer._encryption_key) > 0
+
+        # Key file should exist
+        key_file = Path(backup_config.backup_dir) / ".encryption_key"
+        assert key_file.exists()
+
+    def test_loads_existing_encryption_key(self, backup_config: BackupConfig, temp_workspace: Path) -> None:
+        """Loads existing encryption key from file.
+
+        Validates _init_encryption() reuses existing key.
+        """
+        from bot_v2.state.backup.serialization import ENCRYPTION_AVAILABLE
+
+        if not ENCRYPTION_AVAILABLE:
+            pytest.skip("Cryptography not available")
+
+        # Create existing key file
+        from cryptography.fernet import Fernet
+
+        existing_key = Fernet.generate_key()
+        key_file = Path(backup_config.backup_dir) / ".encryption_key"
+        key_file.parent.mkdir(parents=True, exist_ok=True)
+        with open(key_file, "wb") as f:
+            f.write(existing_key)
+
+        # Initialize serializer - should load existing key
+        backup_config.enable_encryption = True
+        serializer = BackupSerializer(backup_config)
+
+        assert serializer._encryption_key == existing_key
+
+    def test_encryption_disabled_when_library_unavailable(
+        self, backup_config: BackupConfig, monkeypatch
+    ) -> None:
+        """Handles missing cryptography library gracefully.
+
+        Validates ENCRYPTION_AVAILABLE=False path.
+        """
+        # Mock ENCRYPTION_AVAILABLE as False
+        import bot_v2.state.backup.serialization as serialization_module
+
+        monkeypatch.setattr(serialization_module, "ENCRYPTION_AVAILABLE", False)
+
+        backup_config.enable_encryption = True
+        serializer = BackupSerializer(backup_config)
+
+        # Should not have encryption key
+        assert serializer._encryption_key is None
+
+        # encrypt_payload should return data unchanged
+        test_data = b"test data"
+        encrypted, algorithm = serializer.encrypt_payload(test_data)
+        assert encrypted == test_data
+        assert algorithm is None
+
+    def test_encryption_init_failure_handled_gracefully(
+        self, backup_config: BackupConfig, monkeypatch
+    ) -> None:
+        """Handles encryption initialization errors gracefully.
+
+        Validates exception handling in _init_encryption().
+        """
+        from bot_v2.state.backup.serialization import ENCRYPTION_AVAILABLE
+
+        if not ENCRYPTION_AVAILABLE:
+            pytest.skip("Cryptography not available")
+
+        # Mock file operations to raise exception
+        def failing_open(*args, **kwargs):
+            raise PermissionError("Cannot write key file")
+
+        monkeypatch.setattr("builtins.open", failing_open)
+
+        backup_config.enable_encryption = True
+        serializer = BackupSerializer(backup_config)
+
+        # Should handle error - encryption key should be None
+        assert serializer._encryption_key is None
+
+    def test_encrypt_decrypt_roundtrip(self, backup_config: BackupConfig) -> None:
+        """Encrypts and decrypts data successfully.
+
+        Validates encryption/decryption works end-to-end.
+        """
+        from bot_v2.state.backup.serialization import ENCRYPTION_AVAILABLE
+
+        if not ENCRYPTION_AVAILABLE:
+            pytest.skip("Cryptography not available")
+
+        backup_config.enable_encryption = True
+        serializer = BackupSerializer(backup_config)
+
+        original_data = b"sensitive backup data"
+
+        # Encrypt
+        encrypted, algorithm = serializer.encrypt_payload(original_data)
+        assert encrypted != original_data
+        assert algorithm == "Fernet"
+
+        # Decrypt
+        decrypted = serializer.decrypt_payload(encrypted)
+        assert decrypted == original_data
+
+
+class TestDecryptionErrorHandling:
+    """Tests for decryption error propagation."""
+
+    def test_decrypt_raises_on_invalid_encrypted_data(self, backup_config: BackupConfig) -> None:
+        """Decryption raises exception on invalid encrypted data.
+
+        Validates decrypt_payload() error propagation.
+        """
+        from bot_v2.state.backup.serialization import ENCRYPTION_AVAILABLE
+
+        if not ENCRYPTION_AVAILABLE:
+            pytest.skip("Cryptography not available")
+
+        backup_config.enable_encryption = True
+        serializer = BackupSerializer(backup_config)
+
+        # Try to decrypt invalid data
+        invalid_encrypted_data = b"this is not valid encrypted data"
+
+        with pytest.raises(Exception):  # Fernet raises InvalidToken
+            serializer.decrypt_payload(invalid_encrypted_data)
+
+    def test_decrypt_returns_unchanged_when_no_key(self, backup_config: BackupConfig) -> None:
+        """Returns data unchanged when no encryption key available.
+
+        Validates decrypt_payload() without key.
+        """
+        backup_config.enable_encryption = False
+        serializer = BackupSerializer(backup_config)
+
+        test_data = b"unencrypted data"
+        result = serializer.decrypt_payload(test_data)
+
+        assert result == test_data
+
+    def test_decrypt_returns_unchanged_when_encryption_unavailable(
+        self, backup_config: BackupConfig, monkeypatch
+    ) -> None:
+        """Returns data unchanged when cryptography library unavailable.
+
+        Validates ENCRYPTION_AVAILABLE=False path in decrypt.
+        """
+        import bot_v2.state.backup.serialization as serialization_module
+
+        monkeypatch.setattr(serialization_module, "ENCRYPTION_AVAILABLE", False)
+
+        backup_config.enable_encryption = True
+        serializer = BackupSerializer(backup_config)
+
+        test_data = b"data"
+        result = serializer.decrypt_payload(test_data)
+
+        assert result == test_data
+
+
+class TestDecompressionFallback:
+    """Tests for decompression failure handling."""
+
+    def test_decompress_returns_original_on_invalid_compressed_data(
+        self, backup_serializer: BackupSerializer
+    ) -> None:
+        """Returns original data when decompression fails.
+
+        Validates decompress_payload() fallback for non-compressed data.
+        """
+        # Non-compressed data
+        uncompressed_data = b"this is not compressed"
+
+        # Should return original data when decompression fails
+        result = backup_serializer.decompress_payload(uncompressed_data)
+
+        assert result == uncompressed_data
+
+    def test_decompress_handles_valid_compressed_data(self, backup_config: BackupConfig) -> None:
+        """Decompresses valid compressed data successfully.
+
+        Validates decompress_payload() success path.
+        """
+        from bot_v2.state.utils import compress_data
+
+        backup_config.enable_compression = True
+        serializer = BackupSerializer(backup_config)
+
+        original_data = b"test data to compress" * 100
+        compressed = compress_data(original_data)
+
+        # Should decompress successfully
+        decompressed = serializer.decompress_payload(compressed)
+        assert decompressed == original_data
+
+    def test_compression_decompression_roundtrip(self, backup_config: BackupConfig) -> None:
+        """Compresses and decompresses data without loss.
+
+        Full roundtrip validation.
+        """
+        backup_config.enable_compression = True
+        serializer = BackupSerializer(backup_config)
+
+        original = b"Repetitive data " * 50
+
+        # Compress
+        compressed, orig_size, comp_size = serializer.prepare_compressed_payload(original)
+        assert comp_size < orig_size
+
+        # Decompress
+        decompressed = serializer.decompress_payload(compressed)
+        assert decompressed == original

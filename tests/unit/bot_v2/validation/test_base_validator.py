@@ -39,3 +39,9 @@ def test_validator_wraps_predicate_exceptions():
 
     with pytest.raises(ValidationError, match="bad field"):
         validator.validate("value", "bad_field")
+
+
+def test_validator_predicate_tuple_wrong_size_raises():
+    validator = Validator(predicate=lambda value: (True, value, "extra"))
+    with pytest.raises(ValidationError, match="field"):
+        validator.validate("value", "field")

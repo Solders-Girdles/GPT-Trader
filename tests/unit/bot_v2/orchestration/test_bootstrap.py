@@ -13,7 +13,7 @@ def test_build_bot_populates_registry(monkeypatch, tmp_path):
     monkeypatch.setenv("EVENT_STORE_ROOT", str(tmp_path))
     monkeypatch.setenv("PERPS_FORCE_MOCK", "1")
     monkeypatch.setattr(
-        "bot_v2.orchestration.perps_bot.PerpsBot._start_streaming_background", lambda self: None
+        "bot_v2.orchestration.perps_bot.PerpsBot._start_streaming_if_configured", lambda self: None
     )
 
     config = BotConfig.from_profile("dev")
@@ -41,7 +41,7 @@ def test_bot_from_profile(monkeypatch, tmp_path):
     monkeypatch.setenv("EVENT_STORE_ROOT", str(tmp_path))
     monkeypatch.setenv("PERPS_FORCE_MOCK", "1")
     monkeypatch.setattr(
-        "bot_v2.orchestration.perps_bot.PerpsBot._start_streaming_background", lambda self: None
+        "bot_v2.orchestration.perps_bot.PerpsBot._start_streaming_if_configured", lambda self: None
     )
 
     bot, registry = bot_from_profile("dev")

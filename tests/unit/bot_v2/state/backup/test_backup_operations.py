@@ -29,6 +29,7 @@ Business Context:
 
 from __future__ import annotations
 
+import asyncio
 import json
 import os
 import tempfile
@@ -672,3 +673,369 @@ class TestStorageTiers:
 
         # Emergency should prefer local storage
         assert metadata.storage_tier == StorageTier.LOCAL
+
+
+class TestAsyncScheduling:
+    """Tests for async backup scheduling."""
+
+    @pytest.mark.asyncio
+    async def test_start_scheduled_backups_creates_tasks(
+        self, backup_manager: BackupManager
+    ) -> None:
+        """start_scheduled_backups creates background tasks."""
+        await backup_manager.start_scheduled_backups()
+
+        # Should have created 5 tasks (full, diff, inc, cleanup, verification)
+        assert len(backup_manager._scheduled_tasks) == 5
+
+        # Cleanup
+        await backup_manager.stop_scheduled_backups()
+
+    @pytest.mark.asyncio
+    async def test_stop_scheduled_backups_cancels_tasks(
+        self, backup_manager: BackupManager
+    ) -> None:
+        """stop_scheduled_backups cancels all background tasks."""
+        await backup_manager.start_scheduled_backups()
+        assert len(backup_manager._scheduled_tasks) == 5
+
+        await backup_manager.stop_scheduled_backups()
+
+        # All tasks should be cancelled
+        assert len(backup_manager._scheduled_tasks) == 0
+
+    @pytest.mark.asyncio
+    async def test_full_backup_schedule_runs_periodically(
+        self, backup_manager: BackupManager, monkeypatch
+    ) -> None:
+        """_run_full_backup_schedule creates backups on schedule."""
+        backup_created = asyncio.Event()
+        original_create = backup_manager._create_backup
+
+        async def mock_create_backup(*args, **kwargs):
+            backup_created.set()
+            return await original_create(*args, **kwargs)
+
+        monkeypatch.setattr(backup_manager, "_create_backup", mock_create_backup)
+
+        # Set very short interval for testing
+        monkeypatch.setattr(backup_manager.config, "full_backup_interval_hours", 0.0001)
+
+        # Start the schedule
+        task = asyncio.create_task(backup_manager._run_full_backup_schedule())
+
+        try:
+            # Wait for backup to be created (with timeout)
+            await asyncio.wait_for(backup_created.wait(), timeout=1.0)
+            assert backup_created.is_set()
+        finally:
+            task.cancel()
+            try:
+                await task
+            except asyncio.CancelledError:
+                pass
+
+    @pytest.mark.asyncio
+    async def test_differential_backup_schedule_runs_periodically(
+        self, backup_manager: BackupManager, monkeypatch
+    ) -> None:
+        """_run_differential_backup_schedule creates backups on schedule."""
+        backup_created = asyncio.Event()
+
+        async def mock_create_backup(backup_type, **kwargs):
+            if backup_type == BackupType.DIFFERENTIAL:
+                backup_created.set()
+            return None
+
+        monkeypatch.setattr(backup_manager, "_create_backup", mock_create_backup)
+        monkeypatch.setattr(backup_manager.config, "differential_backup_interval_hours", 0.0001)
+
+        task = asyncio.create_task(backup_manager._run_differential_backup_schedule())
+
+        try:
+            await asyncio.wait_for(backup_created.wait(), timeout=1.0)
+            assert backup_created.is_set()
+        finally:
+            task.cancel()
+            try:
+                await task
+            except asyncio.CancelledError:
+                pass
+
+    @pytest.mark.asyncio
+    async def test_incremental_backup_schedule_runs_periodically(
+        self, backup_manager: BackupManager, monkeypatch
+    ) -> None:
+        """_run_incremental_backup_schedule creates backups on schedule."""
+        backup_created = asyncio.Event()
+
+        async def mock_create_backup(backup_type, **kwargs):
+            if backup_type == BackupType.INCREMENTAL:
+                backup_created.set()
+            return None
+
+        monkeypatch.setattr(backup_manager, "_create_backup", mock_create_backup)
+        monkeypatch.setattr(backup_manager.config, "incremental_backup_interval_minutes", 0.001)
+
+        task = asyncio.create_task(backup_manager._run_incremental_backup_schedule())
+
+        try:
+            await asyncio.wait_for(backup_created.wait(), timeout=1.0)
+            assert backup_created.is_set()
+        finally:
+            task.cancel()
+            try:
+                await task
+            except asyncio.CancelledError:
+                pass
+
+    @pytest.mark.asyncio
+    async def test_schedule_handles_backup_errors_gracefully(
+        self, backup_manager: BackupManager, monkeypatch
+    ) -> None:
+        """Scheduling loops continue despite backup errors."""
+        error_count = 0
+        backup_count = 0
+
+        async def failing_create_backup(*args, **kwargs):
+            nonlocal error_count, backup_count
+            backup_count += 1
+            if backup_count == 1:
+                error_count += 1
+                raise Exception("Simulated backup failure")
+            return None
+
+        monkeypatch.setattr(backup_manager, "_create_backup", failing_create_backup)
+        # Set very short interval: 0.00001 hours = 0.036 seconds
+        monkeypatch.setattr(backup_manager.config, "full_backup_interval_hours", 0.00001)
+
+        task = asyncio.create_task(backup_manager._run_full_backup_schedule())
+
+        try:
+            # Wait long enough for multiple attempts (0.15s allows ~4 backups at 0.036s intervals)
+            await asyncio.sleep(0.15)
+            # Should have continued after error
+            assert backup_count >= 2
+            assert error_count >= 1
+        finally:
+            task.cancel()
+            try:
+                await task
+            except asyncio.CancelledError:
+                pass
+
+    @pytest.mark.asyncio
+    async def test_schedule_respects_cancellation(self, backup_manager: BackupManager) -> None:
+        """Scheduling loops exit cleanly on cancellation."""
+        task = asyncio.create_task(backup_manager._run_full_backup_schedule())
+
+        # Let it start
+        await asyncio.sleep(0.01)
+
+        # Cancel
+        task.cancel()
+
+        # Should exit cleanly - loop catches CancelledError and breaks
+        try:
+            await task
+        except asyncio.CancelledError:
+            # This is acceptable too if cancellation happens before exception handler
+            pass
+
+        # Task should be done either way
+        assert task.done()
+
+
+class TestCreateBackupErrorPaths:
+    """Tests for _create_backup error handling."""
+
+    @pytest.mark.asyncio
+    async def test_prevents_concurrent_backups(self, backup_manager: BackupManager) -> None:
+        """Rejects backup creation when one is already in progress."""
+        # Simulate backup in progress
+        backup_manager._backup_in_progress = True
+
+        result = await backup_manager._create_backup(BackupType.FULL)
+
+        # Should return None
+        assert result is None
+
+    @pytest.mark.asyncio
+    async def test_handles_empty_backup_data(
+        self, backup_manager: BackupManager, monkeypatch
+    ) -> None:
+        """Handles empty backup data gracefully."""
+
+        async def mock_collect_empty_data(*args, **kwargs):
+            return None  # Empty data
+
+        monkeypatch.setattr(backup_manager, "_collect_backup_data", mock_collect_empty_data)
+
+        result = await backup_manager._create_backup(BackupType.FULL)
+
+        # Should return None on error
+        assert result is None
+
+    @pytest.mark.asyncio
+    async def test_handles_serialization_error(
+        self, backup_manager: BackupManager, monkeypatch
+    ) -> None:
+        """Handles serialization errors gracefully."""
+
+        def failing_serialize(*args, **kwargs):
+            raise ValueError("Serialization failed")
+
+        monkeypatch.setattr(backup_manager, "_serialize_backup_data", failing_serialize)
+
+        # Create state data
+        state_data = {"test": "data"}
+
+        result = await backup_manager._create_backup(BackupType.FULL, state_data=state_data)
+
+        # Should return None on error
+        assert result is None
+
+    @pytest.mark.asyncio
+    async def test_handles_oserror_and_propagates(
+        self, backup_manager: BackupManager, monkeypatch
+    ) -> None:
+        """OSError during backup creation is propagated."""
+
+        async def failing_store(*args, **kwargs):
+            raise OSError("Disk full")
+
+        monkeypatch.setattr(backup_manager, "_store_backup", failing_store)
+
+        state_data = {"test": "data"}
+
+        # Should raise OSError
+        with pytest.raises(OSError, match="Disk full"):
+            await backup_manager._create_backup(BackupType.FULL, state_data=state_data)
+
+    @pytest.mark.asyncio
+    async def test_clears_backup_in_progress_flag_after_error(
+        self, backup_manager: BackupManager, monkeypatch
+    ) -> None:
+        """Ensures _backup_in_progress is cleared even after errors."""
+
+        async def failing_collect(*args, **kwargs):
+            raise ValueError("Collection failed")
+
+        monkeypatch.setattr(backup_manager, "_collect_backup_data", failing_collect)
+
+        # Before backup
+        assert not backup_manager._backup_in_progress
+
+        # Attempt backup (will fail)
+        result = await backup_manager._create_backup(BackupType.FULL)
+
+        # Should have cleared the flag despite error
+        assert not backup_manager._backup_in_progress
+        assert result is None
+
+    @pytest.mark.asyncio
+    async def test_clears_pending_snapshot_after_error(
+        self, backup_manager: BackupManager, monkeypatch
+    ) -> None:
+        """Clears pending snapshot even if backup fails."""
+        backup_manager._pending_state_snapshot = {"test": "snapshot"}
+
+        async def failing_collect(*args, **kwargs):
+            raise ValueError("Collection failed")
+
+        monkeypatch.setattr(backup_manager, "_collect_backup_data", failing_collect)
+
+        await backup_manager._create_backup(BackupType.FULL)
+
+        # Should have cleared pending snapshot
+        assert backup_manager._pending_state_snapshot is None
+
+
+class TestRestoreAsyncPaths:
+    """Tests for async restoration paths."""
+
+    @pytest.mark.asyncio
+    async def test_restore_from_backup_async_success(
+        self, backup_manager: BackupManager
+    ) -> None:
+        """restore_from_backup succeeds in async context."""
+        # Create a backup first
+        state_data = {"test": "async_restore"}
+        metadata = await backup_manager.create_backup(state_data=state_data, backup_type=BackupType.FULL)
+
+        # Restore in async context
+        result = await backup_manager.restore_from_backup(metadata.backup_id)
+
+        assert result is True
+
+    @pytest.mark.asyncio
+    async def test_restore_from_backup_async_failure(
+        self, backup_manager: BackupManager, monkeypatch
+    ) -> None:
+        """restore_from_backup returns False on async error."""
+        # Create a backup
+        state_data = {"test": "data"}
+        metadata = await backup_manager.create_backup(state_data=state_data, backup_type=BackupType.FULL)
+
+        # Mock internal restore to fail
+        async def failing_restore(*args, **kwargs):
+            raise RuntimeError("Restore failed")
+
+        monkeypatch.setattr(
+            backup_manager, "_restore_from_backup_internal", failing_restore
+        )
+
+        # Should return False instead of raising
+        result = await backup_manager.restore_from_backup(metadata.backup_id)
+
+        assert result is False
+
+
+class TestRestoreLatestBackup:
+    """Tests for restore_latest_backup method."""
+
+    @pytest.mark.asyncio
+    async def test_restores_latest_full_backup(self, backup_manager: BackupManager) -> None:
+        """Restores most recent FULL backup when requested."""
+        # Create multiple backups
+        await backup_manager.create_backup(state_data={"v": 1}, backup_type=BackupType.FULL)
+        await asyncio.sleep(0.01)  # Ensure different timestamps
+        await backup_manager.create_backup(state_data={"v": 2}, backup_type=BackupType.FULL)
+
+        # Restore latest
+        result = await backup_manager.restore_latest_backup(backup_type=BackupType.FULL)
+
+        assert result is True
+
+    @pytest.mark.asyncio
+    async def test_restores_latest_any_type(self, backup_manager: BackupManager) -> None:
+        """Restores most recent backup of any type when no filter specified."""
+        # Create backups of different types
+        await backup_manager.create_backup(state_data={"v": 1}, backup_type=BackupType.FULL)
+
+        # Restore latest (any type)
+        result = await backup_manager.restore_latest_backup()
+
+        assert result is True
+
+    @pytest.mark.asyncio
+    async def test_returns_false_when_no_backups_exist(
+        self, backup_manager: BackupManager
+    ) -> None:
+        """Returns False when no valid backups found."""
+        # No backups created
+        result = await backup_manager.restore_latest_backup()
+
+        assert result is False
+
+    @pytest.mark.asyncio
+    async def test_filters_by_backup_type(self, backup_manager: BackupManager) -> None:
+        """Filters backups by type when specified."""
+        # Create different backup types
+        await backup_manager.create_backup(state_data={"full": True}, backup_type=BackupType.FULL)
+
+        # Request latest INCREMENTAL (doesn't exist)
+        result = await backup_manager.restore_latest_backup(backup_type=BackupType.INCREMENTAL)
+
+        # Should fail since no INCREMENTAL backups
+        assert result is False

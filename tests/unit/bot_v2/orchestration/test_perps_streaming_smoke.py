@@ -42,8 +42,11 @@ def test_perps_streaming_smoke(monkeypatch, tmp_path, fake_clock):
     bot.broker.stream_orderbook = stream_orderbook_unavail  # type: ignore[attr-defined]
     bot.broker.stream_trades = stream_trades_once  # type: ignore[attr-defined]
 
-    # Start streaming now
-    bot._start_streaming_background()
+    # Start streaming now (use legacy method if builder not used, or streaming service)
+    if bot._streaming_service is not None:
+        bot._streaming_service.start(level=1)
+    else:
+        bot._start_streaming_background_legacy()
 
     from bot_v2.persistence.event_store import EventStore
 

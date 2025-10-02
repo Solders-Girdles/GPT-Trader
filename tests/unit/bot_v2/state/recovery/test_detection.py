@@ -1,7 +1,10 @@
 """Tests for failure detection module"""
 
-import pytest
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
+
+import pytest
+
 from bot_v2.state.recovery.detection import FailureDetector
 from bot_v2.state.recovery.models import FailureType
 
@@ -131,6 +134,15 @@ class TestFailureDetector:
         assert result is False
 
     @pytest.mark.asyncio
+    async def test_trading_engine_health_handles_exception(self, detector):
+        """Trading engine retrieval errors should be handled gracefully."""
+        detector.state_manager.get_state = AsyncMock(side_effect=RuntimeError("redis down"))
+
+        result = await detector.test_trading_engine_health()
+
+        assert result is False
+
+    @pytest.mark.asyncio
     async def test_data_corruption_detection_no_corruption(self, detector):
         """Test data corruption detection with valid checksums"""
         import hashlib
@@ -167,6 +179,15 @@ class TestFailureDetector:
         assert result is False
 
     @pytest.mark.asyncio
+    async def test_data_corruption_detection_handles_errors(self, detector):
+        """Detector should swallow unexpected errors and signal healthy state."""
+        detector.state_manager.get_state = AsyncMock(side_effect=RuntimeError("boom"))
+
+        result = await detector.detect_data_corruption()
+
+        assert result is False
+
+    @pytest.mark.asyncio
     @patch("bot_v2.state.recovery.detection.psutil")
     async def test_memory_usage_check(self, mock_psutil, detector):
         """Test memory usage check"""
@@ -185,6 +206,39 @@ class TestFailureDetector:
         assert result == 0
 
     @pytest.mark.asyncio
+    async def test_memory_usage_psutil_none(self, detector, monkeypatch):
+        """Explicit psutil None should trigger ImportError path."""
+        monkeypatch.setattr("bot_v2.state.recovery.detection.psutil", None, raising=False)
+
+        result = await detector.check_memory_usage()
+
+        assert result == 0
+
+    @pytest.mark.asyncio
+    async def test_memory_usage_missing_virtual_memory(self, detector, monkeypatch):
+        """Missing virtual_memory should trigger fallback path."""
+        stub = SimpleNamespace(virtual_memory=None)
+        monkeypatch.setattr("bot_v2.state.recovery.detection.psutil", stub, raising=False)
+
+        result = await detector.check_memory_usage()
+
+        assert result == 0
+
+    @pytest.mark.asyncio
+    async def test_memory_usage_invalid_percent(self, detector, monkeypatch):
+        """Unexpected memory percent formats should be handled."""
+
+        class FakeMemory:
+            percent = "invalid"
+
+        stub = SimpleNamespace(virtual_memory=lambda: FakeMemory())
+        monkeypatch.setattr("bot_v2.state.recovery.detection.psutil", stub, raising=False)
+
+        result = await detector.check_memory_usage()
+
+        assert result == 0
+
+    @pytest.mark.asyncio
     @patch("bot_v2.state.recovery.detection.psutil")
     async def test_disk_usage_check(self, mock_psutil, detector):
         """Test disk usage check"""
@@ -194,6 +248,39 @@ class TestFailureDetector:
 
         assert result == 92.3
         mock_psutil.disk_usage.assert_called_once_with("/")
+
+    @pytest.mark.asyncio
+    async def test_disk_usage_missing_disk_usage_fn(self, detector, monkeypatch):
+        """Missing disk_usage callable should safely return zero."""
+        stub = SimpleNamespace(disk_usage=None)
+        monkeypatch.setattr("bot_v2.state.recovery.detection.psutil", stub, raising=False)
+
+        result = await detector.check_disk_usage()
+
+        assert result == 0
+
+    @pytest.mark.asyncio
+    async def test_disk_usage_invalid_percent(self, detector, monkeypatch):
+        """Invalid disk usage payload should not raise."""
+
+        class FakeDisk:
+            percent = "invalid"
+
+        stub = SimpleNamespace(disk_usage=lambda _path="/": FakeDisk())
+        monkeypatch.setattr("bot_v2.state.recovery.detection.psutil", stub, raising=False)
+
+        result = await detector.check_disk_usage()
+
+        assert result == 0
+
+    @pytest.mark.asyncio
+    async def test_disk_usage_psutil_none(self, detector, monkeypatch):
+        """psutil None sentinel should be tolerated."""
+        monkeypatch.setattr("bot_v2.state.recovery.detection.psutil", None, raising=False)
+
+        result = await detector.check_disk_usage()
+
+        assert result == 0
 
     @pytest.mark.asyncio
     async def test_detect_failures_all_healthy(self, detector):
@@ -224,6 +311,21 @@ class TestFailureDetector:
         failures = await detector.detect_failures()
 
         assert FailureType.REDIS_DOWN in failures
+
+    @pytest.mark.asyncio
+    async def test_detect_failures_s3_unavailable(self, detector):
+        """Test failure detection when S3 cannot be reached."""
+        detector.test_redis_health = AsyncMock(return_value=True)
+        detector.test_postgres_health = AsyncMock(return_value=True)
+        detector.test_s3_health = AsyncMock(return_value=False)
+        detector.test_trading_engine_health = AsyncMock(return_value=True)
+        detector.detect_data_corruption = AsyncMock(return_value=False)
+        detector.check_memory_usage = AsyncMock(return_value=10)
+        detector.check_disk_usage = AsyncMock(return_value=10)
+
+        failures = await detector.detect_failures()
+
+        assert failures == [FailureType.S3_UNAVAILABLE]
 
     @pytest.mark.asyncio
     async def test_detect_failures_multiple_issues(self, detector):

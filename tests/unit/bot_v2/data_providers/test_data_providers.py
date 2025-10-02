@@ -530,6 +530,15 @@ class TestFactoryFunction:
 
         assert provider1 is provider2
 
+    def test_get_data_provider_unsupported(self):
+        """Unsupported provider names should raise immediately."""
+        import bot_v2.data_providers as dp_module
+
+        dp_module._provider_instance = None
+
+        with pytest.raises(ValueError, match="Unsupported data provider 'alpaca'"):
+            get_data_provider("alpaca")
+
     def test_set_data_provider(self):
         """Test setting custom data provider."""
         custom_provider = MockProvider()

@@ -12,6 +12,13 @@ import pytest
 
 from tests.fixtures.behavioral import FakeClock
 
+# Plugin declarations must be at top level
+pytest_plugins = [
+    "tests.fixtures.infrastructure",
+    "tests.fixtures.monitoring",
+    "tests.fixtures.orchestration",
+]
+
 
 def pytest_collection_modifyitems(items):
     for item in items:

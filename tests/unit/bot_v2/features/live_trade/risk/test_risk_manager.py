@@ -429,7 +429,7 @@ class TestPreTradeValidation:
             )
 
     def test_validate_exposure_limits_total(self, risk_manager: LiveRiskManager) -> None:
-        """Validates total portfolio exposure limit (max_total_exposure_pct).
+        """Validates total portfolio exposure limit (max_exposure_pct).
 
         Prevents overexposure across all positions combined.
         """

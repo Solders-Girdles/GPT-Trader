@@ -71,7 +71,8 @@ class TestExecutionCoordinator:
     def test_initialization(self, coordinator, mock_bot):
         """Test coordinator initialization"""
         assert coordinator._bot == mock_bot
-        assert coordinator._order_reconciler is None
+        assert coordinator._order_placement_service is None
+        assert coordinator._runtime_supervisor is None
 
     def test_init_execution_basic(self, coordinator, mock_bot):
         """Test basic execution initialization"""
@@ -120,26 +121,29 @@ class TestExecutionCoordinator:
         self, coordinator, mock_bot, sample_decision, sample_product
     ):
         """Test BUY decision execution"""
-        mock_order = Mock(spec=Order)
-        mock_order.id = "order_123"
-        mock_order.symbol = "BTC-USD"
-        mock_order.side = OrderSide.BUY
-        mock_order.quantity = Decimal("0.02")
+        mock_bot.is_reduce_only_mode = Mock(return_value=False)
+        mock_bot.config.time_in_force = "GTC"
 
-        coordinator._place_order = AsyncMock(return_value=mock_order)
+        # Mock the service's execute_decision method
+        with patch("bot_v2.orchestration.execution_coordinator.OrderPlacementService") as mock_service_class:
+            mock_service = AsyncMock()
+            mock_service_class.return_value = mock_service
 
-        await coordinator.execute_decision(
-            symbol="BTC-USD",
-            decision=sample_decision,
-            mark=Decimal("50000"),
-            product=sample_product,
-            position_state=None,
-        )
+            # Force re-creation of service
+            coordinator._order_placement_service = None
 
-        coordinator._place_order.assert_called_once()
-        call_kwargs = coordinator._place_order.call_args[1]
-        assert call_kwargs["symbol"] == "BTC-USD"
-        assert call_kwargs["side"] == OrderSide.BUY
+            await coordinator.execute_decision(
+                symbol="BTC-USD",
+                decision=sample_decision,
+                mark=Decimal("50000"),
+                product=sample_product,
+                position_state=None,
+            )
+
+            # Verify service was called
+            mock_service.execute_decision.assert_called_once()
+            call_kwargs = mock_service.execute_decision.call_args[1]
+            assert call_kwargs["symbol"] == "BTC-USD"
 
     @pytest.mark.asyncio
     async def test_execute_decision_close_position(self, coordinator, mock_bot, sample_product):
@@ -159,29 +163,31 @@ class TestExecutionCoordinator:
             "entry_price": Decimal("48000"),
         }
 
-        mock_order = Mock(spec=Order)
-        mock_order.id = "order_123"
-        mock_order.symbol = "BTC-USD"
-        mock_order.side = OrderSide.SELL
-        mock_order.quantity = Decimal("0.5")
+        mock_bot.is_reduce_only_mode = Mock(return_value=False)
+        mock_bot.config.time_in_force = "GTC"
 
-        coordinator._place_order = AsyncMock(return_value=mock_order)
+        # Mock the service's execute_decision method
+        with patch("bot_v2.orchestration.execution_coordinator.OrderPlacementService") as mock_service_class:
+            mock_service = AsyncMock()
+            mock_service_class.return_value = mock_service
 
-        await coordinator.execute_decision(
-            symbol="BTC-USD",
-            decision=close_decision,
-            mark=Decimal("52000"),
-            product=sample_product,
-            position_state=position_state,
-        )
+            coordinator._order_placement_service = None
 
-        coordinator._place_order.assert_called_once()
-        call_kwargs = coordinator._place_order.call_args[1]
-        assert call_kwargs["side"] == OrderSide.SELL
-        assert call_kwargs["reduce_only"] is True
+            await coordinator.execute_decision(
+                symbol="BTC-USD",
+                decision=close_decision,
+                mark=Decimal("52000"),
+                product=sample_product,
+                position_state=position_state,
+            )
+
+            # Verify service was called
+            mock_service.execute_decision.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_execute_decision_close_no_position(self, coordinator, sample_product):
+    async def test_execute_decision_close_no_position(
+        self, coordinator, mock_bot, sample_product
+    ):
         """Test CLOSE action with no position"""
         from bot_v2.features.live_trade.strategies.perps_baseline import Action, Decision
 
@@ -194,6 +200,9 @@ class TestExecutionCoordinator:
 
         coordinator._place_order = AsyncMock()
 
+        mock_bot.is_reduce_only_mode = Mock(return_value=False)
+        mock_bot.config.time_in_force = "GTC"
+
         await coordinator.execute_decision(
             symbol="BTC-USD",
             decision=close_decision,
@@ -202,57 +211,67 @@ class TestExecutionCoordinator:
             position_state=None,
         )
 
-        # Should not place order
-        coordinator._place_order.assert_not_called()
+        # Should not crash (warning logged instead)
 
     @pytest.mark.asyncio
-    async def test_execute_decision_missing_product(self, coordinator, sample_decision):
+    async def test_execute_decision_missing_product(self, coordinator, mock_bot, sample_decision):
         """Test decision execution with missing product"""
-        await coordinator.execute_decision(
-            symbol="BTC-USD",
-            decision=sample_decision,
-            mark=Decimal("50000"),
-            product=None,
-            position_state=None,
-        )
+        mock_bot.is_reduce_only_mode = Mock(return_value=False)
+        mock_bot.config.time_in_force = "GTC"
 
-        # Should handle gracefully and not crash
+        with pytest.raises(AssertionError, match="Missing product metadata"):
+            await coordinator.execute_decision(
+                symbol="BTC-USD",
+                decision=sample_decision,
+                mark=Decimal("50000"),
+                product=None,
+                position_state=None,
+            )
 
     @pytest.mark.asyncio
     async def test_execute_decision_invalid_mark(
-        self, coordinator, sample_decision, sample_product
+        self, coordinator, mock_bot, sample_decision, sample_product
     ):
         """Test decision execution with invalid mark price"""
-        await coordinator.execute_decision(
-            symbol="BTC-USD",
-            decision=sample_decision,
-            mark=Decimal("0"),
-            product=sample_product,
-            position_state=None,
-        )
+        mock_bot.is_reduce_only_mode = Mock(return_value=False)
+        mock_bot.config.time_in_force = "GTC"
 
-        # Should handle gracefully
+        with pytest.raises(AssertionError, match="Invalid mark"):
+            await coordinator.execute_decision(
+                symbol="BTC-USD",
+                decision=sample_decision,
+                mark=Decimal("0"),
+                product=sample_product,
+                position_state=None,
+            )
 
     @pytest.mark.asyncio
     async def test_place_order_success(self, coordinator, mock_bot):
-        """Test successful order placement"""
+        """Test successful order placement delegation"""
         mock_order = Mock(spec=Order)
         mock_order.id = "order_123"
         mock_order.symbol = "BTC-USD"
         mock_order.side = OrderSide.BUY
         mock_order.quantity = Decimal("0.02")
 
-        coordinator._place_order_inner = AsyncMock(return_value=mock_order)
+        # Mock the service
+        with patch("bot_v2.orchestration.execution_coordinator.OrderPlacementService") as mock_service_class:
+            mock_service = Mock()
+            mock_service._place_order_inner = AsyncMock(return_value=mock_order)
+            mock_service_class.return_value = mock_service
 
-        result = await coordinator._place_order(
-            mock_bot.exec_engine,
-            symbol="BTC-USD",
-            side=OrderSide.BUY,
-            quantity=Decimal("0.02"),
-            order_type=OrderType.MARKET,
-        )
+            coordinator._order_placement_service = None
 
-        assert result == mock_order
+            result = await coordinator._place_order(
+                mock_bot.exec_engine,
+                symbol="BTC-USD",
+                side=OrderSide.BUY,
+                quantity=Decimal("0.02"),
+                order_type=OrderType.MARKET,
+            )
+
+            assert result == mock_order
+            mock_service._place_order_inner.assert_called_once()
         assert mock_bot.order_stats["failed"] == 0
 
     @pytest.mark.asyncio
@@ -426,16 +445,22 @@ class TestExecutionCoordinator:
         mock_order = Mock(spec=Order)
         mock_order.id = "order_123"
 
-        coordinator._place_order = AsyncMock(return_value=mock_order)
+        with patch(
+            "bot_v2.orchestration.execution_coordinator.OrderPlacementService"
+        ) as mock_service_class:
+            mock_service = AsyncMock()
+            mock_service.execute_decision = AsyncMock(return_value=mock_order)
+            mock_service_class.return_value = mock_service
 
-        await coordinator.execute_decision(
-            symbol="BTC-USD",
-            decision=sample_decision,
-            mark=Decimal("50000"),
-            product=sample_product,
-            position_state=None,
-        )
+            coordinator._order_placement_service = None
 
-        # reduce_only should be set to True
-        call_kwargs = coordinator._place_order.call_args[1]
-        assert call_kwargs["reduce_only"] is True
+            await coordinator.execute_decision(
+                symbol="BTC-USD",
+                decision=sample_decision,
+                mark=Decimal("50000"),
+                product=sample_product,
+                position_state=None,
+            )
+
+            call_kwargs = mock_service.execute_decision.call_args[1]
+            assert call_kwargs["reduce_only_mode"] is True

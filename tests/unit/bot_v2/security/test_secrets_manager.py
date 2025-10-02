@@ -438,6 +438,117 @@ class TestVaultIntegration:
             assert manager._vault_enabled is False
             assert "Vault authentication failed" in caplog.text
 
+    def test_vault_connection_error_falls_back(
+        self, encryption_key, monkeypatch, tmp_path, caplog
+    ):
+        """Vault connection error during init falls back to file storage."""
+        pytest.importorskip("hvac")
+
+        monkeypatch.setenv("BOT_V2_ENCRYPTION_KEY", encryption_key)
+        monkeypatch.setenv("VAULT_TOKEN", "test-token")
+        monkeypatch.setattr(Path, "home", lambda: tmp_path)
+
+        # Mock hvac Client to raise connection error
+        with patch("hvac.Client") as mock_client_class:
+            mock_client_class.side_effect = Exception("Connection refused")
+
+            manager = SecretsManager(vault_enabled=True)
+
+            assert manager._vault_enabled is False
+            assert "Vault initialization failed" in caplog.text
+
+    def test_hvac_import_error_uses_file_storage(
+        self, encryption_key, monkeypatch, tmp_path, caplog
+    ):
+        """Missing hvac package falls back to file storage gracefully."""
+        monkeypatch.setenv("BOT_V2_ENCRYPTION_KEY", encryption_key)
+        monkeypatch.setenv("VAULT_TOKEN", "test-token")
+        monkeypatch.setattr(Path, "home", lambda: tmp_path)
+
+        # Simulate hvac not being installed
+        with patch.dict("sys.modules", {"hvac": None}):
+            manager = SecretsManager(vault_enabled=True)
+
+            assert manager._vault_enabled is False
+            assert "hvac not installed" in caplog.text
+
+    def test_store_secret_vault_error_returns_false(
+        self, encryption_key, monkeypatch, tmp_path, caplog
+    ):
+        """Store operation failing in Vault returns False and logs error."""
+        pytest.importorskip("hvac")
+
+        monkeypatch.setenv("BOT_V2_ENCRYPTION_KEY", encryption_key)
+        monkeypatch.setenv("VAULT_TOKEN", "test-token")
+        monkeypatch.setattr(Path, "home", lambda: tmp_path)
+
+        # Mock successful auth but failed store
+        with patch("hvac.Client") as mock_client_class:
+            mock_client = Mock()
+            mock_client.is_authenticated.return_value = True
+            mock_client.secrets.kv.v2.create_or_update_secret.side_effect = Exception(
+                "Vault write error"
+            )
+            mock_client_class.return_value = mock_client
+
+            manager = SecretsManager(vault_enabled=True)
+            assert manager._vault_enabled is True
+
+            # Store should fail and return False
+            result = manager.store_secret("test/key", {"value": "data"})
+            assert result is False
+            assert "Failed to store secret" in caplog.text
+
+    def test_get_secret_vault_error_returns_none(
+        self, encryption_key, monkeypatch, tmp_path, caplog
+    ):
+        """Get operation failing in Vault returns None and logs error."""
+        pytest.importorskip("hvac")
+
+        monkeypatch.setenv("BOT_V2_ENCRYPTION_KEY", encryption_key)
+        monkeypatch.setenv("VAULT_TOKEN", "test-token")
+        monkeypatch.setattr(Path, "home", lambda: tmp_path)
+
+        with patch("hvac.Client") as mock_client_class:
+            mock_client = Mock()
+            mock_client.is_authenticated.return_value = True
+            mock_client.secrets.kv.v2.read_secret_version.side_effect = Exception(
+                "Vault read error"
+            )
+            mock_client_class.return_value = mock_client
+
+            manager = SecretsManager(vault_enabled=True)
+
+            # Get should fail and return None
+            result = manager.get_secret("test/key")
+            assert result is None
+            assert "Failed to retrieve secret" in caplog.text
+
+    def test_vault_fallback_continues_operations(
+        self, encryption_key, monkeypatch, tmp_path
+    ):
+        """After vault failure, operations continue with file storage."""
+        pytest.importorskip("hvac")
+
+        monkeypatch.setenv("BOT_V2_ENCRYPTION_KEY", encryption_key)
+        monkeypatch.setenv("VAULT_TOKEN", "test-token")
+        monkeypatch.setattr(Path, "home", lambda: tmp_path)
+
+        # Vault fails during init
+        with patch("hvac.Client") as mock_client_class:
+            mock_client_class.side_effect = Exception("Vault unavailable")
+            manager = SecretsManager(vault_enabled=True)
+
+        # Should fall back to file storage
+        assert manager._vault_enabled is False
+
+        # Operations should still work via file storage
+        test_secret = {"api_key": "test-key-123"}
+        assert manager.store_secret("test/fallback", test_secret) is True
+
+        retrieved = manager.get_secret("test/fallback")
+        assert retrieved == test_secret
+
 
 class TestSecretListing:
     """Test listing available secrets."""

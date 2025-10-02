@@ -149,6 +149,7 @@ def mock_state_manager(sample_runtime_state: dict[str, Any]) -> Mock:
     manager.restore_snapshot = AsyncMock(return_value=True)
     manager.get_state = AsyncMock(return_value=None)
     manager.set_state = AsyncMock(return_value=True)
+    manager.batch_set_state = AsyncMock(side_effect=lambda items, **kwargs: len(items))
     manager.get_keys_by_pattern = AsyncMock(return_value=[])
     return manager
 

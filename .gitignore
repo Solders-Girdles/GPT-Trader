@@ -80,6 +80,8 @@ coordination/orchestration/*
 .benchmarks/
 .swarm/
 .coverage
+coverage.json
+htmlcov/
 .claude-flow/
 .mcp.json
 var/

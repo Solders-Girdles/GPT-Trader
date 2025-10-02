@@ -25,11 +25,22 @@ def manager() -> sm.StateManager:
 
 @pytest.mark.asyncio
 async def test_delete_state_logs_backend_failures(manager: sm.StateManager, caplog):
+    from bot_v2.state.repositories import (
+        RedisStateRepository,
+        PostgresStateRepository,
+        S3StateRepository,
+    )
+
     # Manager already has failing adapters from fixture
     # Note: Postgres/S3 may be None after initialization validation, so re-assign
     manager.redis_adapter = FailingRedisAdapter()
     manager.postgres_adapter = FailingPostgresAdapter()
     manager.s3_adapter = FailingS3Adapter()
+
+    # Recreate repositories with failing adapters
+    manager._redis_repo = RedisStateRepository(manager.redis_adapter, 3600)
+    manager._postgres_repo = PostgresStateRepository(manager.postgres_adapter)
+    manager._s3_repo = S3StateRepository(manager.s3_adapter, "test-bucket")
 
     with caplog.at_level("DEBUG"):
         success = await manager.delete_state("portfolio:test")
@@ -43,10 +54,21 @@ async def test_delete_state_logs_backend_failures(manager: sm.StateManager, capl
 
 @pytest.mark.asyncio
 async def test_get_keys_by_pattern_handles_backend_errors(manager: sm.StateManager, caplog):
+    from bot_v2.state.repositories import (
+        RedisStateRepository,
+        PostgresStateRepository,
+        S3StateRepository,
+    )
+
     # Re-assign to ensure all adapters are present for this test
     manager.redis_adapter = FailingRedisAdapter()
     manager.postgres_adapter = FailingPostgresAdapter()
     manager.s3_adapter = FailingS3Adapter()
+
+    # Recreate repositories with failing adapters
+    manager._redis_repo = RedisStateRepository(manager.redis_adapter, 3600)
+    manager._postgres_repo = PostgresStateRepository(manager.postgres_adapter)
+    manager._s3_repo = S3StateRepository(manager.s3_adapter, "test-bucket")
 
     with caplog.at_level("DEBUG"):
         keys = await manager.get_keys_by_pattern("order:*")
@@ -59,10 +81,21 @@ async def test_get_keys_by_pattern_handles_backend_errors(manager: sm.StateManag
 
 @pytest.mark.asyncio
 async def test_get_storage_stats_handles_backend_errors(manager: sm.StateManager, caplog):
+    from bot_v2.state.repositories import (
+        RedisStateRepository,
+        PostgresStateRepository,
+        S3StateRepository,
+    )
+
     # Re-assign to ensure all adapters are present for this test
     manager.redis_adapter = FailingRedisAdapter()
     manager.postgres_adapter = FailingPostgresAdapter()
     manager.s3_adapter = FailingS3Adapter()
+
+    # Recreate repositories with failing adapters
+    manager._redis_repo = RedisStateRepository(manager.redis_adapter, 3600)
+    manager._postgres_repo = PostgresStateRepository(manager.postgres_adapter)
+    manager._s3_repo = S3StateRepository(manager.s3_adapter, "test-bucket")
 
     with caplog.at_level("DEBUG"):
         stats = await manager.get_storage_stats()

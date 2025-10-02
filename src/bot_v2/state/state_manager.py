@@ -5,7 +5,6 @@ Provides multi-tier state management with hot (Redis), warm (PostgreSQL),
 and cold (S3) storage layers for optimal performance and cost efficiency.
 """
 
-import hashlib
 import json
 import logging
 import threading
@@ -14,10 +13,14 @@ from datetime import datetime
 from enum import Enum
 from typing import Any
 
+from bot_v2.state.cache_manager import StateCacheManager
+from bot_v2.state.repositories import (
+    PostgresStateRepository,
+    RedisStateRepository,
+    S3StateRepository,
+)
+from bot_v2.state.storage_adapter_factory import StorageAdapterFactory
 from bot_v2.state.utils.adapters import (
-    DefaultPostgresAdapter,
-    DefaultRedisAdapter,
-    DefaultS3Adapter,
     PostgresAdapter,
     RedisAdapter,
     S3Adapter,
@@ -86,120 +89,86 @@ class StateManager:
     ) -> None:
         self.config = config or StateConfig()
         self._lock = threading.Lock()
-        self._local_cache: dict[str, Any] = {}
-        self._access_history: dict[str, list[datetime]] = {}
-        self._metadata_cache: dict[str, StateMetadata] = {}
+
+        # Initialize cache manager
+        self._cache_manager = StateCacheManager(config=self.config)
 
         # Initialize storage backends with provided adapters or defaults
-        self.redis_adapter = redis_adapter
-        self.postgres_adapter = postgres_adapter
-        self.s3_adapter = s3_adapter
+        factory = StorageAdapterFactory()
 
-        # Initialize connections if adapters not provided
-        if self.redis_adapter is None:
-            self._init_redis()
-        if self.postgres_adapter is None:
-            self._init_postgres()
-        else:
-            # If adapter provided, still need to create tables
-            try:
-                self._create_postgres_tables(self.postgres_adapter)
-            except Exception as e:
-                logger.warning(f"PostgreSQL table creation failed: {e}")
-                self.postgres_adapter = None
-        if self.s3_adapter is None:
-            self._init_s3()
-        else:
-            # If adapter provided, verify bucket exists
-            try:
-                self.s3_adapter.head_bucket(bucket=self.config.s3_bucket)
-            except Exception as e:
-                logger.warning(f"S3 bucket verification failed: {e}")
-                self.s3_adapter = None
-
-    def _init_redis(self) -> None:
-        """Initialize Redis connection"""
-        try:
-            adapter = DefaultRedisAdapter(
+        # Redis adapter initialization
+        if redis_adapter is None:
+            self.redis_adapter = factory.create_redis_adapter(
                 host=self.config.redis_host,
                 port=self.config.redis_port,
                 db=self.config.redis_db,
             )
-            if adapter.ping():
-                self.redis_adapter = adapter
-                logger.info("Redis connection established")
-            else:
-                self.redis_adapter = None
-                logger.warning("Redis ping failed")
-        except Exception as e:
-            logger.warning(f"Redis initialization failed: {e}")
-            self.redis_adapter = None
+        else:
+            self.redis_adapter = redis_adapter
 
-    def _init_postgres(self) -> None:
-        """Initialize PostgreSQL connection"""
-        try:
-            adapter = DefaultPostgresAdapter(
+        # PostgreSQL adapter initialization
+        if postgres_adapter is None:
+            self.postgres_adapter = factory.create_postgres_adapter(
                 host=self.config.postgres_host,
                 port=self.config.postgres_port,
                 database=self.config.postgres_database,
                 user=self.config.postgres_user,
                 password=self.config.postgres_password,
             )
-            # Create tables if not exist
-            self._create_postgres_tables(adapter)
-            self.postgres_adapter = adapter
-            logger.info("PostgreSQL connection established")
-        except Exception as e:
-            logger.warning(f"PostgreSQL initialization failed: {e}")
-            self.postgres_adapter = None
+        else:
+            # Validate provided adapter by creating tables
+            self.postgres_adapter = factory.validate_postgres_adapter(postgres_adapter)
 
-    def _init_s3(self) -> None:
-        """Initialize S3 client"""
-        try:
-            adapter = DefaultS3Adapter(region=self.config.s3_region)
-            # Verify bucket exists
-            adapter.head_bucket(bucket=self.config.s3_bucket)
-            self.s3_adapter = adapter
-            logger.info("S3 connection established")
-        except Exception as e:
-            logger.warning(f"S3 initialization failed: {e}")
-            self.s3_adapter = None
+        # S3 adapter initialization
+        if s3_adapter is None:
+            self.s3_adapter = factory.create_s3_adapter(
+                region=self.config.s3_region,
+                bucket=self.config.s3_bucket,
+            )
+        else:
+            # Validate provided adapter by checking bucket
+            self.s3_adapter = factory.validate_s3_adapter(s3_adapter, self.config.s3_bucket)
 
-    def _create_postgres_tables(self, adapter: PostgresAdapter) -> None:
-        """Create necessary PostgreSQL tables"""
-        create_table_sql = """
-        CREATE TABLE IF NOT EXISTS state_warm (
-            key VARCHAR(255) PRIMARY KEY,
-            data JSONB NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            last_accessed TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            size_bytes INTEGER,
-            checksum VARCHAR(64),
-            version INTEGER DEFAULT 1
-        );
+        # Initialize tier-specific repositories
+        self._redis_repo = (
+            RedisStateRepository(self.redis_adapter, self.config.redis_ttl_seconds)
+            if self.redis_adapter
+            else None
+        )
+        self._postgres_repo = (
+            PostgresStateRepository(self.postgres_adapter) if self.postgres_adapter else None
+        )
+        self._s3_repo = (
+            S3StateRepository(self.s3_adapter, self.config.s3_bucket) if self.s3_adapter else None
+        )
 
-        CREATE INDEX IF NOT EXISTS idx_state_warm_last_accessed
-        ON state_warm(last_accessed);
+    # Backwards compatibility properties for tests
+    @property
+    def _local_cache(self) -> dict[str, Any]:
+        """Access local cache (for backwards compatibility)."""
+        return self._cache_manager._local_cache
 
-        CREATE TABLE IF NOT EXISTS state_metadata (
-            key VARCHAR(255) PRIMARY KEY,
-            category VARCHAR(10),
-            location VARCHAR(255),
-            created_at TIMESTAMP,
-            last_accessed TIMESTAMP,
-            access_count INTEGER DEFAULT 0,
-            size_bytes INTEGER,
-            checksum VARCHAR(64)
-        );
-        """
+    @property
+    def _metadata_cache(self) -> dict[str, StateMetadata]:
+        """Access metadata cache (for backwards compatibility)."""
+        return self._cache_manager._metadata_cache
 
-        try:
-            adapter.execute(create_table_sql)
-            adapter.commit()
-        except Exception as e:
-            logger.error(f"Failed to create PostgreSQL tables: {e}")
-            adapter.rollback()
-            raise
+    @property
+    def _access_history(self) -> dict[str, list[datetime]]:
+        """Access access history (for backwards compatibility)."""
+        return self._cache_manager._access_history
+
+    def _update_access_history(self, key: str) -> None:
+        """Update access history (for backwards compatibility)."""
+        self._cache_manager.update_access_history(key)
+
+    def _manage_cache_size(self) -> None:
+        """Manage cache size (for backwards compatibility)."""
+        self._cache_manager.manage_cache_size()
+
+    def _calculate_checksum(self, data: str) -> str:
+        """Calculate checksum (for backwards compatibility)."""
+        return self._cache_manager.calculate_checksum(data)
 
     async def get_state(self, key: str, auto_promote: bool = True) -> Any | None:
         """
@@ -213,35 +182,32 @@ class StateManager:
             State value or None if not found
         """
         # Check local cache first
-        if key in self._local_cache:
-            self._update_access_history(key)
-            return self._local_cache[key]
+        cached_value = self._cache_manager.get(key)
+        if cached_value is not None:
+            return cached_value
 
         # Try hot storage (Redis)
         value = await self._get_from_redis(key)
         if value is not None:
-            self._update_access_history(key)
-            self._local_cache[key] = value
+            self._cache_manager.set(key, value)
             return value
 
         # Try warm storage (PostgreSQL)
         value = await self._get_from_postgres(key)
         if value is not None:
-            self._update_access_history(key)
             if auto_promote:
                 # Promote to hot storage
                 await self.set_state(key, value, StateCategory.HOT)
-            self._local_cache[key] = value
+            self._cache_manager.set(key, value)
             return value
 
         # Try cold storage (S3)
         value = await self._get_from_s3(key)
         if value is not None:
-            self._update_access_history(key)
             if auto_promote:
                 # Promote to warm storage
                 await self.set_state(key, value, StateCategory.WARM)
-            self._local_cache[key] = value
+            self._cache_manager.set(key, value)
             return value
 
         return None
@@ -268,7 +234,7 @@ class StateManager:
         try:
             # Serialize value
             serialized = json.dumps(value, default=str)
-            checksum = self._calculate_checksum(serialized)
+            checksum = self._cache_manager.calculate_checksum(serialized)
 
             # Store in appropriate tier
             if category == StateCategory.HOT:
@@ -280,23 +246,16 @@ class StateManager:
 
             if success:
                 # Update metadata
-                metadata = StateMetadata(
+                self._cache_manager.update_metadata(
                     key=key,
                     category=category,
-                    created_at=datetime.utcnow(),
-                    last_accessed=datetime.utcnow(),
                     size_bytes=len(serialized.encode()),
                     checksum=checksum,
-                    version=1,
                     ttl_seconds=ttl_seconds,
                 )
-                self._metadata_cache[key] = metadata
 
                 # Update local cache
-                self._local_cache[key] = value
-
-                # Manage cache size
-                self._manage_cache_size()
+                self._cache_manager.set(key, value)
 
             return success
 
@@ -336,193 +295,66 @@ class StateManager:
                 logger.warning("Failed to delete %s from S3: %s", key, exc, exc_info=True)
 
         # Clear from caches
-        self._local_cache.pop(key, None)
-        self._metadata_cache.pop(key, None)
-        self._access_history.pop(key, None)
+        self._cache_manager.delete(key)
 
         return success
 
     async def _get_from_redis(self, key: str) -> Any | None:
         """Get value from Redis"""
-        if not self.redis_adapter:
+        if not self._redis_repo:
             return None
-
-        try:
-            value = self.redis_adapter.get(key)
-            if value:
-                return json.loads(value)
-        except Exception as e:
-            logger.debug(f"Redis get failed for {key}: {e}")
-
-        return None
+        return await self._redis_repo.fetch(key)
 
     async def _get_from_postgres(self, key: str) -> Any | None:
         """Get value from PostgreSQL"""
-        if not self.postgres_adapter:
+        if not self._postgres_repo:
             return None
-
-        try:
-            results = self.postgres_adapter.execute(
-                "SELECT data FROM state_warm WHERE key = %s", (key,)
-            )
-            if results:
-                result = results[0]
-                # Update last accessed time
-                self.postgres_adapter.execute(
-                    "UPDATE state_warm SET last_accessed = %s WHERE key = %s",
-                    (datetime.utcnow(), key),
-                )
-                self.postgres_adapter.commit()
-                return result["data"]
-        except Exception as e:
-            logger.debug(f"PostgreSQL get failed for {key}: {e}")
-            self.postgres_adapter.rollback()
-
-        return None
+        return await self._postgres_repo.fetch(key)
 
     async def _get_from_s3(self, key: str) -> Any | None:
         """Get value from S3"""
-        if not self.s3_adapter:
+        if not self._s3_repo:
             return None
-
-        try:
-            response = self.s3_adapter.get_object(bucket=self.config.s3_bucket, key=f"cold/{key}")
-            data = response["Body"].read().decode("utf-8")
-            return json.loads(data)
-        except Exception as e:
-            logger.debug(f"S3 get failed for {key}: {e}")
-
-        return None
+        return await self._s3_repo.fetch(key)
 
     async def _set_in_redis(self, key: str, value: str, ttl_seconds: int | None) -> bool:
         """Set value in Redis"""
-        if not self.redis_adapter:
+        if not self._redis_repo:
             return False
-
-        try:
-            ttl = ttl_seconds or self.config.redis_ttl_seconds
-            return self.redis_adapter.setex(key, ttl, value)
-        except Exception as e:
-            logger.error(f"Redis set failed for {key}: {e}")
-            return False
+        return await self._redis_repo.store(key, value, {"ttl_seconds": ttl_seconds})
 
     async def _set_in_postgres(self, key: str, value: str, checksum: str) -> bool:
         """Set value in PostgreSQL"""
-        if not self.postgres_adapter:
+        if not self._postgres_repo:
             return False
-
-        try:
-            self.postgres_adapter.execute(
-                """
-                INSERT INTO state_warm (key, data, checksum, size_bytes)
-                VALUES (%s, %s, %s, %s)
-                ON CONFLICT (key) DO UPDATE SET
-                    data = EXCLUDED.data,
-                    checksum = EXCLUDED.checksum,
-                    size_bytes = EXCLUDED.size_bytes,
-                    last_accessed = CURRENT_TIMESTAMP,
-                    version = state_warm.version + 1
-            """,
-                (key, value, checksum, len(value.encode())),
-            )
-            self.postgres_adapter.commit()
-            return True
-        except Exception as e:
-            logger.error(f"PostgreSQL set failed for {key}: {e}")
-            self.postgres_adapter.rollback()
-            return False
+        return await self._postgres_repo.store(
+            key, value, {"checksum": checksum, "size_bytes": len(value.encode())}
+        )
 
     async def _set_in_s3(self, key: str, value: str, checksum: str) -> bool:
         """Set value in S3"""
-        if not self.s3_adapter:
+        if not self._s3_repo:
             return False
-
-        try:
-            self.s3_adapter.put_object(
-                bucket=self.config.s3_bucket,
-                key=f"cold/{key}",
-                body=value.encode(),
-                storage_class="STANDARD_IA",
-                metadata={"checksum": checksum},
-            )
-            return True
-        except Exception as e:
-            logger.error(f"S3 set failed for {key}: {e}")
-            return False
-
-    def _calculate_checksum(self, data: str) -> str:
-        """Calculate SHA256 checksum"""
-        return hashlib.sha256(data.encode()).hexdigest()
-
-    def _update_access_history(self, key: str) -> None:
-        """Update access history for tier management"""
-        if key not in self._access_history:
-            self._access_history[key] = []
-
-        self._access_history[key].append(datetime.utcnow())
-
-        # Keep only last 100 accesses
-        if len(self._access_history[key]) > 100:
-            self._access_history[key] = self._access_history[key][-100:]
-
-    def _manage_cache_size(self) -> None:
-        """Manage local cache size"""
-        max_cache_size = self.config.cache_size_mb * 1024 * 1024  # Convert to bytes
-        current_size = sum(
-            len(json.dumps(v, default=str).encode()) for v in self._local_cache.values()
-        )
-
-        if current_size > max_cache_size:
-            # Remove least recently accessed items
-            sorted_keys = sorted(
-                self._local_cache.keys(),
-                key=lambda k: self._access_history.get(k, [datetime.min])[-1],
-            )
-
-            while current_size > max_cache_size and sorted_keys:
-                key_to_remove = sorted_keys.pop(0)
-                removed_value = self._local_cache.pop(key_to_remove, None)
-                if removed_value:
-                    current_size -= len(json.dumps(removed_value, default=str).encode())
+        return await self._s3_repo.store(key, value, {"checksum": checksum})
 
     async def get_keys_by_pattern(self, pattern: str) -> list[str]:
         """Get all keys matching pattern"""
         keys = set()
 
         # Check Redis
-        if self.redis_adapter:
-            try:
-                redis_keys = self.redis_adapter.keys(pattern)
-                keys.update(redis_keys)
-            except Exception as exc:
-                logger.debug(
-                    "Redis key lookup failed for pattern %s: %s", pattern, exc, exc_info=True
-                )
+        if self._redis_repo:
+            redis_keys = await self._redis_repo.keys(pattern)
+            keys.update(redis_keys)
 
         # Check PostgreSQL
-        if self.postgres_adapter:
-            try:
-                sql_pattern = pattern.replace("*", "%")
-                results = self.postgres_adapter.execute(
-                    "SELECT key FROM state_warm WHERE key LIKE %s", (sql_pattern,)
-                )
-                pg_keys = [row["key"] for row in results]
-                keys.update(pg_keys)
-            except Exception as exc:
-                logger.debug("PostgreSQL key lookup failed for %s: %s", pattern, exc, exc_info=True)
+        if self._postgres_repo:
+            pg_keys = await self._postgres_repo.keys(pattern)
+            keys.update(pg_keys)
 
-        # Check S3 (limited pattern matching)
-        if self.s3_adapter:
-            try:
-                prefix = pattern.split("*")[0] if "*" in pattern else pattern
-                response = self.s3_adapter.list_objects_v2(
-                    bucket=self.config.s3_bucket, prefix=f"cold/{prefix}"
-                )
-                if "Contents" in response:
-                    s3_keys = [obj["Key"].replace("cold/", "") for obj in response["Contents"]]
-                    keys.update(s3_keys)
-            except Exception as exc:
-                logger.debug("S3 key lookup failed for %s: %s", pattern, exc, exc_info=True)
+        # Check S3
+        if self._s3_repo:
+            s3_keys = await self._s3_repo.keys(pattern)
+            keys.update(s3_keys)
 
         return list(keys)
 
@@ -559,37 +391,24 @@ class StateManager:
         }
 
         # Redis stats
-        if self.redis_adapter:
-            try:
-                stats["hot_keys"] = self.redis_adapter.dbsize()
-            except Exception as exc:
-                logger.debug("Redis stats collection failed: %s", exc, exc_info=True)
+        if self._redis_repo:
+            redis_stats = await self._redis_repo.stats()
+            stats["hot_keys"] = redis_stats.get("key_count", 0)
 
         # PostgreSQL stats
-        if self.postgres_adapter:
-            try:
-                results = self.postgres_adapter.execute("SELECT COUNT(*) as count FROM state_warm")
-                if results:
-                    result = results[0]
-                    stats["warm_keys"] = result["count"]
-            except Exception as exc:
-                logger.debug("PostgreSQL stats collection failed: %s", exc, exc_info=True)
+        if self._postgres_repo:
+            postgres_stats = await self._postgres_repo.stats()
+            stats["warm_keys"] = postgres_stats.get("key_count", 0)
 
         # S3 stats
-        if self.s3_adapter:
-            try:
-                response = self.s3_adapter.list_objects_v2(
-                    bucket=self.config.s3_bucket, prefix="cold/"
-                )
-                stats["cold_keys"] = response.get("KeyCount", 0)
-            except Exception as exc:
-                logger.debug("S3 stats collection failed: %s", exc, exc_info=True)
+        if self._s3_repo:
+            s3_stats = await self._s3_repo.stats()
+            stats["cold_keys"] = s3_stats.get("key_count", 0)
 
         # Cache stats
-        stats["cache_size_bytes"] = sum(
-            len(json.dumps(v, default=str).encode()) for v in self._local_cache.values()
-        )
-        stats["cache_keys"] = len(self._local_cache)
+        cache_stats = self._cache_manager.get_cache_stats()
+        stats["cache_size_bytes"] = cache_stats["cache_size_bytes"]
+        stats["cache_keys"] = cache_stats["cache_keys"]
         stats["total_keys"] = stats["hot_keys"] + stats["warm_keys"] + stats["cold_keys"]
 
         return stats

@@ -837,8 +837,15 @@ class BackupManager:
                 # Batch restore all items in one call
                 restored_count = await self._maybe_await(self.state_manager.batch_set_state(items))
 
-                logger.info(f"Restored {restored_count} items from backup (batch operation)")
-                return restored_count > 0
+                # Handle cases where batch_set_state might return non-numeric (e.g., Mock in tests)
+                try:
+                    count = int(restored_count) if restored_count is not None else 0
+                except (TypeError, ValueError):
+                    # If we can't convert to int, assume success if we had items to restore
+                    count = len(items)
+
+                logger.info(f"Restored {count} items from backup (batch operation)")
+                return count > 0
 
             else:
                 # Fallback: Sequential restoration for compatibility

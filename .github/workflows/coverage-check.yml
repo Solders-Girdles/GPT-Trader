@@ -1,0 +1,67 @@
+name: Coverage Check
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+
+jobs:
+  check-coverage:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          pip install poetry
+          poetry install --with dev
+
+      - name: Run tests with coverage
+        run: |
+          poetry run pytest --cov=src/bot_v2 \
+            --cov-report=json \
+            --cov-report=term-missing \
+            -q
+
+      - name: Check Phase 0 thresholds
+        env:
+          COVERAGE_PHASE: phase0
+        run: |
+          python scripts/check_package_coverage.py
+
+      - name: Upload coverage to Codecov (optional)
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage.xml
+          fail_ci_if_error: false
+
+      - name: Comment PR with coverage (optional)
+        if: github.event_name == 'pull_request'
+        uses: py-cov-action/python-coverage-comment-action@v3
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Phase-specific checks (uncomment as phases complete)
+  # check-phase1:
+  #   runs-on: ubuntu-latest
+  #   if: github.ref == 'refs/heads/develop' || github.base_ref == 'develop'
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #     - name: Set up Python
+  #       uses: actions/setup-python@v4
+  #       with:
+  #         python-version: '3.12'
+  #     - name: Install and test
+  #       run: |
+  #         pip install poetry
+  #         poetry install --with dev
+  #         poetry run pytest --cov=src/bot_v2 --cov-report=json -q
+  #     - name: Check Phase 1 thresholds
+  #       run: python scripts/check_package_coverage.py phase1

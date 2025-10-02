@@ -616,15 +616,16 @@ class StateManager:
                 except Exception as e:
                     logger.error(f"Failed to prepare item {key}: {e}")
 
-            # Batch write to tiers and update cache only on success
+            # Batch write to tiers and update cache only for successfully stored keys
             stored_count = 0
 
             if hot_items and self._redis_repo:
                 try:
-                    count = await self._redis_repo.store_many(hot_items)
-                    if count > 0:
-                        # Update cache and metadata only for successfully stored items
-                        for key, (value, size_bytes, checksum, ttl) in hot_metadata.items():
+                    successful_keys = await self._redis_repo.store_many(hot_items)
+                    # Update cache and metadata ONLY for keys that were successfully stored
+                    for key in successful_keys:
+                        if key in hot_metadata:
+                            value, size_bytes, checksum, ttl = hot_metadata[key]
                             self._cache_manager.set(key, value)
                             self._cache_manager.update_metadata(
                                 key=key,
@@ -633,16 +634,17 @@ class StateManager:
                                 checksum=checksum,
                                 ttl_seconds=ttl,
                             )
-                        stored_count += count
+                    stored_count += len(successful_keys)
                 except Exception as e:
                     logger.error(f"Batch write to Redis failed: {e}")
 
             if warm_items and self._postgres_repo:
                 try:
-                    count = await self._postgres_repo.store_many(warm_items)
-                    if count > 0:
-                        # Update cache and metadata only for successfully stored items
-                        for key, (value, size_bytes, checksum) in warm_metadata.items():
+                    successful_keys = await self._postgres_repo.store_many(warm_items)
+                    # Update cache and metadata ONLY for keys that were successfully stored
+                    for key in successful_keys:
+                        if key in warm_metadata:
+                            value, size_bytes, checksum = warm_metadata[key]
                             self._cache_manager.set(key, value)
                             self._cache_manager.update_metadata(
                                 key=key,
@@ -650,16 +652,17 @@ class StateManager:
                                 size_bytes=size_bytes,
                                 checksum=checksum,
                             )
-                        stored_count += count
+                    stored_count += len(successful_keys)
                 except Exception as e:
                     logger.error(f"Batch write to PostgreSQL failed: {e}")
 
             if cold_items and self._s3_repo:
                 try:
-                    count = await self._s3_repo.store_many(cold_items)
-                    if count > 0:
-                        # Update cache and metadata only for successfully stored items
-                        for key, (value, size_bytes, checksum) in cold_metadata.items():
+                    successful_keys = await self._s3_repo.store_many(cold_items)
+                    # Update cache and metadata ONLY for keys that were successfully stored
+                    for key in successful_keys:
+                        if key in cold_metadata:
+                            value, size_bytes, checksum = cold_metadata[key]
                             self._cache_manager.set(key, value)
                             self._cache_manager.update_metadata(
                                 key=key,
@@ -667,7 +670,7 @@ class StateManager:
                                 size_bytes=size_bytes,
                                 checksum=checksum,
                             )
-                        stored_count += count
+                    stored_count += len(successful_keys)
                 except Exception as e:
                     logger.error(f"Batch write to S3 failed: {e}")
 

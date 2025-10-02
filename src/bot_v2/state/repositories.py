@@ -43,7 +43,7 @@ class StateRepository(Protocol):
         ...
 
     # Batch operations
-    async def store_many(self, items: dict[str, tuple[str, dict[str, Any]]]) -> int:
+    async def store_many(self, items: dict[str, tuple[str, dict[str, Any]]]) -> set[str]:
         """
         Store multiple items at once.
 
@@ -51,7 +51,7 @@ class StateRepository(Protocol):
             items: Dict mapping keys to (value, metadata) tuples
 
         Returns:
-            Number of items successfully stored
+            Set of keys that were successfully stored
         """
         ...
 
@@ -171,7 +171,7 @@ class RedisStateRepository:
             return {"key_count": 0}
 
     # Batch operations
-    async def store_many(self, items: dict[str, tuple[str, dict[str, Any]]]) -> int:
+    async def store_many(self, items: dict[str, tuple[str, dict[str, Any]]]) -> set[str]:
         """
         Store multiple items in Redis with TTL.
 
@@ -179,10 +179,10 @@ class RedisStateRepository:
             items: Dict mapping keys to (value, metadata) tuples
 
         Returns:
-            Number of items successfully stored
+            Set of keys that were successfully stored
         """
         if not items:
-            return 0
+            return set()
 
         try:
             # Group by TTL for efficient pipeline execution
@@ -198,10 +198,11 @@ class RedisStateRepository:
             for ttl, mapping in ttl_groups.items():
                 self.adapter.msetex(mapping, ttl)
 
-            return len(items)
+            # All items succeeded (Redis msetex is atomic per TTL group)
+            return set(items.keys())
         except Exception as e:
             logger.error(f"Redis store_many failed: {e}")
-            return 0
+            return set()
 
     async def delete_many(self, keys: list[str]) -> int:
         """
@@ -362,7 +363,7 @@ class PostgresStateRepository:
         return {"key_count": 0}
 
     # Batch operations
-    async def store_many(self, items: dict[str, tuple[str, dict[str, Any]]]) -> int:
+    async def store_many(self, items: dict[str, tuple[str, dict[str, Any]]]) -> set[str]:
         """
         Store multiple items in PostgreSQL using batch upsert.
 
@@ -370,10 +371,10 @@ class PostgresStateRepository:
             items: Dict mapping keys to (value, metadata) tuples
 
         Returns:
-            Number of items successfully stored
+            Set of keys that were successfully stored
         """
         if not items:
-            return 0
+            return set()
 
         try:
             records = []
@@ -391,11 +392,12 @@ class PostgresStateRepository:
 
             count = self.adapter.batch_upsert("state_warm", "key", records)
             self.adapter.commit()
-            return count
+            # All items succeeded (PostgreSQL batch_upsert is transactional)
+            return set(items.keys()) if count > 0 else set()
         except Exception as e:
             logger.error(f"PostgreSQL store_many failed: {e}")
             self.adapter.rollback()
-            return 0
+            return set()
 
     async def delete_many(self, keys: list[str]) -> int:
         """
@@ -551,7 +553,7 @@ class S3StateRepository:
         return {"key_count": 0}
 
     # Batch operations
-    async def store_many(self, items: dict[str, tuple[str, dict[str, Any]]]) -> int:
+    async def store_many(self, items: dict[str, tuple[str, dict[str, Any]]]) -> set[str]:
         """
         Store multiple items in S3.
 
@@ -562,12 +564,12 @@ class S3StateRepository:
             items: Dict mapping keys to (value, metadata) tuples
 
         Returns:
-            Number of items successfully stored
+            Set of keys that were successfully stored
         """
         if not items:
-            return 0
+            return set()
 
-        count = 0
+        successful_keys = set()
         for key, (value, metadata) in items.items():
             try:
                 checksum = metadata.get("checksum", "")
@@ -578,11 +580,11 @@ class S3StateRepository:
                     storage_class="STANDARD_IA",
                     metadata={"checksum": checksum},
                 )
-                count += 1
+                successful_keys.add(key)
             except Exception as e:
                 logger.error(f"S3 store failed for {key}: {e}")
 
-        return count
+        return successful_keys
 
     async def delete_many(self, keys: list[str]) -> int:
         """

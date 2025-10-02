@@ -30,6 +30,26 @@ from bot_v2.state.utils.adapters import (
 logger = logging.getLogger(__name__)
 
 
+@dataclass
+class StateRepositories:
+    """
+    Bundle of tier-specific repositories for direct access.
+
+    Useful for batch operations (backup, checkpoint, recovery) that don't
+    need StateManager's auto-promotion and caching overhead.
+
+    Example:
+        repos = state_manager.get_repositories()
+        keys = await repos.redis.keys("position:*")
+        for key in keys:
+            value = await repos.redis.fetch(key)
+    """
+
+    redis: RedisStateRepository | None
+    postgres: PostgresStateRepository | None
+    s3: S3StateRepository | None
+
+
 class StateCategory(Enum):
     """State storage tier categories"""
 
@@ -426,6 +446,33 @@ class StateManager:
         stats["total_keys"] = stats["hot_keys"] + stats["warm_keys"] + stats["cold_keys"]
 
         return stats
+
+    def get_repositories(self) -> StateRepositories:
+        """
+        Get direct access to tier-specific repositories.
+
+        Useful for batch operations (backup, checkpoint, recovery) that:
+        - Don't need auto-promotion logic
+        - Don't benefit from local caching
+        - Need tier-specific access for performance
+
+        Returns:
+            StateRepositories bundle with redis, postgres, and s3 repositories
+
+        Example:
+            repos = state_manager.get_repositories()
+
+            # Fast HOT-tier backup
+            if repos.redis:
+                keys = await repos.redis.keys("position:*")
+                for key in keys:
+                    value = await repos.redis.fetch(key)
+        """
+        return StateRepositories(
+            redis=self._redis_repo,
+            postgres=self._postgres_repo,
+            s3=self._s3_repo,
+        )
 
     def close(self) -> None:
         """Close all connections"""

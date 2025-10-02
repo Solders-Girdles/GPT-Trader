@@ -567,26 +567,50 @@ class BackupManager:
         ]
 
         # Use direct repository access for batch operations (99%+ faster)
-        repos = self.state_manager.get_repositories()
+        # Fall back to StateManager if repositories unavailable
+        try:
+            repos = self.state_manager.get_repositories()
+            use_direct_access = repos is not None
+        except (AttributeError, TypeError):
+            use_direct_access = False
 
         with self._metrics.time_operation("backup.collect_all_data"):
-            for pattern in patterns:
-                # Try HOT tier (Redis) first
-                if repos.redis:
-                    keys = await repos.redis.keys(pattern)
-                    for key in keys:
-                        value = await repos.redis.fetch(key)
-                        if value:
-                            data[key] = value
-
-                # Check WARM tier (PostgreSQL) for keys not in HOT
-                if repos.postgres:
-                    keys = await repos.postgres.keys(pattern)
-                    for key in keys:
-                        if key not in data:  # Skip if already found in HOT
-                            value = await repos.postgres.fetch(key)
+            if use_direct_access:
+                # Direct repository access (fast path)
+                for pattern in patterns:
+                    # Try HOT tier (Redis) first
+                    if repos.redis:
+                        keys = await repos.redis.keys(pattern)
+                        for key in keys:
+                            value = await repos.redis.fetch(key)
                             if value:
                                 data[key] = value
+
+                    # Check WARM tier (PostgreSQL) for keys not in HOT
+                    if repos.postgres:
+                        keys = await repos.postgres.keys(pattern)
+                        for key in keys:
+                            if key not in data:  # Skip if already found in HOT
+                                value = await repos.postgres.fetch(key)
+                                if value:
+                                    data[key] = value
+
+                    # Check COLD tier (S3) for keys not in HOT/WARM
+                    if repos.s3:
+                        keys = await repos.s3.keys(pattern)
+                        for key in keys:
+                            if key not in data:  # Skip if already found in HOT/WARM
+                                value = await repos.s3.fetch(key)
+                                if value:
+                                    data[key] = value
+            else:
+                # Fallback: StateManager access (slower but compatible)
+                for pattern in patterns:
+                    keys = await self.state_manager.get_keys_by_pattern(pattern)
+                    for key in keys:
+                        value = await self.state_manager.get_state(key)
+                        if value:
+                            data[key] = value
 
         logger.debug(f"Collected {len(data)} items for full backup")
 
@@ -601,81 +625,78 @@ class BackupManager:
         patterns = ["position:*", "order:*", "portfolio*"]
 
         # Use direct repository access for batch operations (99%+ faster)
-        repos = self.state_manager.get_repositories()
+        # Fall back to StateManager if repositories unavailable
+        try:
+            repos = self.state_manager.get_repositories()
+            use_direct_access = repos is not None
+        except (AttributeError, TypeError):
+            use_direct_access = False
+
+        def _check_timestamp(value: Any) -> bool:
+            """Helper to check if value's timestamp is after 'since'."""
+            if not (value and isinstance(value, dict)):
+                return False
+
+            timestamp = value.get("timestamp") or value.get("last_updated")
+            if not timestamp:
+                return True  # Include if no timestamp
+
+            try:
+                if isinstance(timestamp, str):
+                    dt = datetime.fromisoformat(timestamp)
+                else:
+                    dt = timestamp
+
+                if isinstance(dt, datetime) and dt.tzinfo is None:
+                    dt = dt.replace(tzinfo=timezone.utc)
+
+                return dt > since
+            except (TypeError, ValueError) as exc:
+                logger.debug(
+                    "Unable to parse timestamp %s: %s",
+                    timestamp,
+                    exc,
+                    exc_info=True,
+                )
+                return True  # Include if timestamp is malformed
 
         with self._metrics.time_operation("backup.collect_changed_data"):
-            for pattern in patterns:
-                # Collect from HOT tier (Redis)
-                if repos.redis:
-                    keys = await repos.redis.keys(pattern)
-                    for key in keys:
-                        value = await repos.redis.fetch(key)
-
-                        # Check if data has timestamp
-                        if value and isinstance(value, dict):
-                            timestamp = value.get("timestamp") or value.get("last_updated")
-
-                            if timestamp:
-                                try:
-                                    if isinstance(timestamp, str):
-                                        dt = datetime.fromisoformat(timestamp)
-                                    else:
-                                        dt = timestamp
-
-                                    if isinstance(dt, datetime) and dt.tzinfo is None:
-                                        dt = dt.replace(tzinfo=timezone.utc)
-
-                                    if dt > since:
-                                        data[key] = value
-                                except (TypeError, ValueError) as exc:
-                                    logger.debug(
-                                        "Unable to parse timestamp %s for key %s: %s",
-                                        timestamp,
-                                        key,
-                                        exc,
-                                        exc_info=True,
-                                    )
-                                    # Include if timestamp is malformed
-                                    data[key] = value
-                            else:
-                                # Include if no timestamp
+            if use_direct_access:
+                # Direct repository access (fast path)
+                for pattern in patterns:
+                    # Collect from HOT tier (Redis)
+                    if repos.redis:
+                        keys = await repos.redis.keys(pattern)
+                        for key in keys:
+                            value = await repos.redis.fetch(key)
+                            if _check_timestamp(value):
                                 data[key] = value
 
-                # Check WARM tier for keys not already found
-                if repos.postgres:
-                    keys = await repos.postgres.keys(pattern)
-                    for key in keys:
-                        if key in data:
-                            continue
-
-                        value = await repos.postgres.fetch(key)
-
-                        if value and isinstance(value, dict):
-                            timestamp = value.get("timestamp") or value.get("last_updated")
-
-                            if timestamp:
-                                try:
-                                    if isinstance(timestamp, str):
-                                        dt = datetime.fromisoformat(timestamp)
-                                    else:
-                                        dt = timestamp
-
-                                    if isinstance(dt, datetime) and dt.tzinfo is None:
-                                        dt = dt.replace(tzinfo=timezone.utc)
-
-                                    if dt > since:
-                                        data[key] = value
-                                except (TypeError, ValueError) as exc:
-                                    logger.debug(
-                                        "Unable to parse timestamp %s for key %s: %s",
-                                        timestamp,
-                                        key,
-                                        exc,
-                                        exc_info=True,
-                                    )
+                    # Check WARM tier for keys not already found
+                    if repos.postgres:
+                        keys = await repos.postgres.keys(pattern)
+                        for key in keys:
+                            if key not in data:
+                                value = await repos.postgres.fetch(key)
+                                if _check_timestamp(value):
                                     data[key] = value
-                            else:
-                                data[key] = value
+
+                    # Check COLD tier (S3) for keys not in HOT/WARM
+                    if repos.s3:
+                        keys = await repos.s3.keys(pattern)
+                        for key in keys:
+                            if key not in data:
+                                value = await repos.s3.fetch(key)
+                                if _check_timestamp(value):
+                                    data[key] = value
+            else:
+                # Fallback: StateManager access (slower but compatible)
+                for pattern in patterns:
+                    keys = await self.state_manager.get_keys_by_pattern(pattern)
+                    for key in keys:
+                        value = await self.state_manager.get_state(key)
+                        if _check_timestamp(value):
+                            data[key] = value
 
         logger.debug(f"Collected {len(data)} changed items since {since}")
 
@@ -703,25 +724,48 @@ class BackupManager:
         result = {}
 
         # Use direct repository access for batch operations (99%+ faster)
-        repos = self.state_manager.get_repositories()
+        # Fall back to StateManager if repositories unavailable
+        try:
+            repos = self.state_manager.get_repositories()
+            use_direct_access = repos is not None
+        except (AttributeError, TypeError):
+            use_direct_access = False
 
         with self._metrics.time_operation("backup.get_all_by_pattern"):
-            # Try HOT tier (Redis) first
-            if repos.redis:
-                keys = await repos.redis.keys(pattern)
-                for key in keys:
-                    value = await repos.redis.fetch(key)
-                    if value:
-                        result[key] = value
-
-            # Check WARM tier (PostgreSQL) for keys not in HOT
-            if repos.postgres:
-                keys = await repos.postgres.keys(pattern)
-                for key in keys:
-                    if key not in result:  # Skip if already found in HOT
-                        value = await repos.postgres.fetch(key)
+            if use_direct_access:
+                # Direct repository access (fast path)
+                # Try HOT tier (Redis) first
+                if repos.redis:
+                    keys = await repos.redis.keys(pattern)
+                    for key in keys:
+                        value = await repos.redis.fetch(key)
                         if value:
                             result[key] = value
+
+                # Check WARM tier (PostgreSQL) for keys not in HOT
+                if repos.postgres:
+                    keys = await repos.postgres.keys(pattern)
+                    for key in keys:
+                        if key not in result:  # Skip if already found in HOT
+                            value = await repos.postgres.fetch(key)
+                            if value:
+                                result[key] = value
+
+                # Check COLD tier (S3) for keys not in HOT/WARM
+                if repos.s3:
+                    keys = await repos.s3.keys(pattern)
+                    for key in keys:
+                        if key not in result:  # Skip if already found in HOT/WARM
+                            value = await repos.s3.fetch(key)
+                            if value:
+                                result[key] = value
+            else:
+                # Fallback: StateManager access (slower but compatible)
+                keys = await self.state_manager.get_keys_by_pattern(pattern)
+                for key in keys:
+                    value = await self.state_manager.get_state(key)
+                    if value:
+                        result[key] = value
 
         return result
 

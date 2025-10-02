@@ -50,12 +50,20 @@ class TestCrashRecoverySimulation:
             state_storage[key] = value
             return True
 
+        async def mock_batch_set_state(items: dict) -> int:
+            count = 0
+            for key, (value, category) in items.items():
+                state_storage[key] = value
+                count += 1
+            return count
+
         async def mock_get_state(key: str) -> Any:
             return state_storage.get(key)
 
         mock_state_manager = Mock()
         mock_state_manager.create_snapshot = AsyncMock(side_effect=mock_create_snapshot)
         mock_state_manager.set_state = AsyncMock(side_effect=mock_set_state)
+        mock_state_manager.batch_set_state = AsyncMock(side_effect=mock_batch_set_state)
         mock_state_manager.get_state = AsyncMock(side_effect=mock_get_state)
         mock_state_manager.get_keys_by_pattern = AsyncMock(return_value=[])
 
@@ -239,9 +247,14 @@ class TestDataConsistencyValidation:
                 raise Exception("Simulated restore failure")
             return True
 
+        async def failing_batch_set_state(items: dict) -> int:
+            # Simulate failure when restoring items
+            raise Exception("Simulated batch restore failure")
+
         mock_state_manager = Mock()
         mock_state_manager.create_snapshot = AsyncMock(return_value=sample_runtime_state)
         mock_state_manager.set_state = AsyncMock(side_effect=failing_set_state)
+        mock_state_manager.batch_set_state = AsyncMock(side_effect=failing_batch_set_state)
         mock_state_manager.get_keys_by_pattern = AsyncMock(return_value=[])
 
         manager = BackupManager(state_manager=mock_state_manager, config=backup_config)

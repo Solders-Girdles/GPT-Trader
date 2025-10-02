@@ -309,7 +309,15 @@ class TestRuntimeStateRestoration:
             restored_data[key] = value
             return True
 
+        async def mock_batch_set_state(items: dict) -> int:
+            count = 0
+            for key, (value, category) in items.items():
+                restored_data[key] = value
+                count += 1
+            return count
+
         mock_state_manager.set_state = AsyncMock(side_effect=mock_set_state)
+        mock_state_manager.batch_set_state = AsyncMock(side_effect=mock_batch_set_state)
         mock_state_manager.create_snapshot = AsyncMock(return_value=sample_runtime_state)
 
         manager = BackupManager(state_manager=mock_state_manager, config=backup_config)

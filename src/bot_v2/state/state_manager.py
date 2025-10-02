@@ -14,6 +14,7 @@ from enum import Enum
 from typing import Any
 
 from bot_v2.state.cache_manager import StateCacheManager
+from bot_v2.state.performance import StatePerformanceMetrics
 from bot_v2.state.repositories import (
     PostgresStateRepository,
     RedisStateRepository,
@@ -93,6 +94,7 @@ class StateConfig:
     enable_compression: bool = True
     enable_encryption: bool = False
     cache_size_mb: int = 100
+    enable_performance_tracking: bool = False
 
 
 class StateManager:
@@ -170,6 +172,9 @@ class StateManager:
             s3_repo=self._s3_repo,
         )
 
+        # Initialize performance metrics
+        self._metrics = StatePerformanceMetrics(enabled=self.config.enable_performance_tracking)
+
     # Backwards compatibility properties for tests
     @property
     def _local_cache(self) -> dict[str, Any]:
@@ -209,43 +214,44 @@ class StateManager:
         Returns:
             State value or None if not found
         """
-        # Check local cache first
-        cached_value = self._cache_manager.get(key)
-        if cached_value is not None:
-            return cached_value
+        with self._metrics.time_operation("state_manager.get_state"):
+            # Check local cache first
+            cached_value = self._cache_manager.get(key)
+            if cached_value is not None:
+                return cached_value
 
-        # Try hot storage (Redis)
-        value = await self._get_from_redis(key)
-        if value is not None:
-            self._cache_manager.set(key, value)
-            return value
+            # Try hot storage (Redis)
+            value = await self._get_from_redis(key)
+            if value is not None:
+                self._cache_manager.set(key, value)
+                return value
 
-        # Try warm storage (PostgreSQL)
-        value = await self._get_from_postgres(key)
-        if value is not None:
-            if self._promotion_policy.should_auto_promote(StateCategory.WARM, auto_promote):
-                # Promote to hot storage
-                serialized = json.dumps(value, default=str)
-                await self._promotion_policy.promote_value(
-                    key, serialized, StateCategory.WARM, {"ttl_seconds": None}
-                )
-            self._cache_manager.set(key, value)
-            return value
+            # Try warm storage (PostgreSQL)
+            value = await self._get_from_postgres(key)
+            if value is not None:
+                if self._promotion_policy.should_auto_promote(StateCategory.WARM, auto_promote):
+                    # Promote to hot storage
+                    serialized = json.dumps(value, default=str)
+                    await self._promotion_policy.promote_value(
+                        key, serialized, StateCategory.WARM, {"ttl_seconds": None}
+                    )
+                self._cache_manager.set(key, value)
+                return value
 
-        # Try cold storage (S3)
-        value = await self._get_from_s3(key)
-        if value is not None:
-            if self._promotion_policy.should_auto_promote(StateCategory.COLD, auto_promote):
-                # Promote to warm storage
-                serialized = json.dumps(value, default=str)
-                checksum = self._cache_manager.calculate_checksum(serialized)
-                await self._promotion_policy.promote_value(
-                    key, serialized, StateCategory.COLD, {"checksum": checksum}
-                )
-            self._cache_manager.set(key, value)
-            return value
+            # Try cold storage (S3)
+            value = await self._get_from_s3(key)
+            if value is not None:
+                if self._promotion_policy.should_auto_promote(StateCategory.COLD, auto_promote):
+                    # Promote to warm storage
+                    serialized = json.dumps(value, default=str)
+                    checksum = self._cache_manager.calculate_checksum(serialized)
+                    await self._promotion_policy.promote_value(
+                        key, serialized, StateCategory.COLD, {"checksum": checksum}
+                    )
+                self._cache_manager.set(key, value)
+                return value
 
-        return None
+            return None
 
     async def set_state(
         self,
@@ -266,73 +272,77 @@ class StateManager:
         Returns:
             Success status
         """
-        try:
-            # Serialize value
-            serialized = json.dumps(value, default=str)
-            checksum = self._cache_manager.calculate_checksum(serialized)
+        with self._metrics.time_operation("state_manager.set_state"):
+            try:
+                # Serialize value
+                serialized = json.dumps(value, default=str)
+                checksum = self._cache_manager.calculate_checksum(serialized)
 
-            # Store in appropriate tier
-            if category == StateCategory.HOT:
-                success = await self._set_in_redis(key, serialized, ttl_seconds)
-            elif category == StateCategory.WARM:
-                success = await self._set_in_postgres(key, serialized, checksum)
-            else:  # COLD
-                success = await self._set_in_s3(key, serialized, checksum)
+                # Store in appropriate tier
+                if category == StateCategory.HOT:
+                    success = await self._set_in_redis(key, serialized, ttl_seconds)
+                elif category == StateCategory.WARM:
+                    success = await self._set_in_postgres(key, serialized, checksum)
+                else:  # COLD
+                    success = await self._set_in_s3(key, serialized, checksum)
 
-            if success:
-                # Update metadata
-                self._cache_manager.update_metadata(
-                    key=key,
-                    category=category,
-                    size_bytes=len(serialized.encode()),
-                    checksum=checksum,
-                    ttl_seconds=ttl_seconds,
-                )
+                if success:
+                    # Update metadata
+                    self._cache_manager.update_metadata(
+                        key=key,
+                        category=category,
+                        size_bytes=len(serialized.encode()),
+                        checksum=checksum,
+                        ttl_seconds=ttl_seconds,
+                    )
 
-                # Update local cache
-                self._cache_manager.set(key, value)
+                    # Update local cache
+                    self._cache_manager.set(key, value)
 
-            return success
+                return success
 
-        except Exception as e:
-            logger.error(f"Failed to set state for key {key}: {e}")
-            return False
+            except Exception as e:
+                logger.error(f"Failed to set state for key {key}: {e}")
+                return False
 
     async def delete_state(self, key: str) -> bool:
         """Delete state from all tiers"""
-        success = True
+        with self._metrics.time_operation("state_manager.delete_state"):
+            success = True
 
-        # Delete from all tiers
-        if self.redis_adapter:
-            try:
-                self.redis_adapter.delete(key)
-            except Exception as exc:
-                success = False
-                logger.warning("Failed to delete %s from Redis: %s", key, exc, exc_info=True)
-
-        if self.postgres_adapter:
-            try:
-                self.postgres_adapter.execute("DELETE FROM state_warm WHERE key = %s", (key,))
-                self.postgres_adapter.commit()
-            except Exception as exc:
-                success = False
-                logger.warning("Failed to delete %s from PostgreSQL: %s", key, exc, exc_info=True)
+            # Delete from all tiers
+            if self.redis_adapter:
                 try:
-                    self.postgres_adapter.rollback()
-                except Exception:
-                    logger.debug("PostgreSQL rollback failed after delete error", exc_info=True)
+                    self.redis_adapter.delete(key)
+                except Exception as exc:
+                    success = False
+                    logger.warning("Failed to delete %s from Redis: %s", key, exc, exc_info=True)
 
-        if self.s3_adapter:
-            try:
-                self.s3_adapter.delete_object(bucket=self.config.s3_bucket, key=f"cold/{key}")
-            except Exception as exc:
-                success = False
-                logger.warning("Failed to delete %s from S3: %s", key, exc, exc_info=True)
+            if self.postgres_adapter:
+                try:
+                    self.postgres_adapter.execute("DELETE FROM state_warm WHERE key = %s", (key,))
+                    self.postgres_adapter.commit()
+                except Exception as exc:
+                    success = False
+                    logger.warning(
+                        "Failed to delete %s from PostgreSQL: %s", key, exc, exc_info=True
+                    )
+                    try:
+                        self.postgres_adapter.rollback()
+                    except Exception:
+                        logger.debug("PostgreSQL rollback failed after delete error", exc_info=True)
 
-        # Clear from caches
-        self._cache_manager.delete(key)
+            if self.s3_adapter:
+                try:
+                    self.s3_adapter.delete_object(bucket=self.config.s3_bucket, key=f"cold/{key}")
+                except Exception as exc:
+                    success = False
+                    logger.warning("Failed to delete %s from S3: %s", key, exc, exc_info=True)
 
-        return success
+            # Clear from caches
+            self._cache_manager.delete(key)
+
+            return success
 
     async def _get_from_redis(self, key: str) -> Any | None:
         """Get value from Redis"""
@@ -374,24 +384,25 @@ class StateManager:
 
     async def get_keys_by_pattern(self, pattern: str) -> list[str]:
         """Get all keys matching pattern"""
-        keys = set()
+        with self._metrics.time_operation("state_manager.get_keys_by_pattern"):
+            keys = set()
 
-        # Check Redis
-        if self._redis_repo:
-            redis_keys = await self._redis_repo.keys(pattern)
-            keys.update(redis_keys)
+            # Check Redis
+            if self._redis_repo:
+                redis_keys = await self._redis_repo.keys(pattern)
+                keys.update(redis_keys)
 
-        # Check PostgreSQL
-        if self._postgres_repo:
-            pg_keys = await self._postgres_repo.keys(pattern)
-            keys.update(pg_keys)
+            # Check PostgreSQL
+            if self._postgres_repo:
+                pg_keys = await self._postgres_repo.keys(pattern)
+                keys.update(pg_keys)
 
-        # Check S3
-        if self._s3_repo:
-            s3_keys = await self._s3_repo.keys(pattern)
-            keys.update(s3_keys)
+            # Check S3
+            if self._s3_repo:
+                s3_keys = await self._s3_repo.keys(pattern)
+                keys.update(s3_keys)
 
-        return list(keys)
+            return list(keys)
 
     async def promote_to_hot(self, key: str) -> bool:
         """Manually promote state to hot tier"""
@@ -446,6 +457,21 @@ class StateManager:
         stats["total_keys"] = stats["hot_keys"] + stats["warm_keys"] + stats["cold_keys"]
 
         return stats
+
+    def get_performance_metrics(self) -> dict[str, Any]:
+        """
+        Get performance metrics for state operations.
+
+        Returns detailed timing statistics for state operations when
+        performance tracking is enabled via config.
+
+        Returns:
+            Dictionary with performance metrics or empty dict if disabled
+        """
+        if not self._metrics.is_enabled():
+            return {"enabled": False, "message": "Performance tracking disabled"}
+
+        return self._metrics.get_summary()
 
     def get_repositories(self) -> StateRepositories:
         """

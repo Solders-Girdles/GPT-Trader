@@ -24,6 +24,12 @@ from bot_v2.state.checkpoint import (
     create_checkpoint,
     restore_latest_checkpoint,
 )
+from bot_v2.state.performance import (
+    StatePerformanceMetrics,
+    disable_performance_tracking,
+    enable_performance_tracking,
+    get_global_metrics,
+)
 from bot_v2.state.recovery import (
     FailureEvent,
     FailureType,
@@ -57,6 +63,11 @@ __all__ = [
     "get_state",
     "set_state",
     "delete_state",
+    # Performance Metrics
+    "StatePerformanceMetrics",
+    "enable_performance_tracking",
+    "disable_performance_tracking",
+    "get_global_metrics",
     # Checkpoint Handler
     "CheckpointHandler",
     "Checkpoint",

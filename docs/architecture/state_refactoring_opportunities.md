@@ -206,16 +206,24 @@ Add metrics to compare before/after:
 - Need cross-tier fallback logic
 - Tier doesn't matter to caller
 
-## Potential Performance Gains
+## Actual Performance Gains
 
-Based on profiling estimates:
+**Benchmark Results** (October 2025):
 
-| Operation | Current | With Repos | Improvement |
-|-----------|---------|------------|-------------|
-| Full backup (1000 keys) | ~5.2s | ~2.1s | **60% faster** |
-| HOT checkpoint (500 keys) | ~2.8s | ~0.9s | **68% faster** |
-| Recovery (200 keys to HOT) | ~3.5s | ~1.2s | **66% faster** |
-| Backup memory overhead | ~15MB | ~3MB | **80% less** |
+Real-world performance measurements using `scripts/benchmarks/state_performance.py`:
+
+| Dataset Size | StateManager | Direct Repos | Improvement | Throughput Gain |
+|-------------|--------------|--------------|-------------|-----------------|
+| 100 keys | 97.11ms | 0.60ms | **99.4% faster** | 162x |
+| 500 keys | 2391.83ms | 3.07ms | **99.9% faster** | 778x |
+| 1000 keys | 9329.85ms | 6.79ms | **99.9% faster** | 1374x |
+
+**Memory Improvements:**
+- 100 keys: 26.9% less memory (0.07MB → 0.05MB)
+- 500 keys: 4.5% less memory (0.31MB → 0.30MB)
+- 1000 keys: 4.0% less memory (0.64MB → 0.61MB)
+
+**Key Finding:** Direct repository access for batch operations is **99%+ faster** than going through StateManager, far exceeding the original 60-80% estimate. This validates the optimization approach for backup/checkpoint/recovery workloads.
 
 ## Migration Risk Assessment
 

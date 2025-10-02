@@ -21,6 +21,16 @@ def mock_state_manager():
     manager.set_state = AsyncMock()
     manager.delete_state = AsyncMock()
     manager.get_keys_by_pattern = AsyncMock()
+
+    # Add batch operation mocks
+    async def batch_delete_mock(keys):
+        return len(keys)
+
+    async def batch_set_mock(items, ttl_seconds=None):
+        return len(items)
+
+    manager.batch_delete_state = AsyncMock(side_effect=batch_delete_mock)
+    manager.batch_set_state = AsyncMock(side_effect=batch_set_mock)
     return manager
 
 
@@ -104,7 +114,7 @@ class TestTradingRecoveryHandlers:
         success = await trading_handlers.recover_trading_engine(recovery_operation)
 
         assert success is True
-        assert "Cancelled 0 pending orders" in recovery_operation.actions_taken[1]
+        assert "No orders found" in recovery_operation.actions_taken[1]
 
     @pytest.mark.asyncio
     async def test_recover_trading_engine_no_portfolio_data(
@@ -143,8 +153,8 @@ class TestTradingRecoveryHandlers:
         success = await trading_handlers.recover_trading_engine(recovery_operation)
 
         assert success is True
-        # Invalid position should be deleted
-        trading_handlers.state_manager.delete_state.assert_called_once_with("position:ETH")
+        # Invalid position should be deleted via batch_delete_state
+        trading_handlers.state_manager.batch_delete_state.assert_called_once_with(["position:ETH"])
 
     @pytest.mark.asyncio
     async def test_recover_trading_engine_exception(self, trading_handlers, recovery_operation):
@@ -178,8 +188,12 @@ class TestTradingRecoveryHandlers:
         assert success is True
         assert "Recovered 2 ML models" in recovery_operation.actions_taken[1]
 
-        # Verify models were reset to stable version
-        assert trading_handlers.state_manager.set_state.call_count >= 2
+        # Verify models were reset to stable version via batch_set_state
+        assert trading_handlers.state_manager.batch_set_state.call_count == 1
+        items = trading_handlers.state_manager.batch_set_state.call_args[0][0]
+        assert len(items) == 2  # Both models should be in the batch
+        assert "ml_model:momentum" in items
+        assert "ml_model:reversal" in items
 
     @pytest.mark.asyncio
     async def test_recover_ml_models_no_stable_version(self, trading_handlers, recovery_operation):
@@ -194,7 +208,7 @@ class TestTradingRecoveryHandlers:
         success = await trading_handlers.recover_ml_models(recovery_operation)
 
         assert success is True
-        assert "Recovered 0 ML models" in recovery_operation.actions_taken[1]
+        assert "No ML models recovered" in recovery_operation.actions_taken[1]
 
     @pytest.mark.asyncio
     async def test_recover_ml_models_no_models(self, trading_handlers, recovery_operation):

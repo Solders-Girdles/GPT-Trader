@@ -20,6 +20,8 @@ class StorageRecoveryHandlers:
     async def recover_redis(self, operation: RecoveryOperation) -> bool:
         """Recover from Redis failure"""
         try:
+            from bot_v2.state.state_manager import StateCategory
+
             logger.info("Recovering Redis from warm storage")
             operation.actions_taken.append("Starting Redis recovery from PostgreSQL")
 
@@ -36,25 +38,34 @@ class StorageRecoveryHandlers:
                         (datetime.utcnow() - timedelta(minutes=5),),
                     )
 
-                    recovered_count = 0
+                    # Collect all items to restore using batch operations
+                    items_to_restore = {}
                     for row in cursor.fetchall():
                         key, data = row["key"], row["data"]
                         try:
-                            # Attempt to restore to Redis
-                            if self.state_manager.redis_client:
-                                self.state_manager.redis_client.set(key, json.dumps(data), ex=3600)
-                                recovered_count += 1
+                            # Parse JSON data if it's a string
+                            if isinstance(data, str):
+                                parsed_data = json.loads(data)
+                            else:
+                                parsed_data = data
+                            items_to_restore[key] = (parsed_data, StateCategory.HOT)
                         except Exception as exc:
                             logger.debug(
-                                "Failed to restore key %s to Redis: %s",
+                                "Failed to parse data for key %s: %s",
                                 key,
                                 exc,
                                 exc_info=True,
                             )
 
-                    operation.actions_taken.append(f"Recovered {recovered_count} keys to Redis")
-                    logger.info(f"Redis recovery completed with {recovered_count} keys")
-                    return recovered_count > 0
+                    # Batch restore to Redis
+                    if items_to_restore:
+                        recovered_count = await self.state_manager.batch_set_state(items_to_restore)
+                        operation.actions_taken.append(f"Recovered {recovered_count} keys to Redis")
+                        logger.info(f"Redis recovery completed with {recovered_count} keys")
+                        return recovered_count > 0
+                    else:
+                        operation.actions_taken.append("No keys found to recover")
+                        return False
 
             return False
 

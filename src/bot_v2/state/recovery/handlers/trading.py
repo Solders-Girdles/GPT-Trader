@@ -17,22 +17,32 @@ class TradingRecoveryHandlers:
     async def recover_trading_engine(self, operation: RecoveryOperation) -> bool:
         """Recover from trading engine crash"""
         try:
+            from bot_v2.state.state_manager import StateCategory
+
             logger.info("Recovering trading engine")
             operation.actions_taken.append("Starting trading engine recovery")
 
-            # Cancel all pending orders
+            # Cancel all pending orders using batch operations
             order_keys = await self.state_manager.get_keys_by_pattern("order:*")
-            cancelled_count = 0
 
-            for key in order_keys:
-                order_data = await self.state_manager.get_state(key)
-                if order_data and order_data.get("status") == "pending":
-                    order_data["status"] = "cancelled"
-                    order_data["cancel_reason"] = "Trading engine recovery"
-                    await self.state_manager.set_state(key, order_data)
-                    cancelled_count += 1
+            if order_keys:
+                # Collect pending orders to cancel
+                orders_to_cancel = {}
+                for key in order_keys:
+                    order_data = await self.state_manager.get_state(key)
+                    if order_data and order_data.get("status") == "pending":
+                        order_data["status"] = "cancelled"
+                        order_data["cancel_reason"] = "Trading engine recovery"
+                        orders_to_cancel[key] = (order_data, StateCategory.HOT)
 
-            operation.actions_taken.append(f"Cancelled {cancelled_count} pending orders")
+                # Batch update cancelled orders
+                if orders_to_cancel:
+                    cancelled_count = await self.state_manager.batch_set_state(orders_to_cancel)
+                    operation.actions_taken.append(f"Cancelled {cancelled_count} pending orders")
+                else:
+                    operation.actions_taken.append("No pending orders to cancel")
+            else:
+                operation.actions_taken.append("No orders found")
 
             # Restore positions from last known state
             portfolio_data = await self.state_manager.get_state("portfolio_current")
@@ -40,15 +50,22 @@ class TradingRecoveryHandlers:
             if portfolio_data:
                 operation.actions_taken.append("Restored portfolio state")
 
-                # Verify position consistency
+                # Verify position consistency and collect invalid positions
                 position_keys = await self.state_manager.get_keys_by_pattern("position:*")
+                invalid_positions = []
+
                 for key in position_keys:
                     position = await self.state_manager.get_state(key)
                     if position:
                         # Validate position data
                         if not self._validate_position(position):
                             logger.warning(f"Invalid position found: {key}")
-                            await self.state_manager.delete_state(key)
+                            invalid_positions.append(key)
+
+                # Batch delete invalid positions
+                if invalid_positions:
+                    deleted_count = await self.state_manager.batch_delete_state(invalid_positions)
+                    operation.actions_taken.append(f"Removed {deleted_count} invalid positions")
 
             # Signal trading engine restart
             await self.state_manager.set_state("system:trading_engine_status", "recovered")
@@ -64,6 +81,8 @@ class TradingRecoveryHandlers:
     async def recover_ml_models(self, operation: RecoveryOperation) -> bool:
         """Recover from ML model failure"""
         try:
+            from bot_v2.state.state_manager import StateCategory
+
             logger.info("Recovering ML models")
             operation.actions_taken.append("Starting ML model recovery")
 
@@ -74,7 +93,8 @@ class TradingRecoveryHandlers:
                 await self.state_manager.set_state("system:ml_models_available", False)
                 return True
 
-            recovered_models = 0
+            # Collect models to recover using batch operations
+            models_to_recover = {}
 
             for key in ml_keys:
                 model_state = await self.state_manager.get_state(key)
@@ -82,13 +102,13 @@ class TradingRecoveryHandlers:
                     # Reset model to last stable version
                     if "last_stable_version" in model_state:
                         model_state["current_version"] = model_state["last_stable_version"]
-                        await self.state_manager.set_state(key, model_state)
-                        recovered_models += 1
+                        models_to_recover[key] = (model_state, StateCategory.WARM)
 
-            operation.actions_taken.append(f"Recovered {recovered_models} ML models")
-
-            # Fall back to baseline models if needed
-            if recovered_models == 0:
+            # Batch update recovered models
+            if models_to_recover:
+                recovered_count = await self.state_manager.batch_set_state(models_to_recover)
+                operation.actions_taken.append(f"Recovered {recovered_count} ML models")
+            else:
                 operation.actions_taken.append("No ML models recovered, using baseline strategies")
                 await self.state_manager.set_state("system:ml_models_available", False)
 

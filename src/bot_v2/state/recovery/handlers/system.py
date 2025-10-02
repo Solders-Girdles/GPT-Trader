@@ -113,12 +113,13 @@ class SystemRecoveryHandlers:
             # Signal API gateway restart
             await self.state_manager.set_state("system:api_gateway_status", "restarting")
 
-            # Clear API rate limit counters
+            # Clear API rate limit counters using batch delete
             rate_limit_keys = await self.state_manager.get_keys_by_pattern("rate_limit:*")
-            for key in rate_limit_keys:
-                await self.state_manager.delete_state(key)
-
-            operation.actions_taken.append("Cleared rate limit counters")
+            if rate_limit_keys:
+                deleted_count = await self.state_manager.batch_delete_state(rate_limit_keys)
+                operation.actions_taken.append(f"Cleared {deleted_count} rate limit counters")
+            else:
+                operation.actions_taken.append("No rate limit counters to clear")
 
             # Update gateway status
             await self.state_manager.set_state("system:api_gateway_status", "recovered")
@@ -135,16 +136,26 @@ class SystemRecoveryHandlers:
         try:
             from bot_v2.state.state_manager import StateCategory
 
-            # Re-sync critical state across tiers
+            # Re-sync critical state across tiers using batch operations
             hot_keys = await self.state_manager.get_keys_by_pattern("position:*")
 
+            if not hot_keys:
+                logger.info("No positions to synchronize")
+                return
+
+            # Collect all position data
+            items_to_sync = {}
             for key in hot_keys:
                 value = await self.state_manager.get_state(key)
                 if value:
-                    # Force write to ensure consistency
-                    await self.state_manager.set_state(key, value, StateCategory.HOT)
+                    items_to_sync[key] = (value, StateCategory.HOT)
 
-            logger.info("State synchronization completed")
+            # Batch write to ensure consistency
+            if items_to_sync:
+                synced_count = await self.state_manager.batch_set_state(items_to_sync)
+                logger.info(f"State synchronization completed: {synced_count} positions synced")
+            else:
+                logger.info("No valid positions to synchronize")
 
         except Exception as e:
             logger.error(f"State synchronization failed: {e}")

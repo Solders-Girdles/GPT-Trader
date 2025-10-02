@@ -55,6 +55,11 @@ def mock_redis_adapter() -> Mock:
     adapter.keys.return_value = []
     adapter.dbsize.return_value = 0
     adapter.close.return_value = None
+    # Batch operations
+    adapter.mget.return_value = []
+    adapter.mset.return_value = True
+    adapter.msetex.return_value = True
+    adapter.delete_many.return_value = 0
     return adapter
 
 
@@ -70,6 +75,10 @@ def mock_postgres_adapter() -> Mock:
     adapter.commit.return_value = None
     adapter.rollback.return_value = None
     adapter.close.return_value = None
+    # Batch operations
+    adapter.executemany.return_value = None
+    adapter.batch_upsert.return_value = 0
+    adapter.batch_delete.return_value = 0
     return adapter
 
 
@@ -86,6 +95,8 @@ def mock_s3_adapter() -> Mock:
     adapter.put_object.return_value = {}
     adapter.delete_object.return_value = {}
     adapter.list_objects_v2.return_value = {}
+    # Batch operations
+    adapter.delete_objects.return_value = {"Deleted": [], "Errors": []}
     return adapter
 
 
@@ -116,6 +127,19 @@ class FailingRedisAdapter(RedisAdapter):
     def close(self) -> None:
         pass
 
+    # Batch operations
+    def mget(self, keys: list[str]) -> list[str | None]:
+        raise RuntimeError("redis mget failure")
+
+    def mset(self, mapping: dict[str, str]) -> bool:
+        raise RuntimeError("redis mset failure")
+
+    def msetex(self, mapping: dict[str, str], ttl_seconds: int) -> bool:
+        raise RuntimeError("redis msetex failure")
+
+    def delete_many(self, keys: list[str]) -> int:
+        raise RuntimeError("redis delete_many failure")
+
 
 class FailingPostgresAdapter(PostgresAdapter):
     """Postgres adapter that fails deterministically for degradation testing."""
@@ -131,6 +155,16 @@ class FailingPostgresAdapter(PostgresAdapter):
 
     def close(self) -> None:
         pass
+
+    # Batch operations
+    def executemany(self, query: str, params_list: list[tuple]) -> None:
+        raise RuntimeError("pg executemany failure")
+
+    def batch_upsert(self, table: str, key_column: str, records: list[dict]) -> int:
+        raise RuntimeError("pg batch_upsert failure")
+
+    def batch_delete(self, table: str, key_column: str, keys: list[str]) -> int:
+        raise RuntimeError("pg batch_delete failure")
 
 
 class FailingS3Adapter(S3Adapter):
@@ -157,6 +191,10 @@ class FailingS3Adapter(S3Adapter):
 
     def list_objects_v2(self, bucket: str, prefix: str = "") -> dict:
         raise RuntimeError("s3 list failure")
+
+    # Batch operations
+    def delete_objects(self, bucket: str, keys: list[str]) -> dict:
+        raise RuntimeError("s3 delete_objects failure")
 
 
 @pytest.fixture

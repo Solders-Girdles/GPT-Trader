@@ -49,6 +49,27 @@ class RedisAdapter(ABC):
         """Close Redis connection."""
         pass
 
+    # Batch operations
+    @abstractmethod
+    def mget(self, keys: list[str]) -> list[str | None]:
+        """Get multiple values from Redis."""
+        pass
+
+    @abstractmethod
+    def mset(self, mapping: dict[str, str]) -> bool:
+        """Set multiple key-value pairs in Redis."""
+        pass
+
+    @abstractmethod
+    def msetex(self, mapping: dict[str, str], ttl_seconds: int) -> bool:
+        """Set multiple key-value pairs with TTL using pipeline."""
+        pass
+
+    @abstractmethod
+    def delete_many(self, keys: list[str]) -> int:
+        """Delete multiple keys from Redis."""
+        pass
+
 
 class PostgresAdapter(ABC):
     """Abstract adapter for PostgreSQL operations."""
@@ -71,6 +92,22 @@ class PostgresAdapter(ABC):
     @abstractmethod
     def close(self) -> None:
         """Close PostgreSQL connection."""
+        pass
+
+    # Batch operations
+    @abstractmethod
+    def executemany(self, query: str, params_list: list[tuple]) -> None:
+        """Execute query with multiple parameter sets."""
+        pass
+
+    @abstractmethod
+    def batch_upsert(self, table: str, key_column: str, records: list[dict[str, Any]]) -> int:
+        """Batch upsert records into table."""
+        pass
+
+    @abstractmethod
+    def batch_delete(self, table: str, key_column: str, keys: list[str]) -> int:
+        """Delete multiple records by key."""
         pass
 
 
@@ -107,6 +144,12 @@ class S3Adapter(ABC):
     @abstractmethod
     def list_objects_v2(self, bucket: str, prefix: str = "") -> dict[str, Any]:
         """List objects in S3 bucket."""
+        pass
+
+    # Batch operations
+    @abstractmethod
+    def delete_objects(self, bucket: str, keys: list[str]) -> dict[str, Any]:
+        """Delete multiple objects from S3 (up to 1000 keys)."""
         pass
 
 
@@ -171,6 +214,48 @@ class DefaultRedisAdapter(RedisAdapter):
         if self._client:
             self._client.close()
 
+    # Batch operations
+    def mget(self, keys: list[str]) -> list[str | None]:
+        if not self._client or not keys:
+            return []
+        try:
+            return self._client.mget(keys)
+        except Exception as e:
+            logger.error(f"Redis mget failed: {e}")
+            return []
+
+    def mset(self, mapping: dict[str, str]) -> bool:
+        if not self._client or not mapping:
+            return False
+        try:
+            return self._client.mset(mapping)
+        except Exception as e:
+            logger.error(f"Redis mset failed: {e}")
+            return False
+
+    def msetex(self, mapping: dict[str, str], ttl_seconds: int) -> bool:
+        """Set multiple key-value pairs with TTL using pipeline."""
+        if not self._client or not mapping:
+            return False
+        try:
+            pipe = self._client.pipeline()
+            for key, value in mapping.items():
+                pipe.setex(key, ttl_seconds, value)
+            pipe.execute()
+            return True
+        except Exception as e:
+            logger.error(f"Redis msetex failed: {e}")
+            return False
+
+    def delete_many(self, keys: list[str]) -> int:
+        if not self._client or not keys:
+            return 0
+        try:
+            return self._client.delete(*keys)
+        except Exception as e:
+            logger.error(f"Redis delete_many failed: {e}")
+            return 0
+
 
 class DefaultPostgresAdapter(PostgresAdapter):
     """Default PostgreSQL adapter using psycopg2."""
@@ -214,6 +299,67 @@ class DefaultPostgresAdapter(PostgresAdapter):
     def close(self) -> None:
         if self._conn:
             self._conn.close()
+
+    # Batch operations
+    def executemany(self, query: str, params_list: list[tuple]) -> None:
+        """Execute query with multiple parameter sets."""
+        if not self._conn or not params_list:
+            return
+
+        try:
+            with self._conn.cursor() as cursor:
+                cursor.executemany(query, params_list)
+        except Exception as e:
+            logger.error(f"PostgreSQL executemany failed: {e}")
+            raise
+
+    def batch_upsert(self, table: str, key_column: str, records: list[dict[str, Any]]) -> int:
+        """Batch upsert records into table."""
+        if not self._conn or not records:
+            return 0
+
+        try:
+            # Build column list from first record
+            columns = list(records[0].keys())
+            col_names = ", ".join(columns)
+            placeholders = ", ".join(["%s"] * len(columns))
+            update_clause = ", ".join(
+                [f"{col} = EXCLUDED.{col}" for col in columns if col != key_column]
+            )
+
+            query = f"""
+                INSERT INTO {table} ({col_names})
+                VALUES ({placeholders})
+                ON CONFLICT ({key_column}) DO UPDATE SET
+                    {update_clause}
+            """
+
+            params_list = [tuple(rec[col] for col in columns) for rec in records]
+
+            with self._conn.cursor() as cursor:
+                cursor.executemany(query, params_list)
+
+            return len(records)
+        except Exception as e:
+            logger.error(f"PostgreSQL batch_upsert failed: {e}")
+            raise
+
+    def batch_delete(self, table: str, key_column: str, keys: list[str]) -> int:
+        """Delete multiple records by key."""
+        if not self._conn or not keys:
+            return 0
+
+        try:
+            placeholders = ", ".join(["%s"] * len(keys))
+            query = f"DELETE FROM {table} WHERE {key_column} IN ({placeholders})"
+
+            with self._conn.cursor() as cursor:
+                cursor.execute(query, tuple(keys))
+
+            return len(keys)
+        except Exception as e:
+            logger.error(f"PostgreSQL batch_delete failed: {e}")
+            raise
 
 
 class DefaultS3Adapter(S3Adapter):
@@ -269,3 +415,27 @@ class DefaultS3Adapter(S3Adapter):
         if not self._client:
             raise Exception("S3 client not available")
         return self._client.list_objects_v2(Bucket=bucket, Prefix=prefix)
+
+    # Batch operations
+    def delete_objects(self, bucket: str, keys: list[str]) -> dict[str, Any]:
+        """Delete multiple objects from S3 (up to 1000 keys per request)."""
+        if not self._client:
+            raise Exception("S3 client not available")
+        if not keys:
+            return {"Deleted": [], "Errors": []}
+
+        # S3 delete_objects accepts max 1000 keys per request
+        if len(keys) > 1000:
+            logger.warning(
+                f"delete_objects received {len(keys)} keys, only first 1000 will be deleted"
+            )
+            keys = keys[:1000]
+
+        delete_request = {"Objects": [{"Key": key} for key in keys]}
+
+        try:
+            response = self._client.delete_objects(Bucket=bucket, Delete=delete_request)
+            return response
+        except Exception as e:
+            logger.error(f"S3 delete_objects failed: {e}")
+            raise

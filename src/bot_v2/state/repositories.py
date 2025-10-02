@@ -42,6 +42,31 @@ class StateRepository(Protocol):
         """Get storage statistics."""
         ...
 
+    # Batch operations
+    async def store_many(self, items: dict[str, tuple[str, dict[str, Any]]]) -> int:
+        """
+        Store multiple items at once.
+
+        Args:
+            items: Dict mapping keys to (value, metadata) tuples
+
+        Returns:
+            Number of items successfully stored
+        """
+        ...
+
+    async def delete_many(self, keys: list[str]) -> int:
+        """
+        Delete multiple keys at once.
+
+        Args:
+            keys: List of keys to delete
+
+        Returns:
+            Number of keys successfully deleted
+        """
+        ...
+
 
 class RedisStateRepository:
     """
@@ -144,6 +169,58 @@ class RedisStateRepository:
         except Exception as e:
             logger.debug(f"Redis stats collection failed: {e}")
             return {"key_count": 0}
+
+    # Batch operations
+    async def store_many(self, items: dict[str, tuple[str, dict[str, Any]]]) -> int:
+        """
+        Store multiple items in Redis with TTL.
+
+        Args:
+            items: Dict mapping keys to (value, metadata) tuples
+
+        Returns:
+            Number of items successfully stored
+        """
+        if not items:
+            return 0
+
+        try:
+            # Group by TTL for efficient pipeline execution
+            ttl_groups: dict[int, dict[str, str]] = {}
+
+            for key, (value, metadata) in items.items():
+                ttl = metadata.get("ttl_seconds", self.default_ttl)
+                if ttl not in ttl_groups:
+                    ttl_groups[ttl] = {}
+                ttl_groups[ttl][key] = value
+
+            # Execute batch sets grouped by TTL
+            for ttl, mapping in ttl_groups.items():
+                self.adapter.msetex(mapping, ttl)
+
+            return len(items)
+        except Exception as e:
+            logger.error(f"Redis store_many failed: {e}")
+            return 0
+
+    async def delete_many(self, keys: list[str]) -> int:
+        """
+        Delete multiple keys from Redis.
+
+        Args:
+            keys: List of keys to delete
+
+        Returns:
+            Number of keys successfully deleted
+        """
+        if not keys:
+            return 0
+
+        try:
+            return self.adapter.delete_many(keys)
+        except Exception as e:
+            logger.error(f"Redis delete_many failed: {e}")
+            return 0
 
 
 class PostgresStateRepository:
@@ -284,6 +361,67 @@ class PostgresStateRepository:
 
         return {"key_count": 0}
 
+    # Batch operations
+    async def store_many(self, items: dict[str, tuple[str, dict[str, Any]]]) -> int:
+        """
+        Store multiple items in PostgreSQL using batch upsert.
+
+        Args:
+            items: Dict mapping keys to (value, metadata) tuples
+
+        Returns:
+            Number of items successfully stored
+        """
+        if not items:
+            return 0
+
+        try:
+            records = []
+            for key, (value, metadata) in items.items():
+                checksum = metadata.get("checksum", "")
+                size_bytes = metadata.get("size_bytes", len(value.encode()))
+                records.append(
+                    {
+                        "key": key,
+                        "data": value,
+                        "checksum": checksum,
+                        "size_bytes": size_bytes,
+                    }
+                )
+
+            count = self.adapter.batch_upsert("state_warm", "key", records)
+            self.adapter.commit()
+            return count
+        except Exception as e:
+            logger.error(f"PostgreSQL store_many failed: {e}")
+            self.adapter.rollback()
+            return 0
+
+    async def delete_many(self, keys: list[str]) -> int:
+        """
+        Delete multiple keys from PostgreSQL.
+
+        Args:
+            keys: List of keys to delete
+
+        Returns:
+            Number of keys successfully deleted
+        """
+        if not keys:
+            return 0
+
+        try:
+            count = self.adapter.batch_delete("state_warm", "key", keys)
+            self.adapter.commit()
+            return count
+        except Exception as e:
+            logger.error(f"PostgreSQL delete_many failed: {e}")
+            try:
+                self.adapter.rollback()
+            except Exception:
+                logger.debug("PostgreSQL rollback failed after delete_many error", exc_info=True)
+            return 0
+
 
 class S3StateRepository:
     """
@@ -411,3 +549,69 @@ class S3StateRepository:
             logger.debug(f"S3 stats collection failed: {e}")
 
         return {"key_count": 0}
+
+    # Batch operations
+    async def store_many(self, items: dict[str, tuple[str, dict[str, Any]]]) -> int:
+        """
+        Store multiple items in S3.
+
+        Note: S3 doesn't have batch put, so this iterates sequentially.
+        For true parallelism, consider using concurrent uploads at higher level.
+
+        Args:
+            items: Dict mapping keys to (value, metadata) tuples
+
+        Returns:
+            Number of items successfully stored
+        """
+        if not items:
+            return 0
+
+        count = 0
+        for key, (value, metadata) in items.items():
+            try:
+                checksum = metadata.get("checksum", "")
+                self.adapter.put_object(
+                    bucket=self.bucket,
+                    key=self._build_key(key),
+                    body=value.encode(),
+                    storage_class="STANDARD_IA",
+                    metadata={"checksum": checksum},
+                )
+                count += 1
+            except Exception as e:
+                logger.error(f"S3 store failed for {key}: {e}")
+
+        return count
+
+    async def delete_many(self, keys: list[str]) -> int:
+        """
+        Delete multiple keys from S3 using batch delete.
+
+        Args:
+            keys: List of keys to delete
+
+        Returns:
+            Number of keys successfully deleted
+        """
+        if not keys:
+            return 0
+
+        try:
+            # Build full S3 keys with prefix
+            full_keys = [self._build_key(key) for key in keys]
+
+            # S3 batch delete handles up to 1000 keys
+            response = self.adapter.delete_objects(bucket=self.bucket, keys=full_keys)
+
+            # Count successful deletions
+            deleted = len(response.get("Deleted", []))
+            errors = response.get("Errors", [])
+
+            if errors:
+                logger.warning(f"S3 delete_many had {len(errors)} errors")
+
+            return deleted
+        except Exception as e:
+            logger.error(f"S3 delete_many failed: {e}")
+            return 0

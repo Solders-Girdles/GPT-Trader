@@ -103,6 +103,28 @@ class _DummyStateManager:
     async def get_state(self, key: str) -> Any:
         return self._values.get(key)
 
+    def get_repositories(self) -> Any:
+        """Return mock repositories for direct access."""
+        from bot_v2.state.state_manager import StateRepositories
+
+        # Create a mock Redis repository
+        class MockRedisRepo:
+            def __init__(self, values):
+                self._values = values
+
+            async def keys(self, pattern: str) -> list[str]:
+                prefix = pattern.rstrip("*")
+                return [key for key in self._values if key.startswith(prefix)]
+
+            async def fetch(self, key: str) -> Any:
+                return self._values.get(key)
+
+        return StateRepositories(
+            redis=MockRedisRepo(self._values),
+            postgres=None,
+            s3=None,
+        )
+
 
 @pytest.mark.asyncio
 async def test_create_backup_writes_metadata(tmp_path) -> None:

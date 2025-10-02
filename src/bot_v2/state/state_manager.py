@@ -563,6 +563,9 @@ class StateManager:
         Uses batch repository operations for efficiency while maintaining
         cache coherence, metadata tracking, and tier-appropriate storage.
 
+        Cache and metadata updates occur ONLY after successful storage,
+        matching single-item set_state semantics.
+
         Args:
             items: Dict mapping keys to (value, category) tuples
             ttl_seconds: Optional TTL override for HOT tier items
@@ -576,12 +579,17 @@ class StateManager:
         with self._metrics.time_operation("state_manager.batch_set_state"):
             import json
 
-            # Group items by tier
+            # Group items by tier, preserving original values for cache updates
             hot_items: dict[str, tuple[str, dict[str, Any]]] = {}
             warm_items: dict[str, tuple[str, dict[str, Any]]] = {}
             cold_items: dict[str, tuple[str, dict[str, Any]]] = {}
 
-            # Prepare items with metadata
+            # Track metadata for cache updates (deferred until after successful storage)
+            hot_metadata: dict[str, tuple[Any, int, str, int]] = {}  # (value, size, checksum, ttl)
+            warm_metadata: dict[str, tuple[Any, int, str]] = {}  # (value, size, checksum)
+            cold_metadata: dict[str, tuple[Any, int, str]] = {}  # (value, size, checksum)
+
+            # Prepare items with metadata (but don't update cache yet)
             for key, (value, category) in items.items():
                 try:
                     serialized = json.dumps(value, default=str)
@@ -597,45 +605,69 @@ class StateManager:
                         ttl = ttl_seconds or self.config.redis_ttl_seconds
                         metadata["ttl_seconds"] = ttl
                         hot_items[key] = (serialized, metadata)
+                        hot_metadata[key] = (value, size_bytes, checksum, ttl)
                     elif category == StateCategory.WARM:
                         warm_items[key] = (serialized, metadata)
+                        warm_metadata[key] = (value, size_bytes, checksum)
                     else:  # COLD
                         cold_items[key] = (serialized, metadata)
-
-                    # Update cache and metadata immediately for consistency
-                    self._cache_manager.set(key, value)
-                    self._cache_manager.update_metadata(
-                        key=key,
-                        category=category,
-                        size_bytes=size_bytes,
-                        checksum=checksum,
-                        ttl_seconds=metadata.get("ttl_seconds"),
-                    )
+                        cold_metadata[key] = (value, size_bytes, checksum)
 
                 except Exception as e:
                     logger.error(f"Failed to prepare item {key}: {e}")
 
-            # Batch write to tiers
+            # Batch write to tiers and update cache only on success
             stored_count = 0
 
             if hot_items and self._redis_repo:
                 try:
                     count = await self._redis_repo.store_many(hot_items)
-                    stored_count += count
+                    if count > 0:
+                        # Update cache and metadata only for successfully stored items
+                        for key, (value, size_bytes, checksum, ttl) in hot_metadata.items():
+                            self._cache_manager.set(key, value)
+                            self._cache_manager.update_metadata(
+                                key=key,
+                                category=StateCategory.HOT,
+                                size_bytes=size_bytes,
+                                checksum=checksum,
+                                ttl_seconds=ttl,
+                            )
+                        stored_count += count
                 except Exception as e:
                     logger.error(f"Batch write to Redis failed: {e}")
 
             if warm_items and self._postgres_repo:
                 try:
                     count = await self._postgres_repo.store_many(warm_items)
-                    stored_count += count
+                    if count > 0:
+                        # Update cache and metadata only for successfully stored items
+                        for key, (value, size_bytes, checksum) in warm_metadata.items():
+                            self._cache_manager.set(key, value)
+                            self._cache_manager.update_metadata(
+                                key=key,
+                                category=StateCategory.WARM,
+                                size_bytes=size_bytes,
+                                checksum=checksum,
+                            )
+                        stored_count += count
                 except Exception as e:
                     logger.error(f"Batch write to PostgreSQL failed: {e}")
 
             if cold_items and self._s3_repo:
                 try:
                     count = await self._s3_repo.store_many(cold_items)
-                    stored_count += count
+                    if count > 0:
+                        # Update cache and metadata only for successfully stored items
+                        for key, (value, size_bytes, checksum) in cold_metadata.items():
+                            self._cache_manager.set(key, value)
+                            self._cache_manager.update_metadata(
+                                key=key,
+                                category=StateCategory.COLD,
+                                size_bytes=size_bytes,
+                                checksum=checksum,
+                            )
+                        stored_count += count
                 except Exception as e:
                     logger.error(f"Batch write to S3 failed: {e}")
 

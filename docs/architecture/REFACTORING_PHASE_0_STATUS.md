@@ -372,3 +372,27 @@ Before proceeding to Phase 1 (MarketDataService extraction):
 - Target completion: 2025-10-04 (3 days with buffer)
 - Actual completion: 2025-10-01 (SAME DAY! 🎉)
 - **Ahead of schedule by 3 days**
+
+---
+
+## Known Issues (Post-Phase 3)
+
+### PerpsBot: Missing builder methods in apply_config_change()
+
+**Location**: `src/bot_v2/orchestration/perps_bot.py:364-365`
+
+**Issue**: `apply_config_change()` calls `_init_market_services()` and `_init_streaming_service()` which were moved to the builder and no longer exist as instance methods.
+
+```python
+def apply_config_change(self, change: ConfigChange) -> None:
+    # ...
+    self._init_market_services()       # ❌ Method doesn't exist
+    self._init_streaming_service()     # ❌ Method doesn't exist
+    # ...
+```
+
+**Impact**: Config changes at runtime will fail with `AttributeError`.
+
+**Resolution**: These should call builder methods or be reimplemented as instance methods. Deferred until legacy streaming cleanup (USE_NEW_STREAMING_SERVICE cleanup).
+
+**Tracked**: 2025-10-02

@@ -57,24 +57,26 @@ class TestPerpsBotInitialization:
         bot = PerpsBot(minimal_config)
 
         # Core services (must exist)
-        assert hasattr(bot, 'strategy_orchestrator')
-        assert hasattr(bot, 'execution_coordinator')
-        assert hasattr(bot, 'system_monitor')
-        assert hasattr(bot, 'runtime_coordinator')
+        assert hasattr(bot, "strategy_orchestrator")
+        assert hasattr(bot, "execution_coordinator")
+        assert hasattr(bot, "system_monitor")
+        assert hasattr(bot, "runtime_coordinator")
         assert bot.strategy_orchestrator is not None
         assert bot.execution_coordinator is not None
         assert bot.system_monitor is not None
         assert bot.runtime_coordinator is not None
 
-    def test_initialization_creates_accounting_services(self, monkeypatch, tmp_path, minimal_config):
+    def test_initialization_creates_accounting_services(
+        self, monkeypatch, tmp_path, minimal_config
+    ):
         """Document: Accounting services must exist"""
         monkeypatch.setenv("EVENT_STORE_ROOT", str(tmp_path))
         monkeypatch.setattr(PerpsBot, "_start_streaming_if_configured", lambda self: None)
 
         bot = PerpsBot(minimal_config)
 
-        assert hasattr(bot, 'account_manager')
-        assert hasattr(bot, 'account_telemetry')
+        assert hasattr(bot, "account_manager")
+        assert hasattr(bot, "account_telemetry")
         assert bot.account_manager is not None
         assert bot.account_telemetry is not None
 
@@ -85,7 +87,7 @@ class TestPerpsBotInitialization:
 
         bot = PerpsBot(minimal_config)
 
-        assert hasattr(bot, '_market_monitor')
+        assert hasattr(bot, "_market_monitor")
         assert bot._market_monitor is not None
 
     def test_initialization_creates_runtime_state(self, monkeypatch, tmp_path, minimal_config):
@@ -96,10 +98,10 @@ class TestPerpsBotInitialization:
         bot = PerpsBot(minimal_config)
 
         # State dictionaries (NOTE: _product_map removed - was dead code)
-        assert hasattr(bot, 'mark_windows')
-        assert hasattr(bot, 'last_decisions')
-        assert hasattr(bot, '_last_positions')
-        assert hasattr(bot, 'order_stats')
+        assert hasattr(bot, "mark_windows")
+        assert hasattr(bot, "last_decisions")
+        assert hasattr(bot, "_last_positions")
+        assert hasattr(bot, "order_stats")
 
         # Verify types
         assert isinstance(bot.mark_windows, dict)
@@ -119,9 +121,9 @@ class TestPerpsBotInitialization:
 
         bot = PerpsBot(minimal_config)
 
-        assert hasattr(bot, '_mark_lock')
+        assert hasattr(bot, "_mark_lock")
         # RLock is _thread.RLock type, check by name
-        assert type(bot._mark_lock).__name__ == 'RLock'
+        assert type(bot._mark_lock).__name__ == "RLock"
 
     def test_initialization_sets_symbols(self, monkeypatch, tmp_path, minimal_config):
         """Document: Symbols list is extracted from config"""
@@ -348,7 +350,7 @@ class TestPerpsBotStreamingLockSharing:
         bot = PerpsBot(minimal_config)
 
         # RLock is _thread.RLock type, check by name
-        assert type(bot._mark_lock).__name__ == 'RLock'
+        assert type(bot._mark_lock).__name__ == "RLock"
 
     @pytest.mark.asyncio
     async def test_update_mark_window_is_thread_safe(self, monkeypatch, tmp_path, minimal_config):
@@ -364,6 +366,7 @@ class TestPerpsBotStreamingLockSharing:
 
         class InstrumentedRLock:
             """Wrapper that tracks acquire calls to verify lock usage"""
+
             def __init__(self):
                 self._lock = original_rlock()
 
@@ -402,7 +405,9 @@ class TestPerpsBotStreamingLockSharing:
 
         # CRITICAL: Verify lock was actually acquired (fails if lock removed)
         # Without this assertion, GIL makes list appends safe, hiding lock removal
-        assert acquire_count["count"] >= 2, f"Lock acquired {acquire_count['count']} times, expected >= 2"
+        assert (
+            acquire_count["count"] >= 2
+        ), f"Lock acquired {acquire_count['count']} times, expected >= 2"
 
         # Verify no corruption
         assert len(bot.mark_windows["BTC-USD"]) == 2
@@ -470,6 +475,7 @@ class TestPerpsBotFullCycle:
 
 # Feature Flag Tests (for rollback safety)
 
+
 @pytest.mark.integration
 @pytest.mark.characterization
 class TestFeatureFlagRollback:
@@ -484,7 +490,7 @@ class TestFeatureFlagRollback:
         bot = PerpsBot(minimal_config)
 
         # Verify MarketDataService exists and shares state
-        assert hasattr(bot, '_market_data_service')
+        assert hasattr(bot, "_market_data_service")
         assert bot._market_data_service is not None
         assert bot._market_data_service.mark_windows is bot.mark_windows
         assert bot._market_data_service._mark_lock is bot._mark_lock
@@ -504,6 +510,7 @@ class TestFeatureFlagRollback:
         bot.broker.get_quote = Mock(return_value=mock_quote)
 
         import asyncio
+
         asyncio.run(bot.update_marks())
 
         # Verify legacy behavior preserved
@@ -518,7 +525,7 @@ class TestFeatureFlagRollback:
         bot = PerpsBot(minimal_config)
 
         # Verify StreamingService exists when flag is on and MarketDataService exists
-        assert hasattr(bot, '_streaming_service')
+        assert hasattr(bot, "_streaming_service")
         if bot._market_data_service is not None:
             assert bot._streaming_service is not None
             assert bot._streaming_service.symbols == bot.symbols
@@ -537,9 +544,9 @@ class TestFeatureFlagRollback:
         assert bot._streaming_service is None
 
         # Verify legacy methods still exist
-        assert hasattr(bot, '_start_streaming_background_legacy')
-        assert hasattr(bot, '_stop_streaming_background')
-        assert hasattr(bot, '_run_stream_loop')
+        assert hasattr(bot, "_start_streaming_background_legacy")
+        assert hasattr(bot, "_stop_streaming_background")
+        assert hasattr(bot, "_run_stream_loop")
 
     # Placeholder for Phase 3
     @pytest.mark.skip(reason="Implement in Phase 3 when Builder is introduced")
@@ -626,65 +633,76 @@ class TestStreamingServiceRestartBehavior:
 @pytest.mark.integration
 @pytest.mark.characterization
 class TestPerpsBotBuilderPattern:
-    """Characterize builder pattern construction (Phase 3)"""
+    """Characterize builder-centric construction now that it is the default."""
 
-    def test_builder_flag_enables_new_construction(self, monkeypatch, tmp_path, minimal_config):
-        """USE_PERPS_BOT_BUILDER=true uses builder pattern"""
+    def test_constructor_uses_builder_pipeline(self, monkeypatch, tmp_path, minimal_config):
+        """Direct construction routes through PerpsBotBuilder.build."""
+        from bot_v2.orchestration.perps_bot_builder import PerpsBotBuilder
+
         monkeypatch.setenv("EVENT_STORE_ROOT", str(tmp_path))
-        monkeypatch.setenv("USE_PERPS_BOT_BUILDER", "true")
         monkeypatch.setattr(PerpsBot, "_start_streaming_if_configured", lambda self: None)
+
+        build_calls: list[None] = []
+        original_build = PerpsBotBuilder.build
+
+        def tracking_build(self):  # type: ignore[override]
+            build_calls.append(None)
+            return original_build(self)
+
+        monkeypatch.setattr(PerpsBotBuilder, "build", tracking_build)
 
         bot = PerpsBot(minimal_config)
 
-        # Verify bot was constructed (builder or legacy - both should work)
+        assert build_calls, "Expected PerpsBotBuilder.build to be invoked"
         assert bot.bot_id == "perps_bot"
         assert bot.config == minimal_config
         assert hasattr(bot, "strategy_orchestrator")
         assert hasattr(bot, "execution_coordinator")
 
-    def test_builder_flag_disables_new_construction(self, monkeypatch, tmp_path, minimal_config):
-        """USE_PERPS_BOT_BUILDER=false uses legacy construction"""
+    def test_constructor_ignores_legacy_env_flag(self, monkeypatch, tmp_path, minimal_config):
+        """Historical USE_PERPS_BOT_BUILDER flag no longer flips code paths."""
         import warnings
+        from bot_v2.orchestration.perps_bot_builder import PerpsBotBuilder
 
         monkeypatch.setenv("EVENT_STORE_ROOT", str(tmp_path))
         monkeypatch.setenv("USE_PERPS_BOT_BUILDER", "false")
         monkeypatch.setattr(PerpsBot, "_start_streaming_if_configured", lambda self: None)
 
-        with warnings.catch_warnings(record=True) as w:
+        build_calls: list[None] = []
+        original_build = PerpsBotBuilder.build
+
+        def tracking_build(self):  # type: ignore[override]
+            build_calls.append(None)
+            return original_build(self)
+
+        monkeypatch.setattr(PerpsBotBuilder, "build", tracking_build)
+
+        with warnings.catch_warnings(record=True) as caught:
             warnings.simplefilter("always")
             bot = PerpsBot(minimal_config)
 
-            # Should emit at least one deprecation warning for legacy path
-            deprecation_warnings = [
-                warning for warning in w if issubclass(warning.category, DeprecationWarning)
-            ]
-            assert len(deprecation_warnings) >= 1
-            assert any("legacy" in str(warning.message).lower() for warning in deprecation_warnings)
+        legacy_warnings = [
+            w
+            for w in caught
+            if issubclass(w.category, DeprecationWarning) and "legacy" in str(w.message).lower()
+        ]
 
-        # Verify bot still works with legacy path
-        assert bot.bot_id == "perps_bot"
+        assert build_calls, "Builder path should run even when flag is false"
+        assert not legacy_warnings, "Legacy builder warnings should be gone"
         assert bot.config == minimal_config
 
-    def test_builder_and_legacy_produce_identical_attributes(
+    def test_constructor_and_builder_produce_identical_state(
         self, monkeypatch, tmp_path, minimal_config
     ):
-        """Builder and legacy paths produce same runtime state"""
-        import warnings
+        """Direct construction and explicit builder flow return equivalent bots."""
+        from bot_v2.orchestration.perps_bot_builder import PerpsBotBuilder
 
         monkeypatch.setenv("EVENT_STORE_ROOT", str(tmp_path))
         monkeypatch.setattr(PerpsBot, "_start_streaming_if_configured", lambda self: None)
 
-        # Build with builder
-        monkeypatch.setenv("USE_PERPS_BOT_BUILDER", "true")
-        bot_builder = PerpsBot(minimal_config)
+        direct_bot = PerpsBot(minimal_config)
+        builder_bot = PerpsBot.from_builder(PerpsBotBuilder(minimal_config))
 
-        # Build with legacy
-        monkeypatch.setenv("USE_PERPS_BOT_BUILDER", "false")
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            bot_legacy = PerpsBot(minimal_config)
-
-        # Compare core attributes (ignoring transient fields like start_time)
         core_attrs = [
             "bot_id",
             "running",
@@ -693,9 +711,8 @@ class TestPerpsBotBuilderPattern:
         ]
 
         for attr in core_attrs:
-            assert getattr(bot_builder, attr) == getattr(bot_legacy, attr), f"Mismatch in {attr}"
+            assert getattr(direct_bot, attr) == getattr(builder_bot, attr), attr
 
-        # Verify both have all required services
         service_attrs = [
             "strategy_orchestrator",
             "execution_coordinator",
@@ -711,10 +728,8 @@ class TestPerpsBotBuilderPattern:
         ]
 
         for attr in service_attrs:
-            assert hasattr(bot_builder, attr), f"Builder missing {attr}"
-            assert hasattr(bot_legacy, attr), f"Legacy missing {attr}"
-            assert getattr(bot_builder, attr) is not None, f"Builder {attr} is None"
-            assert getattr(bot_legacy, attr) is not None, f"Legacy {attr} is None"
+            assert getattr(direct_bot, attr) is not None, f"direct missing {attr}"
+            assert getattr(builder_bot, attr) is not None, f"builder missing {attr}"
 
     def test_builder_from_classmethod_works(self, monkeypatch, tmp_path, minimal_config):
         """PerpsBot.from_builder() creates valid instance"""
@@ -735,7 +750,6 @@ class TestPerpsBotBuilderPattern:
         from bot_v2.orchestration.service_registry import empty_registry
 
         monkeypatch.setenv("EVENT_STORE_ROOT", str(tmp_path))
-        monkeypatch.setenv("USE_PERPS_BOT_BUILDER", "true")
         monkeypatch.setattr(PerpsBot, "_start_streaming_if_configured", lambda self: None)
 
         custom_registry = empty_registry(minimal_config)

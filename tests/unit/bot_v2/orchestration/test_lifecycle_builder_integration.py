@@ -122,9 +122,9 @@ class TestLifecycleServiceBuilderIntegration:
         bot = PerpsBotBuilder(minimal_config).build()
 
         # The lifecycle service should point to the actual bot instance
-        assert bot.lifecycle_service._bot is bot, (
-            "lifecycle_service._bot points to wrong instance (builder temp instead of real bot)"
-        )
+        assert (
+            bot.lifecycle_service._bot is bot
+        ), "lifecycle_service._bot points to wrong instance (builder temp instead of real bot)"
 
     def test_all_coordinators_bound_to_correct_bot_instance(self, minimal_config):
         """All coordinator services point to the actual bot, not the builder temp instance."""
@@ -172,7 +172,6 @@ class TestLifecycleServiceBuilderIntegration:
         # If the binding was wrong, the loop would hang
         assert bot.running is False
 
-    @patch.dict(os.environ, {"USE_PERPS_BOT_BUILDER": "true"})
     def test_normal_construction_path_rebinds_services(self, minimal_config):
         """PerpsBot(config) via builder also rebinds all coordinator services."""
         # This is the normal way users create a bot
@@ -185,7 +184,6 @@ class TestLifecycleServiceBuilderIntegration:
         assert bot.system_monitor._bot is bot
         assert bot.runtime_coordinator._bot is bot
 
-    @patch.dict(os.environ, {"USE_PERPS_BOT_BUILDER": "true"})
     @pytest.mark.asyncio
     async def test_normal_construction_running_flag_works(self, minimal_config):
         """PerpsBot(config) via builder has working running flag."""

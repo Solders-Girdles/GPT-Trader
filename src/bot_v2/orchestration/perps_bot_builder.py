@@ -1,9 +1,9 @@
 """Builder pattern for PerpsBot construction.
 
 Separates object construction from runtime behavior by extracting initialization logic
-from PerpsBot.__init__ into discrete, composable builder methods.
-
-Feature Flag: USE_PERPS_BOT_BUILDER (default: true)
+from :class:`PerpsBot` into discrete, composable builder methods. The builder now
+represents the canonical construction path — the ``USE_PERPS_BOT_BUILDER`` flag has
+been retired in favor of always using this pipeline.
 """
 
 from __future__ import annotations
@@ -23,23 +23,20 @@ from bot_v2.orchestration.execution_coordinator import ExecutionCoordinator
 from bot_v2.orchestration.market_data_service import MarketDataService
 from bot_v2.orchestration.market_monitor import MarketActivityMonitor
 from bot_v2.orchestration.runtime_coordinator import RuntimeCoordinator
+from bot_v2.orchestration.service_rebinding import rebind_bot_services
 from bot_v2.orchestration.service_registry import ServiceRegistry, empty_registry
 from bot_v2.orchestration.session_guard import TradingSessionGuard
 from bot_v2.orchestration.storage import StorageBootstrapper
-from bot_v2.orchestration.streaming_service import StreamingService
 from bot_v2.orchestration.strategy_orchestrator import StrategyOrchestrator
+from bot_v2.orchestration.streaming_service import StreamingService
 from bot_v2.orchestration.system_monitor import SystemMonitor
 
 if TYPE_CHECKING:  # pragma: no cover
     from datetime import datetime
     from decimal import Decimal
 
-    from bot_v2.features.brokerages.core.interfaces import IBrokerage
     from bot_v2.features.live_trade.advanced_execution import AdvancedExecutionEngine
-    from bot_v2.features.live_trade.risk import LiveRiskManager
     from bot_v2.orchestration.live_execution import LiveExecutionEngine
-    from bot_v2.persistence.event_store import EventStore
-    from bot_v2.persistence.orders_store import OrdersStore
 
 logger = logging.getLogger(__name__)
 
@@ -154,6 +151,10 @@ class PerpsBotBuilder:
         self._build_market_services(bot)
         self._build_streaming_service(bot)
         self._start_streaming_if_configured(bot)
+
+        # Ensure services that captured `_bot` during construction reference the
+        # final instance returned to callers.
+        rebind_bot_services(bot)
 
         return bot
 

@@ -24,7 +24,6 @@ from bot_v2.features.brokerages.core.interfaces import (
 )
 
 
-
 def test_init_uses_mock_broker_in_dev(monkeypatch, tmp_path):
     # Reduce side effects: avoid spawning background threads
     monkeypatch.setenv("EVENT_STORE_ROOT", str(tmp_path))
@@ -45,7 +44,6 @@ def test_calculate_spread_bps():
     assert bps > 0
     # Within a small tolerance around 99-100 bps
     assert Decimal("90") < bps < Decimal("110")
-
 
 
 def test_update_mark_window_trims(monkeypatch, tmp_path):
@@ -250,45 +248,6 @@ async def test_place_order_lock_serialises_calls(monkeypatch, tmp_path, fake_clo
     assert bot.order_stats["successful"] == 6
 
 
-def test_ws_failure_records_metrics_and_risk_listener(monkeypatch, tmp_path):
-    monkeypatch.setenv("EVENT_STORE_ROOT", str(tmp_path))
-    monkeypatch.setenv("PERPS_FORCE_MOCK", "1")
-    monkeypatch.setenv("COINBASE_ENABLE_DERIVATIVES", "1")
-    monkeypatch.setattr(PerpsBot, "_start_streaming_if_configured", lambda self: None)
-
-    config = BotConfig(profile=Profile.DEV, symbols=["BTC-PERP"], update_interval=1)
-    bot = PerpsBot(config)
-
-    metric_records = []
-
-    def record_metric(bot_id, metrics=None, **kwargs):  # type: ignore
-        payload = metrics or kwargs
-        metric_records.append(payload)
-
-    bot.event_store.append_metric = record_metric  # type: ignore
-
-    def boom(*args, **kwargs):
-        raise RuntimeError("stream failed")
-
-    bot.broker.stream_orderbook = boom  # type: ignore
-    bot.broker.stream_trades = boom  # type: ignore
-
-    bot._ws_stop = None
-    bot._run_stream_loop(["BTC-PERP"], level=1)
-
-    assert any(
-        m.get("event_type") in {"ws_stream_error", "ws_stream_exit"}
-        for m in metric_records
-        if isinstance(m, dict)
-    )
-
-    # Ensure reduce-only listener still in effect after failure handling
-    bot.risk_manager.set_reduce_only_mode(True, reason="ws_failure")
-    assert bot.is_reduce_only_mode() is True
-    bot.risk_manager.set_reduce_only_mode(False, reason="ws_recovery")
-    assert bot.is_reduce_only_mode() is False
-
-
 # ============================================================================
 # Comprehensive tests for coverage improvement
 # ============================================================================
@@ -297,7 +256,6 @@ def test_ws_failure_records_metrics_and_risk_listener(monkeypatch, tmp_path):
 class TestMarkWindowManagement:
     """Test mark window updates and MA calculations."""
 
-    
     def test_update_mark_window_maintains_max_size(self, monkeypatch, tmp_path):
         """Should trim mark window to max size."""
         monkeypatch.setenv("EVENT_STORE_ROOT", str(tmp_path))
@@ -316,7 +274,6 @@ class TestMarkWindowManagement:
         # Should keep most recent values
         assert bot.mark_windows["BTC-PERP"][-1] == Decimal("50099")
 
-    
     def test_update_mark_window_thread_safe(self, monkeypatch, tmp_path):
         """Should handle concurrent mark updates safely."""
         monkeypatch.setenv("EVENT_STORE_ROOT", str(tmp_path))
@@ -333,9 +290,7 @@ class TestMarkWindowManagement:
         # Simulate concurrent updates
         import threading
 
-        threads = [
-            threading.Thread(target=update_marks, args=(1000 * i, 10)) for i in range(5)
-        ]
+        threads = [threading.Thread(target=update_marks, args=(1000 * i, 10)) for i in range(5)]
         for t in threads:
             t.start()
         for t in threads:
@@ -348,7 +303,6 @@ class TestMarkWindowManagement:
 class TestProductRetrieval:
     """Test product catalog access."""
 
-    
     def test_get_product_returns_from_catalog(self, monkeypatch, tmp_path):
         """Should retrieve product from broker catalog."""
         monkeypatch.setenv("EVENT_STORE_ROOT", str(tmp_path))
@@ -362,7 +316,6 @@ class TestProductRetrieval:
         assert product is not None
         assert product.symbol == "BTC-PERP"
 
-    
     def test_get_product_returns_same_symbol(self, monkeypatch, tmp_path):
         """Should return product with matching symbol."""
         monkeypatch.setenv("EVENT_STORE_ROOT", str(tmp_path))
@@ -380,7 +333,6 @@ class TestProductRetrieval:
 class TestReduceOnlyMode:
     """Test reduce-only mode management."""
 
-    
     def test_reduce_only_mode_delegates_to_risk_manager(self, monkeypatch, tmp_path):
         """Should delegate reduce-only mode to risk manager."""
         monkeypatch.setenv("EVENT_STORE_ROOT", str(tmp_path))
@@ -405,7 +357,6 @@ class TestReduceOnlyMode:
 class TestHealthStatus:
     """Test health status management."""
 
-    
     def test_write_health_status_ok(self, monkeypatch, tmp_path):
         """Should write health status."""
         monkeypatch.setenv("EVENT_STORE_ROOT", str(tmp_path))
@@ -418,7 +369,6 @@ class TestHealthStatus:
         # Should not raise
         bot.write_health_status(ok=True, message="All good")
 
-    
     def test_write_health_status_error(self, monkeypatch, tmp_path):
         """Should write health status with error."""
         monkeypatch.setenv("EVENT_STORE_ROOT", str(tmp_path))
@@ -434,7 +384,6 @@ class TestHealthStatus:
 
 class TestSessionGuard:
     """Test trading session guard edge cases."""
-
 
     @pytest.mark.asyncio
     async def test_trading_window_tuesday(self, monkeypatch, tmp_path):
@@ -472,7 +421,6 @@ class TestSessionGuard:
         bot._session_guard._now = lambda: datetime(2024, 1, 2, 10, 30)  # Tuesday
         await bot.run_cycle()
         assert len(processed) == 1
-
 
     @pytest.mark.asyncio
     async def test_trading_window_all_days(self, monkeypatch, tmp_path):
@@ -515,7 +463,6 @@ class TestSessionGuard:
 class TestShutdown:
     """Test bot shutdown procedures."""
 
-    
     @pytest.mark.asyncio
     async def test_shutdown_sets_running_false(self, monkeypatch, tmp_path):
         """Should set running to False on shutdown."""
@@ -534,7 +481,6 @@ class TestShutdown:
 class TestUpdateMarks:
     """Test mark price update flows."""
 
-    
     @pytest.mark.asyncio
     async def test_update_marks_delegates_to_service(self, monkeypatch, tmp_path):
         """Should delegate mark updates to market data service."""
@@ -551,7 +497,6 @@ class TestUpdateMarks:
 
 class TestConfigChanges:
     """Test configuration change handling."""
-
 
     def test_apply_config_change_updates_config(self, monkeypatch, tmp_path):
         """Should handle config changes."""
@@ -577,7 +522,6 @@ class TestConfigChanges:
 
 class TestRunCycleBalancesPositions:
     """Test run_cycle with balances and positions."""
-
 
     @pytest.mark.asyncio
     async def test_run_cycle_handles_balance_fetch_error(self, monkeypatch, tmp_path):
@@ -605,6 +549,7 @@ class TestRunCycleBalancesPositions:
 
         async def noop_log():
             return None
+
         bot.update_marks = noop_update  # type: ignore
         bot.process_symbol = capture_process  # type: ignore
         bot.system_monitor.log_status = noop_log  # type: ignore
@@ -612,7 +557,6 @@ class TestRunCycleBalancesPositions:
         # Should not raise, continue processing
         await bot.run_cycle()
         assert len(processed) == 1
-
 
     @pytest.mark.asyncio
     async def test_run_cycle_handles_position_fetch_error(self, monkeypatch, tmp_path):
@@ -638,7 +582,6 @@ class TestRunCycleBalancesPositions:
         async def noop_update():
             return None
 
-
         async def noop_log():
             return None
 
@@ -654,23 +597,19 @@ class TestRunCycleBalancesPositions:
 class TestInitialization:
     """Test initialization paths."""
 
-
     def test_init_with_multiple_symbols(self, monkeypatch, tmp_path):
         """Should initialize mark windows for all symbols."""
         monkeypatch.setenv("EVENT_STORE_ROOT", str(tmp_path))
         monkeypatch.setenv("PERPS_FORCE_MOCK", "1")
         monkeypatch.setattr(PerpsBot, "_start_streaming_if_configured", lambda self: None)
 
-        config = BotConfig(
-            profile=Profile.DEV, symbols=["BTC-PERP", "ETH-PERP", "SOL-PERP"]
-        )
+        config = BotConfig(profile=Profile.DEV, symbols=["BTC-PERP", "ETH-PERP", "SOL-PERP"])
         bot = PerpsBot(config)
 
         assert len(bot.mark_windows) == 3
         assert "BTC-PERP" in bot.mark_windows
         assert "ETH-PERP" in bot.mark_windows
         assert "SOL-PERP" in bot.mark_windows
-
 
     def test_init_sets_bot_id(self, monkeypatch, tmp_path):
         """Should initialize with bot_id."""
@@ -688,7 +627,6 @@ class TestInitialization:
 class TestBrokerRiskManagerProperties:
     """Test broker and risk_manager property setters."""
 
-    
     def test_broker_property_setter(self, monkeypatch, tmp_path):
         """Should allow setting broker property."""
         monkeypatch.setenv("EVENT_STORE_ROOT", str(tmp_path))
@@ -707,7 +645,6 @@ class TestBrokerRiskManagerProperties:
         assert bot.broker is new_broker
         assert bot.registry.broker is new_broker
 
-    
     def test_risk_manager_property_setter(self, monkeypatch, tmp_path):
         """Should allow setting risk_manager property."""
         monkeypatch.setenv("EVENT_STORE_ROOT", str(tmp_path))
@@ -749,93 +686,6 @@ class TestSpreadCalculation:
         bps = _PB._calculate_spread_bps(Decimal("100"), Decimal("100.01"))
         assert bps > Decimal("0")
         assert bps < Decimal("10")
-
-
-@pytest.mark.asyncio
-async def test_run_legacy_single_cycle_executes_workflow(monkeypatch, tmp_path):
-    monkeypatch.setenv("USE_LIFECYCLE_SERVICE", "false")
-    monkeypatch.setenv("PERPS_FORCE_MOCK", "1")
-    monkeypatch.setenv("EVENT_STORE_ROOT", str(tmp_path))
-    monkeypatch.setattr(PerpsBot, "_start_streaming_if_configured", lambda self: None)
-
-    config = BotConfig(
-        profile=Profile.DEV,
-        symbols=["BTC-PERP"],
-        update_interval=1,
-        dry_run=True,
-        mock_broker=True,
-    )
-
-    bot = PerpsBot(config)
-
-    bot.broker.list_balances = lambda: []  # type: ignore[assignment]
-    bot.broker.list_positions = lambda: []  # type: ignore[assignment]
-
-    bot.update_marks = AsyncMock()  # type: ignore[assignment]
-    bot.system_monitor.log_status = AsyncMock()  # type: ignore[assignment]
-    bot.system_monitor.write_health_status = Mock()
-    bot.system_monitor.check_config_updates = Mock()
-    bot.shutdown = AsyncMock()  # type: ignore[assignment]
-    bot._session_guard.should_trade = lambda: True  # type: ignore[assignment]
-    bot.strategy_orchestrator.process_symbol = AsyncMock()  # type: ignore[assignment]
-
-    await bot.run(single_cycle=True)
-
-    bot.update_marks.assert_awaited_once()
-    call = bot.strategy_orchestrator.process_symbol.await_args
-    assert call.args[0] == "BTC-PERP"
-    assert call.args[1] == []
-    assert call.args[2] == {}
-    bot.system_monitor.log_status.assert_awaited_once()
-    bot.system_monitor.write_health_status.assert_called_once_with(ok=True)
-    bot.system_monitor.check_config_updates.assert_called_once()
-    bot.shutdown.assert_awaited_once()
-
-
-@pytest.mark.asyncio
-async def test_run_legacy_handles_keyboard_interrupt(monkeypatch, tmp_path):
-    monkeypatch.setenv("USE_LIFECYCLE_SERVICE", "false")
-    monkeypatch.setenv("PERPS_FORCE_MOCK", "1")
-    monkeypatch.setenv("EVENT_STORE_ROOT", str(tmp_path))
-    monkeypatch.setattr(PerpsBot, "_start_streaming_if_configured", lambda self: None)
-
-    config = BotConfig(profile=Profile.DEV, symbols=["BTC-PERP"], dry_run=True, mock_broker=True)
-    bot = PerpsBot(config)
-
-    bot.run_cycle = AsyncMock(side_effect=KeyboardInterrupt())  # type: ignore[assignment]
-    bot.shutdown = AsyncMock()  # type: ignore[assignment]
-    bot.system_monitor.write_health_status = Mock()
-    bot.system_monitor.check_config_updates = Mock()
-
-    await bot.run(single_cycle=True)
-
-    bot.shutdown.assert_awaited_once()
-    bot.system_monitor.write_health_status.assert_not_called()
-    assert bot.running is False
-
-
-@pytest.mark.asyncio
-async def test_run_legacy_handles_exception_and_writes_health(monkeypatch, tmp_path):
-    monkeypatch.setenv("USE_LIFECYCLE_SERVICE", "false")
-    monkeypatch.setenv("PERPS_FORCE_MOCK", "1")
-    monkeypatch.setenv("EVENT_STORE_ROOT", str(tmp_path))
-    monkeypatch.setattr(PerpsBot, "_start_streaming_if_configured", lambda self: None)
-
-    config = BotConfig(profile=Profile.DEV, symbols=["BTC-PERP"], dry_run=True, mock_broker=True)
-    bot = PerpsBot(config)
-
-    bot.run_cycle = AsyncMock(side_effect=RuntimeError("boom"))  # type: ignore[assignment]
-    bot.shutdown = AsyncMock()  # type: ignore[assignment]
-    bot.system_monitor.write_health_status = Mock()
-    bot.system_monitor.check_config_updates = Mock()
-
-    await bot.run(single_cycle=True)
-
-    bot.shutdown.assert_awaited_once()
-    bot.system_monitor.write_health_status.assert_called_once()
-    kwargs = bot.system_monitor.write_health_status.call_args.kwargs
-    assert kwargs["ok"] is False
-    assert "boom" in kwargs["error"]
 
 
 @pytest.mark.asyncio

@@ -8,40 +8,37 @@ from __future__ import annotations
 import inspect
 import logging
 import time
-import uuid
 from decimal import Decimal
 from typing import Any, cast
 
-from bot_v2.errors import ExecutionError, ValidationError
-from bot_v2.features.brokerages.coinbase.specs import (
-    validate_order as spec_validate_order,
-)
 from bot_v2.features.brokerages.core.interfaces import (
     Order,
     OrderSide,
     OrderType,
     Position,
-    Product,
-    Quote,
     TimeInForce,
 )
 from bot_v2.features.live_trade.advanced_execution_models.models import (
+    NormalizedOrderRequest,
     OrderConfig,
     SizingMode,
     StopTrigger,
 )
 from bot_v2.features.live_trade.dynamic_sizing_helper import DynamicSizingHelper
+from bot_v2.features.live_trade.order_metrics_reporter import OrderMetricsReporter
+from bot_v2.features.live_trade.order_request_normalizer import OrderRequestNormalizer
+from bot_v2.features.live_trade.order_validation_pipeline import OrderValidationPipeline
 from bot_v2.features.live_trade.risk import (
     LiveRiskManager,
     PositionSizingAdvice,
 )
 from bot_v2.features.live_trade.stop_trigger_manager import StopTriggerManager
-from bot_v2.utilities.quantization import quantize_price_side_aware
 
 __all__ = [
     "SizingMode",
     "OrderConfig",
     "StopTrigger",
+    "NormalizedOrderRequest",
     "AdvancedExecutionEngine",
 ]
 
@@ -80,31 +77,44 @@ class AdvancedExecutionEngine:
         self.risk_manager = risk_manager
         self.config = config or OrderConfig()
 
+        # Order tracking (shared with normalizer)
+        self.pending_orders: dict[str, Order] = {}
+        self.client_order_map: dict[str, str] = {}  # client_id -> order_id
+
         # Dedicated components
+        self.normalizer = OrderRequestNormalizer(
+            broker=broker,
+            pending_orders=self.pending_orders,
+            client_order_map=self.client_order_map,
+            config=self.config,
+        )
         self.stop_trigger_manager = StopTriggerManager(config=self.config)
         self.sizing_helper = DynamicSizingHelper(
             broker=broker,
             risk_manager=risk_manager,
             config=self.config,
         )
-
-        # Order tracking
-        self.pending_orders: dict[str, Order] = {}
-        self.client_order_map: dict[str, str] = {}  # client_id -> order_id
+        self.validation_pipeline = OrderValidationPipeline(
+            config=self.config,
+            sizing_helper=self.sizing_helper,
+            stop_trigger_manager=self.stop_trigger_manager,
+            risk_manager=risk_manager,
+        )
 
         # Metrics
-        self.order_metrics = {
-            "placed": 0,
-            "filled": 0,
-            "cancelled": 0,
-            "rejected": 0,
-            "post_only_rejected": 0,
-        }
-
-        # Track rejection reasons
-        self.rejections_by_reason: dict[str, int] = {}
+        self.metrics_reporter = OrderMetricsReporter()
 
         logger.info(f"AdvancedExecutionEngine initialized with config: {self.config}")
+
+    @property
+    def order_metrics(self) -> dict[str, int]:
+        """Get order metrics dict (backward compatibility)."""
+        return self.metrics_reporter.get_metrics_dict()
+
+    @property
+    def rejections_by_reason(self) -> dict[str, int]:
+        """Get rejections by reason dict (backward compatibility)."""
+        return self.metrics_reporter.rejections_by_reason
 
     def place_order(
         self,
@@ -123,297 +133,76 @@ class AdvancedExecutionEngine:
         """
         Place an order with advanced features, adhering to IBrokerage.
         """
-        client_id = self._prepare_order_request(client_id, symbol, side)
-
-        duplicate_order = self._check_duplicate_order(client_id)
-        if duplicate_order:
-            return duplicate_order
-
+        request = None  # Track for cleanup in except block
         try:
-            order_quantity = self._normalize_quantity(quantity)
-            product, quote = self._fetch_market_data(
-                symbol=symbol,
-                order_type=order_type,
-                post_only=post_only,
-            )
-
-            sizing_advice = self.sizing_helper.maybe_apply_position_sizing(
+            # Normalize request
+            request = self.normalizer.normalize(
                 symbol=symbol,
                 side=side,
+                quantity=quantity,
                 order_type=order_type,
-                order_quantity=order_quantity,
-                limit_price=limit_price,
-                product=product,
-                quote=quote,
-                leverage=leverage,
-            )
-
-            if sizing_advice is not None:
-                order_quantity = sizing_advice.target_quantity
-                if order_quantity <= 0:
-                    logger.info(
-                        "Dynamic sizing prevented new order for %s (%s)",
-                        symbol,
-                        sizing_advice.reason or "no reason provided",
-                    )
-                    self.order_metrics["rejected"] += 1
-                    self.rejections_by_reason["position_sizing"] = (
-                        self.rejections_by_reason.get("position_sizing", 0) + 1
-                    )
-                    return None
-                if sizing_advice.reason:
-                    logger.debug(
-                        "Dynamic sizing adjusted %s quantity to %s (%s)",
-                        symbol,
-                        order_quantity,
-                        sizing_advice.reason,
-                    )
-                reduce_only = reduce_only or sizing_advice.reduce_only
-
-            if not self._validate_post_only_constraints(
-                symbol=symbol,
-                order_type=order_type,
-                post_only=post_only,
-                side=side,
-                limit_price=limit_price,
-                quote=quote,
-            ):
-                return None
-
-            adjustment = self._apply_quantization_and_specs(
-                symbol=symbol,
-                product=product,
-                order_type=order_type,
-                side=side,
-                limit_price=limit_price,
-                stop_price=stop_price,
-                order_quantity=order_quantity,
-            )
-            if adjustment is None:
-                return None
-            limit_price, stop_price, order_quantity = adjustment
-
-            if not self._run_risk_validation(
-                symbol=symbol,
-                side=side,
-                order_quantity=order_quantity,
-                limit_price=limit_price,
-                order_type=order_type,
-                product=product,
-                quote=quote,
-            ):
-                return None
-
-            is_valid, rejection_reason = self.stop_trigger_manager.validate_stop_order_requirements(
-                symbol=symbol,
-                order_type=order_type,
-                stop_price=stop_price,
-            )
-            if not is_valid:
-                self.order_metrics["rejected"] += 1
-                if rejection_reason:
-                    self.rejections_by_reason[rejection_reason] = (
-                        self.rejections_by_reason.get(rejection_reason, 0) + 1
-                    )
-                return None
-
-            self.stop_trigger_manager.register_stop_trigger(
-                order_type=order_type,
-                client_id=client_id,
-                symbol=symbol,
-                stop_price=stop_price,
-                side=side,
-                order_quantity=order_quantity,
-                limit_price=limit_price,
-            )
-
-            return self._submit_order_to_broker(
-                symbol=symbol,
-                side=side,
-                order_type=order_type,
-                order_quantity=order_quantity,
                 limit_price=limit_price,
                 stop_price=stop_price,
                 time_in_force=time_in_force,
-                client_id=client_id,
                 reduce_only=reduce_only,
+                post_only=post_only,
+                client_id=client_id,
                 leverage=leverage,
             )
 
+            # Handle duplicate orders
+            if request is None:
+                existing = self.normalizer.get_existing_order(client_id or "")
+                if existing:
+                    logger.warning(f"Duplicate client_id, returning existing order {existing.id}")
+                return existing
+            validation = self.validation_pipeline.validate(request)
+            if validation.failed:
+                reason = validation.rejection_reason or "unknown"
+                self._record_rejection(
+                    reason,
+                    post_only=validation.post_only_rejection,
+                )
+                return None
+
+            self.stop_trigger_manager.register_stop_trigger(
+                order_type=request.order_type,
+                client_id=request.client_id,
+                symbol=request.symbol,
+                stop_price=request.stop_price,
+                side=request.side,
+                order_quantity=request.quantity,
+                limit_price=request.limit_price,
+            )
+
+            return self._submit_order_to_broker(
+                symbol=request.symbol,
+                side=request.side,
+                order_type=request.order_type,
+                order_quantity=request.quantity,
+                limit_price=request.limit_price,
+                stop_price=request.stop_price,
+                time_in_force=request.time_in_force,
+                client_id=request.client_id,
+                reduce_only=request.reduce_only,
+                leverage=request.leverage,
+            )
+
         except Exception as exc:
-            return self._handle_order_error(
-                exc=exc,
-                order_type=order_type,
-                client_id=client_id,
+            # Handle errors from normalization or execution
+            logger.error(
+                "Failed to place order via AdvancedExecutionEngine: %s",
+                exc,
+                exc_info=True,
             )
-
-    def _prepare_order_request(self, client_id: str | None, symbol: str, side: OrderSide) -> str:
-        return (
-            client_id or f"{symbol}_{side.value}_{int(time.time() * 1000)}_{uuid.uuid4().hex[:8]}"
-        )
-
-    def _check_duplicate_order(self, client_id: str) -> Order | None:
-        if client_id in self.client_order_map:
-            logger.warning(f"Duplicate client_id {client_id}, returning existing order")
-            existing_id = self.client_order_map[client_id]
-            return self.pending_orders.get(existing_id)
-        return None
-
-    def _normalize_quantity(self, quantity: Decimal | int) -> Decimal:
-        return quantity if isinstance(quantity, Decimal) else Decimal(str(quantity))
-
-    def _run_risk_validation(
-        self,
-        *,
-        symbol: str,
-        side: OrderSide,
-        order_quantity: Decimal,
-        limit_price: Decimal | None,
-        order_type: OrderType,
-        product: Product | None,
-        quote: Quote | None,
-    ) -> bool:
-        if self.risk_manager is None:
-            return True
-        try:
-            validation_price = self.sizing_helper.determine_reference_price(
-                symbol=symbol,
-                side=side,
-                order_type=order_type,
-                limit_price=limit_price,
-                quote=quote,
-                product=product,
-            )
-            equity = self.sizing_helper.estimate_equity()
-            current_positions = getattr(self.risk_manager, "positions", {})
-            self.risk_manager.pre_trade_validate(
-                symbol=symbol,
-                side=side.value,
-                quantity=order_quantity,
-                price=validation_price,
-                product=product,
-                equity=equity,
-                current_positions=current_positions,
-            )
-            return True
-        except ValidationError as exc:
-            logger.warning(f"Risk validation failed for {symbol}: {exc}")
-            self.order_metrics["rejected"] += 1
-            self.rejections_by_reason["risk"] = self.rejections_by_reason.get("risk", 0) + 1
-            return False
-
-    def _fetch_market_data(
-        self, *, symbol: str, order_type: OrderType, post_only: bool
-    ) -> tuple[Product | None, Quote | None]:
-        try:
-            product = cast(Product | None, self.broker.get_product(symbol))
-        except Exception:
-            product = None
-
-        quote: Quote | None = None
-        if order_type == OrderType.LIMIT and post_only and self.config.reject_on_cross:
-            try:
-                quote = cast(Quote | None, self.broker.get_quote(symbol))
-            except Exception as exc:
-                logger.error(
-                    "Failed to fetch quote for post-only validation on %s: %s", symbol, exc
-                )
-                raise ExecutionError(
-                    f"Could not get quote for post-only validation on {symbol}"
-                ) from exc
-
-            if quote is None:
-                raise ExecutionError(f"Could not get quote for post-only validation on {symbol}")
-
-        return product, quote
-
-    def _validate_post_only_constraints(
-        self,
-        *,
-        symbol: str,
-        order_type: OrderType,
-        post_only: bool,
-        side: OrderSide,
-        limit_price: Decimal | None,
-        quote: Quote | None,
-    ) -> bool:
-        if not (order_type == OrderType.LIMIT and post_only and self.config.reject_on_cross):
-            return True
-
-        if quote is None or limit_price is None:
-            return True
-
-        if side == OrderSide.BUY and limit_price >= quote.ask:
-            logger.warning(f"Post-only buy would cross at {limit_price:.2f} >= {quote.ask:.2f}")
-            self.order_metrics["post_only_rejected"] += 1
-            return False
-
-        if side == OrderSide.SELL and limit_price <= quote.bid:
-            logger.warning(f"Post-only sell would cross at {limit_price:.2f} <= {quote.bid:.2f}")
-            self.order_metrics["post_only_rejected"] += 1
-            return False
-
-        return True
-
-    def _apply_quantization_and_specs(
-        self,
-        *,
-        symbol: str,
-        product: Product | None,
-        order_type: OrderType,
-        side: OrderSide,
-        limit_price: Decimal | None,
-        stop_price: Decimal | None,
-        order_quantity: Decimal,
-    ) -> tuple[Decimal | None, Decimal | None, Decimal] | None:
-        if product is not None and product.price_increment:
-            increment = product.price_increment
-            if order_type == OrderType.LIMIT and limit_price is not None:
-                limit_price = quantize_price_side_aware(
-                    Decimal(str(limit_price)), increment, side.value
-                )
-            if order_type in (OrderType.STOP, OrderType.STOP_LIMIT) and stop_price is not None:
-                stop_price = quantize_price_side_aware(
-                    Decimal(str(stop_price)), increment, side.value
-                )
-            if order_type == OrderType.STOP_LIMIT and limit_price is not None:
-                limit_price = quantize_price_side_aware(
-                    Decimal(str(limit_price)), increment, side.value
-                )
-
-        if product is None:
-            return limit_price, stop_price, order_quantity
-
-        validation = spec_validate_order(
-            product=product,
-            side=side.value,
-            quantity=Decimal(str(order_quantity)),
-            order_type=order_type.value.lower(),
-            price=(
-                Decimal(str(limit_price))
-                if (order_type == OrderType.LIMIT and limit_price is not None)
-                else None
-            ),
-        )
-
-        if not validation.ok:
-            reason = validation.reason or "spec_violation"
-            self.order_metrics["rejected"] += 1
-            self.rejections_by_reason[reason] = self.rejections_by_reason.get(reason, 0) + 1
-            logger.warning(f"Spec validation failed for {symbol}: {reason}")
+            self._record_rejection("exception")
+            # Clean up stop trigger if this was a stop order
+            if order_type in (OrderType.STOP, OrderType.STOP_LIMIT):
+                # Use client_id from request if available, otherwise use parameter
+                cleanup_client_id = request.client_id if request else client_id
+                if cleanup_client_id:
+                    self.stop_trigger_manager.unregister_stop_trigger(cleanup_client_id)
             return None
-
-        if validation.adjusted_quantity is not None:
-            order_quantity = (
-                validation.adjusted_quantity
-                if isinstance(validation.adjusted_quantity, Decimal)
-                else Decimal(str(validation.adjusted_quantity))
-            )
-
-        if validation.adjusted_price is not None and order_type == OrderType.LIMIT:
-            limit_price = validation.adjusted_price
-
-        return limit_price, stop_price, order_quantity
 
     def _submit_order_to_broker(
         self,
@@ -470,27 +259,14 @@ class AdvancedExecutionEngine:
         if order:
             self.pending_orders[order.id] = order
             self.client_order_map[client_id] = order.id
-            self.order_metrics["placed"] += 1
+            self.metrics_reporter.record_placement(order)
             logger.info(f"Placed order {order.id}: {side.value} {order_quantity} {symbol}")
 
         return order
 
-    def _handle_order_error(
-        self,
-        *,
-        exc: Exception,
-        order_type: OrderType,
-        client_id: str,
-    ) -> Order | None:
-        logger.error(
-            "Failed to place order via AdvancedExecutionEngine: %s",
-            exc,
-            exc_info=True,
-        )
-        self.order_metrics["rejected"] += 1
-        if order_type in (OrderType.STOP, OrderType.STOP_LIMIT):
-            self.stop_trigger_manager.unregister_stop_trigger(client_id)
-        return None
+    def _record_rejection(self, reason: str, *, post_only: bool = False) -> None:
+        """Record order rejection metrics and categorize by reason."""
+        self.metrics_reporter.record_rejection(reason, post_only=post_only)
 
     def cancel_and_replace(
         self,
@@ -524,7 +300,9 @@ class AdvancedExecutionEngine:
         for attempt in range(max_retries):
             try:
                 if bool(self.broker.cancel_order(order_id)):
-                    self.order_metrics["cancelled"] += 1
+                    # Get order before deleting for metrics
+                    cancelled_order = self.pending_orders[order_id]
+                    self.metrics_reporter.record_cancellation(cancelled_order)
                     del self.pending_orders[order_id]
                     break
             except Exception as e:
@@ -540,7 +318,9 @@ class AdvancedExecutionEngine:
         replacement_tif = original.tif
 
         new_quantity = new_size if new_size is not None else original_quantity
-        new_quantity = self._normalize_quantity(new_quantity)
+        # Normalize to Decimal
+        if not isinstance(new_quantity, Decimal):
+            new_quantity = Decimal(str(new_quantity))
 
         new_price_decimal = Decimal(str(new_price)) if new_price is not None else None
 
@@ -669,8 +449,31 @@ class AdvancedExecutionEngine:
         """Get execution metrics."""
         stop_metrics = self.stop_trigger_manager.get_metrics()
         return {
-            "orders": {**self.order_metrics.copy(), **stop_metrics},
+            "orders": {**self.metrics_reporter.get_metrics_dict(), **stop_metrics},
             "pending_count": len(self.pending_orders),
             "stop_triggers": stop_metrics["stop_triggers"],
             "active_stops": stop_metrics["active_stops"],
         }
+
+    def export_metrics(self, collector: Any, prefix: str = "execution") -> None:
+        """Export metrics to MetricsCollector for telemetry.
+
+        Args:
+            collector: MetricsCollector instance
+            prefix: Metric name prefix (default: "execution")
+
+        This method is called periodically by the bot's telemetry system to
+        surface order execution metrics in monitoring dashboards.
+        """
+        # Export order metrics
+        self.metrics_reporter.export_to_collector(collector, prefix=f"{prefix}.orders")
+
+        # Export pending order count as gauge
+        collector.record_gauge(f"{prefix}.pending_orders", float(len(self.pending_orders)))
+
+        # Export stop trigger metrics
+        stop_metrics = self.stop_trigger_manager.get_metrics()
+        collector.record_gauge(
+            f"{prefix}.stop_triggers", float(stop_metrics.get("stop_triggers", 0))
+        )
+        collector.record_gauge(f"{prefix}.active_stops", float(stop_metrics.get("active_stops", 0)))

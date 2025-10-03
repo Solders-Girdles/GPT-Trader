@@ -9,7 +9,8 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import TYPE_CHECKING, Any, Callable, Protocol
+from collections.abc import Callable
+from typing import TYPE_CHECKING, Any, Protocol
 
 if TYPE_CHECKING:  # pragma: no cover - type checking only
     from bot_v2.orchestration.perps_bot import PerpsBot
@@ -106,9 +107,7 @@ class LifecycleService:
         self._sleep_fn = sleep_fn or asyncio.sleep
         self._task_registry = BackgroundTaskRegistry()
 
-    def register_background_task(
-        self, task_factory: Callable[[], asyncio.Task[Any]]
-    ) -> None:
+    def register_background_task(self, task_factory: Callable[[], asyncio.Task[Any]]) -> None:
         """Register a background task to run during the bot lifecycle.
 
         Args:
@@ -138,23 +137,17 @@ class LifecycleService:
 
         # Runtime guards
         self._task_registry.register(
-            lambda: asyncio.create_task(
-                self._bot.execution_coordinator.run_runtime_guards()
-            )
+            lambda: asyncio.create_task(self._bot.execution_coordinator.run_runtime_guards())
         )
 
         # Order reconciliation
         self._task_registry.register(
-            lambda: asyncio.create_task(
-                self._bot.execution_coordinator.run_order_reconciliation()
-            )
+            lambda: asyncio.create_task(self._bot.execution_coordinator.run_order_reconciliation())
         )
 
         # Position reconciliation
         self._task_registry.register(
-            lambda: asyncio.create_task(
-                self._bot.system_monitor.run_position_reconciliation()
-            )
+            lambda: asyncio.create_task(self._bot.system_monitor.run_position_reconciliation())
         )
 
         # Account telemetry (if supported)
@@ -165,6 +158,11 @@ class LifecycleService:
                 lambda: asyncio.create_task(self._run_account_telemetry(interval))
             )
 
+        # Execution metrics export (every 60s)
+        self._task_registry.register(
+            lambda: asyncio.create_task(self._run_execution_metrics_export())
+        )
+
     async def _run_account_telemetry(self, interval_seconds: int = 300) -> None:
         """Run account telemetry background task.
 
@@ -174,6 +172,13 @@ class LifecycleService:
         if not self._bot.account_telemetry.supports_snapshots():
             return
         await self._bot.account_telemetry.run(interval_seconds)
+
+    async def _run_execution_metrics_export(self) -> None:
+        """Run execution metrics export background task.
+
+        Delegates to PerpsBot's _run_execution_metrics_export method.
+        """
+        await self._bot._run_execution_metrics_export(interval_seconds=60)
 
     async def run(self, single_cycle: bool = False) -> None:
         """Run the trading bot lifecycle.
@@ -200,9 +205,7 @@ class LifecycleService:
                 await self._bot.runtime_coordinator.reconcile_state_on_startup()
                 self._task_registry.spawn_all()
             else:
-                logger.info(
-                    "Dry-run: skipping startup reconciliation and background guard loops"
-                )
+                logger.info("Dry-run: skipping startup reconciliation and background guard loops")
 
             # Main trading loop
             await self._run_trading_loop(single_cycle)

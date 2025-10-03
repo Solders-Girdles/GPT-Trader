@@ -12,12 +12,19 @@ from datetime import datetime
 from decimal import Decimal
 from enum import Enum
 
-from bot_v2.features.brokerages.core.interfaces import OrderSide
+from bot_v2.features.brokerages.core.interfaces import (
+    OrderSide,
+    OrderType,
+    Product,
+    Quote,
+    TimeInForce,
+)
 
 __all__ = [
     "SizingMode",
     "OrderConfig",
     "StopTrigger",
+    "NormalizedOrderRequest",
 ]
 
 
@@ -71,3 +78,46 @@ class StopTrigger:
     created_at: datetime = field(default_factory=datetime.now)
     triggered: bool = False
     triggered_at: datetime | None = None
+
+
+@dataclass
+class NormalizedOrderRequest:
+    """Normalized order request ready for validation.
+
+    This dataclass represents an order request that has been normalized with:
+    - Generated/validated client_id
+    - Quantity converted to Decimal
+    - Market data fetched (product, quote)
+    - All parameters validated for basic correctness
+
+    Attributes:
+        client_id: Unique client identifier for this order
+        symbol: Trading symbol
+        side: Order side (BUY/SELL)
+        quantity: Order quantity (always Decimal)
+        order_type: Order type (MARKET, LIMIT, STOP, etc.)
+        limit_price: Limit price for LIMIT/STOP_LIMIT orders
+        stop_price: Stop price for STOP/STOP_LIMIT orders
+        time_in_force: Time-in-force policy
+        reduce_only: Whether order can only reduce position
+        post_only: Whether order should be post-only
+        leverage: Leverage multiplier (for derivatives)
+        product: Product information from broker (if available)
+        quote: Current market quote (if post_only=True)
+    """
+
+    client_id: str
+    symbol: str
+    side: OrderSide
+    quantity: Decimal
+    order_type: OrderType
+    limit_price: Decimal | None
+    stop_price: Decimal | None
+    time_in_force: TimeInForce
+    reduce_only: bool
+    post_only: bool
+    leverage: int | None
+
+    # Market data (fetched during normalization)
+    product: Product | None = None
+    quote: Quote | None = None

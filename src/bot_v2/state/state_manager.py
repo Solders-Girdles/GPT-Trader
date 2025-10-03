@@ -13,6 +13,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any
 
+from bot_v2.state.adapter_bootstrapper import AdapterBootstrapper
 from bot_v2.state.cache_manager import StateCacheManager
 from bot_v2.state.performance import StatePerformanceMetrics
 from bot_v2.state.repositories import (
@@ -20,6 +21,7 @@ from bot_v2.state.repositories import (
     RedisStateRepository,
     S3StateRepository,
 )
+from bot_v2.state.repository_factory import RepositoryFactory
 from bot_v2.state.storage_adapter_factory import StorageAdapterFactory
 from bot_v2.state.tier_promotion_policy import TierPromotionPolicy
 from bot_v2.state.utils.adapters import (
@@ -113,66 +115,34 @@ class StateManager:
         self.config = config or StateConfig()
         self._lock = threading.Lock()
 
-        # Initialize cache manager
-        self._cache_manager = StateCacheManager(config=self.config)
-
-        # Initialize storage backends with provided adapters or defaults
+        # Bootstrap adapters
         factory = StorageAdapterFactory()
-
-        # Redis adapter initialization
-        if redis_adapter is None:
-            self.redis_adapter = factory.create_redis_adapter(
-                host=self.config.redis_host,
-                port=self.config.redis_port,
-                db=self.config.redis_db,
-            )
-        else:
-            self.redis_adapter = redis_adapter
-
-        # PostgreSQL adapter initialization
-        if postgres_adapter is None:
-            self.postgres_adapter = factory.create_postgres_adapter(
-                host=self.config.postgres_host,
-                port=self.config.postgres_port,
-                database=self.config.postgres_database,
-                user=self.config.postgres_user,
-                password=self.config.postgres_password,
-            )
-        else:
-            # Validate provided adapter by creating tables
-            self.postgres_adapter = factory.validate_postgres_adapter(postgres_adapter)
-
-        # S3 adapter initialization
-        if s3_adapter is None:
-            self.s3_adapter = factory.create_s3_adapter(
-                region=self.config.s3_region,
-                bucket=self.config.s3_bucket,
-            )
-        else:
-            # Validate provided adapter by checking bucket
-            self.s3_adapter = factory.validate_s3_adapter(s3_adapter, self.config.s3_bucket)
-
-        # Initialize tier-specific repositories
-        self._redis_repo = (
-            RedisStateRepository(self.redis_adapter, self.config.redis_ttl_seconds)
-            if self.redis_adapter
-            else None
-        )
-        self._postgres_repo = (
-            PostgresStateRepository(self.postgres_adapter) if self.postgres_adapter else None
-        )
-        self._s3_repo = (
-            S3StateRepository(self.s3_adapter, self.config.s3_bucket) if self.s3_adapter else None
+        bootstrapper = AdapterBootstrapper(factory)
+        adapters = bootstrapper.bootstrap(
+            self.config,
+            redis_adapter=redis_adapter,
+            postgres_adapter=postgres_adapter,
+            s3_adapter=s3_adapter,
         )
 
-        # Initialize tier promotion policy
+        # Store adapters for access
+        self.redis_adapter = adapters.redis
+        self.postgres_adapter = adapters.postgres
+        self.s3_adapter = adapters.s3
+
+        # Create repositories
+        repos = RepositoryFactory.create_repositories(adapters, self.config)
+        self._redis_repo = repos.redis
+        self._postgres_repo = repos.postgres
+        self._s3_repo = repos.s3
+
+        # Initialize components
+        self._cache_manager = StateCacheManager(config=self.config)
         self._promotion_policy = TierPromotionPolicy(
             redis_repo=self._redis_repo,
             postgres_repo=self._postgres_repo,
             s3_repo=self._s3_repo,
         )
-
-        # Initialize performance metrics
         self._metrics = StatePerformanceMetrics(enabled=self.config.enable_performance_tracking)
 
     # Backwards compatibility properties for tests

@@ -9,15 +9,17 @@ Features:
 - Emits JSON lines to rotating file handlers via `logging` (bot_v2.json)
 """
 
-import json
 import logging
 import os
-import threading
 import time
-import uuid
 from datetime import datetime
 from enum import Enum
 from typing import Any
+
+from bot_v2.monitoring.system.correlation_context import CorrelationContext
+from bot_v2.monitoring.system.log_buffer import LogBuffer
+from bot_v2.monitoring.system.log_emitter import LogEmitter
+from bot_v2.monitoring.system.performance_tracker import PerformanceTracker
 
 
 class LogLevel(Enum):
@@ -51,42 +53,41 @@ class ProductionLogger:
             enable_console: Whether to print to console (disable for production)
         """
         self.service_name = service_name
+
+        # Infrastructure components
+        self._correlation = CorrelationContext()
+        self._buffer = LogBuffer(max_size=1000)
+        self._performance = PerformanceTracker()
+
+        # Configure emitter
+        min_level = os.getenv("PERPS_MIN_LOG_LEVEL", "info").lower()
+        if os.getenv("PERPS_DEBUG") in ("1", "true", "yes", "on"):
+            min_level = "debug"
+
+        # Python logger for JSON lines; handlers configured in bot_v2.logging_setup
+        py_logger = logging.getLogger(f"{service_name}.json")
+        if not py_logger.handlers:
+            py_logger = logging.getLogger("bot_v2.json")
+
         # Allow env var to override console logging to avoid noisy prod
         env_console = os.getenv("PERPS_JSON_CONSOLE")
         if env_console is not None:
             enable_console = env_console.strip().lower() in ("1", "true", "yes", "on")
-        self.enable_console = enable_console
-        self.correlation_ids = threading.local()
 
-        # Performance tracking
-        self._log_count = 0
-        self._total_log_time = 0.0
-
-        # In-memory buffer for recent logs (for monitoring)
-        self._recent_logs: list[dict[str, Any]] = []
-        self._max_recent_logs = 1000
-        self._lock = threading.Lock()
-        # Minimum level filter
-        self._min_level = os.getenv("PERPS_MIN_LOG_LEVEL", "info").lower()
-        if os.getenv("PERPS_DEBUG") in ("1", "true", "yes", "on"):
-            self._min_level = "debug"
-        # Python logger for JSON lines; handlers configured in bot_v2.logging_setup
-        self._py_json_logger = logging.getLogger(f"{self.service_name}.json")
-        # Fallback to global channel if sub-logger has no handlers
-        if not self._py_json_logger.handlers:
-            self._py_json_logger = logging.getLogger("bot_v2.json")
+        self._emitter = LogEmitter(
+            service_name=service_name,
+            enable_console=enable_console,
+            min_level=min_level,
+            py_logger=py_logger,
+        )
 
     def set_correlation_id(self, correlation_id: str | None = None) -> None:
         """Set correlation ID for current thread."""
-        if correlation_id is None:
-            correlation_id = str(uuid.uuid4())[:8]
-        self.correlation_ids.value = correlation_id
+        self._correlation.set_correlation_id(correlation_id)
 
     def get_correlation_id(self) -> str:
         """Get current thread's correlation ID."""
-        if not hasattr(self.correlation_ids, "value"):
-            self.set_correlation_id()
-        return str(self.correlation_ids.value)
+        return self._correlation.get_correlation_id()
 
     def _create_log_entry(
         self, level: LogLevel, event_type: str, message: str, **kwargs: Any
@@ -99,7 +100,7 @@ class ProductionLogger:
             "timestamp": datetime.now().isoformat(),
             "level": level.value,
             "service": self.service_name,
-            "correlation_id": self.get_correlation_id(),
+            "correlation_id": self._correlation.get_correlation_id(),
             "event_type": event_type,
             "message": message,
         }
@@ -109,38 +110,16 @@ class ProductionLogger:
             entry.update(kwargs)
 
         # Track performance
-        log_time = time.perf_counter() - start_time
-        self._log_count += 1
-        self._total_log_time += log_time
+        self._performance.record(time.perf_counter() - start_time)
 
         return entry
 
     def _emit_log(self, entry: dict[str, Any]) -> None:
-        """Emit log entry with minimal overhead."""
-        # Respect minimum level
-        try:
-            if _LEVEL_MAP.get(entry.get("level", "info"), logging.INFO) < _LEVEL_MAP.get(
-                self._min_level, logging.INFO
-            ):
-                return
-        except Exception:
-            pass
-        # Store in recent logs buffer
-        with self._lock:
-            self._recent_logs.append(entry)
-            if len(self._recent_logs) > self._max_recent_logs:
-                self._recent_logs.pop(0)
-
-        # Output to console if enabled (production should disable this)
-        if self.enable_console:
-            print(json.dumps(entry, separators=(",", ":")))
-        # Emit to JSON file logger (handled by logging_setup)
-        try:
-            py_level = _LEVEL_MAP.get(entry.get("level", "info"), logging.INFO)
-            self._py_json_logger.log(py_level, json.dumps(entry, separators=(",", ":")))
-        except Exception:
-            # Don't let logging errors break the app
-            pass
+        """Emit log entry (delegates to buffer and emitter)."""
+        # Only buffer/emit if entry meets minimum level
+        if self._emitter._should_emit(entry):  # noqa: SLF001
+            self._buffer.append(entry)
+            self._emitter.emit(entry)
 
     def log_event(
         self,
@@ -582,24 +561,11 @@ class ProductionLogger:
 
     def get_recent_logs(self, count: int = 100) -> list[dict[str, Any]]:
         """Get recent log entries."""
-        with self._lock:
-            return (
-                self._recent_logs[-count:]
-                if count < len(self._recent_logs)
-                else self._recent_logs.copy()
-            )
+        return self._buffer.get_recent(count)
 
     def get_performance_stats(self) -> dict[str, float | int]:
         """Get logger performance statistics."""
-        if self._log_count == 0:
-            return {"avg_log_time_ms": 0.0, "total_logs": 0}
-
-        avg_time_ms = (self._total_log_time / self._log_count) * 1000
-        return {
-            "avg_log_time_ms": avg_time_ms,
-            "total_logs": self._log_count,
-            "total_log_time_ms": self._total_log_time * 1000,
-        }
+        return self._performance.get_stats()
 
 
 # Global logger instance

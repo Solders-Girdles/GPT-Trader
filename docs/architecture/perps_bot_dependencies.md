@@ -1,8 +1,8 @@
 # PerpsBot Architecture & Dependencies
 
-**Status**: Living document - Updated during Phase 2 refactoring
+**Status**: Living document – updated for builder-default construction
 **Purpose**: Map ALL dependencies before refactoring to prevent data loss
-**Last Updated**: 2025-10-01 (Phase 2: StreamingService extraction)
+**Last Updated**: 2025-04-27 (Builder default + service rebinding helper)
 
 ## Overview
 
@@ -11,65 +11,34 @@ PerpsBot is the main orchestration class for the trading system. This document m
 ## Initialization Sequence
 
 ```
-__init__(config, registry)
-  ├─ _init_configuration_state(config, registry)
-  │   ├─ ConfigController(config)
-  │   ├─ empty_registry(config) or use provided
-  │   ├─ registry.with_updates(config=self.config) [if mismatch]
-  │   ├─ TradingSessionGuard(start, end, trading_days)
-  │   └─ symbols list extraction
-  │
-  ├─ _init_runtime_state()
-  │   ├─ _product_map: dict[str, Product] = {}
-  │   ├─ mark_windows: dict[str, list[Decimal]] = {s: [] for s in symbols}
-  │   ├─ last_decisions: dict[str, Any] = {}
-  │   ├─ _last_positions: dict[str, dict[str, Any]] = {}
-  │   ├─ order_stats = {"attempted": 0, "successful": 0, "failed": 0}
-  │   ├─ _order_lock: asyncio.Lock | None = None
-  │   ├─ _mark_lock = threading.RLock()
-  │   ├─ _symbol_strategies: dict[str, Any] = {}
-  │   ├─ strategy: Any | None = None
-  │   └─ _exec_engine: LiveExecutionEngine | AdvancedExecutionEngine | None = None
-  │
-  ├─ _bootstrap_storage()
-  │   ├─ StorageBootstrapper(config, registry).bootstrap()
-  │   ├─ event_store [OUTPUT]
-  │   ├─ orders_store [OUTPUT]
-  │   └─ registry [UPDATED]
-  │
-  ├─ _construct_services()
-  │   ├─ StrategyOrchestrator(self)
-  │   ├─ ExecutionCoordinator(self)
-  │   ├─ SystemMonitor(self)
-  │   └─ RuntimeCoordinator(self)
-  │
-  ├─ runtime_coordinator.bootstrap()
-  │   └─ Calls: execution_coordinator.init_execution()
-  │       └─ Side effect: May initialize exec_engine
-  │
-  ├─ _init_accounting_services()
-  │   ├─ CoinbaseAccountManager(broker, event_store)
-  │   ├─ AccountTelemetryService(broker, account_manager, event_store, bot_id, profile)
-  │   ├─ Checks: account_telemetry.supports_snapshots()
-  │   └─ system_monitor.attach_account_telemetry(account_telemetry)
-  │
-  ├─ _init_market_services()
-  │   └─ MarketActivityMonitor(symbols, heartbeat_logger=_log_market_heartbeat)
-  │       └─ _log_market_heartbeat → _get_plog().log_market_heartbeat(**payload)
-  │
-  ├─ _init_streaming_service() [Phase 2]
-  │   └─ IF USE_NEW_STREAMING_SERVICE=true AND _market_data_service exists:
-  │       └─ StreamingService(symbols, broker, market_data_service, risk_manager, event_store, market_monitor, bot_id)
-  │
-  └─ _start_streaming_if_configured()
-      └─ IF perps_enable_streaming AND profile in {CANARY, PROD}:
-          ├─ IF _streaming_service exists:
-          │   └─ _streaming_service.start(level=perps_stream_level)
-          └─ ELSE:
-              └─ _start_streaming_background_legacy() [rollback path]
+PerpsBot.__init__(config, registry=None)
+  ├─ builder = PerpsBotBuilder(config)
+  │   └─ if registry provided → builder.with_registry(registry)
+  ├─ built = builder.build()
+  │   ├─ _build_configuration_state(bot)
+  │   ├─ _build_runtime_state(bot)
+  │   ├─ _build_storage(bot)
+  │   ├─ _build_core_services(bot)
+  │   ├─ bot.runtime_coordinator.bootstrap()
+  │   ├─ _build_market_data_service(bot)
+  │   ├─ _build_accounting_services(bot)
+  │   ├─ _build_market_services(bot)
+  │   ├─ _build_streaming_service(bot)
+  │   └─ _start_streaming_if_configured(bot)
+  └─ _apply_built_state(built)
+      ├─ copy attributes onto runtime instance
+      └─ service_rebinding.rebind_bot_services(self)
+
+# Streaming toggles at runtime re-use: PerpsBot._start_streaming_if_configured()
 ```
 
+**Rebinding helper:** `rebind_bot_services(bot)` walks every coordinator-style attribute and
+reassigns cached `_bot` references to the live runtime instance. Adding a new service that stores
+a `_bot` attribute automatically opts-in to this rebind step.
+
 ## MarketDataService Extraction - Dependency Checklist
+
+*Builder hook:* `PerpsBotBuilder._build_market_data_service`
 
 ### Inputs (Constructor Dependencies)
 - `symbols: list[str]` - from config
@@ -111,6 +80,8 @@ async def update_marks(self):
 
 ## StreamingService Extraction (Phase 2) - Dependency Checklist
 
+*Builder hook:* `PerpsBotBuilder._build_streaming_service`
+
 ### Inputs (Constructor Dependencies)
 - `symbols: list[str]` - from PerpsBot
 - `broker: IBrokerage` - from registry
@@ -151,26 +122,26 @@ def _stream_loop(self, symbols, level):
 
 ### Lock Sharing (CRITICAL)
 
-**Current state after Phase 2:**
+**Current state after builder default:**
 ```python
-# PerpsBot creates lock
-self._mark_lock = threading.RLock()
+# PerpsBotBuilder creates lock
+bot._mark_lock = threading.RLock()
 
 # MarketDataService shares the lock
-self._market_data_service = MarketDataService(
+bot._market_data_service = MarketDataService(
     ...,
-    mark_lock=self._mark_lock,  # ← SAME instance
-    mark_windows=self.mark_windows,
+    mark_lock=bot._mark_lock,  # ← SAME instance
+    mark_windows=bot.mark_windows,
 )
 
 # StreamingService uses lock via MarketDataService
-self._streaming_service = StreamingService(
-    market_data_service=self._market_data_service,  # ← Lock accessed here
+bot._streaming_service = StreamingService(
+    market_data_service=bot._market_data_service,  # ← Lock accessed here
     ...
 )
 
 # Streaming calls:
-market_data_service._update_mark_window(symbol, mark)
+bot._market_data_service._update_mark_window(symbol, mark)
 # Which internally uses:
 with self._mark_lock:  # ← SAME lock as PerpsBot._mark_lock
     ...

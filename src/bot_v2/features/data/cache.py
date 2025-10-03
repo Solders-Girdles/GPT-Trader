@@ -1,14 +1,15 @@
-"""
-Local data caching implementation.
+"""Local data caching implementation."""
 
-Complete isolation - no external dependencies.
-"""
-
+from collections.abc import Callable, Iterable
 from datetime import datetime, timedelta
+import logging
 
 import pandas as pd
 
 from bot_v2.features.data.types import CacheEntry
+
+
+logger = logging.getLogger(__name__)
 
 
 class DataCache:
@@ -61,8 +62,8 @@ class DataCache:
             self.cache[key] = entry
             return True
 
-        except Exception as e:
-            print(f"Cache error: {e}")
+        except Exception as exc:  # pragma: no cover - defensive logging path
+            logger.exception("Failed to cache payload", extra={"key": key, "error": str(exc)})
             return False
 
     def get(self, key: str) -> pd.DataFrame | None:
@@ -170,14 +171,47 @@ class DataCache:
             freed_space += entry.size_bytes
             del self.cache[key]
 
-    def warm_up(self, queries: list):
-        """
-        Warm up cache with common queries.
+    def warm_up(
+        self,
+        keys: Iterable[str],
+        loader: Callable[[str], pd.DataFrame | None] | None = None,
+        ttl_seconds: int = 3600,
+    ) -> int:
+        """Pre-populate cache entries using a user-provided loader.
 
         Args:
-            queries: List of queries to pre-cache
+            keys: Iterable of cache keys to populate.
+            loader: Callable that returns a DataFrame for a given key. If not provided,
+                the method logs a debug message and returns immediately.
+            ttl_seconds: TTL to apply to warmed entries.
+
+        Returns:
+            Number of cache entries successfully warmed.
         """
-        print("Warming up cache...")
-        for query in queries:
-            # This would fetch and cache data
-            pass
+        key_list = list(keys)
+
+        if loader is None:
+            logger.debug(
+                "Cache warm-up requested without loader; skipping",
+                extra={"keys": key_list},
+            )
+            return 0
+
+        warmed = 0
+        for key in key_list:
+            try:
+                data = loader(key)
+            except Exception as exc:  # pragma: no cover - defensive logging path
+                logger.warning(
+                    "Cache warm-up loader failed",
+                    extra={"key": key, "error": str(exc)},
+                )
+                continue
+
+            if data is None or data.empty:
+                continue
+
+            if self.put(key, data, ttl_seconds):
+                warmed += 1
+
+        return warmed

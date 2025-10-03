@@ -91,8 +91,11 @@ class DataStorage:
 
             return True
 
-        except Exception as e:
-            print(f"Storage error: {e}")
+        except Exception as exc:  # pragma: no cover - defensive logging path
+            logger.exception(
+                "Failed to store data",
+                extra={"symbol": symbol, "data_type": data_type.value, "source": source.value},
+            )
             return False
 
     def fetch(self, query: DataQuery) -> pd.DataFrame | None:

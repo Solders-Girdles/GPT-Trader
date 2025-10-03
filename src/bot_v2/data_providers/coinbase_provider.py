@@ -209,8 +209,86 @@ class CoinbaseDataProvider(DataProvider):
         # Default to quote pair for spot trading
         return f"{symbol_upper}-{default_quote}"
 
+    def _build_cache_key(
+        self,
+        symbol: str,
+        period: str,
+        interval: str,
+        start: datetime | str | None,
+        end: datetime | str | None,
+    ) -> str:
+        """Build cache key that distinguishes explicit date ranges."""
+        start_key = self._format_cache_bound(start)
+        end_key = self._format_cache_bound(end)
+        if not start_key and not end_key:
+            return f"{symbol}_{period}_{interval}"
+        return f"{symbol}_{period}_{interval}_{start_key}_{end_key}"
+
+    @staticmethod
+    def _format_cache_bound(bound: datetime | str | None) -> str:
+        if bound is None:
+            return ""
+        if isinstance(bound, datetime):
+            return bound.isoformat()
+        return str(bound)
+
+    def _resolve_period_days(
+        self,
+        period: str,
+        start: datetime | str | None,
+        end: datetime | str | None,
+    ) -> int:
+        """Determine the requested window length in days."""
+        start_dt = self._coerce_datetime(start)
+        end_dt = self._coerce_datetime(end)
+        if start_dt is not None and end_dt is not None:
+            delta_days = max(int((end_dt - start_dt).days) + 1, 1)
+            return delta_days
+
+        return self._parse_period_days(period)
+
+    @staticmethod
+    def _coerce_datetime(value: datetime | str | None) -> datetime | None:
+        if value is None:
+            return None
+        if isinstance(value, datetime):
+            return value
+        try:
+            return pd.to_datetime(value).to_pydatetime()
+        except Exception:
+            return None
+
+    @staticmethod
+    def _parse_period_days(period: str) -> int:
+        try:
+            if period.endswith("d"):
+                return max(int(period[:-1]), 1)
+        except (AttributeError, ValueError):
+            return 60
+        return 60
+
+    def _fallback_period(
+        self,
+        period: str,
+        start: datetime | str | None,
+        end: datetime | str | None,
+        period_days: int | None,
+    ) -> str:
+        """Return a period string suitable for mock data fallbacks."""
+        if period:
+            return period
+        if period_days is None:
+            period_days = self._resolve_period_days(period, start, end)
+        return f"{period_days}d"
+
     def get_historical_data(
-        self, symbol: str, period: str = "60d", interval: str = "1d"
+        self,
+        symbol: str,
+        period: str = "60d",
+        interval: str = "1d",
+        *,
+        start: datetime | str | None = None,
+        end: datetime | str | None = None,
     ) -> pd.DataFrame:
         """
         Get historical price data from Coinbase.
@@ -225,7 +303,7 @@ class CoinbaseDataProvider(DataProvider):
             DataFrame with OHLCV data
         """
         normalized_symbol = self._normalize_symbol(symbol)
-        cache_key = f"{normalized_symbol}_{period}_{interval}"
+        cache_key = self._build_cache_key(normalized_symbol, period, interval, start, end)
 
         # Check cache
         if cache_key in self._historical_cache:
@@ -249,14 +327,14 @@ class CoinbaseDataProvider(DataProvider):
 
             granularity = granularity_map.get(interval, "ONE_DAY")
 
-            # Calculate limit based on period
-            days = int(period.rstrip("d")) if "d" in period else 60
+            # Calculate limit based on requested window
+            period_days = self._resolve_period_days(period, start, end)
             if interval == "1d":
-                limit = days
+                limit = period_days
             elif interval == "1h":
-                limit = min(days * 24, 300)  # Coinbase has limits
+                limit = min(period_days * 24, 300)  # Coinbase has limits
             elif interval == "5m":
-                limit = min(days * 24 * 12, 300)
+                limit = min(period_days * 24 * 12, 300)
             else:
                 limit = 200  # Default
 
@@ -266,7 +344,8 @@ class CoinbaseDataProvider(DataProvider):
 
             if not candles:
                 logger.warning(f"No data returned for {normalized_symbol}, using mock data")
-                return self._get_mock_data(symbol, period)
+                fallback_period = self._fallback_period(period, start, end, period_days)
+                return self._get_mock_data(symbol, fallback_period)
 
             # Convert to DataFrame
             data = []
@@ -295,7 +374,8 @@ class CoinbaseDataProvider(DataProvider):
         except Exception as e:
             logger.error(f"Error fetching Coinbase data for {normalized_symbol}: {e}")
             logger.info("Falling back to mock data")
-            return self._get_mock_data(symbol, period)
+            fallback_period = self._fallback_period(period, start, end, period_days=None)
+            return self._get_mock_data(symbol, fallback_period)
 
     def get_current_price(self, symbol: str) -> float:
         """

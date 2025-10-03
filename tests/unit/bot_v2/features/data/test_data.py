@@ -19,13 +19,16 @@ from bot_v2.features.data.types import DataQuery, DataSource, DataType, StorageS
 def sample_data():
     """Create sample OHLCV data."""
     dates = pd.date_range(start="2023-01-01", periods=30, freq="D")
-    return pd.DataFrame({
-        "open": [100 + i for i in range(30)],
-        "high": [101 + i for i in range(30)],
-        "low": [99 + i for i in range(30)],
-        "close": [100.5 + i for i in range(30)],
-        "volume": [1000000 for _ in range(30)],
-    }, index=dates)
+    return pd.DataFrame(
+        {
+            "open": [100 + i for i in range(30)],
+            "high": [101 + i for i in range(30)],
+            "low": [99 + i for i in range(30)],
+            "close": [100.5 + i for i in range(30)],
+            "volume": [1000000 for _ in range(30)],
+        },
+        index=dates,
+    )
 
 
 @pytest.fixture
@@ -108,7 +111,9 @@ class TestDataServiceInit:
 class TestStoreData:
     """Tests for store_data method."""
 
-    def test_store_data_success(self, data_service, sample_data, mock_storage, mock_quality_checker):
+    def test_store_data_success(
+        self, data_service, sample_data, mock_storage, mock_quality_checker
+    ):
         """Test successful data storage."""
         result = data_service.store_data(
             symbol="AAPL",
@@ -211,7 +216,9 @@ class TestFetchData:
         mock_cache.get.assert_not_called()
 
     @patch("bot_v2.features.data.data.get_data_provider")
-    def test_fetch_downloads_if_not_found(self, mock_get_provider, data_service, sample_data, mock_storage):
+    def test_fetch_downloads_if_not_found(
+        self, mock_get_provider, data_service, sample_data, mock_storage
+    ):
         """Test downloading data if not in storage."""
         mock_storage.fetch.return_value = None
 
@@ -231,6 +238,77 @@ class TestFetchData:
 
         assert result is not None
         mock_provider.get_historical_data.assert_called()
+
+    def test_fetch_downloads_with_date_range(
+        self,
+        data_service,
+        mock_storage,
+        mock_cache,
+        mock_quality_checker,
+        monkeypatch,
+    ):
+        """Ensure provider receives explicit start/end parameters."""
+
+        class DummyProvider:
+            def __init__(self) -> None:
+                self.calls: list[dict[str, object]] = []
+
+            def get_historical_data(
+                self,
+                symbol: str,
+                period: str = "60d",
+                interval: str = "1d",
+                *,
+                start=None,
+                end=None,
+            ) -> pd.DataFrame:
+                self.calls.append(
+                    {
+                        "symbol": symbol,
+                        "period": period,
+                        "interval": interval,
+                        "start": start,
+                        "end": end,
+                    }
+                )
+                index = pd.date_range(start=start, end=end, freq="D")
+                return pd.DataFrame(
+                    {
+                        "open": [100 + i for i in range(len(index))],
+                        "high": [101 + i for i in range(len(index))],
+                        "low": [99 + i for i in range(len(index))],
+                        "close": [100.5 + i for i in range(len(index))],
+                        "volume": [1_000_000 for _ in index],
+                    },
+                    index=index,
+                )
+
+        provider = DummyProvider()
+        monkeypatch.setattr("bot_v2.features.data.data.get_data_provider", lambda: provider)
+
+        start_date = datetime(2024, 1, 1)
+        end_date = datetime(2024, 1, 5)
+        query = DataQuery(
+            symbols=["AAPL"],
+            start_date=start_date,
+            end_date=end_date,
+            data_type=DataType.OHLCV,
+            source=DataSource.YAHOO,
+        )
+
+        mock_storage.fetch.return_value = None
+
+        result = data_service.fetch_data(query, use_cache=True)
+
+        assert result is not None
+        assert "AAPL" in result
+        assert len(provider.calls) == 1
+        call = provider.calls[0]
+        assert call["symbol"] == "AAPL"
+        assert call["interval"] == "1d"
+        assert call["start"] == start_date
+        assert call["end"] == end_date
+        mock_storage.store.assert_called()
 
 
 class TestCacheOperations:
@@ -252,6 +330,35 @@ class TestCacheOperations:
         assert result is not None
         mock_cache.get.assert_called_with("test_key")
         pd.testing.assert_frame_equal(result, sample_data)
+
+
+class TestDataCacheWarmUp:
+    """Tests for DataCache.warm_up."""
+
+    def test_warm_up_without_loader(self):
+        """Verify warm_up returns zero when no loader provided."""
+        cache = DataCache()
+        warmed = cache.warm_up(["alpha", "beta"], loader=None)
+
+        assert warmed == 0
+        assert cache.get("alpha") is None
+
+    def test_warm_up_with_loader(self):
+        """Warm-up should populate cache for keys with data."""
+        cache = DataCache()
+
+        def loader(key: str) -> pd.DataFrame | None:
+            if key == "alpha":
+                index = pd.date_range(start="2024-01-01", periods=3, freq="D")
+                return pd.DataFrame({"close": [1, 2, 3]}, index=index)
+            return None
+
+        warmed = cache.warm_up(["alpha", "beta"], loader=loader, ttl_seconds=120)
+
+        assert warmed == 1
+        warmed_frame = cache.get("alpha")
+        assert warmed_frame is not None
+        assert cache.get("beta") is None
 
 
 class TestDownloadHistorical:

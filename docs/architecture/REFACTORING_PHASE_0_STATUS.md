@@ -1,15 +1,15 @@
 # PerpsBot Refactoring - Progress Tracker
 
 **Date Started**: 2025-10-01
-**Current Phase**: Phase 2 Complete, Phase 3 Next
-**Last Updated**: 2025-10-01
+**Current Phase**: Phase 3 Complete (Builder pattern delivered)
+**Last Updated**: 2025-10-02
 
 ## Phase Overview
 
 - ✅ **Phase 0**: Safety net (characterization tests, docs)
 - ✅ **Phase 1**: MarketDataService extraction
 - ✅ **Phase 2**: StreamingService extraction
-- ⏳ **Phase 3**: Builder pattern (planned)
+- ✅ **Phase 3**: Builder pattern + construction cleanup (`PHASE_3_COMPLETE_SUMMARY.md`)
 
 ## Objectives
 
@@ -91,12 +91,12 @@ From dependency doc:
 - [x] Confirm event_store is only used by streaming, not update_marks
 - [x] Document exact trimming algorithm
 
-### 2. Builder Shim Alternative (Planned for Phase 3)
+### 2. Builder Shim Alternative ✅ (Phase 3 Delivery)
 
 User feedback addressed:
 > builder shim (self.__dict__ = bot.__dict__) can bypass descriptors
 
-**Solution** (documented in architecture):
+**Solution** (implemented, see Phase 3 summary):
 ```python
 # Instead of: self.__dict__ = bot.__dict__
 # Use: @classmethod from_builder
@@ -258,23 +258,19 @@ $ pytest tests/integration/test_perps_bot_characterization.py::TestStreamingServ
 
 ---
 
-## Phase 3 - Next Steps (Planned)
+## Phase 3 Completion Summary ✅
 
-**Goal**: Extract construction logic into Builder pattern
+**Date Completed**: 2025-10-01
+**Feature Flag**: `USE_PERPS_BOT_BUILDER=true` (default)
 
-### Planned Work
+### Highlights
 
-1. Create `PerpsBotBuilder` for service composition
-2. Remove direct PerpsBot constructor usage
-3. Feature flag: `USE_PERPS_BOT_BUILDER=true` (default)
-4. Preserve all initialization behavior
-5. Tests for builder path and legacy path
+- Introduced `PerpsBotBuilder` with nine construction phases mirroring legacy `__init__`.
+- Added feature-flagged shim in `PerpsBot.__init__` plus `from_builder` helper for future refactors.
+- Rebound coordinator services post-build to keep `_bot` references aligned.
+- Expanded unit/integration test coverage validating builder/legacy parity and rollback path.
 
-### Dependencies
-
-- ✅ Phase 1 complete (MarketDataService extracted)
-- ✅ Phase 2 complete (StreamingService extracted)
-- Both services now injectable, making builder pattern straightforward
+**Status**: ✅ Complete — see `docs/architecture/PHASE_3_COMPLETE_SUMMARY.md` for full details.
 
 ---
 

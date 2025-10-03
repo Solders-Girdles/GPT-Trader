@@ -230,7 +230,12 @@ class TestReadOnlyMode:
         mock_state_manager = Mock()
         mock_state_manager.create_snapshot = AsyncMock(return_value=sample_runtime_state)
         mock_state_manager.set_state = AsyncMock(side_effect=counting_set_state)
-        mock_state_manager.batch_set_state = AsyncMock(side_effect=lambda items, **kwargs: (write_attempts.__setitem__("count", write_attempts["count"] + len(items)) or len(items)))
+        mock_state_manager.batch_set_state = AsyncMock(
+            side_effect=lambda items, **kwargs: (
+                write_attempts.__setitem__("count", write_attempts["count"] + len(items))
+                or len(items)
+            )
+        )
         mock_state_manager.get_keys_by_pattern = AsyncMock(return_value=[])
 
         manager = BackupManager(state_manager=mock_state_manager, config=backup_config)
@@ -386,7 +391,9 @@ class TestErrorRecovery:
         # Simulate write failure by making directory read-only after creation
         manager = BackupManager(state_manager=mock_state_manager, config=backup_config)
 
-        with patch.object(manager, "_store_backup", side_effect=Exception("Write failed")):
+        with patch.object(
+            manager.backup_creator, "_store_backup", side_effect=Exception("Write failed")
+        ):
             # Should handle error gracefully
             metadata = await manager.create_backup(BackupType.FULL)
 

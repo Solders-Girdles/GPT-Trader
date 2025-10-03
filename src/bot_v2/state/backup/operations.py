@@ -13,10 +13,11 @@ import logging
 import os
 import threading
 from collections.abc import Coroutine
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, TypeVar
 
+from bot_v2.state.backup.collector import DataCollector
 from bot_v2.state.backup.creator import BackupCreator
 from bot_v2.state.backup.metadata import BackupMetadataManager
 from bot_v2.state.backup.models import (
@@ -135,6 +136,15 @@ class BackupManager:
             compression_service=self.compression_service,
             transport_service=self.transport_service,
             tier_strategy=self.tier_strategy,
+        )
+
+        # Initialize data collector
+        self.data_collector = DataCollector(
+            state_manager=self.state_manager,
+            config=self.config,
+            context=self.context,
+            metadata_manager=self.metadata_manager,
+            metrics=self._metrics,
         )
 
         logger.info(
@@ -458,7 +468,11 @@ class BackupManager:
     async def _collect_backup_data(
         self, backup_type: BackupType, override: dict[str, Any] | None = None
     ) -> dict[str, Any]:
-        """Collect data for backup based on type."""
+        """Collect data for backup based on type.
+
+        Delegates to DataCollector for actual data gathering,
+        then applies normalization and diffing logic.
+        """
         metadata = {
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "backup_type": backup_type.value,
@@ -468,28 +482,13 @@ class BackupManager:
             },
         }
 
-        if override is not None:
-            state_payload = self._normalize_state_payload(override)
-        else:
-            if backup_type == BackupType.FULL:
-                state_payload = await self._collect_all_data()
-            elif backup_type == BackupType.INCREMENTAL:
-                last_backup = self.metadata_manager.get_last_backup_time()
-                state_payload = await self._collect_changed_data(last_backup)
-            elif backup_type == BackupType.DIFFERENTIAL:
-                last_full = self._last_full_backup or datetime.now(timezone.utc) - timedelta(
-                    days=30
-                )
-                state_payload = await self._collect_changed_data(last_full)
-            elif backup_type == BackupType.SNAPSHOT:
-                state_payload = await self._collect_snapshot_data()
-            elif backup_type == BackupType.EMERGENCY:
-                state_payload = await self._collect_critical_data()
-            else:
-                state_payload = await self._collect_all_data()
+        # Delegate data collection to DataCollector
+        state_payload = await self.data_collector.collect_for_backup(backup_type, override)
 
+        # Normalize the collected payload
         self._pending_state_snapshot = self._normalize_state_payload(state_payload)
 
+        # Compute diff for incremental/differential backups
         persisted_state = self._pending_state_snapshot
         if backup_type == BackupType.INCREMENTAL:
             persisted_state = self._diff_state(
@@ -500,261 +499,6 @@ class BackupManager:
 
         metadata["state"] = persisted_state
         return metadata
-
-    async def _collect_all_data(self) -> dict[str, Any]:
-        """Collect all system data"""
-        if hasattr(self.state_manager, "create_snapshot") and callable(
-            getattr(self.state_manager, "create_snapshot", None)
-        ):
-            snapshot_callable = getattr(self.state_manager, "create_snapshot")
-            snapshot = await self._maybe_await(snapshot_callable())
-            if snapshot:
-                return self._normalize_state_payload(snapshot)
-
-        data = {}
-
-        # Collect all state data
-        patterns = [
-            "position:*",
-            "order:*",
-            "portfolio*",
-            "ml_model:*",
-            "config:*",
-            "performance*",
-            "strategy:*",
-        ]
-
-        # Use direct repository access for batch operations (99%+ faster)
-        # Fall back to StateManager if repositories unavailable or not async-compatible
-        try:
-            repos = self.state_manager.get_repositories()
-        except (AttributeError, TypeError):
-            repos = None
-
-        with self._metrics.time_operation("backup.collect_all_data"):
-            if repos is not None:
-                try:
-                    # Direct repository access (fast path)
-                    for pattern in patterns:
-                        # Try HOT tier (Redis) first
-                        if repos.redis:
-                            keys = await repos.redis.keys(pattern)
-                            for key in keys:
-                                value = await repos.redis.fetch(key)
-                                if value:
-                                    data[key] = value
-
-                        # Check WARM tier (PostgreSQL) for keys not in HOT
-                        if repos.postgres:
-                            keys = await repos.postgres.keys(pattern)
-                            for key in keys:
-                                if key not in data:  # Skip if already found in HOT
-                                    value = await repos.postgres.fetch(key)
-                                    if value:
-                                        data[key] = value
-
-                        # Check COLD tier (S3) for keys not in HOT/WARM
-                        if repos.s3:
-                            keys = await repos.s3.keys(pattern)
-                            for key in keys:
-                                if key not in data:  # Skip if already found in HOT/WARM
-                                    value = await repos.s3.fetch(key)
-                                    if value:
-                                        data[key] = value
-                except TypeError:
-                    # Repositories exist but aren't async-compatible (e.g., Mocks)
-                    # Fall back to StateManager
-                    data = {}
-                    for pattern in patterns:
-                        keys = await self.state_manager.get_keys_by_pattern(pattern)
-                        for key in keys:
-                            value = await self.state_manager.get_state(key)
-                            if value:
-                                data[key] = value
-            else:
-                # Fallback: StateManager access (slower but compatible)
-                for pattern in patterns:
-                    keys = await self.state_manager.get_keys_by_pattern(pattern)
-                    for key in keys:
-                        value = await self.state_manager.get_state(key)
-                        if value:
-                            data[key] = value
-
-        logger.debug(f"Collected {len(data)} items for full backup")
-
-        return data
-
-    async def _collect_changed_data(self, since: datetime) -> dict[str, Any]:
-        """Collect data changed since given time"""
-        data = {}
-
-        # Get recently modified keys
-        # This would ideally track modification times
-        patterns = ["position:*", "order:*", "portfolio*"]
-
-        # Use direct repository access for batch operations (99%+ faster)
-        # Fall back to StateManager if repositories unavailable or not async-compatible
-        try:
-            repos = self.state_manager.get_repositories()
-        except (AttributeError, TypeError):
-            repos = None
-
-        def _check_timestamp(value: Any) -> bool:
-            """Helper to check if value's timestamp is after 'since'."""
-            if not (value and isinstance(value, dict)):
-                return False
-
-            timestamp = value.get("timestamp") or value.get("last_updated")
-            if not timestamp:
-                return True  # Include if no timestamp
-
-            try:
-                if isinstance(timestamp, str):
-                    dt = datetime.fromisoformat(timestamp)
-                else:
-                    dt = timestamp
-
-                if isinstance(dt, datetime) and dt.tzinfo is None:
-                    dt = dt.replace(tzinfo=timezone.utc)
-
-                return dt > since
-            except (TypeError, ValueError) as exc:
-                logger.debug(
-                    "Unable to parse timestamp %s: %s",
-                    timestamp,
-                    exc,
-                    exc_info=True,
-                )
-                return True  # Include if timestamp is malformed
-
-        with self._metrics.time_operation("backup.collect_changed_data"):
-            if repos is not None:
-                try:
-                    # Direct repository access (fast path)
-                    for pattern in patterns:
-                        # Collect from HOT tier (Redis)
-                        if repos.redis:
-                            keys = await repos.redis.keys(pattern)
-                            for key in keys:
-                                value = await repos.redis.fetch(key)
-                                if _check_timestamp(value):
-                                    data[key] = value
-
-                        # Check WARM tier for keys not already found
-                        if repos.postgres:
-                            keys = await repos.postgres.keys(pattern)
-                            for key in keys:
-                                if key not in data:
-                                    value = await repos.postgres.fetch(key)
-                                    if _check_timestamp(value):
-                                        data[key] = value
-
-                        # Check COLD tier (S3) for keys not in HOT/WARM
-                        if repos.s3:
-                            keys = await repos.s3.keys(pattern)
-                            for key in keys:
-                                if key not in data:
-                                    value = await repos.s3.fetch(key)
-                                    if _check_timestamp(value):
-                                        data[key] = value
-                except TypeError:
-                    # Repositories exist but aren't async-compatible (e.g., Mocks)
-                    # Fall back to StateManager
-                    data = {}
-                    for pattern in patterns:
-                        keys = await self.state_manager.get_keys_by_pattern(pattern)
-                        for key in keys:
-                            value = await self.state_manager.get_state(key)
-                            if _check_timestamp(value):
-                                data[key] = value
-            else:
-                # Fallback: StateManager access (slower but compatible)
-                for pattern in patterns:
-                    keys = await self.state_manager.get_keys_by_pattern(pattern)
-                    for key in keys:
-                        value = await self.state_manager.get_state(key)
-                        if _check_timestamp(value):
-                            data[key] = value
-
-        logger.debug(f"Collected {len(data)} changed items since {since}")
-
-        return data
-
-    async def _collect_snapshot_data(self) -> dict[str, Any]:
-        """Collect current state snapshot"""
-        return {
-            "positions": await self._get_all_by_pattern("position:*"),
-            "orders": await self._get_all_by_pattern("order:*"),
-            "portfolio": await self.state_manager.get_state("portfolio_current"),
-            "performance": await self.state_manager.get_state("performance_metrics"),
-        }
-
-    async def _collect_critical_data(self) -> dict[str, Any]:
-        """Collect only critical data for emergency backup"""
-        return {
-            "positions": await self._get_all_by_pattern("position:*"),
-            "portfolio": await self.state_manager.get_state("portfolio_current"),
-            "critical_config": await self.state_manager.get_state("config:critical"),
-        }
-
-    async def _get_all_by_pattern(self, pattern: str) -> dict[str, Any]:
-        """Get all data matching pattern"""
-        result = {}
-
-        # Use direct repository access for batch operations (99%+ faster)
-        # Fall back to StateManager if repositories unavailable or not async-compatible
-        try:
-            repos = self.state_manager.get_repositories()
-        except (AttributeError, TypeError):
-            repos = None
-
-        with self._metrics.time_operation("backup.get_all_by_pattern"):
-            if repos is not None:
-                try:
-                    # Direct repository access (fast path)
-                    # Try HOT tier (Redis) first
-                    if repos.redis:
-                        keys = await repos.redis.keys(pattern)
-                        for key in keys:
-                            value = await repos.redis.fetch(key)
-                            if value:
-                                result[key] = value
-
-                    # Check WARM tier (PostgreSQL) for keys not in HOT
-                    if repos.postgres:
-                        keys = await repos.postgres.keys(pattern)
-                        for key in keys:
-                            if key not in result:  # Skip if already found in HOT
-                                value = await repos.postgres.fetch(key)
-                                if value:
-                                    result[key] = value
-
-                    # Check COLD tier (S3) for keys not in HOT/WARM
-                    if repos.s3:
-                        keys = await repos.s3.keys(pattern)
-                        for key in keys:
-                            if key not in result:  # Skip if already found in HOT/WARM
-                                value = await repos.s3.fetch(key)
-                                if value:
-                                    result[key] = value
-                except TypeError:
-                    # Repositories exist but aren't async-compatible (e.g., Mocks)
-                    # Fall back to StateManager
-                    result = {}
-                    keys = await self.state_manager.get_keys_by_pattern(pattern)
-                    for key in keys:
-                        value = await self.state_manager.get_state(key)
-                        if value:
-                            result[key] = value
-            else:
-                # Fallback: StateManager access (slower but compatible)
-                keys = await self.state_manager.get_keys_by_pattern(pattern)
-                for key in keys:
-                    value = await self.state_manager.get_state(key)
-                    if value:
-                        result[key] = value
-
-        return result
 
     def _upload_to_s3(self, backup_id: str) -> None:
         """Upload an existing local backup artifact to S3."""

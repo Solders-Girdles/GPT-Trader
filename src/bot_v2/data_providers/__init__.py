@@ -28,7 +28,13 @@ class DataProvider(ABC):
 
     @abstractmethod
     def get_historical_data(
-        self, symbol: str, period: str = "60d", interval: str = "1d"
+        self,
+        symbol: str,
+        period: str = "60d",
+        interval: str = "1d",
+        *,
+        start: datetime | str | None = None,
+        end: datetime | str | None = None,
     ) -> pd.DataFrame:
         """
         Get historical price data for a symbol
@@ -42,24 +48,24 @@ class DataProvider(ABC):
             DataFrame with columns: Open, High, Low, Close, Volume
             Index: DatetimeIndex
         """
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def get_current_price(self, symbol: str) -> float:
         """Get current price for a symbol"""
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def get_multiple_symbols(
         self, symbols: list[str], period: str = "60d"
     ) -> dict[str, pd.DataFrame]:
         """Get historical data for multiple symbols"""
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def is_market_open(self) -> bool:
         """Check if market is currently open"""
-        pass
+        raise NotImplementedError
 
 
 class YFinanceProvider(DataProvider):
@@ -89,11 +95,56 @@ class YFinanceProvider(DataProvider):
             return False
         return datetime.now() < self._cache_expiry[key]
 
+    def _build_cache_key(
+        self,
+        symbol: str,
+        period: str,
+        interval: str,
+        start: datetime | str | None,
+        end: datetime | str | None,
+    ) -> str:
+        """Create a cache key that differentiates date-range requests."""
+        start_key = self._format_cache_bound(start)
+        end_key = self._format_cache_bound(end)
+        if start_key == "" and end_key == "":
+            return f"{symbol}_{period}_{interval}"
+        return f"{symbol}_{period}_{interval}_{start_key}_{end_key}"
+
+    @staticmethod
+    def _format_cache_bound(bound: datetime | str | None) -> str:
+        if bound is None:
+            return ""
+        if isinstance(bound, datetime):
+            return bound.isoformat()
+        return str(bound)
+
+    def _resolve_fallback_period(
+        self,
+        period: str | None,
+        start: datetime | str | None,
+        end: datetime | str | None,
+    ) -> str:
+        """Infer a reasonable period string for mock data fallbacks."""
+        if period:
+            return period
+        start_dt = pd.to_datetime(start) if start is not None else None
+        end_dt = pd.to_datetime(end) if end is not None else None
+        if start_dt is not None and end_dt is not None:
+            days = max(int((end_dt - start_dt).days) + 1, 1)
+            return f"{days}d"
+        return "60d"
+
     def get_historical_data(
-        self, symbol: str, period: str = "60d", interval: str = "1d"
+        self,
+        symbol: str,
+        period: str = "60d",
+        interval: str = "1d",
+        *,
+        start: datetime | str | None = None,
+        end: datetime | str | None = None,
     ) -> pd.DataFrame:
         """Get historical data from Yahoo Finance"""
-        cache_key = f"{symbol}_{period}_{interval}"
+        cache_key = self._build_cache_key(symbol, period, interval, start, end)
 
         # Check cache
         if self._is_cache_valid(cache_key):
@@ -101,21 +152,32 @@ class YFinanceProvider(DataProvider):
 
         try:
             ticker = self.yf.Ticker(symbol)
-            data = ticker.history(period=period, interval=interval)
+            history_kwargs: dict[str, object] = {"interval": interval}
+            if start is not None or end is not None:
+                if start is not None:
+                    history_kwargs["start"] = start
+                if end is not None:
+                    history_kwargs["end"] = end
+            else:
+                history_kwargs["period"] = period
+
+            data = ticker.history(**history_kwargs)
 
             if data.empty:
                 logger.warning(f"No data returned for {symbol}")
-                return self._get_mock_data(symbol, period)
+                fallback_period = self._resolve_fallback_period(period, start, end)
+                return self._get_mock_data(symbol, fallback_period)
 
             # Cache the data
-            self._cache[cache_key] = data
+            self._cache[cache_key] = data.copy()
             self._cache_expiry[cache_key] = datetime.now() + self._cache_duration
 
             return data
 
         except Exception as e:
             logger.error(f"Error fetching data for {symbol}: {e}")
-            return self._get_mock_data(symbol, period)
+            fallback_period = self._resolve_fallback_period(period, start, end)
+            return self._get_mock_data(symbol, fallback_period)
 
     def get_current_price(self, symbol: str) -> float:
         """Get current price from Yahoo Finance"""
@@ -191,14 +253,16 @@ class MockProvider(DataProvider):
                 self._mock_data = json.load(f)
 
     def get_historical_data(
-        self, symbol: str, period: str = "60d", interval: str = "1d"
+        self,
+        symbol: str,
+        period: str = "60d",
+        interval: str = "1d",
+        *,
+        start: datetime | str | None = None,
+        end: datetime | str | None = None,
     ) -> pd.DataFrame:
         """Get mock historical data"""
-        # Generate deterministic mock data
-        try:
-            days = int(period.rstrip("d")) if "d" in period else 60
-        except ValueError:
-            days = 60  # Default to 60 days if period is invalid
+        days = self._resolve_days(period, start, end)
         # Use fixed end date for consistency in tests
         end_date = datetime(2024, 3, 1)
         dates = pd.date_range(end=end_date, periods=days, freq="D")
@@ -255,6 +319,27 @@ class MockProvider(DataProvider):
     def is_market_open(self) -> bool:
         """Mock market hours"""
         return True  # Always open for testing
+
+    @staticmethod
+    def _resolve_days(
+        period: str,
+        start: datetime | str | None,
+        end: datetime | str | None,
+    ) -> int:
+        """Resolve number of days requested from period or explicit bounds."""
+        if start is not None or end is not None:
+            start_dt = pd.to_datetime(start) if start is not None else None
+            end_dt = pd.to_datetime(end) if end is not None else datetime.now()
+            if start_dt is not None and end_dt is not None:
+                delta_days = max(int((end_dt - start_dt).days) + 1, 1)
+                return delta_days
+
+        try:
+            if period.endswith("d"):
+                return max(int(period[:-1]), 1)
+        except (AttributeError, ValueError):
+            return 60
+        return 60
 
 
 # Global provider instance

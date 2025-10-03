@@ -195,6 +195,27 @@ class TestYFinanceProviderHistoricalData:
         # Different intervals = different cache keys
         assert mock_yf.Ticker.call_count == 2
 
+    @patch("bot_v2.data_providers.YFinanceProvider.yf")
+    def test_get_historical_data_with_date_range(self, mock_yf):
+        """Test fetching data with explicit start and end dates."""
+        provider = YFinanceProvider()
+
+        mock_ticker = Mock()
+        index = pd.date_range(start=datetime(2024, 1, 1), periods=3, freq="D")
+        mock_data = pd.DataFrame({"Close": [100, 101, 102]}, index=index)
+        mock_ticker.history.return_value = mock_data
+        mock_yf.Ticker.return_value = mock_ticker
+
+        start = datetime(2024, 1, 1)
+        end = datetime(2024, 1, 3)
+
+        result_1 = provider.get_historical_data("AAPL", interval="1d", start=start, end=end)
+        result_2 = provider.get_historical_data("AAPL", interval="1d", start=start, end=end)
+
+        mock_yf.Ticker.assert_called_once_with("AAPL")
+        mock_ticker.history.assert_called_once_with(start=start, end=end, interval="1d")
+        pd.testing.assert_frame_equal(result_1, result_2)
+
 
 # ============================================================================
 # Test: YFinanceProvider Current Price

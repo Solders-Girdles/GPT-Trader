@@ -298,8 +298,9 @@ class DataService:
                 provider = get_data_provider()
                 data = provider.get_historical_data(
                     symbol,
-                    start=start.strftime("%Y-%m-%d") if start else None,
-                    end=end.strftime("%Y-%m-%d") if end else None,
+                    interval=interval,
+                    start=start,
+                    end=end,
                 )
 
                 if not data.empty:

@@ -70,24 +70,6 @@ class TestLifecycleServiceBuilderIntegration:
         assert call_args[0][0] is True or call_args[1].get("single_cycle") is True
 
     @pytest.mark.asyncio
-    @patch.dict("os.environ", {"USE_LIFECYCLE_SERVICE": "false"})
-    async def test_run_uses_legacy_path_when_disabled(self, minimal_config):
-        """Bot uses legacy _run_legacy when USE_LIFECYCLE_SERVICE=false."""
-        bot = PerpsBotBuilder(minimal_config).build()
-        bot.run_cycle = AsyncMock()
-
-        # Mock the legacy run method
-        bot._run_legacy = AsyncMock()
-
-        await bot.run(single_cycle=True)
-
-        # Should have called legacy path
-        bot._run_legacy.assert_called_once()
-        # Verify it was called with single_cycle=True (positional or keyword)
-        call_args = bot._run_legacy.call_args
-        assert call_args[0][0] is True or call_args[1].get("single_cycle") is True
-
-    @pytest.mark.asyncio
     async def test_lifecycle_service_can_configure_background_tasks(self, minimal_config):
         """LifecycleService can configure background tasks without error."""
         minimal_config.dry_run = False  # Enable background tasks

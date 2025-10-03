@@ -21,6 +21,7 @@ ALLOWLIST = {
     "tests/unit/bot_v2/features/live_trade/test_risk_runtime_comprehensive.py",  # 1178 lines: comprehensive risk runtime test suite (5 classes, 46 tests covering margin, leverage, position limits, account snapshots)
     "tests/unit/bot_v2/orchestration/test_perps_bot.py",
     "tests/unit/bot_v2/orchestration/test_live_execution.py",
+    "tests/unit/bot_v2/orchestration/test_lifecycle_service.py",  # 436 lines: comprehensive lifecycle service test suite (40 tests covering initialization, background tasks, error handling, cleanup)
     "tests/unit/bot_v2/test_broker_behavioral_contract.py",  # 358 lines: broker contract validation suite
     "tests/unit/bot_v2/security/test_secrets_manager.py",  # 482 lines: comprehensive security test suite (encryption, vault, threading)
     "tests/unit/bot_v2/security/test_security_validator.py",  # 575 lines: comprehensive security validation (injection, rate limiting, trading limits)

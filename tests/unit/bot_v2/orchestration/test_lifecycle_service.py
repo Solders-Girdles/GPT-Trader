@@ -175,8 +175,9 @@ class TestLifecycleService:
         """Test normal background task configuration."""
         lifecycle_service.configure_background_tasks(single_cycle=False)
 
-        # Should register 4 tasks (runtime guards, order reconciliation, position reconciliation, telemetry)
-        assert len(lifecycle_service._task_registry._factory_functions) == 4
+        # Should register 5 tasks (runtime guards, order reconciliation, position reconciliation,
+        # execution metrics export, account telemetry)
+        assert len(lifecycle_service._task_registry._factory_functions) == 5
 
     def test_configure_background_tasks_no_telemetry(self, lifecycle_service, mock_bot):
         """Test background task configuration without telemetry support."""
@@ -184,8 +185,9 @@ class TestLifecycleService:
 
         lifecycle_service.configure_background_tasks(single_cycle=False)
 
-        # Should register 3 tasks (no telemetry)
-        assert len(lifecycle_service._task_registry._factory_functions) == 3
+        # Should register 4 tasks (runtime guards, order reconciliation, position reconciliation,
+        # execution metrics export - no account telemetry)
+        assert len(lifecycle_service._task_registry._factory_functions) == 4
 
     @pytest.mark.asyncio
     async def test_run_single_cycle_success(self, lifecycle_service, mock_bot):
@@ -266,9 +268,7 @@ class TestLifecycleService:
             await lifecycle_service.run(single_cycle=True)
 
         # Should write error to health status
-        mock_bot.system_monitor.write_health_status.assert_called_with(
-            ok=False, error=error_msg
-        )
+        mock_bot.system_monitor.write_health_status.assert_called_with(ok=False, error=error_msg)
 
         # Should still shutdown
         mock_bot.shutdown.assert_called_once()
@@ -432,6 +432,4 @@ class TestLifecycleServiceIntegration:
 
         # Cleanup should still happen
         mock_bot.shutdown.assert_called_once()
-        mock_bot.system_monitor.write_health_status.assert_called_with(
-            ok=False, error="Test error"
-        )
+        mock_bot.system_monitor.write_health_status.assert_called_with(ok=False, error="Test error")

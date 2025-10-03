@@ -7,7 +7,7 @@ import uuid
 class CorrelationContext:
     """Manages thread-local correlation IDs for distributed tracing."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize correlation context with thread-local storage."""
         self._storage = threading.local()
 

@@ -6,7 +6,7 @@ import threading
 class PerformanceTracker:
     """Tracks logger performance metrics."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize performance tracker."""
         self._log_count = 0
         self._total_log_time = 0.0

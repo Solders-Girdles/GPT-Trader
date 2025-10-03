@@ -11,14 +11,14 @@ from datetime import datetime
 from typing import Any
 
 import pandas as pd
-
-logger = logging.getLogger(__name__)
 from bot_v2.features.paper_trade.data import DataFeed
 from bot_v2.features.paper_trade.execution import PaperExecutor
 from bot_v2.features.paper_trade.risk import RiskManager
 from bot_v2.features.paper_trade.strategies import create_paper_strategy
 from bot_v2.features.paper_trade.types import PaperTradeResult, PerformanceMetrics
 from bot_v2.types.trading import TradingSessionResult
+
+logger = logging.getLogger(__name__)
 
 
 class PaperTradingSession:

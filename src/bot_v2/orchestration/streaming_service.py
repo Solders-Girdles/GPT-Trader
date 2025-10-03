@@ -10,7 +10,7 @@ import logging
 import threading
 from datetime import datetime
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:  # pragma: no cover
     from bot_v2.features.brokerages.core.interfaces import IBrokerage

@@ -14,7 +14,6 @@ from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:  # pragma: no cover
     from bot_v2.orchestration.order_reconciler import OrderReconciler
-    from bot_v2.persistence.orders_store import OrdersStore
 
 logger = logging.getLogger(__name__)
 
@@ -66,9 +65,7 @@ class ExecutionRuntimeSupervisor:
                 logger.error(f"Error in runtime guards: {e}", exc_info=True)
             await asyncio.sleep(60)
 
-    async def run_order_reconciliation(
-        self, running_flag: Any, interval_seconds: int = 45
-    ) -> None:
+    async def run_order_reconciliation(self, running_flag: Any, interval_seconds: int = 45) -> None:
         """Run order reconciliation loop.
 
         Args:

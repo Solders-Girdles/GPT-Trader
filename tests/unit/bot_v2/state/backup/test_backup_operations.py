@@ -313,6 +313,41 @@ class TestDifferentialBackup:
 
         assert diff_metadata.backup_type == BackupType.DIFFERENTIAL
 
+    def test_differential_stores_only_changed_values(self, backup_manager: BackupManager) -> None:
+        """Differential backup should persist only the delta payload."""
+        # Disable compression/encryption to inspect stored payload directly
+        backup_manager.config.enable_compression = False
+        backup_manager.compression_service.enabled = False
+        backup_manager.config.enable_encryption = False
+        backup_manager.encryption_service.enabled = False
+        backup_manager._encryption_enabled = False
+
+        baseline_state = {"positions": {"AAPL": {"qty": 10, "pnl": 5}}}
+        full_metadata = backup_manager.create_backup(
+            state_data=baseline_state, backup_type=BackupType.FULL
+        )
+        assert full_metadata is not None
+
+        changed_state = {
+            "positions": {"AAPL": {"qty": 12, "pnl": 5}},
+            "cash": {"usd": 1000},
+        }
+        diff_metadata = backup_manager.create_backup(
+            state_data=changed_state, backup_type=BackupType.DIFFERENTIAL
+        )
+        assert diff_metadata is not None
+
+        backup_path = Path(backup_manager.transport_service.backup_path)
+        diff_path = backup_path / f"{diff_metadata.backup_id}.backup"
+        with open(diff_path, "rb") as diff_file:
+            payload = json.loads(diff_file.read().decode("utf-8"))
+
+        diff_state = payload.get("state", {})
+        assert diff_state == {
+            "positions": {"AAPL": {"qty": 12}},
+            "cash": {"usd": 1000},
+        }
+
 
 class TestBackupCompression:
     """Test backup compression."""
@@ -891,7 +926,9 @@ class TestCreateBackupErrorPaths:
         def failing_serialize(*args, **kwargs):
             raise ValueError("Serialization failed")
 
-        monkeypatch.setattr(backup_manager, "_serialize_backup_data", failing_serialize)
+        monkeypatch.setattr(
+            backup_manager.backup_creator, "_serialize_backup_data", failing_serialize
+        )
 
         # Create state data
         state_data = {"test": "data"}
@@ -910,7 +947,7 @@ class TestCreateBackupErrorPaths:
         async def failing_store(*args, **kwargs):
             raise OSError("Disk full")
 
-        monkeypatch.setattr(backup_manager, "_store_backup", failing_store)
+        monkeypatch.setattr(backup_manager.backup_creator, "_store_backup", failing_store)
 
         state_data = {"test": "data"}
 

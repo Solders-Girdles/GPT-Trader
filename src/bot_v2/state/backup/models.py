@@ -82,6 +82,20 @@ class BackupContext:
     last_backup_state: dict[str, Any] | None = None
     last_restored_payload: dict[str, Any] | None = None
 
+    def update_baseline(self, backup_type: BackupType, snapshot: dict[str, Any]) -> None:
+        """Update baseline snapshots after successful backup.
+
+        Centralizes the logic for updating last_backup_state and last_full_state
+        to prevent inconsistent state mutations during backup creation.
+
+        Args:
+            backup_type: Type of backup that was created
+            snapshot: The state snapshot that was backed up
+        """
+        self.last_backup_state = snapshot
+        if backup_type in {BackupType.FULL, BackupType.SNAPSHOT}:
+            self.last_full_state = snapshot
+
 
 @dataclass
 class BackupConfig:

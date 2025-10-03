@@ -17,6 +17,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, TypeVar
 
+from bot_v2.state.backup.creator import BackupCreator
 from bot_v2.state.backup.metadata import BackupMetadataManager
 from bot_v2.state.backup.models import (
     BackupConfig,
@@ -24,7 +25,6 @@ from bot_v2.state.backup.models import (
     BackupMetadata,
     BackupStatus,
     BackupType,
-    StorageTier,
 )
 from bot_v2.state.backup.services import (
     CompressionService,
@@ -59,14 +59,10 @@ class BackupManager:
         self._pending_state_snapshot: dict[str, Any] | None = None
         self._scheduled_tasks: list[asyncio.Task] = []
 
-        # Backwards compatibility - expose context attributes as instance attributes
+        # Backwards compatibility - expose mutable context attributes as instance attributes.
+        # Immutable context fields are surfaced via properties to avoid stale references.
         self._backup_history = self.context.backup_history
         self._backup_metadata = self.context.backup_metadata
-        self._last_full_backup = self.context.last_full_backup
-        self._last_differential_backup = self.context.last_differential_backup
-        self._last_full_state = self.context.last_full_state
-        self._last_backup_state = self.context.last_backup_state
-        self._last_restored_payload = self.context.last_restored_payload
 
         # Initialize services
         backup_dir = Path(self.config.backup_dir)
@@ -130,9 +126,78 @@ class BackupManager:
         self.metadata_manager = BackupMetadataManager(self.config, self.context)
         self.metadata_manager.load_history()
 
+        # Initialize backup creator
+        self.backup_creator = BackupCreator(
+            config=self.config,
+            context=self.context,
+            metadata_manager=self.metadata_manager,
+            encryption_service=self.encryption_service,
+            compression_service=self.compression_service,
+            transport_service=self.transport_service,
+            tier_strategy=self.tier_strategy,
+        )
+
         logger.info(
             f"BackupManager initialized with {len(self.context.backup_history)} backups in history"
         )
+
+    @property
+    def _last_full_backup(self) -> datetime | None:
+        """Alias for backwards compatibility with legacy attributes."""
+        return self.context.last_full_backup
+
+    @_last_full_backup.setter
+    def _last_full_backup(self, value: datetime | None) -> None:
+        self.context.last_full_backup = value
+
+    @property
+    def _last_differential_backup(self) -> datetime | None:
+        return self.context.last_differential_backup
+
+    @_last_differential_backup.setter
+    def _last_differential_backup(self, value: datetime | None) -> None:
+        self.context.last_differential_backup = value
+
+    @property
+    def _last_full_state(self) -> dict[str, Any] | None:
+        return self.context.last_full_state
+
+    @_last_full_state.setter
+    def _last_full_state(self, value: dict[str, Any] | None) -> None:
+        self.context.last_full_state = value
+
+    @property
+    def _last_backup_state(self) -> dict[str, Any] | None:
+        return self.context.last_backup_state
+
+    @_last_backup_state.setter
+    def _last_backup_state(self, value: dict[str, Any] | None) -> None:
+        self.context.last_backup_state = value
+
+    @property
+    def _last_restored_payload(self) -> dict[str, Any] | None:
+        return self.context.last_restored_payload
+
+    @_last_restored_payload.setter
+    def _last_restored_payload(self, value: dict[str, Any] | None) -> None:
+        self.context.last_restored_payload = value
+
+    # -- Legacy compatibility helpers -------------------------------------------------
+    def _save_backup_metadata(self, metadata: BackupMetadata) -> None:
+        """Backward-compatible wrapper around metadata manager."""
+        self.metadata_manager.save_metadata(metadata)
+
+    def _find_backup_metadata(self, backup_id: str) -> BackupMetadata | None:
+        """Backward-compatible wrapper to locate metadata by ID."""
+        return self.metadata_manager.find_metadata(backup_id)
+
+    def _load_backup_history(self) -> None:
+        """Backward-compatible wrapper to refresh metadata cache."""
+        self.metadata_manager.load_history()
+
+    def get_backup_stats(self) -> dict[str, Any]:
+        """Backward-compatible access to backup statistics."""
+        return self.metadata_manager.get_stats()
 
     def _run_or_return(self, coro: Coroutine[Any, Any, T]) -> T | Coroutine[Any, Any, T]:
         """Run coroutine immediately when no event loop is active."""
@@ -234,6 +299,7 @@ class BackupManager:
 
         Args:
             backup_type: Type of backup to create
+            state_data: Optional state data override
 
         Returns:
             Backup metadata or None if failed
@@ -249,75 +315,16 @@ class BackupManager:
             try:
                 backup_id = self._generate_backup_id(backup_type)
 
-                logger.info(f"Creating {backup_type.value} backup {backup_id}")
-
+                # Collect backup data (delegates to manager for now)
                 backup_data = await self._collect_backup_data(backup_type, override=state_data)
 
-                if not backup_data:
-                    raise Exception("No data to backup")
-                serialized = self._serialize_backup_data(backup_data)
-
-                # Calculate actual diff payload sizes for incremental/differential backups
-                # backup_data["state"] already contains the diff for inc/diff backups
-                state_serialized = json.dumps(backup_data.get("state", {}), default=str).encode(
-                    "utf-8"
-                )
-                state_original_size = len(state_serialized)
-                if self.config.enable_compression:
-                    _, _, state_compressed_size = self.compression_service.compress(
-                        state_serialized
-                    )
-                else:
-                    state_compressed_size = 0
-
-                payload, _, _ = self._prepare_compressed_payload(serialized)
-                payload, encryption_key_id = self._encrypt_payload(payload)
-                checksum = hashlib.sha256(payload).hexdigest()
-                storage_tier = self._determine_storage_tier(backup_type)
-                await self._store_backup(backup_id, payload, storage_tier)
-
-                duration_seconds = (datetime.now(timezone.utc) - start_time).total_seconds()
-                metadata = self._build_backup_metadata(
-                    backup_id=backup_id,
+                # Delegate to backup creator for orchestration
+                metadata = await self.backup_creator.create_backup_internal(
                     backup_type=backup_type,
-                    timestamp=start_time,
-                    original_size=state_original_size,
-                    compressed_size=state_compressed_size,
-                    checksum=checksum,
-                    encryption_key_id=encryption_key_id,
-                    storage_tier=storage_tier,
-                    duration_seconds=duration_seconds,
                     backup_data=backup_data,
-                )
-
-                if self._pending_state_snapshot is not None:
-                    self._update_state_snapshots(backup_type, self._pending_state_snapshot)
-                    self._pending_state_snapshot = None
-
-                if self.config.verify_after_backup:
-                    if await self._verify_backup(metadata, payload):
-                        metadata.status = BackupStatus.VERIFIED
-                        metadata.verification_status = "passed"
-                    else:
-                        metadata.status = BackupStatus.CORRUPTED
-                        metadata.verification_status = "failed"
-                        logger.warning(f"Backup {backup_id} verification failed")
-
-                self.metadata_manager.add_to_history(metadata, backup_type, start_time)
-                if metadata.timestamp.tzinfo is not None:
-                    metadata.timestamp = metadata.timestamp.replace(tzinfo=None)
-
-                logger.info(
-                    "Backup %s completed in %.2fs, compressed %d -> %d bytes (%.1f%%)",
-                    backup_id,
-                    metadata.backup_duration_seconds,
-                    state_original_size,
-                    state_compressed_size,
-                    (
-                        (state_compressed_size / state_original_size * 100)
-                        if state_original_size and state_compressed_size
-                        else 0.0
-                    ),
+                    backup_id=backup_id,
+                    start_time=start_time,
+                    pending_snapshot=self._pending_state_snapshot,
                 )
 
                 return metadata
@@ -424,58 +431,6 @@ class BackupManager:
 
         return await self.restore_from_backup(latest.backup_id)
 
-    def _serialize_backup_data(self, backup_data: dict[str, Any]) -> bytes:
-        return json.dumps(backup_data, default=str).encode()
-
-    def _prepare_compressed_payload(self, serialized: bytes) -> tuple[bytes, int, int]:
-        return self.compression_service.compress(serialized)
-
-    def _encrypt_payload(self, payload: bytes) -> tuple[bytes, str | None]:
-        return self.encryption_service.encrypt(payload)
-
-    def _build_backup_metadata(
-        self,
-        *,
-        backup_id: str,
-        backup_type: BackupType,
-        timestamp: datetime,
-        original_size: int,
-        compressed_size: int,
-        checksum: str,
-        encryption_key_id: str | None,
-        storage_tier: StorageTier,
-        duration_seconds: float,
-        backup_data: dict[str, Any],
-    ) -> BackupMetadata:
-        state = backup_data.get("state", {})
-        data_sources = list(state.keys()) if isinstance(state, dict) else []
-
-        return BackupMetadata(
-            backup_id=backup_id,
-            backup_type=backup_type,
-            timestamp=timestamp,
-            size_bytes=original_size,
-            size_compressed=compressed_size,
-            checksum=checksum,
-            encryption_key_id=encryption_key_id,
-            storage_tier=storage_tier,
-            retention_days=self._get_retention_days(backup_type),
-            status=BackupStatus.COMPLETED,
-            backup_duration_seconds=duration_seconds,
-            data_sources=data_sources,
-        )
-
-    def _update_history_after_backup(
-        self, metadata: BackupMetadata, backup_type: BackupType, start_time: datetime
-    ) -> None:
-        self._backup_history.append(metadata)
-        self._backup_metadata[metadata.backup_id] = metadata
-        self.metadata_manager.save_metadata(metadata)
-        if backup_type == BackupType.FULL:
-            self.context.last_full_backup = start_time
-        elif backup_type == BackupType.DIFFERENTIAL:
-            self.context.last_differential_backup = start_time
-
     def _normalize_state_payload(self, payload: dict[str, Any]) -> dict[str, Any]:
         """Ensure payload is JSON serialisable for persistence."""
         return json.loads(json.dumps(payload, default=str))
@@ -499,11 +454,6 @@ class BackupManager:
                 diff[key] = value
 
         return diff
-
-    def _update_state_snapshots(self, backup_type: BackupType, snapshot: dict[str, Any]) -> None:
-        self.context.last_backup_state = snapshot
-        if backup_type in {BackupType.FULL, BackupType.SNAPSHOT}:
-            self.context.last_full_state = snapshot
 
     async def _collect_backup_data(
         self, backup_type: BackupType, override: dict[str, Any] | None = None
@@ -806,10 +756,6 @@ class BackupManager:
 
         return result
 
-    async def _store_backup(self, backup_id: str, data: bytes, storage_tier: StorageTier) -> str:
-        """Store backup data to appropriate tier"""
-        return await self.transport_service.store(backup_id, data, storage_tier)
-
     def _upload_to_s3(self, backup_id: str) -> None:
         """Upload an existing local backup artifact to S3."""
         self.transport_service.upload_to_s3(backup_id)
@@ -878,34 +824,6 @@ class BackupManager:
 
         except Exception as e:
             logger.error(f"Data restoration failed: {e}")
-            return False
-
-    async def _verify_backup(self, metadata: BackupMetadata, data: bytes) -> bool:
-        """Verify backup integrity"""
-        try:
-            # Verify checksum
-            calculated = hashlib.sha256(data).hexdigest()
-
-            if calculated != metadata.checksum:
-                logger.error(f"Backup {metadata.backup_id} checksum verification failed")
-                return False
-
-            # Try to decrypt and decompress
-            test_data = data
-
-            if metadata.encryption_key_id:
-                test_data = self.encryption_service.decrypt(test_data)
-
-            if self.config.enable_compression:
-                test_data = self.compression_service.decompress(test_data)
-
-            # Try to parse
-            json.loads(test_data.decode() if isinstance(test_data, bytes) else test_data)
-
-            return True
-
-        except Exception as e:
-            logger.error(f"Backup verification failed: {e}")
             return False
 
     def cleanup_old_backups(self) -> int | Coroutine[Any, Any, int]:
@@ -1026,10 +944,6 @@ class BackupManager:
             logger.error(f"Restore test failed: {e}")
             return False
 
-    def _determine_storage_tier(self, backup_type: BackupType) -> StorageTier:
-        """Determine appropriate storage tier for backup type"""
-        return self.tier_strategy.determine_tier(backup_type)
-
     def _get_retention_days(self, backup_type: BackupType) -> int:
         """Get retention period for backup type"""
         generic_retention = getattr(self.config, "retention_days", None)
@@ -1043,10 +957,6 @@ class BackupManager:
         timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
         type_prefix = backup_type.value[:3].upper()
         return f"{type_prefix}_{timestamp}"
-
-    def get_backup_stats(self) -> dict[str, Any]:
-        """Get backup statistics."""
-        return self.metadata_manager.get_stats()
 
     def get_performance_metrics(self) -> dict[str, Any]:
         """Get performance metrics for backup operations.

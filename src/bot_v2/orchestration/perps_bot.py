@@ -7,6 +7,7 @@ import os
 from collections.abc import Sequence
 from datetime import UTC, datetime
 from decimal import Decimal
+from threading import RLock
 from typing import TYPE_CHECKING, Any
 
 from bot_v2.features.brokerages.core.interfaces import (
@@ -23,17 +24,64 @@ from bot_v2.orchestration.service_registry import ServiceRegistry
 from bot_v2.orchestration.session_guard import TradingSessionGuard
 
 if TYPE_CHECKING:  # pragma: no cover - imports for type checking only
+    from bot_v2.features.brokerages.coinbase.account_manager import CoinbaseAccountManager
     from bot_v2.features.brokerages.core.interfaces import IBrokerage
     from bot_v2.features.live_trade.advanced_execution import AdvancedExecutionEngine
     from bot_v2.features.live_trade.risk import LiveRiskManager
+    from bot_v2.orchestration.account_telemetry import AccountTelemetryService
+    from bot_v2.orchestration.config_controller import ConfigController
+    from bot_v2.orchestration.execution_coordinator import ExecutionCoordinator
+    from bot_v2.orchestration.lifecycle_service import LifecycleService
     from bot_v2.orchestration.live_execution import LiveExecutionEngine
+    from bot_v2.orchestration.market_data_service import MarketDataService
+    from bot_v2.orchestration.market_monitor import MarketActivityMonitor
     from bot_v2.orchestration.perps_bot_builder import PerpsBotBuilder
+    from bot_v2.orchestration.runtime_coordinator import RuntimeCoordinator
+    from bot_v2.orchestration.strategy_orchestrator import StrategyOrchestrator
+    from bot_v2.orchestration.streaming_service import StreamingService
+    from bot_v2.orchestration.system_monitor import SystemMonitor
+    from bot_v2.persistence.event_store import EventStore
+    from bot_v2.persistence.orders_store import OrdersStore
 
 logger = logging.getLogger(__name__)
 
 
 class PerpsBot:
     """Main Coinbase trading bot (spot by default, perps optional)."""
+
+    registry: ServiceRegistry
+    config_controller: ConfigController
+    config: BotConfig
+    _session_guard: TradingSessionGuard
+    symbols: list[str]
+    _derivatives_enabled: bool
+    bot_id: str
+    start_time: datetime
+    running: bool
+
+    mark_windows: dict[str, list[Decimal]]
+    last_decisions: dict[str, Any]
+    _last_positions: dict[str, dict[str, Any]]
+    order_stats: dict[str, int]
+    _order_lock: asyncio.Lock | None
+    _mark_lock: RLock
+    _symbol_strategies: dict[str, Any]
+    strategy: Any | None
+    _exec_engine: LiveExecutionEngine | AdvancedExecutionEngine | None
+    _streaming_service: StreamingService | None
+    _market_data_service: MarketDataService | None
+    _market_monitor: MarketActivityMonitor | None
+    _product_map: dict[str, Product]
+
+    strategy_orchestrator: StrategyOrchestrator
+    execution_coordinator: ExecutionCoordinator
+    system_monitor: SystemMonitor
+    runtime_coordinator: RuntimeCoordinator
+    lifecycle_service: LifecycleService
+    account_manager: CoinbaseAccountManager
+    account_telemetry: AccountTelemetryService
+    event_store: EventStore
+    orders_store: OrdersStore
 
     def __init__(self, config: BotConfig, registry: ServiceRegistry | None = None) -> None:
         """Construct the bot using the builder pipeline."""
@@ -281,6 +329,14 @@ class PerpsBot:
                 self._stop_streaming_background()
         except Exception as exc:
             logger.debug("Failed to stop WS thread cleanly: %s", exc, exc_info=True)
+
+    def _start_streaming_background_legacy(self) -> None:
+        """No-op legacy streaming starter retained for backward compatibility."""
+        logger.debug("Legacy streaming start requested but no legacy worker is configured")
+
+    def _stop_streaming_background(self) -> None:
+        """No-op legacy streaming stopper retained for backward compatibility."""
+        logger.debug("Legacy streaming stop requested but no legacy worker is configured")
 
     # ------------------------------------------------------------------
     def apply_config_change(self, change: ConfigChange) -> None:

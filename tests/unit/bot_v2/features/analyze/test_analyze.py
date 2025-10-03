@@ -102,7 +102,9 @@ def sample_strategy_signals():
     """Create sample strategy signals."""
     return [
         StrategySignals(strategy_name="MA", signal=1, confidence=0.7, reason="Golden cross"),
-        StrategySignals(strategy_name="Momentum", signal=1, confidence=0.6, reason="Positive momentum"),
+        StrategySignals(
+            strategy_name="Momentum", signal=1, confidence=0.6, reason="Positive momentum"
+        ),
         StrategySignals(strategy_name="Mean Reversion", signal=0, confidence=0.4, reason="Neutral"),
     ]
 
@@ -116,7 +118,9 @@ class TestAnalyzeSymbol:
     """Test main analyze_symbol function."""
 
     @patch("bot_v2.features.analyze.analyze.get_data_provider")
-    def test_analyzes_symbol_successfully(self, mock_get_provider, mock_data_provider, sample_market_data):
+    def test_analyzes_symbol_successfully(
+        self, mock_get_provider, mock_data_provider, sample_market_data
+    ):
         """Test successful symbol analysis."""
         mock_get_provider.return_value = mock_data_provider
 
@@ -196,7 +200,9 @@ class TestAnalyzePortfolio:
 
     @patch("bot_v2.features.analyze.analyze.get_data_provider")
     @patch("bot_v2.features.analyze.analyze.analyze_symbol")
-    def test_uses_equal_weights_when_none_provided(self, mock_analyze_symbol, mock_get_provider, mock_data_provider):
+    def test_uses_equal_weights_when_none_provided(
+        self, mock_analyze_symbol, mock_get_provider, mock_data_provider
+    ):
         """Test equal weights when weights not specified."""
         mock_get_provider.return_value = mock_data_provider
 
@@ -214,7 +220,9 @@ class TestAnalyzePortfolio:
 
     @patch("bot_v2.features.analyze.analyze.get_data_provider")
     @patch("bot_v2.features.analyze.analyze.analyze_symbol")
-    def test_handles_symbol_analysis_errors(self, mock_analyze_symbol, mock_get_provider, mock_data_provider, caplog):
+    def test_handles_symbol_analysis_errors(
+        self, mock_analyze_symbol, mock_get_provider, mock_data_provider, caplog
+    ):
         """Test handling of errors for individual symbols."""
         mock_get_provider.return_value = mock_data_provider
 
@@ -352,13 +360,23 @@ class TestDetermineRegime:
     def test_bullish_regime_with_high_rsi(self, sample_market_data):
         """Test bullish regime detection."""
         indicators = TechnicalIndicators(
-            sma_20=100, sma_50=95, sma_200=90,
-            ema_12=101, ema_26=99,
+            sma_20=100,
+            sma_50=95,
+            sma_200=90,
+            ema_12=101,
+            ema_26=99,
             rsi=75.0,  # Overbought
-            macd=1.0, macd_signal=0.5, macd_histogram=0.5,
-            bollinger_upper=105, bollinger_middle=100, bollinger_lower=95,
-            atr=2.0, volume_sma=2000000, obv=50000000,
-            stochastic_k=70, stochastic_d=68,
+            macd=1.0,
+            macd_signal=0.5,
+            macd_histogram=0.5,
+            bollinger_upper=105,
+            bollinger_middle=100,
+            bollinger_lower=95,
+            atr=2.0,
+            volume_sma=2000000,
+            obv=50000000,
+            stochastic_k=70,
+            stochastic_d=68,
         )
 
         regime = determine_regime(sample_market_data, indicators)
@@ -368,13 +386,23 @@ class TestDetermineRegime:
     def test_bearish_regime_with_low_rsi(self, sample_market_data):
         """Test bearish regime detection."""
         indicators = TechnicalIndicators(
-            sma_20=100, sma_50=105, sma_200=110,
-            ema_12=99, ema_26=101,
+            sma_20=100,
+            sma_50=105,
+            sma_200=110,
+            ema_12=99,
+            ema_26=101,
             rsi=25.0,  # Oversold
-            macd=-1.0, macd_signal=-0.5, macd_histogram=-0.5,
-            bollinger_upper=105, bollinger_middle=100, bollinger_lower=95,
-            atr=3.0, volume_sma=2000000, obv=40000000,
-            stochastic_k=25, stochastic_d=23,
+            macd=-1.0,
+            macd_signal=-0.5,
+            macd_histogram=-0.5,
+            bollinger_upper=105,
+            bollinger_middle=100,
+            bollinger_lower=95,
+            atr=3.0,
+            volume_sma=2000000,
+            obv=40000000,
+            stochastic_k=25,
+            stochastic_d=23,
         )
 
         regime = determine_regime(sample_market_data, indicators)
@@ -394,13 +422,23 @@ class TestGenerateRecommendation:
         """Test strong buy signal generation."""
         # Bullish indicators
         indicators = TechnicalIndicators(
-            sma_20=100, sma_50=95, sma_200=90,
-            ema_12=102, ema_26=98,
+            sma_20=100,
+            sma_50=95,
+            sma_200=90,
+            ema_12=102,
+            ema_26=98,
             rsi=25.0,  # Oversold - buy signal
-            macd=1.0, macd_signal=0.5, macd_histogram=0.5,  # Bullish
-            bollinger_upper=105, bollinger_middle=100, bollinger_lower=95,
-            atr=2.0, volume_sma=2000000, obv=50000000,
-            stochastic_k=70, stochastic_d=68,
+            macd=1.0,
+            macd_signal=0.5,
+            macd_histogram=0.5,  # Bullish
+            bollinger_upper=105,
+            bollinger_middle=100,
+            bollinger_lower=95,
+            atr=2.0,
+            volume_sma=2000000,
+            obv=50000000,
+            stochastic_k=70,
+            stochastic_d=68,
         )
 
         regime = MarketRegime(
@@ -427,13 +465,23 @@ class TestGenerateRecommendation:
         """Test strong sell signal generation."""
         # Bearish indicators
         indicators = TechnicalIndicators(
-            sma_20=100, sma_50=105, sma_200=110,
-            ema_12=98, ema_26=102,
+            sma_20=100,
+            sma_50=105,
+            sma_200=110,
+            ema_12=98,
+            ema_26=102,
             rsi=75.0,  # Overbought - sell signal
-            macd=-1.0, macd_signal=-0.5, macd_histogram=-0.5,  # Bearish
-            bollinger_upper=105, bollinger_middle=100, bollinger_lower=95,
-            atr=3.0, volume_sma=2000000, obv=40000000,
-            stochastic_k=25, stochastic_d=23,
+            macd=-1.0,
+            macd_signal=-0.5,
+            macd_histogram=-0.5,  # Bearish
+            bollinger_upper=105,
+            bollinger_middle=100,
+            bollinger_lower=95,
+            atr=3.0,
+            volume_sma=2000000,
+            obv=40000000,
+            stochastic_k=25,
+            stochastic_d=23,
         )
 
         regime = MarketRegime(

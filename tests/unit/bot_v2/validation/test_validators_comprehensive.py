@@ -316,13 +316,15 @@ class TestOHLCDataValidator:
     def test_ohlc_validator_invalid_high_low(self):
         """Test OHLCDataValidator with High < Low"""
         validator = OHLCDataValidator()
-        df = pd.DataFrame({
-            "Open": [100, 101],
-            "High": [102, 99],  # High < Low on second row
-            "Low": [98, 100],
-            "Close": [101, 100],
-            "Volume": [1000, 1100],
-        })
+        df = pd.DataFrame(
+            {
+                "Open": [100, 101],
+                "High": [102, 99],  # High < Low on second row
+                "Low": [98, 100],
+                "Close": [101, 100],
+                "Volume": [1000, 1100],
+            }
+        )
         with pytest.raises(ValidationError) as exc_info:
             validator.validate(df, "ohlc_data")
         assert "invalid High < Low" in str(exc_info.value)
@@ -330,13 +332,15 @@ class TestOHLCDataValidator:
     def test_ohlc_validator_high_below_open(self):
         """Test OHLCDataValidator with High below Open"""
         validator = OHLCDataValidator()
-        df = pd.DataFrame({
-            "Open": [100, 105],  # Open > High on second row
-            "High": [102, 103],
-            "Low": [98, 102],
-            "Close": [101, 103],
-            "Volume": [1000, 1100],
-        })
+        df = pd.DataFrame(
+            {
+                "Open": [100, 105],  # Open > High on second row
+                "High": [102, 103],
+                "Low": [98, 102],
+                "Close": [101, 103],
+                "Volume": [1000, 1100],
+            }
+        )
         with pytest.raises(ValidationError) as exc_info:
             validator.validate(df, "ohlc_data")
         assert "High values below Open or Close" in str(exc_info.value)
@@ -344,13 +348,15 @@ class TestOHLCDataValidator:
     def test_ohlc_validator_high_below_close(self):
         """Test OHLCDataValidator with High below Close"""
         validator = OHLCDataValidator()
-        df = pd.DataFrame({
-            "Open": [100, 101],
-            "High": [102, 103],
-            "Low": [98, 100],
-            "Close": [101, 105],  # Close > High on second row
-            "Volume": [1000, 1100],
-        })
+        df = pd.DataFrame(
+            {
+                "Open": [100, 101],
+                "High": [102, 103],
+                "Low": [98, 100],
+                "Close": [101, 105],  # Close > High on second row
+                "Volume": [1000, 1100],
+            }
+        )
         with pytest.raises(ValidationError) as exc_info:
             validator.validate(df, "ohlc_data")
         assert "High values below Open or Close" in str(exc_info.value)
@@ -358,13 +364,15 @@ class TestOHLCDataValidator:
     def test_ohlc_validator_low_above_open(self):
         """Test OHLCDataValidator with Low above Open"""
         validator = OHLCDataValidator()
-        df = pd.DataFrame({
-            "Open": [100, 99],  # Open < Low on second row
-            "High": [102, 103],
-            "Low": [98, 100],
-            "Close": [101, 102],
-            "Volume": [1000, 1100],
-        })
+        df = pd.DataFrame(
+            {
+                "Open": [100, 99],  # Open < Low on second row
+                "High": [102, 103],
+                "Low": [98, 100],
+                "Close": [101, 102],
+                "Volume": [1000, 1100],
+            }
+        )
         with pytest.raises(ValidationError) as exc_info:
             validator.validate(df, "ohlc_data")
         assert "Low values above Open or Close" in str(exc_info.value)
@@ -372,13 +380,15 @@ class TestOHLCDataValidator:
     def test_ohlc_validator_low_above_close(self):
         """Test OHLCDataValidator with Low above Close"""
         validator = OHLCDataValidator()
-        df = pd.DataFrame({
-            "Open": [100, 101],
-            "High": [102, 103],
-            "Low": [98, 100],
-            "Close": [101, 99],  # Close < Low on second row
-            "Volume": [1000, 1100],
-        })
+        df = pd.DataFrame(
+            {
+                "Open": [100, 101],
+                "High": [102, 103],
+                "Low": [98, 100],
+                "Close": [101, 99],  # Close < Low on second row
+                "Volume": [1000, 1100],
+            }
+        )
         with pytest.raises(ValidationError) as exc_info:
             validator.validate(df, "ohlc_data")
         assert "Low values above Open or Close" in str(exc_info.value)
@@ -386,13 +396,15 @@ class TestOHLCDataValidator:
     def test_ohlc_validator_negative_values(self):
         """Test OHLCDataValidator with negative values"""
         validator = OHLCDataValidator()
-        df = pd.DataFrame({
-            "Open": [100, 101],
-            "High": [102, 103],
-            "Low": [98, -5],  # Negative value
-            "Close": [101, 100],
-            "Volume": [1000, 1100],
-        })
+        df = pd.DataFrame(
+            {
+                "Open": [100, 101],
+                "High": [102, 103],
+                "Low": [98, -5],  # Negative value
+                "Close": [101, 100],
+                "Volume": [1000, 1100],
+            }
+        )
         with pytest.raises(ValidationError) as exc_info:
             validator.validate(df, "ohlc_data")
         assert "contains negative values" in str(exc_info.value)
@@ -400,13 +412,15 @@ class TestOHLCDataValidator:
     def test_ohlc_validator_valid_data(self):
         """Test OHLCDataValidator with valid OHLC data"""
         validator = OHLCDataValidator()
-        df = pd.DataFrame({
-            "Open": [100, 101, 102],
-            "High": [105, 106, 107],
-            "Low": [95, 96, 97],
-            "Close": [103, 104, 105],
-            "Volume": [1000, 1100, 1200],
-        })
+        df = pd.DataFrame(
+            {
+                "Open": [100, 101, 102],
+                "High": [105, 106, 107],
+                "Low": [95, 96, 97],
+                "Close": [103, 104, 105],
+                "Volume": [1000, 1100, 1200],
+            }
+        )
         result = validator.validate(df, "ohlc_data")
         assert isinstance(result, pd.DataFrame)
 

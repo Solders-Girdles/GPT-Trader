@@ -129,7 +129,15 @@ def test_determine_overall_status_healthy(monitoring_system: MonitoringSystem) -
     assert status is ComponentStatus.HEALTHY
 
 
-def build_system_health(config: MonitorConfig, *, cpu: float, memory: float, disk: float, error_rate: float, response_ms: float) -> SystemHealth:
+def build_system_health(
+    config: MonitorConfig,
+    *,
+    cpu: float,
+    memory: float,
+    disk: float,
+    error_rate: float,
+    response_ms: float,
+) -> SystemHealth:
     resources = make_resources(cpu=cpu, memory=memory, disk=disk)
     performance = make_performance(avg_response_ms=response_ms, error_rate=error_rate)
     components = {"api": make_component(ComponentStatus.HEALTHY)}
@@ -174,14 +182,20 @@ def test_check_alerts_triggers_expected_notifications(monitoring_system: Monitor
     assert any("error rate" in entry["message"].lower() for entry in recorded)
 
 
-def test_collect_health_uses_collectors(monkeypatch: pytest.MonkeyPatch, monitoring_system: MonitoringSystem) -> None:
+def test_collect_health_uses_collectors(
+    monkeypatch: pytest.MonkeyPatch, monitoring_system: MonitoringSystem
+) -> None:
     expected_resources = make_resources(cpu=55.0)
     expected_performance = make_performance(avg_response_ms=120.0)
     expected_components = {"executor": make_component(ComponentStatus.HEALTHY)}
 
     monitoring_system.resource_collector = types.SimpleNamespace(collect=lambda: expected_resources)
-    monitoring_system.performance_collector = types.SimpleNamespace(collect=lambda: expected_performance)
-    monitoring_system.component_collector = types.SimpleNamespace(collect=lambda: expected_components)
+    monitoring_system.performance_collector = types.SimpleNamespace(
+        collect=lambda: expected_performance
+    )
+    monitoring_system.component_collector = types.SimpleNamespace(
+        collect=lambda: expected_components
+    )
     monitoring_system.alert_manager.get_active_alerts = lambda: [1, 2]  # type: ignore[assignment]
 
     health = monitoring_system._collect_health()
@@ -192,7 +206,9 @@ def test_collect_health_uses_collectors(monkeypatch: pytest.MonkeyPatch, monitor
     assert health.active_alerts == 2
 
 
-def test_monitoring_loop_handles_exception_and_recovers(monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture) -> None:
+def test_monitoring_loop_handles_exception_and_recovers(
+    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
     system = MonitoringSystem()
     caplog.set_level("ERROR")
 
@@ -270,7 +286,9 @@ def test_start_idempotent(monkeypatch: pytest.MonkeyPatch) -> None:
         def join(self, timeout: float | None = None) -> None:  # noqa: ARG002, ANN001
             return None
 
-    monkeypatch.setattr("bot_v2.monitoring.system.engine.threading.Thread", lambda target: DummyThread(target))
+    monkeypatch.setattr(
+        "bot_v2.monitoring.system.engine.threading.Thread", lambda target: DummyThread(target)
+    )
 
     system.start()
     first_thread = system.thread
@@ -302,8 +320,12 @@ def test_monitoring_loop_trims_history(monkeypatch: pytest.MonkeyPatch) -> None:
     system = MonitoringSystem()
     system.max_history = 1
 
-    health1 = build_system_health(system.config, cpu=5.0, memory=5.0, disk=5.0, error_rate=0.0, response_ms=5.0)
-    health2 = build_system_health(system.config, cpu=6.0, memory=6.0, disk=6.0, error_rate=0.0, response_ms=6.0)
+    health1 = build_system_health(
+        system.config, cpu=5.0, memory=5.0, disk=5.0, error_rate=0.0, response_ms=5.0
+    )
+    health2 = build_system_health(
+        system.config, cpu=6.0, memory=6.0, disk=6.0, error_rate=0.0, response_ms=6.0
+    )
     healths = [health1, health2]
 
     def wrapped_collect() -> SystemHealth:

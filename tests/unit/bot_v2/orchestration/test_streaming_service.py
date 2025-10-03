@@ -115,6 +115,7 @@ class TestStreamingServiceStartStop:
 
     def test_start_idempotent_if_already_running(self, streaming_service, mock_broker):
         """Test that start() is idempotent if thread already running."""
+
         # Setup: mock a long-running stream
         def slow_stream():
             yield {"product_id": "BTC-USD", "best_bid": "50000", "best_ask": "50001"}

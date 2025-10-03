@@ -1,0 +1,8 @@
+tests/unit/bot_v2/config/test_config_loader.py
+tests/unit/bot_v2/data_providers/test_data_providers.py
+tests/unit/bot_v2/errors/test_error_handler.py
+tests/unit/bot_v2/features/adaptive_portfolio/test_config_manager.py
+tests/unit/bot_v2/features/data/test_cache.py
+tests/unit/bot_v2/monitoring/test_metrics_collector.py
+tests/unit/bot_v2/orchestration/test_streaming_service.py
+tests/unit/bot_v2/state/checkpoint/test_checkpoint_handler.py

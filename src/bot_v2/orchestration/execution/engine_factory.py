@@ -15,9 +15,10 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:  # pragma: no cover
+    from bot_v2.state.event_store import EventStore
+
     from bot_v2.features.brokerages.core.interfaces import IBrokerage
     from bot_v2.features.live_trade.risk import LiveRiskManager
-    from bot_v2.state.event_store import EventStore
 
 logger = logging.getLogger(__name__)
 
@@ -66,9 +67,7 @@ class ExecutionEngineFactory:
         )
 
     @staticmethod
-    def create_impact_estimator(
-        broker: IBrokerage, risk_manager: LiveRiskManager
-    ) -> Any:
+    def create_impact_estimator(broker: IBrokerage, risk_manager: LiveRiskManager) -> Any:
         """Create market impact estimator function for risk manager.
 
         Returns a closure that estimates market impact using LiquidityService.

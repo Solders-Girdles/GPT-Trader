@@ -148,7 +148,9 @@ def test_list_balances_parses_accounts(service: DummyPortfolioService) -> None:
     ]
 
 
-def test_list_balances_handles_invalid_numbers(service: DummyPortfolioService, caplog: pytest.LogCaptureFixture) -> None:
+def test_list_balances_handles_invalid_numbers(
+    service: DummyPortfolioService, caplog: pytest.LogCaptureFixture
+) -> None:
     caplog.set_level("WARNING")
     service.client.accounts_response["accounts"].append({"currency": "BAD", "balance": "nan"})
     balances = service.list_balances()
@@ -156,12 +158,18 @@ def test_list_balances_handles_invalid_numbers(service: DummyPortfolioService, c
     assert any("Could not parse" in record.message for record in caplog.records)
 
 
-def test_get_portfolio_balances_falls_back(service: DummyPortfolioService, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_get_portfolio_balances_falls_back(
+    service: DummyPortfolioService, monkeypatch: pytest.MonkeyPatch
+) -> None:
     balances = service.get_portfolio_balances()
     assert balances[0].asset == "BTC"
 
     # Force failure path
-    monkeypatch.setattr(service.client, "get_portfolio_breakdown", lambda _: (_ for _ in ()).throw(RuntimeError("down")))
+    monkeypatch.setattr(
+        service.client,
+        "get_portfolio_breakdown",
+        lambda _: (_ for _ in ()).throw(RuntimeError("down")),
+    )
     balances = service.get_portfolio_balances()
     assert balances[0].asset == "BTC"
 

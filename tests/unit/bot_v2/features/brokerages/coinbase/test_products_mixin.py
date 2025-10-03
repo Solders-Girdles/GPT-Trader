@@ -348,9 +348,7 @@ class TestGetRestQuote:
             "bot_v2.features.brokerages.coinbase.rest.products.normalize_symbol",
             return_value="BTC-USD",
         ) as mock_normalize:
-            with patch(
-                "bot_v2.features.brokerages.coinbase.rest.products.to_quote"
-            ):
+            with patch("bot_v2.features.brokerages.coinbase.rest.products.to_quote"):
                 products_mixin.get_rest_quote("btc-usd")
 
         mock_normalize.assert_called_with("btc-usd")
@@ -391,8 +389,22 @@ class TestGetCandles:
         """Should fetch and convert candles."""
         products_mixin.client.get_candles.return_value = {
             "candles": [
-                {"start": "2024-01-15T00:00:00", "open": "50000", "high": "50100", "low": "49900", "close": "50050", "volume": "100"},
-                {"start": "2024-01-15T01:00:00", "open": "50050", "high": "50200", "low": "50000", "close": "50150", "volume": "150"},
+                {
+                    "start": "2024-01-15T00:00:00",
+                    "open": "50000",
+                    "high": "50100",
+                    "low": "49900",
+                    "close": "50050",
+                    "volume": "100",
+                },
+                {
+                    "start": "2024-01-15T01:00:00",
+                    "open": "50050",
+                    "high": "50200",
+                    "low": "50000",
+                    "close": "50150",
+                    "volume": "150",
+                },
             ]
         }
 

@@ -369,23 +369,23 @@ jobs:
             --dry-run=client -o yaml | \
             sed 's/trading-bot/trading-bot-green/g' | \
             kubectl apply -f -
-          
+
           # Update green deployment with new image
           kubectl set image deployment/trading-bot-green \
             trading-bot=${{ needs.build-image.outputs.image-tag }} \
             -n trading-system
-          
+
           # Wait for green deployment to be ready
           kubectl rollout status deployment/trading-bot-green -n trading-system
-          
+
           # Switch traffic to green
           kubectl patch service trading-bot-service \
             -p '{"spec":{"selector":{"deployment":"green"}}}' \
             -n trading-system
-          
+
           # Wait and monitor
           sleep 60
-          
+
           # If successful, remove blue deployment
           kubectl delete deployment trading-bot -n trading-system || true
           kubectl label deployment trading-bot-green deployment=blue -n trading-system

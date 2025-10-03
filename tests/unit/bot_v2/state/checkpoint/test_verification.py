@@ -43,12 +43,12 @@ class TestCheckpointVerification:
                 "timestamp": "2024-01-01T00:00:00",
                 "positions": {
                     "position:BTC": {"symbol": "BTC", "qty": 1.0},
-                    "position:ETH": {"symbol": "ETH", "qty": 2.0}
+                    "position:ETH": {"symbol": "ETH", "qty": 2.0},
                 },
-                "portfolio": {"total_value": 100000}
+                "portfolio": {"total_value": 100000},
             },
             consistency_hash="abc123",
-            metadata={"test": "data"}
+            metadata={"test": "data"},
         )
 
     def test_initialization(self, checkpoint_verification, mock_state_manager, mock_storage):
@@ -66,7 +66,9 @@ class TestCheckpointVerification:
         result = await checkpoint_verification.verify_checkpoint(sample_checkpoint)
 
         assert result is True
-        mock_storage.calculate_consistency_hash.assert_called_once_with(sample_checkpoint.state_snapshot)
+        mock_storage.calculate_consistency_hash.assert_called_once_with(
+            sample_checkpoint.state_snapshot
+        )
 
     @pytest.mark.asyncio
     async def test_verify_checkpoint_hash_mismatch(
@@ -91,12 +93,9 @@ class TestCheckpointVerification:
             version=1,
             size_bytes=512,
             timestamp=datetime.fromisoformat("2024-01-01T00:00:00"),
-            state_snapshot={
-                "positions": {},
-                "portfolio": {}
-            },
+            state_snapshot={"positions": {}, "portfolio": {}},
             consistency_hash="xyz789",
-            metadata={}
+            metadata={},
         )
 
         mock_storage.calculate_consistency_hash.return_value = "xyz789"
@@ -168,7 +167,9 @@ class TestCheckpointVerification:
         mock_state_manager.get_state.return_value = {"total_value": 100000}
         # 3 positions restored, but checkpoint has 2
         mock_state_manager.get_keys_by_pattern.return_value = [
-            "position:BTC", "position:ETH", "position:SOL"
+            "position:BTC",
+            "position:ETH",
+            "position:SOL",
         ]
 
         result = await checkpoint_verification.verify_restoration(sample_checkpoint)
@@ -191,10 +192,10 @@ class TestCheckpointVerification:
             state_snapshot={
                 "timestamp": "2024-01-01T00:00:00",
                 "positions": {},
-                "portfolio": {"total_value": 50000}
+                "portfolio": {"total_value": 50000},
             },
             consistency_hash="xyz",
-            metadata={}
+            metadata={},
         )
 
         mock_state_manager.get_state.return_value = {"total_value": 50000}
@@ -228,10 +229,10 @@ class TestCheckpointVerification:
             timestamp=datetime.fromisoformat("2024-01-01T00:00:00"),
             state_snapshot={
                 "timestamp": "2024-01-01T00:00:00",
-                "portfolio": {"total_value": 50000}
+                "portfolio": {"total_value": 50000},
             },
             consistency_hash="xyz",
-            metadata={}
+            metadata={},
         )
 
         mock_state_manager.get_state.return_value = {"total_value": 50000}

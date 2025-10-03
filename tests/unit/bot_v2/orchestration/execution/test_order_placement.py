@@ -55,9 +55,7 @@ class TestOrderPlacementServiceInit:
 
     def test_initializes_with_required_params(self, orders_store, order_stats):
         """Service initializes with required parameters."""
-        service = OrderPlacementService(
-            orders_store=orders_store, order_stats=order_stats
-        )
+        service = OrderPlacementService(orders_store=orders_store, order_stats=order_stats)
 
         assert service._orders_store is orders_store
         assert service._order_stats is order_stats
@@ -318,9 +316,7 @@ class TestTimeInForceHandling:
     """Tests for time_in_force parsing."""
 
     @pytest.mark.asyncio
-    async def test_parses_string_time_in_force(
-        self, order_placement_service, sample_product
-    ):
+    async def test_parses_string_time_in_force(self, order_placement_service, sample_product):
         """Parses string TIF to TimeInForce enum."""
         decision = Mock()
         decision.target_notional = None
@@ -351,9 +347,7 @@ class TestTimeInForceHandling:
             assert order_placement_service._order_stats["attempted"] > 0
 
     @pytest.mark.asyncio
-    async def test_uses_default_time_in_force(
-        self, order_placement_service, sample_product
-    ):
+    async def test_uses_default_time_in_force(self, order_placement_service, sample_product):
         """Uses default TIF when decision TIF is None."""
         decision = Mock()
         decision.target_notional = None
@@ -446,9 +440,7 @@ class TestPlaceOrderErrorHandling:
                 )
 
     @pytest.mark.asyncio
-    async def test_generic_exception_logs_error(
-        self, order_placement_service, sample_product
-    ):
+    async def test_generic_exception_logs_error(self, order_placement_service, sample_product):
         """Generic exception is logged but doesn't raise."""
         decision = Mock()
         decision.target_notional = None

@@ -62,9 +62,7 @@ class TestPathInitialization:
         assert not local_path.exists()
         assert not backup_path.exists()
 
-        service = TransportService(
-            local_path=local_path, backup_path=backup_path, enable_s3=False
-        )
+        service = TransportService(local_path=local_path, backup_path=backup_path, enable_s3=False)
 
         # Paths should be created
         assert local_path.exists()
@@ -326,9 +324,7 @@ class TestStoreOperations:
         assert Path(path).read_bytes() == data
 
     @pytest.mark.asyncio
-    async def test_store_local_creates_mirror_copy(
-        self, temp_transport_paths: dict
-    ) -> None:
+    async def test_store_local_creates_mirror_copy(self, temp_transport_paths: dict) -> None:
         """Creates mirror copy when local_path differs from backup_path."""
         service = TransportService(
             local_path=temp_transport_paths["local"],
@@ -351,9 +347,7 @@ class TestStoreOperations:
         assert mirror_path.read_bytes() == data
 
     @pytest.mark.asyncio
-    async def test_store_local_mirror_copy_error_handled(
-        self, temp_transport_paths: dict
-    ) -> None:
+    async def test_store_local_mirror_copy_error_handled(self, temp_transport_paths: dict) -> None:
         """Handles mirror copy failure gracefully."""
         service = TransportService(
             local_path=temp_transport_paths["local"],
@@ -582,9 +576,7 @@ class TestDeleteOperations:
         mock_s3.delete_object.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_delete_returns_false_on_error(
-        self, temp_transport_paths: dict
-    ) -> None:
+    async def test_delete_returns_false_on_error(self, temp_transport_paths: dict) -> None:
         """Returns False when deletion fails."""
         # Create service with invalid permissions
         service = TransportService(
@@ -616,9 +608,7 @@ class TestUploadToS3:
 
     @skip_if_no_boto3
     @patch("boto3.client")
-    def test_upload_to_s3_success(
-        self, mock_boto3_client, temp_transport_paths: dict
-    ) -> None:
+    def test_upload_to_s3_success(self, mock_boto3_client, temp_transport_paths: dict) -> None:
         """Uploads local backup to S3 successfully."""
         mock_s3 = Mock()
         mock_s3.head_bucket = Mock(return_value={})
@@ -643,9 +633,7 @@ class TestUploadToS3:
 
     @skip_if_no_boto3
     @patch("boto3.client")
-    def test_upload_to_s3_not_found(
-        self, mock_boto3_client, temp_transport_paths: dict
-    ) -> None:
+    def test_upload_to_s3_not_found(self, mock_boto3_client, temp_transport_paths: dict) -> None:
         """Handles missing local backup gracefully."""
         mock_s3 = Mock()
         mock_s3.head_bucket = Mock(return_value={})
@@ -665,9 +653,7 @@ class TestUploadToS3:
         # Should not call upload_file
         mock_s3.upload_file.assert_not_called()
 
-    def test_upload_to_s3_when_s3_unavailable(
-        self, temp_transport_paths: dict
-    ) -> None:
+    def test_upload_to_s3_when_s3_unavailable(self, temp_transport_paths: dict) -> None:
         """Does nothing when S3 client unavailable."""
         service = TransportService(
             local_path=temp_transport_paths["local"],
@@ -726,9 +712,7 @@ class TestStorageProperties:
 
     @skip_if_no_boto3
     @patch("boto3.client")
-    def test_has_cloud_storage_true(
-        self, mock_boto3_client, temp_transport_paths: dict
-    ) -> None:
+    def test_has_cloud_storage_true(self, mock_boto3_client, temp_transport_paths: dict) -> None:
         """has_cloud_storage is True when S3 client initialized."""
         mock_s3 = Mock()
         mock_s3.head_bucket = Mock(return_value={})

@@ -26,7 +26,7 @@ def test_cfm_balance_summary_requires_advanced_mode():
 
     client.set_transport_for_testing(fake_transport)
     out = client.cfm_balance_summary()
-    
+
     assert calls[0][0] == "GET"
     assert calls[0][1].endswith("/api/v3/brokerage/cfm/balance_summary")
     assert "balance" in out
@@ -44,7 +44,7 @@ def test_cfm_positions_formats_path():
 
     client.set_transport_for_testing(fake_transport)
     out = client.cfm_positions()
-    
+
     assert calls[0][0] == "GET"
     assert calls[0][1].endswith("/api/v3/brokerage/cfm/positions")
     assert "positions" in out
@@ -61,7 +61,7 @@ def test_cfm_position_with_product_id():
 
     client.set_transport_for_testing(fake_transport)
     out = client.cfm_position("ETH-PERP")
-    
+
     assert calls[0][0] == "GET"
     assert calls[0][1].endswith("/api/v3/brokerage/cfm/positions/ETH-PERP")
     assert "position" in out
@@ -78,7 +78,7 @@ def test_cfm_intraday_current_margin_window():
 
     client.set_transport_for_testing(fake_transport)
     out = client.cfm_intraday_current_margin_window()
-    
+
     assert calls[0][0] == "GET"
     assert calls[0][1].endswith("/api/v3/brokerage/cfm/intraday/current_margin_window")
     assert out["margin_window"] == "INTRADAY_HIGH_MARGIN_1H"
@@ -106,9 +106,9 @@ def test_cfm_sweep_not_implemented():
 def test_cfm_methods_require_advanced_mode():
     """Test that CFM methods are not available in exchange mode."""
     from bot_v2.features.brokerages.core.interfaces import InvalidRequestError
-    
+
     client_ex = make_client(api_mode="exchange")
-    
+
     # CFM methods should raise InvalidRequestError in exchange mode
     try:
         client_ex.cfm_balance_summary()

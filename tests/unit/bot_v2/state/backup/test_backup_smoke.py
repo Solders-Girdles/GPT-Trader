@@ -188,7 +188,9 @@ class TestBackupSmokeTest:
 class TestEncryptionBootstrap:
     """Tests for encryption key initialization and management."""
 
-    def test_generates_new_encryption_key_when_none_exists(self, backup_config: BackupConfig) -> None:
+    def test_generates_new_encryption_key_when_none_exists(
+        self, backup_config: BackupConfig
+    ) -> None:
         """Generates new encryption key when key file doesn't exist.
 
         Validates _init_encryption() creates new key.
@@ -209,7 +211,9 @@ class TestEncryptionBootstrap:
         key_file = Path(backup_config.backup_dir) / ".encryption_key"
         assert key_file.exists()
 
-    def test_loads_existing_encryption_key(self, backup_config: BackupConfig, temp_workspace: Path) -> None:
+    def test_loads_existing_encryption_key(
+        self, backup_config: BackupConfig, temp_workspace: Path
+    ) -> None:
         """Loads existing encryption key from file.
 
         Validates _init_encryption() reuses existing key.

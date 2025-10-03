@@ -64,9 +64,7 @@ class TestCacheOperations:
     def test_delete_removes_metadata(self, cache_manager):
         """Should remove metadata when deleting key."""
         cache_manager.set("test_key", "value")
-        cache_manager.update_metadata(
-            "test_key", StateCategory.HOT, 100, "checksum123"
-        )
+        cache_manager.update_metadata("test_key", StateCategory.HOT, 100, "checksum123")
 
         cache_manager.delete("test_key")
 
@@ -122,9 +120,7 @@ class TestMetadataManagement:
     def test_metadata_includes_timestamps(self, cache_manager):
         """Metadata should include creation and access timestamps."""
         before = datetime.utcnow()
-        cache_manager.update_metadata(
-            "test_key", StateCategory.HOT, 100, "checksum"
-        )
+        cache_manager.update_metadata("test_key", StateCategory.HOT, 100, "checksum")
         after = datetime.utcnow()
 
         metadata = cache_manager.get_metadata("test_key")
@@ -234,8 +230,7 @@ class TestCacheEviction:
         import json
 
         actual_size = sum(
-            len(json.dumps(v, default=str).encode())
-            for v in cache_manager._local_cache.values()
+            len(json.dumps(v, default=str).encode()) for v in cache_manager._local_cache.values()
         )
 
         # Should be under or at the limit (10KB = 10240 bytes)

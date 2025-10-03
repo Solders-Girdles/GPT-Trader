@@ -89,7 +89,7 @@ def _install_fake_psycopg2(monkeypatch: pytest.MonkeyPatch) -> list[Any]:
             self._result: list[dict[str, Any]] = []
             cursors.append(self)
 
-        def __enter__(self) -> "FakeCursor":
+        def __enter__(self) -> FakeCursor:
             return self
 
         def __exit__(self, exc_type, exc, tb) -> None:  # noqa: ANN001, D401
@@ -252,7 +252,9 @@ def test_default_postgres_adapter_happy_path(monkeypatch: pytest.MonkeyPatch) ->
     assert cursors, "Cursor should have been created"
 
 
-def test_default_postgres_adapter_handles_absent_connection(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_default_postgres_adapter_handles_absent_connection(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     _install_fake_psycopg2(monkeypatch)
     adapter = DefaultPostgresAdapter("localhost", 5432, "db", "user", "pass")
 

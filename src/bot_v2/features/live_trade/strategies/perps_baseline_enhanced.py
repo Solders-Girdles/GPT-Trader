@@ -11,6 +11,10 @@ from typing import Any
 from bot_v2.features.brokerages.core.interfaces import Product
 from bot_v2.features.live_trade.risk import LiveRiskManager, PositionSizingContext
 from bot_v2.features.live_trade.strategies.decisions import Action, Decision
+from bot_v2.features.live_trade.strategies.strategy_signals import (
+    SignalSnapshot,
+    StrategySignalCalculator,
+)
 from bot_v2.features.strategy_tools import (
     MarketConditionFilters,
     RiskGuards,
@@ -22,6 +26,7 @@ from bot_v2.features.strategy_tools import (
 __all__ = [
     "Action",
     "Decision",
+    "SignalSnapshot",
     "StrategyFiltersConfig",
     "StrategyConfig",
     "PerpsBaselineEnhancedStrategy",
@@ -113,22 +118,6 @@ class StrategyConfig:
         )
 
 
-@dataclass
-class SignalSnapshot:
-    """Summary of technical signals used for decisions."""
-
-    short_ma: Decimal
-    long_ma: Decimal
-    epsilon: Decimal
-    bullish_cross: bool
-    bearish_cross: bool
-    rsi: Decimal | None
-
-    @property
-    def ma_diff(self) -> Decimal:
-        return self.short_ma - self.long_ma
-
-
 class PerpsBaselineEnhancedStrategy:
     """Baseline MA crossover strategy with liquidity and risk enhancements."""
 
@@ -138,6 +127,7 @@ class PerpsBaselineEnhancedStrategy:
         risk_manager: LiveRiskManager | None = None,
         event_store: Any | None = None,
         bot_id: str = "perps_bot",
+        signal_calculator: StrategySignalCalculator | None = None,
     ) -> None:
         """
         Initialize enhanced strategy.
@@ -146,6 +136,8 @@ class PerpsBaselineEnhancedStrategy:
             config: Strategy configuration
             risk_manager: Risk manager for constraint checks
             event_store: Event store for metrics tracking
+            bot_id: Bot identifier for logging
+            signal_calculator: Optional signal calculator (for testing/injection)
         """
         self.config = config or StrategyConfig()
         self.risk_manager = risk_manager
@@ -165,6 +157,18 @@ class PerpsBaselineEnhancedStrategy:
             self.market_filters = create_conservative_filters()
             self.risk_guards = create_standard_risk_guards()
             self.enhancements = StrategyEnhancements()
+
+        # Initialize signal calculator
+        if signal_calculator:
+            self.signal_calculator = signal_calculator
+        else:
+            self.signal_calculator = StrategySignalCalculator(
+                short_ma_period=self.config.short_ma_period,
+                long_ma_period=self.config.long_ma_period,
+                ma_cross_epsilon_bps=self.config.ma_cross_epsilon_bps,
+                ma_cross_confirm_bars=self.config.ma_cross_confirm_bars,
+                rsi_calculator=self.enhancements,
+            )
 
         # In-memory state
         self.mark_windows: dict[str, list[Decimal]] = {}
@@ -308,77 +312,16 @@ class PerpsBaselineEnhancedStrategy:
     def _calculate_trading_signals(
         self, marks: list[Decimal], current_mark: Decimal
     ) -> SignalSnapshot:
-        """Compute moving averages, crossovers, and supporting indicators."""
-        short_sum = sum(marks[-self.config.short_ma_period :], Decimal("0"))
-        long_sum = sum(marks[-self.config.long_ma_period :], Decimal("0"))
-        short_ma = short_sum / Decimal(self.config.short_ma_period)
-        long_ma = long_sum / Decimal(self.config.long_ma_period)
+        """Compute moving averages, crossovers, and supporting indicators (delegates to calculator)."""
+        # Determine if RSI is required
+        require_rsi = (
+            self.config.filters_config is not None
+            and self.config.filters_config.require_rsi_confirmation
+        )
 
-        epsilon_rate = self.config.ma_cross_epsilon_bps / Decimal("10000")
-        epsilon = current_mark * epsilon_rate
-        bullish_cross = False
-        bearish_cross = False
-
-        if len(marks) >= self.config.long_ma_period + 1:
-            prev_marks = marks[:-1]
-            prev_short = sum(prev_marks[-self.config.short_ma_period :], Decimal("0")) / Decimal(
-                self.config.short_ma_period
-            )
-            prev_long = sum(prev_marks[-self.config.long_ma_period :], Decimal("0")) / Decimal(
-                self.config.long_ma_period
-            )
-            prev_diff = prev_short - prev_long
-            cur_diff = short_ma - long_ma
-
-            bullish_cross = (prev_diff <= epsilon) and (cur_diff > epsilon)
-            bearish_cross = (prev_diff >= -epsilon) and (cur_diff < -epsilon)
-
-            if bullish_cross or bearish_cross:
-                cross_type = "Bullish" if bullish_cross else "Bearish"
-                logger.debug(
-                    f"{cross_type} cross detected: prev_diff={prev_diff:.4f}, "
-                    f"cur_diff={cur_diff:.4f}, eps={epsilon:.4f}, "
-                    f"confirm_bars={self.config.ma_cross_confirm_bars}"
-                )
-
-            if self.config.ma_cross_confirm_bars > 0 and (bullish_cross or bearish_cross):
-                if len(marks) >= self.config.long_ma_period + self.config.ma_cross_confirm_bars + 1:
-                    confirmed = True
-                    for i in range(1, self.config.ma_cross_confirm_bars + 1):
-                        check_marks = marks[:-i]
-                        check_short = sum(
-                            check_marks[-self.config.short_ma_period :], Decimal("0")
-                        ) / Decimal(self.config.short_ma_period)
-                        check_long = sum(
-                            check_marks[-self.config.long_ma_period :], Decimal("0")
-                        ) / Decimal(self.config.long_ma_period)
-                        check_diff = check_short - check_long
-
-                        if bullish_cross and check_diff <= epsilon:
-                            confirmed = False
-                            break
-                        if bearish_cross and check_diff >= -epsilon:
-                            confirmed = False
-                            break
-
-                    bullish_cross = bullish_cross and confirmed
-                    bearish_cross = bearish_cross and confirmed
-                else:
-                    bullish_cross = False
-                    bearish_cross = False
-
-        rsi = None
-        if self.config.filters_config and self.config.filters_config.require_rsi_confirmation:
-            rsi_raw = self.enhancements.calculate_rsi(marks)
-            rsi = Decimal(str(rsi_raw)) if rsi_raw is not None else None
-
-        return SignalSnapshot(
-            short_ma=short_ma,
-            long_ma=long_ma,
-            epsilon=epsilon,
-            bullish_cross=bullish_cross,
-            bearish_cross=bearish_cross,
-            rsi=rsi,
+        # Delegate to signal calculator
+        return self.signal_calculator.calculate_signals(
+            marks, current_mark, require_rsi=require_rsi
         )
 
     def _evaluate_position_exits(

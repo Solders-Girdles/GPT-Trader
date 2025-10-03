@@ -123,13 +123,9 @@ class TestPromoteValue:
     @pytest.mark.asyncio
     async def test_returns_false_when_target_repo_unavailable(self):
         """Should return False when target repository is None."""
-        policy = TierPromotionPolicy(
-            redis_repo=None, postgres_repo=None, s3_repo=None
-        )
+        policy = TierPromotionPolicy(redis_repo=None, postgres_repo=None, s3_repo=None)
 
-        result = await policy.promote_value(
-            "test_key", "test_value", StateCategory.COLD, {}
-        )
+        result = await policy.promote_value("test_key", "test_value", StateCategory.COLD, {})
 
         assert result is False
 
@@ -137,13 +133,9 @@ class TestPromoteValue:
     async def test_returns_false_when_promotion_fails(self):
         """Should return False when repository store fails."""
         failing_redis = MockRepository(should_fail=True)
-        policy = TierPromotionPolicy(
-            redis_repo=failing_redis, postgres_repo=None, s3_repo=None
-        )
+        policy = TierPromotionPolicy(redis_repo=failing_redis, postgres_repo=None, s3_repo=None)
 
-        result = await policy.promote_value(
-            "test_key", "test_value", StateCategory.WARM, {}
-        )
+        result = await policy.promote_value("test_key", "test_value", StateCategory.WARM, {})
 
         assert result is False
 
@@ -154,9 +146,7 @@ class TestPromoteToHot:
     @pytest.mark.asyncio
     async def test_promotes_to_hot_successfully(self, policy, mock_repos):
         """Should store value in Redis (HOT tier)."""
-        result = await policy.promote_to_hot(
-            "test_key", "test_value", {"ttl_seconds": 3600}
-        )
+        result = await policy.promote_to_hot("test_key", "test_value", {"ttl_seconds": 3600})
 
         assert result is True
         assert "test_key" in mock_repos["redis"].stored_values
@@ -164,9 +154,7 @@ class TestPromoteToHot:
     @pytest.mark.asyncio
     async def test_returns_false_when_redis_unavailable(self):
         """Should return False when Redis repository is None."""
-        policy = TierPromotionPolicy(
-            redis_repo=None, postgres_repo=None, s3_repo=None
-        )
+        policy = TierPromotionPolicy(redis_repo=None, postgres_repo=None, s3_repo=None)
 
         result = await policy.promote_to_hot("test_key", "test_value", {})
 
@@ -176,9 +164,7 @@ class TestPromoteToHot:
     async def test_returns_false_when_redis_store_fails(self):
         """Should return False when Redis store operation fails."""
         failing_redis = MockRepository(should_fail=True)
-        policy = TierPromotionPolicy(
-            redis_repo=failing_redis, postgres_repo=None, s3_repo=None
-        )
+        policy = TierPromotionPolicy(redis_repo=failing_redis, postgres_repo=None, s3_repo=None)
 
         result = await policy.promote_to_hot("test_key", "test_value", {})
 
@@ -191,9 +177,7 @@ class TestDemoteToCold:
     @pytest.mark.asyncio
     async def test_demotes_to_cold_successfully(self, policy, mock_repos):
         """Should delete from HOT/WARM and store in COLD."""
-        result = await policy.demote_to_cold(
-            "test_key", "test_value", {"checksum": "abc123"}
-        )
+        result = await policy.demote_to_cold("test_key", "test_value", {"checksum": "abc123"})
 
         assert result is True
         # Verify deletions
@@ -256,9 +240,7 @@ class TestEdgeCases:
     @pytest.mark.asyncio
     async def test_handles_all_repos_none(self):
         """Should handle gracefully when all repositories are None."""
-        policy = TierPromotionPolicy(
-            redis_repo=None, postgres_repo=None, s3_repo=None
-        )
+        policy = TierPromotionPolicy(redis_repo=None, postgres_repo=None, s3_repo=None)
 
         # All operations should return False
         assert not await policy.promote_value("k", "v", StateCategory.COLD, {})

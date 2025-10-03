@@ -106,7 +106,9 @@ def test_require_quantity_validation() -> None:
     with pytest.raises(ValueError):
         orders_module.OrderRestMixin._require_quantity(None, context="test")
 
-    assert orders_module.OrderRestMixin._require_quantity(Decimal("1"), context="ctx") == Decimal("1")
+    assert orders_module.OrderRestMixin._require_quantity(Decimal("1"), context="ctx") == Decimal(
+        "1"
+    )
 
 
 def test_preview_and_edit_flows() -> None:
@@ -173,7 +175,9 @@ def test_list_fills_handles_errors(monkeypatch: pytest.MonkeyPatch) -> None:
     fills = service.list_fills(symbol="BTC-USD", limit=50)
     assert fills[0]["id"] == "fill-1"
 
-    monkeypatch.setattr(service.client, "list_fills", lambda **_: (_ for _ in ()).throw(RuntimeError("fail")))
+    monkeypatch.setattr(
+        service.client, "list_fills", lambda **_: (_ for _ in ()).throw(RuntimeError("fail"))
+    )
     assert service.list_fills() == []
 
 
@@ -191,7 +195,11 @@ def test_close_position_workflow(monkeypatch: pytest.MonkeyPatch) -> None:
         fallback_called.update({"side": side, "qty": qty, "reduce_only": reduce_only})
         return {"fallback": True}
 
-    monkeypatch.setattr(service.client, "close_position", lambda payload: (_ for _ in ()).throw(RuntimeError("fail")))
+    monkeypatch.setattr(
+        service.client,
+        "close_position",
+        lambda payload: (_ for _ in ()).throw(RuntimeError("fail")),
+    )
     order = service.close_position(
         "ETH-USD",
         quantity=Decimal("3"),

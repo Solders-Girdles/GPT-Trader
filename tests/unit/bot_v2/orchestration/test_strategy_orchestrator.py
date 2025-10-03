@@ -478,9 +478,7 @@ class TestStrategyOrchestrator:
         from bot_v2.features.live_trade.strategies.perps_baseline import Action, Decision
 
         strategy = Mock()
-        strategy.decide = Mock(
-            return_value=Decision(action=Action.BUY, reason="test", leverage=2)
-        )
+        strategy.decide = Mock(return_value=Decision(action=Action.BUY, reason="test", leverage=2))
         marks = [Decimal("50000"), Decimal("50100")]
         mock_bot.get_product.return_value = sample_product
 
@@ -651,9 +649,7 @@ class TestStrategyOrchestrator:
         from bot_v2.features.live_trade.strategies.perps_baseline import Action, Decision
 
         orchestrator._spot_profiles.get = Mock(
-            return_value={
-                "volatility_filter": {"window": 10, "min_vol": 0.05, "max_vol": 0.10}
-            }
+            return_value={"volatility_filter": {"window": 10, "min_vol": 0.05, "max_vol": 0.10}}
         )
         decision = Decision(action=Action.BUY, reason="test", leverage=1)
 
@@ -727,9 +723,7 @@ class TestStrategyOrchestrator:
         assert candles == []
 
     @pytest.mark.asyncio
-    async def test_process_symbol_zero_equity(
-        self, orchestrator, mock_bot, sample_balances
-    ):
+    async def test_process_symbol_zero_equity(self, orchestrator, mock_bot, sample_balances):
         """Test symbol processing with zero equity"""
         mock_bot.mark_windows["BTC-USD"] = [Decimal("50000")]
         balance = Mock(spec=Balance)

@@ -19,7 +19,7 @@ def mock_bot_with_account_manager():
         "from_portfolio": "port-123",
         "to_portfolio": "port-789",
         "amount": "5000.00",
-        "status": "completed"
+        "status": "completed",
     }
     bot.account_manager = account_mgr
     return bot
@@ -36,9 +36,13 @@ class TestHandleMoveFunds:
     """Tests for handle_move_funds function."""
 
     @patch("bot_v2.cli.commands.move_funds.ensure_shutdown")
-    def test_successful_fund_movement(self, mock_shutdown, mock_bot_with_account_manager, mock_parser, capsys):
+    def test_successful_fund_movement(
+        self, mock_shutdown, mock_bot_with_account_manager, mock_parser, capsys
+    ):
         """Test successful fund movement between portfolios."""
-        result = handle_move_funds("port-123:port-789:5000", mock_bot_with_account_manager, mock_parser)
+        result = handle_move_funds(
+            "port-123:port-789:5000", mock_bot_with_account_manager, mock_parser
+        )
 
         assert result == 0
         mock_bot_with_account_manager.account_manager.move_funds.assert_called_once_with(
@@ -53,7 +57,9 @@ class TestHandleMoveFunds:
         assert "port-789" in captured.out
 
     @patch("bot_v2.cli.commands.move_funds.ensure_shutdown")
-    def test_move_funds_output_is_json(self, mock_shutdown, mock_bot_with_account_manager, mock_parser, capsys):
+    def test_move_funds_output_is_json(
+        self, mock_shutdown, mock_bot_with_account_manager, mock_parser, capsys
+    ):
         """Test that move-funds output is valid JSON."""
         handle_move_funds("port-123:port-789:5000", mock_bot_with_account_manager, mock_parser)
 
@@ -64,7 +70,9 @@ class TestHandleMoveFunds:
         assert parsed["to_portfolio"] == "port-789"
 
     @patch("bot_v2.cli.commands.move_funds.ensure_shutdown")
-    def test_invalid_format_missing_parts(self, mock_shutdown, mock_bot_with_account_manager, mock_parser, caplog):
+    def test_invalid_format_missing_parts(
+        self, mock_shutdown, mock_bot_with_account_manager, mock_parser, caplog
+    ):
         """Test error when move-funds format is invalid (missing parts)."""
         import logging
 
@@ -82,7 +90,9 @@ class TestHandleMoveFunds:
         )
 
     @patch("bot_v2.cli.commands.move_funds.ensure_shutdown")
-    def test_invalid_format_single_value(self, mock_shutdown, mock_bot_with_account_manager, mock_parser):
+    def test_invalid_format_single_value(
+        self, mock_shutdown, mock_bot_with_account_manager, mock_parser
+    ):
         """Test error when move-funds format has no separators."""
         mock_parser.error.side_effect = SystemExit(2)
 
@@ -92,9 +102,13 @@ class TestHandleMoveFunds:
         mock_parser.error.assert_called_once()
 
     @patch("bot_v2.cli.commands.move_funds.ensure_shutdown")
-    def test_move_funds_with_whitespace(self, mock_shutdown, mock_bot_with_account_manager, mock_parser):
+    def test_move_funds_with_whitespace(
+        self, mock_shutdown, mock_bot_with_account_manager, mock_parser
+    ):
         """Test fund movement with whitespace around values."""
-        result = handle_move_funds(" port-123 : port-789 : 5000 ", mock_bot_with_account_manager, mock_parser)
+        result = handle_move_funds(
+            " port-123 : port-789 : 5000 ", mock_bot_with_account_manager, mock_parser
+        )
 
         assert result == 0
         mock_bot_with_account_manager.account_manager.move_funds.assert_called_once_with(
@@ -102,15 +116,21 @@ class TestHandleMoveFunds:
         )
 
     @patch("bot_v2.cli.commands.move_funds.ensure_shutdown")
-    def test_move_funds_exception_raised(self, mock_shutdown, mock_bot_with_account_manager, mock_parser, caplog):
+    def test_move_funds_exception_raised(
+        self, mock_shutdown, mock_bot_with_account_manager, mock_parser, caplog
+    ):
         """Test exception during fund movement is raised and logged."""
         import logging
 
-        mock_bot_with_account_manager.account_manager.move_funds.side_effect = Exception("Insufficient balance")
+        mock_bot_with_account_manager.account_manager.move_funds.side_effect = Exception(
+            "Insufficient balance"
+        )
 
         with caplog.at_level(logging.ERROR):
             with pytest.raises(Exception, match="Insufficient balance"):
-                handle_move_funds("port-123:port-789:5000", mock_bot_with_account_manager, mock_parser)
+                handle_move_funds(
+                    "port-123:port-789:5000", mock_bot_with_account_manager, mock_parser
+                )
 
         # Verify error was logged
         assert "Fund movement failed" in caplog.text
@@ -119,16 +139,20 @@ class TestHandleMoveFunds:
         mock_shutdown.assert_called_once_with(mock_bot_with_account_manager)
 
     @patch("bot_v2.cli.commands.move_funds.ensure_shutdown")
-    def test_move_funds_with_decimal_amount(self, mock_shutdown, mock_bot_with_account_manager, mock_parser):
+    def test_move_funds_with_decimal_amount(
+        self, mock_shutdown, mock_bot_with_account_manager, mock_parser
+    ):
         """Test fund movement with decimal amount."""
         mock_bot_with_account_manager.account_manager.move_funds.return_value = {
             "from_portfolio": "port-aaa",
             "to_portfolio": "port-bbb",
             "amount": "2500.75",
-            "status": "completed"
+            "status": "completed",
         }
 
-        result = handle_move_funds("port-aaa:port-bbb:2500.75", mock_bot_with_account_manager, mock_parser)
+        result = handle_move_funds(
+            "port-aaa:port-bbb:2500.75", mock_bot_with_account_manager, mock_parser
+        )
 
         assert result == 0
         mock_bot_with_account_manager.account_manager.move_funds.assert_called_once_with(
@@ -136,16 +160,22 @@ class TestHandleMoveFunds:
         )
 
     @patch("bot_v2.cli.commands.move_funds.ensure_shutdown")
-    def test_shutdown_called_on_success(self, mock_shutdown, mock_bot_with_account_manager, mock_parser):
+    def test_shutdown_called_on_success(
+        self, mock_shutdown, mock_bot_with_account_manager, mock_parser
+    ):
         """Test that shutdown is called even on success."""
         handle_move_funds("port-123:port-789:5000", mock_bot_with_account_manager, mock_parser)
 
         mock_shutdown.assert_called_once()
 
     @patch("bot_v2.cli.commands.move_funds.ensure_shutdown")
-    def test_shutdown_called_on_error(self, mock_shutdown, mock_bot_with_account_manager, mock_parser):
+    def test_shutdown_called_on_error(
+        self, mock_shutdown, mock_bot_with_account_manager, mock_parser
+    ):
         """Test that shutdown is called even when error occurs."""
-        mock_bot_with_account_manager.account_manager.move_funds.side_effect = Exception("API error")
+        mock_bot_with_account_manager.account_manager.move_funds.side_effect = Exception(
+            "API error"
+        )
 
         with pytest.raises(Exception):
             handle_move_funds("port-123:port-789:5000", mock_bot_with_account_manager, mock_parser)
@@ -153,12 +183,16 @@ class TestHandleMoveFunds:
         mock_shutdown.assert_called_once()
 
     @patch("bot_v2.cli.commands.move_funds.ensure_shutdown")
-    def test_move_funds_with_uuid_portfolios(self, mock_shutdown, mock_bot_with_account_manager, mock_parser):
+    def test_move_funds_with_uuid_portfolios(
+        self, mock_shutdown, mock_bot_with_account_manager, mock_parser
+    ):
         """Test fund movement with UUID-formatted portfolios."""
         uuid1 = "550e8400-e29b-41d4-a716-446655440000"
         uuid2 = "6ba7b810-9dad-11d1-80b4-00c04fd430c8"
 
-        result = handle_move_funds(f"{uuid1}:{uuid2}:1000", mock_bot_with_account_manager, mock_parser)
+        result = handle_move_funds(
+            f"{uuid1}:{uuid2}:1000", mock_bot_with_account_manager, mock_parser
+        )
 
         assert result == 0
         mock_bot_with_account_manager.account_manager.move_funds.assert_called_once_with(
@@ -166,9 +200,13 @@ class TestHandleMoveFunds:
         )
 
     @patch("bot_v2.cli.commands.move_funds.ensure_shutdown")
-    def test_move_funds_with_colons_in_amount(self, mock_shutdown, mock_bot_with_account_manager, mock_parser):
+    def test_move_funds_with_colons_in_amount(
+        self, mock_shutdown, mock_bot_with_account_manager, mock_parser
+    ):
         """Test fund movement where amount might contain colons (uses maxsplit)."""
-        result = handle_move_funds("port-123:port-789:1000:extra", mock_bot_with_account_manager, mock_parser)
+        result = handle_move_funds(
+            "port-123:port-789:1000:extra", mock_bot_with_account_manager, mock_parser
+        )
 
         assert result == 0
         # Amount should be "1000:extra" due to maxsplit=2

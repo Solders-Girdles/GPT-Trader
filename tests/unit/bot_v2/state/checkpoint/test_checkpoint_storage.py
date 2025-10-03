@@ -24,9 +24,7 @@ class TestCheckpointStorage:
     def checkpoint_config(self, temp_checkpoint_dir):
         """Create checkpoint configuration."""
         return CheckpointConfig(
-            checkpoint_dir=str(temp_checkpoint_dir),
-            compression_enabled=False,
-            max_checkpoints=5
+            checkpoint_dir=str(temp_checkpoint_dir), compression_enabled=False, max_checkpoints=5
         )
 
     @pytest.fixture
@@ -44,7 +42,7 @@ class TestCheckpointStorage:
             timestamp=datetime.fromisoformat("2024-01-01T00:00:00"),
             state_snapshot={"positions": {}, "orders": {}},
             consistency_hash="abc123",
-            metadata={"test": "data"}
+            metadata={"test": "data"},
         )
 
     def test_initialization(self, checkpoint_storage, temp_checkpoint_dir):
@@ -63,9 +61,7 @@ class TestCheckpointStorage:
         assert new_dir.exists()
 
     @pytest.mark.asyncio
-    async def test_store_checkpoint_atomic_success(
-        self, checkpoint_storage, sample_checkpoint
-    ):
+    async def test_store_checkpoint_atomic_success(self, checkpoint_storage, sample_checkpoint):
         """Test successful atomic checkpoint storage."""
         data = json.dumps(sample_checkpoint.state_snapshot).encode("utf-8")
 
@@ -74,7 +70,9 @@ class TestCheckpointStorage:
         assert result is True
 
         # Check files were created
-        checkpoint_file = checkpoint_storage.checkpoint_path / f"{sample_checkpoint.checkpoint_id}.checkpoint"
+        checkpoint_file = (
+            checkpoint_storage.checkpoint_path / f"{sample_checkpoint.checkpoint_id}.checkpoint"
+        )
         meta_file = checkpoint_storage.checkpoint_path / f"{sample_checkpoint.checkpoint_id}.meta"
 
         assert checkpoint_file.exists()
@@ -90,7 +88,7 @@ class TestCheckpointStorage:
         await checkpoint_storage.store_checkpoint_atomic(sample_checkpoint, data)
 
         meta_file = checkpoint_storage.checkpoint_path / f"{sample_checkpoint.checkpoint_id}.meta"
-        with open(meta_file, "r") as f:
+        with open(meta_file) as f:
             metadata = json.load(f)
 
         # State snapshot should not be in metadata
@@ -98,13 +96,12 @@ class TestCheckpointStorage:
         assert "checkpoint_id" in metadata
         assert "timestamp" in metadata
 
-    def test_load_checkpoint_from_disk_success(
-        self, checkpoint_storage, sample_checkpoint
-    ):
+    def test_load_checkpoint_from_disk_success(self, checkpoint_storage, sample_checkpoint):
         """Test successful checkpoint loading."""
         # First store a checkpoint
         data = json.dumps(sample_checkpoint.state_snapshot).encode("utf-8")
         import asyncio
+
         asyncio.run(checkpoint_storage.store_checkpoint_atomic(sample_checkpoint, data))
 
         # Load it back
@@ -135,7 +132,9 @@ class TestCheckpointStorage:
     def test_delete_checkpoint_files_success(self, checkpoint_storage, sample_checkpoint):
         """Test successful checkpoint deletion."""
         # Create files
-        checkpoint_file = checkpoint_storage.checkpoint_path / f"{sample_checkpoint.checkpoint_id}.checkpoint"
+        checkpoint_file = (
+            checkpoint_storage.checkpoint_path / f"{sample_checkpoint.checkpoint_id}.checkpoint"
+        )
         meta_file = checkpoint_storage.checkpoint_path / f"{sample_checkpoint.checkpoint_id}.meta"
 
         checkpoint_file.write_text("{}")
@@ -164,8 +163,7 @@ class TestCheckpointStorage:
 
             # Files should not exist after cleanup
             checkpoint_file = (
-                checkpoint_storage.checkpoint_path
-                / f"{sample_checkpoint.checkpoint_id}.checkpoint"
+                checkpoint_storage.checkpoint_path / f"{sample_checkpoint.checkpoint_id}.checkpoint"
             )
             meta_file = (
                 checkpoint_storage.checkpoint_path / f"{sample_checkpoint.checkpoint_id}.meta"
@@ -187,9 +185,7 @@ class TestCheckpointStorage:
         checkpoint_file = (
             checkpoint_storage.checkpoint_path / f"{sample_checkpoint.checkpoint_id}.checkpoint"
         )
-        meta_file = (
-            checkpoint_storage.checkpoint_path / f"{sample_checkpoint.checkpoint_id}.meta"
-        )
+        meta_file = checkpoint_storage.checkpoint_path / f"{sample_checkpoint.checkpoint_id}.meta"
 
         checkpoint_file.write_bytes(compressed_data)
 
@@ -206,9 +202,7 @@ class TestCheckpointStorage:
     def test_load_checkpoint_error_handling(self, checkpoint_storage, sample_checkpoint):
         """Test error handling during checkpoint load."""
         # Create corrupted metadata file
-        meta_file = (
-            checkpoint_storage.checkpoint_path / f"{sample_checkpoint.checkpoint_id}.meta"
-        )
+        meta_file = checkpoint_storage.checkpoint_path / f"{sample_checkpoint.checkpoint_id}.meta"
         meta_file.write_text("invalid json{")
 
         loaded = checkpoint_storage.load_checkpoint_from_disk(sample_checkpoint.checkpoint_id)
@@ -216,9 +210,7 @@ class TestCheckpointStorage:
         assert loaded is None
 
     @pytest.mark.asyncio
-    async def test_verify_checkpoint_integrity_success(
-        self, checkpoint_storage, sample_checkpoint
-    ):
+    async def test_verify_checkpoint_integrity_success(self, checkpoint_storage, sample_checkpoint):
         """Test successful checkpoint integrity verification."""
         # Calculate correct hash for the snapshot
         sample_checkpoint.consistency_hash = checkpoint_storage.calculate_consistency_hash(
@@ -301,9 +293,7 @@ class TestCheckpointStorage:
 
         assert result is False
 
-    def test_delete_checkpoint_files_error_handling(
-        self, checkpoint_storage, sample_checkpoint
-    ):
+    def test_delete_checkpoint_files_error_handling(self, checkpoint_storage, sample_checkpoint):
         """Test error handling during checkpoint deletion."""
         # Mock storage to fail
         with patch.object(

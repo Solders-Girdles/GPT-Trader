@@ -117,9 +117,7 @@ class TestCheckpointCreation:
         assert checkpoint.version == 1
         assert len(checkpoint_handler._checkpoint_history) == 1
 
-    async def test_create_checkpoint_pauses_trading(
-        self, checkpoint_handler, mock_state_manager
-    ):
+    async def test_create_checkpoint_pauses_trading(self, checkpoint_handler, mock_state_manager):
         """Test that trading is paused during checkpoint creation."""
         mock_state_manager.get_keys_by_pattern.return_value = []
 
@@ -226,9 +224,7 @@ class TestCheckpointRetrieval:
         }
 
         (checkpoint_dir / f"{checkpoint_id}.meta").write_text(json.dumps(meta_data))
-        (checkpoint_dir / f"{checkpoint_id}.checkpoint").write_text(
-            json.dumps({"positions": {}})
-        )
+        (checkpoint_dir / f"{checkpoint_id}.checkpoint").write_text(json.dumps({"positions": {}}))
 
         retrieved = checkpoint_handler.get_checkpoint(checkpoint_id)
 
@@ -258,9 +254,7 @@ class TestCheckpointRetrieval:
         latest = checkpoint_handler.get_latest_checkpoint()
         assert latest is None
 
-    async def test_find_valid_checkpoint_before_time(
-        self, checkpoint_handler, mock_state_manager
-    ):
+    async def test_find_valid_checkpoint_before_time(self, checkpoint_handler, mock_state_manager):
         """Test finding valid checkpoint before specific time."""
         mock_state_manager.get_keys_by_pattern.return_value = []
 
@@ -328,9 +322,7 @@ class TestCheckpointRestoration:
         ]
         assert len(emergency_checkpoints) >= 1
 
-    async def test_rollback_to_nonexistent_checkpoint(
-        self, checkpoint_handler, mock_state_manager
-    ):
+    async def test_rollback_to_nonexistent_checkpoint(self, checkpoint_handler, mock_state_manager):
         """Test rollback to non-existent checkpoint fails."""
         success = await checkpoint_handler.rollback_to_checkpoint("nonexistent")
         assert success is False
@@ -362,9 +354,7 @@ class TestCheckpointRestoration:
 class TestCheckpointCleanup:
     """Test checkpoint cleanup functionality."""
 
-    async def test_cleanup_respects_max_checkpoints(
-        self, checkpoint_handler, mock_state_manager
-    ):
+    async def test_cleanup_respects_max_checkpoints(self, checkpoint_handler, mock_state_manager):
         """Test that cleanup enforces max_checkpoints limit for old checkpoints."""
         mock_state_manager.get_keys_by_pattern.return_value = []
 
@@ -389,7 +379,9 @@ class TestCheckpointCleanup:
         ]
 
         # Should have removed old ones if total > max
-        assert len(auto_checkpoints) <= checkpoint_handler.config.max_checkpoints + 2  # Some tolerance
+        assert (
+            len(auto_checkpoints) <= checkpoint_handler.config.max_checkpoints + 2
+        )  # Some tolerance
 
     async def test_cleanup_preserves_emergency_checkpoints(
         self, checkpoint_handler, mock_state_manager

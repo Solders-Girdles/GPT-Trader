@@ -31,7 +31,7 @@ def serialize_decimal(value: Decimal) -> str:
 
 def serialize_enum(value: Enum) -> str:
     """Serialize Enum to its value."""
-    return value.value
+    return str(value.value)
 
 
 def calculate_data_hash(data: dict[str, Any]) -> str:
@@ -171,7 +171,10 @@ def deserialize_from_json(data: bytes) -> dict[str, Any]:
     Returns:
         Deserialized dictionary
     """
-    return json.loads(data.decode("utf-8"))
+    loaded = json.loads(data.decode("utf-8"))
+    if not isinstance(loaded, dict):
+        raise ValueError("Expected JSON object during deserialization")
+    return loaded
 
 
 def prepare_compressed_payload(

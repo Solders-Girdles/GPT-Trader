@@ -94,9 +94,7 @@ class TestMarketDataServiceUpdateMarks:
     """Test update_marks method."""
 
     @pytest.mark.asyncio
-    async def test_update_marks_updates_mark_windows(
-        self, market_data_service, mock_quote
-    ):
+    async def test_update_marks_updates_mark_windows(self, market_data_service, mock_quote):
         """Verify update_marks appends to mark_windows."""
         market_data_service.broker.get_quote.return_value = mock_quote
 
@@ -118,15 +116,12 @@ class TestMarketDataServiceUpdateMarks:
 
         assert "BTC-USD" in market_data_service.risk_manager.last_mark_update
         assert "ETH-USD" in market_data_service.risk_manager.last_mark_update
-        assert isinstance(
-            market_data_service.risk_manager.last_mark_update["BTC-USD"], datetime
-        )
+        assert isinstance(market_data_service.risk_manager.last_mark_update["BTC-USD"], datetime)
 
     @pytest.mark.asyncio
-    async def test_update_marks_continues_after_symbol_error(
-        self, market_data_service, mock_quote
-    ):
+    async def test_update_marks_continues_after_symbol_error(self, market_data_service, mock_quote):
         """Verify error on one symbol doesn't block others."""
+
         # BTC-USD fails, ETH-USD succeeds
         def get_quote_side_effect(symbol):
             if symbol == "BTC-USD":
@@ -144,9 +139,7 @@ class TestMarketDataServiceUpdateMarks:
         assert market_data_service.mark_windows["ETH-USD"][0] == Decimal("50000.0")
 
     @pytest.mark.asyncio
-    async def test_update_marks_handles_quote_without_last_price(
-        self, market_data_service
-    ):
+    async def test_update_marks_handles_quote_without_last_price(self, market_data_service):
         """Verify error when quote has no price field."""
         bad_quote = Mock()
         bad_quote.last = None
@@ -160,9 +153,7 @@ class TestMarketDataServiceUpdateMarks:
         assert len(market_data_service.mark_windows["ETH-USD"]) == 0
 
     @pytest.mark.asyncio
-    async def test_update_marks_uses_last_price_fallback(
-        self, market_data_service
-    ):
+    async def test_update_marks_uses_last_price_fallback(self, market_data_service):
         """Verify fallback to last_price attribute if last doesn't exist."""
         quote = Mock(spec=[])  # No attributes defined
         quote.last_price = Decimal("51000.0")
@@ -189,9 +180,7 @@ class TestMarketDataServiceWindowTrimming:
     """Test window trimming behavior."""
 
     @pytest.mark.asyncio
-    async def test_update_mark_window_trims_correctly(
-        self, market_data_service, mock_quote
-    ):
+    async def test_update_mark_window_trims_correctly(self, market_data_service, mock_quote):
         """Verify window trimmed to max(long_ma, short_ma) + 5."""
         market_data_service.broker.get_quote.return_value = mock_quote
 
@@ -205,9 +194,7 @@ class TestMarketDataServiceWindowTrimming:
         assert len(market_data_service.mark_windows["ETH-USD"]) == 55
 
     @pytest.mark.asyncio
-    async def test_window_trimming_keeps_latest_values(
-        self, market_data_service
-    ):
+    async def test_window_trimming_keeps_latest_values(self, market_data_service):
         """Verify trimming keeps most recent values."""
         # Add marks with increasing values
         for i in range(60):
@@ -258,6 +245,7 @@ class TestMarketDataServiceThreadSafety:
 
         # Create service with instrumented lock
         from bot_v2.orchestration.market_data_service import MarketDataService
+
         broker = Mock()
         risk_manager = Mock()
         risk_manager.last_mark_update = {}
@@ -301,9 +289,7 @@ class TestMarketDataServiceRiskManagerIntegration:
     """Test risk manager timestamp updates."""
 
     @pytest.mark.asyncio
-    async def test_risk_manager_timestamp_uses_quote_ts(
-        self, market_data_service
-    ):
+    async def test_risk_manager_timestamp_uses_quote_ts(self, market_data_service):
         """Verify risk manager gets timestamp from quote.ts."""
         quote = Mock()
         quote.last = Decimal("50000.0")
@@ -317,9 +303,7 @@ class TestMarketDataServiceRiskManagerIntegration:
         )
 
     @pytest.mark.asyncio
-    async def test_risk_manager_timestamp_continues_on_error(
-        self, market_data_service, mock_quote
-    ):
+    async def test_risk_manager_timestamp_continues_on_error(self, market_data_service, mock_quote):
         """Verify timestamp update errors don't crash update_marks."""
         market_data_service.broker.get_quote.return_value = mock_quote
 

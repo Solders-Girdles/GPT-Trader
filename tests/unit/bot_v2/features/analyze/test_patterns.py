@@ -91,11 +91,13 @@ def bear_flag_data():
 @pytest.fixture
 def insufficient_data():
     """Create insufficient data for testing."""
-    return pd.DataFrame({
-        "high": [101, 102],
-        "low": [99, 100],
-        "close": [100, 101],
-    })
+    return pd.DataFrame(
+        {
+            "high": [101, 102],
+            "low": [99, 100],
+            "close": [100, 101],
+        }
+    )
 
 
 class TestDetectPatterns:
@@ -115,11 +117,13 @@ class TestDetectPatterns:
     def test_detects_multiple_patterns(self):
         """Test that function can detect multiple patterns."""
         # Create complex data that might have multiple patterns
-        data = pd.DataFrame({
-            "high": list(range(100, 150)),
-            "low": list(range(98, 148)),
-            "close": list(range(99, 149)),
-        })
+        data = pd.DataFrame(
+            {
+                "high": list(range(100, 150)),
+                "low": list(range(98, 148)),
+                "close": list(range(99, 149)),
+            }
+        )
         result = detect_patterns(data)
         assert isinstance(result, list)
 
@@ -134,11 +138,13 @@ class TestDetectDoubleTop:
 
     def test_no_pattern(self):
         """Test with no double top pattern."""
-        data = pd.DataFrame({
-            "high": list(range(100, 125)),
-            "low": list(range(98, 123)),
-            "close": list(range(99, 124)),
-        })
+        data = pd.DataFrame(
+            {
+                "high": list(range(100, 125)),
+                "low": list(range(98, 123)),
+                "close": list(range(99, 124)),
+            }
+        )
         result = detect_double_top(data, lookback=20)
         # May or may not find a pattern in trending data
         assert result is None or isinstance(result, PricePattern)
@@ -177,11 +183,13 @@ class TestDetectDoubleBottom:
 
     def test_no_pattern(self):
         """Test with no double bottom pattern."""
-        data = pd.DataFrame({
-            "high": list(range(125, 100, -1)),
-            "low": list(range(123, 98, -1)),
-            "close": list(range(124, 99, -1)),
-        })
+        data = pd.DataFrame(
+            {
+                "high": list(range(125, 100, -1)),
+                "low": list(range(123, 98, -1)),
+                "close": list(range(124, 99, -1)),
+            }
+        )
         result = detect_double_bottom(data, lookback=20)
         # May or may not find a pattern in trending data
         assert result is None or isinstance(result, PricePattern)
@@ -220,11 +228,13 @@ class TestDetectHeadShoulders:
 
     def test_no_pattern(self):
         """Test with no head and shoulders pattern."""
-        data = pd.DataFrame({
-            "high": list(range(100, 135)),
-            "low": list(range(98, 133)),
-            "close": list(range(99, 134)),
-        })
+        data = pd.DataFrame(
+            {
+                "high": list(range(100, 135)),
+                "low": list(range(98, 133)),
+                "close": list(range(99, 134)),
+            }
+        )
         result = detect_head_shoulders(data, lookback=30)
         assert result is None or isinstance(result, PricePattern)
 
@@ -283,12 +293,15 @@ class TestDetectTriangle:
     def test_no_triangle_in_random_data(self):
         """Test that random data doesn't necessarily produce triangle."""
         import numpy as np
+
         np.random.seed(42)
-        data = pd.DataFrame({
-            "high": np.random.uniform(100, 110, 20),
-            "low": np.random.uniform(90, 100, 20),
-            "close": np.random.uniform(95, 105, 20),
-        })
+        data = pd.DataFrame(
+            {
+                "high": np.random.uniform(100, 110, 20),
+                "low": np.random.uniform(90, 100, 20),
+                "close": np.random.uniform(95, 105, 20),
+            }
+        )
         result = detect_triangle(data, lookback=20)
         # May or may not detect pattern in random data
         assert result is None or isinstance(result, PricePattern)
@@ -325,7 +338,9 @@ class TestDetectFlag:
     def test_requires_strong_move(self):
         """Test that flag requires strong initial move (> 5%)."""
         # Create weak move (< 5%) followed by consolidation
-        pre_flag = [{"high": 100 + i * 0.3, "low": 99 + i * 0.3, "close": 99.5 + i * 0.3} for i in range(10)]
+        pre_flag = [
+            {"high": 100 + i * 0.3, "low": 99 + i * 0.3, "close": 99.5 + i * 0.3} for i in range(10)
+        ]
         flag = [{"high": 104, "low": 102, "close": 103} for _ in range(15)]
         data = pd.DataFrame(pre_flag + flag)
 
@@ -336,7 +351,9 @@ class TestDetectFlag:
     def test_requires_tight_consolidation(self):
         """Test that flag requires tight consolidation."""
         # Create strong move followed by wide range (> 3%)
-        pre_flag = [{"high": 100 + i * 2, "low": 98 + i * 2, "close": 99 + i * 2} for i in range(10)]
+        pre_flag = [
+            {"high": 100 + i * 2, "low": 98 + i * 2, "close": 99 + i * 2} for i in range(10)
+        ]
         # Wide consolidation range
         flag = [{"high": 125 + i, "low": 115 - i, "close": 120} for i in range(15)]
         data = pd.DataFrame(pre_flag + flag)

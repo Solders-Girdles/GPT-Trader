@@ -125,7 +125,9 @@ class TestExecutionCoordinator:
         mock_bot.config.time_in_force = "GTC"
 
         # Mock the service's execute_decision method
-        with patch("bot_v2.orchestration.execution_coordinator.OrderPlacementService") as mock_service_class:
+        with patch(
+            "bot_v2.orchestration.execution_coordinator.OrderPlacementService"
+        ) as mock_service_class:
             mock_service = AsyncMock()
             mock_service_class.return_value = mock_service
 
@@ -167,7 +169,9 @@ class TestExecutionCoordinator:
         mock_bot.config.time_in_force = "GTC"
 
         # Mock the service's execute_decision method
-        with patch("bot_v2.orchestration.execution_coordinator.OrderPlacementService") as mock_service_class:
+        with patch(
+            "bot_v2.orchestration.execution_coordinator.OrderPlacementService"
+        ) as mock_service_class:
             mock_service = AsyncMock()
             mock_service_class.return_value = mock_service
 
@@ -185,9 +189,7 @@ class TestExecutionCoordinator:
             mock_service.execute_decision.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_execute_decision_close_no_position(
-        self, coordinator, mock_bot, sample_product
-    ):
+    async def test_execute_decision_close_no_position(self, coordinator, mock_bot, sample_product):
         """Test CLOSE action with no position"""
         from bot_v2.features.live_trade.strategies.perps_baseline import Action, Decision
 
@@ -255,7 +257,9 @@ class TestExecutionCoordinator:
         mock_order.quantity = Decimal("0.02")
 
         # Mock the service
-        with patch("bot_v2.orchestration.execution_coordinator.OrderPlacementService") as mock_service_class:
+        with patch(
+            "bot_v2.orchestration.execution_coordinator.OrderPlacementService"
+        ) as mock_service_class:
             mock_service = Mock()
             mock_service._place_order_inner = AsyncMock(return_value=mock_order)
             mock_service_class.return_value = mock_service

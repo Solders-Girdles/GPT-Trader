@@ -265,7 +265,10 @@ class TestConfigValidation:
         # Suggestion triggers when: max_positions > 10 AND min_capital < 10000
         valid_config_dict["tiers"]["micro"]["positions"]["max"] = 12
         valid_config_dict["tiers"]["micro"]["min_position_size"] = 150
-        valid_config_dict["tiers"]["micro"]["range"] = [2000, 2500]  # Changed to avoid division error
+        valid_config_dict["tiers"]["micro"]["range"] = [
+            2000,
+            2500,
+        ]  # Changed to avoid division error
         temp_config_file.write_text(json.dumps(valid_config_dict))
 
         manager = ConfigManager(temp_config_file)

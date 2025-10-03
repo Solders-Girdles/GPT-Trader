@@ -6,6 +6,7 @@ Complete isolation - no external dependencies.
 
 import numpy as np
 import pandas as pd
+
 from bot_v2.features.analyze.types import PricePattern
 
 

@@ -11,7 +11,9 @@ from bot_v2.monitoring.runtime_guards.manager import RuntimeGuardManager, create
 
 
 class StubGuard(RuntimeGuard):
-    def __init__(self, name: str, alert: Alert | None = None, *, auto_shutdown: bool = False) -> None:
+    def __init__(
+        self, name: str, alert: Alert | None = None, *, auto_shutdown: bool = False
+    ) -> None:
         super().__init__(
             GuardConfig(
                 name=name,
@@ -98,7 +100,13 @@ def test_create_default_guards_handles_invalid_config() -> None:
 
     # Default guards should still be created even if config types are wrong
     guard_names = set(manager.guards.keys())
-    assert {"daily_loss", "stale_marks", "error_rate", "position_stuck", "max_drawdown"} <= guard_names
+    assert {
+        "daily_loss",
+        "stale_marks",
+        "error_rate",
+        "position_stuck",
+        "max_drawdown",
+    } <= guard_names
 
 
 def test_create_default_guards_uses_threshold_overrides() -> None:

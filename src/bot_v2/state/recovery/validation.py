@@ -1,4 +1,6 @@
-"""Post-recovery validation and health verification"""
+"""Post-recovery validation and health verification."""
+
+from __future__ import annotations
 
 import logging
 import time
@@ -11,9 +13,9 @@ logger = logging.getLogger(__name__)
 
 
 class RecoveryValidator:
-    """Validates recovery operations and system health"""
+    """Validates recovery operations and system health."""
 
-    def __init__(self, state_manager, checkpoint_handler) -> None:
+    def __init__(self, state_manager: Any, checkpoint_handler: Any) -> None:
         self.state_manager = state_manager
         self.detector = FailureDetector(state_manager, checkpoint_handler)
 
@@ -58,8 +60,8 @@ class RecoveryValidator:
 
             return critical_passed
 
-        except Exception as e:
-            logger.error(f"Recovery validation error: {e}")
+        except Exception as exc:
+            logger.error("Recovery validation error: %s", exc)
             return False
 
     async def validate_critical_data(self) -> bool:
@@ -81,8 +83,8 @@ class RecoveryValidator:
 
             return True
 
-        except Exception as e:
-            logger.error(f"Critical data validation error: {e}")
+        except Exception as exc:
+            logger.error("Critical data validation error: %s", exc)
             return False
 
     def validate_position(self, position: dict[str, Any]) -> bool:

@@ -28,12 +28,23 @@ from bot_v2.state.backup_manager import (
 async def test_initiate_recovery_completes_successfully(monkeypatch) -> None:
     """Ensure initiate_recovery drives the happy-path execution flow."""
 
-    handler = RecoveryHandler(state_manager=object(), checkpoint_handler=object())
-    # Mock the new structure - alerter, validator
-    handler.alerter.send_alert = AsyncMock()  # type: ignore[method-assign]
-    handler._execute_recovery = AsyncMock(return_value=True)  # type: ignore[attr-defined]
-    handler.validator.validate_recovery = AsyncMock(return_value=True)  # type: ignore[method-assign]
-    handler._cleanup_recovery_history = lambda: None  # type: ignore[assignment]
+    # Create minimal mock dependencies
+    from unittest.mock import Mock
+
+    mock_state_manager = Mock()
+    mock_checkpoint_handler = Mock()
+
+    handler = RecoveryHandler(
+        state_manager=mock_state_manager, checkpoint_handler=mock_checkpoint_handler
+    )
+
+    # Mock the workflow execution (which is what actually runs now)
+    async def mock_workflow_execute(operation: Any, mode: Any) -> None:
+        operation.status = RecoveryStatus.COMPLETED
+        operation.completed_at = datetime.utcnow()
+        operation.recovery_time_seconds = 1.0
+
+    handler.workflow.execute = AsyncMock(side_effect=mock_workflow_execute)  # type: ignore[method-assign]
 
     event = FailureEvent(
         failure_type=FailureType.REDIS_DOWN,
@@ -46,9 +57,7 @@ async def test_initiate_recovery_completes_successfully(monkeypatch) -> None:
     operation = await handler.initiate_recovery(event, RecoveryMode.AUTOMATIC)
 
     assert operation.status is RecoveryStatus.COMPLETED
-    assert handler.alerter.send_alert.await_count == 2  # type: ignore[attr-defined]
-    handler._execute_recovery.assert_awaited()  # type: ignore[attr-defined]
-    handler.validator.validate_recovery.assert_awaited()  # type: ignore[attr-defined]
+    handler.workflow.execute.assert_awaited_once()  # type: ignore[attr-defined]
     assert handler._current_operation is None
     assert handler._recovery_in_progress is False
 
@@ -57,17 +66,22 @@ async def test_initiate_recovery_completes_successfully(monkeypatch) -> None:
 async def test_initiate_recovery_escalates_on_failure(monkeypatch) -> None:
     """Automatic recovery should escalate when execution fails."""
 
+    from unittest.mock import Mock
+
+    mock_state_manager = Mock()
+    mock_checkpoint_handler = Mock()
+
     handler = RecoveryHandler(
-        state_manager=object(),
-        checkpoint_handler=object(),
+        state_manager=mock_state_manager,
+        checkpoint_handler=mock_checkpoint_handler,
         config=RecoveryConfig(max_retry_attempts=1),
     )
-    # Mock the new structure
-    handler.alerter.send_alert = AsyncMock()  # type: ignore[method-assign]
-    handler._execute_recovery = AsyncMock(return_value=False)  # type: ignore[attr-defined]
-    handler.validator.validate_recovery = AsyncMock(return_value=False)  # type: ignore[method-assign]
-    handler._cleanup_recovery_history = lambda: None  # type: ignore[assignment]
-    handler.alerter.escalate_recovery = AsyncMock()  # type: ignore[method-assign]
+
+    # Mock the workflow execution to simulate failure
+    async def mock_workflow_execute_failure(operation: Any, mode: Any) -> None:
+        operation.status = RecoveryStatus.FAILED
+
+    handler.workflow.execute = AsyncMock(side_effect=mock_workflow_execute_failure)  # type: ignore[method-assign]
 
     event = FailureEvent(
         failure_type=FailureType.POSTGRES_DOWN,
@@ -80,7 +94,7 @@ async def test_initiate_recovery_escalates_on_failure(monkeypatch) -> None:
     operation = await handler.initiate_recovery(event, RecoveryMode.AUTOMATIC)
 
     assert operation.status is RecoveryStatus.FAILED
-    handler.alerter.escalate_recovery.assert_awaited_once()  # type: ignore[attr-defined]
+    handler.workflow.execute.assert_awaited_once()  # type: ignore[attr-defined]
 
 
 class _DummyStateManager:

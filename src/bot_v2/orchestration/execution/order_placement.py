@@ -140,9 +140,7 @@ class OrderPlacementService:
                 try:
                     order_quantity = Decimal(str(raw_quantity))
                 except (InvalidOperation, TypeError, ValueError) as exc:
-                    logger.warning(
-                        "Invalid quantity %s for %s: %s", raw_quantity, symbol, exc
-                    )
+                    logger.warning("Invalid quantity %s for %s: %s", raw_quantity, symbol, exc)
                     raise ValidationError(f"Invalid quantity for {symbol}") from exc
 
         # Determine order side
@@ -155,9 +153,7 @@ class OrderPlacementService:
             )
 
         # Determine reduce_only
-        reduce_only = (
-            decision.reduce_only or reduce_only_mode or decision.action == Action.CLOSE
-        )
+        reduce_only = decision.reduce_only or reduce_only_mode or decision.action == Action.CLOSE
 
         # Extract order parameters
         order_type = getattr(decision, "order_type", OrderType.MARKET)
@@ -179,9 +175,7 @@ class OrderPlacementService:
             order_type
             if isinstance(order_type, OrderType)
             else (
-                OrderType[order_type.upper()]
-                if isinstance(order_type, str)
-                else OrderType.MARKET
+                OrderType[order_type.upper()] if isinstance(order_type, str) else OrderType.MARKET
             )
         )
 
@@ -277,9 +271,7 @@ class OrderPlacementService:
             self._order_stats["failed"] += 1
             return None
 
-    async def _place_order_inner(
-        self, exec_engine: Any, **kwargs: Any
-    ) -> Order | None:
+    async def _place_order_inner(self, exec_engine: Any, **kwargs: Any) -> Order | None:
         """Inner order placement logic."""
         from bot_v2.features.live_trade.advanced_execution import AdvancedExecutionEngine
 

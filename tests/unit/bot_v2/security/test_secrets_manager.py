@@ -438,9 +438,7 @@ class TestVaultIntegration:
             assert manager._vault_enabled is False
             assert "Vault authentication failed" in caplog.text
 
-    def test_vault_connection_error_falls_back(
-        self, encryption_key, monkeypatch, tmp_path, caplog
-    ):
+    def test_vault_connection_error_falls_back(self, encryption_key, monkeypatch, tmp_path, caplog):
         """Vault connection error during init falls back to file storage."""
         pytest.importorskip("hvac")
 
@@ -524,9 +522,7 @@ class TestVaultIntegration:
             assert result is None
             assert "Failed to retrieve secret" in caplog.text
 
-    def test_vault_fallback_continues_operations(
-        self, encryption_key, monkeypatch, tmp_path
-    ):
+    def test_vault_fallback_continues_operations(self, encryption_key, monkeypatch, tmp_path):
         """After vault failure, operations continue with file storage."""
         pytest.importorskip("hvac")
 

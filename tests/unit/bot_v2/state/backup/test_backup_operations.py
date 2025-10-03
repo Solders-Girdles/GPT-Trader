@@ -81,11 +81,19 @@ def mock_state_manager():
         """Mock batch_set_state that returns count of items."""
         return len(items)
 
+    async def mock_create_snapshot() -> dict:
+        """Mock create_snapshot that returns test data."""
+        return {
+            "position:BTC-USD": {"qty": "1.0", "timestamp": "2024-01-01T00:00:00Z"},
+            "order:test123": {"id": "test123", "timestamp": "2024-01-01T00:00:00Z"},
+        }
+
     state_manager = Mock()
     state_manager.get_keys_by_pattern = AsyncMock(return_value=["test:key1", "test:key2"])
     state_manager.get_state = AsyncMock(return_value={"test": "data"})
     state_manager.set_state = AsyncMock(return_value=True)
     state_manager.batch_set_state = AsyncMock(side_effect=mock_batch_set_state)
+    state_manager.create_snapshot = AsyncMock(side_effect=mock_create_snapshot)
     return state_manager
 
 

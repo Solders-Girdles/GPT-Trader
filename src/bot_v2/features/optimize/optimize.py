@@ -10,6 +10,7 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
+
 from bot_v2.data_providers import get_data_provider
 from bot_v2.features.optimize.backtester import run_backtest_local
 from bot_v2.features.optimize.strategies import get_strategy_params

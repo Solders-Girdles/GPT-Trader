@@ -255,7 +255,9 @@ class TestErrorHandler:
     def test_circuit_breaker_integration(self):
         """Test that circuit breaker opens after failures."""
         cb_config = CircuitBreakerConfig(failure_threshold=2)
-        retry_config = RetryConfig(max_attempts=1, initial_delay=0.01)  # Fail fast to avoid retry delays
+        retry_config = RetryConfig(
+            max_attempts=1, initial_delay=0.01
+        )  # Fail fast to avoid retry delays
         handler = ErrorHandler(circuit_breaker_config=cb_config, retry_config=retry_config)
 
         mock_func = Mock(side_effect=NetworkError("Error"))

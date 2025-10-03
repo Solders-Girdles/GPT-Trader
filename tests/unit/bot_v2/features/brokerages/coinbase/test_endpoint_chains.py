@@ -36,7 +36,7 @@ def test_trading_flow_place_get_cancel():
     # Get
     got = client.get_order_historical("ord-1")
     # Cancel
-    cancelled = client.cancel_orders(["ord-1"]) 
+    cancelled = client.cancel_orders(["ord-1"])
 
     assert place["order_id"] == "ord-1"
     assert got["order"]["id"] == "ord-1"
@@ -45,13 +45,19 @@ def test_trading_flow_place_get_cancel():
     # Verify path sequence and payloads
     methods_urls = [(m, u) for (m, u, _p) in calls]
     assert methods_urls[0][0] == "POST" and methods_urls[0][1].endswith("/api/v3/brokerage/orders")
-    assert methods_urls[1][0] == "GET" and "/api/v3/brokerage/orders/historical/ord-1" in methods_urls[1][1]
-    assert methods_urls[2][0] == "POST" and methods_urls[2][1].endswith("/api/v3/brokerage/orders/batch_cancel")
+    assert (
+        methods_urls[1][0] == "GET"
+        and "/api/v3/brokerage/orders/historical/ord-1" in methods_urls[1][1]
+    )
+    assert methods_urls[2][0] == "POST" and methods_urls[2][1].endswith(
+        "/api/v3/brokerage/orders/batch_cancel"
+    )
 
 
 def test_market_data_flow_products_ticker_candles():
     client = make_client()
     calls = []
+
     def transport(method, url, headers, body, timeout):
         calls.append((method, url))
         if url.endswith("/api/v3/brokerage/market/products"):
@@ -61,6 +67,7 @@ def test_market_data_flow_products_ticker_candles():
         if url.endswith("/api/v3/brokerage/market/products/BTC-USD/candles?granularity=1H&limit=2"):
             return 200, {}, json.dumps({"candles": []})
         return 200, {}, json.dumps({})
+
     client.set_transport_for_testing(transport)
 
     prods = client.get_market_products()
@@ -70,12 +77,15 @@ def test_market_data_flow_products_ticker_candles():
 
     assert calls[0][1].endswith("/api/v3/brokerage/market/products")
     assert calls[1][1].endswith("/api/v3/brokerage/market/products/BTC-USD/ticker")
-    assert calls[2][1].endswith("/api/v3/brokerage/market/products/BTC-USD/candles?granularity=1H&limit=2")
+    assert calls[2][1].endswith(
+        "/api/v3/brokerage/market/products/BTC-USD/candles?granularity=1H&limit=2"
+    )
 
 
 def test_position_flow_cfm_positions_then_detail():
     client = make_client()
     calls = []
+
     def transport(method, url, headers, body, timeout):
         calls.append((method, url))
         if url.endswith("/api/v3/brokerage/cfm/positions"):
@@ -83,6 +93,7 @@ def test_position_flow_cfm_positions_then_detail():
         if url.endswith("/api/v3/brokerage/cfm/positions/ETH-USD-PERP"):
             return 200, {}, json.dumps({"position": {"symbol": "ETH-USD-PERP", "size": "5"}})
         return 200, {}, json.dumps({})
+
     client.set_transport_for_testing(transport)
 
     positions = client.cfm_positions()
@@ -92,4 +103,3 @@ def test_position_flow_cfm_positions_then_detail():
     assert detail["position"]["symbol"] == "ETH-USD-PERP"
     assert calls[0][1].endswith("/api/v3/brokerage/cfm/positions")
     assert calls[1][1].endswith("/api/v3/brokerage/cfm/positions/ETH-USD-PERP")
-

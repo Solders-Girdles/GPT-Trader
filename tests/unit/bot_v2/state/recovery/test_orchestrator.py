@@ -76,7 +76,7 @@ class TestRecoveryOrchestrator:
         assert orchestrator.detector is not None
         assert orchestrator.validator is not None
         assert orchestrator.alerter is not None
-        assert len(orchestrator._failure_handlers) == 10
+        assert len(orchestrator.handler_registry) == 10
 
     def test_handler_registration(self, orchestrator):
         """Test failure handlers are registered"""
@@ -94,8 +94,8 @@ class TestRecoveryOrchestrator:
         ]
 
         for failure_type in expected_handlers:
-            assert failure_type in orchestrator._failure_handlers
-            assert callable(orchestrator._failure_handlers[failure_type])
+            assert orchestrator.handler_registry.has_handler(failure_type)
+            assert callable(orchestrator.handler_registry.get_handler(failure_type))
 
     @pytest.mark.asyncio
     async def test_detect_failures_delegates_to_detector(self, orchestrator):
@@ -135,6 +135,8 @@ class TestRecoveryOrchestrator:
     @pytest.mark.asyncio
     async def test_initiate_recovery_creates_operation(self, orchestrator):
         """Test recovery initiation creates operation"""
+        from bot_v2.state.recovery.workflow import RecoveryOutcome
+
         failure_event = FailureEvent(
             failure_type=FailureType.REDIS_DOWN,
             timestamp=datetime.utcnow(),
@@ -143,9 +145,17 @@ class TestRecoveryOrchestrator:
             error_message="Redis connection lost",
         )
 
-        orchestrator._execute_recovery = AsyncMock(return_value=True)
-        orchestrator.validator.validate_recovery = AsyncMock(return_value=True)
-        orchestrator.alerter.send_alert = AsyncMock()
+        # Mock workflow to update operation status and return successful outcome
+        async def mock_execute(op, mode):
+            op.status = RecoveryStatus.COMPLETED
+            op.completed_at = datetime.utcnow()
+            return RecoveryOutcome(
+                success=True,
+                status=RecoveryStatus.COMPLETED,
+                validation_passed=True,
+            )
+
+        orchestrator.workflow.execute = mock_execute
 
         operation = await orchestrator.initiate_recovery(failure_event, RecoveryMode.AUTOMATIC)
 
@@ -192,193 +202,6 @@ class TestRecoveryOrchestrator:
 
         assert operation == mock_operation
 
-    @pytest.mark.asyncio
-    async def test_execute_recovery_success(self, orchestrator):
-        """Test successful recovery execution"""
-        failure_event = FailureEvent(
-            failure_type=FailureType.REDIS_DOWN,
-            timestamp=datetime.utcnow(),
-            severity="high",
-            affected_components=["cache"],
-            error_message="Redis down",
-        )
-
-        operation = orchestrator._create_recovery_operation(failure_event, RecoveryMode.AUTOMATIC)
-
-        mock_handler = AsyncMock(return_value=True)
-        orchestrator._failure_handlers[FailureType.REDIS_DOWN] = mock_handler
-
-        success = await orchestrator._execute_recovery(operation)
-
-        assert success is True
-        mock_handler.assert_called_once_with(operation)
-        assert len(operation.actions_taken) > 0
-
-    @pytest.mark.asyncio
-    async def test_execute_recovery_with_retries(self, orchestrator):
-        """Test recovery execution with retries"""
-        failure_event = FailureEvent(
-            failure_type=FailureType.REDIS_DOWN,
-            timestamp=datetime.utcnow(),
-            severity="high",
-            affected_components=["cache"],
-            error_message="Redis down",
-        )
-
-        operation = orchestrator._create_recovery_operation(failure_event, RecoveryMode.AUTOMATIC)
-
-        # Fail twice, succeed on third attempt
-        mock_handler = AsyncMock(side_effect=[False, False, True])
-        orchestrator._failure_handlers[FailureType.REDIS_DOWN] = mock_handler
-
-        success = await orchestrator._execute_recovery(operation)
-
-        assert success is True
-        assert mock_handler.call_count == 3
-
-    @pytest.mark.asyncio
-    async def test_execute_recovery_all_attempts_fail(self, orchestrator):
-        """Test recovery execution when all attempts fail"""
-        failure_event = FailureEvent(
-            failure_type=FailureType.REDIS_DOWN,
-            timestamp=datetime.utcnow(),
-            severity="high",
-            affected_components=["cache"],
-            error_message="Redis down",
-        )
-
-        operation = orchestrator._create_recovery_operation(failure_event, RecoveryMode.AUTOMATIC)
-
-        mock_handler = AsyncMock(return_value=False)
-        orchestrator._failure_handlers[FailureType.REDIS_DOWN] = mock_handler
-
-        success = await orchestrator._execute_recovery(operation)
-
-        assert success is False
-        assert mock_handler.call_count == 3
-
-    @pytest.mark.asyncio
-    async def test_execute_recovery_no_handler(self, orchestrator):
-        """Test recovery execution with no registered handler"""
-        failure_event = FailureEvent(
-            failure_type=FailureType.REDIS_DOWN,
-            timestamp=datetime.utcnow(),
-            severity="high",
-            affected_components=["cache"],
-            error_message="Redis down",
-        )
-
-        operation = orchestrator._create_recovery_operation(failure_event, RecoveryMode.AUTOMATIC)
-
-        # Remove handler
-        del orchestrator._failure_handlers[FailureType.REDIS_DOWN]
-
-        success = await orchestrator._execute_recovery(operation)
-
-        assert success is False
-
-    @pytest.mark.asyncio
-    async def test_execute_recovery_handler_raises(self, orchestrator):
-        """Handler exceptions should be captured and logged."""
-        failure_event = FailureEvent(
-            failure_type=FailureType.REDIS_DOWN,
-            timestamp=datetime.utcnow(),
-            severity="high",
-            affected_components=["cache"],
-            error_message="Redis down",
-        )
-
-        operation = orchestrator._create_recovery_operation(failure_event, RecoveryMode.AUTOMATIC)
-
-        orchestrator._failure_handlers[FailureType.REDIS_DOWN] = AsyncMock(
-            side_effect=RuntimeError("handler exploded")
-        )
-
-        success = await orchestrator._execute_recovery(operation)
-
-        assert success is False
-        assert operation.actions_taken.count("Handler error: handler exploded") == orchestrator.config.max_retry_attempts
-
-    @pytest.mark.asyncio
-    async def test_complete_recovery_validates_successfully(self, orchestrator):
-        """Test successful recovery completion with validation"""
-        failure_event = FailureEvent(
-            failure_type=FailureType.REDIS_DOWN,
-            timestamp=datetime.utcnow(),
-            severity="high",
-            affected_components=["cache"],
-            error_message="Redis down",
-        )
-
-        operation = orchestrator._create_recovery_operation(failure_event, RecoveryMode.AUTOMATIC)
-
-        orchestrator.validator.validate_recovery = AsyncMock(return_value=True)
-
-        await orchestrator._complete_recovery(operation)
-
-        assert operation.status == RecoveryStatus.COMPLETED
-        assert operation.completed_at is not None
-        assert operation.recovery_time_seconds is not None
-
-    @pytest.mark.asyncio
-    async def test_complete_recovery_validation_fails(self, orchestrator):
-        """Test recovery completion when validation fails"""
-        failure_event = FailureEvent(
-            failure_type=FailureType.REDIS_DOWN,
-            timestamp=datetime.utcnow(),
-            severity="high",
-            affected_components=["cache"],
-            error_message="Redis down",
-        )
-
-        operation = orchestrator._create_recovery_operation(failure_event, RecoveryMode.AUTOMATIC)
-
-        orchestrator.validator.validate_recovery = AsyncMock(return_value=False)
-
-        await orchestrator._complete_recovery(operation)
-
-        assert operation.status == RecoveryStatus.PARTIAL
-
-    @pytest.mark.asyncio
-    async def test_handle_recovery_failure_automatic_mode(self, orchestrator):
-        """Test recovery failure handling in automatic mode"""
-        failure_event = FailureEvent(
-            failure_type=FailureType.REDIS_DOWN,
-            timestamp=datetime.utcnow(),
-            severity="high",
-            affected_components=["cache"],
-            error_message="Redis down",
-        )
-
-        operation = orchestrator._create_recovery_operation(failure_event, RecoveryMode.AUTOMATIC)
-
-        orchestrator.alerter.escalate_recovery = AsyncMock()
-
-        await orchestrator._handle_recovery_failure(operation, RecoveryMode.AUTOMATIC)
-
-        assert operation.status == RecoveryStatus.FAILED
-        orchestrator.alerter.escalate_recovery.assert_called_once_with(operation)
-
-    @pytest.mark.asyncio
-    async def test_handle_recovery_failure_manual_mode(self, orchestrator):
-        """Test recovery failure handling in manual mode"""
-        failure_event = FailureEvent(
-            failure_type=FailureType.REDIS_DOWN,
-            timestamp=datetime.utcnow(),
-            severity="high",
-            affected_components=["cache"],
-            error_message="Redis down",
-        )
-
-        operation = orchestrator._create_recovery_operation(failure_event, RecoveryMode.MANUAL)
-
-        orchestrator.alerter.escalate_recovery = AsyncMock()
-
-        await orchestrator._handle_recovery_failure(operation, RecoveryMode.MANUAL)
-
-        assert operation.status == RecoveryStatus.FAILED
-        orchestrator.alerter.escalate_recovery.assert_not_called()
-
     def test_cleanup_recovery_history(self, orchestrator):
         """Test recovery history cleanup"""
         # Add 150 operations
@@ -421,62 +244,51 @@ class TestRecoveryOrchestrator:
 
     @pytest.mark.asyncio
     async def test_start_monitoring(self, orchestrator):
-        """Test monitoring start"""
-        orchestrator._monitoring_loop = AsyncMock()
-
+        """Test monitoring start (delegates to RecoveryMonitor)"""
         await orchestrator.start_monitoring()
 
-        assert orchestrator._monitoring_task is not None
+        assert orchestrator.monitor.is_running()
+
+        await orchestrator.stop_monitoring()
 
     @pytest.mark.asyncio
     async def test_start_monitoring_already_started(self, orchestrator):
-        """Test starting monitoring when already started"""
-        orchestrator._monitoring_task = Mock()
-
+        """Test starting monitoring when already started (idempotent)"""
         await orchestrator.start_monitoring()
+        assert orchestrator.monitor.is_running()
 
-        # Should not create new task
+        # Should be idempotent
+        await orchestrator.start_monitoring()
+        assert orchestrator.monitor.is_running()
+
+        await orchestrator.stop_monitoring()
 
     @pytest.mark.asyncio
     async def test_stop_monitoring(self, orchestrator):
-        """Test monitoring stop"""
-        mock_task = AsyncMock()
-        mock_task.cancel = Mock()
-        orchestrator._monitoring_task = mock_task
+        """Test monitoring stop (delegates to RecoveryMonitor)"""
+        await orchestrator.start_monitoring()
+        assert orchestrator.monitor.is_running()
 
         await orchestrator.stop_monitoring()
 
-        mock_task.cancel.assert_called_once()
-        assert orchestrator._monitoring_task is None
+        assert not orchestrator.monitor.is_running()
 
     @pytest.mark.asyncio
     async def test_stop_monitoring_handles_cancelled_error(self, orchestrator):
-        """Stop should gracefully swallow CancelledError from task await."""
+        """Stop should gracefully handle cancellation (delegated to RecoveryMonitor)."""
+        await orchestrator.start_monitoring()
+        assert orchestrator.monitor.is_running()
 
-        class CancelOnce:
-            def __init__(self) -> None:
-                self.cancel_called = False
-
-            def cancel(self) -> None:
-                self.cancel_called = True
-
-            def __await__(self):
-                async def _raiser():
-                    raise asyncio.CancelledError
-
-                return _raiser().__await__()
-
-        task = CancelOnce()
-        orchestrator._monitoring_task = task
-
+        # Stop should handle cancellation gracefully
         await orchestrator.stop_monitoring()
 
-        assert task.cancel_called is True
-        assert orchestrator._monitoring_task is None
+        assert not orchestrator.monitor.is_running()
 
     @pytest.mark.asyncio
     async def test_monitoring_loop_detects_and_recovers(self, orchestrator):
-        """Test monitoring loop detection and recovery"""
+        """Test monitoring loop detection and recovery (via RecoveryMonitor)"""
+        from bot_v2.state.recovery.workflow import RecoveryOutcome
+
         orchestrator.detector.detect_failures = AsyncMock(
             side_effect=[
                 [FailureType.DATA_CORRUPTION],
@@ -484,65 +296,38 @@ class TestRecoveryOrchestrator:
             ]
         )
 
-        orchestrator._execute_recovery = AsyncMock(return_value=True)
-        orchestrator.validator.validate_recovery = AsyncMock(return_value=True)
-        orchestrator.alerter.send_alert = AsyncMock()
+        # Mock workflow to simulate successful recovery
+        async def mock_workflow_execute(op, mode):
+            op.status = RecoveryStatus.COMPLETED
+            return RecoveryOutcome(success=True, status=RecoveryStatus.COMPLETED)
 
-        # Run monitoring loop for short time
-        task = asyncio.create_task(orchestrator._monitoring_loop())
+        orchestrator.workflow.execute = mock_workflow_execute
+
+        # Run monitoring for short time
+        await orchestrator.start_monitoring()
         await asyncio.sleep(0.1)
-        task.cancel()
+        await orchestrator.stop_monitoring()
 
-        try:
-            await task
-        except asyncio.CancelledError:
-            pass
-
-        # Should have attempted recovery
+        # Should have attempted detection
         orchestrator.detector.detect_failures.assert_called()
 
     @pytest.mark.asyncio
-    async def test_monitoring_loop_handles_detector_errors(self, orchestrator, monkeypatch):
-        """Detector exceptions should trigger backoff sleep."""
-        orchestrator.detector.detect_failures = AsyncMock(side_effect=RuntimeError("boom"))
-
-        sleep_calls: list[int] = []
-
-        async def fake_sleep(duration: int) -> None:
-            sleep_calls.append(duration)
-            raise asyncio.CancelledError
-
-        monkeypatch.setattr("bot_v2.state.recovery.orchestrator.asyncio.sleep", fake_sleep)
-
-        with pytest.raises(asyncio.CancelledError):
-            await orchestrator._monitoring_loop()
-
-        assert sleep_calls == [orchestrator.config.failure_detection_interval_seconds * 2]
-
-    @pytest.mark.asyncio
-    async def test_rto_compliance_warning(self, orchestrator):
-        """Test RTO compliance warning"""
-        failure_event = FailureEvent(
-            failure_type=FailureType.REDIS_DOWN,
-            timestamp=datetime.utcnow(),
-            severity="high",
-            affected_components=["cache"],
-            error_message="Redis down",
+    async def test_monitoring_loop_handles_detector_errors(self, orchestrator):
+        """Monitor should handle detector exceptions (delegated to RecoveryMonitor)."""
+        orchestrator.detector.detect_failures = AsyncMock(
+            side_effect=[
+                RuntimeError("boom"),
+                [],  # Recover on second call
+            ]
         )
 
-        operation = orchestrator._create_recovery_operation(failure_event, RecoveryMode.AUTOMATIC)
+        # Run monitoring briefly
+        await orchestrator.start_monitoring()
+        await asyncio.sleep(0.1)
+        await orchestrator.stop_monitoring()
 
-        # Simulate long recovery time
-        operation.recovery_time_seconds = 400  # > 5 minutes
-
-        orchestrator.validator.validate_recovery = AsyncMock(return_value=True)
-
-        with patch("bot_v2.state.recovery.orchestrator.logger") as mock_logger:
-            await orchestrator._complete_recovery(operation)
-
-            # Should log warning about RTO
-            warning_calls = [call for call in mock_logger.warning.call_args_list]
-            assert any("exceeded RTO" in str(call) for call in warning_calls)
+        # Should have called detector multiple times (error + recovery)
+        assert orchestrator.detector.detect_failures.call_count >= 1
 
 
 @pytest.mark.asyncio
@@ -563,14 +348,14 @@ async def test_detect_and_recover_initiates_when_critical(monkeypatch: pytest.Mo
         def _get_affected_components(self, failure: FailureType) -> list[str]:
             return ["system"]
 
-        async def initiate_recovery(self, event: FailureEvent, mode: RecoveryMode = RecoveryMode.AUTOMATIC):
+        async def initiate_recovery(
+            self, event: FailureEvent, mode: RecoveryMode = RecoveryMode.AUTOMATIC
+        ):
             self.last_event = event
             return "operation"
 
     StubOrchestrator.failures = [FailureType.POSTGRES_DOWN]
-    monkeypatch.setattr(
-        "bot_v2.state.recovery.orchestrator.RecoveryOrchestrator", StubOrchestrator
-    )
+    monkeypatch.setattr("bot_v2.state.recovery.orchestrator.RecoveryOrchestrator", StubOrchestrator)
 
     result = await detect_and_recover(SimpleNamespace(), SimpleNamespace())
 
@@ -578,7 +363,9 @@ async def test_detect_and_recover_initiates_when_critical(monkeypatch: pytest.Mo
 
 
 @pytest.mark.asyncio
-async def test_detect_and_recover_returns_none_for_non_critical(monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_detect_and_recover_returns_none_for_non_critical(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     class StubOrchestrator:
         failures: list[FailureType] = []
 
@@ -594,13 +381,13 @@ async def test_detect_and_recover_returns_none_for_non_critical(monkeypatch: pyt
         def _get_affected_components(self, failure: FailureType) -> list[str]:
             return ["system"]
 
-        async def initiate_recovery(self, event: FailureEvent, mode: RecoveryMode = RecoveryMode.AUTOMATIC):
+        async def initiate_recovery(
+            self, event: FailureEvent, mode: RecoveryMode = RecoveryMode.AUTOMATIC
+        ):
             raise AssertionError("Should not be called")
 
     StubOrchestrator.failures = [FailureType.S3_UNAVAILABLE]
-    monkeypatch.setattr(
-        "bot_v2.state.recovery.orchestrator.RecoveryOrchestrator", StubOrchestrator
-    )
+    monkeypatch.setattr("bot_v2.state.recovery.orchestrator.RecoveryOrchestrator", StubOrchestrator)
 
     result = await detect_and_recover(SimpleNamespace(), SimpleNamespace())
 

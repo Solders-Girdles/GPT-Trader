@@ -24,7 +24,9 @@ def test_adapter_stream_trades_wires_subscription(monkeypatch):
     def fake_factory(self):
         return ws
 
-    b = CoinbaseBrokerage(APIConfig(api_key="k", api_secret="s", passphrase=None, base_url="https://api"))
+    b = CoinbaseBrokerage(
+        APIConfig(api_key="k", api_secret="s", passphrase=None, base_url="https://api")
+    )
     # Inject ws factory
     monkeypatch.setattr(CoinbaseBrokerage, "_create_ws", fake_factory)
     out = []
@@ -34,4 +36,3 @@ def test_adapter_stream_trades_wires_subscription(monkeypatch):
     sub = ws.subs[0]
     assert sorted(sub.product_ids) == ["BTC-USD", "ETH-USD"]
     assert [m["product_id"] for m in out] == ["BTC-USD", "ETH-USD"]
-

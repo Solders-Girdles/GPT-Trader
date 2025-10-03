@@ -1,7 +1,10 @@
-"""Alert dispatch and recovery escalation"""
+"""Alert dispatch and recovery escalation."""
+
+from __future__ import annotations
 
 import logging
 from datetime import datetime
+from typing import Any
 
 from bot_v2.state.recovery.models import FailureType, RecoveryOperation
 
@@ -9,9 +12,9 @@ logger = logging.getLogger(__name__)
 
 
 class RecoveryAlerter:
-    """Handles alert dispatch and recovery escalation"""
+    """Handles alert dispatch and recovery escalation."""
 
-    def __init__(self, state_manager) -> None:
+    def __init__(self, state_manager: Any) -> None:
         self.state_manager = state_manager
 
     async def send_alert(
@@ -44,8 +47,8 @@ class RecoveryAlerter:
             # await self._send_to_slack(alert_data)
             # await self._send_email(alert_data)
 
-        except Exception as e:
-            logger.error(f"Failed to send alert: {e}")
+        except Exception as exc:
+            logger.error("Failed to send alert: %s", exc)
 
     async def escalate_recovery(self, operation: RecoveryOperation) -> None:
         """Escalate failed recovery to manual intervention"""
@@ -73,14 +76,14 @@ class RecoveryAlerter:
                 },
             )
 
-        except Exception as e:
-            logger.error(f"Recovery escalation failed: {e}")
+        except Exception as exc:
+            logger.error("Recovery escalation failed: %s", exc)
 
     def generate_manual_recovery_checklist(self, operation: RecoveryOperation) -> str:
         """Generate manual recovery checklist"""
         failure_type = operation.failure_event.failure_type
 
-        checklists = {
+        checklists: dict[FailureType, str] = {
             FailureType.DATA_CORRUPTION: """
             1. Stop all trading operations immediately
             2. Create emergency checkpoint
@@ -101,6 +104,5 @@ class RecoveryAlerter:
             """,
         }
 
-        return checklists.get(
-            failure_type, "1. Assess situation\n2. Contact support\n3. Follow runbook"
-        )
+        default_checklist = "1. Assess situation\n2. Contact support\n3. Follow runbook"
+        return checklists.get(failure_type, default_checklist)

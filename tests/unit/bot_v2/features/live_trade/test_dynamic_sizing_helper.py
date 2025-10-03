@@ -104,10 +104,7 @@ class TestDynamicSizingHelperInitialization:
 
     def test_initialization_with_risk_manager(self, mock_broker, mock_risk_manager):
         """Test initialization with risk manager."""
-        helper = DynamicSizingHelper(
-            broker=mock_broker,
-            risk_manager=mock_risk_manager
-        )
+        helper = DynamicSizingHelper(broker=mock_broker, risk_manager=mock_risk_manager)
 
         assert helper.risk_manager is mock_risk_manager
 
@@ -180,9 +177,7 @@ class TestPositionSizingApplication:
 
         assert advice is None
 
-    def test_applies_sizing_when_enabled(
-        self, mock_broker, mock_risk_manager, sample_quote
-    ):
+    def test_applies_sizing_when_enabled(self, mock_broker, mock_risk_manager, sample_quote):
         """Test that sizing is applied when enabled."""
         mock_risk_manager.config.enable_dynamic_position_sizing = True
         mock_risk_manager.size_position = Mock(
@@ -322,9 +317,7 @@ class TestReferencePriceDetermination:
         assert price == Decimal("50010")
         sizing_helper.broker.get_quote.assert_called_once_with("BTC-USD")
 
-    def test_uses_product_mark_price_as_final_fallback(
-        self, sizing_helper, sample_product
-    ):
+    def test_uses_product_mark_price_as_final_fallback(self, sizing_helper, sample_product):
         """Test using product mark price as final fallback."""
         price = sizing_helper.determine_reference_price(
             symbol="BTC-USD",
@@ -359,9 +352,7 @@ class TestReferencePriceDetermination:
 class TestEquityEstimation:
     """Test estimate_equity method."""
 
-    def test_uses_risk_manager_start_of_day_equity(
-        self, mock_broker, mock_risk_manager
-    ):
+    def test_uses_risk_manager_start_of_day_equity(self, mock_broker, mock_risk_manager):
         """Test using risk manager's start of day equity."""
         mock_risk_manager.start_of_day_equity = Decimal("25000")
 
@@ -584,9 +575,7 @@ class TestPositionQuantityExtraction:
 
         assert quantity == Decimal("0")
 
-    def test_extracts_position_from_risk_manager(
-        self, mock_broker, mock_risk_manager
-    ):
+    def test_extracts_position_from_risk_manager(self, mock_broker, mock_risk_manager):
         """Test extracting position from risk manager."""
         mock_risk_manager.positions = {"BTC-USD": Decimal("2.5")}
 
@@ -595,9 +584,7 @@ class TestPositionQuantityExtraction:
 
         assert quantity == Decimal("2.5")
 
-    def test_returns_zero_for_missing_position(
-        self, mock_broker, mock_risk_manager
-    ):
+    def test_returns_zero_for_missing_position(self, mock_broker, mock_risk_manager):
         """Test returns zero for missing position."""
         mock_risk_manager.positions = {}
 

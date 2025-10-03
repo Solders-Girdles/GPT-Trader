@@ -112,7 +112,7 @@ def portfolio_config():
 
     large_tier = TierConfig(
         name="large",
-        range=(50000, float('inf')),
+        range=(50000, float("inf")),
         positions=PositionConstraints(
             min_positions=10,
             max_positions=50,
@@ -235,8 +235,7 @@ class TestTierTransitions:
     def test_no_transition_within_same_tier(self, tier_manager):
         """Test no transition when capital stays within tier."""
         should_transition, target = tier_manager.should_transition(
-            current_tier=PortfolioTier.MICRO,
-            current_capital=1500.0  # Within micro range
+            current_tier=PortfolioTier.MICRO, current_capital=1500.0  # Within micro range
         )
 
         assert should_transition is False
@@ -247,15 +246,13 @@ class TestTierTransitions:
         # Small tier starts at 2000, with 10% buffer = 2800
         # Should not transition at 2100
         should_transition, _ = tier_manager.should_transition(
-            current_tier=PortfolioTier.MICRO,
-            current_capital=2100.0
+            current_tier=PortfolioTier.MICRO, current_capital=2100.0
         )
         assert should_transition is False
 
         # Should transition at 2900 (above buffer)
         should_transition, target = tier_manager.should_transition(
-            current_tier=PortfolioTier.MICRO,
-            current_capital=2900.0
+            current_tier=PortfolioTier.MICRO, current_capital=2900.0
         )
         assert should_transition is True
         assert target == PortfolioTier.SMALL
@@ -265,15 +262,13 @@ class TestTierTransitions:
         # Small tier starts at 2000, with 10% buffer = 200
         # Should not transition at 1900
         should_transition, _ = tier_manager.should_transition(
-            current_tier=PortfolioTier.SMALL,
-            current_capital=1900.0
+            current_tier=PortfolioTier.SMALL, current_capital=1900.0
         )
         assert should_transition is False
 
         # Should transition at 1100 (below buffer threshold of 1200)
         should_transition, target = tier_manager.should_transition(
-            current_tier=PortfolioTier.SMALL,
-            current_capital=1100.0
+            current_tier=PortfolioTier.SMALL, current_capital=1100.0
         )
         assert should_transition is True
         assert target == PortfolioTier.MICRO
@@ -282,7 +277,7 @@ class TestTierTransitions:
         """Test transition to large tier happens immediately."""
         should_transition, target = tier_manager.should_transition(
             current_tier=PortfolioTier.MEDIUM,
-            current_capital=50100.0  # Just over large tier boundary
+            current_capital=50100.0,  # Just over large tier boundary
         )
 
         # Should transition immediately to large tier
@@ -292,8 +287,7 @@ class TestTierTransitions:
     def test_transition_from_large_tier_immediate(self, tier_manager):
         """Test transition from large tier happens immediately."""
         should_transition, target = tier_manager.should_transition(
-            current_tier=PortfolioTier.LARGE,
-            current_capital=49000.0  # Below large tier minimum
+            current_tier=PortfolioTier.LARGE, current_capital=49000.0  # Below large tier minimum
         )
 
         # Should transition immediately from large tier
@@ -306,7 +300,7 @@ class TestTierTransitions:
         should_transition, target = tier_manager.should_transition(
             current_tier=PortfolioTier.MICRO,
             current_capital=2500.0,  # Would trigger with 5% buffer, not 10%
-            buffer_pct=5.0
+            buffer_pct=5.0,
         )
 
         assert should_transition is True
@@ -383,8 +377,10 @@ class TestTransitionAnalysis:
         result = tier_manager.get_tier_transitions_needed(snapshot)
 
         # Should add mean_reversion strategy
-        assert any("add strategies" in change.lower() and "mean_reversion" in change.lower()
-                   for change in result["changes_needed"])
+        assert any(
+            "add strategies" in change.lower() and "mean_reversion" in change.lower()
+            for change in result["changes_needed"]
+        )
 
     def test_transition_includes_risk_limit_changes(self, tier_manager):
         """Test that transition includes risk limit changes."""
@@ -435,9 +431,7 @@ class TestTierCompatibility:
             sector_exposures={"tech": 50.0, "finance": 50.0},
         )
 
-        is_compatible, issues = tier_manager.validate_tier_compatibility(
-            tier_config, snapshot
-        )
+        is_compatible, issues = tier_manager.validate_tier_compatibility(tier_config, snapshot)
 
         assert is_compatible is True
         assert len(issues) == 0
@@ -459,9 +453,7 @@ class TestTierCompatibility:
             sector_exposures={"tech": 100.0},
         )
 
-        is_compatible, issues = tier_manager.validate_tier_compatibility(
-            tier_config, snapshot
-        )
+        is_compatible, issues = tier_manager.validate_tier_compatibility(tier_config, snapshot)
 
         assert is_compatible is False
         assert any("too many positions" in issue.lower() for issue in issues)
@@ -483,9 +475,7 @@ class TestTierCompatibility:
             sector_exposures={"tech": 100.0},
         )
 
-        is_compatible, issues = tier_manager.validate_tier_compatibility(
-            tier_config, snapshot
-        )
+        is_compatible, issues = tier_manager.validate_tier_compatibility(tier_config, snapshot)
 
         assert is_compatible is False
         assert any("too small" in issue.lower() for issue in issues)
@@ -507,9 +497,7 @@ class TestTierCompatibility:
             sector_exposures={"tech": 100.0},
         )
 
-        is_compatible, issues = tier_manager.validate_tier_compatibility(
-            tier_config, snapshot
-        )
+        is_compatible, issues = tier_manager.validate_tier_compatibility(tier_config, snapshot)
 
         assert is_compatible is False
         assert any("exceeds tier limit" in issue.lower() for issue in issues)
@@ -531,9 +519,7 @@ class TestTierCompatibility:
             sector_exposures={"tech": 100.0},
         )
 
-        is_compatible, issues = tier_manager.validate_tier_compatibility(
-            tier_config, snapshot
-        )
+        is_compatible, issues = tier_manager.validate_tier_compatibility(tier_config, snapshot)
 
         assert is_compatible is False
         assert any("concentrated" in issue.lower() for issue in issues)
@@ -562,9 +548,7 @@ class TestTransitionStepRecommendations:
             sector_exposures={"tech": 100.0},
         )
 
-        steps = tier_manager.recommend_tier_transition_steps(
-            snapshot, PortfolioTier.SMALL
-        )
+        steps = tier_manager.recommend_tier_transition_steps(snapshot, PortfolioTier.SMALL)
 
         # Should recommend opening new positions (6 target - 1 current = 5 needed)
         assert any("open" in step.lower() and "position" in step.lower() for step in steps)
@@ -584,9 +568,7 @@ class TestTransitionStepRecommendations:
             sector_exposures={"tech": 100.0},
         )
 
-        steps = tier_manager.recommend_tier_transition_steps(
-            snapshot, PortfolioTier.MICRO
-        )
+        steps = tier_manager.recommend_tier_transition_steps(snapshot, PortfolioTier.MICRO)
 
         # Should recommend closing positions (12 current - 5 max = 7 to close)
         assert any("close" in step.lower() and "position" in step.lower() for step in steps)
@@ -609,9 +591,7 @@ class TestTransitionStepRecommendations:
             sector_exposures={"tech": 100.0},
         )
 
-        steps = tier_manager.recommend_tier_transition_steps(
-            snapshot, PortfolioTier.SMALL
-        )
+        steps = tier_manager.recommend_tier_transition_steps(snapshot, PortfolioTier.SMALL)
 
         # Should recommend increasing position sizes ($100 < $200 minimum)
         assert any("increase size" in step.lower() for step in steps)
@@ -631,13 +611,13 @@ class TestTransitionStepRecommendations:
             sector_exposures={},
         )
 
-        steps = tier_manager.recommend_tier_transition_steps(
-            snapshot, PortfolioTier.MEDIUM
-        )
+        steps = tier_manager.recommend_tier_transition_steps(snapshot, PortfolioTier.MEDIUM)
 
         # Should recommend implementing new strategies (breakout)
-        assert any("implement new strategies" in step.lower() or "breakout" in step.lower()
-                   for step in steps)
+        assert any(
+            "implement new strategies" in step.lower() or "breakout" in step.lower()
+            for step in steps
+        )
 
     def test_recommends_risk_reduction(self, tier_manager):
         """Test recommendation to reduce risk when moving down tiers."""
@@ -654,9 +634,7 @@ class TestTransitionStepRecommendations:
             sector_exposures={"tech": 100.0},
         )
 
-        steps = tier_manager.recommend_tier_transition_steps(
-            snapshot, PortfolioTier.MICRO
-        )
+        steps = tier_manager.recommend_tier_transition_steps(snapshot, PortfolioTier.MICRO)
 
         # Should recommend reducing position sizes for lower risk limits
         assert any("reduce position sizes" in step.lower() for step in steps)

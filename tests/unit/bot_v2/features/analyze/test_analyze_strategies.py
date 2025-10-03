@@ -17,31 +17,37 @@ from bot_v2.features.analyze.types import StrategySignals
 @pytest.fixture
 def sample_data():
     """Create sample OHLC data for testing."""
-    return pd.DataFrame({
-        "close": [100, 101, 102, 103, 104, 105, 106, 107, 108, 109] + [110] * 40,
-        "high": [101, 102, 103, 104, 105, 106, 107, 108, 109, 110] + [111] * 40,
-        "low": [99, 100, 101, 102, 103, 104, 105, 106, 107, 108] + [109] * 40,
-    })
+    return pd.DataFrame(
+        {
+            "close": [100, 101, 102, 103, 104, 105, 106, 107, 108, 109] + [110] * 40,
+            "high": [101, 102, 103, 104, 105, 106, 107, 108, 109, 110] + [111] * 40,
+            "low": [99, 100, 101, 102, 103, 104, 105, 106, 107, 108] + [109] * 40,
+        }
+    )
 
 
 @pytest.fixture
 def trending_up_data():
     """Create upward trending data."""
-    return pd.DataFrame({
-        "close": list(range(100, 150)),
-        "high": list(range(101, 151)),
-        "low": list(range(99, 149)),
-    })
+    return pd.DataFrame(
+        {
+            "close": list(range(100, 150)),
+            "high": list(range(101, 151)),
+            "low": list(range(99, 149)),
+        }
+    )
 
 
 @pytest.fixture
 def trending_down_data():
     """Create downward trending data."""
-    return pd.DataFrame({
-        "close": list(range(150, 100, -1)),
-        "high": list(range(151, 101, -1)),
-        "low": list(range(149, 99, -1)),
-    })
+    return pd.DataFrame(
+        {
+            "close": list(range(150, 100, -1)),
+            "high": list(range(151, 101, -1)),
+            "low": list(range(149, 99, -1)),
+        }
+    )
 
 
 @pytest.fixture
@@ -50,21 +56,25 @@ def volatile_data():
     data = []
     for i in range(100):
         data.append(100 + (i % 2) * 10 - 5)
-    return pd.DataFrame({
-        "close": data,
-        "high": [x + 2 for x in data],
-        "low": [x - 2 for x in data],
-    })
+    return pd.DataFrame(
+        {
+            "close": data,
+            "high": [x + 2 for x in data],
+            "low": [x - 2 for x in data],
+        }
+    )
 
 
 @pytest.fixture
 def insufficient_data():
     """Create insufficient data for testing."""
-    return pd.DataFrame({
-        "close": [100, 101, 102],
-        "high": [101, 102, 103],
-        "low": [99, 100, 101],
-    })
+    return pd.DataFrame(
+        {
+            "close": [100, 101, 102],
+            "high": [101, 102, 103],
+            "low": [99, 100, 101],
+        }
+    )
 
 
 class TestAnalyzeWithStrategies:
@@ -321,11 +331,13 @@ class TestAnalyzeBreakoutStrategy:
 
     def test_insufficient_data(self):
         """Test with insufficient data."""
-        data = pd.DataFrame({
-            "close": [100, 101],
-            "high": [101, 102],
-            "low": [99, 100],
-        })
+        data = pd.DataFrame(
+            {
+                "close": [100, 101],
+                "high": [101, 102],
+                "low": [99, 100],
+            }
+        )
         result = analyze_breakout_strategy(data, lookback=20)
 
         assert result.strategy_name == "Breakout"

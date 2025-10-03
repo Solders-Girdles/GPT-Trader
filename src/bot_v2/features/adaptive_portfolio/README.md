@@ -280,7 +280,7 @@ for name, config_path in configs.items():
 While this slice is completely self-contained, it can be enhanced by integrating with:
 
 - **`ml_strategy/`**: For ML-enhanced signal generation
-- **`market_regime/`**: For regime-aware tier adjustments  
+- **`market_regime/`**: For regime-aware tier adjustments
 - **`backtest/`**: For more sophisticated backtesting
 - **`risk/`**: For advanced risk analytics
 

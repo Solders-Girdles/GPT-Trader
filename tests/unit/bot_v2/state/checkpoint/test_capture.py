@@ -58,17 +58,13 @@ class TestStateCapture:
         """Test capturing position data."""
         # Setup mocks
         position_keys = ["position:BTC-USD", "position:ETH-USD"]
-        position_data = {
-            "symbol": "BTC-USD",
-            "quantity": 1.5,
-            "entry_price": 50000
-        }
+        position_data = {"symbol": "BTC-USD", "quantity": 1.5, "entry_price": 50000}
 
         mock_state_manager.get_keys_by_pattern.side_effect = lambda pattern: {
             "position:*": position_keys,
             "order:*": [],
             "ml_model:*": [],
-            "config:*": []
+            "config:*": [],
         }.get(pattern, [])
 
         mock_state_manager.get_state.return_value = position_data
@@ -88,14 +84,14 @@ class TestStateCapture:
         orders = [
             {"order_id": "1", "status": "open"},
             {"order_id": "2", "status": "filled"},  # Should be excluded
-            {"order_id": "3", "status": "pending"}
+            {"order_id": "3", "status": "pending"},
         ]
 
         mock_state_manager.get_keys_by_pattern.side_effect = lambda pattern: {
             "position:*": [],
             "order:*": order_keys,
             "ml_model:*": [],
-            "config:*": []
+            "config:*": [],
         }.get(pattern, [])
 
         # Return different order data for each call
@@ -121,11 +117,7 @@ class TestStateCapture:
     @pytest.mark.asyncio
     async def test_capture_portfolio(self, state_capture, mock_state_manager):
         """Test capturing portfolio data."""
-        portfolio_data = {
-            "total_value": 100000,
-            "cash": 50000,
-            "positions_value": 50000
-        }
+        portfolio_data = {"total_value": 100000, "cash": 50000, "positions_value": 50000}
 
         mock_state_manager.get_keys_by_pattern.return_value = []
 
@@ -150,7 +142,7 @@ class TestStateCapture:
             "position:*": [],
             "order:*": [],
             "ml_model:*": ml_keys,
-            "config:*": []
+            "config:*": [],
         }.get(pattern, [])
 
         mock_state_manager.get_state.return_value = ml_data
@@ -170,7 +162,7 @@ class TestStateCapture:
             "position:*": [],
             "order:*": [],
             "ml_model:*": [],
-            "config:*": config_keys
+            "config:*": config_keys,
         }.get(pattern, [])
 
         mock_state_manager.get_state.return_value = config_data
@@ -182,11 +174,7 @@ class TestStateCapture:
     @pytest.mark.asyncio
     async def test_capture_performance_metrics(self, state_capture, mock_state_manager):
         """Test capturing performance metrics."""
-        metrics_data = {
-            "total_return": 15.5,
-            "sharpe_ratio": 1.8,
-            "max_drawdown": -5.2
-        }
+        metrics_data = {"total_return": 15.5, "sharpe_ratio": 1.8, "max_drawdown": -5.2}
 
         mock_state_manager.get_keys_by_pattern.return_value = []
 
@@ -249,7 +237,7 @@ class TestStateCapture:
             "position:*": position_keys,
             "order:*": order_keys,
             "ml_model:*": [],
-            "config:*": []
+            "config:*": [],
         }.get(pattern, [])
 
         mock_state_manager.get_state.return_value = {"data": "test"}

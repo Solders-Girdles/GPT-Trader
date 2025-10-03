@@ -90,7 +90,9 @@ class DummyProductCatalog:
     def get(self, client: DummyClient, symbol: str) -> Product:  # noqa: ARG002
         return self.product
 
-    def get_funding(self, client: DummyClient, symbol: str) -> tuple[Decimal, datetime]:  # noqa: ARG002
+    def get_funding(
+        self, client: DummyClient, symbol: str
+    ) -> tuple[Decimal, datetime]:  # noqa: ARG002
         return Decimal("0.0001"), datetime.utcnow() + timedelta(hours=8)
 
 
@@ -229,7 +231,9 @@ def test_execute_order_payload_general_exception(service: DummyRestService) -> N
 
     service.client.place_order = boom  # type: ignore[assignment]
     with pytest.raises(RuntimeError):
-        service._execute_order_payload("BTC-USD", {"product_id": "BTC-USD", "quantity": "0.1"}, client_id=None)
+        service._execute_order_payload(
+            "BTC-USD", {"product_id": "BTC-USD", "quantity": "0.1"}, client_id=None
+        )
 
 
 def test_update_position_metrics_records_events(service: DummyRestService) -> None:

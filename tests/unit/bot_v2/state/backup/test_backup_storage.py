@@ -273,9 +273,7 @@ class TestBackupStorageNetwork:
             assert f.read() == test_data
 
     @pytest.mark.asyncio
-    async def test_store_network_without_path_fallsback_to_local(
-        self, temp_backup_dir
-    ):
+    async def test_store_network_without_path_fallsback_to_local(self, temp_backup_dir):
         """Test storing to network without path configured falls back to local."""
         config = BackupConfig(
             backup_dir=temp_backup_dir["backup_dir"],
@@ -387,9 +385,7 @@ class TestBackupStorageS3Cloud:
     @patch("bot_v2.state.backup.storage.boto3")
     @patch("bot_v2.state.backup.storage.S3_AVAILABLE", True)
     @pytest.mark.asyncio
-    async def test_store_cloud_failure_fallsback_to_local(
-        self, mock_boto3, backup_config
-    ):
+    async def test_store_cloud_failure_fallsback_to_local(self, mock_boto3, backup_config):
         """Test S3 store failure falls back to local storage."""
         mock_client = Mock()
         mock_client.put_object.side_effect = Exception("S3 error")
@@ -567,9 +563,7 @@ class TestBackupStorageFallback:
     """Test fallback behavior when storage tiers are unavailable."""
 
     @pytest.mark.asyncio
-    async def test_store_cloud_without_s3_fallsback_to_local(
-        self, backup_storage
-    ):
+    async def test_store_cloud_without_s3_fallsback_to_local(self, backup_storage):
         """Test storing to cloud without S3 falls back to local."""
         # backup_storage fixture has S3 disabled
         test_data = b"test backup data"
@@ -586,9 +580,7 @@ class TestBackupStorageFallback:
         assert result == str(expected_path)
 
     @pytest.mark.asyncio
-    async def test_store_archive_without_s3_fallsback_to_local(
-        self, backup_storage
-    ):
+    async def test_store_archive_without_s3_fallsback_to_local(self, backup_storage):
         """Test storing to archive without S3 falls back to local."""
         # backup_storage fixture has S3 disabled
         test_data = b"test backup data"
@@ -605,9 +597,7 @@ class TestBackupStorageFallback:
         assert result == str(expected_path)
 
     @pytest.mark.asyncio
-    async def test_retrieve_cloud_without_s3_returns_none(
-        self, backup_storage, sample_metadata
-    ):
+    async def test_retrieve_cloud_without_s3_returns_none(self, backup_storage, sample_metadata):
         """Test retrieving from cloud without S3 returns None."""
         sample_metadata.storage_tier = StorageTier.CLOUD
 
@@ -616,9 +606,7 @@ class TestBackupStorageFallback:
         assert retrieved_data is None
 
     @pytest.mark.asyncio
-    async def test_delete_cloud_without_s3_returns_false(
-        self, backup_storage, sample_metadata
-    ):
+    async def test_delete_cloud_without_s3_returns_false(self, backup_storage, sample_metadata):
         """Test deleting from cloud without S3 returns False."""
         sample_metadata.storage_tier = StorageTier.CLOUD
 
@@ -694,9 +682,7 @@ class TestBackupStorageEdgeCases:
     @patch("bot_v2.state.backup.storage.boto3")
     @patch("bot_v2.state.backup.storage.S3_AVAILABLE", True)
     @pytest.mark.asyncio
-    async def test_store_s3_without_client_fallsback_to_local(
-        self, mock_boto3, backup_config
-    ):
+    async def test_store_s3_without_client_fallsback_to_local(self, mock_boto3, backup_config):
         """Test storing to S3 when client is None falls back to local."""
         mock_boto3.client.return_value = Mock()
 

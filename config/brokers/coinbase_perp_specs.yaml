@@ -13,7 +13,7 @@ products:
     safe_buffer: 0.1
     last_verified: "2025-01-01"
     source: "api_verified"
-    
+
   ETH-PERP:
     min_size: 0.001
     step_size: 0.001
@@ -24,7 +24,7 @@ products:
     safe_buffer: 0.1
     last_verified: "2025-01-01"
     source: "api_verified"
-    
+
   SOL-PERP:
     min_size: 0.1
     step_size: 0.1
@@ -35,7 +35,7 @@ products:
     safe_buffer: 0.12
     last_verified: "2025-01-01"
     source: "api_verified"
-    
+
   XRP-PERP:
     min_size: 10.0
     step_size: 10.0
@@ -46,7 +46,7 @@ products:
     safe_buffer: 0.15
     last_verified: "2025-01-01"
     source: "api_verified"
-    
+
   DOGE-PERP:
     min_size: 100.0
     step_size: 100.0
@@ -57,7 +57,7 @@ products:
     safe_buffer: 0.15
     last_verified: "2025-01-01"
     source: "api_verified"
-    
+
   ADA-PERP:
     min_size: 10.0
     step_size: 10.0
@@ -68,7 +68,7 @@ products:
     safe_buffer: 0.15
     last_verified: "2025-01-01"
     source: "api_verified"
-    
+
   AVAX-PERP:
     min_size: 0.1
     step_size: 0.1
@@ -79,7 +79,7 @@ products:
     safe_buffer: 0.12
     last_verified: "2025-01-01"
     source: "api_verified"
-    
+
   LINK-PERP:
     min_size: 0.1
     step_size: 0.1

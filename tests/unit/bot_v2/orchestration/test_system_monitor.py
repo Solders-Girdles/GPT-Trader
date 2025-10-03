@@ -99,7 +99,7 @@ class TestSystemMonitorInitialization:
 
         assert monitor._account_telemetry is mock_telemetry
 
-    @patch('bot_v2.orchestration.system_monitor.ResourceCollector')
+    @patch("bot_v2.orchestration.system_monitor.ResourceCollector")
     def test_init_creates_resource_collector(self, mock_rc_class, mock_bot):
         """Should create ResourceCollector if available."""
         monitor = SystemMonitor(mock_bot)
@@ -107,7 +107,10 @@ class TestSystemMonitorInitialization:
         mock_rc_class.assert_called_once()
         assert monitor._resource_collector is not None
 
-    @patch('bot_v2.orchestration.system_monitor.ResourceCollector', side_effect=Exception("psutil unavailable"))
+    @patch(
+        "bot_v2.orchestration.system_monitor.ResourceCollector",
+        side_effect=Exception("psutil unavailable"),
+    )
     def test_init_handles_resource_collector_error(self, mock_rc_class, mock_bot):
         """Should gracefully handle ResourceCollector creation failure."""
         monitor = SystemMonitor(mock_bot)
@@ -210,7 +213,7 @@ class TestLogStatus:
         assert "account_snapshot" not in metrics
 
     @pytest.mark.asyncio
-    @patch('bot_v2.orchestration.system_monitor.ResourceCollectorType')
+    @patch("bot_v2.orchestration.system_monitor.ResourceCollectorType")
     async def test_log_status_with_system_metrics(self, mock_rc_type, mock_bot):
         """Should include system metrics when ResourceCollector available."""
         # Create mock usage
@@ -280,7 +283,7 @@ class TestPublishMetrics:
 
     def test_publish_metrics_writes_json_file(self, mock_bot, tmp_path):
         """Should write metrics to JSON file."""
-        with patch('bot_v2.orchestration.system_monitor.RUNTIME_DATA_DIR', tmp_path):
+        with patch("bot_v2.orchestration.system_monitor.RUNTIME_DATA_DIR", tmp_path):
             monitor = SystemMonitor(mock_bot)
             metrics = {"event_type": "cycle_metrics", "equity": 10000}
 
@@ -300,11 +303,11 @@ class TestPublishMetrics:
         monitor = SystemMonitor(mock_bot)
         metrics = {"event_type": "cycle_metrics"}
 
-        with patch('bot_v2.orchestration.system_monitor.RUNTIME_DATA_DIR', Path("/invalid/path")):
+        with patch("bot_v2.orchestration.system_monitor.RUNTIME_DATA_DIR", Path("/invalid/path")):
             # Should not crash
             monitor._publish_metrics(metrics)
 
-    @patch('bot_v2.orchestration.system_monitor._get_plog')
+    @patch("bot_v2.orchestration.system_monitor._get_plog")
     def test_publish_metrics_plog_error(self, mock_plog, mock_bot):
         """Should handle plog errors."""
         mock_plog.return_value.log_event.side_effect = Exception("Plog error")
@@ -410,7 +413,7 @@ class TestWriteHealthStatus:
 
     def test_write_health_status_ok(self, mock_bot, tmp_path):
         """Should write OK health status."""
-        with patch('bot_v2.orchestration.system_monitor.RUNTIME_DATA_DIR', tmp_path):
+        with patch("bot_v2.orchestration.system_monitor.RUNTIME_DATA_DIR", tmp_path):
             monitor = SystemMonitor(mock_bot)
             monitor.write_health_status(ok=True, message="All systems operational")
 
@@ -426,12 +429,10 @@ class TestWriteHealthStatus:
 
     def test_write_health_status_error(self, mock_bot, tmp_path):
         """Should write error health status."""
-        with patch('bot_v2.orchestration.system_monitor.RUNTIME_DATA_DIR', tmp_path):
+        with patch("bot_v2.orchestration.system_monitor.RUNTIME_DATA_DIR", tmp_path):
             monitor = SystemMonitor(mock_bot)
             monitor.write_health_status(
-                ok=False,
-                message="System degraded",
-                error="Database connection lost"
+                ok=False, message="System degraded", error="Database connection lost"
             )
 
             status_file = tmp_path / "perps_bot" / "dev" / "health.json"
@@ -522,7 +523,7 @@ class TestPositionReconciliation:
         # Should not crash
 
     @pytest.mark.asyncio
-    @patch('bot_v2.orchestration.system_monitor._get_plog')
+    @patch("bot_v2.orchestration.system_monitor._get_plog")
     async def test_position_reconciliation_plog_error(self, mock_plog, mock_bot):
         """Should handle plog errors during reconciliation."""
         mock_bot._last_positions = {"BTC-USD": {"quantity": "0.5", "side": "LONG"}}

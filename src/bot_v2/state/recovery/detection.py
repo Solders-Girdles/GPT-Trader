@@ -1,11 +1,9 @@
-"""
-Failure Detection and Health Checks
+"""Failure detection and health checks for the recovery system."""
 
-Provides system-wide health monitoring and failure type detection
-for the recovery system.
-"""
+from __future__ import annotations
 
 import logging
+from typing import Any
 
 from bot_v2.state.recovery.models import FailureType
 
@@ -18,9 +16,9 @@ logger = logging.getLogger(__name__)
 
 
 class FailureDetector:
-    """Detects system failures through health checks"""
+    """Detects system failures through health checks."""
 
-    def __init__(self, state_manager, checkpoint_handler) -> None:
+    def __init__(self, state_manager: Any, checkpoint_handler: Any) -> None:
         self.state_manager = state_manager
         self.checkpoint_handler = checkpoint_handler
 
@@ -31,7 +29,7 @@ class FailureDetector:
         Returns:
             List of detected failure types
         """
-        failures = []
+        failures: list[FailureType] = []
 
         # Test Redis connectivity
         if not await self.test_redis_health():
@@ -129,8 +127,8 @@ class FailureDetector:
 
             return False
 
-        except Exception as e:
-            logger.error(f"Corruption detection error: {e}")
+        except Exception as exc:
+            logger.error("Corruption detection error: %s", exc)
             return False
 
     async def check_memory_usage(self) -> float:

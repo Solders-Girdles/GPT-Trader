@@ -15,9 +15,13 @@ def _patch_random(monkeypatch: pytest.MonkeyPatch) -> None:
         "randint": 42,
     }
 
-    monkeypatch.setattr(collectors.random, "uniform", lambda a, b=None: mock_random_values["uniform"])
+    monkeypatch.setattr(
+        collectors.random, "uniform", lambda a, b=None: mock_random_values["uniform"]
+    )
     monkeypatch.setattr(collectors.random, "random", lambda: mock_random_values["random"])
-    monkeypatch.setattr(collectors.random, "randint", lambda a, b=None: mock_random_values["randint"])
+    monkeypatch.setattr(
+        collectors.random, "randint", lambda a, b=None: mock_random_values["randint"]
+    )
 
 
 def test_resource_collector_collects_metrics(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -105,5 +109,6 @@ def test_component_collector_returns_health(monkeypatch: pytest.MonkeyPatch) -> 
         "Database",
         "API",
     }
-    assert all(component.last_check.date() == datetime.now().date() for component in components.values())
-
+    assert all(
+        component.last_check.date() == datetime.now().date() for component in components.values()
+    )

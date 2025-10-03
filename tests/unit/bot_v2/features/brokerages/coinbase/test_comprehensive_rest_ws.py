@@ -86,13 +86,15 @@ class ReusableHTTPTransport:
 
     def __call__(self, method: str, url: str, headers: dict, body: Any, timeout: float):
         """Simulate HTTP call."""
-        self.calls.append({
-            "method": method,
-            "url": url,
-            "headers": headers,
-            "body": body,
-            "timeout": timeout,
-        })
+        self.calls.append(
+            {
+                "method": method,
+                "url": url,
+                "headers": headers,
+                "body": body,
+                "timeout": timeout,
+            }
+        )
 
         # Simulate failures
         if self.should_fail and self.failure_count < self.max_failures:
@@ -145,8 +147,7 @@ class ReusableWebSocketTransport:
             return
 
         messages, should_disconnect = self.message_batches.popleft()
-        for msg in messages:
-            yield msg
+        yield from messages
 
         if should_disconnect:
             raise ConnectionError("simulated disconnect")
@@ -177,7 +178,8 @@ def ws_transport():
 def specs_service(tmp_path):
     """Specs service with test configuration."""
     config_file = tmp_path / "test_specs.yaml"
-    config_file.write_text("""
+    config_file.write_text(
+        """
 products:
   BTC-USD-PERP:
     min_size: "0.001"
@@ -191,7 +193,8 @@ products:
     price_increment: "0.1"
     min_notional: "10"
     max_size: "5000"
-""")
+"""
+    )
     return SpecsService(str(config_file))
 
 
@@ -798,14 +801,10 @@ class TestReconnectAndErrorHandling:
         """Test sequence gap detection after reconnect."""
         # First batch with sequence 1-3, then disconnect
         ws_transport.add_message_batch(
-            [{"sequence": 1}, {"sequence": 2}, {"sequence": 3}],
-            disconnect=True
+            [{"sequence": 1}, {"sequence": 2}, {"sequence": 3}], disconnect=True
         )
         # After reconnect, start at sequence 10 (gap!)
-        ws_transport.add_message_batch(
-            [{"sequence": 10}, {"sequence": 11}],
-            disconnect=False
-        )
+        ws_transport.add_message_batch([{"sequence": 10}, {"sequence": 11}], disconnect=False)
 
         ws = CoinbaseWebSocket("wss://test", max_retries=3, base_delay=0)
         ws.set_transport(ws_transport)
@@ -861,8 +860,7 @@ class TestQuoteEdgeCases:
     def test_quote_from_trades_array(self):
         """Test quote derivation from trades array."""
         quote = CoinbaseQuoteFactory.create_quote_from_trades(
-            symbol="ETH-USD",
-            last_trade_price="3000.50"
+            symbol="ETH-USD", last_trade_price="3000.50"
         )
         result = to_quote(quote)
 

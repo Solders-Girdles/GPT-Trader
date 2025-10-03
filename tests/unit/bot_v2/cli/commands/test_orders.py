@@ -20,6 +20,7 @@ from bot_v2.features.brokerages.core.interfaces import OrderSide, OrderType, Tim
 @dataclass
 class MockOrder:
     """Mock order for testing."""
+
     order_id: str
     symbol: str
     side: str
@@ -44,10 +45,7 @@ def mock_bot():
         "changes": {"quantity": "0.2"},
     }
     bot.broker.edit_order.return_value = MockOrder(
-        order_id="order-123",
-        symbol="BTC-USD",
-        side="BUY",
-        status="OPEN"
+        order_id="order-123", symbol="BTC-USD", side="BUY", status="OPEN"
     )
     return bot
 
@@ -122,7 +120,9 @@ class TestHandleOrderTooling:
         mock_shutdown.assert_called_once_with(mock_bot)
 
     @patch("bot_v2.cli.commands.orders.ensure_shutdown")
-    def test_edit_order_preview_flow(self, mock_shutdown, mock_bot, parser, edit_order_preview_args):
+    def test_edit_order_preview_flow(
+        self, mock_shutdown, mock_bot, parser, edit_order_preview_args
+    ):
         """Test order edit preview flow."""
         result = handle_order_tooling(edit_order_preview_args, mock_bot, parser)
 
@@ -150,7 +150,9 @@ class TestHandleOrderTooling:
         # parser.error() exits before finally block, so shutdown is not called
 
     @patch("bot_v2.cli.commands.orders.ensure_shutdown")
-    def test_missing_symbol_for_edit_preview(self, mock_shutdown, mock_bot, parser, edit_order_preview_args):
+    def test_missing_symbol_for_edit_preview(
+        self, mock_shutdown, mock_bot, parser, edit_order_preview_args
+    ):
         """Test error when symbol missing for edit preview."""
         edit_order_preview_args.order_symbol = None
 
@@ -306,9 +308,7 @@ class TestHandleEditOrderPreview:
 
     def test_edit_order_preview_success(self, mock_bot, parser, edit_order_preview_args, capsys):
         """Test successful order edit preview."""
-        result = _handle_edit_order_preview(
-            edit_order_preview_args, mock_bot, parser, "BTC-USD"
-        )
+        result = _handle_edit_order_preview(edit_order_preview_args, mock_bot, parser, "BTC-USD")
 
         assert result == 0
         mock_bot.broker.edit_order_preview.assert_called_once()
@@ -330,9 +330,7 @@ class TestHandleEditOrderPreview:
         """Test edit preview with stop price."""
         edit_order_preview_args.order_stop = 50000
 
-        result = _handle_edit_order_preview(
-            edit_order_preview_args, mock_bot, parser, "BTC-USD"
-        )
+        result = _handle_edit_order_preview(edit_order_preview_args, mock_bot, parser, "BTC-USD")
 
         assert result == 0
         call_kwargs = mock_bot.broker.edit_order_preview.call_args.kwargs
@@ -342,9 +340,7 @@ class TestHandleEditOrderPreview:
         """Test edit preview with new client ID."""
         edit_order_preview_args.order_client_id = "new-client-456"
 
-        result = _handle_edit_order_preview(
-            edit_order_preview_args, mock_bot, parser, "BTC-USD"
-        )
+        result = _handle_edit_order_preview(edit_order_preview_args, mock_bot, parser, "BTC-USD")
 
         assert result == 0
         call_kwargs = mock_bot.broker.edit_order_preview.call_args.kwargs
@@ -354,9 +350,7 @@ class TestHandleEditOrderPreview:
         """Test edit preview with reduce only flag."""
         edit_order_preview_args.order_reduce_only = True
 
-        result = _handle_edit_order_preview(
-            edit_order_preview_args, mock_bot, parser, "BTC-USD"
-        )
+        result = _handle_edit_order_preview(edit_order_preview_args, mock_bot, parser, "BTC-USD")
 
         assert result == 0
         call_kwargs = mock_bot.broker.edit_order_preview.call_args.kwargs
@@ -367,27 +361,21 @@ class TestHandleEditOrderPreview:
         edit_order_preview_args.order_side = None
 
         with pytest.raises(SystemExit):
-            _handle_edit_order_preview(
-                edit_order_preview_args, mock_bot, parser, "BTC-USD"
-            )
+            _handle_edit_order_preview(edit_order_preview_args, mock_bot, parser, "BTC-USD")
 
     def test_edit_order_preview_missing_type(self, mock_bot, parser, edit_order_preview_args):
         """Test error when order type is missing."""
         edit_order_preview_args.order_type = None
 
         with pytest.raises(SystemExit):
-            _handle_edit_order_preview(
-                edit_order_preview_args, mock_bot, parser, "BTC-USD"
-            )
+            _handle_edit_order_preview(edit_order_preview_args, mock_bot, parser, "BTC-USD")
 
     def test_edit_order_preview_missing_quantity(self, mock_bot, parser, edit_order_preview_args):
         """Test error when quantity is missing."""
         edit_order_preview_args.order_quantity = None
 
         with pytest.raises(SystemExit):
-            _handle_edit_order_preview(
-                edit_order_preview_args, mock_bot, parser, "BTC-USD"
-            )
+            _handle_edit_order_preview(edit_order_preview_args, mock_bot, parser, "BTC-USD")
 
 
 class TestHandleApplyOrderEdit:
@@ -413,7 +401,9 @@ class TestHandleApplyOrderEdit:
         assert result == 0
         mock_bot.broker.edit_order.assert_called_once_with("order-123", "preview-456")
 
-    def test_apply_order_edit_invalid_format_no_colon(self, mock_bot, parser, apply_order_edit_args):
+    def test_apply_order_edit_invalid_format_no_colon(
+        self, mock_bot, parser, apply_order_edit_args
+    ):
         """Test error when format is invalid (no colon)."""
         apply_order_edit_args.apply_order_edit = "order-123-preview-456"
 

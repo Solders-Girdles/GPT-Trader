@@ -22,24 +22,28 @@ def cache():
 @pytest.fixture
 def sample_data():
     """Small test DataFrame."""
-    return pd.DataFrame({
-        "open": [100, 101, 102],
-        "high": [101, 102, 103],
-        "low": [99, 100, 101],
-        "close": [100.5, 101.5, 102.5],
-        "volume": [1000000, 1100000, 1200000],
-    })
+    return pd.DataFrame(
+        {
+            "open": [100, 101, 102],
+            "high": [101, 102, 103],
+            "low": [99, 100, 101],
+            "close": [100.5, 101.5, 102.5],
+            "volume": [1000000, 1100000, 1200000],
+        }
+    )
 
 
 @pytest.fixture
 def large_data():
     """Larger DataFrame for eviction tests."""
     # ~100KB DataFrame
-    return pd.DataFrame({
-        "col1": range(5000),
-        "col2": range(5000, 10000),
-        "col3": range(10000, 15000),
-    })
+    return pd.DataFrame(
+        {
+            "col1": range(5000),
+            "col2": range(5000, 10000),
+            "col3": range(10000, 15000),
+        }
+    )
 
 
 class TestCachePut:
@@ -306,7 +310,7 @@ class TestCacheStats:
 
         assert stats["entries"] == 2
         assert stats["size_mb"] > 0
-        assert stats["hit_rate"] == 2/3  # 2 hits, 1 miss
+        assert stats["hit_rate"] == 2 / 3  # 2 hits, 1 miss
         assert stats["total_hits"] == 2
         assert stats["total_misses"] == 1
 

@@ -45,7 +45,7 @@ PHASE_THRESHOLDS = {
 }
 
 
-def load_coverage_data(coverage_file: str = "coverage.json") -> Dict:
+def load_coverage_data(coverage_file: str = "coverage.json") -> dict:
     """Load coverage data from JSON file."""
     if not Path(coverage_file).exists():
         print(f"❌ Coverage file '{coverage_file}' not found.")
@@ -56,7 +56,7 @@ def load_coverage_data(coverage_file: str = "coverage.json") -> Dict:
         return json.load(f)
 
 
-def calculate_package_coverage(coverage_data: Dict, package_prefix: str) -> float:
+def calculate_package_coverage(coverage_data: dict, package_prefix: str) -> float:
     """Calculate coverage percentage for a package prefix."""
     total_statements = 0
     covered_statements = 0
@@ -74,7 +74,7 @@ def calculate_package_coverage(coverage_data: Dict, package_prefix: str) -> floa
     return (covered_statements / total_statements) * 100
 
 
-def check_phase_thresholds(coverage_data: Dict, phase: str) -> bool:
+def check_phase_thresholds(coverage_data: dict, phase: str) -> bool:
     """Check if all packages in a phase meet their thresholds."""
     thresholds = PHASE_THRESHOLDS.get(phase, {})
     if not thresholds:
@@ -111,16 +111,14 @@ def check_phase_thresholds(coverage_data: Dict, phase: str) -> bool:
         return False
 
 
-def show_all_packages(coverage_data: Dict) -> None:
+def show_all_packages(coverage_data: dict) -> None:
     """Show coverage for all tracked packages."""
     print("\n📊 Coverage for All Tracked Packages")
     print("=" * 60)
 
     all_packages = set()
     for phase_thresholds in PHASE_THRESHOLDS.values():
-        all_packages.update(
-            pkg for pkg in phase_thresholds.keys() if pkg != "*"
-        )
+        all_packages.update(pkg for pkg in phase_thresholds.keys() if pkg != "*")
 
     for package in sorted(all_packages):
         coverage_pct = calculate_package_coverage(coverage_data, package)

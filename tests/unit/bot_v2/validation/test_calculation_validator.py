@@ -233,7 +233,9 @@ class TestManualBacktestExample:
 
         for i, sell_trade in enumerate(sell_trades):
             # Find corresponding BUY trade (previous trade before this SELL)
-            buy_trades_before = [t for t in trades if t["action"] == "BUY" and t["day"] < sell_trade["day"]]
+            buy_trades_before = [
+                t for t in trades if t["action"] == "BUY" and t["day"] < sell_trade["day"]
+            ]
 
             if buy_trades_before:
                 last_buy = buy_trades_before[-1]

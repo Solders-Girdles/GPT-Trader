@@ -47,13 +47,15 @@ def ohlcv_data():
     for i in range(100):
         change = np.random.randn() * 2
         base = max(10, base + change)
-        data.append({
-            "open": base,
-            "high": base + abs(np.random.randn()),
-            "low": base - abs(np.random.randn()),
-            "close": base + np.random.randn() * 0.5,
-            "volume": np.random.randint(100000, 1000000),
-        })
+        data.append(
+            {
+                "open": base,
+                "high": base + abs(np.random.randn()),
+                "low": base - abs(np.random.randn()),
+                "close": base + np.random.randn() * 0.5,
+                "volume": np.random.randint(100000, 1000000),
+            }
+        )
     return pd.DataFrame(data, index=dates)
 
 
@@ -244,10 +246,7 @@ class TestCalculateATR:
     def test_returns_series(self, ohlcv_data):
         """Test that function returns a Series."""
         result = calculate_atr(
-            ohlcv_data["high"],
-            ohlcv_data["low"],
-            ohlcv_data["close"],
-            period=14
+            ohlcv_data["high"], ohlcv_data["low"], ohlcv_data["close"], period=14
         )
 
         assert isinstance(result, pd.Series)
@@ -256,10 +255,7 @@ class TestCalculateATR:
     def test_atr_positive(self, ohlcv_data):
         """Test that ATR values are positive."""
         result = calculate_atr(
-            ohlcv_data["high"],
-            ohlcv_data["low"],
-            ohlcv_data["close"],
-            period=14
+            ohlcv_data["high"], ohlcv_data["low"], ohlcv_data["close"], period=14
         )
 
         # All non-NaN ATR values should be positive
@@ -269,18 +265,22 @@ class TestCalculateATR:
     def test_atr_reflects_volatility(self):
         """Test that ATR increases with volatility."""
         # Low volatility data
-        low_vol = pd.DataFrame({
-            "high": [101] * 20,
-            "low": [99] * 20,
-            "close": [100] * 20,
-        })
+        low_vol = pd.DataFrame(
+            {
+                "high": [101] * 20,
+                "low": [99] * 20,
+                "close": [100] * 20,
+            }
+        )
 
         # High volatility data
-        high_vol = pd.DataFrame({
-            "high": [110, 105, 115, 100, 120] * 4,
-            "low": [90, 95, 85, 100, 80] * 4,
-            "close": [100, 100, 100, 100, 100] * 4,
-        })
+        high_vol = pd.DataFrame(
+            {
+                "high": [110, 105, 115, 100, 120] * 4,
+                "low": [90, 95, 85, 100, 80] * 4,
+                "close": [100, 100, 100, 100, 100] * 4,
+            }
+        )
 
         atr_low = calculate_atr(low_vol["high"], low_vol["low"], low_vol["close"], period=5)
         atr_high = calculate_atr(high_vol["high"], high_vol["low"], high_vol["close"], period=5)
@@ -348,11 +348,7 @@ class TestCalculateStochastic:
     def test_returns_two_series(self, ohlcv_data):
         """Test that function returns two Series."""
         k, d = calculate_stochastic(
-            ohlcv_data["high"],
-            ohlcv_data["low"],
-            ohlcv_data["close"],
-            k_period=14,
-            d_period=3
+            ohlcv_data["high"], ohlcv_data["low"], ohlcv_data["close"], k_period=14, d_period=3
         )
 
         assert isinstance(k, pd.Series)
@@ -361,11 +357,7 @@ class TestCalculateStochastic:
     def test_stochastic_range(self, ohlcv_data):
         """Test that stochastic values are in [0, 100] range."""
         k, d = calculate_stochastic(
-            ohlcv_data["high"],
-            ohlcv_data["low"],
-            ohlcv_data["close"],
-            k_period=14,
-            d_period=3
+            ohlcv_data["high"], ohlcv_data["low"], ohlcv_data["close"], k_period=14, d_period=3
         )
 
         # Check %K
@@ -379,11 +371,7 @@ class TestCalculateStochastic:
     def test_d_is_sma_of_k(self, ohlcv_data):
         """Test that %D is moving average of %K."""
         k, d = calculate_stochastic(
-            ohlcv_data["high"],
-            ohlcv_data["low"],
-            ohlcv_data["close"],
-            k_period=14,
-            d_period=3
+            ohlcv_data["high"], ohlcv_data["low"], ohlcv_data["close"], k_period=14, d_period=3
         )
 
         # %D should be smoother than %K
@@ -418,11 +406,13 @@ class TestIdentifySupportResistance:
 
     def test_pivot_calculation(self):
         """Test pivot point calculation."""
-        data = pd.DataFrame({
-            "high": [110, 110],
-            "low": [90, 90],
-            "close": [100, 100],
-        })
+        data = pd.DataFrame(
+            {
+                "high": [110, 110],
+                "low": [90, 90],
+                "close": [100, 100],
+            }
+        )
 
         _, _, _, _, pivot = identify_support_resistance(data, lookback=2)
 

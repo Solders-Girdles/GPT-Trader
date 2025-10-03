@@ -26,26 +26,32 @@ def temp_storage(tmp_path):
 def sample_ohlcv():
     """Sample OHLCV data with datetime index."""
     dates = pd.date_range(start="2023-01-01", periods=10, freq="D")
-    return pd.DataFrame({
-        "open": range(100, 110),
-        "high": range(101, 111),
-        "low": range(99, 109),
-        "close": range(100, 110),
-        "volume": [1000000] * 10,
-    }, index=dates)
+    return pd.DataFrame(
+        {
+            "open": range(100, 110),
+            "high": range(101, 111),
+            "low": range(99, 109),
+            "close": range(100, 110),
+            "volume": [1000000] * 10,
+        },
+        index=dates,
+    )
 
 
 @pytest.fixture
 def additional_ohlcv():
     """Additional OHLCV data for merge tests."""
     dates = pd.date_range(start="2023-01-08", periods=10, freq="D")
-    return pd.DataFrame({
-        "open": range(107, 117),
-        "high": range(108, 118),
-        "low": range(106, 116),
-        "close": range(107, 117),
-        "volume": [1100000] * 10,
-    }, index=dates)
+    return pd.DataFrame(
+        {
+            "open": range(107, 117),
+            "high": range(108, 118),
+            "low": range(106, 116),
+            "close": range(107, 117),
+            "volume": [1100000] * 10,
+        },
+        index=dates,
+    )
 
 
 class TestStorageInitialization:

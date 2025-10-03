@@ -263,6 +263,7 @@ class TestConfigValidation:
 
     def test_validation_with_custom_validator(self, config_loader):
         """Custom validators can be set for config slices."""
+
         # Just test that set_validator works
         def positive_validator(value):
             if value <= 0:

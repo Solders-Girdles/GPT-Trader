@@ -32,12 +32,26 @@ def _patch_datetime(monkeypatch: pytest.MonkeyPatch) -> FrozenDateTime:
 def test_margin_window_policy_determines_windows() -> None:
     policy = margin.MarginWindowPolicy()
 
-    assert policy.determine_current_window(datetime(2025, 1, 15, 0, 0)) is margin.MarginWindow.PRE_FUNDING
+    assert (
+        policy.determine_current_window(datetime(2025, 1, 15, 0, 0))
+        is margin.MarginWindow.PRE_FUNDING
+    )
     # Wrap-around branch (23:45 -> 00:00 funding)
-    assert policy.determine_current_window(datetime(2025, 1, 14, 23, 45)) is margin.MarginWindow.PRE_FUNDING
-    assert policy.determine_current_window(datetime(2025, 1, 15, 22, 1)) is margin.MarginWindow.OVERNIGHT
-    assert policy.determine_current_window(datetime(2025, 1, 15, 14, 30)) is margin.MarginWindow.INTRADAY
-    assert policy.determine_current_window(datetime(2025, 1, 15, 11, 0)) is margin.MarginWindow.NORMAL
+    assert (
+        policy.determine_current_window(datetime(2025, 1, 14, 23, 45))
+        is margin.MarginWindow.PRE_FUNDING
+    )
+    assert (
+        policy.determine_current_window(datetime(2025, 1, 15, 22, 1))
+        is margin.MarginWindow.OVERNIGHT
+    )
+    assert (
+        policy.determine_current_window(datetime(2025, 1, 15, 14, 30))
+        is margin.MarginWindow.INTRADAY
+    )
+    assert (
+        policy.determine_current_window(datetime(2025, 1, 15, 11, 0)) is margin.MarginWindow.NORMAL
+    )
 
 
 def test_margin_window_policy_next_change() -> None:
@@ -52,7 +66,9 @@ def test_margin_window_policy_next_change() -> None:
 def test_margin_window_policy_risk_reduction() -> None:
     policy = margin.MarginWindowPolicy()
     assert policy.should_reduce_risk(margin.MarginWindow.NORMAL, margin.MarginWindow.PRE_FUNDING)
-    assert not policy.should_reduce_risk(margin.MarginWindow.OVERNIGHT, margin.MarginWindow.OVERNIGHT)
+    assert not policy.should_reduce_risk(
+        margin.MarginWindow.OVERNIGHT, margin.MarginWindow.OVERNIGHT
+    )
 
 
 @pytest.mark.asyncio
@@ -104,7 +120,9 @@ async def test_margin_state_monitor_risk_flags(monkeypatch: pytest.MonkeyPatch) 
             "leverage_reduction_factor": 0.4,
         }
 
-    monitor = margin.MarginStateMonitor(alert_threshold=Decimal("0.50"), liquidation_buffer=Decimal("0.20"))
+    monitor = margin.MarginStateMonitor(
+        alert_threshold=Decimal("0.50"), liquidation_buffer=Decimal("0.20")
+    )
     monkeypatch.setattr(monitor, "check_window_transition", fake_transition)
 
     alerts: list[str] = []

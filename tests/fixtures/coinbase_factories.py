@@ -207,7 +207,9 @@ class CoinbaseCandleFactory:
             volume = random.uniform(100, 1000)
 
             candle = CoinbaseCandleFactory.create_candle(
-                time=(current_time - timedelta(minutes=interval_minutes * (count - i - 1))).isoformat(),
+                time=(
+                    current_time - timedelta(minutes=interval_minutes * (count - i - 1))
+                ).isoformat(),
                 open=f"{open_price:.2f}",
                 high=f"{high_price:.2f}",
                 low=f"{low_price:.2f}",

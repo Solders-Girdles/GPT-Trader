@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Any
 
 import yaml
+
 from bot_v2.errors import ConfigurationError
 from bot_v2.validation import Validator, validate_config
 

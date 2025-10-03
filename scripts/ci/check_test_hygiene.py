@@ -33,6 +33,22 @@ ALLOWLIST = {
     "tests/unit/bot_v2/features/paper_trade/test_paper_trade_strategies.py",  # 1052 lines: comprehensive paper trading strategy test suite (9 classes, 72 tests covering momentum, mean reversion, volatility, breakout, MA crossover, scalping strategies)
 }
 
+LINE_ALLOWLIST_PATH = pathlib.Path("tests/.hygiene_line_allowlist")
+SLEEP_ALLOWLIST_PATH = pathlib.Path("tests/.hygiene_sleep_allowlist")
+
+
+def _load_allowlist(path: pathlib.Path) -> set[str]:
+    if not path.exists():
+        return set()
+
+    entries: set[str] = set()
+    for raw_line in path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#"):
+            continue
+        entries.add(line)
+    return entries
+
 
 def scan(paths: Sequence[str]) -> int:
     root = pathlib.Path.cwd()
@@ -49,19 +65,24 @@ def scan(paths: Sequence[str]) -> int:
 
     problems: list[str] = []
 
+    line_allowlist = set(ALLOWLIST)
+    line_allowlist.update(_load_allowlist(LINE_ALLOWLIST_PATH))
+    sleep_allowlist = _load_allowlist(SLEEP_ALLOWLIST_PATH)
+
     normalized = [path.resolve() for path in test_files]
 
     for path in normalized:
         rel = path.relative_to(root)
+        rel_str = str(rel)
         text = path.read_text(encoding="utf-8")
         line_count = text.count("\n") + 1
 
-        if line_count > THRESHOLD and str(rel) not in ALLOWLIST:
+        if line_count > THRESHOLD and rel_str not in line_allowlist:
             problems.append(
                 f"{rel} exceeds {THRESHOLD} lines ({line_count}). Split into smaller modules or add to the allowlist with justification."
             )
 
-        if "time.sleep(" in text and "fake_clock" not in text:
+        if "time.sleep(" in text and "fake_clock" not in text and rel_str not in sleep_allowlist:
             problems.append(
                 f"{rel} calls time.sleep without using fake_clock fixture. Use fake_clock or justify with an explicit helper."
             )

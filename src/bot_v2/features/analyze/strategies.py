@@ -5,6 +5,7 @@ Complete duplication from other slices - intentional for isolation!
 """
 
 import pandas as pd
+
 from bot_v2.features.analyze.types import StrategySignals
 
 

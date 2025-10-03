@@ -20,39 +20,59 @@ def quality_checker():
 def valid_ohlcv_data():
     """Create valid OHLCV data."""
     dates = pd.date_range(end=datetime.now(), periods=30, freq="D")
-    return pd.DataFrame({
-        "open": [100 + i * 0.5 for i in range(30)],
-        "high": [101 + i * 0.5 for i in range(30)],
-        "low": [99 + i * 0.5 for i in range(30)],
-        "close": [100.5 + i * 0.5 for i in range(30)],
-        "volume": [1000000 + i * 1000 for i in range(30)],
-    }, index=dates)
+    return pd.DataFrame(
+        {
+            "open": [100 + i * 0.5 for i in range(30)],
+            "high": [101 + i * 0.5 for i in range(30)],
+            "low": [99 + i * 0.5 for i in range(30)],
+            "close": [100.5 + i * 0.5 for i in range(30)],
+            "volume": [1000000 + i * 1000 for i in range(30)],
+        },
+        index=dates,
+    )
 
 
 @pytest.fixture
 def invalid_ohlcv_data():
     """Create invalid OHLCV data with various issues."""
     dates = pd.date_range(end=datetime.now(), periods=10, freq="D")
-    return pd.DataFrame({
-        "open": [100, 101, 102, None, 104, 105, 106, 107, 108, 109],
-        "high": [99, 102, 103, 104, 105, 106, 107, 108, 109, 110],  # First row: high < low
-        "low": [100, 100, 101, 102, 103, 104, 105, 106, 107, 108],  # First row: low > open
-        "close": [100.5, 101.5, 102.5, 103.5, 104.5, 105.5, 106.5, 107.5, 108.5, 109.5],
-        "volume": [1000000, -5000, 1000000, 1000000, 1000000, 1000000, 1000000, 1000000, 1000000, 1000000],
-    }, index=dates)
+    return pd.DataFrame(
+        {
+            "open": [100, 101, 102, None, 104, 105, 106, 107, 108, 109],
+            "high": [99, 102, 103, 104, 105, 106, 107, 108, 109, 110],  # First row: high < low
+            "low": [100, 100, 101, 102, 103, 104, 105, 106, 107, 108],  # First row: low > open
+            "close": [100.5, 101.5, 102.5, 103.5, 104.5, 105.5, 106.5, 107.5, 108.5, 109.5],
+            "volume": [
+                1000000,
+                -5000,
+                1000000,
+                1000000,
+                1000000,
+                1000000,
+                1000000,
+                1000000,
+                1000000,
+                1000000,
+            ],
+        },
+        index=dates,
+    )
 
 
 @pytest.fixture
 def old_data():
     """Create old data for timeliness testing."""
     old_dates = pd.date_range(end=datetime.now() - timedelta(days=100), periods=30, freq="D")
-    return pd.DataFrame({
-        "open": [100 + i * 0.5 for i in range(30)],
-        "high": [101 + i * 0.5 for i in range(30)],
-        "low": [99 + i * 0.5 for i in range(30)],
-        "close": [100.5 + i * 0.5 for i in range(30)],
-        "volume": [1000000 for _ in range(30)],
-    }, index=old_dates)
+    return pd.DataFrame(
+        {
+            "open": [100 + i * 0.5 for i in range(30)],
+            "high": [101 + i * 0.5 for i in range(30)],
+            "low": [99 + i * 0.5 for i in range(30)],
+            "close": [100.5 + i * 0.5 for i in range(30)],
+            "volume": [1000000 for _ in range(30)],
+        },
+        index=old_dates,
+    )
 
 
 class TestDataQualityCheckerInit:
@@ -106,10 +126,12 @@ class TestCheckQuality:
 
     def test_completeness_calculation(self, quality_checker):
         """Test completeness calculation with missing values."""
-        data = pd.DataFrame({
-            "open": [100, None, 102, None, 104],
-            "close": [101, 102, 103, 104, 105],
-        })
+        data = pd.DataFrame(
+            {
+                "open": [100, None, 102, None, 104],
+                "close": [101, 102, 103, 104, 105],
+            }
+        )
 
         result = quality_checker.check_quality(data)
         # 8 non-null out of 10 total values = 0.8
@@ -132,32 +154,38 @@ class TestCheckAccuracy:
 
     def test_invalid_high_low(self, quality_checker):
         """Test detection of high < low."""
-        data = pd.DataFrame({
-            "high": [100, 90],  # Second row: high < low
-            "low": [99, 95],
-        })
+        data = pd.DataFrame(
+            {
+                "high": [100, 90],  # Second row: high < low
+                "low": [99, 95],
+            }
+        )
         result = quality_checker._check_accuracy(data)
         assert result < 1.0  # Should detect issue
 
     def test_negative_prices(self, quality_checker):
         """Test detection of negative prices."""
-        data = pd.DataFrame({
-            "open": [100, -50],
-            "high": [101, 51],
-            "low": [99, -51],
-            "close": [100.5, 50],
-        })
+        data = pd.DataFrame(
+            {
+                "open": [100, -50],
+                "high": [101, 51],
+                "low": [99, -51],
+                "close": [100.5, 50],
+            }
+        )
         result = quality_checker._check_accuracy(data)
         assert result < 1.0  # Should detect negative prices
 
     def test_high_not_highest(self, quality_checker):
         """Test detection when high is not the highest."""
-        data = pd.DataFrame({
-            "open": [100, 100],
-            "high": [101, 101],
-            "low": [99, 99],
-            "close": [102, 100],  # First row: close > high
-        })
+        data = pd.DataFrame(
+            {
+                "open": [100, 100],
+                "high": [101, 101],
+                "low": [99, 99],
+                "close": [102, 100],  # First row: close > high
+            }
+        )
         result = quality_checker._check_accuracy(data)
         assert result < 1.0  # Should detect issue
 
@@ -217,8 +245,7 @@ class TestCheckTimeliness:
     def test_recent_data(self, quality_checker):
         """Test timeliness check on recent data."""
         data = pd.DataFrame(
-            {"close": [100, 101, 102]},
-            index=pd.date_range(end=datetime.now(), periods=3, freq="D")
+            {"close": [100, 101, 102]}, index=pd.date_range(end=datetime.now(), periods=3, freq="D")
         )
         result = quality_checker._check_timeliness(data)
         assert result >= 0.95  # Should have high timeliness for today's data
@@ -275,39 +302,45 @@ class TestValidateOHLCV:
 
     def test_invalid_high_relationship(self, quality_checker):
         """Test detection of high below open/close."""
-        data = pd.DataFrame({
-            "open": [100],
-            "high": [99],  # high < open
-            "low": [98],
-            "close": [99.5],
-            "volume": [1000],
-        })
+        data = pd.DataFrame(
+            {
+                "open": [100],
+                "high": [99],  # high < open
+                "low": [98],
+                "close": [99.5],
+                "volume": [1000],
+            }
+        )
         issues = quality_checker.validate_ohlcv(data)
 
         assert any("High below" in issue for issue in issues)
 
     def test_invalid_low_relationship(self, quality_checker):
         """Test detection of low above open/close."""
-        data = pd.DataFrame({
-            "open": [100],
-            "high": [102],
-            "low": [101],  # low > open
-            "close": [100.5],
-            "volume": [1000],
-        })
+        data = pd.DataFrame(
+            {
+                "open": [100],
+                "high": [102],
+                "low": [101],  # low > open
+                "close": [100.5],
+                "volume": [1000],
+            }
+        )
         issues = quality_checker.validate_ohlcv(data)
 
         assert any("Low above" in issue for issue in issues)
 
     def test_negative_prices(self, quality_checker):
         """Test detection of negative prices."""
-        data = pd.DataFrame({
-            "open": [-100],
-            "high": [101],
-            "low": [99],
-            "close": [100],
-            "volume": [1000],
-        })
+        data = pd.DataFrame(
+            {
+                "open": [-100],
+                "high": [101],
+                "low": [99],
+                "close": [100],
+                "volume": [1000],
+            }
+        )
         issues = quality_checker.validate_ohlcv(data)
 
         assert any("Negative" in issue and "open" in issue for issue in issues)
@@ -358,18 +391,22 @@ class TestGetQualityTrend:
     def test_trend_averages_over_history(self, quality_checker):
         """Test that trend averages over all history."""
         # Create good data
-        good_data = pd.DataFrame({
-            "close": [100, 101, 102],
-            "high": [101, 102, 103],
-            "low": [99, 100, 101],
-        })
+        good_data = pd.DataFrame(
+            {
+                "close": [100, 101, 102],
+                "high": [101, 102, 103],
+                "low": [99, 100, 101],
+            }
+        )
 
         # Create poor data
-        poor_data = pd.DataFrame({
-            "close": [100, None, None],
-            "high": [101, None, None],
-            "low": [99, None, None],
-        })
+        poor_data = pd.DataFrame(
+            {
+                "close": [100, None, None],
+                "high": [101, None, None],
+                "low": [99, None, None],
+            }
+        )
 
         # Check both
         quality_checker.check_quality(good_data)

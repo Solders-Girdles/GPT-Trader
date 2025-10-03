@@ -4,7 +4,11 @@ from decimal import Decimal
 
 import pytest
 
-from bot_v2.monitoring.domain.perps.liquidation import LiquidationMonitor, LiquidationRisk, MarginInfo
+from bot_v2.monitoring.domain.perps.liquidation import (
+    LiquidationMonitor,
+    LiquidationRisk,
+    MarginInfo,
+)
 
 
 def make_margin(
@@ -45,28 +49,40 @@ def test_calculate_liquidation_price_handles_errors(caplog: pytest.LogCaptureFix
     caplog.set_level("ERROR")
     liq = monitor.calculate_liquidation_price(bad_margin)
     assert liq is None
-    assert any("Failed to calculate liquidation price" in record.message for record in caplog.records)
+    assert any(
+        "Failed to calculate liquidation price" in record.message for record in caplog.records
+    )
 
 
 def test_assess_liquidation_risk_states() -> None:
     monitor = LiquidationMonitor(warning_buffer_pct=20.0, critical_buffer_pct=10.0)
 
-    no_position = monitor.assess_liquidation_risk(make_margin(side="long", entry=100, current=100, size=0))
+    no_position = monitor.assess_liquidation_risk(
+        make_margin(side="long", entry=100, current=100, size=0)
+    )
     assert no_position.risk_level == "safe"
 
-    liquidated = monitor.assess_liquidation_risk(make_margin(side="long", entry=100, current=10, leverage=1.5))
+    liquidated = monitor.assess_liquidation_risk(
+        make_margin(side="long", entry=100, current=10, leverage=1.5)
+    )
     assert liquidated.risk_level == "liquidated"
     assert liquidated.should_reduce_only is True
 
-    critical = monitor.assess_liquidation_risk(make_margin(side="short", entry=100, current=112, leverage=5))
+    critical = monitor.assess_liquidation_risk(
+        make_margin(side="short", entry=100, current=112, leverage=5)
+    )
     assert critical.risk_level == "critical"
     assert critical.should_reject_entry is True
 
-    warning = monitor.assess_liquidation_risk(make_margin(side="long", entry=100, current=85, leverage=3))
+    warning = monitor.assess_liquidation_risk(
+        make_margin(side="long", entry=100, current=85, leverage=3)
+    )
     assert warning.risk_level == "warning"
     assert warning.reason.startswith("Liquidation warning")
 
-    safe = monitor.assess_liquidation_risk(make_margin(side="long", entry=100, current=150, leverage=3))
+    safe = monitor.assess_liquidation_risk(
+        make_margin(side="long", entry=100, current=150, leverage=3)
+    )
     assert safe.risk_level == "safe"
 
 

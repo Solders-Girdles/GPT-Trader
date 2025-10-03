@@ -18,14 +18,8 @@ def mock_bot_with_telemetry():
         "account_id": "acc-123",
         "balance": "10000.00",
         "available_balance": "9500.00",
-        "positions": [
-            {
-                "symbol": "BTC-USD",
-                "size": "0.5",
-                "unrealized_pnl": "250.00"
-            }
-        ],
-        "timestamp": "2023-01-01T12:00:00Z"
+        "positions": [{"symbol": "BTC-USD", "size": "0.5", "unrealized_pnl": "250.00"}],
+        "timestamp": "2023-01-01T12:00:00Z",
     }
     bot.account_telemetry = telemetry
     return bot
@@ -98,7 +92,9 @@ class TestHandleAccountSnapshot:
         mock_shutdown.assert_called_once_with(mock_bot_without_telemetry)
 
     @patch("bot_v2.cli.commands.account.ensure_shutdown")
-    def test_telemetry_doesnt_support_snapshots(self, mock_shutdown, mock_bot_telemetry_no_snapshots):
+    def test_telemetry_doesnt_support_snapshots(
+        self, mock_shutdown, mock_bot_telemetry_no_snapshots
+    ):
         """Test error when telemetry doesn't support snapshots."""
         with pytest.raises(RuntimeError, match="Account snapshot telemetry is not available"):
             handle_account_snapshot(mock_bot_telemetry_no_snapshots)
@@ -127,7 +123,7 @@ class TestHandleAccountSnapshot:
             "balance": "5000.00",
             "available_balance": "5000.00",
             "positions": [],
-            "timestamp": "2023-01-01T12:00:00Z"
+            "timestamp": "2023-01-01T12:00:00Z",
         }
 
         result = handle_account_snapshot(mock_bot_with_telemetry)
@@ -147,7 +143,7 @@ class TestHandleAccountSnapshot:
                 {"symbol": "BTC-USD", "size": "1.0"},
                 {"symbol": "ETH-USD", "size": "10.0"},
                 {"symbol": "SOL-USD", "size": "100.0"},
-            ]
+            ],
         }
 
         result = handle_account_snapshot(mock_bot_with_telemetry)
@@ -166,12 +162,8 @@ class TestHandleAccountSnapshot:
             "metadata": {
                 "created_at": "2022-01-01",
                 "tier": "premium",
-                "features": {
-                    "margin": True,
-                    "futures": True,
-                    "options": False
-                }
-            }
+                "features": {"margin": True, "futures": True, "options": False},
+            },
         }
 
         result = handle_account_snapshot(mock_bot_with_telemetry)
@@ -232,7 +224,9 @@ class TestHandleAccountSnapshot:
         mock_shutdown.assert_called_once()
 
     @patch("bot_v2.cli.commands.account.ensure_shutdown")
-    def test_shutdown_called_on_error_before_collection(self, mock_shutdown, mock_bot_without_telemetry):
+    def test_shutdown_called_on_error_before_collection(
+        self, mock_shutdown, mock_bot_without_telemetry
+    ):
         """Test that shutdown is called when error occurs before collection."""
         with pytest.raises(RuntimeError):
             handle_account_snapshot(mock_bot_without_telemetry)
@@ -240,7 +234,9 @@ class TestHandleAccountSnapshot:
         mock_shutdown.assert_called_once()
 
     @patch("bot_v2.cli.commands.account.ensure_shutdown")
-    def test_shutdown_called_on_error_during_collection(self, mock_shutdown, mock_bot_with_telemetry):
+    def test_shutdown_called_on_error_during_collection(
+        self, mock_shutdown, mock_bot_with_telemetry
+    ):
         """Test that shutdown is called when error occurs during collection."""
         mock_bot_with_telemetry.account_telemetry.collect_snapshot.side_effect = Exception("Error")
 

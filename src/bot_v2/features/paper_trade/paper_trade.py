@@ -11,6 +11,7 @@ from datetime import datetime
 from typing import Any
 
 import pandas as pd
+
 from bot_v2.features.paper_trade.data import DataFeed
 from bot_v2.features.paper_trade.execution import PaperExecutor
 from bot_v2.features.paper_trade.risk import RiskManager

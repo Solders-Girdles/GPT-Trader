@@ -29,7 +29,9 @@ class TestHandleRunBot:
 
     @patch("bot_v2.cli.commands.run.ShutdownHandler")
     @patch("bot_v2.cli.commands.run.asyncio.run")
-    def test_successful_bot_run_dev_mode(self, mock_asyncio_run, mock_handler_class, mock_bot, mock_shutdown_handler):
+    def test_successful_bot_run_dev_mode(
+        self, mock_asyncio_run, mock_handler_class, mock_bot, mock_shutdown_handler
+    ):
         """Test successful bot run in dev_fast mode."""
         mock_handler_class.return_value = mock_shutdown_handler
 
@@ -44,7 +46,9 @@ class TestHandleRunBot:
 
     @patch("bot_v2.cli.commands.run.ShutdownHandler")
     @patch("bot_v2.cli.commands.run.asyncio.run")
-    def test_successful_bot_run_continuous(self, mock_asyncio_run, mock_handler_class, mock_bot, mock_shutdown_handler):
+    def test_successful_bot_run_continuous(
+        self, mock_asyncio_run, mock_handler_class, mock_bot, mock_shutdown_handler
+    ):
         """Test successful bot run in continuous mode."""
         mock_handler_class.return_value = mock_shutdown_handler
 
@@ -59,7 +63,9 @@ class TestHandleRunBot:
 
     @patch("bot_v2.cli.commands.run.ShutdownHandler")
     @patch("bot_v2.cli.commands.run.asyncio.run")
-    def test_keyboard_interrupt_handled(self, mock_asyncio_run, mock_handler_class, mock_bot, mock_shutdown_handler):
+    def test_keyboard_interrupt_handled(
+        self, mock_asyncio_run, mock_handler_class, mock_bot, mock_shutdown_handler
+    ):
         """Test KeyboardInterrupt is handled gracefully."""
         mock_handler_class.return_value = mock_shutdown_handler
         mock_asyncio_run.side_effect = KeyboardInterrupt()
@@ -70,7 +76,9 @@ class TestHandleRunBot:
 
     @patch("bot_v2.cli.commands.run.ShutdownHandler")
     @patch("bot_v2.cli.commands.run.asyncio.run")
-    def test_exception_returns_error_code(self, mock_asyncio_run, mock_handler_class, mock_bot, mock_shutdown_handler):
+    def test_exception_returns_error_code(
+        self, mock_asyncio_run, mock_handler_class, mock_bot, mock_shutdown_handler
+    ):
         """Test exception during bot run returns error code."""
         mock_handler_class.return_value = mock_shutdown_handler
         mock_asyncio_run.side_effect = Exception("Bot execution failed")
@@ -81,7 +89,9 @@ class TestHandleRunBot:
 
     @patch("bot_v2.cli.commands.run.ShutdownHandler")
     @patch("bot_v2.cli.commands.run.asyncio.run")
-    def test_shutdown_handler_registered_before_run(self, mock_asyncio_run, mock_handler_class, mock_bot, mock_shutdown_handler):
+    def test_shutdown_handler_registered_before_run(
+        self, mock_asyncio_run, mock_handler_class, mock_bot, mock_shutdown_handler
+    ):
         """Test shutdown handler is registered before bot runs."""
         mock_handler_class.return_value = mock_shutdown_handler
 
@@ -95,7 +105,9 @@ class TestHandleRunBot:
 
     @patch("bot_v2.cli.commands.run.ShutdownHandler")
     @patch("bot_v2.cli.commands.run.asyncio.run")
-    def test_dev_fast_mode_single_cycle(self, mock_asyncio_run, mock_handler_class, mock_bot, mock_shutdown_handler):
+    def test_dev_fast_mode_single_cycle(
+        self, mock_asyncio_run, mock_handler_class, mock_bot, mock_shutdown_handler
+    ):
         """Test dev_fast mode runs single cycle."""
         mock_handler_class.return_value = mock_shutdown_handler
 
@@ -108,7 +120,9 @@ class TestHandleRunBot:
 
     @patch("bot_v2.cli.commands.run.ShutdownHandler")
     @patch("bot_v2.cli.commands.run.asyncio.run")
-    def test_continuous_mode_no_single_cycle(self, mock_asyncio_run, mock_handler_class, mock_bot, mock_shutdown_handler):
+    def test_continuous_mode_no_single_cycle(
+        self, mock_asyncio_run, mock_handler_class, mock_bot, mock_shutdown_handler
+    ):
         """Test continuous mode runs without single_cycle."""
         mock_handler_class.return_value = mock_shutdown_handler
 
@@ -119,7 +133,9 @@ class TestHandleRunBot:
 
     @patch("bot_v2.cli.commands.run.ShutdownHandler")
     @patch("bot_v2.cli.commands.run.asyncio.run")
-    def test_default_dev_fast_is_false(self, mock_asyncio_run, mock_handler_class, mock_bot, mock_shutdown_handler):
+    def test_default_dev_fast_is_false(
+        self, mock_asyncio_run, mock_handler_class, mock_bot, mock_shutdown_handler
+    ):
         """Test default dev_fast parameter is False."""
         mock_handler_class.return_value = mock_shutdown_handler
 
@@ -130,7 +146,9 @@ class TestHandleRunBot:
 
     @patch("bot_v2.cli.commands.run.ShutdownHandler")
     @patch("bot_v2.cli.commands.run.asyncio.run")
-    def test_exception_logged_and_raised(self, mock_asyncio_run, mock_handler_class, mock_bot, mock_shutdown_handler, caplog):
+    def test_exception_logged_and_raised(
+        self, mock_asyncio_run, mock_handler_class, mock_bot, mock_shutdown_handler, caplog
+    ):
         """Test exception is logged when bot execution fails."""
         import logging
 
@@ -145,7 +163,9 @@ class TestHandleRunBot:
 
     @patch("bot_v2.cli.commands.run.ShutdownHandler")
     @patch("bot_v2.cli.commands.run.asyncio.run")
-    def test_keyboard_interrupt_logged(self, mock_asyncio_run, mock_handler_class, mock_bot, mock_shutdown_handler, caplog):
+    def test_keyboard_interrupt_logged(
+        self, mock_asyncio_run, mock_handler_class, mock_bot, mock_shutdown_handler, caplog
+    ):
         """Test KeyboardInterrupt is logged appropriately."""
         import logging
 

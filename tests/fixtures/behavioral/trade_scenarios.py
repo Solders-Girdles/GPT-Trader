@@ -13,27 +13,29 @@ from typing import List, Optional, Dict, Any
 @dataclass
 class TradeExecution:
     """Represents a single trade execution."""
+
     timestamp: datetime
     side: str  # 'buy' or 'sell'
     quantity: Decimal
     price: Decimal
-    fees: Decimal = Decimal('0')
+    fees: Decimal = Decimal("0")
     is_reduce: bool = False
 
 
 @dataclass
 class TradeScenario:
     """Complete trading scenario with expected outcomes."""
+
     name: str
     symbol: str
     initial_capital: Decimal
-    trades: List[TradeExecution]
+    trades: list[TradeExecution]
     expected_pnl: Decimal
     expected_fees: Decimal
     expected_final_position: Decimal
-    funding_payments: Decimal = Decimal('0')
+    funding_payments: Decimal = Decimal("0")
     description: str = ""
-    
+
     @property
     def expected_net_pnl(self) -> Decimal:
         """Net P&L after fees and funding."""
@@ -43,7 +45,7 @@ class TradeScenario:
 def create_long_profit_scenario() -> TradeScenario:
     """
     Create a simple long position profit scenario.
-    
+
     Scenario:
     - Buy 1 BTC at $50,000
     - Sell 1 BTC at $51,000
@@ -62,7 +64,7 @@ def create_long_profit_scenario() -> TradeScenario:
                 side="buy",
                 quantity=Decimal("1.0"),
                 price=Decimal("50000"),
-                fees=Decimal("50")  # 0.1% of 50000
+                fees=Decimal("50"),  # 0.1% of 50000
             ),
             TradeExecution(
                 timestamp=datetime(2024, 1, 1, 11, 0, 0),
@@ -70,20 +72,20 @@ def create_long_profit_scenario() -> TradeScenario:
                 quantity=Decimal("1.0"),
                 price=Decimal("51000"),
                 fees=Decimal("51"),  # 0.1% of 51000
-                is_reduce=True
-            )
+                is_reduce=True,
+            ),
         ],
         expected_pnl=Decimal("1000"),
         expected_fees=Decimal("101"),
         expected_final_position=Decimal("0"),
-        description="Simple long position with profit"
+        description="Simple long position with profit",
     )
 
 
 def create_short_loss_scenario() -> TradeScenario:
     """
     Create a short position loss scenario.
-    
+
     Scenario:
     - Sell 2 ETH at $3,000 (short)
     - Buy 2 ETH at $3,100 (cover)
@@ -102,7 +104,7 @@ def create_short_loss_scenario() -> TradeScenario:
                 side="sell",
                 quantity=Decimal("2.0"),
                 price=Decimal("3000"),
-                fees=Decimal("6")  # 0.1% of 6000
+                fees=Decimal("6"),  # 0.1% of 6000
             ),
             TradeExecution(
                 timestamp=datetime(2024, 1, 1, 11, 0, 0),
@@ -110,20 +112,20 @@ def create_short_loss_scenario() -> TradeScenario:
                 quantity=Decimal("2.0"),
                 price=Decimal("3100"),
                 fees=Decimal("6.2"),  # 0.1% of 6200
-                is_reduce=True
-            )
+                is_reduce=True,
+            ),
         ],
         expected_pnl=Decimal("-200"),
         expected_fees=Decimal("12.2"),
         expected_final_position=Decimal("0"),
-        description="Short position with loss"
+        description="Short position with loss",
     )
 
 
 def create_funding_payment_scenario() -> TradeScenario:
     """
     Create a scenario with funding payments.
-    
+
     Scenario:
     - Long 1 BTC at $50,000
     - Hold through 3 funding periods at 0.01% each
@@ -142,7 +144,7 @@ def create_funding_payment_scenario() -> TradeScenario:
                 side="buy",
                 quantity=Decimal("1.0"),
                 price=Decimal("50000"),
-                fees=Decimal("50")
+                fees=Decimal("50"),
             ),
             TradeExecution(
                 timestamp=datetime(2024, 1, 2, 0, 0, 0),  # Next day
@@ -150,21 +152,21 @@ def create_funding_payment_scenario() -> TradeScenario:
                 quantity=Decimal("1.0"),
                 price=Decimal("50500"),
                 fees=Decimal("50.5"),
-                is_reduce=True
-            )
+                is_reduce=True,
+            ),
         ],
         expected_pnl=Decimal("500"),
         expected_fees=Decimal("100.5"),
         expected_final_position=Decimal("0"),
         funding_payments=Decimal("-15"),  # Negative because long pays
-        description="Long position with funding payments"
+        description="Long position with funding payments",
     )
 
 
 def create_stop_loss_scenario() -> TradeScenario:
     """
     Create a stop-loss execution scenario.
-    
+
     Scenario:
     - Buy 0.5 BTC at $50,000
     - Stop-loss triggers at $49,000
@@ -181,7 +183,7 @@ def create_stop_loss_scenario() -> TradeScenario:
                 side="buy",
                 quantity=Decimal("0.5"),
                 price=Decimal("50000"),
-                fees=Decimal("25")
+                fees=Decimal("25"),
             ),
             TradeExecution(
                 timestamp=datetime(2024, 1, 1, 10, 30, 0),
@@ -189,20 +191,20 @@ def create_stop_loss_scenario() -> TradeScenario:
                 quantity=Decimal("0.5"),
                 price=Decimal("49000"),  # Stop triggered
                 fees=Decimal("24.5"),
-                is_reduce=True
-            )
+                is_reduce=True,
+            ),
         ],
         expected_pnl=Decimal("-500"),
         expected_fees=Decimal("49.5"),
         expected_final_position=Decimal("0"),
-        description="Stop-loss triggered scenario"
+        description="Stop-loss triggered scenario",
     )
 
 
 def create_partial_close_scenario() -> TradeScenario:
     """
     Create a partial position close scenario.
-    
+
     Scenario:
     - Buy 3 BTC at $50,000
     - Sell 1 BTC at $51,000 (partial close)
@@ -219,7 +221,7 @@ def create_partial_close_scenario() -> TradeScenario:
                 side="buy",
                 quantity=Decimal("3.0"),
                 price=Decimal("50000"),
-                fees=Decimal("150")
+                fees=Decimal("150"),
             ),
             TradeExecution(
                 timestamp=datetime(2024, 1, 1, 11, 0, 0),
@@ -227,7 +229,7 @@ def create_partial_close_scenario() -> TradeScenario:
                 quantity=Decimal("1.0"),
                 price=Decimal("51000"),
                 fees=Decimal("51"),
-                is_reduce=True
+                is_reduce=True,
             ),
             TradeExecution(
                 timestamp=datetime(2024, 1, 1, 12, 0, 0),
@@ -235,20 +237,20 @@ def create_partial_close_scenario() -> TradeScenario:
                 quantity=Decimal("2.0"),
                 price=Decimal("52000"),
                 fees=Decimal("104"),
-                is_reduce=True
-            )
+                is_reduce=True,
+            ),
         ],
         expected_pnl=Decimal("5000"),
         expected_fees=Decimal("305"),
         expected_final_position=Decimal("0"),
-        description="Partial position closing with scaling out"
+        description="Partial position closing with scaling out",
     )
 
 
 def create_position_flip_scenario() -> TradeScenario:
     """
     Create a position flip scenario (long to short).
-    
+
     Scenario:
     - Buy 1 BTC at $50,000 (long)
     - Sell 2 BTC at $51,000 (close long, open short)
@@ -265,14 +267,14 @@ def create_position_flip_scenario() -> TradeScenario:
                 side="buy",
                 quantity=Decimal("1.0"),
                 price=Decimal("50000"),
-                fees=Decimal("50")
+                fees=Decimal("50"),
             ),
             TradeExecution(
                 timestamp=datetime(2024, 1, 1, 11, 0, 0),
                 side="sell",
                 quantity=Decimal("2.0"),  # Close 1, open 1 short
                 price=Decimal("51000"),
-                fees=Decimal("102")
+                fees=Decimal("102"),
             ),
             TradeExecution(
                 timestamp=datetime(2024, 1, 1, 12, 0, 0),
@@ -280,11 +282,11 @@ def create_position_flip_scenario() -> TradeScenario:
                 quantity=Decimal("1.0"),
                 price=Decimal("50500"),
                 fees=Decimal("50.5"),
-                is_reduce=True
-            )
+                is_reduce=True,
+            ),
         ],
         expected_pnl=Decimal("1500"),  # 1000 from long + 500 from short
         expected_fees=Decimal("202.5"),
         expected_final_position=Decimal("0"),
-        description="Position flip from long to short"
+        description="Position flip from long to short",
     )

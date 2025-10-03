@@ -213,7 +213,9 @@ class TestStreamOrderbook:
         sub = mock_ws.subscribe.call_args[0][0]
         assert "level2" in sub.channels
 
-    def test_stream_orderbook_updates_mark_from_ticker(self, handler, mock_market_data, mock_rest_service):
+    def test_stream_orderbook_updates_mark_from_ticker(
+        self, handler, mock_market_data, mock_rest_service
+    ):
         """Should calculate and set mark price from bid/ask."""
         messages = [
             {"type": "ticker", "product_id": "BTC-USD", "best_bid": "49999", "best_ask": "50001"},
@@ -288,7 +290,7 @@ class TestStreamUserEvents:
 class TestHandleWSMessage:
     """Test _handle_ws_message method."""
 
-    @patch('bot_v2.features.brokerages.coinbase.websocket_handler.datetime')
+    @patch("bot_v2.features.brokerages.coinbase.websocket_handler.datetime")
     def test_handle_ticker_message(self, mock_datetime, handler, mock_market_data):
         """Should process ticker messages and update market data."""
         mock_datetime.utcnow.return_value = datetime(2024, 1, 1, 12, 0, 0)
@@ -311,7 +313,7 @@ class TestHandleWSMessage:
         assert call_args[2] == Decimal("50000.50")  # ask
         assert call_args[3] == Decimal("50000.00")  # last
 
-    @patch('bot_v2.features.brokerages.coinbase.websocket_handler.datetime')
+    @patch("bot_v2.features.brokerages.coinbase.websocket_handler.datetime")
     def test_handle_match_message(self, mock_datetime, handler, mock_market_data):
         """Should process match messages and record trades."""
         mock_datetime.utcnow.return_value = datetime(2024, 1, 1, 12, 0, 0)
@@ -330,7 +332,7 @@ class TestHandleWSMessage:
         assert call_args[0] == "BTC-USD"
         assert call_args[1] == Decimal("0.5")
 
-    @patch('bot_v2.features.brokerages.coinbase.websocket_handler.datetime')
+    @patch("bot_v2.features.brokerages.coinbase.websocket_handler.datetime")
     def test_handle_l2update_message(self, mock_datetime, handler, mock_market_data):
         """Should process level2 updates."""
         mock_datetime.utcnow.return_value = datetime(2024, 1, 1, 12, 0, 0)
@@ -548,7 +550,7 @@ class TestWSClientManagement:
 
         assert ws is mock_ws
 
-    @patch('bot_v2.features.brokerages.coinbase.websocket_handler.build_ws_auth_provider')
+    @patch("bot_v2.features.brokerages.coinbase.websocket_handler.build_ws_auth_provider")
     def test_create_ws_builds_auth(self, mock_build_auth, handler, mock_config):
         """Should build auth provider for WebSocket."""
         mock_build_auth.return_value = Mock()

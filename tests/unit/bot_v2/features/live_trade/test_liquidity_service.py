@@ -68,11 +68,7 @@ class TestLiquidityMetrics:
         # Use recent timestamp to avoid cleanup
         timestamp = datetime.now() - timedelta(minutes=1)
 
-        metrics.add_trade(
-            price=Decimal("100"),
-            size=Decimal("10"),
-            timestamp=timestamp
-        )
+        metrics.add_trade(price=Decimal("100"), size=Decimal("10"), timestamp=timestamp)
 
         assert len(metrics._volume_data) == 1
         assert len(metrics._trade_data) == 1
@@ -267,11 +263,7 @@ class TestLiquidityServiceOrderBookAnalysis:
         """Test analysis with empty order book."""
         service = LiquidityService()
 
-        analysis = service.analyze_order_book(
-            symbol="BTC-USD",
-            bids=[],
-            asks=[]
-        )
+        analysis = service.analyze_order_book(symbol="BTC-USD", bids=[], asks=[])
 
         assert analysis.symbol == "BTC-USD"
         assert analysis.bid_price == Decimal("0")
@@ -296,11 +288,7 @@ class TestLiquidityServiceOrderBookAnalysis:
             (Decimal("50100"), Decimal("30")),
         ]
 
-        analysis = service.analyze_order_book(
-            symbol="BTC-USD",
-            bids=bids,
-            asks=asks
-        )
+        analysis = service.analyze_order_book(symbol="BTC-USD", bids=bids, asks=asks)
 
         assert analysis.symbol == "BTC-USD"
         assert analysis.bid_price == Decimal("50000")
@@ -369,9 +357,7 @@ class TestLiquidityServiceOrderBookAnalysis:
         bids = [(Decimal("100"), Decimal("10"))]
         asks = [(Decimal("101"), Decimal("10"))]
 
-        analysis = service.analyze_order_book(
-            "BTC-USD", bids, asks, timestamp=timestamp
-        )
+        analysis = service.analyze_order_book("BTC-USD", bids, asks, timestamp=timestamp)
 
         assert analysis.timestamp == timestamp
 
@@ -389,9 +375,7 @@ class TestLiquidityServiceMarketImpact:
         service = LiquidityService()
 
         estimate = service.estimate_market_impact(
-            symbol="BTC-USD",
-            side="buy",
-            quantity=Decimal("1.0")
+            symbol="BTC-USD", side="buy", quantity=Decimal("1.0")
         )
 
         assert estimate.symbol == "BTC-USD"
@@ -414,9 +398,7 @@ class TestLiquidityServiceMarketImpact:
         service.update_trade_data("BTC-USD", Decimal("50000"), Decimal("1"))
 
         estimate = service.estimate_market_impact(
-            symbol="BTC-USD",
-            side="buy",
-            quantity=Decimal("0.5")
+            symbol="BTC-USD", side="buy", quantity=Decimal("0.5")
         )
 
         assert estimate.symbol == "BTC-USD"
@@ -433,12 +415,8 @@ class TestLiquidityServiceMarketImpact:
         service.analyze_order_book("BTC-USD", bids, asks)
         service.update_trade_data("BTC-USD", Decimal("50000"), Decimal("1"))
 
-        buy_estimate = service.estimate_market_impact(
-            "BTC-USD", "buy", Decimal("0.5")
-        )
-        sell_estimate = service.estimate_market_impact(
-            "BTC-USD", "sell", Decimal("0.5")
-        )
+        buy_estimate = service.estimate_market_impact("BTC-USD", "buy", Decimal("0.5"))
+        sell_estimate = service.estimate_market_impact("BTC-USD", "sell", Decimal("0.5"))
 
         # Buy should have higher avg price, sell should have lower
         mid = Decimal("50005")
@@ -454,9 +432,7 @@ class TestLiquidityServiceMarketImpact:
         service.analyze_order_book("BTC-USD", bids, asks)
         service.update_trade_data("BTC-USD", Decimal("50000"), Decimal("0.1"))
 
-        estimate = service.estimate_market_impact(
-            "BTC-USD", "buy", Decimal("10")  # Large order
-        )
+        estimate = service.estimate_market_impact("BTC-USD", "buy", Decimal("10"))  # Large order
 
         assert estimate.recommended_slicing is True
         assert estimate.max_slice_size is not None
@@ -472,9 +448,7 @@ class TestLiquidityServiceMarketImpact:
         service.analyze_order_book("BTC-USD", bids, asks)
         service.update_trade_data("BTC-USD", Decimal("50000"), Decimal("0.01"))
 
-        estimate = service.estimate_market_impact(
-            "BTC-USD", "buy", Decimal("0.5")
-        )
+        estimate = service.estimate_market_impact("BTC-USD", "buy", Decimal("0.5"))
 
         assert estimate.use_post_only is True
 

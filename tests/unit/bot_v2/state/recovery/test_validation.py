@@ -124,7 +124,9 @@ async def test_validate_recovery_handles_detector_errors(
 
 
 @pytest.mark.asyncio
-async def test_validate_critical_data_success(state_manager, checkpoint_handler, detector_stub) -> None:
+async def test_validate_critical_data_success(
+    state_manager, checkpoint_handler, detector_stub
+) -> None:
     """Healthy portfolio data should pass validation."""
     validator = validation.RecoveryValidator(state_manager, checkpoint_handler)
 
@@ -180,7 +182,9 @@ async def test_validate_critical_data_handles_exceptions(
 class TestValidatePosition:
     """Unit tests for position validation helper."""
 
-    def test_position_with_all_fields_is_valid(self, state_manager, checkpoint_handler, detector_stub) -> None:
+    def test_position_with_all_fields_is_valid(
+        self, state_manager, checkpoint_handler, detector_stub
+    ) -> None:
         validator = validation.RecoveryValidator(state_manager, checkpoint_handler)
         position = {"symbol": "AAPL", "quantity": 10, "entry_price": 100}
         assert validator.validate_position(position) is True

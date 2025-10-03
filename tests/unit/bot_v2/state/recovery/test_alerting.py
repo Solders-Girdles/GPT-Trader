@@ -107,7 +107,9 @@ async def test_escalate_recovery_creates_manual_recovery_record(
 
 
 @pytest.mark.asyncio
-async def test_escalate_recovery_logs_errors(mock_state_manager, recovery_operation, caplog) -> None:
+async def test_escalate_recovery_logs_errors(
+    mock_state_manager, recovery_operation, caplog
+) -> None:
     """Errors during escalation should be logged rather than raised."""
     mock_state_manager.set_state.side_effect = RuntimeError("write failed")
     caplog.set_level(logging.ERROR)
@@ -121,12 +123,16 @@ async def test_escalate_recovery_logs_errors(mock_state_manager, recovery_operat
 class TestManualRecoveryChecklist:
     """Unit tests for manual recovery checklist generation."""
 
-    def test_known_failure_type_has_dedicated_runbook(self, mock_state_manager, recovery_operation) -> None:
+    def test_known_failure_type_has_dedicated_runbook(
+        self, mock_state_manager, recovery_operation
+    ) -> None:
         alerter = RecoveryAlerter(mock_state_manager)
         checklist = alerter.generate_manual_recovery_checklist(recovery_operation)
         assert "Stop all trading operations immediately" in checklist
 
-    def test_unknown_failure_type_uses_fallback(self, mock_state_manager, recovery_operation) -> None:
+    def test_unknown_failure_type_uses_fallback(
+        self, mock_state_manager, recovery_operation
+    ) -> None:
         recovery_operation.failure_event.failure_type = FailureType.REDIS_DOWN
         alerter = RecoveryAlerter(mock_state_manager)
         checklist = alerter.generate_manual_recovery_checklist(recovery_operation)

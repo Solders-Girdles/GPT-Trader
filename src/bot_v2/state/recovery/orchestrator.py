@@ -4,17 +4,15 @@ Recovery orchestrator - main facade for failure recovery operations
 Coordinates failure detection, handler execution, validation, and alerting.
 """
 
-import asyncio
-import inspect
 import logging
 import threading
 import uuid
-from collections.abc import Callable
 from datetime import datetime
 from typing import Any
 
 from bot_v2.state.recovery.alerting import RecoveryAlerter
 from bot_v2.state.recovery.detection import FailureDetector
+from bot_v2.state.recovery.handler_registry import RecoveryHandlerRegistry
 from bot_v2.state.recovery.handlers import (
     StorageRecoveryHandlers,
     SystemRecoveryHandlers,
@@ -28,7 +26,9 @@ from bot_v2.state.recovery.models import (
     RecoveryOperation,
     RecoveryStatus,
 )
+from bot_v2.state.recovery.monitor import RecoveryMonitor
 from bot_v2.state.recovery.validation import RecoveryValidator
+from bot_v2.state.recovery.workflow import RecoveryWorkflow
 
 logger = logging.getLogger(__name__)
 
@@ -55,6 +55,7 @@ class RecoveryOrchestrator:
         self.detector = FailureDetector(state_manager, checkpoint_handler)
         self.validator = RecoveryValidator(state_manager, checkpoint_handler)
         self.alerter = RecoveryAlerter(state_manager)
+        self.handler_registry = RecoveryHandlerRegistry()
 
         # Initialize handlers
         self.storage_handlers = StorageRecoveryHandlers(
@@ -63,16 +64,32 @@ class RecoveryOrchestrator:
         self.trading_handlers = TradingRecoveryHandlers(state_manager)
         self.system_handlers = SystemRecoveryHandlers(state_manager, checkpoint_handler)
 
+        # Register handlers
+        self._register_handlers()
+
+        # Initialize workflow (after registry is populated)
+        self.workflow = RecoveryWorkflow(
+            handler_registry=self.handler_registry,
+            validator=self.validator,
+            alerter=self.alerter,
+            config=self.config,
+        )
+
         # State tracking
         self._recovery_lock = threading.Lock()
         self._recovery_in_progress = False
         self._current_operation: RecoveryOperation | None = None
         self._recovery_history: list[RecoveryOperation] = []
-        self._failure_handlers: dict[FailureType, Callable] = {}
-        self._monitoring_task: asyncio.Task | None = None
 
-        # Register handlers
-        self._register_handlers()
+        # Initialize monitor (after all dependencies ready)
+        self.monitor = RecoveryMonitor(
+            detector=self.detector,
+            recovery_initiator=self.initiate_recovery,
+            is_critical_checker=self._is_critical,
+            affected_components_getter=self._get_affected_components,
+            recovery_in_progress_checker=lambda: self._recovery_in_progress,
+            config=self.config,
+        )
 
         logger.info(
             f"RecoveryOrchestrator initialized with RTO={self.config.rto_minutes}min, "
@@ -81,76 +98,28 @@ class RecoveryOrchestrator:
 
     def _register_handlers(self) -> None:
         """Register failure recovery handlers"""
-        self._failure_handlers = {
-            FailureType.REDIS_DOWN: self.storage_handlers.recover_redis,
-            FailureType.POSTGRES_DOWN: self.storage_handlers.recover_postgres,
-            FailureType.S3_UNAVAILABLE: self.storage_handlers.recover_s3,
-            FailureType.DATA_CORRUPTION: self.storage_handlers.recover_from_corruption,
-            FailureType.TRADING_ENGINE_CRASH: self.trading_handlers.recover_trading_engine,
-            FailureType.ML_MODEL_FAILURE: self.trading_handlers.recover_ml_models,
-            FailureType.MEMORY_OVERFLOW: self.system_handlers.recover_from_memory_overflow,
-            FailureType.DISK_FULL: self.system_handlers.recover_from_disk_full,
-            FailureType.NETWORK_PARTITION: self.system_handlers.recover_from_network_partition,
-            FailureType.API_GATEWAY_DOWN: self.system_handlers.recover_api_gateway,
-        }
+        self.handler_registry.register_batch(
+            {
+                FailureType.REDIS_DOWN: self.storage_handlers.recover_redis,
+                FailureType.POSTGRES_DOWN: self.storage_handlers.recover_postgres,
+                FailureType.S3_UNAVAILABLE: self.storage_handlers.recover_s3,
+                FailureType.DATA_CORRUPTION: self.storage_handlers.recover_from_corruption,
+                FailureType.TRADING_ENGINE_CRASH: self.trading_handlers.recover_trading_engine,
+                FailureType.ML_MODEL_FAILURE: self.trading_handlers.recover_ml_models,
+                FailureType.MEMORY_OVERFLOW: self.system_handlers.recover_from_memory_overflow,
+                FailureType.DISK_FULL: self.system_handlers.recover_from_disk_full,
+                FailureType.NETWORK_PARTITION: self.system_handlers.recover_from_network_partition,
+                FailureType.API_GATEWAY_DOWN: self.system_handlers.recover_api_gateway,
+            }
+        )
 
     async def start_monitoring(self) -> None:
-        """Start continuous failure detection monitoring"""
-        if self._monitoring_task:
-            logger.warning("Monitoring already started")
-            return
-
-        self._monitoring_task = asyncio.create_task(self._monitoring_loop())
-        logger.info("Recovery monitoring started")
+        """Start continuous failure detection monitoring (delegates to RecoveryMonitor)."""
+        await self.monitor.start()
 
     async def stop_monitoring(self) -> None:
-        """Stop failure detection monitoring"""
-        if self._monitoring_task:
-            task = self._monitoring_task
-
-            cancel = getattr(task, "cancel", None)
-            if callable(cancel):
-                cancel()
-
-            try:
-                if isinstance(task, asyncio.Task) or inspect.isawaitable(task):
-                    await task
-            except asyncio.CancelledError:
-                pass
-            finally:
-                self._monitoring_task = None
-                logger.info("Recovery monitoring stopped")
-
-    async def _monitoring_loop(self) -> None:
-        """Continuous monitoring loop for failure detection"""
-        while True:
-            try:
-                # Detect failures
-                failures = await self.detector.detect_failures()
-
-                if failures and self.config.automatic_recovery_enabled:
-                    # Prioritize by severity
-                    critical_failures = [f for f in failures if self._is_critical(f)]
-
-                    for failure in critical_failures:
-                        if not self._recovery_in_progress:
-                            # Create failure event
-                            event = FailureEvent(
-                                failure_type=failure,
-                                timestamp=datetime.utcnow(),
-                                severity="critical",
-                                affected_components=self._get_affected_components(failure),
-                                error_message=f"Automatic detection: {failure.value}",
-                            )
-
-                            # Initiate recovery
-                            await self.initiate_recovery(event, RecoveryMode.AUTOMATIC)
-
-                await asyncio.sleep(self.config.failure_detection_interval_seconds)
-
-            except Exception as e:
-                logger.error(f"Monitoring loop error: {e}")
-                await asyncio.sleep(self.config.failure_detection_interval_seconds * 2)
+        """Stop failure detection monitoring (delegates to RecoveryMonitor)."""
+        await self.monitor.stop()
 
     async def detect_failures(self) -> list[FailureType]:
         """Detect system failures - delegates to FailureDetector"""
@@ -201,110 +170,14 @@ class RecoveryOrchestrator:
         )
 
     async def _run_recovery(self, operation: RecoveryOperation, mode: RecoveryMode) -> None:
-        failure_type = operation.failure_event.failure_type.value
-        logger.info(
-            "Starting recovery operation %s for %s in %s mode",
-            operation.operation_id,
-            failure_type,
-            mode.value,
-        )
-
-        await self.alerter.send_alert(
-            f"Recovery started for {failure_type}",
-            operation,
-        )
-
-        success = await self._execute_recovery(operation)
-
-        if success:
-            await self._complete_recovery(operation)
-        else:
-            await self._handle_recovery_failure(operation, mode)
-
-        await self.alerter.send_alert(
-            f"Recovery {operation.status.value} for {operation.failure_event.failure_type.value}",
-            operation,
-        )
-
-    async def _complete_recovery(self, operation: RecoveryOperation) -> None:
-        operation.status = RecoveryStatus.VALIDATING
-        if await self.validator.validate_recovery(operation):
-            operation.status = RecoveryStatus.COMPLETED
-            if not operation.completed_at:
-                operation.completed_at = datetime.utcnow()
-            if operation.recovery_time_seconds is None:
-                operation.recovery_time_seconds = (
-                    operation.completed_at - operation.started_at
-                ).total_seconds()
-            logger.info(
-                "Recovery %s completed successfully in %.2f seconds",
-                operation.operation_id,
-                operation.recovery_time_seconds,
-            )
-            if operation.recovery_time_seconds > self.config.rto_minutes * 60:
-                logger.warning(
-                    "Recovery exceeded RTO: %.2fs > %.2fs",
-                    operation.recovery_time_seconds,
-                    self.config.rto_minutes * 60,
-                )
-        else:
-            operation.status = RecoveryStatus.PARTIAL
-            logger.warning(f"Recovery {operation.operation_id} validation failed")
-
-    async def _handle_recovery_failure(
-        self, operation: RecoveryOperation, mode: RecoveryMode
-    ) -> None:
-        operation.status = RecoveryStatus.FAILED
-        if mode == RecoveryMode.AUTOMATIC:
-            logger.info("Automatic recovery failed, escalating to manual mode")
-            await self.alerter.escalate_recovery(operation)
+        """Execute recovery workflow (delegates to RecoveryWorkflow)."""
+        await self.workflow.execute(operation, mode)
 
     def _finalize_recovery_operation(self, operation: RecoveryOperation) -> None:
         self._recovery_in_progress = False
         self._current_operation = None
         self._recovery_history.append(operation)
         self._cleanup_recovery_history()
-
-    async def _execute_recovery(self, operation: RecoveryOperation) -> bool:
-        """
-        Execute recovery based on failure type.
-
-        Args:
-            operation: Recovery operation
-
-        Returns:
-            Success status
-        """
-        failure_type = operation.failure_event.failure_type
-
-        # Get appropriate handler
-        handler = self._failure_handlers.get(failure_type)
-
-        if not handler:
-            logger.error(f"No handler registered for {failure_type.value}")
-            return False
-
-        # Execute handler with retries
-        for attempt in range(self.config.max_retry_attempts):
-            try:
-                logger.info(f"Recovery attempt {attempt + 1}/{self.config.max_retry_attempts}")
-
-                success = await handler(operation)
-
-                if success:
-                    operation.actions_taken.append(
-                        f"Successfully executed {handler.__name__} on attempt {attempt + 1}"
-                    )
-                    return True
-
-                if attempt < self.config.max_retry_attempts - 1:
-                    await asyncio.sleep(self.config.retry_delay_seconds)
-
-            except Exception as e:
-                logger.error(f"Recovery handler error: {e}")
-                operation.actions_taken.append(f"Handler error: {str(e)}")
-
-        return False
 
     def _is_critical(self, failure_type: FailureType) -> bool:
         """Check if failure is critical"""

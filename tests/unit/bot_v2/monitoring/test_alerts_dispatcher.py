@@ -48,7 +48,13 @@ async def test_alert_channel_send_threshold(sample_alert: alerts.Alert) -> None:
 
 
 class RecordingChannel(alerts.AlertChannel):
-    def __init__(self, name: str, *, should_fail: bool = False, min_severity: alerts.AlertSeverity = alerts.AlertSeverity.INFO) -> None:
+    def __init__(
+        self,
+        name: str,
+        *,
+        should_fail: bool = False,
+        min_severity: alerts.AlertSeverity = alerts.AlertSeverity.INFO,
+    ) -> None:
         super().__init__(min_severity=min_severity)
         self.name = name
         self.should_fail = should_fail
@@ -64,9 +70,13 @@ class RecordingChannel(alerts.AlertChannel):
 @pytest.mark.asyncio
 async def test_alert_dispatcher_dispatch_flow(sample_alert: alerts.Alert) -> None:
     dispatcher = alerts.AlertDispatcher()
-    dispatcher.add_channel("primary", RecordingChannel("primary", min_severity=alerts.AlertSeverity.ERROR))
+    dispatcher.add_channel(
+        "primary", RecordingChannel("primary", min_severity=alerts.AlertSeverity.ERROR)
+    )
     dispatcher.add_channel("secondary", RecordingChannel("secondary", should_fail=True))
-    dispatcher.add_channel("debug", RecordingChannel("debug", min_severity=alerts.AlertSeverity.CRITICAL))
+    dispatcher.add_channel(
+        "debug", RecordingChannel("debug", min_severity=alerts.AlertSeverity.CRITICAL)
+    )
 
     results = await dispatcher.dispatch(sample_alert)
 
@@ -124,21 +134,23 @@ def test_dispatcher_from_config_builds_channels(monkeypatch: pytest.MonkeyPatch)
 
 
 @pytest.mark.asyncio
-async def test_slack_channel_sends_payload(monkeypatch: pytest.MonkeyPatch, sample_alert: alerts.Alert) -> None:
+async def test_slack_channel_sends_payload(
+    monkeypatch: pytest.MonkeyPatch, sample_alert: alerts.Alert
+) -> None:
     payloads: list[dict[str, Any]] = []
 
     class DummyResponse:
         def __init__(self, status: int = 200) -> None:
             self.status = status
 
-        async def __aenter__(self) -> "DummyResponse":
+        async def __aenter__(self) -> DummyResponse:
             return self
 
         async def __aexit__(self, exc_type, exc, tb) -> None:
             return None
 
     class DummySession:
-        async def __aenter__(self) -> "DummySession":
+        async def __aenter__(self) -> DummySession:
             return self
 
         async def __aexit__(self, exc_type, exc, tb) -> None:
@@ -148,7 +160,9 @@ async def test_slack_channel_sends_payload(monkeypatch: pytest.MonkeyPatch, samp
             payloads.append({"url": url, "json": json})
             return DummyResponse()
 
-    dummy_module = types.SimpleNamespace(ClientSession=lambda: DummySession(), ClientTimeout=lambda total: total)
+    dummy_module = types.SimpleNamespace(
+        ClientSession=lambda: DummySession(), ClientTimeout=lambda total: total
+    )
     monkeypatch.setattr(alerts, "HAS_AIOHTTP", True)
     monkeypatch.setattr(alerts, "aiohttp", dummy_module, raising=False)
 
@@ -159,26 +173,30 @@ async def test_slack_channel_sends_payload(monkeypatch: pytest.MonkeyPatch, samp
 
 
 @pytest.mark.asyncio
-async def test_webhook_channel_without_aiohttp(sample_alert: alerts.Alert, monkeypatch: pytest.MonkeyPatch) -> None:
+async def test_webhook_channel_without_aiohttp(
+    sample_alert: alerts.Alert, monkeypatch: pytest.MonkeyPatch
+) -> None:
     monkeypatch.setattr(alerts, "HAS_AIOHTTP", False)
     channel = alerts.WebhookChannel("https://example.com/hook")
     assert not await channel.send(sample_alert)
 
 
 @pytest.mark.asyncio
-async def test_slack_channel_handles_failure(monkeypatch: pytest.MonkeyPatch, sample_alert: alerts.Alert) -> None:
+async def test_slack_channel_handles_failure(
+    monkeypatch: pytest.MonkeyPatch, sample_alert: alerts.Alert
+) -> None:
     class DummyResponse:
         def __init__(self, status: int) -> None:
             self.status = status
 
-        async def __aenter__(self) -> "DummyResponse":
+        async def __aenter__(self) -> DummyResponse:
             return self
 
         async def __aexit__(self, exc_type, exc, tb) -> None:
             return None
 
     class DummySession:
-        async def __aenter__(self) -> "DummySession":
+        async def __aenter__(self) -> DummySession:
             return self
 
         async def __aexit__(self, exc_type, exc, tb) -> None:
@@ -187,7 +205,9 @@ async def test_slack_channel_handles_failure(monkeypatch: pytest.MonkeyPatch, sa
         def post(self, url: str, *, json: dict[str, Any], timeout: Any) -> DummyResponse:
             return DummyResponse(status=500)
 
-    dummy_module = types.SimpleNamespace(ClientSession=lambda: DummySession(), ClientTimeout=lambda total: total)
+    dummy_module = types.SimpleNamespace(
+        ClientSession=lambda: DummySession(), ClientTimeout=lambda total: total
+    )
     monkeypatch.setattr(alerts, "HAS_AIOHTTP", True)
     monkeypatch.setattr(alerts, "aiohttp", dummy_module, raising=False)
 
@@ -197,30 +217,36 @@ async def test_slack_channel_handles_failure(monkeypatch: pytest.MonkeyPatch, sa
 
 
 @pytest.mark.asyncio
-async def test_pagerduty_channel_sends_payload(monkeypatch: pytest.MonkeyPatch, sample_alert: alerts.Alert) -> None:
+async def test_pagerduty_channel_sends_payload(
+    monkeypatch: pytest.MonkeyPatch, sample_alert: alerts.Alert
+) -> None:
     requests: list[dict[str, Any]] = []
 
     class DummyResponse:
         status = 202
 
-        async def __aenter__(self) -> "DummyResponse":
+        async def __aenter__(self) -> DummyResponse:
             return self
 
         async def __aexit__(self, exc_type, exc, tb) -> None:
             return None
 
     class DummySession:
-        async def __aenter__(self) -> "DummySession":
+        async def __aenter__(self) -> DummySession:
             return self
 
         async def __aexit__(self, exc_type, exc, tb) -> None:
             return None
 
-        def post(self, url: str, *, json: dict[str, Any], headers: dict[str, Any], timeout: Any) -> DummyResponse:
+        def post(
+            self, url: str, *, json: dict[str, Any], headers: dict[str, Any], timeout: Any
+        ) -> DummyResponse:
             requests.append({"url": url, "json": json, "headers": headers})
             return DummyResponse()
 
-    dummy_module = types.SimpleNamespace(ClientSession=lambda: DummySession(), ClientTimeout=lambda total: total)
+    dummy_module = types.SimpleNamespace(
+        ClientSession=lambda: DummySession(), ClientTimeout=lambda total: total
+    )
     monkeypatch.setattr(alerts, "HAS_AIOHTTP", True)
     monkeypatch.setattr(alerts, "aiohttp", dummy_module, raising=False)
 
@@ -234,7 +260,9 @@ async def test_pagerduty_channel_sends_payload(monkeypatch: pytest.MonkeyPatch, 
 
 
 @pytest.mark.asyncio
-async def test_email_channel_sends_message(monkeypatch: pytest.MonkeyPatch, sample_alert: alerts.Alert) -> None:
+async def test_email_channel_sends_message(
+    monkeypatch: pytest.MonkeyPatch, sample_alert: alerts.Alert
+) -> None:
     sent_messages: list[dict[str, Any]] = []
 
     async def fake_send(msg: Any, **kwargs: Any) -> None:
@@ -263,7 +291,9 @@ async def test_email_channel_sends_message(monkeypatch: pytest.MonkeyPatch, samp
 
 
 @pytest.mark.asyncio
-async def test_email_channel_missing_dependency(monkeypatch: pytest.MonkeyPatch, sample_alert: alerts.Alert) -> None:
+async def test_email_channel_missing_dependency(
+    monkeypatch: pytest.MonkeyPatch, sample_alert: alerts.Alert
+) -> None:
     monkeypatch.setattr(alerts, "HAS_AIOSMTPLIB", False)
     channel = alerts.EmailChannel(
         smtp_host="smtp.test",
@@ -276,27 +306,33 @@ async def test_email_channel_missing_dependency(monkeypatch: pytest.MonkeyPatch,
 
 
 @pytest.mark.asyncio
-async def test_pagerduty_channel_handles_failure(monkeypatch: pytest.MonkeyPatch, sample_alert: alerts.Alert) -> None:
+async def test_pagerduty_channel_handles_failure(
+    monkeypatch: pytest.MonkeyPatch, sample_alert: alerts.Alert
+) -> None:
     class DummyResponse:
         status = 400
 
-        async def __aenter__(self) -> "DummyResponse":
+        async def __aenter__(self) -> DummyResponse:
             return self
 
         async def __aexit__(self, exc_type, exc, tb) -> None:
             return None
 
     class DummySession:
-        async def __aenter__(self) -> "DummySession":
+        async def __aenter__(self) -> DummySession:
             return self
 
         async def __aexit__(self, exc_type, exc, tb) -> None:
             return None
 
-        def post(self, url: str, *, json: dict[str, Any], headers: dict[str, Any], timeout: Any) -> DummyResponse:
+        def post(
+            self, url: str, *, json: dict[str, Any], headers: dict[str, Any], timeout: Any
+        ) -> DummyResponse:
             return DummyResponse()
 
-    dummy_module = types.SimpleNamespace(ClientSession=lambda: DummySession(), ClientTimeout=lambda total: total)
+    dummy_module = types.SimpleNamespace(
+        ClientSession=lambda: DummySession(), ClientTimeout=lambda total: total
+    )
     monkeypatch.setattr(alerts, "HAS_AIOHTTP", True)
     monkeypatch.setattr(alerts, "aiohttp", dummy_module, raising=False)
 
@@ -306,7 +342,9 @@ async def test_pagerduty_channel_handles_failure(monkeypatch: pytest.MonkeyPatch
 
 
 @pytest.mark.asyncio
-async def test_email_channel_send_failure_logs(monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture, sample_alert: alerts.Alert) -> None:
+async def test_email_channel_send_failure_logs(
+    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture, sample_alert: alerts.Alert
+) -> None:
     async def failing_send(msg: Any, **kwargs: Any) -> None:  # noqa: ARG001
         raise RuntimeError("smtp down")
 
@@ -329,7 +367,9 @@ async def test_email_channel_send_failure_logs(monkeypatch: pytest.MonkeyPatch, 
 
 
 @pytest.mark.asyncio
-async def test_log_channel_emits(caplog: pytest.LogCaptureFixture, sample_alert: alerts.Alert) -> None:
+async def test_log_channel_emits(
+    caplog: pytest.LogCaptureFixture, sample_alert: alerts.Alert
+) -> None:
     caplog.set_level("INFO")
     channel = alerts.LogChannel(min_severity=alerts.AlertSeverity.DEBUG)
     sent = await channel.send(sample_alert)

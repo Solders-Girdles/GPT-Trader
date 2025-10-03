@@ -12,6 +12,8 @@ from __future__ import annotations
 
 import logging
 
+from dotenv import load_dotenv
+
 from bot_v2.cli.commands.account import handle_account_snapshot
 from bot_v2.cli.commands.convert import handle_convert
 from bot_v2.cli.commands.move_funds import handle_move_funds
@@ -26,7 +28,6 @@ from bot_v2.cli.parser import (
 from bot_v2.logging import configure_logging
 from bot_v2.orchestration.bootstrap import build_bot
 from bot_v2.orchestration.configuration import BotConfig
-from dotenv import load_dotenv
 
 __all__ = [
     "BotConfig",

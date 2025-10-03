@@ -219,9 +219,7 @@ class TestSignalCalculation:
 
     def test_signal_with_confirmation_bars(self):
         """Should require confirmation bars to persist."""
-        config = StrategyConfig(
-            short_ma_period=5, long_ma_period=20, ma_cross_confirm_bars=2
-        )
+        config = StrategyConfig(short_ma_period=5, long_ma_period=20, ma_cross_confirm_bars=2)
         strategy = BaselinePerpsStrategy(config=config)
 
         # Bullish crossover but need persistence
@@ -568,7 +566,9 @@ class TestTrailingStops:
         assert peak == Decimal("100")
         assert stop_price == Decimal("101")  # 1% above for short
 
-    def test_trailing_stop_short_updates_peak(self, default_config, mock_product, mock_risk_manager):
+    def test_trailing_stop_short_updates_peak(
+        self, default_config, mock_product, mock_risk_manager
+    ):
         """Should update peak (lowest) for short as price drops."""
         strategy = BaselinePerpsStrategy(config=default_config, risk_manager=mock_risk_manager)
 
@@ -828,7 +828,9 @@ class TestEdgeCases:
         # Should use default 5%
         assert decision.target_notional == Decimal("1000")  # 10000 * 0.05 * 2 (leverage)
 
-    def test_hold_when_position_quantity_zero(self, default_config, mock_product, mock_risk_manager):
+    def test_hold_when_position_quantity_zero(
+        self, default_config, mock_product, mock_risk_manager
+    ):
         """Should treat zero quantity as no position."""
         strategy = BaselinePerpsStrategy(config=default_config, risk_manager=mock_risk_manager)
 

@@ -19,6 +19,7 @@ from unittest.mock import Mock, patch, MagicMock
 import pandas as pd
 import pytest
 
+
 # Mock the non-existent classes before importing coinbase_provider
 # These classes are referenced in coinbase_provider.py but don't exist in the codebase
 class MockTickerCache:
@@ -49,6 +50,7 @@ class MockTickerService:
 
 # Inject mocks into market_data_service module
 import bot_v2.features.brokerages.coinbase.market_data_service as mds_module
+
 mds_module.CoinbaseTickerService = MockTickerService
 mds_module.TickerCache = MockTickerCache
 
@@ -157,9 +159,7 @@ class TestCoinbaseProviderInitialization:
 
     def test_initialization_streaming_enabled_via_param(self):
         """Test enabling streaming via parameter."""
-        with patch.object(
-            CoinbaseDataProvider, "_setup_streaming"
-        ) as mock_setup_streaming:
+        with patch.object(CoinbaseDataProvider, "_setup_streaming") as mock_setup_streaming:
             provider = CoinbaseDataProvider(enable_streaming=True)
 
             assert provider.enable_streaming is True
@@ -168,9 +168,7 @@ class TestCoinbaseProviderInitialization:
     def test_initialization_streaming_enabled_via_env(self):
         """Test enabling streaming via environment variable."""
         with patch.dict(os.environ, {"COINBASE_ENABLE_STREAMING": "1"}, clear=False):
-            with patch.object(
-                CoinbaseDataProvider, "_setup_streaming"
-            ) as mock_setup_streaming:
+            with patch.object(CoinbaseDataProvider, "_setup_streaming") as mock_setup_streaming:
                 provider = CoinbaseDataProvider()
 
                 assert provider.enable_streaming is True
@@ -341,7 +339,7 @@ class TestCoinbaseProviderHistoricalData:
         mock_candles = []
         for i in range(3):
             candle = Mock()
-            candle.ts = datetime.now() - timedelta(days=2-i)
+            candle.ts = datetime.now() - timedelta(days=2 - i)
             candle.open = 100.0 + i
             candle.high = 102.0 + i
             candle.low = 99.0 + i
@@ -366,7 +364,9 @@ class TestCoinbaseProviderHistoricalData:
     def test_get_historical_data_caching(self):
         """Test that historical data is cached."""
         mock_adapter = Mock(spec=CoinbaseBrokerage)
-        mock_candles = [Mock(ts=datetime.now(), open=100, high=101, low=99, close=100.5, volume=1000)]
+        mock_candles = [
+            Mock(ts=datetime.now(), open=100, high=101, low=99, close=100.5, volume=1000)
+        ]
         mock_adapter.get_candles.return_value = mock_candles
 
         provider = CoinbaseDataProvider(adapter=mock_adapter, cache_ttl=60)
@@ -384,7 +384,9 @@ class TestCoinbaseProviderHistoricalData:
     def test_get_historical_data_cache_expiry(self):
         """Test that cache expires after TTL."""
         mock_adapter = Mock(spec=CoinbaseBrokerage)
-        mock_candles = [Mock(ts=datetime.now(), open=100, high=101, low=99, close=100.5, volume=1000)]
+        mock_candles = [
+            Mock(ts=datetime.now(), open=100, high=101, low=99, close=100.5, volume=1000)
+        ]
         mock_adapter.get_candles.return_value = mock_candles
 
         provider = CoinbaseDataProvider(adapter=mock_adapter, cache_ttl=1)
@@ -541,7 +543,9 @@ class TestCoinbaseProviderMultipleSymbols:
     def test_get_multiple_symbols_no_streaming(self):
         """Test fetching multiple symbols without streaming."""
         mock_adapter = Mock(spec=CoinbaseBrokerage)
-        mock_candles = [Mock(ts=datetime.now(), open=100, high=101, low=99, close=100.5, volume=1000)]
+        mock_candles = [
+            Mock(ts=datetime.now(), open=100, high=101, low=99, close=100.5, volume=1000)
+        ]
         mock_adapter.get_candles.return_value = mock_candles
 
         provider = CoinbaseDataProvider(adapter=mock_adapter)
@@ -558,7 +562,9 @@ class TestCoinbaseProviderMultipleSymbols:
     def test_get_multiple_symbols_with_streaming(self):
         """Test that streaming is started for multiple symbols."""
         mock_adapter = Mock(spec=CoinbaseBrokerage)
-        mock_candles = [Mock(ts=datetime.now(), open=100, high=101, low=99, close=100.5, volume=1000)]
+        mock_candles = [
+            Mock(ts=datetime.now(), open=100, high=101, low=99, close=100.5, volume=1000)
+        ]
         mock_adapter.get_candles.return_value = mock_candles
 
         provider = CoinbaseDataProvider(adapter=mock_adapter, enable_streaming=True)
@@ -618,8 +624,7 @@ class TestCoinbaseProviderMockData:
 
         # Prices should be identical (same seed)
         pd.testing.assert_series_equal(
-            df1["Close"].reset_index(drop=True),
-            df2["Close"].reset_index(drop=True)
+            df1["Close"].reset_index(drop=True), df2["Close"].reset_index(drop=True)
         )
 
     def test_mock_data_btc_higher_base_price(self):
@@ -689,6 +694,7 @@ class TestCreateCoinbaseProvider:
 
             # Should return MockProvider
             from bot_v2.data_providers import MockProvider
+
             assert isinstance(provider, MockProvider)
 
     def test_factory_returns_coinbase_when_real_data_enabled(self):
@@ -709,6 +715,7 @@ class TestCreateCoinbaseProvider:
         provider = create_coinbase_provider(use_real_data=False)
 
         from bot_v2.data_providers import MockProvider
+
         assert isinstance(provider, MockProvider)
 
     def test_factory_enable_streaming_via_env(self):
@@ -743,7 +750,9 @@ class TestCoinbaseProviderEdgeCases:
     def test_get_historical_data_numeric_period(self):
         """Test handling of numeric period format."""
         mock_adapter = Mock(spec=CoinbaseBrokerage)
-        mock_candles = [Mock(ts=datetime.now(), open=100, high=101, low=99, close=100.5, volume=1000)]
+        mock_candles = [
+            Mock(ts=datetime.now(), open=100, high=101, low=99, close=100.5, volume=1000)
+        ]
         mock_adapter.get_candles.return_value = mock_candles
 
         provider = CoinbaseDataProvider(adapter=mock_adapter)

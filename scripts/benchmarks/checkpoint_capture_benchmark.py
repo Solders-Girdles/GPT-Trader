@@ -11,6 +11,7 @@ import time
 from datetime import datetime
 from typing import Any
 
+
 # Mock repositories for benchmarking
 class MockRedisRepo:
     """Mock Redis repository with realistic data."""
@@ -198,9 +199,7 @@ class StateCaptureNew:
         state["positions"] = all_positions
 
         all_orders = await self._get_all_by_pattern("order:*")
-        state["orders"] = {
-            k: v for k, v in all_orders.items() if v.get("status") != "filled"
-        }
+        state["orders"] = {k: v for k, v in all_orders.items() if v.get("status") != "filled"}
 
         state["ml_models"] = await self._get_all_by_pattern("ml_model:*")
         state["configuration"] = await self._get_all_by_pattern("config:*")
@@ -208,7 +207,9 @@ class StateCaptureNew:
         return state
 
 
-def generate_test_data(num_positions: int, num_orders: int, num_models: int, num_configs: int) -> dict[str, Any]:
+def generate_test_data(
+    num_positions: int, num_orders: int, num_models: int, num_configs: int
+) -> dict[str, Any]:
     """Generate realistic test data."""
     data = {}
 
@@ -300,14 +301,13 @@ async def run_benchmarks():
         print(f"  - {scenario['orders']} orders")
         print(f"  - {scenario['models']} ML models")
         print(f"  - {scenario['configs']} config keys")
-        print(f"  Total keys: {scenario['positions'] + scenario['orders'] + scenario['models'] + scenario['configs']}")
+        print(
+            f"  Total keys: {scenario['positions'] + scenario['orders'] + scenario['models'] + scenario['configs']}"
+        )
 
         # Generate test data
         data = generate_test_data(
-            scenario['positions'],
-            scenario['orders'],
-            scenario['models'],
-            scenario['configs']
+            scenario["positions"], scenario["orders"], scenario["models"], scenario["configs"]
         )
 
         # Benchmark old approach
@@ -328,14 +328,19 @@ async def run_benchmarks():
         print(f"    Improvement:         {improvement:.1f}% faster")
         print(f"    Speedup:             {speedup:.1f}x")
 
-        results.append({
-            "scenario": scenario['name'],
-            "total_keys": scenario['positions'] + scenario['orders'] + scenario['models'] + scenario['configs'],
-            "old_time": old_time,
-            "new_time": new_time,
-            "improvement": improvement,
-            "speedup": speedup,
-        })
+        results.append(
+            {
+                "scenario": scenario["name"],
+                "total_keys": scenario["positions"]
+                + scenario["orders"]
+                + scenario["models"]
+                + scenario["configs"],
+                "old_time": old_time,
+                "new_time": new_time,
+                "improvement": improvement,
+                "speedup": speedup,
+            }
+        )
 
     # Summary table
     print("\n" + "=" * 80)
@@ -345,12 +350,14 @@ async def run_benchmarks():
     print("| Scenario | Total Keys | Old (ms) | New (ms) | Improvement | Speedup |")
     print("|----------|------------|----------|----------|-------------|---------|")
     for r in results:
-        print(f"| {r['scenario']:<8} | {r['total_keys']:<10} | {r['old_time']:>8.2f} | {r['new_time']:>8.2f} | {r['improvement']:>10.1f}% | {r['speedup']:>6.1f}x |")
+        print(
+            f"| {r['scenario']:<8} | {r['total_keys']:<10} | {r['old_time']:>8.2f} | {r['new_time']:>8.2f} | {r['improvement']:>10.1f}% | {r['speedup']:>6.1f}x |"
+        )
 
     print("\n" + "=" * 80)
     print("Conclusion:")
-    avg_improvement = sum(r['improvement'] for r in results) / len(results)
-    avg_speedup = sum(r['speedup'] for r in results) / len(results)
+    avg_improvement = sum(r["improvement"] for r in results) / len(results)
+    avg_speedup = sum(r["speedup"] for r in results) / len(results)
     print(f"  Average improvement: {avg_improvement:.1f}% faster")
     print(f"  Average speedup: {avg_speedup:.1f}x")
     print("=" * 80)

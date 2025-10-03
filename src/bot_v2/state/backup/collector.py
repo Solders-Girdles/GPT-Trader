@@ -9,7 +9,7 @@ from __future__ import annotations
 import inspect
 import logging
 from datetime import datetime, timedelta, timezone
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 if TYPE_CHECKING:
     from bot_v2.state.backup.metadata import BackupMetadataManager
@@ -67,6 +67,8 @@ class DataCollector:
         Returns:
             Collected backup data with metadata and state
         """
+        state_payload: dict[str, Any]
+
         if override is not None:
             state_payload = override
         else:
@@ -97,7 +99,9 @@ class DataCollector:
             snapshot_callable = getattr(self.state_manager, "create_snapshot")
             snapshot = await self._maybe_await(snapshot_callable())
             if snapshot:
-                return snapshot
+                if not isinstance(snapshot, dict):
+                    raise TypeError("create_snapshot must return dict[str, Any]")
+                return cast(dict[str, Any], snapshot)
 
         data = {}
 

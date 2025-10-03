@@ -62,7 +62,7 @@ class TestMetricsCalculator:
                 metrics={
                     "timestamp": timestamp.isoformat(),
                     "equity": str(1000 + i * 100),
-                }
+                },
             )
 
         curve = metrics_calculator.get_equity_curve(days=30)
@@ -81,7 +81,7 @@ class TestMetricsCalculator:
             metrics={
                 "timestamp": old_timestamp.isoformat(),
                 "equity": "500",
-            }
+            },
         )
 
         # Add recent event (should be included)
@@ -91,7 +91,7 @@ class TestMetricsCalculator:
             metrics={
                 "timestamp": recent_timestamp.isoformat(),
                 "equity": "1000",
-            }
+            },
         )
 
         curve = metrics_calculator.get_equity_curve(days=30)
@@ -108,7 +108,7 @@ class TestMetricsCalculator:
             metrics={
                 "timestamp": now.isoformat(),
                 "equity": "1000",
-            }
+            },
         )
 
         # Unix timestamp (float)
@@ -117,7 +117,7 @@ class TestMetricsCalculator:
             metrics={
                 "timestamp": now.timestamp(),
                 "equity": "2000",
-            }
+            },
         )
 
         # Unix timestamp (int)
@@ -126,7 +126,7 @@ class TestMetricsCalculator:
             metrics={
                 "timestamp": int(now.timestamp()),
                 "equity": "3000",
-            }
+            },
         )
 
         curve = metrics_calculator.get_equity_curve(days=1)
@@ -141,7 +141,7 @@ class TestMetricsCalculator:
             metrics={
                 "time": now.isoformat(),
                 "equity": "1000",
-            }
+            },
         )
 
         curve = metrics_calculator.get_equity_curve(days=1)
@@ -158,7 +158,7 @@ class TestMetricsCalculator:
             metrics={
                 "timestamp": "invalid",
                 "equity": "1000",
-            }
+            },
         )
 
         # Valid timestamp
@@ -167,7 +167,7 @@ class TestMetricsCalculator:
             metrics={
                 "timestamp": now.isoformat(),
                 "equity": "2000",
-            }
+            },
         )
 
         curve = metrics_calculator.get_equity_curve(days=1)
@@ -183,7 +183,7 @@ class TestMetricsCalculator:
             bot_id="risk_engine",
             metrics={
                 "timestamp": now.isoformat(),
-            }
+            },
         )
 
         # Event with equity
@@ -192,7 +192,7 @@ class TestMetricsCalculator:
             metrics={
                 "timestamp": now.isoformat(),
                 "equity": "1000",
-            }
+            },
         )
 
         curve = metrics_calculator.get_equity_curve(days=1)
@@ -257,7 +257,7 @@ class TestMetricsCalculator:
             metrics={
                 "timestamp": now.isoformat(),
                 "equity": "1000",
-            }
+            },
         )
         sharpe = metrics_calculator.calculate_sharpe(window_days=30)
         assert sharpe == Decimal("0")
@@ -275,7 +275,7 @@ class TestMetricsCalculator:
                 metrics={
                     "timestamp": timestamp.isoformat(),
                     "equity": str(equity),
-                }
+                },
             )
 
         sharpe = metrics_calculator.calculate_sharpe(window_days=30)
@@ -294,7 +294,7 @@ class TestMetricsCalculator:
                 metrics={
                     "timestamp": timestamp.isoformat(),
                     "equity": "1000",
-                }
+                },
             )
 
         sharpe = metrics_calculator.calculate_sharpe(window_days=30)
@@ -319,7 +319,7 @@ class TestMetricsCalculator:
                 metrics={
                     "timestamp": timestamp.isoformat(),
                     "equity": str(1000 + i * 100),
-                }
+                },
             )
 
         dd, peak_date, trough_date = metrics_calculator.calculate_max_drawdown(window_days=90)
@@ -333,7 +333,7 @@ class TestMetricsCalculator:
         equities = [
             (now - timedelta(days=3), "1000"),
             (now - timedelta(days=2), "1200"),  # Peak
-            (now - timedelta(days=1), "900"),   # Trough (25% drawdown)
+            (now - timedelta(days=1), "900"),  # Trough (25% drawdown)
             (now, "1100"),
         ]
 
@@ -343,7 +343,7 @@ class TestMetricsCalculator:
                 metrics={
                     "timestamp": timestamp.isoformat(),
                     "equity": equity,
-                }
+                },
             )
 
         dd, peak_date, trough_date = metrics_calculator.calculate_max_drawdown(window_days=90)
@@ -363,7 +363,7 @@ class TestMetricsCalculator:
             (now - timedelta(days=5), "1100"),  # First peak
             (now - timedelta(days=4), "1050"),  # Small drawdown
             (now - timedelta(days=3), "1200"),  # Highest peak
-            (now - timedelta(days=2), "800"),   # Largest drawdown (33.3%)
+            (now - timedelta(days=2), "800"),  # Largest drawdown (33.3%)
             (now - timedelta(days=1), "1000"),
             (now, "1150"),
         ]
@@ -374,7 +374,7 @@ class TestMetricsCalculator:
                 metrics={
                     "timestamp": timestamp.isoformat(),
                     "equity": equity,
-                }
+                },
             )
 
         dd, peak_date, trough_date = metrics_calculator.calculate_max_drawdown(window_days=90)

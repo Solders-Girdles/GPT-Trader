@@ -32,6 +32,7 @@ class TestBackupCollector:
 
     async def test_full_backup_collects_all_data(self, backup_collector, mock_state_manager):
         """Test that full backup collects all system data."""
+
         # Mock state manager responses - set up for multiple pattern queries
         async def mock_get_keys(pattern):
             if pattern.startswith("position"):
@@ -107,9 +108,7 @@ class TestBackupCollector:
         # Old data should be excluded
         assert "position:ETH" not in result
 
-    async def test_differential_backup_since_last_full(
-        self, backup_collector, mock_state_manager
-    ):
+    async def test_differential_backup_since_last_full(self, backup_collector, mock_state_manager):
         """Test that differential backup collects changes since last full backup."""
         last_full = datetime.utcnow() - timedelta(days=1)
         last_backup = datetime.utcnow() - timedelta(hours=1)
@@ -133,6 +132,7 @@ class TestBackupCollector:
         self, backup_collector, mock_state_manager
     ):
         """Test that snapshot backup collects current state."""
+
         async def mock_get_keys(pattern):
             if "position" in pattern:
                 return ["position:BTC"]

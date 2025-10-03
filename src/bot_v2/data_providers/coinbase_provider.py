@@ -13,6 +13,7 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
+
 from bot_v2.data_providers import DataProvider
 from bot_v2.features.brokerages.coinbase.adapter import CoinbaseBrokerage
 from bot_v2.features.brokerages.coinbase.client import CoinbaseClient

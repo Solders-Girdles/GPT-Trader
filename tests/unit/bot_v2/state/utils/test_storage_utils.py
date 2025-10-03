@@ -30,7 +30,9 @@ def test_atomic_write_read_and_delete(tmp_path: Path) -> None:
     assert storage.delete("payload.bin") is False
 
 
-def test_atomic_write_cleans_up_temp_files_on_failure(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_atomic_write_cleans_up_temp_files_on_failure(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Failures during rename should remove temporary artifacts."""
     storage = AtomicFileStorage(tmp_path)
 
@@ -47,7 +49,9 @@ def test_atomic_write_cleans_up_temp_files_on_failure(tmp_path: Path, monkeypatc
     assert not (tmp_path / "failure.bin").exists()
 
 
-def test_atomic_write_cleanup_handles_unlink_errors(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_atomic_write_cleanup_handles_unlink_errors(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Cleanup errors should not mask the original failure."""
     storage = AtomicFileStorage(tmp_path)
 

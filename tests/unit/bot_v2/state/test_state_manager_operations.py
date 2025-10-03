@@ -229,9 +229,7 @@ class TestStateManagerOperations:
         assert result is None
 
     @pytest.mark.asyncio
-    async def test_get_from_postgres_with_exception(
-        self, state_manager_with_mocks, mock_postgres
-    ):
+    async def test_get_from_postgres_with_exception(self, state_manager_with_mocks, mock_postgres):
         """Test PostgreSQL get with exception handling"""
         manager = state_manager_with_mocks
         mock_postgres.execute.side_effect = Exception("DB error")
@@ -262,9 +260,7 @@ class TestStateManagerOperations:
         assert result is False
 
     @pytest.mark.asyncio
-    async def test_set_in_postgres_with_exception(
-        self, state_manager_with_mocks, mock_postgres
-    ):
+    async def test_set_in_postgres_with_exception(self, state_manager_with_mocks, mock_postgres):
         """Test PostgreSQL set with exception handling"""
         manager = state_manager_with_mocks
         mock_postgres.execute.side_effect = Exception("DB error")
@@ -340,9 +336,7 @@ class TestStateManagerOperations:
         assert "key_2" in keys
 
     @pytest.mark.asyncio
-    async def test_get_keys_by_pattern_postgres(
-        self, state_manager_with_mocks, mock_postgres
-    ):
+    async def test_get_keys_by_pattern_postgres(self, state_manager_with_mocks, mock_postgres):
         """Test getting keys by pattern from PostgreSQL"""
         manager = state_manager_with_mocks
         mock_postgres.execute.return_value = [{"key": "key_3"}, {"key": "key_4"}]

@@ -193,7 +193,9 @@ class TestRiskMetricsCalculation:
         assert metrics["invested_pct"] == pytest.approx(83.8, abs=0.1)
         assert metrics["positions_count"] == 3
 
-    def test_calculates_concentration_risk(self, risk_manager, portfolio_snapshot, portfolio_config):
+    def test_calculates_concentration_risk(
+        self, risk_manager, portfolio_snapshot, portfolio_config
+    ):
         """Test position concentration risk calculation."""
         tier_config = portfolio_config.tiers["micro"]
 
@@ -202,7 +204,9 @@ class TestRiskMetricsCalculation:
         assert "position_concentration_risk" in metrics
         assert 0 <= metrics["position_concentration_risk"] <= 100
 
-    def test_calculates_daily_risk_metrics(self, risk_manager, portfolio_snapshot, portfolio_config):
+    def test_calculates_daily_risk_metrics(
+        self, risk_manager, portfolio_snapshot, portfolio_config
+    ):
         """Test daily risk and utilization metrics."""
         tier_config = portfolio_config.tiers["micro"]
 
@@ -213,7 +217,9 @@ class TestRiskMetricsCalculation:
         assert metrics["daily_risk_limit_pct"] == 2.0
         assert metrics["daily_risk_utilization_pct"] == 50.0  # 1.0/2.0*100
 
-    def test_calculates_position_sizing_metrics(self, risk_manager, portfolio_snapshot, portfolio_config):
+    def test_calculates_position_sizing_metrics(
+        self, risk_manager, portfolio_snapshot, portfolio_config
+    ):
         """Test position sizing variance calculations."""
         tier_config = portfolio_config.tiers["micro"]
 
@@ -232,7 +238,9 @@ class TestRiskMetricsCalculation:
         assert "tier_compliant" in metrics
         assert isinstance(metrics["tier_compliant"], bool)
 
-    def test_calculates_risk_adjusted_score(self, risk_manager, portfolio_snapshot, portfolio_config):
+    def test_calculates_risk_adjusted_score(
+        self, risk_manager, portfolio_snapshot, portfolio_config
+    ):
         """Test risk-adjusted score calculation."""
         tier_config = portfolio_config.tiers["micro"]
 
@@ -264,9 +272,7 @@ class TestPositionSizeLimits:
         tier_config = portfolio_config.tiers["micro"]
 
         is_valid, reason = risk_manager.check_position_size_limits(
-            position_value=500.0,
-            total_portfolio_value=5000.0,
-            tier_config=tier_config
+            position_value=500.0, total_portfolio_value=5000.0, tier_config=tier_config
         )
 
         assert is_valid is True
@@ -279,7 +285,7 @@ class TestPositionSizeLimits:
         is_valid, reason = risk_manager.check_position_size_limits(
             position_value=50.0,  # Below $100 minimum
             total_portfolio_value=5000.0,
-            tier_config=tier_config
+            tier_config=tier_config,
         )
 
         assert is_valid is False
@@ -293,7 +299,7 @@ class TestPositionSizeLimits:
         is_valid, reason = risk_manager.check_position_size_limits(
             position_value=1500.0,  # 30% of portfolio (>25% max)
             total_portfolio_value=5000.0,
-            tier_config=tier_config
+            tier_config=tier_config,
         )
 
         assert is_valid is False
@@ -314,9 +320,7 @@ class TestPositionSizeCalculation:
         tier_config = portfolio_config.tiers["micro"]
 
         size = risk_manager.calculate_position_size(
-            total_portfolio_value=10000.0,
-            tier_config=tier_config,
-            confidence=1.0
+            total_portfolio_value=10000.0, tier_config=tier_config, confidence=1.0
         )
 
         # For 3 target positions: 10000/3 = 3333, capped at 25% = 2500
@@ -327,15 +331,11 @@ class TestPositionSizeCalculation:
         tier_config = portfolio_config.tiers["micro"]
 
         size_high = risk_manager.calculate_position_size(
-            total_portfolio_value=10000.0,
-            tier_config=tier_config,
-            confidence=1.0
+            total_portfolio_value=10000.0, tier_config=tier_config, confidence=1.0
         )
 
         size_low = risk_manager.calculate_position_size(
-            total_portfolio_value=10000.0,
-            tier_config=tier_config,
-            confidence=0.5
+            total_portfolio_value=10000.0, tier_config=tier_config, confidence=0.5
         )
 
         # Low confidence should yield smaller position
@@ -348,7 +348,7 @@ class TestPositionSizeCalculation:
         size = risk_manager.calculate_position_size(
             total_portfolio_value=1000.0,  # Small portfolio
             tier_config=tier_config,
-            confidence=0.1  # Very low confidence
+            confidence=0.1,  # Very low confidence
         )
 
         # With small portfolio (<5000), 0.8 multiplier applies after other checks
@@ -361,9 +361,7 @@ class TestPositionSizeCalculation:
         tier_config = portfolio_config.tiers["micro"]
 
         size = risk_manager.calculate_position_size(
-            total_portfolio_value=1000.0,
-            tier_config=tier_config,
-            confidence=1.0
+            total_portfolio_value=1000.0, tier_config=tier_config, confidence=1.0
         )
 
         # Should not exceed 25% of portfolio
@@ -379,13 +377,13 @@ class TestPositionSizeCalculation:
         size_small = risk_manager.calculate_position_size(
             total_portfolio_value=3000.0,  # < 5000 threshold
             tier_config=tier_config,
-            confidence=1.0
+            confidence=1.0,
         )
 
         size_large = risk_manager.calculate_position_size(
             total_portfolio_value=6000.0,  # > 5000 threshold
             tier_config=tier_config,
-            confidence=1.0
+            confidence=1.0,
         )
 
         # Small portfolio should have smaller positions (80% factor)
@@ -408,8 +406,7 @@ class TestTradingFrequencyLimits:
         tier_config = portfolio_config.tiers["micro"]
 
         can_trade, reason = risk_manager.check_trading_frequency_limits(
-            trades_this_week=1,  # Below PDT threshold of 2
-            tier_config=tier_config
+            trades_this_week=1, tier_config=tier_config  # Below PDT threshold of 2
         )
 
         assert can_trade is True
@@ -420,8 +417,7 @@ class TestTradingFrequencyLimits:
         tier_config = portfolio_config.tiers["micro"]
 
         can_trade, reason = risk_manager.check_trading_frequency_limits(
-            trades_this_week=5,  # At the 5 trade limit
-            tier_config=tier_config
+            trades_this_week=5, tier_config=tier_config  # At the 5 trade limit
         )
 
         assert can_trade is False
@@ -432,8 +428,7 @@ class TestTradingFrequencyLimits:
         tier_config = portfolio_config.tiers["micro"]  # PDT compliant
 
         can_trade, reason = risk_manager.check_trading_frequency_limits(
-            trades_this_week=2,  # Approaching 3 day trade limit
-            tier_config=tier_config
+            trades_this_week=2, tier_config=tier_config  # Approaching 3 day trade limit
         )
 
         assert can_trade is False
@@ -444,8 +439,7 @@ class TestTradingFrequencyLimits:
         tier_config = portfolio_config.tiers["small"]  # Not PDT compliant
 
         can_trade, reason = risk_manager.check_trading_frequency_limits(
-            trades_this_week=2,
-            tier_config=tier_config
+            trades_this_week=2, tier_config=tier_config
         )
 
         assert can_trade is True  # Should allow trade
@@ -464,9 +458,7 @@ class TestStopLossCalculation:
         tier_config = portfolio_config.tiers["micro"]
 
         stop_loss = risk_manager.calculate_stop_loss_price(
-            entry_price=100.0,
-            tier_config=tier_config,
-            position_direction="LONG"
+            entry_price=100.0, tier_config=tier_config, position_direction="LONG"
         )
 
         # 5% stop loss for micro tier
@@ -478,9 +470,7 @@ class TestStopLossCalculation:
         tier_config = portfolio_config.tiers["micro"]
 
         stop_loss = risk_manager.calculate_stop_loss_price(
-            entry_price=100.0,
-            tier_config=tier_config,
-            position_direction="SHORT"
+            entry_price=100.0, tier_config=tier_config, position_direction="SHORT"
         )
 
         # 5% stop loss for micro tier (above entry for shorts)
@@ -493,15 +483,11 @@ class TestStopLossCalculation:
         small_config = portfolio_config.tiers["small"]
 
         stop_micro = risk_manager.calculate_stop_loss_price(
-            entry_price=100.0,
-            tier_config=micro_config,
-            position_direction="LONG"
+            entry_price=100.0, tier_config=micro_config, position_direction="LONG"
         )
 
         stop_small = risk_manager.calculate_stop_loss_price(
-            entry_price=100.0,
-            tier_config=small_config,
-            position_direction="LONG"
+            entry_price=100.0, tier_config=small_config, position_direction="LONG"
         )
 
         # Micro: 5% stop, Small: 7% stop
@@ -573,7 +559,9 @@ class TestPortfolioRiskAssessment:
         assert risk_score >= 4
         assert len(risk_factors) > 0
 
-    def test_identifies_specific_risk_factors(self, risk_manager, portfolio_snapshot, portfolio_config):
+    def test_identifies_specific_risk_factors(
+        self, risk_manager, portfolio_snapshot, portfolio_config
+    ):
         """Test identification of specific risk factors."""
         tier_config = portfolio_config.tiers["micro"]
 

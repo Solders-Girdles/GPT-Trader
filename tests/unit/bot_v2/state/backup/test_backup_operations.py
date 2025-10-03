@@ -1026,7 +1026,9 @@ class TestRestoreAsyncPaths:
         async def failing_restore(*args, **kwargs):
             raise RuntimeError("Restore failed")
 
-        monkeypatch.setattr(backup_manager, "_restore_from_backup_internal", failing_restore)
+        monkeypatch.setattr(
+            backup_manager.backup_restorer, "restore_from_backup_internal", failing_restore
+        )
 
         # Should return False instead of raising
         result = await backup_manager.restore_from_backup(metadata.backup_id)

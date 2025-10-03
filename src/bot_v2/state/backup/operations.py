@@ -6,7 +6,6 @@ and multi-tier storage for disaster recovery and compliance.
 """
 
 import asyncio
-import hashlib
 import inspect
 import json
 import logging
@@ -26,7 +25,9 @@ from bot_v2.state.backup.models import (
     BackupMetadata,
     BackupStatus,
     BackupType,
+    StorageTier,
 )
+from bot_v2.state.backup.restorer import BackupRestorer
 from bot_v2.state.backup.services import (
     CompressionService,
     EncryptionService,
@@ -39,6 +40,18 @@ from bot_v2.state.performance import StatePerformanceMetrics
 T = TypeVar("T")
 
 logger = logging.getLogger(__name__)
+
+# Re-export public API for backup/__init__.py
+__all__ = [
+    "BackupManager",
+    "BackupConfig",
+    "BackupMetadata",
+    "BackupStatus",
+    "BackupType",
+    "StorageTier",
+    "create_backup",
+    "restore_latest",
+]
 
 
 class BackupManager:
@@ -145,6 +158,17 @@ class BackupManager:
             context=self.context,
             metadata_manager=self.metadata_manager,
             metrics=self._metrics,
+        )
+
+        # Initialize backup restorer
+        self.backup_restorer = BackupRestorer(
+            state_manager=self.state_manager,
+            config=self.config,
+            context=self.context,
+            metadata_manager=self.metadata_manager,
+            encryption_service=self.encryption_service,
+            compression_service=self.compression_service,
+            transport_service=self.transport_service,
         )
 
         logger.info(
@@ -353,14 +377,21 @@ class BackupManager:
     def restore_from_backup(
         self, backup_id: str, *, apply_state: bool = True
     ) -> bool | dict[str, Any] | Coroutine[Any, Any, bool]:
-        """Restore a backup, supporting sync assertions and async orchestration."""
+        """Restore a backup, supporting sync assertions and async orchestration.
+
+        Delegates to BackupRestorer for actual restoration logic.
+        """
 
         async def _run_sync() -> dict[str, Any]:
-            return await self._restore_from_backup_internal(backup_id, apply_state=apply_state)
+            return await self.backup_restorer.restore_from_backup_internal(
+                backup_id, apply_state=apply_state
+            )
 
         async def _run_async() -> bool:
             try:
-                await self._restore_from_backup_internal(backup_id, apply_state=apply_state)
+                await self.backup_restorer.restore_from_backup_internal(
+                    backup_id, apply_state=apply_state
+                )
             except Exception as exc:  # pragma: no cover - error path logged for async callers
                 logger.error(f"Backup restoration failed: {exc}")
                 return False
@@ -373,49 +404,10 @@ class BackupManager:
 
         return _run_async()
 
-    async def _restore_from_backup_internal(
-        self, backup_id: str, *, apply_state: bool = True
-    ) -> dict[str, Any]:
-        logger.info(f"Restoring from backup {backup_id}")
-
-        metadata = self.metadata_manager.find_metadata(backup_id)
-        if not metadata:
-            raise FileNotFoundError(f"Backup {backup_id} not found")
-
-        backup_bytes = await self._retrieve_backup(metadata)
-        if not backup_bytes:
-            raise FileNotFoundError(f"Backup {backup_id} payload missing")
-
-        calculated_checksum = hashlib.sha256(backup_bytes).hexdigest()
-        if calculated_checksum != metadata.checksum:
-            raise ValueError("Backup checksum mismatch")
-
-        # Decrypt if needed
-        if metadata.encryption_key_id:
-            backup_bytes = self.encryption_service.decrypt(backup_bytes)
-
-        if self.config.enable_compression and metadata.size_compressed:
-            backup_bytes = self.compression_service.decompress(backup_bytes)
-
-        payload = json.loads(
-            backup_bytes.decode() if isinstance(backup_bytes, bytes) else backup_bytes
-        )
-        state_payload = payload.get("state", payload)
-        if not isinstance(state_payload, dict):
-            raise ValueError("Restored payload is not a mapping")
-
-        if apply_state:
-            applied = await self._restore_data_to_state(state_payload)
-            if not applied:
-                raise RuntimeError("State restoration incomplete")
-
-        self.context.last_restored_payload = state_payload
-        logger.info(f"Successfully restored from backup {backup_id}")
-        return state_payload
-
     async def restore_latest_backup(self, backup_type: BackupType | None = None) -> bool:
-        """
-        Restore from most recent backup.
+        """Restore from most recent backup.
+
+        Delegates to BackupRestorer for restoration logic.
 
         Args:
             backup_type: Optional type filter
@@ -423,23 +415,7 @@ class BackupManager:
         Returns:
             Success status
         """
-        # Find latest backup
-        backups = [
-            b
-            for b in self._backup_history
-            if b.status in [BackupStatus.COMPLETED, BackupStatus.VERIFIED]
-        ]
-
-        if backup_type:
-            backups = [b for b in backups if b.backup_type == backup_type]
-
-        if not backups:
-            logger.error("No valid backups found")
-            return False
-
-        latest = max(backups, key=lambda b: b.timestamp)
-
-        return await self.restore_from_backup(latest.backup_id)
+        return await self.backup_restorer.restore_latest_backup(backup_type)
 
     def _normalize_state_payload(self, payload: dict[str, Any]) -> dict[str, Any]:
         """Ensure payload is JSON serialisable for persistence."""
@@ -503,72 +479,6 @@ class BackupManager:
     def _upload_to_s3(self, backup_id: str) -> None:
         """Upload an existing local backup artifact to S3."""
         self.transport_service.upload_to_s3(backup_id)
-
-    async def _retrieve_backup(self, metadata: BackupMetadata) -> bytes | None:
-        """Retrieve backup data"""
-        return await self.transport_service.retrieve(metadata.backup_id, metadata.storage_tier)
-
-    async def _restore_data_to_state(self, data: dict[str, Any]) -> bool:
-        """Restore backup data to state manager using batch operations"""
-        try:
-            from bot_v2.state.state_manager import StateCategory
-
-            if not hasattr(self.state_manager, "set_state"):
-                return False
-
-            # Use batch operations if available (247x faster than sequential)
-            if hasattr(self.state_manager, "batch_set_state"):
-                # Prepare items for batch restore: {key: (value, category)}
-                items: dict[str, tuple[Any, StateCategory]] = {}
-
-                for key, value in data.items():
-                    # Determine category based on key pattern
-                    if key.startswith("position:") or key.startswith("order:"):
-                        category = StateCategory.HOT
-                    elif key.startswith("ml_model:") or key.startswith("config:"):
-                        category = StateCategory.WARM
-                    else:
-                        category = StateCategory.HOT
-
-                    items[key] = (value, category)
-
-                # Batch restore all items in one call
-                restored_count = await self._maybe_await(self.state_manager.batch_set_state(items))
-
-                # Handle cases where batch_set_state might return non-numeric (e.g., Mock in tests)
-                try:
-                    count = int(restored_count) if restored_count is not None else 0
-                except (TypeError, ValueError):
-                    # If we can't convert to int, assume success if we had items to restore
-                    count = len(items)
-
-                logger.info(f"Restored {count} items from backup (batch operation)")
-                return count > 0
-
-            else:
-                # Fallback: Sequential restoration for compatibility
-                restored_count = 0
-                for key, value in data.items():
-                    # Determine category based on key pattern
-                    if key.startswith("position:") or key.startswith("order:"):
-                        category = StateCategory.HOT
-                    elif key.startswith("ml_model:") or key.startswith("config:"):
-                        category = StateCategory.WARM
-                    else:
-                        category = StateCategory.HOT
-
-                    result = await self._maybe_await(
-                        self.state_manager.set_state(key, value, category)
-                    )
-                    if result:
-                        restored_count += 1
-
-                logger.info(f"Restored {restored_count} items from backup (sequential operation)")
-                return restored_count > 0
-
-        except Exception as e:
-            logger.error(f"Data restoration failed: {e}")
-            return False
 
     def cleanup_old_backups(self) -> int | Coroutine[Any, Any, int]:
         return self._run_or_return(self._cleanup_old_backups())

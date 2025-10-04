@@ -1,0 +1,26 @@
+profile: dev-entry
+strategy: perps_baseline_enhanced
+strategy_config:
+  short_ma_period: 3
+  long_ma_period: 5
+  position_fraction: 0.1
+  target_leverage: 1
+  require_rsi_confirmation: false
+  max_spread_bps: null
+  min_depth_l1_usd: null
+  min_depth_l10_usd: null
+  disable_new_entries: false
+  enable_shorts: false
+execution:
+  enable_dynamic_position_sizing: true
+  dynamic_sizing_multiplier: 1.0
+risk:
+  enable_dynamic_position_sizing: true
+  enable_market_impact_guard: true
+  volatility_warning_threshold: 0.01
+  volatility_reduce_only_threshold: 0.02
+  volatility_kill_switch_threshold: 0.03
+  circuit_breaker_cooldown_minutes: 1
+  max_mark_staleness_seconds: 15
+  kill_switch_enabled: false
+  reduce_only_mode: false

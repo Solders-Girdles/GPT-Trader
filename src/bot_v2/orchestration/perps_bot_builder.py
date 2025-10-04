@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import os
 import threading
 from typing import TYPE_CHECKING
 
@@ -115,32 +114,17 @@ class PerpsBotBuilder:
         return self
 
     def build(self) -> PerpsBot:
-        """Build and return configured PerpsBot instance.
+        """Build and return a fully initialized :class:`PerpsBot` instance."""
 
-        Executes construction phases in order:
-        1. Configuration state (ConfigController, registry, session guard)
-        2. Runtime state (locks, dicts, windows)
-        3. Storage bootstrap (event_store, orders_store)
-        4. Core services (orchestrators, coordinators)
-        5. Market data service (Phase 1)
-        6. Accounting services (account manager, telemetry)
-        7. Market services (market monitor)
-        8. Streaming service (Phase 2)
-        9. Streaming startup (if configured)
-
-        Returns:
-            Fully initialized PerpsBot instance
-
-        Raises:
-            RuntimeError: If broker not configured in registry
-        """
-        # Lazy import to avoid circular dependency
         from bot_v2.orchestration.perps_bot import PerpsBot
 
-        # Create target instance (empty shell)
-        bot = object.__new__(PerpsBot)
+        bot = PerpsBot.__new__(PerpsBot)
+        self.build_into(bot)
+        return bot
 
-        # Execute construction phases
+    def build_into(self, bot: PerpsBot) -> None:
+        """Populate an existing :class:`PerpsBot` instance via the builder pipeline."""
+
         self._build_configuration_state(bot)
         self._build_runtime_state(bot)
         self._build_storage(bot)
@@ -153,10 +137,8 @@ class PerpsBotBuilder:
         self._start_streaming_if_configured(bot)
 
         # Ensure services that captured `_bot` during construction reference the
-        # final instance returned to callers.
+        # populated instance.
         rebind_bot_services(bot)
-
-        return bot
 
     # ------------------------------------------------------------------
     # Construction Phase Methods
@@ -266,11 +248,10 @@ class PerpsBotBuilder:
             - bot.runtime_coordinator
             - bot.lifecycle_service
 
-        IMPORTANT: All services created here that store a _bot reference will be
-        rebound in PerpsBot._apply_built_state() to point to the final bot instance.
-        If you add a new service here that stores self._bot = bot, you MUST also
-        add rebinding logic in _apply_built_state(), otherwise the service will
-        operate on the throwaway builder instance!
+        IMPORTANT: Services that cache a `_bot` reference are rebound at the end of
+        ``build_into`` so they point at the populated runtime instance. If you add a
+        new service here that stores ``self._bot = bot``, make sure it survives the
+        ``rebind_bot_services`` call.
         """
         from bot_v2.orchestration.lifecycle_service import LifecycleService
 
@@ -281,25 +262,17 @@ class PerpsBotBuilder:
         bot.lifecycle_service = LifecycleService(bot)
 
     def _build_market_data_service(self, bot: PerpsBot) -> None:
-        """Phase 5: Initialize MarketDataService (Phase 1 refactoring).
+        """Phase 5: Initialize MarketDataService for mark/window maintenance."""
 
-        Creates:
-            - bot._market_data_service (if USE_NEW_MARKET_DATA_SERVICE=true)
-        """
-        use_new_service = os.getenv("USE_NEW_MARKET_DATA_SERVICE", "true").lower() == "true"
-
-        if use_new_service:
-            bot._market_data_service = MarketDataService(
-                symbols=bot.symbols,
-                broker=bot.broker,
-                risk_manager=bot.risk_manager,
-                long_ma=bot.config.long_ma,
-                short_ma=bot.config.short_ma,
-                mark_lock=bot._mark_lock,
-                mark_windows=bot.mark_windows,  # Share existing dict for backward compat
-            )
-        else:
-            bot._market_data_service = None
+        bot._market_data_service = MarketDataService(
+            symbols=bot.symbols,
+            broker=bot.broker,
+            risk_manager=bot.risk_manager,
+            long_ma=bot.config.long_ma,
+            short_ma=bot.config.short_ma,
+            mark_lock=bot._mark_lock,
+            mark_windows=bot.mark_windows,  # Share existing dict for backward compat
+        )
 
     def _build_accounting_services(self, bot: PerpsBot) -> None:
         """Phase 6: Initialize accounting and telemetry services.
@@ -349,11 +322,9 @@ class PerpsBotBuilder:
         """Phase 8: Initialize StreamingService (Phase 2 refactoring).
 
         Creates:
-            - bot._streaming_service (if USE_NEW_STREAMING_SERVICE=true)
+            - bot._streaming_service (unconditionally, mirroring MarketDataService)
         """
-        use_new_streaming = os.getenv("USE_NEW_STREAMING_SERVICE", "true").lower() == "true"
-
-        if use_new_streaming and bot._market_data_service is not None:
+        if bot._market_data_service is not None:
             bot._streaming_service = StreamingService(
                 symbols=bot.symbols,
                 broker=bot.broker,
@@ -381,9 +352,6 @@ class PerpsBotBuilder:
                 if bot._streaming_service is not None:
                     configured_level = getattr(bot.config, "perps_stream_level", 1) or 1
                     bot._streaming_service.start(level=configured_level)
-                else:
-                    # Fall back to legacy streaming if service not available
-                    bot._start_streaming_background_legacy()
             except Exception:
                 logger.exception("Failed to start streaming background worker")
 

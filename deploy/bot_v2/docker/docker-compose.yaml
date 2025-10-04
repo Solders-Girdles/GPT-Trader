@@ -1,17 +1,21 @@
-version: '3.8'
-
 services:
   # Main Trading Bot Application
   trading-bot:
     build:
-      context: ../../../..
+      context: ../../..
       dockerfile: deploy/bot_v2/docker/Dockerfile
       target: ${BUILD_TARGET:-development}
     container_name: bot_v2_main
     hostname: trading-bot
+    command: ["python", "-m", "bot_v2", "--profile", "canary", "--interval", "60"]
     environment:
-      - ENV=${ENV:-development}
+      - ENV=${ENV:-staging}
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - PYTHONPATH=/app/src
+      - BROKER=mock
+      - PERPS_FORCE_MOCK=1
+      - PERPS_PAPER=1
+      - PERPS_ENABLE_STREAMING=0
       - DATABASE_URL=postgresql://trader:trader123@postgres:5432/trading_db
       - REDIS_URL=redis://redis:6379/0
       - RABBITMQ_URL=amqp://trader:trader123@rabbitmq:5672/
@@ -37,12 +41,13 @@ services:
     networks:
       - trading-network
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+    # Health check disabled for CLI interval mode (no HTTP server)
+    # healthcheck:
+    #   test: ["CMD", "pgrep", "-f", "python -m bot_v2"]
+    #   interval: 30s
+    #   timeout: 10s
+    #   retries: 3
+    #   start_period: 40s
 
   # PostgreSQL Database
   postgres:
@@ -113,7 +118,7 @@ services:
 
   # HashiCorp Vault (for secrets management)
   vault:
-    image: vault:latest
+    image: hashicorp/vault:latest
     container_name: bot_v2_vault
     hostname: vault
     cap_add:

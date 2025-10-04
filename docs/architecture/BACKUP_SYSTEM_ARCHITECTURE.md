@@ -437,4 +437,4 @@ manager.data_collector = custom_collector
 
 - **Architecture Docs:**
   - `docs/architecture/EXECUTION_COORDINATOR_REFACTOR.md` - Related state management
-  - `docs/architecture/REFACTORING_PHASE_0_STATUS.md` - Project evolution
+  - `docs/archive/refactoring-2025-q1/REFACTORING_PHASE_0_STATUS.md` - Project evolution

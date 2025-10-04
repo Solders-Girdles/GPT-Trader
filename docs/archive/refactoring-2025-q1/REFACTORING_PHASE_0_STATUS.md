@@ -271,7 +271,7 @@ $ pytest tests/integration/test_perps_bot_characterization.py::TestStreamingServ
 - Rebound coordinator services post-build to keep `_bot` references aligned.
 - Expanded unit/integration test coverage validating builder/legacy parity and rollback path.
 
-**Status**: ✅ Complete — see `docs/architecture/PHASE_3_COMPLETE_SUMMARY.md` for full details.
+**Status**: ✅ Complete — see `docs/archive/refactoring-2025-q1/PHASE_3_COMPLETE_SUMMARY.md` for full details.
 
 ---
 

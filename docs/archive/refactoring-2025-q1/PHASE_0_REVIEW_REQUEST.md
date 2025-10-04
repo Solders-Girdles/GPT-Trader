@@ -27,7 +27,7 @@ We've completed Phase 0 of the PerpsBot refactoring - establishing a safety net 
    - Covers initialization, update_marks, properties, delegation, thread safety
    - TODOs for team expansion
 
-3. **📊 Status Document**: `docs/architecture/REFACTORING_PHASE_0_STATUS.md`
+3. **📊 Status Document**: `docs/archive/refactoring-2025-q1/REFACTORING_PHASE_0_STATUS.md`
    - Progress tracking
    - Key discoveries
    - Lessons learned
@@ -78,7 +78,7 @@ pytest tests/integration/test_perps_bot_characterization.py -v -m characterizati
 
 ### 3. Key Discoveries Validation (~5 min)
 
-**File**: `docs/architecture/REFACTORING_PHASE_0_STATUS.md`
+**File**: `docs/archive/refactoring-2025-q1/REFACTORING_PHASE_0_STATUS.md`
 
 **Questions**:
 - [ ] Do the "Key Discoveries" align with your understanding?

@@ -109,7 +109,7 @@ def get_product(self, symbol: str) -> Product:
 
 ## Related Work
 
-- **Phase 0 Status**: `docs/architecture/REFACTORING_PHASE_0_STATUS.md`
+- **Phase 0 Status**: `docs/archive/refactoring-2025-q1/REFACTORING_PHASE_0_STATUS.md`
 - **Dependencies**: `docs/architecture/perps_bot_dependencies.md`
 - **Characterization Tests**: `tests/integration/test_perps_bot_characterization.py`
 

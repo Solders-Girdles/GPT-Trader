@@ -1,11 +1,10 @@
 from __future__ import annotations
 
 import asyncio
-import inspect
 import logging
 import os
 from collections.abc import Sequence
-from datetime import UTC, datetime
+from datetime import datetime
 from decimal import Decimal
 from threading import RLock
 from typing import TYPE_CHECKING, Any
@@ -13,13 +12,11 @@ from typing import TYPE_CHECKING, Any
 from bot_v2.features.brokerages.core.interfaces import (
     Balance,
     MarketType,
-    Order,
     Position,
     Product,
 )
 from bot_v2.orchestration.config_controller import ConfigChange
 from bot_v2.orchestration.configuration import BotConfig, Profile
-from bot_v2.orchestration.service_rebinding import rebind_bot_services
 from bot_v2.orchestration.service_registry import ServiceRegistry
 from bot_v2.orchestration.session_guard import TradingSessionGuard
 
@@ -91,8 +88,7 @@ class PerpsBot:
         if registry is not None:
             builder = builder.with_registry(registry)
 
-        built = builder.build()
-        self._apply_built_state(built)
+        builder.build_into(self)
 
     @classmethod
     def from_builder(cls, builder: PerpsBotBuilder) -> PerpsBot:
@@ -113,24 +109,6 @@ class PerpsBot:
         """
         return builder.build()
 
-    def _apply_built_state(self, built: PerpsBot) -> None:
-        """Adopt the state from an instance produced by :class:`PerpsBotBuilder`.
-
-        We instantiate the builder with a temporary object, then copy its finalized
-        state onto ``self`` so caller code that expects ``PerpsBot()`` construction
-        continues to work. After copying the attributes we invoke
-        :func:`rebind_bot_services` so any coordinator that cached a ``_bot``
-        reference during construction points at this real runtime instance.
-
-        Args:
-            built: Fully initialized :class:`PerpsBot` instance returned by the builder.
-        """
-        # Copy all attributes from built instance
-        for key, value in built.__dict__.items():
-            setattr(self, key, value)
-
-        rebind_bot_services(self)
-
     def _start_streaming_if_configured(self) -> None:
         if getattr(self.config, "perps_enable_streaming", False) and self.config.profile in {
             Profile.CANARY,
@@ -140,8 +118,6 @@ class PerpsBot:
                 if self._streaming_service is not None:
                     configured_level = getattr(self.config, "perps_stream_level", 1) or 1
                     self._streaming_service.start(level=configured_level)
-                else:
-                    self._start_streaming_background_legacy()
             except Exception:
                 logger.exception("Failed to start streaming background worker")
 
@@ -216,15 +192,9 @@ class PerpsBot:
         if positions:
             position_map = {p.symbol: p for p in positions if hasattr(p, "symbol")}
 
-        process_sig = inspect.signature(self.process_symbol)
-        expects_context = len(process_sig.parameters) > 1
-
         tasks = []
         for symbol in self.symbols:
-            if expects_context:
-                tasks.append(self.process_symbol(symbol, balances, position_map))
-            else:
-                tasks.append(self.process_symbol(symbol))
+            tasks.append(self.process_symbol(symbol, balances, position_map))
         await asyncio.gather(*tasks)
         await self.system_monitor.log_status()
 
@@ -248,48 +218,12 @@ class PerpsBot:
             symbol, decision, mark, product, position_state
         )
 
-    def _ensure_order_lock(self) -> asyncio.Lock:
-        return self.execution_coordinator._ensure_order_lock()
-
-    async def _place_order(self, **kwargs: Any) -> Order | None:
-        return await self.execution_coordinator._place_order(self.exec_engine, **kwargs)
-
-    async def _place_order_inner(self, **kwargs: Any) -> Order | None:
-        return await self.execution_coordinator._place_order_inner(**kwargs)
-
     # ------------------------------------------------------------------
     async def update_marks(self) -> None:
-        """Update mark prices for all symbols (delegates to MarketDataService if enabled)."""
-        if self._market_data_service is not None:
-            await self._market_data_service.update_marks()
-        else:
-            await self._update_marks_legacy()
-
-    async def _update_marks_legacy(self) -> None:
-        """Legacy update_marks implementation (rollback path)."""
-        for symbol in self.symbols:
-            try:
-                quote = await asyncio.to_thread(self.broker.get_quote, symbol)
-                if quote is None:
-                    raise RuntimeError(f"No quote for {symbol}")
-                last_price = getattr(quote, "last", getattr(quote, "last_price", None))
-                if last_price is None:
-                    raise RuntimeError(f"Quote missing price for {symbol}")
-                mark = Decimal(str(last_price))
-                if mark <= 0:
-                    raise RuntimeError(f"Invalid mark price: {mark} for {symbol}")
-                ts = getattr(quote, "ts", datetime.now(UTC))
-                self._update_mark_window(symbol, mark)
-                try:
-                    self.risk_manager.last_mark_update[symbol] = (
-                        ts if isinstance(ts, datetime) else datetime.utcnow()
-                    )
-                except Exception as exc:
-                    logger.debug(
-                        "Failed to update mark timestamp for %s: %s", symbol, exc, exc_info=True
-                    )
-            except Exception as exc:
-                logger.error("Error updating mark for %s: %s", symbol, exc)
+        """Update mark prices for all symbols via :class:`MarketDataService`."""
+        if self._market_data_service is None:
+            raise RuntimeError("MarketDataService is not initialized")
+        await self._market_data_service.update_marks()
 
     def get_product(self, symbol: str) -> Product:
         """Build Product on-the-fly (no caching needed - cheap construction)."""
@@ -325,18 +259,23 @@ class PerpsBot:
         try:
             if self._streaming_service is not None:
                 self._streaming_service.stop()
-            else:
-                self._stop_streaming_background()
         except Exception as exc:
-            logger.debug("Failed to stop WS thread cleanly: %s", exc, exc_info=True)
+            logger.debug("Failed to stop streaming service cleanly: %s", exc, exc_info=True)
 
-    def _start_streaming_background_legacy(self) -> None:
-        """No-op legacy streaming starter retained for backward compatibility."""
-        logger.debug("Legacy streaming start requested but no legacy worker is configured")
+    def _restart_streaming_if_needed(self, diff: dict[str, Any]) -> None:
+        """Restart streaming service when config changes streaming settings."""
+        streaming_enabled = bool(getattr(self.config, "perps_enable_streaming", False))
+        toggle_changed = "perps_enable_streaming" in diff or "perps_stream_level" in diff
 
-    def _stop_streaming_background(self) -> None:
-        """No-op legacy streaming stopper retained for backward compatibility."""
-        logger.debug("Legacy streaming stop requested but no legacy worker is configured")
+        if not streaming_enabled:
+            if toggle_changed and self._streaming_service is not None:
+                self._streaming_service.stop()
+            return
+
+        # For enabled streaming ensure we refresh when toggle flips or level changes.
+        if toggle_changed and self._streaming_service is not None:
+            self._streaming_service.stop()
+        self._start_streaming_if_configured()
 
     # ------------------------------------------------------------------
     def apply_config_change(self, change: ConfigChange) -> None:
@@ -358,8 +297,13 @@ class PerpsBot:
             if symbol not in self.symbols:
                 del self.mark_windows[symbol]
 
-        # Note: Market data and streaming services are initialized by the builder
-        # and handle config updates internally. No reinitialization needed here.
+        # Update streaming service symbols if changed
+        if "symbols" in change.diff and self._streaming_service is not None:
+            self._streaming_service.update_symbols(self.symbols)
+
+        # Restart streaming if streaming config changed
+        self._restart_streaming_if_needed(change.diff)
+
         self.strategy_orchestrator.init_strategy()
 
     # ------------------------------------------------------------------

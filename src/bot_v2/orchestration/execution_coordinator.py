@@ -84,7 +84,7 @@ class ExecutionCoordinator:
             default_time_in_force=bot.config.time_in_force,
         )
 
-    def _ensure_order_lock(self) -> asyncio.Lock:
+    def ensure_order_lock(self) -> asyncio.Lock:
         """Ensure a shared asyncio.Lock exists for order placement."""
         bot = self._bot
         if getattr(bot, "_order_lock", None) is None:
@@ -94,9 +94,9 @@ class ExecutionCoordinator:
         service._order_lock = bot._order_lock
         return bot._order_lock
 
-    async def _place_order(self, exec_engine: Any, **kwargs: Any) -> Order | None:
+    async def place_order(self, exec_engine: Any, **kwargs: Any) -> Order | None:
         """Place order while handling validation and execution failures."""
-        lock = self._ensure_order_lock()
+        lock = self.ensure_order_lock()
 
         stats = self._bot.order_stats
         stats.setdefault("failed", 0)

@@ -4,10 +4,10 @@ Main bot execution command for the Perps Trading Bot CLI.
 Provides continuous trading execution with signal handling and graceful shutdown.
 """
 
-import asyncio
 import logging
 
-from bot_v2.cli.handlers.shutdown import ShutdownHandler
+from bot_v2.cli.commands.lifecycle_controller import LifecycleController
+from bot_v2.cli.commands.signal_manager import SignalManager
 from bot_v2.orchestration.perps_bot import PerpsBot
 
 logger = logging.getLogger(__name__)
@@ -26,13 +26,16 @@ def handle_run_bot(bot: PerpsBot, dev_fast: bool = False) -> int:
     """
     logger.info("Starting bot execution (dev_fast=%s)", dev_fast)
 
-    # Setup shutdown handler and register signals
-    shutdown_handler = ShutdownHandler(bot)
-    shutdown_handler.register_signals()
+    # Setup signal handling
+    signal_manager = SignalManager()
+    signal_manager.setup_signals(bot)
+
+    # Setup lifecycle controller
+    lifecycle = LifecycleController()
 
     try:
-        # Run the bot (async)
-        asyncio.run(bot.run(single_cycle=dev_fast))
+        # Run the bot (async via lifecycle controller)
+        lifecycle.execute(bot, single_cycle=dev_fast)
 
         if dev_fast:
             logger.info("Single cycle completed successfully")

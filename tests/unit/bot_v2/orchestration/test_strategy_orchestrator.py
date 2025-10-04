@@ -114,30 +114,43 @@ class TestStrategyOrchestrator:
 
     def test_get_strategy_perps_profile(self, orchestrator, mock_bot):
         """Test getting strategy in perps profile"""
-        mock_bot.strategy = Mock()
+        # Initialize strategy first
+        orchestrator.init_strategy()
 
         strategy = orchestrator.get_strategy("BTC-USD")
 
+        assert strategy is not None
         assert strategy == mock_bot.strategy
 
     def test_get_strategy_spot_profile_existing(self, orchestrator, mock_bot):
         """Test getting existing strategy in spot profile"""
         mock_bot.config.profile = Profile.SPOT
-        mock_strategy = Mock()
-        mock_bot._symbol_strategies["BTC-USD"] = mock_strategy
+        mock_bot.config.symbols = ["BTC-USD"]
 
+        # Initialize strategies
+        orchestrator.init_strategy()
+
+        # Get the initialized strategy
         strategy = orchestrator.get_strategy("BTC-USD")
 
-        assert strategy == mock_strategy
+        assert strategy is not None
+        assert "BTC-USD" in mock_bot._symbol_strategies
+        assert strategy == mock_bot._symbol_strategies["BTC-USD"]
 
     def test_get_strategy_spot_profile_creates_new(self, orchestrator, mock_bot):
-        """Test creating new strategy for symbol in spot profile"""
+        """Test creating new strategy for symbol in spot profile (lazy creation)"""
         mock_bot.config.profile = Profile.SPOT
+        mock_bot.config.symbols = ["BTC-USD"]  # Only BTC initially
 
+        # Initialize with just BTC
+        orchestrator.init_strategy()
+
+        # Request strategy for NEW-USD (not in initial config)
         strategy = orchestrator.get_strategy("NEW-USD")
 
         assert strategy is not None
-        assert "NEW-USD" in mock_bot._symbol_strategies
+        # Lazy creation happens in registry, check it's there
+        assert "NEW-USD" in orchestrator.strategy_registry.symbol_strategies
 
     @pytest.mark.asyncio
     async def test_process_symbol_success(
@@ -259,7 +272,7 @@ class TestStrategyOrchestrator:
 
     def test_extract_equity_usd(self, orchestrator, sample_balances):
         """Test equity extraction with USD balance"""
-        equity = orchestrator._extract_equity(sample_balances)
+        equity = orchestrator.equity_calculator.extract_cash_balance(sample_balances)
 
         assert equity == Decimal("10000")
 
@@ -269,7 +282,7 @@ class TestStrategyOrchestrator:
         balance.asset = "USDC"
         balance.total = Decimal("5000")
 
-        equity = orchestrator._extract_equity([balance])
+        equity = orchestrator.equity_calculator.extract_cash_balance([balance])
 
         assert equity == Decimal("5000")
 
@@ -279,7 +292,7 @@ class TestStrategyOrchestrator:
         balance.asset = "BTC"
         balance.total = Decimal("1.5")
 
-        equity = orchestrator._extract_equity([balance])
+        equity = orchestrator.equity_calculator.extract_cash_balance([balance])
 
         assert equity == Decimal("0")
 
@@ -352,23 +365,33 @@ class TestStrategyOrchestrator:
         assert result == []
 
     def test_adjust_equity_with_position(self, orchestrator):
-        """Test equity adjustment with position"""
-        equity = Decimal("10000")
+        """Test equity calculation with position"""
+        balances = [Mock(spec=Balance, asset="USD", total=Decimal("10000"))]
         position_quantity = Decimal("0.5")
-        marks = [Decimal("50000")]
+        current_mark = Decimal("50000")
 
-        adjusted = orchestrator._adjust_equity(equity, position_quantity, marks, "BTC-USD")
+        equity = orchestrator.equity_calculator.calculate(
+            balances=balances,
+            position_quantity=position_quantity,
+            current_mark=current_mark,
+            symbol="BTC-USD",
+        )
 
         # Should add position value: 10000 + (0.5 * 50000) = 35000
-        assert adjusted == Decimal("35000")
+        assert equity == Decimal("35000")
 
     def test_adjust_equity_no_position(self, orchestrator):
-        """Test equity adjustment without position"""
-        equity = Decimal("10000")
+        """Test equity calculation without position"""
+        balances = [Mock(spec=Balance, asset="USD", total=Decimal("10000"))]
 
-        adjusted = orchestrator._adjust_equity(equity, Decimal("0"), [], "BTC-USD")
+        equity = orchestrator.equity_calculator.calculate(
+            balances=balances,
+            position_quantity=Decimal("0"),
+            current_mark=None,
+            symbol="BTC-USD",
+        )
 
-        assert adjusted == equity
+        assert equity == Decimal("10000")
 
     def test_run_risk_gates_pass(self, orchestrator, mock_bot):
         """Test risk gates passing"""
@@ -376,7 +399,9 @@ class TestStrategyOrchestrator:
         mock_bot.risk_manager.check_volatility_circuit_breaker.return_value = Mock(triggered=False)
         mock_bot.risk_manager.check_mark_staleness.return_value = False
 
-        result = orchestrator._run_risk_gates("BTC-USD", marks)
+        result = orchestrator.risk_gate_validator.validate_gates(
+            "BTC-USD", marks, lookback_window=20
+        )
 
         assert result is True
 
@@ -390,17 +415,19 @@ class TestStrategyOrchestrator:
             action=CircuitBreakerAction.KILL_SWITCH,
         )
 
-        result = orchestrator._run_risk_gates("BTC-USD", marks)
+        result = orchestrator.risk_gate_validator.validate_gates(
+            "BTC-USD", marks, lookback_window=20
+        )
 
         assert result is False
 
     def test_record_decision(self, orchestrator, mock_bot):
-        """Test decision recording"""
+        """Test decision recording via StrategyExecutor"""
         from bot_v2.features.live_trade.strategies.perps_baseline import Action, Decision
 
         decision = Decision(action=Action.BUY, reason="test", leverage=2)
 
-        orchestrator._record_decision("BTC-USD", decision)
+        orchestrator.strategy_executor.record_decision("BTC-USD", decision)
 
         assert mock_bot.last_decisions["BTC-USD"] == decision
 
@@ -439,15 +466,21 @@ class TestStrategyOrchestrator:
         assert mock_bot.strategy is not None
 
     def test_adjust_equity_exception_handling(self, orchestrator):
-        """Test equity adjustment with exception"""
-        equity = Decimal("10000")
-        # Invalid marks that will cause exception
-        marks = []
+        """Test equity calculation with exception in position value calculation"""
+        balances = [Mock(spec=Balance, asset="USD", total=Decimal("10000"))]
+        # Create a bad mark that raises exception when multiplied
+        bad_mark = Mock()
+        bad_mark.__mul__ = Mock(side_effect=ValueError("Invalid mark"))
 
-        adjusted = orchestrator._adjust_equity(equity, Decimal("0.5"), marks, "BTC-USD")
+        equity = orchestrator.equity_calculator.calculate(
+            balances=balances,
+            position_quantity=Decimal("0.5"),
+            current_mark=bad_mark,
+            symbol="BTC-USD",
+        )
 
-        # Should return original equity on exception
-        assert adjusted == equity
+        # Should return cash-only equity on exception
+        assert equity == Decimal("10000")
 
     def test_run_risk_gates_volatility_check_exception(self, orchestrator, mock_bot):
         """Test risk gates when volatility check raises exception"""
@@ -457,7 +490,9 @@ class TestStrategyOrchestrator:
         )
         mock_bot.risk_manager.check_mark_staleness.return_value = False
 
-        result = orchestrator._run_risk_gates("BTC-USD", marks)
+        result = orchestrator.risk_gate_validator.validate_gates(
+            "BTC-USD", marks, lookback_window=20
+        )
 
         # Should continue despite exception
         assert result is True
@@ -468,13 +503,15 @@ class TestStrategyOrchestrator:
         mock_bot.risk_manager.check_volatility_circuit_breaker.return_value = Mock(triggered=False)
         mock_bot.risk_manager.check_mark_staleness.side_effect = Exception("Check error")
 
-        result = orchestrator._run_risk_gates("BTC-USD", marks)
+        result = orchestrator.risk_gate_validator.validate_gates(
+            "BTC-USD", marks, lookback_window=20
+        )
 
         # Should continue despite exception
         assert result is True
 
     def test_evaluate_strategy(self, orchestrator, mock_bot, sample_product):
-        """Test strategy evaluation with timing"""
+        """Test strategy evaluation via StrategyExecutor"""
         from bot_v2.features.live_trade.strategies.perps_baseline import Action, Decision
 
         strategy = Mock()
@@ -482,7 +519,7 @@ class TestStrategyOrchestrator:
         marks = [Decimal("50000"), Decimal("50100")]
         mock_bot.get_product.return_value = sample_product
 
-        decision = orchestrator._evaluate_strategy(
+        decision = orchestrator.strategy_executor.evaluate(
             strategy, "BTC-USD", marks, None, Decimal("10000")
         )
 

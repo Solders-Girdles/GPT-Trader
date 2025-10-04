@@ -11,7 +11,10 @@ import threading
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:  # pragma: no cover
+    from bot_v2.monitoring.metrics_collector import MetricsCollector
 
 from bot_v2.state.adapter_bootstrapper import AdapterBootstrapper
 from bot_v2.state.cache_manager import StateCacheManager
@@ -111,9 +114,11 @@ class StateManager:
         redis_adapter: RedisAdapter | None = None,
         postgres_adapter: PostgresAdapter | None = None,
         s3_adapter: S3Adapter | None = None,
+        metrics_collector: "MetricsCollector | None" = None,
     ) -> None:
         self.config = config or StateConfig()
         self._lock = threading.Lock()
+        self.metrics_collector = metrics_collector
 
         # Bootstrap adapters
         factory = StorageAdapterFactory()
@@ -130,8 +135,8 @@ class StateManager:
         self.postgres_adapter = adapters.postgres
         self.s3_adapter = adapters.s3
 
-        # Create repositories
-        repos = RepositoryFactory.create_repositories(adapters, self.config)
+        # Create repositories with metrics collector
+        repos = RepositoryFactory.create_repositories(adapters, self.config, metrics_collector)
         self._redis_repo = repos.redis
         self._postgres_repo = repos.postgres
         self._s3_repo = repos.s3

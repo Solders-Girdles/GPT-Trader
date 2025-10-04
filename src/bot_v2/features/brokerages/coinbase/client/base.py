@@ -46,7 +46,7 @@ class CoinbaseClientBase:
         auth: AuthStrategy | None,
         timeout: int = 30,
         api_version: str = "2024-10-24",
-        rate_limit_per_minute: int = 100,
+        rate_limit_per_minute: int = 1500,  # Coinbase limit: 1,800/min (safety buffer)
         enable_throttle: bool = True,
         api_mode: str = "advanced",
         enable_keep_alive: bool = True,
@@ -299,8 +299,10 @@ class CoinbaseClientBase:
             body = {}
         headers: dict[str, str] = {
             "Content-Type": "application/json",
-            "CB-VERSION": self.api_version,
         }
+        # CB-VERSION only used by legacy Exchange API, not Advanced Trade
+        if self.api_mode == "exchange":
+            headers["CB-VERSION"] = self.api_version
         if self.auth:
             path_only = path if path.startswith("/") else "/" + path
             try:

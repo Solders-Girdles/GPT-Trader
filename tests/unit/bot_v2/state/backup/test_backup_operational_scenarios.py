@@ -196,8 +196,8 @@ class TestRetentionPolicy:
         manager = BackupManager(state_manager=mock_state_manager, config=backup_config)
 
         # Verify retention settings
-        full_retention = manager._get_retention_days(BackupType.FULL)
-        inc_retention = manager._get_retention_days(BackupType.INCREMENTAL)
+        full_retention = manager.retention_manager.get_retention_days(BackupType.FULL)
+        inc_retention = manager.retention_manager.get_retention_days(BackupType.INCREMENTAL)
 
         assert full_retention == 90
         assert inc_retention == 7

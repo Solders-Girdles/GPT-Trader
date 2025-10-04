@@ -9,8 +9,10 @@ Extracted from RecoveryOrchestrator to improve separation of concerns.
 
 import asyncio
 import logging
+import time
 from dataclasses import dataclass, field
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from bot_v2.state.recovery.alerting import RecoveryAlerter
 from bot_v2.state.recovery.handler_registry import RecoveryHandlerRegistry
@@ -21,6 +23,9 @@ from bot_v2.state.recovery.models import (
     RecoveryStatus,
 )
 from bot_v2.state.recovery.validation import RecoveryValidator
+
+if TYPE_CHECKING:  # pragma: no cover
+    from bot_v2.monitoring.metrics_collector import MetricsCollector
 
 logger = logging.getLogger(__name__)
 
@@ -68,6 +73,7 @@ class RecoveryWorkflow:
         validator: RecoveryValidator,
         alerter: RecoveryAlerter,
         config: RecoveryConfig | None = None,
+        metrics_collector: "MetricsCollector | None" = None,
     ) -> None:
         """
         Initialize recovery workflow.
@@ -77,11 +83,13 @@ class RecoveryWorkflow:
             validator: Recovery validator
             alerter: Alert dispatcher
             config: Recovery configuration
+            metrics_collector: Optional metrics collector for telemetry
         """
         self.handler_registry = handler_registry
         self.validator = validator
         self.alerter = alerter
         self.config = config or RecoveryConfig()
+        self.metrics_collector = metrics_collector
 
     async def execute(
         self,
@@ -100,6 +108,13 @@ class RecoveryWorkflow:
         """
         failure_type = operation.failure_event.failure_type.value
 
+        # Record operation start
+        if self.metrics_collector:
+            self.metrics_collector.record_counter("recovery.operations.started")
+
+        # Track execution duration
+        start_time = time.time()
+
         logger.info(
             "Starting recovery workflow for %s (operation %s) in %s mode",
             failure_type,
@@ -114,7 +129,7 @@ class RecoveryWorkflow:
         )
 
         # Execute handler with retries
-        execution_success = await self._execute_handler(operation)
+        execution_success, retry_attempts = await self._execute_handler(operation)
 
         if execution_success:
             # Validate and complete
@@ -132,10 +147,38 @@ class RecoveryWorkflow:
         # Escalate if needed
         if outcome.escalation_required:
             await self.alerter.escalate_recovery(operation)
+            if self.metrics_collector:
+                self.metrics_collector.record_counter("recovery.operations.escalated")
+
+        # Record metrics
+        if self.metrics_collector:
+            # Record completion status
+            self.metrics_collector.record_counter("recovery.operations.completed_total")
+            if outcome.status == RecoveryStatus.COMPLETED:
+                self.metrics_collector.record_counter("recovery.operations.completed_success")
+            elif outcome.status == RecoveryStatus.PARTIAL:
+                self.metrics_collector.record_counter("recovery.operations.completed_partial")
+            elif outcome.status == RecoveryStatus.FAILED:
+                self.metrics_collector.record_counter("recovery.operations.completed_failed")
+
+            # Record duration
+            duration_seconds = time.time() - start_time
+            self.metrics_collector.record_histogram(
+                "recovery.operation.duration_seconds", duration_seconds
+            )
+
+            # Record retry attempts
+            self.metrics_collector.record_histogram(
+                "recovery.operation.retry_attempts", float(retry_attempts)
+            )
+
+            # Record RTO exceeded
+            if outcome.rto_exceeded:
+                self.metrics_collector.record_counter("recovery.operation.rto_exceeded")
 
         return outcome
 
-    async def _execute_handler(self, operation: RecoveryOperation) -> bool:
+    async def _execute_handler(self, operation: RecoveryOperation) -> tuple[bool, int]:
         """
         Execute recovery handler with retry logic.
 
@@ -143,7 +186,7 @@ class RecoveryWorkflow:
             operation: Recovery operation
 
         Returns:
-            True if handler succeeded, False otherwise
+            Tuple of (success status, number of attempts made)
         """
         failure_type = operation.failure_event.failure_type
 
@@ -153,7 +196,7 @@ class RecoveryWorkflow:
         if not handler:
             logger.error(f"No handler registered for {failure_type.value}")
             operation.actions_taken.append(f"No handler found for {failure_type.value}")
-            return False
+            return False, 0
 
         # Execute with retries
         for attempt in range(self.config.max_retry_attempts):
@@ -172,7 +215,7 @@ class RecoveryWorkflow:
                         f"Successfully executed {getattr(handler, '__name__', 'handler')} "
                         f"on attempt {attempt + 1}"
                     )
-                    return True
+                    return True, attempt + 1
 
                 # Wait before retry (unless last attempt)
                 if attempt < self.config.max_retry_attempts - 1:
@@ -186,7 +229,7 @@ class RecoveryWorkflow:
                 if attempt < self.config.max_retry_attempts - 1:
                     await asyncio.sleep(self.config.retry_delay_seconds)
 
-        return False
+        return False, self.config.max_retry_attempts
 
     async def _complete_recovery(self, operation: RecoveryOperation) -> RecoveryOutcome:
         """

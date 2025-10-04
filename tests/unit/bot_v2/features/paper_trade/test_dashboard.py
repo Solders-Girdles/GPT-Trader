@@ -480,26 +480,31 @@ class TestDisplayOnce:
 class TestContinuousDisplay:
     """Test continuous display functionality."""
 
-    @patch("time.sleep")
+    @patch("bot_v2.features.paper_trade.dashboard.display_controller.time.sleep")
     @patch("builtins.print")
-    @patch.object(PaperTradingDashboard, "clear_screen")
+    @patch("bot_v2.features.paper_trade.dashboard.display_controller.os.system")
     def test_display_continuous_with_duration(self, mock_clear, mock_print, mock_sleep):
         """Test continuous display with duration limit."""
         engine = create_mock_engine()
         dashboard = PaperTradingDashboard(engine, refresh_interval=1)
 
         # Mock time to simulate duration passing
-        with patch("time.time") as mock_time:
-            mock_time.side_effect = [0, 0.5, 1.5]  # Start, check, exit
+        with patch(
+            "bot_v2.features.paper_trade.dashboard.display_controller.time.time"
+        ) as mock_time:
+            mock_time.side_effect = [0, 0, 1.5]  # Start, check, exit
 
             dashboard.display_continuous(duration=1)
 
         # Should clear screen and display
         assert mock_clear.call_count >= 1
 
-    @patch("time.sleep", side_effect=KeyboardInterrupt)
+    @patch(
+        "bot_v2.features.paper_trade.dashboard.display_controller.time.sleep",
+        side_effect=KeyboardInterrupt,
+    )
     @patch("builtins.print")
-    @patch.object(PaperTradingDashboard, "clear_screen")
+    @patch("bot_v2.features.paper_trade.dashboard.display_controller.os.system")
     def test_display_continuous_keyboard_interrupt(self, mock_clear, mock_print, mock_sleep):
         """Test continuous display handles keyboard interrupt."""
         engine = create_mock_engine()

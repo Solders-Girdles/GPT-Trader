@@ -5,7 +5,6 @@ Note: Models extracted to bot_v2.features.live_trade.advanced_execution_models f
 
 from __future__ import annotations
 
-import inspect
 import logging
 import time
 from decimal import Decimal
@@ -24,6 +23,7 @@ from bot_v2.features.live_trade.advanced_execution_models.models import (
     SizingMode,
     StopTrigger,
 )
+from bot_v2.features.live_trade.broker_adapter import BrokerAdapter
 from bot_v2.features.live_trade.dynamic_sizing_helper import DynamicSizingHelper
 from bot_v2.features.live_trade.order_metrics_reporter import OrderMetricsReporter
 from bot_v2.features.live_trade.order_request_normalizer import OrderRequestNormalizer
@@ -82,6 +82,7 @@ class AdvancedExecutionEngine:
         self.client_order_map: dict[str, str] = {}  # client_id -> order_id
 
         # Dedicated components
+        self.broker_adapter = BrokerAdapter(broker=broker)
         self.normalizer = OrderRequestNormalizer(
             broker=broker,
             pending_orders=self.pending_orders,
@@ -218,43 +219,19 @@ class AdvancedExecutionEngine:
         reduce_only: bool,
         leverage: int | None,
     ) -> Order | None:
-        broker_place = getattr(self.broker, "place_order")
-        params = inspect.signature(broker_place).parameters
-
-        kwargs: dict[str, Any] = {
-            "symbol": symbol,
-            "side": side,
-            "order_type": order_type,
-            "quantity": order_quantity,
-            "client_id": client_id,
-            "reduce_only": reduce_only,
-            "leverage": leverage,
-        }
-
-        if "limit_price" in params:
-            kwargs["limit_price"] = limit_price
-        elif "price" in params:
-            kwargs["price"] = limit_price
-
-        if "stop_price" in params:
-            kwargs["stop_price"] = stop_price
-
-        if isinstance(time_in_force, TimeInForce):
-            tif_value_enum = time_in_force
-            tif_value_str = time_in_force.value
-        else:
-            try:
-                tif_value_enum = TimeInForce[str(time_in_force).upper()]
-            except Exception:
-                tif_value_enum = TimeInForce.GTC
-            tif_value_str = tif_value_enum.value
-
-        if "time_in_force" in params:
-            kwargs["time_in_force"] = tif_value_str
-        if "tif" in params:
-            kwargs["tif"] = tif_value_enum
-
-        order = cast(Order | None, broker_place(**kwargs))
+        # Submit order via BrokerAdapter
+        order = self.broker_adapter.submit_order(
+            symbol=symbol,
+            side=side,
+            order_type=order_type,
+            quantity=order_quantity,
+            client_id=client_id,
+            reduce_only=reduce_only,
+            leverage=leverage,
+            limit_price=limit_price,
+            stop_price=stop_price,
+            time_in_force=time_in_force,
+        )
 
         if order:
             self.pending_orders[order.id] = order

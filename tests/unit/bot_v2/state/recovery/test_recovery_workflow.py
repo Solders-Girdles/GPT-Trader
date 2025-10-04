@@ -455,3 +455,310 @@ class TestActionsTaken:
         # Verify
         assert any("Handler error" in action for action in outcome.actions_taken)
         assert any("Test error" in action for action in outcome.actions_taken)
+
+
+class TestMetricsCollection:
+    """Test metrics collection integration."""
+
+    @pytest.fixture
+    def mock_metrics_collector(self):
+        """Create mock metrics collector."""
+        collector = Mock()
+        collector.record_counter = Mock()
+        collector.record_histogram = Mock()
+        collector.record_gauge = Mock()
+        return collector
+
+    @pytest.fixture
+    def workflow_with_metrics(
+        self,
+        mock_handler_registry,
+        mock_validator,
+        mock_alerter,
+        recovery_config,
+        mock_metrics_collector,
+    ):
+        """Create workflow with metrics collector."""
+        return RecoveryWorkflow(
+            handler_registry=mock_handler_registry,
+            validator=mock_validator,
+            alerter=mock_alerter,
+            config=recovery_config,
+            metrics_collector=mock_metrics_collector,
+        )
+
+    @pytest.mark.asyncio
+    async def test_successful_recovery_records_success_metrics(
+        self,
+        workflow_with_metrics,
+        sample_operation,
+        mock_handler_registry,
+        mock_metrics_collector,
+    ):
+        """Should record success metrics when recovery completes successfully."""
+        # Setup
+        mock_handler = AsyncMock(return_value=True)
+        mock_handler_registry.get_handler.return_value = mock_handler
+
+        # Execute
+        outcome = await workflow_with_metrics.execute(sample_operation)
+
+        # Verify outcome
+        assert outcome.success is True
+        assert outcome.status == RecoveryStatus.COMPLETED
+
+        # Verify metrics recorded
+        counter_calls = [
+            call[0][0] for call in mock_metrics_collector.record_counter.call_args_list
+        ]
+        assert "recovery.operations.started" in counter_calls
+        assert "recovery.operations.completed_total" in counter_calls
+        assert "recovery.operations.completed_success" in counter_calls
+        assert "recovery.operations.completed_partial" not in counter_calls
+        assert "recovery.operations.completed_failed" not in counter_calls
+
+        # Verify histogram metrics
+        histogram_calls = [
+            call[0][0] for call in mock_metrics_collector.record_histogram.call_args_list
+        ]
+        assert "recovery.operation.duration_seconds" in histogram_calls
+        assert "recovery.operation.retry_attempts" in histogram_calls
+
+    @pytest.mark.asyncio
+    async def test_partial_recovery_records_partial_metrics(
+        self,
+        workflow_with_metrics,
+        sample_operation,
+        mock_handler_registry,
+        mock_validator,
+        mock_metrics_collector,
+    ):
+        """Should record partial metrics when validation fails."""
+        # Setup
+        mock_handler = AsyncMock(return_value=True)
+        mock_handler_registry.get_handler.return_value = mock_handler
+        mock_validator.validate_recovery.return_value = False
+
+        # Execute
+        outcome = await workflow_with_metrics.execute(sample_operation)
+
+        # Verify outcome
+        assert outcome.success is False
+        assert outcome.status == RecoveryStatus.PARTIAL
+
+        # Verify metrics recorded
+        counter_calls = [
+            call[0][0] for call in mock_metrics_collector.record_counter.call_args_list
+        ]
+        assert "recovery.operations.started" in counter_calls
+        assert "recovery.operations.completed_total" in counter_calls
+        assert "recovery.operations.completed_partial" in counter_calls
+        assert "recovery.operations.completed_success" not in counter_calls
+        assert "recovery.operations.completed_failed" not in counter_calls
+
+    @pytest.mark.asyncio
+    async def test_failed_recovery_records_failure_metrics(
+        self,
+        workflow_with_metrics,
+        sample_operation,
+        mock_handler_registry,
+        mock_metrics_collector,
+    ):
+        """Should record failure metrics when handler fails."""
+        # Setup
+        mock_handler = AsyncMock(return_value=False)
+        mock_handler_registry.get_handler.return_value = mock_handler
+
+        # Execute
+        outcome = await workflow_with_metrics.execute(sample_operation)
+
+        # Verify outcome
+        assert outcome.success is False
+        assert outcome.status == RecoveryStatus.FAILED
+
+        # Verify metrics recorded
+        counter_calls = [
+            call[0][0] for call in mock_metrics_collector.record_counter.call_args_list
+        ]
+        assert "recovery.operations.started" in counter_calls
+        assert "recovery.operations.completed_total" in counter_calls
+        assert "recovery.operations.completed_failed" in counter_calls
+        assert "recovery.operations.completed_success" not in counter_calls
+        assert "recovery.operations.completed_partial" not in counter_calls
+
+    @pytest.mark.asyncio
+    async def test_escalation_records_escalation_metric(
+        self,
+        workflow_with_metrics,
+        sample_operation,
+        mock_handler_registry,
+        mock_metrics_collector,
+    ):
+        """Should record escalation metric when escalation occurs."""
+        # Setup
+        mock_handler = AsyncMock(return_value=False)
+        mock_handler_registry.get_handler.return_value = mock_handler
+
+        # Execute in automatic mode (triggers escalation)
+        outcome = await workflow_with_metrics.execute(sample_operation, RecoveryMode.AUTOMATIC)
+
+        # Verify escalation required
+        assert outcome.escalation_required is True
+
+        # Verify escalation metric recorded
+        counter_calls = [
+            call[0][0] for call in mock_metrics_collector.record_counter.call_args_list
+        ]
+        assert "recovery.operations.escalated" in counter_calls
+
+    @pytest.mark.asyncio
+    async def test_duration_tracking_records_histogram(
+        self,
+        workflow_with_metrics,
+        sample_operation,
+        mock_handler_registry,
+        mock_metrics_collector,
+    ):
+        """Should record duration as histogram."""
+        # Setup
+        mock_handler = AsyncMock(return_value=True)
+        mock_handler_registry.get_handler.return_value = mock_handler
+
+        # Execute
+        await workflow_with_metrics.execute(sample_operation)
+
+        # Verify duration histogram recorded
+        histogram_calls = mock_metrics_collector.record_histogram.call_args_list
+        duration_call = next(
+            call for call in histogram_calls if call[0][0] == "recovery.operation.duration_seconds"
+        )
+        assert duration_call is not None
+        # Duration should be a non-negative float
+        duration_value = duration_call[0][1]
+        assert isinstance(duration_value, float)
+        assert duration_value >= 0
+
+    @pytest.mark.asyncio
+    async def test_retry_attempts_tracked_correctly(
+        self,
+        workflow_with_metrics,
+        sample_operation,
+        mock_handler_registry,
+        mock_metrics_collector,
+    ):
+        """Should record retry attempts in histogram."""
+        # Setup - fail twice, succeed on third attempt
+        mock_handler = AsyncMock(side_effect=[False, False, True])
+        mock_handler.__name__ = "test_handler"
+        mock_handler_registry.get_handler.return_value = mock_handler
+
+        # Execute
+        await workflow_with_metrics.execute(sample_operation)
+
+        # Verify retry attempts histogram recorded
+        histogram_calls = mock_metrics_collector.record_histogram.call_args_list
+        retry_call = next(
+            call for call in histogram_calls if call[0][0] == "recovery.operation.retry_attempts"
+        )
+        assert retry_call is not None
+        # Should have 3 attempts (failed twice, succeeded on third)
+        retry_count = retry_call[0][1]
+        assert retry_count == 3.0
+
+    @pytest.mark.asyncio
+    async def test_rto_exceeded_metric_recorded_when_slow(
+        self,
+        workflow_with_metrics,
+        sample_operation,
+        mock_handler_registry,
+        mock_metrics_collector,
+        recovery_config,
+    ):
+        """Should record RTO exceeded metric when recovery is slow."""
+        # Setup
+        mock_handler = AsyncMock(return_value=True)
+        mock_handler_registry.get_handler.return_value = mock_handler
+
+        # Simulate slow recovery
+        sample_operation.started_at = datetime.utcnow() - timedelta(minutes=10)
+
+        # Execute
+        outcome = await workflow_with_metrics.execute(sample_operation)
+
+        # Verify RTO exceeded
+        assert outcome.rto_exceeded is True
+
+        # Verify metric recorded
+        counter_calls = [
+            call[0][0] for call in mock_metrics_collector.record_counter.call_args_list
+        ]
+        assert "recovery.operation.rto_exceeded" in counter_calls
+
+    @pytest.mark.asyncio
+    async def test_rto_exceeded_not_recorded_when_fast(
+        self,
+        workflow_with_metrics,
+        sample_operation,
+        mock_handler_registry,
+        mock_metrics_collector,
+    ):
+        """Should not record RTO exceeded metric when recovery is fast."""
+        # Setup
+        mock_handler = AsyncMock(return_value=True)
+        mock_handler_registry.get_handler.return_value = mock_handler
+
+        # Execute (fast recovery)
+        outcome = await workflow_with_metrics.execute(sample_operation)
+
+        # Verify RTO not exceeded
+        assert outcome.rto_exceeded is False
+
+        # Verify metric NOT recorded
+        counter_calls = [
+            call[0][0] for call in mock_metrics_collector.record_counter.call_args_list
+        ]
+        assert "recovery.operation.rto_exceeded" not in counter_calls
+
+    @pytest.mark.asyncio
+    async def test_metrics_not_recorded_when_collector_none(
+        self, workflow, sample_operation, mock_handler_registry
+    ):
+        """Should not crash when metrics collector is None."""
+        # Setup
+        mock_handler = AsyncMock(return_value=True)
+        mock_handler_registry.get_handler.return_value = mock_handler
+
+        # Verify collector is None
+        assert workflow.metrics_collector is None
+
+        # Execute (should not crash)
+        outcome = await workflow.execute(sample_operation)
+
+        # Verify success
+        assert outcome.success is True
+
+    @pytest.mark.asyncio
+    async def test_no_handler_does_not_record_retry_metrics(
+        self,
+        workflow_with_metrics,
+        sample_operation,
+        mock_handler_registry,
+        mock_metrics_collector,
+    ):
+        """Should handle missing handler gracefully without recording retry metrics."""
+        # Setup - no handler registered
+        mock_handler_registry.get_handler.return_value = None
+
+        # Execute
+        outcome = await workflow_with_metrics.execute(sample_operation)
+
+        # Verify failure
+        assert outcome.success is False
+        assert outcome.status == RecoveryStatus.FAILED
+
+        # Verify retry attempts is 0
+        histogram_calls = mock_metrics_collector.record_histogram.call_args_list
+        retry_call = next(
+            call for call in histogram_calls if call[0][0] == "recovery.operation.retry_attempts"
+        )
+        assert retry_call[0][1] == 0.0  # No retries when no handler

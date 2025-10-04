@@ -28,7 +28,6 @@ from datetime import datetime
 
 from bot_v2.data_providers import DataProvider, get_data_provider
 from bot_v2.features.adaptive_portfolio.config_manager import (
-    get_current_tier,
     load_portfolio_config,
 )
 from bot_v2.features.adaptive_portfolio.risk_manager import AdaptiveRiskManager
@@ -37,6 +36,7 @@ from bot_v2.features.adaptive_portfolio.tier_manager import TierManager
 from bot_v2.features.adaptive_portfolio.types import (
     AdaptiveResult,
     BacktestMetrics,
+    PortfolioConfig,
     PortfolioSnapshot,
     PortfolioTier,
     PositionInfo,
@@ -58,6 +58,7 @@ class AdaptivePortfolioManager:
         config_path: str | None = None,
         data_provider: DataProvider | None = None,
         prefer_real_data: bool = True,
+        config: PortfolioConfig | None = None,
     ) -> None:
         """
         Initialize with optional custom config path and data provider.
@@ -66,9 +67,10 @@ class AdaptivePortfolioManager:
             config_path: Optional path to custom configuration file
             data_provider: Optional data provider instance. If None, will create one automatically
             prefer_real_data: If True and data_provider is None, prefer real data over mock
+            config: Optional PortfolioConfig instance. If provided, bypasses file loading (for testing)
         """
         self.config_path = config_path
-        self.config = load_portfolio_config(config_path)
+        self.config = config if config is not None else load_portfolio_config(config_path)
 
         # Initialize data provider
         if data_provider is None:
@@ -104,9 +106,7 @@ class AdaptivePortfolioManager:
             AdaptiveResult with tier-appropriate recommendations
         """
         # Determine current tier
-        current_tier_name = get_current_tier(current_capital, self.config_path)
-        current_tier = PortfolioTier(current_tier_name)
-        tier_config = self.config.tiers[current_tier_name]
+        current_tier, tier_config = self.tier_manager.detect_tier(current_capital)
 
         # Create portfolio snapshot
         if positions is None:
@@ -266,14 +266,7 @@ class AdaptivePortfolioManager:
         self, current_capital: float, current_tier: PortfolioTier
     ) -> tuple[bool, PortfolioTier | None]:
         """Check if portfolio needs to transition to different tier."""
-
-        new_tier_name = get_current_tier(current_capital, self.config_path)
-        new_tier = PortfolioTier(new_tier_name)
-
-        if new_tier != current_tier:
-            return True, new_tier
-
-        return False, None
+        return self.tier_manager.should_transition(current_tier, current_capital)
 
     def _generate_tier_appropriate_signals(
         self,

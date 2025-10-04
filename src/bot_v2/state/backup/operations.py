@@ -1,20 +1,29 @@
 """
 Backup Manager for Bot V2 Trading System
 
+Orchestrates backup operations through specialized components:
+- BackupScheduler: Async scheduling and lifecycle management
+- BackupWorkflow: Core backup creation pipeline
+- RetentionManager: Cleanup and retention policy enforcement
+- BackupCreator: Backup artifact creation
+- DataCollector: State data collection
+- BackupRestorer: Backup restoration
+
 Provides comprehensive backup system with encryption, compression,
 and multi-tier storage for disaster recovery and compliance.
 """
 
 import asyncio
 import inspect
-import json
 import logging
-import os
 import threading
 from collections.abc import Coroutine
-from datetime import datetime, timezone
+from datetime import datetime
 from pathlib import Path
-from typing import Any, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
+
+if TYPE_CHECKING:  # pragma: no cover
+    from bot_v2.monitoring.metrics_collector import MetricsCollector
 
 from bot_v2.state.backup.collector import DataCollector
 from bot_v2.state.backup.creator import BackupCreator
@@ -28,6 +37,8 @@ from bot_v2.state.backup.models import (
     StorageTier,
 )
 from bot_v2.state.backup.restorer import BackupRestorer
+from bot_v2.state.backup.retention_manager import RetentionManager
+from bot_v2.state.backup.scheduler import BackupScheduler
 from bot_v2.state.backup.services import (
     CompressionService,
     EncryptionService,
@@ -35,6 +46,7 @@ from bot_v2.state.backup.services import (
     TierStrategy,
     TransportService,
 )
+from bot_v2.state.backup.workflow import BackupWorkflow
 from bot_v2.state.performance import StatePerformanceMetrics
 
 T = TypeVar("T")
@@ -56,21 +68,35 @@ __all__ = [
 
 class BackupManager:
     """
-    Comprehensive backup system with encryption, compression, and tiering.
+    Facade for backup operations, orchestrating specialized components.
+
+    Delegates to:
+    - BackupScheduler: Async scheduling (full/differential/incremental/cleanup/verification)
+    - BackupWorkflow: Core backup creation (ID generation, data collection, diffing, normalization)
+    - RetentionManager: Cleanup and retention policy enforcement
+    - BackupCreator: Backup artifact creation (serialization, compression, encryption, storage)
+    - DataCollector: State data collection from state manager
+    - BackupRestorer: Backup restoration and verification
+
+    Provides comprehensive backup system with encryption, compression, and multi-tier storage.
     Ensures RPO <1 minute through continuous incremental backups.
     """
 
-    def __init__(self, state_manager: Any, config: BackupConfig | None = None) -> None:
+    def __init__(
+        self,
+        state_manager: Any,
+        config: BackupConfig | None = None,
+        metrics_collector: "MetricsCollector | None" = None,
+    ) -> None:
         self.state_manager = state_manager
         self.config = config or BackupConfig()
+        self.metrics_collector = metrics_collector
 
         # Initialize shared context for backup operations
         self.context = BackupContext()
 
         self._backup_lock = threading.Lock()
         self._async_lock: asyncio.Lock | None = None
-        self._backup_in_progress = False
-        self._pending_state_snapshot: dict[str, Any] | None = None
         self._scheduled_tasks: list[asyncio.Task] = []
 
         # Backwards compatibility - expose mutable context attributes as instance attributes.
@@ -171,6 +197,36 @@ class BackupManager:
             transport_service=self.transport_service,
         )
 
+        # Initialize backup workflow
+        self.workflow = BackupWorkflow(
+            data_collector=self.data_collector,
+            backup_creator=self.backup_creator,
+            context=self.context,
+            config=self.config,
+            backup_lock=self._backup_lock,
+            metrics_collector=self.metrics_collector,
+        )
+
+        # Initialize retention manager
+        self.retention_manager = RetentionManager(
+            retention_service=self.retention_service,
+            transport_service=self.transport_service,
+            context=self.context,
+            config=self.config,
+            metrics_collector=self.metrics_collector,
+        )
+
+        # Initialize backup scheduler
+        # Use lambdas to allow monkeypatching in tests
+        self.scheduler = BackupScheduler(
+            config=self.config,
+            create_backup_fn=lambda backup_type: self.workflow.create_backup(
+                backup_type=backup_type
+            ),
+            cleanup_fn=lambda: self.cleanup_old_backups(),
+            test_restore_fn=lambda: self.test_restore(),
+        )
+
         logger.info(
             f"BackupManager initialized with {len(self.context.backup_history)} backups in history"
         )
@@ -248,68 +304,12 @@ class BackupManager:
         return candidate
 
     async def start_scheduled_backups(self) -> None:
-        """Start automated backup scheduling"""
-        logger.info("Starting scheduled backups")
-
-        # Schedule full backups
-        self._scheduled_tasks.append(asyncio.create_task(self._run_full_backup_schedule()))
-
-        # Schedule differential backups
-        self._scheduled_tasks.append(asyncio.create_task(self._run_differential_backup_schedule()))
-
-        # Schedule incremental backups
-        self._scheduled_tasks.append(asyncio.create_task(self._run_incremental_backup_schedule()))
-
-        # Schedule cleanup
-        self._scheduled_tasks.append(asyncio.create_task(self._run_cleanup_schedule()))
-
-        # Schedule verification
-        self._scheduled_tasks.append(asyncio.create_task(self._run_verification_schedule()))
+        """Start automated backup scheduling (delegates to scheduler)."""
+        await self.scheduler.start()
 
     async def stop_scheduled_backups(self) -> None:
-        """Stop scheduled backups"""
-        for task in self._scheduled_tasks:
-            task.cancel()
-            try:
-                await task
-            except asyncio.CancelledError:
-                pass
-
-        self._scheduled_tasks.clear()
-        logger.info("Scheduled backups stopped")
-
-    async def _run_full_backup_schedule(self) -> None:
-        """Run full backup on schedule"""
-        while True:
-            try:
-                await asyncio.sleep(self.config.full_backup_interval_hours * 3600)
-                await self.create_backup(BackupType.FULL)
-            except asyncio.CancelledError:
-                break
-            except Exception as e:
-                logger.error(f"Full backup schedule error: {e}")
-
-    async def _run_differential_backup_schedule(self) -> None:
-        """Run differential backup on schedule"""
-        while True:
-            try:
-                await asyncio.sleep(self.config.differential_backup_interval_hours * 3600)
-                await self.create_backup(BackupType.DIFFERENTIAL)
-            except asyncio.CancelledError:
-                break
-            except Exception as e:
-                logger.error(f"Differential backup schedule error: {e}")
-
-    async def _run_incremental_backup_schedule(self) -> None:
-        """Run incremental backup on schedule"""
-        while True:
-            try:
-                await asyncio.sleep(self.config.incremental_backup_interval_minutes * 60)
-                await self.create_backup(BackupType.INCREMENTAL)
-            except asyncio.CancelledError:
-                break
-            except Exception as e:
-                logger.error(f"Incremental backup schedule error: {e}")
+        """Stop scheduled backups (delegates to scheduler)."""
+        await self.scheduler.stop()
 
     def create_backup(
         self,
@@ -317,8 +317,11 @@ class BackupManager:
         *,
         state_data: dict[str, Any] | None = None,
     ) -> BackupMetadata | None | Coroutine[Any, Any, BackupMetadata | None]:
-        """Create a backup, supporting both sync and async callers."""
+        """
+        Create a backup, supporting both sync and async callers.
 
+        Delegates to BackupWorkflow for core backup creation logic.
+        """
         return self._run_or_return(
             self._create_backup(backup_type=backup_type, state_data=state_data)
         )
@@ -328,58 +331,16 @@ class BackupManager:
         backup_type: BackupType = BackupType.FULL,
         state_data: dict[str, Any] | None = None,
     ) -> BackupMetadata | None:
-        """
-        Create backup of specified type.
-
-        Args:
-            backup_type: Type of backup to create
-            state_data: Optional state data override
-
-        Returns:
-            Backup metadata or None if failed
-        """
-        if self._backup_in_progress:
-            logger.warning("Backup already in progress")
-            return None
-
-        with self._backup_lock:
-            self._backup_in_progress = True
-            start_time = datetime.now(timezone.utc)
-
-            try:
-                backup_id = self._generate_backup_id(backup_type)
-
-                # Collect backup data (delegates to manager for now)
-                backup_data = await self._collect_backup_data(backup_type, override=state_data)
-
-                # Delegate to backup creator for orchestration
-                metadata = await self.backup_creator.create_backup_internal(
-                    backup_type=backup_type,
-                    backup_data=backup_data,
-                    backup_id=backup_id,
-                    start_time=start_time,
-                    pending_snapshot=self._pending_state_snapshot,
-                )
-
-                return metadata
-
-            except Exception as exc:
-                if isinstance(exc, OSError):
-                    logger.exception("Backup creation failed")
-                    raise
-                logger.exception("Backup creation failed")
-                return None
-
-            finally:
-                self._pending_state_snapshot = None
-                self._backup_in_progress = False
+        """Delegate backup creation to BackupWorkflow."""
+        return await self.workflow.create_backup(backup_type=backup_type, state_data=state_data)
 
     def restore_from_backup(
         self, backup_id: str, *, apply_state: bool = True
     ) -> bool | dict[str, Any] | Coroutine[Any, Any, bool]:
-        """Restore a backup, supporting sync assertions and async orchestration.
+        """
+        Restore a backup, supporting sync assertions and async orchestration.
 
-        Delegates to BackupRestorer for actual restoration logic.
+        Delegates to BackupRestorer for restoration logic.
         """
 
         async def _run_sync() -> dict[str, Any]:
@@ -417,159 +378,13 @@ class BackupManager:
         """
         return await self.backup_restorer.restore_latest_backup(backup_type)
 
-    def _normalize_state_payload(self, payload: dict[str, Any]) -> dict[str, Any]:
-        """Ensure payload is JSON serialisable for persistence."""
-        return json.loads(json.dumps(payload, default=str))
-
-    def _diff_state(
-        self, baseline: dict[str, Any] | None, current: dict[str, Any]
-    ) -> dict[str, Any]:
-        if not baseline:
-            return current
-
-        diff: dict[str, Any] = {}
-
-        for key, value in current.items():
-            base_value = baseline.get(key)
-
-            if isinstance(value, dict) and isinstance(base_value, dict):
-                nested_diff = self._diff_state(base_value, value)
-                if nested_diff:
-                    diff[key] = nested_diff
-            elif value != base_value:
-                diff[key] = value
-
-        return diff
-
-    async def _collect_backup_data(
-        self, backup_type: BackupType, override: dict[str, Any] | None = None
-    ) -> dict[str, Any]:
-        """Collect data for backup based on type.
-
-        Delegates to DataCollector for actual data gathering,
-        then applies normalization and diffing logic.
-        """
-        metadata = {
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "backup_type": backup_type.value,
-            "system_info": {
-                "version": "1.0.0",
-                "environment": os.environ.get("ENV", "production"),
-            },
-        }
-
-        # Delegate data collection to DataCollector
-        state_payload = await self.data_collector.collect_for_backup(backup_type, override)
-
-        # Normalize the collected payload
-        self._pending_state_snapshot = self._normalize_state_payload(state_payload)
-
-        # Compute diff for incremental/differential backups
-        persisted_state = self._pending_state_snapshot
-        if backup_type == BackupType.INCREMENTAL:
-            persisted_state = self._diff_state(
-                self._last_backup_state, self._pending_state_snapshot
-            )
-        elif backup_type == BackupType.DIFFERENTIAL:
-            persisted_state = self._diff_state(self._last_full_state, self._pending_state_snapshot)
-
-        metadata["state"] = persisted_state
-        return metadata
-
     def _upload_to_s3(self, backup_id: str) -> None:
         """Upload an existing local backup artifact to S3."""
         self.transport_service.upload_to_s3(backup_id)
 
     def cleanup_old_backups(self) -> int | Coroutine[Any, Any, int]:
-        return self._run_or_return(self._cleanup_old_backups())
-
-    async def _cleanup_old_backups(self) -> int:
-        """Remove expired backups based on retention policy using batch operations"""
-        removed_count = 0
-
-        try:
-            current_time = datetime.now(timezone.utc)
-            all_backups = list(self._backup_metadata.values())
-            expired_backups = self.retention_service.filter_expired(all_backups, current_time)
-
-            if not expired_backups:
-                return 0
-
-            # Use batch delete if available (especially efficient for S3/ARCHIVE tiers)
-            if hasattr(self.transport_service, "batch_delete"):
-                # Prepare batch delete: backup_ids and tier_map
-                backup_ids = [m.backup_id for m in expired_backups]
-                tier_map = {m.backup_id: m.storage_tier for m in expired_backups}
-
-                # Batch delete from storage
-                results = await self.transport_service.batch_delete(backup_ids, tier_map)
-
-                # Update metadata for successful deletions
-                for backup_id, success in results.items():
-                    if success:
-                        self.context.backup_metadata.pop(backup_id, None)
-                        self.context.backup_history = [
-                            entry
-                            for entry in self.context.backup_history
-                            if entry.backup_id != backup_id
-                        ]
-                        removed_count += 1
-
-                logger.info(f"Batch cleaned up {removed_count} expired backups")
-
-            else:
-                # Fallback: Sequential deletion for compatibility
-                for metadata in expired_backups:
-                    if await self.transport_service.delete(
-                        metadata.backup_id, metadata.storage_tier
-                    ):
-                        self.context.backup_metadata.pop(metadata.backup_id, None)
-                        self.context.backup_history = [
-                            entry
-                            for entry in self.context.backup_history
-                            if entry.backup_id != metadata.backup_id
-                        ]
-                        removed_count += 1
-                        logger.debug(f"Removed expired backup {metadata.backup_id}")
-
-                if removed_count > 0:
-                    logger.info(f"Cleaned up {removed_count} expired backups (sequential)")
-
-            # Cleanup metadata files (only for successfully deleted backups)
-            successfully_deleted = [
-                m.backup_id for m in expired_backups if m.backup_id not in self._backup_metadata
-            ]
-            if successfully_deleted:
-                self.retention_service.cleanup_metadata_files(
-                    Path(self.config.backup_dir), successfully_deleted
-                )
-
-        except Exception as e:
-            logger.error(f"Backup cleanup failed: {e}")
-
-        return removed_count
-
-    async def _run_cleanup_schedule(self) -> None:
-        """Run cleanup on schedule"""
-        while True:
-            try:
-                await asyncio.sleep(86400)  # Daily
-                await self.cleanup_old_backups()
-            except asyncio.CancelledError:
-                break
-            except Exception as e:
-                logger.error(f"Cleanup schedule error: {e}")
-
-    async def _run_verification_schedule(self) -> None:
-        """Run backup verification on schedule"""
-        while True:
-            try:
-                await asyncio.sleep(self.config.test_restore_frequency_days * 86400)
-                await self.test_restore()
-            except asyncio.CancelledError:
-                break
-            except Exception as e:
-                logger.error(f"Verification schedule error: {e}")
+        """Remove expired backups based on retention policy (delegates to RetentionManager)."""
+        return self._run_or_return(self.retention_manager.cleanup())
 
     async def test_restore(self) -> bool:
         """Test restore capability with latest backup"""
@@ -597,20 +412,6 @@ class BackupManager:
         except Exception as e:
             logger.error(f"Restore test failed: {e}")
             return False
-
-    def _get_retention_days(self, backup_type: BackupType) -> int:
-        """Get retention period for backup type"""
-        generic_retention = getattr(self.config, "retention_days", None)
-        if generic_retention is not None:
-            return generic_retention
-
-        return self.retention_service.get_retention_days(backup_type)
-
-    def _generate_backup_id(self, backup_type: BackupType) -> str:
-        """Generate unique backup ID"""
-        timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
-        type_prefix = backup_type.value[:3].upper()
-        return f"{type_prefix}_{timestamp}"
 
     def get_performance_metrics(self) -> dict[str, Any]:
         """Get performance metrics for backup operations.

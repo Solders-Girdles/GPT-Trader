@@ -191,7 +191,7 @@ class TestHandlePreviewOrder:
 
     def test_preview_order_success(self, mock_bot, parser, preview_order_args, capsys):
         """Test successful order preview."""
-        result = _handle_preview_order(preview_order_args, mock_bot, parser, "BTC-USD")
+        result = _handle_preview_order(preview_order_args, mock_bot, parser)
 
         assert result == 0
         mock_bot.broker.preview_order.assert_called_once()
@@ -214,7 +214,7 @@ class TestHandlePreviewOrder:
         preview_order_args.order_type = "market"
         preview_order_args.order_price = None
 
-        result = _handle_preview_order(preview_order_args, mock_bot, parser, "BTC-USD")
+        result = _handle_preview_order(preview_order_args, mock_bot, parser)
 
         assert result == 0
         call_kwargs = mock_bot.broker.preview_order.call_args.kwargs
@@ -225,7 +225,7 @@ class TestHandlePreviewOrder:
         """Test order preview with stop price."""
         preview_order_args.order_stop = 49000
 
-        result = _handle_preview_order(preview_order_args, mock_bot, parser, "BTC-USD")
+        result = _handle_preview_order(preview_order_args, mock_bot, parser)
 
         assert result == 0
         call_kwargs = mock_bot.broker.preview_order.call_args.kwargs
@@ -235,7 +235,7 @@ class TestHandlePreviewOrder:
         """Test order preview with custom time in force."""
         preview_order_args.order_tif = "ioc"
 
-        result = _handle_preview_order(preview_order_args, mock_bot, parser, "BTC-USD")
+        result = _handle_preview_order(preview_order_args, mock_bot, parser)
 
         assert result == 0
         call_kwargs = mock_bot.broker.preview_order.call_args.kwargs
@@ -245,7 +245,7 @@ class TestHandlePreviewOrder:
         """Test reduce-only order preview."""
         preview_order_args.order_reduce_only = True
 
-        result = _handle_preview_order(preview_order_args, mock_bot, parser, "BTC-USD")
+        result = _handle_preview_order(preview_order_args, mock_bot, parser)
 
         assert result == 0
         call_kwargs = mock_bot.broker.preview_order.call_args.kwargs
@@ -255,7 +255,7 @@ class TestHandlePreviewOrder:
         """Test order preview with leverage."""
         preview_order_args.order_leverage = 10
 
-        result = _handle_preview_order(preview_order_args, mock_bot, parser, "BTC-USD")
+        result = _handle_preview_order(preview_order_args, mock_bot, parser)
 
         assert result == 0
         call_kwargs = mock_bot.broker.preview_order.call_args.kwargs
@@ -265,7 +265,7 @@ class TestHandlePreviewOrder:
         """Test order preview with client ID."""
         preview_order_args.order_client_id = "my-client-123"
 
-        result = _handle_preview_order(preview_order_args, mock_bot, parser, "BTC-USD")
+        result = _handle_preview_order(preview_order_args, mock_bot, parser)
 
         assert result == 0
         call_kwargs = mock_bot.broker.preview_order.call_args.kwargs
@@ -275,7 +275,7 @@ class TestHandlePreviewOrder:
         """Test sell order preview."""
         preview_order_args.order_side = "sell"
 
-        result = _handle_preview_order(preview_order_args, mock_bot, parser, "BTC-USD")
+        result = _handle_preview_order(preview_order_args, mock_bot, parser)
 
         assert result == 0
         call_kwargs = mock_bot.broker.preview_order.call_args.kwargs
@@ -286,21 +286,21 @@ class TestHandlePreviewOrder:
         preview_order_args.order_side = None
 
         with pytest.raises(SystemExit):
-            _handle_preview_order(preview_order_args, mock_bot, parser, "BTC-USD")
+            _handle_preview_order(preview_order_args, mock_bot, parser)
 
     def test_preview_order_missing_type(self, mock_bot, parser, preview_order_args):
         """Test error when order type is missing."""
         preview_order_args.order_type = None
 
         with pytest.raises(SystemExit):
-            _handle_preview_order(preview_order_args, mock_bot, parser, "BTC-USD")
+            _handle_preview_order(preview_order_args, mock_bot, parser)
 
     def test_preview_order_missing_quantity(self, mock_bot, parser, preview_order_args):
         """Test error when quantity is missing."""
         preview_order_args.order_quantity = None
 
         with pytest.raises(SystemExit):
-            _handle_preview_order(preview_order_args, mock_bot, parser, "BTC-USD")
+            _handle_preview_order(preview_order_args, mock_bot, parser)
 
 
 class TestHandleEditOrderPreview:
@@ -308,7 +308,7 @@ class TestHandleEditOrderPreview:
 
     def test_edit_order_preview_success(self, mock_bot, parser, edit_order_preview_args, capsys):
         """Test successful order edit preview."""
-        result = _handle_edit_order_preview(edit_order_preview_args, mock_bot, parser, "BTC-USD")
+        result = _handle_edit_order_preview(edit_order_preview_args, mock_bot, parser)
 
         assert result == 0
         mock_bot.broker.edit_order_preview.assert_called_once()
@@ -330,7 +330,7 @@ class TestHandleEditOrderPreview:
         """Test edit preview with stop price."""
         edit_order_preview_args.order_stop = 50000
 
-        result = _handle_edit_order_preview(edit_order_preview_args, mock_bot, parser, "BTC-USD")
+        result = _handle_edit_order_preview(edit_order_preview_args, mock_bot, parser)
 
         assert result == 0
         call_kwargs = mock_bot.broker.edit_order_preview.call_args.kwargs
@@ -340,7 +340,7 @@ class TestHandleEditOrderPreview:
         """Test edit preview with new client ID."""
         edit_order_preview_args.order_client_id = "new-client-456"
 
-        result = _handle_edit_order_preview(edit_order_preview_args, mock_bot, parser, "BTC-USD")
+        result = _handle_edit_order_preview(edit_order_preview_args, mock_bot, parser)
 
         assert result == 0
         call_kwargs = mock_bot.broker.edit_order_preview.call_args.kwargs
@@ -350,7 +350,7 @@ class TestHandleEditOrderPreview:
         """Test edit preview with reduce only flag."""
         edit_order_preview_args.order_reduce_only = True
 
-        result = _handle_edit_order_preview(edit_order_preview_args, mock_bot, parser, "BTC-USD")
+        result = _handle_edit_order_preview(edit_order_preview_args, mock_bot, parser)
 
         assert result == 0
         call_kwargs = mock_bot.broker.edit_order_preview.call_args.kwargs
@@ -361,21 +361,21 @@ class TestHandleEditOrderPreview:
         edit_order_preview_args.order_side = None
 
         with pytest.raises(SystemExit):
-            _handle_edit_order_preview(edit_order_preview_args, mock_bot, parser, "BTC-USD")
+            _handle_edit_order_preview(edit_order_preview_args, mock_bot, parser)
 
     def test_edit_order_preview_missing_type(self, mock_bot, parser, edit_order_preview_args):
         """Test error when order type is missing."""
         edit_order_preview_args.order_type = None
 
         with pytest.raises(SystemExit):
-            _handle_edit_order_preview(edit_order_preview_args, mock_bot, parser, "BTC-USD")
+            _handle_edit_order_preview(edit_order_preview_args, mock_bot, parser)
 
     def test_edit_order_preview_missing_quantity(self, mock_bot, parser, edit_order_preview_args):
         """Test error when quantity is missing."""
         edit_order_preview_args.order_quantity = None
 
         with pytest.raises(SystemExit):
-            _handle_edit_order_preview(edit_order_preview_args, mock_bot, parser, "BTC-USD")
+            _handle_edit_order_preview(edit_order_preview_args, mock_bot, parser)
 
 
 class TestHandleApplyOrderEdit:
@@ -429,7 +429,7 @@ class TestOrderParameters:
         preview_order_args.order_quantity = "0.123456789"
         preview_order_args.order_price = "50000.50"
 
-        result = _handle_preview_order(preview_order_args, mock_bot, parser, "BTC-USD")
+        result = _handle_preview_order(preview_order_args, mock_bot, parser)
 
         assert result == 0
         call_kwargs = mock_bot.broker.preview_order.call_args.kwargs
@@ -444,7 +444,7 @@ class TestOrderParameters:
         preview_order_args.order_type = "LIMIT"
         preview_order_args.order_tif = "GTC"
 
-        result = _handle_preview_order(preview_order_args, mock_bot, parser, "BTC-USD")
+        result = _handle_preview_order(preview_order_args, mock_bot, parser)
 
         assert result == 0
         call_kwargs = mock_bot.broker.preview_order.call_args.kwargs
@@ -458,7 +458,7 @@ class TestOutputFormatting:
 
     def test_preview_output_is_json(self, mock_bot, parser, preview_order_args, capsys):
         """Test that preview output is valid JSON."""
-        _handle_preview_order(preview_order_args, mock_bot, parser, "BTC-USD")
+        _handle_preview_order(preview_order_args, mock_bot, parser)
 
         captured = capsys.readouterr()
         # Should be able to parse as JSON
@@ -467,7 +467,7 @@ class TestOutputFormatting:
 
     def test_edit_preview_output_is_json(self, mock_bot, parser, edit_order_preview_args, capsys):
         """Test that edit preview output is valid JSON."""
-        _handle_edit_order_preview(edit_order_preview_args, mock_bot, parser, "BTC-USD")
+        _handle_edit_order_preview(edit_order_preview_args, mock_bot, parser)
 
         captured = capsys.readouterr()
         # Should be able to parse as JSON

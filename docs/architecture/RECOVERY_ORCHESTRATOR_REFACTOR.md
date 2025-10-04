@@ -283,6 +283,232 @@ orchestrator.workflow.execute = mock_execute
 - Delegation overhead is negligible (<1% of recovery time)
 - Async task management is cleaner (monitor manages its own lifecycle)
 
+## Observability & Telemetry
+
+**Status:** ✅ **Implemented** (October 2025)
+
+The RecoveryWorkflow now supports optional telemetry export via `MetricsCollector` integration, enabling comprehensive monitoring of recovery operations in production.
+
+### Metrics Collector Integration
+
+RecoveryWorkflow accepts an optional `metrics_collector` parameter:
+
+```python
+workflow = RecoveryWorkflow(
+    handler_registry=registry,
+    validator=validator,
+    alerter=alerter,
+    config=config,
+    metrics_collector=metrics_collector,  # Optional
+)
+```
+
+**Design Principles:**
+- **Optional dependency:** Metrics collector is optional (defaults to `None`)
+- **Zero overhead when disabled:** All metric recording is wrapped in `if self.metrics_collector:` checks
+- **Backward compatible:** Existing code works without modification
+- **Type-safe:** Uses `TYPE_CHECKING` pattern to avoid circular imports
+
+### Metrics Exported
+
+All metrics use the `recovery.*` namespace for consistent organization.
+
+#### Counters
+
+| Metric | Description | When Incremented |
+|--------|-------------|------------------|
+| `recovery.operations.started` | Recovery operations initiated | Start of `execute()` |
+| `recovery.operations.completed_total` | Total operations completed | End of `execute()` |
+| `recovery.operations.completed_success` | Successfully completed recoveries | Status = COMPLETED |
+| `recovery.operations.completed_partial` | Partially successful recoveries | Status = PARTIAL |
+| `recovery.operations.completed_failed` | Failed recoveries | Status = FAILED |
+| `recovery.operations.escalated` | Operations requiring escalation | Escalation triggered |
+| `recovery.operation.rto_exceeded` | Operations exceeding RTO | Recovery time > RTO threshold |
+
+#### Histograms
+
+| Metric | Description | Value Recorded |
+|--------|-------------|----------------|
+| `recovery.operation.duration_seconds` | Recovery execution time | `time.time() - start_time` |
+| `recovery.operation.retry_attempts` | Handler retry attempts | Number of attempts made |
+
+### Prometheus Query Examples
+
+**Recovery Success Rate (last 1h):**
+```promql
+sum(rate(recovery_operations_completed_success[1h]))
+/
+sum(rate(recovery_operations_completed_total[1h]))
+```
+
+**Average Recovery Duration:**
+```promql
+rate(recovery_operation_duration_seconds_sum[5m])
+/
+rate(recovery_operation_duration_seconds_count[5m])
+```
+
+**RTO Compliance Rate:**
+```promql
+1 - (
+  sum(rate(recovery_operation_rto_exceeded[1h]))
+  /
+  sum(rate(recovery_operations_completed_total[1h]))
+)
+```
+
+**Escalation Rate:**
+```promql
+sum(rate(recovery_operations_escalated[1h]))
+/
+sum(rate(recovery_operations_completed_total[1h]))
+```
+
+**Average Retry Attempts:**
+```promql
+rate(recovery_operation_retry_attempts_sum[5m])
+/
+rate(recovery_operation_retry_attempts_count[5m])
+```
+
+**Recovery Failures (by failure type):**
+```promql
+sum by (failure_type) (rate(recovery_operations_completed_failed[5m]))
+```
+
+### Grafana Dashboard Panels
+
+**Recommended dashboard layout:**
+
+1. **Success Rate (Gauge):** Shows current recovery success percentage
+2. **Recovery Latency (Graph):** P50, P95, P99 duration over time
+3. **Operations by Status (Stacked Area):** Success/Partial/Failed over time
+4. **RTO Violations (Counter):** Total RTO exceeded events
+5. **Escalations (Counter):** Total escalations requiring manual intervention
+6. **Retry Distribution (Heatmap):** Retry attempt frequency distribution
+
+### Test Coverage
+
+**Metrics tests:** 10 comprehensive tests in `test_recovery_workflow.py`
+
+- ✅ Successful recovery records success metrics
+- ✅ Partial recovery records partial metrics
+- ✅ Failed recovery records failure metrics
+- ✅ Escalation records escalation metric
+- ✅ Duration tracking records histogram
+- ✅ Retry attempts tracked correctly
+- ✅ RTO exceeded metric recorded when slow
+- ✅ RTO exceeded not recorded when fast
+- ✅ Metrics not recorded when collector is None
+- ✅ No handler gracefully handles retry metrics
+
+**Test Results:** 28 tests passing (18 baseline + 10 metrics tests)
+
+### Implementation Details
+
+**Duration Tracking:**
+```python
+start_time = time.time()
+# ... execute recovery ...
+duration_seconds = time.time() - start_time
+self.metrics_collector.record_histogram(
+    "recovery.operation.duration_seconds", duration_seconds
+)
+```
+
+**Retry Tracking:**
+```python
+async def _execute_handler(self, operation) -> tuple[bool, int]:
+    # ... retry loop ...
+    return success, attempt_count
+
+# In execute():
+execution_success, retry_attempts = await self._execute_handler(operation)
+self.metrics_collector.record_histogram(
+    "recovery.operation.retry_attempts", float(retry_attempts)
+)
+```
+
+**Status-Based Metrics:**
+```python
+if outcome.status == RecoveryStatus.COMPLETED:
+    self.metrics_collector.record_counter("recovery.operations.completed_success")
+elif outcome.status == RecoveryStatus.PARTIAL:
+    self.metrics_collector.record_counter("recovery.operations.completed_partial")
+elif outcome.status == RecoveryStatus.FAILED:
+    self.metrics_collector.record_counter("recovery.operations.completed_failed")
+```
+
+### Usage in Production
+
+**Initialization:**
+```python
+from bot_v2.monitoring.metrics_collector import MetricsCollector
+
+# Create metrics collector (shared across system)
+metrics_collector = MetricsCollector(
+    backend="prometheus",  # or "datadog", "statsd"
+    prefix="trading_bot",
+)
+
+# Pass to workflow
+workflow = RecoveryWorkflow(
+    handler_registry=registry,
+    validator=validator,
+    alerter=alerter,
+    config=config,
+    metrics_collector=metrics_collector,
+)
+```
+
+**Alerting Rules (Prometheus):**
+```yaml
+groups:
+  - name: recovery_alerts
+    rules:
+      # Alert on low success rate
+      - alert: RecoverySuccessRateLow
+        expr: |
+          sum(rate(recovery_operations_completed_success[5m]))
+          /
+          sum(rate(recovery_operations_completed_total[5m])) < 0.9
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Recovery success rate below 90%"
+
+      # Alert on RTO violations
+      - alert: RecoveryRTOViolations
+        expr: rate(recovery_operation_rto_exceeded[5m]) > 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Recovery operations exceeding RTO"
+
+      # Alert on high escalation rate
+      - alert: RecoveryEscalationRateHigh
+        expr: |
+          sum(rate(recovery_operations_escalated[5m]))
+          /
+          sum(rate(recovery_operations_completed_total[5m])) > 0.2
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "More than 20% of recoveries require escalation"
+```
+
+### Benefits
+
+1. **Incident Response:** Real-time visibility into recovery effectiveness
+2. **RTO/RPO Compliance:** Track recovery time objectives and violations
+3. **Capacity Planning:** Understand retry patterns and failure modes
+4. **SLA Monitoring:** Measure recovery success rates for SLA compliance
+5. **Performance Optimization:** Identify slow recovery handlers
+6. **Alerting:** Proactive alerts on degraded recovery performance
+
 ## Benefits
 
 ### 1. Separation of Concerns
@@ -365,9 +591,11 @@ Project uses `pytest-anyio`, not `pytest-asyncio`:
 ### Potential Improvements
 1. **Pluggable workflow strategies:** Allow custom workflow implementations (e.g., fast recovery, thorough recovery)
 2. **Handler versioning:** Support multiple versions of handlers for gradual rollout
-3. **Recovery metrics export:** Add Prometheus/StatsD export for recovery operations
+3. ✅ **Recovery metrics export:** Add Prometheus/StatsD export for recovery operations *(Completed October 2025)*
 4. **Distributed coordination:** Support multi-instance recovery with leader election
 5. **Recovery simulation:** Add dry-run mode to test recovery without actual execution
+6. **Backup workflow metrics:** Extend telemetry to backup creation and retention operations
+7. **Repository operation metrics:** Add instrumentation to state repository operations
 
 ### Migration Path for Other Modules
 This pattern can be applied to other large orchestrators:

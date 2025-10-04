@@ -34,7 +34,7 @@ class CoinbaseClient(
         auth: AuthStrategy | None = None,
         timeout: int = 30,
         api_version: str = "2024-10-24",
-        rate_limit_per_minute: int = 100,
+        rate_limit_per_minute: int = 1500,  # Coinbase limit: 1,800/min (safety buffer)
         enable_throttle: bool = True,
         api_mode: str = "advanced",
         enable_keep_alive: bool = True,

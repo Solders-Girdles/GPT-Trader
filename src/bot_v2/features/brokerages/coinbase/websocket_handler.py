@@ -57,9 +57,9 @@ class CoinbaseWebSocketHandler:
         ws = self._ensure_ws_client()
         ws.on_message = self._handle_ws_message  # type: ignore[attr-defined]
         subscriptions = [
-            WSSubscription(channels=["ticker"], product_ids=symbol_list),
-            WSSubscription(channels=["matches"], product_ids=symbol_list),
-            WSSubscription(channels=["level2"], product_ids=symbol_list),
+            WSSubscription(channels=["ticker", "heartbeat"], product_ids=symbol_list),
+            WSSubscription(channels=["matches", "heartbeat"], product_ids=symbol_list),
+            WSSubscription(channels=["level2", "heartbeat"], product_ids=symbol_list),
         ]
         for sub in subscriptions:
             ws.subscribe(sub)
@@ -73,7 +73,7 @@ class CoinbaseWebSocketHandler:
     ) -> Iterable[dict]:
         ws = ws or self._create_ws_instance()
         subscription = WSSubscription(
-            channels=["market_trades"],
+            channels=["market_trades", "heartbeat"],
             product_ids=[normalize_symbol(symbol) for symbol in symbols],
         )
         ws.subscribe(subscription)
@@ -92,7 +92,7 @@ class CoinbaseWebSocketHandler:
         ws = ws or self._create_ws_instance()
         channel = "level2" if level >= 2 else "ticker"
         subscription = WSSubscription(
-            channels=[channel],
+            channels=[channel, "heartbeat"],
             product_ids=[normalize_symbol(symbol) for symbol in symbols],
         )
         ws.subscribe(subscription)
@@ -113,7 +113,7 @@ class CoinbaseWebSocketHandler:
     ) -> Iterable[dict]:
         ws = ws or self._create_ws_instance()
         subscription = WSSubscription(
-            channels=["user"],
+            channels=["user", "heartbeat"],
             product_ids=[normalize_symbol(symbol) for symbol in (product_ids or [])],
         )
         ws.subscribe(subscription)

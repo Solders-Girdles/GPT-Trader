@@ -1,40 +1,16 @@
-"""Tests for StrategySelector - tier-based strategy selection and signal generation.
-
-This module tests the StrategySelector's ability to generate appropriate
-trading signals based on portfolio tier, implementing different strategies
-(momentum, mean reversion, trend following, ML-enhanced) with tier-specific
-parameters and position sizing.
-
-Critical behaviors tested:
-- Strategy selection based on tier configuration
-- Signal generation for each strategy type
-- Position sizing calculations per tier
-- Signal filtering and ranking
-- Symbol universe selection by tier
-- Confidence scoring and adjustments
-- Error handling for data issues
-
-Business Context:
-    The StrategySelector determines WHAT to trade and HOW MUCH based on
-    account size and tier configuration. Failures here can result in:
-
-    - Micro accounts attempting complex multi-strategy approaches
-    - Large accounts using overly simple single-strategy methods
-    - Position sizes inappropriate for account tier
-    - Trading signals that violate tier constraints
-    - Over-trading or under-trading relative to tier capacity
-
-    This is the strategic brain that must adapt intelligence to capital.
-"""
+"""StrategySelector integration tests focused on registry coordination."""
 
 from __future__ import annotations
 
 from typing import Any
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 import pytest
 
+from bot_v2.features.adaptive_portfolio.position_size_calculator import PositionSizeCalculator
+from bot_v2.features.adaptive_portfolio.signal_filter import SignalFilter
 from bot_v2.features.adaptive_portfolio.strategy_selector import StrategySelector
+from bot_v2.features.adaptive_portfolio.symbol_universe_builder import SymbolUniverseBuilder
 from bot_v2.features.adaptive_portfolio.types import (
     PortfolioConfig,
     PortfolioSnapshot,
@@ -50,24 +26,17 @@ from bot_v2.features.adaptive_portfolio.types import (
 
 @pytest.fixture
 def mock_data_provider() -> Mock:
-    """Create mock data provider with sample market data."""
+    """Return a simple data provider mock."""
+
     provider = Mock()
-
-    # Create mock historical data with strong uptrend
-    # Need: returns_5d > 2% and returns_20d > 5%
-    mock_data = Mock()
-    mock_data.__len__ = Mock(return_value=60)
-    mock_data.data = {
-        "Close": [100.0 + i * 0.55 for i in range(60)]  # 100 -> 132.45 (stronger uptrend)
-    }
-
-    provider.get_historical_data = Mock(return_value=mock_data)
+    provider.get_historical_data = Mock()
     return provider
 
 
 @pytest.fixture
 def portfolio_config() -> PortfolioConfig:
-    """Create sample portfolio configuration."""
+    """Construct a minimal portfolio configuration for tests."""
+
     tier_config = TierConfig(
         name="micro",
         range=(0, 5000),
@@ -78,7 +47,6 @@ def portfolio_config() -> PortfolioConfig:
         trading=TradingRules(5, "cash", 2, True),
     )
 
-    # Create proper mock for market_constraints
     market_constraints = Mock()
     market_constraints.excluded_symbols = []
 
@@ -96,7 +64,8 @@ def portfolio_config() -> PortfolioConfig:
 
 @pytest.fixture
 def portfolio_snapshot() -> PortfolioSnapshot:
-    """Create sample portfolio snapshot."""
+    """Build a representative snapshot for micro-tier accounts."""
+
     return PortfolioSnapshot(
         total_value=3000.0,
         cash=2000.0,
@@ -112,110 +81,202 @@ def portfolio_snapshot() -> PortfolioSnapshot:
 
 
 @pytest.fixture
+def mock_universe_builder() -> Mock:
+    """Provide a universe builder returning a predictable symbol set."""
+
+    builder = Mock(spec=SymbolUniverseBuilder)
+    builder.build_universe.return_value = ["AAPL", "ETH", "TSLA"]
+    return builder
+
+
+@pytest.fixture
+def mock_signal_filter() -> Mock:
+    """Return a signal filter mock that passes signals through by default."""
+
+    signal_filter = Mock(spec=SignalFilter)
+    signal_filter.filter_signals.side_effect = lambda signals, *_, **__: signals
+    return signal_filter
+
+
+@pytest.fixture
+def strategy_registry() -> dict[str, Mock]:
+    """Build a registry mapping strategy names to handler mocks."""
+
+    momentum = Mock(spec=["generate_signals"])
+    momentum.generate_signals.return_value = []
+
+    mean_reversion = Mock(spec=["generate_signals"])
+    mean_reversion.generate_signals.return_value = []
+
+    return {"momentum": momentum, "mean_reversion": mean_reversion}
+
+
+@pytest.fixture
 def strategy_selector(
-    portfolio_config: PortfolioConfig, mock_data_provider: Mock
+    portfolio_config: PortfolioConfig,
+    mock_data_provider: Mock,
+    mock_universe_builder: Mock,
+    mock_signal_filter: Mock,
+    strategy_registry: dict[str, Mock],
 ) -> StrategySelector:
-    """Create StrategySelector instance."""
-    return StrategySelector(portfolio_config, mock_data_provider)
+    """Instantiate StrategySelector with injected collaborators."""
+
+    return StrategySelector(
+        portfolio_config,
+        mock_data_provider,
+        universe_builder=mock_universe_builder,
+        signal_filter=mock_signal_filter,
+        strategy_registry=strategy_registry,
+    )
 
 
 class TestStrategySelectorInitialization:
-    """Test StrategySelector initialization."""
+    """Confirm StrategySelector wiring during initialization."""
 
     def test_initializes_with_config_and_provider(
-        self, portfolio_config: PortfolioConfig, mock_data_provider: Mock
+        self,
+        portfolio_config: PortfolioConfig,
+        mock_data_provider: Mock,
+        mock_universe_builder: Mock,
+        mock_signal_filter: Mock,
+        strategy_registry: dict[str, Mock],
     ) -> None:
-        """Initializes with configuration and data provider.
-
-        Core dependencies must be stored for signal generation.
-        """
-        selector = StrategySelector(portfolio_config, mock_data_provider)
+        selector = StrategySelector(
+            portfolio_config,
+            mock_data_provider,
+            universe_builder=mock_universe_builder,
+            signal_filter=mock_signal_filter,
+            strategy_registry=strategy_registry,
+        )
 
         assert selector.config is portfolio_config
         assert selector.data_provider is mock_data_provider
+        assert selector._explicit_registry == strategy_registry
 
 
 class TestSignalGeneration:
-    """Test signal generation for different strategies."""
+    """Validate signal generation orchestrates registry handlers."""
 
-    def test_generates_signals_for_tier(
+    def test_delegates_to_all_registered_handlers(
         self,
         strategy_selector: StrategySelector,
-        portfolio_config: PortfolioConfig,
+        strategy_registry: dict[str, Mock],
+        mock_universe_builder: Mock,
+        mock_signal_filter: Mock,
         portfolio_snapshot: PortfolioSnapshot,
     ) -> None:
-        """Generates trading signals appropriate for tier.
-
-        Must produce actionable signals based on tier strategies.
-        """
-        tier_config = portfolio_config.tiers["micro"]
-
-        signals = strategy_selector.generate_signals(tier_config, portfolio_snapshot)
-
-        assert isinstance(signals, list)
-        # Should have signals for momentum strategy
-
-    def test_respects_tier_strategy_list(
-        self,
-        strategy_selector: StrategySelector,
-        portfolio_snapshot: PortfolioSnapshot,
-    ) -> None:
-        """Only generates signals for strategies in tier config.
-
-        Tier-specific strategy selection is critical.
-        """
         tier_config = TierConfig(
-            name="test",
+            name="micro",
             range=(0, 5000),
             positions=PositionConstraints(1, 3, 2, 100.0),
             min_position_size=100.0,
-            strategies=["momentum", "mean_reversion"],  # Two strategies
+            strategies=["momentum", "mean_reversion"],
             risk=RiskProfile(2.0, 10.0, 5.0, 50.0),
             trading=TradingRules(5, "cash", 2, True),
         )
 
+        momentum_signal = TradingSignal(
+            symbol="AAPL",
+            action="BUY",
+            confidence=0.6,
+            target_position_size=150.0,
+            stop_loss_pct=5.0,
+            strategy_source="momentum",
+            reasoning="trend up",
+        )
+        mean_reversion_signal = TradingSignal(
+            symbol="ETH",
+            action="BUY",
+            confidence=0.9,
+            target_position_size=200.0,
+            stop_loss_pct=5.0,
+            strategy_source="mean_reversion",
+            reasoning="oversold",
+        )
+
+        strategy_registry["momentum"].generate_signals.return_value = [momentum_signal]
+        strategy_registry["mean_reversion"].generate_signals.return_value = [mean_reversion_signal]
+
         signals = strategy_selector.generate_signals(tier_config, portfolio_snapshot)
 
-        # Should generate signals from both strategies
-        sources = {s.strategy_source for s in signals}
-        assert len(sources) > 0
+        mock_universe_builder.build_universe.assert_called_once_with(
+            tier_config, portfolio_snapshot
+        )
+        strategy_registry["momentum"].generate_signals.assert_called_once_with(
+            mock_universe_builder.build_universe.return_value,
+            tier_config,
+            portfolio_snapshot,
+        )
+        strategy_registry["mean_reversion"].generate_signals.assert_called_once_with(
+            mock_universe_builder.build_universe.return_value,
+            tier_config,
+            portfolio_snapshot,
+        )
+        mock_signal_filter.filter_signals.assert_called_once()
+        assert signals == [mean_reversion_signal]
 
-
-class TestMomentumStrategy:
-    """Test momentum strategy signal generation."""
-
-    def test_generates_momentum_signals(
+    def test_unknown_strategy_is_skipped(
         self,
         strategy_selector: StrategySelector,
-        portfolio_config: PortfolioConfig,
+        portfolio_snapshot: PortfolioSnapshot,
+        caplog: Any,
+    ) -> None:
+        tier_config = TierConfig(
+            name="micro",
+            range=(0, 5000),
+            positions=PositionConstraints(1, 3, 2, 100.0),
+            min_position_size=100.0,
+            strategies=["unknown"],
+            risk=RiskProfile(2.0, 10.0, 5.0, 50.0),
+            trading=TradingRules(5, "cash", 2, True),
+        )
+
+        with caplog.at_level("WARNING"):
+            signals = strategy_selector.generate_signals(tier_config, portfolio_snapshot)
+
+        assert signals == []
+        assert "Unknown strategy" in caplog.text
+
+    def test_applies_filter_and_ranking(
+        self,
+        strategy_selector: StrategySelector,
+        strategy_registry: dict[str, Mock],
+        mock_signal_filter: Mock,
         portfolio_snapshot: PortfolioSnapshot,
     ) -> None:
-        """Generates momentum-based trading signals.
+        tier_config = TierConfig(
+            name="balanced",
+            range=(10000, 50000),
+            positions=PositionConstraints(2, 5, 4, 100.0),
+            min_position_size=200.0,
+            strategies=["momentum"],
+            risk=RiskProfile(1.5, 8.0, 4.0, 35.0),
+            trading=TradingRules(10, "margin", 1, True),
+        )
 
-        Momentum strategy identifies strong uptrends.
-        """
-        tier_config = portfolio_config.tiers["micro"]
+        strategy_registry["momentum"].generate_signals.return_value = [
+            TradingSignal("AAA", "BUY", 0.2, 150.0, 5.0, "momentum", "low"),
+            TradingSignal("BBB", "BUY", 0.8, 200.0, 5.0, "momentum", "high"),
+            TradingSignal("CCC", "BUY", 0.5, 180.0, 5.0, "momentum", "mid"),
+        ]
 
-        signals = strategy_selector._momentum_strategy(["AAPL"], tier_config, portfolio_snapshot)
+        def filter_override(
+            signals: list[TradingSignal], *_: Any, **__: Any
+        ) -> list[TradingSignal]:
+            return [signals[0], signals[2], signals[1]]  # Intentional reordering
 
-        # Uptrending mock data should generate buy signals
-        if signals:
-            assert signals[0].action == "BUY"
-            assert signals[0].strategy_source == "momentum"
+        mock_signal_filter.filter_signals.side_effect = filter_override
+
+        signals = strategy_selector.generate_signals(tier_config, portfolio_snapshot)
+
+        confidences = [signal.confidence for signal in signals]
+        assert confidences == sorted(confidences, reverse=True)
 
 
 class TestSymbolUniverse:
-    """Test symbol universe selection."""
+    """Ensure symbol universe builder behaves for different tiers."""
 
-    def test_micro_tier_gets_limited_universe(
-        self,
-        strategy_selector: StrategySelector,
-        portfolio_snapshot: PortfolioSnapshot,
-    ) -> None:
-        """Micro tier receives limited symbol universe.
-
-        Small accounts should focus on fewer, more liquid symbols.
-        """
+    def test_micro_tier_gets_limited_universe(self, portfolio_snapshot: PortfolioSnapshot) -> None:
         tier_config = TierConfig(
             name="Micro Portfolio",
             range=(0, 5000),
@@ -226,19 +287,11 @@ class TestSymbolUniverse:
             trading=TradingRules(5, "cash", 2, True),
         )
 
-        universe = strategy_selector._get_symbol_universe(tier_config, portfolio_snapshot)
+        universe = SymbolUniverseBuilder().build_universe(tier_config, portfolio_snapshot)
 
-        assert len(universe) <= 8  # Limited for micro
+        assert len(universe) <= 8
 
-    def test_large_tier_gets_full_universe(
-        self,
-        strategy_selector: StrategySelector,
-        portfolio_snapshot: PortfolioSnapshot,
-    ) -> None:
-        """Large tier receives full symbol universe.
-
-        Large accounts can handle more diversification.
-        """
+    def test_large_tier_gets_full_universe(self, portfolio_snapshot: PortfolioSnapshot) -> None:
         tier_config = TierConfig(
             name="Large Portfolio",
             range=(100000, float("inf")),
@@ -249,122 +302,183 @@ class TestSymbolUniverse:
             trading=TradingRules(20, "margin", 0, False),
         )
 
-        universe = strategy_selector._get_symbol_universe(tier_config, portfolio_snapshot)
+        universe = SymbolUniverseBuilder().build_universe(tier_config, portfolio_snapshot)
 
-        assert len(universe) > 15  # Larger universe
+        assert len(universe) > 15
 
 
 class TestPositionSizing:
-    """Test position sizing calculations."""
+    """Validate position sizing helper remains monotonic and bounded."""
 
     def test_calculates_position_size_based_on_confidence(
         self,
-        strategy_selector: StrategySelector,
-        portfolio_config: PortfolioConfig,
         portfolio_snapshot: PortfolioSnapshot,
     ) -> None:
-        """Position size scales with signal confidence.
-
-        Higher confidence signals get larger positions.
-        """
-        tier_config = portfolio_config.tiers["micro"]
-
-        size_low = strategy_selector._calculate_signal_position_size(
-            0.3, tier_config, portfolio_snapshot
+        tier_config = TierConfig(
+            name="micro",
+            range=(0, 5000),
+            positions=PositionConstraints(1, 3, 2, 100.0),
+            min_position_size=100.0,
+            strategies=["momentum"],
+            risk=RiskProfile(2.0, 10.0, 5.0, 50.0),
+            trading=TradingRules(5, "cash", 2, True),
         )
-        size_high = strategy_selector._calculate_signal_position_size(
-            0.9, tier_config, portfolio_snapshot
-        )
+
+        calculator = PositionSizeCalculator()
+
+        size_low = calculator.calculate(0.3, tier_config, portfolio_snapshot)
+        size_high = calculator.calculate(0.9, tier_config, portfolio_snapshot)
 
         assert size_high > size_low
 
     def test_respects_minimum_position_size(
         self,
-        strategy_selector: StrategySelector,
-        portfolio_config: PortfolioConfig,
         portfolio_snapshot: PortfolioSnapshot,
     ) -> None:
-        """Position size meets tier minimum requirements.
-
-        Even low confidence signals must meet minimum size.
-        """
-        tier_config = portfolio_config.tiers["micro"]
-
-        size = strategy_selector._calculate_signal_position_size(
-            0.1, tier_config, portfolio_snapshot
+        tier_config = TierConfig(
+            name="micro",
+            range=(0, 5000),
+            positions=PositionConstraints(1, 3, 2, 100.0),
+            min_position_size=100.0,
+            strategies=["momentum"],
+            risk=RiskProfile(2.0, 10.0, 5.0, 50.0),
+            trading=TradingRules(5, "cash", 2, True),
         )
+
+        calculator = PositionSizeCalculator()
+
+        size = calculator.calculate(0.1, tier_config, portfolio_snapshot)
 
         assert size >= tier_config.min_position_size
 
 
 class TestSignalFiltering:
-    """Test signal filtering and ranking."""
+    """Cover internal helpers that cap signal counts."""
 
     def test_limits_signals_to_tier_capacity(
         self,
         strategy_selector: StrategySelector,
-        portfolio_config: PortfolioConfig,
         portfolio_snapshot: PortfolioSnapshot,
     ) -> None:
-        """Limits number of signals to tier's position capacity.
-
-        Micro accounts shouldn't get 20 trading signals.
-        """
-        tier_config = portfolio_config.tiers["micro"]
-
-        # Create many signals
-        signals = [
-            TradingSignal(f"SYM{i}", "BUY", 0.7, 500.0, 5.0, "momentum", "test") for i in range(20)
-        ]
+        tier_config = TierConfig(
+            name="micro",
+            range=(0, 5000),
+            positions=PositionConstraints(1, 3, 2, 100.0),
+            min_position_size=100.0,
+            strategies=["momentum"],
+            risk=RiskProfile(2.0, 10.0, 5.0, 50.0),
+            trading=TradingRules(5, "cash", 2, True),
+        )
 
         max_signals = strategy_selector._calculate_max_signals(tier_config, portfolio_snapshot)
 
         assert max_signals <= tier_config.positions.max_positions
 
 
-class TestErrorHandling:
-    """Test error handling for data issues."""
+class TestConfigDrivenRegistry:
+    """Test config-driven strategy registry building."""
 
-    def test_handles_insufficient_data_gracefully(
+    def test_builds_registry_from_tier_config_when_not_injected(
         self,
-        strategy_selector: StrategySelector,
         portfolio_config: PortfolioConfig,
+        mock_data_provider: Mock,
         portfolio_snapshot: PortfolioSnapshot,
     ) -> None:
-        """Handles insufficient historical data without crashing.
+        """Builds strategy registry from tier config when no explicit registry provided."""
+        # Create selector without explicit registry
+        selector = StrategySelector(portfolio_config, mock_data_provider)
 
-        Data provider failures shouldn't crash strategy.
-        """
-        # Mock data provider returns short history
-        short_data = Mock()
-        short_data.__len__ = Mock(return_value=5)  # Too short
-        short_data.data = {"Close": [100.0] * 5}
-        strategy_selector.data_provider.get_historical_data = Mock(return_value=short_data)
-
-        tier_config = portfolio_config.tiers["micro"]
-
-        # Should not raise
-        signals = strategy_selector._momentum_strategy(["AAPL"], tier_config, portfolio_snapshot)
-
-        assert isinstance(signals, list)
-
-    def test_handles_data_provider_exceptions(
-        self,
-        strategy_selector: StrategySelector,
-        portfolio_config: PortfolioConfig,
-        portfolio_snapshot: PortfolioSnapshot,
-    ) -> None:
-        """Handles data provider exceptions gracefully.
-
-        Network/API failures shouldn't crash signal generation.
-        """
-        strategy_selector.data_provider.get_historical_data = Mock(
-            side_effect=Exception("API error")
+        tier_config = TierConfig(
+            name="test_tier",
+            range=(0, 5000),
+            positions=PositionConstraints(1, 3, 2, 100.0),
+            min_position_size=100.0,
+            strategies=["momentum", "mean_reversion"],
+            risk=RiskProfile(2.0, 10.0, 5.0, 50.0),
+            trading=TradingRules(5, "cash", 2, True),
         )
 
-        tier_config = portfolio_config.tiers["micro"]
+        # Should build registry on-demand
+        # Note: generate_signals will fail without real data, but registry should be built
+        try:
+            selector.generate_signals(tier_config, portfolio_snapshot)
+        except Exception:
+            pass  # Expected to fail due to mock data provider
 
-        # Should not raise
-        signals = strategy_selector._momentum_strategy(["AAPL"], tier_config, portfolio_snapshot)
+        # Verify registry was cached
+        assert "test_tier" in selector._tier_registries
+        registry = selector._tier_registries["test_tier"]
+        assert "momentum" in registry
+        assert "mean_reversion" in registry
+        assert len(registry) == 2
 
-        assert signals == []
+    def test_caches_registry_per_tier(
+        self,
+        portfolio_config: PortfolioConfig,
+        mock_data_provider: Mock,
+        portfolio_snapshot: PortfolioSnapshot,
+    ) -> None:
+        """Caches built registries per tier to avoid rebuilding."""
+        selector = StrategySelector(portfolio_config, mock_data_provider)
+
+        tier_config_1 = TierConfig(
+            name="tier_1",
+            range=(0, 5000),
+            positions=PositionConstraints(1, 3, 2, 100.0),
+            min_position_size=100.0,
+            strategies=["momentum"],
+            risk=RiskProfile(2.0, 10.0, 5.0, 50.0),
+            trading=TradingRules(5, "cash", 2, True),
+        )
+
+        tier_config_2 = TierConfig(
+            name="tier_2",
+            range=(5000, 50000),
+            positions=PositionConstraints(2, 8, 5, 250.0),
+            min_position_size=250.0,
+            strategies=["momentum", "mean_reversion", "trend_following"],
+            risk=RiskProfile(1.5, 8.0, 4.0, 35.0),
+            trading=TradingRules(10, "margin", 1, True),
+        )
+
+        # Build registries
+        registry_1 = selector._get_strategy_registry(tier_config_1)
+        registry_2 = selector._get_strategy_registry(tier_config_2)
+
+        # Should be cached
+        assert selector._get_strategy_registry(tier_config_1) is registry_1
+        assert selector._get_strategy_registry(tier_config_2) is registry_2
+
+        # Should be different registries
+        assert len(registry_1) == 1
+        assert len(registry_2) == 3
+
+    def test_uses_explicit_registry_when_provided(
+        self,
+        portfolio_config: PortfolioConfig,
+        mock_data_provider: Mock,
+        portfolio_snapshot: PortfolioSnapshot,
+    ) -> None:
+        """Uses explicit registry when provided (test injection)."""
+        mock_handler = Mock()
+        mock_handler.generate_signals.return_value = []
+        explicit_registry = {"momentum": mock_handler}
+
+        selector = StrategySelector(
+            portfolio_config, mock_data_provider, strategy_registry=explicit_registry
+        )
+
+        tier_config = TierConfig(
+            name="test",
+            range=(0, 5000),
+            positions=PositionConstraints(1, 3, 2, 100.0),
+            min_position_size=100.0,
+            strategies=["momentum"],
+            risk=RiskProfile(2.0, 10.0, 5.0, 50.0),
+            trading=TradingRules(5, "cash", 2, True),
+        )
+
+        # Should use explicit registry, not build from config
+        registry = selector._get_strategy_registry(tier_config)
+        assert registry is explicit_registry
+        assert "test" not in selector._tier_registries  # Should not cache

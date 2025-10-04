@@ -399,7 +399,7 @@ def test_stream_orderbook_channel_selection(level: int, expected_channel: str) -
     with pytest.raises(StopIteration):
         next(stream)
 
-    assert subscriptions[0]["channels"] == [expected_channel]
+    assert subscriptions[0]["channels"] == [expected_channel, "heartbeat"]
 
 
 def test_status_channel_subscription() -> None:

@@ -17,13 +17,15 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from bot_v2.features.live_trade.liquidity_service import (
+from bot_v2.features.live_trade.liquidity_metrics_tracker import LiquidityMetrics
+from bot_v2.features.live_trade.liquidity_models import (
     DepthAnalysis,
     ImpactEstimate,
     LiquidityCondition,
-    LiquidityMetrics,
-    LiquidityService,
     OrderBookLevel,
+)
+from bot_v2.features.live_trade.liquidity_service import (
+    LiquidityService,
     create_liquidity_service,
 )
 
@@ -209,7 +211,7 @@ class TestLiquidityServiceInitialization:
 
         assert service.max_impact_bps == Decimal("50")
         assert service.depth_levels == 20
-        assert isinstance(service._symbol_metrics, dict)
+        assert service._metrics_tracker is not None
         assert isinstance(service._latest_analysis, dict)
 
     def test_custom_initialization(self):
@@ -246,9 +248,11 @@ class TestLiquidityServiceTradeUpdates:
 
         service.update_trade_data("BTC-USD", Decimal("50000"), Decimal("1.5"))
 
-        assert "BTC-USD" in service._symbol_metrics
-        metrics = service._symbol_metrics["BTC-USD"]
-        assert len(metrics._trade_data) == 1
+        # Verify symbol is tracked
+        assert service._metrics_tracker.has_symbol("BTC-USD")
+        # Verify trade was recorded
+        volume_metrics = service._metrics_tracker.get_volume_metrics("BTC-USD")
+        assert volume_metrics["trade_count"] == 1
 
 
 # ============================================================================
@@ -496,20 +500,20 @@ class TestLiquidityServiceSnapshot:
 
 
 class TestLiquidityServiceScoring:
-    """Test internal scoring functions."""
+    """Test scoring integration through LiquidityScorer."""
 
     def test_score_spread_excellent(self):
         """Test spread scoring for tight spreads."""
         service = LiquidityService()
 
-        score = service._score_spread(Decimal("1"))
+        score = service._liquidity_scorer.score_spread(Decimal("1"))
         assert score == Decimal("100")
 
     def test_score_spread_poor(self):
         """Test spread scoring for wide spreads."""
         service = LiquidityService()
 
-        score = service._score_spread(Decimal("100"))
+        score = service._liquidity_scorer.score_spread(Decimal("100"))
         assert score == Decimal("0")
 
     def test_score_depth(self):
@@ -517,9 +521,9 @@ class TestLiquidityServiceScoring:
         service = LiquidityService()
 
         # High depth should score well
-        score_high = service._score_depth(Decimal("20000"), Decimal("50000"))
+        score_high = service._liquidity_scorer.score_depth(Decimal("20000"), Decimal("50000"))
         # Low depth should score poorly
-        score_low = service._score_depth(Decimal("100"), Decimal("50000"))
+        score_low = service._liquidity_scorer.score_depth(Decimal("100"), Decimal("50000"))
 
         assert score_high > score_low
 
@@ -528,9 +532,9 @@ class TestLiquidityServiceScoring:
         service = LiquidityService()
 
         # Balanced book scores high
-        score_balanced = service._score_imbalance(Decimal("0"))
+        score_balanced = service._liquidity_scorer.score_imbalance(Decimal("0"))
         # Imbalanced book scores low
-        score_imbalanced = service._score_imbalance(Decimal("0.5"))
+        score_imbalanced = service._liquidity_scorer.score_imbalance(Decimal("0.5"))
 
         assert score_balanced > score_imbalanced
         assert score_balanced == Decimal("100")
@@ -539,11 +543,23 @@ class TestLiquidityServiceScoring:
         """Test liquidity condition determination."""
         service = LiquidityService()
 
-        assert service._determine_condition(Decimal("90")) == LiquidityCondition.EXCELLENT
-        assert service._determine_condition(Decimal("70")) == LiquidityCondition.GOOD
-        assert service._determine_condition(Decimal("50")) == LiquidityCondition.FAIR
-        assert service._determine_condition(Decimal("30")) == LiquidityCondition.POOR
-        assert service._determine_condition(Decimal("10")) == LiquidityCondition.CRITICAL
+        assert (
+            service._liquidity_scorer.determine_condition(Decimal("90"))
+            == LiquidityCondition.EXCELLENT
+        )
+        assert (
+            service._liquidity_scorer.determine_condition(Decimal("70")) == LiquidityCondition.GOOD
+        )
+        assert (
+            service._liquidity_scorer.determine_condition(Decimal("50")) == LiquidityCondition.FAIR
+        )
+        assert (
+            service._liquidity_scorer.determine_condition(Decimal("30")) == LiquidityCondition.POOR
+        )
+        assert (
+            service._liquidity_scorer.determine_condition(Decimal("10"))
+            == LiquidityCondition.CRITICAL
+        )
 
 
 # ============================================================================

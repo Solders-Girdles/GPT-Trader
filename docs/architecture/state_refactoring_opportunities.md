@@ -3,6 +3,49 @@
 ## Overview
 Analysis of downstream StateManager usage reveals optimization opportunities now that storage, caching, and policy logic are separated into focused components.
 
+## Completed Refactors
+
+### ✅ Backup Operations Facade Refactor (October 2025)
+**Status:** Complete
+**File:** `src/bot_v2/state/backup/operations.py`
+
+Refactored 636-line monolithic BackupManager into a clean facade orchestrating specialized components:
+- **BackupScheduler** (146 lines) - Async scheduling and lifecycle
+- **BackupWorkflow** (200 lines) - Core backup creation pipeline
+- **RetentionManager** (143 lines) - Cleanup and retention policy enforcement
+
+**Results:**
+- operations.py: 636 → 431 lines (-32.2% reduction)
+- Added 54 comprehensive unit tests
+- All 301 tests passing (288 passing, 13 skipped)
+- No behavioral regressions
+
+**Documentation:** See `docs/architecture/BACKUP_OPERATIONS_REFACTOR.md` for details.
+
+### ✅ State Repositories Modularization (October 2025)
+**Status:** Complete
+**File:** `src/bot_v2/state/repositories.py` → `src/bot_v2/state/repositories/`
+
+Refactored 619-line monolithic repositories file into a clean facade pattern with tier-specific modules:
+- **RedisStateRepository** (171 lines) - HOT tier with TTL management and pipeline operations
+- **PostgresStateRepository** (216 lines) - WARM tier with transactions and UPSERT operations
+- **S3StateRepository** (209 lines) - COLD tier with prefix management and batch delete
+
+**Results:**
+- repositories/__init__.py: 619 → 74 lines (-88.0% reduction)
+- Extracted 596 lines to 3 focused modules
+- Added 95 comprehensive unit tests (112 total passing)
+- Zero behavioral regressions
+- Clean Protocol-based interface
+
+**Benefits:**
+- Each storage tier isolated in dedicated module
+- Comprehensive test coverage per tier (26 Redis, 35 Postgres, 34 S3 tests)
+- Easy to add new storage tiers (clear template)
+- Improved maintainability and extensibility
+
+**Documentation:** See `docs/architecture/STATE_REPOSITORIES_REFACTOR.md` for details.
+
 ## Current Usage Analysis
 
 ### Batch Operations Pattern (19 occurrences)

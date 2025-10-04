@@ -224,12 +224,10 @@ class TestPortfolioAnalysis:
     """Test analyze_portfolio method."""
 
     @patch("bot_v2.features.adaptive_portfolio.adaptive_portfolio.load_portfolio_config")
-    @patch("bot_v2.features.adaptive_portfolio.adaptive_portfolio.get_current_tier")
     @patch("bot_v2.features.adaptive_portfolio.adaptive_portfolio.get_data_provider")
     def test_analyzes_portfolio_and_returns_result(
         self,
         mock_get_provider: Mock,
-        mock_get_tier: Mock,
         mock_load_config: Mock,
         sample_tier_config: dict[str, Any],
     ) -> None:
@@ -241,9 +239,12 @@ class TestPortfolioAnalysis:
         mock_config.tiers = {"micro": sample_tier_config}
         mock_load_config.return_value = mock_config
         mock_get_provider.return_value = Mock()
-        mock_get_tier.return_value = "micro"
 
         manager = AdaptivePortfolioManager(prefer_real_data=False)
+        manager.tier_manager.detect_tier = Mock(
+            return_value=(PortfolioTier.MICRO, sample_tier_config)
+        )
+        manager.tier_manager.should_transition = Mock(return_value=(False, None))
         manager.risk_manager.calculate_risk_metrics = Mock(return_value={})
         manager.strategy_selector.generate_signals = Mock(return_value=[])
 
@@ -254,12 +255,10 @@ class TestPortfolioAnalysis:
         assert result.portfolio_snapshot.total_value == 2000.0
 
     @patch("bot_v2.features.adaptive_portfolio.adaptive_portfolio.load_portfolio_config")
-    @patch("bot_v2.features.adaptive_portfolio.adaptive_portfolio.get_current_tier")
     @patch("bot_v2.features.adaptive_portfolio.adaptive_portfolio.get_data_provider")
     def test_creates_portfolio_snapshot(
         self,
         mock_get_provider: Mock,
-        mock_get_tier: Mock,
         mock_load_config: Mock,
         sample_tier_config: dict[str, Any],
         sample_positions: list[PositionInfo],
@@ -272,9 +271,12 @@ class TestPortfolioAnalysis:
         mock_config.tiers = {"micro": sample_tier_config}
         mock_load_config.return_value = mock_config
         mock_get_provider.return_value = Mock()
-        mock_get_tier.return_value = "micro"
 
         manager = AdaptivePortfolioManager(prefer_real_data=False)
+        manager.tier_manager.detect_tier = Mock(
+            return_value=(PortfolioTier.MICRO, sample_tier_config)
+        )
+        manager.tier_manager.should_transition = Mock(return_value=(False, None))
         manager.risk_manager.calculate_risk_metrics = Mock(return_value={})
         manager.strategy_selector.generate_signals = Mock(return_value=[])
 
@@ -287,12 +289,10 @@ class TestPortfolioAnalysis:
         assert snapshot.daily_pnl == 100.0  # 50 + 50
 
     @patch("bot_v2.features.adaptive_portfolio.adaptive_portfolio.load_portfolio_config")
-    @patch("bot_v2.features.adaptive_portfolio.adaptive_portfolio.get_current_tier")
     @patch("bot_v2.features.adaptive_portfolio.adaptive_portfolio.get_data_provider")
     def test_detects_tier_transition_needed(
         self,
         mock_get_provider: Mock,
-        mock_get_tier: Mock,
         mock_load_config: Mock,
         sample_tier_config: dict[str, Any],
     ) -> None:
@@ -304,10 +304,12 @@ class TestPortfolioAnalysis:
         mock_config.tiers = {"micro": sample_tier_config}
         mock_load_config.return_value = mock_config
         mock_get_provider.return_value = Mock()
-        # First call returns "micro", second call returns "small" (simulating transition)
-        mock_get_tier.side_effect = ["micro", "small"]
 
         manager = AdaptivePortfolioManager(prefer_real_data=False)
+        manager.tier_manager.detect_tier = Mock(
+            return_value=(PortfolioTier.MICRO, sample_tier_config)
+        )
+        manager.tier_manager.should_transition = Mock(return_value=(True, PortfolioTier.SMALL))
         manager.risk_manager.calculate_risk_metrics = Mock(return_value={})
         manager.strategy_selector.generate_signals = Mock(return_value=[])
 
@@ -317,12 +319,10 @@ class TestPortfolioAnalysis:
         assert result.tier_transition_target == PortfolioTier.SMALL
 
     @patch("bot_v2.features.adaptive_portfolio.adaptive_portfolio.load_portfolio_config")
-    @patch("bot_v2.features.adaptive_portfolio.adaptive_portfolio.get_current_tier")
     @patch("bot_v2.features.adaptive_portfolio.adaptive_portfolio.get_data_provider")
     def test_generates_tier_appropriate_signals(
         self,
         mock_get_provider: Mock,
-        mock_get_tier: Mock,
         mock_load_config: Mock,
         sample_tier_config: dict[str, Any],
     ) -> None:
@@ -334,7 +334,6 @@ class TestPortfolioAnalysis:
         mock_config.tiers = {"micro": sample_tier_config}
         mock_load_config.return_value = mock_config
         mock_get_provider.return_value = Mock()
-        mock_get_tier.return_value = "micro"
 
         test_signal = TradingSignal(
             symbol="AAPL",
@@ -347,6 +346,10 @@ class TestPortfolioAnalysis:
         )
 
         manager = AdaptivePortfolioManager(prefer_real_data=False)
+        manager.tier_manager.detect_tier = Mock(
+            return_value=(PortfolioTier.MICRO, sample_tier_config)
+        )
+        manager.tier_manager.should_transition = Mock(return_value=(False, None))
         manager.risk_manager.calculate_risk_metrics = Mock(return_value={})
         manager.strategy_selector.generate_signals = Mock(return_value=[test_signal])
 
@@ -360,12 +363,10 @@ class TestRecommendations:
     """Test recommendation generation."""
 
     @patch("bot_v2.features.adaptive_portfolio.adaptive_portfolio.load_portfolio_config")
-    @patch("bot_v2.features.adaptive_portfolio.adaptive_portfolio.get_current_tier")
     @patch("bot_v2.features.adaptive_portfolio.adaptive_portfolio.get_data_provider")
     def test_recommends_adding_positions_when_under_target(
         self,
         mock_get_provider: Mock,
-        mock_get_tier: Mock,
         mock_load_config: Mock,
         sample_tier_config: dict[str, Any],
     ) -> None:
@@ -379,9 +380,12 @@ class TestRecommendations:
         mock_config.tiers = {"micro": tier_cfg}
         mock_load_config.return_value = mock_config
         mock_get_provider.return_value = Mock()
-        mock_get_tier.return_value = "micro"
 
         manager = AdaptivePortfolioManager(prefer_real_data=False)
+        manager.tier_manager.detect_tier = Mock(
+            return_value=(PortfolioTier.MICRO, sample_tier_config)
+        )
+        manager.tier_manager.should_transition = Mock(return_value=(False, None))
         manager.risk_manager.calculate_risk_metrics = Mock(return_value={})
         manager.strategy_selector.generate_signals = Mock(return_value=[])
 
@@ -404,12 +408,10 @@ class TestRecommendations:
         assert any("adding" in rec.lower() for rec in result.recommended_actions)
 
     @patch("bot_v2.features.adaptive_portfolio.adaptive_portfolio.load_portfolio_config")
-    @patch("bot_v2.features.adaptive_portfolio.adaptive_portfolio.get_current_tier")
     @patch("bot_v2.features.adaptive_portfolio.adaptive_portfolio.get_data_provider")
     def test_recommends_reducing_positions_when_over_max(
         self,
         mock_get_provider: Mock,
-        mock_get_tier: Mock,
         mock_load_config: Mock,
         sample_tier_config: dict[str, Any],
     ) -> None:
@@ -423,9 +425,12 @@ class TestRecommendations:
         mock_config.tiers = {"micro": tier_cfg}
         mock_load_config.return_value = mock_config
         mock_get_provider.return_value = Mock()
-        mock_get_tier.return_value = "micro"
 
         manager = AdaptivePortfolioManager(prefer_real_data=False)
+        manager.tier_manager.detect_tier = Mock(
+            return_value=(PortfolioTier.MICRO, sample_tier_config)
+        )
+        manager.tier_manager.should_transition = Mock(return_value=(False, None))
         manager.risk_manager.calculate_risk_metrics = Mock(return_value={})
         manager.strategy_selector.generate_signals = Mock(return_value=[])
 
@@ -445,12 +450,10 @@ class TestWarnings:
     """Test warning generation."""
 
     @patch("bot_v2.features.adaptive_portfolio.adaptive_portfolio.load_portfolio_config")
-    @patch("bot_v2.features.adaptive_portfolio.adaptive_portfolio.get_current_tier")
     @patch("bot_v2.features.adaptive_portfolio.adaptive_portfolio.get_data_provider")
     def test_warns_about_concentrated_position(
         self,
         mock_get_provider: Mock,
-        mock_get_tier: Mock,
         mock_load_config: Mock,
         sample_tier_config: dict[str, Any],
     ) -> None:
@@ -462,9 +465,12 @@ class TestWarnings:
         mock_config.tiers = {"micro": sample_tier_config}
         mock_load_config.return_value = mock_config
         mock_get_provider.return_value = Mock()
-        mock_get_tier.return_value = "micro"
 
         manager = AdaptivePortfolioManager(prefer_real_data=False)
+        manager.tier_manager.detect_tier = Mock(
+            return_value=(PortfolioTier.MICRO, sample_tier_config)
+        )
+        manager.tier_manager.should_transition = Mock(return_value=(False, None))
         manager.risk_manager.calculate_risk_metrics = Mock(return_value={})
         manager.strategy_selector.generate_signals = Mock(return_value=[])
 
@@ -478,12 +484,10 @@ class TestWarnings:
         assert any("largest position" in warn.lower() for warn in result.warnings)
 
     @patch("bot_v2.features.adaptive_portfolio.adaptive_portfolio.load_portfolio_config")
-    @patch("bot_v2.features.adaptive_portfolio.adaptive_portfolio.get_current_tier")
     @patch("bot_v2.features.adaptive_portfolio.adaptive_portfolio.get_data_provider")
     def test_warns_about_pdt_risk_for_small_accounts(
         self,
         mock_get_provider: Mock,
-        mock_get_tier: Mock,
         mock_load_config: Mock,
         sample_tier_config: dict[str, Any],
     ) -> None:
@@ -497,9 +501,12 @@ class TestWarnings:
         mock_config.tiers = {"micro": tier_cfg}
         mock_load_config.return_value = mock_config
         mock_get_provider.return_value = Mock()
-        mock_get_tier.return_value = "micro"
 
         manager = AdaptivePortfolioManager(prefer_real_data=False)
+        manager.tier_manager.detect_tier = Mock(
+            return_value=(PortfolioTier.MICRO, sample_tier_config)
+        )
+        manager.tier_manager.should_transition = Mock(return_value=(False, None))
         manager.risk_manager.calculate_risk_metrics = Mock(return_value={})
         manager.strategy_selector.generate_signals = Mock(return_value=[])
 
@@ -609,12 +616,10 @@ class TestErrorHandling:
     """Test error handling and edge cases."""
 
     @patch("bot_v2.features.adaptive_portfolio.adaptive_portfolio.load_portfolio_config")
-    @patch("bot_v2.features.adaptive_portfolio.adaptive_portfolio.get_current_tier")
     @patch("bot_v2.features.adaptive_portfolio.adaptive_portfolio.get_data_provider")
     def test_handles_zero_capital_gracefully(
         self,
         mock_get_provider: Mock,
-        mock_get_tier: Mock,
         mock_load_config: Mock,
         sample_tier_config: dict[str, Any],
     ) -> None:
@@ -626,9 +631,12 @@ class TestErrorHandling:
         mock_config.tiers = {"micro": sample_tier_config}
         mock_load_config.return_value = mock_config
         mock_get_provider.return_value = Mock()
-        mock_get_tier.return_value = "micro"
 
         manager = AdaptivePortfolioManager(prefer_real_data=False)
+        manager.tier_manager.detect_tier = Mock(
+            return_value=(PortfolioTier.MICRO, sample_tier_config)
+        )
+        manager.tier_manager.should_transition = Mock(return_value=(False, None))
         manager.risk_manager.calculate_risk_metrics = Mock(return_value={})
         manager.strategy_selector.generate_signals = Mock(return_value=[])
 
@@ -638,12 +646,10 @@ class TestErrorHandling:
         assert result.portfolio_snapshot.daily_pnl_pct == 0.0
 
     @patch("bot_v2.features.adaptive_portfolio.adaptive_portfolio.load_portfolio_config")
-    @patch("bot_v2.features.adaptive_portfolio.adaptive_portfolio.get_current_tier")
     @patch("bot_v2.features.adaptive_portfolio.adaptive_portfolio.get_data_provider")
     def test_handles_empty_positions_list(
         self,
         mock_get_provider: Mock,
-        mock_get_tier: Mock,
         mock_load_config: Mock,
         sample_tier_config: dict[str, Any],
     ) -> None:
@@ -655,9 +661,12 @@ class TestErrorHandling:
         mock_config.tiers = {"micro": sample_tier_config}
         mock_load_config.return_value = mock_config
         mock_get_provider.return_value = Mock()
-        mock_get_tier.return_value = "micro"
 
         manager = AdaptivePortfolioManager(prefer_real_data=False)
+        manager.tier_manager.detect_tier = Mock(
+            return_value=(PortfolioTier.MICRO, sample_tier_config)
+        )
+        manager.tier_manager.should_transition = Mock(return_value=(False, None))
         manager.risk_manager.calculate_risk_metrics = Mock(return_value={})
         manager.strategy_selector.generate_signals = Mock(return_value=[])
 

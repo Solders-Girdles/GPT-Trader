@@ -42,9 +42,9 @@ class TestCreateRepositoriesAllAdapters:
             result = RepositoryFactory.create_repositories(adapters, config)
 
             # Verify repository constructors called with correct args
-            mock_redis_repo.assert_called_once_with(redis_adapter, 7200)
-            mock_postgres_repo.assert_called_once_with(postgres_adapter)
-            mock_s3_repo.assert_called_once_with(s3_adapter, "test-bucket")
+            mock_redis_repo.assert_called_once_with(redis_adapter, 7200, metrics_collector=None)
+            mock_postgres_repo.assert_called_once_with(postgres_adapter, metrics_collector=None)
+            mock_s3_repo.assert_called_once_with(s3_adapter, "test-bucket", metrics_collector=None)
 
             # Verify result is StateRepositories
             assert isinstance(result, StateRepositories)
@@ -75,7 +75,7 @@ class TestCreateRepositoriesAllAdapters:
             RepositoryFactory.create_repositories(adapters, config)
 
             # Verify default TTL used
-            mock_redis_repo.assert_called_once_with(redis_adapter, 3600)
+            mock_redis_repo.assert_called_once_with(redis_adapter, 3600, metrics_collector=None)
 
     def test_uses_custom_s3_bucket(self):
         """Should use S3 bucket from config."""
@@ -100,7 +100,9 @@ class TestCreateRepositoriesAllAdapters:
             RepositoryFactory.create_repositories(adapters, config)
 
             # Verify custom bucket used
-            mock_s3_repo.assert_called_once_with(s3_adapter, "custom-bucket-name")
+            mock_s3_repo.assert_called_once_with(
+                s3_adapter, "custom-bucket-name", metrics_collector=None
+            )
 
 
 class TestCreateRepositoriesNoneAdapters:
@@ -207,7 +209,7 @@ class TestCreateRepositoriesPartialAdapters:
 
             result = RepositoryFactory.create_repositories(adapters, config)
 
-            mock_redis_repo.assert_called_once_with(redis_adapter, 1800)
+            mock_redis_repo.assert_called_once_with(redis_adapter, 1800, metrics_collector=None)
             assert result.redis is mock_redis_repo.return_value
             assert result.postgres is None
             assert result.s3 is None
@@ -232,8 +234,10 @@ class TestCreateRepositoriesPartialAdapters:
 
             result = RepositoryFactory.create_repositories(adapters, config)
 
-            mock_postgres_repo.assert_called_once_with(postgres_adapter)
-            mock_s3_repo.assert_called_once_with(s3_adapter, "partial-bucket")
+            mock_postgres_repo.assert_called_once_with(postgres_adapter, metrics_collector=None)
+            mock_s3_repo.assert_called_once_with(
+                s3_adapter, "partial-bucket", metrics_collector=None
+            )
 
             assert result.redis is None
             assert result.postgres is mock_postgres_repo.return_value
@@ -260,7 +264,7 @@ class TestTTLPassthrough:
             RepositoryFactory.create_repositories(adapters, config)
 
             # Verify 0 TTL passed (not treated as falsy)
-            mock_redis_repo.assert_called_once_with(redis_adapter, 0)
+            mock_redis_repo.assert_called_once_with(redis_adapter, 0, metrics_collector=None)
 
     def test_large_ttl_passed_through(self):
         """Should handle large TTL values."""
@@ -278,7 +282,9 @@ class TestTTLPassthrough:
 
             RepositoryFactory.create_repositories(adapters, config)
 
-            mock_redis_repo.assert_called_once_with(redis_adapter, 86400 * 30)
+            mock_redis_repo.assert_called_once_with(
+                redis_adapter, 86400 * 30, metrics_collector=None
+            )
 
 
 class TestStaticMethod:

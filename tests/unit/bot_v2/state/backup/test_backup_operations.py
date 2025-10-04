@@ -547,14 +547,23 @@ class TestBackupCleanup:
         """
         from datetime import timezone
         from bot_v2.state.backup.services import RetentionService
+        from bot_v2.state.backup.retention_manager import RetentionManager
 
         # Update retention service to use 7 days for all backup types
-        backup_manager.retention_service = RetentionService(
+        new_retention_service = RetentionService(
             retention_incremental=7,
             retention_differential=7,
             retention_full=7,
             retention_emergency=7,
             retention_snapshot=7,
+        )
+        backup_manager.retention_service = new_retention_service
+        # Also update retention manager to use the new retention service
+        backup_manager.retention_manager = RetentionManager(
+            retention_service=new_retention_service,
+            transport_service=backup_manager.transport_service,
+            context=backup_manager.context,
+            config=backup_manager.config,
         )
 
         # Create old backup
@@ -731,11 +740,12 @@ class TestAsyncScheduling:
     async def test_start_scheduled_backups_creates_tasks(
         self, backup_manager: BackupManager
     ) -> None:
-        """start_scheduled_backups creates background tasks."""
+        """start_scheduled_backups creates background tasks (via scheduler)."""
         await backup_manager.start_scheduled_backups()
 
-        # Should have created 5 tasks (full, diff, inc, cleanup, verification)
-        assert len(backup_manager._scheduled_tasks) == 5
+        # Should have created 5 tasks via scheduler
+        assert backup_manager.scheduler.is_running()
+        assert len(backup_manager.scheduler._scheduled_tasks) == 5
 
         # Cleanup
         await backup_manager.stop_scheduled_backups()
@@ -744,20 +754,21 @@ class TestAsyncScheduling:
     async def test_stop_scheduled_backups_cancels_tasks(
         self, backup_manager: BackupManager
     ) -> None:
-        """stop_scheduled_backups cancels all background tasks."""
+        """stop_scheduled_backups cancels all background tasks (via scheduler)."""
         await backup_manager.start_scheduled_backups()
-        assert len(backup_manager._scheduled_tasks) == 5
+        assert backup_manager.scheduler.is_running()
 
         await backup_manager.stop_scheduled_backups()
 
         # All tasks should be cancelled
-        assert len(backup_manager._scheduled_tasks) == 0
+        assert not backup_manager.scheduler.is_running()
+        assert len(backup_manager.scheduler._scheduled_tasks) == 0
 
     @pytest.mark.asyncio
     async def test_full_backup_schedule_runs_periodically(
         self, backup_manager: BackupManager, monkeypatch
     ) -> None:
-        """_run_full_backup_schedule creates backups on schedule."""
+        """Full backup schedule creates backups on schedule (via scheduler)."""
         backup_created = asyncio.Event()
         original_create = backup_manager._create_backup
 
@@ -765,13 +776,13 @@ class TestAsyncScheduling:
             backup_created.set()
             return await original_create(*args, **kwargs)
 
-        monkeypatch.setattr(backup_manager, "_create_backup", mock_create_backup)
+        monkeypatch.setattr(backup_manager.workflow, "create_backup", mock_create_backup)
 
         # Set very short interval for testing
-        monkeypatch.setattr(backup_manager.config, "full_backup_interval_hours", 0.0001)
+        monkeypatch.setattr(backup_manager.scheduler.config, "full_backup_interval_hours", 0.0001)
 
-        # Start the schedule
-        task = asyncio.create_task(backup_manager._run_full_backup_schedule())
+        # Start the schedule via scheduler
+        task = asyncio.create_task(backup_manager.scheduler._run_full_backup_schedule())
 
         try:
             # Wait for backup to be created (with timeout)
@@ -788,7 +799,7 @@ class TestAsyncScheduling:
     async def test_differential_backup_schedule_runs_periodically(
         self, backup_manager: BackupManager, monkeypatch
     ) -> None:
-        """_run_differential_backup_schedule creates backups on schedule."""
+        """scheduler._run_differential_backup_schedule creates backups on schedule."""
         backup_created = asyncio.Event()
 
         async def mock_create_backup(backup_type, **kwargs):
@@ -796,10 +807,12 @@ class TestAsyncScheduling:
                 backup_created.set()
             return None
 
-        monkeypatch.setattr(backup_manager, "_create_backup", mock_create_backup)
-        monkeypatch.setattr(backup_manager.config, "differential_backup_interval_hours", 0.0001)
+        monkeypatch.setattr(backup_manager.workflow, "create_backup", mock_create_backup)
+        monkeypatch.setattr(
+            backup_manager.scheduler.config, "differential_backup_interval_hours", 0.0001
+        )
 
-        task = asyncio.create_task(backup_manager._run_differential_backup_schedule())
+        task = asyncio.create_task(backup_manager.scheduler._run_differential_backup_schedule())
 
         try:
             await asyncio.wait_for(backup_created.wait(), timeout=1.0)
@@ -815,7 +828,7 @@ class TestAsyncScheduling:
     async def test_incremental_backup_schedule_runs_periodically(
         self, backup_manager: BackupManager, monkeypatch
     ) -> None:
-        """_run_incremental_backup_schedule creates backups on schedule."""
+        """scheduler._run_incremental_backup_schedule creates backups on schedule."""
         backup_created = asyncio.Event()
 
         async def mock_create_backup(backup_type, **kwargs):
@@ -823,10 +836,12 @@ class TestAsyncScheduling:
                 backup_created.set()
             return None
 
-        monkeypatch.setattr(backup_manager, "_create_backup", mock_create_backup)
-        monkeypatch.setattr(backup_manager.config, "incremental_backup_interval_minutes", 0.001)
+        monkeypatch.setattr(backup_manager.workflow, "create_backup", mock_create_backup)
+        monkeypatch.setattr(
+            backup_manager.scheduler.config, "incremental_backup_interval_minutes", 0.001
+        )
 
-        task = asyncio.create_task(backup_manager._run_incremental_backup_schedule())
+        task = asyncio.create_task(backup_manager.scheduler._run_incremental_backup_schedule())
 
         try:
             await asyncio.wait_for(backup_created.wait(), timeout=1.0)
@@ -854,11 +869,11 @@ class TestAsyncScheduling:
                 raise Exception("Simulated backup failure")
             return None
 
-        monkeypatch.setattr(backup_manager, "_create_backup", failing_create_backup)
+        monkeypatch.setattr(backup_manager.workflow, "create_backup", failing_create_backup)
         # Set very short interval: 0.00001 hours = 0.036 seconds
-        monkeypatch.setattr(backup_manager.config, "full_backup_interval_hours", 0.00001)
+        monkeypatch.setattr(backup_manager.scheduler.config, "full_backup_interval_hours", 0.00001)
 
-        task = asyncio.create_task(backup_manager._run_full_backup_schedule())
+        task = asyncio.create_task(backup_manager.scheduler._run_full_backup_schedule())
 
         try:
             # Wait long enough for multiple attempts (0.15s allows ~4 backups at 0.036s intervals)
@@ -876,7 +891,7 @@ class TestAsyncScheduling:
     @pytest.mark.asyncio
     async def test_schedule_respects_cancellation(self, backup_manager: BackupManager) -> None:
         """Scheduling loops exit cleanly on cancellation."""
-        task = asyncio.create_task(backup_manager._run_full_backup_schedule())
+        task = asyncio.create_task(backup_manager.scheduler._run_full_backup_schedule())
 
         # Let it start
         await asyncio.sleep(0.01)
@@ -902,7 +917,7 @@ class TestCreateBackupErrorPaths:
     async def test_prevents_concurrent_backups(self, backup_manager: BackupManager) -> None:
         """Rejects backup creation when one is already in progress."""
         # Simulate backup in progress
-        backup_manager._backup_in_progress = True
+        backup_manager.workflow._backup_in_progress = True
 
         result = await backup_manager._create_backup(BackupType.FULL)
 
@@ -918,7 +933,9 @@ class TestCreateBackupErrorPaths:
         async def mock_collect_empty_data(*args, **kwargs):
             return None  # Empty data
 
-        monkeypatch.setattr(backup_manager, "_collect_backup_data", mock_collect_empty_data)
+        monkeypatch.setattr(
+            backup_manager.workflow, "_collect_backup_data", mock_collect_empty_data
+        )
 
         result = await backup_manager._create_backup(BackupType.FULL)
 
@@ -972,16 +989,16 @@ class TestCreateBackupErrorPaths:
         async def failing_collect(*args, **kwargs):
             raise ValueError("Collection failed")
 
-        monkeypatch.setattr(backup_manager, "_collect_backup_data", failing_collect)
+        monkeypatch.setattr(backup_manager.workflow, "_collect_backup_data", failing_collect)
 
         # Before backup
-        assert not backup_manager._backup_in_progress
+        assert not backup_manager.workflow.is_backup_in_progress
 
         # Attempt backup (will fail)
         result = await backup_manager._create_backup(BackupType.FULL)
 
         # Should have cleared the flag despite error
-        assert not backup_manager._backup_in_progress
+        assert not backup_manager.workflow.is_backup_in_progress
         assert result is None
 
     @pytest.mark.asyncio
@@ -989,17 +1006,17 @@ class TestCreateBackupErrorPaths:
         self, backup_manager: BackupManager, monkeypatch
     ) -> None:
         """Clears pending snapshot even if backup fails."""
-        backup_manager._pending_state_snapshot = {"test": "snapshot"}
+        backup_manager.workflow._pending_state_snapshot = {"test": "snapshot"}
 
         async def failing_collect(*args, **kwargs):
             raise ValueError("Collection failed")
 
-        monkeypatch.setattr(backup_manager, "_collect_backup_data", failing_collect)
+        monkeypatch.setattr(backup_manager.workflow, "_collect_backup_data", failing_collect)
 
         await backup_manager._create_backup(BackupType.FULL)
 
         # Should have cleared pending snapshot
-        assert backup_manager._pending_state_snapshot is None
+        assert backup_manager.workflow.pending_snapshot is None
 
 
 class TestRestoreAsyncPaths:

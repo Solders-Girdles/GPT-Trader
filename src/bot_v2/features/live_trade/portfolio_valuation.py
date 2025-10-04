@@ -14,7 +14,10 @@ from decimal import Decimal
 from typing import Any, cast
 
 from bot_v2.features.brokerages.core.interfaces import Balance, Position
+from bot_v2.features.live_trade.equity_calculator import EquityCalculator
+from bot_v2.features.live_trade.margin_calculator import MarginCalculator
 from bot_v2.features.live_trade.pnl_tracker import PnLTracker
+from bot_v2.features.live_trade.position_valuer import PositionValuer
 
 logger = logging.getLogger(__name__)
 
@@ -215,64 +218,37 @@ class PortfolioValuationService:
         self.mark_source.get_all_marks()
         stale_marks = self.mark_source.get_stale_symbols()
 
-        # Calculate cash balance (USD/USDC)
-        cash_balance = Decimal("0")
-        for currency in ["USD", "USDC", "USDT"]:
-            if currency in balances:
-                cash_balance += balances[currency].available
+        # Calculate cash balance using EquityCalculator
+        cash_balance = EquityCalculator.calculate_cash_balance(balances)
 
         # Calculate positions value and update unrealized PnL
-        positions_value = Decimal("0")
-        position_details = {}
-        missing_positions = set()
+        (
+            position_details,
+            positions_value,
+            stale_marks_from_valuer,
+            missing_positions,
+        ) = PositionValuer.value_positions(positions, self.mark_source, self.pnl_tracker)
 
-        for symbol, position in positions.items():
-            if position.quantity == 0:
-                continue
-
-            # Get mark price
-            mark_data = self.mark_source.get_mark(symbol)
-            if not mark_data:
-                missing_positions.add(symbol)
-                logger.warning(f"No mark price for position {symbol}")
-                continue
-
-            mark_price, is_stale = mark_data
-            if is_stale:
-                stale_marks.add(symbol)
-
-            # Calculate position value
-            notional_value = abs(position.quantity) * mark_price
-            positions_value += notional_value
-
-            # Get position state from PnL tracker
-            pnl_position = self.pnl_tracker.get_or_create_position(symbol)
-            pnl_position.update_mark(mark_price)
-
-            position_details[symbol] = {
-                "side": "long" if position.quantity > 0 else "short",
-                "quantity": position.quantity,
-                "mark_price": mark_price,
-                "notional_value": notional_value,
-                "unrealized_pnl": pnl_position.unrealized_pnl,
-                "realized_pnl": pnl_position.realized_pnl,
-                "funding_paid": pnl_position.funding_paid,
-                "avg_entry_price": pnl_position.avg_entry_price,
-                "is_stale": is_stale,
-            }
+        # Merge stale marks from valuer
+        stale_marks.update(stale_marks_from_valuer)
 
         # Get total PnL from tracker
         total_pnl = self.pnl_tracker.get_total_pnl()
 
-        # Calculate total equity
-        total_equity = cash_balance + total_pnl["total"]
+        # Calculate total equity using EquityCalculator
+        total_equity = EquityCalculator.calculate_equity_from_pnl_dict(cash_balance, total_pnl)
 
-        # Calculate margin metrics (simplified)
-        margin_used = positions_value * Decimal("0.1")  # Assume 10x leverage
-        margin_available = max(Decimal("0"), cash_balance - margin_used)
-        leverage = (
-            positions_value / max(cash_balance, Decimal("1")) if cash_balance > 0 else Decimal("0")
+        # Calculate margin metrics using MarginCalculator
+        margin_metrics = MarginCalculator.calculate_margin_metrics(
+            positions_value=positions_value,
+            cash_balance=cash_balance,
+            unrealized_pnl=total_pnl["unrealized"],
         )
+
+        # Extract metrics
+        margin_used = margin_metrics.margin_used
+        margin_available = margin_metrics.margin_available
+        leverage = margin_metrics.leverage
 
         # Create snapshot
         snapshot = PortfolioSnapshot(

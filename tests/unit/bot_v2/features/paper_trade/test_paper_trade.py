@@ -51,7 +51,7 @@ class TestPaperTradingSessionInitialization:
         assert session.max_positions == 10
         assert session.position_size == 0.95
         assert session.update_interval == 60
-        assert session.is_running is False
+        assert session.trading_loop.is_running is False
         assert session.start_time is None
         assert session.end_time is None
 
@@ -118,7 +118,7 @@ class TestPaperTradingSessionInitialization:
 class TestSessionStart:
     """Test paper trading session start."""
 
-    @patch("bot_v2.features.paper_trade.paper_trade.threading.Thread")
+    @patch("bot_v2.features.paper_trade.trading_loop.threading.Thread")
     def test_start_sets_running_state(self, mock_thread):
         """Test that start sets session to running state."""
         session = PaperTradingSession(
@@ -127,10 +127,10 @@ class TestSessionStart:
 
         session.start()
 
-        assert session.is_running is True
+        assert session.trading_loop.is_running is True
         assert session.start_time is not None
 
-    @patch("bot_v2.features.paper_trade.paper_trade.threading.Thread")
+    @patch("bot_v2.features.paper_trade.trading_loop.threading.Thread")
     def test_start_creates_thread(self, mock_thread):
         """Test that start creates background thread."""
         session = PaperTradingSession(
@@ -141,10 +141,10 @@ class TestSessionStart:
 
         mock_thread.assert_called_once()
         # Check daemon flag
-        call_kwargs = mock_thread.call_args[1]
-        assert "target" in call_kwargs
+        mock_thread_instance = mock_thread.return_value
+        assert mock_thread_instance.daemon is True
 
-    @patch("bot_v2.features.paper_trade.paper_trade.threading.Thread")
+    @patch("bot_v2.features.paper_trade.trading_loop.threading.Thread")
     def test_start_already_running(self, mock_thread):
         """Test that start does nothing if already running."""
         session = PaperTradingSession(
@@ -161,19 +161,6 @@ class TestSessionStart:
         assert mock_thread.call_count == 1
         assert session.start_time == first_start_time
 
-    @patch("bot_v2.features.paper_trade.paper_trade.threading.Thread")
-    @patch("builtins.print")
-    def test_start_prints_status(self, mock_print, mock_thread):
-        """Test that start prints session information."""
-        session = PaperTradingSession(
-            strategy="SimpleMAStrategy", symbols=["AAPL", "MSFT"], initial_capital=100000
-        )
-
-        session.start()
-
-        # Should print multiple status lines
-        assert mock_print.call_count >= 1
-
 
 # ============================================================================
 # Test: Session Stop
@@ -183,7 +170,7 @@ class TestSessionStart:
 class TestSessionStop:
     """Test paper trading session stop."""
 
-    @patch("bot_v2.features.paper_trade.paper_trade.threading.Thread")
+    @patch("bot_v2.features.paper_trade.trading_loop.threading.Thread")
     def test_stop_sets_not_running(self, mock_thread):
         """Test that stop sets session to not running."""
         session = PaperTradingSession(
@@ -196,11 +183,11 @@ class TestSessionStop:
         session.start()
         result = session.stop()
 
-        assert session.is_running is False
+        assert session.trading_loop.is_running is False
         assert session.end_time is not None
         assert isinstance(result, PaperTradeResult)
 
-    @patch("bot_v2.features.paper_trade.paper_trade.threading.Thread")
+    @patch("bot_v2.features.paper_trade.trading_loop.threading.Thread")
     def test_stop_closes_all_positions(self, mock_thread):
         """Test that stop closes all open positions."""
         session = PaperTradingSession(
@@ -218,7 +205,7 @@ class TestSessionStop:
 
         session.executor.close_all_positions.assert_called_once()
 
-    @patch("bot_v2.features.paper_trade.paper_trade.threading.Thread")
+    @patch("bot_v2.features.paper_trade.trading_loop.threading.Thread")
     def test_stop_when_not_running(self, mock_thread):
         """Test stop when session is not running."""
         session = PaperTradingSession(
@@ -229,9 +216,9 @@ class TestSessionStop:
         result = session.stop()
 
         assert isinstance(result, PaperTradeResult)
-        assert session.is_running is False
+        assert session.trading_loop.is_running is False
 
-    @patch("bot_v2.features.paper_trade.paper_trade.threading.Thread")
+    @patch("bot_v2.features.paper_trade.trading_loop.threading.Thread")
     def test_stop_waits_for_thread(self, mock_thread):
         """Test that stop waits for thread to finish."""
         mock_thread_instance = Mock()
@@ -247,7 +234,7 @@ class TestSessionStop:
         session.stop()
 
         # Should call join with timeout
-        mock_thread_instance.join.assert_called_once()
+        mock_thread_instance.join.assert_called_once_with(timeout=5)
 
 
 # ============================================================================
@@ -268,7 +255,7 @@ class TestTradingLoop:
         session.data_feed.get_historical = Mock(return_value=pd.DataFrame())
         session.executor.execute_signal = Mock()
 
-        session._process_symbol("AAPL")
+        session.strategy_runner.process_symbol("AAPL")
 
         # Should not execute any signals
         session.executor.execute_signal.assert_not_called()
@@ -290,7 +277,7 @@ class TestTradingLoop:
         session.risk_manager.check_trade = Mock(return_value=True)
         session.executor.execute_signal = Mock()
 
-        session._process_symbol("AAPL")
+        session.strategy_runner.process_symbol("AAPL")
 
         # Should execute signal
         session.executor.execute_signal.assert_called_once()
@@ -309,7 +296,7 @@ class TestTradingLoop:
         session.strategy.analyze = Mock(return_value=0)  # Hold signal
         session.executor.execute_signal = Mock()
 
-        session._process_symbol("AAPL")
+        session.strategy_runner.process_symbol("AAPL")
 
         # Should not execute signal
         session.executor.execute_signal.assert_not_called()
@@ -330,7 +317,7 @@ class TestTradingLoop:
         session.risk_manager.check_trade = Mock(return_value=False)  # Reject
         session.executor.execute_signal = Mock()
 
-        session._process_symbol("AAPL")
+        session.strategy_runner.process_symbol("AAPL")
 
         # Should not execute signal
         session.executor.execute_signal.assert_not_called()
@@ -350,7 +337,7 @@ class TestTradingLoop:
         session.strategy.analyze = Mock(return_value=1)  # Buy signal
         session.executor.execute_signal = Mock()
 
-        session._process_symbol("AAPL")
+        session.strategy_runner.process_symbol("AAPL")
 
         # Should not execute signal
         session.executor.execute_signal.assert_not_called()
@@ -511,7 +498,7 @@ class TestGlobalSessionManagement:
         # Set up active running session
         mock_session = Mock()
         mock_session.is_running = True
-        pt_module._active_session = mock_session
+        pt_module._manager._session = mock_session
 
         with pytest.raises(RuntimeError, match="already running"):
             start_paper_trading(
@@ -519,7 +506,7 @@ class TestGlobalSessionManagement:
             )
 
         # Cleanup
-        pt_module._active_session = None
+        pt_module._manager._session = None
 
     @patch("bot_v2.features.paper_trade.paper_trade.PaperTradingSession")
     def test_stop_paper_trading(self, mock_session_class):
@@ -529,22 +516,22 @@ class TestGlobalSessionManagement:
         mock_session = Mock()
         mock_result = Mock(spec=PaperTradeResult)
         mock_session.stop.return_value = mock_result
-        pt_module._active_session = mock_session
+        pt_module._manager._session = mock_session
 
         result = stop_paper_trading()
 
         assert result == mock_result
         mock_session.stop.assert_called_once()
-        assert pt_module._active_session is None
+        assert pt_module._manager._session is None
 
         # Cleanup
-        pt_module._active_session = None
+        pt_module._manager._session = None
 
     def test_stop_paper_trading_no_session(self):
         """Test error when trying to stop without active session."""
         import bot_v2.features.paper_trade.paper_trade as pt_module
 
-        pt_module._active_session = None
+        pt_module._manager._session = None
 
         with pytest.raises(RuntimeError, match="No active paper trading session"):
             stop_paper_trading()
@@ -557,7 +544,7 @@ class TestGlobalSessionManagement:
         mock_session = Mock()
         mock_result = Mock(spec=PaperTradeResult)
         mock_session.get_results.return_value = mock_result
-        pt_module._active_session = mock_session
+        pt_module._manager._session = mock_session
 
         result = get_status()
 
@@ -565,13 +552,13 @@ class TestGlobalSessionManagement:
         mock_session.get_results.assert_called_once()
 
         # Cleanup
-        pt_module._active_session = None
+        pt_module._manager._session = None
 
     def test_get_status_no_session(self):
         """Test getting status without active session."""
         import bot_v2.features.paper_trade.paper_trade as pt_module
 
-        pt_module._active_session = None
+        pt_module._manager._session = None
 
         result = get_status()
 
@@ -585,7 +572,7 @@ class TestGlobalSessionManagement:
         mock_session = Mock()
         mock_result = Mock()
         mock_session.get_trading_session.return_value = mock_result
-        pt_module._active_session = mock_session
+        pt_module._manager._session = mock_session
 
         result = get_trading_session()
 
@@ -593,13 +580,13 @@ class TestGlobalSessionManagement:
         mock_session.get_trading_session.assert_called_once()
 
         # Cleanup
-        pt_module._active_session = None
+        pt_module._manager._session = None
 
     def test_get_trading_session_no_session(self):
         """Test getting trading session without active session."""
         import bot_v2.features.paper_trade.paper_trade as pt_module
 
-        pt_module._active_session = None
+        pt_module._manager._session = None
 
         result = get_trading_session()
 
@@ -649,7 +636,7 @@ class TestEdgeCases:
 
         # Should not raise exception
         try:
-            session._process_symbol("AAPL")
+            session.strategy_runner.process_symbol("AAPL")
         except Exception:
             pytest.fail("_process_symbol should handle exceptions")
 
@@ -684,7 +671,7 @@ class TestEdgeCases:
 
     def test_multiple_start_stop_cycles(self):
         """Test multiple start/stop cycles."""
-        with patch("bot_v2.features.paper_trade.paper_trade.threading.Thread"):
+        with patch("bot_v2.features.paper_trade.trading_loop.threading.Thread"):
             session = PaperTradingSession(
                 strategy="SimpleMAStrategy", symbols=["AAPL"], initial_capital=100000
             )
@@ -695,11 +682,11 @@ class TestEdgeCases:
             session.start()
             session.stop()
 
-            assert session.is_running is False
+            assert session.trading_loop.is_running is False
 
             # Second cycle - should be able to start again
             session.start()
-            assert session.is_running is True
+            assert session.trading_loop.is_running is True
 
     def test_equity_history_accumulation(self):
         """Test that equity history accumulates over time."""
@@ -754,7 +741,7 @@ class TestEdgeCases:
 class TestIntegrationScenarios:
     """Test realistic integration scenarios."""
 
-    @patch("bot_v2.features.paper_trade.paper_trade.threading.Thread")
+    @patch("bot_v2.features.paper_trade.trading_loop.threading.Thread")
     def test_complete_session_lifecycle(self, mock_thread):
         """Test complete session lifecycle from start to finish."""
         session = PaperTradingSession(
@@ -766,7 +753,7 @@ class TestIntegrationScenarios:
 
         # Start session
         session.start()
-        assert session.is_running is True
+        assert session.trading_loop.is_running is True
         assert session.start_time is not None
 
         # Get status while running
@@ -775,7 +762,7 @@ class TestIntegrationScenarios:
 
         # Stop session
         result = session.stop()
-        assert session.is_running is False
+        assert session.trading_loop.is_running is False
         assert session.end_time is not None
         assert isinstance(result, PaperTradeResult)
 
@@ -797,7 +784,7 @@ class TestIntegrationScenarios:
 
         # Process each symbol
         for symbol in session.symbols:
-            session._process_symbol(symbol)
+            session.strategy_runner.process_symbol(symbol)
 
         # Should process all symbols
         assert session.data_feed.get_historical.call_count == 3

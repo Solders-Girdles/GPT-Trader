@@ -1,15 +1,16 @@
 # PerpsBot Refactoring - Progress Tracker
 
 **Date Started**: 2025-10-01
-**Current Phase**: Phase 3 Complete (Builder pattern delivered)
-**Last Updated**: 2025-10-02
+**Current Phase**: Phase 4 Complete (StrategyOrchestrator refactoring delivered)
+**Last Updated**: 2025-10-03
 
 ## Phase Overview
 
 - ✅ **Phase 0**: Safety net (characterization tests, docs)
 - ✅ **Phase 1**: MarketDataService extraction
 - ✅ **Phase 2**: StreamingService extraction
-- ✅ **Phase 3**: Builder pattern + construction cleanup (`PHASE_3_COMPLETE_SUMMARY.md`)
+- ✅ **Phase 3**: Builder pattern + construction cleanup
+- ✅ **Phase 4**: StrategyOrchestrator refactoring (4 service extractions)
 
 ## Objectives
 
@@ -271,6 +272,52 @@ $ pytest tests/integration/test_perps_bot_characterization.py::TestStreamingServ
 - Expanded unit/integration test coverage validating builder/legacy parity and rollback path.
 
 **Status**: ✅ Complete — see `docs/architecture/PHASE_3_COMPLETE_SUMMARY.md` for full details.
+
+---
+
+## Phase 4 Completion Summary ✅
+
+**Date Completed**: 2025-10-03
+**Module**: StrategyOrchestrator Refactoring (Phases 1-4)
+
+### Highlights
+
+- Extracted four specialized services from 411-line StrategyOrchestrator
+- Applied extract → test → compose playbook from StrategySelector refactor
+- Maintained backward compatibility and zero regressions
+- Added 70 new unit tests and 5 characterization tests
+
+### Extracted Services
+
+1. **EquityCalculator** (120 lines, 17 tests)
+   - Cash balance extraction (USD/USDC)
+   - Position value calculation
+
+2. **RiskGateValidator** (131 lines, 17 tests)
+   - Volatility circuit breaker
+   - Mark staleness validation
+   - Lazy initialization pattern
+
+3. **StrategyRegistry** (193 lines, 23 tests)
+   - SPOT vs PERPS strategy initialization
+   - Config-driven window overrides
+   - Per-symbol strategy creation
+   - Backward compatibility syncing
+
+4. **StrategyExecutor** (154 lines, 13 tests)
+   - Strategy evaluation with timing
+   - Performance telemetry logging
+   - Decision recording
+   - Split evaluate/record for SPOT filters
+
+### Results
+
+- **Line reduction**: 411 → 332 lines (-79 lines, -19.2%)
+- **Test increase**: 566 orchestration tests (all passing)
+- **Characterization**: 5 new end-to-end tests verifying service integration
+- **Dependencies**: All services use lazy initialization and dependency injection
+
+**Status**: ✅ Complete — see `docs/architecture/STRATEGY_ORCHESTRATOR_REFACTOR.md` for full details.
 
 ---
 

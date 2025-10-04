@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import time as _time
 from collections.abc import Sequence
 from datetime import datetime
 from decimal import Decimal
@@ -15,16 +14,17 @@ from bot_v2.features.live_trade.indicators import (
 )
 from bot_v2.features.live_trade.indicators import to_decimal as _to_decimal
 from bot_v2.features.live_trade.indicators import true_range as _true_range
-from bot_v2.features.live_trade.risk_runtime import CircuitBreakerAction
 from bot_v2.features.live_trade.strategies.perps_baseline import (
     Action,
     BaselinePerpsStrategy,
     Decision,
-    StrategyConfig,
 )
-from bot_v2.monitoring.system import get_logger as _get_plog
 from bot_v2.orchestration.configuration import Profile
+from bot_v2.orchestration.equity_calculator import EquityCalculator
+from bot_v2.orchestration.risk_gate_validator import RiskGateValidator
 from bot_v2.orchestration.spot_profile_service import SpotProfileService
+from bot_v2.orchestration.strategy_executor import StrategyExecutor
+from bot_v2.orchestration.strategy_registry import StrategyRegistry
 from bot_v2.utilities.quantities import quantity_from
 
 if TYPE_CHECKING:  # pragma: no cover - type checking only
@@ -40,73 +40,57 @@ class StrategyOrchestrator:
         self,
         bot: PerpsBot,
         spot_profile_service: SpotProfileService | None = None,
+        equity_calculator: EquityCalculator | None = None,
+        risk_gate_validator: RiskGateValidator | None = None,
+        strategy_registry: StrategyRegistry | None = None,
+        strategy_executor: StrategyExecutor | None = None,
     ) -> None:
         self._bot = bot
         self._spot_profiles = spot_profile_service or SpotProfileService()
+        self.equity_calculator = equity_calculator or EquityCalculator()
+        self._risk_gate_validator = risk_gate_validator
+        self._strategy_registry = strategy_registry
+        self._strategy_executor = strategy_executor
+
+    @property
+    def risk_gate_validator(self) -> RiskGateValidator:
+        """Get or create risk gate validator (lazy initialization)."""
+        if self._risk_gate_validator is None:
+            self._risk_gate_validator = RiskGateValidator(self._bot.risk_manager)
+        return self._risk_gate_validator
+
+    @property
+    def strategy_registry(self) -> StrategyRegistry:
+        """Get or create strategy registry (lazy initialization)."""
+        if self._strategy_registry is None:
+            self._strategy_registry = StrategyRegistry(
+                self._bot.config,
+                self._bot.risk_manager,
+                self._spot_profiles,
+            )
+        return self._strategy_registry
+
+    @property
+    def strategy_executor(self) -> StrategyExecutor:
+        """Get or create strategy executor (lazy initialization)."""
+        if self._strategy_executor is None:
+            self._strategy_executor = StrategyExecutor(self._bot)
+        return self._strategy_executor
 
     def init_strategy(self) -> None:
-        bot = self._bot
-        derivatives_enabled = bot.config.derivatives_enabled
-        if bot.config.profile == Profile.SPOT:
-            rules = self._spot_profiles.load(bot.config.symbols or [])
-            for symbol in bot.config.symbols or []:
-                rule = rules.get(symbol, {})
-                short = int(rule.get("short_window", bot.config.short_ma))
-                long = int(rule.get("long_window", bot.config.long_ma))
-                strategy_kwargs = {
-                    "short_ma_period": short,
-                    "long_ma_period": long,
-                    "target_leverage": 1,
-                    "trailing_stop_pct": bot.config.trailing_stop_pct,
-                    "enable_shorts": False,
-                }
-                fraction_override = rule.get("position_fraction")
-                if fraction_override is None:
-                    fraction_override = bot.config.perps_position_fraction
-                if fraction_override is not None:
-                    try:
-                        strategy_kwargs["position_fraction"] = float(fraction_override)
-                    except (TypeError, ValueError):
-                        logger.warning(
-                            "Invalid position_fraction=%s for %s; using default",
-                            fraction_override,
-                            symbol,
-                        )
-                bot._symbol_strategies[symbol] = BaselinePerpsStrategy(
-                    config=StrategyConfig(**strategy_kwargs),  # type: ignore[arg-type]
-                    risk_manager=bot.risk_manager,
-                )
-        else:
-            strategy_kwargs = {
-                "short_ma_period": bot.config.short_ma,
-                "long_ma_period": bot.config.long_ma,
-                "target_leverage": bot.config.target_leverage if derivatives_enabled else 1,
-                "trailing_stop_pct": bot.config.trailing_stop_pct,
-                "enable_shorts": bot.config.enable_shorts if derivatives_enabled else False,
-            }
-            fraction_override = bot.config.perps_position_fraction
-            if fraction_override is not None:
-                try:
-                    strategy_kwargs["position_fraction"] = float(fraction_override)
-                except (TypeError, ValueError):
-                    logger.warning(
-                        "Invalid PERPS_POSITION_FRACTION=%s; using default", fraction_override
-                    )
+        """Initialize strategies via strategy registry."""
+        self.strategy_registry.initialize()
 
-            bot.strategy = BaselinePerpsStrategy(
-                config=StrategyConfig(**strategy_kwargs),  # type: ignore[arg-type]
-                risk_manager=bot.risk_manager,
-            )
+        # Sync strategies to bot for backward compatibility
+        bot = self._bot
+        if bot.config.profile == Profile.SPOT:
+            bot._symbol_strategies = self.strategy_registry.symbol_strategies
+        else:
+            bot.strategy = self.strategy_registry.default_strategy
 
     def get_strategy(self, symbol: str) -> BaselinePerpsStrategy:
-        bot = self._bot
-        if bot.config.profile == Profile.SPOT:
-            strat = bot._symbol_strategies.get(symbol)
-            if strat is None:
-                strat = BaselinePerpsStrategy(risk_manager=bot.risk_manager)
-                bot._symbol_strategies[symbol] = strat
-            return strat
-        return bot.strategy  # type: ignore[attr-defined,return-value]
+        """Get strategy for symbol via strategy registry."""
+        return self.strategy_registry.get_strategy(symbol)
 
     async def process_symbol(
         self,
@@ -117,7 +101,6 @@ class StrategyOrchestrator:
         bot = self._bot
         try:
             balances = await self._ensure_balances(balances)
-            equity = self._extract_equity(balances)
             if self._kill_switch_engaged():
                 return
 
@@ -128,21 +111,31 @@ class StrategyOrchestrator:
             if not marks:
                 return
 
-            equity = self._adjust_equity(equity, position_quantity, marks, symbol)
+            # Calculate total equity (cash + position value)
+            equity = self.equity_calculator.calculate(
+                balances=balances,
+                position_quantity=position_quantity,
+                current_mark=marks[-1] if marks else None,
+                symbol=symbol,
+            )
             if equity == Decimal("0"):
                 logger.error(f"No equity info for {symbol}")
                 return
 
-            if not self._run_risk_gates(symbol, marks):
+            if not self.risk_gate_validator.validate_gates(
+                symbol, marks, lookback_window=max(bot.config.long_ma, 20)
+            ):
                 return
 
             strategy_obj = self.get_strategy(symbol)
-            decision = self._evaluate_strategy(strategy_obj, symbol, marks, position_state, equity)
+            decision = self.strategy_executor.evaluate(
+                strategy_obj, symbol, marks, position_state, equity
+            )
 
             if bot.config.profile == Profile.SPOT:
                 decision = await self._apply_spot_filters(symbol, decision, position_state)
 
-            self._record_decision(symbol, decision)
+            self.strategy_executor.record_decision(symbol, decision)
 
             if decision.action in {Action.BUY, Action.SELL, Action.CLOSE}:
                 await bot.execute_decision(
@@ -155,14 +148,6 @@ class StrategyOrchestrator:
         if balances is not None:
             return balances
         return await asyncio.to_thread(self._bot.broker.list_balances)
-
-    def _extract_equity(self, balances: Sequence[Balance]) -> Decimal:
-        cash_assets = {"USD", "USDC"}
-        usd_balance = next(
-            (b for b in balances if getattr(b, "asset", "").upper() in cash_assets),
-            None,
-        )
-        return usd_balance.total if usd_balance else Decimal("0")
 
     def _kill_switch_engaged(self) -> bool:
         bot = self._bot
@@ -203,69 +188,6 @@ class StrategyOrchestrator:
         if not marks:
             logger.warning(f"No marks for {symbol}")
         return marks
-
-    def _adjust_equity(
-        self, equity: Decimal, position_quantity: Decimal, marks: Sequence[Decimal], symbol: str
-    ) -> Decimal:
-        if position_quantity and marks:
-            try:
-                equity += abs(position_quantity) * marks[-1]
-            except Exception as exc:
-                logger.debug(
-                    "Failed to adjust equity for %s position: %s", symbol, exc, exc_info=True
-                )
-        return equity
-
-    def _run_risk_gates(self, symbol: str, marks: Sequence[Decimal]) -> bool:
-        bot = self._bot
-        try:
-            window = marks[-max(bot.config.long_ma, 20) :]
-            cb = bot.risk_manager.check_volatility_circuit_breaker(symbol, list(window))
-            if cb.triggered and cb.action is CircuitBreakerAction.KILL_SWITCH:
-                logger.warning(f"Kill switch tripped by volatility CB for {symbol}")
-                return False
-        except Exception as exc:
-            logger.debug(
-                "Volatility circuit breaker check failed for %s: %s", symbol, exc, exc_info=True
-            )
-
-        try:
-            if bot.risk_manager.check_mark_staleness(symbol):
-                logger.warning(f"Skipping {symbol} due to stale market data")
-                return False
-        except Exception as exc:
-            logger.debug("Mark staleness check failed for %s: %s", symbol, exc, exc_info=True)
-
-        return True
-
-    def _evaluate_strategy(
-        self,
-        strategy: BaselinePerpsStrategy,
-        symbol: str,
-        marks: Sequence[Decimal],
-        position_state: dict[str, Any] | None,
-        equity: Decimal,
-    ) -> Decision:
-        bot = self._bot
-        _t0 = _time.perf_counter()
-        decision = strategy.decide(
-            symbol=symbol,
-            current_mark=marks[-1],
-            position_state=position_state,
-            recent_marks=list(marks[:-1]) if len(marks) > 1 else [],
-            equity=equity,
-            product=bot.get_product(symbol),
-        )
-        _dt_ms = (_time.perf_counter() - _t0) * 1000.0
-        try:
-            _get_plog().log_strategy_duration(strategy=type(strategy).__name__, duration_ms=_dt_ms)
-        except Exception as exc:
-            logger.debug("Failed to log strategy duration: %s", exc, exc_info=True)
-        return decision
-
-    def _record_decision(self, symbol: str, decision: Decision) -> None:
-        self._bot.last_decisions[symbol] = decision
-        logger.info(f"{symbol} Decision: {decision.action.value} - {decision.reason}")
 
     async def _apply_spot_filters(
         self, symbol: str, decision: Decision, position_state: dict[str, Any] | None

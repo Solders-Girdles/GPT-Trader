@@ -137,33 +137,20 @@ class TestPerpsBotBuilderComponents:
 
         assert hasattr(bot, "_market_monitor")
 
-    @patch.dict(os.environ, {"USE_NEW_MARKET_DATA_SERVICE": "true"})
-    def test_builder_creates_market_data_service_when_enabled(self, minimal_config: BotConfig):
-        """Builder creates MarketDataService when flag is enabled."""
+    def test_builder_creates_market_data_service(self, minimal_config: BotConfig):
+        """Builder always creates MarketDataService."""
         bot = PerpsBotBuilder(minimal_config).build()
 
         assert hasattr(bot, "_market_data_service")
         assert bot._market_data_service is not None
 
-    @patch.dict(os.environ, {"USE_NEW_MARKET_DATA_SERVICE": "false"})
-    def test_builder_skips_market_data_service_when_disabled(self, minimal_config: BotConfig):
-        """Builder skips MarketDataService when flag is disabled."""
-        bot = PerpsBotBuilder(minimal_config).build()
-
-        assert hasattr(bot, "_market_data_service")
-        assert bot._market_data_service is None
-
-    @patch.dict(os.environ, {"USE_NEW_STREAMING_SERVICE": "true"})
-    def test_builder_creates_streaming_service_when_enabled(self, minimal_config: BotConfig):
-        """Builder creates StreamingService when flag is enabled and MarketDataService exists."""
+    def test_builder_creates_streaming_service(self, minimal_config: BotConfig):
+        """Builder always creates StreamingService."""
         minimal_config.symbols = ["BTC-USD"]
         bot = PerpsBotBuilder(minimal_config).build()
 
-        # StreamingService requires MarketDataService, which requires USE_NEW_MARKET_DATA_SERVICE
-        if bot._market_data_service is not None:
-            assert bot._streaming_service is not None
-        else:
-            assert bot._streaming_service is None
+        assert bot._market_data_service is not None
+        assert bot._streaming_service is not None
 
 
 class TestPerpsBotBuilderErrorHandling:

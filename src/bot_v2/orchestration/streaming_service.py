@@ -84,6 +84,18 @@ class StreamingService:
             and self._ws_thread.is_alive()
         )
 
+    def update_symbols(self, symbols: list[str]) -> None:
+        """Update the list of symbols to stream.
+
+        Args:
+            symbols: New list of trading symbols
+
+        Note:
+            This updates the internal symbol list but does not automatically restart
+            the streaming thread. Caller should restart streaming if needed.
+        """
+        self.symbols = symbols
+
     def start(self, level: int | None = None) -> None:
         """Start background streaming thread.
 

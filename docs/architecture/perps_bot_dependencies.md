@@ -14,27 +14,25 @@ PerpsBot is the main orchestration class for the trading system. This document m
 PerpsBot.__init__(config, registry=None)
   ├─ builder = PerpsBotBuilder(config)
   │   └─ if registry provided → builder.with_registry(registry)
-  ├─ built = builder.build()
-  │   ├─ _build_configuration_state(bot)
-  │   ├─ _build_runtime_state(bot)
-  │   ├─ _build_storage(bot)
-  │   ├─ _build_core_services(bot)
-  │   ├─ bot.runtime_coordinator.bootstrap()
-  │   ├─ _build_market_data_service(bot)
-  │   ├─ _build_accounting_services(bot)
-  │   ├─ _build_market_services(bot)
-  │   ├─ _build_streaming_service(bot)
-  │   └─ _start_streaming_if_configured(bot)
-  └─ _apply_built_state(built)
-      ├─ copy attributes onto runtime instance
-      └─ service_rebinding.rebind_bot_services(self)
+  └─ builder.build_into(self)
+      ├─ _build_configuration_state(bot)
+      ├─ _build_runtime_state(bot)
+      ├─ _build_storage(bot)
+      ├─ _build_core_services(bot)
+      ├─ bot.runtime_coordinator.bootstrap()
+      ├─ _build_market_data_service(bot)
+      ├─ _build_accounting_services(bot)
+      ├─ _build_market_services(bot)
+      ├─ _build_streaming_service(bot)
+      ├─ _start_streaming_if_configured(bot)
+      └─ service_rebinding.rebind_bot_services(bot)
 
 # Streaming toggles at runtime re-use: PerpsBot._start_streaming_if_configured()
 ```
 
-**Rebinding helper:** `rebind_bot_services(bot)` walks every coordinator-style attribute and
-reassigns cached `_bot` references to the live runtime instance. Adding a new service that stores
-a `_bot` attribute automatically opts-in to this rebind step.
+**Rebinding helper:** `rebind_bot_services(bot)` runs at the end of `build_into`, walking every
+coordinator-style attribute and reassigning cached `_bot` references to the live runtime instance.
+Adding a new service that stores a `_bot` attribute automatically opts in to this rebind step.
 
 ## MarketDataService Extraction - Dependency Checklist
 
@@ -154,17 +152,14 @@ with self._mark_lock:  # ← SAME lock as PerpsBot._mark_lock
 
 ### Feature Flag Rollback Path
 
-**Flag: `USE_NEW_STREAMING_SERVICE` (default: `true`)**
+**Flag: `USE_NEW_STREAMING_SERVICE` *(retired Oct 2025)***
 
-When enabled:
-- StreamingService handles all streaming via `_streaming_service.start(level)`
+StreamingService is now always active:
+- All streaming handled via `_streaming_service.start(level)`
 - Shutdown via `_streaming_service.stop()`
 - Config changes via service restart
-
-When disabled:
-- Legacy methods preserved: `_start_streaming_background_legacy()`, `_run_stream_loop()`
-- All side effects identical
-- Allows safe rollback if streaming service has issues
+- Legacy methods (`_start_streaming_background_legacy()`, `_run_stream_loop()`) removed
+- No rollback path available - StreamingService is the only implementation
 
 ### Data Flow Map
 
@@ -295,10 +290,10 @@ def exec_engine(self) -> LiveExecutionEngine | AdvancedExecutionEngine:
 
 ```bash
 # Phase 1: MarketDataService ✅ COMPLETE (2025-10-01)
-USE_NEW_MARKET_DATA_SERVICE=true  # Default: true (enabled)
+# Flag retired Oct 2025 — MarketDataService always active
 
 # Phase 2: StreamingService
-USE_NEW_STREAMING_SERVICE=true    # Default after extraction
+# USE_NEW_STREAMING_SERVICE — Flag retired Oct 2025, StreamingService always active
 
 # Phase 3: BotBuilder
 USE_BUILDER_PATTERN=true          # Default after extraction

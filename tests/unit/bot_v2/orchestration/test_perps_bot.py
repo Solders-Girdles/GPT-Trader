@@ -149,7 +149,7 @@ async def test_run_cycle_respects_trading_window(monkeypatch, tmp_path):
 
     recorded: list[str] = []
 
-    async def record_process(symbol: str):
+    async def record_process(symbol: str, *_, **__) -> None:
         recorded.append(symbol)
 
     async def noop_log():
@@ -226,7 +226,8 @@ async def test_place_order_lock_serialises_calls(monkeypatch, tmp_path, fake_clo
     bot.broker.get_order = make_order  # type: ignore
 
     async def submit():
-        return await bot._place_order(
+        return await bot.execution_coordinator.place_order(
+            bot.exec_engine,
             symbol="BTC-PERP",
             side=OrderSide.BUY,
             quantity=Decimal("0.01"),
@@ -404,7 +405,7 @@ class TestSessionGuard:
 
         processed = []
 
-        async def capture_process(symbol: str):
+        async def capture_process(symbol: str, *_, **__) -> None:
             processed.append(symbol)
 
         async def noop_update():
@@ -441,7 +442,7 @@ class TestSessionGuard:
 
         processed = []
 
-        async def capture_process(symbol: str):
+        async def capture_process(symbol: str, *_, **__) -> None:
             processed.append(symbol)
 
         async def noop_update():
@@ -870,9 +871,8 @@ class TestInitialization:
         # bot.strategy and _exec_engine are initialized by the builder
         assert bot._product_map == {}
 
-    def test_init_market_data_service_enabled(self, monkeypatch, tmp_path):
-        """Test MarketDataService initialization when enabled."""
-        monkeypatch.setenv("USE_NEW_MARKET_DATA_SERVICE", "true")
+    def test_init_market_data_service_initialized(self, monkeypatch, tmp_path):
+        """Test MarketDataService initialization."""
         monkeypatch.setenv("PERPS_FORCE_MOCK", "1")
         monkeypatch.setenv("EVENT_STORE_ROOT", str(tmp_path))
         monkeypatch.setattr(PerpsBot, "_start_streaming_if_configured", lambda self: None)
@@ -889,23 +889,8 @@ class TestInitialization:
         assert bot._market_data_service is not None
         assert bot._market_data_service.symbols == ["BTC-PERP"]
 
-    def test_init_market_data_service_disabled(self, monkeypatch, tmp_path):
-        """Test MarketDataService not initialized when disabled."""
-        monkeypatch.setenv("USE_NEW_MARKET_DATA_SERVICE", "false")
-        monkeypatch.setenv("PERPS_FORCE_MOCK", "1")
-        monkeypatch.setenv("EVENT_STORE_ROOT", str(tmp_path))
-        monkeypatch.setattr(PerpsBot, "_start_streaming_if_configured", lambda self: None)
-
-        config = BotConfig(profile=Profile.DEV, symbols=["BTC-PERP"])
-
-        bot = PerpsBot(config)
-
-        assert bot._market_data_service is None
-
-    def test_init_streaming_service_enabled(self, monkeypatch, tmp_path):
-        """Test StreamingService initialization when enabled."""
-        monkeypatch.setenv("USE_NEW_STREAMING_SERVICE", "true")
-        monkeypatch.setenv("USE_NEW_MARKET_DATA_SERVICE", "true")
+    def test_init_streaming_service(self, monkeypatch, tmp_path):
+        """Test StreamingService initialization (always created)."""
         monkeypatch.setenv("PERPS_FORCE_MOCK", "1")
         monkeypatch.setenv("EVENT_STORE_ROOT", str(tmp_path))
         monkeypatch.setattr(PerpsBot, "_start_streaming_if_configured", lambda self: None)
@@ -916,34 +901,6 @@ class TestInitialization:
 
         assert bot._streaming_service is not None
         assert bot._streaming_service.symbols == ["BTC-PERP"]
-
-    def test_init_streaming_service_disabled(self, monkeypatch, tmp_path):
-        """Test StreamingService not initialized when disabled."""
-        monkeypatch.setenv("USE_NEW_STREAMING_SERVICE", "false")
-        monkeypatch.setenv("PERPS_FORCE_MOCK", "1")
-        monkeypatch.setenv("EVENT_STORE_ROOT", str(tmp_path))
-        monkeypatch.setattr(PerpsBot, "_start_streaming_if_configured", lambda self: None)
-
-        config = BotConfig(profile=Profile.DEV, symbols=["BTC-PERP"])
-
-        bot = PerpsBot(config)
-
-        assert bot._streaming_service is None
-
-    def test_init_streaming_service_requires_market_data_service(self, monkeypatch, tmp_path):
-        """Test StreamingService not initialized if MarketDataService is None."""
-        monkeypatch.setenv("USE_NEW_STREAMING_SERVICE", "true")
-        monkeypatch.setenv("USE_NEW_MARKET_DATA_SERVICE", "false")  # Disable market data
-        monkeypatch.setenv("PERPS_FORCE_MOCK", "1")
-        monkeypatch.setenv("EVENT_STORE_ROOT", str(tmp_path))
-        monkeypatch.setattr(PerpsBot, "_start_streaming_if_configured", lambda self: None)
-
-        config = BotConfig(profile=Profile.DEV, symbols=["BTC-PERP"])
-
-        bot = PerpsBot(config)
-
-        # StreamingService should be None because MarketDataService is None
-        assert bot._streaming_service is None
 
     def test_construct_services(self, monkeypatch, tmp_path):
         """Test _construct_services creates all service instances."""
@@ -998,8 +955,6 @@ class TestStreamingConfiguration:
 
     def test_start_streaming_canary_profile(self, monkeypatch, tmp_path):
         """Test streaming starts in CANARY profile when enabled."""
-        monkeypatch.setenv("USE_NEW_STREAMING_SERVICE", "true")
-        monkeypatch.setenv("USE_NEW_MARKET_DATA_SERVICE", "true")
         monkeypatch.setenv("PERPS_FORCE_MOCK", "1")
         monkeypatch.setenv("EVENT_STORE_ROOT", str(tmp_path))
 
@@ -1019,8 +974,6 @@ class TestStreamingConfiguration:
 
     def test_start_streaming_prod_profile(self, monkeypatch, tmp_path):
         """Test streaming starts in PROD profile when enabled."""
-        monkeypatch.setenv("USE_NEW_STREAMING_SERVICE", "true")
-        monkeypatch.setenv("USE_NEW_MARKET_DATA_SERVICE", "true")
         monkeypatch.setenv("PERPS_FORCE_MOCK", "1")
         monkeypatch.setenv("EVENT_STORE_ROOT", str(tmp_path))
 
@@ -1038,8 +991,6 @@ class TestStreamingConfiguration:
 
     def test_start_streaming_dev_profile_disabled(self, monkeypatch, tmp_path):
         """Test streaming doesn't start in DEV profile."""
-        monkeypatch.setenv("USE_NEW_STREAMING_SERVICE", "true")
-        monkeypatch.setenv("USE_NEW_MARKET_DATA_SERVICE", "true")
         monkeypatch.setenv("PERPS_FORCE_MOCK", "1")
         monkeypatch.setenv("EVENT_STORE_ROOT", str(tmp_path))
         monkeypatch.setattr(PerpsBot, "_start_streaming_if_configured", lambda self: None)
@@ -1057,8 +1008,6 @@ class TestStreamingConfiguration:
 
     def test_start_streaming_disabled(self, monkeypatch, tmp_path):
         """Test streaming doesn't start when disabled."""
-        monkeypatch.setenv("USE_NEW_STREAMING_SERVICE", "true")
-        monkeypatch.setenv("USE_NEW_MARKET_DATA_SERVICE", "true")
         monkeypatch.setenv("PERPS_FORCE_MOCK", "1")
         monkeypatch.setenv("EVENT_STORE_ROOT", str(tmp_path))
         monkeypatch.setattr(PerpsBot, "_start_streaming_if_configured", lambda self: None)
@@ -1077,8 +1026,6 @@ class TestStreamingConfiguration:
 
     def test_start_streaming_error_handling(self, monkeypatch, tmp_path):
         """Test streaming startup handles errors gracefully."""
-        monkeypatch.setenv("USE_NEW_STREAMING_SERVICE", "true")
-        monkeypatch.setenv("USE_NEW_MARKET_DATA_SERVICE", "true")
         monkeypatch.setenv("PERPS_FORCE_MOCK", "1")
         monkeypatch.setenv("EVENT_STORE_ROOT", str(tmp_path))
 

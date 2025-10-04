@@ -200,7 +200,7 @@ class TestExecutionCoordinator:
             reduce_only=True,
         )
 
-        coordinator._place_order = AsyncMock()
+        coordinator.place_order = AsyncMock()
 
         mock_bot.is_reduce_only_mode = Mock(return_value=False)
         mock_bot.config.time_in_force = "GTC"
@@ -266,7 +266,7 @@ class TestExecutionCoordinator:
 
             coordinator._order_placement_service = None
 
-            result = await coordinator._place_order(
+            result = await coordinator.place_order(
                 mock_bot.exec_engine,
                 symbol="BTC-USD",
                 side=OrderSide.BUY,
@@ -284,7 +284,7 @@ class TestExecutionCoordinator:
         coordinator._place_order_inner = AsyncMock(side_effect=ValidationError("Invalid quantity"))
 
         with pytest.raises(ValidationError):
-            await coordinator._place_order(
+            await coordinator.place_order(
                 mock_bot.exec_engine,
                 symbol="BTC-USD",
                 side=OrderSide.BUY,
@@ -301,7 +301,7 @@ class TestExecutionCoordinator:
         )
 
         with pytest.raises(ExecutionError):
-            await coordinator._place_order(
+            await coordinator.place_order(
                 mock_bot.exec_engine,
                 symbol="BTC-USD",
                 side=OrderSide.BUY,
@@ -315,7 +315,7 @@ class TestExecutionCoordinator:
         """Test order placement with generic exception"""
         coordinator._place_order_inner = AsyncMock(side_effect=Exception("Unexpected error"))
 
-        result = await coordinator._place_order(
+        result = await coordinator.place_order(
             mock_bot.exec_engine,
             symbol="BTC-USD",
             side=OrderSide.BUY,
@@ -350,7 +350,7 @@ class TestExecutionCoordinator:
 
     def test_ensure_order_lock_creates_lock(self, coordinator, mock_bot):
         """Test order lock creation"""
-        lock = coordinator._ensure_order_lock()
+        lock = coordinator.ensure_order_lock()
 
         assert lock is not None
         assert isinstance(lock, asyncio.Lock)
@@ -358,8 +358,8 @@ class TestExecutionCoordinator:
 
     def test_ensure_order_lock_reuses_existing(self, coordinator, mock_bot):
         """Test order lock reuse"""
-        lock1 = coordinator._ensure_order_lock()
-        lock2 = coordinator._ensure_order_lock()
+        lock1 = coordinator.ensure_order_lock()
+        lock2 = coordinator.ensure_order_lock()
 
         assert lock1 is lock2
 

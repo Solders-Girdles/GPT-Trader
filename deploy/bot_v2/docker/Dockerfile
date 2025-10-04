@@ -14,7 +14,7 @@ WORKDIR /app
 
 # Stage 2: Dependency builder (installs Poetry-managed deps)
 FROM base AS dependencies
-ENV POETRY_VERSION=1.8.3     POETRY_HOME=/opt/poetry     PATH="/opt/poetry/bin:${PATH}"
+ENV POETRY_VERSION=2.1.4     POETRY_HOME=/opt/poetry     PATH="/opt/poetry/bin:${PATH}"
 
 # Build toolchain for native-backed Python dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends     build-essential     gcc     g++     make     wget     libssl-dev     libffi-dev     libpq-dev     && rm -rf /var/lib/apt/lists/*
@@ -31,7 +31,7 @@ COPY --chown=trader:trader . .
 RUN poetry install --no-interaction --no-ansi --with dev --no-root
 ENV PYTHONPATH=/app     ENV=development
 USER trader
-CMD ["python", "-m", "bot_v2", "--mode", "development"]
+CMD ["python", "-m", "bot_v2", "--profile", "dev", "--dry-run"]
 
 # Stage 4: Testing environment (runs unit tests with coverage)
 FROM dependencies AS testing

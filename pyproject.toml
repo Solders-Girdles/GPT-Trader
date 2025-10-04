@@ -29,6 +29,10 @@ gpt-trader = "bot_v2.cli:main"
 perps-bot = "bot_v2.cli:main"
 
 [tool.poetry]
+name = "gpt-trader"
+version = "0.1.0"
+description = "Equities-first trading bot scaffold with adapter-based data, backtesting, and paper trading hooks."
+authors = ["RJ + GPT-5"]
 packages = [{ include = "bot_v2", from = "src" }]
 
 [tool.poetry.group.dev.dependencies]

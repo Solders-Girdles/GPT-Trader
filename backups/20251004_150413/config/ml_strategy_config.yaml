@@ -1,0 +1,59 @@
+version: '1.0'
+description: ML Strategy configuration for intelligent strategy selection
+last_updated: '2025-08-19'
+ml_strategy:
+  min_confidence_threshold: 0.6
+  fallback_strategy: SIMPLE_MA
+  model_validation_enabled: true
+  auto_retrain_enabled: true
+  auto_retrain_threshold: 0.4
+  confidence_bounds:
+  - 0.0
+  - 1.0
+  prediction_bounds:
+    return:
+    - -50.0
+    - 100.0
+    sharpe:
+    - -2.0
+    - 5.0
+    drawdown:
+    - -100.0
+    - 0.0
+  training:
+    min_training_samples: 50
+    max_training_samples: 5000
+    validation_split: 0.2
+    cross_validation_folds: 3
+    feature_selection_enabled: true
+    outlier_detection_enabled: true
+  model_parameters:
+    n_estimators: 100
+    max_depth: 5
+    random_state: 42
+    regularization: 0.01
+  performance_thresholds:
+    min_accuracy: 0.5
+    min_f1_score: 0.4
+    max_mae: 50.0
+    min_r_squared: 0.1
+  feature_engineering:
+    interaction_features: true
+    polynomial_features: false
+    feature_scaling: true
+    feature_selection_k: 15
+  monitoring:
+    drift_detection_enabled: true
+    performance_tracking_enabled: true
+    alert_on_poor_performance: true
+    performance_window_days: 30
+  fallback_behavior:
+    use_heuristic_confidence: true
+    fallback_on_model_failure: true
+    fallback_on_low_confidence: true
+    emergency_strategy: SIMPLE_MA
+  logging:
+    log_predictions: true
+    log_confidence_scores: true
+    log_feature_importance: false
+    log_model_performance: true

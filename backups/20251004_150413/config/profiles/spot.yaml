@@ -1,0 +1,135 @@
+strategy:
+  btc:
+    type: ma
+    short_window: 5
+    long_window: 40
+    volatility_filter: null
+    volume_filter:
+      window: 10
+      multiplier: 1.2
+    momentum_filter:
+      window: 14
+      oversold: 40
+      overbought: 70
+    trend_filter: null
+  eth:
+    type: ma
+    short_window: 10
+    long_window: 40
+    volatility_filter: null
+    volume_filter:
+      window: 10
+      multiplier: 1.1
+    momentum_filter: null
+    trend_filter: null
+  sol:
+    type: ma
+    short_window: 8
+    long_window: 32
+    volume_filter:
+      window: 8
+      multiplier: 1.15
+    momentum_filter:
+      window: 12
+      oversold: 35
+      overbought: 70
+    trend_filter: null
+  xrp:
+    type: ma
+    short_window: 12
+    long_window: 48
+    volume_filter:
+      window: 12
+      multiplier: 1.1
+    momentum_filter:
+      window: 20
+      oversold: 30
+      overbought: 68
+    trend_filter: null
+  ltc:
+    type: ma
+    short_window: 7
+    long_window: 35
+    volume_filter:
+      window: 8
+      multiplier: 1.1
+    momentum_filter:
+      window: 14
+      oversold: 38
+      overbought: 72
+    trend_filter: null
+  ada:
+    type: ma
+    short_window: 12
+    long_window: 50
+    volume_filter:
+      window: 12
+      multiplier: 1.05
+    momentum_filter:
+      window: 18
+      oversold: 32
+      overbought: 68
+    trend_filter: null
+  doge:
+    type: ma
+    short_window: 15
+    long_window: 60
+    volume_filter:
+      window: 15
+      multiplier: 1.05
+    momentum_filter:
+      window: 21
+      oversold: 28
+      overbought: 65
+    trend_filter: null
+  bch:
+    type: ma
+    short_window: 6
+    long_window: 30
+    volume_filter:
+      window: 8
+      multiplier: 1.12
+    momentum_filter:
+      window: 14
+      oversold: 37
+      overbought: 70
+    trend_filter: null
+  avax:
+    type: ma
+    short_window: 9
+    long_window: 36
+    volume_filter:
+      window: 10
+      multiplier: 1.1
+    momentum_filter:
+      window: 16
+      oversold: 34
+      overbought: 70
+    trend_filter: null
+  link:
+    type: ma
+    short_window: 9
+    long_window: 45
+    volume_filter:
+      window: 12
+      multiplier: 1.08
+    momentum_filter:
+      window: 16
+      oversold: 35
+      overbought: 71
+    trend_filter: null
+risk:
+  commission_bps: 2.5
+  max_position_pct: 0.2
+  max_daily_loss: 200
+symbols:
+  - BTC-USD
+  - ETH-USD
+  - SOL-USD
+  - XRP-USD
+  - LTC-USD
+  - ADA-USD
+  - DOGE-USD
+  - BCH-USD
+  - AVAX-USD
+  - LINK-USD

@@ -138,7 +138,7 @@ tests/unit/bot_v2/features/paper_trade/dashboard/test_html_report_generator.py
 tests/unit/bot_v2/features/paper_trade/test_session_config.py
 tests/unit/bot_v2/features/paper_trade/test_strategy_runner.py
 tests/unit/bot_v2/features/paper_trade/test_trading_loop.py
-tests/unit/bot_v2/orchestration/test_orchestration_equity_calculator.py
+tests/unit/bot_v2/features/live_trade/test_orchestration_equity_calculator.py
 tests/unit/bot_v2/orchestration/test_risk_gate_validator.py
 tests/unit/bot_v2/orchestration/test_strategy_executor.py
 tests/unit/bot_v2/orchestration/test_strategy_registry.py

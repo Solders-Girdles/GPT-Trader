@@ -7,13 +7,13 @@
 
 ## Summary
 
-**Total Modules**: 37
-**Total Lines**: 7,931
-**Total Classes**: 44
+**Total Modules**: 36
+**Total Lines**: 7,814
+**Total Classes**: 43
 
 ### Complexity Indicators
 
-- **Average Lines per Module**: 214
+- **Average Lines per Module**: 217
 - **Largest Module**: streaming_service (477 lines)
 - **Most Imports**: builders.perps_bot_builder (20 imports)
 
@@ -33,7 +33,7 @@ Modules ranked by complexity (lines + classes*100 + imports*10):
 | 6 | `runtime_coordinator` | 600 | 340 | 2 | 6 |
 | 7 | `streaming_service` | 597 | 477 | 1 | 2 |
 | 8 | `execution.guards` | 569 | 369 | 2 | 0 |
-| 9 | `strategy_orchestrator` | 504 | 334 | 1 | 7 |
+| 9 | `strategy_orchestrator` | 494 | 334 | 1 | 6 |
 | 10 | `execution.order_placement` | 492 | 382 | 1 | 1 |
 | 11 | `order_reconciler` | 460 | 260 | 2 | 0 |
 | 12 | `deterministic_broker` | 457 | 357 | 1 | 0 |
@@ -71,11 +71,6 @@ Modules that could be extracted to separate features:
 ### `system_monitor`
 - **Lines**: 284
 - **Dependencies**: 3 orchestration imports
-- **Reason**: Domain-specific, low coupling
-
-### `equity_calculator`
-- **Lines**: 117
-- **Dependencies**: 0 orchestration imports
 - **Reason**: Domain-specific, low coupling
 
 ### `market_data_service`

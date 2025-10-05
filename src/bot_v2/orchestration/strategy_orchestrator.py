@@ -8,6 +8,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
 from bot_v2.features.brokerages.core.interfaces import Balance, Position
+from bot_v2.features.live_trade.equity import EquityCalculator
 from bot_v2.features.live_trade.indicators import mean_decimal as _mean_decimal
 from bot_v2.features.live_trade.indicators import (
     relative_strength_index as _rsi_from_closes,
@@ -20,7 +21,6 @@ from bot_v2.features.live_trade.strategies.perps_baseline import (
     Decision,
 )
 from bot_v2.orchestration.configuration import Profile
-from bot_v2.orchestration.equity_calculator import EquityCalculator
 from bot_v2.orchestration.risk_gate_validator import RiskGateValidator
 from bot_v2.orchestration.spot_profile_service import SpotProfileService
 from bot_v2.orchestration.strategy_executor import StrategyExecutor

@@ -14,7 +14,7 @@ from unittest.mock import Mock
 import pytest
 
 from bot_v2.features.brokerages.core.interfaces import Balance
-from bot_v2.orchestration.equity_calculator import EquityCalculator
+from bot_v2.features.live_trade.equity import EquityCalculator
 
 
 @pytest.fixture

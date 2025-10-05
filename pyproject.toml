@@ -6,19 +6,20 @@ readme = "README.md"
 authors = [{name = "RJ + GPT-5"}]
 requires-python = ">=3.12,<3.13"
 dependencies = [
-    "coinbase-advanced-py>=1.0.0,<2.0.0",
+    "coinbase-advanced-py (>=1.8.2,<2.0.0)",
     "pandas>=2.2.2,<3.0.0",
     "numpy>=1.26.4,<2.0.0",
     "pydantic>=2.7.4,<3.0.0",
     "python-dotenv>=1.0.1,<2.0.0",
     "requests>=2.32.3,<3.0.0",
-    "websockets>=15.0,<16.0",
+    "websockets>=12.0,<16.0",
     "pyyaml>=6.0.1,<7.0.0",
     "psutil>=7.0.0,<8.0.0",
     "aiohttp>=3.12.15,<4.0.0",
     "redis[hiredis]>=6.0.0,<7.0.0",
     "cryptography>=46.0.0,<47.0.0",
     "pyotp>=2.9.0,<3.0.0",
+    "prometheus-client (>=0.23.1,<0.24.0)",
 ]
 
 [project.optional-dependencies]
@@ -29,10 +30,6 @@ gpt-trader = "bot_v2.cli:main"
 perps-bot = "bot_v2.cli:main"
 
 [tool.poetry]
-name = "gpt-trader"
-version = "0.1.0"
-description = "Equities-first trading bot scaffold with adapter-based data, backtesting, and paper trading hooks."
-authors = ["RJ + GPT-5"]
 packages = [{ include = "bot_v2", from = "src" }]
 
 [tool.poetry.group.dev.dependencies]

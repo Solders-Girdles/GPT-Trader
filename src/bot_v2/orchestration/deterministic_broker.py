@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import time
 from collections.abc import Iterable, Sequence
 from datetime import datetime
 from decimal import Decimal
@@ -9,6 +10,7 @@ from typing import Literal
 
 from bot_v2.features.brokerages.core.interfaces import (
     Balance,
+    BrokerHealth,
     Candle,
     IBrokerage,
     MarketType,
@@ -89,6 +91,15 @@ class DeterministicBroker(IBrokerage):
 
     def validate_connection(self) -> bool:
         return self._connected
+
+    def check_health(self) -> BrokerHealth:
+        """Check health of deterministic broker (always healthy when connected)."""
+        return BrokerHealth(
+            connected=self._connected,
+            api_responsive=self._connected,
+            last_check_timestamp=time.time(),
+            error_message=None if self._connected else "Broker not connected"
+        )
 
     def get_account_id(self) -> str:
         return "DETERMINISTIC"
@@ -236,6 +247,10 @@ class DeterministicBroker(IBrokerage):
 
     def stream_orderbook(self, symbols: Sequence[str], level: int = 1) -> Iterable[dict]:
         return iter(())
+
+    def set_streaming_metrics_emitter(self, emitter) -> None:  # pragma: no cover - no streaming
+        """Deterministic broker ignores streaming metrics emitters."""
+        return
 
     # ---- Test helpers ----
     def seed_position(

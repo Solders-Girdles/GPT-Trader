@@ -44,6 +44,10 @@ class OrderPlacementService:
         order_stats: dict[str, int],
         broker: Any = None,
         dry_run: bool = False,
+        *,
+        metrics_server: Any | None = None,
+        guardrails: Any | None = None,
+        profile: str = "default",
     ) -> None:
         """Initialize order placement service.
 
@@ -58,6 +62,9 @@ class OrderPlacementService:
         self._broker = broker
         self._dry_run = dry_run
         self._order_lock: asyncio.Lock | None = None
+        self._metrics_server = metrics_server
+        self._guardrails = guardrails
+        self._profile = profile
 
     def _ensure_order_lock(self) -> asyncio.Lock:
         """Ensure order lock is initialized."""
@@ -194,18 +201,67 @@ class OrderPlacementService:
             product=product,
         )
 
+        # Guard rail checks (e.g., dry-run enforcement, caps)
+        if self._guardrails is not None:
+            guard_context = {
+                "symbol": symbol,
+                "decision": decision,
+                "mark": mark,
+                "product": product,
+                "order_kwargs": place_kwargs,
+                "profile": self._profile,
+            }
+            guard_result = self._guardrails.check_order(guard_context)
+            if not guard_result.allowed:
+                guard_name = guard_result.guard or "unknown"
+                reason = guard_result.reason or "blocked"
+                logger.info("Order blocked by guard %s: %s", guard_name, reason)
+
+                self._order_stats.setdefault("attempted", 0)
+                self._order_stats.setdefault("successful", 0)
+                self._order_stats.setdefault("failed", 0)
+                self._order_stats["attempted"] += 1
+
+                if guard_name == "dry_run":
+                    self._order_stats["successful"] += 1
+                else:
+                    self._order_stats["failed"] += 1
+
+                if self._metrics_server:
+                    self._metrics_server.record_order_attempt(
+                        "attempted", profile=self._profile
+                    )
+                    self._metrics_server.record_order_attempt(
+                        "success" if guard_name == "dry_run" else "failed",
+                        profile=self._profile,
+                    )
+                    self._metrics_server.record_guard_trip(
+                        guard_name, reason, profile=self._profile
+                    )
+                    if self._guardrails:
+                        self._metrics_server.update_error_streak(
+                            self._guardrails.get_error_streak(), profile=self._profile
+                        )
+                if self._guardrails:
+                    self._guardrails.record_success()
+                return
+
         # Place order
         try:
             order = await self._place_order(exec_engine, **place_kwargs)
             if order:
                 logger.info(f"Order placed successfully: {order.id}")
+                self._handle_guard_success()
             else:
                 logger.warning(f"Order rejected or failed for {symbol}")
+                self._handle_guard_error("order_failed")
         except (ValidationError, ExecutionError, RiskValidationError):
             # Propagate expected validation/execution failures to caller
+            self._handle_guard_error("order_validation_error")
             raise
         except Exception as exc:
             logger.error("Error executing decision for %s: %s", symbol, exc, exc_info=True)
+            self._handle_guard_error("order_exception")
 
     def _build_place_kwargs(
         self,
@@ -297,8 +353,31 @@ class OrderPlacementService:
             # Normalize side to handle both enum and string
             side_str = getattr(order.side, "value", order.side)
             logger.info(f"Order recorded: {order.id} {side_str} {order_quantity} {order.symbol}")
+            self._handle_guard_success()
             return order
 
         self._order_stats["failed"] += 1
         logger.warning("Order attempt failed (no order returned)")
+        self._handle_guard_error("order_no_result")
         return None
+
+    def _handle_guard_error(self, reason: str) -> None:
+        if self._guardrails is None:
+            return
+
+        streak, triggered = self._guardrails.record_error(reason)
+        if self._metrics_server:
+            self._metrics_server.update_error_streak(streak, profile=self._profile)
+            if triggered:
+                self._metrics_server.record_guard_trip(
+                    "circuit_breaker", reason, profile=self._profile
+                )
+
+    def _handle_guard_success(self) -> None:
+        if self._guardrails is None:
+            return
+        self._guardrails.record_success()
+        if self._metrics_server:
+            self._metrics_server.update_error_streak(
+                self._guardrails.get_error_streak(), profile=self._profile
+            )

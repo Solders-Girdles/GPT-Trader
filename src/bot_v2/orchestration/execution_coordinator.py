@@ -58,6 +58,9 @@ class ExecutionCoordinator:
                 order_stats=bot.order_stats,
                 broker=bot.broker,
                 dry_run=bot.config.dry_run,
+                metrics_server=bot.metrics_server,
+                guardrails=getattr(bot, "guardrails", None),
+                profile=bot.config.profile.value,
             )
         return self._order_placement_service
 

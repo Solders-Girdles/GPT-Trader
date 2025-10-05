@@ -12,9 +12,10 @@ Tests cover:
 from __future__ import annotations
 
 import threading
+import time
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any
-from unittest.mock import MagicMock, Mock, call, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, call, patch
 
 import pytest
 
@@ -30,6 +31,7 @@ def mock_broker():
     broker = Mock()
     broker.stream_orderbook = Mock()
     broker.stream_trades = Mock()
+    broker.set_streaming_metrics_emitter = Mock()
     return broker
 
 
@@ -39,6 +41,7 @@ def mock_market_data_service():
     service = Mock()
     service._update_mark_window = Mock()
     service._mark_lock = threading.RLock()
+    service.update_marks = AsyncMock()
     return service
 
 
@@ -75,7 +78,7 @@ def streaming_service(
     mock_market_monitor,
 ):
     """Create StreamingService instance for testing."""
-    return StreamingService(
+    service = StreamingService(
         symbols=["BTC-USD", "ETH-USD"],
         broker=mock_broker,
         market_data_service=mock_market_data_service,
@@ -84,6 +87,48 @@ def streaming_service(
         market_monitor=mock_market_monitor,
         bot_id="test_bot",
     )
+    yield service
+    service.stop()
+
+
+@pytest.fixture
+def metrics_server_mock():
+    """Create a mock metrics server with streaming hooks."""
+    server = Mock()
+    server.set_streaming_context = Mock()
+    server.update_streaming_status = Mock()
+    server.record_streaming_message = Mock()
+    server.record_streaming_reconnect = Mock()
+    server.record_streaming_heartbeat = Mock()
+    server.update_streaming_fallback = Mock()
+    return server
+
+
+@pytest.fixture
+def streaming_service_with_metrics(
+    mock_broker,
+    mock_market_data_service,
+    mock_risk_manager,
+    mock_event_store,
+    mock_market_monitor,
+    metrics_server_mock,
+):
+    """Create StreamingService instance with metrics integration for testing."""
+    service = StreamingService(
+        symbols=["BTC-USD", "ETH-USD"],
+        broker=mock_broker,
+        market_data_service=mock_market_data_service,
+        risk_manager=mock_risk_manager,
+        event_store=mock_event_store,
+        market_monitor=mock_market_monitor,
+        bot_id="test_bot",
+        metrics_server=metrics_server_mock,
+        profile="staging",
+        stream_name="test_ws",
+        rest_poll_interval=0.05,
+    )
+    yield service
+    service.stop()
 
 
 class TestStreamingServiceStartStop:
@@ -562,3 +607,109 @@ class TestStreamingServiceIntegration:
 
         # Verify stopped
         assert not streaming_service.is_running()
+
+
+class TestStreamingServiceMetricsIntegration:
+    """Tests for streaming metrics bridging to MetricsServer."""
+
+    def test_metrics_emitter_registered(
+        self, streaming_service_with_metrics, mock_broker
+    ) -> None:
+        """Broker receives metrics emitter registration on init."""
+
+        mock_broker.set_streaming_metrics_emitter.assert_called_once()
+
+    def test_metrics_events_bridge_to_metrics_server(
+        self, streaming_service_with_metrics, metrics_server_mock
+    ) -> None:
+        """Streaming events map to MetricsServer recording calls."""
+
+        metrics_server_mock.update_streaming_status.reset_mock()
+        streaming_service_with_metrics._handle_streaming_metrics_event(
+            {"event_type": "ws_connect"}
+        )
+        metrics_server_mock.update_streaming_status.assert_called_with(
+            True, profile="staging", stream="test_ws"
+        )
+
+        metrics_server_mock.record_streaming_message.reset_mock()
+        streaming_service_with_metrics._handle_streaming_metrics_event(
+            {"event_type": "ws_message", "elapsed_since_last": 0.5, "timestamp": 123.0}
+        )
+        metrics_server_mock.record_streaming_message.assert_called_with(
+            0.5, timestamp=123.0, profile="staging", stream="test_ws"
+        )
+
+        metrics_server_mock.record_streaming_reconnect.reset_mock()
+        streaming_service_with_metrics._handle_streaming_metrics_event(
+            {"event_type": "ws_reconnect_attempt", "attempt": 2}
+        )
+        metrics_server_mock.record_streaming_reconnect.assert_called_with(
+            "attempt", attempt=2, profile="staging", stream="test_ws"
+        )
+
+        streaming_service_with_metrics._handle_streaming_metrics_event(
+            {"event_type": "ws_reconnect_success", "attempt": 2}
+        )
+        metrics_server_mock.record_streaming_reconnect.assert_called_with(
+            "success", attempt=2, profile="staging", stream="test_ws"
+        )
+
+    def test_rest_fallback_starts_and_stops_on_events(
+        self, streaming_service_with_metrics, metrics_server_mock
+    ) -> None:
+        """REST fallback toggles based on streaming disconnect/connect events."""
+
+        service = streaming_service_with_metrics
+        metrics_server_mock.update_streaming_fallback.reset_mock()
+
+        try:
+            service._handle_streaming_metrics_event({"event_type": "ws_disconnect"})
+            time.sleep(0.05)
+            assert service._rest_fallback_active is True
+            metrics_server_mock.update_streaming_fallback.assert_called_with(
+                True, profile="staging", stream="test_ws"
+            )
+
+            metrics_server_mock.update_streaming_fallback.reset_mock()
+            service._handle_streaming_metrics_event(
+                {"event_type": "ws_message", "elapsed_since_last": 0.1, "timestamp": time.time()}
+            )
+            time.sleep(0.05)
+            assert service._rest_fallback_active is False
+            metrics_server_mock.update_streaming_fallback.assert_called_with(
+                False, profile="staging", stream="test_ws"
+            )
+        finally:
+            service._stop_rest_fallback()
+
+    def test_set_rest_poll_interval_validation(self, streaming_service_with_metrics) -> None:
+        """Rest poll interval setter enforces positive floats."""
+
+        service = streaming_service_with_metrics
+        service.set_rest_poll_interval(0.25)
+        assert service._rest_poll_interval == 0.25
+
+        # Invalid values should not change current interval
+        previous = service._rest_poll_interval
+        service.set_rest_poll_interval(0)
+        assert service._rest_poll_interval == previous
+
+    def test_rest_fallback_without_metrics_server(self, streaming_service) -> None:
+        """Fallback still works when no metrics server is attached."""
+
+        service = streaming_service
+        service.set_rest_poll_interval(0.05)
+
+        try:
+            service._handle_streaming_metrics_event({"event_type": "ws_disconnect"})
+            time.sleep(0.05)
+            assert service._rest_fallback_active is True
+
+            service._handle_streaming_metrics_event(
+                {"event_type": "ws_message", "elapsed_since_last": 0.2, "timestamp": time.time()}
+            )
+            time.sleep(0.05)
+            assert service._rest_fallback_active is False
+        finally:
+            service._stop_rest_fallback()

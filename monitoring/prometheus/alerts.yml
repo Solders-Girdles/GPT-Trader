@@ -187,3 +187,190 @@ groups:
         annotations:
           summary: "Low disk space"
           description: "Only {{ $value | humanizePercentage }} disk space remaining"
+
+  - name: bot_health_alerts
+    interval: 30s
+    rules:
+      # Critical: Bot stalled (no cycle in >5 minutes)
+      - alert: BotCycleStalled
+        expr: (time() - timestamp(bot_cycle_duration_seconds_count{profile="production"} > 0)) > 300
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Bot trading cycle has stalled"
+          description: "No trading cycle executed in the last {{ $value | humanizeDuration }}. Bot may be frozen."
+
+      # Critical: High error rate (>2 errors/min sustained)
+      - alert: BotHighErrorRate
+        expr: rate(bot_errors_total{profile="production"}[5m]) * 60 > 2
+        for: 3m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Bot error rate critically high"
+          description: "Bot is generating {{ $value | humanize }} errors per minute (threshold: 2/min)"
+
+      # Critical: Memory leak detected (>100MB/hour growth)
+      - alert: BotMemoryLeak
+        expr: rate(bot_memory_used_bytes{profile="production"}[1h]) / 1024 / 1024 * 3600 > 100
+        for: 15m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Bot memory leak detected"
+          description: "Memory growing at {{ $value | humanize }}MB/hour (threshold: 100MB/hour)"
+
+      # Critical: CPU pegged (>90% for >1 minute)
+      - alert: BotHighCPU
+        expr: bot_cpu_percent{profile="production"} > 90
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Bot CPU usage critically high"
+          description: "CPU usage at {{ $value | humanize }}% for >1 minute"
+
+      # Warning: Slow cycle (no cycle in >2 minutes)
+      - alert: BotCycleSlow
+        expr: (time() - timestamp(bot_cycle_duration_seconds_count{profile="production"} > 0)) > 120
+        for: 30s
+        labels:
+          severity: warning
+        annotations:
+          summary: "Bot trading cycle delayed"
+          description: "No trading cycle in {{ $value | humanizeDuration }}. Bot may be slow or stuck."
+
+      # Warning: Elevated error rate (>0.5 errors/min)
+      - alert: BotElevatedErrorRate
+        expr: rate(bot_errors_total{profile="production"}[5m]) * 60 > 0.5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Bot error rate elevated"
+          description: "Bot generating {{ $value | humanize }} errors per minute (threshold: 0.5/min)"
+
+      # Warning: Memory growth (>50MB/hour)
+      - alert: BotMemoryGrowth
+        expr: rate(bot_memory_used_bytes{profile="production"}[1h]) / 1024 / 1024 * 3600 > 50
+        for: 30m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Bot memory usage growing"
+          description: "Memory growing at {{ $value | humanize }}MB/hour (threshold: 50MB/hour)"
+
+      # Warning: Low order success rate (<80%)
+      - alert: BotLowOrderSuccessRate
+        expr: (rate(bot_order_attempts_total{profile="production",status="success"}[5m]) / (rate(bot_order_attempts_total{profile="production",status="attempted"}[5m]) + 0.001)) < 0.8
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Bot order success rate low"
+          description: "Order success rate at {{ $value | humanizePercentage }} (threshold: 80%)"
+
+      # Warning: Slow cycle duration (p95 > 10 seconds)
+      - alert: BotSlowCycles
+        expr: histogram_quantile(0.95, rate(bot_cycle_duration_seconds_bucket{profile="production"}[5m])) > 10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Bot cycles running slow"
+          description: "P95 cycle duration is {{ $value | humanize }}s (threshold: 10s)"
+
+      # Warning: No background tasks running
+      - alert: BotNoBackgroundTasks
+        expr: sum(bot_background_tasks{profile="production"}) == 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Bot has no background tasks running"
+          description: "Expected background tasks (guards, reconciliation) are not active"
+
+      # Critical: Daily loss limit breached
+      - alert: BotDailyLossLimitBreached
+        expr: bot_guard_active{guard="daily_loss",profile="production"} == 1
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Bot daily loss limit breached - reduce-only mode active"
+          description: "Daily realized loss of ${{ $labels.profile | query | bot_guard_daily_loss_usd }} exceeded configured limit. Bot entered reduce-only mode."
+
+      # Warning: Daily loss approaching limit (80% threshold)
+      - alert: BotDailyLossApproachingLimit
+        expr: |
+          bot_guard_daily_loss_usd{profile="production"} > 0
+          and
+          bot_guard_daily_loss_usd{profile="production"} / on(profile) group_left()
+            (max by (profile) (bot_guard_daily_loss_usd{profile="production"}) * 1.25) > 0.8
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Bot daily loss approaching configured limit"
+          description: "Daily realized loss is ${{ $value | humanize }}, approaching the configured limit (80% threshold)"
+
+      # Warning: Elevated error streak
+      - alert: BotErrorStreakElevated
+        expr: bot_guard_error_streak{profile="production"} >= 3
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Bot experiencing elevated error streak"
+          description: "Critical error streak has reached {{ $value | humanize }} events"
+
+      # Critical: Circuit breaker tripped
+      - alert: BotCircuitBreakerTripped
+        expr: bot_guard_active{profile="production", guard="circuit_breaker"} == 1
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Bot circuit breaker triggered"
+          description: "Circuit breaker guard active due to repeated failures. Trading halted until manual reset or cooldown."
+
+      # Critical: Streaming disconnected for >60s
+      - alert: BotStreamingDisconnected
+        expr: min_over_time(bot_streaming_connection_state{profile="production",stream="coinbase_ws"}[1m]) < 0.5
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Streaming feed disconnected"
+          description: "Coinbase WebSocket connection has been down for over a minute. Bot is running without live marks."
+
+      # Warning: Streaming heartbeat stale (>15s lag)
+      - alert: BotStreamingHeartbeatStale
+        expr: bot_streaming_heartbeat_lag_seconds{profile="production",stream="coinbase_ws"} > 15
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Streaming heartbeat stale"
+          description: "Latest WebSocket heartbeat for {{ $labels.stream }} is {{ $value | humanizeDuration }} old (threshold: 15s)."
+
+      # Warning: Reconnect attempts exceeding threshold
+      - alert: BotStreamingReconnectStorm
+        expr: increase(bot_streaming_reconnect_total{profile="production",stream="coinbase_ws",status="attempt"}[5m]) > 3
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Streaming reconnect storm detected"
+          description: "Bot attempted {{ $value | humanize }} reconnects within 5 minutes. Investigate network or Coinbase WS stability."
+
+      # Info: Bot restarted
+      - alert: BotRestarted
+        expr: bot_uptime_seconds{profile="production"} < 120
+        for: 30s
+        labels:
+          severity: info
+        annotations:
+          summary: "Bot recently restarted"
+          description: "Bot uptime is {{ $value | humanizeDuration }}. Bot was restarted recently."

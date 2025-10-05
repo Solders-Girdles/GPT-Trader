@@ -9,9 +9,10 @@ REST operations, and WebSocket market data while presenting the same
 from __future__ import annotations
 
 import logging
+import time
 from collections.abc import Iterable, Sequence
 from decimal import Decimal
-from typing import Any
+from typing import Any, Callable
 
 from bot_v2.features.brokerages.coinbase.auth import build_rest_auth
 from bot_v2.features.brokerages.coinbase.client import CoinbaseClient
@@ -24,6 +25,7 @@ from bot_v2.features.brokerages.coinbase.websocket_handler import CoinbaseWebSoc
 from bot_v2.features.brokerages.coinbase.ws import CoinbaseWebSocket
 from bot_v2.features.brokerages.core.interfaces import (
     Balance,
+    BrokerHealth,
     IBrokerage,
     MarketType,
     Order,
@@ -60,6 +62,7 @@ class CoinbaseBrokerage(IBrokerage):
 
         self._connected = False
         self._account_id: str | None = None
+        self.stream_name = "coinbase_ws"
 
         self._event_store = EventStore()
         self._product_catalog = ProductCatalog(ttl_seconds=900)
@@ -72,6 +75,7 @@ class CoinbaseBrokerage(IBrokerage):
             market_data=self.market_data,
             event_store=self._event_store,
         )
+        self._streaming_metrics_emitter = None
         self.ws_handler = CoinbaseWebSocketHandler(
             endpoints=self.endpoints,
             config=config,
@@ -80,6 +84,7 @@ class CoinbaseBrokerage(IBrokerage):
             product_catalog=self._product_catalog,
             client_auth=self.client.auth,
             ws_cls=CoinbaseWebSocket,
+            metrics_emitter=self._streaming_metrics_emitter,
         )
         self._ws_factory_override = None
 
@@ -186,6 +191,14 @@ class CoinbaseBrokerage(IBrokerage):
     ) -> Iterable[dict[str, Any]]:
         return self.ws_handler.stream_user_events(product_ids, ws=self._create_ws())
 
+    def set_streaming_metrics_emitter(
+        self, emitter: Callable[[dict[str, Any]], None] | None
+    ) -> None:
+        """Set metrics emitter for WebSocket streaming events."""
+
+        self._streaming_metrics_emitter = emitter
+        self.ws_handler.set_metrics_emitter(emitter)
+
     def get_quote(self, symbol: str) -> Quote | None:
         cached = self.market_data.get_cached_quote(symbol)
         if cached and not self.is_stale(symbol):
@@ -287,6 +300,34 @@ class CoinbaseBrokerage(IBrokerage):
     def validate_connection(self) -> bool:
         return self._connected
 
+    def check_health(self) -> BrokerHealth:
+        """Check health by testing API responsiveness with lightweight endpoint."""
+        if not self._connected:
+            return BrokerHealth(
+                connected=False,
+                api_responsive=False,
+                last_check_timestamp=time.time(),
+                error_message="Broker not connected"
+            )
+
+        # Test API responsiveness with a lightweight call
+        try:
+            # Use server time endpoint (very lightweight, no auth required)
+            response = self.client.get("/v2/time" if self.config.api_mode == "exchange" else "/api/v3/brokerage/time")
+            api_responsive = bool(response and isinstance(response, dict))
+            error_msg = None
+        except Exception as exc:
+            api_responsive = False
+            error_msg = f"API health check failed: {type(exc).__name__}: {exc}"
+            logger.warning(error_msg)
+
+        return BrokerHealth(
+            connected=self._connected,
+            api_responsive=api_responsive,
+            last_check_timestamp=time.time(),
+            error_message=error_msg
+        )
+
     def get_account_id(self) -> str:
         return self._account_id or ""
 
@@ -306,7 +347,10 @@ class CoinbaseBrokerage(IBrokerage):
         self.ws_handler._client_auth = getattr(self.client, "auth", None)
         if self._ws_factory_override:
             return self._ws_factory_override()
-        return self.ws_handler.create_ws()
+        ws = self.ws_handler.create_ws()
+        if hasattr(ws, "set_metrics_emitter"):
+            ws.set_metrics_emitter(self._streaming_metrics_emitter)
+        return ws
 
     @property
     def product_catalog(self) -> ProductCatalog:

@@ -137,6 +137,13 @@ class TestPerpsBotBuilderComponents:
 
         assert hasattr(bot, "_market_monitor")
 
+    def test_builder_initializes_guardrails(self, minimal_config: BotConfig):
+        """Guardrails are initialized and registered with metrics server."""
+        bot = PerpsBotBuilder(minimal_config).build()
+
+        assert hasattr(bot, "guardrails")
+        assert bot.guardrails.is_guard_active("dry_run") is bool(bot.config.dry_run)
+
     def test_builder_creates_market_data_service(self, minimal_config: BotConfig):
         """Builder always creates MarketDataService."""
         bot = PerpsBotBuilder(minimal_config).build()

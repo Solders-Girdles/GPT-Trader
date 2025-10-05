@@ -35,6 +35,11 @@ class RuntimeCoordinator:
         """Initialize broker, risk, strategy, and execution services."""
 
         self._init_broker()
+
+        # Update metrics server with broker reference for health monitoring
+        if hasattr(self._bot, 'metrics_server') and self._bot.metrics_server:
+            self._bot.metrics_server.set_broker(self._bot.broker)
+
         self._init_risk_manager()
         self._bot.strategy_orchestrator.init_strategy()
         self._bot.execution_coordinator.init_execution()
@@ -49,9 +54,9 @@ class RuntimeCoordinator:
 
         paper_env = bool(getattr(bot.config, "perps_paper_trading", False))
         force_mock = bool(getattr(bot.config, "perps_force_mock", False))
-        is_dev = bot.config.profile == Profile.DEV
+        is_dev_or_demo = bot.config.profile in (Profile.DEV, Profile.DEMO)
 
-        if paper_env or force_mock or is_dev or bot.config.mock_broker:
+        if paper_env or force_mock or is_dev_or_demo or bot.config.mock_broker:
             bot.broker = DeterministicBroker()
             logger.info("Using deterministic broker (REST-first marks)")
         else:
@@ -84,9 +89,13 @@ class RuntimeCoordinator:
         if broker != "coinbase":
             raise RuntimeError("BROKER must be set to 'coinbase' for perps trading")
 
-        if os.getenv("COINBASE_SANDBOX", "0") == "1":
+        # Allow sandbox for staging profile, but block it for production
+        is_sandbox = os.getenv("COINBASE_SANDBOX", "0") == "1"
+        if is_sandbox and bot.config.profile not in (Profile.STAGING, Profile.DEV, Profile.DEMO):
             raise RuntimeError(
-                "COINBASE_SANDBOX=1 is not supported for live trading. Remove it or enable PERPS_PAPER=1."
+                f"COINBASE_SANDBOX=1 is only allowed for dev/demo/staging profiles. "
+                f"Current profile: {bot.config.profile.value}. "
+                f"Remove COINBASE_SANDBOX or switch to staging profile."
             )
 
         derivatives_enabled = bool(getattr(bot.config, "derivatives_enabled", False))
@@ -98,35 +107,69 @@ class RuntimeCoordinator:
                         f"Symbol {sym} is perpetual but COINBASE_ENABLE_DERIVATIVES is not enabled."
                     )
 
-            api_key_present = any(
-                os.getenv(env) for env in ("COINBASE_API_KEY", "COINBASE_PROD_API_KEY")
-            )
-            api_secret_present = any(
-                os.getenv(env) for env in ("COINBASE_API_SECRET", "COINBASE_PROD_API_SECRET")
-            )
-            if not (api_key_present and api_secret_present):
-                raise RuntimeError(
-                    "Spot trading requires Coinbase production API key/secret. "
-                    "Set COINBASE_API_KEY/SECRET (or PROD variants)."
-                )
+            # Validate spot trading credentials based on environment
+            if is_sandbox:
+                api_key_present = os.getenv("COINBASE_SANDBOX_API_KEY") or os.getenv("COINBASE_API_KEY")
+                api_secret_present = os.getenv("COINBASE_SANDBOX_API_SECRET") or os.getenv("COINBASE_API_SECRET")
+                passphrase_present = os.getenv("COINBASE_SANDBOX_API_PASSPHRASE") or os.getenv("COINBASE_API_PASSPHRASE")
+
+                if not (api_key_present and api_secret_present and passphrase_present):
+                    raise RuntimeError(
+                        f"Sandbox spot trading (profile={bot.config.profile.value}) requires credentials. "
+                        f"Set COINBASE_SANDBOX_API_KEY, COINBASE_SANDBOX_API_SECRET, and COINBASE_SANDBOX_API_PASSPHRASE "
+                        f"(or use generic COINBASE_API_* variants)."
+                    )
+            else:
+                api_key_present = os.getenv("COINBASE_PROD_API_KEY") or os.getenv("COINBASE_API_KEY")
+                api_secret_present = os.getenv("COINBASE_PROD_API_SECRET") or os.getenv("COINBASE_API_SECRET")
+
+                if not (api_key_present and api_secret_present):
+                    raise RuntimeError(
+                        f"Production spot trading (profile={bot.config.profile.value}) requires credentials. "
+                        f"Set COINBASE_PROD_API_KEY and COINBASE_PROD_API_SECRET "
+                        f"(or use generic COINBASE_API_KEY/SECRET)."
+                    )
             return
 
+        # Derivatives (perps) validation
         api_mode = os.getenv("COINBASE_API_MODE", "advanced").lower()
-        if api_mode != "advanced":
-            raise RuntimeError(
-                "Perpetuals require Advanced Trade API in production. "
-                "Set COINBASE_API_MODE=advanced and unset COINBASE_SANDBOX, or set PERPS_PAPER=1 for mock mode."
-            )
 
-        cdp_key = os.getenv("COINBASE_PROD_CDP_API_KEY") or os.getenv("COINBASE_CDP_API_KEY")
-        cdp_priv = os.getenv("COINBASE_PROD_CDP_PRIVATE_KEY") or os.getenv(
-            "COINBASE_CDP_PRIVATE_KEY"
-        )
-        if not (cdp_key and cdp_priv):
-            raise RuntimeError(
-                "Missing CDP JWT credentials. Set COINBASE_PROD_CDP_API_KEY and COINBASE_PROD_CDP_PRIVATE_KEY, "
-                "or enable PERPS_PAPER=1 for mock trading."
-            )
+        # Sandbox uses exchange API mode, production/staging can use advanced
+        if is_sandbox:
+            if api_mode != "exchange":
+                logger.warning(
+                    "Sandbox trading typically uses Exchange API mode. "
+                    "Advanced Trade does not have a public sandbox. Proceeding with %s mode.",
+                    api_mode
+                )
+            # Sandbox requires HMAC credentials (exchange mode)
+            api_key = os.getenv("COINBASE_SANDBOX_API_KEY") or os.getenv("COINBASE_API_KEY")
+            api_secret = os.getenv("COINBASE_SANDBOX_API_SECRET") or os.getenv("COINBASE_API_SECRET")
+            passphrase = os.getenv("COINBASE_SANDBOX_API_PASSPHRASE") or os.getenv("COINBASE_API_PASSPHRASE")
+
+            if not (api_key and api_secret and passphrase):
+                raise RuntimeError(
+                    f"Sandbox perpetuals (profile={bot.config.profile.value}) require Exchange API credentials. "
+                    f"Set COINBASE_SANDBOX_API_KEY, COINBASE_SANDBOX_API_SECRET, and COINBASE_SANDBOX_API_PASSPHRASE "
+                    f"(or use generic COINBASE_API_* variants)."
+                )
+        else:
+            # Production requires advanced mode with CDP JWT credentials
+            if api_mode != "advanced":
+                raise RuntimeError(
+                    f"Production perpetuals (profile={bot.config.profile.value}) require Advanced Trade API. "
+                    f"Set COINBASE_API_MODE=advanced or enable PERPS_PAPER=1 for mock mode."
+                )
+
+            cdp_key = os.getenv("COINBASE_PROD_CDP_API_KEY") or os.getenv("COINBASE_CDP_API_KEY")
+            cdp_priv = os.getenv("COINBASE_PROD_CDP_PRIVATE_KEY") or os.getenv("COINBASE_CDP_PRIVATE_KEY")
+
+            if not (cdp_key and cdp_priv):
+                raise RuntimeError(
+                    f"Production perpetuals (profile={bot.config.profile.value}) require CDP JWT credentials. "
+                    f"Set COINBASE_PROD_CDP_API_KEY and COINBASE_PROD_CDP_PRIVATE_KEY, "
+                    f"or enable PERPS_PAPER=1 for mock trading."
+                )
 
     # ------------------------------------------------------------------
     def _init_risk_manager(self) -> None:

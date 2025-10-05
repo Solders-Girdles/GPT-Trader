@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from collections.abc import Iterable, Sequence
+from collections.abc import Callable, Iterable, Sequence
 from datetime import datetime
 from decimal import Decimal
 
@@ -33,6 +33,7 @@ class CoinbaseWebSocketHandler:
         product_catalog: ProductCatalog,
         client_auth: object | None,
         ws_cls: type[CoinbaseWebSocket] = CoinbaseWebSocket,
+        metrics_emitter: Callable[[dict[str, Any]], None] | None = None,
     ) -> None:
         self._endpoints = endpoints
         self._config = config
@@ -41,6 +42,7 @@ class CoinbaseWebSocketHandler:
         self._product_catalog = product_catalog
         self._client_auth = client_auth
         self._ws_cls = ws_cls
+        self._metrics_emitter = metrics_emitter
 
         self._ws_client: CoinbaseWebSocket | None = None
         self._ws_factory_override = None
@@ -129,6 +131,15 @@ class CoinbaseWebSocketHandler:
         if self._ws_client is not None:
             self._ws_client = None
 
+    def set_metrics_emitter(
+        self, emitter: Callable[[dict[str, Any]], None] | None
+    ) -> None:
+        """Attach a streaming metrics emitter for WebSocket events."""
+
+        self._metrics_emitter = emitter
+        if self._ws_client is not None and hasattr(self._ws_client, "set_metrics_emitter"):
+            self._ws_client.set_metrics_emitter(emitter)
+
     # ------------------------------------------------------------------
     # Internal helpers
     # ------------------------------------------------------------------
@@ -144,6 +155,7 @@ class CoinbaseWebSocketHandler:
         return self._ws_cls(
             url=self._endpoints.websocket_url(),
             ws_auth_provider=auth_provider,
+            metrics_emitter=self._metrics_emitter,
         )
 
     # ------------------------------------------------------------------

@@ -17,7 +17,7 @@ trading:
   enabled_strategies:
     - "momentum"  # Start with single, well-tested strategy
   symbols:
-    - "BTC-PERP"  # Single symbol initially
+    - "BTC-USD"  # Sandbox testing on spot
 
   # Position Sizing - EXTREMELY CONSERVATIVE
   position_sizing:
@@ -45,11 +45,14 @@ risk_management:
   # Daily Limits
   daily_loss_limit: 10.00  # $10 maximum daily loss
   daily_profit_target: 20.00  # Optional: stop if target hit
+  max_trade_value: 100.00  # $100 maximum per trade (guardrail test)
 
   # Position Limits
   max_concurrent_positions: 1
   max_leverage: 1.0  # No leverage
   max_exposure_pct: 0.01  # 1% maximum account exposure
+  symbol_position_caps:
+    BTC-USD: 0.01  # 0.01 BTC maximum position size
 
   # Drawdown Controls
   max_drawdown_pct: 0.02  # 2% maximum drawdown
@@ -90,9 +93,15 @@ monitoring:
   # Metrics Collection
   metrics:
     enabled: true
-    interval_seconds: 10
+    interval_seconds: 5
     export_prometheus: true
     export_datadog: false
+
+  # Streaming Configuration (for soak test)
+  streaming:
+    enabled: true
+    level: 1
+    rest_poll_interval: 5.0
 
   # Alerting
   alerts:
@@ -166,24 +175,26 @@ features:
 
 # Session Configuration
 session:
-  # Trading Hours (UTC)
-  start_time: "14:00"  # 2 PM UTC
-  end_time: "15:00"    # 3 PM UTC (1 hour window)
+  # Trading Hours (UTC) - 24/7 for soak test
+  start_time: "00:00"
+  end_time: "23:59"
   trading_days:
     - "monday"
     - "tuesday"
     - "wednesday"
     - "thursday"
     - "friday"
+    - "saturday"
+    - "sunday"
 
   # Session Limits
-  max_session_duration_minutes: 60
-  auto_shutdown_on_limit: true
+  max_session_duration_minutes: 1440  # 24 hours
+  auto_shutdown_on_limit: false
 
 # Broker Configuration
 broker:
   provider: "coinbase"
-  environment: "production"
+  environment: "sandbox"  # Using sandbox for soak test
 
   # Connection Settings
   connection:
@@ -246,17 +257,26 @@ emergency:
 
 # Deployment Notes
 notes: |
-  This canary profile is designed for initial production testing with:
+  This canary profile is configured for Phase 3.2/3.3 Sandbox Soak Test:
+  - Coinbase Sandbox environment (no real funds)
+  - BTC-USD spot trading with reduce-only mode
   - Maximum $10 daily loss limit
+  - Maximum $100 per trade (max_trade_value guard)
   - Single position of 0.01 BTC maximum
-  - Reduce-only mode (cannot increase positions)
-  - 1-hour daily trading window
-  - Comprehensive logging and event recording
+  - 24/7 trading window for continuous testing
+  - WebSocket streaming enabled with REST fallback
+  - Comprehensive metrics and event recording
 
-  Before promoting to full production:
-  1. Run for minimum 5 trading days
-  2. Verify all risk limits trigger correctly
-  3. Confirm event recording works
-  4. Review all logged trades
-  5. Validate PnL calculations
-  6. Test emergency shutdown procedures
+  Soak Test Objectives:
+  1. Validate guardrails (order caps, daily loss, circuit breaker)
+  2. Test streaming resilience and REST fallback
+  3. Verify Prometheus alerts fire correctly
+  4. Measure system stability over 24-48 hours
+  5. Collect baseline metrics for production readiness
+
+  Success Criteria:
+  - 100% guardrail reliability (no bypasses)
+  - >99% streaming uptime with graceful degradation
+  - 100% alert accuracy (no false positives/negatives)
+  - Zero crashes or deadlocks
+  - Memory usage stable (no leaks)

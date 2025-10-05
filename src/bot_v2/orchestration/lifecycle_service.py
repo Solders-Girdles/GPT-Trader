@@ -199,6 +199,13 @@ class LifecycleService:
         logger.info("Starting Perps Bot - Profile: %s", self._bot.config.profile.value)
         self._bot.running = True
 
+        # Start metrics server
+        if not self._bot.metrics_server.is_running:
+            try:
+                self._bot.metrics_server.start()
+            except Exception as e:
+                logger.warning(f"Failed to start metrics server: {e}")
+
         try:
             # Startup reconciliation
             if not self._bot.config.dry_run:
@@ -243,7 +250,36 @@ class LifecycleService:
 
     async def _run_single_cycle(self) -> None:
         """Execute a single trading cycle and post-cycle tasks."""
+        import time
+
+        # Guard rail cycle checks (e.g., halt states)
+        guardrails = getattr(self._bot, "guardrails", None)
+        if guardrails is not None:
+            guardrails.check_cycle({"profile": self._bot.config.profile.value})
+
+        start_time = time.time()
         await self._bot.run_cycle()
+        duration = time.time() - start_time
+
+        # Record metrics
+        profile = self._bot.config.profile.value
+        if guardrails is not None:
+            if self._bot.metrics_server:
+                try:
+                    daily_loss_value = float(guardrails.get_daily_loss())
+                except (TypeError, ValueError):
+                    daily_loss_value = 0.0
+
+                try:
+                    streak_value = int(guardrails.get_error_streak())
+                except (TypeError, ValueError):
+                    streak_value = 0
+
+                self._bot.metrics_server.daily_loss_gauge.labels(profile=profile).set(daily_loss_value)
+                self._bot.metrics_server.update_error_streak(streak_value, profile=profile)
+        self._bot.metrics_server.record_cycle_duration(duration, profile=profile)
+        self._bot.metrics_server.update_uptime(profile=profile)
+
         self._bot.system_monitor.write_health_status(ok=True)
         self._bot.system_monitor.check_config_updates()
 

@@ -139,3 +139,35 @@ class TestAPIModeBehavior:
                 with pytest.raises(InvalidRequestError) as exc:
                     adapter.client.list_portfolios()
                 assert "not available in exchange mode" in str(exc.value)
+
+
+class TestStreamingMetricsEmitter:
+    """Tests for CoinbaseBrokerage streaming metrics emitter integration."""
+
+    def test_metrics_emitter_registration_propagates_to_ws(self):
+        from bot_v2.features.brokerages.coinbase.models import APIConfig
+
+        with patch(
+            "bot_v2.features.brokerages.coinbase.adapter.CoinbaseWebSocketHandler"
+        ) as MockHandler:
+            handler_instance = MockHandler.return_value
+            ws_instance = MagicMock()
+            handler_instance.create_ws.return_value = ws_instance
+
+            config = APIConfig(
+                api_key="test",
+                api_secret="test",
+                passphrase="test",
+                base_url="https://test",
+                api_mode="exchange",
+            )
+
+            adapter = CoinbaseBrokerage(config=config)
+
+            emitter = MagicMock()
+            adapter.set_streaming_metrics_emitter(emitter)
+
+            handler_instance.set_metrics_emitter.assert_called_with(emitter)
+
+            adapter._create_ws()
+            ws_instance.set_metrics_emitter.assert_called_with(emitter)

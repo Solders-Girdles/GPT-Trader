@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Literal, Protocol
+from typing import Any, Callable, Literal, Protocol
 
 
 class MarketType(Enum):
@@ -245,6 +245,15 @@ class PermissionDeniedError(BrokerageError):
     pass
 
 
+@dataclass
+class BrokerHealth:
+    """Health status of brokerage connection."""
+    connected: bool
+    api_responsive: bool
+    last_check_timestamp: float
+    error_message: str | None = None
+
+
 class IBrokerage(Protocol):
     """Brokerage protocol supporting spot and derivatives."""
 
@@ -252,6 +261,7 @@ class IBrokerage(Protocol):
     def connect(self) -> bool: ...
     def disconnect(self) -> None: ...
     def validate_connection(self) -> bool: ...
+    def check_health(self) -> BrokerHealth: ...
 
     # Accounts and balances
     def get_account_id(self) -> str: ...
@@ -291,3 +301,8 @@ class IBrokerage(Protocol):
     # Streaming
     def stream_trades(self, symbols: Sequence[str]) -> Iterable[dict]: ...
     def stream_orderbook(self, symbols: Sequence[str], level: int = 1) -> Iterable[dict]: ...
+
+    # Streaming observability (optional)
+    def set_streaming_metrics_emitter(
+        self, emitter: Callable[[dict[str, Any]], None] | None
+    ) -> None: ...

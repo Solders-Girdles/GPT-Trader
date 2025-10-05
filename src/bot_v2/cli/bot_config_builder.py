@@ -73,6 +73,8 @@ class BotConfigBuilder:
         Returns:
             BotConfig instance configured from arguments
         """
+        from decimal import Decimal
+
         # Filter arguments to config overrides (skip command-specific args)
         config_overrides = {
             key: value
@@ -90,6 +92,21 @@ class BotConfigBuilder:
                 if tokens:
                     config_overrides["symbols"] = tokens
                     logger.info("Loaded %d symbols from TRADING_SYMBOLS env var", len(tokens))
+
+        # Parse symbol_position_caps from SYMBOL:CAP format
+        if "symbol_position_caps" in config_overrides:
+            raw_caps = config_overrides["symbol_position_caps"]
+            if isinstance(raw_caps, list):
+                caps_dict = {}
+                for pair in raw_caps:
+                    if ":" in pair:
+                        symbol, cap = pair.split(":", 1)
+                        try:
+                            caps_dict[symbol.strip()] = Decimal(cap.strip())
+                        except Exception as exc:
+                            logger.warning("Invalid position cap '%s': %s", pair, exc)
+                config_overrides["symbol_position_caps"] = caps_dict
+                logger.info("Parsed %d symbol position caps", len(caps_dict))
 
         logger.info(
             "Building bot config with profile=%s, overrides=%s", args.profile, config_overrides

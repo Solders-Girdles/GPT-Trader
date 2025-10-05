@@ -13,12 +13,12 @@ Key Features:
 - Realistic position sizing and cost modeling
 """
 
-from bot_v2.features.adaptive_portfolio.adaptive_portfolio import (
+from bot_v2.features.adaptive_portfolio.adaptive_portfolio import run_adaptive_strategy
+from bot_v2.features.adaptive_portfolio.config_manager import (
     get_current_tier,
     load_portfolio_config,
-    run_adaptive_strategy,
+    validate_portfolio_config,
 )
-from bot_v2.features.adaptive_portfolio.config_manager import validate_portfolio_config
 from bot_v2.features.adaptive_portfolio.types import (
     AdaptiveResult,
     PortfolioTier,

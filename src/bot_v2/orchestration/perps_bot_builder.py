@@ -14,6 +14,7 @@ import threading
 from typing import TYPE_CHECKING
 
 from bot_v2.features.brokerages.coinbase.account_manager import CoinbaseAccountManager
+from bot_v2.monitoring.metrics_server import MetricsServer
 from bot_v2.monitoring.system import get_logger as _get_plog
 from bot_v2.orchestration.account_telemetry import AccountTelemetryService
 from bot_v2.orchestration.config_controller import ConfigController
@@ -22,6 +23,7 @@ from bot_v2.orchestration.execution_coordinator import ExecutionCoordinator
 from bot_v2.orchestration.market_data_service import MarketDataService
 from bot_v2.orchestration.market_monitor import MarketActivityMonitor
 from bot_v2.orchestration.runtime_coordinator import RuntimeCoordinator
+from bot_v2.orchestration.guardrails import GuardRailManager
 from bot_v2.orchestration.service_rebinding import rebind_bot_services
 from bot_v2.orchestration.service_registry import ServiceRegistry, empty_registry
 from bot_v2.orchestration.session_guard import TradingSessionGuard
@@ -129,6 +131,10 @@ class PerpsBotBuilder:
         self._build_runtime_state(bot)
         self._build_storage(bot)
         self._build_core_services(bot)
+        bot.guardrails.set_dry_run(bool(bot.config.dry_run))
+        bot.metrics_server.register_guard_manager(
+            bot.guardrails, profile=bot.config.profile.value
+        )
         bot.runtime_coordinator.bootstrap()  # Initialize runtime coordinator
         self._build_market_data_service(bot)
         self._build_accounting_services(bot)
@@ -260,6 +266,15 @@ class PerpsBotBuilder:
         bot.system_monitor = SystemMonitor(bot)
         bot.runtime_coordinator = RuntimeCoordinator(bot)
         bot.lifecycle_service = LifecycleService(bot)
+        bot.guardrails = GuardRailManager(
+            max_trade_value=bot.config.max_trade_value,
+            symbol_position_caps=bot.config.symbol_position_caps,
+            daily_loss_limit=bot.config.daily_loss_limit,
+        )
+
+        # Initialize metrics server (configured from bot config)
+        metrics_port = getattr(bot.config, "metrics_port", 9090)
+        bot.metrics_server = MetricsServer(host="0.0.0.0", port=metrics_port)
 
     def _build_market_data_service(self, bot: PerpsBot) -> None:
         """Phase 5: Initialize MarketDataService for mark/window maintenance."""
@@ -325,6 +340,7 @@ class PerpsBotBuilder:
             - bot._streaming_service (unconditionally, mirroring MarketDataService)
         """
         if bot._market_data_service is not None:
+            stream_name = getattr(bot.broker, "stream_name", "coinbase_ws")
             bot._streaming_service = StreamingService(
                 symbols=bot.symbols,
                 broker=bot.broker,
@@ -333,6 +349,10 @@ class PerpsBotBuilder:
                 event_store=bot.event_store,
                 market_monitor=bot._market_monitor,
                 bot_id=bot.bot_id,
+                metrics_server=bot.metrics_server,
+                profile=bot.config.profile.value,
+                stream_name=stream_name,
+                rest_poll_interval=getattr(bot.config, "streaming_rest_poll_interval", 5.0),
             )
         else:
             bot._streaming_service = None

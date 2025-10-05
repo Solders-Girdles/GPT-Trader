@@ -108,6 +108,24 @@ BOT_CONFIG_ARGS = [
         type=int,
         help="Account telemetry interval in seconds",
     ),
+    ArgumentSpec(
+        name="--max-trade-value",
+        dest="max_trade_value",
+        type=Decimal,
+        help="Maximum USD notional value per trade (0 = no limit)",
+    ),
+    ArgumentSpec(
+        name="--symbol-position-caps",
+        type=str,
+        help="Per-symbol position caps as SYMBOL:CAP pairs (e.g., BTC-USD:50000 ETH-USD:30000)",
+        nargs="+",
+    ),
+    ArgumentSpec(
+        name="--streaming-rest-poll-interval",
+        dest="streaming_rest_poll_interval",
+        type=float,
+        help="REST polling interval in seconds when WebSocket streaming is unavailable",
+    ),
 ]
 
 

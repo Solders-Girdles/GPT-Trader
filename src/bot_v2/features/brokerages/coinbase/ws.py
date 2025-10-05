@@ -58,6 +58,13 @@ class CoinbaseWebSocket:
         """Set a custom transport (for testing)."""
         self._transport = transport
 
+    def set_metrics_emitter(
+        self, metrics_emitter: Callable[[dict[str, Any]], None] | None
+    ) -> None:
+        """Set or clear the metrics emitter callback."""
+
+        self._metrics_emitter = metrics_emitter
+
     def connect(self, headers: dict[str, str] | None = None) -> None:
         logger.info(f"Connecting WS to {self.url}")
         try:
@@ -66,6 +73,12 @@ class CoinbaseWebSocket:
             )
         except Exception as exc:  # pragma: no cover - telemetry optional
             logger.debug("ws_connect event emit failed", exc_info=exc)
+
+        if self._metrics_emitter:
+            try:
+                self._metrics_emitter({"event_type": "ws_connect"})
+            except Exception as exc_emit:  # pragma: no cover
+                logger.debug("ws_connect metric emit failed", exc_info=exc_emit)
 
         # Initialize default transport if not set
         if self._transport is None:
@@ -103,6 +116,11 @@ class CoinbaseWebSocket:
             )
         except Exception as exc:  # pragma: no cover
             logger.debug("ws_disconnect event emit failed", exc_info=exc)
+        if self._metrics_emitter:
+            try:
+                self._metrics_emitter({"event_type": "ws_disconnect"})
+            except Exception as exc_emit:  # pragma: no cover
+                logger.debug("ws_disconnect metric emit failed", exc_info=exc_emit)
         self.connected = False
         if self._transport and hasattr(self._transport, "disconnect"):
             try:
@@ -181,6 +199,18 @@ class CoinbaseWebSocket:
                         if elapsed > self._liveness_timeout:
                             raise TimeoutError(f"No messages for {elapsed:.1f}s")
 
+                    if self._metrics_emitter:
+                        try:
+                            self._metrics_emitter(
+                                {
+                                    "event_type": "ws_message",
+                                    "elapsed_since_last": elapsed,
+                                    "timestamp": self._last_message_time,
+                                }
+                            )
+                        except Exception as exc_emit:  # pragma: no cover
+                            logger.debug("ws_message metric emit failed", exc_info=exc_emit)
+
                     yield msg
                 # If stream ended normally, break
                 break
@@ -216,6 +246,7 @@ class CoinbaseWebSocket:
                                 "event_type": "ws_reconnect_attempt",
                                 "attempt": attempt,
                                 "reason": str(e),
+                                "delay_seconds": delay,
                             }
                         )
                 except Exception as exc_emit:  # pragma: no cover
@@ -234,7 +265,10 @@ class CoinbaseWebSocket:
                     try:
                         if self._metrics_emitter:
                             self._metrics_emitter(
-                                {"event_type": "ws_reconnect_success", "attempt": attempt}
+                                {
+                                    "event_type": "ws_reconnect_success",
+                                    "attempt": attempt,
+                                }
                             )
                     except Exception as exc_emit:  # pragma: no cover
                         logger.debug("ws_reconnect_success metric failed", exc_info=exc_emit)

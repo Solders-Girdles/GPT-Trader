@@ -20,6 +20,23 @@ def _env(key: str, default: str | None = None) -> str | None:
     return os.getenv(key, default)
 
 
+def _mask_secret(secret: str | None, show_chars: int = 4) -> str:
+    """Mask a secret for logging, showing only the last N characters.
+
+    Args:
+        secret: Secret string to mask (or None)
+        show_chars: Number of trailing characters to show
+
+    Returns:
+        Masked string like "***xyz" or "<not set>" if secret is None/empty
+    """
+    if not secret:
+        return "<not set>"
+    if len(secret) <= show_chars:
+        return "*" * len(secret)
+    return ("*" * (len(secret) - show_chars)) + secret[-show_chars:]
+
+
 def create_brokerage() -> IBrokerage:
     """Create a brokerage adapter based on configuration.
 
@@ -141,10 +158,18 @@ def create_brokerage() -> IBrokerage:
         )
 
         logger.info(
-            "Creating Coinbase brokerage: mode=%s, sandbox=%s, auth=%s",
+            "Creating Coinbase brokerage: mode=%s, sandbox=%s, auth=%s, base_url=%s",
             api_mode,
             sandbox,
             auth_type,
+            base_url,
+        )
+        logger.debug(
+            "Coinbase credentials loaded: api_key=%s, api_secret=%s, passphrase=%s, cdp_key=%s",
+            _mask_secret(api_key),
+            _mask_secret(api_secret),
+            _mask_secret(passphrase),
+            _mask_secret(cdp_api_key),
         )
 
         return CoinbaseBrokerage(api_config)

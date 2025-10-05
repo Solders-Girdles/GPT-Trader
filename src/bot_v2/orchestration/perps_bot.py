@@ -15,6 +15,7 @@ from bot_v2.features.brokerages.core.interfaces import (
     Position,
     Product,
 )
+from bot_v2.monitoring.metrics_server import MetricsServer
 from bot_v2.orchestration.config_controller import ConfigChange
 from bot_v2.orchestration.configuration import BotConfig, Profile
 from bot_v2.orchestration.service_registry import ServiceRegistry
@@ -37,6 +38,7 @@ if TYPE_CHECKING:  # pragma: no cover - imports for type checking only
     from bot_v2.orchestration.strategy_orchestrator import StrategyOrchestrator
     from bot_v2.orchestration.streaming_service import StreamingService
     from bot_v2.orchestration.system_monitor import SystemMonitor
+    from bot_v2.orchestration.guardrails import GuardRailManager
     from bot_v2.persistence.event_store import EventStore
     from bot_v2.persistence.orders_store import OrdersStore
 
@@ -79,6 +81,8 @@ class PerpsBot:
     account_telemetry: AccountTelemetryService
     event_store: EventStore
     orders_store: OrdersStore
+    metrics_server: MetricsServer
+    guardrails: GuardRailManager
 
     def __init__(self, config: BotConfig, registry: ServiceRegistry | None = None) -> None:
         """Construct the bot using the builder pipeline."""
@@ -192,6 +196,21 @@ class PerpsBot:
         if positions:
             position_map = {p.symbol: p for p in positions if hasattr(p, "symbol")}
 
+        # Check cycle-level guards (e.g., daily loss limit)
+        if hasattr(self, "guardrails"):
+            cycle_context = {
+                "balances": balances,
+                "positions": positions,
+                "position_map": position_map,
+            }
+            self.guardrails.check_cycle(cycle_context)
+
+            # If daily loss guard triggered, activate reduce-only mode
+            if self.guardrails.is_guard_active("daily_loss"):
+                if not self.is_reduce_only_mode():
+                    logger.warning("Daily loss guard active - entering reduce-only mode")
+                    self.set_reduce_only_mode(True, "daily_loss_limit_reached")
+
         tasks = []
         for symbol in self.symbols:
             tasks.append(self.process_symbol(symbol, balances, position_map))
@@ -262,6 +281,12 @@ class PerpsBot:
         except Exception as exc:
             logger.debug("Failed to stop streaming service cleanly: %s", exc, exc_info=True)
 
+        try:
+            if hasattr(self, 'metrics_server') and self.metrics_server.is_running:
+                self.metrics_server.stop()
+        except Exception as exc:
+            logger.debug("Failed to stop metrics server cleanly: %s", exc, exc_info=True)
+
     def _restart_streaming_if_needed(self, diff: dict[str, Any]) -> None:
         """Restart streaming service when config changes streaming settings."""
         streaming_enabled = bool(getattr(self.config, "perps_enable_streaming", False))
@@ -291,6 +316,13 @@ class PerpsBot:
             end=self.config.trading_window_end,
             trading_days=self.config.trading_days,
         )
+        if hasattr(self, "guardrails"):
+            self.guardrails.set_dry_run(bool(self.config.dry_run))
+            self.guardrails.update_limits(
+                max_trade_value=self.config.max_trade_value,
+                symbol_position_caps=self.config.symbol_position_caps,
+                daily_loss_limit=self.config.daily_loss_limit,
+            )
         for symbol in self.symbols:
             self.mark_windows.setdefault(symbol, [])
         for symbol in list(self.mark_windows.keys()):
@@ -300,6 +332,11 @@ class PerpsBot:
         # Update streaming service symbols if changed
         if "symbols" in change.diff and self._streaming_service is not None:
             self._streaming_service.update_symbols(self.symbols)
+
+        if self._streaming_service is not None:
+            self._streaming_service.set_rest_poll_interval(
+                getattr(self.config, "streaming_rest_poll_interval", 5.0)
+            )
 
         # Restart streaming if streaming config changed
         self._restart_streaming_if_needed(change.diff)

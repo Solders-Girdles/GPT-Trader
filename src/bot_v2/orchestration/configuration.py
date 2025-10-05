@@ -46,6 +46,7 @@ class Profile(Enum):
 
     DEV = "dev"
     DEMO = "demo"
+    STAGING = "staging"
     PROD = "prod"
     CANARY = "canary"
     SPOT = "spot"
@@ -76,6 +77,8 @@ class BotConfig:
     trading_window_end: time | None = None
     trading_days: list[str] | None = None
     daily_loss_limit: Decimal = Decimal("0")
+    max_trade_value: Decimal = Decimal("0")
+    symbol_position_caps: dict[str, Decimal] = field(default_factory=dict)
     time_in_force: str = "GTC"
     perps_enable_streaming: bool = False
     perps_stream_level: int = 1
@@ -83,6 +86,7 @@ class BotConfig:
     perps_force_mock: bool = False
     perps_position_fraction: float | None = None
     perps_skip_startup_reconcile: bool = False
+    streaming_rest_poll_interval: float = 5.0
     metadata: dict[str, Any] = field(default_factory=dict, repr=False)
 
     def __post_init__(self) -> None:
@@ -120,6 +124,7 @@ class ConfigManager:
         "PERPS_POSITION_FRACTION",
         "PERPS_SKIP_RECONCILE",
         "PERPS_STREAM_LEVEL",
+        "PERPS_STREAMING_REST_INTERVAL",
         "SLIPPAGE_MULTIPLIERS",
         "SPOT_FORCE_LIVE",
     )
@@ -371,6 +376,12 @@ class ConfigManager:
         except Exception:
             errors.append("max_leverage must be an integer")
 
+        try:
+            if float(config.streaming_rest_poll_interval) <= 0:
+                errors.append("streaming_rest_poll_interval must be positive")
+        except Exception:
+            errors.append("streaming_rest_poll_interval must be numeric")
+
         tif = (config.time_in_force or "").upper()
         if tif and tif not in {"GTC", "IOC", "FOK"}:
             errors.append(f"Unsupported time_in_force '{config.time_in_force}'")
@@ -419,6 +430,19 @@ class ConfigManager:
                 config.perps_position_fraction = None
         else:
             config.perps_position_fraction = None
+
+        rest_interval_raw = os.getenv("PERPS_STREAMING_REST_INTERVAL")
+        if rest_interval_raw:
+            try:
+                interval = float(rest_interval_raw)
+                if interval <= 0:
+                    raise ValueError("interval must be positive")
+                config.streaming_rest_poll_interval = interval
+            except (TypeError, ValueError):
+                logger.warning(
+                    "Invalid PERPS_STREAMING_REST_INTERVAL=%s; ignoring override",
+                    rest_interval_raw,
+                )
 
         return config
 

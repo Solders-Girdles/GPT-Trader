@@ -6,11 +6,12 @@ Phase 2 of PerpsBot refactoring (2025-10-01).
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import threading
 from datetime import datetime
 from decimal import Decimal
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable
 
 if TYPE_CHECKING:  # pragma: no cover
     from bot_v2.features.brokerages.core.interfaces import IBrokerage
@@ -18,6 +19,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from bot_v2.orchestration.market_data_service import MarketDataService
     from bot_v2.orchestration.market_monitor import MarketActivityMonitor
     from bot_v2.persistence.event_store import EventStore
+    from bot_v2.monitoring.metrics_server import MetricsServer
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +52,10 @@ class StreamingService:
         bot_id: str = "perps_bot",
         stop_event: threading.Event | None = None,
         thread: threading.Thread | None = None,
+        metrics_server: "MetricsServer" | None = None,
+        profile: str = "default",
+        stream_name: str | None = None,
+        rest_poll_interval: float = 5.0,
     ) -> None:
         """Initialize streaming service.
 
@@ -71,10 +77,30 @@ class StreamingService:
         self.event_store = event_store
         self.market_monitor = market_monitor
         self.bot_id = bot_id
+        self.metrics_server = metrics_server
+        self.profile = profile
+        self.stream_name = stream_name or "coinbase_ws"
+        self._rest_poll_interval = max(float(rest_poll_interval), 0.5)
 
         # Thread management (allow injection for testing)
         self._ws_stop = stop_event
         self._ws_thread = thread
+
+        self._stream_metrics_emitter: Callable[[dict[str, object]], None] | None = None
+        self._rest_fallback_thread: threading.Thread | None = None
+        self._rest_fallback_stop: threading.Event | None = None
+        self._rest_fallback_active = False
+
+        if self.metrics_server is not None:
+            try:
+                self.metrics_server.set_streaming_context(self.stream_name, profile=self.profile)
+                self.metrics_server.update_streaming_status(
+                    False, profile=self.profile, stream=self.stream_name
+                )
+            except Exception as exc:
+                logger.debug("Failed to initialize streaming metrics context: %s", exc)
+
+        self._attach_streaming_metrics()
 
     def is_running(self) -> bool:
         """Check if streaming thread is running."""
@@ -138,6 +164,98 @@ class StreamingService:
         self._ws_thread.start()
         logger.info("Started WS streaming thread for symbols=%s level=%s", self.symbols, level)
 
+    def _attach_streaming_metrics(self) -> None:
+        """Attach metrics emitter to broker streaming if supported."""
+
+        if not hasattr(self.broker, "set_streaming_metrics_emitter"):
+            return
+
+        try:
+            self._stream_metrics_emitter = self._handle_streaming_metrics_event
+            self.broker.set_streaming_metrics_emitter(self._handle_streaming_metrics_event)
+        except Exception as exc:  # pragma: no cover - defensive
+            logger.debug("Failed to attach streaming metrics emitter: %s", exc, exc_info=True)
+
+    def set_rest_poll_interval(self, interval: float) -> None:
+        """Update the REST fallback polling interval."""
+
+        try:
+            value = float(interval)
+        except (TypeError, ValueError):
+            logger.warning("Invalid rest poll interval %s", interval)
+            return
+        if value <= 0:
+            logger.warning("REST poll interval must be positive; ignoring %s", interval)
+            return
+        self._rest_poll_interval = value
+        logger.info("Updated REST fallback poll interval to %.2fs", value)
+
+    def _start_rest_fallback(self, reason: str) -> None:
+        """Begin REST polling fallback while streaming is degraded."""
+
+        if self._rest_fallback_thread and self._rest_fallback_thread.is_alive():
+            return
+
+        self._rest_fallback_stop = threading.Event()
+        self._rest_fallback_active = True
+        if self.metrics_server is not None:
+            self.metrics_server.update_streaming_fallback(
+                True, profile=self.profile, stream=self.stream_name
+            )
+
+        self._rest_fallback_thread = threading.Thread(
+            target=self._rest_poll_loop,
+            args=(reason,),
+            name="StreamingRESTFallback",
+            daemon=True,
+        )
+        self._rest_fallback_thread.start()
+        logger.warning("Starting REST fallback polling due to %s", reason)
+
+    def _stop_rest_fallback(self) -> None:
+        """Stop REST fallback polling if active."""
+
+        if not self._rest_fallback_active:
+            return
+
+        if self._rest_fallback_stop is not None:
+            self._rest_fallback_stop.set()
+
+        thread = self._rest_fallback_thread
+        if thread and thread.is_alive():
+            thread.join(timeout=1.0)
+
+        self._rest_fallback_thread = None
+        self._rest_fallback_stop = None
+        self._rest_fallback_active = False
+
+        if self.metrics_server is not None:
+            self.metrics_server.update_streaming_fallback(
+                False, profile=self.profile, stream=self.stream_name
+            )
+
+        logger.info("REST fallback polling stopped after streaming recovery")
+
+    def _rest_poll_loop(self, reason: str) -> None:
+        """Background loop polling REST quotes during streaming outage."""
+
+        logger.debug("REST fallback poll loop active (reason=%s)", reason)
+        while True:
+            stop_event = self._rest_fallback_stop
+            if stop_event is not None and stop_event.is_set():
+                break
+
+            try:
+                asyncio.run(self.market_data_service.update_marks())
+            except Exception as exc:
+                logger.warning("REST fallback polling failed: %s", exc, exc_info=True)
+
+            stop_event = self._rest_fallback_stop
+            if stop_event is not None and stop_event.wait(self._rest_poll_interval):
+                break
+
+        logger.debug("REST fallback poll loop exiting")
+
     def stop(self) -> None:
         """Stop background streaming thread.
 
@@ -162,6 +280,97 @@ class StreamingService:
         finally:
             self._ws_thread = None
             self._ws_stop = None
+            self._stop_rest_fallback()
+
+    def _handle_streaming_metrics_event(self, event: dict[str, object]) -> None:
+        """Bridge WebSocket metrics events into MetricsServer collectors."""
+
+        if not isinstance(event, dict):  # pragma: no cover - defensive
+            logger.debug("Received non-dict streaming metrics event: %s", event)
+            return
+
+        event_type = str(event.get("event_type") or "")
+        metrics = self.metrics_server
+
+        try:
+            if event_type == "ws_connect":
+                if metrics is not None:
+                    metrics.update_streaming_status(True, profile=self.profile, stream=self.stream_name)
+                self._stop_rest_fallback()
+            elif event_type == "ws_disconnect":
+                if metrics is not None:
+                    metrics.update_streaming_status(
+                        False, profile=self.profile, stream=self.stream_name
+                    )
+                self._start_rest_fallback("disconnect")
+            elif event_type == "ws_message":
+                elapsed_raw = event.get("elapsed_since_last")
+                elapsed: float | None
+                if isinstance(elapsed_raw, (int, float)):
+                    elapsed = float(elapsed_raw)
+                else:
+                    elapsed = None
+                timestamp_raw = event.get("timestamp")
+                timestamp: float | None
+                if isinstance(timestamp_raw, (int, float)):
+                    timestamp = float(timestamp_raw)
+                else:
+                    timestamp = None
+                if metrics is not None:
+                    metrics.record_streaming_message(
+                        elapsed,
+                        timestamp=timestamp,
+                        profile=self.profile,
+                        stream=self.stream_name,
+                    )
+                if self._rest_fallback_active:
+                    self._stop_rest_fallback()
+            elif event_type == "ws_reconnect_attempt":
+                attempt_raw = event.get("attempt")
+                attempt: int | None
+                if isinstance(attempt_raw, (int, float)):
+                    attempt = int(attempt_raw)
+                else:
+                    attempt = None
+                if metrics is not None:
+                    metrics.record_streaming_reconnect(
+                        "attempt",
+                        attempt=attempt,
+                        profile=self.profile,
+                        stream=self.stream_name,
+                    )
+                if attempt is None or attempt >= 2:
+                    self._start_rest_fallback(f"reconnect_attempt_{attempt or 0}")
+            elif event_type == "ws_reconnect_success":
+                attempt_raw = event.get("attempt")
+                attempt: int | None
+                if isinstance(attempt_raw, (int, float)):
+                    attempt = int(attempt_raw)
+                else:
+                    attempt = None
+                if metrics is not None:
+                    metrics.record_streaming_reconnect(
+                        "success",
+                        attempt=attempt,
+                        profile=self.profile,
+                        stream=self.stream_name,
+                    )
+                self._stop_rest_fallback()
+            elif event_type == "ws_heartbeat":
+                timestamp_raw = event.get("timestamp")
+                timestamp = float(timestamp_raw) if isinstance(timestamp_raw, (int, float)) else None
+                if metrics is not None:
+                    metrics.record_streaming_heartbeat(
+                        timestamp,
+                        profile=self.profile,
+                        stream=self.stream_name,
+                    )
+                if self._rest_fallback_active:
+                    self._stop_rest_fallback()
+            else:
+                logger.debug("Unhandled streaming metrics event: %s", event_type)
+        except Exception as exc:  # pragma: no cover - defensive
+            logger.debug("Failed to record streaming metrics event %s: %s", event_type, exc, exc_info=True)
 
     def _stream_loop(self, symbols: list[str], level: int) -> None:
         """Main streaming loop (runs in background thread).

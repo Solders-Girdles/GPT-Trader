@@ -35,6 +35,7 @@ class ConfigController:
         "perps_force_mock",
         "perps_position_fraction",
         "perps_skip_startup_reconcile",
+        "streaming_rest_poll_interval",
     )
 
     def __init__(self, config: BotConfig) -> None:

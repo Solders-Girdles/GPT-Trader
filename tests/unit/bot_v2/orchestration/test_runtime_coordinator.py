@@ -179,7 +179,7 @@ class TestRuntimeCoordinator:
         mock_bot.config.perps_paper_trading = False
         mock_bot.config.perps_force_mock = False
 
-        with pytest.raises(RuntimeError, match="COINBASE_SANDBOX=1 is not supported"):
+        with pytest.raises(RuntimeError, match="COINBASE_SANDBOX=1 is only allowed"):
             runtime_coordinator._validate_broker_environment()
 
     def test_validate_broker_environment_skip_in_dev(self, runtime_coordinator, mock_bot):

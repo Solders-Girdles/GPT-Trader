@@ -88,7 +88,7 @@ class TestArgumentGroups:
 
     def test_bot_config_args_count(self):
         """Test bot config args has expected count."""
-        assert len(BOT_CONFIG_ARGS) == 9
+        assert len(BOT_CONFIG_ARGS) == 12
 
     def test_account_args_count(self):
         """Test account args has expected count."""
@@ -128,6 +128,24 @@ class TestArgumentGroupRegistrar:
 
         assert args.profile == "prod"
         assert args.dry_run is True
+
+    def test_register_bot_config_with_limits(self):
+        """Test parsing of max-trade-value and symbol-position-caps arguments."""
+        parser = argparse.ArgumentParser()
+        ArgumentGroupRegistrar.register_bot_config(parser)
+
+        args = parser.parse_args(
+            [
+                "--max-trade-value",
+                "25000",
+                "--symbol-position-caps",
+                "BTC-USD:1.5",
+                "ETH-USD:10",
+            ]
+        )
+
+        assert args.max_trade_value == Decimal("25000")
+        assert args.symbol_position_caps == ["BTC-USD:1.5", "ETH-USD:10"]
 
     def test_register_account(self):
         """Test registering account arguments."""

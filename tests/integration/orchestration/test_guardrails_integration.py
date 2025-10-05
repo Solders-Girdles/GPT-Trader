@@ -87,25 +87,27 @@ class TestGuardrailOrderCaps:
         assert result.guard is None
 
     def test_symbol_position_cap_blocks_oversized_position(self, guard_manager):
-        """Verify symbol_position_caps blocks positions exceeding limit."""
-        # Current position at cap (0.01 BTC)
-        current_position = Mock(spec=Position)
-        current_position.symbol = "BTC-USD"
-        current_position.size = Decimal("0.01")
-
+        """Verify symbol_position_caps blocks orders exceeding position cap."""
+        # Attempting to place order larger than 0.01 BTC cap
+        # Use low mark price to avoid max_trade_value guard triggering first
         context = {
             "symbol": "BTC-USD",
-            "side": OrderSide.BUY,
-            "size": Decimal("0.005"),  # Would bring total to 0.015, over 0.01 cap
-            "mark_price": Decimal("50000.00"),
-            "current_position": current_position,
+            "mark": Decimal("100.00"),  # Low price so notional is small
+            "order_kwargs": {
+                "symbol": "BTC-USD",
+                "side": OrderSide.BUY,
+                "quantity": Decimal(
+                    "0.015"
+                ),  # Exceeds 0.01 BTC cap, but notional = 100*0.015 = $1.50 < $100
+            },
         }
 
         result = guard_manager.check_order(context)
 
-        # Verify order blocked
+        # Verify order blocked by position limit (not max_trade_value)
         assert not result.allowed
-        assert result.guard == "position_cap"
+        assert result.guard == "position_limit"
+        assert "0.015" in result.reason  # Order quantity mentioned
         assert "0.01" in result.reason  # Cap value mentioned
 
 
@@ -114,76 +116,62 @@ class TestGuardrailDailyLossLimit:
     """Test daily loss limit triggers reduce-only mode."""
 
     def test_daily_loss_limit_triggers_reduce_only(self, guard_manager):
-        """Verify daily loss limit activates reduce-only mode."""
-        # Simulate $12 loss (exceeds $10 limit)
-        positions = [Mock(symbol="BTC-USD", size=Decimal("0.01"), unrealized_pnl=Decimal("-12.00"))]
+        """Verify daily loss limit activates daily_loss guard."""
+        # Record $12 loss (exceeds $10 limit)
+        guard_manager.record_realized_pnl(Decimal("-12.00"))
 
-        context = {
-            "balances": [],
-            "positions": positions,
-            "position_map": {"BTC-USD": positions[0]},
-        }
+        # Verify guard not active yet (needs cycle check)
+        assert not guard_manager.is_guard_active("daily_loss")
 
-        # Check cycle-level guards
-        guard_manager.check_cycle(context)
+        # Run cycle check to evaluate daily loss limit
+        guard_manager.check_cycle({})
+
+        # Verify daily_loss guard now active
+        assert guard_manager.is_guard_active("daily_loss")
+
+        # Note: The daily_loss guard doesn't directly block orders in check_order.
+        # Instead, PerpsBot detects the active guard and enters reduce-only mode,
+        # which then blocks new position-increasing orders.
+        # See perps_bot.py:209-212 for the integration behavior.
+
+    def test_daily_loss_guard_persists_during_day(self, guard_manager):
+        """Verify daily_loss guard stays active until day change."""
+        # Record loss exceeding limit
+        guard_manager.record_realized_pnl(Decimal("-15.00"))
+        guard_manager.check_cycle({})
 
         # Verify guard active
         assert guard_manager.is_guard_active("daily_loss")
 
-        # Verify new long orders blocked
-        order_context = {
-            "symbol": "BTC-USD",
-            "side": OrderSide.BUY,
-            "size": Decimal("0.001"),
-            "mark_price": Decimal("50000.00"),
-        }
-        result = guard_manager.check_order(order_context)
-        assert not result.allowed
-        assert result.guard == "daily_loss"
+        # Record additional loss - guard should stay active
+        guard_manager.record_realized_pnl(Decimal("-5.00"))
+        guard_manager.check_cycle({})
 
-    def test_reduce_only_allows_position_reduction(self, guard_manager):
-        """Verify reduce-only mode allows closing orders."""
-        # Trigger daily loss limit
-        positions = [Mock(symbol="BTC-USD", size=Decimal("0.01"), unrealized_pnl=Decimal("-15.00"))]
-        guard_manager.check_cycle(
-            {"balances": [], "positions": positions, "position_map": {"BTC-USD": positions[0]}}
-        )
-
+        # Guard still active
         assert guard_manager.is_guard_active("daily_loss")
 
-        # Attempt to close position (sell when long)
-        current_position = Mock(spec=Position)
-        current_position.symbol = "BTC-USD"
-        current_position.size = Decimal("0.01")  # Long position
-
-        order_context = {
-            "symbol": "BTC-USD",
-            "side": OrderSide.SELL,  # Reducing long position
-            "size": Decimal("0.005"),
-            "mark_price": Decimal("50000.00"),
-            "current_position": current_position,
-        }
-
-        result = guard_manager.check_order(order_context)
-
-        # Verify reducing order allowed
-        assert result.allowed
+        # Verify total loss tracked correctly
+        assert guard_manager.get_daily_pnl() == Decimal("-20.00")
 
     def test_daily_loss_guard_auto_resets_next_day(self, guard_manager):
-        """Verify daily loss guard auto-resets after UTC midnight."""
-        # Trigger guard
-        positions = [Mock(symbol="BTC-USD", size=Decimal("0.01"), unrealized_pnl=Decimal("-12.00"))]
-        guard_manager.check_cycle(
-            {"balances": [], "positions": positions, "position_map": {"BTC-USD": positions[0]}}
-        )
+        """Verify daily loss guard auto-resets when new trading day detected."""
+        from datetime import date, timedelta
+
+        # Record loss and activate guard
+        guard_manager.record_realized_pnl(Decimal("-12.00"))
+        guard_manager.check_cycle({})
         assert guard_manager.is_guard_active("daily_loss")
 
-        # Simulate next day (advance internal time or reset manually)
-        # In real implementation, PerpsBot would call reset on new UTC day
-        guard_manager._guard_states["daily_loss"]["active"] = False
-        guard_manager._guard_states["daily_loss"]["triggered_at"] = None
+        # Simulate day change by setting tracking date to yesterday
+        yesterday = date.today() - timedelta(days=1)
+        guard_manager._pnl_tracking_date = yesterday
 
+        # Run cycle check - should detect new day and reset
+        guard_manager.check_cycle({})
+
+        # Guard should be cleared and P&L reset
         assert not guard_manager.is_guard_active("daily_loss")
+        assert guard_manager.get_daily_pnl() == Decimal("0")
 
 
 @pytest.mark.integration
@@ -200,10 +188,8 @@ class TestGuardrailListeners:
         guard_manager.register_listener(listener)
 
         # Trigger daily loss guard
-        positions = [Mock(symbol="BTC-USD", size=Decimal("0.01"), unrealized_pnl=Decimal("-15.00"))]
-        guard_manager.check_cycle(
-            {"balances": [], "positions": positions, "position_map": {"BTC-USD": positions[0]}}
-        )
+        guard_manager.record_realized_pnl(Decimal("-15.00"))
+        guard_manager.check_cycle({})
 
         # Verify listener called
         assert len(events) > 0
@@ -211,6 +197,8 @@ class TestGuardrailListeners:
 
     def test_listener_receives_guard_deactivation(self, guard_manager):
         """Verify listeners notified when guards deactivate."""
+        from datetime import date, timedelta
+
         events = []
 
         def listener(guard_name, active):
@@ -219,18 +207,16 @@ class TestGuardrailListeners:
         guard_manager.register_listener(listener)
 
         # Activate guard
-        positions = [Mock(symbol="BTC-USD", size=Decimal("0.01"), unrealized_pnl=Decimal("-15.00"))]
-        guard_manager.check_cycle(
-            {"balances": [], "positions": positions, "position_map": {"BTC-USD": positions[0]}}
-        )
+        guard_manager.record_realized_pnl(Decimal("-15.00"))
+        guard_manager.check_cycle({})
 
         # Clear events from activation
         events.clear()
 
-        # Deactivate by resetting
-        guard_manager._guard_states["daily_loss"]["active"] = False
-        guard_manager._guard_states["daily_loss"]["triggered_at"] = None
-        guard_manager._notify_listeners("daily_loss", False)
+        # Deactivate by simulating day change
+        yesterday = date.today() - timedelta(days=1)
+        guard_manager._pnl_tracking_date = yesterday
+        guard_manager.check_cycle({})
 
         # Verify deactivation event
         assert any(e["guard"] == "daily_loss" and e["active"] is False for e in events)
@@ -254,30 +240,30 @@ class TestGuardrailPerpsBotIntegration:
         assert hasattr(bot, "guardrails")
         assert bot.guardrails is not None
 
-        # Simulate daily loss limit breach
-        positions = [
-            Mock(
-                symbol="BTC-USD",
-                size=Decimal("0.01"),
-                unrealized_pnl=Decimal("-12.00"),  # Exceeds $10 limit
-            )
-        ]
+        # Record loss exceeding limit
+        bot.guardrails.record_realized_pnl(Decimal("-12.00"))  # Exceeds $10 limit
 
-        # Run cycle check
+        # Simulate PerpsBot's run_cycle logic
+        balances = []
+        positions = []
+        position_map = {}
+
+        # Create cycle context
         cycle_context = {
-            "balances": [],
+            "balances": balances,
             "positions": positions,
-            "position_map": {"BTC-USD": positions[0]},
+            "position_map": position_map,
         }
 
-        # Manually trigger guard check (normally done in run_cycle)
+        # Check cycle-level guards (this is what run_cycle does)
         bot.guardrails.check_cycle(cycle_context)
 
-        # Verify reduce-only mode activated
-        if bot.guardrails.is_guard_active("daily_loss"):
-            # In real PerpsBot, this would trigger reduce-only mode
-            # Verify bot can detect guard state
-            assert bot.guardrails.is_guard_active("daily_loss")
+        # Verify daily_loss guard activated
+        assert bot.guardrails.is_guard_active("daily_loss")
+
+        # In actual PerpsBot.run_cycle(), this guard would trigger:
+        # if bot.guardrails.is_guard_active("daily_loss"):
+        #     bot.set_reduce_only_mode(True, "daily_loss_limit_reached")
 
     async def test_perps_bot_guardrail_metrics_integration(
         self, monkeypatch, tmp_path, guardrail_config
@@ -293,14 +279,14 @@ class TestGuardrailPerpsBotIntegration:
             bot.metrics_server.register_guard_manager(bot.guardrails)
 
         # Trigger guard
-        positions = [Mock(symbol="BTC-USD", size=Decimal("0.01"), unrealized_pnl=Decimal("-15.00"))]
-        bot.guardrails.check_cycle(
-            {"balances": [], "positions": positions, "position_map": {"BTC-USD": positions[0]}}
-        )
+        bot.guardrails.record_realized_pnl(Decimal("-15.00"))
+        bot.guardrails.check_cycle({})
+
+        # Verify guard activated
+        assert bot.guardrails.is_guard_active("daily_loss")
 
         # Verify metrics server received guard state change
-        # (Actual verification depends on MetricsServer implementation)
-        assert bot.guardrails.is_guard_active("daily_loss")
+        # (Actual verification would check MetricsServer state if exposed)
 
 
 @pytest.mark.integration

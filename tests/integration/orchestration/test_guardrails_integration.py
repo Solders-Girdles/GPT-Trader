@@ -40,7 +40,6 @@ def guard_manager(guardrail_config):
         max_trade_value=guardrail_config.max_trade_value,
         symbol_position_caps=guardrail_config.symbol_position_caps,
         daily_loss_limit=guardrail_config.daily_loss_limit,
-        dry_run=False,
     )
 
 
@@ -53,25 +52,32 @@ class TestGuardrailOrderCaps:
         # Attempt order exceeding $100 limit
         context = {
             "symbol": "BTC-USD",
-            "side": OrderSide.BUY,
-            "size": Decimal("0.01"),
-            "mark_price": Decimal("15000.00"),  # Notional = $150
+            "mark": Decimal("15000.00"),
+            "order_kwargs": {
+                "symbol": "BTC-USD",
+                "side": OrderSide.BUY,
+                "quantity": Decimal("0.01"),  # Notional = 15000 * 0.01 = $150
+            },
         }
 
         result = guard_manager.check_order(context)
 
         # Verify order blocked
         assert not result.allowed
-        assert result.guard == "order_cap"
-        assert "max_trade_value" in result.reason.lower()
+        assert result.guard == "max_trade_value"
+        assert "150" in result.reason
+        assert "100" in result.reason
 
     def test_order_cap_allows_small_order(self, guard_manager):
         """Verify orders within limit are allowed."""
         context = {
             "symbol": "BTC-USD",
-            "side": OrderSide.BUY,
-            "size": Decimal("0.001"),
-            "mark_price": Decimal("50000.00"),  # Notional = $50
+            "mark": Decimal("50000.00"),
+            "order_kwargs": {
+                "symbol": "BTC-USD",
+                "side": OrderSide.BUY,
+                "quantity": Decimal("0.001"),  # Notional = 50000 * 0.001 = $50
+            },
         }
 
         result = guard_manager.check_order(context)
@@ -299,47 +305,55 @@ class TestGuardrailPerpsBotIntegration:
 
 @pytest.mark.integration
 class TestGuardrailDryRunMode:
-    """Test guardrails in dry-run mode (warn only)."""
+    """Test guardrails dry-run guard (blocks all orders)."""
 
-    def test_dry_run_mode_allows_all_orders(self):
-        """Verify dry-run mode allows orders but logs violations."""
+    def test_dry_run_guard_blocks_all_orders(self):
+        """Verify dry-run guard blocks all order placement."""
         dry_run_manager = GuardRailManager(
             max_trade_value=Decimal("100.00"),
             symbol_position_caps={"BTC-USD": Decimal("0.01")},
             daily_loss_limit=Decimal("10.00"),
-            dry_run=True,  # Dry-run mode
         )
 
-        # Attempt oversized order
+        # Activate dry-run guard
+        dry_run_manager.set_dry_run(True)
+
+        # Attempt to place order
         context = {
             "symbol": "BTC-USD",
             "side": OrderSide.BUY,
-            "size": Decimal("0.01"),
-            "mark_price": Decimal("20000.00"),  # Notional = $200 (exceeds $100 cap)
+            "size": Decimal("0.001"),
+            "mark_price": Decimal("50000.00"),  # Small order that would normally pass
         }
 
         result = dry_run_manager.check_order(context)
 
-        # In dry-run, order should be allowed with warning
-        assert result.allowed  # Order allowed in dry-run
-        # Guard name and reason still provided for logging
-        assert result.guard == "order_cap"
-        assert "max_trade_value" in result.reason.lower()
+        # Dry-run guard blocks all orders
+        assert not result.allowed
+        assert result.guard == "dry_run"
+        assert "dry_run_active" in result.reason
 
-    def test_dry_run_cycle_checks_warn_but_dont_activate(self):
-        """Verify dry-run cycle checks warn but don't activate guards."""
+    def test_dry_run_guard_can_be_disabled(self):
+        """Verify dry-run guard can be toggled on/off."""
         dry_run_manager = GuardRailManager(
             max_trade_value=Decimal("100.00"),
             daily_loss_limit=Decimal("10.00"),
-            dry_run=True,
         )
 
-        # Trigger daily loss in dry-run
-        positions = [Mock(symbol="BTC-USD", size=Decimal("0.01"), unrealized_pnl=Decimal("-15.00"))]
+        # Enable dry-run
+        dry_run_manager.set_dry_run(True)
+        assert dry_run_manager.is_guard_active("dry_run")
 
-        dry_run_manager.check_cycle(
-            {"balances": [], "positions": positions, "position_map": {"BTC-USD": positions[0]}}
-        )
+        # Disable dry-run
+        dry_run_manager.set_dry_run(False)
+        assert not dry_run_manager.is_guard_active("dry_run")
 
-        # Guard should not be active (dry-run only warns)
-        assert not dry_run_manager.is_guard_active("daily_loss")
+        # Orders now allowed (if no other guards active)
+        context = {
+            "symbol": "BTC-USD",
+            "side": OrderSide.BUY,
+            "size": Decimal("0.001"),
+            "mark_price": Decimal("50000.00"),
+        }
+        result = dry_run_manager.check_order(context)
+        assert result.allowed

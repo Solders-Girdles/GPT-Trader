@@ -27,6 +27,7 @@ if TYPE_CHECKING:  # pragma: no cover - imports for type checking only
     from bot_v2.features.live_trade.advanced_execution import AdvancedExecutionEngine
     from bot_v2.features.live_trade.risk import LiveRiskManager
     from bot_v2.orchestration.account_telemetry import AccountTelemetryService
+    from bot_v2.orchestration.builders import PerpsBotBuilder
     from bot_v2.orchestration.config_controller import ConfigController
     from bot_v2.orchestration.execution_coordinator import ExecutionCoordinator
     from bot_v2.orchestration.guardrails import GuardRailManager
@@ -34,7 +35,6 @@ if TYPE_CHECKING:  # pragma: no cover - imports for type checking only
     from bot_v2.orchestration.live_execution import LiveExecutionEngine
     from bot_v2.orchestration.market_data_service import MarketDataService
     from bot_v2.orchestration.market_monitor import MarketActivityMonitor
-    from bot_v2.orchestration.perps_bot_builder import PerpsBotBuilder
     from bot_v2.orchestration.runtime_coordinator import RuntimeCoordinator
     from bot_v2.orchestration.strategy_orchestrator import StrategyOrchestrator
     from bot_v2.orchestration.streaming_service import StreamingService
@@ -86,7 +86,7 @@ class PerpsBot:
 
     def __init__(self, config: BotConfig, registry: ServiceRegistry | None = None) -> None:
         """Construct the bot using the builder pipeline."""
-        from bot_v2.orchestration.perps_bot_builder import PerpsBotBuilder
+        from bot_v2.orchestration.builders import PerpsBotBuilder
 
         builder = PerpsBotBuilder(config)
         if registry is not None:

@@ -6,9 +6,9 @@ from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
+from bot_v2.orchestration.builders import PerpsBotBuilder
 from bot_v2.orchestration.configuration import BotConfig, Profile
 from bot_v2.orchestration.perps_bot import PerpsBot
-from bot_v2.orchestration.perps_bot_builder import PerpsBotBuilder
 from bot_v2.orchestration.service_registry import ServiceRegistry, empty_registry
 
 

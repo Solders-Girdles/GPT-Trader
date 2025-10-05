@@ -71,7 +71,7 @@ tests/unit/bot_v2/orchestration/test_execution_runtime_guards.py
 tests/unit/bot_v2/orchestration/test_orchestration_market_data.py
 tests/unit/bot_v2/orchestration/test_order_reconciler.py
 tests/unit/bot_v2/orchestration/test_partial_fills.py
-tests/unit/bot_v2/orchestration/test_perps_bot_builder.py
+tests/unit/bot_v2/orchestration/builders/test_perps_bot_builder.py
 tests/unit/bot_v2/orchestration/test_runtime_coordinator.py
 tests/unit/bot_v2/orchestration/test_strategy_orchestrator.py
 tests/unit/bot_v2/orchestration/test_streaming_service.py

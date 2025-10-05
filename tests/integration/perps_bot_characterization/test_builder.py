@@ -7,8 +7,8 @@ Tests documenting builder-centric construction pattern.
 import pytest
 import warnings
 
+from bot_v2.orchestration.builders import PerpsBotBuilder
 from bot_v2.orchestration.perps_bot import PerpsBot
-from bot_v2.orchestration.perps_bot_builder import PerpsBotBuilder
 from bot_v2.orchestration.service_registry import empty_registry
 
 

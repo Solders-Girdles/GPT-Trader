@@ -15,7 +15,7 @@
 
 - **Average Lines per Module**: 216
 - **Largest Module**: configuration (485 lines)
-- **Most Imports**: perps_bot_builder (21 imports)
+- **Most Imports**: builders.perps_bot_builder (21 imports)
 
 ---
 
@@ -26,7 +26,7 @@ Modules ranked by complexity (lines + classes*100 + imports*10):
 | Rank | Module | Complexity | Lines | Classes | Imports |
 |------|--------|------------|-------|---------|---------|
 | 1 | `configuration` | 905 | 485 | 4 | 2 |
-| 2 | `perps_bot_builder` | 690 | 380 | 1 | 21 |
+| 2 | `builders.perps_bot_builder` | 690 | 380 | 1 | 21 |
 | 3 | `perps_bot` | 681 | 391 | 1 | 19 |
 | 4 | `live_execution` | 652 | 402 | 2 | 5 |
 | 5 | `lifecycle_service` | 603 | 293 | 3 | 1 |
@@ -61,7 +61,6 @@ Modules ranked by complexity (lines + classes*100 + imports*10):
 ### Circular Dependencies
 
 - `configuration` ↔️ `symbols` (bidirectional)
-- `perps_bot` ↔️ `perps_bot_builder` (bidirectional)
 
 ---
 
@@ -109,7 +108,7 @@ Modules that could be extracted to separate features:
    - Split into smaller modules
    - Extract 4 classes to separate files
 
-2. **perps_bot_builder** (380 lines)
+2. **builders.perps_bot_builder** (380 lines)
    - Split into smaller modules
    - Extract 1 classes to separate files
 

@@ -4,9 +4,9 @@ import os
 import pytest
 from unittest.mock import AsyncMock, Mock, patch
 
+from bot_v2.orchestration.builders import PerpsBotBuilder
 from bot_v2.orchestration.configuration import BotConfig, Profile
 from bot_v2.orchestration.perps_bot import PerpsBot
-from bot_v2.orchestration.perps_bot_builder import PerpsBotBuilder
 
 
 @pytest.fixture

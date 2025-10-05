@@ -17,6 +17,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from bot_v2.monitoring.metrics_collector import MetricsCollector
 
 from bot_v2.state.adapter_bootstrapper import AdapterBootstrapper
+from bot_v2.state.batch_operations import StateBatchOperations
 from bot_v2.state.cache_manager import StateCacheManager
 from bot_v2.state.performance import StatePerformanceMetrics
 from bot_v2.state.repositories import (
@@ -149,6 +150,14 @@ class StateManager:
             s3_repo=self._s3_repo,
         )
         self._metrics = StatePerformanceMetrics(enabled=self.config.enable_performance_tracking)
+        self._batch_ops = StateBatchOperations(
+            redis_repo=self._redis_repo,
+            postgres_repo=self._postgres_repo,
+            s3_repo=self._s3_repo,
+            cache_manager=self._cache_manager,
+            config=self.config,
+            metrics=self._metrics,
+        )
 
     # Backwards compatibility properties for tests
     @property
@@ -488,46 +497,7 @@ class StateManager:
         Returns:
             Number of keys successfully deleted from at least one tier
         """
-        if not keys:
-            return 0
-
-        with self._metrics.time_operation("state_manager.batch_delete_state"):
-            deleted_count = 0
-
-            # Use batch operations if repositories available
-            if self._redis_repo and self._postgres_repo and self._s3_repo:
-                # Batch delete from all tiers
-                try:
-                    if self._redis_repo:
-                        await self._redis_repo.delete_many(keys)
-                except Exception as e:
-                    logger.warning(f"Batch delete from Redis failed: {e}")
-
-                try:
-                    if self._postgres_repo:
-                        await self._postgres_repo.delete_many(keys)
-                except Exception as e:
-                    logger.warning(f"Batch delete from PostgreSQL failed: {e}")
-
-                try:
-                    if self._s3_repo:
-                        await self._s3_repo.delete_many(keys)
-                except Exception as e:
-                    logger.warning(f"Batch delete from S3 failed: {e}")
-
-                deleted_count = len(keys)
-            else:
-                # Fallback: Individual deletes (slower but works without repos)
-                for key in keys:
-                    if await self.delete_state(key):
-                        deleted_count += 1
-
-            # CRITICAL: Invalidate cache for all keys
-            for key in keys:
-                self._cache_manager.delete(key)
-
-            logger.debug(f"Batch deleted {deleted_count} keys and invalidated cache")
-            return deleted_count
+        return await self._batch_ops.batch_delete(keys)
 
     async def batch_set_state(
         self, items: dict[str, tuple[Any, StateCategory]], ttl_seconds: int | None = None
@@ -548,109 +518,7 @@ class StateManager:
         Returns:
             Number of items successfully stored
         """
-        if not items:
-            return 0
-
-        with self._metrics.time_operation("state_manager.batch_set_state"):
-            import json
-
-            # Group items by tier, preserving original values for cache updates
-            hot_items: dict[str, tuple[str, dict[str, Any]]] = {}
-            warm_items: dict[str, tuple[str, dict[str, Any]]] = {}
-            cold_items: dict[str, tuple[str, dict[str, Any]]] = {}
-
-            # Track metadata for cache updates (deferred until after successful storage)
-            hot_metadata: dict[str, tuple[Any, int, str, int]] = {}  # (value, size, checksum, ttl)
-            warm_metadata: dict[str, tuple[Any, int, str]] = {}  # (value, size, checksum)
-            cold_metadata: dict[str, tuple[Any, int, str]] = {}  # (value, size, checksum)
-
-            # Prepare items with metadata (but don't update cache yet)
-            for key, (value, category) in items.items():
-                try:
-                    serialized = json.dumps(value, default=str)
-                    checksum = self._cache_manager.calculate_checksum(serialized)
-                    size_bytes = len(serialized.encode())
-
-                    metadata = {
-                        "checksum": checksum,
-                        "size_bytes": size_bytes,
-                    }
-
-                    if category == StateCategory.HOT:
-                        ttl = ttl_seconds or self.config.redis_ttl_seconds
-                        metadata["ttl_seconds"] = ttl
-                        hot_items[key] = (serialized, metadata)
-                        hot_metadata[key] = (value, size_bytes, checksum, ttl)
-                    elif category == StateCategory.WARM:
-                        warm_items[key] = (serialized, metadata)
-                        warm_metadata[key] = (value, size_bytes, checksum)
-                    else:  # COLD
-                        cold_items[key] = (serialized, metadata)
-                        cold_metadata[key] = (value, size_bytes, checksum)
-
-                except Exception as e:
-                    logger.error(f"Failed to prepare item {key}: {e}")
-
-            # Batch write to tiers and update cache only for successfully stored keys
-            stored_count = 0
-
-            if hot_items and self._redis_repo:
-                try:
-                    successful_keys = await self._redis_repo.store_many(hot_items)
-                    # Update cache and metadata ONLY for keys that were successfully stored
-                    for key in successful_keys:
-                        if key in hot_metadata:
-                            value, size_bytes, checksum, ttl = hot_metadata[key]
-                            self._cache_manager.set(key, value)
-                            self._cache_manager.update_metadata(
-                                key=key,
-                                category=StateCategory.HOT,
-                                size_bytes=size_bytes,
-                                checksum=checksum,
-                                ttl_seconds=ttl,
-                            )
-                    stored_count += len(successful_keys)
-                except Exception as e:
-                    logger.error(f"Batch write to Redis failed: {e}")
-
-            if warm_items and self._postgres_repo:
-                try:
-                    successful_keys = await self._postgres_repo.store_many(warm_items)
-                    # Update cache and metadata ONLY for keys that were successfully stored
-                    for key in successful_keys:
-                        if key in warm_metadata:
-                            value, size_bytes, checksum = warm_metadata[key]
-                            self._cache_manager.set(key, value)
-                            self._cache_manager.update_metadata(
-                                key=key,
-                                category=StateCategory.WARM,
-                                size_bytes=size_bytes,
-                                checksum=checksum,
-                            )
-                    stored_count += len(successful_keys)
-                except Exception as e:
-                    logger.error(f"Batch write to PostgreSQL failed: {e}")
-
-            if cold_items and self._s3_repo:
-                try:
-                    successful_keys = await self._s3_repo.store_many(cold_items)
-                    # Update cache and metadata ONLY for keys that were successfully stored
-                    for key in successful_keys:
-                        if key in cold_metadata:
-                            value, size_bytes, checksum = cold_metadata[key]
-                            self._cache_manager.set(key, value)
-                            self._cache_manager.update_metadata(
-                                key=key,
-                                category=StateCategory.COLD,
-                                size_bytes=size_bytes,
-                                checksum=checksum,
-                            )
-                    stored_count += len(successful_keys)
-                except Exception as e:
-                    logger.error(f"Batch write to S3 failed: {e}")
-
-            logger.debug(f"Batch stored {stored_count} items with cache/metadata updates")
-            return stored_count
+        return await self._batch_ops.batch_set(items, ttl_seconds)
 
     def close(self) -> None:
         """Close all connections"""

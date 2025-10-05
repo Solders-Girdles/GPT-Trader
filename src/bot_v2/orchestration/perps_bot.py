@@ -29,6 +29,7 @@ if TYPE_CHECKING:  # pragma: no cover - imports for type checking only
     from bot_v2.orchestration.account_telemetry import AccountTelemetryService
     from bot_v2.orchestration.config_controller import ConfigController
     from bot_v2.orchestration.execution_coordinator import ExecutionCoordinator
+    from bot_v2.orchestration.guardrails import GuardRailManager
     from bot_v2.orchestration.lifecycle_service import LifecycleService
     from bot_v2.orchestration.live_execution import LiveExecutionEngine
     from bot_v2.orchestration.market_data_service import MarketDataService
@@ -38,7 +39,6 @@ if TYPE_CHECKING:  # pragma: no cover - imports for type checking only
     from bot_v2.orchestration.strategy_orchestrator import StrategyOrchestrator
     from bot_v2.orchestration.streaming_service import StreamingService
     from bot_v2.orchestration.system_monitor import SystemMonitor
-    from bot_v2.orchestration.guardrails import GuardRailManager
     from bot_v2.persistence.event_store import EventStore
     from bot_v2.persistence.orders_store import OrdersStore
 
@@ -282,7 +282,7 @@ class PerpsBot:
             logger.debug("Failed to stop streaming service cleanly: %s", exc, exc_info=True)
 
         try:
-            if hasattr(self, 'metrics_server') and self.metrics_server.is_running:
+            if hasattr(self, "metrics_server") and self.metrics_server.is_running:
                 self.metrics_server.stop()
         except Exception as exc:
             logger.debug("Failed to stop metrics server cleanly: %s", exc, exc_info=True)

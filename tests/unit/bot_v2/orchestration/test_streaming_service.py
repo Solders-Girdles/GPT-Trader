@@ -612,9 +612,7 @@ class TestStreamingServiceIntegration:
 class TestStreamingServiceMetricsIntegration:
     """Tests for streaming metrics bridging to MetricsServer."""
 
-    def test_metrics_emitter_registered(
-        self, streaming_service_with_metrics, mock_broker
-    ) -> None:
+    def test_metrics_emitter_registered(self, streaming_service_with_metrics, mock_broker) -> None:
         """Broker receives metrics emitter registration on init."""
 
         mock_broker.set_streaming_metrics_emitter.assert_called_once()
@@ -625,9 +623,7 @@ class TestStreamingServiceMetricsIntegration:
         """Streaming events map to MetricsServer recording calls."""
 
         metrics_server_mock.update_streaming_status.reset_mock()
-        streaming_service_with_metrics._handle_streaming_metrics_event(
-            {"event_type": "ws_connect"}
-        )
+        streaming_service_with_metrics._handle_streaming_metrics_event({"event_type": "ws_connect"})
         metrics_server_mock.update_streaming_status.assert_called_with(
             True, profile="staging", stream="test_ws"
         )

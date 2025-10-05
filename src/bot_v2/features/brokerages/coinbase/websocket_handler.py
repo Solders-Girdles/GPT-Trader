@@ -4,6 +4,7 @@ import logging
 from collections.abc import Callable, Iterable, Sequence
 from datetime import datetime
 from decimal import Decimal
+from typing import Any
 
 from bot_v2.features.brokerages.coinbase.auth import build_ws_auth_provider
 from bot_v2.features.brokerages.coinbase.market_data_service import MarketDataService
@@ -131,9 +132,7 @@ class CoinbaseWebSocketHandler:
         if self._ws_client is not None:
             self._ws_client = None
 
-    def set_metrics_emitter(
-        self, emitter: Callable[[dict[str, Any]], None] | None
-    ) -> None:
+    def set_metrics_emitter(self, emitter: Callable[[dict[str, Any]], None] | None) -> None:
         """Attach a streaming metrics emitter for WebSocket events."""
 
         self._metrics_emitter = emitter

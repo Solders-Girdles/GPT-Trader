@@ -9,17 +9,18 @@ from __future__ import annotations
 import asyncio
 import logging
 import threading
+from collections.abc import Callable
 from datetime import datetime
 from decimal import Decimal
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:  # pragma: no cover
     from bot_v2.features.brokerages.core.interfaces import IBrokerage
     from bot_v2.features.live_trade.risk import LiveRiskManager
+    from bot_v2.monitoring.metrics_server import MetricsServer
     from bot_v2.orchestration.market_data_service import MarketDataService
     from bot_v2.orchestration.market_monitor import MarketActivityMonitor
     from bot_v2.persistence.event_store import EventStore
-    from bot_v2.monitoring.metrics_server import MetricsServer
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +53,7 @@ class StreamingService:
         bot_id: str = "perps_bot",
         stop_event: threading.Event | None = None,
         thread: threading.Thread | None = None,
-        metrics_server: "MetricsServer" | None = None,
+        metrics_server: MetricsServer | None = None,
         profile: str = "default",
         stream_name: str | None = None,
         rest_poll_interval: float = 5.0,
@@ -295,7 +296,9 @@ class StreamingService:
         try:
             if event_type == "ws_connect":
                 if metrics is not None:
-                    metrics.update_streaming_status(True, profile=self.profile, stream=self.stream_name)
+                    metrics.update_streaming_status(
+                        True, profile=self.profile, stream=self.stream_name
+                    )
                 self._stop_rest_fallback()
             elif event_type == "ws_disconnect":
                 if metrics is not None:
@@ -358,7 +361,9 @@ class StreamingService:
                 self._stop_rest_fallback()
             elif event_type == "ws_heartbeat":
                 timestamp_raw = event.get("timestamp")
-                timestamp = float(timestamp_raw) if isinstance(timestamp_raw, (int, float)) else None
+                timestamp = (
+                    float(timestamp_raw) if isinstance(timestamp_raw, (int, float)) else None
+                )
                 if metrics is not None:
                     metrics.record_streaming_heartbeat(
                         timestamp,
@@ -370,7 +375,9 @@ class StreamingService:
             else:
                 logger.debug("Unhandled streaming metrics event: %s", event_type)
         except Exception as exc:  # pragma: no cover - defensive
-            logger.debug("Failed to record streaming metrics event %s: %s", event_type, exc, exc_info=True)
+            logger.debug(
+                "Failed to record streaming metrics event %s: %s", event_type, exc, exc_info=True
+            )
 
     def _stream_loop(self, symbols: list[str], level: int) -> None:
         """Main streaming loop (runs in background thread).

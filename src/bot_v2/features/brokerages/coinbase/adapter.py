@@ -10,9 +10,9 @@ from __future__ import annotations
 
 import logging
 import time
-from collections.abc import Iterable, Sequence
+from collections.abc import Callable, Iterable, Sequence
 from decimal import Decimal
-from typing import Any, Callable
+from typing import Any
 
 from bot_v2.features.brokerages.coinbase.auth import build_rest_auth
 from bot_v2.features.brokerages.coinbase.client import CoinbaseClient
@@ -307,13 +307,15 @@ class CoinbaseBrokerage(IBrokerage):
                 connected=False,
                 api_responsive=False,
                 last_check_timestamp=time.time(),
-                error_message="Broker not connected"
+                error_message="Broker not connected",
             )
 
         # Test API responsiveness with a lightweight call
         try:
             # Use server time endpoint (very lightweight, no auth required)
-            response = self.client.get("/v2/time" if self.config.api_mode == "exchange" else "/api/v3/brokerage/time")
+            response = self.client.get(
+                "/v2/time" if self.config.api_mode == "exchange" else "/api/v3/brokerage/time"
+            )
             api_responsive = bool(response and isinstance(response, dict))
             error_msg = None
         except Exception as exc:
@@ -325,7 +327,7 @@ class CoinbaseBrokerage(IBrokerage):
             connected=self._connected,
             api_responsive=api_responsive,
             last_check_timestamp=time.time(),
-            error_message=error_msg
+            error_message=error_msg,
         )
 
     def get_account_id(self) -> str:

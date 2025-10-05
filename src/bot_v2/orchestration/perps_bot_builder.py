@@ -20,10 +20,10 @@ from bot_v2.orchestration.account_telemetry import AccountTelemetryService
 from bot_v2.orchestration.config_controller import ConfigController
 from bot_v2.orchestration.configuration import BotConfig, Profile
 from bot_v2.orchestration.execution_coordinator import ExecutionCoordinator
+from bot_v2.orchestration.guardrails import GuardRailManager
 from bot_v2.orchestration.market_data_service import MarketDataService
 from bot_v2.orchestration.market_monitor import MarketActivityMonitor
 from bot_v2.orchestration.runtime_coordinator import RuntimeCoordinator
-from bot_v2.orchestration.guardrails import GuardRailManager
 from bot_v2.orchestration.service_rebinding import rebind_bot_services
 from bot_v2.orchestration.service_registry import ServiceRegistry, empty_registry
 from bot_v2.orchestration.session_guard import TradingSessionGuard
@@ -132,9 +132,7 @@ class PerpsBotBuilder:
         self._build_storage(bot)
         self._build_core_services(bot)
         bot.guardrails.set_dry_run(bool(bot.config.dry_run))
-        bot.metrics_server.register_guard_manager(
-            bot.guardrails, profile=bot.config.profile.value
-        )
+        bot.metrics_server.register_guard_manager(bot.guardrails, profile=bot.config.profile.value)
         bot.runtime_coordinator.bootstrap()  # Initialize runtime coordinator
         self._build_market_data_service(bot)
         self._build_accounting_services(bot)

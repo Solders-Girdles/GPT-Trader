@@ -228,9 +228,7 @@ class OrderPlacementService:
                     self._order_stats["failed"] += 1
 
                 if self._metrics_server:
-                    self._metrics_server.record_order_attempt(
-                        "attempted", profile=self._profile
-                    )
+                    self._metrics_server.record_order_attempt("attempted", profile=self._profile)
                     self._metrics_server.record_order_attempt(
                         "success" if guard_name == "dry_run" else "failed",
                         profile=self._profile,

@@ -37,7 +37,7 @@ class RuntimeCoordinator:
         self._init_broker()
 
         # Update metrics server with broker reference for health monitoring
-        if hasattr(self._bot, 'metrics_server') and self._bot.metrics_server:
+        if hasattr(self._bot, "metrics_server") and self._bot.metrics_server:
             self._bot.metrics_server.set_broker(self._bot.broker)
 
         self._init_risk_manager()
@@ -109,9 +109,15 @@ class RuntimeCoordinator:
 
             # Validate spot trading credentials based on environment
             if is_sandbox:
-                api_key_present = os.getenv("COINBASE_SANDBOX_API_KEY") or os.getenv("COINBASE_API_KEY")
-                api_secret_present = os.getenv("COINBASE_SANDBOX_API_SECRET") or os.getenv("COINBASE_API_SECRET")
-                passphrase_present = os.getenv("COINBASE_SANDBOX_API_PASSPHRASE") or os.getenv("COINBASE_API_PASSPHRASE")
+                api_key_present = os.getenv("COINBASE_SANDBOX_API_KEY") or os.getenv(
+                    "COINBASE_API_KEY"
+                )
+                api_secret_present = os.getenv("COINBASE_SANDBOX_API_SECRET") or os.getenv(
+                    "COINBASE_API_SECRET"
+                )
+                passphrase_present = os.getenv("COINBASE_SANDBOX_API_PASSPHRASE") or os.getenv(
+                    "COINBASE_API_PASSPHRASE"
+                )
 
                 if not (api_key_present and api_secret_present and passphrase_present):
                     raise RuntimeError(
@@ -120,8 +126,12 @@ class RuntimeCoordinator:
                         f"(or use generic COINBASE_API_* variants)."
                     )
             else:
-                api_key_present = os.getenv("COINBASE_PROD_API_KEY") or os.getenv("COINBASE_API_KEY")
-                api_secret_present = os.getenv("COINBASE_PROD_API_SECRET") or os.getenv("COINBASE_API_SECRET")
+                api_key_present = os.getenv("COINBASE_PROD_API_KEY") or os.getenv(
+                    "COINBASE_API_KEY"
+                )
+                api_secret_present = os.getenv("COINBASE_PROD_API_SECRET") or os.getenv(
+                    "COINBASE_API_SECRET"
+                )
 
                 if not (api_key_present and api_secret_present):
                     raise RuntimeError(
@@ -140,12 +150,16 @@ class RuntimeCoordinator:
                 logger.warning(
                     "Sandbox trading typically uses Exchange API mode. "
                     "Advanced Trade does not have a public sandbox. Proceeding with %s mode.",
-                    api_mode
+                    api_mode,
                 )
             # Sandbox requires HMAC credentials (exchange mode)
             api_key = os.getenv("COINBASE_SANDBOX_API_KEY") or os.getenv("COINBASE_API_KEY")
-            api_secret = os.getenv("COINBASE_SANDBOX_API_SECRET") or os.getenv("COINBASE_API_SECRET")
-            passphrase = os.getenv("COINBASE_SANDBOX_API_PASSPHRASE") or os.getenv("COINBASE_API_PASSPHRASE")
+            api_secret = os.getenv("COINBASE_SANDBOX_API_SECRET") or os.getenv(
+                "COINBASE_API_SECRET"
+            )
+            passphrase = os.getenv("COINBASE_SANDBOX_API_PASSPHRASE") or os.getenv(
+                "COINBASE_API_PASSPHRASE"
+            )
 
             if not (api_key and api_secret and passphrase):
                 raise RuntimeError(
@@ -162,7 +176,9 @@ class RuntimeCoordinator:
                 )
 
             cdp_key = os.getenv("COINBASE_PROD_CDP_API_KEY") or os.getenv("COINBASE_CDP_API_KEY")
-            cdp_priv = os.getenv("COINBASE_PROD_CDP_PRIVATE_KEY") or os.getenv("COINBASE_CDP_PRIVATE_KEY")
+            cdp_priv = os.getenv("COINBASE_PROD_CDP_PRIVATE_KEY") or os.getenv(
+                "COINBASE_CDP_PRIVATE_KEY"
+            )
 
             if not (cdp_key and cdp_priv):
                 raise RuntimeError(

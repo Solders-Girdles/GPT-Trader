@@ -58,9 +58,7 @@ class CoinbaseWebSocket:
         """Set a custom transport (for testing)."""
         self._transport = transport
 
-    def set_metrics_emitter(
-        self, metrics_emitter: Callable[[dict[str, Any]], None] | None
-    ) -> None:
+    def set_metrics_emitter(self, metrics_emitter: Callable[[dict[str, Any]], None] | None) -> None:
         """Set or clear the metrics emitter callback."""
 
         self._metrics_emitter = metrics_emitter

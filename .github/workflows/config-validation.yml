@@ -1,0 +1,93 @@
+name: Configuration Validation
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'config/**/*.yaml'
+      - 'config/**/*.yml'
+      - 'config/**/*.json'
+      - '.env.*'
+      - 'config/environments/.env.*'
+      - 'scripts/tools/config_doctor.py'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'config/**/*.yaml'
+      - 'config/**/*.yml'
+      - 'config/**/*.json'
+      - '.env.*'
+      - 'config/environments/.env.*'
+      - 'scripts/tools/config_doctor.py'
+  schedule:
+    # Run weekly on Mondays at 9 AM UTC
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+
+jobs:
+  validate-configs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Install dependencies
+        run: |
+          poetry install --no-interaction --only main
+          poetry add pydantic pyyaml --group dev
+
+      - name: Run Config Doctor
+        run: |
+          poetry run python scripts/tools/config_doctor.py --check all --strict
+
+      - name: Check for duplicate configs
+        run: |
+          # Fail if spot_top10 exists in both formats
+          if [ -f config/risk/spot_top10.yaml ] && [ -f config/risk/spot_top10.json ]; then
+            echo "ERROR: Duplicate spot_top10 config files detected"
+            echo "Please consolidate to YAML format only"
+            exit 1
+          fi
+
+      - name: Validate YAML syntax
+        run: |
+          # Find and validate all YAML files
+          find config -name "*.yaml" -o -name "*.yml" | while read file; do
+            echo "Validating $file..."
+            poetry run python -c "import yaml; yaml.safe_load(open('$file'))" || exit 1
+          done
+
+      - name: Validate JSON syntax
+        run: |
+          # Find and validate all JSON files
+          find config -name "*.json" | while read file; do
+            echo "Validating $file..."
+            poetry run python -c "import json; json.load(open('$file'))" || exit 1
+          done
+
+      - name: Check .env templates exist
+        run: |
+          required_templates=(
+            "config/environments/.env.template"
+            "config/environments/.env.production"
+            ".env.sandbox.example"
+          )
+
+          for template in "${required_templates[@]}"; do
+            if [ ! -f "$template" ]; then
+              echo "ERROR: Required template missing: $template"
+              exit 1
+            fi
+            echo "✅ Found $template"
+          done

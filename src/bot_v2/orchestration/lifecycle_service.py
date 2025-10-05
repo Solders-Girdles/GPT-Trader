@@ -275,7 +275,9 @@ class LifecycleService:
                 except (TypeError, ValueError):
                     streak_value = 0
 
-                self._bot.metrics_server.daily_loss_gauge.labels(profile=profile).set(daily_loss_value)
+                self._bot.metrics_server.daily_loss_gauge.labels(profile=profile).set(
+                    daily_loss_value
+                )
                 self._bot.metrics_server.update_error_streak(streak_value, profile=profile)
         self._bot.metrics_server.record_cycle_duration(duration, profile=profile)
         self._bot.metrics_server.update_uptime(profile=profile)

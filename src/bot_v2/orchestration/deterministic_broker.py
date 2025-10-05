@@ -98,7 +98,7 @@ class DeterministicBroker(IBrokerage):
             connected=self._connected,
             api_responsive=self._connected,
             last_check_timestamp=time.time(),
-            error_message=None if self._connected else "Broker not connected"
+            error_message=None if self._connected else "Broker not connected",
         )
 
     def get_account_id(self) -> str:

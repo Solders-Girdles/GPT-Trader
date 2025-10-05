@@ -7,12 +7,12 @@ allowing orchestration and strategies to remain broker-agnostic.
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Sequence
+from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Callable, Literal, Protocol
+from typing import Any, Literal, Protocol
 
 
 class MarketType(Enum):
@@ -248,6 +248,7 @@ class PermissionDeniedError(BrokerageError):
 @dataclass
 class BrokerHealth:
     """Health status of brokerage connection."""
+
     connected: bool
     api_responsive: bool
     last_check_timestamp: float

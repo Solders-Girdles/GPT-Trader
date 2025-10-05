@@ -14,7 +14,7 @@ from bot_v2.orchestration.deterministic_broker import DeterministicBroker
 from bot_v2.orchestration.order_reconciler import OrderReconciler
 
 if TYPE_CHECKING:  # pragma: no cover - type checking only
-    from bot_v2.orchestration.perps_bot import PerpsBot
+    from bot_v2.orchestration.core import IBotRuntime
 
 
 logger = logging.getLogger(__name__)
@@ -27,7 +27,7 @@ class BrokerBootstrapError(RuntimeError):
 class RuntimeCoordinator:
     """Handles broker/risk bootstrapping and runtime safety toggles."""
 
-    def __init__(self, bot: PerpsBot) -> None:
+    def __init__(self, bot: IBotRuntime) -> None:
         self._bot = bot
 
     # ------------------------------------------------------------------

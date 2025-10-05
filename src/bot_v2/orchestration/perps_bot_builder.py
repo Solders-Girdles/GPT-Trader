@@ -115,7 +115,7 @@ class PerpsBotBuilder:
         self._config_controller = controller
         return self
 
-    def build(self) -> PerpsBot:
+    def build(self) -> IBotRuntime:
         """Build and return a fully initialized :class:`PerpsBot` instance."""
 
         from bot_v2.orchestration.perps_bot import PerpsBot
@@ -124,7 +124,7 @@ class PerpsBotBuilder:
         self.build_into(bot)
         return bot
 
-    def build_into(self, bot: PerpsBot) -> None:
+    def build_into(self, bot: IBotRuntime) -> None:
         """Populate an existing :class:`PerpsBot` instance via the builder pipeline."""
 
         self._build_configuration_state(bot)
@@ -148,7 +148,7 @@ class PerpsBotBuilder:
     # Construction Phase Methods
     # ------------------------------------------------------------------
 
-    def _build_configuration_state(self, bot: PerpsBot) -> None:
+    def _build_configuration_state(self, bot: IBotRuntime) -> None:
         """Phase 1: Initialize configuration state.
 
         Creates:
@@ -197,7 +197,7 @@ class PerpsBotBuilder:
         bot.start_time = datetime.now(UTC)
         bot.running = False
 
-    def _build_runtime_state(self, bot: PerpsBot) -> None:
+    def _build_runtime_state(self, bot: IBotRuntime) -> None:
         """Phase 2: Initialize runtime state.
 
         Creates:
@@ -229,7 +229,7 @@ class PerpsBotBuilder:
         bot._streaming_service: StreamingService | None = None
         bot._product_map: dict[str, Product] = {}
 
-    def _build_storage(self, bot: PerpsBot) -> None:
+    def _build_storage(self, bot: IBotRuntime) -> None:
         """Phase 3: Bootstrap storage layer.
 
         Creates:
@@ -242,7 +242,7 @@ class PerpsBotBuilder:
         bot.orders_store = storage_ctx.orders_store
         bot.registry = storage_ctx.registry
 
-    def _build_core_services(self, bot: PerpsBot) -> None:
+    def _build_core_services(self, bot: IBotRuntime) -> None:
         """Phase 4: Construct core orchestration services.
 
         Creates:
@@ -274,7 +274,7 @@ class PerpsBotBuilder:
         metrics_port = getattr(bot.config, "metrics_port", 9090)
         bot.metrics_server = MetricsServer(host="0.0.0.0", port=metrics_port)
 
-    def _build_market_data_service(self, bot: PerpsBot) -> None:
+    def _build_market_data_service(self, bot: IBotRuntime) -> None:
         """Phase 5: Initialize MarketDataService for mark/window maintenance."""
 
         bot._market_data_service = MarketDataService(
@@ -287,7 +287,7 @@ class PerpsBotBuilder:
             mark_windows=bot.mark_windows,  # Share existing dict for backward compat
         )
 
-    def _build_accounting_services(self, bot: PerpsBot) -> None:
+    def _build_accounting_services(self, bot: IBotRuntime) -> None:
         """Phase 6: Initialize accounting and telemetry services.
 
         Creates:
@@ -307,7 +307,7 @@ class PerpsBotBuilder:
             logger.info("Account snapshot telemetry disabled; broker lacks required endpoints")
         bot.system_monitor.attach_account_telemetry(bot.account_telemetry)
 
-    def _build_market_services(self, bot: PerpsBot) -> None:
+    def _build_market_services(self, bot: IBotRuntime) -> None:
         """Phase 7: Initialize market monitoring services.
 
         Creates:
@@ -331,7 +331,7 @@ class PerpsBotBuilder:
             heartbeat_logger=_log_market_heartbeat,
         )
 
-    def _build_streaming_service(self, bot: PerpsBot) -> None:
+    def _build_streaming_service(self, bot: IBotRuntime) -> None:
         """Phase 8: Initialize StreamingService (Phase 2 refactoring).
 
         Creates:
@@ -355,7 +355,7 @@ class PerpsBotBuilder:
         else:
             bot._streaming_service = None
 
-    def _start_streaming_if_configured(self, bot: PerpsBot) -> None:
+    def _start_streaming_if_configured(self, bot: IBotRuntime) -> None:
         """Phase 9: Start streaming if enabled in config.
 
         Starts streaming if:
@@ -374,6 +374,6 @@ class PerpsBotBuilder:
                 logger.exception("Failed to start streaming background worker")
 
 
-# Type stub for PerpsBot (avoids circular import)
+# Type hint for bot interface (avoids circular import)
 if TYPE_CHECKING:  # pragma: no cover
-    from bot_v2.orchestration.perps_bot import PerpsBot
+    from bot_v2.orchestration.core import IBotRuntime

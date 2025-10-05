@@ -28,7 +28,7 @@ from bot_v2.orchestration.strategy_registry import StrategyRegistry
 from bot_v2.utilities.quantities import quantity_from
 
 if TYPE_CHECKING:  # pragma: no cover - type checking only
-    from bot_v2.orchestration.perps_bot import PerpsBot
+    from bot_v2.orchestration.core import IBotRuntime
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +38,7 @@ class StrategyOrchestrator:
 
     def __init__(
         self,
-        bot: PerpsBot,
+        bot: IBotRuntime,
         spot_profile_service: SpotProfileService | None = None,
         equity_calculator: EquityCalculator | None = None,
         risk_gate_validator: RiskGateValidator | None = None,

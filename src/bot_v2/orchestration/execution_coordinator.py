@@ -17,7 +17,7 @@ from bot_v2.orchestration.execution.runtime_supervisor import ExecutionRuntimeSu
 from bot_v2.orchestration.order_reconciler import OrderReconciler
 
 if TYPE_CHECKING:  # pragma: no cover - type checking only
-    from bot_v2.orchestration.perps_bot import PerpsBot
+    from bot_v2.orchestration.core import IBotRuntime
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 class ExecutionCoordinator:
     """Coordinates execution engine interactions and order placement."""
 
-    def __init__(self, bot: PerpsBot) -> None:
+    def __init__(self, bot: IBotRuntime) -> None:
         self._bot = bot
         self._order_reconciler: OrderReconciler | None = None
         self._order_placement_service: OrderPlacementService | None = None

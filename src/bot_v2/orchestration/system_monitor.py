@@ -23,7 +23,7 @@ from bot_v2.orchestration.configuration import ConfigValidationError
 from bot_v2.utilities.quantities import quantity_from
 
 if TYPE_CHECKING:  # pragma: no cover - type checking only
-    from bot_v2.orchestration.perps_bot import PerpsBot
+    from bot_v2.orchestration.core import IBotRuntime
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +33,7 @@ class SystemMonitor:
 
     def __init__(
         self,
-        bot: PerpsBot,
+        bot: IBotRuntime,
         account_telemetry: AccountTelemetryService | None = None,
     ) -> None:
         self._bot = bot

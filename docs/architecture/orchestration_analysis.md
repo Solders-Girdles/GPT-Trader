@@ -7,9 +7,9 @@
 
 ## Summary
 
-**Total Modules**: 36
-**Total Lines**: 7,810
-**Total Classes**: 44
+**Total Modules**: 37
+**Total Lines**: 7,994
+**Total Classes**: 45
 
 ### Complexity Indicators
 
@@ -47,26 +47,21 @@ Modules ranked by complexity (lines + classes*100 + imports*10):
 
 ### Core Dependencies (Most Imported)
 
-- **configuration**: imported by 18 modules
-- **perps_bot**: imported by 10 modules
-- **service_registry**: imported by 6 modules
-- **config_controller**: imported by 4 modules
+- **configuration**: imported by 19 modules
+- **service_registry**: imported by 7 modules
+- **config_controller**: imported by 5 modules
+- **perps_bot**: imported by 4 modules
 - **live_execution**: imported by 4 modules
 - **account_telemetry**: imported by 3 modules
+- **execution_coordinator**: imported by 3 modules
 - **market_data_service**: imported by 3 modules
 - **market_monitor**: imported by 3 modules
-- **order_reconciler**: imported by 3 modules
-- **symbols**: imported by 2 modules
+- **strategy_orchestrator**: imported by 3 modules
 
 ### Circular Dependencies
 
 - `configuration` ↔️ `symbols` (bidirectional)
-- `perps_bot` ↔️ `system_monitor` (bidirectional)
 - `perps_bot` ↔️ `perps_bot_builder` (bidirectional)
-- `lifecycle_service` ↔️ `perps_bot` (bidirectional)
-- `perps_bot` ↔️ `runtime_coordinator` (bidirectional)
-- `perps_bot` ↔️ `strategy_orchestrator` (bidirectional)
-- `execution_coordinator` ↔️ `perps_bot` (bidirectional)
 
 ---
 

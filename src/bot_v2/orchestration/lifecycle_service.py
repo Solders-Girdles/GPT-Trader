@@ -13,7 +13,7 @@ from collections.abc import Callable
 from typing import TYPE_CHECKING, Any, Protocol
 
 if TYPE_CHECKING:  # pragma: no cover - type checking only
-    from bot_v2.orchestration.perps_bot import PerpsBot
+    from bot_v2.orchestration.core import IBotRuntime
 
 logger = logging.getLogger(__name__)
 
@@ -94,13 +94,13 @@ class LifecycleService:
 
     def __init__(
         self,
-        bot: PerpsBot,
+        bot: IBotRuntime,
         sleep_fn: Callable[[float], Any] | None = None,
     ) -> None:
         """Initialize the lifecycle service.
 
         Args:
-            bot: The PerpsBot instance to manage
+            bot: The bot runtime instance to manage
             sleep_fn: Optional custom sleep function for testing (defaults to asyncio.sleep)
         """
         self._bot = bot

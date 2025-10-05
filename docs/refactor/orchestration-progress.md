@@ -215,15 +215,307 @@ class SomeService:
 
 ## Phase 2: Extract Domain Modules (Week 2)
 
-**Status**: Not started
+**Status**: Ready to begin
 
-**Planned Extractions**:
-- [ ] Market Data → `features/market_data/`
-- [ ] Streaming → `features/streaming/`
-- [ ] Account Telemetry → `monitoring/telemetry/`
-- [ ] Equity Calculator → `features/live_trade/equity/`
+**Goal**: Migrate domain-specific modules out of orchestration layer into appropriate feature packages
 
-See `orchestration_refactor.md` for detailed plan.
+**Rationale**: Reduce orchestration layer size, improve cohesion, enable independent development of features
+
+### Extraction Candidates (Prioritized by Dependencies)
+
+Based on orchestration analyzer output, ranked by coupling (cleanest first):
+
+**Tier 1: Zero Orchestration Dependencies** (Extract First)
+1. `account_telemetry` - 102 lines, 0 orchestration imports
+2. `equity_calculator` - 117 lines, 0 orchestration imports
+3. `market_monitor` - 68 lines, 0 orchestration imports
+4. `market_data_service` - 131 lines, 0 orchestration imports
+
+**Tier 2: Minimal Orchestration Dependencies** (Extract Second)
+5. `symbols` - 19 lines, 3 orchestration imports (now just wrapper, can deprecate)
+6. `spot_profile_service` - Domain logic, manageable dependencies
+7. `risk_gate_validator` - Guard logic, feature-like
+
+**Tier 3: Complex Dependencies** (Extract Last or Phase 3)
+8. `streaming_service` - 477 lines, requires market_data_service extracted first
+9. `guardrails` - Risk management, cross-cutting concerns
+
+### Extraction Plan Details
+
+---
+
+#### Extraction 1: account_telemetry → monitoring/telemetry/
+
+**Current Location**: `src/bot_v2/orchestration/account_telemetry.py`
+**Target Location**: `src/bot_v2/monitoring/telemetry/account_snapshot.py`
+
+**Rationale**:
+- Pure telemetry concern, not orchestration
+- Zero orchestration dependencies
+- Already in conceptual monitoring domain
+- Clean abstraction with broker interface
+
+**Migration Steps**:
+1. Create `src/bot_v2/monitoring/telemetry/` package
+2. Move `account_telemetry.py` → `telemetry/account_snapshot.py`
+3. Update imports in:
+   - `perps_bot_builder.py`
+   - `system_monitor.py`
+   - Any tests
+4. Add backward-compatible import wrapper in orchestration (optional)
+5. Update `monitoring/__init__.py` to export `AccountTelemetryService`
+
+**Testing Strategy**:
+- Run existing account_telemetry tests from new location
+- Verify integration tests still pass
+- Check system_monitor integration
+
+**Success Criteria**:
+- Module moved to monitoring/telemetry/
+- All imports updated
+- All tests passing
+- No orchestration dependencies
+
+---
+
+#### Extraction 2: equity_calculator → features/live_trade/equity/
+
+**Current Location**: `src/bot_v2/orchestration/equity_calculator.py`
+**Target Location**: `src/bot_v2/features/live_trade/equity/calculator.py`
+
+**Rationale**:
+- Trading calculation logic, not orchestration
+- Zero orchestration dependencies
+- Fits naturally with live_trade feature
+- Reusable across trading contexts
+
+**Migration Steps**:
+1. Create `src/bot_v2/features/live_trade/equity/` package
+2. Move `equity_calculator.py` → `equity/calculator.py`
+3. Update imports in:
+   - `strategy_orchestrator.py`
+   - Any tests
+4. Export `EquityCalculator` from `features/live_trade/equity/__init__.py`
+
+**Testing Strategy**:
+- Run existing equity_calculator tests from new location
+- Verify strategy_orchestrator integration
+- Check calculation accuracy unchanged
+
+**Success Criteria**:
+- Module moved to features/live_trade/equity/
+- All imports updated
+- All tests passing
+- Documentation updated
+
+---
+
+#### Extraction 3: market_monitor → features/market_data/monitoring/
+
+**Current Location**: `src/bot_v2/orchestration/market_monitor.py`
+**Target Location**: `src/bot_v2/features/market_data/monitoring/activity_monitor.py`
+
+**Rationale**:
+- Market data concern, not orchestration
+- Zero orchestration dependencies
+- Natural fit with market data domain
+- Simple heartbeat tracking
+
+**Migration Steps**:
+1. Create `src/bot_v2/features/market_data/monitoring/` package
+2. Move `market_monitor.py` → `monitoring/activity_monitor.py`
+3. Update imports in:
+   - `perps_bot_builder.py`
+   - `streaming_service.py`
+   - Any tests
+4. Export from `features/market_data/__init__.py`
+
+**Testing Strategy**:
+- Run existing market_monitor tests
+- Verify heartbeat logging works
+- Check streaming integration
+
+**Success Criteria**:
+- Module moved to features/market_data/monitoring/
+- All imports updated
+- All tests passing
+- Heartbeat logging functional
+
+---
+
+#### Extraction 4: market_data_service → features/market_data/
+
+**Current Location**: `src/bot_v2/orchestration/market_data_service.py`
+**Target Location**: `src/bot_v2/features/market_data/service.py`
+
+**Rationale**:
+- Core market data responsibility
+- Zero orchestration dependencies
+- Should own mark window management
+- Prerequisite for streaming extraction
+
+**Migration Steps**:
+1. Create/enhance `src/bot_v2/features/market_data/` package
+2. Move `market_data_service.py` → `market_data/service.py`
+3. Update imports in:
+   - `perps_bot_builder.py`
+   - `streaming_service.py`
+   - `perps_bot.py`
+   - Any tests
+4. Export `MarketDataService` from `features/market_data/__init__.py`
+
+**Testing Strategy**:
+- Run existing market_data tests
+- Verify mark window updates work
+- Check price fetching logic
+- Integration test with streaming
+
+**Success Criteria**:
+- Module moved to features/market_data/
+- All imports updated
+- All tests passing
+- Mark windows functional
+
+---
+
+### Extraction Sequence & Timeline
+
+**Week 2 Target**: Complete Tier 1 extractions (4 modules)
+
+**Day 1-2**: `account_telemetry`
+- Low risk, zero orchestration deps
+- Good warmup for extraction pattern
+
+**Day 3-4**: `equity_calculator`
+- Simple calculation logic
+- Minimal consumer updates
+
+**Day 5-6**: `market_monitor`
+- Heartbeat tracking
+- Test streaming integration
+
+**Day 7**: `market_data_service`
+- More complex, multiple consumers
+- Prerequisite for streaming extraction
+- Buffer day for issues
+
+**Validation at Each Step**:
+```bash
+# After each extraction
+poetry run pytest tests/unit/bot_v2/ -v
+poetry run pytest tests/integration/scenarios/ -m scenario
+poetry run python scripts/analysis/orchestration_analyzer.py
+```
+
+---
+
+### Migration Notes
+
+**Import Pattern**:
+```python
+# Old (orchestration layer)
+from bot_v2.orchestration.account_telemetry import AccountTelemetryService
+
+# New (feature layer)
+from bot_v2.monitoring.telemetry import AccountTelemetryService
+# OR
+from bot_v2.features.live_trade.equity import EquityCalculator
+```
+
+**Backward Compatibility Strategy**:
+- Option 1: Leave import wrappers in orchestration (deprecated)
+- Option 2: Update all imports in one commit (cleaner, preferred)
+- Decision: Use Option 2 for cleaner architecture
+
+**Common Pitfalls**:
+- Forgetting to update test imports
+- Missing TYPE_CHECKING imports
+- Breaking integration tests
+- Circular dependencies with new locations
+
+**Mitigation**:
+- Use git grep to find all import locations
+- Run full test suite after each move
+- Check orchestration analyzer after each step
+- Commit each extraction separately for easy rollback
+
+---
+
+### Testing Strategy
+
+**Per-Extraction Tests**:
+1. Unit tests for moved module (should pass unchanged)
+2. Integration tests for consumers
+3. Scenario tests (should pass)
+4. Orchestration analyzer (verify no new cycles)
+
+**Regression Prevention**:
+```bash
+# Before extraction
+poetry run pytest tests/unit/bot_v2/orchestration/ -v > before.txt
+
+# After extraction
+poetry run pytest tests/unit/bot_v2/ -v > after.txt
+
+# Compare test counts
+diff before.txt after.txt
+```
+
+**Integration Verification**:
+- Run full test suite between each extraction
+- Check scenario tests pass
+- Verify bot can still initialize
+- Test end-to-end trading cycle (dry-run)
+
+---
+
+### Rollback Plan
+
+**Per-Extraction Rollback**:
+```bash
+# Each extraction gets its own commit/tag
+git tag extraction-account-telemetry
+git tag extraction-equity-calculator
+# etc.
+
+# Rollback if issues
+git revert <commit-hash>
+# Or
+git reset --hard extraction-<previous>
+```
+
+**Full Phase 2 Rollback**:
+- Return to `phase1-complete` tag
+- Cherry-pick any bug fixes
+- Re-plan extraction approach
+
+---
+
+### Success Criteria (Phase 2)
+
+**Completion Criteria**:
+- [ ] All Tier 1 modules extracted (4 modules)
+- [ ] All imports updated to new locations
+- [ ] All tests passing (no regressions)
+- [ ] Orchestration layer reduced by ~400 lines
+- [ ] Feature packages properly structured
+- [ ] Documentation updated
+
+**Quality Gates**:
+- [ ] Zero circular dependencies maintained
+- [ ] Test coverage ≥ baseline
+- [ ] All scenario tests passing
+- [ ] No new linter warnings
+- [ ] Orchestration analyzer confirms clean structure
+
+**Metrics Target** (After Tier 1 extractions):
+```
+Orchestration Modules: 38 → 34 (4 moved out)
+Orchestration Lines: 8,031 → ~7,600 (-400 lines)
+Feature Packages: Enhanced with 4 new modules
+Circular Dependencies: 0 (maintained)
+Test Coverage: 100% (maintained)
+```
 
 ---
 

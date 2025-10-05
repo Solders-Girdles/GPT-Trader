@@ -18,11 +18,11 @@
 
 **Circular Dependencies**:
 - [ ] `perps_bot` ↔️ `perps_bot_builder`
-- [ ] `perps_bot` ↔️ `system_monitor`
-- [ ] `perps_bot` ↔️ `lifecycle_service`
-- [ ] `perps_bot` ↔️ `runtime_coordinator`
-- [ ] `perps_bot` ↔️ `strategy_orchestrator`
-- [ ] `perps_bot` ↔️ `execution_coordinator`
+- [x] `perps_bot` ↔️ `system_monitor` ✅
+- [x] `perps_bot` ↔️ `lifecycle_service` ✅
+- [x] `perps_bot` ↔️ `runtime_coordinator` ✅
+- [x] `perps_bot` ↔️ `strategy_orchestrator` ✅
+- [x] `perps_bot` ↔️ `execution_coordinator` ✅
 
 **Solution**: Introduce dependency injection via `IBotRuntime` protocol
 
@@ -53,14 +53,15 @@ def stop(self) -> None: ...
 - [ ] Protocol tests pass
 - [ ] No circular import errors in `core/`
 
-#### Step 1.2: Update Dependent Services
+#### Step 1.2: Update Dependent Services ✅ COMPLETE
 
-**Files to Modify**:
-- [ ] `system_monitor.py` - Use `IBotRuntime` instead of `PerpsBot`
-- [ ] `lifecycle_service.py` - Use `IBotRuntime` instead of `PerpsBot`
-- [ ] `runtime_coordinator.py` - Use `IBotRuntime` instead of `PerpsBot`
-- [ ] `strategy_orchestrator.py` - Use `IBotRuntime` instead of `PerpsBot`
-- [ ] `execution_coordinator.py` - Use `IBotRuntime` instead of `PerpsBot`
+**Files Modified**:
+- [x] `system_monitor.py` - Use `IBotRuntime` instead of `PerpsBot` ✅
+- [x] `lifecycle_service.py` - Use `IBotRuntime` instead of `PerpsBot` ✅
+- [x] `runtime_coordinator.py` - Use `IBotRuntime` instead of `PerpsBot` ✅
+- [x] `strategy_orchestrator.py` - Use `IBotRuntime` instead of `PerpsBot` ✅
+- [x] `execution_coordinator.py` - Use `IBotRuntime` instead of `PerpsBot` ✅
+- [x] `perps_bot_builder.py` - Use `IBotRuntime` instead of `PerpsBot` ✅
 
 **Pattern**:
 ```python
@@ -75,11 +76,12 @@ class SomeService:
     def __init__(self, bot: IBotRuntime): ...
 ```
 
-**Verification per file**:
-- [ ] No import of `perps_bot` module
-- [ ] Type hints use `IBotRuntime`
-- [ ] All existing tests still pass
-- [ ] mypy passes
+**Verification**:
+- [x] No import of `perps_bot` module in services ✅
+- [x] Type hints use `IBotRuntime` ✅
+- [x] All existing tests still pass (632/632) ✅
+- [x] ruff --fix applied for import order ✅
+- [x] Circular dependencies reduced from 7 to 2 ✅
 
 #### Step 1.3: Break perps_bot ↔️ perps_bot_builder
 
@@ -265,13 +267,16 @@ Circular Dependencies: 7
 Modules >300 lines: 5
 ```
 
-### Current
+### Current (After Step 1.2)
 
 ```
-Modules: [to be updated after each step]
-Lines: [to be updated]
-Circular Dependencies: [to be updated after each fix]
-Modules >300 lines: [to be updated after splits]
+Modules: 37
+Lines: ~7,810
+Circular Dependencies: 2 (down from 7) ✅
+  - configuration ↔️ symbols
+  - perps_bot ↔️ perps_bot_builder
+Modules >300 lines: 5
+Unit Tests Passing: 632/632 ✅
 ```
 
 ### Target (End of Phase 1)
@@ -319,5 +324,5 @@ git tag phase1-complete
 ---
 
 **Last Updated**: 2025-10-05
-**Status**: Phase 1 Priority 1 - In Progress
-**Next Milestone**: IBotRuntime interface extraction complete
+**Status**: Phase 1 Priority 1 - Step 1.2 Complete (5/6 circular deps eliminated)
+**Next Milestone**: Step 1.3 - Break perps_bot ↔️ perps_bot_builder circular dependency

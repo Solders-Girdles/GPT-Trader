@@ -7,15 +7,15 @@
 
 ## Summary
 
-**Total Modules**: 38
-**Total Lines**: 8,031
-**Total Classes**: 45
+**Total Modules**: 37
+**Total Lines**: 7,931
+**Total Classes**: 44
 
 ### Complexity Indicators
 
-- **Average Lines per Module**: 211
+- **Average Lines per Module**: 214
 - **Largest Module**: streaming_service (477 lines)
-- **Most Imports**: builders.perps_bot_builder (21 imports)
+- **Most Imports**: builders.perps_bot_builder (20 imports)
 
 ---
 
@@ -25,9 +25,9 @@ Modules ranked by complexity (lines + classes*100 + imports*10):
 
 | Rank | Module | Complexity | Lines | Classes | Imports |
 |------|--------|------------|-------|---------|---------|
-| 1 | `configuration` | 901 | 471 | 4 | 3 |
-| 2 | `builders.perps_bot_builder` | 690 | 380 | 1 | 21 |
-| 3 | `perps_bot` | 681 | 391 | 1 | 19 |
+| 1 | `configuration` | 903 | 473 | 4 | 3 |
+| 2 | `builders.perps_bot_builder` | 680 | 380 | 1 | 20 |
+| 3 | `perps_bot` | 671 | 391 | 1 | 18 |
 | 4 | `live_execution` | 652 | 402 | 2 | 5 |
 | 5 | `lifecycle_service` | 603 | 293 | 3 | 1 |
 | 6 | `runtime_coordinator` | 600 | 340 | 2 | 6 |
@@ -38,7 +38,7 @@ Modules ranked by complexity (lines + classes*100 + imports*10):
 | 11 | `order_reconciler` | 460 | 260 | 2 | 0 |
 | 12 | `deterministic_broker` | 457 | 357 | 1 | 0 |
 | 13 | `guardrails` | 441 | 241 | 2 | 0 |
-| 14 | `system_monitor` | 424 | 284 | 1 | 4 |
+| 14 | `system_monitor` | 414 | 284 | 1 | 3 |
 | 15 | `execution.validation` | 373 | 273 | 1 | 0 |
 
 ---
@@ -52,11 +52,11 @@ Modules ranked by complexity (lines + classes*100 + imports*10):
 - **config_controller**: imported by 5 modules
 - **perps_bot**: imported by 4 modules
 - **live_execution**: imported by 4 modules
-- **account_telemetry**: imported by 3 modules
 - **execution_coordinator**: imported by 3 modules
 - **market_data_service**: imported by 3 modules
 - **market_monitor**: imported by 3 modules
 - **strategy_orchestrator**: imported by 3 modules
+- **order_reconciler**: imported by 3 modules
 
 ### Circular Dependencies
 
@@ -68,9 +68,9 @@ Modules ranked by complexity (lines + classes*100 + imports*10):
 
 Modules that could be extracted to separate features:
 
-### `account_telemetry`
-- **Lines**: 102
-- **Dependencies**: 0 orchestration imports
+### `system_monitor`
+- **Lines**: 284
+- **Dependencies**: 3 orchestration imports
 - **Reason**: Domain-specific, low coupling
 
 ### `equity_calculator`
@@ -104,7 +104,7 @@ Modules that could be extracted to separate features:
 
 ### High Priority
 
-1. **configuration** (471 lines)
+1. **configuration** (473 lines)
    - Split into smaller modules
    - Extract 4 classes to separate files
 

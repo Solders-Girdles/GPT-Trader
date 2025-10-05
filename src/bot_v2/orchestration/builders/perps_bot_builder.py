@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING
 from bot_v2.features.brokerages.coinbase.account_manager import CoinbaseAccountManager
 from bot_v2.monitoring.metrics_server import MetricsServer
 from bot_v2.monitoring.system import get_logger as _get_plog
-from bot_v2.orchestration.account_telemetry import AccountTelemetryService
+from bot_v2.monitoring.telemetry import AccountTelemetryService
 from bot_v2.orchestration.config_controller import ConfigController
 from bot_v2.orchestration.configuration import BotConfig, Profile
 from bot_v2.orchestration.execution_coordinator import ExecutionCoordinator

@@ -9,6 +9,7 @@ and alerts modules for production monitoring.
 
 from bot_v2.monitoring.alerts import Alert, AlertDispatcher, AlertLevel, AlertSeverity
 from bot_v2.monitoring.metrics_collector import MetricsCollector
+from bot_v2.monitoring.telemetry import AccountTelemetryService
 from bot_v2.monitoring.workflow_tracker import WorkflowExecution, WorkflowStatus, WorkflowTracker
 
 __all__ = [
@@ -23,4 +24,6 @@ __all__ = [
     "AlertDispatcher",
     # Metrics
     "MetricsCollector",
+    # Telemetry
+    "AccountTelemetryService",
 ]

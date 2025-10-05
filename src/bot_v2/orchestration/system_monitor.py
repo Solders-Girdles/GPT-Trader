@@ -17,7 +17,7 @@ try:  # pragma: no cover - psutil optional
     ResourceCollectorType: type[ResourceCollector] | None = ResourceCollector
 except Exception:  # noqa: BLE001 - degrade gracefully when psutil missing
     ResourceCollectorType = None  # type: ignore[misc]
-from bot_v2.orchestration.account_telemetry import AccountTelemetryService
+from bot_v2.monitoring.telemetry import AccountTelemetryService
 from bot_v2.orchestration.config_controller import ConfigController
 from bot_v2.orchestration.configuration import ConfigValidationError
 from bot_v2.utilities.quantities import quantity_from

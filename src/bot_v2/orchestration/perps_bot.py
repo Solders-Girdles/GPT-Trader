@@ -26,7 +26,7 @@ if TYPE_CHECKING:  # pragma: no cover - imports for type checking only
     from bot_v2.features.brokerages.core.interfaces import IBrokerage
     from bot_v2.features.live_trade.advanced_execution import AdvancedExecutionEngine
     from bot_v2.features.live_trade.risk import LiveRiskManager
-    from bot_v2.orchestration.account_telemetry import AccountTelemetryService
+    from bot_v2.monitoring.telemetry import AccountTelemetryService
     from bot_v2.orchestration.builders import PerpsBotBuilder
     from bot_v2.orchestration.config_controller import ConfigController
     from bot_v2.orchestration.execution_coordinator import ExecutionCoordinator

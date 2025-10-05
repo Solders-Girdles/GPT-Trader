@@ -98,7 +98,7 @@ async def test_run_account_telemetry_emits_metrics(monkeypatch, tmp_path):
     config = BotConfig(profile=Profile.DEV, symbols=["BTC-PERP"], update_interval=1)
     bot = PerpsBot(config)
 
-    monkeypatch.setattr("bot_v2.orchestration.account_telemetry.RUNTIME_DATA_DIR", tmp_path)
+    monkeypatch.setattr("bot_v2.monitoring.telemetry.account_snapshot.RUNTIME_DATA_DIR", tmp_path)
 
     bot.account_manager.snapshot = lambda emit_metric=False: {
         "key_permissions": {},

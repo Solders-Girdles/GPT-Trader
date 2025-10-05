@@ -148,3 +148,4 @@ tests/unit/bot_v2/state/backup/test_retention_manager.py
 tests/unit/bot_v2/state/repositories/test_postgres_repository.py
 tests/unit/bot_v2/state/repositories/test_redis_repository.py
 tests/unit/bot_v2/state/repositories/test_s3_repository.py
+tests/unit/bot_v2/orchestration/shared/test_symbol_utils.py  # Comprehensive test coverage for symbol utilities

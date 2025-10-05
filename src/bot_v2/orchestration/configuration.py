@@ -13,29 +13,17 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, cast
 
-from bot_v2.orchestration.symbols import (
-    derivatives_enabled as _resolve_derivatives_enabled,
-)
-from bot_v2.orchestration.symbols import (
+from bot_v2.orchestration.shared import (
+    TOP_VOLUME_BASES,
     normalize_symbols,
+)
+from bot_v2.orchestration.shared import (
+    derivatives_enabled as _resolve_derivatives_enabled,
 )
 
 logger = logging.getLogger(__name__)
 
-# Top spot markets we enable by default (ordered by Coinbase USD volume).
-TOP_VOLUME_BASES = [
-    "BTC",
-    "ETH",
-    "SOL",
-    "XRP",
-    "LTC",
-    "ADA",
-    "DOGE",
-    "BCH",
-    "AVAX",
-    "LINK",
-]
-
+# Default spot symbols derived from top volume bases (defined in shared.symbol_utils)
 DEFAULT_SPOT_SYMBOLS = [f"{base}-USD" for base in TOP_VOLUME_BASES]
 
 DEFAULT_SPOT_RISK_PATH = Path(__file__).resolve().parents[3] / "config" / "risk" / "spot_top10.json"

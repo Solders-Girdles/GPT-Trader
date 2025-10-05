@@ -7,14 +7,14 @@
 
 ## Summary
 
-**Total Modules**: 37
-**Total Lines**: 7,994
+**Total Modules**: 38
+**Total Lines**: 8,031
 **Total Classes**: 45
 
 ### Complexity Indicators
 
-- **Average Lines per Module**: 216
-- **Largest Module**: configuration (485 lines)
+- **Average Lines per Module**: 211
+- **Largest Module**: streaming_service (477 lines)
 - **Most Imports**: builders.perps_bot_builder (21 imports)
 
 ---
@@ -25,7 +25,7 @@ Modules ranked by complexity (lines + classes*100 + imports*10):
 
 | Rank | Module | Complexity | Lines | Classes | Imports |
 |------|--------|------------|-------|---------|---------|
-| 1 | `configuration` | 905 | 485 | 4 | 2 |
+| 1 | `configuration` | 901 | 471 | 4 | 3 |
 | 2 | `builders.perps_bot_builder` | 690 | 380 | 1 | 21 |
 | 3 | `perps_bot` | 681 | 391 | 1 | 19 |
 | 4 | `live_execution` | 652 | 402 | 2 | 5 |
@@ -47,7 +47,7 @@ Modules ranked by complexity (lines + classes*100 + imports*10):
 
 ### Core Dependencies (Most Imported)
 
-- **configuration**: imported by 19 modules
+- **configuration**: imported by 16 modules
 - **service_registry**: imported by 7 modules
 - **config_controller**: imported by 5 modules
 - **perps_bot**: imported by 4 modules
@@ -60,7 +60,7 @@ Modules ranked by complexity (lines + classes*100 + imports*10):
 
 ### Circular Dependencies
 
-- `configuration` ↔️ `symbols` (bidirectional)
+✅ No circular dependencies detected
 
 ---
 
@@ -84,7 +84,7 @@ Modules that could be extracted to separate features:
 - **Reason**: Domain-specific, low coupling
 
 ### `symbols`
-- **Lines**: 88
+- **Lines**: 19
 - **Dependencies**: 3 orchestration imports
 - **Reason**: Domain-specific, low coupling
 
@@ -104,7 +104,7 @@ Modules that could be extracted to separate features:
 
 ### High Priority
 
-1. **configuration** (485 lines)
+1. **configuration** (471 lines)
    - Split into smaller modules
    - Extract 4 classes to separate files
 

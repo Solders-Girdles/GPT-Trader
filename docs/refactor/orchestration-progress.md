@@ -671,3 +671,14 @@ git tag phase1-complete
 - ✅ Zero circular dependencies maintained
 
 **Rationale**: The `symbols.py` wrapper was created in Phase 1 to maintain backward compatibility during the extraction of symbol utilities to `shared/symbol_utils.py`. With all callers now importing directly from the shared module, the wrapper served no purpose and added unnecessary indirection.
+
+**Tier 2 Extraction 2: spot_profile_service** (2025-10-05):
+- ✅ Moved `orchestration/spot_profile_service.py` → `features/live_trade/profiles/service.py`
+- ✅ Created `features/live_trade/profiles/` package with proper exports
+- ✅ Updated imports in `strategy_orchestrator.py`, `strategy_registry.py`
+- ✅ Moved test to `profiles/test_spot_profile_service.py` (renamed to avoid conflict with market_data test)
+- ✅ Orchestration modules: 33 → 32 (-3%)
+- ✅ Tests: 5,215 passing
+- ✅ Zero circular dependencies maintained
+
+**Rationale**: The spot profile service handles SPOT-specific trading rules and profile configuration loading. It's domain logic that belongs with other live trading features, not in core orchestration. This extraction aligns with the feature-based organization where trading strategies, risk management, and profile configuration live together.

@@ -10,12 +10,12 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
 
+from bot_v2.features.live_trade.profiles import SpotProfileService
 from bot_v2.features.live_trade.strategies.perps_baseline import (
     BaselinePerpsStrategy,
     StrategyConfig,
 )
 from bot_v2.orchestration.configuration import Profile
-from bot_v2.orchestration.spot_profile_service import SpotProfileService
 
 if TYPE_CHECKING:
     from bot_v2.features.live_trade.risk_runtime import RiskManager

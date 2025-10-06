@@ -15,6 +15,7 @@ from bot_v2.features.live_trade.indicators import (
 )
 from bot_v2.features.live_trade.indicators import to_decimal as _to_decimal
 from bot_v2.features.live_trade.indicators import true_range as _true_range
+from bot_v2.features.live_trade.profiles import SpotProfileService
 from bot_v2.features.live_trade.strategies.perps_baseline import (
     Action,
     BaselinePerpsStrategy,
@@ -22,7 +23,6 @@ from bot_v2.features.live_trade.strategies.perps_baseline import (
 )
 from bot_v2.orchestration.configuration import Profile
 from bot_v2.orchestration.risk_gate_validator import RiskGateValidator
-from bot_v2.orchestration.spot_profile_service import SpotProfileService
 from bot_v2.orchestration.strategy_executor import StrategyExecutor
 from bot_v2.orchestration.strategy_registry import StrategyRegistry
 from bot_v2.utilities.quantities import quantity_from

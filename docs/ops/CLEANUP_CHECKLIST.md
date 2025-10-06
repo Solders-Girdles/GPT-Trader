@@ -3,7 +3,7 @@
 **Branch:** `cleanup/operational-audit-q4-2025`
 **Start Date:** 2025-10-05
 **Target Completion:** 2025-11-02 (4 weeks + buffer)
-**Status:** 🔄 Week 4 In Progress (81% Complete - 2/5 Week 4 tasks done)
+**Status:** 🔄 Week 4 In Progress (93% Complete - 4/5 Week 4 tasks done)
 
 ---
 
@@ -25,9 +25,9 @@
 | W3: Update REFACTORING_RUNBOOK | Architecture | ✅ Complete | - | 2025-10-05 | 🟢 LOW | Feature flags validated (no changes needed) |
 | W4: Pre-commit validation | Platform | ✅ Complete | W3 complete | 2025-10-05 | 🟢 LOW | 11 hooks active, 9 passing, 2 with issues |
 | W4: Governance docs | Platform | ✅ Complete | - | 2025-10-05 | 🟢 LOW | governance.md created (639 lines) |
+| W4: Monitoring validation | Ops | ✅ Complete | - | 2025-10-05 | 🟢 LOW | 3 docs validated, aligned with current architecture |
+| W4: Feature flag cleanup | Architecture | ✅ Complete | - | 2025-10-05 | 🟢 LOW | Both retired flags clean (0 code refs) |
 | W4: Trading ops validation | Trading Ops | ⏳ Pending | Sandbox access | 2025-10-30 | 🟡 MEDIUM | Requires environment |
-| W4: Monitoring validation | Ops | ⏳ Pending | - | 2025-10-30 | 🟢 LOW | - |
-| W4: Feature flag cleanup | Architecture | ⏳ Pending | - | 2025-10-31 | 🟡 MEDIUM | Already cleaned from code, docs only |
 
 ---
 
@@ -171,10 +171,12 @@
 - [ ] Check Grafana dashboards (monitoring/grafana/dashboards/)
 - [ ] Test Prometheus alerts (monitoring/alertmanager/alertmanager.yml)
 
-### Monitoring Documentation Validation
-- [ ] docs/MONITORING_PLAYBOOK.md
-- [ ] docs/guides/monitoring.md
-- [ ] docs/ops/operations_runbook.md
+### ✅ Monitoring Documentation Validation (Complete - Oct 5)
+- [x] docs/MONITORING_PLAYBOOK.md ✅ Aligned with spot-first architecture
+- [x] docs/guides/monitoring.md ✅ References live scripts (export_metrics.py, perps_dashboard.py)
+- [x] docs/ops/operations_runbook.md ✅ Matches current exporter metric names (gpt_trader_*)
+
+**Status:** All monitoring docs validated - no outdated references found
 
 ### ✅ Governance Documentation (Complete - Oct 5)
 - [x] Create docs/ops/governance.md ✅
@@ -191,11 +193,19 @@
 
 **Commit:** `56a32d6` - docs: Add Week 4 governance documentation
 
-### Feature Flag Cleanup
-- [ ] Search for USE_NEW_MARKET_DATA_SERVICE references
-- [ ] Search for USE_NEW_STREAMING_SERVICE references
-- [ ] Remove conditional branches if fully retired
-- [ ] Update REFACTORING_2025_RUNBOOK.md status
+### ✅ Feature Flag Cleanup (Complete - Oct 5)
+- [x] Search for USE_NEW_MARKET_DATA_SERVICE references ✅
+  - src/: 0 references (code clean)
+  - tests/: 0 references (tests clean)
+  - docs/: 11 references (historical documentation only)
+- [x] Search for USE_NEW_STREAMING_SERVICE references ✅
+  - src/: 0 references (code clean)
+  - tests/: 0 references (tests clean)
+  - docs/: 13 references (historical documentation only)
+- [x] Verify conditional branches removed ✅ All Phase 0 code fully removed
+- [x] Verify REFACTORING_2025_RUNBOOK.md status ✅ Both flags correctly marked "retired Oct 2025"
+
+**Status:** Feature flag cleanup validated - no lingering code references found. Documentation accurately reflects retired status.
 
 ---
 

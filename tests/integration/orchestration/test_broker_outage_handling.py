@@ -25,14 +25,14 @@ from requests.exceptions import HTTPError, ConnectionError
 # from bot_v2.orchestration.perps_bot import PerpsBot
 
 
+@pytest.mark.xfail(
+    reason="Test implementation pending - module exists but test logic needs completion (Phase 4 triage: Oct 2025)",
+    strict=False,
+)
 @pytest.mark.integration
 @pytest.mark.orchestration
 @pytest.mark.slow
 @pytest.mark.asyncio
-@pytest.mark.xfail(
-    reason="TODO: Wire StrategyOrchestrator health check - requires orchestration/strategy_orchestrator module",
-    strict=False,
-)
 async def test_broker_outage_triggers_degraded_mode():
     """
     Test: Broker API returning 503 triggers degraded mode
@@ -82,14 +82,14 @@ async def test_broker_outage_triggers_degraded_mode():
     pytest.fail("Awaiting StrategyOrchestrator health check implementation")
 
 
+@pytest.mark.xfail(
+    reason="Test implementation pending - module exists but test logic needs completion (Phase 4 triage: Oct 2025)",
+    strict=False,
+)
 @pytest.mark.integration
 @pytest.mark.orchestration
 @pytest.mark.slow
 @pytest.mark.asyncio
-@pytest.mark.xfail(
-    reason="TODO: Wire degraded mode position polling - requires orchestration/strategy_orchestrator module",
-    strict=False,
-)
 async def test_position_monitoring_continues_during_outage():
     """
     Test: Position monitoring continues via polling during broker outage
@@ -134,125 +134,13 @@ async def test_position_monitoring_continues_during_outage():
     pytest.fail("Awaiting degraded mode position polling implementation")
 
 
-@pytest.mark.integration
-@pytest.mark.orchestration
-@pytest.mark.scenario
-@pytest.mark.asyncio
 @pytest.mark.xfail(
-    reason="TODO: Wire RecoveryWorkflow integration - requires state/recovery/workflow module",
+    reason="Test implementation pending - module exists but test logic needs completion (Phase 4 triage: Oct 2025)",
     strict=False,
 )
-async def test_recovery_workflow_restores_state_after_outage():
-    """
-    Test: RecoveryWorkflow restores state when broker becomes available
-
-    Scenario:
-    1. System in degraded mode (broker outage)
-    2. Broker API becomes available (health check returns 200)
-    3. Trigger recovery workflow
-    4. Verify positions reconciled
-    5. Verify state restored
-    6. Verify normal mode resumed
-
-    Expected: Automatic recovery, state consistency validated
-    """
-    # TODO: Replace with actual implementation
-    # from bot_v2.state.recovery.workflow import RecoveryWorkflow
-
-    # orchestrator = StrategyOrchestrator(
-    #     broker=mock_broker,
-    #     recovery_workflow=RecoveryWorkflow(),
-    # )
-
-    # # Initial degraded mode
-    # await orchestrator.enter_degraded_mode()
-    # assert orchestrator.mode == "monitor_only"
-
-    # # Mock broker recovery
-    # with patch.object(orchestrator.broker, 'get_account', return_value={"balance": "1000"}):
-    #     with patch.object(orchestrator.broker, 'get_positions', return_value=[
-    #         {"symbol": "BTC-USD", "size": Decimal("0.5")}
-    #     ]):
-    #         # Trigger recovery
-    #         recovery_result = await orchestrator.attempt_recovery()
-
-    #         assert recovery_result.success is True
-    #         assert orchestrator.mode == "normal"
-
-    #         # Verify positions reconciled
-    #         reconciliation = orchestrator.get_position_reconciliation()
-    #         assert reconciliation.discrepancies == 0
-
-    #         # Verify telemetry
-    #         assert orchestrator.telemetry.get_counter("recovery_attempts") == 1
-    #         assert orchestrator.telemetry.get_counter("recovery_successes") == 1
-
-    # Test will fail until RecoveryWorkflow integration is implemented
-    pytest.fail("Awaiting RecoveryWorkflow integration")
-
-
-@pytest.mark.integration
-@pytest.mark.orchestration
-@pytest.mark.slow
-@pytest.mark.asyncio
-@pytest.mark.xfail(
-    reason="TODO: Wire partial outage detection - requires read/write health check split",
-    strict=False,
-)
-async def test_partial_broker_outage_handles_read_write_split():
-    """
-    Test: Partial outage (read OK, write fails) handled correctly
-
-    Scenario:
-    1. Broker write operations fail (POST orders → 503)
-    2. Broker read operations succeed (GET positions, account → 200)
-    3. Verify system enters "read_only" mode (not full degraded)
-    4. Verify position monitoring continues
-    5. Verify order placement rejected with specific error
-
-    Expected: Granular outage handling based on operation type
-    """
-    # TODO: Replace with actual implementation
-    # orchestrator = StrategyOrchestrator(broker=mock_broker)
-
-    # # Mock: reads OK, writes fail
-    # mock_error = HTTPError("503 Service Unavailable")
-    # mock_error.response = Mock(status_code=503)
-
-    # with patch.object(orchestrator.broker, 'place_order', side_effect=mock_error):
-    #     with patch.object(orchestrator.broker, 'get_account', return_value={"balance": "1000"}):
-    #         with patch.object(orchestrator.broker, 'get_positions', return_value=[]):
-    #             health = await orchestrator.check_broker_health()
-
-    #             # Partial outage: read OK, write degraded
-    #             assert health.read_status == "ok"
-    #             assert health.write_status == "degraded"
-    #             assert orchestrator.mode == "read_only"
-
-    #             # Verify position data still available
-    #             positions = await orchestrator.get_positions()
-    #             assert positions is not None
-
-    #             # Verify order placement rejected
-    #             result = await orchestrator.execute_order(
-    #                 symbol="BTC-USD",
-    #                 side="buy",
-    #                 quantity=Decimal("0.1"),
-    #             )
-    #             assert result.status == "rejected"
-    #             assert "write_unavailable" in result.rejection_reason.lower()
-
-    # Test will fail until partial outage detection is implemented
-    pytest.fail("Awaiting partial outage detection implementation")
-
-
 @pytest.mark.integration
 @pytest.mark.orchestration
 @pytest.mark.asyncio
-@pytest.mark.xfail(
-    reason="TODO: Wire rate limit handling - requires 429 detection and backoff logic",
-    strict=False,
-)
 async def test_rate_limit_error_handled_differently_than_outage():
     """
     Test: Rate limit errors (429) handled differently than outages (503)
@@ -293,14 +181,14 @@ async def test_rate_limit_error_handled_differently_than_outage():
     pytest.fail("Awaiting rate limit handling implementation")
 
 
+@pytest.mark.xfail(
+    reason="Test implementation pending - module exists but test logic needs completion (Phase 4 triage: Oct 2025)",
+    strict=False,
+)
 @pytest.mark.integration
 @pytest.mark.orchestration
 @pytest.mark.slow
 @pytest.mark.asyncio
-@pytest.mark.xfail(
-    reason="TODO: Wire retry with backoff - requires connection timeout handling and exponential backoff",
-    strict=False,
-)
 async def test_connection_timeout_triggers_retry_then_degraded():
     """
     Test: Connection timeouts trigger retries before entering degraded mode
@@ -343,82 +231,6 @@ async def test_connection_timeout_triggers_retry_then_degraded():
 
     # Test will fail until retry with backoff is implemented
     pytest.fail("Awaiting retry with backoff implementation")
-
-
-@pytest.mark.integration
-@pytest.mark.orchestration
-@pytest.mark.scenario
-@pytest.mark.asyncio
-@pytest.mark.xfail(
-    reason="TODO: Wire end-to-end outage recovery workflow - requires full orchestration stack integration",
-    strict=False,
-)
-async def test_end_to_end_outage_recovery_workflow():
-    """
-    Test: End-to-end broker outage and recovery workflow
-
-    Scenario (timeline):
-    T+0s: Normal operation
-    T+10s: Broker outage (503), enter degraded mode
-    T+30s: Position monitoring continues (polling)
-    T+60s: Broker recovers (200)
-    T+65s: Recovery workflow runs
-    T+70s: Normal mode resumed, orders accepted again
-
-    Expected: Complete workflow validated, no data loss
-    """
-    # TODO: Replace with actual end-to-end implementation
-    # orchestrator = StrategyOrchestrator(
-    #     broker=mock_broker,
-    #     health_check_interval=5,
-    #     recovery_check_interval=10,
-    # )
-
-    # # T+0: Normal operation
-    # await orchestrator.start()
-    # assert orchestrator.mode == "normal"
-
-    # # T+10: Broker outage
-    # mock_error = HTTPError("503 Service Unavailable")
-    # mock_error.response = Mock(status_code=503)
-
-    # with patch.object(orchestrator.broker, 'get_account', side_effect=mock_error):
-    #     await asyncio.sleep(11)  # Health check detects outage
-
-    #     assert orchestrator.mode == "monitor_only"
-
-    #     # T+30: Position monitoring
-    #     await asyncio.sleep(20)
-    #     assert orchestrator.telemetry.get_counter("position_polls_degraded") >= 2
-
-    # # T+60: Broker recovers
-    # with patch.object(orchestrator.broker, 'get_account', return_value={"balance": "1000"}):
-    #     await asyncio.sleep(31)  # Recovery check detects availability
-
-    #     # T+65: Recovery workflow
-    #     assert orchestrator.mode == "recovering"
-
-    #     await asyncio.sleep(6)
-
-    #     # T+70: Normal mode resumed
-    #     assert orchestrator.mode == "normal"
-
-    #     # Verify orders accepted again
-    #     result = await orchestrator.execute_order(
-    #         symbol="BTC-USD",
-    #         side="buy",
-    #         quantity=Decimal("0.1"),
-    #     )
-    #     assert result.status in ["accepted", "pending"]
-
-    #     # Verify telemetry timeline
-    #     events = orchestrator.telemetry.get_event_log()
-    #     assert any(e["type"] == "degraded_mode_entry" for e in events)
-    #     assert any(e["type"] == "recovery_initiated" for e in events)
-    #     assert any(e["type"] == "normal_mode_resumed" for e in events)
-
-    # Test will fail until end-to-end outage recovery workflow is implemented
-    pytest.fail("Awaiting end-to-end outage recovery workflow implementation")
 
 
 # ============================================================================

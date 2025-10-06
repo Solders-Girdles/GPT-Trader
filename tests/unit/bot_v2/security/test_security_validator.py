@@ -549,7 +549,25 @@ class TestRequestValidation:
 
     @pytest.mark.skip(reason="sys.getsizeof doesn't reflect actual dict size accurately")
     def test_oversized_request_rejected(self, validator):
-        """Request exceeding 1MB is rejected."""
+        """Request exceeding 1MB is rejected.
+
+        NOTE: This test is skipped due to limitations with sys.getsizeof():
+        - sys.getsizeof() only measures the immediate container size, not nested objects
+        - Actual memory usage of nested dicts/lists is not accurately reflected
+        - Test would produce false positives (claiming 2MB string is under 1MB limit)
+
+        Alternative validation approaches:
+        1. Use recursive size calculation (expensive for large objects)
+        2. Validate at serialization time (JSON size check)
+        3. Use integration tests with actual request payloads
+
+        Current status: Size validation is functional for simple requests but
+        may not catch all oversized nested payloads. Consider adding JSON
+        serialization size check in production code.
+
+        Phase 4 Triage (Oct 2025): Documented limitation. Defer to backlog
+        or implement alternative validation strategy.
+        """
         large_data = "x" * 2000000  # >1MB
         request = {"action": "test", "timestamp": "2025-01-01", "data": large_data}
 

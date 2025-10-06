@@ -7,13 +7,13 @@
 
 ## Summary
 
-**Total Modules**: 34
-**Total Lines**: 7,612
+**Total Modules**: 33
+**Total Lines**: 7,593
 **Total Classes**: 41
 
 ### Complexity Indicators
 
-- **Average Lines per Module**: 223
+- **Average Lines per Module**: 230
 - **Largest Module**: streaming_service (476 lines)
 - **Most Imports**: builders.perps_bot_builder (18 imports)
 
@@ -70,11 +70,6 @@ Modules that could be extracted to separate features:
 
 ### `system_monitor`
 - **Lines**: 284
-- **Dependencies**: 3 orchestration imports
-- **Reason**: Domain-specific, low coupling
-
-### `symbols`
-- **Lines**: 19
 - **Dependencies**: 3 orchestration imports
 - **Reason**: Domain-specific, low coupling
 

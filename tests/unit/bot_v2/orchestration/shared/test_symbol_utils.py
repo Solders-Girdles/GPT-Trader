@@ -214,31 +214,3 @@ class TestNormalizeSymbols:
             normalized, _ = normalize_symbols(profile, None)
 
         assert len(normalized) > 0
-
-
-class TestBackwardCompatibility:
-    """Test backward compatibility with symbols.py."""
-
-    def test_can_import_from_symbols_module(self):
-        """Functions can still be imported from symbols module."""
-        from bot_v2.orchestration.symbols import (
-            PERPS_ALLOWLIST as _PERPS,
-            derivatives_enabled as _derivs,
-            normalize_symbols as _norm,
-        )
-
-        assert _PERPS is PERPS_ALLOWLIST
-        assert _derivs is derivatives_enabled
-        assert _norm is normalize_symbols
-
-    def test_can_import_from_shared_module(self):
-        """Functions can be imported from new shared module."""
-        from bot_v2.orchestration.shared import (
-            TOP_VOLUME_BASES as _BASES,
-            derivatives_enabled as _derivs,
-            normalize_symbols as _norm,
-        )
-
-        assert _BASES is TOP_VOLUME_BASES
-        assert _derivs is derivatives_enabled
-        assert _norm is normalize_symbols

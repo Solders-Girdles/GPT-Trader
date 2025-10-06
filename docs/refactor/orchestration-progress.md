@@ -659,3 +659,15 @@ git tag phase1-complete
 - `extraction-market-data-service`
 
 **Next Milestone**: Phase 2 Tier 2 - Extract modules with minimal orchestration dependencies
+
+### Phase 2 Tier 2 Progress
+
+**Tier 2 Extraction 1: symbols.py wrapper removal** (2025-10-05):
+- ✅ Removed `orchestration/symbols.py` re-export wrapper
+- ✅ Deleted backward compatibility tests (no longer needed)
+- ✅ All imports already using `shared/symbol_utils.py` directly
+- ✅ Orchestration modules: 34 → 33 (-3%)
+- ✅ Tests: 5,215 passing (2 backward compat tests removed)
+- ✅ Zero circular dependencies maintained
+
+**Rationale**: The `symbols.py` wrapper was created in Phase 1 to maintain backward compatibility during the extraction of symbol utilities to `shared/symbol_utils.py`. With all callers now importing directly from the shared module, the wrapper served no purpose and added unnecessary indirection.

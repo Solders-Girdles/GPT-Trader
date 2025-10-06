@@ -55,7 +55,6 @@ from bot_v2.features.monitor import get_logger as _get_plog
 from bot_v2.orchestration.broker_factory import create_brokerage
 from bot_v2.orchestration.configuration import (
     DEFAULT_SPOT_RISK_PATH,
-    TOP_VOLUME_BASES,
     BotConfig,
     ConfigManager,
     ConfigValidationError,
@@ -64,11 +63,9 @@ from bot_v2.orchestration.configuration import (
 from bot_v2.orchestration.live_execution import LiveExecutionEngine
 from bot_v2.orchestration.market_monitor import MarketActivityMonitor
 from bot_v2.orchestration.mock_broker import MockBroker
-from bot_v2.orchestration.service_registry import ServiceRegistry, empty_registry
+from bot_v2.orchestration.perps_bootstrap import prepare_perps_bot
+from bot_v2.orchestration.service_registry import ServiceRegistry
 from bot_v2.orchestration.session_guard import TradingSessionGuard
-from bot_v2.persistence.event_store import EventStore
-from bot_v2.persistence.orders_store import OrdersStore
-from bot_v2.system_paths import RUNTIME_DATA_DIR
 
 logger = logging.getLogger(__name__)
 
@@ -77,12 +74,14 @@ class PerpsBot:
     """Main Coinbase trading bot (spot by default, perps optional)."""
 
     def __init__(self, config: BotConfig, registry: ServiceRegistry | None = None):
-        self.config = config
-        self.registry: ServiceRegistry = registry or empty_registry(config)
-        if self.registry.config is not config:
-            self.registry = self.registry.with_updates(config=config)
+        bootstrap = prepare_perps_bot(config, registry)
+        self.config = bootstrap.config
+        self.registry = bootstrap.registry
+        for record in bootstrap.logs:
+            logger.log(record.level, record.message, *record.args)
+
         try:
-            self._config_manager = ConfigManager.from_config(config)
+            self._config_manager = ConfigManager.from_config(self.config)
         except ConfigValidationError as exc:
             raise ExecutionError(f"Invalid configuration: {exc}") from exc
         self._pending_config_update: BotConfig | None = None
@@ -92,81 +91,12 @@ class PerpsBot:
             end=self.config.trading_window_end,
             trading_days=self.config.trading_days,
         )
-        # Enforce supported instruments on Coinbase perps
-        try:
-            derivatives_enabled = os.environ.get("COINBASE_ENABLE_DERIVATIVES", "0") == "1"
-            if self.config.profile == Profile.SPOT:
-                derivatives_enabled = False
-            symbols: list[str] = []
-            if self.config.symbols:
-                for raw in self.config.symbols:
-                    sym = (raw or "").upper()
-                    if not sym:
-                        continue
-                    if derivatives_enabled:
-                        allowed = {"BTC-PERP", "ETH-PERP", "SOL-PERP", "XRP-PERP"}
-                        if sym not in allowed:
-                            logger.warning(
-                                "Filtering unsupported perpetual symbol %s. Allowed perps: %s",
-                                sym,
-                                sorted(allowed),
-                            )
-                            continue
-                        symbols.append(sym)
-                    else:
-                        if sym.endswith("-PERP"):
-                            base = sym.split("-")[0]
-                            quote = os.environ.get("COINBASE_DEFAULT_QUOTE", "USD").upper()
-                            replacement = f"{base}-{quote}"
-                            logger.warning(
-                                "Derivatives disabled. Replacing %s with spot symbol %s",
-                                sym,
-                                replacement,
-                            )
-                            sym = replacement
-                        symbols.append(sym)
+        self.event_store = bootstrap.event_store
+        self.orders_store = bootstrap.orders_store
+        self.registry = bootstrap.registry
 
-            if not symbols:
-                quote = os.environ.get("COINBASE_DEFAULT_QUOTE", "USD").upper()
-                if derivatives_enabled:
-                    fallback = ["BTC-PERP", "ETH-PERP"]
-                else:
-                    fallback = [f"{base}-{quote}" for base in TOP_VOLUME_BASES]
-                logger.info("No valid symbols provided. Falling back to %s", fallback)
-                symbols = fallback
-
-            # Preserve order but drop duplicates
-            self.config.symbols = list(dict.fromkeys(symbols))
-        except Exception as exc:
-            # Non-fatal in dev/mock contexts, but initialization may bail later if truly empty
-            logger.warning("Failed to normalize symbol list: %s", exc, exc_info=True)
         self.running = False
         self._reduce_only_mode_state = bool(self.config.reduce_only_mode)
-        runtime_root = Path(os.environ.get("GPT_TRADER_RUNTIME_ROOT", str(RUNTIME_DATA_DIR)))
-        storage_dir = runtime_root / f"perps_bot/{self.config.profile.value}"
-        storage_dir.mkdir(parents=True, exist_ok=True)
-
-        event_root_env = os.environ.get("EVENT_STORE_ROOT")
-        if event_root_env:
-            event_store_root = Path(event_root_env)
-            parts = set(event_store_root.parts)
-            if "perps_bot" not in parts:
-                event_store_root = event_store_root / "perps_bot" / self.config.profile.value
-        else:
-            event_store_root = storage_dir
-        event_store_root.mkdir(parents=True, exist_ok=True)
-
-        if self.registry.event_store is not None:
-            self.event_store = self.registry.event_store
-        else:
-            self.event_store = EventStore(root=event_store_root)
-            self.registry = self.registry.with_updates(event_store=self.event_store)
-
-        if self.registry.orders_store is not None:
-            self.orders_store = self.registry.orders_store
-        else:
-            self.orders_store = OrdersStore(storage_path=storage_dir)
-            self.registry = self.registry.with_updates(orders_store=self.orders_store)
 
         # Initialize product map BEFORE _init_broker() uses it
         self._product_map: dict[str, Product] = {}

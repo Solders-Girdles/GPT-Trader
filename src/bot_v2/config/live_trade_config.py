@@ -11,7 +11,14 @@ from typing import Dict, Optional
 from decimal import Decimal
 import os
 import json
-from datetime import time
+
+from .env_utils import (
+    get_env_bool,
+    get_env_decimal,
+    get_env_float,
+    get_env_int,
+    parse_env_mapping,
+)
 
 
 @dataclass
@@ -86,102 +93,77 @@ class RiskConfig:
         config = cls()
         
         # Load from env with defaults
-        if val := os.getenv("RISK_MAX_LEVERAGE"):
-            config.max_leverage = int(val)
-        
-        if val := os.getenv("RISK_LEVERAGE_MAX_PER_SYMBOL"):
-            # Format: BTC-PERP:10,ETH-PERP:8
-            config.leverage_max_per_symbol = {
-                k: int(v) for k, v in 
-                (pair.split(":") for pair in val.split(",") if ":" in pair)
-            }
+        if (val := get_env_int("RISK_MAX_LEVERAGE")) is not None:
+            config.max_leverage = val
+
+        if env := parse_env_mapping("RISK_LEVERAGE_MAX_PER_SYMBOL", int):
+            config.leverage_max_per_symbol = env
         # Time-of-day schedule (optional)
         if val := os.getenv("RISK_DAYTIME_START_UTC"):
             config.daytime_start_utc = val
         if val := os.getenv("RISK_DAYTIME_END_UTC"):
             config.daytime_end_utc = val
-        if val := os.getenv("RISK_DAY_LEVERAGE_MAX_PER_SYMBOL"):
-            # Format: BTC-PERP:10,ETH-PERP:8
-            try:
-                config.day_leverage_max_per_symbol = {k: int(v) for k, v in (pair.split(":") for pair in val.split(",") if ":" in pair)}
-            except Exception:
-                pass
-        if val := os.getenv("RISK_NIGHT_LEVERAGE_MAX_PER_SYMBOL"):
-            try:
-                config.night_leverage_max_per_symbol = {k: int(v) for k, v in (pair.split(":") for pair in val.split(",") if ":" in pair)}
-            except Exception:
-                pass
-        if val := os.getenv("RISK_DAY_MMR_PER_SYMBOL"):
-            # Format: BTC-PERP:0.005,ETH-PERP:0.01
-            try:
-                config.day_mmr_per_symbol = {k: float(v) for k, v in (pair.split(":") for pair in val.split(",") if ":" in pair)}
-            except Exception:
-                pass
-        if val := os.getenv("RISK_NIGHT_MMR_PER_SYMBOL"):
-            try:
-                config.night_mmr_per_symbol = {k: float(v) for k, v in (pair.split(":") for pair in val.split(",") if ":" in pair)}
-            except Exception:
-                pass
-        
-        if val := os.getenv("RISK_MIN_LIQUIDATION_BUFFER_PCT"):
-            config.min_liquidation_buffer_pct = float(val)
-        if val := os.getenv("RISK_ENABLE_PRE_TRADE_LIQ_PROJECTION"):
-            config.enable_pre_trade_liq_projection = val.lower() in ("true", "1", "yes")
-        if val := os.getenv("RISK_DEFAULT_MMR"):
-            config.default_maintenance_margin_rate = float(val)
-        
-        if val := os.getenv("RISK_DAILY_LOSS_LIMIT"):
-            config.daily_loss_limit = Decimal(val)
-        # Legacy env alias for exposure
-        if val := os.getenv("RISK_MAX_TOTAL_EXPOSURE_PCT"):
-            try:
-                config.max_exposure_pct = float(val)
-            except Exception:
-                pass
-        
-        if val := os.getenv("RISK_MAX_EXPOSURE_PCT"):
-            config.max_exposure_pct = float(val)
-        
-        if val := os.getenv("RISK_MAX_POSITION_PCT_PER_SYMBOL"):
-            config.max_position_pct_per_symbol = float(val)
+        if env := parse_env_mapping("RISK_DAY_LEVERAGE_MAX_PER_SYMBOL", int):
+            config.day_leverage_max_per_symbol = env
+        if env := parse_env_mapping("RISK_NIGHT_LEVERAGE_MAX_PER_SYMBOL", int):
+            config.night_leverage_max_per_symbol = env
+        if env := parse_env_mapping("RISK_DAY_MMR_PER_SYMBOL", float):
+            config.day_mmr_per_symbol = env
+        if env := parse_env_mapping("RISK_NIGHT_MMR_PER_SYMBOL", float):
+            config.night_mmr_per_symbol = env
 
-        if val := os.getenv("RISK_MAX_NOTIONAL_PER_SYMBOL"):
-            # Format: BTC-PERP:100000,ETH-PERP:50000
-            try:
-                config.max_notional_per_symbol = {
-                    k: Decimal(str(v)) for k, v in 
-                    (pair.split(":") for pair in val.split(",") if ":" in pair)
-                }
-            except Exception:
-                pass
-        
-        if val := os.getenv("RISK_SLIPPAGE_GUARD_BPS"):
-            config.slippage_guard_bps = int(val)
-        
-        if val := os.getenv("RISK_KILL_SWITCH_ENABLED"):
-            config.kill_switch_enabled = val.lower() in ("true", "1", "yes")
-        
-        if val := os.getenv("RISK_REDUCE_ONLY_MODE"):
-            config.reduce_only_mode = val.lower() in ("true", "1", "yes")
-        
-        if val := os.getenv("RISK_MAX_MARK_STALENESS_SECONDS"):
-            config.max_mark_staleness_seconds = int(val)
+        if (val := get_env_float("RISK_MIN_LIQUIDATION_BUFFER_PCT")) is not None:
+            config.min_liquidation_buffer_pct = val
+        if (val := get_env_bool("RISK_ENABLE_PRE_TRADE_LIQ_PROJECTION")) is not None:
+            config.enable_pre_trade_liq_projection = val
+        if (val := get_env_float("RISK_DEFAULT_MMR")) is not None:
+            config.default_maintenance_margin_rate = val
+
+        if (val := get_env_decimal("RISK_DAILY_LOSS_LIMIT")) is not None:
+            config.daily_loss_limit = val
+        # Legacy env alias for exposure
+        if (val := get_env_float("RISK_MAX_TOTAL_EXPOSURE_PCT")) is not None:
+            config.max_exposure_pct = val
+
+        if (val := get_env_float("RISK_MAX_EXPOSURE_PCT")) is not None:
+            config.max_exposure_pct = val
+
+        if (val := get_env_float("RISK_MAX_POSITION_PCT_PER_SYMBOL")) is not None:
+            config.max_position_pct_per_symbol = val
+
+        max_notional = parse_env_mapping(
+            "RISK_MAX_NOTIONAL_PER_SYMBOL", lambda raw: Decimal(raw)
+        )
+        if max_notional:
+            config.max_notional_per_symbol = max_notional
+
+        if (val := get_env_int("RISK_SLIPPAGE_GUARD_BPS")) is not None:
+            config.slippage_guard_bps = val
+
+        if (val := get_env_bool("RISK_KILL_SWITCH_ENABLED")) is not None:
+            config.kill_switch_enabled = val
+
+        if (val := get_env_bool("RISK_REDUCE_ONLY_MODE")) is not None:
+            config.reduce_only_mode = val
+
+        if (val := get_env_int("RISK_MAX_MARK_STALENESS_SECONDS")) is not None:
+            config.max_mark_staleness_seconds = val
         # Circuit breakers
-        if val := os.getenv("RISK_ENABLE_VOLATILITY_CB"):
-            config.enable_volatility_circuit_breaker = val.lower() in ("true", "1", "yes")
-        if val := os.getenv("RISK_MAX_INTRADAY_VOL"):
-            config.max_intraday_volatility_threshold = float(val)
-        if val := os.getenv("RISK_VOL_WINDOW_PERIODS"):
-            config.volatility_window_periods = int(val)
-        if val := os.getenv("RISK_CB_COOLDOWN_MIN"):
-            config.circuit_breaker_cooldown_minutes = int(val)
-        if val := os.getenv("RISK_VOL_WARNING_THRESH"):
-            config.volatility_warning_threshold = float(val)
-        if val := os.getenv("RISK_VOL_REDUCE_ONLY_THRESH"):
-            config.volatility_reduce_only_threshold = float(val)
-        if val := os.getenv("RISK_VOL_KILL_SWITCH_THRESH"):
-            config.volatility_kill_switch_threshold = float(val)
-        
+        if (val := get_env_bool("RISK_ENABLE_VOLATILITY_CB")) is not None:
+            config.enable_volatility_circuit_breaker = val
+        if (val := get_env_float("RISK_MAX_INTRADAY_VOL")) is not None:
+            config.max_intraday_volatility_threshold = val
+        if (val := get_env_int("RISK_VOL_WINDOW_PERIODS")) is not None:
+            config.volatility_window_periods = val
+        if (val := get_env_int("RISK_CB_COOLDOWN_MIN")) is not None:
+            config.circuit_breaker_cooldown_minutes = val
+        if (val := get_env_float("RISK_VOL_WARNING_THRESH")) is not None:
+            config.volatility_warning_threshold = val
+        if (val := get_env_float("RISK_VOL_REDUCE_ONLY_THRESH")) is not None:
+            config.volatility_reduce_only_threshold = val
+        if (val := get_env_float("RISK_VOL_KILL_SWITCH_THRESH")) is not None:
+            config.volatility_kill_switch_threshold = val
+
         return config
     
     @classmethod

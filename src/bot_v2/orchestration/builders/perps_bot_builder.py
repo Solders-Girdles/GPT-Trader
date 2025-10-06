@@ -14,7 +14,7 @@ import threading
 from typing import TYPE_CHECKING
 
 from bot_v2.features.brokerages.coinbase.account_manager import CoinbaseAccountManager
-from bot_v2.features.market_data import MarketActivityMonitor
+from bot_v2.features.market_data import MarketActivityMonitor, MarketDataService
 from bot_v2.monitoring.metrics_server import MetricsServer
 from bot_v2.monitoring.system import get_logger as _get_plog
 from bot_v2.monitoring.telemetry import AccountTelemetryService
@@ -22,7 +22,6 @@ from bot_v2.orchestration.config_controller import ConfigController
 from bot_v2.orchestration.configuration import BotConfig, Profile
 from bot_v2.orchestration.execution_coordinator import ExecutionCoordinator
 from bot_v2.orchestration.guardrails import GuardRailManager
-from bot_v2.orchestration.market_data_service import MarketDataService
 from bot_v2.orchestration.runtime_coordinator import RuntimeCoordinator
 from bot_v2.orchestration.service_rebinding import rebind_bot_services
 from bot_v2.orchestration.service_registry import ServiceRegistry, empty_registry

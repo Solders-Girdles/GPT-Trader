@@ -17,7 +17,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from bot_v2.orchestration.market_data_service import MarketDataService
+from bot_v2.features.market_data import MarketDataService
 
 
 @pytest.fixture
@@ -244,7 +244,7 @@ class TestMarketDataServiceThreadSafety:
         monkeypatch.setattr(threading, "RLock", InstrumentedRLock)
 
         # Create service with instrumented lock
-        from bot_v2.orchestration.market_data_service import MarketDataService
+        from bot_v2.features.market_data import MarketDataService
 
         broker = Mock()
         risk_manager = Mock()

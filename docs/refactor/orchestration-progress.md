@@ -635,6 +635,27 @@ git tag phase1-complete
 ---
 
 **Last Updated**: 2025-10-05
-**Status**: Phase 1 - COMPLETE ✅ (All 7 circular dependencies eliminated!)
-**Achievement**: Zero circular dependencies in orchestration layer
-**Next Milestone**: Phase 2 - Extract domain modules (Week 2)
+**Status**: Phase 2 Tier 1 - COMPLETE ✅
+**Achievement**: All 4 Tier 1 modules extracted from orchestration
+
+### Phase 2 Tier 1 Milestone
+
+**Modules Extracted** (2025-10-05):
+1. ✅ `account_telemetry` → `monitoring/telemetry/account_snapshot.py`
+2. ✅ `equity_calculator` → `features/live_trade/equity/calculator.py`
+3. ✅ `market_monitor` → `features/market_data/monitoring/activity_monitor.py`
+4. ✅ `market_data_service` → `features/market_data/service.py`
+
+**Metrics**:
+- Orchestration modules: 37 → 34 (3 modules extracted, -8%)
+- Total lines reduced: 7,814 → 7,612 (-202 lines, -2.6%)
+- Zero circular dependencies maintained ✅
+- All 5,217 tests passing ✅
+
+**Git Tags**:
+- `extraction-account-telemetry`
+- `extraction-equity-calculator`
+- `extraction-market-monitor`
+- `extraction-market-data-service`
+
+**Next Milestone**: Phase 2 Tier 2 - Extract modules with minimal orchestration dependencies

@@ -25,13 +25,31 @@ fi
 
 # Verify required environment variables
 source .env
-if [ -z "$COINBASE_API_KEY" ] || [ "$COINBASE_API_KEY" == "your_sandbox_api_key_here" ]; then
-    echo "❌ Error: COINBASE_API_KEY not configured in .env"
-    exit 1
-fi
 
-if [ -z "$COINBASE_API_SECRET" ] || [ "$COINBASE_API_SECRET" == "your_sandbox_api_secret_here" ]; then
-    echo "❌ Error: COINBASE_API_SECRET not configured in .env"
+# Check for CDP credentials (preferred for production/advanced mode)
+if [ -n "$COINBASE_CDP_API_KEY" ] && [ -n "$COINBASE_CDP_PRIVATE_KEY" ]; then
+    echo "✓ CDP credentials configured (Advanced Trade API)"
+# Check for legacy HMAC credentials (sandbox/exchange mode)
+elif [ -n "$COINBASE_API_KEY" ] && [ -n "$COINBASE_API_SECRET" ]; then
+    if [ "$COINBASE_API_KEY" == "your_sandbox_api_key_here" ] || [ "$COINBASE_API_SECRET" == "your_sandbox_api_secret_here" ]; then
+        echo "❌ Error: COINBASE_API_KEY/SECRET contain placeholder values"
+        echo "   Update .env with real credentials"
+        exit 1
+    fi
+    echo "✓ HMAC credentials configured (Exchange API)"
+else
+    echo "❌ Error: No Coinbase credentials configured in .env"
+    echo ""
+    echo "   Required: Either CDP credentials OR HMAC credentials"
+    echo ""
+    echo "   Option 1 - CDP (Advanced Trade API, recommended):"
+    echo "   COINBASE_CDP_API_KEY=<your-api-key-uuid>"
+    echo "   COINBASE_CDP_PRIVATE_KEY=<your-ec-private-key-pem>"
+    echo ""
+    echo "   Option 2 - HMAC (Exchange API, sandbox only):"
+    echo "   COINBASE_API_KEY=<your-api-key>"
+    echo "   COINBASE_API_SECRET=<your-api-secret>"
+    echo "   COINBASE_API_PASSPHRASE=<your-passphrase>"
     exit 1
 fi
 

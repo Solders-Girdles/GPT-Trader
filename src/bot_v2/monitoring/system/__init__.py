@@ -19,8 +19,6 @@ from bot_v2.monitoring.system.logger import (
     get_logger,
     log_error,
     log_event,
-    log_ml_prediction,
-    log_performance,
     log_trade,
     set_correlation_id,
 )
@@ -39,8 +37,6 @@ __all__ = [
     "get_logger",
     "log_event",
     "log_trade",
-    "log_ml_prediction",
-    "log_performance",
     "log_error",
     "set_correlation_id",
     "get_correlation_id",

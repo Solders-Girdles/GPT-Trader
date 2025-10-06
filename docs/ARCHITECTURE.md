@@ -26,12 +26,13 @@ GPT-Trader V2 is a production-ready Coinbase **spot** trading system that retain
 - Result: 5,007 passing tests (up from 2,145), 87.52% coverage
 - Rollback capability: Feature flags enable same-day rollback without redeploy
 
-**Previous Refactoring (2025-09-29):**
+**Previous Refactoring (2025-09-29 to 2025-10-06):**
 - Archived experimental features (backtest, ml_strategy, market_regime, monitoring_dashboard) → `archived/experimental_features_2025_09_29/`
+- Retired over-engineered systems (adaptive_portfolio, state management platform) → `archived/features_adaptive_portfolio/`, `archived/state_platform/`
 - Extracted models from large files into subpackages:
-  - `state/recovery/models.py` - Recovery system models (99 lines)
   - `features/live_trade/advanced_execution_models/` - Execution models (72 lines)
-- Result: Cleaner separation of concerns, improved maintainability
+- Removed 16 orphaned config files from deleted/archived features
+- Result: Cleaner separation of concerns, improved maintainability, reduced configuration drift
 
 ## Trading Capabilities Matrix
 
@@ -51,7 +52,6 @@ The system is organized into vertical feature slices under `src/bot_v2/features/
 src/bot_v2/features/
 ├── live_trade/          # Production trading engine
 ├── paper_trade/         # Simulated trading harness
-├── adaptive_portfolio/  # Tier-based portfolio management
 ├── analyze/             # Market analytics helpers
 ├── position_sizing/     # Kelly & intelligent sizing utilities
 ├── strategies/          # Baseline and experimental strategies
@@ -60,6 +60,8 @@ src/bot_v2/features/
 ├── data/                # Data acquisition helpers
 └── optimize/            # Parameter optimisation experiments
 ```
+
+**Note**: `adaptive_portfolio/` archived to `archived/features_adaptive_portfolio/` (over-engineered for current needs)
 
 Additional cross-cutting packages now live at the top level:
 
@@ -153,6 +155,8 @@ behaviour until the derivatives gate opens.
 ### Feature Slice Reference
 
 **Note:** Experimental features (backtest, ml_strategy, market_regime) were archived on 2025-09-29 to streamline the codebase. Restore from `archived/experimental_features_2025_09_29/` if needed.
+
+Legacy adaptive portfolio and state-management stacks were retired in Q4 2025 and are preserved for reference under `archived/features_adaptive_portfolio/` and `archived/state_platform/`.
 
 #### Paper Trade (`features/paper_trade/`)
 - **Purpose:** Self-contained realtime simulation with local data feed, execution, risk, and metrics.
@@ -323,6 +327,56 @@ monitoring: real-time
 1. **Regression Suite**: `poetry run pytest -q`
 2. **Smoke Test**: `poetry run perps-bot --profile dev --dev-fast`
 3. **Validation**: `python scripts/validation/verify_core.py --check all`
+
+## Configuration System
+
+### Profile-Based Configuration
+
+The bot uses **hardcoded profile-based configuration** via `ConfigManager` (`orchestration/configuration.py`), NOT YAML file loading for most settings.
+
+**Active Profiles**:
+- `dev` - Mock broker, tiny positions, extensive logging (hardcoded in ConfigManager)
+- `demo` - $100 max position, 1x leverage (hardcoded)
+- `spot` - $50k max position, spot-only (hardcoded)
+- `canary` - Ultra-safe prod testing, $10 daily loss limit (loads `config/profiles/canary.yaml`)
+- `prod` - Full sizing, perps-capable (hardcoded)
+
+**YAML Configs** (only 3 loaded):
+- `config/profiles/canary.yaml` - Canary profile overrides
+- `config/profiles/spot.yaml` - Used by alerts manager and profile service
+- `config/profiles/dev_entry.yaml` - Dev/demo profile reference
+
+### Risk Configuration
+
+Risk limits use **environment variables** as primary method, with optional JSON file override:
+
+1. **RISK_CONFIG_PATH** (optional override):
+   ```bash
+   export RISK_CONFIG_PATH=config/risk/dev_dynamic.json
+   ```
+   - Must be valid JSON (YAML not supported)
+   - Currently available: `dev_dynamic.json`
+
+2. **Environment Variables** (default):
+   ```bash
+   export RISK_MAX_LEVERAGE=3
+   export RISK_DAILY_LOSS_LIMIT=0.02
+   export RISK_MAX_EXPOSURE_PCT=0.80
+   ```
+   See `config/risk/README.md` for complete `RISK_*` env var list.
+
+3. **Fallback**: Hardcoded defaults in `RiskConfig` class
+
+### Configuration Migration (Oct 2025)
+
+**Removed** (Phase 1 cleanup):
+- 14 orphaned config files from deleted features (adaptive_portfolio, backtest, ml_strategy, etc.)
+- 2 broken risk configs (YAML format incompatible with JSON-only loader)
+
+**Current State**:
+- Profile configs: Hardcoded + 3 YAMLs
+- Risk configs: Env vars + optional `dev_dynamic.json`
+- No dynamic config loading, fully static
 
 ## Dependencies
 

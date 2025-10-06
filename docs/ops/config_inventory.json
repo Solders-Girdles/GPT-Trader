@@ -1,0 +1,149 @@
+{
+  ".pre-commit-config.yaml": {
+    "dynamic_loading": [],
+    "path": "config/.pre-commit-config.yaml",
+    "size_bytes": 2517,
+    "status": "UNUSED",
+    "usage": {}
+  },
+  "acceptance_tuning.yaml": {
+    "dynamic_loading": [],
+    "path": "config/acceptance_tuning.yaml",
+    "size_bytes": 202,
+    "status": "UNUSED",
+    "usage": {}
+  },
+  "adaptive_portfolio_aggressive.yaml": {
+    "dynamic_loading": [],
+    "path": "config/adaptive_portfolio_aggressive.yaml",
+    "size_bytes": 2699,
+    "status": "UNUSED",
+    "usage": {}
+  },
+  "adaptive_portfolio_config.yaml": {
+    "dynamic_loading": [],
+    "path": "config/adaptive_portfolio_config.yaml",
+    "size_bytes": 2602,
+    "status": "UNUSED",
+    "usage": {}
+  },
+  "adaptive_portfolio_conservative.yaml": {
+    "dynamic_loading": [],
+    "path": "config/adaptive_portfolio_conservative.yaml",
+    "size_bytes": 2628,
+    "status": "UNUSED",
+    "usage": {}
+  },
+  "backtest_config.yaml": {
+    "dynamic_loading": [],
+    "path": "config/backtest_config.yaml",
+    "size_bytes": 865,
+    "status": "UNUSED",
+    "usage": {}
+  },
+  "canary.yaml": {
+    "dynamic_loading": [],
+    "path": "config/profiles/canary.yaml",
+    "size_bytes": 7294,
+    "status": "UNUSED",
+    "usage": {}
+  },
+  "coinbase_perp_specs.yaml": {
+    "dynamic_loading": [],
+    "path": "config/brokers/coinbase_perp_specs.yaml",
+    "size_bytes": 2224,
+    "status": "UNUSED",
+    "usage": {}
+  },
+  "coinbase_perps.prod.yaml": {
+    "dynamic_loading": [],
+    "path": "config/risk/coinbase_perps.prod.yaml",
+    "size_bytes": 979,
+    "status": "UNUSED",
+    "usage": {}
+  },
+  "database.yaml": {
+    "dynamic_loading": [],
+    "path": "config/database.yaml",
+    "size_bytes": 2040,
+    "status": "UNUSED",
+    "usage": {}
+  },
+  "dev_dynamic.json": {
+    "dynamic_loading": [],
+    "path": "config/risk/dev_dynamic.json",
+    "size_bytes": 627,
+    "status": "UNUSED",
+    "usage": {}
+  },
+  "dev_entry.yaml": {
+    "dynamic_loading": [],
+    "path": "config/profiles/dev_entry.yaml",
+    "size_bytes": 725,
+    "status": "UNUSED",
+    "usage": {}
+  },
+  "live_trade_config.yaml": {
+    "dynamic_loading": [],
+    "path": "config/live_trade_config.yaml",
+    "size_bytes": 842,
+    "status": "UNUSED",
+    "usage": {}
+  },
+  "ml_strategy_config.yaml": {
+    "dynamic_loading": [],
+    "path": "config/ml_strategy_config.yaml",
+    "size_bytes": 1456,
+    "status": "UNUSED",
+    "usage": {}
+  },
+  "position_sizing_config.yaml": {
+    "dynamic_loading": [],
+    "path": "config/position_sizing_config.yaml",
+    "size_bytes": 1269,
+    "status": "UNUSED",
+    "usage": {}
+  },
+  "spot.yaml": {
+    "dynamic_loading": [],
+    "path": "config/profiles/spot.yaml",
+    "size_bytes": 2419,
+    "status": "UNUSED",
+    "usage": {}
+  },
+  "spot_top10.yaml": {
+    "dynamic_loading": [],
+    "path": "config/risk/spot_top10.yaml",
+    "size_bytes": 860,
+    "status": "UNUSED",
+    "usage": {}
+  },
+  "stage1_scaleup.yaml": {
+    "dynamic_loading": [],
+    "path": "config/stage1_scaleup.yaml",
+    "size_bytes": 848,
+    "status": "UNUSED",
+    "usage": {}
+  },
+  "stage2_scaleup.yaml": {
+    "dynamic_loading": [],
+    "path": "config/stage2_scaleup.yaml",
+    "size_bytes": 1145,
+    "status": "UNUSED",
+    "usage": {}
+  },
+  "stage3_scaleup.yaml": {
+    "dynamic_loading": [],
+    "path": "config/stage3_scaleup.yaml",
+    "size_bytes": 1193,
+    "status": "UNUSED",
+    "usage": {}
+  },
+  "system_config.yaml": {
+    "dynamic_loading": [],
+    "path": "config/system_config.yaml",
+    "size_bytes": 1269,
+    "status": "UNUSED",
+    "usage": {}
+  }
+}

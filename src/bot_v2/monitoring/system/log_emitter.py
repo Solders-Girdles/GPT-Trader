@@ -46,7 +46,7 @@ class LogEmitter:
             entry: Structured log entry dictionary
         """
         # 1. Level filtering
-        if not self._should_emit(entry):
+        if not self.should_emit(entry):
             return
 
         # 2. Console output
@@ -56,7 +56,7 @@ class LogEmitter:
         # 3. File output
         self._emit_file(entry)
 
-    def _should_emit(self, entry: dict[str, Any]) -> bool:
+    def should_emit(self, entry: dict[str, Any]) -> bool:
         """
         Check if entry meets minimum level threshold.
 

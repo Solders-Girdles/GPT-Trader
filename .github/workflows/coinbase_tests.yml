@@ -60,10 +60,24 @@ jobs:
         run: |
           echo "COINBASE_API_MODE=${{ matrix.api-mode }}" >> $GITHUB_ENV
           echo "COINBASE_API_BASE=${{ matrix.base-url }}" >> $GITHUB_ENV
-          echo "COINBASE_API_KEY=test-key" >> $GITHUB_ENV
-          echo "COINBASE_API_SECRET=test-secret" >> $GITHUB_ENV
-          if [ "${{ matrix.needs-passphrase }}" = "true" ]; then
-            echo "COINBASE_API_PASSPHRASE=test-pass" >> $GITHUB_ENV
+          if [ "${{ matrix.api-mode }}" = "advanced" ]; then
+            # Advanced mode uses CDP JWT authentication
+            echo "COINBASE_CDP_API_KEY=test-cdp-key-uuid" >> $GITHUB_ENV
+            echo "COINBASE_CDP_PRIVATE_KEY=-----BEGIN EC PRIVATE KEY-----
+MHcCAQEEIEsZvoe/wsksW+W/9GLTBNDA2Kz1ik/6UUJwLaKMImR2oAoGCCqGSM49
+AwEHoUQDQgAEthQ2Rkyz9yemEC3sK09H4jeQSanuT98AzIgXTYX0BGQipVYf6QeD
+eiu+QIQ1RzW+g4nL9cfoUd2CgZ4sR6S0qA==
+-----END EC PRIVATE KEY-----" >> $GITHUB_ENV
+            # Also set HMAC vars for validation checks (CDP takes precedence)
+            echo "COINBASE_API_KEY=test-cdp-key-uuid" >> $GITHUB_ENV
+            echo "COINBASE_API_SECRET=placeholder" >> $GITHUB_ENV
+          else
+            # Exchange mode uses HMAC authentication with passphrase
+            echo "COINBASE_API_KEY=test-key" >> $GITHUB_ENV
+            echo "COINBASE_API_SECRET=test-secret" >> $GITHUB_ENV
+            if [ "${{ matrix.needs-passphrase }}" = "true" ]; then
+              echo "COINBASE_API_PASSPHRASE=test-pass" >> $GITHUB_ENV
+            fi
           fi
 
       - name: Run Coinbase unit tests

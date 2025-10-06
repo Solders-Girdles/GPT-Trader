@@ -7,11 +7,18 @@ Complete isolation - everything needed is local.
 from __future__ import annotations
 
 import logging
+import os
 import threading
 import time
+from collections.abc import Mapping
 from datetime import datetime
+from pathlib import Path
+from typing import TYPE_CHECKING, Any
 
-from bot_v2.monitoring.alerts import Alert
+if TYPE_CHECKING:
+    from bot_v2.orchestration.core import IBotRuntime
+
+from bot_v2.monitoring.alerts import Alert, AlertDispatcher
 from bot_v2.monitoring.alerts_manager import AlertManager
 from bot_v2.monitoring.interfaces import (
     ComponentHealth,
@@ -34,14 +41,21 @@ logger = logging.getLogger(__name__)
 class MonitoringSystem:
     """Main monitoring system."""
 
-    def __init__(self, config: MonitorConfig | None = None) -> None:
-        """
-        Initialize monitoring system.
+    def __init__(
+        self,
+        bot: IBotRuntime | None = None,
+        config: MonitorConfig | None = None,
+        *,
+        profile: Any | None = None,
+        alert_config_path: str | Path | None = None,
+        alert_manager: AlertManager | None = None,
+        monitor_settings: Mapping[str, object] | None = None,
+        alert_settings: Mapping[str, object] | None = None,
+    ) -> None:
+        """Initialize monitoring system."""
 
-        Args:
-            config: Monitoring configuration
-        """
-        self.config = config or MonitorConfig()
+        self._bot = bot
+        self.config = config or self._build_monitor_config(monitor_settings)
         self.is_running: bool = False
         self.thread: threading.Thread | None = None
 
@@ -50,12 +64,24 @@ class MonitoringSystem:
         self.performance_collector = PerformanceCollector()
         self.component_collector = ComponentCollector()
 
-        # Alert manager - use from_profile_yaml or create with empty dispatcher
-        # For monitoring system, we use simplified config-based initialization
-        from bot_v2.monitoring.alerts import AlertDispatcher
+        if alert_manager is not None:
+            self.alert_manager = alert_manager
+            alerts_enabled = self.config.enable_notifications
+        else:
+            effective_profile = profile if profile is not None else os.getenv("PERPS_PROFILE")
+            if alert_settings is not None:
+                self.alert_manager = AlertManager.from_settings(alert_settings)
+                alerts_enabled = bool(alert_settings.get("enabled", True))
+            elif self.config.enable_notifications:
+                self.alert_manager = AlertManager.from_profile_yaml(
+                    path=alert_config_path, profile=effective_profile
+                )
+                alerts_enabled = True
+            else:
+                self.alert_manager = AlertManager(dispatcher=AlertDispatcher())
+                alerts_enabled = False
 
-        dispatcher = AlertDispatcher.from_config({})
-        self.alert_manager = AlertManager(dispatcher=dispatcher)
+        self._alerts_enabled = alerts_enabled and self.config.enable_notifications
 
         # Metrics history
         self.health_history: list[SystemHealth] = []
@@ -76,7 +102,7 @@ class MonitoringSystem:
             "Monitoring system started",
             extra={
                 "check_interval_seconds": self.config.check_interval_seconds,
-                "alerts_enabled": self.config.enable_notifications,
+                "alerts_enabled": self._alerts_enabled,
             },
         )
 
@@ -183,6 +209,7 @@ class MonitoringSystem:
                 source="System",
                 message=f"High CPU usage: {health.resource_usage.cpu_percent:.1f}%",
                 context={"cpu_percent": health.resource_usage.cpu_percent},
+                dispatch=self._alerts_enabled,
             )
 
         if health.resource_usage.memory_percent >= self.config.alert_threshold_memory:
@@ -191,6 +218,7 @@ class MonitoringSystem:
                 source="System",
                 message=f"High memory usage: {health.resource_usage.memory_percent:.1f}%",
                 context={"memory_percent": health.resource_usage.memory_percent},
+                dispatch=self._alerts_enabled,
             )
 
         if health.resource_usage.disk_percent >= self.config.alert_threshold_disk:
@@ -199,6 +227,7 @@ class MonitoringSystem:
                 source="System",
                 message=f"High disk usage: {health.resource_usage.disk_percent:.1f}%",
                 context={"disk_percent": health.resource_usage.disk_percent},
+                dispatch=self._alerts_enabled,
             )
 
         # Performance alerts
@@ -208,6 +237,7 @@ class MonitoringSystem:
                 source="Performance",
                 message=f"High error rate: {health.performance.error_rate:.2%}",
                 context={"error_rate": health.performance.error_rate},
+                dispatch=self._alerts_enabled,
             )
 
         if health.performance.avg_response_time_ms > self.config.alert_threshold_response_time_ms:
@@ -216,6 +246,7 @@ class MonitoringSystem:
                 source="Performance",
                 message=f"Slow response time: {health.performance.avg_response_time_ms:.1f}ms",
                 context={"response_time_ms": health.performance.avg_response_time_ms},
+                dispatch=self._alerts_enabled,
             )
 
         # Component alerts
@@ -226,7 +257,48 @@ class MonitoringSystem:
                     source=name,
                     message=f"Component unhealthy: {name}",
                     context=component.details,
+                    dispatch=self._alerts_enabled,
                 )
+
+    def _build_monitor_config(self, monitor_settings: Mapping[str, object] | None) -> MonitorConfig:
+        if monitor_settings is None:
+            return MonitorConfig()
+
+        config = MonitorConfig()
+
+        metrics = monitor_settings.get("metrics")
+        if isinstance(metrics, Mapping):
+            interval = metrics.get("interval_seconds")
+            if isinstance(interval, (int, float)):
+                config.check_interval_seconds = int(interval)
+
+        thresholds = monitor_settings.get("thresholds")
+        if isinstance(thresholds, Mapping):
+            cpu = thresholds.get("cpu_percent")
+            if isinstance(cpu, (int, float)):
+                config.alert_threshold_cpu = float(cpu)
+            memory = thresholds.get("memory_percent")
+            if isinstance(memory, (int, float)):
+                config.alert_threshold_memory = float(memory)
+            disk = thresholds.get("disk_percent")
+            if isinstance(disk, (int, float)):
+                config.alert_threshold_disk = float(disk)
+            error_rate = thresholds.get("error_rate")
+            if isinstance(error_rate, (int, float)):
+                config.alert_threshold_error_rate = float(error_rate)
+            response_ms = thresholds.get("response_time_ms")
+            if isinstance(response_ms, (int, float)):
+                config.alert_threshold_response_time_ms = float(response_ms)
+
+        notifications = monitor_settings.get("enable_notifications")
+        if isinstance(notifications, bool):
+            config.enable_notifications = notifications
+
+        retention = monitor_settings.get("retention_days")
+        if isinstance(retention, (int, float)):
+            config.retention_days = int(retention)
+
+        return config
 
     def get_current_health(self) -> SystemHealth | None:
         """Get current system health."""
@@ -282,7 +354,7 @@ def start_monitoring(config: MonitorConfig | None = None) -> None:
         logger.warning("Monitoring already running")
         return
 
-    _monitor = MonitoringSystem(config)
+    _monitor = MonitoringSystem(config=config)
     _monitor.start()
 
 

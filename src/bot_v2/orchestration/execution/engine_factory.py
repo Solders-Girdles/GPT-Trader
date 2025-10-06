@@ -15,8 +15,6 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:  # pragma: no cover
-    from bot_v2.state.event_store import EventStore
-
     from bot_v2.features.brokerages.core.interfaces import IBrokerage
     from bot_v2.features.live_trade.risk import LiveRiskManager
 
@@ -142,7 +140,7 @@ class ExecutionEngineFactory:
         cls,
         broker: IBrokerage,
         risk_manager: LiveRiskManager,
-        event_store: EventStore,
+        event_store: Any,
         bot_id: str,
         enable_preview: bool,
     ) -> Any:

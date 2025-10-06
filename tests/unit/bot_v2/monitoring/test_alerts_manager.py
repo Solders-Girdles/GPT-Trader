@@ -137,3 +137,20 @@ def test_recent_alerts_and_summary_filters(tmp_path: Path) -> None:
     manager_from_yaml = AlertManager.from_profile_yaml(config_file)
     assert isinstance(manager_from_yaml.dispatcher, AlertDispatcher)
     assert manager_from_yaml.dispatcher.channels.get("slack").min_severity == AlertLevel.ERROR
+
+
+def test_create_alert_dispatches_via_dispatcher(monkeypatch: pytest.MonkeyPatch) -> None:
+    manager = make_manager()
+
+    dispatched: list[str] = []
+
+    async def fake_dispatch(alert):  # type: ignore[no-untyped-def]
+        dispatched.append(alert.message)
+        return {}
+
+    monkeypatch.setattr(manager.dispatcher, "dispatch", fake_dispatch, raising=False)
+
+    manager.create_alert(AlertLevel.INFO, "System", "Dispatch test")
+    manager.create_alert(AlertLevel.INFO, "System", "Suppressed", dispatch=False)
+
+    assert dispatched == ["Dispatch test"]

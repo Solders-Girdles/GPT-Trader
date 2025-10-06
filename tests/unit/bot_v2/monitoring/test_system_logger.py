@@ -78,49 +78,29 @@ def test_recent_logs_buffer_trims(monkeypatch: pytest.MonkeyPatch) -> None:
     assert len(emitted) == 5
 
 
-def test_log_performance_console_output(
+def test_log_event_console_output(
     monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
     monkeypatch.setenv("PERPS_JSON_CONSOLE", "true")
     logger, emitted = _make_logger(monkeypatch, enable_console=True)
 
-    logger.log_performance("load_config", duration_ms=12.5)
+    logger.log_event(LogLevel.INFO, "console_check", "Console output test")
 
     stdout = capsys.readouterr().out.strip()
     assert stdout  # console output enabled
     assert emitted  # also emitted to structured logger
 
 
-def test_log_ml_prediction_and_performance_variants(monkeypatch: pytest.MonkeyPatch) -> None:
-    logger, emitted = _make_logger(monkeypatch)
-    logger.log_ml_prediction(
-        "risk_model",
-        prediction={"side": "long"},
-        confidence=0.85,
-        input_features={"vol": 0.1, "mean": 5, "skew": 0.2},
-        inference_time_ms=4.2,
-    )
-    record = emitted[-1]
-    assert record["event_type"] == "ml_prediction"
-    assert record["feature_count"] == 3
-    assert record["inference_time_ms"] == 4.2
-
-    logger.log_performance("rebalance", duration_ms=55.0, success=False)
-    record = emitted[-1]
-    assert record["success"] is False
-    assert "rebalance" in record["message"]
-
-
-def test_auth_pnl_funding_and_market_logs(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_specialized_logs_capture_expected_fields(monkeypatch: pytest.MonkeyPatch) -> None:
     logger, emitted = _make_logger(monkeypatch)
 
-    logger.log_auth_event("jwt_refresh", provider="coinbase_cdp", success=False, error_code="401")
     logger.log_pnl(
         "BTC-USD", realized_pnl=10.5, unrealized_pnl=-2.0, fees=0.1, funding=0.2, position_size=0.3
     )
-    logger.log_funding(
-        "BTC-USD", funding_rate=0.0001, payment=-0.5, period_start="t0", period_end="t1"
-    )
+    pnl_record = emitted[-1]
+    assert pnl_record["event_type"] == "pnl_update"
+    assert pnl_record["fees"] == 0.1
+
     logger.log_market_heartbeat(
         "coinbase",
         last_update_ts="2025-01-15T12:00:00Z",
@@ -128,9 +108,28 @@ def test_auth_pnl_funding_and_market_logs(monkeypatch: pytest.MonkeyPatch) -> No
         staleness_ms=5.6,
         threshold_ms=50,
     )
+    heartbeat_record = emitted[-1]
+    assert heartbeat_record["event_type"] == "market_heartbeat"
+    assert heartbeat_record["staleness_threshold_ms"] == 50
 
-    events = [entry["event_type"] for entry in emitted[-4:]]
-    assert events == ["auth_event", "pnl_update", "funding_applied", "market_heartbeat"]
+    logger.log_ws_latency("markets", latency_ms=42.0)
+    ws_record = emitted[-1]
+    assert ws_record["event_type"] == "ws_latency"
+    assert ws_record["latency_ms"] == 42.0
+
+    logger.log_rest_response("/orders", method="get", status_code=500, duration_ms=25.0)
+    rest_record = emitted[-1]
+    assert rest_record["event_type"] == "rest_timing"
+    assert rest_record["status_code"] == 500
+
+
+def test_pnl_and_market_logs(monkeypatch: pytest.MonkeyPatch) -> None:
+    logger, emitted = _make_logger(monkeypatch)
+    logger.log_pnl("ETH-USD", realized_pnl=5.0, unrealized_pnl=1.5)
+    logger.log_market_heartbeat("coinbase", last_update_ts="2025-01-15T12:00:00Z")
+
+    events = [entry["event_type"] for entry in emitted[-2:]]
+    assert events == ["pnl_update", "market_heartbeat"]
 
 
 def test_correlation_generation_and_counts(monkeypatch: pytest.MonkeyPatch) -> None:

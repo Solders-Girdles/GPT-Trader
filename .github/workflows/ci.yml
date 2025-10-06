@@ -146,10 +146,17 @@ jobs:
     - name: Run config tests
       env:
         BROKER: coinbase
-        # Production with specific keys
-        COINBASE_PROD_API_KEY: ${{ matrix.env_mode == 'prod' && 'prod_key' || '' }}
-        COINBASE_PROD_API_SECRET: ${{ matrix.env_mode == 'prod' && 'prod_secret' || '' }}
-        # Sandbox with specific keys
+        # Production with CDP credentials (preferred)
+        COINBASE_PROD_CDP_API_KEY: ${{ matrix.env_mode == 'prod' && 'test-cdp-uuid' || '' }}
+        COINBASE_PROD_CDP_PRIVATE_KEY: ${{ matrix.env_mode == 'prod' && '-----BEGIN EC PRIVATE KEY-----
+MHcCAQEEIEsZvoe/wsksW+W/9GLTBNDA2Kz1ik/6UUJwLaKMImR2oAoGCCqGSM49
+AwEHoUQDQgAEthQ2Rkyz9yemEC3sK09H4jeQSanuT98AzIgXTYX0BGQipVYf6QeD
+eiu+QIQ1RzW+g4nL9cfoUd2CgZ4sR6S0qA==
+-----END EC PRIVATE KEY-----' || '' }}
+        # Legacy HMAC fallback for validation checks
+        COINBASE_PROD_API_KEY: ${{ matrix.env_mode == 'prod' && 'test-cdp-uuid' || '' }}
+        COINBASE_PROD_API_SECRET: ${{ matrix.env_mode == 'prod' && 'placeholder' || '' }}
+        # Sandbox with specific keys (Exchange API mode)
         COINBASE_SANDBOX: ${{ (matrix.env_mode == 'sandbox' || matrix.env_mode == 'sandbox_fallback') && '1' || '0' }}
         COINBASE_SANDBOX_API_KEY: ${{ matrix.env_mode == 'sandbox' && 'sandbox_key' || '' }}
         COINBASE_SANDBOX_API_SECRET: ${{ matrix.env_mode == 'sandbox' && 'sandbox_secret' || '' }}

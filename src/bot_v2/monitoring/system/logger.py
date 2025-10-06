@@ -117,7 +117,7 @@ class ProductionLogger:
     def _emit_log(self, entry: dict[str, Any]) -> None:
         """Emit log entry (delegates to buffer and emitter)."""
         # Only buffer/emit if entry meets minimum level
-        if self._emitter._should_emit(entry):  # noqa: SLF001
+        if self._emitter.should_emit(entry):
             self._buffer.append(entry)
             self._emitter.emit(entry)
 
@@ -190,78 +190,6 @@ class ProductionLogger:
 
         self._emit_log(entry)
 
-    def log_ml_prediction(
-        self,
-        model_name: str,
-        prediction: Any,
-        confidence: float | None = None,
-        input_features: dict[str, Any] | None = None,
-        inference_time_ms: float | None = None,
-        **kwargs: Any,
-    ) -> None:
-        """
-        Log ML model predictions and inference.
-
-        Args:
-            model_name: Name of the ML model
-            prediction: Model prediction result
-            confidence: Prediction confidence score (0-1)
-            input_features: Input features (summary)
-            inference_time_ms: Inference time in milliseconds
-            **kwargs: Additional ML data
-        """
-        entry = self._create_log_entry(
-            level=LogLevel.INFO,
-            event_type="ml_prediction",
-            message=f"Model {model_name} predicted: {prediction}",
-            model_name=model_name,
-            prediction=str(prediction),  # Convert to string for JSON safety
-            **kwargs,
-        )
-
-        if confidence is not None:
-            entry["confidence"] = confidence
-
-        if input_features:
-            # Summarize features to avoid large logs
-            entry["feature_count"] = len(input_features)
-            entry["sample_features"] = {k: v for k, v in list(input_features.items())[:5]}
-
-        if inference_time_ms is not None:
-            entry["inference_time_ms"] = inference_time_ms
-
-        self._emit_log(entry)
-
-    def log_performance(
-        self,
-        operation: str,
-        duration_ms: float,
-        success: bool = True,
-        **kwargs: Any,
-    ) -> None:
-        """
-        Log performance metrics for operations.
-
-        Args:
-            operation: Operation name
-            duration_ms: Operation duration in milliseconds
-            success: Whether operation succeeded
-            **kwargs: Additional performance data
-        """
-        level = LogLevel.INFO if success else LogLevel.WARNING
-
-        entry = self._create_log_entry(
-            level=level,
-            event_type="performance_metric",
-            message=f"{operation} completed in {duration_ms:.2f}ms",
-            operation=operation,
-            duration_ms=duration_ms,
-            success=success,
-            **kwargs,
-        )
-
-        self._emit_log(entry)
-
     def log_error(self, error: Exception, context: str | None = None, **kwargs: Any) -> None:
         """
         Log errors with full context.
@@ -285,28 +213,6 @@ class ProductionLogger:
         self._emit_log(entry)
 
     # --- Specialized audit and domain logs ---
-    def log_auth_event(
-        self,
-        action: str,  # "jwt_generate", "jwt_refresh", "key_rotation", "auth_failure"
-        provider: str,  # e.g., "coinbase_cdp"
-        success: bool,
-        error_code: str | None = None,
-        **kwargs: Any,
-    ) -> None:
-        level = LogLevel.INFO if success else LogLevel.ERROR
-        msg = f"auth {action} ({provider}) {'ok' if success else 'failed'}"
-        entry = self._create_log_entry(
-            level=level,
-            event_type="auth_event",
-            message=msg,
-            action=action,
-            provider=provider,
-            success=success,
-            error_code=error_code,
-            **kwargs,
-        )
-        self._emit_log(entry)
-
     def log_pnl(
         self,
         symbol: str,
@@ -330,28 +236,6 @@ class ProductionLogger:
             funding=funding,
             position_size=position_size,
             transition=transition,
-            **kwargs,
-        )
-        self._emit_log(entry)
-
-    def log_funding(
-        self,
-        symbol: str,
-        funding_rate: float,
-        payment: float,
-        period_start: str | None = None,
-        period_end: str | None = None,
-        **kwargs: Any,
-    ) -> None:
-        entry = self._create_log_entry(
-            level=LogLevel.INFO,
-            event_type="funding_applied",
-            message=f"Funding applied {symbol} rate={funding_rate}",
-            symbol=symbol,
-            funding_rate=funding_rate,
-            payment=payment,
-            period_start=period_start,
-            period_end=period_end,
             **kwargs,
         )
         self._emit_log(entry)
@@ -475,25 +359,6 @@ class ProductionLogger:
         )
         self._emit_log(entry)
 
-    def log_risk_breach(
-        self,
-        limit_type: str,
-        limit_value: float,
-        current_value: float,
-        **kwargs: Any,
-    ) -> None:
-        entry = self._create_log_entry(
-            level=LogLevel.WARNING,
-            event_type="risk_limit_breach",
-            message=f"risk breach {limit_type}",
-            limit_type=limit_type,
-            limit_value=limit_value,
-            current_value=current_value,
-            exceeded_by=current_value - limit_value,
-            **kwargs,
-        )
-        self._emit_log(entry)
-
     def log_order_round_trip(
         self,
         order_id: str,
@@ -548,17 +413,6 @@ class ProductionLogger:
         )
         self._emit_log(entry)
 
-    def log_strategy_duration(self, strategy: str, duration_ms: float, **kwargs: Any) -> None:
-        entry = self._create_log_entry(
-            level=LogLevel.INFO,
-            event_type="strategy_duration",
-            message=f"{strategy} took {duration_ms:.1f}ms",
-            strategy=strategy,
-            duration_ms=duration_ms,
-            **kwargs,
-        )
-        self._emit_log(entry)
-
     def get_recent_logs(self, count: int = 100) -> list[dict[str, Any]]:
         """Get recent log entries."""
         return self._buffer.get_recent(count)
@@ -606,18 +460,6 @@ def log_trade(
     """Log a trade execution."""
     logger = get_logger()
     logger.log_trade(action, symbol, quantity, price, strategy, **kwargs)
-
-
-def log_ml_prediction(model_name: str, prediction: Any, **kwargs: Any) -> None:
-    """Log an ML prediction."""
-    logger = get_logger()
-    logger.log_ml_prediction(model_name, prediction, **kwargs)
-
-
-def log_performance(operation: str, duration_ms: float, **kwargs: Any) -> None:
-    """Log a performance metric."""
-    logger = get_logger()
-    logger.log_performance(operation, duration_ms, **kwargs)
 
 
 def log_error(error: Exception, context: str | None = None, **kwargs: Any) -> None:

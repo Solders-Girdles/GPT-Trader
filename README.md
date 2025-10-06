@@ -28,6 +28,33 @@ An ML-driven Coinbase trading system with market regime detection, built on a cl
 
 **Note:** Experimental features (backtest, ml_strategy, market_regime, monitoring_dashboard) were archived on 2025-09-29 to streamline the codebase. They can be restored from `archived/experimental_features_2025_09_29/` or git history if needed.
 
+**Note:** Legacy adaptive portfolio tooling and the multi-tier state management platform now live under `archived/features_adaptive_portfolio/` and `archived/state_platform/`. The runtime code no longer imports these slices, so re-enable them only if you need the previous functionality.
+
+## 📖 What Actually Works
+
+### Configuration System Reality
+- **NOT YAML-based**: Most config is hardcoded in `ConfigManager` class, not loaded from YAML files
+- **Profile configs**: Only 3 YAMLs loaded (`canary.yaml`, `spot.yaml`, `dev_entry.yaml`)
+- **Risk config**: Environment variables (`RISK_*`) + optional JSON override (`RISK_CONFIG_PATH`)
+- **See**: [ARCHITECTURE.md - Configuration System](docs/ARCHITECTURE.md#configuration-system) for details
+
+### Risk Configuration
+```bash
+# Primary method: Environment variables
+export RISK_MAX_LEVERAGE=3
+export RISK_DAILY_LOSS_LIMIT=100      # USD amount (NOT percentage!)
+export RISK_MAX_EXPOSURE_PCT=0.80      # 80% portfolio exposure
+
+# Optional: JSON file override
+export RISK_CONFIG_PATH=config/risk/dev_dynamic.json
+```
+**Complete list**: See `config/risk/README.md` for all 30+ `RISK_*` environment variables
+
+### What Was Removed (Oct 2025)
+- ❌ 14 orphaned config files (adaptive_portfolio, backtest, ml_strategy, etc.)
+- ❌ 2 broken risk configs (YAML incompatible with JSON-only loader)
+- ✅ Configs now match actual code behavior
+
 ## 🚀 Quick Start
 
 ```bash
@@ -44,7 +71,7 @@ poetry run perps-bot --profile dev --dev-fast
 poetry run pytest -q
 ```
 
-> Spot risk defaults (per-symbol caps and slippage guards) are loaded automatically from `config/risk/spot_top10.json` for dev/demo/spot profiles; adjust that file if you need different limits.
+> Risk configuration uses environment variables by default. Optional JSON override via `RISK_CONFIG_PATH=config/risk/dev_dynamic.json`. See `config/risk/README.md` for all `RISK_*` env vars.
 
 ## 📊 Current State
 
@@ -103,8 +130,7 @@ src/bot_v2/
 ├── cli.py                    # Main CLI entry point
 ├── config/                   # Environment configs & settings
 ├── data_providers/           # Market data adapters
-├── features/                 # Vertical slices (10 total)
-│   ├── adaptive_portfolio/  # Dynamic allocation
+├── features/                 # Vertical slices (10 active)
 │   ├── analyze/             # Analysis tools
 │   ├── brokerages/
 │   │   └── coinbase/        # API integration
@@ -118,9 +144,10 @@ src/bot_v2/
 ├── monitoring/              # Metrics & alerting
 ├── orchestration/           # Execution coordination
 ├── persistence/             # Event & order stores
-├── security/                # Secrets & validation
-└── state/                   # State management & recovery
+└── security/                # Secrets & validation
 ```
+
+**Note**: Archived features (`adaptive_portfolio/`, `state/`) removed from tree. See `archived/` directory for legacy code.
 
 ### Workspace highlights
 - `config/environments/` – versioned environment templates and guidance

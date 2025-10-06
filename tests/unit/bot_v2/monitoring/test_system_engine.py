@@ -154,7 +154,9 @@ def build_system_health(
 def test_check_alerts_triggers_expected_notifications(monitoring_system: MonitoringSystem) -> None:
     recorded: list[dict[str, Any]] = []
 
-    def fake_create_alert(level, source, message, title=None, context=None):  # noqa: ANN001
+    def fake_create_alert(
+        level, source, message, title=None, context=None, **kwargs
+    ):  # noqa: ANN001
         recorded.append(
             {
                 "level": level,

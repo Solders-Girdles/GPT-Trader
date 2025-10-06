@@ -240,19 +240,30 @@ class StreamingService:
         """Background loop polling REST quotes during streaming outage."""
 
         logger.debug("REST fallback poll loop active (reason=%s)", reason)
-        while True:
-            stop_event = self._rest_fallback_stop
-            if stop_event is not None and stop_event.is_set():
-                break
+        loop = asyncio.new_event_loop()
+        try:
+            asyncio.set_event_loop(loop)
 
+            while True:
+                stop_event = self._rest_fallback_stop
+                if stop_event is not None and stop_event.is_set():
+                    break
+
+                try:
+                    loop.run_until_complete(self.market_data_service.update_marks())
+                except Exception as exc:
+                    logger.warning("REST fallback polling failed: %s", exc, exc_info=True)
+
+                stop_event = self._rest_fallback_stop
+                if stop_event is not None and stop_event.wait(self._rest_poll_interval):
+                    break
+
+        finally:
+            asyncio.set_event_loop(None)
             try:
-                asyncio.run(self.market_data_service.update_marks())
-            except Exception as exc:
-                logger.warning("REST fallback polling failed: %s", exc, exc_info=True)
-
-            stop_event = self._rest_fallback_stop
-            if stop_event is not None and stop_event.wait(self._rest_poll_interval):
-                break
+                loop.close()
+            except Exception as exc:  # pragma: no cover - defensive
+                logger.debug("Failed to close REST fallback loop cleanly: %s", exc, exc_info=True)
 
         logger.debug("REST fallback poll loop exiting")
 

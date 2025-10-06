@@ -258,9 +258,14 @@ class PerpsBotBuilder:
         """
         from bot_v2.orchestration.lifecycle_service import LifecycleService
 
+        monitoring_settings = getattr(bot.config, "monitoring_settings", {}) or {}
         bot.strategy_orchestrator = StrategyOrchestrator(bot)
         bot.execution_coordinator = ExecutionCoordinator(bot)
-        bot.system_monitor = SystemMonitor(bot)
+        bot.system_monitor = SystemMonitor(
+            bot,
+            monitor_settings=monitoring_settings,
+            alert_settings=monitoring_settings.get("alerts") if monitoring_settings else None,
+        )
         bot.runtime_coordinator = RuntimeCoordinator(bot)
         bot.lifecycle_service = LifecycleService(bot)
         bot.guardrails = GuardRailManager(

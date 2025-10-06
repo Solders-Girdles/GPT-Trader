@@ -99,19 +99,17 @@ class MetricsCollector:
         self.record_gauge("system.health.status", 1.0)
         self.record_gauge("system.uptime_seconds", time.time())
 
-        # Slice availability metrics
-        self.record_gauge("slices.available_count", 11)
-        self.record_gauge("slices.backtest.status", 1.0)
+        # Slice availability metrics (active slices only)
+        self.record_gauge("slices.available_count", 9)
         self.record_gauge("slices.paper_trade.status", 1.0)
         self.record_gauge("slices.analyze.status", 1.0)
         self.record_gauge("slices.optimize.status", 1.0)
         self.record_gauge("slices.live_trade.status", 1.0)
         self.record_gauge("slices.monitor.status", 1.0)
         self.record_gauge("slices.data.status", 1.0)
-        self.record_gauge("slices.ml_strategy.status", 1.0)
-        self.record_gauge("slices.market_regime.status", 1.0)
+        self.record_gauge("slices.market_data.status", 1.0)
         self.record_gauge("slices.position_sizing.status", 1.0)
-        self.record_gauge("slices.adaptive_portfolio.status", 1.0)
+        self.record_gauge("slices.strategy_tools.status", 1.0)
 
         # Agent workflow metrics (historical defaults retained for continuity)
         counts = self._agent_counts or {}

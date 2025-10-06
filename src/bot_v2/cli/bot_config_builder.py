@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import argparse
 import logging
+import os
 from collections.abc import Callable
 from typing import Any
 
@@ -111,5 +112,9 @@ class BotConfigBuilder:
         logger.info(
             "Building bot config with profile=%s, overrides=%s", args.profile, config_overrides
         )
+
+        profile_arg = getattr(args, "profile", None)
+        if profile_arg and not os.getenv("PERPS_PROFILE"):
+            os.environ["PERPS_PROFILE"] = str(profile_arg)
 
         return self._config_factory.from_profile(args.profile, **config_overrides)

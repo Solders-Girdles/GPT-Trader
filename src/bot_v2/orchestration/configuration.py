@@ -26,7 +26,9 @@ logger = logging.getLogger(__name__)
 # Default spot symbols derived from top volume bases (defined in shared.symbol_utils)
 DEFAULT_SPOT_SYMBOLS = [f"{base}-USD" for base in TOP_VOLUME_BASES]
 
-DEFAULT_SPOT_RISK_PATH = Path(__file__).resolve().parents[3] / "config" / "risk" / "spot_top10.json"
+DEFAULT_SPOT_RISK_PATH = (
+    Path(__file__).resolve().parents[3] / "config" / "risk" / "dev_dynamic.json"
+)
 
 
 class Profile(Enum):
@@ -76,6 +78,7 @@ class BotConfig:
     perps_skip_startup_reconcile: bool = False
     streaming_rest_poll_interval: float = 5.0
     metadata: dict[str, Any] = field(default_factory=dict, repr=False)
+    monitoring_settings: dict[str, Any] = field(default_factory=dict, repr=False)
 
     def __post_init__(self) -> None:
         if self.symbols is None:
@@ -244,6 +247,7 @@ class ConfigManager:
         time_in_force = "IOC"
 
         profile_path = Path("config/profiles/canary.yaml")
+        payload: dict[str, Any] = {}
         if profile_path.exists():
             try:
                 import yaml  # type: ignore
@@ -297,6 +301,7 @@ class ConfigManager:
                 trading_days=trading_days,
                 daily_loss_limit=daily_loss_limit,
                 time_in_force=time_in_force,
+                monitoring_settings=payload.get("monitoring", {}) if payload else {},
             ),
         )
 

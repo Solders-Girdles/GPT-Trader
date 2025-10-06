@@ -28,7 +28,9 @@ class RiskRuntimeState:
 class RiskStateManager:
     """Manages risk system state and mode transitions.
 
-    Note: Renamed from StateManager to avoid confusion with bot_v2.state.state_manager.StateManager.
+    Legacy note: this class replaced the heavy ``bot_v2.state`` implementation, which has
+    now been archived. Keeping the docstring clarifies the divergence for downstream
+    developers reviewing historical references.
     """
 
     def __init__(

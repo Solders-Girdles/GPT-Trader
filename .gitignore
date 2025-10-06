@@ -11,12 +11,19 @@ logs/
 *.tmp
 *.swp
 *.swo
+.env
+
+# IDE metadata
+.idea/
 
 # macOS
 .DS_Store
 
 # Backtest outputs
 data/backtests/
+
+# Optimisation grids and other generated datasets
+data/opt/
 
 # Universe data files (keep only sample file)
 data/universe/*

@@ -682,3 +682,33 @@ git tag phase1-complete
 - ✅ Zero circular dependencies maintained
 
 **Rationale**: The spot profile service handles SPOT-specific trading rules and profile configuration loading. It's domain logic that belongs with other live trading features, not in core orchestration. This extraction aligns with the feature-based organization where trading strategies, risk management, and profile configuration live together.
+
+**Tier 2 Extraction 3: risk_gate_validator** (2025-10-05):
+- ✅ Moved `orchestration/risk_gate_validator.py` → `features/live_trade/risk/gate_validator.py`
+- ✅ Added to existing `features/live_trade/risk/` package exports
+- ✅ Updated import in `strategy_orchestrator.py`
+- ✅ Moved test to `features/live_trade/risk/test_gate_validator.py`
+- ✅ Orchestration modules: 32 → 31 (-3%)
+- ✅ Tests: 5,235 passing
+- ✅ Zero circular dependencies maintained
+
+**Rationale**: The risk gate validator provides safety checks (volatility circuit breakers, market data staleness) before trading execution. It belongs with other risk management utilities in the live trading feature package, not in core orchestration. This extraction completes the consolidation of risk-related utilities under the risk feature package.
+
+---
+
+### Phase 2 Tier 2 Complete
+
+**Summary**: Successfully extracted all Tier 2 modules with minimal orchestration dependencies.
+
+**Extractions Completed** (2025-10-05):
+1. ✅ Removed deprecated `symbols.py` wrapper
+2. ✅ `spot_profile_service` → `features/live_trade/profiles/`
+3. ✅ `risk_gate_validator` → `features/live_trade/risk/`
+
+**Overall Impact**:
+- Orchestration modules: **34 → 31** (-9%)
+- Total lines reduced: 7,612 → 7,382 (-230 lines, -3%)
+- Zero circular dependencies maintained ✅
+- All 5,235 tests passing ✅
+
+**Next Milestone**: Phase 2 Tier 3 or Phase 3 - Extract execution layer or begin orchestration core consolidation.

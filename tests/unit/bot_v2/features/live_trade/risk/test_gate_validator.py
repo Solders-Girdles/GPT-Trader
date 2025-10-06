@@ -14,8 +14,8 @@ from unittest.mock import Mock
 
 import pytest
 
+from bot_v2.features.live_trade.risk import RiskGateValidator
 from bot_v2.features.live_trade.risk_runtime import CircuitBreakerAction
-from bot_v2.orchestration.risk_gate_validator import RiskGateValidator
 
 
 @pytest.fixture

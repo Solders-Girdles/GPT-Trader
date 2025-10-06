@@ -5,6 +5,7 @@ Exports all public classes and dataclasses for backward compatibility.
 """
 
 from bot_v2.config.live_trade_config import RiskConfig
+from bot_v2.features.live_trade.risk.gate_validator import RiskGateValidator
 from bot_v2.features.live_trade.risk.manager import LiveRiskManager
 from bot_v2.features.live_trade.risk.position_sizing import (
     ImpactAssessment,
@@ -42,6 +43,8 @@ __all__ = [
     "ValidationError",
     # Runtime Monitoring
     "RuntimeMonitor",
+    # Gate Validation
+    "RiskGateValidator",
     # State Management
     "RiskStateManager",
     "StateManager",  # Backward compatibility alias

@@ -7,13 +7,13 @@
 
 ## Summary
 
-**Total Modules**: 32
-**Total Lines**: 7,510
-**Total Classes**: 40
+**Total Modules**: 31
+**Total Lines**: 7,382
+**Total Classes**: 39
 
 ### Complexity Indicators
 
-- **Average Lines per Module**: 234
+- **Average Lines per Module**: 238
 - **Largest Module**: streaming_service (476 lines)
 - **Most Imports**: builders.perps_bot_builder (18 imports)
 
@@ -34,7 +34,7 @@ Modules ranked by complexity (lines + classes*100 + imports*10):
 | 7 | `streaming_service` | 576 | 476 | 1 | 0 |
 | 8 | `execution.guards` | 569 | 369 | 2 | 0 |
 | 9 | `execution.order_placement` | 492 | 382 | 1 | 1 |
-| 10 | `strategy_orchestrator` | 484 | 334 | 1 | 5 |
+| 10 | `strategy_orchestrator` | 474 | 334 | 1 | 4 |
 | 11 | `order_reconciler` | 460 | 260 | 2 | 0 |
 | 12 | `deterministic_broker` | 457 | 357 | 1 | 0 |
 | 13 | `guardrails` | 441 | 241 | 2 | 0 |

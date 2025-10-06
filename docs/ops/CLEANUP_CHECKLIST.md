@@ -3,7 +3,7 @@
 **Branch:** `cleanup/operational-audit-q4-2025`
 **Start Date:** 2025-10-05
 **Target Completion:** 2025-11-02 (4 weeks + buffer)
-**Status:** ✅ Week 3 Complete (77% Complete - Ready for Week 4)
+**Status:** 🔄 Week 4 In Progress (81% Complete - 2/5 Week 4 tasks done)
 
 ---
 
@@ -23,10 +23,10 @@
 | W3: Update ARCHITECTURE.md | Architecture | ✅ Complete | - | 2025-10-05 | 🟢 LOW | Phase 0-3 added (commit 48ba221) |
 | W3: Update README.md | Architecture | ✅ Complete | - | 2025-10-05 | 🟢 LOW | Quickstart validated (no changes needed) |
 | W3: Update REFACTORING_RUNBOOK | Architecture | ✅ Complete | - | 2025-10-05 | 🟢 LOW | Feature flags validated (no changes needed) |
-| W4: Pre-commit setup | Platform | ⏳ Pending | W3 complete | 2025-10-29 | 🟡 MEDIUM | Already active, just validate |
+| W4: Pre-commit validation | Platform | ✅ Complete | W3 complete | 2025-10-05 | 🟢 LOW | 11 hooks active, 9 passing, 2 with issues |
+| W4: Governance docs | Platform | ✅ Complete | - | 2025-10-05 | 🟢 LOW | governance.md created (639 lines) |
 | W4: Trading ops validation | Trading Ops | ⏳ Pending | Sandbox access | 2025-10-30 | 🟡 MEDIUM | Requires environment |
 | W4: Monitoring validation | Ops | ⏳ Pending | - | 2025-10-30 | 🟢 LOW | - |
-| W4: Governance docs | Platform | ⏳ Pending | - | 2025-10-31 | 🟢 LOW | - |
 | W4: Feature flag cleanup | Architecture | ⏳ Pending | - | 2025-10-31 | 🟡 MEDIUM | Already cleaned from code, docs only |
 
 ---
@@ -143,22 +143,24 @@
 
 ---
 
-## Week 4: Governance & Validation (Oct 26 - Nov 2)
+## Week 4: Governance & Validation (Oct 5 - Ongoing) 🔄 **IN PROGRESS**
 
-### Pre-commit Activation (Incremental)
-**Phase 1: Impact Assessment**
-- [ ] Run `pre-commit run --all-files --show-diff-on-failure > precommit_report.txt`
-- [ ] Review report, identify exclusions needed
+### ✅ Pre-commit Validation (Complete - Oct 5)
+**Phase 1: Impact Assessment** ✅
+- [x] Run `pre-commit run --all-files` and capture output
+- [x] Review findings: 9 hooks passing, 2 with issues
+  - config-doctor: 1 duplicate config (spot_top10 YAML/JSON)
+  - test-hygiene: 15 test files exceed 240-line limit (3 are Week 3 integration tests)
+- [x] Document findings and recommendations
 
-**Phase 2: Apply Fixes**
-- [ ] `pre-commit run black --all-files` (formatting)
-- [ ] `pre-commit run ruff --all-files` (linting)
-- [ ] `pre-commit run mypy --all-files` (typing)
+**Phase 2: Apply Fixes** ⏳
+- [ ] Remove duplicate `config/risk/spot_top10.json`
+- [ ] Allowlist Week 3 integration tests in `check_test_hygiene.py`
+- [ ] Add justification comments to allowlisted test files
 
-**Phase 3: Commit in Batches**
-- [ ] Commit formatting changes
-- [ ] Commit linting fixes
-- [ ] Commit type improvements
+**Phase 3: Long-term Improvements** ⏳
+- [ ] Split large test files into focused modules
+- [ ] Replace `time.sleep()` with `fake_clock` fixture in 2 files
 
 ### Trading Operations Validation
 - [ ] `poetry run perps-bot --account-snapshot` (fees, limits, permissions)
@@ -174,15 +176,20 @@
 - [ ] docs/guides/monitoring.md
 - [ ] docs/ops/operations_runbook.md
 
-### Governance Documentation
-- [ ] Create docs/ops/governance.md
-  - Pre-commit usage guidelines
-  - Dependency update process
-  - CI expectations
-- [ ] Create docs/ops/dependency_policy.md
-  - Pinned version rationale
-  - Review cadence
-  - Update procedures
+### ✅ Governance Documentation (Complete - Oct 5)
+- [x] Create docs/ops/governance.md ✅
+  - Pre-commit usage guidelines (11 hooks documented)
+  - Dependency update process (references dependency_policy.md)
+  - CI expectations (6 workflows, merge requirements)
+  - Code quality standards, testing requirements
+  - Configuration management, deployment process
+  - Exception process
+- [x] docs/ops/dependency_policy.md ✅ (Created Week 1)
+  - Pinned version rationale (numpy, websockets, python, coinbase-advanced-py)
+  - Review cadence (security, monthly, quarterly)
+  - Update procedures and rollback
+
+**Commit:** `56a32d6` - docs: Add Week 4 governance documentation
 
 ### Feature Flag Cleanup
 - [ ] Search for USE_NEW_MARKET_DATA_SERVICE references

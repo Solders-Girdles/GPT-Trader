@@ -31,6 +31,10 @@ ALLOWLIST = {
     "tests/unit/bot_v2/state/backup/test_backup_operations.py",  # 1046 lines: comprehensive backup operations test suite (creation, restoration, compression, encryption, S3, cleanup, concurrency, error handling, metadata, storage tiers, async scheduling)
     "tests/unit/bot_v2/state/backup/test_backup_recovery_integration.py",  # 424 lines: integration test suite for backup and recovery workflows (batch operations, state coherence, error scenarios)
     "tests/unit/bot_v2/features/paper_trade/test_paper_trade_strategies.py",  # 1052 lines: comprehensive paper trading strategy test suite (9 classes, 72 tests covering momentum, mean reversion, volatility, breakout, MA crossover, scalping strategies)
+    # Week 3 integration tests (operational audit Q4 2025) - comprehensive scenario coverage
+    "tests/integration/brokerages/test_coinbase_streaming_failover.py",  # 361 lines: 6 WebSocket failover scenarios (reconnect, auth errors, heartbeat timeout, message corruption, graceful disconnect, concurrent failures)
+    "tests/integration/streaming/test_websocket_rest_fallback.py",  # 378 lines: 7 WebSocket/REST fallback scenarios (WebSocket unavailable, partial failure, REST degradation, recovery validation, latency comparison, concurrent fallback, dual-mode operation)
+    "tests/integration/orchestration/test_broker_outage_handling.py",  # 420 lines: 8 broker outage handling scenarios (full outage detection, graceful degradation, position sync, recovery workflow, partial API failures, concurrent outages, data staleness, error propagation)
 }
 
 LINE_ALLOWLIST_PATH = pathlib.Path("tests/.hygiene_line_allowlist")

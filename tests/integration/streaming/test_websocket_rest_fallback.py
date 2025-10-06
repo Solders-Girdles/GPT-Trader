@@ -75,7 +75,8 @@ async def test_market_data_fallback_to_rest_on_websocket_failure():
     #     logs = service.get_logs()
     #     assert any("fallback" in log.message.lower() for log in logs)
 
-    pytest.skip("Awaiting MarketDataService WebSocket/REST fallback implementation")
+    # Test will fail until MarketDataService WebSocket/REST fallback is implemented
+    pytest.fail("Awaiting MarketDataService WebSocket/REST fallback implementation")
 
 
 @pytest.mark.integration
@@ -134,7 +135,8 @@ async def test_market_data_returns_to_websocket_when_available():
     #     latency_ws = service.telemetry.get_gauge("market_data_latency_ms_websocket")
     #     assert latency_ws < latency_rest  # WebSocket should be lower latency
 
-    pytest.skip("Awaiting MarketDataService mode switching implementation")
+    # Test will fail until MarketDataService mode switching is implemented
+    pytest.fail("Awaiting MarketDataService mode switching implementation")
 
 
 @pytest.mark.integration
@@ -186,7 +188,8 @@ async def test_streaming_service_degrades_gracefully():
     #     assert service.mode == "rest_polling"
     #     assert service.telemetry.get_counter("degradation_fallbacks") == 1
 
-    pytest.skip("Awaiting StreamingService degradation detection implementation")
+    # Test will fail until StreamingService degradation detection is implemented
+    pytest.fail("Awaiting StreamingService degradation detection implementation")
 
 
 @pytest.mark.integration
@@ -252,7 +255,8 @@ async def test_rest_polling_updates_mark_prices():
 
     # await test_rest_poll()
 
-    pytest.skip("Awaiting REST polling implementation")
+    # Test will fail until REST polling is implemented
+    pytest.fail("Awaiting REST polling implementation")
 
 
 @pytest.mark.integration
@@ -305,7 +309,8 @@ async def test_concurrent_symbol_updates_no_race_conditions():
     #     # Verify no update lost
     #     assert service.telemetry.get_counter("price_updates") == 1000
 
-    pytest.skip("Awaiting concurrent update handling implementation")
+    # Test will fail until concurrent update handling is implemented
+    pytest.fail("Awaiting concurrent update handling implementation")
 
 
 @pytest.mark.integration
@@ -367,7 +372,8 @@ async def test_mode_transition_does_not_lose_data():
     #     assert Decimal("50002") in price_history
     #     assert Decimal("50010") in price_history
 
-    pytest.skip("Awaiting mode transition data preservation implementation")
+    # Test will fail until mode transition data preservation is implemented
+    pytest.fail("Awaiting mode transition data preservation implementation")
 
 
 # ============================================================================

@@ -103,7 +103,7 @@ Operational audit and cleanup initiative in progress:
    - Multiple reconnect attempts with exponential backoff
    - Graceful shutdown during active streaming
    - Live Coinbase sandbox placeholder (@pytest.mark.real_api)
-   - **Status:** Scaffolded with `pytest.skip()` - documents intent, ready for mock wiring
+   - **Status:** Marked `@pytest.mark.xfail` - expected failures properly documented
 
 2. ✅ **test_websocket_rest_fallback.py** (378 lines, streaming/)
    - MarketDataService fallback to REST on WebSocket failure
@@ -112,7 +112,7 @@ Operational audit and cleanup initiative in progress:
    - REST polling updates for all symbols
    - Concurrent symbol updates (no race conditions)
    - Mode transition data preservation
-   - **Status:** Scaffolded with `pytest.skip()` - documents intent, ready for mock wiring
+   - **Status:** Marked `@pytest.mark.xfail` - expected failures properly documented
 
 3. ✅ **test_broker_outage_handling.py** (420 lines, orchestration/)
    - Broker outage triggers degraded mode (503 → monitor_only)
@@ -122,7 +122,7 @@ Operational audit and cleanup initiative in progress:
    - Rate limit errors (429) handled separately from outages
    - Connection timeout retry with exponential backoff
    - End-to-end outage recovery workflow
-   - **Status:** Scaffolded with `pytest.skip()` - documents intent, ready for mock wiring
+   - **Status:** Marked `@pytest.mark.xfail` - expected failures properly documented
 
 4. ✅ **pytest.ini** - Added `soak` marker
    - `soak: Extended soak tests (hours/days, opt-in)`
@@ -133,7 +133,7 @@ Operational audit and cleanup initiative in progress:
 - ✅ Guardrails integration (pre-existing test validated)
 - ✅ WebSocket/REST fallback (7 scenarios documented)
 - ✅ Broker outage handling (8 scenarios documented)
-- 📝 **Note:** Tests use `pytest.skip()` to document intent - mock wiring is future enhancement
+- 📝 **Note:** Tests marked `@pytest.mark.xfail` to document expected failures - mock wiring is future enhancement
 
 **Commit:** `e69db0e` - test: Add Week 3 integration tests for critical trading paths
 
@@ -170,10 +170,11 @@ Operational audit and cleanup initiative in progress:
 **Documentation:** All 3 docs synced with Phase 0-3 refactoring
 
 **Integration Test Strategy:**
-Tests scaffolded with `pytest.skip()` for operational audit phase:
+Tests marked with `@pytest.mark.xfail` and concrete TODOs:
 - ✅ Documents test intent and critical scenarios
 - ✅ Provides template for future implementation
 - ✅ Validates test structure and pytest markers
+- ✅ Tests fail as expected (xfail) until modules are implemented
 - 📍 Mock wiring deferred to future enhancement (not blocker for audit completion)
 
 ---

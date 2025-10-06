@@ -86,9 +86,8 @@ async def test_websocket_reconnect_on_unexpected_disconnect():
         # assert len(messages) == 3
         # assert client.is_connected()
 
-        # Placeholder assertion
-        assert mock_connect.call_count == 0  # Not called yet (no client)
-        pytest.skip("Awaiting CoinbaseStreamingClient implementation")
+        # Test will fail until CoinbaseStreamingClient is implemented
+        pytest.fail("Awaiting CoinbaseStreamingClient implementation")
 
 
 @pytest.mark.integration
@@ -136,7 +135,8 @@ async def test_heartbeat_detects_stale_connection():
             # Verify reconnect initiated
             # assert client.reconnect_count > 0
 
-            pytest.skip("Awaiting CoinbaseStreamingClient heartbeat implementation")
+            # Test will fail until CoinbaseStreamingClient heartbeat is implemented
+            pytest.fail("Awaiting CoinbaseStreamingClient heartbeat implementation")
 
 
 @pytest.mark.integration
@@ -205,7 +205,8 @@ async def test_no_message_duplication_after_reconnect():
         # assert received_sequences == [1, 2, 3, 4, 5, 6, 7, 8]
         # assert len(set(received_sequences)) == 8  # All unique
 
-        pytest.skip("Awaiting CoinbaseStreamingClient sequence tracking implementation")
+        # Test will fail until CoinbaseStreamingClient sequence tracking is implemented
+        pytest.fail("Awaiting CoinbaseStreamingClient sequence tracking implementation")
 
 
 @pytest.mark.integration
@@ -262,7 +263,8 @@ async def test_multiple_reconnect_attempts_with_backoff():
             # assert client.state == "failed"
             # assert client.reconnect_count == 5
 
-            pytest.skip("Awaiting CoinbaseStreamingClient reconnect backoff implementation")
+            # Test will fail until CoinbaseStreamingClient reconnect backoff is implemented
+            pytest.fail("Awaiting CoinbaseStreamingClient reconnect backoff implementation")
 
 
 @pytest.mark.integration
@@ -315,7 +317,8 @@ async def test_graceful_shutdown_during_active_streaming():
         # assert client.state == "shutdown"
         # assert not client.is_connected()
 
-        pytest.skip("Awaiting CoinbaseStreamingClient shutdown implementation")
+        # Test will fail until CoinbaseStreamingClient shutdown is implemented
+        pytest.fail("Awaiting CoinbaseStreamingClient shutdown implementation")
 
 
 # ============================================================================

@@ -78,7 +78,8 @@ async def test_broker_outage_triggers_degraded_mode():
     #     assert "broker_unavailable" in result.rejection_reason.lower()
     #     assert orchestrator.telemetry.get_counter("orders_rejected_broker_outage") == 1
 
-    pytest.skip("Awaiting StrategyOrchestrator health check implementation")
+    # Test will fail until StrategyOrchestrator health check is implemented
+    pytest.fail("Awaiting StrategyOrchestrator health check implementation")
 
 
 @pytest.mark.integration
@@ -129,7 +130,8 @@ async def test_position_monitoring_continues_during_outage():
     #         assert len(positions) == 1
     #         assert positions[0]["symbol"] == "BTC-USD"
 
-    pytest.skip("Awaiting degraded mode position polling implementation")
+    # Test will fail until degraded mode position polling is implemented
+    pytest.fail("Awaiting degraded mode position polling implementation")
 
 
 @pytest.mark.integration
@@ -185,7 +187,8 @@ async def test_recovery_workflow_restores_state_after_outage():
     #         assert orchestrator.telemetry.get_counter("recovery_attempts") == 1
     #         assert orchestrator.telemetry.get_counter("recovery_successes") == 1
 
-    pytest.skip("Awaiting RecoveryWorkflow integration")
+    # Test will fail until RecoveryWorkflow integration is implemented
+    pytest.fail("Awaiting RecoveryWorkflow integration")
 
 
 @pytest.mark.integration
@@ -239,7 +242,8 @@ async def test_partial_broker_outage_handles_read_write_split():
     #             assert result.status == "rejected"
     #             assert "write_unavailable" in result.rejection_reason.lower()
 
-    pytest.skip("Awaiting partial outage detection implementation")
+    # Test will fail until partial outage detection is implemented
+    pytest.fail("Awaiting partial outage detection implementation")
 
 
 @pytest.mark.integration
@@ -285,7 +289,8 @@ async def test_rate_limit_error_handled_differently_than_outage():
     #     # Verify backoff telemetry
     #     assert orchestrator.telemetry.get_counter("rate_limit_429") == 1
 
-    pytest.skip("Awaiting rate limit handling implementation")
+    # Test will fail until rate limit handling is implemented
+    pytest.fail("Awaiting rate limit handling implementation")
 
 
 @pytest.mark.integration
@@ -336,7 +341,8 @@ async def test_connection_timeout_triggers_retry_then_degraded():
     #         assert orchestrator.telemetry.get_counter("broker_retries") == 3
     #         assert orchestrator.telemetry.get_counter("degraded_mode_entries") == 1
 
-    pytest.skip("Awaiting retry with backoff implementation")
+    # Test will fail until retry with backoff is implemented
+    pytest.fail("Awaiting retry with backoff implementation")
 
 
 @pytest.mark.integration
@@ -411,7 +417,8 @@ async def test_end_to_end_outage_recovery_workflow():
     #     assert any(e["type"] == "recovery_initiated" for e in events)
     #     assert any(e["type"] == "normal_mode_resumed" for e in events)
 
-    pytest.skip("Awaiting end-to-end outage recovery workflow implementation")
+    # Test will fail until end-to-end outage recovery workflow is implemented
+    pytest.fail("Awaiting end-to-end outage recovery workflow implementation")
 
 
 # ============================================================================

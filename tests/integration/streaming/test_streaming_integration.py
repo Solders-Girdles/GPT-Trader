@@ -13,10 +13,10 @@ from decimal import Decimal
 from unittest.mock import Mock, patch, MagicMock
 from datetime import datetime, UTC
 
-from bot_v2.orchestration.streaming_service import StreamingService
-from bot_v2.orchestration.market_data_service import MarketDataService
-from bot_v2.orchestration.market_monitor import MarketActivityMonitor
 from bot_v2.features.live_trade.risk import LiveRiskManager
+from bot_v2.features.market_data import MarketActivityMonitor
+from bot_v2.orchestration.market_data_service import MarketDataService
+from bot_v2.orchestration.streaming_service import StreamingService
 from bot_v2.persistence.event_store import EventStore
 
 

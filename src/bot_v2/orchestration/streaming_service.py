@@ -17,9 +17,9 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:  # pragma: no cover
     from bot_v2.features.brokerages.core.interfaces import IBrokerage
     from bot_v2.features.live_trade.risk import LiveRiskManager
+    from bot_v2.features.market_data import MarketActivityMonitor
     from bot_v2.monitoring.metrics_server import MetricsServer
     from bot_v2.orchestration.market_data_service import MarketDataService
-    from bot_v2.orchestration.market_monitor import MarketActivityMonitor
     from bot_v2.persistence.event_store import EventStore
 
 logger = logging.getLogger(__name__)

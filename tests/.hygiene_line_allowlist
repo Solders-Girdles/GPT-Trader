@@ -111,6 +111,7 @@ tests/unit/bot_v2/validation/test_validators_comprehensive.py
 # Phase 0 refactoring: comprehensive test suites for extracted modules
 tests/integration/test_adaptive_portfolio_config_driven_strategies.py
 tests/integration/test_liquidity_service_characterization.py
+tests/integration/streaming/test_streaming_integration.py  # Comprehensive streaming integration tests
 tests/unit/bot_v2/cli/test_argument_groups.py
 tests/unit/bot_v2/features/adaptive_portfolio/test_ml_enhanced_handler.py
 tests/unit/bot_v2/features/adaptive_portfolio/test_signal_filter.py

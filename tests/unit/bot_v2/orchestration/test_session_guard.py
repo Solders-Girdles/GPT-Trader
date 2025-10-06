@@ -2,8 +2,8 @@ import datetime as dt
 
 import pytest
 
+from bot_v2.features.market_data import MarketActivityMonitor
 from bot_v2.orchestration.session_guard import TradingSessionGuard
-from bot_v2.orchestration.market_monitor import MarketActivityMonitor
 
 
 def _make_time(hour, minute=0):

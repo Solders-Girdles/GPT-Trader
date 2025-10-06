@@ -7,15 +7,15 @@
 
 ## Summary
 
-**Total Modules**: 36
-**Total Lines**: 7,814
-**Total Classes**: 43
+**Total Modules**: 35
+**Total Lines**: 7,746
+**Total Classes**: 42
 
 ### Complexity Indicators
 
-- **Average Lines per Module**: 217
+- **Average Lines per Module**: 221
 - **Largest Module**: streaming_service (477 lines)
-- **Most Imports**: builders.perps_bot_builder (20 imports)
+- **Most Imports**: builders.perps_bot_builder (19 imports)
 
 ---
 
@@ -26,12 +26,12 @@ Modules ranked by complexity (lines + classes*100 + imports*10):
 | Rank | Module | Complexity | Lines | Classes | Imports |
 |------|--------|------------|-------|---------|---------|
 | 1 | `configuration` | 903 | 473 | 4 | 3 |
-| 2 | `builders.perps_bot_builder` | 680 | 380 | 1 | 20 |
-| 3 | `perps_bot` | 671 | 391 | 1 | 18 |
+| 2 | `builders.perps_bot_builder` | 670 | 380 | 1 | 19 |
+| 3 | `perps_bot` | 661 | 391 | 1 | 17 |
 | 4 | `live_execution` | 652 | 402 | 2 | 5 |
 | 5 | `lifecycle_service` | 603 | 293 | 3 | 1 |
 | 6 | `runtime_coordinator` | 600 | 340 | 2 | 6 |
-| 7 | `streaming_service` | 597 | 477 | 1 | 2 |
+| 7 | `streaming_service` | 587 | 477 | 1 | 1 |
 | 8 | `execution.guards` | 569 | 369 | 2 | 0 |
 | 9 | `strategy_orchestrator` | 494 | 334 | 1 | 6 |
 | 10 | `execution.order_placement` | 492 | 382 | 1 | 1 |
@@ -54,9 +54,9 @@ Modules ranked by complexity (lines + classes*100 + imports*10):
 - **live_execution**: imported by 4 modules
 - **execution_coordinator**: imported by 3 modules
 - **market_data_service**: imported by 3 modules
-- **market_monitor**: imported by 3 modules
 - **strategy_orchestrator**: imported by 3 modules
 - **order_reconciler**: imported by 3 modules
+- **session_guard**: imported by 2 modules
 
 ### Circular Dependencies
 
@@ -83,14 +83,9 @@ Modules that could be extracted to separate features:
 - **Dependencies**: 3 orchestration imports
 - **Reason**: Domain-specific, low coupling
 
-### `market_monitor`
-- **Lines**: 68
-- **Dependencies**: 0 orchestration imports
-- **Reason**: Domain-specific, low coupling
-
 ### `streaming_service`
 - **Lines**: 477
-- **Dependencies**: 2 orchestration imports
+- **Dependencies**: 1 orchestration imports
 - **Reason**: Domain-specific, low coupling
 
 ---

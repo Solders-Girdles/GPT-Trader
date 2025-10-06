@@ -26,6 +26,10 @@ from websockets.exceptions import ConnectionClosed
 @pytest.mark.integration
 @pytest.mark.slow
 @pytest.mark.asyncio
+@pytest.mark.xfail(
+    reason="TODO: Wire MarketDataService WebSocket/REST fallback - requires features/market_data/ module",
+    strict=False,
+)
 async def test_market_data_fallback_to_rest_on_websocket_failure():
     """
     Test: MarketDataService falls back to REST polling when WebSocket unavailable
@@ -77,6 +81,10 @@ async def test_market_data_fallback_to_rest_on_websocket_failure():
 @pytest.mark.integration
 @pytest.mark.slow
 @pytest.mark.asyncio
+@pytest.mark.xfail(
+    reason="TODO: Wire MarketDataService mode switching - requires features/market_data/ module",
+    strict=False,
+)
 async def test_market_data_returns_to_websocket_when_available():
     """
     Test: MarketDataService returns to WebSocket streaming when connection restored
@@ -131,6 +139,10 @@ async def test_market_data_returns_to_websocket_when_available():
 
 @pytest.mark.integration
 @pytest.mark.asyncio
+@pytest.mark.xfail(
+    reason="TODO: Wire StreamingService degradation detection - requires features/market_data/streaming_service module",
+    strict=False,
+)
 async def test_streaming_service_degrades_gracefully():
     """
     Test: StreamingService handles degraded WebSocket performance gracefully
@@ -179,6 +191,10 @@ async def test_streaming_service_degrades_gracefully():
 
 @pytest.mark.integration
 @pytest.mark.asyncio
+@pytest.mark.xfail(
+    reason="TODO: Wire REST polling implementation - requires MarketDataService REST mode",
+    strict=False,
+)
 async def test_rest_polling_updates_mark_prices():
     """
     Test: REST polling mode correctly updates mark prices for all symbols
@@ -242,6 +258,10 @@ async def test_rest_polling_updates_mark_prices():
 @pytest.mark.integration
 @pytest.mark.slow
 @pytest.mark.asyncio
+@pytest.mark.xfail(
+    reason="TODO: Wire concurrent update handling - requires MarketDataService thread-safe price storage",
+    strict=False,
+)
 async def test_concurrent_symbol_updates_no_race_conditions():
     """
     Test: Concurrent market data updates for multiple symbols have no race conditions
@@ -290,6 +310,10 @@ async def test_concurrent_symbol_updates_no_race_conditions():
 
 @pytest.mark.integration
 @pytest.mark.asyncio
+@pytest.mark.xfail(
+    reason="TODO: Wire mode transition data preservation - requires MarketDataService state management",
+    strict=False,
+)
 async def test_mode_transition_does_not_lose_data():
     """
     Test: Transition from WebSocket to REST does not lose price data

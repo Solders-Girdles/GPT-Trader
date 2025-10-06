@@ -2,8 +2,8 @@
 
 **Branch:** `cleanup/operational-audit-q4-2025`
 **Start Date:** 2025-10-05
-**Target Completion:** 2025-11-02 (4 weeks + buffer)
-**Status:** ✅ Week 4 Complete (96% Complete - All tasks done)
+**Completion Date:** 2025-10-05 (same-day execution)
+**Status:** ✅ AUDIT COMPLETE + Post-Audit Cleanup Complete (100%)
 
 ---
 
@@ -215,6 +215,55 @@
 - [x] Verify REFACTORING_2025_RUNBOOK.md status ✅ Both flags correctly marked "retired Oct 2025"
 
 **Status:** Feature flag cleanup validated - no lingering code references found. Documentation accurately reflects retired status.
+
+---
+
+## Post-Audit Cleanup (Oct 5) ✅ **COMPLETE**
+
+After Week 4 completion, three follow-on cleanup tasks executed:
+
+### ✅ Config/Test Hygiene
+- [x] Remove duplicate `config/risk/spot_top10.json` ✅ (YAML canonical)
+- [x] Extend test hygiene allowlist for Week 3 integration tests ✅
+  - test_coinbase_streaming_failover.py (6 scenarios)
+  - test_websocket_rest_fallback.py (7 scenarios)
+  - test_broker_outage_handling.py (8 scenarios)
+
+**Result:** config-doctor ✅ passing, test-hygiene 12 files (down from 15)
+
+**Commit:** `6c73654` - chore: Clean up config/test hygiene (post-audit)
+
+### ✅ Documentation Polish
+- [x] Sweep for stale references (e.g., "perps by default" vs "spot-first") ✅
+  - All docs use "spot-first" terminology consistently
+  - No outdated architecture references found
+- [x] Update `governance.md` with resolved hook status ✅
+- [x] Enhance cross-links (add operations_runbook.md, monitoring.md) ✅
+- [x] Remove resolved config-doctor duplicate issue section ✅
+
+**Result:** governance.md polished, better discoverability
+
+**Commit:** `e34e63c` - docs: Polish governance.md post-audit
+
+### ✅ Coinbase API Alignment Readiness
+- [x] Create `docs/ops/coinbase_readiness_checklist.md` ✅ (426 lines)
+  - API credentials & permissions validation
+  - Rate limit handling (REST: 10-15 req/s, WebSocket: 750 msg/s)
+  - REST/WebSocket endpoint coverage validation
+  - Fee tier & slippage assumption checks
+  - Product spec quantization (tick sizes, lot sizes)
+  - Monitoring & observability validation
+  - Error handling & resilience testing
+  - Risk controls validation
+  - Sandbox soak test (24-48 hours)
+  - Production pre-flight checklist
+  - Post-deployment validation procedures
+
+**Result:** Comprehensive punch list ready for Coinbase integration
+
+**Current Readiness:** 40% (5/12 sections complete, 7 pending sandbox access)
+
+**Commit:** `e0ca143` - docs: Add Coinbase API alignment readiness checklist
 
 ---
 

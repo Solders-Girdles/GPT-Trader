@@ -42,8 +42,8 @@ Pre-commit hooks are **active and enforced** on all commits. Configuration: `.pr
 | `black` | Code formatting (PEP 8) | ✅ Passing | Auto-fix |
 | `ruff` | Fast Python linting | ✅ Passing | Auto-fix + fail |
 | `pyupgrade` | Upgrade Python syntax (3.12+) | ✅ Passing | Auto-fix |
-| `config-doctor` | Validate config files | ⚠️ 1 issue | Fail on error |
-| `test-hygiene` | Enforce test file limits | ⚠️ 15 files | Fail on error |
+| `config-doctor` | Validate config files | ✅ Passing | Fail on error |
+| `test-hygiene` | Enforce test file limits | ⚠️ 12 files | Fail on error |
 | `forbid-bytecode` | Block .pyc commits | ✅ Passing | Fail on error |
 
 ### Hook Details
@@ -75,24 +75,16 @@ Pre-commit hooks are **active and enforced** on all commits. Configuration: `.pr
 - Enforces risk profile schemas
 - Run manually: `poetry run python scripts/tools/config_doctor.py --check all --strict`
 
-**Current Issue (Oct 5, 2025):**
-```
-⚠️  Duplicate configuration files:
-   - Duplicate config 'spot_top10' exists in both YAML and JSON formats.
-     Consolidate to a single format (YAML recommended).
-```
-
-**Resolution:** Remove `config/risk/spot_top10.json` (YAML version is canonical)
-
 **test-hygiene** - Test file quality enforcer
 - Enforces 240-line limit per test file (maintainability)
 - Detects `time.sleep()` usage (should use `fake_clock` fixture)
 - Prevents test bloat and flaky time-dependent tests
 - Run manually: `scripts/ci/check_test_hygiene.py tests/`
 
-**Current Issues (Oct 5, 2025):**
-- 15 test files exceed 240 lines (see [Test Hygiene Allowlist](#test-hygiene-allowlist))
-- 2 files use `time.sleep()` without `fake_clock` fixture
+**Current Issues:**
+- 12 pre-existing test files exceed 240 lines (splitting deferred as low-priority enhancement)
+- Week 3 integration tests (3 files) allowlisted with justification (comprehensive scenario coverage)
+- 2 files use `time.sleep()` without `fake_clock` fixture (low-priority enhancement)
 
 ### Usage Guidelines
 
@@ -524,13 +516,6 @@ poetry run pre-commit run config-doctor --all-files
 - ❌ Never commit `.env` with secrets
 - ❌ No hardcoded credentials in configs
 
-**Duplicate Resolution (Current Issue):**
-```bash
-# Remove JSON version, keep YAML
-rm config/risk/spot_top10.json
-# YAML version is canonical: config/risk/spot_top10.yaml
-```
-
 ---
 
 ## Deployment Process
@@ -622,11 +607,16 @@ If you need to bypass governance (e.g., skip test-hygiene, deploy without stagin
 
 ## Related Documents
 
+**Operations & Infrastructure:**
+- [operations_runbook.md](operations_runbook.md) - Operational procedures and incident response
 - [dependency_policy.md](dependency_policy.md) - Dependency management strategy
 - [CLEANUP_CHECKLIST.md](CLEANUP_CHECKLIST.md) - Operational audit plan
+
+**Architecture & Monitoring:**
 - [ARCHITECTURE.md](../ARCHITECTURE.md) - System architecture
 - [REFACTORING_2025_RUNBOOK.md](../architecture/REFACTORING_2025_RUNBOOK.md) - Refactoring guide
-- [MONITORING_PLAYBOOK.md](../MONITORING_PLAYBOOK.md) - Monitoring and alerting
+- [MONITORING_PLAYBOOK.md](../MONITORING_PLAYBOOK.md) - Monitoring and alerting playbook
+- [monitoring.md](../guides/monitoring.md) - Monitoring setup and configuration
 
 ---
 

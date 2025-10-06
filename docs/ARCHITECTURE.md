@@ -2,20 +2,36 @@
 
 ---
 status: current
-last-updated: 2025-09-29
+last-updated: 2025-10-05
 ---
 
 ## Current State
 
 GPT-Trader V2 is a production-ready Coinbase **spot** trading system that retains future-ready perpetuals logic. Perps execution remains disabled in live environments until Coinbase grants INTX access, but the architecture keeps those paths compiled and testable.
 
-**Recent Refactoring (2025-09-29):**
+**Recent Refactoring (Oct 2025 - Phase 0-3):**
+- ✅ **Phase 0:** MarketDataService & StreamingService extraction
+  - Extracted `features/market_data/` package from PerpsBot monolith
+  - Separated WebSocket streaming logic into dedicated service
+  - Feature flags `USE_NEW_MARKET_DATA_SERVICE` and `USE_NEW_STREAMING_SERVICE` retired (services always active)
+- ✅ **Phase 1:** CLI modularization
+  - Modular command handlers in `cli/commands/`
+  - Feature flag `USE_NEW_CLI_HANDLERS` default=true
+- ✅ **Phase 2:** Live trade service extraction
+  - Advanced execution, liquidity service, order policy composition
+  - Spot profile service, risk gate validator
+- ✅ **Phase 3:** PerpsBotBuilder pattern
+  - Builder-based orchestration with `orchestration/builders/perps_bot_builder.py`
+  - Feature flag `USE_PERPS_BOT_BUILDER` default=true
+- Result: 5,007 passing tests (up from 2,145), 87.52% coverage
+- Rollback capability: Feature flags enable same-day rollback without redeploy
+
+**Previous Refactoring (2025-09-29):**
 - Archived experimental features (backtest, ml_strategy, market_regime, monitoring_dashboard) → `archived/experimental_features_2025_09_29/`
 - Extracted models from large files into subpackages:
   - `state/recovery/models.py` - Recovery system models (99 lines)
   - `features/live_trade/advanced_execution_models/` - Execution models (72 lines)
 - Result: Cleaner separation of concerns, improved maintainability
-- Test coverage: 100% pass rate on active suites (run `poetry run pytest --collect-only` for current counts)
 
 ## Trading Capabilities Matrix
 
@@ -72,14 +88,17 @@ Risk Guards → Coinbase Brokerage Adapter → Metrics + Telemetry
 
 | Module | Purpose |
 |--------|---------|
+| `bot_v2/features/market_data/` | **Phase 0:** Market data service with WebSocket/REST fallback, mark price management |
 | `bot_v2/features/live_trade` | Risk management, execution engines, strategies, and trading utilities |
 | `bot_v2/features/live_trade/risk/` | Risk management subpackage: position sizing, pre-trade validation, runtime monitoring, state management |
 | `bot_v2/orchestration/` | Core orchestration layer: config management, execution/runtime/strategy coordination, telemetry, reconciliation |
+| `bot_v2/orchestration/builders/` | **Phase 3:** PerpsBotBuilder pattern for service composition and initialization |
 | `bot_v2/orchestration/execution/` | Execution subpackage: guards, validation, order submission, state collection |
 | `bot_v2/features/brokerages/coinbase` | REST/WS integration for Coinbase Advanced Trade spot markets |
 | `bot_v2/features/brokerages/coinbase/client/` | Modular client package with mixins (accounts, orders, portfolio, market data) |
 | `bot_v2/features/brokerages/coinbase/rest/` | REST service layer: orders, portfolio, products, P&L calculation |
 | `bot_v2/features/position_sizing` | Kelly-style sizing with guardrails |
+| `bot_v2/cli/commands/` | **Phase 1:** Modular CLI command handlers (accounts, orders, convert, etc.) |
 | `bot_v2/monitoring` | Runtime guard orchestration, alert dispatch, system metrics |
 | `bot_v2/validation` | Predicate-based validators and input decorators |
 

@@ -1,14 +1,12 @@
 from __future__ import annotations
 
-import json
-import threading
 from collections.abc import Iterable
-from dataclasses import asdict, is_dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 from bot_v2.config.path_registry import DEFAULT_EVENT_STORE_DIR
+from bot_v2.persistence.json_file_store import JsonFileStore
 
 
 class EventStore:
@@ -22,27 +20,13 @@ class EventStore:
 
     def __init__(self, root: Path | None = None) -> None:
         base = root or DEFAULT_EVENT_STORE_DIR
-        base.mkdir(parents=True, exist_ok=True)
         self.path = base / "events.jsonl"
-        # Ensure file exists
-        if not self.path.exists():
-            self.path.touch()
-        self._lock = threading.Lock()
+        self._store = JsonFileStore(self.path)
 
     def _write(self, payload: dict[str, Any]) -> None:
         payload = dict(payload)
         payload.setdefault("time", datetime.utcnow().isoformat())
-        line = json.dumps(payload, default=self._default) + "\n"
-        with self._lock, self.path.open("a") as f:
-            f.write(line)
-
-    @staticmethod
-    def _default(obj: Any) -> Any:
-        if is_dataclass(obj) and not isinstance(obj, type):
-            return asdict(obj)
-        if isinstance(obj, (datetime,)):
-            return obj.isoformat()
-        return str(obj)
+        self._store.append_jsonl(payload)
 
     # Public appenders
     def append_trade(self, bot_id: str, trade: dict[str, Any]) -> None:
@@ -69,17 +53,14 @@ class EventStore:
         types_set = set(types or [])
         out: list[dict[str, Any]] = []
         try:
-            with self.path.open("r") as f:
-                for line in f:
-                    try:
-                        evt = json.loads(line)
-                    except Exception:
-                        continue
-                    if evt.get("bot_id") != bot_id:
-                        continue
-                    if types_set and evt.get("type") not in types_set:
-                        continue
-                    out.append(evt)
+            for event in self._store.iter_jsonl():
+                if not isinstance(event, dict):
+                    continue
+                if event.get("bot_id") != bot_id:
+                    continue
+                if types_set and event.get("type") not in types_set:
+                    continue
+                out.append(event)
             return out[-limit:]
         except Exception:
             return []

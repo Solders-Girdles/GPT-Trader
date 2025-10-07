@@ -5,7 +5,6 @@ can be recovered after restarts.
 
 from __future__ import annotations
 
-import json
 import logging
 import threading
 from dataclasses import asdict, dataclass
@@ -14,6 +13,7 @@ from pathlib import Path
 
 from bot_v2.features.brokerages.core.interfaces import Order, OrderStatus
 from bot_v2.monitoring.system import get_logger
+from bot_v2.persistence.json_file_store import JsonFileStore
 
 logger = logging.getLogger(__name__)
 
@@ -79,27 +79,28 @@ class OrdersStore:
         self._lock = threading.RLock()
 
         self.storage_path.mkdir(parents=True, exist_ok=True)
+        self._store = JsonFileStore(self.orders_file)
         self._load()
 
     def _load(self) -> None:
         """Load orders from the JSONL file."""
-        if not self.orders_file.exists():
-            return
-
-        with self.orders_file.open("r") as f:
-            for line in f:
-                try:
-                    data = json.loads(line)
-                    legacy_filled_quantity = data.pop("filled_quantity", None)
-                    if "filled_quantity" not in data and legacy_filled_quantity is not None:
-                        data["filled_quantity"] = legacy_filled_quantity
-                    if "avg_fill_price" not in data:
-                        data["avg_fill_price"] = None
-                    order = StoredOrder(**data)
-                    self._orders[order.order_id] = order
-                    self._client_id_map[order.client_id] = order.order_id
-                except (json.JSONDecodeError, TypeError) as e:
-                    logger.warning(f"Could not load order record: {line.strip()} - Error: {e}")
+        for record in self._store.iter_jsonl():
+            try:
+                data = dict(record)
+                legacy_filled_quantity = data.pop("filled_quantity", None)
+                if "filled_quantity" not in data and legacy_filled_quantity is not None:
+                    data["filled_quantity"] = legacy_filled_quantity
+                if "avg_fill_price" not in data:
+                    data["avg_fill_price"] = None
+                order = StoredOrder(**data)
+                self._orders[order.order_id] = order
+                self._client_id_map[order.client_id] = order.order_id
+            except (TypeError, ValueError) as exc:
+                logger.warning(
+                    "Could not load order record: %s - Error: %s",
+                    record,
+                    exc,
+                )
 
         logger.info(f"Loaded {len(self._orders)} orders from {self.orders_file}")
 
@@ -115,8 +116,7 @@ class OrdersStore:
             if order.client_id:
                 self._client_id_map[order.client_id] = order.id
             # Append to file for durability
-            with self.orders_file.open("a") as f:
-                f.write(json.dumps(asdict(stored_order)) + "\n")
+            self._store.append_jsonl(asdict(stored_order))
 
             # Emit status change and round-trip metrics
             try:

@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-import json
-import threading
 from pathlib import Path
 from typing import Any
+
+from bot_v2.persistence.json_file_store import JsonFileStore
 
 
 class ConfigStore:
@@ -11,26 +11,21 @@ class ConfigStore:
 
     def __init__(self, root: Path | None = None) -> None:
         base = root or (Path(__file__).resolve().parents[3] / "results" / "managed")
-        base.mkdir(parents=True, exist_ok=True)
         self.path = base / "bots.json"
-        self._lock = threading.Lock()
-        if not self.path.exists():
-            with self.path.open("w") as f:
-                json.dump({"bots": []}, f, indent=2)
+        self._store = JsonFileStore(self.path)
+        if self.path.stat().st_size == 0:
+            self._store.write_json({"bots": []})
 
     def load_bots(self) -> list[dict[str, Any]]:
-        try:
-            with self.path.open("r") as f:
-                data = json.load(f)
-            return list(data.get("bots") or [])
-        except Exception:
-            return []
+        data = self._store.read_json(default={"bots": []}) or {"bots": []}
+        bots = data.get("bots") if isinstance(data, dict) else []
+        if isinstance(bots, list):
+            return list(bots)
+        return []
 
     def save_bots(self, bots: list[dict[str, Any]]) -> None:
         payload = {"bots": bots}
-        with self._lock:
-            with self.path.open("w") as f:
-                json.dump(payload, f, indent=2)
+        self._store.write_json(payload)
 
     def add_bot(self, config: dict[str, Any]) -> None:
         bots = self.load_bots()

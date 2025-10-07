@@ -18,6 +18,20 @@ from datetime import datetime, timedelta
 from enum import Enum
 from typing import Any
 
+from bot_v2.state.recovery import (
+    APIGatewayRecoveryStrategy,
+    CorruptionRecoveryStrategy,
+    DiskRecoveryStrategy,
+    MemoryRecoveryStrategy,
+    MLModelsRecoveryStrategy,
+    NetworkRecoveryStrategy,
+    PostgresRecoveryStrategy,
+    RecoveryStrategy,
+    RedisRecoveryStrategy,
+    S3RecoveryStrategy,
+    TradingEngineRecoveryStrategy,
+)
+
 logger = logging.getLogger(__name__)
 
 
@@ -122,30 +136,50 @@ class RecoveryHandler:
         self._recovery_in_progress = False
         self._current_operation: RecoveryOperation | None = None
         self._recovery_history: list[RecoveryOperation] = []
-        self._failure_handlers: dict[FailureType, Callable] = {}
+        self._strategies: dict[FailureType, RecoveryStrategy] = {}
         self._monitoring_task: asyncio.Task | None = None
 
-        # Register default failure handlers
-        self._register_default_handlers()
+        # Register recovery strategies
+        self._register_strategies()
 
         logger.info(
             f"RecoveryHandler initialized with RTO={self.config.rto_minutes}min, "
             f"RPO={self.config.rpo_minutes}min"
         )
 
-    def _register_default_handlers(self) -> None:
-        """Register default failure recovery handlers"""
-        self._failure_handlers = {
-            FailureType.REDIS_DOWN: self._recover_redis,
-            FailureType.POSTGRES_DOWN: self._recover_postgres,
-            FailureType.S3_UNAVAILABLE: self._recover_s3,
-            FailureType.DATA_CORRUPTION: self._recover_from_corruption,
-            FailureType.TRADING_ENGINE_CRASH: self._recover_trading_engine,
-            FailureType.ML_MODEL_FAILURE: self._recover_ml_models,
-            FailureType.MEMORY_OVERFLOW: self._recover_from_memory_overflow,
-            FailureType.DISK_FULL: self._recover_from_disk_full,
-            FailureType.NETWORK_PARTITION: self._recover_from_network_partition,
-            FailureType.API_GATEWAY_DOWN: self._recover_api_gateway,
+    def _register_strategies(self) -> None:
+        """Register recovery strategies for each failure type."""
+        self._strategies = {
+            FailureType.REDIS_DOWN: RedisRecoveryStrategy(
+                self.state_manager, self.checkpoint_handler, self.backup_manager
+            ),
+            FailureType.POSTGRES_DOWN: PostgresRecoveryStrategy(
+                self.state_manager, self.checkpoint_handler, self.backup_manager
+            ),
+            FailureType.S3_UNAVAILABLE: S3RecoveryStrategy(
+                self.state_manager, self.checkpoint_handler, self.backup_manager
+            ),
+            FailureType.DATA_CORRUPTION: CorruptionRecoveryStrategy(
+                self.state_manager, self.checkpoint_handler, self.backup_manager
+            ),
+            FailureType.TRADING_ENGINE_CRASH: TradingEngineRecoveryStrategy(
+                self.state_manager, self.checkpoint_handler, self.backup_manager
+            ),
+            FailureType.ML_MODEL_FAILURE: MLModelsRecoveryStrategy(
+                self.state_manager, self.checkpoint_handler, self.backup_manager
+            ),
+            FailureType.MEMORY_OVERFLOW: MemoryRecoveryStrategy(
+                self.state_manager, self.checkpoint_handler, self.backup_manager
+            ),
+            FailureType.DISK_FULL: DiskRecoveryStrategy(
+                self.state_manager, self.checkpoint_handler, self.backup_manager
+            ),
+            FailureType.NETWORK_PARTITION: NetworkRecoveryStrategy(
+                self.state_manager, self.checkpoint_handler, self.backup_manager
+            ),
+            FailureType.API_GATEWAY_DOWN: APIGatewayRecoveryStrategy(
+                self.state_manager, self.checkpoint_handler, self.backup_manager
+            ),
         }
 
     async def start_monitoring(self) -> None:
@@ -359,23 +393,23 @@ class RecoveryHandler:
         """
         failure_type = operation.failure_event.failure_type
 
-        # Get appropriate handler
-        handler = self._failure_handlers.get(failure_type)
+        # Get appropriate recovery strategy
+        strategy = self._strategies.get(failure_type)
 
-        if not handler:
-            logger.error(f"No handler registered for {failure_type.value}")
+        if not strategy:
+            logger.error(f"No recovery strategy registered for {failure_type.value}")
             return False
 
-        # Execute handler with retries
+        # Execute recovery with retries
         for attempt in range(self.config.max_retry_attempts):
             try:
                 logger.info(f"Recovery attempt {attempt + 1}/{self.config.max_retry_attempts}")
 
-                success = await handler(operation)
+                success = await strategy.recover(operation)
 
                 if success:
                     operation.actions_taken.append(
-                        f"Successfully executed {handler.__name__} on attempt {attempt + 1}"
+                        f"Successfully executed {strategy.failure_type_name} recovery on attempt {attempt + 1}"
                     )
                     return True
 
@@ -387,338 +421,6 @@ class RecoveryHandler:
                 operation.actions_taken.append(f"Handler error: {str(e)}")
 
         return False
-
-    async def _recover_redis(self, operation: RecoveryOperation) -> bool:
-        """Recover from Redis failure"""
-        try:
-            logger.info("Recovering Redis from warm storage")
-            operation.actions_taken.append("Starting Redis recovery from PostgreSQL")
-
-            # Get critical hot state from PostgreSQL backup
-            if self.state_manager.pg_conn:
-                with self.state_manager.pg_conn.cursor() as cursor:
-                    cursor.execute(
-                        """
-                        SELECT key, data FROM state_warm
-                        WHERE last_accessed > %s
-                        ORDER BY last_accessed DESC
-                        LIMIT 1000
-                    """,
-                        (datetime.utcnow() - timedelta(minutes=5),),
-                    )
-
-                    recovered_count = 0
-                    for row in cursor.fetchall():
-                        key, data = row["key"], row["data"]
-                        try:
-                            # Attempt to restore to Redis
-                            if self.state_manager.redis_client:
-                                self.state_manager.redis_client.set(key, json.dumps(data), ex=3600)
-                                recovered_count += 1
-                        except Exception as exc:
-                            logger.debug(
-                                "Failed to restore key %s to Redis: %s",
-                                key,
-                                exc,
-                                exc_info=True,
-                            )
-
-                    operation.actions_taken.append(f"Recovered {recovered_count} keys to Redis")
-                    logger.info(f"Redis recovery completed with {recovered_count} keys")
-                    return recovered_count > 0
-
-            return False
-
-        except Exception as e:
-            logger.error(f"Redis recovery failed: {e}")
-            operation.actions_taken.append(f"Redis recovery error: {str(e)}")
-            return False
-
-    async def _recover_postgres(self, operation: RecoveryOperation) -> bool:
-        """Recover from PostgreSQL failure"""
-        try:
-            logger.info("Recovering PostgreSQL from checkpoint")
-            operation.actions_taken.append("Starting PostgreSQL recovery from checkpoint")
-
-            # Get latest checkpoint
-            latest_checkpoint = self.checkpoint_handler.get_latest_checkpoint()
-
-            if not latest_checkpoint:
-                # Try backup recovery
-                if self.backup_manager:
-                    logger.info("No checkpoint found, attempting backup recovery")
-                    return await self.backup_manager.restore_latest_backup()
-                return False
-
-            # Restore from checkpoint
-            success = await self.checkpoint_handler.restore_from_checkpoint(latest_checkpoint)
-
-            operation.actions_taken.append(
-                f"Restored from checkpoint {latest_checkpoint.checkpoint_id}"
-            )
-
-            # Calculate data loss
-            time_since_checkpoint = datetime.utcnow() - latest_checkpoint.timestamp
-            operation.data_loss_estimate = (
-                f"Up to {time_since_checkpoint.total_seconds():.0f} seconds"
-            )
-
-            return success
-
-        except Exception as e:
-            logger.error(f"PostgreSQL recovery failed: {e}")
-            operation.actions_taken.append(f"PostgreSQL recovery error: {str(e)}")
-            return False
-
-    async def _recover_s3(self, operation: RecoveryOperation) -> bool:
-        """Recover from S3 unavailability"""
-        try:
-            logger.info("Handling S3 unavailability")
-            operation.actions_taken.append("S3 recovery - using local storage fallback")
-
-            # S3 is for cold storage, not critical for operations
-            # Mark cold data as temporarily unavailable
-            await self.state_manager.set_state("system:s3_available", False)
-
-            # Use local disk as temporary cold storage
-            operation.actions_taken.append("Configured local disk fallback for cold storage")
-
-            return True  # System can operate without S3
-
-        except Exception as e:
-            logger.error(f"S3 recovery failed: {e}")
-            return False
-
-    async def _recover_from_corruption(self, operation: RecoveryOperation) -> bool:
-        """Recover from data corruption"""
-        try:
-            logger.info("Recovering from data corruption")
-            operation.actions_taken.append("Starting corruption recovery")
-
-            # Find last valid checkpoint
-            valid_checkpoint = await self.checkpoint_handler.find_valid_checkpoint()
-
-            if not valid_checkpoint:
-                logger.error("No valid checkpoint found for corruption recovery")
-                return False
-
-            # Restore from checkpoint
-            success = await self.checkpoint_handler.restore_from_checkpoint(valid_checkpoint)
-
-            if success:
-                operation.actions_taken.append(
-                    f"Restored from valid checkpoint {valid_checkpoint.checkpoint_id}"
-                )
-
-                # Replay transactions if available
-                if await self._replay_transactions_from(valid_checkpoint.timestamp):
-                    operation.actions_taken.append("Replayed transactions from checkpoint")
-
-            return success
-
-        except Exception as e:
-            logger.error(f"Corruption recovery failed: {e}")
-            operation.actions_taken.append(f"Corruption recovery error: {str(e)}")
-            return False
-
-    async def _recover_trading_engine(self, operation: RecoveryOperation) -> bool:
-        """Recover from trading engine crash"""
-        try:
-            logger.info("Recovering trading engine")
-            operation.actions_taken.append("Starting trading engine recovery")
-
-            # Cancel all pending orders
-            order_keys = await self.state_manager.get_keys_by_pattern("order:*")
-            cancelled_count = 0
-
-            for key in order_keys:
-                order_data = await self.state_manager.get_state(key)
-                if order_data and order_data.get("status") == "pending":
-                    order_data["status"] = "cancelled"
-                    order_data["cancel_reason"] = "Trading engine recovery"
-                    await self.state_manager.set_state(key, order_data)
-                    cancelled_count += 1
-
-            operation.actions_taken.append(f"Cancelled {cancelled_count} pending orders")
-
-            # Restore positions from last known state
-            portfolio_data = await self.state_manager.get_state("portfolio_current")
-
-            if portfolio_data:
-                operation.actions_taken.append("Restored portfolio state")
-
-                # Verify position consistency
-                position_keys = await self.state_manager.get_keys_by_pattern("position:*")
-                for key in position_keys:
-                    position = await self.state_manager.get_state(key)
-                    if position:
-                        # Validate position data
-                        if not self._validate_position(position):
-                            logger.warning(f"Invalid position found: {key}")
-                            await self.state_manager.delete_state(key)
-
-            # Signal trading engine restart
-            await self.state_manager.set_state("system:trading_engine_status", "recovered")
-            operation.actions_taken.append("Trading engine recovery completed")
-
-            return True
-
-        except Exception as e:
-            logger.error(f"Trading engine recovery failed: {e}")
-            operation.actions_taken.append(f"Trading engine recovery error: {str(e)}")
-            return False
-
-    async def _recover_ml_models(self, operation: RecoveryOperation) -> bool:
-        """Recover from ML model failure"""
-        try:
-            logger.info("Recovering ML models")
-            operation.actions_taken.append("Starting ML model recovery")
-
-            # Load last known good model states
-            ml_keys = await self.state_manager.get_keys_by_pattern("ml_model:*")
-            recovered_models = 0
-
-            for key in ml_keys:
-                model_state = await self.state_manager.get_state(key)
-                if model_state:
-                    # Reset model to last stable version
-                    if "last_stable_version" in model_state:
-                        model_state["current_version"] = model_state["last_stable_version"]
-                        await self.state_manager.set_state(key, model_state)
-                        recovered_models += 1
-
-            operation.actions_taken.append(f"Recovered {recovered_models} ML models")
-
-            # Fall back to baseline models if needed
-            if recovered_models == 0:
-                operation.actions_taken.append("No ML models recovered, using baseline strategies")
-                await self.state_manager.set_state("system:ml_models_available", False)
-
-            return True  # System can operate without ML models
-
-        except Exception as e:
-            logger.error(f"ML model recovery failed: {e}")
-            return False
-
-    async def _recover_from_memory_overflow(self, operation: RecoveryOperation) -> bool:
-        """Recover from memory overflow"""
-        try:
-            logger.info("Recovering from memory overflow")
-            operation.actions_taken.append("Starting memory recovery")
-
-            # Clear local caches
-            if hasattr(self.state_manager, "_local_cache"):
-                self.state_manager._local_cache.clear()
-                operation.actions_taken.append("Cleared local cache")
-
-            # Demote data to cold storage
-            hot_keys = await self.state_manager.get_keys_by_pattern("*")
-            demoted_count = 0
-
-            for key in hot_keys[:100]:  # Demote oldest 100 keys
-                if await self.state_manager.demote_to_cold(key):
-                    demoted_count += 1
-
-            operation.actions_taken.append(f"Demoted {demoted_count} keys to cold storage")
-
-            # Trigger garbage collection
-            import gc
-
-            gc.collect()
-            operation.actions_taken.append("Triggered garbage collection")
-
-            return True
-
-        except Exception as e:
-            logger.error(f"Memory recovery failed: {e}")
-            return False
-
-    async def _recover_from_disk_full(self, operation: RecoveryOperation) -> bool:
-        """Recover from disk full condition"""
-        try:
-            logger.info("Recovering from disk full")
-            operation.actions_taken.append("Starting disk space recovery")
-
-            # Clean old checkpoints
-            if hasattr(self.checkpoint_handler, "_cleanup_old_checkpoints"):
-                self.checkpoint_handler._cleanup_old_checkpoints()
-                operation.actions_taken.append("Cleaned old checkpoints")
-
-            # Clean old backups
-            if self.backup_manager:
-                await self.backup_manager.cleanup_old_backups()
-                operation.actions_taken.append("Cleaned old backups")
-
-            # Clear temporary files
-            import shutil
-            import tempfile
-
-            temp_dir = tempfile.gettempdir()
-            bot_temp = f"{temp_dir}/bot_v2"
-
-            if os.path.exists(bot_temp):
-                shutil.rmtree(bot_temp, ignore_errors=True)
-                operation.actions_taken.append("Cleared temporary files")
-
-            return True
-
-        except Exception as e:
-            logger.error(f"Disk recovery failed: {e}")
-            return False
-
-    async def _recover_from_network_partition(self, operation: RecoveryOperation) -> bool:
-        """Recover from network partition"""
-        try:
-            logger.info("Recovering from network partition")
-            operation.actions_taken.append("Handling network partition")
-
-            # Wait for network to stabilize
-            await asyncio.sleep(5)
-
-            # Re-establish connections
-            if hasattr(self.state_manager, "_init_redis"):
-                self.state_manager._init_redis()
-                operation.actions_taken.append("Re-established Redis connection")
-
-            if hasattr(self.state_manager, "_init_postgres"):
-                self.state_manager._init_postgres()
-                operation.actions_taken.append("Re-established PostgreSQL connection")
-
-            # Synchronize state
-            await self._synchronize_state()
-            operation.actions_taken.append("Synchronized distributed state")
-
-            return True
-
-        except Exception as e:
-            logger.error(f"Network recovery failed: {e}")
-            return False
-
-    async def _recover_api_gateway(self, operation: RecoveryOperation) -> bool:
-        """Recover from API gateway failure"""
-        try:
-            logger.info("Recovering API gateway")
-            operation.actions_taken.append("Starting API gateway recovery")
-
-            # Signal API gateway restart
-            await self.state_manager.set_state("system:api_gateway_status", "restarting")
-
-            # Clear API rate limit counters
-            rate_limit_keys = await self.state_manager.get_keys_by_pattern("rate_limit:*")
-            for key in rate_limit_keys:
-                await self.state_manager.delete_state(key)
-
-            operation.actions_taken.append("Cleared rate limit counters")
-
-            # Update gateway status
-            await self.state_manager.set_state("system:api_gateway_status", "recovered")
-            operation.actions_taken.append("API gateway recovery completed")
-
-            return True
-
-        except Exception as e:
-            logger.error(f"API gateway recovery failed: {e}")
-            return False
 
     async def _validate_recovery(self, operation: RecoveryOperation) -> bool:
         """

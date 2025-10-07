@@ -1,21 +1,16 @@
-"""CLI tests for bot_v2.cli.
+"""CLI tests for bot_v2.cli."""
 
-Covers argument parsing and integration points without running the full bot.
-"""
+from __future__ import annotations
 
 import builtins
-import types
+import importlib
 from types import SimpleNamespace
 
-import asyncio
 import pytest
 
 
-def test_cli_dev_fast_runs_with_overrides(monkeypatch):
-    # Arrange: fake argv
-    monkeypatch.setenv("PYTHONASYNCIODEBUG", "0")
+def test_cli_run_defaults_to_run_subcommand(monkeypatch):
     argv = [
-        "prog",
         "--profile",
         "dev",
         "--dry-run",
@@ -30,57 +25,123 @@ def test_cli_dev_fast_runs_with_overrides(monkeypatch):
         "--dev-fast",
     ]
 
-    # Dummy BotConfig.from_profile that returns a minimal object with requested attrs
-    created_configs = {}
+    captured = {}
 
     class DummyConfig:
-        def __init__(self, profile, **kw):
+        def __init__(self, profile: str):
             self.profile = SimpleNamespace(value=profile)
-            for k, v in kw.items():
-                setattr(self, k, v)
-
-    def fake_from_profile(profile, **overrides):
-        created_configs["profile"] = profile
-        created_configs["overrides"] = overrides
-        return DummyConfig(profile, **overrides)
-
-    ran = {"called": False, "single_cycle": None}
 
     class DummyBot:
-        def __init__(self, config):
-            # validate a couple of expected overrides propagated
-            assert getattr(config, "dry_run", False) is True
-            # CLI uses dest="reduce_only_mode" for the --reduce-only flag
-            assert getattr(config, "reduce_only_mode", False) is True
-            # Provide `running` attribute used by signal handler
+        def __init__(self):
             self.running = True
+            self.single_cycle = None
 
         async def run(self, *, single_cycle: bool = False):
-            ran["called"] = True
-            ran["single_cycle"] = single_cycle
-
-    def fake_build_bot(config):
-        dummy = DummyBot(config)
-        return dummy, SimpleNamespace()
-
-    # Patch imports inside cli module
-    import importlib
+            self.single_cycle = single_cycle
 
     cli = importlib.import_module("bot_v2.cli")
-    monkeypatch.setattr(cli, "BotConfig", SimpleNamespace(from_profile=fake_from_profile))
-    monkeypatch.setattr(cli, "build_bot", fake_build_bot)
+    services = importlib.import_module("bot_v2.cli.services")
 
-    # Patch sys.argv for argparse
-    monkeypatch.setattr("sys.argv", argv)
+    def fake_build_config(args, *, include=None, skip=None):
+        captured["profile"] = args.profile
+        captured["symbols"] = list(args.symbols)
+        captured["interval"] = args.interval
+        captured["target_leverage"] = args.target_leverage
+        captured["include"] = set(include or [])
+        captured["skip"] = set(skip or [])
+        return DummyConfig(args.profile)
 
-    # Act
-    exit_code = cli.main()
+    dummy_bot = DummyBot()
 
-    # Assert
+    def fake_instantiate(config):
+        captured["config"] = config
+        return dummy_bot
+
+    monkeypatch.setattr(services, "build_config_from_args", fake_build_config)
+    monkeypatch.setattr(services, "instantiate_bot", fake_instantiate)
+
+    exit_code = cli.main(argv)
+
     assert exit_code == 0
-    assert ran["called"] is True
-    assert ran["single_cycle"] is True  # --dev-fast propagates to single_cycle
-    # Ensure symbols and interval made it through overrides
-    assert created_configs["profile"] == "dev"
-    assert created_configs["overrides"]["symbols"] == ["BTC-PERP", "ETH-PERP"]
-    assert created_configs["overrides"]["interval"] == 3
+    assert captured["profile"] == "dev"
+    assert captured["symbols"] == ["BTC-PERP", "ETH-PERP"]
+    assert captured["interval"] == 3
+    assert captured["target_leverage"] == 2
+    assert "dev_fast" in captured["skip"]
+    assert dummy_bot.single_cycle is True
+
+
+def test_orders_preview_invokes_broker_preview(monkeypatch):
+    argv = [
+        "orders",
+        "preview",
+        "--profile",
+        "dev",
+        "--symbol",
+        "BTC-PERP",
+        "--side",
+        "buy",
+        "--type",
+        "limit",
+        "--quantity",
+        "0.50",
+        "--price",
+        "42000",
+        "--tif",
+        "IOC",
+        "--client-id",
+        "cli-123",
+        "--leverage",
+        "3",
+        "--reduce-only",
+    ]
+
+    cli = importlib.import_module("bot_v2.cli")
+    services = importlib.import_module("bot_v2.cli.services")
+
+    class DummyConfig:
+        def __init__(self, profile: str):
+            self.profile = profile
+
+    captured = {}
+
+    def fake_build_config(args, *, include=None, skip=None):
+        captured["skip"] = set(skip or [])
+        return DummyConfig(args.profile)
+
+    shutdown_called = {"value": False}
+
+    class DummyBroker:
+        def preview_order(self, **payload):
+            captured["payload"] = payload
+            return {"status": "ok"}
+
+    class DummyBot:
+        def __init__(self):
+            self.broker = DummyBroker()
+
+        async def shutdown(self):
+            shutdown_called["value"] = True
+
+    monkeypatch.setattr(services, "build_config_from_args", fake_build_config)
+    monkeypatch.setattr(services, "instantiate_bot", lambda config: DummyBot())
+
+    printed = []
+
+    def fake_print(value):
+        printed.append(value)
+
+    monkeypatch.setattr(builtins, "print", fake_print)
+
+    exit_code = cli.main(argv)
+
+    assert exit_code == 0
+    assert shutdown_called["value"] is True
+    payload = captured["payload"]
+    assert payload["symbol"] == "BTC-PERP"
+    assert payload["side"].name == "BUY"
+    assert payload["order_type"].name == "LIMIT"
+    assert str(payload["quantity"]) == "0.50"
+    assert payload["reduce_only"] is True
+    assert payload["leverage"] == 3
+    assert any("status" in line for line in printed)

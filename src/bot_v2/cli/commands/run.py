@@ -1,0 +1,47 @@
+"""Run command for the trading bot CLI."""
+
+from __future__ import annotations
+
+import asyncio
+import logging
+import signal
+from argparse import Namespace
+from types import FrameType
+
+from bot_v2.cli import options, services
+
+logger = logging.getLogger(__name__)
+
+
+def register(subparsers) -> None:
+    parser = subparsers.add_parser("run", help="Run the trading loop")
+    options.add_profile_option(parser)
+    options.add_runtime_options(parser)
+    parser.add_argument("--dev-fast", action="store_true", help="Run single cycle and exit")
+    parser.set_defaults(handler=execute)
+
+
+def execute(args: Namespace) -> int:
+    config = services.build_config_from_args(
+        args,
+        include=options.RUNTIME_CONFIG_KEYS,
+        skip={"dev_fast"},
+    )
+    bot = services.instantiate_bot(config)
+    return _run_bot(bot, single_cycle=args.dev_fast)
+
+
+def _run_bot(bot, *, single_cycle: bool) -> int:
+    def signal_handler(sig: int, frame: FrameType | None) -> None:  # pragma: no cover - signal
+        logger.info("Signal %s received, shutting down...", sig)
+        bot.running = False
+
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
+
+    try:
+        asyncio.run(bot.run(single_cycle=single_cycle))
+    except KeyboardInterrupt:  # pragma: no cover - defensive
+        logger.info("Shutdown complete.")
+
+    return 0

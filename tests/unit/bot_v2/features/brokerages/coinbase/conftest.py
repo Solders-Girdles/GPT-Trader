@@ -39,3 +39,21 @@ def coinbase_cdp_credentials() -> CDPCredentials:
         pytest.skip(skip_reason)
 
     return CDPCredentials(api_key=api_key, private_key=private_key)
+
+
+@pytest.fixture
+def fake_clock():
+    """Provides a controllable time source for testing."""
+    import time
+
+    class FakeClock:
+        def __init__(self):
+            self._current = time.time()
+
+        def time(self):
+            return self._current
+
+        def sleep(self, duration):
+            self._current += duration
+
+    return FakeClock()

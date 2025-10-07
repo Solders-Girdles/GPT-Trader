@@ -31,7 +31,7 @@ its ML workflows.
 4. Run the dev smoke test:
 
    ```bash
-   poetry run perps-bot --profile dev --dev-fast
+   poetry run perps-bot run --profile dev --dev-fast
    ```
 
    This executes one control cycle using the mock broker.
@@ -60,9 +60,9 @@ its ML workflows.
 - Manual tooling:
 
   ```bash
-  poetry run perps-bot --account-snapshot
-  poetry run perps-bot --convert USD:USDC:250
-  poetry run perps-bot --move-funds from_uuid:to_uuid:25
+  poetry run perps-bot account snapshot
+  poetry run perps-bot treasury convert --from USD --to USDC --amount 250
+  poetry run perps-bot treasury move --from-portfolio from_uuid --to-portfolio to_uuid --amount 25
   ```
 
 - Guardrails default to spot-only. Derivatives remain locked behind INTX access

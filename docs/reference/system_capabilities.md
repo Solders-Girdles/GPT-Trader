@@ -11,7 +11,7 @@ This document captures the December 2024 snapshot when GPT-Trader V2 operated as
 ### Core Components (Active)
 ```
 src/bot_v2/
-├── cli.py                      # Main entry point (perps-bot command)
+├── cli/                        # CLI package (run/account/orders/treasury)
 ├── features/                   # Vertical slice architecture (11 slices)
 │   ├── live_trade/            # Production trading engine
 │   ├── ml_strategy/           # ML-driven strategy selection
@@ -113,7 +113,7 @@ poetry install
 poetry run pytest -q
 
 # Run perpetuals bot
-poetry run perps-bot --profile dev --dev-fast
+poetry run perps-bot run --profile dev --dev-fast
 ```
 
 ### Key Commands
@@ -127,8 +127,9 @@ poetry run pytest tests/unit/bot_v2/ -v
 poetry run pytest --cov=bot_v2 --cov-report=term-missing
 
 # Production
-poetry run perps-bot --profile canary --dry-run
-poetry run perps-bot --profile prod
+poetry run perps-bot run --profile dev --dev-fast
+poetry run perps-bot run --profile canary --dry-run
+poetry run perps-bot run --profile prod
 ```
 
 ## Technical Debt Management
@@ -170,7 +171,7 @@ poetry run perps-bot --profile prod
 - [Coinbase Integration](coinbase_complete.md)
 
 ### Key Files
-- Entry Point: `src/bot_v2/cli.py`
+- Entry Point: `src/bot_v2/cli/__init__.py`
 - Main Bot: `src/bot_v2/orchestration/perps_bot.py`
 - Configuration: `config/environments/.env.template`
 - Tests: `tests/unit/bot_v2/`

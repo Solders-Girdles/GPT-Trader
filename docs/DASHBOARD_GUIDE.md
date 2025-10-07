@@ -10,7 +10,7 @@ retired.
 - `var/data/perps_bot/<profile>/metrics.json` captures the latest cycle metrics
   for each profile. Tools like `jq` or spreadsheets work well for ad-hoc
   reviews.
-- `poetry run perps-bot --account-snapshot` prints balances, fee tiers, and
+- `poetry run perps-bot account snapshot` prints balances, fee tiers, and
   permissions without executing the trading loop.
 - The risk manager records periodic snapshots via
   `bot_v2/features/live_trade/risk_metrics.py`; these feed dashboards and the

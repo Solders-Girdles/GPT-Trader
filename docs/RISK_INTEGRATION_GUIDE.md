@@ -13,7 +13,7 @@ together. Legacy material describing `src/bot/risk/*` has been archived.
 
 ## Execution Path
 
-1. `bot_v2/cli.py` builds a `BotConfig` with risk-specific overrides.
+1. `bot_v2/cli/__init__.py` builds a `BotConfig` with risk-specific overrides via the `run` command.
 2. `bot_v2/orchestration/bootstrap.py` seeds a `ServiceRegistry` for the active
    profile and passes it into `PerpsBot`.
 3. `bot_v2/orchestration/perps_bot.py` constructs the

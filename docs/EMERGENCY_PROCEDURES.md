@@ -28,14 +28,14 @@ pkill -f perps-bot
 export RISK_REDUCE_ONLY_MODE=1
 
 # Submit market exits via Coinbase UI or CLI previews while reduce-only is active.
-poetry run perps-bot --preview-order \
-  --order-symbol BTC-USD --order-side sell --order-type market --order-quantity CURRENT_SIZE
+poetry run perps-bot orders preview \
+  --symbol BTC-USD --side sell --type market --quantity CURRENT_SIZE
 ```
 
 ### 3. CHECK SYSTEM STATUS
 ```bash
 # Account snapshot with balances, permissions, and fee schedule
-poetry run perps-bot --account-snapshot
+poetry run perps-bot account snapshot
 
 # System health check (env, broker access, risk settings)
 poetry run python scripts/production_preflight.py --profile canary
@@ -52,10 +52,10 @@ poetry run python scripts/perps_dashboard.py --profile dev --refresh 5
 poetry run python scripts/perps_dashboard.py --profile dev --refresh 5
 
 # Quick bot smoke test
-poetry run perps-bot --profile dev --dev-fast
+poetry run perps-bot run --profile dev --dev-fast
 
 # Account telemetry on demand
-poetry run perps-bot --account-snapshot
+poetry run perps-bot account snapshot
 
 # Check error logs in real time
 tail -f var/logs/perps_bot.log | grep ERROR
@@ -109,7 +109,7 @@ tail -f var/logs/perps_bot.log | grep ERROR
 1. Check order size limits and increments
 2. Verify account balance and margin
 3. Check if reduce-only mode is active
-4. Dry-run the order with CLI preview: `poetry run perps-bot --preview-order --order-symbol BTC-PERP ...`
+4. Dry-run the order with CLI preview: `poetry run perps-bot orders preview --symbol BTC-PERP ...`
 
 ### Issue: High Leverage Warning
 **Symptoms**: Leverage approaching maximum
@@ -127,13 +127,13 @@ tail -f var/logs/perps_bot.log | grep ERROR
 poetry run python scripts/production_preflight.py --profile canary
 
 # 2. Test a single cycle in mock mode
-poetry run perps-bot --profile dev --dev-fast
+poetry run perps-bot run --profile dev --dev-fast
 
 # 3. Verify risk limits
 cat .env | grep RISK_
 
 # 4. Check account status
-poetry run perps-bot --account-snapshot
+poetry run perps-bot account snapshot
 ```
 
 ### Production Startup Sequence
@@ -145,7 +145,7 @@ export COINBASE_SANDBOX=0
 export COINBASE_ENABLE_DERIVATIVES=1
 
 # 2. Start with canary profile (minimal risk)
-poetry run perps-bot --profile canary --reduce-only
+poetry run perps-bot run --profile canary --reduce-only
 
 # 3. Monitor for first hour
 # - Check first 10 trades manually
@@ -215,8 +215,8 @@ poetry run perps-bot --profile canary --reduce-only
 ### Debug Workflow
 1. Increase verbosity when needed: `export LOG_LEVEL=DEBUG` before restarting the bot.
 2. Inspect recent activity in `var/logs/perps_bot.log` and the EventStore metrics.
-3. Reproduce issues with the dev profile: `poetry run perps-bot --profile dev --dev-fast`.
-4. Capture telemetry snapshots via `poetry run perps-bot --account-snapshot` for audit trails.
+3. Reproduce issues with the dev profile: `poetry run perps-bot run --profile dev --dev-fast`.
+4. Capture telemetry snapshots via `poetry run perps-bot account snapshot` for audit trails.
 5. Use `poetry run pytest tests/unit/bot_v2 -k <keyword>` to target suspect components.
 
 ## 🔍 PERFORMANCE ANALYSIS
@@ -329,16 +329,16 @@ PERPS_PAPER=1                        # Paper trading mode
 ### Common Commands
 ```bash
 # Start trading (spot)
-poetry run perps-bot --profile canary
+poetry run perps-bot run --profile canary
 
 # Dry run test
-poetry run perps-bot --profile dev --dry-run
+poetry run perps-bot run --profile dev --dry-run
 
 # Single cycle test
-poetry run perps-bot --profile dev --dev-fast
+poetry run perps-bot run --profile dev --dev-fast
 
 # Account snapshot
-poetry run perps-bot --account-snapshot
+poetry run perps-bot account snapshot
 
 # Emergency stop
 export RISK_KILL_SWITCH_ENABLED=1 && pkill -f perps-bot

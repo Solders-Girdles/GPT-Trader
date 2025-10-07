@@ -25,8 +25,8 @@ Short, actionable readiness checklist. Complete each section before increasing s
 - Time‑of‑day leverage (10x window): set `RISK_DAYTIME_START_UTC`/`RISK_DAYTIME_END_UTC`; apply `RISK_DAY_*`=10, `RISK_NIGHT_*`=lower
 
 ## 4) Dry Runs
-- Dev mock: `python -m bot_v2.cli --profile dev --dry-run --symbols BTC-PERP` runs one cycle
-- Canary smoke (reduce‑only): `python -m bot_v2.cli --profile canary --symbols BTC-PERP --reduce-only` with tiny limits
+- Dev mock: `python -m bot_v2.cli run --profile dev --dry-run --symbols BTC-PERP` runs one cycle
+- Canary smoke (reduce-only): `python -m bot_v2.cli run --profile canary --symbols BTC-PERP --reduce-only` with tiny limits
 - Logs created under `var/logs/` and event store under `var/data/perps_bot/{profile}`
 
 ## 5) Funding & Costs Sanity
@@ -49,7 +49,7 @@ Short, actionable readiness checklist. Complete each section before increasing s
 ---
 
 Commands reference
-- Runner: `python -m bot_v2.cli --profile canary --symbols BTC-PERP --reduce-only`
+- Runner: `python -m bot_v2.cli run --profile canary --symbols BTC-PERP --reduce-only`
 - Kill switch: export `RISK_KILL_SWITCH_ENABLED=1` (then restart) to halt; set `0` to resume
 - Logs: `var/logs/perps_trading.log`, JSONL at `var/logs/perps_trading.jsonl`
 - Health: `var/data/perps_bot/{profile}/health.json`

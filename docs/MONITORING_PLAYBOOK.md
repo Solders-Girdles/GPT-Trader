@@ -10,7 +10,7 @@ its ML pipeline.
   `/metrics.json` from the bot's `metrics.json` output.
 - **Logs**: Structured JSON (or text) emitted by `perps-bot`; forward to your
   logging stack for search and alerting.
-- **Account telemetry**: `poetry run perps-bot --account-snapshot` when a manual
+- **Account telemetry**: `poetry run perps-bot account snapshot` when a manual
   check is required.
 
 Run the exporter alongside the bot:
@@ -74,7 +74,7 @@ annotations:
 2. Tail the bot logs for errors (`grep "CRITICAL"`).
 3. If the bot crashed, restart using your deployment tooling
    (e.g., `supervisorctl restart perps-bot` or redeploy via CI).
-4. Validate recovery with `poetry run perps-bot --profile dev --dev-fast` in a
+4. Validate recovery with `poetry run perps-bot run --profile dev --dev-fast` in a
    staging environment before enabling live trading if the crash was caused by a
    code change.
 
@@ -84,9 +84,9 @@ annotations:
 2. Ensure positions are flattened; if not, use manual order tooling:
 
    ```bash
-   poetry run perps-bot --profile spot --preview-order \
-     --order-symbol BTC-USD --order-side sell --order-type market \
-     --order-quantity 0.01 --order-reduce-only
+   poetry run perps-bot orders preview \
+     --symbol BTC-USD --side sell --type market \
+     --quantity 0.01 --reduce-only
    ```
 
 3. Keep trading halted until root cause (market regime, bug, configuration) is

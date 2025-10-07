@@ -310,7 +310,7 @@ monitoring: real-time
 ## Verification Path
 
 1. **Regression Suite**: `poetry run pytest -q`
-2. **Smoke Test**: `poetry run perps-bot --profile dev --dev-fast`
+2. **Smoke Test**: `poetry run perps-bot run --profile dev --dev-fast`
 3. **Validation**: `python scripts/validation/verify_core.py --check all`
 
 ## Dependencies

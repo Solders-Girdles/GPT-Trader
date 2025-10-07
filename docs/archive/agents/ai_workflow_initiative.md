@@ -5,7 +5,7 @@ This document tracks the cross-agent effort to streamline the GPT-Trader environ
 ## 1. Mission & Outcomes
 - **Mission:** Cut the average agent setup and orientation time in half while improving naming consistency, documentation accuracy, and testing confidence.
 - **Success Metrics:**
-  - < 15 minutes for a new or returning agent to reach first command execution (`poetry run perps-bot --profile dev --dev-fast`).
+  - < 15 minutes for a new or returning agent to reach first command execution (`poetry run perps-bot run --profile dev --dev-fast`).
   - < 3 minutes to surface naming or configuration conflicts via automation.
   - < 5% doc drift incidents per sprint (tracked in weekly log).
   - 100% of refactors accompanied by updated docs and targeted tests.

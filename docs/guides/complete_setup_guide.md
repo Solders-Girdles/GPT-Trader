@@ -200,7 +200,7 @@ poetry run python scripts/production_preflight.py --profile canary
 ### Step 2: Test with Development Profile
 ```bash
 # Run with mock broker (no real trades)
-poetry run perps-bot --profile dev --dev-fast
+poetry run perps-bot run --profile dev --dev-fast
 
 # This runs for 60 seconds with simulated data
 ```
@@ -208,7 +208,7 @@ poetry run perps-bot --profile dev --dev-fast
 ### Step 3: Test with Dry Run
 ```bash
 # Test with real market data but no trades
-poetry run perps-bot --profile canary --dry-run
+poetry run perps-bot run --profile canary --dry-run
 
 # Monitor the output for proper data reception
 ```
@@ -216,7 +216,7 @@ poetry run perps-bot --profile canary --dry-run
 ### Step 4: First Live Trade (Canary)
 ```bash
 # When ready for real (tiny) trades
-poetry run perps-bot --profile canary
+poetry run perps-bot run --profile canary
 
 # This will trade with minimal position sizes
 ```
@@ -236,7 +236,7 @@ poetry run pytest -q
 ### Check Streaming Health
 ```bash
 # Smoke test the trading loop (mock broker)
-poetry run perps-bot --profile dev --dev-fast
+poetry run perps-bot run --profile dev --dev-fast
 
 # Inspect heartbeat metrics and mark timestamps
 poetry run python scripts/perps_dashboard.py --profile dev --refresh 5 --window-min 5

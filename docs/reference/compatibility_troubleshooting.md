@@ -300,7 +300,7 @@ python -c "import sys; print(sys.version)"
 python -c "import pandas; print(pandas.__version__)"
 
 # Test Coinbase connectivity
-poetry run perps-bot --profile dev --dev-fast
+poetry run perps-bot run --profile dev --dev-fast
 ```
 
 ### Support Resources

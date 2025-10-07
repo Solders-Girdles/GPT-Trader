@@ -21,7 +21,7 @@ This plan complements the draft naming standards (`docs/agents/naming_standards_
 - **Risk:** Low; changes are local variables/parameters but touch initialization paths.
 - **Verification:**
   - Run targeted tests covering config load (`tests/bot_v2/config`) and orchestration bootstrap.
-  - `poetry run perps-bot --profile dev --dev-fast` smoke test.
+  - `poetry run perps-bot run --profile dev --dev-fast` smoke test.
   - Confirm docs referencing these names (if any) are updated.
 - **Backlog Seeds:**
   - `R-001` ConfigStore variable rename.
@@ -39,7 +39,7 @@ This plan complements the draft naming standards (`docs/agents/naming_standards_
 - **Verification:**
 - Run targeted suites: `tests/unit/bot_v2/orchestration/test_bootstrap.py`, `tests/unit/bot_v2/features/live_trade/test_advanced_execution.py`, Coinbase adapter/unit suites under `tests/unit/bot_v2/features/brokerages/coinbase/`.
   - Execute `poetry run pytest tests/unit/bot_v2/errors` (once curated) to validate re-export shims.
-  - Manual smoke: `poetry run perps-bot --profile dev --dev-fast` to confirm orchestrator imports remain healthy.
+  - Manual smoke: `poetry run perps-bot run --profile dev --dev-fast` to confirm orchestrator imports remain healthy.
 - **Backlog Seeds:**
   - `R-050` Error hierarchy reshuffle (`errors.py` → `errors/base.py`).
   - `R-051` Logging/config helper package moves.
@@ -65,7 +65,7 @@ This plan complements the draft naming standards (`docs/agents/naming_standards_
 ## Wave 2 – Quantity Terminology Alignment (Sprint 1 core effort)
 - **Scope:** Replace `qty`/`order_qty` naming with `quantity` across the trading stack.
   - Data models (`Order.qty`, `Position.qty`, etc.) in `src/bot_v2/features/brokerages/core/interfaces.py` and downstream consumers.
-  - CLI flags and arguments now expose only `--order-quantity`; the legacy `--order-qty` alias has been removed from `src/bot_v2/cli.py`.
+  - CLI flags and arguments now expose only `--order-quantity`; the legacy `--order-qty` alias was removed when the CLI moved to `src/bot_v2/cli/`.
   - Strategy modules, deterministic broker, backtests, and tests relying on `qty`.
   - Serialization/logging emitters to prefer `quantity` while accepting legacy fields during transition.
 - **Risk:** High; affects public CLI, persisted state representations, and broad strategy code.

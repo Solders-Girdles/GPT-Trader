@@ -30,7 +30,7 @@ fills are used automatically.
 ## 3. Smoke-Test the Dev Profile
 
 ```bash
-poetry run perps-bot --profile dev --dev-fast
+poetry run perps-bot run --profile dev --dev-fast
 ```
 
 What to expect:
@@ -52,7 +52,7 @@ export COINBASE_API_SECRET="..."
 export COINBASE_API_PASSPHRASE="..."
 export SPOT_FORCE_LIVE=1
 
-poetry run perps-bot --profile spot --dev-fast
+poetry run perps-bot run --profile spot --dev-fast
 ```
 
 Use the `spot` profile for live spot execution; it keeps leverage at 1x and

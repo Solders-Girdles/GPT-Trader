@@ -248,7 +248,7 @@ Notes:
 poetry run python scripts/production_preflight.py --profile canary
 
 # Smoke test the trading loop (mock broker)
-poetry run perps-bot --profile dev --dev-fast
+poetry run perps-bot run --profile dev --dev-fast
 
 # Inspect streaming telemetry
 poetry run python scripts/perps_dashboard.py --profile dev --refresh 5 --window-min 5
@@ -264,7 +264,7 @@ poetry run python scripts/monitoring/export_metrics.py --metrics-file var/data/p
 For development without API calls:
 
 ```bash
-PERPS_FORCE_MOCK=1 poetry run perps-bot --profile dev
+PERPS_FORCE_MOCK=1 poetry run perps-bot run --profile dev
 ```
 
 Features:
@@ -278,7 +278,7 @@ Features:
 For integration testing with real API:
 
 ```bash
-COINBASE_SANDBOX=1 poetry run perps-bot --profile dev
+COINBASE_SANDBOX=1 poetry run perps-bot run --profile dev
 ```
 
 **Limitations**:
@@ -291,7 +291,7 @@ COINBASE_SANDBOX=1 poetry run perps-bot --profile dev
 For safe production testing:
 
 ```bash
-poetry run perps-bot --profile canary --dry-run
+poetry run perps-bot run --profile canary --dry-run
 ```
 
 Features:
@@ -355,13 +355,13 @@ If migrating from older equities-based system:
 
 ```bash
 # Run spot bot in production profile
-poetry run perps-bot --profile prod
+poetry run perps-bot run --profile prod
 
 # Check system health
 poetry run python scripts/production_preflight.py --profile canary
 
 # Account snapshot (balances, permissions, fee schedule)
-poetry run perps-bot --account-snapshot
+poetry run perps-bot account snapshot
 
 # Emergency stop
 export RISK_KILL_SWITCH_ENABLED=1 && pkill -f perps-bot
@@ -369,7 +369,7 @@ export RISK_KILL_SWITCH_ENABLED=1 && pkill -f perps-bot
 
 ### Key Files
 
-- Main entry: `src/bot_v2/cli.py`
+- Main entry: `src/bot_v2/cli/__init__.py`
 - Coinbase client: `src/bot_v2/features/brokerages/coinbase/client.py`
 - WebSocket handler: `src/bot_v2/features/brokerages/coinbase/ws.py`
 - Configuration: `config/environments/.env.template`

@@ -56,7 +56,7 @@ cp config/environments/.env.template .env
 poetry run python scripts/production_preflight.py --profile canary
 
 # Smoke test the trading loop
-poetry run perps-bot --profile dev --dev-fast
+poetry run perps-bot run --profile dev --dev-fast
 
 # Inspect streaming telemetry
 poetry run python scripts/perps_dashboard.py --profile dev --refresh 5 --window-min 5
@@ -65,21 +65,21 @@ poetry run python scripts/perps_dashboard.py --profile dev --refresh 5 --window-
 ### 3. Canary Deployment
 ```bash
 # Start with canary profile (ultra-safe)
-poetry run perps-bot --profile canary --dry-run
+poetry run perps-bot run --profile canary --dry-run
 
 # Monitor for 24 hours
 # Check logs: tail -f var/logs/perps_bot.log
 
 # If successful, enable live spot trading
-poetry run perps-bot --profile canary
+poetry run perps-bot run --profile canary
 ```
 
 ### 4. Production Rollout
 ```bash
 # Gradual scaling approach (spot)
-poetry run perps-bot --profile prod --dry-run             # Validate config under prod settings
-poetry run perps-bot --profile prod --reduce-only         # Warm start with exits only
-poetry run perps-bot --profile prod                       # Full trading once stable
+poetry run perps-bot run --profile prod --dry-run             # Validate config under prod settings
+poetry run perps-bot run --profile prod --reduce-only         # Warm start with exits only
+poetry run perps-bot run --profile prod                       # Full trading once stable
 ```
 
 ## Phased Rollout Plan

@@ -34,6 +34,3 @@ def ensure_directories(paths: Iterable[Path] | None = None) -> None:
     targets = list(paths or (VAR_DIR, LOG_DIR, RESULTS_DIR, RUNTIME_DATA_DIR))
     for path in targets:
         path.mkdir(parents=True, exist_ok=True)
-
-
-ensure_directories()

@@ -18,6 +18,7 @@ from bot_v2.features.brokerages.core.interfaces import (
     Position,
     Product,
 )
+from bot_v2.monitoring.configuration_guardian import ConfigurationGuardian
 from bot_v2.monitoring.system import get_logger as _get_plog
 from bot_v2.orchestration.account_telemetry import AccountTelemetryService
 from bot_v2.orchestration.config_controller import ConfigChange, ConfigController
@@ -51,7 +52,9 @@ class PerpsBot:
         self._init_configuration_state(config, registry)
         self._init_runtime_state()
         self._bootstrap_storage()
+        self._create_baseline_snapshot()
         self._construct_services()
+        self._init_configuration_guardian()
         self.runtime_coordinator.bootstrap()
         self._init_accounting_services()
         self._init_market_services()
@@ -89,12 +92,70 @@ class PerpsBot:
         self._symbol_strategies: dict[str, Any] = {}
         self.strategy: Any | None = None
         self._exec_engine: LiveExecutionEngine | AdvancedExecutionEngine | None = None
+        self._process_symbol_dispatch: Any | None = None
+        self._process_symbol_needs_context: bool | None = None
 
     def _bootstrap_storage(self) -> None:
         storage_ctx = StorageBootstrapper(self.config, self.registry).bootstrap()
         self.event_store = storage_ctx.event_store
         self.orders_store = storage_ctx.orders_store
         self.registry = storage_ctx.registry
+
+    def _create_baseline_snapshot(self) -> None:
+        """Create baseline snapshot for configuration drift detection."""
+        # Get current state for baseline
+        config_dict = {
+            "profile": self.config.profile,
+            "dry_run": self.config.dry_run,
+            "symbols": list(self.config.symbols) if self.config.symbols else [],
+            "derivatives_enabled": self._derivatives_enabled,
+            "update_interval": self.config.update_interval,
+            "short_ma": self.config.short_ma,
+            "long_ma": self.config.long_ma,
+            "target_leverage": self.config.target_leverage,
+            "trailing_stop_pct": self.config.trailing_stop_pct,
+            "enable_shorts": self.config.enable_shorts,
+            "max_position_size": self.config.max_position_size,
+            "max_leverage": self.config.max_leverage,
+            "reduce_only_mode": self.config.reduce_only_mode,
+            "mock_broker": self.config.mock_broker,
+            "mock_fills": self.config.mock_fills,
+            "enable_order_preview": self.config.enable_order_preview,
+            "account_telemetry_interval": self.config.account_telemetry_interval,
+            "trading_window_start": self.config.trading_window_start,
+            "trading_window_end": self.config.trading_window_end,
+            "trading_days": self.config.trading_days,
+            "daily_loss_limit": self.config.daily_loss_limit,
+            "time_in_force": self.config.time_in_force,
+            "perps_enable_streaming": self.config.perps_enable_streaming,
+            "perps_stream_level": self.config.perps_stream_level,
+            "perps_paper_trading": self.config.perps_paper_trading,
+            "perps_force_mock": self.config.perps_force_mock,
+            "perps_position_fraction": self.config.perps_position_fraction,
+            "perps_skip_startup_reconcile": self.config.perps_skip_startup_reconcile,
+        }
+
+        # Get initial positions and equity (will be empty/zero at startup)
+        active_symbols = list(self.config.symbols) if self.config.symbols else []
+        positions = []  # Empty at startup
+        account_equity = None  # Not known yet
+
+        # Get broker type
+        broker_type = "mock" if self.config.mock_broker else "live"
+
+        self.baseline_snapshot = ConfigurationGuardian.create_baseline_snapshot(
+            config_dict=config_dict,
+            active_symbols=active_symbols,
+            positions=positions,
+            account_equity=account_equity,
+            profile=self.config.profile,
+            broker_type=broker_type
+        )
+
+    def _init_configuration_guardian(self) -> None:
+        """Initialize the configuration guardian."""
+        self.configuration_guardian = ConfigurationGuardian(self.baseline_snapshot)
+        logger.info("ConfigurationGuardian initialized for runtime monitoring")
 
     def _construct_services(self) -> None:
         self.strategy_orchestrator = StrategyOrchestrator(self)
@@ -229,15 +290,81 @@ class PerpsBot:
 
     async def run_cycle(self) -> None:
         logger.debug("Running update cycle")
+
+        # Fetch state needed for guardian validation
+        balances: Sequence[Balance] = []
+        positions: Sequence[Position] = []
+        position_map: dict[str, Position] = {}
+        account_equity: Decimal | None = None
+
+        try:
+            balances = await asyncio.to_thread(self.broker.list_balances)
+        except Exception as exc:
+            logger.warning("Unable to fetch balances for trading cycle: %s", exc)
+
+        try:
+            positions = await asyncio.to_thread(self.broker.list_positions)
+        except Exception as exc:
+            logger.warning("Unable to fetch positions for trading cycle: %s", exc)
+
+        try:
+            # Try to get account equity if possible
+            account_info = await asyncio.to_thread(self.broker.get_account_info)
+            account_equity = getattr(account_info, 'equity', None)
+            if account_equity is not None:
+                account_equity = Decimal(str(account_equity))
+        except Exception as exc:
+            logger.debug("Unable to fetch account equity: %s", exc)
+
+        if positions:
+            position_map = {p.symbol: p for p in positions if hasattr(p, "symbol")}
+
+        # Check for configuration drift before proceeding with trading
+        # Pass current config as proposed_config to validate against current trading state
+        current_config_dict = {
+            "profile": self.config.profile,
+            "symbols": list(self.config.symbols) if self.config.symbols else [],
+            "max_leverage": self.config.max_leverage,
+            "max_position_size": self.config.max_position_size,
+            "mock_broker": self.config.mock_broker,
+        }
+
+        validation_result = self.configuration_guardian.pre_cycle_check(
+            proposed_config_dict=current_config_dict,
+            current_balances=balances,
+            current_positions=list(positions),
+            current_equity=account_equity
+        )
+
+        if not validation_result.is_valid:
+            logger.warning("Configuration drift detected: %s", validation_result.errors)
+            for error in validation_result.errors:
+                logger.error("Configuration error: %s", error)
+
+            # Check if we have critical errors requiring emergency shutdown
+            # vs high errors requiring reduce-only mode
+            has_critical_errors = any(
+                "critical" in error.lower() or "emergency_shutdown" in error.lower()
+                for error in validation_result.errors
+            )
+
+            if has_critical_errors:
+                logger.critical("Critical configuration violations detected - initiating emergency shutdown")
+                # Critical events require emergency shutdown
+                self.running = False
+                await self.shutdown()
+                return
+            else:
+                # High events require reduce-only mode
+                logger.warning("High-severity configuration violations detected - switching to reduce-only mode")
+                self.set_reduce_only_mode(True, "Configuration drift detected")
+                return
+
         await self.update_marks()
         if not self._session_guard.should_trade():
             logger.info("Outside trading window; skipping trading actions this cycle")
             await self.system_monitor.log_status()
             return
-
-        balances: Sequence[Balance] = []
-        positions: Sequence[Position] = []
-        position_map: dict[str, Position] = {}
 
         try:
             balances = await asyncio.to_thread(self.broker.list_balances)
@@ -252,8 +379,7 @@ class PerpsBot:
         if positions:
             position_map = {p.symbol: p for p in positions if hasattr(p, "symbol")}
 
-        process_sig = inspect.signature(self.process_symbol)
-        expects_context = len(process_sig.parameters) > 1
+        expects_context = self._process_symbol_expects_context()
 
         tasks = []
         for symbol in self.symbols:
@@ -271,6 +397,17 @@ class PerpsBot:
         position_map: dict[str, Position] | None = None,
     ) -> None:
         await self.strategy_orchestrator.process_symbol(symbol, balances, position_map)
+
+    def _process_symbol_expects_context(self) -> bool:
+        current_dispatch = getattr(self.process_symbol, "__func__", self.process_symbol)
+        if (
+            self._process_symbol_needs_context is None
+            or current_dispatch is not self._process_symbol_dispatch
+        ):
+            process_sig = inspect.signature(self.process_symbol)
+            self._process_symbol_needs_context = len(process_sig.parameters) > 1
+            self._process_symbol_dispatch = current_dispatch
+        return self._process_symbol_needs_context
 
     async def execute_decision(
         self,
@@ -295,9 +432,22 @@ class PerpsBot:
 
     # ------------------------------------------------------------------
     async def update_marks(self) -> None:
-        for symbol in self.symbols:
+        symbols = tuple(self.symbols)
+        if not symbols:
+            return
+
+        quotes = await asyncio.gather(
+            *(asyncio.to_thread(self.broker.get_quote, symbol) for symbol in symbols),
+            return_exceptions=True,
+        )
+
+        for symbol, result in zip(symbols, quotes):
+            if isinstance(result, Exception):
+                logger.error("Error fetching quote for %s: %s", symbol, result)
+                continue
+
             try:
-                quote = await asyncio.to_thread(self.broker.get_quote, symbol)
+                quote = result
                 if quote is None:
                     raise RuntimeError(f"No quote for {symbol}")
                 last_price = getattr(quote, "last", getattr(quote, "last_price", None))

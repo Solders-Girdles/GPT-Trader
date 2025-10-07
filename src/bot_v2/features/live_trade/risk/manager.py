@@ -140,6 +140,31 @@ class LiveRiskManager:
         else:
             logger.info("LiveRiskManager initialized with a non-standard config object")
 
+    def __setattr__(self, name: str, value: Any) -> None:
+        super().__setattr__(name, value)
+        if name == "_now_provider":
+            state_manager = getattr(self, "state_manager", None)
+            if state_manager is not None:
+                state_manager._now_provider = value
+            pre_trade_validator = getattr(self, "pre_trade_validator", None)
+            if pre_trade_validator is not None:
+                pre_trade_validator._now_provider = value
+            runtime_monitor = getattr(self, "runtime_monitor", None)
+            if runtime_monitor is not None:
+                runtime_monitor._now_provider = value
+
+    def set_event_store(self, event_store: EventStore) -> None:
+        """Rebind all subcomponents to a shared event store."""
+        self.event_store = event_store
+        if hasattr(self.state_manager, "event_store"):
+            self.state_manager.event_store = event_store
+        if hasattr(self.position_sizer, "event_store"):
+            self.position_sizer.event_store = event_store
+        if hasattr(self.pre_trade_validator, "event_store"):
+            self.pre_trade_validator.event_store = event_store
+        if hasattr(self.runtime_monitor, "event_store"):
+            self.runtime_monitor.event_store = event_store
+
     # ========== State Management Delegation ==========
 
     def is_reduce_only_mode(self) -> bool:

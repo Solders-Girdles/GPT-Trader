@@ -129,8 +129,9 @@ def to_quote(payload: dict) -> Quote:
 
 
 def to_candle(payload: dict) -> Candle:
+    ts_str = payload.get("time") or payload.get("ts") or datetime.utcnow().isoformat()
     return Candle(
-        ts=datetime.fromisoformat(payload.get("time") or payload.get("ts")),
+        ts=datetime.fromisoformat(ts_str),
         open=Decimal(str(payload.get("open"))),
         high=Decimal(str(payload.get("high"))),
         low=Decimal(str(payload.get("low"))),

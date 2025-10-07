@@ -152,6 +152,18 @@ class StateCollector:
                 if bid > Decimal("0") and ask > Decimal("0"):
                     return (bid + ask) / Decimal("2")
 
+        # Broker quote fallback
+        if hasattr(self.broker, "get_quote"):
+            try:
+                quote = self.broker.get_quote(symbol)  # type: ignore[attr-defined]
+                last = getattr(quote, "last", None)
+                if last is not None:
+                    last_decimal = Decimal(str(last))
+                    if last_decimal > Decimal("0"):
+                        return last_decimal
+            except Exception:
+                pass
+
         # Last resort: use last price or quote_increment
         if hasattr(product, "price") and product.price:
             return Decimal(str(product.price))

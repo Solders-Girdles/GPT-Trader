@@ -7,7 +7,8 @@ from collections.abc import Mapping, MutableMapping
 from dataclasses import dataclass
 from typing import Any
 
-from bot_v2.monitoring.alerting_system import AlertingSystem, AlertLevel
+from bot_v2.monitoring.alert_types import AlertSeverity
+from bot_v2.monitoring.alerting_system import AlertingSystem
 from bot_v2.monitoring.metrics_collector import record_counter
 
 logger = logging.getLogger(__name__)
@@ -133,10 +134,10 @@ def record_guard_failure(error: RiskGuardError) -> None:
         extra={"guard_failure": failure.as_log_args()},
     )
 
-    level = AlertLevel.WARNING if failure.recoverable else AlertLevel.CRITICAL
+    severity = AlertSeverity.WARNING if failure.recoverable else AlertSeverity.CRITICAL
     try:
         _get_alert_system().trigger_alert(
-            level=level,
+            severity,
             category=f"risk_guard.{failure.guard}",
             message=failure.message,
             metadata=dict(failure.details),

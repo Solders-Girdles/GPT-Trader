@@ -32,7 +32,11 @@ def derivatives_enabled(profile: Profile) -> bool:
         profile_value = str(getattr(profile, "value", profile or "")).lower()
         if profile_value == "spot":
             return False
-    return os.getenv("COINBASE_ENABLE_DERIVATIVES", "0") == "1"
+
+    env_value = os.getenv("COINBASE_ENABLE_DERIVATIVES")
+    if env_value is not None:
+        return env_value == "1"
+    return True
 
 
 def normalize_symbols(

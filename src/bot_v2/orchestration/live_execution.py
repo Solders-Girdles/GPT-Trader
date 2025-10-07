@@ -91,8 +91,25 @@ class LiveExecutionEngine:
             enable_preview: Enable order preview (defaults to env var)
         """
         self.broker = broker
-        self.risk_manager = risk_manager or LiveRiskManager()
-        self.event_store = event_store or EventStore()
+
+        provided_manager = risk_manager is not None
+        store = event_store
+        if store is None and provided_manager:
+            store = getattr(risk_manager, "event_store", None)
+        if store is None:
+            store = EventStore()
+        self.event_store = store
+
+        if provided_manager:
+            self.risk_manager = risk_manager
+            if getattr(self.risk_manager, "event_store", None) is not store:
+                # Ensure the injected manager and its collaborators use the shared store.
+                if hasattr(self.risk_manager, "set_event_store"):
+                    self.risk_manager.set_event_store(store)
+                else:  # Fallback for legacy managers without helper
+                    self.risk_manager.event_store = store
+        else:
+            self.risk_manager = LiveRiskManager(event_store=store)
         self.bot_id = bot_id
         self.slippage_multipliers = slippage_multipliers or {}
 
@@ -112,17 +129,22 @@ class LiveExecutionEngine:
 
         # Initialize helper modules
         self.state_collector = StateCollector(broker)
-        self.order_submitter = OrderSubmitter(broker, event_store, bot_id, self.open_orders)
+        self.order_submitter = OrderSubmitter(
+            broker,
+            self.event_store,
+            bot_id,
+            self.open_orders,
+        )
         self.order_validator = OrderValidator(
             broker,
-            risk_manager,
+            self.risk_manager,
             self.enable_order_preview,
             self.order_submitter.record_preview,
             self.order_submitter.record_rejection,
         )
         self.guard_manager = GuardManager(
             broker,
-            risk_manager,
+            self.risk_manager,
             self.state_collector.calculate_equity_from_balances,
             self.cancel_all_orders,
             lambda: None,  # Cache invalidation handled by guard_manager itself

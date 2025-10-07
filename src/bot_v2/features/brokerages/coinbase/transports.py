@@ -19,7 +19,7 @@ class RealTransport:
 
     def __init__(self) -> None:
         self.ws = None
-        self.url = None
+        self.url: str | None = None
 
     def connect(self, url: str, headers: dict[str, str] | None = None) -> None:
         """Connect to the WebSocket server with optional headers."""
@@ -81,7 +81,7 @@ class MockTransport:
     def __init__(self, messages: list | None = None) -> None:
         self.messages = messages or []
         self.connected = False
-        self.subscriptions = []
+        self.subscriptions: list[dict[str, Any]] = []
 
     def connect(self, url: str, headers: dict[str, str] | None = None) -> None:
         """Mock connection with optional headers."""

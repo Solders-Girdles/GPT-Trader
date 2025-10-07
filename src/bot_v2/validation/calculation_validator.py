@@ -41,16 +41,22 @@ def manual_backtest_example() -> (
         else:
             ma5.append(None)
 
+        # Extract values to satisfy type checker
+        ma3_curr = ma3[i]
+        ma5_curr = ma5[i]
+        ma3_prev = ma3[i - 1] if i > 0 else None
+        ma5_prev = ma5[i - 1] if i > 0 else None
+
         if (
             i > 0
-            and ma3[i] is not None
-            and ma5[i] is not None
-            and ma3[i - 1] is not None
-            and ma5[i - 1] is not None
+            and ma3_curr is not None
+            and ma5_curr is not None
+            and ma3_prev is not None
+            and ma5_prev is not None
         ):
-            if ma3[i] > ma5[i] and ma3[i - 1] <= ma5[i - 1]:
+            if ma3_curr > ma5_curr and ma3_prev <= ma5_prev:
                 signals.append("BUY")
-            elif ma3[i] < ma5[i] and ma3[i - 1] >= ma5[i - 1]:
+            elif ma3_curr < ma5_curr and ma3_prev >= ma5_prev:
                 signals.append("SELL")
             else:
                 signals.append("HOLD")
@@ -112,7 +118,8 @@ def manual_backtest_example() -> (
         elif signal == "SELL" and position > 0:
             proceeds = position * prices[i]
             cash += proceeds
-            pnl = proceeds - trades[-1]["cost"]
+            last_cost_val = float(trades[-1]["cost"])  # type: ignore[arg-type]
+            pnl = proceeds - last_cost_val
             trades.append(
                 {
                     "day": i + 1,

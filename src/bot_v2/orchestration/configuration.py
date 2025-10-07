@@ -13,6 +13,8 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, cast
 
+from bot_v2.config.schemas import BotConfigSchema, ConfigValidationResult
+from bot_v2.config.types import Profile
 from bot_v2.orchestration.symbols import (
     derivatives_enabled as _resolve_derivatives_enabled,
 )
@@ -39,16 +41,6 @@ TOP_VOLUME_BASES = [
 DEFAULT_SPOT_SYMBOLS = [f"{base}-USD" for base in TOP_VOLUME_BASES]
 
 DEFAULT_SPOT_RISK_PATH = Path(__file__).resolve().parents[3] / "config" / "risk" / "spot_top10.json"
-
-
-class Profile(Enum):
-    """Configuration profiles."""
-
-    DEV = "dev"
-    DEMO = "demo"
-    PROD = "prod"
-    CANARY = "canary"
-    SPOT = "spot"
 
 
 @dataclass
@@ -308,6 +300,9 @@ class ConfigManager:
         )
 
     def _apply_overrides(self, config: BotConfig) -> BotConfig:
+        # Validate overrides before applying them
+        self._validate_overrides()
+
         for key, value in self.overrides.items():
             if value is None:
                 continue
@@ -316,6 +311,31 @@ class ConfigManager:
             if hasattr(config, key):
                 setattr(config, key, value)
         return config
+
+    def _validate_overrides(self) -> None:
+        """Validate overrides before applying them."""
+        errors = []
+
+        # Validate symbols override specifically (this happens before normalization)
+        if "symbols" in self.overrides:
+            override_symbols = self.overrides.get("symbols")
+            if override_symbols is not None:
+                if not isinstance(override_symbols, (list, tuple)):
+                    errors.append("symbols overrides must be a list or tuple")
+                else:
+                    symbols_list = list(override_symbols)
+                    if not symbols_list:
+                        errors.append("symbols overrides must contain at least one symbol")
+                    else:
+                        invalid_symbols = []
+                        for i, symbol in enumerate(symbols_list):
+                            if not isinstance(symbol, str) or not symbol.strip():
+                                invalid_symbols.append(f"[{i}]: {repr(symbol)}")
+                        if invalid_symbols:
+                            errors.append(f"symbols overrides must contain only non-empty strings: {', '.join(invalid_symbols)}")
+
+        if errors:
+            raise ConfigValidationError(errors)
 
     def _post_process(self, config: BotConfig) -> BotConfig:
         if self.profile == Profile.CANARY:
@@ -347,36 +367,85 @@ class ConfigManager:
         return config
 
     def _validate(self, config: BotConfig) -> None:
-        errors: list[str] = []
-
-        if not isinstance(config.profile, Profile):
-            errors.append("profile must be a Profile enum value")
-
-        symbols = list(config.symbols or [])
-        if not symbols or not all(isinstance(sym, str) and sym.strip() for sym in symbols):
-            errors.append("symbols must contain at least one non-empty string")
-
-        if config.update_interval <= 0:
-            errors.append("update_interval must be > 0")
-
+        """Validate configuration using pydantic schema."""
         try:
-            if Decimal(str(config.max_position_size)) <= Decimal("0"):
-                errors.append("max_position_size must be positive")
-        except Exception:
-            errors.append("max_position_size must be numeric")
+            # Convert config to dict for schema validation
+            config_dict = {
+                "profile": config.profile,
+                "dry_run": config.dry_run,
+                "symbols": list(config.symbols) if config.symbols else None,
+                "derivatives_enabled": config.derivatives_enabled,
+                "update_interval": config.update_interval,
+                "short_ma": config.short_ma,
+                "long_ma": config.long_ma,
+                "target_leverage": config.target_leverage,
+                "trailing_stop_pct": config.trailing_stop_pct,
+                "enable_shorts": config.enable_shorts,
+                "max_position_size": config.max_position_size,
+                "max_leverage": config.max_leverage,
+                "reduce_only_mode": config.reduce_only_mode,
+                "mock_broker": config.mock_broker,
+                "mock_fills": config.mock_fills,
+                "enable_order_preview": config.enable_order_preview,
+                "account_telemetry_interval": config.account_telemetry_interval,
+                "trading_window_start": config.trading_window_start,
+                "trading_window_end": config.trading_window_end,
+                "trading_days": config.trading_days,
+                "daily_loss_limit": config.daily_loss_limit,
+                "time_in_force": config.time_in_force,
+                "perps_enable_streaming": config.perps_enable_streaming,
+                "perps_stream_level": config.perps_stream_level,
+                "perps_paper_trading": config.perps_paper_trading,
+                "perps_force_mock": config.perps_force_mock,
+                "perps_position_fraction": config.perps_position_fraction,
+                "perps_skip_startup_reconcile": config.perps_skip_startup_reconcile,
+            }
 
+            # Validate with pydantic schema
+            BotConfigSchema(**config_dict)
+
+        except Exception as e:
+            # Extract all validation errors
+            errors = []
+            if hasattr(e, "errors"):
+                # Pydantic v2 error format
+                for error in e.errors():
+                    field_path = ".".join(str(loc) for loc in error["loc"])
+                    message = error["msg"]
+                    errors.append(f"{field_path}: {message}")
+            else:
+                # Fallback for other validation errors
+                errors.append(str(e))
+
+            if errors:
+                raise ConfigValidationError(errors)
+
+    def validate_config_dict(self, config_dict: dict[str, Any]) -> ConfigValidationResult:
+        """Validate a configuration dictionary using pydantic schema.
+
+        Returns detailed validation results instead of raising exceptions.
+        """
         try:
-            if int(config.max_leverage) <= 0:
-                errors.append("max_leverage must be positive")
-        except Exception:
-            errors.append("max_leverage must be an integer")
+            BotConfigSchema(**config_dict)
+            return ConfigValidationResult(is_valid=True)
+        except Exception as e:
+            errors = []
+            warnings = []
 
-        tif = (config.time_in_force or "").upper()
-        if tif and tif not in {"GTC", "IOC", "FOK"}:
-            errors.append(f"Unsupported time_in_force '{config.time_in_force}'")
+            if hasattr(e, "errors"):
+                # Pydantic v2 error format
+                for error in e.errors():
+                    field_path = ".".join(str(loc) for loc in error["loc"])
+                    message = error["msg"]
+                    errors.append(f"{field_path}: {message}")
+            else:
+                errors.append(str(e))
 
-        if errors:
-            raise ConfigValidationError(errors)
+            return ConfigValidationResult(
+                is_valid=False,
+                errors=errors,
+                warnings=warnings
+            )
 
     def _normalize_symbols(self, config: BotConfig) -> BotConfig:
         try:
@@ -386,7 +455,7 @@ class ConfigManager:
             normalized = list(config.symbols or [])
             allow_derivatives = _resolve_derivatives_enabled(config.profile)
 
-        config.symbols = tuple(normalized)
+        config.symbols = list(normalized)
         config.derivatives_enabled = bool(allow_derivatives)
         return config
 

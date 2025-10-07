@@ -11,6 +11,7 @@ __pycache__/
 
 # Backup and temporary files from refactoring
 *.backup
+*.bak
 *_original.py
 *_old.py
 
@@ -81,6 +82,7 @@ coordination/orchestration/*
 .benchmarks/
 .swarm/
 .coverage
+coverage.json
 .claude-flow/
 .mcp.json
 var/

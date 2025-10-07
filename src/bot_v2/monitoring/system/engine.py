@@ -8,9 +8,8 @@ import threading
 import time
 from datetime import datetime
 
+from bot_v2.monitoring.alert_types import Alert, AlertSeverity
 from bot_v2.monitoring.interfaces import (
-    Alert,
-    AlertLevel,
     ComponentHealth,
     ComponentStatus,
     MonitorConfig,
@@ -25,26 +24,40 @@ from bot_v2.monitoring.system.collectors import (
     PerformanceCollector,
     ResourceCollector,
 )
+from bot_v2.monitoring.system.demo_collectors import (
+    DemoComponentCollector,
+    DemoPerformanceCollector,
+)
 
 
 class MonitoringSystem:
     """Main monitoring system."""
 
-    def __init__(self, config: MonitorConfig | None = None) -> None:
+    def __init__(
+        self,
+        config: MonitorConfig | None = None,
+        *,
+        resource_collector: ResourceCollector | None = None,
+        performance_collector: PerformanceCollector | None = None,
+        component_collector: ComponentCollector | None = None,
+    ) -> None:
         """
         Initialize monitoring system.
 
         Args:
             config: Monitoring configuration
+            resource_collector: Optional resource collector override.
+            performance_collector: Optional performance collector override.
+            component_collector: Optional component collector override.
         """
         self.config = config or MonitorConfig()
         self.is_running: bool = False
         self.thread: threading.Thread | None = None
 
-        # Collectors
-        self.resource_collector = ResourceCollector()
-        self.performance_collector = PerformanceCollector()
-        self.component_collector = ComponentCollector()
+        # Collectors (default to demo implementations where real collectors are absent)
+        self.resource_collector = resource_collector or ResourceCollector()
+        self.performance_collector = performance_collector or DemoPerformanceCollector()
+        self.component_collector = component_collector or DemoComponentCollector()
 
         # Alert manager
         self.alert_manager = AlertManager(self.config)
@@ -161,7 +174,7 @@ class MonitoringSystem:
         # Resource alerts
         if health.resource_usage.cpu_percent > self.config.alert_threshold_cpu:
             self.alert_manager.create_alert(
-                level=AlertLevel.WARNING,
+                severity=AlertSeverity.WARNING,
                 component="System",
                 message=f"High CPU usage: {health.resource_usage.cpu_percent:.1f}%",
                 details={"cpu_percent": health.resource_usage.cpu_percent},
@@ -169,7 +182,7 @@ class MonitoringSystem:
 
         if health.resource_usage.memory_percent > self.config.alert_threshold_memory:
             self.alert_manager.create_alert(
-                level=AlertLevel.WARNING,
+                severity=AlertSeverity.WARNING,
                 component="System",
                 message=f"High memory usage: {health.resource_usage.memory_percent:.1f}%",
                 details={"memory_percent": health.resource_usage.memory_percent},
@@ -177,7 +190,7 @@ class MonitoringSystem:
 
         if health.resource_usage.disk_percent > self.config.alert_threshold_disk:
             self.alert_manager.create_alert(
-                level=AlertLevel.ERROR,
+                severity=AlertSeverity.ERROR,
                 component="System",
                 message=f"High disk usage: {health.resource_usage.disk_percent:.1f}%",
                 details={"disk_percent": health.resource_usage.disk_percent},
@@ -186,7 +199,7 @@ class MonitoringSystem:
         # Performance alerts
         if health.performance.error_rate > self.config.alert_threshold_error_rate:
             self.alert_manager.create_alert(
-                level=AlertLevel.ERROR,
+                severity=AlertSeverity.ERROR,
                 component="Performance",
                 message=f"High error rate: {health.performance.error_rate:.2%}",
                 details={"error_rate": health.performance.error_rate},
@@ -194,7 +207,7 @@ class MonitoringSystem:
 
         if health.performance.avg_response_time_ms > self.config.alert_threshold_response_time_ms:
             self.alert_manager.create_alert(
-                level=AlertLevel.WARNING,
+                severity=AlertSeverity.WARNING,
                 component="Performance",
                 message=f"Slow response time: {health.performance.avg_response_time_ms:.1f}ms",
                 details={"response_time_ms": health.performance.avg_response_time_ms},
@@ -204,7 +217,7 @@ class MonitoringSystem:
         for name, component in health.components.items():
             if component.status == ComponentStatus.UNHEALTHY:
                 self.alert_manager.create_alert(
-                    level=AlertLevel.CRITICAL,
+                    severity=AlertSeverity.CRITICAL,
                     component=name,
                     message=f"Component unhealthy: {name}",
                     details=component.details,

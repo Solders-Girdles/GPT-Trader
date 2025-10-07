@@ -5,36 +5,18 @@ import logging
 import threading
 from collections import defaultdict
 from collections.abc import Callable
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timedelta
-from enum import Enum
 from typing import Any, DefaultDict
 
-
-class AlertLevel(Enum):
-    INFO = 1
-    WARNING = 2
-    ERROR = 3
-    CRITICAL = 4
-
-
-@dataclass
-class Alert:
-    id: str
-    level: AlertLevel
-    category: str
-    message: str
-    timestamp: datetime
-    metadata: dict[str, Any] = field(default_factory=dict)
-    count: int = 1
-    last_seen: datetime = field(default_factory=datetime.now)
+from bot_v2.monitoring.alert_types import Alert, AlertSeverity
 
 
 @dataclass
 class AlertRule:
     name: str
     condition: Callable[[dict[str, Any]], bool]
-    level: AlertLevel
+    severity: AlertSeverity
     category: str
     message_template: str
     cooldown_minutes: int = 5
@@ -80,7 +62,7 @@ class AlertingSystem:
 
     def trigger_alert(
         self,
-        level: AlertLevel,
+        severity: AlertSeverity,
         category: str,
         message: str,
         metadata: dict[str, Any] | None = None,
@@ -92,21 +74,22 @@ class AlertingSystem:
             # Check for deduplication
             if alert_id in self.alerts:
                 existing = self.alerts[alert_id]
-                existing.count += 1
-                existing.last_seen = datetime.now()
+                existing.touch(metadata=metadata or {})
 
                 # Check suppression rules
                 if self._should_suppress(existing):
                     return
             else:
                 alert = Alert(
-                    id=alert_id,
-                    level=level,
-                    category=category,
+                    alert_id=alert_id,
+                    severity=severity,
+                    title=category,
                     message=message,
-                    timestamp=datetime.now(),
+                    category=category,
+                    source="alerting_system",
                     metadata=dict(metadata or {}),
                 )
+                alert.last_seen_at = alert.created_at
                 self.alerts[alert_id] = alert
 
                 # Add to history
@@ -130,7 +113,7 @@ class AlertingSystem:
         message = rule.message_template.format(**context)
 
         # Trigger alert
-        self.trigger_alert(rule.level, rule.category, message, context)
+        self.trigger_alert(rule.severity, rule.category, message, context)
 
         # Update suppression
         self.suppression_rules[rule_key] = datetime.now()
@@ -138,10 +121,10 @@ class AlertingSystem:
     def _should_suppress(self, alert: Alert) -> bool:
         """Check if an alert should be suppressed due to frequency."""
         # Suppress if too many occurrences in short time
-        if alert.count > 10:
-            time_diff = datetime.now() - alert.timestamp
+        if alert.occurrences > 10:
+            time_diff = datetime.now() - alert.created_at
             if time_diff < timedelta(minutes=5):
-                return alert.count % 10 != 0  # Only alert every 10th occurrence
+                return alert.occurrences % 10 != 0  # Only alert every 10th occurrence
         return False
 
     def _dispatch_alert(self, alert: Alert) -> None:
@@ -159,35 +142,35 @@ class AlertingSystem:
         def console_handler(alert: Alert) -> None:
             icon = (
                 "ℹ️"
-                if alert.level == AlertLevel.INFO
-                else "⚠️" if alert.level == AlertLevel.WARNING else "❌"
+                if alert.severity == AlertSeverity.INFO
+                else "⚠️" if alert.severity == AlertSeverity.WARNING else "❌"
             )
             self.logger.info(
                 "%s [%s] %s: %s",
                 icon,
-                alert.level.name,
+                alert.severity.name,
                 alert.category,
                 alert.message,
             )
 
         # Log handler
         def log_handler(alert: Alert) -> None:
-            if alert.level == AlertLevel.CRITICAL:
+            if alert.severity == AlertSeverity.CRITICAL:
                 self.logger.critical(alert.message)
-            elif alert.level == AlertLevel.ERROR:
+            elif alert.severity == AlertSeverity.ERROR:
                 self.logger.error(alert.message)
-            elif alert.level == AlertLevel.WARNING:
+            elif alert.severity == AlertSeverity.WARNING:
                 self.logger.warning(alert.message)
             else:
                 self.logger.info(alert.message)
 
         # File handler for critical alerts
         def file_handler(alert: Alert) -> None:
-            if alert.level in [AlertLevel.CRITICAL, AlertLevel.ERROR]:
+            if alert.severity in [AlertSeverity.CRITICAL, AlertSeverity.ERROR]:
                 try:
                     with open("critical_alerts.log", "a") as f:
                         f.write(
-                            f"{alert.timestamp.isoformat()} [{alert.level.name}] {alert.category}: {alert.message}\n"
+                            f"{alert.timestamp.isoformat()} [{alert.severity.name}] {alert.category}: {alert.message}\n"
                         )
                 except Exception as e:
                     self.logger.error(f"Error writing to alert file: {e}")
@@ -204,7 +187,7 @@ class AlertingSystem:
                 name="high_cpu",
                 condition=lambda ctx: ctx.get("metric_name") == "cpu_percent"
                 and ctx.get("value", 0) > 80,
-                level=AlertLevel.WARNING,
+                severity=AlertSeverity.WARNING,
                 category="resource",
                 message_template="High CPU usage: {value:.1f}%",
             )
@@ -216,7 +199,7 @@ class AlertingSystem:
                 name="high_memory",
                 condition=lambda ctx: ctx.get("metric_name") == "memory_percent"
                 and ctx.get("value", 0) > 85,
-                level=AlertLevel.WARNING,
+                severity=AlertSeverity.WARNING,
                 category="resource",
                 message_template="High memory usage: {value:.1f}%",
             )
@@ -228,7 +211,7 @@ class AlertingSystem:
                 name="critical_memory",
                 condition=lambda ctx: ctx.get("metric_name") == "memory_percent"
                 and ctx.get("value", 0) > 95,
-                level=AlertLevel.CRITICAL,
+                severity=AlertSeverity.CRITICAL,
                 category="resource",
                 message_template="Critical memory usage: {value:.1f}%",
             )
@@ -239,7 +222,7 @@ class AlertingSystem:
             AlertRule(
                 name="workflow_failed",
                 condition=lambda ctx: ctx.get("workflow_status") == "failed",
-                level=AlertLevel.ERROR,
+                severity=AlertSeverity.ERROR,
                 category="workflow",
                 message_template="Workflow {workflow_name} failed",
             )
@@ -251,7 +234,7 @@ class AlertingSystem:
                 name="trading_error",
                 condition=lambda ctx: ctx.get("category") == "trading"
                 and ctx.get("error_count", 0) > 5,
-                level=AlertLevel.CRITICAL,
+                severity=AlertSeverity.CRITICAL,
                 category="trading",
                 message_template="Multiple trading errors detected: {error_count} errors",
             )
@@ -263,7 +246,7 @@ class AlertingSystem:
                 name="data_stale",
                 condition=lambda ctx: ctx.get("metric_name") == "data_age_minutes"
                 and ctx.get("value", 0) > 30,
-                level=AlertLevel.WARNING,
+                severity=AlertSeverity.WARNING,
                 category="data",
                 message_template="Stale data detected: {value:.1f} minutes old",
             )
@@ -296,15 +279,16 @@ class AlertingSystem:
             by_category: DefaultDict[str, int] = defaultdict(int)
 
             for alert in self.alerts.values():
-                by_level[alert.level.name] += 1
-                by_category[alert.category] += 1
+                by_level[alert.severity.name] += 1
+                if alert.category:
+                    by_category[alert.category] += 1
 
             return {
                 "total_active": len(self.alerts),
                 "by_level": dict(by_level),
                 "by_category": dict(by_category),
                 "critical_alerts": [
-                    a for a in self.alerts.values() if a.level == AlertLevel.CRITICAL
+                    a for a in self.alerts.values() if a.severity == AlertSeverity.CRITICAL
                 ],
                 "recent_alerts": self.alert_history[-10:] if self.alert_history else [],
             }
@@ -318,12 +302,12 @@ class AlertingSystem:
         for alert in self.alert_history:
             history_data.append(
                 {
-                    "id": alert.id,
-                    "level": alert.level.name,
+                    "id": alert.alert_id,
+                    "level": alert.severity.name,
                     "category": alert.category,
                     "message": alert.message,
                     "timestamp": alert.timestamp.isoformat(),
-                    "count": alert.count,
+                    "count": alert.occurrences,
                     "metadata": alert.metadata,
                 }
             )

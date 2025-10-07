@@ -1,3 +1,3 @@
 """Domain-specific monitoring implementations."""
 
-__all__ = []
+__all__: list[str] = []

@@ -4,7 +4,9 @@ Monitoring module for bot_v2 orchestration system.
 Provides comprehensive monitoring, alerting, and metrics collection.
 """
 
-from bot_v2.monitoring.alerting_system import Alert, AlertingSystem, AlertLevel, AlertRule
+from bot_v2.monitoring.alert_types import Alert, AlertSeverity
+from bot_v2.monitoring.alerting_system import AlertingSystem, AlertRule
+from bot_v2.monitoring.configuration_guardian import ConfigurationGuardian
 from bot_v2.monitoring.metrics_collector import MetricsCollector
 from bot_v2.monitoring.monitoring_dashboard import (
     MonitoringDashboard,
@@ -26,10 +28,12 @@ __all__ = [
     "WorkflowTracker",
     "WorkflowExecution",
     "WorkflowStatus",
+    # Configuration Guardian
+    "ConfigurationGuardian",
     # Alerting
     "AlertingSystem",
     "Alert",
-    "AlertLevel",
+    "AlertSeverity",
     "AlertRule",
     # Metrics
     "MetricsCollector",

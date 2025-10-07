@@ -7,7 +7,8 @@ Complete isolation - no external dependencies.
 import uuid
 from datetime import datetime, timedelta
 
-from bot_v2.monitoring.interfaces import Alert, AlertLevel, MonitorConfig
+from bot_v2.monitoring.alert_types import Alert, AlertSeverity
+from bot_v2.monitoring.interfaces import MonitorConfig
 
 
 class AlertManager:
@@ -30,7 +31,7 @@ class AlertManager:
         self.dedup_window_seconds = 300  # 5 minutes
 
     def create_alert(
-        self, level: AlertLevel, component: str, message: str, details: dict | None = None
+        self, severity: AlertSeverity, component: str, message: str, details: dict | None = None
     ) -> Alert | None:
         """
         Create a new alert.
@@ -56,13 +57,12 @@ class AlertManager:
         alert_id = str(uuid.uuid4())[:8]
         alert = Alert(
             alert_id=alert_id,
-            level=level,
+            severity=severity,
+            title=component,
             component=component,
             message=message,
-            details=details or {},
-            created_at=datetime.now(),
-            resolved_at=None,
-            acknowledged=False,
+            details=dict(details or {}),
+            source="monitoring.alert_manager",
         )
 
         # Store alert
@@ -96,7 +96,7 @@ class AlertManager:
             True if acknowledged successfully
         """
         if alert_id in self.alerts:
-            self.alerts[alert_id].acknowledged = True
+            self.alerts[alert_id].acknowledge()
             return True
         return False
 
@@ -112,7 +112,7 @@ class AlertManager:
         """
         if alert_id in self.alerts:
             alert = self.alerts[alert_id]
-            alert.resolved_at = datetime.now()
+            alert.mark_resolved()
 
             # Move to history only
             del self.alerts[alert_id]
@@ -129,7 +129,7 @@ class AlertManager:
         """Get active alerts only."""
         return list(self.alerts.values())
 
-    def get_alerts_by_level(self, level: AlertLevel) -> list[Alert]:
+    def get_alerts_by_level(self, severity: AlertSeverity) -> list[Alert]:
         """
         Get alerts by severity level.
 
@@ -139,7 +139,7 @@ class AlertManager:
         Returns:
             List of alerts with specified level
         """
-        return [a for a in self.alerts.values() if a.level == level]
+        return [a for a in self.alerts.values() if a.severity == severity]
 
     def get_alerts_by_component(self, component: str) -> list[Alert]:
         """
@@ -163,10 +163,10 @@ class AlertManager:
 
         summary = {
             "total_active": len(active_alerts),
-            "critical": len([a for a in active_alerts if a.level == AlertLevel.CRITICAL]),
-            "error": len([a for a in active_alerts if a.level == AlertLevel.ERROR]),
-            "warning": len([a for a in active_alerts if a.level == AlertLevel.WARNING]),
-            "info": len([a for a in active_alerts if a.level == AlertLevel.INFO]),
+            "critical": len([a for a in active_alerts if a.severity == AlertSeverity.CRITICAL]),
+            "error": len([a for a in active_alerts if a.severity == AlertSeverity.ERROR]),
+            "warning": len([a for a in active_alerts if a.severity == AlertSeverity.WARNING]),
+            "info": len([a for a in active_alerts if a.severity == AlertSeverity.INFO]),
             "acknowledged": len([a for a in active_alerts if a.acknowledged]),
             "components_affected": list({a.component for a in active_alerts}),
         }
@@ -196,11 +196,11 @@ class AlertManager:
             alert: Alert to print
         """
         # Color coding by level
-        if alert.level == AlertLevel.CRITICAL:
+        if alert.severity == AlertSeverity.CRITICAL:
             prefix = "🚨 CRITICAL"
-        elif alert.level == AlertLevel.ERROR:
+        elif alert.severity == AlertSeverity.ERROR:
             prefix = "❌ ERROR"
-        elif alert.level == AlertLevel.WARNING:
+        elif alert.severity == AlertSeverity.WARNING:
             prefix = "⚠️  WARNING"
         else:
             prefix = "ℹ️  INFO"

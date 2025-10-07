@@ -14,24 +14,9 @@ from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
 from decimal import Decimal, DecimalException, InvalidOperation
 from enum import Enum
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
-# Import AlertSeverity from alerts module to avoid duplication
-if TYPE_CHECKING:  # pragma: no cover - import for type checking only
-    from bot_v2.monitoring.alerts import AlertSeverity
-else:
-    try:
-        from bot_v2.monitoring.alerts import AlertSeverity
-    except ImportError:
-        # Fallback if alerts module not available
-        class AlertSeverity(Enum):
-            """Alert severity levels."""
-
-            DEBUG = "debug"
-            INFO = "info"
-            WARNING = "warning"
-            ERROR = "error"
-            CRITICAL = "critical"
+from bot_v2.monitoring.alert_types import AlertSeverity
 
 
 logger = logging.getLogger(__name__)

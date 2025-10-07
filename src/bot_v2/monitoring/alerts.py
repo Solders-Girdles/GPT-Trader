@@ -12,8 +12,6 @@ import importlib.util  # naming: allow
 import logging
 import os
 from collections.abc import Mapping
-from dataclasses import dataclass, field
-from datetime import datetime
 from enum import Enum
 from typing import Any
 
@@ -40,49 +38,7 @@ class AlertChannelType(Enum):
     WEBHOOK = "webhook"
 
 
-class AlertSeverity(Enum):
-    """Alert severity levels."""
-
-    DEBUG = "debug"
-    INFO = "info"
-    WARNING = "warning"
-    ERROR = "error"
-    CRITICAL = "critical"
-
-    @property
-    def numeric_level(self) -> int:
-        """Get numeric severity level for comparison."""
-        levels = {
-            AlertSeverity.DEBUG: 10,
-            AlertSeverity.INFO: 20,
-            AlertSeverity.WARNING: 30,
-            AlertSeverity.ERROR: 40,
-            AlertSeverity.CRITICAL: 50,
-        }
-        return levels[self]
-
-
-@dataclass
-class Alert:
-    """Alert data structure."""
-
-    timestamp: datetime
-    source: str
-    severity: AlertSeverity
-    title: str
-    message: str
-    context: dict[str, Any] = field(default_factory=dict)
-
-    def to_dict(self) -> dict[str, Any]:
-        """Convert to dictionary for serialization."""
-        return {
-            "timestamp": self.timestamp.isoformat(),
-            "source": self.source,
-            "severity": self.severity.value,
-            "title": self.title,
-            "message": self.message,
-            "context": self.context,
-        }
+from bot_v2.monitoring.alert_types import Alert, AlertSeverity
 
 
 class AlertChannel:
@@ -527,12 +483,11 @@ def create_risk_alert(
 ) -> Alert:
     """Create a risk-related alert."""
     return Alert(
-        timestamp=datetime.now(),
         source="risk_manager",
         severity=severity,
         title=title,
         message=message,
-        context=context,
+        context=dict(context),
     )
 
 
@@ -541,12 +496,11 @@ def create_execution_alert(
 ) -> Alert:
     """Create an execution-related alert."""
     return Alert(
-        timestamp=datetime.now(),
         source="execution_engine",
         severity=severity,
         title=title,
         message=message,
-        context=context,
+        context=dict(context),
     )
 
 
@@ -555,10 +509,9 @@ def create_system_alert(
 ) -> Alert:
     """Create a system-level alert."""
     return Alert(
-        timestamp=datetime.now(),
         source="system",
         severity=severity,
         title=title,
         message=message,
-        context=context,
+        context=dict(context),
     )

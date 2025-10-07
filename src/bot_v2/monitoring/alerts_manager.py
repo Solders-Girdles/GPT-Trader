@@ -3,7 +3,6 @@ from __future__ import annotations
 import logging
 from collections.abc import Mapping
 from dataclasses import dataclass
-from datetime import datetime
 from pathlib import Path
 from typing import Any, cast
 
@@ -12,7 +11,8 @@ try:
 except Exception:
     yaml = cast(Any, None)
 
-from bot_v2.monitoring.alerts import Alert, AlertDispatcher, AlertSeverity
+from bot_v2.monitoring.alert_types import Alert, AlertSeverity
+from bot_v2.monitoring.alerts import AlertDispatcher
 
 logger = logging.getLogger(__name__)
 
@@ -68,7 +68,6 @@ class AlertManager:
     ) -> None:
         sev = AlertSeverity[level.upper()] if level else AlertSeverity.WARNING
         alert = Alert(
-            timestamp=datetime.utcnow(),
             source="perps_bot",
             severity=sev,
             title=title,

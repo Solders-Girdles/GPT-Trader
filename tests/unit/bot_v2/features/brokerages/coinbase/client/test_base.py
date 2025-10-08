@@ -80,12 +80,12 @@ class TestCoinbaseClientBase:
         client = CoinbaseClientBase(base_url=self.base_url, auth=self.auth, api_mode="advanced")
 
         # Test basic endpoints
-        assert client._get_endpoint_path("products") == "/api/v3/brokerage/market/products"
+        assert client._get_endpoint_path("products") == "/api/v3/brokerage/products"
         assert client._get_endpoint_path("accounts") == "/api/v3/brokerage/accounts"
 
         # Test endpoints with parameters
         path = client._get_endpoint_path("product", product_id="BTC-USD")
-        assert path == "/api/v3/brokerage/market/products/BTC-USD"
+        assert path == "/api/v3/brokerage/products/BTC-USD"
 
         path = client._get_endpoint_path("account", account_uuid="123-456")
         assert path == "/api/v3/brokerage/accounts/123-456"
@@ -492,7 +492,7 @@ class TestCoinbaseClientBase:
 
         # Check that cursor was passed in second request
         second_call_args = client._request.call_args_list[1]
-        assert "cursor=page2" in second_call_args[0][0]
+        assert "cursor=page2" in second_call_args[0][1]
 
     def test_paginate_custom_cursor_params(self) -> None:
         """Test pagination with custom cursor parameters."""
@@ -513,7 +513,7 @@ class TestCoinbaseClientBase:
 
         # Check that custom cursor param was used
         call_args = client._request.call_args
-        assert "page_token=next" in call_args[0][0]
+        assert "page_token=next" in call_args[0][1]
 
     def test_paginate_no_cursor(self) -> None:
         """Test pagination when no cursor is returned."""

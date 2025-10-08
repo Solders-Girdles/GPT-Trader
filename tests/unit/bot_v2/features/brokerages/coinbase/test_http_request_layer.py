@@ -10,10 +10,8 @@ def make_client():
     return CoinbaseClient(base_url="https://api.coinbase.com", auth=CoinbaseAuth("k", "s", "p"), timeout=1)
 
 
-# Audit 2025-09-01: Advanced Trade endpoint path changed to
-# '/api/v3/brokerage/market/products'. This test expects the older
-# '/api/v3/brokerage/products' path. Keeping skipped until assertion
-# is updated to match current client ENDPOINT_MAP.
+# Advanced Trade product discovery should follow the documented
+# `/api/v3/brokerage/products` route.
 def test_request_composes_headers_and_path(monkeypatch):
     client = make_client()
 
@@ -27,8 +25,8 @@ def test_request_composes_headers_and_path(monkeypatch):
     out = client.get_products()
     assert out.get("ok") is True
     assert calls[0].method == "GET"
-    # Advanced Trade 'products' endpoint path (market API)
-    assert calls[0].url.endswith("/api/v3/brokerage/market/products")
+    # Advanced Trade 'products' endpoint path
+    assert calls[0].url.endswith("/api/v3/brokerage/products")
     # Signed headers present
     h = calls[0].headers
     assert "CB-ACCESS-KEY" in h and h["CB-ACCESS-KEY"] == "k"

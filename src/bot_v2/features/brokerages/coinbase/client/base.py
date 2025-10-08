@@ -91,11 +91,16 @@ class CoinbaseClientBase:
     def _get_endpoint_path(self, endpoint_name: str, **kwargs: str) -> str:
         ENDPOINT_MAP = {
             "advanced": {
-                "products": "/api/v3/brokerage/market/products",
-                "product": "/api/v3/brokerage/market/products/{product_id}",
-                "ticker": "/api/v3/brokerage/market/products/{product_id}/ticker",
-                "candles": "/api/v3/brokerage/market/products/{product_id}/candles",
-                "order_book": "/api/v3/brokerage/market/product_book",
+                "products": "/api/v3/brokerage/products",
+                "product": "/api/v3/brokerage/products/{product_id}",
+                "ticker": "/api/v3/brokerage/products/{product_id}/ticker",
+                "candles": "/api/v3/brokerage/products/{product_id}/candles",
+                "order_book": "/api/v3/brokerage/product_book",
+                "public_products": "/api/v3/brokerage/market/products",
+                "public_product": "/api/v3/brokerage/market/products/{product_id}",
+                "public_ticker": "/api/v3/brokerage/market/products/{product_id}/ticker",
+                "public_candles": "/api/v3/brokerage/market/products/{product_id}/candles",
+                "public_order_book": "/api/v3/brokerage/market/product_book",
                 "best_bid_ask": "/api/v3/brokerage/best_bid_ask",
                 "accounts": "/api/v3/brokerage/accounts",
                 "account": "/api/v3/brokerage/accounts/{account_uuid}",
@@ -258,14 +263,16 @@ class CoinbaseClientBase:
         current_time = time.time()
         self._request_times = [t for t in self._request_times if current_time - t < 60]
 
-        if len(self._request_times) >= self.rate_limit_per_minute * 0.8:
+        pending_count = len(self._request_times) + 1
+
+        if pending_count >= self.rate_limit_per_minute * 0.8:
             logger.warning(
                 "Approaching rate limit: %d/%d requests in last minute",
-                len(self._request_times),
+                pending_count,
                 self.rate_limit_per_minute,
             )
 
-        if len(self._request_times) >= self.rate_limit_per_minute:
+        if pending_count > self.rate_limit_per_minute:
             oldest_request = self._request_times[0]
             sleep_time = 60 - (current_time - oldest_request) + 0.1
             if sleep_time > 0:
@@ -376,12 +383,14 @@ class CoinbaseClientBase:
             if attempt_idx > max_retries:
                 return False
             delay = base_delay * (2 ** (attempt_idx - 1))
+            used_retry_after = False
             try:
                 if retry_after:
                     delay = float(retry_after)
+                    used_retry_after = True
             except ValueError:
                 pass
-            if jitter_factor > 0:
+            if jitter_factor > 0 and not used_retry_after:
                 jitter = delay * jitter_factor * ((attempt_idx % 10) / 10.0)
                 delay += jitter
             logger.debug(

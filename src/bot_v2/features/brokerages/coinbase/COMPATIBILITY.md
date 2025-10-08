@@ -9,16 +9,16 @@ Quick reference for endpoint availability by API mode.
 | `get_time()` | `/api/v3/brokerage/time` | `/time` |
 | `get_accounts()` | `/api/v3/brokerage/accounts` | `/accounts` |
 | `get_account(id)` | `/api/v3/brokerage/accounts/{id}` | `/accounts/{id}` |
-| `get_products()` | `/api/v3/brokerage/market/products` | `/products` |
-| `get_product(id)` | `/api/v3/brokerage/market/products/{id}` | `/products/{id}` |
-| `get_ticker(id)` | `/api/v3/brokerage/market/products/{id}/ticker` | `/products/{id}/ticker` |
-| `get_candles(id)` | `/api/v3/brokerage/market/products/{id}/candles` | `/products/{id}/candles` |
-| `get_market_product_book(id)` | `/api/v3/brokerage/market/product_book` | `/products/{id}/book` |
+| `get_products()` | `/api/v3/brokerage/products` | `/products` |
+| `get_product(id)` | `/api/v3/brokerage/products/{id}` | `/products/{id}` |
+| `get_ticker(id)` | `/api/v3/brokerage/products/{id}/ticker` | `/products/{id}/ticker` |
+| `get_candles(id)` | `/api/v3/brokerage/products/{id}/candles` | `/products/{id}/candles` |
+| `get_product_book(id)` | `/api/v3/brokerage/product_book` | `/products/{id}/book` |
 | `create_order()` | `/api/v3/brokerage/orders` | `/orders` |
-| `cancel_order(id)` | `/api/v3/brokerage/orders/cancel` | `/orders/{id}` |
+| `cancel_orders()` | `/api/v3/brokerage/orders/batch_cancel` | `/orders/{id}` |
 | `get_order(id)` | `/api/v3/brokerage/orders/historical/{id}` | `/orders/{id}` |
-| `list_orders()` | `/api/v3/brokerage/orders/historical/fills` | `/orders` |
-| `get_fees()` | `/api/v3/brokerage/transaction_summary` | `/fees` |
+| `list_orders()` | `/api/v3/brokerage/orders/historical` | `/orders` |
+| `get_fees()` | `/api/v3/brokerage/fees` | `/fees` |
 
 ## 🚫 Advanced Mode Only
 

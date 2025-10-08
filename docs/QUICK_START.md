@@ -1,5 +1,10 @@
 # Quick Start
 
+---
+status: current
+last-updated: 2025-10-07
+---
+
 This walkthrough gets the development profile running in a few minutes. It
 defaults to the safe `DeterministicBroker`, but also covers the env toggles required to
 hit real Coinbase endpoints when you are ready.
@@ -16,18 +21,40 @@ poetry install
 The project targets Python 3.12+. If you manage Python with `pyenv`, run
 `pyenv local 3.12.4` (or later) before `poetry install`.
 
-## 2. Create a .env File (optional)
+## 2. Configure Environment Files (optional)
 
-Copy the template if you plan to store credentials locally:
+Copy the templates to keep credentials out of version control:
 
 ```bash
 cp config/environments/.env.template .env
+cp deploy/bot_v2/docker/.env.example deploy/bot_v2/docker/.env
 ```
 
-For the dev profile nothing else is required—the mock broker and deterministic
-fills are used automatically.
+The root `.env` seeds runtime configuration. The Compose stack reads
+`deploy/bot_v2/docker/.env`; populate the database, Redis, RabbitMQ, JWT, and
+Vault secrets before bringing services online.
 
-## 3. Smoke-Test the Dev Profile
+## 3. Launch the Local Stack
+
+Use the `Makefile` helper to boot the dev profile services (bot, Postgres,
+Redis, RabbitMQ) without pulling the observability stack by default:
+
+```bash
+make dev-up
+```
+
+Need metrics and tracing? Opt into the observability profile when required:
+
+```bash
+docker compose --project-directory deploy/bot_v2/docker \
+  -f deploy/bot_v2/docker/docker-compose.yaml \
+--profile observability up -d
+```
+
+> `make dev-up` automatically passes `deploy/bot_v2/docker/.env`, so the stack
+> runs with the secrets you just populated.
+
+## 4. Smoke-Test the Dev Profile
 
 ```bash
 poetry run perps-bot run --profile dev --dev-fast
@@ -40,7 +67,7 @@ What to expect:
   placed.
 - Metrics land under `var/data/perps_bot/dev/` for inspection.
 
-## 4. Enable Real Spot Trading (optional)
+## 5. Enable Real Spot Trading (optional)
 
 When you are ready to exercise Coinbase APIs, provide production Advanced Trade
 credentials and lift the safety toggle:
@@ -59,7 +86,7 @@ Use the `spot` profile for live spot execution; it keeps leverage at 1x and
 disables reduce-only mode. The `dev` profile continues to assume mocks even if
 the toggle is set.
 
-## 5. (Future) Perpetuals Readiness
+## 6. (Future) Perpetuals Readiness
 
 Perpetual futures remain gated behind Coinbase INTX. To exercise those paths you
 must:
@@ -72,7 +99,7 @@ must:
 Until then the code paths continue to compile and run in tests, but real order
 placement is disabled by design.
 
-## 6. Recommended Local Checks
+## 7. Recommended Local Checks
 
 ```bash
 # Full regression suite (spot + orchestration)

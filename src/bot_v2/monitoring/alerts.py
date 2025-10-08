@@ -15,6 +15,8 @@ from collections.abc import Mapping
 from enum import Enum
 from typing import Any
 
+from bot_v2.monitoring.alert_types import Alert, AlertSeverity
+
 # Optional imports
 try:
     import aiohttp
@@ -36,9 +38,6 @@ class AlertChannelType(Enum):
     PAGERDUTY = "pagerduty"
     EMAIL = "email"
     WEBHOOK = "webhook"
-
-
-from bot_v2.monitoring.alert_types import Alert, AlertSeverity
 
 
 class AlertChannel:

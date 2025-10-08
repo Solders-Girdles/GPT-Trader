@@ -15,9 +15,10 @@ import os
 import threading
 import time
 import uuid
-from datetime import datetime
 from enum import Enum
 from typing import Any
+
+from bot_v2.utilities import utc_now_iso
 
 
 class LogLevel(Enum):
@@ -96,7 +97,7 @@ class ProductionLogger:
 
         # Build log entry
         entry = {
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": utc_now_iso(),
             "level": level.value,
             "service": self.service_name,
             "correlation_id": self.get_correlation_id(),

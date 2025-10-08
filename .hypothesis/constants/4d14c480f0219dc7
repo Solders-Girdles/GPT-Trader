@@ -1,0 +1,4 @@
+# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/orchestration/order_reconciler.py
+# hypothesis_version: 6.140.3
+
+['assumed_cancelled', 'avg_fill_price', 'buy', 'client_id', 'created_at', 'event_type', 'exchange_open', 'filled_quantity', 'local_open', 'market', 'order_id', 'order_reconciled', 'order_type', 'price', 'quantity', 'reason', 'side', 'status', 'symbol']

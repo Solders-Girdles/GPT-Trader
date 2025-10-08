@@ -1,0 +1,4 @@
+# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/security/security_validator.py
+# hypothesis_version: 6.140.3
+
+[0.001, 0.01, 0.02, 0.05, 0.2, 0.8, 1.0, 2.0, 100000.0, 100, 255, 1000, 3600, 1000000, 1048576, '"', '""', "'", "''", '<[^>]*>', 'DEBUG', 'HACK', 'Symbol is blocked', 'TEST', '\\.\\.[\\\\/]', '^-?\\d+(\\.\\d+)?$', '^[a-zA-Z0-9]+$', 'action', 'alphanumeric', 'api_calls', 'average_order_size', 'current_order_size', 'data_requests', 'email', 'limit', 'login_attempts', 'max_concentration', 'max_daily_loss', 'max_leverage', 'max_order_value', 'max_position_size', 'min_order_value', 'numeric', 'order_submissions', 'order_type', 'orders_per_minute', 'path_traversal', 'pattern_score', 'price', 'quantity', 'sql_injection', 'symbol', 'timestamp', 'xss_tags']

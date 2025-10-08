@@ -1,0 +1,4 @@
+# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/features/brokerages/coinbase/market_data_features.py
+# hypothesis_version: 6.140.3
+
+[0.0, 10000, '0', 'BTC-PERP', 'DepthSnapshot', 'ETH-PERP', 'RollingWindow', 'SOL-PERP', 'TradeTapeAgg', 'XRP-PERP', 'aggressor_ratio', 'ask', 'avg', 'avg_size', 'bid', 'buy', 'count', 'get_expected_perps', 'notional', 'price', 'sell', 'side', 'size', 'sum', 'timestamp', 'volume', 'vwap']

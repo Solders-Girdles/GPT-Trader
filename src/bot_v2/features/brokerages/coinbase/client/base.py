@@ -11,7 +11,7 @@ from typing import Any, cast
 
 from bot_v2.features.brokerages.coinbase.auth import AuthStrategy, CDPJWTAuth, CoinbaseAuth
 from bot_v2.features.brokerages.coinbase.errors import InvalidRequestError, map_http_error
-from bot_v2.monitoring.system import get_logger
+from bot_v2.monitoring.system import get_correlation_id, get_logger
 
 _ul: Any
 _ue: Any
@@ -309,6 +309,12 @@ class CoinbaseClientBase:
             except Exception as exc:  # pragma: no cover - defensive logging
                 logger.debug("Failed to sync auth api_mode", exc_info=exc)
             headers.update(self.auth.sign(method, path_only, body))
+        try:
+            correlation_id = get_correlation_id()
+        except Exception:  # pragma: no cover - defensive guard
+            correlation_id = None
+        if correlation_id:
+            headers.setdefault("X-Correlation-Id", correlation_id)
 
         data_bytes = (
             json.dumps(body, separators=(",", ":")).encode("utf-8") if body is not None else None

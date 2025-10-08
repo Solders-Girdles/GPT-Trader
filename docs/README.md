@@ -2,21 +2,29 @@
 
 ---
 status: current
-last-updated: 2025-03-01
-organization-updated: 2025-03-01
+last-updated: 2025-10-07
+organization-updated: 2025-10-07
 ---
+
+## 🚦 Start Here
+
+1. **[Quick Start](QUICK_START.md)** – spin up the dev stack with the new `Makefile` helpers.
+2. **[Architecture](ARCHITECTURE.md)** – understand the vertical slices before touching code.
+3. **[Monitoring Playbook](MONITORING_PLAYBOOK.md)** – wire dashboards and alerts prior to live trading.
 
 ## 📍 Quick Links
 
+- **[Quick Start](QUICK_START.md)** - Development bootstrap + core commands
+- **[Architecture](ARCHITECTURE.md)** - System design and capabilities
+- **[Monitoring Playbook](MONITORING_PLAYBOOK.md)** - Metrics, alerting, dashboards
 - **[Complete Setup Guide](guides/complete_setup_guide.md)** - Full installation and configuration
 - **[Coinbase Reference](reference/coinbase_complete.md)** - Complete integration documentation
-- **[Coinbase API Links (Lite)](reference/coinbase_api_links.md)** - Fast links for agents
-- **[Architecture](ARCHITECTURE.md)** - System design and capabilities
 - **[AI Agent Guide](guides/agents.md)** - For AI agents and automation
 
 ## 📚 Core Documentation
 
 ### Getting Started
+- [Quick Start](QUICK_START.md) - Local workflow with `make` and Compose profiles
 - [Complete Setup Guide](guides/complete_setup_guide.md) - Everything from installation to first trade
 - [Testing Guide](guides/testing.md) - Running and writing tests
 - [Behavioral Scenario Utilities](testing/behavioral_scenarios_demo.md) - Deterministic demos for docs/tutorials
@@ -29,6 +37,7 @@ organization-updated: 2025-03-01
 - Legacy acceptance/performance/system suites were removed from the tree; recover them from git history if you need the old coverage. The active CI target is `poetry run pytest`, which exercises the `bot_v2` codebase.
 
 ### Trading Operations
+- [Monitoring Playbook](MONITORING_PLAYBOOK.md) - Metrics, alerting, and dashboards
 - [Production Deployment](guides/production.md) - Deployment guide (spot-first, INTX-gated perps)
 - [Legacy Deployment Migration](guides/legacy_deployment_migration.md) - Steps to move from the archived Docker stack to bot_v2
 - [Stage 3 Runner](../scripts/stage3_runner.py) - Legacy entry that forwards to `perps-bot`
@@ -97,4 +106,4 @@ Use git history if you need to recover earlier runbooks or reports.
 
 ---
 
-*Last validated: March 2025 (spot-first refresh)*
+*Last validated: October 2025 (spot-first refresh)*

@@ -1,0 +1,4 @@
+# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/features/brokerages/coinbase/specs.py
+# hypothesis_version: 6.140.3
+
+['0', '0.001', '0.01', '0.1', '1', '1.0', '1.10', '10', '1000000', 'BUY', 'LIMIT', 'PERPS_SPECS_PATH', 'STOP_LIMIT', 'adjusted_price', 'adjusted_size', 'api', 'capped_at_maximum', 'last_verified', 'limit', 'max_size', 'min_notional', 'min_size', 'price_increment', 'price_required', 'products', 'quantity_missing', 'reasons', 'safe_buffer', 'slippage_multiplier', 'source', 'step_size', 'stop_limit', 'unknown', 'valid', 'within_limits']

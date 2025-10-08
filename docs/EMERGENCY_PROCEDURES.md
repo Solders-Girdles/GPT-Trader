@@ -364,6 +364,6 @@ export RISK_KILL_SWITCH_ENABLED=1 && pkill -f perps-bot
 
 ---
 
-**Last Updated**: September 2025
+**Last Updated**: October 2025
 **Version**: 1.1.0
 **Next Review**: Monthly or after any major incident

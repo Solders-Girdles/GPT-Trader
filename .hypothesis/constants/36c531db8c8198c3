@@ -1,0 +1,4 @@
+# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/orchestration/live_execution.py
+# hypothesis_version: 6.140.3
+
+['0.01', '1', 'LiveExecutionEngine', 'LiveOrder', 'RuntimeGuardState', 'error', 'event_store', 'guard_failure', 'live_execution', 'market', 'order_exception', 'quantity', 'set_event_store', 'side', 'spec_validate_order', 'symbol', 'true', 'yes']

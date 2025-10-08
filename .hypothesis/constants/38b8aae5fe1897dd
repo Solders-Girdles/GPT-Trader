@@ -1,0 +1,4 @@
+# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/orchestration/system_monitor.py
+# hypothesis_version: 6.140.3
+
+[0.0, '0', '=', 'PerpsBot', 'USD', 'account_snapshot', 'action', 'asset', 'changes', 'config_controller', 'cpu_percent', 'cycle_metrics', 'decisions', 'disk_percent', 'disk_used_gb', 'entry_price', 'equity', 'error', 'event_type', 'health.json', 'mark_price', 'memory_percent', 'memory_used_mb', 'message', 'metrics.json', 'metrics_update', 'network_recv_mb', 'network_sent_mb', 'new', 'ok', 'old', 'open_files', 'open_orders', 'order_stats', 'perps_bot', 'position_drift', 'positions', 'profile', 'quantity', 'reason', 'side', 'symbol', 'system', 'threads', 'timestamp', 'unknown', 'uptime_seconds', 'w']

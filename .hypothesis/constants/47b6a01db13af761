@@ -1,0 +1,4 @@
+# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/data_providers/coinbase_provider.py
+# hypothesis_version: 6.140.3
+
+[-0.02, 0.002, 0.02, 0.03, 0.04, 100.0, 3000.0, 50000.0, 200, 300, 10000000, 100000000, '-', '0', '1', '15m', '1d', '1h', '1m', '2h', '30m', '5m', '60d', '6h', 'ADA', 'ADA-PERP', 'ADA-USD', 'AVAX', 'AVAX-PERP', 'AVAX-USD', 'BTC', 'BTC-PERP', 'BTC-USD', 'COINBASE_API_MODE', 'COINBASE_SANDBOX', 'Close', 'D', 'DOGE', 'DOGE-PERP', 'DOGE-USD', 'DOT', 'DOT-PERP', 'DOT-USD', 'ETH', 'ETH-PERP', 'ETH-USD', 'FIFTEEN_MINUTE', 'FIVE_MINUTE', 'HMAC', 'High', 'LINK', 'LINK-PERP', 'LINK-USD', 'Low', 'MATIC', 'MATIC-PERP', 'MATIC-USD', 'ONE_DAY', 'ONE_HOUR', 'ONE_MINUTE', 'Open', 'SIX_HOUR', 'SOL', 'SOL-PERP', 'SOL-USD', 'THIRTY_MINUTE', 'TWO_HOUR', 'UNI', 'UNI-PERP', 'UNI-USD', 'USD', 'USDC', 'USDT', 'Volume', 'advanced', 'd', 'disabled', 'enabled', 'exchange', 'timestamp']

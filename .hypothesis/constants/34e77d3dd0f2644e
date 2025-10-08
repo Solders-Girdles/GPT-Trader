@@ -1,0 +1,4 @@
+# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/orchestration/execution_coordinator.py
+# hypothesis_version: 6.140.3
+
+[',', '0', '0.0005', '100', '1000', '2', '20', ':', 'SLIPPAGE_MULTIPLIERS', 'ask', 'attempted', 'bid', 'config', 'execution_engine', 'failed', 'last', 'leverage', 'limit_price', 'long', 'order_books', 'order_type', 'perps_bot', 'price', 'product', 'quantity', 'reduce_only', 'side', 'stop_price', 'stop_trigger', 'successful', 'symbol', 'target_notional', 'tif', 'time_in_force']

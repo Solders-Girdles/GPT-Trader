@@ -9,15 +9,19 @@ services:
       target: ${BUILD_TARGET:-development}
     container_name: bot_v2_main
     hostname: trading-bot
+    profiles:
+      - local-dev
+    env_file:
+      - .env
     environment:
       - ENV=${ENV:-development}
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
-      - DATABASE_URL=postgresql://trader:trader123@postgres:5432/trading_db
-      - REDIS_URL=redis://redis:6379/0
-      - RABBITMQ_URL=amqp://trader:trader123@rabbitmq:5672/
-      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-development_secret_key_change_in_production}
-      - VAULT_ADDR=http://vault:8200
-      - VAULT_TOKEN=${VAULT_TOKEN:-development_token}
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-trader}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in deploy/bot_v2/docker/.env}@postgres:5432/${POSTGRES_DB:-trading_db}
+      - REDIS_URL=redis://:${REDIS_PASSWORD:?Set REDIS_PASSWORD in deploy/bot_v2/docker/.env}@redis:6379/0
+      - RABBITMQ_URL=amqp://${RABBITMQ_USER:-trader}:${RABBITMQ_PASSWORD:?Set RABBITMQ_PASSWORD in deploy/bot_v2/docker/.env}@rabbitmq:5672/
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:?Set JWT_SECRET_KEY in deploy/bot_v2/docker/.env}
+      - VAULT_ADDR=${VAULT_ADDR:-http://vault:8200}
+      - VAULT_TOKEN=${VAULT_TOKEN:?Set VAULT_TOKEN in deploy/bot_v2/docker/.env}
     volumes:
       - ../../..:/app:cached  # Mount source code for development
       - bot_logs:/app/logs
@@ -49,10 +53,14 @@ services:
     image: postgres:15-alpine
     container_name: bot_v2_postgres
     hostname: postgres
+    profiles:
+      - local-dev
+    env_file:
+      - .env
     environment:
-      - POSTGRES_USER=trader
-      - POSTGRES_PASSWORD=trader123
-      - POSTGRES_DB=trading_db
+      - POSTGRES_USER=${POSTGRES_USER:-trader}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in deploy/bot_v2/docker/.env}
+      - POSTGRES_DB=${POSTGRES_DB:-trading_db}
       - POSTGRES_INITDB_ARGS=--encoding=UTF-8
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -63,18 +71,29 @@ services:
       - trading-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U trader -d trading_db"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U $${POSTGRES_USER:-trader} -d $${POSTGRES_DB:-trading_db}",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 5s
 
   # Redis Cache
   redis:
     image: redis:7-alpine
     container_name: bot_v2_redis
     hostname: redis
-    command: redis-server --appendonly yes --requirepass redis123
+    profiles:
+      - local-dev
+    env_file:
+      - .env
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD:?Set REDIS_PASSWORD in deploy/bot_v2/docker/.env}
+    command: >
+      sh -c "redis-server --appendonly yes --requirepass $$REDIS_PASSWORD"
     volumes:
       - redis_data:/data
     ports:
@@ -83,19 +102,23 @@ services:
       - trading-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
 
   # RabbitMQ Message Broker
   rabbitmq:
     image: rabbitmq:3.12-management-alpine
     container_name: bot_v2_rabbitmq
     hostname: rabbitmq
+    profiles:
+      - local-dev
+    env_file:
+      - .env
     environment:
-      - RABBITMQ_DEFAULT_USER=trader
-      - RABBITMQ_DEFAULT_PASS=trader123
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER:-trader}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD:?Set RABBITMQ_PASSWORD in deploy/bot_v2/docker/.env}
       - RABBITMQ_DEFAULT_VHOST=/
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
@@ -106,16 +129,18 @@ services:
       - trading-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "ping"]
-      interval: 10s
+      test: ["CMD-SHELL", "rabbitmq-diagnostics -q ping"]
+      interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 20
 
   # HashiCorp Vault (for secrets management)
   vault:
     image: vault:latest
     container_name: bot_v2_vault
     hostname: vault
+    profiles:
+      - local-dev
     cap_add:
       - IPC_LOCK
     environment:
@@ -135,6 +160,8 @@ services:
     image: prom/prometheus:latest
     container_name: bot_v2_prometheus
     hostname: prometheus
+    profiles:
+      - observability
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_data:/prometheus
@@ -157,9 +184,13 @@ services:
     image: grafana/grafana:latest
     container_name: bot_v2_grafana
     hostname: grafana
+    env_file:
+      - .env
+    profiles:
+      - observability
     environment:
-      - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=admin123
+      - GF_SECURITY_ADMIN_USER=${GF_SECURITY_ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD:?Set GF_SECURITY_ADMIN_PASSWORD in deploy/bot_v2/docker/.env}
       - GF_INSTALL_PLUGINS=redis-datasource
     volumes:
       - grafana_data:/var/lib/grafana
@@ -178,6 +209,8 @@ services:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.10.2
     container_name: bot_v2_elasticsearch
     hostname: elasticsearch
+    profiles:
+      - observability
     environment:
       - discovery.type=single-node
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
@@ -201,6 +234,8 @@ services:
     image: docker.elastic.co/kibana/kibana:8.10.2
     container_name: bot_v2_kibana
     hostname: kibana
+    profiles:
+      - observability
     environment:
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
     ports:
@@ -217,6 +252,8 @@ services:
     image: jaegertracing/all-in-one:latest
     container_name: bot_v2_jaeger
     hostname: jaeger
+    profiles:
+      - observability
     environment:
       - COLLECTOR_OTLP_ENABLED=true
     ports:

@@ -11,6 +11,8 @@ import logging
 from collections.abc import Iterable
 from typing import Any
 
+from bot_v2.utilities import empty_stream
+
 logger = logging.getLogger(__name__)
 
 
@@ -131,5 +133,4 @@ class NoopTransport:
         logger.debug("NoopTransport subscribe called (ignored)")
 
     def stream(self) -> Iterable[dict]:
-        if False:
-            yield {}
+        return empty_stream()

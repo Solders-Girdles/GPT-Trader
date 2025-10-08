@@ -1,0 +1,4 @@
+# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/features/adaptive_portfolio/tier_manager.py
+# hypothesis_version: 6.140.3
+
+[100, 'changes_needed', 'current_capital', 'current_tier', 'large', 'new_config', 'target_tier', 'transition_needed']

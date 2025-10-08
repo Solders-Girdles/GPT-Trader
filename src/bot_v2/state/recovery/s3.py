@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import logging
 from typing import TYPE_CHECKING
 
@@ -21,22 +20,21 @@ class S3RecoveryStrategy(RecoveryStrategy):
     def failure_type_name(self) -> str:
         return "S3 Unavailable"
 
-async def recover(self, operation: RecoveryOperation) -> bool:
-    """Recover from S3 unavailability"""
-    try:
-        logger.info("Handling S3 unavailability")
-        operation.actions_taken.append("S3 recovery - using local storage fallback")
+    async def recover(self, operation: RecoveryOperation) -> bool:
+        """Recover from S3 unavailability"""
+        try:
+            logger.info("Handling S3 unavailability")
+            operation.actions_taken.append("S3 recovery - using local storage fallback")
 
-        # S3 is for cold storage, not critical for operations
-        # Mark cold data as temporarily unavailable
-        await self.state_manager.set_state("system:s3_available", False)
+            # S3 is for cold storage, not critical for operations
+            # Mark cold data as temporarily unavailable
+            await self.state_manager.set_state("system:s3_available", False)
 
-        # Use local disk as temporary cold storage
-        operation.actions_taken.append("Configured local disk fallback for cold storage")
+            # Use local disk as temporary cold storage
+            operation.actions_taken.append("Configured local disk fallback for cold storage")
 
-        return True  # System can operate without S3
+            return True  # System can operate without S3
 
-    except Exception as e:
-        logger.error(f"S3 recovery failed: {e}")
-        return False
-
+        except Exception as e:
+            logger.error(f"S3 recovery failed: {e}")
+            return False

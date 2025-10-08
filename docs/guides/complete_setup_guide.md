@@ -3,7 +3,7 @@
 ---
 status: current
 created: 2025-01-01
-last-updated: 2025-03-01
+last-updated: 2025-10-07
 consolidates:
   - docs/QUICK_START.md
   - docs/guides/api_key_setup.md

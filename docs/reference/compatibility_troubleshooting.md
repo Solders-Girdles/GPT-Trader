@@ -2,7 +2,7 @@
 
 ---
 status: current
-last-updated: 2025-01-01
+last-updated: 2025-10-07
 consolidates:
   - COMPATIBILITY.md
 ---

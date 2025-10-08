@@ -1,0 +1,4 @@
+# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/features/adaptive_portfolio/risk_manager.py
+# hypothesis_version: 6.140.3
+
+[0.1, 0.2, 0.5, 0.8, 1.0, 1.1, 1.2, 25.0, 100, 5000, 'HIGH', 'LONG', 'LOW', 'MEDIUM', 'VERY_LOW', 'avg_position_size', 'cash_pct', 'daily_pnl_pct', 'daily_risk_limit_pct', 'daily_risk_pct', 'invested_pct', 'largest_position_pct', 'positions_count', 'risk_adjusted_score', 'tier_compliant', 'total_value']

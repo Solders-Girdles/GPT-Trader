@@ -22,6 +22,7 @@ from datetime import datetime, timezone, timedelta
 from decimal import Decimal
 from typing import Dict, List, Tuple, Optional, Any
 from pathlib import Path
+from urllib.error import HTTPError, URLError
 
 
 # Color codes for terminal output
@@ -201,96 +202,171 @@ class PreflightCheck:
 
         return all_good
 
-    def check_api_connectivity(self) -> bool:
-        """Test connection to Coinbase API."""
-        self.section_header("4. API CONNECTIVITY TEST")
-
+    def _build_cdp_client(self) -> tuple[Any, Any] | None:
+        """Construct Coinbase client and auth for CDP JWT flow."""
         try:
             from bot_v2.features.brokerages.coinbase.client import (
                 CoinbaseClient,
                 create_cdp_jwt_auth,
             )
+        except Exception as exc:  # pragma: no cover - defensive import guard
+            self.log_error(f"Coinbase client import failed: {exc}")
+            return None
 
-            # Get credentials
-            api_key = os.getenv("COINBASE_PROD_CDP_API_KEY") or os.getenv("COINBASE_CDP_API_KEY")
-            private_key = os.getenv("COINBASE_PROD_CDP_PRIVATE_KEY") or os.getenv(
-                "COINBASE_CDP_PRIVATE_KEY"
-            )
+        api_key = os.getenv("COINBASE_PROD_CDP_API_KEY") or os.getenv("COINBASE_CDP_API_KEY")
+        private_key = os.getenv("COINBASE_PROD_CDP_PRIVATE_KEY") or os.getenv(
+            "COINBASE_CDP_PRIVATE_KEY"
+        )
 
-            if not api_key or not private_key:
-                self.log_error("Cannot test API without credentials")
-                return False
+        if not api_key or not private_key:
+            self.log_error("CDP credentials missing (export API key and private key)")
+            return None
 
-            # Create auth
+        try:
             auth = create_cdp_jwt_auth(
                 api_key_name=api_key,
                 private_key_pem=private_key,
                 base_url="https://api.coinbase.com",
             )
+        except Exception as exc:
+            self.log_error(f"Failed to initialize CDP JWT auth: {exc}")
+            return None
 
-            # Test JWT generation
+        client = CoinbaseClient(
+            base_url="https://api.coinbase.com",
+            auth=auth,
+            api_mode="advanced",
+        )
+        return client, auth
+
+    def check_api_connectivity(self) -> bool:
+        """Test connection to Coinbase API."""
+        self.section_header("4. API CONNECTIVITY TEST")
+
+        built = self._build_cdp_client()
+        if not built:
+            return False
+        client, auth = built
+
+        try:
+            auth.generate_jwt("GET", "/api/v3/brokerage/accounts")
+            self.log_success("JWT token generated successfully")
+        except Exception as exc:
+            self.log_error(f"JWT generation failed: {exc}")
+            return False
+
+        tests = [
+            ("Server time", lambda: client.get_time()),
+            ("Accounts", lambda: client.get_accounts()),
+            ("Products", lambda: client.list_products()),
+        ]
+
+        all_good = True
+        for test_name, test_func in tests:
             try:
-                jwt_token = auth.generate_jwt("GET", "/api/v3/brokerage/accounts")
-                self.log_success("JWT token generated successfully")
-            except Exception as e:
-                self.log_error(f"JWT generation failed: {e}")
-                return False
+                start = time.perf_counter()
+                result = test_func()
+                latency = (time.perf_counter() - start) * 1000
 
-            # Create client
-            client = CoinbaseClient(
-                base_url="https://api.coinbase.com", auth=auth, api_mode="advanced"
-            )
-
-            # Test endpoints
-            tests = [
-                ("Server time", lambda: client.get_time()),
-                ("Accounts", lambda: client.get_accounts()),
-                ("Products", lambda: client.list_products()),
-            ]
-
-            all_good = True
-            for test_name, test_func in tests:
-                try:
-                    start = time.perf_counter()
-                    result = test_func()
-                    latency = (time.perf_counter() - start) * 1000
-
-                    if result:
-                        self.log_success(f"{test_name}: OK ({latency:.0f}ms)")
-                    else:
-                        self.log_warning(f"{test_name}: Empty response")
-                except Exception as e:
-                    self.log_error(f"{test_name}: {str(e)[:100]}")
-                    all_good = False
-
-            # Test perpetual products
-            try:
-                products = client.list_products()
-                perps = [p for p in products if p.get("product_id", "").endswith("-PERP")]
-                if perps:
-                    self.log_success(f"Found {len(perps)} perpetual products")
-                    if self.verbose:
-                        for p in perps[:3]:
-                            self.log_info(f"  - {p.get('product_id')}")
+                if result:
+                    self.log_success(f"{test_name}: OK ({latency:.0f}ms)")
                 else:
-                    self.log_error("No perpetual products found")
-                    all_good = False
-            except Exception as e:
-                self.log_error(f"Failed to list products: {e}")
+                    self.log_warning(f"{test_name}: Empty response")
+            except Exception as exc:
+                self.log_error(f"{test_name}: {str(exc)[:100]}")
                 all_good = False
 
-            return all_good
+        try:
+            products = client.list_products()
+            perps = [p for p in products if p.get("product_id", "").endswith("-PERP")]
+            if perps:
+                self.log_success(f"Found {len(perps)} perpetual products")
+                if self.verbose:
+                    for product in perps[:3]:
+                        self.log_info(f"  - {product.get('product_id')}")
+            else:
+                self.log_error("No perpetual products found")
+                all_good = False
+        except Exception as exc:
+            self.log_error(f"Failed to list products: {exc}")
+            all_good = False
 
-        except ImportError as e:
-            self.log_error(f"Failed to import required modules: {e}")
+        return all_good
+
+    def check_key_permissions(self) -> bool:
+        """Validate Coinbase key permissions and INTX gating."""
+        self.section_header("5. KEY PERMISSIONS & INTX READINESS")
+
+        built = self._build_cdp_client()
+        if not built:
             return False
-        except Exception as e:
-            self.log_error(f"Unexpected error during API test: {e}")
+        client, _auth = built
+
+        max_attempts = 3
+        permissions: dict[str, Any] | None = None
+        for attempt in range(1, max_attempts + 1):
+            try:
+                permissions = client.get_key_permissions() or {}
+                break
+            except (HTTPError, URLError, TimeoutError, ConnectionError) as exc:
+                if attempt == max_attempts:
+                    self.log_error(f"Key permissions check failed after retries: {exc}")
+                    return False
+                delay = min(5.0, 1.5**attempt)
+                self.log_warning(
+                    f"Transient error fetching key permissions ({exc}); retrying in {delay:.1f}s"
+                )
+                time.sleep(delay)
+            except Exception as exc:
+                self.log_error(f"Failed to fetch key permissions: {exc}")
+                return False
+
+        if permissions is None:
+            self.log_error("Key permissions response empty; cannot validate entitlements")
             return False
+
+        can_trade = bool(permissions.get("can_trade"))
+        can_view = bool(permissions.get("can_view"))
+        portfolio_type = (permissions.get("portfolio_type") or "").upper()
+        portfolio_uuid = permissions.get("portfolio_uuid")
+
+        all_good = True
+
+        if can_trade and can_view:
+            self.log_success("API key has trade + view permissions")
+        else:
+            if not can_trade:
+                self.log_error("API key missing trade permission (can_trade=False)")
+                all_good = False
+            if not can_view:
+                self.log_error("API key missing portfolio view permission (can_view=False)")
+                all_good = False
+
+        if portfolio_uuid:
+            self.log_info(f"Portfolio UUID detected: {portfolio_uuid}")
+        else:
+            self.log_warning("Portfolio UUID not returned; verify CDP key portfolio access")
+
+        derivatives_enabled = os.getenv("COINBASE_ENABLE_DERIVATIVES") == "1"
+        if derivatives_enabled:
+            if portfolio_type == "INTX":
+                self.log_success("INTX portfolio detected (derivatives can execute)")
+            else:
+                display_type = portfolio_type or "UNKNOWN"
+                self.log_error(
+                    f"INTX gating check failed: portfolio_type={display_type} "
+                    "(expected INTX when derivatives are enabled)"
+                )
+                all_good = False
+        else:
+            if portfolio_type == "INTX":
+                self.log_info("INTX portfolio available; derivatives flag is currently disabled")
+
+        return all_good
 
     def check_risk_configuration(self) -> bool:
         """Validate risk management settings."""
-        self.section_header("5. RISK MANAGEMENT VALIDATION")
+        self.section_header("6. RISK MANAGEMENT VALIDATION")
 
         try:
             from bot_v2.config.live_trade_config import RiskConfig
@@ -338,7 +414,7 @@ class PreflightCheck:
 
     def check_test_suite(self) -> bool:
         """Run critical tests."""
-        self.section_header("6. TEST SUITE VALIDATION")
+        self.section_header("7. TEST SUITE VALIDATION")
 
         print("Running core test suite...")
 
@@ -395,7 +471,7 @@ class PreflightCheck:
 
     def check_profile_configuration(self) -> bool:
         """Validate selected trading profile."""
-        self.section_header("7. PROFILE CONFIGURATION")
+        self.section_header("8. PROFILE CONFIGURATION")
 
         profile_path = Path(f"config/profiles/{self.profile}.yaml")
 
@@ -448,7 +524,7 @@ class PreflightCheck:
 
     def check_system_time(self) -> bool:
         """Verify system clock synchronization."""
-        self.section_header("8. SYSTEM TIME SYNC")
+        self.section_header("9. SYSTEM TIME SYNC")
 
         try:
             # Get system time
@@ -513,7 +589,7 @@ class PreflightCheck:
 
     def check_disk_space(self) -> bool:
         """Verify adequate disk space for logs and events."""
-        self.section_header("9. DISK SPACE CHECK")
+        self.section_header("10. DISK SPACE CHECK")
 
         import shutil
 
@@ -541,7 +617,7 @@ class PreflightCheck:
 
     def simulate_dry_run(self) -> bool:
         """Simulate a dry-run execution."""
-        self.section_header("10. DRY-RUN SIMULATION")
+        self.section_header("11. DRY-RUN SIMULATION")
 
         print("Simulating dry-run execution...")
 
@@ -691,6 +767,7 @@ def main():
         checker.check_dependencies,
         checker.check_environment_variables,
         checker.check_api_connectivity,
+        checker.check_key_permissions,
         checker.check_risk_configuration,
         checker.check_test_suite,
         checker.check_profile_configuration,

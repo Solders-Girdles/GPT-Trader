@@ -1,0 +1,4 @@
+# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/features/analyze/patterns.py
+# hypothesis_version: 6.140.3
+
+[-0.001, 0.001, 0.03, 0.05, 0.6, 0.65, 0.7, 0.8, 0.95, 0.97, 0.98, 1.02, 1.03, 1.05, 'Ascending Triangle', 'Bear Flag', 'Bull Flag', 'Continuation pattern', 'Descending Triangle', 'Double Bottom', 'Double Top', 'Head and Shoulders', 'Symmetrical Triangle', 'close', 'high', 'low']

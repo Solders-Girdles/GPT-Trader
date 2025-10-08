@@ -130,8 +130,9 @@ def test_ws_factory_uses_endpoint_urls(monkeypatch) -> None:
             del payload
 
         def stream_messages(self):  # pragma: no cover - helper stub
-            if False:
-                yield {}
+            from bot_v2.utilities import empty_stream
+
+            return empty_stream()
 
     monkeypatch.setattr(adapter_mod, "CoinbaseWebSocket", StubWS)
 
@@ -303,8 +304,9 @@ class CaptureTransport:
         self.subscriptions.append(payload)
 
     def stream(self):  # pragma: no cover - helper stub
-        if False:
-            yield {}
+        from bot_v2.utilities import empty_stream
+
+        return empty_stream()
 
 
 SUBSCRIPTION_CASES = [

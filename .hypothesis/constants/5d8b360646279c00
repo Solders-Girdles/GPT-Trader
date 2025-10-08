@@ -1,0 +1,4 @@
+# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/monitoring/system/collectors.py
+# hypothesis_version: 6.140.3
+
+[0.0, 1.0, 1024, '/', 'ComponentCollector', 'PerformanceCollector', 'ResourceCollector', 'note', 'open_files', 'system']

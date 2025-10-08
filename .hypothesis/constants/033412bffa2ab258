@@ -1,0 +1,4 @@
+# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/monitoring/system/logger.py
+# hypothesis_version: 6.140.3
+
+[0.0, 100, 200, 400, 1000, ',', '1', ':', 'CANCELLED', 'EXPIRED', 'PERPS_DEBUG', 'PERPS_JSON_CONSOLE', 'PERPS_MIN_LOG_LEVEL', 'REJECTED', 'auth_event', 'avg_log_time_ms', 'balance_update', 'bot_v2', 'bot_v2.json', 'component', 'confidence', 'correlation_id', 'critical', 'debug', 'error', 'error_context', 'event_type', 'execution_time_ms', 'feature_count', 'funding_applied', 'inference_time_ms', 'info', 'level', 'market_heartbeat', 'message', 'ml_prediction', 'on', 'order_round_trip', 'order_status_change', 'order_submission', 'performance_metric', 'pnl_update', 'position_change', 'rest_timing', 'risk_limit_breach', 'sample_features', 'service', 'strategy_duration', 'timestamp', 'total_log_time_ms', 'total_logs', 'trade_execution', 'true', 'value', 'warning', 'ws_latency', 'yes']

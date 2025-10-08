@@ -31,6 +31,7 @@ from bot_v2.orchestration.session_guard import TradingSessionGuard
 from bot_v2.orchestration.storage import StorageBootstrapper
 from bot_v2.orchestration.strategy_orchestrator import StrategyOrchestrator
 from bot_v2.orchestration.system_monitor import SystemMonitor
+from bot_v2.utilities import emit_metric, utc_now
 
 if TYPE_CHECKING:  # pragma: no cover - imports for type checking only
     from bot_v2.features.brokerages.core.interfaces import IBrokerage
@@ -149,7 +150,7 @@ class PerpsBot:
             positions=positions,
             account_equity=account_equity,
             profile=self.config.profile,
-            broker_type=broker_type
+            broker_type=broker_type,
         )
 
     def _init_configuration_guardian(self) -> None:
@@ -310,7 +311,7 @@ class PerpsBot:
         try:
             # Try to get account equity if possible
             account_info = await asyncio.to_thread(self.broker.get_account_info)
-            account_equity = getattr(account_info, 'equity', None)
+            account_equity = getattr(account_info, "equity", None)
             if account_equity is not None:
                 account_equity = Decimal(str(account_equity))
         except Exception as exc:
@@ -333,7 +334,7 @@ class PerpsBot:
             proposed_config_dict=current_config_dict,
             current_balances=balances,
             current_positions=list(positions),
-            current_equity=account_equity
+            current_equity=account_equity,
         )
 
         if not validation_result.is_valid:
@@ -349,14 +350,18 @@ class PerpsBot:
             )
 
             if has_critical_errors:
-                logger.critical("Critical configuration violations detected - initiating emergency shutdown")
+                logger.critical(
+                    "Critical configuration violations detected - initiating emergency shutdown"
+                )
                 # Critical events require emergency shutdown
                 self.running = False
                 await self.shutdown()
                 return
             else:
                 # High events require reduce-only mode
-                logger.warning("High-severity configuration violations detected - switching to reduce-only mode")
+                logger.warning(
+                    "High-severity configuration violations detected - switching to reduce-only mode"
+                )
                 self.set_reduce_only_mode(True, "Configuration drift detected")
                 return
 
@@ -460,7 +465,7 @@ class PerpsBot:
                 self._update_mark_window(symbol, mark)
                 try:
                     self.risk_manager.last_mark_update[symbol] = (
-                        ts if isinstance(ts, datetime) else datetime.utcnow()
+                        ts if isinstance(ts, datetime) else utc_now()
                     )
                 except Exception as exc:
                     logger.debug(
@@ -620,26 +625,26 @@ class PerpsBot:
                 self._update_mark_window(sym, mark)
                 try:
                     self._market_monitor.record_update(sym)
-                    self.risk_manager.last_mark_update[sym] = datetime.utcnow()
-                    self.event_store.append_metric(
+                    self.risk_manager.last_mark_update[sym] = utc_now()
+                    emit_metric(
+                        self.event_store,
                         self.bot_id,
                         {"event_type": "ws_mark_update", "symbol": sym, "mark": str(mark)},
                     )
                 except Exception:
                     logger.exception("WS mark update bookkeeping failed for %s", sym)
         except Exception as exc:
-            try:
-                self.event_store.append_metric(
-                    self.bot_id,
-                    {"event_type": "ws_stream_error", "message": str(exc)},
-                )
-            except Exception:
-                logger.exception("Failed to record WS stream error metric")
+            emit_metric(
+                self.event_store,
+                self.bot_id,
+                {"event_type": "ws_stream_error", "message": str(exc)},
+            )
         finally:
-            try:
-                self.event_store.append_metric(self.bot_id, {"event_type": "ws_stream_exit"})
-            except Exception:
-                logger.exception("Failed to record WS stream exit metric")
+            emit_metric(
+                self.event_store,
+                self.bot_id,
+                {"event_type": "ws_stream_exit"},
+            )
 
     # ------------------------------------------------------------------
     def _update_mark_window(self, symbol: str, mark: Decimal) -> None:

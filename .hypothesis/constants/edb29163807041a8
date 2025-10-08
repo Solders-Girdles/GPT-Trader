@@ -1,0 +1,4 @@
+# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/features/brokerages/coinbase/auth.py
+# hypothesis_version: 6.140.3
+
+[120, ',', '-----BEGIN', '/', '/users/self', ':', 'AuthStrategy', 'Authorization', 'CB-ACCESS-KEY', 'CB-ACCESS-PASSPHRASE', 'CB-ACCESS-SIGN', 'CB-ACCESS-TIMESTAMP', 'CDPJWTAuth', 'CoinbaseAuth', 'Content-Type', 'ES256', 'GET', 'Invalid private key', 'JWT', '\\n', 'advanced', 'api.coinbase.com', 'application/json', 'aud', 'auth_type', 'build_rest_auth', 'cdp', 'coinbase-cloud', 'create_cdp_auth', 'create_cdp_jwt_auth', 'exchange', 'exp', 'generate_jwt', 'http://', 'https://', 'iss', 'jwt', 'kid', 'nbf', 'nonce', 'sub', 'uri', 'utf-8']

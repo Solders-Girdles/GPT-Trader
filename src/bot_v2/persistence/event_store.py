@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 from bot_v2.config.path_registry import DEFAULT_EVENT_STORE_DIR
 from bot_v2.persistence.json_file_store import JsonFileStore
+from bot_v2.utilities import utc_now_iso
 
 
 class EventStore:
@@ -25,7 +25,7 @@ class EventStore:
 
     def _write(self, payload: dict[str, Any]) -> None:
         payload = dict(payload)
-        payload.setdefault("time", datetime.utcnow().isoformat())
+        payload.setdefault("time", utc_now_iso())
         self._store.append_jsonl(payload)
 
     # Public appenders

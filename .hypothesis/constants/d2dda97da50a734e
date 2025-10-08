@@ -1,0 +1,4 @@
+# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/utilities/telemetry.py
+# hypothesis_version: 6.140.3
+
+['emit_metric', 'event_type', 'metric_emit_failed', 'unknown']

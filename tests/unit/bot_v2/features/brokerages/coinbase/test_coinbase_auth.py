@@ -121,8 +121,9 @@ def test_adapter_ws_auth_provider_injection(monkeypatch):
             subscribe_payloads.append(payload)
 
         def stream_messages(self):
-            if False:
-                yield {}
+            from bot_v2.utilities import empty_stream
+
+            return empty_stream()
 
     with patch("bot_v2.features.brokerages.coinbase.adapter.CoinbaseWebSocket", FakeWS):
         list(adapter.stream_user_events())

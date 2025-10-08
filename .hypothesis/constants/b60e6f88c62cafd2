@@ -1,0 +1,4 @@
+# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/features/brokerages/coinbase/errors.py
+# hypothesis_version: 6.140.3
+
+[400, 401, 403, 404, 407, 429, 'authentication_error', 'client', 'client_order_id', 'cross', 'dup', 'duplicate', 'exceed', 'forbidden', 'insufficient', 'insufficient funds', 'invalid', 'invalid_api_key', 'invalid_request', 'invalid_signature', 'leverage', 'leverage_violation', 'max size', 'max_size_violation', 'maximum size', 'min size', 'min_size_violation', 'minimum size', 'not found', 'permission', 'permission denied', 'post only', 'price', 'rate', 'rate limit', 'rate limited', 'reduce only', 'size', 'unknown error']

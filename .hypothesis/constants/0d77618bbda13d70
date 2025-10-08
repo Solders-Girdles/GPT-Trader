@@ -1,0 +1,4 @@
+# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/security/auth_handler.py
+# hypothesis_version: 6.140.3
+
+[900, 604800, '*', 'Bearer', 'Bot V2 Trading', 'ENV', 'HS256', 'JWT_SECRET_KEY', 'Token expired', 'access', 'access_token_jti', 'admin', 'admin-001', 'admin123', 'admin@bot-v2.local', 'aud', 'created_at', 'dashboard', 'data:read', 'development', 'exp', 'health:read', 'iat', 'iss', 'jti', 'orders:create', 'performance:read', 'permissions', 'positions:read', 'refresh', 'refresh_token_jti', 'role', 'service', 'signals:write', 'sub', 'trader', 'trading-api', 'trading:execute', 'trading:read', 'type', 'user_id', 'username', 'verify_signature', 'viewer']

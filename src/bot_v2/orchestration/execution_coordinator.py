@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from datetime import datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
@@ -19,6 +18,7 @@ from bot_v2.features.live_trade.risk import ValidationError as RiskValidationErr
 from bot_v2.features.live_trade.strategies.perps_baseline import Action
 from bot_v2.orchestration.live_execution import LiveExecutionEngine
 from bot_v2.orchestration.order_reconciler import OrderReconciler
+from bot_v2.utilities import utc_now
 from bot_v2.utilities.quantities import quantity_from
 
 if TYPE_CHECKING:  # pragma: no cover - type checking only
@@ -34,11 +34,108 @@ class ExecutionCoordinator:
         self._bot = bot
         self._order_reconciler: OrderReconciler | None = None
 
+    @staticmethod
+    def _should_use_advanced(risk_config: Any) -> bool:
+        """Determine if advanced execution engine should be used based on risk config.
+
+        Args:
+            risk_config: Risk manager configuration object
+
+        Returns:
+            True if advanced execution engine is required, False otherwise
+        """
+        if risk_config is None:
+            return False
+        if getattr(risk_config, "enable_dynamic_position_sizing", False):
+            return True
+        if getattr(risk_config, "enable_market_impact_guard", False):
+            return True
+        return False
+
+    def _build_impact_estimator(self) -> Any:
+        """Build market impact estimator function for advanced execution.
+
+        Returns:
+            Callable impact estimator function
+
+        Raises:
+            ImportError: If LiquidityService cannot be imported
+        """
+        from bot_v2.features.live_trade.liquidity_service import LiquidityService
+
+        bot = self._bot
+        liquidity_service = LiquidityService()
+
+        def _impact_estimator(req: Any) -> Any:
+            try:
+                quote = bot.broker.get_quote(req.symbol)
+            except Exception:
+                quote = None
+
+            bids: list[tuple[Decimal, Decimal]]
+            asks: list[tuple[Decimal, Decimal]]
+
+            # Allow deterministic brokers to seed a custom order book
+            seeded_orderbooks = getattr(bot.broker, "order_books", None)
+            if seeded_orderbooks and req.symbol in seeded_orderbooks:
+                seeded = seeded_orderbooks[req.symbol]
+                bids = [(Decimal(str(p)), Decimal(str(s))) for p, s in seeded[0]]
+                asks = [(Decimal(str(p)), Decimal(str(s))) for p, s in seeded[1]]
+            else:
+                mid = None
+                if quote is not None and getattr(quote, "last", None) is not None:
+                    mid = Decimal(str(quote.last))
+                elif (
+                    quote is not None
+                    and getattr(quote, "bid", None) is not None
+                    and getattr(quote, "ask", None) is not None
+                ):
+                    mid = (Decimal(str(quote.bid)) + Decimal(str(quote.ask))) / Decimal("2")
+                if mid is None:
+                    mid = Decimal("100")
+
+                tick = None
+                if (
+                    quote is not None
+                    and getattr(quote, "ask", None) is not None
+                    and getattr(quote, "bid", None) is not None
+                ):
+                    spread = Decimal(str(quote.ask)) - Decimal(str(quote.bid))
+                    if spread > 0:
+                        tick = spread / Decimal("2")
+                if tick is None or tick == 0:
+                    tick = mid * Decimal("0.0005")
+
+                depth_size = max(Decimal("1000"), abs(Decimal(str(req.quantity))) * Decimal("20"))
+                bids = [(mid - tick * Decimal(i + 1), depth_size) for i in range(5)]
+                asks = [(mid + tick * Decimal(i + 1), depth_size) for i in range(5)]
+
+            liquidity_service.analyze_order_book(
+                req.symbol,
+                bids=bids,
+                asks=asks,
+                timestamp=utc_now(),
+            )
+            return liquidity_service.estimate_market_impact(
+                symbol=req.symbol,
+                side=req.side,
+                quantity=Decimal(str(req.quantity)),
+                book_data=(bids, asks),
+            )
+
+        return _impact_estimator
+
     def init_execution(self) -> None:
+        """Initialize execution engine based on risk configuration.
+
+        Sets up either AdvancedExecutionEngine (if dynamic sizing or impact guard enabled)
+        or LiveExecutionEngine (standard execution) based on risk configuration flags.
+        """
         import os
 
         bot = self._bot
 
+        # Parse slippage multipliers from environment
         slippage_env = os.environ.get("SLIPPAGE_MULTIPLIERS", "")
         slippage_map: dict[str, float] = {}
         if slippage_env:
@@ -52,93 +149,23 @@ class ExecutionCoordinator:
                     "Invalid SLIPPAGE_MULTIPLIERS entry '%s': %s", slippage_env, exc, exc_info=True
                 )
 
+        # Determine execution engine type based on risk configuration
         risk_config = getattr(bot.risk_manager, "config", None)
-        use_advanced = False
-        if risk_config is not None:
-            if getattr(risk_config, "enable_dynamic_position_sizing", False):
-                use_advanced = True
-            if getattr(risk_config, "enable_market_impact_guard", False):
-                use_advanced = True
+        use_advanced = self._should_use_advanced(risk_config)
 
+        # Initialize liquidity estimator for advanced execution
         if use_advanced:
             try:
-                from bot_v2.features.live_trade.liquidity_service import LiquidityService
-
-                liquidity_service = LiquidityService()
-
-                def _impact_estimator(req: Any) -> Any:
-                    try:
-                        quote = bot.broker.get_quote(req.symbol)
-                    except Exception:
-                        quote = None
-
-                    bids: list[tuple[Decimal, Decimal]]
-                    asks: list[tuple[Decimal, Decimal]]
-
-                    # Allow deterministic brokers to seed a custom order book
-                    seeded_orderbooks = getattr(bot.broker, "order_books", None)
-                    if seeded_orderbooks and req.symbol in seeded_orderbooks:
-                        seeded = seeded_orderbooks[req.symbol]
-                        bids = [(Decimal(str(p)), Decimal(str(s))) for p, s in seeded[0]]
-                        asks = [(Decimal(str(p)), Decimal(str(s))) for p, s in seeded[1]]
-                    else:
-                        mid = None
-                        if quote is not None and getattr(quote, "last", None) is not None:
-                            mid = Decimal(str(quote.last))
-                        elif (
-                            quote is not None
-                            and getattr(quote, "bid", None) is not None
-                            and getattr(quote, "ask", None) is not None
-                        ):
-                            mid = (Decimal(str(quote.bid)) + Decimal(str(quote.ask))) / Decimal("2")
-                        if mid is None:
-                            mid = Decimal("100")
-
-                        tick = None
-                        if (
-                            quote is not None
-                            and getattr(quote, "ask", None) is not None
-                            and getattr(quote, "bid", None) is not None
-                        ):
-                            spread = Decimal(str(quote.ask)) - Decimal(str(quote.bid))
-                            if spread > 0:
-                                tick = spread / Decimal("2")
-                        if tick is None or tick == 0:
-                            tick = mid * Decimal("0.0005")
-
-                        depth_size = max(
-                            Decimal("1000"), abs(Decimal(str(req.quantity))) * Decimal("20")
-                        )
-                        bids = [(mid - tick * Decimal(i + 1), depth_size) for i in range(5)]
-                        asks = [(mid + tick * Decimal(i + 1), depth_size) for i in range(5)]
-
-                    liquidity_service.analyze_order_book(
-                        req.symbol,
-                        bids=bids,
-                        asks=asks,
-                        timestamp=datetime.utcnow(),
-                    )
-                    return liquidity_service.estimate_market_impact(
-                        symbol=req.symbol,
-                        side=req.side,
-                        quantity=Decimal(str(req.quantity)),
-                        book_data=(bids, asks),
-                    )
-
-                bot.risk_manager.set_impact_estimator(_impact_estimator)
+                impact_estimator = self._build_impact_estimator()
+                bot.risk_manager.set_impact_estimator(impact_estimator)
             except Exception as exc:
                 logger.warning(
                     "Failed to initialize LiquidityService impact estimator: %s",
                     exc,
                     exc_info=True,
                 )
-        use_advanced = False
-        if risk_config is not None:
-            if getattr(risk_config, "enable_dynamic_position_sizing", False):
-                use_advanced = True
-            if getattr(risk_config, "enable_market_impact_guard", False):
-                use_advanced = True
 
+        # Create appropriate execution engine
         if use_advanced:
             bot.exec_engine = AdvancedExecutionEngine(
                 broker=bot.broker,
@@ -155,6 +182,8 @@ class ExecutionCoordinator:
                 enable_preview=bot.config.enable_order_preview,
             )
             logger.info("Initialized LiveExecutionEngine with risk integration")
+
+        # Register execution engine in service registry
         extras = dict(bot.registry.extras)
         extras["execution_engine"] = bot.exec_engine
         bot.registry = bot.registry.with_updates(extras=extras)

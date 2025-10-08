@@ -9,10 +9,12 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Literal
 
-from bot_v2.monitoring.alert_types import Alert, AlertSeverity
+from bot_v2.monitoring.alert_types import Alert as AlertType
+from bot_v2.monitoring.alert_types import AlertSeverity
 
 # Backwards-compatible alias – code should transition to ``AlertSeverity``
 AlertLevel = AlertSeverity
+Alert = AlertType
 
 
 class ComponentStatus(Enum):

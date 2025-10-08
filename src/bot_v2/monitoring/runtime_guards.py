@@ -18,7 +18,6 @@ from typing import Any
 
 from bot_v2.monitoring.alert_types import AlertSeverity
 
-
 logger = logging.getLogger(__name__)
 
 

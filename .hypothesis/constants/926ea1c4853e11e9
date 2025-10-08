@@ -1,0 +1,4 @@
+# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/orchestration/execution/order_submission.py
+# hypothesis_version: 6.140.3
+
+['LiveExecutionEngine', 'REJECTED', 'SUBMITTED', 'bot_id', 'client_order_id', 'event_type', 'market', 'order_id', 'order_preview', 'order_rejected', 'order_type', 'preview', 'price', 'quantity', 'reason', 'side', 'status', 'symbol', 'type']

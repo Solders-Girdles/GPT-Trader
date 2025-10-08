@@ -5,7 +5,6 @@ Complete isolation - no external dependencies.
 """
 
 from datetime import datetime
-from typing import List, Optional, Any
 import logging
 import pandas as pd
 import pickle

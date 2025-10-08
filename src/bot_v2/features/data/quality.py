@@ -4,8 +4,7 @@ Local data quality checking.
 Complete isolation - no external dependencies.
 """
 
-from datetime import datetime, timedelta
-from typing import Dict, List
+from datetime import datetime
 import pandas as pd
 import numpy as np
 from bot_v2.features.data.types import DataQuality

@@ -1,0 +1,4 @@
+# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/monitoring/configuration_guardian.py
+# hypothesis_version: 6.140.3
+
+['0', '1000', 'Informational only', 'PERPS_FORCE_MOCK', 'PERPS_PAPER', 'SPOT_FORCE_LIVE', '[REDACTED]', '_KEY', '_SECRET', '_TOKEN', 'baseline_timestamp', 'critical', 'critical_env_changed', 'current_exposure', 'current_leverage', 'daily_loss_limit', 'drift_detector', 'drift_summary', 'emergency_shutdown', 'environment_monitor', 'error', 'events_by_component', 'exposure', 'healthy', 'high', 'highest_severity', 'impact', 'low', 'max_leverage', 'max_position_size', 'medium', 'message', 'metadata', 'monitor_failure', 'monitors_status', 'new_max_leverage', 'new_profile', 'new_value', 'none', 'old_profile', 'old_value', 'price', 'profile', 'reduce_only', 'removed_symbols', 'risk_env_changed', 'size', 'state_validator', 'sticky', 'symbol', 'symbols', 'total_events', 'variable']

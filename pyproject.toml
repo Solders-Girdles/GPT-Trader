@@ -79,8 +79,8 @@ select = [
     "F",      # pyflakes
     "I",      # isort
     "W",      # pycodestyle warnings
-    # ANN: Type annotations checked exclusively by MyPy (disallow_untyped_defs=true)
-    #      to maintain single source of truth and avoid duplicate violations
+    "ANN001", # Missing type annotation for function argument
+    "ANN201", # Missing return type annotation for public function
 ]
 ignore = [
     "S101",    # Use of assert (acceptable in tests)

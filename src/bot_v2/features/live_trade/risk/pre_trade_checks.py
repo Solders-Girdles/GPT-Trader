@@ -34,7 +34,6 @@ def _coalesce_quantity(*values: Decimal | None) -> Decimal:
 class ValidationError(Exception):
     """Risk validation failure with clear message."""
 
-    pass
 
 
 class PreTradeValidator:

@@ -6,7 +6,7 @@ from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
-from typing import Any, Optional
+from typing import Any
 
 from bot_v2.features.brokerages.coinbase.market_data_features import RollingWindow
 from bot_v2.features.brokerages.coinbase.utilities import MarkCache

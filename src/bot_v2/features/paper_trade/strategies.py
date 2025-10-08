@@ -24,12 +24,10 @@ class PaperTradeStrategy(ABC):
         Analyze data and return signal.
         Returns: 1 (buy), -1 (sell), 0 (hold)
         """
-        pass
 
     @abstractmethod
     def get_required_periods(self) -> int:
         """Return minimum periods needed."""
-        pass
 
 
 class SimpleMAStrategy(PaperTradeStrategy):

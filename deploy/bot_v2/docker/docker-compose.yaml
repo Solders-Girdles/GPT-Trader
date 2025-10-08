@@ -141,10 +141,12 @@ services:
     hostname: vault
     profiles:
       - local-dev
+    env_file:
+      - .env
     cap_add:
       - IPC_LOCK
     environment:
-      - VAULT_DEV_ROOT_TOKEN_ID=development_token
+      - VAULT_DEV_ROOT_TOKEN_ID=${VAULT_DEV_ROOT_TOKEN_ID:-development_token}
       - VAULT_DEV_LISTEN_ADDRESS=0.0.0.0:8200
     volumes:
       - vault_data:/vault/file

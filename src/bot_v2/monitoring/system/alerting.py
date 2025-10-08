@@ -186,7 +186,6 @@ class AlertManager:
         # - PagerDuty
         # - SMS
         # etc.
-        pass
 
     def _print_alert(self, alert: Alert) -> None:
         """

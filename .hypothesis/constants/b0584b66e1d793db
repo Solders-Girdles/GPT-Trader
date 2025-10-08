@@ -1,0 +1,4 @@
+# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/features/optimize/strategies.py
+# hypothesis_version: 6.140.3
+
+[0.01, 0.015, 0.02, 0.025, 0.03, 0.25, 0.5, 0.75, 1.5, 2.0, 2.5, 'Breakout', 'MeanReversion', 'Momentum', 'SimpleMA', 'Volatility', 'close', 'confirm_bars', 'entry_std', 'exit_std', 'fast_period', 'high', 'hold_period', 'lookback', 'low', 'period', 'slow_period', 'stop_loss', 'threshold', 'trend_period', 'vol_period', 'vol_threshold']

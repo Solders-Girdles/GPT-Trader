@@ -19,12 +19,10 @@ class OptimizableStrategy(ABC):
     @abstractmethod
     def generate_signals(self, data: pd.DataFrame) -> pd.Series:
         """Generate trading signals."""
-        pass
 
     @abstractmethod
     def get_required_periods(self) -> int:
         """Return minimum periods needed."""
-        pass
 
 
 class SimpleMAStrategy(OptimizableStrategy):

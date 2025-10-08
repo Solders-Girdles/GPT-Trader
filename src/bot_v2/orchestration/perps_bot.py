@@ -43,7 +43,35 @@ logger = logging.getLogger(__name__)
 
 
 class PerpsBot:
-    """Main Coinbase trading bot (spot by default, perps optional)."""
+    """Main Coinbase trading bot implementation.
+
+This module contains the core PerpsBot class that orchestrates trading activities
+including market data collection, strategy execution, risk management, and
+position monitoring. The bot supports both spot and perpetual trading with
+comprehensive error handling, configuration validation, and runtime monitoring.
+
+Key Features:
+- Multi-symbol trading with configurable strategies
+- Real-time market data streaming and processing
+- Risk management with position sizing and loss limits
+- Configuration drift detection and validation
+- Comprehensive logging and monitoring
+- Graceful shutdown and error recovery
+- Support for both dry-run and live trading modes
+
+Architecture:
+The bot follows a modular architecture with separate coordinators for:
+- Execution: Order placement and management
+- Strategy: Trading signal generation and processing
+- Monitoring: System health and performance tracking
+- Configuration: Dynamic config updates and validation
+- Runtime: State management and recovery
+
+Usage:
+    config = BotConfig(profile=Profile.DEV, symbols=["BTC-USD"])
+    bot = PerpsBot(config)
+    await bot.run(single_cycle=False)  # Run continuously
+"""
 
     def __init__(self, config: BotConfig, registry: ServiceRegistry | None = None) -> None:
         self.bot_id = "perps_bot"
@@ -290,26 +318,49 @@ class PerpsBot:
             await self.shutdown()
 
     async def run_cycle(self) -> None:
+        """Execute a single trading cycle with validation and trading logic."""
         logger.debug("Running update cycle")
 
-        # Fetch state needed for guardian validation
+        # Fetch current state for validation
+        current_state = await self._fetch_current_state()
+        
+        # Validate configuration and handle any drift
+        if not await self._validate_configuration_and_handle_drift(current_state):
+            return
+
+        # Update market data
+        await self.update_marks()
+        
+        # Check if we should trade
+        if not self._session_guard.should_trade():
+            logger.info("Outside trading window; skipping trading actions this cycle")
+            await self.system_monitor.log_status()
+            return
+
+        # Refresh state for trading
+        trading_state = await self._fetch_current_state()
+        
+        # Execute trading logic for all symbols
+        await self._execute_trading_cycle(trading_state)
+        await self.system_monitor.log_status()
+
+    async def _fetch_current_state(self) -> dict[str, Any]:
+        """Fetch current broker state (balances, positions, equity)."""
         balances: Sequence[Balance] = []
         positions: Sequence[Position] = []
-        position_map: dict[str, Position] = {}
         account_equity: Decimal | None = None
 
         try:
             balances = await asyncio.to_thread(self.broker.list_balances)
         except Exception as exc:
-            logger.warning("Unable to fetch balances for trading cycle: %s", exc)
+            logger.warning("Unable to fetch balances: %s", exc)
 
         try:
             positions = await asyncio.to_thread(self.broker.list_positions)
         except Exception as exc:
-            logger.warning("Unable to fetch positions for trading cycle: %s", exc)
+            logger.warning("Unable to fetch positions: %s", exc)
 
         try:
-            # Try to get account equity if possible
             account_info = await asyncio.to_thread(self.broker.get_account_info)
             account_equity = getattr(account_info, "equity", None)
             if account_equity is not None:
@@ -317,11 +368,23 @@ class PerpsBot:
         except Exception as exc:
             logger.debug("Unable to fetch account equity: %s", exc)
 
+        position_map = {}
         if positions:
             position_map = {p.symbol: p for p in positions if hasattr(p, "symbol")}
 
-        # Check for configuration drift before proceeding with trading
-        # Pass current config as proposed_config to validate against current trading state
+        return {
+            "balances": balances,
+            "positions": positions,
+            "position_map": position_map,
+            "account_equity": account_equity,
+        }
+
+    async def _validate_configuration_and_handle_drift(self, current_state: dict[str, Any]) -> bool:
+        """Validate configuration and handle any detected drift.
+        
+        Returns:
+            bool: True if trading should continue, False if cycle should be aborted
+        """
         current_config_dict = {
             "profile": self.config.profile,
             "symbols": list(self.config.symbols) if self.config.symbols else [],
@@ -332,68 +395,56 @@ class PerpsBot:
 
         validation_result = self.configuration_guardian.pre_cycle_check(
             proposed_config_dict=current_config_dict,
-            current_balances=balances,
-            current_positions=list(positions),
-            current_equity=account_equity,
+            current_balances=current_state["balances"],
+            current_positions=current_state["positions"],
+            current_equity=current_state["account_equity"],
         )
 
-        if not validation_result.is_valid:
-            logger.warning("Configuration drift detected: %s", validation_result.errors)
-            for error in validation_result.errors:
-                logger.error("Configuration error: %s", error)
+        if validation_result.is_valid:
+            return True
 
-            # Check if we have critical errors requiring emergency shutdown
-            # vs high errors requiring reduce-only mode
-            has_critical_errors = any(
-                "critical" in error.lower() or "emergency_shutdown" in error.lower()
-                for error in validation_result.errors
+        logger.warning("Configuration drift detected: %s", validation_result.errors)
+        for error in validation_result.errors:
+            logger.error("Configuration error: %s", error)
+
+        # Check error severity and handle appropriately
+        has_critical_errors = any(
+            "critical" in error.lower() or "emergency_shutdown" in error.lower()
+            for error in validation_result.errors
+        )
+
+        if has_critical_errors:
+            logger.critical(
+                "Critical configuration violations detected - initiating emergency shutdown"
             )
+            self.running = False
+            await self.shutdown()
+            return False
+        else:
+            logger.warning(
+                "High-severity configuration violations detected - switching to reduce-only mode"
+            )
+            self.set_reduce_only_mode(True, "Configuration drift detected")
+            return False
 
-            if has_critical_errors:
-                logger.critical(
-                    "Critical configuration violations detected - initiating emergency shutdown"
-                )
-                # Critical events require emergency shutdown
-                self.running = False
-                await self.shutdown()
-                return
-            else:
-                # High events require reduce-only mode
-                logger.warning(
-                    "High-severity configuration violations detected - switching to reduce-only mode"
-                )
-                self.set_reduce_only_mode(True, "Configuration drift detected")
-                return
-
-        await self.update_marks()
-        if not self._session_guard.should_trade():
-            logger.info("Outside trading window; skipping trading actions this cycle")
-            await self.system_monitor.log_status()
-            return
-
-        try:
-            balances = await asyncio.to_thread(self.broker.list_balances)
-        except Exception as exc:
-            logger.warning("Unable to fetch balances for trading cycle: %s", exc)
-
-        try:
-            positions = await asyncio.to_thread(self.broker.list_positions)
-        except Exception as exc:
-            logger.warning("Unable to fetch positions for trading cycle: %s", exc)
-
-        if positions:
-            position_map = {p.symbol: p for p in positions if hasattr(p, "symbol")}
-
+    async def _execute_trading_cycle(self, trading_state: dict[str, Any]) -> None:
+        """Execute trading logic for all configured symbols."""
         expects_context = self._process_symbol_expects_context()
 
         tasks = []
         for symbol in self.symbols:
             if expects_context:
-                tasks.append(self.process_symbol(symbol, balances, position_map))
+                tasks.append(
+                    self.process_symbol(
+                        symbol, 
+                        trading_state["balances"], 
+                        trading_state["position_map"]
+                    )
+                )
             else:
                 tasks.append(self.process_symbol(symbol))
+        
         await asyncio.gather(*tasks)
-        await self.system_monitor.log_status()
 
     async def process_symbol(
         self,

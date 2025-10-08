@@ -1,0 +1,4 @@
+# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/monitoring/system/alerting.py
+# hypothesis_version: 6.140.3
+
+[300, 1000, 'acknowledged', 'components_affected', 'critical', 'error', 'info', 'total_active', 'warning', 'ℹ️  INFO', '⚠️  WARNING', '❌ ERROR', '🚨 CRITICAL']

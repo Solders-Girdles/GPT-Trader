@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Iterable, Sequence
 from datetime import datetime
 from decimal import Decimal
@@ -22,6 +23,8 @@ from bot_v2.features.brokerages.core.interfaces import (
     TimeInForce,
 )
 
+logger = logging.getLogger(__name__)
+
 
 class DeterministicBroker(IBrokerage):
     """A simple, predictable test broker implementing IBrokerage.
@@ -29,13 +32,39 @@ class DeterministicBroker(IBrokerage):
     - Static quotes derived from an internal `marks` map.
     - No random behavior; no side-effects beyond local state.
     - Suitable for unit tests that need a concrete broker object.
+    - Uses structured fixtures for consistent test data.
     """
 
     def __init__(self, equity: Decimal = Decimal("100000")) -> None:
         self._connected = False
         self.equity = Decimal(str(equity))
-        # Minimal product catalog sufficient for tests
-        self._products: dict[str, Product] = {
+        
+        # Try to load from fixtures, fall back to hardcoded defaults
+        self._products: dict[str, Product] = self._load_products_from_fixtures()
+        self.marks: dict[str, Decimal] = self._load_marks_from_fixtures()
+        
+        self._orders: list[Order] = []
+        self._positions: dict[str, Position] = {}
+        
+    def _load_products_from_fixtures(self) -> dict[str, Product]:
+        """Load products from structured fixtures."""
+        try:
+            # Try to import the product factory
+            from tests.fixtures.product_factory import default_product_factory
+            
+            products = {}
+            for symbol in default_product_factory.list_perpetual_symbols():
+                products[symbol] = default_product_factory.create_product(symbol, MarketType.PERPETUAL)
+            
+            if products:
+                logger.debug(f"Loaded {len(products)} products from fixtures")
+                return products
+                
+        except Exception as exc:
+            logger.debug(f"Could not load products from fixtures: {exc}")
+            
+        # Fall back to hardcoded defaults
+        return {
             "BTC-PERP": Product(
                 symbol="BTC-PERP",
                 base_asset="BTC",
@@ -70,14 +99,26 @@ class DeterministicBroker(IBrokerage):
                 leverage_max=3,
             ),
         }
-        # Deterministic marks
-        self.marks: dict[str, Decimal] = {
+        
+    def _load_marks_from_fixtures(self) -> dict[str, Decimal]:
+        """Load mark prices from structured fixtures."""
+        try:
+            from tests.fixtures.product_factory import default_product_factory
+            marks = default_product_factory.get_default_marks()
+            
+            if marks:
+                logger.debug(f"Loaded {len(marks)} mark prices from fixtures")
+                return marks
+                
+        except Exception as exc:
+            logger.debug(f"Could not load marks from fixtures: {exc}")
+            
+        # Fall back to hardcoded defaults
+        return {
             "BTC-PERP": Decimal("50000"),
             "ETH-PERP": Decimal("3000"),
             "XRP-PERP": Decimal("0.50"),
         }
-        self._orders: list[Order] = []
-        self._positions: dict[str, Position] = {}
 
     # ---- Connectivity ----
     def connect(self) -> bool:

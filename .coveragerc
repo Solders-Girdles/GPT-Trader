@@ -1,13 +1,14 @@
 [run]
 branch = True
 source =
-    src/bot_v2/cli
-    src/bot_v2/config
-    src/bot_v2/features/brokerages/coinbase/client
-    src/bot_v2/features/brokerages/coinbase/utilities
+    src/bot_v2
 parallel = True
 omit =
     **/__init__.py
+    **/__main__.py
+    **/scripts/**
+    **/demos/**
+    **/archived/**
 
 [report]
 exclude_lines =
@@ -15,3 +16,11 @@ exclude_lines =
     if TYPE_CHECKING:
     raise NotImplementedError
     @overload
+    def __repr__
+    if __name__ == .__main__.
+precision = 2
+show_missing = True
+skip_covered = False
+
+[html]
+directory = htmlcov

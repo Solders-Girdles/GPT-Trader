@@ -30,16 +30,13 @@ class BacktestStrategy(ABC):
     @abstractmethod
     def run(self, data: pd.DataFrame) -> pd.Series:
         """Generate signals from data."""
-        pass
 
     @abstractmethod
     def get_required_periods(self) -> int:
         """Return minimum periods needed."""
-        pass
 
     def _validate_parameters(self) -> None:
         """Validate strategy parameters. Override in subclasses."""
-        pass
 
     def _safe_rolling_calculation(
         self, series: pd.Series, window: int, operation: str

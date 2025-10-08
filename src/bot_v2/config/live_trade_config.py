@@ -10,7 +10,6 @@ import json
 import os
 from dataclasses import dataclass, field
 from decimal import Decimal
-from typing import Dict, Optional
 
 from .env_utils import (
     get_env_bool,
@@ -99,91 +98,78 @@ class RiskConfig:
     @classmethod
     def from_env(cls) -> RiskConfig:
         """Load config from environment variables."""
-        config = cls()
+        # Leverage controls
+        leverage_max_per_symbol = parse_env_mapping("RISK_LEVERAGE_MAX_PER_SYMBOL", int)
+        day_leverage_max_per_symbol = parse_env_mapping("RISK_DAY_LEVERAGE_MAX_PER_SYMBOL", int)
+        night_leverage_max_per_symbol = parse_env_mapping("RISK_NIGHT_LEVERAGE_MAX_PER_SYMBOL", int)
+        
+        # Margin rates
+        day_mmr_per_symbol = parse_env_mapping("RISK_DAY_MMR_PER_SYMBOL", float)
+        night_mmr_per_symbol = parse_env_mapping("RISK_NIGHT_MMR_PER_SYMBOL", float)
+        
+        # Position limits
+        max_notional_per_symbol = parse_env_mapping(
+            "RISK_MAX_NOTIONAL_PER_SYMBOL", lambda raw: Decimal(raw)
+        )
 
-        # Load from env with defaults
-        if (val := get_env_int("RISK_MAX_LEVERAGE")) is not None:
-            config.max_leverage = val
-
-        if env := parse_env_mapping("RISK_LEVERAGE_MAX_PER_SYMBOL", int):
-            config.leverage_max_per_symbol = env
-        # Time-of-day schedule (optional)
-        if val := os.getenv("RISK_DAYTIME_START_UTC"):
-            config.daytime_start_utc = val
-        if val := os.getenv("RISK_DAYTIME_END_UTC"):
-            config.daytime_end_utc = val
-        if env := parse_env_mapping("RISK_DAY_LEVERAGE_MAX_PER_SYMBOL", int):
-            config.day_leverage_max_per_symbol = env
-        if env := parse_env_mapping("RISK_NIGHT_LEVERAGE_MAX_PER_SYMBOL", int):
-            config.night_leverage_max_per_symbol = env
-        if env := parse_env_mapping("RISK_DAY_MMR_PER_SYMBOL", float):
-            config.day_mmr_per_symbol = env
-        if env := parse_env_mapping("RISK_NIGHT_MMR_PER_SYMBOL", float):
-            config.night_mmr_per_symbol = env
-
-        if (val := get_env_float("RISK_MIN_LIQUIDATION_BUFFER_PCT")) is not None:
-            config.min_liquidation_buffer_pct = val
-        if (val := get_env_bool("RISK_ENABLE_PRE_TRADE_LIQ_PROJECTION")) is not None:
-            config.enable_pre_trade_liq_projection = val
-        if (val := get_env_float("RISK_DEFAULT_MMR")) is not None:
-            config.default_maintenance_margin_rate = val
-
-        if (val := get_env_decimal("RISK_DAILY_LOSS_LIMIT")) is not None:
-            config.daily_loss_limit = val
-        # Legacy env alias for exposure
-        if (val := get_env_float("RISK_MAX_TOTAL_EXPOSURE_PCT")) is not None:
-            config.max_exposure_pct = val
-
-        if (val := get_env_float("RISK_MAX_EXPOSURE_PCT")) is not None:
-            config.max_exposure_pct = val
-
-        if (val := get_env_float("RISK_MAX_POSITION_PCT_PER_SYMBOL")) is not None:
-            config.max_position_pct_per_symbol = val
-
-        max_notional = parse_env_mapping("RISK_MAX_NOTIONAL_PER_SYMBOL", lambda raw: Decimal(raw))
-        if max_notional:
-            config.max_notional_per_symbol = max_notional
-
-        if (val := get_env_int("RISK_SLIPPAGE_GUARD_BPS")) is not None:
-            config.slippage_guard_bps = val
-
-        if (val := get_env_bool("RISK_KILL_SWITCH_ENABLED")) is not None:
-            config.kill_switch_enabled = val
-
-        if (val := get_env_bool("RISK_REDUCE_ONLY_MODE")) is not None:
-            config.reduce_only_mode = val
-
-        if (val := get_env_int("RISK_MAX_MARK_STALENESS_SECONDS")) is not None:
-            config.max_mark_staleness_seconds = val
-
-        if (val := get_env_bool("RISK_ENABLE_DYNAMIC_POSITION_SIZING")) is not None:
-            config.enable_dynamic_position_sizing = val
-        if (val := os.getenv("RISK_POSITION_SIZING_METHOD")) is not None:
-            config.position_sizing_method = val
-        if (val := get_env_float("RISK_POSITION_SIZING_MULTIPLIER")) is not None:
-            config.position_sizing_multiplier = val
-        if (val := get_env_bool("RISK_ENABLE_MARKET_IMPACT_GUARD")) is not None:
-            config.enable_market_impact_guard = val
-        if (val := get_env_int("RISK_MAX_MARKET_IMPACT_BPS")) is not None:
-            config.max_market_impact_bps = val
-
-        # Circuit breakers
-        if (val := get_env_bool("RISK_ENABLE_VOLATILITY_CB")) is not None:
-            config.enable_volatility_circuit_breaker = val
-        if (val := get_env_float("RISK_MAX_INTRADAY_VOL")) is not None:
-            config.max_intraday_volatility_threshold = val
-        if (val := get_env_int("RISK_VOL_WINDOW_PERIODS")) is not None:
-            config.volatility_window_periods = val
-        if (val := get_env_int("RISK_CB_COOLDOWN_MIN")) is not None:
-            config.circuit_breaker_cooldown_minutes = val
-        if (val := get_env_float("RISK_VOL_WARNING_THRESH")) is not None:
-            config.volatility_warning_threshold = val
-        if (val := get_env_float("RISK_VOL_REDUCE_ONLY_THRESH")) is not None:
-            config.volatility_reduce_only_threshold = val
-        if (val := get_env_float("RISK_VOL_KILL_SWITCH_THRESH")) is not None:
-            config.volatility_kill_switch_threshold = val
-
-        return config
+        return cls(
+            # Leverage controls
+            max_leverage=get_env_int("RISK_MAX_LEVERAGE") or 5,
+            leverage_max_per_symbol=leverage_max_per_symbol,
+            
+            # Time-of-day schedule
+            daytime_start_utc=os.getenv("RISK_DAYTIME_START_UTC"),
+            daytime_end_utc=os.getenv("RISK_DAYTIME_END_UTC"),
+            day_leverage_max_per_symbol=day_leverage_max_per_symbol,
+            night_leverage_max_per_symbol=night_leverage_max_per_symbol,
+            day_mmr_per_symbol=day_mmr_per_symbol,
+            night_mmr_per_symbol=night_mmr_per_symbol,
+            
+            # Liquidation safety
+            min_liquidation_buffer_pct=get_env_float("RISK_MIN_LIQUIDATION_BUFFER_PCT") or 0.15,
+            enable_pre_trade_liq_projection=get_env_bool("RISK_ENABLE_PRE_TRADE_LIQ_PROJECTION") or True,
+            default_maintenance_margin_rate=get_env_float("RISK_DEFAULT_MMR") or 0.005,
+            
+            # Loss limits
+            daily_loss_limit=get_env_decimal("RISK_DAILY_LOSS_LIMIT") or Decimal("100"),
+            
+            # Exposure controls (with legacy support)
+            max_exposure_pct=(
+                get_env_float("RISK_MAX_TOTAL_EXPOSURE_PCT") or 
+                get_env_float("RISK_MAX_EXPOSURE_PCT") or 
+                0.8
+            ),
+            max_position_pct_per_symbol=get_env_float("RISK_MAX_POSITION_PCT_PER_SYMBOL") or 0.2,
+            max_notional_per_symbol=max_notional_per_symbol,
+            
+            # Slippage protection
+            slippage_guard_bps=get_env_int("RISK_SLIPPAGE_GUARD_BPS") or 50,
+            
+            # Emergency controls
+            kill_switch_enabled=get_env_bool("RISK_KILL_SWITCH_ENABLED") or False,
+            reduce_only_mode=get_env_bool("RISK_REDUCE_ONLY_MODE") or False,
+            
+            # Mark price staleness
+            max_mark_staleness_seconds=get_env_int("RISK_MAX_MARK_STALENESS_SECONDS") or 180,
+            
+            # Dynamic position sizing
+            enable_dynamic_position_sizing=get_env_bool("RISK_ENABLE_DYNAMIC_POSITION_SIZING") or False,
+            position_sizing_method=os.getenv("RISK_POSITION_SIZING_METHOD", "notional"),
+            position_sizing_multiplier=get_env_float("RISK_POSITION_SIZING_MULTIPLIER") or 1.0,
+            
+            # Market impact guard
+            enable_market_impact_guard=get_env_bool("RISK_ENABLE_MARKET_IMPACT_GUARD") or False,
+            max_market_impact_bps=get_env_int("RISK_MAX_MARKET_IMPACT_BPS") or 0,
+            
+            # Circuit breakers
+            enable_volatility_circuit_breaker=get_env_bool("RISK_ENABLE_VOLATILITY_CB") or False,
+            max_intraday_volatility_threshold=get_env_float("RISK_MAX_INTRADAY_VOL") or 0.15,
+            volatility_window_periods=get_env_int("RISK_VOL_WINDOW_PERIODS") or 20,
+            circuit_breaker_cooldown_minutes=get_env_int("RISK_CB_COOLDOWN_MIN") or 30,
+            volatility_warning_threshold=get_env_float("RISK_VOL_WARNING_THRESH") or 0.15,
+            volatility_reduce_only_threshold=get_env_float("RISK_VOL_REDUCE_ONLY_THRESH") or 0.20,
+            volatility_kill_switch_threshold=get_env_float("RISK_VOL_KILL_SWITCH_THRESH") or 0.25,
+        )
 
     @classmethod
     def from_json(cls, path: str) -> RiskConfig:

@@ -36,24 +36,20 @@ class DataProvider(ABC):
             DataFrame with columns: Open, High, Low, Close, Volume
             Index: DatetimeIndex
         """
-        pass
 
     @abstractmethod
     def get_current_price(self, symbol: str) -> float:
         """Get current price for a symbol"""
-        pass
 
     @abstractmethod
     def get_multiple_symbols(
         self, symbols: list[str], period: str = "60d"
     ) -> dict[str, pd.DataFrame]:
         """Get historical data for multiple symbols"""
-        pass
 
     @abstractmethod
     def is_market_open(self) -> bool:
         """Check if market is currently open"""
-        pass
 
 
 class YFinanceProvider(DataProvider):

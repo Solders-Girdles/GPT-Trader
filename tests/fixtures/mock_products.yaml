@@ -1,0 +1,112 @@
+# Mock product fixtures for deterministic broker testing
+# These fixtures provide consistent test data across the codebase
+
+# Default perpetual products
+perpetual_products:
+  BTC-PERP:
+    symbol: "BTC-PERP"
+    base_asset: "BTC"
+    quote_asset: "USD"
+    market_type: "PERPETUAL"
+    min_size: "0.001"
+    step_size: "0.001"
+    min_notional: "10"
+    price_increment: "0.01"
+    leverage_max: 3
+    
+  ETH-PERP:
+    symbol: "ETH-PERP"
+    base_asset: "ETH"
+    quote_asset: "USD"
+    market_type: "PERPETUAL"
+    min_size: "0.001"
+    step_size: "0.001"
+    min_notional: "10"
+    price_increment: "0.01"
+    leverage_max: 3
+    
+  XRP-PERP:
+    symbol: "XRP-PERP"
+    base_asset: "XRP"
+    quote_asset: "USD"
+    market_type: "PERPETUAL"
+    min_size: "10"
+    step_size: "10"
+    min_notional: "10"
+    price_increment: "0.0001"
+    leverage_max: 3
+
+# Default spot products
+spot_products:
+  BTC-USD:
+    symbol: "BTC-USD"
+    base_asset: "BTC"
+    quote_asset: "USD"
+    market_type: "SPOT"
+    min_size: "0.00001"
+    step_size: "0.00001"
+    min_notional: "1"
+    price_increment: "0.01"
+    leverage_max: 1
+    
+  ETH-USD:
+    symbol: "ETH-USD"
+    base_asset: "ETH"
+    quote_asset: "USD"
+    market_type: "SPOT"
+    min_size: "0.0001"
+    step_size: "0.0001"
+    min_notional: "1"
+    price_increment: "0.01"
+    leverage_max: 1
+
+# Default mark prices for testing
+default_marks:
+  BTC-PERP: "50000"
+  ETH-PERP: "3000"
+  XRP-PERP: "0.50"
+  BTC-USD: "50000"
+  ETH-USD: "3000"
+
+# Test scenarios with specific price levels
+price_scenarios:
+  bull_market:
+    BTC-PERP: "75000"
+    ETH-PERP: "4500"
+    XRP-PERP: "0.75"
+    
+  bear_market:
+    BTC-PERP: "25000"
+    ETH-PERP: "1500"
+    XRP-PERP: "0.25"
+    
+  sideways:
+    BTC-PERP: "50000"
+    ETH-PERP: "3000"
+    XRP-PERP: "0.50"
+
+# Product variations for edge case testing
+edge_case_products:
+  # Very small increments
+  MICRO-BTC-PERP:
+    symbol: "MICRO-BTC-PERP"
+    base_asset: "BTC"
+    quote_asset: "USD"
+    market_type: "PERPETUAL"
+    min_size: "0.000001"
+    step_size: "0.000001"
+    min_notional: "1"
+    price_increment: "0.001"
+    leverage_max: 10
+    
+  # Large increments
+  INDEX-PERP:
+    symbol: "INDEX-PERP"
+    base_asset: "INDEX"
+    quote_asset: "USD"
+    market_type: "PERPETUAL"
+    min_size: "1"
+    step_size: "1"
+    min_notional: "100"
+    price_increment: "0.1"
+    leverage_max: 2

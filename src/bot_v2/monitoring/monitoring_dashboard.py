@@ -316,7 +316,6 @@ class MonitoringDashboard:
     def _check_alert_conditions(self, metric_name: str, value: float) -> None:
         """Check if metric value triggers any alerts."""
         # This would integrate with alerting system in production
-        pass
 
     def _calculate_slice_uptime(self, slice_name: str) -> str:
         """Calculate uptime for a specific slice."""

@@ -1,71 +1,53 @@
-"""Tests for legacy error hierarchy."""
+"""Tests for comprehensive error hierarchy."""
 
 import pytest
 
-from bot_v2.errors.base import (
-    BotError,
-    ExecutionError,
+from bot_v2.errors import (
+    TradingError,
     ValidationError,
-    ConfigError,
-    RiskError,
+    ExecutionError,
+    ConfigurationError,
+    RiskLimitExceeded,
+    DataError,
+    StrategyError,
+    BacktestError,
+    NetworkError,
+    InsufficientFundsError,
 )
 
 
-class TestBotError:
-    """Test the base BotError class."""
+class TestTradingError:
+    """Test the base TradingError class."""
 
-    def test_bot_error_inheritance(self) -> None:
-        """Test that BotError inherits from Exception."""
-        assert issubclass(BotError, Exception)
+    def test_trading_error_inheritance(self) -> None:
+        """Test that TradingError inherits from Exception."""
+        assert issubclass(TradingError, Exception)
 
-    def test_bot_error_creation(self) -> None:
-        """Test BotError can be created with message."""
-        error = BotError("test message")
+    def test_trading_error_creation(self) -> None:
+        """Test TradingError can be created with message."""
+        error = TradingError("test message")
         assert str(error) == "test message"
         assert error.args == ("test message",)
 
-    def test_bot_error_creation_without_message(self) -> None:
-        """Test BotError can be created without message."""
-        error = BotError()
+    def test_trading_error_creation_without_message(self) -> None:
+        """Test TradingError requires a message."""
+        # TradingError now requires a message argument
+        error = TradingError("")
         assert str(error) == ""
-        assert error.args == ()
 
-    def test_bot_error_with_kwargs(self) -> None:
-        """Test BotError can be created with additional context."""
-        error = BotError("test")
-        # Add attribute after creation since kwargs aren't supported
-        error.code = 123
+    def test_trading_error_with_context(self) -> None:
+        """Test TradingError supports context."""
+        error = TradingError("test", context={"key": "value"})
         assert str(error) == "test"
-        assert error.code == 123
-
-
-class TestExecutionError:
-    """Test the ExecutionError class."""
-
-    def test_execution_error_inheritance(self) -> None:
-        """Test that ExecutionError inherits from BotError."""
-        assert issubclass(ExecutionError, BotError)
-        assert issubclass(ExecutionError, Exception)
-
-    def test_execution_error_creation(self) -> None:
-        """Test ExecutionError can be created with message."""
-        error = ExecutionError("execution failed")
-        assert str(error) == "execution failed"
-
-    def test_execution_error_with_order_id(self) -> None:
-        """Test ExecutionError can include order context."""
-        error = ExecutionError("order failed")
-        error.order_id = "12345"
-        assert str(error) == "order failed"
-        assert error.order_id == "12345"
+        assert error.context == {"key": "value"}
 
 
 class TestValidationError:
     """Test the ValidationError class."""
 
     def test_validation_error_inheritance(self) -> None:
-        """Test that ValidationError inherits from BotError."""
-        assert issubclass(ValidationError, BotError)
+        """Test that ValidationError inherits from TradingError."""
+        assert issubclass(ValidationError, TradingError)
         assert issubclass(ValidationError, Exception)
 
     def test_validation_error_creation(self) -> None:
@@ -75,89 +57,182 @@ class TestValidationError:
 
     def test_validation_error_with_field(self) -> None:
         """Test ValidationError can include field context."""
-        error = ValidationError("invalid price")
-        error.field = "price"
-        error.value = -1
+        error = ValidationError("invalid price", field="price", value=-1)
         assert str(error) == "invalid price"
-        assert error.field == "price"
-        assert error.value == -1
+        assert error.context["field"] == "price"
+        assert error.context["value"] == -1
 
 
-class TestConfigError:
-    """Test the ConfigError class."""
+class TestExecutionError:
+    """Test the ExecutionError class."""
 
-    def test_config_error_inheritance(self) -> None:
-        """Test that ConfigError inherits from BotError."""
-        assert issubclass(ConfigError, BotError)
-        assert issubclass(ConfigError, Exception)
+    def test_execution_error_inheritance(self) -> None:
+        """Test that ExecutionError inherits from TradingError."""
+        assert issubclass(ExecutionError, TradingError)
+        assert issubclass(ExecutionError, Exception)
 
-    def test_config_error_creation(self) -> None:
-        """Test ConfigError can be created with message."""
-        error = ConfigError("missing config")
+    def test_execution_error_creation(self) -> None:
+        """Test ExecutionError can be created with message."""
+        error = ExecutionError("execution failed")
+        assert str(error) == "execution failed"
+
+    def test_execution_error_with_order_id(self) -> None:
+        """Test ExecutionError can include order context."""
+        error = ExecutionError("order failed", order_id="12345")
+        assert str(error) == "order failed"
+        assert error.context["order_id"] == "12345"
+
+
+class TestConfigurationError:
+    """Test the ConfigurationError class."""
+
+    def test_configuration_error_inheritance(self) -> None:
+        """Test that ConfigurationError inherits from TradingError."""
+        assert issubclass(ConfigurationError, TradingError)
+        assert issubclass(ConfigurationError, Exception)
+
+    def test_configuration_error_creation(self) -> None:
+        """Test ConfigurationError can be created with message."""
+        error = ConfigurationError("missing config")
         assert str(error) == "missing config"
 
-    def test_config_error_with_config_key(self) -> None:
-        """Test ConfigError can include config context."""
-        error = ConfigError("invalid value")
-        error.config_key = "api_key"
+    def test_configuration_error_with_config_key(self) -> None:
+        """Test ConfigurationError can include config context."""
+        error = ConfigurationError("invalid value", config_key="api_key")
         assert str(error) == "invalid value"
-        assert error.config_key == "api_key"
+        assert error.context["config_key"] == "api_key"
 
 
-class TestRiskError:
-    """Test the RiskError class."""
+class TestRiskLimitExceeded:
+    """Test the RiskLimitExceeded class."""
 
-    def test_risk_error_inheritance(self) -> None:
-        """Test that RiskError inherits from BotError."""
-        assert issubclass(RiskError, BotError)
-        assert issubclass(RiskError, Exception)
+    def test_risk_limit_exceeded_inheritance(self) -> None:
+        """Test that RiskLimitExceeded inherits from TradingError."""
+        assert issubclass(RiskLimitExceeded, TradingError)
+        assert issubclass(RiskLimitExceeded, Exception)
 
-    def test_risk_error_creation(self) -> None:
-        """Test RiskError can be created with message."""
-        error = RiskError("risk limit exceeded")
+    def test_risk_limit_exceeded_creation(self) -> None:
+        """Test RiskLimitExceeded can be created with message."""
+        error = RiskLimitExceeded("risk limit exceeded", limit_type="position", limit_value=50000, current_value=100000)
         assert str(error) == "risk limit exceeded"
 
-    def test_risk_error_with_risk_metrics(self) -> None:
-        """Test RiskError can include risk context."""
-        error = RiskError("position too large")
-        error.position_size = 100000
-        error.limit = 50000
+    def test_risk_limit_exceeded_with_risk_metrics(self) -> None:
+        """Test RiskLimitExceeded can include risk context."""
+        error = RiskLimitExceeded("position too large", limit_type="position_size", limit_value=50000, current_value=100000)
         assert str(error) == "position too large"
-        assert error.position_size == 100000
-        assert error.limit == 50000
+        assert error.context["limit_value"] == 50000
+        assert error.context["current_value"] == 100000
+
+
+class TestDataError:
+    """Test the DataError class."""
+
+    def test_data_error_inheritance(self) -> None:
+        """Test that DataError inherits from TradingError."""
+        assert issubclass(DataError, TradingError)
+
+    def test_data_error_creation(self) -> None:
+        """Test DataError can be created with message."""
+        error = DataError("data issue")
+        assert str(error) == "data issue"
+
+
+class TestStrategyError:
+    """Test the StrategyError class."""
+
+    def test_strategy_error_inheritance(self) -> None:
+        """Test that StrategyError inherits from TradingError."""
+        assert issubclass(StrategyError, TradingError)
+
+    def test_strategy_error_creation(self) -> None:
+        """Test StrategyError can be created with message."""
+        error = StrategyError("strategy failed")
+        assert str(error) == "strategy failed"
+
+
+class TestBacktestError:
+    """Test the BacktestError class."""
+
+    def test_backtest_error_inheritance(self) -> None:
+        """Test that BacktestError inherits from TradingError."""
+        assert issubclass(BacktestError, TradingError)
+
+    def test_backtest_error_creation(self) -> None:
+        """Test BacktestError can be created with message."""
+        error = BacktestError("backtest failed")
+        assert str(error) == "backtest failed"
+
+
+class TestNetworkError:
+    """Test the NetworkError class."""
+
+    def test_network_error_inheritance(self) -> None:
+        """Test that NetworkError inherits from TradingError."""
+        assert issubclass(NetworkError, TradingError)
+
+    def test_network_error_creation(self) -> None:
+        """Test NetworkError can be created with message."""
+        error = NetworkError("network issue")
+        assert str(error) == "network issue"
+
+
+class TestInsufficientFundsError:
+    """Test the InsufficientFundsError class."""
+
+    def test_insufficient_funds_error_inheritance(self) -> None:
+        """Test that InsufficientFundsError inherits from TradingError."""
+        assert issubclass(InsufficientFundsError, TradingError)
+
+    def test_insufficient_funds_error_creation(self) -> None:
+        """Test InsufficientFundsError can be created with message."""
+        error = InsufficientFundsError("insufficient funds", required=1000.0, available=500.0)
+        assert str(error) == "insufficient funds"
+        assert error.context["required"] == 1000.0
+        assert error.context["available"] == 500.0
+        assert error.context["shortfall"] == 500.0
 
 
 class TestErrorHierarchy:
     """Test error hierarchy relationships."""
 
-    def test_all_errors_inherit_from_bot_error(self) -> None:
-        """Test that all custom errors inherit from BotError."""
-        errors = [ExecutionError, ValidationError, ConfigError, RiskError]
+    def test_all_errors_inherit_from_trading_error(self) -> None:
+        """Test that all custom errors inherit from TradingError."""
+        errors = [
+            ValidationError,
+            ExecutionError,
+            ConfigurationError,
+            RiskLimitExceeded,
+            DataError,
+            StrategyError,
+            BacktestError,
+            NetworkError,
+            InsufficientFundsError,
+        ]
         for error_class in errors:
-            assert issubclass(error_class, BotError)
+            assert issubclass(error_class, TradingError)
 
     def test_error_catching_hierarchy(self) -> None:
         """Test that errors can be caught by their parent classes."""
         try:
             raise ExecutionError("test")
-        except BotError as e:
+        except TradingError as e:
             assert isinstance(e, ExecutionError)
             assert str(e) == "test"
 
         try:
             raise ValidationError("test")
-        except BotError as e:
+        except TradingError as e:
             assert isinstance(e, ValidationError)
             assert str(e) == "test"
 
     def test_specific_error_catching(self) -> None:
         """Test that errors can be caught specifically."""
         try:
-            raise ConfigError("config error")
-        except ConfigError as e:
+            raise ConfigurationError("config error")
+        except ConfigurationError as e:
             assert str(e) == "config error"
         except Exception:
-            pytest.fail("Should have been caught by ConfigError")
+            pytest.fail("Should have been caught by ConfigurationError")
 
     def test_exception_chaining(self) -> None:
         """Test that errors support exception chaining."""

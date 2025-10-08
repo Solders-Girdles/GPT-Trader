@@ -83,18 +83,15 @@ class ConfigurationMonitor(ABC):
     @abstractmethod
     def check_changes(self) -> list[DriftEvent]:
         """Check for configuration changes, return drift events if found."""
-        pass
 
     @abstractmethod
     def get_current_state(self) -> dict[str, Any]:
         """Get current state for monitoring."""
-        pass
 
     @property
     @abstractmethod
     def monitor_name(self) -> str:
         """Component name for logging."""
-        pass
 
 
 class EnvironmentMonitor(ConfigurationMonitor):

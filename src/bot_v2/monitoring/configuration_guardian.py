@@ -5,15 +5,14 @@ from __future__ import annotations
 import logging
 import os
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Protocol, Set
+from typing import Any
 
 from bot_v2.config.schemas import ConfigValidationResult
 from bot_v2.config.types import Profile
 from bot_v2.features.brokerages.core.interfaces import Balance, Position
-from bot_v2.monitoring.interfaces import TradeMetrics
 
 logger = logging.getLogger(__name__)
 
@@ -34,10 +33,10 @@ class DriftEvent:
     component: str  # "environment" | "file" | "state_validator"
     drift_type: str  # e.g., "env_var_changed", "config_file_modified", "unsafe_leverage"
     severity: str  # "low" | "medium" | "high" | "critical"
-    details: Dict[str, Any]
+    details: dict[str, Any]
     suggested_response: str  # DriftResponse value
     applied_response: str
-    resolution_notes: Optional[str] = None
+    resolution_notes: str | None = None
 
 
 @dataclass
@@ -48,46 +47,46 @@ class BaselineSnapshot:
 
     def validate_config_against_state(
         self,
-        new_config_dict: Dict[str, Any],
-        current_balances: List[Balance],
-        current_positions: List[Position],
-        current_equity: Optional[Decimal]
-    ) -> List[DriftEvent]:
+        new_config_dict: dict[str, Any],
+        current_balances: list[Balance],
+        current_positions: list[Position],
+        current_equity: Decimal | None,
+    ) -> list[DriftEvent]:
         """Validate proposed config changes against live trading state."""
         return StateValidator(self).validate_config_against_state(
             new_config_dict, current_balances, current_positions, current_equity
         )
 
     # Configuration
-    config_dict: Dict[str, Any]
+    config_dict: dict[str, Any]
     config_hash: str  # For quick comparison
 
     # Environment variables (secure version - no secrets)
-    env_keys: Set[str]  # Which env vars were set
-    critical_env_values: Dict[str, str]  # Safe env vars only (not secrets)
+    env_keys: set[str]  # Which env vars were set
+    critical_env_values: dict[str, str]  # Safe env vars only (not secrets)
 
     # Trading state
-    active_symbols: List[str]
-    open_positions: Dict[str, Dict[str, Any]]  # symbol -> position_summary
-    account_equity: Optional[Decimal]
+    active_symbols: list[str]
+    open_positions: dict[str, dict[str, Any]]  # symbol -> position_summary
+    account_equity: Decimal | None
     total_exposure: Decimal
 
     # Contextual info
     profile: Profile
     broker_type: str
-    risk_limits: Dict[str, Any]
+    risk_limits: dict[str, Any]
 
 
 class ConfigurationMonitor(ABC):
     """Abstract base for configuration monitoring components."""
 
     @abstractmethod
-    def check_changes(self) -> List[DriftEvent]:
+    def check_changes(self) -> list[DriftEvent]:
         """Check for configuration changes, return drift events if found."""
         pass
 
     @abstractmethod
-    def get_current_state(self) -> Dict[str, Any]:
+    def get_current_state(self) -> dict[str, Any]:
         """Get current state for monitoring."""
         pass
 
@@ -136,7 +135,7 @@ class EnvironmentMonitor(ConfigurationMonitor):
         self.baseline = baseline_snapshot
         self._last_state = self._capture_current_state()
 
-    def check_changes(self) -> List[DriftEvent]:
+    def check_changes(self) -> list[DriftEvent]:
         """Check for environment variable changes."""
         events = []
         current_state = self._capture_current_state()
@@ -146,65 +145,71 @@ class EnvironmentMonitor(ConfigurationMonitor):
             old_val = self._last_state.get(var)
             new_val = current_state.get(var)
             if old_val != new_val:
-                events.append(DriftEvent(
-                    timestamp=datetime.now(UTC),
-                    component=self.monitor_name,
-                    drift_type="critical_env_changed",
-                    severity="critical",
-                    details={
-                        "variable": var,
-                        "old_value": old_val,
-                        "new_value": new_val,
-                        "impact": "Runtime change prevents safe operation"
-                    },
-                    suggested_response=DriftResponse.EMERGENCY_SHUTDOWN,
-                    applied_response=DriftResponse.EMERGENCY_SHUTDOWN
-                ))
+                events.append(
+                    DriftEvent(
+                        timestamp=datetime.now(UTC),
+                        component=self.monitor_name,
+                        drift_type="critical_env_changed",
+                        severity="critical",
+                        details={
+                            "variable": var,
+                            "old_value": old_val,
+                            "new_value": new_val,
+                            "impact": "Runtime change prevents safe operation",
+                        },
+                        suggested_response=DriftResponse.EMERGENCY_SHUTDOWN,
+                        applied_response=DriftResponse.EMERGENCY_SHUTDOWN,
+                    )
+                )
 
         # Check risk vars that modify trading behavior
         for var in self.RISK_ENV_VARS:
             old_val = self._last_state.get(var)
             new_val = current_state.get(var)
             if old_val != new_val:
-                events.append(DriftEvent(
-                    timestamp=datetime.now(UTC),
-                    component=self.monitor_name,
-                    drift_type="risk_env_changed",
-                    severity="high",
-                    details={
-                        "variable": var,
-                        "old_value": old_val,
-                        "new_value": new_val,
-                        "impact": "Changes risk management behavior"
-                    },
-                    suggested_response=DriftResponse.REDUCE_ONLY,
-                    applied_response=DriftResponse.REDUCE_ONLY
-                ))
+                events.append(
+                    DriftEvent(
+                        timestamp=datetime.now(UTC),
+                        component=self.monitor_name,
+                        drift_type="risk_env_changed",
+                        severity="high",
+                        details={
+                            "variable": var,
+                            "old_value": old_val,
+                            "new_value": new_val,
+                            "impact": "Changes risk management behavior",
+                        },
+                        suggested_response=DriftResponse.REDUCE_ONLY,
+                        applied_response=DriftResponse.REDUCE_ONLY,
+                    )
+                )
 
         # Check monitored vars for informational purposes
         for var in self.MONITOR_ENV_VARS:
             old_val = self._last_state.get(var)
             new_val = current_state.get(var)
             if old_val != new_val:
-                events.append(DriftEvent(
-                    timestamp=datetime.now(UTC),
-                    component=self.monitor_name,
-                    drift_type="monitored_env_changed",
-                    severity="low",
-                    details={
-                        "variable": var,
-                        "old_value": old_val,
-                        "new_value": new_val,
-                        "impact": "Informational only"
-                    },
-                    suggested_response=DriftResponse.STICKY,
-                    applied_response=DriftResponse.STICKY
-                ))
+                events.append(
+                    DriftEvent(
+                        timestamp=datetime.now(UTC),
+                        component=self.monitor_name,
+                        drift_type="monitored_env_changed",
+                        severity="low",
+                        details={
+                            "variable": var,
+                            "old_value": old_val,
+                            "new_value": new_val,
+                            "impact": "Informational only",
+                        },
+                        suggested_response=DriftResponse.STICKY,
+                        applied_response=DriftResponse.STICKY,
+                    )
+                )
 
         self._last_state = current_state
         return events
 
-    def get_current_state(self) -> Dict[str, Any]:
+    def get_current_state(self) -> dict[str, Any]:
         """Get current environment monitor state."""
         return self._capture_current_state()
 
@@ -212,7 +217,7 @@ class EnvironmentMonitor(ConfigurationMonitor):
     def monitor_name(self) -> str:
         return "environment_monitor"
 
-    def _capture_current_state(self) -> Dict[str, Any]:
+    def _capture_current_state(self) -> dict[str, Any]:
         """Capture current environment state (safe values only)."""
         state = {}
         all_vars = self.CRITICAL_ENV_VARS | self.RISK_ENV_VARS | self.MONITOR_ENV_VARS
@@ -221,7 +226,7 @@ class EnvironmentMonitor(ConfigurationMonitor):
             value = os.getenv(var)
             if value is not None:
                 # Don't store sensitive values
-                if var.upper().endswith(('_KEY', '_SECRET', '_TOKEN')):
+                if var.upper().endswith(("_KEY", "_SECRET", "_TOKEN")):
                     state[var] = "[REDACTED]"
                 else:
                     state[var] = value
@@ -242,7 +247,7 @@ class StateValidator(ConfigurationMonitor):
     def __init__(self, baseline_snapshot: BaselineSnapshot):
         self.baseline = baseline_snapshot
 
-    def check_changes(self) -> List[DriftEvent]:
+    def check_changes(self) -> list[DriftEvent]:
         """Validate configuration state against trading invariants."""
         # This will be called with new config proposals during runtime
         # For now, return empty list as we need the trading state context
@@ -250,11 +255,11 @@ class StateValidator(ConfigurationMonitor):
 
     def validate_config_against_state(
         self,
-        new_config_dict: Dict[str, Any],
-        current_balances: List[Balance],
-        current_positions: List[Position],
-        current_equity: Optional[Decimal]
-    ) -> List[DriftEvent]:
+        new_config_dict: dict[str, Any],
+        current_balances: list[Balance],
+        current_positions: list[Position],
+        current_equity: Decimal | None,
+    ) -> list[DriftEvent]:
         """Validate proposed config changes against live trading state."""
 
         events = []
@@ -268,85 +273,92 @@ class StateValidator(ConfigurationMonitor):
         # Check: Symbol universe changes
         baseline_symbols = set(self.baseline.active_symbols)
         removed_symbols = baseline_symbols - new_symbols
-        added_symbols = new_symbols - baseline_symbols
 
         # Don't allow removing symbols with active positions
-        active_symbols = {pos.symbol for pos in current_positions if hasattr(pos, 'symbol')}
+        active_symbols = {pos.symbol for pos in current_positions if hasattr(pos, "symbol")}
         removed_with_positions = removed_symbols & active_symbols
 
         if removed_with_positions:
-            events.append(DriftEvent(
-                timestamp=datetime.now(UTC),
-                component=self.monitor_name,
-                drift_type="symbols_remove_active_positions",
-                severity="critical",
-                details={
-                    "removed_symbols": list(removed_with_positions),
-                    "message": f"Cannot remove {removed_with_positions} - active positions exist"
-                },
-                suggested_response=DriftResponse.EMERGENCY_SHUTDOWN,
-                applied_response=DriftResponse.EMERGENCY_SHUTDOWN
-            ))
+            events.append(
+                DriftEvent(
+                    timestamp=datetime.now(UTC),
+                    component=self.monitor_name,
+                    drift_type="symbols_remove_active_positions",
+                    severity="critical",
+                    details={
+                        "removed_symbols": list(removed_with_positions),
+                        "message": f"Cannot remove {removed_with_positions} - active positions exist",
+                    },
+                    suggested_response=DriftResponse.EMERGENCY_SHUTDOWN,
+                    applied_response=DriftResponse.EMERGENCY_SHUTDOWN,
+                )
+            )
 
         # Check: Leverage changes vs current positions
         current_leverage = self._calculate_current_leverage(current_positions, current_equity)
         if current_leverage > new_max_leverage:
-            events.append(DriftEvent(
-                timestamp=datetime.now(UTC),
-                component=self.monitor_name,
-                drift_type="leverage_violation_current_positions",
-                severity="high",
-                details={
-                    "current_leverage": float(current_leverage),
-                    "new_max_leverage": new_max_leverage,
-                    "message": "Current positions exceed new leverage limit"
-                },
-                suggested_response=DriftResponse.REDUCE_ONLY,
-                applied_response=DriftResponse.REDUCE_ONLY
-            ))
+            events.append(
+                DriftEvent(
+                    timestamp=datetime.now(UTC),
+                    component=self.monitor_name,
+                    drift_type="leverage_violation_current_positions",
+                    severity="high",
+                    details={
+                        "current_leverage": float(current_leverage),
+                        "new_max_leverage": new_max_leverage,
+                        "message": "Current positions exceed new leverage limit",
+                    },
+                    suggested_response=DriftResponse.REDUCE_ONLY,
+                    applied_response=DriftResponse.REDUCE_ONLY,
+                )
+            )
 
         # Check: Position size vs current exposure
         current_exposure = sum(
-            abs(float(getattr(pos, 'size', 0))) * float(getattr(pos, 'price', 0))
+            abs(float(getattr(pos, "size", 0))) * float(getattr(pos, "price", 0))
             for pos in current_positions
-            if hasattr(pos, 'size') and hasattr(pos, 'price')
+            if hasattr(pos, "size") and hasattr(pos, "price")
         )
 
         if current_exposure > float(new_position_size):
-            events.append(DriftEvent(
-                timestamp=datetime.now(UTC),
-                component=self.monitor_name,
-                drift_type="position_size_violation_current_exposure",
-                severity="high",
-                details={
-                    "current_exposure": current_exposure,
-                    "new_max_position_size": float(new_position_size),
-                    "message": "Current exposure exceeds new position limit"
-                },
-                suggested_response=DriftResponse.REDUCE_ONLY,
-                applied_response=DriftResponse.REDUCE_ONLY
-            ))
+            events.append(
+                DriftEvent(
+                    timestamp=datetime.now(UTC),
+                    component=self.monitor_name,
+                    drift_type="position_size_violation_current_exposure",
+                    severity="high",
+                    details={
+                        "current_exposure": current_exposure,
+                        "new_max_position_size": float(new_position_size),
+                        "message": "Current exposure exceeds new position limit",
+                    },
+                    suggested_response=DriftResponse.REDUCE_ONLY,
+                    applied_response=DriftResponse.REDUCE_ONLY,
+                )
+            )
 
         # Check: Profile compatibility
         if str(new_profile) != str(self.baseline.profile):
             # Profile changes during runtime are critical
-            events.append(DriftEvent(
-                timestamp=datetime.now(UTC),
-                component=self.monitor_name,
-                drift_type="profile_changed_during_runtime",
-                severity="critical",
-                details={
-                    "old_profile": str(self.baseline.profile),
-                    "new_profile": str(new_profile),
-                    "message": "Profile changes during runtime not supported"
-                },
-                suggested_response=DriftResponse.EMERGENCY_SHUTDOWN,
-                applied_response=DriftResponse.EMERGENCY_SHUTDOWN
-            ))
+            events.append(
+                DriftEvent(
+                    timestamp=datetime.now(UTC),
+                    component=self.monitor_name,
+                    drift_type="profile_changed_during_runtime",
+                    severity="critical",
+                    details={
+                        "old_profile": str(self.baseline.profile),
+                        "new_profile": str(new_profile),
+                        "message": "Profile changes during runtime not supported",
+                    },
+                    suggested_response=DriftResponse.EMERGENCY_SHUTDOWN,
+                    applied_response=DriftResponse.EMERGENCY_SHUTDOWN,
+                )
+            )
 
         return events
 
-    def get_current_state(self) -> Dict[str, Any]:
+    def get_current_state(self) -> dict[str, Any]:
         """Get current state validator status."""
         return {"baseline_snapshot_timestamp": self.baseline.timestamp.isoformat()}
 
@@ -355,9 +367,7 @@ class StateValidator(ConfigurationMonitor):
         return "state_validator"
 
     def _calculate_current_leverage(
-        self,
-        positions: List[Position],
-        equity: Optional[Decimal]
+        self, positions: list[Position], equity: Decimal | None
     ) -> Decimal:
         """Calculate current leverage across all positions."""
         if not equity or equity <= 0:
@@ -365,7 +375,7 @@ class StateValidator(ConfigurationMonitor):
 
         total_exposure = Decimal("0")
         for pos in positions:
-            if hasattr(pos, 'size') and hasattr(pos, 'price'):
+            if hasattr(pos, "size") and hasattr(pos, "price"):
                 size = abs(float(pos.size))
                 price = float(pos.price)
                 exposure = Decimal(str(size * price))
@@ -383,20 +393,20 @@ class DriftDetector(ConfigurationMonitor):
 
     def __init__(self, baseline_snapshot: BaselineSnapshot):
         self.baseline = baseline_snapshot
-        self.drift_history: List[DriftEvent] = []
+        self.drift_history: list[DriftEvent] = []
 
-    def check_changes(self) -> List[DriftEvent]:
+    def check_changes(self) -> list[DriftEvent]:
         """Compare current state against baseline."""
         # This method is called by the guardian to check all monitors
         # Individual monitor check_changes() methods handle the actual detection
         return self.drift_history
 
-    def record_drift_events(self, events: List[DriftEvent]) -> None:
+    def record_drift_events(self, events: list[DriftEvent]) -> None:
         """Record drift events for audit trail."""
         self.drift_history.extend(events)
         logger.info(f"Recorded {len(events)} drift events")
 
-    def get_drift_summary(self) -> Dict[str, Any]:
+    def get_drift_summary(self) -> dict[str, Any]:
         """Get summary of drift activity."""
         if not self.drift_history:
             return {"total_events": 0, "highest_severity": "none"}
@@ -409,11 +419,11 @@ class DriftDetector(ConfigurationMonitor):
             "highest_severity": max(severities, key=lambda s: severity_order.get(s, -1)),
             "events_by_component": {
                 comp: len([e for e in self.drift_history if e.component == comp])
-                for comp in set(e.component for e in self.drift_history)
-            }
+                for comp in {e.component for e in self.drift_history}
+            },
         }
 
-    def get_current_state(self) -> Dict[str, Any]:
+    def get_current_state(self) -> dict[str, Any]:
         """Get current drift detector state."""
         return self.get_drift_summary()
 
@@ -437,19 +447,18 @@ class ConfigurationGuardian:
         self.state_validator = StateValidator(baseline_snapshot)
         self.drift_detector = DriftDetector(baseline_snapshot)
 
-        self.monitors = [
-            self.environment_monitor,
-            self.drift_detector
-        ]
+        self.monitors = [self.environment_monitor, self.drift_detector]
 
-        logger.info(f"ConfigurationGuardian initialized with baseline from {baseline_snapshot.timestamp}")
+        logger.info(
+            f"ConfigurationGuardian initialized with baseline from {baseline_snapshot.timestamp}"
+        )
 
     def pre_cycle_check(
         self,
-        proposed_config_dict: Optional[Dict[str, Any]] = None,
-        current_balances: Optional[List[Balance]] = None,
-        current_positions: Optional[List[Position]] = None,
-        current_equity: Optional[Decimal] = None
+        proposed_config_dict: dict[str, Any] | None = None,
+        current_balances: list[Balance] | None = None,
+        current_positions: list[Position] | None = None,
+        current_equity: Decimal | None = None,
     ) -> ConfigValidationResult:
         """Master validation method called before each trading cycle."""
 
@@ -462,15 +471,17 @@ class ConfigurationGuardian:
                 all_events.extend(events)
             except Exception as e:
                 logger.error(f"Monitor {monitor.monitor_name} failed: {e}")
-                all_events.append(DriftEvent(
-                    timestamp=datetime.now(UTC),
-                    component=monitor.monitor_name,
-                    drift_type="monitor_failure",
-                    severity="high",
-                    details={"error": str(e)},
-                    suggested_response=DriftResponse.REDUCE_ONLY,
-                    applied_response=DriftResponse.REDUCE_ONLY
-                ))
+                all_events.append(
+                    DriftEvent(
+                        timestamp=datetime.now(UTC),
+                        component=monitor.monitor_name,
+                        drift_type="monitor_failure",
+                        severity="high",
+                        details={"error": str(e)},
+                        suggested_response=DriftResponse.REDUCE_ONLY,
+                        applied_response=DriftResponse.REDUCE_ONLY,
+                    )
+                )
 
         # If new config is proposed, validate against current state
         if proposed_config_dict:
@@ -478,7 +489,7 @@ class ConfigurationGuardian:
                 proposed_config_dict,
                 current_balances or [],
                 current_positions or [],
-                current_equity
+                current_equity,
             )
             all_events.extend(state_events)
 
@@ -494,33 +505,30 @@ class ConfigurationGuardian:
         # High → Reduce-only mode
         if critical_events or high_events:
             error_messages = []
-            for event in critical_events + high_events:
+            for event in critical_events:
                 error_messages.append(
-                    f"[{event.component}] {event.drift_type}: {event.details.get('message', '')}"
+                    f"[{event.component}] {event.drift_type} (severity=critical, response=emergency_shutdown): {event.details.get('message', '')}"
+                )
+            for event in high_events:
+                error_messages.append(
+                    f"[{event.component}] {event.drift_type} (severity=high): {event.details.get('message', '')}"
                 )
 
-            return ConfigValidationResult(
-                is_valid=False,
-                errors=error_messages,
-                warnings=[]
-            )
+            return ConfigValidationResult(is_valid=False, errors=error_messages, warnings=[])
 
         # Valid but may have warnings (low/medium severity)
-        warning_messages = [f"[{e.component}] {e.drift_type}: {e.details.get('message', '')}"
-                          for e in all_events]
+        warning_messages = [
+            f"[{e.component}] {e.drift_type}: {e.details.get('message', '')}" for e in all_events
+        ]
 
-        return ConfigValidationResult(
-            is_valid=True,
-            errors=[],
-            warnings=warning_messages
-        )
+        return ConfigValidationResult(is_valid=True, errors=[], warnings=warning_messages)
 
-    def get_health_status(self) -> Dict[str, Any]:
+    def get_health_status(self) -> dict[str, Any]:
         """Get guardian health status for monitoring."""
         status = {
             "baseline_timestamp": self.baseline.timestamp.isoformat(),
             "monitors_status": {},
-            "drift_summary": self.drift_detector.get_drift_summary()
+            "drift_summary": self.drift_detector.get_drift_summary(),
         }
 
         for monitor in self.monitors:
@@ -534,12 +542,12 @@ class ConfigurationGuardian:
         return status
 
     def create_baseline_snapshot(
-        config_dict: Dict[str, Any],
-        active_symbols: List[str],
-        positions: List[Position],
-        account_equity: Optional[Decimal],
+        config_dict: dict[str, Any],
+        active_symbols: list[str],
+        positions: list[Position],
+        account_equity: Decimal | None,
         profile: Profile,
-        broker_type: str
+        broker_type: str,
     ) -> BaselineSnapshot:
         """Factory method to create baseline snapshot at startup."""
 
@@ -548,7 +556,7 @@ class ConfigurationGuardian:
         position_summaries = {}
 
         for pos in positions:
-            if hasattr(pos, 'symbol') and hasattr(pos, 'size') and hasattr(pos, 'price'):
+            if hasattr(pos, "symbol") and hasattr(pos, "size") and hasattr(pos, "price"):
                 symbol = pos.symbol
                 size = abs(float(pos.size))
                 price = float(pos.price)
@@ -558,7 +566,7 @@ class ConfigurationGuardian:
                 position_summaries[symbol] = {
                     "size": size,
                     "price": price,
-                    "exposure": float(exposure)
+                    "exposure": float(exposure),
                 }
 
         # Calculate config hash for quick comparison
@@ -576,20 +584,20 @@ class ConfigurationGuardian:
         critical_env_vars = {
             "COINBASE_DEFAULT_QUOTE",
             "PERPS_ENABLE_STREAMING",
-            "ORDER_PREVIEW_ENABLED"
+            "ORDER_PREVIEW_ENABLED",
         }
 
         for var in critical_env_vars:
             if os.getenv(var) is not None:
                 env_keys.add(var)
                 # Don't store sensitive values
-                if not var.upper().endswith(('_KEY', '_SECRET', '_TOKEN')):
+                if not var.upper().endswith(("_KEY", "_SECRET", "_TOKEN")):
                     critical_env_values[var] = os.getenv(var, "")
 
         risk_limits = {
             "max_position_size": config_dict.get("max_position_size", "1000"),
             "max_leverage": config_dict.get("max_leverage", 3),
-            "daily_loss_limit": config_dict.get("daily_loss_limit", "0")
+            "daily_loss_limit": config_dict.get("daily_loss_limit", "0"),
         }
 
         return BaselineSnapshot(
@@ -604,5 +612,5 @@ class ConfigurationGuardian:
             total_exposure=total_exposure,
             profile=profile,
             broker_type=broker_type,
-            risk_limits=risk_limits
+            risk_limits=risk_limits,
         )

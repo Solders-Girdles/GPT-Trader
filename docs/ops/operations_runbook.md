@@ -2,7 +2,7 @@
 
 ---
 status: current
-last-updated: 2025-09-27
+last-updated: 2025-10-07
 consolidates:
   - RUNBOOK_PERPS.md
   - LIVE_MONITORING_GUIDE.md

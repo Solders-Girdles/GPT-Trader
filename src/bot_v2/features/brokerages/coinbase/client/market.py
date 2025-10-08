@@ -67,23 +67,25 @@ class MarketDataClientMixin:
             raise InvalidRequestError(
                 "get_market_products requires advanced mode (COINBASE_API_MODE=advanced)."
             )
-        return self._request("GET", self._get_endpoint_path("products"))
+        return self._request("GET", self._get_endpoint_path("public_products"))
 
     def get_market_product(self: CoinbaseClientProtocol, product_id: str) -> dict[str, Any]:
         if self.api_mode != "advanced":
             raise InvalidRequestError(
                 "get_market_product requires advanced mode (COINBASE_API_MODE=advanced)."
             )
-        return self._request("GET", self._get_endpoint_path("product", product_id=product_id))
+        return self._request(
+            "GET", self._get_endpoint_path("public_product", product_id=product_id)
+        )
 
     def get_market_product_ticker(self: CoinbaseClientProtocol, product_id: str) -> dict[str, Any]:
-        path = self._get_endpoint_path("ticker", product_id=product_id)
+        path = self._get_endpoint_path("public_ticker", product_id=product_id)
         return self._request("GET", path)
 
     def get_market_product_candles(
         self: CoinbaseClientProtocol, product_id: str, granularity: str, limit: int = 200
     ) -> dict[str, Any]:
-        path = self._get_endpoint_path("candles", product_id=product_id)
+        path = self._get_endpoint_path("public_candles", product_id=product_id)
         return self._request("GET", f"{path}?granularity={granularity}&limit={limit}")
 
     def get_market_product_book(

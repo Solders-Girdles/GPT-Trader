@@ -90,7 +90,7 @@ class TestCoinbaseMarketData:
         client.set_transport_for_testing(fake_transport)
         out = client.get_product("BTC-USD")
         assert calls[0][0] == "GET"
-        assert calls[0][1].endswith("/api/v3/brokerage/market/products/BTC-USD")
+        assert calls[0][1].endswith("/api/v3/brokerage/products/BTC-USD")
         assert "product_id" in out
 
     def test_products_path_differs_by_mode(self) -> None:
@@ -112,7 +112,7 @@ class TestCoinbaseMarketData:
             )
         )
         client_adv.get_products()
-        assert urls[0].endswith("/api/v3/brokerage/market/products")
+        assert urls[0].endswith("/api/v3/brokerage/products")
 
     def test_get_product_book_path_mapping_by_mode(self) -> None:
         client_ex = make_client("exchange")
@@ -137,9 +137,7 @@ class TestCoinbaseMarketData:
             )
         )
         client_adv.get_product_book("BTC-USD", level=2)
-        assert urls_adv[0].endswith(
-            "/api/v3/brokerage/market/product_book?product_id=BTC-USD&level=2"
-        )
+        assert urls_adv[0].endswith("/api/v3/brokerage/product_book?product_id=BTC-USD&level=2")
 
     def test_advanced_only_endpoints_raise_in_exchange(self) -> None:
         client_ex = make_client("exchange")

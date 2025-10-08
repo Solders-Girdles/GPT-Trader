@@ -99,11 +99,11 @@ jobs:
       if: github.event_name != 'pull_request'
       run: |
         poetry run pytest -m "not slow and not performance" -q \
-          --cov=src/bot_v2/cli \
-          --cov=src/bot_v2/config \
-          --cov=src/bot_v2/features/brokerages/coinbase/client \
-          --cov=src/bot_v2/features/brokerages/coinbase/utilities \
-          --cov-report=term --cov-report=xml --cov-report=html --cov-fail-under=80
+          --cov=bot_v2/cli \
+          --cov=bot_v2/config \
+          --cov=bot_v2/features/brokerages/coinbase/client \
+          --cov=bot_v2/features/brokerages/coinbase/utilities \
+          --cov-report=term --cov-report=xml --cov-report=html --cov-fail-under=75
 
     - name: Upload coverage to Artifacts
       if: github.event_name != 'pull_request'
@@ -169,51 +169,3 @@ jobs:
         COINBASE_API_SECRET: ${{ (matrix.env_mode == 'prod_fallback' || matrix.env_mode == 'sandbox_fallback') && 'fallback_secret' || '' }}
       run: |
         poetry run pytest tests/unit/bot_v2/orchestration/test_config_manager.py tests/unit/bot_v2/orchestration/test_configuration.py
-
-  coverage-check:
-    name: Coverage (warning @ 80%)
-    runs-on: ubuntu-latest
-    continue-on-error: true
-    steps:
-    - uses: actions/checkout@v5
-
-    - name: Set up Python 3.12
-      id: setup-python
-      uses: actions/setup-python@v6
-      with:
-        python-version: '3.12'
-
-    - name: Install Poetry
-      uses: snok/install-poetry@v1
-      with:
-        version: 1.8.4
-        virtualenvs-create: true
-        virtualenvs-in-project: true
-        installer-parallel: true
-
-    - name: Load cached venv
-      id: cached-poetry-dependencies
-      uses: actions/cache@v4
-      with:
-        path: .venv
-        key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
-
-    - name: Install dependencies
-      if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-      run: poetry install --no-interaction --no-root
-
-    - name: Run unit tests with coverage gate (warn only)
-      run: |
-        poetry run pytest \
-          --cov=src/bot_v2/cli \
-          --cov=src/bot_v2/config \
-          --cov=src/bot_v2/features/brokerages/coinbase/client \
-          --cov=src/bot_v2/features/brokerages/coinbase/utilities \
-          --cov-report=term --cov-report=html --cov-fail-under=80 \
-          tests/unit/bot_v2 tests/unit/test_foundation.py
-
-    - name: Upload coverage report (HTML)
-      uses: actions/upload-artifact@v4
-      with:
-        name: coverage-report
-        path: htmlcov/

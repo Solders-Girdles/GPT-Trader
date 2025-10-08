@@ -168,10 +168,11 @@ jobs:
           ENV: test
         run: |
           poetry run pytest tests/unit/bot_v2/ \
-            --cov=src/bot_v2 \
+            --cov=bot_v2 \
             --cov-report=xml \
             --cov-report=html \
             --cov-report=term-missing \
+            --cov-fail-under=75 \
             -v
 
       - name: Upload coverage reports

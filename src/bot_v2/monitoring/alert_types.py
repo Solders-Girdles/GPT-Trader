@@ -4,7 +4,8 @@ import uuid
 from dataclasses import InitVar, dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Mapping
+from typing import Any
+from collections.abc import Mapping
 
 
 class AlertSeverity(Enum):
@@ -29,7 +30,7 @@ class AlertSeverity(Enum):
         return mapping[self]
 
     @classmethod
-    def coerce(cls, value: "AlertSeverity | str | int") -> "AlertSeverity":
+    def coerce(cls, value: AlertSeverity | str | int) -> AlertSeverity:
         """Coerce user-provided severity into an ``AlertSeverity`` enum."""
         if isinstance(value, AlertSeverity):
             return value

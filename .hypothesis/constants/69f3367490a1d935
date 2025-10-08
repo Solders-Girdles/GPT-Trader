@@ -1,0 +1,4 @@
+# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/features/brokerages/coinbase/client/market.py
+# hypothesis_version: 6.140.3
+
+[200, 300, '+00:00', ',', 'GET', 'Z', 'advanced', 'best_bid_ask', 'candles', 'end', 'exchange', 'granularity', 'limit', 'order_book', 'product', 'products', 'start', 'ticker']

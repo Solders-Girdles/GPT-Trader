@@ -1,0 +1,4 @@
+# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/features/brokerages/coinbase/rest/orders.py
+# hypothesis_version: 6.140.3
+
+[200, '0', 'OrderRestMixin', 'cancelled_order_ids', 'data', 'edit_order_preview', 'fills', 'get_order_historical', 'limit', 'list_orders', 'new_client_order_id', 'order', 'order_id', 'order_status', 'orders', 'place_order', 'preview_id', 'preview_order', 'product_id', 'quantity', 'reduce_only', 'results', 'side', 'size', 'success']

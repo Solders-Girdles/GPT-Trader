@@ -1,0 +1,4 @@
+# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/data_providers/__init__.py
+# hypothesis_version: 6.140.3
+
+[-0.01, 0.001, 0.01, 0.015, 0.02, 0.95, 0.98, 0.99, 1.01, 1.02, 1.05, 100.0, 150.0, 250.0, 300.0, 2800.0, 2024, 1000000, 10000000, '1', '1d', '60d', 'AAPL', 'Close', 'D', 'DataProvider', 'GOOGL', 'High', 'Low', 'MSFT', 'MockProvider', 'Open', 'TESTING', 'TSLA', 'Volume', 'YFinanceProvider', 'alpaca', 'coinbase', 'currentPrice', 'd', 'get_data_provider', 'mock', 'mock_data.json', 'regularMarketPrice', 'set_data_provider', 'true', 'yfinance']

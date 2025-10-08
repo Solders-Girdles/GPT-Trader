@@ -201,26 +201,28 @@ class TestCoinbaseClientBase:
         client._request.assert_called_once_with("DELETE", "/api/v3/test", {"data": "value"})
         assert result == {"success": True}
 
-    @patch('bot_v2.features.brokerages.coinbase.client.base.time.time')
+    @patch("bot_v2.features.brokerages.coinbase.client.base.time.time")
     def test_check_rate_limit_disabled(self, mock_time: Mock) -> None:
         """Test rate limit checking when disabled."""
         mock_time.return_value = 1000.0
-        client = CoinbaseClientBase(
-            base_url=self.base_url, auth=self.auth, enable_throttle=False
-        )
+        client = CoinbaseClientBase(base_url=self.base_url, auth=self.auth, enable_throttle=False)
 
         # Should not raise any exceptions or sleep
         client._check_rate_limit()
 
         assert len(client._request_times) == 0
 
-    @patch('bot_v2.features.brokerages.coinbase.client.base.time.time')
-    @patch('bot_v2.features.brokerages.coinbase.client.base.time.sleep')
-    @patch('bot_v2.features.brokerages.coinbase.client.base.logger')
-    def test_check_rate_limit_normal_usage(self, mock_logger: Mock, mock_sleep: Mock, mock_time: Mock) -> None:
+    @patch("bot_v2.features.brokerages.coinbase.client.base.time.time")
+    @patch("bot_v2.features.brokerages.coinbase.client.base.time.sleep")
+    @patch("bot_v2.features.brokerages.coinbase.client.base.logger")
+    def test_check_rate_limit_normal_usage(
+        self, mock_logger: Mock, mock_sleep: Mock, mock_time: Mock
+    ) -> None:
         """Test rate limit checking with normal usage."""
         mock_time.return_value = 1000.0
-        client = CoinbaseClientBase(base_url=self.base_url, auth=self.auth, rate_limit_per_minute=10)
+        client = CoinbaseClientBase(
+            base_url=self.base_url, auth=self.auth, rate_limit_per_minute=10
+        )
 
         # Add some requests within the limit
         for i in range(5):
@@ -229,13 +231,17 @@ class TestCoinbaseClientBase:
         assert len(client._request_times) == 5
         mock_sleep.assert_not_called()
 
-    @patch('bot_v2.features.brokerages.coinbase.client.base.time.time')
-    @patch('bot_v2.features.brokerages.coinbase.client.base.time.sleep')
-    @patch('bot_v2.features.brokerages.coinbase.client.base.logger')
-    def test_check_rate_limit_warning_threshold(self, mock_logger: Mock, mock_sleep: Mock, mock_time: Mock) -> None:
+    @patch("bot_v2.features.brokerages.coinbase.client.base.time.time")
+    @patch("bot_v2.features.brokerages.coinbase.client.base.time.sleep")
+    @patch("bot_v2.features.brokerages.coinbase.client.base.logger")
+    def test_check_rate_limit_warning_threshold(
+        self, mock_logger: Mock, mock_sleep: Mock, mock_time: Mock
+    ) -> None:
         """Test rate limit warning threshold."""
         mock_time.return_value = 1000.0
-        client = CoinbaseClientBase(base_url=self.base_url, auth=self.auth, rate_limit_per_minute=10)
+        client = CoinbaseClientBase(
+            base_url=self.base_url, auth=self.auth, rate_limit_per_minute=10
+        )
 
         # Add requests up to 80% of limit
         for i in range(8):
@@ -247,10 +253,12 @@ class TestCoinbaseClientBase:
             10,
         )
 
-    @patch('bot_v2.features.brokerages.coinbase.client.base.time.time')
-    @patch('bot_v2.features.brokerages.coinbase.client.base.time.sleep')
-    @patch('bot_v2.features.brokerages.coinbase.client.base.logger')
-    def test_check_rate_limit_exceeded(self, mock_logger: Mock, mock_sleep: Mock, mock_time: Mock) -> None:
+    @patch("bot_v2.features.brokerages.coinbase.client.base.time.time")
+    @patch("bot_v2.features.brokerages.coinbase.client.base.time.sleep")
+    @patch("bot_v2.features.brokerages.coinbase.client.base.logger")
+    def test_check_rate_limit_exceeded(
+        self, mock_logger: Mock, mock_sleep: Mock, mock_time: Mock
+    ) -> None:
         """Test rate limit exceeded behavior."""
         # Start at time 1000
         mock_time.return_value = 1000.0
@@ -273,10 +281,12 @@ class TestCoinbaseClientBase:
         mock_logger.info.assert_called_once()
         assert "Rate limit reached" in mock_logger.info.call_args[0][0]
 
-    @patch('bot_v2.features.brokerages.coinbase.client.base.time.time')
+    @patch("bot_v2.features.brokerages.coinbase.client.base.time.time")
     def test_check_rate_limit_window_cleanup(self, mock_time: Mock) -> None:
         """Test rate limit window cleanup."""
-        client = CoinbaseClientBase(base_url=self.base_url, auth=self.auth, rate_limit_per_minute=10)
+        client = CoinbaseClientBase(
+            base_url=self.base_url, auth=self.auth, rate_limit_per_minute=10
+        )
 
         # Add requests at time 1000
         mock_time.return_value = 1000.0
@@ -348,7 +358,7 @@ class TestCoinbaseClientBase:
         headers = call_args[0][2]
         assert "Authorization" not in headers
 
-    @patch('bot_v2.features.brokerages.coinbase.client.base.get_correlation_id')
+    @patch("bot_v2.features.brokerages.coinbase.client.base.get_correlation_id")
     def test_request_with_correlation_id(self, mock_get_correlation_id: Mock) -> None:
         """Test request with correlation ID."""
         mock_get_correlation_id.return_value = "test-correlation-123"
@@ -367,7 +377,11 @@ class TestCoinbaseClientBase:
         """Test request with 4xx error."""
         client = CoinbaseClientBase(base_url=self.base_url, auth=self.auth)
         mock_transport = Mock()
-        mock_transport.return_value = (400, {}, '{"error": "INVALID_REQUEST", "message": "Bad request"}')
+        mock_transport.return_value = (
+            400,
+            {},
+            '{"error": "INVALID_REQUEST", "message": "Bad request"}',
+        )
         client.set_transport_for_testing(mock_transport)
 
         with pytest.raises(InvalidRequestError, match="Bad request"):
@@ -384,7 +398,7 @@ class TestCoinbaseClientBase:
         ]
         client.set_transport_for_testing(mock_transport)
 
-        with patch('time.sleep') as mock_sleep:
+        with patch("time.sleep") as mock_sleep:
             result = client._request("GET", "/api/v3/test")
 
         assert result == {"success": True}
@@ -401,7 +415,7 @@ class TestCoinbaseClientBase:
         ]
         client.set_transport_for_testing(mock_transport)
 
-        with patch('time.sleep') as mock_sleep:
+        with patch("time.sleep") as mock_sleep:
             result = client._request("GET", "/api/v3/test")
 
         assert result == {"success": True}
@@ -417,7 +431,7 @@ class TestCoinbaseClientBase:
         ]
         client.set_transport_for_testing(mock_transport)
 
-        with patch('time.sleep') as mock_sleep:
+        with patch("time.sleep") as mock_sleep:
             result = client._request("GET", "/api/v3/test")
 
         assert result == {"success": True}
@@ -431,7 +445,7 @@ class TestCoinbaseClientBase:
         mock_transport.return_value = (500, {}, '{"error": "INTERNAL_ERROR"}')
         client.set_transport_for_testing(mock_transport)
 
-        with patch('time.sleep'):
+        with patch("time.sleep"):
             with pytest.raises(Exception):  # Should raise some kind of HTTP error
                 client._request("GET", "/api/v3/test")
 
@@ -442,7 +456,7 @@ class TestCoinbaseClientBase:
         """Test request with invalid JSON response."""
         client = CoinbaseClientBase(base_url=self.base_url, auth=self.auth)
         mock_transport = Mock()
-        mock_transport.return_value = (200, {}, 'invalid json response')
+        mock_transport.return_value = (200, {}, "invalid json response")
         client.set_transport_for_testing(mock_transport)
 
         result = client._request("GET", "/api/v3/test")
@@ -453,7 +467,7 @@ class TestCoinbaseClientBase:
         """Test request with empty response."""
         client = CoinbaseClientBase(base_url=self.base_url, auth=self.auth)
         mock_transport = Mock()
-        mock_transport.return_value = (200, {}, '')
+        mock_transport.return_value = (200, {}, "")
         client.set_transport_for_testing(mock_transport)
 
         result = client._request("GET", "/api/v3/test")
@@ -463,11 +477,11 @@ class TestCoinbaseClientBase:
     def test_paginate_success(self) -> None:
         """Test successful pagination."""
         client = CoinbaseClientBase(base_url=self.base_url, auth=self.auth)
-        
+
         # Mock responses for multiple pages
         page1 = {"data": [{"id": 1}, {"id": 2}], "cursor": "page2"}
         page2 = {"data": [{"id": 3}], "cursor": None}
-        
+
         client._request = Mock(side_effect=[page1, page2])
 
         results = list(client.paginate("/api/v3/test", {}, "data"))
@@ -483,17 +497,19 @@ class TestCoinbaseClientBase:
     def test_paginate_custom_cursor_params(self) -> None:
         """Test pagination with custom cursor parameters."""
         client = CoinbaseClientBase(base_url=self.base_url, auth=self.auth)
-        
+
         page = {"items": [{"id": 1}], "next_cursor": "next"}
         client._request = Mock(return_value=page)
 
-        list(client.paginate(
-            "/api/v3/test", 
-            {"limit": "100"}, 
-            "items", 
-            cursor_param="page_token",
-            cursor_field="next_cursor"
-        ))
+        list(
+            client.paginate(
+                "/api/v3/test",
+                {"limit": "100"},
+                "items",
+                cursor_param="page_token",
+                cursor_field="next_cursor",
+            )
+        )
 
         # Check that custom cursor param was used
         call_args = client._request.call_args
@@ -502,7 +518,7 @@ class TestCoinbaseClientBase:
     def test_paginate_no_cursor(self) -> None:
         """Test pagination when no cursor is returned."""
         client = CoinbaseClientBase(base_url=self.base_url, auth=self.auth)
-        
+
         page = {"data": [{"id": 1}]}
         client._request = Mock(return_value=page)
 
@@ -514,7 +530,7 @@ class TestCoinbaseClientBase:
     def test_paginate_empty_items(self) -> None:
         """Test pagination when items are empty."""
         client = CoinbaseClientBase(base_url=self.base_url, auth=self.auth)
-        
+
         page = {"data": [], "cursor": "next"}
         client._request = Mock(return_value=page)
 
@@ -524,17 +540,17 @@ class TestCoinbaseClientBase:
         # Should still make the request to check for next page
         assert client._request.call_count == 1
 
-    @patch('bot_v2.features.brokerages.coinbase.client.base._load_system_config')
+    @patch("bot_v2.features.brokerages.coinbase.client.base._load_system_config")
     def test_load_system_config_with_package_config(self, mock_load_config: Mock) -> None:
         """Test loading system config from package."""
         mock_load_config.return_value = {"max_retries": 5, "retry_delay": 2.0}
-        
+
         client = CoinbaseClientBase(base_url=self.base_url, auth=self.auth)
         mock_transport = Mock()
         mock_transport.return_value = (500, {}, "Server error")
         client.set_transport_for_testing(mock_transport)
 
-        with patch('time.sleep'):
+        with patch("time.sleep"):
             try:
                 client._request("GET", "/api/v3/test")
             except:
@@ -546,7 +562,7 @@ class TestCoinbaseClientBase:
         """Test that auth API mode is synced with client API mode."""
         auth = Mock(spec=CoinbaseAuth)
         auth.api_mode = None
-        
+
         client = CoinbaseClientBase(base_url=self.base_url, auth=auth, api_mode="exchange")
         mock_transport = Mock()
         mock_transport.return_value = (200, {}, '{"success": true}')
@@ -560,21 +576,21 @@ class TestCoinbaseClientBase:
     def test_urllib_transport_success(self) -> None:
         """Test urllib transport with successful response."""
         client = CoinbaseClientBase(base_url=self.base_url, auth=self.auth)
-        
-        with patch('bot_v2.features.brokerages.coinbase.client.base._ul') as mock_ul:
+
+        with patch("bot_v2.features.brokerages.coinbase.client.base._ul") as mock_ul:
             mock_response = Mock()
             mock_response.getcode.return_value = 200
             mock_response.headers.items.return_value = [("content-type", "application/json")]
             mock_response.read.return_value = b'{"success": true}'
-            
+
             mock_urlopen = Mock()
             mock_urlopen.return_value.__enter__.return_value = mock_response
             mock_ul.urlopen.return_value = mock_urlopen
-            
+
             status, headers, text = client._urllib_transport(
                 "GET", "https://api.coinbase.com/test", {}, None, 30
             )
-            
+
             assert status == 200
             assert headers["content-type"] == "application/json"
             assert text == '{"success": true}'
@@ -582,50 +598,52 @@ class TestCoinbaseClientBase:
     def test_urllib_transport_http_error(self) -> None:
         """Test urllib transport with HTTP error."""
         client = CoinbaseClientBase(base_url=self.base_url, auth=self.auth)
-        
-        with patch('bot_v2.features.brokerages.coinbase.client.base._ul') as mock_ul:
+
+        with patch("bot_v2.features.brokerages.coinbase.client.base._ul") as mock_ul:
             from bot_v2.features.brokerages.coinbase.client import _ue
-            
+
             mock_error = Mock()
             mock_error.code = 404
             mock_error.headers = {"content-type": "application/json"}
             mock_error.read.return_value = b'{"error": "NOT_FOUND"}'
-            
-            mock_urlopen = Mock(side_effect=_ue.HTTPError(
-                url="https://api.coinbase.com/test",
-                code=404,
-                msg="Not Found",
-                hdrs={"content-type": "application/json"},
-                fp=Mock()
-            ))
+
+            mock_urlopen = Mock(
+                side_effect=_ue.HTTPError(
+                    url="https://api.coinbase.com/test",
+                    code=404,
+                    msg="Not Found",
+                    hdrs={"content-type": "application/json"},
+                    fp=Mock(),
+                )
+            )
             mock_urlopen.side_effect.read.return_value = b'{"error": "NOT_FOUND"}'
             mock_ul.urlopen.return_value = mock_urlopen
-            
+
             status, headers, text = client._urllib_transport(
                 "GET", "https://api.coinbase.com/test", {}, None, 30
             )
-            
+
             assert status == 404
             assert text == '{"error": "NOT_FOUND"}'
 
     def test_urllib_transport_keep_alive(self) -> None:
         """Test urllib transport with keep-alive enabled."""
         client = CoinbaseClientBase(base_url=self.base_url, auth=self.auth, enable_keep_alive=True)
-        
-        with patch('bot_v2.features.brokerages.coinbase.client.base._ul') as mock_ul:
+
+        with patch("bot_v2.features.brokerages.coinbase.client.base._ul") as mock_ul:
             mock_response = Mock()
             mock_response.getcode.return_value = 200
             mock_response.headers.items.return_value = []
             mock_response.read.return_value = b'{"success": true}'
-            
+
             mock_urlopen = Mock()
             mock_urlopen.return_value.__enter__.return_value = mock_response
             client._opener = Mock()
             client._opener.open.return_value = mock_urlopen
-            
+
             status, headers, text = client._urllib_transport(
                 "GET", "https://api.coinbase.com/test", {}, None, 30
             )
-            
+
             client._opener.open.assert_called_once()
             mock_ul.urlopen.assert_not_called()

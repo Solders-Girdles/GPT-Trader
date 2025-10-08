@@ -1,0 +1,4 @@
+# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/features/live_trade/brokers.py
+# hypothesis_version: 6.140.3
+
+[0.01, 0.02, 100.0, 100000.0, 100, '0', 'BrokerInterface', 'SIM_001', 'SimulatedBroker', 'closed', 'day', 'long', 'open', 'quantity', 'symbol']

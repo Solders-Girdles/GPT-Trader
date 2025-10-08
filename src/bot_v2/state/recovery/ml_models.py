@@ -43,9 +43,7 @@ class MLModelsRecoveryStrategy(RecoveryStrategy):
 
             # Fall back to baseline models if needed
             if recovered_models == 0:
-                operation.actions_taken.append(
-                    "No ML models recovered, using baseline strategies"
-                )
+                operation.actions_taken.append("No ML models recovered, using baseline strategies")
                 await self.state_manager.set_state("system:ml_models_available", False)
 
             return True  # System can operate without ML models

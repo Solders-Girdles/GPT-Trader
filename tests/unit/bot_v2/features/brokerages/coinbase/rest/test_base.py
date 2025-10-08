@@ -366,7 +366,7 @@ class TestCoinbaseRestServiceBase:
         mock_order.id = "order_123"
         self.client.place_order.return_value = {"order_id": "order_123"}
 
-        with patch('bot_v2.features.brokerages.coinbase.models.to_order', return_value=mock_order):
+        with patch("bot_v2.features.brokerages.coinbase.models.to_order", return_value=mock_order):
             result = self.service._execute_order_payload("BTC-USD", payload, "client_123")
 
         assert result == mock_order
@@ -380,7 +380,7 @@ class TestCoinbaseRestServiceBase:
         self.client.preview_order.return_value = {"success": True}
         self.client.place_order.return_value = {"order_id": "order_123"}
 
-        with patch('bot_v2.features.brokerages.coinbase.models.to_order', return_value=mock_order):
+        with patch("bot_v2.features.brokerages.coinbase.models.to_order", return_value=mock_order):
             result = self.service._execute_order_payload("BTC-USD", payload, "client_123")
 
         assert result == mock_order
@@ -416,7 +416,9 @@ class TestCoinbaseRestServiceBase:
         result = self.service._execute_order_payload("BTC-USD", payload, "client_123")
 
         assert result == mock_order
-        self.service._find_existing_order_by_client_id.assert_called_once_with("BTC-USD", "client_123")
+        self.service._find_existing_order_by_client_id.assert_called_once_with(
+            "BTC-USD", "client_123"
+        )
 
     def test_execute_order_payload_unexpected_error(self) -> None:
         """Test order execution with unexpected error."""
@@ -437,7 +439,7 @@ class TestCoinbaseRestServiceBase:
         mock_order = Mock(spec=Order)
         mock_order.id = "order_123"
 
-        with patch('bot_v2.features.brokerages.coinbase.models.to_order', return_value=mock_order):
+        with patch("bot_v2.features.brokerages.coinbase.models.to_order", return_value=mock_order):
             result = self.service._find_existing_order_by_client_id("BTC-USD", "client_123")
 
         assert result == mock_order
@@ -474,7 +476,7 @@ class TestCoinbaseRestServiceBase:
         mock_order = Mock(spec=Order)
         mock_order.id = "order_2"
 
-        with patch('bot_v2.features.brokerages.coinbase.models.to_order', return_value=mock_order):
+        with patch("bot_v2.features.brokerages.coinbase.models.to_order", return_value=mock_order):
             result = self.service._find_existing_order_by_client_id("BTC-USD", "client_123")
 
         assert result == mock_order
@@ -498,7 +500,9 @@ class TestCoinbaseRestServiceBase:
         """Test updating position metrics when no mark price is available."""
         from bot_v2.features.brokerages.coinbase.utilities import PositionState
 
-        position = PositionState(symbol="BTC-USD", side="LONG", quantity=Decimal("0.1"), entry_price=Decimal("50000"))
+        position = PositionState(
+            symbol="BTC-USD", side="LONG", quantity=Decimal("0.1"), entry_price=Decimal("50000")
+        )
         self.service._positions["BTC-USD"] = position
         self.market_data.get_mark.return_value = None
 
@@ -511,10 +515,15 @@ class TestCoinbaseRestServiceBase:
         """Test successful position metrics update."""
         from bot_v2.features.brokerages.coinbase.utilities import PositionState
 
-        position = PositionState(symbol="BTC-USD", side="LONG", quantity=Decimal("0.1"), entry_price=Decimal("50000"))
+        position = PositionState(
+            symbol="BTC-USD", side="LONG", quantity=Decimal("0.1"), entry_price=Decimal("50000")
+        )
         self.service._positions["BTC-USD"] = position
         self.market_data.get_mark.return_value = Decimal("51000")
-        self.product_catalog.get_funding.return_value = (Decimal("0.01"), datetime(2024, 1, 1, 12, 0, 0))
+        self.product_catalog.get_funding.return_value = (
+            Decimal("0.01"),
+            datetime(2024, 1, 1, 12, 0, 0),
+        )
 
         self.service._update_position_metrics("BTC-USD")
 
@@ -532,13 +541,20 @@ class TestCoinbaseRestServiceBase:
         """Test position metrics update with funding accrual."""
         from bot_v2.features.brokerages.coinbase.utilities import PositionState
 
-        position = PositionState(symbol="BTC-USD", side="LONG", quantity=Decimal("0.1"), entry_price=Decimal("50000"))
+        position = PositionState(
+            symbol="BTC-USD", side="LONG", quantity=Decimal("0.1"), entry_price=Decimal("50000")
+        )
         self.service._positions["BTC-USD"] = position
         self.market_data.get_mark.return_value = Decimal("51000")
-        self.product_catalog.get_funding.return_value = (Decimal("0.01"), datetime(2024, 1, 1, 12, 0, 0))
+        self.product_catalog.get_funding.return_value = (
+            Decimal("0.01"),
+            datetime(2024, 1, 1, 12, 0, 0),
+        )
 
         # Mock funding calculator to return a non-zero delta
-        with patch.object(self.service._funding_calculator, 'accrue_if_due', return_value=Decimal("5.0")):
+        with patch.object(
+            self.service._funding_calculator, "accrue_if_due", return_value=Decimal("5.0")
+        ):
             self.service._update_position_metrics("BTC-USD")
 
         # Should have recorded funding metric
@@ -553,7 +569,9 @@ class TestCoinbaseRestServiceBase:
         """Test positions property access."""
         from bot_v2.features.brokerages.coinbase.utilities import PositionState
 
-        position = PositionState(symbol="BTC-USD", side="LONG", quantity=Decimal("0.1"), entry_price=Decimal("50000"))
+        position = PositionState(
+            symbol="BTC-USD", side="LONG", quantity=Decimal("0.1"), entry_price=Decimal("50000")
+        )
         self.service._positions["BTC-USD"] = position
 
         positions = self.service.positions
@@ -566,7 +584,9 @@ class TestCoinbaseRestServiceBase:
         """Test public update_position_metrics method."""
         from bot_v2.features.brokerages.coinbase.utilities import PositionState
 
-        position = PositionState(symbol="BTC-USD", side="LONG", quantity=Decimal("0.1"), entry_price=Decimal("50000"))
+        position = PositionState(
+            symbol="BTC-USD", side="LONG", quantity=Decimal("0.1"), entry_price=Decimal("50000")
+        )
         self.service._positions["BTC-USD"] = position
         self.market_data.get_mark.return_value = Decimal("51000")
 

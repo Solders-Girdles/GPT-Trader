@@ -1,0 +1,4 @@
+# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/validation/calculation_validator.py
+# hypothesis_version: 6.140.3
+
+[100, 101, 102, 103, 104, 10000, '\nTrade Log:', '         P&L: $%s', '-', '=', 'BUY', 'Buy signal', 'FINAL RESULTS', 'Final cash: $%s', 'HOLD', 'Outperformance: %s%%', 'Position value: $%s', 'SELL', 'Sell signal', 'TRADING SIMULATION', 'Total value: $%s', 'action', 'cash_after', 'cost', 'day', 'final_value', 'ma3', 'ma5', 'pnl', 'price', 'prices', 'proceeds', 'return_pct', 'shares', 'signals', 'trades']

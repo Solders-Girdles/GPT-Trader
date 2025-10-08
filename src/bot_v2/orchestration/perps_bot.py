@@ -150,7 +150,7 @@ class PerpsBot:
             positions=positions,
             account_equity=account_equity,
             profile=self.config.profile,
-            broker_type=broker_type
+            broker_type=broker_type,
         )
 
     def _init_configuration_guardian(self) -> None:
@@ -311,7 +311,7 @@ class PerpsBot:
         try:
             # Try to get account equity if possible
             account_info = await asyncio.to_thread(self.broker.get_account_info)
-            account_equity = getattr(account_info, 'equity', None)
+            account_equity = getattr(account_info, "equity", None)
             if account_equity is not None:
                 account_equity = Decimal(str(account_equity))
         except Exception as exc:
@@ -334,7 +334,7 @@ class PerpsBot:
             proposed_config_dict=current_config_dict,
             current_balances=balances,
             current_positions=list(positions),
-            current_equity=account_equity
+            current_equity=account_equity,
         )
 
         if not validation_result.is_valid:
@@ -350,14 +350,18 @@ class PerpsBot:
             )
 
             if has_critical_errors:
-                logger.critical("Critical configuration violations detected - initiating emergency shutdown")
+                logger.critical(
+                    "Critical configuration violations detected - initiating emergency shutdown"
+                )
                 # Critical events require emergency shutdown
                 self.running = False
                 await self.shutdown()
                 return
             else:
                 # High events require reduce-only mode
-                logger.warning("High-severity configuration violations detected - switching to reduce-only mode")
+                logger.warning(
+                    "High-severity configuration violations detected - switching to reduce-only mode"
+                )
                 self.set_reduce_only_mode(True, "Configuration drift detected")
                 return
 

@@ -1,2 +1,1 @@
 """Coinbase REST unit tests."""
-

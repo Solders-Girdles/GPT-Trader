@@ -1,0 +1,4 @@
+# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/features/brokerages/coinbase/ws.py
+# hypothesis_version: 6.140.3
+
+[1.0, 30.0, 1000.0, '+00:00', '0', '1', 'DISABLE_WS_STREAMING', 'Disconnecting', 'Disconnecting WS', 'PERPS_DEBUG', 'SequenceGuard reset', 'Z', '__code__', 'ask', 'attempt', 'best_ask', 'best_bid', 'bid', 'channels', 'close', 'coinbase_ws', 'connect', 'disconnect', 'event_type', 'false', 'gap_detected', 'high', 'last', 'last_seq', 'low', 'no', 'off', 'on', 'open', 'price', 'product_ids', 'reason', 'seq', 'sequence', 'sequence_num', 'size', 'subscribe', 'time', 'timestamp', 'true', 'type', 'user', 'volume', 'ws_connect', 'ws_disconnect', 'ws_error', 'ws_reconnect', 'ws_reconnect_attempt', 'ws_reconnect_success', 'yes']

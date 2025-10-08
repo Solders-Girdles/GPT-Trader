@@ -1,0 +1,4 @@
+# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/features/live_trade/risk/runtime_monitoring.py
+# hypothesis_version: 6.140.3
+
+['0', 'action', 'buffer_pct', 'daily_loss', 'daily_loss_abs', 'daily_loss_breach', 'daily_loss_limit', 'daily_pnl', 'event_type', 'limit', 'liq_price', 'liquidation_buffer', 'liquidation_price', 'mark', 'position_data', 'qty', 'quantity', 'realized_pnl', 'reduce_only', 'risk_engine', 'symbol', 'timestamp', 'unrealized_pnl']

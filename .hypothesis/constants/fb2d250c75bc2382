@@ -1,0 +1,4 @@
+# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/orchestration/runtime_coordinator.py
+# hypothesis_version: 6.140.3
+
+['-PERP', '0', '1', 'BROKER', 'COINBASE_API_KEY', 'COINBASE_API_MODE', 'COINBASE_API_SECRET', 'COINBASE_CDP_API_KEY', 'COINBASE_SANDBOX', 'RISK_CONFIG_PATH', 'advanced', 'coinbase', 'config_init', 'derivatives_enabled', 'disabled', 'enabled', 'error', 'event_type', 'get_position_risk', 'max_leverage', 'perps_force_mock', 'perps_paper_trading', 'reason', 'symbol', 'unspecified']

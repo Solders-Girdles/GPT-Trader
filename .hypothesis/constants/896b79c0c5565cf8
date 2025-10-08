@@ -1,0 +1,4 @@
+# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/features/optimize/backtester.py
+# hypothesis_version: 6.140.3
+
+[0.0005, 0.001, 0.95, 10000.0, 252, 10000, 'buy', 'close', 'date', 'inf', 'pnl', 'pnl_pct', 'price', 'sell', 'shares', 'strategy', 'type', 'value']

@@ -1,0 +1,4 @@
+# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/features/live_trade/__init__.py
+# hypothesis_version: 6.140.3
+
+[0.0, 0.5, 'AccountInfo', 'BrokerConnection', 'Order', 'OrderStatus', 'Position', 'action', 'buy', 'confidence', 'connect_broker', 'disconnect', 'error', 'execute_live_trade', 'executed', 'filled', 'filled_price', 'get_account', 'get_account_snapshot', 'get_positions', 'message', 'order_id', 'pending', 'place_order', 'quantity', 'status', 'strategy', 'symbol', 'unknown']

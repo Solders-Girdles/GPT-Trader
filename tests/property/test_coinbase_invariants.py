@@ -25,8 +25,12 @@ def _make_service(step_size: Decimal, price_increment: Decimal) -> SpecsService:
 @seed(1337)
 @settings(max_examples=80, deadline=None)
 @given(
-    step=st.decimals(min_value="0.0001", max_value="5", allow_nan=False, allow_infinity=False, places=6),
-    size=st.decimals(min_value="0", max_value="5000", allow_nan=False, allow_infinity=False, places=6),
+    step=st.decimals(
+        min_value="0.0001", max_value="5", allow_nan=False, allow_infinity=False, places=6
+    ),
+    size=st.decimals(
+        min_value="0", max_value="5000", allow_nan=False, allow_infinity=False, places=6
+    ),
 )
 def test_quantize_size_never_exceeds_input(step: Decimal, size: Decimal) -> None:
     service = _make_service(step, price_increment=Decimal("0.01"))
@@ -40,13 +44,15 @@ def test_quantize_size_never_exceeds_input(step: Decimal, size: Decimal) -> None
 @seed(7331)
 @settings(max_examples=80, deadline=None)
 @given(
-    price=st.decimals(min_value="0.01", max_value="50000", allow_nan=False, allow_infinity=False, places=4),
-    increment=st.decimals(min_value="0.01", max_value="250", allow_nan=False, allow_infinity=False, places=2),
+    price=st.decimals(
+        min_value="0.01", max_value="50000", allow_nan=False, allow_infinity=False, places=4
+    ),
+    increment=st.decimals(
+        min_value="0.01", max_value="250", allow_nan=False, allow_infinity=False, places=2
+    ),
     side=st.sampled_from(["BUY", "SELL"]),
 )
-def test_quantize_price_respects_increment(
-    price: Decimal, increment: Decimal, side: str
-) -> None:
+def test_quantize_price_respects_increment(price: Decimal, increment: Decimal, side: str) -> None:
     service = _make_service(step_size=Decimal("0.0001"), price_increment=increment)
     quantized = service.quantize_price_side_aware("BTC-PERP", side, float(price))
     price_decimal = Decimal(str(price))

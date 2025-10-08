@@ -1,0 +1,4 @@
+# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/features/live_trade/risk/manager.py
+# hypothesis_version: 6.140.3
+
+['ImpactAssessment', 'ImpactRequest', 'LiveRiskManager', 'PositionSizingAdvice', 'RiskRuntimeState', 'ValidationError', '_now_provider', 'event_store', 'pre_trade_validator', 'runtime_monitor', 'state_manager', 'to_dict']

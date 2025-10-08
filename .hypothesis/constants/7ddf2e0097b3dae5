@@ -1,0 +1,4 @@
+# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/features/live_trade/strategies/perps_baseline.py
+# hypothesis_version: 6.140.3
+
+[0.0, 0.01, 0.05, '0', '0.05', '1', '10000', 'Bearish MA crossover', 'Bullish MA crossover', 'New entries disabled', 'No signal', 'bearish', 'bullish', 'live', 'long', 'neutral', 'short', 'side']

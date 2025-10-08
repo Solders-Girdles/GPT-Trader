@@ -1,0 +1,4 @@
+# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/orchestration/config_controller.py
+# hypothesis_version: 6.140.3
+
+['current', 'daily_loss_limit', 'derivatives_enabled', 'max_leverage', 'max_position_size', 'new', 'perps_force_mock', 'perps_paper_trading', 'perps_stream_level', 'reduce_only_mode', 'symbols', 'time_in_force', 'update_interval']

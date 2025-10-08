@@ -39,6 +39,7 @@ class AlertChannelType(Enum):
     EMAIL = "email"
     WEBHOOK = "webhook"
 
+
 class AlertChannel:
     """Base class for alert channels."""
 

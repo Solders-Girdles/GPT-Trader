@@ -1,0 +1,4 @@
+# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/features/brokerages/coinbase/account_manager.py
+# hypothesis_version: 6.140.3
+
+['account_snapshot', 'coinbase_account', 'convert_commit', 'event_type', 'fee_schedule', 'id', 'key_permissions', 'limits', 'limits_unavailable', 'payment_methods', 'portfolio_move', 'portfolios', 'quote', 'quote_id', 'result', 'trade_id', 'transaction_summary']

@@ -66,9 +66,7 @@ class TestCoinbaseDataProvider:
 
     def test_provider_init_with_client_and_adapter(self) -> None:
         """Test provider initialization with provided client and adapter."""
-        provider = CoinbaseDataProvider(
-            client=self.mock_client, adapter=self.mock_adapter
-        )
+        provider = CoinbaseDataProvider(client=self.mock_client, adapter=self.mock_adapter)
 
         assert provider.client == self.mock_client
         assert provider.adapter == self.mock_adapter
@@ -108,7 +106,10 @@ class TestCoinbaseDataProvider:
         provider = CoinbaseDataProvider()
         provider.enable_streaming = True
 
-        with patch("bot_v2.data_providers.coinbase_provider.CoinbaseTickerService", side_effect=Exception("Connection failed")):
+        with patch(
+            "bot_v2.data_providers.coinbase_provider.CoinbaseTickerService",
+            side_effect=Exception("Connection failed"),
+        ):
             provider._setup_streaming()
 
             assert provider.enable_streaming is False
@@ -245,13 +246,21 @@ class TestCoinbaseDataProvider:
             # Check that granularity was mapped correctly
             self.mock_adapter.get_candles.assert_called()
             call_args = self.mock_adapter.get_candles.call_args
-            assert call_args[0][1] in ["ONE_MINUTE", "FIVE_MINUTE", "FIFTEEN_MINUTE", 
-                                      "THIRTY_MINUTE", "ONE_HOUR", "TWO_HOUR", "SIX_HOUR", "ONE_DAY"]
+            assert call_args[0][1] in [
+                "ONE_MINUTE",
+                "FIVE_MINUTE",
+                "FIFTEEN_MINUTE",
+                "THIRTY_MINUTE",
+                "ONE_HOUR",
+                "TWO_HOUR",
+                "SIX_HOUR",
+                "ONE_DAY",
+            ]
 
     def test_get_current_price_websocket_fresh(self) -> None:
         """Test current price retrieval from fresh WebSocket cache."""
         provider = CoinbaseDataProvider(enable_streaming=True)
-        
+
         # Mock ticker cache
         mock_ticker = Mock()
         mock_ticker.last = 50500.0
@@ -268,7 +277,7 @@ class TestCoinbaseDataProvider:
     def test_get_current_price_websocket_stale_fallback(self) -> None:
         """Test current price retrieval falls back to REST when WebSocket data is stale."""
         provider = CoinbaseDataProvider(adapter=self.mock_adapter, enable_streaming=True)
-        
+
         # Mock stale ticker cache
         mock_cache = Mock()
         mock_cache.get.return_value = Mock(last=50500.0)
@@ -323,7 +332,7 @@ class TestCoinbaseDataProvider:
     def test_get_multiple_symbols_with_streaming(self) -> None:
         """Test getting multiple symbols with streaming enabled."""
         provider = CoinbaseDataProvider(enable_streaming=True)
-        
+
         # Mock ticker service
         mock_service = Mock()
         mock_service._thread = Mock()
@@ -332,7 +341,7 @@ class TestCoinbaseDataProvider:
 
         with patch.object(provider, "get_historical_data") as mock_get_data:
             mock_get_data.return_value = pd.DataFrame()
-            
+
             provider.get_multiple_symbols(["BTC", "ETH"], "60d")
 
             # Should update symbols in ticker service
@@ -383,7 +392,7 @@ class TestCoinbaseDataProvider:
     def test_start_stop_streaming(self) -> None:
         """Test starting and stopping streaming."""
         provider = CoinbaseDataProvider(enable_streaming=True)
-        
+
         mock_service = Mock()
         provider.ticker_service = mock_service
 
@@ -396,7 +405,7 @@ class TestCoinbaseDataProvider:
     def test_context_manager(self) -> None:
         """Test context manager functionality."""
         provider = CoinbaseDataProvider(enable_streaming=True)
-        
+
         mock_service = Mock()
         provider.ticker_service = mock_service
 
@@ -519,14 +528,12 @@ class TestIntegrationWorkflow:
 
         with patch("bot_v2.data_providers.coinbase_provider.CoinbaseTickerService") as mock_service:
             with patch("bot_v2.data_providers.coinbase_provider.TickerCache") as mock_cache:
-                provider = CoinbaseDataProvider(
-                    adapter=mock_adapter, enable_streaming=True
-                )
+                provider = CoinbaseDataProvider(adapter=mock_adapter, enable_streaming=True)
 
                 with provider:
                     # Streaming should be started
                     mock_service.return_value.start.assert_called_once()
-                    
+
                     # Should be able to get data
                     price = provider.get_current_price("BTC")
                     assert price == 50500.0

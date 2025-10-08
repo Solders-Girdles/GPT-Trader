@@ -1,0 +1,4 @@
+# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/orchestration/symbols.py
+# hypothesis_version: 6.140.3
+
+['-', '-PERP', '1', 'BTC-PERP', 'ETH-PERP', 'SOL-PERP', 'USD', 'XRP-PERP', 'spot', 'value']

@@ -28,7 +28,9 @@ def test_request_retries_on_429_and_5xx_then_succeeds(mocker) -> None:
         (200, {}, '{"ok": true}'),
     ]
 
-    def fake_transport(method: str, url: str, headers: dict[str, str], body: bytes | None, timeout: int) -> tuple[int, dict[str, str], str]:
+    def fake_transport(
+        method: str, url: str, headers: dict[str, str], body: bytes | None, timeout: int
+    ) -> tuple[int, dict[str, str], str]:
         status, hdrs, text = responses.pop(0)
         return status, hdrs, text
 
@@ -44,7 +46,9 @@ def test_request_fast_fails_on_auth_errors(mocker) -> None:
     client = _make_client()
     _patch_retry_config(mocker)
 
-    def transport(method: str, url: str, headers: dict[str, str], body: bytes | None, timeout: int) -> tuple[int, dict[str, str], str]:
+    def transport(
+        method: str, url: str, headers: dict[str, str], body: bytes | None, timeout: int
+    ) -> tuple[int, dict[str, str], str]:
         return 401, {}, '{"message": "invalid api key"}'
 
     client._transport = transport  # type: ignore[assignment]
@@ -59,7 +63,9 @@ def test_non_json_response_yields_brokerage_error(mocker) -> None:
     client = _make_client()
     _patch_retry_config(mocker)
 
-    def transport(method: str, url: str, headers: dict[str, str], body: bytes | None, timeout: int) -> tuple[int, dict[str, str], str]:
+    def transport(
+        method: str, url: str, headers: dict[str, str], body: bytes | None, timeout: int
+    ) -> tuple[int, dict[str, str], str]:
         return 500, {}, "<html>oops</html>"
 
     client._transport = transport  # type: ignore[assignment]

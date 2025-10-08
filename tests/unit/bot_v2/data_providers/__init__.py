@@ -1,2 +1,1 @@
 """Data provider unit tests."""
-

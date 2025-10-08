@@ -331,7 +331,9 @@ class ConfigManager:
                             if not isinstance(symbol, str) or not symbol.strip():
                                 invalid_symbols.append(f"[{i}]: {repr(symbol)}")
                         if invalid_symbols:
-                            errors.append(f"symbols overrides must contain only non-empty strings: {', '.join(invalid_symbols)}")
+                            errors.append(
+                                f"symbols overrides must contain only non-empty strings: {', '.join(invalid_symbols)}"
+                            )
 
         if errors:
             raise ConfigValidationError(errors)
@@ -440,11 +442,7 @@ class ConfigManager:
             else:
                 errors.append(str(e))
 
-            return ConfigValidationResult(
-                is_valid=False,
-                errors=errors,
-                warnings=warnings
-            )
+            return ConfigValidationResult(is_valid=False, errors=errors, warnings=warnings)
 
     def _normalize_symbols(self, config: BotConfig) -> BotConfig:
         try:

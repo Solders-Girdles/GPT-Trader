@@ -21,12 +21,19 @@ class StubClient:
 
 
 @pytest.mark.parametrize("final_response", ["success", "fail"])
-def test_key_permission_retry_behaviour(monkeypatch: pytest.MonkeyPatch, final_response: str) -> None:
+def test_key_permission_retry_behaviour(
+    monkeypatch: pytest.MonkeyPatch, final_response: str
+) -> None:
     if final_response == "success":
         responses = [
             URLError("temporary network issue"),
             URLError("rate limit"),
-            {"can_trade": True, "can_view": True, "portfolio_type": "INTX", "portfolio_uuid": "uuid"},
+            {
+                "can_trade": True,
+                "can_view": True,
+                "portfolio_type": "INTX",
+                "portfolio_uuid": "uuid",
+            },
         ]
         expected_result = True
     else:

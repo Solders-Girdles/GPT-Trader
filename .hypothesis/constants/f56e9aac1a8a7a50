@@ -1,0 +1,4 @@
+# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/features/live_trade/risk/position_sizing.py
+# hypothesis_version: 6.140.3
+
+[1.0, '0', 'error', 'event_type', 'fallback', 'fallback_used', 'reason', 'reduce_only', 'reduce_only_mode', 'risk_engine', 'side', 'symbol', 'target_notional', 'target_quantity', 'used_dynamic']

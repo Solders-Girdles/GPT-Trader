@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import logging
 import threading
-import time
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from datetime import datetime
@@ -22,9 +21,9 @@ class CoinbaseTicker:
     """Simple container for ticker snapshots."""
 
     symbol: str
-    bid: Optional[Decimal]
-    ask: Optional[Decimal]
-    last: Optional[Decimal]
+    bid: Decimal | None
+    ask: Decimal | None
+    last: Decimal | None
     timestamp: datetime
     raw: dict[str, Any] | None = None
 
@@ -101,7 +100,9 @@ class CoinbaseTickerService:
             if self._thread and self._thread.is_alive():
                 return
             self._stop_event.clear()
-            self._thread = threading.Thread(target=self._run, name="coinbase-ticker-service", daemon=True)
+            self._thread = threading.Thread(
+                target=self._run, name="coinbase-ticker-service", daemon=True
+            )
             self._thread.start()
             logger.info("CoinbaseTickerService thread started")
 
@@ -178,8 +179,12 @@ class CoinbaseTickerService:
         ask = self._safe_decimal(
             message.get("best_ask") or message.get("ask") or message.get("ask_price")
         )
-        last = self._safe_decimal(message.get("price") or message.get("last") or message.get("close"))
-        ticker = CoinbaseTicker(symbol=symbol, bid=bid, ask=ask, last=last, timestamp=utc_now(), raw=dict(message))
+        last = self._safe_decimal(
+            message.get("price") or message.get("last") or message.get("close")
+        )
+        ticker = CoinbaseTicker(
+            symbol=symbol, bid=bid, ask=ask, last=last, timestamp=utc_now(), raw=dict(message)
+        )
         self._cache.set(symbol, ticker)
         if self._on_update:
             try:
@@ -188,7 +193,7 @@ class CoinbaseTickerService:
                 logger.debug("CoinbaseTickerService on_update callback failed", exc_info=True)
 
     @staticmethod
-    def _safe_decimal(value: Any) -> Optional[Decimal]:
+    def _safe_decimal(value: Any) -> Decimal | None:
         if value in (None, "", "null"):
             return None
         try:
@@ -196,7 +201,6 @@ class CoinbaseTickerService:
         except (InvalidOperation, ValueError, TypeError):
             logger.debug("Unable to parse decimal from value=%s", value)
             return None
-
 
 
 class MarketDataService:

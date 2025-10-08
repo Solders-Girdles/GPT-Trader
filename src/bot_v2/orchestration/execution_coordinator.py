@@ -106,9 +106,7 @@ class ExecutionCoordinator:
                 if tick is None or tick == 0:
                     tick = mid * Decimal("0.0005")
 
-                depth_size = max(
-                    Decimal("1000"), abs(Decimal(str(req.quantity))) * Decimal("20")
-                )
+                depth_size = max(Decimal("1000"), abs(Decimal(str(req.quantity))) * Decimal("20"))
                 bids = [(mid - tick * Decimal(i + 1), depth_size) for i in range(5)]
                 asks = [(mid + tick * Decimal(i + 1), depth_size) for i in range(5)]
 

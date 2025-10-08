@@ -19,6 +19,7 @@ from bot_v2.features.live_trade.strategies.perps_baseline import Action
 from bot_v2.orchestration.live_execution import LiveExecutionEngine
 from bot_v2.orchestration.order_reconciler import OrderReconciler
 from bot_v2.utilities import utc_now
+from bot_v2.utilities.async_utils import run_in_thread
 from bot_v2.utilities.quantities import quantity_from
 
 if TYPE_CHECKING:  # pragma: no cover - type checking only
@@ -327,14 +328,14 @@ class ExecutionCoordinator:
         def _place() -> Any:
             return exec_engine.place_order(**kwargs)
 
-        result = await asyncio.to_thread(_place)
+        result = await run_in_thread(_place)
 
         if isinstance(exec_engine, AdvancedExecutionEngine):
             order = result
         else:
             order = None
             if result:
-                order = await asyncio.to_thread(bot.broker.get_order, result)
+                order = await run_in_thread(bot.broker.get_order, result)
 
         if order:
             bot.orders_store.upsert(order)
@@ -370,7 +371,7 @@ class ExecutionCoordinator:
         bot = self._bot
         while bot.running:
             try:
-                await asyncio.to_thread(bot.exec_engine.run_runtime_guards)
+                await run_in_thread(bot.exec_engine.run_runtime_guards)
             except Exception as e:
                 logger.error(f"Error in runtime guards: {e}", exc_info=True)
             await asyncio.sleep(60)

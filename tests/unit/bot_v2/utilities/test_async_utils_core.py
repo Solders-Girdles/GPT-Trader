@@ -1,4 +1,4 @@
-"""Tests for async utilities."""
+"""Tests for core async utilities."""
 
 from __future__ import annotations
 
@@ -22,10 +22,6 @@ from bot_v2.utilities.async_utils import (
     async_cache,
     AsyncRetry,
     async_retry,
-    gather_with_concurrency,
-    wait_for_first,
-    is_async_func,
-    run_async_if_needed,
 )
 
 
@@ -349,66 +345,6 @@ class TestAsyncRetry:
         assert call_count == 2
 
 
-class TestAsyncUtilities:
-    """Test general async utility functions."""
-    
-    @pytest.mark.asyncio
-    async def test_gather_with_concurrency(self) -> None:
-        """Test gather with concurrency limit."""
-        async def slow_operation(x: int) -> int:
-            await asyncio.sleep(0.01)
-            return x * 2
-            
-        operations = [slow_operation(i) for i in range(10)]
-        results = await gather_with_concurrency(operations, max_concurrency=3)
-        
-        assert len(results) == 10
-        assert results == [i * 2 for i in range(10)]
-        
-    @pytest.mark.asyncio
-    async def test_wait_for_first(self) -> None:
-        """Test waiting for first completed coroutine."""
-        async def fast_operation():
-            await asyncio.sleep(0.01)
-            return "fast"
-            
-        async def slow_operation():
-            await asyncio.sleep(0.1)
-            return "slow"
-            
-        result = await wait_for_first([fast_operation(), slow_operation()])
-        assert result == "fast"
-        
-    def test_is_async_func(self) -> None:
-        """Test async function detection."""
-        async def async_func():
-            pass
-            
-        def sync_func():
-            pass
-            
-        assert is_async_func(async_func)
-        assert not is_async_func(sync_func)
-        
-    @pytest.mark.asyncio
-    async def test_run_async_if_needed(self) -> None:
-        """Test running async functions if needed."""
-        async def async_func(x: int) -> int:
-            return x * 2
-            
-        def sync_func(x: int) -> int:
-            return x * 3
-            
-        # Async function should return coroutine
-        result = run_async_if_needed(async_func, 5)
-        assert asyncio.iscoroutine(result)
-        assert await result == 10
-        
-        # Sync function should return result directly
-        result = run_async_if_needed(sync_func, 5)
-        assert result == 15
-
-
 class TestAsyncEdgeCases:
     """Test edge cases and error conditions."""
     
@@ -457,34 +393,3 @@ class TestAsyncEdgeCases:
         retry = AsyncRetry(max_attempts=1)  # Only one attempt
         result = await retry.execute(func)
         assert result == "result"
-
-
-class TestAsyncPerformance:
-    """Test performance-related async utilities."""
-    
-    @pytest.mark.asyncio
-    async def test_concurrent_execution_performance(self) -> None:
-        """Test that concurrent execution is faster than sequential."""
-        async def slow_operation(x: int) -> int:
-            await asyncio.sleep(0.01)
-            return x * 2
-            
-        # Create fresh coroutines for each test
-        operations1 = [slow_operation(i) for i in range(5)]
-        operations2 = [slow_operation(i) for i in range(5)]
-        
-        # Sequential execution
-        start_time = time.time()
-        sequential_results = []
-        for op in operations1:
-            sequential_results.append(await op)
-        sequential_time = time.time() - start_time
-        
-        # Concurrent execution
-        start_time = time.time()
-        concurrent_results = await asyncio.gather(*operations2)
-        concurrent_time = time.time() - start_time
-        
-        # Concurrent should be faster
-        assert concurrent_time < sequential_time
-        assert sequential_results == concurrent_results

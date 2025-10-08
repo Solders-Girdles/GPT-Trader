@@ -6,15 +6,25 @@ module now offers only the yfinance-backed provider (with mock fallbacks) so
 older tutorials and tests can keep running without third-party dependencies.
 """
 
+from __future__ import annotations
+
 import json
-import logging
 import os
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
+from typing import TYPE_CHECKING, Any
 
-import pandas as pd
+from bot_v2.utilities import get_logger, log_operation, optional_import
 
-logger = logging.getLogger(__name__)
+# Lazy imports for heavy dependencies
+pandas = optional_import("pandas")
+
+# Type checking imports (not loaded at runtime)
+if TYPE_CHECKING:
+    import pandas as pd
+
+# Logger
+logger = get_logger(__name__)
 
 
 class DataProvider(ABC):
@@ -62,7 +72,7 @@ class YFinanceProvider(DataProvider):
         self._cache_duration = timedelta(minutes=5)
 
     @property
-    def yf(self):
+    def yf(self) -> Any:
         """Lazy load yfinance"""
         if self._yfinance is None:
             try:
@@ -83,29 +93,49 @@ class YFinanceProvider(DataProvider):
         self, symbol: str, period: str = "60d", interval: str = "1d"
     ) -> pd.DataFrame:
         """Get historical data from Yahoo Finance"""
-        cache_key = f"{symbol}_{period}_{interval}"
+        with log_operation(
+            "get_historical_data", logger, symbol=symbol, period=period, interval=interval
+        ):
+            cache_key = f"{symbol}_{period}_{interval}"
 
-        # Check cache
-        if self._is_cache_valid(cache_key):
-            return self._cache[cache_key]
+            # Check cache
+            if self._is_cache_valid(cache_key):
+                logger.info("Cache hit", symbol=symbol, cache_key=cache_key)
+                return self._cache[cache_key]
 
-        try:
-            ticker = self.yf.Ticker(symbol)
-            data = ticker.history(period=period, interval=interval)
+            try:
+                if not pandas.is_available:
+                    logger.error("pandas not available for data processing")
+                    return self._get_mock_data(symbol, period)
 
-            if data.empty:
-                logger.warning(f"No data returned for {symbol}")
+                ticker = self.yf.Ticker(symbol)
+                data = ticker.history(period=period, interval=interval)
+
+                if data.empty:
+                    logger.warning("No data returned", symbol=symbol, provider="yfinance")
+                    return self._get_mock_data(symbol, period)
+
+                # Cache the data
+                self._cache[cache_key] = data
+                self._cache_expiry[cache_key] = datetime.now() + self._cache_duration
+
+                logger.info(
+                    "Data fetched successfully",
+                    symbol=symbol,
+                    records=len(data),
+                    provider="yfinance",
+                )
+                return data
+
+            except Exception as e:
+                logger.error(
+                    "Error fetching historical data",
+                    symbol=symbol,
+                    error=str(e),
+                    provider="yfinance",
+                    exc_info=True,
+                )
                 return self._get_mock_data(symbol, period)
-
-            # Cache the data
-            self._cache[cache_key] = data
-            self._cache_expiry[cache_key] = datetime.now() + self._cache_duration
-
-            return data
-
-        except Exception as e:
-            logger.error(f"Error fetching data for {symbol}: {e}")
-            return self._get_mock_data(symbol, period)
 
     def get_current_price(self, symbol: str) -> float:
         """Get current price from Yahoo Finance"""

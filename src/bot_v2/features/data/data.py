@@ -4,10 +4,23 @@ Main data management orchestration - entry point for the slice.
 Complete isolation - everything needed is local.
 """
 
+from __future__ import annotations
+
 from datetime import datetime, timedelta
-import pandas as pd
 import os
+
 from bot_v2.data_providers import get_data_provider
+from bot_v2.utilities import (
+    optional_import,
+    console_data,
+    console_success,
+    console_error,
+    console_warning,
+    console_cache,
+    console_storage,
+    log_operation,
+    get_logger,
+)
 
 from bot_v2.features.data.types import (
     DataQuery,
@@ -20,10 +33,16 @@ from bot_v2.features.data.cache import DataCache
 from bot_v2.features.data.quality import DataQualityChecker
 
 
+# Lazy imports for heavy dependencies
+pandas = optional_import("pandas")
+
 # Global instances
 _storage = DataStorage()
 _cache = DataCache()
 _quality_checker = DataQualityChecker()
+
+# Logger
+logger = get_logger(__name__)
 
 
 def store_data(
@@ -46,35 +65,51 @@ def store_data(
     Returns:
         True if stored successfully
     """
-    try:
-        # Check data quality
-        quality = _quality_checker.check_quality(data)
-        if not quality.is_acceptable():
-            print(f"⚠️ Data quality below threshold: {quality.overall_score():.2%}")
+    with log_operation(
+        "store_data", logger, symbol=symbol, data_type=data_type.value, source=source.value
+    ):
+        try:
+            # Check data quality
+            quality = _quality_checker.check_quality(data)
+            if not quality.is_acceptable():
+                console_warning(
+                    f"Data quality below threshold: {quality.overall_score():.2%}",
+                    symbol=symbol,
+                    quality_score=quality.overall_score(),
+                )
 
-        # Store data
-        success = _storage.store(
-            symbol=symbol, data=data, data_type=data_type, source=source, metadata=metadata
-        )
-
-        if success:
-            print(f"✅ Stored {len(data)} records for {symbol}")
-
-            # Update cache
-            query = DataQuery(
-                symbols=[symbol],
-                start_date=data.index.min(),
-                end_date=data.index.max(),
-                data_type=data_type,
-                source=source,
+            # Store data
+            success = _storage.store(
+                symbol=symbol, data=data, data_type=data_type, source=source, metadata=metadata
             )
-            _cache.put(query.get_cache_key(), data)
 
-        return success
+            if success:
+                console_success(f"Stored {len(data)} records", symbol=symbol, records=len(data))
+                logger.info(
+                    "Data stored successfully",
+                    symbol=symbol,
+                    records=len(data),
+                    data_type=data_type.value,
+                    source=source.value,
+                )
 
-    except Exception as e:
-        print(f"❌ Failed to store data: {e}")
-        return False
+                # Update cache
+                query = DataQuery(
+                    symbols=[symbol],
+                    start_date=data.index.min(),
+                    end_date=data.index.max(),
+                    data_type=data_type,
+                    source=source,
+                )
+                _cache.put(query.get_cache_key(), data)
+                console_cache("Updated cache", cache_key=query.get_cache_key())
+
+            return success
+
+        except Exception as e:
+            console_error(f"Failed to store data", error=str(e), symbol=symbol)
+            logger.error("Data storage failed", error=str(e), symbol=symbol, exc_info=True)
+            return False
 
 
 def fetch_data(query: DataQuery, use_cache: bool = True) -> pd.DataFrame | None:
@@ -88,49 +123,54 @@ def fetch_data(query: DataQuery, use_cache: bool = True) -> pd.DataFrame | None:
     Returns:
         DataFrame with requested data or None
     """
-    # Check cache first
-    if use_cache:
-        cache_key = query.get_cache_key()
-        cached_data = _cache.get(cache_key)
-        if cached_data is not None:
-            print(f"📦 Cache hit for {cache_key}")
-            return cached_data
-
-    # Fetch from storage
-    data = _storage.fetch(query)
-
-    if data is not None and not data.empty:
-        print(f"💾 Fetched {len(data)} records from storage")
-
-        # Update cache
+    with log_operation("fetch_data", logger, symbols=query.symbols, use_cache=use_cache):
+        # Check cache first
         if use_cache:
-            _cache.put(query.get_cache_key(), data)
+            cache_key = query.get_cache_key()
+            cached_data = _cache.get(cache_key)
+            if cached_data is not None:
+                console_cache("Cache hit", cache_key=cache_key, records=len(cached_data))
+                logger.info("Cache hit", cache_key=cache_key, records=len(cached_data))
+                return cached_data
 
-        return data
+        # Fetch from storage
+        data = _storage.fetch(query)
 
-    # If not in storage, try downloading
-    if query.source == DataSource.YAHOO or query.source is None:
-        data = download_from_yahoo(
-            symbols=query.symbols,
-            start=query.start_date,
-            end=query.end_date,
-            interval=query.interval,
-        )
+        if data is not None and not data.empty:
+            console_storage("Fetched from storage", records=len(data), symbols=query.symbols)
+            logger.info("Data fetched from storage", records=len(data), symbols=query.symbols)
 
-        if data is not None:
-            # Store for future use
-            for symbol in query.symbols:
-                if symbol in data:
-                    store_data(
-                        symbol=symbol,
-                        data=data[symbol],
-                        data_type=query.data_type,
-                        source=DataSource.YAHOO,
-                    )
+            # Update cache
+            if use_cache:
+                _cache.put(query.get_cache_key(), data)
+                console_cache("Updated cache", cache_key=query.get_cache_key())
 
             return data
 
-    return None
+        # If not in storage, try downloading
+        if query.source == DataSource.YAHOO or query.source is None:
+            console_data("Attempting download", symbols=query.symbols, source="yahoo")
+            data = download_from_yahoo(
+                symbols=query.symbols,
+                start=query.start_date,
+                end=query.end_date,
+                interval=query.interval,
+            )
+
+            if data is not None:
+                # Store for future use
+                for symbol in query.symbols:
+                    if symbol in data:
+                        store_data(
+                            symbol=symbol,
+                            data=data[symbol],
+                            data_type=query.data_type,
+                            source=DataSource.YAHOO,
+                        )
+
+            return data
+
+        return None
 
 
 def cache_data(key: str, data: pd.DataFrame, ttl_seconds: int = 3600) -> bool:
@@ -145,7 +185,11 @@ def cache_data(key: str, data: pd.DataFrame, ttl_seconds: int = 3600) -> bool:
     Returns:
         True if cached successfully
     """
-    return _cache.put(key, data, ttl_seconds)
+    with log_operation("cache_data", logger, cache_key=key, ttl_seconds=ttl_seconds):
+        success = _cache.put(key, data, ttl_seconds)
+        if success:
+            console_cache("Data cached", cache_key=key, records=len(data))
+        return success
 
 
 def get_cache(key: str) -> pd.DataFrame | None:
@@ -158,7 +202,8 @@ def get_cache(key: str) -> pd.DataFrame | None:
     Returns:
         Cached data or None
     """
-    return _cache.get(key)
+    with log_operation("get_cache", logger, cache_key=key):
+        return _cache.get(key)
 
 
 def download_historical(
@@ -181,19 +226,21 @@ def download_historical(
     Returns:
         Dict of symbol -> DataFrame
     """
-    results = {}
+    with log_operation("download_historical", logger, symbols=symbols, source=source.value):
+        results = {}
 
-    if source == DataSource.YAHOO:
-        results = download_from_yahoo(symbols, start_date, end_date, interval)
-    else:
-        print(f"⚠️ Source {source.value} not implemented")
+        if source == DataSource.YAHOO:
+            results = download_from_yahoo(symbols, start_date, end_date, interval)
+        else:
+            console_warning(f"Source {source.value} not implemented", source=source.value)
+            logger.warning("Unsupported data source", source=source.value)
 
-    # Store downloaded data
-    for symbol, data in results.items():
-        if data is not None and not data.empty:
-            store_data(symbol=symbol, data=data, data_type=DataType.OHLCV, source=source)
+        # Store downloaded data
+        for symbol, data in results.items():
+            if data is not None and not data.empty:
+                store_data(symbol=symbol, data=data, data_type=DataType.OHLCV, source=source)
 
-    return results
+        return results
 
 
 def clean_old_data(days_to_keep: int = 365) -> int:
@@ -206,13 +253,15 @@ def clean_old_data(days_to_keep: int = 365) -> int:
     Returns:
         Number of records deleted
     """
-    cutoff = datetime.now() - timedelta(days=days_to_keep)
+    with log_operation("clean_old_data", logger, days_to_keep=days_to_keep):
+        cutoff = datetime.now() - timedelta(days=days_to_keep)
 
-    deleted = _storage.delete_before(cutoff)
-    _cache.clear_expired()
+        deleted = _storage.delete_before(cutoff)
+        _cache.clear_expired()
 
-    print(f"🧹 Cleaned {deleted} old records")
-    return deleted
+        console_storage("Cleaned old records", records_deleted=deleted, days_to_keep=days_to_keep)
+        logger.info("Old data cleaned", records_deleted=deleted, days_to_keep=days_to_keep)
+        return deleted
 
 
 def get_storage_stats() -> StorageStats:
@@ -252,30 +301,37 @@ def download_from_yahoo(
     Returns:
         Dict of symbol -> DataFrame
     """
-    results = {}
+    with log_operation("download_from_yahoo", logger, symbols=symbols, interval=interval):
+        results = {}
 
-    for symbol in symbols:
-        try:
-            print(f"📥 Downloading {symbol} using data provider...")
-            provider = get_data_provider()
-            data = provider.get_historical_data(
-                symbol,
-                start=start.strftime("%Y-%m-%d") if start else None,
-                end=end.strftime("%Y-%m-%d") if end else None,
-            )
+        for symbol in symbols:
+            with log_operation("download_symbol", logger, symbol=symbol):
+                try:
+                    console_data("Downloading", symbol=symbol, source="yahoo")
+                    provider = get_data_provider()
+                    data = provider.get_historical_data(
+                        symbol,
+                        start=start.strftime("%Y-%m-%d") if start else None,
+                        end=end.strftime("%Y-%m-%d") if end else None,
+                    )
 
-            if not data.empty:
-                # Standardize columns
-                data.columns = data.columns.str.lower()
-                results[symbol] = data
-                print(f"✅ Downloaded {len(data)} records for {symbol}")
-            else:
-                print(f"⚠️ No data available for {symbol}")
+                    if not data.empty:
+                        # Standardize columns
+                        data.columns = data.columns.str.lower()
+                        results[symbol] = data
+                        console_success("Downloaded", symbol=symbol, records=len(data))
+                        logger.info(
+                            "Data downloaded successfully", symbol=symbol, records=len(data)
+                        )
+                    else:
+                        console_warning("No data available", symbol=symbol)
+                        logger.warning("No data available for symbol", symbol=symbol)
 
-        except Exception as e:
-            print(f"❌ Failed to download {symbol}: {e}")
+                except Exception as e:
+                    console_error("Download failed", symbol=symbol, error=str(e))
+                    logger.error("Data download failed", symbol=symbol, error=str(e), exc_info=True)
 
-    return results
+        return results
 
 
 def export_data(query: DataQuery, format: str = "csv", path: str = "./exports") -> bool:
@@ -290,34 +346,39 @@ def export_data(query: DataQuery, format: str = "csv", path: str = "./exports") 
     Returns:
         True if exported successfully
     """
-    data = fetch_data(query)
+    with log_operation("export_data", logger, format=format, path=path):
+        data = fetch_data(query)
 
-    if data is None or data.empty:
-        print("No data to export")
-        return False
-
-    os.makedirs(path, exist_ok=True)
-
-    filename = f"{query.get_cache_key()}.{format}"
-    filepath = os.path.join(path, filename)
-
-    try:
-        if format == "csv":
-            data.to_csv(filepath)
-        elif format == "json":
-            data.to_json(filepath)
-        elif format == "parquet":
-            data.to_parquet(filepath)
-        else:
-            print(f"Unsupported format: {format}")
+        if data is None or data.empty:
+            console_warning("No data to export", query=query.get_cache_key())
             return False
 
-        print(f"✅ Exported to {filepath}")
-        return True
+        os.makedirs(path, exist_ok=True)
 
-    except Exception as e:
-        print(f"❌ Export failed: {e}")
-        return False
+        filename = f"{query.get_cache_key()}.{format}"
+        filepath = os.path.join(path, filename)
+
+        try:
+            if format == "csv":
+                data.to_csv(filepath)
+            elif format == "json":
+                data.to_json(filepath)
+            elif format == "parquet":
+                data.to_parquet(filepath)
+            else:
+                console_error("Unsupported export format", format=format)
+                return False
+
+            console_success("Data exported", filepath=filepath, format=format, records=len(data))
+            logger.info(
+                "Data exported successfully", filepath=filepath, format=format, records=len(data)
+            )
+            return True
+
+        except Exception as e:
+            console_error("Export failed", filepath=filepath, error=str(e))
+            logger.error("Data export failed", filepath=filepath, error=str(e), exc_info=True)
+            return False
 
 
 def import_data(
@@ -338,23 +399,41 @@ def import_data(
     Returns:
         True if imported successfully
     """
-    try:
-        # Determine format from extension
-        ext = os.path.splitext(filepath)[1].lower()
+    with log_operation(
+        "import_data", logger, filepath=filepath, symbol=symbol, source=source.value
+    ):
+        try:
+            # Determine format from extension
+            ext = os.path.splitext(filepath)[1].lower()
 
-        if ext == ".csv":
-            data = pd.read_csv(filepath, index_col=0, parse_dates=True)
-        elif ext == ".json":
-            data = pd.read_json(filepath)
-        elif ext == ".parquet":
-            data = pd.read_parquet(filepath)
-        else:
-            print(f"Unsupported file format: {ext}")
+            if ext == ".csv":
+                if not pandas.is_available:
+                    console_error("pandas not available for CSV import")
+                    return False
+                data = pandas.read_csv(filepath, index_col=0, parse_dates=True)
+            elif ext == ".json":
+                if not pandas.is_available:
+                    console_error("pandas not available for JSON import")
+                    return False
+                data = pandas.read_json(filepath)
+            elif ext == ".parquet":
+                if not pandas.is_available:
+                    console_error("pandas not available for Parquet import")
+                    return False
+                data = pandas.read_parquet(filepath)
+            else:
+                console_error("Unsupported file format", format=ext)
+                return False
+
+            console_success("Data imported", filepath=filepath, symbol=symbol, records=len(data))
+            logger.info(
+                "Data imported successfully", filepath=filepath, symbol=symbol, records=len(data)
+            )
+
+            # Store imported data
+            return store_data(symbol=symbol, data=data, data_type=data_type, source=source)
+
+        except Exception as e:
+            console_error("Import failed", filepath=filepath, error=str(e))
+            logger.error("Data import failed", filepath=filepath, error=str(e), exc_info=True)
             return False
-
-        # Store imported data
-        return store_data(symbol=symbol, data=data, data_type=data_type, source=source)
-
-    except Exception as e:
-        print(f"❌ Import failed: {e}")
-        return False

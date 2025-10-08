@@ -10,8 +10,11 @@ from collections.abc import Callable
 from datetime import date, datetime
 from typing import Any
 
-import pandas as pd
 from bot_v2.errors import ValidationError
+from bot_v2.utilities.import_utils import optional_import
+
+# Optional pandas import
+pandas = optional_import("pandas")
 
 
 # Base validators
@@ -305,8 +308,14 @@ class DataFrameValidator(Validator):
         self.required_columns = required_columns
         self.min_rows = min_rows
 
-    def validate(self, value: Any, field_name: str = "dataframe") -> pd.DataFrame:
-        if not isinstance(value, pd.DataFrame):
+    def validate(self, value: Any, field_name: str = "dataframe") -> Any:
+        if pandas is None:
+            raise ValidationError(
+                f"{field_name} validation requires pandas but it's not available",
+                field=field_name,
+            )
+
+        if not isinstance(value, pandas.DataFrame):
             raise ValidationError(
                 f"{field_name} must be a pandas DataFrame",
                 field=field_name,
@@ -342,7 +351,7 @@ class OHLCDataValidator(DataFrameValidator):
             error_message=error_message,
         )
 
-    def validate(self, value: Any, field_name: str = "ohlc_data") -> pd.DataFrame:
+    def validate(self, value: Any, field_name: str = "ohlc_data") -> Any:
         df = super().validate(value, field_name)
 
         # Validate OHLC relationships
@@ -383,8 +392,14 @@ class SeriesValidator(Validator):
     def __init__(self, error_message: str | None = None) -> None:
         super().__init__(error_message)
 
-    def validate(self, value: Any, field_name: str = "series") -> pd.Series:
-        if not isinstance(value, pd.Series):
+    def validate(self, value: Any, field_name: str = "series") -> Any:
+        if pandas is None:
+            raise ValidationError(
+                f"{field_name} validation requires pandas but it's not available",
+                field=field_name,
+            )
+
+        if not isinstance(value, pandas.Series):
             raise ValidationError(
                 f"{field_name} must be a pandas Series",
                 field=field_name,
@@ -394,11 +409,11 @@ class SeriesValidator(Validator):
 
 
 # Validation decorator
-def validate_inputs(**validators: Validator):
+def validate_inputs(**validators: Validator) -> Callable:
     """Decorator to validate function inputs"""
 
-    def decorator(func):
-        def wrapper(*args, **kwargs):
+    def decorator(func: Callable) -> Callable:
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
             # Get function signature
             import inspect
 

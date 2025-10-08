@@ -31,7 +31,7 @@ jobs:
             needs-passphrase: true
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
@@ -79,7 +79,7 @@ jobs:
     needs: test-matrix
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Set up Python 3.12
         uses: actions/setup-python@v5

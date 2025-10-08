@@ -25,23 +25,6 @@ data:
   METRICS_ENABLED: "true"
   METRICS_PORT: "9090"
 
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: trading-bot-secrets
-  namespace: trading-system
-type: Opaque
-stringData:
-  database-username: "trader"
-  database-password: "change_in_production_123"
-  redis-password: "change_in_production_456"
-  rabbitmq-username: "trader"
-  rabbitmq-password: "change_in_production_789"
-  jwt-secret-key: "change_in_production_jwt_secret_key"
-  vault-token: "change_in_production_vault_token"
-
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -80,6 +63,12 @@ spec:
       - name: trading-bot
         image: trading-bot:latest
         imagePullPolicy: Always
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - "ALL"
+          readOnlyRootFilesystem: true
         ports:
         - name: http
           containerPort: 8080
@@ -107,12 +96,12 @@ spec:
           valueFrom:
             secretKeyRef:
               name: trading-bot-secrets
-              key: database-username
+              key: database_username
         - name: DATABASE_PASSWORD
           valueFrom:
             secretKeyRef:
               name: trading-bot-secrets
-              key: database-password
+              key: database_password
         - name: DATABASE_HOST
           valueFrom:
             configMapKeyRef:
@@ -144,7 +133,7 @@ spec:
           valueFrom:
             secretKeyRef:
               name: trading-bot-secrets
-              key: redis-password
+              key: redis_password
         - name: RABBITMQ_URL
           value: "amqp://$(RABBITMQ_USERNAME):$(RABBITMQ_PASSWORD)@$(RABBITMQ_HOST):$(RABBITMQ_PORT)/"
         - name: RABBITMQ_HOST
@@ -161,22 +150,22 @@ spec:
           valueFrom:
             secretKeyRef:
               name: trading-bot-secrets
-              key: rabbitmq-username
+              key: rabbitmq_username
         - name: RABBITMQ_PASSWORD
           valueFrom:
             secretKeyRef:
               name: trading-bot-secrets
-              key: rabbitmq-password
+              key: rabbitmq_password
         - name: JWT_SECRET_KEY
           valueFrom:
             secretKeyRef:
               name: trading-bot-secrets
-              key: jwt-secret-key
+              key: jwt_secret_key
         - name: VAULT_TOKEN
           valueFrom:
             secretKeyRef:
               name: trading-bot-secrets
-              key: vault-token
+              key: vault_token
         resources:
           requests:
             memory: "512Mi"

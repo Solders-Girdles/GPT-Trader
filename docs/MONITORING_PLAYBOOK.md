@@ -1,5 +1,10 @@
 # GPT-Trader Monitoring & Incident Response
 
+---
+status: current
+last-updated: 2025-10-07
+---
+
 This playbook reflects the spot-first `perps-bot` architecture. It supersedes
 the retired monitoring guides that targeted the legacy `gpt-trader` service and
 its ML pipeline.
@@ -12,6 +17,14 @@ its ML pipeline.
   logging stack for search and alerting.
 - **Account telemetry**: `poetry run perps-bot account snapshot` when a manual
   check is required.
+
+Start Prometheus/Grafana/ELK/Jaeger only when needed:
+
+```bash
+docker compose --project-directory deploy/bot_v2/docker \
+  -f deploy/bot_v2/docker/docker-compose.yaml \
+  --profile observability up -d
+```
 
 Run the exporter alongside the bot:
 

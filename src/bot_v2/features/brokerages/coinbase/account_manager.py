@@ -11,6 +11,7 @@ from typing import Any
 
 from bot_v2.features.brokerages.coinbase.adapter import CoinbaseBrokerage
 from bot_v2.monitoring.system import LogLevel, get_logger
+from bot_v2.utilities import emit_metric as emit_metric_util
 
 logger = get_logger()
 
@@ -67,19 +68,13 @@ class CoinbaseAccountManager:
         except Exception:
             out["portfolios"] = []
 
-        if emit_metric and self.event_store is not None:
-            try:
-                self.event_store.append_metric(
-                    bot_id="coinbase_account",
-                    metrics={"event_type": "account_manager_snapshot", **out},
-                )
-            except Exception as exc:  # pragma: no cover - defensive telemetry guard
-                logger.log_event(
-                    LogLevel.DEBUG,
-                    "account_snapshot_metric_failed",
-                    "failed to append snapshot metric",
-                    error=str(exc),
-                )
+        if emit_metric:
+            emit_metric_util(
+                self.event_store,
+                bot_id="coinbase_account",
+                payload={"event_type": "account_manager_snapshot", **out},
+                logger=logger,
+            )
         return out
 
     def convert(

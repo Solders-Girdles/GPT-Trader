@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import TYPE_CHECKING
 
@@ -20,31 +21,30 @@ class NetworkRecoveryStrategy(RecoveryStrategy):
     def failure_type_name(self) -> str:
         return "Network Partition"
 
-async def recover(self, operation: RecoveryOperation) -> bool:
-    """Recover from network partition"""
-    try:
-        logger.info("Recovering from network partition")
-        operation.actions_taken.append("Handling network partition")
+    async def recover(self, operation: RecoveryOperation) -> bool:
+        """Recover from network partition"""
+        try:
+            logger.info("Recovering from network partition")
+            operation.actions_taken.append("Handling network partition")
 
-        # Wait for network to stabilize
-        await asyncio.sleep(5)
+            # Wait for network to stabilize
+            await asyncio.sleep(5)
 
-        # Re-establish connections
-        if hasattr(self.state_manager, "_init_redis"):
-            self.state_manager._init_redis()
-            operation.actions_taken.append("Re-established Redis connection")
+            # Re-establish connections
+            if hasattr(self.state_manager, "_init_redis"):
+                self.state_manager._init_redis()
+                operation.actions_taken.append("Re-established Redis connection")
 
-        if hasattr(self.state_manager, "_init_postgres"):
-            self.state_manager._init_postgres()
-            operation.actions_taken.append("Re-established PostgreSQL connection")
+            if hasattr(self.state_manager, "_init_postgres"):
+                self.state_manager._init_postgres()
+                operation.actions_taken.append("Re-established PostgreSQL connection")
 
-        # Synchronize state
-        await self._synchronize_state()
-        operation.actions_taken.append("Synchronized distributed state")
+            # Synchronize state
+            await self._synchronize_state()
+            operation.actions_taken.append("Synchronized distributed state")
 
-        return True
+            return True
 
-    except Exception as e:
-        logger.error(f"Network recovery failed: {e}")
-        return False
-
+        except Exception as e:
+            logger.error(f"Network recovery failed: {e}")
+            return False

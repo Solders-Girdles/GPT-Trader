@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable
-from datetime import datetime, timedelta
+from datetime import timedelta, timezone
+
+from bot_v2.utilities import to_iso_utc, utc_now
 
 
 class MarketActivityMonitor:
@@ -17,7 +19,7 @@ class MarketActivityMonitor:
         max_staleness_ms: int = 5_000,
         heartbeat_logger: Callable[..., None] | None = None,
     ) -> None:
-        self.last_update: dict[str, datetime] = {sym: datetime.utcnow() for sym in symbols}
+        self.last_update = {sym: utc_now() for sym in symbols}
         self.consecutive_failures: int = 0
         self.max_failures = max_failures
         self.max_staleness_ms = max_staleness_ms
@@ -30,13 +32,13 @@ class MarketActivityMonitor:
         self.consecutive_failures = 0
 
     def record_update(self, symbol: str) -> None:
-        now = datetime.utcnow()
+        now = utc_now()
         self.last_update[symbol] = now
         if self._heartbeat_logger is not None:
             try:
                 self._heartbeat_logger(
                     source="rest_quote",
-                    last_update_ts=now.isoformat() + "Z",
+                    last_update_ts=to_iso_utc(now),
                 )
             except Exception:
                 # Heartbeat logging is best effort
@@ -46,16 +48,19 @@ class MarketActivityMonitor:
         if not self.last_update:
             return False
         threshold = timedelta(milliseconds=self.max_staleness_ms)
-        now = datetime.utcnow()
+        now = utc_now()
         for symbol, ts in self.last_update.items():
-            if now - ts > threshold:
+            last_ts = ts
+            if last_ts.tzinfo is None and now.tzinfo is not None:
+                last_ts = last_ts.replace(tzinfo=timezone.utc)
+            if now - last_ts > threshold:
                 if self._heartbeat_logger is not None:
                     try:
                         self._heartbeat_logger(
                             source="staleness_guard",
                             symbol=symbol,
-                            last_update_ts=ts.isoformat() + "Z",
-                            staleness_ms=(now - ts).total_seconds() * 1000.0,
+                            last_update_ts=to_iso_utc(last_ts),
+                            staleness_ms=(now - last_ts).total_seconds() * 1000.0,
                             threshold_ms=self.max_staleness_ms,
                         )
                     except Exception:

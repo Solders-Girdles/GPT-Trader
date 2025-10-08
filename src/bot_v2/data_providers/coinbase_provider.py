@@ -130,7 +130,7 @@ class CoinbaseDataProvider(DataProvider):
             self.ticker_cache = TickerCache()
 
             def ws_factory():
-                ws = CoinbaseWebSocket()
+                ws = CoinbaseWebSocket(url="wss://advanced-trade-ws.coinbase.com")
                 ws.connect()
                 return ws
 
@@ -337,9 +337,8 @@ class CoinbaseDataProvider(DataProvider):
             normalized_symbols = [self._normalize_symbol(s) for s in symbols]
             try:
                 # Update the ticker service with new symbols
-                self.ticker_service._symbols = normalized_symbols
-                if not self.ticker_service._thread or not self.ticker_service._thread.is_alive():
-                    self.ticker_service.start()
+                self.ticker_service.set_symbols(normalized_symbols)
+                self.ticker_service.ensure_started()
                 logger.info(
                     f"Subscribed to WebSocket updates for {len(normalized_symbols)} symbols"
                 )

@@ -6,11 +6,11 @@ Phase 5: Risk Engine configuration only.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import Dict, Optional
-from decimal import Decimal
-import os
 import json
+import os
+from dataclasses import dataclass, field
+from decimal import Decimal
+from typing import Dict, Optional
 
 from .env_utils import (
     get_env_bool,
@@ -24,10 +24,10 @@ from .env_utils import (
 @dataclass
 class RiskConfig:
     """Risk management configuration for perpetuals trading.
-    
+
     All limits are fail-fast with explicit rejection messages.
     """
-    
+
     # Leverage controls
     max_leverage: int = 5  # Global leverage cap
     leverage_max_per_symbol: Dict[str, int] = field(default_factory=dict)  # Per-symbol caps
@@ -38,29 +38,38 @@ class RiskConfig:
     night_leverage_max_per_symbol: Dict[str, int] = field(default_factory=dict)
     day_mmr_per_symbol: Dict[str, float] = field(default_factory=dict)   # maintenance margin rate
     night_mmr_per_symbol: Dict[str, float] = field(default_factory=dict)
-    
+
     # Liquidation safety
     min_liquidation_buffer_pct: float = 0.15  # Maintain 15% buffer from liquidation (safer default)
     enable_pre_trade_liq_projection: bool = True  # Enforce projected buffer pre-trade
     default_maintenance_margin_rate: float = 0.005  # 0.5% fallback MMR when exchange not provided
-    
+
     # Loss limits
     daily_loss_limit: Decimal = Decimal("100")  # Max daily loss in USD
-    
+
     # Exposure controls
     max_exposure_pct: float = 0.8  # Allow up to 80% portfolio exposure
     max_position_pct_per_symbol: float = 0.2  # Max 20% per symbol
     max_notional_per_symbol: Dict[str, Decimal] = field(default_factory=dict)  # Optional hard caps
-    
+
     # Slippage protection
     slippage_guard_bps: int = 50  # 50 bps = 0.5% max slippage (safer default)
-    
+
     # Emergency controls
     kill_switch_enabled: bool = False  # Global halt
     reduce_only_mode: bool = False  # Only allow reducing positions
-    
+
     # Mark price staleness (seconds)
     max_mark_staleness_seconds: int = 180  # Warn if >180s; halt only on severe staleness
+
+    # Dynamic position sizing
+    enable_dynamic_position_sizing: bool = False
+    position_sizing_method: str = "notional"
+    position_sizing_multiplier: float = 1.0
+
+    # Market impact guard
+    enable_market_impact_guard: bool = False
+    max_market_impact_bps: int = 0
 
     # Circuit breakers (volatility)
     enable_volatility_circuit_breaker: bool = False
@@ -86,12 +95,12 @@ class RiskConfig:
                 self.max_exposure_pct = float(self.max_total_exposure_pct)
         except Exception:
             pass
-    
+
     @classmethod
     def from_env(cls) -> RiskConfig:
         """Load config from environment variables."""
         config = cls()
-        
+
         # Load from env with defaults
         if (val := get_env_int("RISK_MAX_LEVERAGE")) is not None:
             config.max_leverage = val
@@ -148,6 +157,18 @@ class RiskConfig:
 
         if (val := get_env_int("RISK_MAX_MARK_STALENESS_SECONDS")) is not None:
             config.max_mark_staleness_seconds = val
+
+        if (val := get_env_bool("RISK_ENABLE_DYNAMIC_POSITION_SIZING")) is not None:
+            config.enable_dynamic_position_sizing = val
+        if (val := os.getenv("RISK_POSITION_SIZING_METHOD")) is not None:
+            config.position_sizing_method = val
+        if (val := get_env_float("RISK_POSITION_SIZING_MULTIPLIER")) is not None:
+            config.position_sizing_multiplier = val
+        if (val := get_env_bool("RISK_ENABLE_MARKET_IMPACT_GUARD")) is not None:
+            config.enable_market_impact_guard = val
+        if (val := get_env_int("RISK_MAX_MARKET_IMPACT_BPS")) is not None:
+            config.max_market_impact_bps = val
+
         # Circuit breakers
         if (val := get_env_bool("RISK_ENABLE_VOLATILITY_CB")) is not None:
             config.enable_volatility_circuit_breaker = val
@@ -165,7 +186,7 @@ class RiskConfig:
             config.volatility_kill_switch_threshold = val
 
         return config
-    
+
     @classmethod
     def from_json(cls, path: str) -> RiskConfig:
         """Load config from JSON file."""
@@ -201,6 +222,16 @@ class RiskConfig:
             data['reduce_only_mode'] = bool(raw['reduce_only_mode'])
         if 'max_mark_staleness_seconds' in raw:
             data['max_mark_staleness_seconds'] = int(raw['max_mark_staleness_seconds'])
+        if 'enable_dynamic_position_sizing' in raw:
+            data['enable_dynamic_position_sizing'] = bool(raw['enable_dynamic_position_sizing'])
+        if 'position_sizing_method' in raw:
+            data['position_sizing_method'] = str(raw['position_sizing_method'])
+        if 'position_sizing_multiplier' in raw:
+            data['position_sizing_multiplier'] = float(raw['position_sizing_multiplier'])
+        if 'enable_market_impact_guard' in raw:
+            data['enable_market_impact_guard'] = bool(raw['enable_market_impact_guard'])
+        if 'max_market_impact_bps' in raw:
+            data['max_market_impact_bps'] = int(raw['max_market_impact_bps'])
         if 'enable_volatility_circuit_breaker' in raw:
             data['enable_volatility_circuit_breaker'] = bool(raw['enable_volatility_circuit_breaker'])
         if 'max_intraday_volatility_threshold' in raw:
@@ -241,7 +272,7 @@ class RiskConfig:
                 data[k] = v
 
         return cls(**data)  # type: ignore[arg-type]
-    
+
     def to_dict(self) -> Dict:
         """Convert to dictionary for persistence."""
         return {
@@ -264,6 +295,11 @@ class RiskConfig:
             "kill_switch_enabled": self.kill_switch_enabled,
             "reduce_only_mode": self.reduce_only_mode,
             "max_mark_staleness_seconds": self.max_mark_staleness_seconds,
+            "enable_dynamic_position_sizing": self.enable_dynamic_position_sizing,
+            "position_sizing_method": self.position_sizing_method,
+            "position_sizing_multiplier": self.position_sizing_multiplier,
+            "enable_market_impact_guard": self.enable_market_impact_guard,
+            "max_market_impact_bps": self.max_market_impact_bps,
             "enable_volatility_circuit_breaker": self.enable_volatility_circuit_breaker,
             "max_intraday_volatility_threshold": self.max_intraday_volatility_threshold,
             "volatility_window_periods": self.volatility_window_periods,

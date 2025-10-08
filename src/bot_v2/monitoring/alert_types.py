@@ -69,11 +69,11 @@ class Alert:
     details: dict[str, Any] = field(default_factory=dict)
     resolved_at: datetime | None = None
     acknowledged: bool = False
-    _timestamp_init: InitVar[datetime | None] = None
+    timestamp: InitVar[datetime | None] = None
 
-    def __post_init__(self, _timestamp_init: datetime | None) -> None:
-        if _timestamp_init is not None:
-            self.created_at = _timestamp_init
+    def __post_init__(self, timestamp: datetime | None) -> None:
+        if timestamp is not None:
+            self.created_at = timestamp
         if self.last_seen_at is None:
             self.last_seen_at = self.created_at
 

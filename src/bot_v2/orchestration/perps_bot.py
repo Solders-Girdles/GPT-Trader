@@ -31,6 +31,7 @@ from bot_v2.orchestration.session_guard import TradingSessionGuard
 from bot_v2.orchestration.storage import StorageBootstrapper
 from bot_v2.orchestration.strategy_orchestrator import StrategyOrchestrator
 from bot_v2.orchestration.system_monitor import SystemMonitor
+from bot_v2.utilities import emit_metric, utc_now
 
 if TYPE_CHECKING:  # pragma: no cover - imports for type checking only
     from bot_v2.features.brokerages.core.interfaces import IBrokerage
@@ -460,7 +461,7 @@ class PerpsBot:
                 self._update_mark_window(symbol, mark)
                 try:
                     self.risk_manager.last_mark_update[symbol] = (
-                        ts if isinstance(ts, datetime) else datetime.utcnow()
+                        ts if isinstance(ts, datetime) else utc_now()
                     )
                 except Exception as exc:
                     logger.debug(
@@ -620,26 +621,26 @@ class PerpsBot:
                 self._update_mark_window(sym, mark)
                 try:
                     self._market_monitor.record_update(sym)
-                    self.risk_manager.last_mark_update[sym] = datetime.utcnow()
-                    self.event_store.append_metric(
+                    self.risk_manager.last_mark_update[sym] = utc_now()
+                    emit_metric(
+                        self.event_store,
                         self.bot_id,
                         {"event_type": "ws_mark_update", "symbol": sym, "mark": str(mark)},
                     )
                 except Exception:
                     logger.exception("WS mark update bookkeeping failed for %s", sym)
         except Exception as exc:
-            try:
-                self.event_store.append_metric(
-                    self.bot_id,
-                    {"event_type": "ws_stream_error", "message": str(exc)},
-                )
-            except Exception:
-                logger.exception("Failed to record WS stream error metric")
+            emit_metric(
+                self.event_store,
+                self.bot_id,
+                {"event_type": "ws_stream_error", "message": str(exc)},
+            )
         finally:
-            try:
-                self.event_store.append_metric(self.bot_id, {"event_type": "ws_stream_exit"})
-            except Exception:
-                logger.exception("Failed to record WS stream exit metric")
+            emit_metric(
+                self.event_store,
+                self.bot_id,
+                {"event_type": "ws_stream_exit"},
+            )
 
     # ------------------------------------------------------------------
     def _update_mark_window(self, symbol: str, mark: Decimal) -> None:

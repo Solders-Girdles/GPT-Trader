@@ -20,36 +20,35 @@ class MemoryRecoveryStrategy(RecoveryStrategy):
     def failure_type_name(self) -> str:
         return "Memory Overflow"
 
-async def recover(self, operation: RecoveryOperation) -> bool:
-    """Recover from memory overflow"""
-    try:
-        logger.info("Recovering from memory overflow")
-        operation.actions_taken.append("Starting memory recovery")
+    async def recover(self, operation: RecoveryOperation) -> bool:
+        """Recover from memory overflow"""
+        try:
+            logger.info("Recovering from memory overflow")
+            operation.actions_taken.append("Starting memory recovery")
 
-        # Clear local caches
-        if hasattr(self.state_manager, "_local_cache"):
-            self.state_manager._local_cache.clear()
-            operation.actions_taken.append("Cleared local cache")
+            # Clear local caches
+            if hasattr(self.state_manager, "_local_cache"):
+                self.state_manager._local_cache.clear()
+                operation.actions_taken.append("Cleared local cache")
 
-        # Demote data to cold storage
-        hot_keys = await self.state_manager.get_keys_by_pattern("*")
-        demoted_count = 0
+            # Demote data to cold storage
+            hot_keys = await self.state_manager.get_keys_by_pattern("*")
+            demoted_count = 0
 
-        for key in hot_keys[:100]:  # Demote oldest 100 keys
-            if await self.state_manager.demote_to_cold(key):
-                demoted_count += 1
+            for key in hot_keys[:100]:  # Demote oldest 100 keys
+                if await self.state_manager.demote_to_cold(key):
+                    demoted_count += 1
 
-        operation.actions_taken.append(f"Demoted {demoted_count} keys to cold storage")
+            operation.actions_taken.append(f"Demoted {demoted_count} keys to cold storage")
 
-        # Trigger garbage collection
-        import gc
+            # Trigger garbage collection
+            import gc
 
-        gc.collect()
-        operation.actions_taken.append("Triggered garbage collection")
+            gc.collect()
+            operation.actions_taken.append("Triggered garbage collection")
 
-        return True
+            return True
 
-    except Exception as e:
-        logger.error(f"Memory recovery failed: {e}")
-        return False
-
+        except Exception as e:
+            logger.error(f"Memory recovery failed: {e}")
+            return False

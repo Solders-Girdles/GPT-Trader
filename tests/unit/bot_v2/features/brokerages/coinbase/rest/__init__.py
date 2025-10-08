@@ -1,0 +1,2 @@
+"""Coinbase REST unit tests."""
+

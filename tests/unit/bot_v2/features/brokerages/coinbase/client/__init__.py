@@ -1,0 +1,2 @@
+"""Coinbase client unit tests."""
+

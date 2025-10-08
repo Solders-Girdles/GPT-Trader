@@ -4,13 +4,14 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from decimal import ROUND_DOWN, Decimal
 from typing import Any, Protocol
 
 from bot_v2.features.brokerages.coinbase.errors import InvalidRequestError, NotFoundError
 from bot_v2.features.brokerages.coinbase.models import to_product
 from bot_v2.features.brokerages.core.interfaces import MarketType, Product
+from bot_v2.utilities import utc_now
 
 logger = logging.getLogger(__name__)
 
@@ -102,7 +103,7 @@ class MarkCache:
 
     def set_mark(self, symbol: str, mark: Decimal) -> None:
         """Set the mark price for a symbol."""
-        self._marks[symbol] = (mark, datetime.utcnow())
+        self._marks[symbol] = (mark, utc_now())
 
     def get_mark(self, symbol: str) -> Decimal | None:
         """Get the mark price if not stale.
@@ -114,7 +115,7 @@ class MarkCache:
             return None
 
         mark, timestamp = self._marks[symbol]
-        age = datetime.utcnow() - timestamp
+        age = utc_now() - timestamp
 
         if age > timedelta(seconds=self.ttl_seconds):
             if symbol not in self._warned_symbols:
@@ -145,8 +146,8 @@ class FundingCalculator:
         position_side: str,  # "long" or "short"
         mark_price: Decimal,
         funding_rate: Decimal | None,
-        next_funding_time: datetime | None,
-        now: datetime | None = None,
+        next_funding_time,  # datetime | None
+        now=None,  # datetime | None
     ) -> Decimal:
         """Calculate funding delta if due.
 
@@ -163,7 +164,7 @@ class FundingCalculator:
             Funding delta (negative = payment, positive = receipt)
         """
         if now is None:
-            now = datetime.utcnow()
+            now = utc_now()
 
         # Skip if no funding data
         if funding_rate is None or next_funding_time is None:
@@ -302,7 +303,11 @@ class ProductCatalog:
     def _is_expired(self) -> bool:
         if not self._last_refresh:
             return True
-        return datetime.utcnow() - self._last_refresh > timedelta(seconds=self.ttl_seconds)
+        now = utc_now()
+        last_refresh = self._last_refresh
+        if last_refresh.tzinfo is None and now.tzinfo is not None:
+            last_refresh = last_refresh.replace(tzinfo=timezone.utc)
+        return now - last_refresh > timedelta(seconds=self.ttl_seconds)
 
     def refresh(self, client: ProductClient) -> None:
         data = client.get_products() or {}
@@ -313,7 +318,7 @@ class ProductCatalog:
             cache[prod.symbol] = prod
         if cache:
             self._cache = cache
-            self._last_refresh = datetime.utcnow()
+            self._last_refresh = utc_now()
 
     def get(self, client: ProductClient, symbol: str) -> Product:
         if self._is_expired():

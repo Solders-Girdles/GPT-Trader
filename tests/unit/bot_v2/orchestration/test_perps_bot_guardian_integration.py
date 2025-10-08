@@ -28,35 +28,36 @@ class TestPerpsBotGuardianIntegration:
             enable_shorts=False,
             max_position_size=Decimal("1000"),
             max_leverage=3,
-            **(config_overrides or {})
+            **(config_overrides or {}),
         )
 
         # Create mock registry with the config
-        from bot_v2.orchestration.service_registry import ServiceRegistry
-        mock_registry = ServiceRegistry.create_empty()
-        mock_registry = mock_registry.with_updates(config=config)
+        from bot_v2.orchestration.service_registry import empty_registry
+
+        mock_registry = empty_registry(config)
 
         # Create mock broker
         broker = MagicMock()
         mock_registry = mock_registry.with_updates(broker=broker)
 
-        # Create mock risk manager
-        risk_manager = LiveRiskManager(
+        # Create mock risk manager with RiskConfig
+        from bot_v2.config.live_trade_config import RiskConfig
+
+        risk_config = RiskConfig(
             max_leverage=config.max_leverage,
-            max_position_size=config.max_position_size,
             daily_loss_limit=Decimal("1000"),
-            symbols=config.symbols
         )
+        risk_manager = LiveRiskManager(config=risk_config)
 
         # Setup risk manager state
         for symbol in config.symbols:
             risk_manager.last_mark_update[symbol] = None
-            risk_manager._positions[symbol] = None
-            risk_manager._position_sizes[symbol] = Decimal("0")
+            risk_manager.positions[symbol] = None
 
         mock_registry = mock_registry.with_updates(risk_manager=risk_manager)
 
         from bot_v2.orchestration.perps_bot import PerpsBot
+
         bot = PerpsBot(config, mock_registry)
 
         return bot, broker, risk_manager
@@ -74,7 +75,7 @@ class TestPerpsBotGuardianIntegration:
         broker.get_account_info = AsyncMock(return_value=MagicMock(equity=Decimal("10000")))
 
         # Patch update_marks since it calls market data
-        with patch.object(bot, 'update_marks', new_callable=AsyncMock):
+        with patch.object(bot, "update_marks", new_callable=AsyncMock):
             await bot.run_cycle()
 
         assert bot.is_reduce_only_mode() is False  # Should still be False
@@ -88,9 +89,9 @@ class TestPerpsBotGuardianIntegration:
 
         # Set initial state with the env var
         with patch.dict("os.environ", {"COINBASE_ENABLE_DERIVATIVES": "0"}, clear=False):
-            if not hasattr(bot, '_create_baseline_snapshot'):
+            if not hasattr(bot, "_create_baseline_snapshot"):
                 await asyncio.to_thread(bot._create_baseline_snapshot)
-            if not hasattr(bot, '_init_configuration_guardian'):
+            if not hasattr(bot, "_init_configuration_guardian"):
                 bot._init_configuration_guardian()
 
         # Now change the env var to trigger critical drift
@@ -104,10 +105,10 @@ class TestPerpsBotGuardianIntegration:
             broker.get_account_info = AsyncMock(return_value=account_info_mock)
 
             # Patch update_marks to avoid market data calls
-            with patch.object(bot, 'update_marks', new_callable=AsyncMock):
+            with patch.object(bot, "update_marks", new_callable=AsyncMock):
                 try:
                     await asyncio.wait_for(bot.run_cycle(), timeout=5.0)
-                except asyncio.TimeoutError:
+                except TimeoutError:
                     # Expected - critical drift should trigger shutdown, stopping the cycle
                     pass
 
@@ -123,9 +124,9 @@ class TestPerpsBotGuardianIntegration:
 
         # Set initial state with the env var
         with patch.dict("os.environ", {"PERPS_POSITION_FRACTION": "0.2"}, clear=False):
-            if not hasattr(bot, '_create_baseline_snapshot'):
+            if not hasattr(bot, "_create_baseline_snapshot"):
                 await asyncio.to_thread(bot._create_baseline_snapshot)
-            if not hasattr(bot, '_init_configuration_guardian'):
+            if not hasattr(bot, "_init_configuration_guardian"):
                 bot._init_configuration_guardian()
 
         assert bot.is_reduce_only_mode() is False
@@ -141,11 +142,13 @@ class TestPerpsBotGuardianIntegration:
             broker.get_account_info = AsyncMock(return_value=account_info_mock)
 
             # Patch update_marks to avoid market data calls
-            with patch.object(bot, 'update_marks', new_callable=AsyncMock):
+            with patch.object(bot, "update_marks", new_callable=AsyncMock):
                 await bot.run_cycle()
 
         # After high-severity drift, bot should be in reduce-only mode
-        assert bot.is_reduce_only_mode() is True, "High-severity drift should enable reduce-only mode"
+        assert (
+            bot.is_reduce_only_mode() is True
+        ), "High-severity drift should enable reduce-only mode"
         assert bot.running is True, "High-severity drift should not stop the bot"
 
     async def test_position_violations_trigger_reduce_only(self):
@@ -172,11 +175,13 @@ class TestPerpsBotGuardianIntegration:
         broker.get_account_info = AsyncMock(return_value=account_info_mock)
 
         # Patch update_marks to avoid market data calls
-        with patch.object(bot, 'update_marks', new_callable=AsyncMock):
+        with patch.object(bot, "update_marks", new_callable=AsyncMock):
             await bot.run_cycle()
 
         # Position size violation should trigger reduce-only mode
-        assert bot.is_reduce_only_mode() is True, "Position size violation should enable reduce-only mode"
+        assert (
+            bot.is_reduce_only_mode() is True
+        ), "Position size violation should enable reduce-only mode"
 
     async def test_symbol_removal_violation_triggers_emergency_shutdown(self):
         """Test that removing symbols with active positions triggers emergency shutdown."""
@@ -197,12 +202,14 @@ class TestPerpsBotGuardianIntegration:
         broker.get_account_info = AsyncMock(return_value=account_info_mock)
 
         # Patch update_marks to avoid market data calls
-        with patch.object(bot, 'update_marks', new_callable=AsyncMock):
+        with patch.object(bot, "update_marks", new_callable=AsyncMock):
             try:
                 await asyncio.wait_for(bot.run_cycle(), timeout=5.0)
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 # Expected - critical violation should trigger shutdown
                 pass
 
         # Symbol removal violation should trigger emergency shutdown
-        assert bot.running is False, "Symbol removal with active positions should trigger emergency shutdown"
+        assert (
+            bot.running is False
+        ), "Symbol removal with active positions should trigger emergency shutdown"

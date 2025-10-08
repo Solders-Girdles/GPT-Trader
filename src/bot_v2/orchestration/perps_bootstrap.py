@@ -4,23 +4,25 @@ from __future__ import annotations
 
 import logging
 import os
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable, Mapping, Sequence
 
+from bot_v2.config.path_registry import RUNTIME_DATA_DIR
 from bot_v2.persistence.event_store import EventStore
 from bot_v2.persistence.orders_store import OrdersStore
-from bot_v2.system_paths import RUNTIME_DATA_DIR
 
-from .configuration import BotConfig, Profile, TOP_VOLUME_BASES
+from .configuration import TOP_VOLUME_BASES, BotConfig, Profile
 from .service_registry import ServiceRegistry, empty_registry
 
-_DEFAULT_ALLOWED_PERPS: frozenset[str] = frozenset({
-    "BTC-PERP",
-    "ETH-PERP",
-    "SOL-PERP",
-    "XRP-PERP",
-})
+_DEFAULT_ALLOWED_PERPS: frozenset[str] = frozenset(
+    {
+        "BTC-PERP",
+        "ETH-PERP",
+        "SOL-PERP",
+        "XRP-PERP",
+    }
+)
 
 
 @dataclass(frozen=True)
@@ -159,8 +161,7 @@ def prepare_perps_bot(
         env_map = env
 
     derivatives_enabled = (
-        config.profile != Profile.SPOT
-        and env_map.get("COINBASE_ENABLE_DERIVATIVES", "0") == "1"
+        config.profile != Profile.SPOT and env_map.get("COINBASE_ENABLE_DERIVATIVES", "0") == "1"
     )
     default_quote = env_map.get("COINBASE_DEFAULT_QUOTE", "USD").upper()
 

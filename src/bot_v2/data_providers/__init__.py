@@ -19,6 +19,11 @@ from bot_v2.utilities import get_logger, log_operation, optional_import
 # Lazy imports for heavy dependencies
 pandas = optional_import("pandas")
 
+# Runtime alias: pd = pandas (OptionalImport wrapper)
+# - At runtime: pd.DataFrame/pd.date_range forward to OptionalImport.__getattr__
+# - Type checking: overridden by TYPE_CHECKING block below for proper type hints
+pd = pandas  # type: ignore[assignment]
+
 # Type checking imports (not loaded at runtime)
 if TYPE_CHECKING:
     import pandas as pd

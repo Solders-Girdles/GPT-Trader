@@ -1,4 +1,0 @@
-# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/orchestration/storage.py
-# hypothesis_version: 6.140.3
-
-['EVENT_STORE_ROOT', 'perps_bot']

@@ -1,3 +1,0 @@
-{"type": "metric", "bot_id": "perps_bot", "event_type": "ws_mark_update", "symbol": "BTC-USD", "mark": "100", "time": "2025-09-30T00:24:17.288397"}
-{"type": "metric", "bot_id": "perps_bot", "event_type": "ws_mark_update", "symbol": "BTC-USD", "mark": "101", "time": "2025-09-30T00:24:17.288568"}
-{"type": "metric", "bot_id": "perps_bot", "event_type": "ws_stream_exit", "time": "2025-09-30T00:24:17.288812"}

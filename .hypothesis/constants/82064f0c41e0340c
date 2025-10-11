@@ -1,4 +1,0 @@
-# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/orchestration/broker_factory.py
-# hypothesis_version: 6.140.3
-
-['0', '1', 'BROKER', 'COINBASE_API_BASE', 'COINBASE_API_KEY', 'COINBASE_API_MODE', 'COINBASE_API_SECRET', 'COINBASE_AUTH_TYPE', 'COINBASE_CDP_API_KEY', 'COINBASE_SANDBOX', 'COINBASE_WS_URL', 'HMAC', 'JWT', 'advanced', 'broker', 'coinbase', 'exchange', 'system']

@@ -1,4 +1,0 @@
-# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/features/backtest/strategies.py
-# hypothesis_version: 6.140.3
-
-[-0.01, 0.01, 0.02, 1.0, 2.0, 'BreakoutStrategy', 'MomentumStrategy', 'SimpleMAStrategy', 'Strategy not found', 'VolatilityStrategy', 'available', 'available_columns', 'available_strategies', 'class_name', 'close', 'creation_error', 'data_length', 'data_shape', 'default_params', 'doc', 'error', 'exists', 'fast_period', 'high', 'lookback', 'low', 'max', 'mean', 'min', 'missing', 'name', 'num_std', 'operation', 'params', 'period', 'period_relationship', 'requested_strategy', 'required', 'required_periods', 'slow_period', 'std', 'strategy', 'strategy_class', 'strategy_name', 'threshold', 'validation_error', 'vol_threshold', 'window']

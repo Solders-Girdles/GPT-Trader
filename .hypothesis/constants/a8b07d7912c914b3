@@ -1,4 +1,0 @@
-# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/features/brokerages/coinbase/adapter.py
-# hypothesis_version: 6.140.3
-
-[200, 900, '0', 'COINBASE', 'accounts', 'ask', 'auth', 'bid', 'data', 'id', 'last', 'last_update', 'uuid']

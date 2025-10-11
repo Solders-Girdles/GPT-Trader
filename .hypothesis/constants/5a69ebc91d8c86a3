@@ -1,4 +1,0 @@
-# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/config/live_trade_config.py
-# hypothesis_version: 6.140.3
-
-[0.005, 0.15, 0.2, 0.25, 0.8, 1.0, 180, '100', 'RISK_CB_COOLDOWN_MIN', 'RISK_DAYTIME_END_UTC', 'RISK_DEFAULT_MMR', 'RISK_MAX_LEVERAGE', 'daily_loss_limit', 'day_mmr_per_symbol', 'daytime_end_utc', 'daytime_start_utc', 'kill_switch_enabled', 'max_exposure_pct', 'max_leverage', 'night_mmr_per_symbol', 'notional', 'reduce_only_mode', 'slippage_guard_bps']

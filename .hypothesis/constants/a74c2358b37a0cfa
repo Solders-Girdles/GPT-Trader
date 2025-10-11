@@ -1,4 +1,0 @@
-# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/features/data/data.py
-# hypothesis_version: 6.140.3
-
-[365, 3600, '%Y-%m-%d', './exports', '.csv', '.json', '.parquet', '1d', 'No data to export', 'csv', 'entries', 'hit_rate', 'json', 'newest_record', 'oldest_record', 'parquet', 'size_mb', 'symbols_count', 'total_records', 'total_size_mb']

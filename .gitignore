@@ -23,6 +23,10 @@ logs/
 *.tmp
 *.swp
 *.swo
+backups/
+tmp_ws_root/
+results/
+_tmp_status.txt
 
 # macOS
 .DS_Store
@@ -85,6 +89,7 @@ coordination/orchestration/*
 coverage.json
 .claude-flow/
 .mcp.json
+.hypothesis/
 var/
 .claude/
 .mypy_cache/

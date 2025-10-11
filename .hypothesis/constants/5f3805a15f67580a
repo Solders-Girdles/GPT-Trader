@@ -1,4 +1,0 @@
-# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/features/data/types.py
-# hypothesis_version: 6.140.3
-
-[0.8, ',', '1d', 'api', 'coinbase', 'csv', 'data', 'data_type', 'database', 'fundamental', 'indicator', 'metadata', 'news', 'ohlcv', 'polygon', 'quote', 'simulated', 'source', 'symbol', 'timestamp', 'trade', 'yahoo']

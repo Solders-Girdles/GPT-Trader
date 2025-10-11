@@ -1,4 +1,4 @@
-"""Connection registry for the legacy live-trade facade."""
+"""Connection and execution registry for the legacy live-trade facade."""
 
 from __future__ import annotations
 
@@ -8,32 +8,23 @@ from dataclasses import dataclass
 
 from bot_v2.errors import NetworkError, ValidationError, log_error
 from bot_v2.errors.handler import RecoveryStrategy, get_error_handler
+from bot_v2.features.live_trade.advanced_execution import AdvancedExecutionEngine
 from bot_v2.features.live_trade.brokers import BrokerInterface, SimulatedBroker
-from bot_v2.features.live_trade.execution import ExecutionEngine
 from bot_v2.features.live_trade.risk import LiveRiskManager
 from bot_v2.features.live_trade.types import BrokerConnection
 
 logger = logging.getLogger(__name__)
 
-__all__ = [
-    "connect_broker",
-    "disconnect",
-    "get_connection",
-    "get_broker_client",
-    "get_risk_manager",
-    "get_execution_engine",
-]
-
 
 @dataclass
-class _Registry:
+class _SessionState:
     connection: BrokerConnection | None = None
     broker_client: BrokerInterface | None = None
     risk_manager: LiveRiskManager | None = None
-    execution_engine: ExecutionEngine | None = None
+    execution_engine: AdvancedExecutionEngine | None = None
 
 
-_REGISTRY = _Registry()
+_SESSION = _SessionState()
 
 
 def _build_connection_record(
@@ -58,11 +49,13 @@ def connect_broker(
     broker_name: str = "simulated",
     api_key: str = "",
     api_secret: str = "",
-    *,
     is_paper: bool = True,
     base_url: str | None = None,
+    *,
     risk_factory: Callable[[], LiveRiskManager] | None = None,
 ) -> BrokerConnection:
+    """Connect to the simulated broker stub used by legacy demos."""
+
     requested_name = broker_name.lower().strip() or "simulated"
     alias_map = {"alpaca": "simulated", "ibkr": "simulated"}
     normalized_name = alias_map.get(requested_name, requested_name)
@@ -84,7 +77,7 @@ def connect_broker(
         BrokerConnection,
         BrokerInterface,
         LiveRiskManager,
-        ExecutionEngine,
+        AdvancedExecutionEngine,
     ]:
         broker_client = SimulatedBroker()
         connection = _build_connection_record(
@@ -101,13 +94,18 @@ def connect_broker(
         connection.account_id = broker_client.get_account_id()
 
         risk_manager = risk_factory() if risk_factory else LiveRiskManager()
-        execution_engine = ExecutionEngine(broker_client, risk_manager)
+        execution_engine = AdvancedExecutionEngine(
+            broker=broker_client,
+            risk_manager=risk_manager,
+        )
+
         logger.info(
             "Connected to %s (%s mode)",
             normalized_name,
             "paper" if is_paper else "live",
         )
         logger.info("Account ID: %s", connection.account_id)
+
         return connection, broker_client, risk_manager, execution_engine
 
     try:
@@ -128,37 +126,61 @@ def connect_broker(
         log_error(network_error)
         raise network_error from exc
 
-    _REGISTRY.connection = connection
-    _REGISTRY.broker_client = broker_client
-    _REGISTRY.risk_manager = risk_manager
-    _REGISTRY.execution_engine = execution_engine
+    _SESSION.connection = connection
+    _SESSION.broker_client = broker_client
+    _SESSION.risk_manager = risk_manager
+    _SESSION.execution_engine = execution_engine
     return connection
 
 
 def disconnect() -> None:
-    if _REGISTRY.broker_client:
-        try:
-            _REGISTRY.broker_client.disconnect()
-        except Exception:  # pragma: no cover - best effort
+    """Disconnect the simulated broker session."""
+
+    broker_client = _SESSION.broker_client
+    if broker_client is not None:
+        try:  # pragma: no cover - defensive clean-up
+            broker_client.disconnect()
+        except Exception:
             pass
 
-    _REGISTRY.connection = None
-    _REGISTRY.broker_client = None
-    _REGISTRY.risk_manager = None
-    _REGISTRY.execution_engine = None
+    _SESSION.connection = None
+    _SESSION.broker_client = None
+    _SESSION.risk_manager = None
+    _SESSION.execution_engine = None
+
+    logger.info("Disconnected from broker")
+    print("Disconnected from broker")
 
 
 def get_connection() -> BrokerConnection | None:
-    return _REGISTRY.connection
+    """Return the active broker connection metadata, if any."""
+
+    return _SESSION.connection
 
 
 def get_broker_client() -> BrokerInterface | None:
-    return _REGISTRY.broker_client
+    """Return the active broker client instance used by the legacy facade."""
+
+    return _SESSION.broker_client
 
 
 def get_risk_manager() -> LiveRiskManager | None:
-    return _REGISTRY.risk_manager
+    """Return the risk manager guarding the legacy execution path."""
+
+    return _SESSION.risk_manager
 
 
-def get_execution_engine() -> ExecutionEngine | None:
-    return _REGISTRY.execution_engine
+def get_execution_engine() -> AdvancedExecutionEngine | None:
+    """Return the execution engine used by the legacy facade."""
+
+    return _SESSION.execution_engine
+
+
+__all__ = [
+    "connect_broker",
+    "disconnect",
+    "get_connection",
+    "get_broker_client",
+    "get_risk_manager",
+    "get_execution_engine",
+]

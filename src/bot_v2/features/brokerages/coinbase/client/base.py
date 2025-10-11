@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import sys
 import time
 from collections.abc import Callable, Iterator
@@ -327,7 +328,11 @@ class CoinbaseClientBase:
             json.dumps(body, separators=(",", ":")).encode("utf-8") if body is not None else None
         )
 
-        sys_config = _load_system_config()
+        sys_config = dict(_load_system_config())
+        if os.environ.get("COINBASE_FAST_RETRY", "0") == "1":
+            sys_config.setdefault("max_retries", sys_config.get("max_retries", 3))
+            sys_config["retry_delay"] = 0.0
+            sys_config["jitter_factor"] = 0.0
         max_retries = int(sys_config.get("max_retries", 3))
         base_delay = float(sys_config.get("retry_delay", 1.0))
         jitter_factor = float(sys_config.get("jitter_factor", 0.1))

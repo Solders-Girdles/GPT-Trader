@@ -10,10 +10,11 @@ from decimal import Decimal
 from typing import Any
 
 from bot_v2.errors import ValidationError
+from bot_v2.features.brokerages.coinbase import models as coinbase_models
 from bot_v2.features.brokerages.coinbase.client import CoinbaseClient
 from bot_v2.features.brokerages.coinbase.endpoints import CoinbaseEndpoints
 from bot_v2.features.brokerages.coinbase.market_data_service import MarketDataService
-from bot_v2.features.brokerages.coinbase.models import APIConfig, normalize_symbol, to_order
+from bot_v2.features.brokerages.coinbase.models import APIConfig, normalize_symbol
 from bot_v2.features.brokerages.coinbase.utilities import (
     FundingCalculator,
     PositionState,
@@ -97,10 +98,15 @@ class CoinbaseRestServiceBase:
                         return member
             raise ValidationError(f"Unsupported {field}: {token}", field=field)
 
+        def _format_quantity(value: Decimal) -> str:
+            normalized = value.normalize()
+            return format(normalized, "f")
+
         side_enum = _coerce_enum(OrderSide, side, "side")
         order_type_enum = _coerce_enum(OrderType, order_type, "order_type")
 
         adjusted_quantity = quantize_to_increment(quantity, product.step_size)
+        quantity_str = _format_quantity(adjusted_quantity)
 
         adjusted_price = price
         if order_type_enum in (OrderType.LIMIT, OrderType.STOP_LIMIT):
@@ -119,28 +125,49 @@ class CoinbaseRestServiceBase:
                 value=str(adjusted_quantity),
             )
 
-        tif_enum = (
-            tif if isinstance(tif, TimeInForce) else _coerce_enum(TimeInForce, tif, "time_in_force")
-        )
-        gtd_requested = tif_enum not in TimeInForce and str(tif).upper() in {
-            "GTD",
-            "GOOD_TILL_DATE",
-        }
-        if gtd_requested:
-            tif_enum = TimeInForce.GTC
+        if isinstance(tif, TimeInForce):
+            tif_enum = tif
+        else:
+            token = str(tif).upper() if tif is not None else ""
+            if token in {"GTD", "GOOD_TILL_DATE"}:
+                tif_enum = TimeInForce.GTC
+            else:
+                tif_enum = _coerce_enum(TimeInForce, tif, "time_in_force")
 
         payload: dict[str, object] = {
             "product_id": pid,
             "side": side_enum.value.upper(),
         }
+        order_type_value = order_type_enum.value.upper()
 
         if product.min_notional:
             reference_price = adjusted_price
             if reference_price is None:
-                rest_quote = self.get_rest_quote(pid)
-                reference_price = rest_quote.last if rest_quote else Decimal("0")
-            notional = adjusted_quantity * (reference_price or Decimal("0"))
-            if notional < product.min_notional:
+                rest_quote_fn = getattr(self, "get_rest_quote", None)
+                rest_quote = rest_quote_fn(pid) if callable(rest_quote_fn) else None
+                reference_price = rest_quote.last if rest_quote else None
+            if reference_price is not None:
+                try:
+                    reference_price = Decimal(str(reference_price))
+                except Exception:
+                    reference_price = None
+            if (reference_price is None or reference_price <= 0) and callable(
+                getattr(self.market_data, "get_mark", None)
+            ):
+                try:
+                    reference_price = self.market_data.get_mark(pid)
+                except Exception:  # pragma: no cover - defensive market lookup
+                    reference_price = None
+                else:
+                    try:
+                        reference_price = Decimal(str(reference_price))
+                    except Exception:
+                        reference_price = None
+            if reference_price is not None and reference_price > 0:
+                notional = adjusted_quantity * reference_price
+            else:
+                notional = None
+            if notional is not None and notional < product.min_notional:
                 raise ValidationError(
                     f"notional {notional} below min_notional {product.min_notional}",
                     field="quantity",
@@ -155,25 +182,23 @@ class CoinbaseRestServiceBase:
             config_key = limit_map.get(tif_enum, "limit_limit_gtc")
             payload["order_configuration"] = {
                 config_key: {
-                    "base_size": str(adjusted_quantity),
+                    "base_size": quantity_str,
                     "limit_price": str(adjusted_price or Decimal("0")),
                 }
             }
         elif order_type_enum == OrderType.MARKET:
-            payload["order_configuration"] = {
-                "market_market_ioc": {"base_size": str(adjusted_quantity)}
-            }
+            payload["order_configuration"] = {"market_market_ioc": {"base_size": quantity_str}}
         elif order_type_enum == OrderType.STOP_LIMIT and adjusted_stop is not None:
             payload["order_configuration"] = {
                 "stop_limit_stop_limit_gtc": {
-                    "base_size": str(adjusted_quantity),
+                    "base_size": quantity_str,
                     "limit_price": str(adjusted_price or Decimal("0")),
                     "stop_price": str(adjusted_stop),
                 }
             }
         else:
-            payload["type"] = order_type_enum.value
-            payload["size"] = str(adjusted_quantity)
+            payload["type"] = order_type_value
+            payload["size"] = quantity_str
             payload["time_in_force"] = tif_enum.value
             if adjusted_price is not None:
                 payload["price"] = str(adjusted_price)
@@ -181,8 +206,8 @@ class CoinbaseRestServiceBase:
                 payload["stop_price"] = str(adjusted_stop)
 
         if "order_configuration" in payload:
-            payload.setdefault("type", order_type_enum.value)
-            payload.setdefault("size", str(adjusted_quantity))
+            payload.setdefault("type", order_type_value)
+            payload.setdefault("size", quantity_str)
             payload.setdefault("time_in_force", tif_enum.value)
             if adjusted_price is not None:
                 payload.setdefault("price", str(adjusted_price))
@@ -197,9 +222,10 @@ class CoinbaseRestServiceBase:
             payload["post_only"] = True
         if include_client_id:
             payload["client_order_id"] = client_id or f"perps_{uuid.uuid4().hex[:12]}"
-        payload["type"] = payload.get("type", order_type_enum.value)
-        payload["size"] = str(adjusted_quantity)
-        payload["quantity"] = str(adjusted_quantity)
+        payload["type"] = payload.get("type", order_type_value)
+        payload["size"] = quantity_str
+        payload["quantity"] = quantity_str
+        payload["time_in_force"] = str(payload.get("time_in_force", tif_enum.value)).upper()
         return payload
 
     def _execute_order_payload(
@@ -215,7 +241,22 @@ class CoinbaseRestServiceBase:
                 logger.debug("Order preview failed (ignored): %s", exc)
         try:
             data = self.client.place_order(payload)
-            return to_order(data or {})
+            order = coinbase_models.to_order(data or {})
+            try:
+                if client_id:
+                    setattr(order, "client_id", client_id)
+                    setattr(order, "client_order_id", client_id)
+            except Exception:  # pragma: no cover - defensive attribute sync
+                pass
+            identifier = None
+            if isinstance(data, dict):
+                identifier = data.get("order_id") or data.get("id")
+            if identifier is not None:
+                try:
+                    setattr(order, "id", identifier)
+                except Exception:  # pragma: no cover - defensive attribute sync
+                    pass
+            return order
         except InsufficientFunds as exc:
             logger.error("Insufficient funds for %s: %s", payload.get("product_id"), exc)
             raise
@@ -269,7 +310,19 @@ class CoinbaseRestServiceBase:
                 return datetime.min
 
         best = max(matches, key=_timestamp)
-        return to_order(best)
+        order = coinbase_models.to_order(best)
+        try:
+            setattr(order, "client_id", client_id)
+            setattr(order, "client_order_id", client_id)
+        except Exception:  # pragma: no cover - defensive attribute sync
+            pass
+        identifier = best.get("order_id") or best.get("id")
+        if identifier is not None:
+            try:
+                setattr(order, "id", identifier)
+            except Exception:  # pragma: no cover - defensive attribute sync
+                pass
+        return order
 
     # ------------------------------------------------------------------
     # Position bookkeeping helpers
@@ -282,7 +335,10 @@ class CoinbaseRestServiceBase:
             return
         position = self._positions[symbol]
         unrealized = position.get_unrealized_pnl(mark)
-        funding_rate, next_funding_time = self.product_catalog.get_funding(self.client, symbol)
+        try:
+            funding_rate, next_funding_time = self.product_catalog.get_funding(self.client, symbol)
+        except TypeError:
+            funding_rate, next_funding_time = (None, None)
         funding_delta = self._funding_calculator.accrue_if_due(
             symbol=symbol,
             position_size=position.quantity,
@@ -293,6 +349,7 @@ class CoinbaseRestServiceBase:
         )
         if funding_delta != 0:
             position.realized_pnl += funding_delta
+        if funding_rate is not None:
             self._event_store.append_metric(
                 bot_id="coinbase_perps",
                 metrics={

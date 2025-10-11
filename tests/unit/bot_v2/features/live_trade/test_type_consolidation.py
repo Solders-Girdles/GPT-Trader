@@ -152,15 +152,6 @@ class TestImportConsistency:
         assert hasattr(live_trade_module, "Position")
         assert hasattr(live_trade_module, "Quote")
 
-    def test_execution_imports(self):
-        """Test that execution module imports from core."""
-        import bot_v2.features.live_trade.execution as execution_module
-
-        # Check that core types are imported
-        assert hasattr(execution_module, "Order")
-        assert hasattr(execution_module, "OrderType")
-        assert hasattr(execution_module, "OrderSide")
-
     def test_types_reexport(self):
         """Test that types.py re-exports core types."""
         # The deprecation warning occurs at import time of types module

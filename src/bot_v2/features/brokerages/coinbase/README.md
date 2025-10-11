@@ -78,11 +78,11 @@ COINBASE_WS_URL=wss://custom-ws-url.com
 from bot_v2.orchestration.broker_factory import create_brokerage
 
 # Will auto-configure from environment
-broker = create_brokerage()
+broker, event_store, market_data, product_catalog = create_brokerage()
 broker.connect()
 
 # Get products
-products = broker.get_products()
+products = broker.list_products()
 print(f"Available products: {len(products)}")
 ```
 

@@ -8,26 +8,51 @@ from dataclasses import dataclass
 from typing import Any
 
 from bot_v2.monitoring.alert_types import AlertSeverity
-from bot_v2.monitoring.alerting_system import AlertingSystem
+from bot_v2.monitoring.interfaces import MonitorConfig
 from bot_v2.monitoring.metrics_collector import record_counter
+from bot_v2.monitoring.system.alerting import AlertManager
 
 logger = logging.getLogger(__name__)
 
-_alert_system: AlertingSystem | None = None
+
+class GuardAlertDispatcher:
+    """Thin wrapper over the monitoring alert manager for guard failures."""
+
+    def __init__(self) -> None:
+        self._manager = AlertManager(MonitorConfig(enable_notifications=False))
+
+    def trigger_alert(
+        self,
+        severity: AlertSeverity,
+        category: str,
+        message: str,
+        metadata: dict[str, Any] | None = None,
+    ) -> None:
+        self._manager.create_alert(
+            severity=severity,
+            component=category,
+            message=message,
+            details=dict(metadata or {}),
+        )
 
 
-def configure_guard_alert_system(system: AlertingSystem | None) -> None:
+_alert_system: Any | None = None
+
+
+def configure_guard_alert_system(system: Any | None) -> None:
     """Override the alerting system used for guard failures (test hook)."""
 
     global _alert_system
-    _alert_system = system
+    _alert_system = system  # type: ignore[assignment]
 
 
-def _get_alert_system() -> AlertingSystem:
+def _get_alert_system() -> GuardAlertDispatcher:
     global _alert_system
     if _alert_system is None:
-        _alert_system = AlertingSystem()
-    return _alert_system
+        _alert_system = GuardAlertDispatcher()
+    if not hasattr(_alert_system, "trigger_alert"):
+        _alert_system = GuardAlertDispatcher()
+    return _alert_system  # type: ignore[return-value]
 
 
 @dataclass

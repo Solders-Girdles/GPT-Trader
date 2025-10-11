@@ -12,9 +12,16 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import Any
 
-from bot_v2.features.brokerages.core.interfaces import MarketType, Product
+from bot_v2.features.brokerages.core.interfaces import Product
 from bot_v2.features.live_trade.risk import LiveRiskManager
 from bot_v2.features.live_trade.strategies.decisions import Action, Decision
+from bot_v2.features.live_trade.strategies.shared import (
+    calculate_ma_snapshot,
+    create_close_decision,
+    create_entry_decision,
+    update_mark_window,
+    update_trailing_stop,
+)
 from bot_v2.utilities.quantities import quantity_from
 
 logger = logging.getLogger(__name__)
@@ -124,20 +131,27 @@ class BaselinePerpsStrategy:
             Decision with action and parameters
         """
         # Update mark window
-        if symbol not in self.mark_windows:
-            self.mark_windows[symbol] = []
+        marks = update_mark_window(
+            self.mark_windows,
+            symbol=symbol,
+            current_mark=current_mark,
+            short_period=self.config.short_ma_period,
+            long_period=self.config.long_ma_period,
+            recent_marks=recent_marks,
+        )
 
-        # Use provided recent marks or maintain our own
-        if recent_marks:
-            self.mark_windows[symbol] = list(recent_marks)
-        self.mark_windows[symbol].append(current_mark)
-
-        # Keep window size reasonable
-        max_window = max(self.config.short_ma_period, self.config.long_ma_period) + 5
-        if len(self.mark_windows[symbol]) > max_window:
-            self.mark_windows[symbol] = self.mark_windows[symbol][-max_window:]
-
-        marks = self.mark_windows[symbol]
+        snapshot = calculate_ma_snapshot(
+            marks,
+            short_period=self.config.short_ma_period,
+            long_period=self.config.long_ma_period,
+            epsilon_bps=self.config.ma_cross_epsilon_bps,
+            confirm_bars=self.config.ma_cross_confirm_bars,
+        )
+        signal = (
+            "bullish"
+            if snapshot.bullish_cross
+            else "bearish" if snapshot.bearish_cross else "neutral"
+        )
 
         # Check for existing position
         position_quantity = quantity_from(position_state, default=Decimal("0"))
@@ -147,8 +161,12 @@ class BaselinePerpsStrategy:
         if self.risk_manager and self.risk_manager.is_reduce_only_mode():
             if has_position and position_state:
                 # Can only close in reduce-only mode
-                return self._create_close_decision(
-                    symbol, position_state, "Reduce-only mode active"
+                return create_close_decision(
+                    symbol=symbol,
+                    position_state=position_state,
+                    position_adds=self.position_adds,
+                    trailing_stops=self.trailing_stops,
+                    reason="Reduce-only mode active",
                 )
             return Decision(action=Action.HOLD, reason="Reduce-only mode - no new entries")
 
@@ -156,20 +174,20 @@ class BaselinePerpsStrategy:
         if self.config.disable_new_entries:
             if has_position and position_state:
                 # Check for exit signals
-                signal = self._calculate_signal(marks)
                 pos_side = str(position_state.get("side", "")).lower()
 
                 if (pos_side == "long" and signal == "bearish") or (
                     pos_side == "short" and signal == "bullish"
                 ):
-                    return self._create_close_decision(
-                        symbol, position_state, f"Exit on {signal} signal"
+                    return create_close_decision(
+                        symbol=symbol,
+                        position_state=position_state,
+                        position_adds=self.position_adds,
+                        trailing_stops=self.trailing_stops,
+                        reason=f"Exit on {signal} signal",
                     )
 
             return Decision(action=Action.HOLD, reason="New entries disabled")
-
-        # Calculate MA signal
-        signal = self._calculate_signal(marks)
 
         # Funding awareness intentionally disabled in simplified baseline
 
@@ -177,12 +195,30 @@ class BaselinePerpsStrategy:
         if not has_position:
             # No position - check for entry
             if signal == "bullish":
-                return self._create_entry_decision(
-                    symbol, Action.BUY, equity, product, "Bullish MA crossover"
+                return create_entry_decision(
+                    symbol=symbol,
+                    action=Action.BUY,
+                    equity=equity,
+                    product=product,
+                    position_fraction=self.config.position_fraction,
+                    target_leverage=self.config.target_leverage,
+                    max_trade_usd=self.config.max_trade_usd,
+                    position_adds=self.position_adds,
+                    trailing_stops=self.trailing_stops,
+                    reason="Bullish MA crossover",
                 )
             elif signal == "bearish" and self.config.enable_shorts:
-                return self._create_entry_decision(
-                    symbol, Action.SELL, equity, product, "Bearish MA crossover"
+                return create_entry_decision(
+                    symbol=symbol,
+                    action=Action.SELL,
+                    equity=equity,
+                    product=product,
+                    position_fraction=self.config.position_fraction,
+                    target_leverage=self.config.target_leverage,
+                    max_trade_usd=self.config.max_trade_usd,
+                    position_adds=self.position_adds,
+                    trailing_stops=self.trailing_stops,
+                    reason="Bearish MA crossover",
                 )
         elif position_state:
             # Has position - check for exit or add
@@ -190,20 +226,40 @@ class BaselinePerpsStrategy:
 
             # Check for exit signal
             if pos_side == "long" and signal == "bearish":
-                return self._create_close_decision(
-                    symbol, position_state, "Exit long on bearish signal"
+                return create_close_decision(
+                    symbol=symbol,
+                    position_state=position_state,
+                    position_adds=self.position_adds,
+                    trailing_stops=self.trailing_stops,
+                    reason="Exit long on bearish signal",
                 )
             elif pos_side == "short" and signal == "bullish":
-                return self._create_close_decision(
-                    symbol, position_state, "Exit short on bullish signal"
+                return create_close_decision(
+                    symbol=symbol,
+                    position_state=position_state,
+                    position_adds=self.position_adds,
+                    trailing_stops=self.trailing_stops,
+                    reason="Exit short on bullish signal",
                 )
 
-            # Check trailing stop after signal check (fixed pct)
-            stop_decision = self._check_trailing_stop(
-                symbol, current_mark, position_state, override_stop_pct=None
+            trailing_hit = update_trailing_stop(
+                self.trailing_stops,
+                symbol=symbol,
+                side=pos_side,
+                current_price=current_mark,
+                trailing_pct=Decimal(str(self.config.trailing_stop_pct)),
             )
-            if stop_decision.action == Action.CLOSE:
-                return stop_decision
+            if trailing_hit:
+                peak, stop_price = self.trailing_stops.get(symbol, (current_mark, current_mark))
+                return create_close_decision(
+                    symbol=symbol,
+                    position_state=position_state,
+                    position_adds=self.position_adds,
+                    trailing_stops=self.trailing_stops,
+                    reason=(
+                        f"Trailing stop hit (peak: {peak}, stop: {stop_price}, current: {current_mark})"
+                    ),
+                )
 
             # Check for adding to position (pyramiding)
             adds = self.position_adds.get(symbol, 0)
@@ -217,238 +273,24 @@ class BaselinePerpsStrategy:
 
         return Decision(action=Action.HOLD, reason="No signal")
 
-    def _calculate_signal(self, marks: list[Decimal]) -> str:
-        """
-        Calculate MA crossover signal (event-based).
-
-        Returns 'bullish' or 'bearish' only on a fresh crossover event
-        on the most recent bar, otherwise 'neutral'.
-        """
-        if len(marks) < self.config.long_ma_period:
-            return "neutral"
-
-        # Calculate current MAs using Decimal-safe sums
-        short_sum = sum(marks[-self.config.short_ma_period :], Decimal("0"))
-        long_sum = sum(marks[-self.config.long_ma_period :], Decimal("0"))
-        short_ma = short_sum / Decimal(self.config.short_ma_period)
-        long_ma = long_sum / Decimal(self.config.long_ma_period)
-
-        # Require at least one additional bar for previous MA state
-        if len(marks) >= self.config.long_ma_period + 1:
-            prev_marks = marks[:-1]
-            prev_short = sum(prev_marks[-self.config.short_ma_period :], Decimal("0")) / Decimal(
-                self.config.short_ma_period
-            )
-            prev_long = sum(prev_marks[-self.config.long_ma_period :], Decimal("0")) / Decimal(
-                self.config.long_ma_period
-            )
-
-            # Epsilon tolerance based on current price in bps
-            current_mark = marks[-1]
-            try:
-                eps = current_mark * (self.config.ma_cross_epsilon_bps / Decimal("10000"))
-            except Exception:
-                eps = Decimal("0")
-
-            prev_diff = prev_short - prev_long
-            cur_diff = short_ma - long_ma
-
-            bullish_cross = (prev_diff <= eps) and (cur_diff > eps)
-            bearish_cross = (prev_diff >= -eps) and (cur_diff < -eps)
-
-            # Optional confirmation: require persistence of the crossed state
-            if self.config.ma_cross_confirm_bars > 0 and (bullish_cross or bearish_cross):
-                confirm_bars = self.config.ma_cross_confirm_bars
-                if len(marks) >= self.config.long_ma_period + confirm_bars + 1:
-                    confirmed = True
-                    for i in range(1, confirm_bars + 1):
-                        check_marks = marks[:-i]
-                        check_short = sum(
-                            check_marks[-self.config.short_ma_period :], Decimal("0")
-                        ) / Decimal(self.config.short_ma_period)
-                        check_long = sum(
-                            check_marks[-self.config.long_ma_period :], Decimal("0")
-                        ) / Decimal(self.config.long_ma_period)
-                        check_diff = check_short - check_long
-                        if bullish_cross and check_diff <= eps:
-                            confirmed = False
-                            break
-                        if bearish_cross and check_diff >= -eps:
-                            confirmed = False
-                            break
-                    bullish_cross = bullish_cross and confirmed
-                    bearish_cross = bearish_cross and confirmed
-                else:
-                    # Not enough history yet to confirm
-                    bullish_cross = False
-                    bearish_cross = False
-
-            if bullish_cross:
-                return "bullish"
-            if bearish_cross:
-                return "bearish"
-
-        # No fresh crossover event on this bar
-        return "neutral"
-
-    def _check_trailing_stop(
-        self,
-        symbol: str,
-        current_mark: Decimal,
-        position_state: dict[str, Any],
-        override_stop_pct: float | None = None,
-    ) -> Decision:
-        """
-        Check and update trailing stop.
-
-        Returns:
-            Decision to close if stop hit, otherwise hold
-        """
-        pos_side = position_state.get("side", "").lower()
-
-        # Initialize trailing stop if needed
-        if symbol not in self.trailing_stops:
-            # Initialize with current price and calculate stop from there
-            stop_pct = Decimal(
-                str(
-                    override_stop_pct
-                    if override_stop_pct is not None
-                    else self.config.trailing_stop_pct
-                )
-            )
-            if pos_side == "long":
-                stop_price = current_mark * (Decimal("1") - stop_pct)
-            else:
-                stop_price = current_mark * (Decimal("1") + stop_pct)
-            self.trailing_stops[symbol] = (current_mark, stop_price)
-
-        peak, stop_price = self.trailing_stops[symbol]
-
-        if pos_side == "long":
-            # Update peak if higher
-            if current_mark > peak:
-                peak = current_mark
-                stop_pct = Decimal(
-                    str(
-                        override_stop_pct
-                        if override_stop_pct is not None
-                        else self.config.trailing_stop_pct
-                    )
-                )
-                stop_price = peak * (Decimal("1") - stop_pct)
-                self.trailing_stops[symbol] = (peak, stop_price)
-
-            # Check if stop hit
-            if current_mark <= stop_price:
-                return self._create_close_decision(
-                    symbol,
-                    position_state,
-                    f"Trailing stop hit (peak: {peak}, stop: {stop_price}, current: {current_mark})",
-                )
-
-        elif pos_side == "short":
-            # Update peak (lowest for short)
-            if current_mark < peak:
-                peak = current_mark
-                stop_pct = Decimal(
-                    str(
-                        override_stop_pct
-                        if override_stop_pct is not None
-                        else self.config.trailing_stop_pct
-                    )
-                )
-                stop_price = peak * (Decimal("1") + stop_pct)
-                self.trailing_stops[symbol] = (peak, stop_price)
-
-            # Check if stop hit
-            if current_mark >= stop_price:
-                return self._create_close_decision(
-                    symbol,
-                    position_state,
-                    f"Trailing stop hit (peak: {peak}, stop: {stop_price}, current: {current_mark})",
-                )
-
-        return Decision(action=Action.HOLD, reason="Position within trailing stop")
-
-    # Volatility-based trailing stop removed for simplicity
-
-    def _create_entry_decision(
-        self, symbol: str, action: Action, equity: Decimal, product: Product, reason: str
-    ) -> Decision:
-        """Create entry decision with leverage-based sizing.
-
-        - Notional = equity * target_leverage
-        - Order type left unset (defaults to market in execution)
-
-        Risk and caps are enforced at execution time by the risk engine.
-        """
-        # Leverage-based notional requested by strategy
-        fraction = Decimal(str(self.config.position_fraction or 0))
-        if fraction <= Decimal("0"):
-            fraction = Decimal("0.05")  # conservative default sizing
-        target_notional = equity * fraction
-
-        if self.config.max_trade_usd is not None:
-            try:
-                cap = Decimal(str(self.config.max_trade_usd))
-                target_notional = min(target_notional, cap)
-            except Exception:
-                pass
-
-        leverage_value: int | None = None
-        if product.market_type == MarketType.PERPETUAL:
-            try:
-                lv = Decimal(str(self.config.target_leverage))
-                if lv > Decimal("1"):
-                    target_notional = target_notional * lv
-            except Exception:
-                lv = Decimal("1")
-            try:
-                leverage_value = int(self.config.target_leverage)
-            except Exception:
-                leverage_value = None
-
-        # Reset position tracking
-        self.position_adds[symbol] = 0
-        if symbol in self.trailing_stops:
-            del self.trailing_stops[symbol]
-
-        return Decision(
-            action=action, target_notional=target_notional, leverage=leverage_value, reason=reason
-        )
-
-    def _create_close_decision(
-        self, symbol: str, position_state: dict[str, Any], reason: str
-    ) -> Decision:
-        """Create close/exit decision."""
-        # Clear position tracking
-        if symbol in self.position_adds:
-            del self.position_adds[symbol]
-        if symbol in self.trailing_stops:
-            del self.trailing_stops[symbol]
-
-        # Get current position quantity to close
-        raw_quantity = quantity_from(position_state)
-        close_quantity = abs(raw_quantity) if raw_quantity is not None else Decimal("0")
-
-        return Decision(
-            action=Action.CLOSE,
-            quantity=close_quantity,
-            reduce_only=True,  # Always reduce-only for exits
-            reason=reason,
-        )
-
     def update_marks(self, symbol: str, marks: list[Decimal]) -> None:
         """Seed or update the internal mark window for a symbol.
 
         This helper is used by some tests to pre-populate recent prices
         without invoking decide() first.
         """
-        # Normalize and store a bounded window similar to decide()
-        self.mark_windows[symbol] = list(marks)
-        max_window = max(self.config.short_ma_period, self.config.long_ma_period) + 5
-        if len(self.mark_windows[symbol]) > max_window:
-            self.mark_windows[symbol] = self.mark_windows[symbol][-max_window:]
+        if not marks:
+            self.mark_windows.pop(symbol, None)
+            return
+
+        update_mark_window(
+            self.mark_windows,
+            symbol=symbol,
+            current_mark=Decimal(str(marks[-1])),
+            short_period=self.config.short_ma_period,
+            long_period=self.config.long_ma_period,
+            recent_marks=[Decimal(str(value)) for value in marks[:-1]],
+        )
 
     def reset(self, symbol: str | None = None) -> None:
         """

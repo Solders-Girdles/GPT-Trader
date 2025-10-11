@@ -42,7 +42,14 @@ logger = logging.getLogger(__name__)
 class CoinbaseBrokerage(IBrokerage):
     """Production-ready Coinbase perpetuals adapter built from focused services."""
 
-    def __init__(self, config: APIConfig) -> None:
+    def __init__(
+        self,
+        config: APIConfig,
+        *,
+        event_store: EventStore | None = None,
+        market_data: MarketDataService | None = None,
+        product_catalog: ProductCatalog | None = None,
+    ) -> None:
         self.config = config
         self.endpoints = CoinbaseEndpoints(
             mode=config.api_mode,
@@ -61,9 +68,9 @@ class CoinbaseBrokerage(IBrokerage):
         self._connected = False
         self._account_id: str | None = None
 
-        self._event_store = EventStore()
-        self._product_catalog = ProductCatalog(ttl_seconds=900)
-        self.market_data = MarketDataService()
+        self._event_store = event_store or EventStore()
+        self._product_catalog = product_catalog or ProductCatalog(ttl_seconds=900)
+        self.market_data = market_data or MarketDataService()
         self.rest_service = CoinbaseRestService(
             client=self.client,
             endpoints=self.endpoints,
@@ -293,10 +300,10 @@ class CoinbaseBrokerage(IBrokerage):
     # ------------------------------------------------------------------
     # Testing hooks
     # ------------------------------------------------------------------
-    def set_http_transport_for_testing(self, transport) -> None:
+    def set_http_transport_for_testing(self, transport: Any) -> None:
         self.client.set_transport_for_testing(transport)
 
-    def set_ws_factory_for_testing(self, factory) -> None:
+    def set_ws_factory_for_testing(self, factory: Any) -> None:
         self._ws_factory_override = factory
         self.ws_handler.set_ws_factory_for_testing(factory)
 

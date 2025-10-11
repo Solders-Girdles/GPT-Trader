@@ -32,13 +32,14 @@ class ProductClient(Protocol):
     def get_product(self, symbol: str) -> dict[str, Any]: ...
 
 
-def quantize_to_increment(value: Decimal, increment: Decimal) -> Decimal:
+def quantize_to_increment(
+    value: Decimal, increment: Decimal, *, rounding: str = ROUND_DOWN
+) -> Decimal:
     if increment is None or increment == 0:
         return value
     # quantize requires exponent like Decimal('0.01'); handle arbitrary increments by division
-    # Compute floor to nearest multiple of increment
-    q = (value / increment).to_integral_value(rounding=ROUND_DOWN)
-    return (q * increment).quantize(increment)
+    factor = (value / increment).to_integral_value(rounding=rounding)
+    return (factor * increment).quantize(increment)
 
 
 def enforce_perp_rules(
@@ -146,8 +147,8 @@ class FundingCalculator:
         position_side: str,  # "long" or "short"
         mark_price: Decimal,
         funding_rate: Decimal | None,
-        next_funding_time,  # datetime | None
-        now=None,  # datetime | None
+        next_funding_time: datetime | None,
+        now: datetime | None = None,
     ) -> Decimal:
         """Calculate funding delta if due.
 
@@ -166,6 +167,16 @@ class FundingCalculator:
         if now is None:
             now = utc_now()
 
+        def _normalize(dt: datetime | None) -> datetime | None:
+            if dt is None:
+                return None
+            if dt.tzinfo is None:
+                return dt
+            return dt.replace(tzinfo=None)
+
+        now_cmp = _normalize(now)
+        next_cmp = _normalize(next_funding_time)
+
         # Skip if no funding data
         if funding_rate is None or next_funding_time is None:
             if symbol not in self._warned_symbols:
@@ -178,7 +189,7 @@ class FundingCalculator:
 
         # If we haven't tracked this symbol yet, check if we're past funding time
         if last_funding is None:
-            if now >= next_funding_time:
+            if now_cmp >= next_cmp:
                 # Funding is due - record it
                 self._last_funding_times[symbol] = next_funding_time
                 # But don't accrue on first observation (avoid double-counting)
@@ -188,7 +199,7 @@ class FundingCalculator:
                 return Decimal("0")
 
         # Check if new funding period
-        if next_funding_time > last_funding and now >= next_funding_time:
+        if next_funding_time > last_funding and now_cmp >= next_cmp:
             # Funding is due
             self._last_funding_times[symbol] = next_funding_time
 

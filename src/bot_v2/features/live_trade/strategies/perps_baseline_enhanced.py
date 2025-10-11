@@ -9,8 +9,15 @@ from decimal import Decimal
 from typing import Any
 
 from bot_v2.features.brokerages.core.interfaces import Product
-from bot_v2.features.live_trade.risk import LiveRiskManager, PositionSizingContext
+from bot_v2.features.live_trade.risk import LiveRiskManager
 from bot_v2.features.live_trade.strategies.decisions import Action, Decision
+from bot_v2.features.live_trade.strategies.shared import (
+    calculate_ma_snapshot,
+    create_close_decision,
+    create_entry_decision,
+    update_mark_window,
+    update_trailing_stop,
+)
 from bot_v2.features.strategy_tools import (
     MarketConditionFilters,
     RiskGuards,
@@ -261,17 +268,45 @@ class PerpsBaselineEnhancedStrategy:
         if entry_decision:
             return entry_decision
 
+        entry_reason = (
+            "Bullish MA crossover with RSI confirmation"
+            if base_signal == "buy"
+            else "Bearish MA crossover with RSI confirmation" if base_signal == "sell" else None
+        )
+        if base_signal and entry_reason:
+            return create_entry_decision(
+                symbol=symbol,
+                action=Action.BUY if base_signal == "buy" else Action.SELL,
+                equity=equity,
+                product=product or self._build_default_product(symbol),
+                position_fraction=0.1,
+                target_leverage=self.config.target_leverage,
+                max_trade_usd=None,
+                position_adds=self.position_adds,
+                trailing_stops=self.trailing_stops,
+                reason=entry_reason,
+            )
+
+        return self._build_hold_decision(signal)
+
+        if entry_decision:
+            return entry_decision
+
         return self._build_hold_decision(signal)
 
     def _prepare_trading_data(
         self, symbol: str, recent_marks: list[Decimal], current_mark: Decimal
     ) -> list[Decimal]:
         """Maintain mark history and return the updated window."""
-        window = self.mark_windows.setdefault(symbol, [])
-        updated_window = (recent_marks + [current_mark])[-50:]
-        if window != updated_window:
-            self.mark_windows[symbol] = updated_window
-        return self.mark_windows[symbol]
+        return update_mark_window(
+            self.mark_windows,
+            symbol=symbol,
+            current_mark=current_mark,
+            short_period=self.config.short_ma_period,
+            long_period=self.config.long_ma_period,
+            recent_marks=recent_marks,
+            buffer=30,
+        )
 
     def _check_early_guards(
         self,
@@ -309,63 +344,23 @@ class PerpsBaselineEnhancedStrategy:
         self, marks: list[Decimal], current_mark: Decimal
     ) -> SignalSnapshot:
         """Compute moving averages, crossovers, and supporting indicators."""
-        short_sum = sum(marks[-self.config.short_ma_period :], Decimal("0"))
-        long_sum = sum(marks[-self.config.long_ma_period :], Decimal("0"))
-        short_ma = short_sum / Decimal(self.config.short_ma_period)
-        long_ma = long_sum / Decimal(self.config.long_ma_period)
+        snapshot = calculate_ma_snapshot(
+            marks,
+            short_period=self.config.short_ma_period,
+            long_period=self.config.long_ma_period,
+            epsilon_bps=self.config.ma_cross_epsilon_bps,
+            confirm_bars=self.config.ma_cross_confirm_bars,
+        )
 
-        epsilon_rate = self.config.ma_cross_epsilon_bps / Decimal("10000")
-        epsilon = current_mark * epsilon_rate
-        bullish_cross = False
-        bearish_cross = False
-
-        if len(marks) >= self.config.long_ma_period + 1:
-            prev_marks = marks[:-1]
-            prev_short = sum(prev_marks[-self.config.short_ma_period :], Decimal("0")) / Decimal(
-                self.config.short_ma_period
+        if snapshot.bullish_cross or snapshot.bearish_cross:
+            cross_type = "Bullish" if snapshot.bullish_cross else "Bearish"
+            logger.debug(
+                "%s cross detected: short=%.4f long=%.4f eps=%.4f",
+                cross_type,
+                float(snapshot.short_ma),
+                float(snapshot.long_ma),
+                float(snapshot.epsilon),
             )
-            prev_long = sum(prev_marks[-self.config.long_ma_period :], Decimal("0")) / Decimal(
-                self.config.long_ma_period
-            )
-            prev_diff = prev_short - prev_long
-            cur_diff = short_ma - long_ma
-
-            bullish_cross = (prev_diff <= epsilon) and (cur_diff > epsilon)
-            bearish_cross = (prev_diff >= -epsilon) and (cur_diff < -epsilon)
-
-            if bullish_cross or bearish_cross:
-                cross_type = "Bullish" if bullish_cross else "Bearish"
-                logger.debug(
-                    f"{cross_type} cross detected: prev_diff={prev_diff:.4f}, "
-                    f"cur_diff={cur_diff:.4f}, eps={epsilon:.4f}, "
-                    f"confirm_bars={self.config.ma_cross_confirm_bars}"
-                )
-
-            if self.config.ma_cross_confirm_bars > 0 and (bullish_cross or bearish_cross):
-                if len(marks) >= self.config.long_ma_period + self.config.ma_cross_confirm_bars + 1:
-                    confirmed = True
-                    for i in range(1, self.config.ma_cross_confirm_bars + 1):
-                        check_marks = marks[:-i]
-                        check_short = sum(
-                            check_marks[-self.config.short_ma_period :], Decimal("0")
-                        ) / Decimal(self.config.short_ma_period)
-                        check_long = sum(
-                            check_marks[-self.config.long_ma_period :], Decimal("0")
-                        ) / Decimal(self.config.long_ma_period)
-                        check_diff = check_short - check_long
-
-                        if bullish_cross and check_diff <= epsilon:
-                            confirmed = False
-                            break
-                        if bearish_cross and check_diff >= -epsilon:
-                            confirmed = False
-                            break
-
-                    bullish_cross = bullish_cross and confirmed
-                    bearish_cross = bearish_cross and confirmed
-                else:
-                    bullish_cross = False
-                    bearish_cross = False
 
         rsi = None
         if self.config.filters_config and self.config.filters_config.require_rsi_confirmation:
@@ -373,11 +368,11 @@ class PerpsBaselineEnhancedStrategy:
             rsi = Decimal(str(rsi_raw)) if rsi_raw is not None else None
 
         return SignalSnapshot(
-            short_ma=short_ma,
-            long_ma=long_ma,
-            epsilon=epsilon,
-            bullish_cross=bullish_cross,
-            bearish_cross=bearish_cross,
+            short_ma=snapshot.short_ma,
+            long_ma=snapshot.long_ma,
+            epsilon=snapshot.epsilon,
+            bullish_cross=snapshot.bullish_cross,
+            bearish_cross=snapshot.bearish_cross,
             rsi=rsi,
         )
 
@@ -423,12 +418,30 @@ class PerpsBaselineEnhancedStrategy:
 
         side = position_state.get("side") if position_state else None
         if side == "long" and exit_bearish:
-            return Decision(action=Action.CLOSE, reduce_only=True, reason="Bearish crossover exit")
+            return create_close_decision(
+                symbol=symbol,
+                position_state=position_state,
+                position_adds=self.position_adds,
+                trailing_stops=self.trailing_stops,
+                reason="Bearish crossover exit",
+            )
         if side == "short" and exit_bullish:
-            return Decision(action=Action.CLOSE, reduce_only=True, reason="Bullish crossover exit")
+            return create_close_decision(
+                symbol=symbol,
+                position_state=position_state,
+                position_adds=self.position_adds,
+                trailing_stops=self.trailing_stops,
+                reason="Bullish crossover exit",
+            )
 
         if position_state and self._check_trailing_stop(symbol, current_mark, position_state):
-            return Decision(action=Action.CLOSE, reduce_only=True, reason="Trailing stop hit")
+            return create_close_decision(
+                symbol=symbol,
+                position_state=position_state,
+                position_adds=self.position_adds,
+                trailing_stops=self.trailing_stops,
+                reason="Trailing stop hit",
+            )
 
         return None
 
@@ -488,96 +501,6 @@ class PerpsBaselineEnhancedStrategy:
             rejection_type=rejection_type,
         )
 
-    def _process_entry_signal(
-        self,
-        *,
-        symbol: str,
-        base_signal: str | None,
-        equity: Decimal,
-        current_mark: Decimal,
-        product: Product | None,
-        market_snapshot: dict[str, Any] | None,
-        position_state: dict[str, Any] | None,
-    ) -> Decision | None:
-        """Run risk guards and size the position when an entry exists."""
-        if not base_signal:
-            return None
-
-        target_notional = self._calculate_position_size(equity, current_mark, product)
-
-        if self.risk_manager and base_signal:
-            context = PositionSizingContext(
-                symbol=symbol,
-                side=base_signal,
-                equity=equity,
-                current_price=current_mark,
-                strategy_name=self.__class__.__name__,
-                method=getattr(
-                    self.risk_manager.config,
-                    "position_sizing_method",
-                    "intelligent",
-                ),
-                current_position_quantity=(
-                    Decimal(str(position_state.get("quantity", "0")))
-                    if position_state
-                    else Decimal("0")
-                ),
-                target_leverage=Decimal(str(self.config.target_leverage)),
-                product=product,
-                strategy_multiplier=float(
-                    getattr(self.risk_manager.config, "position_sizing_multiplier", 1.0)
-                ),
-            )
-            advice = self.risk_manager.size_position(context)
-            target_notional = advice.target_notional
-            if advice.reduce_only and target_notional == 0:
-                self._record_rejection("risk_position_sizing", symbol)
-                return Decision(
-                    action=Action.HOLD,
-                    reason=advice.reason or "Position sizing prevented entry",
-                    guard_rejected=True,
-                    rejection_type="position_sizing",
-                )
-
-        if product and market_snapshot:
-            safe_liq, liq_reason = self.risk_guards.check_liquidation_distance(
-                entry_price=current_mark,
-                position_size=target_notional / current_mark,
-                leverage=Decimal(self.config.target_leverage),
-                account_equity=equity,
-            )
-
-            if not safe_liq:
-                self._record_rejection("guard_liquidation", symbol)
-                return Decision(
-                    action=Action.HOLD,
-                    reason=f"Liquidation guard: {liq_reason}",
-                    guard_rejected=True,
-                    rejection_type="liquidation",
-                )
-
-            safe_slip, slip_reason = self.risk_guards.check_slippage_impact(
-                order_size=target_notional, market_snapshot=market_snapshot
-            )
-
-            if not safe_slip:
-                self._record_rejection("guard_slippage", symbol)
-                return Decision(
-                    action=Action.HOLD,
-                    reason=f"Slippage guard: {slip_reason}",
-                    guard_rejected=True,
-                    rejection_type="slippage",
-                )
-
-        self._record_acceptance(symbol)
-
-        return Decision(
-            action=Action.BUY if base_signal == "buy" else Action.SELL,
-            target_notional=target_notional,
-            leverage=self.config.target_leverage,
-            reason=f"{'Bullish' if base_signal == 'buy' else 'Bearish'} MA crossover with RSI confirmation",
-        )
-
     def _build_hold_decision(self, signal: SignalSnapshot) -> Decision:
         """Produce the default hold decision with diagnostics."""
         return Decision(
@@ -589,37 +512,14 @@ class PerpsBaselineEnhancedStrategy:
         self, symbol: str, current_price: Decimal, position_state: dict[str, Any]
     ) -> bool:
         """Check if trailing stop is hit."""
-        if symbol not in self.trailing_stops:
-            # Initialize trailing stop
-            trailing_pct = _to_decimal(self.config.trailing_stop_pct)
-            self.trailing_stops[symbol] = (
-                current_price,
-                current_price * (Decimal("1") - trailing_pct),
-            )
-            return False
-
-        peak, stop_price = self.trailing_stops[symbol]
-        trailing_pct = _to_decimal(self.config.trailing_stop_pct)
-
-        # Update peak and stop for long positions
-        if position_state["side"] == "long":
-            if current_price > peak:
-                peak = current_price
-                stop_price = peak * (Decimal("1") - trailing_pct)
-                self.trailing_stops[symbol] = (peak, stop_price)
-
-            return current_price <= stop_price
-
-        # Update for short positions
-        if position_state["side"] == "short":
-            if current_price < peak:
-                peak = current_price
-                stop_price = peak * (Decimal("1") + trailing_pct)
-                self.trailing_stops[symbol] = (peak, stop_price)
-
-            return current_price >= stop_price
-
-        return False
+        side = position_state.get("side", "").lower()
+        return update_trailing_stop(
+            self.trailing_stops,
+            symbol=symbol,
+            side=side,
+            current_price=current_price,
+            trailing_pct=_to_decimal(self.config.trailing_stop_pct),
+        )
 
     def _calculate_position_size(
         self, equity: Decimal, current_mark: Decimal, product: Product | None

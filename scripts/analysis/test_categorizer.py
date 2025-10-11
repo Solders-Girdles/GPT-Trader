@@ -20,7 +20,6 @@ TARGET_CATEGORIES = {
     "execution_helper": {
         "bot_v2.orchestration.live_execution",
         "bot_v2.features.live_trade.advanced_execution",
-        "bot_v2.features.live_trade.execution",
         "bot_v2.features.live_trade.order_policy",
     },
     "strategy_helper": {
@@ -29,14 +28,12 @@ TARGET_CATEGORIES = {
         "bot_v2.features.strategy_tools",
     },
     "pipeline_stage": {
-        "bot_v2.features.backtest",
         "bot_v2.features.live_trade.live_trade",
         "bot_v2.orchestration.perps_bot",
     },
     "integration": {
         "bot_v2.features.brokerages",
         "bot_v2.persistence",
-        "bot_v2.state",
         "bot_v2.data_providers",
     },
     "smoke": {

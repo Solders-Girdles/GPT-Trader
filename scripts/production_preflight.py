@@ -633,7 +633,7 @@ class PreflightCheck:
 
             # Try to create broker
             try:
-                broker = create_brokerage()
+                broker, *_ = create_brokerage()
                 self.log_success("Broker factory initialized")
             except Exception as e:
                 self.log_warning(f"Broker initialization warning: {e}")

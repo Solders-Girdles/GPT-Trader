@@ -4,13 +4,14 @@ from decimal import Decimal
 import asyncio
 import pytest
 
-from bot_v2.orchestration.perps_bot import PerpsBot, BotConfig
+from bot_v2.orchestration.configuration import BotConfig
+from bot_v2.orchestration.perps_bot_builder import create_perps_bot
 from bot_v2.features.brokerages.core.interfaces import OrderSide, OrderType, OrderStatus
 from bot_v2.features.live_trade.risk import ValidationError
 
 
 def test_market_data_actually_updates():
-    bot = PerpsBot(BotConfig.from_profile("dev"))
+    bot = create_perps_bot(BotConfig.from_profile("dev"))
 
     # Initialize marks
     asyncio.run(bot.update_marks())
@@ -28,7 +29,7 @@ def test_market_data_actually_updates():
 
 
 def test_order_actually_places():
-    bot = PerpsBot(BotConfig.from_profile("dev"))
+    bot = create_perps_bot(BotConfig.from_profile("dev"))
 
     order_id = bot.exec_engine.place_order(
         symbol=bot.config.symbols[0],
@@ -43,7 +44,7 @@ def test_order_actually_places():
 
 
 def test_position_math_is_correct():
-    bot = PerpsBot(BotConfig.from_profile("dev"))
+    bot = create_perps_bot(BotConfig.from_profile("dev"))
     sym = bot.config.symbols[0]
 
     # Buy 0.1 at 50,000 (5% exposure under default risk caps)
@@ -66,7 +67,7 @@ def test_position_math_is_correct():
 
 
 def test_risk_limits_actually_stop_trading():
-    bot = PerpsBot(BotConfig.from_profile("dev"))
+    bot = create_perps_bot(BotConfig.from_profile("dev"))
     bot.risk_manager.config.reduce_only_mode = True
 
     with pytest.raises(ValidationError):

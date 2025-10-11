@@ -26,9 +26,8 @@ from bot_v2.orchestration.configuration import BotConfig, Profile
 from bot_v2.orchestration.execution_coordinator import ExecutionCoordinator
 from bot_v2.orchestration.market_monitor import MarketActivityMonitor
 from bot_v2.orchestration.runtime_coordinator import RuntimeCoordinator
-from bot_v2.orchestration.service_registry import ServiceRegistry, empty_registry
+from bot_v2.orchestration.service_registry import ServiceRegistry
 from bot_v2.orchestration.session_guard import TradingSessionGuard
-from bot_v2.orchestration.storage import StorageBootstrapper
 from bot_v2.orchestration.strategy_orchestrator import StrategyOrchestrator
 from bot_v2.orchestration.system_monitor import SystemMonitor
 from bot_v2.utilities import emit_metric, utc_now
@@ -38,6 +37,8 @@ if TYPE_CHECKING:  # pragma: no cover - imports for type checking only
     from bot_v2.features.live_trade.advanced_execution import AdvancedExecutionEngine
     from bot_v2.features.live_trade.risk import LiveRiskManager
     from bot_v2.orchestration.live_execution import LiveExecutionEngine
+    from bot_v2.persistence.event_store import EventStore
+    from bot_v2.persistence.orders_store import OrdersStore
 
 logger = logging.getLogger(__name__)
 
@@ -45,70 +46,71 @@ logger = logging.getLogger(__name__)
 class PerpsBot:
     """Main Coinbase trading bot implementation.
 
-This module contains the core PerpsBot class that orchestrates trading activities
-including market data collection, strategy execution, risk management, and
-position monitoring. The bot supports both spot and perpetual trading with
-comprehensive error handling, configuration validation, and runtime monitoring.
+    This module contains the core PerpsBot class that orchestrates trading activities
+    including market data collection, strategy execution, risk management, and
+    position monitoring. The bot supports both spot and perpetual trading with
+    comprehensive error handling, configuration validation, and runtime monitoring.
 
-Key Features:
-- Multi-symbol trading with configurable strategies
-- Real-time market data streaming and processing
-- Risk management with position sizing and loss limits
-- Configuration drift detection and validation
-- Comprehensive logging and monitoring
-- Graceful shutdown and error recovery
-- Support for both dry-run and live trading modes
+    Key Features:
+    - Multi-symbol trading with configurable strategies
+    - Real-time market data streaming and processing
+    - Risk management with position sizing and loss limits
+    - Configuration drift detection and validation
+    - Comprehensive logging and monitoring
+    - Graceful shutdown and error recovery
+    - Support for both dry-run and live trading modes
 
-Architecture:
-The bot follows a modular architecture with separate coordinators for:
-- Execution: Order placement and management
-- Strategy: Trading signal generation and processing
-- Monitoring: System health and performance tracking
-- Configuration: Dynamic config updates and validation
-- Runtime: State management and recovery
+    Architecture:
+    The bot follows a modular architecture with separate coordinators for:
+    - Execution: Order placement and management
+    - Strategy: Trading signal generation and processing
+    - Monitoring: System health and performance tracking
+    - Configuration: Dynamic config updates and validation
+    - Runtime: State management and recovery
 
-Usage:
-    config = BotConfig(profile=Profile.DEV, symbols=["BTC-USD"])
-    bot = PerpsBot(config)
-    await bot.run(single_cycle=False)  # Run continuously
-"""
+    Usage:
+        config = BotConfig.from_profile(Profile.DEV.value)
+        from bot_v2.orchestration.perps_bot_builder import create_perps_bot
+        bot = create_perps_bot(config)
+        await bot.run(single_cycle=False)  # Run continuously
+    """
 
-    def __init__(self, config: BotConfig, registry: ServiceRegistry | None = None) -> None:
+    def __init__(
+        self,
+        *,
+        config_controller: ConfigController,
+        registry: ServiceRegistry,
+        event_store: EventStore,
+        orders_store: OrdersStore,
+        session_guard: TradingSessionGuard,
+        baseline_snapshot: Any,
+        configuration_guardian: ConfigurationGuardian | None = None,
+    ) -> None:
         self.bot_id = "perps_bot"
         self.start_time = datetime.now(UTC)
         self.running = False
 
-        self._init_configuration_state(config, registry)
-        self._init_runtime_state()
-        self._bootstrap_storage()
-        self._create_baseline_snapshot()
-        self._construct_services()
-        self._init_configuration_guardian()
-        self.runtime_coordinator.bootstrap()
-        self._init_accounting_services()
-        self._init_market_services()
-        self._start_streaming_if_configured()
-
-    def _init_configuration_state(
-        self, config: BotConfig, registry: ServiceRegistry | None
-    ) -> None:
-        self.config_controller = ConfigController(config)
+        self.config_controller = config_controller
         self.config = self.config_controller.current
-        base_registry = registry or empty_registry(self.config)
-        if base_registry.config is not self.config:
-            base_registry = base_registry.with_updates(config=self.config)
-        self.registry = base_registry
 
-        self._session_guard = TradingSessionGuard(
-            start=self.config.trading_window_start,
-            end=self.config.trading_window_end,
-            trading_days=self.config.trading_days,
+        if registry.config is not self.config:
+            registry = registry.with_updates(config=self.config)
+        self.registry = registry
+
+        self.event_store = event_store
+        self.orders_store = orders_store
+        self._session_guard = session_guard
+        self.baseline_snapshot = baseline_snapshot
+        self.configuration_guardian = configuration_guardian or ConfigurationGuardian(
+            self.baseline_snapshot
         )
 
         self.symbols = list(self.config.symbols or [])
         if not self.symbols:
             logger.warning("No symbols configured; continuing with empty symbol list")
         self._derivatives_enabled = bool(getattr(self.config, "derivatives_enabled", False))
+
+        self._init_runtime_state()
 
     def _init_runtime_state(self) -> None:
         self._product_map: dict[str, Product] = {}
@@ -124,67 +126,52 @@ Usage:
         self._process_symbol_dispatch: Any | None = None
         self._process_symbol_needs_context: bool | None = None
 
-    def _bootstrap_storage(self) -> None:
-        storage_ctx = StorageBootstrapper(self.config, self.registry).bootstrap()
-        self.event_store = storage_ctx.event_store
-        self.orders_store = storage_ctx.orders_store
-        self.registry = storage_ctx.registry
+    @staticmethod
+    def build_baseline_snapshot(config: BotConfig, derivatives_enabled: bool) -> Any:
+        """Return a baseline snapshot for configuration drift detection."""
 
-    def _create_baseline_snapshot(self) -> None:
-        """Create baseline snapshot for configuration drift detection."""
-        # Get current state for baseline
         config_dict = {
-            "profile": self.config.profile,
-            "dry_run": self.config.dry_run,
-            "symbols": list(self.config.symbols) if self.config.symbols else [],
-            "derivatives_enabled": self._derivatives_enabled,
-            "update_interval": self.config.update_interval,
-            "short_ma": self.config.short_ma,
-            "long_ma": self.config.long_ma,
-            "target_leverage": self.config.target_leverage,
-            "trailing_stop_pct": self.config.trailing_stop_pct,
-            "enable_shorts": self.config.enable_shorts,
-            "max_position_size": self.config.max_position_size,
-            "max_leverage": self.config.max_leverage,
-            "reduce_only_mode": self.config.reduce_only_mode,
-            "mock_broker": self.config.mock_broker,
-            "mock_fills": self.config.mock_fills,
-            "enable_order_preview": self.config.enable_order_preview,
-            "account_telemetry_interval": self.config.account_telemetry_interval,
-            "trading_window_start": self.config.trading_window_start,
-            "trading_window_end": self.config.trading_window_end,
-            "trading_days": self.config.trading_days,
-            "daily_loss_limit": self.config.daily_loss_limit,
-            "time_in_force": self.config.time_in_force,
-            "perps_enable_streaming": self.config.perps_enable_streaming,
-            "perps_stream_level": self.config.perps_stream_level,
-            "perps_paper_trading": self.config.perps_paper_trading,
-            "perps_force_mock": self.config.perps_force_mock,
-            "perps_position_fraction": self.config.perps_position_fraction,
-            "perps_skip_startup_reconcile": self.config.perps_skip_startup_reconcile,
+            "profile": config.profile,
+            "dry_run": config.dry_run,
+            "symbols": list(config.symbols) if config.symbols else [],
+            "derivatives_enabled": derivatives_enabled,
+            "update_interval": config.update_interval,
+            "short_ma": config.short_ma,
+            "long_ma": config.long_ma,
+            "target_leverage": config.target_leverage,
+            "trailing_stop_pct": config.trailing_stop_pct,
+            "enable_shorts": config.enable_shorts,
+            "max_position_size": config.max_position_size,
+            "max_leverage": config.max_leverage,
+            "reduce_only_mode": config.reduce_only_mode,
+            "mock_broker": config.mock_broker,
+            "mock_fills": config.mock_fills,
+            "enable_order_preview": config.enable_order_preview,
+            "account_telemetry_interval": config.account_telemetry_interval,
+            "trading_window_start": config.trading_window_start,
+            "trading_window_end": config.trading_window_end,
+            "trading_days": config.trading_days,
+            "daily_loss_limit": config.daily_loss_limit,
+            "time_in_force": config.time_in_force,
+            "perps_enable_streaming": getattr(config, "perps_enable_streaming", False),
+            "perps_stream_level": getattr(config, "perps_stream_level", 1),
+            "perps_paper_trading": getattr(config, "perps_paper_trading", False),
+            "perps_force_mock": getattr(config, "perps_force_mock", False),
+            "perps_position_fraction": getattr(config, "perps_position_fraction", None),
+            "perps_skip_startup_reconcile": getattr(config, "perps_skip_startup_reconcile", False),
         }
 
-        # Get initial positions and equity (will be empty/zero at startup)
-        active_symbols = list(self.config.symbols) if self.config.symbols else []
-        positions = []  # Empty at startup
-        account_equity = None  # Not known yet
+        active_symbols = list(config.symbols) if config.symbols else []
+        broker_type = "mock" if config.mock_broker else "live"
 
-        # Get broker type
-        broker_type = "mock" if self.config.mock_broker else "live"
-
-        self.baseline_snapshot = ConfigurationGuardian.create_baseline_snapshot(
+        return ConfigurationGuardian.create_baseline_snapshot(
             config_dict=config_dict,
             active_symbols=active_symbols,
-            positions=positions,
-            account_equity=account_equity,
-            profile=self.config.profile,
+            positions=[],
+            account_equity=None,
+            profile=config.profile,
             broker_type=broker_type,
         )
-
-    def _init_configuration_guardian(self) -> None:
-        """Initialize the configuration guardian."""
-        self.configuration_guardian = ConfigurationGuardian(self.baseline_snapshot)
-        logger.info("ConfigurationGuardian initialized for runtime monitoring")
 
     def _construct_services(self) -> None:
         self.strategy_orchestrator = StrategyOrchestrator(self)
@@ -323,14 +310,14 @@ Usage:
 
         # Fetch current state for validation
         current_state = await self._fetch_current_state()
-        
+
         # Validate configuration and handle any drift
         if not await self._validate_configuration_and_handle_drift(current_state):
             return
 
         # Update market data
         await self.update_marks()
-        
+
         # Check if we should trade
         if not self._session_guard.should_trade():
             logger.info("Outside trading window; skipping trading actions this cycle")
@@ -339,7 +326,7 @@ Usage:
 
         # Refresh state for trading
         trading_state = await self._fetch_current_state()
-        
+
         # Execute trading logic for all symbols
         await self._execute_trading_cycle(trading_state)
         await self.system_monitor.log_status()
@@ -381,7 +368,7 @@ Usage:
 
     async def _validate_configuration_and_handle_drift(self, current_state: dict[str, Any]) -> bool:
         """Validate configuration and handle any detected drift.
-        
+
         Returns:
             bool: True if trading should continue, False if cycle should be aborted
         """
@@ -436,14 +423,12 @@ Usage:
             if expects_context:
                 tasks.append(
                     self.process_symbol(
-                        symbol, 
-                        trading_state["balances"], 
-                        trading_state["position_map"]
+                        symbol, trading_state["balances"], trading_state["position_map"]
                     )
                 )
             else:
                 tasks.append(self.process_symbol(symbol))
-        
+
         await asyncio.gather(*tasks)
 
     async def process_symbol(

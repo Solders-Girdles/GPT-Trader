@@ -12,7 +12,9 @@ import time as _time
 
 import pytest
 
-from bot_v2.orchestration.perps_bot import PerpsBot, BotConfig, Profile
+from bot_v2.orchestration.configuration import BotConfig, Profile
+from bot_v2.orchestration.perps_bot import PerpsBot
+from bot_v2.orchestration.perps_bot_builder import create_perps_bot
 from bot_v2.orchestration.deterministic_broker import DeterministicBroker
 from bot_v2.features.brokerages.core.interfaces import (
     OrderSide,
@@ -31,7 +33,7 @@ def test_init_uses_mock_broker_in_dev(monkeypatch, tmp_path):
     monkeypatch.setattr(PerpsBot, "_start_streaming_background", lambda self: None)
 
     config = BotConfig(profile=Profile.DEV, symbols=["BTC-PERP"], update_interval=1)
-    bot = PerpsBot(config)
+    bot = create_perps_bot(config)
 
     assert isinstance(bot.broker, DeterministicBroker)
 
@@ -53,7 +55,7 @@ def test_update_mark_window_trims(monkeypatch, tmp_path):
     monkeypatch.setattr(PerpsBot, "_start_streaming_background", lambda self: None)
 
     config = BotConfig(profile=Profile.DEV, symbols=["BTC-PERP"], short_ma=2, long_ma=3)
-    bot = PerpsBot(config)
+    bot = create_perps_bot(config)
 
     for i in range(50):
         bot._update_mark_window("BTC-PERP", Decimal(str(50000 + i)))
@@ -68,7 +70,7 @@ def test_collect_account_snapshot_uses_broker(monkeypatch, tmp_path):
     monkeypatch.setattr(PerpsBot, "_start_streaming_background", lambda self: None)
 
     config = BotConfig(profile=Profile.DEV, symbols=["BTC-PERP"], update_interval=1)
-    bot = PerpsBot(config)
+    bot = create_perps_bot(config)
 
     snapshot_data = {
         "key_permissions": {"can_trade": True},
@@ -97,7 +99,7 @@ async def test_run_account_telemetry_emits_metrics(monkeypatch, tmp_path):
     monkeypatch.setattr(PerpsBot, "_start_streaming_background", lambda self: None)
 
     config = BotConfig(profile=Profile.DEV, symbols=["BTC-PERP"], update_interval=1)
-    bot = PerpsBot(config)
+    bot = create_perps_bot(config)
 
     monkeypatch.setattr("bot_v2.orchestration.account_telemetry.RUNTIME_DATA_DIR", tmp_path)
 
@@ -143,7 +145,7 @@ async def test_run_cycle_respects_trading_window(monkeypatch, tmp_path):
         mock_broker=True,
     )
 
-    bot = PerpsBot(config)
+    bot = create_perps_bot(config)
 
     async def noop_update():
         return None
@@ -179,7 +181,7 @@ async def test_place_order_lock_serialises_calls(monkeypatch, tmp_path, fake_clo
     monkeypatch.setattr(PerpsBot, "_start_streaming_background", lambda self: None)
 
     config = BotConfig(profile=Profile.DEV, symbols=["BTC-PERP"], update_interval=1)
-    bot = PerpsBot(config)
+    bot = create_perps_bot(config)
 
     product = bot.get_product("BTC-PERP")
 
@@ -256,7 +258,7 @@ def test_ws_failure_records_metrics_and_risk_listener(monkeypatch, tmp_path):
     monkeypatch.setattr(PerpsBot, "_start_streaming_background", lambda self: None)
 
     config = BotConfig(profile=Profile.DEV, symbols=["BTC-PERP"], update_interval=1)
-    bot = PerpsBot(config)
+    bot = create_perps_bot(config)
 
     metric_records = []
 

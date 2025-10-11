@@ -26,12 +26,13 @@ def test_coinbase_sandbox_exchange_mode(monkeypatch):
     captured = {}
 
     class DummyBroker:
-        def __init__(self, api_config):
+        def __init__(self, api_config, **kwargs):
             captured["api_config"] = api_config
+            captured["kwargs"] = kwargs
 
     monkeypatch.setattr(broker_factory, "CoinbaseBrokerage", DummyBroker)
 
-    _ = broker_factory.create_brokerage()
+    broker, event_store, market_data, product_catalog = broker_factory.create_brokerage()
     api_config = captured["api_config"]
 
     assert api_config.sandbox is True
@@ -56,12 +57,13 @@ def test_coinbase_prod_advanced_jwt(monkeypatch):
     captured = {}
 
     class DummyBroker:
-        def __init__(self, api_config):
+        def __init__(self, api_config, **kwargs):
             captured["api_config"] = api_config
+            captured["kwargs"] = kwargs
 
     monkeypatch.setattr(broker_factory, "CoinbaseBrokerage", DummyBroker)
 
-    _ = broker_factory.create_brokerage()
+    broker_factory.create_brokerage()
     api_config = captured["api_config"]
     assert api_config.sandbox is False
     assert api_config.api_mode == "advanced"

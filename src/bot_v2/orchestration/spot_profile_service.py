@@ -8,9 +8,16 @@ from collections.abc import Callable, Sequence
 from pathlib import Path
 from typing import Any
 
-from bot_v2.features.backtest.profile import load_profile as _load_spot_profile
+import yaml
 
 logger = logging.getLogger(__name__)
+
+
+def _load_spot_profile(path: Path) -> dict[str, Any]:
+    """Load spot strategy profile YAML into a dictionary."""
+
+    document = yaml.safe_load(path.read_text(encoding="utf-8"))
+    return document if isinstance(document, dict) else {}
 
 
 class SpotProfileService:

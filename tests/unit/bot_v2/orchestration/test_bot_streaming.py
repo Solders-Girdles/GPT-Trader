@@ -3,14 +3,15 @@ from __future__ import annotations
 import asyncio
 import time
 
-from bot_v2.orchestration.perps_bot import PerpsBot, BotConfig
+from bot_v2.orchestration.configuration import BotConfig
+from bot_v2.orchestration.perps_bot_builder import create_perps_bot
 import pytest
 
 
 @pytest.mark.uses_mock_broker
 def test_background_ws_stream_updates_marks(fake_clock):
     # Dev profile uses DeterministicBroker which now exposes stream_trades
-    bot = PerpsBot(BotConfig.from_profile("dev"))
+    bot = create_perps_bot(BotConfig.from_profile("dev"))
     # Initially, windows may be empty until update or stream
     initial = {s: len(bot.mark_windows.get(s, [])) for s in bot.config.symbols}
 

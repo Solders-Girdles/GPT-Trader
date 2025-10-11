@@ -54,10 +54,24 @@ class RuntimeCoordinator:
         if paper_env or force_mock or is_dev or bot.config.mock_broker:
             bot.broker = DeterministicBroker()
             logger.info("Using deterministic broker (REST-first marks)")
+            registry_updates = {"broker": bot.broker}
         else:
             try:
                 self._validate_broker_environment()
-                bot.broker = create_brokerage()
+                broker, event_store, market_data, product_catalog = create_brokerage(
+                    bot.registry,
+                    event_store=bot.event_store,
+                    market_data=bot.registry.market_data_service,
+                    product_catalog=bot.registry.product_catalog,
+                )
+                bot.broker = broker
+                bot.event_store = event_store
+                registry_updates = {
+                    "broker": bot.broker,
+                    "event_store": event_store,
+                    "market_data_service": market_data,
+                    "product_catalog": product_catalog,
+                }
                 if not bot.broker.connect():
                     raise RuntimeError("Failed to connect to broker")
                 products = bot.broker.list_products()
@@ -69,7 +83,7 @@ class RuntimeCoordinator:
                 logger.error("Failed to initialize real broker: %s", exc)
                 raise BrokerBootstrapError("Broker initialization failed") from exc
 
-        bot.registry = bot.registry.with_updates(broker=bot.broker)
+        bot.registry = bot.registry.with_updates(**registry_updates)
 
     def _validate_broker_environment(self) -> None:
         bot = self._bot

@@ -6,9 +6,12 @@ from unittest.mock import MagicMock, AsyncMock, patch
 
 import pytest
 
+from bot_v2.monitoring.configuration_guardian import ConfigurationGuardian
 from bot_v2.orchestration.configuration import BotConfig
 from bot_v2.config.types import Profile
 from bot_v2.features.live_trade.risk import LiveRiskManager
+from bot_v2.orchestration.perps_bot import PerpsBot
+from bot_v2.orchestration.perps_bot_builder import create_perps_bot
 
 
 class TestPerpsBotGuardianIntegration:
@@ -60,9 +63,7 @@ class TestPerpsBotGuardianIntegration:
 
         mock_registry = mock_registry.with_updates(risk_manager=risk_manager)
 
-        from bot_v2.orchestration.perps_bot import PerpsBot
-
-        bot = PerpsBot(config, mock_registry)
+        bot = create_perps_bot(config, mock_registry)
 
         return bot, broker, risk_manager
 
@@ -93,10 +94,10 @@ class TestPerpsBotGuardianIntegration:
 
         # Set initial state with the env var
         with patch.dict("os.environ", {"COINBASE_ENABLE_DERIVATIVES": "0"}, clear=False):
-            if not hasattr(bot, "_create_baseline_snapshot"):
-                await asyncio.to_thread(bot._create_baseline_snapshot)
-            if not hasattr(bot, "_init_configuration_guardian"):
-                bot._init_configuration_guardian()
+            bot.baseline_snapshot = PerpsBot.build_baseline_snapshot(
+                bot.config, getattr(bot.config, "derivatives_enabled", False)
+            )
+            bot.configuration_guardian = ConfigurationGuardian(bot.baseline_snapshot)
 
         # Now change the env var to trigger critical drift
         with patch.dict("os.environ", {"COINBASE_ENABLE_DERIVATIVES": "1"}, clear=False):

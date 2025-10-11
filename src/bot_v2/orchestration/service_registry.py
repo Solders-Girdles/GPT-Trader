@@ -6,6 +6,8 @@ from dataclasses import dataclass, field, replace
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:  # pragma: no cover - import guards for type checkers only
+    from bot_v2.features.brokerages.coinbase.market_data_service import MarketDataService
+    from bot_v2.features.brokerages.coinbase.utilities import ProductCatalog
     from bot_v2.features.brokerages.core.interfaces import IBrokerage
     from bot_v2.features.live_trade.risk import LiveRiskManager
     from bot_v2.orchestration.configuration import BotConfig
@@ -29,6 +31,8 @@ class ServiceRegistry:
     orders_store: OrdersStore | None = None
     risk_manager: LiveRiskManager | None = None
     broker: IBrokerage | None = None
+    market_data_service: MarketDataService | None = None
+    product_catalog: ProductCatalog | None = None
     extras: dict[str, Any] = field(default_factory=dict)
 
     def with_updates(self, **overrides: Any) -> ServiceRegistry:

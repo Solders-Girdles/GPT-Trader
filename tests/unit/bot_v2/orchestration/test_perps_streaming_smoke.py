@@ -3,7 +3,8 @@ from __future__ import annotations
 import os
 import time
 
-from bot_v2.orchestration.perps_bot import PerpsBot, BotConfig, Profile
+from bot_v2.orchestration.configuration import BotConfig, Profile
+from bot_v2.orchestration.perps_bot_builder import create_perps_bot
 
 
 def test_perps_streaming_smoke(monkeypatch, tmp_path, fake_clock):
@@ -17,7 +18,7 @@ def test_perps_streaming_smoke(monkeypatch, tmp_path, fake_clock):
     config = BotConfig.from_profile("canary")
 
     # Start bot; streaming thread won't start due to gate
-    bot = PerpsBot(config)
+    bot = create_perps_bot(config)
 
     # Monkeypatch broker streams to yield a couple messages
     def stream_orderbook_unavail(symbols, level=1):

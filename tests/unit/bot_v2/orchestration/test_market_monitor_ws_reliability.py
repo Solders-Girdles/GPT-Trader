@@ -1,12 +1,13 @@
 from datetime import datetime, timedelta
 
-from bot_v2.orchestration.perps_bot import BotConfig, PerpsBot, Profile
+from bot_v2.orchestration.configuration import BotConfig, Profile
+from bot_v2.orchestration.perps_bot_builder import create_perps_bot
 
 
 def test_consecutive_failures(monkeypatch):
     # Disable WS threads for test
     monkeypatch.setenv("DISABLE_WS_STREAMING", "1")
-    bot = PerpsBot(BotConfig.from_profile(Profile.DEV.value))
+    bot = create_perps_bot(BotConfig.from_profile(Profile.DEV.value))
     monitor = bot._market_monitor
 
     # First 3 failures shouldn't trigger fallback
@@ -24,7 +25,7 @@ def test_consecutive_failures(monkeypatch):
 
 def test_staleness_detection(monkeypatch):
     monkeypatch.setenv("DISABLE_WS_STREAMING", "1")
-    bot = PerpsBot(BotConfig.from_profile(Profile.DEV.value))
+    bot = create_perps_bot(BotConfig.from_profile(Profile.DEV.value))
     monitor = bot._market_monitor
     monitor.max_staleness_ms = 1000
 

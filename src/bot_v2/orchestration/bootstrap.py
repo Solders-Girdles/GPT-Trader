@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from bot_v2.orchestration.configuration import BotConfig
-from bot_v2.orchestration.perps_bot import PerpsBot
+from bot_v2.orchestration.perps_bot_builder import create_perps_bot
 from bot_v2.orchestration.service_registry import ServiceRegistry, empty_registry
+
+if TYPE_CHECKING:  # pragma: no cover - circular type import guard
+    from bot_v2.orchestration.perps_bot import PerpsBot
 
 
 def build_service_registry(
@@ -27,8 +30,7 @@ def build_bot(
     """Instantiate a PerpsBot with a populated service registry."""
 
     service_registry = build_service_registry(config, registry)
-    bot = PerpsBot(config, registry=service_registry)
-    # PerpsBot may have enriched the registry with lazily constructed services
+    bot = create_perps_bot(config, service_registry)
     return bot, bot.registry
 
 

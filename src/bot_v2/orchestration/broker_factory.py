@@ -10,8 +10,12 @@ from typing import Literal, cast
 
 from bot_v2.config import get_config
 from bot_v2.features.brokerages.coinbase import CoinbaseBrokerage
+from bot_v2.features.brokerages.coinbase.market_data_service import MarketDataService
 from bot_v2.features.brokerages.coinbase.models import APIConfig
+from bot_v2.features.brokerages.coinbase.utilities import ProductCatalog
 from bot_v2.features.brokerages.core.interfaces import IBrokerage
+from bot_v2.orchestration.service_registry import ServiceRegistry
+from bot_v2.persistence.event_store import EventStore
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +24,13 @@ def _env(key: str, default: str | None = None) -> str | None:
     return os.getenv(key, default)
 
 
-def create_brokerage() -> IBrokerage:
+def create_brokerage(
+    registry: ServiceRegistry | None = None,
+    *,
+    event_store: EventStore | None = None,
+    market_data: MarketDataService | None = None,
+    product_catalog: ProductCatalog | None = None,
+) -> tuple[IBrokerage, EventStore, MarketDataService, ProductCatalog]:
     """Create a brokerage adapter based on configuration.
 
     Uses env var `BROKER` to select: e.g., `coinbase`.
@@ -147,6 +157,26 @@ def create_brokerage() -> IBrokerage:
             auth_type,
         )
 
-        return CoinbaseBrokerage(api_config)
+        broker_event_store = (
+            event_store or (registry.event_store if registry else None) or EventStore()
+        )
+        broker_market_data = (
+            market_data
+            or (registry.market_data_service if registry else None)
+            or MarketDataService()
+        )
+        broker_product_catalog = (
+            product_catalog
+            or (registry.product_catalog if registry else None)
+            or ProductCatalog(ttl_seconds=900)
+        )
+
+        brokerage = CoinbaseBrokerage(
+            api_config,
+            event_store=broker_event_store,
+            market_data=broker_market_data,
+            product_catalog=broker_product_catalog,
+        )
+        return brokerage, broker_event_store, broker_market_data, broker_product_catalog
 
     raise ValueError(f"Unsupported broker: {broker}")

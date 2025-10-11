@@ -15,6 +15,9 @@ ALLOWLIST = {
     "tests/unit/bot_v2/features/brokerages/coinbase/test_performance.py",
     "tests/unit/bot_v2/features/brokerages/coinbase/test_order_payloads.py",
     "tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_integration.py",
+    "tests/unit/bot_v2/features/brokerages/coinbase/client/test_base.py",  # comprehensive client contract coverage
+    "tests/unit/bot_v2/features/brokerages/coinbase/rest/test_base.py",  # REST validation matrix
+    "tests/unit/bot_v2/data_providers/test_coinbase_provider.py",  # integration heavy provider tests
     "tests/unit/bot_v2/features/live_trade/test_pnl_comprehensive.py",
     "tests/unit/bot_v2/features/live_trade/test_risk_core.py",
     "tests/unit/bot_v2/features/live_trade/test_risk_runtime.py",  # 343 lines: comprehensive runtime guard tests

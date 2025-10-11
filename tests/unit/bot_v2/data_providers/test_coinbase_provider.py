@@ -173,14 +173,14 @@ class TestCoinbaseDataProvider:
 
     def test_get_historical_data_cache_hit(self) -> None:
         """Test historical data retrieval with cache hit."""
-        provider = CoinbaseDataProvider()
+        provider = CoinbaseDataProvider(adapter=self.mock_adapter)
         cached_df = pd.DataFrame({"Close": [100.0, 101.0]})
         provider._historical_cache["BTC-USD_60d_1d"] = (cached_df, pd.Timestamp.now())
 
         result = provider.get_historical_data("BTC", "60d", "1d")
 
         assert result.equals(cached_df)
-        provider.mock_adapter.get_candles.assert_not_called()
+        self.mock_adapter.get_candles.assert_not_called()
 
     def test_get_historical_data_cache_miss_success(self) -> None:
         """Test historical data retrieval with cache miss and successful API call."""
@@ -337,6 +337,12 @@ class TestCoinbaseDataProvider:
         mock_service = Mock()
         mock_service._thread = Mock()
         mock_service._thread.is_alive.return_value = False
+
+        # Configure set_symbols to update _symbols attribute
+        def set_symbols_side_effect(symbols):
+            mock_service._symbols = symbols
+
+        mock_service.set_symbols.side_effect = set_symbols_side_effect
         provider.ticker_service = mock_service
 
         with patch.object(provider, "get_historical_data") as mock_get_data:
@@ -449,13 +455,13 @@ class TestCreateCoinbaseProvider:
         """Test creating mock provider when real data is disabled."""
         os.environ["COINBASE_USE_REAL_DATA"] = "0"
 
-        with patch("bot_v2.data_providers.coinbase_provider.MockProvider") as mock_provider:
+        with patch("bot_v2.data_providers.MockProvider") as mock_provider:
             create_coinbase_provider()
             mock_provider.assert_called_once()
 
     def test_create_mock_provider_explicit_false(self) -> None:
         """Test creating mock provider when explicitly disabled."""
-        with patch("bot_v2.data_providers.coinbase_provider.MockProvider") as mock_provider:
+        with patch("bot_v2.data_providers.MockProvider") as mock_provider:
             create_coinbase_provider(use_real_data=False)
             mock_provider.assert_called_once()
 

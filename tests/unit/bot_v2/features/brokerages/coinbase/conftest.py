@@ -19,9 +19,21 @@ class CDPCredentials:
 
 
 @pytest.fixture(autouse=True)
-def fast_retry_sleep(fake_clock):
+def fast_retry_sleep(fake_clock, monkeypatch):
     """Auto-use deterministic clock so retry loops advance instantly."""
+    monkeypatch.setattr("time.sleep", fake_clock.sleep)
     return fake_clock
+
+
+@pytest.fixture(autouse=True)
+def fast_retry_env(monkeypatch, request):
+    """Ensure Coinbase client retries run with zero delay for faster tests."""
+    if "test_coinbase_system.py" in request.node.nodeid:
+        monkeypatch.delenv("COINBASE_FAST_RETRY", raising=False)
+        yield
+        return
+    monkeypatch.setenv("COINBASE_FAST_RETRY", "1")
+    yield
 
 
 @pytest.fixture

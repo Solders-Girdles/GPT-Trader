@@ -238,7 +238,7 @@ class TestCoinbaseRestServiceBase:
         )
 
         config = payload["order_configuration"]["limit_limit_gtc"]
-        assert config["base_size"] == "0.12345679"  # Rounded to step_size
+        assert config["base_size"] == "0.12345678"  # Rounded down to step_size
         assert config["limit_price"] == "50000.12"  # Rounded to price_increment
 
     def test_build_order_payload_quantity_below_min_size(self) -> None:

@@ -4,7 +4,8 @@ import asyncio
 from datetime import datetime
 from decimal import Decimal
 
-from bot_v2.orchestration.perps_bot import PerpsBot, BotConfig
+from bot_v2.orchestration.configuration import BotConfig
+from bot_v2.orchestration.perps_bot_builder import create_perps_bot
 from bot_v2.features.brokerages.core.interfaces import (
     Order,
     OrderSide,
@@ -18,7 +19,7 @@ def test_reconcile_updates_stale_local_open_order():
     # Create config without dry_run so reconciliation actually runs
     config = BotConfig.from_profile("dev")
     config.dry_run = False  # Ensure reconciliation runs
-    bot = PerpsBot(config)
+    bot = create_perps_bot(config)
 
     # Seed a local OPEN order not present at broker
     stale = Order(

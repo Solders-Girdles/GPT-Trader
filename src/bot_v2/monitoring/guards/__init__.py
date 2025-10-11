@@ -1,20 +1,17 @@
-"""Backwards-compatible shim for runtime guard utilities."""
+"""Runtime guard utilities for monitoring."""
 
 from __future__ import annotations
 
-from bot_v2.monitoring.alert_types import AlertSeverity
-
-from .guards import (
-    Alert,
+from .base import Alert, GuardConfig, GuardStatus, RuntimeGuard
+from .builtins import (
     DailyLossGuard,
     DrawdownGuard,
     ErrorRateGuard,
-    GuardConfig,
-    GuardStatus,
     PositionStuckGuard,
-    RuntimeGuard,
-    RuntimeGuardManager,
     StaleMarkGuard,
+)
+from .manager import (
+    RuntimeGuardManager,
     create_default_runtime_guard_manager,
     email_alert_handler,
     log_alert_handler,
@@ -26,15 +23,14 @@ __all__ = [
     "GuardConfig",
     "GuardStatus",
     "RuntimeGuard",
-    "RuntimeGuardManager",
     "DailyLossGuard",
-    "StaleMarkGuard",
+    "DrawdownGuard",
     "ErrorRateGuard",
     "PositionStuckGuard",
-    "DrawdownGuard",
+    "StaleMarkGuard",
+    "RuntimeGuardManager",
     "create_default_runtime_guard_manager",
     "log_alert_handler",
     "slack_alert_handler",
     "email_alert_handler",
-    "AlertSeverity",
 ]

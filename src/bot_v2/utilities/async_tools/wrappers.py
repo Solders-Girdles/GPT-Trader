@@ -17,28 +17,22 @@ class AsyncToSyncWrapper:
     def __init__(self, loop: asyncio.AbstractEventLoop | None = None) -> None:
         self.loop = loop
 
-    def _get_loop(self) -> asyncio.AbstractEventLoop:
-        if self.loop:
-            return self.loop
-        try:
-            return asyncio.get_running_loop()
-        except RuntimeError:
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            return loop
-
     def __call__(self, coro: Coroutine[Any, Any, T]) -> T:
-        loop = self._get_loop()
+        if self.loop is not None:
+            if self.loop.is_running():
+                future = asyncio.run_coroutine_threadsafe(coro, self.loop)
+                return future.result()
+            return self.loop.run_until_complete(coro)
+
         try:
-            running = asyncio.get_running_loop()
+            running_loop = asyncio.get_running_loop()
         except RuntimeError:
-            running = None
+            running_loop = None
 
-        if running is loop:
-            return loop.run_until_complete(coro)
+        if running_loop is not None:
+            raise RuntimeError("AsyncToSyncWrapper cannot be used from within a running event loop")
 
-        future = asyncio.run_coroutine_threadsafe(coro, loop)
-        return future.result()
+        return asyncio.run(coro)
 
 
 def async_to_sync(func: Callable[..., Coroutine[Any, Any, T]]) -> Callable[..., T]:

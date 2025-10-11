@@ -45,10 +45,14 @@ poetry run pytest -q                             # Full unit suite
 
 ## 5. Experimental vs Production Slices
 Treat these modules as **experimental** (documented with `__experimental__ = True`):
-- `src/bot_v2/features/backtest/`
-- `src/bot_v2/features/ml_strategy/`
-- `src/bot_v2/features/market_regime/`
-- `src/bot_v2/monitoring/monitoring_dashboard.py`
+- `archived/experimental/features/backtest/`
+- `archived/experimental/features/ml_strategy/`
+- `archived/experimental/features/market_regime/`
+- `archived/experimental/features/adaptive_portfolio/`
+- `archived/experimental/features/paper_trade/`
+- `archived/experimental/tests/unit/bot_v2/features/`
+- `archived/experimental/config/`
+- `archived/experimental/monitoring/monitoring_dashboard.py`
 
 The retired workflow engine was removed; retrieve it from git history if needed. Only touch the remaining experimental slices when specifically asked. Everything else in `features/` is either production-critical or demo-supporting.
 

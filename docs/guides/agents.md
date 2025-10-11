@@ -51,7 +51,7 @@ DRY_RUN=1
 ## Operational Notes
 - Stage 3 runner is a wrapper—prefer `poetry run perps-bot` directly.
 - Metrics exporter lives at `scripts/monitoring/export_metrics.py`.
-- Experimental slices (`backtest`, `ml_strategy`, `market_regime`, `workflows`, `monitoring_dashboard`) are tagged `__experimental__`; avoid production changes there unless requested.
+- Experimental slices (`backtest`, `ml_strategy`, `market_regime`, `paper_trade`, `strategies`, `workflows/monitoring_dashboard`) now live under `archived/experimental/`; avoid production changes there unless requested.
 
 ## Keeping Docs in Sync
 Whenever behavior changes:

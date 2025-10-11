@@ -37,7 +37,7 @@ poetry run python scripts/monitoring/export_metrics.py \
 
 Use `scripts/perps_dashboard.py` for a lightweight real-time view of guard
 status, risk metrics, and system health. The script consumes the same telemetry
-as the exporter and uses the monitoring framework directly.
+as the exporter without depending on the deprecated dashboard stack.
 
 ```bash
 poetry run python scripts/perps_dashboard.py \
@@ -51,19 +51,25 @@ poetry run python scripts/perps_dashboard.py \
 - Pulls resource telemetry from `bot_v2/monitoring/system/` collectors when
   available.
 
-## Advanced Monitoring Components
+## Runtime Monitoring Components
 
 - **Runtime guards** (`bot_v2/monitoring/runtime_guards.py`): support comparison
   modes (`gt`, `lt`, `abs_gt`, etc.), warning bands, and contextual messaging.
-- **Alert channels** (`bot_v2/monitoring/alerts.py`): Slack, PagerDuty, email,
-  webhook, and a safe no-op fallback. Configure channels via your orchestration
-  or deployment scripts.
+- **Guard alert dispatcher** (`bot_v2/features/live_trade/guard_errors.py`):
+  wraps `AlertManager` to emit guard failures without the archived alert stack.
 - **Validation framework** (`bot_v2/validation`): declarative validators with
   inline predicate support keep inputs clean before they reach monitoring
   surfaces.
-- **Monitoring dashboard module** (`bot_v2/monitoring/monitoring_dashboard.py`):
-  provides snapshot storage and helper utilities for CLI dashboards or future
-  UI integrations.
+
+## Archived Monitoring Toolkit
+
+The legacy alert router, metrics collector, workflow tracker, and dashboard live
+under `archived/experimental/monitoring/`. Restore the relevant files to
+`src/bot_v2/monitoring/` if you need the full alerting channels (`alerts.py`,
+`alerts_manager.py`), rich metrics collector, or the Streamlit-style dashboard.
+The historical canary monitor also resides in
+`archived/experimental/scripts/monitoring/canary_monitor.py` and must be copied
+back into `scripts/monitoring/` before use.
 
 ## Alerting Hooks
 

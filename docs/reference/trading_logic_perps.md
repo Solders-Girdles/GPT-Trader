@@ -20,10 +20,13 @@ This document captures the architecture and trading flow for the Coinbase Perpet
    - Handles REST API and WebSocket connections
    - Manages product discovery and order routing
 
-3. **Strategy Layer** (`src/bot_v2/features/live_trade/strategies/perps_baseline.py`)
-   - Baseline MA crossover with optional confirmation windows
-   - Maintains trailing stops and per-symbol position counters
-   - Delegates all exposure checks to the risk engine
+3. **Strategy Layer**
+   - **Active:** `src/bot_v2/features/live_trade/strategies/perps_baseline.py` (instantiated by `StrategyOrchestrator`)
+     - Baseline MA crossover with optional confirmation windows
+     - Maintains trailing stops and per-symbol position counters
+     - Delegates all exposure checks to the risk engine
+   - **Experimental:** `src/bot_v2/features/live_trade/strategies/perps_baseline_enhanced.py`
+     - Adds liquidity filters and additional guards; kept for future iteration but not wired into the bot by default
 
 4. **Risk Management** (`src/bot_v2/features/live_trade/risk.py`)
    - Leverage limits enforcement (capped at spot-friendly defaults until INTX enabled)
@@ -62,21 +65,21 @@ This document captures the architecture and trading flow for the Coinbase Perpet
 
 ### 3. Signal Generation
 
-#### Enhanced MA Crossover Strategy
+#### Baseline MA Crossover Strategy
 - **Entry Signals:**
   - Bullish: Short MA crosses above Long MA
   - Bearish: Short MA crosses below Long MA (if shorts enabled)
   - Epsilon tolerance for robust crossover detection
   - Optional confirmation bars requirement
 
-- **Market Condition Filters:**
+- **Market Condition Filters (optional via enhanced strategy):**
   - Max spread: 10 bps (configurable)
   - Min L1 depth: $50,000
   - Min L10 depth: $200,000
   - Min 1m volume: $100,000
   - RSI confirmation (oversold < 30, overbought > 70)
 
-- **Risk Guards:**
+- **Risk Guards (baseline relies on risk engine; enhanced strategy layers on extra checks):**
   - Min liquidation buffer: 20%
   - Max slippage impact: 15 bps
 

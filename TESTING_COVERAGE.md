@@ -6,6 +6,8 @@
 
 **New Tests Added**: 68 tests across 5 new test files
 
+> **Note:** The experimental feature slices (`ml_strategy`, `market_regime`, `backtest`, `adaptive_portfolio`, `paper_trade`) were archived to `archived/experimental/` on 2025-10-09 and are excluded from the coverage metrics below.
+
 ## Completed Work
 
 ### Phase 1: Fix Broken Tests & Expand Coverage Tracking ✅
@@ -54,7 +56,6 @@
 
 ### Well-Tested Modules (>70% coverage)
 - `src/bot_v2/config/types.py` - 100%
-- `src/bot_v2/features/adaptive_portfolio/types.py` - 100%
 - `src/bot_v2/features/brokerages/coinbase/rest_service.py` - 100%
 - `src/bot_v2/features/analyze/types.py` - 94%
 - `src/bot_v2/data_providers/coinbase_provider.py` - 91%
@@ -62,40 +63,27 @@
 - `src/bot_v2/config/schemas.py` - 86%
 - `src/bot_v2/features/data/types.py` - 86%
 - `src/bot_v2/config/path_registry.py` - 74%
-- `src/bot_v2/features/backtest/backtest.py` - 72%
 - `src/bot_v2/features/brokerages/core/interfaces.py` - 71%
 
 ### Modules Needing Improvement (30-70% coverage)
 - `src/bot_v2/config/live_trade_config.py` - 65%
-- `src/bot_v2/features/backtest/execution.py` - 62%
 - `src/bot_v2/features/live_trade/risk/position_sizing.py` - 61%
 - `src/bot_v2/features/live_trade/guard_errors.py` - 58%
-- `src/bot_v2/features/backtest/signals.py` - 57%
-- `src/bot_v2/features/backtest/metrics.py` - 54%
-- `src/bot_v2/features/backtest/data.py` - 51%
 - `src/bot_v2/features/brokerages/coinbase/adapter.py` - 49%
 - `src/bot_v2/features/brokerages/coinbase/client/base.py` - 41%
 - `src/bot_v2/features/brokerages/coinbase/endpoints.py` - 39%
-- `src/bot_v2/features/backtest/types.py` - 40%
 - `src/bot_v2/features/brokerages/coinbase/auth.py` - 27%
 
 ### Modules with Low Coverage (<30%)
 Need significant test additions:
-- `src/bot_v2/features/live_trade/execution.py` - 11%
-- `src/bot_v2/features/adaptive_portfolio/adaptive_portfolio.py` - 12%
 - `src/bot_v2/features/live_trade/live_trade.py` - 13%
 - `src/bot_v2/features/analyze/analyze.py` - 14%
-- `src/bot_v2/features/backtest/spot.py` - 16%
 - And many others...
 
 ### Modules with NO Tests
 Features that need test creation:
 - `src/bot_v2/features/market_data/` - NO TESTS
-- `src/bot_v2/features/market_regime/` - NO TESTS
-- `src/bot_v2/features/ml_strategy/` - NO TESTS
-- `src/bot_v2/features/paper_trade/` - NO TESTS
 - `src/bot_v2/features/position_sizing/` - NO TESTS
-- `src/bot_v2/features/strategies/` - NO TESTS
 - `src/bot_v2/features/strategy_tools/` - NO TESTS
 
 ## Remaining Work
@@ -107,7 +95,7 @@ Features that need test creation:
 
 2. **Improve low-coverage modules**
    - Focus on modules with <30% coverage that are actively used
-   - Priority: `live_trade/`, `backtest/`, `adaptive_portfolio/`
+   - Priority: `features/live_trade/`, `features/brokerages/coinbase/`, `monitoring/`
 
 3. **Add logging tests**
    - `src/bot_v2/logging/setup.py` - needs dedicated tests
@@ -158,7 +146,7 @@ poetry run pytest --cov --cov-report=term -q
 ## Notes
 
 - Current coverage is **48%** across 245 source files
-- 127 test files exist with 800+ tests
+- 131 test files exist with 800+ tests
 - Coverage configuration tracks all of `src/bot_v2`
 - HTML coverage reports generated in `htmlcov/`
 - Coverage baseline established: 2025-10-07
@@ -175,13 +163,13 @@ poetry run pytest --cov --cov-report=term -q
 ### New Test Modules Created
 4. ✅ `tests/unit/bot_v2/types/test_trading.py` - Trading domain types (21 tests)
 5. ✅ `tests/unit/bot_v2/logging/test_setup.py` - Logging configuration (18 tests)
-6. ✅ `tests/unit/bot_v2/features/strategies/test_interfaces.py` - Strategy base classes (15 tests)
-7. ✅ `tests/unit/bot_v2/features/strategies/test_momentum.py` - Momentum strategy (14 tests)
+6. ✅ `tests/unit/bot_v2/features/strategies/test_interfaces.py` - Strategy base classes (15 tests) *(archived 2025-10-09)*
+7. ✅ `tests/unit/bot_v2/features/strategies/test_momentum.py` - Momentum strategy (14 tests) *(archived 2025-10-09)*
 
 ### New Test Package Directories
 - `tests/unit/bot_v2/types/`
 - `tests/unit/bot_v2/logging/`
-- `tests/unit/bot_v2/features/strategies/`
+- `tests/unit/bot_v2/features/strategies/` *(archived)*
 
 ### Documentation
 8. ✅ `TESTING_COVERAGE.md` - This file
@@ -193,6 +181,6 @@ poetry run pytest --cov --cov-report=term -q
 - **New Tests Added**: 68 tests
   - Types module: 21 tests
   - Logging module: 18 tests
-  - Strategies module: 29 tests (15 + 14)
+  - Strategies module: 29 tests (15 + 14) *(now archived)*
 - **Tests Fixed**: 30 (errors module)
 - **All New Tests**: ✅ Passing (68/68)

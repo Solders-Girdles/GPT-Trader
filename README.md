@@ -32,7 +32,14 @@ An ML-driven Coinbase trading system with market regime detection, built on a cl
 - Stage 3 runner: `scripts/stage3_runner.py` (delegates to `perps-bot` for legacy workflows)
 
 Experimental (kept for demos, not in the perps critical path):
-- `features/backtest/*`, `features/ml_strategy/*`, `features/market_regime/*`, `monitoring/monitoring_dashboard.py`
+- `archived/experimental/features/backtest/*`
+- `archived/experimental/features/ml_strategy/*`
+- `archived/experimental/features/market_regime/*`
+- `archived/experimental/features/adaptive_portfolio/*`
+- `archived/experimental/features/paper_trade/*`
+- `archived/experimental/tests/unit/bot_v2/features/*`
+- `archived/experimental/config/*.yaml`
+- `archived/experimental/monitoring/*` (legacy alerts, dashboard, metrics, canary monitor)
   - These modules are tagged with `__experimental__ = True` and their heavy deps are now optional extras.
   - Install extras as needed, e.g.: `poetry install -E ml -E research -E api`
 

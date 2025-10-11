@@ -21,18 +21,13 @@ GPT-Trader V2 is a production-ready Coinbase **spot** trading system that retain
 
 ### Vertical Slice Design
 
-The system is organized into vertical feature slices under `src/bot_v2/features/`. Production-critical slices (e.g., `live_trade`, `brokerages`, `position_sizing`) ship with full test coverage, while research/demo slices (`backtest`, `ml_strategy`, `market_regime`, `monitoring_dashboard`) are tagged `__experimental__` and excluded from the core trading loop. The former workflow engine was removed; recover it from repository history if you need a reference.
+The system is organized into vertical feature slices under `src/bot_v2/features/`. Production-critical slices (e.g., `live_trade`, `brokerages`, `position_sizing`) ship with full test coverage, while the legacy research slices now live under `archived/experimental/` (`backtest`, `ml_strategy`, `market_regime`, `paper_trade`, `strategies`, `monitoring_dashboard`). The former workflow engine was removed; recover it from repository history if you need a reference.
 
 ```
 src/bot_v2/features/
 ├── live_trade/          # Production trading engine
-├── paper_trade/         # Simulated trading harness
-├── backtest/            # Historical simulation utilities
-├── adaptive_portfolio/  # Tier-based portfolio management
 ├── analyze/             # Market analytics helpers
-├── market_regime/       # Market condition detection
 ├── position_sizing/     # Kelly & intelligent sizing utilities
-├── strategies/          # Baseline and experimental strategies
 ├── strategy_tools/      # Shared helpers for strategy slices
 ├── brokerages/          # Exchange integrations
 ├── data/                # Data acquisition helpers
@@ -43,7 +38,7 @@ Additional cross-cutting packages now live at the top level:
 
 ```
 src/bot_v2/
-├── monitoring/          # Runtime guards, alerting, system telemetry
+├── monitoring/          # Runtime guards, configuration guardian, system logger
 └── validation/          # Declarative validators and decorators
 ```
 
@@ -113,9 +108,10 @@ This modular design achieves 66% file size reduction with clear separation of co
 - **Runtime guards** (`bot_v2/monitoring/runtime_guards.py`): guard evaluation supports rich
   comparison modes (`gt`, `lt`, `abs_gt`, etc.), warning bands, and contextual messaging to power
   both orchestration checks and monitoring dashboards.
-- **Alerts** (`bot_v2/monitoring/alerts.py`): the base alert channel now degrades gracefully,
-  logging when no transport is configured instead of raising. Concrete channels (Slack, PagerDuty,
-  email, webhook) continue to extend `_send_impl`.
+- **Guard alert dispatcher** (`bot_v2/features/live_trade/guard_errors.py`): wraps the lightweight
+  alert manager to emit guard failures without depending on the retired alert stack. The legacy
+  multi-channel router remains in `archived/experimental/monitoring/alerts.py` for teams that need
+  to restore email, Slack, or PagerDuty integrations.
 - **Risk metrics aggregation** (`bot_v2/features/live_trade/risk_metrics.py`): periodic EventStore
   snapshots feed into the monitoring stack for dashboards and analytics.
 
@@ -127,7 +123,7 @@ behaviour until the derivatives gate opens.
 
 ### Feature Slice Reference
 
-#### Backtest (`features/backtest/`)
+#### Backtest (`archived/experimental/features/backtest/`)
 - **Purpose:** Run historical strategy simulations with token-efficient helpers such as `run_backtest`.
 - **Usage:**
     from features.backtest import run_backtest
@@ -142,7 +138,7 @@ behaviour until the derivatives gate opens.
     print(result.summary())
 - **Outputs:** Returns `BacktestResult` objects with trade logs, equity curve, Sharpe/max drawdown, and win-rate metrics.
 
-#### Paper Trade (`features/paper_trade/`)
+#### Paper Trade (`archived/experimental/features/paper_trade/`)
 - **Purpose:** Self-contained realtime simulation with local data feed, execution, risk, and metrics.
 - **Highlights:** Quick-start helpers `start_paper_trading`, `get_status`, and `stop_paper_trading` with configurable commission, slippage, and update intervals.
 - **Further reading:** See the [Paper Trading Guide](guides/paper_trading.md) for workflow, configuration, and performance tracking tips.

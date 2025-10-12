@@ -2,7 +2,7 @@
 
 ---
 status: current
-last-updated: 2025-10-07
+last-updated: 2025-10-12
 consolidates:
   - COMPATIBILITY.md
 ---
@@ -41,11 +41,11 @@ consolidates:
 #### Core Dependencies
 ```toml
 python = "^3.12"
-pandas = "^2.0.0"
-numpy = "^1.24.0"
-requests = "^2.31.0"
-websockets = "^11.0.0"
-pydantic = "^2.0.0"
+pandas = "^2.2.0"
+numpy = "^1.26.0"
+requests = "^2.32.0"
+websockets = ">=13.0,<14.0"
+pydantic = "^2.7.0"
 ```
 
 #### Optional Dependencies
@@ -59,8 +59,13 @@ matplotlib = "^3.7.0"
 plotly = "^5.15.0"
 
 # For performance monitoring
-psutil = "^5.9.0"
+psutil = "^6.0.0"
 ```
+
+> **Coinbase SDK Dependency Note**
+> The official `coinbase-advanced-py` SDK (v1.8.x) currently pins `websockets` to `<14`.
+> To stay compatible with their WebSocket implementation we lock the project to `websockets >=13,<14`.
+> If you upgrade `websockets`, verify that Coinbase has published a corresponding SDK release first.
 
 ## Environment Compatibility
 

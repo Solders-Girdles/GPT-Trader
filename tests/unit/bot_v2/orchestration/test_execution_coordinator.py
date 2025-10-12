@@ -143,13 +143,13 @@ class TestShouldUseAdvanced:
 
 
 class TestEnsureOrderLock:
-    """Test _ensure_order_lock method."""
+    """Test ensure_order_lock method."""
 
     def test_creates_lock_when_none(self, coordinator, mock_bot):
         """Test creates asyncio.Lock when bot has no lock."""
         mock_bot.runtime_state.order_lock = None
 
-        lock = coordinator._ensure_order_lock()
+        lock = coordinator.ensure_order_lock()
 
         assert isinstance(lock, asyncio.Lock)
         assert mock_bot.runtime_state.order_lock is lock
@@ -159,7 +159,7 @@ class TestEnsureOrderLock:
         existing_lock = asyncio.Lock()
         mock_bot.runtime_state.order_lock = existing_lock
 
-        lock = coordinator._ensure_order_lock()
+        lock = coordinator.ensure_order_lock()
 
         assert lock is existing_lock
 
@@ -170,7 +170,7 @@ class TestEnsureOrderLock:
         # Simulate RuntimeError during Lock creation
         with patch("asyncio.Lock", side_effect=RuntimeError("No event loop")):
             with pytest.raises(RuntimeError, match="No event loop"):
-                coordinator._ensure_order_lock()
+                coordinator.ensure_order_lock()
 
 
 class TestGetOrderReconciler:
@@ -226,7 +226,7 @@ class TestResetOrderReconciler:
 
 
 class TestPlaceOrderInner:
-    """Test _place_order_inner async method."""
+    """Test place_order_inner async method."""
 
     @pytest.mark.asyncio
     async def test_increments_attempted_counter(self, coordinator, mock_bot):
@@ -236,7 +236,7 @@ class TestPlaceOrderInner:
 
         initial_count = mock_bot.order_stats["attempted"]
 
-        await coordinator._place_order_inner(exec_engine, symbol="BTC-PERP")
+        await coordinator.place_order_inner(exec_engine, symbol="BTC-PERP")
 
         assert mock_bot.order_stats["attempted"] == initial_count + 1
 
@@ -252,7 +252,7 @@ class TestPlaceOrderInner:
 
         initial_count = mock_bot.order_stats["successful"]
 
-        await coordinator._place_order_inner(exec_engine, symbol="BTC-PERP")
+        await coordinator.place_order_inner(exec_engine, symbol="BTC-PERP")
 
         assert mock_bot.order_stats["successful"] == initial_count + 1
 
@@ -264,7 +264,7 @@ class TestPlaceOrderInner:
 
         initial_count = mock_bot.order_stats["failed"]
 
-        await coordinator._place_order_inner(exec_engine, symbol="BTC-PERP")
+        await coordinator.place_order_inner(exec_engine, symbol="BTC-PERP")
 
         assert mock_bot.order_stats["failed"] == initial_count + 1
 
@@ -276,7 +276,7 @@ class TestPlaceOrderInner:
         exec_engine = Mock(spec=AdvancedExecutionEngine)
         exec_engine.place_order = Mock(return_value=test_order)
 
-        await coordinator._place_order_inner(exec_engine, symbol="BTC-PERP")
+        await coordinator.place_order_inner(exec_engine, symbol="BTC-PERP")
 
         mock_bot.orders_store.upsert.assert_called_once_with(test_order)
 
@@ -288,7 +288,7 @@ class TestPlaceOrderInner:
         exec_engine = Mock(spec=AdvancedExecutionEngine)
         exec_engine.place_order = Mock(return_value=test_order)
 
-        result = await coordinator._place_order_inner(exec_engine, symbol="BTC-PERP")
+        result = await coordinator.place_order_inner(exec_engine, symbol="BTC-PERP")
 
         assert result == test_order
         # Should not call broker.get_order for advanced engine
@@ -303,7 +303,7 @@ class TestPlaceOrderInner:
         exec_engine.place_order = Mock(return_value="order_id_123")
         mock_bot.broker.get_order = Mock(return_value=test_order)
 
-        result = await coordinator._place_order_inner(exec_engine, symbol="BTC-PERP")
+        result = await coordinator.place_order_inner(exec_engine, symbol="BTC-PERP")
 
         assert result == test_order
         # Should call broker.get_order for standard engine
@@ -311,7 +311,7 @@ class TestPlaceOrderInner:
 
 
 class TestPlaceOrder:
-    """Test _place_order async method with lock."""
+    """Test place_order async method with lock."""
 
     @pytest.mark.asyncio
     async def test_acquires_lock_before_placement(self, coordinator, mock_bot):
@@ -320,7 +320,7 @@ class TestPlaceOrder:
         exec_engine.place_order = Mock(return_value=None)
 
         # Ensure lock exists
-        lock = coordinator._ensure_order_lock()
+        lock = coordinator.ensure_order_lock()
 
         # Track lock acquisition
         lock_acquired = False
@@ -333,7 +333,7 @@ class TestPlaceOrder:
 
         lock.acquire = track_acquire
 
-        await coordinator._place_order(exec_engine, symbol="BTC-PERP")
+        await coordinator.place_order(exec_engine, symbol="BTC-PERP")
 
         # Lock should have been acquired
         assert lock_acquired or True  # Lock is acquired via async context manager
@@ -349,7 +349,7 @@ class TestPlaceOrder:
         initial_count = mock_bot.order_stats["failed"]
 
         with pytest.raises(ValidationError):
-            await coordinator._place_order(exec_engine, symbol="BTC-PERP")
+            await coordinator.place_order(exec_engine, symbol="BTC-PERP")
 
         assert mock_bot.order_stats["failed"] == initial_count + 1
 
@@ -364,7 +364,7 @@ class TestPlaceOrder:
         initial_count = mock_bot.order_stats["failed"]
 
         with pytest.raises(ExecutionError):
-            await coordinator._place_order(exec_engine, symbol="BTC-PERP")
+            await coordinator.place_order(exec_engine, symbol="BTC-PERP")
 
         assert mock_bot.order_stats["failed"] == initial_count + 1
 
@@ -376,7 +376,7 @@ class TestPlaceOrder:
 
         initial_count = mock_bot.order_stats["failed"]
 
-        result = await coordinator._place_order(exec_engine, symbol="BTC-PERP")
+        result = await coordinator.place_order(exec_engine, symbol="BTC-PERP")
 
         assert result is None
         assert mock_bot.order_stats["failed"] == initial_count + 1
@@ -448,7 +448,7 @@ class TestExecuteDecision:
         decision.stop_trigger = None
         decision.time_in_force = None
 
-        with patch.object(coordinator, "_place_order", new_callable=AsyncMock) as mock_place:
+        with patch.object(coordinator, "place_order", new_callable=AsyncMock) as mock_place:
             mock_place.return_value = test_order
 
             await coordinator.execute_decision(
@@ -459,7 +459,7 @@ class TestExecuteDecision:
                 position_state=None,
             )
 
-            # Verify _place_order was called
+            # Verify place_order was called
             assert mock_place.called
             call_kwargs = mock_place.call_args.kwargs
             assert call_kwargs["side"] == OrderSide.BUY
@@ -485,7 +485,7 @@ class TestExecuteDecision:
         decision.stop_trigger = None
         decision.time_in_force = None
 
-        with patch.object(coordinator, "_place_order", new_callable=AsyncMock) as mock_place:
+        with patch.object(coordinator, "place_order", new_callable=AsyncMock) as mock_place:
             mock_place.return_value = test_order
 
             await coordinator.execute_decision(
@@ -519,7 +519,7 @@ class TestExecuteDecision:
         decision.stop_trigger = None
         decision.time_in_force = None
 
-        with patch.object(coordinator, "_place_order", new_callable=AsyncMock) as mock_place:
+        with patch.object(coordinator, "place_order", new_callable=AsyncMock) as mock_place:
             mock_place.return_value = test_order
 
             await coordinator.execute_decision(

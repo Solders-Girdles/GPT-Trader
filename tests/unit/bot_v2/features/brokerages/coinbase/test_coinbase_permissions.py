@@ -261,6 +261,32 @@ def test_check_required_permissions_missing(
     assert missing == expected_missing
 
 
+def test_stubbed_permission_response_satisfies_required_keys() -> None:
+    client = make_client()
+    response = {
+        "can_view": True,
+        "can_trade": True,
+        "can_transfer": False,
+        "portfolio_uuid": "stub-uuid",
+        "portfolio_type": "DEFAULT",
+    }
+
+    with patch.object(client, "_request", return_value=response):
+        permissions = client.get_key_permissions()
+
+    required_keys = ("can_view", "can_trade", "can_transfer", "portfolio_uuid", "portfolio_type")
+    for key in required_keys:
+        assert key in permissions
+
+    granted, missing = _check_required_permissions(
+        {key: permissions[key] for key in ("can_view", "can_trade", "can_transfer")},
+        ("can_view", "can_trade"),
+    )
+    assert granted is True
+    assert missing == []
+    assert permissions["portfolio_uuid"] == "stub-uuid"
+
+
 # --- Live integration coverage ---------------------------------------------------------------
 
 

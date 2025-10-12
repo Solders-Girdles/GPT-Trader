@@ -282,7 +282,7 @@ class ExecutionCoordinator:
                     }
                 )
 
-            order = await self._place_order(exec_engine, **place_kwargs)
+            order = await self.place_order(exec_engine, **place_kwargs)
 
             if order:
                 logger.info(f"Order placed successfully: {order.id}")
@@ -291,7 +291,7 @@ class ExecutionCoordinator:
         except Exception as e:
             logger.error(f"Error executing decision for {symbol}: {e}")
 
-    def _ensure_order_lock(self) -> asyncio.Lock:
+    def ensure_order_lock(self) -> asyncio.Lock:
         bot = self._bot
         state = bot.runtime_state
         if state.order_lock is None:
@@ -303,11 +303,11 @@ class ExecutionCoordinator:
         assert state.order_lock is not None
         return state.order_lock
 
-    async def _place_order(self, exec_engine: Any, **kwargs: Any) -> Order | None:
+    async def place_order(self, exec_engine: Any, **kwargs: Any) -> Order | None:
         try:
-            lock = self._ensure_order_lock()
+            lock = self.ensure_order_lock()
             async with lock:
-                return await self._place_order_inner(exec_engine, **kwargs)
+                return await self.place_order_inner(exec_engine, **kwargs)
         except (ValidationError, RiskValidationError, ExecutionError) as e:
             logger.warning(f"Order validation/execution failed: {e}")
             self._bot.order_stats["failed"] += 1
@@ -317,7 +317,7 @@ class ExecutionCoordinator:
             self._bot.order_stats["failed"] += 1
             return None
 
-    async def _place_order_inner(self, exec_engine: Any, **kwargs: Any) -> Order | None:
+    async def place_order_inner(self, exec_engine: Any, **kwargs: Any) -> Order | None:
         bot = self._bot
         bot.order_stats["attempted"] += 1
 

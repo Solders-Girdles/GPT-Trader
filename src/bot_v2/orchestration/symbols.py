@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import logging
 import os
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:  # pragma: no cover - import for type checking only
@@ -13,6 +14,15 @@ if TYPE_CHECKING:  # pragma: no cover - import for type checking only
 logger = logging.getLogger(__name__)
 
 PERPS_ALLOWLIST = frozenset({"BTC-PERP", "ETH-PERP", "SOL-PERP", "XRP-PERP"})
+
+
+@dataclass(frozen=True)
+class SymbolNormalizationLog:
+    """Captured log emitted during symbol normalization."""
+
+    level: int
+    message: str
+    args: tuple[object, ...] = ()
 
 
 def derivatives_enabled(profile: Profile) -> bool:
@@ -39,13 +49,18 @@ def derivatives_enabled(profile: Profile) -> bool:
     return True
 
 
-def normalize_symbols(
-    profile: Profile, symbols: Sequence[str] | None, *, quote: str | None = None
-) -> tuple[list[str], bool]:
-    """Normalize configured symbols, applying per-profile defaults and gating."""
+def normalize_symbol_list(
+    symbols: Sequence[str] | None,
+    *,
+    allow_derivatives: bool,
+    quote: str,
+    allowed_perps: Iterable[str] | None = None,
+    fallback_bases: Sequence[str] | None = None,
+) -> tuple[list[str], list[SymbolNormalizationLog]]:
+    """Produce a normalised symbol list and captured log records."""
 
-    quote_currency = (quote or os.getenv("COINBASE_DEFAULT_QUOTE") or "USD").upper()
-    allow_derivatives = derivatives_enabled(profile)
+    logs: list[SymbolNormalizationLog] = []
+    allowed_set = set(allowed_perps) if allowed_perps is not None else set(PERPS_ALLOWLIST)
     normalized: list[str] = []
 
     for raw in symbols or []:
@@ -53,39 +68,73 @@ def normalize_symbols(
         if not token:
             continue
 
-        if token.endswith("-PERP"):
-            if allow_derivatives:
-                if token in PERPS_ALLOWLIST:
+        if allow_derivatives:
+            if token.endswith("-PERP"):
+                if token in allowed_set:
                     normalized.append(token)
                 else:
-                    logger.warning(
-                        "Filtering unsupported perpetual symbol %s. Allowed perps: %s",
-                        token,
-                        sorted(PERPS_ALLOWLIST),
+                    logs.append(
+                        SymbolNormalizationLog(
+                            logging.WARNING,
+                            "Filtering unsupported perpetual symbol %s. Allowed perps: %s",
+                            (token, sorted(allowed_set)),
+                        )
                     )
             else:
-                base = token.split("-", 1)[0]
-                replacement = f"{base}-{quote_currency}"
-                logger.warning(
-                    "Derivatives disabled. Replacing %s with spot symbol %s",
-                    token,
-                    replacement,
-                )
-                normalized.append(replacement)
-        else:
-            normalized.append(token)
+                normalized.append(token)
+            continue
 
-    if not normalized:
-        normalized = _default_symbols(allow_derivatives, quote_currency)
-        logger.info("No valid symbols provided. Falling back to %s", normalized)
+        if token.endswith("-PERP"):
+            base = token.split("-", 1)[0]
+            replacement = f"{base}-{quote}"
+            logs.append(
+                SymbolNormalizationLog(
+                    logging.WARNING,
+                    "Derivatives disabled. Replacing %s with spot symbol %s",
+                    (token, replacement),
+                )
+            )
+            token = replacement
+
+        normalized.append(token)
 
     normalized = list(dict.fromkeys(normalized))
+    if normalized:
+        return normalized, logs
+
+    if allow_derivatives:
+        fallback = ["BTC-PERP", "ETH-PERP"]
+    else:
+        if fallback_bases is None:
+            from bot_v2.orchestration.configuration import TOP_VOLUME_BASES
+
+            fallback_bases = TOP_VOLUME_BASES
+        fallback = [f"{base}-{quote}" for base in fallback_bases]
+
+    logs.append(
+        SymbolNormalizationLog(
+            logging.INFO,
+            "No valid symbols provided. Falling back to %s",
+            (fallback,),
+        )
+    )
+    return fallback, logs
+
+
+def normalize_symbols(
+    profile: Profile, symbols: Sequence[str] | None, *, quote: str | None = None
+) -> tuple[list[str], bool]:
+    """Normalize configured symbols, applying per-profile defaults and gating."""
+
+    quote_currency = (quote or os.getenv("COINBASE_DEFAULT_QUOTE") or "USD").upper()
+    allow_derivatives = derivatives_enabled(profile)
+    normalized, logs = normalize_symbol_list(
+        symbols,
+        allow_derivatives=allow_derivatives,
+        quote=quote_currency,
+    )
+
+    for record in logs:
+        logger.log(record.level, record.message, *record.args)
+
     return normalized, allow_derivatives
-
-
-def _default_symbols(derivatives: bool, quote: str) -> list[str]:
-    if derivatives:
-        return ["BTC-PERP", "ETH-PERP"]
-    from bot_v2.orchestration.configuration import TOP_VOLUME_BASES
-
-    return [f"{base}-{quote}" for base in TOP_VOLUME_BASES]

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import threading
 import time
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -59,10 +60,30 @@ class TestAsyncToSyncWrapper:
         assert result == 21
 
     def test_async_to_sync_in_running_loop(self) -> None:
-        """Test async to sync conversion in running loop."""
-        # Skip this test as it's complex to test properly
-        # The functionality is tested implicitly through other tests
-        pytest.skip("Complex async loop testing - functionality tested elsewhere")
+        async def async_func(x: int) -> int:
+            await asyncio.sleep(0)
+            return x * 2
+
+        loop = asyncio.new_event_loop()
+        loop_started = threading.Event()
+
+        def run_loop() -> None:
+            asyncio.set_event_loop(loop)
+            loop_started.set()
+            loop.run_forever()
+
+        runner = threading.Thread(target=run_loop)
+        runner.start()
+        loop_started.wait()
+
+        try:
+            wrapper = AsyncToSyncWrapper(loop)
+            result = wrapper(async_func(5))
+            assert result == 10
+        finally:
+            loop.call_soon_threadsafe(loop.stop)
+            runner.join()
+            loop.close()
 
 
 class TestSyncToAsyncWrapper:

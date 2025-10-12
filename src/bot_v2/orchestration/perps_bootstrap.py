@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 import os
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
@@ -14,15 +13,7 @@ from bot_v2.persistence.orders_store import OrdersStore
 
 from .configuration import TOP_VOLUME_BASES, BotConfig, Profile
 from .service_registry import ServiceRegistry, empty_registry
-
-_DEFAULT_ALLOWED_PERPS: frozenset[str] = frozenset(
-    {
-        "BTC-PERP",
-        "ETH-PERP",
-        "SOL-PERP",
-        "XRP-PERP",
-    }
-)
+from .symbols import PERPS_ALLOWLIST, normalize_symbol_list
 
 
 @dataclass(frozen=True)
@@ -59,67 +50,24 @@ def normalise_symbols(
     *,
     derivatives_enabled: bool,
     default_quote: str,
-    allowed_perps: Iterable[str] = _DEFAULT_ALLOWED_PERPS,
+    allowed_perps: Iterable[str] = PERPS_ALLOWLIST,
     fallback_bases: Sequence[str] = TOP_VOLUME_BASES,
 ) -> tuple[list[str], list[BootstrapLogRecord]]:
     """Return canonical symbol list for the configured runtime."""
 
-    logs: list[BootstrapLogRecord] = []
-    allowed_set = set(allowed_perps)
-    normalised: list[str] = []
-
-    for raw in requested or []:
-        symbol = (raw or "").strip().upper()
-        if not symbol:
-            continue
-
-        if derivatives_enabled:
-            if symbol not in allowed_set:
-                logs.append(
-                    BootstrapLogRecord(
-                        logging.WARNING,
-                        "Filtering unsupported perpetual symbol %s. Allowed perps: %s",
-                        (symbol, sorted(allowed_set)),
-                    )
-                )
-                continue
-            normalised.append(symbol)
-            continue
-
-        if symbol.endswith("-PERP"):
-            base = symbol.split("-", 1)[0]
-            replacement = f"{base}-{default_quote.upper()}"
-            logs.append(
-                BootstrapLogRecord(
-                    logging.WARNING,
-                    "Derivatives disabled. Replacing %s with spot symbol %s",
-                    (symbol, replacement),
-                )
-            )
-            symbol = replacement
-
-        normalised.append(symbol)
-
-    # Deduplicate while preserving the first occurrence order
-    normalised = list(dict.fromkeys(normalised))
-
-    if normalised:
-        return normalised, logs
-
-    if derivatives_enabled:
-        fallback = ["BTC-PERP", "ETH-PERP"]
-    else:
-        quote = default_quote.upper()
-        fallback = [f"{base}-{quote}" for base in fallback_bases]
-
-    logs.append(
-        BootstrapLogRecord(
-            logging.INFO,
-            "No valid symbols provided. Falling back to %s",
-            (fallback,),
-        )
+    symbol_quote = default_quote.upper()
+    normalised, records = normalize_symbol_list(
+        requested,
+        allow_derivatives=derivatives_enabled,
+        quote=symbol_quote,
+        allowed_perps=allowed_perps,
+        fallback_bases=fallback_bases,
     )
-    return fallback, logs
+    logs = [
+        BootstrapLogRecord(level=record.level, message=record.message, args=record.args)
+        for record in records
+    ]
+    return normalised, logs
 
 
 def resolve_runtime_paths(

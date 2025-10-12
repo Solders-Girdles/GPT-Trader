@@ -83,13 +83,13 @@ class StrategyCoordinator:
         )
 
     def ensure_order_lock(self) -> asyncio.Lock:
-        return self._bot.execution_coordinator._ensure_order_lock()
+        return self._bot.execution_coordinator.ensure_order_lock()
 
     async def place_order(self, **kwargs: Any) -> Order | None:
-        return await self._bot.execution_coordinator._place_order(self._bot.exec_engine, **kwargs)
+        return await self._bot.execution_coordinator.place_order(self._bot.exec_engine, **kwargs)
 
     async def place_order_inner(self, **kwargs: Any) -> Order | None:
-        return await self._bot.execution_coordinator._place_order_inner(**kwargs)
+        return await self._bot.execution_coordinator.place_order_inner(**kwargs)
 
     # ------------------------------------------------------------------
     async def update_marks(self) -> None:

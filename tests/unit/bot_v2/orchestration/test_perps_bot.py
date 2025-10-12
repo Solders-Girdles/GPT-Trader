@@ -15,7 +15,9 @@ import pytest
 from bot_v2.orchestration.configuration import BotConfig, Profile
 from bot_v2.orchestration.perps_bot import PerpsBot
 from bot_v2.orchestration.perps_bot_builder import create_perps_bot
-from bot_v2.orchestration.deterministic_broker import DeterministicBroker
+from bot_v2.orchestration.runtime_coordinator import RuntimeCoordinator
+from bot_v2.orchestration.service_registry import ServiceRegistry
+from bot_v2.orchestration.strategy_coordinator import StrategyCoordinator
 from bot_v2.features.brokerages.core.interfaces import (
     OrderSide,
     OrderType,
@@ -25,17 +27,37 @@ from bot_v2.features.brokerages.core.interfaces import (
 )
 
 
-@pytest.mark.uses_mock_broker
-def test_init_uses_mock_broker_in_dev(monkeypatch, tmp_path):
-    # Reduce side effects: avoid spawning background threads
-    monkeypatch.setenv("EVENT_STORE_ROOT", str(tmp_path))
-    monkeypatch.setenv("PERPS_FORCE_MOCK", "1")
-    monkeypatch.setattr(PerpsBot, "_start_streaming_background", lambda self: None)
-
+def test_runtime_coordinator_uses_deterministic_broker_for_dev(monkeypatch):
     config = BotConfig(profile=Profile.DEV, symbols=["BTC-PERP"], update_interval=1)
-    bot = create_perps_bot(config)
+    registry = ServiceRegistry(config=config)
 
-    assert isinstance(bot.broker, DeterministicBroker)
+    class StubBot:
+        def __init__(self) -> None:
+            self.config = config
+            self.registry = registry
+            self.event_store = object()
+            self._product_map: dict[str, object] = {}
+
+        @property
+        def broker(self):
+            return self.registry.broker
+
+        @broker.setter
+        def broker(self, value):
+            self.registry = self.registry.with_updates(broker=value)
+
+    stub_broker = object()
+    monkeypatch.setattr(
+        "bot_v2.orchestration.runtime_coordinator.DeterministicBroker",
+        lambda: stub_broker,
+    )
+
+    bot = StubBot()
+    coordinator = RuntimeCoordinator(bot)
+    coordinator._init_broker()
+
+    assert bot.broker is stub_broker
+    assert bot.registry.broker is stub_broker
 
 
 def test_calculate_spread_bps():
@@ -48,20 +70,28 @@ def test_calculate_spread_bps():
     assert Decimal("90") < bps < Decimal("110")
 
 
-@pytest.mark.uses_mock_broker
-def test_update_mark_window_trims(monkeypatch, tmp_path):
-    monkeypatch.setenv("EVENT_STORE_ROOT", str(tmp_path))
-    monkeypatch.setenv("PERPS_FORCE_MOCK", "1")
-    monkeypatch.setattr(PerpsBot, "_start_streaming_background", lambda self: None)
-
+def test_update_mark_window_trims() -> None:
     config = BotConfig(profile=Profile.DEV, symbols=["BTC-PERP"], short_ma=2, long_ma=3)
-    bot = create_perps_bot(config)
+
+    class StubState:
+        def __init__(self) -> None:
+            self.mark_windows: dict[str, list[Decimal]] = {}
+            self.mark_lock = threading.RLock()
+
+    class StubBot:
+        def __init__(self, cfg: BotConfig, state: StubState) -> None:
+            self.config = cfg
+            self.runtime_state = state
+
+    state = StubState()
+    bot = StubBot(config, state)
+    coordinator = StrategyCoordinator(bot)
 
     for i in range(50):
-        bot._update_mark_window("BTC-PERP", Decimal(str(50000 + i)))
+        coordinator.update_mark_window("BTC-PERP", Decimal(str(50000 + i)))
 
     max_expected = max(config.short_ma, config.long_ma) + 5
-    assert len(bot.mark_windows["BTC-PERP"]) <= max_expected
+    assert len(state.mark_windows["BTC-PERP"]) == max_expected
 
 
 def test_collect_account_snapshot_uses_broker(monkeypatch, tmp_path):

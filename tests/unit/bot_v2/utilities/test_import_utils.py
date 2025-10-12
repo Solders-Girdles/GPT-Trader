@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import importlib
 import time
 import sys
 from unittest.mock import Mock, patch
@@ -283,6 +284,36 @@ class TestImportPerformance:
 
     def test_slow_import_logging(self) -> None:
         """Test that slow imports are logged."""
-        # Skip this test for now as it requires complex mocking
-        # The functionality is tested implicitly through other tests
-        pytest.skip("Complex mocking required - functionality tested elsewhere")
+        mock_module = Mock()
+        mock_logger = Mock()
+
+        time_values = iter([0.0, 0.25])
+
+        def fake_time() -> float:
+            try:
+                return next(time_values)
+            except StopIteration:
+                return 0.25
+
+        original_import_module = importlib.import_module
+        import_calls: list[str] = []
+
+        def fake_import(name: str, *args: object, **kwargs: object):
+            import_calls.append(name)
+            if name == "fake.module":
+                return mock_module
+            return original_import_module(name, *args, **kwargs)
+
+        with patch("bot_v2.utilities.importing.lazy.time.time", new=fake_time):
+            with patch(
+                "bot_v2.utilities.importing.lazy.importlib.import_module", new=fake_import
+            ) as mocked_import:
+                with patch(
+                    "bot_v2.utilities.importing.lazy.logging.getLogger", return_value=mock_logger
+                ):
+                    lazy_module = lazy_import("fake.module")
+                    loaded = lazy_module._load()
+
+        assert loaded is mock_module
+        assert import_calls[-1] == "fake.module"
+        mock_logger.debug.assert_called_once_with("Slow import: %s took %.3fs", "fake.module", 0.25)

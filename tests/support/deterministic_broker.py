@@ -152,7 +152,7 @@ class DeterministicBroker(IBrokerage):
         """Seed a deterministic order book for impact-cost tests."""
 
         def _normalise(
-            levels: Sequence[tuple[Decimal | float, Decimal | float]]
+            levels: Sequence[tuple[Decimal | float, Decimal | float]],
         ) -> list[tuple[Decimal, Decimal]]:
             return [(Decimal(str(price)), Decimal(str(size))) for price, size in levels]
 

@@ -157,7 +157,9 @@ class TestConfigureLogging:
         handlers = json_logger.handlers
 
         # Check we have rotating file handlers
-        rotating_handlers = [h for h in handlers if isinstance(h, logging.handlers.RotatingFileHandler)]
+        rotating_handlers = [
+            h for h in handlers if isinstance(h, logging.handlers.RotatingFileHandler)
+        ]
         assert len(rotating_handlers) >= 2
 
         # Check that handlers have the right formatters (plain for JSON)
@@ -190,7 +192,11 @@ class TestConfigureLogging:
     @patch("bot_v2.logging.setup.ensure_directories")
     @patch("pathlib.Path.mkdir")
     def test_configure_logging_respects_max_bytes_env(
-        self, mock_mkdir: MagicMock, mock_ensure: MagicMock, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+        self,
+        mock_mkdir: MagicMock,
+        mock_ensure: MagicMock,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """Test that log size environment variables are respected."""
         custom_max_bytes = 1024 * 1024  # 1 MB
@@ -210,7 +216,11 @@ class TestConfigureLogging:
     @patch("bot_v2.logging.setup.ensure_directories")
     @patch("pathlib.Path.mkdir")
     def test_configure_logging_respects_backup_count_env(
-        self, mock_mkdir: MagicMock, mock_ensure: MagicMock, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+        self,
+        mock_mkdir: MagicMock,
+        mock_ensure: MagicMock,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """Test that backup count environment variables are respected."""
         custom_backup_count = 20
@@ -230,7 +240,11 @@ class TestConfigureLogging:
     @patch("bot_v2.logging.setup.ensure_directories")
     @patch("pathlib.Path.mkdir")
     def test_configure_logging_enables_debug_with_env(
-        self, mock_mkdir: MagicMock, mock_ensure: MagicMock, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+        self,
+        mock_mkdir: MagicMock,
+        mock_ensure: MagicMock,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """Test that PERPS_DEBUG environment variable enables debug logging."""
         monkeypatch.setenv("PERPS_DEBUG", "1")

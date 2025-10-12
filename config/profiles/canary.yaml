@@ -1,6 +1,6 @@
 # Canary Production Profile - Safe Testing Configuration
 # Purpose: Initial production deployment with minimal risk exposure
-# 
+#
 # This profile implements multiple safety layers:
 # 1. Tiny notional amounts (0.01 BTC max)
 # 2. Reduce-only mode (no position increases)
@@ -18,21 +18,21 @@ trading:
     - "momentum"  # Start with single, well-tested strategy
   symbols:
     - "BTC-PERP"  # Single symbol initially
-  
+
   # Position Sizing - EXTREMELY CONSERVATIVE
   position_sizing:
     max_position_size: 0.01  # 0.01 BTC maximum
     max_notional_value: 500  # $500 USD maximum notional
     position_size_pct: 0.001  # 0.1% of account per position
     use_kelly_criterion: false  # Disable advanced sizing initially
-    
+
   # Order Limits
   order_limits:
     max_orders_per_minute: 2
     max_orders_per_hour: 20
     max_orders_per_day: 50
     min_order_interval_seconds: 30
-    
+
   # Execution Settings
   execution:
     slippage_tolerance: 0.002  # 0.2% maximum slippage
@@ -45,26 +45,26 @@ risk_management:
   # Daily Limits
   daily_loss_limit: 10.00  # $10 maximum daily loss
   daily_profit_target: 20.00  # Optional: stop if target hit
-  
+
   # Position Limits
   max_concurrent_positions: 1
   max_leverage: 1.0  # No leverage
   max_exposure_pct: 0.01  # 1% maximum account exposure
-  
+
   # Drawdown Controls
   max_drawdown_pct: 0.02  # 2% maximum drawdown
   trailing_stop_pct: 0.01  # 1% trailing stop on all positions
-  
+
   # Circuit Breakers
   circuit_breakers:
     consecutive_losses: 2  # Stop after 2 consecutive losses
     hourly_loss_limit: 5.00  # $5 per hour maximum
     error_threshold: 3  # Stop after 3 errors
     stale_mark_seconds: 60  # Stop if marks are stale > 60s
-    
+
   # Correlation Limits
   max_correlation: 0.7  # Not applicable with single symbol
-  
+
 # Monitoring & Alerting
 monitoring:
   # Logging
@@ -72,7 +72,7 @@ monitoring:
   log_all_orders: true
   log_all_fills: true
   log_all_errors: true
-  
+
   # Event Recording
   event_store:
     enabled: true
@@ -86,14 +86,14 @@ monitoring:
       - "errors"
       - "risk_events"
       - "strategy_signals"
-      
+
   # Metrics Collection
   metrics:
     enabled: true
     interval_seconds: 10
     export_prometheus: true
     export_datadog: false
-    
+
   # Alerting
   alerts:
     enabled: true
@@ -106,7 +106,7 @@ monitoring:
       - type: "pagerduty"
         api_key: "${PAGERDUTY_API_KEY}"
         level: "CRITICAL"
-        
+
     # Alert Conditions
     conditions:
       - name: "daily_loss_breach"
@@ -126,11 +126,11 @@ monitoring:
 performance:
   # Threading
   use_threading: false  # Single-threaded for predictability
-  
+
   # Caching
   cache_quotes: true
   quote_cache_ttl_ms: 1000
-  
+
   # Rate Limiting
   api_rate_limit_pct: 0.5  # Use only 50% of rate limits
 
@@ -141,12 +141,12 @@ validation:
   min_required_balance: 100.00
   require_connection_test: true
   require_strategy_validation: true
-  
+
   # Runtime Checks
   validate_every_order: true
   validate_position_limits: true
   validate_risk_limits: true
-  
+
   # Post-trade Checks
   reconcile_positions: true
   reconciliation_interval_seconds: 60
@@ -158,12 +158,12 @@ features:
   portfolio_optimization: false
   ml_predictions: false
   advanced_orders: false
-  
+
   # Enabled Safety Features
   dead_mans_switch: true
   emergency_liquidation: true
   reduce_only_mode: true
-  
+
 # Session Configuration
 session:
   # Trading Hours (UTC)
@@ -175,50 +175,50 @@ session:
     - "wednesday"
     - "thursday"
     - "friday"
-  
+
   # Session Limits
   max_session_duration_minutes: 60
   auto_shutdown_on_limit: true
-  
+
 # Broker Configuration
 broker:
   provider: "coinbase"
   environment: "production"
-  
+
   # Connection Settings
   connection:
     timeout_seconds: 5
     max_retries: 3
     retry_delay_seconds: 1
     heartbeat_interval_seconds: 30
-    
+
   # Order Configuration
   orders:
     default_time_in_force: "IOC"
     enable_post_only: false
     enable_reduce_only: true
-    
+
 # Data Configuration
 data:
   # Market Data
   market_data_source: "coinbase"
   use_websocket: true
   use_rest_fallback: true
-  
+
   # Historical Data
   historical_lookback_days: 30
   cache_historical: true
-  
+
 # Reporting
 reporting:
   # Performance Reports
   generate_daily_report: true
   generate_trade_log: true
-  
+
   # Report Destinations
   report_email: "${ADMIN_EMAIL}"
   report_s3_bucket: "${REPORT_BUCKET}"
-  
+
   # Report Content
   include_metrics:
     - "pnl"
@@ -233,11 +233,11 @@ emergency:
   # Kill Switch
   kill_switch_enabled: true
   kill_switch_key: "${KILL_SWITCH_KEY}"
-  
+
   # Emergency Contacts
   emergency_phone: "${EMERGENCY_PHONE}"
   emergency_email: "${EMERGENCY_EMAIL}"
-  
+
   # Liquidation Settings
   emergency_liquidation:
     enabled: true
@@ -252,7 +252,7 @@ notes: |
   - Reduce-only mode (cannot increase positions)
   - 1-hour daily trading window
   - Comprehensive logging and event recording
-  
+
   Before promoting to full production:
   1. Run for minimum 5 trading days
   2. Verify all risk limits trigger correctly

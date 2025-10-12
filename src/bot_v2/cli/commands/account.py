@@ -5,11 +5,12 @@ from __future__ import annotations
 import asyncio
 import json
 from argparse import Namespace
+from typing import Any
 
 from bot_v2.cli import options, services
 
 
-def register(subparsers) -> None:
+def register(subparsers: Any) -> None:
     parser = subparsers.add_parser("account", help="Account utilities")
     options.add_profile_option(parser)
     account_subparsers = parser.add_subparsers(dest="account_command", required=True)

@@ -113,12 +113,19 @@ class TestRiskLimitExceeded:
 
     def test_risk_limit_exceeded_creation(self) -> None:
         """Test RiskLimitExceeded can be created with message."""
-        error = RiskLimitExceeded("risk limit exceeded", limit_type="position", limit_value=50000, current_value=100000)
+        error = RiskLimitExceeded(
+            "risk limit exceeded", limit_type="position", limit_value=50000, current_value=100000
+        )
         assert str(error) == "risk limit exceeded"
 
     def test_risk_limit_exceeded_with_risk_metrics(self) -> None:
         """Test RiskLimitExceeded can include risk context."""
-        error = RiskLimitExceeded("position too large", limit_type="position_size", limit_value=50000, current_value=100000)
+        error = RiskLimitExceeded(
+            "position too large",
+            limit_type="position_size",
+            limit_value=50000,
+            current_value=100000,
+        )
         assert str(error) == "position too large"
         assert error.context["limit_value"] == 50000
         assert error.context["current_value"] == 100000

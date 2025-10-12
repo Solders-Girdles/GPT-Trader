@@ -615,4 +615,3 @@ class TestCoinbaseMarketData:
         adapter.start_market_data([symbol])
         assert adapter.is_stale(symbol) is False
         assert adapter.is_stale(symbol, threshold_seconds=1) is False
-

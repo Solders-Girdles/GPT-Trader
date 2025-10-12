@@ -5,6 +5,7 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
+
 from bot_v2.features.optimize.strategies import create_local_strategy
 from bot_v2.features.optimize.types import BacktestMetrics
 

@@ -55,7 +55,7 @@ def async_cache(
     cache = AsyncCache(ttl)
 
     def decorator(
-        func: Callable[..., Coroutine[Any, Any, T]]
+        func: Callable[..., Coroutine[Any, Any, T]],
     ) -> Callable[..., Coroutine[Any, Any, T]]:
         async def wrapper(*args: Any, **kwargs: Any) -> T:
             key = f"{func.__name__}:{hash(str(args) + str(sorted(kwargs.items())))}"

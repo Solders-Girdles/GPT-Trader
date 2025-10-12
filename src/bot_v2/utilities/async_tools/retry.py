@@ -55,7 +55,7 @@ def async_retry(
     retry = AsyncRetry(max_attempts, base_delay, max_delay, backoff_factor, exceptions)
 
     def decorator(
-        func: Callable[..., Coroutine[Any, Any, T]]
+        func: Callable[..., Coroutine[Any, Any, T]],
     ) -> Callable[..., Coroutine[Any, Any, T]]:
         async def wrapper(*args: Any, **kwargs: Any) -> T:
             return await retry.execute(func, *args, **kwargs)

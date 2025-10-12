@@ -35,7 +35,7 @@ class TestBaselineSnapshot:
             positions=[],
             account_equity=Decimal("10000"),
             profile=Profile.DEV,
-            broker_type="mock"
+            broker_type="mock",
         )
 
         assert snapshot.profile == Profile.DEV
@@ -62,7 +62,7 @@ class TestEnvironmentMonitor:
             total_exposure=Decimal("0"),
             profile=Profile.DEV,
             broker_type="mock",
-            risk_limits={}
+            risk_limits={},
         )
 
     @patch.dict("os.environ", {}, clear=True)
@@ -136,11 +136,7 @@ class TestConfigurationGuardian:
         """Create a test guardian."""
         baseline = BaselineSnapshot(
             timestamp=datetime(2025, 1, 1, tzinfo=UTC),
-            config_dict={
-                "symbols": ["BTC-USD"],
-                "max_leverage": 3,
-                "profile": Profile.DEV
-            },
+            config_dict={"symbols": ["BTC-USD"], "max_leverage": 3, "profile": Profile.DEV},
             config_hash="",
             env_keys=set(),
             critical_env_values={},
@@ -150,7 +146,7 @@ class TestConfigurationGuardian:
             total_exposure=Decimal("0"),
             profile=Profile.DEV,
             broker_type="mock",
-            risk_limits={}
+            risk_limits={},
         )
 
         return ConfigurationGuardian(baseline)
@@ -220,7 +216,9 @@ class TestConfigurationGuardian:
 
         result = baseline.validate_config_against_state(
             {"max_position_size": Decimal("4000")},  # New limit below current position
-            [], [mock_position], Decimal("10000")
+            [],
+            [mock_position],
+            Decimal("10000"),
         )
 
         assert len(result) > 0
@@ -236,8 +234,7 @@ class TestConfigurationGuardian:
 
         # Try to remove BTC-USD from symbols
         result = baseline.validate_config_against_state(
-            {"symbols": ["ETH-USD"]},  # Remove BTC-USD
-            [], [mock_position], Decimal("10000")
+            {"symbols": ["ETH-USD"]}, [], [mock_position], Decimal("10000")  # Remove BTC-USD
         )
 
         assert len(result) > 0
@@ -249,8 +246,7 @@ class TestConfigurationGuardian:
 
         # Try to change profile during runtime
         result = baseline.validate_config_against_state(
-            {"profile": Profile.CANARY},  # Change from DEV to CANARY
-            [], [], Decimal("10000")
+            {"profile": Profile.CANARY}, [], [], Decimal("10000")  # Change from DEV to CANARY
         )
 
         assert len(result) > 0
@@ -273,7 +269,8 @@ class TestConfigurationGuardian:
 
         # Most importantly - result contains critical event indication
         critical_errors = [
-            error for error in result.errors
+            error
+            for error in result.errors
             if any(keyword in error.lower() for keyword in ["critical", "emergency_shutdown"])
         ]
         assert len(critical_errors) > 0, f"Expected critical errors but got only: {result.errors}"

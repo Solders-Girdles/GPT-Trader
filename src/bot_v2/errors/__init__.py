@@ -69,7 +69,9 @@ class ConfigurationError(TradingError):
 class ValidationError(TradingError):
     """Raised when input validation fails"""
 
-    def __init__(self, message: str, field: str | None = None, value: Any = None, **kwargs: Any) -> None:
+    def __init__(
+        self, message: str, field: str | None = None, value: Any = None, **kwargs: Any
+    ) -> None:
         super().__init__(message, error_code="VALIDATION_ERROR", recoverable=False, **kwargs)
         if field:
             self.add_context(field=field, value=value)

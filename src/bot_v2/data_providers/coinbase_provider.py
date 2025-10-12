@@ -6,13 +6,17 @@ to fetch real market data instead of using mock data. It supports both
 REST API calls and WebSocket streaming for real-time updates.
 """
 
+from __future__ import annotations
+
 import logging
 import os
 from datetime import datetime, timedelta
+from types import TracebackType
 from typing import Any
 
 import numpy as np
 import pandas as pd
+
 from bot_v2.data_providers import DataProvider
 from bot_v2.features.brokerages.coinbase.adapter import CoinbaseBrokerage
 from bot_v2.features.brokerages.coinbase.client import CoinbaseClient
@@ -413,12 +417,17 @@ class CoinbaseDataProvider(DataProvider):
             self.ticker_service.stop()
             logger.info("WebSocket streaming stopped")
 
-    def __enter__(self):
+    def __enter__(self) -> CoinbaseDataProvider:
         """Context manager entry - starts streaming if enabled."""
         self.start_streaming()
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> None:
         """Context manager exit - stops streaming."""
         self.stop_streaming()
 

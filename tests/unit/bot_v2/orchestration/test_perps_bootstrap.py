@@ -79,4 +79,6 @@ def test_prepare_perps_bot_reuses_injected_event_store(tmp_path):
     assert result.registry.event_store is custom_store
     assert result.orders_store is not None
     assert config.symbols == ["BTC-PERP"]
-    assert result.runtime_paths.storage_dir == Path(env["GPT_TRADER_RUNTIME_ROOT"]) / "perps_bot/dev"
+    assert (
+        result.runtime_paths.storage_dir == Path(env["GPT_TRADER_RUNTIME_ROOT"]) / "perps_bot/dev"
+    )

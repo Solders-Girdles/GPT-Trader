@@ -7,6 +7,7 @@ import logging
 import signal
 from argparse import Namespace
 from types import FrameType
+from typing import Any
 
 from bot_v2.cli import options, services
 from bot_v2.orchestration.configuration import ConfigValidationError
@@ -14,7 +15,7 @@ from bot_v2.orchestration.configuration import ConfigValidationError
 logger = logging.getLogger(__name__)
 
 
-def register(subparsers) -> None:
+def register(subparsers: Any) -> None:
     parser = subparsers.add_parser(
         "run",
         help="Run the trading loop",
@@ -44,7 +45,7 @@ def execute(args: Namespace) -> int:
     return _run_bot(bot, single_cycle=args.dev_fast)
 
 
-def _run_bot(bot, *, single_cycle: bool) -> int:
+def _run_bot(bot: Any, *, single_cycle: bool) -> int:
     def signal_handler(sig: int, frame: FrameType | None) -> None:  # pragma: no cover - signal
         logger.info("Signal %s received, shutting down...", sig)
         bot.running = False

@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 import uuid
+from collections.abc import Mapping
 from dataclasses import InitVar, dataclass, field
 from datetime import datetime
 from enum import Enum
 from typing import Any
-from collections.abc import Mapping
 
 
 class AlertSeverity(Enum):
@@ -84,7 +84,7 @@ class Alert:
         return self.alert_id
 
     @property
-    def timestamp(self) -> datetime:
+    def timestamp(self) -> datetime:  # noqa: F811
         """Alias kept for callers that relied on ``timestamp`` field."""
         return self.created_at
 

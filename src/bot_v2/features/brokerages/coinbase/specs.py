@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Any
 
 import yaml
+
 from bot_v2.utilities.quantization import quantize_price_side_aware
 
 logger = logging.getLogger(__name__)
@@ -281,7 +282,7 @@ def quantize_size_up(size: Decimal, step_size: Decimal) -> Decimal:
 
 def validate_order(
     *,
-    product,
+    product: Any,
     side: str,
     quantity: Decimal | None = None,
     order_type: str,
@@ -338,7 +339,7 @@ def validate_order(
 
 def calculate_safe_position_size(
     *,
-    product,
+    product: Any,
     side: str,
     intended_quantity: Decimal,
     ref_price: Decimal,

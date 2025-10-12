@@ -6,9 +6,10 @@ from datetime import time
 from decimal import Decimal
 from typing import Any, Literal
 
-from bot_v2.config.types import Profile
 from pydantic import BaseModel, Field, field_validator, model_validator
 from pydantic_core import PydanticCustomError
+
+from bot_v2.config.types import Profile
 
 
 class BotConfigSchema(BaseModel):

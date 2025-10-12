@@ -291,12 +291,13 @@ def set_error_handler(handler: ErrorHandler) -> None:
 
 # Decorator for automatic error handling
 def with_error_handling(
-    recovery_strategy: RecoveryStrategy = RecoveryStrategy.RETRY, fallback: Callable | None = None
-):
+    recovery_strategy: RecoveryStrategy = RecoveryStrategy.RETRY,
+    fallback: Callable[..., Any] | None = None,
+) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
     """Decorator to add error handling to functions"""
 
-    def decorator(func):
-        def wrapper(*args, **kwargs):
+    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
             handler = get_error_handler()
 
             if fallback:

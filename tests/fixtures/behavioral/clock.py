@@ -1,15 +1,17 @@
 """Deterministic clock helpers for tests."""
+
 from __future__ import annotations
 
 import asyncio
 import time
-from typing import Awaitable, Callable, Optional
+from typing import Optional
+from collections.abc import Awaitable, Callable
 
 
 class FakeClock:
     """Simple monotonic clock that advances manually."""
 
-    def __init__(self, start: Optional[float] = None) -> None:
+    def __init__(self, start: float | None = None) -> None:
         # Default to real time so code that inspects absolute timestamps still sees plausible values.
         self._current = float(start if start is not None else time.time())
         self._yield: Callable[[], Awaitable[None]] | None = None

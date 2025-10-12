@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import logging
-from collections.abc import Iterable, Sequence
+from collections.abc import Callable, Iterable, Sequence
 from datetime import datetime
 from decimal import Decimal
+from typing import Any
 
 from bot_v2.features.brokerages.coinbase.auth import build_ws_auth_provider
 from bot_v2.features.brokerages.coinbase.market_data_service import MarketDataService
@@ -26,7 +27,7 @@ class CoinbaseWebSocketHandler:
     def __init__(
         self,
         *,
-        endpoints,
+        endpoints: Any,
         config: APIConfig,
         market_data: MarketDataService,
         rest_service: CoinbaseRestService,
@@ -43,7 +44,7 @@ class CoinbaseWebSocketHandler:
         self._ws_cls = ws_cls
 
         self._ws_client: CoinbaseWebSocket | None = None
-        self._ws_factory_override = None
+        self._ws_factory_override: Callable[[], CoinbaseWebSocket] | None = None
         self._sequence_guard = SequenceGuard()
 
     # ------------------------------------------------------------------
@@ -124,7 +125,7 @@ class CoinbaseWebSocketHandler:
                 self._rest_service.process_fill_for_pnl(annotated)
             yield annotated
 
-    def set_ws_factory_for_testing(self, factory) -> None:
+    def set_ws_factory_for_testing(self, factory: Callable[[], CoinbaseWebSocket]) -> None:
         self._ws_factory_override = factory
         if self._ws_client is not None:
             self._ws_client = None

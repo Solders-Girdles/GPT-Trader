@@ -9,6 +9,7 @@ import logging
 import math
 
 import numpy as np
+
 from bot_v2.errors import ValidationError, log_error
 from bot_v2.features.position_sizing.types import ConfidenceAdjustment
 from bot_v2.validation import PercentageValidator, RangeValidator

@@ -226,13 +226,13 @@ class TestIntegration:
         assert trading_ops.risk_manager == mock_risk_manager
 
         # Test that risk manager is accessible for future enhancements
-        assert hasattr(trading_ops, 'risk_manager')
+        assert hasattr(trading_ops, "risk_manager")
         assert trading_ops.risk_manager is not None
 
     def test_error_handler_integration(self, trading_ops):
         """Test integration with error handling system."""
         # Verify error handler is properly initialized
-        assert hasattr(trading_ops, 'error_handler')
+        assert hasattr(trading_ops, "error_handler")
         assert trading_ops.error_handler is not None
 
         # Test that error handling wrapper is applied

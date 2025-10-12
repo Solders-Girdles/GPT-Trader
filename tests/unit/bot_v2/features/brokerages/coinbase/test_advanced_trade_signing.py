@@ -28,4 +28,3 @@ def test_advanced_trade_hmac_signing_base64(monkeypatch):
     assert headers["CB-ACCESS-KEY"] == "key123"
     assert headers["CB-ACCESS-TIMESTAMP"] == str(1_700_000_000)
     assert headers["CB-ACCESS-SIGN"] == expected
-

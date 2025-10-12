@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import json
 from argparse import Namespace
+from typing import Any
 
 from bot_v2.cli import options, services
 
@@ -18,7 +19,7 @@ _CONFIG_SKIP_KEYS = {
 }
 
 
-def register(subparsers) -> None:
+def register(subparsers: Any) -> None:
     parser = subparsers.add_parser("treasury", help="Treasury utilities")
     options.add_profile_option(parser)
     treasury_subparsers = parser.add_subparsers(dest="treasury_command", required=True)

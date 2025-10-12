@@ -114,7 +114,7 @@ def log_operation(
     logger: StructuredLogger | logging.Logger | None = None,
     level: int = logging.INFO,
     **context: Any,
-) -> Generator[None, None, None]:
+) -> Generator[None]:
     """Context manager for logging operation start/end with timing.
 
     Args:

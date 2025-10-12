@@ -13,7 +13,7 @@ perpetual_products:
     min_notional: "10"
     price_increment: "0.01"
     leverage_max: 3
-    
+
   ETH-PERP:
     symbol: "ETH-PERP"
     base_asset: "ETH"
@@ -24,7 +24,7 @@ perpetual_products:
     min_notional: "10"
     price_increment: "0.01"
     leverage_max: 3
-    
+
   XRP-PERP:
     symbol: "XRP-PERP"
     base_asset: "XRP"
@@ -48,7 +48,7 @@ spot_products:
     min_notional: "1"
     price_increment: "0.01"
     leverage_max: 1
-    
+
   ETH-USD:
     symbol: "ETH-USD"
     base_asset: "ETH"
@@ -74,12 +74,12 @@ price_scenarios:
     BTC-PERP: "75000"
     ETH-PERP: "4500"
     XRP-PERP: "0.75"
-    
+
   bear_market:
     BTC-PERP: "25000"
     ETH-PERP: "1500"
     XRP-PERP: "0.25"
-    
+
   sideways:
     BTC-PERP: "50000"
     ETH-PERP: "3000"
@@ -98,7 +98,7 @@ edge_case_products:
     min_notional: "1"
     price_increment: "0.001"
     leverage_max: 10
-    
+
   # Large increments
   INDEX-PERP:
     symbol: "INDEX-PERP"

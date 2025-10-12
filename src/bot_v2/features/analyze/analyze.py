@@ -9,6 +9,7 @@ from datetime import datetime
 
 import numpy as np
 import pandas as pd
+
 from bot_v2.data_providers import get_data_provider
 from bot_v2.features.analyze.indicators import (
     calculate_atr,

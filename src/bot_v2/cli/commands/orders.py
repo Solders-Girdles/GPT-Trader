@@ -7,6 +7,7 @@ import json
 from argparse import Namespace
 from dataclasses import asdict
 from decimal import Decimal
+from typing import Any
 
 from bot_v2.cli import options, services
 from bot_v2.features.brokerages.core.interfaces import OrderSide, OrderType, TimeInForce
@@ -28,7 +29,7 @@ _CONFIG_SKIP_KEYS = {
 }
 
 
-def register(subparsers) -> None:
+def register(subparsers: Any) -> None:
     parser = subparsers.add_parser("orders", help="Order preview and edit tooling")
     options.add_profile_option(parser)
     orders_subparsers = parser.add_subparsers(dest="orders_command", required=True)

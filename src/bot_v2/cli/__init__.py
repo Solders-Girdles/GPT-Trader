@@ -7,9 +7,10 @@ import logging
 import sys
 from collections.abc import Sequence
 
+from dotenv import load_dotenv
+
 from bot_v2.cli.commands import account, orders, run, treasury
 from bot_v2.logging import configure_logging
-from dotenv import load_dotenv
 
 # Preserve host-provided secrets; only fill gaps from .env
 load_dotenv()

@@ -2,10 +2,11 @@ from __future__ import annotations
 
 import json
 import threading
+from collections.abc import Iterable, Iterator, Mapping, MutableMapping
 from dataclasses import asdict, is_dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Iterable, Iterator, Mapping, MutableMapping
+from typing import Any
 
 
 class JsonFileStore:
@@ -67,9 +68,7 @@ class JsonFileStore:
         """Rewrite the JSONL file with the provided entries."""
         with self._lock, self.path.open("w", encoding="utf-8") as handle:
             for entry in entries:
-                handle.write(
-                    json.dumps(dict(entry), default=self._default_serializer) + "\n"
-                )
+                handle.write(json.dumps(dict(entry), default=self._default_serializer) + "\n")
 
     @staticmethod
     def _default_serializer(value: Any) -> Any:

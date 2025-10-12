@@ -279,4 +279,3 @@ class TestCoinbaseSystem:
                 order_type=OrderType.MARKET,
                 quantity=Decimal("1.0"),
             )
-

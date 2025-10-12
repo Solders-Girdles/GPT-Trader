@@ -24,7 +24,7 @@ data:
   RABBITMQ_PORT: "5672"
   METRICS_ENABLED: "true"
   METRICS_PORT: "9090"
-
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:

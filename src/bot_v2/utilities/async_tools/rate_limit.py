@@ -46,7 +46,7 @@ def async_rate_limit(
     limiter = AsyncRateLimiter(rate_limit, burst_limit)
 
     def decorator(
-        func: Callable[..., Coroutine[Any, Any, T]]
+        func: Callable[..., Coroutine[Any, Any, T]],
     ) -> Callable[..., Coroutine[Any, Any, T]]:
         async def wrapper(*args: Any, **kwargs: Any) -> T:
             async with limiter:

@@ -8,12 +8,14 @@ environment variable overrides, validation, and hot-reload capabilities.
 import json
 import logging
 import os
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 import yaml
+
 from bot_v2.errors import ConfigurationError
 from bot_v2.validation import Validator, validate_config
 
@@ -308,11 +310,11 @@ def set_config_loader(loader: ConfigLoader) -> None:
 
 
 # Configuration decorator
-def with_config(slice_name: str):
+def with_config(slice_name: str) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
     """Decorator to inject configuration into function"""
 
-    def decorator(func):
-        def wrapper(*args, **kwargs):
+    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
             config = get_config(slice_name)
             return func(*args, config=config, **kwargs)
 

@@ -10,7 +10,9 @@ from bot_v2.features.analyze import analyze
 class _FailingProvider:
     """Data provider stub that always fails."""
 
-    def get_historical_data(self, symbol: str, period: str) -> pd.DataFrame:  # noqa: D401 - simple stub
+    def get_historical_data(
+        self, symbol: str, period: str
+    ) -> pd.DataFrame:  # noqa: D401 - simple stub
         raise RuntimeError(f"boom for {symbol}:{period}")
 
 
@@ -26,4 +28,6 @@ def test_calculate_correlations_logs_provider_errors(monkeypatch, caplog):
         frame = analyze.calculate_correlations(["BTC-USD"], 5)
 
     assert frame.empty
-    assert any("Failed to load historical data for BTC-USD" in message for message in caplog.messages)
+    assert any(
+        "Failed to load historical data for BTC-USD" in message for message in caplog.messages
+    )

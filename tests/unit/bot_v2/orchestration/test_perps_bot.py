@@ -205,7 +205,7 @@ async def test_place_order_lock_serialises_calls(monkeypatch, tmp_path, fake_clo
                     self.active -= 1
 
     exec_engine = StubExecEngine()
-    bot.exec_engine = exec_engine  # type: ignore
+    bot.runtime_state.exec_engine = exec_engine  # type: ignore[attr-defined]
 
     def make_order(order_id: str) -> Order:
         now = datetime.now(timezone.utc)

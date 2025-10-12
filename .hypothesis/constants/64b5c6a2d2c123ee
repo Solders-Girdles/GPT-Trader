@@ -1,4 +1,0 @@
-# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/features/live_trade/adapters.py
-# hypothesis_version: 6.140.3
-
-['buy', 'day', 'fok', 'gtc', 'ioc', 'limit', 'market', 'sell', 'stop', 'stop_limit', 'value']

@@ -1,4 +1,0 @@
-# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/features/live_trade/risk/pre_trade_checks.py
-# hypothesis_version: 6.140.3
-
-[10000, '0', '1', 'allowed', 'blocked', 'buy', 'component', 'event_type', 'impact_bps', 'inf', 'kill_switch', 'liquidity_sufficient', 'long', 'mark', 'market_impact_guard', 'max_slice_size', 'message', 'notional', 'price', 'qty', 'quantity', 'reason', 'recommended_slicing', 'reduce_only_block', 'risk_engine', 'risk_manager', 'sell', 'short', 'side', 'slippage_cost', 'status', 'symbol', 'threshold_bps']

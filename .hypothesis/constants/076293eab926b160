@@ -1,4 +1,0 @@
-# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/features/live_trade/risk_runtime.py
-# hypothesis_version: 6.140.3
-
-[0.0, 0.1, 0.12, 0.15, 252.0, '0', '0.4', 'action', 'age_seconds', 'concentration_risk', 'correlation_risk', 'daily_pnl', 'daily_pnl_pct', 'equity', 'exposure_pct', 'halt_new_orders', 'hhi', 'kill_switch', 'limit_seconds', 'mark', 'mark_staleness', 'max_leverage', 'none', 'qty', 'quantity', 'reason', 'reduce_only', 'risk_engine', 'risk_metrics', 'rolling_volatility', 'stale_mark_price', 'symbol', 'symbols', 'timestamp', 'total_notional', 'triggered', 'value', 'warning', 'warning_threshold']

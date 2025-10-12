@@ -1,4 +1,0 @@
-# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/features/analyze/analyze.py
-# hypothesis_version: 6.140.3
-
-[-1.5, -0.5, -0.1, 0.0, 0.02, 0.03, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.9, 1.0, 1.5, 2.0, 25.0, 50.0, 75.0, 200, 100000, 'Breakout', 'Close', 'Finance', 'Healthcare', 'MeanReversion', 'Momentum', 'SimpleMA', 'Technology', 'Volatility', 'accumulation', 'action', 'bear', 'bearish', 'beta', 'bull', 'bullish', 'buy', 'close', 'concentration_risk', 'correlation_risk', 'current_weight', 'cvar_95', 'decrease', 'distribution', 'high', 'hold', 'increase', 'low', 'max_drawdown', 'neutral', 'reason', 'return', 'sell', 'sharpe', 'strong_buy', 'strong_down', 'strong_sell', 'strong_up', 'symbol', 'target_weight', 'var_95', 'volume', 'weak_down', 'weak_up', 'win_rate']

@@ -1,4 +1,0 @@
-# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/features/backtest/backtest.py
-# hypothesis_version: 6.140.3
-
-[0.0, 0.0005, 0.001, 10000.0, 100, 1000, 'backtest', 'backtest_complete', 'backtest_failed', 'backtest_start', 'calculate_metrics', 'commission', 'context', 'data_rows', 'date_range', 'duration_ms', 'end', 'equity_points', 'equity_valid', 'error', 'error_code', 'error_type', 'generate_signals', 'initial_capital', 'level', 'message', 'metrics_valid', 'min_data_points', 'original_error', 'params', 'recoverable', 'returns_points', 'returns_valid', 'signals_count', 'simulate_trades', 'slippage', 'start', 'strategy', 'symbol', 'trades_count', 'trades_valid']

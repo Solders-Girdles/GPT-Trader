@@ -1,4 +1,0 @@
-# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/features/brokerages/coinbase/rest/portfolio.py
-# hypothesis_version: 6.140.3
-
-['0', 'EUR', 'GBP', 'PortfolioRestMixin', 'USD', 'USDC', 'accounts', 'asset', 'available', 'available_balance', 'avg_entry_price', 'balance', 'breakdown', 'contracts', 'currency', 'current_price', 'data', 'entry_price', 'hold', 'index_price', 'key_permissions', 'leverage', 'limits', 'long', 'mark_price', 'payment_method', 'payment_methods', 'portfolio', 'portfolios', 'positions', 'product_id', 'realizedPnl', 'realized_pnl', 'retail_portfolio_id', 'short', 'side', 'size', 'spot_positions', 'total_balance', 'total_balance_crypto', 'unknown', 'unrealizedPnl', 'unrealized_pnl', 'value']

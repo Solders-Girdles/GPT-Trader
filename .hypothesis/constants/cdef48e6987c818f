@@ -1,4 +1,0 @@
-# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/features/brokerages/coinbase/rest/base.py
-# hypothesis_version: 6.140.3
-
-['+00:00', '0', 'GOOD_TILL_DATE', 'GTD', 'Z', 'base_size', 'client_order_id', 'coinbase_perps', 'created_at', 'data', 'duplicate', 'entry_price', 'funding', 'funding_amount', 'funding_rate', 'leverage', 'limit_limit_fok', 'limit_limit_gtc', 'limit_limit_ioc', 'limit_price', 'logger', 'mark_price', 'market_market_ioc', 'order_configuration', 'order_type', 'orders', 'position_value', 'post_only', 'price', 'product_id', 'quantity', 'realized_pnl', 'reduce_only', 'side', 'size', 'stop_price', 'submitted_at', 'symbol', 'time_in_force', 'timestamp', 'type', 'unrealized_pnl']

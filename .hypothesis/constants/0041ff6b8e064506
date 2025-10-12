@@ -1,4 +1,0 @@
-# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/features/backtest/profile.py
-# hypothesis_version: 6.140.3
-
-[2.5, 10000, '-', '0', '1', '2', '30', '70', 'bollinger', 'commission_bps', 'initial_cash', 'long_window', 'ma', 'max_vol', 'min_slope', 'min_vol', 'momentum_filter', 'multiplier', 'num_std', 'overbought', 'oversold', 'r', 'risk', 'short_window', 'strategy', 'trend_filter', 'type', 'volatility_filter', 'volume_filter', 'window']

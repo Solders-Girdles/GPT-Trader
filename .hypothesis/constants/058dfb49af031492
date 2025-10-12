@@ -1,4 +1,0 @@
-# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/features/data/storage.py
-# hypothesis_version: 6.140.3
-
-[1024, './data_storage', '.pkl', '_', 'index.json', 'last', 'metadata', 'newest_record', 'ohlcv', 'oldest_record', 'symbols_count', 'total_records', 'total_size_mb', 'w']

@@ -1,4 +1,0 @@
-# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/features/brokerages/coinbase/client/accounts.py
-# hypothesis_version: 6.140.3
-
-['AccountClientMixin', 'GET', 'account', 'accounts', 'exchange', 'fees', 'key_permissions', 'limits', 'time', 'transaction_summary']

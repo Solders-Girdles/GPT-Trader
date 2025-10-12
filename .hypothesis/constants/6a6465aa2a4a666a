@@ -1,4 +1,0 @@
-# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/features/brokerages/core/interfaces.py
-# hypothesis_version: 6.140.3
-
-[200, '0', 'buy', 'cancelled', 'filled', 'fok', 'futures', 'gtc', 'ioc', 'limit', 'long', 'market', 'partially_filled', 'pending', 'perpetual', 'rejected', 'sell', 'short', 'spot', 'stop', 'stop_limit', 'submitted', 'take_profit', 'trailing_stop']

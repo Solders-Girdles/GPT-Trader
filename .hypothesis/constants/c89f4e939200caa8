@@ -1,4 +1,0 @@
-# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/features/live_trade/strategies/decisions.py
-# hypothesis_version: 6.140.3
-
-['Action', 'Decision', 'buy', 'close', 'hold', 'sell']

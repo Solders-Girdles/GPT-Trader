@@ -1,4 +1,0 @@
-# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/features/brokerages/coinbase/client/portfolio.py
-# hypothesis_version: 6.140.3
-
-['GET', 'POST', 'PortfolioClientMixin', 'cfm_balance_summary', 'cfm_position', 'cfm_positions', 'cfm_schedule_sweep', 'cfm_sweeps', 'convert_quote', 'convert_trade', 'exchange', 'intx_allocate', 'intx_balances', 'intx_portfolio', 'intx_position', 'intx_positions', 'move_funds', 'payment_method', 'payment_methods', 'portfolio', 'portfolio_breakdown', 'portfolios']

@@ -1,4 +1,0 @@
-# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/state/recovery/ml_models.py
-# hypothesis_version: 6.140.3
-
-['ML Model Failure', 'Recovering ML models', 'current_version', 'last_stable_version', 'ml_model:*']

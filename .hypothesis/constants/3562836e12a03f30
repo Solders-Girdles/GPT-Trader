@@ -1,4 +1,0 @@
-# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/features/backtest/validation.py
-# hypothesis_version: 6.140.3
-
-[0.1, 0.8, 'close', 'entry_date', 'entry_price', 'exit_date', 'exit_price', 'high', 'low', 'open', 'pnl', 'position_size', 'volume']

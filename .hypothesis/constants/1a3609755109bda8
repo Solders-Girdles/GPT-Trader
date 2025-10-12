@@ -1,4 +1,0 @@
-# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/features/live_trade/risk_metrics.py
-# hypothesis_version: 6.140.3
-
-[2000, '+00:00', '0', '1', 'Z', 'bot_id', 'daily_pnl', 'daily_pnl_pct', 'equity', 'exposure_pct', 'kill_switch', 'max_leverage', 'metric', 'on', 'reduce_only', 'risk_engine', 'time', 'timestamp', 'total_notional', 'true', 'type', 'yes']

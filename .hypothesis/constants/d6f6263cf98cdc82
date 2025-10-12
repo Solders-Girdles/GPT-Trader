@@ -1,4 +1,0 @@
-# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/features/live_trade/live_trade.py
-# hypothesis_version: 6.140.3
-
-[0.0, 100, '+', '-', '0', '0.001', '0.01', '10', 'Broker not connected', 'No open positions', 'USD', 'baseline_perps', 'buy', 'cancel_order', 'close_all_positions', 'connect_broker', 'disconnect', 'entry', 'failed_positions', 'get_account', 'get_account_snapshot', 'get_market_hours', 'get_orders', 'get_positions', 'get_quote', 'long', 'open', 'order_id', 'original_error', 'place_order', 'quantity', 'run_strategy', 'sell', 'side', 'simulated', 'symbol', '💰 Account Summary:', '📊 Current Positions:', '📊 No open positions']

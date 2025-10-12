@@ -1,4 +1,0 @@
-# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/persistence/orders_store.py
-# hypothesis_version: 6.140.3
-
-[1000.0, 'CANCELLED', 'EXPIRED', 'FILLED', 'REJECTED', 'avg_fill_price', 'filled_quantity', 'orders.jsonl']

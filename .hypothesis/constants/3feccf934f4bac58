@@ -1,4 +1,0 @@
-# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/features/adaptive_portfolio/config_manager.py
-# hypothesis_version: 6.140.3
-
-[0.5, 1.0, 10000, 25000, '.json.backup', 'account_type', 'commission_per_trade', 'config', 'costs', 'daily_limit_pct', 'description', 'excluded_sectors', 'excluded_symbols', 'large', 'last_updated', 'market_constraints', 'market_hours_only', 'max', 'max_share_price', 'max_trades_per_week', 'min', 'min_daily_volume', 'min_position_size', 'min_share_price', 'name', 'pdt_compliant', 'positions', 'quarterly_limit_pct', 'range', 'rebalancing', 'risk', 'settlement_days', 'slippage_pct', 'spread_estimate_pct', 'strategies', 'target', 'tiers', 'trading', 'validation', 'version', 'w']

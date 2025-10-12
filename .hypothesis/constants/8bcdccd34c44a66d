@@ -1,4 +1,0 @@
-# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/features/adaptive_portfolio/strategy_selector.py
-# hypothesis_version: 6.140.3
-
-[-1.5, 0.25, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.95, 1.2, 40.0, 60.0, 100.0, 100, '100d', '60d', 'AAPL', 'ADBE', 'AMZN', 'BAC', 'BRK-B', 'BUY', 'CRM', 'Close', 'DIS', 'GOOGL', 'HD', 'IWM', 'JNJ', 'JPM', 'MA', 'META', 'MSFT', 'Medium Portfolio', 'Micro Portfolio', 'NFLX', 'NVDA', 'PG', 'PYPL', 'QQQ', 'SPY', 'Small Portfolio', 'TSLA', 'UNH', 'V', 'VTI', 'columns', 'data', 'large', 'mean_reversion', 'medium', 'micro', 'ml_enhanced', 'momentum', 'small', 'trend_following']

@@ -1,4 +1,0 @@
-# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/features/analyze/types.py
-# hypothesis_version: 6.140.3
-
-['accumulation', 'bearish', 'bullish', 'buy', 'distribution', 'high', 'hold', 'low', 'medium', 'neutral', 'sell', 'strong_buy', 'strong_down', 'strong_sell', 'strong_up', 'weak_down', 'weak_up']

@@ -1,4 +1,0 @@
-# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/monitoring/workflow_tracker.py
-# hypothesis_version: 6.140.3
-
-[0.0, 100, 3600, 'avg_duration', 'cancelled', 'completed', 'completed_at', 'context', 'current_duration', 'description', 'duration', 'error_count', 'errors', 'expected_steps', 'failed', 'failure_rate', 'id', 'last_execution', 'metadata', 'metrics', 'pending', 'progress', 'registered_at', 'registry_info', 'running', 'started_at', 'status', 'step_timings', 'steps', 'steps_completed', 'steps_failed', 'steps_total', 'success_rate', 'timestamp', 'total', 'total_duration', 'total_executions', 'workflow', 'workflow_name']

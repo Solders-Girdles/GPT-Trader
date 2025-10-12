@@ -1,4 +1,0 @@
-# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/state/checkpoint_handler.py
-# hypothesis_version: 6.140.3
-
-[0.1, 1000, '%Y%m%d_%H%M%S', '*.meta', '.checkpoint', '.meta', '.tmp', 'Checkpoint', 'automatic', 'average_size_bytes', 'checkpoint_id', 'checkpoint_type', 'config:*', 'configuration', 'consistency_hash', 'corrupted', 'creating', 'creation_duration_ms', 'daily', 'deleted', 'emergency', 'filled', 'invalid', 'invalid_checkpoints', 'manual', 'market_data_cache', 'metadata', 'ml_model:*', 'ml_models', 'newest_checkpoint', 'oldest_checkpoint', 'order:*', 'orders', 'orders_count', 'performance_metrics', 'portfolio', 'portfolio_current', 'position:*', 'positions', 'positions_count', 'pre_upgrade', 'rb', 'size_bytes', 'state_snapshot', 'status', 'timestamp', 'total_checkpoints', 'total_size_bytes', 'valid', 'valid_checkpoints', 'version', 'w', 'wb']

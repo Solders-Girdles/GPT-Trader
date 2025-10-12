@@ -1,4 +1,0 @@
-# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/config/path_registry.py
-# hypothesis_version: 6.140.3
-
-['LOG_DIR', 'PERPS_RUNTIME_DIR', 'PROJECT_ROOT', 'RESULTS_DIR', 'RUNTIME_DATA_DIR', 'VAR_DIR', 'data', 'ensure_directories', 'logs', 'perps_bot', 'results', 'shared', 'var']

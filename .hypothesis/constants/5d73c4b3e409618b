@@ -1,4 +1,0 @@
-# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/state/state_manager.py
-# hypothesis_version: 6.140.3
-
-[-100, 100, 1024, 3600, 5432, 6379, '%', '*', 'Body', 'Contents', 'Key', 'KeyCount', 'Redis not available', 'S3 not available', 'STANDARD_IA', 'cache_keys', 'cache_size_bytes', 'checksum', 'cold', 'cold/', 'cold_keys', 'count', 'data', 'hot', 'hot_keys', 'key', 'localhost', 's3', 'total_keys', 'trader', 'trader123', 'trading_bot', 'us-east-1', 'utf-8', 'warm', 'warm_keys']

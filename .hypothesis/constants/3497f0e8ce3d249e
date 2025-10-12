@@ -1,4 +1,0 @@
-# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/features/live_trade/execution.py
-# hypothesis_version: 6.140.3
-
-[0.0, 10000, 'CANCELLED', 'FILLED', 'ORDER_CANCELLED', 'ORDER_FILLED', 'ORDER_PARTIAL_FILL', 'ORDER_PLACED', 'ORDER_REJECTED', 'REJECTED', 'all', 'avg_fill_time', 'cancelled_orders', 'day', 'filled_orders', 'fok', 'gtc', 'ioc', 'limit_price', 'live_trade', 'max_order_quantity', 'order_id', 'order_type', 'original_error', 'pending_orders', 'quantity', 'rejected_orders', 'side', 'stop_price', 'symbol', 'time_in_force', 'total_commission', 'total_orders', 'value', '🚫 Order rejected: %s']

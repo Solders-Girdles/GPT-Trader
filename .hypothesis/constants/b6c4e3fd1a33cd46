@@ -1,4 +1,0 @@
-# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/orchestration/strategy_orchestrator.py
-# hypothesis_version: 6.140.3
-
-[1000.0, '0', 'ONE_HOUR', 'USD', 'USDC', 'asset', 'close', 'enable_shorts', 'entry', 'entry_price', 'high', 'kill_switch_enabled', 'long', 'long_ma_period', 'long_window', 'low', 'max_vol', 'min_slope', 'min_vol', 'momentum_filter', 'momentum_filter_wait', 'multiplier', 'overbought', 'oversold', 'position_fraction', 'quantity', 'short_ma_period', 'short_window', 'side', 'symbol', 'target_leverage', 'timestamp', 'trailing_stop_pct', 'trend_filter', 'trend_filter_blocked', 'trend_filter_wait', 'ts', 'volatility_filter', 'volume', 'volume_filter', 'volume_filter_wait', 'window']

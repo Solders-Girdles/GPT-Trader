@@ -1,4 +1,0 @@
-# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/monitoring/metrics_collector.py
-# hypothesis_version: 6.140.3
-
-[0.0, 1.0, 50.0, 100.0, -10000, 1000, 10000, 'MetricsCollector', '_', 'active_timers', 'adaptive_portfolio', 'agents.builtin_count', 'agents.custom_count', 'analyze', 'available_count', 'backtest', 'builtin_count', 'collection_interval', 'count', 'counters', 'custom_count', 'data', 'degraded', 'error', 'error_rate', 'failure', 'gauges', 'healthy', 'histograms', 'last_collection', 'live_trade', 'market_regime', 'max', 'mean', 'median', 'min', 'ml_strategy', 'monitor', 'optimize', 'p95', 'p99', 'paper_trade', 'position_sizing', 'series_stats', 'status', 'stdev', 'success', 'sum', 'system.health.status', 'tags', 'timestamp', 'total_errors', 'total_successes', 'trading.pnl', 'trading.trade_pnl', 'uptime_seconds', 'value']

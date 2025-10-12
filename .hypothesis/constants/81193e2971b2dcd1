@@ -1,4 +1,0 @@
-# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/errors/handler.py
-# hypothesis_version: 6.140.3
-
-[0.5, 1.0, 2.0, 60.0, 100, 'CIRCUIT_BREAKER_OPEN', 'CircuitBreaker', 'CircuitBreakerConfig', 'CircuitBreakerState', 'ErrorHandler', 'RETRY_EXHAUSTED', 'RecoveryStrategy', 'RetryConfig', 'attempts', 'circuit_break', 'closed', 'degrade', 'error_types', 'fail_fast', 'fallback', 'get_error_handler', 'half_open', 'last_error', 'open', 'retry', 'set_error_handler', 'total_errors', 'with_error_handling']

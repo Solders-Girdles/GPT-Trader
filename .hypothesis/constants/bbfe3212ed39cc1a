@@ -1,4 +1,0 @@
-# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/state/recovery/network.py
-# hypothesis_version: 6.140.3
-
-['Network Partition', '_init_postgres', '_init_redis']

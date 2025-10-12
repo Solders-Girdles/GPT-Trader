@@ -1,4 +1,0 @@
-# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/orchestration/account_telemetry.py
-# hypothesis_version: 6.140.3
-
-[300, 'account.json', 'account_snapshot', 'event_type', 'get_account_limits', 'get_fee_schedule', 'get_key_permissions', 'list_payment_methods', 'list_portfolios', 'perps_bot', 'server_time', 'timestamp', 'w']

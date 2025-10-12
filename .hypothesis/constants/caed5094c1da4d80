@@ -1,4 +1,0 @@
-# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/monitoring/alerting_system.py
-# hypothesis_version: 6.140.3
-
-[1000, '%s [%s] %s: %s', 'a', 'alerting', 'alerting_system', 'by_category', 'by_level', 'category', 'count', 'cpu_percent', 'critical_alerts', 'critical_alerts.log', 'critical_memory', 'data', 'data_age_minutes', 'data_stale', 'error_count', 'failed', 'high_cpu', 'high_memory', 'id', 'level', 'memory_percent', 'message', 'metadata', 'metric_name', 'recent_alerts', 'resource', 'timestamp', 'total_active', 'trading', 'trading_error', 'value', 'w', 'workflow', 'workflow_failed', 'workflow_status', 'ℹ️', '⚠️', '❌']

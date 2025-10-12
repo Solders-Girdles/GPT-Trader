@@ -1,4 +1,0 @@
-# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/orchestration/perps_bootstrap.py
-# hypothesis_version: 6.140.3
-
-['-', '-PERP', '0', '1', 'BTC-PERP', 'BootstrapLogRecord', 'ETH-PERP', 'EVENT_STORE_ROOT', 'PerpsBootstrapResult', 'RuntimePaths', 'SOL-PERP', 'USD', 'XRP-PERP', 'normalise_symbols', 'perps_bot', 'prepare_perps_bot']

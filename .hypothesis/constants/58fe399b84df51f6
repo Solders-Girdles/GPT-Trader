@@ -1,4 +1,0 @@
-# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/orchestration/execution/guards.py
-# hypothesis_version: 6.140.3
-
-[0.0, 60.0, '-1', '0', '1', '1m', '_mark_cache', 'close', 'correlation_risk', 'daily_loss', 'entry', 'entry_price', 'equity', 'error', 'failures', 'get_candles', 'get_position_pnl', 'get_position_risk', 'liquidation_buffer', 'liquidation_price', 'long', 'mark', 'mark_price', 'mark_staleness', 'pnl_telemetry', 'positions', 'quantity', 'realized_pnl', 'risk_metrics', 'side', 'symbol', 'unknown', 'unrealized_pnl']

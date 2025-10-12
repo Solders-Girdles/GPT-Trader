@@ -1,4 +1,0 @@
-# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/features/live_trade/types.py
-# hypothesis_version: 6.140.3
-
-['0', 'AccountInfo', 'AccountSnapshot', 'Bar', 'BrokerConnection', 'ExecutionReport', 'MarketHours', 'Order', 'OrderSide', 'OrderStatus', 'OrderType', 'Position', 'Quote', 'TimeInForce', 'TradeFill', 'TradingPosition', 'unknown']

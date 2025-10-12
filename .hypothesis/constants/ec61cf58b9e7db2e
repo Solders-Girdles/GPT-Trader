@@ -1,4 +1,0 @@
-# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/features/brokerages/coinbase/websocket_handler.py
-# hypothesis_version: 6.140.3
-
-['0', 'amount', 'ask', 'ask_price', 'asks', 'best_ask', 'best_bid', 'bid', 'bid_price', 'bids', 'book', 'buy', 'changes', 'channel', 'close', 'data', 'event', 'event_type', 'executed_trade', 'execution_price', 'fill', 'instrument', 'l2', 'l2update', 'last', 'last_price', 'level2', 'level2_batch', 'market_trades', 'match', 'matches', 'orderbook', 'price', 'product_id', 'quantity', 'sell', 'size', 'symbol', 'tick', 'ticker', 'ticker_batch', 'tickers', 'trade', 'trade_price', 'trades', 'type', 'updates', 'user']

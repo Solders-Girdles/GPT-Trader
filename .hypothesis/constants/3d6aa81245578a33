@@ -1,4 +1,0 @@
-# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/features/live_trade/broker_connection.py
-# hypothesis_version: 6.140.3
-
-['Account ID: %s', 'alpaca', 'broker', 'broker_name', 'connect_broker', 'disconnect', 'get_broker_client', 'get_connection', 'get_execution_engine', 'get_risk_manager', 'ibkr', 'is_paper', 'live', 'original_error', 'paper', 'simulated']

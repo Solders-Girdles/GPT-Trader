@@ -1,4 +1,0 @@
-# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/features/live_trade/pnl_tracker.py
-# hypothesis_version: 6.140.3
-
-['0', '0.01', '15.87', 'avg_entry', 'buy', 'daily_return', 'equity', 'funding', 'funding_paid', 'long', 'max_drawdown', 'positions', 'quantity', 'realized', 'realized_pnl', 'sell', 'sharpe', 'short', 'side', 'symbol', 'timestamp', 'total', 'total_pnl', 'trades', 'unrealized', 'unrealized_pnl', 'win_rate']

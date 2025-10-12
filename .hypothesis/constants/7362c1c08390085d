@@ -1,4 +1,0 @@
-# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/features/backtest/signals.py
-# hypothesis_version: 6.140.3
-
-[0.5, 'activity_rate', 'available_columns', 'available_periods', 'buy_rate', 'buy_signals', 'close', 'creation_error', 'data_rows', 'data_shape', 'duplicate_count', 'error', 'execution_error', 'extreme_returns', 'high', 'hold_signals', 'invalid_count', 'low', 'min_prices', 'null_counts', 'open', 'params', 'required_periods', 'sell_rate', 'sell_signals', 'shape', 'shortfall', 'signal_count', 'signal_rate', 'signals_shape', 'strategy', 'total_signals', 'unique_values', 'unknown', 'validation_error', 'volume']

@@ -1,4 +1,0 @@
-# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/config/schemas.py
-# hypothesis_version: 6.140.3
-
-[0.01, 300, ', ', '0', '1000', '; ', 'FOK', 'GTC', 'IOC', 'after', 'before', 'daily_loss_limit', 'error', 'invalid', 'long_ma', 'max_leverage', 'max_leverage_invalid', 'max_position_size', 'perps_stream_level', 'short_ma', 'supported', 'symbols', 'symbols_empty', 'symbols_invalid_type', 'target_leverage', 'time_in_force', 'trailing_stop_pct', 'type', 'update_interval', 'value']

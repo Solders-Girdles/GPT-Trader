@@ -1,4 +1,0 @@
-# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/monitoring/domain/perps/margin.py
-# hypothesis_version: 6.140.3
-
-[1.0, 288, '0', '0.05', '0.075', '0.1', '0.10', '0.125', '0.15', '0.20', '0.25', '0.8', '10', '4', '5', '6.67', 'HIGH_UTILIZATION', 'LIQUIDATION_RISK', 'MARGIN_CALL', 'WINDOW_TRANSITION', 'cash_balance', 'change_time', 'current_max_leverage', 'current_window', 'initial_margin_req', 'intraday', 'is_liquidation_risk', 'is_margin_call', 'leverage', 'margin_available', 'margin_used', 'margin_utilization', 'mark_price', 'minutes_until', 'next_max_leverage', 'next_window', 'normal', 'overnight', 'positions_notional', 'pre_funding', 'quantity', 'should_reduce_risk', 'timestamp', 'total_equity', 'window']

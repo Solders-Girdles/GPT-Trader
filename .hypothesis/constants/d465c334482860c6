@@ -1,4 +1,0 @@
-# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/features/brokerages/coinbase/client/orders.py
-# hypothesis_version: 6.140.3
-
-['&', 'GET', 'OrderClientMixin', 'POST', 'close_position', 'exchange', 'fills', 'method not allowed', 'order', 'order_edit', 'order_edit_preview', 'order_ids', 'order_preview', 'orders', 'orders_batch', 'orders_batch_cancel', 'orders_historical']

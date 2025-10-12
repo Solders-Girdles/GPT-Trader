@@ -1,4 +1,0 @@
-# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/features/brokerages/coinbase/rest/pnl.py
-# hypothesis_version: 6.140.3
-
-[100, '0', 'PnLRestMixin', 'buy', 'coinbase_perps', 'entry', 'funding', 'funding_accrued', 'funding_amount', 'long', 'mark', 'metric', 'positions', 'price', 'product_id', 'quantity', 'realized_pnl', 'short', 'side', 'size', 'symbol', 'total_funding', 'total_pnl', 'total_realized_pnl', 'total_unrealized_pnl', 'type', 'unrealized_pnl']

@@ -1,4 +1,0 @@
-# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/features/backtest/types.py
-# hypothesis_version: 6.140.3
-
-[0.0, '0', 'No results available', 'buy', 'commission', 'date', 'fee', 'id', 'price', 'quantity', 'side', 'slippage', 'slippage_amount', 'symbol', 'timestamp']

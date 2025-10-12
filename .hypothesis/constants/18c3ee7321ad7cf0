@@ -1,4 +1,0 @@
-# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/features/backtest/data.py
-# hypothesis_version: 6.140.3
-
-[0.5, '%Y-%m-%d', '1d', 'Close', 'High', 'Low', 'Open', 'Volume', 'available_columns', 'available_points', 'avg_volume', 'backtest', 'close', 'columns', 'connection', 'data_quality_issues', 'data_requirements', 'data_shape', 'date_range', 'duplicate_dates', 'empty', 'end', 'end_date', 'error', 'extreme_returns', 'gap_count', 'high_price_count', 'interval', 'low_price_count', 'low_volume_count', 'max_close', 'max_gap_days', 'max_price', 'max_price_threshold', 'min_close', 'min_data_points', 'min_price', 'min_price_threshold', 'min_volume', 'min_volume_threshold', 'missing_columns', 'network', 'null_counts', 'null_values_present', 'payload_type', 'price_stats', 'provider_error', 'provider_type', 'required_points', 'rows_fetched', 'shortfall', 'start', 'start_date', 'symbol', 'timeout', 'total_periods', 'validation_error', 'volume']

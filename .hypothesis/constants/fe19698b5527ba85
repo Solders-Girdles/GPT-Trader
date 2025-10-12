@@ -1,4 +1,0 @@
-# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/monitoring/system/demo_collectors.py
-# hypothesis_version: 6.140.3
-
-[0.01, 0.05, 0.1, 0.8, 1.2, 1.5, 2.0, 100, 150, 200, 1000, 'API', 'DataProvider', 'Database', 'Executor', 'Normal', 'RiskManager', 'Strategies', 'active_strategies', 'avg_calculation_ms', 'avg_latency_ms', 'checks_passed', 'connections', 'data_sources', 'error_rate', 'fills', 'last_update', 'latency_ms', 'orders_processed', 'queries_per_sec', 'replication_lag', 'requests_per_sec', 'risk_limit', 'signals_generated', 'violations']

@@ -1,4 +1,0 @@
-# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/monitoring/system/engine.py
-# hypothesis_version: 6.140.3
-
-[0.65, 2.3, 125.5, 2500.0, 150000.0, 1000, 'Performance', 'System', 'cpu_percent', 'disk_percent', 'error_rate', 'memory_percent', 'response_time_ms']

@@ -1,4 +1,0 @@
-# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/state/backup/models.py
-# hypothesis_version: 6.140.3
-
-[0.0, 180, '/tmp/bot_v2/backups', 'archive', 'backup_id', 'backup_type', 'bot-v2-backups', 'bot_v2', 'checksum', 'cloud', 'completed', 'corrupted', 'data_sources', 'differential', 'emergency', 'encryption_key_id', 'error_message', 'failed', 'full', 'in_progress', 'incremental', 'local', 'network', 'pending', 'retention_days', 'size_bytes', 'size_compressed', 'snapshot', 'source_system', 'status', 'storage_tier', 'timestamp', 'us-east-1', 'verification_status', 'verified']

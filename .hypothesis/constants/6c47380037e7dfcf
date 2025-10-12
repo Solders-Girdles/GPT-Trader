@@ -1,4 +1,0 @@
-# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/features/adaptive_portfolio/adaptive_portfolio.py
-# hypothesis_version: 6.140.3
-
-[0.0, 0.8, 365.25, 100, 1000, 25000, '1d', 'BUY', 'Close', 'D', 'action', 'capital', 'custom', 'daily_risk_pct', 'date', 'from_tier', 'mock', 'price', 'shares', 'strategy', 'symbol', 'tier', 'to_tier', 'total_value', 'value', 'yfinance']

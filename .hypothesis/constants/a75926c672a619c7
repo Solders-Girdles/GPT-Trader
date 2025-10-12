@@ -1,4 +1,0 @@
-# file: /Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/features/live_trade/risk_calculations.py
-# hypothesis_version: 6.140.3
-
-[':', 'day_mmr_per_symbol', 'daytime_end_utc', 'daytime_start_utc', 'leverage_cap', 'max_leverage', 'mmr', 'night_mmr_per_symbol']

@@ -64,11 +64,7 @@ class PerpsBotBuilder:
             configuration_guardian=ConfigurationGuardian(baseline_snapshot),
         )
 
-        bot._construct_services()
-        bot.runtime_coordinator.bootstrap()
-        bot._init_accounting_services()
-        bot._init_market_services()
-        bot._start_streaming_if_configured()
+        bot.lifecycle_manager.bootstrap()
 
         logger.info(
             "PerpsBot constructed via builder - profile=%s symbols=%s",

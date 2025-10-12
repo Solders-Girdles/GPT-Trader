@@ -5,6 +5,7 @@ This document summarizes the comprehensive codebase cleanup and refactoring work
 ## Overview
 
 The cleanup focused on key areas:
+- Orchestration facade decomposition and coordinator ownership
 - Configuration management and parsing utilities
 - Builder pattern implementation for complex object construction
 - Structured test fixtures and data factories
@@ -14,6 +15,14 @@ The cleanup focused on key areas:
 - Enhanced documentation and type safety
 
 ## Key Improvements
+
+### 0. Orchestration Facade Decomposition (`src/bot_v2/orchestration/`)
+
+#### Highlights:
+- Introduced dedicated coordinators: `LifecycleManager`, `StrategyCoordinator`, and `TelemetryCoordinator` to isolate startup/shutdown, trading-loop orchestration, and telemetry/stream management.
+- Slimmed `PerpsBot` into a thin facade that now delegates to collaborators instantiated during construction, eliminating bespoke `_construct_services` and `_init_*` helpers.
+- Enhanced telemetry tests with `tests/unit/bot_v2/orchestration/test_telemetry_coordinator.py` and protected legacy shim behaviour via `tests/unit/bot_v2/features/live_trade/test_live_trade_shim.py`.
+- Added focused coverage for `calculate_position_size` flows (`tests/unit/bot_v2/features/position_sizing/test_position_sizing.py`) to close a previously untested slice.
 
 ### 1. Configuration Management (`src/bot_v2/config/`)
 

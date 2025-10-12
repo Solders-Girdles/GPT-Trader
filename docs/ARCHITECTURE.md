@@ -72,6 +72,22 @@ Risk Guards → Coinbase Brokerage Adapter → Metrics + Telemetry
 | `bot_v2/monitoring` | Runtime guard orchestration, alert dispatch, system metrics |
 | `bot_v2/validation` | Predicate-based validators and input decorators |
 
+#### Orchestration Coordinators
+
+The PerpsBot facade (`bot_v2/orchestration/perps_bot.py`) now delegates concrete work to three
+focused coordinators:
+
+- `LifecycleManager` (`bot_v2/orchestration/lifecycle_manager.py`) boots the service graph, runs the
+  guarded async loop, and tears down background tasks/streams on shutdown.
+- `StrategyCoordinator` (`bot_v2/orchestration/strategy_coordinator.py`) owns trading-cycle
+  orchestration, including configuration drift checks, mark updates, and dispatching symbol
+  processing to the strategy orchestrator and execution coordinator.
+- `TelemetryCoordinator` (`bot_v2/orchestration/telemetry_coordinator.py`) encapsulates account
+  telemetry wiring, market activity monitoring, and websocket/stream lifecycle management.
+
+This split keeps the PerpsBot class as a thin facade while isolating runtime responsibilities into
+independently testable units, reducing coupling between lifecycle, trading logic, and telemetry.
+
 #### Coinbase Client Package
 
 The previous monolithic `client.py` was replaced with a composable package (`client/__init__.py`

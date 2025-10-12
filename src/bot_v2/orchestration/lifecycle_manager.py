@@ -48,7 +48,7 @@ class LifecycleManager:
                     background_tasks.append(
                         asyncio.create_task(bot.system_monitor.run_position_reconciliation())
                     )
-                    account_telemetry = getattr(bot, "account_telemetry", None)
+                    account_telemetry = bot.account_telemetry
                     if account_telemetry and account_telemetry.supports_snapshots():
                         background_tasks.append(
                             asyncio.create_task(
@@ -59,6 +59,12 @@ class LifecycleManager:
                         )
             else:
                 logger.info("Dry-run: skipping startup reconciliation and background guard loops")
+
+            ensure_streaming = getattr(bot.telemetry_coordinator, "ensure_streaming_task", None)
+            if callable(ensure_streaming):
+                stream_task = ensure_streaming()
+                if stream_task:
+                    background_tasks.append(stream_task)
 
             await bot.run_cycle()
             bot.system_monitor.write_health_status(ok=True)
@@ -97,4 +103,4 @@ class LifecycleManager:
         try:
             bot.telemetry_coordinator.stop_streaming_background()
         except Exception as exc:  # pragma: no cover - defensive shutdown logging
-            logger.debug("Failed to stop WS thread cleanly: %s", exc, exc_info=True)
+            logger.debug("Failed to stop WS streaming task cleanly: %s", exc, exc_info=True)

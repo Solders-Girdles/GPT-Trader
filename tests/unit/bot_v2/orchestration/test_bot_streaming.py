@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import asyncio
 from decimal import Decimal
 from types import SimpleNamespace
+
+import pytest
 
 from bot_v2.orchestration.configuration import Profile
 from bot_v2.orchestration.telemetry_coordinator import TelemetryCoordinator
@@ -60,7 +63,8 @@ def test_stream_loop_updates_mark_window_unit() -> None:
     assert bot.event_store.metrics
 
 
-def test_background_stream_thread_emits_updates(monkeypatch) -> None:
+@pytest.mark.asyncio
+async def test_background_stream_task_emits_updates() -> None:
     updates: list[tuple[str, Decimal]] = []
 
     class StubStrategy:
@@ -107,9 +111,9 @@ def test_background_stream_thread_emits_updates(monkeypatch) -> None:
     coordinator._market_monitor = None  # type: ignore[attr-defined]
 
     coordinator.start_streaming_background()
-    assert coordinator._ws_thread is not None
-    coordinator._ws_thread.join(timeout=1.0)
-    assert not coordinator._ws_thread.is_alive()
+    task = coordinator.ensure_streaming_task()
+    assert task is not None
+    await asyncio.wait_for(task, timeout=1.0)
 
     assert updates == [("BTC-PERP", Decimal("100.5"))]
     assert "BTC-PERP" in bot.risk_manager.last_mark_update

@@ -7,7 +7,7 @@ Async and periodic checks performed during trading operations.
 from __future__ import annotations
 
 import logging
-from collections.abc import Callable
+from collections.abc import Callable, MutableMapping
 from datetime import datetime
 from decimal import Decimal
 from typing import Any
@@ -49,7 +49,7 @@ class RuntimeMonitor:
         event_store: EventStore,
         set_reduce_only_mode: Callable[[bool, str], None] | None = None,
         now_provider: Callable[[], datetime] | None = None,
-        last_mark_update: dict[str, datetime] | None = None,
+        last_mark_update: MutableMapping[str, datetime | None] | None = None,
     ):
         """
         Initialize runtime monitor.
@@ -65,7 +65,7 @@ class RuntimeMonitor:
         self.event_store = event_store
         self._set_reduce_only_mode = set_reduce_only_mode or (lambda enabled, reason: None)
         self._now_provider = now_provider or (lambda: datetime.utcnow())
-        self.last_mark_update = last_mark_update or {}
+        self.last_mark_update = last_mark_update if last_mark_update is not None else {}
 
         # Circuit breaker state
         self._cb_last_trigger: dict[str, datetime] = {}

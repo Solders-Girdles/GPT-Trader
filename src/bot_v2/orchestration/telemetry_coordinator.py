@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import threading
 from collections.abc import Iterable
@@ -27,8 +28,9 @@ class TelemetryCoordinator:
 
     def __init__(self, bot: PerpsBot) -> None:
         self._bot = bot
-        self._ws_thread: threading.Thread | None = None
+        self._stream_task: asyncio.Task[None] | None = None
         self._ws_stop: threading.Event | None = None
+        self._pending_stream_config: tuple[list[str], int] | None = None
         self._market_monitor: MarketActivityMonitor | None = None
 
     # ------------------------------------------------------------------
@@ -41,17 +43,19 @@ class TelemetryCoordinator:
 
     def init_accounting_services(self) -> None:
         bot = self._bot
-        bot.account_manager = CoinbaseAccountManager(bot.broker, event_store=bot.event_store)
-        bot.account_telemetry = AccountTelemetryService(
+        account_manager = CoinbaseAccountManager(bot.broker, event_store=bot.event_store)
+        bot.account_manager = account_manager
+        account_telemetry = AccountTelemetryService(
             broker=bot.broker,
-            account_manager=bot.account_manager,
+            account_manager=account_manager,
             event_store=bot.event_store,
             bot_id=bot.bot_id,
             profile=bot.config.profile.value,
         )
-        if not bot.account_telemetry.supports_snapshots():
+        bot.account_telemetry = account_telemetry
+        if not account_telemetry.supports_snapshots():
             logger.info("Account snapshot telemetry disabled; broker lacks required endpoints")
-        bot.system_monitor.attach_account_telemetry(bot.account_telemetry)
+        bot.system_monitor.attach_account_telemetry(account_telemetry)
 
     def init_market_services(self) -> None:
         bot = self._bot
@@ -68,8 +72,8 @@ class TelemetryCoordinator:
                 )
 
         monitor = MarketActivityMonitor(tuple(bot.symbols), heartbeat_logger=_log_market_heartbeat)
+        bot.market_monitor = monitor
         self._market_monitor = monitor
-        bot._market_monitor = monitor
 
     # ------------------------------------------------------------------
     def start_streaming_if_configured(self) -> None:
@@ -94,30 +98,29 @@ class TelemetryCoordinator:
         except (TypeError, ValueError):
             logger.warning("Invalid streaming level %s; defaulting to 1", configured_level)
             level = 1
-        try:
-            self._ws_stop = threading.Event()
-        except Exception:
-            self._ws_stop = None
-        self._ws_thread = threading.Thread(
-            target=self._run_stream_loop, args=(symbols, level), daemon=True
-        )
-        self._ws_thread.start()
-        logger.info("Started WS streaming thread for symbols=%s level=%s", symbols, level)
+        self._pending_stream_config = (symbols, level)
+        scheduled = self._schedule_streaming_task()
+        if not scheduled:
+            logger.debug(
+                "WS streaming task deferred; no running event loop yet (symbols=%s level=%s)",
+                symbols,
+                level,
+            )
 
     def stop_streaming_background(self) -> None:
-        if not self._ws_thread:
-            return
-        try:
-            if self._ws_stop:
-                self._ws_stop.set()
-            thread = self._ws_thread
-            if thread and thread.is_alive():
-                thread.join(timeout=2.0)
-        except Exception as exc:
-            logger.debug("Failed to stop WS streaming thread cleanly: %s", exc, exc_info=True)
-        finally:
-            self._ws_thread = None
+        self._pending_stream_config = None
+        stop = self._ws_stop
+        if stop:
+            stop.set()
             self._ws_stop = None
+        task = self._stream_task
+        if task and not task.done():
+            loop = task.get_loop()
+            if loop.is_running():
+                loop.call_soon_threadsafe(task.cancel)
+            else:
+                task.cancel()
+        self._stream_task = None
 
     def restart_streaming_if_needed(self, diff: dict[str, Any]) -> None:
         bot = self._bot
@@ -136,12 +139,59 @@ class TelemetryCoordinator:
     # ------------------------------------------------------------------
     async def run_account_telemetry(self, interval_seconds: int = 300) -> None:
         bot = self._bot
-        if not bot.account_telemetry.supports_snapshots():
+        account_telemetry = bot.account_telemetry
+        if not account_telemetry or not account_telemetry.supports_snapshots():
             return
-        await bot.account_telemetry.run(interval_seconds)
+        await account_telemetry.run(interval_seconds)
 
     # ------------------------------------------------------------------
-    def _run_stream_loop(self, symbols: list[str], level: int) -> None:
+    def ensure_streaming_task(self) -> asyncio.Task[None] | None:
+        """Ensure the WS stream task is scheduled when the event loop is running."""
+
+        self._schedule_streaming_task()
+        return self._stream_task
+
+    def _schedule_streaming_task(self) -> bool:
+        if not self._pending_stream_config:
+            return False
+        if self._stream_task and not self._stream_task.done():
+            return False
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            return False
+        symbols, level = self._pending_stream_config
+        self._ws_stop = threading.Event()
+        task = loop.create_task(self._run_stream_loop_async(symbols, level, self._ws_stop))
+        task.add_done_callback(self._handle_stream_task_completion)
+        self._stream_task = task
+        logger.info("Started WS streaming task for symbols=%s level=%s", symbols, level)
+        return True
+
+    def _handle_stream_task_completion(self, task: asyncio.Task[None]) -> None:
+        self._stream_task = None
+        self._ws_stop = None
+        try:
+            task.result()
+        except asyncio.CancelledError:
+            logger.info("WS streaming task cancelled")
+        except Exception as exc:
+            logger.exception("WS streaming task failed: %s", exc)
+
+    async def _run_stream_loop_async(
+        self, symbols: list[str], level: int, stop_signal: threading.Event | None
+    ) -> None:
+        loop = asyncio.get_running_loop()
+        try:
+            await loop.run_in_executor(None, self._run_stream_loop, symbols, level, stop_signal)
+        except asyncio.CancelledError:
+            if stop_signal:
+                stop_signal.set()
+            raise
+
+    def _run_stream_loop(
+        self, symbols: list[str], level: int, stop_signal: threading.Event | None = None
+    ) -> None:
         bot = self._bot
         try:
             stream: Iterable[Any] | None = None
@@ -156,7 +206,7 @@ class TelemetryCoordinator:
                     return
 
             for msg in stream or []:
-                if self._ws_stop and self._ws_stop.is_set():
+                if stop_signal and stop_signal.is_set():
                     break
                 if not isinstance(msg, dict):
                     continue
@@ -180,11 +230,15 @@ class TelemetryCoordinator:
                     continue
 
                 bot.strategy_coordinator.update_mark_window(sym, mark)
-                monitor = self._market_monitor
+                monitor = getattr(bot, "market_monitor", self._market_monitor)
                 try:
                     if monitor:
                         monitor.record_update(sym)
-                    bot.risk_manager.last_mark_update[sym] = utc_now()
+                    timestamp = utc_now()
+                    risk_manager = bot.risk_manager
+                    record_fn = getattr(risk_manager, "record_mark_update", None)
+                    stored = record_fn(sym, timestamp) if callable(record_fn) else timestamp
+                    risk_manager.last_mark_update[sym] = stored
                     emit_metric(
                         bot.event_store,
                         bot.bot_id,

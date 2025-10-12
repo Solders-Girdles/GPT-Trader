@@ -7,7 +7,7 @@ All synchronous checks performed before order placement.
 from __future__ import annotations
 
 import logging
-from collections.abc import Callable
+from collections.abc import Callable, MutableMapping
 from datetime import datetime
 from decimal import Decimal
 from typing import Any
@@ -47,7 +47,7 @@ class PreTradeValidator:
         impact_estimator: Any | None = None,
         is_reduce_only_mode: Callable[[], bool] | None = None,
         now_provider: Callable[[], datetime] | None = None,
-        last_mark_update: dict[str, datetime] | None = None,
+        last_mark_update: MutableMapping[str, datetime | None] | None = None,
     ):
         """
         Initialize pre-trade validator.
@@ -67,7 +67,7 @@ class PreTradeValidator:
         self._impact_estimator = impact_estimator
         self._is_reduce_only_mode = is_reduce_only_mode or (lambda: False)
         self._now_provider = now_provider or (lambda: datetime.utcnow())
-        self.last_mark_update = last_mark_update or {}
+        self.last_mark_update = last_mark_update if last_mark_update is not None else {}
 
     def pre_trade_validate(
         self,

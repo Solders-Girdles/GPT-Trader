@@ -49,6 +49,8 @@ class SymbolProcessingContext:
 class StrategyOrchestrator:
     """Encapsulates strategy initialization and decision execution per symbol."""
 
+    requires_context = True
+
     def __init__(
         self,
         bot: PerpsBot,

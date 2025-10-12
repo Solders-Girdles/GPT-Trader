@@ -24,7 +24,7 @@ def _handle_snapshot(args: Namespace) -> int:
     config = services.build_config_from_args(args, skip={"account_command"})
     bot = services.instantiate_bot(config)
     try:
-        telemetry = getattr(bot, "account_telemetry", None)
+        telemetry = bot.account_telemetry
         if telemetry is None or not telemetry.supports_snapshots():
             raise RuntimeError("Account snapshot telemetry is not available for this broker")
 

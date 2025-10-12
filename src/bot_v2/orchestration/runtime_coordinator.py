@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import logging
 import os
-from typing import TYPE_CHECKING
+from collections.abc import Sequence
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Any
 
 from bot_v2.config.live_trade_config import RiskConfig
 from bot_v2.features.live_trade.risk import LiveRiskManager, RiskRuntimeState
@@ -23,6 +25,14 @@ logger = logging.getLogger(__name__)
 
 class BrokerBootstrapError(RuntimeError):
     """Raised when broker initialization fails."""
+
+
+@dataclass
+class BrokerBootstrapArtifacts:
+    broker: object
+    registry_updates: dict[str, Any]
+    event_store: object | None = None
+    products: Sequence[object] = ()
 
 
 class RuntimeCoordinator:
@@ -48,50 +58,78 @@ class RuntimeCoordinator:
             logger.info("Using broker from service registry")
             return
 
+        try:
+            if self._should_use_mock_broker():
+                artifacts = self._build_mock_broker()
+            else:
+                artifacts = self._build_real_broker()
+        except Exception as exc:  # pragma: no cover - fatal boot failure
+            logger.error("Failed to initialize broker: %s", exc)
+            raise BrokerBootstrapError("Broker initialization failed") from exc
+
+        self._apply_broker_bootstrap(artifacts)
+
+    def _should_use_mock_broker(self) -> bool:
+        bot = self._bot
         paper_env = bool(getattr(bot.config, "perps_paper_trading", False))
         force_mock = bool(getattr(bot.config, "perps_force_mock", False))
         is_dev = bot.config.profile == Profile.DEV
+        return paper_env or force_mock or is_dev or bool(getattr(bot.config, "mock_broker", False))
 
-        if paper_env or force_mock or is_dev or bot.config.mock_broker:
-            bot.broker = DeterministicBroker()
-            logger.info("Using deterministic broker (REST-first marks)")
-            registry_updates = {"broker": bot.broker}
-        else:
-            try:
-                self._validate_broker_environment()
-                broker, event_store, market_data, product_catalog = create_brokerage(
-                    bot.registry,
-                    event_store=bot.event_store,
-                    market_data=bot.registry.market_data_service,
-                    product_catalog=bot.registry.product_catalog,
-                )
-                bot.broker = broker
-                bot.event_store = event_store
-                registry_updates = {
-                    "broker": bot.broker,
-                    "event_store": event_store,
-                    "market_data_service": market_data,
-                    "product_catalog": product_catalog,
-                }
-                if not bot.broker.connect():
-                    raise RuntimeError("Failed to connect to broker")
-                products = bot.broker.list_products()
-                logger.info("Connected to broker, found %d products", len(products))
-                for product in products:
-                    if hasattr(product, "symbol"):
-                        bot._product_map[product.symbol] = product
-            except Exception as exc:  # pragma: no cover - fatal boot failure
-                logger.error("Failed to initialize real broker: %s", exc)
-                raise BrokerBootstrapError("Broker initialization failed") from exc
+    def _build_mock_broker(self) -> BrokerBootstrapArtifacts:
+        broker = DeterministicBroker()
+        logger.info("Using deterministic broker (REST-first marks)")
+        return BrokerBootstrapArtifacts(
+            broker=broker,
+            registry_updates={"broker": broker},
+        )
 
-        bot.registry = bot.registry.with_updates(**registry_updates)
+    def _build_real_broker(self) -> BrokerBootstrapArtifacts:
+        bot = self._bot
+        self._validate_broker_environment()
+        broker, event_store, market_data, product_catalog = create_brokerage(
+            bot.registry,
+            event_store=bot.event_store,
+            market_data=bot.registry.market_data_service,
+            product_catalog=bot.registry.product_catalog,
+        )
+        if not broker.connect():
+            raise RuntimeError("Failed to connect to broker")
+        products = broker.list_products()
+        logger.info("Connected to broker, found %d products", len(products))
+        return BrokerBootstrapArtifacts(
+            broker=broker,
+            event_store=event_store,
+            registry_updates={
+                "broker": broker,
+                "event_store": event_store,
+                "market_data_service": market_data,
+                "product_catalog": product_catalog,
+            },
+            products=products,
+        )
+
+    def _apply_broker_bootstrap(self, artifacts: BrokerBootstrapArtifacts) -> None:
+        bot = self._bot
+        bot.broker = artifacts.broker
+        if artifacts.event_store is not None:
+            bot.event_store = artifacts.event_store
+        bot.registry = bot.registry.with_updates(**artifacts.registry_updates)
+        self._hydrate_product_cache(artifacts.products)
+
+    def _hydrate_product_cache(self, products: Sequence[object]) -> None:
+        if not products:
+            return
+        bot = self._bot
+        for product in products:
+            symbol = getattr(product, "symbol", None)
+            if symbol:
+                bot._product_map[symbol] = product
 
     def _validate_broker_environment(self) -> None:
         bot = self._bot
 
-        paper_env = bool(getattr(bot.config, "perps_paper_trading", False))
-        force_mock = bool(getattr(bot.config, "perps_force_mock", False))
-        if paper_env or force_mock or bot.config.mock_broker or bot.config.profile == Profile.DEV:
+        if self._should_use_mock_broker():
             logger.info("Paper/mock mode enabled — skipping production env checks")
             return
 

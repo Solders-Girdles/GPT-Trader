@@ -1,13 +1,16 @@
 from __future__ import annotations
 
+import asyncio
 import os
-import time
+
+import pytest
 
 from bot_v2.orchestration.configuration import BotConfig, Profile
 from bot_v2.orchestration.perps_bot_builder import create_perps_bot
 
 
-def test_perps_streaming_smoke(monkeypatch, tmp_path, fake_clock):
+@pytest.mark.asyncio
+async def test_perps_streaming_smoke(monkeypatch, tmp_path, fake_clock):
     # Ensure streaming does not auto-start; we'll start it after patching broker
     monkeypatch.setenv("PERPS_ENABLE_STREAMING", "0")
     monkeypatch.setenv("PERPS_FORCE_MOCK", "1")
@@ -45,21 +48,18 @@ def test_perps_streaming_smoke(monkeypatch, tmp_path, fake_clock):
 
     # Start streaming now
     bot._start_streaming_background()
+    task = bot.telemetry_coordinator.ensure_streaming_task()
+    assert task is not None
+    await asyncio.wait_for(task, timeout=2.0)
 
     from bot_v2.persistence.event_store import EventStore
 
     es = EventStore(root=tmp_path / f"perps_bot/{config.profile.value}")
 
-    deadline = time.time() + 2.0
-    has_ws_update = False
-    events = []
-    while time.time() < deadline and not has_ws_update:
-        events = es.tail(bot_id="perps_bot", limit=50)
-        has_ws_update = any(e.get("event_type") == "ws_mark_update" for e in events)
-        if not has_ws_update:
-            time.sleep(0.05)
-
-    assert has_ws_update, f"No ws_mark_update events found in {events}"
+    events = es.tail(bot_id="perps_bot", limit=50)
+    assert any(e.get("event_type") == "ws_mark_update" for e in events), events
 
     # Verify risk manager got a mark timestamp for at least one symbol
     assert any(sym in bot.risk_manager.last_mark_update for sym in config.symbols)
+
+    bot.telemetry_coordinator.stop_streaming_background()

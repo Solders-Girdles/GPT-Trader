@@ -10,9 +10,10 @@ This module now serves as a delegation facade to focused submodules.
 from __future__ import annotations
 
 import logging
-from collections.abc import Callable
+from collections.abc import Callable, Iterator, MutableMapping
 from datetime import datetime
 from decimal import Decimal
+from threading import RLock
 from typing import Any
 
 from bot_v2.config.live_trade_config import RiskConfig
@@ -34,6 +35,7 @@ from bot_v2.features.live_trade.risk.state_management import (
 )
 from bot_v2.features.live_trade.risk_runtime import CircuitBreakerOutcome, RuntimeMonitor
 from bot_v2.persistence.event_store import EventStore
+from bot_v2.utilities.datetime_helpers import normalize_to_utc, utc_now
 
 logger = logging.getLogger(__name__)
 
@@ -47,6 +49,71 @@ __all__ = [
     "ImpactAssessment",
     "RiskRuntimeState",
 ]
+
+
+class MarkTimestampRegistry(MutableMapping[str, datetime | None]):
+    """Thread-safe registry for tracking latest mark timestamps per symbol."""
+
+    def __init__(self, now_provider: Callable[[], datetime] | None = None) -> None:
+        self._data: dict[str, datetime | None] = {}
+        self._lock = RLock()
+        self._now_provider = now_provider or utc_now
+
+    def __getitem__(self, key: str) -> datetime | None:
+        with self._lock:
+            return self._data[key]
+
+    def __setitem__(self, key: str, value: datetime | None) -> None:
+        with self._lock:
+            self._data[key] = value
+
+    def __delitem__(self, key: str) -> None:
+        with self._lock:
+            del self._data[key]
+
+    def __iter__(self) -> Iterator[str]:
+        return iter(self.keys())
+
+    def __len__(self) -> int:
+        with self._lock:
+            return len(self._data)
+
+    def __contains__(self, key: object) -> bool:
+        with self._lock:
+            return key in self._data
+
+    def keys(self) -> tuple[str, ...]:  # type: ignore[override]
+        with self._lock:
+            return tuple(self._data.keys())
+
+    def items(self) -> tuple[tuple[str, datetime | None], ...]:  # type: ignore[override]
+        with self._lock:
+            return tuple(self._data.items())
+
+    def values(self) -> tuple[datetime | None, ...]:  # type: ignore[override]
+        with self._lock:
+            return tuple(self._data.values())
+
+    def get(self, key: str, default: datetime | None = None) -> datetime | None:  # type: ignore[override]
+        with self._lock:
+            return self._data.get(key, default)
+
+    def clear(self) -> None:  # type: ignore[override]
+        with self._lock:
+            self._data.clear()
+
+    def snapshot(self) -> dict[str, datetime | None]:
+        """Return a shallow copy of the registry."""
+        with self._lock:
+            return dict(self._data)
+
+    def update_timestamp(self, symbol: str, timestamp: datetime | None = None) -> datetime:
+        """Record the latest mark timestamp for a symbol."""
+        ts_source = timestamp or self._now_provider()
+        normalized = normalize_to_utc(ts_source)
+        with self._lock:
+            self._data[symbol] = normalized
+        return normalized
 
 
 class LiveRiskManager:
@@ -85,7 +152,9 @@ class LiveRiskManager:
         self._now_provider = lambda: datetime.utcnow()
 
         # Shared state
-        self.last_mark_update: dict[str, datetime] = {}
+        self.last_mark_update: MarkTimestampRegistry = MarkTimestampRegistry(
+            now_provider=self._now_provider
+        )
 
         # Initialize helper modules
         self.state_manager = StateManager(
@@ -138,6 +207,14 @@ class LiveRiskManager:
             logger.info(f"LiveRiskManager initialized with config: {self.config.to_dict()}")
         else:
             logger.info("LiveRiskManager initialized with a non-standard config object")
+
+    def record_mark_update(self, symbol: str, timestamp: datetime | None = None) -> datetime:
+        """Update the latest mark timestamp for ``symbol``."""
+        return self.last_mark_update.update_timestamp(symbol, timestamp)
+
+    def mark_timestamp_for(self, symbol: str) -> datetime | None:
+        """Return the last recorded mark timestamp for ``symbol``."""
+        return self.last_mark_update.get(symbol)
 
     def __setattr__(self, name: str, value: Any) -> None:
         super().__setattr__(name, value)

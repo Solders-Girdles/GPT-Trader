@@ -11,6 +11,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
 from bot_v2.features.brokerages.core.interfaces import Balance, Order, Position, Product
+from bot_v2.orchestration.symbol_processor import SymbolProcessor
 from bot_v2.utilities import utc_now
 from bot_v2.utilities.config import ConfigBaselinePayload
 
@@ -26,6 +27,25 @@ class StrategyCoordinator:
 
     def __init__(self, bot: PerpsBot) -> None:
         self._bot = bot
+        self._symbol_processor: SymbolProcessor | None = None
+
+    @property
+    def symbol_processor(self) -> SymbolProcessor:
+        """Return the active symbol processor, falling back to the orchestrator."""
+        return self._resolve_symbol_processor()
+
+    def set_symbol_processor(self, processor: SymbolProcessor | None) -> None:
+        """Register a custom symbol processor or reset to the default."""
+        self._symbol_processor = processor
+        state = self._bot.runtime_state
+        state.process_symbol_dispatch = None
+        state.process_symbol_needs_context = None
+
+    def _resolve_symbol_processor(self) -> SymbolProcessor:
+        processor = self._symbol_processor
+        if processor is None:
+            processor = self._bot.strategy_orchestrator
+        return processor
 
     # ------------------------------------------------------------------
     async def run_cycle(self) -> None:
@@ -56,19 +76,16 @@ class StrategyCoordinator:
         balances: Sequence[Balance] | None = None,
         position_map: dict[str, Position] | None = None,
     ) -> None:
-        bot = self._bot
-        override = getattr(bot, "__dict__", {}).get("process_symbol")
-        if override is not None:
-            needs_context = self._process_symbol_expects_context()
-            args: list[Any] = [symbol]
-            if needs_context:
-                args.extend([balances, position_map])
-            result = override(*args)
-            if inspect.isawaitable(result):
-                await result
-            return
-
-        await bot.strategy_orchestrator.process_symbol(symbol, balances, position_map)
+        processor = self._resolve_symbol_processor()
+        needs_context = self._process_symbol_expects_context()
+        args: list[Any] = [symbol]
+        if needs_context:
+            args.extend([balances, position_map])
+        result = processor.process_symbol(*args)
+        if inspect.isawaitable(result):
+            await result
+        elif result is not None:
+            logger.debug("Symbol processor %s returned non-awaitable result", processor)
 
     async def execute_decision(
         self,
@@ -121,9 +138,11 @@ class StrategyCoordinator:
                 ts = getattr(quote, "ts", datetime.now(UTC))
                 self.update_mark_window(symbol, mark)
                 try:
-                    bot.risk_manager.last_mark_update[symbol] = (
-                        ts if isinstance(ts, datetime) else utc_now()
-                    )
+                    timestamp = ts if isinstance(ts, datetime) else utc_now()
+                    risk_manager = bot.risk_manager
+                    record_fn = getattr(risk_manager, "record_mark_update", None)
+                    stored = record_fn(symbol, timestamp) if callable(record_fn) else timestamp
+                    risk_manager.last_mark_update[symbol] = stored
                 except Exception as exc:
                     logger.debug(
                         "Failed to update mark timestamp for %s: %s", symbol, exc, exc_info=True
@@ -246,18 +265,16 @@ class StrategyCoordinator:
     def _process_symbol_expects_context(self) -> bool:
         bot = self._bot
         state = bot.runtime_state
-        override = getattr(bot, "__dict__", {}).get("process_symbol")
-        if override is not None:
-            current_dispatch = override
-            target = override
-        else:
-            orchestrator_callable = bot.strategy_orchestrator.process_symbol
-            current_dispatch = getattr(orchestrator_callable, "__func__", orchestrator_callable)
-            target = orchestrator_callable
+        processor = self._resolve_symbol_processor()
+        bound_callable = processor.process_symbol
+        dispatch = getattr(bound_callable, "__func__", bound_callable)
         needs_context = state.process_symbol_needs_context
-        if needs_context is None or current_dispatch is not state.process_symbol_dispatch:
-            process_sig = inspect.signature(target)
-            needs_context = len(process_sig.parameters) > 1
+        if needs_context is None or dispatch is not state.process_symbol_dispatch:
+            requires_context = getattr(processor, "requires_context", None)
+            if requires_context is None:
+                process_sig = inspect.signature(dispatch)
+                requires_context = len(process_sig.parameters) > 1
+            needs_context = bool(requires_context)
             state.process_symbol_needs_context = needs_context
-            state.process_symbol_dispatch = current_dispatch
+            state.process_symbol_dispatch = dispatch
         return bool(needs_context)

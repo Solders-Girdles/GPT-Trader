@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import inspect
 import logging
 import os
 import threading
@@ -32,14 +33,45 @@ from bot_v2.orchestration.telemetry_coordinator import TelemetryCoordinator
 from bot_v2.utilities.config import ConfigBaselinePayload
 
 if TYPE_CHECKING:  # pragma: no cover - imports for type checking only
+    from bot_v2.features.brokerages.coinbase.account_manager import CoinbaseAccountManager
     from bot_v2.features.brokerages.core.interfaces import IBrokerage
     from bot_v2.features.live_trade.advanced_execution import AdvancedExecutionEngine
     from bot_v2.features.live_trade.risk import LiveRiskManager
+    from bot_v2.orchestration.account_telemetry import AccountTelemetryService
     from bot_v2.orchestration.live_execution import LiveExecutionEngine
+    from bot_v2.orchestration.market_monitor import MarketActivityMonitor
+    from bot_v2.orchestration.symbol_processor import SymbolProcessor
     from bot_v2.persistence.event_store import EventStore
     from bot_v2.persistence.orders_store import OrdersStore
 
 logger = logging.getLogger(__name__)
+
+
+class _CallableSymbolProcessor:
+    """Adapter allowing bare callables to masquerade as ``SymbolProcessor`` implementations."""
+
+    def __init__(
+        self,
+        func: Any,
+        *,
+        requires_context: bool,
+    ) -> None:
+        self._func = func
+        self.requires_context = requires_context
+
+    def process_symbol(
+        self,
+        symbol: str,
+        balances: Sequence[Balance] | None = None,
+        position_map: dict[str, Position] | None = None,
+    ) -> Any:
+        if self.requires_context:
+            return self._func(symbol, balances, position_map)
+        return self._func(symbol)
+
+    @property
+    def function(self) -> Any:
+        return self._func
 
 
 class PerpsBot:
@@ -110,6 +142,7 @@ class PerpsBot:
         self._derivatives_enabled = bool(getattr(self.config, "derivatives_enabled", False))
 
         self._state = PerpsBotRuntimeState(self.symbols)
+        self._symbol_processor_override: _CallableSymbolProcessor | None = None
         self.strategy_orchestrator = StrategyOrchestrator(self)
         self.execution_coordinator = ExecutionCoordinator(self)
         self.system_monitor = SystemMonitor(self)
@@ -221,6 +254,37 @@ class PerpsBot:
             raise RuntimeError("Execution engine not initialized")
         return engine
 
+    @property
+    def account_manager(self) -> CoinbaseAccountManager | None:
+        return self._state.account_manager
+
+    @account_manager.setter
+    def account_manager(self, value: CoinbaseAccountManager | None) -> None:
+        self._state.account_manager = value
+
+    @property
+    def account_telemetry(self) -> AccountTelemetryService | None:
+        return self._state.account_telemetry
+
+    @account_telemetry.setter
+    def account_telemetry(self, value: AccountTelemetryService | None) -> None:
+        self._state.account_telemetry = value
+
+    @property
+    def market_monitor(self) -> MarketActivityMonitor | None:
+        monitor = self._state.market_monitor
+        if monitor is None:
+            return self.__dict__.get("_market_monitor")
+        return monitor
+
+    @market_monitor.setter
+    def market_monitor(self, value: MarketActivityMonitor | None) -> None:
+        self._state.market_monitor = value
+        if value is None:
+            self.__dict__.pop("_market_monitor", None)
+        else:
+            self.__dict__["_market_monitor"] = value
+
     # ------------------------------------------------------------------
     async def run(self, single_cycle: bool = False) -> None:
         await self.lifecycle_manager.run(single_cycle)
@@ -238,6 +302,17 @@ class PerpsBot:
 
     async def _execute_trading_cycle(self, trading_state: dict[str, Any]) -> None:
         await self.strategy_coordinator._execute_trading_cycle(trading_state)
+
+    @property
+    def symbol_processor(self) -> SymbolProcessor:
+        return self.strategy_coordinator.symbol_processor
+
+    def set_symbol_processor(self, processor: SymbolProcessor | None) -> None:
+        if isinstance(processor, _CallableSymbolProcessor):
+            self._symbol_processor_override = processor
+        else:
+            self._symbol_processor_override = None
+        self.strategy_coordinator.set_symbol_processor(processor)
 
     async def process_symbol(
         self,
@@ -361,3 +436,36 @@ class PerpsBot:
     # ------------------------------------------------------------------
     async def _run_account_telemetry(self, interval_seconds: int = 300) -> None:
         await self.telemetry_coordinator.run_account_telemetry(interval_seconds)
+
+    # ------------------------------------------------------------------
+    def _wrap_symbol_processor(self, handler: Any) -> _CallableSymbolProcessor:
+        """Convert a callable into a ``SymbolProcessor`` compatible adapter."""
+
+        if not callable(handler):
+            raise TypeError("process_symbol handler must be callable")
+
+        try:
+            parameters = inspect.signature(handler).parameters
+        except (TypeError, ValueError):
+            parameters = {}
+        requires_context = len(parameters) > 1
+        return _CallableSymbolProcessor(handler, requires_context=requires_context)
+
+    def _install_symbol_processor_override(self, handler: Any) -> None:
+        """Install or remove a legacy ``process_symbol`` override."""
+
+        if handler is None:
+            self._symbol_processor_override = None
+            self.strategy_coordinator.set_symbol_processor(None)
+            return
+        wrapped = self._wrap_symbol_processor(handler)
+        self._symbol_processor_override = wrapped
+        self.strategy_coordinator.set_symbol_processor(wrapped)
+
+    def __setattr__(self, name: str, value: Any) -> None:
+        if name == "process_symbol":
+            if value is not None and not callable(value):
+                raise TypeError("process_symbol override must be callable or None")
+            self._install_symbol_processor_override(value)
+            return
+        super().__setattr__(name, value)

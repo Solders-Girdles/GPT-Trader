@@ -6,7 +6,12 @@ import asyncio
 import threading
 from collections.abc import Sequence
 from decimal import Decimal
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:  # pragma: no cover - type-only imports
+    from bot_v2.features.brokerages.coinbase.account_manager import CoinbaseAccountManager
+    from bot_v2.orchestration.account_telemetry import AccountTelemetryService
+    from bot_v2.orchestration.market_monitor import MarketActivityMonitor
 
 
 class PerpsBotRuntimeState:
@@ -28,3 +33,6 @@ class PerpsBotRuntimeState:
         self.exec_engine: Any | None = None
         self.process_symbol_dispatch: Any | None = None
         self.process_symbol_needs_context: bool | None = None
+        self.account_manager: CoinbaseAccountManager | None = None
+        self.account_telemetry: AccountTelemetryService | None = None
+        self.market_monitor: MarketActivityMonitor | None = None

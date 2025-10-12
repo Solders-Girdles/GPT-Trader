@@ -12,6 +12,7 @@ from bot_v2.orchestration.broker_factory import create_brokerage
 from bot_v2.orchestration.configuration import DEFAULT_SPOT_RISK_PATH, Profile
 from bot_v2.orchestration.deterministic_broker import DeterministicBroker
 from bot_v2.orchestration.order_reconciler import OrderReconciler
+from bot_v2.utilities.telemetry import emit_metric
 
 if TYPE_CHECKING:  # pragma: no cover - type checking only
     from bot_v2.orchestration.perps_bot import PerpsBot
@@ -231,17 +232,16 @@ class RuntimeCoordinator:
 
     def _emit_reduce_only_metric(self, enabled: bool, reason: str) -> None:
         bot = self._bot
-        try:
-            bot.event_store.append_metric(
-                bot_id=bot.bot_id,
-                metrics={
-                    "event_type": "reduce_only_mode_changed",
-                    "enabled": enabled,
-                    "reason": reason,
-                },
-            )
-        except Exception:
-            logger.exception("Failed to persist bot reduce-only mode change")
+        emit_metric(
+            bot.event_store,
+            bot.bot_id,
+            {
+                "event_type": "reduce_only_mode_changed",
+                "enabled": enabled,
+                "reason": reason,
+            },
+            logger=logger,
+        )
 
     # ------------------------------------------------------------------
     async def reconcile_state_on_startup(self) -> None:
@@ -276,7 +276,7 @@ class RuntimeCoordinator:
             try:
                 snapshot = await reconciler.snapshot_positions()
                 if snapshot:
-                    bot._last_positions = snapshot
+                    bot.runtime_state.last_positions = snapshot
             except Exception as exc:
                 logger.debug("Failed to snapshot initial positions: %s", exc, exc_info=True)
 

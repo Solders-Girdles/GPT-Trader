@@ -168,13 +168,13 @@ class ExecutionCoordinator:
 
         # Create appropriate execution engine
         if use_advanced:
-            bot.exec_engine = AdvancedExecutionEngine(
+            bot.runtime_state.exec_engine = AdvancedExecutionEngine(
                 broker=bot.broker,
                 risk_manager=bot.risk_manager,
             )
             logger.info("Initialized AdvancedExecutionEngine with dynamic sizing integration")
         else:
-            bot.exec_engine = LiveExecutionEngine(
+            bot.runtime_state.exec_engine = LiveExecutionEngine(
                 broker=bot.broker,
                 risk_manager=bot.risk_manager,
                 event_store=bot.event_store,
@@ -186,7 +186,7 @@ class ExecutionCoordinator:
 
         # Register execution engine in service registry
         extras = dict(bot.registry.extras)
-        extras["execution_engine"] = bot.exec_engine
+        extras["execution_engine"] = bot.runtime_state.exec_engine
         bot.registry = bot.registry.with_updates(extras=extras)
 
     async def execute_decision(
@@ -260,7 +260,7 @@ class ExecutionCoordinator:
                 )
             )
 
-            exec_engine = bot.exec_engine
+            exec_engine = bot.runtime_state.exec_engine
             place_kwargs: dict[str, Any] = {
                 "symbol": symbol,
                 "side": side,
@@ -299,13 +299,15 @@ class ExecutionCoordinator:
 
     def _ensure_order_lock(self) -> asyncio.Lock:
         bot = self._bot
-        if bot._order_lock is None:
+        state = bot.runtime_state
+        if state.order_lock is None:
             try:
-                bot._order_lock = asyncio.Lock()
+                state.order_lock = asyncio.Lock()
             except RuntimeError as exc:
                 logger.error("Unable to initialize async order lock: %s", exc)
                 raise
-        return bot._order_lock
+        assert state.order_lock is not None
+        return state.order_lock
 
     async def _place_order(self, exec_engine: Any, **kwargs: Any) -> Order | None:
         try:
@@ -371,7 +373,9 @@ class ExecutionCoordinator:
         bot = self._bot
         while bot.running:
             try:
-                await run_in_thread(bot.exec_engine.run_runtime_guards)
+                exec_engine = bot.runtime_state.exec_engine
+                if exec_engine:
+                    await run_in_thread(exec_engine.run_runtime_guards)
             except Exception as e:
                 logger.error(f"Error in runtime guards: {e}", exc_info=True)
             await asyncio.sleep(60)

@@ -14,6 +14,7 @@ from .metrics import (
     PerformanceStats,
     get_collector,
 )
+from .monitor import PerformanceMonitor
 from .profiler import PerformanceProfiler, get_profiler, profile_performance
 from .reporter import PerformanceReporter
 from .resource import ResourceMonitor, get_resource_monitor, psutil
@@ -27,6 +28,7 @@ __all__ = [
     "PerformanceReporter",
     "PerformanceProfiler",
     "ResourceMonitor",
+    "PerformanceMonitor",
     "measure_performance",
     "measure_performance_decorator",
     "profile_performance",

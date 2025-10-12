@@ -25,6 +25,7 @@ from bot_v2.orchestration.config_controller import ConfigChange, ConfigControlle
 from bot_v2.orchestration.configuration import BotConfig, Profile
 from bot_v2.orchestration.execution_coordinator import ExecutionCoordinator
 from bot_v2.orchestration.market_monitor import MarketActivityMonitor
+from bot_v2.orchestration.perps_bot_state import PerpsBotRuntimeState
 from bot_v2.orchestration.runtime_coordinator import RuntimeCoordinator
 from bot_v2.orchestration.service_registry import ServiceRegistry
 from bot_v2.orchestration.session_guard import TradingSessionGuard
@@ -110,21 +111,60 @@ class PerpsBot:
             logger.warning("No symbols configured; continuing with empty symbol list")
         self._derivatives_enabled = bool(getattr(self.config, "derivatives_enabled", False))
 
-        self._init_runtime_state()
+        self._state = PerpsBotRuntimeState(self.symbols)
 
-    def _init_runtime_state(self) -> None:
-        self._product_map: dict[str, Product] = {}
-        self.mark_windows: dict[str, list[Decimal]] = {s: [] for s in self.symbols}
-        self.last_decisions: dict[str, Any] = {}
-        self._last_positions: dict[str, dict[str, Any]] = {}
-        self.order_stats = {"attempted": 0, "successful": 0, "failed": 0}
-        self._order_lock: asyncio.Lock | None = None
-        self._mark_lock = threading.RLock()
-        self._symbol_strategies: dict[str, Any] = {}
-        self.strategy: Any | None = None
-        self._exec_engine: LiveExecutionEngine | AdvancedExecutionEngine | None = None
-        self._process_symbol_dispatch: Any | None = None
-        self._process_symbol_needs_context: bool | None = None
+    # ------------------------------------------------------------------
+    @property
+    def runtime_state(self) -> PerpsBotRuntimeState:
+        return self._state
+
+    @property
+    def mark_windows(self) -> dict[str, list[Decimal]]:
+        return self._state.mark_windows
+
+    @property
+    def last_decisions(self) -> dict[str, Any]:
+        return self._state.last_decisions
+
+    @property
+    def _last_positions(self) -> dict[str, dict[str, Any]]:
+        return self._state.last_positions
+
+    @property
+    def order_stats(self) -> dict[str, int]:
+        return self._state.order_stats
+
+    @property
+    def _product_map(self) -> dict[str, Product]:
+        return self._state.product_map
+
+    @property
+    def _order_lock(self) -> asyncio.Lock | None:
+        return self._state.order_lock
+
+    @property
+    def _mark_lock(self) -> threading.RLock:
+        return self._state.mark_lock
+
+    @property
+    def _symbol_strategies(self) -> dict[str, Any]:
+        return self._state.symbol_strategies
+
+    @property
+    def strategy(self) -> Any | None:
+        return self._state.strategy
+
+    @property
+    def _exec_engine(self) -> Any | None:
+        return self._state.exec_engine
+
+    @property
+    def _process_symbol_dispatch(self) -> Any | None:
+        return self._state.process_symbol_dispatch
+
+    @property
+    def _process_symbol_needs_context(self) -> bool | None:
+        return self._state.process_symbol_needs_context
 
     @staticmethod
     def build_baseline_snapshot(config: BotConfig, derivatives_enabled: bool) -> Any:
@@ -243,13 +283,10 @@ class PerpsBot:
 
     @property
     def exec_engine(self) -> LiveExecutionEngine | AdvancedExecutionEngine:
-        if self._exec_engine is None:
+        engine = self._state.exec_engine
+        if engine is None:
             raise RuntimeError("Execution engine not initialized")
-        return self._exec_engine
-
-    @exec_engine.setter
-    def exec_engine(self, engine: LiveExecutionEngine | AdvancedExecutionEngine) -> None:
-        self._exec_engine = engine
+        return engine
 
     # ------------------------------------------------------------------
     async def run(self, single_cycle: bool = False) -> None:
@@ -441,14 +478,13 @@ class PerpsBot:
 
     def _process_symbol_expects_context(self) -> bool:
         current_dispatch = getattr(self.process_symbol, "__func__", self.process_symbol)
-        if (
-            self._process_symbol_needs_context is None
-            or current_dispatch is not self._process_symbol_dispatch
-        ):
+        needs_context = self._state.process_symbol_needs_context
+        if needs_context is None or current_dispatch is not self._state.process_symbol_dispatch:
             process_sig = inspect.signature(self.process_symbol)
-            self._process_symbol_needs_context = len(process_sig.parameters) > 1
-            self._process_symbol_dispatch = current_dispatch
-        return self._process_symbol_needs_context
+            needs_context = len(process_sig.parameters) > 1
+            self._state.process_symbol_needs_context = needs_context
+            self._state.process_symbol_dispatch = current_dispatch
+        return needs_context
 
     async def execute_decision(
         self,
@@ -561,11 +597,12 @@ class PerpsBot:
             end=self.config.trading_window_end,
             trading_days=self.config.trading_days,
         )
+        mark_windows = self._state.mark_windows
         for symbol in self.symbols:
-            self.mark_windows.setdefault(symbol, [])
-        for symbol in list(self.mark_windows.keys()):
+            mark_windows.setdefault(symbol, [])
+        for symbol in list(mark_windows.keys()):
             if symbol not in self.symbols:
-                del self.mark_windows[symbol]
+                del mark_windows[symbol]
         self._init_market_services()
         self.strategy_orchestrator.init_strategy()
         self._restart_streaming_if_needed(change.diff)
@@ -684,13 +721,12 @@ class PerpsBot:
 
     # ------------------------------------------------------------------
     def _update_mark_window(self, symbol: str, mark: Decimal) -> None:
-        with self._mark_lock:
-            if symbol not in self.mark_windows:
-                self.mark_windows[symbol] = []
-            self.mark_windows[symbol].append(mark)
+        with self._state.mark_lock:
+            window = self._state.mark_windows.setdefault(symbol, [])
+            window.append(mark)
             max_size = max(self.config.short_ma, self.config.long_ma) + 5
-            if len(self.mark_windows[symbol]) > max_size:
-                self.mark_windows[symbol] = self.mark_windows[symbol][-max_size:]
+            if len(window) > max_size:
+                self._state.mark_windows[symbol] = window[-max_size:]
 
     @staticmethod
     def _calculate_spread_bps(bid_price: Decimal, ask_price: Decimal) -> Decimal:

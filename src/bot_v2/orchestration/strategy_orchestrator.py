@@ -4,6 +4,7 @@ import asyncio
 import logging
 import time as _time
 from collections.abc import Sequence
+from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any
@@ -33,6 +34,18 @@ if TYPE_CHECKING:  # pragma: no cover - type checking only
 logger = logging.getLogger(__name__)
 
 
+@dataclass(slots=True)
+class SymbolProcessingContext:
+    symbol: str
+    balances: Sequence[Balance]
+    equity: Decimal
+    positions: dict[str, Position]
+    position_state: dict[str, Any] | None
+    position_quantity: Decimal
+    marks: list[Decimal]
+    product: Any | None
+
+
 class StrategyOrchestrator:
     """Encapsulates strategy initialization and decision execution per symbol."""
 
@@ -46,6 +59,7 @@ class StrategyOrchestrator:
 
     def init_strategy(self) -> None:
         bot = self._bot
+        state = bot.runtime_state
         derivatives_enabled = bot.config.derivatives_enabled
         if bot.config.profile == Profile.SPOT:
             rules = self._spot_profiles.load(bot.config.symbols or [])
@@ -72,7 +86,7 @@ class StrategyOrchestrator:
                             fraction_override,
                             symbol,
                         )
-                bot._symbol_strategies[symbol] = BaselinePerpsStrategy(
+                state.symbol_strategies[symbol] = BaselinePerpsStrategy(
                     config=StrategyConfig(**strategy_kwargs),  # type: ignore[arg-type]
                     risk_manager=bot.risk_manager,
                 )
@@ -93,20 +107,21 @@ class StrategyOrchestrator:
                         "Invalid PERPS_POSITION_FRACTION=%s; using default", fraction_override
                     )
 
-            bot.strategy = BaselinePerpsStrategy(
+            state.strategy = BaselinePerpsStrategy(
                 config=StrategyConfig(**strategy_kwargs),  # type: ignore[arg-type]
                 risk_manager=bot.risk_manager,
             )
 
     def get_strategy(self, symbol: str) -> BaselinePerpsStrategy:
         bot = self._bot
+        state = bot.runtime_state
         if bot.config.profile == Profile.SPOT:
-            strat = bot._symbol_strategies.get(symbol)
+            strat = state.symbol_strategies.get(symbol)
             if strat is None:
                 strat = BaselinePerpsStrategy(risk_manager=bot.risk_manager)
-                bot._symbol_strategies[symbol] = strat
+                state.symbol_strategies[symbol] = strat
             return strat
-        return bot.strategy  # type: ignore[attr-defined,return-value]
+        return state.strategy  # type: ignore[attr-defined,return-value]
 
     async def process_symbol(
         self,
@@ -116,40 +131,83 @@ class StrategyOrchestrator:
     ) -> None:
         bot = self._bot
         try:
-            balances = await self._ensure_balances(balances)
-            equity = self._extract_equity(balances)
-            if self._kill_switch_engaged():
+            context = await self._prepare_context(symbol, balances, position_map)
+            if context is None:
                 return
 
-            positions_lookup = await self._ensure_positions(position_map)
-            position_state, position_quantity = self._build_position_state(symbol, positions_lookup)
-
-            marks = self._get_marks(symbol)
-            if not marks:
-                return
-
-            equity = self._adjust_equity(equity, position_quantity, marks, symbol)
-            if equity == Decimal("0"):
-                logger.error(f"No equity info for {symbol}")
-                return
-
-            if not self._run_risk_gates(symbol, marks):
-                return
-
-            strategy_obj = self.get_strategy(symbol)
-            decision = self._evaluate_strategy(strategy_obj, symbol, marks, position_state, equity)
-
-            if bot.config.profile == Profile.SPOT:
-                decision = await self._apply_spot_filters(symbol, decision, position_state)
-
+            decision = await self._resolve_decision(context)
             self._record_decision(symbol, decision)
 
             if decision.action in {Action.BUY, Action.SELL, Action.CLOSE}:
                 await bot.execute_decision(
-                    symbol, decision, marks[-1], bot.get_product(symbol), position_state
+                    symbol,
+                    decision,
+                    context.marks[-1],
+                    context.product,
+                    context.position_state,
                 )
-        except Exception as e:
-            logger.error(f"Error processing {symbol}: {e}", exc_info=True)
+        except Exception as exc:
+            logger.error("Error processing %s: %s", symbol, exc, exc_info=True)
+
+    async def _prepare_context(
+        self,
+        symbol: str,
+        balances: Sequence[Balance] | None,
+        position_map: dict[str, Position] | None,
+    ) -> SymbolProcessingContext | None:
+        balances = await self._ensure_balances(balances)
+        equity = self._extract_equity(balances)
+        if self._kill_switch_engaged():
+            return None
+
+        positions_lookup = await self._ensure_positions(position_map)
+        position_state, position_quantity = self._build_position_state(symbol, positions_lookup)
+
+        marks = self._get_marks(symbol)
+        if not marks:
+            return None
+
+        adjusted_equity = self._adjust_equity(equity, position_quantity, marks, symbol)
+        if adjusted_equity == Decimal("0"):
+            logger.error("No equity info for %s", symbol)
+            return None
+
+        product = None
+        try:
+            product = self._bot.get_product(symbol)
+        except Exception:
+            logger.debug("Failed to fetch product metadata for %s", symbol, exc_info=True)
+
+        context = SymbolProcessingContext(
+            symbol=symbol,
+            balances=balances,
+            equity=adjusted_equity,
+            positions=positions_lookup,
+            position_state=position_state,
+            position_quantity=position_quantity,
+            marks=list(marks),
+            product=product,
+        )
+
+        if not self._run_risk_gates(context):
+            return None
+
+        return context
+
+    async def _resolve_decision(self, context: SymbolProcessingContext) -> Decision:
+        strategy = self.get_strategy(context.symbol)
+        decision = self._evaluate_strategy(
+            strategy,
+            context.symbol,
+            context.marks,
+            context.position_state,
+            context.equity,
+            context.product,
+        )
+
+        if self._bot.config.profile == Profile.SPOT:
+            decision = await self._apply_spot_filters(context, decision)
+        return decision
 
     async def _ensure_balances(self, balances: Sequence[Balance] | None) -> Sequence[Balance]:
         if balances is not None:
@@ -216,25 +274,30 @@ class StrategyOrchestrator:
                 )
         return equity
 
-    def _run_risk_gates(self, symbol: str, marks: Sequence[Decimal]) -> bool:
+    def _run_risk_gates(self, context: SymbolProcessingContext) -> bool:
         bot = self._bot
         try:
-            window = marks[-max(bot.config.long_ma, 20) :]
-            cb = bot.risk_manager.check_volatility_circuit_breaker(symbol, list(window))
+            window = context.marks[-max(bot.config.long_ma, 20) :]
+            cb = bot.risk_manager.check_volatility_circuit_breaker(context.symbol, list(window))
             if cb.triggered and cb.action is CircuitBreakerAction.KILL_SWITCH:
-                logger.warning(f"Kill switch tripped by volatility CB for {symbol}")
+                logger.warning("Kill switch tripped by volatility CB for %s", context.symbol)
                 return False
         except Exception as exc:
             logger.debug(
-                "Volatility circuit breaker check failed for %s: %s", symbol, exc, exc_info=True
+                "Volatility circuit breaker check failed for %s: %s",
+                context.symbol,
+                exc,
+                exc_info=True,
             )
 
         try:
-            if bot.risk_manager.check_mark_staleness(symbol):
-                logger.warning(f"Skipping {symbol} due to stale market data")
+            if bot.risk_manager.check_mark_staleness(context.symbol):
+                logger.warning("Skipping %s due to stale market data", context.symbol)
                 return False
         except Exception as exc:
-            logger.debug("Mark staleness check failed for %s: %s", symbol, exc, exc_info=True)
+            logger.debug(
+                "Mark staleness check failed for %s: %s", context.symbol, exc, exc_info=True
+            )
 
         return True
 
@@ -245,8 +308,8 @@ class StrategyOrchestrator:
         marks: Sequence[Decimal],
         position_state: dict[str, Any] | None,
         equity: Decimal,
+        product: Any | None,
     ) -> Decision:
-        bot = self._bot
         _t0 = _time.perf_counter()
         decision = strategy.decide(
             symbol=symbol,
@@ -254,7 +317,7 @@ class StrategyOrchestrator:
             position_state=position_state,
             recent_marks=list(marks[:-1]) if len(marks) > 1 else [],
             equity=equity,
-            product=bot.get_product(symbol),
+            product=product,
         )
         _dt_ms = (_time.perf_counter() - _t0) * 1000.0
         try:
@@ -268,12 +331,12 @@ class StrategyOrchestrator:
         logger.info(f"{symbol} Decision: {decision.action.value} - {decision.reason}")
 
     async def _apply_spot_filters(
-        self, symbol: str, decision: Decision, position_state: dict[str, Any] | None
+        self, context: SymbolProcessingContext, decision: Decision
     ) -> Decision:
-        rules = self._spot_profiles.get(symbol)
+        rules = self._spot_profiles.get(context.symbol)
         if not rules or decision.action != Action.BUY:
             return decision
-        if position_state and quantity_from(position_state) != Decimal("0"):
+        if context.position_state and quantity_from(context.position_state) != Decimal("0"):
             return decision
 
         needs_data = False
@@ -310,6 +373,7 @@ class StrategyOrchestrator:
         if not needs_data:
             return decision
 
+        symbol = context.symbol
         candles = await self._fetch_spot_candles(symbol, max_window)
         if not candles:
             logger.debug("Insufficient candle data for %s; deferring entry", symbol)
@@ -330,7 +394,7 @@ class StrategyOrchestrator:
                 avg_vol = _mean_decimal(recent)
                 latest_vol = volumes[-1]
                 if avg_vol <= Decimal("0") or latest_vol < avg_vol * multiplier:
-                    logger.info("%s entry blocked by volume filter", symbol)
+                    logger.info("%s entry blocked by volume filter", context.symbol)
                     return Decision(action=Action.HOLD, reason="volume_filter_blocked")
 
         if isinstance(momentum_config, dict):
@@ -343,7 +407,9 @@ class StrategyOrchestrator:
                 rsi = _rsi_from_closes(closes[-(window + 1) :])
                 if rsi > oversold:
                     logger.info(
-                        "%s entry blocked by momentum filter (RSI=%.2f)", symbol, float(rsi)
+                        "%s entry blocked by momentum filter (RSI=%.2f)",
+                        context.symbol,
+                        float(rsi),
                     )
                     return Decision(action=Action.HOLD, reason="momentum_filter_blocked")
 
@@ -358,7 +424,9 @@ class StrategyOrchestrator:
                 slope = (current_ma - prev_ma) / Decimal(window)
                 if slope < min_slope:
                     logger.info(
-                        "%s entry blocked by trend filter (slope=%.6f)", symbol, float(slope)
+                        "%s entry blocked by trend filter (slope=%.6f)",
+                        context.symbol,
+                        float(slope),
                     )
                     return Decision(action=Action.HOLD, reason="trend_filter_blocked")
 
@@ -384,7 +452,9 @@ class StrategyOrchestrator:
                 vol_pct = atr / closes[-1]
                 if vol_pct < min_vol or vol_pct > max_vol:
                     logger.info(
-                        "%s entry blocked by volatility filter (%.6f)", symbol, float(vol_pct)
+                        "%s entry blocked by volatility filter (%.6f)",
+                        context.symbol,
+                        float(vol_pct),
                     )
                     return Decision(action=Action.HOLD, reason="volatility_filter_blocked")
 

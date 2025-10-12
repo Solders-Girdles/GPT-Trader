@@ -13,14 +13,7 @@ from bot_v2.features.live_trade.risk import (
     PositionSizingAdvice,
     PositionSizingContext,
 )
-
-
-class _RecordingEventStore:
-    def __init__(self) -> None:
-        self.metrics: list[dict] = []
-
-    def append_metric(self, **kwargs) -> None:  # pragma: no cover - exercised in tests
-        self.metrics.append(kwargs)
+from tests.support.event_store import RecordingEventStore
 
 
 def _make_context(**overrides) -> PositionSizingContext:
@@ -39,7 +32,7 @@ def _make_context(**overrides) -> PositionSizingContext:
 
 def test_size_position_uses_dynamic_estimator():
     config = RiskConfig(enable_dynamic_position_sizing=True)
-    store = _RecordingEventStore()
+    store = RecordingEventStore()
 
     captured = {}
 
@@ -75,7 +68,7 @@ def test_size_position_uses_dynamic_estimator():
 
 def test_size_position_fallback_on_failure():
     config = RiskConfig(enable_dynamic_position_sizing=True)
-    store = _RecordingEventStore()
+    store = RecordingEventStore()
 
     def estimator(context: PositionSizingContext) -> PositionSizingAdvice:
         raise RuntimeError("estimator blew up")
@@ -100,7 +93,7 @@ def test_size_position_fallback_on_failure():
 
 def test_size_position_respects_reduce_only_mode():
     config = RiskConfig(enable_dynamic_position_sizing=True)
-    store = _RecordingEventStore()
+    store = RecordingEventStore()
 
     def estimator(context: PositionSizingContext) -> PositionSizingAdvice:
         return PositionSizingAdvice(

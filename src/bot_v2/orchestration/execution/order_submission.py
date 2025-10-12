@@ -16,6 +16,7 @@ from typing import Any
 from bot_v2.features.brokerages.core.interfaces import IBrokerage, OrderSide, OrderType
 from bot_v2.monitoring.system import LogLevel, get_logger
 from bot_v2.persistence.event_store import EventStore
+from bot_v2.utilities.telemetry import emit_metric
 
 logger = logging.getLogger(__name__)
 
@@ -56,21 +57,20 @@ class OrderSubmitter:
         """Record order preview for analysis."""
         if preview is None:
             return
-        try:
-            self.event_store.append_metric(
-                bot_id=self.bot_id,
-                metrics={
-                    "event_type": "order_preview",
-                    "symbol": symbol,
-                    "side": side.value,
-                    "order_type": order_type.value,
-                    "quantity": str(quantity),
-                    "price": str(price) if price is not None else "market",
-                    "preview": preview,
-                },
-            )
-        except Exception:
-            pass
+        emit_metric(
+            self.event_store,
+            self.bot_id,
+            {
+                "event_type": "order_preview",
+                "symbol": symbol,
+                "side": side.value,
+                "order_type": order_type.value,
+                "quantity": str(quantity),
+                "price": str(price) if price is not None else "market",
+                "preview": preview,
+            },
+            logger=get_logger(),
+        )
         try:
             get_logger().log_event(
                 level=LogLevel.INFO,
@@ -92,20 +92,19 @@ class OrderSubmitter:
             f"Order rejected: {symbol} {side} {quantity} @ {price or 'market'} reason={reason}"
         )
         # Persist an order_rejected metric for downstream analysis/tests
-        try:
-            self.event_store._write(
-                {
-                    "type": "order_rejected",
-                    "bot_id": self.bot_id,
-                    "symbol": symbol,
-                    "side": side,
-                    "quantity": str(quantity),
-                    "price": str(price) if price is not None else "market",
-                    "reason": reason,
-                }
-            )
-        except Exception:
-            pass
+        emit_metric(
+            self.event_store,
+            self.bot_id,
+            {
+                "event_type": "order_rejected",
+                "symbol": symbol,
+                "side": side,
+                "quantity": str(quantity),
+                "price": str(price) if price is not None else "market",
+                "reason": reason,
+            },
+            logger=get_logger(),
+        )
         try:
             get_logger().log_order_status_change(
                 order_id="",

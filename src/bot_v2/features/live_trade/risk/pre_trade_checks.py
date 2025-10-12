@@ -19,6 +19,7 @@ from bot_v2.features.live_trade.risk_calculations import (
     effective_symbol_leverage_cap,
 )
 from bot_v2.persistence.event_store import EventStore
+from bot_v2.utilities.telemetry import emit_metric
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +34,6 @@ def _coalesce_quantity(*values: Decimal | None) -> Decimal:
 
 class ValidationError(Exception):
     """Risk validation failure with clear message."""
-
 
 
 class PreTradeValidator:
@@ -103,34 +103,32 @@ class PreTradeValidator:
 
         # Kill switch check
         if self.config.kill_switch_enabled:
-            try:
-                self.event_store.append_metric(
-                    bot_id="risk_engine",
-                    metrics={
-                        "event_type": "kill_switch",
-                        "message": "Kill switch enabled - trading halted",
-                        "component": "risk_manager",
-                    },
-                )
-            except Exception:
-                logger.exception("Failed to record kill switch metric")
+            emit_metric(
+                self.event_store,
+                "risk_engine",
+                {
+                    "event_type": "kill_switch",
+                    "message": "Kill switch enabled - trading halted",
+                    "component": "risk_manager",
+                },
+                logger=logger,
+            )
             raise ValidationError("Kill switch enabled - all trading halted")
 
         # Reduce-only mode check
         if self._is_reduce_only_mode():
             if not self._is_reducing_position(symbol, side, current_positions):
-                try:
-                    self.event_store.append_metric(
-                        bot_id="risk_engine",
-                        metrics={
-                            "event_type": "reduce_only_block",
-                            "symbol": symbol,
-                            "message": f"Blocked increase for {symbol} (reduce-only)",
-                            "component": "risk_manager",
-                        },
-                    )
-                except Exception:
-                    logger.exception("Failed to record reduce-only block metric for %s", symbol)
+                emit_metric(
+                    self.event_store,
+                    "risk_engine",
+                    {
+                        "event_type": "reduce_only_block",
+                        "symbol": symbol,
+                        "message": f"Blocked increase for {symbol} (reduce-only)",
+                        "component": "risk_manager",
+                    },
+                    logger=logger,
+                )
                 raise ValidationError(
                     f"Reduce-only mode active - cannot increase position for {symbol}"
                 )
@@ -388,10 +386,12 @@ class PreTradeValidator:
         if reason:
             metrics["reason"] = reason
 
-        try:
-            self.event_store.append_metric(bot_id="risk_engine", metrics=metrics)
-        except Exception:
-            logger.debug("Failed to record market impact guard metric", exc_info=True)
+        emit_metric(
+            self.event_store,
+            "risk_engine",
+            metrics,
+            logger=logger,
+        )
 
         if status == "blocked":
             if reason == "impact_exceeds_threshold":

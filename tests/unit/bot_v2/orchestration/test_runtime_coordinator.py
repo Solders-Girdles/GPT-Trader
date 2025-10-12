@@ -16,6 +16,7 @@ from bot_v2.orchestration.runtime_coordinator import (
 )
 from bot_v2.orchestration.configuration import Profile
 from bot_v2.features.live_trade.risk import RiskRuntimeState
+from bot_v2.orchestration.perps_bot_state import PerpsBotRuntimeState
 
 
 @pytest.fixture
@@ -45,8 +46,10 @@ def mock_bot():
     bot.registry.with_updates = Mock(return_value=bot.registry)
     bot.event_store = Mock()
     bot.orders_store = Mock()
-    bot._product_map = {}
-    bot._last_positions = {}
+    state = PerpsBotRuntimeState([])
+    bot.runtime_state = state
+    bot._product_map = state.product_map
+    bot._last_positions = state.last_positions
     bot.strategy_orchestrator = Mock()
     bot.execution_coordinator = Mock()
     return bot
@@ -139,7 +142,7 @@ class TestInitBroker:
                 coordinator._init_broker()
 
                 assert mock_bot.broker == real_broker
-                assert "BTC-PERP" in mock_bot._product_map
+                assert "BTC-PERP" in mock_bot.runtime_state.product_map
 
     def test_raises_bootstrap_error_when_connection_fails(self, coordinator, mock_bot):
         """Test raises BrokerBootstrapError when connection fails."""
@@ -453,4 +456,4 @@ class TestReconcileStateOnStartup:
 
             await coordinator.reconcile_state_on_startup()
 
-            assert mock_bot._last_positions == initial_positions
+            assert mock_bot.runtime_state.last_positions == initial_positions

@@ -9,6 +9,7 @@ from datetime import UTC, datetime
 from typing import Any
 
 from bot_v2.config.path_registry import RUNTIME_DATA_DIR
+from bot_v2.utilities.telemetry import emit_metric
 
 logger = logging.getLogger(__name__)
 
@@ -85,13 +86,12 @@ class AccountTelemetryService:
 
     # ------------------------------------------------------------------
     def _publish_snapshot(self, snapshot: dict[str, Any]) -> None:
-        try:
-            self._event_store.append_metric(
-                bot_id=self._bot_id,
-                metrics={"event_type": "account_snapshot", **snapshot},
-            )
-        except Exception as exc:
-            logger.debug("Failed to append account snapshot metric: %s", exc, exc_info=True)
+        emit_metric(
+            self._event_store,
+            self._bot_id,
+            {"event_type": "account_snapshot", **snapshot},
+            logger=logger,
+        )
         try:
             output_path = RUNTIME_DATA_DIR / "perps_bot" / self._profile / "account.json"
             output_path.parent.mkdir(parents=True, exist_ok=True)

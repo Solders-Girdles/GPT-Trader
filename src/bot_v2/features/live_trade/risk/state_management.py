@@ -14,6 +14,7 @@ from decimal import Decimal
 
 from bot_v2.config.live_trade_config import RiskConfig
 from bot_v2.persistence.event_store import EventStore
+from bot_v2.utilities.telemetry import emit_metric
 
 logger = logging.getLogger(__name__)
 
@@ -86,22 +87,21 @@ class StateManager:
         except Exception as exc:
             logger.debug("Failed to mirror reduce-only state onto config: %s", exc, exc_info=True)
 
-        try:
-            self.event_store.append_metric(
-                bot_id="risk_engine",
-                metrics={
-                    "event_type": "reduce_only_mode_changed",
-                    "enabled": enabled,
-                    "reason": reason or "unspecified",
-                    "timestamp": (
-                        self._state.last_reduce_only_at.isoformat()
-                        if self._state.last_reduce_only_at
-                        else None
-                    ),
-                },
-            )
-        except Exception as exc:
-            logger.warning("Failed to persist reduce-only mode change: %s", exc)
+        emit_metric(
+            self.event_store,
+            "risk_engine",
+            {
+                "event_type": "reduce_only_mode_changed",
+                "enabled": enabled,
+                "reason": reason or "unspecified",
+                "timestamp": (
+                    self._state.last_reduce_only_at.isoformat()
+                    if self._state.last_reduce_only_at
+                    else None
+                ),
+            },
+            logger=logger,
+        )
 
         if self._state_listener:
             try:

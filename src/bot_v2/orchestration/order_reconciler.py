@@ -19,6 +19,7 @@ from bot_v2.features.brokerages.core.interfaces import (
 from bot_v2.persistence.event_store import EventStore
 from bot_v2.persistence.orders_store import OrdersStore
 from bot_v2.utilities.quantities import quantity_from
+from bot_v2.utilities.telemetry import emit_metric
 
 logger = logging.getLogger(__name__)
 
@@ -108,17 +109,16 @@ class OrderReconciler:
     async def record_snapshot(
         self, local_open: dict[str, Any], exchange_open: dict[str, Order]
     ) -> None:
-        try:
-            self._event_store.append_metric(
-                bot_id=self._bot_id,
-                metrics={
-                    "event_type": "order_reconcile_snapshot",
-                    "local_open": len(local_open),
-                    "exchange_open": len(exchange_open),
-                },
-            )
-        except Exception as exc:
-            logger.exception("Failed to persist order reconciliation snapshot: %s", exc)
+        emit_metric(
+            self._event_store,
+            self._bot_id,
+            {
+                "event_type": "order_reconcile_snapshot",
+                "local_open": len(local_open),
+                "exchange_open": len(exchange_open),
+            },
+            logger=logger,
+        )
 
     async def reconcile_missing_on_exchange(self, diff: OrderDiff) -> None:
         for order_id, local_order in diff.missing_on_exchange.items():
@@ -175,17 +175,16 @@ class OrderReconciler:
             logger.exception("Failed to update orders_store with %s: %s", order.id, exc)
             return
 
-        try:
-            self._event_store.append_metric(
-                bot_id=self._bot_id,
-                metrics={
-                    "event_type": "order_reconciled",
-                    "order_id": order.id,
-                    "status": order.status.value,
-                },
-            )
-        except Exception as exc:
-            logger.exception("Failed to log order reconciliation for %s: %s", order.id, exc)
+        emit_metric(
+            self._event_store,
+            self._bot_id,
+            {
+                "event_type": "order_reconciled",
+                "order_id": order.id,
+                "status": order.status.value,
+            },
+            logger=logger,
+        )
         logger.info("Updated order %s to status: %s", order.id, order.status.value)
 
     def _assume_cancelled(self, order_id: str, local_order: Any) -> None:
@@ -219,18 +218,17 @@ class OrderReconciler:
                 updated_at=datetime.now(UTC),
             )
             self._orders_store.upsert(cancelled_order)
-            try:
-                self._event_store.append_metric(
-                    bot_id=self._bot_id,
-                    metrics={
-                        "event_type": "order_reconciled",
-                        "order_id": order_id,
-                        "status": OrderStatus.CANCELLED.value,
-                        "reason": "assumed_cancelled",
-                    },
-                )
-            except Exception as exc:
-                logger.exception("Failed to log assumed cancellation for %s: %s", order_id, exc)
+            emit_metric(
+                self._event_store,
+                self._bot_id,
+                {
+                    "event_type": "order_reconciled",
+                    "order_id": order_id,
+                    "status": OrderStatus.CANCELLED.value,
+                    "reason": "assumed_cancelled",
+                },
+                logger=logger,
+            )
             logger.info("Marked order %s as cancelled due to missing on exchange", order_id)
         except Exception as exc:
             logger.debug(

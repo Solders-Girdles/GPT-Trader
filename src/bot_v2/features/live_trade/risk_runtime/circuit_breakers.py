@@ -1,4 +1,4 @@
-"""Runtime guard helpers extracted from the live risk manager."""
+"""Circuit breaker utilities for runtime risk checks."""
 
 from __future__ import annotations
 
@@ -11,13 +11,7 @@ from decimal import Decimal
 from enum import Enum
 from typing import Any
 
-from bot_v2.features.live_trade.guard_errors import (
-    RiskGuardComputationError,
-    RiskGuardTelemetryError,
-)
-
-AnyLogger = Any  # local alias for loose logger typing
-LogEventFn = Callable[[str, dict[str, str], str], None]
+from .types import AnyLogger, LogEventFn
 
 
 class CircuitBreakerAction(Enum):
@@ -53,8 +47,6 @@ class CircuitBreakerOutcome:
     value: Decimal | None = None
 
     def to_payload(self) -> dict[str, Any]:
-        """Serialize the outcome for telemetry hooks."""
-
         return {
             "triggered": self.triggered,
             "action": self.action.value,
@@ -79,10 +71,8 @@ class CircuitBreakerState:
         self._triggers: dict[str, dict[str, CircuitBreakerSnapshot]] = {}
 
     def register_rule(self, rule: CircuitBreakerRule) -> None:
-        """Register a circuit breaker rule."""
         self._rules[rule.name] = rule
-        if rule.name not in self._triggers:
-            self._triggers[rule.name] = {}
+        self._triggers.setdefault(rule.name, {})
 
     def record(
         self,
@@ -91,177 +81,16 @@ class CircuitBreakerState:
         action: CircuitBreakerAction,
         triggered_at: datetime,
     ) -> None:
-        """Record a circuit breaker trigger."""
-        if rule_name not in self._triggers:
-            self._triggers[rule_name] = {}
-        self._triggers[rule_name][symbol] = CircuitBreakerSnapshot(
+        self._triggers.setdefault(rule_name, {})[symbol] = CircuitBreakerSnapshot(
             last_action=action,
             triggered_at=triggered_at,
         )
 
     def get(self, rule_name: str, symbol: str) -> CircuitBreakerSnapshot | None:
-        """Get most recent trigger for a rule/symbol."""
         return self._triggers.get(rule_name, {}).get(symbol)
 
     def snapshot(self) -> dict[str, dict[str, CircuitBreakerSnapshot]]:
-        """Get all triggers."""
         return self._triggers
-
-
-def check_mark_staleness(
-    *,
-    symbol: str,
-    last_mark_update: MutableMapping[str, datetime],
-    now: Callable[[], datetime],
-    max_staleness_seconds: int,
-    log_event: LogEventFn,
-    logger: AnyLogger,
-) -> bool:
-    """Return True when mark data is stale enough to halt trading."""
-    if symbol not in last_mark_update:
-        return False
-
-    age = now() - last_mark_update[symbol]
-    soft_limit = timedelta(seconds=max_staleness_seconds)
-    hard_limit = timedelta(seconds=max_staleness_seconds * 2)
-
-    if age > hard_limit:
-        log_event(
-            "stale_mark_price",
-            {
-                "symbol": symbol,
-                "age_seconds": str(age.total_seconds()),
-                "limit_seconds": str(max_staleness_seconds),
-                "action": "halt_new_orders",
-            },
-            guard="mark_staleness",
-        )
-        logger.warning(
-            "Stale mark price for %s: %.0fs > hard limit %.0fs - Halting new orders",
-            symbol,
-            age.total_seconds(),
-            hard_limit.total_seconds(),
-        )
-        return True
-    if age > soft_limit:
-        logger.info(
-            "Mark slightly stale for %s: %.0fs > %.0fs - continuing",
-            symbol,
-            age.total_seconds(),
-            soft_limit.total_seconds(),
-        )
-    return False
-
-
-def append_risk_metrics(
-    *,
-    event_store,
-    now: Callable[[], datetime],
-    equity: Decimal,
-    positions: dict[str, Any],
-    daily_pnl: Decimal,
-    start_of_day_equity: Decimal,
-    reduce_only: bool,
-    kill_switch_enabled: bool,
-    logger: AnyLogger,
-) -> None:
-    """Persist a summary of current risk posture."""
-    total_notional = Decimal("0")
-    max_leverage = Decimal("0")
-
-    for symbol, pos_data in positions.items():
-        try:
-            qty = abs(Decimal(str(pos_data.get("quantity", pos_data.get("qty", 0)))))
-            mark = Decimal(str(pos_data.get("mark", 0)))
-        except Exception:
-            continue
-        if qty > 0 and mark > 0:
-            notional = qty * mark
-            total_notional += notional
-            leverage = notional / equity if equity > 0 else Decimal("0")
-            max_leverage = max(max_leverage, leverage)
-
-    exposure_pct = total_notional / equity if equity > 0 else Decimal("0")
-    if start_of_day_equity > 0:
-        daily_pnl_pct = daily_pnl / start_of_day_equity
-    else:
-        daily_pnl_pct = Decimal("0")
-
-    logger.debug(
-        "Risk snapshot: equity=%s notional=%s exposure=%.3f max_lev=%.2f daily_pnl=%s daily_pnl_pct=%.4f reduce_only=%s kill=%s",
-        equity,
-        total_notional,
-        exposure_pct,
-        max_leverage,
-        daily_pnl,
-        daily_pnl_pct,
-        reduce_only,
-        kill_switch_enabled,
-    )
-
-    try:
-        event_store.append_metric(
-            bot_id="risk_engine",
-            metrics={
-                "timestamp": now().isoformat(),
-                "equity": str(equity),
-                "total_notional": str(total_notional),
-                "exposure_pct": str(exposure_pct),
-                "max_leverage": str(max_leverage),
-                "daily_pnl": str(daily_pnl),
-                "daily_pnl_pct": str(daily_pnl_pct),
-                "reduce_only": str(reduce_only),
-                "kill_switch": str(kill_switch_enabled),
-            },
-        )
-    except Exception as exc:
-        raise RiskGuardTelemetryError(
-            guard="risk_metrics",
-            message="Failed to persist risk snapshot metric",
-            details={
-                "equity": str(equity),
-                "total_notional": str(total_notional),
-                "exposure_pct": str(exposure_pct),
-            },
-            original=exc,
-        ) from exc
-
-
-def check_correlation_risk(
-    positions: dict[str, Any],
-    *,
-    log_event: LogEventFn,
-    logger: AnyLogger,
-) -> bool:
-    """Return True when portfolio concentration or correlation limits are breached."""
-    try:
-        symbols = list(positions.keys())
-        if len(symbols) < 2:
-            return False
-
-        notional_vals: list[Decimal] = []
-        for sym, p in positions.items():
-            qty = abs(Decimal(str(p.get("quantity", p.get("qty", 0)))))
-            mark = Decimal(str(p.get("mark", 0)))
-            notional_vals.append(qty * mark)
-        total = sum(notional_vals) if notional_vals else Decimal("0")
-        if total <= 0:
-            return False
-        hhi = sum((v / total) ** 2 for v in notional_vals)
-        if hhi > Decimal("0.4"):
-            log_event("concentration_risk", {"hhi": str(hhi)}, guard="correlation_risk")
-            logger.warning("Concentration risk detected (HHI=%.3f)", hhi)
-            return True
-
-        # Correlation placeholder – left for future enrichment
-        return False
-    except Exception as exc:
-        raise RiskGuardComputationError(
-            guard="correlation_risk",
-            message="Failed to evaluate correlation risk",
-            details={"symbols": list(positions.keys())},
-            original=exc,
-        ) from exc
 
 
 def check_volatility_circuit_breaker(
@@ -285,7 +114,7 @@ def check_volatility_circuit_breaker(
     use_rule = rule is not None and state is not None
 
     if use_rule:
-        assert rule is not None and state is not None  # for type checkers
+        assert rule is not None and state is not None
         if not rule.enabled:
             return CircuitBreakerOutcome(triggered=False, action=CircuitBreakerAction.NONE)
         window = int(rule.window)
@@ -298,23 +127,23 @@ def check_volatility_circuit_breaker(
     if len(marks) < window:
         return CircuitBreakerOutcome(triggered=False, action=CircuitBreakerAction.NONE)
 
-    rets: list[float] = []
+    returns: list[float] = []
     for a, b in zip(marks[-window:-1], marks[-window + 1 :], strict=False):
         if a and a > 0:
             try:
-                rets.append(float((b - a) / a))
+                returns.append(float((b - a) / a))
             except Exception:
                 continue
-    if len(rets) < max(10, window // 2):
+    if len(returns) < max(10, window // 2):
         return CircuitBreakerOutcome(triggered=False, action=CircuitBreakerAction.NONE)
 
-    stdev = statistics.stdev(rets) if len(rets) > 1 else 0.0
+    stdev = statistics.stdev(returns) if len(returns) > 1 else 0.0
     rolling_vol = float(stdev * math.sqrt(252.0))
     rolling_vol_decimal = Decimal(f"{rolling_vol:.6f}")
 
     current_time = now()
     if use_rule:
-        snapshot = state.get(rule.name, symbol) if state is not None else None
+        snapshot = state.get(rule.name, symbol)
         if snapshot and (current_time - snapshot.triggered_at) < rule.cooldown:
             return CircuitBreakerOutcome(
                 triggered=False,
@@ -394,3 +223,13 @@ def check_volatility_circuit_breaker(
         action=CircuitBreakerAction.NONE,
         value=rolling_vol_decimal,
     )
+
+
+__all__ = [
+    "CircuitBreakerAction",
+    "CircuitBreakerOutcome",
+    "CircuitBreakerRule",
+    "CircuitBreakerSnapshot",
+    "CircuitBreakerState",
+    "check_volatility_circuit_breaker",
+]

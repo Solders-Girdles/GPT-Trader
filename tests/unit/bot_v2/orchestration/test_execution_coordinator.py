@@ -22,6 +22,7 @@ from bot_v2.features.brokerages.core.interfaces import (
     MarketType,
 )
 from bot_v2.features.live_trade.strategies.perps_baseline import Action
+from bot_v2.orchestration.perps_bot_state import PerpsBotRuntimeState
 
 
 @pytest.fixture
@@ -33,12 +34,12 @@ def mock_bot():
     bot.config.dry_run = False
     bot.config.time_in_force = "GTC"
     bot.broker = Mock()
-    bot.exec_engine = Mock()
     bot.risk_manager = Mock()
     bot.orders_store = Mock()
     bot.event_store = Mock()
-    bot.order_stats = {"attempted": 0, "successful": 0, "failed": 0}
-    bot._order_lock = None
+    state = PerpsBotRuntimeState([])
+    bot.runtime_state = state
+    bot.order_stats = state.order_stats
     bot.running = True
     return bot
 
@@ -146,17 +147,17 @@ class TestEnsureOrderLock:
 
     def test_creates_lock_when_none(self, coordinator, mock_bot):
         """Test creates asyncio.Lock when bot has no lock."""
-        mock_bot._order_lock = None
+        mock_bot.runtime_state.order_lock = None
 
         lock = coordinator._ensure_order_lock()
 
         assert isinstance(lock, asyncio.Lock)
-        assert mock_bot._order_lock is lock
+        assert mock_bot.runtime_state.order_lock is lock
 
     def test_returns_existing_lock(self, coordinator, mock_bot):
         """Test returns existing lock when already created."""
         existing_lock = asyncio.Lock()
-        mock_bot._order_lock = existing_lock
+        mock_bot.runtime_state.order_lock = existing_lock
 
         lock = coordinator._ensure_order_lock()
 
@@ -164,7 +165,7 @@ class TestEnsureOrderLock:
 
     def test_raises_on_runtime_error(self, coordinator, mock_bot):
         """Test raises RuntimeError when lock creation fails."""
-        mock_bot._order_lock = None
+        mock_bot.runtime_state.order_lock = None
 
         # Simulate RuntimeError during Lock creation
         with patch("asyncio.Lock", side_effect=RuntimeError("No event loop")):
@@ -388,6 +389,7 @@ class TestExecuteDecision:
     async def test_skips_execution_in_dry_run_mode(self, coordinator, mock_bot, test_product):
         """Test skips execution when in dry run mode."""
         mock_bot.config.dry_run = True
+        mock_bot.runtime_state.exec_engine = Mock()
 
         decision = Mock()
         decision.action = Action.BUY
@@ -404,13 +406,14 @@ class TestExecuteDecision:
         )
 
         # Should not call exec_engine
-        mock_bot.exec_engine.place_order.assert_not_called()
+        mock_bot.runtime_state.exec_engine.place_order.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_handles_close_action_with_no_position(self, coordinator, mock_bot, test_product):
         """Test handles CLOSE action when no position exists."""
         decision = Mock()
         decision.action = Action.CLOSE
+        mock_bot.runtime_state.exec_engine = Mock()
 
         await coordinator.execute_decision(
             symbol="BTC-PERP",
@@ -421,7 +424,7 @@ class TestExecuteDecision:
         )
 
         # Should not attempt to place order
-        mock_bot.exec_engine.place_order.assert_not_called()
+        mock_bot.runtime_state.exec_engine.place_order.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_converts_buy_action_to_buy_side(
@@ -430,8 +433,8 @@ class TestExecuteDecision:
         """Test converts BUY action to BUY order side."""
         from bot_v2.features.live_trade.advanced_execution import AdvancedExecutionEngine
 
-        mock_bot.exec_engine = Mock(spec=AdvancedExecutionEngine)
-        mock_bot.exec_engine.place_order = Mock(return_value=test_order)
+        mock_bot.runtime_state.exec_engine = Mock(spec=AdvancedExecutionEngine)
+        mock_bot.runtime_state.exec_engine.place_order = Mock(return_value=test_order)
         mock_bot.is_reduce_only_mode = Mock(return_value=False)
 
         decision = Mock()
@@ -468,7 +471,7 @@ class TestExecuteDecision:
         """Test converts SELL action to SELL order side."""
         from bot_v2.features.live_trade.advanced_execution import AdvancedExecutionEngine
 
-        mock_bot.exec_engine = Mock(spec=AdvancedExecutionEngine)
+        mock_bot.runtime_state.exec_engine = Mock(spec=AdvancedExecutionEngine)
         mock_bot.is_reduce_only_mode = Mock(return_value=False)
 
         decision = Mock()
@@ -502,7 +505,7 @@ class TestExecuteDecision:
         """Test respects reduce-only mode from bot."""
         from bot_v2.features.live_trade.advanced_execution import AdvancedExecutionEngine
 
-        mock_bot.exec_engine = Mock(spec=AdvancedExecutionEngine)
+        mock_bot.runtime_state.exec_engine = Mock(spec=AdvancedExecutionEngine)
         mock_bot.is_reduce_only_mode = Mock(return_value=True)
 
         decision = Mock()
@@ -537,6 +540,7 @@ class TestExecuteDecision:
         decision = Mock()
         decision.action = Action.BUY
         decision.quantity = Decimal("0.1")
+        mock_bot.runtime_state.exec_engine = Mock()
 
         # Force an exception by making mark invalid - should be caught and logged
         await coordinator.execute_decision(
@@ -549,7 +553,7 @@ class TestExecuteDecision:
 
         # Should not raise - exception is caught and logged
         # Verify no order was placed
-        mock_bot.exec_engine.place_order.assert_not_called()
+        mock_bot.runtime_state.exec_engine.place_order.assert_not_called()
 
 
 class TestEdgeCases:

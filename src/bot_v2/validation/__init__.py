@@ -11,7 +11,7 @@ from datetime import date, datetime
 from typing import Any
 
 from bot_v2.errors import ValidationError
-from bot_v2.utilities.import_utils import optional_import
+from bot_v2.utilities.importing import optional_import
 
 # Optional pandas import
 pandas = optional_import("pandas")

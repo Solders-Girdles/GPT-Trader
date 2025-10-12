@@ -31,6 +31,7 @@ from bot_v2.features.brokerages.core.interfaces import (
     TimeInForce,
 )
 from bot_v2.persistence.event_store import EventStore
+from bot_v2.utilities.telemetry import emit_metric
 
 logger = logging.getLogger(__name__)
 
@@ -350,10 +351,11 @@ class CoinbaseRestServiceBase:
         if funding_delta != 0:
             position.realized_pnl += funding_delta
         if funding_rate is not None:
-            self._event_store.append_metric(
-                bot_id="coinbase_perps",
-                metrics={
-                    "type": "funding",
+            emit_metric(
+                self._event_store,
+                "coinbase_perps",
+                {
+                    "event_type": "funding",
                     "timestamp": datetime.utcnow().isoformat(),
                     "symbol": symbol,
                     "side": position.side,
@@ -362,6 +364,7 @@ class CoinbaseRestServiceBase:
                     "mark_price": str(mark),
                     "funding_amount": str(funding_delta),
                 },
+                logger=logger,
             )
         position_value = position.quantity * mark
         self._event_store.append_position(

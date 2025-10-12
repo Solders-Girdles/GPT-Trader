@@ -12,7 +12,10 @@ from unittest.mock import Mock, MagicMock, AsyncMock, patch
 
 import pytest
 
-from bot_v2.orchestration.strategy_orchestrator import StrategyOrchestrator
+from bot_v2.orchestration.strategy_orchestrator import (
+    StrategyOrchestrator,
+    SymbolProcessingContext,
+)
 from bot_v2.orchestration.configuration import Profile
 from bot_v2.features.brokerages.core.interfaces import Balance, Position
 from bot_v2.features.live_trade.strategies.perps_baseline import (
@@ -24,6 +27,7 @@ from bot_v2.features.live_trade.risk_runtime import (
     CircuitBreakerOutcome,
     CircuitBreakerAction,
 )
+from bot_v2.orchestration.perps_bot_state import PerpsBotRuntimeState
 
 
 @pytest.fixture
@@ -46,10 +50,11 @@ def mock_bot():
     bot.risk_manager.config = Mock()
     bot.risk_manager.config.kill_switch_enabled = False
 
-    bot.strategy = None
-    bot._symbol_strategies = {}
-    bot.mark_windows = {}
-    bot.last_decisions = {}
+    state = PerpsBotRuntimeState(bot.config.symbols or [])
+    bot.runtime_state = state
+    bot.mark_windows = state.mark_windows
+    bot.last_decisions = state.last_decisions
+    bot._symbol_strategies = state.symbol_strategies
     bot.execute_decision = AsyncMock()
     bot.get_product = Mock()
 
@@ -121,10 +126,10 @@ class TestInitStrategy:
         orchestrator.init_strategy()
 
         # Should create single strategy on bot.strategy
-        assert isinstance(mock_bot.strategy, BaselinePerpsStrategy)
-        assert mock_bot.strategy.config.short_ma_period == 10
-        assert mock_bot.strategy.config.long_ma_period == 30
-        assert mock_bot.strategy.config.target_leverage == 2
+        assert isinstance(mock_bot.runtime_state.strategy, BaselinePerpsStrategy)
+        assert mock_bot.runtime_state.strategy.config.short_ma_period == 10
+        assert mock_bot.runtime_state.strategy.config.long_ma_period == 30
+        assert mock_bot.runtime_state.strategy.config.target_leverage == 2
 
     def test_initializes_spot_strategy_per_symbol(
         self, orchestrator, mock_bot, mock_spot_profile_service
@@ -140,10 +145,11 @@ class TestInitStrategy:
         orchestrator.init_strategy()
 
         # Should create per-symbol strategies
-        assert "BTC-PERP" in mock_bot._symbol_strategies
-        assert "ETH-PERP" in mock_bot._symbol_strategies
+        symbol_map = mock_bot.runtime_state.symbol_strategies
+        assert "BTC-PERP" in symbol_map
+        assert "ETH-PERP" in symbol_map
 
-        btc_strat = mock_bot._symbol_strategies["BTC-PERP"]
+        btc_strat = symbol_map["BTC-PERP"]
         assert btc_strat.config.short_ma_period == 5
         assert btc_strat.config.long_ma_period == 15
         assert btc_strat.config.enable_shorts is False
@@ -154,7 +160,7 @@ class TestInitStrategy:
 
         orchestrator.init_strategy()
 
-        assert mock_bot.strategy.config.position_fraction == 0.3
+        assert mock_bot.runtime_state.strategy.config.position_fraction == 0.3
 
     def test_disables_leverage_when_derivatives_disabled(self, orchestrator, mock_bot):
         """Test sets leverage to 1 when derivatives disabled."""
@@ -163,8 +169,8 @@ class TestInitStrategy:
 
         orchestrator.init_strategy()
 
-        assert mock_bot.strategy.config.target_leverage == 1
-        assert mock_bot.strategy.config.enable_shorts is False
+        assert mock_bot.runtime_state.strategy.config.target_leverage == 1
+        assert mock_bot.runtime_state.strategy.config.enable_shorts is False
 
 
 class TestGetStrategy:
@@ -173,17 +179,17 @@ class TestGetStrategy:
     def test_returns_bot_strategy_for_perps_profile(self, orchestrator, mock_bot):
         """Test returns bot.strategy for non-SPOT profile."""
         mock_bot.config.profile = Profile.PROD
-        mock_bot.strategy = Mock(spec=BaselinePerpsStrategy)
+        mock_bot.runtime_state.strategy = Mock(spec=BaselinePerpsStrategy)
 
         strategy = orchestrator.get_strategy("BTC-PERP")
 
-        assert strategy == mock_bot.strategy
+        assert strategy == mock_bot.runtime_state.strategy
 
     def test_returns_symbol_strategy_for_spot_profile(self, orchestrator, mock_bot):
         """Test returns symbol-specific strategy for SPOT profile."""
         mock_bot.config.profile = Profile.SPOT
         btc_strategy = Mock(spec=BaselinePerpsStrategy)
-        mock_bot._symbol_strategies["BTC-PERP"] = btc_strategy
+        mock_bot.runtime_state.symbol_strategies["BTC-PERP"] = btc_strategy
 
         strategy = orchestrator.get_strategy("BTC-PERP")
 
@@ -192,12 +198,12 @@ class TestGetStrategy:
     def test_creates_default_strategy_for_unknown_symbol(self, orchestrator, mock_bot):
         """Test creates default strategy when symbol not in map."""
         mock_bot.config.profile = Profile.SPOT
-        mock_bot._symbol_strategies = {}
+        mock_bot.runtime_state.symbol_strategies.clear()
 
         strategy = orchestrator.get_strategy("NEW-SYMBOL")
 
         assert isinstance(strategy, BaselinePerpsStrategy)
-        assert "NEW-SYMBOL" in mock_bot._symbol_strategies
+        assert "NEW-SYMBOL" in mock_bot.runtime_state.symbol_strategies
 
 
 class TestEnsureBalances:
@@ -333,9 +339,9 @@ class TestGetMarks:
 
     def test_returns_marks_for_symbol(self, orchestrator, mock_bot):
         """Test returns marks from bot mark_windows."""
-        mock_bot.mark_windows = {
-            "BTC-PERP": [Decimal("50000"), Decimal("51000")],
-        }
+        state = mock_bot.runtime_state
+        state.mark_windows.clear()
+        state.mark_windows["BTC-PERP"] = [Decimal("50000"), Decimal("51000")]
 
         marks = orchestrator._get_marks("BTC-PERP")
 
@@ -343,7 +349,7 @@ class TestGetMarks:
 
     def test_returns_empty_list_when_no_marks(self, orchestrator, mock_bot):
         """Test returns empty list when no marks for symbol."""
-        mock_bot.mark_windows = {}
+        mock_bot.runtime_state.mark_windows.clear()
 
         marks = orchestrator._get_marks("BTC-PERP")
 
@@ -387,7 +393,18 @@ class TestRunRiskGates:
         )
         mock_bot.risk_manager.check_mark_staleness = Mock(return_value=False)
 
-        result = orchestrator._run_risk_gates("BTC-PERP", marks)
+        context = SymbolProcessingContext(
+            symbol="BTC-PERP",
+            balances=[],
+            equity=Decimal("10000"),
+            positions={},
+            position_state=None,
+            position_quantity=Decimal("0"),
+            marks=list(marks),
+            product=None,
+        )
+
+        result = orchestrator._run_risk_gates(context)
 
         assert result is True
 
@@ -402,7 +419,18 @@ class TestRunRiskGates:
             )
         )
 
-        result = orchestrator._run_risk_gates("BTC-PERP", marks)
+        context = SymbolProcessingContext(
+            symbol="BTC-PERP",
+            balances=[],
+            equity=Decimal("10000"),
+            positions={},
+            position_state=None,
+            position_quantity=Decimal("0"),
+            marks=list(marks),
+            product=None,
+        )
+
+        result = orchestrator._run_risk_gates(context)
 
         assert result is False
 
@@ -416,7 +444,18 @@ class TestRunRiskGates:
         )
         mock_bot.risk_manager.check_mark_staleness = Mock(return_value=True)
 
-        result = orchestrator._run_risk_gates("BTC-PERP", marks)
+        context = SymbolProcessingContext(
+            symbol="BTC-PERP",
+            balances=[],
+            equity=Decimal("10000"),
+            positions={},
+            position_state=None,
+            position_quantity=Decimal("0"),
+            marks=list(marks),
+            product=None,
+        )
+
+        result = orchestrator._run_risk_gates(context)
 
         assert result is False
 
@@ -437,7 +476,7 @@ class TestEvaluateStrategy:
         mock_bot.get_product = Mock(return_value=product)
 
         result = orchestrator._evaluate_strategy(
-            strategy, "BTC-PERP", marks, position_state, equity
+            strategy, "BTC-PERP", marks, position_state, equity, product
         )
 
         assert result == decision
@@ -507,7 +546,7 @@ class TestProcessSymbol:
         """Test skips processing when no marks available."""
         mock_bot.broker.list_balances = Mock(return_value=[test_balance])
         mock_bot.broker.list_positions = Mock(return_value=[])
-        mock_bot.mark_windows = {}
+        mock_bot.runtime_state.mark_windows.clear()
 
         await orchestrator.process_symbol("BTC-PERP")
 
@@ -520,7 +559,9 @@ class TestProcessSymbol:
         mock_bot.config.profile = Profile.PROD
         mock_bot.broker.list_balances = Mock(return_value=[test_balance])
         mock_bot.broker.list_positions = Mock(return_value=[test_position])
-        mock_bot.mark_windows = {"BTC-PERP": [Decimal("50000")] * 35}
+        state = mock_bot.runtime_state
+        state.mark_windows.clear()
+        state.mark_windows["BTC-PERP"] = [Decimal("50000")] * 35
         mock_bot.risk_manager.check_volatility_circuit_breaker = Mock(
             return_value=CircuitBreakerOutcome(
                 triggered=False, action=CircuitBreakerAction.NONE, reason=None
@@ -532,7 +573,7 @@ class TestProcessSymbol:
         strategy = Mock(spec=BaselinePerpsStrategy)
         decision = Decision(action=Action.BUY, reason="test")
         strategy.decide = Mock(return_value=decision)
-        mock_bot.strategy = strategy
+        mock_bot.runtime_state.strategy = strategy
 
         product = Mock()
         mock_bot.get_product = Mock(return_value=product)
@@ -550,7 +591,9 @@ class TestProcessSymbol:
         """Test skips execution when risk gates fail."""
         mock_bot.broker.list_balances = Mock(return_value=[test_balance])
         mock_bot.broker.list_positions = Mock(return_value=[])
-        mock_bot.mark_windows = {"BTC-PERP": [Decimal("50000")] * 35}
+        state = mock_bot.runtime_state
+        state.mark_windows.clear()
+        state.mark_windows["BTC-PERP"] = [Decimal("50000")] * 35
         mock_bot.risk_manager.check_mark_staleness = Mock(return_value=True)
 
         await orchestrator.process_symbol("BTC-PERP")

@@ -38,10 +38,10 @@ class TestEventStore:
             mock_json_store.return_value = mock_store_instance
 
             store = EventStore()
-            store._write({"test": "data"})
+            store._write({"bot_id": "b", "type": "test", "test": "data"})
 
             mock_store_instance.append_jsonl.assert_called_once_with(
-                {"test": "data", "time": "2023-01-01T12:00:00Z"}
+                {"bot_id": "b", "type": "test", "test": "data", "time": "2023-01-01T12:00:00Z"}
             )
 
     @patch("bot_v2.persistence.event_store.utc_now_iso")
@@ -54,11 +54,13 @@ class TestEventStore:
             mock_json_store.return_value = mock_store_instance
 
             store = EventStore()
-            store._write({"time": "2023-01-01T10:00:00Z", "test": "data"})
+            store._write(
+                {"bot_id": "b", "type": "test", "time": "2023-01-01T10:00:00Z", "test": "data"}
+            )
 
             # Should not override existing timestamp
             mock_store_instance.append_jsonl.assert_called_once_with(
-                {"time": "2023-01-01T10:00:00Z", "test": "data"}
+                {"bot_id": "b", "type": "test", "time": "2023-01-01T10:00:00Z", "test": "data"}
             )
 
     @patch("bot_v2.persistence.event_store.utc_now_iso")
@@ -80,6 +82,7 @@ class TestEventStore:
                 "symbol": "BTC-USD",
                 "side": "buy",
                 "size": 0.1,
+                "quantity": "0.1",
                 "time": "2023-01-01T12:00:00Z",
             }
             mock_store_instance.append_jsonl.assert_called_once_with(expected_payload)
@@ -94,15 +97,23 @@ class TestEventStore:
             mock_json_store.return_value = mock_store_instance
 
             store = EventStore()
-            position_data = {"symbol": "BTC-USD", "size": 0.5, "pnl": 100.0}
+            position_data = {
+                "symbol": "BTC-USD",
+                "quantity": 0.5,
+                "mark_price": 51000,
+                "unrealized_pnl": 100.0,
+                "side": "long",
+            }
             store.append_position("bot123", position_data)
 
             expected_payload = {
                 "type": "position",
                 "bot_id": "bot123",
                 "symbol": "BTC-USD",
-                "size": 0.5,
-                "pnl": 100.0,
+                "quantity": "0.5",
+                "mark_price": "51000",
+                "unrealized_pnl": "100.0",
+                "side": "long",
                 "time": "2023-01-01T12:00:00Z",
             }
             mock_store_instance.append_jsonl.assert_called_once_with(expected_payload)
@@ -117,12 +128,17 @@ class TestEventStore:
             mock_json_store.return_value = mock_store_instance
 
             store = EventStore()
-            metric_data = {"portfolio_value": 10000.0, "leverage": 2.5}
+            metric_data = {
+                "event_type": "portfolio_snapshot",
+                "portfolio_value": 10000.0,
+                "leverage": 2.5,
+            }
             store.append_metric("bot123", metric_data)
 
             expected_payload = {
-                "type": "metric",
+                "type": "portfolio_snapshot",
                 "bot_id": "bot123",
+                "event_type": "portfolio_snapshot",
                 "portfolio_value": 10000.0,
                 "leverage": 2.5,
                 "time": "2023-01-01T12:00:00Z",
@@ -171,6 +187,33 @@ class TestEventStore:
                 "time": "2023-01-01T12:00:00Z",
             }
             mock_store_instance.append_jsonl.assert_called_once_with(expected_payload)
+
+    def test_write_requires_bot_id_and_type(self) -> None:
+        store = EventStore()
+        with pytest.raises(ValueError):
+            store._normalize_payload({"type": "trade"})
+        with pytest.raises(ValueError):
+            store._normalize_payload({"bot_id": "bot123"})
+
+    def test_append_trade_requires_quantity(self, tmp_path: Path) -> None:
+        store = EventStore(root=tmp_path)
+        with pytest.raises(ValueError):
+            store.append_trade("bot123", {"symbol": "BTC-USD", "side": "buy"})
+
+    def test_append_position_requires_mark_price(self, tmp_path: Path) -> None:
+        store = EventStore(root=tmp_path)
+        with pytest.raises(ValueError):
+            store.append_position("bot123", {"symbol": "BTC-USD", "quantity": 1})
+
+    def test_append_metric_requires_event_type(self, tmp_path: Path) -> None:
+        store = EventStore(root=tmp_path)
+        with pytest.raises(ValueError):
+            store.append_metric("bot123", {"value": 1})
+
+    def test_append_error_requires_message(self, tmp_path: Path) -> None:
+        store = EventStore(root=tmp_path)
+        with pytest.raises(ValueError):
+            store.append_error("bot123", "")
 
     def test_tail_no_filter(self) -> None:
         """Test tail method without type filtering."""
@@ -333,10 +376,18 @@ class TestEventStore:
             store = EventStore()
 
             # Add different types of events - just verify they call append_jsonl correctly
-            store.append_trade("bot123", {"symbol": "BTC-USD", "side": "buy"})
-            store.append_position("bot123", {"symbol": "BTC-USD", "size": 0.5})
+            store.append_trade(
+                "bot123",
+                {"symbol": "BTC-USD", "side": "buy", "quantity": 1, "price": "market"},
+            )
+            store.append_position(
+                "bot123",
+                {"symbol": "BTC-USD", "quantity": 0.5, "mark_price": 51000},
+            )
             store.append_error("bot123", "Test error")
-            store.append_trade("bot456", {"symbol": "ETH-USD", "side": "sell"})  # Different bot
+            store.append_trade(
+                "bot456", {"symbol": "ETH-USD", "side": "sell", "quantity": 2}
+            )  # Different bot
 
             # Verify all events were written
             assert mock_store_instance.append_jsonl.call_count == 4

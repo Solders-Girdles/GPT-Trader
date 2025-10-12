@@ -21,6 +21,7 @@ from bot_v2.features.live_trade.risk_calculations import (
     evaluate_daytime_window,
 )
 from bot_v2.features.live_trade.risk_runtime import CircuitBreakerAction
+from tests.support.event_store import RecordingEventStore
 
 
 class _CalculationConfig:
@@ -41,14 +42,6 @@ class _Logger:
 
     def debug(self, msg, *args):
         self.debug_calls.append(msg % args if args else msg)
-
-
-class _RecordingEventStore:
-    def __init__(self) -> None:
-        self.metrics: list[dict] = []
-
-    def append_metric(self, **kwargs) -> None:  # pragma: no cover - exercised in tests
-        self.metrics.append(kwargs)
 
 
 @pytest.fixture(name="calculation_config")
@@ -406,7 +399,7 @@ def test_market_impact_guard_allows_within_limit():
         max_market_impact_bps=Decimal("40"),
         max_position_pct_per_symbol=0.5,
     )
-    store = _RecordingEventStore()
+    store = RecordingEventStore()
 
     def estimator(request: ImpactRequest) -> ImpactAssessment:
         return ImpactAssessment(
@@ -454,7 +447,7 @@ def test_market_impact_guard_blocks_when_exceeding_limit():
         max_market_impact_bps=Decimal("25"),
         max_position_pct_per_symbol=0.5,
     )
-    store = _RecordingEventStore()
+    store = RecordingEventStore()
 
     def estimator(request: ImpactRequest) -> ImpactAssessment:
         return ImpactAssessment(

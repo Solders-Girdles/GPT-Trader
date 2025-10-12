@@ -29,6 +29,7 @@ ALLOWLIST = {
     "tests/unit/bot_v2/orchestration/test_system_monitor.py",  # monitoring integration matrix
     "tests/unit/bot_v2/test_broker_behavioral_contract.py",  # 358 lines: broker contract validation suite
     "tests/unit/bot_v2/utilities/test_async_utils_advanced.py",  # legacy async helpers coverage
+    "tests/unit/bot_v2/persistence/test_event_store.py",  # event store contract and normalization coverage
 }
 
 

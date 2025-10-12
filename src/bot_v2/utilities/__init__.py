@@ -27,7 +27,7 @@ from .datetime_helpers import (
     utc_now_iso,
     utc_timestamp,
 )
-from .import_utils import optional_import
+from .importing import optional_import
 from .iterators import empty_stream
 from .logging_patterns import get_logger, log_operation
 from .quantities import quantity_from

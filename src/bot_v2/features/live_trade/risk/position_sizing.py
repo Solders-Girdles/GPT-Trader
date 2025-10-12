@@ -14,6 +14,7 @@ from decimal import Decimal
 from bot_v2.config.live_trade_config import RiskConfig
 from bot_v2.features.brokerages.core.interfaces import Product
 from bot_v2.persistence.event_store import EventStore
+from bot_v2.utilities.telemetry import emit_metric
 
 logger = logging.getLogger(__name__)
 
@@ -133,17 +134,16 @@ class PositionSizer:
                 return advice
             except Exception as exc:
                 logger.exception("Position size estimator failed for %s", context.symbol)
-                try:
-                    self.event_store.append_metric(
-                        bot_id="risk_engine",
-                        metrics={
-                            "event_type": "position_sizing_error",
-                            "symbol": context.symbol,
-                            "error": str(exc),
-                        },
-                    )
-                except Exception:
-                    pass
+                emit_metric(
+                    self.event_store,
+                    "risk_engine",
+                    {
+                        "event_type": "position_sizing_error",
+                        "symbol": context.symbol,
+                        "error": str(exc),
+                    },
+                    logger=logger,
+                )
 
         # Fallback: simple target_leverage-based sizing
         target_notional = (
@@ -168,23 +168,22 @@ class PositionSizer:
         self, context: PositionSizingContext, advice: PositionSizingAdvice
     ) -> None:
         """Record position sizing metrics to event store."""
-        try:
-            self.event_store.append_metric(
-                bot_id="risk_engine",
-                metrics={
-                    "event_type": "position_sizing_advice",
-                    "symbol": context.symbol,
-                    "side": context.side,
-                    "target_notional": float(advice.target_notional),
-                    "target_quantity": float(advice.target_quantity),
-                    "used_dynamic": advice.used_dynamic,
-                    "reduce_only": advice.reduce_only,
-                    "fallback_used": advice.fallback_used,
-                    "reason": advice.reason,
-                },
-            )
-        except Exception:
-            logger.debug("Failed to record position sizing metric", exc_info=True)
+        emit_metric(
+            self.event_store,
+            "risk_engine",
+            {
+                "event_type": "position_sizing_advice",
+                "symbol": context.symbol,
+                "side": context.side,
+                "target_notional": float(advice.target_notional),
+                "target_quantity": float(advice.target_quantity),
+                "used_dynamic": advice.used_dynamic,
+                "reduce_only": advice.reduce_only,
+                "fallback_used": advice.fallback_used,
+                "reason": advice.reason,
+            },
+            logger=logger,
+        )
 
     def set_impact_estimator(
         self, estimator: Callable[[ImpactRequest], ImpactAssessment] | None

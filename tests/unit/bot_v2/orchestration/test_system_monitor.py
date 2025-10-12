@@ -15,9 +15,11 @@ from unittest.mock import Mock, MagicMock, AsyncMock, patch, mock_open
 import pytest
 
 from bot_v2.orchestration.system_monitor import SystemMonitor
+from bot_v2.orchestration.system_monitor_metrics import MetricsPublisher
 from bot_v2.orchestration.configuration import Profile
 from bot_v2.features.brokerages.core.interfaces import Balance, Position
 from bot_v2.features.live_trade.strategies.perps_baseline import Action, Decision
+from bot_v2.orchestration.perps_bot_state import PerpsBotRuntimeState
 
 
 @pytest.fixture
@@ -30,11 +32,13 @@ def mock_bot():
     bot.broker = Mock()
     bot.event_store = Mock()
     bot.orders_store = Mock()
-    bot.last_decisions = {}
-    bot.order_stats = {"attempted": 0, "successful": 0, "failed": 0}
+    state = PerpsBotRuntimeState([])
+    bot.runtime_state = state
+    bot.last_decisions = state.last_decisions
+    bot.order_stats = state.order_stats
     bot.start_time = datetime.now(timezone.utc)
     bot.running = True
-    bot._last_positions = {}
+    bot._last_positions = state.last_positions
     bot.apply_config_change = Mock()
     return bot
 
@@ -120,7 +124,7 @@ class TestLogStatus:
         mock_bot.broker.list_balances = Mock(return_value=[test_balance])
         mock_bot.orders_store.get_open_orders = Mock(return_value=[])
 
-        with patch.object(monitor, "_publish_metrics"):
+        with patch.object(monitor._metrics_publisher, "publish"):
             await monitor.log_status()
 
         mock_bot.broker.list_positions.assert_called_once()
@@ -139,7 +143,7 @@ class TestLogStatus:
             nonlocal metrics_published
             metrics_published = metrics
 
-        with patch.object(monitor, "_publish_metrics", side_effect=capture_metrics):
+        with patch.object(monitor._metrics_publisher, "publish", side_effect=capture_metrics):
             await monitor.log_status()
 
         assert metrics_published is not None
@@ -160,7 +164,7 @@ class TestLogStatus:
             nonlocal metrics_published
             metrics_published = metrics
 
-        with patch.object(monitor, "_publish_metrics", side_effect=capture_metrics):
+        with patch.object(monitor._metrics_publisher, "publish", side_effect=capture_metrics):
             await monitor.log_status()
 
         assert len(metrics_published["positions"]) == 1
@@ -175,9 +179,9 @@ class TestLogStatus:
         mock_bot.broker.list_positions = Mock(return_value=[])
         mock_bot.broker.list_balances = Mock(return_value=[test_balance])
         mock_bot.orders_store.get_open_orders = Mock(return_value=[])
-        mock_bot.last_decisions = {
-            "BTC-PERP": Decision(action=Action.BUY, reason="test_signal"),
-        }
+        decisions = mock_bot.runtime_state.last_decisions
+        decisions.clear()
+        decisions["BTC-PERP"] = Decision(action=Action.BUY, reason="test_signal")
 
         metrics_published = None
 
@@ -185,7 +189,7 @@ class TestLogStatus:
             nonlocal metrics_published
             metrics_published = metrics
 
-        with patch.object(monitor, "_publish_metrics", side_effect=capture_metrics):
+        with patch.object(monitor._metrics_publisher, "publish", side_effect=capture_metrics):
             await monitor.log_status()
 
         assert "BTC-PERP" in metrics_published["decisions"]
@@ -199,49 +203,59 @@ class TestLogStatus:
         mock_bot.broker.list_balances = Mock(return_value=[test_balance])
         mock_bot.orders_store.get_open_orders = Mock(return_value=[])
 
-        with patch.object(monitor, "_publish_metrics"):
+        with patch.object(monitor._metrics_publisher, "publish"):
             await monitor.log_status()
 
         # Should not raise
 
 
-class TestPublishMetrics:
-    """Test _publish_metrics method."""
+class TestMetricsPublisher:
+    """Tests for MetricsPublisher component."""
 
-    def test_appends_to_event_store(self, monitor, mock_bot):
-        """Test appends metrics to event store."""
-        metrics = {"event_type": "cycle_metrics", "equity": 10000}
-
-        with patch("bot_v2.orchestration.system_monitor.RUNTIME_DATA_DIR"):
-            monitor._publish_metrics(metrics)
+    def test_appends_to_event_store(self, tmp_path, mock_bot):
+        publisher = MetricsPublisher(
+            event_store=mock_bot.event_store,
+            bot_id=mock_bot.bot_id,
+            profile=mock_bot.config.profile.value,
+            base_dir=tmp_path,
+        )
+        with patch("bot_v2.orchestration.system_monitor_metrics._get_plog") as mock_plog:
+            mock_plog.return_value.log_event = Mock()
+            publisher.publish({"equity": 10000})
 
         mock_bot.event_store.append_metric.assert_called_once()
         call_kwargs = mock_bot.event_store.append_metric.call_args.kwargs
-        assert call_kwargs["bot_id"] == "test_bot"
+        assert call_kwargs["bot_id"] == mock_bot.bot_id
 
-    def test_writes_metrics_to_json_file(self, monitor, mock_bot):
-        """Test writes metrics to JSON file."""
-        metrics = {"equity": 10000}
+    def test_writes_metrics_snapshot(self, tmp_path, mock_bot):
+        publisher = MetricsPublisher(
+            event_store=mock_bot.event_store,
+            bot_id=mock_bot.bot_id,
+            profile=mock_bot.config.profile.value,
+            base_dir=tmp_path,
+        )
+        with patch("bot_v2.orchestration.system_monitor_metrics._get_plog") as mock_plog:
+            mock_plog.return_value.log_event = Mock()
+            publisher.publish({"equity": 42})
 
-        with patch("bot_v2.orchestration.system_monitor.RUNTIME_DATA_DIR") as mock_dir:
-            mock_path = Mock(spec=Path)
-            mock_dir.__truediv__ = Mock(return_value=mock_path)
-            mock_path.__truediv__ = Mock(return_value=mock_path)
-            mock_path.parent = Mock()
-            mock_path.open = mock_open()
+        metrics_file = tmp_path / "perps_bot" / mock_bot.config.profile.value / "metrics.json"
+        assert metrics_file.exists()
+        data = json.loads(metrics_file.read_text())
+        assert data["equity"] == 42
 
-            monitor._publish_metrics(metrics)
-
-            mock_path.parent.mkdir.assert_called_once_with(parents=True, exist_ok=True)
-
-    def test_handles_event_store_failure(self, monitor, mock_bot):
-        """Test handles event store failure gracefully."""
-        mock_bot.event_store.append_metric = Mock(side_effect=Exception("store failed"))
-        metrics = {"equity": 10000}
-
-        with patch("bot_v2.orchestration.system_monitor.RUNTIME_DATA_DIR"):
-            # Should not raise
-            monitor._publish_metrics(metrics)
+    def test_write_health_status(self, tmp_path, mock_bot):
+        publisher = MetricsPublisher(
+            event_store=mock_bot.event_store,
+            bot_id=mock_bot.bot_id,
+            profile=mock_bot.config.profile.value,
+            base_dir=tmp_path,
+        )
+        publisher.write_health_status(ok=True, message="ok", error="")
+        status_file = tmp_path / "perps_bot" / mock_bot.config.profile.value / "health.json"
+        assert status_file.exists()
+        payload = json.loads(status_file.read_text())
+        assert payload["ok"] is True
+        assert payload["message"] == "ok"
 
 
 class TestCheckConfigUpdates:
@@ -301,40 +315,17 @@ class TestWriteHealthStatus:
 
     def test_writes_ok_status(self, monitor, mock_bot):
         """Test writes OK health status."""
-        with patch("bot_v2.orchestration.system_monitor.RUNTIME_DATA_DIR") as mock_dir:
-            mock_path = Mock(spec=Path)
-            mock_dir.__truediv__ = Mock(return_value=mock_path)
-            mock_path.__truediv__ = Mock(return_value=mock_path)
-            mock_path.parent = Mock()
+        with patch.object(monitor._metrics_publisher, "write_health_status") as mock_write:
+            monitor.write_health_status(ok=True, message="All systems operational")
 
-            m = mock_open()
-            with patch("builtins.open", m):
-                monitor.write_health_status(ok=True, message="All systems operational")
-
-            mock_path.parent.mkdir.assert_called_once_with(parents=True, exist_ok=True)
-            handle = m()
-            written = "".join(call.args[0] for call in handle.write.call_args_list)
-            data = json.loads(written)
-            assert data["ok"] is True
-            assert data["message"] == "All systems operational"
+        mock_write.assert_called_once_with(ok=True, message="All systems operational", error="")
 
     def test_writes_error_status(self, monitor, mock_bot):
         """Test writes error health status."""
-        with patch("bot_v2.orchestration.system_monitor.RUNTIME_DATA_DIR") as mock_dir:
-            mock_path = Mock(spec=Path)
-            mock_dir.__truediv__ = Mock(return_value=mock_path)
-            mock_path.__truediv__ = Mock(return_value=mock_path)
-            mock_path.parent = Mock()
+        with patch.object(monitor._metrics_publisher, "write_health_status") as mock_write:
+            monitor.write_health_status(ok=False, error="Connection timeout")
 
-            m = mock_open()
-            with patch("builtins.open", m):
-                monitor.write_health_status(ok=False, error="Connection timeout")
-
-            handle = m()
-            written = "".join(call.args[0] for call in handle.write.call_args_list)
-            data = json.loads(written)
-            assert data["ok"] is False
-            assert data["error"] == "Connection timeout"
+        mock_write.assert_called_once_with(ok=False, message="", error="Connection timeout")
 
 
 class TestPositionReconciliation:
@@ -343,7 +334,7 @@ class TestPositionReconciliation:
     @pytest.mark.asyncio
     async def test_initializes_positions_on_first_run(self, monitor, mock_bot, test_position):
         """Test initializes positions on first run."""
-        mock_bot.broker.list_positions = Mock(return_value=[test_position])
+        monitor._position_reconciler._fetch_positions = AsyncMock(return_value=[test_position])
 
         # Run one iteration
         iteration_count = [0]
@@ -355,18 +346,20 @@ class TestPositionReconciliation:
                 mock_bot.running = False
             await original_sleep(0)
 
-        with patch("bot_v2.orchestration.system_monitor.asyncio.sleep", side_effect=limited_sleep):
+        with patch(
+            "bot_v2.orchestration.system_monitor_positions.asyncio.sleep", side_effect=limited_sleep
+        ):
             await monitor.run_position_reconciliation(interval_seconds=1)
 
-        assert "BTC-PERP" in mock_bot._last_positions
+        assert "BTC-PERP" in mock_bot.runtime_state.last_positions
 
     @pytest.mark.asyncio
     async def test_detects_new_position(self, monitor, mock_bot, test_position):
         """Test detects new position."""
-        mock_bot._last_positions = {
-            "ETH-PERP": {"quantity": "1.0", "side": "long"}
-        }  # Start with different position
-        mock_bot.broker.list_positions = Mock(return_value=[test_position])
+        state = mock_bot.runtime_state
+        state.last_positions.clear()
+        state.last_positions["ETH-PERP"] = {"quantity": "1.0", "side": "long"}
+        monitor._position_reconciler._fetch_positions = AsyncMock(return_value=[test_position])
 
         # Run one iteration
         iteration_count = [0]
@@ -378,7 +371,9 @@ class TestPositionReconciliation:
                 mock_bot.running = False
             await original_sleep(0)
 
-        with patch("bot_v2.orchestration.system_monitor.asyncio.sleep", side_effect=limited_sleep):
+        with patch(
+            "bot_v2.orchestration.system_monitor_positions.asyncio.sleep", side_effect=limited_sleep
+        ):
             await monitor.run_position_reconciliation(interval_seconds=1)
 
         # Position should be logged
@@ -389,9 +384,11 @@ class TestPositionReconciliation:
     @pytest.mark.asyncio
     async def test_detects_position_quantity_change(self, monitor, mock_bot, test_position):
         """Test detects quantity change in position."""
-        mock_bot._last_positions = {"BTC-PERP": {"quantity": "0.3", "side": "long"}}
+        state = mock_bot.runtime_state
+        state.last_positions.clear()
+        state.last_positions["BTC-PERP"] = {"quantity": "0.3", "side": "long"}
         test_position.quantity = Decimal("0.5")
-        mock_bot.broker.list_positions = Mock(return_value=[test_position])
+        monitor._position_reconciler._fetch_positions = AsyncMock(return_value=[test_position])
 
         # Run one iteration
         iteration_count = [0]
@@ -403,7 +400,9 @@ class TestPositionReconciliation:
                 mock_bot.running = False
             await original_sleep(0)
 
-        with patch("bot_v2.orchestration.system_monitor.asyncio.sleep", side_effect=limited_sleep):
+        with patch(
+            "bot_v2.orchestration.system_monitor_positions.asyncio.sleep", side_effect=limited_sleep
+        ):
             await monitor.run_position_reconciliation(interval_seconds=1)
 
         # Change should be logged
@@ -412,8 +411,10 @@ class TestPositionReconciliation:
     @pytest.mark.asyncio
     async def test_detects_closed_position(self, monitor, mock_bot):
         """Test detects when position is closed."""
-        mock_bot._last_positions = {"BTC-PERP": {"quantity": "0.5", "side": "long"}}
-        mock_bot.broker.list_positions = Mock(return_value=[])
+        state = mock_bot.runtime_state
+        state.last_positions.clear()
+        state.last_positions["BTC-PERP"] = {"quantity": "0.5", "side": "long"}
+        monitor._position_reconciler._fetch_positions = AsyncMock(return_value=[])
 
         # Run one iteration
         iteration_count = [0]
@@ -425,7 +426,9 @@ class TestPositionReconciliation:
                 mock_bot.running = False
             await original_sleep(0)
 
-        with patch("bot_v2.orchestration.system_monitor.asyncio.sleep", side_effect=limited_sleep):
+        with patch(
+            "bot_v2.orchestration.system_monitor_positions.asyncio.sleep", side_effect=limited_sleep
+        ):
             await monitor.run_position_reconciliation(interval_seconds=1)
 
         # Closure should be logged
@@ -438,7 +441,9 @@ class TestPositionReconciliation:
     @pytest.mark.asyncio
     async def test_handles_position_fetch_failure(self, monitor, mock_bot):
         """Test handles position fetch failure gracefully."""
-        mock_bot.broker.list_positions = Mock(side_effect=Exception("fetch failed"))
+        monitor._position_reconciler._fetch_positions = AsyncMock(
+            side_effect=Exception("fetch failed")
+        )
 
         # Run one iteration
         iteration_count = [0]
@@ -450,6 +455,8 @@ class TestPositionReconciliation:
                 mock_bot.running = False
             await original_sleep(0)
 
-        with patch("bot_v2.orchestration.system_monitor.asyncio.sleep", side_effect=limited_sleep):
+        with patch(
+            "bot_v2.orchestration.system_monitor_positions.asyncio.sleep", side_effect=limited_sleep
+        ):
             # Should not raise
             await monitor.run_position_reconciliation(interval_seconds=1)

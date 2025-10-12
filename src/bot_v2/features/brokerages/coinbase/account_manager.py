@@ -94,38 +94,27 @@ class CoinbaseAccountManager:
 
         commit_result = self.broker.commit_convert_trade(trade_id, commit_payload or {})
         if self.event_store is not None:
-            try:
-                self.event_store.append_metric(
-                    bot_id="coinbase_account",
-                    metrics={
-                        "event_type": "convert_commit",
-                        "trade_id": trade_id,
-                        "quote": quote,
-                        "result": commit_result,
-                    },
-                )
-            except Exception as exc:  # pragma: no cover - defensive telemetry guard
-                logger.log_event(
-                    LogLevel.DEBUG,
-                    "convert_commit_metric_failed",
-                    "failed to append convert commit metric",
-                    error=str(exc),
-                )
+            emit_metric_util(
+                self.event_store,
+                "coinbase_account",
+                {
+                    "event_type": "convert_commit",
+                    "trade_id": trade_id,
+                    "quote": quote,
+                    "result": commit_result,
+                },
+                logger=logger,
+            )
         return commit_result
 
     def move_funds(self, payload: dict[str, Any]) -> dict[str, Any]:
         """Move funds between Coinbase portfolios."""
         result = self.broker.move_portfolio_funds(payload)
         if self.event_store is not None:
-            try:
-                self.event_store.append_metric(
-                    bot_id="coinbase_account", metrics={"event_type": "portfolio_move", **payload}
-                )
-            except Exception as exc:  # pragma: no cover - defensive telemetry guard
-                logger.log_event(
-                    LogLevel.DEBUG,
-                    "portfolio_move_metric_failed",
-                    "failed to append portfolio move metric",
-                    error=str(exc),
-                )
+            emit_metric_util(
+                self.event_store,
+                "coinbase_account",
+                {"event_type": "portfolio_move", **payload},
+                logger=logger,
+            )
         return result

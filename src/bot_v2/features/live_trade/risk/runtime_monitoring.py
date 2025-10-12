@@ -18,23 +18,24 @@ from bot_v2.features.live_trade.guard_errors import (
     RiskGuardDataCorrupt,
     RiskGuardTelemetryError,
 )
-from bot_v2.features.live_trade.risk_runtime import (
+from bot_v2.features.live_trade.risk_runtime.circuit_breakers import (
     CircuitBreakerOutcome,
     CircuitBreakerState,
 )
-from bot_v2.features.live_trade.risk_runtime import (
-    append_risk_metrics as runtime_append_risk_metrics,
-)
-from bot_v2.features.live_trade.risk_runtime import (
-    check_correlation_risk as runtime_check_correlation_risk,
-)
-from bot_v2.features.live_trade.risk_runtime import (
-    check_mark_staleness as runtime_check_mark_staleness,
-)
-from bot_v2.features.live_trade.risk_runtime import (
+from bot_v2.features.live_trade.risk_runtime.circuit_breakers import (
     check_volatility_circuit_breaker as runtime_check_volatility_circuit_breaker,
 )
+from bot_v2.features.live_trade.risk_runtime.guards import (
+    check_correlation_risk as runtime_check_correlation_risk,
+)
+from bot_v2.features.live_trade.risk_runtime.guards import (
+    check_mark_staleness as runtime_check_mark_staleness,
+)
+from bot_v2.features.live_trade.risk_runtime.metrics import (
+    append_risk_metrics as runtime_append_risk_metrics,
+)
 from bot_v2.persistence.event_store import EventStore
+from bot_v2.utilities.telemetry import emit_metric
 
 logger = logging.getLogger(__name__)
 
@@ -298,13 +299,16 @@ class RuntimeMonitor:
     ) -> None:
         """Log risk event to EventStore, surfacing telemetry failures."""
         try:
-            self.event_store.append_metric(
-                bot_id="risk_engine",
-                metrics={
+            emit_metric(
+                self.event_store,
+                "risk_engine",
+                {
                     "event_type": event_type,
                     "timestamp": datetime.utcnow().isoformat(),
                     **details,
                 },
+                logger=logger,
+                raise_on_error=True,
             )
         except Exception as exc:
             raise RiskGuardTelemetryError(

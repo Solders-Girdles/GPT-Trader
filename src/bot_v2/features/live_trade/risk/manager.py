@@ -28,12 +28,11 @@ from bot_v2.features.live_trade.risk.pre_trade_checks import (
     PreTradeValidator,
     ValidationError,
 )
-from bot_v2.features.live_trade.risk.runtime_monitoring import RuntimeMonitor
 from bot_v2.features.live_trade.risk.state_management import (
     RiskRuntimeState,
     StateManager,
 )
-from bot_v2.features.live_trade.risk_runtime import CircuitBreakerOutcome
+from bot_v2.features.live_trade.risk_runtime import CircuitBreakerOutcome, RuntimeMonitor
 from bot_v2.persistence.event_store import EventStore
 
 logger = logging.getLogger(__name__)

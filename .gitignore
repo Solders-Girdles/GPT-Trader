@@ -87,6 +87,8 @@ coordination/orchestration/*
 .swarm/
 .coverage
 coverage.json
+.pip-audit/
+pip-audit-report.json
 .claude-flow/
 .mcp.json
 .hypothesis/

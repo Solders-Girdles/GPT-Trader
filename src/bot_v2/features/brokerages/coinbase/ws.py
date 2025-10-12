@@ -10,7 +10,6 @@ Design goals:
 from __future__ import annotations
 
 import logging
-import os
 import time
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
@@ -20,6 +19,7 @@ from typing import Any
 
 from bot_v2.features.brokerages.coinbase.transports import NoopTransport, RealTransport
 from bot_v2.monitoring.system import LogLevel, get_logger
+from bot_v2.orchestration.runtime_settings import RuntimeSettings, load_runtime_settings
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +41,7 @@ class CoinbaseWebSocket:
         liveness_timeout: float = 30.0,
         ws_auth_provider: Callable[[], dict[str, Any]] | None = None,
         metrics_emitter: Callable[[dict[str, Any]], None] | None = None,
+        settings: RuntimeSettings | None = None,
     ) -> None:
         self.url = url
         self.connected = False
@@ -53,34 +54,56 @@ class CoinbaseWebSocket:
         self._last_message_time: float | None = None
         self._sequence_guard = SequenceGuard()
         self._metrics_emitter = metrics_emitter
+        self._static_settings = settings is not None
+        self._settings = settings or load_runtime_settings()
+        self._production_logger = get_logger(settings=self._settings)
 
     def set_transport(self, transport: Any) -> None:
         """Set a custom transport (for testing)."""
         self._transport = transport
 
     def connect(self, headers: dict[str, str] | None = None) -> None:
+        if not self._static_settings:
+            self._settings = load_runtime_settings()
+            self._production_logger = get_logger(settings=self._settings)
+
         logger.info(f"Connecting WS to {self.url}")
         try:
-            get_logger().log_event(
+            self._production_logger.log_event(
                 level=LogLevel.INFO, event_type="ws_connect", message=f"Connecting to {self.url}"
             )
         except Exception as exc:  # pragma: no cover - telemetry optional
             logger.debug("ws_connect event emit failed", exc_info=exc)
 
+        disable_flag = (self._settings.raw_env.get("DISABLE_WS_STREAMING") or "").strip().lower()
+        enable_flag = (self._settings.raw_env.get("PERPS_ENABLE_STREAMING") or "").strip().lower()
+        streaming_disabled = disable_flag in {"1", "true", "yes", "on"} or enable_flag in {
+            "0",
+            "false",
+            "no",
+            "off",
+        }
+
         # Initialize default transport if not set
         if self._transport is None:
-            # Allow disabling streaming via env for tests/CI without import hacks
-            disable = os.getenv("DISABLE_WS_STREAMING")
-            enable_flag = os.getenv("PERPS_ENABLE_STREAMING")
-            streaming_disabled = (disable or "").lower() in ("1", "true", "yes", "on") or (
-                enable_flag or ""
-            ).lower() in ("0", "false", "no", "off")
             if streaming_disabled:
-                self._transport = NoopTransport()
+                self._transport = NoopTransport(settings=self._settings)
                 logger.info("Initialized NoopTransport (streaming disabled)")
             else:
-                self._transport = RealTransport()
+                self._transport = RealTransport(settings=self._settings)
                 logger.info("Initialized RealTransport for WebSocket")
+        else:
+            if streaming_disabled and isinstance(self._transport, RealTransport):
+                self._transport = NoopTransport(settings=self._settings)
+                logger.info("Switched to NoopTransport (streaming disabled)")
+            elif not streaming_disabled and isinstance(self._transport, NoopTransport):
+                self._transport = RealTransport(settings=self._settings)
+                logger.info("Switched to RealTransport (streaming enabled)")
+            elif hasattr(self._transport, "update_settings"):
+                try:
+                    self._transport.update_settings(self._settings)  # type: ignore[call-arg]
+                except Exception:  # pragma: no cover - defensive update
+                    logger.debug("transport update_settings() failed", exc_info=True)
 
         # Pass headers if transport supports it
         if hasattr(self._transport, "connect"):
@@ -98,7 +121,7 @@ class CoinbaseWebSocket:
     def disconnect(self) -> None:
         logger.info("Disconnecting WS")
         try:
-            get_logger().log_event(
+            self._production_logger.log_event(
                 level=LogLevel.WARNING, event_type="ws_disconnect", message="Disconnecting"
             )
         except Exception as exc:  # pragma: no cover
@@ -155,7 +178,12 @@ class CoinbaseWebSocket:
                         logger.debug("sequence guard annotation failed", exc_info=exc)
                     # Emit latency metric in debug mode when message has timestamp
                     try:
-                        if os.getenv("PERPS_DEBUG") in ("1", "true", "yes", "on"):
+                        if (self._settings.raw_env.get("PERPS_DEBUG", "").lower()) in (
+                            "1",
+                            "true",
+                            "yes",
+                            "on",
+                        ):
                             ts = msg.get("time") or msg.get("timestamp")
                             if isinstance(ts, str):
                                 # Normalize Z suffix
@@ -165,7 +193,7 @@ class CoinbaseWebSocket:
                                     latency_ms = (
                                         datetime.utcnow() - tmsg.replace(tzinfo=None)
                                     ).total_seconds() * 1000.0
-                                    get_logger().log_ws_latency(
+                                    self._production_logger.log_ws_latency(
                                         stream="coinbase_ws", latency_ms=latency_ms
                                     )
                                 except (
@@ -189,7 +217,7 @@ class CoinbaseWebSocket:
                 if attempt > self._max_retries:
                     logger.error(f"WS max retries exceeded: {e}")
                     try:
-                        get_logger().log_event(
+                        self._production_logger.log_event(
                             level=LogLevel.ERROR,
                             event_type="ws_error",
                             message=f"max retries exceeded: {e}",
@@ -201,7 +229,7 @@ class CoinbaseWebSocket:
                 delay = self._base_delay * (2 ** (attempt - 1))
                 logger.warning(f"WS error: {e}; reconnecting in {delay:.2f}s (attempt {attempt})")
                 try:
-                    get_logger().log_event(
+                    self._production_logger.log_event(
                         level=LogLevel.WARNING,
                         event_type="ws_reconnect",
                         message=f"{e}; in {delay:.2f}s (attempt {attempt})",

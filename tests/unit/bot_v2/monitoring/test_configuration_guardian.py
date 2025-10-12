@@ -9,6 +9,7 @@ from pydantic import ValidationError
 
 from bot_v2.config.types import Profile
 from bot_v2.features.brokerages.core.interfaces import Balance, Position
+from bot_v2.orchestration.runtime_settings import load_runtime_settings
 from bot_v2.monitoring.configuration_guardian import (
     BaselineSnapshot,
     ConfigurationGuardian,
@@ -65,63 +66,61 @@ class TestEnvironmentMonitor:
             risk_limits={},
         )
 
-    @patch.dict("os.environ", {}, clear=True)
     def test_no_env_changes(self):
         """Test no environment changes."""
+        with patch.dict("os.environ", {}, clear=True):
+            settings = load_runtime_settings()
         baseline = self.create_baseline_snapshot()
-        monitor = EnvironmentMonitor(baseline)
+        monitor = EnvironmentMonitor(baseline, settings=settings)
 
         events = monitor.check_changes()
         assert len(events) == 0
 
-    @patch.dict("os.environ", {"COINBASE_ENABLE_DERIVATIVES": "1"}, clear=False)
     def test_critical_env_change(self):
         """Test critical environment variable change."""
-        baseline = self.create_baseline_snapshot()
-        monitor = EnvironmentMonitor(baseline)
+        with patch.dict("os.environ", {"COINBASE_ENABLE_DERIVATIVES": "1"}, clear=True):
+            settings = load_runtime_settings()
+            baseline = self.create_baseline_snapshot()
+            baseline.env_keys.add("COINBASE_ENABLE_DERIVATIVES")
+            monitor = EnvironmentMonitor(baseline, settings=settings)
 
-        # Add the var to baseline to simulate initial state
-        baseline.env_keys.add("COINBASE_ENABLE_DERIVATIVES")
-
-        # Change it
-        with patch.dict("os.environ", {"COINBASE_ENABLE_DERIVATIVES": "0"}, clear=False):
-            events = monitor.check_changes()
+            with patch.dict("os.environ", {"COINBASE_ENABLE_DERIVATIVES": "0"}, clear=True):
+                monitor._settings = load_runtime_settings()
+                events = monitor.check_changes()
 
         assert len(events) == 1
         assert events[0].drift_type == "critical_env_changed"
         assert events[0].severity == "critical"
         assert events[0].applied_response == "emergency_shutdown"
 
-    @patch.dict("os.environ", {"PERPS_POSITION_FRACTION": "0.1"}, clear=False)
     def test_risk_env_change(self):
         """Test risk environment variable change."""
-        baseline = self.create_baseline_snapshot()
-        monitor = EnvironmentMonitor(baseline)
+        with patch.dict("os.environ", {"PERPS_POSITION_FRACTION": "0.1"}, clear=True):
+            settings = load_runtime_settings()
+            baseline = self.create_baseline_snapshot()
+            baseline.env_keys.add("PERPS_POSITION_FRACTION")
+            monitor = EnvironmentMonitor(baseline, settings=settings)
 
-        # Add the var to baseline to simulate initial state
-        baseline.env_keys.add("PERPS_POSITION_FRACTION")
-
-        # Change it
-        with patch.dict("os.environ", {"PERPS_POSITION_FRACTION": "0.2"}, clear=False):
-            events = monitor.check_changes()
+            with patch.dict("os.environ", {"PERPS_POSITION_FRACTION": "0.2"}, clear=True):
+                monitor._settings = load_runtime_settings()
+                events = monitor.check_changes()
 
         assert len(events) == 1
         assert events[0].drift_type == "risk_env_changed"
         assert events[0].severity == "high"
         assert events[0].applied_response == "reduce_only"
 
-    @patch.dict("os.environ", {"COINBASE_DEFAULT_QUOTE": "USD"}, clear=False)
     def test_monitored_env_change(self):
         """Test monitored environment variable change."""
-        baseline = self.create_baseline_snapshot()
-        monitor = EnvironmentMonitor(baseline)
+        with patch.dict("os.environ", {"COINBASE_DEFAULT_QUOTE": "USD"}, clear=True):
+            settings = load_runtime_settings()
+            baseline = self.create_baseline_snapshot()
+            baseline.env_keys.add("COINBASE_DEFAULT_QUOTE")
+            monitor = EnvironmentMonitor(baseline, settings=settings)
 
-        # Add the var to baseline to simulate initial state
-        baseline.env_keys.add("COINBASE_DEFAULT_QUOTE")
-
-        # Change it
-        with patch.dict("os.environ", {"COINBASE_DEFAULT_QUOTE": "EUR"}, clear=False):
-            events = monitor.check_changes()
+            with patch.dict("os.environ", {"COINBASE_DEFAULT_QUOTE": "EUR"}, clear=True):
+                monitor._settings = load_runtime_settings()
+                events = monitor.check_changes()
 
         assert len(events) == 1
         assert events[0].drift_type == "monitored_env_changed"
@@ -149,7 +148,7 @@ class TestConfigurationGuardian:
             risk_limits={},
         )
 
-        return ConfigurationGuardian(baseline)
+        return ConfigurationGuardian(baseline, settings=load_runtime_settings())
 
     @patch.dict("os.environ", {}, clear=True)
     def test_guardian_initialization(self):
@@ -160,45 +159,46 @@ class TestConfigurationGuardian:
         assert status["monitors_status"]["environment_monitor"] == "healthy"
         assert status["drift_summary"]["total_events"] == 0
 
-    @patch.dict("os.environ", {}, clear=True)
     def test_pre_cycle_check_clean(self):
         """Test pre-cycle check with no issues."""
-        guardian = self.create_test_guardian()
-
-        result = guardian.pre_cycle_check()
+        with patch.dict("os.environ", {}, clear=True):
+            guardian = self.create_test_guardian()
+            result = guardian.pre_cycle_check()
 
         assert result.is_valid is True
         assert len(result.errors) == 0
         assert len(result.warnings) == 0
 
-    @patch.dict("os.environ", {"COINBASE_ENABLE_DERIVATIVES": "0"}, clear=False)
     def test_pre_cycle_check_env_drift(self):
         """Test pre-cycle check with environment drift."""
         # Start with the env var set at baseline
-        with patch.dict("os.environ", {"COINBASE_ENABLE_DERIVATIVES": "1"}, clear=False):
+        with patch.dict("os.environ", {"COINBASE_ENABLE_DERIVATIVES": "1"}, clear=True):
             guardian = self.create_test_guardian()
             # Set baseline to see the env var as existing
             guardian.environment_monitor.baseline.env_keys.add("COINBASE_ENABLE_DERIVATIVES")
+            guardian.environment_monitor._settings = load_runtime_settings()
 
         # Now change it and check
-        with patch.dict("os.environ", {"COINBASE_ENABLE_DERIVATIVES": "0"}, clear=False):
+        with patch.dict("os.environ", {"COINBASE_ENABLE_DERIVATIVES": "0"}, clear=True):
+            guardian.environment_monitor._settings = load_runtime_settings()
             result = guardian.pre_cycle_check()
 
         assert result.is_valid is False
         assert len(result.errors) > 0
         assert any("critical_env_changed" in error for error in result.errors)
 
-    @patch.dict("os.environ", {"PERPS_POSITION_FRACTION": "0.3"}, clear=False)
     def test_pre_cycle_check_high_severity_env_drift(self):
         """Test pre-cycle check fails validation for high-severity risks."""
         # Start with the env var set at baseline
-        with patch.dict("os.environ", {"PERPS_POSITION_FRACTION": "0.1"}, clear=False):
+        with patch.dict("os.environ", {"PERPS_POSITION_FRACTION": "0.1"}, clear=True):
             guardian = self.create_test_guardian()
             # Set baseline to see the env var as existing
             guardian.environment_monitor.baseline.env_keys.add("PERPS_POSITION_FRACTION")
+            guardian.environment_monitor._settings = load_runtime_settings()
 
         # Change it to a different value (high-severity event)
-        with patch.dict("os.environ", {"PERPS_POSITION_FRACTION": "0.3"}, clear=False):
+        with patch.dict("os.environ", {"PERPS_POSITION_FRACTION": "0.3"}, clear=True):
+            guardian.environment_monitor._settings = load_runtime_settings()
             result = guardian.pre_cycle_check()
 
         assert result.is_valid is False  # High-severity should fail validation
@@ -252,17 +252,18 @@ class TestConfigurationGuardian:
         assert len(result) > 0
         assert any("profile_changed_during_runtime" in e.drift_type for e in result)
 
-    @patch.dict("os.environ", {"COINBASE_ENABLE_DERIVATIVES": "0"}, clear=False)
     def test_critical_events_detection(self):
         """Test that critical events are properly detected for emergency shutdown."""
         # Start with the env var set at baseline
-        with patch.dict("os.environ", {"COINBASE_ENABLE_DERIVATIVES": "1"}, clear=False):
+        with patch.dict("os.environ", {"COINBASE_ENABLE_DERIVATIVES": "1"}, clear=True):
             guardian = self.create_test_guardian()
             # Set baseline to see the env var as existing
             guardian.environment_monitor.baseline.env_keys.add("COINBASE_ENABLE_DERIVATIVES")
+            guardian.environment_monitor._settings = load_runtime_settings()
 
         # Change it to a different value (critical event)
-        with patch.dict("os.environ", {"COINBASE_ENABLE_DERIVATIVES": "0"}, clear=False):
+        with patch.dict("os.environ", {"COINBASE_ENABLE_DERIVATIVES": "0"}, clear=True):
+            guardian.environment_monitor._settings = load_runtime_settings()
             result = guardian.pre_cycle_check()
 
         assert result.is_valid is False

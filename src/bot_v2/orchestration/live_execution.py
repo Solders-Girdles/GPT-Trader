@@ -13,7 +13,6 @@ This module has been refactored to delegate to focused helper modules:
 from __future__ import annotations
 
 import logging
-import os
 import time
 from dataclasses import dataclass
 from decimal import Decimal
@@ -37,6 +36,7 @@ from bot_v2.orchestration.execution import (
     RuntimeGuardState,
     StateCollector,
 )
+from bot_v2.orchestration.runtime_settings import RuntimeSettings, load_runtime_settings
 from bot_v2.persistence.event_store import EventStore
 
 logger = logging.getLogger(__name__)
@@ -78,6 +78,7 @@ class LiveExecutionEngine:
         bot_id: str = "live_execution",
         slippage_multipliers: dict[str, float] | None = None,
         enable_preview: bool | None = None,
+        settings: RuntimeSettings | None = None,
     ) -> None:
         """
         Initialize live execution engine.
@@ -113,8 +114,11 @@ class LiveExecutionEngine:
         self.bot_id = bot_id
         self.slippage_multipliers = slippage_multipliers or {}
 
+        runtime_settings = settings or load_runtime_settings()
+        self._production_logger = get_logger(settings=runtime_settings)
+
         # Determine order preview setting
-        preview_env = os.getenv("ORDER_PREVIEW_ENABLED")
+        preview_env = runtime_settings.raw_env.get("ORDER_PREVIEW_ENABLED")
         if enable_preview is not None:
             self.enable_order_preview = enable_preview
         elif preview_env is not None:
@@ -128,7 +132,7 @@ class LiveExecutionEngine:
         self._last_collateral_available: Decimal | None = None
 
         # Initialize helper modules
-        self.state_collector = StateCollector(broker)
+        self.state_collector = StateCollector(broker, settings=runtime_settings)
         self.order_submitter = OrderSubmitter(
             broker,
             self.event_store,
@@ -414,7 +418,7 @@ class LiveExecutionEngine:
 
         # Log to telemetry
         try:
-            get_logger().log_balance_update(
+            self._production_logger.log_balance_update(
                 available=float(total_available),
                 total=float(collateral_total),
                 equity=float(equity),

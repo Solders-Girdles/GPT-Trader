@@ -7,17 +7,28 @@ environment variable overrides, validation, and hot-reload capabilities.
 
 import json
 import logging
-import os
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import yaml
 
 from bot_v2.errors import ConfigurationError
 from bot_v2.validation import Validator, validate_config
+
+if TYPE_CHECKING:  # pragma: no cover - type checking guard
+    from bot_v2.orchestration.runtime_settings import RuntimeSettings
+else:  # pragma: no cover - runtime alias
+    RuntimeSettings = Any  # type: ignore[misc]
+
+
+def _load_runtime_settings() -> RuntimeSettings:
+    from bot_v2.orchestration.runtime_settings import load_runtime_settings as _loader
+
+    return _loader()
+
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +46,12 @@ class ConfigMetadata:
 class ConfigLoader:
     """Centralized configuration loader with caching and validation"""
 
-    def __init__(self, config_dir: Path | None = None) -> None:
+    def __init__(
+        self,
+        config_dir: Path | None = None,
+        *,
+        settings: RuntimeSettings | None = None,
+    ) -> None:
         """Initialize config loader
 
         Args:
@@ -52,6 +68,9 @@ class ConfigLoader:
         self._metadata: dict[str, ConfigMetadata] = {}
         self._validators: dict[str, dict[str, Validator]] = {}
         self._file_mtimes: dict[str, float] = {}
+
+        self._settings_locked = settings is not None
+        self._settings: RuntimeSettings = settings or _load_runtime_settings()
 
         # Environment variable prefix
         self.env_prefix = "BOT_V2_"
@@ -222,7 +241,13 @@ class ConfigLoader:
         """
         prefix = f"{self.env_prefix}{slice_name.upper()}_"
 
-        for env_key, env_value in os.environ.items():
+        if self._settings_locked:
+            env_map = self._settings.raw_env
+        else:
+            self._settings = _load_runtime_settings()
+            env_map = self._settings.raw_env
+
+        for env_key, env_value in env_map.items():
             if env_key.startswith(prefix):
                 config_key = env_key[len(prefix) :].lower()
 

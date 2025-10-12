@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 import logging
-import os
 from collections.abc import Callable, Sequence
 from pathlib import Path
 from typing import Any
 
 import yaml
+
+from bot_v2.orchestration.runtime_settings import RuntimeSettings, load_runtime_settings
 
 logger = logging.getLogger(__name__)
 
@@ -23,14 +24,25 @@ def _load_spot_profile(path: Path) -> dict[str, Any]:
 class SpotProfileService:
     """Loads spot strategy profiles and returns per-symbol rule dictionaries."""
 
-    def __init__(self, *, loader: Callable[[Path], dict[str, Any]] = _load_spot_profile) -> None:
+    def __init__(
+        self,
+        *,
+        loader: Callable[[Path], dict[str, Any]] = _load_spot_profile,
+        settings: RuntimeSettings | None = None,
+    ) -> None:
         self._loader = loader
         self._rules: dict[str, dict[str, Any]] = {}
         self._last_path: Path | None = None
+        self._settings_locked = settings is not None
+        self._settings = settings or load_runtime_settings()
 
     # ------------------------------------------------------------------
     def load(self, symbols: Sequence[str]) -> dict[str, dict[str, Any]]:
-        profile_path = Path(os.environ.get("SPOT_PROFILE_PATH", "config/profiles/spot.yaml"))
+        if not self._settings_locked:
+            self._settings = load_runtime_settings()
+
+        raw_env = self._settings.raw_env
+        profile_path = Path(raw_env.get("SPOT_PROFILE_PATH", "config/profiles/spot.yaml"))
         if not profile_path.exists():
             logger.info("Spot profile %s not found; using default parameters", profile_path)
             self._rules = {}

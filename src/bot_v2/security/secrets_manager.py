@@ -9,7 +9,6 @@ with encrypted file fallback.
 # Removed unused imports - Fernet handles encryption directly
 import json
 import logging
-import os
 import threading
 from dataclasses import dataclass
 from datetime import datetime
@@ -17,6 +16,8 @@ from pathlib import Path
 from typing import Any
 
 from cryptography.fernet import Fernet
+
+from bot_v2.orchestration.runtime_settings import RuntimeSettings, load_runtime_settings
 
 logger = logging.getLogger(__name__)
 
@@ -36,12 +37,16 @@ class SecretsManager:
     Implements secure storage patterns for production trading systems.
     """
 
-    def __init__(self, vault_enabled: bool = True) -> None:
+    def __init__(
+        self, vault_enabled: bool = True, *, settings: RuntimeSettings | None = None
+    ) -> None:
         self._lock = threading.Lock()
         self._cipher_suite = None
         self._secrets_cache = {}
         self._vault_client = None
         self._vault_enabled = vault_enabled
+        self._static_settings = settings is not None
+        self._settings = settings or load_runtime_settings()
         self._initialize_encryption()
 
         if vault_enabled:
@@ -49,11 +54,15 @@ class SecretsManager:
 
     def _initialize_encryption(self) -> None:
         """Initialize encryption using environment key or generate new"""
-        encryption_key = os.environ.get("BOT_V2_ENCRYPTION_KEY")
+        env_map = (
+            self._settings.raw_env if self._static_settings else load_runtime_settings().raw_env
+        )
+        encryption_key = env_map.get("BOT_V2_ENCRYPTION_KEY")
 
         if not encryption_key:
             # Generate new key for development
-            if os.environ.get("ENV", "development") == "development":
+            environment = (env_map.get("ENV") or "development").lower()
+            if environment == "development":
                 encryption_key = Fernet.generate_key().decode()
                 logger.warning("Generated new encryption key for development")
             else:
@@ -72,8 +81,11 @@ class SecretsManager:
         try:
             import hvac
 
-            vault_addr = os.environ.get("VAULT_ADDR", "http://localhost:8200")
-            vault_token = os.environ.get("VAULT_TOKEN")
+            env_map = (
+                self._settings.raw_env if self._static_settings else load_runtime_settings().raw_env
+            )
+            vault_addr = env_map.get("VAULT_ADDR", "http://localhost:8200")
+            vault_token = env_map.get("VAULT_TOKEN")
 
             if vault_token:
                 self._vault_client = hvac.Client(url=vault_addr, token=vault_token)

@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import logging
-import os
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, fields
 from decimal import Decimal, InvalidOperation
 from typing import TYPE_CHECKING, Any
+
+from bot_v2.orchestration.runtime_settings import load_runtime_settings
 
 logger = logging.getLogger(__name__)
 
@@ -163,7 +164,7 @@ def load_slippage_multipliers(
 ) -> dict[str, Decimal]:
     """Load slippage multipliers from environment, logging validation errors."""
 
-    source = env or os.environ
+    source = env or load_runtime_settings().raw_env
     raw_value = source.get(env_key, "")
     if not raw_value:
         return {}

@@ -5,7 +5,6 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
-import os
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -15,6 +14,7 @@ from typing import Any
 from bot_v2.config.schemas import ConfigValidationResult
 from bot_v2.config.types import Profile
 from bot_v2.features.brokerages.core.interfaces import Balance, Position
+from bot_v2.orchestration.runtime_settings import RuntimeSettings, load_runtime_settings
 from bot_v2.utilities.config import ConfigBaselinePayload
 
 logger = logging.getLogger(__name__)
@@ -131,8 +131,14 @@ class EnvironmentMonitor(ConfigurationMonitor):
         "PERPS_PAPER",  # Paper trading toggles
     }
 
-    def __init__(self, baseline_snapshot: BaselineSnapshot):
+    def __init__(
+        self,
+        baseline_snapshot: BaselineSnapshot,
+        *,
+        settings: RuntimeSettings | None = None,
+    ) -> None:
         self.baseline = baseline_snapshot
+        self._settings = settings or load_runtime_settings()
         self._last_state = self._capture_current_state()
 
     def update_baseline(self, baseline_snapshot: BaselineSnapshot) -> None:
@@ -228,7 +234,7 @@ class EnvironmentMonitor(ConfigurationMonitor):
         all_vars = self.CRITICAL_ENV_VARS | self.RISK_ENV_VARS | self.MONITOR_ENV_VARS
 
         for var in all_vars:
-            value = os.getenv(var)
+            value = self._settings.raw_env.get(var)
             if value is not None:
                 # Don't store sensitive values
                 if var.upper().endswith(("_KEY", "_SECRET", "_TOKEN")):
@@ -452,11 +458,17 @@ class ConfigurationGuardian:
     for checking configuration safety before trading cycles.
     """
 
-    def __init__(self, baseline_snapshot: BaselineSnapshot):
+    def __init__(
+        self,
+        baseline_snapshot: BaselineSnapshot,
+        *,
+        settings: RuntimeSettings | None = None,
+    ) -> None:
         self.baseline = baseline_snapshot
+        self._settings = settings or load_runtime_settings()
 
         # Initialize monitoring components
-        self.environment_monitor = EnvironmentMonitor(baseline_snapshot)
+        self.environment_monitor = EnvironmentMonitor(baseline_snapshot, settings=self._settings)
         self.state_validator = StateValidator(baseline_snapshot)
         self.drift_detector = DriftDetector(baseline_snapshot)
 
@@ -623,12 +635,15 @@ class ConfigurationGuardian:
             "ORDER_PREVIEW_ENABLED",
         }
 
+        settings = load_runtime_settings()
+
         for var in critical_env_vars:
-            if os.getenv(var) is not None:
+            value = settings.raw_env.get(var)
+            if value is not None:
                 env_keys.add(var)
                 # Don't store sensitive values
                 if not var.upper().endswith(("_KEY", "_SECRET", "_TOKEN")):
-                    critical_env_values[var] = os.getenv(var, "")
+                    critical_env_values[var] = value
 
         risk_limits = {
             "max_position_size": payload_dict.get("max_position_size", "1000"),

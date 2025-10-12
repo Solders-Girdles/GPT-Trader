@@ -9,17 +9,26 @@ from collections.abc import Sequence
 
 from dotenv import load_dotenv
 
-from bot_v2.cli.commands import account, orders, run, treasury
 from bot_v2.logging import configure_logging
+from bot_v2.orchestration.runtime_settings import RuntimeSettings, load_runtime_settings
 
 # Preserve host-provided secrets; only fill gaps from .env
 load_dotenv()
 
+RUNTIME_SETTINGS: RuntimeSettings = load_runtime_settings()
+
 # Configure logging (rotating files + console)
-configure_logging()
+configure_logging(settings=RUNTIME_SETTINGS)
 logger = logging.getLogger(__name__)
 
+from . import services as _cli_services  # noqa: E402
+
+_cli_services.OVERRIDE_SETTINGS = RUNTIME_SETTINGS
+
+from bot_v2.cli.commands import account, orders, run, treasury  # noqa: E402
+
 COMMAND_NAMES = {"run", "account", "orders", "treasury"}
+__all__ = ["main", "RUNTIME_SETTINGS"]
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -73,9 +82,8 @@ def _maybe_enable_debug_logging() -> None:
 
 
 def _env_flag(name: str) -> bool:
-    import os
-
-    return os.getenv(name, "").strip().lower() in {"1", "true", "yes", "on"}
+    value = RUNTIME_SETTINGS.raw_env.get(name, "")
+    return value.strip().lower() in {"1", "true", "yes", "on"}
 
 
 if __name__ == "__main__":  # pragma: no cover - CLI entry point

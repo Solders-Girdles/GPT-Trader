@@ -7,13 +7,15 @@ workflows (telemetry, treasury automation) can remain thin.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from bot_v2.features.brokerages.coinbase.adapter import CoinbaseBrokerage
 from bot_v2.monitoring.system import LogLevel, get_logger
 from bot_v2.utilities import emit_metric as emit_metric_util
 
 logger = get_logger()
+
+if TYPE_CHECKING:  # pragma: no cover - type checking only
+    from bot_v2.features.brokerages.coinbase.adapter import CoinbaseBrokerage
 
 
 @dataclass

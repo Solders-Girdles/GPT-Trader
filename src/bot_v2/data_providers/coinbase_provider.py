@@ -9,7 +9,6 @@ REST API calls and WebSocket streaming for real-time updates.
 from __future__ import annotations
 
 import logging
-import os
 from datetime import datetime, timedelta
 from types import TracebackType
 from typing import Any
@@ -26,6 +25,7 @@ from bot_v2.features.brokerages.coinbase.market_data_service import (
 )
 from bot_v2.features.brokerages.coinbase.models import APIConfig
 from bot_v2.features.brokerages.coinbase.ws import CoinbaseWebSocket
+from bot_v2.orchestration.runtime_settings import RuntimeSettings, load_runtime_settings
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +50,8 @@ class CoinbaseDataProvider(DataProvider):
         adapter: CoinbaseBrokerage | None = None,
         enable_streaming: bool = False,
         cache_ttl: int = 5,
+        *,
+        settings: RuntimeSettings | None = None,
     ) -> None:
         """
         Initialize Coinbase data provider.
@@ -60,25 +62,28 @@ class CoinbaseDataProvider(DataProvider):
             enable_streaming: Enable WebSocket streaming for real-time data
             cache_ttl: Cache time-to-live in seconds
         """
+        runtime_settings = settings or load_runtime_settings()
+        self._settings = runtime_settings
+
+        # Enforce production endpoints for public market data to avoid sandbox gaps
+        sandbox_requested = runtime_settings.coinbase_sandbox_enabled
+        sandbox = False
+        if sandbox_requested:
+            logger.warning(
+                "COINBASE_SANDBOX=1 detected while requesting real market data. "
+                "Defaulting to production endpoints."
+            )
+
+        api_mode = (runtime_settings.coinbase_api_mode or "advanced").lower()
+        if api_mode == "exchange":
+            logger.warning(
+                "COINBASE_API_MODE=exchange detected while requesting real market data. "
+                "Defaulting to Advanced Trade production endpoints."
+            )
+            api_mode = "advanced"
+
         # Initialize client and adapter if not provided
         if client is None:
-            # Determine if we're using sandbox or production (force production for live data)
-            sandbox = os.environ.get("COINBASE_SANDBOX", "0") == "1"
-            if sandbox:
-                logger.warning(
-                    "COINBASE_SANDBOX=1 detected while requesting real market data. "
-                    "Defaulting to production endpoints."
-                )
-                sandbox = False
-
-            api_mode = (os.environ.get("COINBASE_API_MODE", "advanced") or "advanced").lower()
-            if api_mode == "exchange":
-                logger.warning(
-                    "COINBASE_API_MODE=exchange detected while requesting real market data. "
-                    "Defaulting to Advanced Trade production endpoints."
-                )
-                api_mode = "advanced"
-
             # Set base URL based on mode
             if api_mode == "advanced":
                 base_url = "https://api.coinbase.com"
@@ -87,7 +92,12 @@ class CoinbaseDataProvider(DataProvider):
 
             # Create client without auth for public market data
             # Auth would be needed for private endpoints, but market data is public
-            self.client = CoinbaseClient(base_url=base_url, auth=None, api_mode=api_mode)
+            self.client = CoinbaseClient(
+                base_url=base_url,
+                auth=None,
+                api_mode=api_mode,
+                settings=runtime_settings,
+            )
         else:
             self.client = client
 
@@ -104,14 +114,19 @@ class CoinbaseDataProvider(DataProvider):
                 auth_type="HMAC",  # Default auth type for public data
                 enable_derivatives=False,  # Not needed for market data
             )
-            self.adapter = CoinbaseBrokerage(config=config)
+            self.adapter = CoinbaseBrokerage(config=config, settings=runtime_settings)
         else:
             self.adapter = adapter
 
         # Configure streaming
-        self.enable_streaming = (
-            enable_streaming or os.environ.get("COINBASE_ENABLE_STREAMING", "0") == "1"
-        )
+        streaming_env = runtime_settings.raw_env.get("COINBASE_ENABLE_STREAMING")
+        streaming_enabled = streaming_env is not None and streaming_env.strip().lower() in {
+            "1",
+            "true",
+            "yes",
+            "on",
+        }
+        self.enable_streaming = enable_streaming or streaming_enabled
         self.cache_ttl = cache_ttl
 
         # Initialize ticker service for streaming if enabled
@@ -134,7 +149,10 @@ class CoinbaseDataProvider(DataProvider):
             self.ticker_cache = TickerCache()
 
             def ws_factory():
-                ws = CoinbaseWebSocket(url="wss://advanced-trade-ws.coinbase.com")
+                ws = CoinbaseWebSocket(
+                    url="wss://advanced-trade-ws.coinbase.com",
+                    settings=self._settings,
+                )
                 ws.connect()
                 return ws
 
@@ -170,7 +188,7 @@ class CoinbaseDataProvider(DataProvider):
 
         # Default the mapping to spot pairs; append -PERP only when derivatives are enabled.
         symbol_upper = symbol.upper()
-        derivatives_enabled = os.environ.get("COINBASE_ENABLE_DERIVATIVES", "0") == "1"
+        derivatives_enabled = self._settings.coinbase_enable_derivatives
 
         spot_map = {
             "BTC": "BTC-USD",
@@ -199,7 +217,7 @@ class CoinbaseDataProvider(DataProvider):
         }
 
         # Allow explicit override of the quote currency (e.g., USDC) for spot pairs.
-        default_quote = os.environ.get("COINBASE_DEFAULT_QUOTE", "USD").upper()
+        default_quote = self._settings.coinbase_default_quote
         if default_quote not in {"USD", "USDC", "USDT"}:
             default_quote = "USD"
 
@@ -446,8 +464,16 @@ def create_coinbase_provider(
         CoinbaseDataProvider if real data is enabled, MockProvider otherwise
     """
     # Check environment configuration
+    runtime_settings = load_runtime_settings()
+    raw_env = runtime_settings.raw_env
+
     if use_real_data is None:
-        use_real_data = os.environ.get("COINBASE_USE_REAL_DATA", "0") == "1"
+        use_real_data = raw_env.get("COINBASE_USE_REAL_DATA", "0").strip().lower() in {
+            "1",
+            "true",
+            "yes",
+            "on",
+        }
 
     if not use_real_data:
         # Return mock provider for testing
@@ -458,7 +484,12 @@ def create_coinbase_provider(
 
     # Create real Coinbase provider
     if enable_streaming is None:
-        enable_streaming = os.environ.get("COINBASE_ENABLE_STREAMING", "0") == "1"
+        enable_streaming = raw_env.get("COINBASE_ENABLE_STREAMING", "0").strip().lower() in {
+            "1",
+            "true",
+            "yes",
+            "on",
+        }
 
     logger.info(f"Creating CoinbaseDataProvider (streaming={enable_streaming})")
     return CoinbaseDataProvider(enable_streaming=enable_streaming)

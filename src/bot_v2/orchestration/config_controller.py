@@ -7,6 +7,7 @@ from typing import Any
 
 from bot_v2.features.live_trade.risk import LiveRiskManager
 from bot_v2.orchestration.configuration import BotConfig, ConfigManager
+from bot_v2.orchestration.runtime_settings import RuntimeSettings
 from bot_v2.utilities.config import ConfigBaselinePayload
 
 
@@ -23,8 +24,8 @@ class ConfigController:
 
     _TRACKED_FIELDS = ConfigBaselinePayload.tracked_fields()
 
-    def __init__(self, config: BotConfig) -> None:
-        self._manager = ConfigManager.from_config(config)
+    def __init__(self, config: BotConfig, *, settings: RuntimeSettings | None = None) -> None:
+        self._manager = ConfigManager.from_config(config, settings=settings)
         self._pending_change: ConfigChange | None = None
         self._reduce_only_mode_state = bool(config.reduce_only_mode)
 

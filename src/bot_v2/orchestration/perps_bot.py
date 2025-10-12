@@ -3,7 +3,6 @@ from __future__ import annotations
 import asyncio
 import inspect
 import logging
-import os
 import threading
 from collections.abc import Sequence
 from datetime import UTC, datetime
@@ -17,13 +16,13 @@ from bot_v2.features.brokerages.core.interfaces import (
     Position,
     Product,
 )
-from bot_v2.monitoring.configuration_guardian import ConfigurationGuardian
 from bot_v2.orchestration.config_controller import ConfigChange, ConfigController
 from bot_v2.orchestration.configuration import BotConfig
 from bot_v2.orchestration.execution_coordinator import ExecutionCoordinator
 from bot_v2.orchestration.lifecycle_manager import LifecycleManager
 from bot_v2.orchestration.perps_bot_state import PerpsBotRuntimeState
 from bot_v2.orchestration.runtime_coordinator import RuntimeCoordinator
+from bot_v2.orchestration.runtime_settings import RuntimeSettings, load_runtime_settings
 from bot_v2.orchestration.service_registry import ServiceRegistry
 from bot_v2.orchestration.session_guard import TradingSessionGuard
 from bot_v2.orchestration.strategy_coordinator import StrategyCoordinator
@@ -37,6 +36,7 @@ if TYPE_CHECKING:  # pragma: no cover - imports for type checking only
     from bot_v2.features.brokerages.core.interfaces import IBrokerage
     from bot_v2.features.live_trade.advanced_execution import AdvancedExecutionEngine
     from bot_v2.features.live_trade.risk import LiveRiskManager
+    from bot_v2.monitoring.configuration_guardian import ConfigurationGuardian
     from bot_v2.orchestration.account_telemetry import AccountTelemetryService
     from bot_v2.orchestration.live_execution import LiveExecutionEngine
     from bot_v2.orchestration.market_monitor import MarketActivityMonitor
@@ -132,9 +132,13 @@ class PerpsBot:
         self.orders_store = orders_store
         self._session_guard = session_guard
         self.baseline_snapshot = baseline_snapshot
-        self.configuration_guardian = configuration_guardian or ConfigurationGuardian(
-            self.baseline_snapshot
-        )
+        if configuration_guardian is None:
+            from bot_v2.monitoring.configuration_guardian import (
+                ConfigurationGuardian as _ConfigurationGuardian,
+            )
+
+            configuration_guardian = _ConfigurationGuardian(self.baseline_snapshot)
+        self.configuration_guardian = configuration_guardian
 
         self.symbols = list(self.config.symbols or [])
         if not self.symbols:
@@ -155,6 +159,15 @@ class PerpsBot:
     @property
     def runtime_state(self) -> PerpsBotRuntimeState:
         return self._state
+
+    @property
+    def settings(self) -> RuntimeSettings:
+        settings = self.registry.runtime_settings
+        if settings is not None:
+            return settings
+        settings = load_runtime_settings()
+        self.registry = self.registry.with_updates(runtime_settings=settings)
+        return settings
 
     @property
     def mark_windows(self) -> dict[str, list[Decimal]]:
@@ -208,6 +221,10 @@ class PerpsBot:
     def build_baseline_snapshot(config: BotConfig, derivatives_enabled: bool) -> Any:
         """Return a baseline snapshot for configuration drift detection."""
 
+        from bot_v2.monitoring.configuration_guardian import (
+            ConfigurationGuardian as _ConfigurationGuardian,
+        )
+
         payload = ConfigBaselinePayload.from_config(
             config,
             derivatives_enabled=derivatives_enabled,
@@ -216,7 +233,7 @@ class PerpsBot:
         active_symbols = list(payload.symbols)
         broker_type = "mock" if config.mock_broker else "live"
 
-        return ConfigurationGuardian.create_baseline_snapshot(
+        return _ConfigurationGuardian.create_baseline_snapshot(
             config_dict=payload,
             active_symbols=active_symbols,
             positions=[],
@@ -354,7 +371,7 @@ class PerpsBot:
         if symbol in self._product_map:
             return self._product_map[symbol]
         base, _, quote = symbol.partition("-")
-        quote = quote or os.getenv("COINBASE_DEFAULT_QUOTE", "USD").upper()
+        quote = quote or self.settings.coinbase_default_quote
         is_perp = symbol.upper().endswith("-PERP")
         market_type = MarketType.PERPETUAL if is_perp else MarketType.SPOT
         # Provide conservative defaults; execution will re-quantize via product catalog

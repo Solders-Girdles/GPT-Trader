@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-import os
 import uuid
 from datetime import datetime
 from decimal import Decimal
@@ -30,6 +29,7 @@ from bot_v2.features.brokerages.core.interfaces import (
     OrderType,
     TimeInForce,
 )
+from bot_v2.orchestration.runtime_settings import RuntimeSettings, load_runtime_settings
 from bot_v2.persistence.event_store import EventStore
 from bot_v2.utilities.telemetry import emit_metric
 
@@ -48,6 +48,7 @@ class CoinbaseRestServiceBase:
         product_catalog: ProductCatalog,
         market_data: MarketDataService,
         event_store: EventStore,
+        settings: RuntimeSettings | None = None,
     ) -> None:
         self.client = client
         self.endpoints = endpoints
@@ -57,6 +58,12 @@ class CoinbaseRestServiceBase:
         self._event_store = event_store
         self._funding_calculator = FundingCalculator()
         self._positions: dict[str, PositionState] = {}
+        self._static_settings = settings is not None
+        self._settings = settings or load_runtime_settings()
+        preview_flag = self._settings.order_preview_enabled
+        if preview_flag is None:
+            preview_flag = bool(getattr(config, "enable_order_preview", False))
+        self._order_preview_enabled = bool(preview_flag)
 
     # ------------------------------------------------------------------
     # Order payload helpers
@@ -235,7 +242,13 @@ class CoinbaseRestServiceBase:
         payload: dict[str, object],
         client_id: str | None,
     ) -> Order:
-        if os.getenv("ORDER_PREVIEW_ENABLED"):
+        if not self._static_settings:
+            self._settings = load_runtime_settings()
+            preview_flag = self._settings.order_preview_enabled
+            if preview_flag is not None:
+                self._order_preview_enabled = bool(preview_flag)
+
+        if self._order_preview_enabled:
             try:
                 self.client.preview_order(payload)  # type: ignore[attr-defined]
             except Exception as exc:  # pragma: no cover - preview optional

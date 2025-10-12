@@ -69,7 +69,15 @@ COINBASE_CDP_PRIVATE_KEY=your-ec-private-key-pem
 # Optional overrides
 COINBASE_API_BASE=https://custom-url.com
 COINBASE_WS_URL=wss://custom-ws-url.com
+# WebSocket runtime tuning
+COINBASE_WS_CONNECT_TIMEOUT=5.0       # Optional connect timeout (seconds)
+COINBASE_WS_SUBPROTOCOLS=feed,private # Comma-separated list of subprotocols
+COINBASE_WS_ENABLE_TRACE=1            # Enable websocket-client trace logging
 ```
+
+The CLI and runtime settings snapshot capture these overrides once and reuse them across REST
+and WebSocket transports, so the same values apply to reconnects, data providers, and the
+adapter without repeated `os.getenv` calls.
 
 ## Usage Examples
 

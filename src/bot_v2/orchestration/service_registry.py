@@ -11,6 +11,7 @@ if TYPE_CHECKING:  # pragma: no cover - import guards for type checkers only
     from bot_v2.features.brokerages.core.interfaces import IBrokerage
     from bot_v2.features.live_trade.risk import LiveRiskManager
     from bot_v2.orchestration.configuration import BotConfig
+    from bot_v2.orchestration.runtime_settings import RuntimeSettings
     from bot_v2.persistence.event_store import EventStore
     from bot_v2.persistence.orders_store import OrdersStore
 
@@ -33,6 +34,7 @@ class ServiceRegistry:
     broker: IBrokerage | None = None
     market_data_service: MarketDataService | None = None
     product_catalog: ProductCatalog | None = None
+    runtime_settings: RuntimeSettings | None = None
     extras: dict[str, Any] = field(default_factory=dict)
 
     def with_updates(self, **overrides: Any) -> ServiceRegistry:

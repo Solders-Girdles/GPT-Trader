@@ -17,6 +17,7 @@ from bot_v2.features.brokerages.coinbase.ws import (
     WSSubscription,
     normalize_market_message,
 )
+from bot_v2.orchestration.runtime_settings import RuntimeSettings, load_runtime_settings
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +35,7 @@ class CoinbaseWebSocketHandler:
         product_catalog: ProductCatalog,
         client_auth: object | None,
         ws_cls: type[CoinbaseWebSocket] = CoinbaseWebSocket,
+        settings: RuntimeSettings | None = None,
     ) -> None:
         self._endpoints = endpoints
         self._config = config
@@ -42,6 +44,7 @@ class CoinbaseWebSocketHandler:
         self._product_catalog = product_catalog
         self._client_auth = client_auth
         self._ws_cls = ws_cls
+        self._settings = settings or load_runtime_settings()
 
         self._ws_client: CoinbaseWebSocket | None = None
         self._ws_factory_override: Callable[[], CoinbaseWebSocket] | None = None
@@ -141,10 +144,15 @@ class CoinbaseWebSocketHandler:
     def _create_ws_instance(self) -> CoinbaseWebSocket:
         if self._ws_factory_override:
             return self._ws_factory_override()
-        auth_provider = build_ws_auth_provider(self._config, self._client_auth)
+        auth_provider = build_ws_auth_provider(
+            self._config,
+            self._client_auth,
+            settings=self._settings,
+        )
         return self._ws_cls(
             url=self._endpoints.websocket_url(),
             ws_auth_provider=auth_provider,
+            settings=self._settings,
         )
 
     # ------------------------------------------------------------------

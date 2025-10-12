@@ -10,7 +10,6 @@ Handles:
 
 import logging
 import math
-import os
 from dataclasses import dataclass
 from decimal import ROUND_DOWN, ROUND_UP, Decimal
 from pathlib import Path
@@ -18,6 +17,7 @@ from typing import Any
 
 import yaml
 
+from bot_v2.orchestration.runtime_settings import RuntimeSettings, load_runtime_settings
 from bot_v2.utilities.quantization import quantize_price_side_aware
 
 logger = logging.getLogger(__name__)
@@ -44,13 +44,18 @@ class ProductSpec:
 class SpecsService:
     """Manages product specifications with YAML overrides."""
 
-    def __init__(self, config_path: str | None = None) -> None:
+    def __init__(
+        self, config_path: str | None = None, *, settings: RuntimeSettings | None = None
+    ) -> None:
         self.specs_cache: dict[str, ProductSpec] = {}
         self.overrides: dict[str, dict] = {}
+        runtime_settings = settings or load_runtime_settings()
 
         # Load overrides from YAML if available
         if config_path is None:
-            config_path = os.getenv("PERPS_SPECS_PATH", "config/brokers/coinbase_perp_specs.yaml")
+            config_path = runtime_settings.raw_env.get(
+                "PERPS_SPECS_PATH", "config/brokers/coinbase_perp_specs.yaml"
+            )
 
         self.load_overrides(config_path)
 

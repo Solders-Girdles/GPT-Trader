@@ -8,11 +8,11 @@ balances, positions, equity calculations, and collateral asset resolution.
 from __future__ import annotations
 
 import logging
-import os
 from decimal import Decimal
 from typing import Any
 
 from bot_v2.features.brokerages.core.interfaces import Balance, IBrokerage, Product
+from bot_v2.orchestration.runtime_settings import RuntimeSettings, load_runtime_settings
 from bot_v2.utilities.quantities import quantity_from
 
 logger = logging.getLogger(__name__)
@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 class StateCollector:
     """Collects and transforms account state for execution and risk management."""
 
-    def __init__(self, broker: IBrokerage) -> None:
+    def __init__(self, broker: IBrokerage, *, settings: RuntimeSettings | None = None) -> None:
         """
         Initialize state collector.
 
@@ -29,11 +29,12 @@ class StateCollector:
             broker: Brokerage adapter
         """
         self.broker = broker
+        self._settings = settings or load_runtime_settings()
         self.collateral_assets = self._resolve_collateral_assets()
 
     def _resolve_collateral_assets(self) -> set[str]:
         """Resolve collateral assets from environment or use defaults."""
-        env_value = os.getenv("PERPS_COLLATERAL_ASSETS") or ""
+        env_value = self._settings.raw_env.get("PERPS_COLLATERAL_ASSETS", "")
         default_assets = {"USD", "USDC"}
         parsed = {token.strip().upper() for token in env_value.split(",") if token.strip()}
         return parsed or set(default_assets)

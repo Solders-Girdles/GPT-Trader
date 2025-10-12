@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 import logging
-import os
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:  # pragma: no cover - import for type checking only
     from bot_v2.orchestration.configuration import Profile
+
+from bot_v2.orchestration.runtime_settings import RuntimeSettings, load_runtime_settings
 
 logger = logging.getLogger(__name__)
 
@@ -25,8 +26,10 @@ class SymbolNormalizationLog:
     args: tuple[object, ...] = ()
 
 
-def derivatives_enabled(profile: Profile) -> bool:
+def derivatives_enabled(profile: Profile, *, settings: RuntimeSettings | None = None) -> bool:
     """Determine whether derivatives trading should be enabled for the profile."""
+
+    runtime_settings = settings or load_runtime_settings()
 
     try:  # Local import to avoid circular at module load time.
         from bot_v2.orchestration.configuration import Profile as _Profile
@@ -43,9 +46,8 @@ def derivatives_enabled(profile: Profile) -> bool:
         if profile_value == "spot":
             return False
 
-    env_value = os.getenv("COINBASE_ENABLE_DERIVATIVES")
-    if env_value is not None:
-        return env_value == "1"
+    if runtime_settings.coinbase_enable_derivatives_overridden:
+        return runtime_settings.coinbase_enable_derivatives
     return True
 
 
@@ -122,12 +124,17 @@ def normalize_symbol_list(
 
 
 def normalize_symbols(
-    profile: Profile, symbols: Sequence[str] | None, *, quote: str | None = None
+    profile: Profile,
+    symbols: Sequence[str] | None,
+    *,
+    quote: str | None = None,
+    settings: RuntimeSettings | None = None,
 ) -> tuple[list[str], bool]:
     """Normalize configured symbols, applying per-profile defaults and gating."""
 
-    quote_currency = (quote or os.getenv("COINBASE_DEFAULT_QUOTE") or "USD").upper()
-    allow_derivatives = derivatives_enabled(profile)
+    runtime_settings = settings or load_runtime_settings()
+    quote_currency = (quote or runtime_settings.coinbase_default_quote).upper()
+    allow_derivatives = derivatives_enabled(profile, settings=runtime_settings)
     normalized, logs = normalize_symbol_list(
         symbols,
         allow_derivatives=allow_derivatives,

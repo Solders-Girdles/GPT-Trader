@@ -14,6 +14,7 @@ from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any
 
+from bot_v2.orchestration.runtime_settings import RuntimeSettings, load_runtime_settings
 from bot_v2.utilities import get_logger, log_operation, optional_import
 
 # Lazy imports for heavy dependencies
@@ -279,11 +280,17 @@ class MockProvider(DataProvider):
         return True  # Always open for testing
 
 
-# Global provider instance
-_provider_instance = None
+# Global provider instance + settings snapshot
+_provider_instance: DataProvider | None = None
+_provider_settings_snapshot: RuntimeSettings | None = None
+_settings_override: RuntimeSettings | None = None
 
 
-def get_data_provider(provider_type: str = None) -> DataProvider:
+def get_data_provider(
+    provider_type: str | None = None,
+    *,
+    settings: RuntimeSettings | None = None,
+) -> DataProvider:
     """
     Factory function to get appropriate data provider
 
@@ -294,10 +301,22 @@ def get_data_provider(provider_type: str = None) -> DataProvider:
     Returns:
         DataProvider instance
     """
-    global _provider_instance
+    global _provider_instance, _provider_settings_snapshot
+
+    runtime_settings = settings or _settings_override or load_runtime_settings()
+    env_map = runtime_settings.raw_env
+
+    if (
+        _provider_instance is not None
+        and _provider_settings_snapshot is not None
+        and _provider_settings_snapshot != runtime_settings
+        and provider_type is None
+    ):
+        _provider_instance = None
+        _provider_settings_snapshot = None
 
     # If TESTING is explicitly enabled, always use a fresh MockProvider
-    testing_mode = os.environ.get("TESTING", "").lower() == "true"
+    testing_mode = env_map.get("TESTING", "").strip().lower() == "true"
     if provider_type is None and testing_mode:
         _provider_instance = MockProvider()
         logger.info("Using mock data provider (TESTING=true)")
@@ -308,15 +327,12 @@ def get_data_provider(provider_type: str = None) -> DataProvider:
 
     # Auto-detect provider type if not specified
     if provider_type is None:
-        if os.environ.get("TESTING", "").lower() == "true":
+        if testing_mode:
             provider_type = "mock"
-        elif (
-            os.environ.get("COINBASE_USE_REAL_DATA", "").lower() == "true"
-            or os.environ.get("COINBASE_USE_REAL_DATA") == "1"
-        ):
-            provider_type = "coinbase"
         else:
-            provider_type = "yfinance"
+            real_data_flag = env_map.get("COINBASE_USE_REAL_DATA", "")
+            real_data_enabled = real_data_flag.strip().lower() in {"1", "true"}
+            provider_type = "coinbase" if real_data_enabled else "yfinance"
 
     # Handle legacy aliases
     if provider_type == "alpaca":
@@ -330,10 +346,11 @@ def get_data_provider(provider_type: str = None) -> DataProvider:
         # Lazy import to avoid circular dependencies
         from bot_v2.data_providers.coinbase_provider import CoinbaseDataProvider
 
-        _provider_instance = CoinbaseDataProvider()
+        _provider_instance = CoinbaseDataProvider(settings=runtime_settings)
     else:
         _provider_instance = YFinanceProvider()
 
+    _provider_settings_snapshot = runtime_settings
     logger.info(f"Using {provider_type} data provider")
     return _provider_instance
 
@@ -342,6 +359,15 @@ def set_data_provider(provider: DataProvider) -> None:
     """Set custom data provider instance"""
     global _provider_instance
     _provider_instance = provider
+    # When manually overriding the provider we no longer track a settings snapshot
+    global _provider_settings_snapshot
+    _provider_settings_snapshot = None
+
+
+def set_runtime_settings_override(settings: RuntimeSettings | None) -> None:
+    """Override the runtime settings used for provider selection (primarily for tests)."""
+    global _settings_override
+    _settings_override = settings
 
 
 # Export main interface
@@ -351,4 +377,5 @@ __all__ = [
     "MockProvider",
     "get_data_provider",
     "set_data_provider",
+    "set_runtime_settings_override",
 ]

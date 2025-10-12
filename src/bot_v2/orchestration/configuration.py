@@ -3,22 +3,22 @@
 from __future__ import annotations
 
 import logging
-import os
-from collections.abc import Sequence
 from copy import deepcopy
-from dataclasses import dataclass, field
 from datetime import time
 from decimal import Decimal
 from pathlib import Path
 from typing import Any, cast
 
-from bot_v2.config.schemas import BotConfigSchema, ConfigValidationResult
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
+from pydantic_core import PydanticCustomError
+
 from bot_v2.config.types import Profile
+from bot_v2.orchestration.runtime_settings import RuntimeSettings, load_runtime_settings
 from bot_v2.orchestration.symbols import (
     derivatives_enabled as _resolve_derivatives_enabled,
 )
 from bot_v2.orchestration.symbols import (
-    normalize_symbols,
+    normalize_symbol_list,
 )
 
 logger = logging.getLogger(__name__)
@@ -42,13 +42,12 @@ DEFAULT_SPOT_SYMBOLS = [f"{base}-USD" for base in TOP_VOLUME_BASES]
 DEFAULT_SPOT_RISK_PATH = Path(__file__).resolve().parents[3] / "config" / "risk" / "spot_top10.json"
 
 
-@dataclass
-class BotConfig:
-    """Bot configuration."""
+class BotConfig(BaseModel):
+    """Bot configuration backed by Pydantic validation."""
 
     profile: Profile
     dry_run: bool = False
-    symbols: Sequence[str] | None = None
+    symbols: list[str] | None = None
     derivatives_enabled: bool = False
     update_interval: int = 5
     short_ma: int = 5
@@ -74,18 +73,374 @@ class BotConfig:
     perps_force_mock: bool = False
     perps_position_fraction: float | None = None
     perps_skip_startup_reconcile: bool = False
-    metadata: dict[str, Any] = field(default_factory=dict, repr=False)
+    metadata: dict[str, Any] = Field(default_factory=dict, repr=False)
 
-    def __post_init__(self) -> None:
+    model_config = ConfigDict(
+        arbitrary_types_allowed=True,
+        validate_assignment=True,
+        extra="forbid",
+    )
+
+    @field_validator("max_leverage", mode="before")
+    @classmethod
+    def _validate_max_leverage(cls, value: Any) -> int:
+        try:
+            result = int(value)
+        except (TypeError, ValueError) as exc:
+            raise PydanticCustomError(
+                "max_leverage_invalid",
+                "max_leverage must be a valid integer, got {value}: {error}",
+                {"value": value, "error": str(exc)},
+            ) from exc
+        if result <= 0:
+            raise PydanticCustomError(
+                "max_leverage_too_small",
+                "max_leverage must be positive, got {value}",
+                {"value": result},
+            )
+        return result
+
+    @field_validator("update_interval", mode="before")
+    @classmethod
+    def _validate_update_interval(cls, value: Any) -> int:
+        try:
+            result = int(value)
+        except (TypeError, ValueError) as exc:
+            raise PydanticCustomError(
+                "update_interval_invalid",
+                "update_interval must be a valid integer, got {value}: {error}",
+                {"value": value, "error": str(exc)},
+            ) from exc
+        if result <= 0:
+            raise PydanticCustomError(
+                "update_interval_too_small",
+                "update_interval must be positive, got {value}",
+                {"value": result},
+            )
+        return result
+
+    @field_validator("max_position_size", mode="before")
+    @classmethod
+    def _validate_max_position_size(cls, value: Any) -> Decimal:
+        try:
+            result = Decimal(str(value))
+        except (TypeError, ValueError, ArithmeticError) as exc:
+            raise PydanticCustomError(
+                "max_position_size_invalid",
+                "max_position_size must be numeric, got {value}: {error}",
+                {"value": value, "error": str(exc)},
+            ) from exc
+        if result <= 0:
+            raise PydanticCustomError(
+                "max_position_size_too_small",
+                "max_position_size must be positive, got {value}",
+                {"value": str(result)},
+            )
+        return result
+
+    @field_validator("daily_loss_limit", mode="before")
+    @classmethod
+    def _validate_daily_loss_limit(cls, value: Any) -> Decimal:
+        try:
+            result = Decimal(str(value))
+        except (TypeError, ValueError, ArithmeticError) as exc:
+            raise PydanticCustomError(
+                "daily_loss_limit_invalid",
+                "daily_loss_limit must be numeric, got {value}: {error}",
+                {"value": value, "error": str(exc)},
+            ) from exc
+        if result < 0:
+            raise PydanticCustomError(
+                "daily_loss_limit_negative",
+                "daily_loss_limit must be non-negative, got {value}",
+                {"value": str(result)},
+            )
+        return result
+
+    @field_validator("symbols", mode="before")
+    @classmethod
+    def _validate_symbols(cls, value: Any) -> list[str] | None:
+        if value is None:
+            return None
+        if not isinstance(value, (list, tuple)):
+            raise PydanticCustomError(
+                "symbols_invalid_type",
+                "symbols must be a list or tuple, got {type}",
+                {"type": type(value).__name__},
+            )
+        symbols = [str(item).strip().upper() for item in value]
+        if not symbols:
+            raise PydanticCustomError(
+                "symbols_empty",
+                "symbols cannot be empty when provided",
+                {},
+            )
+        invalid = [
+            f"[{idx}]: {repr(orig)}"
+            for idx, (orig, item) in enumerate(zip(value, symbols))
+            if not item
+        ]
+        if invalid:
+            raise PydanticCustomError(
+                "symbols_invalid_values",
+                "symbols must contain only non-empty strings: {invalid}",
+                {"invalid": ", ".join(invalid)},
+            )
+        return symbols
+
+    @field_validator("time_in_force", mode="before")
+    @classmethod
+    def _validate_time_in_force(cls, value: Any) -> str | None:
+        if value is None:
+            return None
+        tif = str(value).upper()
+        supported = {"GTC", "IOC", "FOK"}
+        if tif not in supported:
+            raise PydanticCustomError(
+                "time_in_force_unsupported",
+                "time_in_force must be one of {supported}, got {value}",
+                {"supported": supported, "value": repr(value)},
+            )
+        return tif
+
+    @field_validator("account_telemetry_interval", mode="before")
+    @classmethod
+    def _validate_account_telemetry_interval(cls, value: Any) -> int:
+        try:
+            result = int(value)
+        except (TypeError, ValueError) as exc:
+            raise PydanticCustomError(
+                "account_telemetry_interval_invalid",
+                "account_telemetry_interval must be a valid integer, got {value}: {error}",
+                {"value": value, "error": str(exc)},
+            ) from exc
+        if result <= 0:
+            raise PydanticCustomError(
+                "account_telemetry_interval_too_small",
+                "account_telemetry_interval must be positive, got {value}",
+                {"value": result},
+            )
+        return result
+
+    @field_validator("perps_stream_level", mode="before")
+    @classmethod
+    def _validate_perps_stream_level(cls, value: Any) -> int:
+        if value is None:
+            return 1
+        try:
+            result = int(value)
+        except (TypeError, ValueError) as exc:
+            raise PydanticCustomError(
+                "perps_stream_level_invalid",
+                "perps_stream_level must be a valid integer, got {value}: {error}",
+                {"value": value, "error": str(exc)},
+            ) from exc
+        if result < 1:
+            raise PydanticCustomError(
+                "perps_stream_level_too_small",
+                "perps_stream_level must be >= 1, got {value}",
+                {"value": result},
+            )
+        return result
+
+    @field_validator("perps_position_fraction", mode="before")
+    @classmethod
+    def _validate_perps_position_fraction(cls, value: Any) -> float | None:
+        if value is None:
+            return None
+        try:
+            result = float(value)
+        except (TypeError, ValueError) as exc:
+            raise PydanticCustomError(
+                "perps_position_fraction_invalid",
+                "perps_position_fraction must be numeric, got {value}: {error}",
+                {"value": value, "error": str(exc)},
+            ) from exc
+        if not 0 < result <= 1:
+            raise PydanticCustomError(
+                "perps_position_fraction_invalid_range",
+                "perps_position_fraction must be in (0, 1], got {value}",
+                {"value": result},
+            )
+        return result
+
+    @field_validator("target_leverage", "short_ma", "long_ma", mode="before")
+    @classmethod
+    def _validate_positive_integers(cls, value: Any, field: Any) -> int:
+        try:
+            result = int(value)
+        except (TypeError, ValueError) as exc:
+            raise PydanticCustomError(
+                f"{field.field_name}_invalid",
+                f"{field.field_name} must be a valid integer, got {{value}}: {{error}}",
+                {"value": value, "error": str(exc)},
+            ) from exc
+        if result <= 0:
+            raise PydanticCustomError(
+                f"{field.field_name}_too_small",
+                f"{field.field_name} must be positive, got {{value}}",
+                {"value": result},
+            )
+        return result
+
+    @field_validator("trailing_stop_pct", mode="before")
+    @classmethod
+    def _validate_trailing_stop_pct(cls, value: Any) -> float:
+        try:
+            result = float(value)
+        except (TypeError, ValueError) as exc:
+            raise PydanticCustomError(
+                "trailing_stop_pct_invalid",
+                "trailing_stop_pct must be numeric, got {value}: {error}",
+                {"value": value, "error": str(exc)},
+            ) from exc
+        if result < 0:
+            raise PydanticCustomError(
+                "trailing_stop_pct_negative",
+                "trailing_stop_pct must be non-negative, got {value}",
+                {"value": result},
+            )
+        return result
+
+    @model_validator(mode="after")
+    def _apply_defaults_and_normalization(self) -> BotConfig:
+        metadata = dict(self.metadata) if isinstance(self.metadata, dict) else {}
+
+        settings = metadata.get("_runtime_settings")
+        if not isinstance(settings, RuntimeSettings):
+            settings = load_runtime_settings()
+            metadata["_runtime_settings"] = settings
+            object.__setattr__(self, "metadata", metadata)
+
+        submitted_symbols = list(self.symbols) if self.symbols is not None else None
+        last_normalized = metadata.get("normalized_symbols")
+        last_normalized_list = list(last_normalized) if isinstance(last_normalized, list) else None
+        requested_symbols = metadata.get("requested_symbols")
+        requested_list = list(requested_symbols) if isinstance(requested_symbols, list) else None
+
+        override_payload = metadata.get("symbol_normalization_overrides", {})
+        override_quote: str | None = None
+        override_derivatives: bool | None = None
+        if isinstance(override_payload, dict):
+            raw_quote = override_payload.get("quote")
+            if raw_quote is not None:
+                override_quote = str(raw_quote).upper()
+            if "allow_derivatives" in override_payload:
+                override_derivatives = bool(override_payload["allow_derivatives"])
+
         if self.symbols is None:
-            # Default to high-volume spot pairs; derivatives mode can override via CLI/env.
-            self.symbols = list(DEFAULT_SPOT_SYMBOLS)
-        if not isinstance(self.metadata, dict):
-            self.metadata = {}
+            object.__setattr__(self, "symbols", list(DEFAULT_SPOT_SYMBOLS))
+            submitted_symbols = list(DEFAULT_SPOT_SYMBOLS)
+
+        if submitted_symbols is not None:
+            if last_normalized_list is not None and submitted_symbols != last_normalized_list:
+                requested_list = list(submitted_symbols)
+                metadata["requested_symbols"] = list(submitted_symbols)
+            elif requested_list is None:
+                requested_list = list(submitted_symbols)
+                metadata["requested_symbols"] = list(submitted_symbols)
+
+        input_symbols = requested_list if requested_list is not None else submitted_symbols
+
+        metadata.setdefault("default_quote", settings.coinbase_default_quote)
+
+        quote_currency = (
+            override_quote
+            or metadata.get("default_quote")
+            or settings.coinbase_default_quote
+            or "USD"
+        )
+        quote_currency = str(quote_currency).upper()
+        if override_derivatives is None:
+            allow_derivatives = _resolve_derivatives_enabled(self.profile)
+        else:
+            allow_derivatives = override_derivatives
+
+        normalized, logs = normalize_symbol_list(
+            input_symbols,
+            allow_derivatives=allow_derivatives,
+            quote=quote_currency,
+        )
+        object.__setattr__(self, "symbols", normalized)
+        object.__setattr__(self, "derivatives_enabled", bool(allow_derivatives))
+
+        metadata.setdefault("default_quote", quote_currency)
+        metadata["symbol_normalization_logs"] = [
+            {"level": record.level, "message": record.message, "args": list(record.args)}
+            for record in logs
+        ]
+        metadata["normalized_symbols"] = list(normalized)
+
+        if isinstance(override_payload, dict):
+            existing_quote = override_payload.get("quote")
+            existing_allow = override_payload.get("allow_derivatives")
+        else:
+            existing_quote = None
+            existing_allow = None
+
+        if (
+            override_quote is not None
+            or override_derivatives is not None
+            or existing_quote is not None
+            or existing_allow is not None
+        ):
+            metadata["symbol_normalization_overrides"] = {
+                "quote": override_quote if override_quote is not None else existing_quote,
+                "allow_derivatives": (
+                    override_derivatives if override_derivatives is not None else existing_allow
+                ),
+            }
+        elif "symbol_normalization_overrides" in metadata:
+            metadata.pop("symbol_normalization_overrides", None)
+
+        object.__setattr__(self, "metadata", metadata)
+        return self
+
+    @model_validator(mode="after")
+    def _validate_profile_constraints(self) -> BotConfig:
+        errors: list[str] = []
+
+        if self.profile == Profile.CANARY:
+            if not self.reduce_only_mode:
+                errors.append(
+                    "[canary_reduce_only_required] Canary profile must have reduce_only_mode=True"
+                )
+            if self.max_leverage > 1:
+                errors.append(
+                    f"[canary_max_leverage_too_high] Canary profile max_leverage cannot exceed 1, got {self.max_leverage}"
+                )
+            if self.time_in_force not in ("IOC",):
+                errors.append(
+                    f"[canary_time_in_force_invalid] Canary profile must use IOC time_in_force, got {self.time_in_force}"
+                )
+
+        elif self.profile == Profile.SPOT:
+            if self.enable_shorts:
+                errors.append("[spot_shorts_not_allowed] Spot profile cannot enable shorts")
+            if self.max_leverage > 1:
+                errors.append(
+                    f"[spot_leverage_too_high] Spot profile max_leverage cannot exceed 1, got {self.max_leverage}"
+                )
+
+        if self.short_ma >= self.long_ma:
+            errors.append(
+                f"[ma_periods_invalid] short_ma ({self.short_ma}) must be < long_ma ({self.long_ma})"
+            )
+
+        if errors:
+            raise ValueError("; ".join(errors))
+        return self
 
     @classmethod
-    def from_profile(cls, profile: str, **overrides: Any) -> BotConfig:
-        manager = ConfigManager(profile=profile, overrides=overrides, config_cls=cls)
+    def from_profile(
+        cls, profile: str, *, settings: RuntimeSettings | None = None, **overrides: Any
+    ) -> BotConfig:
+        manager = ConfigManager(
+            profile=profile,
+            overrides=overrides,
+            config_cls=cls,
+            settings=settings,
+        )
         return manager.build()
 
 
@@ -123,19 +478,33 @@ class ConfigManager:
         overrides: dict[str, Any] | None = None,
         config_cls: type[BotConfig] = BotConfig,
         auto_build: bool = True,
+        settings: RuntimeSettings | None = None,
     ) -> None:
         self.profile = profile if isinstance(profile, Profile) else Profile(profile)
         self.overrides = dict(overrides or {})
         self._config_cls = config_cls
         self._config: BotConfig | None = None
         self._last_snapshot: dict[str, Any] | None = None
+        self._settings_locked = settings is not None
+        self._settings: RuntimeSettings = settings or load_runtime_settings()
         if auto_build:
             self.build()
 
     # ----- Public API -------------------------------------------------
+    def _create_config(
+        self,
+        *,
+        metadata: dict[str, Any] | None = None,
+        **kwargs: Any,
+    ) -> BotConfig:
+        meta = dict(metadata or {})
+        meta.setdefault("_runtime_settings", self._settings)
+        return cast(BotConfig, self._config_cls(metadata=meta, **kwargs))
+
     def build(self) -> BotConfig:
         """Construct a validated configuration instance."""
 
+        self._refresh_settings_if_needed()
         config = self._build_profile_config()
         config = self._apply_overrides(config)
         config = self._post_process(config)
@@ -166,13 +535,19 @@ class ConfigManager:
         return self._config
 
     @classmethod
-    def from_config(cls, config: BotConfig) -> ConfigManager:
+    def from_config(
+        cls, config: BotConfig, settings: RuntimeSettings | None = None
+    ) -> ConfigManager:
         """Recreate a manager from an existing configuration instance."""
 
         overrides = deepcopy(config.metadata.get("overrides", {}))
         snapshot = deepcopy(config.metadata.get("config_snapshot"))
         manager = cls(
-            profile=config.profile, overrides=overrides, config_cls=type(config), auto_build=False
+            profile=config.profile,
+            overrides=overrides,
+            config_cls=type(config),
+            auto_build=False,
+            settings=settings,
         )
         manager._config = config
         if snapshot is not None:
@@ -187,47 +562,35 @@ class ConfigManager:
         if self.profile == Profile.CANARY:
             return self._build_canary_config()
         if self.profile == Profile.DEV:
-            return cast(
-                BotConfig,
-                self._config_cls(
-                    profile=self.profile,
-                    mock_broker=True,
-                    mock_fills=True,
-                    max_position_size=Decimal("10000"),
-                    dry_run=True,
-                ),
+            return self._create_config(
+                profile=self.profile,
+                mock_broker=True,
+                mock_fills=True,
+                max_position_size=Decimal("10000"),
+                dry_run=True,
             )
         if self.profile == Profile.DEMO:
-            return cast(
-                BotConfig,
-                self._config_cls(
-                    profile=self.profile,
-                    max_position_size=Decimal("100"),
-                    max_leverage=1,
-                    enable_shorts=False,
-                ),
+            return self._create_config(
+                profile=self.profile,
+                max_position_size=Decimal("100"),
+                max_leverage=1,
+                enable_shorts=False,
             )
         if self.profile == Profile.SPOT:
-            return cast(
-                BotConfig,
-                self._config_cls(
-                    profile=self.profile,
-                    max_position_size=Decimal("50000"),
-                    max_leverage=1,
-                    enable_shorts=False,
-                    mock_broker=False,
-                    mock_fills=False,
-                ),
-            )
-        # Default to production profile (perps capable)
-        return cast(
-            BotConfig,
-            self._config_cls(
+            return self._create_config(
                 profile=self.profile,
                 max_position_size=Decimal("50000"),
-                max_leverage=3,
-                enable_shorts=True,
-            ),
+                max_leverage=1,
+                enable_shorts=False,
+                mock_broker=False,
+                mock_fills=False,
+            )
+        # Default to production profile (perps capable)
+        return self._create_config(
+            profile=self.profile,
+            max_position_size=Decimal("50000"),
+            max_leverage=3,
+            enable_shorts=True,
         )
 
     def _build_canary_config(self) -> BotConfig:
@@ -280,63 +643,44 @@ class ConfigManager:
                 logger = logging.getLogger(__name__)
                 logger.debug("Failed to load canary profile YAML: %s", exc, exc_info=True)
 
-        return cast(
-            BotConfig,
-            self._config_cls(
-                profile=self.profile,
-                symbols=symbols,
-                reduce_only_mode=reduce_only,
-                max_leverage=max_leverage,
-                update_interval=update_interval,
-                dry_run=False,
-                max_position_size=Decimal("500"),
-                trading_window_start=trading_window_start,
-                trading_window_end=trading_window_end,
-                trading_days=trading_days,
-                daily_loss_limit=daily_loss_limit,
-                time_in_force=time_in_force,
-            ),
+        return self._create_config(
+            profile=self.profile,
+            symbols=symbols,
+            reduce_only_mode=reduce_only,
+            max_leverage=max_leverage,
+            update_interval=update_interval,
+            dry_run=False,
+            max_position_size=Decimal("500"),
+            trading_window_start=trading_window_start,
+            trading_window_end=trading_window_end,
+            trading_days=trading_days,
+            daily_loss_limit=daily_loss_limit,
+            time_in_force=time_in_force,
         )
 
     def _apply_overrides(self, config: BotConfig) -> BotConfig:
-        # Validate overrides before applying them
-        self._validate_overrides()
+        if not self.overrides:
+            return config
 
+        errors: list[str] = []
         for key, value in self.overrides.items():
             if value is None:
                 continue
             if self.profile == Profile.CANARY and key in self.CANARY_LOCKED_KEYS:
                 continue
-            if hasattr(config, key):
+            if not hasattr(config, key):
+                errors.append(f"Unknown configuration override '{key}'")
+                continue
+            try:
                 setattr(config, key, value)
-        return config
-
-    def _validate_overrides(self) -> None:
-        """Validate overrides before applying them."""
-        errors = []
-
-        # Validate symbols override specifically (this happens before normalization)
-        if "symbols" in self.overrides:
-            override_symbols = self.overrides.get("symbols")
-            if override_symbols is not None:
-                if not isinstance(override_symbols, (list, tuple)):
-                    errors.append("symbols overrides must be a list or tuple")
-                else:
-                    symbols_list = list(override_symbols)
-                    if not symbols_list:
-                        errors.append("symbols overrides must contain at least one symbol")
-                    else:
-                        invalid_symbols = []
-                        for i, symbol in enumerate(symbols_list):
-                            if not isinstance(symbol, str) or not symbol.strip():
-                                invalid_symbols.append(f"[{i}]: {repr(symbol)}")
-                        if invalid_symbols:
-                            errors.append(
-                                f"symbols overrides must contain only non-empty strings: {', '.join(invalid_symbols)}"
-                            )
+            except ValidationError as exc:
+                errors.extend(self._format_validation_errors(exc))
+            except (TypeError, ValueError) as exc:
+                errors.append(f"{key}: {exc}")
 
         if errors:
             raise ConfigValidationError(errors)
+        return config
 
     def _post_process(self, config: BotConfig) -> BotConfig:
         if self.profile == Profile.CANARY:
@@ -350,76 +694,28 @@ class ConfigManager:
             config.enable_shorts = False
             config.max_leverage = 1
             config.reduce_only_mode = False
-            if os.getenv("SPOT_FORCE_LIVE", "").lower() not in {"1", "true"}:
+            if not self._settings.spot_force_live:
                 logger.info("Spot profile detected; falling back to mock broker for safety")
                 config.mock_broker = True
 
-        config = self._normalize_symbols(config)
         config = self._apply_runtime_toggles(config)
 
         if (
             "enable_order_preview" not in self.overrides
             or self.overrides.get("enable_order_preview") is None
         ):
-            preview_env = os.getenv("ORDER_PREVIEW_ENABLED")
-            if preview_env is not None:
-                config.enable_order_preview = preview_env.lower() in {"1", "true", "yes"}
+            preview_flag = self._settings.order_preview_enabled
+            if preview_flag is not None:
+                config.enable_order_preview = preview_flag
 
         return config
 
     def _validate(self, config: BotConfig) -> None:
         """Validate configuration using pydantic schema."""
         try:
-            # Convert config to dict for schema validation
-            config_dict = {
-                "profile": config.profile,
-                "dry_run": config.dry_run,
-                "symbols": list(config.symbols) if config.symbols else None,
-                "derivatives_enabled": config.derivatives_enabled,
-                "update_interval": config.update_interval,
-                "short_ma": config.short_ma,
-                "long_ma": config.long_ma,
-                "target_leverage": config.target_leverage,
-                "trailing_stop_pct": config.trailing_stop_pct,
-                "enable_shorts": config.enable_shorts,
-                "max_position_size": config.max_position_size,
-                "max_leverage": config.max_leverage,
-                "reduce_only_mode": config.reduce_only_mode,
-                "mock_broker": config.mock_broker,
-                "mock_fills": config.mock_fills,
-                "enable_order_preview": config.enable_order_preview,
-                "account_telemetry_interval": config.account_telemetry_interval,
-                "trading_window_start": config.trading_window_start,
-                "trading_window_end": config.trading_window_end,
-                "trading_days": config.trading_days,
-                "daily_loss_limit": config.daily_loss_limit,
-                "time_in_force": config.time_in_force,
-                "perps_enable_streaming": config.perps_enable_streaming,
-                "perps_stream_level": config.perps_stream_level,
-                "perps_paper_trading": config.perps_paper_trading,
-                "perps_force_mock": config.perps_force_mock,
-                "perps_position_fraction": config.perps_position_fraction,
-                "perps_skip_startup_reconcile": config.perps_skip_startup_reconcile,
-            }
-
-            # Validate with pydantic schema
-            BotConfigSchema(**config_dict)
-
-        except Exception as e:
-            # Extract all validation errors
-            errors = []
-            if hasattr(e, "errors"):
-                # Pydantic v2 error format
-                for error in e.errors():
-                    field_path = ".".join(str(loc) for loc in error["loc"])
-                    message = error["msg"]
-                    errors.append(f"{field_path}: {message}")
-            else:
-                # Fallback for other validation errors
-                errors.append(str(e))
-
-            if errors:
-                raise ConfigValidationError(errors)
+            self._config_cls.model_validate(config.model_dump())
+        except ValidationError as exc:
+            raise ConfigValidationError(self._format_validation_errors(exc))
 
     def validate_config_dict(self, config_dict: dict[str, Any]) -> ConfigValidationResult:
         """Validate a configuration dictionary using pydantic schema.
@@ -427,69 +723,28 @@ class ConfigManager:
         Returns detailed validation results instead of raising exceptions.
         """
         try:
-            BotConfigSchema(**config_dict)
+            self._config_cls.model_validate(config_dict)
             return ConfigValidationResult(is_valid=True)
-        except Exception as e:
-            errors = []
-            warnings = []
-
-            if hasattr(e, "errors"):
-                # Pydantic v2 error format
-                for error in e.errors():
-                    field_path = ".".join(str(loc) for loc in error["loc"])
-                    message = error["msg"]
-                    errors.append(f"{field_path}: {message}")
-            else:
-                errors.append(str(e))
-
-            return ConfigValidationResult(is_valid=False, errors=errors, warnings=warnings)
-
-    def _normalize_symbols(self, config: BotConfig) -> BotConfig:
-        try:
-            normalized, allow_derivatives = normalize_symbols(config.profile, config.symbols)
-        except Exception as exc:  # pragma: no cover - defensive logging
-            logger.warning("Failed to normalize symbol list: %s", exc, exc_info=True)
-            normalized = list(config.symbols or [])
-            allow_derivatives = _resolve_derivatives_enabled(config.profile)
-
-        config.symbols = list(normalized)
-        config.derivatives_enabled = bool(allow_derivatives)
-        return config
+        except ValidationError as exc:
+            errors = self._format_validation_errors(exc)
+            return ConfigValidationResult(is_valid=False, errors=errors, warnings=[])
 
     def _apply_runtime_toggles(self, config: BotConfig) -> BotConfig:
-        def _flag(name: str) -> bool:
-            return os.getenv(name, "").lower() in {"1", "true", "yes"}
+        settings = self._settings
 
-        config.perps_enable_streaming = _flag("PERPS_ENABLE_STREAMING")
+        config.perps_enable_streaming = settings.perps_enable_streaming
+        config.perps_stream_level = settings.perps_stream_level
 
-        stream_level_raw = os.getenv("PERPS_STREAM_LEVEL")
-        try:
-            config.perps_stream_level = int(stream_level_raw) if stream_level_raw else 1
-        except (TypeError, ValueError):
-            logger.warning("Invalid PERPS_STREAM_LEVEL=%s; defaulting to 1", stream_level_raw)
-            config.perps_stream_level = 1
-
-        config.perps_paper_trading = _flag("PERPS_PAPER")
-        config.perps_force_mock = _flag("PERPS_FORCE_MOCK")
-        config.perps_skip_startup_reconcile = _flag("PERPS_SKIP_RECONCILE")
-
-        position_fraction_raw = os.getenv("PERPS_POSITION_FRACTION")
-        if position_fraction_raw:
-            try:
-                config.perps_position_fraction = float(position_fraction_raw)
-            except (TypeError, ValueError):
-                logger.warning(
-                    "Invalid PERPS_POSITION_FRACTION=%s; ignoring override",
-                    position_fraction_raw,
-                )
-                config.perps_position_fraction = None
-        else:
-            config.perps_position_fraction = None
+        config.perps_paper_trading = settings.perps_paper_trading
+        config.perps_force_mock = settings.perps_force_mock
+        config.perps_skip_startup_reconcile = settings.perps_skip_startup_reconcile
+        config.perps_position_fraction = settings.perps_position_fraction
 
         return config
 
     def _capture_snapshot(self) -> dict[str, Any]:
-        env_snapshot = {key: os.getenv(key) for key in self.ENVIRONMENT_KEYS}
+        snapshot_settings = self._settings if self._settings_locked else load_runtime_settings()
+        env_snapshot = snapshot_settings.snapshot_env(self.ENVIRONMENT_KEYS)
         env_snapshot["profile"] = self.profile.value
 
         overrides_snapshot = {
@@ -524,3 +779,40 @@ class ConfigManager:
         if isinstance(value, dict):
             return {k: ConfigManager._normalize_snapshot_value(v) for k, v in value.items()}
         return value
+
+    @staticmethod
+    def _format_validation_errors(exc: ValidationError) -> list[str]:
+        errors: list[str] = []
+        for error in exc.errors():
+            loc = error.get("loc", ())
+            field_path = ".".join(str(item) for item in loc)
+            message = error.get("msg", "")
+            if field_path:
+                errors.append(f"{field_path}: {message}")
+            else:
+                errors.append(message or str(exc))
+        if not errors:
+            errors.append(str(exc))
+        return errors
+
+    def _refresh_settings_if_needed(self) -> None:
+        if not self._settings_locked:
+            self._settings = load_runtime_settings()
+
+
+class ConfigValidationResult(BaseModel):
+    """Result of configuration validation."""
+
+    is_valid: bool
+    errors: list[str] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
+
+    @property
+    def has_errors(self) -> bool:
+        """Check if validation failed."""
+        return bool(self.errors)
+
+    @property
+    def has_warnings(self) -> bool:
+        """Check if there are validation warnings."""
+        return bool(self.warnings)

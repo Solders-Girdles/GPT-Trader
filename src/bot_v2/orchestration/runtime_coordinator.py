@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import logging
-import os
 from collections.abc import Sequence
 from dataclasses import dataclass
+from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from bot_v2.config.live_trade_config import RiskConfig
@@ -14,6 +14,7 @@ from bot_v2.orchestration.broker_factory import create_brokerage
 from bot_v2.orchestration.configuration import DEFAULT_SPOT_RISK_PATH, Profile
 from bot_v2.orchestration.deterministic_broker import DeterministicBroker
 from bot_v2.orchestration.order_reconciler import OrderReconciler
+from bot_v2.orchestration.runtime_settings import RuntimeSettings, load_runtime_settings
 from bot_v2.utilities.telemetry import emit_metric
 
 if TYPE_CHECKING:  # pragma: no cover - type checking only
@@ -109,6 +110,14 @@ class RuntimeCoordinator:
             products=products,
         )
 
+    def _resolve_settings(self) -> RuntimeSettings:
+        settings = self._bot.registry.runtime_settings
+        if settings is not None:
+            return settings
+        resolved = load_runtime_settings()
+        self._bot.registry = self._bot.registry.with_updates(runtime_settings=resolved)
+        return resolved
+
     def _apply_broker_bootstrap(self, artifacts: BrokerBootstrapArtifacts) -> None:
         bot = self._bot
         bot.broker = artifacts.broker
@@ -128,16 +137,17 @@ class RuntimeCoordinator:
 
     def _validate_broker_environment(self) -> None:
         bot = self._bot
+        settings = self._resolve_settings()
 
         if self._should_use_mock_broker():
             logger.info("Paper/mock mode enabled — skipping production env checks")
             return
 
-        broker = os.getenv("BROKER", "").lower()
+        broker = settings.broker_hint or ""
         if broker != "coinbase":
             raise RuntimeError("BROKER must be set to 'coinbase' for perps trading")
 
-        if os.getenv("COINBASE_SANDBOX", "0") == "1":
+        if settings.coinbase_sandbox_enabled:
             raise RuntimeError(
                 "COINBASE_SANDBOX=1 is not supported for live trading. Remove it or enable PERPS_PAPER=1."
             )
@@ -152,10 +162,11 @@ class RuntimeCoordinator:
                     )
 
             api_key_present = any(
-                os.getenv(env) for env in ("COINBASE_API_KEY", "COINBASE_PROD_API_KEY")
+                settings.raw_env.get(env) for env in ("COINBASE_API_KEY", "COINBASE_PROD_API_KEY")
             )
             api_secret_present = any(
-                os.getenv(env) for env in ("COINBASE_API_SECRET", "COINBASE_PROD_API_SECRET")
+                settings.raw_env.get(env)
+                for env in ("COINBASE_API_SECRET", "COINBASE_PROD_API_SECRET")
             )
             if not (api_key_present and api_secret_present):
                 raise RuntimeError(
@@ -164,15 +175,16 @@ class RuntimeCoordinator:
                 )
             return
 
-        api_mode = os.getenv("COINBASE_API_MODE", "advanced").lower()
+        api_mode = settings.coinbase_api_mode
         if api_mode != "advanced":
             raise RuntimeError(
                 "Perpetuals require Advanced Trade API in production. "
                 "Set COINBASE_API_MODE=advanced and unset COINBASE_SANDBOX, or set PERPS_PAPER=1 for mock mode."
             )
 
-        cdp_key = os.getenv("COINBASE_PROD_CDP_API_KEY") or os.getenv("COINBASE_CDP_API_KEY")
-        cdp_priv = os.getenv("COINBASE_PROD_CDP_PRIVATE_KEY") or os.getenv(
+        raw_env = settings.raw_env
+        cdp_key = raw_env.get("COINBASE_PROD_CDP_API_KEY") or raw_env.get("COINBASE_CDP_API_KEY")
+        cdp_priv = raw_env.get("COINBASE_PROD_CDP_PRIVATE_KEY") or raw_env.get(
             "COINBASE_CDP_PRIVATE_KEY"
         )
         if not (cdp_key and cdp_priv):
@@ -193,8 +205,9 @@ class RuntimeCoordinator:
             bot.risk_manager.set_reduce_only_mode(controller.reduce_only_mode, reason="config_init")
             return
 
-        env_risk_config_path = os.getenv("RISK_CONFIG_PATH")
-        resolved_risk_path = env_risk_config_path
+        settings = self._resolve_settings()
+        env_risk_config_path = settings.risk_config_path
+        resolved_risk_path = str(env_risk_config_path) if env_risk_config_path else None
         if not resolved_risk_path and bot.config.profile in {
             Profile.SPOT,
             Profile.DEV,
@@ -204,9 +217,10 @@ class RuntimeCoordinator:
                 resolved_risk_path = str(DEFAULT_SPOT_RISK_PATH)
                 logger.info("Loading spot risk profile from %s", resolved_risk_path)
 
+        path_obj: Path | None = Path(resolved_risk_path) if resolved_risk_path else None
         try:
-            if resolved_risk_path and os.path.exists(resolved_risk_path):
-                risk_config = RiskConfig.from_json(resolved_risk_path)
+            if path_obj and path_obj.exists():
+                risk_config = RiskConfig.from_json(str(path_obj))
             else:
                 risk_config = RiskConfig.from_env()
         except Exception:

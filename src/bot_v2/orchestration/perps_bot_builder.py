@@ -5,11 +5,11 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from bot_v2.monitoring.configuration_guardian import ConfigurationGuardian
 from bot_v2.orchestration.config_controller import ConfigController
 from bot_v2.orchestration.configuration import BotConfig
 from bot_v2.orchestration.perps_bootstrap import prepare_perps_bot
 from bot_v2.orchestration.perps_bot import PerpsBot
+from bot_v2.orchestration.runtime_settings import RuntimeSettings, load_runtime_settings
 from bot_v2.orchestration.service_registry import ServiceRegistry
 from bot_v2.orchestration.session_guard import TradingSessionGuard
 
@@ -22,6 +22,7 @@ class PerpsBotBuilder:
     def __init__(self) -> None:
         self._config: BotConfig | None = None
         self._registry: ServiceRegistry | None = None
+        self._settings: RuntimeSettings | None = None
 
     def with_config(self, config: BotConfig) -> PerpsBotBuilder:
         self._config = config
@@ -31,14 +32,30 @@ class PerpsBotBuilder:
         self._registry = registry
         return self
 
+    def with_settings(self, settings: RuntimeSettings) -> PerpsBotBuilder:
+        self._settings = settings
+        return self
+
     def build(self) -> PerpsBot:
         if self._config is None:
             raise ValueError("Configuration must be supplied before building the bot")
 
-        bootstrap_result = prepare_perps_bot(self._config, self._registry)
+        settings = self._settings
+        if settings is None and self._registry is not None:
+            settings = self._registry.runtime_settings
+        if settings is None:
+            settings = load_runtime_settings()
+
+        bootstrap_result = prepare_perps_bot(
+            self._config,
+            self._registry,
+            settings=settings,
+        )
         registry = bootstrap_result.registry
 
-        config_controller = ConfigController(bootstrap_result.config)
+        config_controller = ConfigController(
+            bootstrap_result.config, settings=bootstrap_result.settings
+        )
         config = config_controller.current
         if registry.config is not config:
             registry = registry.with_updates(config=config)
@@ -53,6 +70,8 @@ class PerpsBotBuilder:
             config,
             getattr(config, "derivatives_enabled", False),
         )
+
+        from bot_v2.monitoring.configuration_guardian import ConfigurationGuardian
 
         bot = PerpsBot(
             config_controller=config_controller,
@@ -84,6 +103,8 @@ def create_perps_bot(
     builder = PerpsBotBuilder().with_config(config)
     if registry is not None:
         builder = builder.with_registry(registry)
+        if registry.runtime_settings is not None:
+            builder = builder.with_settings(registry.runtime_settings)
     return builder.build()
 
 

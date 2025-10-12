@@ -5,23 +5,18 @@ Broker factory to instantiate brokerage adapters based on config/env.
 from __future__ import annotations
 
 import logging
-import os
 from typing import Literal, cast
 
 from bot_v2.config import get_config
-from bot_v2.features.brokerages.coinbase import CoinbaseBrokerage
 from bot_v2.features.brokerages.coinbase.market_data_service import MarketDataService
 from bot_v2.features.brokerages.coinbase.models import APIConfig
 from bot_v2.features.brokerages.coinbase.utilities import ProductCatalog
 from bot_v2.features.brokerages.core.interfaces import IBrokerage
+from bot_v2.orchestration.runtime_settings import RuntimeSettings, load_runtime_settings
 from bot_v2.orchestration.service_registry import ServiceRegistry
 from bot_v2.persistence.event_store import EventStore
 
 logger = logging.getLogger(__name__)
-
-
-def _env(key: str, default: str | None = None) -> str | None:
-    return os.getenv(key, default)
 
 
 def create_brokerage(
@@ -30,6 +25,7 @@ def create_brokerage(
     event_store: EventStore | None = None,
     market_data: MarketDataService | None = None,
     product_catalog: ProductCatalog | None = None,
+    settings: RuntimeSettings | None = None,
 ) -> tuple[IBrokerage, EventStore, MarketDataService, ProductCatalog]:
     """Create a brokerage adapter based on configuration.
 
@@ -45,17 +41,30 @@ def create_brokerage(
       - COINBASE_SANDBOX ("1" enables sandbox base URL)
       - COINBASE_API_MODE ("advanced" or "exchange" - auto-detected if not set)
     """
-    broker_value = _env("BROKER") or get_config("system").get("broker") or "coinbase"
+    runtime_settings = (
+        settings
+        or (registry.runtime_settings if registry is not None else None)
+        or load_runtime_settings()
+    )
+
+    raw_env = runtime_settings.raw_env
+
+    def env(key: str, default: str | None = None) -> str | None:
+        value = raw_env.get(key)
+        return value if value is not None else default
+
+    broker_value = env("BROKER") or get_config("system").get("broker") or "coinbase"
     broker = broker_value.lower()
 
     if broker == "coinbase":
-        sandbox = _env("COINBASE_SANDBOX", "0") == "1"
+
+        sandbox = env("COINBASE_SANDBOX", "0") == "1"
 
         # Determine API mode - sandbox ALWAYS uses exchange mode
         if sandbox:
             api_mode: str = "exchange"
         else:
-            api_mode = _env("COINBASE_API_MODE") or "advanced"
+            api_mode = env("COINBASE_API_MODE") or "advanced"
 
         # If not explicitly set, determine based on sandbox and base URL
         if not api_mode:
@@ -72,7 +81,7 @@ def create_brokerage(
                 api_mode = "advanced"
 
         # Set base URL based on mode and sandbox
-        base_url = _env("COINBASE_API_BASE")
+        base_url = env("COINBASE_API_BASE")
         if not base_url:
             if api_mode == "exchange":
                 base_url = (
@@ -89,7 +98,7 @@ def create_brokerage(
                 base_url = "https://api.coinbase.com"
 
         # Set WebSocket URL based on mode
-        ws_url = _env("COINBASE_WS_URL")
+        ws_url = env("COINBASE_WS_URL")
         if not ws_url:
             if api_mode == "exchange":
                 ws_url = (
@@ -101,18 +110,18 @@ def create_brokerage(
                 ws_url = "wss://advanced-trade-ws.coinbase.com"
 
         # Determine auth type based on API mode
-        cdp_api_key = _env("COINBASE_CDP_API_KEY")
-        cdp_private_key = _env("COINBASE_CDP_PRIVATE_KEY")
+        cdp_api_key = env("COINBASE_CDP_API_KEY")
+        cdp_private_key = env("COINBASE_CDP_PRIVATE_KEY")
 
         if api_mode == "exchange":
             auth_type: str = "HMAC"
         elif cdp_api_key and cdp_private_key:
             auth_type = "JWT"
         else:
-            auth_type = _env("COINBASE_AUTH_TYPE") or "HMAC"
+            auth_type = env("COINBASE_AUTH_TYPE") or "HMAC"
 
         # Validate auth requirements for exchange mode
-        if api_mode == "exchange" and not _env("COINBASE_API_PASSPHRASE"):
+        if api_mode == "exchange" and not env("COINBASE_API_PASSPHRASE"):
             logger.warning(
                 "Exchange API mode requires passphrase for HMAC auth. "
                 "Set COINBASE_API_PASSPHRASE environment variable."
@@ -120,19 +129,19 @@ def create_brokerage(
 
         # Choose credential set based on environment
         if sandbox:
-            api_key = _env("COINBASE_SANDBOX_API_KEY") or _env("COINBASE_API_KEY", "")
-            api_secret = _env("COINBASE_SANDBOX_API_SECRET") or _env("COINBASE_API_SECRET", "")
-            passphrase = _env("COINBASE_SANDBOX_API_PASSPHRASE") or _env("COINBASE_API_PASSPHRASE")
-            cdp_api_key = _env(
+            api_key = env("COINBASE_SANDBOX_API_KEY") or env("COINBASE_API_KEY", "")
+            api_secret = env("COINBASE_SANDBOX_API_SECRET") or env("COINBASE_API_SECRET", "")
+            passphrase = env("COINBASE_SANDBOX_API_PASSPHRASE") or env("COINBASE_API_PASSPHRASE")
+            cdp_api_key = env(
                 "COINBASE_CDP_API_KEY"
             )  # Sandbox does not support AT; keep for completeness
-            cdp_private_key = _env("COINBASE_CDP_PRIVATE_KEY")
+            cdp_private_key = env("COINBASE_CDP_PRIVATE_KEY")
         else:
-            api_key = _env("COINBASE_PROD_API_KEY") or _env("COINBASE_API_KEY") or ""
-            api_secret = _env("COINBASE_PROD_API_SECRET") or _env("COINBASE_API_SECRET") or ""
-            passphrase = _env("COINBASE_PROD_API_PASSPHRASE") or _env("COINBASE_API_PASSPHRASE")
-            cdp_api_key = _env("COINBASE_PROD_CDP_API_KEY") or _env("COINBASE_CDP_API_KEY")
-            cdp_private_key = _env("COINBASE_PROD_CDP_PRIVATE_KEY") or _env(
+            api_key = env("COINBASE_PROD_API_KEY") or env("COINBASE_API_KEY") or ""
+            api_secret = env("COINBASE_PROD_API_SECRET") or env("COINBASE_API_SECRET") or ""
+            passphrase = env("COINBASE_PROD_API_PASSPHRASE") or env("COINBASE_API_PASSPHRASE")
+            cdp_api_key = env("COINBASE_PROD_CDP_API_KEY") or env("COINBASE_CDP_API_KEY")
+            cdp_private_key = env("COINBASE_PROD_CDP_PRIVATE_KEY") or env(
                 "COINBASE_CDP_PRIVATE_KEY"
             )
 
@@ -143,7 +152,7 @@ def create_brokerage(
             base_url=base_url,
             sandbox=sandbox,
             ws_url=ws_url,
-            enable_derivatives=_env("COINBASE_ENABLE_DERIVATIVES", "0") == "1",
+            enable_derivatives=runtime_settings.coinbase_enable_derivatives,
             cdp_api_key=cdp_api_key,
             cdp_private_key=cdp_private_key,
             auth_type=auth_type,
@@ -171,12 +180,26 @@ def create_brokerage(
             or ProductCatalog(ttl_seconds=900)
         )
 
-        brokerage = CoinbaseBrokerage(
+        broker_cls = globals().get("CoinbaseBrokerage")
+        if broker_cls is None:
+            broker_cls = __getattr__("CoinbaseBrokerage")
+
+        brokerage = broker_cls(
             api_config,
             event_store=broker_event_store,
             market_data=broker_market_data,
             product_catalog=broker_product_catalog,
+            settings=runtime_settings,
         )
         return brokerage, broker_event_store, broker_market_data, broker_product_catalog
 
     raise ValueError(f"Unsupported broker: {broker}")
+
+
+def __getattr__(name: str):
+    if name == "CoinbaseBrokerage":
+        from bot_v2.features.brokerages.coinbase import CoinbaseBrokerage as _CoinbaseBrokerage
+
+        globals()["CoinbaseBrokerage"] = _CoinbaseBrokerage
+        return _CoinbaseBrokerage
+    raise AttributeError(name)

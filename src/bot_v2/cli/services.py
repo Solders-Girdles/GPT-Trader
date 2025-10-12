@@ -2,16 +2,26 @@
 
 from __future__ import annotations
 
-import os
 from argparse import Namespace
 from collections.abc import Iterable
 
 from bot_v2.orchestration.bootstrap import build_bot
 from bot_v2.orchestration.configuration import BotConfig
 from bot_v2.orchestration.perps_bot import PerpsBot
+from bot_v2.orchestration.runtime_settings import RuntimeSettings, load_runtime_settings
 
 DEFAULT_SKIP_KEYS = {"profile", "command", "handler"}
 ALIAS_KEYS = {"interval": "update_interval"}
+
+OVERRIDE_SETTINGS: RuntimeSettings | None = None
+
+
+def _resolve_settings(settings: RuntimeSettings | None) -> RuntimeSettings:
+    if settings is not None:
+        return settings
+    if OVERRIDE_SETTINGS is not None:
+        return OVERRIDE_SETTINGS
+    return load_runtime_settings()
 
 
 def build_config_from_args(
@@ -19,7 +29,10 @@ def build_config_from_args(
     *,
     include: Iterable[str] | None = None,
     skip: Iterable[str] | None = None,
+    settings: RuntimeSettings | None = None,
 ) -> BotConfig:
+    runtime_settings = _resolve_settings(settings)
+
     skip_set = set(DEFAULT_SKIP_KEYS)
     if skip:
         skip_set.update(skip)
@@ -38,8 +51,9 @@ def build_config_from_args(
         if alias in overrides and target not in overrides:
             overrides[target] = overrides.pop(alias)
 
-    if "symbols" not in overrides or not overrides.get("symbols"):
-        env_symbols = os.getenv("TRADING_SYMBOLS", "")
+    allow_env_symbols = not overrides.get("symbols")
+    if allow_env_symbols:
+        env_symbols = runtime_settings.raw_env.get("TRADING_SYMBOLS", "")
         if env_symbols:
             tokens = [
                 tok.strip() for tok in env_symbols.replace(";", ",").split(",") if tok.strip()
@@ -48,7 +62,7 @@ def build_config_from_args(
                 overrides["symbols"] = tokens
 
     profile = getattr(args, "profile", "dev")
-    return BotConfig.from_profile(profile, **overrides)
+    return BotConfig.from_profile(profile, settings=runtime_settings, **overrides)
 
 
 def instantiate_bot(config: BotConfig) -> PerpsBot:

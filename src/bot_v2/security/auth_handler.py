@@ -5,7 +5,6 @@ Implements JWT-based authentication with RBAC, MFA support, and secure session m
 """
 
 import logging
-import os
 import secrets
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
@@ -16,6 +15,8 @@ from typing import Any
 import jwt
 import pyotp
 from jwt import PyJWTError
+
+from bot_v2.orchestration.runtime_settings import RuntimeSettings, load_runtime_settings
 
 logger = logging.getLogger(__name__)
 
@@ -74,15 +75,18 @@ class AuthHandler:
         Role.SERVICE: ["data:read", "signals:write", "health:read"],
     }
 
-    def __init__(self) -> None:
+    def __init__(self, *, settings: RuntimeSettings | None = None) -> None:
         self._lock = Lock()
         self._users = {}  # In production, use database
         self._sessions = {}  # Active sessions
         self._revoked_tokens = set()  # Revoked token JTIs
 
+        self._settings = settings or load_runtime_settings()
+        env_map = self._settings.raw_env
+
         # JWT configuration
         self.algorithm = "HS256"  # Using HS256 for simplicity, RS256 requires key pair
-        self.secret_key = os.environ.get("JWT_SECRET_KEY", secrets.token_urlsafe(32))
+        self.secret_key = env_map.get("JWT_SECRET_KEY") or secrets.token_urlsafe(32)
         self.issuer = "bot-v2-trading-system"
         self.audience = ["trading-api", "dashboard"]
         self.access_token_lifetime = 900  # 15 minutes
@@ -93,7 +97,8 @@ class AuthHandler:
 
     def _create_default_users(self) -> None:
         """Create default users for development"""
-        if os.environ.get("ENV", "development") == "development":
+        environment = (self._settings.raw_env.get("ENV") or "development").lower()
+        if environment == "development":
             admin_user = User(
                 id="admin-001",
                 username="admin",

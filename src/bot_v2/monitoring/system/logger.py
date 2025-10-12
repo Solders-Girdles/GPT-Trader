@@ -11,13 +11,13 @@ Features:
 
 import json
 import logging
-import os
 import threading
 import time
 import uuid
 from enum import Enum
 from typing import Any
 
+from bot_v2.orchestration.runtime_settings import RuntimeSettings, load_runtime_settings
 from bot_v2.utilities import utc_now_iso
 
 
@@ -43,7 +43,13 @@ _LEVEL_MAP = {
 class ProductionLogger:
     """High-performance production logger with structured JSON output."""
 
-    def __init__(self, service_name: str = "bot_v2", enable_console: bool = True) -> None:
+    def __init__(
+        self,
+        service_name: str = "bot_v2",
+        enable_console: bool = True,
+        *,
+        settings: RuntimeSettings | None = None,
+    ) -> None:
         """
         Initialize production logger.
 
@@ -52,8 +58,9 @@ class ProductionLogger:
             enable_console: Whether to print to console (disable for production)
         """
         self.service_name = service_name
+        self._settings = settings or load_runtime_settings()
         # Allow env var to override console logging to avoid noisy prod
-        env_console = os.getenv("PERPS_JSON_CONSOLE")
+        env_console = self._settings.raw_env.get("PERPS_JSON_CONSOLE")
         if env_console is not None:
             enable_console = env_console.strip().lower() in ("1", "true", "yes", "on")
         self.enable_console = enable_console
@@ -68,8 +75,8 @@ class ProductionLogger:
         self._max_recent_logs = 1000
         self._lock = threading.Lock()
         # Minimum level filter
-        self._min_level = os.getenv("PERPS_MIN_LOG_LEVEL", "info").lower()
-        if os.getenv("PERPS_DEBUG") in ("1", "true", "yes", "on"):
+        self._min_level = (self._settings.raw_env.get("PERPS_MIN_LOG_LEVEL") or "info").lower()
+        if (self._settings.raw_env.get("PERPS_DEBUG") or "").lower() in {"1", "true", "yes", "on"}:
             self._min_level = "debug"
         # Python logger for JSON lines; handlers configured in bot_v2.logging_setup
         self._py_json_logger = logging.getLogger(f"{self.service_name}.json")
@@ -607,13 +614,19 @@ class ProductionLogger:
 _logger: ProductionLogger | None = None
 
 
-def get_logger(service_name: str = "bot_v2", enable_console: bool = True) -> ProductionLogger:
+def get_logger(
+    service_name: str = "bot_v2",
+    enable_console: bool = True,
+    *,
+    settings: RuntimeSettings | None = None,
+) -> ProductionLogger:
     """
     Get or create global logger instance.
 
     Args:
         service_name: Service name for logging
         enable_console: Whether to enable console output
+        settings: Runtime settings snapshot to control logging behaviour
 
     Returns:
         ProductionLogger instance
@@ -621,7 +634,7 @@ def get_logger(service_name: str = "bot_v2", enable_console: bool = True) -> Pro
     global _logger
 
     if _logger is None:
-        _logger = ProductionLogger(service_name, enable_console)
+        _logger = ProductionLogger(service_name, enable_console, settings=settings)
 
     return _logger
 

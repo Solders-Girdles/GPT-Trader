@@ -2,16 +2,15 @@
 
 from __future__ import annotations
 
-import os
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
-from bot_v2.config.path_registry import RUNTIME_DATA_DIR
 from bot_v2.persistence.event_store import EventStore
 from bot_v2.persistence.orders_store import OrdersStore
 
 from .configuration import TOP_VOLUME_BASES, BotConfig, Profile
+from .runtime_settings import RuntimeSettings, load_runtime_settings
 from .service_registry import ServiceRegistry, empty_registry
 from .symbols import PERPS_ALLOWLIST, normalize_symbol_list
 
@@ -42,23 +41,23 @@ class PerpsBootstrapResult:
     runtime_paths: RuntimePaths
     event_store: EventStore
     orders_store: OrdersStore
+    settings: RuntimeSettings
     logs: list[BootstrapLogRecord]
 
 
 def normalise_symbols(
     requested: Sequence[str] | None,
     *,
-    derivatives_enabled: bool,
-    default_quote: str,
+    settings: RuntimeSettings,
     allowed_perps: Iterable[str] = PERPS_ALLOWLIST,
     fallback_bases: Sequence[str] = TOP_VOLUME_BASES,
 ) -> tuple[list[str], list[BootstrapLogRecord]]:
     """Return canonical symbol list for the configured runtime."""
 
-    symbol_quote = default_quote.upper()
+    symbol_quote = settings.coinbase_default_quote
     normalised, records = normalize_symbol_list(
         requested,
-        allow_derivatives=derivatives_enabled,
+        allow_derivatives=settings.coinbase_enable_derivatives,
         quote=symbol_quote,
         allowed_perps=allowed_perps,
         fallback_bases=fallback_bases,
@@ -72,19 +71,16 @@ def normalise_symbols(
 
 def resolve_runtime_paths(
     profile: Profile,
-    env: Mapping[str, str] | None = None,
+    settings: RuntimeSettings,
 ) -> RuntimePaths:
     """Determine and materialise storage directories for the bot."""
 
-    env_map: Mapping[str, str] = env or os.environ
-
-    runtime_root = Path(env_map.get("GPT_TRADER_RUNTIME_ROOT", str(RUNTIME_DATA_DIR)))
+    runtime_root = settings.runtime_root
     storage_dir = runtime_root / f"perps_bot/{profile.value}"
     storage_dir.mkdir(parents=True, exist_ok=True)
 
-    event_root = env_map.get("EVENT_STORE_ROOT")
-    if event_root:
-        event_store_root = Path(event_root)
+    event_store_root = settings.event_store_root_override
+    if event_store_root:
         if "perps_bot" not in set(event_store_root.parts):
             event_store_root = event_store_root / "perps_bot" / profile.value
     else:
@@ -99,28 +95,74 @@ def prepare_perps_bot(
     registry: ServiceRegistry | None = None,
     *,
     env: Mapping[str, str] | None = None,
+    settings: RuntimeSettings | None = None,
 ) -> PerpsBootstrapResult:
     """Prepare directories and registry dependencies for :class:`PerpsBot`."""
 
-    env_map: Mapping[str, str]
-    if env is None:
-        env_map = os.environ
+    if settings is None:
+        if registry is not None and registry.runtime_settings is not None:
+            settings = registry.runtime_settings
+        else:
+            settings = load_runtime_settings(env)
+
+    metadata = dict(config.metadata)
+    existing_overrides_raw = metadata.get("symbol_normalization_overrides")
+    overrides = dict(existing_overrides_raw) if isinstance(existing_overrides_raw, dict) else {}
+    metadata_changed = False
+
+    if settings.coinbase_default_quote_overridden:
+        if overrides.get("quote") != settings.coinbase_default_quote:
+            overrides["quote"] = settings.coinbase_default_quote
+            metadata_changed = True
+
+    if settings.coinbase_enable_derivatives_overridden:
+        allow_override = settings.coinbase_enable_derivatives
+        if overrides.get("allow_derivatives") != allow_override:
+            overrides["allow_derivatives"] = allow_override
+            metadata_changed = True
+
+    cleaned_overrides = {key: value for key, value in overrides.items() if value is not None}
+
+    current_overrides = (
+        dict(existing_overrides_raw) if isinstance(existing_overrides_raw, dict) else {}
+    )
+
+    if cleaned_overrides:
+        if current_overrides != cleaned_overrides:
+            metadata["symbol_normalization_overrides"] = cleaned_overrides
+            metadata_changed = True
     else:
-        env_map = env
+        if existing_overrides_raw is not None:
+            metadata.pop("symbol_normalization_overrides", None)
+            metadata_changed = True
 
-    derivatives_enabled = (
-        config.profile != Profile.SPOT and env_map.get("COINBASE_ENABLE_DERIVATIVES", "0") == "1"
-    )
-    default_quote = env_map.get("COINBASE_DEFAULT_QUOTE", "USD").upper()
+    if metadata_changed:
+        raw_config = config.model_dump()
+        raw_config["metadata"] = metadata
+        rebuilt = config.__class__.model_validate(raw_config)
+        for field_name in config.model_fields:
+            object.__setattr__(config, field_name, getattr(rebuilt, field_name))
+        metadata = dict(config.metadata)
 
-    symbols, logs = normalise_symbols(
-        config.symbols,
-        derivatives_enabled=derivatives_enabled,
-        default_quote=default_quote,
-    )
-    config.symbols = list(symbols)
+    normalization_log_payload = config.metadata.get("symbol_normalization_logs", [])
+    if normalization_log_payload:
+        logs = [
+            BootstrapLogRecord(
+                level=int(entry.get("level", 20)),
+                message=str(entry.get("message", "")),
+                args=tuple(entry.get("args", ())),
+            )
+            for entry in normalization_log_payload
+            if isinstance(entry, dict)
+        ]
+    else:
+        _, fallback_logs = normalise_symbols(config.symbols, settings=settings)
+        logs = [
+            BootstrapLogRecord(level=record.level, message=record.message, args=record.args)
+            for record in fallback_logs
+        ]
 
-    runtime_paths = resolve_runtime_paths(config.profile, env_map)
+    runtime_paths = resolve_runtime_paths(config.profile, settings)
 
     prepared_registry = registry or empty_registry(config)
     if prepared_registry.config is not config:
@@ -136,12 +178,15 @@ def prepare_perps_bot(
         orders_store = OrdersStore(storage_path=runtime_paths.storage_dir)
         prepared_registry = prepared_registry.with_updates(orders_store=orders_store)
 
+    prepared_registry = prepared_registry.with_updates(runtime_settings=settings)
+
     return PerpsBootstrapResult(
         config=config,
         registry=prepared_registry,
         runtime_paths=runtime_paths,
         event_store=event_store,
         orders_store=orders_store,
+        settings=settings,
         logs=logs,
     )
 

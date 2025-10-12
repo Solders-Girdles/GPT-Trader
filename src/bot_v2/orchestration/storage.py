@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-import os
 from dataclasses import dataclass
 from pathlib import Path
 
-from bot_v2.config.path_registry import RUNTIME_DATA_DIR
 from bot_v2.orchestration.configuration import BotConfig
+from bot_v2.orchestration.runtime_settings import RuntimeSettings, load_runtime_settings
 from bot_v2.orchestration.service_registry import ServiceRegistry
 from bot_v2.persistence.event_store import EventStore
 from bot_v2.persistence.orders_store import OrdersStore
@@ -31,13 +30,13 @@ class StorageBootstrapper:
 
     def bootstrap(self) -> StorageContext:
         profile = self._config.profile.value
-        runtime_root = Path(os.environ.get("GPT_TRADER_RUNTIME_ROOT", str(RUNTIME_DATA_DIR)))
+        settings = self._resolve_settings()
+        runtime_root = settings.runtime_root
         storage_dir = runtime_root / f"perps_bot/{profile}"
         storage_dir.mkdir(parents=True, exist_ok=True)
 
-        event_root_env = os.environ.get("EVENT_STORE_ROOT")
-        if event_root_env:
-            event_store_root = Path(event_root_env)
+        event_store_root = settings.event_store_root_override
+        if event_store_root:
             if "perps_bot" not in set(event_store_root.parts):
                 event_store_root = event_store_root / "perps_bot" / profile
         else:
@@ -45,6 +44,8 @@ class StorageBootstrapper:
         event_store_root.mkdir(parents=True, exist_ok=True)
 
         registry = self._registry
+        if registry.runtime_settings is None:
+            registry = registry.with_updates(runtime_settings=settings)
 
         if registry.event_store is not None:
             event_store = registry.event_store
@@ -65,3 +66,9 @@ class StorageBootstrapper:
             event_store_root=event_store_root,
             registry=registry,
         )
+
+    def _resolve_settings(self) -> RuntimeSettings:
+        registry_settings = self._registry.runtime_settings
+        if registry_settings is not None:
+            return registry_settings
+        return load_runtime_settings()

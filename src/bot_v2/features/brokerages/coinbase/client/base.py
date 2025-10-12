@@ -4,15 +4,19 @@ from __future__ import annotations
 
 import json
 import logging
-import os
 import sys
 import time
 from collections.abc import Callable, Iterator
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from bot_v2.features.brokerages.coinbase.auth import AuthStrategy, CDPJWTAuth, CoinbaseAuth
 from bot_v2.features.brokerages.coinbase.errors import InvalidRequestError, map_http_error
 from bot_v2.monitoring.system import get_correlation_id, get_logger
+
+if TYPE_CHECKING:
+    from bot_v2.orchestration.runtime_settings import RuntimeSettings
+else:  # pragma: no cover - runtime type alias
+    RuntimeSettings = Any  # type: ignore[misc]
 
 _ul: Any
 _ue: Any
@@ -26,6 +30,8 @@ except Exception:  # pragma: no cover - urllib unavailable in some runtimes
 
 logger = logging.getLogger(__name__)
 
+_TRUTHY = {"1", "true", "yes", "on"}
+
 
 def _load_system_config() -> dict[str, Any]:
     """Resolve configuration loader, allowing package-level monkeypatching in tests."""
@@ -35,6 +41,12 @@ def _load_system_config() -> dict[str, Any]:
     from bot_v2.config import get_config as fallback_get_config
 
     return cast(dict[str, Any], fallback_get_config("system"))
+
+
+def _load_runtime_settings_snapshot() -> RuntimeSettings:
+    from bot_v2.orchestration.runtime_settings import load_runtime_settings as _loader
+
+    return _loader()
 
 
 class CoinbaseClientBase:
@@ -51,6 +63,7 @@ class CoinbaseClientBase:
         enable_throttle: bool = True,
         api_mode: str = "advanced",
         enable_keep_alive: bool = True,
+        settings: RuntimeSettings | None = None,
     ) -> None:
         self.base_url = base_url.rstrip("/")
         self.auth = auth
@@ -71,6 +84,11 @@ class CoinbaseClientBase:
         if enable_keep_alive:
             self._setup_opener()
 
+        self._static_settings = settings is not None
+        self._settings = settings or _load_runtime_settings_snapshot()
+        self._production_logger: Any | None = None
+        self._configure_logger()
+
     def set_transport_for_testing(
         self,
         transport: Callable[
@@ -78,6 +96,57 @@ class CoinbaseClientBase:
         ],
     ) -> None:
         self._transport = transport
+
+    def _configure_logger(self) -> None:
+        try:
+            self._production_logger = get_logger(settings=self._settings)
+        except Exception:  # pragma: no cover - telemetry optional
+            try:
+                self._production_logger = get_logger()
+            except Exception:  # pragma: no cover - telemetry optional
+                self._production_logger = None
+
+    def _ensure_runtime_settings(self) -> None:
+        if self._static_settings:
+            return
+        self._settings = _load_runtime_settings_snapshot()
+        self._configure_logger()
+
+    def _log_rest_response(
+        self,
+        *,
+        endpoint: str,
+        method: str,
+        status_code: int,
+        duration_ms: float,
+        error: str | None = None,
+    ) -> None:
+        logger_instance = self._production_logger
+        if logger_instance is None:
+            try:
+                logger_instance = get_logger()
+            except Exception:  # pragma: no cover - telemetry optional
+                logger_instance = None
+        if logger_instance is None:
+            return
+        try:
+            if error is not None:
+                logger_instance.log_rest_response(
+                    endpoint=endpoint,
+                    method=method,
+                    status_code=status_code,
+                    duration_ms=duration_ms,
+                    error=error,
+                )
+            else:
+                logger_instance.log_rest_response(
+                    endpoint=endpoint,
+                    method=method,
+                    status_code=status_code,
+                    duration_ms=duration_ms,
+                )
+        except Exception as exc:  # pragma: no cover - telemetry resilience
+            logger.debug("log_rest_response failed", exc_info=exc)
 
     # ------------------------------------------------------------------
     # Endpoint handling
@@ -290,6 +359,7 @@ class CoinbaseClientBase:
     def _request(
         self, method: str, path: str, body: dict[str, Any] | None = None
     ) -> dict[str, Any]:
+        self._ensure_runtime_settings()
         self._check_rate_limit()
 
         self._request_count += 1
@@ -332,7 +402,8 @@ class CoinbaseClientBase:
         )
 
         sys_config = dict(_load_system_config())
-        if os.environ.get("COINBASE_FAST_RETRY", "0") == "1":
+        fast_retry_flag = (self._settings.raw_env.get("COINBASE_FAST_RETRY") or "").strip().lower()
+        if fast_retry_flag in _TRUTHY:
             sys_config.setdefault("max_retries", sys_config.get("max_retries", 3))
             sys_config["retry_delay"] = 0.0
             sys_config["jitter_factor"] = 0.0
@@ -422,28 +493,25 @@ class CoinbaseClientBase:
                 )
             except retryable_exceptions as exc:
                 duration_ms = (time.perf_counter() - start) * 1000.0
-                try:
-                    get_logger().log_rest_response(
-                        endpoint=path,
-                        method=method,
-                        status_code=0,
-                        duration_ms=duration_ms,
-                        error=str(exc),
-                    )
-                except Exception as log_exc:  # pragma: no cover - telemetry resilience
-                    logger.debug("log_rest_response failed", exc_info=log_exc)
+                self._log_rest_response(
+                    endpoint=path,
+                    method=method,
+                    status_code=0,
+                    duration_ms=duration_ms,
+                    error=str(exc),
+                )
 
                 reason = f"network error: {exc}" if str(exc) else exc.__class__.__name__
                 if _should_retry_retryable_error(attempt, reason):
                     continue
                 raise map_http_error(0, None, str(exc)) from exc
             duration_ms = (time.perf_counter() - start) * 1000.0
-            try:
-                get_logger().log_rest_response(
-                    endpoint=path, method=method, status_code=status, duration_ms=duration_ms
-                )
-            except Exception as exc:  # pragma: no cover - telemetry resilience
-                logger.debug("log_rest_response failed", exc_info=exc)
+            self._log_rest_response(
+                endpoint=path,
+                method=method,
+                status_code=status,
+                duration_ms=duration_ms,
+            )
 
             try:
                 payload = json.loads(text) if text else {}

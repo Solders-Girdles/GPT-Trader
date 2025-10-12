@@ -6,7 +6,6 @@ import hashlib
 import hmac
 import json
 import logging
-import os
 import secrets
 import time
 from collections.abc import Callable, Iterable
@@ -15,6 +14,7 @@ from typing import Any, Protocol
 from urllib.parse import urlparse
 
 from bot_v2.features.brokerages.coinbase.models import APIConfig
+from bot_v2.orchestration.runtime_settings import RuntimeSettings, load_runtime_settings
 
 logger = logging.getLogger(__name__)
 
@@ -237,13 +237,18 @@ def build_rest_auth(config: APIConfig) -> AuthStrategy:
 def build_ws_auth_provider(
     config: APIConfig,
     client_auth: Any,
+    *,
+    settings: RuntimeSettings | None = None,
 ) -> Callable[[], dict[str, str] | None] | None:
     """Return a callable that produces WebSocket auth payloads when required."""
 
     if config is None:
         return None
 
-    if os.getenv("COINBASE_WS_USER_AUTH") and getattr(client_auth, "generate_jwt", None):
+    runtime_settings = settings or load_runtime_settings()
+
+    ws_user_auth_raw = runtime_settings.raw_env.get("COINBASE_WS_USER_AUTH")
+    if ws_user_auth_raw and getattr(client_auth, "generate_jwt", None):
 
         def provider() -> dict[str, str] | None:
             try:

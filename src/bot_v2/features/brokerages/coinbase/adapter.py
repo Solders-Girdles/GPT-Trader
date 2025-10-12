@@ -34,6 +34,7 @@ from bot_v2.features.brokerages.core.interfaces import (
     Product,
     Quote,
 )
+from bot_v2.orchestration.runtime_settings import RuntimeSettings, load_runtime_settings
 from bot_v2.persistence.event_store import EventStore
 
 logger = logging.getLogger(__name__)
@@ -49,6 +50,7 @@ class CoinbaseBrokerage(IBrokerage):
         event_store: EventStore | None = None,
         market_data: MarketDataService | None = None,
         product_catalog: ProductCatalog | None = None,
+        settings: RuntimeSettings | None = None,
     ) -> None:
         self.config = config
         self.endpoints = CoinbaseEndpoints(
@@ -58,11 +60,13 @@ class CoinbaseBrokerage(IBrokerage):
         )
 
         auth = build_rest_auth(config)
+        self._settings = settings or load_runtime_settings()
         self.client = CoinbaseClient(
             auth=auth,
             base_url=self.endpoints.base_url,
             api_mode=config.api_mode,
             api_version=config.api_version,
+            settings=self._settings,
         )
 
         self._connected = False
@@ -78,6 +82,7 @@ class CoinbaseBrokerage(IBrokerage):
             product_catalog=self._product_catalog,
             market_data=self.market_data,
             event_store=self._event_store,
+            settings=self._settings,
         )
         self.ws_handler = CoinbaseWebSocketHandler(
             endpoints=self.endpoints,
@@ -87,6 +92,7 @@ class CoinbaseBrokerage(IBrokerage):
             product_catalog=self._product_catalog,
             client_auth=self.client.auth,
             ws_cls=CoinbaseWebSocket,
+            settings=self._settings,
         )
         self._ws_factory_override = None
 

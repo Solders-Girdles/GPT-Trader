@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING, Any
+
 from bot_v2.config import get_config
 from bot_v2.features.brokerages.coinbase.auth import (
     AuthStrategy,
@@ -17,6 +19,11 @@ from bot_v2.features.brokerages.coinbase.client.base import CoinbaseClientBase
 from bot_v2.features.brokerages.coinbase.client.market import MarketDataClientMixin
 from bot_v2.features.brokerages.coinbase.client.orders import OrderClientMixin
 from bot_v2.features.brokerages.coinbase.client.portfolio import PortfolioClientMixin
+
+if TYPE_CHECKING:
+    from bot_v2.orchestration.runtime_settings import RuntimeSettings
+else:  # pragma: no cover - runtime type alias
+    RuntimeSettings = Any  # type: ignore[misc]
 
 
 class CoinbaseClient(
@@ -38,6 +45,7 @@ class CoinbaseClient(
         enable_throttle: bool = True,
         api_mode: str = "advanced",
         enable_keep_alive: bool = True,
+        settings: RuntimeSettings | None = None,
     ) -> None:
         super().__init__(
             base_url=base_url,
@@ -48,6 +56,7 @@ class CoinbaseClient(
             enable_throttle=enable_throttle,
             api_mode=api_mode,
             enable_keep_alive=enable_keep_alive,
+            settings=settings,
         )
 
 

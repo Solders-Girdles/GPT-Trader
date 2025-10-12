@@ -14,6 +14,7 @@ from bot_v2.features.brokerages.coinbase.rest import (
     ProductRestMixin,
 )
 from bot_v2.features.brokerages.coinbase.utilities import ProductCatalog
+from bot_v2.orchestration.runtime_settings import RuntimeSettings, load_runtime_settings
 from bot_v2.persistence.event_store import EventStore
 
 
@@ -35,7 +36,9 @@ class CoinbaseRestService(
         product_catalog: ProductCatalog,
         market_data: MarketDataService,
         event_store: EventStore,
+        settings: RuntimeSettings | None = None,
     ) -> None:
+        runtime_settings = settings or load_runtime_settings()
         super().__init__(
             client=client,
             endpoints=endpoints,
@@ -43,6 +46,7 @@ class CoinbaseRestService(
             product_catalog=product_catalog,
             market_data=market_data,
             event_store=event_store,
+            settings=runtime_settings,
         )
 
 

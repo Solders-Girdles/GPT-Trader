@@ -175,6 +175,7 @@ class ExecutionCoordinator:
                 bot_id="perps_bot",
                 slippage_multipliers=live_slippage,
                 enable_preview=bot.config.enable_order_preview,
+                settings=bot.settings,
             )
             logger.info("Initialized LiveExecutionEngine with risk integration")
 

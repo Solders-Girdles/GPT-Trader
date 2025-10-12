@@ -231,6 +231,9 @@ class CoinbaseClientBase:
         if _ul is None or _ue is None:  # pragma: no cover
             raise RuntimeError("urllib not available in this environment")
 
+        if not url.startswith(("http://", "https://")):
+            raise InvalidRequestError(f"Unsupported URL scheme: {url!r}")
+
         req = _ul.Request(url, data=body, method=method.upper())
         for key, value in headers.items():
             req.add_header(key, value)
@@ -239,9 +242,9 @@ class CoinbaseClientBase:
 
         try:
             if self._opener and self.enable_keep_alive:
-                resp = self._opener.open(req, timeout=timeout)
+                resp = self._opener.open(req, timeout=timeout)  # nosec B310
             else:
-                resp = _ul.urlopen(req, timeout=timeout)
+                resp = _ul.urlopen(req, timeout=timeout)  # nosec B310
 
             with resp:
                 status = resp.getcode()

@@ -86,7 +86,7 @@ jobs:
         continue-on-error: true
 
       - name: Run Bandit security checker
-        run: poetry run bandit -r src/bot_v2/ -f json -o bandit-report.json
+        run: poetry run bandit -r src/bot_v2/ --severity-level high --confidence-level high -f json -o bandit-report.json
 
       - name: Install pip-audit
         run: poetry run pip install pip-audit

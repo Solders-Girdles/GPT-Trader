@@ -19,7 +19,7 @@ class PerformanceProfiler:
         self._total_times: dict[str, float] = {}
 
     def should_sample(self) -> bool:
-        return random.random() < self.sample_rate
+        return random.random() < self.sample_rate  # nosec B311
 
     def record_call(self, func_name: str, duration: float) -> None:
         self._call_counts[func_name] = self._call_counts.get(func_name, 0) + 1

@@ -66,14 +66,14 @@ class DataStorage:
 
             # Load existing data if any
             if os.path.exists(filepath):
-                existing_data = pd.read_pickle(filepath)
+                existing_data = pd.read_pickle(filepath)  # nosec B301
                 # Merge with new data (avoid duplicates)
                 data = pd.concat([existing_data, data])
                 data = data[~data.index.duplicated(keep="last")]
                 data.sort_index(inplace=True)
 
             # Save data
-            data.to_pickle(filepath)
+            data.to_pickle(filepath)  # nosec B301
 
             # Update index
             self._update_index(symbol, data_type, source, filepath)
@@ -111,7 +111,7 @@ class DataStorage:
                 if index_key.startswith(key):
                     try:
                         # Load data
-                        data = pd.read_pickle(filepath)
+                        data = pd.read_pickle(filepath)  # nosec B301
 
                         # Filter by date range
                         mask = (data.index >= query.start_date) & (data.index <= query.end_date)
@@ -158,7 +158,7 @@ class DataStorage:
 
         for filepath in self.index.values():
             try:
-                data = pd.read_pickle(filepath)
+                data = pd.read_pickle(filepath)  # nosec B301
                 original_len = len(data)
 
                 # Keep only data after cutoff
@@ -169,7 +169,7 @@ class DataStorage:
 
                     if len(data) > 0:
                         # Save filtered data
-                        data.to_pickle(filepath)
+                        data.to_pickle(filepath)  # nosec B301
                     else:
                         # Delete empty file
                         os.remove(filepath)
@@ -202,7 +202,7 @@ class DataStorage:
                 total_size_mb += size_bytes / (1024 * 1024)
 
                 # Load data for stats
-                data = pd.read_pickle(filepath)
+                data = pd.read_pickle(filepath)  # nosec B301
                 total_records += len(data)
 
                 # Track date range

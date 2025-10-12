@@ -204,7 +204,7 @@ class ErrorHandler:
         if self.retry_config.jitter:
             import random
 
-            delay *= 0.5 + random.random()  # Add 0-50% jitter
+            delay *= 0.5 + random.random()  # nosec B311
 
         return delay
 

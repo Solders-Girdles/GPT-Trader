@@ -51,6 +51,7 @@ freezegun = "^1.2.0"
 hypothesis = "^6.70.0"
 responses = "^0.23.0"
 coverage = "^7.0.0"
+pip-audit = "^2.9.0"
 bandit = "^1.7.9"
 
 [build-system]

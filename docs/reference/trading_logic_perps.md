@@ -25,8 +25,8 @@ This document captures the architecture and trading flow for the Coinbase Perpet
      - Baseline MA crossover with optional confirmation windows
      - Maintains trailing stops and per-symbol position counters
      - Delegates all exposure checks to the risk engine
-   - **Experimental:** `src/bot_v2/features/live_trade/strategies/perps_baseline_enhanced.py`
-     - Adds liquidity filters and additional guards; kept for future iteration but not wired into the bot by default
+   - **Experimental:** `src/bot_v2/features/live_trade/strategies/perps_baseline_enhanced/strategy.py`
+     - Adds liquidity filters, dedicated state management, and additional guards; kept for future iteration but not wired into the bot by default
 
 4. **Risk Management** (`src/bot_v2/features/live_trade/risk.py`)
    - Leverage limits enforcement (capped at spot-friendly defaults until INTX enabled)

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import time
+from collections.abc import Mapping
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
@@ -26,6 +27,7 @@ from bot_v2.features.live_trade.execution import (
     StopManager,
 )
 from bot_v2.features.live_trade.risk import LiveRiskManager, PositionSizingAdvice
+from bot_v2.utilities.config import load_slippage_multipliers
 
 __all__ = [
     "SizingMode",
@@ -92,6 +94,7 @@ class AdvancedExecutionEngine:
         broker: Any,
         risk_manager: LiveRiskManager | None = None,
         config: OrderConfig | None = None,
+        slippage_multipliers: Mapping[str, Decimal] | None = None,
     ) -> None:
         """
         Initialize enhanced execution engine.
@@ -145,18 +148,14 @@ class AdvancedExecutionEngine:
         self._last_sizing_advice: PositionSizingAdvice | None = None
 
         # Optional per-symbol slippage multipliers for impact-aware sizing
-        self.slippage_multipliers: dict[str, Decimal] = {}
-        try:
-            import os
-
-            env_val = os.getenv("SLIPPAGE_MULTIPLIERS", "")
-            if env_val:
-                for pair in env_val.split(","):
-                    if ":" in pair:
-                        sym, mult = pair.split(":", 1)
-                        self.slippage_multipliers[sym.strip()] = Decimal(str(mult.strip()))
-        except Exception:
-            pass
+        resolved_multipliers = (
+            slippage_multipliers
+            if slippage_multipliers is not None
+            else load_slippage_multipliers()
+        )
+        self.slippage_multipliers = {
+            symbol: Decimal(str(mult)) for symbol, mult in resolved_multipliers.items()
+        }
 
         logger.info(f"AdvancedExecutionEngine initialized with config: {self.config}")
 

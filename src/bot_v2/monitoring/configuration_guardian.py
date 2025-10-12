@@ -13,6 +13,7 @@ from typing import Any
 from bot_v2.config.schemas import ConfigValidationResult
 from bot_v2.config.types import Profile
 from bot_v2.features.brokerages.core.interfaces import Balance, Position
+from bot_v2.utilities.config import ConfigBaselinePayload
 
 logger = logging.getLogger(__name__)
 
@@ -132,6 +133,11 @@ class EnvironmentMonitor(ConfigurationMonitor):
         self.baseline = baseline_snapshot
         self._last_state = self._capture_current_state()
 
+    def update_baseline(self, baseline_snapshot: BaselineSnapshot) -> None:
+        """Refresh cached state after a baseline change."""
+        self.baseline = baseline_snapshot
+        self._last_state = self._capture_current_state()
+
     def check_changes(self) -> list[DriftEvent]:
         """Check for environment variable changes."""
         events = []
@@ -242,6 +248,10 @@ class StateValidator(ConfigurationMonitor):
     """
 
     def __init__(self, baseline_snapshot: BaselineSnapshot):
+        self.baseline = baseline_snapshot
+
+    def update_baseline(self, baseline_snapshot: BaselineSnapshot) -> None:
+        """Refresh validator baseline after intentional config updates."""
         self.baseline = baseline_snapshot
 
     def check_changes(self) -> list[DriftEvent]:
@@ -392,6 +402,10 @@ class DriftDetector(ConfigurationMonitor):
         self.baseline = baseline_snapshot
         self.drift_history: list[DriftEvent] = []
 
+    def update_baseline(self, baseline_snapshot: BaselineSnapshot) -> None:
+        """Refresh baseline snapshot used for drift comparisons."""
+        self.baseline = baseline_snapshot
+
     def check_changes(self) -> list[DriftEvent]:
         """Compare current state against baseline."""
         # This method is called by the guardian to check all monitors
@@ -448,6 +462,16 @@ class ConfigurationGuardian:
 
         logger.info(
             f"ConfigurationGuardian initialized with baseline from {baseline_snapshot.timestamp}"
+        )
+
+    def reset_baseline(self, new_snapshot: BaselineSnapshot) -> None:
+        """Reset baseline snapshot following an intentional configuration change."""
+        self.baseline = new_snapshot
+        self.environment_monitor.update_baseline(new_snapshot)
+        self.state_validator.update_baseline(new_snapshot)
+        self.drift_detector.update_baseline(new_snapshot)
+        logger.info(
+            "ConfigurationGuardian baseline reset to %s", new_snapshot.timestamp.isoformat()
         )
 
     def pre_cycle_check(
@@ -539,7 +563,7 @@ class ConfigurationGuardian:
         return status
 
     def create_baseline_snapshot(
-        config_dict: dict[str, Any],
+        config_dict: dict[str, Any] | ConfigBaselinePayload,
         active_symbols: list[str],
         positions: list[Position],
         account_equity: Decimal | None,
@@ -547,6 +571,15 @@ class ConfigurationGuardian:
         broker_type: str,
     ) -> BaselineSnapshot:
         """Factory method to create baseline snapshot at startup."""
+
+        if isinstance(config_dict, ConfigBaselinePayload):
+            payload_dict = config_dict.to_dict()
+        else:
+            payload_dict = dict(config_dict)
+
+        resolved_active_symbols = (
+            active_symbols.copy() if active_symbols else list(payload_dict.get("symbols", []))
+        )
 
         # Calculate total exposure
         total_exposure = Decimal("0")
@@ -569,7 +602,7 @@ class ConfigurationGuardian:
         # Calculate config hash for quick comparison
         # Simple hash of sorted key-value pairs (exclude timestamps/metadata)
         config_hash_items = []
-        for k, v in sorted(config_dict.items()):
+        for k, v in sorted(payload_dict.items()):
             if k not in {"metadata"} and not isinstance(v, dict):
                 config_hash_items.append(f"{k}:{v}")
         config_hash = hash(tuple(config_hash_items))
@@ -592,18 +625,18 @@ class ConfigurationGuardian:
                     critical_env_values[var] = os.getenv(var, "")
 
         risk_limits = {
-            "max_position_size": config_dict.get("max_position_size", "1000"),
-            "max_leverage": config_dict.get("max_leverage", 3),
-            "daily_loss_limit": config_dict.get("daily_loss_limit", "0"),
+            "max_position_size": payload_dict.get("max_position_size", "1000"),
+            "max_leverage": payload_dict.get("max_leverage", 3),
+            "daily_loss_limit": payload_dict.get("daily_loss_limit", "0"),
         }
 
         return BaselineSnapshot(
             timestamp=datetime.now(UTC),
-            config_dict=config_dict.copy(),
+            config_dict=payload_dict.copy(),
             config_hash=str(config_hash),
             env_keys=env_keys,
             critical_env_values=critical_env_values,
-            active_symbols=active_symbols.copy(),
+            active_symbols=resolved_active_symbols,
             open_positions=position_summaries,
             account_equity=account_equity,
             total_exposure=total_exposure,

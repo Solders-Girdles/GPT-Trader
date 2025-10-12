@@ -20,6 +20,7 @@ from bot_v2.orchestration.live_execution import LiveExecutionEngine
 from bot_v2.orchestration.order_reconciler import OrderReconciler
 from bot_v2.utilities import utc_now
 from bot_v2.utilities.async_utils import run_in_thread
+from bot_v2.utilities.config import load_slippage_multipliers
 from bot_v2.utilities.quantities import quantity_from
 
 if TYPE_CHECKING:  # pragma: no cover - type checking only
@@ -132,23 +133,15 @@ class ExecutionCoordinator:
         Sets up either AdvancedExecutionEngine (if dynamic sizing or impact guard enabled)
         or LiveExecutionEngine (standard execution) based on risk configuration flags.
         """
-        import os
-
         bot = self._bot
 
-        # Parse slippage multipliers from environment
-        slippage_env = os.environ.get("SLIPPAGE_MULTIPLIERS", "")
-        slippage_map: dict[str, float] = {}
-        if slippage_env:
-            try:
-                parts = [p for p in slippage_env.split(",") if ":" in p]
-                for part in parts:
-                    k, v = part.split(":", 1)
-                    slippage_map[k.strip()] = float(v)
-            except Exception as exc:
-                logger.warning(
-                    "Invalid SLIPPAGE_MULTIPLIERS entry '%s': %s", slippage_env, exc, exc_info=True
-                )
+        # Parse slippage multipliers from environment using shared helper
+        slippage_multipliers = load_slippage_multipliers()
+        live_slippage = (
+            {symbol: float(mult) for symbol, mult in slippage_multipliers.items()}
+            if slippage_multipliers
+            else None
+        )
 
         # Determine execution engine type based on risk configuration
         risk_config = getattr(bot.risk_manager, "config", None)
@@ -171,6 +164,7 @@ class ExecutionCoordinator:
             bot.runtime_state.exec_engine = AdvancedExecutionEngine(
                 broker=bot.broker,
                 risk_manager=bot.risk_manager,
+                slippage_multipliers=slippage_multipliers,
             )
             logger.info("Initialized AdvancedExecutionEngine with dynamic sizing integration")
         else:
@@ -179,7 +173,7 @@ class ExecutionCoordinator:
                 risk_manager=bot.risk_manager,
                 event_store=bot.event_store,
                 bot_id="perps_bot",
-                slippage_multipliers=slippage_map or None,
+                slippage_multipliers=live_slippage,
                 enable_preview=bot.config.enable_order_preview,
             )
             logger.info("Initialized LiveExecutionEngine with risk integration")

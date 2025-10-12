@@ -7,6 +7,7 @@ from typing import Any
 
 from bot_v2.features.live_trade.risk import LiveRiskManager
 from bot_v2.orchestration.configuration import BotConfig, ConfigManager
+from bot_v2.utilities.config import ConfigBaselinePayload
 
 
 @dataclass
@@ -20,22 +21,7 @@ class ConfigChange:
 class ConfigController:
     """Owns the active bot configuration and synchronizes runtime state."""
 
-    _TRACKED_FIELDS = (
-        "symbols",
-        "update_interval",
-        "max_position_size",
-        "max_leverage",
-        "reduce_only_mode",
-        "time_in_force",
-        "daily_loss_limit",
-        "derivatives_enabled",
-        "perps_enable_streaming",
-        "perps_stream_level",
-        "perps_paper_trading",
-        "perps_force_mock",
-        "perps_position_fraction",
-        "perps_skip_startup_reconcile",
-    )
+    _TRACKED_FIELDS = ConfigBaselinePayload.tracked_fields()
 
     def __init__(self, config: BotConfig) -> None:
         self._manager = ConfigManager.from_config(config)
@@ -109,11 +95,15 @@ class ConfigController:
 
     # ------------------------------------------------------------------
     def _summarize_diff(self, current: BotConfig, updated: BotConfig) -> dict[str, Any]:
-        diff: dict[str, Any] = {}
-        for field_name in self._TRACKED_FIELDS:
-            if getattr(current, field_name) != getattr(updated, field_name):
-                diff[field_name] = {
-                    "current": getattr(current, field_name),
-                    "new": getattr(updated, field_name),
-                }
-        return diff
+        current_payload = ConfigBaselinePayload.from_config(
+            current,
+            derivatives_enabled=bool(getattr(current, "derivatives_enabled", False)),
+        )
+        updated_payload = ConfigBaselinePayload.from_config(
+            updated,
+            derivatives_enabled=bool(getattr(updated, "derivatives_enabled", False)),
+        )
+
+        diff = current_payload.diff(updated_payload)
+        # Preserve historical behavior of returning only tracked fields
+        return {field: diff[field] for field in self._TRACKED_FIELDS if field in diff}

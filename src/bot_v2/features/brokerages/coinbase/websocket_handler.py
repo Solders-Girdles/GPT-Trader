@@ -21,6 +21,8 @@ from bot_v2.orchestration.runtime_settings import RuntimeSettings, load_runtime_
 
 logger = logging.getLogger(__name__)
 
+_UNSET = object()
+
 
 class CoinbaseWebSocketHandler:
     """Encapsulates Coinbase WebSocket lifecycle and message processing."""
@@ -132,6 +134,28 @@ class CoinbaseWebSocketHandler:
         self._ws_factory_override = factory
         if self._ws_client is not None:
             self._ws_client = None
+
+    def configure_websocket(
+        self,
+        *,
+        ws_cls: type[CoinbaseWebSocket] | None = None,
+        client_auth: Any = _UNSET,
+    ) -> None:
+        """Expose limited hooks for adapter configuration without touching internals."""
+
+        updated = False
+        if ws_cls is not None and ws_cls is not self._ws_cls:
+            self._ws_cls = ws_cls
+            updated = True
+        if client_auth is not _UNSET and client_auth is not self._client_auth:
+            self._client_auth = client_auth
+            updated = True
+
+        if updated and self._ws_client is not None:
+            self._ws_client = None
+
+    def set_product_catalog(self, catalog: ProductCatalog) -> None:
+        self._product_catalog = catalog
 
     # ------------------------------------------------------------------
     # Internal helpers

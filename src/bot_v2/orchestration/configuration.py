@@ -12,6 +12,7 @@ from typing import Any, cast
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
 from pydantic_core import PydanticCustomError
 
+from bot_v2.config import path_registry
 from bot_v2.config.types import Profile
 from bot_v2.orchestration.runtime_settings import RuntimeSettings, load_runtime_settings
 from bot_v2.orchestration.symbols import (
@@ -604,7 +605,7 @@ class ConfigManager:
         daily_loss_limit = Decimal("10")
         time_in_force = "IOC"
 
-        profile_path = Path("config/profiles/canary.yaml")
+        profile_path = path_registry.PROJECT_ROOT / "config" / "profiles" / "canary.yaml"
         if profile_path.exists():
             try:
                 import yaml  # type: ignore
@@ -767,7 +768,7 @@ class ConfigManager:
 
     def _files_to_watch(self) -> list[Path]:
         if self.profile == Profile.CANARY:
-            return [Path("config/profiles/canary.yaml")]
+            return [path_registry.PROJECT_ROOT / "config" / "profiles" / "canary.yaml"]
         return []
 
     @staticmethod

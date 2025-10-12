@@ -315,8 +315,10 @@ class CoinbaseBrokerage(IBrokerage):
 
     def _create_ws(self):
         # Always reflect the current CoinbaseWebSocket class (patch-friendly for tests)
-        self.ws_handler._ws_cls = CoinbaseWebSocket
-        self.ws_handler._client_auth = getattr(self.client, "auth", None)
+        self.ws_handler.configure_websocket(
+            ws_cls=CoinbaseWebSocket,
+            client_auth=getattr(self.client, "auth", None),
+        )
         if self._ws_factory_override:
             return self._ws_factory_override()
         return self.ws_handler.create_ws()
@@ -329,4 +331,4 @@ class CoinbaseBrokerage(IBrokerage):
     def product_catalog(self, catalog: ProductCatalog) -> None:
         self._product_catalog = catalog
         self.rest_service.product_catalog = catalog
-        self.ws_handler._product_catalog = catalog
+        self.ws_handler.set_product_catalog(catalog)

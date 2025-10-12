@@ -149,6 +149,10 @@ class EnvironmentMonitor(ConfigurationMonitor):
     def check_changes(self) -> list[DriftEvent]:
         """Check for environment variable changes."""
         events = []
+        try:
+            self._settings = load_runtime_settings()
+        except Exception as exc:  # pragma: no cover - defensive guard
+            logger.warning("Failed to reload runtime settings: %s", exc, exc_info=True)
         current_state = self._capture_current_state()
 
         # Check critical vars that should never change

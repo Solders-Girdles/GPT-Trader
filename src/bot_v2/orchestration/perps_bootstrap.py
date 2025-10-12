@@ -137,11 +137,9 @@ def prepare_perps_bot(
             metadata_changed = True
 
     if metadata_changed:
-        raw_config = config.model_dump()
-        raw_config["metadata"] = metadata
-        rebuilt = config.__class__.model_validate(raw_config)
+        rebuilt = config.model_copy(update={"metadata": metadata})
         for field_name in config.model_fields:
-            object.__setattr__(config, field_name, getattr(rebuilt, field_name))
+            setattr(config, field_name, getattr(rebuilt, field_name))
         metadata = dict(config.metadata)
 
     normalization_log_payload = config.metadata.get("symbol_normalization_logs", [])

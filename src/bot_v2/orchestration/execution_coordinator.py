@@ -18,6 +18,7 @@ from bot_v2.features.live_trade.risk import ValidationError as RiskValidationErr
 from bot_v2.features.live_trade.strategies.perps_baseline import Action
 from bot_v2.orchestration.live_execution import LiveExecutionEngine
 from bot_v2.orchestration.order_reconciler import OrderReconciler
+from bot_v2.orchestration.runtime_settings import RuntimeSettings
 from bot_v2.utilities import utc_now
 from bot_v2.utilities.async_utils import run_in_thread
 from bot_v2.utilities.config import load_slippage_multipliers
@@ -168,6 +169,10 @@ class ExecutionCoordinator:
             )
             logger.info("Initialized AdvancedExecutionEngine with dynamic sizing integration")
         else:
+            settings_param = getattr(bot, "settings", None)
+            runtime_settings = (
+                settings_param if isinstance(settings_param, RuntimeSettings) else None
+            )
             bot.runtime_state.exec_engine = LiveExecutionEngine(
                 broker=bot.broker,
                 risk_manager=bot.risk_manager,
@@ -175,7 +180,7 @@ class ExecutionCoordinator:
                 bot_id="perps_bot",
                 slippage_multipliers=live_slippage,
                 enable_preview=bot.config.enable_order_preview,
-                settings=bot.settings,
+                settings=runtime_settings,
             )
             logger.info("Initialized LiveExecutionEngine with risk integration")
 

@@ -111,8 +111,8 @@ class RuntimeCoordinator:
         )
 
     def _resolve_settings(self) -> RuntimeSettings:
-        settings = self._bot.registry.runtime_settings
-        if settings is not None:
+        settings = getattr(self._bot.registry, "runtime_settings", None)
+        if isinstance(settings, RuntimeSettings):
             return settings
         resolved = load_runtime_settings()
         self._bot.registry = self._bot.registry.with_updates(runtime_settings=resolved)

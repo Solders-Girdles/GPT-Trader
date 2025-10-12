@@ -58,7 +58,7 @@ jobs:
             tests/unit/bot_v2/features/live_trade/test_reduce_only_guard.py \
             tests/unit/bot_v2/features/live_trade/test_trailing_stop_decision.py \
             tests/unit/bot_v2/features/live_trade/test_leverage_cap.py \
-            tests/unit/bot_v2/features/brokerages/coinbase/test_quantization_rules.py \
+            tests/unit/bot_v2/features/brokerages/coinbase/test_specs_quantization.py \
             -q --tb=short
 
       - name: Verify adapter integration

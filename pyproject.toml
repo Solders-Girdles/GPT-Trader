@@ -6,13 +6,13 @@ readme = "README.md"
 authors = [{name = "RJ + GPT-5"}]
 requires-python = ">=3.12,<3.13"
 dependencies = [
-    "coinbase-advanced-py>=1.0.0,<2.0.0",
+    "coinbase-advanced-py>=1.8.2,<2.0.0",
     "pandas>=2.2.2,<3.0.0",
     "numpy>=1.26.4,<2.0.0",
     "pydantic>=2.7.4,<3.0.0",
     "python-dotenv>=1.0.1,<2.0.0",
     "requests>=2.32.3,<3.0.0",
-    "websockets>=14.0,<15.0",
+    "websockets>=13.0,<14.0",
     "pyyaml>=6.0.1,<7.0.0",
     "psutil>=6.0.0,<7.0.0",
     "aiohttp>=3.12.15,<4.0.0",

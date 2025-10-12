@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import hashlib
+import json
 import logging
 import os
 from abc import ABC, abstractmethod
@@ -599,13 +601,17 @@ class ConfigurationGuardian:
                     "exposure": float(exposure),
                 }
 
-        # Calculate config hash for quick comparison
-        # Simple hash of sorted key-value pairs (exclude timestamps/metadata)
-        config_hash_items = []
-        for k, v in sorted(payload_dict.items()):
-            if k not in {"metadata"} and not isinstance(v, dict):
-                config_hash_items.append(f"{k}:{v}")
-        config_hash = hash(tuple(config_hash_items))
+        # Calculate config hash using a stable digest so persisted baselines
+        # remain comparable across interpreter restarts.
+        normalized_config = {
+            key: value for key, value in payload_dict.items() if key not in {"metadata"}
+        }
+        config_hash_payload = json.dumps(
+            normalized_config,
+            sort_keys=True,
+            default=str,
+        ).encode("utf-8")
+        config_hash = hashlib.sha256(config_hash_payload).hexdigest()
 
         # Safely capture environment state
         env_keys = set()

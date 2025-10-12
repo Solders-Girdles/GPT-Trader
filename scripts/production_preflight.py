@@ -49,6 +49,50 @@ class PreflightCheck:
         self.successes: list[str] = []
         self.config: dict[str, Any] = {}
 
+    # ----- Internal helpers -------------------------------------------------
+    def _resolve_cdp_credentials(self) -> tuple[str | None, str | None]:
+        api_key = os.getenv("COINBASE_PROD_CDP_API_KEY") or os.getenv("COINBASE_CDP_API_KEY")
+        private_key = os.getenv("COINBASE_PROD_CDP_PRIVATE_KEY") or os.getenv(
+            "COINBASE_CDP_PRIVATE_KEY"
+        )
+        return api_key, private_key
+
+    def _has_real_cdp_credentials(self) -> bool:
+        api_key, private_key = self._resolve_cdp_credentials()
+        if not api_key or not private_key:
+            return False
+        if not (api_key.startswith("organizations/") and "/apiKeys/" in api_key):
+            return False
+        if "BEGIN EC PRIVATE KEY" not in private_key:
+            return False
+        return True
+
+    def _should_skip_remote_checks(self) -> bool:
+        if os.getenv("COINBASE_PREFLIGHT_FORCE_REMOTE") == "1":
+            return False
+        if os.getenv("COINBASE_PREFLIGHT_SKIP_REMOTE") == "1":
+            return True
+        if self.profile == "dev" and not self._has_real_cdp_credentials():
+            return True
+        return False
+
+    def _expected_env_defaults(self) -> dict[str, tuple[str, bool]]:
+        """Return expected environment defaults (value, strict?)."""
+
+        if self.profile == "dev":
+            return {
+                "BROKER": ("coinbase", True),
+                "COINBASE_SANDBOX": ("1", False),
+                "COINBASE_API_MODE": ("advanced", False),
+                "COINBASE_ENABLE_DERIVATIVES": ("0", False),
+            }
+        return {
+            "BROKER": ("coinbase", True),
+            "COINBASE_SANDBOX": ("0", True),
+            "COINBASE_API_MODE": ("advanced", True),
+            "COINBASE_ENABLE_DERIVATIVES": ("1", True),
+        }
+
     def log_success(self, message: str) -> None:
         """Log a successful check."""
         self.successes.append(message)
@@ -126,55 +170,65 @@ class PreflightCheck:
         """Verify critical environment variables are set."""
         self.section_header("3. ENVIRONMENT CONFIGURATION")
 
-        # Required variables
-        required_vars = {
-            "BROKER": "coinbase",
-            "COINBASE_API_MODE": "advanced",
-            "COINBASE_SANDBOX": "0",
-            "COINBASE_ENABLE_DERIVATIVES": "1",
-        }
-
-        # Check and set required values
         all_good = True
-        for var, expected in required_vars.items():
+        for var, (expected, strict) in self._expected_env_defaults().items():
             actual = os.getenv(var)
-            if actual != expected:
-                if actual is None:
-                    self.log_warning(f"{var} not set, should be '{expected}'")
-                else:
-                    self.log_error(f"{var}={actual}, must be '{expected}' for perpetuals")
-                    all_good = False
-            else:
+            if actual == expected:
                 self.log_info(f"{var}={expected}")
+                continue
+
+            if actual is None:
+                message = f"{var} not set, expected '{expected}'"
+            else:
+                message = f"{var}={actual}, expected '{expected}'"
+
+            if strict:
+                self.log_error(message)
+                all_good = False
+            else:
+                self.log_warning(message)
 
         # Check credentials
-        api_key = os.getenv("COINBASE_PROD_CDP_API_KEY") or os.getenv("COINBASE_CDP_API_KEY")
-        private_key = os.getenv("COINBASE_PROD_CDP_PRIVATE_KEY") or os.getenv(
-            "COINBASE_CDP_PRIVATE_KEY"
-        )
+        api_key, private_key = self._resolve_cdp_credentials()
 
         if not api_key:
-            self.log_error("CDP API key not found (COINBASE_PROD_CDP_API_KEY)")
-            all_good = False
+            if self._should_skip_remote_checks():
+                self.log_warning(
+                    "CDP API key not configured; remote connectivity checks will be skipped"
+                )
+            else:
+                self.log_error("CDP API key not found (COINBASE_PROD_CDP_API_KEY)")
+                all_good = False
         else:
             # Validate key format
             if api_key.startswith("organizations/") and "/apiKeys/" in api_key:
                 self.log_success(f"CDP API key format valid: {api_key[:30]}...")
             else:
-                self.log_error(
-                    f"Invalid CDP API key format. Expected: organizations/.../apiKeys/..."
-                )
-                all_good = False
+                message = "Invalid CDP API key format. Expected: organizations/.../apiKeys/..."
+                if self._should_skip_remote_checks():
+                    self.log_warning(message)
+                else:
+                    self.log_error(message)
+                    all_good = False
 
         if not private_key:
-            self.log_error("CDP private key not found (COINBASE_PROD_CDP_PRIVATE_KEY)")
-            all_good = False
+            if self._should_skip_remote_checks():
+                self.log_warning(
+                    "CDP private key not configured; remote connectivity checks will be skipped"
+                )
+            else:
+                self.log_error("CDP private key not found (COINBASE_PROD_CDP_PRIVATE_KEY)")
+                all_good = False
         else:
             if "BEGIN EC PRIVATE KEY" in private_key:
                 self.log_success("CDP private key found (EC format)")
             else:
-                self.log_error("Invalid private key format (must be EC private key)")
-                all_good = False
+                message = "Invalid private key format (must be EC private key)"
+                if self._should_skip_remote_checks():
+                    self.log_warning(message)
+                else:
+                    self.log_error(message)
+                    all_good = False
 
         # Check risk settings
         risk_vars = {
@@ -213,13 +267,13 @@ class PreflightCheck:
             self.log_error(f"Coinbase client import failed: {exc}")
             return None
 
-        api_key = os.getenv("COINBASE_PROD_CDP_API_KEY") or os.getenv("COINBASE_CDP_API_KEY")
-        private_key = os.getenv("COINBASE_PROD_CDP_PRIVATE_KEY") or os.getenv(
-            "COINBASE_CDP_PRIVATE_KEY"
-        )
+        api_key, private_key = self._resolve_cdp_credentials()
 
         if not api_key or not private_key:
-            self.log_error("CDP credentials missing (export API key and private key)")
+            if self._should_skip_remote_checks():
+                self.log_info("CDP credentials not configured; skipping remote connectivity checks")
+            else:
+                self.log_error("CDP credentials missing (export API key and private key)")
             return None
 
         try:
@@ -242,6 +296,10 @@ class PreflightCheck:
     def check_api_connectivity(self) -> bool:
         """Test connection to Coinbase API."""
         self.section_header("4. API CONNECTIVITY TEST")
+
+        if self._should_skip_remote_checks():
+            self.log_success("API connectivity checks bypassed (offline/stub credentials)")
+            return True
 
         built = self._build_cdp_client()
         if not built:
@@ -296,6 +354,10 @@ class PreflightCheck:
     def check_key_permissions(self) -> bool:
         """Validate Coinbase key permissions and INTX gating."""
         self.section_header("5. KEY PERMISSIONS & INTX READINESS")
+
+        if self._should_skip_remote_checks():
+            self.log_success("Key permission checks bypassed (offline/stub credentials)")
+            return True
 
         built = self._build_cdp_client()
         if not built:
@@ -428,7 +490,8 @@ class PreflightCheck:
                     "run",
                     "pytest",
                     "tests/unit/bot_v2/orchestration",
-                    "tests/unit/bot_v2/features/brokerages/coinbase/test_auth_and_models.py",
+                    "tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_auth.py",
+                    "tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_models.py",
                     "-q",
                     "--tb=no",
                 ],

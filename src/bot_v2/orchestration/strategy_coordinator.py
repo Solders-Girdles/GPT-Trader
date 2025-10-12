@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import inspect
 import logging
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from datetime import UTC, datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any
@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING, Any
 from bot_v2.features.brokerages.core.interfaces import Balance, Order, Position, Product
 from bot_v2.orchestration.symbol_processor import SymbolProcessor
 from bot_v2.utilities import utc_now
+from bot_v2.utilities.async_tools import gather_with_concurrency
 from bot_v2.utilities.config import ConfigBaselinePayload
 
 if TYPE_CHECKING:  # pragma: no cover - circular import guard
@@ -20,6 +21,8 @@ if TYPE_CHECKING:  # pragma: no cover - circular import guard
 
 
 logger = logging.getLogger(__name__)
+
+MAX_QUOTE_FETCH_CONCURRENCY = 10
 
 
 class StrategyCoordinator:
@@ -115,8 +118,10 @@ class StrategyCoordinator:
         if not symbols:
             return
 
-        quotes = await asyncio.gather(
-            *(asyncio.to_thread(bot.broker.get_quote, symbol) for symbol in symbols),
+        quote_coroutines = [asyncio.to_thread(bot.broker.get_quote, symbol) for symbol in symbols]
+        quotes = await gather_with_concurrency(
+            quote_coroutines,
+            max_concurrency=MAX_QUOTE_FETCH_CONCURRENCY,
             return_exceptions=True,
         )
 
@@ -177,23 +182,46 @@ class StrategyCoordinator:
         positions: Sequence[Position] = []
         account_equity: Decimal | None = None
 
-        try:
-            balances = await asyncio.to_thread(bot.broker.list_balances)
-        except Exception as exc:
-            logger.warning("Unable to fetch balances: %s", exc)
+        async def _call_in_thread(
+            getter: Callable[[], Callable[[], Any]],
+            log_fn: Callable[[Exception], None],
+        ) -> Any:
+            try:
+                func = getter()
+            except Exception as exc:
+                log_fn(exc)
+                return exc
+            try:
+                return await asyncio.to_thread(func)
+            except Exception as exc:
+                log_fn(exc)
+                return exc
 
-        try:
-            positions = await asyncio.to_thread(bot.broker.list_positions)
-        except Exception as exc:
-            logger.warning("Unable to fetch positions: %s", exc)
+        balances_result, positions_result, account_info_result = await asyncio.gather(
+            _call_in_thread(
+                lambda: bot.broker.list_balances,
+                lambda exc: logger.warning("Unable to fetch balances: %s", exc),
+            ),
+            _call_in_thread(
+                lambda: bot.broker.list_positions,
+                lambda exc: logger.warning("Unable to fetch positions: %s", exc),
+            ),
+            _call_in_thread(
+                lambda: bot.broker.get_account_info,
+                lambda exc: logger.debug("Unable to fetch account equity: %s", exc),
+            ),
+        )
 
-        try:
-            account_info = await asyncio.to_thread(bot.broker.get_account_info)
-            account_equity = getattr(account_info, "equity", None)
+        if not isinstance(balances_result, Exception):
+            balances = balances_result if balances_result is not None else []
+
+        if not isinstance(positions_result, Exception):
+            positions = positions_result if positions_result is not None else []
+
+        if not isinstance(account_info_result, Exception) and account_info_result is not None:
+            account_equity = getattr(account_info_result, "equity", None)
             if account_equity is not None:
                 account_equity = Decimal(str(account_equity))
-        except Exception as exc:
-            logger.debug("Unable to fetch account equity: %s", exc)
 
         position_map = {}
         if positions:

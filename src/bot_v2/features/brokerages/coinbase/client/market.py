@@ -104,5 +104,29 @@ class MarketDataClientMixin:
         query = ",".join(product_ids)
         return self._request("GET", f"{path}?product_ids={query}")
 
+    def list_products(
+        self: CoinbaseClientProtocol, product_type: str | None = None
+    ) -> list[dict[str, Any]]:
+        """Return available products, normalising legacy payload shapes."""
+
+        payload = self.get_products()
+        products: list[dict[str, Any]] = []
+        if isinstance(payload, dict):
+            raw_products = payload.get("products")
+            if isinstance(raw_products, list):
+                products = [p for p in raw_products if isinstance(p, dict)]
+        elif isinstance(payload, list):
+            products = [p for p in payload if isinstance(p, dict)]
+
+        if product_type:
+            target = product_type.upper()
+            products = [
+                product
+                for product in products
+                if (product.get("product_type") or "").upper() == target
+            ]
+
+        return products
+
 
 __all__ = ["MarketDataClientMixin"]

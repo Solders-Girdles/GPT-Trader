@@ -39,7 +39,12 @@ class ServiceRegistry:
         """Return a new registry with selected fields replaced."""
 
         data = dict(self.__dict__)
+        extras = data.get("extras")
+        if isinstance(extras, dict):
+            data["extras"] = dict(extras)
         data.update(overrides)
+        if "extras" in data and isinstance(data["extras"], dict):
+            data["extras"] = dict(data["extras"])
         return replace(self, **data)
 
 

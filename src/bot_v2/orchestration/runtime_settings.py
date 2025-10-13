@@ -75,9 +75,9 @@ class RuntimeSettings:
         self, keys: Mapping[str, object] | list[str] | tuple[str, ...]
     ) -> dict[str, str | None]:
         if isinstance(keys, Mapping):
-            iterable = keys.keys()
+            iterable: list[str] = list(str(key) for key in keys.keys())
         else:
-            iterable = keys
+            iterable = list(keys)
         return {key: self.raw_env.get(key) for key in iterable}
 
 

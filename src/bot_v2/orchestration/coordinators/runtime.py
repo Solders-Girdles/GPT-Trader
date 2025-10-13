@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import logging
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any, cast
 
 from bot_v2.config.live_trade_config import RiskConfig
 from bot_v2.features.live_trade.risk import LiveRiskManager, RiskRuntimeState
@@ -16,6 +16,12 @@ from bot_v2.orchestration.deterministic_broker import DeterministicBroker
 from bot_v2.orchestration.order_reconciler import OrderReconciler
 from bot_v2.orchestration.runtime_settings import RuntimeSettings, load_runtime_settings
 from bot_v2.utilities.telemetry import emit_metric
+
+if TYPE_CHECKING:  # pragma: no cover - type checking only
+    from bot_v2.features.brokerages.coinbase.market_data_service import MarketDataService
+    from bot_v2.features.brokerages.coinbase.utilities import ProductCatalog
+    from bot_v2.features.brokerages.core.interfaces import IBrokerage
+    from bot_v2.persistence.event_store import EventStore
 
 from .base import BaseCoordinator, CoordinatorContext
 
@@ -431,24 +437,29 @@ class RuntimeCoordinator(BaseCoordinator):
             self.set_reduce_only_mode(True, reason="startup_reconcile_failed")
 
     @property
-    def _deterministic_broker_cls(self):
-        return DeterministicBroker
+    def _deterministic_broker_cls(self) -> type[DeterministicBroker]:
+        return cast(type[DeterministicBroker], DeterministicBroker)
 
     @property
-    def _create_brokerage(self):
-        return create_brokerage
+    def _create_brokerage(
+        self,
+    ) -> Callable[..., tuple[IBrokerage, EventStore, MarketDataService, ProductCatalog]]:
+        return cast(
+            Callable[..., tuple["IBrokerage", "EventStore", "MarketDataService", "ProductCatalog"]],
+            create_brokerage,
+        )
 
     @property
-    def _risk_config_cls(self):
-        return RiskConfig
+    def _risk_config_cls(self) -> type[RiskConfig]:
+        return cast(type[RiskConfig], RiskConfig)
 
     @property
-    def _risk_manager_cls(self):
-        return LiveRiskManager
+    def _risk_manager_cls(self) -> type[LiveRiskManager]:
+        return cast(type[LiveRiskManager], LiveRiskManager)
 
     @property
-    def _order_reconciler_cls(self):
-        return OrderReconciler
+    def _order_reconciler_cls(self) -> type[OrderReconciler]:
+        return cast(type[OrderReconciler], OrderReconciler)
 
 
 __all__ = [

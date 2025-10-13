@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import functools
 from collections.abc import Awaitable, Callable, Coroutine, Iterable
-from typing import Any, TypeVar
+from typing import Any, TypeVar, cast
 
 T = TypeVar("T")
 
@@ -15,7 +15,7 @@ async def gather_with_concurrency(
     max_concurrency: int = 10,
     *,
     return_exceptions: bool = True,
-) -> list[T]:
+) -> list[T | BaseException]:
     pending = list(coroutines)
     if not pending:
         return []
@@ -24,7 +24,7 @@ async def gather_with_concurrency(
         raise ValueError("max_concurrency must be at least 1")
 
     semaphore = asyncio.Semaphore(max_concurrency)
-    results: list[Any] = [None] * len(pending)
+    results: list[T | BaseException | None] = [None] * len(pending)
     first_exception: BaseException | None = None
 
     async def runner(index: int, coro: Awaitable[T]) -> None:
@@ -33,18 +33,17 @@ async def gather_with_concurrency(
             try:
                 results[index] = await coro
             except BaseException as exc:  # pragma: no cover - exercised in tests
-                if return_exceptions:
-                    results[index] = exc
-                else:
-                    if first_exception is None:
-                        first_exception = exc
+                results[index] = exc
+                if not return_exceptions and first_exception is None:
+                    first_exception = exc
 
     await asyncio.gather(*(runner(idx, coro) for idx, coro in enumerate(pending)))
 
     if first_exception is not None:
         raise first_exception
 
-    return results  # type: ignore[return-value]
+    assert all(result is not None for result in results)
+    return [cast(T | BaseException, result) for result in results]
 
 
 async def wait_for_first(
@@ -55,9 +54,10 @@ async def wait_for_first(
     if not pending:
         raise ValueError("At least one coroutine must be provided")
 
-    async def iterate():
+    async def iterate() -> T:
         for coro in asyncio.as_completed(pending):
             return await coro
+        raise RuntimeError("asyncio.as_completed produced no results")
 
     if timeout is None:
         return await iterate()
@@ -73,7 +73,8 @@ def run_async_if_needed(
     func: Callable[..., T], *args: Any, **kwargs: Any
 ) -> T | Coroutine[Any, Any, T]:
     if is_async_func(func):
-        return func(*args, **kwargs)  # type: ignore[return-value]
+        async_func = cast(Callable[..., Coroutine[Any, Any, T]], func)
+        return async_func(*args, **kwargs)
     return func(*args, **kwargs)
 
 

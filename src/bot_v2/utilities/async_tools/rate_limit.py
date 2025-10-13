@@ -16,7 +16,7 @@ class AsyncRateLimiter:
     def __init__(self, rate_limit: float, burst_limit: int = 1) -> None:
         self.rate_limit = rate_limit
         self.burst_limit = burst_limit
-        self.tokens = burst_limit
+        self.tokens: float = float(burst_limit)
         self.last_update = time.time()
         self._lock = asyncio.Lock()
 
@@ -24,12 +24,13 @@ class AsyncRateLimiter:
         async with self._lock:
             now = time.time()
             time_passed = now - self.last_update
-            self.tokens = min(self.burst_limit, self.tokens + time_passed * self.rate_limit)
+            burst_cap = float(self.burst_limit)
+            self.tokens = min(burst_cap, self.tokens + time_passed * self.rate_limit)
             self.last_update = now
             if self.tokens < 1:
                 wait_time = (1 - self.tokens) / self.rate_limit
                 await asyncio.sleep(wait_time)
-                self.tokens = 0
+                self.tokens = 0.0
             else:
                 self.tokens -= 1
 

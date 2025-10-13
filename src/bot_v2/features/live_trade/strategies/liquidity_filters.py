@@ -97,7 +97,7 @@ class RSIConfirmation:
         self.period = period
         self.oversold = oversold
         self.overbought = overbought
-        self._price_history: dict[str, list] = {}
+        self._price_history: dict[str, list[float]] = {}
 
     def update_prices(self, symbol: str, price: Decimal) -> None:
         """Update price history for RSI calculation."""

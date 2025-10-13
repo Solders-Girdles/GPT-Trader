@@ -10,6 +10,7 @@ Handles:
 
 import logging
 import math
+from collections.abc import Mapping
 from dataclasses import dataclass
 from decimal import ROUND_DOWN, ROUND_UP, Decimal
 from pathlib import Path
@@ -48,7 +49,7 @@ class SpecsService:
         self, config_path: str | None = None, *, settings: RuntimeSettings | None = None
     ) -> None:
         self.specs_cache: dict[str, ProductSpec] = {}
-        self.overrides: dict[str, dict] = {}
+        self.overrides: dict[str, dict[str, Any]] = {}
         runtime_settings = settings or load_runtime_settings()
 
         # Load overrides from YAML if available
@@ -69,9 +70,14 @@ class SpecsService:
         try:
             with open(path) as f:
                 config = yaml.safe_load(f)
-                if config and "products" in config:
-                    self.overrides = config["products"]
-                    logger.info(f"Loaded {len(self.overrides)} product overrides")
+                products = config.get("products") if isinstance(config, Mapping) else None
+                if isinstance(products, Mapping):
+                    self.overrides = {
+                        str(product_id): dict(spec)
+                        for product_id, spec in products.items()
+                        if isinstance(spec, Mapping)
+                    }
+                    logger.info("Loaded %d product overrides", len(self.overrides))
         except Exception as e:
             logger.error(f"Failed to load specs config: {e}")
 
@@ -82,11 +88,12 @@ class SpecsService:
             return self.specs_cache[product_id]
 
         # Start with API data or defaults
-        spec_data = api_data.copy() if api_data else {}
+        spec_data: dict[str, Any] = dict(api_data or {})
 
         # Apply overrides if available
-        if product_id in self.overrides:
-            spec_data.update(self.overrides[product_id])
+        override = self.overrides.get(product_id)
+        if override:
+            spec_data.update(override)
             logger.debug(f"Applied overrides for {product_id}")
 
         # Create and cache spec
@@ -107,17 +114,12 @@ class SpecsService:
         if increment <= 0:
             return price_decimal
 
-        # Calculate number of increments
-        num_increments = price_decimal / increment
-
+        normalized = price_decimal / increment
         if side.upper() == "BUY":
-            # Floor for buy orders (lower price = more aggressive)
-            quantized = math.floor(num_increments) * increment
-        else:  # SELL
-            # Ceil for sell orders (higher price = more aggressive)
-            quantized = math.ceil(num_increments) * increment
-
-        return Decimal(str(quantized))
+            steps = normalized.to_integral_value(rounding=ROUND_DOWN)
+        else:
+            steps = normalized.to_integral_value(rounding=ROUND_UP)
+        return (steps * increment).quantize(increment)
 
     def quantize_size(self, product_id: str, size: float) -> Decimal:
         """Quantize size to step size (always floor for safety)."""
@@ -189,7 +191,12 @@ class SpecsService:
         Returns dict with adjusted values or error details.
         """
         spec = self.get_spec(product_id)
-        result = {"valid": True, "adjusted_size": None, "adjusted_price": None, "reasons": []}
+        result: dict[str, Any] = {
+            "valid": True,
+            "adjusted_size": None,
+            "adjusted_price": None,
+            "reasons": [],
+        }
 
         # Validate and adjust size
         size_decimal = Decimal(str(size))

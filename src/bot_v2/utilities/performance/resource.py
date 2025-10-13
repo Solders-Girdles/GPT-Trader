@@ -18,7 +18,7 @@ class ResourceMonitor:
     """Monitor system resource usage."""
 
     def __init__(self) -> None:
-        self._psutil = None
+        self._psutil: Any = None
         self._try_import_psutil()
 
     def _try_import_psutil(self) -> None:
@@ -47,7 +47,11 @@ class ResourceMonitor:
         if not self.is_available():
             return {}
 
-        memory = self._psutil.virtual_memory()
+        ps_module = self._psutil
+        if ps_module is None:
+            return {}
+
+        memory = ps_module.virtual_memory()
         return {
             "rss_mb": memory.used / 1024 / 1024,
             "vms_mb": memory.total / 1024 / 1024,
@@ -58,18 +62,26 @@ class ResourceMonitor:
         if not self.is_available():
             return {}
 
+        ps_module = self._psutil
+        if ps_module is None:
+            return {}
+
         return {
-            "cpu_percent": float(self._psutil.cpu_percent()),
-            "cpu_count": self._psutil.cpu_count(),
+            "cpu_percent": float(ps_module.cpu_percent()),
+            "cpu_count": ps_module.cpu_count(),
         }
 
     def get_system_info(self) -> dict[str, Any]:
         if not self.is_available():
             return {}
 
-        memory_info = self._psutil.virtual_memory()
+        ps_module = self._psutil
+        if ps_module is None:
+            return {}
+
+        memory_info = ps_module.virtual_memory()
         return {
-            "cpu_count": self._psutil.cpu_count(),
+            "cpu_count": ps_module.cpu_count(),
             "memory_total_gb": memory_info.total / 1024 / 1024 / 1024,
             "memory_available_gb": memory_info.available / 1024 / 1024 / 1024,
             "memory_percent": float(memory_info.percent),

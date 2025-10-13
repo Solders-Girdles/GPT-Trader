@@ -37,11 +37,11 @@ def check_mark_staleness(
             "stale_mark_price",
             {
                 "symbol": symbol,
-                "age_seconds": str(age.total_seconds()),
+                "age_seconds": f"{age.total_seconds():.0f}",
                 "limit_seconds": str(max_staleness_seconds),
                 "action": "halt_new_orders",
             },
-            guard="mark_staleness",
+            "mark_staleness",
         )
         logger.warning(
             "Stale mark price for %s: %.0fs > hard limit %.0fs - Halting new orders",
@@ -83,7 +83,7 @@ def check_correlation_risk(
             return False
         hhi = sum((value / total) ** 2 for value in notional_vals)
         if hhi > Decimal("0.4"):
-            log_event("concentration_risk", {"hhi": str(hhi)}, guard="correlation_risk")
+            log_event("concentration_risk", {"hhi": str(hhi)}, "correlation_risk")
             logger.warning("Concentration risk detected (HHI=%.3f)", hhi)
             return True
 

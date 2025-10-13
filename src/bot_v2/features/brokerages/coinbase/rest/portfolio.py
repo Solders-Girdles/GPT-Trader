@@ -3,15 +3,22 @@
 from __future__ import annotations
 
 from decimal import Decimal, InvalidOperation
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from bot_v2.features.brokerages.coinbase.rest.base import logger
 from bot_v2.features.brokerages.core.interfaces import Balance, Position
 from bot_v2.utilities.quantities import quantity_from
 
+if TYPE_CHECKING:
+    from bot_v2.features.brokerages.coinbase.client import CoinbaseClient
+    from bot_v2.features.brokerages.coinbase.endpoints import CoinbaseEndpoints
+
 
 class PortfolioRestMixin:
     """Account surface area exposed by the Coinbase REST service."""
+
+    client: CoinbaseClient
+    endpoints: CoinbaseEndpoints
 
     def list_balances(self) -> list[Balance]:
         raw = self.client.get_accounts() or {}

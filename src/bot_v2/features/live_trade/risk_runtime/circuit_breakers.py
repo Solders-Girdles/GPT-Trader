@@ -143,6 +143,7 @@ def check_volatility_circuit_breaker(
 
     current_time = now()
     if use_rule:
+        assert rule is not None and state is not None
         snapshot = state.get(rule.name, symbol)
         if snapshot and (current_time - snapshot.triggered_at) < rule.cooldown:
             return CircuitBreakerOutcome(
@@ -185,7 +186,7 @@ def check_volatility_circuit_breaker(
         outcome_action = CircuitBreakerAction.WARNING
 
     if outcome_action is not CircuitBreakerAction.NONE:
-        if use_rule and state is not None:
+        if use_rule and state is not None and rule is not None:
             state.record(rule.name, symbol, outcome_action, current_time)
         elif state is not None:
             state.record("volatility_circuit_breaker", symbol, outcome_action, current_time)
@@ -199,11 +200,11 @@ def check_volatility_circuit_breaker(
                 "symbol": symbol,
                 "rolling_volatility": f"{rolling_vol:.6f}",
                 "action": outcome_action.value,
-                "warning_threshold": warn_th,
-                "reduce_only_threshold": reduce_only_th,
-                "kill_switch_threshold": kill_th,
+                "warning_threshold": f"{warn_th:.6f}",
+                "reduce_only_threshold": f"{reduce_only_th:.6f}",
+                "kill_switch_threshold": f"{kill_th:.6f}",
             },
-            guard="volatility_circuit_breaker",
+            "volatility_circuit_breaker",
         )
         logger.warning(
             "Volatility CB: %s vol=%.3f action=%s",

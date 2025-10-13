@@ -5,13 +5,16 @@ Provides intelligent error handling with retry logic, exponential backoff,
 and circuit breaker pattern for fault tolerance.
 """
 
+from __future__ import annotations
+
 import logging
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from functools import wraps
+from typing import Any, ParamSpec, TypeVar, cast
 
 from bot_v2.errors import (
     NetworkError,
@@ -22,6 +25,9 @@ from bot_v2.errors import (
 )
 
 logger = logging.getLogger(__name__)
+
+P = ParamSpec("P")
+T = TypeVar("T")
 
 
 class RecoveryStrategy(Enum):
@@ -51,7 +57,7 @@ class CircuitBreakerConfig:
 
     failure_threshold: int = 5
     recovery_timeout: float = 60.0  # seconds
-    expected_exception_types: tuple = (NetworkError, TimeoutError)
+    expected_exception_types: tuple[type[Exception], ...] = (NetworkError, TimeoutError)
 
 
 class CircuitBreakerState(Enum):
@@ -121,21 +127,23 @@ class ErrorHandler:
         self,
         retry_config: RetryConfig | None = None,
         circuit_breaker_config: CircuitBreakerConfig | None = None,
-        fallback_handlers: dict[type, Callable] | None = None,
+        fallback_handlers: dict[type[BaseException], Callable[..., Any]] | None = None,
     ) -> None:
         self.retry_config = retry_config or RetryConfig()
         self.circuit_breaker = CircuitBreaker(circuit_breaker_config or CircuitBreakerConfig())
-        self.fallback_handlers = fallback_handlers or {}
+        self.fallback_handlers: dict[type[BaseException], Callable[..., Any]] = (
+            fallback_handlers.copy() if fallback_handlers else {}
+        )
         self.error_history: list[TradingError] = []
         self.max_history = 100
 
     def with_retry(
         self,
-        func: Callable,
-        *args,
+        func: Callable[..., T],
+        *args: Any,
         recovery_strategy: RecoveryStrategy = RecoveryStrategy.RETRY,
-        **kwargs,
-    ) -> Any:
+        **kwargs: Any,
+    ) -> T:
         """Execute function with retry logic and error handling"""
 
         # Check circuit breaker
@@ -146,7 +154,7 @@ class ErrorHandler:
                 recoverable=False,
             )
 
-        last_error = None
+        last_error: TradingError | None = None
         attempt = 0
 
         while attempt < self.retry_config.max_attempts:
@@ -174,7 +182,7 @@ class ErrorHandler:
                     fallback = self._get_fallback(type(e))
                     if fallback:
                         logger.info(f"Using fallback for {e.__class__.__name__}")
-                        return fallback(*args, **kwargs)
+                        return cast(T, fallback(*args, **kwargs))
 
                 # Calculate retry delay
                 if attempt < self.retry_config.max_attempts:
@@ -186,6 +194,12 @@ class ErrorHandler:
                     time.sleep(delay)
 
         # All retries exhausted
+        if last_error is None:
+            last_error = TradingError(
+                "Retry attempts exhausted without captured TradingError",
+                error_code="UNKNOWN_RETRY_EXHAUSTION",
+                recoverable=False,
+            )
         self.circuit_breaker.record_failure(last_error)
         raise TradingError(
             f"All {self.retry_config.max_attempts} retry attempts failed",
@@ -208,7 +222,7 @@ class ErrorHandler:
 
         return delay
 
-    def _get_fallback(self, error_type: type) -> Callable | None:
+    def _get_fallback(self, error_type: type[BaseException]) -> Callable[..., Any] | None:
         """Get fallback handler for error type"""
         for error_class, handler in self.fallback_handlers.items():
             if issubclass(error_type, error_class):
@@ -227,7 +241,7 @@ class ErrorHandler:
         error: Exception,
         context: dict[str, Any] | None = None,
         recovery_strategy: RecoveryStrategy = RecoveryStrategy.RETRY,
-    ) -> Any | None:
+    ) -> None:
         """Handle an error with appropriate recovery strategy"""
         trading_error = handle_error(error, context)
         self._record_error(trading_error)
@@ -250,7 +264,7 @@ class ErrorHandler:
                 "circuit_breaker_state": self.circuit_breaker.state.value,
             }
 
-        error_types = {}
+        error_types: dict[str, int] = {}
         for error in self.error_history:
             error_type = error.error_code
             error_types[error_type] = error_types.get(error_type, 0) + 1
@@ -272,7 +286,7 @@ class ErrorHandler:
 
 
 # Global error handler instance
-_error_handler = None
+_error_handler: ErrorHandler | None = None
 
 
 def get_error_handler() -> ErrorHandler:
@@ -292,12 +306,13 @@ def set_error_handler(handler: ErrorHandler) -> None:
 # Decorator for automatic error handling
 def with_error_handling(
     recovery_strategy: RecoveryStrategy = RecoveryStrategy.RETRY,
-    fallback: Callable[..., Any] | None = None,
-) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+    fallback: Callable[P, T] | None = None,
+) -> Callable[[Callable[P, T]], Callable[P, T]]:
     """Decorator to add error handling to functions"""
 
-    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
-        def wrapper(*args: Any, **kwargs: Any) -> Any:
+    def decorator(func: Callable[P, T]) -> Callable[P, T]:
+        @wraps(func)
+        def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
             handler = get_error_handler()
 
             if fallback:

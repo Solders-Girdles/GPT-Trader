@@ -13,7 +13,7 @@ from bot_v2.features.data.types import DataQuality
 class DataQualityChecker:
     """Checks data quality."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize quality checker."""
         self.quality_history: list[DataQuality] = []
         self.max_history = 100
@@ -95,7 +95,7 @@ class DataQualityChecker:
             if col in data.columns:
                 valid_checks.append((data[col] > 0).mean())
 
-        return np.mean(valid_checks) if valid_checks else 1.0
+        return float(np.mean(valid_checks)) if valid_checks else 1.0
 
     def _check_consistency(self, data: pd.DataFrame) -> float:
         """
@@ -231,8 +231,8 @@ class DataQualityChecker:
             return {"completeness": 0.0, "accuracy": 0.0, "consistency": 0.0, "timeliness": 0.0}
 
         return {
-            "completeness": np.mean([q.completeness for q in self.quality_history]),
-            "accuracy": np.mean([q.accuracy for q in self.quality_history]),
-            "consistency": np.mean([q.consistency for q in self.quality_history]),
-            "timeliness": np.mean([q.timeliness for q in self.quality_history]),
+            "completeness": float(np.mean([q.completeness for q in self.quality_history])),
+            "accuracy": float(np.mean([q.accuracy for q in self.quality_history])),
+            "consistency": float(np.mean([q.consistency for q in self.quality_history])),
+            "timeliness": float(np.mean([q.timeliness for q in self.quality_history])),
         }

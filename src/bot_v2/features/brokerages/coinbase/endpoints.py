@@ -340,6 +340,20 @@ class CoinbaseEndpoints:
         else:
             return f"{self.base_url}/orders"
 
+    def list_orders(self) -> str:
+        """List orders endpoint."""
+        if self.mode == "advanced":
+            return f"{self.base_url}/api/v3/brokerage/orders/historical"
+        else:
+            return f"{self.base_url}/orders"
+
+    def get_order(self, order_id: str) -> str:
+        """Get single order endpoint."""
+        if self.mode == "advanced":
+            return f"{self.base_url}/api/v3/brokerage/orders/historical/{order_id}"
+        else:
+            return f"{self.base_url}/orders/{order_id}"
+
     def cancel_orders(self) -> str:
         """Cancel orders endpoint."""
         if self.mode == "advanced":
@@ -361,6 +375,12 @@ class CoinbaseEndpoints:
         else:
             # Fallback for non-derivatives mode
             return f"{self.base_url}/api/v3/brokerage/accounts"
+
+    def get_position(self, product_id: str) -> str:
+        """Get single position endpoint for derivatives."""
+        if self.mode == "advanced" and self.enable_derivatives:
+            return f"{self.base_url}/api/v3/brokerage/cfm/positions/{product_id}"
+        raise NotImplementedError("Position lookup not supported for this mode")
 
     def close_position(self) -> str:
         """Close position endpoint."""

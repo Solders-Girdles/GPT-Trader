@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 import time
 import types
-from collections.abc import Callable, Generator
+from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from decimal import Decimal
 from functools import wraps
@@ -119,7 +119,7 @@ def log_operation(
     logger: StructuredLogger | logging.Logger | None = None,
     level: int = logging.INFO,
     **context: Any,
-) -> Generator[None]:
+) -> Iterator[None]:
     """Context manager for logging operation start/end with timing.
 
     Args:

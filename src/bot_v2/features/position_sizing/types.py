@@ -215,11 +215,11 @@ class VolatilityMetrics:
             return cls(0.0, 0.0, 0.0, 0.0)
 
         returns = np.diff(np.log(prices))
-        daily_vol = np.std(returns)
-        annual_vol = daily_vol * np.sqrt(252)  # 252 trading days
+        daily_vol = float(np.std(returns))
+        annual_vol = daily_vol * float(np.sqrt(252))  # 252 trading days
 
-        var_95 = daily_vol * confidence_95
-        var_99 = daily_vol * confidence_99
+        var_95 = daily_vol * float(confidence_95)
+        var_99 = daily_vol * float(confidence_99)
 
         return cls(
             daily_volatility=daily_vol,

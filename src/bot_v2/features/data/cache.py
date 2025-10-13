@@ -5,8 +5,12 @@ Complete isolation - no external dependencies.
 """
 
 from datetime import datetime, timedelta
+from typing import Dict, cast
+from collections.abc import Iterable
+
 import pandas as pd
-from bot_v2.features.data.types import CacheEntry
+
+from bot_v2.features.data.types import CacheEntry, DataQuery
 
 
 class DataCache:
@@ -38,7 +42,7 @@ class DataCache:
         """
         try:
             # Calculate data size
-            size_bytes = data.memory_usage(deep=True).sum()
+            size_bytes = int(data.memory_usage(deep=True).sum())
 
             # Check if adding would exceed limit
             current_size = self._get_total_size()
@@ -89,7 +93,7 @@ class DataCache:
         entry.hit_count += 1
         self.total_hits += 1
 
-        return entry.data.copy()
+        return cast(pd.DataFrame, entry.data.copy())
 
     def invalidate(self, key: str) -> bool:
         """
@@ -106,7 +110,7 @@ class DataCache:
             return True
         return False
 
-    def clear(self):
+    def clear(self) -> None:
         """Clear all cache entries."""
         self.cache.clear()
         self.total_hits = 0
@@ -126,7 +130,7 @@ class DataCache:
 
         return len(expired_keys)
 
-    def get_stats(self) -> dict:
+    def get_stats(self) -> dict[str, float | int]:
         """Get cache statistics."""
         total_size = self._get_total_size()
         hit_rate = (
@@ -148,7 +152,7 @@ class DataCache:
         """Get total cache size in bytes."""
         return sum(entry.size_bytes for entry in self.cache.values())
 
-    def _evict_lru(self, required_space: int):
+    def _evict_lru(self, required_space: int) -> None:
         """
         Evict least recently used entries.
 
@@ -168,7 +172,7 @@ class DataCache:
             freed_space += entry.size_bytes
             del self.cache[key]
 
-    def warm_up(self, queries: list):
+    def warm_up(self, queries: Iterable[DataQuery]) -> None:
         """
         Warm up cache with common queries.
 

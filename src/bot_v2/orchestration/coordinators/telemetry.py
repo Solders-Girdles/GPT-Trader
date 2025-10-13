@@ -7,7 +7,7 @@ import logging
 import threading
 from collections.abc import Iterable
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from bot_v2.features.brokerages.coinbase.account_manager import CoinbaseAccountManager
 from bot_v2.monitoring.system import get_logger as _get_plog
@@ -19,7 +19,7 @@ from bot_v2.utilities import emit_metric, utc_now
 from .base import BaseCoordinator, CoordinatorContext, HealthStatus
 
 if TYPE_CHECKING:  # pragma: no cover - typing only
-    pass
+    from bot_v2.features.brokerages.coinbase.adapter import CoinbaseBrokerage
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +45,21 @@ class TelemetryCoordinator(BaseCoordinator):
             logger.warning("Telemetry initialization skipped: no broker available")
             return ctx
 
-        account_manager = CoinbaseAccountManager(broker, event_store=ctx.event_store)
+        try:
+            from bot_v2.features.brokerages.coinbase.adapter import (
+                CoinbaseBrokerage as _CoinbaseBrokerage,
+            )
+        except Exception:  # pragma: no cover - fallback
+            logger.warning("Coinbase adapter unavailable; telemetry coordinator skipping setup")
+            return ctx
+
+        if not isinstance(broker, _CoinbaseBrokerage):
+            logger.warning("Telemetry coordinator requires a Coinbase brokerage; skipping setup")
+            return ctx
+
+        account_manager = CoinbaseAccountManager(
+            cast("CoinbaseBrokerage", broker), event_store=ctx.event_store
+        )
         account_telemetry = AccountTelemetryService(
             broker=broker,
             account_manager=account_manager,

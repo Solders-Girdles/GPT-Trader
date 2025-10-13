@@ -564,22 +564,24 @@ class ConfigurationGuardian:
 
     def get_health_status(self) -> dict[str, Any]:
         """Get guardian health status for monitoring."""
-        status = {
+        monitors_status: dict[str, str] = {}
+        status: dict[str, Any] = {
             "baseline_timestamp": self.baseline.timestamp.isoformat(),
-            "monitors_status": {},
+            "monitors_status": monitors_status,
             "drift_summary": self.drift_detector.get_drift_summary(),
         }
 
         for monitor in self.monitors:
             try:
-                status["monitors_status"][monitor.monitor_name] = "healthy"
+                monitors_status[monitor.monitor_name] = "healthy"
                 # Could add more detailed health checks here
             except Exception as e:
-                status["monitors_status"][monitor.monitor_name] = f"error: {e}"
+                monitors_status[monitor.monitor_name] = f"error: {e}"
                 logger.error(f"Monitor {monitor.monitor_name} health check failed: {e}")
 
         return status
 
+    @staticmethod
     def create_baseline_snapshot(
         config_dict: dict[str, Any] | ConfigBaselinePayload,
         active_symbols: list[str],
@@ -601,7 +603,7 @@ class ConfigurationGuardian:
 
         # Calculate total exposure
         total_exposure = Decimal("0")
-        position_summaries = {}
+        position_summaries: dict[str, dict[str, float]] = {}
 
         for pos in positions:
             if hasattr(pos, "symbol") and hasattr(pos, "size") and hasattr(pos, "price"):

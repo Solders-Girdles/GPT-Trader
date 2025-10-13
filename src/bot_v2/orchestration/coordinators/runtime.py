@@ -390,12 +390,18 @@ class RuntimeCoordinator(BaseCoordinator):
             logger.info("No broker available for reconciliation; skipping")
             return
 
+        orders_store = ctx.orders_store
+        event_store = ctx.event_store
+        if orders_store is None or event_store is None:
+            logger.warning("Skipping reconciliation: missing orders/event store")
+            return
+
         logger.info("Reconciling state with exchange...")
         try:
             reconciler = self._order_reconciler_cls(
                 broker=broker,
-                orders_store=ctx.orders_store,
-                event_store=ctx.event_store,
+                orders_store=orders_store,
+                event_store=event_store,
                 bot_id=ctx.bot_id,
             )
 

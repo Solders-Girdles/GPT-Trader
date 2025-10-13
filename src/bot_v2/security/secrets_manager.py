@@ -13,13 +13,18 @@ import threading
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from cryptography.fernet import Fernet
 
 from bot_v2.orchestration.runtime_settings import RuntimeSettings, load_runtime_settings
 
 logger = logging.getLogger(__name__)
+
+if TYPE_CHECKING:  # pragma: no cover
+    from hvac import Client as HvacClient
+else:
+    HvacClient = Any  # type: ignore[misc]
 
 
 @dataclass
@@ -41,9 +46,9 @@ class SecretsManager:
         self, vault_enabled: bool = True, *, settings: RuntimeSettings | None = None
     ) -> None:
         self._lock = threading.Lock()
-        self._cipher_suite = None
-        self._secrets_cache = {}
-        self._vault_client = None
+        self._cipher_suite: Fernet | None = None
+        self._secrets_cache: dict[str, dict[str, Any]] = {}
+        self._vault_client: HvacClient | None = None
         self._vault_enabled = vault_enabled
         self._static_settings = settings is not None
         self._settings = settings or load_runtime_settings()
@@ -75,6 +80,17 @@ class SecretsManager:
             )
         except Exception as e:
             raise ValueError(f"Invalid encryption key: {e}")
+
+    def _require_cipher(self) -> Fernet:
+        if self._cipher_suite is None:
+            raise RuntimeError("Encryption subsystem not initialised")
+        return self._cipher_suite
+
+    @staticmethod
+    def _as_secret_dict(payload: Any) -> dict[str, Any]:
+        if isinstance(payload, dict):
+            return dict(payload)
+        raise ValueError("Secret payload must be a mapping")
 
     def _initialize_vault(self) -> None:
         """Initialize HashiCorp Vault connection"""
@@ -154,10 +170,13 @@ class SecretsManager:
                 return self._secrets_cache[path]
 
             try:
-                if self._vault_enabled and self._vault_client:
+                if self._vault_enabled and self._vault_client is not None:
                     # Retrieve from Vault
                     response = self._vault_client.secrets.kv.v2.read_secret_version(path=path)
-                    secret = response["data"]["data"]
+                    secret_payload = response.get("data", {}).get("data")
+                    secret = (
+                        self._as_secret_dict(secret_payload) if secret_payload is not None else None
+                    )
                 else:
                     # Retrieve from encrypted file
                     secret = self._load_from_file(path)
@@ -179,8 +198,9 @@ class SecretsManager:
         file_path = secrets_dir / f"{path.replace('/', '_')}.enc"
 
         # Encrypt data
+        cipher = self._require_cipher()
         data = json.dumps(secret).encode()
-        encrypted = self._cipher_suite.encrypt(data)
+        encrypted = cipher.encrypt(data)
 
         # Write to file
         file_path.write_bytes(encrypted)
@@ -195,9 +215,14 @@ class SecretsManager:
 
         try:
             # Read and decrypt
+            cipher = self._require_cipher()
             encrypted = file_path.read_bytes()
-            decrypted = self._cipher_suite.decrypt(encrypted)
-            return json.loads(decrypted.decode())
+            decrypted = cipher.decrypt(encrypted)
+            payload = json.loads(decrypted.decode())
+            return self._as_secret_dict(payload)
+        except ValueError as exc:
+            logger.error("Invalid secret payload for %s: %s", path, exc)
+            return None
         except Exception as e:
             logger.error(f"Failed to decrypt file: {e}")
             return None
@@ -278,7 +303,7 @@ class SecretsManager:
 
 
 # Global instance
-_secrets_manager = None
+_secrets_manager: SecretsManager | None = None
 
 
 def get_secrets_manager() -> SecretsManager:

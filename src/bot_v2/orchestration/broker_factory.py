@@ -5,7 +5,7 @@ Broker factory to instantiate brokerage adapters based on config/env.
 from __future__ import annotations
 
 import logging
-from typing import Literal, cast
+from typing import Any, Literal, cast
 
 from bot_v2.config import get_config
 from bot_v2.features.brokerages.coinbase.market_data_service import MarketDataService
@@ -196,7 +196,7 @@ def create_brokerage(
     raise ValueError(f"Unsupported broker: {broker}")
 
 
-def __getattr__(name: str):
+def __getattr__(name: str) -> Any:
     if name == "CoinbaseBrokerage":
         from bot_v2.features.brokerages.coinbase import CoinbaseBrokerage as _CoinbaseBrokerage
 

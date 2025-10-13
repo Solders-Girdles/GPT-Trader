@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from typing import Any
 
 AnyLogger = Any
-LogEventFn = Callable[[str, dict[str, str], str], None]
+LogEventFn = Callable[[str, Mapping[str, Any], str | None], None]
 
 
 __all__ = ["AnyLogger", "LogEventFn"]

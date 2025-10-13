@@ -28,6 +28,7 @@ if TYPE_CHECKING:  # pragma: no cover - type checking only
     from bot_v2.features.brokerages.core.interfaces import IBrokerage
     from bot_v2.orchestration.perps_bot import PerpsBot
     from bot_v2.persistence.event_store import EventStore
+    from bot_v2.persistence.orders_store import OrdersStore
 
 logger = logging.getLogger(__name__)
 
@@ -52,15 +53,13 @@ class RuntimeCoordinator(_RuntimeCoordinator):
         super().bootstrap()
         self._sync_bot(self.context)
 
-    def _init_broker(self, context: CoordinatorContext | None = None) -> CoordinatorContext | None:  # type: ignore[override]
+    def _init_broker(self, context: CoordinatorContext | None = None) -> CoordinatorContext:
         ctx = context or self._refresh_context_from_bot()
         updated = super()._init_broker(ctx)
         self.update_context(updated)
         return updated
 
-    def _init_risk_manager(
-        self, context: CoordinatorContext | None = None
-    ) -> CoordinatorContext | None:  # type: ignore[override]
+    def _init_risk_manager(self, context: CoordinatorContext | None = None) -> CoordinatorContext:
         ctx = context or self._refresh_context_from_bot()
         updated = super()._init_risk_manager(ctx)
         self.update_context(updated)
@@ -93,7 +92,7 @@ class RuntimeCoordinator(_RuntimeCoordinator):
             except Exception:
                 fallback_broker = None
             if fallback_broker is not None:
-                context = context.with_updates(broker=fallback_broker)
+                context = context.with_updates(broker=cast("IBrokerage", fallback_broker))
                 super().update_context(context)
         await super().reconcile_state_on_startup()
         self._sync_bot(self.context)
@@ -120,21 +119,25 @@ class RuntimeCoordinator(_RuntimeCoordinator):
             except Exception:
                 return None
 
-        broker_value = (
+        broker_attr = (
             getattr(registry, "broker", None)
             or bot.__dict__.get("broker")
             or _safe_attr(bot, "broker")
         )
-        risk_value = (
+        risk_attr = (
             getattr(registry, "risk_manager", None)
             or bot.__dict__.get("risk_manager")
             or _safe_attr(bot, "risk_manager")
         )
+        broker_value = cast("IBrokerage | None", broker_attr)
+        risk_value = cast("LiveRiskManager | None", risk_attr)
+        event_store_value = cast("EventStore | None", getattr(bot, "event_store", None))
+        orders_store_value = cast("OrdersStore | None", getattr(bot, "orders_store", None))
         return CoordinatorContext(
             config=bot.config,
             registry=registry,
-            event_store=getattr(bot, "event_store", None),
-            orders_store=getattr(bot, "orders_store", None),
+            event_store=event_store_value,
+            orders_store=orders_store_value,
             broker=broker_value,
             risk_manager=risk_value,
             symbols=symbols,
@@ -153,8 +156,12 @@ class RuntimeCoordinator(_RuntimeCoordinator):
             bot.event_store = context.event_store
         if context.orders_store is not None:
             bot.orders_store = context.orders_store
-        bot.broker = context.broker or bot.registry.broker
-        bot.risk_manager = context.risk_manager or bot.registry.risk_manager
+        broker_candidate = context.broker or context.registry.broker
+        if broker_candidate is not None:
+            bot.broker = cast("IBrokerage", broker_candidate)
+        risk_candidate = context.risk_manager or context.registry.risk_manager
+        if risk_candidate is not None:
+            bot.risk_manager = cast("LiveRiskManager", risk_candidate)
         if context.product_cache is not None:
             if hasattr(bot, "_state") and hasattr(bot._state, "product_map"):
                 bot._state.product_map = context.product_cache

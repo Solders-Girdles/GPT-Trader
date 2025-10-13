@@ -6,11 +6,12 @@ Implements JWT-based authentication with RBAC, MFA support, and secure session m
 
 import logging
 import secrets
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from enum import Enum
 from threading import Lock
-from typing import Any
+from typing import Any, cast
 
 import jwt
 import pyotp
@@ -55,6 +56,14 @@ class TokenPair:
     token_type: str = "Bearer"
 
 
+@dataclass
+class SessionInfo:
+    user_id: str
+    created_at: datetime
+    access_token_jti: str
+    refresh_token_jti: str
+
+
 class AuthHandler:
     """
     Handles authentication, authorization, and session management.
@@ -77,9 +86,9 @@ class AuthHandler:
 
     def __init__(self, *, settings: RuntimeSettings | None = None) -> None:
         self._lock = Lock()
-        self._users = {}  # In production, use database
-        self._sessions = {}  # Active sessions
-        self._revoked_tokens = set()  # Revoked token JTIs
+        self._users: dict[str, User] = {}
+        self._sessions: dict[str, SessionInfo] = {}
+        self._revoked_tokens: set[str] = set()
 
         self._settings = settings or load_runtime_settings()
         env_map = self._settings.raw_env
@@ -142,21 +151,21 @@ class AuthHandler:
                     return None
 
             # Generate tokens
-            tokens = self._generate_tokens(user)
+            token_pair, access_jti, refresh_jti = self._generate_tokens(user)
 
             # Create session
             session_id = secrets.token_urlsafe(32)
-            self._sessions[session_id] = {
-                "user_id": user.id,
-                "created_at": datetime.now(UTC),
-                "access_token_jti": self._get_jti(tokens.access_token),
-                "refresh_token_jti": self._get_jti(tokens.refresh_token),
-            }
+            self._sessions[session_id] = SessionInfo(
+                user_id=user.id,
+                created_at=datetime.now(UTC),
+                access_token_jti=access_jti,
+                refresh_token_jti=refresh_jti,
+            )
 
             logger.info(f"User authenticated successfully: {username}")
-            return tokens
+            return token_pair
 
-    def _generate_tokens(self, user: User) -> TokenPair:
+    def _generate_tokens(self, user: User) -> tuple[TokenPair, str, str]:
         """Generate JWT token pair for user"""
         now = datetime.now(UTC)
 
@@ -193,11 +202,12 @@ class AuthHandler:
         access_token = jwt.encode(access_claims, self.secret_key, algorithm=self.algorithm)
         refresh_token = jwt.encode(refresh_claims, self.secret_key, algorithm=self.algorithm)
 
-        return TokenPair(
+        pair = TokenPair(
             access_token=access_token,
             refresh_token=refresh_token,
             expires_in=self.access_token_lifetime,
         )
+        return pair, access_jti, refresh_jti
 
     def validate_token(self, token: str) -> dict[str, Any] | None:
         """
@@ -211,12 +221,15 @@ class AuthHandler:
         """
         try:
             # Decode token
-            claims = jwt.decode(
-                token,
-                self.secret_key,
-                algorithms=[self.algorithm],
-                issuer=self.issuer,
-                audience=self.audience,
+            claims = cast(
+                dict[str, Any],
+                jwt.decode(
+                    token,
+                    self.secret_key,
+                    algorithms=[self.algorithm],
+                    issuer=self.issuer,
+                    audience=self.audience,
+                ),
             )
 
             # Check if revoked
@@ -257,7 +270,8 @@ class AuthHandler:
         self._revoked_tokens.add(claims["jti"])
 
         # Generate new tokens
-        return self._generate_tokens(user)
+        new_pair, _, _ = self._generate_tokens(user)
+        return new_pair
 
     def revoke_token(self, token: str) -> bool:
         """Revoke a token"""
@@ -324,7 +338,7 @@ class AuthHandler:
 
         # Generate provisioning URI
         totp = pyotp.TOTP(secret)
-        return totp.provisioning_uri(name=user.email, issuer_name="Bot V2 Trading")
+        return str(totp.provisioning_uri(name=user.email, issuer_name="Bot V2 Trading"))
 
     def _verify_mfa(self, user: User, code: str) -> bool:
         """Verify MFA code"""
@@ -332,13 +346,13 @@ class AuthHandler:
             return False
 
         totp = pyotp.TOTP(user.mfa_secret)
-        return totp.verify(code, valid_window=1)
+        return bool(totp.verify(code, valid_window=1))
 
     def _find_user_by_username(self, username: str) -> User | None:
         """Find user by username or email"""
-        for user in self._users.values():
-            if user.username == username or user.email == username:
-                return user
+        for candidate in self._users.values():
+            if candidate.username == username or candidate.email == username:
+                return candidate
         return None
 
     def _verify_password(self, password: str, user_id: str) -> bool:
@@ -347,15 +361,16 @@ class AuthHandler:
         return password == "admin123"  # Demo password
 
     def _get_jti(self, token: str) -> str | None:
-        """Extract JTI from token"""
+        """Extract JTI from token (legacy helper for tests)."""
         try:
-            claims = jwt.decode(
+            claims: Mapping[str, Any] = jwt.decode(
                 token,
                 self.secret_key,
                 algorithms=[self.algorithm],
                 options={"verify_signature": False},
             )
-            return claims.get("jti")
+            jti_value = claims.get("jti")
+            return str(jti_value) if jti_value is not None else None
         except PyJWTError as exc:
             logger.warning("Failed to extract JTI from token: %s", exc, exc_info=True)
         except Exception as exc:
@@ -364,7 +379,7 @@ class AuthHandler:
 
 
 # Global instance
-_auth_handler = None
+_auth_handler: AuthHandler | None = None
 
 
 def get_auth_handler() -> AuthHandler:

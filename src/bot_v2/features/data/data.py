@@ -8,6 +8,8 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 import os
+from typing import TYPE_CHECKING, Any, Dict, Optional, cast
+from collections.abc import Mapping, MutableMapping
 
 from bot_v2.data_providers import get_data_provider
 from bot_v2.utilities import (
@@ -35,6 +37,11 @@ from bot_v2.features.data.quality import DataQualityChecker
 
 # Lazy imports for heavy dependencies
 pandas = optional_import("pandas")
+
+if TYPE_CHECKING:  # pragma: no cover
+    import pandas as pd
+else:
+    pd = cast(Any, pandas)
 
 # Global instances
 _storage = DataStorage()
@@ -79,8 +86,10 @@ def store_data(
                 )
 
             # Store data
-            success = _storage.store(
-                symbol=symbol, data=data, data_type=data_type, source=source, metadata=metadata
+            success = bool(
+                _storage.store(
+                    symbol=symbol, data=data, data_type=data_type, source=source, metadata=metadata
+                )
             )
 
             if success:
@@ -127,14 +136,14 @@ def fetch_data(query: DataQuery, use_cache: bool = True) -> pd.DataFrame | None:
         # Check cache first
         if use_cache:
             cache_key = query.get_cache_key()
-            cached_data = _cache.get(cache_key)
+            cached_data = cast(Optional[pd.DataFrame], _cache.get(cache_key))
             if cached_data is not None:
                 console_cache("Cache hit", cache_key=cache_key, records=len(cached_data))
                 logger.info("Cache hit", cache_key=cache_key, records=len(cached_data))
                 return cached_data
 
         # Fetch from storage
-        data = _storage.fetch(query)
+        data = cast(Optional[pd.DataFrame], _storage.fetch(query))
 
         if data is not None and not data.empty:
             console_storage("Fetched from storage", records=len(data), symbols=query.symbols)
@@ -150,25 +159,34 @@ def fetch_data(query: DataQuery, use_cache: bool = True) -> pd.DataFrame | None:
         # If not in storage, try downloading
         if query.source == DataSource.YAHOO or query.source is None:
             console_data("Attempting download", symbols=query.symbols, source="yahoo")
-            data = download_from_yahoo(
+            downloaded = download_from_yahoo(
                 symbols=query.symbols,
                 start=query.start_date,
                 end=query.end_date,
                 interval=query.interval,
             )
 
-            if data is not None:
+            if downloaded:
                 # Store for future use
                 for symbol in query.symbols:
-                    if symbol in data:
+                    frame = downloaded.get(symbol)
+                    if frame is not None and not frame.empty:
                         store_data(
                             symbol=symbol,
-                            data=data[symbol],
+                            data=frame,
                             data_type=query.data_type,
                             source=DataSource.YAHOO,
                         )
 
-            return data
+                if len(query.symbols) == 1:
+                    return downloaded.get(query.symbols[0])
+
+                # Combine multi-symbol data using column MultiIndex
+                combined_frames = [frame for frame in downloaded.values() if frame is not None]
+                if combined_frames:
+                    return pd.concat(combined_frames, axis=1, keys=downloaded.keys())
+
+            return None
 
         return None
 
@@ -186,7 +204,7 @@ def cache_data(key: str, data: pd.DataFrame, ttl_seconds: int = 3600) -> bool:
         True if cached successfully
     """
     with log_operation("cache_data", logger, cache_key=key, ttl_seconds=ttl_seconds):
-        success = _cache.put(key, data, ttl_seconds)
+        success = bool(_cache.put(key, data, ttl_seconds))
         if success:
             console_cache("Data cached", cache_key=key, records=len(data))
         return success
@@ -203,7 +221,7 @@ def get_cache(key: str) -> pd.DataFrame | None:
         Cached data or None
     """
     with log_operation("get_cache", logger, cache_key=key):
-        return _cache.get(key)
+        return cast(Optional[pd.DataFrame], _cache.get(key))
 
 
 def download_historical(
@@ -227,7 +245,7 @@ def download_historical(
         Dict of symbol -> DataFrame
     """
     with log_operation("download_historical", logger, symbols=symbols, source=source.value):
-        results = {}
+        results: dict[str, pd.DataFrame] = {}
 
         if source == DataSource.YAHOO:
             results = download_from_yahoo(symbols, start_date, end_date, interval)
@@ -236,9 +254,9 @@ def download_historical(
             logger.warning("Unsupported data source", source=source.value)
 
         # Store downloaded data
-        for symbol, data in results.items():
-            if data is not None and not data.empty:
-                store_data(symbol=symbol, data=data, data_type=DataType.OHLCV, source=source)
+        for symbol, frame in results.items():
+            if not frame.empty:
+                store_data(symbol=symbol, data=frame, data_type=DataType.OHLCV, source=source)
 
         return results
 
@@ -256,7 +274,7 @@ def clean_old_data(days_to_keep: int = 365) -> int:
     with log_operation("clean_old_data", logger, days_to_keep=days_to_keep):
         cutoff = datetime.now() - timedelta(days=days_to_keep)
 
-        deleted = _storage.delete_before(cutoff)
+        deleted = int(_storage.delete_before(cutoff))
         _cache.clear_expired()
 
         console_storage("Cleaned old records", records_deleted=deleted, days_to_keep=days_to_keep)
@@ -271,8 +289,8 @@ def get_storage_stats() -> StorageStats:
     Returns:
         StorageStats object
     """
-    storage_stats = _storage.get_stats()
-    cache_stats = _cache.get_stats()
+    storage_stats = cast(dict[str, Any], _storage.get_stats())
+    cache_stats = cast(dict[str, Any], _cache.get_stats())
 
     return StorageStats(
         total_records=storage_stats["total_records"],
@@ -302,18 +320,28 @@ def download_from_yahoo(
         Dict of symbol -> DataFrame
     """
     with log_operation("download_from_yahoo", logger, symbols=symbols, interval=interval):
-        results = {}
+        results: dict[str, pd.DataFrame] = {}
 
         for symbol in symbols:
             with log_operation("download_symbol", logger, symbol=symbol):
                 try:
                     console_data("Downloading", symbol=symbol, source="yahoo")
                     provider = get_data_provider()
-                    data = provider.get_historical_data(
-                        symbol,
-                        start=start.strftime("%Y-%m-%d") if start else None,
-                        end=end.strftime("%Y-%m-%d") if end else None,
+                    period_days = max((end - start).days, 1)
+                    raw = cast(
+                        pd.DataFrame,
+                        provider.get_historical_data(symbol, period=f"{period_days}d"),
                     )
+
+                    if raw.empty:
+                        console_warning("No data available", symbol=symbol)
+                        logger.warning("No data available for symbol", symbol=symbol)
+                        continue
+
+                    raw.index = pd.to_datetime(raw.index)
+                    idx_array = raw.index.to_pydatetime()
+                    mask = (idx_array >= start) & (idx_array <= end)
+                    data = raw.loc[mask].copy()
 
                     if not data.empty:
                         # Standardize columns
@@ -407,20 +435,20 @@ def import_data(
             ext = os.path.splitext(filepath)[1].lower()
 
             if ext == ".csv":
-                if not pandas.is_available:
+                if not pandas.is_available():
                     console_error("pandas not available for CSV import")
                     return False
-                data = pandas.read_csv(filepath, index_col=0, parse_dates=True)
+                data = cast(pd.DataFrame, pandas.read_csv(filepath, index_col=0, parse_dates=True))
             elif ext == ".json":
-                if not pandas.is_available:
+                if not pandas.is_available():
                     console_error("pandas not available for JSON import")
                     return False
-                data = pandas.read_json(filepath)
+                data = cast(pd.DataFrame, pandas.read_json(filepath))
             elif ext == ".parquet":
-                if not pandas.is_available:
+                if not pandas.is_available():
                     console_error("pandas not available for Parquet import")
                     return False
-                data = pandas.read_parquet(filepath)
+                data = cast(pd.DataFrame, pandas.read_parquet(filepath))
             else:
                 console_error("Unsupported file format", format=ext)
                 return False

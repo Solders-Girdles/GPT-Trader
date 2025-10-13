@@ -39,7 +39,7 @@ class CoinbaseWebSocket:
         base_delay: float = 1.0,
         transport: Any | None = None,
         liveness_timeout: float = 30.0,
-        ws_auth_provider: Callable[[], dict[str, Any]] | None = None,
+        ws_auth_provider: Callable[[], dict[str, Any] | None] | None = None,
         metrics_emitter: Callable[[dict[str, Any]], None] | None = None,
         settings: RuntimeSettings | None = None,
     ) -> None:

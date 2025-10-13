@@ -190,31 +190,48 @@ class OrderReconciler:
     def _assume_cancelled(self, order_id: str, local_order: Any) -> None:
         logger.error("Could not retrieve final status for order %s.", order_id)
         try:
-            filled_value = getattr(
-                local_order, "filled_quantity", getattr(local_order, "filled_quantity", None)
-            )
+            filled_value = getattr(local_order, "filled_quantity", None)
+            quantity = quantity_from(local_order, default=Decimal("0")) or Decimal("0")
+            price_raw = getattr(local_order, "price", None)
+            price: Decimal | None = None
+            if price_raw not in (None, "", "null"):
+                try:
+                    price = Decimal(str(price_raw))
+                except Exception:
+                    price = None
+            avg_fill_raw = getattr(local_order, "avg_fill_price", None)
+            avg_fill: Decimal | None = None
+            if avg_fill_raw not in (None, "", "null"):
+                try:
+                    avg_fill = Decimal(str(avg_fill_raw))
+                except Exception:
+                    avg_fill = None
+            side_token = str(getattr(local_order, "side", "buy")).lower()
+            side = OrderSide.BUY if side_token.startswith("b") else OrderSide.SELL
+            type_token = str(getattr(local_order, "order_type", "market")).lower()
+            try:
+                order_type = OrderType(type_token)
+            except ValueError:
+                order_type = OrderType.MARKET
+            submitted_at = self._parse_timestamp(
+                getattr(local_order, "created_at", "")
+            ) or datetime.now(UTC)
+            symbol_value = getattr(local_order, "symbol", "")
+            symbol_str = str(symbol_value) if symbol_value else ""
             cancelled_order = Order(
-                id=getattr(local_order, "order_id", order_id),
+                id=str(getattr(local_order, "order_id", order_id)),
                 client_id=getattr(local_order, "client_id", None),
-                symbol=getattr(local_order, "symbol", ""),
-                side=OrderSide(str(getattr(local_order, "side", "buy")).lower()),
-                type=OrderType(str(getattr(local_order, "order_type", "market")).lower()),
-                quantity=quantity_from(local_order),
-                price=(
-                    Decimal(str(getattr(local_order, "price", "")))
-                    if getattr(local_order, "price", None)
-                    else None
-                ),
+                symbol=symbol_str,
+                side=side,
+                type=order_type,
+                quantity=quantity,
+                price=price,
                 stop_price=None,
                 tif=TimeInForce.GTC,
                 status=OrderStatus.CANCELLED,
-                filled_quantity=quantity_from(filled_value),
-                avg_fill_price=(
-                    Decimal(str(getattr(local_order, "avg_fill_price", "")))
-                    if getattr(local_order, "avg_fill_price", None)
-                    else None
-                ),
-                submitted_at=self._parse_timestamp(getattr(local_order, "created_at", "")),
+                filled_quantity=quantity_from(filled_value, default=None),
+                avg_fill_price=avg_fill,
+                submitted_at=submitted_at,
                 updated_at=datetime.now(UTC),
             )
             self._orders_store.upsert(cancelled_order)

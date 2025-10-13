@@ -6,10 +6,13 @@ Complete isolation - no external dependencies.
 
 from datetime import datetime
 import logging
-import pandas as pd
 import pickle
 import os
 import json
+from typing import Any, Dict, List, Optional, cast
+
+import pandas as pd
+
 from bot_v2.features.data.types import DataQuery, DataType, DataSource
 
 
@@ -36,7 +39,7 @@ class DataStorage:
         os.makedirs(self.metadata_path, exist_ok=True)
 
         # Index for fast lookups
-        self.index = self._load_index()
+        self.index: dict[str, str] = self._load_index()
 
     def store(
         self,
@@ -66,7 +69,7 @@ class DataStorage:
 
             # Load existing data if any
             if os.path.exists(filepath):
-                existing_data = pd.read_pickle(filepath)  # nosec B301
+                existing_data = cast(pd.DataFrame, pd.read_pickle(filepath))  # nosec B301
                 # Merge with new data (avoid duplicates)
                 data = pd.concat([existing_data, data])
                 data = data[~data.index.duplicated(keep="last")]
@@ -101,7 +104,7 @@ class DataStorage:
         Returns:
             DataFrame or None
         """
-        results = []
+        results: list[pd.DataFrame] = []
 
         for symbol in query.symbols:
             # Find file in index
@@ -111,7 +114,7 @@ class DataStorage:
                 if index_key.startswith(key):
                     try:
                         # Load data
-                        data = pd.read_pickle(filepath)  # nosec B301
+                        data = cast(pd.DataFrame, pd.read_pickle(filepath))  # nosec B301
 
                         # Filter by date range
                         mask = (data.index >= query.start_date) & (data.index <= query.end_date)
@@ -137,7 +140,7 @@ class DataStorage:
 
         if results:
             # Combine results
-            combined = pd.concat(results)
+            combined = cast(pd.DataFrame, pd.concat(results))
             combined = combined[~combined.index.duplicated(keep="last")]
             combined.sort_index(inplace=True)
             return combined
@@ -158,7 +161,7 @@ class DataStorage:
 
         for filepath in self.index.values():
             try:
-                data = pd.read_pickle(filepath)  # nosec B301
+                data = cast(pd.DataFrame, pd.read_pickle(filepath))  # nosec B301
                 original_len = len(data)
 
                 # Keep only data after cutoff
@@ -190,10 +193,10 @@ class DataStorage:
     def get_stats(self) -> dict:
         """Get storage statistics."""
         total_records = 0
-        total_size_mb = 0
-        oldest_record = None
-        newest_record = None
-        symbols = set()
+        total_size_mb = 0.0
+        oldest_record: datetime | None = None
+        newest_record: datetime | None = None
+        symbols: set[str] = set()
 
         for filepath in self.index.values():
             try:
@@ -202,7 +205,7 @@ class DataStorage:
                 total_size_mb += size_bytes / (1024 * 1024)
 
                 # Load data for stats
-                data = pd.read_pickle(filepath)  # nosec B301
+                data = cast(pd.DataFrame, pd.read_pickle(filepath))  # nosec B301
                 total_records += len(data)
 
                 # Track date range
@@ -239,10 +242,10 @@ class DataStorage:
 
         if os.path.exists(index_file):
             with open(index_file) as f:
-                return json.load(f)
+                return cast(dict[str, str], json.load(f))
 
         # Build index from files
-        index = {}
+        index: dict[str, str] = {}
         for filename in os.listdir(self.ohlcv_path):
             if filename.endswith(".pkl"):
                 parts = filename[:-4].split("_")
@@ -256,13 +259,15 @@ class DataStorage:
 
         return index
 
-    def _save_index(self):
+    def _save_index(self) -> None:
         """Save storage index."""
         index_file = os.path.join(self.base_path, "index.json")
         with open(index_file, "w") as f:
             json.dump(self.index, f)
 
-    def _update_index(self, symbol: str, data_type: DataType, source: DataSource, filepath: str):
+    def _update_index(
+        self, symbol: str, data_type: DataType, source: DataSource, filepath: str
+    ) -> None:
         """Update storage index."""
         key = f"{symbol}_{data_type.value}_{source.value}"
         self.index[key] = filepath

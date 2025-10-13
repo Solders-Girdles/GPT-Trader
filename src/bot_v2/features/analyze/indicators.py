@@ -4,6 +4,8 @@ Local technical indicator calculations.
 Complete isolation - no external dependencies.
 """
 
+from typing import cast
+
 import numpy as np
 import pandas as pd
 
@@ -29,14 +31,17 @@ def calculate_rsi(data: pd.Series, period: int = 14) -> pd.Series:
     Returns:
         RSI series
     """
-    delta = data.diff()
-    gain = (delta.where(delta > 0, 0)).rolling(window=period).mean()
-    loss = (-delta.where(delta < 0, 0)).rolling(window=period).mean()
+    delta = data.diff().fillna(0.0)
+    gain = delta.clip(lower=0.0)
+    loss = (-delta.clip(upper=0.0)).abs()
 
-    rs = gain / loss
+    avg_gain = gain.rolling(window=period).mean()
+    avg_loss = loss.rolling(window=period).mean()
+
+    rs = avg_gain.div(avg_loss.replace(0.0, np.nan))
     rsi = 100 - (100 / (1 + rs))
 
-    return rsi
+    return rsi.fillna(0.0)
 
 
 def calculate_macd(
@@ -108,9 +113,9 @@ def calculate_atr(high: pd.Series, low: pd.Series, close: pd.Series, period: int
     tr = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
 
     # Calculate ATR
-    atr = tr.rolling(window=period).mean()
+    atr = cast(pd.Series, tr.rolling(window=period).mean())
 
-    return atr
+    return atr.fillna(0.0)
 
 
 def calculate_obv(close: pd.Series, volume: pd.Series) -> pd.Series:
@@ -124,14 +129,18 @@ def calculate_obv(close: pd.Series, volume: pd.Series) -> pd.Series:
     Returns:
         OBV series
     """
-    obv = pd.Series(index=close.index, dtype=float)
-    obv.iloc[0] = volume.iloc[0]
+    if close.empty:
+        return pd.Series(dtype=float)
+
+    obv = pd.Series(0.0, index=close.index)
+    obv.iloc[0] = float(volume.iloc[0]) if not volume.empty else 0.0
 
     for i in range(1, len(close)):
+        current_volume = float(volume.iloc[i]) if i < len(volume) else 0.0
         if close.iloc[i] > close.iloc[i - 1]:
-            obv.iloc[i] = obv.iloc[i - 1] + volume.iloc[i]
+            obv.iloc[i] = obv.iloc[i - 1] + current_volume
         elif close.iloc[i] < close.iloc[i - 1]:
-            obv.iloc[i] = obv.iloc[i - 1] - volume.iloc[i]
+            obv.iloc[i] = obv.iloc[i - 1] - current_volume
         else:
             obv.iloc[i] = obv.iloc[i - 1]
 
@@ -157,10 +166,11 @@ def calculate_stochastic(
     lowest_low = low.rolling(window=k_period).min()
     highest_high = high.rolling(window=k_period).max()
 
-    k = 100 * ((close - lowest_low) / (highest_high - lowest_low))
+    denominator = (highest_high - lowest_low).replace(0, np.nan)
+    k = 100 * ((close - lowest_low).div(denominator))
     d = k.rolling(window=d_period).mean()
 
-    return k, d
+    return k.fillna(0.0), d.fillna(0.0)
 
 
 def identify_support_resistance(

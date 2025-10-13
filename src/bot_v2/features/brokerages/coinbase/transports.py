@@ -9,7 +9,7 @@ from __future__ import annotations
 import json
 import logging
 from collections.abc import Iterable
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from bot_v2.utilities import empty_stream
 
@@ -108,7 +108,7 @@ class RealTransport:
         self.ws.send(msg_str)
         logger.debug(f"Sent subscription: {msg_str}")
 
-    def stream(self) -> Iterable[dict]:
+    def stream(self) -> Iterable[dict[str, Any]]:
         """Stream messages from the WebSocket."""
         if not self.ws:
             raise RuntimeError("Not connected to WebSocket")
@@ -127,8 +127,8 @@ class RealTransport:
 class MockTransport:
     """Mock WebSocket transport for testing."""
 
-    def __init__(self, messages: list | None = None) -> None:
-        self.messages = messages or []
+    def __init__(self, messages: list[dict[str, Any]] | None = None) -> None:
+        self.messages: list[dict[str, Any]] = messages or []
         self.connected = False
         self.subscriptions: list[dict[str, Any]] = []
 
@@ -148,11 +148,11 @@ class MockTransport:
         self.subscriptions.append(message)
         logger.debug(f"Mock subscription: {message}")
 
-    def stream(self) -> Iterable[dict]:
+    def stream(self) -> Iterable[dict[str, Any]]:
         """Yield predefined messages."""
         yield from self.messages
 
-    def add_message(self, message: dict) -> None:
+    def add_message(self, message: dict[str, Any]) -> None:
         """Add a message to the mock stream."""
         self.messages.append(message)
 
@@ -181,5 +181,5 @@ class NoopTransport:
     def subscribe(self, message: dict[str, Any]) -> None:  # noqa: ARG002
         logger.debug("NoopTransport subscribe called (ignored)")
 
-    def stream(self) -> Iterable[dict]:
-        return empty_stream()
+    def stream(self) -> Iterable[dict[str, Any]]:
+        return cast(Iterable[dict[str, Any]], empty_stream())

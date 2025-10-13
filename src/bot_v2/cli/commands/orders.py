@@ -7,7 +7,7 @@ import json
 from argparse import Namespace
 from dataclasses import asdict
 from decimal import Decimal
-from typing import Any
+from typing import Any, Protocol, cast, runtime_checkable
 
 from bot_v2.cli import options, services
 from bot_v2.features.brokerages.core.interfaces import OrderSide, OrderType, TimeInForce
@@ -59,9 +59,13 @@ def register(subparsers: Any) -> None:
 def _handle_preview(args: Namespace) -> int:
     config = services.build_config_from_args(args, skip=_CONFIG_SKIP_KEYS)
     bot = services.instantiate_bot(config)
+    broker = bot.broker
+    if not isinstance(broker, OrderPreviewBroker):
+        raise RuntimeError("Broker does not support order previews")
+    preview_broker = cast(OrderPreviewBroker, broker)
     try:
         payload = _build_order_payload(args)
-        result = bot.broker.preview_order(**payload)
+        result = preview_broker.preview_order(**payload)
         print(json.dumps(result, indent=2, default=str))
     finally:
         asyncio.run(bot.shutdown())
@@ -71,9 +75,13 @@ def _handle_preview(args: Namespace) -> int:
 def _handle_edit_preview(args: Namespace) -> int:
     config = services.build_config_from_args(args, skip=_CONFIG_SKIP_KEYS)
     bot = services.instantiate_bot(config)
+    broker = bot.broker
+    if not isinstance(broker, OrderPreviewBroker):
+        raise RuntimeError("Broker does not support order edit previews")
+    preview_broker = cast(OrderPreviewBroker, broker)
     try:
         payload = _build_order_payload(args)
-        result = bot.broker.edit_order_preview(order_id=args.order_id, **payload)
+        result = preview_broker.edit_order_preview(order_id=args.order_id, **payload)
         print(json.dumps(result, indent=2, default=str))
     finally:
         asyncio.run(bot.shutdown())
@@ -83,8 +91,12 @@ def _handle_edit_preview(args: Namespace) -> int:
 def _handle_apply_edit(args: Namespace) -> int:
     config = services.build_config_from_args(args, skip=_CONFIG_SKIP_KEYS)
     bot = services.instantiate_bot(config)
+    broker = bot.broker
+    if not isinstance(broker, OrderPreviewBroker):
+        raise RuntimeError("Broker does not support order edit application")
+    preview_broker = cast(OrderPreviewBroker, broker)
     try:
-        order = bot.broker.edit_order(args.order_id, args.preview_id)
+        order = preview_broker.edit_order(args.order_id, args.preview_id)
         data = asdict(order) if hasattr(order, "__dataclass_fields__") else order
         print(json.dumps(data, indent=2, default=str))
     finally:
@@ -118,3 +130,12 @@ def _build_order_payload(args: Namespace) -> dict[str, object]:
         payload["stop_price"] = stop
 
     return payload
+
+
+@runtime_checkable
+class OrderPreviewBroker(Protocol):
+    def preview_order(self, **kwargs: Any) -> Any: ...
+
+    def edit_order_preview(self, order_id: str, **kwargs: Any) -> Any: ...
+
+    def edit_order(self, order_id: str, preview_id: str, **kwargs: Any) -> Any: ...

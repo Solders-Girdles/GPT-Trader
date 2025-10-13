@@ -16,7 +16,7 @@ import logging
 import time
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Any
+from typing import Any, cast
 
 from bot_v2.features.brokerages.coinbase.specs import validate_order as spec_validate_order
 from bot_v2.features.brokerages.core.interfaces import (
@@ -96,19 +96,20 @@ class LiveExecutionEngine:
         provided_manager = risk_manager is not None
         store = event_store
         if store is None and provided_manager:
-            store = getattr(risk_manager, "event_store", None)
+            store = getattr(risk_manager, "event_store", None)  # type: ignore[attr-defined]
         if store is None:
             store = EventStore()
         self.event_store = store
 
-        if provided_manager:
+        self.risk_manager: LiveRiskManager
+        if risk_manager is not None:
             self.risk_manager = risk_manager
             if getattr(self.risk_manager, "event_store", None) is not store:
                 # Ensure the injected manager and its collaborators use the shared store.
                 if hasattr(self.risk_manager, "set_event_store"):
                     self.risk_manager.set_event_store(store)
                 else:  # Fallback for legacy managers without helper
-                    self.risk_manager.event_store = store
+                    setattr(self.risk_manager, "event_store", store)
         else:
             self.risk_manager = LiveRiskManager(event_store=store)
         self.bot_id = bot_id
@@ -132,21 +133,21 @@ class LiveExecutionEngine:
         self._last_collateral_available: Decimal | None = None
 
         # Initialize helper modules
-        self.state_collector = StateCollector(broker, settings=runtime_settings)
-        self.order_submitter = OrderSubmitter(
+        self.state_collector: StateCollector = StateCollector(broker, settings=runtime_settings)
+        self.order_submitter: OrderSubmitter = OrderSubmitter(
             broker,
             self.event_store,
             bot_id,
             self.open_orders,
         )
-        self.order_validator = OrderValidator(
+        self.order_validator: OrderValidator = OrderValidator(
             broker,
             self.risk_manager,
             self.enable_order_preview,
             self.order_submitter.record_preview,
             self.order_submitter.record_rejection,
         )
-        self.guard_manager = GuardManager(
+        self.guard_manager: GuardManager = GuardManager(
             broker,
             self.risk_manager,
             self.state_collector.calculate_equity_from_balances,
@@ -269,18 +270,21 @@ class LiveExecutionEngine:
             is_reduce_only = self.order_validator.finalize_reduce_only_flag(reduce_only, symbol)
 
             # Submit order
-            return self.order_submitter.submit_order(
-                symbol=symbol,
-                side=side,
-                order_type=order_type,
-                order_quantity=order_quantity,
-                price=price_decimal,
-                effective_price=effective_price,
-                stop_price=stop_price,
-                tif=tif,
-                reduce_only=is_reduce_only,
-                leverage=leverage,
-                client_order_id=client_order_id,
+            return cast(
+                str | None,
+                self.order_submitter.submit_order(
+                    symbol=symbol,
+                    side=side,
+                    order_type=order_type,
+                    order_quantity=order_quantity,
+                    price=price_decimal,
+                    effective_price=effective_price,
+                    stop_price=stop_price,
+                    tif=tif,
+                    reduce_only=is_reduce_only,
+                    leverage=leverage,
+                    client_order_id=client_order_id,
+                ),
             )
 
         except ValidationError as e:
@@ -346,9 +350,6 @@ class LiveExecutionEngine:
             force_full = self.guard_manager.should_run_full_guard(now)
             self.guard_manager.run_runtime_guards(force_full=force_full)
 
-            # Store state for potential incremental runs
-            self.guard_manager._runtime_guard_last_run_ts = now
-
         except RiskGuardError as err:
             level = logging.WARNING if err.recoverable else logging.ERROR
             logger.log(
@@ -404,24 +405,29 @@ class LiveExecutionEngine:
         if not collateral_balances:
             return
 
-        total_available = sum(b.available for b in collateral_balances)
+        total_available = sum((b.available for b in collateral_balances), Decimal("0"))
 
+        change_value: Decimal | None = None
         if self._last_collateral_available is not None:
-            change = total_available - self._last_collateral_available
-            if abs(change) > Decimal("0.01"):
+            diff = total_available - self._last_collateral_available
+            change_value = diff
+            if abs(diff) > Decimal("0.01"):
                 logger.info(
                     f"Collateral available changed: {self._last_collateral_available} → "
-                    f"{total_available} (Δ {change:+.2f})"
+                    f"{total_available} (Δ {diff:+.2f})"
                 )
 
         self._last_collateral_available = total_available
 
         # Log to telemetry
         try:
+            currency = collateral_balances[0].asset if collateral_balances else "USD"
             self._production_logger.log_balance_update(
+                currency=currency,
                 available=float(total_available),
                 total=float(collateral_total),
                 equity=float(equity),
+                change=float(change_value) if change_value is not None else None,
             )
         except Exception:
             pass

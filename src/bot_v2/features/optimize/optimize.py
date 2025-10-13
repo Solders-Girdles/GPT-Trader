@@ -6,7 +6,7 @@ Complete isolation - everything needed is local.
 
 import time
 from datetime import datetime, timedelta
-from typing import Any
+from typing import Any, cast
 
 import numpy as np
 import pandas as pd
@@ -15,6 +15,7 @@ from bot_v2.data_providers import get_data_provider
 from bot_v2.features.optimize.backtester import run_backtest_local
 from bot_v2.features.optimize.strategies import get_strategy_params
 from bot_v2.features.optimize.types import (
+    BacktestMetrics,
     OptimizationResult,
     ParameterGrid,
     WalkForwardResult,
@@ -64,10 +65,10 @@ def optimize_strategy(
     data = fetch_data(symbol, start_date, end_date)
 
     # Test all combinations
-    all_results = []
+    all_results: list[dict[str, Any]] = []
     best_score = -float("inf")
-    best_params = None
-    best_metrics = None
+    best_params: dict[str, Any] | None = None
+    best_metrics: BacktestMetrics | None = None
 
     for i, params in enumerate(grid.get_combinations()):
         # Run backtest with these parameters
@@ -98,6 +99,9 @@ def optimize_strategy(
             print(f"Progress: {i+1}/{grid.total_combinations()} combinations tested")
 
     optimization_time = time.time() - start_time
+
+    if best_params is None or best_metrics is None:
+        raise ValueError("No optimization results were produced")
 
     print(f"\nOptimization complete in {optimization_time:.1f} seconds")
     print(f"Best {metric}: {best_score:.3f}")
@@ -201,7 +205,7 @@ def walk_forward_analysis(
     print(f"Step size: {step_size} days")
 
     # Generate windows
-    windows = []
+    windows: list[WalkForwardWindow] = []
     current_start = start_date
 
     while current_start + timedelta(days=window_size + test_size) <= end_date:
@@ -251,13 +255,13 @@ def walk_forward_analysis(
         current_start += timedelta(days=step_size)
 
     # Calculate overall metrics
-    efficiencies = [w.get_efficiency() for w in windows]
-    avg_efficiency = np.mean(efficiencies) if efficiencies else 0
+    efficiencies = [float(w.get_efficiency()) for w in windows]
+    avg_efficiency = float(np.mean(efficiencies)) if efficiencies else 0.0
 
     # Consistency score (inverse of std dev of returns)
-    test_returns = [w.test_metrics.total_return for w in windows]
+    test_returns = [float(w.test_metrics.total_return) for w in windows]
     if len(test_returns) > 1:
-        consistency_score = 1 / (1 + np.std(test_returns))
+        consistency_score = float(1 / (1 + np.std(test_returns)))
     else:
         consistency_score = 0.5
 
@@ -288,9 +292,18 @@ def walk_forward_analysis(
 def fetch_data(symbol: str, start: datetime, end: datetime) -> pd.DataFrame:
     """Fetch historical data for optimization."""
     provider = get_data_provider()
-    data = provider.get_historical_data(
-        symbol, start=start.strftime("%Y-%m-%d"), end=end.strftime("%Y-%m-%d")
-    )
+    period_days = max((end - start).days, 1)
+    raw = cast(pd.DataFrame, provider.get_historical_data(symbol, period=f"{period_days}d"))
+
+    if raw.empty:
+        raise ValueError(f"No data available for {symbol}")
+
+    data = raw.copy()
+    data.index = pd.to_datetime(data.index)
+    idx = cast(pd.DatetimeIndex, data.index)
+    idx_array = idx.to_pydatetime()
+    mask = (idx_array >= start) & (idx_array <= end)
+    data = data.loc[mask].copy()
 
     if data.empty:
         raise ValueError(f"No data available for {symbol}")

@@ -159,7 +159,7 @@ class MemoryHealthCheck(HealthChecker):
             rss_value = getattr(memory_info, "rss", None)
             if not isinstance(rss_value, Real):
                 raise ImportError
-            memory_mb = rss_value / 1024 / 1024
+            memory_mb = float(rss_value) / (1024 * 1024)
 
             if memory_mb > self.critical_threshold_mb:
                 status = HealthStatus.UNHEALTHY

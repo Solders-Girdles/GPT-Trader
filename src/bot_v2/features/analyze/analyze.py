@@ -5,7 +5,9 @@ Complete isolation - everything needed is local.
 """
 
 import logging
+from collections.abc import Mapping
 from datetime import datetime
+from typing import Any, Literal, cast
 
 import numpy as np
 import pandas as pd
@@ -30,11 +32,18 @@ from bot_v2.features.analyze.types import (
     AnalysisResult,
     MarketRegime,
     PortfolioAnalysis,
+    PricePattern,
     StrategyComparison,
     StrategySignals,
     SupportResistance,
     TechnicalIndicators,
 )
+
+Recommendation = Literal["strong_buy", "buy", "hold", "sell", "strong_sell"]
+TrendLiteral = Literal["bullish", "bearish", "neutral"]
+VolatilityLiteral = Literal["low", "medium", "high"]
+MomentumLiteral = Literal["strong_up", "weak_up", "neutral", "weak_down", "strong_down"]
+VolumeProfileLiteral = Literal["accumulation", "distribution", "neutral"]
 
 logger = logging.getLogger(__name__)
 
@@ -73,10 +82,12 @@ def analyze_symbol(
     levels = identify_levels(data)
 
     # Detect patterns
-    patterns = detect_patterns(data) if include_patterns else []
+    patterns: list[PricePattern] = detect_patterns(data) if include_patterns else []
 
     # Get strategy signals
-    strategy_signals = analyze_with_strategies(data) if include_strategies else []
+    strategy_signals: list[StrategySignals] = (
+        analyze_with_strategies(data) if include_strategies else []
+    )
 
     # Generate recommendation
     recommendation, confidence = generate_recommendation(
@@ -111,6 +122,9 @@ def analyze_portfolio(
     Returns:
         Portfolio analysis
     """
+    if not symbols:
+        raise ValueError("Portfolio analysis requires at least one symbol")
+
     if weights is None:
         weights = {s: 1.0 / len(symbols) for s in symbols}
 
@@ -169,7 +183,7 @@ def compare_strategies(
     data = fetch_data(symbol, lookback_days)
 
     # Run each strategy and collect metrics
-    metrics = {}
+    metrics: dict[str, dict[str, float]] = {}
     for strategy in strategies:
         strategy_metrics = backtest_strategy(strategy, data)
         metrics[strategy] = strategy_metrics
@@ -178,7 +192,7 @@ def compare_strategies(
     rankings = rank_strategies(metrics)
 
     # Find best strategy
-    best_strategy = min(rankings, key=rankings.get)
+    best_strategy = min(rankings.keys(), key=lambda strategy_: rankings[strategy_])
 
     # Generate recommendation
     recommendation = (
@@ -202,7 +216,7 @@ def compare_strategies(
 def fetch_data(symbol: str, lookback_days: int) -> pd.DataFrame:
     """Fetch historical data for analysis."""
     provider = get_data_provider()
-    data = provider.get_historical_data(symbol, period=f"{lookback_days}d")
+    data = cast(pd.DataFrame, provider.get_historical_data(symbol, period=f"{lookback_days}d"))
 
     # Standardize columns
     data.columns = data.columns.str.lower()
@@ -212,10 +226,14 @@ def fetch_data(symbol: str, lookback_days: int) -> pd.DataFrame:
 
 def calculate_indicators(data: pd.DataFrame) -> TechnicalIndicators:
     """Calculate all technical indicators."""
-    close = data["close"]
-    high = data["high"]
-    low = data["low"]
-    volume = data["volume"]
+    close = data["close"].astype(float)
+    high = data["high"].astype(float)
+    low = data["low"].astype(float)
+    volume_series = data.get("volume")
+    if volume_series is None:
+        volume = pd.Series(0.0, index=data.index)
+    else:
+        volume = volume_series.astype(float)
 
     # Moving averages
     sma_20 = calculate_sma(close, 20).iloc[-1]
@@ -237,8 +255,10 @@ def calculate_indicators(data: pd.DataFrame) -> TechnicalIndicators:
     atr = calculate_atr(high, low, close).iloc[-1]
 
     # Volume indicators
-    volume_sma = calculate_sma(volume, 20).iloc[-1]
-    obv = calculate_obv(close, volume).iloc[-1]
+    volume_sma_series = calculate_sma(volume, 20)
+    volume_sma = volume_sma_series.iloc[-1] if not volume_sma_series.empty else 0.0
+    obv_series = calculate_obv(close, volume)
+    obv = obv_series.iloc[-1] if not obv_series.empty else 0.0
 
     # Stochastic
     stoch_k, stoch_d = calculate_stochastic(high, low, close)
@@ -270,14 +290,22 @@ def determine_regime(data: pd.DataFrame, indicators: TechnicalIndicators) -> Mar
     returns = close.pct_change()
 
     # Trend
-    trend = detect_trend(close)
+    raw_trend = detect_trend(close)
+    if raw_trend in {"bullish", "bearish", "neutral"}:
+        trend = cast(TrendLiteral, raw_trend)
+    else:
+        trend = "neutral"
 
     # Volatility
-    volatility = calculate_volatility(returns)
+    raw_volatility = calculate_volatility(returns)
+    if raw_volatility in {"low", "medium", "high"}:
+        volatility = cast(VolatilityLiteral, raw_volatility)
+    else:
+        volatility = "medium"
 
     # Momentum
     if indicators.rsi > 70:
-        momentum = "strong_up"
+        momentum: MomentumLiteral = "strong_up"
     elif indicators.rsi > 55:
         momentum = "weak_up"
     elif indicators.rsi < 30:
@@ -292,11 +320,12 @@ def determine_regime(data: pd.DataFrame, indicators: TechnicalIndicators) -> Mar
     avg_volume = indicators.volume_sma
     if current_volume > avg_volume * 1.5:
         if close.iloc[-1] > close.iloc[-2]:
-            volume_profile = "accumulation"
+            volume_profile_value = "accumulation"
         else:
-            volume_profile = "distribution"
+            volume_profile_value = "distribution"
     else:
-        volume_profile = "neutral"
+        volume_profile_value = "neutral"
+    volume_profile = cast(VolumeProfileLiteral, volume_profile_value)
 
     # Regime strength (0-100)
     strength = 50.0
@@ -332,9 +361,9 @@ def identify_levels(data: pd.DataFrame) -> SupportResistance:
 def generate_recommendation(
     indicators: TechnicalIndicators,
     regime: MarketRegime,
-    patterns: list,
+    patterns: list[PricePattern],
     signals: list[StrategySignals],
-) -> tuple:
+) -> tuple[Recommendation, float]:
     """
     Generate trading recommendation.
 
@@ -389,7 +418,7 @@ def generate_recommendation(
 
     # Generate recommendation
     if avg_score >= 1.5:
-        recommendation = "strong_buy"
+        recommendation: Recommendation = "strong_buy"
         confidence = min(0.9, 0.5 + avg_score * 0.1)
     elif avg_score >= 0.5:
         recommendation = "buy"
@@ -414,8 +443,9 @@ def calculate_correlations(symbols: list[str], lookback_days: int) -> pd.DataFra
         try:
             provider = get_data_provider()
             data = provider.get_historical_data(symbol, period=f"{lookback_days}d")
-            if not data.empty:
-                prices[symbol] = data["Close"]
+            data.columns = data.columns.str.lower()
+            if not data.empty and "close" in data.columns:
+                prices[symbol] = data["close"].astype(float)
         except Exception as exc:
             logger.warning("Failed to load historical data for %s: %s", symbol, exc, exc_info=True)
 
@@ -431,13 +461,16 @@ def calculate_portfolio_risk(
 ) -> dict[str, float]:
     """Calculate portfolio risk metrics."""
     # Simplified risk calculations
-    avg_correlation = correlation_matrix.values[
-        np.triu_indices_from(correlation_matrix.values, k=1)
-    ].mean()
+    if correlation_matrix.empty:
+        avg_correlation = 0.0
+    else:
+        upper_idx = np.triu_indices_from(correlation_matrix.values, k=1)
+        upper_values = correlation_matrix.values[upper_idx]
+        avg_correlation = float(np.mean(upper_values)) if upper_values.size else 0.0
 
     # Concentration risk
-    max_weight = max(weights.values())
-    concentration_risk = max_weight
+    max_weight = max(weights.values(), default=0.0)
+    concentration_risk = float(max_weight)
 
     return {
         "beta": 1.0,  # Placeholder
@@ -452,7 +485,7 @@ def generate_rebalance_suggestions(
     analyses: dict[str, AnalysisResult], current_weights: dict[str, float]
 ) -> list[dict]:
     """Generate portfolio rebalancing suggestions."""
-    suggestions = []
+    suggestions: list[dict[str, Any]] = []
 
     for symbol, analysis in analyses.items():
         current_weight = current_weights.get(symbol, 0)
@@ -463,8 +496,8 @@ def generate_rebalance_suggestions(
                 {
                     "symbol": symbol,
                     "action": "increase",
-                    "current_weight": current_weight,
-                    "target_weight": min(0.2, current_weight * 1.5),
+                    "current_weight": float(current_weight),
+                    "target_weight": float(min(0.2, current_weight * 1.5)),
                     "reason": f"Strong buy signal with {analysis.confidence:.1%} confidence",
                 }
             )
@@ -473,8 +506,8 @@ def generate_rebalance_suggestions(
                 {
                     "symbol": symbol,
                     "action": "decrease",
-                    "current_weight": current_weight,
-                    "target_weight": max(0.05, current_weight * 0.5),
+                    "current_weight": float(current_weight),
+                    "target_weight": float(max(0.05, current_weight * 0.5)),
                     "reason": f"Strong sell signal with {analysis.confidence:.1%} confidence",
                 }
             )
@@ -493,14 +526,14 @@ def backtest_strategy(strategy: str, data: pd.DataFrame) -> dict[str, float]:
     }
 
 
-def rank_strategies(metrics: dict[str, dict[str, float]]) -> dict[str, int]:
+def rank_strategies(metrics: Mapping[str, Mapping[str, float]]) -> dict[str, int]:
     """Rank strategies based on metrics."""
-    scores = {}
+    scores: dict[str, float] = {}
     for strategy, m in metrics.items():
         # Simple scoring: return + sharpe - drawdown
-        score = m["return"] + m["sharpe"] - m["max_drawdown"]
-        scores[strategy] = score
+        score = m.get("return", 0.0) + m.get("sharpe", 0.0) - m.get("max_drawdown", 0.0)
+        scores[strategy] = float(score)
 
     # Convert to rankings
-    sorted_strategies = sorted(scores.items(), key=lambda x: x[1], reverse=True)
-    return {s[0]: i + 1 for i, s in enumerate(sorted_strategies)}
+    sorted_strategies = sorted(scores.items(), key=lambda item: item[1], reverse=True)
+    return {name: idx + 1 for idx, (name, _) in enumerate(sorted_strategies)}

@@ -7,7 +7,7 @@ Async and periodic checks performed during trading operations.
 from __future__ import annotations
 
 import logging
-from collections.abc import Callable, MutableMapping
+from collections.abc import Callable, Mapping, MutableMapping
 from datetime import datetime
 from decimal import Decimal
 from typing import Any
@@ -65,7 +65,12 @@ class RuntimeMonitor:
         self.event_store = event_store
         self._set_reduce_only_mode = set_reduce_only_mode or (lambda enabled, reason: None)
         self._now_provider = now_provider or (lambda: datetime.utcnow())
-        self.last_mark_update = last_mark_update if last_mark_update is not None else {}
+        if last_mark_update is not None:
+            self.last_mark_update: dict[str, datetime] = {
+                symbol: timestamp for symbol, timestamp in last_mark_update.items() if timestamp
+            }
+        else:
+            self.last_mark_update = {}
 
         # Circuit breaker state
         self._cb_last_trigger: dict[str, datetime] = {}
@@ -172,6 +177,7 @@ class RuntimeMonitor:
         notional = abs(qty * mark)
 
         # If we have a true liquidation price, compute distance-to-liquidation as buffer
+        buffer_pct = Decimal("0")
         if liquidation_price is not None and mark > 0:
             try:
                 buffer_pct = abs(mark - liquidation_price) / mark
@@ -186,8 +192,15 @@ class RuntimeMonitor:
             # Fallback: estimate via leverage
             max_leverage = self.config.leverage_max_per_symbol.get(symbol, self.config.max_leverage)
             try:
-                margin_used = notional / max_leverage if max_leverage > 0 else notional
-                buffer_pct = (equity - margin_used) / equity if equity > 0 else 0
+                max_leverage_decimal = (
+                    max_leverage
+                    if isinstance(max_leverage, Decimal)
+                    else Decimal(str(max_leverage))
+                )
+                margin_used = (
+                    notional / max_leverage_decimal if max_leverage_decimal > 0 else notional
+                )
+                buffer_pct = (equity - margin_used) / equity if equity > 0 else Decimal("0")
             except Exception as exc:
                 raise RiskGuardComputationError(
                     guard=guard_name,
@@ -227,13 +240,15 @@ class RuntimeMonitor:
         """Check whether mark data for symbol is stale."""
         if mark_timestamp is not None:
             self.last_mark_update[symbol] = mark_timestamp
-        return runtime_check_mark_staleness(
-            symbol=symbol,
-            last_mark_update=self.last_mark_update,
-            now=self._now_provider,
-            max_staleness_seconds=self.config.max_mark_staleness_seconds,
-            log_event=self._log_risk_event,
-            logger=logger,
+        return bool(
+            runtime_check_mark_staleness(
+                symbol=symbol,
+                last_mark_update=self.last_mark_update,
+                now=self._now_provider,
+                max_staleness_seconds=self.config.max_mark_staleness_seconds,
+                log_event=self._log_risk_event,
+                logger=logger,
+            )
         )
 
     def append_risk_metrics(
@@ -259,10 +274,12 @@ class RuntimeMonitor:
 
     def check_correlation_risk(self, positions: dict[str, Any]) -> bool:
         """Check portfolio correlation and concentration risk."""
-        return runtime_check_correlation_risk(
-            positions,
-            log_event=self._log_risk_event,
-            logger=logger,
+        return bool(
+            runtime_check_correlation_risk(
+                positions,
+                log_event=self._log_risk_event,
+                logger=logger,
+            )
         )
 
     def check_volatility_circuit_breaker(
@@ -295,9 +312,10 @@ class RuntimeMonitor:
         return outcome
 
     def _log_risk_event(
-        self, event_type: str, details: dict[str, Any], *, guard: str | None = None
+        self, event_type: str, details: Mapping[str, Any], guard: str | None = None
     ) -> None:
         """Log risk event to EventStore, surfacing telemetry failures."""
+        guard_name = guard or event_type
         try:
             emit_metric(
                 self.event_store,
@@ -305,15 +323,15 @@ class RuntimeMonitor:
                 {
                     "event_type": event_type,
                     "timestamp": datetime.utcnow().isoformat(),
-                    **details,
+                    **dict(details),
                 },
                 logger=logger,
                 raise_on_error=True,
             )
         except Exception as exc:
             raise RiskGuardTelemetryError(
-                guard=guard or event_type,
+                guard=guard_name,
                 message=f"Failed to persist risk event '{event_type}'",
-                details=details,
+                details=dict(details),
                 original=exc,
             ) from exc

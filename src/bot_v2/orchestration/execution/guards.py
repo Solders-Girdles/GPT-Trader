@@ -52,7 +52,7 @@ class GuardManager:
         self,
         broker: IBrokerage,
         risk_manager: LiveRiskManager,
-        equity_calculator: Callable[[list[Balance]], tuple[Decimal, Decimal, Decimal]],
+        equity_calculator: Callable[[list[Balance]], tuple[Decimal, list[Balance], Decimal]],
         cancel_orders_callback: Callable[[], int],
         invalidate_cache_callback: Callable[[], None],
     ) -> None:
@@ -159,14 +159,14 @@ class GuardManager:
                 return
             raise
         except Exception as exc:
-            err = RiskGuardComputationError(
+            fallback_err = RiskGuardComputationError(
                 guard=guard_name,
                 message=f"Unexpected failure in guard '{guard_name}'",
                 details={},
                 original=exc,
             )
-            record_guard_failure(err)
-            raise err
+            record_guard_failure(fallback_err)
+            raise fallback_err
         else:
             record_guard_success(guard_name)
 

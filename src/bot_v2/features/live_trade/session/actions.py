@@ -7,8 +7,13 @@ from decimal import Decimal
 from typing import cast
 
 from bot_v2.errors import ExecutionError, NetworkError, ValidationError, log_error
-from bot_v2.errors.handler import RecoveryStrategy, get_error_handler
-from bot_v2.features.brokerages.core.interfaces import Order, OrderSide, OrderType, TimeInForce
+from bot_v2.features.brokerages.core.interfaces import (
+    IBrokerage,
+    Order,
+    OrderSide,
+    OrderType,
+    TimeInForce,
+)
 from bot_v2.validation import PositiveNumberValidator, SymbolValidator
 
 from .account import get_account, get_positions
@@ -51,19 +56,22 @@ def place_order(
         symbol = symbol_validator.validate(symbol, "symbol")
 
         quantity_validator = PositiveNumberValidator(allow_zero=False)
-        quantity_validator.validate(quantity, "quantity")
+        quantity_value = Decimal(str(quantity_validator.validate(quantity, "quantity")))
 
         account = get_account()
         if not account:
             raise ExecutionError("Unable to retrieve account information")
 
+        limit_price_decimal = Decimal(str(limit_price)) if limit_price is not None else None
+        stop_price_decimal = Decimal(str(stop_price)) if stop_price is not None else None
+
         order = execution_engine.place_order(
             symbol=symbol,
             side=side,
-            quantity=quantity,
+            quantity=quantity_value,
             order_type=order_type,
-            limit_price=limit_price,
-            stop_price=stop_price,
+            limit_price=limit_price_decimal,
+            stop_price=stop_price_decimal,
             time_in_force=time_in_force,
         )
 
@@ -91,7 +99,7 @@ def place_order(
             context={
                 "symbol": symbol,
                 "side": side,
-                "quantity": quantity,
+                "quantity": quantity_value,
                 "original_error": str(exc),
             },
         )
@@ -118,27 +126,16 @@ def cancel_order(order_id: str) -> bool:
         broker = get_broker_client()
         if broker is None:
             raise NetworkError("Broker client not initialized")
-
-        error_handler = get_error_handler()
-
-        def _cancel_order_with_broker() -> bool:
-            return broker.cancel_order(order_id)
-
-        success = cast(
-            bool,
-            error_handler.with_retry(
-                _cancel_order_with_broker, recovery_strategy=RecoveryStrategy.RETRY
-            ),
-        )
+        success = cast(IBrokerage, broker).cancel_order(order_id)
 
         if success:
             logger.info("Order cancelled successfully: %s", order_id)
             print(f"✅ Order {order_id} cancelled")
-        else:
-            logger.warning("Failed to cancel order: %s", order_id)
-            print(f"❌ Failed to cancel order {order_id}")
+            return True
 
-        return success
+        logger.warning("Failed to cancel order: %s", order_id)
+        print(f"❌ Failed to cancel order {order_id}")
+        return False
 
     except (ValidationError, NetworkError) as exc:
         log_error(exc)
@@ -173,7 +170,7 @@ def close_all_positions() -> bool:
             return True
 
         logger.info("Closing %s positions", len(positions))
-        success = True
+        success: bool = True
         failed_positions: list[str] = []
 
         for position in positions:

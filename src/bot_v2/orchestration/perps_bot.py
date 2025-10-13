@@ -233,7 +233,9 @@ class PerpsBot:
         coordinator = self._coordinator_registry.get("runtime")
         if coordinator is None:
             raise RuntimeError("Runtime coordinator not registered")
-        return coordinator  # type: ignore[return-value]
+        if not isinstance(coordinator, RuntimeCoordinator):
+            raise RuntimeError("Runtime coordinator has unexpected type")
+        return coordinator
 
     @property
     def execution_coordinator(self) -> ExecutionCoordinator:
@@ -369,7 +371,7 @@ class PerpsBot:
         engine = self._state.exec_engine
         if engine is None:
             raise RuntimeError("Execution engine not initialized")
-        return engine
+        return cast("LiveExecutionEngine | AdvancedExecutionEngine", engine)
 
     @property
     def account_manager(self) -> CoinbaseAccountManager | None:

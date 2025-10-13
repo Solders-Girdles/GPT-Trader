@@ -11,7 +11,7 @@ from __future__ import annotations
 import logging
 from datetime import datetime, timedelta
 from types import TracebackType
-from typing import Any
+from typing import Any, Literal, cast
 
 import numpy as np
 import pandas as pd
@@ -74,12 +74,15 @@ class CoinbaseDataProvider(DataProvider):
                 "Defaulting to production endpoints."
             )
 
-        api_mode = (runtime_settings.coinbase_api_mode or "advanced").lower()
-        if api_mode == "exchange":
+        mode_value = (runtime_settings.coinbase_api_mode or "advanced").lower()
+        api_mode: Literal["advanced", "exchange"]
+        if mode_value == "exchange":
             logger.warning(
                 "COINBASE_API_MODE=exchange detected while requesting real market data. "
                 "Defaulting to Advanced Trade production endpoints."
             )
+            api_mode = "exchange"
+        else:
             api_mode = "advanced"
 
         # Initialize client and adapter if not provided
@@ -109,7 +112,7 @@ class CoinbaseDataProvider(DataProvider):
                 passphrase="",
                 base_url=self.client.base_url,
                 ws_url="wss://advanced-trade-ws.coinbase.com",
-                api_mode=self.client.api_mode,
+                api_mode=cast(Literal["advanced", "exchange"], self.client.api_mode),
                 sandbox=sandbox,
                 auth_type="HMAC",  # Default auth type for public data
                 enable_derivatives=False,  # Not needed for market data
@@ -148,7 +151,7 @@ class CoinbaseDataProvider(DataProvider):
         try:
             self.ticker_cache = TickerCache()
 
-            def ws_factory():
+            def ws_factory() -> CoinbaseWebSocket:
                 ws = CoinbaseWebSocket(
                     url="wss://advanced-trade-ws.coinbase.com",
                     settings=self._settings,
@@ -332,12 +335,19 @@ class CoinbaseDataProvider(DataProvider):
             if self.enable_streaming and self.ticker_cache:
                 ticker = self.ticker_cache.get(normalized_symbol)
                 if ticker and not self.ticker_cache.is_stale(normalized_symbol, self.cache_ttl):
-                    logger.debug(f"Using WebSocket price for {normalized_symbol}: {ticker.last}")
-                    return float(ticker.last)
+                    last_price = ticker.last
+                    if last_price is not None:
+                        logger.debug(
+                            "Using WebSocket price for %s: %s", normalized_symbol, last_price
+                        )
+                        return float(last_price)
 
             # Fall back to REST API
             quote = self.adapter.get_quote(normalized_symbol)
-            price = float(quote.last)
+            price_source = quote.last or getattr(quote, "ask", None) or getattr(quote, "bid", None)
+            if price_source is None:
+                raise ValueError("Quote did not contain a price")
+            price = float(price_source)
             logger.debug(f"Using REST API price for {normalized_symbol}: {price}")
             return price
 

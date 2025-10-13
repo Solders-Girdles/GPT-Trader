@@ -6,7 +6,6 @@ import logging
 from datetime import datetime
 from decimal import Decimal
 from functools import lru_cache
-from types import SimpleNamespace
 from typing import Any
 
 from bot_v2.features.brokerages.core.interfaces import MarketType, Product
@@ -497,7 +496,7 @@ def _default_product_stub(symbol: str, target_leverage: int) -> Product:
     base_asset = parts[0] if parts else symbol
     quote_asset = parts[-1] if len(parts) > 1 else "USD"
 
-    return SimpleNamespace(
+    return Product(
         symbol=symbol,
         base_asset=base_asset,
         quote_asset=quote_asset,
@@ -507,6 +506,7 @@ def _default_product_stub(symbol: str, target_leverage: int) -> Product:
         min_notional=None,
         price_increment=Decimal("0.01"),
         leverage_max=target_leverage,
+        expiry=None,
         contract_size=None,
         funding_rate=None,
         next_funding_time=None,

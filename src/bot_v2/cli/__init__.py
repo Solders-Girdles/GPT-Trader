@@ -40,7 +40,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     handler = getattr(args, "handler", None)
     if handler is None:
         parser.error("No command handler configured.")
-    return handler(args)
+    result = handler(args)
+    return int(result) if result is not None else 0
 
 
 def _build_parser() -> argparse.ArgumentParser:

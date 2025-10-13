@@ -9,7 +9,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any, cast
 
-from bot_v2.features.brokerages.core.interfaces import Balance, Position
+from bot_v2.features.brokerages.core.interfaces import Balance, Position, Product
 from bot_v2.features.live_trade.indicators import mean_decimal as _mean_decimal
 from bot_v2.features.live_trade.indicators import (
     relative_strength_index as _rsi_from_closes,
@@ -43,7 +43,7 @@ class SymbolProcessingContext:
     position_state: dict[str, Any] | None
     position_quantity: Decimal
     marks: list[Decimal]
-    product: Any | None
+    product: Product | None
 
 
 class StrategyOrchestrator:
@@ -141,11 +141,15 @@ class StrategyOrchestrator:
             self._record_decision(symbol, decision)
 
             if decision.action in {Action.BUY, Action.SELL, Action.CLOSE}:
+                product = context.product
+                if not isinstance(product, Product):
+                    logger.warning("Skipping execution for %s: missing product metadata", symbol)
+                    return
                 await bot.execute_decision(
                     symbol,
                     decision,
                     context.marks[-1],
-                    context.product,
+                    product,
                     context.position_state,
                 )
         except Exception as exc:
@@ -311,16 +315,25 @@ class StrategyOrchestrator:
         marks: Sequence[Decimal],
         position_state: dict[str, Any] | None,
         equity: Decimal,
-        product: Any | None,
+        product: Product | None,
     ) -> Decision:
         _t0 = _time.perf_counter()
+        product_meta = product
+        if product_meta is None and hasattr(strategy, "_build_default_product"):
+            try:
+                product_meta = cast(Product, strategy._build_default_product(symbol))  # type: ignore[attr-defined]
+            except Exception:
+                product_meta = None
+        if product_meta is None:
+            raise ValueError(f"Missing product metadata for {symbol}")
+
         decision = strategy.decide(
             symbol=symbol,
             current_mark=marks[-1],
             position_state=position_state,
             recent_marks=list(marks[:-1]) if len(marks) > 1 else [],
             equity=equity,
-            product=product,
+            product=product_meta,
         )
         _dt_ms = (_time.perf_counter() - _t0) * 1000.0
         try:

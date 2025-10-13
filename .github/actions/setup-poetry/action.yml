@@ -70,14 +70,21 @@ runs:
     - name: Install dependencies
       if: inputs.install-deps == 'true'
       shell: bash
-      working-directory: ${{ inputs.working-directory }}
       env:
         CACHE_HIT: ${{ steps.deps-cache.outputs.cache-hit }}
         CACHE_PATH: ${{ inputs.cache-path }}
         INSTALL_ARGS: ${{ inputs.install-args }}
+        WORKING_DIRECTORY: ${{ inputs.working-directory }}
       run: |
         set -euo pipefail
 
+        WORKSPACE="${GITHUB_WORKSPACE}"
+        if [ -n "${WORKING_DIRECTORY}" ] && [ "${WORKING_DIRECTORY}" != "." ]; then
+          WORKSPACE="${GITHUB_WORKSPACE}/${WORKING_DIRECTORY}"
+        fi
+        cd "$WORKSPACE"
+
+        CACHE_HIT=${CACHE_HIT:-false}
         if [ -n "$CACHE_PATH" ] && [ "$CACHE_HIT" = "true" ]; then
           echo "Dependencies cache restored; skipping install."
           exit 0

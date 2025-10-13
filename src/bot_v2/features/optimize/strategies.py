@@ -13,7 +13,7 @@ import pandas as pd
 class OptimizableStrategy(ABC):
     """Base class for optimizable strategies."""
 
-    def __init__(self, **params) -> None:
+    def __init__(self, **params: Any) -> None:
         self.params = params
 
     @abstractmethod
@@ -28,7 +28,7 @@ class OptimizableStrategy(ABC):
 class SimpleMAStrategy(OptimizableStrategy):
     """Moving average crossover strategy."""
 
-    def __init__(self, fast_period: int = 10, slow_period: int = 30, **kwargs) -> None:
+    def __init__(self, fast_period: int = 10, slow_period: int = 30, **kwargs: Any) -> None:
         super().__init__(fast_period=fast_period, slow_period=slow_period, **kwargs)
         self.fast_period = fast_period
         self.slow_period = slow_period
@@ -55,7 +55,11 @@ class MomentumStrategy(OptimizableStrategy):
     """Momentum-based strategy."""
 
     def __init__(
-        self, lookback: int = 20, threshold: float = 0.02, hold_period: int = 5, **kwargs
+        self,
+        lookback: int = 20,
+        threshold: float = 0.02,
+        hold_period: int = 5,
+        **kwargs: Any,
     ) -> None:
         super().__init__(lookback=lookback, threshold=threshold, hold_period=hold_period, **kwargs)
         self.lookback = lookback
@@ -104,7 +108,11 @@ class MeanReversionStrategy(OptimizableStrategy):
     """Mean reversion strategy."""
 
     def __init__(
-        self, period: int = 20, entry_std: float = 2.0, exit_std: float = 0.5, **kwargs
+        self,
+        period: int = 20,
+        entry_std: float = 2.0,
+        exit_std: float = 0.5,
+        **kwargs: Any,
     ) -> None:
         super().__init__(period=period, entry_std=entry_std, exit_std=exit_std, **kwargs)
         self.period = period
@@ -157,7 +165,11 @@ class VolatilityStrategy(OptimizableStrategy):
     """Volatility-based strategy."""
 
     def __init__(
-        self, vol_period: int = 20, vol_threshold: float = 0.02, trend_period: int = 50, **kwargs
+        self,
+        vol_period: int = 20,
+        vol_threshold: float = 0.02,
+        trend_period: int = 50,
+        **kwargs: Any,
     ) -> None:
         super().__init__(
             vol_period=vol_period, vol_threshold=vol_threshold, trend_period=trend_period, **kwargs
@@ -199,7 +211,11 @@ class BreakoutStrategy(OptimizableStrategy):
     """Price breakout strategy."""
 
     def __init__(
-        self, lookback: int = 20, confirm_bars: int = 2, stop_loss: float = 0.02, **kwargs
+        self,
+        lookback: int = 20,
+        confirm_bars: int = 2,
+        stop_loss: float = 0.02,
+        **kwargs: Any,
     ) -> None:
         super().__init__(
             lookback=lookback, confirm_bars=confirm_bars, stop_loss=stop_loss, **kwargs
@@ -263,7 +279,7 @@ class BreakoutStrategy(OptimizableStrategy):
 
 
 # Strategy factory
-STRATEGY_MAP = {
+STRATEGY_MAP: dict[str, type[OptimizableStrategy]] = {
     "SimpleMA": SimpleMAStrategy,
     "Momentum": MomentumStrategy,
     "MeanReversion": MeanReversionStrategy,
@@ -272,7 +288,7 @@ STRATEGY_MAP = {
 }
 
 
-def create_local_strategy(name: str, **params) -> OptimizableStrategy:
+def create_local_strategy(name: str, **params: Any) -> OptimizableStrategy:
     """Create strategy instance for optimization."""
     if name not in STRATEGY_MAP:
         raise ValueError(f"Unknown strategy: {name}")

@@ -6,6 +6,7 @@ consistent error handling and logging fallbacks.
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any
 
@@ -19,7 +20,7 @@ def emit_metric(
     bot_id: str,
     payload: Mapping[str, Any],
     *,
-    logger: ProductionLogger | None = None,
+    logger: ProductionLogger | logging.Logger | None = None,
     raise_on_error: bool = False,
 ) -> None:
     """Safely emit a metric to the event store with fallback logging on failure.
@@ -59,7 +60,7 @@ def emit_metric(
         metrics_payload.setdefault("event_type", "metric")
         metrics_payload.setdefault("type", "metric")
 
-    failure: Exception | None = None
+    caught_exc: Exception | None = None
     try:
         event_store.append_metric(bot_id=bot_id, metrics=metrics_payload)
         return
@@ -68,14 +69,13 @@ def emit_metric(
             event_store.append_metric(bot_id, metrics_payload)
             return
         except Exception as exc:  # fall through to shared handler
-            failure = exc
+            caught_exc = exc
     except Exception as exc:
-        failure = exc
-    else:
+        caught_exc = exc
+
+    if caught_exc is None:
         return
 
-    assert failure is not None  # pragma: no cover - guard for static analysis
-    exc = failure
     if logger is not None:
         if hasattr(logger, "log_event"):
             from bot_v2.monitoring.system.logger import LogLevel
@@ -84,7 +84,7 @@ def emit_metric(
                 LogLevel.DEBUG,
                 "metric_emit_failed",
                 "Failed to emit metric to event store",
-                error=str(exc),
+                error=str(caught_exc),
                 bot_id=bot_id,
                 metric_type=payload.get("event_type", "unknown"),
             )
@@ -92,14 +92,14 @@ def emit_metric(
             try:
                 logger.debug(
                     "Failed to emit metric to event store: %s (bot_id=%s, metric_type=%s)",
-                    exc,
+                    caught_exc,
                     bot_id,
                     payload.get("event_type", "unknown"),
                 )
             except Exception:
                 pass
     if raise_on_error:
-        raise
+        raise caught_exc
 
 
 __all__ = ["emit_metric"]

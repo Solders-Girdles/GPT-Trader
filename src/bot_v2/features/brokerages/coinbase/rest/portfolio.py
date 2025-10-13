@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 from decimal import Decimal, InvalidOperation
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal, cast
 
+from bot_v2.features.brokerages.coinbase.models import normalize_symbol
 from bot_v2.features.brokerages.coinbase.rest.base import logger
 from bot_v2.features.brokerages.core.interfaces import Balance, Position
 from bot_v2.utilities.quantities import quantity_from
@@ -190,7 +191,8 @@ class PortfolioRestMixin:
         if not self.endpoints.supports_derivatives():
             return None
         try:
-            data = self.client.get(self.endpoints.get_position(symbol))
+            product_id = normalize_symbol(symbol)
+            data = self.client.get_position(product_id) or {}
         except Exception as exc:
             logger.debug("No position found for %s: %s", symbol, exc)
             return None
@@ -222,6 +224,11 @@ class PortfolioRestMixin:
             side = str(data.get("side", "")).lower()
             if not side:
                 side = "long" if quantity >= 0 else "short"
+            typed_side: Literal["long", "short"]
+            if side in {"long", "short"}:
+                typed_side = cast(Literal["long", "short"], side)
+            else:
+                typed_side = cast(Literal["long", "short"], "long" if quantity >= 0 else "short")
             return Position(
                 symbol=data.get("product_id", ""),
                 quantity=abs(quantity),
@@ -230,7 +237,7 @@ class PortfolioRestMixin:
                 unrealized_pnl=unrealized,
                 realized_pnl=realized,
                 leverage=int(leverage) if leverage is not None else None,
-                side=side,
+                side=typed_side,
             )
         except Exception as exc:
             logger.error("Failed to map position payload: %s", exc)

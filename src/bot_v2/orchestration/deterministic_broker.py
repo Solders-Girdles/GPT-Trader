@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from datetime import datetime
 from decimal import Decimal
 from typing import Literal
@@ -52,11 +52,22 @@ class DeterministicBroker(IBrokerage):
             # Try to import the product factory
             from tests.fixtures.product_factory import default_product_factory
 
-            products = {}
+            products: dict[str, Product] = {}
             for symbol in default_product_factory.list_perpetual_symbols():
-                products[symbol] = default_product_factory.create_product(
-                    symbol, MarketType.PERPETUAL
-                )
+                product = default_product_factory.create_product(symbol, MarketType.PERPETUAL)
+                if isinstance(product, Product):
+                    products[symbol] = product
+                else:
+                    products[symbol] = Product(
+                        symbol=symbol,
+                        base_asset=(symbol.split("-")[0] if "-" in symbol else symbol),
+                        quote_asset=(symbol.split("-")[-1] if "-" in symbol else "USD"),
+                        market_type=MarketType.PERPETUAL,
+                        min_size=Decimal("0.001"),
+                        step_size=Decimal("0.001"),
+                        min_notional=Decimal("10"),
+                        price_increment=Decimal("0.01"),
+                    )
 
             if products:
                 logger.debug(f"Loaded {len(products)} products from fixtures")
@@ -107,11 +118,16 @@ class DeterministicBroker(IBrokerage):
         try:
             from tests.fixtures.product_factory import default_product_factory
 
-            marks = default_product_factory.get_default_marks()
+            marks_data = default_product_factory.get_default_marks()
 
-            if marks:
-                logger.debug(f"Loaded {len(marks)} mark prices from fixtures")
-                return marks
+            if isinstance(marks_data, Mapping):
+                marks = {
+                    symbol: value if isinstance(value, Decimal) else Decimal(str(value))
+                    for symbol, value in marks_data.items()
+                }
+                if marks:
+                    logger.debug(f"Loaded {len(marks)} mark prices from fixtures")
+                    return marks
 
         except Exception as exc:
             logger.debug(f"Could not load marks from fixtures: {exc}")

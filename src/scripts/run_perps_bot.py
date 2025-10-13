@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime, time
 from decimal import Decimal
-from typing import List, Optional
+from typing import Any
 
 from bot_v2.orchestration.configuration import BotConfig as _CoreBotConfig, Profile
 
@@ -31,13 +31,10 @@ class BotConfig:
     time_in_force: str = "GTC"
 
     @classmethod
-    def from_profile(cls, profile: str, **overrides) -> BotConfig:
+    def from_profile(cls, profile: str, **overrides: Any) -> BotConfig:
         core = _CoreBotConfig.from_profile(profile, **overrides)
-        ProfileShim = type("ProfileShim", (), {})
-        p = ProfileShim()
-        setattr(p, "value", core.profile.value)
         return cls(
-            profile=p,  # type: ignore[assignment]
+            profile=str(core.profile.value),
             dry_run=core.dry_run,
             symbols=core.symbols,
             update_interval=core.update_interval,

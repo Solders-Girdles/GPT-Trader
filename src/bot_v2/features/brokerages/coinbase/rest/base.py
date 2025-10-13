@@ -23,7 +23,6 @@ from bot_v2.features.brokerages.coinbase.utilities import (
 from bot_v2.features.brokerages.core.interfaces import (
     InsufficientFunds,
     InvalidRequestError,
-    NotFoundError,
     Order,
     OrderSide,
     OrderType,
@@ -85,12 +84,7 @@ class CoinbaseRestServiceBase:
         include_client_id: bool = True,
     ) -> dict[str, object]:
         pid = normalize_symbol(symbol)
-        try:
-            product = self.product_catalog.get(self.client, pid)
-        except NotFoundError:
-            product = self.get_product(pid)
-            if product is None:
-                raise
+        product = self.product_catalog.get(self.client, pid)
 
         def _coerce_enum(enum_cls: Any, raw: Any, field: str) -> Any:
             if isinstance(raw, enum_cls):
@@ -242,6 +236,7 @@ class CoinbaseRestServiceBase:
         payload: dict[str, object],
         client_id: str | None,
     ) -> Order:
+        product_id = normalize_symbol(symbol)
         if not self._static_settings:
             self._settings = load_runtime_settings()
             preview_flag = self._settings.order_preview_enabled
@@ -272,29 +267,27 @@ class CoinbaseRestServiceBase:
                     pass
             return order
         except InsufficientFunds as exc:
-            logger.error("Insufficient funds for %s: %s", payload.get("product_id"), exc)
+            logger.error("Insufficient funds for %s: %s", product_id, exc)
             raise
         except ValidationError as exc:
-            logger.error("Order validation failed for %s: %s", payload.get("product_id"), exc)
+            logger.error("Order validation failed for %s: %s", product_id, exc)
             raise
         except InvalidRequestError as exc:
             if client_id and "duplicate" in str(exc).lower():
-                existing = self._find_existing_order_by_client_id(
-                    payload.get("product_id", ""), client_id
-                )
+                existing = self._find_existing_order_by_client_id(product_id, client_id)
                 if existing:
                     logger.info(
                         "Resolved duplicate client_order_id for %s via order %s",
-                        payload.get("product_id"),
+                        product_id,
                         existing.id,
                     )
                     return existing
-            logger.error("Order placement failed for %s: %s", payload.get("product_id"), exc)
+            logger.error("Order placement failed for %s: %s", product_id, exc)
             raise
         except Exception as exc:
             logger.error(
                 "Order placement failed for %s: %s: %s",
-                payload.get("product_id"),
+                product_id,
                 exc.__class__.__name__,
                 exc,
             )

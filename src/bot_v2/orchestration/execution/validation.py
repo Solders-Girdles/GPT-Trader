@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import logging
 from decimal import Decimal
-from typing import Any
+from typing import Any, Protocol, cast, runtime_checkable
 
 from bot_v2.features.brokerages.coinbase.specs import validate_order as spec_validate_order
 from bot_v2.features.brokerages.core.interfaces import (
@@ -234,9 +234,14 @@ class OrderValidator:
         """
         if not self.enable_order_preview:
             return
+        broker = self.broker
+        if not isinstance(broker, _PreviewBroker):
+            logger.debug("Broker does not support order preview")
+            return
+        preview_broker = cast(_PreviewBroker, broker)
         try:
             tif_value = tif if isinstance(tif, TimeInForce) else (tif or TimeInForce.GTC)
-            preview_data = self.broker.preview_order(
+            preview_data = preview_broker.preview_order(
                 symbol=symbol,
                 side=side,
                 order_type=order_type,
@@ -270,3 +275,10 @@ class OrderValidator:
             logger.info(f"Reduce-only mode active - forcing reduce_only=True for {symbol}")
             return True
         return reduce_only
+
+
+@runtime_checkable
+class _PreviewBroker(Protocol):
+    def preview_order(self, **kwargs: Any) -> Any: ...
+
+    def edit_order_preview(self, order_id: str, **kwargs: Any) -> Any: ...

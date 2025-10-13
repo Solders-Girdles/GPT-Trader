@@ -6,6 +6,7 @@ No external dependencies - all logic local to this slice.
 """
 
 import logging
+import math
 
 import numpy as np
 
@@ -106,8 +107,8 @@ def dynamic_regime_multipliers(
         return multipliers
 
     # Calculate performance by regime
-    regime_performance = {}
-    regime_counts = {}
+    regime_performance: dict[str, list[float]] = {}
+    regime_counts: dict[str, int] = {}
 
     for regime, performance in regime_history:
         if regime not in regime_performance:
@@ -118,11 +119,11 @@ def dynamic_regime_multipliers(
         regime_counts[regime] += 1
 
     # Adjust multipliers based on performance
-    adjustments = {}
+    adjustments: dict[str, float] = {}
     for regime, performances in regime_performance.items():
         if len(performances) >= 3:  # Need minimum sample size
-            avg_performance = np.mean(performances)
-            volatility = np.std(performances)
+            avg_performance = float(np.mean(performances))
+            volatility = float(np.std(performances))
 
             # Positive performance increases multiplier, negative decreases
             performance_adjustment = avg_performance * 2  # Scale factor
@@ -255,7 +256,7 @@ def portfolio_regime_allocation(
     }
 
     # Calculate weighted scores for each symbol
-    symbol_scores = {}
+    symbol_scores: dict[str, float] = {}
     for symbol, regime in current_regimes.items():
         base_weight = regime_weights.get(regime, 1.0)
         confidence = regime_confidences.get(symbol, 0.5)
@@ -264,11 +265,11 @@ def portfolio_regime_allocation(
         symbol_scores[symbol] = base_weight * confidence
 
     # Normalize to total risk budget
-    total_score = sum(symbol_scores.values())
+    total_score = float(sum(symbol_scores.values()))
     if total_score == 0:
         return {symbol: 0.0 for symbol in current_regimes}
 
-    allocations = {}
+    allocations: dict[str, float] = {}
     for symbol, score in symbol_scores.items():
         allocations[symbol] = (score / total_score) * total_risk_budget
 
@@ -295,7 +296,7 @@ def regime_correlation_adjustment(
         return {symbol: 1.0 for symbol in symbol_regimes}
 
     # Count symbols in each regime
-    regime_counts = {}
+    regime_counts: dict[str, int] = {}
     for regime in symbol_regimes.values():
         regime_counts[regime] = regime_counts.get(regime, 0) + 1
 
@@ -336,17 +337,18 @@ def regime_volatility_scaling(
         return 1.0
 
     volatility_ratio = realized_volatility / expected_volatility
+    sqrt_ratio = math.sqrt(volatility_ratio)
 
     # Different regimes handle volatility differently
     if regime == "crisis":
         # Crisis: any volatility increase is very bad
-        return min(1.0, 1.0 / max(1.0, volatility_ratio**2))
+        return min(1.0, 1.0 / max(1.0, volatility_ratio * volatility_ratio))
     elif "volatile" in regime:
         # Volatile regimes: less sensitive to volatility changes
-        return min(1.2, 1.0 / max(0.8, volatility_ratio**0.5))
+        return min(1.2, 1.0 / max(0.8, sqrt_ratio))
     elif "quiet" in regime:
         # Quiet regimes: very sensitive to volatility increases
-        return min(1.0, 1.0 / max(1.0, volatility_ratio**1.5))
+        return min(1.0, 1.0 / max(1.0, volatility_ratio * sqrt_ratio))
     else:
         # Default: linear relationship
         return min(1.1, 1.0 / max(0.9, volatility_ratio))

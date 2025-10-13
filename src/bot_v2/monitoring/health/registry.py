@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from typing import cast
 
 from .base import HealthChecker, HealthCheckResult, HealthStatus, logger
 
@@ -34,11 +35,12 @@ class HealthCheckRegistry:
             return []
 
         tasks = [checker.check_health() for checker in self._checkers.values()]
-        results = await asyncio.gather(*tasks, return_exceptions=True)
+        raw_results = await asyncio.gather(*tasks, return_exceptions=True)
+        results = [cast(HealthCheckResult | BaseException, result) for result in raw_results]
 
         health_results: list[HealthCheckResult] = []
         for checker_name, result in zip(self._checkers.keys(), results):
-            if isinstance(result, Exception):
+            if isinstance(result, BaseException):
                 health_results.append(
                     HealthCheckResult(
                         name=checker_name,

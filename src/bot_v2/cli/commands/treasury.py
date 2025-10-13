@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import json
 from argparse import Namespace
-from typing import Any
+from typing import Any, Protocol, cast, runtime_checkable
 
 from bot_v2.cli import options, services
 
@@ -64,9 +64,13 @@ def register(subparsers: Any) -> None:
 def _handle_convert(args: Namespace) -> int:
     config = services.build_config_from_args(args, skip=_CONFIG_SKIP_KEYS)
     bot = services.instantiate_bot(config)
+    manager = bot.account_manager
+    if manager is None or not isinstance(manager, TreasuryManager):
+        raise RuntimeError("Account manager does not support treasury operations")
+    treasury_manager = cast(TreasuryManager, manager)
     try:
         payload = {"from": args.from_asset, "to": args.to_asset, "amount": args.amount}
-        result = bot.account_manager.convert(payload, commit=True)
+        result = treasury_manager.convert(payload, commit=True)
         print(json.dumps(result, indent=2, default=str))
     finally:
         asyncio.run(bot.shutdown())
@@ -76,14 +80,25 @@ def _handle_convert(args: Namespace) -> int:
 def _handle_move(args: Namespace) -> int:
     config = services.build_config_from_args(args, skip=_CONFIG_SKIP_KEYS)
     bot = services.instantiate_bot(config)
+    manager = bot.account_manager
+    if manager is None or not isinstance(manager, TreasuryManager):
+        raise RuntimeError("Account manager does not support treasury operations")
+    treasury_manager = cast(TreasuryManager, manager)
     try:
         payload = {
             "from_portfolio": args.from_portfolio,
             "to_portfolio": args.to_portfolio,
             "amount": args.amount,
         }
-        result = bot.account_manager.move_funds(payload)
+        result = treasury_manager.move_funds(payload)
         print(json.dumps(result, indent=2, default=str))
     finally:
         asyncio.run(bot.shutdown())
     return 0
+
+
+@runtime_checkable
+class TreasuryManager(Protocol):
+    def convert(self, payload: dict[str, Any], *, commit: bool = ...) -> Any: ...
+
+    def move_funds(self, payload: dict[str, Any]) -> Any: ...

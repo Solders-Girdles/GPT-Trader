@@ -415,8 +415,21 @@ class SeriesValidator(Validator):
 
 
 # Validation decorator
-def validate_inputs(**validators: Validator) -> Callable:
+def validate_inputs(**validators: Validator | Callable[[Any, str], Any]) -> Callable:
     """Decorator to validate function inputs"""
+
+    normalized: dict[str, Validator] = {}
+    for name, validator in validators.items():
+        if isinstance(validator, Validator):
+            normalized[name] = validator
+        else:
+
+            def _predicate(
+                value: Any, field_name: str = name, func: Callable[[Any, str], Any] = validator
+            ) -> tuple[bool, Any]:
+                return True, func(value, field_name)
+
+            normalized[name] = Validator(predicate=_predicate)
 
     def decorator(func: Callable) -> Callable:
         def wrapper(*args: Any, **kwargs: Any) -> Any:
@@ -428,7 +441,7 @@ def validate_inputs(**validators: Validator) -> Callable:
             bound.apply_defaults()
 
             # Validate each parameter
-            for param_name, validator in validators.items():
+            for param_name, validator in normalized.items():
                 if param_name in bound.arguments:
                     value = bound.arguments[param_name]
                     bound.arguments[param_name] = validator(value, param_name)

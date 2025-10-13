@@ -3,16 +3,21 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import Any
+from typing import TYPE_CHECKING, Any, cast
 
 from bot_v2.features.brokerages.coinbase.rest.base import logger
 from bot_v2.features.brokerages.coinbase.utilities import PositionState
+
+if TYPE_CHECKING:
+    from bot_v2.features.brokerages.coinbase.rest.base import CoinbaseRestServiceBase
 
 
 class PnLRestMixin:
     """Tracks realised/unrealised PnL and funding accruals."""
 
     def process_fill_for_pnl(self, fill: dict[str, Any]) -> None:
+        base = cast("CoinbaseRestServiceBase", self)
+        positions = base.positions
         symbol = fill.get("product_id")
         if not symbol:
             return
@@ -21,23 +26,25 @@ class PnLRestMixin:
         fill_side = str(fill.get("side", "")).lower()
         if fill_quantity == 0 or fill_price == 0:
             return
-        if symbol not in self._positions:
+        if symbol not in positions:
             position_side = "long" if fill_side == "buy" else "short"
-            self._positions[symbol] = PositionState(
+            positions[symbol] = PositionState(
                 symbol=symbol,
                 side=position_side,
                 quantity=fill_quantity,
                 entry_price=fill_price,
             )
         else:
-            position = self._positions[symbol]
+            position = positions[symbol]
             realized_delta = position.update_from_fill(fill_quantity, fill_price, fill_side)
             if realized_delta != 0:
                 logger.info("Realized PnL for %s: %s", symbol, realized_delta)
-        self._update_position_metrics(symbol)
+        base.update_position_metrics(symbol)
 
     def get_position_pnl(self, symbol: str) -> dict[str, Any]:
-        if symbol not in self._positions:
+        base = cast("CoinbaseRestServiceBase", self)
+        positions = base.positions
+        if symbol not in positions:
             return {
                 "symbol": symbol,
                 "quantity": Decimal("0"),
@@ -48,10 +55,10 @@ class PnLRestMixin:
                 "realized_pnl": Decimal("0"),
                 "funding_accrued": Decimal("0"),
             }
-        position = self._positions[symbol]
-        mark = self.market_data.get_mark(symbol) or Decimal("0")
+        position = positions[symbol]
+        mark = base.market_data.get_mark(symbol) or Decimal("0")
         unrealized = position.get_unrealized_pnl(mark)
-        events = self._event_store.tail(bot_id="coinbase_perps", limit=100, types=["metric"])
+        events = base._event_store.tail(bot_id="coinbase_perps", limit=100, types=["metric"])
         funding_events = [
             e for e in events if e.get("type") == "funding" and e.get("symbol") == symbol
         ]
@@ -72,7 +79,8 @@ class PnLRestMixin:
         total_realized = Decimal("0")
         total_funding = Decimal("0")
         breakdown: dict[str, Any] = {}
-        for symbol in list(self._positions.keys()):
+        base = cast("CoinbaseRestServiceBase", self)
+        for symbol in list(base.positions.keys()):
             pnl = self.get_position_pnl(symbol)
             breakdown[symbol] = pnl
             total_unrealized += pnl["unrealized_pnl"]

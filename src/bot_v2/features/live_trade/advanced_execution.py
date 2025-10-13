@@ -292,7 +292,7 @@ class AdvancedExecutionEngine:
             return self._handle_order_error(
                 exc=exc,
                 order_type=order_type,
-                client_id=client_id,
+                client_id=client_id or "",
             )
 
     def _normalize_quantity(self, quantity: Decimal | int) -> Decimal:
@@ -321,7 +321,8 @@ class AdvancedExecutionEngine:
                 product=product,
             )
             equity = self.position_sizer.estimate_equity()
-            current_positions = self.position_sizer.current_positions()
+            current_positions_raw = self.position_sizer.current_positions()
+            current_positions = dict(current_positions_raw) if current_positions_raw else None
             self.risk_manager.pre_trade_validate(
                 symbol=symbol,
                 side=side.value,

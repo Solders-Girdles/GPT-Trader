@@ -176,13 +176,10 @@ class OrderRestMixin:
             )
         if symbol:
             params["product_id"] = normalize_symbol(symbol)
+        base = cast("CoinbaseRestServiceBase", self)
+        client = cast("CoinbaseClient", base.client)
         try:
-            base = cast("CoinbaseRestServiceBase", self)
-            client = cast("CoinbaseClient", base.client)
-            if hasattr(client, "list_orders"):
-                data = client.list_orders(**params) or {}
-            else:  # pragma: no cover - legacy path
-                data = base.client.get(base.endpoints.list_orders(), params=params)
+            data = client.list_orders(**params) or {}
         except Exception as exc:
             logger.error("Failed to list orders: %s", exc)
             return []
@@ -190,15 +187,11 @@ class OrderRestMixin:
         return [to_order(item) for item in items]
 
     def get_order(self, order_id: str) -> Order | None:
+        base = cast("CoinbaseRestServiceBase", self)
+        client = cast("CoinbaseClient", base.client)
         try:
-            if hasattr(self.client, "get_order_historical"):
-                base = cast("CoinbaseRestServiceBase", self)
-                client = cast("CoinbaseClient", base.client)
-                data = client.get_order_historical(order_id) or {}
-                payload = data.get("order") or data
-            else:  # pragma: no cover - legacy path
-                base = cast("CoinbaseRestServiceBase", self)
-                payload = base.client.get(base.endpoints.get_order(order_id)) or {}
+            data = client.get_order_historical(order_id) or {}
+            payload = data.get("order") or data
             return to_order(payload)
         except Exception as exc:
             logger.error("Failed to get order %s: %s", order_id, exc)

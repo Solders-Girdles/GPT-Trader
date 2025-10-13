@@ -46,9 +46,11 @@ def _validate_position_request(
     PositiveNumberValidator()(request.strategy_multiplier, "strategy_multiplier")
 
     # Validate Kelly inputs if provided
-    if _has_kelly_data(request):
+    kelly_inputs = _extract_kelly_params(request)
+    if kelly_inputs is not None:
+        win_rate, avg_win, avg_loss = kelly_inputs
         try:
-            validate_kelly_inputs(request.win_rate, request.avg_win, request.avg_loss)
+            validate_kelly_inputs(win_rate, avg_win, avg_loss)
         except Exception as e:
             raise ValidationError(f"Kelly validation failed: {e}", field="kelly_inputs")
 
@@ -135,17 +137,19 @@ def _calculate_intelligent_size(request: PositionSizeRequest) -> PositionSizeRes
     """Calculate position size using all available intelligence."""
     notes = []
     warnings = []
+    kelly_inputs = _extract_kelly_params(request)
 
     try:
         # Start with base Kelly sizing if statistics available
-        if _has_kelly_data(request):
+        if kelly_inputs is not None:
             # Additional validation for Kelly inputs
-            _validate_kelly_safety(request.win_rate, request.avg_win, request.avg_loss)
+            win_rate, avg_win, avg_loss = kelly_inputs
+            _validate_kelly_safety(win_rate, avg_win, avg_loss)
 
             base_size = fractional_kelly(
-                request.win_rate,
-                request.avg_win,
-                request.avg_loss,
+                win_rate,
+                avg_win,
+                avg_loss,
                 request.risk_params.kelly_fraction,
             )
 
@@ -254,11 +258,13 @@ def _calculate_intelligent_size(request: PositionSizeRequest) -> PositionSizeRes
         position_size_pct=position_size_pct,
         risk_pct=risk_pct,
         method_used=SizingMethod.INTELLIGENT,
-        kelly_fraction=base_size if _has_kelly_data(request) else None,
+        kelly_fraction=base_size if kelly_inputs is not None else None,
         confidence_adjustment=confidence_adjustment if request.confidence else None,
         regime_adjustment=regime_adjustment if request.market_regime else None,
-        max_loss_estimate=position_value * abs(request.avg_loss or 0.05),
-        expected_return=position_value * (request.avg_win or 0.03) * (request.win_rate or 0.5),
+        max_loss_estimate=position_value * abs(_optional_float(request.avg_loss, 0.05)),
+        expected_return=position_value
+        * _optional_float(request.avg_win, 0.03)
+        * _optional_float(request.win_rate, 0.5),
         calculation_notes=notes,
         warnings=warnings,
     )
@@ -266,12 +272,14 @@ def _calculate_intelligent_size(request: PositionSizeRequest) -> PositionSizeRes
 
 def _calculate_kelly_size(request: PositionSizeRequest) -> PositionSizeResponse:
     """Calculate position size using full Kelly Criterion."""
-    if not _has_kelly_data(request):
+    kelly_inputs = _extract_kelly_params(request)
+    if kelly_inputs is None:
         return _create_error_response(
             request, ["Kelly sizing requires win_rate, avg_win, and avg_loss"]
         )
 
-    kelly_size = kelly_criterion(request.win_rate, request.avg_win, request.avg_loss)
+    win_rate, avg_win, avg_loss = kelly_inputs
+    kelly_size = kelly_criterion(win_rate, avg_win, avg_loss)
     position_value, share_count = kelly_position_value(
         request.portfolio_value, kelly_size, request.current_price, request.risk_params
     )
@@ -287,22 +295,22 @@ def _calculate_kelly_size(request: PositionSizeRequest) -> PositionSizeResponse:
         risk_pct=risk_pct,
         method_used=SizingMethod.KELLY,
         kelly_fraction=kelly_size,
-        max_loss_estimate=position_value * abs(request.avg_loss),
-        expected_return=position_value * request.avg_win * request.win_rate,
+        max_loss_estimate=position_value * abs(avg_loss),
+        expected_return=position_value * avg_win * win_rate,
         calculation_notes=[f"Full Kelly Criterion: {kelly_size:.4f}"],
     )
 
 
 def _calculate_fractional_kelly_size(request: PositionSizeRequest) -> PositionSizeResponse:
     """Calculate position size using fractional Kelly Criterion."""
-    if not _has_kelly_data(request):
+    kelly_inputs = _extract_kelly_params(request)
+    if kelly_inputs is None:
         return _create_error_response(
             request, ["Fractional Kelly sizing requires win_rate, avg_win, and avg_loss"]
         )
 
-    kelly_size = fractional_kelly(
-        request.win_rate, request.avg_win, request.avg_loss, request.risk_params.kelly_fraction
-    )
+    win_rate, avg_win, avg_loss = kelly_inputs
+    kelly_size = fractional_kelly(win_rate, avg_win, avg_loss, request.risk_params.kelly_fraction)
 
     position_value, share_count = kelly_position_value(
         request.portfolio_value, kelly_size, request.current_price, request.risk_params
@@ -319,8 +327,8 @@ def _calculate_fractional_kelly_size(request: PositionSizeRequest) -> PositionSi
         risk_pct=risk_pct,
         method_used=SizingMethod.FRACTIONAL_KELLY,
         kelly_fraction=kelly_size,
-        max_loss_estimate=position_value * abs(request.avg_loss),
-        expected_return=position_value * request.avg_win * request.win_rate,
+        max_loss_estimate=position_value * abs(avg_loss),
+        expected_return=position_value * avg_win * win_rate,
         calculation_notes=[
             f"Fractional Kelly ({request.risk_params.kelly_fraction:.2f}): {kelly_size:.4f}"
         ],
@@ -493,9 +501,21 @@ def calculate_portfolio_allocation(requests: list[PositionSizeRequest]) -> Posit
 
 def _has_kelly_data(request: PositionSizeRequest) -> bool:
     """Check if request has data needed for Kelly calculation."""
-    return all(
-        [request.win_rate is not None, request.avg_win is not None, request.avg_loss is not None]
+    return _extract_kelly_params(request) is not None
+
+
+def _extract_kelly_params(request: PositionSizeRequest) -> tuple[float, float, float] | None:
+    if request.win_rate is None or request.avg_win is None or request.avg_loss is None:
+        return None
+    return (
+        float(request.win_rate),
+        float(request.avg_win),
+        float(request.avg_loss),
     )
+
+
+def _optional_float(value: float | None, default: float) -> float:
+    return float(value) if value is not None else default
 
 
 def _estimate_position_risk(request: PositionSizeRequest, position_size_pct: float) -> float:
@@ -504,8 +524,7 @@ def _estimate_position_risk(request: PositionSizeRequest, position_size_pct: flo
         return float(position_size_pct * abs(request.avg_loss))
     if request.volatility is not None:
         return float(position_size_pct * request.volatility * 1.5)  # Conservative estimate
-    else:
-        return float(position_size_pct * 0.05)  # Default 5% risk estimate
+    return float(position_size_pct * 0.05)  # Default 5% risk estimate
 
 
 def _estimate_portfolio_risk(
@@ -521,11 +540,11 @@ def _estimate_portfolio_risk(
             risk = position_size_pct * 0.05  # Default 5% risk estimate
 
         # Safety bounds
-        return max(0.0, min(1.0, risk))
+        return float(max(0.0, min(1.0, risk)))
 
     except Exception as e:
         logger.warning(f"Risk estimation failed: {e}, using conservative default")
-        return position_size_pct * 0.05
+        return float(position_size_pct * 0.05)
 
 
 def _create_error_response(request: PositionSizeRequest, errors: list[str]) -> PositionSizeResponse:

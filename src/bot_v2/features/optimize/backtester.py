@@ -132,16 +132,17 @@ def simulate_trades(
     Returns:
         (List of trades, Equity curve)
     """
-    trades = []
+    trades: list[dict[str, Any]] = []
     cash = initial_capital
     position = 0
-    equity_curve = []
+    equity_curve: list[float] = []
 
-    for _, (date, signal) in enumerate(signals.items()):
+    for date, signal in signals.items():
         if date not in data.index:
             continue
 
-        price = data.loc[date, "close"]
+        price_value = data.loc[date, "close"]
+        price = float(np.asarray(price_value)[-1])
 
         # Update equity
         equity = cash + (position * price)
@@ -150,7 +151,7 @@ def simulate_trades(
         # Process signals
         if signal == 1 and position == 0:
             # Buy
-            buy_price = price * (1 + slippage)
+            buy_price = float(price * (1 + slippage))
             shares = int((cash * 0.95) / buy_price)
 
             if shares > 0:
@@ -171,13 +172,13 @@ def simulate_trades(
 
         elif signal == -1 and position > 0:
             # Sell
-            sell_price = price * (1 - slippage)
+            sell_price = float(price * (1 - slippage))
             proceeds = position * sell_price * (1 - commission)
             cash += proceeds
 
             # Calculate P&L
             if trades and trades[-1]["type"] == "buy":
-                entry_price = trades[-1]["price"]
+                entry_price = float(trades[-1]["price"])
                 pnl = (sell_price - entry_price) * position
                 pnl_pct = pnl / (entry_price * position)
             else:
@@ -200,7 +201,7 @@ def simulate_trades(
 
     # Close final position
     if position > 0 and len(data) > 0:
-        final_price = data.iloc[-1]["close"]
+        final_price = float(data.iloc[-1]["close"])
         proceeds = position * final_price * (1 - commission)
         cash += proceeds
         equity_curve.append(cash)
@@ -234,8 +235,8 @@ def calculate_metrics(trades: list[dict[str, Any]], equity_curve: pd.Series) -> 
             calmar_ratio=0,
         )
 
-    initial_capital = equity_curve.iloc[0] if len(equity_curve) > 0 else 10000
-    final_capital = equity_curve.iloc[-1] if len(equity_curve) > 0 else initial_capital
+    initial_capital = float(equity_curve.iloc[0]) if len(equity_curve) > 0 else 10000.0
+    final_capital = float(equity_curve.iloc[-1]) if len(equity_curve) > 0 else initial_capital
 
     # Total return
     total_return = (final_capital - initial_capital) / initial_capital
@@ -245,14 +246,14 @@ def calculate_metrics(trades: list[dict[str, Any]], equity_curve: pd.Series) -> 
 
     # Sharpe ratio
     if len(returns) > 0 and returns.std() > 0:
-        sharpe_ratio = (returns.mean() * 252) / (returns.std() * np.sqrt(252))
+        sharpe_ratio = float((returns.mean() * 252) / (returns.std() * np.sqrt(252)))
     else:
         sharpe_ratio = 0
 
     # Max drawdown
     peak = equity_curve.expanding().max()
     drawdown = (equity_curve - peak) / peak
-    max_drawdown = abs(drawdown.min()) if len(drawdown) > 0 else 0
+    max_drawdown = abs(float(drawdown.min())) if len(drawdown) > 0 else 0.0
 
     # Trade statistics
     completed_trades = [t for t in trades if t.get("type") == "sell"]
@@ -264,29 +265,29 @@ def calculate_metrics(trades: list[dict[str, Any]], equity_curve: pd.Series) -> 
         win_rate = len(wins) / len(completed_trades)
 
         # Profit factor
-        total_wins = sum(t.get("pnl", 0) for t in wins)
-        total_losses = abs(sum(t.get("pnl", 0) for t in losses))
+        total_wins = float(sum(t.get("pnl", 0) for t in wins))
+        total_losses = abs(float(sum(t.get("pnl", 0) for t in losses)))
         profit_factor = (
             total_wins / total_losses if total_losses > 0 else float("inf") if total_wins > 0 else 0
         )
 
         # Trade averages
-        all_pnls = [t.get("pnl_pct", 0) for t in completed_trades]
-        avg_trade = np.mean(all_pnls) if all_pnls else 0
-        best_trade = max(all_pnls) if all_pnls else 0
-        worst_trade = min(all_pnls) if all_pnls else 0
+        all_pnls = [float(t.get("pnl_pct", 0)) for t in completed_trades]
+        avg_trade = float(np.mean(all_pnls)) if all_pnls else 0.0
+        best_trade = max(all_pnls) if all_pnls else 0.0
+        worst_trade = min(all_pnls) if all_pnls else 0.0
     else:
         win_rate = 0
         profit_factor = 0
-        avg_trade = 0
-        best_trade = 0
-        worst_trade = 0
+        avg_trade = 0.0
+        best_trade = 0.0
+        worst_trade = 0.0
 
     # Recovery factor
-    recovery_factor = total_return / max_drawdown if max_drawdown > 0 else 0
+    recovery_factor = total_return / max_drawdown if max_drawdown > 0 else 0.0
 
     # Calmar ratio
-    calmar_ratio = total_return / max_drawdown if max_drawdown > 0 else 0
+    calmar_ratio = total_return / max_drawdown if max_drawdown > 0 else 0.0
 
     return BacktestMetrics(
         total_return=total_return,

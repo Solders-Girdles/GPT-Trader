@@ -109,12 +109,8 @@ class CDPJWTAuth:
             ) from exc
 
         try:
-            private_key = serialization.load_pem_private_key(
-                (
-                    self.private_key_pem.encode()
-                    if isinstance(self.private_key_pem, str)
-                    else self.private_key_pem
-                ),
+            serialization.load_pem_private_key(
+                self.private_key_pem.encode(),
                 password=None,
                 backend=default_backend(),
             )
@@ -137,9 +133,11 @@ class CDPJWTAuth:
         if self.add_nonce_header:
             headers["nonce"] = secrets.token_hex()
 
-        token = jwt.encode(claims, private_key, algorithm="ES256", headers=headers)
-        if isinstance(token, bytes):  # pragma: no cover - PyJWT <2 compatibility
-            token = token.decode("utf-8")
+        encoded_token = jwt.encode(claims, self.private_key_pem, algorithm="ES256", headers=headers)
+        if isinstance(encoded_token, bytes):
+            token = encoded_token.decode("utf-8")
+        else:
+            token = encoded_token
 
         fingerprint = hashlib.sha256(token.encode("utf-8")).hexdigest()[:8]
         logger.debug("Generated CDP JWT uri=%s fingerprint=%s", uri, fingerprint)
@@ -219,9 +217,11 @@ def build_rest_auth(config: APIConfig) -> AuthStrategy:
 
     if config.cdp_api_key and config.cdp_private_key:
         logger.info("Using CDP JWT authentication (SDK-compatible)")
+        api_key = config.cdp_api_key
+        private_key = config.cdp_private_key
         return create_cdp_jwt_auth(
-            api_key_name=config.cdp_api_key,
-            private_key_pem=config.cdp_private_key,
+            api_key_name=api_key,
+            private_key_pem=private_key,
             base_url=config.base_url,
         )
 
@@ -271,9 +271,13 @@ def build_ws_auth_provider(
 
         def provider() -> dict[str, str] | None:
             try:
+                api_key = config.cdp_api_key
+                private_key = config.cdp_private_key
+                if api_key is None or private_key is None:
+                    return None
                 auth = create_cdp_auth(
-                    api_key_name=config.cdp_api_key,
-                    private_key_pem=config.cdp_private_key,
+                    api_key_name=api_key,
+                    private_key_pem=private_key,
                     base_url=config.base_url,
                 )
                 token = auth.generate_jwt("GET", "/users/self")

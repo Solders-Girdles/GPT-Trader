@@ -6,7 +6,7 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from decimal import ROUND_DOWN, Decimal
-from typing import Any, Protocol
+from typing import Any, Protocol, cast
 
 from bot_v2.features.brokerages.coinbase.errors import InvalidRequestError, NotFoundError
 from bot_v2.features.brokerages.coinbase.models import to_product
@@ -167,6 +167,13 @@ class FundingCalculator:
         if now is None:
             now = utc_now()
 
+        # Skip if no funding data
+        if funding_rate is None or next_funding_time is None:
+            if symbol not in self._warned_symbols:
+                logger.warning("No funding data available for %s", symbol)
+                self._warned_symbols.add(symbol)
+            return Decimal("0")
+
         def _normalize(dt: datetime | None) -> datetime | None:
             if dt is None:
                 return None
@@ -174,15 +181,11 @@ class FundingCalculator:
                 return dt
             return dt.replace(tzinfo=None)
 
-        now_cmp = _normalize(now)
+        now_cmp = cast(datetime, _normalize(now))
         next_cmp = _normalize(next_funding_time)
-
-        # Skip if no funding data
-        if funding_rate is None or next_funding_time is None:
-            if symbol not in self._warned_symbols:
-                logger.warning("No funding data available for %s", symbol)
-                self._warned_symbols.add(symbol)
+        if next_cmp is None:
             return Decimal("0")
+        next_cmp = cast(datetime, next_cmp)
 
         # Check if funding is due
         last_funding = self._last_funding_times.get(symbol)
@@ -318,7 +321,7 @@ class ProductCatalog:
         last_refresh = self._last_refresh
         if last_refresh.tzinfo is None and now.tzinfo is not None:
             last_refresh = last_refresh.replace(tzinfo=timezone.utc)
-        return now - last_refresh > timedelta(seconds=self.ttl_seconds)
+        return bool(now - last_refresh > timedelta(seconds=self.ttl_seconds))
 
     def refresh(self, client: ProductClient) -> None:
         data = client.get_products() or {}

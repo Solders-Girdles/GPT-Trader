@@ -80,7 +80,7 @@ def _linear_confidence_curve(confidence: float, adjustment: ConfidenceAdjustment
 
     # Scale from 1.0 at min_confidence to max_adjustment at 1.0
     multiplier = 1.0 + (adjustment.max_adjustment - 1.0) * (confidence_excess / confidence_range)
-    return min(adjustment.max_adjustment, multiplier)
+    return float(min(adjustment.max_adjustment, multiplier))
 
 
 def _exponential_confidence_curve(confidence: float, adjustment: ConfidenceAdjustment) -> float:
@@ -95,7 +95,7 @@ def _exponential_confidence_curve(confidence: float, adjustment: ConfidenceAdjus
     normalized_confidence = confidence_excess / confidence_range
     multiplier = 1.0 + (adjustment.max_adjustment - 1.0) * (normalized_confidence**2)
 
-    return min(adjustment.max_adjustment, multiplier)
+    return float(min(adjustment.max_adjustment, multiplier))
 
 
 def _sigmoid_confidence_curve(confidence: float, adjustment: ConfidenceAdjustment) -> float:
@@ -113,7 +113,7 @@ def _sigmoid_confidence_curve(confidence: float, adjustment: ConfidenceAdjustmen
 
     # Scale sigmoid output to adjustment range
     multiplier = 1.0 + (adjustment.max_adjustment - 1.0) * sigmoid_value
-    return min(adjustment.max_adjustment, multiplier)
+    return float(min(adjustment.max_adjustment, multiplier))
 
 
 def multi_model_confidence(confidences: list[float], weights: list[float] | None = None) -> float:
@@ -142,7 +142,7 @@ def multi_model_confidence(confidences: list[float], weights: list[float] | None
         return 0.0
 
     weighted_sum = sum(conf * weight for conf, weight in zip(confidences, weights, strict=False))
-    return weighted_sum / total_weight
+    return float(weighted_sum) / float(total_weight)
 
 
 def confidence_decay(
@@ -165,8 +165,8 @@ def confidence_decay(
         return initial_confidence
 
     # Exponential decay: conf(t) = conf(0) * 0.5^(t/half_life)
-    decay_factor = 0.5 ** (time_since_prediction / half_life_hours)
-    return initial_confidence * decay_factor
+    decay_factor = float(0.5 ** (time_since_prediction / half_life_hours))
+    return float(initial_confidence * decay_factor)
 
 
 def confidence_from_backtest_metrics(
@@ -218,7 +218,7 @@ def adaptive_confidence_threshold(
         return base_threshold
 
     # Calculate recent performance metrics
-    avg_return = np.mean(recent_performance)
+    avg_return = float(np.mean(recent_performance))
     win_rate = len([r for r in recent_performance if r > 0]) / len(recent_performance)
 
     # Positive performance lowers threshold, negative raises it

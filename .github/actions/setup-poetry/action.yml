@@ -1,0 +1,86 @@
+name: Setup Python with Poetry
+description: Configure the requested Python version, install Poetry, prime the virtualenv cache, and install dependencies.
+
+inputs:
+  python-version:
+    description: Python version to install.
+    required: false
+    default: "3.12"
+  poetry-version:
+    description: Poetry release to install.
+    required: false
+    default: "1.8.4"
+  cache-path:
+    description: Filesystem path to cache (leave blank to disable caching).
+    required: false
+    default: ".venv"
+  cache-prefix:
+    description: Prefix used for the cache key.
+    required: false
+    default: "venv"
+  install-deps:
+    description: When true, run poetry install.
+    required: false
+    default: "true"
+  install-args:
+    description: Arguments forwarded to poetry install.
+    required: false
+    default: "--no-interaction --no-root"
+  working-directory:
+    description: Working directory used for dependency installation.
+    required: false
+    default: "."
+
+outputs:
+  cache-hit:
+    description: Indicates whether the environment cache was restored.
+    value: ${{ steps.deps-cache.outputs.cache-hit }}
+  python-version:
+    description: Resolved Python version.
+    value: ${{ steps.setup-python.outputs.python-version }}
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Python
+      id: setup-python
+      uses: actions/setup-python@v6
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Install Poetry
+      uses: snok/install-poetry@v1
+      with:
+        version: ${{ inputs.poetry-version }}
+        virtualenvs-create: true
+        virtualenvs-in-project: true
+        installer-parallel: true
+
+    - name: Load cached venv
+      if: inputs.cache-path != ''
+      id: deps-cache
+      uses: actions/cache@v4
+      with:
+        path: ${{ inputs.cache-path }}
+        key: ${{ inputs.cache-prefix }}-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
+        restore-keys: |
+          ${{ inputs.cache-prefix }}-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-
+          ${{ inputs.cache-prefix }}-${{ runner.os }}-
+
+    - name: Install dependencies
+      if: inputs.install-deps == 'true'
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        CACHE_HIT: ${{ steps.deps-cache.outputs.cache-hit }}
+        CACHE_PATH: ${{ inputs.cache-path }}
+        INSTALL_ARGS: ${{ inputs.install-args }}
+      run: |
+        set -euo pipefail
+
+        if [ -n "$CACHE_PATH" ] && [ "$CACHE_HIT" = "true" ]; then
+          echo "Dependencies cache restored; skipping install."
+          exit 0
+        fi
+
+        poetry install $INSTALL_ARGS

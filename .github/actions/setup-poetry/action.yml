@@ -9,7 +9,7 @@ inputs:
   poetry-version:
     description: Poetry release to install.
     required: false
-    default: "1.8.4"
+    default: "2.1.4"
   cache-path:
     description: Filesystem path to cache (leave blank to disable caching).
     required: false
@@ -62,8 +62,9 @@ runs:
       uses: actions/cache@v4
       with:
         path: ${{ inputs.cache-path }}
-        key: ${{ inputs.cache-prefix }}-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
+        key: ${{ inputs.cache-prefix }}-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-poetry${{ inputs.poetry-version }}-${{ hashFiles('**/poetry.lock') }}
         restore-keys: |
+          ${{ inputs.cache-prefix }}-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-poetry${{ inputs.poetry-version }}-
           ${{ inputs.cache-prefix }}-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-
           ${{ inputs.cache-prefix }}-${{ runner.os }}-
 

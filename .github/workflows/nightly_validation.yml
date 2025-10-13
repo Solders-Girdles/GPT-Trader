@@ -36,10 +36,20 @@ jobs:
 
       - name: Quick WebSocket smoke
         run: |
+          export PYTHONPATH="${GITHUB_WORKSPACE}${PYTHONPATH:+:$PYTHONPATH}"
           poetry run python - <<'PY'
-          from src.bot_v2.features.brokerages.coinbase.ws import CoinbaseWebSocket, SequenceGuard
+          import os
           import sys
           import types
+
+          workspace = os.getcwd()
+          src_path = os.path.join(workspace, "src")
+          if src_path not in sys.path:
+            sys.path.insert(0, src_path)
+          if workspace not in sys.path:
+            sys.path.insert(0, workspace)
+
+          from src.bot_v2.features.brokerages.coinbase.ws import CoinbaseWebSocket, SequenceGuard
 
           mock_ws = types.ModuleType('websocket')
           mock_ws.create_connection = lambda url: None

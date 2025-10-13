@@ -9,9 +9,10 @@ REST operations, and WebSocket market data while presenting the same
 from __future__ import annotations
 
 import logging
-from collections.abc import Iterable, Sequence
+from collections.abc import Callable, Iterable, Sequence
+from datetime import datetime
 from decimal import Decimal
-from typing import Any
+from typing import Any, cast
 
 from bot_v2.features.brokerages.coinbase.auth import build_rest_auth
 from bot_v2.features.brokerages.coinbase.client import CoinbaseClient
@@ -24,8 +25,10 @@ from bot_v2.features.brokerages.coinbase.websocket_handler import CoinbaseWebSoc
 from bot_v2.features.brokerages.coinbase.ws import CoinbaseWebSocket
 from bot_v2.features.brokerages.core.interfaces import (
     Balance,
+    Candle,
     IBrokerage,
     MarketType,
+    NotFoundError,
     Order,
     OrderSide,
     OrderStatus,
@@ -33,6 +36,7 @@ from bot_v2.features.brokerages.core.interfaces import (
     Position,
     Product,
     Quote,
+    TimeInForce,
 )
 from bot_v2.orchestration.runtime_settings import RuntimeSettings, load_runtime_settings
 from bot_v2.persistence.event_store import EventStore
@@ -53,7 +57,7 @@ class CoinbaseBrokerage(IBrokerage):
         settings: RuntimeSettings | None = None,
     ) -> None:
         self.config = config
-        self.endpoints = CoinbaseEndpoints(
+        self.endpoints: CoinbaseEndpoints = CoinbaseEndpoints(
             mode=config.api_mode,
             sandbox=config.sandbox,
             enable_derivatives=config.enable_derivatives,
@@ -61,7 +65,7 @@ class CoinbaseBrokerage(IBrokerage):
 
         auth = build_rest_auth(config)
         self._settings = settings or load_runtime_settings()
-        self.client = CoinbaseClient(
+        self.client: CoinbaseClient = CoinbaseClient(
             auth=auth,
             base_url=self.endpoints.base_url,
             api_mode=config.api_mode,
@@ -72,10 +76,10 @@ class CoinbaseBrokerage(IBrokerage):
         self._connected = False
         self._account_id: str | None = None
 
-        self._event_store = event_store or EventStore()
-        self._product_catalog = product_catalog or ProductCatalog(ttl_seconds=900)
-        self.market_data = market_data or MarketDataService()
-        self.rest_service = CoinbaseRestService(
+        self._event_store: EventStore = event_store or EventStore()
+        self._product_catalog: ProductCatalog = product_catalog or ProductCatalog(ttl_seconds=900)
+        self.market_data: MarketDataService = market_data or MarketDataService()
+        self.rest_service: CoinbaseRestService = CoinbaseRestService(
             client=self.client,
             endpoints=self.endpoints,
             config=config,
@@ -84,7 +88,7 @@ class CoinbaseBrokerage(IBrokerage):
             event_store=self._event_store,
             settings=self._settings,
         )
-        self.ws_handler = CoinbaseWebSocketHandler(
+        self.ws_handler: CoinbaseWebSocketHandler = CoinbaseWebSocketHandler(
             endpoints=self.endpoints,
             config=config,
             market_data=self.market_data,
@@ -94,7 +98,7 @@ class CoinbaseBrokerage(IBrokerage):
             ws_cls=CoinbaseWebSocket,
             settings=self._settings,
         )
-        self._ws_factory_override = None
+        self._ws_factory_override: Callable[[], CoinbaseWebSocket] | None = None
 
         logger.info(
             "CoinbaseBrokerage initialized - mode: %s, sandbox: %s",
@@ -106,13 +110,16 @@ class CoinbaseBrokerage(IBrokerage):
     # Product discovery
     # ------------------------------------------------------------------
     def list_products(self, market: MarketType | None = None) -> list[Product]:
-        return self.rest_service.list_products(market)
+        return cast(list[Product], self.rest_service.list_products(market))
 
-    def get_product(self, symbol: str) -> Product | None:
-        return self.rest_service.get_product(symbol)
+    def get_product(self, symbol: str) -> Product:
+        product = self.rest_service.get_product(symbol)
+        if product is None:
+            raise NotFoundError(f"Product not found: {symbol}")
+        return product
 
     def get_perpetuals(self) -> list[Product]:
-        return self.rest_service.get_perpetuals()
+        return cast(list[Product], self.rest_service.get_perpetuals())
 
     # ------------------------------------------------------------------
     # Orders
@@ -122,25 +129,48 @@ class CoinbaseBrokerage(IBrokerage):
         status: OrderStatus | str | None = None,
         symbol: str | None = None,
     ) -> list[Order]:
-        return self.rest_service.list_orders(status=status, symbol=symbol)
+        return cast(list[Order], self.rest_service.list_orders(status=status, symbol=symbol))
 
     def get_order(self, order_id: str) -> Order | None:
         return self.rest_service.get_order(order_id)
 
     def preview_order(self, **kwargs: Any) -> dict[str, Any]:
-        return self.rest_service.preview_order(**kwargs)
+        return cast(dict[str, Any], self.rest_service.preview_order(**kwargs))
 
     def edit_order_preview(self, **kwargs: Any) -> dict[str, Any]:
-        return self.rest_service.edit_order_preview(**kwargs)
+        return cast(dict[str, Any], self.rest_service.edit_order_preview(**kwargs))
 
     def edit_order(self, order_id: str, preview_id: str) -> Order:
-        return self.rest_service.edit_order(order_id=order_id, preview_id=preview_id)
+        return cast(Order, self.rest_service.edit_order(order_id=order_id, preview_id=preview_id))
 
-    def place_order(self, **kwargs: Any) -> Order:
-        return self.rest_service.place_order(**kwargs)
+    def place_order(
+        self,
+        symbol: str,
+        side: OrderSide,
+        order_type: OrderType,
+        quantity: Decimal,
+        price: Decimal | None = None,
+        stop_price: Decimal | None = None,
+        tif: TimeInForce = TimeInForce.GTC,
+        client_id: str | None = None,
+        reduce_only: bool | None = None,
+        leverage: int | None = None,
+    ) -> Order:
+        return self.rest_service.place_order(
+            symbol=symbol,
+            side=side,
+            order_type=order_type,
+            quantity=quantity,
+            price=price,
+            stop_price=stop_price,
+            tif=tif,
+            client_id=client_id,
+            reduce_only=reduce_only,
+            leverage=leverage,
+        )
 
     def cancel_order(self, order_id: str) -> bool:
-        return self.rest_service.cancel_order(order_id)
+        return bool(self.rest_service.cancel_order(order_id))
 
     def close_position(
         self, symbol: str, quantity: Decimal | None = None, reduce_only: bool = True
@@ -165,22 +195,22 @@ class CoinbaseBrokerage(IBrokerage):
         )
 
     def list_fills(self, symbol: str | None = None, limit: int = 200) -> list[dict[str, Any]]:
-        return self.rest_service.list_fills(symbol, limit)
+        return cast(list[dict[str, Any]], self.rest_service.list_fills(symbol, limit))
 
     # ------------------------------------------------------------------
     # Positions & PnL
     # ------------------------------------------------------------------
     def list_positions(self) -> list[Position]:
-        return self.rest_service.list_positions()
+        return cast(list[Position], self.rest_service.list_positions())
 
     def get_position(self, symbol: str) -> Position | None:
         return self.rest_service.get_position(symbol)
 
     def get_position_pnl(self, symbol: str) -> dict[str, Any]:
-        return self.rest_service.get_position_pnl(symbol)
+        return cast(dict[str, Any], self.rest_service.get_position_pnl(symbol))
 
     def get_portfolio_pnl(self) -> dict[str, Any]:
-        return self.rest_service.get_portfolio_pnl()
+        return cast(dict[str, Any], self.rest_service.get_portfolio_pnl())
 
     # ------------------------------------------------------------------
     # Market data
@@ -189,86 +219,99 @@ class CoinbaseBrokerage(IBrokerage):
         self.ws_handler.start_market_data(symbols)
 
     def stream_trades(self, symbols: Sequence[str]) -> Iterable[dict[str, Any]]:
-        return self.ws_handler.stream_trades(symbols, ws=self._create_ws())
+        return cast(
+            Iterable[dict[str, Any]], self.ws_handler.stream_trades(symbols, ws=self._create_ws())
+        )
 
     def stream_orderbook(self, symbols: Sequence[str], level: int = 1) -> Iterable[dict[str, Any]]:
-        return self.ws_handler.stream_orderbook(symbols, level, ws=self._create_ws())
+        return cast(
+            Iterable[dict[str, Any]],
+            self.ws_handler.stream_orderbook(symbols, level, ws=self._create_ws()),
+        )
 
     def stream_user_events(
         self, product_ids: Sequence[str] | None = None
     ) -> Iterable[dict[str, Any]]:
-        return self.ws_handler.stream_user_events(product_ids, ws=self._create_ws())
+        return cast(
+            Iterable[dict[str, Any]],
+            self.ws_handler.stream_user_events(product_ids, ws=self._create_ws()),
+        )
 
-    def get_quote(self, symbol: str) -> Quote | None:
+    def get_quote(self, symbol: str) -> Quote:
         cached = self.market_data.get_cached_quote(symbol)
         if cached and not self.is_stale(symbol):
-            return Quote(
-                symbol=symbol,
-                bid=cached.get("bid", Decimal("0")),
-                ask=cached.get("ask", Decimal("0")),
-                last=cached.get("last", Decimal("0")),
-                ts=cached.get("last_update"),
+            bid = Decimal(str(cached.get("bid"))) if cached.get("bid") is not None else Decimal("0")
+            ask = Decimal(str(cached.get("ask"))) if cached.get("ask") is not None else Decimal("0")
+            last = (
+                Decimal(str(cached.get("last"))) if cached.get("last") is not None else Decimal("0")
             )
-        return self.rest_service.get_rest_quote(symbol)
+            last_update = cached.get("last_update")
+            ts = last_update if isinstance(last_update, datetime) else datetime.utcnow()
+            return Quote(symbol=symbol, bid=bid, ask=ask, last=last, ts=ts)
+
+        quote = self.rest_service.get_rest_quote(symbol)
+        if quote is None:
+            raise NotFoundError(f"Quote unavailable for {symbol}")
+        return quote
 
     def get_market_snapshot(self, symbol: str) -> dict[str, Any]:
-        return self.market_data.get_snapshot(symbol)
+        return cast(dict[str, Any], self.market_data.get_snapshot(symbol))
 
-    def get_candles(self, symbol: str, granularity: str, limit: int = 200) -> list[Any]:
-        return self.rest_service.get_candles(symbol, granularity, limit)
+    def get_candles(self, symbol: str, granularity: str, limit: int = 200) -> list[Candle]:
+        return cast(list[Candle], self.rest_service.get_candles(symbol, granularity, limit))
 
     def is_stale(self, symbol: str, threshold_seconds: int = 10) -> bool:
-        return self.market_data.is_stale(symbol, threshold_seconds)
+        return bool(self.market_data.is_stale(symbol, threshold_seconds))
 
     # ------------------------------------------------------------------
     # Account & portfolio helpers
     # ------------------------------------------------------------------
     def list_balances(self) -> list[Balance]:
-        return self.rest_service.list_balances()
+        return cast(list[Balance], self.rest_service.list_balances())
 
     def get_portfolio_balances(self) -> list[Balance]:
-        return self.rest_service.get_portfolio_balances()
+        return cast(list[Balance], self.rest_service.get_portfolio_balances())
 
     def get_key_permissions(self) -> dict[str, Any]:
-        return self.rest_service.get_key_permissions()
+        return cast(dict[str, Any], self.rest_service.get_key_permissions())
 
     def get_fee_schedule(self) -> dict[str, Any]:
-        return self.rest_service.get_fee_schedule()
+        return cast(dict[str, Any], self.rest_service.get_fee_schedule())
 
     def get_account_limits(self) -> dict[str, Any]:
-        return self.rest_service.get_account_limits()
+        return cast(dict[str, Any], self.rest_service.get_account_limits())
 
     def get_transaction_summary(self) -> dict[str, Any]:
-        return self.rest_service.get_transaction_summary()
+        return cast(dict[str, Any], self.rest_service.get_transaction_summary())
 
     def list_payment_methods(self) -> list[dict[str, Any]]:
-        return self.rest_service.list_payment_methods()
+        return cast(list[dict[str, Any]], self.rest_service.list_payment_methods())
 
     def get_payment_method(self, payment_method_id: str) -> dict[str, Any]:
-        return self.rest_service.get_payment_method(payment_method_id)
+        return cast(dict[str, Any], self.rest_service.get_payment_method(payment_method_id))
 
     def list_portfolios(self) -> list[dict[str, Any]]:
-        return self.rest_service.list_portfolios()
+        return cast(list[dict[str, Any]], self.rest_service.list_portfolios())
 
     def get_portfolio(self, portfolio_uuid: str) -> dict[str, Any]:
-        return self.rest_service.get_portfolio(portfolio_uuid)
+        return cast(dict[str, Any], self.rest_service.get_portfolio(portfolio_uuid))
 
     def get_portfolio_breakdown(self, portfolio_uuid: str) -> dict[str, Any]:
-        return self.rest_service.get_portfolio_breakdown(portfolio_uuid)
+        return cast(dict[str, Any], self.rest_service.get_portfolio_breakdown(portfolio_uuid))
 
     def move_portfolio_funds(self, payload: dict[str, Any]) -> dict[str, Any]:
-        return self.rest_service.move_portfolio_funds(payload)
+        return cast(dict[str, Any], self.rest_service.move_portfolio_funds(payload))
 
     def create_convert_quote(self, payload: dict[str, Any]) -> dict[str, Any]:
-        return self.rest_service.create_convert_quote(payload)
+        return cast(dict[str, Any], self.rest_service.create_convert_quote(payload))
 
     def commit_convert_trade(
         self, trade_id: str, payload: dict[str, Any] | None = None
     ) -> dict[str, Any]:
-        return self.rest_service.commit_convert_trade(trade_id, payload)
+        return cast(dict[str, Any], self.rest_service.commit_convert_trade(trade_id, payload))
 
     def get_convert_trade(self, trade_id: str) -> dict[str, Any]:
-        return self.rest_service.get_convert_trade(trade_id)
+        return cast(dict[str, Any], self.rest_service.get_convert_trade(trade_id))
 
     # ------------------------------------------------------------------
     # Connectivity
@@ -313,7 +356,7 @@ class CoinbaseBrokerage(IBrokerage):
         self._ws_factory_override = factory
         self.ws_handler.set_ws_factory_for_testing(factory)
 
-    def _create_ws(self):
+    def _create_ws(self) -> CoinbaseWebSocket:
         # Always reflect the current CoinbaseWebSocket class (patch-friendly for tests)
         self.ws_handler.configure_websocket(
             ws_cls=CoinbaseWebSocket,

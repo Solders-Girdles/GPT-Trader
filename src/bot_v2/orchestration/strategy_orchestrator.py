@@ -7,7 +7,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from bot_v2.features.brokerages.core.interfaces import Balance, Position
 from bot_v2.features.live_trade.indicators import mean_decimal as _mean_decimal
@@ -222,7 +222,7 @@ class StrategyOrchestrator:
             (b for b in balances if getattr(b, "asset", "").upper() in cash_assets),
             None,
         )
-        return usd_balance.total if usd_balance else Decimal("0")
+        return cast(Decimal, usd_balance.total) if usd_balance is not None else Decimal("0")
 
     def _kill_switch_engaged(self) -> bool:
         bot = self._bot
@@ -259,7 +259,8 @@ class StrategyOrchestrator:
         return state, quantity
 
     def _get_marks(self, symbol: str) -> list[Decimal]:
-        marks = self._bot.mark_windows.get(symbol, [])
+        raw_marks = self._bot.mark_windows.get(symbol, [])
+        marks = [Decimal(str(mark)) for mark in raw_marks]
         if not marks:
             logger.warning(f"No marks for {symbol}")
         return marks
@@ -338,8 +339,13 @@ class StrategyOrchestrator:
         rules = self._spot_profiles.get(context.symbol)
         if not rules or decision.action != Action.BUY:
             return decision
-        if context.position_state and quantity_from(context.position_state) != Decimal("0"):
-            return decision
+        if context.position_state:
+            position_qty_raw = quantity_from(context.position_state, default=Decimal("0"))
+            position_qty = (
+                position_qty_raw if isinstance(position_qty_raw, Decimal) else Decimal("0")
+            )
+            if position_qty != Decimal("0"):
+                return decision
 
         needs_data = False
         max_window = 0
@@ -381,10 +387,10 @@ class StrategyOrchestrator:
             logger.debug("Insufficient candle data for %s; deferring entry", symbol)
             return Decision(action=Action.HOLD, reason="indicator_data_unavailable")
 
-        closes = [_to_decimal(getattr(c, "close", 0)) for c in candles]
-        volumes = [_to_decimal(getattr(c, "volume", 0)) for c in candles]
-        highs = [_to_decimal(getattr(c, "high", 0)) for c in candles]
-        lows = [_to_decimal(getattr(c, "low", 0)) for c in candles]
+        closes = [Decimal(str(_to_decimal(getattr(c, "close", 0)))) for c in candles]
+        volumes = [Decimal(str(_to_decimal(getattr(c, "volume", 0)))) for c in candles]
+        highs = [Decimal(str(_to_decimal(getattr(c, "high", 0)))) for c in candles]
+        lows = [Decimal(str(_to_decimal(getattr(c, "low", 0)))) for c in candles]
 
         if isinstance(volma_config, dict):
             window = int(volma_config.get("window", 0))

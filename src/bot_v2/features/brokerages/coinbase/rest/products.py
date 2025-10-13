@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import Any
+from typing import TYPE_CHECKING, Any, cast
 
 from bot_v2.features.brokerages.coinbase.models import (
     normalize_symbol,
@@ -14,13 +14,25 @@ from bot_v2.features.brokerages.coinbase.models import (
 from bot_v2.features.brokerages.coinbase.rest.base import logger
 from bot_v2.features.brokerages.core.interfaces import MarketType, Product, Quote
 
+if TYPE_CHECKING:
+    from bot_v2.features.brokerages.coinbase.client import CoinbaseClient
+    from bot_v2.features.brokerages.coinbase.endpoints import CoinbaseEndpoints
+    from bot_v2.features.brokerages.coinbase.rest.base import CoinbaseRestServiceBase
+    from bot_v2.features.brokerages.coinbase.utilities import ProductCatalog
+
 
 class ProductRestMixin:
     """Product discovery and market data helpers."""
 
+    client: CoinbaseClient
+    endpoints: CoinbaseEndpoints
+    product_catalog: ProductCatalog
+
     def list_products(self, market: MarketType | None = None) -> list[Product]:
         try:
-            response = self.client.get_products() or {}
+            base = cast("CoinbaseRestServiceBase", self)
+            client = cast("CoinbaseClient", base.client)
+            response = client.get_products() or {}
         except Exception as exc:
             logger.error("Failed to list products: %s", exc)
             return []
@@ -43,17 +55,22 @@ class ProductRestMixin:
         normalized = normalize_symbol(symbol)
         product: Product | None = None
         try:
-            product = self.product_catalog.get(self.client, normalized)
+            base = cast("CoinbaseRestServiceBase", self)
+            catalog = cast("ProductCatalog", base.product_catalog)
+            client = cast("CoinbaseClient", base.client)
+            product = catalog.get(client, normalized)
         except Exception as exc:
             logger.debug("Product catalog lookup failed for %s: %s", normalized, exc, exc_info=True)
             product = None
 
         if product is None:
             try:
-                if hasattr(self.client, "get_product"):
-                    data = self.client.get_product(normalized) or {}
+                base = cast("CoinbaseRestServiceBase", self)
+                client = cast("CoinbaseClient", base.client)
+                if hasattr(client, "get_product"):
+                    data = client.get_product(normalized) or {}
                 else:  # pragma: no cover - legacy endpoint
-                    data = self.client.get(self.endpoints.get_product(normalized)) or {}
+                    data = client.get(base.endpoints.get_product(normalized)) or {}
                 product = to_product(data)
             except Exception as exc:
                 logger.error("Failed to fetch product %s: %s", symbol, exc)
@@ -67,9 +84,10 @@ class ProductRestMixin:
         if not self.endpoints.supports_derivatives():
             return product
         try:
-            funding_rate, next_funding_time = self.product_catalog.get_funding(
-                self.client, product.symbol
-            )
+            base = cast("CoinbaseRestServiceBase", self)
+            catalog = cast("ProductCatalog", base.product_catalog)
+            client = cast("CoinbaseClient", base.client)
+            funding_rate, next_funding_time = catalog.get_funding(client, product.symbol)
             if funding_rate is not None:
                 product.funding_rate = Decimal(str(funding_rate))
             if next_funding_time is not None:
@@ -81,14 +99,18 @@ class ProductRestMixin:
     def get_rest_quote(self, symbol: str) -> Quote | None:
         try:
             pid = normalize_symbol(symbol)
-            response = self.client.get_ticker(pid)
+            base = cast("CoinbaseRestServiceBase", self)
+            client = cast("CoinbaseClient", base.client)
+            response = client.get_ticker(pid)
         except Exception as exc:
             logger.error("Failed to get quote for %s: %s", symbol, exc)
             return None
         return to_quote({"symbol": pid, **(response or {})})
 
     def get_candles(self, symbol: str, granularity: str, limit: int = 200) -> list[Any]:
-        data = self.client.get_candles(normalize_symbol(symbol), granularity, limit) or {}
+        base = cast("CoinbaseRestServiceBase", self)
+        client = cast("CoinbaseClient", base.client)
+        data = client.get_candles(normalize_symbol(symbol), granularity, limit) or {}
         items = data.get("candles") or data.get("data") or []
         return [to_candle(candle) for candle in items]
 

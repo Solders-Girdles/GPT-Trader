@@ -16,13 +16,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-python@v6
-        with: { python-version: "3.12" }
+      - name: Prepare Python environment
+        uses: ./.github/actions/setup-poetry
+        with:
+          python-version: "3.12"
+          install-deps: "false"
+          cache-path: ""
       - name: Install pip-audit
         run: python -m pip install --upgrade pip pip-audit
       - name: Install project (no dev)
         run: |
-          python -m pip install poetry==1.8.4
           poetry export -f requirements.txt --with main --without-hashes -o requirements.txt
       - name: Run pip-audit (fail on high/critical)
         run: pip-audit --strict

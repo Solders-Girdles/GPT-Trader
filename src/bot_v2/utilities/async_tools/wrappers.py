@@ -81,8 +81,8 @@ class AsyncBatchProcessor:
         self,
         operations: list[Coroutine[Any, Any, T]],
         return_exceptions: bool = False,
-    ) -> list[T | Exception]:
-        results: list[T | Exception] = []
+    ) -> list[T | BaseException]:
+        results: list[T | BaseException] = []
         for i in range(0, len(operations), self.batch_size):
             batch = operations[i : i + self.batch_size]
             batch_results = await asyncio.gather(*batch, return_exceptions=return_exceptions)

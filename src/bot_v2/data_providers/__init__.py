@@ -12,22 +12,20 @@ import json
 import os
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
-from typing import TYPE_CHECKING, Any
+from types import ModuleType
+from typing import TYPE_CHECKING, Any, cast
 
 from bot_v2.orchestration.runtime_settings import RuntimeSettings, load_runtime_settings
 from bot_v2.utilities import get_logger, log_operation, optional_import
 
-# Lazy imports for heavy dependencies
+# Lazy import wrapper for pandas. We supply a proper module during type checking
+# so annotations remain valid even when pandas is missing at runtime.
 pandas = optional_import("pandas")
 
-# Runtime alias: pd = pandas (OptionalImport wrapper)
-# - At runtime: pd.DataFrame/pd.date_range forward to OptionalImport.__getattr__
-# - Type checking: overridden by TYPE_CHECKING block below for proper type hints
-pd = pandas  # type: ignore[assignment]
-
-# Type checking imports (not loaded at runtime)
 if TYPE_CHECKING:
     import pandas as pd
+else:  # pragma: no cover - runtime branch only
+    pd = cast(Any, pandas)
 
 # Logger
 logger = get_logger(__name__)
@@ -72,13 +70,13 @@ class YFinanceProvider(DataProvider):
     """Yahoo Finance data provider - default implementation"""
 
     def __init__(self) -> None:
-        self._yfinance = None
-        self._cache = {}
-        self._cache_expiry = {}
+        self._yfinance: ModuleType | None = None
+        self._cache: dict[str, pd.DataFrame] = {}
+        self._cache_expiry: dict[str, datetime] = {}
         self._cache_duration = timedelta(minutes=5)
 
     @property
-    def yf(self) -> Any:
+    def yf(self) -> ModuleType:
         """Lazy load yfinance"""
         if self._yfinance is None:
             try:
@@ -110,12 +108,23 @@ class YFinanceProvider(DataProvider):
                 return self._cache[cache_key]
 
             try:
-                if not pandas.is_available:
+                if not pandas.is_available():
                     logger.error("pandas not available for data processing")
                     return self._get_mock_data(symbol, period)
 
                 ticker = self.yf.Ticker(symbol)
-                data = ticker.history(period=period, interval=interval)
+                raw_data = ticker.history(period=period, interval=interval)
+
+                if not isinstance(raw_data, pd.DataFrame):
+                    logger.warning(
+                        "Unexpected payload from yfinance, falling back to mock data",
+                        symbol=symbol,
+                        provider="yfinance",
+                        payload_type=type(raw_data).__name__,
+                    )
+                    return self._get_mock_data(symbol, period)
+
+                data = cast(pd.DataFrame, raw_data)
 
                 if data.empty:
                     logger.warning("No data returned", symbol=symbol, provider="yfinance")
@@ -148,7 +157,8 @@ class YFinanceProvider(DataProvider):
         try:
             ticker = self.yf.Ticker(symbol)
             info = ticker.info
-            return info.get("currentPrice", info.get("regularMarketPrice", 100.0))
+            price = info.get("currentPrice", info.get("regularMarketPrice", 100.0))
+            return float(price)
         except Exception as e:
             logger.error(f"Error fetching current price for {symbol}: {e}")
             return 100.0
@@ -157,7 +167,7 @@ class YFinanceProvider(DataProvider):
         self, symbols: list[str], period: str = "60d"
     ) -> dict[str, pd.DataFrame]:
         """Get data for multiple symbols"""
-        result = {}
+        result: dict[str, pd.DataFrame] = {}
         for symbol in symbols:
             result[symbol] = self.get_historical_data(symbol, period)
         return result
@@ -203,9 +213,9 @@ class YFinanceProvider(DataProvider):
 class MockProvider(DataProvider):
     """Mock data provider for testing"""
 
-    def __init__(self, data_dir: str = None) -> None:
+    def __init__(self, data_dir: str | None = None) -> None:
         self.data_dir = data_dir or "tests/fixtures/market_data"
-        self._mock_data = {}
+        self._mock_data: dict[str, Any] = {}
         self._load_mock_data()
 
     def _load_mock_data(self) -> None:
@@ -270,7 +280,7 @@ class MockProvider(DataProvider):
         self, symbols: list[str], period: str = "60d"
     ) -> dict[str, pd.DataFrame]:
         """Get mock data for multiple symbols"""
-        result = {}
+        result: dict[str, pd.DataFrame] = {}
         for symbol in symbols:
             result[symbol] = self.get_historical_data(symbol, period)
         return result

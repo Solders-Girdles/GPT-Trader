@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING
+from collections.abc import Callable
+from typing import TYPE_CHECKING, cast
 
 from bot_v2.config.live_trade_config import RiskConfig
 from bot_v2.features.live_trade.risk import LiveRiskManager, RiskRuntimeState
@@ -22,7 +23,11 @@ from bot_v2.orchestration.runtime_settings import RuntimeSettings, load_runtime_
 from bot_v2.utilities.telemetry import emit_metric
 
 if TYPE_CHECKING:  # pragma: no cover - type checking only
+    from bot_v2.features.brokerages.coinbase.market_data_service import MarketDataService
+    from bot_v2.features.brokerages.coinbase.utilities import ProductCatalog
+    from bot_v2.features.brokerages.core.interfaces import IBrokerage
     from bot_v2.orchestration.perps_bot import PerpsBot
+    from bot_v2.persistence.event_store import EventStore
 
 logger = logging.getLogger(__name__)
 
@@ -72,7 +77,7 @@ class RuntimeCoordinator(_RuntimeCoordinator):
 
     def is_reduce_only_mode(self) -> bool:  # type: ignore[override]
         self._refresh_context_from_bot()
-        return super().is_reduce_only_mode()
+        return bool(super().is_reduce_only_mode())
 
     def on_risk_state_change(self, state: RiskRuntimeState) -> None:  # type: ignore[override]
         self._refresh_context_from_bot()
@@ -111,7 +116,7 @@ class RuntimeCoordinator(_RuntimeCoordinator):
 
         def _safe_attr(obj: object, name: str) -> object | None:
             try:
-                return getattr(obj, name)
+                return cast(object, getattr(obj, name))
             except Exception:
                 return None
 
@@ -159,24 +164,34 @@ class RuntimeCoordinator(_RuntimeCoordinator):
 
     # ------------------------------------------------------------------
     @property
-    def _deterministic_broker_cls(self):  # type: ignore[override]
-        return DeterministicBroker
+    def _deterministic_broker_cls(self) -> type[DeterministicBroker]:  # type: ignore[override]
+        return cast(type[DeterministicBroker], DeterministicBroker)
 
     @property
-    def _create_brokerage(self):  # type: ignore[override]
-        return create_brokerage
+    def _create_brokerage(
+        self,
+    ) -> Callable[
+        ..., tuple[IBrokerage, EventStore, MarketDataService, ProductCatalog]
+    ]:  # type: ignore[override]
+        return cast(
+            Callable[
+                ...,
+                tuple["IBrokerage", "EventStore", "MarketDataService", "ProductCatalog"],
+            ],
+            create_brokerage,
+        )
 
     @property
-    def _risk_config_cls(self):  # type: ignore[override]
-        return RiskConfig
+    def _risk_config_cls(self) -> type[RiskConfig]:  # type: ignore[override]
+        return cast(type[RiskConfig], RiskConfig)
 
     @property
-    def _risk_manager_cls(self):  # type: ignore[override]
-        return LiveRiskManager
+    def _risk_manager_cls(self) -> type[LiveRiskManager]:  # type: ignore[override]
+        return cast(type[LiveRiskManager], LiveRiskManager)
 
     @property
-    def _order_reconciler_cls(self):  # type: ignore[override]
-        return OrderReconciler
+    def _order_reconciler_cls(self) -> type[OrderReconciler]:  # type: ignore[override]
+        return cast(type[OrderReconciler], OrderReconciler)
 
 
 __all__ = [

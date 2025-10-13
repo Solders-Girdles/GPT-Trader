@@ -177,12 +177,12 @@ class TradeStatistics:
         losing_trades = len(losses)
         total_return = sum(returns)
 
-        avg_win_return = np.mean(wins) if wins else 0.0
-        avg_loss_return = np.mean(losses) if losses else 0.0
+        avg_win_return = float(np.mean(wins)) if wins else 0.0
+        avg_loss_return = float(np.mean(losses)) if losses else 0.0
         win_rate = winning_trades / total_trades if total_trades > 0 else 0.0
 
-        total_wins = sum(wins) if wins else 0.0
-        total_losses = abs(sum(losses)) if losses else 1.0
+        total_wins = float(sum(wins)) if wins else 0.0
+        total_losses = float(abs(sum(losses))) if losses else 1.0
         profit_factor = total_wins / total_losses if total_losses > 0 else 0.0
 
         return cls(

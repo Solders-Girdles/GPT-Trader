@@ -28,6 +28,9 @@ class CoinbaseClientProtocol(Protocol):
     ) -> str:
         """Append query parameters to the provided path."""
 
+    def get_products(self) -> dict[str, Any]:
+        """Return the raw product listing payload."""
+
     def get_product_book(self, product_id: str, level: int = 2) -> dict[str, Any]:
         """Optional helper for market mixins; implemented by the combined client."""
 

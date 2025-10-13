@@ -1,11 +1,27 @@
 """Tests for EventStore persistence functionality."""
 
+import json
 from pathlib import Path
 from unittest.mock import Mock, patch
 
 import pytest
 
 from bot_v2.persistence.event_store import EventStore
+
+
+def _write_events(file_path: Path, events: list[object]) -> None:
+    """Persist the provided iterable of events as JSONL."""
+    lines: list[str] = []
+    for event in events:
+        if isinstance(event, dict):
+            lines.append(json.dumps(event))
+        elif event is None:
+            lines.append("null")
+        else:
+            lines.append(str(event))
+
+    file_path.parent.mkdir(parents=True, exist_ok=True)
+    file_path.write_text("\n".join(lines) + ("\n" if lines else ""), encoding="utf-8")
 
 
 class TestEventStore:
@@ -215,7 +231,7 @@ class TestEventStore:
         with pytest.raises(ValueError):
             store.append_error("bot123", "")
 
-    def test_tail_no_filter(self) -> None:
+    def test_tail_no_filter(self, tmp_path: Path) -> None:
         """Test tail method without type filtering."""
         events = [
             {"bot_id": "bot123", "type": "trade", "symbol": "BTC-USD"},
@@ -224,23 +240,19 @@ class TestEventStore:
             {"bot_id": "bot123", "type": "error", "message": "Failed"},
         ]
 
-        with patch("bot_v2.persistence.event_store.JsonFileStore") as mock_json_store:
-            mock_store_instance = Mock()
-            mock_store_instance.iter_jsonl.return_value = iter(events)
-            mock_json_store.return_value = mock_store_instance
+        store = EventStore(root=tmp_path)
+        _write_events(store.path, events)
+        result = store.tail("bot123")
 
-            store = EventStore()
-            result = store.tail("bot123")
+        # Should only return events for bot123, in order
+        expected = [
+            {"bot_id": "bot123", "type": "trade", "symbol": "BTC-USD"},
+            {"bot_id": "bot123", "type": "position", "symbol": "ETH-USD"},
+            {"bot_id": "bot123", "type": "error", "message": "Failed"},
+        ]
+        assert result == expected
 
-            # Should only return events for bot123, in order
-            expected = [
-                {"bot_id": "bot123", "type": "trade", "symbol": "BTC-USD"},
-                {"bot_id": "bot123", "type": "position", "symbol": "ETH-USD"},
-                {"bot_id": "bot123", "type": "error", "message": "Failed"},
-            ]
-            assert result == expected
-
-    def test_tail_with_type_filter(self) -> None:
+    def test_tail_with_type_filter(self, tmp_path: Path) -> None:
         """Test tail method with type filtering."""
         events = [
             {"bot_id": "bot123", "type": "trade", "symbol": "BTC-USD"},
@@ -249,22 +261,18 @@ class TestEventStore:
             {"bot_id": "bot123", "type": "error", "message": "Failed"},
         ]
 
-        with patch("bot_v2.persistence.event_store.JsonFileStore") as mock_json_store:
-            mock_store_instance = Mock()
-            mock_store_instance.iter_jsonl.return_value = iter(events)
-            mock_json_store.return_value = mock_store_instance
+        store = EventStore(root=tmp_path)
+        _write_events(store.path, events)
+        result = store.tail("bot123", types=["trade"])
 
-            store = EventStore()
-            result = store.tail("bot123", types=["trade"])
+        # Should only return trade events for bot123
+        expected = [
+            {"bot_id": "bot123", "type": "trade", "symbol": "BTC-USD"},
+            {"bot_id": "bot123", "type": "trade", "symbol": "ETH-USD"},
+        ]
+        assert result == expected
 
-            # Should only return trade events for bot123
-            expected = [
-                {"bot_id": "bot123", "type": "trade", "symbol": "BTC-USD"},
-                {"bot_id": "bot123", "type": "trade", "symbol": "ETH-USD"},
-            ]
-            assert result == expected
-
-    def test_tail_with_multiple_type_filter(self) -> None:
+    def test_tail_with_multiple_type_filter(self, tmp_path: Path) -> None:
         """Test tail method with multiple type filtering."""
         events = [
             {"bot_id": "bot123", "type": "trade", "symbol": "BTC-USD"},
@@ -272,22 +280,18 @@ class TestEventStore:
             {"bot_id": "bot123", "type": "error", "message": "Failed"},
         ]
 
-        with patch("bot_v2.persistence.event_store.JsonFileStore") as mock_json_store:
-            mock_store_instance = Mock()
-            mock_store_instance.iter_jsonl.return_value = iter(events)
-            mock_json_store.return_value = mock_store_instance
+        store = EventStore(root=tmp_path)
+        _write_events(store.path, events)
+        result = store.tail("bot123", types=["trade", "error"])
 
-            store = EventStore()
-            result = store.tail("bot123", types=["trade", "error"])
+        # Should only return trade and error events for bot123
+        expected = [
+            {"bot_id": "bot123", "type": "trade", "symbol": "BTC-USD"},
+            {"bot_id": "bot123", "type": "error", "message": "Failed"},
+        ]
+        assert result == expected
 
-            # Should only return trade and error events for bot123
-            expected = [
-                {"bot_id": "bot123", "type": "trade", "symbol": "BTC-USD"},
-                {"bot_id": "bot123", "type": "error", "message": "Failed"},
-            ]
-            assert result == expected
-
-    def test_tail_with_limit(self) -> None:
+    def test_tail_with_limit(self, tmp_path: Path) -> None:
         """Test tail method with limit."""
         events = [
             {"bot_id": "bot123", "type": "trade", "symbol": "BTC-USD"},
@@ -296,22 +300,18 @@ class TestEventStore:
             {"bot_id": "bot123", "type": "error", "message": "Failed"},
         ]
 
-        with patch("bot_v2.persistence.event_store.JsonFileStore") as mock_json_store:
-            mock_store_instance = Mock()
-            mock_store_instance.iter_jsonl.return_value = iter(events)
-            mock_json_store.return_value = mock_store_instance
+        store = EventStore(root=tmp_path)
+        _write_events(store.path, events)
+        result = store.tail("bot123", limit=2)
 
-            store = EventStore()
-            result = store.tail("bot123", limit=2)
+        # Should only return last 2 events for bot123
+        expected = [
+            {"bot_id": "bot123", "type": "trade", "symbol": "ETH-USD"},
+            {"bot_id": "bot123", "type": "error", "message": "Failed"},
+        ]
+        assert result == expected
 
-            # Should only return last 2 events for bot123
-            expected = [
-                {"bot_id": "bot123", "type": "trade", "symbol": "ETH-USD"},
-                {"bot_id": "bot123", "type": "error", "message": "Failed"},
-            ]
-            assert result == expected
-
-    def test_tail_handles_invalid_events(self) -> None:
+    def test_tail_handles_invalid_events(self, tmp_path: Path) -> None:
         """Test tail method handles invalid event data."""
         events = [
             {"bot_id": "bot123", "type": "trade", "symbol": "BTC-USD"},
@@ -321,26 +321,26 @@ class TestEventStore:
             123,  # Invalid event
         ]
 
-        with patch("bot_v2.persistence.event_store.JsonFileStore") as mock_json_store:
-            mock_store_instance = Mock()
-            mock_store_instance.iter_jsonl.return_value = iter(events)
-            mock_json_store.return_value = mock_store_instance
+        store = EventStore(root=tmp_path)
+        _write_events(store.path, events)
+        result = store.tail("bot123")
 
-            store = EventStore()
-            result = store.tail("bot123")
-
-            # Should only return valid dict events for bot123
-            expected = [
-                {"bot_id": "bot123", "type": "trade", "symbol": "BTC-USD"},
-                {"bot_id": "bot123", "type": "position", "symbol": "ETH-USD"},
-            ]
-            assert result == expected
+        # Should only return valid dict events for bot123
+        expected = [
+            {"bot_id": "bot123", "type": "trade", "symbol": "BTC-USD"},
+            {"bot_id": "bot123", "type": "position", "symbol": "ETH-USD"},
+        ]
+        assert result == expected
 
     def test_tail_handles_exception(self) -> None:
         """Test tail method handles exceptions gracefully."""
         with patch("bot_v2.persistence.event_store.JsonFileStore") as mock_json_store:
             mock_store_instance = Mock()
-            mock_store_instance.iter_jsonl.side_effect = Exception("File not found")
+            mock_store_instance._lock = None
+            mock_path = Mock()
+            mock_path.exists.return_value = True
+            mock_path.open.side_effect = OSError("File not found")
+            mock_store_instance.path = mock_path
             mock_json_store.return_value = mock_store_instance
 
             store = EventStore()
@@ -349,23 +349,19 @@ class TestEventStore:
             # Should return empty list on exception
             assert result == []
 
-    def test_tail_empty_result(self) -> None:
+    def test_tail_empty_result(self, tmp_path: Path) -> None:
         """Test tail method returns empty list when no matching events."""
         events = [
             {"bot_id": "bot456", "type": "trade", "symbol": "BTC-USD"},  # Different bot
             {"bot_id": "bot789", "type": "position", "symbol": "ETH-USD"},  # Different bot
         ]
 
-        with patch("bot_v2.persistence.event_store.JsonFileStore") as mock_json_store:
-            mock_store_instance = Mock()
-            mock_store_instance.iter_jsonl.return_value = iter(events)
-            mock_json_store.return_value = mock_store_instance
+        store = EventStore(root=tmp_path)
+        _write_events(store.path, events)
+        result = store.tail("bot123")
 
-            store = EventStore()
-            result = store.tail("bot123")
-
-            # Should return empty list for non-existent bot
-            assert result == []
+        # Should return empty list for non-existent bot
+        assert result == []
 
     def test_integration_workflow(self) -> None:
         """Test complete workflow of event storage and retrieval."""

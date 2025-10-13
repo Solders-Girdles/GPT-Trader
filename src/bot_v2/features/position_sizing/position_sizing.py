@@ -500,12 +500,12 @@ def _has_kelly_data(request: PositionSizeRequest) -> bool:
 
 def _estimate_position_risk(request: PositionSizeRequest, position_size_pct: float) -> float:
     """Estimate risk percentage for a position."""
-    if request.avg_loss:
-        return position_size_pct * abs(request.avg_loss)
-    elif request.volatility:
-        return position_size_pct * request.volatility * 1.5  # Conservative estimate
+    if request.avg_loss is not None:
+        return float(position_size_pct * abs(request.avg_loss))
+    if request.volatility is not None:
+        return float(position_size_pct * request.volatility * 1.5)  # Conservative estimate
     else:
-        return position_size_pct * 0.05  # Default 5% risk estimate
+        return float(position_size_pct * 0.05)  # Default 5% risk estimate
 
 
 def _estimate_portfolio_risk(
@@ -513,9 +513,9 @@ def _estimate_portfolio_risk(
 ) -> float:
     """Estimate portfolio risk with bounds checking"""
     try:
-        if avg_loss:
+        if avg_loss is not None:
             risk = position_size_pct * abs(avg_loss)
-        elif volatility:
+        elif volatility is not None:
             risk = position_size_pct * volatility * 1.5  # Conservative estimate
         else:
             risk = position_size_pct * 0.05  # Default 5% risk estimate

@@ -5,15 +5,14 @@ from __future__ import annotations
 import logging
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any, Literal, TYPE_CHECKING
 
 import yaml
 
-from bot_v2.features.brokerages.core.interfaces import (
-    Balance,
-    MarketType,
-    Product,
-)
+from bot_v2.features.brokerages.core.interfaces import Balance, MarketType, Product
+
+if TYPE_CHECKING:  # pragma: no cover - typing only
+    from bot_v2.orchestration.deterministic_broker import DeterministicBroker
 
 logger = logging.getLogger(__name__)
 

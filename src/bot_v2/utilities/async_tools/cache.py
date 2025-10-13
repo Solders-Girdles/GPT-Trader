@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import time
 from collections.abc import Callable, Coroutine
-from typing import Any, TypeVar
+from typing import Any, TypeVar, cast
 
 T = TypeVar("T")
 
@@ -61,7 +61,7 @@ def async_cache(
             key = f"{func.__name__}:{hash(str(args) + str(sorted(kwargs.items())))}"
             cached = await cache.get(key)
             if cached is not None:
-                return cached
+                return cast(T, cached)
             result = await func(*args, **kwargs)
             await cache.set(key, result)
             return result

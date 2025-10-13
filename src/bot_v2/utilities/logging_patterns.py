@@ -8,7 +8,8 @@ import types
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from decimal import Decimal
-from typing import Any
+from functools import wraps
+from typing import Any, ParamSpec, TypeVar
 
 # Standardized log field names
 LOG_FIELDS = {
@@ -27,6 +28,10 @@ LOG_FIELDS = {
     "error_type": "error_type",
     "status": "status",
 }
+
+
+ExecP = ParamSpec("ExecP")
+ExecR = TypeVar("ExecR")
 
 
 class StructuredLogger:
@@ -181,7 +186,7 @@ def log_trade_event(
     elif isinstance(logger, logging.Logger):
         logger = StructuredLogger(logger.name)
 
-    context = {
+    context: dict[str, Any] = {
         "operation": "trade_event",
         "symbol": symbol,
         "event_type": event_type,
@@ -222,7 +227,7 @@ def log_position_update(
     elif isinstance(logger, logging.Logger):
         logger = StructuredLogger(logger.name)
 
-    context = {
+    context: dict[str, Any] = {
         "operation": "position_update",
         "symbol": symbol,
         "position_size": position_size,
@@ -254,7 +259,7 @@ def log_error_with_context(
     """
     logger = StructuredLogger("error", component=component)
 
-    error_context = {
+    error_context: dict[str, Any] = {
         "operation": operation,
         "error_type": type(error).__name__,
         "error_message": str(error),
@@ -288,7 +293,7 @@ def log_configuration_change(
     elif isinstance(logger, logging.Logger):
         logger = StructuredLogger(logger.name)
 
-    context = {
+    context: dict[str, Any] = {
         "operation": "config_change",
         "config_key": config_key,
         "old_value": str(old_value) if old_value is not None else "None",
@@ -322,7 +327,7 @@ def log_market_data_update(
     elif isinstance(logger, logging.Logger):
         logger = StructuredLogger(logger.name)
 
-    context = {
+    context: dict[str, Any] = {
         "operation": "market_data_update",
         "symbol": symbol,
         "price": price,
@@ -355,7 +360,7 @@ def log_system_health(
     elif isinstance(logger, logging.Logger):
         logger = StructuredLogger(logger.name)
 
-    context = {
+    context: dict[str, Any] = {
         "operation": "health_check",
         "status": status,
     }
@@ -392,7 +397,7 @@ def log_execution(
     level: int = logging.INFO,
     include_args: bool = False,
     include_result: bool = False,
-) -> callable:
+) -> Callable[[Callable[ExecP, ExecR]], Callable[ExecP, ExecR]]:
     """Decorator to automatically log function execution.
 
     Args:
@@ -406,27 +411,31 @@ def log_execution(
         Decorated function
     """
 
-    def decorator(func: Callable) -> Callable:
-        def wrapper(*args: Any, **kwargs: Any) -> Any:
+    def decorator(func: Callable[ExecP, ExecR]) -> Callable[ExecP, ExecR]:
+        @wraps(func)
+        def wrapper(*args: ExecP.args, **kwargs: ExecP.kwargs) -> ExecR:
             op_name = operation or func.__name__
-            nonlocal logger
-            if logger is None:
-                logger = StructuredLogger(func.__module__)
-            elif isinstance(logger, logging.Logger):
-                logger = StructuredLogger(logger.name)
 
-            context = {}
+            logger_obj: StructuredLogger
+            if logger is None:
+                logger_obj = StructuredLogger(func.__module__)
+            elif isinstance(logger, logging.Logger):
+                logger_obj = StructuredLogger(logger.name)
+            else:
+                logger_obj = logger
+
+            context: dict[str, Any] = {}
             if include_args:
                 # Add non-sensitive args to context
                 for i, arg in enumerate(args):
                     if not callable(arg) and not isinstance(arg, (type, types.ModuleType)):
                         context[f"arg_{i}"] = str(arg)
 
-            with log_operation(op_name, logger, level, **context):
+            with log_operation(op_name, logger_obj, level, **context):
                 result = func(*args, **kwargs)
 
                 if include_result and result is not None:
-                    logger.debug(f"Result: {result}")
+                    logger_obj.debug(f"Result: {result}")
 
                 return result
 

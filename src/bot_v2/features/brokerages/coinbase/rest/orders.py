@@ -5,7 +5,7 @@ from __future__ import annotations
 import uuid
 from collections.abc import Callable, Sequence
 from decimal import Decimal
-from typing import Any
+from typing import TYPE_CHECKING, Any, cast
 
 from bot_v2.errors import ValidationError
 from bot_v2.features.brokerages.coinbase.models import normalize_symbol, to_order
@@ -20,16 +20,25 @@ from bot_v2.features.brokerages.core.interfaces import (
 )
 from bot_v2.utilities.quantities import quantity_from
 
+if TYPE_CHECKING:
+    from bot_v2.features.brokerages.coinbase.client import CoinbaseClient
+    from bot_v2.features.brokerages.coinbase.endpoints import CoinbaseEndpoints
+    from bot_v2.features.brokerages.coinbase.rest.base import CoinbaseRestServiceBase
+    from bot_v2.features.brokerages.coinbase.rest.portfolio import PortfolioRestMixin
+
 
 class OrderRestMixin:
     """High-level order helpers built on top of the Coinbase client."""
+
+    client: CoinbaseClient
+    endpoints: CoinbaseEndpoints
 
     @staticmethod
     def _require_quantity(quantity: Decimal | None, *, context: str) -> Decimal:
         resolved = quantity_from({"quantity": quantity}, default=None)
         if resolved is None:
             raise ValueError(f"{context} requires a quantity")
-        return resolved
+        return cast(Decimal, resolved)
 
     def preview_order(
         self,
@@ -46,7 +55,8 @@ class OrderRestMixin:
         post_only: bool = False,
     ) -> dict[str, Any]:
         order_quantity = self._require_quantity(quantity, context="preview_order")
-        payload = self._build_order_payload(
+        base = cast("CoinbaseRestServiceBase", self)
+        payload = base._build_order_payload(
             symbol=symbol,
             side=side,
             order_type=order_type,
@@ -60,7 +70,9 @@ class OrderRestMixin:
             post_only=post_only,
             include_client_id=False,
         )
-        return self.client.preview_order(payload)  # type: ignore[attr-defined]
+        client = cast("CoinbaseClient", base.client)
+        response = client.preview_order(payload)
+        return cast(dict[str, Any], response or {})
 
     def edit_order_preview(
         self,
@@ -79,7 +91,8 @@ class OrderRestMixin:
         post_only: bool = False,
     ) -> dict[str, Any]:
         order_quantity = self._require_quantity(quantity, context="edit_order_preview")
-        payload = self._build_order_payload(
+        base = cast("CoinbaseRestServiceBase", self)
+        payload = base._build_order_payload(
             symbol=symbol,
             side=side,
             order_type=order_type,
@@ -96,11 +109,15 @@ class OrderRestMixin:
         payload["order_id"] = order_id
         if new_client_id:
             payload["new_client_order_id"] = new_client_id
-        return self.client.edit_order_preview(payload)  # type: ignore[attr-defined]
+        client = cast("CoinbaseClient", base.client)
+        response = client.edit_order_preview(payload)
+        return cast(dict[str, Any], response or {})
 
     def edit_order(self, order_id: str, preview_id: str) -> Order:
         payload = {"order_id": order_id, "preview_id": preview_id}
-        data = self.client.edit_order(payload)  # type: ignore[attr-defined]
+        base = cast("CoinbaseRestServiceBase", self)
+        client = cast("CoinbaseClient", base.client)
+        data = client.edit_order(payload)
         return to_order(data or {})
 
     def place_order(
@@ -120,7 +137,8 @@ class OrderRestMixin:
     ) -> Order:
         order_quantity = self._require_quantity(quantity, context="place_order")
         final_client_id = client_id or f"perps_{uuid.uuid4().hex[:12]}"
-        payload = self._build_order_payload(
+        base = cast("CoinbaseRestServiceBase", self)
+        payload = base._build_order_payload(
             symbol=symbol,
             side=side,
             order_type=order_type,
@@ -133,10 +151,12 @@ class OrderRestMixin:
             leverage=leverage,
             post_only=post_only,
         )
-        return self._execute_order_payload(symbol, payload, final_client_id)
+        return base._execute_order_payload(symbol, payload, final_client_id)
 
     def cancel_order(self, order_id: str) -> bool:
-        response = self.client.cancel_orders([order_id]) or {}
+        base = cast("CoinbaseRestServiceBase", self)
+        client = cast("CoinbaseClient", base.client)
+        response = client.cancel_orders([order_id]) or {}
         results = response.get("results") or response.get("data") or []
         for entry in results:
             if str(entry.get("order_id")) == order_id and entry.get("success") is True:
@@ -157,10 +177,12 @@ class OrderRestMixin:
         if symbol:
             params["product_id"] = normalize_symbol(symbol)
         try:
-            if hasattr(self.client, "list_orders"):
-                data = self.client.list_orders(**params) or {}
+            base = cast("CoinbaseRestServiceBase", self)
+            client = cast("CoinbaseClient", base.client)
+            if hasattr(client, "list_orders"):
+                data = client.list_orders(**params) or {}
             else:  # pragma: no cover - legacy path
-                data = self.client.get(self.endpoints.list_orders(), params=params)
+                data = base.client.get(base.endpoints.list_orders(), params=params)
         except Exception as exc:
             logger.error("Failed to list orders: %s", exc)
             return []
@@ -170,10 +192,13 @@ class OrderRestMixin:
     def get_order(self, order_id: str) -> Order | None:
         try:
             if hasattr(self.client, "get_order_historical"):
-                data = self.client.get_order_historical(order_id) or {}
+                base = cast("CoinbaseRestServiceBase", self)
+                client = cast("CoinbaseClient", base.client)
+                data = client.get_order_historical(order_id) or {}
                 payload = data.get("order") or data
             else:  # pragma: no cover - legacy path
-                payload = self.client.get(self.endpoints.get_order(order_id)) or {}
+                base = cast("CoinbaseRestServiceBase", self)
+                payload = base.client.get(base.endpoints.get_order(order_id)) or {}
             return to_order(payload)
         except Exception as exc:
             logger.error("Failed to get order %s: %s", order_id, exc)
@@ -184,7 +209,9 @@ class OrderRestMixin:
         if symbol:
             params["product_id"] = normalize_symbol(symbol)
         try:
-            data = self.client.list_fills(**params) or {}
+            base = cast("CoinbaseRestServiceBase", self)
+            client = cast("CoinbaseClient", base.client)
+            data = client.list_fills(**params) or {}
         except Exception as exc:
             logger.error("Failed to list fills: %s", exc)
             return []
@@ -205,7 +232,9 @@ class OrderRestMixin:
         close_side: OrderSide | None = None
 
         positions = (
-            list(positions_override) if positions_override is not None else self.list_positions()
+            list(positions_override)
+            if positions_override is not None
+            else cast("PortfolioRestMixin", self).list_positions()
         )
 
         if requested_quantity is None or close_side is None:
@@ -231,7 +260,9 @@ class OrderRestMixin:
         }
 
         try:
-            response = self.client.close_position(payload) or {}
+            base = cast("CoinbaseRestServiceBase", self)
+            client = cast("CoinbaseClient", base.client)
+            response = client.close_position(payload) or {}
             return to_order(response.get("order") or response)
         except Exception as exc:
             logger.warning("close_position fallback triggered for %s: %s", symbol, exc)

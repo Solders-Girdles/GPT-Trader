@@ -9,7 +9,7 @@ from __future__ import annotations
 import logging
 from collections.abc import Callable, MutableMapping
 from datetime import datetime
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from typing import Any
 
 from bot_v2.config.live_trade_config import RiskConfig
@@ -30,6 +30,16 @@ def _coalesce_quantity(*values: Decimal | None) -> Decimal:
         if value is not None:
             return value
     raise TypeError("quantity must be provided")
+
+
+def _to_decimal(value: Any, default: Decimal = Decimal("0")) -> Decimal:
+    """Safely coerce arbitrary inputs to Decimal."""
+    if value in (None, "", "null"):
+        return default
+    try:
+        return Decimal(str(value))
+    except (InvalidOperation, ValueError, TypeError):
+        return default
 
 
 class ValidationError(Exception):
@@ -197,7 +207,10 @@ class PreTradeValidator:
         notional = order_qty * price
 
         # Calculate implied leverage
-        target_leverage = notional / equity if equity > 0 else float("inf")
+        if equity <= 0:
+            target_leverage = Decimal("Infinity")
+        else:
+            target_leverage = notional / equity
 
         # Check effective per-symbol cap
         symbol_cap = effective_symbol_leverage_cap(
@@ -208,16 +221,19 @@ class PreTradeValidator:
             logger=logger,
         )
 
-        if target_leverage > symbol_cap:
+        symbol_cap_decimal = Decimal(str(symbol_cap))
+
+        if target_leverage > symbol_cap_decimal:
             raise ValidationError(
-                f"Leverage {target_leverage:.1f}x exceeds {symbol} cap of {symbol_cap}x "
+                f"Leverage {float(target_leverage):.1f}x exceeds {symbol} cap of {symbol_cap_decimal}x "
                 f"(notional: {notional}, equity: {equity})"
             )
 
         # Global cap as a final safeguard
-        if target_leverage > self.config.max_leverage:
+        max_leverage_cap = Decimal(str(self.config.max_leverage))
+        if target_leverage > max_leverage_cap:
             raise ValidationError(
-                f"Leverage {target_leverage:.1f}x exceeds global cap of {self.config.max_leverage}x"
+                f"Leverage {float(target_leverage):.1f}x exceeds global cap of {max_leverage_cap}x"
             )
 
     def validate_liquidation_buffer(
@@ -258,12 +274,13 @@ class PreTradeValidator:
 
         # Check if we'd have enough buffer after this trade
         remaining_equity = equity - margin_required
-        buffer_pct = remaining_equity / equity if equity > 0 else 0
+        buffer_pct = remaining_equity / equity if equity > 0 else Decimal("0")
+        buffer_threshold = Decimal(str(self.config.min_liquidation_buffer_pct))
 
-        if buffer_pct < self.config.min_liquidation_buffer_pct:
+        if buffer_pct < buffer_threshold:
             raise ValidationError(
-                f"Insufficient liquidation buffer: {buffer_pct:.1%} < "
-                f"{self.config.min_liquidation_buffer_pct:.1%} required "
+                f"Insufficient liquidation buffer: {float(buffer_pct):.1%} < "
+                f"{float(buffer_threshold):.1%} required "
                 f"(margin needed: {margin_required}, equity: {equity})"
             )
 
@@ -287,12 +304,13 @@ class PreTradeValidator:
                 f"Symbol notional {notional} exceeds cap {max_notional_cap} for {symbol}"
             )
 
-        symbol_exposure_pct = notional / equity if equity > 0 else float("inf")
+        symbol_exposure_pct = notional / equity if equity > 0 else Decimal("Infinity")
+        symbol_exposure_cap = Decimal(str(self.config.max_position_pct_per_symbol))
 
-        if symbol_exposure_pct > self.config.max_position_pct_per_symbol:
+        if symbol_exposure_pct > symbol_exposure_cap:
             raise ValidationError(
-                f"Symbol exposure {symbol_exposure_pct:.1%} exceeds cap of "
-                f"{self.config.max_position_pct_per_symbol:.1%} for {symbol}"
+                f"Symbol exposure {float(symbol_exposure_pct):.1%} exceeds cap of "
+                f"{float(symbol_exposure_cap):.1%} for {symbol}"
             )
 
         # Total portfolio exposure check
@@ -301,22 +319,20 @@ class PreTradeValidator:
             for pos_symbol, pos_data in current_positions.items():
                 if pos_symbol != symbol and isinstance(pos_data, dict):
                     if "notional" in pos_data:
-                        try:
-                            pos_notional = abs(Decimal(str(pos_data.get("notional", 0))))
-                        except Exception:
-                            pos_notional = Decimal("0")
+                        pos_notional = abs(_to_decimal(pos_data.get("notional")))
                     else:
-                        qty_value = pos_data.get("quantity", pos_data.get("qty", 0))
-                        price_value = pos_data.get("mark", pos_data.get("price", 0))
-                        pos_notional = abs(Decimal(str(qty_value)) * Decimal(str(price_value)))
+                        qty_value = _to_decimal(pos_data.get("quantity", pos_data.get("qty")))
+                        price_value = _to_decimal(pos_data.get("mark", pos_data.get("price")))
+                        pos_notional = abs(qty_value * price_value)
                     total_exposure += pos_notional
 
-        total_exposure_pct = total_exposure / equity if equity > 0 else float("inf")
+        total_exposure_pct = total_exposure / equity if equity > 0 else Decimal("Infinity")
+        total_exposure_cap = Decimal(str(self.config.max_exposure_pct))
 
-        if total_exposure_pct > self.config.max_exposure_pct:
+        if total_exposure_pct > total_exposure_cap:
             raise ValidationError(
-                f"Total exposure {total_exposure_pct:.1%} would exceed cap of "
-                f"{self.config.max_exposure_pct:.1%} (new notional: {notional})"
+                f"Total exposure {float(total_exposure_pct):.1%} would exceed cap of "
+                f"{float(total_exposure_cap):.1%} (new notional: {notional})"
             )
 
     def _apply_market_impact_guard(
@@ -425,16 +441,26 @@ class PreTradeValidator:
             return  # Disabled
 
         # Calculate expected slippage
+        decimal_zero = Decimal("0")
         if side.lower() == "buy":
-            slippage = (expected_price - mark_or_quote) / mark_or_quote if mark_or_quote > 0 else 0
+            slippage = (
+                (expected_price - mark_or_quote) / mark_or_quote
+                if mark_or_quote > 0
+                else decimal_zero
+            )
         else:
-            slippage = (mark_or_quote - expected_price) / mark_or_quote if mark_or_quote > 0 else 0
+            slippage = (
+                (mark_or_quote - expected_price) / mark_or_quote
+                if mark_or_quote > 0
+                else decimal_zero
+            )
 
-        slippage_bps = slippage * 10000
+        slippage_bps = slippage * Decimal(10000)
+        guard_threshold = Decimal(str(self.config.slippage_guard_bps))
 
-        if slippage_bps > self.config.slippage_guard_bps:
+        if slippage_bps > guard_threshold:
             raise ValidationError(
-                f"Expected slippage {slippage_bps:.0f} bps exceeds guard of "
+                f"Expected slippage {float(slippage_bps):.0f} bps exceeds guard of "
                 f"{self.config.slippage_guard_bps} bps for {symbol} "
                 f"(price: {expected_price}, mark: {mark_or_quote})"
             )
@@ -455,7 +481,7 @@ class PreTradeValidator:
         try:
             # Determine post-trade absolute quantity and side
             pos = current_positions.get(symbol) or {}
-            cur_qty = abs(Decimal(str(pos.get("quantity", pos.get("qty", 0)))))
+            cur_qty = abs(_to_decimal(pos.get("quantity", pos.get("qty"))))
             cur_side = str(pos.get("side", "")).lower()
             order_side = side.lower()
 
@@ -475,7 +501,7 @@ class PreTradeValidator:
             if new_qty <= 0:
                 return Decimal("1")  # Reducing-only → safe
 
-            notional = Decimal(str(new_qty)) * Decimal(str(price))
+            notional = new_qty * price
             if equity <= 0 or notional <= 0:
                 return Decimal("0")
 
@@ -489,7 +515,8 @@ class PreTradeValidator:
             )
 
             # Equity buffer after accounting for maintenance requirement
-            buffer = (Decimal(str(equity)) - (mmr * notional)) / Decimal(str(equity))
+            equity_decimal = Decimal(str(equity))
+            buffer: Decimal = (equity_decimal - (mmr * notional)) / equity_decimal
             if buffer < Decimal("0"):
                 buffer = Decimal("0")
             if buffer > Decimal("1"):

@@ -7,7 +7,7 @@ import threading
 from collections.abc import Sequence
 from datetime import UTC, datetime
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from bot_v2.features.brokerages.core.interfaces import (
     Balance,
@@ -242,7 +242,7 @@ class PerpsBot:
             coordinator = self._coordinator_registry.get("execution")
         if coordinator is None:
             raise RuntimeError("Execution coordinator not registered")
-        return coordinator  # type: ignore[return-value]
+        return cast(ExecutionCoordinator, coordinator)
 
     @property
     def strategy_coordinator(self) -> StrategyCoordinator:
@@ -251,14 +251,14 @@ class PerpsBot:
             coordinator = self._coordinator_registry.get("strategy")
         if coordinator is None:
             raise RuntimeError("Strategy coordinator not registered")
-        return coordinator  # type: ignore[return-value]
+        return cast(StrategyCoordinator, coordinator)
 
     @property
     def telemetry_coordinator(self) -> TelemetryCoordinator:
         coordinator = self._coordinator_registry.get("telemetry")
         if coordinator is None:
             raise RuntimeError("Telemetry coordinator not registered")
-        return coordinator  # type: ignore[return-value]
+        return cast(TelemetryCoordinator, coordinator)
 
     @property
     def settings(self) -> RuntimeSettings:
@@ -271,35 +271,35 @@ class PerpsBot:
 
     @property
     def mark_windows(self) -> dict[str, list[Decimal]]:
-        return self._state.mark_windows
+        return cast(dict[str, list[Decimal]], self._state.mark_windows)
 
     @property
     def last_decisions(self) -> dict[str, Any]:
-        return self._state.last_decisions
+        return cast(dict[str, Any], self._state.last_decisions)
 
     @property
     def _last_positions(self) -> dict[str, dict[str, Any]]:
-        return self._state.last_positions
+        return cast(dict[str, dict[str, Any]], self._state.last_positions)
 
     @property
     def order_stats(self) -> dict[str, int]:
-        return self._state.order_stats
+        return cast(dict[str, int], self._state.order_stats)
 
     @property
     def _product_map(self) -> dict[str, Product]:
-        return self._state.product_map
+        return cast(dict[str, Product], self._state.product_map)
 
     @property
     def _order_lock(self) -> asyncio.Lock | None:
-        return self._state.order_lock
+        return cast(asyncio.Lock | None, self._state.order_lock)
 
     @property
     def _mark_lock(self) -> threading.RLock:
-        return self._state.mark_lock
+        return cast(threading.RLock, self._state.mark_lock)
 
     @property
     def _symbol_strategies(self) -> dict[str, Any]:
-        return self._state.symbol_strategies
+        return cast(dict[str, Any], self._state.symbol_strategies)
 
     @property
     def strategy(self) -> Any | None:
@@ -315,7 +315,7 @@ class PerpsBot:
 
     @property
     def _process_symbol_needs_context(self) -> bool | None:
-        return self._state.process_symbol_needs_context
+        return cast(bool | None, self._state.process_symbol_needs_context)
 
     @staticmethod
     def build_baseline_snapshot(config: BotConfig, derivatives_enabled: bool) -> Any:
@@ -410,12 +410,14 @@ class PerpsBot:
         await self.strategy_coordinator.run_cycle()
 
     async def _fetch_current_state(self) -> dict[str, Any]:
-        return await self.strategy_coordinator._fetch_current_state()
+        state = await self.strategy_coordinator._fetch_current_state()
+        return cast(dict[str, Any], state)
 
     async def _validate_configuration_and_handle_drift(self, current_state: dict[str, Any]) -> bool:
-        return await self.strategy_coordinator._validate_configuration_and_handle_drift(
+        result = await self.strategy_coordinator._validate_configuration_and_handle_drift(
             current_state
         )
+        return bool(result)
 
     async def _execute_trading_cycle(self, trading_state: dict[str, Any]) -> None:
         await self.strategy_coordinator._execute_trading_cycle(trading_state)
@@ -440,7 +442,7 @@ class PerpsBot:
         await self.strategy_coordinator.process_symbol(symbol, balances, position_map)
 
     def _process_symbol_expects_context(self) -> bool:
-        return self.strategy_coordinator._process_symbol_expects_context()
+        return bool(self.strategy_coordinator._process_symbol_expects_context())
 
     async def execute_decision(
         self,
@@ -455,7 +457,8 @@ class PerpsBot:
         )
 
     def _ensure_order_lock(self) -> asyncio.Lock:
-        return self.strategy_coordinator.ensure_order_lock()
+        lock = self.strategy_coordinator.ensure_order_lock()
+        return cast(asyncio.Lock, lock)
 
     async def _place_order(self, **kwargs: Any) -> Order | None:
         return await self.strategy_coordinator.place_order(**kwargs)
@@ -488,7 +491,7 @@ class PerpsBot:
 
     # ------------------------------------------------------------------
     def is_reduce_only_mode(self) -> bool:
-        return self.runtime_coordinator.is_reduce_only_mode()
+        return bool(self.runtime_coordinator.is_reduce_only_mode())
 
     def set_reduce_only_mode(self, enabled: bool, reason: str) -> None:
         self.runtime_coordinator.set_reduce_only_mode(enabled, reason)
@@ -552,7 +555,7 @@ class PerpsBot:
             StrategyCoordinator as _StrategyCoordinator,
         )
 
-        return _StrategyCoordinator.calculate_spread_bps(bid_price, ask_price)
+        return cast(Decimal, _StrategyCoordinator.calculate_spread_bps(bid_price, ask_price))
 
     # ------------------------------------------------------------------
     async def _run_account_telemetry(self, interval_seconds: int = 300) -> None:
@@ -568,7 +571,7 @@ class PerpsBot:
         try:
             parameters = inspect.signature(handler).parameters
         except (TypeError, ValueError):
-            parameters = {}
+            parameters = inspect.Signature(parameters=()).parameters
         requires_context = len(parameters) > 1
         return _CallableSymbolProcessor(handler, requires_context=requires_context)
 

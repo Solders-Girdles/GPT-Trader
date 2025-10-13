@@ -23,7 +23,7 @@ class StoredOrder:
     """A simplified, serializable representation of an order."""
 
     order_id: str
-    client_id: str
+    client_id: str | None
     symbol: str
     side: str
     order_type: str
@@ -92,9 +92,14 @@ class OrdersStore:
                     data["filled_quantity"] = legacy_filled_quantity
                 if "avg_fill_price" not in data:
                     data["avg_fill_price"] = None
+                if "client_order_id" in data and "client_id" not in data:
+                    data["client_id"] = data.pop("client_order_id")
+                else:
+                    data.setdefault("client_id", None)
                 order = StoredOrder(**data)
                 self._orders[order.order_id] = order
-                self._client_id_map[order.client_id] = order.order_id
+                if order.client_id:
+                    self._client_id_map[order.client_id] = order.order_id
             except (TypeError, ValueError) as exc:
                 logger.warning(
                     "Could not load order record: %s - Error: %s",

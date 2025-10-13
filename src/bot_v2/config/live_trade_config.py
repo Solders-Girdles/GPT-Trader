@@ -148,6 +148,14 @@ class RiskConfig:
             settings=runtime_settings,
         )
 
+        pre_trade_liq_projection = get_env_bool(
+            "RISK_ENABLE_PRE_TRADE_LIQ_PROJECTION",
+            default=True,
+            settings=runtime_settings,
+        )
+        if pre_trade_liq_projection is None:
+            pre_trade_liq_projection = True
+
         return cls(
             # Leverage controls
             max_leverage=get_env_int("RISK_MAX_LEVERAGE", settings=runtime_settings) or 5,
@@ -160,121 +168,81 @@ class RiskConfig:
             day_mmr_per_symbol=day_mmr_per_symbol,
             night_mmr_per_symbol=night_mmr_per_symbol,
             # Liquidation safety
-            min_liquidation_buffer_pct=get_env_float(
-                "RISK_MIN_LIQUIDATION_BUFFER_PCT",
-                settings=runtime_settings,
-            )
-            or 0.15,
-            enable_pre_trade_liq_projection=get_env_bool(
-                "RISK_ENABLE_PRE_TRADE_LIQ_PROJECTION",
-                default=True,
-                settings=runtime_settings,
+            min_liquidation_buffer_pct=(
+                get_env_float("RISK_MIN_LIQUIDATION_BUFFER_PCT", settings=runtime_settings) or 0.15
             ),
-            default_maintenance_margin_rate=get_env_float(
-                "RISK_DEFAULT_MMR",
-                settings=runtime_settings,
-            )
-            or 0.005,
+            enable_pre_trade_liq_projection=pre_trade_liq_projection,
+            default_maintenance_margin_rate=(
+                get_env_float("RISK_DEFAULT_MMR", settings=runtime_settings) or 0.005
+            ),
             # Loss limits
-            daily_loss_limit=get_env_decimal(
-                "RISK_DAILY_LOSS_LIMIT",
-                settings=runtime_settings,
-            )
-            or Decimal("100"),
+            daily_loss_limit=(
+                get_env_decimal("RISK_DAILY_LOSS_LIMIT", settings=runtime_settings)
+                or Decimal("100")
+            ),
             # Exposure controls (with legacy support)
             max_exposure_pct=(
                 get_env_float("RISK_MAX_TOTAL_EXPOSURE_PCT", settings=runtime_settings)
                 or get_env_float("RISK_MAX_EXPOSURE_PCT", settings=runtime_settings)
                 or 0.8
             ),
-            max_position_pct_per_symbol=get_env_float(
-                "RISK_MAX_POSITION_PCT_PER_SYMBOL",
-                settings=runtime_settings,
-            )
-            or 0.2,
+            max_position_pct_per_symbol=(
+                get_env_float("RISK_MAX_POSITION_PCT_PER_SYMBOL", settings=runtime_settings) or 0.2
+            ),
             max_notional_per_symbol=max_notional_per_symbol,
             # Slippage protection
-            slippage_guard_bps=get_env_int(
-                "RISK_SLIPPAGE_GUARD_BPS",
-                settings=runtime_settings,
-            )
-            or 50,
+            slippage_guard_bps=(
+                get_env_int("RISK_SLIPPAGE_GUARD_BPS", settings=runtime_settings) or 50
+            ),
             # Emergency controls
-            kill_switch_enabled=get_env_bool(
-                "RISK_KILL_SWITCH_ENABLED",
-                settings=runtime_settings,
-            )
-            or False,
-            reduce_only_mode=get_env_bool(
-                "RISK_REDUCE_ONLY_MODE",
-                settings=runtime_settings,
-            )
-            or False,
+            kill_switch_enabled=(
+                get_env_bool("RISK_KILL_SWITCH_ENABLED", settings=runtime_settings) or False
+            ),
+            reduce_only_mode=(
+                get_env_bool("RISK_REDUCE_ONLY_MODE", settings=runtime_settings) or False
+            ),
             # Mark price staleness
-            max_mark_staleness_seconds=get_env_int(
-                "RISK_MAX_MARK_STALENESS_SECONDS",
-                settings=runtime_settings,
-            )
-            or 180,
+            max_mark_staleness_seconds=(
+                get_env_int("RISK_MAX_MARK_STALENESS_SECONDS", settings=runtime_settings) or 180
+            ),
             # Dynamic position sizing
-            enable_dynamic_position_sizing=get_env_bool(
-                "RISK_ENABLE_DYNAMIC_POSITION_SIZING",
-                settings=runtime_settings,
-            )
-            or False,
+            enable_dynamic_position_sizing=(
+                get_env_bool("RISK_ENABLE_DYNAMIC_POSITION_SIZING", settings=runtime_settings)
+                or False
+            ),
             position_sizing_method=raw_env.get("RISK_POSITION_SIZING_METHOD", "notional"),
-            position_sizing_multiplier=get_env_float(
-                "RISK_POSITION_SIZING_MULTIPLIER",
-                settings=runtime_settings,
-            )
-            or 1.0,
+            position_sizing_multiplier=(
+                get_env_float("RISK_POSITION_SIZING_MULTIPLIER", settings=runtime_settings) or 1.0
+            ),
             # Market impact guard
-            enable_market_impact_guard=get_env_bool(
-                "RISK_ENABLE_MARKET_IMPACT_GUARD",
-                settings=runtime_settings,
-            )
-            or False,
-            max_market_impact_bps=get_env_int(
-                "RISK_MAX_MARKET_IMPACT_BPS",
-                settings=runtime_settings,
-            )
-            or 0,
+            enable_market_impact_guard=(
+                get_env_bool("RISK_ENABLE_MARKET_IMPACT_GUARD", settings=runtime_settings) or False
+            ),
+            max_market_impact_bps=(
+                get_env_int("RISK_MAX_MARKET_IMPACT_BPS", settings=runtime_settings) or 0
+            ),
             # Circuit breakers
-            enable_volatility_circuit_breaker=get_env_bool(
-                "RISK_ENABLE_VOLATILITY_CB",
-                settings=runtime_settings,
-            )
-            or False,
-            max_intraday_volatility_threshold=get_env_float(
-                "RISK_MAX_INTRADAY_VOL",
-                settings=runtime_settings,
-            )
-            or 0.15,
-            volatility_window_periods=get_env_int(
-                "RISK_VOL_WINDOW_PERIODS",
-                settings=runtime_settings,
-            )
-            or 20,
-            circuit_breaker_cooldown_minutes=get_env_int(
-                "RISK_CB_COOLDOWN_MIN",
-                settings=runtime_settings,
-            )
-            or 30,
-            volatility_warning_threshold=get_env_float(
-                "RISK_VOL_WARNING_THRESH",
-                settings=runtime_settings,
-            )
-            or 0.15,
-            volatility_reduce_only_threshold=get_env_float(
-                "RISK_VOL_REDUCE_ONLY_THRESH",
-                settings=runtime_settings,
-            )
-            or 0.20,
-            volatility_kill_switch_threshold=get_env_float(
-                "RISK_VOL_KILL_SWITCH_THRESH",
-                settings=runtime_settings,
-            )
-            or 0.25,
+            enable_volatility_circuit_breaker=(
+                get_env_bool("RISK_ENABLE_VOLATILITY_CB", settings=runtime_settings) or False
+            ),
+            max_intraday_volatility_threshold=(
+                get_env_float("RISK_MAX_INTRADAY_VOL", settings=runtime_settings) or 0.15
+            ),
+            volatility_window_periods=(
+                get_env_int("RISK_VOL_WINDOW_PERIODS", settings=runtime_settings) or 20
+            ),
+            circuit_breaker_cooldown_minutes=(
+                get_env_int("RISK_CB_COOLDOWN_MIN", settings=runtime_settings) or 30
+            ),
+            volatility_warning_threshold=(
+                get_env_float("RISK_VOL_WARNING_THRESH", settings=runtime_settings) or 0.15
+            ),
+            volatility_reduce_only_threshold=(
+                get_env_float("RISK_VOL_REDUCE_ONLY_THRESH", settings=runtime_settings) or 0.20
+            ),
+            volatility_kill_switch_threshold=(
+                get_env_float("RISK_VOL_KILL_SWITCH_THRESH", settings=runtime_settings) or 0.25
+            ),
         )
 
     @classmethod

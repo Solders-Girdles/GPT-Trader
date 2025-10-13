@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import logging
 import traceback
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from functools import wraps
-from typing import Any, TypeVar
+from typing import Any, ParamSpec, TypeAlias, TypeVar, cast
 
 from bot_v2.errors import (
     ConfigurationError,
@@ -21,6 +21,12 @@ from bot_v2.errors import (
 logger = logging.getLogger(__name__)
 
 T = TypeVar("T")
+P = ParamSpec("P")
+R = TypeVar("R")
+Q = ParamSpec("Q")
+
+ErrorDecorator: TypeAlias = Callable[[Callable[P, T]], Callable[P, T]]
+AsyncErrorDecorator: TypeAlias = Callable[[Callable[P, Awaitable[T]]], Callable[P, Awaitable[T]]]
 
 
 class ErrorContext:
@@ -99,10 +105,10 @@ class ErrorContext:
 def handle_errors(
     operation: str,
     reraise: type[Exception] | tuple[type[Exception], ...] | None = None,
-    default_return: Any = None,
+    default_return: T | None = None,
     log_level: int = logging.ERROR,
     extra_context: dict[str, Any] | None = None,
-) -> Callable[[Callable[..., T]], Callable[..., T]]:
+) -> ErrorDecorator:
     """Decorator for standardized error handling.
 
     Args:
@@ -116,9 +122,9 @@ def handle_errors(
         Decorated function
     """
 
-    def decorator(func: Callable[..., T]) -> Callable[..., T]:
+    def decorator(func: Callable[P, T]) -> Callable[P, T]:
         @wraps(func)
-        def wrapper(*args: Any, **kwargs: Any) -> T:
+        def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
             with ErrorContext(
                 operation=operation,
                 reraise=reraise,
@@ -128,8 +134,7 @@ def handle_errors(
             ):
                 return func(*args, **kwargs)
 
-            # This should never be reached, but mypy needs it
-            return default_return  # type: ignore[return-value]
+            return cast(T, default_return)
 
         return wrapper
 
@@ -170,7 +175,7 @@ def safe_execute(
 # Specific error handling patterns for common operations
 
 
-def handle_brokerage_errors(operation: str) -> Callable[[Callable[..., T]], Callable[..., T]]:
+def handle_brokerage_errors(operation: str) -> ErrorDecorator:
     """Decorator for brokerage operations with standardized error handling.
 
     Args:
@@ -186,7 +191,7 @@ def handle_brokerage_errors(operation: str) -> Callable[[Callable[..., T]], Call
     )
 
 
-def handle_order_errors(operation: str) -> Callable[[Callable[..., T]], Callable[..., T]]:
+def handle_order_errors(operation: str) -> ErrorDecorator:
     """Decorator for order operations with standardized error handling.
 
     Args:
@@ -202,7 +207,7 @@ def handle_order_errors(operation: str) -> Callable[[Callable[..., T]], Callable
     )
 
 
-def handle_data_errors(operation: str) -> Callable[[Callable[..., T]], Callable[..., T]]:
+def handle_data_errors(operation: str) -> ErrorDecorator:
     """Decorator for data operations with standardized error handling.
 
     Args:
@@ -218,7 +223,7 @@ def handle_data_errors(operation: str) -> Callable[[Callable[..., T]], Callable[
     )
 
 
-def handle_config_errors(operation: str) -> Callable[[Callable[..., T]], Callable[..., T]]:
+def handle_config_errors(operation: str) -> ErrorDecorator:
     """Decorator for configuration operations with standardized error handling.
 
     Args:
@@ -234,7 +239,7 @@ def handle_config_errors(operation: str) -> Callable[[Callable[..., T]], Callabl
     )
 
 
-def handle_account_errors(operation: str) -> Callable[[Callable[..., T]], Callable[..., T]]:
+def handle_account_errors(operation: str) -> ErrorDecorator:
     """Decorator for account operations with standardized error handling.
 
     Args:
@@ -256,10 +261,10 @@ def handle_account_errors(operation: str) -> Callable[[Callable[..., T]], Callab
 def handle_async_errors(
     operation: str,
     reraise: type[Exception] | tuple[type[Exception], ...] | None = None,
-    default_return: Any = None,
+    default_return: R | None = None,
     log_level: int = logging.ERROR,
     extra_context: dict[str, Any] | None = None,
-) -> Callable[[Callable[..., T]], Callable[..., T]]:
+) -> AsyncErrorDecorator:
     """Decorator for async functions with standardized error handling.
 
     Args:
@@ -273,11 +278,11 @@ def handle_async_errors(
         Decorated async function
     """
 
-    def decorator(func: Callable[..., T]) -> Callable[..., T]:
+    def decorator(func: Callable[Q, Awaitable[R]]) -> Callable[Q, Awaitable[R]]:
         @wraps(func)
-        async def wrapper(*args: Any, **kwargs: Any) -> T:
+        async def wrapper(*args: Q.args, **kwargs: Q.kwargs) -> R:
             try:
-                return await func(*args, **kwargs)  # type: ignore[misc]
+                return await func(*args, **kwargs)
             except Exception as exc:
                 # Log the error with context
                 context_parts = [
@@ -299,7 +304,7 @@ def handle_async_errors(
 
                 # Determine whether to re-raise
                 if reraise is None:
-                    return default_return  # type: ignore[return-value]
+                    return cast(R, default_return)
 
                 if isinstance(reraise, tuple):
                     should_reraise = isinstance(exc, reraise)
@@ -309,7 +314,7 @@ def handle_async_errors(
                 if should_reraise:
                     raise
 
-                return default_return  # type: ignore[return-value]
+                return cast(R, default_return)
 
         return wrapper
 
@@ -323,7 +328,7 @@ def validate_and_execute(
     validator: Callable[..., bool],
     error_message: str,
     operation: str,
-) -> Callable[[Callable[..., T]], Callable[..., T]]:
+) -> ErrorDecorator:
     """Decorator that validates before executing function.
 
     Args:
@@ -335,14 +340,16 @@ def validate_and_execute(
         Decorated function
     """
 
-    def decorator(func: Callable[..., T]) -> Callable[..., T]:
+    def decorator(func: Callable[P, T]) -> Callable[P, T]:
         @wraps(func)
-        def wrapper(*args: Any, **kwargs: Any) -> T:
+        def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
             if not validator(*args, **kwargs):
                 raise ValidationError(error_message, field=operation)
 
             with ErrorContext(operation=operation):
                 return func(*args, **kwargs)
+
+            return cast(T, None)
 
         return wrapper
 
@@ -354,7 +361,7 @@ def retry_on_error(
     delay: float = 1.0,
     backoff_factor: float = 2.0,
     retry_on: type[Exception] | tuple[type[Exception], ...] = Exception,
-) -> Callable[[Callable[..., T]], Callable[..., T]]:
+) -> ErrorDecorator:
     """Decorator that retries function on specified exceptions.
 
     Args:
@@ -367,12 +374,12 @@ def retry_on_error(
         Decorated function
     """
 
-    def decorator(func: Callable[..., T]) -> Callable[..., T]:
+    def decorator(func: Callable[P, T]) -> Callable[P, T]:
         @wraps(func)
-        def wrapper(*args: Any, **kwargs: Any) -> T:
+        def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
             import time
 
-            last_exception = None
+            last_exception: Exception | None = None
             current_delay = delay
 
             for attempt in range(max_attempts):
@@ -396,7 +403,9 @@ def retry_on_error(
                     current_delay *= backoff_factor
 
             # This should never be reached
-            raise last_exception  # type: ignore[misc]
+            if last_exception is not None:
+                raise last_exception
+            raise RuntimeError("retry_on_error exhausted without capturing exception")
 
         return wrapper
 

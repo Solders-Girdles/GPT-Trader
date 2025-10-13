@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from bot_v2.errors import ExecutionError, ValidationError
 from bot_v2.features.brokerages.core.interfaces import (
@@ -30,6 +30,7 @@ from .base import BaseCoordinator, CoordinatorContext, HealthStatus
 
 if TYPE_CHECKING:  # pragma: no cover - type checking only
     from bot_v2.features.live_trade.liquidity_service import LiquidityService
+    from bot_v2.orchestration.perps_bot_state import PerpsBotRuntimeState
 
 logger = logging.getLogger(__name__)
 
@@ -135,9 +136,11 @@ class ExecutionCoordinator(BaseCoordinator):
         return tasks
 
     def ensure_order_lock(self) -> asyncio.Lock:
-        runtime_state = self.context.runtime_state
-        if runtime_state is None:
+        runtime_state_obj = self.context.runtime_state
+        if runtime_state_obj is None:
             raise RuntimeError("Runtime state is unavailable; cannot create order lock")
+
+        runtime_state = cast("PerpsBotRuntimeState", runtime_state_obj)
 
         if runtime_state.order_lock is None:
             try:
@@ -145,7 +148,7 @@ class ExecutionCoordinator(BaseCoordinator):
             except RuntimeError as exc:
                 logger.error("Unable to initialize async order lock: %s", exc)
                 raise
-        return runtime_state.order_lock
+        return cast(asyncio.Lock, runtime_state.order_lock)
 
     async def execute_decision(
         self,
@@ -156,10 +159,11 @@ class ExecutionCoordinator(BaseCoordinator):
         position_state: dict[str, Any] | None,
     ) -> None:
         ctx = self.context
-        runtime_state = ctx.runtime_state
-        if runtime_state is None:
+        runtime_state_obj = ctx.runtime_state
+        if runtime_state_obj is None:
             logger.debug("Runtime state missing; skipping decision execution for %s", symbol)
             return
+        runtime_state = cast("PerpsBotRuntimeState", runtime_state_obj)
         try:
             assert product is not None, "Missing product metadata"
             assert mark is not None and mark > 0, f"Invalid mark: {mark}"
@@ -170,7 +174,12 @@ class ExecutionCoordinator(BaseCoordinator):
                 logger.info("DRY RUN: Would execute %s for %s", decision.action.value, symbol)
                 return
 
-            position_quantity = quantity_from(position_state) or Decimal("0")
+            position_quantity_raw = quantity_from(position_state)
+            position_quantity = (
+                position_quantity_raw
+                if isinstance(position_quantity_raw, Decimal)
+                else Decimal("0")
+            )
 
             if decision.action == Action.CLOSE:
                 if not position_state or position_quantity == 0:
@@ -289,9 +298,9 @@ class ExecutionCoordinator(BaseCoordinator):
         self._increment_order_stat("attempted")
         orders_store = self.context.orders_store
         broker = self.context.broker
-        runtime_state = self.context.runtime_state
+        runtime_state_obj = self.context.runtime_state
 
-        if runtime_state is None:
+        if runtime_state_obj is None:
             logger.debug("Runtime state missing; cannot record order")
             return None
 
@@ -301,17 +310,21 @@ class ExecutionCoordinator(BaseCoordinator):
         result = await run_in_thread(_place)
 
         if isinstance(exec_engine, AdvancedExecutionEngine):
-            order = result
+            order = cast(Order | None, result)
         else:
             order = None
             if result and broker is not None:
                 order = await run_in_thread(broker.get_order, result)
+                order = cast(Order | None, order)
 
         if order:
             if orders_store is not None:
                 orders_store.upsert(order)
             self._increment_order_stat("successful")
-            order_quantity = quantity_from(order)
+            order_quantity_raw = quantity_from(order)
+            order_quantity = (
+                order_quantity_raw if isinstance(order_quantity_raw, Decimal) else Decimal("0")
+            )
             logger.info(
                 "Order recorded: %s %s %s %s",
                 order.id,

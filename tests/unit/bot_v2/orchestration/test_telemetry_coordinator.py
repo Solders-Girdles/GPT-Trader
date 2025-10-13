@@ -38,7 +38,7 @@ def test_init_market_services_populates_monitor(monkeypatch, tmp_path):
     bot = create_perps_bot(config)
 
     bot.symbols = ["BTC-PERP", "ETH-PERP"]
-    bot.telemetry_coordinator.init_market_services()
+    bot.telemetry_coordinator.bootstrap()
 
     monitor = getattr(bot, "_market_monitor", None)
     assert monitor is not None

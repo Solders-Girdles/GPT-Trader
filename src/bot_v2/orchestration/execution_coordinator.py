@@ -1,424 +1,199 @@
+"""Legacy execution coordinator facade wrapping the coordinator package."""
+
 from __future__ import annotations
 
 import asyncio
 import logging
-from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
-from bot_v2.errors import ExecutionError, ValidationError
-from bot_v2.features.brokerages.core.interfaces import (
-    Order,
-    OrderSide,
-    OrderType,
-    Product,
-    TimeInForce,
+from bot_v2.orchestration.configuration import BotConfig, Profile
+from bot_v2.orchestration.coordinators.base import CoordinatorContext
+from bot_v2.orchestration.coordinators.execution import (
+    ExecutionCoordinator as _ExecutionCoordinator,
 )
-from bot_v2.features.live_trade.advanced_execution import AdvancedExecutionEngine
-from bot_v2.features.live_trade.risk import ValidationError as RiskValidationError
-from bot_v2.features.live_trade.strategies.perps_baseline import Action
-from bot_v2.orchestration.live_execution import LiveExecutionEngine
 from bot_v2.orchestration.order_reconciler import OrderReconciler
-from bot_v2.orchestration.runtime_settings import RuntimeSettings
-from bot_v2.utilities import utc_now
+from bot_v2.orchestration.service_registry import ServiceRegistry
 from bot_v2.utilities.async_utils import run_in_thread
-from bot_v2.utilities.config import load_slippage_multipliers
-from bot_v2.utilities.quantities import quantity_from
 
 if TYPE_CHECKING:  # pragma: no cover - type checking only
+    from bot_v2.features.brokerages.core.interfaces import Order
     from bot_v2.orchestration.perps_bot import PerpsBot
 
 logger = logging.getLogger(__name__)
 
 
-class ExecutionCoordinator:
-    """Coordinates execution engine interactions and order placement."""
+class ExecutionCoordinator(_ExecutionCoordinator):
+    """Compatibility layer preserving the historical ExecutionCoordinator API."""
 
-    def __init__(self, bot: PerpsBot) -> None:
+    def __init__(self, bot: PerpsBot | None) -> None:
         self._bot = bot
-        self._order_reconciler: OrderReconciler | None = None
-
-    @staticmethod
-    def _should_use_advanced(risk_config: Any) -> bool:
-        """Determine if advanced execution engine should be used based on risk config.
-
-        Args:
-            risk_config: Risk manager configuration object
-
-        Returns:
-            True if advanced execution engine is required, False otherwise
-        """
-        if risk_config is None:
-            return False
-        if getattr(risk_config, "enable_dynamic_position_sizing", False):
-            return True
-        if getattr(risk_config, "enable_market_impact_guard", False):
-            return True
-        return False
-
-    def _build_impact_estimator(self) -> Any:
-        """Build market impact estimator function for advanced execution.
-
-        Returns:
-            Callable impact estimator function
-
-        Raises:
-            ImportError: If LiquidityService cannot be imported
-        """
-        from bot_v2.features.live_trade.liquidity_service import LiquidityService
-
-        bot = self._bot
-        liquidity_service = LiquidityService()
-
-        def _impact_estimator(req: Any) -> Any:
-            try:
-                quote = bot.broker.get_quote(req.symbol)
-            except Exception:
-                quote = None
-
-            bids: list[tuple[Decimal, Decimal]]
-            asks: list[tuple[Decimal, Decimal]]
-
-            # Allow deterministic brokers to seed a custom order book
-            seeded_orderbooks = getattr(bot.broker, "order_books", None)
-            if seeded_orderbooks and req.symbol in seeded_orderbooks:
-                seeded = seeded_orderbooks[req.symbol]
-                bids = [(Decimal(str(p)), Decimal(str(s))) for p, s in seeded[0]]
-                asks = [(Decimal(str(p)), Decimal(str(s))) for p, s in seeded[1]]
-            else:
-                mid = None
-                if quote is not None and getattr(quote, "last", None) is not None:
-                    mid = Decimal(str(quote.last))
-                elif (
-                    quote is not None
-                    and getattr(quote, "bid", None) is not None
-                    and getattr(quote, "ask", None) is not None
-                ):
-                    mid = (Decimal(str(quote.bid)) + Decimal(str(quote.ask))) / Decimal("2")
-                if mid is None:
-                    mid = Decimal("100")
-
-                tick = None
-                if (
-                    quote is not None
-                    and getattr(quote, "ask", None) is not None
-                    and getattr(quote, "bid", None) is not None
-                ):
-                    spread = Decimal(str(quote.ask)) - Decimal(str(quote.bid))
-                    if spread > 0:
-                        tick = spread / Decimal("2")
-                if tick is None or tick == 0:
-                    tick = mid * Decimal("0.0005")
-
-                depth_size = max(Decimal("1000"), abs(Decimal(str(req.quantity))) * Decimal("20"))
-                bids = [(mid - tick * Decimal(i + 1), depth_size) for i in range(5)]
-                asks = [(mid + tick * Decimal(i + 1), depth_size) for i in range(5)]
-
-            liquidity_service.analyze_order_book(
-                req.symbol,
-                bids=bids,
-                asks=asks,
-                timestamp=utc_now(),
+        if bot is None:
+            placeholder_config = BotConfig(profile=Profile.PROD)
+            context = CoordinatorContext(
+                config=placeholder_config,
+                registry=ServiceRegistry(config=placeholder_config),
+                symbols=(),
+                bot_id="perps_bot",
             )
-            return liquidity_service.estimate_market_impact(
-                symbol=req.symbol,
-                side=req.side,
-                quantity=Decimal(str(req.quantity)),
-                book_data=(bids, asks),
-            )
+            super().__init__(context)
+            return
+        context = self._build_context(bot)
+        super().__init__(context)
+        self._sync_bot(context)
 
-        return _impact_estimator
-
+    # ------------------------------------------------------------------
     def init_execution(self) -> None:
-        """Initialize execution engine based on risk configuration.
+        context = self._refresh_context_from_bot()
+        updated = self.initialize(context)
+        self.update_context(updated)
+        self._sync_bot(updated)
 
-        Sets up either AdvancedExecutionEngine (if dynamic sizing or impact guard enabled)
-        or LiveExecutionEngine (standard execution) based on risk configuration flags.
-        """
+    def ensure_order_lock(self) -> asyncio.Lock:  # type: ignore[override]
+        self._refresh_context_from_bot()
+        lock = super().ensure_order_lock()
+        self._sync_bot(self.context)
+        return lock
+
+    async def execute_decision(self, *args: Any, **kwargs: Any) -> None:  # type: ignore[override]
+        self._refresh_context_from_bot()
+        await super().execute_decision(*args, **kwargs)
+        self._sync_bot(self.context)
+
+    async def place_order(self, exec_engine: Any, **kwargs: Any) -> Order | None:  # type: ignore[override]
+        self._refresh_context_from_bot()
+        result = await super().place_order(exec_engine, **kwargs)
+        self._sync_bot(self.context)
+        return result
+
+    async def place_order_inner(self, exec_engine: Any, **kwargs: Any) -> Order | None:  # type: ignore[override]
+        self._refresh_context_from_bot()
+        result = await super().place_order_inner(exec_engine, **kwargs)
+        self._sync_bot(self.context)
+        return result
+
+    def _get_order_reconciler(self) -> OrderReconciler:  # type: ignore[override]
+        self._refresh_context_from_bot()
+        reconciler = super()._get_order_reconciler()
+        self._sync_bot(self.context)
+        return reconciler
+
+    def reset_order_reconciler(self) -> None:  # type: ignore[override]
+        super().reset_order_reconciler()
+
+    async def run_runtime_guards(self) -> None:  # type: ignore[override]
+        self._refresh_context_from_bot()
+        await super().run_runtime_guards()
+
+    async def _run_runtime_guards_loop(self) -> None:  # type: ignore[override]
         bot = self._bot
+        if bot is None:
+            await super()._run_runtime_guards_loop()
+            return
+        try:
+            while getattr(bot, "running", True):
+                self._refresh_context_from_bot()
+                exec_engine = getattr(self.context.runtime_state, "exec_engine", None)
+                if exec_engine is not None:
+                    try:
+                        await run_in_thread(exec_engine.run_runtime_guards)
+                    except Exception as exc:  # pragma: no cover - defensive logging
+                        logger.error("Error in runtime guards: %s", exc, exc_info=True)
+                await asyncio.sleep(60)
+        except asyncio.CancelledError:
+            raise
 
-        # Parse slippage multipliers from environment using shared helper
-        slippage_multipliers = load_slippage_multipliers()
-        live_slippage = (
-            {symbol: float(mult) for symbol, mult in slippage_multipliers.items()}
-            if slippage_multipliers
-            else None
+    async def run_order_reconciliation(self, interval_seconds: int = 45) -> None:  # type: ignore[override]
+        self._refresh_context_from_bot()
+        await super().run_order_reconciliation(interval_seconds=interval_seconds)
+
+    async def _run_order_reconciliation_loop(self, interval_seconds: int = 45) -> None:  # type: ignore[override]
+        bot = self._bot
+        if bot is None:
+            await super()._run_order_reconciliation_loop(interval_seconds=interval_seconds)
+            return
+        try:
+            while getattr(bot, "running", True):
+                self._refresh_context_from_bot()
+                try:
+                    reconciler = self._get_order_reconciler()
+                    await super()._run_order_reconciliation_cycle(reconciler)
+                    self._sync_bot(self.context)
+                except Exception as exc:  # pragma: no cover - defensive logging
+                    logger.debug("Order reconciliation error: %s", exc, exc_info=True)
+                await asyncio.sleep(interval_seconds)
+        except asyncio.CancelledError:
+            raise
+
+    async def _run_order_reconciliation_cycle(self, reconciler: OrderReconciler) -> None:  # type: ignore[override]
+        await super()._run_order_reconciliation_cycle(reconciler)
+        self._sync_bot(self.context)
+
+    # ------------------------------------------------------------------
+    def _refresh_context_from_bot(self) -> CoordinatorContext:
+        if self._bot is None:
+            return self.context
+        updated = self._build_context(self._bot)
+        super().update_context(updated)
+        return self.context
+
+    def _build_context(self, bot: PerpsBot) -> CoordinatorContext:
+        runtime_state = getattr(bot, "runtime_state", None)
+
+        registry = getattr(bot, "registry", None)
+        if not isinstance(registry, ServiceRegistry):
+            registry = ServiceRegistry(
+                config=bot.config,
+                broker=getattr(bot, "broker", None),
+                risk_manager=getattr(bot, "risk_manager", None),
+                event_store=getattr(bot, "event_store", None),
+                orders_store=getattr(bot, "orders_store", None),
+            )
+        broker = registry.broker
+        risk_manager = registry.risk_manager
+
+        symbols_attr = getattr(bot.config, "symbols", None)
+        if symbols_attr:
+            try:
+                symbols = tuple(symbols_attr)
+            except TypeError:
+                symbols = ()
+        else:
+            symbols = ()
+
+        return CoordinatorContext(
+            config=bot.config,
+            registry=registry,
+            event_store=getattr(bot, "event_store", None),
+            orders_store=getattr(bot, "orders_store", None),
+            broker=broker,
+            risk_manager=risk_manager,
+            symbols=symbols,
+            bot_id=getattr(bot, "bot_id", "perps_bot"),
+            runtime_state=runtime_state,
+            config_controller=getattr(bot, "config_controller", None),
+            strategy_orchestrator=getattr(bot, "strategy_orchestrator", None),
+            execution_coordinator=self,
+            product_cache=(
+                getattr(bot._state, "product_map", None) if hasattr(bot, "_state") else None
+            ),
         )
 
-        # Determine execution engine type based on risk configuration
-        risk_config = getattr(bot.risk_manager, "config", None)
-        use_advanced = self._should_use_advanced(risk_config)
-
-        # Initialize liquidity estimator for advanced execution
-        if use_advanced:
-            try:
-                impact_estimator = self._build_impact_estimator()
-                bot.risk_manager.set_impact_estimator(impact_estimator)
-            except Exception as exc:
-                logger.warning(
-                    "Failed to initialize LiquidityService impact estimator: %s",
-                    exc,
-                    exc_info=True,
-                )
-
-        # Create appropriate execution engine
-        if use_advanced:
-            bot.runtime_state.exec_engine = AdvancedExecutionEngine(
-                broker=bot.broker,
-                risk_manager=bot.risk_manager,
-                slippage_multipliers=slippage_multipliers,
-            )
-            logger.info("Initialized AdvancedExecutionEngine with dynamic sizing integration")
-        else:
-            settings_param = getattr(bot, "settings", None)
-            runtime_settings = (
-                settings_param if isinstance(settings_param, RuntimeSettings) else None
-            )
-            bot.runtime_state.exec_engine = LiveExecutionEngine(
-                broker=bot.broker,
-                risk_manager=bot.risk_manager,
-                event_store=bot.event_store,
-                bot_id="perps_bot",
-                slippage_multipliers=live_slippage,
-                enable_preview=bot.config.enable_order_preview,
-                settings=runtime_settings,
-            )
-            logger.info("Initialized LiveExecutionEngine with risk integration")
-
-        # Register execution engine in service registry
-        extras = dict(bot.registry.extras)
-        extras["execution_engine"] = bot.runtime_state.exec_engine
-        bot.registry = bot.registry.with_updates(extras=extras)
-
-    async def execute_decision(
-        self,
-        symbol: str,
-        decision: Any,
-        mark: Decimal,
-        product: Product,
-        position_state: dict[str, Any] | None,
-    ) -> None:
+    def _sync_bot(self, context: CoordinatorContext) -> None:
         bot = self._bot
-        try:
-            assert product is not None, "Missing product metadata"
-            assert mark is not None and mark > 0, f"Invalid mark: {mark}"
-            assert (
-                position_state is None or "quantity" in position_state
-            ), "Position state missing quantity"
-            if bot.config.dry_run:
-                logger.info(f"DRY RUN: Would execute {decision.action.value} for {symbol}")
-                return
+        if bot is None:
+            return
+        bot.registry = context.registry
+        if context.event_store is not None:
+            bot.event_store = context.event_store
+        if context.orders_store is not None:
+            bot.orders_store = context.orders_store
+        if context.product_cache is not None:
+            if hasattr(bot, "_state") and hasattr(bot._state, "product_map"):
+                bot._state.product_map = context.product_cache
+        if context.broker is not None:
+            bot.registry = bot.registry.with_updates(broker=context.broker)
+        if context.risk_manager is not None:
+            bot.registry = bot.registry.with_updates(risk_manager=context.risk_manager)
 
-            position_quantity = quantity_from(position_state)
-            if position_quantity is None:
-                position_quantity = Decimal("0")
 
-            if decision.action == Action.CLOSE:
-                if not position_state or position_quantity == 0:
-                    logger.warning(f"No position to close for {symbol}")
-                    return
-                order_quantity = abs(position_quantity)
-            elif getattr(decision, "target_notional", None):
-                order_quantity = Decimal(str(decision.target_notional)) / mark
-            elif getattr(decision, "quantity", None) is not None:
-                order_quantity = Decimal(str(decision.quantity))
-            else:
-                logger.warning(f"No quantity or notional in decision for {symbol}")
-                return
-
-            side = OrderSide.BUY if decision.action == Action.BUY else OrderSide.SELL
-            if decision.action == Action.CLOSE:
-                side = (
-                    OrderSide.SELL
-                    if position_state and position_state.get("side") == "long"
-                    else OrderSide.BUY
-                )
-
-            reduce_only_global = bot.is_reduce_only_mode()
-            reduce_only = (
-                decision.reduce_only or reduce_only_global or decision.action == Action.CLOSE
-            )
-
-            order_type = getattr(decision, "order_type", OrderType.MARKET)
-            limit_price = getattr(decision, "limit_price", None)
-            stop_price = getattr(decision, "stop_trigger", None)
-            tif = getattr(decision, "time_in_force", None)
-            try:
-                if isinstance(tif, str):
-                    tif = TimeInForce[tif.upper()]
-                elif tif is None and isinstance(bot.config.time_in_force, str):
-                    tif = TimeInForce[bot.config.time_in_force.upper()]
-            except Exception:
-                tif = None
-
-            normalised_order_type = (
-                order_type
-                if isinstance(order_type, OrderType)
-                else (
-                    OrderType[order_type.upper()]
-                    if isinstance(order_type, str)
-                    else OrderType.MARKET
-                )
-            )
-
-            exec_engine = bot.runtime_state.exec_engine
-            place_kwargs: dict[str, Any] = {
-                "symbol": symbol,
-                "side": side,
-                "quantity": order_quantity,
-                "order_type": normalised_order_type,
-                "reduce_only": reduce_only,
-                "leverage": decision.leverage,
-            }
-
-            if isinstance(exec_engine, AdvancedExecutionEngine):
-                place_kwargs.update(
-                    {
-                        "limit_price": limit_price,
-                        "stop_price": stop_price,
-                        "time_in_force": tif or TimeInForce.GTC,
-                    }
-                )
-            else:
-                place_kwargs.update(
-                    {
-                        "product": product,
-                        "price": limit_price,
-                        "stop_price": stop_price,
-                        "tif": tif or None,
-                    }
-                )
-
-            order = await self.place_order(exec_engine, **place_kwargs)
-
-            if order:
-                logger.info(f"Order placed successfully: {order.id}")
-            else:
-                logger.warning(f"Order rejected or failed for {symbol}")
-        except Exception as e:
-            logger.error(f"Error executing decision for {symbol}: {e}")
-
-    def ensure_order_lock(self) -> asyncio.Lock:
-        bot = self._bot
-        state = bot.runtime_state
-        if state.order_lock is None:
-            try:
-                state.order_lock = asyncio.Lock()
-            except RuntimeError as exc:
-                logger.error("Unable to initialize async order lock: %s", exc)
-                raise
-        assert state.order_lock is not None
-        return state.order_lock
-
-    async def place_order(self, exec_engine: Any, **kwargs: Any) -> Order | None:
-        try:
-            lock = self.ensure_order_lock()
-            async with lock:
-                return await self.place_order_inner(exec_engine, **kwargs)
-        except (ValidationError, RiskValidationError, ExecutionError) as e:
-            logger.warning(f"Order validation/execution failed: {e}")
-            self._bot.order_stats["failed"] += 1
-            raise
-        except Exception as e:
-            logger.error(f"Failed to place order: {e}", exc_info=True)
-            self._bot.order_stats["failed"] += 1
-            return None
-
-    async def place_order_inner(self, exec_engine: Any, **kwargs: Any) -> Order | None:
-        bot = self._bot
-        bot.order_stats["attempted"] += 1
-
-        def _place() -> Any:
-            return exec_engine.place_order(**kwargs)
-
-        result = await run_in_thread(_place)
-
-        if isinstance(exec_engine, AdvancedExecutionEngine):
-            order = result
-        else:
-            order = None
-            if result:
-                order = await run_in_thread(bot.broker.get_order, result)
-
-        if order:
-            bot.orders_store.upsert(order)
-            bot.order_stats["successful"] += 1
-            order_quantity = quantity_from(order)
-            logger.info(
-                f"Order recorded: {order.id} {order.side.value} {order_quantity} {order.symbol}"
-            )
-            return order
-
-        bot.order_stats["failed"] += 1
-        logger.warning("Order attempt failed (no order returned)")
-        return None
-
-    def _get_order_reconciler(self) -> OrderReconciler:
-        if self._order_reconciler is None:
-            bot = self._bot
-            self._order_reconciler = OrderReconciler(
-                broker=bot.broker,
-                orders_store=bot.orders_store,
-                event_store=bot.event_store,
-                bot_id=bot.bot_id,
-            )
-        return self._order_reconciler
-
-    def reset_order_reconciler(self) -> None:
-        self._order_reconciler = None
-
-    async def run_runtime_guards(self) -> None:
-        await self._run_runtime_guards_loop()
-
-    async def _run_runtime_guards_loop(self) -> None:
-        bot = self._bot
-        while bot.running:
-            try:
-                exec_engine = bot.runtime_state.exec_engine
-                if exec_engine:
-                    await run_in_thread(exec_engine.run_runtime_guards)
-            except Exception as e:
-                logger.error(f"Error in runtime guards: {e}", exc_info=True)
-            await asyncio.sleep(60)
-
-    async def run_order_reconciliation(self, interval_seconds: int = 45) -> None:
-        await self._run_order_reconciliation_loop(interval_seconds=interval_seconds)
-
-    async def _run_order_reconciliation_loop(self, interval_seconds: int = 45) -> None:
-        bot = self._bot
-        while bot.running:
-            try:
-                reconciler = self._get_order_reconciler()
-                await self._run_order_reconciliation_cycle(reconciler)
-            except Exception as e:
-                logger.debug(f"Order reconciliation error: {e}", exc_info=True)
-            await asyncio.sleep(interval_seconds)
-
-    async def _run_order_reconciliation_cycle(self, reconciler: OrderReconciler) -> None:
-        bot = self._bot
-        local_open = reconciler.fetch_local_open_orders()
-        exchange_open = await reconciler.fetch_exchange_open_orders()
-
-        if len(local_open) != len(exchange_open):
-            logger.info(
-                "Order count mismatch: local=%s exchange=%s",
-                len(local_open),
-                len(exchange_open),
-            )
-
-        diff = reconciler.diff_orders(local_open, exchange_open)
-        if diff.missing_on_exchange or diff.missing_locally:
-            await reconciler.reconcile_missing_on_exchange(diff)
-            reconciler.reconcile_missing_locally(diff)
-
-        for order in exchange_open.values():
-            try:
-                bot.orders_store.upsert(order)
-            except Exception as exc:
-                logger.debug(
-                    "Failed to upsert exchange order %s during reconciliation: %s",
-                    order.id,
-                    exc,
-                    exc_info=True,
-                )
-
-        await reconciler.record_snapshot(local_open, exchange_open)
+__all__ = ["ExecutionCoordinator"]

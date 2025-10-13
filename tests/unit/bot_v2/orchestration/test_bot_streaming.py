@@ -6,7 +6,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from bot_v2.orchestration.configuration import Profile
+from bot_v2.orchestration.configuration import BotConfig, Profile
+from bot_v2.orchestration.service_registry import ServiceRegistry
 from bot_v2.orchestration.telemetry_coordinator import TelemetryCoordinator
 
 
@@ -44,19 +45,35 @@ def test_stream_loop_updates_mark_window_unit() -> None:
                 }
             ]
 
+    config = BotConfig(profile=Profile.PROD)
+    config.perps_enable_streaming = True
+    config.perps_stream_level = 1
+    config.short_ma = 2
+    config.long_ma = 3
+    config.symbols = ["BTC-PERP"]
+
+    registry = ServiceRegistry(
+        config=config,
+        broker=StubBroker(),
+        risk_manager=StubRisk(),
+        event_store=StubEventStore(),
+    )
+
     bot = SimpleNamespace(
         bot_id="perps_bot",
+        config=config,
+        registry=registry,
         symbols=["BTC-PERP"],
-        broker=StubBroker(),
+        broker=registry.broker,
         strategy_coordinator=StubStrategy(),
-        event_store=StubEventStore(),
-        risk_manager=StubRisk(),
+        event_store=registry.event_store,
+        risk_manager=registry.risk_manager,
     )
 
     coordinator = TelemetryCoordinator(bot)
     coordinator._market_monitor = None  # type: ignore[attr-defined]
 
-    coordinator._run_stream_loop(bot.symbols, level=1)
+    coordinator._run_stream_loop(bot.symbols, level=1, stop_signal=None)
 
     assert updates == [("BTC-PERP", Decimal("101"))]
     assert "BTC-PERP" in bot.risk_manager.last_mark_update
@@ -95,29 +112,46 @@ async def test_background_stream_task_emits_updates() -> None:
             self.orderbook_calls.append((tuple(symbols), level))
             yield {"product_id": symbols[0], "best_bid": "100", "best_ask": "101"}
 
+    config = BotConfig(profile=Profile.PROD)
+    config.perps_enable_streaming = True
+    config.perps_stream_level = 1
+    config.short_ma = 2
+    config.long_ma = 3
+    config.symbols = ["BTC-PERP"]
+
+    event_store = StubEventStore()
+    risk_manager = StubRisk()
+    broker = StubBroker()
+
+    registry = ServiceRegistry(
+        config=config,
+        broker=broker,
+        risk_manager=risk_manager,
+        event_store=event_store,
+    )
+
     bot = SimpleNamespace(
         bot_id="perps_bot",
+        config=config,
+        registry=registry,
         symbols=["BTC-PERP"],
-        config=SimpleNamespace(
-            perps_enable_streaming=True, perps_stream_level=1, profile=Profile.PROD
-        ),
-        broker=StubBroker(),
+        broker=broker,
         strategy_coordinator=StubStrategy(),
-        event_store=StubEventStore(),
-        risk_manager=StubRisk(),
+        event_store=event_store,
+        risk_manager=risk_manager,
     )
 
     coordinator = TelemetryCoordinator(bot)
     coordinator._market_monitor = None  # type: ignore[attr-defined]
 
-    coordinator.start_streaming_background()
-    task = coordinator.ensure_streaming_task()
-    assert task is not None
-    await asyncio.wait_for(task, timeout=1.0)
+    coordinator.bootstrap()
+    tasks = await coordinator.start_background_tasks()
+    assert tasks
+    await asyncio.gather(*tasks)
 
     assert updates == [("BTC-PERP", Decimal("100.5"))]
     assert "BTC-PERP" in bot.risk_manager.last_mark_update
     assert bot.event_store.metrics
     assert bot.broker.orderbook_calls == [(("BTC-PERP",), 1)]
 
-    coordinator.stop_streaming_background()
+    await coordinator.shutdown()

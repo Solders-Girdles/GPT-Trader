@@ -1,260 +1,189 @@
-"""Telemetry and streaming coordination for :class:`PerpsBot`."""
+"""Legacy telemetry coordinator facade wrapping the coordinator package."""
 
 from __future__ import annotations
 
 import asyncio
 import logging
-import threading
-from collections.abc import Iterable
-from decimal import Decimal
+from collections.abc import Coroutine
 from typing import TYPE_CHECKING, Any
 
-from bot_v2.features.brokerages.coinbase.account_manager import CoinbaseAccountManager
-from bot_v2.monitoring.system import get_logger as _get_plog
-from bot_v2.orchestration.account_telemetry import AccountTelemetryService
-from bot_v2.orchestration.configuration import Profile
-from bot_v2.orchestration.market_monitor import MarketActivityMonitor
-from bot_v2.utilities import emit_metric, utc_now
+from bot_v2.orchestration.configuration import BotConfig, Profile
+from bot_v2.orchestration.coordinators.base import CoordinatorContext
+from bot_v2.orchestration.coordinators.telemetry import (
+    TelemetryCoordinator as _TelemetryCoordinator,
+)
+from bot_v2.orchestration.service_registry import ServiceRegistry
 
-if TYPE_CHECKING:  # pragma: no cover - circular type import guard
+if TYPE_CHECKING:  # pragma: no cover - typing only
     from bot_v2.orchestration.perps_bot import PerpsBot
-
 
 logger = logging.getLogger(__name__)
 
 
-class TelemetryCoordinator:
-    """Manage account telemetry services and market streaming for ``PerpsBot``."""
+class TelemetryCoordinator(_TelemetryCoordinator):
+    """Compatibility layer preserving the historical telemetry coordinator API."""
 
     def __init__(self, bot: PerpsBot) -> None:
         self._bot = bot
-        self._stream_task: asyncio.Task[None] | None = None
-        self._ws_stop: threading.Event | None = None
-        self._pending_stream_config: tuple[list[str], int] | None = None
-        self._market_monitor: MarketActivityMonitor | None = None
+        context = self._build_context(bot)
+        super().__init__(context)
+        self._sync_bot(context)
 
     # ------------------------------------------------------------------
     def bootstrap(self) -> None:
-        """Initialise telemetry services and start streaming if eligible."""
-
-        self.init_accounting_services()
-        self.init_market_services()
-        self.start_streaming_if_configured()
+        context = self._refresh_context_from_bot()
+        updated = self.initialize(context)
+        self.update_context(updated)
+        self._sync_bot(updated)
 
     def init_accounting_services(self) -> None:
-        bot = self._bot
-        account_manager = CoinbaseAccountManager(bot.broker, event_store=bot.event_store)
-        bot.account_manager = account_manager
-        account_telemetry = AccountTelemetryService(
-            broker=bot.broker,
-            account_manager=account_manager,
-            event_store=bot.event_store,
-            bot_id=bot.bot_id,
-            profile=bot.config.profile.value,
-        )
-        bot.account_telemetry = account_telemetry
-        if not account_telemetry.supports_snapshots():
-            logger.info("Account snapshot telemetry disabled; broker lacks required endpoints")
-        bot.system_monitor.attach_account_telemetry(account_telemetry)
+        self.bootstrap()
 
     def init_market_services(self) -> None:
-        bot = self._bot
+        pass
 
-        def _log_market_heartbeat(**payload: Any) -> None:
-            try:
-                _get_plog().log_market_heartbeat(**payload)
-            except Exception as exc:
-                logger.debug(
-                    "Failed to record market heartbeat for %s: %s",
-                    payload.get("symbol") or payload.get("source"),
-                    exc,
-                    exc_info=True,
-                )
-
-        monitor = MarketActivityMonitor(tuple(bot.symbols), heartbeat_logger=_log_market_heartbeat)
-        bot.market_monitor = monitor
-        self._market_monitor = monitor
-
-    # ------------------------------------------------------------------
     def start_streaming_if_configured(self) -> None:
-        bot = self._bot
-        if getattr(bot.config, "perps_enable_streaming", False) and bot.config.profile in {
-            Profile.CANARY,
-            Profile.PROD,
-        }:
-            try:
-                self.start_streaming_background()
-            except Exception:
-                logger.exception("Failed to start streaming background worker")
+        self._refresh_context_from_bot()
+        if self._should_enable_streaming():
+            self._schedule_coroutine(self._start_streaming())
 
-    def start_streaming_background(self) -> None:  # pragma: no cover - gated by env/profile
-        bot = self._bot
-        symbols = list(bot.symbols)
-        if not symbols:
-            return
-        configured_level = getattr(bot.config, "perps_stream_level", 1) or 1
-        try:
-            level = max(int(configured_level), 1)
-        except (TypeError, ValueError):
-            logger.warning("Invalid streaming level %s; defaulting to 1", configured_level)
-            level = 1
-        self._pending_stream_config = (symbols, level)
-        scheduled = self._schedule_streaming_task()
-        if not scheduled:
-            logger.debug(
-                "WS streaming task deferred; no running event loop yet (symbols=%s level=%s)",
-                symbols,
-                level,
-            )
-
-    def stop_streaming_background(self) -> None:
-        self._pending_stream_config = None
-        stop = self._ws_stop
-        if stop:
-            stop.set()
-            self._ws_stop = None
-        task = self._stream_task
-        if task and not task.done():
-            loop = task.get_loop()
-            if loop.is_running():
-                loop.call_soon_threadsafe(task.cancel)
-            else:
-                task.cancel()
-        self._stream_task = None
-
-    def restart_streaming_if_needed(self, diff: dict[str, Any]) -> None:
-        bot = self._bot
-        streaming_enabled = bool(getattr(bot.config, "perps_enable_streaming", False))
-        toggle_changed = "perps_enable_streaming" in diff or "perps_stream_level" in diff
-
-        if not streaming_enabled:
-            if toggle_changed:
-                self.stop_streaming_background()
-            return
-
-        if toggle_changed:
-            self.stop_streaming_background()
+    def start_streaming_background(self) -> None:
         self.start_streaming_if_configured()
 
-    # ------------------------------------------------------------------
-    async def run_account_telemetry(self, interval_seconds: int = 300) -> None:
-        bot = self._bot
-        account_telemetry = bot.account_telemetry
-        if not account_telemetry or not account_telemetry.supports_snapshots():
+    def stop_streaming_background(self) -> None:
+        self._schedule_coroutine(self._stop_streaming())
+
+    def restart_streaming_if_needed(self, diff: dict[str, Any]) -> None:
+        relevant = {"perps_enable_streaming", "perps_stream_level", "symbols"}
+        if not relevant.intersection(diff.keys()):
             return
-        await account_telemetry.run(interval_seconds)
 
-    # ------------------------------------------------------------------
-    def ensure_streaming_task(self) -> asyncio.Task[None] | None:
-        """Ensure the WS stream task is scheduled when the event loop is running."""
+        self._refresh_context_from_bot()
+        should_stream = self._should_enable_streaming()
 
-        self._schedule_streaming_task()
+        async def _apply_restart() -> None:
+            try:
+                await self._stop_streaming()
+            except Exception:
+                logger.exception("Failed to stop existing streaming task during restart")
+            if should_stream:
+                try:
+                    await self._start_streaming()
+                except Exception:
+                    logger.exception("Failed to start streaming after config change")
+
+        self._schedule_coroutine(_apply_restart())
+
+    async def run_account_telemetry(self, interval_seconds: int = 300) -> None:
+        self._refresh_context_from_bot()
+        await self._run_account_telemetry(interval_seconds)
+
+    def ensure_streaming_task(self) -> asyncio.Task[Any] | None:
+        self._refresh_context_from_bot()
         return self._stream_task
 
-    def _schedule_streaming_task(self) -> bool:
-        if not self._pending_stream_config:
-            return False
-        if self._stream_task and not self._stream_task.done():
-            return False
+    # ------------------------------------------------------------------
+    def _refresh_context_from_bot(self) -> CoordinatorContext:
+        updated = self._build_context(self._bot)
+        super().update_context(updated)
+        return self.context
+
+    def _build_context(self, bot: PerpsBot) -> CoordinatorContext:
+        registry = getattr(bot, "registry", None)
+        if not isinstance(registry, ServiceRegistry):
+            config = getattr(bot, "config", None)
+            if config is None:
+                config = BotConfig(profile=Profile.PROD)
+            registry = ServiceRegistry(
+                config=config,
+                broker=getattr(bot, "broker", None),
+                risk_manager=getattr(bot, "risk_manager", None),
+                event_store=getattr(bot, "event_store", None),
+                orders_store=getattr(bot, "orders_store", None),
+                extras=(
+                    dict(getattr(bot.registry, "extras", {})) if hasattr(bot, "registry") else {}
+                ),
+            )
+
+        return CoordinatorContext(
+            config=bot.config,
+            registry=registry,
+            event_store=getattr(bot, "event_store", None),
+            orders_store=getattr(bot, "orders_store", None),
+            broker=registry.broker if registry else getattr(bot, "broker", None),
+            risk_manager=registry.risk_manager if registry else getattr(bot, "risk_manager", None),
+            symbols=tuple(getattr(bot, "symbols", []) or []),
+            bot_id=getattr(bot, "bot_id", "perps_bot"),
+            runtime_state=getattr(bot, "runtime_state", None),
+            config_controller=getattr(bot, "config_controller", None),
+            strategy_orchestrator=getattr(bot, "strategy_orchestrator", None),
+            execution_coordinator=getattr(bot, "execution_coordinator", None),
+            strategy_coordinator=getattr(bot, "strategy_coordinator", None),
+            product_cache=(
+                getattr(bot._state, "product_map", None) if hasattr(bot, "_state") else None
+            ),
+            session_guard=getattr(bot, "_session_guard", None),
+            configuration_guardian=getattr(bot, "configuration_guardian", None),
+            system_monitor=getattr(bot, "system_monitor", None),
+            set_reduce_only_mode=getattr(bot, "set_reduce_only_mode", None),
+            shutdown_hook=getattr(bot, "shutdown", None),
+            set_running_flag=lambda value: setattr(bot, "running", value),
+        )
+
+    def _sync_bot(self, context: CoordinatorContext) -> None:
+        bot = self._bot
+        if hasattr(bot, "registry"):
+            bot.registry = context.registry
+
+        account_manager = context.registry.extras.get("account_manager")
+        if account_manager is not None and hasattr(bot, "account_manager"):
+            bot.account_manager = account_manager
+
+        account_telemetry = context.registry.extras.get("account_telemetry")
+        if account_telemetry is not None and hasattr(bot, "account_telemetry"):
+            bot.account_telemetry = account_telemetry
+            if hasattr(bot, "system_monitor") and callable(
+                getattr(bot.system_monitor, "attach_account_telemetry", None)
+            ):
+                try:
+                    bot.system_monitor.attach_account_telemetry(account_telemetry)
+                except Exception:
+                    logger.debug(
+                        "Failed to attach account telemetry to system monitor", exc_info=True
+                    )
+
+        market_monitor = context.registry.extras.get("market_monitor")
+        if market_monitor is not None and hasattr(bot, "market_monitor"):
+            bot.market_monitor = market_monitor
+            setattr(bot, "_market_monitor", market_monitor)
+
+    def _schedule_coroutine(self, coro: Coroutine[Any, Any, Any]) -> None:
+        """Execute a coordinator coroutine on the running loop or in a safe fallback."""
+
         try:
             loop = asyncio.get_running_loop()
         except RuntimeError:
-            return False
-        symbols, level = self._pending_stream_config
-        self._ws_stop = threading.Event()
-        task = loop.create_task(self._run_stream_loop_async(symbols, level, self._ws_stop))
-        task.add_done_callback(self._handle_stream_task_completion)
-        self._stream_task = task
-        logger.info("Started WS streaming task for symbols=%s level=%s", symbols, level)
-        return True
+            loop = None
 
-    def _handle_stream_task_completion(self, task: asyncio.Task[None]) -> None:
-        self._stream_task = None
-        self._ws_stop = None
-        try:
-            task.result()
-        except asyncio.CancelledError:
-            logger.info("WS streaming task cancelled")
-        except Exception as exc:
-            logger.exception("WS streaming task failed: %s", exc)
+        if loop and loop.is_running():
+            loop.create_task(coro)
+            return
 
-    async def _run_stream_loop_async(
-        self, symbols: list[str], level: int, stop_signal: threading.Event | None
-    ) -> None:
-        loop = asyncio.get_running_loop()
-        try:
-            await loop.run_in_executor(None, self._run_stream_loop, symbols, level, stop_signal)
-        except asyncio.CancelledError:
-            if stop_signal:
-                stop_signal.set()
-            raise
-
-    def _run_stream_loop(
-        self, symbols: list[str], level: int, stop_signal: threading.Event | None = None
-    ) -> None:
-        bot = self._bot
-        try:
-            stream: Iterable[Any] | None = None
+        task_loop: asyncio.AbstractEventLoop | None = None
+        if self._stream_task is not None:
             try:
-                stream = bot.broker.stream_orderbook(symbols, level=level)
-            except Exception as exc:
-                logger.warning("Orderbook stream unavailable, falling back to trades: %s", exc)
-                try:
-                    stream = bot.broker.stream_trades(symbols)
-                except Exception as trade_exc:
-                    logger.error("Failed to start streaming trades: %s", trade_exc)
-                    return
+                task_loop = self._stream_task.get_loop()
+            except Exception:
+                task_loop = None
 
-            for msg in stream or []:
-                if stop_signal and stop_signal.is_set():
-                    break
-                if not isinstance(msg, dict):
-                    continue
-                sym = str(msg.get("product_id") or msg.get("symbol") or "")
-                if not sym:
-                    continue
-                mark: Decimal | None = None
-                bid = msg.get("best_bid") or msg.get("bid")
-                ask = msg.get("best_ask") or msg.get("ask")
-                if bid is not None and ask is not None:
-                    try:
-                        mark = (Decimal(str(bid)) + Decimal(str(ask))) / Decimal("2")
-                    except Exception:
-                        mark = None
-                if mark is None:
-                    raw_mark = msg.get("last") or msg.get("price")
-                    if raw_mark is None:
-                        continue
-                    mark = Decimal(str(raw_mark))
-                if mark <= 0:
-                    continue
+        if task_loop and task_loop.is_running():
+            task_loop.call_soon_threadsafe(asyncio.create_task, coro)
+            return
 
-                bot.strategy_coordinator.update_mark_window(sym, mark)
-                monitor = getattr(bot, "market_monitor", self._market_monitor)
-                try:
-                    if monitor:
-                        monitor.record_update(sym)
-                    timestamp = utc_now()
-                    risk_manager = bot.risk_manager
-                    record_fn = getattr(risk_manager, "record_mark_update", None)
-                    stored = record_fn(sym, timestamp) if callable(record_fn) else timestamp
-                    risk_manager.last_mark_update[sym] = stored
-                    emit_metric(
-                        bot.event_store,
-                        bot.bot_id,
-                        {"event_type": "ws_mark_update", "symbol": sym, "mark": str(mark)},
-                    )
-                except Exception:
-                    logger.exception("WS mark update bookkeeping failed for %s", sym)
-        except Exception as exc:  # pragma: no cover - defensive error metric
-            emit_metric(
-                bot.event_store,
-                bot.bot_id,
-                {"event_type": "ws_stream_error", "message": str(exc)},
-            )
-        finally:
-            emit_metric(
-                bot.event_store,
-                bot.bot_id,
-                {"event_type": "ws_stream_exit"},
-            )
+        if loop is None:
+            asyncio.run(coro)
+        else:
+            loop.run_until_complete(coro)
+
+
+__all__ = ["TelemetryCoordinator"]

@@ -24,8 +24,36 @@ class LifecycleManager:
         """Initialise orchestration collaborators required before running."""
 
         bot = self._bot
-        bot.runtime_coordinator.bootstrap()
-        bot.telemetry_coordinator.bootstrap()
+        logger.info("Initializing coordinators...")
+        updated_context = bot._coordinator_registry.initialize_all()
+        bot._coordinator_context = updated_context
+
+        if updated_context.registry is not bot.registry:
+            bot.registry = updated_context.registry
+        if updated_context.broker is not None:
+            try:
+                bot.broker = updated_context.broker
+            except Exception:
+                logger.debug("Failed to set broker during bootstrap", exc_info=True)
+        if updated_context.risk_manager is not None:
+            try:
+                bot.risk_manager = updated_context.risk_manager
+            except Exception:
+                logger.debug("Failed to set risk manager during bootstrap", exc_info=True)
+
+        extras = updated_context.registry.extras
+        account_manager = extras.get("account_manager")
+        if account_manager is not None and hasattr(bot, "account_manager"):
+            bot.account_manager = account_manager
+        account_telemetry = extras.get("account_telemetry")
+        if account_telemetry is not None and hasattr(bot, "account_telemetry"):
+            bot.account_telemetry = account_telemetry
+        market_monitor = extras.get("market_monitor")
+        if market_monitor is not None and hasattr(bot, "market_monitor"):
+            bot.market_monitor = market_monitor
+            setattr(bot, "_market_monitor", market_monitor)
+
+        logger.info("Coordinator initialization complete")
 
     # ------------------------------------------------------------------
     async def run(self, single_cycle: bool = False) -> None:
@@ -38,33 +66,17 @@ class LifecycleManager:
         try:
             if not bot.config.dry_run:
                 await bot.runtime_coordinator.reconcile_state_on_startup()
-                if not single_cycle:
-                    background_tasks.append(
-                        asyncio.create_task(bot.execution_coordinator.run_runtime_guards())
-                    )
-                    background_tasks.append(
-                        asyncio.create_task(bot.execution_coordinator.run_order_reconciliation())
-                    )
-                    background_tasks.append(
-                        asyncio.create_task(bot.system_monitor.run_position_reconciliation())
-                    )
-                    account_telemetry = bot.account_telemetry
-                    if account_telemetry and account_telemetry.supports_snapshots():
-                        background_tasks.append(
-                            asyncio.create_task(
-                                bot.telemetry_coordinator.run_account_telemetry(
-                                    bot.config.account_telemetry_interval
-                                )
-                            )
-                        )
-            else:
-                logger.info("Dry-run: skipping startup reconciliation and background guard loops")
 
-            ensure_streaming = getattr(bot.telemetry_coordinator, "ensure_streaming_task", None)
-            if callable(ensure_streaming):
-                stream_task = ensure_streaming()
-                if stream_task:
-                    background_tasks.append(stream_task)
+            if not single_cycle and not bot.config.dry_run:
+                logger.info("Starting coordinator background tasks...")
+                coordinator_tasks = await bot._coordinator_registry.start_all_background_tasks()
+                background_tasks.extend(coordinator_tasks)
+                logger.info("Started %d coordinator background tasks", len(coordinator_tasks))
+
+            if not bot.config.dry_run:
+                background_tasks.append(
+                    asyncio.create_task(bot.system_monitor.run_position_reconciliation())
+                )
 
             await bot.run_cycle()
             bot.system_monitor.write_health_status(ok=True)
@@ -100,7 +112,4 @@ class LifecycleManager:
         bot = self._bot
         logger.info("Shutting down bot...")
         bot.running = False
-        try:
-            bot.telemetry_coordinator.stop_streaming_background()
-        except Exception as exc:  # pragma: no cover - defensive shutdown logging
-            logger.debug("Failed to stop WS streaming task cleanly: %s", exc, exc_info=True)
+        await bot._coordinator_registry.shutdown_all()

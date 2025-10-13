@@ -2,7 +2,7 @@
 
 ---
 status: current
-last-updated: 2025-10-07
+last-updated: 2025-10-12
 ---
 
 ## Current State
@@ -72,21 +72,50 @@ Risk Guards → Coinbase Brokerage Adapter → Metrics + Telemetry
 | `bot_v2/monitoring` | Runtime guard orchestration, alert dispatch, system metrics |
 | `bot_v2/validation` | Predicate-based validators and input decorators |
 
-#### Orchestration Coordinators
+#### Coordinator Pattern (new 2025-10)
 
-The PerpsBot facade (`bot_v2/orchestration/perps_bot.py`) now delegates concrete work to three
-focused coordinators:
+The orchestration layer now follows a coordinator pattern that centralises lifecycle management and
+dependency injection. See [ADR 002](architecture/decisions/002-coordinator-pattern.md) for the full
+rationale.
 
-- `LifecycleManager` (`bot_v2/orchestration/lifecycle_manager.py`) boots the service graph, runs the
-  guarded async loop, and tears down background tasks/streams on shutdown.
-- `StrategyCoordinator` (`bot_v2/orchestration/strategy_coordinator.py`) owns trading-cycle
-  orchestration, including configuration drift checks, mark updates, and dispatching symbol
-  processing to the strategy orchestrator and execution coordinator.
-- `TelemetryCoordinator` (`bot_v2/orchestration/telemetry_coordinator.py`) encapsulates account
-  telemetry wiring, market activity monitoring, and websocket/stream lifecycle management.
+**Key components**
 
-This split keeps the PerpsBot class as a thin facade while isolating runtime responsibilities into
-independently testable units, reducing coupling between lifecycle, trading logic, and telemetry.
+- `CoordinatorContext` – immutable snapshot of broker, risk, stores, and orchestration services
+- `BaseCoordinator` / `Coordinator` protocol – shared lifecycle contract (`initialize`, background
+  tasks, `shutdown`, `health_check`)
+- `CoordinatorRegistry` – registers coordinators, drives initialise/start/shutdown, and pushes
+  updated context snapshots to every coordinator
+
+**Registered coordinators**
+
+- Runtime (`bot_v2/orchestration/coordinators/runtime.py`) – broker & risk bootstrap, reconciliation
+- Execution (`bot_v2/orchestration/coordinators/execution.py`) – order placement, guards, locks
+- Strategy (`bot_v2/orchestration/coordinators/strategy.py`) – trading cycle, mark management,
+  strategy orchestration
+- Telemetry (`bot_v2/orchestration/coordinators/telemetry.py`) – account telemetry, market monitor,
+  websocket streaming
+
+_PerpsBot facade_
+
+```
+PerpsBot
+└── CoordinatorRegistry
+    ├── RuntimeCoordinator
+    ├── ExecutionCoordinator
+    ├── StrategyCoordinator
+    └── TelemetryCoordinator
+```
+
+**Lifecycle flow**
+
+1. `PerpsBot` constructs a `CoordinatorRegistry` using the initial context from the service registry.
+2. `LifecycleManager.bootstrap()` calls `initialize_all()` so each coordinator can create
+   dependencies and emit context updates.
+3. `LifecycleManager.run()` delegates to `start_all_background_tasks()` to launch async work.
+4. `LifecycleManager.shutdown()` invokes `shutdown_all()` for clean cancellation and teardown.
+
+Legacy facades (e.g., `bot_v2/orchestration/telemetry_coordinator.py`) remain as thin wrappers to
+preserve existing imports while downstream consumers migrate to the new modules.
 
 #### Coinbase Client Package
 

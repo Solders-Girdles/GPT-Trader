@@ -47,10 +47,9 @@ async def test_perps_streaming_smoke(monkeypatch, tmp_path, fake_clock):
     bot.broker.stream_trades = stream_trades_once  # type: ignore[attr-defined]
 
     # Start streaming now
-    bot._start_streaming_background()
-    task = bot.telemetry_coordinator.ensure_streaming_task()
-    assert task is not None
-    await asyncio.wait_for(task, timeout=2.0)
+    stream_task = await bot.telemetry_coordinator._start_streaming()
+    assert stream_task is not None
+    await asyncio.wait_for(stream_task, timeout=2.0)
 
     from bot_v2.persistence.event_store import EventStore
 
@@ -62,4 +61,4 @@ async def test_perps_streaming_smoke(monkeypatch, tmp_path, fake_clock):
     # Verify risk manager got a mark timestamp for at least one symbol
     assert any(sym in bot.risk_manager.last_mark_update for sym in config.symbols)
 
-    bot.telemetry_coordinator.stop_streaming_background()
+    await bot.telemetry_coordinator.shutdown()

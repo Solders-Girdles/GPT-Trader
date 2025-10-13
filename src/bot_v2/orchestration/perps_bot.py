@@ -18,17 +18,14 @@ from bot_v2.features.brokerages.core.interfaces import (
 )
 from bot_v2.orchestration.config_controller import ConfigChange, ConfigController
 from bot_v2.orchestration.configuration import BotConfig
-from bot_v2.orchestration.execution_coordinator import ExecutionCoordinator
+from bot_v2.orchestration.coordinators import CoordinatorContext, CoordinatorRegistry
 from bot_v2.orchestration.lifecycle_manager import LifecycleManager
 from bot_v2.orchestration.perps_bot_state import PerpsBotRuntimeState
-from bot_v2.orchestration.runtime_coordinator import RuntimeCoordinator
 from bot_v2.orchestration.runtime_settings import RuntimeSettings, load_runtime_settings
 from bot_v2.orchestration.service_registry import ServiceRegistry
 from bot_v2.orchestration.session_guard import TradingSessionGuard
-from bot_v2.orchestration.strategy_coordinator import StrategyCoordinator
 from bot_v2.orchestration.strategy_orchestrator import StrategyOrchestrator
 from bot_v2.orchestration.system_monitor import SystemMonitor
-from bot_v2.orchestration.telemetry_coordinator import TelemetryCoordinator
 from bot_v2.utilities.config import ConfigBaselinePayload
 
 if TYPE_CHECKING:  # pragma: no cover - imports for type checking only
@@ -38,9 +35,13 @@ if TYPE_CHECKING:  # pragma: no cover - imports for type checking only
     from bot_v2.features.live_trade.risk import LiveRiskManager
     from bot_v2.monitoring.configuration_guardian import ConfigurationGuardian
     from bot_v2.orchestration.account_telemetry import AccountTelemetryService
+    from bot_v2.orchestration.execution_coordinator import ExecutionCoordinator
     from bot_v2.orchestration.live_execution import LiveExecutionEngine
     from bot_v2.orchestration.market_monitor import MarketActivityMonitor
+    from bot_v2.orchestration.runtime_coordinator import RuntimeCoordinator
+    from bot_v2.orchestration.strategy_coordinator import StrategyCoordinator
     from bot_v2.orchestration.symbol_processor import SymbolProcessor
+    from bot_v2.orchestration.telemetry_coordinator import TelemetryCoordinator
     from bot_v2.persistence.event_store import EventStore
     from bot_v2.persistence.orders_store import OrdersStore
 
@@ -92,7 +93,8 @@ class PerpsBot:
     - Support for both dry-run and live trading modes
 
     Architecture:
-    The bot follows a modular architecture with separate coordinators for:
+    Lifecycle management is delegated to a ``CoordinatorRegistry`` which instantiates and tracks
+    dedicated coordinators for:
     - Execution: Order placement and management
     - Strategy: Trading signal generation and processing
     - Monitoring: System health and performance tracking
@@ -148,17 +150,115 @@ class PerpsBot:
         self._state = PerpsBotRuntimeState(self.symbols)
         self._symbol_processor_override: _CallableSymbolProcessor | None = None
         self.strategy_orchestrator = StrategyOrchestrator(self)
-        self.execution_coordinator = ExecutionCoordinator(self)
+
+        # Coordinator context and registry setup
+        self._coordinator_context = CoordinatorContext(
+            config=self.config,
+            registry=self.registry,
+            event_store=self.event_store,
+            orders_store=self.orders_store,
+            symbols=tuple(self.symbols),
+            bot_id=self.bot_id,
+            runtime_state=self._state,
+            config_controller=self.config_controller,
+            strategy_orchestrator=self.strategy_orchestrator,
+            execution_coordinator=None,
+            strategy_coordinator=None,
+            session_guard=self._session_guard,
+            configuration_guardian=self.configuration_guardian,
+            system_monitor=None,
+            set_reduce_only_mode=self.set_reduce_only_mode,
+            shutdown_hook=self.shutdown,
+            set_running_flag=lambda value: setattr(self, "running", value),
+        )
+        self._coordinator_registry = CoordinatorRegistry(self._coordinator_context)
+        self._register_coordinators()
+
         self.system_monitor = SystemMonitor(self)
-        self.runtime_coordinator = RuntimeCoordinator(self)
+        self._coordinator_context = self._coordinator_context.with_updates(
+            system_monitor=self.system_monitor,
+            execution_coordinator=self.execution_coordinator,
+            strategy_coordinator=self.strategy_coordinator,
+        )
+        self._coordinator_registry._context = self._coordinator_context  # type: ignore[attr-defined]
+        for coordinator in (
+            self.runtime_coordinator,
+            self.execution_coordinator,
+            self.strategy_coordinator,
+            self.telemetry_coordinator,
+        ):
+            if hasattr(coordinator, "update_context"):
+                coordinator.update_context(self._coordinator_context)
+
         self.lifecycle_manager = LifecycleManager(self)
-        self.strategy_coordinator = StrategyCoordinator(self)
-        self.telemetry_coordinator = TelemetryCoordinator(self)
+
+        # Placeholders for services populated during telemetry initialization
+        self.account_manager: CoinbaseAccountManager | None = None
+        self.account_telemetry: AccountTelemetryService | None = None
+        self.market_monitor: MarketActivityMonitor | None = None
+
+    def _register_coordinators(self) -> None:
+        """Register orchestrator coordinators in dependency order."""
+
+        from bot_v2.orchestration.execution_coordinator import ExecutionCoordinator
+        from bot_v2.orchestration.runtime_coordinator import RuntimeCoordinator
+        from bot_v2.orchestration.strategy_coordinator import StrategyCoordinator
+        from bot_v2.orchestration.telemetry_coordinator import TelemetryCoordinator
+
+        execution = ExecutionCoordinator(self)
+        self._coordinator_context = self._coordinator_context.with_updates(
+            execution_coordinator=execution
+        )
+        self._coordinator_registry._context = self._coordinator_context  # type: ignore[attr-defined]
+
+        self._coordinator_registry.register(RuntimeCoordinator(self))
+        self._coordinator_registry.register(execution)
+
+        strategy = StrategyCoordinator(self)
+        self._coordinator_context = self._coordinator_context.with_updates(
+            strategy_coordinator=strategy
+        )
+        self._coordinator_registry._context = self._coordinator_context  # type: ignore[attr-defined]
+        self._coordinator_registry.register(strategy)
+
+        self._coordinator_registry.register(TelemetryCoordinator(self))
 
     # ------------------------------------------------------------------
     @property
     def runtime_state(self) -> PerpsBotRuntimeState:
         return self._state
+
+    @property
+    def runtime_coordinator(self) -> RuntimeCoordinator:
+        coordinator = self._coordinator_registry.get("runtime")
+        if coordinator is None:
+            raise RuntimeError("Runtime coordinator not registered")
+        return coordinator  # type: ignore[return-value]
+
+    @property
+    def execution_coordinator(self) -> ExecutionCoordinator:
+        coordinator = self._coordinator_context.execution_coordinator
+        if coordinator is None:
+            coordinator = self._coordinator_registry.get("execution")
+        if coordinator is None:
+            raise RuntimeError("Execution coordinator not registered")
+        return coordinator  # type: ignore[return-value]
+
+    @property
+    def strategy_coordinator(self) -> StrategyCoordinator:
+        coordinator = self._coordinator_context.strategy_coordinator
+        if coordinator is None:
+            coordinator = self._coordinator_registry.get("strategy")
+        if coordinator is None:
+            raise RuntimeError("Strategy coordinator not registered")
+        return coordinator  # type: ignore[return-value]
+
+    @property
+    def telemetry_coordinator(self) -> TelemetryCoordinator:
+        coordinator = self._coordinator_registry.get("telemetry")
+        if coordinator is None:
+            raise RuntimeError("Telemetry coordinator not registered")
+        return coordinator  # type: ignore[return-value]
 
     @property
     def settings(self) -> RuntimeSettings:
@@ -440,7 +540,7 @@ class PerpsBot:
         self.telemetry_coordinator.restart_streaming_if_needed(diff)
 
     def _run_stream_loop(self, symbols: list[str], level: int) -> None:
-        self.telemetry_coordinator._run_stream_loop(symbols, level)
+        self.telemetry_coordinator._run_stream_loop(symbols, level, stop_signal=None)
 
     # ------------------------------------------------------------------
     def _update_mark_window(self, symbol: str, mark: Decimal) -> None:
@@ -448,7 +548,11 @@ class PerpsBot:
 
     @staticmethod
     def _calculate_spread_bps(bid_price: Decimal, ask_price: Decimal) -> Decimal:
-        return StrategyCoordinator.calculate_spread_bps(bid_price, ask_price)
+        from bot_v2.orchestration.strategy_coordinator import (
+            StrategyCoordinator as _StrategyCoordinator,
+        )
+
+        return _StrategyCoordinator.calculate_spread_bps(bid_price, ask_price)
 
     # ------------------------------------------------------------------
     async def _run_account_telemetry(self, interval_seconds: int = 300) -> None:

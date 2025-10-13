@@ -1,17 +1,21 @@
-"""Runtime coordination helpers for the perps bot orchestration layer."""
+"""Legacy runtime coordinator facade wrapping the coordinator package."""
 
 from __future__ import annotations
 
 import logging
-from collections.abc import Sequence
-from dataclasses import dataclass
-from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from bot_v2.config.live_trade_config import RiskConfig
 from bot_v2.features.live_trade.risk import LiveRiskManager, RiskRuntimeState
 from bot_v2.orchestration.broker_factory import create_brokerage
-from bot_v2.orchestration.configuration import DEFAULT_SPOT_RISK_PATH, Profile
+from bot_v2.orchestration.coordinators.base import CoordinatorContext
+from bot_v2.orchestration.coordinators.runtime import (
+    BrokerBootstrapArtifacts,
+    BrokerBootstrapError,
+)
+from bot_v2.orchestration.coordinators.runtime import (
+    RuntimeCoordinator as _RuntimeCoordinator,
+)
 from bot_v2.orchestration.deterministic_broker import DeterministicBroker
 from bot_v2.orchestration.order_reconciler import OrderReconciler
 from bot_v2.orchestration.runtime_settings import RuntimeSettings, load_runtime_settings
@@ -20,327 +24,166 @@ from bot_v2.utilities.telemetry import emit_metric
 if TYPE_CHECKING:  # pragma: no cover - type checking only
     from bot_v2.orchestration.perps_bot import PerpsBot
 
-
 logger = logging.getLogger(__name__)
 
 
-class BrokerBootstrapError(RuntimeError):
-    """Raised when broker initialization fails."""
-
-
-@dataclass
-class BrokerBootstrapArtifacts:
-    broker: object
-    registry_updates: dict[str, Any]
-    event_store: object | None = None
-    products: Sequence[object] = ()
-
-
-class RuntimeCoordinator:
-    """Handles broker/risk bootstrapping and runtime safety toggles."""
+class RuntimeCoordinator(_RuntimeCoordinator):
+    """Compatibility layer for existing PerpsBot runtime coordination."""
 
     def __init__(self, bot: PerpsBot) -> None:
         self._bot = bot
+        context = self._build_context(bot)
+        super().__init__(
+            context,
+            config_controller=getattr(bot, "config_controller", None),
+            strategy_orchestrator=getattr(bot, "strategy_orchestrator", None),
+            execution_coordinator=getattr(bot, "execution_coordinator", None),
+            product_cache=getattr(bot, "_product_map", None),
+        )
 
     # ------------------------------------------------------------------
     def bootstrap(self) -> None:
-        """Initialize broker, risk, strategy, and execution services."""
+        self._refresh_context_from_bot()
+        super().bootstrap()
+        self._sync_bot(self.context)
 
-        self._init_broker()
-        self._init_risk_manager()
-        self._bot.strategy_orchestrator.init_strategy()
-        self._bot.execution_coordinator.init_execution()
+    def _init_broker(self, context: CoordinatorContext | None = None) -> CoordinatorContext | None:  # type: ignore[override]
+        ctx = context or self._refresh_context_from_bot()
+        updated = super()._init_broker(ctx)
+        self.update_context(updated)
+        return updated
 
-    # ------------------------------------------------------------------
-    def _init_broker(self) -> None:
-        bot = self._bot
-        if bot.registry.broker is not None:
-            bot.broker = bot.registry.broker
-            logger.info("Using broker from service registry")
-            return
+    def _init_risk_manager(
+        self, context: CoordinatorContext | None = None
+    ) -> CoordinatorContext | None:  # type: ignore[override]
+        ctx = context or self._refresh_context_from_bot()
+        updated = super()._init_risk_manager(ctx)
+        self.update_context(updated)
+        return updated
 
-        try:
-            if self._should_use_mock_broker():
-                artifacts = self._build_mock_broker()
-            else:
-                artifacts = self._build_real_broker()
-        except Exception as exc:  # pragma: no cover - fatal boot failure
-            logger.error("Failed to initialize broker: %s", exc)
-            raise BrokerBootstrapError("Broker initialization failed") from exc
+    def _validate_broker_environment(self) -> None:  # type: ignore[override]
+        ctx = self._refresh_context_from_bot()
+        super()._validate_broker_environment(ctx)
 
-        self._apply_broker_bootstrap(artifacts)
+    def set_reduce_only_mode(self, enabled: bool, reason: str) -> None:  # type: ignore[override]
+        self._refresh_context_from_bot()
+        super().set_reduce_only_mode(enabled, reason)
+        self._sync_bot(self.context)
 
-    def _should_use_mock_broker(self) -> bool:
-        bot = self._bot
-        paper_env = bool(getattr(bot.config, "perps_paper_trading", False))
-        force_mock = bool(getattr(bot.config, "perps_force_mock", False))
-        is_dev = bot.config.profile == Profile.DEV
-        return paper_env or force_mock or is_dev or bool(getattr(bot.config, "mock_broker", False))
+    def is_reduce_only_mode(self) -> bool:  # type: ignore[override]
+        self._refresh_context_from_bot()
+        return super().is_reduce_only_mode()
 
-    def _build_mock_broker(self) -> BrokerBootstrapArtifacts:
-        broker = DeterministicBroker()
-        logger.info("Using deterministic broker (REST-first marks)")
-        return BrokerBootstrapArtifacts(
-            broker=broker,
-            registry_updates={"broker": broker},
-        )
+    def on_risk_state_change(self, state: RiskRuntimeState) -> None:  # type: ignore[override]
+        self._refresh_context_from_bot()
+        super().on_risk_state_change(state)
+        self._sync_bot(self.context)
 
-    def _build_real_broker(self) -> BrokerBootstrapArtifacts:
-        bot = self._bot
-        self._validate_broker_environment()
-        broker, event_store, market_data, product_catalog = create_brokerage(
-            bot.registry,
-            event_store=bot.event_store,
-            market_data=bot.registry.market_data_service,
-            product_catalog=bot.registry.product_catalog,
-        )
-        if not broker.connect():
-            raise RuntimeError("Failed to connect to broker")
-        products = broker.list_products()
-        logger.info("Connected to broker, found %d products", len(products))
-        return BrokerBootstrapArtifacts(
-            broker=broker,
-            event_store=event_store,
-            registry_updates={
-                "broker": broker,
-                "event_store": event_store,
-                "market_data_service": market_data,
-                "product_catalog": product_catalog,
-            },
-            products=products,
-        )
-
-    def _resolve_settings(self) -> RuntimeSettings:
-        settings = getattr(self._bot.registry, "runtime_settings", None)
-        if isinstance(settings, RuntimeSettings):
-            return settings
-        resolved = load_runtime_settings()
-        self._bot.registry = self._bot.registry.with_updates(runtime_settings=resolved)
-        return resolved
-
-    def _apply_broker_bootstrap(self, artifacts: BrokerBootstrapArtifacts) -> None:
-        bot = self._bot
-        bot.broker = artifacts.broker
-        if artifacts.event_store is not None:
-            bot.event_store = artifacts.event_store
-        bot.registry = bot.registry.with_updates(**artifacts.registry_updates)
-        self._hydrate_product_cache(artifacts.products)
-
-    def _hydrate_product_cache(self, products: Sequence[object]) -> None:
-        if not products:
-            return
-        bot = self._bot
-        for product in products:
-            symbol = getattr(product, "symbol", None)
-            if symbol:
-                bot._product_map[symbol] = product
-
-    def _validate_broker_environment(self) -> None:
-        bot = self._bot
-        settings = self._resolve_settings()
-
-        if self._should_use_mock_broker():
-            logger.info("Paper/mock mode enabled — skipping production env checks")
-            return
-
-        broker = settings.broker_hint or ""
-        if broker != "coinbase":
-            raise RuntimeError("BROKER must be set to 'coinbase' for perps trading")
-
-        if settings.coinbase_sandbox_enabled:
-            raise RuntimeError(
-                "COINBASE_SANDBOX=1 is not supported for live trading. Remove it or enable PERPS_PAPER=1."
-            )
-
-        derivatives_enabled = bool(getattr(bot.config, "derivatives_enabled", False))
-
-        if not derivatives_enabled:
-            for sym in bot.config.symbols or []:
-                if sym.upper().endswith("-PERP"):
-                    raise RuntimeError(
-                        f"Symbol {sym} is perpetual but COINBASE_ENABLE_DERIVATIVES is not enabled."
-                    )
-
-            api_key_present = any(
-                settings.raw_env.get(env) for env in ("COINBASE_API_KEY", "COINBASE_PROD_API_KEY")
-            )
-            api_secret_present = any(
-                settings.raw_env.get(env)
-                for env in ("COINBASE_API_SECRET", "COINBASE_PROD_API_SECRET")
-            )
-            if not (api_key_present and api_secret_present):
-                raise RuntimeError(
-                    "Spot trading requires Coinbase production API key/secret. "
-                    "Set COINBASE_API_KEY/SECRET (or PROD variants)."
-                )
-            return
-
-        api_mode = settings.coinbase_api_mode
-        if api_mode != "advanced":
-            raise RuntimeError(
-                "Perpetuals require Advanced Trade API in production. "
-                "Set COINBASE_API_MODE=advanced and unset COINBASE_SANDBOX, or set PERPS_PAPER=1 for mock mode."
-            )
-
-        raw_env = settings.raw_env
-        cdp_key = raw_env.get("COINBASE_PROD_CDP_API_KEY") or raw_env.get("COINBASE_CDP_API_KEY")
-        cdp_priv = raw_env.get("COINBASE_PROD_CDP_PRIVATE_KEY") or raw_env.get(
-            "COINBASE_CDP_PRIVATE_KEY"
-        )
-        if not (cdp_key and cdp_priv):
-            raise RuntimeError(
-                "Missing CDP JWT credentials. Set COINBASE_PROD_CDP_API_KEY and COINBASE_PROD_CDP_PRIVATE_KEY, "
-                "or enable PERPS_PAPER=1 for mock trading."
-            )
-
-    # ------------------------------------------------------------------
-    def _init_risk_manager(self) -> None:
-        bot = self._bot
-        controller = bot.config_controller
-
-        if bot.registry.risk_manager is not None:
-            bot.risk_manager = bot.registry.risk_manager
-            bot.risk_manager.set_state_listener(self.on_risk_state_change)
-            controller.sync_with_risk_manager(bot.risk_manager)
-            bot.risk_manager.set_reduce_only_mode(controller.reduce_only_mode, reason="config_init")
-            return
-
-        settings = self._resolve_settings()
-        env_risk_config_path = settings.risk_config_path
-        resolved_risk_path = str(env_risk_config_path) if env_risk_config_path else None
-        if not resolved_risk_path and bot.config.profile in {
-            Profile.SPOT,
-            Profile.DEV,
-            Profile.DEMO,
-        }:
-            if DEFAULT_SPOT_RISK_PATH.exists():
-                resolved_risk_path = str(DEFAULT_SPOT_RISK_PATH)
-                logger.info("Loading spot risk profile from %s", resolved_risk_path)
-
-        path_obj: Path | None = Path(resolved_risk_path) if resolved_risk_path else None
-        try:
-            if path_obj and path_obj.exists():
-                risk_config = RiskConfig.from_json(str(path_obj))
-            else:
-                risk_config = RiskConfig.from_env()
-        except Exception:
-            logger.exception("Failed to load risk config; using defaults")
-            risk_config = RiskConfig()
-
-        try:
-            if getattr(bot.config, "max_leverage", None):
-                risk_config.max_leverage = int(bot.config.max_leverage)
-        except Exception as exc:
-            logger.warning("Failed to apply max leverage override: %s", exc, exc_info=True)
-        try:
-            risk_config.reduce_only_mode = bool(bot.config.reduce_only_mode)
-        except Exception as exc:
-            logger.warning(
-                "Failed to sync reduce-only override into risk config: %s", exc, exc_info=True
-            )
-
-        bot.risk_manager = LiveRiskManager(config=risk_config, event_store=bot.event_store)
-        try:
-            if hasattr(bot.broker, "get_position_risk"):
-                bot.risk_manager.set_risk_info_provider(bot.broker.get_position_risk)  # type: ignore[attr-defined]
-        except Exception as exc:
-            logger.warning("Failed to set broker risk info provider: %s", exc, exc_info=True)
-
-        bot.risk_manager.set_state_listener(self.on_risk_state_change)
-        controller.sync_with_risk_manager(bot.risk_manager)
-        bot.risk_manager.set_reduce_only_mode(controller.reduce_only_mode, reason="config_init")
-        bot.registry = bot.registry.with_updates(risk_manager=bot.risk_manager)
-
-    # ------------------------------------------------------------------
-    def set_reduce_only_mode(self, enabled: bool, reason: str) -> None:
-        bot = self._bot
-        controller = bot.config_controller
-        if not controller.set_reduce_only_mode(
-            enabled, reason=reason, risk_manager=bot.risk_manager
-        ):
-            return
-        logger.warning("Reduce-only mode %s (%s)", "enabled" if enabled else "disabled", reason)
-        self._emit_reduce_only_metric(enabled, reason)
-
-    def is_reduce_only_mode(self) -> bool:
-        bot = self._bot
-        controller = bot.config_controller
-        return controller.is_reduce_only_mode(bot.risk_manager)
-
-    # ------------------------------------------------------------------
-    def on_risk_state_change(self, state: RiskRuntimeState) -> None:
-        bot = self._bot
-        controller = bot.config_controller
-        reduce_only = bool(state.reduce_only_mode)
-        if not controller.apply_risk_update(reduce_only):
-            return
-        reason = state.last_reduce_only_reason or "unspecified"
-        logger.warning(
-            "Risk manager toggled reduce-only mode to %s (reason=%s)",
-            "enabled" if reduce_only else "disabled",
-            reason,
-        )
-        self._emit_reduce_only_metric(reduce_only, reason)
-
-    def _emit_reduce_only_metric(self, enabled: bool, reason: str) -> None:
-        bot = self._bot
-        emit_metric(
-            bot.event_store,
-            bot.bot_id,
-            {
-                "event_type": "reduce_only_mode_changed",
-                "enabled": enabled,
-                "reason": reason,
-            },
-            logger=logger,
-        )
-
-    # ------------------------------------------------------------------
-    async def reconcile_state_on_startup(self) -> None:
-        bot = self._bot
-        if bot.config.dry_run or getattr(bot.config, "perps_skip_startup_reconcile", False):
-            logger.info("Skipping startup reconciliation (dry-run or PERPS_SKIP_RECONCILE)")
-            return
-
-        logger.info("Reconciling state with exchange...")
-        try:
-            reconciler = OrderReconciler(
-                broker=bot.broker,
-                orders_store=bot.orders_store,
-                event_store=bot.event_store,
-                bot_id=bot.bot_id,
-            )
-
-            local_open = reconciler.fetch_local_open_orders()
-            exchange_open = await reconciler.fetch_exchange_open_orders()
-
-            logger.info(
-                "Reconciliation snapshot: local_open=%s exchange_open=%s",
-                len(local_open),
-                len(exchange_open),
-            )
-            await reconciler.record_snapshot(local_open, exchange_open)
-
-            diff = reconciler.diff_orders(local_open, exchange_open)
-            await reconciler.reconcile_missing_on_exchange(diff)
-            reconciler.reconcile_missing_locally(diff)
-
+    async def reconcile_state_on_startup(self) -> None:  # type: ignore[override]
+        context = self._refresh_context_from_bot()
+        if context.broker is None:
+            fallback_broker = None
             try:
-                snapshot = await reconciler.snapshot_positions()
-                if snapshot:
-                    bot.runtime_state.last_positions = snapshot
-            except Exception as exc:
-                logger.debug("Failed to snapshot initial positions: %s", exc, exc_info=True)
-
-            logger.info("State reconciliation complete.")
-        except Exception as exc:
-            logger.error("Failed to reconcile state on startup: %s", exc, exc_info=True)
-            try:
-                bot.event_store.append_error(
-                    bot_id=bot.bot_id,
-                    message="startup_reconcile_failed",
-                    context={"error": str(exc)},
-                )
+                fallback_broker = getattr(self._bot, "broker")
             except Exception:
-                logger.exception("Failed to persist startup reconciliation error")
-            self.set_reduce_only_mode(True, reason="startup_reconcile_failed")
+                fallback_broker = None
+            if fallback_broker is not None:
+                context = context.with_updates(broker=fallback_broker)
+                super().update_context(context)
+        await super().reconcile_state_on_startup()
+        self._sync_bot(self.context)
+
+    # ------------------------------------------------------------------
+    def update_context(self, context: CoordinatorContext) -> None:  # type: ignore[override]
+        super().update_context(context)
+        self._sync_bot(context)
+
+    # ------------------------------------------------------------------
+    def _refresh_context_from_bot(self) -> CoordinatorContext:
+        updated = self._build_context(self._bot)
+        super().update_context(updated)
+        return self.context
+
+    def _build_context(self, bot: PerpsBot) -> CoordinatorContext:
+        symbols = tuple(getattr(bot.config, "symbols", None) or ())
+        product_cache = getattr(bot._state, "product_map", None) if hasattr(bot, "_state") else None
+        registry = bot.registry
+
+        def _safe_attr(obj: object, name: str) -> object | None:
+            try:
+                return getattr(obj, name)
+            except Exception:
+                return None
+
+        broker_value = (
+            getattr(registry, "broker", None)
+            or bot.__dict__.get("broker")
+            or _safe_attr(bot, "broker")
+        )
+        risk_value = (
+            getattr(registry, "risk_manager", None)
+            or bot.__dict__.get("risk_manager")
+            or _safe_attr(bot, "risk_manager")
+        )
+        return CoordinatorContext(
+            config=bot.config,
+            registry=registry,
+            event_store=getattr(bot, "event_store", None),
+            orders_store=getattr(bot, "orders_store", None),
+            broker=broker_value,
+            risk_manager=risk_value,
+            symbols=symbols,
+            bot_id=getattr(bot, "bot_id", "perps_bot"),
+            runtime_state=getattr(bot, "runtime_state", None),
+            config_controller=getattr(bot, "config_controller", None),
+            strategy_orchestrator=getattr(bot, "strategy_orchestrator", None),
+            execution_coordinator=getattr(bot, "execution_coordinator", None),
+            product_cache=product_cache,
+        )
+
+    def _sync_bot(self, context: CoordinatorContext) -> None:
+        bot = self._bot
+        bot.registry = context.registry
+        if context.event_store is not None:
+            bot.event_store = context.event_store
+        if context.orders_store is not None:
+            bot.orders_store = context.orders_store
+        bot.broker = context.broker or bot.registry.broker
+        bot.risk_manager = context.risk_manager or bot.registry.risk_manager
+        if context.product_cache is not None:
+            if hasattr(bot, "_state") and hasattr(bot._state, "product_map"):
+                bot._state.product_map = context.product_cache
+            runtime_state = getattr(bot, "runtime_state", None)
+            if runtime_state is not None and hasattr(runtime_state, "product_map"):
+                runtime_state.product_map = context.product_cache
+
+    # ------------------------------------------------------------------
+    @property
+    def _deterministic_broker_cls(self):  # type: ignore[override]
+        return DeterministicBroker
+
+    @property
+    def _create_brokerage(self):  # type: ignore[override]
+        return create_brokerage
+
+    @property
+    def _risk_config_cls(self):  # type: ignore[override]
+        return RiskConfig
+
+    @property
+    def _risk_manager_cls(self):  # type: ignore[override]
+        return LiveRiskManager
+
+    @property
+    def _order_reconciler_cls(self):  # type: ignore[override]
+        return OrderReconciler
+
+
+__all__ = [
+    "BrokerBootstrapArtifacts",
+    "BrokerBootstrapError",
+    "RuntimeCoordinator",
+    "RuntimeSettings",
+    "load_runtime_settings",
+    "emit_metric",
+]

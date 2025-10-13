@@ -34,16 +34,9 @@ def make_bot(*, dry_run: bool, telemetry_enabled: bool) -> SimpleNamespace:
         reconcile_state_on_startup=AsyncMock(),
     )
 
-    telemetry_coordinator = SimpleNamespace(
-        run_account_telemetry=probes["account"].run,
-        stop_streaming_background=MagicMock(),
-        bootstrap=MagicMock(),
-    )
+    telemetry_coordinator = SimpleNamespace(run_account_telemetry=probes["account"].run)
 
-    execution_coordinator = SimpleNamespace(
-        run_runtime_guards=probes["guards"].run,
-        run_order_reconciliation=probes["orders"].run,
-    )
+    execution_coordinator = SimpleNamespace()
 
     system_monitor = SimpleNamespace(
         run_position_reconciliation=probes["positions"].run,
@@ -71,6 +64,35 @@ def make_bot(*, dry_run: bool, telemetry_enabled: bool) -> SimpleNamespace:
         probes=probes,
     )
 
+    class RegistryStub:
+        def __init__(self) -> None:
+            self.start_calls = 0
+            self.shutdown_calls = 0
+            self.tasks: list[asyncio.Task[Any]] = []
+
+        def initialize_all(self) -> SimpleNamespace:
+            return SimpleNamespace(
+                registry=None,
+                broker=None,
+                risk_manager=None,
+            )
+
+        async def start_all_background_tasks(self) -> list[asyncio.Task[Any]]:
+            self.start_calls += 1
+            tasks = [
+                asyncio.create_task(probes["guards"].run()),
+                asyncio.create_task(probes["orders"].run()),
+                asyncio.create_task(probes["account"].run()),
+            ]
+            self.tasks.extend(tasks)
+            return tasks
+
+        async def shutdown_all(self) -> None:
+            self.shutdown_calls += 1
+
+    bot._coordinator_registry = RegistryStub()
+    bot._coordinator_context = SimpleNamespace()
+
     bot.run_cycle_calls = 0
 
     async def run_cycle() -> None:
@@ -93,11 +115,12 @@ async def test_run_single_cycle_dry_run_skips_background_tasks() -> None:
 
     assert bot.run_cycle_calls == 1
     assert bot.runtime_coordinator.reconcile_state_on_startup.await_count == 0
+    assert bot._coordinator_registry.start_calls == 0
     assert not bot.probes["guards"].started.is_set()
     assert not bot.probes["orders"].started.is_set()
     assert not bot.probes["positions"].started.is_set()
     assert not bot.probes["account"].started.is_set()
-    bot.telemetry_coordinator.stop_streaming_background.assert_called_once()
+    assert bot._coordinator_registry.shutdown_calls == 1
 
 
 @pytest.mark.asyncio
@@ -108,9 +131,10 @@ async def test_run_starts_and_cancels_background_tasks() -> None:
     await manager.run(single_cycle=False)
 
     bot.runtime_coordinator.reconcile_state_on_startup.assert_awaited()
+    assert bot._coordinator_registry.start_calls == 1
     for name in ("guards", "orders", "positions", "account"):
         assert bot.probes[name].started.is_set()
         assert bot.probes[name].cancelled.is_set()
     assert bot.system_monitor.write_health_status.call_count >= 1
     assert bot.system_monitor.check_config_updates.call_count >= 1
-    bot.telemetry_coordinator.stop_streaming_background.assert_called_once()
+    assert bot._coordinator_registry.shutdown_calls == 1

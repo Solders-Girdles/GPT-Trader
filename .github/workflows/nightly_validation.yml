@@ -32,7 +32,7 @@ jobs:
 
       - name: Run Coinbase websocket regression test
         run: |
-          poetry run pytest tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_websocket.py -k SequenceGuard -v
+          poetry run pytest tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_websocket.py -k sequence_guard -v
 
       - name: Quick WebSocket smoke
         run: |

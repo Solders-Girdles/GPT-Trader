@@ -146,7 +146,7 @@ jobs:
           RUNNER_TEMP: ${{ runner.temp }}
         run: |
           set -euo pipefail
-          export PYTHONPATH="${GITHUB_WORKSPACE}${PYTHONPATH:+:$PYTHONPATH}"
+          export PYTHONPATH="${GITHUB_WORKSPACE}/src:${GITHUB_WORKSPACE}${PYTHONPATH:+:$PYTHONPATH}"
 
           export EVENT_STORE_ROOT="$RUNNER_TEMP/event_store_unit"
           mkdir -p "$EVENT_STORE_ROOT"

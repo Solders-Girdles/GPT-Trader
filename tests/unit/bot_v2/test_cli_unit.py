@@ -116,6 +116,12 @@ def test_orders_preview_invokes_broker_preview(monkeypatch):
             captured["payload"] = payload
             return {"status": "ok"}
 
+        def edit_order_preview(self, order_id, **payload):
+            return {"order_id": order_id, "payload": payload}
+
+        def edit_order(self, order_id, preview_id, **payload):
+            return {"order_id": order_id, "preview_id": preview_id, "payload": payload}
+
     class DummyBot:
         def __init__(self):
             self.broker = DummyBroker()

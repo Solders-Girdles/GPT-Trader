@@ -41,6 +41,20 @@ DEFAULT_SPOT_SYMBOLS = [f"{base}-USD" for base in TOP_VOLUME_BASES]
 DEFAULT_SPOT_RISK_PATH = Path(__file__).resolve().parents[4] / "config" / "risk" / "spot_top10.json"
 
 
+class ConfigState:
+    """Holds runtime state for BotConfig instances.
+
+    This is intentionally not a Pydantic model to avoid validation overhead
+    for frequently accessed metadata.
+    """
+
+    def __init__(self) -> None:
+        self.runtime_settings: RuntimeSettings | None = None
+        self.profile_value: str | None = None
+        self.overrides_snapshot: dict[str, Any] = {}
+        self.config_snapshot: dict[str, Any] | None = None
+
+
 class BotConfig(BaseModel):
     """Bot configuration backed by Pydantic validation."""
 
@@ -73,6 +87,7 @@ class BotConfig(BaseModel):
     perps_position_fraction: float | None = None
     perps_skip_startup_reconcile: bool = False
     metadata: dict[str, Any] = Field(default_factory=dict, repr=False)
+    state: ConfigState = Field(default_factory=ConfigState, repr=False, exclude=True)
 
     model_config = ConfigDict(
         arbitrary_types_allowed=True,
@@ -305,9 +320,17 @@ class BotConfig(BaseModel):
     def _apply_defaults_and_normalization(self) -> BotConfig:
         metadata = dict(self.metadata) if isinstance(self.metadata, dict) else {}
 
-        settings = metadata.get("_runtime_settings")
+        # Initialize state if needed
+        if not isinstance(self.state, ConfigState):
+            object.__setattr__(self, "state", ConfigState())
+
+        # Load runtime settings from state, metadata fallback, or fresh load
+        settings = self.state.runtime_settings
         if not isinstance(settings, RuntimeSettings):
-            settings = load_runtime_settings()
+            settings = metadata.get("_runtime_settings")
+            if not isinstance(settings, RuntimeSettings):
+                settings = load_runtime_settings()
+            self.state.runtime_settings = settings
             metadata["_runtime_settings"] = settings
             object.__setattr__(self, "metadata", metadata)
 
@@ -443,6 +466,28 @@ class BotConfig(BaseModel):
             settings=settings,
         )
         return manager.build()
+
+    def with_overrides(self, **overrides: Any) -> BotConfig:
+        """Create a new BotConfig instance with the specified overrides applied.
+
+        This method creates a new config instance rather than mutating the existing one,
+        supporting immutable configuration patterns.
+        """
+        current_data = self.model_dump(exclude={"metadata", "state"})
+        current_data.update(overrides)
+
+        new_config = self.__class__(
+            metadata=dict(self.metadata),
+            **current_data,
+        )
+
+        # Copy state from current instance
+        new_config.state.runtime_settings = self.state.runtime_settings
+        new_config.state.profile_value = self.state.profile_value
+        new_config.state.overrides_snapshot = dict(self.state.overrides_snapshot)
+        new_config.state.config_snapshot = self.state.config_snapshot
+
+        return new_config
 
 
 __all__ = [

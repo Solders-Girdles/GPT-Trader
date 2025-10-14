@@ -17,7 +17,7 @@ from bot_v2.orchestration.strategy_orchestrator import (
     SymbolProcessingContext,
 )
 from bot_v2.orchestration.configuration import Profile
-from bot_v2.features.brokerages.core.interfaces import Balance, Position
+from bot_v2.features.brokerages.core.interfaces import Balance, Position, Product, MarketType
 from bot_v2.features.live_trade.strategies.perps_baseline import (
     Action,
     Decision,
@@ -472,7 +472,21 @@ class TestEvaluateStrategy:
         marks = [Decimal("50000"), Decimal("51000")]
         position_state = {"quantity": Decimal("0.5"), "side": "long"}
         equity = Decimal("10000")
-        product = Mock()
+        product = Product(
+            symbol="BTC-PERP",
+            base_asset="BTC",
+            quote_asset="USD",
+            market_type=MarketType.PERPETUAL,
+            min_size=Decimal("0.001"),
+            step_size=Decimal("0.001"),
+            min_notional=Decimal("1"),
+            price_increment=Decimal("0.01"),
+            leverage_max=5,
+            expiry=None,
+            contract_size=Decimal("1"),
+            funding_rate=Decimal("0"),
+            next_funding_time=None,
+        )
         mock_bot.get_product = Mock(return_value=product)
 
         result = orchestrator._evaluate_strategy(

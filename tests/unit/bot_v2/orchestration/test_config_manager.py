@@ -14,8 +14,8 @@ def test_config_manager_build_and_snapshot(monkeypatch):
     config = manager.build()
 
     assert isinstance(config, BotConfig)
-    assert config.metadata["profile"] == Profile.DEV.value
-    assert "config_snapshot" in config.metadata
+    assert config.state.profile_value == Profile.DEV.value
+    assert config.state.config_snapshot is not None
     assert not manager.has_changes()
 
     monkeypatch.setenv("ORDER_PREVIEW_ENABLED", "1")

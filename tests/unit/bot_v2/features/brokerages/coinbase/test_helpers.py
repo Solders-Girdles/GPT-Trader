@@ -11,6 +11,7 @@ import pytest
 from bot_v2.features.brokerages.coinbase.adapter import CoinbaseBrokerage
 from bot_v2.features.brokerages.coinbase.client import CoinbaseClient
 from bot_v2.features.brokerages.coinbase.models import APIConfig
+from bot_v2.features.brokerages.core.interfaces import InvalidRequestError
 
 
 def make_client(api_mode: str = "advanced", auth=None) -> CoinbaseClient:
@@ -18,7 +19,9 @@ def make_client(api_mode: str = "advanced", auth=None) -> CoinbaseClient:
     return CoinbaseClient(base_url="https://api.coinbase.com", auth=auth, api_mode=api_mode)
 
 
-def make_adapter(api_mode: str = "advanced") -> CoinbaseBrokerage:
+def make_adapter(
+    api_mode: str = "advanced", *, enable_derivatives: bool = True
+) -> CoinbaseBrokerage:
     """Construct a brokerage adapter with default credentials."""
     config = APIConfig(
         api_key="k",
@@ -27,6 +30,7 @@ def make_adapter(api_mode: str = "advanced") -> CoinbaseBrokerage:
         base_url="https://api.coinbase.com",
         api_mode=api_mode,
         sandbox=False,
+        enable_derivatives=enable_derivatives,
     )
     return CoinbaseBrokerage(config)
 
@@ -438,8 +442,14 @@ CLIENT_ENDPOINT_CASES = [
             "id": "list_orders_batch",
             "method": "list_orders_batch",
             "args": (["order1", "order2", "order3"],),
+            "kwargs": {"cursor": "cursor-1", "limit": 50},
             "expected_method": "GET",
             "expected_path": "/api/v3/brokerage/orders/historical/batch",
+            "expected_query": {
+                "order_ids": ["order1", "order2", "order3"],
+                "cursor": ["cursor-1"],
+                "limit": ["50"],
+            },
             "response": {"orders": []},
             "expected_result": {"orders": []},
         },
@@ -539,6 +549,8 @@ CLIENT_ENDPOINT_CASES = [
 class StubBroker:
     def __init__(self):
         self.calls = []
+        self.intx_supported = True
+        self.intx_resolved_uuid = "pf-1"
 
     def get_key_permissions(self):
         self.calls.append("key_permissions")
@@ -563,6 +575,66 @@ class StubBroker:
     def list_portfolios(self):
         self.calls.append("portfolios")
         return [{"uuid": "pf-1"}]
+
+    def supports_intx(self):
+        self.calls.append("supports_intx")
+        return self.intx_supported
+
+    def resolve_intx_portfolio(self, preferred_uuid=None, refresh=False):
+        self.calls.append(("resolve_intx", preferred_uuid, refresh))
+        if not self.intx_supported:
+            return None
+        return self.intx_resolved_uuid if preferred_uuid is None else preferred_uuid
+
+    def get_intx_balances(self, portfolio_uuid=None):
+        self.calls.append(("intx_balances", portfolio_uuid))
+        if not self.intx_supported or portfolio_uuid is None:
+            raise InvalidRequestError("INTX unsupported")
+        return [{"asset": "USD", "available": "100.00"}]
+
+    def get_intx_portfolio(self, portfolio_uuid=None):
+        self.calls.append(("intx_portfolio", portfolio_uuid))
+        if not self.intx_supported or portfolio_uuid is None:
+            return {}
+        return {"uuid": portfolio_uuid, "nav": "500.00"}
+
+    def list_intx_positions(self, portfolio_uuid=None):
+        self.calls.append(("intx_positions", portfolio_uuid))
+        if not self.intx_supported or portfolio_uuid is None:
+            return []
+        return [{"symbol": "BTC-USD", "quantity": "1.0"}]
+
+    def get_intx_position(self, portfolio_uuid, symbol):
+        self.calls.append(("intx_position", portfolio_uuid, symbol))
+        if not self.intx_supported or portfolio_uuid is None:
+            return {}
+        return {"symbol": symbol, "quantity": "0.5"}
+
+    def get_intx_collateral(self):
+        self.calls.append("intx_collateral")
+        if not self.intx_supported:
+            return {}
+        return {"collateral_value": "750.00"}
+
+    def get_cfm_balance_summary(self):
+        self.calls.append("cfm_balance_summary")
+        return {"portfolio_value": "250.50", "available_margin": "125.25"}
+
+    def list_cfm_sweeps(self):
+        self.calls.append("cfm_sweeps")
+        return [{"sweep_id": "sweep-1", "amount": "10.5"}]
+
+    def get_cfm_sweeps_schedule(self):
+        self.calls.append("cfm_sweeps_schedule")
+        return {"windows": ["00:00Z", "12:00Z"]}
+
+    def get_cfm_margin_window(self):
+        self.calls.append("cfm_margin_window")
+        return {"margin_window": "INTRADAY_STANDARD"}
+
+    def update_cfm_margin_window(self, margin_window, *, effective_time=None, **kwargs):
+        self.calls.append(("cfm_margin_update", margin_window, effective_time, kwargs))
+        return {"status": "accepted", "margin_window": margin_window}
 
     def create_convert_quote(self, payload):
         self.calls.append(("convert_quote", payload))

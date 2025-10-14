@@ -9,9 +9,11 @@ from decimal import Decimal
 import asyncio
 import threading
 import time as _time
+from unittest.mock import Mock
 
 import pytest
 
+from bot_v2.features.brokerages.coinbase.adapter import CoinbaseBrokerage
 from bot_v2.orchestration.configuration import BotConfig, Profile
 from bot_v2.orchestration.perps_bot import PerpsBot
 from bot_v2.orchestration.perps_bot_builder import create_perps_bot
@@ -100,7 +102,10 @@ def test_collect_account_snapshot_uses_broker(monkeypatch, tmp_path):
     monkeypatch.setattr(PerpsBot, "_start_streaming_background", lambda self: None)
 
     config = BotConfig(profile=Profile.DEV, symbols=["BTC-PERP"], update_interval=1)
-    bot = create_perps_bot(config)
+    broker = Mock(spec=CoinbaseBrokerage)
+    broker.__class__ = CoinbaseBrokerage
+    registry = ServiceRegistry(config=config, broker=broker)
+    bot = create_perps_bot(config, registry=registry)
 
     snapshot_data = {
         "key_permissions": {"can_trade": True},
@@ -129,7 +134,10 @@ async def test_run_account_telemetry_emits_metrics(monkeypatch, tmp_path):
     monkeypatch.setattr(PerpsBot, "_start_streaming_background", lambda self: None)
 
     config = BotConfig(profile=Profile.DEV, symbols=["BTC-PERP"], update_interval=1)
-    bot = create_perps_bot(config)
+    broker = Mock(spec=CoinbaseBrokerage)
+    broker.__class__ = CoinbaseBrokerage
+    registry = ServiceRegistry(config=config, broker=broker)
+    bot = create_perps_bot(config, registry=registry)
 
     monkeypatch.setattr("bot_v2.orchestration.account_telemetry.RUNTIME_DATA_DIR", tmp_path)
 

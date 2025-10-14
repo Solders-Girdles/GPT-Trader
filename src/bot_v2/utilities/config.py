@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import logging
-from collections.abc import Iterable, Mapping
-from dataclasses import dataclass, fields
+from collections.abc import Mapping
+from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
 from typing import TYPE_CHECKING, Any
 
@@ -18,44 +18,15 @@ if TYPE_CHECKING:  # pragma: no cover - type checking only
     from bot_v2.orchestration.configuration import BotConfig
 
 
-def _as_sequence(value: Iterable[str] | None) -> tuple[str, ...]:
-    if not value:
-        return ()
-    return tuple(str(item) for item in value)
-
-
 @dataclass(frozen=True)
 class ConfigBaselinePayload:
     """Normalized payload describing the tracked configuration baseline."""
 
-    profile: Any
-    dry_run: bool
-    symbols: tuple[str, ...]
-    derivatives_enabled: bool
-    update_interval: Any
-    short_ma: Any
-    long_ma: Any
-    target_leverage: Any
-    trailing_stop_pct: Any
-    enable_shorts: bool
-    max_position_size: Any
-    max_leverage: Any
-    reduce_only_mode: bool
-    mock_broker: bool
-    mock_fills: bool
-    enable_order_preview: bool
-    account_telemetry_interval: Any
-    trading_window_start: Any
-    trading_window_end: Any
-    trading_days: tuple[str, ...]
-    daily_loss_limit: Any
-    time_in_force: Any
-    perps_enable_streaming: bool
-    perps_stream_level: Any
-    perps_paper_trading: bool
-    perps_force_mock: bool
-    perps_position_fraction: Any
-    perps_skip_startup_reconcile: bool
+    data: dict[str, Any]
+    fields: tuple[str, ...]
+
+    EXCLUDE_FIELDS = frozenset({"metadata"})
+    INCLUDE_FIELDS: frozenset[str] | None = None
 
     @classmethod
     def from_config(
@@ -66,66 +37,58 @@ class ConfigBaselinePayload:
     ) -> ConfigBaselinePayload:
         """Build payload from the runtime bot configuration."""
 
-        return cls(
-            profile=getattr(config, "profile", None),
-            dry_run=bool(getattr(config, "dry_run", False)),
-            symbols=_as_sequence(getattr(config, "symbols", None)),
-            derivatives_enabled=bool(derivatives_enabled),
-            update_interval=getattr(config, "update_interval", None),
-            short_ma=getattr(config, "short_ma", None),
-            long_ma=getattr(config, "long_ma", None),
-            target_leverage=getattr(config, "target_leverage", None),
-            trailing_stop_pct=getattr(config, "trailing_stop_pct", None),
-            enable_shorts=bool(getattr(config, "enable_shorts", False)),
-            max_position_size=getattr(config, "max_position_size", None),
-            max_leverage=getattr(config, "max_leverage", None),
-            reduce_only_mode=bool(getattr(config, "reduce_only_mode", False)),
-            mock_broker=bool(getattr(config, "mock_broker", False)),
-            mock_fills=bool(getattr(config, "mock_fills", False)),
-            enable_order_preview=bool(getattr(config, "enable_order_preview", False)),
-            account_telemetry_interval=getattr(config, "account_telemetry_interval", None),
-            trading_window_start=getattr(config, "trading_window_start", None),
-            trading_window_end=getattr(config, "trading_window_end", None),
-            trading_days=_as_sequence(getattr(config, "trading_days", None)),
-            daily_loss_limit=getattr(config, "daily_loss_limit", None),
-            time_in_force=getattr(config, "time_in_force", None),
-            perps_enable_streaming=bool(getattr(config, "perps_enable_streaming", False)),
-            perps_stream_level=getattr(config, "perps_stream_level", None),
-            perps_paper_trading=bool(getattr(config, "perps_paper_trading", False)),
-            perps_force_mock=bool(getattr(config, "perps_force_mock", False)),
-            perps_position_fraction=getattr(config, "perps_position_fraction", None),
-            perps_skip_startup_reconcile=bool(
-                getattr(config, "perps_skip_startup_reconcile", False)
-            ),
-        )
+        payload = config.model_dump(mode="python")
+        payload["derivatives_enabled"] = bool(derivatives_enabled)
 
-    @classmethod
-    def tracked_fields(cls) -> tuple[str, ...]:
-        """Return the ordered field names tracked for drift detection."""
-        return tuple(field.name for field in fields(cls))
+        include = cls.INCLUDE_FIELDS
+        if include is None:
+            ordered_keys = [key for key in payload if key not in cls.EXCLUDE_FIELDS]
+        else:
+            ordered_keys = [
+                key for key in include if key in payload and key not in cls.EXCLUDE_FIELDS
+            ]
+
+        normalized: dict[str, Any] = {
+            key: cls._normalize_value(payload.get(key)) for key in ordered_keys
+        }
+
+        return cls(data=normalized, fields=tuple(ordered_keys))
 
     def to_dict(self) -> dict[str, Any]:
         """Convert payload to a dictionary suitable for baseline snapshots."""
 
-        def _normalize(value: Any) -> Any:
-            if isinstance(value, tuple):
-                return list(value)
-            return value
-
-        return {field.name: _normalize(getattr(self, field.name)) for field in fields(self)}
+        return {key: self._present_value(value) for key, value in self.data.items()}
 
     def diff(self, other: ConfigBaselinePayload) -> dict[str, Any]:
         """Compute field-level differences between payloads."""
         diff: dict[str, Any] = {}
-        for field in fields(self):
-            left = getattr(self, field.name)
-            right = getattr(other, field.name)
+        ordered_keys = dict.fromkeys(self.fields)
+        for key in other.fields:
+            ordered_keys.setdefault(key, None)
+
+        for key in ordered_keys:
+            left = self.data.get(key)
+            right = other.data.get(key)
             if left != right:
-                diff[field.name] = {
-                    "current": list(left) if isinstance(left, tuple) else left,
-                    "new": list(right) if isinstance(right, tuple) else right,
+                diff[key] = {
+                    "current": self._present_value(left),
+                    "new": self._present_value(right),
                 }
         return diff
+
+    @staticmethod
+    def _normalize_value(value: Any) -> Any:
+        if isinstance(value, list):
+            return tuple(value)
+        if isinstance(value, tuple):
+            return tuple(value)
+        return value
+
+    @staticmethod
+    def _present_value(value: Any) -> Any:
+        if isinstance(value, tuple):
+            return list(value)
+        return value
 
 
 def parse_slippage_multipliers(raw_value: str | None) -> dict[str, Decimal]:

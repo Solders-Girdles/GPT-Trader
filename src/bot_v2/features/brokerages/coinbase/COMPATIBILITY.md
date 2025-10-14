@@ -57,6 +57,8 @@ These endpoints are **not available** in exchange mode and will raise `InvalidRe
 - `intx_position()` - Specific position
 - `intx_multi_asset_collateral()` - Multi-asset collateral
 
+> **Note:** INTX endpoints require Advanced Trade mode **and** institutional entitlements on the API key. When unavailable, read methods return empty payloads and `intx_allocate()` raises `InvalidRequestError`.
+
 ### CFM/Futures (Advanced Only)
 - `cfm_balance_summary()` - CFM balance summary
 - `cfm_positions()` - CFM positions
@@ -65,6 +67,8 @@ These endpoints are **not available** in exchange mode and will raise `InvalidRe
 - `cfm_sweeps_schedule()` - Sweep schedule
 - `cfm_intraday_current_margin_window()` - Margin window
 - `cfm_intraday_margin_setting()` - Margin settings
+
+> **Note:** All CFM endpoints require Advanced Trade mode **and** derivatives enablement on the API key. In Exchange mode or when derivatives are disabled, the client raises `InvalidRequestError`.
 
 ## WebSocket Channels
 

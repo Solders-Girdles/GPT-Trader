@@ -8,12 +8,17 @@ from collections.abc import Iterable
 from bot_v2.orchestration.bootstrap import build_bot
 from bot_v2.orchestration.configuration import BotConfig
 from bot_v2.orchestration.perps_bot import PerpsBot
-from bot_v2.orchestration.runtime_settings import RuntimeSettings, load_runtime_settings
+from bot_v2.orchestration.runtime_settings import (
+    DEFAULT_RUNTIME_SETTINGS_PROVIDER,
+    RuntimeSettings,
+    RuntimeSettingsProvider,
+)
 
 DEFAULT_SKIP_KEYS = {"profile", "command", "handler"}
 ALIAS_KEYS = {"interval": "update_interval"}
 
 OVERRIDE_SETTINGS: RuntimeSettings | None = None
+SETTINGS_PROVIDER: RuntimeSettingsProvider = DEFAULT_RUNTIME_SETTINGS_PROVIDER
 
 
 def _resolve_settings(settings: RuntimeSettings | None) -> RuntimeSettings:
@@ -21,7 +26,7 @@ def _resolve_settings(settings: RuntimeSettings | None) -> RuntimeSettings:
         return settings
     if OVERRIDE_SETTINGS is not None:
         return OVERRIDE_SETTINGS
-    return load_runtime_settings()
+    return SETTINGS_PROVIDER.get()
 
 
 def build_config_from_args(
@@ -66,5 +71,5 @@ def build_config_from_args(
 
 
 def instantiate_bot(config: BotConfig) -> PerpsBot:
-    bot, _registry = build_bot(config)
+    bot, _registry = build_bot(config, settings_provider=SETTINGS_PROVIDER)
     return bot

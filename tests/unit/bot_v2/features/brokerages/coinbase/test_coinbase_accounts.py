@@ -6,6 +6,7 @@ import json
 from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import Any
+from unittest.mock import Mock
 from urllib.parse import parse_qs, urlparse
 
 import pytest
@@ -14,7 +15,7 @@ import bot_v2.features.brokerages.coinbase.client as client_mod
 from bot_v2.features.brokerages.coinbase.account_manager import CoinbaseAccountManager
 from bot_v2.features.brokerages.coinbase.adapter import CoinbaseBrokerage
 from bot_v2.features.brokerages.coinbase.models import APIConfig
-from bot_v2.features.brokerages.core.interfaces import MarketType, Product
+from bot_v2.features.brokerages.core.interfaces import InvalidRequestError, MarketType, Product
 
 from tests.unit.bot_v2.features.brokerages.coinbase.test_helpers import (
     ACCOUNT_ENDPOINT_CASES,
@@ -168,6 +169,108 @@ class TestCoinbaseAccounts:
         assert positions[0].symbol == "BTC-USD-PERP" and positions[0].quantity == Decimal("1.5")
         assert positions[1].symbol == "ETH-USD-PERP" and positions[1].quantity == Decimal("2")
 
+    def test_adapter_cfm_telemetry_delegates_to_rest_service(self) -> None:
+        adapter = make_adapter()
+        adapter.rest_service.get_cfm_balance_summary = Mock(
+            return_value={"portfolio_value": Decimal("100.5")}
+        )
+        adapter.rest_service.list_cfm_sweeps = Mock(return_value=[{"amount": Decimal("5.25")}])
+        adapter.rest_service.get_cfm_sweeps_schedule = Mock(return_value={"windows": ["08:00Z"]})
+        adapter.rest_service.get_cfm_margin_window = Mock(return_value={"margin_window": "TEST"})
+        adapter.rest_service.update_cfm_margin_window = Mock(return_value={"status": "ok"})
+
+        summary = adapter.get_cfm_balance_summary()
+        sweeps = adapter.list_cfm_sweeps()
+        schedule = adapter.get_cfm_sweeps_schedule()
+        margin = adapter.get_cfm_margin_window()
+        update = adapter.update_cfm_margin_window("TEST")
+
+        assert summary["portfolio_value"] == Decimal("100.5")
+        assert sweeps[0]["amount"] == Decimal("5.25")
+        assert schedule["windows"] == ["08:00Z"]
+        assert margin["margin_window"] == "TEST"
+        assert update["status"] == "ok"
+        adapter.rest_service.get_cfm_balance_summary.assert_called_once()
+        adapter.rest_service.list_cfm_sweeps.assert_called_once()
+        adapter.rest_service.get_cfm_sweeps_schedule.assert_called_once()
+        adapter.rest_service.get_cfm_margin_window.assert_called_once()
+        adapter.rest_service.update_cfm_margin_window.assert_called_once_with(
+            "TEST",
+            effective_time=None,
+            extra_payload=None,
+        )
+
+    def test_adapter_cfm_telemetry_respects_derivatives_gating(self) -> None:
+        adapter = make_adapter(enable_derivatives=False)
+        adapter.client.cfm_balance_summary = Mock(side_effect=AssertionError("should not call"))
+        adapter.client.cfm_sweeps = Mock(side_effect=AssertionError("should not call"))
+        adapter.client.cfm_sweeps_schedule = Mock(side_effect=AssertionError("should not call"))
+        adapter.client.cfm_intraday_current_margin_window = Mock(
+            side_effect=AssertionError("should not call")
+        )
+
+        summary = adapter.get_cfm_balance_summary()
+        sweeps = adapter.list_cfm_sweeps()
+        schedule = adapter.get_cfm_sweeps_schedule()
+        margin = adapter.get_cfm_margin_window()
+
+        assert summary == {}
+        assert sweeps == []
+        assert schedule == {}
+        assert margin == {}
+
+        with pytest.raises(InvalidRequestError):
+            adapter.update_cfm_margin_window("TEST")
+
+    def test_adapter_intx_methods_delegate_to_rest_service(self) -> None:
+        adapter = make_adapter()
+        adapter.rest_service.intx_allocate = Mock(return_value={"status": "accepted"})
+        adapter.rest_service.get_intx_balances = Mock(return_value=[{"asset": "USD"}])
+        adapter.rest_service.get_intx_portfolio = Mock(return_value={"uuid": "pf-1"})
+        adapter.rest_service.list_intx_positions = Mock(return_value=[{"symbol": "BTC"}])
+        adapter.rest_service.get_intx_position = Mock(return_value={"symbol": "ETH"})
+        adapter.rest_service.get_intx_multi_asset_collateral = Mock(
+            return_value={"ratio": Decimal("0.5")}
+        )
+
+        allocation = adapter.intx_allocate({"amount": "10"})
+        balances = adapter.get_intx_balances("pf-1")
+        portfolio = adapter.get_intx_portfolio("pf-1")
+        positions = adapter.list_intx_positions("pf-1")
+        position = adapter.get_intx_position("pf-1", "ETH")
+        collateral = adapter.get_intx_multi_asset_collateral()
+
+        assert allocation["status"] == "accepted"
+        assert balances[0]["asset"] == "USD"
+        assert portfolio["uuid"] == "pf-1"
+        assert positions[0]["symbol"] == "BTC"
+        assert position["symbol"] == "ETH"
+        assert collateral["ratio"] == Decimal("0.5")
+        adapter.rest_service.intx_allocate.assert_called_once()
+        adapter.rest_service.get_intx_balances.assert_called_once_with("pf-1")
+        adapter.rest_service.get_intx_portfolio.assert_called_once_with("pf-1")
+        adapter.rest_service.list_intx_positions.assert_called_once_with("pf-1")
+        adapter.rest_service.get_intx_position.assert_called_once_with("pf-1", "ETH")
+        adapter.rest_service.get_intx_multi_asset_collateral.assert_called_once()
+
+    def test_adapter_intx_methods_respect_intx_support(self) -> None:
+        adapter = make_adapter(api_mode="exchange")
+
+        balances = adapter.get_intx_balances("pf-1")
+        portfolio = adapter.get_intx_portfolio("pf-1")
+        positions = adapter.list_intx_positions("pf-1")
+        position = adapter.get_intx_position("pf-1", "BTC")
+        collateral = adapter.get_intx_multi_asset_collateral()
+
+        assert balances == []
+        assert portfolio == {}
+        assert positions == []
+        assert position == {}
+        assert collateral == {}
+
+        with pytest.raises(InvalidRequestError):
+            adapter.intx_allocate({"amount": "5"})
+
     def test_account_manager_snapshot_collects_all_sections(self) -> None:
         broker = StubBroker()
         store = StubEventStore()
@@ -181,9 +284,58 @@ class TestCoinbaseAccounts:
         assert snapshot["transaction_summary"]["total_volume"] == "12345"
         assert snapshot["payment_methods"][0]["id"] == "pm-1"
         assert snapshot["portfolios"][0]["uuid"] == "pf-1"
+        assert snapshot["cfm_balance_summary"]["portfolio_value"] == "250.50"
+        assert snapshot["cfm_sweeps"][0]["sweep_id"] == "sweep-1"
+        assert snapshot["cfm_sweeps_schedule"]["windows"][0] == "00:00Z"
+        assert snapshot["cfm_margin_window"]["margin_window"] == "INTRADAY_STANDARD"
+        assert snapshot["intx_available"] is True
+        assert snapshot["intx_portfolio_uuid"] == "pf-1"
+        assert snapshot["intx_balances"][0]["asset"] == "USD"
+        assert snapshot["intx_positions"][0]["symbol"] == "BTC-USD"
+        assert snapshot["intx_collateral"]["collateral_value"] == "750.00"
         assert any(
             metric[1].get("event_type") == "account_manager_snapshot" for metric in store.metrics
         )
+
+    def test_account_manager_intx_unavailable_marks_reason(self) -> None:
+        broker = StubBroker()
+        broker.intx_supported = False
+        store = StubEventStore()
+        manager = CoinbaseAccountManager(broker, event_store=store)
+
+        snapshot = manager.snapshot()
+
+        assert snapshot["intx_available"] is False
+        assert snapshot["intx_unavailable_reason"] in {
+            "intx_not_supported",
+            "intx_portfolio_not_found",
+        }
+        assert snapshot["intx_balances"] == []
+
+    def test_account_manager_intx_recovers_after_refresh(self) -> None:
+        class FailingIntxBroker(StubBroker):
+            def __init__(self) -> None:
+                super().__init__()
+                self.intx_resolved_uuid = "pf-bad"
+
+            def get_intx_balances(self, portfolio_uuid=None):
+                if portfolio_uuid == "pf-bad":
+                    raise InvalidRequestError("bad portfolio")
+                return super().get_intx_balances(portfolio_uuid)
+
+            def resolve_intx_portfolio(self, preferred_uuid=None, refresh=False):
+                if refresh:
+                    return "pf-1"
+                return super().resolve_intx_portfolio(preferred_uuid, refresh)
+
+        broker = FailingIntxBroker()
+        store = StubEventStore()
+        manager = CoinbaseAccountManager(broker, event_store=store)
+
+        snapshot = manager.snapshot()
+
+        assert snapshot["intx_available"] is True
+        assert snapshot["intx_portfolio_uuid"] == "pf-1"
 
     def test_account_manager_convert_commits_when_requested(self) -> None:
         broker = StubBroker()

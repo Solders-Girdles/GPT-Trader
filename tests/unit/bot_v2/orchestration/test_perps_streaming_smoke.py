@@ -2,26 +2,33 @@ from __future__ import annotations
 
 import asyncio
 import os
+from unittest.mock import Mock
 
 import pytest
 
+from bot_v2.features.brokerages.coinbase.adapter import CoinbaseBrokerage
 from bot_v2.orchestration.configuration import BotConfig, Profile
 from bot_v2.orchestration.perps_bot_builder import create_perps_bot
+from bot_v2.orchestration.service_registry import ServiceRegistry
 
 
 @pytest.mark.asyncio
 async def test_perps_streaming_smoke(monkeypatch, tmp_path, fake_clock):
     # Ensure streaming does not auto-start; we'll start it after patching broker
     monkeypatch.setenv("PERPS_ENABLE_STREAMING", "0")
-    monkeypatch.setenv("PERPS_FORCE_MOCK", "1")
+    monkeypatch.setenv("PERPS_FORCE_MOCK", "0")
     # Set event store root to temp dir
     monkeypatch.setenv("EVENT_STORE_ROOT", str(tmp_path))
 
     # CANARY profile to allow streaming
     config = BotConfig.from_profile("canary")
 
+    broker = Mock(spec=CoinbaseBrokerage)
+    broker.__class__ = CoinbaseBrokerage
+    registry = ServiceRegistry(config=config, broker=broker)
+
     # Start bot; streaming thread won't start due to gate
-    bot = create_perps_bot(config)
+    bot = create_perps_bot(config, registry=registry)
 
     # Monkeypatch broker streams to yield a couple messages
     def stream_orderbook_unavail(symbols, level=1):
@@ -51,11 +58,7 @@ async def test_perps_streaming_smoke(monkeypatch, tmp_path, fake_clock):
     assert stream_task is not None
     await asyncio.wait_for(stream_task, timeout=2.0)
 
-    from bot_v2.persistence.event_store import EventStore
-
-    es = EventStore(root=tmp_path / f"perps_bot/{config.profile.value}")
-
-    events = es.tail(bot_id="perps_bot", limit=50)
+    events = bot.event_store.tail(bot_id="perps_bot", limit=50)
     assert any(e.get("event_type") == "ws_mark_update" for e in events), events
 
     # Verify risk manager got a mark timestamp for at least one symbol

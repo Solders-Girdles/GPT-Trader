@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 
+from bot_v2.features.brokerages.coinbase.adapter import CoinbaseBrokerage
 from bot_v2.orchestration.coordinators.base import CoordinatorContext
 from bot_v2.orchestration.coordinators.telemetry import TelemetryCoordinator
 from bot_v2.orchestration.configuration import BotConfig, Profile
@@ -52,7 +53,8 @@ def test_initialize_without_broker() -> None:
 
 
 def test_initialize_with_broker() -> None:
-    broker = Mock()
+    broker = Mock(spec=CoinbaseBrokerage)
+    broker.__class__ = CoinbaseBrokerage
     risk_manager = Mock()
     context = _make_context(broker=broker, risk_manager=risk_manager)
 

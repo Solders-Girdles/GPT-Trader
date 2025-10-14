@@ -13,6 +13,7 @@ from bot_v2.features.brokerages.coinbase.account_manager import CoinbaseAccountM
 from bot_v2.monitoring.system import get_logger as _get_plog
 from bot_v2.orchestration.account_telemetry import AccountTelemetryService
 from bot_v2.orchestration.configuration import Profile
+from bot_v2.orchestration.intx_portfolio_service import IntxPortfolioService
 from bot_v2.orchestration.market_monitor import MarketActivityMonitor
 from bot_v2.utilities import emit_metric, utc_now
 
@@ -60,6 +61,10 @@ class TelemetryCoordinator(BaseCoordinator):
         account_manager = CoinbaseAccountManager(
             cast("CoinbaseBrokerage", broker), event_store=ctx.event_store
         )
+        intx_service = IntxPortfolioService(
+            account_manager=account_manager,
+            runtime_settings=ctx.registry.runtime_settings if ctx.registry else None,
+        )
         account_telemetry = AccountTelemetryService(
             broker=broker,
             account_manager=account_manager,
@@ -89,6 +94,7 @@ class TelemetryCoordinator(BaseCoordinator):
             {
                 "account_manager": account_manager,
                 "account_telemetry": account_telemetry,
+                "intx_portfolio_service": intx_service,
                 "market_monitor": market_monitor,
             }
         )

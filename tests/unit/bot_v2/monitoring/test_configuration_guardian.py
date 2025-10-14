@@ -70,10 +70,9 @@ class TestEnvironmentMonitor:
         """Test no environment changes."""
         with patch.dict("os.environ", {}, clear=True):
             settings = load_runtime_settings()
-        baseline = self.create_baseline_snapshot()
-        monitor = EnvironmentMonitor(baseline, settings=settings)
-
-        events = monitor.check_changes()
+            baseline = self.create_baseline_snapshot()
+            monitor = EnvironmentMonitor(baseline, settings=settings)
+            events = monitor.check_changes()
         assert len(events) == 0
 
     def test_critical_env_change(self):

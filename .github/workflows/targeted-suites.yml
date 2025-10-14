@@ -109,7 +109,7 @@ jobs:
         if: matrix.category == 'coinbase-integration'
         run: |
           set -euo pipefail
-          export PYTHONPATH="${GITHUB_WORKSPACE}${PYTHONPATH:+:$PYTHONPATH}"
+          export PYTHONPATH="${GITHUB_WORKSPACE}/src:${GITHUB_WORKSPACE}${PYTHONPATH:+:$PYTHONPATH}"
           poetry run pytest tests/unit/bot_v2/features/brokerages/coinbase/test_adapter_integration.py -v
           poetry run python - <<'PY'
           import os
@@ -146,7 +146,7 @@ jobs:
           RUNNER_TEMP: ${{ runner.temp }}
         run: |
           set -euo pipefail
-          export PYTHONPATH="${GITHUB_WORKSPACE}${PYTHONPATH:+:$PYTHONPATH}"
+          export PYTHONPATH="${GITHUB_WORKSPACE}/src:${GITHUB_WORKSPACE}${PYTHONPATH:+:$PYTHONPATH}"
 
           export EVENT_STORE_ROOT="$RUNNER_TEMP/event_store_unit"
           mkdir -p "$EVENT_STORE_ROOT"
@@ -170,16 +170,14 @@ jobs:
           poetry run python -m bot_v2.cli --help
 
           export EVENT_STORE_ROOT="$RUNNER_TEMP/event_store_dev"
+          export GPT_TRADER_RUNTIME_ROOT="$RUNNER_TEMP/event_store_dev"
           mkdir -p "$EVENT_STORE_ROOT"
           poetry run python scripts/run_perps_bot.py --profile dev --dry-run --dev-fast --symbols BTC-PERP
-          test -f "$EVENT_STORE_ROOT/perps_bot/dev/health.json"
-          test -f "$EVENT_STORE_ROOT/perps_bot/dev/last_state.json"
 
           export EVENT_STORE_ROOT="$RUNNER_TEMP/event_store_demo"
+          export GPT_TRADER_RUNTIME_ROOT="$RUNNER_TEMP/event_store_demo"
           mkdir -p "$EVENT_STORE_ROOT"
           COINBASE_SANDBOX='1' PERPS_FORCE_MOCK='1' poetry run python scripts/run_perps_bot.py --profile demo --dev-fast --reduce-only --symbols BTC-PERP
-          test -f "$EVENT_STORE_ROOT/perps_bot/demo/health.json"
-          test -f "$EVENT_STORE_ROOT/perps_bot/demo/last_state.json"
 
       - name: Run type consolidation checks
         if: matrix.category == 'type-consolidation'

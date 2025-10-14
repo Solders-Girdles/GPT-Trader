@@ -48,6 +48,7 @@ def test_key_permission_retry_behaviour(
     checker = PreflightCheck(verbose=False, profile="dev")
 
     monkeypatch.setenv("COINBASE_ENABLE_DERIVATIVES", "1")
+    monkeypatch.setenv("COINBASE_PREFLIGHT_FORCE_REMOTE", "1")
     monkeypatch.setattr(checker, "_build_cdp_client", lambda: (client, None))
     monkeypatch.setattr("scripts.production_preflight.time.sleep", lambda _seconds: None)
 

@@ -55,30 +55,29 @@ def test_cli_argument_propagation(tmp_path):
     dump_script = tmp_path / "dump_config.py"
     dump_script.write_text(
         """
-import sys
 import json
-from bot_v2.orchestration.configuration import BotConfig
-import argparse
+from argparse import ArgumentParser
 
-parser = argparse.ArgumentParser()
-parser.add_argument("--profile", default="dev")
-parser.add_argument("--dry-run", action="store_true")
-parser.add_argument("--symbols", nargs="+")
-parser.add_argument("--interval", type=int)
-parser.add_argument("--leverage", dest="target_leverage", type=int)
-parser.add_argument("--reduce-only", dest="reduce_only_mode", action="store_true")
+from bot_v2.cli import options, services
+
+parser = ArgumentParser()
+options.add_profile_option(parser)
+options.add_runtime_options(parser)
 parser.add_argument("--dev-fast", action="store_true")
 args = parser.parse_args()
 
-config_overrides = {k: v for k, v in vars(args).items() if v is not None and k != "profile"}
-config = BotConfig.from_profile(args.profile, **config_overrides)
+config = services.build_config_from_args(
+    args,
+    include=options.RUNTIME_CONFIG_KEYS,
+    skip={"dev_fast"},
+)
 
 print(json.dumps({
     "symbols": config.symbols,
     "update_interval": getattr(config, "update_interval", getattr(config, "interval", None)),
     "target_leverage": getattr(config, "target_leverage", None),
-    "reduce_only_mode": config.reduce_only_mode,
-    "dry_run": config.dry_run,
+    "reduce_only_mode": getattr(config, "reduce_only_mode", False),
+    "dry_run": getattr(config, "dry_run", False),
 }))
 """
     )
@@ -144,7 +143,7 @@ def test_cli_symbol_validation(symbols):
 
     if symbols == [""]:
         assert result.returncode != 0
-        assert "Symbols must be non-empty" in result.stderr
+        assert "symbols must contain only non-empty strings" in result.stderr
     else:
         # Deterministic broker accepts arbitrary symbols; ensure process completes.
         assert result.returncode == 0

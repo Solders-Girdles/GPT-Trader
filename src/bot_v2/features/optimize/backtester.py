@@ -142,7 +142,8 @@ def simulate_trades(
             continue
 
         price_value = data.loc[date, "close"]
-        price = float(np.asarray(price_value)[-1])
+        price_array = np.asarray(price_value)
+        price = float(price_array.reshape(-1)[-1])
 
         # Update equity
         equity = cash + (position * price)

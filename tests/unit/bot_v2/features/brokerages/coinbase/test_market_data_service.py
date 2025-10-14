@@ -7,7 +7,10 @@ from unittest.mock import Mock, patch
 import pytest
 
 from bot_v2.features.brokerages.coinbase.market_data_features import RollingWindow
-from bot_v2.features.brokerages.coinbase.market_data_service import MarketDataService
+from bot_v2.features.brokerages.coinbase.market_data_service import (
+    MarketDataService,
+    MarketSnapshot,
+)
 from bot_v2.features.brokerages.coinbase.utilities import MarkCache
 
 
@@ -42,12 +45,16 @@ class TestMarketDataService:
             assert symbol in self.service._rolling_windows
 
             # Check market data initialization
-            data = self.service._market_data[symbol]
-            assert data["mid"] == Decimal("0")
-            assert data["spread_bps"] == 0.0
-            assert data["depth_l1"] == Decimal("0")
-            assert data["depth_l10"] == Decimal("0")
-            assert data["last_update"] is None
+            snapshot = self.service._market_data[symbol]
+            assert isinstance(snapshot, MarketSnapshot)
+            assert snapshot.bid is None
+            assert snapshot.ask is None
+            assert snapshot.last is None
+            assert snapshot.mid is None
+            assert snapshot.spread_bps is None
+            assert snapshot.depth_l1 is None
+            assert snapshot.depth_l10 is None
+            assert snapshot.last_update is None
 
             # Check rolling windows initialization
             windows = self.service._rolling_windows[symbol]
@@ -62,14 +69,14 @@ class TestMarketDataService:
         self.service.initialise_symbols([self.test_symbol])
 
         # Modify existing data
-        self.service._market_data[self.test_symbol]["mid"] = Decimal("50000")
+        self.service._market_data[self.test_symbol].mid = Decimal("50000")
         self.service._rolling_windows[self.test_symbol]["vol_1m"].add(100.0, self.test_timestamp)
 
         # Re-initialize (should not overwrite existing data)
         self.service.initialise_symbols([self.test_symbol])
 
         # Data should remain unchanged
-        assert self.service._market_data[self.test_symbol]["mid"] == Decimal("50000")
+        assert self.service._market_data[self.test_symbol].mid == Decimal("50000")
         assert self.service._rolling_windows[self.test_symbol]["vol_1m"].sum == 100.0
 
     def test_initialise_symbols_mixed_new_and_existing(self) -> None:
@@ -105,13 +112,13 @@ class TestMarketDataService:
 
         self.service.update_ticker(self.test_symbol, bid, ask, last, self.test_timestamp)
 
-        data = self.service._market_data[self.test_symbol]
-        assert data["bid"] == bid
-        assert data["ask"] == ask
-        assert data["last"] == last
-        assert data["mid"] == Decimal("50050.00")  # (50000 + 50100) / 2
-        assert data["spread_bps"] == 20.0  # (50100 - 50000) / 50000 * 10000
-        assert data["last_update"] == self.test_timestamp
+        snapshot = self.service._market_data[self.test_symbol]
+        assert snapshot.bid == bid
+        assert snapshot.ask == ask
+        assert snapshot.last == last
+        assert snapshot.mid == Decimal("50050.00")  # (50000 + 50100) / 2
+        assert snapshot.spread_bps == 20.0  # (50100 - 50000) / 50000 * 10000
+        assert snapshot.last_update == self.test_timestamp
 
     def test_update_ticker_bid_ask_only(self) -> None:
         """Test updating ticker with only bid/ask data."""
@@ -120,13 +127,13 @@ class TestMarketDataService:
 
         self.service.update_ticker(self.test_symbol, bid, ask, None, self.test_timestamp)
 
-        data = self.service._market_data[self.test_symbol]
-        assert data["bid"] == bid
-        assert data["ask"] == ask
-        assert data["mid"] == Decimal("50050.00")
-        assert data["spread_bps"] == 20.0
-        assert "last" not in data
-        assert data["last_update"] == self.test_timestamp
+        snapshot = self.service._market_data[self.test_symbol]
+        assert snapshot.bid == bid
+        assert snapshot.ask == ask
+        assert snapshot.mid == Decimal("50050.00")
+        assert snapshot.spread_bps == 20.0
+        assert snapshot.last is None
+        assert snapshot.last_update == self.test_timestamp
 
     def test_update_ticker_last_only(self) -> None:
         """Test updating ticker with only last price."""
@@ -134,13 +141,13 @@ class TestMarketDataService:
 
         self.service.update_ticker(self.test_symbol, None, None, last, self.test_timestamp)
 
-        data = self.service._market_data[self.test_symbol]
-        assert data["last"] == last
-        assert data["last_update"] == self.test_timestamp
-        assert "bid" not in data
-        assert "ask" not in data
-        assert "mid" not in data
-        assert "spread_bps" not in data
+        snapshot = self.service._market_data[self.test_symbol]
+        assert snapshot.last == last
+        assert snapshot.last_update == self.test_timestamp
+        assert snapshot.bid is None
+        assert snapshot.ask is None
+        assert snapshot.mid is None
+        assert snapshot.spread_bps is None
 
     def test_update_ticker_zero_bid(self) -> None:
         """Test updating ticker with zero bid (no spread calculation)."""
@@ -149,12 +156,12 @@ class TestMarketDataService:
 
         self.service.update_ticker(self.test_symbol, bid, ask, None, self.test_timestamp)
 
-        data = self.service._market_data[self.test_symbol]
-        assert data["bid"] == bid
-        assert data["ask"] == ask
-        assert data["mid"] == Decimal("25050.00")  # (0 + 50100) / 2
+        snapshot = self.service._market_data[self.test_symbol]
+        assert snapshot.bid == bid
+        assert snapshot.ask == ask
+        assert snapshot.mid == Decimal("25050.00")  # (0 + 50100) / 2
         # spread_bps should not be set when bid is 0
-        assert "spread_bps" not in data
+        assert snapshot.spread_bps is None
 
     def test_update_ticker_existing_symbol(self) -> None:
         """Test updating ticker for existing symbol."""
@@ -169,12 +176,12 @@ class TestMarketDataService:
             self.test_symbol, Decimal("50100"), Decimal("50200"), Decimal("50150"), new_timestamp
         )
 
-        data = self.service._market_data[self.test_symbol]
-        assert data["bid"] == Decimal("50100")
-        assert data["ask"] == Decimal("50200")
-        assert data["last"] == Decimal("50150")
-        assert data["mid"] == Decimal("50150")
-        assert data["last_update"] == new_timestamp
+        snapshot = self.service._market_data[self.test_symbol]
+        assert snapshot.bid == Decimal("50100")
+        assert snapshot.ask == Decimal("50200")
+        assert snapshot.last == Decimal("50150")
+        assert snapshot.mid == Decimal("50150")
+        assert snapshot.last_update == new_timestamp
 
     def test_record_trade_existing_symbol(self) -> None:
         """Test recording trade for existing symbol."""
@@ -233,11 +240,11 @@ class TestMarketDataService:
 
         self.service.update_depth(self.test_symbol, changes)
 
-        data = self.service._market_data[self.test_symbol]
+        snapshot = self.service._market_data[self.test_symbol]
 
         # L1 depth: first level only
         expected_l1 = Decimal("50000") + Decimal("50100") * Decimal("1.2")  # $50,000 + $60,120
-        assert data["depth_l1"] == expected_l1
+        assert snapshot.depth_l1 == expected_l1
 
         # L10 depth: first 10 levels (we have 4)
         expected_l10 = (
@@ -246,7 +253,7 @@ class TestMarketDataService:
             + Decimal("50100") * Decimal("1.2")  # $60,120
             + Decimal("50200") * Decimal("0.8")  # $40,160
         )
-        assert data["depth_l10"] == expected_l10
+        assert snapshot.depth_l10 == expected_l10
 
     def test_update_depth_empty_size(self) -> None:
         """Test updating depth with empty size values."""
@@ -258,11 +265,11 @@ class TestMarketDataService:
 
         self.service.update_depth(self.test_symbol, changes)
 
-        data = self.service._market_data[self.test_symbol]
+        snapshot = self.service._market_data[self.test_symbol]
 
         # Only the valid sell order should contribute
-        assert data["depth_l1"] == Decimal("50100") * Decimal("1.2")
-        assert data["depth_l10"] == Decimal("50100") * Decimal("1.2")
+        assert snapshot.depth_l1 == Decimal("50100") * Decimal("1.2")
+        assert snapshot.depth_l10 == Decimal("50100") * Decimal("1.2")
 
     def test_update_depth_invalid_changes(self) -> None:
         """Test updating depth with invalid change data."""
@@ -275,11 +282,11 @@ class TestMarketDataService:
 
         self.service.update_depth(self.test_symbol, changes)
 
-        data = self.service._market_data[self.test_symbol]
+        snapshot = self.service._market_data[self.test_symbol]
 
         # Should have zero depth since all changes were invalid
-        assert data["depth_l1"] == Decimal("0")
-        assert data["depth_l10"] == Decimal("0")
+        assert snapshot.depth_l1 == Decimal("0")
+        assert snapshot.depth_l10 == Decimal("0")
 
     def test_update_depth_more_than_10_levels(self) -> None:
         """Test updating depth with more than 10 levels (should only use first 10)."""
@@ -290,12 +297,12 @@ class TestMarketDataService:
 
         self.service.update_depth(self.test_symbol, changes)
 
-        data = self.service._market_data[self.test_symbol]
+        snapshot = self.service._market_data[self.test_symbol]
 
         # Should only include first 10 levels
         expected_levels = 10
         expected_depth = sum(Decimal(50000 - i * 100) for i in range(expected_levels))
-        assert data["depth_l10"] == expected_depth
+        assert snapshot.depth_l10 == expected_depth
 
     def test_is_stale_no_data(self) -> None:
         """Test is_stale when no data exists."""
@@ -303,34 +310,34 @@ class TestMarketDataService:
 
     def test_is_stale_no_timestamp(self) -> None:
         """Test is_stale when data exists but no timestamp."""
-        self.service._market_data[self.test_symbol] = {"bid": Decimal("50000")}
+        self.service._market_data[self.test_symbol] = MarketSnapshot(bid=Decimal("50000"))
 
         assert self.service.is_stale(self.test_symbol) is True
 
     def test_is_stale_fresh_data(self) -> None:
         """Test is_stale with fresh data."""
-        self.service._market_data[self.test_symbol] = {
-            "bid": Decimal("50000"),
-            "last_update": datetime.utcnow() - timedelta(seconds=5),
-        }
+        self.service._market_data[self.test_symbol] = MarketSnapshot(
+            bid=Decimal("50000"),
+            last_update=datetime.utcnow() - timedelta(seconds=5),
+        )
 
         assert self.service.is_stale(self.test_symbol, threshold_seconds=10) is False
 
     def test_is_stale_old_data(self) -> None:
         """Test is_stale with old data."""
-        self.service._market_data[self.test_symbol] = {
-            "bid": Decimal("50000"),
-            "last_update": datetime.utcnow() - timedelta(seconds=15),
-        }
+        self.service._market_data[self.test_symbol] = MarketSnapshot(
+            bid=Decimal("50000"),
+            last_update=datetime.utcnow() - timedelta(seconds=15),
+        )
 
         assert self.service.is_stale(self.test_symbol, threshold_seconds=10) is True
 
     def test_is_stale_custom_threshold(self) -> None:
         """Test is_stale with custom threshold."""
-        self.service._market_data[self.test_symbol] = {
-            "bid": Decimal("50000"),
-            "last_update": datetime.utcnow() - timedelta(seconds=30),
-        }
+        self.service._market_data[self.test_symbol] = MarketSnapshot(
+            bid=Decimal("50000"),
+            last_update=datetime.utcnow() - timedelta(seconds=30),
+        )
 
         # Should be fresh with 60s threshold
         assert self.service.is_stale(self.test_symbol, threshold_seconds=60) is False
@@ -346,7 +353,7 @@ class TestMarketDataService:
 
     def test_get_cached_quote_no_timestamp(self) -> None:
         """Test getting cached quote when no timestamp exists."""
-        self.service._market_data[self.test_symbol] = {"bid": Decimal("50000")}
+        self.service._market_data[self.test_symbol] = MarketSnapshot(bid=Decimal("50000"))
 
         result = self.service.get_cached_quote(self.test_symbol)
 
@@ -354,12 +361,12 @@ class TestMarketDataService:
 
     def test_get_cached_quote_success(self) -> None:
         """Test successful cached quote retrieval."""
-        self.service._market_data[self.test_symbol] = {
-            "bid": Decimal("50000"),
-            "ask": Decimal("50100"),
-            "last": Decimal("50050"),
-            "last_update": self.test_timestamp,
-        }
+        self.service._market_data[self.test_symbol] = MarketSnapshot(
+            bid=Decimal("50000"),
+            ask=Decimal("50100"),
+            last=Decimal("50050"),
+            last_update=self.test_timestamp,
+        )
 
         result = self.service.get_cached_quote(self.test_symbol)
 
@@ -377,13 +384,13 @@ class TestMarketDataService:
 
     def test_get_snapshot_market_data_only(self) -> None:
         """Test getting snapshot with only market data."""
-        self.service._market_data[self.test_symbol] = {
-            "bid": Decimal("50000"),
-            "ask": Decimal("50100"),
-            "mid": Decimal("50050"),
-            "spread_bps": 200.0,
-            "last_update": self.test_timestamp,
-        }
+        self.service._market_data[self.test_symbol] = MarketSnapshot(
+            bid=Decimal("50000"),
+            ask=Decimal("50100"),
+            mid=Decimal("50050"),
+            spread_bps=200.0,
+            last_update=self.test_timestamp,
+        )
 
         result = self.service.get_snapshot(self.test_symbol)
 
@@ -396,10 +403,10 @@ class TestMarketDataService:
     def test_get_snapshot_with_rolling_windows(self) -> None:
         """Test getting snapshot with rolling window data."""
         # Set up market data
-        self.service._market_data[self.test_symbol] = {
-            "bid": Decimal("50000"),
-            "last_update": self.test_timestamp,
-        }
+        self.service._market_data[self.test_symbol] = MarketSnapshot(
+            bid=Decimal("50000"),
+            last_update=self.test_timestamp,
+        )
 
         # Set up rolling windows with some data
         self.service.initialise_symbols([self.test_symbol])
@@ -451,7 +458,7 @@ class TestMarketDataService:
         windows = self.service.rolling_windows(self.test_symbol)
 
         assert isinstance(windows, dict)
-        assert len(windows) == 0
+        assert set(windows.keys()) == {"vol_1m", "vol_5m"}
 
         # Should also create the entry in the main dict
         assert self.test_symbol in self.service._rolling_windows
@@ -495,7 +502,7 @@ class TestMarketDataService:
 
         # Check everything is working (use current time for staleness check)
         current_time = datetime.utcnow()
-        self.service._market_data[self.test_symbol]["last_update"] = current_time
+        self.service._market_data[self.test_symbol].last_update = current_time
         assert not self.service.is_stale(self.test_symbol)
 
         quote = self.service.get_cached_quote(self.test_symbol)

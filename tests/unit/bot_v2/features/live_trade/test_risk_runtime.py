@@ -69,8 +69,8 @@ class TestMarkStaleness:
         last_update = {"BTC-USD": dt.datetime.utcnow() - dt.timedelta(seconds=5)}
         events = []
 
-        def log_event(event_type, details, *, guard):
-            events.append((event_type, details, guard))
+        def log_event(event_type, details, stream):
+            events.append((event_type, details, stream))
 
         logger = DummyLogger()
         result = runtime_check_mark_staleness(
@@ -218,8 +218,8 @@ def test_check_correlation_risk_detects_concentration():
     events = []
     logger = DummyLogger()
 
-    def log_event(event_type, details, *, guard):
-        events.append((event_type, guard, details))
+    def log_event(event_type, details, stream):
+        events.append((event_type, stream, details))
 
     result = check_correlation_risk(
         {

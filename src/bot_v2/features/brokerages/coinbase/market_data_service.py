@@ -35,10 +35,10 @@ class MarketSnapshot:
     bid: Decimal | None = None
     ask: Decimal | None = None
     last: Decimal | None = None
-    mid: Decimal = Decimal("0")
-    spread_bps: float = 0.0
-    depth_l1: Decimal = Decimal("0")
-    depth_l10: Decimal = Decimal("0")
+    mid: Decimal | None = None
+    spread_bps: float | None = None
+    depth_l1: Decimal | None = None
+    depth_l10: Decimal | None = None
     last_update: datetime | None = None
 
 

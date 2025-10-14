@@ -3269,5 +3269,4 @@ market-data = ["yfinance"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<3.13"
-content-hash = "d677ccc096f79195ce0a2339acdea6e7017d4fc0cc56c75cdb8dd916f206ee2f"
 content-hash = "830f29102918439fd1c10b1ce8b3f399a542aa9e1c4931a39e675b4d148830bd"

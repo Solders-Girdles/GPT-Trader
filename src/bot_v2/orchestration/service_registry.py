@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field, replace
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 if TYPE_CHECKING:  # pragma: no cover - import guards for type checkers only
     from bot_v2.features.brokerages.coinbase.market_data_service import MarketDataService
@@ -48,6 +48,9 @@ class ServiceRegistry:
         if "extras" in data and isinstance(data["extras"], dict):
             data["extras"] = dict(data["extras"])
         return replace(self, **data)
+
+    def get_intx_portfolio_service(self) -> Any:
+        return cast(Any, self.extras.get("intx_portfolio_service"))
 
 
 def empty_registry(config: BotConfig) -> ServiceRegistry:

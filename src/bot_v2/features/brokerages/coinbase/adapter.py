@@ -27,6 +27,7 @@ from bot_v2.features.brokerages.core.interfaces import (
     Balance,
     Candle,
     IBrokerage,
+    InvalidRequestError,
     MarketType,
     NotFoundError,
     Order,
@@ -75,6 +76,7 @@ class CoinbaseBrokerage(IBrokerage):
 
         self._connected = False
         self._account_id: str | None = None
+        self._intx_portfolio_uuid: str | None = None
 
         self._event_store: EventStore = event_store or EventStore()
         self._product_catalog: ProductCatalog = product_catalog or ProductCatalog(ttl_seconds=900)
@@ -130,6 +132,22 @@ class CoinbaseBrokerage(IBrokerage):
         symbol: str | None = None,
     ) -> list[Order]:
         return cast(list[Order], self.rest_service.list_orders(status=status, symbol=symbol))
+
+    def list_orders_batch(
+        self,
+        order_ids: Sequence[str],
+        *,
+        cursor: str | None = None,
+        limit: int | None = None,
+    ) -> list[Order]:
+        return cast(
+            list[Order],
+            self.rest_service.list_orders_batch(
+                order_ids=order_ids,
+                cursor=cursor,
+                limit=limit,
+            ),
+        )
 
     def get_order(self, order_id: str) -> Order | None:
         return self.rest_service.get_order(order_id)
@@ -211,6 +229,135 @@ class CoinbaseBrokerage(IBrokerage):
 
     def get_portfolio_pnl(self) -> dict[str, Any]:
         return cast(dict[str, Any], self.rest_service.get_portfolio_pnl())
+
+    def supports_intx(self) -> bool:
+        return self.config.api_mode == "advanced"
+
+    # ------------------------------------------------------------------
+    # CFM telemetry
+    # ------------------------------------------------------------------
+    def get_cfm_balance_summary(self) -> dict[str, Any]:
+        """Return the latest CFM balance summary, or {} if derivatives disabled."""
+        return cast(dict[str, Any], self.rest_service.get_cfm_balance_summary())
+
+    def list_cfm_sweeps(self) -> list[dict[str, Any]]:
+        """Return recent CFM sweep events."""
+        return cast(list[dict[str, Any]], self.rest_service.list_cfm_sweeps())
+
+    def get_cfm_sweeps_schedule(self) -> dict[str, Any]:
+        """Return the configured CFM sweep schedule."""
+        return cast(dict[str, Any], self.rest_service.get_cfm_sweeps_schedule())
+
+    def get_cfm_margin_window(self) -> dict[str, Any]:
+        """Return the current CFM intraday margin window configuration."""
+        return cast(dict[str, Any], self.rest_service.get_cfm_margin_window())
+
+    def update_cfm_margin_window(
+        self,
+        margin_window: str,
+        *,
+        effective_time: str | None = None,
+        extra_payload: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Update the intraday margin window, respecting derivatives gating."""
+        return cast(
+            dict[str, Any],
+            self.rest_service.update_cfm_margin_window(
+                margin_window,
+                effective_time=effective_time,
+                extra_payload=extra_payload,
+            ),
+        )
+
+    # ------------------------------------------------------------------
+    # INTX (Institutional) helpers
+    # ------------------------------------------------------------------
+    def intx_allocate(
+        self,
+        payload: dict[str, Any],
+        *,
+        portfolio_uuid: str | None = None,
+    ) -> dict[str, Any]:
+        """Allocate collateral via INTX allocation endpoint."""
+        if not self.supports_intx():
+            raise InvalidRequestError("INTX allocation requires advanced mode.")
+        final_payload = dict(payload)
+        chosen_uuid = (
+            portfolio_uuid or final_payload.get("portfolio_uuid") or self._intx_portfolio_uuid
+        )
+        if chosen_uuid is not None:
+            final_payload.setdefault("portfolio_uuid", chosen_uuid)
+        return cast(dict[str, Any], self.rest_service.intx_allocate(final_payload))
+
+    def get_intx_balances(self, portfolio_uuid: str | None = None) -> list[dict[str, Any]]:
+        """Return institutional balances for the given portfolio."""
+        if not self.supports_intx() or portfolio_uuid is None:
+            return []
+        return cast(list[dict[str, Any]], self.rest_service.get_intx_balances(portfolio_uuid))
+
+    def get_intx_portfolio(self, portfolio_uuid: str | None = None) -> dict[str, Any]:
+        """Return INTX portfolio details."""
+        if not self.supports_intx() or portfolio_uuid is None:
+            return {}
+        return cast(dict[str, Any], self.rest_service.get_intx_portfolio(portfolio_uuid))
+
+    def list_intx_positions(self, portfolio_uuid: str | None = None) -> list[dict[str, Any]]:
+        """Return raw INTX position payloads for the specified portfolio."""
+        if not self.supports_intx() or portfolio_uuid is None:
+            return []
+        return cast(list[dict[str, Any]], self.rest_service.list_intx_positions(portfolio_uuid))
+
+    def get_intx_position(self, portfolio_uuid: str | None, symbol: str) -> dict[str, Any]:
+        """Return a specific INTX position, if available."""
+        if not self.supports_intx() or portfolio_uuid is None:
+            return {}
+        return cast(dict[str, Any], self.rest_service.get_intx_position(portfolio_uuid, symbol))
+
+    def get_intx_multi_asset_collateral(self) -> dict[str, Any]:
+        """Return the multi-asset collateral configuration for INTX."""
+        if not self.supports_intx():
+            return {}
+        return cast(dict[str, Any], self.rest_service.get_intx_multi_asset_collateral())
+
+    def resolve_intx_portfolio(
+        self,
+        *,
+        preferred_uuid: str | None = None,
+        refresh: bool = False,
+    ) -> str | None:
+        if not self.supports_intx():
+            return None
+        if not refresh and self._intx_portfolio_uuid:
+            return self._intx_portfolio_uuid
+
+        candidates: list[str] = []
+        if preferred_uuid:
+            candidates.append(str(preferred_uuid))
+        if refresh:
+            self._intx_portfolio_uuid = None
+        try:
+            portfolio_listing = self.list_portfolios()
+        except Exception:
+            portfolio_listing = []
+        for entry in portfolio_listing:
+            if isinstance(entry, dict):
+                uuid = entry.get("portfolio_uuid") or entry.get("uuid") or entry.get("id")
+                if uuid:
+                    candidates.append(str(uuid))
+
+        seen: set[str] = set()
+        for candidate in candidates:
+            if not candidate or candidate in seen:
+                continue
+            seen.add(candidate)
+            try:
+                balances = self.rest_service.get_intx_balances(candidate)
+            except Exception:
+                continue
+            if balances is not None:
+                self._intx_portfolio_uuid = candidate
+                return candidate
+        return None
 
     # ------------------------------------------------------------------
     # Market data

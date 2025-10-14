@@ -34,6 +34,8 @@ def test_init_accounting_services_sets_manager(monkeypatch, tmp_path):
     assert isinstance(bot.account_manager, CoinbaseAccountManager)
     assert bot.account_telemetry is not None
     assert getattr(bot.system_monitor, "_account_telemetry", None) is bot.account_telemetry
+    assert getattr(bot, "intx_portfolio_service", None) is not None
+    assert "intx_portfolio_service" in bot.registry.extras
 
 
 def test_init_market_services_populates_monitor(monkeypatch, tmp_path):

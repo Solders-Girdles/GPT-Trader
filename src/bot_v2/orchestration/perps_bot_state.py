@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:  # pragma: no cover - type-only imports
     from bot_v2.features.brokerages.coinbase.account_manager import CoinbaseAccountManager
     from bot_v2.orchestration.account_telemetry import AccountTelemetryService
+    from bot_v2.orchestration.intx_portfolio_service import IntxPortfolioService
     from bot_v2.orchestration.market_monitor import MarketActivityMonitor
 
 
@@ -36,3 +37,4 @@ class PerpsBotRuntimeState:
         self.account_manager: CoinbaseAccountManager | None = None
         self.account_telemetry: AccountTelemetryService | None = None
         self.market_monitor: MarketActivityMonitor | None = None
+        self.intx_portfolio_service: IntxPortfolioService | None = None

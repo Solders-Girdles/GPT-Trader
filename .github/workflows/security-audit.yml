@@ -1,4 +1,4 @@
-name: security-audit
+name: Security Audit
 on:
   schedule:
     - cron: "0 6 * * 1" # weekly, Mondays 06:00 UTC
@@ -11,6 +11,13 @@ concurrency:
 permissions:
   contents: read
 
+defaults:
+  run:
+    shell: bash --noprofile --norc
+
+env:
+  PYTHON_VERSION: "3.12"
+
 jobs:
   pip-audit:
     runs-on: ubuntu-latest
@@ -19,13 +26,18 @@ jobs:
       - name: Prepare Python environment
         uses: ./.github/actions/setup-poetry
         with:
-          python-version: "3.12"
+          python-version: ${{ env.PYTHON_VERSION }}
           install-deps: "false"
           cache-path: ""
       - name: Install pip-audit
-        run: python -m pip install --upgrade pip pip-audit
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip pip-audit
       - name: Install project (no dev)
         run: |
+          set -euo pipefail
           poetry export -f requirements.txt --with main --without-hashes -o requirements.txt
       - name: Run pip-audit (fail on high/critical)
-        run: pip-audit --strict
+        run: |
+          set -euo pipefail
+          pip-audit -r requirements.txt --strict

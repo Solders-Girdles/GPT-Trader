@@ -14,6 +14,7 @@ from bot_v2.features.brokerages.coinbase.models import APIConfig
 from bot_v2.features.brokerages.core.interfaces import (
     InvalidRequestError as CoreInvalidRequestError,
     MarketType,
+    Order,
     OrderSide,
     OrderType,
     Position,
@@ -98,6 +99,45 @@ class TestCoinbaseTrading:
 
         assert [item["id"] for item in collected] == ["ord1", "ord2", "ord3"]
         assert call_count == 2
+
+    def test_list_orders_batch_requires_order_ids(self) -> None:
+        client = make_client()
+        with pytest.raises(CoreInvalidRequestError):
+            client.list_orders_batch([])
+
+    def test_adapter_list_orders_batch_normalises_orders(self, monkeypatch) -> None:
+        adapter = make_adapter()
+        captured: dict[str, Any] = {}
+
+        def fake_batch(order_ids, cursor=None, limit=None):
+            captured["order_ids"] = order_ids
+            captured["cursor"] = cursor
+            captured["limit"] = limit
+            return {
+                "orders": [
+                    {
+                        "order_id": "ord-1",
+                        "product_id": "BTC-USD",
+                        "side": "BUY",
+                        "type": "limit",
+                        "size": "1",
+                        "time_in_force": "GTC",
+                        "status": "open",
+                        "created_at": "2024-01-01T00:00:00",
+                    }
+                ]
+            }
+
+        monkeypatch.setattr(adapter.client, "list_orders_batch", fake_batch)
+
+        orders = adapter.list_orders_batch(["ord-1"], cursor="cursor-1", limit=25)
+
+        assert captured["order_ids"] == ["ord-1"]
+        assert captured["cursor"] == "cursor-1"
+        assert captured["limit"] == 25
+        assert len(orders) == 1
+        assert isinstance(orders[0], Order)
+        assert orders[0].id == "ord-1"
 
     def test_transaction_summary_blocked_in_exchange_mode(self) -> None:
         client = make_client("exchange")

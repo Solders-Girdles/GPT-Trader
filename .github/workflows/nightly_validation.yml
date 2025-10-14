@@ -14,6 +14,13 @@ permissions:
   actions: write
   issues: write
 
+defaults:
+  run:
+    shell: bash --noprofile --norc
+
+env:
+  PYTHON_VERSION: "3.12"
+
 jobs:
   quick-validation:
     runs-on: ubuntu-latest
@@ -24,18 +31,21 @@ jobs:
         id: setup-poetry
         uses: ./.github/actions/setup-poetry
         with:
-          python-version: "3.12"
+          python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Run core validation harness
         run: |
+          set -euo pipefail
           poetry run python scripts/validation/verify_core.py --check all
 
       - name: Run Coinbase websocket regression test
         run: |
+          set -euo pipefail
           poetry run pytest tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_websocket.py -k sequence_guard -v
 
       - name: Quick WebSocket smoke
         run: |
+          set -euo pipefail
           export PYTHONPATH="${GITHUB_WORKSPACE}${PYTHONPATH:+:$PYTHONPATH}"
           poetry run python - <<'PY'
           import os

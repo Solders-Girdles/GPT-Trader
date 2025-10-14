@@ -1,10 +1,11 @@
-name: derivatives-phase6
+name: Perps Validation
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [main, master]
   pull_request:
-    branches: [ main, master ]
+    branches: [main, master]
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -14,27 +15,37 @@ permissions:
   contents: read
   actions: write
 
+defaults:
+  run:
+    shell: bash --noprofile --norc
+
+env:
+  PYTHON_VERSION: "3.12"
+
 jobs:
-  validate-derivatives-phase6:
+  perps-validation:
+    name: Derivatives/Perps Health
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v5
 
       - name: Prepare Python environment
-        id: setup-poetry
         uses: ./.github/actions/setup-poetry
         with:
-          python-version: "3.12"
+          python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Run perps validation harness
         env:
           EVENT_STORE_ROOT: ${{ runner.temp }}/event_store_validation
         run: |
+          set -euo pipefail
           mkdir -p "$EVENT_STORE_ROOT"
           poetry run python scripts/validation/validate_perps_e2e.py
 
       - name: Run tightening guard tests
         run: |
+          set -euo pipefail
           poetry run pytest \
             tests/unit/bot_v2/features/live_trade/test_reduce_only_guard.py \
             tests/unit/bot_v2/features/live_trade/test_trailing_stop_decision.py \
@@ -44,4 +55,5 @@ jobs:
 
       - name: Verify adapter integration
         run: |
+          set -euo pipefail
           poetry run pytest tests/unit/bot_v2/features/brokerages/coinbase/test_adapter_integration.py -v

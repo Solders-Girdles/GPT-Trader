@@ -10,7 +10,7 @@ on:
       - 'tests/unit/bot_v2/features/brokerages/coinbase/**'
       - 'tests/unit/bot_v2/features/live_trade/**'
       - 'tests/unit/bot_v2/orchestration/test_broker_factory.py'
-      - 'tests/unit/bot_v2/orchestration/test_live_execution_perps.py'
+      - 'tests/unit/bot_v2/orchestration/test_live_execution.py'
       - 'tests/unit/bot_v2/orchestration/test_configuration.py'
       - 'tests/unit/bot_v2/orchestration/test_config_manager.py'
       - 'tests/**/perps/**'
@@ -26,7 +26,7 @@ on:
       - 'tests/unit/bot_v2/features/brokerages/coinbase/**'
       - 'tests/unit/bot_v2/features/live_trade/**'
       - 'tests/unit/bot_v2/orchestration/test_broker_factory.py'
-      - 'tests/unit/bot_v2/orchestration/test_live_execution_perps.py'
+      - 'tests/unit/bot_v2/orchestration/test_live_execution.py'
       - 'tests/unit/bot_v2/orchestration/test_configuration.py'
       - 'tests/unit/bot_v2/orchestration/test_config_manager.py'
       - 'tests/**/perps/**'
@@ -155,7 +155,7 @@ jobs:
           export EVENT_STORE_ROOT="$RUNNER_TEMP/event_store_orchestration"
           mkdir -p "$EVENT_STORE_ROOT"
           poetry run pytest \
-            tests/unit/bot_v2/orchestration/test_live_execution_perps.py \
+            tests/unit/bot_v2/orchestration/test_live_execution.py \
             tests/unit/bot_v2/features/live_trade/test_type_consolidation.py \
             -q --tb=short
 

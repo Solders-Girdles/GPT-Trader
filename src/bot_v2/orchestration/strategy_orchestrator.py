@@ -142,7 +142,7 @@ class StrategyOrchestrator:
 
             if decision.action in {Action.BUY, Action.SELL, Action.CLOSE}:
                 product = context.product
-                if not isinstance(product, Product):
+                if product is None:
                     logger.warning("Skipping execution for %s: missing product metadata", symbol)
                     return
                 await bot.execute_decision(

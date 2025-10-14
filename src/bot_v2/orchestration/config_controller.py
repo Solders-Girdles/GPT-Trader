@@ -22,8 +22,6 @@ class ConfigChange:
 class ConfigController:
     """Owns the active bot configuration and synchronizes runtime state."""
 
-    _TRACKED_FIELDS = ConfigBaselinePayload.tracked_fields()
-
     def __init__(self, config: BotConfig, *, settings: RuntimeSettings | None = None) -> None:
         self._manager = ConfigManager.from_config(config, settings=settings)
         self._pending_change: ConfigChange | None = None
@@ -40,6 +38,10 @@ class ConfigController:
     @property
     def reduce_only_mode(self) -> bool:
         return bool(self._reduce_only_mode_state)
+
+    def _set_current_config(self, config: BotConfig) -> None:
+        self._manager.replace_config(config)
+        self._reduce_only_mode_state = bool(config.reduce_only_mode)
 
     # ------------------------------------------------------------------
     def refresh_if_changed(self) -> ConfigChange | None:
@@ -65,8 +67,11 @@ class ConfigController:
         """Ensure reduce-only mode matches risk manager state."""
 
         reduce_only = bool(self.current.reduce_only_mode) or risk_manager.is_reduce_only_mode()
-        self._reduce_only_mode_state = reduce_only
-        self.current.reduce_only_mode = reduce_only
+        if reduce_only != self.current.reduce_only_mode:
+            updated = self.current.with_overrides(reduce_only_mode=reduce_only)
+            self._set_current_config(updated)
+        else:
+            self._reduce_only_mode_state = reduce_only
 
     def set_reduce_only_mode(
         self, enabled: bool, *, reason: str, risk_manager: LiveRiskManager | None = None
@@ -75,8 +80,8 @@ class ConfigController:
 
         if enabled == self._reduce_only_mode_state:
             return False
-        self._reduce_only_mode_state = enabled
-        self.current.reduce_only_mode = enabled
+        updated = self.current.with_overrides(reduce_only_mode=enabled)
+        self._set_current_config(updated)
         if risk_manager is not None:
             risk_manager.set_reduce_only_mode(enabled, reason=reason)
         return True
@@ -90,8 +95,8 @@ class ConfigController:
     def apply_risk_update(self, enabled: bool) -> bool:
         if enabled == self._reduce_only_mode_state:
             return False
-        self._reduce_only_mode_state = enabled
-        self.current.reduce_only_mode = enabled
+        updated = self.current.with_overrides(reduce_only_mode=enabled)
+        self._set_current_config(updated)
         return True
 
     # ------------------------------------------------------------------
@@ -105,6 +110,4 @@ class ConfigController:
             derivatives_enabled=bool(getattr(updated, "derivatives_enabled", False)),
         )
 
-        diff = current_payload.diff(updated_payload)
-        # Preserve historical behavior of returning only tracked fields
-        return {field: diff[field] for field in self._TRACKED_FIELDS if field in diff}
+        return current_payload.diff(updated_payload)

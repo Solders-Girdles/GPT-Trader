@@ -9,7 +9,11 @@ from bot_v2.orchestration.config_controller import ConfigController
 from bot_v2.orchestration.configuration import BotConfig
 from bot_v2.orchestration.perps_bootstrap import prepare_perps_bot
 from bot_v2.orchestration.perps_bot import PerpsBot
-from bot_v2.orchestration.runtime_settings import RuntimeSettings, load_runtime_settings
+from bot_v2.orchestration.runtime_settings import (
+    DEFAULT_RUNTIME_SETTINGS_PROVIDER,
+    RuntimeSettings,
+    RuntimeSettingsProvider,
+)
 from bot_v2.orchestration.service_registry import ServiceRegistry
 from bot_v2.orchestration.session_guard import TradingSessionGuard
 
@@ -19,10 +23,13 @@ logger = logging.getLogger(__name__)
 class PerpsBotBuilder:
     """Composable builder that assembles a :class:`PerpsBot` without side effects."""
 
-    def __init__(self) -> None:
+    def __init__(self, provider: RuntimeSettingsProvider | None = None) -> None:
         self._config: BotConfig | None = None
         self._registry: ServiceRegistry | None = None
         self._settings: RuntimeSettings | None = None
+        self._settings_provider: RuntimeSettingsProvider = (
+            provider or DEFAULT_RUNTIME_SETTINGS_PROVIDER
+        )
 
     def with_config(self, config: BotConfig) -> PerpsBotBuilder:
         self._config = config
@@ -36,6 +43,10 @@ class PerpsBotBuilder:
         self._settings = settings
         return self
 
+    def with_settings_provider(self, provider: RuntimeSettingsProvider) -> PerpsBotBuilder:
+        self._settings_provider = provider
+        return self
+
     def build(self) -> PerpsBot:
         if self._config is None:
             raise ValueError("Configuration must be supplied before building the bot")
@@ -44,7 +55,7 @@ class PerpsBotBuilder:
         if settings is None and self._registry is not None:
             settings = self._registry.runtime_settings
         if settings is None:
-            settings = load_runtime_settings()
+            settings = self._settings_provider.get()
 
         bootstrap_result = prepare_perps_bot(
             self._config,
@@ -97,10 +108,12 @@ class PerpsBotBuilder:
 def create_perps_bot(
     config: BotConfig,
     registry: ServiceRegistry | None = None,
+    *,
+    settings_provider: RuntimeSettingsProvider | None = None,
 ) -> PerpsBot:
     """Factory helper around :class:`PerpsBotBuilder`."""
 
-    builder = PerpsBotBuilder().with_config(config)
+    builder = PerpsBotBuilder(provider=settings_provider).with_config(config)
     if registry is not None:
         builder = builder.with_registry(registry)
         if registry.runtime_settings is not None:
@@ -111,8 +124,10 @@ def create_perps_bot(
 def create_test_perps_bot(
     config: BotConfig,
     registry: ServiceRegistry | None = None,
+    *,
+    settings_provider: RuntimeSettingsProvider | None = None,
     **_: Any,
 ) -> PerpsBot:
     """Test-focused shortcut that proxies to :func:`create_perps_bot`."""
 
-    return create_perps_bot(config, registry)
+    return create_perps_bot(config, registry, settings_provider=settings_provider)

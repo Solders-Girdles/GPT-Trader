@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 import os
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -183,8 +183,39 @@ def get_runtime_settings(
     return _SNAPSHOT_CACHE
 
 
+class RuntimeSettingsProvider:
+    """Thin wrapper around module-level runtime settings helpers."""
+
+    def __init__(
+        self,
+        loader: Callable[[Mapping[str, str] | None], RuntimeSettings] = load_runtime_settings,
+    ) -> None:
+        self._loader = loader
+
+    def get(
+        self,
+        *,
+        force_refresh: bool = False,
+        env: Mapping[str, str] | None = None,
+    ) -> RuntimeSettings:
+        if env is not None:
+            return self._loader(env)
+        return get_runtime_settings(force_refresh=force_refresh)
+
+    def override(self, snapshot: RuntimeSettings | None) -> None:
+        set_runtime_settings_override(snapshot)
+
+    def clear(self) -> None:
+        clear_runtime_settings_cache()
+
+
+DEFAULT_RUNTIME_SETTINGS_PROVIDER = RuntimeSettingsProvider()
+
+
 __all__ = [
+    "DEFAULT_RUNTIME_SETTINGS_PROVIDER",
     "RuntimeSettings",
+    "RuntimeSettingsProvider",
     "load_runtime_settings",
     "get_runtime_settings",
     "set_runtime_settings_override",

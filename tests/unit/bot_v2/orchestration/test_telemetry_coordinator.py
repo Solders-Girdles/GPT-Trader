@@ -2,21 +2,28 @@
 
 from __future__ import annotations
 
+from unittest.mock import Mock
+
 import pytest
 
 from bot_v2.features.brokerages.coinbase.account_manager import CoinbaseAccountManager
+from bot_v2.features.brokerages.coinbase.adapter import CoinbaseBrokerage
 from bot_v2.orchestration.configuration import BotConfig, Profile
 from bot_v2.orchestration.perps_bot import PerpsBot
 from bot_v2.orchestration.perps_bot_builder import create_perps_bot
+from bot_v2.orchestration.service_registry import ServiceRegistry
 
 
 def test_init_accounting_services_sets_manager(monkeypatch, tmp_path):
     monkeypatch.setenv("EVENT_STORE_ROOT", str(tmp_path))
-    monkeypatch.setenv("PERPS_FORCE_MOCK", "1")
+    monkeypatch.setenv("PERPS_FORCE_MOCK", "0")
     monkeypatch.setattr(PerpsBot, "_start_streaming_background", lambda self: None)
 
     config = BotConfig(profile=Profile.DEV, symbols=["BTC-PERP"], update_interval=1)
-    bot = create_perps_bot(config)
+    broker = Mock(spec=CoinbaseBrokerage)
+    broker.__class__ = CoinbaseBrokerage
+    registry = ServiceRegistry(config=config, broker=broker)
+    bot = create_perps_bot(config, registry=registry)
 
     # Clear existing instances to exercise re-initialisation path.
     bot.account_manager = None  # type: ignore[assignment]
@@ -31,11 +38,14 @@ def test_init_accounting_services_sets_manager(monkeypatch, tmp_path):
 
 def test_init_market_services_populates_monitor(monkeypatch, tmp_path):
     monkeypatch.setenv("EVENT_STORE_ROOT", str(tmp_path))
-    monkeypatch.setenv("PERPS_FORCE_MOCK", "1")
+    monkeypatch.setenv("PERPS_FORCE_MOCK", "0")
     monkeypatch.setattr(PerpsBot, "_start_streaming_background", lambda self: None)
 
     config = BotConfig(profile=Profile.DEV, symbols=["BTC-PERP"], update_interval=1)
-    bot = create_perps_bot(config)
+    broker = Mock(spec=CoinbaseBrokerage)
+    broker.__class__ = CoinbaseBrokerage
+    registry = ServiceRegistry(config=config, broker=broker)
+    bot = create_perps_bot(config, registry=registry)
 
     bot.symbols = ["BTC-PERP", "ETH-PERP"]
     bot.telemetry_coordinator.bootstrap()
@@ -48,11 +58,14 @@ def test_init_market_services_populates_monitor(monkeypatch, tmp_path):
 @pytest.mark.asyncio
 async def test_run_account_telemetry_respects_snapshot_support(monkeypatch, tmp_path):
     monkeypatch.setenv("EVENT_STORE_ROOT", str(tmp_path))
-    monkeypatch.setenv("PERPS_FORCE_MOCK", "1")
+    monkeypatch.setenv("PERPS_FORCE_MOCK", "0")
     monkeypatch.setattr(PerpsBot, "_start_streaming_background", lambda self: None)
 
     config = BotConfig(profile=Profile.DEV, symbols=["BTC-PERP"], update_interval=1)
-    bot = create_perps_bot(config)
+    broker = Mock(spec=CoinbaseBrokerage)
+    broker.__class__ = CoinbaseBrokerage
+    registry = ServiceRegistry(config=config, broker=broker)
+    bot = create_perps_bot(config, registry=registry)
 
     run_calls: list[int] = []
 

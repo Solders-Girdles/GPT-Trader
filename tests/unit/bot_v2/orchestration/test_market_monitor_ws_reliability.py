@@ -1,13 +1,21 @@
 from datetime import datetime, timedelta
 
+from unittest.mock import Mock
+
+from bot_v2.features.brokerages.coinbase.adapter import CoinbaseBrokerage
 from bot_v2.orchestration.configuration import BotConfig, Profile
 from bot_v2.orchestration.perps_bot_builder import create_perps_bot
+from bot_v2.orchestration.service_registry import ServiceRegistry
 
 
 def test_consecutive_failures(monkeypatch):
     # Disable WS threads for test
     monkeypatch.setenv("DISABLE_WS_STREAMING", "1")
-    bot = create_perps_bot(BotConfig.from_profile(Profile.DEV.value))
+    config = BotConfig.from_profile(Profile.DEV.value)
+    broker = Mock(spec=CoinbaseBrokerage)
+    broker.__class__ = CoinbaseBrokerage
+    registry = ServiceRegistry(config=config, broker=broker)
+    bot = create_perps_bot(config, registry=registry)
     monitor = bot._market_monitor
 
     # First 3 failures shouldn't trigger fallback
@@ -25,7 +33,11 @@ def test_consecutive_failures(monkeypatch):
 
 def test_staleness_detection(monkeypatch):
     monkeypatch.setenv("DISABLE_WS_STREAMING", "1")
-    bot = create_perps_bot(BotConfig.from_profile(Profile.DEV.value))
+    config = BotConfig.from_profile(Profile.DEV.value)
+    broker = Mock(spec=CoinbaseBrokerage)
+    broker.__class__ = CoinbaseBrokerage
+    registry = ServiceRegistry(config=config, broker=broker)
+    bot = create_perps_bot(config, registry=registry)
     monitor = bot._market_monitor
     monitor.max_staleness_ms = 1000
 

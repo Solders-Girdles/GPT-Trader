@@ -70,8 +70,9 @@ class ConfigManager:
         **kwargs: Any,
     ) -> BotConfig:
         meta = dict(metadata or {})
-        meta.setdefault("_runtime_settings", self._settings)
-        return cast(BotConfig, self._config_cls(metadata=meta, **kwargs))
+        config = cast(BotConfig, self._config_cls(metadata=meta, **kwargs))
+        config.state.runtime_settings = self._settings
+        return config
 
     def build(self) -> BotConfig:
         """Construct a validated configuration instance."""
@@ -83,9 +84,9 @@ class ConfigManager:
         self._validate(config)
 
         snapshot = self._capture_snapshot()
-        config.metadata["profile"] = self.profile.value
-        config.metadata["overrides"] = deepcopy(self.overrides)
-        config.metadata["config_snapshot"] = snapshot
+        config.state.profile_value = self.profile.value
+        config.state.overrides_snapshot = deepcopy(self.overrides)
+        config.state.config_snapshot = snapshot
 
         self._config = config
         self._last_snapshot = snapshot
@@ -106,14 +107,24 @@ class ConfigManager:
     def get_config(self) -> BotConfig | None:
         return self._config
 
+    def replace_config(self, config: BotConfig) -> None:
+        """Replace the managed configuration with a new instance."""
+
+        self._config = config
+        snapshot = self._capture_snapshot()
+        self._last_snapshot = snapshot
+        config.state.config_snapshot = snapshot
+        config.state.overrides_snapshot = deepcopy(self.overrides)
+        config.state.profile_value = self.profile.value
+
     @classmethod
     def from_config(
         cls, config: BotConfig, settings: RuntimeSettings | None = None
     ) -> ConfigManager:
         """Recreate a manager from an existing configuration instance."""
 
-        overrides = deepcopy(config.metadata.get("overrides", {}))
-        snapshot = deepcopy(config.metadata.get("config_snapshot"))
+        overrides = deepcopy(config.state.overrides_snapshot)
+        snapshot = deepcopy(config.state.config_snapshot)
         manager = cls(
             profile=config.profile,
             overrides=overrides,
@@ -138,6 +149,7 @@ class ConfigManager:
             return config
 
         errors: list[str] = []
+        updated = config
         for key, value in self.overrides.items():
             if value is None:
                 continue
@@ -147,7 +159,7 @@ class ConfigManager:
                 errors.append(f"Unknown configuration override '{key}'")
                 continue
             try:
-                setattr(config, key, value)
+                updated = updated.with_overrides(**{key: value})
             except ValidationError as exc:
                 errors.extend(format_validation_errors(exc))
             except (TypeError, ValueError) as exc:
@@ -155,23 +167,32 @@ class ConfigManager:
 
         if errors:
             raise ConfigValidationError(errors)
-        return config
+        return updated
 
     def _post_process(self, config: BotConfig) -> BotConfig:
+        profile_updates: dict[str, Any] = {}
         if self.profile == Profile.CANARY:
-            config.reduce_only_mode = True
             try:
-                config.max_leverage = min(int(getattr(config, "max_leverage", 1)), 1)
+                leverage_value = int(getattr(config, "max_leverage", 1))
             except Exception:
-                config.max_leverage = 1
-            config.time_in_force = "IOC"
+                leverage_value = 1
+            profile_updates.update(
+                reduce_only_mode=True,
+                max_leverage=min(leverage_value, 1),
+                time_in_force="IOC",
+            )
         elif self.profile == Profile.SPOT:
-            config.enable_shorts = False
-            config.max_leverage = 1
-            config.reduce_only_mode = False
+            profile_updates.update(
+                enable_shorts=False,
+                max_leverage=1,
+                reduce_only_mode=False,
+            )
             if not self._settings.spot_force_live:
                 logger.info("Spot profile detected; falling back to mock broker for safety")
-                config.mock_broker = True
+                profile_updates["mock_broker"] = True
+
+        if profile_updates:
+            config = config.with_overrides(**profile_updates)
 
         config = self._apply_runtime_toggles(config)
 
@@ -181,7 +202,7 @@ class ConfigManager:
         ):
             preview_flag = self._settings.order_preview_enabled
             if preview_flag is not None:
-                config.enable_order_preview = preview_flag
+                config = config.with_overrides(enable_order_preview=preview_flag)
 
         return config
 
@@ -207,15 +228,14 @@ class ConfigManager:
     def _apply_runtime_toggles(self, config: BotConfig) -> BotConfig:
         settings = self._settings
 
-        config.perps_enable_streaming = settings.perps_enable_streaming
-        config.perps_stream_level = settings.perps_stream_level
-
-        config.perps_paper_trading = settings.perps_paper_trading
-        config.perps_force_mock = settings.perps_force_mock
-        config.perps_skip_startup_reconcile = settings.perps_skip_startup_reconcile
-        config.perps_position_fraction = settings.perps_position_fraction
-
-        return config
+        return config.with_overrides(
+            perps_enable_streaming=settings.perps_enable_streaming,
+            perps_stream_level=settings.perps_stream_level,
+            perps_paper_trading=settings.perps_paper_trading,
+            perps_force_mock=settings.perps_force_mock,
+            perps_skip_startup_reconcile=settings.perps_skip_startup_reconcile,
+            perps_position_fraction=settings.perps_position_fraction,
+        )
 
     def _capture_snapshot(self) -> dict[str, Any]:
         snapshot_settings = self._settings if self._settings_locked else load_runtime_settings()

@@ -109,7 +109,7 @@ jobs:
         if: matrix.category == 'coinbase-integration'
         run: |
           set -euo pipefail
-          export PYTHONPATH="${GITHUB_WORKSPACE}${PYTHONPATH:+:$PYTHONPATH}"
+          export PYTHONPATH="${GITHUB_WORKSPACE}/src:${GITHUB_WORKSPACE}${PYTHONPATH:+:$PYTHONPATH}"
           poetry run pytest tests/unit/bot_v2/features/brokerages/coinbase/test_adapter_integration.py -v
           poetry run python - <<'PY'
           import os

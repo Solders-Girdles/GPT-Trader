@@ -1,8 +1,9 @@
-name: Nightly Tests
+name: Nightly Full Suite
 
 on:
   schedule:
     - cron: "0 2 * * *" # Every day at 2 AM UTC
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -12,12 +13,16 @@ permissions:
   contents: read
   actions: write
 
+defaults:
+  run:
+    shell: bash --noprofile --norc
+
+env:
+  PYTHON_VERSION: "3.12"
+
 jobs:
   full-test-suite:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ["3.12"]
 
     steps:
     - uses: actions/checkout@v5
@@ -26,8 +31,9 @@ jobs:
       id: setup-poetry
       uses: ./.github/actions/setup-poetry
       with:
-        python-version: ${{ matrix.python-version }}
+        python-version: ${{ env.PYTHON_VERSION }}
 
     - name: Run full test suite (including slow tests)
       run: |
+        set -euo pipefail
         poetry run pytest

@@ -170,7 +170,6 @@ class CoinbaseClientBase:
                 "public_product": "/api/v3/brokerage/market/products/{product_id}",
                 "public_ticker": "/api/v3/brokerage/market/products/{product_id}/ticker",
                 "public_candles": "/api/v3/brokerage/market/products/{product_id}/candles",
-                "public_order_book": "/api/v3/brokerage/market/product_book",
                 "best_bid_ask": "/api/v3/brokerage/best_bid_ask",
                 "accounts": "/api/v3/brokerage/accounts",
                 "account": "/api/v3/brokerage/accounts/{account_uuid}",

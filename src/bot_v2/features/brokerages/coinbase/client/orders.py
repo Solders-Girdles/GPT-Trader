@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from typing import TYPE_CHECKING, Any
+from urllib.parse import urlencode
 
 from bot_v2.features.brokerages.coinbase.errors import InvalidRequestError
 from bot_v2.features.brokerages.core.interfaces import BrokerageError, NotFoundError
@@ -87,14 +89,31 @@ class OrderClientMixin:
                     return {"orders": []}
                 raise
 
-    def list_orders_batch(self: CoinbaseClientProtocol, order_ids: list[str]) -> dict[str, Any]:
+    def list_orders_batch(
+        self: CoinbaseClientProtocol,
+        order_ids: Sequence[str],
+        *,
+        cursor: str | None = None,
+        limit: int | None = None,
+    ) -> dict[str, Any]:
+        """Retrieve multiple orders in a single call using order IDs."""
         if self.api_mode == "exchange":
             raise InvalidRequestError(
                 "list_orders_batch not available in exchange mode. "
                 "Set COINBASE_API_MODE=advanced to use this feature."
             )
+        resolved_ids = [str(order_id) for order_id in order_ids if order_id]
+        if not resolved_ids:
+            raise InvalidRequestError("list_orders_batch requires at least one order_id.")
         path = self._get_endpoint_path("orders_batch")
-        return self._request("GET", path)
+        params: dict[str, Any] = {"order_ids": resolved_ids}
+        if cursor:
+            params["cursor"] = cursor
+        if limit is not None:
+            params["limit"] = str(limit)
+        query = urlencode(params, doseq=True)
+        final_path = f"{path}?{query}" if query else path
+        return self._request("GET", final_path)
 
     def list_fills(self: CoinbaseClientProtocol, **params: Any) -> dict[str, Any]:
         path = self._get_endpoint_path("fills")

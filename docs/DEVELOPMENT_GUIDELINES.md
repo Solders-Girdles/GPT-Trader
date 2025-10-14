@@ -44,6 +44,16 @@ rules that referenced the monolithic `src/bot` package have been archived.
   keeping facade modules (e.g., `risk/__init__.py`) that re-export the public
   API.
 
+## Continuous Integration
+
+- `Python CI`: Default PR gate; runs selective tests on pull requests and full coverage on direct pushes.
+- `Targeted Suites`: Matrix guarding Coinbase, perps, and live-trade regressions when relevant paths change.
+- `Perps Validation`: Focused derivatives/perps health check; formerly the “phase6” workflow.
+- `Nightly Validation`: Coinbase websocket and harness smoke tests on a nightly cadence.
+- `Nightly Full Suite`: Scheduled full pytest run (slow markers included); manually triggerable for debugging.
+- `Security Audit`: Weekly pip-audit export to catch dependency vulnerabilities.
+- `Bot V2 CI/CD Pipeline`: End-to-end build and deployment flow for staging/production releases; Docker publish is skipped on pull requests.
+
 ## Documentation
 
 - Update `docs/ARCHITECTURE.md`, `docs/RISK_INTEGRATION_GUIDE.md`, or other

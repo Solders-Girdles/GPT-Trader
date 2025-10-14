@@ -157,6 +157,10 @@ class TelemetryCoordinator(_TelemetryCoordinator):
             bot.market_monitor = market_monitor
             setattr(bot, "_market_monitor", market_monitor)
 
+        intx_service = context.registry.extras.get("intx_portfolio_service")
+        if intx_service is not None and hasattr(bot, "intx_portfolio_service"):
+            bot.intx_portfolio_service = intx_service
+
     def _schedule_coroutine(self, coro: Coroutine[Any, Any, Any]) -> None:
         """Execute a coordinator coroutine on the running loop or in a safe fallback."""
 

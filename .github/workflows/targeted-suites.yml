@@ -1,30 +1,38 @@
-name: Specialized Suites
+name: Targeted Suites
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
     paths:
       - 'src/bot_v2/features/brokerages/coinbase/**'
-      - 'tests/unit/bot_v2/features/brokerages/coinbase/**'
+      - 'src/bot_v2/features/brokerages/core/**'
       - 'src/bot_v2/features/live_trade/**'
-      - 'src/bot_v2/features/brokerages/**'
-      - 'tests/**/live_trade/**'
+      - 'tests/unit/bot_v2/features/brokerages/coinbase/**'
+      - 'tests/unit/bot_v2/features/live_trade/**'
+      - 'tests/unit/bot_v2/orchestration/test_broker_factory.py'
+      - 'tests/unit/bot_v2/orchestration/test_live_execution_perps.py'
+      - 'tests/unit/bot_v2/orchestration/test_configuration.py'
+      - 'tests/unit/bot_v2/orchestration/test_config_manager.py'
       - 'tests/**/perps/**'
       - 'scripts/run_perps_bot.py'
       - 'scripts/validation/**'
-      - '.github/workflows/specialized-tests.yml'
+      - '.github/workflows/targeted-suites.yml'
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop]
     paths:
       - 'src/bot_v2/features/brokerages/coinbase/**'
-      - 'tests/unit/bot_v2/features/brokerages/coinbase/**'
+      - 'src/bot_v2/features/brokerages/core/**'
       - 'src/bot_v2/features/live_trade/**'
-      - 'src/bot_v2/features/brokerages/**'
-      - 'tests/**/live_trade/**'
+      - 'tests/unit/bot_v2/features/brokerages/coinbase/**'
+      - 'tests/unit/bot_v2/features/live_trade/**'
+      - 'tests/unit/bot_v2/orchestration/test_broker_factory.py'
+      - 'tests/unit/bot_v2/orchestration/test_live_execution_perps.py'
+      - 'tests/unit/bot_v2/orchestration/test_configuration.py'
+      - 'tests/unit/bot_v2/orchestration/test_config_manager.py'
       - 'tests/**/perps/**'
       - 'scripts/run_perps_bot.py'
       - 'scripts/validation/**'
-      - '.github/workflows/specialized-tests.yml'
+      - '.github/workflows/targeted-suites.yml'
   workflow_dispatch:
 
 concurrency:
@@ -35,33 +43,39 @@ permissions:
   contents: read
   actions: write
 
+defaults:
+  run:
+    shell: bash --noprofile --norc
+
+env:
+  PYTHON_VERSION: "3.12"
+
 jobs:
-  specialized:
+  targeted:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         include:
           - suite: coinbase-advanced
-            type: coinbase-api
+            category: coinbase-api
             api_mode: advanced
             base_url: https://api.coinbase.com
             needs_passphrase: false
           - suite: coinbase-exchange
-            type: coinbase-api
+            category: coinbase-api
             api_mode: exchange
             base_url: https://api-public.sandbox.exchange.coinbase.com
             needs_passphrase: true
           - suite: coinbase-integration
-            type: coinbase-integration
+            category: coinbase-integration
             api_mode: advanced
             base_url: https://api.coinbase.com
             needs_passphrase: false
           - suite: perps
-            type: perps
-            api_mode: ""
-            base_url: ""
-            needs_passphrase: false
+            category: perps
+          - suite: live-trade-types
+            category: type-consolidation
 
     steps:
       - uses: actions/checkout@v5
@@ -70,11 +84,12 @@ jobs:
         id: setup-poetry
         uses: ./.github/actions/setup-poetry
         with:
-          python-version: "3.12"
+          python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Configure Coinbase API mode
         if: startsWith(matrix.suite, 'coinbase')
         run: |
+          set -euo pipefail
           echo "COINBASE_API_MODE=${{ matrix.api_mode }}" >> $GITHUB_ENV
           echo "COINBASE_API_BASE=${{ matrix.base_url }}" >> $GITHUB_ENV
           echo "COINBASE_API_KEY=test-key" >> $GITHUB_ENV
@@ -84,14 +99,14 @@ jobs:
           fi
 
       - name: Run Coinbase unit suite
-        if: matrix.type == 'coinbase-api'
+        if: matrix.category == 'coinbase-api'
         run: |
           set -euo pipefail
           poetry run pytest tests/unit/bot_v2/features/brokerages/coinbase -v --maxfail=1 --durations=10
           poetry run pytest tests/unit/bot_v2/orchestration/test_broker_factory.py -v
 
       - name: Run Coinbase integration smoke
-        if: matrix.type == 'coinbase-integration'
+        if: matrix.category == 'coinbase-integration'
         run: |
           set -euo pipefail
           export PYTHONPATH="${GITHUB_WORKSPACE}${PYTHONPATH:+:$PYTHONPATH}"
@@ -119,14 +134,14 @@ jobs:
           assert ws._transport is not None
 
           guard = SequenceGuard()
-          msg = guard.annotate({'sequence': 1})
-          assert 'gap_detected' not in msg
-          msg = guard.annotate({'sequence': 3})
-          assert msg.get('gap_detected') is True
+          first = guard.annotate({'sequence': 1})
+          assert 'gap_detected' not in first
+          second = guard.annotate({'sequence': 3})
+          assert second.get('gap_detected') is True
           PY
 
       - name: Run perps validation suite
-        if: matrix.type == 'perps'
+        if: matrix.category == 'perps'
         env:
           RUNNER_TEMP: ${{ runner.temp }}
         run: |
@@ -165,3 +180,14 @@ jobs:
           COINBASE_SANDBOX='1' PERPS_FORCE_MOCK='1' poetry run python scripts/run_perps_bot.py --profile demo --dev-fast --reduce-only --symbols BTC-PERP
           test -f "$EVENT_STORE_ROOT/perps_bot/demo/health.json"
           test -f "$EVENT_STORE_ROOT/perps_bot/demo/last_state.json"
+
+      - name: Run type consolidation checks
+        if: matrix.category == 'type-consolidation'
+        run: |
+          set -euo pipefail
+          poetry run pytest tests/unit/bot_v2/features/live_trade/test_type_consolidation.py -v
+          ! grep -E "^class (Order|Position|Quote|OrderType|OrderSide|OrderStatus)\s" src/bot_v2/features/live_trade/types.py
+          ! grep -E "return .*(LocalOrder|LocalQuote|LocalPosition)" src/bot_v2/features/live_trade/brokers.py
+          ! grep -E "core_to_local_(order|quote|position)" src/bot_v2/features/live_trade/
+          ! rg -n "from .*live_trade\.types .*(Order\b|OrderSide\b|OrderType\b|Position\b|Quote\b)" -S
+          ! rg -n "from \.types .*(Order\b|OrderSide\b|OrderType\b)" src/bot_v2/features/live_trade/ -S

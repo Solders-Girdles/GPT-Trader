@@ -70,6 +70,7 @@ class RuntimeSettings:
     coinbase_sandbox_enabled: bool
     coinbase_api_mode: str
     risk_config_path: Path | None
+    coinbase_intx_portfolio_uuid: str | None
 
     def snapshot_env(
         self, keys: Mapping[str, object] | list[str] | tuple[str, ...]
@@ -116,6 +117,7 @@ def load_runtime_settings(env: Mapping[str, str] | None = None) -> RuntimeSettin
     broker_hint = env_map.get("BROKER")
     coinbase_sandbox = bool(_normalize_bool(env_map.get("COINBASE_SANDBOX")))
     coinbase_api_mode = (env_map.get("COINBASE_API_MODE") or "advanced").lower()
+    coinbase_intx_portfolio_uuid = env_map.get("COINBASE_INTX_PORTFOLIO_UUID")
 
     risk_config_raw = env_map.get("RISK_CONFIG_PATH")
     risk_config_path = Path(risk_config_raw) if risk_config_raw else None
@@ -140,6 +142,7 @@ def load_runtime_settings(env: Mapping[str, str] | None = None) -> RuntimeSettin
         coinbase_sandbox_enabled=coinbase_sandbox,
         coinbase_api_mode=coinbase_api_mode,
         risk_config_path=risk_config_path,
+        coinbase_intx_portfolio_uuid=coinbase_intx_portfolio_uuid,
     )
 
 

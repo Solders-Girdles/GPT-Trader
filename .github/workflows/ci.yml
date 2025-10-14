@@ -5,6 +5,7 @@ on:
     branches: [ main, develop ]
   pull_request:
     branches: [ main, develop ]
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -14,12 +15,17 @@ permissions:
   contents: read
   actions: write
 
+defaults:
+  run:
+    shell: bash --noprofile --norc
+
+env:
+  PYTHON_VERSION: "3.12"
+
 jobs:
-  build:
+  core-checks:
+    name: Core Checks
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ["3.12"]
 
     steps:
     - uses: actions/checkout@v5
@@ -30,11 +36,12 @@ jobs:
       id: setup-poetry
       uses: ./.github/actions/setup-poetry
       with:
-        python-version: ${{ matrix.python-version }}
+        python-version: ${{ env.PYTHON_VERSION }}
 
     - name: Generate dependency artifacts
       if: github.event_name == 'pull_request'
       run: |
+        set -euo pipefail
         poetry run python scripts/analysis/dependency_map.py --tests "tests/**/*.py" --output dependency_report.json
         poetry run python scripts/analysis/test_categorizer.py --output test_categories.json
 
@@ -43,6 +50,7 @@ jobs:
       env:
         PYTEST_ADDOPTS: '-m "not slow and not performance" -q'
       run: |
+        set -euo pipefail
         git fetch origin ${{ github.event.pull_request.base.ref }} --depth=1
         CHANGED=$(git diff --name-only origin/${{ github.event.pull_request.base.ref }} HEAD -- '*.py' | tr '\n' ' ')
         if [ -z "$CHANGED" ]; then
@@ -62,23 +70,28 @@ jobs:
 
     - name: Lint with ruff
       run: |
+        set -euo pipefail
         poetry run ruff check .
 
     - name: Check formatting with black
       run: |
+        set -euo pipefail
         poetry run black --check .
 
     - name: Type-check with mypy
       run: |
+        set -euo pipefail
         poetry run mypy src --ignore-missing-imports
 
     - name: Run Coinbase core checks
       run: |
+        set -euo pipefail
         poetry run pytest tests/unit/bot_v2/features/brokerages/coinbase -q
 
     - name: Run tests with pytest and generate coverage report
       if: github.event_name != 'pull_request'
       run: |
+        set -euo pipefail
         poetry run pytest -m "not slow and not performance" -q \
           --cov=bot_v2/cli \
           --cov=bot_v2/config \
@@ -100,12 +113,12 @@ jobs:
         name: coverage-html
         path: htmlcov
 
-  test-config-matrix:
+  config-modes:
+    name: Config Mode Coverage
     runs-on: ubuntu-latest
     strategy:
       matrix:
         env_mode: ['prod', 'sandbox', 'prod_fallback', 'sandbox_fallback']
-        python-version: ["3.12"]
 
     steps:
     - uses: actions/checkout@v5
@@ -114,7 +127,7 @@ jobs:
       id: setup-poetry
       uses: ./.github/actions/setup-poetry
       with:
-        python-version: ${{ matrix.python-version }}
+        python-version: ${{ env.PYTHON_VERSION }}
 
     - name: Run config tests
       env:
@@ -130,4 +143,5 @@ jobs:
         COINBASE_API_KEY: ${{ (matrix.env_mode == 'prod_fallback' || matrix.env_mode == 'sandbox_fallback') && 'fallback_key' || '' }}
         COINBASE_API_SECRET: ${{ (matrix.env_mode == 'prod_fallback' || matrix.env_mode == 'sandbox_fallback') && 'fallback_secret' || '' }}
       run: |
+        set -euo pipefail
         poetry run pytest tests/unit/bot_v2/orchestration/test_config_manager.py tests/unit/bot_v2/orchestration/test_configuration.py

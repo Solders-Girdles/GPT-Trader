@@ -8,6 +8,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, Any, cast
 
 from bot_v2.errors import ValidationError
+from bot_v2.features.brokerages.coinbase.errors import InvalidRequestError
 from bot_v2.features.brokerages.coinbase.models import normalize_symbol, to_order
 from bot_v2.features.brokerages.coinbase.rest.base import logger
 from bot_v2.features.brokerages.core.interfaces import (
@@ -182,6 +183,27 @@ class OrderRestMixin:
             data = client.list_orders(**params) or {}
         except Exception as exc:
             logger.error("Failed to list orders: %s", exc)
+            return []
+        items = data.get("orders") or data.get("data") or []
+        return [to_order(item) for item in items]
+
+    def list_orders_batch(
+        self,
+        order_ids: Sequence[str],
+        *,
+        cursor: str | None = None,
+        limit: int | None = None,
+    ) -> list[Order]:
+        if not order_ids:
+            return []
+        base = cast("CoinbaseRestServiceBase", self)
+        client = cast("CoinbaseClient", base.client)
+        try:
+            data = client.list_orders_batch(list(order_ids), cursor=cursor, limit=limit) or {}
+        except InvalidRequestError:
+            raise
+        except Exception as exc:
+            logger.error("Failed to list orders batch: %s", exc)
             return []
         items = data.get("orders") or data.get("data") or []
         return [to_order(item) for item in items]

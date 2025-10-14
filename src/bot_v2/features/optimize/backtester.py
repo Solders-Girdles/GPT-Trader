@@ -1,7 +1,7 @@
 """Local backtesting helpers used by the optimization pipeline."""
 
 import logging
-from typing import Any
+from typing import Any, cast
 
 import numpy as np
 import pandas as pd
@@ -141,7 +141,7 @@ def simulate_trades(
         if date not in data.index:
             continue
 
-        price_value = data.loc[date, "close"]
+        price_value = data.loc[cast(Any, date), "close"]
         price_array = np.asarray(price_value)
         price = float(price_array.reshape(-1)[-1])
 

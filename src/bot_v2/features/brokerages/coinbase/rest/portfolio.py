@@ -57,12 +57,6 @@ class PortfolioRestMixin:
             return [PortfolioRestMixin._decimals_to_str(item) for item in value]
         return value
 
-    def _intx_supported(self) -> bool:
-        try:
-            return bool(self.endpoints.supports_intx())
-        except Exception:
-            return False
-
     def list_balances(self) -> list[Balance]:
         raw = self.client.get_accounts() or {}
         accounts = raw if isinstance(raw, list) else raw.get("accounts") or raw.get("data") or []

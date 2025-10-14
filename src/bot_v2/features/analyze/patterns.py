@@ -195,8 +195,8 @@ def detect_triangle(data: pd.DataFrame, lookback: int = 20) -> PricePattern | No
     recent = data.tail(lookback)
 
     # Calculate trendlines
-    highs = recent["high"].values
-    lows = recent["low"].values
+    highs = recent["high"].to_numpy()
+    lows = recent["low"].to_numpy()
     x = np.arange(len(highs))
 
     # Fit lines to highs and lows

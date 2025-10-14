@@ -108,7 +108,8 @@ class CoinbaseAccountManager:
             balances = self.broker.get_intx_balances(portfolio_uuid=target_uuid)
             portfolio = self.broker.get_intx_portfolio(portfolio_uuid=target_uuid)
             positions = self.broker.list_intx_positions(portfolio_uuid=target_uuid)
-            collateral = self.broker.get_intx_collateral()
+            collateral_fetch = getattr(self.broker, "get_intx_collateral", None)
+            collateral = collateral_fetch() if callable(collateral_fetch) else None
         except Exception as exc:
             logger.log_event(
                 LogLevel.DEBUG,

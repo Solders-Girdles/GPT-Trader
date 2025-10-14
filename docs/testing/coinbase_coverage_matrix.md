@@ -1,48 +1,72 @@
-Coinbase API Test Coverage Matrix
+# Coinbase API Coverage Matrix
 
-- Accounts: get_accounts, get_account, list_portfolios, get_portfolio, get_portfolio_breakdown, move_funds
-  - tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_integration.py::TestCoinbaseAccounts
+This matrix maps every Coinbase Advanced Trade endpoint declared in `src/bot_v2/features/brokerages/coinbase/endpoints.py` to its current client implementation, REST surface, adapter exposure, and unit-test coverage. Tiers follow the trading-impact rubric:
+- **Tier 1** – trade lifecycle, balances, fills, and market data foundations.
+- **Tier 2** – portfolio cash controls and derivatives risk endpoints.
+- **Tier 3** – institutional (`intx_*`) conveniences.
 
-- Trading & Order Management: place_order, cancel_orders, list_orders, list_orders_batch, list_fills, get_order_historical, preview_order, edit_order_preview, edit_order, close_position
-  - tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_integration.py::TestCoinbaseTrading
-  - tests/unit/bot_v2/features/brokerages/coinbase/test_endpoint_chains.py
+## Tier 1 – Trade Lifecycle & Balances
 
-- Market Data & Models: products, product, ticker, candles, order_book, best_bid_ask, quote normalization
-  - tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_integration.py::TestCoinbaseMarketData
-  - tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_models.py
+| Endpoint | Client mixin | REST surface | Adapter | Tests | Notes |
+|---|---|---|---|---|---|
+| cancel_orders (POST) | OrderClientMixin.cancel_orders | OrderRestMixin.cancel_order | CoinbaseBrokerage.cancel_order | tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_trading.py<br>tests/unit/bot_v2/features/brokerages/coinbase/test_endpoint_chains.py<br>tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_permissions.py | — |
+| close_position (POST) | OrderClientMixin.close_position | OrderRestMixin.close_position | CoinbaseBrokerage.close_position | tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_trading.py<br>tests/unit/bot_v2/features/brokerages/coinbase/test_endpoint_chains.py<br>tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_permissions.py | — |
+| edit_order (POST) | OrderClientMixin.edit_order | OrderRestMixin.edit_order | CoinbaseBrokerage.edit_order | tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_trading.py<br>tests/unit/bot_v2/features/brokerages/coinbase/test_endpoint_chains.py<br>tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_permissions.py | — |
+| edit_order_preview (POST) | OrderClientMixin.edit_order_preview | OrderRestMixin.edit_order_preview | CoinbaseBrokerage.edit_order_preview | tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_trading.py<br>tests/unit/bot_v2/features/brokerages/coinbase/test_endpoint_chains.py<br>tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_permissions.py | — |
+| get_account (GET) | AccountClientMixin.get_account | — | — | tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_accounts.py<br>tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_system.py | No REST or adapter surface; only raw client usage. |
+| get_best_bid_ask (GET) | MarketDataClientMixin.get_best_bid_ask | — | — | tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_market_data.py<br>tests/unit/bot_v2/features/brokerages/coinbase/test_endpoint_registry.py | Client call only; adapter/rest do not expose aggregated best bid/ask. |
+| get_fees (GET) | AccountClientMixin.get_fees | PortfolioRestMixin.get_fee_schedule | CoinbaseBrokerage.get_fee_schedule | tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_accounts.py<br>tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_system.py | — |
+| get_key_permissions (GET) | AccountClientMixin.get_key_permissions | PortfolioRestMixin.get_key_permissions | CoinbaseBrokerage.get_key_permissions | tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_accounts.py<br>tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_system.py | — |
+| get_limits (GET) | AccountClientMixin.get_limits | PortfolioRestMixin.get_account_limits | CoinbaseBrokerage.get_account_limits | tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_accounts.py<br>tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_system.py | — |
+| get_order_historical (GET) | OrderClientMixin.get_order_historical | OrderRestMixin.get_order | CoinbaseBrokerage.get_order | tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_trading.py<br>tests/unit/bot_v2/features/brokerages/coinbase/test_endpoint_chains.py<br>tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_permissions.py | — |
+| get_product (GET) | MarketDataClientMixin.get_product | ProductRestMixin.get_product | CoinbaseBrokerage.get_product | tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_market_data.py<br>tests/unit/bot_v2/features/brokerages/coinbase/test_endpoint_registry.py | — |
+| get_product_book (GET) | MarketDataClientMixin.get_product_book | — | — | tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_market_data.py<br>tests/unit/bot_v2/features/brokerages/coinbase/test_endpoint_registry.py | Client-only; no REST or adapter wrapper. |
+| get_product_candles (GET) | MarketDataClientMixin.get_candles | ProductRestMixin.get_candles | CoinbaseBrokerage.get_candles | tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_market_data.py<br>tests/unit/bot_v2/features/brokerages/coinbase/test_endpoint_registry.py | — |
+| get_product_ticker (GET) | MarketDataClientMixin.get_ticker | ProductRestMixin.get_rest_quote | CoinbaseBrokerage.get_quote | tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_market_data.py<br>tests/unit/bot_v2/features/brokerages/coinbase/test_endpoint_registry.py | — |
+| get_public_product (GET) | MarketDataClientMixin.get_market_product | — | — | tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_market_data.py<br>tests/unit/bot_v2/features/brokerages/coinbase/test_endpoint_registry.py | Public market namespace only available via client mixin. |
+| get_public_product_candles (GET) | MarketDataClientMixin.get_market_product_candles | — | — | tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_market_data.py<br>tests/unit/bot_v2/features/brokerages/coinbase/test_endpoint_registry.py | Public market namespace only available via client mixin. |
+| get_public_product_ticker (GET) | MarketDataClientMixin.get_market_product_ticker | — | — | tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_market_data.py<br>tests/unit/bot_v2/features/brokerages/coinbase/test_endpoint_registry.py | Public market namespace only available via client mixin. |
+| get_time (GET) | AccountClientMixin.get_time | — | — | tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_accounts.py<br>tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_system.py | Utility endpoint only exposed via client tests. |
+| get_transaction_summary (GET) | AccountClientMixin.get_transaction_summary | PortfolioRestMixin.get_transaction_summary | CoinbaseBrokerage.get_transaction_summary | tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_accounts.py<br>tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_system.py | — |
+| list_accounts (GET) | AccountClientMixin.get_accounts | PortfolioRestMixin.list_balances<br>PortfolioRestMixin.get_portfolio_balances | CoinbaseBrokerage.list_balances<br>CoinbaseBrokerage.get_portfolio_balances | tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_accounts.py<br>tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_system.py | — |
+| list_fills (GET) | OrderClientMixin.list_fills | OrderRestMixin.list_fills | CoinbaseBrokerage.list_fills | tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_trading.py<br>tests/unit/bot_v2/features/brokerages/coinbase/test_endpoint_chains.py<br>tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_permissions.py | — |
+| list_orders_historical (GET) | OrderClientMixin.list_orders | OrderRestMixin.list_orders | CoinbaseBrokerage.list_orders | tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_trading.py<br>tests/unit/bot_v2/features/brokerages/coinbase/test_endpoint_chains.py<br>tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_permissions.py | — |
+| list_orders_historical_batch (GET) | OrderClientMixin.list_orders_batch | OrderRestMixin.list_orders_batch | CoinbaseBrokerage.list_orders_batch | tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_trading.py<br>tests/unit/bot_v2/features/brokerages/coinbase/test_endpoint_chains.py<br>tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_permissions.py | Accepts `order_ids` with optional cursor/limit; advanced mode only. |
+| list_products (GET) | MarketDataClientMixin.get_products | ProductRestMixin.list_products | CoinbaseBrokerage.list_products<br>CoinbaseBrokerage.get_perpetuals | tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_market_data.py<br>tests/unit/bot_v2/features/brokerages/coinbase/test_endpoint_registry.py | — |
+| list_public_products (GET) | MarketDataClientMixin.get_market_products | — | — | tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_market_data.py<br>tests/unit/bot_v2/features/brokerages/coinbase/test_endpoint_registry.py | Public market namespace only available via client mixin. |
+| place_order (POST) | OrderClientMixin.list_orders<br>OrderClientMixin.place_order | OrderRestMixin.place_order | CoinbaseBrokerage.place_order | tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_trading.py<br>tests/unit/bot_v2/features/brokerages/coinbase/test_endpoint_chains.py<br>tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_permissions.py | — |
+| preview_order (POST) | OrderClientMixin.preview_order | OrderRestMixin.preview_order | CoinbaseBrokerage.preview_order | tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_trading.py<br>tests/unit/bot_v2/features/brokerages/coinbase/test_endpoint_chains.py<br>tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_permissions.py | — |
 
-- System, Fees & Permissions: time, fees, limits, key_permissions, auth selection
-  - tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_integration.py::TestCoinbaseSystem
-  - tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_permissions.py
-  - tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_auth.py
+## Tier 2 – Portfolio Controls & Derivatives Risk
 
-- Conversions & Funding Flows: convert_quote, get_convert_trade, move funds, sweeps
-  - tests/unit/bot_v2/features/brokerages/coinbase/test_conversion_endpoints.py
-  - tests/unit/bot_v2/features/brokerages/coinbase/test_cfm_endpoints.py
+| Endpoint | Client mixin | REST surface | Adapter | Tests | Notes |
+|---|---|---|---|---|---|
+| cfm_balance_summary (GET) | PortfolioClientMixin.cfm_balance_summary | PortfolioRestMixin.get_cfm_balance_summary | CoinbaseBrokerage.get_cfm_balance_summary | tests/unit/bot_v2/features/brokerages/coinbase/test_cfm_endpoints.py<br>tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_accounts.py<br>tests/unit/bot_v2/features/brokerages/coinbase/rest/test_cfm_portfolio.py | Snapshot exposed via account manager and adapter; REST emits telemetry metrics. Requires Advanced mode with derivatives. |
+| cfm_intraday_current_margin_window (GET) | PortfolioClientMixin.cfm_intraday_current_margin_window | PortfolioRestMixin.get_cfm_margin_window | CoinbaseBrokerage.get_cfm_margin_window | tests/unit/bot_v2/features/brokerages/coinbase/test_cfm_endpoints.py<br>tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_accounts.py<br>tests/unit/bot_v2/features/brokerages/coinbase/rest/test_cfm_portfolio.py | Adapter returns normalized margin window state (Advanced mode + derivatives only). |
+| cfm_intraday_margin_setting (POST) | PortfolioClientMixin.cfm_intraday_margin_setting | PortfolioRestMixin.update_cfm_margin_window | CoinbaseBrokerage.update_cfm_margin_window | tests/unit/bot_v2/features/brokerages/coinbase/test_cfm_endpoints.py<br>tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_accounts.py<br>tests/unit/bot_v2/features/brokerages/coinbase/rest/test_cfm_portfolio.py | Advanced-only; update path emits telemetry metrics and enforces derivatives gating. |
+| cfm_position (GET) | PortfolioClientMixin.cfm_position<br>PortfolioClientMixin.get_position | PortfolioRestMixin.get_position | CoinbaseBrokerage.get_position | tests/unit/bot_v2/features/brokerages/coinbase/test_cfm_endpoints.py<br>tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_accounts.py | — |
+| cfm_positions (GET) | PortfolioClientMixin.cfm_positions<br>PortfolioClientMixin.list_positions | PortfolioRestMixin.list_positions | CoinbaseBrokerage.list_positions | tests/unit/bot_v2/features/brokerages/coinbase/test_cfm_endpoints.py<br>tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_accounts.py | — |
+| cfm_sweeps (GET) | PortfolioClientMixin.cfm_sweeps | PortfolioRestMixin.list_cfm_sweeps | CoinbaseBrokerage.list_cfm_sweeps | tests/unit/bot_v2/features/brokerages/coinbase/test_cfm_endpoints.py<br>tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_accounts.py<br>tests/unit/bot_v2/features/brokerages/coinbase/rest/test_cfm_portfolio.py | REST layer normalizes sweeps and emits metrics; adapter exposes list for orchestration (Advanced mode + derivatives only). |
+| cfm_sweeps_schedule (GET) | PortfolioClientMixin.cfm_sweeps_schedule | PortfolioRestMixin.get_cfm_sweeps_schedule | CoinbaseBrokerage.get_cfm_sweeps_schedule | tests/unit/bot_v2/features/brokerages/coinbase/test_cfm_endpoints.py<br>tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_accounts.py<br>tests/unit/bot_v2/features/brokerages/coinbase/rest/test_cfm_portfolio.py | Schedule now available to account telemetry snapshots (Advanced mode + derivatives only). |
+| convert_quote (POST) | PortfolioClientMixin.convert_quote | PortfolioRestMixin.create_convert_quote | CoinbaseBrokerage.create_convert_quote | tests/unit/bot_v2/features/brokerages/coinbase/test_conversion_endpoints.py<br>tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_accounts.py | Adapter exposure via `create_convert_quote`; commit endpoint not in registry. |
+| get_convert_trade (GET) | PortfolioClientMixin.commit_convert_trade<br>PortfolioClientMixin.get_convert_trade | PortfolioRestMixin.get_convert_trade | CoinbaseBrokerage.get_convert_trade<br>CoinbaseBrokerage.commit_convert_trade | tests/unit/bot_v2/features/brokerages/coinbase/test_conversion_endpoints.py<br>tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_accounts.py | POST commit shares path but registry lacks dedicated entry. |
+| get_payment_method (GET) | PortfolioClientMixin.get_payment_method | PortfolioRestMixin.get_payment_method | CoinbaseBrokerage.get_payment_method | tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_accounts.py<br>tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_system.py | — |
+| get_portfolio (GET) | PortfolioClientMixin.get_portfolio | PortfolioRestMixin.get_portfolio | CoinbaseBrokerage.get_portfolio | tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_accounts.py<br>tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_system.py | — |
+| list_payment_methods (GET) | PortfolioClientMixin.list_payment_methods | PortfolioRestMixin.list_payment_methods | CoinbaseBrokerage.list_payment_methods | tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_accounts.py<br>tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_system.py | — |
+| list_portfolios (GET) | PortfolioClientMixin.list_portfolios | PortfolioRestMixin.list_portfolios | CoinbaseBrokerage.list_portfolios | tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_accounts.py<br>tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_system.py | — |
+| move_funds (POST) | PortfolioClientMixin.move_funds | PortfolioRestMixin.move_portfolio_funds | CoinbaseBrokerage.move_portfolio_funds | tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_accounts.py<br>tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_system.py | — |
 
-- Perpetuals (CFM) Risk Controls: balance_summary, positions, sweeps schedule, quantization rules
-  - tests/unit/bot_v2/features/brokerages/coinbase/test_cfm_endpoints.py
-  - tests/unit/bot_v2/features/brokerages/coinbase/test_quantization_rules.py
-  - tests/unit/bot_v2/features/brokerages/coinbase/test_specs_quantization.py
+## Tier 3 – Institutional / INTX Surface
 
-- Institutional (INTX): allocate, balances, portfolio, positions, multi_asset_collateral
-  - tests/unit/bot_v2/features/brokerages/coinbase/test_intx_endpoints.py
+| Endpoint | Client mixin | REST surface | Adapter | Tests | Notes |
+|---|---|---|---|---|---|
+| intx_allocate (POST) | PortfolioClientMixin.intx_allocate | PortfolioRestMixin.intx_allocate | CoinbaseBrokerage.intx_allocate | tests/unit/bot_v2/features/brokerages/coinbase/test_intx_endpoints.py<br>tests/unit/bot_v2/features/brokerages/coinbase/rest/test_intx_portfolio.py<br>tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_accounts.py | Advanced + institutional entitlement required; allocation emits telemetry metrics. |
+| intx_balances (GET) | PortfolioClientMixin.intx_balances | PortfolioRestMixin.get_intx_balances | CoinbaseBrokerage.get_intx_balances | tests/unit/bot_v2/features/brokerages/coinbase/test_intx_endpoints.py<br>tests/unit/bot_v2/features/brokerages/coinbase/rest/test_intx_portfolio.py<br>tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_accounts.py | Returns Decimal-normalised balances; REST emits telemetry snapshot. |
+| intx_multi_asset_collateral (GET) | PortfolioClientMixin.intx_multi_asset_collateral | PortfolioRestMixin.get_intx_multi_asset_collateral | CoinbaseBrokerage.get_intx_multi_asset_collateral | tests/unit/bot_v2/features/brokerages/coinbase/test_intx_endpoints.py<br>tests/unit/bot_v2/features/brokerages/coinbase/rest/test_intx_portfolio.py<br>tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_accounts.py | Adapter exposes collateral view; telemetry event records latest payload. |
+| intx_portfolio (GET) | PortfolioClientMixin.intx_portfolio | PortfolioRestMixin.get_intx_portfolio | CoinbaseBrokerage.get_intx_portfolio | tests/unit/bot_v2/features/brokerages/coinbase/test_intx_endpoints.py<br>tests/unit/bot_v2/features/brokerages/coinbase/rest/test_intx_portfolio.py<br>tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_accounts.py | Returns normalized INTX portfolio snapshot (advanced mode only). |
+| intx_position (GET) | PortfolioClientMixin.intx_position | PortfolioRestMixin.get_intx_position | CoinbaseBrokerage.get_intx_position | tests/unit/bot_v2/features/brokerages/coinbase/test_intx_endpoints.py<br>tests/unit/bot_v2/features/brokerages/coinbase/rest/test_intx_portfolio.py<br>tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_accounts.py | Returns individual position payload; gracefully falls back to `{}` when unavailable. |
+| intx_positions (GET) | PortfolioClientMixin.intx_positions | PortfolioRestMixin.list_intx_positions | CoinbaseBrokerage.list_intx_positions | tests/unit/bot_v2/features/brokerages/coinbase/test_intx_endpoints.py<br>tests/unit/bot_v2/features/brokerages/coinbase/rest/test_intx_portfolio.py<br>tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_accounts.py | Provides normalized list of positions; institutional access required. |
 
-- WebSocket & Streaming: ticker, level2, trades, status, user channel auth, reconnection, SequenceGuard coverage
-  - tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_websocket.py
-  - tests/unit/bot_v2/features/brokerages/coinbase/test_adapter_streams.py
-  - tests/unit/bot_v2/features/brokerages/coinbase/test_adapter_integration.py
+### Notable Gaps
 
-- Exchange Mode vs Advanced Mode: path mapping, feature gating, broker configuration
-  - tests/unit/bot_v2/features/brokerages/coinbase/test_adapter_integration.py::TestAPIModeBehavior
-  - tests/unit/bot_v2/features/brokerages/coinbase/test_endpoint_registry.py
-  - tests/unit/bot_v2/orchestration/test_broker_factory.py
-
-- Error Handling & Pagination: auth failures, rate limits with retries, 503 recovery, pagination edge cases, query params
-  - tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_errors.py
-  - tests/unit/bot_v2/features/brokerages/coinbase/test_pagination_and_errors.py
-  - tests/unit/bot_v2/features/brokerages/coinbase/test_http_request_layer.py
-
-Notes
-- All tests are deterministic with mocked transports. No live network calls.
-- For sandbox behavior and mode selection, see tests in orchestration and config.
+- Institutional endpoints still rely on external portfolio UUID context; higher-level helpers may be needed to select default portfolios automatically.

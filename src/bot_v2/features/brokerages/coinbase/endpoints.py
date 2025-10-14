@@ -83,13 +83,6 @@ ENDPOINTS: list[Endpoint] = [
         "Candles (public market)",
     ),
     Endpoint(
-        "get_public_product_book",
-        "GET",
-        "/api/v3/brokerage/market/product_book",
-        False,
-        "Order book (public market)",
-    ),
-    Endpoint(
         "get_best_bid_ask",
         "GET",
         "/api/v3/brokerage/best_bid_ask",
@@ -407,6 +400,10 @@ class CoinbaseEndpoints:
         legacy Exchange mode does not expose these.
         """
         return self.mode == "advanced" and bool(self.enable_derivatives)
+
+    def supports_intx(self) -> bool:
+        """Return True if institutional INTX endpoints should be available."""
+        return self.mode == "advanced"
 
 
 def get_perps_symbols() -> set:

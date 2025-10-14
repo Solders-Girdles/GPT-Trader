@@ -36,6 +36,7 @@ if TYPE_CHECKING:  # pragma: no cover - imports for type checking only
     from bot_v2.monitoring.configuration_guardian import ConfigurationGuardian
     from bot_v2.orchestration.account_telemetry import AccountTelemetryService
     from bot_v2.orchestration.execution_coordinator import ExecutionCoordinator
+    from bot_v2.orchestration.intx_portfolio_service import IntxPortfolioService
     from bot_v2.orchestration.live_execution import LiveExecutionEngine
     from bot_v2.orchestration.market_monitor import MarketActivityMonitor
     from bot_v2.orchestration.runtime_coordinator import RuntimeCoordinator
@@ -196,6 +197,7 @@ class PerpsBot:
         self.account_manager: CoinbaseAccountManager | None = None
         self.account_telemetry: AccountTelemetryService | None = None
         self.market_monitor: MarketActivityMonitor | None = None
+        self.intx_portfolio_service: IntxPortfolioService | None = None
 
     def _register_coordinators(self) -> None:
         """Register orchestrator coordinators in dependency order."""
@@ -261,9 +263,17 @@ class PerpsBot:
 
     @property
     def telemetry_coordinator(self) -> TelemetryCoordinator:
-        coordinator = self._coordinator_registry.get("telemetry")
+        from bot_v2.orchestration.telemetry_coordinator import (
+            TelemetryCoordinator as _TelemetryCoordinator,
+        )
+
+        coordinator = getattr(self._coordinator_context, "telemetry_coordinator", None)
+        if coordinator is None:
+            coordinator = self._coordinator_registry.get("telemetry")
         if coordinator is None:
             raise RuntimeError("Telemetry coordinator not registered")
+        if not isinstance(coordinator, _TelemetryCoordinator):
+            raise RuntimeError("Telemetry coordinator has unexpected type")
         return cast("TelemetryCoordinator", coordinator)
 
     @property
@@ -336,11 +346,12 @@ class PerpsBot:
             derivatives_enabled=derivatives_enabled,
         )
 
-        active_symbols = list(payload.symbols)
+        payload_dict = payload.to_dict()
+        active_symbols = list(payload_dict.get("symbols") or [])
         broker_type = "mock" if config.mock_broker else "live"
 
         return _ConfigurationGuardian.create_baseline_snapshot(
-            config_dict=payload,
+            config_dict=payload_dict,
             active_symbols=active_symbols,
             positions=[],
             account_equity=None,
@@ -407,6 +418,14 @@ class PerpsBot:
             self.__dict__.pop("_market_monitor", None)
         else:
             self.__dict__["_market_monitor"] = value
+
+    @property
+    def intx_portfolio_service(self) -> IntxPortfolioService | None:
+        return self._state.intx_portfolio_service
+
+    @intx_portfolio_service.setter
+    def intx_portfolio_service(self, value: IntxPortfolioService | None) -> None:
+        self._state.intx_portfolio_service = value
 
     # ------------------------------------------------------------------
     async def run(self, single_cycle: bool = False) -> None:

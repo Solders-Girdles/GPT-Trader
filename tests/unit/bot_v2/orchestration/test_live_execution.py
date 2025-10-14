@@ -212,6 +212,7 @@ def test_preview_enabled_calls_preview(monkeypatch):
 
     preview_calls = []
     broker.preview_order = lambda **kwargs: preview_calls.append(kwargs) or {"success": True}  # type: ignore[attr-defined]
+    broker.edit_order_preview = lambda order_id, **kwargs: None  # type: ignore[attr-defined]
 
     captured_metrics: list = []
     engine.event_store.append_metric = (

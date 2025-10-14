@@ -48,6 +48,7 @@ ALLOWLIST = {
     "tests/unit/bot_v2/types/test_trading.py",  # trading dataclass behaviours
     "tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_market_data.py",  # market data coverage
     "tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_system.py",  # system integration harness
+    "tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_accounts.py",  # account snapshot + treasury surface coverage
     "tests/unit/bot_v2/errors/test_base.py",  # error taxonomy coverage
     "tests/unit/bot_v2/monitoring/test_configuration_guardian.py",  # guardian behaviour matrix
     "tests/unit/bot_v2/utilities/test_trading_operations_integration.py",  # trading ops integration harness

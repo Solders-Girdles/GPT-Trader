@@ -93,10 +93,7 @@ jobs:
       run: |
         set -euo pipefail
         poetry run pytest -m "not slow and not performance" -q \
-          --cov=bot_v2/cli \
-          --cov=bot_v2/config \
-          --cov=bot_v2/features/brokerages/coinbase/client \
-          --cov=bot_v2/features/brokerages/coinbase/utilities \
+          --cov=bot_v2 \
           --cov-report=term --cov-report=xml --cov-report=html --cov-fail-under=75
 
     - name: Upload coverage to Artifacts

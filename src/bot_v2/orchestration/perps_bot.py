@@ -230,12 +230,16 @@ class PerpsBot:
 
     @property
     def runtime_coordinator(self) -> RuntimeCoordinator:
+        from bot_v2.orchestration.runtime_coordinator import (
+            RuntimeCoordinator as _RuntimeCoordinator,
+        )
+
         coordinator = self._coordinator_registry.get("runtime")
         if coordinator is None:
             raise RuntimeError("Runtime coordinator not registered")
-        if not isinstance(coordinator, RuntimeCoordinator):
+        if not isinstance(coordinator, _RuntimeCoordinator):
             raise RuntimeError("Runtime coordinator has unexpected type")
-        return coordinator
+        return cast("RuntimeCoordinator", coordinator)
 
     @property
     def execution_coordinator(self) -> ExecutionCoordinator:
@@ -244,7 +248,7 @@ class PerpsBot:
             coordinator = self._coordinator_registry.get("execution")
         if coordinator is None:
             raise RuntimeError("Execution coordinator not registered")
-        return cast(ExecutionCoordinator, coordinator)
+        return cast("ExecutionCoordinator", coordinator)
 
     @property
     def strategy_coordinator(self) -> StrategyCoordinator:
@@ -253,14 +257,14 @@ class PerpsBot:
             coordinator = self._coordinator_registry.get("strategy")
         if coordinator is None:
             raise RuntimeError("Strategy coordinator not registered")
-        return cast(StrategyCoordinator, coordinator)
+        return cast("StrategyCoordinator", coordinator)
 
     @property
     def telemetry_coordinator(self) -> TelemetryCoordinator:
         coordinator = self._coordinator_registry.get("telemetry")
         if coordinator is None:
             raise RuntimeError("Telemetry coordinator not registered")
-        return cast(TelemetryCoordinator, coordinator)
+        return cast("TelemetryCoordinator", coordinator)
 
     @property
     def settings(self) -> RuntimeSettings:

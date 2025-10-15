@@ -19,6 +19,13 @@ from tests.fixtures.environment import (  # noqa: F401
     temp_home,
     yahoo_provider_stub,
 )
+from tests.fixtures.monitoring import (  # noqa: F401
+    alert_manager,
+    alert_recorder,
+    advance_time,
+    frozen_time,
+    monitoring_collectors,
+)
 
 
 def pytest_collection_modifyitems(items):

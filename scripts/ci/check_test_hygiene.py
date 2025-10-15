@@ -57,6 +57,7 @@ ALLOWLIST = {
     "tests/unit/bot_v2/logging/test_setup.py",  # logging stack regression suite
     "tests/unit/bot_v2/validation/test_calculation_validator.py",  # calculation validator coverage
     "tests/unit/bot_v2/features/brokerages/coinbase/test_market_data_service.py",  # market data service contract
+    "tests/unit/bot_v2/features/data/test_data_module.py",  # 295 lines: comprehensive data module contract with storage/cache stubs
 }
 
 SLEEP_ALLOWLIST = {

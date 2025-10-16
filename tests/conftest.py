@@ -26,6 +26,22 @@ from tests.fixtures.monitoring import (  # noqa: F401
     frozen_time,
     monitoring_collectors,
 )
+from tests.fixtures.optimization import (  # noqa: F401
+    backtest_metrics_factory,
+    fake_backtest_runner,
+    ohlc_data_factory,
+    optimization_workspace,
+    seeded_ohlc_sets,
+)
+from tests.fixtures.live_trade import (  # noqa: F401
+    LiveTradeTestContext,
+    build_order_book,
+    build_trade_stream,
+    create_order,
+    create_position,
+    default_account,
+    live_trade_context,
+)
 
 
 def pytest_collection_modifyitems(items):

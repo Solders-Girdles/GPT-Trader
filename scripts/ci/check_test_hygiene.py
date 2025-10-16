@@ -58,6 +58,9 @@ ALLOWLIST = {
     "tests/unit/bot_v2/validation/test_calculation_validator.py",  # calculation validator coverage
     "tests/unit/bot_v2/features/brokerages/coinbase/test_market_data_service.py",  # market data service contract
     "tests/unit/bot_v2/features/data/test_data_module.py",  # 295 lines: comprehensive data module contract with storage/cache stubs
+    "tests/unit/bot_v2/cli/test_commands_orders.py",  # 254 lines: comprehensive CLI orders command coverage
+    "tests/unit/bot_v2/utilities/test_console_logging_core.py",  # 336 lines: console logging contract and fallback behavior matrix
+    "tests/unit/bot_v2/utilities/test_logging_patterns.py",  # 494 lines: extensive structured logging patterns and decorator coverage
 }
 
 SLEEP_ALLOWLIST = {

@@ -113,6 +113,28 @@ class TestConsoleLogger:
         output = mock_output_stream.getvalue()
         assert output == ""
 
+    def test_all_methods_when_console_disabled(self, mock_output_stream):
+        """Ensure all console methods skip printing when disabled."""
+        logger = ConsoleLogger(enable_console=False, output_stream=mock_output_stream)
+        for method_name in [
+            "success",
+            "error",
+            "warning",
+            "info",
+            "data",
+            "trading",
+            "order",
+            "position",
+            "cache",
+            "storage",
+            "network",
+            "analysis",
+            "ml",
+        ]:
+            getattr(logger, method_name)("message")
+
+        assert mock_output_stream.getvalue() == ""
+
     def test_print_section(self, console_logger, mock_output_stream):
         """Test section printing."""
         console_logger.print_section("Test Section", "=", 30)
@@ -128,12 +150,20 @@ class TestConsoleLogger:
         output = mock_output_stream.getvalue()
         assert "-" * 20 in output
 
+    def test_print_section_disabled(self, mock_output_stream):
+        """Section printing does nothing when console is disabled."""
+        logger = ConsoleLogger(enable_console=False, output_stream=mock_output_stream)
+        logger.print_section("Hidden", "*", 10)
+        assert mock_output_stream.getvalue() == ""
+
     def test_print_table(self, console_logger, mock_output_stream):
         """Test table printing."""
         headers = ["Symbol", "Price", "Quantity"]
         rows = [
             ["BTC-USD", "50000", "1.0"],
             ["ETH-USD", "3000", "10.0"],
+            # Extra column to exercise branch where i >= len(col_widths)
+            ["SOL-USD", "150", "20.0", "ignored"],
         ]
 
         console_logger.print_table(headers, rows)
@@ -212,6 +242,63 @@ class TestConsoleLogger:
         # Verify write was attempted
         mock_output_stream.write.assert_called()
 
+    def test_print_section_fallback_on_failure(self, monkeypatch):
+        """Fallback should print without stream when section print fails."""
+        recorded: list[str] = []
+        failing_stream = object()
+
+        def fake_print(*args, **kwargs):
+            if kwargs.get("file") is failing_stream:
+                raise Exception("stream failure")
+            recorded.append(args[0])
+
+        monkeypatch.setattr("builtins.print", fake_print)
+        logger = ConsoleLogger(enable_console=True, output_stream=failing_stream)
+
+        logger.print_section("Fallback", "#", 10)
+
+        assert recorded
+        assert "Fallback" in recorded[0]
+
+    def test_print_table_fallback_on_failure(self, monkeypatch):
+        """Fallback branch should execute when printing rows fails."""
+        recorded: list[str] = []
+        failing_stream = object()
+
+        def fake_print(*args, **kwargs):
+            if kwargs.get("file") is failing_stream:
+                raise Exception("stream failure")
+            recorded.append(args[0])
+
+        monkeypatch.setattr("builtins.print", fake_print)
+        logger = ConsoleLogger(enable_console=True, output_stream=failing_stream)
+
+        headers = ["Name"]
+        rows = [["Alice"], ["Bob"]]
+        logger.print_table(headers, rows)
+
+        assert recorded[0].strip() == "Name"
+        assert recorded[1].strip().startswith("-")
+        assert recorded[2].strip().startswith("Alice")
+        assert recorded[3].strip().startswith("Bob")
+
+    def test_print_key_value_fallback_on_failure(self, monkeypatch):
+        """printKeyValue should fall back to default stdout when stream fails."""
+        recorded: list[str] = []
+        failing_stream = object()
+
+        def fake_print(*args, **kwargs):
+            if kwargs.get("file") is failing_stream:
+                raise Exception("stream failure")
+            recorded.append(args[0])
+
+        monkeypatch.setattr("builtins.print", fake_print)
+        logger = ConsoleLogger(enable_console=True, output_stream=failing_stream)
+
+        logger.printKeyValue("Key", "Value", indent=1)
+
+        assert recorded == ["   Key: Value"]
+
 
 class TestGlobalConsoleLogger:
     """Test cases for global console logger functions."""
@@ -233,3 +320,16 @@ class TestGlobalConsoleLogger:
         logger = get_console_logger(enable_console=False)
 
         assert logger.enable_console is False
+
+    def test_get_console_logger_preserves_existing_instance(self):
+        """Calling get_console_logger after initialization should reuse singleton."""
+        import bot_v2.utilities.console_logging
+
+        bot_v2.utilities.console_logging._console_logger = None
+        first = get_console_logger(enable_console=True)
+        first.enable_console = True
+
+        second = get_console_logger(enable_console=False)
+        assert second is first
+        # The original enable_console flag should remain unchanged
+        assert second.enable_console is True

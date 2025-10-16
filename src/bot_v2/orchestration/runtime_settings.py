@@ -7,22 +7,20 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from bot_v2.config.path_registry import RUNTIME_DATA_DIR
+from bot_v2.utilities.parsing import interpret_tristate_bool
 
 logger = logging.getLogger(__name__)
 
-_TRUTHY = {"1", "true", "yes", "on"}
 
-
-def _normalize_bool(value: str | None) -> bool | None:
+def _normalize_bool(value: str | None, *, field_name: str | None = None) -> bool | None:
     if value is None:
         return None
-    lowered = value.strip().lower()
-    if not lowered:
-        return None
-    if lowered in _TRUTHY:
-        return True
-    if lowered in {"0", "false", "no", "off"}:
-        return False
+    interpreted = interpret_tristate_bool(value)
+    if interpreted is not None:
+        return interpreted
+    stripped = value.strip()
+    if stripped and field_name:
+        logger.warning("Invalid %s=%s; ignoring override", field_name, value)
     return None
 
 
@@ -96,26 +94,40 @@ def load_runtime_settings(env: Mapping[str, str] | None = None) -> RuntimeSettin
     default_quote = (default_quote_raw or "USD").upper()
 
     derivatives_flag_raw = env_map.get("COINBASE_ENABLE_DERIVATIVES")
-    derivatives_bool = _normalize_bool(derivatives_flag_raw)
+    derivatives_bool = _normalize_bool(
+        derivatives_flag_raw, field_name="COINBASE_ENABLE_DERIVATIVES"
+    )
     coinbase_enable_derivatives = bool(derivatives_bool)
 
-    perps_enable_streaming = bool(_normalize_bool(env_map.get("PERPS_ENABLE_STREAMING")))
+    perps_enable_streaming = bool(
+        _normalize_bool(env_map.get("PERPS_ENABLE_STREAMING"), field_name="PERPS_ENABLE_STREAMING")
+    )
     perps_stream_level = max(
         1,
         _safe_int(env_map.get("PERPS_STREAM_LEVEL"), fallback=1, field_name="PERPS_STREAM_LEVEL"),
     )
-    perps_paper = bool(_normalize_bool(env_map.get("PERPS_PAPER")))
-    perps_force_mock = bool(_normalize_bool(env_map.get("PERPS_FORCE_MOCK")))
-    perps_skip_reconcile = bool(_normalize_bool(env_map.get("PERPS_SKIP_RECONCILE")))
+    perps_paper = bool(_normalize_bool(env_map.get("PERPS_PAPER"), field_name="PERPS_PAPER"))
+    perps_force_mock = bool(
+        _normalize_bool(env_map.get("PERPS_FORCE_MOCK"), field_name="PERPS_FORCE_MOCK")
+    )
+    perps_skip_reconcile = bool(
+        _normalize_bool(env_map.get("PERPS_SKIP_RECONCILE"), field_name="PERPS_SKIP_RECONCILE")
+    )
     perps_fraction = _safe_float(
         env_map.get("PERPS_POSITION_FRACTION"), field_name="PERPS_POSITION_FRACTION"
     )
 
-    order_preview_raw = _normalize_bool(env_map.get("ORDER_PREVIEW_ENABLED"))
-    spot_force_live = bool(_normalize_bool(env_map.get("SPOT_FORCE_LIVE")))
+    order_preview_raw = _normalize_bool(
+        env_map.get("ORDER_PREVIEW_ENABLED"), field_name="ORDER_PREVIEW_ENABLED"
+    )
+    spot_force_live = bool(
+        _normalize_bool(env_map.get("SPOT_FORCE_LIVE"), field_name="SPOT_FORCE_LIVE")
+    )
 
     broker_hint = env_map.get("BROKER")
-    coinbase_sandbox = bool(_normalize_bool(env_map.get("COINBASE_SANDBOX")))
+    coinbase_sandbox = bool(
+        _normalize_bool(env_map.get("COINBASE_SANDBOX"), field_name="COINBASE_SANDBOX")
+    )
     coinbase_api_mode = (env_map.get("COINBASE_API_MODE") or "advanced").lower()
     coinbase_intx_portfolio_uuid = env_map.get("COINBASE_INTX_PORTFOLIO_UUID")
 

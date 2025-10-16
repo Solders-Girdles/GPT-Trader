@@ -4,12 +4,15 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Callable
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from bot_v2.config.live_trade_config import RiskConfig
 from bot_v2.features.live_trade.risk import LiveRiskManager, RiskRuntimeState
 from bot_v2.orchestration.broker_factory import create_brokerage
-from bot_v2.orchestration.context_builder import build_coordinator_context
+from bot_v2.orchestration.coordinator_facades import (
+    BaseCoordinatorFacade,
+    ContextPreservingCoordinator,
+)
 from bot_v2.orchestration.coordinators.base import CoordinatorContext
 from bot_v2.orchestration.coordinators.runtime import (
     BrokerBootstrapArtifacts,
@@ -33,12 +36,15 @@ if TYPE_CHECKING:  # pragma: no cover - type checking only
 logger = logging.getLogger(__name__)
 
 
-class RuntimeCoordinator(_RuntimeCoordinator):
+class RuntimeCoordinator(
+    BaseCoordinatorFacade,
+    ContextPreservingCoordinator,
+    _RuntimeCoordinator,
+):
     """Compatibility layer for existing PerpsBot runtime coordination."""
 
     def __init__(self, bot: PerpsBot) -> None:
-        self._bot = bot
-        context = self._build_context(bot)
+        context = self._setup_facade(bot)
         super().__init__(
             context,
             config_controller=getattr(bot, "config_controller", None),
@@ -48,69 +54,104 @@ class RuntimeCoordinator(_RuntimeCoordinator):
         )
 
     # ------------------------------------------------------------------
+    @ContextPreservingCoordinator.context_action(sync_after=True)
     def bootstrap(self) -> None:
-        self._refresh_context_from_bot()
         super().bootstrap()
-        self._sync_bot(self.context)
+
+    def _context_with_bot_config(self, ctx: CoordinatorContext) -> CoordinatorContext:
+        bot_config = getattr(self._bot, "config", None)
+        if bot_config is not None and ctx.config is not bot_config:
+            symbols = getattr(bot_config, "symbols", None)
+            symbol_tuple: tuple[str, ...] | None = None
+            if symbols is not None:
+                try:
+                    symbol_tuple = tuple(symbols)
+                except TypeError:
+                    symbol_tuple = None
+            overrides: dict[str, Any] = {"config": bot_config}
+            if symbol_tuple is not None:
+                overrides["symbols"] = symbol_tuple
+            ctx = ctx.with_updates(**overrides)
+        return ctx
 
     def _init_broker(self, context: CoordinatorContext | None = None) -> CoordinatorContext:
         ctx = context or self._refresh_context_from_bot()
+        ctx = self._context_with_bot_config(ctx)
+
+        bot_registry = getattr(self._bot, "registry", None)
+        external_broker = getattr(bot_registry, "broker", None)
+        if external_broker is not None:
+            ctx = ctx.with_updates(broker=external_broker)
+            self.update_context(ctx)
+            return ctx
+
+        ctx = ctx.with_updates(
+            broker=None,
+            registry=ctx.registry.with_updates(broker=None),
+        )
         updated = super()._init_broker(ctx)
         self.update_context(updated)
         return updated
 
     def _init_risk_manager(self, context: CoordinatorContext | None = None) -> CoordinatorContext:
         ctx = context or self._refresh_context_from_bot()
+        ctx = self._context_with_bot_config(ctx)
+        bot_registry = getattr(self._bot, "registry", None)
+        external_risk = getattr(bot_registry, "risk_manager", None)
+        if external_risk is not None:
+            external_risk.set_state_listener(self.on_risk_state_change)
+            controller = getattr(self, "_config_controller", None)
+            if controller is not None:
+                controller.sync_with_risk_manager(external_risk)
+                try:
+                    reduce_only = bool(controller.reduce_only_mode)
+                except Exception:
+                    reduce_only = False
+                external_risk.set_reduce_only_mode(reduce_only, reason="config_init")
+            ctx = ctx.with_updates(risk_manager=external_risk)
+            self.update_context(ctx)
+            return ctx
+
+        ctx = ctx.with_updates(
+            risk_manager=None,
+            registry=ctx.registry.with_updates(risk_manager=None),
+        )
         updated = super()._init_risk_manager(ctx)
         self.update_context(updated)
         return updated
 
+    @ContextPreservingCoordinator.context_action()
     def _validate_broker_environment(self) -> None:  # type: ignore[override]
-        ctx = self._refresh_context_from_bot()
+        ctx = self._context_with_bot_config(self.context)
         super()._validate_broker_environment(ctx)
 
+    @ContextPreservingCoordinator.context_action(sync_after=True)
     def set_reduce_only_mode(self, enabled: bool, reason: str) -> None:  # type: ignore[override]
-        self._refresh_context_from_bot()
         super().set_reduce_only_mode(enabled, reason)
-        self._sync_bot(self.context)
 
+    @ContextPreservingCoordinator.context_action()
     def is_reduce_only_mode(self) -> bool:  # type: ignore[override]
-        self._refresh_context_from_bot()
         return bool(super().is_reduce_only_mode())
 
+    @ContextPreservingCoordinator.context_action(sync_after=True)
     def on_risk_state_change(self, state: RiskRuntimeState) -> None:  # type: ignore[override]
-        self._refresh_context_from_bot()
         super().on_risk_state_change(state)
-        self._sync_bot(self.context)
 
+    @ContextPreservingCoordinator.context_action(sync_after=True)
     async def reconcile_state_on_startup(self) -> None:  # type: ignore[override]
-        context = self._refresh_context_from_bot()
+        context = self._context_with_bot_config(self.context)
         if context.broker is None:
-            fallback_broker = None
+            fallback_broker: Any | None = None
             try:
                 fallback_broker = getattr(self._bot, "broker")
-            except Exception:
+            except Exception:  # pragma: no cover - defensive guard
                 fallback_broker = None
             if fallback_broker is not None:
-                context = context.with_updates(broker=cast("IBrokerage", fallback_broker))
-                super().update_context(context)
+                updated = context.with_updates(broker=cast("IBrokerage", fallback_broker))
+                self.update_context(updated)
         await super().reconcile_state_on_startup()
-        self._sync_bot(self.context)
 
     # ------------------------------------------------------------------
-    def update_context(self, context: CoordinatorContext) -> None:  # type: ignore[override]
-        super().update_context(context)
-        self._sync_bot(context)
-
-    # ------------------------------------------------------------------
-    def _refresh_context_from_bot(self) -> CoordinatorContext:
-        updated = self._build_context(self._bot)
-        super().update_context(updated)
-        return self.context
-
-    def _build_context(self, bot: PerpsBot) -> CoordinatorContext:
-        return build_coordinator_context(bot)
-
     def _sync_bot(self, context: CoordinatorContext) -> None:
         bot = self._bot
         bot.registry = context.registry

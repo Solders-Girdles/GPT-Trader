@@ -7,6 +7,7 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from bot_v2.orchestration.configuration import BotConfig, Profile
+from bot_v2.orchestration.context_builder import build_coordinator_context
 from bot_v2.orchestration.coordinators.base import CoordinatorContext
 from bot_v2.orchestration.coordinators.execution import (
     ExecutionCoordinator as _ExecutionCoordinator,
@@ -137,45 +138,11 @@ class ExecutionCoordinator(_ExecutionCoordinator):
         return self.context
 
     def _build_context(self, bot: PerpsBot) -> CoordinatorContext:
-        runtime_state = getattr(bot, "runtime_state", None)
-
-        registry = getattr(bot, "registry", None)
-        if not isinstance(registry, ServiceRegistry):
-            registry = ServiceRegistry(
-                config=bot.config,
-                broker=getattr(bot, "broker", None),
-                risk_manager=getattr(bot, "risk_manager", None),
-                event_store=getattr(bot, "event_store", None),
-                orders_store=getattr(bot, "orders_store", None),
-            )
-        broker = registry.broker
-        risk_manager = registry.risk_manager
-
-        symbols_attr = getattr(bot.config, "symbols", None)
-        if symbols_attr:
-            try:
-                symbols = tuple(symbols_attr)
-            except TypeError:
-                symbols = ()
-        else:
-            symbols = ()
-
-        return CoordinatorContext(
-            config=bot.config,
-            registry=registry,
-            event_store=getattr(bot, "event_store", None),
-            orders_store=getattr(bot, "orders_store", None),
-            broker=broker,
-            risk_manager=risk_manager,
-            symbols=symbols,
-            bot_id=getattr(bot, "bot_id", "perps_bot"),
-            runtime_state=runtime_state,
-            config_controller=getattr(bot, "config_controller", None),
-            strategy_orchestrator=getattr(bot, "strategy_orchestrator", None),
-            execution_coordinator=self,
-            product_cache=(
-                getattr(bot._state, "product_map", None) if hasattr(bot, "_state") else None
-            ),
+        return build_coordinator_context(
+            bot,
+            overrides={
+                "execution_coordinator": self,
+            },
         )
 
     def _sync_bot(self, context: CoordinatorContext) -> None:

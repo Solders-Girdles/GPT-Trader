@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, cast
 from bot_v2.config.live_trade_config import RiskConfig
 from bot_v2.features.live_trade.risk import LiveRiskManager, RiskRuntimeState
 from bot_v2.orchestration.broker_factory import create_brokerage
+from bot_v2.orchestration.context_builder import build_coordinator_context
 from bot_v2.orchestration.coordinators.base import CoordinatorContext
 from bot_v2.orchestration.coordinators.runtime import (
     BrokerBootstrapArtifacts,
@@ -28,7 +29,6 @@ if TYPE_CHECKING:  # pragma: no cover - type checking only
     from bot_v2.features.brokerages.core.interfaces import IBrokerage
     from bot_v2.orchestration.perps_bot import PerpsBot
     from bot_v2.persistence.event_store import EventStore
-    from bot_v2.persistence.orders_store import OrdersStore
 
 logger = logging.getLogger(__name__)
 
@@ -109,45 +109,7 @@ class RuntimeCoordinator(_RuntimeCoordinator):
         return self.context
 
     def _build_context(self, bot: PerpsBot) -> CoordinatorContext:
-        symbols = tuple(getattr(bot.config, "symbols", None) or ())
-        product_cache = getattr(bot._state, "product_map", None) if hasattr(bot, "_state") else None
-        registry = bot.registry
-
-        def _safe_attr(obj: object, name: str) -> object | None:
-            try:
-                return cast(object, getattr(obj, name))
-            except Exception:
-                return None
-
-        broker_attr = (
-            getattr(registry, "broker", None)
-            or bot.__dict__.get("broker")
-            or _safe_attr(bot, "broker")
-        )
-        risk_attr = (
-            getattr(registry, "risk_manager", None)
-            or bot.__dict__.get("risk_manager")
-            or _safe_attr(bot, "risk_manager")
-        )
-        broker_value = cast("IBrokerage | None", broker_attr)
-        risk_value = cast("LiveRiskManager | None", risk_attr)
-        event_store_value = cast("EventStore | None", getattr(bot, "event_store", None))
-        orders_store_value = cast("OrdersStore | None", getattr(bot, "orders_store", None))
-        return CoordinatorContext(
-            config=bot.config,
-            registry=registry,
-            event_store=event_store_value,
-            orders_store=orders_store_value,
-            broker=broker_value,
-            risk_manager=risk_value,
-            symbols=symbols,
-            bot_id=getattr(bot, "bot_id", "perps_bot"),
-            runtime_state=getattr(bot, "runtime_state", None),
-            config_controller=getattr(bot, "config_controller", None),
-            strategy_orchestrator=getattr(bot, "strategy_orchestrator", None),
-            execution_coordinator=getattr(bot, "execution_coordinator", None),
-            product_cache=product_cache,
-        )
+        return build_coordinator_context(bot)
 
     def _sync_bot(self, context: CoordinatorContext) -> None:
         bot = self._bot

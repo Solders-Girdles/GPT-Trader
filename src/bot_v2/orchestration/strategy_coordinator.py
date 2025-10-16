@@ -7,10 +7,9 @@ import logging
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
-from bot_v2.orchestration.configuration import BotConfig, Profile
+from bot_v2.orchestration.context_builder import build_coordinator_context
 from bot_v2.orchestration.coordinators.base import CoordinatorContext
 from bot_v2.orchestration.coordinators.strategy import StrategyCoordinator as _StrategyCoordinator
-from bot_v2.orchestration.service_registry import ServiceRegistry
 
 if TYPE_CHECKING:  # pragma: no cover - type checking only
     from bot_v2.features.brokerages.core.interfaces import Order, Product
@@ -94,42 +93,11 @@ class StrategyCoordinator(_StrategyCoordinator):
         return self.context
 
     def _build_context(self, bot: PerpsBot) -> CoordinatorContext:
-        registry = getattr(bot, "registry", None)
-        if not isinstance(registry, ServiceRegistry):
-            config = getattr(bot, "config", None)
-            if config is None:
-                config = BotConfig(profile=Profile.PROD)
-            registry = ServiceRegistry(
-                config=config,
-                broker=getattr(bot, "broker", None),
-                risk_manager=getattr(bot, "risk_manager", None),
-                event_store=getattr(bot, "event_store", None),
-                orders_store=getattr(bot, "orders_store", None),
-            )
-        runtime_state = getattr(bot, "runtime_state", None)
-
-        return CoordinatorContext(
-            config=bot.config,
-            registry=registry,
-            event_store=getattr(bot, "event_store", None),
-            orders_store=getattr(bot, "orders_store", None),
-            broker=registry.broker if registry else getattr(bot, "broker", None),
-            risk_manager=registry.risk_manager if registry else getattr(bot, "risk_manager", None),
-            symbols=tuple(getattr(bot, "symbols", []) or []),
-            bot_id=getattr(bot, "bot_id", "perps_bot"),
-            runtime_state=runtime_state,
-            config_controller=getattr(bot, "config_controller", None),
-            strategy_orchestrator=getattr(bot, "strategy_orchestrator", None),
-            execution_coordinator=getattr(bot, "execution_coordinator", None),
-            product_cache=(
-                getattr(bot._state, "product_map", None) if hasattr(bot, "_state") else None
-            ),
-            session_guard=getattr(bot, "_session_guard", None),
-            configuration_guardian=getattr(bot, "configuration_guardian", None),
-            system_monitor=getattr(bot, "system_monitor", None),
-            set_reduce_only_mode=getattr(bot, "set_reduce_only_mode", None),
-            shutdown_hook=getattr(bot, "shutdown", None),
-            set_running_flag=lambda value: setattr(bot, "running", value),
+        return build_coordinator_context(
+            bot,
+            overrides={
+                "strategy_coordinator": self,
+            },
         )
 
     def _sync_bot(self, context: CoordinatorContext) -> None:

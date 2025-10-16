@@ -45,7 +45,7 @@ class SecretsManager:
     def __init__(
         self, vault_enabled: bool = True, *, settings: RuntimeSettings | None = None
     ) -> None:
-        self._lock = threading.Lock()
+        self._lock = threading.RLock()
         self._cipher_suite: Fernet | None = None
         self._secrets_cache: dict[str, dict[str, Any]] = {}
         self._vault_client: HvacClient | None = None

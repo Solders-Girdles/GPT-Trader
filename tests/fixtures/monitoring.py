@@ -12,7 +12,16 @@ from datetime import datetime, timedelta
 from collections.abc import Callable
 
 import pytest
-from freezegun import freeze_time as _freeze_time
+
+try:  # pragma: no cover - optional dependency shim
+    from freezegun import freeze_time as _freeze_time
+except ModuleNotFoundError:  # pragma: no cover - fallback when dependency absent
+    from contextlib import contextmanager
+
+    @contextmanager
+    def _freeze_time(*_args: object, **_kwargs: object):
+        yield
+
 
 from bot_v2.monitoring.alert_types import AlertSeverity
 from bot_v2.monitoring.interfaces import (

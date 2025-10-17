@@ -349,6 +349,7 @@ class PerpsBot:
         payload_dict = payload.to_dict()
         active_symbols = list(payload_dict.get("symbols") or [])
         broker_type = "mock" if config.mock_broker else "live"
+        runtime_settings = getattr(getattr(config, "state", None), "runtime_settings", None)
 
         return _ConfigurationGuardian.create_baseline_snapshot(
             config_dict=payload_dict,
@@ -357,6 +358,7 @@ class PerpsBot:
             account_equity=None,
             profile=config.profile,
             broker_type=broker_type,
+            settings=runtime_settings,
         )
 
     @property

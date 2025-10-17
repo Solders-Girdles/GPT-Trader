@@ -11,10 +11,13 @@ if TYPE_CHECKING:
 else:  # pragma: no cover - runtime alias for type checking
     RuntimeSettings = Any  # type: ignore[misc]
 
-T = TypeVar("T")
+from bot_v2.utilities.parsing import (
+    FALSE_BOOLEAN_TOKENS,
+    TRUE_BOOLEAN_TOKENS,
+    interpret_tristate_bool,
+)
 
-_TRUE_VALUES = {"1", "true", "t", "yes", "y", "on"}
-_FALSE_VALUES = {"0", "false", "f", "no", "n", "off"}
+T = TypeVar("T")
 
 
 class EnvVarError(ValueError):
@@ -158,15 +161,14 @@ def get_env_bool(
             _ensure_required(var_name)
         return default
 
-    normalised = value.lower()
-    if normalised in _TRUE_VALUES:
-        return True
-    if normalised in _FALSE_VALUES:
-        return False
+    interpreted = interpret_tristate_bool(value)
+    if interpreted is not None:
+        return interpreted
 
+    allowed_values = ", ".join(sorted(TRUE_BOOLEAN_TOKENS | FALSE_BOOLEAN_TOKENS))
     _raise_env_error(
         var_name,
-        f"expected a boolean value but received {value!r}",
+        f"expected a boolean value ({allowed_values}) but received {value!r}",
         value,
     )
     return None  # pragma: no cover - raise above

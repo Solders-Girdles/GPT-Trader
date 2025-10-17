@@ -589,8 +589,14 @@ class ConfigurationGuardian:
         account_equity: Decimal | None,
         profile: Profile,
         broker_type: str,
+        *,
+        settings: RuntimeSettings | None = None,
     ) -> BaselineSnapshot:
-        """Factory method to create baseline snapshot at startup."""
+        """Factory method to create baseline snapshot at startup.
+
+        Args:
+            settings: Optional runtime settings snapshot to seed environment capture.
+        """
 
         if isinstance(config_dict, ConfigBaselinePayload):
             payload_dict = config_dict.to_dict()
@@ -641,10 +647,10 @@ class ConfigurationGuardian:
             "ORDER_PREVIEW_ENABLED",
         }
 
-        settings = load_runtime_settings()
+        resolved_settings = settings or load_runtime_settings()
 
         for var in critical_env_vars:
-            value = settings.raw_env.get(var)
+            value = resolved_settings.raw_env.get(var)
             if value is not None:
                 env_keys.add(var)
                 # Don't store sensitive values

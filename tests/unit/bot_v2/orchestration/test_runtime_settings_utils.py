@@ -137,3 +137,25 @@ def test_get_runtime_settings_cache_and_override(monkeypatch: pytest.MonkeyPatch
     assert env_result is env_snapshot
 
     assert calls == [None, None, None, {"SPECIAL": "1"}]
+
+
+def test_load_runtime_settings_logs_invalid_boolean(caplog: pytest.LogCaptureFixture) -> None:
+    caplog.set_level(logging.WARNING, runtime_settings.logger.name)
+    env = {
+        "COINBASE_ENABLE_DERIVATIVES": "invalid",
+        "PERPS_ENABLE_STREAMING": "not-bool",
+        "PERPS_PAPER": "",
+    }
+
+    settings = runtime_settings.load_runtime_settings(env)
+
+    # Invalid values should fall back to False
+    assert settings.coinbase_enable_derivatives is False
+    assert settings.perps_enable_streaming is False
+    # Blank string should be treated as unset (no log)
+    assert settings.perps_paper_trading is False
+
+    warning_text = caplog.text
+    assert "Invalid COINBASE_ENABLE_DERIVATIVES=invalid" in warning_text
+    assert "Invalid PERPS_ENABLE_STREAMING=not-bool" in warning_text
+    assert "PERPS_PAPER" not in warning_text

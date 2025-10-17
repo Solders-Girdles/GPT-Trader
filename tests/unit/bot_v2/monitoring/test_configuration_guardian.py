@@ -45,6 +45,32 @@ class TestBaselineSnapshot:
         assert snapshot.broker_type == "mock"
         assert snapshot.total_exposure == Decimal("0")  # No positions
 
+    def test_create_baseline_snapshot_respects_injected_settings(self):
+        """Ensure injected runtime settings seed environment snapshot."""
+        config_dict = {
+            "profile": Profile.DEV,
+            "symbols": ["BTC-USD"],
+            "max_leverage": 3,
+            "mock_broker": True,
+        }
+
+        with patch.dict("os.environ", {"COINBASE_DEFAULT_QUOTE": "USD"}, clear=True):
+            injected_settings = load_runtime_settings()
+
+        with patch.dict("os.environ", {"COINBASE_DEFAULT_QUOTE": "EUR"}, clear=True):
+            snapshot = ConfigurationGuardian.create_baseline_snapshot(
+                config_dict=config_dict,
+                active_symbols=["BTC-USD"],
+                positions=[],
+                account_equity=None,
+                profile=Profile.DEV,
+                broker_type="mock",
+                settings=injected_settings,
+            )
+
+        assert snapshot.critical_env_values.get("COINBASE_DEFAULT_QUOTE") == "USD"
+        assert "COINBASE_DEFAULT_QUOTE" in snapshot.env_keys
+
 
 class TestEnvironmentMonitor:
     """Test environment variable monitoring."""

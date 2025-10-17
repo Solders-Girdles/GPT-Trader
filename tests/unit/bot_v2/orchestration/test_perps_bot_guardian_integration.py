@@ -13,6 +13,8 @@ from bot_v2.features.live_trade.risk import LiveRiskManager
 from bot_v2.orchestration.perps_bot import PerpsBot
 from bot_v2.orchestration.perps_bot_builder import create_perps_bot
 
+pytestmark = pytest.mark.asyncio
+
 
 class TestPerpsBotGuardianIntegration:
     """Test PerpsBot guardian integration end-to-end."""

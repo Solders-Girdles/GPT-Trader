@@ -29,6 +29,7 @@ Suggested First‑Run Values
 Notes
 - YAML supports inline comments—capture rationale directly in the file and keep this history updated.
 - Exchange rules (MMR, leverage) can change; these caps are your upper bounds.
+- The loader validates input with a shared Pydantic schema: env errors raise `EnvVarError` with the offending key (e.g. `RISK_MAX_EXPOSURE_PCT`), and JSON parsing enforces percentage bounds plus mapping formats. Legacy aliases like `RISK_MAX_TOTAL_EXPOSURE_PCT` still map to `max_exposure_pct`.
 
 Related Env
 - `FEE_BPS_BY_SYMBOL` lets sizing tools use per‑symbol fee bps (e.g., `BTC-PERP:6,ETH-PERP:8`).

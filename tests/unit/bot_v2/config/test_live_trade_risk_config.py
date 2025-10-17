@@ -5,13 +5,10 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
-from bot_v2.config.live_trade_config import RiskConfig
-
-
-class StubSettings:
-    def __init__(self, raw_env: dict[str, str]) -> None:
-        self.raw_env = raw_env
+from bot_v2.config.live_trade_config import RISK_CONFIG_ENV_KEYS, RiskConfig
+from bot_v2.orchestration.runtime_settings import load_runtime_settings
 
 
 def test_risk_config_alias_maps_exposure() -> None:
@@ -53,7 +50,13 @@ def test_risk_config_from_env_parses_values() -> None:
         "RISK_VOL_KILL_SWITCH_THRESH": "0.22",
     }
 
-    config = RiskConfig.from_env(settings=StubSettings(env))
+    settings = load_runtime_settings(env)
+    snapshot = settings.snapshot_env(RISK_CONFIG_ENV_KEYS)
+
+    assert snapshot["RISK_MAX_LEVERAGE"] == "7"
+    assert snapshot["RISK_LEVERAGE_MAX_PER_SYMBOL"] == "BTC-PERP:5,ETH-PERP:3"
+
+    config = RiskConfig.from_env(settings=settings)
 
     assert config.max_leverage == 7
     assert config.leverage_max_per_symbol == {"BTC-PERP": 5, "ETH-PERP": 3}
@@ -90,7 +93,8 @@ def test_risk_config_from_env_parses_values() -> None:
 
 
 def test_risk_config_from_env_defaults_when_missing() -> None:
-    config = RiskConfig.from_env(settings=StubSettings({}))
+    settings = load_runtime_settings({})
+    config = RiskConfig.from_env(settings=settings)
 
     assert config.max_leverage == 5
     assert config.enable_pre_trade_liq_projection is True
@@ -128,6 +132,41 @@ def test_risk_config_from_json_coerces_types(tmp_path: Path) -> None:
     assert config.kill_switch_enabled is True
     assert config.daytime_start_utc is None
     assert config.day_mmr_per_symbol == {"BTC-PERP": 0.02}
+
+
+def test_risk_config_from_json_honors_exposure_alias(tmp_path: Path) -> None:
+    path = tmp_path / "risk.json"
+    path.write_text(json.dumps({"max_total_exposure_pct": 0.55}))
+
+    config = RiskConfig.from_json(str(path))
+
+    assert config.max_exposure_pct == 0.55
+
+
+def test_risk_config_from_json_invalid_alias_percentage(tmp_path: Path) -> None:
+    path = tmp_path / "risk.json"
+    path.write_text(json.dumps({"max_total_exposure_pct": 1.5}))
+
+    with pytest.raises(ValidationError):
+        RiskConfig.from_json(str(path))
+
+
+def test_risk_config_from_json_allows_legacy_fields(tmp_path: Path) -> None:
+    path = tmp_path / "risk.json"
+    path.write_text(json.dumps({"max_position_usd": "1000", "max_daily_loss_pct": 0.3}))
+
+    config = RiskConfig.from_json(str(path))
+
+    assert config.max_position_usd == Decimal("1000")
+    assert config.max_daily_loss_pct == 0.3
+
+
+def test_risk_config_from_json_invalid_percentage(tmp_path: Path) -> None:
+    path = tmp_path / "risk.json"
+    path.write_text(json.dumps({"max_exposure_pct": 1.2}))
+
+    with pytest.raises(ValidationError):
+        RiskConfig.from_json(str(path))
 
 
 def test_risk_config_to_dict_serializes_decimal() -> None:

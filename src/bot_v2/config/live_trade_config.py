@@ -7,6 +7,9 @@ Phase 5: Risk Engine configuration only.
 from __future__ import annotations
 
 import json
+import logging
+import re
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any
@@ -16,13 +19,26 @@ if TYPE_CHECKING:
 else:  # pragma: no cover - runtime type alias
     RuntimeSettings = Any  # type: ignore[misc]
 
-from .env_utils import (
-    get_env_bool,
-    get_env_decimal,
-    get_env_float,
-    get_env_int,
-    parse_env_mapping,
+from pydantic import (
+    AliasChoices,
+    BaseModel,
+    ConfigDict,
+    Field,
+    ValidationError,
+    ValidationInfo,
+    field_validator,
+    model_validator,
 )
+
+from bot_v2.utilities.parsing import (
+    FALSE_BOOLEAN_TOKENS,
+    TRUE_BOOLEAN_TOKENS,
+    interpret_tristate_bool,
+)
+
+from .env_utils import EnvVarError
+
+logger = logging.getLogger(__name__)
 
 
 def _load_runtime_settings() -> RuntimeSettings:
@@ -109,255 +125,16 @@ class RiskConfig:
     @classmethod
     def from_env(cls, *, settings: RuntimeSettings | None = None) -> RiskConfig:
         """Load config from environment variables."""
-        runtime_settings = settings or _load_runtime_settings()
-        raw_env = runtime_settings.raw_env
-
-        # Leverage controls
-        leverage_max_per_symbol = parse_env_mapping(
-            "RISK_LEVERAGE_MAX_PER_SYMBOL",
-            int,
-            settings=runtime_settings,
-        )
-        day_leverage_max_per_symbol = parse_env_mapping(
-            "RISK_DAY_LEVERAGE_MAX_PER_SYMBOL",
-            int,
-            settings=runtime_settings,
-        )
-        night_leverage_max_per_symbol = parse_env_mapping(
-            "RISK_NIGHT_LEVERAGE_MAX_PER_SYMBOL",
-            int,
-            settings=runtime_settings,
-        )
-
-        # Margin rates
-        day_mmr_per_symbol = parse_env_mapping(
-            "RISK_DAY_MMR_PER_SYMBOL",
-            float,
-            settings=runtime_settings,
-        )
-        night_mmr_per_symbol = parse_env_mapping(
-            "RISK_NIGHT_MMR_PER_SYMBOL",
-            float,
-            settings=runtime_settings,
-        )
-
-        # Position limits
-        max_notional_per_symbol = parse_env_mapping(
-            "RISK_MAX_NOTIONAL_PER_SYMBOL",
-            lambda raw: Decimal(raw),
-            settings=runtime_settings,
-        )
-
-        pre_trade_liq_projection = get_env_bool(
-            "RISK_ENABLE_PRE_TRADE_LIQ_PROJECTION",
-            default=True,
-            settings=runtime_settings,
-        )
-        if pre_trade_liq_projection is None:
-            pre_trade_liq_projection = True
-
-        return cls(
-            # Leverage controls
-            max_leverage=get_env_int("RISK_MAX_LEVERAGE", settings=runtime_settings) or 5,
-            leverage_max_per_symbol=leverage_max_per_symbol,
-            # Time-of-day schedule
-            daytime_start_utc=raw_env.get("RISK_DAYTIME_START_UTC"),
-            daytime_end_utc=raw_env.get("RISK_DAYTIME_END_UTC"),
-            day_leverage_max_per_symbol=day_leverage_max_per_symbol,
-            night_leverage_max_per_symbol=night_leverage_max_per_symbol,
-            day_mmr_per_symbol=day_mmr_per_symbol,
-            night_mmr_per_symbol=night_mmr_per_symbol,
-            # Liquidation safety
-            min_liquidation_buffer_pct=(
-                get_env_float("RISK_MIN_LIQUIDATION_BUFFER_PCT", settings=runtime_settings) or 0.15
-            ),
-            enable_pre_trade_liq_projection=pre_trade_liq_projection,
-            default_maintenance_margin_rate=(
-                get_env_float("RISK_DEFAULT_MMR", settings=runtime_settings) or 0.005
-            ),
-            # Loss limits
-            daily_loss_limit=(
-                get_env_decimal("RISK_DAILY_LOSS_LIMIT", settings=runtime_settings)
-                or Decimal("100")
-            ),
-            # Exposure controls (with legacy support)
-            max_exposure_pct=(
-                get_env_float("RISK_MAX_TOTAL_EXPOSURE_PCT", settings=runtime_settings)
-                or get_env_float("RISK_MAX_EXPOSURE_PCT", settings=runtime_settings)
-                or 0.8
-            ),
-            max_position_pct_per_symbol=(
-                get_env_float("RISK_MAX_POSITION_PCT_PER_SYMBOL", settings=runtime_settings) or 0.2
-            ),
-            max_notional_per_symbol=max_notional_per_symbol,
-            # Slippage protection
-            slippage_guard_bps=(
-                get_env_int("RISK_SLIPPAGE_GUARD_BPS", settings=runtime_settings) or 50
-            ),
-            # Emergency controls
-            kill_switch_enabled=(
-                get_env_bool("RISK_KILL_SWITCH_ENABLED", settings=runtime_settings) or False
-            ),
-            reduce_only_mode=(
-                get_env_bool("RISK_REDUCE_ONLY_MODE", settings=runtime_settings) or False
-            ),
-            # Mark price staleness
-            max_mark_staleness_seconds=(
-                get_env_int("RISK_MAX_MARK_STALENESS_SECONDS", settings=runtime_settings) or 180
-            ),
-            # Dynamic position sizing
-            enable_dynamic_position_sizing=(
-                get_env_bool("RISK_ENABLE_DYNAMIC_POSITION_SIZING", settings=runtime_settings)
-                or False
-            ),
-            position_sizing_method=raw_env.get("RISK_POSITION_SIZING_METHOD", "notional"),
-            position_sizing_multiplier=(
-                get_env_float("RISK_POSITION_SIZING_MULTIPLIER", settings=runtime_settings) or 1.0
-            ),
-            # Market impact guard
-            enable_market_impact_guard=(
-                get_env_bool("RISK_ENABLE_MARKET_IMPACT_GUARD", settings=runtime_settings) or False
-            ),
-            max_market_impact_bps=(
-                get_env_int("RISK_MAX_MARKET_IMPACT_BPS", settings=runtime_settings) or 0
-            ),
-            # Circuit breakers
-            enable_volatility_circuit_breaker=(
-                get_env_bool("RISK_ENABLE_VOLATILITY_CB", settings=runtime_settings) or False
-            ),
-            max_intraday_volatility_threshold=(
-                get_env_float("RISK_MAX_INTRADAY_VOL", settings=runtime_settings) or 0.15
-            ),
-            volatility_window_periods=(
-                get_env_int("RISK_VOL_WINDOW_PERIODS", settings=runtime_settings) or 20
-            ),
-            circuit_breaker_cooldown_minutes=(
-                get_env_int("RISK_CB_COOLDOWN_MIN", settings=runtime_settings) or 30
-            ),
-            volatility_warning_threshold=(
-                get_env_float("RISK_VOL_WARNING_THRESH", settings=runtime_settings) or 0.15
-            ),
-            volatility_reduce_only_threshold=(
-                get_env_float("RISK_VOL_REDUCE_ONLY_THRESH", settings=runtime_settings) or 0.20
-            ),
-            volatility_kill_switch_threshold=(
-                get_env_float("RISK_VOL_KILL_SWITCH_THRESH", settings=runtime_settings) or 0.25
-            ),
-        )
+        model = _load_risk_model_from_env(settings=settings)
+        return cls(**model.model_dump())  # type: ignore[arg-type]
 
     @classmethod
     def from_json(cls, path: str) -> RiskConfig:
         """Load config from JSON file."""
         with open(path) as f:
             raw = json.load(f) or {}
-
-        # Normalize types to match constructor expectations
-        data: dict[str, object] = {}
-
-        # Simple passthroughs with safe casts
-        if "max_leverage" in raw:
-            data["max_leverage"] = int(raw["max_leverage"])
-        if "min_liquidation_buffer_pct" in raw:
-            data["min_liquidation_buffer_pct"] = float(raw["min_liquidation_buffer_pct"])
-        if "enable_pre_trade_liq_projection" in raw:
-            data["enable_pre_trade_liq_projection"] = bool(raw["enable_pre_trade_liq_projection"])
-        if "default_maintenance_margin_rate" in raw:
-            data["default_maintenance_margin_rate"] = float(raw["default_maintenance_margin_rate"])
-        if "daily_loss_limit" in raw:
-            data["daily_loss_limit"] = Decimal(str(raw["daily_loss_limit"]))
-        if "max_exposure_pct" in raw:
-            data["max_exposure_pct"] = float(raw["max_exposure_pct"])
-        if "max_position_pct_per_symbol" in raw:
-            data["max_position_pct_per_symbol"] = float(raw["max_position_pct_per_symbol"])
-        # Legacy alias
-        if "max_total_exposure_pct" in raw:
-            data["max_exposure_pct"] = float(raw["max_total_exposure_pct"])
-        if "slippage_guard_bps" in raw:
-            data["slippage_guard_bps"] = int(raw["slippage_guard_bps"])
-        if "kill_switch_enabled" in raw:
-            data["kill_switch_enabled"] = bool(raw["kill_switch_enabled"])
-        if "reduce_only_mode" in raw:
-            data["reduce_only_mode"] = bool(raw["reduce_only_mode"])
-        if "max_mark_staleness_seconds" in raw:
-            data["max_mark_staleness_seconds"] = int(raw["max_mark_staleness_seconds"])
-        if "enable_dynamic_position_sizing" in raw:
-            data["enable_dynamic_position_sizing"] = bool(raw["enable_dynamic_position_sizing"])
-        if "position_sizing_method" in raw:
-            data["position_sizing_method"] = str(raw["position_sizing_method"])
-        if "position_sizing_multiplier" in raw:
-            data["position_sizing_multiplier"] = float(raw["position_sizing_multiplier"])
-        if "enable_market_impact_guard" in raw:
-            data["enable_market_impact_guard"] = bool(raw["enable_market_impact_guard"])
-        if "max_market_impact_bps" in raw:
-            data["max_market_impact_bps"] = int(raw["max_market_impact_bps"])
-        if "enable_volatility_circuit_breaker" in raw:
-            data["enable_volatility_circuit_breaker"] = bool(
-                raw["enable_volatility_circuit_breaker"]
-            )
-        if "max_intraday_volatility_threshold" in raw:
-            data["max_intraday_volatility_threshold"] = float(
-                raw["max_intraday_volatility_threshold"]
-            )
-        if "volatility_window_periods" in raw:
-            data["volatility_window_periods"] = int(raw["volatility_window_periods"])
-        if "circuit_breaker_cooldown_minutes" in raw:
-            data["circuit_breaker_cooldown_minutes"] = int(raw["circuit_breaker_cooldown_minutes"])
-        if "volatility_warning_threshold" in raw:
-            data["volatility_warning_threshold"] = float(raw["volatility_warning_threshold"])
-        if "volatility_reduce_only_threshold" in raw:
-            data["volatility_reduce_only_threshold"] = float(
-                raw["volatility_reduce_only_threshold"]
-            )
-        if "volatility_kill_switch_threshold" in raw:
-            data["volatility_kill_switch_threshold"] = float(
-                raw["volatility_kill_switch_threshold"]
-            )
-
-        # Mappings
-        if "leverage_max_per_symbol" in raw and isinstance(raw["leverage_max_per_symbol"], dict):
-            data["leverage_max_per_symbol"] = {
-                str(k): int(v) for k, v in raw["leverage_max_per_symbol"].items()
-            }
-        if "max_notional_per_symbol" in raw and isinstance(raw["max_notional_per_symbol"], dict):
-            data["max_notional_per_symbol"] = {
-                str(k): Decimal(str(v)) for k, v in raw["max_notional_per_symbol"].items()
-            }
-        # Optional day/night schedule
-        if "daytime_start_utc" in raw:
-            data["daytime_start_utc"] = (
-                str(raw["daytime_start_utc"]) if raw["daytime_start_utc"] else None
-            )
-        if "daytime_end_utc" in raw:
-            data["daytime_end_utc"] = (
-                str(raw["daytime_end_utc"]) if raw["daytime_end_utc"] else None
-            )
-        if "day_leverage_max_per_symbol" in raw and isinstance(
-            raw["day_leverage_max_per_symbol"], dict
-        ):
-            data["day_leverage_max_per_symbol"] = {
-                str(k): int(v) for k, v in raw["day_leverage_max_per_symbol"].items()
-            }
-        if "night_leverage_max_per_symbol" in raw and isinstance(
-            raw["night_leverage_max_per_symbol"], dict
-        ):
-            data["night_leverage_max_per_symbol"] = {
-                str(k): int(v) for k, v in raw["night_leverage_max_per_symbol"].items()
-            }
-        if "day_mmr_per_symbol" in raw and isinstance(raw["day_mmr_per_symbol"], dict):
-            data["day_mmr_per_symbol"] = {
-                str(k): float(v) for k, v in raw["day_mmr_per_symbol"].items()
-            }
-        if "night_mmr_per_symbol" in raw and isinstance(raw["night_mmr_per_symbol"], dict):
-            data["night_mmr_per_symbol"] = {
-                str(k): float(v) for k, v in raw["night_mmr_per_symbol"].items()
-            }
-
-        # Fill any missing keys from raw directly (best-effort)
-        for k, v in raw.items():
-            if k not in data:
-                data[k] = v
-
-        return cls(**data)  # type: ignore[arg-type]
+        model = _load_risk_model_from_json(raw)
+        return cls(**model.model_dump())  # type: ignore[arg-type]
 
     def to_dict(self) -> dict:
         """Convert to dictionary for persistence."""
@@ -394,3 +171,554 @@ class RiskConfig:
             "volatility_reduce_only_threshold": self.volatility_reduce_only_threshold,
             "volatility_kill_switch_threshold": self.volatility_kill_switch_threshold,
         }
+
+
+# ---------------------------------------------------------------------------
+# Risk configuration schema metadata and validation helpers
+# ---------------------------------------------------------------------------
+
+RISK_CONFIG_ENV_ALIASES: dict[str, tuple[str, ...]] = {
+    "max_leverage": ("RISK_MAX_LEVERAGE",),
+    "leverage_max_per_symbol": ("RISK_LEVERAGE_MAX_PER_SYMBOL",),
+    "daytime_start_utc": ("RISK_DAYTIME_START_UTC",),
+    "daytime_end_utc": ("RISK_DAYTIME_END_UTC",),
+    "day_leverage_max_per_symbol": ("RISK_DAY_LEVERAGE_MAX_PER_SYMBOL",),
+    "night_leverage_max_per_symbol": ("RISK_NIGHT_LEVERAGE_MAX_PER_SYMBOL",),
+    "day_mmr_per_symbol": ("RISK_DAY_MMR_PER_SYMBOL",),
+    "night_mmr_per_symbol": ("RISK_NIGHT_MMR_PER_SYMBOL",),
+    "min_liquidation_buffer_pct": ("RISK_MIN_LIQUIDATION_BUFFER_PCT",),
+    "enable_pre_trade_liq_projection": ("RISK_ENABLE_PRE_TRADE_LIQ_PROJECTION",),
+    "default_maintenance_margin_rate": ("RISK_DEFAULT_MMR",),
+    "daily_loss_limit": ("RISK_DAILY_LOSS_LIMIT",),
+    "max_exposure_pct": ("RISK_MAX_EXPOSURE_PCT", "RISK_MAX_TOTAL_EXPOSURE_PCT"),
+    "max_total_exposure_pct": ("RISK_MAX_TOTAL_EXPOSURE_PCT",),
+    "max_position_usd": ("RISK_MAX_POSITION_USD",),
+    "max_daily_loss_pct": ("RISK_MAX_DAILY_LOSS_PCT",),
+    "max_position_pct_per_symbol": ("RISK_MAX_POSITION_PCT_PER_SYMBOL",),
+    "max_notional_per_symbol": ("RISK_MAX_NOTIONAL_PER_SYMBOL",),
+    "slippage_guard_bps": ("RISK_SLIPPAGE_GUARD_BPS",),
+    "kill_switch_enabled": ("RISK_KILL_SWITCH_ENABLED",),
+    "reduce_only_mode": ("RISK_REDUCE_ONLY_MODE",),
+    "max_mark_staleness_seconds": ("RISK_MAX_MARK_STALENESS_SECONDS",),
+    "enable_dynamic_position_sizing": ("RISK_ENABLE_DYNAMIC_POSITION_SIZING",),
+    "position_sizing_method": ("RISK_POSITION_SIZING_METHOD",),
+    "position_sizing_multiplier": ("RISK_POSITION_SIZING_MULTIPLIER",),
+    "enable_market_impact_guard": ("RISK_ENABLE_MARKET_IMPACT_GUARD",),
+    "max_market_impact_bps": ("RISK_MAX_MARKET_IMPACT_BPS",),
+    "enable_volatility_circuit_breaker": ("RISK_ENABLE_VOLATILITY_CB",),
+    "max_intraday_volatility_threshold": ("RISK_MAX_INTRADAY_VOL",),
+    "volatility_window_periods": ("RISK_VOL_WINDOW_PERIODS",),
+    "circuit_breaker_cooldown_minutes": ("RISK_CB_COOLDOWN_MIN",),
+    "volatility_warning_threshold": ("RISK_VOL_WARNING_THRESH",),
+    "volatility_reduce_only_threshold": ("RISK_VOL_REDUCE_ONLY_THRESH",),
+    "volatility_kill_switch_threshold": ("RISK_VOL_KILL_SWITCH_THRESH",),
+}
+
+RISK_CONFIG_JSON_ALIASES: dict[str, tuple[str, ...]] = {
+    "max_leverage": ("max_leverage",),
+    "leverage_max_per_symbol": ("leverage_max_per_symbol",),
+    "daytime_start_utc": ("daytime_start_utc",),
+    "daytime_end_utc": ("daytime_end_utc",),
+    "day_leverage_max_per_symbol": ("day_leverage_max_per_symbol",),
+    "night_leverage_max_per_symbol": ("night_leverage_max_per_symbol",),
+    "day_mmr_per_symbol": ("day_mmr_per_symbol",),
+    "night_mmr_per_symbol": ("night_mmr_per_symbol",),
+    "min_liquidation_buffer_pct": ("min_liquidation_buffer_pct",),
+    "enable_pre_trade_liq_projection": ("enable_pre_trade_liq_projection",),
+    "default_maintenance_margin_rate": ("default_maintenance_margin_rate",),
+    "daily_loss_limit": ("daily_loss_limit",),
+    "max_exposure_pct": ("max_exposure_pct",),
+    "max_total_exposure_pct": ("max_total_exposure_pct",),
+    "max_position_usd": ("max_position_usd",),
+    "max_daily_loss_pct": ("max_daily_loss_pct",),
+    "max_position_pct_per_symbol": ("max_position_pct_per_symbol",),
+    "max_notional_per_symbol": ("max_notional_per_symbol",),
+    "slippage_guard_bps": ("slippage_guard_bps",),
+    "kill_switch_enabled": ("kill_switch_enabled",),
+    "reduce_only_mode": ("reduce_only_mode",),
+    "max_mark_staleness_seconds": ("max_mark_staleness_seconds",),
+    "enable_dynamic_position_sizing": ("enable_dynamic_position_sizing",),
+    "position_sizing_method": ("position_sizing_method",),
+    "position_sizing_multiplier": ("position_sizing_multiplier",),
+    "enable_market_impact_guard": ("enable_market_impact_guard",),
+    "max_market_impact_bps": ("max_market_impact_bps",),
+    "enable_volatility_circuit_breaker": ("enable_volatility_circuit_breaker",),
+    "max_intraday_volatility_threshold": ("max_intraday_volatility_threshold",),
+    "volatility_window_periods": ("volatility_window_periods",),
+    "circuit_breaker_cooldown_minutes": ("circuit_breaker_cooldown_minutes",),
+    "volatility_warning_threshold": ("volatility_warning_threshold",),
+    "volatility_reduce_only_threshold": ("volatility_reduce_only_threshold",),
+    "volatility_kill_switch_threshold": ("volatility_kill_switch_threshold",),
+}
+
+RISK_CONFIG_ENV_KEYS: tuple[str, ...] = tuple(
+    dict.fromkeys(alias for aliases in RISK_CONFIG_ENV_ALIASES.values() for alias in aliases).keys()
+)
+
+RISK_CONFIG_JSON_KEYS: tuple[str, ...] = tuple(
+    dict.fromkeys(
+        alias for aliases in RISK_CONFIG_JSON_ALIASES.values() for alias in aliases
+    ).keys()
+)
+
+_BOOL_FIELD_DEFAULTS: dict[str, bool] = {
+    "enable_pre_trade_liq_projection": True,
+    "kill_switch_enabled": False,
+    "reduce_only_mode": False,
+    "enable_dynamic_position_sizing": False,
+    "enable_market_impact_guard": False,
+    "enable_volatility_circuit_breaker": False,
+}
+
+_TIME_OF_DAY_PATTERN = re.compile(r"^(?:[01]\d|2[0-3]):[0-5]\d$")
+_BOOLEAN_TOKEN_DISPLAY = ", ".join(sorted(TRUE_BOOLEAN_TOKENS | FALSE_BOOLEAN_TOKENS))
+
+
+def _alias_choices(field_name: str) -> AliasChoices:
+    seen: list[str] = []
+    for alias_group in (
+        RISK_CONFIG_ENV_ALIASES.get(field_name, ()),
+        RISK_CONFIG_JSON_ALIASES.get(field_name, ()),
+        (field_name,),
+    ):
+        for alias in alias_group:
+            if alias not in seen:
+                seen.append(alias)
+    return AliasChoices(*seen)
+
+
+def _coerce_bool(value: object, *, field_name: str) -> bool:
+    if value is None:
+        return _BOOL_FIELD_DEFAULTS[field_name]
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, (int, float)):
+        if value in (0, 1):
+            return bool(int(value))
+    if isinstance(value, str):
+        candidate = interpret_tristate_bool(value.strip())
+        if candidate is not None:
+            return candidate
+    raise ValueError(f"expected a boolean value ({_BOOLEAN_TOKEN_DISPLAY}) but received {value!r}")
+
+
+def _coerce_mapping(
+    value: object,
+    converter: Callable[[object], object],
+) -> dict[str, object]:
+    if value is None:
+        return {}
+    if isinstance(value, Mapping):
+        result: dict[str, object] = {}
+        for raw_key, raw_val in value.items():
+            key = str(raw_key).strip()
+            if not key:
+                raise ValueError("includes an entry with an empty key")
+            if raw_val is None or (isinstance(raw_val, str) and not raw_val.strip()):
+                raise ValueError(f"includes an entry for {key!r} with an empty value")
+            try:
+                result[key] = converter(raw_val)
+            except Exception as exc:  # pragma: no cover - defensive
+                raise ValueError(f"could not cast value {raw_val!r} for key {key!r}") from exc
+        return result
+    if isinstance(value, str):
+        result: dict[str, object] = {}
+        for raw_pair in value.split(","):
+            chunk = raw_pair.strip()
+            if not chunk:
+                continue
+            if ":" not in chunk:
+                raise ValueError(f"has an invalid entry {chunk!r}; expected 'KEY:VALUE'")
+            key_raw, val_raw = chunk.split(":", 1)
+            key = key_raw.strip()
+            if not key:
+                raise ValueError("includes an entry with an empty key")
+            val = val_raw.strip()
+            if not val:
+                raise ValueError(f"includes an entry for {key!r} with an empty value")
+            try:
+                result[key] = converter(val)
+            except Exception as exc:  # pragma: no cover - defensive
+                raise ValueError(f"could not cast value {val!r} for key {key!r}") from exc
+        return result
+    raise ValueError("expected a mapping or comma-separated 'KEY:VALUE' string")
+
+
+def _coerce_decimal(value: object) -> Decimal:
+    if isinstance(value, Decimal):
+        return value
+    if isinstance(value, (int, float)):
+        return Decimal(str(value))
+    if isinstance(value, str):
+        candidate = value.strip()
+        if not candidate:
+            raise ValueError("expected a decimal value but received an empty string")
+        try:
+            return Decimal(candidate)
+        except Exception as exc:  # pragma: no cover - defensive
+            raise ValueError(f"could not parse decimal value {value!r}") from exc
+    raise ValueError(f"expected a decimal-compatible value, received {type(value).__name__}")
+
+
+def _normalize_time(value: object) -> str | None:
+    if value is None:
+        return None
+    if isinstance(value, str):
+        candidate = value.strip()
+        if not candidate:
+            return None
+        if not _TIME_OF_DAY_PATTERN.match(candidate):
+            raise ValueError("expected HH:MM (24h) format")
+        return candidate
+    raise ValueError("expected HH:MM string")
+
+
+def _normalize_optional_float(value: object) -> float | None:
+    if value is None:
+        return None
+    if isinstance(value, str):
+        candidate = value.strip()
+        if not candidate:
+            return None
+        try:
+            return float(candidate)
+        except Exception as exc:  # pragma: no cover - defensive
+            raise ValueError(f"expected a float value but received {value!r}") from exc
+    try:
+        return float(value)
+    except Exception as exc:  # pragma: no cover - defensive
+        raise ValueError(f"expected a float value but received {value!r}") from exc
+
+
+def _normalize_optional_decimal(value: object) -> Decimal | None:
+    if value is None:
+        return None
+    if isinstance(value, str):
+        candidate = value.strip()
+        if not candidate:
+            return None
+        return _coerce_decimal(candidate)
+    return _coerce_decimal(value)
+
+
+def _ensure_percentage(value: float) -> float:
+    if not 0 <= value <= 1:
+        raise ValueError("must be between 0 and 1 inclusive")
+    return value
+
+
+class RiskConfigModel(BaseModel):
+    """Validated representation matching :class:`RiskConfig` semantics."""
+
+    model_config = ConfigDict(populate_by_name=True, extra="forbid")
+
+    max_leverage: int = Field(
+        default=5,
+        ge=1,
+        validation_alias=_alias_choices("max_leverage"),
+    )
+    leverage_max_per_symbol: dict[str, int] = Field(
+        default_factory=dict,
+        validation_alias=_alias_choices("leverage_max_per_symbol"),
+    )
+    daytime_start_utc: str | None = Field(
+        default=None,
+        validation_alias=_alias_choices("daytime_start_utc"),
+    )
+    daytime_end_utc: str | None = Field(
+        default=None,
+        validation_alias=_alias_choices("daytime_end_utc"),
+    )
+    day_leverage_max_per_symbol: dict[str, int] = Field(
+        default_factory=dict,
+        validation_alias=_alias_choices("day_leverage_max_per_symbol"),
+    )
+    night_leverage_max_per_symbol: dict[str, int] = Field(
+        default_factory=dict,
+        validation_alias=_alias_choices("night_leverage_max_per_symbol"),
+    )
+    day_mmr_per_symbol: dict[str, float] = Field(
+        default_factory=dict,
+        validation_alias=_alias_choices("day_mmr_per_symbol"),
+    )
+    night_mmr_per_symbol: dict[str, float] = Field(
+        default_factory=dict,
+        validation_alias=_alias_choices("night_mmr_per_symbol"),
+    )
+    min_liquidation_buffer_pct: float = Field(
+        default=0.15,
+        validation_alias=_alias_choices("min_liquidation_buffer_pct"),
+    )
+    enable_pre_trade_liq_projection: bool = Field(
+        default=True,
+        validation_alias=_alias_choices("enable_pre_trade_liq_projection"),
+    )
+    default_maintenance_margin_rate: float = Field(
+        default=0.005,
+        validation_alias=_alias_choices("default_maintenance_margin_rate"),
+    )
+    daily_loss_limit: Decimal = Field(
+        default=Decimal("100"),
+        validation_alias=_alias_choices("daily_loss_limit"),
+    )
+    max_exposure_pct: float = Field(
+        default=0.8,
+        validation_alias=_alias_choices("max_exposure_pct"),
+    )
+    max_total_exposure_pct: float | None = Field(
+        default=None,
+        validation_alias=_alias_choices("max_total_exposure_pct"),
+    )
+    max_position_pct_per_symbol: float = Field(
+        default=0.2,
+        validation_alias=_alias_choices("max_position_pct_per_symbol"),
+    )
+    max_notional_per_symbol: dict[str, Decimal] = Field(
+        default_factory=dict,
+        validation_alias=_alias_choices("max_notional_per_symbol"),
+    )
+    max_position_usd: Decimal | None = Field(
+        default=None,
+        validation_alias=_alias_choices("max_position_usd"),
+    )
+    max_daily_loss_pct: float | None = Field(
+        default=None,
+        validation_alias=_alias_choices("max_daily_loss_pct"),
+    )
+    slippage_guard_bps: int = Field(
+        default=50,
+        ge=0,
+        validation_alias=_alias_choices("slippage_guard_bps"),
+    )
+    kill_switch_enabled: bool = Field(
+        default=False,
+        validation_alias=_alias_choices("kill_switch_enabled"),
+    )
+    reduce_only_mode: bool = Field(
+        default=False,
+        validation_alias=_alias_choices("reduce_only_mode"),
+    )
+    max_mark_staleness_seconds: int = Field(
+        default=180,
+        ge=0,
+        validation_alias=_alias_choices("max_mark_staleness_seconds"),
+    )
+    enable_dynamic_position_sizing: bool = Field(
+        default=False,
+        validation_alias=_alias_choices("enable_dynamic_position_sizing"),
+    )
+    position_sizing_method: str = Field(
+        default="notional",
+        validation_alias=_alias_choices("position_sizing_method"),
+    )
+    position_sizing_multiplier: float = Field(
+        default=1.0,
+        ge=0,
+        validation_alias=_alias_choices("position_sizing_multiplier"),
+    )
+    enable_market_impact_guard: bool = Field(
+        default=False,
+        validation_alias=_alias_choices("enable_market_impact_guard"),
+    )
+    max_market_impact_bps: int = Field(
+        default=0,
+        ge=0,
+        validation_alias=_alias_choices("max_market_impact_bps"),
+    )
+    enable_volatility_circuit_breaker: bool = Field(
+        default=False,
+        validation_alias=_alias_choices("enable_volatility_circuit_breaker"),
+    )
+    max_intraday_volatility_threshold: float = Field(
+        default=0.15,
+        validation_alias=_alias_choices("max_intraday_volatility_threshold"),
+    )
+    volatility_window_periods: int = Field(
+        default=20,
+        ge=1,
+        validation_alias=_alias_choices("volatility_window_periods"),
+    )
+    circuit_breaker_cooldown_minutes: int = Field(
+        default=30,
+        ge=0,
+        validation_alias=_alias_choices("circuit_breaker_cooldown_minutes"),
+    )
+    volatility_warning_threshold: float = Field(
+        default=0.15,
+        validation_alias=_alias_choices("volatility_warning_threshold"),
+    )
+    volatility_reduce_only_threshold: float = Field(
+        default=0.20,
+        validation_alias=_alias_choices("volatility_reduce_only_threshold"),
+    )
+    volatility_kill_switch_threshold: float = Field(
+        default=0.25,
+        validation_alias=_alias_choices("volatility_kill_switch_threshold"),
+    )
+
+    @field_validator(
+        "enable_pre_trade_liq_projection",
+        "kill_switch_enabled",
+        "reduce_only_mode",
+        "enable_dynamic_position_sizing",
+        "enable_market_impact_guard",
+        "enable_volatility_circuit_breaker",
+        mode="before",
+    )
+    @classmethod
+    def _parse_bool(cls, value: object, info: ValidationInfo) -> bool:
+        return _coerce_bool(value, field_name=info.field_name)
+
+    @field_validator(
+        "leverage_max_per_symbol",
+        "day_leverage_max_per_symbol",
+        "night_leverage_max_per_symbol",
+        mode="before",
+    )
+    @classmethod
+    def _parse_int_mapping(cls, value: object) -> dict[str, int]:
+        parsed = _coerce_mapping(value, int)
+        return {k: int(v) for k, v in parsed.items()}
+
+    @field_validator("day_mmr_per_symbol", "night_mmr_per_symbol", mode="before")
+    @classmethod
+    def _parse_float_mapping(cls, value: object) -> dict[str, float]:
+        parsed = _coerce_mapping(value, float)
+        return {k: float(v) for k, v in parsed.items()}
+
+    @field_validator("max_notional_per_symbol", mode="before")
+    @classmethod
+    def _parse_decimal_mapping(cls, value: object) -> dict[str, Decimal]:
+        parsed = _coerce_mapping(value, lambda raw: Decimal(str(raw)))
+        return {k: _coerce_decimal(v) for k, v in parsed.items()}
+
+    @field_validator("max_position_usd", mode="before")
+    @classmethod
+    def _parse_optional_max_position(cls, value: object) -> Decimal | None:
+        return _normalize_optional_decimal(value)
+
+    @field_validator("max_daily_loss_pct", mode="before")
+    @classmethod
+    def _parse_optional_loss_pct(cls, value: object) -> float | None:
+        return _normalize_optional_float(value)
+
+    @field_validator("daytime_start_utc", "daytime_end_utc", mode="before")
+    @classmethod
+    def _parse_time(cls, value: object) -> str | None:
+        return _normalize_time(value)
+
+    @field_validator("daily_loss_limit", mode="before")
+    @classmethod
+    def _parse_decimal(cls, value: object) -> Decimal:
+        return _coerce_decimal(value)
+
+    @field_validator("position_sizing_method", mode="before")
+    @classmethod
+    def _normalize_position_method(cls, value: object) -> str:
+        if value is None:
+            return "notional"
+        candidate = str(value).strip()
+        return candidate or "notional"
+
+    @field_validator("position_sizing_multiplier", mode="before")
+    @classmethod
+    def _normalize_multiplier(cls, value: object) -> float:
+        if value is None:
+            return 1.0
+        if isinstance(value, str):
+            candidate = value.strip()
+            if not candidate:
+                return 1.0
+            try:
+                return float(candidate)
+            except Exception as exc:  # pragma: no cover - defensive
+                raise ValueError(f"expected a float value but received {value!r}") from exc
+        try:
+            return float(value)
+        except Exception as exc:  # pragma: no cover - defensive
+            raise ValueError(f"expected a float value but received {value!r}") from exc
+
+    @field_validator("max_total_exposure_pct", mode="before")
+    @classmethod
+    def _normalize_optional_exposure(cls, value: object) -> float | None:
+        return _normalize_optional_float(value)
+
+    @field_validator(
+        "min_liquidation_buffer_pct",
+        "max_exposure_pct",
+        "max_position_pct_per_symbol",
+        "max_intraday_volatility_threshold",
+        "volatility_warning_threshold",
+        "volatility_reduce_only_threshold",
+        "volatility_kill_switch_threshold",
+        mode="after",
+    )
+    @classmethod
+    def _validate_percentage_fields(cls, value: float) -> float:
+        return _ensure_percentage(value)
+
+    @field_validator("default_maintenance_margin_rate", mode="after")
+    @classmethod
+    def _validate_mmr(cls, value: float) -> float:
+        return _ensure_percentage(value)
+
+    @field_validator("max_total_exposure_pct", mode="after")
+    @classmethod
+    def _validate_max_total_exposure(cls, value: float | None) -> float | None:
+        if value is None:
+            return None
+        return _ensure_percentage(float(value))
+
+    @model_validator(mode="after")
+    def _sync_exposure_aliases(self) -> RiskConfigModel:
+        if self.max_total_exposure_pct is not None:
+            self.max_exposure_pct = float(self.max_total_exposure_pct)
+        return self
+
+
+def _load_risk_model_from_env(
+    *,
+    settings: RuntimeSettings | None = None,
+) -> RiskConfigModel:
+    runtime_settings = settings or _load_runtime_settings()
+    snapshot = runtime_settings.snapshot_env(RISK_CONFIG_ENV_KEYS)
+    env_values: dict[str, str] = {}
+    for key, raw in snapshot.items():
+        if raw is None:
+            continue
+        candidate = raw.strip()
+        if not candidate:
+            continue
+        env_values[key] = candidate
+    try:
+        return RiskConfigModel.model_validate(
+            env_values,
+            context={"source": "env", "raw_env": env_values},
+        )
+    except ValidationError as exc:
+        env_error = _convert_env_validation_error(exc)
+        logger.error(
+            "Invalid risk configuration env var %s: %s",
+            env_error.var_name,
+            env_error.message,
+        )
+        raise env_error from None
+
+
+def _load_risk_model_from_json(raw: Mapping[str, Any]) -> RiskConfigModel:
+    if not isinstance(raw, Mapping):
+        raise ValueError("Risk configuration JSON must be an object")
+    return RiskConfigModel.model_validate(raw, context={"source": "json"})
+
+
+def _convert_env_validation_error(error: ValidationError) -> EnvVarError:
+    errors = error.errors()
+    if not errors:
+        raise error
+    first = errors[0]
+    loc = first.get("loc", ("UNKNOWN_ENV",))
+    var_name = str(loc[0]) if loc else "UNKNOWN_ENV"
+    message = first.get("msg", "invalid value")
+    raw_value = first.get("input")
+    captured = raw_value if isinstance(raw_value, str) else None
+    return EnvVarError(var_name, message, captured)

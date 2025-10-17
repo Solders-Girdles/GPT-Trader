@@ -10,6 +10,9 @@ together. Legacy material describing `src/bot/risk/*` has been archived.
   USD pairs. Override with `RISK_CONFIG_PATH` to supply a custom file.
 - Environment flags (`DAILY_LOSS_LIMIT`, `VOL_GUARD_MULTIPLIER`, etc.) merge
   into `BotConfig` and flow into the guard classes.
+- `RiskConfigModel` (Pydantic) validates env/JSON payloads via
+  `RuntimeSettings.snapshot_env`; validation errors cite the original env var or
+  JSON field so misconfigurations surface immediately.
 
 ## Execution Path
 

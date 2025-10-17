@@ -16,14 +16,14 @@ This document captures notable opportunities to improve maintainability, streaml
 - Allow `PerpsBot` to accept pre-built collaborators (risk manager, execution engine) so integration tests can substitute fakes without touching environment variables.
 
 ### 2. Consolidate configuration parsing helpers
-*Observation.* `RiskConfig.from_env` hand-parses multiple colon-separated environment variables with copy/pasted `split` logic and silent `except` blocks, increasing the chance of divergent behaviour across config loaders.【F:src/bot_v2/config/live_trade_config.py†L83-L185】
+*Status.* Completed. `RiskConfig.from_env` now delegates to a `RiskConfigModel` Pydantic schema that draws inputs from `RuntimeSettings.snapshot_env`, keeping defaults and aliases aligned with the runtime snapshot.
 
-*Why it matters.* Manual parsing repeats across future config classes, is difficult to validate, and makes it easy to miss malformed inputs.
+*Highlights.*
+- Validators normalise mapping payloads, enforce percentage bounds, and raise descriptive errors that reference the originating env var or JSON key.
+- Shared unit tests capture the env key list via `RuntimeSettings.snapshot_env` and cover legacy aliases, invalid mappings, and out‑of‑range percentages to guard against regression.
 
-*First steps.*
-- Create shared parsing utilities (e.g., `parse_mapping_env(var_name, cast)` and boolean helpers) within a config utilities module.
-- Replace the repeated comprehension blocks in `RiskConfig.from_env` with calls to those helpers and add targeted tests that assert failure cases raise descriptive errors instead of silently `pass`ing.
-- Document supported environment formats next to the helpers to keep behaviour consistent across configuration classes.
+*Next opportunities.*
+- Extend the schema-driven approach to other configuration surfaces (e.g., spot risk, orchestration profiles) so loaders share the same validation guarantees.
 
 ### 3. Source mock product metadata from structured fixtures
 *Observation.* `MockBroker._init_products` hardcodes extensive spot/perp metadata inline, duplicating market constants and forcing edits in code for simple test data tweaks.【F:src/bot_v2/orchestration/mock_broker.py†L35-L200】

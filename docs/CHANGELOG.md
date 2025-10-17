@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Risk Config Schema Hardening
+- `RiskConfig.from_env` now funnels through a `RiskConfigModel` Pydantic schema, using `RuntimeSettings.snapshot_env` to keep defaults and aliases in lockstep with runtime settings.
+- Environment parsing raises `EnvVarError` with the offending var and logs the failure; JSON inputs emit precise `ValidationError`s when mappings or percentages are malformed.
+- Regression tests snapshot the env key list, cover legacy aliases, and assert percentage bounds; operator docs now describe the stricter validation guarantees.
+
 ### Naming Alignment: `qty` → `quantity`
 - Core brokerage interfaces now expose `quantity` exclusively; legacy `qty` aliases have been removed across serializers and dataclasses.
 - Coinbase adapter, live execution, deterministic broker stub, and strategy paths emit `quantity` only in logs and telemetry to keep downstream metrics consistent.

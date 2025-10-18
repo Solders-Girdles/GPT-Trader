@@ -83,6 +83,11 @@ jobs:
         set -euo pipefail
         poetry run mypy src --ignore-missing-imports
 
+    - name: Verify Poetry lockfile in sync
+      run: |
+        set -euo pipefail
+        poetry check --lock
+
     - name: Run Coinbase core checks
       run: |
         set -euo pipefail
@@ -129,19 +134,55 @@ jobs:
       with:
         python-version: ${{ env.PYTHON_VERSION }}
 
+    - name: Configure Coinbase credentials
+      shell: bash
+      env:
+        ENV_MODE: ${{ matrix.env_mode }}
+      run: |
+        set -euo pipefail
+
+        {
+          echo "COINBASE_SANDBOX=0"
+          echo "COINBASE_PROD_API_KEY="
+          echo "COINBASE_PROD_API_SECRET="
+          echo "COINBASE_SANDBOX_API_KEY="
+          echo "COINBASE_SANDBOX_API_SECRET="
+          echo "COINBASE_API_KEY="
+          echo "COINBASE_API_SECRET="
+        } >> "$GITHUB_ENV"
+
+        case "$ENV_MODE" in
+          prod)
+            {
+              echo "COINBASE_PROD_API_KEY=prod_key"
+              echo "COINBASE_PROD_API_SECRET=prod_secret"
+            } >> "$GITHUB_ENV"
+            ;;
+          sandbox)
+            {
+              echo "COINBASE_SANDBOX=1"
+              echo "COINBASE_SANDBOX_API_KEY=sandbox_key"
+              echo "COINBASE_SANDBOX_API_SECRET=sandbox_secret"
+            } >> "$GITHUB_ENV"
+            ;;
+          prod_fallback)
+            {
+              echo "COINBASE_API_KEY=fallback_key"
+              echo "COINBASE_API_SECRET=fallback_secret"
+            } >> "$GITHUB_ENV"
+            ;;
+          sandbox_fallback)
+            {
+              echo "COINBASE_SANDBOX=1"
+              echo "COINBASE_API_KEY=fallback_key"
+              echo "COINBASE_API_SECRET=fallback_secret"
+            } >> "$GITHUB_ENV"
+            ;;
+        esac
+
     - name: Run config tests
       env:
         BROKER: coinbase
-        # Production with specific keys
-        COINBASE_PROD_API_KEY: ${{ matrix.env_mode == 'prod' && 'prod_key' || '' }}
-        COINBASE_PROD_API_SECRET: ${{ matrix.env_mode == 'prod' && 'prod_secret' || '' }}
-        # Sandbox with specific keys
-        COINBASE_SANDBOX: ${{ (matrix.env_mode == 'sandbox' || matrix.env_mode == 'sandbox_fallback') && '1' || '0' }}
-        COINBASE_SANDBOX_API_KEY: ${{ matrix.env_mode == 'sandbox' && 'sandbox_key' || '' }}
-        COINBASE_SANDBOX_API_SECRET: ${{ matrix.env_mode == 'sandbox' && 'sandbox_secret' || '' }}
-        # Fallback keys
-        COINBASE_API_KEY: ${{ (matrix.env_mode == 'prod_fallback' || matrix.env_mode == 'sandbox_fallback') && 'fallback_key' || '' }}
-        COINBASE_API_SECRET: ${{ (matrix.env_mode == 'prod_fallback' || matrix.env_mode == 'sandbox_fallback') && 'fallback_secret' || '' }}
       run: |
         set -euo pipefail
         poetry run pytest tests/unit/bot_v2/orchestration/test_config_manager.py tests/unit/bot_v2/orchestration/test_configuration.py

@@ -4,7 +4,7 @@ This is the shared orientation document for all AI agents working in this reposi
 
 ## 1. Current Mission Snapshot
 - **Live focus:** Coinbase **spot** trading. Perpetual futures logic remains in the tree but real endpoints stay locked behind the Coinbase INTX gate (`COINBASE_ENABLE_DERIVATIVES` must be `1` *and* INTX access is required).
-- **Primary entry point:** `poetry run perps-bot run --profile dev --dev-fast`. The legacy Stage 3 wrapper has been removed.
+- **Primary entry point:** `poetry run perps-bot run --profile dev --dev-fast`.
 - **Architecture style:** Vertical slices under `src/bot_v2/features/`, but the codebase has grown to 181 Python files—expect multi-file workflows instead of single 500-token modules.
 
 ## 2. Directory Compass

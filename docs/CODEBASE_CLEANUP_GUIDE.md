@@ -40,7 +40,7 @@ order = trading_ops.place_order(symbol="BTC-USD", side=OrderSide.BUY, quantity=1
 ```
 
 #### 2. Simplified Legacy Interface
-**File**: `src/bot_v2/features/live_trade/live_trade_simplified.py`
+**File**: (removed) `src/bot_v2/features/live_trade/live_trade_simplified.py`
 
 **Purpose**: Provide a cleaned-up version of the legacy interface that uses new utilities.
 
@@ -56,7 +56,7 @@ order = trading_ops.place_order(symbol="BTC-USD", side=OrderSide.BUY, quantity=1
 from bot_v2.features.live_trade.live_trade import place_order, get_positions
 
 # After (simplified)
-from bot_v2.features.live_trade.live_trade_simplified import place_order, get_positions
+# Legacy facade removed; use trading_operations instead
 # Same API, cleaner implementation
 ```
 
@@ -177,7 +177,7 @@ from bot_v2.utilities import create_trading_operations
 # ... transition existing code ...
 
 # Step 4: Update imports
-from bot_v2.features.live_trade.live_trade_simplified import place_order
+# Legacy facade removed; use trading_operations instead
 ```
 
 #### 2. Backward Compatibility

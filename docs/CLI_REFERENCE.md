@@ -62,5 +62,5 @@ Order arguments accept the same flags as before (`--symbol`, `--side`, `--type`,
 
 ### Legacy Wrapper
 
-`scripts/stage3_runner.py` remains as a thin wrapper for compatibility. It now
-forwards directly to the CLI outlined above and should not be extended.
+The historical `scripts/stage3_runner.py` wrapper has been removed. Use the
+`perps-bot` CLI directly for all workflows.

@@ -244,7 +244,7 @@ risk_management:
 # RUN_SANDBOX_VALIDATIONS=1 python scripts/validate_ws_week1.py
 
 # Full cycle test
-python scripts/run_perps_bot.py --profile dev --dry-run --dev-fast
+poetry run perps-bot run --profile dev --dry-run --dev-fast
 ```
 
 ## Performance Metrics
@@ -312,16 +312,16 @@ $EVENT_STORE_ROOT/perps_bot/{profile}/orders/
 ### Operational Commands
 ```bash
 # Start production trading
-python scripts/run_perps_bot.py --profile prod
+poetry run perps-bot run --profile prod
 
 # Emergency reduce-only mode
-python scripts/run_perps_bot.py --profile prod --reduce-only
+poetry run perps-bot run --profile prod --reduce-only
 
 # Canary deployment
-python scripts/run_perps_bot.py --profile canary
+poetry run perps-bot run --profile canary
 
 # Single cycle validation
-python scripts/run_perps_bot.py --profile prod --dev-fast --dry-run
+poetry run perps-bot run --profile prod --dev-fast --dry-run
 ```
 
 ## Future Enhancements

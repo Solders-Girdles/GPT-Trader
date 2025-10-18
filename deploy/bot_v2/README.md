@@ -59,5 +59,4 @@ volumes are declared at the bottom of the file so metrics and logs persist acros
 
 ## Migrating from the Legacy Stack
 If you previously relied on `deploy/docker/`, consult
-[`docs/guides/legacy_deployment_migration.md`](../../docs/guides/legacy_deployment_migration.md)
 for migration notes. The legacy assets now live under `docs/archive/legacy-deployment/`.

@@ -2,16 +2,16 @@
 
 from __future__ import annotations
 
-import logging
 from decimal import Decimal
 from typing import Any, cast
 
 from bot_v2.errors import ExecutionError
 from bot_v2.features.brokerages.coinbase.specs import validate_order as spec_validate_order
 from bot_v2.features.brokerages.core.interfaces import OrderSide, OrderType, Product, Quote
+from bot_v2.utilities.logging_patterns import get_logger
 from bot_v2.utilities.quantization import quantize_price_side_aware
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="live_trade_execution")
 
 
 class OrderGuards:

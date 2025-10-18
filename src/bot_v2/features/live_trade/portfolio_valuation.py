@@ -7,7 +7,6 @@ and unified PnL tracking with funding accruals for production readiness.
 
 from __future__ import annotations
 
-import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from decimal import Decimal
@@ -15,8 +14,9 @@ from typing import Any, cast
 
 from bot_v2.features.brokerages.core.interfaces import Balance, Position
 from bot_v2.features.live_trade.pnl_tracker import PnLTracker
+from bot_v2.utilities.logging_patterns import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="live_trade_portfolio")
 
 
 @dataclass

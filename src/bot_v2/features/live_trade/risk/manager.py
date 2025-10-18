@@ -9,7 +9,6 @@ This module now serves as a delegation facade to focused submodules.
 
 from __future__ import annotations
 
-import logging
 from collections.abc import Callable, Iterator, MutableMapping
 from datetime import datetime
 from decimal import Decimal
@@ -36,8 +35,9 @@ from bot_v2.features.live_trade.risk.state_management import (
 from bot_v2.features.live_trade.risk_runtime import CircuitBreakerOutcome, RuntimeMonitor
 from bot_v2.persistence.event_store import EventStore
 from bot_v2.utilities.datetime_helpers import normalize_to_utc, utc_now
+from bot_v2.utilities.logging_patterns import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="live_trade_risk")
 
 # Re-export for backward compatibility
 __all__ = [

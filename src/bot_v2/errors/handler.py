@@ -7,7 +7,6 @@ and circuit breaker pattern for fault tolerance.
 
 from __future__ import annotations
 
-import logging
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -23,8 +22,9 @@ from bot_v2.errors import (
     handle_error,
     log_error,
 )
+from bot_v2.utilities.logging_patterns import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="error_handler")
 
 P = ParamSpec("P")
 T = TypeVar("T")

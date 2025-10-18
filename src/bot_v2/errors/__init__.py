@@ -9,9 +9,21 @@ import logging
 import sys
 import traceback
 from datetime import datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any, Optional
 
-logger = logging.getLogger(__name__)
+if TYPE_CHECKING:  # pragma: no cover
+    from bot_v2.utilities.logging_patterns import UnifiedLogger
+
+_logger: Optional["UnifiedLogger"] = None
+
+
+def _get_logger() -> "UnifiedLogger":
+    global _logger
+    if _logger is None:
+        from bot_v2.utilities.logging_patterns import get_logger as _get_structured_logger
+
+        _logger = _get_structured_logger(__name__, component="errors")
+    return _logger
 
 
 def _capture_traceback() -> str:
@@ -207,7 +219,9 @@ def handle_error(error: Exception, context: dict[str, Any] | None = None) -> Tra
 
 def log_error(error: TradingError, level: int = logging.ERROR) -> None:
     """Log an error with full context"""
-    logger.log(level, f"{error.error_code}: {error.message}", extra={"error_data": error.to_dict()})
+    _get_logger().log(
+        level, f"{error.error_code}: {error.message}", extra={"error_data": error.to_dict()}
+    )
 
 
 # Export all error types

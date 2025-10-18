@@ -16,7 +16,6 @@ on:
       - 'tests/unit/bot_v2/orchestration/test_configuration.py'
       - 'tests/unit/bot_v2/orchestration/test_config_manager.py'
       - 'tests/**/perps/**'
-      - 'scripts/run_perps_bot.py'
       - 'scripts/validation/**'
       - '.github/workflows/targeted-suites.yml'
   pull_request:
@@ -25,6 +24,7 @@ on:
       - 'src/bot_v2/features/brokerages/coinbase/**'
       - 'src/bot_v2/features/brokerages/core/**'
       - 'src/bot_v2/features/live_trade/**'
+      - 'src/bot_v2/cli/**'
       - 'tests/unit/bot_v2/features/brokerages/coinbase/**'
       - 'tests/unit/bot_v2/features/live_trade/**'
       - 'tests/unit/bot_v2/orchestration/test_broker_factory.py'
@@ -32,10 +32,9 @@ on:
       - 'tests/unit/bot_v2/orchestration/test_configuration.py'
       - 'tests/unit/bot_v2/orchestration/test_config_manager.py'
       - 'tests/**/perps/**'
-      - 'scripts/run_perps_bot.py'
       - 'scripts/validation/**'
       - '.github/workflows/targeted-suites.yml'
-  workflow_dispatch:
+workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -156,7 +155,7 @@ jobs:
           mkdir -p "$EVENT_STORE_ROOT"
           poetry run pytest \
             tests/unit/bot_v2/orchestration/test_live_execution.py \
-            tests/unit/bot_v2/features/live_trade/test_type_consolidation.py \
+            tests/unit/bot_v2/orchestration/test_execution_coordinator.py \
             -q --tb=short
 
           export EVENT_STORE_ROOT="$RUNNER_TEMP/event_store_validation"
@@ -172,7 +171,7 @@ jobs:
           export EVENT_STORE_ROOT="$RUNNER_TEMP/event_store_dev"
           export GPT_TRADER_RUNTIME_ROOT="$RUNNER_TEMP/event_store_dev"
           mkdir -p "$EVENT_STORE_ROOT"
-          poetry run python scripts/run_perps_bot.py --profile dev --dry-run --dev-fast --symbols BTC-PERP
+          poetry run python -m bot_v2.cli run --profile dev --dry-run --dev-fast --symbols BTC-PERP
 
           export EVENT_STORE_ROOT="$RUNNER_TEMP/event_store_demo"
           export GPT_TRADER_RUNTIME_ROOT="$RUNNER_TEMP/event_store_demo"

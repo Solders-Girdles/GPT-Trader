@@ -11,6 +11,7 @@ from dotenv import load_dotenv
 
 from bot_v2.logging import configure_logging
 from bot_v2.orchestration.runtime_settings import RuntimeSettings, load_runtime_settings
+from bot_v2.utilities.logging_patterns import get_logger
 
 # Preserve host-provided secrets; only fill gaps from .env
 load_dotenv()
@@ -19,7 +20,7 @@ RUNTIME_SETTINGS: RuntimeSettings = load_runtime_settings()
 
 # Configure logging (rotating files + console)
 configure_logging(settings=RUNTIME_SETTINGS)
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="cli")
 
 from . import services as _cli_services  # noqa: E402
 

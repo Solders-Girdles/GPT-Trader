@@ -5,18 +5,18 @@ Complete isolation - no external dependencies.
 """
 
 from datetime import datetime
-import logging
-import pickle
-import os
 import json
+import os
+import pickle
 from typing import Any, Dict, List, Optional, cast
 
 import pandas as pd
 
 from bot_v2.features.data.types import DataQuery, DataType, DataSource
+from bot_v2.utilities.logging_patterns import get_logger
 
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="data_storage")
 
 
 class DataStorage:

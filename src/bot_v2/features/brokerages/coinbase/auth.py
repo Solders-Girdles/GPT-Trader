@@ -5,7 +5,6 @@ from __future__ import annotations
 import hashlib
 import hmac
 import json
-import logging
 import secrets
 import time
 from collections.abc import Callable, Iterable
@@ -15,8 +14,9 @@ from urllib.parse import urlparse
 
 from bot_v2.features.brokerages.coinbase.models import APIConfig
 from bot_v2.orchestration.runtime_settings import RuntimeSettings, load_runtime_settings
+from bot_v2.utilities.logging_patterns import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="coinbase_auth")
 
 
 class AuthStrategy(Protocol):

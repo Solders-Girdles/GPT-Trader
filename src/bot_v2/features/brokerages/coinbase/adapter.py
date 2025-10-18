@@ -8,7 +8,6 @@ REST operations, and WebSocket market data while presenting the same
 
 from __future__ import annotations
 
-import logging
 from collections.abc import Callable, Iterable, Sequence
 from datetime import datetime
 from decimal import Decimal
@@ -41,8 +40,9 @@ from bot_v2.features.brokerages.core.interfaces import (
 )
 from bot_v2.orchestration.runtime_settings import RuntimeSettings, load_runtime_settings
 from bot_v2.persistence.event_store import EventStore
+from bot_v2.utilities.logging_patterns import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="coinbase_adapter")
 
 
 class CoinbaseBrokerage(IBrokerage):

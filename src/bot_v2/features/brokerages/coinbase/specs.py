@@ -8,7 +8,6 @@ Handles:
 - Pre-flight order validation
 """
 
-import logging
 import math
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -19,9 +18,10 @@ from typing import Any
 import yaml
 
 from bot_v2.orchestration.runtime_settings import RuntimeSettings, load_runtime_settings
+from bot_v2.utilities.logging_patterns import get_logger
 from bot_v2.utilities.quantization import quantize_price_side_aware
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="coinbase_specs")
 
 
 class ProductSpec:

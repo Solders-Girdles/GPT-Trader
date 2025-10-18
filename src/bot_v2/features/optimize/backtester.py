@@ -8,8 +8,9 @@ import pandas as pd
 
 from bot_v2.features.optimize.strategies import create_local_strategy
 from bot_v2.features.optimize.types import BacktestMetrics
+from bot_v2.utilities.logging_patterns import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="optimize")
 
 
 def _format_percent(value: float) -> str:

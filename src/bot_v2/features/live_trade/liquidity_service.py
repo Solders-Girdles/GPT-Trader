@@ -7,14 +7,15 @@ to optimize order execution and sizing decisions.
 
 from __future__ import annotations
 
-import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from decimal import Decimal
 from enum import Enum
 from typing import Any
 
-logger = logging.getLogger(__name__)
+from bot_v2.utilities.logging_patterns import get_logger
+
+logger = get_logger(__name__, component="liquidity_service")
 
 
 class LiquidityCondition(Enum):

@@ -2,15 +2,15 @@
 
 from __future__ import annotations
 
-import logging
 from collections.abc import ItemsView, Iterable, Iterator, Mapping, MutableMapping, ValuesView
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 
 from bot_v2.features.brokerages.core.interfaces import OrderSide, OrderType
+from bot_v2.utilities.logging_patterns import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="live_trade_execution")
 
 
 @dataclass

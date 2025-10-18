@@ -9,7 +9,6 @@ Design goals:
 
 from __future__ import annotations
 
-import logging
 import time
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
@@ -18,10 +17,12 @@ from decimal import Decimal, InvalidOperation
 from typing import Any
 
 from bot_v2.features.brokerages.coinbase.transports import NoopTransport, RealTransport
-from bot_v2.monitoring.system import LogLevel, get_logger
+from bot_v2.monitoring.system import LogLevel
+from bot_v2.monitoring.system import get_logger as get_production_logger
 from bot_v2.orchestration.runtime_settings import RuntimeSettings, load_runtime_settings
+from bot_v2.utilities.logging_patterns import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="coinbase_ws")
 
 
 @dataclass
@@ -56,7 +57,7 @@ class CoinbaseWebSocket:
         self._metrics_emitter = metrics_emitter
         self._static_settings = settings is not None
         self._settings = settings or load_runtime_settings()
-        self._production_logger = get_logger(settings=self._settings)
+        self._production_logger = get_production_logger(settings=self._settings)
 
     def set_transport(self, transport: Any) -> None:
         """Set a custom transport (for testing)."""
@@ -65,7 +66,7 @@ class CoinbaseWebSocket:
     def connect(self, headers: dict[str, str] | None = None) -> None:
         if not self._static_settings:
             self._settings = load_runtime_settings()
-            self._production_logger = get_logger(settings=self._settings)
+            self._production_logger = get_production_logger(settings=self._settings)
 
         logger.info(f"Connecting WS to {self.url}")
         try:

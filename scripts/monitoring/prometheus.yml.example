@@ -1,5 +1,5 @@
 scrape_configs:
-  - job_name: gpt_trader
+  - job_name: perps_bot
     scrape_interval: 15s
     scrape_timeout: 10s
     static_configs:

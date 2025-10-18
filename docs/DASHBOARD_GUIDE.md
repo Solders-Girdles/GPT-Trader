@@ -63,13 +63,9 @@ poetry run python scripts/perps_dashboard.py \
 
 ## Archived Monitoring Toolkit
 
-The legacy alert router, metrics collector, workflow tracker, and dashboard live
-under `archived/experimental/monitoring/`. Restore the relevant files to
-`src/bot_v2/monitoring/` if you need the full alerting channels (`alerts.py`,
-`alerts_manager.py`), rich metrics collector, or the Streamlit-style dashboard.
-The historical canary monitor also resides in
-`archived/experimental/scripts/monitoring/canary_monitor.py` and must be copied
-back into `scripts/monitoring/` before use.
+Legacy monitoring components (alert router, Streamlit dashboard, canary
+monitor, etc.) were removed from the active tree. Recover them via
+`docs/archive/legacy_recovery.md` when you need the historical tooling.
 
 ## Alerting Hooks
 

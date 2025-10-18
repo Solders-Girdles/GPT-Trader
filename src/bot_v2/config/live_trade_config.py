@@ -7,8 +7,7 @@ Phase 5: Risk Engine configuration only.
 from __future__ import annotations
 
 import json
-import re
-from collections.abc import Callable, Mapping
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any
@@ -30,10 +29,14 @@ from pydantic import (
 )
 
 from bot_v2.utilities.logging_patterns import get_logger
-from bot_v2.utilities.parsing import (
-    FALSE_BOOLEAN_TOKENS,
-    TRUE_BOOLEAN_TOKENS,
-    interpret_tristate_bool,
+from bot_v2.validation import (
+    BooleanRule,
+    DecimalRule,
+    FloatRule,
+    MappingRule,
+    PercentageRule,
+    StripStringRule,
+    TimeOfDayRule,
 )
 
 from .env_utils import EnvVarError
@@ -270,9 +273,6 @@ _BOOL_FIELD_DEFAULTS: dict[str, bool] = {
     "enable_volatility_circuit_breaker": False,
 }
 
-_TIME_OF_DAY_PATTERN = re.compile(r"^(?:[01]\d|2[0-3]):[0-5]\d$")
-_BOOLEAN_TOKEN_DISPLAY = ", ".join(sorted(TRUE_BOOLEAN_TOKENS | FALSE_BOOLEAN_TOKENS))
-
 
 def _alias_choices(field_name: str) -> AliasChoices:
     seen: list[str] = []
@@ -287,124 +287,19 @@ def _alias_choices(field_name: str) -> AliasChoices:
     return AliasChoices(*seen)
 
 
-def _coerce_bool(value: object, *, field_name: str) -> bool:
-    if value is None:
-        return _BOOL_FIELD_DEFAULTS[field_name]
-    if isinstance(value, bool):
-        return value
-    if isinstance(value, (int, float)):
-        if value in (0, 1):
-            return bool(int(value))
-    if isinstance(value, str):
-        candidate = interpret_tristate_bool(value.strip())
-        if candidate is not None:
-            return candidate
-    raise ValueError(f"expected a boolean value ({_BOOLEAN_TOKEN_DISPLAY}) but received {value!r}")
-
-
-def _coerce_mapping(
-    value: object,
-    converter: Callable[[object], object],
-) -> dict[str, object]:
-    if value is None:
-        return {}
-    if isinstance(value, Mapping):
-        result: dict[str, object] = {}
-        for raw_key, raw_val in value.items():
-            key = str(raw_key).strip()
-            if not key:
-                raise ValueError("includes an entry with an empty key")
-            if raw_val is None or (isinstance(raw_val, str) and not raw_val.strip()):
-                raise ValueError(f"includes an entry for {key!r} with an empty value")
-            try:
-                result[key] = converter(raw_val)
-            except Exception as exc:  # pragma: no cover - defensive
-                raise ValueError(f"could not cast value {raw_val!r} for key {key!r}") from exc
-        return result
-    if isinstance(value, str):
-        result: dict[str, object] = {}
-        for raw_pair in value.split(","):
-            chunk = raw_pair.strip()
-            if not chunk:
-                continue
-            if ":" not in chunk:
-                raise ValueError(f"has an invalid entry {chunk!r}; expected 'KEY:VALUE'")
-            key_raw, val_raw = chunk.split(":", 1)
-            key = key_raw.strip()
-            if not key:
-                raise ValueError("includes an entry with an empty key")
-            val = val_raw.strip()
-            if not val:
-                raise ValueError(f"includes an entry for {key!r} with an empty value")
-            try:
-                result[key] = converter(val)
-            except Exception as exc:  # pragma: no cover - defensive
-                raise ValueError(f"could not cast value {val!r} for key {key!r}") from exc
-        return result
-    raise ValueError("expected a mapping or comma-separated 'KEY:VALUE' string")
-
-
-def _coerce_decimal(value: object) -> Decimal:
-    if isinstance(value, Decimal):
-        return value
-    if isinstance(value, (int, float)):
-        return Decimal(str(value))
-    if isinstance(value, str):
-        candidate = value.strip()
-        if not candidate:
-            raise ValueError("expected a decimal value but received an empty string")
-        try:
-            return Decimal(candidate)
-        except Exception as exc:  # pragma: no cover - defensive
-            raise ValueError(f"could not parse decimal value {value!r}") from exc
-    raise ValueError(f"expected a decimal-compatible value, received {type(value).__name__}")
-
-
-def _normalize_time(value: object) -> str | None:
-    if value is None:
-        return None
-    if isinstance(value, str):
-        candidate = value.strip()
-        if not candidate:
-            return None
-        if not _TIME_OF_DAY_PATTERN.match(candidate):
-            raise ValueError("expected HH:MM (24h) format")
-        return candidate
-    raise ValueError("expected HH:MM string")
-
-
-def _normalize_optional_float(value: object) -> float | None:
-    if value is None:
-        return None
-    if isinstance(value, str):
-        candidate = value.strip()
-        if not candidate:
-            return None
-        try:
-            return float(candidate)
-        except Exception as exc:  # pragma: no cover - defensive
-            raise ValueError(f"expected a float value but received {value!r}") from exc
-    try:
-        return float(value)
-    except Exception as exc:  # pragma: no cover - defensive
-        raise ValueError(f"expected a float value but received {value!r}") from exc
-
-
-def _normalize_optional_decimal(value: object) -> Decimal | None:
-    if value is None:
-        return None
-    if isinstance(value, str):
-        candidate = value.strip()
-        if not candidate:
-            return None
-        return _coerce_decimal(candidate)
-    return _coerce_decimal(value)
-
-
-def _ensure_percentage(value: float) -> float:
-    if not 0 <= value <= 1:
-        raise ValueError("must be between 0 and 1 inclusive")
-    return value
+_BOOL_RULES = {name: BooleanRule(default=default) for name, default in _BOOL_FIELD_DEFAULTS.items()}
+_INT_MAPPING_RULE = MappingRule(value_converter=int)
+_FLOAT_MAPPING_RULE = MappingRule(value_converter=float)
+_DECIMAL_RULE = DecimalRule()
+_OPTIONAL_DECIMAL_RULE = DecimalRule(allow_none=True)
+_DECIMAL_MAPPING_RULE = MappingRule(value_rule=DecimalRule())
+_OPTIONAL_FLOAT_RULE = FloatRule(allow_none=True)
+_FLOAT_DEFAULT_ONE_RULE = FloatRule(default=1.0, allow_none=True)
+_PERCENTAGE_RULE = PercentageRule()
+_OPTIONAL_PERCENTAGE_RULE = PercentageRule(allow_none=True)
+_TIME_OF_DAY_RULE = TimeOfDayRule()
+_POSITION_METHOD_RULE = StripStringRule(default="notional")
+_DEFAULT_BOOL_RULE = BooleanRule()
 
 
 class RiskConfigModel(BaseModel):
@@ -567,7 +462,8 @@ class RiskConfigModel(BaseModel):
     )
     @classmethod
     def _parse_bool(cls, value: object, info: ValidationInfo) -> bool:
-        return _coerce_bool(value, field_name=info.field_name)
+        rule = _BOOL_RULES.get(info.field_name, _DEFAULT_BOOL_RULE)
+        return rule(value, info.field_name)
 
     @field_validator(
         "leverage_max_per_symbol",
@@ -576,72 +472,62 @@ class RiskConfigModel(BaseModel):
         mode="before",
     )
     @classmethod
-    def _parse_int_mapping(cls, value: object) -> dict[str, int]:
-        parsed = _coerce_mapping(value, int)
+    def _parse_int_mapping(cls, value: object, info: ValidationInfo) -> dict[str, int]:
+        parsed = _INT_MAPPING_RULE(value, info.field_name)
         return {k: int(v) for k, v in parsed.items()}
 
     @field_validator("day_mmr_per_symbol", "night_mmr_per_symbol", mode="before")
     @classmethod
-    def _parse_float_mapping(cls, value: object) -> dict[str, float]:
-        parsed = _coerce_mapping(value, float)
+    def _parse_float_mapping(cls, value: object, info: ValidationInfo) -> dict[str, float]:
+        parsed = _FLOAT_MAPPING_RULE(value, info.field_name)
         return {k: float(v) for k, v in parsed.items()}
 
     @field_validator("max_notional_per_symbol", mode="before")
     @classmethod
-    def _parse_decimal_mapping(cls, value: object) -> dict[str, Decimal]:
-        parsed = _coerce_mapping(value, lambda raw: Decimal(str(raw)))
-        return {k: _coerce_decimal(v) for k, v in parsed.items()}
+    def _parse_decimal_mapping(cls, value: object, info: ValidationInfo) -> dict[str, Decimal]:
+        parsed = _DECIMAL_MAPPING_RULE(value, info.field_name)
+        return {k: v if isinstance(v, Decimal) else Decimal(str(v)) for k, v in parsed.items()}
 
     @field_validator("max_position_usd", mode="before")
     @classmethod
-    def _parse_optional_max_position(cls, value: object) -> Decimal | None:
-        return _normalize_optional_decimal(value)
+    def _parse_optional_max_position(cls, value: object, info: ValidationInfo) -> Decimal | None:
+        return _OPTIONAL_DECIMAL_RULE(value, info.field_name)
 
     @field_validator("max_daily_loss_pct", mode="before")
     @classmethod
-    def _parse_optional_loss_pct(cls, value: object) -> float | None:
-        return _normalize_optional_float(value)
+    def _parse_optional_loss_pct(cls, value: object, info: ValidationInfo) -> float | None:
+        return _OPTIONAL_FLOAT_RULE(value, info.field_name)
 
     @field_validator("daytime_start_utc", "daytime_end_utc", mode="before")
     @classmethod
-    def _parse_time(cls, value: object) -> str | None:
-        return _normalize_time(value)
+    def _parse_time(cls, value: object, info: ValidationInfo) -> str | None:
+        return _TIME_OF_DAY_RULE(value, info.field_name)
 
     @field_validator("daily_loss_limit", mode="before")
     @classmethod
-    def _parse_decimal(cls, value: object) -> Decimal:
-        return _coerce_decimal(value)
+    def _parse_decimal(cls, value: object, info: ValidationInfo) -> Decimal:
+        result = _DECIMAL_RULE(value, info.field_name)
+        if result is None:  # pragma: no cover - defensive guard
+            raise ValueError(f"{info.field_name} must not be null")
+        return result
 
     @field_validator("position_sizing_method", mode="before")
     @classmethod
-    def _normalize_position_method(cls, value: object) -> str:
-        if value is None:
-            return "notional"
-        candidate = str(value).strip()
-        return candidate or "notional"
+    def _normalize_position_method(cls, value: object, info: ValidationInfo) -> str:
+        return _POSITION_METHOD_RULE(value, info.field_name)
 
     @field_validator("position_sizing_multiplier", mode="before")
     @classmethod
-    def _normalize_multiplier(cls, value: object) -> float:
-        if value is None:
+    def _normalize_multiplier(cls, value: object, info: ValidationInfo) -> float:
+        result = _FLOAT_DEFAULT_ONE_RULE(value, info.field_name)
+        if result is None:  # pragma: no cover - defensive guard
             return 1.0
-        if isinstance(value, str):
-            candidate = value.strip()
-            if not candidate:
-                return 1.0
-            try:
-                return float(candidate)
-            except Exception as exc:  # pragma: no cover - defensive
-                raise ValueError(f"expected a float value but received {value!r}") from exc
-        try:
-            return float(value)
-        except Exception as exc:  # pragma: no cover - defensive
-            raise ValueError(f"expected a float value but received {value!r}") from exc
+        return result
 
     @field_validator("max_total_exposure_pct", mode="before")
     @classmethod
-    def _normalize_optional_exposure(cls, value: object) -> float | None:
-        return _normalize_optional_float(value)
+    def _normalize_optional_exposure(cls, value: object, info: ValidationInfo) -> float | None:
+        return _OPTIONAL_FLOAT_RULE(value, info.field_name)
 
     @field_validator(
         "min_liquidation_buffer_pct",
@@ -654,20 +540,24 @@ class RiskConfigModel(BaseModel):
         mode="after",
     )
     @classmethod
-    def _validate_percentage_fields(cls, value: float) -> float:
-        return _ensure_percentage(value)
+    def _validate_percentage_fields(cls, value: float, info: ValidationInfo) -> float:
+        result = _PERCENTAGE_RULE(value, info.field_name)
+        assert result is not None  # Narrow type for static checkers
+        return result
 
     @field_validator("default_maintenance_margin_rate", mode="after")
     @classmethod
-    def _validate_mmr(cls, value: float) -> float:
-        return _ensure_percentage(value)
+    def _validate_mmr(cls, value: float, info: ValidationInfo) -> float:
+        result = _PERCENTAGE_RULE(value, info.field_name)
+        assert result is not None
+        return result
 
     @field_validator("max_total_exposure_pct", mode="after")
     @classmethod
-    def _validate_max_total_exposure(cls, value: float | None) -> float | None:
-        if value is None:
-            return None
-        return _ensure_percentage(float(value))
+    def _validate_max_total_exposure(
+        cls, value: float | None, info: ValidationInfo
+    ) -> float | None:
+        return _OPTIONAL_PERCENTAGE_RULE(value, info.field_name)
 
     @model_validator(mode="after")
     def _sync_exposure_aliases(self) -> RiskConfigModel:

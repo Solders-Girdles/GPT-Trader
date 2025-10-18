@@ -36,7 +36,7 @@ jobs:
       - name: Install project (no dev)
         run: |
           set -euo pipefail
-          poetry export -f requirements.txt --with main --without-hashes -o requirements.txt
+          poetry export --format=requirements.txt --without-hashes -o requirements.txt
       - name: Run pip-audit (fail on high/critical)
         run: |
           set -euo pipefail

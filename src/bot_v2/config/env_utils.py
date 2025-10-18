@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable
+from collections.abc import Callable
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any, NoReturn, TypeVar
 
@@ -11,10 +11,14 @@ if TYPE_CHECKING:
 else:  # pragma: no cover - runtime alias for type checking
     RuntimeSettings = Any  # type: ignore[misc]
 
-from bot_v2.utilities.parsing import (
-    FALSE_BOOLEAN_TOKENS,
-    TRUE_BOOLEAN_TOKENS,
-    interpret_tristate_bool,
+from bot_v2.validation import (
+    BooleanRule,
+    DecimalRule,
+    FloatRule,
+    IntegerRule,
+    ListRule,
+    MappingRule,
+    RuleError,
 )
 
 T = TypeVar("T")
@@ -53,8 +57,34 @@ def _raise_env_error(var_name: str, message: str, value: str | None = None) -> N
     raise EnvVarError(var_name, message, value)
 
 
+def _normalize_rule_message(var_name: str, message: str) -> str:
+    if message.startswith(var_name):
+        trimmed = message[len(var_name) :]
+        return trimmed.lstrip(" :")
+    return message
+
+
+def _raise_rule_error(var_name: str, error: RuleError) -> NoReturn:
+    message = _normalize_rule_message(var_name, str(error))
+    value = getattr(error, "value", None)
+    _raise_env_error(var_name, message, value if isinstance(value, str) else None)
+
+
 def _ensure_required(var_name: str) -> None:
     _raise_env_error(var_name, "is required but was not set")
+
+
+def _coerce_with_rule(var_name: str, raw_value: str, rule: Callable[[Any, str], Any]) -> Any:
+    try:
+        return rule(raw_value, var_name)
+    except RuleError as exc:
+        _raise_rule_error(var_name, exc)
+
+
+_BOOLEAN_RULE = BooleanRule()
+_INT_RULE = IntegerRule()
+_FLOAT_RULE = FloatRule()
+_DECIMAL_RULE = DecimalRule()
 
 
 def coerce_env_value(
@@ -98,13 +128,14 @@ def get_env_int(
     settings: RuntimeSettings | None = None,
 ) -> int | None:
     """Read an integer from ``var_name``."""
-    return coerce_env_value(
-        var_name,
-        int,
-        default=default,
-        required=required,
-        settings=settings,
-    )
+    runtime_settings = _resolve_settings(settings)
+    value = _get_env(var_name, runtime_settings)
+    if value is None:
+        if required:
+            _ensure_required(var_name)
+        return default
+    coerced = _coerce_with_rule(var_name, value, _INT_RULE)
+    return int(coerced)
 
 
 def get_env_float(
@@ -115,13 +146,14 @@ def get_env_float(
     settings: RuntimeSettings | None = None,
 ) -> float | None:
     """Read a float from ``var_name``."""
-    return coerce_env_value(
-        var_name,
-        float,
-        default=default,
-        required=required,
-        settings=settings,
-    )
+    runtime_settings = _resolve_settings(settings)
+    value = _get_env(var_name, runtime_settings)
+    if value is None:
+        if required:
+            _ensure_required(var_name)
+        return default
+    coerced = _coerce_with_rule(var_name, value, _FLOAT_RULE)
+    return float(coerced)
 
 
 def get_env_decimal(
@@ -132,13 +164,15 @@ def get_env_decimal(
     settings: RuntimeSettings | None = None,
 ) -> Decimal | None:
     """Read a :class:`~decimal.Decimal` from ``var_name``."""
-    return coerce_env_value(
-        var_name,
-        Decimal,
-        default=default,
-        required=required,
-        settings=settings,
-    )
+    runtime_settings = _resolve_settings(settings)
+    value = _get_env(var_name, runtime_settings)
+    if value is None:
+        if required:
+            _ensure_required(var_name)
+        return default
+    coerced = _coerce_with_rule(var_name, value, _DECIMAL_RULE)
+    assert isinstance(coerced, Decimal)
+    return coerced
 
 
 def get_env_bool(
@@ -160,22 +194,7 @@ def get_env_bool(
         if required:
             _ensure_required(var_name)
         return default
-
-    interpreted = interpret_tristate_bool(value)
-    if interpreted is not None:
-        return interpreted
-
-    allowed_values = ", ".join(sorted(TRUE_BOOLEAN_TOKENS | FALSE_BOOLEAN_TOKENS))
-    _raise_env_error(
-        var_name,
-        f"expected a boolean value ({allowed_values}) but received {value!r}",
-        value,
-    )
-    return None  # pragma: no cover - raise above
-
-
-def _split_items(value: str, delimiter: str) -> Iterable[str]:
-    return (item.strip() for item in value.split(delimiter))
+    return bool(_coerce_with_rule(var_name, value, _BOOLEAN_RULE))
 
 
 def parse_env_list(
@@ -196,17 +215,16 @@ def parse_env_list(
             _ensure_required(var_name)
         return list(default or [])
 
-    result: list[T] = []
-    for raw in _split_items(value, separator):
-        if not raw:
-            if allow_empty:
-                continue
-            _raise_env_error(var_name, "contains an empty list entry")
-        try:
-            result.append(cast(raw))
-        except Exception:
-            _raise_env_error(var_name, f"could not cast value {raw!r}", raw)
-    return result
+    rule = ListRule(
+        item_converter=cast,
+        allow_none=False,
+        allow_blank_items=allow_empty,
+        separator=separator,
+    )
+    try:
+        return rule(value, var_name)
+    except RuleError as exc:
+        _raise_rule_error(var_name, exc)
 
 
 def parse_env_mapping(
@@ -233,43 +251,17 @@ def parse_env_mapping(
             _ensure_required(var_name)
         return dict(default or {})
 
-    result: dict[str, T] = {}
-    for raw_pair in _split_items(value, item_delimiter):
-        if not raw_pair:
-            if allow_empty:
-                continue
-            _raise_env_error(var_name, "contains an empty mapping entry", raw_pair)
-
-        if kv_delimiter not in raw_pair:
-            _raise_env_error(
-                var_name,
-                f"has an invalid entry {raw_pair!r}; expected 'KEY{kv_delimiter}VALUE'",
-                raw_pair,
-            )
-
-        key, raw_val = raw_pair.split(kv_delimiter, 1)
-        key = key.strip()
-        if not key:
-            _raise_env_error(var_name, "includes an entry with an empty key", raw_pair)
-
-        raw_val = raw_val.strip()
-        if not raw_val:
-            _raise_env_error(
-                var_name,
-                f"includes an entry for {key!r} with an empty value",
-                raw_pair,
-            )
-
-        try:
-            result[key] = cast(raw_val)
-        except Exception:
-            _raise_env_error(
-                var_name,
-                f"could not cast value {raw_val!r} for key {key!r}",
-                raw_val,
-            )
-
-    return result
+    rule = MappingRule(
+        value_converter=cast,
+        allow_none=False,
+        item_separator=item_delimiter,
+        kv_separator=kv_delimiter,
+        allow_blank_items=allow_empty,
+    )
+    try:
+        return rule(value, var_name)
+    except RuleError as exc:
+        _raise_rule_error(var_name, exc)
 
 
 __all__ = [

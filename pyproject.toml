@@ -27,14 +27,11 @@ dependencies = [
 market-data = ["yfinance>=0.2.40,<0.3.0"]
 
 [project.scripts]
-gpt-trader = "bot_v2.cli:main"
 perps-bot = "bot_v2.cli:main"
-gpt-trader-next = "gpt_trader.cli:main"
 
 [tool.poetry]
 packages = [
     { include = "bot_v2", from = "src" },
-    { include = "gpt_trader", from = "src" },
 ]
 
 [tool.poetry.group.dev.dependencies]

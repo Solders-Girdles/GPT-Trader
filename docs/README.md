@@ -93,7 +93,7 @@ Use git history if you need to recover earlier runbooks or reports.
 - **Primary**: Coinbase spot trading (perps code paths kept future-ready)
 - **Architecture**: Vertical slice design (production vs experimental slices clearly marked)
 - **ML**: Strategy selection, regime detection, Kelly sizing (experimental slices)
-- **Testing**: 455 collected / 446 selected tests (`poetry run pytest --collect-only`)
+- **Testing**: 1555 collected / 1554 selected tests (`poetry run pytest --collect-only`)
 
 ## 📞 Getting Help
 

@@ -4,12 +4,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from decimal import Decimal, DecimalException, InvalidOperation
+from decimal import Decimal
 from enum import Enum
 from typing import Any
 
 from bot_v2.monitoring.alert_types import AlertSeverity
 from bot_v2.utilities.logging_patterns import get_logger
+from bot_v2.validation import DecimalRule, RuleError
 
 logger = get_logger(__name__, component="monitoring_guards_base")
 
@@ -59,6 +60,8 @@ class GuardConfig:
 class RuntimeGuard:
     """Base class for runtime guards."""
 
+    _DECIMAL_RULE = DecimalRule(allow_none=True)
+
     def __init__(self, config: GuardConfig) -> None:
         self.config = config
         self.status: GuardStatus = GuardStatus.HEALTHY if config.enabled else GuardStatus.DISABLED
@@ -104,8 +107,8 @@ class RuntimeGuard:
     # ------------------------------------------------------------------
     def _coerce_decimal(self, raw: Any) -> Decimal | None:
         try:
-            return Decimal(str(raw))
-        except (TypeError, ValueError, DecimalException, InvalidOperation):
+            return self._DECIMAL_RULE(raw, "value")
+        except RuleError:
             return None
 
     def _evaluate(self, context: dict[str, Any]) -> tuple[bool, str]:

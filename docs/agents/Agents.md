@@ -44,17 +44,10 @@ poetry run pytest -q                             # Full unit suite
    - Guard new work behind checks for `COINBASE_ENABLE_DERIVATIVES` to avoid surprise production enablement.
 
 ## 5. Experimental vs Production Slices
-Treat these modules as **experimental** (documented with `__experimental__ = True`):
-- `archived/experimental/features/backtest/`
-- `archived/experimental/features/ml_strategy/`
-- `archived/experimental/features/market_regime/`
-- `archived/experimental/features/adaptive_portfolio/`
-- `archived/experimental/features/paper_trade/`
-- `archived/experimental/tests/unit/bot_v2/features/`
-- `archived/experimental/config/`
-- `archived/experimental/monitoring/monitoring_dashboard.py`
-
-The retired workflow engine was removed; retrieve it from git history if needed. Only touch the remaining experimental slices when specifically asked. Everything else in `features/` is either production-critical or demo-supporting.
+All legacy experimental slices were removed from the active tree. Retrieve them
+through the legacy bundle when explicitly required (`docs/archive/legacy_recovery.md`).
+Everything under `src/bot_v2/features/` is considered current unless marked
+otherwise in this guide.
 
 ## 6. Operational Tooling
 - **Account telemetry:** `poetry run perps-bot account snapshot` (dumps permissions, fee schedule, and limits).
@@ -66,7 +59,7 @@ The retired workflow engine was removed; retrieve it from git history if needed.
 - **Documentation templates:** Copy/paste matrices, interview outlines, and backlog seeds from `docs/archive/agents/templates.md` during Sprint 0 and ongoing maintenance.
 
 ## 7. Testing Expectations
-- **Command:** `poetry run pytest --collect-only` currently discovers 455 tests (446 selected after deselection).
+- **Command:** `poetry run pytest --collect-only` currently discovers 1555 tests (1554 selected / 1 deselected).
 - **Dependencies:** `pyotp` remains part of the base Poetry environment; run `poetry install` after pulling to ensure security tests pass.
 - Keep unit tests under `tests/unit/bot_v2/` up to date, and add coverage for new risk or telemetry paths.
 

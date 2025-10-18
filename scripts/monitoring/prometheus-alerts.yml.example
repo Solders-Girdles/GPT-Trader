@@ -1,18 +1,18 @@
 groups:
-  - name: gpt_trader_alerts
+  - name: perps_bot_alerts
     interval: 30s
     rules:
-      - alert: GptTraderNoMetrics
-        expr: time() - gpt_trader_metrics_timestamp_seconds > 300
+      - alert: PerpsBotNoMetrics
+        expr: time() - perps_bot_metrics_timestamp_seconds > 300
         for: 2m
         labels:
           severity: critical
         annotations:
-          summary: "GPT-Trader metrics stale"
+          summary: "Perps Bot metrics stale"
           description: "No fresh cycle metrics received for over 5 minutes."
 
-      - alert: GptTraderLowTradingLimit
-        expr: gpt_trader_account_limit_remaining < 1000
+      - alert: PerpsBotLowTradingLimit
+        expr: perps_bot_account_limit_remaining < 1000
         for: 5m
         labels:
           severity: warning
@@ -20,10 +20,10 @@ groups:
           summary: "Trading limit running low"
           description: "Remaining Coinbase trading limit is below $1,000."
 
-      - alert: GptTraderPreviewFailures
-        expr: increase(gpt_trader_order_preview_failures_total[5m]) > 0
+      - alert: PerpsBotPreviewFailures
+        expr: increase(perps_bot_order_preview_failures_total[5m]) > 0
         labels:
           severity: warning
         annotations:
           summary: "Order preview failures detected"
-          description: "GPT-Trader encountered order preview errors in the last 5 minutes."
+          description: "Perps Bot encountered order preview errors in the last 5 minutes."

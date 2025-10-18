@@ -13,6 +13,8 @@ consolidates:
 
 Complete operational procedures for GPT-Trader. The bot operates **spot-first**; enable perpetuals only after Coinbase grants INTX access and `COINBASE_ENABLE_DERIVATIVES=1` is set. Notes below call out derivatives-specific steps where relevant.
 
+- Legacy cleanup tracker: `docs/ops/legacy_cleanup_inventory.md`
+
 ## Daily Operations
 
 ### Morning Checklist
@@ -21,6 +23,7 @@ Complete operational procedures for GPT-Trader. The bot operates **spot-first**;
 - [ ] Review overnight PnL and positions via `poetry run perps-bot account snapshot`
 - [ ] Scan `var/logs/perps_bot.log` for new ERROR/CRITICAL entries
 - [ ] Verify recent market heartbeat metrics in `scripts/perps_dashboard.py`
+- [ ] Review workspace hygiene (`make clean-dry-run`); see `docs/ops/workspace_cleanup.md`
 
 ### Spot Profile Daily Checklist
 - **Creds & Env** – Ensure the deployment environment exports the correct Coinbase credentials and keeps `COINBASE_ENABLE_DERIVATIVES` unset unless INTX access is confirmed.

@@ -36,31 +36,28 @@ def fail(msg: str):
 
 
 def check_files():
-    runner = REPO_ROOT / "scripts" / "run_perps_bot.py"
+    cli_entry = REPO_ROOT / "src" / "bot_v2" / "cli" / "__init__.py"
     runbook = REPO_ROOT / "docs" / "ops" / "operations_runbook.md"
-    if not runner.exists():
-        fail(f"Runner not found: {runner}")
+    if not cli_entry.exists():
+        fail(f"CLI entry point not found: {cli_entry}")
     if not runbook.exists():
         fail(f"Operations runbook not found: {runbook}")
-    ok("Runner and operations runbook present")
+    ok("CLI entry point and operations runbook present")
 
 
 def check_cli_command():
-    from subprocess import run, PIPE
+    from subprocess import run
 
-    runner = REPO_ROOT / "scripts" / "run_perps_bot.py"
-    if not runner.exists():
-        fail(f"Runner not found: {runner}")
     env = os.environ.copy()
     existing = env.get("PYTHONPATH")
     src_path = str(REPO_ROOT / "src")
     env["PYTHONPATH"] = src_path if not existing else f"{src_path}{os.pathsep}{existing}"
-    p = run([sys.executable, str(runner), "--help"], capture_output=True, text=True, env=env)
+    p = run([sys.executable, "-m", "bot_v2.cli", "--help"], capture_output=True, text=True, env=env)
     if p.returncode != 0:
-        fail(f"Runner help failed: {p.stderr}")
+        fail(f"CLI help failed: {p.stderr}")
     if "--profile" not in p.stdout:
-        fail("Runner help missing --profile flag")
-    ok("Runner exposes CLI help")
+        fail("CLI help missing --profile flag")
+    ok("CLI exposes help output")
 
 
 def check_quantization_helper():

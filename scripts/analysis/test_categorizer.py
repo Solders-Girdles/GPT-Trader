@@ -28,7 +28,6 @@ TARGET_CATEGORIES = {
         "bot_v2.features.strategy_tools",
     },
     "pipeline_stage": {
-        "bot_v2.features.live_trade.live_trade",
         "bot_v2.orchestration.perps_bot",
     },
     "integration": {

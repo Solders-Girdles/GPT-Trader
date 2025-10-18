@@ -79,8 +79,6 @@ Trades CSV (`--trades-csv`) contains columns such as:
 entry_timestamp,exit_timestamp,entry_close,exit_close,return_pct,hold_duration_seconds,entry_reason,exit_reason,entry_confidence
 2024-01-01T00:00:00+00:00,2024-01-02T00:00:00+00:00,100.0,103.1,3.1,86400.0,short_ma_cross_above_long_ma,profit_target,0.82
 ```
-- Stage 3 runner: `scripts/stage3_runner.py` (delegates to `perps-bot` for legacy workflows)
-
 Experimental (kept for demos, not in the perps critical path):
 - `archived/experimental/features/backtest/*`
 - `archived/experimental/features/ml_strategy/*`
@@ -108,8 +106,6 @@ poetry run perps-bot run --profile dev --dev-fast
 # Run tests (full spot suite)
 poetry run pytest -q
 
-# Stage 3 multi-asset runner
-poetry run python scripts/stage3_runner.py --duration-minutes 60
 ```
 
 > Spot risk defaults (per-symbol caps and slippage guards) are loaded automatically from `config/risk/spot_top10.json` for dev/demo/spot profiles; adjust that file if you need different limits.

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -16,8 +15,9 @@ from bot_v2.config.types import Profile
 from bot_v2.features.brokerages.core.interfaces import Balance, Position
 from bot_v2.orchestration.runtime_settings import RuntimeSettings, load_runtime_settings
 from bot_v2.utilities.config import ConfigBaselinePayload
+from bot_v2.utilities.logging_patterns import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="configuration_guardian")
 
 
 class DriftResponse:
@@ -152,7 +152,13 @@ class EnvironmentMonitor(ConfigurationMonitor):
         try:
             self._settings = load_runtime_settings()
         except Exception as exc:  # pragma: no cover - defensive guard
-            logger.warning("Failed to reload runtime settings: %s", exc, exc_info=True)
+            logger.warning(
+                "Failed to reload runtime settings",
+                operation="config_guardian",
+                stage="environment_monitor",
+                error=str(exc),
+                exc_info=True,
+            )
         current_state = self._capture_current_state()
 
         # Check critical vars that should never change
@@ -427,7 +433,12 @@ class DriftDetector(ConfigurationMonitor):
     def record_drift_events(self, events: list[DriftEvent]) -> None:
         """Record drift events for audit trail."""
         self.drift_history.extend(events)
-        logger.info(f"Recorded {len(events)} drift events")
+        logger.info(
+            "Drift events recorded",
+            operation="config_guardian",
+            stage="record_events",
+            event_count=len(events),
+        )
 
     def get_drift_summary(self) -> dict[str, Any]:
         """Get summary of drift activity."""
@@ -479,7 +490,10 @@ class ConfigurationGuardian:
         self.monitors = [self.environment_monitor, self.drift_detector]
 
         logger.info(
-            f"ConfigurationGuardian initialized with baseline from {baseline_snapshot.timestamp}"
+            "ConfigurationGuardian initialized",
+            operation="config_guardian",
+            stage="init",
+            baseline_timestamp=baseline_snapshot.timestamp.isoformat(),
         )
 
     def reset_baseline(self, new_snapshot: BaselineSnapshot) -> None:
@@ -489,7 +503,10 @@ class ConfigurationGuardian:
         self.state_validator.update_baseline(new_snapshot)
         self.drift_detector.update_baseline(new_snapshot)
         logger.info(
-            "ConfigurationGuardian baseline reset to %s", new_snapshot.timestamp.isoformat()
+            "ConfigurationGuardian baseline reset",
+            operation="config_guardian",
+            stage="reset_baseline",
+            baseline_timestamp=new_snapshot.timestamp.isoformat(),
         )
 
     def pre_cycle_check(
@@ -509,7 +526,14 @@ class ConfigurationGuardian:
                 events = monitor.check_changes()
                 all_events.extend(events)
             except Exception as e:
-                logger.error(f"Monitor {monitor.monitor_name} failed: {e}")
+                logger.error(
+                    "Monitor check failed",
+                    operation="config_guardian",
+                    stage="monitor_check",
+                    monitor=monitor.monitor_name,
+                    error=str(e),
+                    exc_info=True,
+                )
                 all_events.append(
                     DriftEvent(
                         timestamp=datetime.now(UTC),
@@ -577,7 +601,14 @@ class ConfigurationGuardian:
                 # Could add more detailed health checks here
             except Exception as e:
                 monitors_status[monitor.monitor_name] = f"error: {e}"
-                logger.error(f"Monitor {monitor.monitor_name} health check failed: {e}")
+                logger.error(
+                    "Monitor health check failed",
+                    operation="config_guardian",
+                    stage="health_check",
+                    monitor=monitor.monitor_name,
+                    error=str(e),
+                    exc_info=True,
+                )
 
         return status
 

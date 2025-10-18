@@ -7,11 +7,12 @@ with configurable risk buffers to force reduce-only mode or reject entries.
 
 from __future__ import annotations
 
-import logging
 from dataclasses import dataclass
 from decimal import Decimal
 
-logger = logging.getLogger(__name__)
+from bot_v2.utilities.logging_patterns import get_logger
+
+logger = get_logger(__name__, component="liquidation_monitor")
 
 
 @dataclass
@@ -79,7 +80,14 @@ class LiquidationMonitor:
             return liq_price
 
         except Exception as e:
-            logger.error(f"Failed to calculate liquidation price for {margin_info.symbol}: {e}")
+            logger.error(
+                "Failed to calculate liquidation price",
+                operation="liquidation_monitor",
+                stage="calculate_liquidation_price",
+                symbol=margin_info.symbol,
+                error=str(e),
+                exc_info=True,
+            )
             return None
 
     def calculate_distance_to_liquidation(
@@ -202,29 +210,56 @@ class LiquidationMonitor:
     def log_risk_summary(self, positions: dict[str, MarginInfo]) -> None:
         """Log liquidation risk summary for all positions."""
         if not positions:
-            logger.info("No positions to monitor")
+            logger.info(
+                "No positions to monitor",
+                operation="liquidation_monitor",
+                stage="summary",
+            )
             return
 
-        logger.info("=== Liquidation Risk Summary ===")
+        logger.info(
+            "Liquidation risk summary",
+            operation="liquidation_monitor",
+            stage="summary_start",
+            position_count=len(positions),
+        )
 
         for symbol, margin_info in positions.items():
             risk = self.assess_liquidation_risk(margin_info)
 
-            logger.info(f"{symbol}:")
             logger.info(
-                f"  Position: {margin_info.position_side} {margin_info.position_size} @ {margin_info.entry_price}"
+                "Liquidation risk details",
+                operation="liquidation_monitor",
+                stage="summary_detail",
+                symbol=symbol,
+                position_side=margin_info.position_side,
+                position_size=float(margin_info.position_size),
+                entry_price=float(margin_info.entry_price),
+                current_price=float(margin_info.current_price),
+                leverage=float(margin_info.leverage),
+                liquidation_price=float(risk.liquidation_price) if risk.liquidation_price else None,
+                distance_pct=risk.distance_pct,
+                distance_bps=risk.distance_bps,
+                risk_level=risk.risk_level,
+                reason=risk.reason,
             )
-            logger.info(
-                f"  Current: {margin_info.current_price}, Leverage: {margin_info.leverage}x"
-            )
-            logger.info(f"  Liquidation: {risk.liquidation_price}")
-            logger.info(f"  Distance: {risk.distance_pct:.1f}% ({risk.distance_bps:.0f}bps)")
-            logger.info(f"  Risk: {risk.risk_level.upper()} - {risk.reason}")
 
             if risk.should_reduce_only:
-                logger.warning(f"  >>> REDUCE-ONLY mode recommended for {symbol}")
+                logger.warning(
+                    "Reduce-only mode recommended",
+                    operation="liquidation_monitor",
+                    stage="summary_detail",
+                    symbol=symbol,
+                    risk_level=risk.risk_level,
+                )
             if risk.should_reject_entry:
-                logger.warning(f"  >>> REJECT new entries for {symbol}")
+                logger.warning(
+                    "Reject new entries recommendation",
+                    operation="liquidation_monitor",
+                    stage="summary_detail",
+                    symbol=symbol,
+                    risk_level=risk.risk_level,
+                )
 
 
 # Helper functions for testing

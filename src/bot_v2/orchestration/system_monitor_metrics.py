@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import logging
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -11,9 +10,10 @@ from typing import Any
 from bot_v2.config.path_registry import RUNTIME_DATA_DIR
 from bot_v2.monitoring.system import LogLevel
 from bot_v2.monitoring.system import get_logger as _get_plog
+from bot_v2.utilities.logging_patterns import get_logger
 from bot_v2.utilities.telemetry import emit_metric
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="system_monitor_metrics")
 
 
 class MetricsPublisher:
@@ -53,7 +53,13 @@ class MetricsPublisher:
             with metrics_path.open("w") as fh:
                 json.dump(metrics, fh, indent=2)
         except Exception as exc:
-            logger.debug("Failed to write metrics file: %s", exc, exc_info=True)
+            logger.debug(
+                "Failed to write metrics snapshot",
+                operation="system_monitor_metrics",
+                stage="write_snapshot",
+                error=str(exc),
+                exc_info=True,
+            )
 
     def _log_update(self, metrics: dict[str, Any]) -> None:
         try:
@@ -70,7 +76,13 @@ class MetricsPublisher:
                 **summary_fields,
             )
         except Exception as exc:
-            logger.debug("Failed to emit metrics update event: %s", exc, exc_info=True)
+            logger.debug(
+                "Failed to emit metrics update event",
+                operation="system_monitor_metrics",
+                stage="log_update",
+                error=str(exc),
+                exc_info=True,
+            )
 
     def write_health_status(self, ok: bool, message: str = "", error: str = "") -> None:
         """Write health status snapshot to disk."""

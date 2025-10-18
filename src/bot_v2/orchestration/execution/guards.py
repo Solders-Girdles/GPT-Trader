@@ -7,7 +7,6 @@ liquidation buffers, mark price staleness, and volatility circuit breakers.
 
 from __future__ import annotations
 
-import logging
 import time
 from collections.abc import Callable
 from dataclasses import dataclass, field
@@ -26,10 +25,11 @@ from bot_v2.features.live_trade.guard_errors import (
     record_guard_success,
 )
 from bot_v2.features.live_trade.risk import LiveRiskManager
-from bot_v2.monitoring.system import get_logger
+from bot_v2.monitoring.system import get_logger as _get_plog
+from bot_v2.utilities.logging_patterns import get_logger
 from bot_v2.utilities.quantities import quantity_from
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="execution_guards")
 
 
 @dataclass
@@ -173,7 +173,7 @@ class GuardManager:
     def log_guard_telemetry(self, state: RuntimeGuardState) -> None:
         """Log P&L telemetry for all positions."""
         guard_name = "pnl_telemetry"
-        plog = get_logger()
+        plog = _get_plog()
         failures: list[dict[str, Any]] = []
 
         for sym, pnl in state.positions_pnl.items():

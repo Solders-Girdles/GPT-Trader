@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-import logging
 import threading
 from collections.abc import Iterable
 from decimal import Decimal
@@ -16,13 +15,14 @@ from bot_v2.orchestration.configuration import Profile
 from bot_v2.orchestration.intx_portfolio_service import IntxPortfolioService
 from bot_v2.orchestration.market_monitor import MarketActivityMonitor
 from bot_v2.utilities import emit_metric, utc_now
+from bot_v2.utilities.logging_patterns import get_logger
 
 from .base import BaseCoordinator, CoordinatorContext, HealthStatus
 
 if TYPE_CHECKING:  # pragma: no cover - typing only
     from bot_v2.features.brokerages.coinbase.adapter import CoinbaseBrokerage
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="telemetry_coordinator")
 
 
 class TelemetryCoordinator(BaseCoordinator):
@@ -43,7 +43,11 @@ class TelemetryCoordinator(BaseCoordinator):
         ctx = context or self.context
         broker = ctx.broker
         if broker is None:
-            logger.warning("Telemetry initialization skipped: no broker available")
+            logger.warning(
+                "Telemetry initialization skipped: no broker available",
+                operation="telemetry_init",
+                stage="missing_broker",
+            )
             return ctx
 
         try:
@@ -51,11 +55,19 @@ class TelemetryCoordinator(BaseCoordinator):
                 CoinbaseBrokerage as _CoinbaseBrokerage,
             )
         except Exception:  # pragma: no cover - fallback
-            logger.warning("Coinbase adapter unavailable; telemetry coordinator skipping setup")
+            logger.warning(
+                "Coinbase adapter unavailable; telemetry coordinator skipping setup",
+                operation="telemetry_init",
+                stage="adapter_missing",
+            )
             return ctx
 
         if not isinstance(broker, _CoinbaseBrokerage):
-            logger.warning("Telemetry coordinator requires a Coinbase brokerage; skipping setup")
+            logger.warning(
+                "Telemetry coordinator requires a Coinbase brokerage; skipping setup",
+                operation="telemetry_init",
+                stage="adapter_mismatch",
+            )
             return ctx
 
         account_manager = CoinbaseAccountManager(
@@ -73,17 +85,23 @@ class TelemetryCoordinator(BaseCoordinator):
             profile=ctx.config.profile.value,
         )
         if not account_telemetry.supports_snapshots():
-            logger.info("Account snapshot telemetry disabled; broker lacks required endpoints")
+            logger.info(
+                "Account snapshot telemetry disabled; broker lacks required endpoints",
+                operation="telemetry_init",
+                stage="snapshot_disabled",
+            )
 
         def _log_market_heartbeat(**payload: Any) -> None:
             try:
                 _get_plog().log_market_heartbeat(**payload)
             except Exception as exc:
                 logger.debug(
-                    "Failed to record market heartbeat for %s: %s",
-                    payload.get("symbol") or payload.get("source"),
-                    exc,
+                    "Failed to record market heartbeat",
+                    symbol=payload.get("symbol") or payload.get("source"),
+                    error=str(exc),
                     exc_info=True,
+                    operation="market_monitor",
+                    stage="heartbeat",
                 )
 
         market_monitor = MarketActivityMonitor(ctx.symbols, heartbeat_logger=_log_market_heartbeat)
@@ -110,7 +128,12 @@ class TelemetryCoordinator(BaseCoordinator):
             task = asyncio.create_task(self._run_account_telemetry(interval))
             self._register_background_task(task)
             tasks.append(task)
-            logger.info("Started account telemetry background task (interval=%ds)", interval)
+            logger.info(
+                "Started account telemetry background task",
+                interval=interval,
+                operation="telemetry_tasks",
+                stage="account_telemetry",
+            )
 
         if self._should_enable_streaming():
             try:
@@ -119,7 +142,13 @@ class TelemetryCoordinator(BaseCoordinator):
                     self._register_background_task(stream_task)
                     tasks.append(stream_task)
             except Exception as exc:  # pragma: no cover - defensive logging
-                logger.error("Failed to start streaming background task: %s", exc, exc_info=True)
+                logger.error(
+                    "Failed to start streaming background task",
+                    error=str(exc),
+                    exc_info=True,
+                    operation="telemetry_tasks",
+                    stage="stream_start",
+                )
 
         return tasks
 
@@ -159,14 +188,23 @@ class TelemetryCoordinator(BaseCoordinator):
     async def _start_streaming(self) -> asyncio.Task[Any] | None:
         symbols = list(self.context.symbols)
         if not symbols:
-            logger.debug("No symbols configured; skipping streaming")
+            logger.debug(
+                "No symbols configured; skipping streaming",
+                operation="telemetry_stream",
+                stage="skip",
+            )
             return None
 
         configured_level = self.context.config.perps_stream_level or 1
         try:
             level = max(int(configured_level), 1)
         except (TypeError, ValueError):
-            logger.warning("Invalid streaming level %s; defaulting to 1", configured_level)
+            logger.warning(
+                "Invalid streaming level; defaulting to 1",
+                configured_level=configured_level,
+                operation="telemetry_stream",
+                stage="config",
+            )
             level = 1
 
         self._ws_stop = threading.Event()
@@ -175,13 +213,23 @@ class TelemetryCoordinator(BaseCoordinator):
         try:
             loop = asyncio.get_running_loop()
         except RuntimeError:
-            logger.debug("No running event loop; streaming will be deferred")
+            logger.debug(
+                "No running event loop; streaming will be deferred",
+                operation="telemetry_stream",
+                stage="deferred",
+            )
             return None
 
         task = loop.create_task(self._run_stream_loop_async(symbols, level, self._ws_stop))
         task.add_done_callback(self._handle_stream_task_completion)
         self._stream_task = task
-        logger.info("Started WS streaming task for symbols=%s level=%s", symbols, level)
+        logger.info(
+            "Started WS streaming task",
+            symbols=symbols,
+            level=level,
+            operation="telemetry_stream",
+            stage="start",
+        )
         return task
 
     async def _stop_streaming(self) -> None:
@@ -195,8 +243,17 @@ class TelemetryCoordinator(BaseCoordinator):
             try:
                 await self._stream_task
             except asyncio.CancelledError:
-                logger.info("WS streaming task cancelled")
+                logger.info(
+                    "WS streaming task cancelled",
+                    operation="telemetry_stream",
+                    stage="cancel",
+                )
         self._stream_task = None
+        logger.info(
+            "Streaming halted",
+            operation="telemetry_stream",
+            stage="stop",
+        )
 
     def _handle_stream_task_completion(self, task: asyncio.Task[Any]) -> None:
         self._stream_task = None
@@ -204,9 +261,18 @@ class TelemetryCoordinator(BaseCoordinator):
         try:
             task.result()
         except asyncio.CancelledError:
-            logger.info("WS streaming task cancelled")
+            logger.info(
+                "WS streaming task cancelled",
+                operation="telemetry_stream",
+                stage="cancel",
+            )
         except Exception as exc:  # pragma: no cover - defensive logging
-            logger.exception("WS streaming task failed: %s", exc)
+            logger.exception(
+                "WS streaming task failed",
+                error=str(exc),
+                operation="telemetry_stream",
+                stage="failed",
+            )
 
     async def _run_stream_loop_async(
         self,
@@ -237,18 +303,32 @@ class TelemetryCoordinator(BaseCoordinator):
         ctx = self.context
         broker = ctx.broker
         if broker is None:
-            logger.error("Cannot start streaming: no broker available")
+            logger.error(
+                "Cannot start streaming: no broker available",
+                operation="telemetry_stream",
+                stage="run",
+            )
             return
 
         stream: Iterable[Any] | None = None
         try:
             stream = broker.stream_orderbook(symbols, level=level)
         except Exception as exc:  # pragma: no cover - dependent on broker impl
-            logger.warning("Orderbook stream unavailable, falling back to trades: %s", exc)
+            logger.warning(
+                "Orderbook stream unavailable, falling back to trades",
+                error=str(exc),
+                operation="telemetry_stream",
+                stage="orderbook",
+            )
             try:
                 stream = broker.stream_trades(symbols)
             except Exception as trade_exc:
-                logger.error("Failed to start streaming trades: %s", trade_exc)
+                logger.error(
+                    "Failed to start streaming trades",
+                    error=str(trade_exc),
+                    operation="telemetry_stream",
+                    stage="trades",
+                )
                 stream = None
 
         try:
@@ -302,7 +382,14 @@ class TelemetryCoordinator(BaseCoordinator):
             try:
                 strategy_coordinator.update_mark_window(symbol, mark)
             except Exception as exc:  # pragma: no cover - defensive logging
-                logger.debug("Failed to update mark window: %s", exc, exc_info=True)
+                logger.debug(
+                    "Failed to update mark window",
+                    error=str(exc),
+                    symbol=symbol,
+                    exc_info=True,
+                    operation="telemetry_stream",
+                    stage="mark_window",
+                )
         else:
             runtime_state = ctx.runtime_state
             if runtime_state is not None:
@@ -318,7 +405,13 @@ class TelemetryCoordinator(BaseCoordinator):
             try:
                 monitor.record_update(symbol)
             except Exception:  # pragma: no cover - defensive logging
-                logger.debug("Failed to record market update for %s", symbol, exc_info=True)
+                logger.debug(
+                    "Failed to record market update",
+                    symbol=symbol,
+                    exc_info=True,
+                    operation="telemetry_stream",
+                    stage="market_monitor",
+                )
 
         risk_manager = ctx.risk_manager
         if risk_manager is not None:
@@ -328,7 +421,12 @@ class TelemetryCoordinator(BaseCoordinator):
                 stored = record_fn(symbol, timestamp) if callable(record_fn) else timestamp
                 risk_manager.last_mark_update[symbol] = stored
             except Exception:  # pragma: no cover - defensive logging
-                logger.exception("WS mark update bookkeeping failed for %s", symbol)
+                logger.exception(
+                    "WS mark update bookkeeping failed",
+                    symbol=symbol,
+                    operation="telemetry_stream",
+                    stage="risk_update",
+                )
 
         emit_metric(
             ctx.event_store,

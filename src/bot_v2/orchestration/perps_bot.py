@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import asyncio
 import inspect
-import logging
 import threading
 from collections.abc import Sequence
 from datetime import UTC, datetime
@@ -27,6 +26,7 @@ from bot_v2.orchestration.session_guard import TradingSessionGuard
 from bot_v2.orchestration.strategy_orchestrator import StrategyOrchestrator
 from bot_v2.orchestration.system_monitor import SystemMonitor
 from bot_v2.utilities.config import ConfigBaselinePayload
+from bot_v2.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:  # pragma: no cover - imports for type checking only
     from bot_v2.features.brokerages.coinbase.account_manager import CoinbaseAccountManager
@@ -44,9 +44,9 @@ if TYPE_CHECKING:  # pragma: no cover - imports for type checking only
     from bot_v2.orchestration.symbol_processor import SymbolProcessor
     from bot_v2.orchestration.telemetry_coordinator import TelemetryCoordinator
     from bot_v2.persistence.event_store import EventStore
-    from bot_v2.persistence.orders_store import OrdersStore
+from bot_v2.persistence.orders_store import OrdersStore
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="perps_bot")
 
 
 class _CallableSymbolProcessor:
@@ -145,7 +145,11 @@ class PerpsBot:
 
         self.symbols = list(self.config.symbols or [])
         if not self.symbols:
-            logger.warning("No symbols configured; continuing with empty symbol list")
+            logger.warning(
+                "No symbols configured; continuing with empty symbol list",
+                operation="perps_bot_init",
+                stage="symbols_missing",
+            )
         self._derivatives_enabled = bool(getattr(self.config, "derivatives_enabled", False))
 
         self._state = PerpsBotRuntimeState(self.symbols)
@@ -531,7 +535,13 @@ class PerpsBot:
 
     # ------------------------------------------------------------------
     def apply_config_change(self, change: ConfigChange) -> None:
-        logger.info("Applying configuration change diff=%s", change.diff)
+        logger.info(
+            "Applying configuration change",
+            operation="config_change",
+            stage="apply",
+            diff=change.diff,
+            changed_fields=sorted(change.diff.keys()),
+        )
         self.config = change.updated
         self.symbols = list(self.config.symbols or [])
         self._derivatives_enabled = bool(getattr(self.config, "derivatives_enabled", False))

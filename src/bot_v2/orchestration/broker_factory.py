@@ -4,7 +4,6 @@ Broker factory to instantiate brokerage adapters based on config/env.
 
 from __future__ import annotations
 
-import logging
 from typing import Any, Literal, cast
 
 from bot_v2.config import get_config
@@ -15,8 +14,9 @@ from bot_v2.features.brokerages.core.interfaces import IBrokerage
 from bot_v2.orchestration.runtime_settings import RuntimeSettings, load_runtime_settings
 from bot_v2.orchestration.service_registry import ServiceRegistry
 from bot_v2.persistence.event_store import EventStore
+from bot_v2.utilities.logging_patterns import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="broker_factory")
 
 
 def create_brokerage(
@@ -72,9 +72,11 @@ def create_brokerage(
                 # Sandbox defaults to exchange mode (legacy) since AT doesn't have public sandbox
                 api_mode = "exchange"
                 logger.warning(
-                    "Sandbox mode enabled: Using legacy Exchange API. "
-                    "Only basic endpoints available. For full Advanced Trade features, "
-                    "use production with test account."
+                    "Sandbox mode enables legacy Exchange API",
+                    operation="broker_factory",
+                    stage="sandbox_mode",
+                    api_mode=api_mode,
+                    sandbox=sandbox,
                 )
             else:
                 # Production defaults to advanced mode
@@ -92,8 +94,11 @@ def create_brokerage(
             else:  # advanced
                 if sandbox:
                     logger.warning(
-                        "Advanced Trade API does not have a public sandbox. "
-                        "Consider using 'exchange' mode for sandbox testing."
+                        "Advanced Trade API lacks public sandbox",
+                        operation="broker_factory",
+                        stage="sandbox_mode",
+                        api_mode=api_mode,
+                        sandbox=sandbox,
                     )
                 base_url = "https://api.coinbase.com"
 
@@ -123,8 +128,10 @@ def create_brokerage(
         # Validate auth requirements for exchange mode
         if api_mode == "exchange" and not env("COINBASE_API_PASSPHRASE"):
             logger.warning(
-                "Exchange API mode requires passphrase for HMAC auth. "
-                "Set COINBASE_API_PASSPHRASE environment variable."
+                "Exchange API mode requires passphrase for HMAC auth",
+                operation="broker_factory",
+                stage="auth_validation",
+                api_mode=api_mode,
             )
 
         # Choose credential set based on environment
@@ -160,10 +167,12 @@ def create_brokerage(
         )
 
         logger.info(
-            "Creating Coinbase brokerage: mode=%s, sandbox=%s, auth=%s",
-            api_mode,
-            sandbox,
-            auth_type,
+            "Creating Coinbase brokerage",
+            operation="broker_factory",
+            stage="create_brokerage",
+            api_mode=api_mode,
+            sandbox=sandbox,
+            auth_type=auth_type,
         )
 
         broker_event_store = (

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-import logging
 from collections.abc import Coroutine
 from typing import TYPE_CHECKING, Any
 
@@ -15,11 +14,12 @@ from bot_v2.orchestration.coordinators.base import CoordinatorContext
 from bot_v2.orchestration.coordinators.telemetry import (
     TelemetryCoordinator as _TelemetryCoordinator,
 )
+from bot_v2.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:  # pragma: no cover - typing only
     from bot_v2.orchestration.perps_bot import PerpsBot
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="telemetry_coordinator_facade")
 
 
 class TelemetryCoordinator(
@@ -69,13 +69,23 @@ class TelemetryCoordinator(
         async def _apply_restart() -> None:
             try:
                 await self._stop_streaming()
-            except Exception:
-                logger.exception("Failed to stop existing streaming task during restart")
+            except Exception as exc:
+                logger.exception(
+                    "Failed to stop existing streaming task during restart",
+                    operation="telemetry_streaming",
+                    stage="stop",
+                    error=str(exc),
+                )
             if should_stream:
                 try:
                     await self._start_streaming()
-                except Exception:
-                    logger.exception("Failed to start streaming after config change")
+                except Exception as exc:
+                    logger.exception(
+                        "Failed to start streaming after config change",
+                        operation="telemetry_streaming",
+                        stage="start",
+                        error=str(exc),
+                    )
 
         self._schedule_coroutine(_apply_restart())
 
@@ -105,9 +115,13 @@ class TelemetryCoordinator(
             ):
                 try:
                     bot.system_monitor.attach_account_telemetry(account_telemetry)
-                except Exception:
+                except Exception as exc:
                     logger.debug(
-                        "Failed to attach account telemetry to system monitor", exc_info=True
+                        "Failed to attach account telemetry to system monitor",
+                        operation="telemetry_facade",
+                        stage="attach_account_telemetry",
+                        error=str(exc),
+                        exc_info=True,
                     )
 
         market_monitor = context.registry.extras.get("market_monitor")

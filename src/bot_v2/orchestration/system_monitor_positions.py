@@ -3,15 +3,15 @@
 from __future__ import annotations
 
 import asyncio
-import logging
 from decimal import Decimal
 from typing import Any
 
 from bot_v2.monitoring.system import get_logger as _get_plog
+from bot_v2.utilities.logging_patterns import get_logger
 from bot_v2.utilities.quantities import quantity_from
 from bot_v2.utilities.telemetry import emit_metric
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="system_monitor_positions")
 
 
 class PositionReconciler:
@@ -38,7 +38,13 @@ class PositionReconciler:
                         self._emit_position_changes(bot, changes)
                         state.last_positions = current
             except Exception as exc:
-                logger.debug("Position reconciliation error: %s", exc, exc_info=True)
+                logger.debug(
+                    "Position reconciliation error",
+                    operation="system_monitor_positions",
+                    stage="run_loop",
+                    error=str(exc),
+                    exc_info=True,
+                )
             await asyncio.sleep(interval_seconds)
 
     # ------------------------------------------------------------------
@@ -63,10 +69,11 @@ class PositionReconciler:
                 }
             except Exception as exc:
                 logger.exception(
-                    "Failed to normalize position for %s: %s",
-                    getattr(pos, "symbol", "unknown"),
-                    exc,
-                    exc_info=True,
+                    "Failed to normalize position",
+                    operation="system_monitor_positions",
+                    stage="normalize",
+                    symbol=str(getattr(pos, "symbol", "unknown")),
+                    error=str(exc),
                 )
         return normalized
 
@@ -85,7 +92,12 @@ class PositionReconciler:
         return changes
 
     def _emit_position_changes(self, bot: Any, changes: dict[str, dict[str, Any]]) -> None:
-        logger.info("Position changes detected: %d updates", len(changes))
+        logger.info(
+            "Position changes detected",
+            operation="system_monitor_positions",
+            stage="emit_changes",
+            change_count=len(changes),
+        )
         try:
             plog = _get_plog()
             for symbol, change in changes.items():
@@ -94,7 +106,13 @@ class PositionReconciler:
                 side = str(new_data.get("side") or "")
                 plog.log_position_change(symbol=symbol, side=side, size=size)
         except Exception as exc:
-            logger.debug("Failed to log position change metric: %s", exc, exc_info=True)
+            logger.debug(
+                "Failed to log position change metric",
+                operation="system_monitor_positions",
+                stage="emit_changes",
+                error=str(exc),
+                exc_info=True,
+            )
 
         emit_metric(
             self._event_store,

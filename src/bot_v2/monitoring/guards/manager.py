@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import json
-import logging
 from collections.abc import Callable, Mapping
 from typing import Any
 
 from bot_v2.monitoring.alert_types import AlertSeverity
+from bot_v2.utilities.logging_patterns import get_logger
 
 from .base import Alert, GuardConfig, RuntimeGuard
 from .builtins import (
@@ -18,7 +18,7 @@ from .builtins import (
     StaleMarkGuard,
 )
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="runtime_guard_manager")
 
 
 class RuntimeGuardManager:
@@ -32,7 +32,12 @@ class RuntimeGuardManager:
 
     def add_guard(self, guard: RuntimeGuard) -> None:
         self.guards[guard.config.name] = guard
-        logger.info("Added runtime guard: %s", guard.config.name)
+        logger.info(
+            "Added runtime guard",
+            operation="guard_manager",
+            stage="add_guard",
+            guard_name=guard.config.name,
+        )
 
     def add_alert_handler(self, handler: Callable[[Alert], None]) -> None:
         self.alert_handlers.append(handler)
@@ -51,16 +56,36 @@ class RuntimeGuardManager:
 
     def _handle_alert(self, alert: Alert, guard: RuntimeGuard) -> None:
         log_method = getattr(logger, alert.severity.value, logger.info)
-        log_method("[%s] %s", alert.guard_name, alert.message)
+        log_method(
+            "Runtime guard alert",
+            operation="guard_manager",
+            stage="handle_alert",
+            guard_name=alert.guard_name,
+            severity=alert.severity.value,
+            alert_message=alert.message,
+        )
 
         for handler in self.alert_handlers:
             try:
                 handler(alert)
             except Exception as exc:  # pragma: no cover - defensive
-                logger.error("Alert handler error: %s", exc)
+                logger.error(
+                    "Alert handler error",
+                    operation="guard_manager",
+                    stage="handle_alert",
+                    guard_name=alert.guard_name,
+                    handler=repr(handler),
+                    error=str(exc),
+                    exc_info=True,
+                )
 
         if guard.config.auto_shutdown and self.shutdown_callback:
-            logger.critical("Auto-shutdown triggered by %s", alert.guard_name)
+            logger.critical(
+                "Auto-shutdown triggered",
+                operation="guard_manager",
+                stage="auto_shutdown",
+                guard_name=alert.guard_name,
+            )
             self.shutdown_callback()
 
     def get_status(self) -> dict[str, Any]:
@@ -156,7 +181,14 @@ def create_default_runtime_guard_manager(config: Mapping[str, Any]) -> RuntimeGu
 
 
 def log_alert_handler(alert: Alert) -> None:
-    logger.info("ALERT: %s", json.dumps(alert.to_dict(), indent=2))
+    logger.info(
+        "Runtime guard alert dispatched",
+        operation="guard_alert",
+        stage="log_handler",
+        guard_name=alert.guard_name,
+        severity=alert.severity.value,
+        payload=json.dumps(alert.to_dict(), indent=2),
+    )
 
 
 def slack_alert_handler(alert: Alert, webhook_url: str) -> None:  # pragma: no cover - IO
@@ -190,7 +222,15 @@ def slack_alert_handler(alert: Alert, webhook_url: str) -> None:  # pragma: no c
         response = requests.post(webhook_url, json=payload, timeout=5)
         response.raise_for_status()
     except Exception as exc:
-        logger.error("Failed to send Slack alert: %s", exc)
+        logger.error(
+            "Failed to send Slack alert",
+            operation="guard_alert",
+            stage="slack_handler",
+            guard_name=alert.guard_name,
+            severity=alert.severity.value,
+            error=str(exc),
+            exc_info=True,
+        )
 
 
 def email_alert_handler(
@@ -234,7 +274,15 @@ Context:
                 server.login(str(smtp_config["username"]), str(smtp_config["password"]))
             server.send_message(msg)
     except Exception as exc:
-        logger.error("Failed to send email alert: %s", exc)
+        logger.error(
+            "Failed to send email alert",
+            operation="guard_alert",
+            stage="email_handler",
+            guard_name=alert.guard_name,
+            severity=alert.severity.value,
+            error=str(exc),
+            exc_info=True,
+        )
 
 
 __all__ = [

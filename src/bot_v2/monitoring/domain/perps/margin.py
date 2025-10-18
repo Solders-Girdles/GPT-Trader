@@ -7,7 +7,6 @@ with support for day/overnight/intraday margin transitions.
 
 from __future__ import annotations
 
-import logging
 from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass
 from datetime import datetime, time, timedelta
@@ -15,7 +14,9 @@ from decimal import Decimal
 from enum import Enum
 from typing import Any
 
-logger = logging.getLogger(__name__)
+from bot_v2.utilities.logging_patterns import get_logger
+
+logger = get_logger(__name__, component="margin_monitor")
 
 
 class MarginWindow(Enum):
@@ -230,7 +231,14 @@ class MarginStateMonitor:
         self._snapshot_history: list[MarginSnapshot] = []
         self._alert_callbacks: list[Callable[[MarginSnapshot, str], Awaitable[None]]] = []
 
-        logger.info(f"MarginStateMonitor initialized - alert at {alert_threshold:.1%} utilization")
+        logger.info(
+            "MarginStateMonitor initialized",
+            operation="margin_monitor",
+            stage="init",
+            alert_threshold=float(alert_threshold),
+            liquidation_buffer=float(liquidation_buffer),
+            client_provided=bool(client),
+        )
 
     def add_alert_callback(
         self, callback: Callable[[MarginSnapshot, str], Awaitable[None]]
@@ -413,7 +421,14 @@ class MarginStateMonitor:
                 try:
                     await callback(snapshot, alert_type)
                 except Exception as e:
-                    logger.error(f"Alert callback failed: {e}")
+                    logger.error(
+                        "Margin alert callback failed",
+                        operation="margin_monitor",
+                        stage="alert_callback",
+                        alert_type=alert_type,
+                        error=str(e),
+                        exc_info=True,
+                    )
 
     def _store_snapshot(self, snapshot: MarginSnapshot) -> None:
         """Store snapshot and manage retention."""
@@ -428,5 +443,10 @@ class MarginStateMonitor:
 async def create_margin_monitor(client: Any | None = None, **kwargs: Any) -> MarginStateMonitor:
     """Create and initialize margin state monitor."""
     monitor = MarginStateMonitor(client=client, **kwargs)
-    logger.info("MarginStateMonitor created and ready")
+    logger.info(
+        "MarginStateMonitor ready",
+        operation="margin_monitor",
+        stage="factory",
+        client_provided=bool(client),
+    )
     return monitor

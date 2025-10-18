@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-import logging
 from typing import TYPE_CHECKING, Any
 
 from bot_v2.orchestration.configuration import BotConfig, Profile
@@ -18,12 +17,13 @@ from bot_v2.orchestration.coordinators.execution import (
 from bot_v2.orchestration.order_reconciler import OrderReconciler
 from bot_v2.orchestration.service_registry import ServiceRegistry
 from bot_v2.utilities.async_utils import run_in_thread
+from bot_v2.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:  # pragma: no cover - type checking only
     from bot_v2.features.brokerages.core.interfaces import Order
     from bot_v2.orchestration.perps_bot import PerpsBot
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="execution_coordinator_facade")
 
 
 class ExecutionCoordinator(
@@ -97,7 +97,13 @@ class ExecutionCoordinator(
                     try:
                         await run_in_thread(exec_engine.run_runtime_guards)
                     except Exception as exc:  # pragma: no cover - defensive logging
-                        logger.error("Error in runtime guards: %s", exc, exc_info=True)
+                        logger.error(
+                            "Error while running runtime guards",
+                            operation="execution_runtime_guards",
+                            stage="loop",
+                            error=str(exc),
+                            exc_info=True,
+                        )
                 await asyncio.sleep(60)
         except asyncio.CancelledError:
             raise
@@ -122,7 +128,13 @@ class ExecutionCoordinator(
                     await super()._run_order_reconciliation_cycle(reconciler)
                     self._sync_bot(self.context)
                 except Exception as exc:  # pragma: no cover - defensive logging
-                    logger.debug("Order reconciliation error: %s", exc, exc_info=True)
+                    logger.debug(
+                        "Order reconciliation loop error",
+                        operation="execution_order_reconcile",
+                        stage="loop",
+                        error=str(exc),
+                        exc_info=True,
+                    )
                 await asyncio.sleep(interval_seconds)
         except asyncio.CancelledError:
             raise

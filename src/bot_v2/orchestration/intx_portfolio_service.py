@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from typing import TYPE_CHECKING, Any
 
 from bot_v2.orchestration.runtime_settings import (
@@ -12,8 +11,6 @@ from bot_v2.orchestration.runtime_settings import (
 
 if TYPE_CHECKING:  # pragma: no cover - typing convenience
     from bot_v2.features.brokerages.coinbase.account_manager import CoinbaseAccountManager
-
-logger = logging.getLogger(__name__)
 
 
 class IntxPortfolioService:

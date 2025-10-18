@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from collections.abc import Callable
 from typing import TYPE_CHECKING, Any, cast
 
@@ -24,6 +23,7 @@ from bot_v2.orchestration.coordinators.runtime import (
 from bot_v2.orchestration.deterministic_broker import DeterministicBroker
 from bot_v2.orchestration.order_reconciler import OrderReconciler
 from bot_v2.orchestration.runtime_settings import RuntimeSettings, load_runtime_settings
+from bot_v2.utilities.logging_patterns import get_logger
 from bot_v2.utilities.telemetry import emit_metric
 
 if TYPE_CHECKING:  # pragma: no cover - type checking only
@@ -33,7 +33,7 @@ if TYPE_CHECKING:  # pragma: no cover - type checking only
     from bot_v2.orchestration.perps_bot import PerpsBot
     from bot_v2.persistence.event_store import EventStore
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="runtime_coordinator_facade")
 
 
 class RuntimeCoordinator(

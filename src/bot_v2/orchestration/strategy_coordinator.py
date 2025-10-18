@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-import logging
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
@@ -13,13 +12,14 @@ from bot_v2.orchestration.coordinator_facades import (
 )
 from bot_v2.orchestration.coordinators.base import CoordinatorContext
 from bot_v2.orchestration.coordinators.strategy import StrategyCoordinator as _StrategyCoordinator
+from bot_v2.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:  # pragma: no cover - type checking only
     from bot_v2.features.brokerages.core.interfaces import Order, Product
     from bot_v2.orchestration.perps_bot import PerpsBot
     from bot_v2.orchestration.symbol_processor import SymbolProcessor
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="strategy_coordinator_facade")
 
 
 class StrategyCoordinator(

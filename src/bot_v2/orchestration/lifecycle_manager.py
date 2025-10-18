@@ -3,14 +3,15 @@
 from __future__ import annotations
 
 import asyncio
-import logging
 from typing import TYPE_CHECKING, Any
+
+from bot_v2.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:  # pragma: no cover - circular import guard
     from bot_v2.orchestration.perps_bot import PerpsBot
 
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="lifecycle_manager")
 
 
 class LifecycleManager:
@@ -24,7 +25,12 @@ class LifecycleManager:
         """Initialise orchestration collaborators required before running."""
 
         bot = self._bot
-        logger.info("Initializing coordinators...")
+        logger.info(
+            "Initializing coordinators",
+            operation="lifecycle_bootstrap",
+            stage="start",
+            profile=bot.config.profile.value,
+        )
         updated_context = bot._coordinator_registry.initialize_all()
         bot._coordinator_context = updated_context
 
@@ -34,12 +40,22 @@ class LifecycleManager:
             try:
                 bot.broker = updated_context.broker
             except Exception:
-                logger.debug("Failed to set broker during bootstrap", exc_info=True)
+                logger.debug(
+                    "Failed to set broker during bootstrap",
+                    operation="lifecycle_bootstrap",
+                    stage="broker_assignment",
+                    exc_info=True,
+                )
         if updated_context.risk_manager is not None:
             try:
                 bot.risk_manager = updated_context.risk_manager
             except Exception:
-                logger.debug("Failed to set risk manager during bootstrap", exc_info=True)
+                logger.debug(
+                    "Failed to set risk manager during bootstrap",
+                    operation="lifecycle_bootstrap",
+                    stage="risk_assignment",
+                    exc_info=True,
+                )
 
         extras = updated_context.registry.extras
         account_manager = extras.get("account_manager")
@@ -53,14 +69,26 @@ class LifecycleManager:
             bot.market_monitor = market_monitor
             setattr(bot, "_market_monitor", market_monitor)
 
-        logger.info("Coordinator initialization complete")
+        logger.info(
+            "Coordinator initialization complete",
+            operation="lifecycle_bootstrap",
+            stage="complete",
+            symbols=list(bot.symbols),
+        )
 
     # ------------------------------------------------------------------
     async def run(self, single_cycle: bool = False) -> None:
         """Execute the PerpsBot runtime loop."""
 
         bot = self._bot
-        logger.info("Starting Perps Bot - Profile: %s", bot.config.profile.value)
+        logger.info(
+            "Starting Perps Bot run loop",
+            operation="lifecycle_run",
+            stage="start",
+            profile=bot.config.profile.value,
+            single_cycle=single_cycle,
+            dry_run=bool(bot.config.dry_run),
+        )
         bot.running = True
         background_tasks: list[asyncio.Task[Any]] = []
         try:
@@ -68,10 +96,19 @@ class LifecycleManager:
                 await bot.runtime_coordinator.reconcile_state_on_startup()
 
             if not single_cycle and not bot.config.dry_run:
-                logger.info("Starting coordinator background tasks...")
+                logger.info(
+                    "Starting coordinator background tasks",
+                    operation="lifecycle_run",
+                    stage="background_tasks_start",
+                )
                 coordinator_tasks = await bot._coordinator_registry.start_all_background_tasks()
                 background_tasks.extend(coordinator_tasks)
-                logger.info("Started %d coordinator background tasks", len(coordinator_tasks))
+                logger.info(
+                    "Coordinator background tasks started",
+                    operation="lifecycle_run",
+                    stage="background_tasks_started",
+                    task_count=len(coordinator_tasks),
+                )
 
             if not bot.config.dry_run:
                 background_tasks.append(
@@ -91,11 +128,21 @@ class LifecycleManager:
                     bot.system_monitor.write_health_status(ok=True)
                     bot.system_monitor.check_config_updates()
         except KeyboardInterrupt:
-            logger.info("Interrupted by user")
+            logger.info(
+                "Run loop interrupted by user",
+                operation="lifecycle_run",
+                stage="interrupt",
+            )
         except (
             Exception
         ) as exc:  # pragma: no cover - defensive catch, behaviour verified indirectly
-            logger.error("Bot error: %s", exc, exc_info=True)
+            logger.error(
+                "Run loop encountered error",
+                operation="lifecycle_run",
+                stage="exception",
+                error=str(exc),
+                exc_info=True,
+            )
             bot.system_monitor.write_health_status(ok=False, error=str(exc))
         finally:
             bot.running = False
@@ -110,6 +157,10 @@ class LifecycleManager:
         """Tear down runtime resources gracefully."""
 
         bot = self._bot
-        logger.info("Shutting down bot...")
+        logger.info(
+            "Shutting down bot",
+            operation="lifecycle_shutdown",
+            stage="start",
+        )
         bot.running = False
         await bot._coordinator_registry.shutdown_all()

@@ -176,5 +176,4 @@ jobs:
           export EVENT_STORE_ROOT="$RUNNER_TEMP/event_store_demo"
           export GPT_TRADER_RUNTIME_ROOT="$RUNNER_TEMP/event_store_demo"
           mkdir -p "$EVENT_STORE_ROOT"
-          COINBASE_SANDBOX='1' PERPS_FORCE_MOCK='1' poetry run python scripts/run_perps_bot.py --profile demo --dev-fast --reduce-only --symbols BTC-PERP
-
+          COINBASE_SANDBOX='1' PERPS_FORCE_MOCK='1' poetry run perps-bot run --profile demo --dev-fast --reduce-only --symbols BTC-PERP

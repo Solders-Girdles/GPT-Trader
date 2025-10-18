@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import random
 import time
 import tempfile
 import os
@@ -92,6 +93,8 @@ class TestPerformanceProfiler:
     def test_performance_profiler_initialization(self) -> None:
         """Test profiler initialization."""
         profiler = PerformanceProfiler(sample_rate=0.5)
+
+        random.seed(2024)
 
         assert profiler.sample_rate == 0.5
         assert len(profiler._call_counts) == 0
@@ -348,7 +351,10 @@ class TestPerformanceAdvancedIntegration:
         profile_data = profiler.get_profile_data()
         if "test_func" in profile_data:
             # Allow some variance due to randomness
-            assert 40 <= profile_data["test_func"]["call_count"] <= 60
+            call_count = profile_data["test_func"]["call_count"]
+            expected = int(100 * profiler.sample_rate)
+            tolerance = 15
+            assert expected - tolerance <= call_count <= expected + tolerance
 
     def test_resource_monitor_with_mock_psutil(self) -> None:
         """Test resource monitor with mocked psutil."""

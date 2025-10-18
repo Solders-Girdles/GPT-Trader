@@ -34,6 +34,7 @@ from tests.fixtures.optimization import (  # noqa: F401
     seeded_ohlc_sets,
 )
 
+
 def pytest_collection_modifyitems(items):
     for item in items:
         # If tests use pytest-asyncio marker but the plugin isn't installed,

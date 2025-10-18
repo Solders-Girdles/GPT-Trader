@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import asyncio
-import logging
 import time as _time
 from collections.abc import Sequence
 from dataclasses import dataclass
@@ -26,12 +25,13 @@ from bot_v2.features.live_trade.strategies.perps_baseline import (
 from bot_v2.monitoring.system import get_logger as _get_plog
 from bot_v2.orchestration.configuration import Profile
 from bot_v2.orchestration.spot_profile_service import SpotProfileService
+from bot_v2.utilities.logging_patterns import get_logger
 from bot_v2.utilities.quantities import quantity_from
 
 if TYPE_CHECKING:  # pragma: no cover - type checking only
     from bot_v2.orchestration.perps_bot import PerpsBot
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="strategy_orchestrator")
 
 
 @dataclass(slots=True)
@@ -87,6 +87,9 @@ class StrategyOrchestrator:
                             "Invalid position_fraction=%s for %s; using default",
                             fraction_override,
                             symbol,
+                            operation="strategy_init",
+                            stage="spot_fraction",
+                            symbol=symbol,
                         )
                 state.symbol_strategies[symbol] = BaselinePerpsStrategy(
                     config=StrategyConfig(**strategy_kwargs),  # type: ignore[arg-type]
@@ -106,7 +109,10 @@ class StrategyOrchestrator:
                     strategy_kwargs["position_fraction"] = float(fraction_override)
                 except (TypeError, ValueError):
                     logger.warning(
-                        "Invalid PERPS_POSITION_FRACTION=%s; using default", fraction_override
+                        "Invalid PERPS_POSITION_FRACTION=%s; using default",
+                        fraction_override,
+                        operation="strategy_init",
+                        stage="perps_fraction",
                     )
 
             state.strategy = BaselinePerpsStrategy(
@@ -143,7 +149,13 @@ class StrategyOrchestrator:
             if decision.action in {Action.BUY, Action.SELL, Action.CLOSE}:
                 product = context.product
                 if product is None:
-                    logger.warning("Skipping execution for %s: missing product metadata", symbol)
+                    logger.warning(
+                        "Skipping execution for %s: missing product metadata",
+                        symbol,
+                        operation="strategy_execute",
+                        stage="missing_product",
+                        symbol=symbol,
+                    )
                     return
                 await bot.execute_decision(
                     symbol,
@@ -153,7 +165,15 @@ class StrategyOrchestrator:
                     context.position_state,
                 )
         except Exception as exc:
-            logger.error("Error processing %s: %s", symbol, exc, exc_info=True)
+            logger.error(
+                "Error processing %s: %s",
+                symbol,
+                exc,
+                exc_info=True,
+                operation="strategy_execute",
+                stage="process_symbol",
+                symbol=symbol,
+            )
 
     async def _prepare_context(
         self,
@@ -171,18 +191,38 @@ class StrategyOrchestrator:
 
         marks = self._get_marks(symbol)
         if not marks:
+            logger.warning(
+                "No marks for %s",
+                symbol,
+                operation="strategy_prepare",
+                stage="marks",
+                symbol=symbol,
+            )
             return None
 
         adjusted_equity = self._adjust_equity(equity, position_quantity, marks, symbol)
         if adjusted_equity == Decimal("0"):
-            logger.error("No equity info for %s", symbol)
+            logger.error(
+                "No equity info for %s",
+                symbol,
+                operation="strategy_prepare",
+                stage="equity",
+                symbol=symbol,
+            )
             return None
 
         product = None
         try:
             product = self._bot.get_product(symbol)
         except Exception:
-            logger.debug("Failed to fetch product metadata for %s", symbol, exc_info=True)
+            logger.debug(
+                "Failed to fetch product metadata for %s",
+                symbol,
+                exc_info=True,
+                operation="strategy_prepare",
+                stage="product",
+                symbol=symbol,
+            )
 
         context = SymbolProcessingContext(
             symbol=symbol,

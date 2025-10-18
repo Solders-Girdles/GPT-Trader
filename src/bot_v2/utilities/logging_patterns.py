@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 import logging
+import sys
 import time
 import types
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from decimal import Decimal
 from functools import wraps
-from typing import Any, ParamSpec, TypeVar
+from typing import Any, ParamSpec, TextIO, TypeVar
 
 # Standardized log field names
 LOG_FIELDS = {
@@ -34,83 +35,267 @@ ExecP = ParamSpec("ExecP")
 ExecR = TypeVar("ExecR")
 
 
-class StructuredLogger:
-    """Logger with standardized structured logging patterns."""
+class UnifiedLogger:
+    """Unified logger with structured context and optional console mirroring."""
 
-    def __init__(self, name: str, component: str | None = None) -> None:
-        """Initialize structured logger.
+    LEVEL_PREFIXES: dict[int, str] = {
+        logging.INFO: "ℹ️",
+        logging.WARNING: "⚠️",
+        logging.ERROR: "❌",
+        logging.CRITICAL: "🚨",
+    }
+
+    CHANNEL_PREFIXES: dict[str, tuple[int, str]] = {
+        "success": (logging.INFO, "✅"),
+        "data": (logging.INFO, "📊"),
+        "trading": (logging.INFO, "💰"),
+        "order": (logging.INFO, "📝"),
+        "position": (logging.INFO, "📈"),
+        "cache": (logging.DEBUG, "📦"),
+        "storage": (logging.INFO, "💾"),
+        "network": (logging.INFO, "🌐"),
+        "analysis": (logging.INFO, "🔍"),
+        "ml": (logging.INFO, "🧠"),
+    }
+
+    def __init__(
+        self,
+        name: str,
+        *,
+        component: str | None = None,
+        enable_console: bool = False,
+        output_stream: TextIO | None = None,
+    ) -> None:
+        """Initialize unified logger.
 
         Args:
-            name: Logger name
-            component: Component name for log context
+            name: Logger name used for structured logging.
+            component: Optional logical component name.
+            enable_console: Whether to mirror logs to console with prefixes.
+            output_stream: Console output stream (defaults to stdout).
         """
         self.logger = logging.getLogger(name)
         self.component = component
+        self.enable_console = enable_console
+        self.output_stream = output_stream or sys.stdout
+
+    @property
+    def name(self) -> str:
+        """Expose underlying logger name for compatibility."""
+        return self.logger.name
 
     def _format_message(self, message: str, **kwargs: Any) -> str:
-        """Format message with structured context.
+        """Format message with structured context similar to legacy logger."""
+        context_parts: list[str] = []
 
-        Args:
-            message: Log message
-            **kwargs: Additional context fields
-
-        Returns:
-            Formatted message with context
-        """
-        context_parts = []
-
-        # Add component if specified
         if self.component:
             context_parts.append(f"component={self.component}")
 
-        # Add structured fields
         for key, value in kwargs.items():
             if key in LOG_FIELDS.values():
-                # Format special types
                 if isinstance(value, Decimal):
                     formatted_value = f"{value:.8f}".rstrip("0").rstrip(".")
                 elif isinstance(value, (int, float)):
                     formatted_value = f"{value}"
                 else:
                     formatted_value = str(value)
-
                 context_parts.append(f"{key}={formatted_value}")
 
         if context_parts:
-            context_str = " | " + " ".join(context_parts)
-            return f"{message}{context_str}"
+            return f"{message} | " + " ".join(context_parts)
+        return message
+
+    def _emit_console(self, message: str, prefix: str | None = None) -> None:
+        """Emit console output with graceful fallback."""
+        text = f"{prefix} {message}" if prefix else message
+        try:
+            print(text, file=self.output_stream)
+        except Exception:
+            print(text)
+
+    def log(
+        self,
+        level: int,
+        message: str,
+        *args: Any,
+        console_prefix: str | None = None,
+        console_message: str | None = None,
+        **kwargs: Any,
+    ) -> None:
+        """Log message at specified level and optionally mirror to console."""
+        extra = kwargs.pop("extra", None)
+        exc_info = kwargs.pop("exc_info", None)
+        stack_info = kwargs.pop("stack_info", None)
+        stacklevel = kwargs.pop("stacklevel", None)
+
+        if args:
+            try:
+                rendered_message = message % args
+            except Exception:
+                rendered_message = message
         else:
-            return message
+            rendered_message = message
 
-    def info(self, message: str, **kwargs: Any) -> None:
-        """Log info message with structured context."""
-        self.logger.info(self._format_message(message, **kwargs))
+        formatted_message = self._format_message(rendered_message, **kwargs)
 
-    def warning(self, message: str, **kwargs: Any) -> None:
-        """Log warning message with structured context."""
-        self.logger.warning(self._format_message(message, **kwargs))
+        log_kwargs: dict[str, Any] = {}
+        if exc_info is not None:
+            log_kwargs["exc_info"] = exc_info
+        if stack_info is not None:
+            log_kwargs["stack_info"] = stack_info
+        if stacklevel is not None:
+            log_kwargs["stacklevel"] = stacklevel
+        if extra is not None:
+            log_kwargs["extra"] = extra
 
-    def error(self, message: str, **kwargs: Any) -> None:
-        """Log error message with structured context."""
-        self.logger.error(self._format_message(message, **kwargs))
+        self.logger.log(level, formatted_message, **log_kwargs)
 
-    def debug(self, message: str, **kwargs: Any) -> None:
-        """Log debug message with structured context."""
-        self.logger.debug(self._format_message(message, **kwargs))
+        if self.enable_console:
+            prefix = console_prefix
+            if prefix is None:
+                prefix = self.LEVEL_PREFIXES.get(level)
+            self._emit_console(console_message or rendered_message, prefix=prefix)
 
-    def critical(self, message: str, **kwargs: Any) -> None:
-        """Log critical message with structured context."""
-        self.logger.critical(self._format_message(message, **kwargs))
+    def info(self, message: str, *args: Any, **kwargs: Any) -> None:
+        """Log informational message."""
+        self.log(logging.INFO, message, *args, **kwargs)
 
-    def log(self, level: int, message: str, **kwargs: Any) -> None:
-        """Log message at specified level with structured context.
+    def warning(self, message: str, *args: Any, **kwargs: Any) -> None:
+        """Log warning message."""
+        self.log(logging.WARNING, message, *args, **kwargs)
 
-        Args:
-            level: Logging level
-            message: Log message
-            **kwargs: Additional context fields
-        """
-        self.logger.log(level, self._format_message(message, **kwargs))
+    def error(self, message: str, *args: Any, **kwargs: Any) -> None:
+        """Log error message."""
+        self.log(logging.ERROR, message, *args, **kwargs)
+
+    def debug(self, message: str, *args: Any, **kwargs: Any) -> None:
+        """Log debug message."""
+        self.log(logging.DEBUG, message, *args, console_prefix=None, **kwargs)
+
+    def critical(self, message: str, *args: Any, **kwargs: Any) -> None:
+        """Log critical message."""
+        self.log(logging.CRITICAL, message, *args, **kwargs)
+
+    def exception(self, message: str, *args: Any, **kwargs: Any) -> None:
+        """Log an error message with exception information."""
+        kwargs.setdefault("exc_info", True)
+        self.error(message, *args, **kwargs)
+
+    # Console-first helper channels -------------------------------------------------
+    def success(self, message: str, **kwargs: Any) -> None:
+        """Log success event."""
+        level, prefix = self.CHANNEL_PREFIXES["success"]
+        self.log(level, message, console_prefix=prefix, **kwargs)
+
+    def data(self, message: str, **kwargs: Any) -> None:
+        """Log data-related event."""
+        level, prefix = self.CHANNEL_PREFIXES["data"]
+        self.log(level, message, console_prefix=prefix, **kwargs)
+
+    def trading(self, message: str, **kwargs: Any) -> None:
+        """Log trading event."""
+        level, prefix = self.CHANNEL_PREFIXES["trading"]
+        self.log(level, message, console_prefix=prefix, **kwargs)
+
+    def order(self, message: str, **kwargs: Any) -> None:
+        """Log order event."""
+        level, prefix = self.CHANNEL_PREFIXES["order"]
+        self.log(level, message, console_prefix=prefix, **kwargs)
+
+    def position(self, message: str, **kwargs: Any) -> None:
+        """Log position event."""
+        level, prefix = self.CHANNEL_PREFIXES["position"]
+        self.log(level, message, console_prefix=prefix, **kwargs)
+
+    def cache(self, message: str, **kwargs: Any) -> None:
+        """Log cache event."""
+        level, prefix = self.CHANNEL_PREFIXES["cache"]
+        self.log(level, message, console_prefix=prefix, **kwargs)
+
+    def storage(self, message: str, **kwargs: Any) -> None:
+        """Log storage event."""
+        level, prefix = self.CHANNEL_PREFIXES["storage"]
+        self.log(level, message, console_prefix=prefix, **kwargs)
+
+    def network(self, message: str, **kwargs: Any) -> None:
+        """Log network event."""
+        level, prefix = self.CHANNEL_PREFIXES["network"]
+        self.log(level, message, console_prefix=prefix, **kwargs)
+
+    def analysis(self, message: str, **kwargs: Any) -> None:
+        """Log analysis event."""
+        level, prefix = self.CHANNEL_PREFIXES["analysis"]
+        self.log(level, message, console_prefix=prefix, **kwargs)
+
+    def ml(self, message: str, **kwargs: Any) -> None:
+        """Log ML event."""
+        level, prefix = self.CHANNEL_PREFIXES["ml"]
+        self.log(level, message, console_prefix=prefix, **kwargs)
+
+    # Console presentation helpers --------------------------------------------------
+    def print_section(self, title: str, char: str = "=", width: int = 50) -> None:
+        """Print a section separator."""
+        if not self.enable_console:
+            return
+
+        section = char * width
+        if title:
+            padding = max(width - len(title) - 2, 0)
+            left = padding // 2
+            right = padding - left
+            section = f"{char * left} {title} {char * right}"
+
+        try:
+            print(section, file=self.output_stream)
+        except Exception:
+            print(section)
+
+    def print_table(self, headers: list[str], rows: list[list[str]]) -> None:
+        """Print a formatted table."""
+        if not self.enable_console or not rows:
+            return
+
+        col_widths = [len(header) for header in headers]
+        for row in rows:
+            for idx, cell in enumerate(row):
+                if idx < len(col_widths):
+                    col_widths[idx] = max(col_widths[idx], len(str(cell)))
+
+        header_row = " | ".join(f"{header:<{col_widths[i]}}" for i, header in enumerate(headers))
+        separator = "-" * len(header_row)
+
+        try:
+            print(header_row, file=self.output_stream)
+            print(separator, file=self.output_stream)
+            for row in rows:
+                formatted = " | ".join(
+                    f"{str(cell):<{col_widths[i]}}" for i, cell in enumerate(row[: len(col_widths)])
+                )
+                print(formatted, file=self.output_stream)
+        except Exception:
+            print(header_row)
+            print(separator)
+            for row in rows:
+                formatted = " | ".join(
+                    f"{str(cell):<{col_widths[i]}}" for i, cell in enumerate(row[: len(col_widths)])
+                )
+                print(formatted)
+
+    def printKeyValue(self, key: str, value: Any, indent: int = 0) -> None:
+        """Print a key-value pair with optional indentation."""
+        if not self.enable_console:
+            return
+
+        prefix = "   " * indent
+        line = f"{prefix}{key}: {value}"
+        try:
+            print(line, file=self.output_stream)
+        except Exception:
+            print(line)
+
+
+# Preserve legacy name for downstream imports/patches
+StructuredLogger = UnifiedLogger
 
 
 @contextmanager
@@ -377,17 +562,20 @@ def log_system_health(
 # Convenience functions for common logging scenarios
 
 
-def get_logger(name: str, component: str | None = None) -> StructuredLogger:
-    """Get a structured logger instance.
+def get_logger(
+    name: str, component: str | None = None, *, enable_console: bool = False
+) -> UnifiedLogger:
+    """Get a unified logger instance.
 
     Args:
         name: Logger name
         component: Component name
+        enable_console: Whether to enable console mirroring
 
     Returns:
-        StructuredLogger instance
+        UnifiedLogger instance
     """
-    return StructuredLogger(name, component=component)
+    return StructuredLogger(name, component=component, enable_console=enable_console)
 
 
 # Decorator for automatic operation logging

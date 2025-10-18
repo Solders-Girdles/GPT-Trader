@@ -4,14 +4,14 @@ from __future__ import annotations
 
 import asyncio
 import json
-import logging
 from datetime import UTC, datetime
 from typing import Any
 
 from bot_v2.config.path_registry import RUNTIME_DATA_DIR
+from bot_v2.utilities.logging_patterns import get_logger
 from bot_v2.utilities.telemetry import emit_metric
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="account_telemetry")
 
 
 class AccountTelemetryService:
@@ -57,7 +57,12 @@ class AccountTelemetryService:
     # ------------------------------------------------------------------
     async def run(self, interval_seconds: int = 300) -> None:
         if not self.supports_snapshots():
-            logger.info("Account snapshot telemetry disabled; broker lacks required endpoints")
+            logger.info(
+                "Account snapshot telemetry disabled; broker lacks required endpoints",
+                operation="account_telemetry",
+                stage="startup",
+                status="disabled",
+            )
             return
         while True:
             try:
@@ -65,7 +70,13 @@ class AccountTelemetryService:
                 if snapshot:
                     self._publish_snapshot(snapshot)
             except Exception as exc:
-                logger.debug("Account telemetry error: %s", exc, exc_info=True)
+                logger.debug(
+                    "Account telemetry error: %s",
+                    exc,
+                    exc_info=True,
+                    operation="account_telemetry",
+                    stage="run",
+                )
             await asyncio.sleep(interval_seconds)
 
     # ------------------------------------------------------------------
@@ -74,7 +85,13 @@ class AccountTelemetryService:
         try:
             snapshot.update(self._account_manager.snapshot(emit_metric=False))
         except Exception as exc:
-            logger.debug("Failed to capture account manager snapshot: %s", exc, exc_info=True)
+            logger.debug(
+                "Failed to capture account manager snapshot: %s",
+                exc,
+                exc_info=True,
+                operation="account_telemetry",
+                stage="manager_snapshot",
+            )
         try:
             server_time = self._broker.get_server_time()
             snapshot["server_time"] = server_time.isoformat() if server_time else None
@@ -98,4 +115,10 @@ class AccountTelemetryService:
             with output_path.open("w") as fh:
                 json.dump(snapshot, fh, indent=2)
         except Exception as exc:
-            logger.debug("Failed to write account snapshot: %s", exc, exc_info=True)
+            logger.debug(
+                "Failed to write account snapshot: %s",
+                exc,
+                exc_info=True,
+                operation="account_telemetry",
+                stage="write_snapshot",
+            )

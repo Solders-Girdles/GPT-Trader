@@ -7,7 +7,6 @@ Phase 5: Risk Engine configuration only.
 from __future__ import annotations
 
 import json
-import logging
 import re
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
@@ -30,6 +29,7 @@ from pydantic import (
     model_validator,
 )
 
+from bot_v2.utilities.logging_patterns import get_logger
 from bot_v2.utilities.parsing import (
     FALSE_BOOLEAN_TOKENS,
     TRUE_BOOLEAN_TOKENS,
@@ -38,7 +38,7 @@ from bot_v2.utilities.parsing import (
 
 from .env_utils import EnvVarError
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="risk")
 
 
 def _load_runtime_settings() -> RuntimeSettings:
@@ -698,9 +698,9 @@ def _load_risk_model_from_env(
     except ValidationError as exc:
         env_error = _convert_env_validation_error(exc)
         logger.error(
-            "Invalid risk configuration env var %s: %s",
-            env_error.var_name,
-            env_error.message,
+            f"Invalid risk configuration env var {env_error.var_name}: {env_error.message}",
+            operation="risk_config_load",
+            status="invalid",
         )
         raise env_error from None
 

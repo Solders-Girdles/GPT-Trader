@@ -4,6 +4,7 @@ Tests for console logging utilities - Core functionality.
 This module tests the core ConsoleLogger class functionality.
 """
 
+import logging
 import pytest
 from unittest.mock import Mock, patch
 from io import StringIO
@@ -221,13 +222,17 @@ class TestConsoleLogger:
         output = mock_output_stream.getvalue()
         assert output == ""
 
-    @patch("bot_v2.utilities.console_logging.logger")
-    def test_structured_logging_integration(self, mock_structured_logger, console_logger):
+    def test_structured_logging_integration(self, console_logger, caplog):
         """Test integration with structured logging."""
+        caplog.set_level(logging.INFO, logger="bot_v2.utilities.console_logging")
+
         console_logger.success("Test message", test_param="value")
 
-        # Verify structured logger was called
-        mock_structured_logger.info.assert_called_once_with("Test message", test_param="value")
+        assert any(
+            record.name == "bot_v2.utilities.console_logging"
+            and "Test message" in record.getMessage()
+            for record in caplog.records
+        )
 
     def test_output_stream_error_handling(self, mock_output_stream):
         """Test handling of output stream errors."""

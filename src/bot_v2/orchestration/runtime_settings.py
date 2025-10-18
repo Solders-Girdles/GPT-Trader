@@ -1,15 +1,15 @@
 from __future__ import annotations
 
-import logging
 import os
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 
 from bot_v2.config.path_registry import RUNTIME_DATA_DIR
+from bot_v2.utilities.logging_patterns import get_logger
 from bot_v2.utilities.parsing import interpret_tristate_bool
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="runtime_settings")
 
 
 def _normalize_bool(value: str | None, *, field_name: str | None = None) -> bool | None:
@@ -20,7 +20,15 @@ def _normalize_bool(value: str | None, *, field_name: str | None = None) -> bool
         return interpreted
     stripped = value.strip()
     if stripped and field_name:
-        logger.warning("Invalid %s=%s; ignoring override", field_name, value)
+        logger.warning(
+            "Invalid %s=%s; ignoring override",
+            field_name,
+            value,
+            operation="runtime_setting_parse",
+            status="invalid",
+            field=field_name,
+            raw=value,
+        )
     return None
 
 
@@ -30,7 +38,17 @@ def _safe_int(value: str | None, *, fallback: int, field_name: str) -> int:
     try:
         parsed = int(value)
     except (TypeError, ValueError):
-        logger.warning("Invalid %s=%s; defaulting to %s", field_name, value, fallback)
+        logger.warning(
+            "Invalid %s=%s; defaulting to %s",
+            field_name,
+            value,
+            fallback,
+            operation="runtime_setting_parse",
+            status="fallback",
+            field=field_name,
+            raw=value,
+            fallback_value=fallback,
+        )
         return fallback
     return parsed
 
@@ -41,7 +59,15 @@ def _safe_float(value: str | None, *, field_name: str) -> float | None:
     try:
         return float(value)
     except (TypeError, ValueError):
-        logger.warning("Invalid %s=%s; ignoring override", field_name, value)
+        logger.warning(
+            "Invalid %s=%s; ignoring override",
+            field_name,
+            value,
+            operation="runtime_setting_parse",
+            status="invalid",
+            field=field_name,
+            raw=value,
+        )
         return None
 
 

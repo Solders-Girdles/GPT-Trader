@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
@@ -15,6 +14,7 @@ from bot_v2.orchestration.configuration import DEFAULT_SPOT_RISK_PATH, Profile
 from bot_v2.orchestration.deterministic_broker import DeterministicBroker
 from bot_v2.orchestration.order_reconciler import OrderReconciler
 from bot_v2.orchestration.runtime_settings import RuntimeSettings, load_runtime_settings
+from bot_v2.utilities.logging_patterns import get_logger
 from bot_v2.utilities.telemetry import emit_metric
 
 if TYPE_CHECKING:  # pragma: no cover - type checking only
@@ -25,7 +25,7 @@ if TYPE_CHECKING:  # pragma: no cover - type checking only
 
 from .base import BaseCoordinator, CoordinatorContext
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="runtime_coordinator")
 
 
 class BrokerBootstrapError(RuntimeError):
@@ -116,7 +116,13 @@ class RuntimeCoordinator(BaseCoordinator):
             else:
                 artifacts, updated_ctx = self._build_real_broker(ctx)
         except Exception as exc:  # pragma: no cover - fatal boot failure
-            logger.error("Failed to initialize broker: %s", exc)
+            logger.error(
+                "Failed to initialize broker",
+                error=str(exc),
+                operation="broker_bootstrap",
+                stage="init",
+                exc_info=True,
+            )
             raise BrokerBootstrapError("Broker initialization failed") from exc
 
         return self._apply_broker_bootstrap(updated_ctx, artifacts)
@@ -130,7 +136,11 @@ class RuntimeCoordinator(BaseCoordinator):
 
     def _build_mock_broker(self) -> BrokerBootstrapArtifacts:
         broker = self._deterministic_broker_cls()
-        logger.info("Using deterministic broker (REST-first marks)")
+        logger.info(
+            "Using deterministic broker (REST-first marks)",
+            operation="broker_bootstrap",
+            stage="mock",
+        )
         return BrokerBootstrapArtifacts(broker=broker, registry_updates={"broker": broker})
 
     def _build_real_broker(
@@ -150,7 +160,12 @@ class RuntimeCoordinator(BaseCoordinator):
         if not broker.connect():
             raise RuntimeError("Failed to connect to broker")
         products = broker.list_products()
-        logger.info("Connected to broker, found %d products", len(products))
+        logger.info(
+            "Connected to broker",
+            products=len(products),
+            operation="broker_bootstrap",
+            stage="connect",
+        )
 
         artifacts = BrokerBootstrapArtifacts(
             broker=broker,
@@ -217,7 +232,11 @@ class RuntimeCoordinator(BaseCoordinator):
             context = updated
 
         if self._should_use_mock_broker(context):
-            logger.info("Paper/mock mode enabled — skipping production env checks")
+            logger.info(
+                "Paper/mock mode enabled — skipping production env checks",
+                operation="broker_env_validate",
+                stage="mock",
+            )
             return
 
         broker_hint = settings.broker_hint or ""
@@ -291,7 +310,12 @@ class RuntimeCoordinator(BaseCoordinator):
         if not resolved_risk_path and config_profile in {Profile.SPOT, Profile.DEV, Profile.DEMO}:
             if DEFAULT_SPOT_RISK_PATH.exists():
                 resolved_risk_path = str(DEFAULT_SPOT_RISK_PATH)
-                logger.info("Loading spot risk profile from %s", resolved_risk_path)
+                logger.info(
+                    "Loading spot risk profile",
+                    path=resolved_risk_path,
+                    operation="risk_config",
+                    stage="load",
+                )
 
         path_obj: Path | None = Path(resolved_risk_path) if resolved_risk_path else None
         try:
@@ -300,19 +324,33 @@ class RuntimeCoordinator(BaseCoordinator):
             else:
                 risk_config = self._risk_config_cls.from_env()
         except Exception:
-            logger.exception("Failed to load risk config; using defaults")
+            logger.exception(
+                "Failed to load risk config; using defaults",
+                operation="risk_config",
+                stage="load",
+            )
             risk_config = self._risk_config_cls()
 
         try:
             if getattr(ctx.config, "max_leverage", None):
                 risk_config.max_leverage = int(ctx.config.max_leverage)
         except Exception as exc:
-            logger.warning("Failed to apply max leverage override: %s", exc, exc_info=True)
+            logger.warning(
+                "Failed to apply max leverage override",
+                error=str(exc),
+                exc_info=True,
+                operation="risk_config",
+                stage="override",
+            )
         try:
             risk_config.reduce_only_mode = bool(ctx.config.reduce_only_mode)
         except Exception as exc:
             logger.warning(
-                "Failed to sync reduce-only override into risk config: %s", exc, exc_info=True
+                "Failed to sync reduce-only override into risk config",
+                error=str(exc),
+                exc_info=True,
+                operation="risk_config",
+                stage="override",
             )
 
         risk_manager = self._risk_manager_cls(config=risk_config, event_store=ctx.event_store)
@@ -321,7 +359,13 @@ class RuntimeCoordinator(BaseCoordinator):
             if broker is not None and hasattr(broker, "get_position_risk"):
                 risk_manager.set_risk_info_provider(broker.get_position_risk)  # type: ignore[attr-defined]
         except Exception as exc:
-            logger.warning("Failed to set broker risk info provider: %s", exc, exc_info=True)
+            logger.warning(
+                "Failed to set broker risk info provider",
+                error=str(exc),
+                exc_info=True,
+                operation="risk_config",
+                stage="risk_provider",
+            )
 
         risk_manager.set_state_listener(self.on_risk_state_change)
         if controller is not None:
@@ -335,11 +379,23 @@ class RuntimeCoordinator(BaseCoordinator):
         controller = self._config_controller
         risk_manager = self.context.risk_manager
         if controller is None:
-            logger.debug("No config controller available to toggle reduce-only mode")
+            logger.debug(
+                "No config controller available to toggle reduce-only mode",
+                operation="reduce_only_toggle",
+                stage="controller_missing",
+            )
             return
         if not controller.set_reduce_only_mode(enabled, reason=reason, risk_manager=risk_manager):
             return
-        logger.warning("Reduce-only mode %s (%s)", "enabled" if enabled else "disabled", reason)
+        logger.warning(
+            "Reduce-only mode %s (%s)",
+            "enabled" if enabled else "disabled",
+            reason,
+            operation="reduce_only_toggle",
+            stage="set",
+            enabled=bool(enabled),
+            reason=reason,
+        )
         self._emit_reduce_only_metric(enabled, reason)
 
     def is_reduce_only_mode(self) -> bool:
@@ -357,9 +413,11 @@ class RuntimeCoordinator(BaseCoordinator):
             return
         reason = state.last_reduce_only_reason or "unspecified"
         logger.warning(
-            "Risk manager toggled reduce-only mode to %s (reason=%s)",
-            "enabled" if reduce_only else "disabled",
-            reason,
+            "Risk manager toggled reduce-only mode",
+            enabled=reduce_only,
+            reason=reason,
+            operation="reduce_only_toggle",
+            stage="risk_update",
         )
         self._emit_reduce_only_metric(reduce_only, reason)
 
@@ -382,21 +440,38 @@ class RuntimeCoordinator(BaseCoordinator):
         ctx = self.context
         config = ctx.config
         if config.dry_run or getattr(config, "perps_skip_startup_reconcile", False):
-            logger.info("Skipping startup reconciliation (dry-run or PERPS_SKIP_RECONCILE)")
+            logger.info(
+                "Skipping startup reconciliation",
+                reason="dry_run" if config.dry_run else "perps_skip_startup_reconcile",
+                operation="startup_reconcile",
+                stage="skip",
+            )
             return
 
         broker = ctx.broker or ctx.registry.broker
         if broker is None:
-            logger.info("No broker available for reconciliation; skipping")
+            logger.info(
+                "No broker available for reconciliation; skipping",
+                operation="startup_reconcile",
+                stage="skip",
+            )
             return
 
         orders_store = ctx.orders_store
         event_store = ctx.event_store
         if orders_store is None or event_store is None:
-            logger.warning("Skipping reconciliation: missing orders/event store")
+            logger.warning(
+                "Skipping reconciliation: missing orders/event store",
+                operation="startup_reconcile",
+                stage="skip",
+            )
             return
 
-        logger.info("Reconciling state with exchange...")
+        logger.info(
+            "Reconciling state with exchange",
+            operation="startup_reconcile",
+            stage="begin",
+        )
         try:
             reconciler = self._order_reconciler_cls(
                 broker=broker,
@@ -409,9 +484,11 @@ class RuntimeCoordinator(BaseCoordinator):
             exchange_open = await reconciler.fetch_exchange_open_orders()
 
             logger.info(
-                "Reconciliation snapshot: local_open=%s exchange_open=%s",
-                len(local_open),
-                len(exchange_open),
+                "Reconciliation snapshot",
+                local_open=len(local_open),
+                exchange_open=len(exchange_open),
+                operation="startup_reconcile",
+                stage="snapshot",
             )
             await reconciler.record_snapshot(local_open, exchange_open)
 
@@ -426,11 +503,27 @@ class RuntimeCoordinator(BaseCoordinator):
                     if runtime_state is not None:
                         runtime_state.last_positions = snapshot
             except Exception as exc:
-                logger.debug("Failed to snapshot initial positions: %s", exc, exc_info=True)
+                logger.debug(
+                    "Failed to snapshot initial positions",
+                    error=str(exc),
+                    exc_info=True,
+                    operation="startup_reconcile",
+                    stage="positions",
+                )
 
-            logger.info("State reconciliation complete.")
+            logger.info(
+                "State reconciliation complete",
+                operation="startup_reconcile",
+                stage="complete",
+            )
         except Exception as exc:
-            logger.error("Failed to reconcile state on startup: %s", exc, exc_info=True)
+            logger.error(
+                "Failed to reconcile state on startup",
+                error=str(exc),
+                exc_info=True,
+                operation="startup_reconcile",
+                stage="error",
+            )
             try:
                 if ctx.event_store is not None:
                     ctx.event_store.append_error(
@@ -439,7 +532,11 @@ class RuntimeCoordinator(BaseCoordinator):
                         context={"error": str(exc)},
                     )
             except Exception:
-                logger.exception("Failed to persist startup reconciliation error")
+                logger.exception(
+                    "Failed to persist startup reconciliation error",
+                    operation="startup_reconcile",
+                    stage="error_persist",
+                )
             self.set_reduce_only_mode(True, reason="startup_reconcile_failed")
 
     @property

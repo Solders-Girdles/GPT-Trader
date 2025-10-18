@@ -7,18 +7,19 @@ recording of order events, previews, and rejections.
 
 from __future__ import annotations
 
-import logging
 import time
 import uuid
 from decimal import Decimal
 from typing import Any
 
 from bot_v2.features.brokerages.core.interfaces import IBrokerage, OrderSide, OrderType
-from bot_v2.monitoring.system import LogLevel, get_logger
+from bot_v2.monitoring.system import LogLevel
+from bot_v2.monitoring.system import get_logger as get_monitoring_logger
 from bot_v2.persistence.event_store import EventStore
+from bot_v2.utilities.logging_patterns import get_logger
 from bot_v2.utilities.telemetry import emit_metric
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="order_submission")
 
 
 class OrderSubmitter:
@@ -69,10 +70,10 @@ class OrderSubmitter:
                 "price": str(price) if price is not None else "market",
                 "preview": preview,
             },
-            logger=get_logger(),
+            logger=get_monitoring_logger(),
         )
         try:
-            get_logger().log_event(
+            get_monitoring_logger().log_event(
                 level=LogLevel.INFO,
                 event_type="order_preview",
                 message="Order preview generated",
@@ -89,7 +90,19 @@ class OrderSubmitter:
     ) -> None:
         """Record order rejection for analysis."""
         logger.warning(
-            f"Order rejected: {symbol} {side} {quantity} @ {price or 'market'} reason={reason}"
+            "Order rejected: %s %s %s @ %s reason=%s",
+            symbol,
+            side,
+            quantity,
+            price or "market",
+            reason,
+            symbol=symbol,
+            side=side,
+            quantity=float(quantity),
+            price=float(price) if price is not None else None,
+            reason=reason,
+            operation="order_rejected",
+            stage="record",
         )
         # Persist an order_rejected metric for downstream analysis/tests
         emit_metric(
@@ -103,10 +116,10 @@ class OrderSubmitter:
                 "price": str(price) if price is not None else "market",
                 "reason": reason,
             },
-            logger=get_logger(),
+            logger=get_monitoring_logger(),
         )
         try:
-            get_logger().log_order_status_change(
+            get_monitoring_logger().log_order_status_change(
                 order_id="",
                 client_order_id="",
                 from_status=None,
@@ -154,7 +167,7 @@ class OrderSubmitter:
             client_order_id or f"{self.bot_id}_{int(time.time() * 1000)}_{uuid.uuid4().hex[:6]}"
         )
         try:
-            get_logger().log_order_submission(
+            get_monitoring_logger().log_order_submission(
                 client_order_id=submit_id,
                 symbol=symbol,
                 side=side.value,
@@ -182,15 +195,39 @@ class OrderSubmitter:
             self.open_orders.append(order.id)
             display_price = price if price is not None else "market"
             logger.info(
-                f"Order placed: {order.id} - {side.value} {order_quantity} {symbol} @ "
-                f"{display_price} (reduce_only={reduce_only})"
+                "Order placed: %s %s %s @ %s (reduce_only=%s)",
+                side.value,
+                order_quantity,
+                symbol,
+                display_price,
+                reduce_only,
+                order_id=str(order.id),
+                symbol=symbol,
+                side=side.value,
+                quantity=float(order_quantity),
+                price=float(display_price) if isinstance(display_price, Decimal) else display_price,
+                reduce_only=reduce_only,
+                operation="order_submit",
+                stage="placed",
             )
             logger.info(
-                f"Trade recorded: {order.id} {side.value} {order_quantity} {symbol} @ "
-                f"{display_price} (reduce_only={reduce_only})"
+                "Trade recorded: %s %s %s @ %s (reduce_only=%s)",
+                side.value,
+                order_quantity,
+                symbol,
+                display_price,
+                reduce_only,
+                order_id=str(order.id),
+                symbol=symbol,
+                side=side.value,
+                quantity=float(order_quantity),
+                price=float(display_price) if isinstance(display_price, Decimal) else display_price,
+                reduce_only=reduce_only,
+                operation="order_submit",
+                stage="trade_record",
             )
             try:
-                get_logger().log_order_status_change(
+                get_monitoring_logger().log_order_status_change(
                     order_id=str(order.id),
                     client_order_id=getattr(order, "client_order_id", submit_id),
                     from_status=None,
@@ -214,7 +251,14 @@ class OrderSubmitter:
                 pass
             return order.id
 
-        logger.error(f"Order placement failed for {symbol}")
+        logger.error(
+            "Order placement failed",
+            symbol=symbol,
+            side=side.value,
+            quantity=float(order_quantity),
+            operation="order_submit",
+            stage="failed",
+        )
         try:
             self.event_store.append_error(
                 bot_id=self.bot_id,

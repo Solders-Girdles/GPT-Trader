@@ -7,7 +7,6 @@ mark price staleness checks, slippage guards, and order previews.
 
 from __future__ import annotations
 
-import logging
 from decimal import Decimal
 from typing import Any, Protocol, cast, runtime_checkable
 
@@ -20,9 +19,10 @@ from bot_v2.features.brokerages.core.interfaces import (
     TimeInForce,
 )
 from bot_v2.features.live_trade.risk import LiveRiskManager, ValidationError
+from bot_v2.utilities.logging_patterns import get_logger
 from bot_v2.utilities.quantization import quantize_price_side_aware
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="order_validation")
 
 
 class OrderValidator:
@@ -233,10 +233,19 @@ class OrderValidator:
             leverage: Leverage multiplier
         """
         if not self.enable_order_preview:
+            logger.debug(
+                "Order preview disabled",
+                operation="order_preview",
+                stage="disabled",
+            )
             return
         broker = self.broker
         if not isinstance(broker, _PreviewBroker):
-            logger.debug("Broker does not support order preview")
+            logger.debug(
+                "Broker does not support order preview",
+                operation="order_preview",
+                stage="unsupported",
+            )
             return
         preview_broker = cast(_PreviewBroker, broker)
         try:
@@ -258,7 +267,12 @@ class OrderValidator:
         except ValidationError:
             raise
         except Exception as exc:
-            logger.debug(f"Preview call failed: {exc}")
+            logger.debug(
+                "Preview call failed",
+                error=str(exc),
+                operation="order_preview",
+                stage="error",
+            )
 
     def finalize_reduce_only_flag(self, reduce_only: bool, symbol: str) -> bool:
         """
@@ -272,7 +286,12 @@ class OrderValidator:
             Final reduce-only flag value
         """
         if self.risk_manager.is_reduce_only_mode():
-            logger.info(f"Reduce-only mode active - forcing reduce_only=True for {symbol}")
+            logger.info(
+                "Reduce-only mode active - forcing reduce_only=True",
+                symbol=symbol,
+                operation="reduce_only",
+                stage="enforce",
+            )
             return True
         return reduce_only
 

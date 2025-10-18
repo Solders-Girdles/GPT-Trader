@@ -8,7 +8,6 @@ REST API calls and WebSocket streaming for real-time updates.
 
 from __future__ import annotations
 
-import logging
 from datetime import datetime, timedelta
 from types import TracebackType
 from typing import Any, Literal, cast
@@ -26,8 +25,9 @@ from bot_v2.features.brokerages.coinbase.market_data_service import (
 from bot_v2.features.brokerages.coinbase.models import APIConfig
 from bot_v2.features.brokerages.coinbase.ws import CoinbaseWebSocket
 from bot_v2.orchestration.runtime_settings import RuntimeSettings, load_runtime_settings
+from bot_v2.utilities.logging_patterns import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="coinbase_provider")
 
 
 class CoinbaseDataProvider(DataProvider):
@@ -70,16 +70,18 @@ class CoinbaseDataProvider(DataProvider):
         sandbox = False
         if sandbox_requested:
             logger.warning(
-                "COINBASE_SANDBOX=1 detected while requesting real market data. "
-                "Defaulting to production endpoints."
+                "Sandbox flag set while requesting real market data; forcing production endpoints.",
+                operation="provider_init",
+                status="sandbox_override",
             )
 
         mode_value = (runtime_settings.coinbase_api_mode or "advanced").lower()
         api_mode: Literal["advanced", "exchange"]
         if mode_value == "exchange":
             logger.warning(
-                "COINBASE_API_MODE=exchange detected while requesting real market data. "
-                "Defaulting to Advanced Trade production endpoints."
+                "Exchange API mode requested; defaulting to Advanced Trade endpoints for market data.",
+                operation="provider_init",
+                status="mode_override",
             )
             api_mode = "exchange"
         else:
@@ -144,7 +146,11 @@ class CoinbaseDataProvider(DataProvider):
         self._cache_duration = timedelta(seconds=cache_ttl)
 
         streaming_status = "enabled" if self.enable_streaming else "disabled"
-        logger.info(f"CoinbaseDataProvider initialized (streaming={streaming_status})")
+        logger.info(
+            "CoinbaseDataProvider initialised",
+            operation="provider_init",
+            streaming=streaming_status,
+        )
 
     def _setup_streaming(self) -> None:
         """Setup WebSocket streaming for real-time data."""
@@ -167,15 +173,28 @@ class CoinbaseDataProvider(DataProvider):
                 on_update=self._on_ticker_update,
             )
 
-            logger.info("WebSocket streaming setup complete")
+            logger.info(
+                "WebSocket streaming setup complete",
+                operation="streaming_setup",
+                status="success",
+            )
         except Exception as e:
-            logger.warning(f"Failed to setup streaming, falling back to REST: {e}")
+            logger.warning(
+                "Failed to setup streaming, falling back to REST",
+                operation="streaming_setup",
+                status="fallback",
+                error=str(e),
+            )
             self.enable_streaming = False
 
     def _on_ticker_update(self, symbol: str, ticker: Any) -> None:
         """Callback for ticker updates from WebSocket."""
         logger.debug(
-            f"Ticker update for {symbol}: bid={ticker.bid}, ask={ticker.ask}, last={ticker.last}"
+            "Received ticker update",
+            symbol=symbol,
+            bid=getattr(ticker, "bid", None),
+            ask=getattr(ticker, "ask", None),
+            last=getattr(ticker, "last", None),
         )
 
     def _normalize_symbol(self, symbol: str) -> str:
@@ -256,7 +275,12 @@ class CoinbaseDataProvider(DataProvider):
         if cache_key in self._historical_cache:
             cached_data, cached_time = self._historical_cache[cache_key]
             if datetime.now() - cached_time < self._cache_duration:
-                logger.debug(f"Using cached data for {normalized_symbol}")
+                logger.debug(
+                    "Using cached historical data",
+                    symbol=normalized_symbol,
+                    period=period,
+                    interval=interval,
+                )
                 return cached_data
 
         try:
@@ -286,11 +310,22 @@ class CoinbaseDataProvider(DataProvider):
                 limit = 200  # Default
 
             # Fetch candles from Coinbase
-            logger.info(f"Fetching {limit} candles for {normalized_symbol} at {granularity}")
+            logger.info(
+                "Fetching historical candles",
+                symbol=normalized_symbol,
+                granularity=granularity,
+                limit=limit,
+                operation="historical_fetch",
+            )
             candles = self.adapter.get_candles(normalized_symbol, granularity, limit)
 
             if not candles:
-                logger.warning(f"No data returned for {normalized_symbol}, using mock data")
+                logger.warning(
+                    "No Coinbase candles returned; falling back to mock data",
+                    symbol=normalized_symbol,
+                    operation="historical_fetch",
+                    status="empty",
+                )
                 return self._get_mock_data(symbol, period)
 
             # Convert to DataFrame
@@ -314,12 +349,29 @@ class CoinbaseDataProvider(DataProvider):
             # Cache the result
             self._historical_cache[cache_key] = (df, datetime.now())
 
-            logger.info(f"Retrieved {len(df)} bars of historical data for {normalized_symbol}")
+            logger.info(
+                "Retrieved historical data",
+                symbol=normalized_symbol,
+                rows=len(df),
+                operation="historical_fetch",
+                status="success",
+            )
             return df
 
         except Exception as e:
-            logger.error(f"Error fetching Coinbase data for {normalized_symbol}: {e}")
-            logger.info("Falling back to mock data")
+            logger.error(
+                "Error fetching Coinbase historical data",
+                symbol=normalized_symbol,
+                operation="historical_fetch",
+                status="error",
+                error=str(e),
+            )
+            logger.info(
+                "Falling back to mock historical data",
+                symbol=normalized_symbol,
+                operation="historical_fetch",
+                status="fallback",
+            )
             return self._get_mock_data(symbol, period)
 
     def get_current_price(self, symbol: str) -> float:
@@ -338,7 +390,10 @@ class CoinbaseDataProvider(DataProvider):
                     last_price = ticker.last
                     if last_price is not None:
                         logger.debug(
-                            "Using WebSocket price for %s: %s", normalized_symbol, last_price
+                            "Using WebSocket price",
+                            symbol=normalized_symbol,
+                            price=float(last_price),
+                            source="websocket",
                         )
                         return float(last_price)
 
@@ -348,11 +403,22 @@ class CoinbaseDataProvider(DataProvider):
             if price_source is None:
                 raise ValueError("Quote did not contain a price")
             price = float(price_source)
-            logger.debug(f"Using REST API price for {normalized_symbol}: {price}")
+            logger.debug(
+                "Using REST API price",
+                symbol=normalized_symbol,
+                price=price,
+                source="rest",
+            )
             return price
 
         except Exception as e:
-            logger.error(f"Error fetching current price for {normalized_symbol}: {e}")
+            logger.error(
+                "Error fetching current price",
+                symbol=normalized_symbol,
+                operation="price_fetch",
+                status="error",
+                error=str(e),
+            )
             # Return a reasonable default
             return 100.0
 
@@ -372,10 +438,18 @@ class CoinbaseDataProvider(DataProvider):
                 self.ticker_service.set_symbols(normalized_symbols)
                 self.ticker_service.ensure_started()
                 logger.info(
-                    f"Subscribed to WebSocket updates for {len(normalized_symbols)} symbols"
+                    "Subscribed to WebSocket updates",
+                    symbols=len(normalized_symbols),
+                    operation="streaming_subscribe",
+                    status="success",
                 )
             except Exception as e:
-                logger.warning(f"Failed to subscribe to WebSocket: {e}")
+                logger.warning(
+                    "Failed to subscribe to WebSocket",
+                    operation="streaming_subscribe",
+                    status="error",
+                    error=str(e),
+                )
 
         # Fetch historical data for each symbol
         result = {}
@@ -437,13 +511,21 @@ class CoinbaseDataProvider(DataProvider):
         """Start WebSocket streaming if configured."""
         if self.enable_streaming and self.ticker_service:
             self.ticker_service.start()
-            logger.info("WebSocket streaming started")
+            logger.info(
+                "WebSocket streaming started",
+                operation="streaming",
+                status="started",
+            )
 
     def stop_streaming(self) -> None:
         """Stop WebSocket streaming."""
         if self.ticker_service:
             self.ticker_service.stop()
-            logger.info("WebSocket streaming stopped")
+            logger.info(
+                "WebSocket streaming stopped",
+                operation="streaming",
+                status="stopped",
+            )
 
     def __enter__(self) -> CoinbaseDataProvider:
         """Context manager entry - starts streaming if enabled."""
@@ -489,7 +571,11 @@ def create_coinbase_provider(
         # Return mock provider for testing
         from bot_v2.data_providers import MockProvider
 
-        logger.info("Using MockProvider (COINBASE_USE_REAL_DATA=0)")
+        logger.info(
+            "Using MockProvider for Coinbase data",
+            operation="provider_factory",
+            status="mock",
+        )
         return MockProvider()
 
     # Create real Coinbase provider
@@ -501,5 +587,9 @@ def create_coinbase_provider(
             "on",
         }
 
-    logger.info(f"Creating CoinbaseDataProvider (streaming={enable_streaming})")
+    logger.info(
+        "Creating CoinbaseDataProvider",
+        operation="provider_factory",
+        streaming=bool(enable_streaming),
+    )
     return CoinbaseDataProvider(enable_streaming=enable_streaming)

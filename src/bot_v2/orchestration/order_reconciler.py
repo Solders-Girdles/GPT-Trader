@@ -59,7 +59,12 @@ class OrderReconciler:
         try:
             return {order.order_id: order for order in self._orders_store.get_open_orders()}
         except Exception as exc:
-            logger.exception("Failed to load local open orders: %s", exc, exc_info=True)
+            logger.exception(
+                "Failed to load local open orders: %s",
+                exc,
+                operation="order_reconcile",
+                stage="load_local",
+            )
             return {}
 
     async def fetch_exchange_open_orders(self) -> dict[str, Order]:
@@ -80,7 +85,8 @@ class OrderReconciler:
                         logger.exception(
                             "Failed fallback list_orders() during reconciliation: %s",
                             exc,
-                            exc_info=True,
+                            operation="order_reconcile",
+                            stage="fetch_exchange_fallback",
                         )
                 break
             except Exception as exc:
@@ -88,7 +94,9 @@ class OrderReconciler:
                     "Failed to fetch exchange open orders for status=%s: %s",
                     status,
                     exc,
-                    exc_info=True,
+                    operation="order_reconcile",
+                    stage="fetch_exchange",
+                    order_status=status.value if hasattr(status, "value") else str(status),
                 )
         return exchange_open
 
@@ -125,12 +133,22 @@ class OrderReconciler:
             logger.warning(
                 "Order %s is OPEN locally but not on exchange. Fetching final status...",
                 order_id,
+                operation="order_reconcile",
+                stage="missing_on_exchange",
+                order_id=order_id,
             )
             final_order: Order | None
             try:
                 final_order = await asyncio.to_thread(self._broker.get_order, order_id)
             except Exception as exc:
-                logger.debug("Failed to fetch final status for %s: %s", order_id, exc)
+                logger.debug(
+                    "Failed to fetch final status for %s: %s",
+                    order_id,
+                    exc,
+                    operation="order_reconcile",
+                    stage="missing_on_exchange",
+                    order_id=order_id,
+                )
                 final_order = None
 
             if final_order:
@@ -140,17 +158,36 @@ class OrderReconciler:
 
     def reconcile_missing_locally(self, diff: OrderDiff) -> None:
         for order_id, exchange_order in diff.missing_locally.items():
-            logger.warning("Found untracked OPEN order on exchange: %s. Adding to store.", order_id)
+            logger.warning(
+                "Found untracked OPEN order on exchange: %s. Adding to store.",
+                order_id,
+                operation="order_reconcile",
+                stage="missing_locally",
+                order_id=order_id,
+            )
             try:
                 self._orders_store.upsert(exchange_order)
             except Exception as exc:
-                logger.debug("Failed to upsert exchange order %s: %s", order_id, exc)
+                logger.debug(
+                    "Failed to upsert exchange order %s: %s",
+                    order_id,
+                    exc,
+                    operation="order_reconcile",
+                    stage="missing_locally",
+                    order_id=order_id,
+                )
 
     async def snapshot_positions(self) -> dict[str, dict[str, str]]:
         try:
             positions = await asyncio.to_thread(self._broker.list_positions)
         except Exception as exc:
-            logger.debug("Failed to fetch positions during reconciliation: %s", exc, exc_info=True)
+            logger.debug(
+                "Failed to fetch positions during reconciliation: %s",
+                exc,
+                operation="order_reconcile",
+                stage="positions",
+                exc_info=True,
+            )
             return {}
 
         snapshot: dict[str, dict[str, str]] = {}
@@ -172,7 +209,14 @@ class OrderReconciler:
         try:
             self._orders_store.upsert(order)
         except Exception as exc:
-            logger.exception("Failed to update orders_store with %s: %s", order.id, exc)
+            logger.exception(
+                "Failed to update orders_store with %s: %s",
+                order.id,
+                exc,
+                operation="order_reconcile",
+                stage="persist_order",
+                order_id=order.id,
+            )
             return
 
         emit_metric(
@@ -185,10 +229,24 @@ class OrderReconciler:
             },
             logger=logger,
         )
-        logger.info("Updated order %s to status: %s", order.id, order.status.value)
+        logger.info(
+            "Updated order %s to status: %s",
+            order.id,
+            order.status.value,
+            operation="order_reconcile",
+            stage="persist_order",
+            order_id=order.id,
+            status=order.status.value,
+        )
 
     def _assume_cancelled(self, order_id: str, local_order: Any) -> None:
-        logger.error("Could not retrieve final status for order %s.", order_id)
+        logger.error(
+            "Could not retrieve final status for order %s.",
+            order_id,
+            operation="order_reconcile",
+            stage="assume_cancelled",
+            order_id=order_id,
+        )
         try:
             filled_value = getattr(local_order, "filled_quantity", None)
             quantity = quantity_from(local_order, default=Decimal("0")) or Decimal("0")
@@ -246,13 +304,22 @@ class OrderReconciler:
                 },
                 logger=logger,
             )
-            logger.info("Marked order %s as cancelled due to missing on exchange", order_id)
+            logger.info(
+                "Marked order %s as cancelled due to missing on exchange",
+                order_id,
+                operation="order_reconcile",
+                stage="assume_cancelled",
+                order_id=order_id,
+            )
         except Exception as exc:
             logger.debug(
                 "Failed to mark %s cancelled during reconciliation: %s",
                 order_id,
                 exc,
                 exc_info=True,
+                operation="order_reconcile",
+                stage="assume_cancelled",
+                order_id=order_id,
             )
 
     @staticmethod

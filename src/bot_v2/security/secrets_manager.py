@@ -8,7 +8,6 @@ with encrypted file fallback.
 
 # Removed unused imports - Fernet handles encryption directly
 import json
-import logging
 import threading
 from dataclasses import dataclass
 from datetime import datetime
@@ -18,8 +17,9 @@ from typing import TYPE_CHECKING, Any
 from cryptography.fernet import Fernet
 
 from bot_v2.orchestration.runtime_settings import RuntimeSettings, load_runtime_settings
+from bot_v2.utilities.logging_patterns import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="security")
 
 if TYPE_CHECKING:  # pragma: no cover
     from hvac import Client as HvacClient
@@ -69,7 +69,11 @@ class SecretsManager:
             environment = (env_map.get("ENV") or "development").lower()
             if environment == "development":
                 encryption_key = Fernet.generate_key().decode()
-                logger.warning("Generated new encryption key for development")
+                logger.warning(
+                    "Generated new encryption key for development",
+                    operation="encryption_init",
+                    status="generated",
+                )
             else:
                 raise ValueError("ENCRYPTION_KEY must be set in production")
 
@@ -107,19 +111,39 @@ class SecretsManager:
                 self._vault_client = hvac.Client(url=vault_addr, token=vault_token)
 
                 if self._vault_client.is_authenticated():
-                    logger.info("Vault connection established")
+                    logger.info(
+                        "Vault connection established",
+                        operation="vault_init",
+                        status="connected",
+                    )
                 else:
-                    logger.warning("Vault authentication failed, using file fallback")
+                    logger.warning(
+                        "Vault authentication failed, using file fallback",
+                        operation="vault_init",
+                        status="unauthenticated",
+                    )
                     self._vault_enabled = False
             else:
-                logger.info("Vault token not found, using file storage")
+                logger.info(
+                    "Vault token not found, using file storage",
+                    operation="vault_init",
+                    status="token_missing",
+                )
                 self._vault_enabled = False
 
         except ImportError:
-            logger.warning("hvac not installed, using file storage")
+            logger.warning(
+                "hvac not installed, using file storage",
+                operation="vault_init",
+                status="dependency_missing",
+            )
             self._vault_enabled = False
         except Exception as e:
-            logger.error(f"Vault initialization failed: {e}")
+            logger.error(
+                f"Vault initialization failed: {e}",
+                operation="vault_init",
+                status="error",
+            )
             self._vault_enabled = False
 
     def store_secret(self, path: str, secret: dict[str, Any]) -> bool:
@@ -140,18 +164,30 @@ class SecretsManager:
                     self._vault_client.secrets.kv.v2.create_or_update_secret(
                         path=path, secret=secret
                     )
-                    logger.info(f"Secret stored in Vault: {path}")
+                    logger.info(
+                        f"Secret stored in Vault: {path}",
+                        operation="secret_store",
+                        status="success",
+                    )
                 else:
                     # Fallback to encrypted file
                     self._store_to_file(path, secret)
-                    logger.info(f"Secret stored in encrypted file: {path}")
+                    logger.info(
+                        f"Secret stored in encrypted file: {path}",
+                        operation="secret_store",
+                        status="success",
+                    )
 
                 # Update cache
                 self._secrets_cache[path] = secret
                 return True
 
             except Exception as e:
-                logger.error(f"Failed to store secret: {e}")
+                logger.error(
+                    f"Failed to store secret: {e}",
+                    operation="secret_store",
+                    status="error",
+                )
                 return False
 
     def get_secret(self, path: str) -> dict[str, Any] | None:
@@ -186,7 +222,11 @@ class SecretsManager:
                     return secret
 
             except Exception as e:
-                logger.error(f"Failed to retrieve secret: {e}")
+                logger.error(
+                    f"Failed to retrieve secret: {e}",
+                    operation="secret_retrieve",
+                    status="error",
+                )
 
             return None
 

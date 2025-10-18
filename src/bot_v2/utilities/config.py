@@ -2,15 +2,15 @@
 
 from __future__ import annotations
 
-import logging
 from collections.abc import Mapping
 from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
 from typing import TYPE_CHECKING, Any
 
 from bot_v2.orchestration.runtime_settings import load_runtime_settings
+from bot_v2.utilities.logging_patterns import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="config")
 
 SLIPPAGE_ENV_KEY = "SLIPPAGE_MULTIPLIERS"
 
@@ -135,5 +135,13 @@ def load_slippage_multipliers(
     try:
         return parse_slippage_multipliers(raw_value)
     except ValueError as exc:
-        logger.warning("Invalid %s entry '%s': %s", env_key, raw_value, exc, exc_info=True)
+        logger.warning(
+            "Invalid %s entry '%s': %s",
+            env_key,
+            raw_value,
+            exc,
+            operation="config_slippage_parse",
+            status="invalid",
+            exc_info=True,
+        )
         return {}

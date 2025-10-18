@@ -4,7 +4,6 @@ Authentication and Authorization Handler for Bot V2 Trading System
 Implements JWT-based authentication with RBAC, MFA support, and secure session management.
 """
 
-import logging
 import secrets
 from collections.abc import Mapping
 from dataclasses import dataclass, field
@@ -18,8 +17,9 @@ import pyotp
 from jwt import PyJWTError
 
 from bot_v2.orchestration.runtime_settings import RuntimeSettings, load_runtime_settings
+from bot_v2.utilities.logging_patterns import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="auth")
 
 
 class Role(Enum):
@@ -116,7 +116,11 @@ class AuthHandler:
                 permissions=self.ROLE_PERMISSIONS[Role.ADMIN],
             )
             self._users[admin_user.id] = admin_user
-            logger.info("Created default admin user")
+            logger.info(
+                "Created default admin user",
+                operation="user_bootstrap",
+                status="created",
+            )
 
     def authenticate_user(
         self, username: str, password: str, mfa_code: str | None = None
@@ -136,18 +140,30 @@ class AuthHandler:
             # Find user
             user = self._find_user_by_username(username)
             if not user:
-                logger.warning(f"Authentication failed: user not found - {username}")
+                logger.warning(
+                    f"Authentication failed: user not found - {username}",
+                    operation="authenticate_user",
+                    status="failed",
+                )
                 return None
 
             # Verify password (simplified for demo)
             if not self._verify_password(password, user.id):
-                logger.warning(f"Authentication failed: invalid password - {username}")
+                logger.warning(
+                    f"Authentication failed: invalid password - {username}",
+                    operation="authenticate_user",
+                    status="failed",
+                )
                 return None
 
             # Check MFA if enabled
             if user.mfa_enabled:
                 if not mfa_code or not self._verify_mfa(user, mfa_code):
-                    logger.warning(f"Authentication failed: invalid MFA - {username}")
+                    logger.warning(
+                        f"Authentication failed: invalid MFA - {username}",
+                        operation="authenticate_user",
+                        status="failed",
+                    )
                     return None
 
             # Generate tokens
@@ -162,7 +178,11 @@ class AuthHandler:
                 refresh_token_jti=refresh_jti,
             )
 
-            logger.info(f"User authenticated successfully: {username}")
+            logger.info(
+                f"User authenticated successfully: {username}",
+                operation="authenticate_user",
+                status="success",
+            )
             return token_pair
 
     def _generate_tokens(self, user: User) -> tuple[TokenPair, str, str]:
@@ -234,16 +254,28 @@ class AuthHandler:
 
             # Check if revoked
             if claims.get("jti") in self._revoked_tokens:
-                logger.warning(f"Token is revoked: {claims.get('jti')}")
+                logger.warning(
+                    f"Token is revoked: {claims.get('jti')}",
+                    operation="token_validate",
+                    status="revoked",
+                )
                 return None
 
             return claims
 
         except jwt.ExpiredSignatureError:
-            logger.debug("Token expired")
+            logger.debug(
+                "Token expired",
+                operation="token_validate",
+                status="expired",
+            )
             return None
         except jwt.InvalidTokenError as e:
-            logger.warning(f"Invalid token: {e}")
+            logger.warning(
+                f"Invalid token: {e}",
+                operation="token_validate",
+                status="invalid",
+            )
             return None
 
     def refresh_token(self, refresh_token: str) -> TokenPair | None:
@@ -285,12 +317,25 @@ class AuthHandler:
             jti = claims.get("jti")
             if jti:
                 self._revoked_tokens.add(jti)
-                logger.info(f"Token revoked: {jti}")
+                logger.info(
+                    f"Token revoked: {jti}",
+                    operation="token_revoke",
+                    status="revoked",
+                )
                 return True
         except PyJWTError as exc:
-            logger.warning("Failed to decode token during revocation: %s", exc, exc_info=True)
+            logger.warning(
+                f"Failed to decode token during revocation: {exc}",
+                operation="token_revoke",
+                status="decode_failed",
+                exc_info=True,
+            )
         except Exception as exc:
-            logger.exception("Unexpected error revoking token: %s", exc)
+            logger.exception(
+                f"Unexpected error revoking token: {exc}",
+                operation="token_revoke",
+                status="error",
+            )
         return False
 
     def check_permission(self, user_id: str, resource: str, action: str) -> bool:
@@ -372,9 +417,18 @@ class AuthHandler:
             jti_value = claims.get("jti")
             return str(jti_value) if jti_value is not None else None
         except PyJWTError as exc:
-            logger.warning("Failed to extract JTI from token: %s", exc, exc_info=True)
+            logger.warning(
+                f"Failed to extract JTI from token: {exc}",
+                operation="token_revoke",
+                status="decode_failed",
+                exc_info=True,
+            )
         except Exception as exc:
-            logger.exception("Unexpected error extracting JTI: %s", exc)
+            logger.exception(
+                f"Unexpected error extracting JTI: {exc}",
+                operation="token_revoke",
+                status="error",
+            )
         return None
 
 

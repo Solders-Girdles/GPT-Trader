@@ -5,7 +5,6 @@ Implements input validation, rate limiting, and trading-specific security checks
 to protect against injection attacks and ensure safe trading operations.
 """
 
-import logging
 import re
 import time
 from collections import defaultdict, deque
@@ -15,7 +14,9 @@ from decimal import Decimal, InvalidOperation
 from threading import Lock
 from typing import Any
 
-logger = logging.getLogger(__name__)
+from bot_v2.utilities.logging_patterns import get_logger
+
+logger = get_logger(__name__, component="security")
 
 
 @dataclass
@@ -257,7 +258,11 @@ class SecurityValidator:
                 self._suspicious_activity[identifier] += 1
                 if self._suspicious_activity[identifier] > 10:
                     self._blocked_ips.add(identifier)
-                    logger.warning(f"Blocked {identifier} for excessive rate limit violations")
+                    logger.warning(
+                        f"Blocked {identifier} for excessive rate limit violations",
+                        operation="rate_limit",
+                        status="blocked",
+                    )
 
                 return (
                     False,
@@ -307,19 +312,31 @@ class SecurityValidator:
         # Rapid-fire orders
         if activity.get("orders_per_minute", 0) > 10:
             suspicious_indicators += 1
-            logger.warning(f"Rapid-fire orders detected for {user_id}")
+            logger.warning(
+                f"Rapid-fire orders detected for {user_id}",
+                operation="suspicious_activity",
+                status="alert",
+            )
 
         # Unusual order size
         avg_size = activity.get("average_order_size", 0)
         current_size = activity.get("current_order_size", 0)
         if avg_size > 0 and current_size > avg_size * 5:
             suspicious_indicators += 1
-            logger.warning(f"Unusual order size detected for {user_id}")
+            logger.warning(
+                f"Unusual order size detected for {user_id}",
+                operation="suspicious_activity",
+                status="alert",
+            )
 
         # Pattern detection (simplified)
         if activity.get("pattern_score", 0) > 0.8:
             suspicious_indicators += 1
-            logger.warning(f"Suspicious pattern detected for {user_id}")
+            logger.warning(
+                f"Suspicious pattern detected for {user_id}",
+                operation="suspicious_activity",
+                status="alert",
+            )
 
         return suspicious_indicators >= 2
 

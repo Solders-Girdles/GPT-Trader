@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 import inspect
-import logging
 from collections.abc import Sequence
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -14,12 +13,13 @@ from bot_v2.features.brokerages.core.interfaces import Balance, Order, Position,
 from bot_v2.utilities import utc_now
 from bot_v2.utilities.async_tools import gather_with_concurrency
 from bot_v2.utilities.config import ConfigBaselinePayload
+from bot_v2.utilities.logging_patterns import get_logger
 
 from ..symbol_processor import SymbolProcessor
 from .base import BaseCoordinator, CoordinatorContext, HealthStatus
 from .execution import ExecutionCoordinator
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="strategy_coordinator")
 
 MAX_QUOTE_FETCH_CONCURRENCY = 10
 
@@ -78,7 +78,11 @@ class StrategyCoordinator(BaseCoordinator):
     # ------------------------------------------------------------------ trading cycle
     async def run_cycle(self) -> None:
         ctx = self.context
-        logger.debug("Running update cycle")
+        logger.debug(
+            "Running update cycle",
+            operation="strategy_cycle",
+            stage="start",
+        )
 
         current_state = await self._fetch_current_state()
         if not await self._validate_configuration_and_handle_drift(current_state):
@@ -93,13 +97,22 @@ class StrategyCoordinator(BaseCoordinator):
             try:
                 should_trade = bool(session_guard.should_trade())
             except Exception as exc:  # pragma: no cover - defensive logging
-                logger.warning("Session guard failed during should_trade: %s", exc)
+                logger.warning(
+                    "Session guard failed during should_trade",
+                    error=str(exc),
+                    operation="strategy_cycle",
+                    stage="session_guard",
+                )
                 should_trade = True
         else:
             should_trade = True
 
         if not should_trade:
-            logger.info("Outside trading window; skipping trading actions this cycle")
+            logger.info(
+                "Outside trading window; skipping trading actions this cycle",
+                operation="strategy_cycle",
+                stage="skip",
+            )
             if system_monitor is not None:
                 await system_monitor.log_status()
             return
@@ -125,7 +138,12 @@ class StrategyCoordinator(BaseCoordinator):
         if inspect.isawaitable(result):
             await result
         elif result is not None:
-            logger.debug("Symbol processor %s returned non-awaitable result", processor)
+            logger.debug(
+                "Symbol processor returned non-awaitable result",
+                processor=str(processor),
+                operation="process_symbol",
+                stage="result",
+            )
 
     async def execute_decision(
         self,
@@ -186,12 +204,26 @@ class StrategyCoordinator(BaseCoordinator):
 
         for symbol, result in zip(symbols, quotes):
             if isinstance(result, Exception):
-                logger.error("Error fetching quote for %s: %s", symbol, result)
+                logger.error(
+                    "Error fetching quote",
+                    symbol=symbol,
+                    error=str(result),
+                    operation="update_marks",
+                    stage="fetch",
+                    exc_info=True,
+                )
                 continue
             try:
                 self._process_quote_update(symbol, result)
             except Exception as exc:
-                logger.error("Error updating mark for %s: %s", symbol, exc)
+                logger.error(
+                    "Error updating mark",
+                    symbol=symbol,
+                    error=str(exc),
+                    operation="update_marks",
+                    stage="process",
+                    exc_info=True,
+                )
 
     def _process_quote_update(self, symbol: str, quote: Any) -> None:
         if quote is None:
@@ -322,9 +354,19 @@ class StrategyCoordinator(BaseCoordinator):
         if validation_result.is_valid:
             return True
 
-        logger.warning("Configuration drift detected: %s", validation_result.errors)
+        logger.warning(
+            "Configuration drift detected",
+            errors=validation_result.errors,
+            operation="strategy_cycle",
+            stage="config_drift",
+        )
         for error in validation_result.errors:
-            logger.error("Configuration error: %s", error)
+            logger.error(
+                "Configuration error",
+                error=error,
+                operation="strategy_cycle",
+                stage="config_drift",
+            )
 
         has_critical_errors = any(
             "critical" in error.lower() or "emergency_shutdown" in error.lower()
@@ -337,24 +379,39 @@ class StrategyCoordinator(BaseCoordinator):
                 try:
                     set_running_flag(False)
                 except Exception:  # pragma: no cover - defensive logging
-                    logger.debug("Failed to update running flag during shutdown", exc_info=True)
+                    logger.debug(
+                        "Failed to update running flag during shutdown",
+                        exc_info=True,
+                        operation="strategy_cycle",
+                        stage="shutdown",
+                    )
             shutdown_hook = getattr(self.context, "shutdown_hook", None)
             if callable(shutdown_hook):
                 try:
                     await shutdown_hook()
                 except Exception:  # pragma: no cover - defensive logging
-                    logger.exception("Failed to execute shutdown hook after critical drift")
+                    logger.exception(
+                        "Failed to execute shutdown hook after critical drift",
+                        operation="strategy_cycle",
+                        stage="shutdown",
+                    )
             return False
 
         logger.warning(
-            "High-severity configuration violations detected - switching to reduce-only mode"
+            "High-severity configuration violations detected - switching to reduce-only mode",
+            operation="strategy_cycle",
+            stage="reduce_only",
         )
         set_reduce_only = getattr(self.context, "set_reduce_only_mode", None)
         if callable(set_reduce_only):
             try:
                 set_reduce_only(True, "Configuration drift detected")
             except Exception:  # pragma: no cover - defensive logging
-                logger.exception("Failed to enable reduce-only mode after configuration drift")
+                logger.exception(
+                    "Failed to enable reduce-only mode after configuration drift",
+                    operation="strategy_cycle",
+                    stage="reduce_only",
+                )
         return False
 
     async def _execute_trading_cycle(self, trading_state: dict[str, Any]) -> None:

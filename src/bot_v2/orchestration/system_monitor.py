@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import asyncio
-import logging
 from datetime import UTC, datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any
@@ -17,12 +16,13 @@ from bot_v2.orchestration.config_controller import ConfigController
 from bot_v2.orchestration.configuration import ConfigValidationError
 from bot_v2.orchestration.system_monitor_metrics import MetricsPublisher
 from bot_v2.orchestration.system_monitor_positions import PositionReconciler
+from bot_v2.utilities.logging_patterns import get_logger
 from bot_v2.utilities.quantities import quantity_from
 
 if TYPE_CHECKING:  # pragma: no cover - type checking only
     from bot_v2.orchestration.perps_bot import PerpsBot
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="system_monitor", enable_console=True)
 
 
 class SystemMonitor:
@@ -49,7 +49,13 @@ class SystemMonitor:
             try:
                 self._resource_collector = ResourceCollector()
             except Exception as exc:  # pragma: no cover - psutil unavailable or restricted
-                logger.debug("Resource collector unavailable: %s", exc, exc_info=True)
+                logger.debug(
+                    "Resource collector unavailable: %s",
+                    exc,
+                    exc_info=True,
+                    operation="system_monitor_init",
+                    stage="resource_collector",
+                )
 
     def attach_account_telemetry(self, service: AccountTelemetryService) -> None:
         self._account_telemetry = service
@@ -60,23 +66,52 @@ class SystemMonitor:
         balances = []
         try:
             positions = await asyncio.to_thread(bot.broker.list_positions)
-        except Exception as e:
-            logger.warning(f"Unable to fetch positions for status log: {e}")
+        except Exception as exc:
+            logger.warning(
+                "Unable to fetch positions for status log",
+                error=str(exc),
+                operation="status_log",
+                stage="positions",
+            )
         try:
             balances = await asyncio.to_thread(bot.broker.list_balances)
-        except Exception as e:
-            logger.warning(f"Unable to fetch balances for status log: {e}")
+        except Exception as exc:
+            logger.warning(
+                "Unable to fetch balances for status log",
+                error=str(exc),
+                operation="status_log",
+                stage="balances",
+            )
 
         usd_balance = next((b for b in balances if getattr(b, "asset", "").upper() == "USD"), None)
         equity = usd_balance.available if usd_balance else Decimal("0")
 
-        logger.info("=" * 60)
+        logger.info("=" * 60, operation="status_log", stage="banner")
         logger.info(
-            f"Bot Status - {datetime.now()} - Profile: {bot.config.profile.value} - Equity: ${equity} - Positions: {len(positions)}"
+            "Bot Status - %s - Profile: %s - Equity: $%s - Positions: %s",
+            datetime.now(),
+            bot.config.profile.value,
+            equity,
+            len(positions),
+            operation="status_log",
+            stage="summary",
+            profile=bot.config.profile.value,
+            equity=float(equity) if isinstance(equity, Decimal) else equity,
+            positions=len(positions),
         )
         for symbol, decision in bot.last_decisions.items():
-            logger.info(f"  {symbol}: {decision.action.value} ({decision.reason})")
-        logger.info("=" * 60)
+            logger.info(
+                "  %s: %s (%s)",
+                symbol,
+                decision.action.value,
+                decision.reason,
+                operation="status_log",
+                stage="decision",
+                symbol=symbol,
+                action=decision.action.value,
+                reason=decision.reason,
+            )
+        logger.info("=" * 60, operation="status_log", stage="banner")
 
         try:
             open_orders_count = len(bot.orders_store.get_open_orders())
@@ -129,7 +164,13 @@ class SystemMonitor:
                 }
                 metrics_payload["system"] = system_metrics
             except Exception as exc:
-                logger.debug("Unable to collect system metrics: %s", exc, exc_info=True)
+                logger.debug(
+                    "Unable to collect system metrics: %s",
+                    exc,
+                    exc_info=True,
+                    operation="status_log",
+                    stage="system_metrics",
+                )
 
         self._metrics_publisher.publish(metrics_payload)
 
@@ -141,7 +182,12 @@ class SystemMonitor:
         try:
             change = controller.refresh_if_changed()
         except ConfigValidationError as exc:
-            logger.error("Configuration update rejected: %s", exc)
+            logger.error(
+                "Configuration update rejected: %s",
+                exc,
+                operation="config_refresh",
+                status="rejected",
+            )
             return
 
         if not change:
@@ -153,16 +199,27 @@ class SystemMonitor:
                 "Configuration change detected for profile %s: %s",
                 controller.current.profile.value,
                 diff,
+                operation="config_refresh",
+                status="changed",
+                profile=controller.current.profile.value,
             )
         else:
             logger.warning(
                 "Configuration inputs changed for profile %s; restart recommended to apply updates",
                 controller.current.profile.value,
+                operation="config_refresh",
+                status="inputs_changed",
+                profile=controller.current.profile.value,
             )
         try:
             self._bot.apply_config_change(change)
         except Exception as exc:
-            logger.exception("Failed to apply configuration change: %s", exc)
+            logger.exception(
+                "Failed to apply configuration change: %s",
+                exc,
+                operation="config_refresh",
+                status="apply_failed",
+            )
         finally:
             controller.consume_pending_change()
 

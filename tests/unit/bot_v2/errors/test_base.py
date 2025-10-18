@@ -3,6 +3,7 @@
 import pytest
 
 from bot_v2.errors import (
+    handle_error,
     TradingError,
     ValidationError,
     ExecutionError,
@@ -40,6 +41,12 @@ class TestTradingError:
         error = TradingError("test", context={"key": "value"})
         assert str(error) == "test"
         assert error.context == {"key": "value"}
+
+    def test_trading_error_captures_stack_when_no_exception(self) -> None:
+        """Ensure stack trace is captured even when instantiated outside except blocks."""
+        error = TradingError("stack capture check")
+        assert "test_trading_error_captures_stack_when_no_exception" in error.traceback
+        assert "NoneType: None" not in error.traceback
 
 
 class TestValidationError:
@@ -197,6 +204,22 @@ class TestInsufficientFundsError:
         assert error.context["required"] == 1000.0
         assert error.context["available"] == 500.0
         assert error.context["shortfall"] == 500.0
+
+
+class TestHandleError:
+    """Tests for the handle_error helper."""
+
+    def test_handle_error_wraps_exception_with_traceback(self) -> None:
+        """Ensure wrapped exceptions retain traceback information."""
+        try:
+            raise ValueError("boom")
+        except ValueError as exc:
+            wrapped = handle_error(exc, context={"example": "value"})
+
+        assert isinstance(wrapped, TradingError)
+        assert wrapped.error_code == "ValueError"
+        assert wrapped.context["example"] == "value"
+        assert "ValueError: boom" in wrapped.traceback
 
 
 class TestErrorHierarchy:

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-import logging
 import signal
 from argparse import Namespace
 from types import FrameType
@@ -11,8 +10,9 @@ from typing import Any
 
 from bot_v2.cli import options, services
 from bot_v2.orchestration.configuration import ConfigValidationError
+from bot_v2.utilities.logging_patterns import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, enable_console=True)
 
 
 def register(subparsers: Any) -> None:
@@ -47,7 +47,7 @@ def execute(args: Namespace) -> int:
 
 def _run_bot(bot: Any, *, single_cycle: bool) -> int:
     def signal_handler(sig: int, frame: FrameType | None) -> None:  # pragma: no cover - signal
-        logger.info("Signal %s received, shutting down...", sig)
+        logger.info(f"Signal {sig} received, shutting down...", operation="shutdown")
         bot.running = False
 
     signal.signal(signal.SIGINT, signal_handler)
@@ -56,6 +56,6 @@ def _run_bot(bot: Any, *, single_cycle: bool) -> int:
     try:
         asyncio.run(bot.run(single_cycle=single_cycle))
     except KeyboardInterrupt:  # pragma: no cover - defensive
-        logger.info("Shutdown complete.")
+        logger.info("Shutdown complete.", status="stopped")
 
     return 0

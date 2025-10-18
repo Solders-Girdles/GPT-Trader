@@ -28,7 +28,7 @@ from bot_v2.features.brokerages.core.interfaces import (
 )
 from bot_v2.features.live_trade.guard_errors import RiskGuardError
 from bot_v2.features.live_trade.risk import LiveRiskManager, ValidationError
-from bot_v2.monitoring.system import get_logger
+from bot_v2.monitoring.system import get_logger as get_prod_logger
 from bot_v2.orchestration.execution import (
     GuardManager,
     OrderSubmitter,
@@ -38,8 +38,9 @@ from bot_v2.orchestration.execution import (
 )
 from bot_v2.orchestration.runtime_settings import RuntimeSettings, load_runtime_settings
 from bot_v2.persistence.event_store import EventStore
+from bot_v2.utilities.logging_patterns import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="live_execution")
 
 # Re-export for backward compatibility
 __all__ = ["LiveExecutionEngine", "LiveOrder", "RuntimeGuardState", "spec_validate_order"]
@@ -116,7 +117,7 @@ class LiveExecutionEngine:
         self.slippage_multipliers = slippage_multipliers or {}
 
         runtime_settings = settings or load_runtime_settings()
-        self._production_logger = get_logger(settings=runtime_settings)
+        self._production_logger = get_prod_logger(settings=runtime_settings)
 
         # Determine order preview setting
         preview_env = runtime_settings.raw_env.get("ORDER_PREVIEW_ENABLED")
@@ -155,7 +156,11 @@ class LiveExecutionEngine:
             lambda: None,  # Cache invalidation handled by guard_manager itself
         )
 
-        logger.info(f"LiveExecutionEngine initialized for {bot_id}")
+        logger.info(
+            "LiveExecutionEngine initialised",
+            bot_id=bot_id,
+            operation="live_execution_init",
+        )
 
     def place_order(
         self,
@@ -287,16 +292,30 @@ class LiveExecutionEngine:
                 ),
             )
 
-        except ValidationError as e:
-            logger.warning(f"Risk validation failed: {e}")
+        except ValidationError as exc:
+            logger.warning(
+                "Risk validation failed: %s",
+                exc,
+                operation="order_place",
+                stage="validation",
+                symbol=symbol,
+                side=side.value,
+            )
             rejection_price = price_decimal if price_decimal is not None else effective_price
             self.order_submitter.record_rejection(
-                symbol, side.value, order_quantity, rejection_price, str(e)
+                symbol, side.value, order_quantity, rejection_price, str(exc)
             )
             raise
 
-        except Exception as e:
-            logger.error(f"Order placement error: {e}")
+        except Exception as exc:
+            logger.error(
+                "Order placement error: %s",
+                exc,
+                operation="order_place",
+                stage="exception",
+                symbol=symbol,
+                side=side.value,
+            )
             try:
                 self.event_store.append_error(
                     bot_id=self.bot_id,
@@ -305,7 +324,7 @@ class LiveExecutionEngine:
                         "symbol": symbol,
                         "side": side.value,
                         "quantity": str(order_quantity),
-                        "error": str(e),
+                        "error": str(exc),
                     },
                 )
             except Exception:
@@ -329,12 +348,29 @@ class LiveExecutionEngine:
                 if self.broker.cancel_order(order_id):
                     cancelled += 1
                     self.open_orders.remove(order_id)
-                    logger.info(f"Cancelled order: {order_id}")
+                    logger.info(
+                        "Cancelled order",
+                        order_id=order_id,
+                        operation="order_cancel",
+                        stage="single",
+                    )
             except Exception as e:
-                logger.error(f"Failed to cancel order {order_id}: {e}")
+                logger.error(
+                    "Failed to cancel order %s: %s",
+                    order_id,
+                    e,
+                    operation="order_cancel",
+                    stage="single",
+                    order_id=order_id,
+                )
 
         if cancelled > 0:
-            logger.info(f"Cancelled {cancelled} open orders due to risk trip")
+            logger.info(
+                "Cancelled open orders due to risk trip",
+                cancelled=cancelled,
+                operation="order_cancel",
+                stage="bulk",
+            )
             self.guard_manager.invalidate_cache()
 
         return cancelled
@@ -357,21 +393,29 @@ class LiveExecutionEngine:
                 "Runtime guard failure: %s",
                 err,
                 exc_info=not err.recoverable,
-                extra={
-                    "guard_failure": err.failure.as_log_args(),
-                },
+                operation="runtime_guards",
+                stage="guard_failure",
+                recoverable=err.recoverable,
             )
             if not err.recoverable:
                 try:
                     self.risk_manager.set_reduce_only_mode(True, reason="guard_failure")
                 except Exception:
                     logger.warning(
-                        "Failed to set reduce-only mode after guard failure", exc_info=True
+                        "Failed to set reduce-only mode after guard failure",
+                        exc_info=True,
+                        operation="runtime_guards",
+                        stage="reduce_only",
                     )
                 self.guard_manager.invalidate_cache()
 
-        except Exception as e:
-            logger.error(f"Runtime guards error: {e}")
+        except Exception as exc:
+            logger.error(
+                "Runtime guards error: %s",
+                exc,
+                operation="runtime_guards",
+                stage="exception",
+            )
 
     def reset_daily_tracking(self) -> None:
         """Reset daily PnL tracking (call at start of trading day)."""
@@ -382,13 +426,23 @@ class LiveExecutionEngine:
 
             # Reset risk manager daily tracking
             self.risk_manager.reset_daily_tracking(equity)
-            logger.info(f"Daily tracking reset with equity: {equity}")
+            logger.info(
+                "Daily tracking reset",
+                operation="daily_tracking",
+                stage="reset",
+                equity=float(equity),
+            )
 
             # Invalidate guard cache
             self.guard_manager.invalidate_cache()
 
-        except Exception as e:
-            logger.error(f"Failed to reset daily tracking: {e}")
+        except Exception as exc:
+            logger.error(
+                "Failed to reset daily tracking: %s",
+                exc,
+                operation="daily_tracking",
+                stage="reset",
+            )
 
     def _invalidate_runtime_guard_cache(self) -> None:
         """Backward compatibility wrapper for invalidate_cache."""
@@ -413,8 +467,11 @@ class LiveExecutionEngine:
             change_value = diff
             if abs(diff) > Decimal("0.01"):
                 logger.info(
-                    f"Collateral available changed: {self._last_collateral_available} → "
-                    f"{total_available} (Δ {diff:+.2f})"
+                    "Collateral available changed",
+                    previous=float(self._last_collateral_available),
+                    current=float(total_available),
+                    delta=float(diff),
+                    operation="collateral_update",
                 )
 
         self._last_collateral_available = total_available

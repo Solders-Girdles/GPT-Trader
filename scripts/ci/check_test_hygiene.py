@@ -61,6 +61,7 @@ ALLOWLIST = {
     "tests/unit/bot_v2/cli/test_commands_orders.py",  # 254 lines: comprehensive CLI orders command coverage
     "tests/unit/bot_v2/utilities/test_console_logging_core.py",  # 336 lines: console logging contract and fallback behavior matrix
     "tests/unit/bot_v2/utilities/test_logging_patterns.py",  # 494 lines: extensive structured logging patterns and decorator coverage
+    "tests/unit/gpt_trader/test_cli.py",  # legacy CLI coverage slated for refactor
 }
 
 SLEEP_ALLOWLIST = {

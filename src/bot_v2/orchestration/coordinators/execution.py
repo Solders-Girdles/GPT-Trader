@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-import logging
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any, cast
 
@@ -24,6 +23,7 @@ from bot_v2.orchestration.runtime_settings import RuntimeSettings, load_runtime_
 from bot_v2.utilities import utc_now
 from bot_v2.utilities.async_utils import run_in_thread
 from bot_v2.utilities.config import load_slippage_multipliers
+from bot_v2.utilities.logging_patterns import get_logger
 from bot_v2.utilities.quantities import quantity_from
 
 from .base import BaseCoordinator, CoordinatorContext, HealthStatus
@@ -32,7 +32,7 @@ if TYPE_CHECKING:  # pragma: no cover - type checking only
     from bot_v2.features.live_trade.liquidity_service import LiquidityService
     from bot_v2.orchestration.perps_bot_state import PerpsBotRuntimeState
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="execution_coordinator")
 
 
 class ExecutionCoordinator(BaseCoordinator):
@@ -65,7 +65,11 @@ class ExecutionCoordinator(BaseCoordinator):
         runtime_state = ctx.runtime_state
 
         if broker is None or risk_manager is None or runtime_state is None:
-            logger.warning("Execution initialization skipped: missing broker or risk manager")
+            logger.warning(
+                "Execution initialization skipped: missing broker or risk manager",
+                operation="execution_init",
+                stage="dependencies",
+            )
             return ctx
 
         slippage_multipliers = load_slippage_multipliers()
@@ -83,9 +87,11 @@ class ExecutionCoordinator(BaseCoordinator):
                 risk_manager.set_impact_estimator(impact_estimator)
             except Exception as exc:  # pragma: no cover - defensive logging
                 logger.warning(
-                    "Failed to initialize LiquidityService impact estimator: %s",
-                    exc,
+                    "Failed to initialize LiquidityService impact estimator",
                     exc_info=True,
+                    operation="execution_init",
+                    stage="impact_estimator",
+                    error=str(exc),
                 )
 
         registry = ctx.registry
@@ -101,7 +107,12 @@ class ExecutionCoordinator(BaseCoordinator):
                 risk_manager=risk_manager,
                 slippage_multipliers=slippage_multipliers,
             )
-            logger.info("Initialized AdvancedExecutionEngine with dynamic sizing integration")
+            logger.info(
+                "Initialized AdvancedExecutionEngine with dynamic sizing integration",
+                operation="execution_init",
+                stage="engine",
+                engine="advanced",
+            )
         else:
             runtime_state.exec_engine = LiveExecutionEngine(
                 broker=broker,
@@ -112,7 +123,12 @@ class ExecutionCoordinator(BaseCoordinator):
                 enable_preview=getattr(ctx.config, "enable_order_preview", False),
                 settings=runtime_settings,
             )
-            logger.info("Initialized LiveExecutionEngine with risk integration")
+            logger.info(
+                "Initialized LiveExecutionEngine with risk integration",
+                operation="execution_init",
+                stage="engine",
+                engine="live",
+            )
 
         extras = dict(ctx.registry.extras)
         extras["execution_engine"] = runtime_state.exec_engine
@@ -146,7 +162,12 @@ class ExecutionCoordinator(BaseCoordinator):
             try:
                 runtime_state.order_lock = asyncio.Lock()
             except RuntimeError as exc:
-                logger.error("Unable to initialize async order lock: %s", exc)
+                logger.error(
+                    "Unable to initialize async order lock: %s",
+                    exc,
+                    operation="order_lock",
+                    stage="initialize",
+                )
                 raise
         return cast(asyncio.Lock, runtime_state.order_lock)
 
@@ -161,7 +182,12 @@ class ExecutionCoordinator(BaseCoordinator):
         ctx = self.context
         runtime_state_obj = ctx.runtime_state
         if runtime_state_obj is None:
-            logger.debug("Runtime state missing; skipping decision execution for %s", symbol)
+            logger.debug(
+                "Runtime state missing; skipping decision execution",
+                symbol=symbol,
+                operation="execution_decision",
+                stage="runtime_state",
+            )
             return
         runtime_state = cast("PerpsBotRuntimeState", runtime_state_obj)
         try:
@@ -171,7 +197,15 @@ class ExecutionCoordinator(BaseCoordinator):
                 raise AssertionError("Position state missing quantity")
 
             if ctx.config.dry_run:
-                logger.info("DRY RUN: Would execute %s for %s", decision.action.value, symbol)
+                logger.info(
+                    "DRY RUN: Would execute %s for %s",
+                    decision.action.value,
+                    symbol,
+                    operation="execution_decision",
+                    stage="dry_run",
+                    symbol=symbol,
+                    action=decision.action.value,
+                )
                 return
 
             position_quantity_raw = quantity_from(position_state)
@@ -183,7 +217,12 @@ class ExecutionCoordinator(BaseCoordinator):
 
             if decision.action == Action.CLOSE:
                 if not position_state or position_quantity == 0:
-                    logger.warning("No position to close for %s", symbol)
+                    logger.warning(
+                        "No position to close for %s",
+                        symbol,
+                        operation="execution_decision",
+                        stage="close",
+                    )
                     return
                 order_quantity = abs(position_quantity)
             elif getattr(decision, "target_notional", None):
@@ -191,7 +230,12 @@ class ExecutionCoordinator(BaseCoordinator):
             elif getattr(decision, "quantity", None) is not None:
                 order_quantity = Decimal(str(decision.quantity))
             else:
-                logger.warning("No quantity or notional in decision for %s", symbol)
+                logger.warning(
+                    "No quantity or notional in decision for %s",
+                    symbol,
+                    operation="execution_decision",
+                    stage="quantity",
+                )
                 return
 
             side = OrderSide.BUY if decision.action == Action.BUY else OrderSide.SELL
@@ -241,7 +285,11 @@ class ExecutionCoordinator(BaseCoordinator):
             exec_engine = runtime_state.exec_engine
             if exec_engine is None:
                 logger.warning(
-                    "Execution engine not initialized; cannot place order for %s", symbol
+                    "Execution engine not initialized; cannot place order for %s",
+                    symbol,
+                    operation="execution_decision",
+                    stage="engine_missing",
+                    symbol=symbol,
                 )
                 return
 
@@ -274,11 +322,29 @@ class ExecutionCoordinator(BaseCoordinator):
 
             order = await self.place_order(exec_engine, **place_kwargs)
             if order:
-                logger.info("Order placed successfully: %s", order.id)
+                logger.info(
+                    "Order placed successfully",
+                    order_id=str(order.id),
+                    symbol=symbol,
+                    operation="execution_decision",
+                    stage="placed",
+                )
             else:
-                logger.warning("Order rejected or failed for %s", symbol)
+                logger.warning(
+                    "Order rejected or failed",
+                    symbol=symbol,
+                    operation="execution_decision",
+                    stage="placed",
+                )
         except Exception as exc:  # pragma: no cover - defensive logging
-            logger.error("Error executing decision for %s: %s", symbol, exc, exc_info=True)
+            logger.error(
+                "Error executing decision",
+                symbol=symbol,
+                error=str(exc),
+                exc_info=True,
+                operation="execution_decision",
+                stage="exception",
+            )
 
     async def place_order(self, exec_engine: Any, **kwargs: Any) -> Order | None:
         lock = self.ensure_order_lock()
@@ -286,11 +352,22 @@ class ExecutionCoordinator(BaseCoordinator):
             async with lock:
                 return await self.place_order_inner(exec_engine, **kwargs)
         except (ValidationError, RiskValidationError, ExecutionError) as exc:
-            logger.warning("Order validation/execution failed: %s", exc)
+            logger.warning(
+                "Order validation/execution failed",
+                error=str(exc),
+                operation="execution_order",
+                stage="validation",
+            )
             self._increment_order_stat("failed")
             raise
         except Exception as exc:  # pragma: no cover - defensive logging
-            logger.error("Failed to place order: %s", exc, exc_info=True)
+            logger.error(
+                "Failed to place order",
+                error=str(exc),
+                exc_info=True,
+                operation="execution_order",
+                stage="submit_exception",
+            )
             self._increment_order_stat("failed")
             return None
 
@@ -301,7 +378,11 @@ class ExecutionCoordinator(BaseCoordinator):
         runtime_state_obj = self.context.runtime_state
 
         if runtime_state_obj is None:
-            logger.debug("Runtime state missing; cannot record order")
+            logger.debug(
+                "Runtime state missing; cannot record order",
+                operation="execution_order",
+                stage="runtime_state",
+            )
             return None
 
         def _place() -> Any:
@@ -326,16 +407,22 @@ class ExecutionCoordinator(BaseCoordinator):
                 order_quantity_raw if isinstance(order_quantity_raw, Decimal) else Decimal("0")
             )
             logger.info(
-                "Order recorded: %s %s %s %s",
-                order.id,
-                order.side.value,
-                order_quantity,
-                order.symbol,
+                "Order recorded",
+                order_id=str(order.id),
+                side=order.side.value,
+                quantity=float(order_quantity),
+                symbol=order.symbol,
+                operation="execution_order",
+                stage="record",
             )
             return order
 
         self._increment_order_stat("failed")
-        logger.warning("Order attempt failed (no order returned)")
+        logger.warning(
+            "Order attempt failed (no order returned)",
+            operation="execution_order",
+            stage="record",
+        )
         return None
 
     def _get_order_reconciler(self) -> OrderReconciler:
@@ -368,7 +455,13 @@ class ExecutionCoordinator(BaseCoordinator):
                     try:
                         await run_in_thread(exec_engine.run_runtime_guards)
                     except Exception as exc:  # pragma: no cover - defensive logging
-                        logger.error("Error in runtime guards: %s", exc, exc_info=True)
+                        logger.error(
+                            "Error in runtime guards",
+                            error=str(exc),
+                            exc_info=True,
+                            operation="runtime_guard_loop",
+                            stage="run",
+                        )
                 await asyncio.sleep(60)
         except asyncio.CancelledError:
             raise
@@ -383,7 +476,13 @@ class ExecutionCoordinator(BaseCoordinator):
                     reconciler = self._get_order_reconciler()
                     await self._run_order_reconciliation_cycle(reconciler)
                 except Exception as exc:  # pragma: no cover - defensive logging
-                    logger.debug("Order reconciliation error: %s", exc, exc_info=True)
+                    logger.debug(
+                        "Order reconciliation error",
+                        error=str(exc),
+                        exc_info=True,
+                        operation="order_reconcile_loop",
+                        stage="run",
+                    )
                 await asyncio.sleep(interval_seconds)
         except asyncio.CancelledError:
             raise
@@ -396,9 +495,11 @@ class ExecutionCoordinator(BaseCoordinator):
 
         if len(local_open) != len(exchange_open):
             logger.info(
-                "Order count mismatch: local=%s exchange=%s",
-                len(local_open),
-                len(exchange_open),
+                "Order count mismatch",
+                local=len(local_open),
+                exchange=len(exchange_open),
+                operation="order_reconcile",
+                stage="diff",
             )
 
         diff = reconciler.diff_orders(local_open, exchange_open)
@@ -412,10 +513,12 @@ class ExecutionCoordinator(BaseCoordinator):
                     orders_store.upsert(order)
                 except Exception as exc:  # pragma: no cover - defensive logging
                     logger.debug(
-                        "Failed to upsert exchange order %s during reconciliation: %s",
-                        order.id,
-                        exc,
+                        "Failed to upsert exchange order during reconciliation",
+                        order_id=order.id,
+                        error=str(exc),
                         exc_info=True,
+                        operation="order_reconcile",
+                        stage="upsert",
                     )
 
         await reconciler.record_snapshot(local_open, exchange_open)

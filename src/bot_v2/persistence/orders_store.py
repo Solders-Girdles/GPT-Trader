@@ -5,17 +5,17 @@ can be recovered after restarts.
 
 from __future__ import annotations
 
-import logging
 import threading
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
 
 from bot_v2.features.brokerages.core.interfaces import Order, OrderStatus
-from bot_v2.monitoring.system import get_logger
+from bot_v2.monitoring.system import get_logger as get_prod_logger
 from bot_v2.persistence.json_file_store import JsonFileStore
+from bot_v2.utilities.logging_patterns import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="orders_store")
 
 
 @dataclass
@@ -105,9 +105,18 @@ class OrdersStore:
                     "Could not load order record: %s - Error: %s",
                     record,
                     exc,
+                    operation="orders_store_load",
+                    status="invalid_record",
+                    record=str(record),
                 )
 
-        logger.info(f"Loaded {len(self._orders)} orders from {self.orders_file}")
+        logger.info(
+            "Loaded orders from %s",
+            self.orders_file,
+            operation="orders_store_load",
+            status="success",
+            count=len(self._orders),
+        )
 
     def upsert(self, order: Order) -> None:
         """Update or insert an order."""
@@ -126,7 +135,7 @@ class OrdersStore:
             # Emit status change and round-trip metrics
             try:
                 if prev_status != stored_order.status:
-                    get_logger().log_order_status_change(
+                    get_prod_logger().log_order_status_change(
                         order_id=stored_order.order_id,
                         client_order_id=stored_order.client_id,
                         from_status=prev_status,
@@ -145,7 +154,7 @@ class OrdersStore:
                             t0 = datetime.fromisoformat(prev_created_at)
                         if t0 and t1:
                             rtt_ms = (t1 - t0).total_seconds() * 1000.0
-                            get_logger().log_order_round_trip(
+                            get_prod_logger().log_order_round_trip(
                                 order_id=stored_order.order_id,
                                 client_order_id=stored_order.client_id,
                                 round_trip_ms=rtt_ms,
@@ -158,10 +167,19 @@ class OrdersStore:
                             stored_order.order_id,
                             exc,
                             exc_info=True,
+                            operation="orders_store_upsert",
+                            status="metric_failure",
+                            order_id=stored_order.order_id,
                         )
             except Exception as exc:
                 # Never break on logging but surface for diagnostics
-                logger.debug("Order metrics logging failure: %s", exc, exc_info=True)
+                logger.debug(
+                    "Order metrics logging failure: %s",
+                    exc,
+                    exc_info=True,
+                    operation="orders_store_upsert",
+                    status="metric_failure",
+                )
 
     def get_by_id(self, order_id: str) -> StoredOrder | None:
         with self._lock:

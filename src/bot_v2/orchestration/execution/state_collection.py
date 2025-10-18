@@ -7,15 +7,15 @@ balances, positions, equity calculations, and collateral asset resolution.
 
 from __future__ import annotations
 
-import logging
 from decimal import Decimal
 from typing import Any
 
 from bot_v2.features.brokerages.core.interfaces import Balance, IBrokerage, Product
 from bot_v2.orchestration.runtime_settings import RuntimeSettings, load_runtime_settings
+from bot_v2.utilities.logging_patterns import get_logger
 from bot_v2.utilities.quantities import quantity_from
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="state_collection")
 
 
 class StateCollector:
@@ -110,7 +110,13 @@ class StateCollector:
                     "mark_price": Decimal(str(getattr(pos, "mark_price", "0"))),
                 }
             except Exception as exc:
-                logger.warning(f"Failed to parse position {pos.symbol}: {exc}")
+                logger.warning(
+                    "Failed to parse position",
+                    symbol=getattr(pos, "symbol", ""),
+                    error=str(exc),
+                    operation="state_collection",
+                    stage="positions",
+                )
                 continue
         return positions_dict
 

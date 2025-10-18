@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from datetime import time
 from decimal import Decimal
 from pathlib import Path
@@ -19,8 +18,9 @@ from bot_v2.orchestration.symbols import (
 from bot_v2.orchestration.symbols import (
     normalize_symbol_list,
 )
+from bot_v2.utilities.logging_patterns import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="config_core")
 
 # Top spot markets we enable by default (ordered by Coinbase USD volume).
 TOP_VOLUME_BASES = [

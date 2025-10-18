@@ -6,7 +6,6 @@ environment variable overrides, validation, and hot-reload capabilities.
 """
 
 import json
-import logging
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
@@ -16,6 +15,7 @@ from typing import TYPE_CHECKING, Any
 import yaml
 
 from bot_v2.errors import ConfigurationError
+from bot_v2.utilities.logging_patterns import get_logger
 from bot_v2.validation import Validator, validate_config
 
 if TYPE_CHECKING:  # pragma: no cover - type checking guard
@@ -30,7 +30,7 @@ def _load_runtime_settings() -> RuntimeSettings:
     return _loader()
 
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="config")
 
 
 @dataclass
@@ -190,7 +190,11 @@ class ConfigLoader:
         if not config_path:
             # Use defaults if no file exists
             if slice_name not in self._configs:
-                logger.warning(f"No config file found for {slice_name}, using defaults")
+                logger.warning(
+                    f"No config file found for {slice_name}, using defaults",
+                    operation="config_load",
+                    status="missing",
+                )
                 self._configs[slice_name] = {}
             return
 
@@ -221,7 +225,11 @@ class ConfigLoader:
                     source=str(config_path),
                 )
 
-            logger.info(f"Loaded config for {slice_name} from {config_path}")
+            logger.info(
+                f"Loaded config for {slice_name} from {config_path}",
+                operation="config_load",
+                status="loaded",
+            )
 
         except Exception as e:
             raise ConfigurationError(
@@ -269,7 +277,10 @@ class ConfigLoader:
                         else:
                             config[config_key] = env_value
 
-                logger.debug(f"Override {slice_name}.{config_key} from environment")
+                logger.debug(
+                    f"Override {slice_name}.{config_key} from environment",
+                    operation="config_override",
+                )
 
         return config
 
@@ -296,7 +307,11 @@ class ConfigLoader:
             with open(config_path, "w") as f:
                 json.dump(config, f, indent=2, default=str)
 
-            logger.info(f"Saved config for {slice_name} to {config_path}")
+            logger.info(
+                f"Saved config for {slice_name} to {config_path}",
+                operation="config_save",
+                status="success",
+            )
 
         except Exception as e:
             raise ConfigurationError(

@@ -6,11 +6,26 @@ for all feature slices, ensuring consistent error management across the system.
 """
 
 import logging
+import sys
 import traceback
 from datetime import datetime
 from typing import Any
 
 logger = logging.getLogger(__name__)
+
+
+def _capture_traceback() -> str:
+    """Return the active traceback or, if none, a snapshot of the current stack."""
+
+    exc_type, exc_value, exc_tb = sys.exc_info()
+    if exc_type is not None and exc_tb is not None:
+        return "".join(traceback.format_exception(exc_type, exc_value, exc_tb))
+
+    stack = traceback.format_stack()
+    if not stack:
+        return ""
+    # Drop the last frame so the helper itself does not appear in the stack trace
+    return "".join(stack[:-1])
 
 
 class TradingError(Exception):
@@ -29,7 +44,7 @@ class TradingError(Exception):
         self.context = context or {}
         self.recoverable = recoverable
         self.timestamp = datetime.now()
-        self.traceback = traceback.format_exc()
+        self.traceback = _capture_traceback()
 
     def add_context(self, **kwargs: Any) -> "TradingError":
         """Add additional context to the error"""
@@ -186,7 +201,7 @@ def handle_error(error: Exception, context: dict[str, Any] | None = None) -> Tra
     wrapped = TradingError(
         message=str(error), error_code=error.__class__.__name__, context=context or {}
     )
-    wrapped.traceback = traceback.format_exc()
+    wrapped.traceback = _capture_traceback()
     return wrapped
 
 

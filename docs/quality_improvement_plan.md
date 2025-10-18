@@ -36,7 +36,7 @@ This document captures notable opportunities to improve maintainability, streaml
 - Expose a deterministic fixture factory that both the mock broker and tests can consume to ensure consistency.
 
 ### 4. Align experimental feature slices with optional dependencies
-*Observation.* Experimental slices under `archived/experimental/features/*` expose `__experimental__ = True`, yet the optional dependency groups in `pyproject.toml` do not clearly map to those slices, leaving unused packages in the default install and complicating dependency trimming.【F:archived/experimental/features/backtest/__init__.py†L1-L14】【F:pyproject.toml†L36-L78】
+*Observation.* Experimental slices (packaged in `var/legacy/legacy_bundle_latest.tar.gz`) expose `__experimental__ = True`, yet the optional dependency groups in `pyproject.toml` do not clearly map to those slices, leaving unused packages in the default install and complicating dependency trimming.【F:pyproject.toml†L36-L78】
 
 *Why it matters.* Clear boundaries between core and experimental features make it easier to ship a lean runtime image and avoid unnecessary security patching.
 

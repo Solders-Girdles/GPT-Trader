@@ -38,12 +38,12 @@
       },
       "targets": [
         {
-          "expr": "gpt_trader_equity",
+          "expr": "perps_bot_equity",
           "legendFormat": "Equity",
           "refId": "A"
         },
         {
-          "expr": "gpt_trader_account_limit_remaining",
+          "expr": "perps_bot_account_limit_remaining",
           "legendFormat": "Remaining trading limit",
           "refId": "B"
         }
@@ -82,12 +82,12 @@
       },
       "targets": [
         {
-          "expr": "gpt_trader_open_orders",
+          "expr": "perps_bot_open_orders",
           "legendFormat": "Open Orders",
           "refId": "A"
         },
         {
-          "expr": "gpt_trader_order_preview_failures_total",
+          "expr": "perps_bot_order_preview_failures_total",
           "legendFormat": "Preview Failures",
           "refId": "B"
         }
@@ -113,7 +113,7 @@
       },
       "targets": [
         {
-          "expr": "label_replace(gpt_trader_fee_tier, \"tier\", \"$1\", \"tier\", \"(.*)\")",
+          "expr": "label_replace(perps_bot_fee_tier, \"tier\", \"$1\", \"tier\", \"(.*)\")",
           "format": "table",
           "instant": true,
           "refId": "A"

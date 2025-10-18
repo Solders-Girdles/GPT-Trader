@@ -6,7 +6,7 @@
 
 **New Tests Added**: 68 tests across 5 new test files
 
-> **Note:** The experimental feature slices (`ml_strategy`, `market_regime`, `backtest`, `adaptive_portfolio`, `paper_trade`) were archived to `archived/experimental/` on 2025-10-09 and are excluded from the coverage metrics below.
+> **Note:** The experimental feature slices (`ml_strategy`, `market_regime`, `backtest`, `adaptive_portfolio`, `paper_trade`) now live in the legacy bundle (`var/legacy/legacy_bundle_latest.tar.gz`) and are excluded from the coverage metrics below.
 
 ## Completed Work
 

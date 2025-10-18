@@ -28,68 +28,10 @@ An ML-driven Coinbase trading system with market regime detection, built on a cl
   - Tests: `pytest tests/unit/bot_v2/features/brokerages/coinbase/test_*.py -q`
 - CLI entrypoint: `src/bot_v2/cli/__init__.py`
   - Commands: `run`, `account`, `orders`, `treasury` (default to `run` if omitted)
-  - Invoke: `poetry run perps-bot <command> [options]` or `poetry run gpt-trader <command> [options]`
-- Next-gen CLI seam (PoC): `src/gpt_trader/cli.py`
-  - Trade: `poetry run gpt-trader-next trade --symbol BTC-USD --lookback 120 --interval 1h`
-  - Backtest: `poetry run gpt-trader-next backtest --symbol BTC-USD --strategy ma-crossover --output reports/backtest.json`
-    (prints cumulative/avg returns, win rate, best/worst trade, max drawdown, avg hold & confidence; optional JSON + CSV exports and equity plot via `--equity-csv`, `--trades-csv`, `--plot`, `--plot-log`, repeatable `--benchmark-csv`, `--benchmark-start`, and a `--quiet` mode for artifact-only runs)
-  - Flag highlights:
-    - `--quiet` suppresses console summaries while still writing artifacts
-    - `--equity-csv`, `--trades-csv` export equity and trade details (with reasoning & confidence)
-    - `--plot`, `--plot-log`, `--benchmark-csv`, `--benchmark-align`, `--benchmark-start` control multi-series equity plots with timestamp-aware alignment
+  - Invoke: `poetry run perps-bot <command> [options]`
 
-### Backtest CLI quick reference
-
-```bash
-# JSON + CSV + plot with two benchmarks (trim to shared start)
-poetry run gpt-trader-next backtest \
-  --symbol BTC-USD \
-  --strategy ma-crossover \
-  --output reports/btc-canary.json \
-  --equity-csv reports/btc-equity.csv \
-  --trades-csv reports/btc-trades.csv \
-  --plot reports/btc-equity.png \
-  --benchmark-csv data/benchmarks/btc_buyhold.csv \
-  --benchmark-csv data/benchmarks/sp500.csv \
-  --benchmark-start 2024-01-01T00:00:00 \
-  --benchmark-align pad
-
-# Artifact-only run (quiet console)
-poetry run gpt-trader-next backtest --symbol ETH-USD --strategy ma-crossover --output reports/eth.json --quiet
-```
-
-Sample JSON summary fragment (truncated for brevity):
-
-```json
-{
-  "symbol": "BTC-USD",
-  "total_trades": 4,
-  "cumulative_return_pct": 12.4,
-  "summary": {
-    "average_entry_confidence": 0.81,
-    "last_entry_reason": "short_ma_cross_above_long_ma",
-    "last_exit_reason": "profit_target"
-  }
-}
-```
-
-Trades CSV (`--trades-csv`) contains columns such as:
-
-```
-entry_timestamp,exit_timestamp,entry_close,exit_close,return_pct,hold_duration_seconds,entry_reason,exit_reason,entry_confidence
-2024-01-01T00:00:00+00:00,2024-01-02T00:00:00+00:00,100.0,103.1,3.1,86400.0,short_ma_cross_above_long_ma,profit_target,0.82
-```
-Experimental (kept for demos, not in the perps critical path):
-- `archived/experimental/features/backtest/*`
-- `archived/experimental/features/ml_strategy/*`
-- `archived/experimental/features/market_regime/*`
-- `archived/experimental/features/adaptive_portfolio/*`
-- `archived/experimental/features/paper_trade/*`
-- `archived/experimental/tests/unit/bot_v2/features/*`
-- `archived/experimental/config/*.yaml`
-- `archived/experimental/monitoring/*` (legacy alerts, dashboard, metrics, canary monitor)
-  - These modules are tagged with `__experimental__ = True` and their heavy deps are now optional extras.
-  - Install extras as needed, e.g.: `poetry install -E ml -E research -E api`
+Legacy experimental slices (backtest, ml_strategy, monitoring dashboards, PoC CLI)
+now live in the legacy bundle. See `docs/archive/legacy_recovery.md` for details.
 
 ## 🚀 Quick Start
 
@@ -118,7 +60,7 @@ poetry run pytest -q
 - **Vertical Architecture**: Feature slices under `src/bot_v2/features/` with per-slice tests
 - **Risk Management**: Daily loss guard, liquidation buffers, volatility circuit breakers, correlation checks
 - **Operational Telemetry**: Account snapshots, cycle metrics, Prometheus exporter
-- **Test Coverage**: 445 active tests selected during collection (`poetry run pytest --collect-only -q`)
+- **Test Coverage**: 1554 active tests selected during collection (`poetry run pytest --collect-only -q`)
 
 ### 🚨 Production vs Sandbox
 
@@ -167,13 +109,14 @@ src/bot_v2/
 ├── cli/                      # CLI package (run/account/orders/treasury)
 │   ├── __init__.py           # Entry point + default-command shim
 │   └── commands/             # Subcommand implementations
-├── features/                 # Vertical slices (11 total)
+├── features/                 # Vertical slices (production + tooling)
 │   ├── live_trade/          # Production trading
-│   ├── ml_strategy/         # ML-driven selection
-│   ├── market_regime/       # Regime detection
-│   ├── position_sizing/     # Kelly Criterion
-│   └── brokerages/
-│       └── coinbase/        # API integration
+│   ├── analyze/             # Market analytics helpers
+│   ├── position_sizing/     # Kelly Criterion + confidence sizing
+│   ├── strategy_tools/      # Shared strategy helpers
+│   ├── brokerages/
+│   │   └── coinbase/        # API integration
+│   └── data/                # Market data and caching
 └── orchestration/
     └── perps_bot.py         # Main orchestrator
 ```
@@ -185,7 +128,7 @@ src/bot_v2/
 
 ## 🧪 Test Status
 
-- **Active Code**: 445 tests collected after deselection ✅
+- **Active Code**: 1554 tests collected after deselection ✅
 - **Legacy/archived**: Additional tests skipped/deselected by markers
 - **Command**: `poetry run pytest --collect-only` (run `poetry install` first for new deps like `pyotp`)
 

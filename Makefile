@@ -1,4 +1,4 @@
-.PHONY: dev-up dev-down lint typecheck test smoke preflight dash cov
+.PHONY: dev-up dev-down lint typecheck test smoke preflight dash cov clean clean-dry-run legacy-bundle
 
 COMPOSE_DIR=deploy/bot_v2/docker
 COMPOSE_FILE=$(COMPOSE_DIR)/docker-compose.yaml
@@ -38,3 +38,12 @@ dash:
 	poetry run python scripts/monitoring/export_metrics.py \
 		--metrics-file var/data/perps_bot/prod/metrics.json \
 		--port 9102
+
+clean:
+	poetry run python scripts/maintenance/cleanup_workspace.py --apply
+
+clean-dry-run:
+	poetry run python scripts/maintenance/cleanup_workspace.py
+
+legacy-bundle:
+	poetry run python scripts/maintenance/create_legacy_bundle.py

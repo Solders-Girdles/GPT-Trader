@@ -1,0 +1,179 @@
+# Agent Confusion Points for GPT-Trader Repository
+
+This document highlights key areas of confusion for AI agents working with the GPT-Trader repository. The codebase has undergone significant architectural changes and contains mixed messaging that can mislead agents.
+
+## 🚨 Critical Confusion Points
+
+### 1. Spot vs Perpetuals Confusion
+**Primary Issue**: The bot is now **spot-first** but extensive documentation and code still references perpetuals as if they're actively enabled.
+
+**Confusing Elements**:
+- README mentions "perpetual futures logic remains in the tree" but requires INTX gate
+- Architecture doc describes perps components as "future-ready" without clear distinction
+- CLI is called `perps-bot` but primarily does spot trading
+- Multiple references to "perps" throughout codebase that are actually dormant
+
+**Reality Check**:
+- Spot trading: ✅ Active (BTC-USD, ETH-USD, etc.)
+- Perpetuals: ⚠️ Code exists but requires `COINBASE_ENABLE_DERIVATIVES=1` + INTX access
+- Default behavior: Spot-only with mock broker for dev profile
+
+### 2. Legacy vs Active Code Confusion
+**Major Issue**: Extensive legacy code and documentation mixed with active components.
+
+**Confusing Elements**:
+- Legacy bundles exist but the in-tree code is gone, so outdated docs can still point to removed paths.
+- Multiple "legacy recovery" instructions were scattered across docs.
+- Older test counts included legacy suites.
+
+**Reality Check**:
+- Active stack: `src/bot_v2/**` (all runtime code)
+- Legacy artifacts: packaged under `var/legacy/legacy_bundle_*.tar.gz` (see `docs/archive/legacy_recovery.md`)
+- Tests: `poetry run pytest --collect-only` currently reports 1554 active tests (1 deselected legacy placeholder)
+
+### 3. Documentation Inconsistencies
+**Critical Issue**: Documentation contains contradictory information.
+
+**Confusing Elements**:
+- `docs/ARCHITECTURE.md` describes archived slices as part of current system
+- `docs/agents/Agents.md` references experimental slices that were removed
+- Multiple guides contain restoration steps for legacy monitoring
+- `docs/reference/system_capabilities.md` is outdated (Dec 2024 snapshot)
+
+**Reality Check**:
+- Always verify file modification dates
+- Cross-reference with actual code structure
+- Prefer recent documentation over older references
+
+### 4. Configuration and Environment Confusion
+**Issue**: Complex configuration with mixed legacy and modern settings.
+
+**Confusing Elements**:
+- `config/system_config.yaml` contains outdated settings (yfinance, mock data providers)
+- Multiple authentication methods (HMAC vs JWT) with unclear usage
+- Environment variables like `COINBASE_ENABLE_DERIVATIVES` that default to disabled
+- Debug flags scattered throughout (`PERPS_DEBUG`, `LOG_LEVEL`)
+
+**Reality Check**:
+- Spot trading uses HMAC auth (API key/secret)
+- Perps requires CDP auth (JWT) + INTX access
+- Most config files are profile-specific under `config/`
+
+### 5. CLI and Entry Point Confusion
+**Issue**: Multiple CLI tools with unclear purposes.
+
+**Confusing Elements**:
+- References to retired PoC CLIs (`gpt-trader-next`) still appear in older docs.
+- Command aliases and shims that may not work.
+- Multiple entry points mentioned historically.
+
+**Reality Check**:
+- Primary CLI: `poetry run perps-bot`
+- Legacy CLI prototypes live only in the legacy bundle/tag; do not expect them in the workspace.
+
+### 6. Testing and Validation Confusion
+**Issue**: Complex test structure with mixed active/legacy tests.
+
+**Confusing Elements**:
+- Tests deselected/skipped without clear reasons
+- Legacy test coverage kept alive for PoC code
+- Multiple test commands with different purposes
+- Integration tests archived but referenced in docs
+
+**Reality Check**:
+- Active tests: `poetry run pytest -q`
+- Test discovery: `poetry run pytest --collect-only`
+- Legacy tests: Skipped by markers
+
+### 7. Naming and Terminology Confusion
+**Issue**: Inconsistent naming conventions and terminology.
+
+**Confusing Elements**:
+- `qty` vs `quantity` (legacy aliases removed but may still appear)
+- "perps" naming throughout spot-first system
+- Mixed abbreviations and full terms
+- Legacy naming patterns in some areas
+
+**Reality Check**:
+- Use `quantity` not `qty`
+- "perps-bot" name is historical (now spot-first)
+- Check naming standards in `docs/agents/naming_standards_outline.md`
+
+### 8. Operational Confusion
+**Issue**: Unclear operational procedures and status.
+
+**Confusing Elements**:
+- Multiple monitoring approaches (active vs legacy)
+- Unclear production vs sandbox boundaries
+- Mixed deployment instructions
+- Emergency procedures referencing retired components
+
+**Reality Check**:
+- Production: Use `canary` or `prod` profiles
+- Development: Use `dev` profile with `--dev-fast`
+- Sandbox: Not recommended (API diverges)
+
+## 🔍 Agent Verification Checklist
+
+Before making changes, agents should:
+
+### Pre-Task Verification
+- [ ] Check if feature is spot-only or perps-gated
+- [ ] Verify which codebase section is active vs legacy
+- [ ] Confirm documentation recency (check file dates)
+- [ ] Test with dev profile first: `poetry run perps-bot run --profile dev --dev-fast`
+- [ ] Run test discovery: `poetry run pytest --collect-only`
+
+### Code Navigation
+- [ ] Use `src/bot_v2/` imports for active code
+- [ ] Avoid `archived/` unless specifically needed
+- [ ] Check coordinator pattern usage (new architecture)
+- [ ] Verify configuration actually exists and is used
+
+### Testing Approach
+- [ ] Add tests to `tests/unit/bot_v2/` for new features
+- [ ] Run `poetry run pytest -q` for regression testing
+- [ ] Check for skipped/legacy tests in output
+- [ ] Verify test counts match expectations (1554 selected / 1 deselected)
+
+### Documentation Updates
+- [ ] Update relevant docs if behavior changes
+- [ ] Sync agent guides after architectural changes
+- [ ] Note INTX gating for perps-related changes
+- [ ] Remove references to archived components
+
+## 🚨 Common Pitfalls
+
+1. **Assuming perps are enabled** - They're gated behind INTX access
+2. **Using legacy imports** - Stick to `src/bot_v2/` paths
+3. **Trusting outdated docs** - Always verify with current code
+4. **Missing profile context** - Dev uses mock broker, prod uses live
+5. **Ignoring test selection** - Many tests are deselected/skipped
+6. **Configuration drift** - Some configs contain legacy settings
+
+## 📚 Quick Reference Commands
+
+```bash
+# Verify current state
+poetry run pytest --collect-only
+poetry run perps-bot run --profile dev --dev-fast
+
+# Testing
+poetry run pytest -q
+poetry run pytest tests/unit/bot_v2/ -q
+
+# Account verification
+poetry run perps-bot account snapshot
+
+# Metrics
+poetry run python scripts/monitoring/export_metrics.py --metrics-file var/data/perps_bot/prod/metrics.json
+```
+
+## 🔄 Architecture Evolution
+
+The codebase is transitioning from:
+- Legacy: Monolithic `src/bot` + experimental slices
+- Current: Vertical slices `src/bot_v2/` + coordinators
+- Future: Cleaner separation of concerns
+
+Always check the modification date and context before trusting any documentation or code patterns.

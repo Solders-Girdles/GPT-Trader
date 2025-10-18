@@ -15,7 +15,7 @@ Historical integration, performance, and experimental suites were archived in Se
 ## Current Test Metrics
 
 ### Active Test Suites (Maintained)
-- **Collection Snapshot**: 455 collected / 9 deselected / 446 selected (`poetry run pytest --collect-only`)
+- **Collection Snapshot**: 1555 collected / 1 deselected / 1554 selected (`poetry run pytest --collect-only`)
 - **Pass Target**: **100%** ✅ for the selected suites
 - **Coverage Focus**: Spot trading orchestration, Coinbase integration, risk controls
 

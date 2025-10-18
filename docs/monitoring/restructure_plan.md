@@ -25,7 +25,7 @@
    - Feature-specific `types.py` remain in place when purpose-built.
 2. **Implementation Notes**
    - Start by moving duplicate dataclasses (orders, positions, metrics) into `common.py` and `trading.py`.
-   - Replace local imports (e.g., `archived/experimental/features/backtest/types.py`) with shared types where definitions match.
+   - Replace local imports (e.g., legacy `backtest` types from the bundle) with shared types where definitions match. Legacy sources are documented in `docs/archive/legacy_recovery.md`.
    - Document migration in module docstrings to aid reviewers.
    - Provide compatibility aliases during transition to avoid broad refactors in a single PR.
 3. **Testing Strategy**

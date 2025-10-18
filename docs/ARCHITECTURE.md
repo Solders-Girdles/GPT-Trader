@@ -21,7 +21,7 @@ GPT-Trader V2 is a production-ready Coinbase **spot** trading system that retain
 
 ### Vertical Slice Design
 
-The system is organized into vertical feature slices under `src/bot_v2/features/`. Production-critical slices (e.g., `live_trade`, `brokerages`, `position_sizing`) ship with full test coverage, while the legacy research slices now live under `archived/experimental/` (`backtest`, `ml_strategy`, `market_regime`, `paper_trade`, `strategies`, `monitoring_dashboard`). The former workflow engine was removed; recover it from repository history if you need a reference.
+The system is organized into vertical feature slices under `src/bot_v2/features/`. Production-critical slices (e.g., `live_trade`, `brokerages`, `position_sizing`) ship with full test coverage. Legacy research slices were removed from the active tree; recover them via `docs/archive/legacy_recovery.md` if you need a historical reference.
 
 ```
 src/bot_v2/features/
@@ -154,9 +154,9 @@ This modular design achieves 66% file size reduction with clear separation of co
   comparison modes (`gt`, `lt`, `abs_gt`, etc.), warning bands, and contextual messaging to power
   both orchestration checks and monitoring dashboards.
 - **Guard alert dispatcher** (`bot_v2/features/live_trade/guard_errors.py`): wraps the lightweight
-  alert manager to emit guard failures without depending on the retired alert stack. The legacy
-  multi-channel router remains in `archived/experimental/monitoring/alerts.py` for teams that need
-  to restore email, Slack, or PagerDuty integrations.
+  alert manager to emit guard failures without depending on the retired alert stack. Restore the
+  multi-channel router from the legacy bundle (`docs/archive/legacy_recovery.md`) if you still need
+  email, Slack, or PagerDuty integrations.
 - **Risk metrics aggregation** (`bot_v2/features/live_trade/risk_metrics.py`): periodic EventStore
   snapshots feed into the monitoring stack for dashboards and analytics.
 
@@ -168,25 +168,17 @@ behaviour until the derivatives gate opens.
 
 ### Feature Slice Reference
 
-#### Backtest (`archived/experimental/features/backtest/`)
-- **Purpose:** Run historical strategy simulations with token-efficient helpers such as `run_backtest`.
-- **Usage:**
-    from features.backtest import run_backtest
+#### Backtest (legacy)
 
-    result = run_backtest(
-        strategy="MomentumStrategy",
-        symbol="AAPL",
-        start=datetime(2024, 1, 1),
-        end=datetime(2024, 12, 31),
-        initial_capital=10_000,
-    )
-    print(result.summary())
-- **Outputs:** Returns `BacktestResult` objects with trade logs, equity curve, Sharpe/max drawdown, and win-rate metrics.
+Removed from the active codebase. Recover the slice from
+`docs/archive/legacy_recovery.md` if you need to inspect historical strategy
+simulations.
 
-#### Paper Trade (`archived/experimental/features/paper_trade/`)
-- **Purpose:** Self-contained realtime simulation with local data feed, execution, risk, and metrics.
-- **Highlights:** Quick-start helpers `start_paper_trading`, `get_status`, and `stop_paper_trading` with configurable commission, slippage, and update intervals.
-- **Further reading:** See the [Paper Trading Guide](guides/paper_trading.md) for workflow, configuration, and performance tracking tips.
+#### Paper Trade (legacy)
+
+Self-contained paper trading utilities now live in the legacy bundle. Restore
+them via `docs/archive/legacy_recovery.md` when you need to revisit the old
+workflow.
 
 #### Position Sizing (`features/position_sizing/`)
 - **Purpose:** Intelligent position sizing that combines Kelly Criterion math, confidence modifiers, and market-regime scaling while remaining slice-local.
@@ -264,7 +256,7 @@ The orchestration layer provides coordinated control across trading operations t
 - Order placement/management through `LiveExecutionEngine`
 - Account telemetry snapshots and cycle metrics persisted for monitoring
 - Runtime safety rails: daily loss guard, liquidation buffer enforcement, mark staleness detection, volatility circuit breaker, correlation checks
-- 446 active tests selected at collection time (`poetry run pytest --collect-only`)
+- 1554 active tests selected at collection time (`poetry run pytest --collect-only`)
 
 ### ⚠️ Partially Working / Future Activation
 - Perpetual futures execution: code paths compile and tests run, but live trading remains disabled without INTX

@@ -8,6 +8,7 @@ on:
       - 'src/bot_v2/features/brokerages/core/**'
       - 'src/bot_v2/features/live_trade/**'
       - 'src/bot_v2/cli/**'
+      - 'src/bot_v2/cli/**'
       - 'tests/unit/bot_v2/features/brokerages/coinbase/**'
       - 'tests/unit/bot_v2/features/live_trade/**'
       - 'tests/unit/bot_v2/orchestration/test_broker_factory.py'
@@ -175,4 +176,5 @@ jobs:
           export EVENT_STORE_ROOT="$RUNNER_TEMP/event_store_demo"
           export GPT_TRADER_RUNTIME_ROOT="$RUNNER_TEMP/event_store_demo"
           mkdir -p "$EVENT_STORE_ROOT"
-          COINBASE_SANDBOX='1' PERPS_FORCE_MOCK='1' poetry run python -m bot_v2.cli run --profile demo --dev-fast --reduce-only --symbols BTC-PERP
+          COINBASE_SANDBOX='1' PERPS_FORCE_MOCK='1' poetry run python scripts/run_perps_bot.py --profile demo --dev-fast --reduce-only --symbols BTC-PERP
+

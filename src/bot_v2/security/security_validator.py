@@ -15,6 +15,7 @@ from threading import Lock
 from typing import Any
 
 from bot_v2.utilities.logging_patterns import get_logger
+from bot_v2.validation import DecimalRule, RuleError, SymbolRule
 
 logger = get_logger(__name__, component="security")
 
@@ -42,6 +43,9 @@ class SecurityValidator:
     Comprehensive security validation for trading operations.
     Prevents injection attacks and enforces trading limits.
     """
+
+    _SYMBOL_RULE = SymbolRule()
+    _NUMERIC_RULE = DecimalRule()
 
     # Regex patterns for validation
     PATTERNS = {
@@ -127,22 +131,25 @@ class SecurityValidator:
         """Validate trading symbol"""
         errors = []
 
-        if not symbol:
-            return ValidationResult(False, ["Symbol cannot be empty"])
-
-        # Check format
-        if not re.match(self.PATTERNS["symbol"], symbol):
+        try:
+            normalised = self._SYMBOL_RULE(symbol, "symbol")
+        except RuleError:
             errors.append("Invalid symbol format")
+            normalised = None
+        except Exception:
+            errors.append("Invalid symbol format")
+            normalised = None
 
         # Check against blocklist (simplified)
         blocked_symbols = {"TEST", "DEBUG", "HACK"}
-        if symbol in blocked_symbols:
+        candidate = normalised or (symbol.upper() if isinstance(symbol, str) else "")
+        if candidate in blocked_symbols:
             errors.append("Symbol is blocked")
 
         return ValidationResult(
             is_valid=len(errors) == 0,
             errors=errors,
-            sanitized_value=symbol.upper() if not errors else None,
+            sanitized_value=candidate if not errors else None,
         )
 
     def validate_numeric(
@@ -153,7 +160,8 @@ class SecurityValidator:
 
         try:
             # Convert to Decimal for precise financial calculations
-            num_value = Decimal(str(value))
+            num_value = self._NUMERIC_RULE(value, "value")
+            assert isinstance(num_value, Decimal)
 
             if min_val is not None and num_value < Decimal(str(min_val)):
                 errors.append(f"Value must be at least {min_val}")
@@ -167,7 +175,7 @@ class SecurityValidator:
                 sanitized_value=float(num_value) if not errors else None,
             )
 
-        except (InvalidOperation, ValueError):
+        except (InvalidOperation, ValueError, RuleError, AssertionError):
             return ValidationResult(False, ["Invalid numeric value"])
 
     def validate_order_request(

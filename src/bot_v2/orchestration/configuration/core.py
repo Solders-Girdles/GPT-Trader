@@ -19,8 +19,55 @@ from bot_v2.orchestration.symbols import (
     normalize_symbol_list,
 )
 from bot_v2.utilities.logging_patterns import get_logger
+from bot_v2.validation import (
+    BaseValidationRule,
+    DecimalRule,
+    FloatRule,
+    IntegerRule,
+    ListRule,
+    RuleError,
+    StripStringRule,
+    SymbolRule,
+)
 
 logger = get_logger(__name__, component="config_core")
+
+
+def _apply_rule(
+    rule: BaseValidationRule,
+    value: Any,
+    *,
+    field_label: str,
+    error_code: str,
+    error_template: str,
+) -> Any:
+    try:
+        return rule(value, field_label)
+    except RuleError as exc:
+        raise PydanticCustomError(
+            error_code,
+            error_template,
+            {"value": value, "error": str(exc)},
+        ) from exc
+
+
+def _ensure_condition(
+    condition: bool,
+    *,
+    error_code: str,
+    error_template: str,
+    context: dict[str, Any],
+) -> None:
+    if condition:
+        raise PydanticCustomError(error_code, error_template, context)
+
+
+_INT_RULE = IntegerRule()
+_DECIMAL_RULE = DecimalRule()
+_FLOAT_RULE = FloatRule()
+_STRING_RULE = StripStringRule()
+_SYMBOL_RULE = SymbolRule()
+_SYMBOL_LIST_RULE = ListRule(item_rule=_SYMBOL_RULE, allow_blank_items=False)
 
 # Top spot markets we enable by default (ordered by Coinbase USD volume).
 TOP_VOLUME_BASES = [
@@ -98,77 +145,73 @@ class BotConfig(BaseModel):
     @field_validator("max_leverage", mode="before")
     @classmethod
     def _validate_max_leverage(cls, value: Any) -> int:
-        try:
-            result = int(value)
-        except (TypeError, ValueError) as exc:
-            raise PydanticCustomError(
-                "max_leverage_invalid",
-                "max_leverage must be a valid integer, got {value}: {error}",
-                {"value": value, "error": str(exc)},
-            ) from exc
-        if result <= 0:
-            raise PydanticCustomError(
-                "max_leverage_too_small",
-                "max_leverage must be positive, got {value}",
-                {"value": result},
-            )
-        return result
+        result = _apply_rule(
+            _INT_RULE,
+            value,
+            field_label="max_leverage",
+            error_code="max_leverage_invalid",
+            error_template="max_leverage must be a valid integer, got {value}: {error}",
+        )
+        _ensure_condition(
+            result <= 0,
+            error_code="max_leverage_too_small",
+            error_template="max_leverage must be positive, got {value}",
+            context={"value": result},
+        )
+        return int(result)
 
     @field_validator("update_interval", mode="before")
     @classmethod
     def _validate_update_interval(cls, value: Any) -> int:
-        try:
-            result = int(value)
-        except (TypeError, ValueError) as exc:
-            raise PydanticCustomError(
-                "update_interval_invalid",
-                "update_interval must be a valid integer, got {value}: {error}",
-                {"value": value, "error": str(exc)},
-            ) from exc
-        if result <= 0:
-            raise PydanticCustomError(
-                "update_interval_too_small",
-                "update_interval must be positive, got {value}",
-                {"value": result},
-            )
-        return result
+        result = _apply_rule(
+            _INT_RULE,
+            value,
+            field_label="update_interval",
+            error_code="update_interval_invalid",
+            error_template="update_interval must be a valid integer, got {value}: {error}",
+        )
+        _ensure_condition(
+            result <= 0,
+            error_code="update_interval_too_small",
+            error_template="update_interval must be positive, got {value}",
+            context={"value": result},
+        )
+        return int(result)
 
     @field_validator("max_position_size", mode="before")
     @classmethod
     def _validate_max_position_size(cls, value: Any) -> Decimal:
-        try:
-            result = Decimal(str(value))
-        except (TypeError, ValueError, ArithmeticError) as exc:
-            raise PydanticCustomError(
-                "max_position_size_invalid",
-                "max_position_size must be numeric, got {value}: {error}",
-                {"value": value, "error": str(exc)},
-            ) from exc
-        if result <= 0:
-            raise PydanticCustomError(
-                "max_position_size_too_small",
-                "max_position_size must be positive, got {value}",
-                {"value": str(result)},
-            )
+        result = _apply_rule(
+            _DECIMAL_RULE,
+            value,
+            field_label="max_position_size",
+            error_code="max_position_size_invalid",
+            error_template="max_position_size must be numeric, got {value}: {error}",
+        )
+        _ensure_condition(
+            result <= 0,
+            error_code="max_position_size_too_small",
+            error_template="max_position_size must be positive, got {value}",
+            context={"value": str(result)},
+        )
         return result
 
     @field_validator("daily_loss_limit", mode="before")
     @classmethod
     def _validate_daily_loss_limit(cls, value: Any) -> Decimal:
-        try:
-            result = Decimal(str(value))
-        except (TypeError, ValueError, ArithmeticError) as exc:
-            raise PydanticCustomError(
-                "daily_loss_limit_invalid",
-                "daily_loss_limit must be numeric, got {value}: {error}",
-                {"value": value, "error": str(exc)},
-            ) from exc
-        if result < 0:
-            raise PydanticCustomError(
-                "daily_loss_limit_negative",
-                "daily_loss_limit must be non-negative, got {value}",
-                {"value": str(result)},
-            )
+        result = _apply_rule(
+            _DECIMAL_RULE,
+            value,
+            field_label="daily_loss_limit",
+            error_code="daily_loss_limit_invalid",
+            error_template="daily_loss_limit must be numeric, got {value}: {error}",
+        )
+        _ensure_condition(
+            result < 0,
+            error_code="daily_loss_limit_negative",
+            error_template="daily_loss_limit must be non-negative, got {value}",
+            context={"value": str(result)},
+        )
         return result
 
     @field_validator("symbols", mode="before")
@@ -182,23 +225,20 @@ class BotConfig(BaseModel):
                 "symbols must be a list or tuple, got {type}",
                 {"type": type(value).__name__},
             )
-        symbols = [str(item).strip().upper() for item in value]
+        try:
+            symbols = _SYMBOL_LIST_RULE(value, "symbols")
+        except RuleError as exc:
+            raise PydanticCustomError(
+                "symbols_invalid_values",
+                "symbols must contain only non-empty strings: {error}",
+                {"value": value, "error": str(exc)},
+            ) from exc
+
         if not symbols:
             raise PydanticCustomError(
                 "symbols_empty",
                 "symbols cannot be empty when provided",
                 {},
-            )
-        invalid = [
-            f"[{idx}]: {repr(orig)}"
-            for idx, (orig, item) in enumerate(zip(value, symbols))
-            if not item
-        ]
-        if invalid:
-            raise PydanticCustomError(
-                "symbols_invalid_values",
-                "symbols must contain only non-empty strings: {invalid}",
-                {"invalid": ", ".join(invalid)},
             )
         return symbols
 
@@ -207,7 +247,14 @@ class BotConfig(BaseModel):
     def _validate_time_in_force(cls, value: Any) -> str | None:
         if value is None:
             return None
-        tif = str(value).upper()
+        raw = _apply_rule(
+            _STRING_RULE,
+            value,
+            field_label="time_in_force",
+            error_code="time_in_force_invalid",
+            error_template="time_in_force must be a non-empty string, got {value}: {error}",
+        )
+        tif = raw.upper()
         supported = {"GTC", "IOC", "FOK"}
         if tif not in supported:
             raise PydanticCustomError(
@@ -220,101 +267,97 @@ class BotConfig(BaseModel):
     @field_validator("account_telemetry_interval", mode="before")
     @classmethod
     def _validate_account_telemetry_interval(cls, value: Any) -> int:
-        try:
-            result = int(value)
-        except (TypeError, ValueError) as exc:
-            raise PydanticCustomError(
-                "account_telemetry_interval_invalid",
-                "account_telemetry_interval must be a valid integer, got {value}: {error}",
-                {"value": value, "error": str(exc)},
-            ) from exc
-        if result <= 0:
-            raise PydanticCustomError(
-                "account_telemetry_interval_too_small",
-                "account_telemetry_interval must be positive, got {value}",
-                {"value": result},
-            )
-        return result
+        result = _apply_rule(
+            _INT_RULE,
+            value,
+            field_label="account_telemetry_interval",
+            error_code="account_telemetry_interval_invalid",
+            error_template="account_telemetry_interval must be a valid integer, got {value}: {error}",
+        )
+        _ensure_condition(
+            result <= 0,
+            error_code="account_telemetry_interval_too_small",
+            error_template="account_telemetry_interval must be positive, got {value}",
+            context={"value": result},
+        )
+        return int(result)
 
     @field_validator("perps_stream_level", mode="before")
     @classmethod
     def _validate_perps_stream_level(cls, value: Any) -> int:
         if value is None:
             return 1
-        try:
-            result = int(value)
-        except (TypeError, ValueError) as exc:
-            raise PydanticCustomError(
-                "perps_stream_level_invalid",
-                "perps_stream_level must be a valid integer, got {value}: {error}",
-                {"value": value, "error": str(exc)},
-            ) from exc
-        if result < 1:
-            raise PydanticCustomError(
-                "perps_stream_level_too_small",
-                "perps_stream_level must be >= 1, got {value}",
-                {"value": result},
-            )
-        return result
+        result = _apply_rule(
+            _INT_RULE,
+            value,
+            field_label="perps_stream_level",
+            error_code="perps_stream_level_invalid",
+            error_template="perps_stream_level must be a valid integer, got {value}: {error}",
+        )
+        _ensure_condition(
+            result < 1,
+            error_code="perps_stream_level_too_small",
+            error_template="perps_stream_level must be >= 1, got {value}",
+            context={"value": result},
+        )
+        return int(result)
 
     @field_validator("perps_position_fraction", mode="before")
     @classmethod
     def _validate_perps_position_fraction(cls, value: Any) -> float | None:
         if value is None:
             return None
-        try:
-            result = float(value)
-        except (TypeError, ValueError) as exc:
-            raise PydanticCustomError(
-                "perps_position_fraction_invalid",
-                "perps_position_fraction must be numeric, got {value}: {error}",
-                {"value": value, "error": str(exc)},
-            ) from exc
-        if not 0 < result <= 1:
-            raise PydanticCustomError(
-                "perps_position_fraction_invalid_range",
-                "perps_position_fraction must be in (0, 1], got {value}",
-                {"value": result},
-            )
-        return result
+        result = _apply_rule(
+            _FLOAT_RULE,
+            value,
+            field_label="perps_position_fraction",
+            error_code="perps_position_fraction_invalid",
+            error_template="perps_position_fraction must be numeric, got {value}: {error}",
+        )
+        _ensure_condition(
+            not 0 < result <= 1,
+            error_code="perps_position_fraction_invalid_range",
+            error_template="perps_position_fraction must be in (0, 1], got {value}",
+            context={"value": result},
+        )
+        return float(result)
 
     @field_validator("target_leverage", "short_ma", "long_ma", mode="before")
     @classmethod
     def _validate_positive_integers(cls, value: Any, field: Any) -> int:
-        try:
-            result = int(value)
-        except (TypeError, ValueError) as exc:
-            raise PydanticCustomError(
-                f"{field.field_name}_invalid",
-                f"{field.field_name} must be a valid integer, got {{value}}: {{error}}",
-                {"value": value, "error": str(exc)},
-            ) from exc
-        if result <= 0:
-            raise PydanticCustomError(
-                f"{field.field_name}_too_small",
-                f"{field.field_name} must be positive, got {{value}}",
-                {"value": result},
-            )
-        return result
+        field_name = field.field_name
+        result = _apply_rule(
+            _INT_RULE,
+            value,
+            field_label=field_name,
+            error_code=f"{field_name}_invalid",
+            error_template=f"{field_name} must be a valid integer, got {{value}}: {{error}}",
+        )
+        _ensure_condition(
+            result <= 0,
+            error_code=f"{field_name}_too_small",
+            error_template=f"{field_name} must be positive, got {{value}}",
+            context={"value": result},
+        )
+        return int(result)
 
     @field_validator("trailing_stop_pct", mode="before")
     @classmethod
     def _validate_trailing_stop_pct(cls, value: Any) -> float:
-        try:
-            result = float(value)
-        except (TypeError, ValueError) as exc:
-            raise PydanticCustomError(
-                "trailing_stop_pct_invalid",
-                "trailing_stop_pct must be numeric, got {value}: {error}",
-                {"value": value, "error": str(exc)},
-            ) from exc
-        if result < 0:
-            raise PydanticCustomError(
-                "trailing_stop_pct_negative",
-                "trailing_stop_pct must be non-negative, got {value}",
-                {"value": result},
-            )
-        return result
+        result = _apply_rule(
+            _FLOAT_RULE,
+            value,
+            field_label="trailing_stop_pct",
+            error_code="trailing_stop_pct_invalid",
+            error_template="trailing_stop_pct must be numeric, got {value}: {error}",
+        )
+        _ensure_condition(
+            result < 0,
+            error_code="trailing_stop_pct_negative",
+            error_template="trailing_stop_pct must be non-negative, got {value}",
+            context={"value": result},
+        )
+        return float(result)
 
     @model_validator(mode="after")
     def _apply_defaults_and_normalization(self) -> BotConfig:

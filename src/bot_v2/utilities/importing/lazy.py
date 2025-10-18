@@ -8,6 +8,10 @@ import time
 from collections.abc import Callable
 from typing import Any, TypeVar
 
+from bot_v2.utilities.logging_patterns import get_logger
+
+logger = get_logger(__name__, component="utilities")
+
 T = TypeVar("T")
 
 
@@ -37,6 +41,7 @@ class LazyImport:
                 logging.getLogger(__name__).debug(
                     "Slow import: %s took %.3fs", self.module_path, load_time
                 )
+                logger.debug("Slow import: %s took %.3fs", self.module_path, load_time)
         return self._module
 
     def __getattr__(self, name: str) -> Any:

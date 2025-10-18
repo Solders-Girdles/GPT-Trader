@@ -6,7 +6,6 @@ All synchronous checks performed before order placement.
 
 from __future__ import annotations
 
-import logging
 from collections.abc import Callable, MutableMapping
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
@@ -19,9 +18,10 @@ from bot_v2.features.live_trade.risk_calculations import (
     effective_symbol_leverage_cap,
 )
 from bot_v2.persistence.event_store import EventStore
+from bot_v2.utilities.logging_patterns import get_logger
 from bot_v2.utilities.telemetry import emit_metric
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="live_trade_risk")
 
 
 def _coalesce_quantity(*values: Decimal | None) -> Decimal:

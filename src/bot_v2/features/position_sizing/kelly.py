@@ -5,13 +5,12 @@ Pure Kelly Criterion calculations with no external dependencies.
 All math and utilities implemented locally within this slice.
 """
 
-import logging
-
 from bot_v2.errors import RiskLimitExceeded, ValidationError, log_error
 from bot_v2.features.position_sizing.types import RiskParameters, TradeStatistics
+from bot_v2.utilities.logging_patterns import get_logger
 from bot_v2.validation import PositiveNumberValidator, RangeValidator
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="position_sizing")
 
 
 def kelly_criterion(win_rate: float, avg_win: float, avg_loss: float) -> float:

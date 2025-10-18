@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 import time
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -35,7 +34,9 @@ __all__ = [
     "AdvancedExecutionEngine",
 ]
 
-logger = logging.getLogger(__name__)
+from bot_v2.utilities.logging_patterns import get_logger
+
+logger = get_logger(__name__, component="live_trade_execution")
 
 
 class SizingMode(Enum):

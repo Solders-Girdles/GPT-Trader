@@ -15,7 +15,6 @@ poetry install                                        # install deps
 poetry run perps-bot run --profile dev --dev-fast         # spot dev cycle
 poetry run perps-bot run --profile canary --dry-run       # canary dry run
 poetry run perps-bot run --profile canary                 # live spot (tiny)
-poetry run python scripts/stage3_runner.py ...        # legacy wrapper → perps-bot
 poetry run python scripts/monitoring/export_metrics.py --metrics-file var/data/perps_bot/prod/metrics.json
 
 # Tests
@@ -49,7 +48,6 @@ DRY_RUN=1
 - Real-API or integration flows are archived; build new coverage inside `tests/unit/bot_v2/` when adding features.
 
 ## Operational Notes
-- Stage 3 runner is a wrapper—prefer `poetry run perps-bot` directly.
 - Metrics exporter lives at `scripts/monitoring/export_metrics.py`.
 - Experimental slices (`backtest`, `ml_strategy`, `market_regime`, `paper_trade`, `strategies`, `workflows/monitoring_dashboard`) now live under `archived/experimental/`; avoid production changes there unless requested.
 

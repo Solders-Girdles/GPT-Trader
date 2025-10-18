@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from collections.abc import Mapping, MutableMapping
 from dataclasses import dataclass
 from typing import Any
@@ -11,8 +10,9 @@ from bot_v2.monitoring.alert_types import AlertSeverity
 from bot_v2.monitoring.interfaces import MonitorConfig
 from bot_v2.monitoring.metrics_collector import record_counter
 from bot_v2.monitoring.system.alerting import AlertManager
+from bot_v2.utilities.logging_patterns import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="live_trade_guards")
 
 
 class GuardAlertDispatcher:
@@ -157,6 +157,7 @@ def record_guard_failure(error: RiskGuardError) -> None:
     log_method(
         failure.message,
         extra={"guard_failure": failure.as_log_args()},
+        raw_message=True,
     )
 
     severity = AlertSeverity.WARNING if failure.recoverable else AlertSeverity.CRITICAL

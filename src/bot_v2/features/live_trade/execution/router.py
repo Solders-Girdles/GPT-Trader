@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import inspect
-import logging
 import time
 import uuid
 from collections.abc import MutableMapping
@@ -11,8 +10,9 @@ from decimal import Decimal
 from typing import Any, cast
 
 from bot_v2.features.brokerages.core.interfaces import Order, OrderSide, OrderType, TimeInForce
+from bot_v2.utilities.logging_patterns import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="live_trade_execution")
 
 
 class OrderRouter:

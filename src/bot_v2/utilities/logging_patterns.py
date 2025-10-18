@@ -30,6 +30,31 @@ LOG_FIELDS = {
     "status": "status",
 }
 
+RESERVED_LOG_RECORD_ATTRS = {
+    "name",
+    "msg",
+    "args",
+    "levelname",
+    "levelno",
+    "pathname",
+    "filename",
+    "module",
+    "exc_info",
+    "exc_text",
+    "stack_info",
+    "lineno",
+    "funcName",
+    "created",
+    "msecs",
+    "relativeCreated",
+    "thread",
+    "threadName",
+    "processName",
+    "process",
+    "message",
+    "asctime",
+}
+
 
 ExecP = ParamSpec("ExecP")
 ExecR = TypeVar("ExecR")
@@ -84,27 +109,6 @@ class UnifiedLogger:
         """Expose underlying logger name for compatibility."""
         return self.logger.name
 
-    def _format_message(self, message: str, **kwargs: Any) -> str:
-        """Format message with structured context similar to legacy logger."""
-        context_parts: list[str] = []
-
-        if self.component:
-            context_parts.append(f"component={self.component}")
-
-        for key, value in kwargs.items():
-            if key in LOG_FIELDS.values():
-                if isinstance(value, Decimal):
-                    formatted_value = f"{value:.8f}".rstrip("0").rstrip(".")
-                elif isinstance(value, (int, float)):
-                    formatted_value = f"{value}"
-                else:
-                    formatted_value = str(value)
-                context_parts.append(f"{key}={formatted_value}")
-
-        if context_parts:
-            return f"{message} | " + " ".join(context_parts)
-        return message
-
     def _emit_console(self, message: str, prefix: str | None = None) -> None:
         """Emit console output with graceful fallback."""
         text = f"{prefix} {message}" if prefix else message
@@ -123,10 +127,26 @@ class UnifiedLogger:
         **kwargs: Any,
     ) -> None:
         """Log message at specified level and optionally mirror to console."""
-        extra = kwargs.pop("extra", None)
         exc_info = kwargs.pop("exc_info", None)
         stack_info = kwargs.pop("stack_info", None)
         stacklevel = kwargs.pop("stacklevel", None)
+        extra_param = kwargs.pop("extra", None)
+        console_message_override = kwargs.pop("console_message", None)
+        console_prefix_override = kwargs.pop("console_prefix", None)
+
+        reserved_kwargs = {"exc_info", "stack_info", "stacklevel", "extra", "raw_message"}
+        if console_message_override is not None:
+            console_message = console_message_override
+        if console_prefix_override is not None:
+            console_prefix = console_prefix_override
+
+        raw_message = kwargs.pop("raw_message", False)
+
+        context_fields: dict[str, Any] = {}
+        for key in list(kwargs.keys()):
+            if key in reserved_kwargs:
+                continue
+            context_fields[key] = kwargs.pop(key)
 
         if args:
             try:
@@ -136,8 +156,6 @@ class UnifiedLogger:
         else:
             rendered_message = message
 
-        formatted_message = self._format_message(rendered_message, **kwargs)
-
         log_kwargs: dict[str, Any] = {}
         if exc_info is not None:
             log_kwargs["exc_info"] = exc_info
@@ -145,35 +163,96 @@ class UnifiedLogger:
             log_kwargs["stack_info"] = stack_info
         if stacklevel is not None:
             log_kwargs["stacklevel"] = stacklevel
-        if extra is not None:
+
+        extra: dict[str, Any] = {}
+        if isinstance(extra_param, dict):
+            extra.update(extra_param)
+
+        if self.component and "component" not in extra:
+            extra["component"] = self.component
+
+        display_context: dict[str, Any] = {}
+        for key, value in context_fields.items():
+            display_key = "level" if key == "_context_level" else key
+            display_context[display_key] = value
+
+        normalized_context: dict[str, Any] = {}
+        for display_key, value in display_context.items():
+            store_key = "stream_level" if display_key == "level" else display_key
+            if store_key in RESERVED_LOG_RECORD_ATTRS:
+                store_key = f"context_{store_key}"
+            normalized_context[store_key] = value
+
+        for store_key, value in normalized_context.items():
+            extra.setdefault(store_key, value)
+
+        if extra:
             log_kwargs["extra"] = extra
 
-        self.logger.log(level, formatted_message, **log_kwargs)
+        console_context: dict[str, Any] = {}
+        console_context.update(display_context)
+        if isinstance(extra_param, dict):
+            for key, value in extra_param.items():
+                if key != "component" and key not in console_context:
+                    console_context[key] = value
+
+        context_str = self._format_context(console_context)
+
+        if not raw_message:
+            message_for_record = self._format_message(rendered_message, **console_context)
+        else:
+            message_for_record = rendered_message
+
+        self.logger.log(level, message_for_record, **log_kwargs)
 
         if self.enable_console:
-            prefix = console_prefix
-            if prefix is None:
-                prefix = self.LEVEL_PREFIXES.get(level)
-            self._emit_console(console_message or rendered_message, prefix=prefix)
+            prefix = (
+                console_prefix if console_prefix is not None else self.LEVEL_PREFIXES.get(level)
+            )
+            if console_message is not None:
+                console_text = console_message
+                if not raw_message and context_str:
+                    console_text = f"{console_text} | {context_str}"
+            else:
+                console_text = message_for_record if not raw_message else rendered_message
+                if raw_message and context_str:
+                    console_text = console_text  # no extra context when raw_message is True
+
+            self._emit_console(console_text, prefix=prefix)
 
     def info(self, message: str, *args: Any, **kwargs: Any) -> None:
         """Log informational message."""
+        context_level = kwargs.pop("level", None)
+        if context_level is not None:
+            kwargs["_context_level"] = context_level
         self.log(logging.INFO, message, *args, **kwargs)
 
     def warning(self, message: str, *args: Any, **kwargs: Any) -> None:
         """Log warning message."""
+        context_level = kwargs.pop("level", None)
+        if context_level is not None:
+            kwargs["_context_level"] = context_level
         self.log(logging.WARNING, message, *args, **kwargs)
 
     def error(self, message: str, *args: Any, **kwargs: Any) -> None:
         """Log error message."""
+        context_level = kwargs.pop("level", None)
+        if context_level is not None:
+            kwargs["_context_level"] = context_level
         self.log(logging.ERROR, message, *args, **kwargs)
 
     def debug(self, message: str, *args: Any, **kwargs: Any) -> None:
         """Log debug message."""
+        context_level = kwargs.pop("level", None)
+        if context_level is not None:
+            kwargs["_context_level"] = context_level
         self.log(logging.DEBUG, message, *args, console_prefix=None, **kwargs)
 
     def critical(self, message: str, *args: Any, **kwargs: Any) -> None:
         """Log critical message."""
+        context_level = kwargs.pop("level", None)
+        if context_level is not None:
+            kwargs["_context_level"] = context_level
         self.log(logging.CRITICAL, message, *args, **kwargs)
 
     def exception(self, message: str, *args: Any, **kwargs: Any) -> None:
@@ -181,20 +260,66 @@ class UnifiedLogger:
         kwargs.setdefault("exc_info", True)
         self.error(message, *args, **kwargs)
 
+    def _format_context(self, context: dict[str, Any]) -> str:
+        """Render context key/value pairs for console mirroring."""
+        if not context:
+            return ""
+
+        parts: list[str] = []
+        ordered_keys = [field for field in LOG_FIELDS.values() if field in context]
+        ordered_keys.extend(key for key in sorted(context.keys()) if key not in ordered_keys)
+
+        for key in ordered_keys:
+            value = context.get(key)
+            if isinstance(value, Decimal):
+                formatted = f"{value:.8f}".rstrip("0").rstrip(".")
+            elif isinstance(value, (int, float)):
+                formatted = f"{value}"
+            else:
+                formatted = str(value)
+            parts.append(f"{key}={formatted}")
+        if self.component:
+            parts.insert(0, f"component={self.component}")
+        return " ".join(parts)
+
+    def _format_message(self, message: str, **context: Any) -> str:
+        """Backwards-compatible message formatter retaining legacy behaviour."""
+        context_str = self._format_context(context)
+        if context_str:
+            return f"{message} | {context_str}"
+        return message
+
+    def is_enabled_for(self, level: int) -> bool:
+        """Check if the underlying logger is enabled for a level."""
+        return self.logger.isEnabledFor(level)
+
+    def isEnabledFor(self, level: int) -> bool:  # pragma: no cover - legacy alias
+        """Alias for logging.Logger compatibility."""
+        return self.is_enabled_for(level)
+
     # Console-first helper channels -------------------------------------------------
     def success(self, message: str, **kwargs: Any) -> None:
         """Log success event."""
         level, prefix = self.CHANNEL_PREFIXES["success"]
+        context_level = kwargs.pop("level", None)
+        if context_level is not None:
+            kwargs["_context_level"] = context_level
         self.log(level, message, console_prefix=prefix, **kwargs)
 
     def data(self, message: str, **kwargs: Any) -> None:
         """Log data-related event."""
         level, prefix = self.CHANNEL_PREFIXES["data"]
+        context_level = kwargs.pop("level", None)
+        if context_level is not None:
+            kwargs["_context_level"] = context_level
         self.log(level, message, console_prefix=prefix, **kwargs)
 
     def trading(self, message: str, **kwargs: Any) -> None:
         """Log trading event."""
         level, prefix = self.CHANNEL_PREFIXES["trading"]
+        context_level = kwargs.pop("level", None)
+        if context_level is not None:
+            kwargs["_context_level"] = context_level
         self.log(level, message, console_prefix=prefix, **kwargs)
 
     def order(self, message: str, **kwargs: Any) -> None:

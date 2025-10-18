@@ -5,16 +5,16 @@ Adjusts position sizes based on current market regime.
 No external dependencies - all logic local to this slice.
 """
 
-import logging
 import math
 
 import numpy as np
 
 from bot_v2.errors import ValidationError, log_error
 from bot_v2.features.position_sizing.types import RegimeMultipliers
+from bot_v2.utilities.logging_patterns import get_logger
 from bot_v2.validation import ChoiceValidator, RangeValidator
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="position_sizing")
 
 
 def regime_adjusted_size(

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from datetime import datetime
 from decimal import Decimal
 from functools import lru_cache
@@ -19,12 +18,13 @@ from bot_v2.features.strategy_tools import (
     create_conservative_filters,
     create_standard_risk_guards,
 )
+from bot_v2.utilities.logging_patterns import get_logger
 
 from .config import StrategyConfig, StrategyFiltersConfig
 from .signals import StrategySignal, build_signal
 from .state import StrategyState
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="live_trade_strategy")
 
 
 def _to_decimal(value: Decimal | float | int) -> Decimal:

@@ -6,7 +6,6 @@ Async and periodic checks performed during trading operations.
 
 from __future__ import annotations
 
-import logging
 from collections.abc import Callable, Mapping, MutableMapping
 from datetime import datetime
 from decimal import Decimal
@@ -35,9 +34,10 @@ from bot_v2.features.live_trade.risk_runtime.metrics import (
     append_risk_metrics as runtime_append_risk_metrics,
 )
 from bot_v2.persistence.event_store import EventStore
+from bot_v2.utilities.logging_patterns import get_logger
 from bot_v2.utilities.telemetry import emit_metric
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="live_trade_risk")
 
 
 class RuntimeMonitor:

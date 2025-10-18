@@ -7,11 +7,11 @@ Provides both real and mock transports for production and testing.
 from __future__ import annotations
 
 import json
-import logging
 from collections.abc import Iterable
 from typing import TYPE_CHECKING, Any, cast
 
 from bot_v2.utilities import empty_stream
+from bot_v2.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:
     from bot_v2.orchestration.runtime_settings import RuntimeSettings
@@ -20,7 +20,7 @@ else:  # pragma: no cover - runtime type alias
 
 _TRUTHY = {"1", "true", "yes", "on"}
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="coinbase_transport")
 
 
 def _load_runtime_settings_snapshot() -> RuntimeSettings:

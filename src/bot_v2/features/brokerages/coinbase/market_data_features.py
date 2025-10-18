@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
-import logging
 from collections import deque
 from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import Any
+
+from bot_v2.utilities.logging_patterns import get_logger
 
 __all__ = [
     "RollingWindow",
@@ -15,7 +16,7 @@ __all__ = [
     "get_expected_perps",
 ]
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="coinbase_market_data")
 
 
 class RollingWindow:

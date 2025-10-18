@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-import logging
 from dataclasses import dataclass
 from decimal import Decimal
+
+from bot_v2.utilities.logging_patterns import get_logger
 
 __all__ = [
     "LiquidityGates",
@@ -15,7 +16,7 @@ __all__ = [
     "create_test_snapshot",
 ]
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="live_trade_strategy")
 
 
 @dataclass

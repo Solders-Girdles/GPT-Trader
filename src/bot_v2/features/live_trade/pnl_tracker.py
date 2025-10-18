@@ -6,12 +6,13 @@ Tracks realized/unrealized PnL, funding accruals, and daily metrics.
 
 from __future__ import annotations
 
-import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from decimal import Decimal
 
-logger = logging.getLogger(__name__)
+from bot_v2.utilities.logging_patterns import get_logger
+
+logger = get_logger(__name__, component="live_trade_pnl")
 
 
 @dataclass

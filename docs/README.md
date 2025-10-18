@@ -39,8 +39,6 @@ organization-updated: 2025-10-07
 ### Trading Operations
 - [Monitoring Playbook](MONITORING_PLAYBOOK.md) - Metrics, alerting, and dashboards
 - [Production Deployment](guides/production.md) - Deployment guide (spot-first, INTX-gated perps)
-- [Legacy Deployment Migration](guides/legacy_deployment_migration.md) - Steps to move from the archived Docker stack to bot_v2
-- [Stage 3 Runner](../scripts/stage3_runner.py) - Legacy entry that forwards to `perps-bot`
 - [Operations Runbook](ops/operations_runbook.md) - Operational procedures
 
 ### Development

@@ -4,7 +4,6 @@ Main market analysis orchestration - entry point for the slice.
 Complete isolation - everything needed is local.
 """
 
-import logging
 from collections.abc import Mapping
 from datetime import datetime
 from typing import Any, Literal, cast
@@ -38,6 +37,7 @@ from bot_v2.features.analyze.types import (
     SupportResistance,
     TechnicalIndicators,
 )
+from bot_v2.utilities.logging_patterns import get_logger
 
 Recommendation = Literal["strong_buy", "buy", "hold", "sell", "strong_sell"]
 TrendLiteral = Literal["bullish", "bearish", "neutral"]
@@ -45,7 +45,7 @@ VolatilityLiteral = Literal["low", "medium", "high"]
 MomentumLiteral = Literal["strong_up", "weak_up", "neutral", "weak_down", "strong_down"]
 VolumeProfileLiteral = Literal["accumulation", "distribution", "neutral"]
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="analysis")
 
 
 def analyze_symbol(

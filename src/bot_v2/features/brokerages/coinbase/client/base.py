@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import logging
 import sys
 import time
 from collections.abc import Callable, Iterator
@@ -11,7 +10,9 @@ from typing import TYPE_CHECKING, Any, cast
 
 from bot_v2.features.brokerages.coinbase.auth import AuthStrategy, CDPJWTAuth, CoinbaseAuth
 from bot_v2.features.brokerages.coinbase.errors import InvalidRequestError, map_http_error
-from bot_v2.monitoring.system import get_correlation_id, get_logger
+from bot_v2.monitoring.system import get_correlation_id
+from bot_v2.monitoring.system import get_logger as get_production_logger
+from bot_v2.utilities.logging_patterns import get_logger as get_structured_logger
 
 if TYPE_CHECKING:
     from bot_v2.orchestration.runtime_settings import RuntimeSettings
@@ -28,7 +29,7 @@ except Exception:  # pragma: no cover - urllib unavailable in some runtimes
     _ul = None
     _ue = None
 
-logger = logging.getLogger(__name__)
+logger = get_structured_logger(__name__, component="coinbase_client")
 
 _TRUTHY = {"1", "true", "yes", "on"}
 
@@ -99,10 +100,10 @@ class CoinbaseClientBase:
 
     def _configure_logger(self) -> None:
         try:
-            self._production_logger = get_logger(settings=self._settings)
+            self._production_logger = get_production_logger(settings=self._settings)
         except Exception:  # pragma: no cover - telemetry optional
             try:
-                self._production_logger = get_logger()
+                self._production_logger = get_production_logger()
             except Exception:  # pragma: no cover - telemetry optional
                 self._production_logger = None
 
@@ -124,7 +125,7 @@ class CoinbaseClientBase:
         logger_instance = self._production_logger
         if logger_instance is None:
             try:
-                logger_instance = get_logger()
+                logger_instance = get_production_logger()
             except Exception:  # pragma: no cover - telemetry optional
                 logger_instance = None
         if logger_instance is None:

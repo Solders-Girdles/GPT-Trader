@@ -12,9 +12,12 @@ from typing import Any
 
 from bot_v2.errors import ValidationError
 from bot_v2.utilities.importing import optional_import
+from bot_v2.utilities.logging_patterns import get_logger
 
 # Optional pandas import
 pandas = optional_import("pandas")
+
+logger = get_logger(__name__, component="validation")
 
 
 # Base validators
@@ -481,9 +484,7 @@ def validate_config(config: dict[str, Any], schema: dict[str, Validator]) -> dic
     # Check for extra keys
     extra_keys = set(config.keys()) - set(schema.keys())
     if extra_keys:
-        import logging
-
-        logging.warning(f"Unknown config keys will be ignored: {extra_keys}")
+        logger.warning(f"Unknown config keys will be ignored: {extra_keys}")
 
     return validated
 

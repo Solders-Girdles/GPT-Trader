@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from decimal import ROUND_DOWN, Decimal
@@ -12,8 +11,9 @@ from bot_v2.features.brokerages.coinbase.errors import InvalidRequestError, NotF
 from bot_v2.features.brokerages.coinbase.models import to_product
 from bot_v2.features.brokerages.core.interfaces import MarketType, Product
 from bot_v2.utilities import utc_now
+from bot_v2.utilities.logging_patterns import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="coinbase_utilities")
 
 __all__ = [
     "ProductClient",

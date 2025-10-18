@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from collections.abc import Sequence
 from decimal import Decimal
 from typing import Any
@@ -14,13 +13,14 @@ from bot_v2.features.live_trade.strategies.shared import (
     create_close_decision,
     create_entry_decision,
 )
+from bot_v2.utilities.logging_patterns import get_logger
 from bot_v2.utilities.quantities import quantity_from
 
 from .config import StrategyConfig
 from .signals import StrategySignal, build_signal
 from .state import StrategyState
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="live_trade_strategy")
 
 
 class BaselinePerpsStrategy:

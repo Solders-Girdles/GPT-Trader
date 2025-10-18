@@ -5,8 +5,6 @@ Main entry point for intelligent position sizing combining Kelly Criterion,
 confidence adjustments, and regime-based scaling. Complete isolation maintained.
 """
 
-import logging
-
 from bot_v2.config import get_config
 from bot_v2.errors import RiskLimitExceeded, ValidationError, log_error
 from bot_v2.features.position_sizing.confidence import confidence_adjusted_size
@@ -25,9 +23,10 @@ from bot_v2.features.position_sizing.types import (
     RegimeMultipliers,
     SizingMethod,
 )
+from bot_v2.utilities.logging_patterns import get_logger
 from bot_v2.validation import PercentageValidator, PositiveNumberValidator, validate_inputs
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="position_sizing")
 
 
 def _validate_position_request(

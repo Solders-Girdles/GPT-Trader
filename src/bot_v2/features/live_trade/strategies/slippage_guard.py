@@ -7,11 +7,12 @@ under configured basis point targets. Reject orders if not satisfiable.
 
 from __future__ import annotations
 
-import logging
 from dataclasses import dataclass
 from decimal import Decimal
 
-logger = logging.getLogger(__name__)
+from bot_v2.utilities.logging_patterns import get_logger
+
+logger = get_logger(__name__, component="live_trade_strategy")
 
 
 @dataclass

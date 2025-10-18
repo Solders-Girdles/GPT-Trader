@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import logging
 import threading
 from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass
@@ -12,8 +11,9 @@ from bot_v2.features.brokerages.coinbase.market_data_features import RollingWind
 from bot_v2.features.brokerages.coinbase.utilities import MarkCache
 from bot_v2.features.brokerages.coinbase.ws import CoinbaseWebSocket, WSSubscription
 from bot_v2.utilities.datetime_helpers import utc_now
+from bot_v2.utilities.logging_patterns import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="coinbase_market_data")
 
 
 @dataclass(slots=True)

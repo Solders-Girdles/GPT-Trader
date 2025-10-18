@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from collections.abc import Iterable, Mapping, Sequence
 from datetime import datetime
 from decimal import Decimal
@@ -22,8 +21,9 @@ from bot_v2.features.brokerages.core.interfaces import (
     Quote,
     TimeInForce,
 )
+from bot_v2.utilities.logging_patterns import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="deterministic_broker")
 
 
 class DeterministicBroker(IBrokerage):
@@ -70,11 +70,21 @@ class DeterministicBroker(IBrokerage):
                     )
 
             if products:
-                logger.debug(f"Loaded {len(products)} products from fixtures")
+                logger.debug(
+                    "Loaded products from fixtures",
+                    operation="deterministic_broker",
+                    stage="load_products",
+                    product_count=len(products),
+                )
                 return products
 
         except Exception as exc:
-            logger.debug(f"Could not load products from fixtures: {exc}")
+            logger.debug(
+                "Could not load products from fixtures",
+                operation="deterministic_broker",
+                stage="load_products",
+                error=str(exc),
+            )
 
         # Fall back to hardcoded defaults
         return {
@@ -126,11 +136,21 @@ class DeterministicBroker(IBrokerage):
                     for symbol, value in marks_data.items()
                 }
                 if marks:
-                    logger.debug(f"Loaded {len(marks)} mark prices from fixtures")
+                    logger.debug(
+                        "Loaded mark prices from fixtures",
+                        operation="deterministic_broker",
+                        stage="load_marks",
+                        mark_count=len(marks),
+                    )
                     return marks
 
         except Exception as exc:
-            logger.debug(f"Could not load marks from fixtures: {exc}")
+            logger.debug(
+                "Could not load marks from fixtures",
+                operation="deterministic_broker",
+                stage="load_marks",
+                error=str(exc),
+            )
 
         # Fall back to hardcoded defaults
         return {

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from bot_v2.orchestration.config_controller import ConfigController
@@ -16,8 +15,9 @@ from bot_v2.orchestration.runtime_settings import (
 )
 from bot_v2.orchestration.service_registry import ServiceRegistry
 from bot_v2.orchestration.session_guard import TradingSessionGuard
+from bot_v2.utilities.logging_patterns import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="perps_bot_builder")
 
 
 class PerpsBotBuilder:
@@ -96,10 +96,14 @@ class PerpsBotBuilder:
 
         bot.lifecycle_manager.bootstrap()
 
+        symbols = list(bot.symbols)
         logger.info(
-            "PerpsBot constructed via builder - profile=%s symbols=%s",
-            config.profile.value,
-            ", ".join(bot.symbols) or "<none>",
+            "PerpsBot constructed via builder",
+            operation="perps_bot_builder",
+            stage="build_complete",
+            profile=config.profile.value,
+            symbol_count=len(symbols),
+            symbols=symbols or ["<none>"],
         )
 
         return bot

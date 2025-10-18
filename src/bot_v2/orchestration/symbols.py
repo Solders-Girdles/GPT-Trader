@@ -11,8 +11,9 @@ if TYPE_CHECKING:  # pragma: no cover - import for type checking only
     from bot_v2.orchestration.configuration import Profile
 
 from bot_v2.orchestration.runtime_settings import RuntimeSettings, load_runtime_settings
+from bot_v2.utilities.logging_patterns import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="symbols")
 
 PERPS_ALLOWLIST = frozenset({"BTC-PERP", "ETH-PERP", "SOL-PERP", "XRP-PERP"})
 

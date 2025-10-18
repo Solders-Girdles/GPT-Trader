@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal, DecimalException, InvalidOperation
@@ -10,8 +9,9 @@ from enum import Enum
 from typing import Any
 
 from bot_v2.monitoring.alert_types import AlertSeverity
+from bot_v2.utilities.logging_patterns import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="monitoring_guards_base")
 
 
 class GuardStatus(Enum):

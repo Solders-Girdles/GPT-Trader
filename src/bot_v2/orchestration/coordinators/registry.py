@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-import logging
 from typing import Any
+
+from bot_v2.utilities.logging_patterns import get_logger
 
 from .base import Coordinator, CoordinatorContext, HealthStatus
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="coordinator_registry")
 
 
 class CoordinatorRegistry:
@@ -33,7 +34,12 @@ class CoordinatorRegistry:
 
         self._coordinators[name] = coordinator
         self._initialization_order.append(name)
-        logger.debug("Registered coordinator: %s", name)
+        logger.debug(
+            "Registered coordinator",
+            coordinator=name,
+            operation="registry",
+            stage="register",
+        )
 
     def get(self, name: str) -> Coordinator | None:
         """Retrieve a coordinator by name."""
@@ -46,7 +52,12 @@ class CoordinatorRegistry:
         context = self._context
         for name in self._initialization_order:
             coordinator = self._coordinators[name]
-            logger.info("Initializing coordinator: %s", name)
+            logger.info(
+                "Initializing coordinator",
+                coordinator=name,
+                operation="registry",
+                stage="initialize",
+            )
             context = coordinator.initialize(context)
             self._propagate_context(context)
 
@@ -58,7 +69,12 @@ class CoordinatorRegistry:
 
         tasks: list[Any] = []
         for name, coordinator in self._coordinators.items():
-            logger.info("Starting background tasks for coordinator: %s", name)
+            logger.info(
+                "Starting background tasks for coordinator",
+                coordinator=name,
+                operation="registry",
+                stage="background_start",
+            )
             started = await coordinator.start_background_tasks()
             tasks.extend(started)
         return tasks
@@ -68,7 +84,12 @@ class CoordinatorRegistry:
 
         for name in reversed(self._initialization_order):
             coordinator = self._coordinators[name]
-            logger.info("Shutting down coordinator: %s", name)
+            logger.info(
+                "Shutting down coordinator",
+                coordinator=name,
+                operation="registry",
+                stage="shutdown",
+            )
             await coordinator.shutdown()
 
     def health_check_all(self) -> dict[str, HealthStatus]:

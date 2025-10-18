@@ -2,19 +2,19 @@
 
 from __future__ import annotations
 
-import logging
 from collections.abc import Callable, Sequence
 from datetime import time
 from decimal import Decimal
 
 from bot_v2.config import path_registry
 from bot_v2.config.types import Profile
+from bot_v2.utilities.logging_patterns import get_logger
 
 from .core import BotConfig
 
 ConfigFactory = Callable[..., BotConfig]
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="config_profiles")
 
 
 def build_profile_config(profile: Profile, create_config: ConfigFactory) -> BotConfig:
@@ -92,7 +92,13 @@ def build_canary_config(profile: Profile, create_config: ConfigFactory) -> BotCo
             )
             time_in_force = payload.get("order_policy", {}).get("time_in_force", time_in_force)
         except Exception as exc:  # pragma: no cover - defensive logging
-            logger.debug("Failed to load canary profile YAML: %s", exc, exc_info=True)
+            logger.debug(
+                "Failed to load canary profile YAML",
+                operation="config_profiles",
+                stage="load_canary",
+                error=str(exc),
+                exc_info=True,
+            )
 
     return create_config(
         profile=profile,

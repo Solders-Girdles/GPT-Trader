@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from copy import deepcopy
 from decimal import Decimal
 from pathlib import Path
@@ -13,6 +12,7 @@ from pydantic import ValidationError
 from bot_v2.config import path_registry
 from bot_v2.config.types import Profile
 from bot_v2.orchestration.runtime_settings import RuntimeSettings, load_runtime_settings
+from bot_v2.utilities.logging_patterns import get_logger
 
 from .core import BotConfig
 from .profiles import build_profile_config
@@ -22,7 +22,7 @@ from .validation import (
     format_validation_errors,
 )
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="config_manager")
 
 
 class ConfigManager:
@@ -188,7 +188,11 @@ class ConfigManager:
                 reduce_only_mode=False,
             )
             if not self._settings.spot_force_live:
-                logger.info("Spot profile detected; falling back to mock broker for safety")
+                logger.info(
+                    "Spot profile detected; falling back to mock broker",
+                    operation="config_manager",
+                    stage="post_process",
+                )
                 profile_updates["mock_broker"] = True
 
         if profile_updates:

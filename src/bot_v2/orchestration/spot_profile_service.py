@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from collections.abc import Callable, Sequence
 from pathlib import Path
 from typing import Any
@@ -10,8 +9,9 @@ from typing import Any
 import yaml
 
 from bot_v2.orchestration.runtime_settings import RuntimeSettings, load_runtime_settings
+from bot_v2.utilities.logging_patterns import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="spot_profile_service")
 
 
 def _load_spot_profile(path: Path) -> dict[str, Any]:
@@ -44,14 +44,26 @@ class SpotProfileService:
         raw_env = self._settings.raw_env
         profile_path = Path(raw_env.get("SPOT_PROFILE_PATH", "config/profiles/spot.yaml"))
         if not profile_path.exists():
-            logger.info("Spot profile %s not found; using default parameters", profile_path)
+            logger.info(
+                "Spot profile not found; using default parameters",
+                operation="spot_profile_service",
+                stage="load_missing",
+                profile_path=str(profile_path),
+            )
             self._rules = {}
             self._last_path = profile_path
             return {}
         try:
             profile_doc = self._loader(profile_path)
         except Exception as exc:
-            logger.warning("Failed to load spot profile %s: %s", profile_path, exc, exc_info=True)
+            logger.warning(
+                "Failed to load spot profile",
+                operation="spot_profile_service",
+                stage="load_failure",
+                profile_path=str(profile_path),
+                error=str(exc),
+                exc_info=True,
+            )
             self._rules = {}
             self._last_path = profile_path
             return {}
@@ -88,8 +100,10 @@ class SpotProfileService:
             if key in strategies:
                 return strategies.get(key) or {}
         logger.warning(
-            "No strategy entry for %s in %s; defaults will be used",
-            symbol,
-            profile_path,
+            "No strategy entry for symbol in profile; defaults will be used",
+            operation="spot_profile_service",
+            stage="missing_strategy",
+            symbol=symbol,
+            profile_path=str(profile_path),
         )
         return None

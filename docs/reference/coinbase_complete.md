@@ -114,7 +114,7 @@ if os.getenv("COINBASE_SANDBOX"):
 - OAuth connections enforce portfolio account-level trade access
 - Requires client credentials in token revocation
 
-**Status**: OAuth2 is officially supported (confirmed in official changelog and docs). Exact launch date not publicly documented; likely 2024-2025 based on forum activity. See changelog at https://docs.cdp.coinbase.com/coinbase-app/introduction/changelog
+**Status**: OAuth2 is officially supported (confirmed in official changelog and docs). Exact launch date is not publicly documented. See changelog at https://docs.cdp.coinbase.com/coinbase-app/introduction/changelog
 
 ## API Endpoints & Products
 

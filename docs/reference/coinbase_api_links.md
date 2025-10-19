@@ -89,7 +89,7 @@ retry-after:            Seconds to wait (on 429 response)
 
 **WebSocket Subscription Limit**: Documentation references "100 per connection" for Advanced Trade, but this is not explicitly documented in official Coinbase docs. Exchange accounts are documented as limited to 10 subscriptions per product/channel, but Advanced Trade limits appear tier-specific or undocumented. Verify with your API tier.
 
-**OAuth2 Support**: OAuth2 is confirmed as officially supported for Advanced Trade API (references in official changelog and docs), but the exact launch date/timeline is not publicly documented. Likely 2024-2025 based on forum activity.
+**OAuth2 Support**: OAuth2 is confirmed as officially supported for Advanced Trade API (references in official changelog and docs). The exact launch date is not publicly documented.
 
 **Rate Limit Headers**:
 - ✅ Confirmed: `CB-RATELIMIT-LIMIT`, `CB-RATELIMIT-REMAINING`, `CB-RATELIMIT-RESET`

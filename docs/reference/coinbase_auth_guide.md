@@ -201,7 +201,11 @@ class HMACAuth:
         self.passphrase = passphrase
 
     def create_signature(self, timestamp: str, method: str, path: str, body: str = "") -> str:
-        """Create HMAC-SHA256 signature"""
+        """Create HMAC-SHA256 signature
+
+        ⚠️ path must be FULL path: /api/v3/brokerage/accounts (not just /accounts)
+        Example message to sign: "1697750400GET/api/v3/brokerage/accounts"
+        """
         message = f"{timestamp}{method}{path}{body}"
 
         # Decode base64 secret
@@ -240,10 +244,16 @@ import json
 auth = HMACAuth(api_key, api_secret, passphrase)
 
 def make_hmac_request(method: str, path: str, body: dict = None) -> dict:
-    """Make HMAC-authenticated request"""
-    url = "https://api.coinbase.com/api/v3/brokerage" + path
+    """Make HMAC-authenticated request
+
+    ⚠️ CRITICAL: path must be the FULL request path including /api/v3/brokerage
+    (e.g., "/api/v3/brokerage/accounts"), NOT just the endpoint (e.g., "/accounts").
+    The signature is computed over the full path; truncated path = 401 Unauthorized.
+    """
+    url = "https://api.coinbase.com" + path  # Full URL
 
     body_str = json.dumps(body) if body else ""
+    # Pass the FULL path to get_headers for signature computation
     headers = auth.get_headers(method, path, body_str)
 
     if method == "GET":
@@ -255,8 +265,8 @@ def make_hmac_request(method: str, path: str, body: dict = None) -> dict:
 
     return response.json()
 
-# Example: List accounts
-accounts = make_hmac_request("GET", "/accounts")
+# Example: List accounts (note: FULL path including /api/v3/brokerage)
+accounts = make_hmac_request("GET", "/api/v3/brokerage/accounts")
 print(f"Accounts: {json.dumps(accounts, indent=2)}")
 ```
 

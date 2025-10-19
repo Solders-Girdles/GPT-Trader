@@ -107,26 +107,33 @@ curl -X POST https://api.coinbase.com/api/v3/brokerage/orders \
 
 ---
 
-## Products Endpoints
+## Products Endpoints (Market Data - Unauthenticated)
 
-Retrieve market data and product information.
+Retrieve market data and product information **without authentication**.
 
-| Endpoint | Method | Rate Limit | Production | Sandbox | Notes |
-|----------|--------|-----------|-----------|---------|-------|
-| List Products | `GET /products` | Public (10/s) | ✅ | ❌ | Get all tradeable products (verified 2025-10-19) |
-| Get Product | `GET /products/{product_id}` | Public (10/s) | ✅ | ❌ | Get specific product details |
-| Get Product Candles | `GET /products/{product_id}/candles` | Public (10/s) | ✅ | ❌ | OHLCV data for charting |
-| Get Product Ticker | `GET /products/{product_id}/ticker` | Public (10/s) | ✅ | ❌ | Current price and volume |
-| Get Product Book | `GET /products/{product_id}/book` | Public (10/s) | ✅ | ❌ | Order book (bid/ask levels) |
-| Get Product Trades | `GET /products/{product_id}/trades` | Public (10/s) | ✅ | ❌ | Recent trades on product |
+⚠️ **CRITICAL**: These endpoints live under `/market/*` path, NOT `/products`
+- Authenticated endpoints (which require API key) are at `/api/v3/brokerage/products` (returns 401 if unauthenticated)
+- **Unauthenticated market data** is at `/api/v3/brokerage/market/products` (no auth required)
 
-**Example Request:**
+| Endpoint | Method | Rate Limit | Auth Required | Sandbox | Notes |
+|----------|--------|-----------|--------------|---------|-------|
+| List Products | `GET /market/products` | Public (10/s) | ❌ No | ❌ | Get all tradeable products (verified 2025-10-19) |
+| Get Product | `GET /market/products/{product_id}` | Public (10/s) | ❌ No | ❌ | Get specific product details |
+| Get Product Candles | `GET /market/candles?product_id={id}` | Public (10/s) | ❌ No | ❌ | OHLCV data for charting |
+| Get Product Ticker | `GET /market/ticker?product_id={id}` | Public (10/s) | ❌ No | ❌ | Current price and volume |
+| Get Product Book | `GET /market/orderbook?product_id={id}` | Public (10/s) | ❌ No | ❌ | Order book (bid/ask levels) |
+| Get Product Trades | `GET /market/trades?product_id={id}` | Public (10/s) | ❌ No | ❌ | Recent trades on product |
+
+**Correct Unauthenticated Request:**
 ```bash
-curl -X GET "https://api.coinbase.com/api/v3/brokerage/products/BTC-USD" \
-  -H "Authorization: Bearer <token>"
+# ✅ CORRECT - Uses /market/* path, no auth headers
+curl -X GET "https://api.coinbase.com/api/v3/brokerage/market/products/BTC-USD"
+
+# ❌ WRONG - This returns 401 Unauthorized
+curl -X GET "https://api.coinbase.com/api/v3/brokerage/products/BTC-USD"
 ```
 
-**Sandbox Limitation**: Product endpoints are not available in sandbox. Use production credentials for market data or mock broker for testing.
+**Sandbox Limitation**: Market data endpoints are not available in sandbox. Use production credentials for market data or mock broker for testing.
 
 ---
 

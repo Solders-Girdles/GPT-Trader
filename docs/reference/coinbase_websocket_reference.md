@@ -68,7 +68,13 @@ import hashlib
 import base64
 from datetime import datetime
 
-def create_signature(timestamp, message, secret):
+def create_signature(timestamp, secret, path="/users/self/verify"):
+    """Create WebSocket authentication signature
+
+    ⚠️ CRITICAL: Message format is timestamp + "GET" + path (same as REST HMAC)
+    NOT "subscribe" + timestamp!
+    """
+    message = f"{timestamp}GET{path}"
     message = message.encode('utf-8')
     hmac_key = base64.b64decode(secret)
     signature = hmac.new(hmac_key, message, hashlib.sha256)
@@ -78,8 +84,8 @@ async def connect_authenticated():
     uri = "wss://advanced-trade-ws.coinbase.com"
 
     timestamp = str(int(datetime.now().timestamp()))
-    message = f"subscribe{timestamp}"
-    signature = create_signature(timestamp, message, api_secret)
+    # ⚠️ Signature uses same pattern as REST: timestamp + "GET" + "/users/self/verify"
+    signature = create_signature(timestamp, api_secret)
 
     async with websockets.connect(uri) as websocket:
         await websocket.send(json.dumps({

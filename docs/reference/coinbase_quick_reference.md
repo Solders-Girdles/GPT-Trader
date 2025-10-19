@@ -58,22 +58,31 @@ GET /orders/batch?order_status=PENDING&product_id=BTC-USD
 GET /orders/historical/fills
 ```
 
-### Products (Public - No Auth)
+### Products (Public Market Data - No Auth Required)
+
+⚠️ **CRITICAL**: Use `/market/*` paths for unauthenticated access
+- `/market/products` returns 200 (no auth)
+- `/products` returns 401 (requires API key)
+
 ```bash
-# List all products
-GET /products
+# ✅ List all products (no auth)
+GET /market/products
 
-# Get product details
-GET /products/BTC-USD
+# ✅ Get product details (no auth)
+GET /market/products/BTC-USD
 
-# Get price candles (OHLCV)
-GET /products/BTC-USD/candles?start=<timestamp>&end=<timestamp>&granularity=300
+# ✅ Get price candles/OHLCV (no auth)
+GET /market/candles?product_id=BTC-USD&start=<timestamp>&end=<timestamp>&granularity=300
 
-# Get current ticker
-GET /products/BTC-USD/ticker
+# ✅ Get current ticker (no auth)
+GET /market/ticker?product_id=BTC-USD
 
-# Get order book
-GET /products/BTC-USD/book
+# ✅ Get order book (no auth)
+GET /market/orderbook?product_id=BTC-USD
+
+# ❌ These return 401 (do NOT use):
+GET /products  # Wrong - requires auth
+GET /products/BTC-USD  # Wrong - requires auth
 ```
 
 ### Fees
@@ -117,7 +126,7 @@ CB-RATELIMIT-RESET:     1697750400 (Unix timestamp when resets)
 # Setup variables
 TIMESTAMP=$(date +%s)
 METHOD="GET"
-PATH="/accounts"
+PATH="/api/v3/brokerage/accounts"  # ⚠️ CRITICAL: Full path, not just "/accounts"
 SECRET_B64="your_base64_secret"
 API_KEY="your_api_key"
 PASSPHRASE="your_passphrase"
@@ -127,6 +136,7 @@ PASSPHRASE="your_passphrase"
 KEY_HEX=$(printf %s "$SECRET_B64" | base64 -d | xxd -p -c256 | tr -d '\n')
 
 # Create the message to sign and compute HMAC-SHA256 using hex key
+# Message format: timestamp + method + full_path (e.g., "1697750400GET/api/v3/brokerage/accounts")
 MESSAGE="${TIMESTAMP}${METHOD}${PATH}"
 SIG=$(echo -n "$MESSAGE" | openssl dgst -sha256 -mac HMAC -macopt hexkey:$KEY_HEX -binary | base64)
 

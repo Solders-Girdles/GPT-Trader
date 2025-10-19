@@ -8,7 +8,7 @@ from collections.abc import Iterable, Mapping
 from pathlib import Path
 from typing import Any
 
-from bot_v2.config.path_registry import DEFAULT_EVENT_STORE_DIR
+from bot_v2.config.path_registry import DEFAULT_EVENT_STORE_DIR, LEGACY_EVENT_STORE_DIR
 from bot_v2.persistence.json_file_store import JsonFileStore
 from bot_v2.utilities import utc_now_iso
 
@@ -114,21 +114,28 @@ class EventStore:
     """Lightweight JSONL event store for trades, positions, metrics, and errors.
 
     Writes one JSON object per line with at minimum: time, bot_id, type.
-    File default: var/data/perps_bot/shared/events.jsonl (created if missing).
+    File default: var/data/coinbase_trader/shared/events.jsonl (created if missing, with legacy writes maintained in var/data/perps_bot/shared/events.jsonl during migration).
     Callers typically provide a profile-specific root such as
-    var/data/perps_bot/<profile>/events.jsonl.
+    var/data/coinbase_trader/<profile>/events.jsonl.
     """
 
-    def __init__(self, root: Path | None = None) -> None:
+    def __init__(self, root: Path | None = None, *, bridge_legacy: bool | None = None) -> None:
         base = root or DEFAULT_EVENT_STORE_DIR
         self.path = base / "events.jsonl"
         self._store = JsonFileStore(self.path)
         self._lock = threading.RLock()
+        should_bridge = bridge_legacy if bridge_legacy is not None else root is None
+        legacy_path = LEGACY_EVENT_STORE_DIR / "events.jsonl"
+        self._legacy_store = (
+            JsonFileStore(legacy_path) if should_bridge and legacy_path != self.path else None
+        )
 
     def _write(self, payload: dict[str, Any]) -> None:
         record = self._normalize_payload(payload)
         with self._lock:
             self._store.append_jsonl(record)
+            if self._legacy_store is not None and self._legacy_store is not self._store:
+                self._legacy_store.append_jsonl(record)
 
     def _normalize_payload(self, payload: Mapping[str, Any]) -> dict[str, Any]:
         if "bot_id" not in payload:

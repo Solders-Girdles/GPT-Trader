@@ -57,10 +57,10 @@ git log --oneline -5 -- README.md
 ```bash
 # ✅ Spot-first reality check
 poetry run pytest --collect-only               # ~1484 collected / 1483 selected / 1 deselected
-poetry run perps-bot run --profile dev         # Spot trading by default
+poetry run coinbase-trader run --profile dev         # Spot trading by default
 
 # ⚠️ Perps check (expect failure without INTX)
-COINBASE_ENABLE_DERIVATIVES=1 poetry run perps-bot run --profile dev
+COINBASE_ENABLE_DERIVATIVES=1 poetry run coinbase-trader run --profile dev
 ```
 
 ## Emergency Trust Reset

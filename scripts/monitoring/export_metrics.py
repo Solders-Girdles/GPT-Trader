@@ -1,4 +1,4 @@
-"""Simple HTTP exporter for Perps Bot metrics.
+"""Simple HTTP exporter for Coinbase Trader metrics.
 
 Serves Prometheus-compatible metrics and a JSON view of the latest
 `cycle_metrics` and `account_snapshot` data so dashboards/alerting stacks
@@ -11,13 +11,18 @@ import argparse
 import json
 import os
 from pathlib import Path
-from typing import Any, Dict, Tuple
+from typing import Any
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_METRICS = REPO_ROOT / "var" / "data" / "perps_bot" / "prod" / "metrics.json"
-DEFAULT_EVENTS = REPO_ROOT / "var" / "data" / "perps_bot" / "prod" / "events.jsonl"
-METRIC_PREFIX = "perps_bot"
+DEFAULT_METRICS = REPO_ROOT / "var" / "data" / "coinbase_trader" / "prod" / "metrics.json"
+LEGACY_DEFAULT_METRICS = REPO_ROOT / "var" / "data" / "perps_bot" / "prod" / "metrics.json"
+DEFAULT_EVENTS = REPO_ROOT / "var" / "data" / "coinbase_trader" / "prod" / "events.jsonl"
+LEGACY_DEFAULT_EVENTS = REPO_ROOT / "var" / "data" / "perps_bot" / "prod" / "events.jsonl"
+METRIC_PREFIX = os.getenv(
+    "COINBASE_TRADER_METRIC_PREFIX",
+    os.getenv("PERPS_BOT_METRIC_PREFIX", "coinbase_trader"),
+)
 
 from flask import Flask, Response, jsonify
 
@@ -200,7 +205,7 @@ def create_app(metrics_path: Path, events_path: Path) -> Flask:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Perps Bot metrics exporter")
+    parser = argparse.ArgumentParser(description="Coinbase Trader metrics exporter")
     parser.add_argument("--metrics-file", default=str(DEFAULT_METRICS), help="Path to metrics.json")
     parser.add_argument("--events-file", default=str(DEFAULT_EVENTS), help="Path to events log")
     parser.add_argument("--host", default="0.0.0.0")
@@ -208,7 +213,17 @@ def main():
     args = parser.parse_args()
 
     metrics_path = Path(args.metrics_file)
+    if args.metrics_file == str(DEFAULT_METRICS) and not metrics_path.exists():
+        legacy_metrics = LEGACY_DEFAULT_METRICS
+        if legacy_metrics.exists():
+            metrics_path = legacy_metrics
+
     events_path = Path(args.events_file)
+    if args.events_file == str(DEFAULT_EVENTS) and not events_path.exists():
+        legacy_events = LEGACY_DEFAULT_EVENTS
+        if legacy_events.exists():
+            events_path = legacy_events
+
     app = create_app(metrics_path, events_path)
     app.run(host=args.host, port=args.port)
 

@@ -49,7 +49,7 @@ if TYPE_CHECKING:  # pragma: no cover - imports for type checking only
     from bot_v2.persistence.event_store import EventStore
 from bot_v2.persistence.orders_store import OrdersStore
 
-logger = get_logger(__name__, component="perps_bot")
+logger = get_logger(__name__, component="coinbase_trader")
 
 
 class _CallableSymbolProcessor:
@@ -123,7 +123,7 @@ class PerpsBot:
         baseline_snapshot: Any,
         configuration_guardian: ConfigurationGuardian | None = None,
     ) -> None:
-        self.bot_id = "perps_bot"
+        self.bot_id = "coinbase_trader"
         self.start_time = datetime.now(UTC)
         self.running = False
 
@@ -176,7 +176,7 @@ class PerpsBot:
         if not symbols:
             logger.warning(
                 "No symbols configured; continuing with empty symbol list",
-                operation="perps_bot_init",
+                operation="coinbase_trader_init",
                 stage="symbols_missing",
             )
 
@@ -652,3 +652,7 @@ class PerpsBot:
             self._install_symbol_processor_override(value)
             return
         super().__setattr__(name, value)
+
+
+# Backwards-compatibility alias for the spot-first runtime name.
+CoinbaseTrader = PerpsBot

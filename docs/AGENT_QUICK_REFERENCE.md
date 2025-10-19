@@ -5,7 +5,7 @@ This is a condensed reference for AI agents working with the GPT-Trader reposito
 ## 🎯 Current State (2025-10)
 
 **Active System**: Spot trading bot with Coinbase Advanced Trade
-**Primary CLI**: `poetry run perps-bot`
+**Primary CLI**: `poetry run coinbase-trader` (legacy alias: `poetry run perps-bot`)
 **Architecture**: Vertical slices under `src/bot_v2/`
 **Perpetuals**: ⚠️ Code exists but requires INTX access + `COINBASE_ENABLE_DERIVATIVES=1`
 
@@ -40,30 +40,30 @@ docs/agents/                 # Agent-specific guides
 poetry install
 
 # Run bot in dev mode (mock broker)
-poetry run perps-bot run --profile dev --dev-fast
+poetry run coinbase-trader run --profile dev --dev-fast
 
 # Run tests
 poetry run pytest --collect-only  # Check test count
 poetry run pytest -q              # Run active suite
 
 # Account verification
-poetry run perps-bot account snapshot
+poetry run coinbase-trader account snapshot
 ```
 
 ### Trading Operations
 ```bash
 # Treasury operations
-poetry run perps-bot treasury convert --from USD --to USDC --amount 1000
-poetry run perps-bot treasury move --from-portfolio a --to-portfolio b --amount 50
+poetry run coinbase-trader treasury convert --from USD --to USDC --amount 1000
+poetry run coinbase-trader treasury move --from-portfolio a --to-portfolio b --amount 50
 
 # Order preview (no execution)
-poetry run perps-bot orders preview --symbol BTC-USD --side buy --type market --quantity 0.1
+poetry run coinbase-trader orders preview --symbol BTC-USD --side buy --type market --quantity 0.1
 ```
 
 ### Monitoring
 ```bash
 # Export metrics
-poetry run python scripts/monitoring/export_metrics.py --metrics-file var/data/perps_bot/prod/metrics.json
+poetry run python scripts/monitoring/export_metrics.py --metrics-file var/data/coinbase_trader/prod/metrics.json
 ```
 
 ## 🔧 Configuration
@@ -86,7 +86,8 @@ COINBASE_ENABLE_DERIVATIVES=0
 # COINBASE_PROD_CDP_PRIVATE_KEY="-----BEGIN EC PRIVATE KEY-----..."
 
 # Debug flags
-PERPS_DEBUG=1                 # Enable debug logging
+COINBASE_TRADER_DEBUG=1       # Enable debug logging
+PERPS_DEBUG=1                 # Legacy alias (still supported)
 DRY_RUN=1                     # Dry run mode
 ```
 
@@ -212,19 +213,19 @@ profile_config = config.load_profile_config(config.profile)
 ```bash
 export PERPS_DEBUG=1
 export LOG_LEVEL=DEBUG
-poetry run perps-bot run --profile dev --dev-fast
+poetry run coinbase-trader run --profile dev --dev-fast
 ```
 
 ### Check System State
 ```bash
 # Account status
-poetry run perps-bot account snapshot
+poetry run coinbase-trader account snapshot
 
 # Metrics
-poetry run python scripts/monitoring/export_metrics.py --metrics-file var/data/perps_bot/dev/metrics.json
+poetry run python scripts/monitoring/export_metrics.py --metrics-file var/data/coinbase_trader/dev/metrics.json
 
 # Logs
-tail -f var/logs/perps_bot.log
+tail -f var/logs/coinbase_trader.log
 ```
 
 ### Common Issues

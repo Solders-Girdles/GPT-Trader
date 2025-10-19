@@ -214,7 +214,7 @@ RUN poetry config virtualenvs.create false \
 # Copy application
 COPY . .
 
-CMD ["poetry", "run", "perps-bot", "--profile", "prod"]
+CMD ["poetry", "run", "coinbase-trader", "--profile", "prod"]
 ```
 
 ### Cloud Platform Support
@@ -305,7 +305,7 @@ python -c "import sys; print(sys.version)"
 python -c "import pandas; print(pandas.__version__)"
 
 # Test Coinbase connectivity
-poetry run perps-bot run --profile dev --dev-fast
+poetry run coinbase-trader run --profile dev --dev-fast
 ```
 
 ### Support Resources

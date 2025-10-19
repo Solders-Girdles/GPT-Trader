@@ -17,7 +17,7 @@ from bot_v2.orchestration.service_registry import ServiceRegistry
 from bot_v2.orchestration.session_guard import TradingSessionGuard
 from bot_v2.utilities.logging_patterns import get_logger
 
-logger = get_logger(__name__, component="perps_bot_builder")
+logger = get_logger(__name__, component="coinbase_trader_builder")
 
 
 class PerpsBotBuilder:
@@ -98,8 +98,8 @@ class PerpsBotBuilder:
 
         symbols = list(bot.symbols)
         logger.info(
-            "PerpsBot constructed via builder",
-            operation="perps_bot_builder",
+            "Coinbase Trader constructed via builder",
+            operation="coinbase_trader_builder",
             stage="build_complete",
             profile=config.profile.value,
             symbol_count=len(symbols),

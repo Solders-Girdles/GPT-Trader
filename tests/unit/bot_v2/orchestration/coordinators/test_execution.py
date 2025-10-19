@@ -11,6 +11,8 @@ from bot_v2.orchestration.coordinators.execution import ExecutionCoordinator
 from bot_v2.orchestration.perps_bot_state import PerpsBotRuntimeState
 from bot_v2.orchestration.service_registry import ServiceRegistry
 
+BOT_ID = "coinbase_trader"
+
 
 def _make_context(*, dry_run: bool = False, advanced: bool = False) -> CoordinatorContext:
     config = BotConfig(profile=Profile.PROD, dry_run=dry_run)
@@ -28,7 +30,7 @@ def _make_context(*, dry_run: bool = False, advanced: bool = False) -> Coordinat
         broker=broker,
         risk_manager=risk_manager,
         symbols=("BTC-PERP",),
-        bot_id="perps_bot",
+        bot_id=BOT_ID,
         runtime_state=runtime_state,
     )
     return context

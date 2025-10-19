@@ -31,7 +31,7 @@ its ML workflows.
 4. Run the dev smoke test:
 
    ```bash
-   poetry run perps-bot run --profile dev --dev-fast
+   poetry run coinbase-trader run --profile dev --dev-fast
    ```
 
    This executes one control cycle using the mock broker.
@@ -42,7 +42,7 @@ its ML workflows.
   sizing with risk caps.
 - **Risk guards**: See `docs/RISK_INTEGRATION_GUIDE.md` for guard coverage and
   thresholds.
-- **Telemetry**: Metrics persist to `var/data/perps_bot/<profile>/metrics.json`; the
+- **Telemetry**: Metrics persist to `var/data/coinbase_trader/<profile>/metrics.json`; the
   exporter in `scripts/monitoring/export_metrics.py` converts them to Prometheus.
 
 ## Module 4 – Development Workflow
@@ -60,9 +60,9 @@ its ML workflows.
 - Manual tooling:
 
   ```bash
-  poetry run perps-bot account snapshot
-  poetry run perps-bot treasury convert --from USD --to USDC --amount 250
-  poetry run perps-bot treasury move --from-portfolio from_uuid --to-portfolio to_uuid --amount 25
+  poetry run coinbase-trader account snapshot
+  poetry run coinbase-trader treasury convert --from USD --to USDC --amount 250
+  poetry run coinbase-trader treasury move --from-portfolio from_uuid --to-portfolio to_uuid --amount 25
   ```
 
 - Guardrails default to spot-only. Derivatives remain locked behind INTX access

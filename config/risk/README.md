@@ -7,7 +7,7 @@ Overview
 How To Use
 - Set env: `RISK_CONFIG_PATH=config/risk/coinbase_perps.prod.yaml`
 - Optionally set symbols via env: `TRADING_SYMBOLS=BTC-PERP,ETH-PERP,SOL-PERP,XRP-PERP`
-- Or pass on CLI: `poetry run perps-bot --profile prod --symbols BTC-PERP ETH-PERP SOL-PERP XRP-PERP`
+- Or pass on CLI: `poetry run coinbase-trader --profile prod --symbols BTC-PERP ETH-PERP SOL-PERP XRP-PERP`
 
 Key Settings
 - max_leverage: Global cap; day/night per‑symbol caps override when stricter.

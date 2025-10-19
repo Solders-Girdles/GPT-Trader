@@ -193,7 +193,7 @@ health_status = await endpoint.get_health_status()
 ### 2. Builder Pattern Implementation (`src/bot_v2/orchestration/`)
 
 #### New Files:
-- **`perps_bot_builder.py`** - Builder pattern for PerpsBot construction
+- **`coinbase_trader_builder.py`** - Builder pattern for PerpsBot construction
 
 #### Benefits:
 - **Simplified construction**: Complex object initialization made readable

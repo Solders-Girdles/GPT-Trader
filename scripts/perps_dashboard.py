@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Perps Metrics Dashboard
+Coinbase Trader Metrics Dashboard
 
-Surfaces PerpsBot metrics emitted via EventStore and health.json.
+Surfaces Coinbase Trader metrics emitted via EventStore and health.json.
 
 Shows:
 - Order success/failure counts and acceptance rate (sliding window)
@@ -13,7 +13,8 @@ Usage:
   python scripts/perps_dashboard.py --profile dev --refresh 5 --window-min 5
 
 Env overrides:
-  EVENT_STORE_ROOT: base directory for events/health (defaults to var/data/perps_bot/<profile>)
+  EVENT_STORE_ROOT: base directory for events/health (defaults to var/data/coinbase_trader/<profile>;
+  falls back to the legacy var/data/perps_bot/<profile> if present)
 """
 
 from __future__ import annotations
@@ -122,14 +123,18 @@ def load_metrics(metrics_path: Path) -> dict:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Perps Metrics Dashboard")
+    parser = argparse.ArgumentParser(description="Coinbase Trader Metrics Dashboard")
     parser.add_argument("--profile", choices=["dev", "demo", "prod", "canary"], default="dev")
     parser.add_argument("--refresh", type=int, default=5, help="Refresh interval seconds")
     parser.add_argument("--window-min", type=int, default=5, help="Sliding window in minutes")
     args = parser.parse_args()
 
-    # Resolve base dir for this profile (aligns with PerpsBot EventStore root)
-    default_root = RUNTIME_DATA_DIR / "perps_bot" / args.profile
+    # Resolve base dir for this profile (aligns with Coinbase Trader EventStore root)
+    default_root = RUNTIME_DATA_DIR / "coinbase_trader" / args.profile
+    legacy_root = RUNTIME_DATA_DIR / "perps_bot" / args.profile
+    if not default_root.exists() and legacy_root.exists():
+        default_root = legacy_root
+
     base_dir = Path(os.getenv("EVENT_STORE_ROOT", str(default_root)))
     events_path = base_dir / "events.jsonl"
     health_path = base_dir / "health.json"
@@ -143,7 +148,7 @@ def main():
             clear()
             print("=" * 80)
             print(
-                f"🚀 Perps Metrics Dashboard  |  Profile: {args.profile}  |  Window: {args.window_min}m"
+                f"🚀 Coinbase Trader Metrics Dashboard  |  Profile: {args.profile}  |  Window: {args.window_min}m"
             )
             print("=" * 80)
 

@@ -14,6 +14,8 @@ from bot_v2.orchestration.coordinators.strategy import StrategyCoordinator
 from bot_v2.orchestration.perps_bot_state import PerpsBotRuntimeState
 from bot_v2.orchestration.service_registry import ServiceRegistry
 
+BOT_ID = "coinbase_trader"
+
 shutdown_flag = SimpleNamespace(value=True)
 
 
@@ -56,7 +58,7 @@ def _make_context(
         event_store=registry.event_store,
         orders_store=registry.orders_store,
         symbols=symbols,
-        bot_id="perps_bot",
+        bot_id=BOT_ID,
         runtime_state=runtime_state,
         strategy_orchestrator=strategy_orchestrator
         or Mock(process_symbol=Mock(return_value=None), requires_context=False),

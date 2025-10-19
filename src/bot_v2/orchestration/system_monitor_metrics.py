@@ -45,13 +45,21 @@ class MetricsPublisher:
         self._write_snapshot(metrics)
         self._log_update(metrics)
 
+    def _target_dirs(self) -> list[Path]:
+        modern = self._base_dir / "coinbase_trader" / self._profile
+        legacy = self._base_dir / "perps_bot" / self._profile
+        if legacy == modern:
+            return [modern]
+        return [modern, legacy]
+
     # ------------------------------------------------------------------
     def _write_snapshot(self, metrics: dict[str, Any]) -> None:
         try:
-            metrics_path = self._base_dir / "perps_bot" / self._profile / "metrics.json"
-            metrics_path.parent.mkdir(parents=True, exist_ok=True)
-            with metrics_path.open("w") as fh:
-                json.dump(metrics, fh, indent=2)
+            for target_dir in self._target_dirs():
+                metrics_path = target_dir / "metrics.json"
+                metrics_path.parent.mkdir(parents=True, exist_ok=True)
+                with metrics_path.open("w") as fh:
+                    json.dump(metrics, fh, indent=2)
         except Exception as exc:
             logger.debug(
                 "Failed to write metrics snapshot",
@@ -72,7 +80,7 @@ class MetricsPublisher:
                 level=LogLevel.INFO,
                 event_type="metrics_update",
                 message="Cycle metrics updated",
-                component="PerpsBot",
+                component="CoinbaseTrader",
                 **summary_fields,
             )
         except Exception as exc:
@@ -93,10 +101,11 @@ class MetricsPublisher:
             "message": message,
             "error": error,
         }
-        status_path = self._base_dir / "perps_bot" / self._profile / "health.json"
-        status_path.parent.mkdir(parents=True, exist_ok=True)
-        with status_path.open("w") as fh:
-            json.dump(status, fh, indent=2)
+        for target_dir in self._target_dirs():
+            status_path = target_dir / "health.json"
+            status_path.parent.mkdir(parents=True, exist_ok=True)
+            with status_path.open("w") as fh:
+                json.dump(status, fh, indent=2)
 
 
 __all__ = ["MetricsPublisher"]

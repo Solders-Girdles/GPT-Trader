@@ -1,16 +1,16 @@
 # GPT-Trader Monitoring & Dashboards
 
 The current monitoring stack centres on runtime telemetry emitted by
-`perps-bot`, the live risk engine, and the Prometheus-compatible exporter. This
+`coinbase-trader`, the live risk engine, and the Prometheus-compatible exporter. This
 guide covers the primary surfaces now that the legacy Streamlit UI has been
 retired.
 
 ## Runtime Telemetry
 
-- `var/data/perps_bot/<profile>/metrics.json` captures the latest cycle metrics
+- `var/data/coinbase_trader/<profile>/metrics.json` captures the latest cycle metrics
   for each profile. Tools like `jq` or spreadsheets work well for ad-hoc
   reviews.
-- `poetry run perps-bot account snapshot` prints balances, fee tiers, and
+- `poetry run coinbase-trader account snapshot` prints balances, fee tiers, and
   permissions without executing the trading loop.
 - The risk manager records periodic snapshots via
   `bot_v2/features/live_trade/risk_metrics.py`; these feed dashboards and the
@@ -22,7 +22,7 @@ retired.
 
 ```bash
 poetry run python scripts/monitoring/export_metrics.py \
-  --metrics-file var/data/perps_bot/prod/metrics.json \
+  --metrics-file var/data/coinbase_trader/prod/metrics.json \
   --port 9102
 ```
 
@@ -41,7 +41,7 @@ as the exporter without depending on the deprecated dashboard stack.
 
 ```bash
 poetry run python scripts/perps_dashboard.py \
-  --metrics-file var/data/perps_bot/canary/metrics.json \
+  --metrics-file var/data/coinbase_trader/canary/metrics.json \
   --refresh-seconds 5
 ```
 

@@ -10,7 +10,7 @@ This document highlights key areas of confusion for AI agents working with the G
 **Confusing Elements**:
 - README mentions "perpetual futures logic remains in the tree" but requires INTX gate
 - Architecture doc describes perps components as "future-ready" without clear distinction
-- CLI is called `perps-bot` but primarily does spot trading
+- CLI is called `coinbase-trader` but primarily does spot trading
 - Multiple references to "perps" throughout codebase that are actually dormant
 
 **Reality Check**:
@@ -52,7 +52,7 @@ This document highlights key areas of confusion for AI agents working with the G
 - `config/system_config.yaml` contains outdated settings (yfinance, mock data providers)
 - Multiple authentication methods (HMAC vs JWT) with unclear usage
 - Environment variables like `COINBASE_ENABLE_DERIVATIVES` that default to disabled
-- Debug flags scattered throughout (`PERPS_DEBUG`, `LOG_LEVEL`)
+- Debug flags scattered throughout (`COINBASE_TRADER_DEBUG`, legacy `PERPS_DEBUG`, `LOG_LEVEL`)
 
 **Reality Check**:
 - Spot trading uses HMAC auth (API key/secret)
@@ -68,7 +68,7 @@ This document highlights key areas of confusion for AI agents working with the G
 - Multiple entry points mentioned historically.
 
 **Reality Check**:
-- Primary CLI: `poetry run perps-bot`
+- Primary CLI: `poetry run coinbase-trader` (legacy alias `poetry run perps-bot` remains available for older scripts)
 - Legacy CLI prototypes live only in the legacy bundle/tag; do not expect them in the workspace.
 
 ### 6. Testing and Validation Confusion
@@ -96,7 +96,7 @@ This document highlights key areas of confusion for AI agents working with the G
 
 **Reality Check**:
 - Use `quantity` not `qty`
-- "perps-bot" name is historical (now spot-first)
+- `coinbase-trader` is the canonical CLI/runtime name (legacy `perps-bot` remains as an alias during migration)
 - Check naming standards in `docs/agents/naming_standards_outline.md`
 
 ### 8. Operational Confusion
@@ -153,7 +153,7 @@ Before making changes, agents should:
 - [ ] Check if feature is spot-only or perps-gated
 - [ ] Verify which codebase section is active vs legacy
 - [ ] Confirm documentation recency (check file dates)
-- [ ] Test with dev profile first: `poetry run perps-bot run --profile dev --dev-fast`
+- [ ] Test with dev profile first: `poetry run coinbase-trader run --profile dev --dev-fast`
 - [ ] Run test discovery: `poetry run pytest --collect-only` (1484 collected / 1483 selected / 1 deselected)
 
 ### Code Navigation
@@ -188,17 +188,17 @@ Before making changes, agents should:
 ```bash
 # Verify current state
 poetry run pytest --collect-only
-poetry run perps-bot run --profile dev --dev-fast
+poetry run coinbase-trader run --profile dev --dev-fast
 
 # Testing
 poetry run pytest -q
 poetry run pytest tests/unit/bot_v2/ -q
 
 # Account verification
-poetry run perps-bot account snapshot
+poetry run coinbase-trader account snapshot
 
 # Metrics
-poetry run python scripts/monitoring/export_metrics.py --metrics-file var/data/perps_bot/prod/metrics.json
+poetry run python scripts/monitoring/export_metrics.py --metrics-file var/data/coinbase_trader/prod/metrics.json
 ```
 
 ## 🔄 Architecture Evolution

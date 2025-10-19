@@ -757,9 +757,9 @@ class PreflightCheck:
         print(f"\n{Colors.BOLD}Recommendations:{Colors.RESET}")
 
         if status == "READY":
-            print(f"1. Start with: poetry run perps-bot --profile {self.profile} --dry-run")
+            print(f"1. Start with: poetry run coinbase-trader --profile {self.profile} --dry-run")
             print(f"2. Monitor for 1 hour in dry-run mode")
-            print(f"3. Begin live with: poetry run perps-bot --profile {self.profile}")
+            print(f"3. Begin live with: poetry run coinbase-trader --profile {self.profile}")
             print(f"4. Use tiny positions (0.001 BTC) initially")
             print(f"5. Monitor closely for first 24 hours")
         elif status == "REVIEW":

@@ -10,6 +10,8 @@ from bot_v2.orchestration.configuration import BotConfig
 from bot_v2.orchestration.perps_bot_builder import create_perps_bot
 from bot_v2.orchestration.service_registry import ServiceRegistry
 
+BOT_ID = "coinbase_trader"
+
 
 @pytest.mark.asyncio
 async def test_perps_streaming_smoke(monkeypatch, tmp_path, fake_clock):
@@ -57,7 +59,7 @@ async def test_perps_streaming_smoke(monkeypatch, tmp_path, fake_clock):
     assert stream_task is not None
     await asyncio.wait_for(stream_task, timeout=2.0)
 
-    events = bot.event_store.tail(bot_id="perps_bot", limit=50)
+    events = bot.event_store.tail(bot_id=BOT_ID, limit=50)
     assert any(e.get("event_type") == "ws_mark_update" for e in events), events
 
     # Verify risk manager got a mark timestamp for at least one symbol

@@ -103,7 +103,7 @@ export COINBASE_API_SECRET=your-sandbox-secret
 export COINBASE_API_PASSPHRASE=your-sandbox-passphrase
 
 # Run smoke test (spot)
-poetry run perps-bot --profile dev --symbols BTC-USD --dry-run --dev-fast
+poetry run coinbase-trader --profile dev --symbols BTC-USD --dry-run --dev-fast
 ```
 
 ### WebSocket Streaming

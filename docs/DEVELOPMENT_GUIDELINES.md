@@ -64,7 +64,7 @@ rules that referenced the monolithic `src/bot` package have been archived.
 
 ## Operational Hygiene
 
-- Validate new behaviour with `poetry run perps-bot run --profile dev --dev-fast`.
+- Validate new behaviour with `poetry run coinbase-trader run --profile dev --dev-fast`.
 - Confirm metrics output updates when telemetry changes (`metrics.json`).
 - Coordinate with operations before altering risk guard thresholds or order
   routing.

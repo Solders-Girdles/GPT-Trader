@@ -200,7 +200,7 @@ poetry run python scripts/production_preflight.py --profile canary
 ### Step 2: Test with Development Profile
 ```bash
 # Run with mock broker (no real trades)
-poetry run perps-bot run --profile dev --dev-fast
+poetry run coinbase-trader run --profile dev --dev-fast
 
 # This runs for 60 seconds with simulated data
 ```
@@ -208,7 +208,7 @@ poetry run perps-bot run --profile dev --dev-fast
 ### Step 3: Test with Dry Run
 ```bash
 # Test with real market data but no trades
-poetry run perps-bot run --profile canary --dry-run
+poetry run coinbase-trader run --profile canary --dry-run
 
 # Monitor the output for proper data reception
 ```
@@ -216,7 +216,7 @@ poetry run perps-bot run --profile canary --dry-run
 ### Step 4: First Live Trade (Canary)
 ```bash
 # When ready for real (tiny) trades
-poetry run perps-bot run --profile canary
+poetry run coinbase-trader run --profile canary
 
 # This will trade with minimal position sizes
 ```
@@ -236,7 +236,7 @@ poetry run pytest -q
 ### Check Streaming Health
 ```bash
 # Smoke test the trading loop (mock broker)
-poetry run perps-bot run --profile dev --dev-fast
+poetry run coinbase-trader run --profile dev --dev-fast
 
 # Inspect heartbeat metrics and mark timestamps
 poetry run python scripts/perps_dashboard.py --profile dev --refresh 5 --window-min 5
@@ -248,7 +248,7 @@ poetry run python scripts/perps_dashboard.py --profile dev --refresh 5 --window-
 poetry run python scripts/production_preflight.py --profile canary
 
 # Export Prometheus-compatible metrics
-poetry run python scripts/monitoring/export_metrics.py --metrics-file var/data/perps_bot/prod/metrics.json
+poetry run python scripts/monitoring/export_metrics.py --metrics-file var/data/coinbase_trader/prod/metrics.json
 ```
 
 ## Troubleshooting
@@ -295,10 +295,10 @@ poetry shell  # Activate environment
 poetry run python -c "import os; print(os.getenv('COINBASE_API_KEY')[:20])"
 
 # Monitor real-time logs
-tail -f var/logs/perps_bot.log
+tail -f var/logs/coinbase_trader.log
 
 # Emergency stop
-export RISK_KILL_SWITCH_ENABLED=1 && pkill -f perps-bot
+export RISK_KILL_SWITCH_ENABLED=1 && pkill -f coinbase-trader
 ```
 
 ### Getting Help
@@ -309,7 +309,7 @@ export RISK_KILL_SWITCH_ENABLED=1 && pkill -f perps-bot
    - [Trading Operations](../reference/trading_logic_perps.md)
 
 2. **Review Logs**:
-   - Main log: `var/logs/perps_bot.log`
+   - Main log: `var/logs/coinbase_trader.log`
    - Error details with: `--log-level DEBUG`
 
 3. **Community Support**:
@@ -331,8 +331,8 @@ After successful setup:
    - Gradually increase position sizes once telemetry looks healthy
 
 3. **Monitor Performance**:
-   - Use metrics exporter: `poetry run python scripts/monitoring/export_metrics.py --metrics-file var/data/perps_bot/prod/metrics.json`
-   - Track logs in `var/logs/perps_bot.log`
+   - Use metrics exporter: `poetry run python scripts/monitoring/export_metrics.py --metrics-file var/data/coinbase_trader/prod/metrics.json`
+   - Track logs in `var/logs/coinbase_trader.log`
    - Schedule regular performance and risk reviews
 
 ---

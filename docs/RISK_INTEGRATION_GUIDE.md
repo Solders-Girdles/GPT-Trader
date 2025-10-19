@@ -1,6 +1,6 @@
 # Risk Integration Guide (bot_v2)
 
-The spot-first `perps-bot` architecture layers risk controls throughout the
+The spot-first `coinbase-trader` architecture layers risk controls throughout the
 execution stack. This guide highlights the active components and how they work
 together. Legacy material describing `src/bot/risk/*` has been archived.
 

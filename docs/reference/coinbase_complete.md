@@ -248,13 +248,13 @@ Notes:
 poetry run python scripts/production_preflight.py --profile canary
 
 # Smoke test the trading loop (mock broker)
-poetry run perps-bot run --profile dev --dev-fast
+poetry run coinbase-trader run --profile dev --dev-fast
 
 # Inspect streaming telemetry
 poetry run python scripts/perps_dashboard.py --profile dev --refresh 5 --window-min 5
 
 # Export Prometheus-compatible metrics
-poetry run python scripts/monitoring/export_metrics.py --metrics-file var/data/perps_bot/prod/metrics.json
+poetry run python scripts/monitoring/export_metrics.py --metrics-file var/data/coinbase_trader/prod/metrics.json
 ```
 
 ## Testing & Development
@@ -264,7 +264,7 @@ poetry run python scripts/monitoring/export_metrics.py --metrics-file var/data/p
 For development without API calls:
 
 ```bash
-PERPS_FORCE_MOCK=1 poetry run perps-bot run --profile dev
+PERPS_FORCE_MOCK=1 poetry run coinbase-trader run --profile dev
 ```
 
 Features:
@@ -278,7 +278,7 @@ Features:
 For integration testing with real API:
 
 ```bash
-COINBASE_SANDBOX=1 poetry run perps-bot run --profile dev
+COINBASE_SANDBOX=1 poetry run coinbase-trader run --profile dev
 ```
 
 **Limitations**:
@@ -291,7 +291,7 @@ COINBASE_SANDBOX=1 poetry run perps-bot run --profile dev
 For safe production testing:
 
 ```bash
-poetry run perps-bot run --profile canary --dry-run
+poetry run coinbase-trader run --profile canary --dry-run
 ```
 
 Features:
@@ -345,8 +345,8 @@ If migrating from older equities-based system:
 - [API Status](https://status.coinbase.com/)
 
 ### Internal Resources
-- Logs: `var/logs/perps_bot.log`
-- EventStore metrics: `var/data/perps_bot/<profile>/metrics.json`
+- Logs: `var/logs/coinbase_trader.log`
+- EventStore metrics: `var/data/coinbase_trader/<profile>/metrics.json`
 - Configuration templates: `config/environments/`
 
 ## Quick Reference
@@ -355,16 +355,16 @@ If migrating from older equities-based system:
 
 ```bash
 # Run spot bot in production profile
-poetry run perps-bot run --profile prod
+poetry run coinbase-trader run --profile prod
 
 # Check system health
 poetry run python scripts/production_preflight.py --profile canary
 
 # Account snapshot (balances, permissions, fee schedule)
-poetry run perps-bot account snapshot
+poetry run coinbase-trader account snapshot
 
 # Emergency stop
-export RISK_KILL_SWITCH_ENABLED=1 && pkill -f perps-bot
+export RISK_KILL_SWITCH_ENABLED=1 && pkill -f coinbase-trader
 ```
 
 ### Key Files

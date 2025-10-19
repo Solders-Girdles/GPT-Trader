@@ -56,7 +56,7 @@ cp config/environments/.env.template .env
 poetry run python scripts/production_preflight.py --profile canary
 
 # Smoke test the trading loop
-poetry run perps-bot run --profile dev --dev-fast
+poetry run coinbase-trader run --profile dev --dev-fast
 
 # Inspect streaming telemetry
 poetry run python scripts/perps_dashboard.py --profile dev --refresh 5 --window-min 5
@@ -65,21 +65,21 @@ poetry run python scripts/perps_dashboard.py --profile dev --refresh 5 --window-
 ### 3. Canary Deployment
 ```bash
 # Start with canary profile (ultra-safe)
-poetry run perps-bot run --profile canary --dry-run
+poetry run coinbase-trader run --profile canary --dry-run
 
 # Monitor for 24 hours
-# Check logs: tail -f var/logs/perps_bot.log
+# Check logs: tail -f var/logs/coinbase_trader.log
 
 # If successful, enable live spot trading
-poetry run perps-bot run --profile canary
+poetry run coinbase-trader run --profile canary
 ```
 
 ### 4. Production Rollout
 ```bash
 # Gradual scaling approach (spot)
-poetry run perps-bot run --profile prod --dry-run             # Validate config under prod settings
-poetry run perps-bot run --profile prod --reduce-only         # Warm start with exits only
-poetry run perps-bot run --profile prod                       # Full trading once stable
+poetry run coinbase-trader run --profile prod --dry-run             # Validate config under prod settings
+poetry run coinbase-trader run --profile prod --reduce-only         # Warm start with exits only
+poetry run coinbase-trader run --profile prod                       # Full trading once stable
 ```
 
 ## Phased Rollout Plan
@@ -154,10 +154,10 @@ export RISK_REDUCE_ONLY_MODE=1
 # Submit market exits via Coinbase UI or CLI previews while reduce-only is active.
 
 # 3. Stop the bot
-pkill -f perps-bot
+pkill -f coinbase-trader
 
 # 4. Review logs and diagnose
-tail -n 1000 var/logs/perps_bot.log | grep ERROR
+tail -n 1000 var/logs/coinbase_trader.log | grep ERROR
 ```
 
 ## Verification

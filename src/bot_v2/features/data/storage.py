@@ -19,7 +19,8 @@ from bot_v2.utilities.logging_patterns import get_logger
 
 logger = get_logger(__name__, component="data_storage")
 
-DEFAULT_STORAGE_ROOT = Path("var/data/perps_bot/shared/storage")
+DEFAULT_STORAGE_ROOT = Path("var/data/coinbase_trader/shared/storage")
+LEGACY_RUNTIME_STORAGE_ROOT = Path("var/data/perps_bot/shared/storage")
 LEGACY_STORAGE_ROOT = Path("data_storage")
 
 
@@ -248,14 +249,33 @@ class DataStorage:
 
         Preference order:
         1. Explicit path provided by the caller.
-        2. Migrated legacy `data_storage` directory (if present and new root missing).
-        3. Default `var/data/perps_bot/shared/storage`.
+        2. Migrated legacy runtime dir (`var/data/perps_bot/shared/storage`) when the new root is absent.
+        3. Migrated legacy `data_storage` directory when present.
+        4. Default `var/data/coinbase_trader/shared/storage`.
         """
         if base_path is not None:
             return Path(base_path)
 
         default_root = DEFAULT_STORAGE_ROOT
+        legacy_runtime_root = LEGACY_RUNTIME_STORAGE_ROOT
         legacy_root = LEGACY_STORAGE_ROOT
+
+        if legacy_runtime_root.exists():
+            try:
+                default_root.parent.mkdir(parents=True, exist_ok=True)
+                if not default_root.exists():
+                    legacy_runtime_root.rename(default_root)
+                    logger.info("Migrated legacy runtime storage to %s", default_root)
+                return default_root
+            except OSError as exc:
+                logger.warning(
+                    "Failed to migrate legacy runtime storage to %s (%s); using %s",
+                    default_root,
+                    exc,
+                    legacy_runtime_root,
+                    exc_info=True,
+                )
+                return legacy_runtime_root.resolve()
 
         if legacy_root.exists():
             try:

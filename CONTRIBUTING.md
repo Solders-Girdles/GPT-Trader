@@ -61,10 +61,10 @@ poetry run pytest --cov=bot_v2 --cov-report=term-missing
 
 ## Running the Bot Locally
 
-To run the spot trading bot for development, use the `perps-bot` command (derivatives stay gated behind INTX + `COINBASE_ENABLE_DERIVATIVES=1`):
+To run the spot trading bot for development, use the `coinbase-trader` command (legacy alias `perps-bot` remains available; derivatives stay gated behind INTX + `COINBASE_ENABLE_DERIVATIVES=1`):
 
 ```bash
-poetry run perps-bot run --profile dev --dev-fast
+poetry run coinbase-trader run --profile dev --dev-fast
 ```
 
 ## Development Workflow

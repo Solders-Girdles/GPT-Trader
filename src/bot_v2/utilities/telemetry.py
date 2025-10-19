@@ -41,7 +41,7 @@ def emit_metric(
         >>> logger = get_logger()
         >>> emit_metric(
         ...     store,
-        ...     "perps_bot",
+        ...     "coinbase_trader",
         ...     {"event_type": "ws_mark_update", "symbol": "BTC-PERP"},
         ...     logger=logger
         ... )

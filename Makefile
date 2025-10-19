@@ -37,7 +37,7 @@ cov:
 
 dash:
 	poetry run python scripts/monitoring/export_metrics.py \
-		--metrics-file var/data/perps_bot/prod/metrics.json \
+		--metrics-file var/data/coinbase_trader/prod/metrics.json \
 		--port 9102
 
 clean:

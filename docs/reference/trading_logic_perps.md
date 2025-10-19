@@ -246,7 +246,7 @@ risk_management:
 # RUN_SANDBOX_VALIDATIONS=1 python scripts/validate_ws_week1.py
 
 # Full cycle test
-poetry run perps-bot run --profile dev --dry-run --dev-fast
+poetry run coinbase-trader run --profile dev --dry-run --dev-fast
 ```
 
 ## Performance Metrics
@@ -299,31 +299,31 @@ rejection_counts = {
 8. ✅ Review position size calculations
 
 ### Monitoring Setup
-`EVENT_STORE_ROOT` should point to the parent runtime directory (for example `/srv/gpt-trader-runtime`). The bot automatically creates `perps_bot/{profile}` underneath it, so do not append the profile when exporting the variable.
+`EVENT_STORE_ROOT` should point to the parent runtime directory (for example `/srv/gpt-trader-runtime`). The bot automatically creates `coinbase_trader/{profile}` underneath it (and continues writing to the legacy `perps_bot/{profile}` path during the migration window), so do not append the profile when exporting the variable.
 ```bash
 # Health status location
-$EVENT_STORE_ROOT/perps_bot/{profile}/health.json
+$EVENT_STORE_ROOT/coinbase_trader/{profile}/health.json
 
 # Event logs
-$EVENT_STORE_ROOT/perps_bot/{profile}/events/
+$EVENT_STORE_ROOT/coinbase_trader/{profile}/events/
 
 # Order tracking
-$EVENT_STORE_ROOT/perps_bot/{profile}/orders/
+$EVENT_STORE_ROOT/coinbase_trader/{profile}/orders/
 ```
 
 ### Operational Commands
 ```bash
 # Start production trading
-poetry run perps-bot run --profile prod
+poetry run coinbase-trader run --profile prod
 
 # Emergency reduce-only mode
-poetry run perps-bot run --profile prod --reduce-only
+poetry run coinbase-trader run --profile prod --reduce-only
 
 # Canary deployment
-poetry run perps-bot run --profile canary
+poetry run coinbase-trader run --profile canary
 
 # Single cycle validation
-poetry run perps-bot run --profile prod --dev-fast --dry-run
+poetry run coinbase-trader run --profile prod --dev-fast --dry-run
 ```
 
 ## Future Enhancements

@@ -8,7 +8,7 @@ use repository-relative references.
 - Active stack: `src/bot_v2/**` (CLI, orchestration, Coinbase adapters, risk)
 - Legacy bundle: `var/legacy/legacy_bundle_latest.tar.gz` (contains the former
   `archived/experimental/**` tree and the `src/gpt_trader/**` PoC CLI)
-- ✅ Rebranded metrics exporter outputs to the `perps_bot_*` prefix (update dashboards to match)
+- ✅ Rebranded metrics exporter outputs to the `coinbase_trader_*` prefix (update dashboards to match)
 - ✅ Removed stale `ml_strategy` block from `config/system_config.yaml`; keep an eye
   out for reintroductions when syncing configs across environments
 

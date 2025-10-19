@@ -46,7 +46,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
 
 def _build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Perpetuals Trading Bot")
+    parser = argparse.ArgumentParser(description="Coinbase Trading Bot")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     run.register(subparsers)
@@ -78,7 +78,7 @@ def _ensure_command(argv: Sequence[str]) -> list[str]:
 
 
 def _maybe_enable_debug_logging() -> None:
-    if _env_flag("PERPS_DEBUG"):
+    if _env_flag("COINBASE_TRADER_DEBUG") or _env_flag("PERPS_DEBUG"):
         logging.getLogger("bot_v2.features.brokerages.coinbase").setLevel(logging.DEBUG)
         logging.getLogger("bot_v2.orchestration").setLevel(logging.DEBUG)
 

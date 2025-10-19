@@ -9,6 +9,8 @@ from bot_v2.orchestration.coordinators.telemetry import TelemetryCoordinator
 from bot_v2.orchestration.perps_bot_state import PerpsBotRuntimeState
 from bot_v2.orchestration.service_registry import ServiceRegistry
 
+BOT_ID = "coinbase_trader"
+
 
 def _build_context(
     *,
@@ -40,7 +42,7 @@ def _build_context(
         broker=broker,
         risk_manager=risk_manager,
         symbols=tuple(config.symbols),
-        bot_id="perps_bot",
+        bot_id=BOT_ID,
         runtime_state=runtime_state,
         strategy_coordinator=strategy_coordinator,
         set_running_flag=lambda _: None,
@@ -113,7 +115,7 @@ def test_streaming_disabled_returns_none() -> None:
         broker=registry.broker,
         risk_manager=registry.risk_manager,
         symbols=("BTC-PERP",),
-        bot_id="perps_bot",
+        bot_id=BOT_ID,
         runtime_state=PerpsBotRuntimeState(["BTC-PERP"]),
         strategy_coordinator=None,
         set_running_flag=lambda _: None,

@@ -48,13 +48,13 @@ src/bot_v2/
 ### High-Level Flow
 
 ```
-CLI (perps-bot) → Config (BotConfig) → Service Registry → LiveExecutionEngine →
+CLI (coinbase-trader) → Config (BotConfig) → Service Registry → LiveExecutionEngine →
 Risk Guards → Coinbase Brokerage Adapter → Metrics + Telemetry
 ```
 
 ### Entry Point & Service Wiring
 
-- `poetry run perps-bot` invokes `bot_v2.cli:main`, producing a `BotConfig` from
+- `poetry run coinbase-trader` invokes `bot_v2.cli:main`, producing a `BotConfig` from
   CLI arguments and environment overrides.
 - `bot_v2/orchestration/bootstrap.py` hydrates the `ServiceRegistry`, wiring the
   broker adapter, risk manager, execution engine, and telemetry surfaces before
@@ -333,7 +333,7 @@ monitoring: real-time
 
 ## Performance & Observability
 
-- **Cycle Metrics**: persisted to `var/data/perps_bot/<profile>/metrics.json` and exposed via the
+- **Cycle Metrics**: persisted to `var/data/coinbase_trader/<profile>/metrics.json` and exposed via the
   Prometheus exporter (`scripts/monitoring/export_metrics.py`). The live risk manager now emits
   snapshot events consumed by dashboards and the monitoring stack.
 - **Account Snapshots**: periodic telemetry via `CoinbaseAccountManager` with fee/limit tracking.
@@ -347,7 +347,7 @@ monitoring: real-time
 ## Verification Path
 
 1. **Regression Suite**: `poetry run pytest -q`
-2. **Smoke Test**: `poetry run perps-bot run --profile dev --dev-fast`
+2. **Smoke Test**: `poetry run coinbase-trader run --profile dev --dev-fast`
 3. **Validation**: `python scripts/validation/verify_core.py --check all`
 
 ## Dependencies

@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:  # pragma: no cover - import-time cycle guard
     from bot_v2.orchestration.bootstrap import bot_from_profile, build_bot
     from bot_v2.orchestration.configuration import BotConfig, ConfigManager, Profile
-    from bot_v2.orchestration.perps_bot import PerpsBot
+    from bot_v2.orchestration.perps_bot import CoinbaseTrader, PerpsBot
     from bot_v2.orchestration.service_registry import ServiceRegistry
 
 __all__ = [
@@ -18,6 +18,7 @@ __all__ = [
     "Profile",
     "ServiceRegistry",
     "PerpsBot",
+    "CoinbaseTrader",
 ]
 
 
@@ -35,7 +36,11 @@ def __getattr__(name: str) -> Any:
 
         return ServiceRegistry
     if name == "PerpsBot":
-        from bot_v2.orchestration.perps_bot import PerpsBot
+        from bot_v2.orchestration.perps_bot import CoinbaseTrader, PerpsBot
 
         return PerpsBot
+    if name == "CoinbaseTrader":
+        from bot_v2.orchestration.perps_bot import CoinbaseTrader
+
+        return CoinbaseTrader
     raise AttributeError(name)

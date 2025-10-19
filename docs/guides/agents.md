@@ -12,10 +12,10 @@ This guide points AI agents to the canonical resources for GPT-Trader V2. The bo
 ## Core Commands
 ```bash
 poetry install                                        # install deps
-poetry run perps-bot run --profile dev --dev-fast         # spot dev cycle
-poetry run perps-bot run --profile canary --dry-run       # canary dry run
-poetry run perps-bot run --profile canary                 # live spot (tiny)
-poetry run python scripts/monitoring/export_metrics.py --metrics-file var/data/perps_bot/prod/metrics.json
+poetry run coinbase-trader run --profile dev --dev-fast         # spot dev cycle
+poetry run coinbase-trader run --profile canary --dry-run       # canary dry run
+poetry run coinbase-trader run --profile canary                 # live spot (tiny)
+poetry run python scripts/monitoring/export_metrics.py --metrics-file var/data/coinbase_trader/prod/metrics.json
 
 # Tests
 poetry run pytest --collect-only                      # expect 1484 collected / 1483 selected / 1 deselected

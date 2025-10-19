@@ -28,7 +28,8 @@ security = ["cryptography>=43.0.0,<47.0.0", "pyotp>=2.9.0,<3.0.0", "pyjwt>=2.9.0
 infra = ["redis[hiredis]>=5.1.0,<6.0.0"]
 
 [project.scripts]
-perps-bot = "bot_v2.cli:main"
+coinbase-trader = "bot_v2.cli:main"
+perps-bot = "bot_v2.cli:main"  # legacy alias kept for backwards compatibility
 
 [tool.poetry]
 packages = [

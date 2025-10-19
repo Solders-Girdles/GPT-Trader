@@ -13,22 +13,23 @@ An ML-driven Coinbase trading system with market regime detection, built on a cl
 ## 🔎 What's Active Today
 
 - Coinbase trading stack (spot-first): `src/bot_v2/orchestration/perps_bot.py`
-  - Run spot mode: `poetry run perps-bot run --profile dev --dev-fast`
+  - Run spot mode: `poetry run coinbase-trader run --profile dev --dev-fast`
     - The dev profile uses the built-in `DeterministicBroker` for safety; enable real spot execution with `SPOT_FORCE_LIVE=1` plus Coinbase API keys.
     - Default universe: top-ten USD spot markets by Coinbase volume (`BTC`, `ETH`, `SOL`, `XRP`, `LTC`, `ADA`, `DOGE`, `BCH`, `AVAX`, `LINK`).
-    - Shortcut: omitting `run` still works (`poetry run perps-bot --profile dev`) thanks to the default-command shim.
+    - Shortcut: omitting `run` still works (`poetry run coinbase-trader --profile dev`) thanks to the default-command shim.
   - Optional perps (future-ready): requires INTX + `COINBASE_ENABLE_DERIVATIVES=1`
   - Adapter: `src/bot_v2/features/brokerages/coinbase/`
-  - Account telemetry: `poetry run perps-bot account snapshot` (fees, limits, permissions)
-  - Treasury helpers: convert with `poetry run perps-bot treasury convert --from USD --to USDC --amount 1000`
-    and move funds via `poetry run perps-bot treasury move --from-portfolio pf-a --to-portfolio pf-b --amount 50`
-  - Order tooling: preview without executing `poetry run perps-bot orders preview --symbol BTC-USD --side buy --type market --quantity 0.1`
-    and apply edits with `poetry run perps-bot orders apply-edit --order-id ORDER_ID --preview-id PREVIEW_ID`
+  - Account telemetry: `poetry run coinbase-trader account snapshot` (fees, limits, permissions)
+  - Treasury helpers: convert with `poetry run coinbase-trader treasury convert --from USD --to USDC --amount 1000`
+    and move funds via `poetry run coinbase-trader treasury move --from-portfolio pf-a --to-portfolio pf-b --amount 50`
+  - Order tooling: preview without executing `poetry run coinbase-trader orders preview --symbol BTC-USD --side buy --type market --quantity 0.1`
+    and apply edits with `poetry run coinbase-trader orders apply-edit --order-id ORDER_ID --preview-id PREVIEW_ID`
 - Coinbase adapter: `src/bot_v2/features/brokerages/coinbase/`
   - Tests: `pytest tests/unit/bot_v2/features/brokerages/coinbase/test_*.py -q`
 - CLI entrypoint: `src/bot_v2/cli/__init__.py`
   - Commands: `run`, `account`, `orders`, `treasury` (default to `run` if omitted)
-  - Invoke: `poetry run perps-bot <command> [options]`
+  - Invoke: `poetry run coinbase-trader <command> [options]`
+  - Legacy alias: `poetry run perps-bot …` continues to function for existing scripts; prefer `coinbase-trader` for new automation.
 
 Legacy experimental slices (backtest, ml_strategy, monitoring dashboards, PoC CLI)
 now live in the legacy bundle. See `docs/archive/legacy_recovery.md` for details.
@@ -42,10 +43,10 @@ now live in the legacy bundle. See `docs/archive/legacy_recovery.md` for details
 poetry install
 
 # Run Coinbase bot in spot mode (dev profile)
-poetry run perps-bot run --profile dev --dev-fast
+poetry run coinbase-trader run --profile dev --dev-fast
 
 # Run with derivatives (requires COINBASE_ENABLE_DERIVATIVES=1 + CDP creds)
-# COINBASE_ENABLE_DERIVATIVES=1 poetry run perps-bot run --profile canary
+# COINBASE_ENABLE_DERIVATIVES=1 poetry run coinbase-trader run --profile canary
 
 # Run tests (full spot suite)
 poetry run pytest -q
@@ -102,7 +103,7 @@ poetry run pytest -q
 - **[Monitoring Guide](docs/guides/monitoring.md)** - Exporter, Prometheus/Grafana, and alerting setup
 - **[Document Verification Matrix](docs/agents/Document_Verification_Matrix.md)** - Trust levels and verification workflow
 - **[Archived System Snapshot](docs/reference/system_capabilities.md)** - Pointer to the 2024 historical document (verify before use)
-- **Monitoring Exporter**: `poetry run python scripts/monitoring/export_metrics.py --metrics-file var/data/perps_bot/prod/metrics.json`
+- **Monitoring Exporter**: `poetry run python scripts/monitoring/export_metrics.py --metrics-file var/data/coinbase_trader/prod/metrics.json`
   - Serves `/metrics` (Prometheus) and `/metrics.json` (raw snapshot); requires the optional `flask` extra (`poetry install -E monitoring`).
   - Sample stack: `scripts/monitoring/docker-compose.yml.example` (Prometheus, Grafana, Loki, Promtail)
 

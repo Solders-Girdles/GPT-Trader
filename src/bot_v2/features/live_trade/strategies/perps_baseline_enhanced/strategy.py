@@ -40,7 +40,7 @@ class PerpsBaselineEnhancedStrategy:
         config: StrategyConfig | None = None,
         risk_manager: LiveRiskManager | None = None,
         event_store: Any | None = None,
-        bot_id: str = "perps_bot",
+        bot_id: str = "coinbase_trader",
         state: StrategyState | None = None,
     ) -> None:
         """

@@ -64,9 +64,9 @@ def test_resolve_runtime_paths_respects_environment(tmp_path):
 
     paths = resolve_runtime_paths(Profile.DEV, settings)
 
-    assert paths.storage_dir == Path(env["GPT_TRADER_RUNTIME_ROOT"]) / "perps_bot/dev"
+    assert paths.storage_dir == (Path(env["GPT_TRADER_RUNTIME_ROOT"]) / "coinbase_trader/dev")
     assert paths.storage_dir.exists()
-    assert paths.event_store_root == Path(env["EVENT_STORE_ROOT"]) / "perps_bot/dev"
+    assert paths.event_store_root == (Path(env["EVENT_STORE_ROOT"]) / "coinbase_trader/dev")
     assert paths.event_store_root.exists()
 
 
@@ -87,8 +87,8 @@ def test_prepare_perps_bot_reuses_injected_event_store(tmp_path):
     assert result.registry.event_store is custom_store
     assert result.orders_store is not None
     assert config.symbols == ["BTC-PERP"]
-    assert (
-        result.runtime_paths.storage_dir == Path(env["GPT_TRADER_RUNTIME_ROOT"]) / "perps_bot/dev"
+    assert result.runtime_paths.storage_dir == (
+        Path(env["GPT_TRADER_RUNTIME_ROOT"]) / "coinbase_trader/dev"
     )
 
 

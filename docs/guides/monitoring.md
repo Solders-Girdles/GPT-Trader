@@ -1,6 +1,6 @@
 # Monitoring & Metrics Exporter
 
-This guide shows how to surface Perps Bot telemetry in Prometheus/Grafana (or any monitoring stack that can scrape HTTP JSON/text). The bot already writes snapshots to disk; the exporter bundles them up for external use.
+This guide shows how to surface Coinbase Trader telemetry in Prometheus/Grafana (or any monitoring stack that can scrape HTTP JSON/text). The bot already writes snapshots to disk; the exporter bundles them up for external use.
 
 ## 1. Install the optional monitoring extra
 
@@ -14,8 +14,8 @@ This pulls in `flask` so the exporter can run.
 
 ```bash
 poetry run python scripts/monitoring/export_metrics.py \
-  --metrics-file var/data/perps_bot/prod/metrics.json \
-  --events-file var/data/perps_bot/prod/events.jsonl \
+  --metrics-file var/data/coinbase_trader/prod/metrics.json \
+  --events-file var/data/coinbase_trader/prod/events.jsonl \
   --host 0.0.0.0 --port 9000
 ```
 
@@ -30,22 +30,22 @@ Add a job similar to the sample below (`scripts/monitoring/prometheus.yml.exampl
 
 ```yaml
 scrape_configs:
-  - job_name: perps_bot
+  - job_name: coinbase_trader
     scrape_interval: 15s
     static_configs:
-      - targets: ['perps-bot-host:9000']
+      - targets: ['coinbase-trader-host:9000']
 ```
 
 ## 4. Grafana panels & alerts
 
-- Read `perps_bot_equity`, `perps_bot_open_orders`, and the `account_snapshot` fields to build dashboards.
+- Read `coinbase_trader_equity`, `coinbase_trader_open_orders`, and the `account_snapshot` fields to build dashboards.
 - Alert ideas: equity drawdown, open orders stuck > X minutes, account limits approaching zero, missing `account_snapshot` samples.
 
 ## 5. Shipping events to Loki (optional)
 
-If you override `EVENT_STORE_ROOT`, point it at the parent directory (for example `/srv/perps-bot-runtime`). The bot automatically creates `perps_bot/<profile>` beneath that location so you do not need to append the profile yourself.
+If you override `EVENT_STORE_ROOT`, point it at the parent directory (for example `/srv/coinbase-trader-runtime`). The bot automatically creates `coinbase_trader/<profile>` beneath that location (and simultaneously maintains the legacy `perps_bot/<profile>` path during migration), so you do not need to append the profile yourself.
 
-Use the Promtail config template (`scripts/monitoring/promtail-config.yml.example`) to tail `var/data/perps_bot/prod/events.jsonl` into Loki. Key event types to monitor:
+Use the Promtail config template (`scripts/monitoring/promtail-config.yml.example`) to tail `var/data/coinbase_trader/prod/events.jsonl` into Loki. Key event types to monitor:
 
 - `order_preview`, `order_submit`, `order_reject`
 - `account_snapshot`

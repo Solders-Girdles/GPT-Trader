@@ -12,6 +12,8 @@ from bot_v2.orchestration.coordinators.telemetry import TelemetryCoordinator
 from bot_v2.orchestration.perps_bot_state import PerpsBotRuntimeState
 from bot_v2.orchestration.service_registry import ServiceRegistry
 
+BOT_ID = "coinbase_trader"
+
 
 def _make_context(
     *,
@@ -37,7 +39,7 @@ def _make_context(
         broker=broker,
         risk_manager=risk_manager,
         symbols=symbols,
-        bot_id="perps_bot",
+        bot_id=BOT_ID,
         runtime_state=runtime_state,
     )
 

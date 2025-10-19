@@ -29,6 +29,8 @@ from bot_v2.orchestration.perps_bot_builder import create_perps_bot
 from bot_v2.orchestration.perps_bot_state import PerpsBotRuntimeState
 from bot_v2.orchestration.service_registry import ServiceRegistry
 
+BOT_ID = "coinbase_trader"
+
 
 def test_runtime_coordinator_uses_deterministic_broker_for_dev(monkeypatch):
     config = BotConfig(profile=Profile.DEV, symbols=["BTC-PERP"], update_interval=1)
@@ -42,7 +44,7 @@ def test_runtime_coordinator_uses_deterministic_broker_for_dev(monkeypatch):
         broker=None,
         risk_manager=None,
         symbols=tuple(config.symbols),
-        bot_id="perps_bot",
+        bot_id=BOT_ID,
         runtime_state=runtime_state,
         set_running_flag=lambda _: None,
     )
@@ -89,7 +91,7 @@ def test_update_mark_window_trims() -> None:
         broker=None,
         risk_manager=None,
         symbols=tuple(config.symbols),
-        bot_id="perps_bot",
+        bot_id=BOT_ID,
         runtime_state=runtime_state,
         set_running_flag=lambda _: None,
     )

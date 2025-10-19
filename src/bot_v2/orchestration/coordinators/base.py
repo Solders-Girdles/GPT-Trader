@@ -48,7 +48,7 @@ class CoordinatorContext:
     broker: IBrokerage | None = None
     risk_manager: LiveRiskManager | None = None
     symbols: tuple[str, ...] = ()
-    bot_id: str = "perps_bot"
+    bot_id: str = "coinbase_trader"
     runtime_state: Any = None
     config_controller: Any | None = None
     strategy_orchestrator: Any | None = None

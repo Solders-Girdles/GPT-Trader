@@ -237,9 +237,13 @@ class TestMetricsPublisher:
             mock_plog.return_value.log_event = Mock()
             publisher.publish({"equity": 42})
 
-        metrics_file = tmp_path / "perps_bot" / mock_bot.config.profile.value / "metrics.json"
-        assert metrics_file.exists()
-        data = json.loads(metrics_file.read_text())
+        modern_metrics = (
+            tmp_path / "coinbase_trader" / mock_bot.config.profile.value / "metrics.json"
+        )
+        legacy_metrics = tmp_path / "perps_bot" / mock_bot.config.profile.value / "metrics.json"
+        assert modern_metrics.exists()
+        assert legacy_metrics.exists()
+        data = json.loads(modern_metrics.read_text())
         assert data["equity"] == 42
 
     def test_write_health_status(self, tmp_path, mock_bot):
@@ -250,9 +254,11 @@ class TestMetricsPublisher:
             base_dir=tmp_path,
         )
         publisher.write_health_status(ok=True, message="ok", error="")
-        status_file = tmp_path / "perps_bot" / mock_bot.config.profile.value / "health.json"
-        assert status_file.exists()
-        payload = json.loads(status_file.read_text())
+        modern_status = tmp_path / "coinbase_trader" / mock_bot.config.profile.value / "health.json"
+        legacy_status = tmp_path / "perps_bot" / mock_bot.config.profile.value / "health.json"
+        assert modern_status.exists()
+        assert legacy_status.exists()
+        payload = json.loads(modern_status.read_text())
         assert payload["ok"] is True
         assert payload["message"] == "ok"
 

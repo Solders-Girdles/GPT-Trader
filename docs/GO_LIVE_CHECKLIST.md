@@ -27,7 +27,7 @@ Short, actionable readiness checklist. Complete each section before increasing s
 ## 4) Dry Runs
 - Dev mock: `python -m bot_v2.cli run --profile dev --dry-run --symbols BTC-PERP` runs one cycle
 - Canary smoke (reduce-only): `python -m bot_v2.cli run --profile canary --symbols BTC-PERP --reduce-only` with tiny limits
-- Logs created under `var/logs/` and event store under `var/data/perps_bot/{profile}`
+- Logs created under `var/logs/` and event store under `var/data/coinbase_trader/{profile}`
 
 ## 5) Funding & Costs Sanity
 - Maker/taker tier confirmed; fee schedule understood
@@ -52,6 +52,6 @@ Commands reference
 - Runner: `python -m bot_v2.cli run --profile canary --symbols BTC-PERP --reduce-only`
 - Kill switch: export `RISK_KILL_SWITCH_ENABLED=1` (then restart) to halt; set `0` to resume
 - Logs: `var/logs/perps_trading.log`, JSONL at `var/logs/perps_trading.jsonl`
-- Health: `var/data/perps_bot/{profile}/health.json`
+- Health: `var/data/coinbase_trader/{profile}/health.json`
 
 Non‑advice disclaimer: Perpetual futures are high risk; you may lose all posted collateral.

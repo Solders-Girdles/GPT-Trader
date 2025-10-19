@@ -11,8 +11,10 @@ __all__ = [
     "LOG_DIR",
     "RESULTS_DIR",
     "RUNTIME_DATA_DIR",
+    "COINBASE_TRADER_RUNTIME_DIR",
     "PERPS_RUNTIME_DIR",
     "DEFAULT_EVENT_STORE_DIR",
+    "LEGACY_EVENT_STORE_DIR",
     "ensure_directories",
 ]
 
@@ -26,11 +28,23 @@ VAR_DIR = PROJECT_ROOT / "var"
 LOG_DIR = VAR_DIR / "logs"
 RESULTS_DIR = VAR_DIR / "results"
 RUNTIME_DATA_DIR = VAR_DIR / "data"
+COINBASE_TRADER_RUNTIME_DIR = RUNTIME_DATA_DIR / "coinbase_trader"
+# Legacy alias retained for backwards compatibility with tooling/tests.
 PERPS_RUNTIME_DIR = RUNTIME_DATA_DIR / "perps_bot"
-DEFAULT_EVENT_STORE_DIR = PERPS_RUNTIME_DIR / "shared"
+DEFAULT_EVENT_STORE_DIR = COINBASE_TRADER_RUNTIME_DIR / "shared"
+LEGACY_EVENT_STORE_DIR = PERPS_RUNTIME_DIR / "shared"
 
 
 def ensure_directories(paths: Iterable[Path] | None = None) -> None:
-    targets = list(paths or (VAR_DIR, LOG_DIR, RESULTS_DIR, RUNTIME_DATA_DIR))
+    targets = list(
+        paths
+        or (
+            VAR_DIR,
+            LOG_DIR,
+            RESULTS_DIR,
+            RUNTIME_DATA_DIR,
+            COINBASE_TRADER_RUNTIME_DIR,
+        )
+    )
     for path in targets:
         path.mkdir(parents=True, exist_ok=True)

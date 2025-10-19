@@ -29,6 +29,8 @@ from bot_v2.orchestration.coordinators.execution import ExecutionCoordinator
 from bot_v2.orchestration.perps_bot_state import PerpsBotRuntimeState
 from bot_v2.orchestration.service_registry import ServiceRegistry
 
+BOT_ID = "coinbase_trader"
+
 
 @pytest.fixture
 def base_context() -> CoordinatorContext:
@@ -65,7 +67,7 @@ def base_context() -> CoordinatorContext:
         broker=broker,
         risk_manager=risk_manager,
         symbols=("BTC-PERP",),
-        bot_id="perps_bot",
+        bot_id=BOT_ID,
         runtime_state=runtime_state,
         config_controller=controller,
         strategy_orchestrator=Mock(),

@@ -20,7 +20,7 @@ This directory contains documentation specifically for AI agents working with th
 ## 🎯 Current System State (2025-10)
 
 **Active Architecture**: Spot-first trading bot
-- **Primary CLI**: `poetry run perps-bot`
+- **Primary CLI**: `poetry run coinbase-trader`
 - **Codebase**: `src/bot_v2/` (vertical slices + coordinators)
 - **Tests**: 1483 active tests (1484 collected; 1 deselected legacy placeholder)
 - **Perpetuals**: Code exists but requires INTX access
@@ -43,7 +43,7 @@ This directory contains documentation specifically for AI agents working with th
 ```bash
 poetry install                                    # Fresh dependencies
 poetry run pytest --collect-only                 # Verify test state
-poetry run perps-bot run --profile dev --dev-fast # Quick smoke test
+poetry run coinbase-trader run --profile dev --dev-fast # Quick smoke test
 ```
 
 ### During Development
@@ -62,15 +62,15 @@ poetry run perps-bot run --profile dev --dev-fast # Quick smoke test
 
 ```bash
 # Development
-poetry run perps-bot run --profile dev --dev-fast
+poetry run coinbase-trader run --profile dev --dev-fast
 poetry run pytest -q
 
 # Operations
-poetry run perps-bot account snapshot
-poetry run perps-bot treasury convert --from USD --to USDC --amount 1000
+poetry run coinbase-trader account snapshot
+poetry run coinbase-trader treasury convert --from USD --to USDC --amount 1000
 
 # Monitoring
-poetry run python scripts/monitoring/export_metrics.py --metrics-file var/data/perps_bot/prod/metrics.json
+poetry run python scripts/monitoring/export_metrics.py --metrics-file var/data/coinbase_trader/prod/metrics.json
 ```
 
 ## 🔍 Debugging
@@ -81,8 +81,8 @@ export PERPS_DEBUG=1
 export LOG_LEVEL=DEBUG
 
 # Check system state
-poetry run perps-bot account snapshot
-tail -f var/logs/perps_bot.log
+poetry run coinbase-trader account snapshot
+tail -f var/logs/coinbase_trader.log
 ```
 
 ## 📞 Getting Help

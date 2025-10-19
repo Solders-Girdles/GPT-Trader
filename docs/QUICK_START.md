@@ -67,7 +67,7 @@ docker compose --project-directory deploy/bot_v2/docker \
 ## 4. Smoke-Test the Dev Profile
 
 ```bash
-poetry run perps-bot run --profile dev --dev-fast
+poetry run coinbase-trader run --profile dev --dev-fast
 ```
 
 What to expect:
@@ -75,7 +75,9 @@ What to expect:
 - Mark prices are fetched via REST quotes for the top-ten USD spot markets (`BTC`, `ETH`, `SOL`, `XRP`, `LTC`, `ADA`, `DOGE`, `BCH`, `AVAX`, `LINK`).
 - Orders are routed through the built-in `DeterministicBroker`, so no live trades are
   placed.
-- Metrics land under `var/data/perps_bot/dev/` for inspection.
+- Metrics land under `var/data/coinbase_trader/dev/` for inspection.
+
+> Legacy alias: `poetry run perps-bot …` continues to work for existing automation, but new workflows should prefer `coinbase-trader`.
 
 ## 5. Enable Real Spot Trading (optional)
 
@@ -89,7 +91,7 @@ export COINBASE_API_SECRET="..."
 export COINBASE_API_PASSPHRASE="..."
 export SPOT_FORCE_LIVE=1
 
-poetry run perps-bot run --profile spot --dev-fast
+poetry run coinbase-trader run --profile spot --dev-fast
 ```
 
 Use the `spot` profile for live spot execution; it keeps leverage at 1x and

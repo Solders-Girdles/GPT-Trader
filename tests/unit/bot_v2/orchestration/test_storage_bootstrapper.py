@@ -29,7 +29,7 @@ def test_bootstrapper_creates_context_with_defaults(
     context = bootstrapper.bootstrap()
 
     expected_storage_root = (
-        patched_runtime_settings.runtime_root / f"perps_bot/{config.profile.value}"
+        patched_runtime_settings.runtime_root / f"coinbase_trader/{config.profile.value}"
     )
     assert context.storage_dir == expected_storage_root
     assert context.orders_store.storage_path == expected_storage_root
@@ -64,8 +64,8 @@ def test_bootstrapper_respects_event_store_override(
 
     expected_root = settings.event_store_root_override
     assert expected_root is not None
-    if "perps_bot" not in expected_root.parts:
-        expected_root = expected_root / "perps_bot" / config.profile.value
+    if "coinbase_trader" not in expected_root.parts:
+        expected_root = expected_root / "coinbase_trader" / config.profile.value
     assert context.event_store_root == expected_root
     assert context.event_store.path.parent == expected_root
 

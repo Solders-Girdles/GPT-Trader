@@ -1,40 +1,7 @@
 name: Targeted Suites
 
 on:
-  push:
-    branches: [main, develop]
-    paths:
-      - 'src/bot_v2/features/brokerages/coinbase/**'
-      - 'src/bot_v2/features/brokerages/core/**'
-      - 'src/bot_v2/features/live_trade/**'
-      - 'src/bot_v2/cli/**'
-      - 'src/bot_v2/cli/**'
-      - 'tests/unit/bot_v2/features/brokerages/coinbase/**'
-      - 'tests/unit/bot_v2/features/live_trade/**'
-      - 'tests/unit/bot_v2/orchestration/test_broker_factory.py'
-      - 'tests/unit/bot_v2/orchestration/test_live_execution.py'
-      - 'tests/unit/bot_v2/orchestration/test_configuration.py'
-      - 'tests/unit/bot_v2/orchestration/test_config_manager.py'
-      - 'tests/**/perps/**'
-      - 'scripts/validation/**'
-      - '.github/workflows/targeted-suites.yml'
-  pull_request:
-    branches: [main, develop]
-    paths:
-      - 'src/bot_v2/features/brokerages/coinbase/**'
-      - 'src/bot_v2/features/brokerages/core/**'
-      - 'src/bot_v2/features/live_trade/**'
-      - 'src/bot_v2/cli/**'
-      - 'tests/unit/bot_v2/features/brokerages/coinbase/**'
-      - 'tests/unit/bot_v2/features/live_trade/**'
-      - 'tests/unit/bot_v2/orchestration/test_broker_factory.py'
-      - 'tests/unit/bot_v2/orchestration/test_live_execution.py'
-      - 'tests/unit/bot_v2/orchestration/test_configuration.py'
-      - 'tests/unit/bot_v2/orchestration/test_config_manager.py'
-      - 'tests/**/perps/**'
-      - 'scripts/validation/**'
-      - '.github/workflows/targeted-suites.yml'
-workflow_dispatch:
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}

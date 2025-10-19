@@ -106,6 +106,7 @@ class SpecsService:
         Quantize price based on side for better fills.
         BUY orders: floor to price increment (more aggressive)
         SELL orders: ceil to price increment (more aggressive)
+        Invalid sides default to BUY behavior (floor).
         """
         spec = self.get_spec(product_id)
         price_decimal = Decimal(str(price))
@@ -115,10 +116,10 @@ class SpecsService:
             return price_decimal
 
         normalized = price_decimal / increment
-        if side.upper() == "BUY":
-            steps = normalized.to_integral_value(rounding=ROUND_DOWN)
-        else:
+        if side.upper() == "SELL":
             steps = normalized.to_integral_value(rounding=ROUND_UP)
+        else:
+            steps = normalized.to_integral_value(rounding=ROUND_DOWN)
         return (steps * increment).quantize(increment)
 
     def quantize_size(self, product_id: str, size: float) -> Decimal:

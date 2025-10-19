@@ -143,7 +143,9 @@ class CDPJWTAuth:
         logger.debug("Generated CDP JWT uri=%s fingerprint=%s", uri, fingerprint)
         return token
 
-    def sign(self, method: str, path: str, body: dict[str, Any] | None) -> dict[str, str]:  # noqa: ARG002 - body kept for signature parity
+    def sign(
+        self, method: str, path: str, body: dict[str, Any] | None
+    ) -> dict[str, str]:  # noqa: ARG002 - body kept for signature parity
         token = self.generate_jwt(method, path)
         return {
             "Authorization": f"Bearer {token}",

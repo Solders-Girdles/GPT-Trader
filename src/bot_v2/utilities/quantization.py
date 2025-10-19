@@ -40,8 +40,8 @@ def quantize_price_side_aware(price: Decimal, increment: Decimal, side: str) -> 
         return price
     side_normalized = (side or "").lower()
     quotient = price / increment
-    if side_normalized == "buy":
-        quantized_units = quotient.to_integral_value(rounding=ROUND_DOWN)
-    else:
+    if side_normalized == "sell":
         quantized_units = quotient.to_integral_value(rounding=ROUND_UP)
+    else:
+        quantized_units = quotient.to_integral_value(rounding=ROUND_DOWN)
     return (quantized_units * increment).quantize(increment)

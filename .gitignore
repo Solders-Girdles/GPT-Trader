@@ -98,3 +98,6 @@ var/
 .claude/
 .mypy_cache/
 .pytest_cache/
+.kilocode/
+.kilocodemodes/
+coverage.xml

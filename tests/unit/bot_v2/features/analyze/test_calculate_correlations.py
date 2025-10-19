@@ -10,7 +10,9 @@ from bot_v2.features.analyze import analyze
 class _FailingProvider:
     """Data provider stub that always fails."""
 
-    def get_historical_data(self, symbol: str, period: str) -> pd.DataFrame:  # noqa: D401 - simple stub
+    def get_historical_data(
+        self, symbol: str, period: str
+    ) -> pd.DataFrame:  # noqa: D401 - simple stub
         raise RuntimeError(f"boom for {symbol}:{period}")
 
 

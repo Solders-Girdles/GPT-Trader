@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from decimal import Decimal
 
+import pytest
+
 from bot_v2.features.brokerages.core.interfaces import MarketType
 from bot_v2.features.live_trade.strategies.decisions import Action
 from bot_v2.features.live_trade.strategies.shared.decisions import (
@@ -106,52 +108,139 @@ def test_calculate_ma_snapshot_detects_cross():
     assert empty_snapshot.bullish_cross is False
 
 
-def test_update_trailing_stop_for_long_and_short():
+@pytest.mark.parametrize(
+    "side,initial_price,trailing_pct,price_sequence,expected_triggers",
+    [
+        # Long position: normal trailing behavior
+        (
+            "long",
+            Decimal("100"),
+            Decimal("0.1"),
+            [Decimal("100"), Decimal("120"), Decimal("105")],
+            [False, False, True],
+        ),
+        # Long position: price doesn't move enough to trigger
+        (
+            "long",
+            Decimal("100"),
+            Decimal("0.1"),
+            [Decimal("100"), Decimal("110"), Decimal("100")],
+            [False, False, False],
+        ),
+        # Short position: normal trailing behavior
+        (
+            "short",
+            Decimal("200"),
+            Decimal("0.05"),
+            [Decimal("200"), Decimal("180"), Decimal("195")],
+            [False, False, True],
+        ),
+        # Short position: price rises, stop should tighten
+        (
+            "short",
+            Decimal("200"),
+            Decimal("0.05"),
+            [Decimal("200"), Decimal("190"), Decimal("185"), Decimal("190")],
+            [False, False, False, True],
+        ),
+        # Edge case: zero trailing percentage
+        (
+            "long",
+            Decimal("100"),
+            Decimal("0"),
+            [Decimal("100"), Decimal("120"), Decimal("99")],
+            [False, False, True],
+        ),
+        # Edge case: very small trailing percentage
+        (
+            "long",
+            Decimal("100"),
+            Decimal("0.001"),
+            [Decimal("100"), Decimal("101"), Decimal("100")],
+            [False, False, False],
+        ),
+    ],
+)
+def test_update_trailing_stop_various_scenarios(
+    side, initial_price, trailing_pct, price_sequence, expected_triggers
+):
+    stops: dict[str, tuple[Decimal, Decimal]] = {}
+    symbol = "TEST-USD"
+
+    for i, price in enumerate(price_sequence):
+        triggered = update_trailing_stop(
+            stops,
+            symbol=symbol,
+            side=side,
+            current_price=price,
+            trailing_pct=trailing_pct,
+        )
+        assert (
+            triggered == expected_triggers[i]
+        ), f"Step {i}: expected {expected_triggers[i]}, got {triggered}"
+
+        if i == 0:  # Check initial stop placement
+            peak, stop_price = stops[symbol]
+            if side.lower() == "long":
+                assert stop_price == initial_price * (Decimal("1") - trailing_pct)
+            else:
+                assert stop_price == initial_price * (Decimal("1") + trailing_pct)
+
+
+def test_update_trailing_stop_case_insensitive_side():
     stops: dict[str, tuple[Decimal, Decimal]] = {}
 
-    # Long position: initial placement
-    triggered = update_trailing_stop(
+    # Test LONG vs long
+    update_trailing_stop(
         stops,
         symbol="BTC-USD",
         side="LONG",
         current_price=Decimal("100"),
         trailing_pct=Decimal("0.1"),
     )
-    assert not triggered
-    peak, stop_price = stops["BTC-USD"]
-    assert stop_price == Decimal("90")
-
-    # Price rises, stop should tighten
-    triggered = update_trailing_stop(
+    update_trailing_stop(
         stops,
         symbol="BTC-USD",
         side="long",
         current_price=Decimal("120"),
         trailing_pct=Decimal("0.1"),
     )
-    assert not triggered
+
     peak, stop_price = stops["BTC-USD"]
     assert peak == Decimal("120")
     assert stop_price == Decimal("108")
 
-    # Drop below stop triggers exit
-    triggered = update_trailing_stop(
-        stops,
-        symbol="BTC-USD",
-        side="long",
-        current_price=Decimal("105"),
-        trailing_pct=Decimal("0.1"),
-    )
-    assert triggered is True
-
-    # Short position behaviour
-    triggered = update_trailing_stop(
+    # Test SHORT vs short
+    update_trailing_stop(
         stops,
         symbol="ETH-USD",
-        side="short",
+        side="SHORT",
         current_price=Decimal("200"),
         trailing_pct=Decimal("0.05"),
     )
-    assert triggered is False
+    update_trailing_stop(
+        stops,
+        symbol="ETH-USD",
+        side="short",
+        current_price=Decimal("180"),
+        trailing_pct=Decimal("0.05"),
+    )
+
     peak, stop_price = stops["ETH-USD"]
-    assert stop_price == Decimal("210")
+    assert peak == Decimal("180")
+    assert stop_price == Decimal("189")
+
+
+def test_update_trailing_stop_invalid_side():
+    stops: dict[str, tuple[Decimal, Decimal]] = {}
+
+    # Invalid side should not update stops and return False
+    triggered = update_trailing_stop(
+        stops,
+        symbol="BTC-USD",
+        side="invalid",
+        current_price=Decimal("100"),
+        trailing_pct=Decimal("0.1"),
+    )
+    assert triggered is False
+    assert "BTC-USD" not in stops

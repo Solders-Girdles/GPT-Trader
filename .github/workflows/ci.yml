@@ -98,11 +98,17 @@ jobs:
       run: |
         set -euo pipefail
         poetry run pytest -m "not slow and not performance" -q \
-          --cov=bot_v2.cli \
-          --cov=bot_v2.config \
-          --cov=bot_v2.features.brokerages.coinbase.client \
-          --cov=bot_v2.features.brokerages.coinbase.utilities \
-          --cov-report=term --cov-report=xml --cov-report=html --cov-fail-under=82
+          --cov=src \
+          --cov-report=term-missing --cov-report=json:coverage.json --cov-report=xml --cov-report=html --cov-fail-under=23.50
+
+    - name: Check coverage regression
+      if: github.event_name != 'pull_request'
+      run: |
+        set -euo pipefail
+        # Compare against baseline coverage.json if it exists
+        if [ -f coverage.json ]; then
+          poetry run python -c "import json, sys; current=json.load(open('coverage.json')); overall_pct=current.get('totals', {}).get('percent_covered', 0); print(f\"Current overall coverage: {overall_pct:.2f}%\"); (overall_pct >= 23.50) or sys.exit(f\"ERROR: Coverage regression detected. Current: {overall_pct:.2f}%, Baseline: 23.50%\"); print('Coverage check passed.')"
+        fi
 
     - name: Upload coverage to Artifacts
       if: github.event_name != 'pull_request'

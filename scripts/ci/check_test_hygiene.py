@@ -10,6 +10,7 @@ from collections.abc import Sequence
 
 THRESHOLD = 240
 ALLOWLIST = {
+    "tests/integration/test_coinbase_auth_smoke.py",  # full credential negotiation + auth fallback smoke flow
     "tests/unit/bot_v2/features/brokerages/coinbase/test_product_catalog.py",
     "tests/unit/bot_v2/features/brokerages/coinbase/test_specs_quantization.py",
     "tests/unit/bot_v2/features/brokerages/coinbase/test_performance.py",
@@ -58,15 +59,24 @@ ALLOWLIST = {
     "tests/unit/bot_v2/validation/test_calculation_validator.py",  # calculation validator coverage
     "tests/unit/bot_v2/features/brokerages/coinbase/test_market_data_service.py",  # market data service contract
     "tests/unit/bot_v2/features/data/test_data_module.py",  # 295 lines: comprehensive data module contract with storage/cache stubs
+    "tests/unit/bot_v2/features/brokerages/coinbase/rest/test_contract_suite.py",  # REST contract suite covering retries, fallbacks, and error surfaces
+    "tests/unit/bot_v2/features/live_trade/strategies/shared/test_shared_helpers.py",  # shared strategy helper permutations across venues
+    "tests/unit/bot_v2/features/position_sizing/test_position_sizing.py",  # covers regime, strategy, and kelly sizing permutations in one harness
     "tests/unit/bot_v2/cli/test_commands_orders.py",  # 254 lines: comprehensive CLI orders command coverage
     "tests/unit/bot_v2/utilities/test_console_logging_core.py",  # 336 lines: console logging contract and fallback behavior matrix
     "tests/unit/bot_v2/utilities/test_logging_patterns.py",  # 494 lines: extensive structured logging patterns and decorator coverage
     "tests/unit/bot_v2/features/analyze/test_analyze_strategies.py",  # 280 lines: comprehensive strategy signal matrix (MA/momentum/reversion/volatility/breakout)
+    "tests/property/test_coinbase_invariants.py",  # property-based coverage for invariants across stochastic market scenarios
+    "tests/unit/bot_v2/monitoring/test_guard_manager_e2e.py",  # end-to-end guard orchestration scenarios spanning async workflows
+    "tests/unit/bot_v2/monitoring/test_system_logger.py",  # structured logging sink contract covering emit and fallback paths
+    "tests/unit/bot_v2/orchestration/test_orchestration_async.py",  # async orchestration behaviours with concurrency guard rails
+    "tests/unit/bot_v2/persistence/test_json_file_store_contract.py",  # persistence contract with locking, rotation, and corruption scenarios
 }
 
 SLEEP_ALLOWLIST = {
     "tests/unit/bot_v2/utilities/test_performance_monitoring_advanced.py",
     "tests/unit/bot_v2/utilities/test_performance_monitoring_core.py",
+    "tests/unit/bot_v2/persistence/test_json_file_store_contract.py",  # uses real sleep to validate file system based locking semantics
 }
 
 

@@ -222,8 +222,13 @@ class HMACAuth:
         return base64.b64encode(signature.digest()).decode()
 
     def get_headers(self, method: str, path: str, body: str = "") -> dict:
-        """Generate authentication headers"""
-        timestamp = str(datetime.utcnow().timestamp())
+        """Generate authentication headers
+
+        ⚠️ CRITICAL: Timestamp must be whole seconds (int), not float with decimals.
+        Decimal timestamps produce wrong signatures → 401 Unauthorized.
+        """
+        # ✅ CORRECT: Convert to int first (whole seconds only)
+        timestamp = str(int(datetime.utcnow().timestamp()))
         signature = self.create_signature(timestamp, method, path, body)
 
         return {

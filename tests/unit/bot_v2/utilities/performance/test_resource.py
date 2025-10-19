@@ -3,7 +3,8 @@ import sys
 from types import SimpleNamespace
 
 import pytest
-from src.bot_v2.utilities.performance import resource
+
+from bot_v2.utilities.performance import resource
 
 
 class StubMemory:

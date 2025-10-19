@@ -156,9 +156,9 @@ Buy Signals: {buy_signals}
 Sell Signals: {sell_signals}
 
 Risk Metrics:
-- Portfolio Beta: {self.risk_metrics.get('beta', 0):.2f}
-- Correlation Risk: {self.risk_metrics.get('correlation_risk', 0):.2%}
-- Concentration Risk: {self.risk_metrics.get('concentration_risk', 0):.2%}
+- Portfolio Beta: {self.risk_metrics.get("beta", 0):.2f}
+- Correlation Risk: {self.risk_metrics.get("correlation_risk", 0):.2%}
+- Concentration Risk: {self.risk_metrics.get("concentration_risk", 0):.2%}
 
 Rebalance Suggestions: {len(self.rebalance_suggestions)}
         """.strip()

@@ -83,7 +83,8 @@ class TestLiquidationMonitor:
     def test_risk_assessment_safe(self):
         """Test risk assessment for safe position."""
         margin_info = create_test_margin_info(
-            current_price=50000.0, leverage=2.0  # Same as entry  # Low leverage
+            current_price=50000.0,
+            leverage=2.0,  # Same as entry  # Low leverage
         )
 
         risk = self.monitor.assess_liquidation_risk(margin_info)

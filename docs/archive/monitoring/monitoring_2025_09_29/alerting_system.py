@@ -160,7 +160,9 @@ class AlertingSystem:
             icon = (
                 "ℹ️"
                 if alert.level == AlertLevel.INFO
-                else "⚠️" if alert.level == AlertLevel.WARNING else "❌"
+                else "⚠️"
+                if alert.level == AlertLevel.WARNING
+                else "❌"
             )
             self.logger.info(
                 "%s [%s] %s: %s",

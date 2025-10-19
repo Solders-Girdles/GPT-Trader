@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import pytest
-from src.bot_v2.features.brokerages.coinbase.client import CoinbaseClient
 
+from bot_v2.features.brokerages.coinbase.client import CoinbaseClient
 from bot_v2.features.brokerages.core.interfaces import AuthError, BrokerageError
 
 
@@ -13,10 +13,10 @@ def _make_client() -> CoinbaseClient:
 
 def _patch_retry_config(mocker) -> None:
     mocker.patch(
-        "src.bot_v2.features.brokerages.coinbase.client.base._load_system_config",
+        "bot_v2.features.brokerages.coinbase.client.base._load_system_config",
         return_value={"max_retries": 2, "retry_delay": 0, "jitter_factor": 0},
     )
-    mocker.patch("src.bot_v2.features.brokerages.coinbase.client.base.time.sleep", lambda _s: None)
+    mocker.patch("bot_v2.features.brokerages.coinbase.client.base.time.sleep", lambda _s: None)
 
 
 def test_request_retries_on_429_and_5xx_then_succeeds(mocker) -> None:

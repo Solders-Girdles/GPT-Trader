@@ -6,7 +6,7 @@ from contextlib import contextmanager
 from decimal import Decimal
 from typing import Any
 
-from src.bot_v2.utilities import logging_patterns as lp
+from bot_v2.utilities import logging_patterns as lp
 
 
 class ListHandler(logging.Handler):

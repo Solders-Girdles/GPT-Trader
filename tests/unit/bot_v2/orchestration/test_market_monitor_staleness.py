@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 
-from src.bot_v2.orchestration.market_monitor import MarketActivityMonitor
+from bot_v2.orchestration.market_monitor import MarketActivityMonitor
 
 
 def test_market_monitor_handles_naive_timestamps() -> None:

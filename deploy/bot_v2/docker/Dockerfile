@@ -23,12 +23,12 @@ RUN pip install --no-cache-dir poetry==${POETRY_VERSION}
 
 # Install only runtime dependencies (no dev extras) into the global site-packages
 COPY pyproject.toml poetry.lock ./
-RUN poetry config virtualenvs.create false     && poetry install --no-interaction --no-ansi --without dev --no-root
+RUN poetry config virtualenvs.create false     && poetry install --no-interaction --no-ansi -vv --without dev --no-root
 
 # Stage 3: Development environment (includes dev dependencies and full source tree)
 FROM dependencies AS development
 COPY --chown=trader:trader . .
-RUN poetry install --no-interaction --no-ansi --with dev --no-root
+RUN poetry install --no-interaction --no-ansi -vv --with dev --no-root
 ENV PYTHONPATH=/app     ENV=development
 USER trader
 CMD ["python", "-m", "bot_v2", "--mode", "development"]
@@ -36,7 +36,7 @@ CMD ["python", "-m", "bot_v2", "--mode", "development"]
 # Stage 4: Testing environment (runs unit tests with coverage)
 FROM dependencies AS testing
 COPY --chown=trader:trader . .
-RUN poetry install --no-interaction --no-ansi --with dev --no-root
+RUN poetry install --no-interaction --no-ansi -vv --with dev --no-root
 RUN poetry run pytest tests/unit/ --cov=src/bot_v2 --cov-report=term-missing
 
 # Stage 5: Production build (minimal runtime footprint)

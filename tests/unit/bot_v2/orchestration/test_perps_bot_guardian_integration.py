@@ -148,9 +148,9 @@ class TestPerpsBotGuardianIntegration:
                 await bot.run_cycle()
 
         # After high-severity drift, bot should be in reduce-only mode
-        assert (
-            bot.is_reduce_only_mode() is True
-        ), "High-severity drift should enable reduce-only mode"
+        assert bot.is_reduce_only_mode() is True, (
+            "High-severity drift should enable reduce-only mode"
+        )
         assert bot.running is True, "High-severity drift should not stop the bot"
 
     async def test_position_violations_trigger_reduce_only(self):
@@ -181,9 +181,9 @@ class TestPerpsBotGuardianIntegration:
             await bot.run_cycle()
 
         # Position size violation should trigger reduce-only mode
-        assert (
-            bot.is_reduce_only_mode() is True
-        ), "Position size violation should enable reduce-only mode"
+        assert bot.is_reduce_only_mode() is True, (
+            "Position size violation should enable reduce-only mode"
+        )
 
     async def test_symbol_removal_violation_triggers_emergency_shutdown(self):
         """Test that removing symbols with active positions triggers emergency shutdown."""
@@ -220,6 +220,6 @@ class TestPerpsBotGuardianIntegration:
                 pass
 
         # Symbol removal violation should trigger emergency shutdown
-        assert (
-            bot.running is False
-        ), "Symbol removal with active positions should trigger emergency shutdown"
+        assert bot.running is False, (
+            "Symbol removal with active positions should trigger emergency shutdown"
+        )

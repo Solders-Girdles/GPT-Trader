@@ -359,7 +359,10 @@ class TestPerformanceAdvancedIntegration:
         with patch("bot_v2.utilities.performance_monitoring.psutil") as mock_psutil:
             # Mock psutil to always be available
             mock_psutil.virtual_memory.return_value = Mock(
-                total=8589934592, available=4294967296, percent=50.0, used=4294967296  # 8GB  # 4GB
+                total=8589934592,
+                available=4294967296,
+                percent=50.0,
+                used=4294967296,  # 8GB  # 4GB
             )
             mock_psutil.cpu_percent.return_value = 25.0
             mock_psutil.cpu_count.return_value = 4

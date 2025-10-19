@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from src.bot_v2.utilities.performance import reporter
+from bot_v2.utilities.performance import reporter
 
 
 class StubCollector:

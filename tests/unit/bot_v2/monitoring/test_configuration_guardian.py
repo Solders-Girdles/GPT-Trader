@@ -255,7 +255,10 @@ class TestConfigurationGuardian:
 
         # Try to remove BTC-USD from symbols
         result = baseline.validate_config_against_state(
-            {"symbols": ["ETH-USD"]}, [], [mock_position], Decimal("10000")  # Remove BTC-USD
+            {"symbols": ["ETH-USD"]},
+            [],
+            [mock_position],
+            Decimal("10000"),  # Remove BTC-USD
         )
 
         assert len(result) > 0
@@ -267,7 +270,10 @@ class TestConfigurationGuardian:
 
         # Try to change profile during runtime
         result = baseline.validate_config_against_state(
-            {"profile": Profile.CANARY}, [], [], Decimal("10000")  # Change from DEV to CANARY
+            {"profile": Profile.CANARY},
+            [],
+            [],
+            Decimal("10000"),  # Change from DEV to CANARY
         )
 
         assert len(result) > 0

@@ -12,31 +12,32 @@ import threading
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
-
-try:  # pragma: no cover - optional dependency
-    from cryptography.fernet import Fernet  # type: ignore[import-not-found]
-except ImportError:  # pragma: no cover - degrade gracefully
-    Fernet = None  # type: ignore[assignment]
+from typing import TYPE_CHECKING, Any, cast
 
 from bot_v2.orchestration.runtime_settings import RuntimeSettings, load_runtime_settings
 from bot_v2.utilities.logging_patterns import get_logger
 
+if TYPE_CHECKING:  # pragma: no cover - type hints only
+    from cryptography.fernet import Fernet as FernetType
+else:  # pragma: no cover - runtime import guard
+    FernetType = Any
+
+_RuntimeFernet: type[FernetType] | None
+try:  # pragma: no cover - optional dependency
+    from cryptography.fernet import Fernet as _RuntimeFernet  # type: ignore[import-not-found]
+except ImportError:  # pragma: no cover - degrade gracefully
+    _RuntimeFernet = None
+
 logger = get_logger(__name__, component="security")
 
-if TYPE_CHECKING:  # pragma: no cover
-    from hvac import Client as HvacClient
-else:
-    HvacClient = Any  # type: ignore[misc]
 
-
-def _require_fernet() -> Any:
-    if Fernet is None:
+def _require_fernet() -> type[FernetType]:
+    if _RuntimeFernet is None:
         raise RuntimeError(
             "cryptography is not installed. Install extras with `pip install gpt-trader[security]` "
             "or `poetry install --with security`."
         )
-    return Fernet
+    return cast(type[FernetType], _RuntimeFernet)
 
 
 @dataclass
@@ -58,9 +59,9 @@ class SecretsManager:
         self, vault_enabled: bool = True, *, settings: RuntimeSettings | None = None
     ) -> None:
         self._lock = threading.RLock()
-        self._cipher_suite: Fernet | None = None
+        self._cipher_suite: FernetType | None = None
         self._secrets_cache: dict[str, dict[str, Any]] = {}
-        self._vault_client: HvacClient | None = None
+        self._vault_client: Any | None = None
         self._vault_enabled = vault_enabled
         self._static_settings = settings is not None
         self._settings = settings or load_runtime_settings()
@@ -99,7 +100,7 @@ class SecretsManager:
         except Exception as e:
             raise ValueError(f"Invalid encryption key: {e}")
 
-    def _require_cipher(self) -> Fernet:
+    def _require_cipher(self) -> FernetType:
         if self._cipher_suite is None:
             raise RuntimeError("Encryption subsystem not initialised")
         return self._cipher_suite

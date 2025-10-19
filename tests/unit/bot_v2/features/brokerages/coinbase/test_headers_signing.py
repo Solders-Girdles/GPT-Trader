@@ -2,8 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from src.bot_v2.features.brokerages.coinbase.client.base import CoinbaseClientBase
-
+from bot_v2.features.brokerages.coinbase.client.base import CoinbaseClientBase
 from bot_v2.monitoring.system import set_correlation_id
 
 

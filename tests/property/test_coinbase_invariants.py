@@ -5,8 +5,9 @@ from typing import Any
 
 from hypothesis import given, seed, settings
 from hypothesis import strategies as st
-from src.bot_v2.features.brokerages.coinbase.client.base import CoinbaseClientBase
-from src.bot_v2.features.brokerages.coinbase.specs import ProductSpec, SpecsService
+
+from bot_v2.features.brokerages.coinbase.client.base import CoinbaseClientBase
+from bot_v2.features.brokerages.coinbase.specs import ProductSpec, SpecsService
 
 
 def _make_service(step_size: Decimal, price_increment: Decimal) -> SpecsService:

@@ -224,7 +224,7 @@ class SecurityValidator:
         position_pct = order_value / account_value if account_value > 0 else 1.0
         if position_pct > self.TRADING_LIMITS["max_position_size"]:
             errors.append(
-                f"Position size exceeds {self.TRADING_LIMITS['max_position_size']*100}% limit"
+                f"Position size exceeds {self.TRADING_LIMITS['max_position_size'] * 100}% limit"
             )
 
         return ValidationResult(

@@ -73,7 +73,7 @@ class SimpleBroker(IBrokerage):
         leverage: int | None = None,
     ) -> Order:
         now = datetime.utcnow()
-        oid = client_id or f"ord_{len(self._orders)+1}"
+        oid = client_id or f"ord_{len(self._orders) + 1}"
         o = Order(
             id=oid,
             client_id=oid,

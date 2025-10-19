@@ -6,7 +6,6 @@ from collections.abc import Callable
 from datetime import datetime
 from datetime import time as dtime
 from decimal import Decimal
-from logging import Logger
 from typing import Any
 
 RiskInfoProvider = Callable[[str], dict[str, Any]]
@@ -16,7 +15,7 @@ def evaluate_daytime_window(
     config: Any,
     now: datetime | None,
     *,
-    logger: Logger | None = None,
+    logger: Any | None = None,
 ) -> bool | None:
     """Return True if ``now`` is within the configured daytime window."""
     start_s = getattr(config, "daytime_start_utc", None)
@@ -46,7 +45,7 @@ def effective_symbol_leverage_cap(
     *,
     now: datetime | None,
     risk_info_provider: RiskInfoProvider | None,
-    logger: Logger | None = None,
+    logger: Any | None = None,
 ) -> int:
     """Compute the effective leverage cap considering schedules and provider overrides."""
     cap = config.leverage_max_per_symbol.get(symbol, config.max_leverage)
@@ -88,7 +87,7 @@ def effective_mmr(
     *,
     now: datetime | None,
     risk_info_provider: RiskInfoProvider | None,
-    logger: Logger | None = None,
+    logger: Any | None = None,
 ) -> Decimal:
     """Compute the maintenance margin rate with provider/schedule overrides."""
     if risk_info_provider is not None:

@@ -6,12 +6,10 @@ consistent error handling and logging fallbacks.
 
 from __future__ import annotations
 
-import logging
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from bot_v2.monitoring.system.logger import ProductionLogger
     from bot_v2.persistence.event_store import EventStore
 
 
@@ -20,7 +18,7 @@ def emit_metric(
     bot_id: str,
     payload: Mapping[str, Any],
     *,
-    logger: ProductionLogger | logging.Logger | None = None,
+    logger: Any | None = None,
     raise_on_error: bool = False,
 ) -> None:
     """Safely emit a metric to the event store with fallback logging on failure.

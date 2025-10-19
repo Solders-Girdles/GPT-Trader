@@ -10,7 +10,7 @@ import json
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 if TYPE_CHECKING:
     from bot_v2.orchestration.runtime_settings import RuntimeSettings
@@ -527,7 +527,7 @@ class RiskConfigModel(BaseModel):
     @field_validator("max_total_exposure_pct", mode="before")
     @classmethod
     def _normalize_optional_exposure(cls, value: object, info: ValidationInfo) -> float | None:
-        return _OPTIONAL_FLOAT_RULE(value, info.field_name)
+        return cast(float | None, _OPTIONAL_FLOAT_RULE(value, info.field_name))
 
     @field_validator(
         "min_liquidation_buffer_pct",
@@ -557,7 +557,7 @@ class RiskConfigModel(BaseModel):
     def _validate_max_total_exposure(
         cls, value: float | None, info: ValidationInfo
     ) -> float | None:
-        return _OPTIONAL_PERCENTAGE_RULE(value, info.field_name)
+        return cast(float | None, _OPTIONAL_PERCENTAGE_RULE(value, info.field_name))
 
     @model_validator(mode="after")
     def _sync_exposure_aliases(self) -> RiskConfigModel:

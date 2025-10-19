@@ -72,7 +72,9 @@ GET /market/products
 GET /market/products/BTC-USD
 
 # ✅ Get OHLCV candles (no auth) - Unix timestamps + enum granularity
-GET /market/products/BTC-USD/candles?start=1697750400&end=1697836800&granularity=ONE_MINUTE
+# ⚠️ Max 350 buckets per request (e.g., ONE_MINUTE limits range to ~5.83 hours)
+# This example: 3-hour window = 180 ONE_MINUTE candles ✅
+GET /market/products/BTC-USD/candles?start=1697750400&end=1697761200&granularity=ONE_MINUTE
 
 # ✅ Get ticker (no auth) - includes bid/ask + recent trades
 GET /market/products/BTC-USD/ticker
@@ -85,7 +87,14 @@ GET /products  # Wrong - requires auth
 GET /products/BTC-USD  # Wrong - requires auth
 ```
 
-**Candle Granularities**: ONE_MINUTE, FIVE_MINUTE, FIFTEEN_MINUTE, THIRTY_MINUTE, ONE_HOUR, SIX_HOUR, ONE_DAY
+**Candle Granularities & Bucket Limits** (max 350 buckets per request):
+- ONE_MINUTE: 350 min (~5.83 hrs)
+- FIVE_MINUTE: 1,750 min (~29.17 hrs)
+- FIFTEEN_MINUTE: 5,250 min (~3.65 days)
+- THIRTY_MINUTE: 10,500 min (~7.29 days)
+- ONE_HOUR: 350 hours (~14.58 days)
+- SIX_HOUR: 2,100 hours (~87.5 days)
+- ONE_DAY: 350 days (~11.7 months)
 
 ### Fees
 ```bash

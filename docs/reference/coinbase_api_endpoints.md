@@ -119,7 +119,7 @@ Retrieve market data and product information **without authentication**.
 |----------|--------|-----------|--------------|---------|-------|
 | List Products | `GET /market/products` | Public (10/s) | ❌ No | ❌ | Get all tradeable products (verified 2025-10-19) |
 | Get Product | `GET /market/products/{product_id}` | Public (10/s) | ❌ No | ❌ | Get specific product details |
-| Get Product Candles | `GET /market/products/{product_id}/candles` | Public (10/s) | ❌ No | ❌ | OHLCV data (Unix seconds + enum granularity: ONE_MINUTE, FIVE_MINUTE, etc.) |
+| Get Product Candles | `GET /market/products/{product_id}/candles` | Public (10/s) | ❌ No | ❌ | OHLCV data (Unix seconds + enum granularity); ⚠️ 350 bucket max per request |
 | Get Product Ticker | `GET /market/products/{product_id}/ticker` | Public (10/s) | ❌ No | ❌ | Current price, best bid/ask, recent trades |
 | Get Product Book | `GET /market/product_book?product_id={id}` | Public (10/s) | ❌ No | ❌ | Order book (bid/ask levels) |
 
@@ -132,7 +132,12 @@ curl -X GET "https://api.coinbase.com/api/v3/brokerage/market/products"
 curl -X GET "https://api.coinbase.com/api/v3/brokerage/market/products/BTC-USD"
 
 # ✅ Get OHLCV candles (Unix timestamps, enum granularity)
-curl -X GET "https://api.coinbase.com/api/v3/brokerage/market/products/BTC-USD/candles?start=1697750400&end=1697836800&granularity=ONE_MINUTE"
+# ⚠️ CRITICAL: Candles are capped at 350 buckets per request
+#    - ONE_MINUTE: max 350 minutes (~5.83 hours)
+#    - FIVE_MINUTE: max 1750 minutes (~29.17 hours)
+#    - ONE_HOUR: max 350 hours (~14.58 days)
+# This example: 3-hour range with ONE_MINUTE granularity = 180 buckets ✅
+curl -X GET "https://api.coinbase.com/api/v3/brokerage/market/products/BTC-USD/candles?start=1697750400&end=1697761200&granularity=ONE_MINUTE"
 
 # ✅ Get ticker (includes bid/ask + recent trades)
 curl -X GET "https://api.coinbase.com/api/v3/brokerage/market/products/BTC-USD/ticker"
@@ -143,6 +148,14 @@ curl -X GET "https://api.coinbase.com/api/v3/brokerage/market/product_book?produ
 # ❌ WRONG - These return 401 Unauthorized (require API key)
 curl -X GET "https://api.coinbase.com/api/v3/brokerage/products/BTC-USD"
 ```
+
+**Candle Bucket Limit**: The API caps responses at **350 buckets per request**. This means:
+- ONE_MINUTE candles: maximum 350 minutes (~5.83 hours per request)
+- FIVE_MINUTE candles: maximum 1,750 minutes (~29.17 hours per request)
+- ONE_HOUR candles: maximum 350 hours (~14.58 days per request)
+- ONE_DAY candles: maximum 350 days (~11.7 months per request)
+
+Requesting a larger time range returns HTTP 400 with `INVALID_ARGUMENT` error. For longer timeframes, either paginate with multiple requests or use a larger granularity.
 
 **Sandbox Limitation**: Market data endpoints are not available in sandbox. Use production credentials for market data or mock broker for testing.
 

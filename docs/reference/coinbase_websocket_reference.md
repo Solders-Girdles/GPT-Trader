@@ -324,7 +324,7 @@ Personal account updates including orders, fills, and position changes.
 - Multiple concurrent connections count toward this same limit
 
 **Connection Behavior:**
-- Maximum subscriptions per connection: Up to 100 channels (⚠️ **needs official verification**)
+- **Maximum subscriptions per connection**: Up to 100 channels (⚠️ **Not explicitly documented by Coinbase; may be tier-specific**)
 - Heartbeat: Required every 30 seconds to maintain connection
 - Automatic reconnection with exponential backoff on disconnect
 

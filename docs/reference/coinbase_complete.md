@@ -114,7 +114,7 @@ if os.getenv("COINBASE_SANDBOX"):
 - OAuth connections enforce portfolio account-level trade access
 - Requires client credentials in token revocation
 
-**Note**: OAuth2 launch date and feature timeline to be confirmed against official changelog at https://docs.cdp.coinbase.com/coinbase-app/introduction/changelog
+**Status**: OAuth2 is officially supported (confirmed in official changelog and docs). Exact launch date not publicly documented; likely 2024-2025 based on forum activity. See changelog at https://docs.cdp.coinbase.com/coinbase-app/introduction/changelog
 
 ## API Endpoints & Products
 
@@ -201,7 +201,7 @@ await ws.subscribe(["ticker", "matches", "level2"], ["BTC-PERP"])
 
 - Automatic heartbeat every 30 seconds
 - Exponential backoff reconnection
-- **Channel subscriptions**: Up to 100 per connection (⚠️ needs verification)
+- **Channel subscriptions**: Up to 100 per connection (⚠️ not explicitly documented; may be tier-specific)
 
 ### Rate Limiting
 

@@ -85,11 +85,16 @@ retry-after:            Seconds to wait (on 429 response)
 | **Spot (Sandbox)** | Advanced Trade v3 (Accounts/Orders only) | HMAC | `https://api-public.sandbox.exchange.coinbase.com/api/v3/brokerage` |
 | **Perpetuals (Sandbox)** | ❌ Not supported | N/A | N/A |
 
-## ⚠️ Items Needing Verification
+## ⚠️ Items with Limited Official Documentation
 
-- WebSocket subscription limit: "100 per connection" (needs official confirmation)
-- OAuth2 launch date and exact feature timeline
-- Rate limit response header names (CB-RATELIMIT-* confirmed; others TBD)
+**WebSocket Subscription Limit**: Documentation references "100 per connection" for Advanced Trade, but this is not explicitly documented in official Coinbase docs. Exchange accounts are documented as limited to 10 subscriptions per product/channel, but Advanced Trade limits appear tier-specific or undocumented. Verify with your API tier.
+
+**OAuth2 Support**: OAuth2 is confirmed as officially supported for Advanced Trade API (references in official changelog and docs), but the exact launch date/timeline is not publicly documented. Likely 2024-2025 based on forum activity.
+
+**Rate Limit Headers**:
+- ✅ Confirmed: `CB-RATELIMIT-LIMIT`, `CB-RATELIMIT-REMAINING`, `CB-RATELIMIT-RESET`
+- ✅ Confirmed: `retry-after` header on 429 responses
+- Other headers: None found in official docs
 
 ---
 

@@ -480,34 +480,40 @@ class RiskConfigModel(BaseModel):
     @field_validator("day_mmr_per_symbol", "night_mmr_per_symbol", mode="before")
     @classmethod
     def _parse_float_mapping(cls, value: object, info: ValidationInfo) -> dict[str, float]:
-        parsed = cast(dict[str, Any], _FLOAT_MAPPING_RULE(value, info.field_name))
+        field = info.field_name or "value"
+        parsed = cast(dict[str, Any], _FLOAT_MAPPING_RULE(value, field))
         return {k: float(v) for k, v in parsed.items()}
 
     @field_validator("max_notional_per_symbol", mode="before")
     @classmethod
     def _parse_decimal_mapping(cls, value: object, info: ValidationInfo) -> dict[str, Decimal]:
-        parsed = cast(dict[str, Any], _DECIMAL_MAPPING_RULE(value, info.field_name))
+        field = info.field_name or "value"
+        parsed = cast(dict[str, Any], _DECIMAL_MAPPING_RULE(value, field))
         return {k: v if isinstance(v, Decimal) else Decimal(str(v)) for k, v in parsed.items()}
 
     @field_validator("max_position_usd", mode="before")
     @classmethod
     def _parse_optional_max_position(cls, value: object, info: ValidationInfo) -> Decimal | None:
-        return cast(Decimal | None, _OPTIONAL_DECIMAL_RULE(value, info.field_name))
+        field = info.field_name or "value"
+        return cast(Decimal | None, _OPTIONAL_DECIMAL_RULE(value, field))
 
     @field_validator("max_daily_loss_pct", mode="before")
     @classmethod
     def _parse_optional_loss_pct(cls, value: object, info: ValidationInfo) -> float | None:
-        return cast(float | None, _OPTIONAL_FLOAT_RULE(value, info.field_name))
+        field = info.field_name or "value"
+        return cast(float | None, _OPTIONAL_FLOAT_RULE(value, field))
 
     @field_validator("daytime_start_utc", "daytime_end_utc", mode="before")
     @classmethod
     def _parse_time(cls, value: object, info: ValidationInfo) -> str | None:
-        return cast(str | None, _TIME_OF_DAY_RULE(value, info.field_name))
+        field = info.field_name or "value"
+        return cast(str | None, _TIME_OF_DAY_RULE(value, field))
 
     @field_validator("daily_loss_limit", mode="before")
     @classmethod
     def _parse_decimal(cls, value: object, info: ValidationInfo) -> Decimal:
-        result = cast(Decimal, _DECIMAL_RULE(value, info.field_name))
+        field = info.field_name or "value"
+        result = cast(Decimal, _DECIMAL_RULE(value, field))
         if result is None:  # pragma: no cover - defensive guard
             raise ValueError(f"{info.field_name} must not be null")
         return result
@@ -515,12 +521,14 @@ class RiskConfigModel(BaseModel):
     @field_validator("position_sizing_method", mode="before")
     @classmethod
     def _normalize_position_method(cls, value: object, info: ValidationInfo) -> str:
-        return _POSITION_METHOD_RULE(value, info.field_name)
+        field = info.field_name or "value"
+        return cast(str, _POSITION_METHOD_RULE(value, field))
 
     @field_validator("position_sizing_multiplier", mode="before")
     @classmethod
     def _normalize_multiplier(cls, value: object, info: ValidationInfo) -> float:
-        result = _FLOAT_DEFAULT_ONE_RULE(value, info.field_name)
+        field = info.field_name or "value"
+        result = _FLOAT_DEFAULT_ONE_RULE(value, field)
         if result is None:  # pragma: no cover - defensive guard
             return 1.0
         return result
@@ -528,7 +536,8 @@ class RiskConfigModel(BaseModel):
     @field_validator("max_total_exposure_pct", mode="before")
     @classmethod
     def _normalize_optional_exposure(cls, value: object, info: ValidationInfo) -> float | None:
-        return cast(float | None, _OPTIONAL_FLOAT_RULE(value, info.field_name))
+        field = info.field_name or "value"
+        return cast(float | None, _OPTIONAL_FLOAT_RULE(value, field))
 
     @field_validator(
         "min_liquidation_buffer_pct",

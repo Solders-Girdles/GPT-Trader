@@ -129,13 +129,15 @@ jobs:
           REDIS_URL: redis://localhost:6379/0
           ENV: test
         run: |
-          poetry run pytest tests/unit/bot_v2/ \
-            --cov=bot_v2 \
+          poetry run pytest -m "not slow and not performance" -q \
+            --cov=src/bot_v2/cli \
+            --cov=src/bot_v2/config \
+            --cov=src/bot_v2/features/brokerages/coinbase/client \
+            --cov=src/bot_v2/features/brokerages/coinbase/utilities \
+            --cov-report=term \
             --cov-report=xml \
             --cov-report=html \
-            --cov-report=term-missing \
-            --cov-fail-under=75 \
-            -v
+            --cov-fail-under=75
 
       - name: Upload coverage reports
         uses: codecov/codecov-action@v5

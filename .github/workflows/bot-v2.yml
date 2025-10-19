@@ -67,7 +67,7 @@ jobs:
         run: poetry run ruff check src/bot_v2/
 
       - name: Run MyPy type checker
-        run: echo "Skipping mypy (temporarily disabled during cleanup)"
+        run: poetry run mypy src/bot_v2/
 
       - name: Run Bandit security checker
         run: poetry run bandit -r src/bot_v2/ --severity-level high --confidence-level high -f json -o bandit-report.json
@@ -137,7 +137,7 @@ jobs:
             --cov-report=term \
             --cov-report=xml \
             --cov-report=html \
-            --cov-fail-under=75
+            --cov-fail-under=82
 
       - name: Upload coverage reports
         uses: codecov/codecov-action@v5

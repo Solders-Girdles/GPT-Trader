@@ -760,8 +760,7 @@ src/bot_v2/
 │   │   ├── strategy.py (StrategyCoordinator)
 │   │   ├── execution.py (ExecutionCoordinator)
 │   │   └── telemetry.py (TelemetryCoordinator)
-│   ├── coordinator_facades.py
-│   └── [18 other orchestration files]
+│   └── [17 other orchestration files]
 ├── features/
 │   └── strategy_tools/
 │       ├── __init__.py

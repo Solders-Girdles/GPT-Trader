@@ -192,8 +192,9 @@ src/bot_v2/orchestration/
 │   ├── registry.py (CoordinatorRegistry)
 │   ├── runtime.py (RuntimeCoordinator)
 │   ├── strategy.py (StrategyCoordinator)
-│   └── execution.py (ExecutionCoordinator)
-└── coordinator_facades.py (Legacy facades)
+│   ├── execution.py (ExecutionCoordinator)
+│   └── telemetry.py (TelemetryCoordinator)
+└── perps_bot.py (orchestration entrypoint)
 ```
 
 ### Monitoring

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import threading
-from collections.abc import Iterable
+from collections.abc import Coroutine, Iterable
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any, cast
 
@@ -34,6 +34,7 @@ class TelemetryCoordinator(BaseCoordinator):
         self._ws_stop: threading.Event | None = None
         self._market_monitor: MarketActivityMonitor | None = None
         self._pending_stream_config: tuple[list[str], int] | None = None
+        self._loop_task_handle: asyncio.Task[Any] | None = None
 
     @property
     def name(self) -> str:
@@ -119,6 +120,52 @@ class TelemetryCoordinator(BaseCoordinator):
         updated_registry = ctx.registry.with_updates(extras=extras)
         return ctx.with_updates(registry=updated_registry)
 
+    # ------------------------------------------------------------------ compatibility helpers
+    def init_market_services(self) -> None:
+        updated = self.initialize(self.context)
+        self.update_context(updated)
+
+    def start_streaming_background(self) -> None:
+        if not self._should_enable_streaming():
+            return
+        self._schedule_coroutine(self._start_streaming())
+
+    def stop_streaming_background(self) -> None:
+        self._schedule_coroutine(self._stop_streaming())
+
+    def restart_streaming_if_needed(self, diff: dict[str, Any]) -> None:
+        relevant = {"perps_enable_streaming", "perps_stream_level", "symbols"}
+        if not relevant.intersection(diff.keys()):
+            return
+
+        should_stream = self._should_enable_streaming()
+
+        async def _apply_restart() -> None:
+            try:
+                await self._stop_streaming()
+            except Exception as exc:  # pragma: no cover - defensive logging
+                logger.exception(
+                    "Failed to stop streaming before restart",
+                    error=str(exc),
+                    operation="telemetry_stream",
+                    stage="restart_stop",
+                )
+            if should_stream:
+                try:
+                    await self._start_streaming()
+                except Exception as exc:  # pragma: no cover - defensive logging
+                    logger.exception(
+                        "Failed to restart streaming after config change",
+                        error=str(exc),
+                        operation="telemetry_stream",
+                        stage="restart_start",
+                    )
+
+        self._schedule_coroutine(_apply_restart())
+
+    async def run_account_telemetry(self, interval_seconds: int = 300) -> None:
+        await self._run_account_telemetry(interval_seconds)
+
     async def start_background_tasks(self) -> list[asyncio.Task[Any]]:
         tasks: list[asyncio.Task[Any]] = []
 
@@ -185,6 +232,30 @@ class TelemetryCoordinator(BaseCoordinator):
             Profile.PROD,
         }
 
+    def _schedule_coroutine(self, coro: Coroutine[Any, Any, Any]) -> None:
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            loop = None
+
+        if loop and loop.is_running():
+            loop.create_task(coro)
+            return
+
+        if self._loop_task_handle is not None:
+            try:
+                task_loop = self._loop_task_handle.get_loop()
+                if task_loop.is_running():
+                    task_loop.call_soon_threadsafe(asyncio.create_task, coro)
+                    return
+            except Exception:
+                pass
+
+        if loop is None:
+            asyncio.run(coro)
+        else:
+            loop.run_until_complete(coro)
+
     async def _start_streaming(self) -> asyncio.Task[Any] | None:
         symbols = list(self.context.symbols)
         if not symbols:
@@ -223,6 +294,7 @@ class TelemetryCoordinator(BaseCoordinator):
         task = loop.create_task(self._run_stream_loop_async(symbols, level, self._ws_stop))
         task.add_done_callback(self._handle_stream_task_completion)
         self._stream_task = task
+        self._loop_task_handle = task
         logger.info(
             "Started WS streaming task",
             symbols=symbols,
@@ -249,6 +321,7 @@ class TelemetryCoordinator(BaseCoordinator):
                     stage="cancel",
                 )
         self._stream_task = None
+        self._loop_task_handle = None
         logger.info(
             "Streaming halted",
             operation="telemetry_stream",

@@ -69,6 +69,17 @@ class LifecycleManager:
             bot.market_monitor = market_monitor
             setattr(bot, "_market_monitor", market_monitor)
 
+        try:
+            bot.strategy_orchestrator.init_strategy()
+        except Exception as exc:  # pragma: no cover - defensive logging
+            logger.debug(
+                "Failed to initialise strategy orchestrator during bootstrap",
+                error=str(exc),
+                operation="lifecycle_bootstrap",
+                stage="strategy_init",
+                exc_info=True,
+            )
+
         logger.info(
             "Coordinator initialization complete",
             operation="lifecycle_bootstrap",

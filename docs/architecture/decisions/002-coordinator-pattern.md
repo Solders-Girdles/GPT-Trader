@@ -17,7 +17,7 @@ Accepted – Implemented 2025-10-12
 - Migrate Runtime, Execution, Strategy, and Telemetry concerns into concrete coordinators that each consume the shared context.
 - Update `PerpsBot` to build coordinators through the registry and expose them via properties for backwards compatibility.
 - Refactor `LifecycleManager` to delegate initialisation, task start-up, and shutdown to the registry.
-- Retain facade classes (e.g., `telemetry_coordinator.py`) as thin compatibility layers so existing integrations can migrate gradually.
+- Retire legacy facade classes in favour of importing coordinators directly, simplifying the public API.
 
 ## Consequences
 ### Positive
@@ -29,7 +29,6 @@ Accepted – Implemented 2025-10-12
 
 ### Negative
 - **Additional abstraction**: Developers must understand the registry + context pattern before extending the orchestrator.
-- **Facade maintenance**: Legacy wrapper classes remain until downstream consumers migrate, adding interim complexity.
 - **Context management**: The shared context must stay up-to-date; careless mutation can lead to stale dependencies.
 
 ### Migration Strategy

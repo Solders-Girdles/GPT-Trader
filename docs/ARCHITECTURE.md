@@ -226,8 +226,9 @@ The orchestration layer provides coordinated control across trading operations t
 
 **Strategy & Runtime Coordination:**
 - `strategy_orchestrator.py` - Strategy lifecycle management and symbol processing
-- `runtime_coordinator.py` - Runtime orchestration and derivatives validation
-- `execution_coordinator.py` - Execution flow coordination across strategies
+- `coordinators/runtime.py` - Runtime orchestration and derivatives validation
+- `coordinators/execution.py` - Execution flow coordination across strategies
+- `coordinators/telemetry.py` - Streaming, telemetry, and monitoring integration
 
 **Services & Telemetry:**
 - `spot_profile_service.py` - Spot trading profile loading and rule management

@@ -241,6 +241,11 @@ class StrategyCoordinator(BaseCoordinator):
         timestamp = getattr(quote, "ts", datetime.now(UTC))
         self._record_mark_timestamp(symbol, timestamp)
 
+    def update_mark_window(self, symbol: str, mark: Decimal) -> None:
+        """Public facade retained for legacy call sites."""
+
+        self._update_mark_window(symbol, mark)
+
     def _update_mark_window(self, symbol: str, mark: Decimal) -> None:
         runtime_state = self.context.runtime_state
         if runtime_state is None:

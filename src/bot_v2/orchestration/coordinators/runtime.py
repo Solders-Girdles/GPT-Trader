@@ -88,11 +88,6 @@ class RuntimeCoordinator(BaseCoordinator):
         self.update_context(ctx)
         ctx = self.context
 
-        if self._strategy_orchestrator is not None:
-            self._strategy_orchestrator.init_strategy()
-        if self._execution_coordinator is not None:
-            self._execution_coordinator.init_execution()
-
         return self.context
 
     def bootstrap(self) -> None:

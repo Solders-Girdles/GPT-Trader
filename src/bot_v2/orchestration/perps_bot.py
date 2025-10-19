@@ -17,7 +17,14 @@ from bot_v2.features.brokerages.core.interfaces import (
 )
 from bot_v2.orchestration.config_controller import ConfigChange, ConfigController
 from bot_v2.orchestration.configuration import BotConfig
-from bot_v2.orchestration.coordinators import CoordinatorContext, CoordinatorRegistry
+from bot_v2.orchestration.coordinators import (
+    CoordinatorContext,
+    CoordinatorRegistry,
+    ExecutionCoordinator,
+    RuntimeCoordinator,
+    StrategyCoordinator,
+    TelemetryCoordinator,
+)
 from bot_v2.orchestration.lifecycle_manager import LifecycleManager
 from bot_v2.orchestration.perps_bot_state import PerpsBotRuntimeState
 from bot_v2.orchestration.runtime_settings import RuntimeSettings, load_runtime_settings
@@ -35,14 +42,10 @@ if TYPE_CHECKING:  # pragma: no cover - imports for type checking only
     from bot_v2.features.live_trade.risk import LiveRiskManager
     from bot_v2.monitoring.configuration_guardian import ConfigurationGuardian
     from bot_v2.orchestration.account_telemetry import AccountTelemetryService
-    from bot_v2.orchestration.execution_coordinator import ExecutionCoordinator
     from bot_v2.orchestration.intx_portfolio_service import IntxPortfolioService
     from bot_v2.orchestration.live_execution import LiveExecutionEngine
     from bot_v2.orchestration.market_monitor import MarketActivityMonitor
-    from bot_v2.orchestration.runtime_coordinator import RuntimeCoordinator
-    from bot_v2.orchestration.strategy_coordinator import StrategyCoordinator
     from bot_v2.orchestration.symbol_processor import SymbolProcessor
-    from bot_v2.orchestration.telemetry_coordinator import TelemetryCoordinator
     from bot_v2.persistence.event_store import EventStore
 from bot_v2.persistence.orders_store import OrdersStore
 
@@ -206,28 +209,30 @@ class PerpsBot:
     def _register_coordinators(self) -> None:
         """Register orchestrator coordinators in dependency order."""
 
-        from bot_v2.orchestration.execution_coordinator import ExecutionCoordinator
-        from bot_v2.orchestration.runtime_coordinator import RuntimeCoordinator
-        from bot_v2.orchestration.strategy_coordinator import StrategyCoordinator
-        from bot_v2.orchestration.telemetry_coordinator import TelemetryCoordinator
+        runtime = RuntimeCoordinator(
+            self._coordinator_context,
+            config_controller=self.config_controller,
+            strategy_orchestrator=self.strategy_orchestrator,
+            execution_coordinator=None,
+            product_cache=self._state.product_map,
+        )
+        execution = ExecutionCoordinator(self._coordinator_context)
+        strategy = StrategyCoordinator(self._coordinator_context)
+        telemetry = TelemetryCoordinator(self._coordinator_context)
 
-        execution = ExecutionCoordinator(self)
         self._coordinator_context = self._coordinator_context.with_updates(
-            execution_coordinator=execution
+            execution_coordinator=execution,
+            strategy_coordinator=strategy,
         )
         self._coordinator_registry._context = self._coordinator_context  # type: ignore[attr-defined]
 
-        self._coordinator_registry.register(RuntimeCoordinator(self))
+        for coordinator in (runtime, execution, strategy, telemetry):
+            coordinator.update_context(self._coordinator_context)
+
+        self._coordinator_registry.register(runtime)
         self._coordinator_registry.register(execution)
-
-        strategy = StrategyCoordinator(self)
-        self._coordinator_context = self._coordinator_context.with_updates(
-            strategy_coordinator=strategy
-        )
-        self._coordinator_registry._context = self._coordinator_context  # type: ignore[attr-defined]
         self._coordinator_registry.register(strategy)
-
-        self._coordinator_registry.register(TelemetryCoordinator(self))
+        self._coordinator_registry.register(telemetry)
 
     # ------------------------------------------------------------------
     @property
@@ -236,14 +241,10 @@ class PerpsBot:
 
     @property
     def runtime_coordinator(self) -> RuntimeCoordinator:
-        from bot_v2.orchestration.runtime_coordinator import (
-            RuntimeCoordinator as _RuntimeCoordinator,
-        )
-
         coordinator = self._coordinator_registry.get("runtime")
         if coordinator is None:
             raise RuntimeError("Runtime coordinator not registered")
-        if not isinstance(coordinator, _RuntimeCoordinator):
+        if not isinstance(coordinator, RuntimeCoordinator):
             raise RuntimeError("Runtime coordinator has unexpected type")
         return cast("RuntimeCoordinator", coordinator)
 
@@ -267,16 +268,12 @@ class PerpsBot:
 
     @property
     def telemetry_coordinator(self) -> TelemetryCoordinator:
-        from bot_v2.orchestration.telemetry_coordinator import (
-            TelemetryCoordinator as _TelemetryCoordinator,
-        )
-
         coordinator = getattr(self._coordinator_context, "telemetry_coordinator", None)
         if coordinator is None:
             coordinator = self._coordinator_registry.get("telemetry")
         if coordinator is None:
             raise RuntimeError("Telemetry coordinator not registered")
-        if not isinstance(coordinator, _TelemetryCoordinator):
+        if not isinstance(coordinator, TelemetryCoordinator):
             raise RuntimeError("Telemetry coordinator has unexpected type")
         return cast("TelemetryCoordinator", coordinator)
 
@@ -588,11 +585,7 @@ class PerpsBot:
 
     @staticmethod
     def _calculate_spread_bps(bid_price: Decimal, ask_price: Decimal) -> Decimal:
-        from bot_v2.orchestration.strategy_coordinator import (
-            StrategyCoordinator as _StrategyCoordinator,
-        )
-
-        return cast(Decimal, _StrategyCoordinator.calculate_spread_bps(bid_price, ask_price))
+        return cast(Decimal, StrategyCoordinator.calculate_spread_bps(bid_price, ask_price))
 
     # ------------------------------------------------------------------
     async def _run_account_telemetry(self, interval_seconds: int = 300) -> None:

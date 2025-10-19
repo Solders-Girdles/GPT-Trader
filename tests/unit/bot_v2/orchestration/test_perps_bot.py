@@ -13,13 +13,6 @@ from unittest.mock import Mock
 
 import pytest
 
-from bot_v2.features.brokerages.coinbase.adapter import CoinbaseBrokerage
-from bot_v2.orchestration.configuration import BotConfig, Profile
-from bot_v2.orchestration.perps_bot import PerpsBot
-from bot_v2.orchestration.perps_bot_builder import create_perps_bot
-from bot_v2.orchestration.runtime_coordinator import RuntimeCoordinator
-from bot_v2.orchestration.service_registry import ServiceRegistry
-from bot_v2.orchestration.strategy_coordinator import StrategyCoordinator
 from bot_v2.features.brokerages.core.interfaces import (
     OrderSide,
     OrderType,
@@ -27,39 +20,45 @@ from bot_v2.features.brokerages.core.interfaces import (
     OrderStatus,
     TimeInForce,
 )
+from bot_v2.features.brokerages.coinbase.adapter import CoinbaseBrokerage
+from bot_v2.orchestration.coordinators.base import CoordinatorContext
+from bot_v2.orchestration.coordinators.runtime import RuntimeCoordinator
+from bot_v2.orchestration.coordinators.strategy import StrategyCoordinator
+from bot_v2.orchestration.configuration import BotConfig, Profile
+from bot_v2.orchestration.perps_bot import PerpsBot
+from bot_v2.orchestration.perps_bot_builder import create_perps_bot
+from bot_v2.orchestration.perps_bot_state import PerpsBotRuntimeState
+from bot_v2.orchestration.service_registry import ServiceRegistry
 
 
 def test_runtime_coordinator_uses_deterministic_broker_for_dev(monkeypatch):
     config = BotConfig(profile=Profile.DEV, symbols=["BTC-PERP"], update_interval=1)
     registry = ServiceRegistry(config=config)
-
-    class StubBot:
-        def __init__(self) -> None:
-            self.config = config
-            self.registry = registry
-            self.event_store = object()
-            self._product_map: dict[str, object] = {}
-
-        @property
-        def broker(self):
-            return self.registry.broker
-
-        @broker.setter
-        def broker(self, value):
-            self.registry = self.registry.with_updates(broker=value)
+    runtime_state = PerpsBotRuntimeState(config.symbols)
+    context = CoordinatorContext(
+        config=config,
+        registry=registry,
+        event_store=object(),
+        orders_store=None,
+        broker=None,
+        risk_manager=None,
+        symbols=tuple(config.symbols),
+        bot_id="perps_bot",
+        runtime_state=runtime_state,
+        set_running_flag=lambda _: None,
+    )
 
     stub_broker = object()
     monkeypatch.setattr(
-        "bot_v2.orchestration.runtime_coordinator.DeterministicBroker",
+        "bot_v2.orchestration.coordinators.runtime.DeterministicBroker",
         lambda: stub_broker,
     )
 
-    bot = StubBot()
-    coordinator = RuntimeCoordinator(bot)
-    coordinator._init_broker()
+    coordinator = RuntimeCoordinator(context)
+    updated = coordinator._init_broker(context)
 
-    assert bot.broker is stub_broker
-    assert bot.registry.broker is stub_broker
+    assert updated.broker is stub_broker
+    assert updated.registry.broker is stub_broker
 
 
 def test_calculate_spread_bps():
@@ -80,14 +79,22 @@ def test_update_mark_window_trims() -> None:
             self.mark_windows: dict[str, list[Decimal]] = {}
             self.mark_lock = threading.RLock()
 
-    class StubBot:
-        def __init__(self, cfg: BotConfig, state: StubState) -> None:
-            self.config = cfg
-            self.runtime_state = state
-
     state = StubState()
-    bot = StubBot(config, state)
-    coordinator = StrategyCoordinator(bot)
+    runtime_state = state  # reuse stub state as runtime state
+    registry = ServiceRegistry(config=config)
+    context = CoordinatorContext(
+        config=config,
+        registry=registry,
+        event_store=None,
+        orders_store=None,
+        broker=None,
+        risk_manager=None,
+        symbols=tuple(config.symbols),
+        bot_id="perps_bot",
+        runtime_state=runtime_state,
+        set_running_flag=lambda _: None,
+    )
+    coordinator = StrategyCoordinator(context)
 
     for i in range(50):
         coordinator.update_mark_window("BTC-PERP", Decimal(str(50000 + i)))

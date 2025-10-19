@@ -206,9 +206,8 @@ src/bot_v2/utilities/
 ```
 src/bot_v2/orchestration/
 ├── coordinators/        (5 coordinators)
-├── coordinator_facades.py
 ├── perps_bot.py
-└── [18+ other files]    (20+ total)
+└── [17+ other files]    (20 total)
 ```
 
 ### Monitoring Analyzed

@@ -5,8 +5,6 @@ import logging
 import signal
 from argparse import Namespace
 
-import pytest
-
 import bot_v2.cli.commands.run as run_cmd
 from bot_v2.orchestration.configuration import ConfigValidationError
 

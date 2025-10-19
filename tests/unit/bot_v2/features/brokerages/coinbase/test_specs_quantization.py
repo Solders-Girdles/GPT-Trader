@@ -4,21 +4,20 @@ Unit tests for Coinbase perpetuals product specifications and quantization.
 Tests side-aware price quantization, safe position sizing, and XRP 10-unit requirements.
 """
 
-import pytest
+import tempfile
 from decimal import Decimal
 from pathlib import Path
-import tempfile
+
+import pytest
 import yaml
 
 from bot_v2.features.brokerages.coinbase.specs import (
     ProductSpec,
     SpecsService,
-    get_specs_service,
-    validate_order,
+    calculate_safe_position_size,
     quantize_price_side_aware,
     quantize_size,
-    calculate_safe_position_size,
-    ValidationResult,
+    validate_order,
 )
 
 
@@ -310,7 +309,7 @@ class TestEnforcePerpsRules:
     @staticmethod
     def make_product():
         """Helper to create test product."""
-        from bot_v2.features.brokerages.core.interfaces import Product, MarketType
+        from bot_v2.features.brokerages.core.interfaces import MarketType, Product
 
         return Product(
             symbol="BTC-PERP",
@@ -327,8 +326,8 @@ class TestEnforcePerpsRules:
     def test_quantity_rounds_to_step_and_enforces_min_size(self):
         """Test enforce_perp_rules rounds quantity and enforces minimums."""
         from bot_v2.features.brokerages.coinbase.utilities import (
-            enforce_perp_rules,
             InvalidRequestError,
+            enforce_perp_rules,
         )
 
         p = self.make_product()
@@ -346,8 +345,8 @@ class TestEnforcePerpsRules:
     def test_min_notional_enforced(self):
         """Test enforce_perp_rules enforces minimum notional value."""
         from bot_v2.features.brokerages.coinbase.utilities import (
-            enforce_perp_rules,
             InvalidRequestError,
+            enforce_perp_rules,
         )
 
         p = self.make_product()

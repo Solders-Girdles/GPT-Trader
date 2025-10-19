@@ -1,9 +1,10 @@
 from decimal import Decimal
+
 import pytest
 
-from bot_v2.features.live_trade.risk import LiveRiskManager, ValidationError
 from bot_v2.config.live_trade_config import RiskConfig
-from bot_v2.features.brokerages.core.interfaces import Product, MarketType
+from bot_v2.features.brokerages.core.interfaces import MarketType, Product
+from bot_v2.features.live_trade.risk import LiveRiskManager, ValidationError
 
 
 def make_product():

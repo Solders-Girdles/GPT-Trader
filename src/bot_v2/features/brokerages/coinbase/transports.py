@@ -53,8 +53,8 @@ class RealTransport:
             import websocket
         except ImportError:
             raise ImportError(
-                "websocket-client is not installed. "
-                "Install it with: pip install websocket-client"
+                "websocket-client is not installed. Install the live trading extras with "
+                "`pip install gpt-trader[live-trade]` or `poetry install --with live-trade`."
             )
 
         self.url = url

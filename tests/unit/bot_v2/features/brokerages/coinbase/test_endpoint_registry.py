@@ -1,5 +1,5 @@
-from bot_v2.features.brokerages.coinbase.endpoints import ENDPOINTS
 from bot_v2.features.brokerages.coinbase import client as client_mod
+from bot_v2.features.brokerages.coinbase.endpoints import ENDPOINTS
 
 
 def test_registry_non_empty_and_methods_exist():

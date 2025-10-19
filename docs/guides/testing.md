@@ -144,7 +144,7 @@ pre-commit run --all-files
 ### Issue: Import Errors
 **Solutions**:
 - Ensure you're using `bot_v2` imports, not legacy `src` paths
-- Run `poetry install` after dependency updates (e.g., `pyotp` for security tests)
+- Use `poetry install --with security` when you need the optional auth dependencies (e.g., `pyotp`) for security tests.
 
 ### Issue: Decimal Precision
 **Solution**: Use quantization helpers for consistent rounding

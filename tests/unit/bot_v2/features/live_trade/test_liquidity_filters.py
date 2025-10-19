@@ -3,11 +3,10 @@
 from decimal import Decimal
 
 from bot_v2.features.live_trade.strategies.liquidity_filters import (
-    LiquidityGates,
     LiquidityFilter,
+    LiquidityGates,
     LiquidityStrategyFilter,
     RSIConfirmation,
-    MarketSnapshot,
     create_test_snapshot,
 )
 
@@ -28,7 +27,7 @@ class TestLiquidityFilter:
 
         should_reject, reason = self.filter.should_reject_entry(snapshot)
 
-        assert should_reject == True
+        assert should_reject
         assert "Spread 25.0bps > 20.0bps" in reason
 
     def test_l1_depth_rejection(self):
@@ -37,7 +36,7 @@ class TestLiquidityFilter:
 
         should_reject, reason = self.filter.should_reject_entry(snapshot)
 
-        assert should_reject == True
+        assert should_reject
         assert "L1 depth" in reason and "< 50" in reason
 
     def test_l10_depth_rejection(self):
@@ -46,7 +45,7 @@ class TestLiquidityFilter:
 
         should_reject, reason = self.filter.should_reject_entry(snapshot)
 
-        assert should_reject == True
+        assert should_reject
         assert "L10 depth" in reason and "< 500" in reason
 
     def test_volume_rejection(self):
@@ -55,7 +54,7 @@ class TestLiquidityFilter:
 
         should_reject, reason = self.filter.should_reject_entry(snapshot)
 
-        assert should_reject == True
+        assert should_reject
         assert "1m volume 50.0 < 75.0" in reason
 
     def test_all_gates_pass(self):
@@ -69,7 +68,7 @@ class TestLiquidityFilter:
 
         should_reject, reason = self.filter.should_reject_entry(snapshot)
 
-        assert should_reject == False
+        assert not should_reject
         assert "Liquidity gates passed" in reason
 
 
@@ -90,7 +89,7 @@ class TestRSIConfirmation:
 
         confirmed, reason = self.rsi.confirm_buy_signal("BTC-PERP")
 
-        assert confirmed == False
+        assert not confirmed
         assert "Insufficient price history" in reason
 
     def test_rsi_buy_confirmation(self):
@@ -102,7 +101,7 @@ class TestRSIConfirmation:
 
         confirmed, reason = self.rsi.confirm_buy_signal("BTC-PERP")
 
-        assert confirmed == True
+        assert confirmed
         assert "RSI" in reason and "confirms buy" in reason
 
     def test_rsi_buy_rejection_oversold(self):
@@ -114,7 +113,7 @@ class TestRSIConfirmation:
 
         confirmed, reason = self.rsi.confirm_buy_signal("BTC-PERP")
 
-        assert confirmed == False
+        assert not confirmed
         assert "too low" in reason
 
     def test_rsi_sell_confirmation(self):
@@ -126,7 +125,7 @@ class TestRSIConfirmation:
 
         confirmed, reason = self.rsi.confirm_sell_signal("BTC-PERP")
 
-        assert confirmed == True
+        assert confirmed
         assert "RSI" in reason and "confirms sell" in reason
 
 
@@ -147,7 +146,7 @@ class TestLiquidityStrategyFilter:
 
         should_reject, reason = self.filter.should_reject_entry("buy", snapshot)
 
-        assert should_reject == True
+        assert should_reject
         assert "Liquidity:" in reason
         assert "Spread" in reason
 
@@ -160,7 +159,7 @@ class TestLiquidityStrategyFilter:
 
         should_reject, reason = filter_no_rsi.should_reject_entry("buy", snapshot)
 
-        assert should_reject == False
+        assert not should_reject
         assert "All filters passed" in reason
 
     def test_combined_filter_pass(self):
@@ -182,5 +181,5 @@ class TestLiquidityStrategyFilter:
             rsi = self.filter.rsi_confirmation.calculate_rsi("BTC-PERP")
             print(f"RSI value: {rsi}")
 
-        assert should_reject == False
+        assert not should_reject
         assert "All filters passed" in reason

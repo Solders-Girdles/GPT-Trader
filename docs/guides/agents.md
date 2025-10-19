@@ -42,7 +42,7 @@ DRY_RUN=1
 ```
 
 ## Running Tests
-- Always run `poetry install` after pulling to pick up dependency changes (`pyotp` is required for security tests).
+- After pulling, run `poetry install --with security` when working on authentication flows so optional dependencies like `pyotp` are available for the security tests.
 - Use `poetry run pytest --collect-only` to confirm suite counts (1484 collected / 1483 selected / 1 deselected).
 - The enforcement suite is `poetry run pytest -q`.
 - Real-API or integration flows are archived; build new coverage inside `tests/unit/bot_v2/` when adding features.

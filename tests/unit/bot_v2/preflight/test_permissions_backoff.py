@@ -3,7 +3,6 @@ from __future__ import annotations
 from urllib.error import URLError
 
 import pytest
-
 from scripts.production_preflight import PreflightCheck
 
 

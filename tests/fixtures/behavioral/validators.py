@@ -5,7 +5,7 @@ These validators check that actual behavior matches expected outcomes.
 """
 
 from decimal import Decimal
-from typing import Dict, List, Optional, Any
+from typing import Any
 
 
 def validate_pnl_calculation(

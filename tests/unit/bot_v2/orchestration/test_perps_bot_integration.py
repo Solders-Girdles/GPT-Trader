@@ -1,13 +1,14 @@
 from __future__ import annotations
 
-from decimal import Decimal
 import asyncio
+from decimal import Decimal
+
 import pytest
 
+from bot_v2.features.brokerages.core.interfaces import OrderSide, OrderStatus, OrderType
+from bot_v2.features.live_trade.risk import ValidationError
 from bot_v2.orchestration.configuration import BotConfig
 from bot_v2.orchestration.perps_bot_builder import create_perps_bot
-from bot_v2.features.brokerages.core.interfaces import OrderSide, OrderType, OrderStatus
-from bot_v2.features.live_trade.risk import ValidationError
 
 
 def test_market_data_actually_updates():

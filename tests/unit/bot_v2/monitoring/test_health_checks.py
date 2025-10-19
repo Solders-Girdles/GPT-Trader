@@ -9,19 +9,19 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 
 from bot_v2.monitoring.health_checks import (
-    HealthStatus,
-    HealthCheckResult,
-    HealthChecker,
-    DatabaseHealthCheck,
     APIHealthCheck,
     BrokerageHealthCheck,
+    DatabaseHealthCheck,
+    HealthCheckEndpoint,
+    HealthChecker,
+    HealthCheckRegistry,
+    HealthCheckResult,
+    HealthStatus,
     MemoryHealthCheck,
     PerformanceHealthCheck,
-    HealthCheckRegistry,
-    HealthCheckEndpoint,
-    setup_basic_health_checks,
     get_health_registry,
     get_health_summary,
+    setup_basic_health_checks,
 )
 
 
@@ -655,7 +655,6 @@ class TestHealthCheckEdgeCases:
     @pytest.mark.asyncio
     async def test_health_check_concurrent_execution(self) -> None:
         """Test that health checks run concurrently."""
-        import time
 
         class SlowCheck(HealthChecker):
             async def _do_check(self):

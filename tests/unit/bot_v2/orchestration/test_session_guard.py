@@ -1,9 +1,7 @@
 import datetime as dt
 
-import pytest
-
-from bot_v2.orchestration.session_guard import TradingSessionGuard
 from bot_v2.orchestration.market_monitor import MarketActivityMonitor
+from bot_v2.orchestration.session_guard import TradingSessionGuard
 
 
 def _make_time(hour, minute=0):

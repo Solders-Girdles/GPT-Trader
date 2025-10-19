@@ -7,10 +7,10 @@ metrics to keep optimization tests focused on behavioural assertions.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
-from collections.abc import Callable
 
 import numpy as np
 import pandas as pd

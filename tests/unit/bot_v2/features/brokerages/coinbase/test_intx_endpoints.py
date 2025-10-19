@@ -10,11 +10,11 @@ Verifies HTTP method, path formatting, and mode gating for:
 """
 
 import json
+
 import pytest
 
 from bot_v2.features.brokerages.coinbase.client import CoinbaseClient
 from bot_v2.features.brokerages.core.interfaces import InvalidRequestError
-
 
 pytestmark = pytest.mark.endpoints
 

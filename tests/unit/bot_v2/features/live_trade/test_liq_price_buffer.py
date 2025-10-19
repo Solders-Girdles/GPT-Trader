@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from bot_v2.features.live_trade.risk import LiveRiskManager
 from bot_v2.config.live_trade_config import RiskConfig
+from bot_v2.features.live_trade.risk import LiveRiskManager
 
 
 def test_liquidation_buffer_with_real_liq_price_triggers_reduce_only():

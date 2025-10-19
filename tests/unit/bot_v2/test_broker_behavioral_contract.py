@@ -5,23 +5,20 @@ follow the same behavioral contract. This prevents mocks from diverging
 from real broker behavior.
 """
 
-from decimal import Decimal
-from datetime import datetime
-import pytest
-from typing import Protocol, List, Optional
 from abc import abstractmethod
+from decimal import Decimal
+from typing import Protocol
+
+import pytest
 
 from bot_v2.features.brokerages.core.interfaces import (
     IBrokerage,
     Order,
     OrderSide,
-    OrderType,
     OrderStatus,
-    TimeInForce,
+    OrderType,
     Position,
     Quote,
-    Product,
-    MarketType,
 )
 from bot_v2.orchestration.deterministic_broker import DeterministicBroker
 
@@ -205,7 +202,7 @@ class BrokerContractTests:
         initial_quantity = sum(p.quantity for p in btc_positions) if btc_positions else Decimal("0")
 
         # Place a market order
-        order = broker.place_order(
+        broker.place_order(
             symbol="BTC-PERP",
             side=OrderSide.BUY,
             order_type=OrderType.MARKET,

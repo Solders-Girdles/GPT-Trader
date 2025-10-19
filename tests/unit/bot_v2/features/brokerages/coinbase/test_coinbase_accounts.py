@@ -16,7 +16,6 @@ from bot_v2.features.brokerages.coinbase.account_manager import CoinbaseAccountM
 from bot_v2.features.brokerages.coinbase.adapter import CoinbaseBrokerage
 from bot_v2.features.brokerages.coinbase.models import APIConfig
 from bot_v2.features.brokerages.core.interfaces import InvalidRequestError, MarketType, Product
-
 from tests.unit.bot_v2.features.brokerages.coinbase.test_helpers import (
     ACCOUNT_ENDPOINT_CASES,
     StubBroker,
@@ -25,7 +24,6 @@ from tests.unit.bot_v2.features.brokerages.coinbase.test_helpers import (
     make_adapter,
     make_client,
 )
-
 
 pytestmark = pytest.mark.endpoints
 

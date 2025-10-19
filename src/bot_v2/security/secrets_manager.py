@@ -14,7 +14,10 @@ from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from cryptography.fernet import Fernet
+try:  # pragma: no cover - optional dependency
+    from cryptography.fernet import Fernet  # type: ignore[import-not-found]
+except ImportError:  # pragma: no cover - degrade gracefully
+    Fernet = None  # type: ignore[assignment]
 
 from bot_v2.orchestration.runtime_settings import RuntimeSettings, load_runtime_settings
 from bot_v2.utilities.logging_patterns import get_logger
@@ -25,6 +28,15 @@ if TYPE_CHECKING:  # pragma: no cover
     from hvac import Client as HvacClient
 else:
     HvacClient = Any  # type: ignore[misc]
+
+
+def _require_fernet() -> Any:
+    if Fernet is None:
+        raise RuntimeError(
+            "cryptography is not installed. Install extras with `pip install gpt-trader[security]` "
+            "or `poetry install --with security`."
+        )
+    return Fernet
 
 
 @dataclass
@@ -68,7 +80,8 @@ class SecretsManager:
             # Generate new key for development
             environment = (env_map.get("ENV") or "development").lower()
             if environment == "development":
-                encryption_key = Fernet.generate_key().decode()
+                fernet_cls = _require_fernet()
+                encryption_key = fernet_cls.generate_key().decode()
                 logger.warning(
                     "Generated new encryption key for development",
                     operation="encryption_init",
@@ -79,7 +92,8 @@ class SecretsManager:
 
         # Validate and set cipher
         try:
-            self._cipher_suite = Fernet(
+            fernet_cls = _require_fernet()
+            self._cipher_suite = fernet_cls(
                 encryption_key.encode() if isinstance(encryption_key, str) else encryption_key
             )
         except Exception as e:

@@ -3,8 +3,6 @@ from __future__ import annotations
 from decimal import Decimal
 from types import SimpleNamespace
 
-import pytest
-
 from bot_v2.features.brokerages.core.interfaces import OrderSide, OrderType
 from bot_v2.features.live_trade.execution.sizing import PositionSizer
 from bot_v2.features.live_trade.risk.position_sizing import PositionSizingAdvice

@@ -26,7 +26,7 @@ This document captures notable opportunities to improve maintainability, streaml
 - Extend the schema-driven approach to other configuration surfaces (e.g., spot risk, orchestration profiles) so loaders share the same validation guarantees.
 
 ### 3. Source mock product metadata from structured fixtures
-*Observation.* `MockBroker._init_products` hardcodes extensive spot/perp metadata inline, duplicating market constants and forcing edits in code for simple test data tweaks.【F:src/bot_v2/orchestration/mock_broker.py†L35-L200】
+*Observation.* `DeterministicBroker` still duplicated spot/perp metadata inline when fixture imports failed, forcing code edits for simple test data tweaks.【F:src/bot_v2/orchestration/deterministic_broker.py†L33-L134】
 
 *Why it matters.* Keeping large literal dictionaries in code bloats diffs, hides shared defaults (e.g., price increments), and makes it difficult to reuse the same fixtures in other tests.
 
@@ -36,14 +36,16 @@ This document captures notable opportunities to improve maintainability, streaml
 - Expose a deterministic fixture factory that both the mock broker and tests can consume to ensure consistency.
 
 ### 4. Align experimental feature slices with optional dependencies
-*Observation.* Experimental slices (packaged in `var/legacy/legacy_bundle_latest.tar.gz`) expose `__experimental__ = True`, yet the optional dependency groups in `pyproject.toml` do not clearly map to those slices, leaving unused packages in the default install and complicating dependency trimming.【F:pyproject.toml†L36-L78】
+*Status.* Completed. Core dependencies were trimmed to the essentials and feature-focused extras now map to monitoring, live trading, security, and infrastructure slices.【F:pyproject.toml†L8-L60】
 
-*Why it matters.* Clear boundaries between core and experimental features make it easier to ship a lean runtime image and avoid unnecessary security patching.
+*Highlights.*
+- `monitoring`, `live-trade`, `security`, and `infra` extras gate optional packages such as `psutil`, `websocket-client`, and `pyotp`.
+- Sensitive modules (auth handler, secrets manager, monitoring collectors) now degrade gracefully when optional dependencies are absent.
+- Documentation and runtime warnings point developers to `poetry install --with <extra>` / `pip install gpt-trader[<extra>]` guidance.
 
-*First steps.*
-- Define extras that match the experimental slices (e.g., `backtest`, `monitoring`) and gate optional imports behind feature flags.
-- Update installation docs to recommend `poetry install --without` for unused slices.
-- Move experimental modules into a dedicated namespace or package subdirectory to emphasise their opt-in nature.
+*Next opportunities.*
+- Extend extras to any remaining experimental bundles (e.g., legacy backtesting) and ensure CI exercises minimal + feature matrices.
+- Track optional dependency coverage in release notes so deployment teams know which slices to include.
 
 ### 5. Restore lint and test visibility for the `tests/` tree
 *Observation.* The Ruff configuration excludes the entire `tests` directory, so style regressions or typing issues in test utilities are never surfaced. The testing status doc also highlights legacy suites that remain skipped, hinting at a gap between documentation and automation.【F:pyproject.toml†L116-L150】【F:tests/TESTING_STATUS.md†L1-L22】
@@ -56,7 +58,7 @@ This document captures notable opportunities to improve maintainability, streaml
 - Evaluate whether any skipped suites can be archived or updated, reducing the maintenance burden of documenting their status.
 
 ## Additional Maintenance Ideas
-- **Runtime path management.** Encapsulate the logic that chooses between `EVENT_STORE_ROOT`, `GPT_TRADER_RUNTIME_ROOT`, and default directories in a reusable `RuntimePaths` helper to avoid inconsistencies across services.【F:src/bot_v2/orchestration/perps_bot.py†L145-L169】
+- **Runtime path management.** Completed via `bot_v2.orchestration.runtime_paths.resolve_runtime_paths`, which centralises storage/event-store resolution for both bootstrap and storage helpers.【F:src/bot_v2/orchestration/runtime_paths.py†L1-L38】【F:src/bot_v2/orchestration/storage.py†L4-L55】
 - **Dependency hygiene.** Review core dependencies listed in `pyproject.toml` to confirm each is needed for the default trading path; large packages like `scipy` or `ta-lib` might move to extras if not required at runtime.【F:pyproject.toml†L8-L34】
 
 ## Next Steps

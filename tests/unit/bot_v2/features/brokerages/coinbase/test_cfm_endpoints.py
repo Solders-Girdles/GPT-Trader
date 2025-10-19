@@ -4,6 +4,7 @@ Covers cfm_balance_summary, cfm_positions, cfm_position, cfm_intraday_* methods.
 """
 
 import json
+
 import pytest
 
 from bot_v2.features.brokerages.coinbase.client import CoinbaseClient

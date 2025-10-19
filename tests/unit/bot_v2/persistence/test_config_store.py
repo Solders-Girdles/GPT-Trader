@@ -1,10 +1,7 @@
 """Tests for ConfigStore persistence functionality."""
 
-import json
 from pathlib import Path
 from unittest.mock import Mock, patch
-
-import pytest
 
 from bot_v2.persistence.config_store import ConfigStore
 
@@ -39,7 +36,7 @@ class TestConfigStore:
         mock_store_instance = Mock()
         mock_json_store.return_value = mock_store_instance
 
-        store = ConfigStore()
+        ConfigStore()
 
         # Should write default structure
         mock_store_instance.write_json.assert_called_once_with({"bots": []})
@@ -53,7 +50,7 @@ class TestConfigStore:
         mock_store_instance = Mock()
         mock_json_store.return_value = mock_store_instance
 
-        store = ConfigStore()
+        ConfigStore()
 
         # Should not write anything for non-empty file
         mock_store_instance.write_json.assert_not_called()

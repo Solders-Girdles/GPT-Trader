@@ -1,7 +1,6 @@
 from contextlib import contextmanager
 
 import pytest
-
 from src.bot_v2.utilities.performance import monitor
 from src.bot_v2.utilities.performance.metrics import PerformanceMetric
 

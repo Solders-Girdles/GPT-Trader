@@ -7,7 +7,6 @@ Creates complete trading scenarios with known outcomes for validation.
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
-from typing import List, Optional, Dict, Any
 
 
 @dataclass

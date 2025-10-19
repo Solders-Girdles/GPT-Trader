@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from datetime import timedelta
 
-import pytest
-
 from bot_v2.monitoring.alert_types import AlertSeverity
 
 

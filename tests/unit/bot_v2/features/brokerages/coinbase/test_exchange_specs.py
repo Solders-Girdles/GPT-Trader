@@ -1,11 +1,11 @@
 from decimal import Decimal
 
-from bot_v2.features.brokerages.core.interfaces import Product, MarketType
 from bot_v2.features.brokerages.coinbase.specs import (
+    calculate_safe_position_size,
     quantize_price_side_aware,
     validate_order,
-    calculate_safe_position_size,
 )
+from bot_v2.features.brokerages.core.interfaces import MarketType, Product
 
 
 def make_product(symbol: str) -> Product:

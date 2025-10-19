@@ -1,7 +1,7 @@
 """Tests for the orchestration service registry scaffolding."""
 
 from bot_v2.orchestration.configuration import BotConfig
-from bot_v2.orchestration.service_registry import ServiceRegistry, empty_registry
+from bot_v2.orchestration.service_registry import empty_registry
 
 
 def test_empty_registry_initialises_with_config():

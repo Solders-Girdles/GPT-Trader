@@ -1,14 +1,13 @@
 """Tests for Coinbase client base functionality."""
 
 import json
-import time
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
-from bot_v2.features.brokerages.coinbase.auth import CoinbaseAuth, CDPJWTAuth
+from bot_v2.features.brokerages.coinbase.auth import CDPJWTAuth, CoinbaseAuth
 from bot_v2.features.brokerages.coinbase.client.base import CoinbaseClientBase
-from bot_v2.features.brokerages.coinbase.errors import InvalidRequestError, RateLimitError
+from bot_v2.features.brokerages.coinbase.errors import InvalidRequestError
 
 pytestmark = pytest.mark.slow
 
@@ -558,7 +557,7 @@ class TestCoinbaseClientBase:
         with patch("time.sleep"):
             try:
                 client._request("GET", "/api/v3/test")
-            except:
+            except Exception:
                 pass
 
         mock_load_config.assert_called_once()
@@ -620,6 +619,7 @@ class TestCoinbaseClientBase:
         """Test urllib transport with HTTP error."""
         client = CoinbaseClientBase(base_url=self.base_url, auth=self.auth, enable_keep_alive=False)
         from urllib import request as real_request
+
         from bot_v2.features.brokerages.coinbase.client.base import _ue
 
         http_error = _ue.HTTPError(

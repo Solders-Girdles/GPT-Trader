@@ -2,9 +2,7 @@
 
 from pathlib import Path
 
-import pytest
-
-from bot_v2.orchestration.bootstrap import build_bot, build_service_registry, bot_from_profile
+from bot_v2.orchestration.bootstrap import bot_from_profile, build_bot, build_service_registry
 from bot_v2.orchestration.configuration import BotConfig
 from bot_v2.persistence.event_store import EventStore
 

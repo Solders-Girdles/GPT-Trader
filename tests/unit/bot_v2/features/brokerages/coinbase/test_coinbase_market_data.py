@@ -6,8 +6,8 @@ import json
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from typing import Any
-from urllib.parse import parse_qs, urlparse
 from unittest.mock import MagicMock
+from urllib.parse import parse_qs, urlparse
 
 import pytest
 
@@ -24,11 +24,12 @@ from bot_v2.features.brokerages.coinbase.utilities import (
 )
 from bot_v2.features.brokerages.core.interfaces import (
     InvalidRequestError as CoreInvalidRequestError,
+)
+from bot_v2.features.brokerages.core.interfaces import (
     MarketType,
     NotFoundError,
     Product,
 )
-
 from tests.unit.bot_v2.features.brokerages.coinbase.minimal_brokerage import (
     MinimalCoinbaseBrokerage,
 )
@@ -38,7 +39,6 @@ from tests.unit.bot_v2.features.brokerages.coinbase.test_helpers import (
     make_client,
     url_has_param,
 )
-
 
 pytestmark = pytest.mark.endpoints
 

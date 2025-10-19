@@ -1,7 +1,6 @@
 """Unit tests for broker_factory.create_brokerage env-driven selection."""
 
 import importlib
-from types import SimpleNamespace
 
 
 def _reload_factory(monkeypatch):

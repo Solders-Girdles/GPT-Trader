@@ -1,9 +1,8 @@
+import builtins
 import sys
 from types import SimpleNamespace
 
-import builtins
 import pytest
-
 from src.bot_v2.utilities.performance import resource
 
 

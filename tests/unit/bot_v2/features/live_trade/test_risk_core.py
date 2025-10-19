@@ -5,6 +5,7 @@ import math
 from decimal import Decimal
 
 import pytest
+from tests.support.event_store import RecordingEventStore
 
 from bot_v2.config.live_trade_config import RiskConfig
 from bot_v2.features.brokerages.core.interfaces import MarketType, Product
@@ -14,14 +15,13 @@ from bot_v2.features.live_trade.risk import (
     LiveRiskManager,
     ValidationError,
 )
-from bot_v2.features.live_trade.risk_metrics import RiskMetricsAggregator
 from bot_v2.features.live_trade.risk_calculations import (
     effective_mmr,
     effective_symbol_leverage_cap,
     evaluate_daytime_window,
 )
+from bot_v2.features.live_trade.risk_metrics import RiskMetricsAggregator
 from bot_v2.features.live_trade.risk_runtime import CircuitBreakerAction
-from tests.support.event_store import RecordingEventStore
 
 
 class _CalculationConfig:

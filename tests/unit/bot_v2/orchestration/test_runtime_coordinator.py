@@ -10,13 +10,13 @@ from unittest.mock import AsyncMock, Mock
 import pytest
 
 from bot_v2.features.live_trade.risk import RiskRuntimeState
+from bot_v2.orchestration.configuration import BotConfig, Profile
 from bot_v2.orchestration.coordinators.base import CoordinatorContext
 from bot_v2.orchestration.coordinators.runtime import (
     BrokerBootstrapArtifacts,
     BrokerBootstrapError,
     RuntimeCoordinator,
 )
-from bot_v2.orchestration.configuration import BotConfig, Profile
 from bot_v2.orchestration.perps_bot_state import PerpsBotRuntimeState
 from bot_v2.orchestration.service_registry import ServiceRegistry
 

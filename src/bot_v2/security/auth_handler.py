@@ -10,16 +10,51 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from enum import Enum
 from threading import Lock
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
-import jwt
-import pyotp
-from jwt import PyJWTError
+if TYPE_CHECKING:  # pragma: no cover - type checking only
+    import jwt as _jwt_module  # noqa: F401
+    import pyotp as _pyotp_module  # noqa: F401
+else:  # pragma: no cover - runtime import guards
+    try:
+        import jwt as _jwt_module  # type: ignore[import-not-found]
+        from jwt import PyJWTError as _PyJWTError  # type: ignore[import-not-found]
+    except ImportError:  # pragma: no cover - optional dependency
+        _jwt_module = None  # type: ignore[assignment]
+
+        class _PyJWTError(Exception):
+            """Fallback error when PyJWT is unavailable."""
+
+            pass
+
+    try:
+        import pyotp as _pyotp_module  # type: ignore[import-not-found]
+    except ImportError:
+        _pyotp_module = None  # type: ignore[assignment]
 
 from bot_v2.orchestration.runtime_settings import RuntimeSettings, load_runtime_settings
 from bot_v2.utilities.logging_patterns import get_logger
 
 logger = get_logger(__name__, component="auth")
+PyJWTError = _PyJWTError
+
+
+def _require_jwt() -> Any:
+    if _jwt_module is None:
+        raise RuntimeError(
+            "PyJWT is not installed. Install extras with `pip install gpt-trader[security]` "
+            "or `poetry install --with security`."
+        )
+    return _jwt_module
+
+
+def _require_pyotp() -> Any:
+    if _pyotp_module is None:
+        raise RuntimeError(
+            "pyotp is not installed. Install extras with `pip install gpt-trader[security]` "
+            "or `poetry install --with security`."
+        )
+    return _pyotp_module
 
 
 class Role(Enum):
@@ -219,8 +254,9 @@ class AuthHandler:
         }
 
         # Generate tokens
-        access_token = jwt.encode(access_claims, self.secret_key, algorithm=self.algorithm)
-        refresh_token = jwt.encode(refresh_claims, self.secret_key, algorithm=self.algorithm)
+        jwt_module = _require_jwt()
+        access_token = jwt_module.encode(access_claims, self.secret_key, algorithm=self.algorithm)
+        refresh_token = jwt_module.encode(refresh_claims, self.secret_key, algorithm=self.algorithm)
 
         pair = TokenPair(
             access_token=access_token,
@@ -239,11 +275,12 @@ class AuthHandler:
         Returns:
             Token claims if valid, None otherwise
         """
+        jwt_module = _require_jwt()
         try:
             # Decode token
             claims = cast(
                 dict[str, Any],
-                jwt.decode(
+                jwt_module.decode(
                     token,
                     self.secret_key,
                     algorithms=[self.algorithm],
@@ -263,16 +300,16 @@ class AuthHandler:
 
             return claims
 
-        except jwt.ExpiredSignatureError:
+        except jwt_module.ExpiredSignatureError:
             logger.debug(
                 "Token expired",
                 operation="token_validate",
                 status="expired",
             )
             return None
-        except jwt.InvalidTokenError as e:
+        except jwt_module.InvalidTokenError as exc:
             logger.warning(
-                f"Invalid token: {e}",
+                f"Invalid token: {exc}",
                 operation="token_validate",
                 status="invalid",
             )
@@ -307,8 +344,9 @@ class AuthHandler:
 
     def revoke_token(self, token: str) -> bool:
         """Revoke a token"""
+        jwt_module = _require_jwt()
         try:
-            claims = jwt.decode(
+            claims = jwt_module.decode(
                 token,
                 self.secret_key,
                 algorithms=[self.algorithm],
@@ -377,12 +415,13 @@ class AuthHandler:
             return None
 
         # Generate secret
-        secret = pyotp.random_base32()
+        pyotp_module = _require_pyotp()
+        secret = pyotp_module.random_base32()
         user.mfa_secret = secret
         user.mfa_enabled = True
 
         # Generate provisioning URI
-        totp = pyotp.TOTP(secret)
+        totp = pyotp_module.TOTP(secret)
         return str(totp.provisioning_uri(name=user.email, issuer_name="Bot V2 Trading"))
 
     def _verify_mfa(self, user: User, code: str) -> bool:
@@ -390,7 +429,8 @@ class AuthHandler:
         if not user.mfa_secret:
             return False
 
-        totp = pyotp.TOTP(user.mfa_secret)
+        pyotp_module = _require_pyotp()
+        totp = pyotp_module.TOTP(user.mfa_secret)
         return bool(totp.verify(code, valid_window=1))
 
     def _find_user_by_username(self, username: str) -> User | None:
@@ -407,8 +447,9 @@ class AuthHandler:
 
     def _get_jti(self, token: str) -> str | None:
         """Extract JTI from token (legacy helper for tests)."""
+        jwt_module = _require_jwt()
         try:
-            claims: Mapping[str, Any] = jwt.decode(
+            claims: Mapping[str, Any] = jwt_module.decode(
                 token,
                 self.secret_key,
                 algorithms=[self.algorithm],

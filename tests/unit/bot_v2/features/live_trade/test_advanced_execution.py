@@ -2,22 +2,21 @@
 
 from datetime import datetime
 from decimal import Decimal
-from typing import Optional
 
 import pytest
 
 from bot_v2.config.live_trade_config import RiskConfig
-from bot_v2.features.live_trade.advanced_execution import AdvancedExecutionEngine
 from bot_v2.features.brokerages.core.interfaces import (
-    Product,
     MarketType,
-    OrderType,
-    OrderSide,
-    TimeInForce,
     Order,
+    OrderSide,
     OrderStatus,
+    OrderType,
+    Product,
     Quote,
+    TimeInForce,
 )
+from bot_v2.features.live_trade.advanced_execution import AdvancedExecutionEngine
 from bot_v2.features.live_trade.risk import PositionSizingAdvice
 
 
@@ -133,7 +132,6 @@ def test_high_volume_stop_orders_trigger_and_cleanup():
     total_orders = 50
     for idx in range(total_orders):
         stop_price = Decimal("100") - Decimal(idx) / Decimal("100")
-        limit_price = stop_price
         engine.place_order(
             symbol="BTC-PERP",
             side=OrderSide.SELL,

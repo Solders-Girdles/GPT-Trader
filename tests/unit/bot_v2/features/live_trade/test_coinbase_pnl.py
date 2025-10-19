@@ -2,17 +2,13 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Any, Dict
-from collections.abc import Iterable
+from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
-
-from bot_v2.features.brokerages.coinbase.models import to_position
-from bot_v2.features.live_trade.pnl_tracker import FundingCalculator, PnLTracker
-
 from tests.unit.bot_v2.features.live_trade.pnl_test_utils import (
     TradeOp,
     apply_marks,
@@ -20,6 +16,9 @@ from tests.unit.bot_v2.features.live_trade.pnl_test_utils import (
     ensure_advanced_pnl_available,
     make_position,
 )
+
+from bot_v2.features.brokerages.coinbase.models import to_position
+from bot_v2.features.live_trade.pnl_tracker import FundingCalculator, PnLTracker
 
 ensure_advanced_pnl_available()
 

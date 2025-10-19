@@ -2,15 +2,15 @@ import json
 
 import pytest
 
-from bot_v2.features.brokerages.coinbase.client import CoinbaseClient, CoinbaseAuth
+from bot_v2.features.brokerages.coinbase.client import CoinbaseAuth, CoinbaseClient
 from bot_v2.features.brokerages.coinbase.errors import map_http_error
 from bot_v2.features.brokerages.core.interfaces import (
-    RateLimitError,
     AuthError,
-    NotFoundError,
-    InvalidRequestError,
     InsufficientFunds,
+    InvalidRequestError,
+    NotFoundError,
     PermissionDeniedError,
+    RateLimitError,
 )
 
 pytestmark = pytest.mark.endpoints

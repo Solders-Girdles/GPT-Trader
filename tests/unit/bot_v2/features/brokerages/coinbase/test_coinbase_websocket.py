@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 from collections import deque
+from collections.abc import Iterable
 from decimal import Decimal
 from typing import Any, Deque
-from collections.abc import Iterable
 
 import pytest
 
@@ -16,9 +16,7 @@ from bot_v2.features.brokerages.coinbase.ws import (
     WSSubscription,
     normalize_market_message,
 )
-
 from tests.unit.bot_v2.features.brokerages.coinbase.websocket_test_utils import make_adapter
-
 
 # --- Connectivity and reconnection behaviour -------------------------------------------------
 

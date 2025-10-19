@@ -2,8 +2,6 @@
 
 from datetime import UTC, datetime, timedelta, timezone
 
-import pytest
-
 from bot_v2.utilities.datetime_helpers import (
     normalize_to_utc,
     to_iso_utc,

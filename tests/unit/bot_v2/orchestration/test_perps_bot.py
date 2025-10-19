@@ -3,28 +3,27 @@
 Avoids network and real broker connections; focuses on safe internals.
 """
 
-from datetime import datetime, timezone, time
-from decimal import Decimal
-
 import asyncio
 import threading
 import time as _time
+from datetime import datetime, time, timezone
+from decimal import Decimal
 from unittest.mock import Mock
 
 import pytest
 
+from bot_v2.features.brokerages.coinbase.adapter import CoinbaseBrokerage
 from bot_v2.features.brokerages.core.interfaces import (
-    OrderSide,
-    OrderType,
     Order,
+    OrderSide,
     OrderStatus,
+    OrderType,
     TimeInForce,
 )
-from bot_v2.features.brokerages.coinbase.adapter import CoinbaseBrokerage
+from bot_v2.orchestration.configuration import BotConfig, Profile
 from bot_v2.orchestration.coordinators.base import CoordinatorContext
 from bot_v2.orchestration.coordinators.runtime import RuntimeCoordinator
 from bot_v2.orchestration.coordinators.strategy import StrategyCoordinator
-from bot_v2.orchestration.configuration import BotConfig, Profile
 from bot_v2.orchestration.perps_bot import PerpsBot
 from bot_v2.orchestration.perps_bot_builder import create_perps_bot
 from bot_v2.orchestration.perps_bot_state import PerpsBotRuntimeState

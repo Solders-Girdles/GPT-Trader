@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict
 from collections.abc import Iterable
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -11,12 +11,10 @@ import pytest
 from bot_v2.features.brokerages.coinbase.auth import CDPJWTAuth
 from bot_v2.features.brokerages.coinbase.client import CoinbaseClient
 from bot_v2.features.brokerages.coinbase.errors import AuthError
-
 from tests.unit.bot_v2.features.brokerages.coinbase.permissions_test_utils import (
     make_broker,
     make_client,
 )
-
 
 # --- Broker facade behaviour ---------------------------------------------------------------
 

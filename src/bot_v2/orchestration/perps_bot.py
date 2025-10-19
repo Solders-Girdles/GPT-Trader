@@ -129,37 +129,64 @@ class PerpsBot:
 
         self.config_controller = config_controller
         self.config = self.config_controller.current
-
-        if registry.config is not self.config:
-            registry = registry.with_updates(config=self.config)
-        self.registry = registry
-
+        self.registry = self._align_registry_with_config(registry)
         self.event_store = event_store
         self.orders_store = orders_store
         self._session_guard = session_guard
         self.baseline_snapshot = baseline_snapshot
-        if configuration_guardian is None:
-            from bot_v2.monitoring.configuration_guardian import (
-                ConfigurationGuardian as _ConfigurationGuardian,
-            )
+        self.configuration_guardian = self._resolve_configuration_guardian(
+            configuration_guardian, baseline_snapshot
+        )
 
-            configuration_guardian = _ConfigurationGuardian(self.baseline_snapshot)
-        self.configuration_guardian = configuration_guardian
+        self._state = self._initialize_symbols_state()
+        self._symbol_processor_override: _CallableSymbolProcessor | None = None
+        self.strategy_orchestrator = StrategyOrchestrator(self)
 
-        self.symbols = list(self.config.symbols or [])
-        if not self.symbols:
+        self._setup_coordinator_stack()
+        self.lifecycle_manager = LifecycleManager(self)
+        self._initialize_service_placeholders()
+
+    def _align_registry_with_config(self, registry: ServiceRegistry) -> ServiceRegistry:
+        """Ensure the registry reflects the runtime configuration."""
+
+        if registry.config is not self.config:
+            return registry.with_updates(config=self.config)
+        return registry
+
+    def _resolve_configuration_guardian(
+        self,
+        configuration_guardian: ConfigurationGuardian | None,
+        baseline_snapshot: Any,
+    ) -> ConfigurationGuardian:
+        """Return the configuration guardian instance backing drift detection."""
+
+        if configuration_guardian is not None:
+            return configuration_guardian
+
+        from bot_v2.monitoring.configuration_guardian import (
+            ConfigurationGuardian as _ConfigurationGuardian,
+        )
+
+        return _ConfigurationGuardian(baseline_snapshot)
+
+    def _initialize_symbols_state(self) -> PerpsBotRuntimeState:
+        """Initialise symbol configuration and backing runtime state."""
+
+        symbols = list(self.config.symbols or [])
+        if not symbols:
             logger.warning(
                 "No symbols configured; continuing with empty symbol list",
                 operation="perps_bot_init",
                 stage="symbols_missing",
             )
+
+        self.symbols = symbols
         self._derivatives_enabled = bool(getattr(self.config, "derivatives_enabled", False))
+        return PerpsBotRuntimeState(symbols)
 
-        self._state = PerpsBotRuntimeState(self.symbols)
-        self._symbol_processor_override: _CallableSymbolProcessor | None = None
-        self.strategy_orchestrator = StrategyOrchestrator(self)
+    def _setup_coordinator_stack(self) -> None:
+        """Instantiate coordinator context, registry, and wiring."""
 
-        # Coordinator context and registry setup
         self._coordinator_context = CoordinatorContext(
             config=self.config,
             registry=self.registry,
@@ -179,6 +206,7 @@ class PerpsBot:
             shutdown_hook=self.shutdown,
             set_running_flag=lambda value: setattr(self, "running", value),
         )
+
         self._coordinator_registry = CoordinatorRegistry(self._coordinator_context)
         self._register_coordinators()
 
@@ -189,6 +217,7 @@ class PerpsBot:
             strategy_coordinator=self.strategy_coordinator,
         )
         self._coordinator_registry._context = self._coordinator_context  # type: ignore[attr-defined]
+
         for coordinator in (
             self.runtime_coordinator,
             self.execution_coordinator,
@@ -198,13 +227,13 @@ class PerpsBot:
             if hasattr(coordinator, "update_context"):
                 coordinator.update_context(self._coordinator_context)
 
-        self.lifecycle_manager = LifecycleManager(self)
+    def _initialize_service_placeholders(self) -> None:
+        """Reset service placeholders that are populated during telemetry startup."""
 
-        # Placeholders for services populated during telemetry initialization
-        self.account_manager: CoinbaseAccountManager | None = None
-        self.account_telemetry: AccountTelemetryService | None = None
-        self.market_monitor: MarketActivityMonitor | None = None
-        self.intx_portfolio_service: IntxPortfolioService | None = None
+        self.account_manager = None
+        self.account_telemetry = None
+        self.market_monitor = None
+        self.intx_portfolio_service = None
 
     def _register_coordinators(self) -> None:
         """Register orchestrator coordinators in dependency order."""

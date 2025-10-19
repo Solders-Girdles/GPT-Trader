@@ -3,8 +3,6 @@
 from datetime import datetime
 from decimal import Decimal
 
-import pytest
-
 from bot_v2.features.brokerages.core.interfaces import OrderSide, OrderType
 from bot_v2.types.trading import (
     AccountSnapshot,

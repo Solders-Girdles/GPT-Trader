@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta
-
 from unittest.mock import Mock
 
 from bot_v2.features.brokerages.coinbase.adapter import CoinbaseBrokerage

@@ -2,14 +2,14 @@
 
 import asyncio
 from decimal import Decimal
-from unittest.mock import MagicMock, AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from bot_v2.monitoring.configuration_guardian import ConfigurationGuardian
-from bot_v2.orchestration.configuration import BotConfig
 from bot_v2.config.types import Profile
 from bot_v2.features.live_trade.risk import LiveRiskManager
+from bot_v2.monitoring.configuration_guardian import ConfigurationGuardian
+from bot_v2.orchestration.configuration import BotConfig
 from bot_v2.orchestration.perps_bot import PerpsBot
 from bot_v2.orchestration.perps_bot_builder import create_perps_bot
 

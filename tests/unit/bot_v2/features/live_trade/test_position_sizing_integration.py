@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import replace
 from decimal import Decimal
 
-import pytest
+from tests.support.event_store import RecordingEventStore
 
 from bot_v2.config.live_trade_config import RiskConfig
 from bot_v2.features.live_trade.risk import (
@@ -13,7 +13,6 @@ from bot_v2.features.live_trade.risk import (
     PositionSizingAdvice,
     PositionSizingContext,
 )
-from tests.support.event_store import RecordingEventStore
 
 
 def _make_context(**overrides) -> PositionSizingContext:

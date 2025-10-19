@@ -4,12 +4,13 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
-from pathlib import Path
 
 from bot_v2.persistence.event_store import EventStore
 from bot_v2.persistence.orders_store import OrdersStore
 
 from .configuration import TOP_VOLUME_BASES, BotConfig, Profile
+from .runtime_paths import RuntimePaths
+from .runtime_paths import resolve_runtime_paths as compute_runtime_paths
 from .runtime_settings import RuntimeSettings, load_runtime_settings
 from .service_registry import ServiceRegistry, empty_registry
 from .symbols import PERPS_ALLOWLIST, normalize_symbol_list
@@ -22,14 +23,6 @@ class BootstrapLogRecord:
     level: int
     message: str
     args: tuple[object, ...] = ()
-
-
-@dataclass(frozen=True)
-class RuntimePaths:
-    """Materialized runtime directories for the bot."""
-
-    storage_dir: Path
-    event_store_root: Path
 
 
 @dataclass(frozen=True)
@@ -75,19 +68,7 @@ def resolve_runtime_paths(
 ) -> RuntimePaths:
     """Determine and materialise storage directories for the bot."""
 
-    runtime_root = settings.runtime_root
-    storage_dir = runtime_root / f"perps_bot/{profile.value}"
-    storage_dir.mkdir(parents=True, exist_ok=True)
-
-    event_store_root = settings.event_store_root_override
-    if event_store_root:
-        if "perps_bot" not in set(event_store_root.parts):
-            event_store_root = event_store_root / "perps_bot" / profile.value
-    else:
-        event_store_root = storage_dir
-
-    event_store_root.mkdir(parents=True, exist_ok=True)
-    return RuntimePaths(storage_dir=storage_dir, event_store_root=event_store_root)
+    return compute_runtime_paths(settings=settings, profile=profile)
 
 
 def prepare_perps_bot(

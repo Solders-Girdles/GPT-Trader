@@ -4,15 +4,13 @@ from __future__ import annotations
 
 import os
 import sys
-from collections.abc import Callable, Generator
+from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
-from collections.abc import Iterator
 
 import pytest
-
 from cryptography.fernet import Fernet
 
 from bot_v2.orchestration.runtime_settings import RuntimeSettings, load_runtime_settings

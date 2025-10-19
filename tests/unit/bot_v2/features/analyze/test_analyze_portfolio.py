@@ -11,7 +11,6 @@ from bot_v2.features.analyze.types import (
     AnalysisResult,
     MarketRegime,
     StrategyComparison,
-    StrategySignals,
     SupportResistance,
     TechnicalIndicators,
 )

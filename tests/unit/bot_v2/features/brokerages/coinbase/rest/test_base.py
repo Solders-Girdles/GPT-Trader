@@ -1,10 +1,9 @@
 """Tests for Coinbase REST service base functionality."""
 
 import os
-import uuid
 from datetime import datetime
 from decimal import Decimal
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 

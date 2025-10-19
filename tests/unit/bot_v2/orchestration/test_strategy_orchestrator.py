@@ -5,29 +5,28 @@ Tests strategy initialization, decision execution, risk gates,
 and spot-specific filtering logic.
 """
 
-import asyncio
 from datetime import datetime, timezone
 from decimal import Decimal
-from unittest.mock import Mock, MagicMock, AsyncMock, patch
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 
+from bot_v2.features.brokerages.core.interfaces import Balance, MarketType, Position, Product
+from bot_v2.features.live_trade.risk_runtime import (
+    CircuitBreakerAction,
+    CircuitBreakerOutcome,
+)
+from bot_v2.features.live_trade.strategies.perps_baseline import (
+    Action,
+    BaselinePerpsStrategy,
+    Decision,
+)
+from bot_v2.orchestration.configuration import Profile
+from bot_v2.orchestration.perps_bot_state import PerpsBotRuntimeState
 from bot_v2.orchestration.strategy_orchestrator import (
     StrategyOrchestrator,
     SymbolProcessingContext,
 )
-from bot_v2.orchestration.configuration import Profile
-from bot_v2.features.brokerages.core.interfaces import Balance, Position, Product, MarketType
-from bot_v2.features.live_trade.strategies.perps_baseline import (
-    Action,
-    Decision,
-    BaselinePerpsStrategy,
-)
-from bot_v2.features.live_trade.risk_runtime import (
-    CircuitBreakerOutcome,
-    CircuitBreakerAction,
-)
-from bot_v2.orchestration.perps_bot_state import PerpsBotRuntimeState
 
 
 @pytest.fixture

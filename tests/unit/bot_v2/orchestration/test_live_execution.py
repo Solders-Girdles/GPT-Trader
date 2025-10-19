@@ -3,31 +3,29 @@
 Focus on pre-trade validation path and reduce-only enforcement.
 """
 
-from decimal import Decimal
-from datetime import datetime
-from pathlib import Path
 import tempfile
-from typing import List, Optional
+from datetime import datetime
+from decimal import Decimal
+from pathlib import Path
 
 import pytest
-
-from bot_v2.features.brokerages.core.interfaces import (
-    IBrokerage,
-    Balance,
-    Product,
-    MarketType,
-    OrderSide,
-    OrderType,
-    Order,
-    OrderStatus,
-    TimeInForce,
-    Position,
-)
-from bot_v2.orchestration.live_execution import LiveExecutionEngine
-from bot_v2.features.live_trade.risk import LiveRiskManager, ValidationError
-from bot_v2.config.live_trade_config import RiskConfig
-from bot_v2.persistence.event_store import EventStore
 from tests.support.deterministic_broker import DeterministicBroker
+
+from bot_v2.config.live_trade_config import RiskConfig
+from bot_v2.features.brokerages.core.interfaces import (
+    Balance,
+    MarketType,
+    Order,
+    OrderSide,
+    OrderStatus,
+    OrderType,
+    Position,
+    Product,
+    TimeInForce,
+)
+from bot_v2.features.live_trade.risk import LiveRiskManager, ValidationError
+from bot_v2.orchestration.live_execution import LiveExecutionEngine
+from bot_v2.persistence.event_store import EventStore
 
 
 class DummyBroker:

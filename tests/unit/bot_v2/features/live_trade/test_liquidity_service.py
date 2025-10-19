@@ -3,13 +3,12 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from decimal import Decimal
 
-import pytest
+from tests.fixtures.live_trade import build_order_book, build_trade_stream
 
 from bot_v2.features.live_trade.liquidity_service import (
     LiquidityCondition,
     LiquidityService,
 )
-from tests.fixtures.live_trade import build_order_book, build_trade_stream
 
 
 def test_analyze_order_book_scores_and_caches():

@@ -4,15 +4,14 @@ from __future__ import annotations
 
 import asyncio
 import time
-from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
 from bot_v2.utilities.async_utils import (
     gather_with_concurrency,
-    wait_for_first,
     is_async_func,
     run_async_if_needed,
+    wait_for_first,
 )
 
 
@@ -247,7 +246,8 @@ class TestAsyncEdgeCasesAdvanced:
         async def async_lambda():
             pass
 
-        sync_lambda = lambda: None
+        def sync_lambda() -> None:
+            return None
 
         assert is_async_func(async_lambda)
         assert not is_async_func(sync_lambda)
@@ -286,7 +286,7 @@ class TestAsyncIntegrationScenarios:
     @pytest.mark.asyncio
     async def test_rate_limiting_with_batch_processing(self) -> None:
         """Test combining rate limiting with batch processing."""
-        from bot_v2.utilities.async_utils import AsyncRateLimiter, AsyncBatchProcessor
+        from bot_v2.utilities.async_utils import AsyncBatchProcessor, AsyncRateLimiter
 
         limiter = AsyncRateLimiter(rate_limit=50.0, burst_limit=5)
         processor = AsyncBatchProcessor(batch_size=3, delay_between_batches=0.01)
@@ -365,8 +365,8 @@ class TestAsyncIntegrationScenarios:
             AsyncCache,
             AsyncRateLimiter,
             AsyncRetry,
-            gather_with_concurrency,
             async_timeout,
+            gather_with_concurrency,
         )
 
         # Setup components

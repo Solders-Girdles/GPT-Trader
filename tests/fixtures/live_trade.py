@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Tuple
 
 __all__ = ["build_order_book", "build_trade_stream"]
 

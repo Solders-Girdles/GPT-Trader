@@ -4,26 +4,27 @@ Tests for console logging utilities - Global functions and integration.
 This module tests the global console logging functions and integration scenarios.
 """
 
-import pytest
 from unittest.mock import Mock, patch
 
+import pytest
+
 from bot_v2.utilities.console_logging import (
-    console_success,
-    console_error,
-    console_warning,
-    console_info,
+    console_analysis,
+    console_cache,
     console_data,
-    console_trading,
+    console_error,
+    console_info,
+    console_key_value,
+    console_ml,
+    console_network,
     console_order,
     console_position,
-    console_cache,
-    console_storage,
-    console_network,
-    console_analysis,
-    console_ml,
     console_section,
+    console_storage,
+    console_success,
     console_table,
-    console_key_value,
+    console_trading,
+    console_warning,
 )
 
 

@@ -217,7 +217,7 @@ bot = (
 ### 3. Structured Test Fixtures (`tests/fixtures/`)
 
 #### New Files:
-- **`mock_products.yaml`** - Structured product data for testing
+- **`src/bot_v2/features/brokerages/fixtures/mock_products.yaml`** - Structured product data for testing
 - **`product_factory.py`** - Factory for creating test data from fixtures
 
 #### Benefits:

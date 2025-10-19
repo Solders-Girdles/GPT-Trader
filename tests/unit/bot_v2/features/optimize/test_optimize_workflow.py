@@ -168,8 +168,6 @@ def test_walk_forward_analysis_generates_windows(
     )
 
     assert len(result.windows) > 0
-    first_window = result.windows[0]
-    efficiency = first_window.test_metrics.total_return / first_window.train_metrics.total_return
     avg_expected = sum(w.get_efficiency() for w in result.windows) / len(result.windows)
     assert result.avg_efficiency == pytest.approx(avg_expected)
     assert 0.0 <= result.robustness_score <= 1.0

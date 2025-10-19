@@ -4,23 +4,23 @@ Tests for trading operations utilities - Integration scenarios.
 This module tests integration scenarios and edge cases for trading operations.
 """
 
-import pytest
 from decimal import Decimal
-from unittest.mock import Mock, MagicMock, patch
+from unittest.mock import Mock, patch
+
+import pytest
 
 from bot_v2.errors import ExecutionError, NetworkError, ValidationError
 from bot_v2.features.brokerages.core.interfaces import (
-    Order,
     OrderSide,
     OrderStatus,
     OrderType,
     TimeInForce,
 )
 from bot_v2.utilities.trading_operations import (
-    TradingOperations,
     PositionManager,
-    create_trading_operations,
+    TradingOperations,
     create_position_manager,
+    create_trading_operations,
 )
 
 

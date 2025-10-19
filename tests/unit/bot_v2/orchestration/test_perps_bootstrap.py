@@ -1,6 +1,5 @@
-from pathlib import Path
-
 import logging
+from pathlib import Path
 
 from bot_v2.orchestration.configuration import BotConfig, Profile
 from bot_v2.orchestration.perps_bootstrap import (

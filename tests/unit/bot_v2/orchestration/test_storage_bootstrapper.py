@@ -3,7 +3,6 @@ from __future__ import annotations
 import pytest
 
 import bot_v2.orchestration.runtime_settings as runtime_settings_module
-
 from bot_v2.config.types import Profile
 from bot_v2.orchestration.configuration.core import BotConfig
 from bot_v2.orchestration.service_registry import ServiceRegistry

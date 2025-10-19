@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import json
 import time
+from decimal import Decimal
 from typing import Any
-from urllib.parse import parse_qs, urlparse
 from unittest.mock import MagicMock, patch
+from urllib.parse import parse_qs, urlparse
 
 import pytest
 
@@ -15,13 +16,10 @@ from bot_v2.features.brokerages.coinbase.client import CoinbaseClient
 from bot_v2.features.brokerages.coinbase.errors import InsufficientFunds
 from bot_v2.features.brokerages.coinbase.models import APIConfig
 from bot_v2.features.brokerages.core.interfaces import OrderSide, OrderType
-from decimal import Decimal
-
 from tests.unit.bot_v2.features.brokerages.coinbase.test_helpers import (
     SYSTEM_ENDPOINT_CASES,
     make_client,
 )
-
 
 pytestmark = pytest.mark.endpoints
 

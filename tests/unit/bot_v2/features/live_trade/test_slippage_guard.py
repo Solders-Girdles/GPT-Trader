@@ -7,13 +7,13 @@ from decimal import Decimal
 import pytest
 
 from bot_v2.config.live_trade_config import RiskConfig
+from bot_v2.features.live_trade.risk import LiveRiskManager
 from bot_v2.features.live_trade.strategies.slippage_guard import (
-    SlippageGuard,
-    SlippageConfig,
     MarketDepth,
+    SlippageConfig,
+    SlippageGuard,
     create_test_depth,
 )
-from bot_v2.features.live_trade.risk import LiveRiskManager
 
 
 class TestSlippageGuard:
@@ -56,7 +56,7 @@ class TestSlippageGuard:
 
         should_reject, reason = self.guard.should_reject_order(depth, "buy", large_quantity)
 
-        assert should_reject == True
+        assert should_reject
         assert "impact" in reason.lower()
         assert "max safe quantity" in reason.lower()
 
@@ -69,7 +69,7 @@ class TestSlippageGuard:
 
         should_reject, reason = self.guard.should_reject_order(depth, "buy", small_quantity)
 
-        assert should_reject == False
+        assert not should_reject
         assert "acceptable limits" in reason.lower()
 
     def test_l1_vs_l10_mode(self):
@@ -139,7 +139,7 @@ class TestSlippageGuard:
             incomplete_depth, "buy", Decimal("1.0")
         )
 
-        assert should_reject == True
+        assert should_reject
         assert "insufficient market data" in reason.lower()
 
     def test_zero_depth_handling(self):
@@ -148,7 +148,7 @@ class TestSlippageGuard:
 
         should_reject, reason = self.guard.should_reject_order(zero_depth, "buy", Decimal("1.0"))
 
-        assert should_reject == True
+        assert should_reject
         # The actual implementation returns "Cannot calculate slippage impact for {symbol}"
         assert "cannot calculate slippage impact" in reason.lower()
 

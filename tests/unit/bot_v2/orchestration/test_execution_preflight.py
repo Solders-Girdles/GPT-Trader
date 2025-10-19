@@ -2,11 +2,11 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-
-from bot_v2.orchestration.live_execution import LiveExecutionEngine
 from tests.support.deterministic_broker import DeterministicBroker
-from bot_v2.persistence.event_store import EventStore
+
 from bot_v2.features.brokerages.core.interfaces import OrderSide, OrderType
+from bot_v2.orchestration.live_execution import LiveExecutionEngine
+from bot_v2.persistence.event_store import EventStore
 
 
 def make_engine(tmp_path: Path) -> tuple[LiveExecutionEngine, DeterministicBroker, EventStore]:

@@ -4,29 +4,27 @@ Minimal test adapter for Week 1 validation.
 
 from __future__ import annotations
 
-from decimal import Decimal
+import logging
 from datetime import datetime
-from typing import Dict, List, Optional
+from decimal import Decimal
 
-from bot_v2.features.brokerages.coinbase.models import APIConfig, to_product
 from bot_v2.features.brokerages.coinbase.endpoints import CoinbaseEndpoints
+from bot_v2.features.brokerages.coinbase.models import APIConfig, to_product
 from bot_v2.features.brokerages.coinbase.utilities import ProductCatalog
 from bot_v2.features.brokerages.core.interfaces import (
+    Balance,
+    Candle,
     IBrokerage,
     MarketType,
-    Product,
     Order,
-    Quote,
-    Candle,
-    Position,
-    Balance,
     OrderSide,
-    OrderType,
     OrderStatus,
+    OrderType,
+    Position,
+    Product,
+    Quote,
     TimeInForce,
 )
-
-import logging
 
 logger = logging.getLogger(__name__)
 

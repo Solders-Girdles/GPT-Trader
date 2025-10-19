@@ -1,12 +1,13 @@
 from decimal import Decimal
+
 import pytest
 
+from bot_v2.features.brokerages.core.interfaces import MarketType, Product
 from bot_v2.features.live_trade.strategies.perps_baseline import (
+    Action,
     BaselinePerpsStrategy,
     StrategyConfig,
-    Action,
 )
-from bot_v2.features.brokerages.core.interfaces import Product, MarketType
 
 
 def make_product():

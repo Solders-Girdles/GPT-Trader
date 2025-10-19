@@ -3,8 +3,8 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import Any
 
-from hypothesis import given, seed, settings, strategies as st
-
+from hypothesis import given, seed, settings
+from hypothesis import strategies as st
 from src.bot_v2.features.brokerages.coinbase.client.base import CoinbaseClientBase
 from src.bot_v2.features.brokerages.coinbase.specs import ProductSpec, SpecsService
 

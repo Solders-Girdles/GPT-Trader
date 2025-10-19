@@ -3,22 +3,20 @@
 from __future__ import annotations
 
 import importlib
-import time
-import sys
 from unittest.mock import Mock, patch
 
 import pytest
 
 from bot_v2.utilities.import_utils import (
+    ImportProfiler,
     LazyImport,
     OptionalImport,
-    lazy_import,
-    optional_import,
     conditional_import,
     get_import_stats,
-    ImportProfiler,
-    with_lazy_imports,
     is_test_environment,
+    lazy_import,
+    optional_import,
+    with_lazy_imports,
 )
 
 
@@ -165,7 +163,6 @@ class TestImportProfiler:
         profiler.start_profiling()
 
         # Import a module
-        import json
 
         profiler.stop_profiling()
 
@@ -179,8 +176,6 @@ class TestImportProfiler:
         profiler.start_profiling()
 
         # Import some modules
-        import json
-        import csv
 
         profiler.stop_profiling()
 
@@ -305,9 +300,7 @@ class TestImportPerformance:
             return original_import_module(name, *args, **kwargs)
 
         with patch("bot_v2.utilities.importing.lazy.time.time", new=fake_time):
-            with patch(
-                "bot_v2.utilities.importing.lazy.importlib.import_module", new=fake_import
-            ) as mocked_import:
+            with patch("bot_v2.utilities.importing.lazy.importlib.import_module", new=fake_import):
                 with patch(
                     "bot_v2.utilities.importing.lazy.logging.getLogger", return_value=mock_logger
                 ):

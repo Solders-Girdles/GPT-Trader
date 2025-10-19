@@ -4,8 +4,6 @@ from decimal import Decimal
 
 from bot_v2.config.live_trade_config import RiskConfig
 from bot_v2.features.live_trade.risk.position_sizing import (
-    ImpactAssessment,
-    ImpactRequest,
     PositionSizer,
     PositionSizingAdvice,
     PositionSizingContext,

@@ -1,8 +1,9 @@
 import json
-import pytest
 from types import SimpleNamespace
 
-from bot_v2.features.brokerages.coinbase.client import CoinbaseClient, CoinbaseAuth
+import pytest
+
+from bot_v2.features.brokerages.coinbase.client import CoinbaseAuth, CoinbaseClient
 from bot_v2.features.brokerages.core.interfaces import AuthError
 
 

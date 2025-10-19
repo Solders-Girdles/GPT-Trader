@@ -3,8 +3,10 @@ Integration tests for Coinbase adapter with SequenceGuard.
 Verifies stream_user_events properly annotates messages with gap detection.
 """
 
+from unittest.mock import patch
+
 import pytest
-from unittest.mock import Mock, MagicMock, patch
+
 from bot_v2.features.brokerages.coinbase.adapter import CoinbaseBrokerage
 from bot_v2.features.brokerages.coinbase.ws import SequenceGuard
 
@@ -50,7 +52,7 @@ class TestAdapterSequenceGuard:
             assert "gap_detected" not in annotated_messages[1]
 
             # Check third message has gap detected
-            assert annotated_messages[2].get("gap_detected") == True
+            assert annotated_messages[2].get("gap_detected")
             assert annotated_messages[2].get("last_seq") == 2
             assert annotated_messages[2].get("sequence") == 4
 
@@ -69,7 +71,7 @@ class TestAdapterSequenceGuard:
         # Test 'seq' field with gap
         msg2 = {"seq": 12}
         result2 = guard.annotate(msg2)
-        assert result2.get("gap_detected") == True
+        assert result2.get("gap_detected")
         assert result2.get("last_seq") == 10
 
         # Test 'sequence_num' field
@@ -95,7 +97,7 @@ class TestAdapterSequenceGuard:
         # Now gaps are detected normally
         msg3 = {"sequence": 102}
         result3 = guard.annotate(msg3)
-        assert result3.get("gap_detected") == True
+        assert result3.get("gap_detected")
 
 
 class TestAPIModeBehavior:

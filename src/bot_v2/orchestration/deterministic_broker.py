@@ -21,6 +21,15 @@ from bot_v2.features.brokerages.core.interfaces import (
     Quote,
     TimeInForce,
 )
+from bot_v2.features.brokerages.fixtures import (
+    create_product as load_fixture_product,
+)
+from bot_v2.features.brokerages.fixtures import (
+    default_marks as load_default_marks,
+)
+from bot_v2.features.brokerages.fixtures import (
+    list_perpetual_symbols,
+)
 from bot_v2.utilities.logging_patterns import get_logger
 
 logger = get_logger(__name__, component="deterministic_broker")
@@ -49,25 +58,9 @@ class DeterministicBroker(IBrokerage):
     def _load_products_from_fixtures(self) -> dict[str, Product]:
         """Load products from structured fixtures."""
         try:
-            # Try to import the product factory
-            from tests.fixtures.product_factory import default_product_factory
-
             products: dict[str, Product] = {}
-            for symbol in default_product_factory.list_perpetual_symbols():
-                product = default_product_factory.create_product(symbol, MarketType.PERPETUAL)
-                if isinstance(product, Product):
-                    products[symbol] = product
-                else:
-                    products[symbol] = Product(
-                        symbol=symbol,
-                        base_asset=(symbol.split("-")[0] if "-" in symbol else symbol),
-                        quote_asset=(symbol.split("-")[-1] if "-" in symbol else "USD"),
-                        market_type=MarketType.PERPETUAL,
-                        min_size=Decimal("0.001"),
-                        step_size=Decimal("0.001"),
-                        min_notional=Decimal("10"),
-                        price_increment=Decimal("0.01"),
-                    )
+            for symbol in list_perpetual_symbols():
+                products[symbol] = load_fixture_product(symbol, MarketType.PERPETUAL)
 
             if products:
                 logger.debug(
@@ -126,15 +119,10 @@ class DeterministicBroker(IBrokerage):
     def _load_marks_from_fixtures(self) -> dict[str, Decimal]:
         """Load mark prices from structured fixtures."""
         try:
-            from tests.fixtures.product_factory import default_product_factory
-
-            marks_data = default_product_factory.get_default_marks()
+            marks_data = load_default_marks()
 
             if isinstance(marks_data, Mapping):
-                marks = {
-                    symbol: value if isinstance(value, Decimal) else Decimal(str(value))
-                    for symbol, value in marks_data.items()
-                }
+                marks = dict(marks_data)
                 if marks:
                     logger.debug(
                         "Loaded mark prices from fixtures",

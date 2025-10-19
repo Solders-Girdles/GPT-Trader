@@ -9,17 +9,16 @@ import asyncio
 import json
 from datetime import datetime, timezone
 from decimal import Decimal
-from pathlib import Path
-from unittest.mock import Mock, MagicMock, AsyncMock, patch, mock_open
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from bot_v2.orchestration.system_monitor import SystemMonitor
-from bot_v2.orchestration.system_monitor_metrics import MetricsPublisher
-from bot_v2.orchestration.configuration import Profile
 from bot_v2.features.brokerages.core.interfaces import Balance, Position
 from bot_v2.features.live_trade.strategies.perps_baseline import Action, Decision
+from bot_v2.orchestration.configuration import Profile
 from bot_v2.orchestration.perps_bot_state import PerpsBotRuntimeState
+from bot_v2.orchestration.system_monitor import SystemMonitor
+from bot_v2.orchestration.system_monitor_metrics import MetricsPublisher
 
 
 @pytest.fixture

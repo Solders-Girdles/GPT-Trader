@@ -12,14 +12,14 @@ Usage:
 
 from __future__ import annotations
 
+from collections.abc import Iterable, Sequence
 from datetime import datetime
 from decimal import Decimal
-from collections.abc import Iterable, Sequence
 
 from bot_v2.features.brokerages.core.interfaces import (
-    IBrokerage,
     Balance,
     Candle,
+    IBrokerage,
     MarketType,
     Order,
     OrderSide,

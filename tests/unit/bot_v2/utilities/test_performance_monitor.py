@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-from decimal import Decimal
-
-from bot_v2.utilities.performance import PerformanceMonitor, PerformanceMetric
+from bot_v2.utilities.performance import PerformanceMetric, PerformanceMonitor
 
 
 def test_record_duration_and_summary() -> None:

@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
-
 from bot_v2.monitoring.runtime_guards import (
     AlertSeverity,
     GuardConfig,

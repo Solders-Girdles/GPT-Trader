@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import os
-from pathlib import Path
 from collections.abc import Mapping
+from pathlib import Path
 
 
 def cli_env(base: Mapping[str, str] | None = None) -> dict[str, str]:

@@ -72,7 +72,7 @@ otherwise in this guide.
 
 ## 7. Testing Expectations
 - **Command:** `poetry run pytest --collect-only` currently discovers 1484 tests (1483 selected / 1 deselected).
-- **Dependencies:** `pyotp` remains part of the base Poetry environment; run `poetry install` after pulling to ensure security tests pass.
+- **Dependencies:** Install the security extras (`poetry install --with security`) when working on auth flows so libraries like `pyotp` are available for tests.
 - Keep unit tests under `tests/unit/bot_v2/` up to date, and add coverage for new risk or telemetry paths.
 
 ## 8. Common Workflows for Agents
@@ -90,7 +90,7 @@ otherwise in this guide.
 Whenever you ship a change, confirm:
 - [ ] README reflects the new instructions.
 - [ ] Architecture doc matches the live system.
-- [ ] Tests either pass or document the dependency gap (e.g., `pyotp`).
+- [ ] Tests either pass or document any optional dependency gaps (e.g., missing `pyotp` if security extras are skipped).
 - [ ] Agent guides (this file + per-agent files) stay consistent.
 
 Stay explicit about spot vs perps mode, and note the INTX gate in every perps-related change description.

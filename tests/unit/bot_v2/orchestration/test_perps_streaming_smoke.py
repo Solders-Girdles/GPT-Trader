@@ -1,13 +1,12 @@
 from __future__ import annotations
 
 import asyncio
-import os
 from unittest.mock import Mock
 
 import pytest
 
 from bot_v2.features.brokerages.coinbase.adapter import CoinbaseBrokerage
-from bot_v2.orchestration.configuration import BotConfig, Profile
+from bot_v2.orchestration.configuration import BotConfig
 from bot_v2.orchestration.perps_bot_builder import create_perps_bot
 from bot_v2.orchestration.service_registry import ServiceRegistry
 

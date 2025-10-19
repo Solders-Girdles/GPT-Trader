@@ -3,12 +3,12 @@ from __future__ import annotations
 import asyncio
 from decimal import Decimal
 
+from bot_v2.orchestration.bootstrap import build_bot
 from bot_v2.orchestration.configuration import (
+    DEFAULT_SPOT_SYMBOLS,
     BotConfig,
     Profile,
-    DEFAULT_SPOT_SYMBOLS,
 )
-from bot_v2.orchestration.bootstrap import build_bot
 
 
 def test_spot_profile_uses_top_volume_symbols(monkeypatch, tmp_path):

@@ -154,8 +154,9 @@ pytest tests/unit/bot_v2/features/brokerages/coinbase/test_critical_fixes.py -v
    - Advanced Trade supports both HMAC (no passphrase) and CDP JWT
 
 4. **WebSocket Requirements**
-   - Requires `websocket-client` package for real connections
-   - Install with: `pip install websocket-client`
+   - Install the live trading extras to enable websocket-client support:
+     - `pip install gpt-trader[live-trade]`, or
+     - `poetry install --with live-trade`
 
 ## Troubleshooting
 
@@ -166,7 +167,7 @@ pytest tests/unit/bot_v2/features/brokerages/coinbase/test_critical_fixes.py -v
 - Check that passphrase is set for HMAC auth
 
 **WebSocket Connection Failures**
-- Install websocket-client: `pip install websocket-client`
+- Ensure the live trade extras are installed (`pip install gpt-trader[live-trade]`)
 - Check WebSocket URL matches API mode
 
 **Authentication Errors**

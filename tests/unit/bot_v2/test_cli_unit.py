@@ -6,8 +6,6 @@ import builtins
 import importlib
 from types import SimpleNamespace
 
-import pytest
-
 
 def test_cli_run_defaults_to_run_subcommand(monkeypatch):
     argv = [

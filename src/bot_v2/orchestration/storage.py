@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from bot_v2.orchestration.configuration import BotConfig
+from bot_v2.orchestration.runtime_paths import resolve_runtime_paths
 from bot_v2.orchestration.runtime_settings import RuntimeSettings, load_runtime_settings
 from bot_v2.orchestration.service_registry import ServiceRegistry
 from bot_v2.persistence.event_store import EventStore
@@ -31,17 +32,9 @@ class StorageBootstrapper:
     def bootstrap(self) -> StorageContext:
         profile = self._config.profile.value
         settings = self._resolve_settings()
-        runtime_root = settings.runtime_root
-        storage_dir = runtime_root / f"perps_bot/{profile}"
-        storage_dir.mkdir(parents=True, exist_ok=True)
-
-        event_store_root = settings.event_store_root_override
-        if event_store_root:
-            if "perps_bot" not in set(event_store_root.parts):
-                event_store_root = event_store_root / "perps_bot" / profile
-        else:
-            event_store_root = storage_dir
-        event_store_root.mkdir(parents=True, exist_ok=True)
+        runtime_paths = resolve_runtime_paths(settings=settings, profile=profile)
+        storage_dir = runtime_paths.storage_dir
+        event_store_root = runtime_paths.event_store_root
 
         registry = self._registry
         if registry.runtime_settings is None:

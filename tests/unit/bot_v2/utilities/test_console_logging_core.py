@@ -5,10 +5,11 @@ This module tests the core ConsoleLogger class functionality.
 """
 
 import logging
-import pytest
-from unittest.mock import Mock, patch
-from io import StringIO
 import sys
+from io import StringIO
+from unittest.mock import Mock
+
+import pytest
 
 from bot_v2.utilities.console_logging import (
     ConsoleLogger,

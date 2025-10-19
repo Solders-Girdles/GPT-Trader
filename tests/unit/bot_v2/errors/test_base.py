@@ -3,17 +3,17 @@
 import pytest
 
 from bot_v2.errors import (
-    handle_error,
+    BacktestError,
+    ConfigurationError,
+    DataError,
+    ExecutionError,
+    InsufficientFundsError,
+    NetworkError,
+    RiskLimitExceeded,
+    StrategyError,
     TradingError,
     ValidationError,
-    ExecutionError,
-    ConfigurationError,
-    RiskLimitExceeded,
-    DataError,
-    StrategyError,
-    BacktestError,
-    NetworkError,
-    InsufficientFundsError,
+    handle_error,
 )
 
 

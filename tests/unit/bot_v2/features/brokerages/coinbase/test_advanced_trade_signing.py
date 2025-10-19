@@ -1,7 +1,6 @@
 import base64
-import hmac
 import hashlib
-import json
+import hmac
 
 from bot_v2.features.brokerages.coinbase.client import CoinbaseAuth
 

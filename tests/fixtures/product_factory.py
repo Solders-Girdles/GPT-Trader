@@ -5,11 +5,32 @@ from __future__ import annotations
 import logging
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, Literal, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import yaml
 
 from bot_v2.features.brokerages.core.interfaces import Balance, MarketType, Product
+from bot_v2.features.brokerages.fixtures import (
+    create_product as create_fixture_product,
+)
+from bot_v2.features.brokerages.fixtures import (
+    default_marks as fixture_default_marks,
+)
+from bot_v2.features.brokerages.fixtures import (
+    edge_case_product as fixture_edge_case_product,
+)
+from bot_v2.features.brokerages.fixtures import (
+    fixture_payload,
+)
+from bot_v2.features.brokerages.fixtures import (
+    list_perpetual_symbols as fixture_list_perpetual,
+)
+from bot_v2.features.brokerages.fixtures import (
+    list_spot_symbols as fixture_list_spot,
+)
+from bot_v2.features.brokerages.fixtures import (
+    price_scenario_marks as fixture_price_scenario,
+)
 
 if TYPE_CHECKING:  # pragma: no cover - typing only
     from bot_v2.orchestration.deterministic_broker import DeterministicBroker
@@ -21,25 +42,30 @@ class ProductFactory:
     """Factory for creating test products from YAML fixtures."""
 
     def __init__(self, fixture_path: Path | None = None) -> None:
-        """Initialize the factory with optional custom fixture path.
+        """Initialize the factory with optional custom fixture path."""
 
-        Args:
-            fixture_path: Path to YAML fixtures file. Defaults to standard location.
-        """
+        self._custom_fixtures = self._load_custom_fixtures(fixture_path)
+
+    def _load_custom_fixtures(self, fixture_path: Path | None) -> dict[str, Any] | None:
+        """Load fixtures from a custom YAML file if provided."""
+
         if fixture_path is None:
-            fixture_path = Path(__file__).parent / "mock_products.yaml"
+            return None
 
-        self.fixture_path = fixture_path
-        self._fixtures = self._load_fixtures()
-
-    def _load_fixtures(self) -> dict[str, Any]:
-        """Load fixtures from YAML file."""
         try:
-            with open(self.fixture_path) as f:
-                return yaml.safe_load(f) or {}
+            with open(fixture_path, encoding="utf-8") as handle:
+                return yaml.safe_load(handle) or {}
         except Exception as exc:
-            logger.warning(f"Failed to load product fixtures from {self.fixture_path}: {exc}")
+            logger.warning(f"Failed to load product fixtures from {fixture_path}: {exc}")
             return {}
+
+    @property
+    def _fixtures(self) -> dict[str, Any]:
+        """Return fixture payload, preferring overrides when configured."""
+
+        if self._custom_fixtures is not None:
+            return self._custom_fixtures
+        return fixture_payload()
 
     def create_product(
         self, symbol: str, market_type: MarketType = MarketType.PERPETUAL
@@ -54,6 +80,9 @@ class ProductFactory:
             Product instance
         """
         # Look in the appropriate section
+        if self._custom_fixtures is None:
+            return create_fixture_product(symbol, market_type)
+
         section_key = (
             "perpetual_products" if market_type == MarketType.PERPETUAL else "spot_products"
         )
@@ -99,8 +128,11 @@ class ProductFactory:
         Returns:
             Dictionary mapping symbols to mark prices
         """
+        if self._custom_fixtures is None:
+            return fixture_default_marks()
+
         marks_data = self._fixtures.get("default_marks", {})
-        return {symbol: Decimal(price) for symbol, price in marks_data.items()}
+        return {symbol: Decimal(str(price)) for symbol, price in marks_data.items()}
 
     def get_price_scenario(self, scenario: str) -> dict[str, Decimal]:
         """Get mark prices for a specific scenario.
@@ -111,13 +143,16 @@ class ProductFactory:
         Returns:
             Dictionary mapping symbols to mark prices
         """
+        if self._custom_fixtures is None:
+            return fixture_price_scenario(scenario)
+
         scenarios = self._fixtures.get("price_scenarios", {})
         if scenario not in scenarios:
             logger.warning(f"Price scenario {scenario} not found, using defaults")
             return self.get_default_marks()
 
         marks_data = scenarios[scenario]
-        return {symbol: Decimal(price) for symbol, price in marks_data.items()}
+        return {symbol: Decimal(str(price)) for symbol, price in marks_data.items()}
 
     def list_perpetual_symbols(self) -> list[str]:
         """List all perpetual product symbols from fixtures.
@@ -125,6 +160,9 @@ class ProductFactory:
         Returns:
             List of perpetual product symbols
         """
+        if self._custom_fixtures is None:
+            return fixture_list_perpetual()
+
         products = self._fixtures.get("perpetual_products", {})
         return list(products.keys())
 
@@ -134,6 +172,9 @@ class ProductFactory:
         Returns:
             List of spot product symbols
         """
+        if self._custom_fixtures is None:
+            return fixture_list_spot()
+
         products = self._fixtures.get("spot_products", {})
         return list(products.keys())
 
@@ -146,6 +187,9 @@ class ProductFactory:
         Returns:
             Product instance
         """
+        if self._custom_fixtures is None:
+            return fixture_edge_case_product(symbol)
+
         edge_products = self._fixtures.get("edge_case_products", {})
         if symbol not in edge_products:
             raise ValueError(f"Edge case product {symbol} not found in fixtures")

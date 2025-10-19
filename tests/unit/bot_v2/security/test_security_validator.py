@@ -5,7 +5,7 @@ from datetime import datetime
 import pytest
 from freezegun import freeze_time
 
-from bot_v2.security.security_validator import RateLimitConfig, SecurityValidator
+from bot_v2.security.security_validator import SecurityValidator
 
 
 @pytest.fixture

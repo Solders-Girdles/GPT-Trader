@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import pytest
+from src.bot_v2.features.brokerages.coinbase.client import CoinbaseClient
 
 from bot_v2.features.brokerages.core.interfaces import AuthError, BrokerageError
-from src.bot_v2.features.brokerages.coinbase.client import CoinbaseClient
 
 
 def _make_client() -> CoinbaseClient:

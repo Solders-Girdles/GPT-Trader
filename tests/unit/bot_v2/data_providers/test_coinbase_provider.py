@@ -1,20 +1,15 @@
 """Tests for Coinbase data provider."""
 
 import os
+from unittest.mock import Mock, patch
+
 import pandas as pd
-import pytest
-from unittest.mock import MagicMock, Mock, patch
 
 from bot_v2.data_providers.coinbase_provider import (
     CoinbaseDataProvider,
     create_coinbase_provider,
 )
 from bot_v2.features.brokerages.coinbase.client import CoinbaseClient
-from bot_v2.features.brokerages.coinbase.models import APIConfig
-from bot_v2.features.brokerages.coinbase.market_data_service import (
-    CoinbaseTickerService,
-    TickerCache,
-)
 
 
 class TestCoinbaseDataProvider:
@@ -546,6 +541,7 @@ class TestIntegrationWorkflow:
 
                 # Streaming should be stopped
                 mock_service.return_value.stop.assert_called_once()
+                mock_cache.assert_called()
 
     def test_error_recovery_workflow(self) -> None:
         """Test error recovery and fallback behavior."""

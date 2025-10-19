@@ -1,7 +1,4 @@
-import io
 from pathlib import Path
-
-import pytest
 
 from src.bot_v2.utilities.performance import reporter
 

@@ -4,10 +4,10 @@ Covers convert_quote (POST) and references get_convert_trade (GET).
 """
 
 import json
+
 import pytest
 
 from bot_v2.features.brokerages.coinbase.client import CoinbaseClient
-
 
 pytestmark = pytest.mark.endpoints
 

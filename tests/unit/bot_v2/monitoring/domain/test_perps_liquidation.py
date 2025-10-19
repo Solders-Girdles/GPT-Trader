@@ -2,13 +2,10 @@
 Unit tests for liquidation distance monitoring.
 """
 
-import pytest
 from decimal import Decimal
 
 from bot_v2.monitoring.domain.perps.liquidation import (
     LiquidationMonitor,
-    MarginInfo,
-    LiquidationRisk,
     create_test_margin_info,
 )
 
@@ -92,8 +89,8 @@ class TestLiquidationMonitor:
         risk = self.monitor.assess_liquidation_risk(margin_info)
 
         assert risk.risk_level == "safe"
-        assert risk.should_reduce_only == False
-        assert risk.should_reject_entry == False
+        assert not risk.should_reduce_only
+        assert not risk.should_reject_entry
         assert risk.distance_pct > 25  # Should be well above warning buffer
 
     def test_risk_assessment_warning_or_critical(self):
@@ -110,7 +107,7 @@ class TestLiquidationMonitor:
 
         # Should be in warning or critical zone (distance <= 20%)
         assert risk.risk_level in ["warning", "critical"]
-        assert risk.should_reject_entry == True  # Should reject new entries
+        assert risk.should_reject_entry  # Should reject new entries
         assert risk.distance_pct <= 20.0  # Close to liquidation
 
     def test_risk_assessment_critical(self):
@@ -127,8 +124,8 @@ class TestLiquidationMonitor:
 
         # Should be in critical zone (distance <= 15%)
         assert risk.risk_level == "critical"
-        assert risk.should_reduce_only == True
-        assert risk.should_reject_entry == True
+        assert risk.should_reduce_only
+        assert risk.should_reject_entry
         assert risk.distance_pct <= 15.0
 
     def test_portfolio_level_blocking(self):
@@ -146,7 +143,7 @@ class TestLiquidationMonitor:
         # Should block new ETH-PERP entry due to BTC-PERP risk
         should_block, reason = self.monitor.should_block_new_position("ETH-PERP", positions)
 
-        assert should_block == True
+        assert should_block
         assert "Portfolio liquidation risk" in reason
         assert "BTC-PERP" in reason
 

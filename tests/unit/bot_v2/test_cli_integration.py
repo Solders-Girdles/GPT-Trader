@@ -15,7 +15,6 @@ import pytest
 
 from tests.unit.bot_v2.cli_test_utils import cli_env
 
-
 # ===== Core CLI Behavior =====
 
 

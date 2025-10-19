@@ -1,7 +1,7 @@
 import unittest
 from datetime import datetime, timezone
 from decimal import Decimal
-from bot_v2.persistence.orders_store import StoredOrder
+
 from bot_v2.features.brokerages.core.interfaces import (
     Order,
     OrderSide,
@@ -9,6 +9,7 @@ from bot_v2.features.brokerages.core.interfaces import (
     OrderType,
     TimeInForce,
 )
+from bot_v2.persistence.orders_store import StoredOrder
 
 
 class TestOrdersStore(unittest.TestCase):

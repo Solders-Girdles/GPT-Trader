@@ -48,7 +48,6 @@ class TestManualBacktestExample:
     def test_manual_backtest_example_moving_averages(self) -> None:
         """Test moving average calculations."""
         result = manual_backtest_example()
-        prices = result["prices"]
         ma3 = result["ma3"]
         ma5 = result["ma5"]
 
@@ -69,8 +68,6 @@ class TestManualBacktestExample:
         """Test that signals are generated correctly."""
         result = manual_backtest_example()
         signals = result["signals"]
-        ma3 = result["ma3"]
-        ma5 = result["ma5"]
 
         # Should have same length as prices
         assert len(signals) == len(result["prices"])

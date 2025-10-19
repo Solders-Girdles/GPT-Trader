@@ -4,15 +4,15 @@ import asyncio
 from datetime import datetime
 from decimal import Decimal
 
-from bot_v2.orchestration.configuration import BotConfig
-from bot_v2.orchestration.perps_bot_builder import create_perps_bot
 from bot_v2.features.brokerages.core.interfaces import (
     Order,
     OrderSide,
+    OrderStatus,
     OrderType,
     TimeInForce,
-    OrderStatus,
 )
+from bot_v2.orchestration.configuration import BotConfig
+from bot_v2.orchestration.perps_bot_builder import create_perps_bot
 
 
 def test_reconcile_updates_stale_local_open_order():

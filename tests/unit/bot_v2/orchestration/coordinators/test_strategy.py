@@ -7,13 +7,12 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 
+from bot_v2.orchestration.configuration import BotConfig, Profile
+from bot_v2.orchestration.configuration.validation import ConfigValidationResult
 from bot_v2.orchestration.coordinators.base import CoordinatorContext
 from bot_v2.orchestration.coordinators.strategy import StrategyCoordinator
-from bot_v2.orchestration.configuration import BotConfig, Profile
 from bot_v2.orchestration.perps_bot_state import PerpsBotRuntimeState
 from bot_v2.orchestration.service_registry import ServiceRegistry
-from bot_v2.orchestration.configuration.validation import ConfigValidationResult
-
 
 shutdown_flag = SimpleNamespace(value=True)
 

@@ -20,9 +20,9 @@ from tests.fixtures.environment import (  # noqa: F401
     yahoo_provider_stub,
 )
 from tests.fixtures.monitoring import (  # noqa: F401
+    advance_time,
     alert_manager,
     alert_recorder,
-    advance_time,
     frozen_time,
     monitoring_collectors,
 )

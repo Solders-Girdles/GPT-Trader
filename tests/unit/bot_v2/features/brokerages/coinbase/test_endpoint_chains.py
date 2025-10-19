@@ -4,6 +4,7 @@ Uses mocked transport to assert correct sequencing, paths, and payloads.
 """
 
 import json
+
 import pytest
 
 from bot_v2.features.brokerages.coinbase.client import CoinbaseClient

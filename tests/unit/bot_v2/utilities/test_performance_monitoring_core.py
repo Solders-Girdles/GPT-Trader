@@ -3,17 +3,16 @@
 from __future__ import annotations
 
 import time
-from unittest.mock import Mock, patch
 
 import pytest
 
 from bot_v2.utilities.performance_monitoring import (
+    PerformanceCollector,
     PerformanceMetric,
     PerformanceStats,
-    PerformanceCollector,
+    PerformanceTimer,
     measure_performance,
     measure_performance_decorator,
-    PerformanceTimer,
 )
 
 

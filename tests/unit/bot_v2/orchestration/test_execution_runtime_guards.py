@@ -2,30 +2,29 @@ from __future__ import annotations
 
 from datetime import datetime
 from decimal import Decimal
-from typing import List, Optional
 
-from bot_v2.orchestration.live_execution import LiveExecutionEngine
-from bot_v2.features.live_trade.risk import LiveRiskManager, RiskConfig
-from bot_v2.features.live_trade import guard_errors
-from bot_v2.features.live_trade.guard_errors import (
-    RiskGuardTelemetryError,
-    RiskGuardComputationError,
-)
-from bot_v2.features.live_trade.risk_runtime import CircuitBreakerAction, CircuitBreakerOutcome
 from bot_v2.features.brokerages.core.interfaces import (
+    Balance,
     IBrokerage,
-    Product,
     MarketType,
-    Quote,
     Order,
     OrderSide,
-    OrderType,
-    TimeInForce,
     OrderStatus,
-    Balance,
+    OrderType,
     Position,
+    Product,
+    Quote,
+    TimeInForce,
 )
+from bot_v2.features.live_trade import guard_errors
+from bot_v2.features.live_trade.guard_errors import (
+    RiskGuardComputationError,
+    RiskGuardTelemetryError,
+)
+from bot_v2.features.live_trade.risk import LiveRiskManager, RiskConfig
+from bot_v2.features.live_trade.risk_runtime import CircuitBreakerAction, CircuitBreakerOutcome
 from bot_v2.monitoring.metrics_collector import get_metrics_collector
+from bot_v2.orchestration.live_execution import LiveExecutionEngine
 
 
 class SimpleBroker(IBrokerage):

@@ -113,7 +113,6 @@ def test_generate_recommendation_scores_paths(
     patterns: list[PricePattern],
     expected: str,
 ) -> None:
-    base = analyze.calculate_indicators(_basic_data())
     indicators = _regime_indicators(rsi, 100)
     regime = MarketRegime(
         trend=trend, volatility="medium", momentum="neutral", volume_profile="neutral", strength=50

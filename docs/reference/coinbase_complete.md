@@ -3,6 +3,12 @@
 ---
 status: current
 created: 2025-01-01
+last-verified: 2025-10-19
+verification-schedule: quarterly
+scope: Coinbase Advanced Trade API v3 (spot + future-ready perps)
+documentation-venues:
+  - primary: docs.cdp.coinbase.com (current Coinbase Developer Platform)
+  - legacy: docs.cloud.coinbase.com (older Coinbase Cloud - for reference only)
 consolidates:
   - docs/reference/coinbase.md (retired)
   - docs/reference/coinbase_troubleshooting.md
@@ -97,13 +103,27 @@ if os.getenv("COINBASE_SANDBOX"):
 
 **Important**: Sandbox does NOT support perpetuals. Use production with canary profile for safe perpetuals testing.
 
+### OAuth2 Authentication (Sign in with Coinbase)
+
+**Status**: ✅ Supported (as of 2024/2025)
+
+**Used for**: Building applications with user consent flow and delegated access
+
+**Key characteristics**:
+- Refresh tokens expire after 1.5 years
+- OAuth connections enforce portfolio account-level trade access
+- Requires client credentials in token revocation
+
+**Note**: OAuth2 launch date and feature timeline to be confirmed against official changelog at https://docs.cdp.coinbase.com/coinbase-app/introduction/changelog
+
 ## API Endpoints & Products
 
 ### Supported Products
 
 - **Spot (default)**: BTC-USD, ETH-USD, and other Advanced Trade spot pairs
 - **Derivatives (INTX required)**: BTC-PERP, ETH-PERP, SOL-PERP, XRP-PERP (dormant until enabled)
-- **Sandbox**: Spot-only environment (no derivatives)
+- **Sandbox**: Spot-only environment (no derivatives, static responses)
+  - Note: Sandbox Accounts and Orders endpoints only; responses are pre-defined and not live
 
 ### API Endpoints
 
@@ -111,8 +131,8 @@ if os.getenv("COINBASE_SANDBOX"):
 # Production (Advanced Trade v3)
 BASE_URL = "https://api.coinbase.com/api/v3/brokerage"
 WS_URL = "wss://advanced-trade-ws.coinbase.com"
-# Sandbox (spot only)
-BASE_URL = "https://api-sandbox.coinbase.com/api/v2"
+# Sandbox (Advanced Trade v3 - CDP Sandbox)
+BASE_URL = "https://api-public.sandbox.exchange.coinbase.com/api/v3/brokerage"
 WS_URL = "wss://ws-feed-sandbox.exchange.coinbase.com"
 ```
 
@@ -181,7 +201,13 @@ await ws.subscribe(["ticker", "matches", "level2"], ["BTC-PERP"])
 
 - Automatic heartbeat every 30 seconds
 - Exponential backoff reconnection
-- Maximum 100 channel subscriptions
+- **Channel subscriptions**: Up to 100 per connection (⚠️ needs verification)
+
+### Rate Limiting
+
+**WebSocket API**: 750 requests per second **per IP address** (applies to all connections from the same IP combined)
+
+**Engineering note**: Current codebase uses 100 requests/min throttle (much more conservative than API limits)
 
 ### Streaming Toggles (CANARY/PROD)
 
@@ -332,17 +358,47 @@ If migrating from older equities-based system:
 - Use incremental order book updates
 - Implement efficient depth calculation
 
-### Rate Limiting
-- Production: 10 requests/second
-- Sandbox: 5 requests/second
-- WebSocket: 100 subscriptions maximum
+### API Rate Limits
+
+**REST API (Official Coinbase Advanced Trade API):**
+- **Private endpoints**: 30 requests/second (per user account)
+- **Public endpoints**: 10 requests/second (per IP address)
+- **Rate limit algorithm**: Token bucket (lazy-fill, starts full, refills continuously)
+
+**WebSocket API:**
+- **750 requests/second per IP address** (applies to all WebSocket connections from same IP combined)
+
+**Rate Limit Response Headers** (available in HTTP responses):
+- `CB-RATELIMIT-LIMIT` - Total request limit for current window
+- `CB-RATELIMIT-REMAINING` - Requests remaining in current window
+- `CB-RATELIMIT-RESET` - Unix timestamp when limit window resets
+- `CB-BEFORE`, `CB-AFTER` - Pagination cursors (for list endpoints)
+
+**HTTP 429 Response**: When rate limit exceeded, API responds with status 429 "Too Many Requests" and `retry-after` header (in seconds)
+
+**Engineering implementation note**:
+- Current codebase uses conservative 100 requests/min client-side throttle (well below API limits)
+- See `src/bot_v2/features/brokerages/coinbase/client/base.py` for implementation
 
 ## Support Resources
 
 ### Official Documentation
-- [Coinbase Advanced Trade API](https://docs.cdp.coinbase.com/advanced-trade/docs/welcome)
-- [WebSocket Feed](https://docs.cdp.coinbase.com/advanced-trade/docs/ws-overview)
+
+**Primary (Current - Coinbase Developer Platform - CDP):**
+- [Advanced Trade API Welcome](https://docs.cdp.coinbase.com/advanced-trade/docs/welcome)
+- [REST API Rate Limits](https://docs.cdp.coinbase.com/advanced-trade/docs/rest-api-rate-limits)
+- [WebSocket Rate Limits](https://docs.cdp.coinbase.com/advanced-trade/docs/ws-rate-limits)
+- [WebSocket Channels & Overview](https://docs.cdp.coinbase.com/advanced-trade/docs/ws-overview)
+- [API Authentication](https://docs.cdp.coinbase.com/advanced-trade/docs/rest-api-auth)
+- [API Endpoints](https://docs.cdp.coinbase.com/advanced-trade/docs/api-overview)
+- [Changelog](https://docs.cdp.coinbase.com/coinbase-app/introduction/changelog)
+- [Python SDK](https://github.com/coinbase/coinbase-advanced-py)
+
+**Status & Support:**
 - [API Status](https://status.coinbase.com/)
+- [Coinbase Developer Platform](https://www.coinbase.com/developer-platform)
+
+**Note**: Legacy docs at `docs.cloud.coinbase.com` are outdated; use CDP URLs above for current information.
 
 ### Internal Resources
 - Logs: `var/logs/coinbase_trader.log`

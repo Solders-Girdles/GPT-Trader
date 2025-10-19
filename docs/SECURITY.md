@@ -62,7 +62,7 @@ COINBASE_API_SECRET=your-coinbase-secret
 # Database configuration
 DATABASE_HOST=localhost
 DATABASE_PORT=5432
-DATABASE_NAME=gpt_trader
+DATABASE_NAME=coinbase_trader
 DATABASE_USER=trader_user
 
 # Application configuration

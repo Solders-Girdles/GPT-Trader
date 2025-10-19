@@ -123,10 +123,12 @@ class PerpsBot:
         baseline_snapshot: Any,
         configuration_guardian: ConfigurationGuardian | None = None,
     ) -> None:
+        # Basic attributes
         self.bot_id = "coinbase_trader"
         self.start_time = datetime.now(UTC)
         self.running = False
 
+        # Core dependencies
         self.config_controller = config_controller
         self.config = self.config_controller.current
         self.registry = self._align_registry_with_config(registry)
@@ -138,11 +140,21 @@ class PerpsBot:
             configuration_guardian, baseline_snapshot
         )
 
+        # Initialize all components in a single, focused method
+        self._initialize_components()
+
+    def _initialize_components(self) -> None:
+        """Initialize all bot components in dependency order."""
+
+        # Initialize runtime state
         self._state = self._initialize_symbols_state()
         self._symbol_processor_override: _CallableSymbolProcessor | None = None
-        self.strategy_orchestrator = StrategyOrchestrator(self)
 
+        # Initialize orchestrators and coordinators
+        self.strategy_orchestrator = StrategyOrchestrator(self)
         self._setup_coordinator_stack()
+
+        # Initialize lifecycle management
         self.lifecycle_manager = LifecycleManager(self)
         self._initialize_service_placeholders()
 

@@ -61,11 +61,6 @@ poetry run python scripts/perps_dashboard.py \
   inline predicate support keep inputs clean before they reach monitoring
   surfaces.
 
-## Archived Monitoring Toolkit
-
-Legacy monitoring components (alert router, Streamlit dashboard, canary
-monitor, etc.) were removed from the active tree. Recover them via
-`docs/archive/legacy_recovery.md` when you need the historical tooling.
 
 ## Alerting Hooks
 
@@ -75,9 +70,3 @@ monitor, etc.) were removed from the active tree. Recover them via
   surfaced via the dashboard or your log pipeline.
 - The alert dispatcher logs a warning when no transport is configured, allowing
   safe degradation in lower environments.
-
-## Legacy UI
-
-The Streamlit dashboard bundled with earlier versions relied on modules that no
-longer ship with GPT-Trader V2. For historical reference, retrieve the assets
-from repository history; avoid reintroducing them into active deployments.

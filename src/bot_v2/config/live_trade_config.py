@@ -1,7 +1,7 @@
 """
-Risk configuration for perpetuals live trading.
+Configuration for live trading with schema-driven parsing.
 
-Phase 5: Risk Engine configuration only.
+Supports both RiskConfig (legacy) and LiveTradeConfig (new schema-based).
 """
 
 from __future__ import annotations
@@ -626,3 +626,173 @@ def _convert_env_validation_error(error: ValidationError) -> EnvVarError:
     raw_value = first.get("input")
     captured = raw_value if isinstance(raw_value, str) else None
     return EnvVarError(var_name, message, captured)
+
+
+# ---------------------------------------------------------------------------
+# Live Trade Configuration Schema (New)
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class LiveTradeConfig:
+    """Schema-driven live trading configuration with validation."""
+
+    # Basic settings
+    version: str = "1.0"
+    description: str = ""
+    last_updated: str = ""
+
+    # Capital and fees
+    initial_capital: float = 10000.0
+    commission: float = 0.0
+    slippage: float = 0.001
+
+    # Position limits
+    max_positions: int = 10
+    enable_shorting: bool = False
+
+    # Order validation
+    order_validation: dict[str, Any] = field(default_factory=dict)
+
+    # Risk limits
+    risk_limits: dict[str, Any] = field(default_factory=dict)
+
+    # Error handling
+    error_handling: dict[str, Any] = field(default_factory=dict)
+
+    # Broker settings
+    broker_settings: dict[str, Any] = field(default_factory=dict)
+
+    # Monitoring
+    monitoring: dict[str, Any] = field(default_factory=dict)
+
+    @classmethod
+    def from_yaml(cls, path: str) -> LiveTradeConfig:
+        """Load configuration from YAML file."""
+        import yaml
+
+        with open(path) as f:
+            data = yaml.safe_load(f) or {}
+
+        # Validate with Pydantic model
+        model = LiveTradeConfigModel.model_validate(data)
+        return cls(**model.model_dump())
+
+    @classmethod
+    def from_env(cls, *, settings: RuntimeSettings | None = None) -> LiveTradeConfig:
+        """Load configuration from environment variables."""
+        model = _load_live_trade_model_from_env(settings=settings)
+        return cls(**model.model_dump())
+
+
+class LiveTradeConfigModel(BaseModel):
+    """Pydantic model for live trade configuration validation."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    version: str = Field(default="1.0", min_length=1)
+    description: str = Field(default="")
+    last_updated: str = Field(default="", min_length=0)
+
+    initial_capital: float = Field(default=10000.0, gt=0)
+    commission: float = Field(default=0.0, ge=0)
+    slippage: float = Field(default=0.001, ge=0)
+
+    max_positions: int = Field(default=10, ge=1)
+    enable_shorting: bool = Field(default=False)
+
+    order_validation: dict[str, Any] = Field(default_factory=dict)
+    risk_limits: dict[str, Any] = Field(default_factory=dict)
+    error_handling: dict[str, Any] = Field(default_factory=dict)
+    broker_settings: dict[str, Any] = Field(default_factory=dict)
+    monitoring: dict[str, Any] = Field(default_factory=dict)
+
+
+def _load_live_trade_model_from_env(
+    *,
+    settings: RuntimeSettings | None = None,
+) -> LiveTradeConfigModel:
+    """Load live trade config from environment variables."""
+    # For now, return defaults - can be extended with env var support
+    return LiveTradeConfigModel()
+
+
+# ---------------------------------------------------------------------------
+# Position Sizing Configuration Schema (New)
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class PositionSizingConfig:
+    """Schema-driven position sizing configuration with validation."""
+
+    # Basic settings
+    version: str = "1.0"
+    description: str = ""
+    last_updated: str = ""
+
+    # Kelly parameters
+    kelly: dict[str, Any] = field(default_factory=dict)
+
+    # Confidence parameters
+    confidence: dict[str, Any] = field(default_factory=dict)
+
+    # Regime parameters
+    regime: dict[str, Any] = field(default_factory=dict)
+
+    # Risk limits
+    risk_limits: dict[str, Any] = field(default_factory=dict)
+
+    # Safety settings
+    safety: dict[str, Any] = field(default_factory=dict)
+
+    # Validation settings
+    validation: dict[str, Any] = field(default_factory=dict)
+
+    # Logging settings
+    logging: dict[str, Any] = field(default_factory=dict)
+
+    @classmethod
+    def from_yaml(cls, path: str) -> PositionSizingConfig:
+        """Load configuration from YAML file."""
+        import yaml
+
+        with open(path) as f:
+            data = yaml.safe_load(f) or {}
+
+        # Validate with Pydantic model
+        model = PositionSizingConfigModel.model_validate(data)
+        return cls(**model.model_dump())
+
+    @classmethod
+    def from_env(cls, *, settings: RuntimeSettings | None = None) -> PositionSizingConfig:
+        """Load configuration from environment variables."""
+        model = _load_position_sizing_model_from_env(settings=settings)
+        return cls(**model.model_dump())
+
+
+class PositionSizingConfigModel(BaseModel):
+    """Pydantic model for position sizing configuration validation."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    version: str = Field(default="1.0", min_length=1)
+    description: str = Field(default="")
+    last_updated: str = Field(default="", min_length=0)
+
+    kelly: dict[str, Any] = Field(default_factory=dict)
+    confidence: dict[str, Any] = Field(default_factory=dict)
+    regime: dict[str, Any] = Field(default_factory=dict)
+    risk_limits: dict[str, Any] = Field(default_factory=dict)
+    safety: dict[str, Any] = Field(default_factory=dict)
+    validation: dict[str, Any] = Field(default_factory=dict)
+    logging: dict[str, Any] = Field(default_factory=dict)
+
+
+def _load_position_sizing_model_from_env(
+    *,
+    settings: RuntimeSettings | None = None,
+) -> PositionSizingConfigModel:
+    """Load position sizing config from environment variables."""
+    # For now, return defaults - can be extended with env var support
+    return PositionSizingConfigModel()

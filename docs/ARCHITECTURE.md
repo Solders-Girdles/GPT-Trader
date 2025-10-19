@@ -23,7 +23,7 @@ GPT-Trader V2 is a production-ready Coinbase **spot** trading system that retain
 
 ### Vertical Slice Design
 
-The system is organized into vertical feature slices under `src/bot_v2/features/`. Production-critical slices (e.g., `live_trade`, `brokerages`, `position_sizing`) ship with full test coverage. Legacy research slices were removed from the active tree; recover them via `docs/archive/legacy_recovery.md` if you need a historical reference.
+The system is organized into vertical feature slices under `src/bot_v2/features/`. Production-critical slices (e.g., `live_trade`, `brokerages`, `position_sizing`) ship with full test coverage.
 
 ```
 src/bot_v2/features/
@@ -171,17 +171,6 @@ behaviour until the derivatives gate opens.
 
 ### Feature Slice Reference
 
-#### Backtest (legacy)
-
-Removed from the active codebase. Recover the slice from
-`docs/archive/legacy_recovery.md` if you need to inspect historical strategy
-simulations.
-
-#### Paper Trade (legacy)
-
-Self-contained paper trading utilities now live in the legacy bundle. Restore
-them via `docs/archive/legacy_recovery.md` when you need to revisit the old
-workflow.
 
 #### Position Sizing (`features/position_sizing/`)
 - **Purpose:** Intelligent position sizing that combines Kelly Criterion math, confidence modifiers, and market-regime scaling while remaining slice-local.
@@ -246,12 +235,6 @@ The orchestration layer provides coordinated control across trading operations t
 - `session_guard.py` - Trading window enforcement
 - `market_monitor.py` - Market data freshness monitoring
 - `perps_bot.py` - Main orchestrator coordinating all components
-- Legacy status reports that used to live under `src/bot_v2/*.md` were removed; pull them from
-  repository history if you need a reference.
-- Historical V1/V2 integration and system tests depending on the legacy `bot.*` package lived under
-  `archived/legacy_tests/` before the cleanup. Recover them from git history if you need a
-  reference. The active pytest suite now focuses exclusively on the `bot_v2` stack and passes via
-  `poetry run pytest`.
 
 ## What's Actually Working
 

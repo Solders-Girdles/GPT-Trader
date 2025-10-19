@@ -31,8 +31,6 @@ An ML-driven Coinbase trading system with market regime detection, built on a cl
   - Invoke: `poetry run coinbase-trader <command> [options]`
   - Legacy alias: `poetry run perps-bot …` continues to function for existing scripts; prefer `coinbase-trader` for new automation.
 
-Legacy experimental slices (backtest, ml_strategy, monitoring dashboards, PoC CLI)
-now live in the legacy bundle. See `docs/archive/legacy_recovery.md` for details.
 
 ## 🚀 Quick Start
 

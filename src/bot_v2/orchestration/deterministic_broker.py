@@ -79,7 +79,12 @@ class DeterministicBroker(IBrokerage):
                 error=str(exc),
             )
 
-        # Fall back to hardcoded defaults
+        # Fall back to hardcoded defaults (kept for backward compatibility)
+        return self._get_hardcoded_products()
+
+    @staticmethod
+    def _get_hardcoded_products() -> dict[str, Product]:
+        """Return hardcoded product definitions for fallback."""
         return {
             "BTC-PERP": Product(
                 symbol="BTC-PERP",
@@ -140,7 +145,12 @@ class DeterministicBroker(IBrokerage):
                 error=str(exc),
             )
 
-        # Fall back to hardcoded defaults
+        # Fall back to hardcoded defaults (kept for backward compatibility)
+        return self._get_hardcoded_marks()
+
+    @staticmethod
+    def _get_hardcoded_marks() -> dict[str, Decimal]:
+        """Return hardcoded mark prices for fallback."""
         return {
             "BTC-PERP": Decimal("50000"),
             "ETH-PERP": Decimal("3000"),

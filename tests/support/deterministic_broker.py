@@ -30,6 +30,15 @@ from bot_v2.features.brokerages.core.interfaces import (
     Quote,
     TimeInForce,
 )
+from bot_v2.features.brokerages.fixtures import (
+    create_product as load_fixture_product,
+)
+from bot_v2.features.brokerages.fixtures import (
+    default_marks as load_default_marks,
+)
+from bot_v2.features.brokerages.fixtures import (
+    list_perpetual_symbols,
+)
 
 
 class DeterministicBroker(IBrokerage):
@@ -43,8 +52,38 @@ class DeterministicBroker(IBrokerage):
     def __init__(self, equity: Decimal = Decimal("100000")) -> None:
         self._connected = False
         self.equity = Decimal(str(equity))
-        # Minimal product catalog sufficient for tests
-        self._products: dict[str, Product] = {
+
+        # Load products and marks from structured fixtures
+        self._products: dict[str, Product] = self._load_products_from_fixtures()
+        self.marks: dict[str, Decimal] = self._load_marks_from_fixtures()
+        self._orders: list[Order] = []
+        self._positions: dict[str, Position] = {}
+        self.order_books: dict[
+            str, tuple[list[tuple[Decimal, Decimal]], list[tuple[Decimal, Decimal]]]
+        ] = {}
+        for symbol, mark in self.marks.items():
+            self.order_books[symbol] = self._build_default_order_book(mark)
+
+    def _load_products_from_fixtures(self) -> dict[str, Product]:
+        """Load products from structured fixtures."""
+        try:
+            products: dict[str, Product] = {}
+            for symbol in list_perpetual_symbols():
+                products[symbol] = load_fixture_product(symbol, MarketType.PERPETUAL)
+
+            if products:
+                return products
+
+        except Exception:
+            pass  # Fall through to hardcoded defaults
+
+        # Fall back to hardcoded defaults (kept for backward compatibility)
+        return self._get_hardcoded_products()
+
+    @staticmethod
+    def _get_hardcoded_products() -> dict[str, Product]:
+        """Return hardcoded product definitions for fallback."""
+        return {
             "BTC-PERP": Product(
                 symbol="BTC-PERP",
                 base_asset="BTC",
@@ -54,7 +93,6 @@ class DeterministicBroker(IBrokerage):
                 step_size=Decimal("0.001"),
                 min_notional=Decimal("10"),
                 price_increment=Decimal("0.01"),
-                leverage_max=3,
             ),
             "ETH-PERP": Product(
                 symbol="ETH-PERP",
@@ -65,7 +103,6 @@ class DeterministicBroker(IBrokerage):
                 step_size=Decimal("0.001"),
                 min_notional=Decimal("10"),
                 price_increment=Decimal("0.01"),
-                leverage_max=3,
             ),
             "XRP-PERP": Product(
                 symbol="XRP-PERP",
@@ -76,22 +113,31 @@ class DeterministicBroker(IBrokerage):
                 step_size=Decimal("10"),
                 min_notional=Decimal("10"),
                 price_increment=Decimal("0.0001"),
-                leverage_max=3,
             ),
         }
-        # Deterministic marks
-        self.marks: dict[str, Decimal] = {
+
+    def _load_marks_from_fixtures(self) -> dict[str, Decimal]:
+        """Load mark prices from structured fixtures."""
+        try:
+            marks_data = load_default_marks()
+
+            if isinstance(marks_data, dict) and marks_data:
+                return dict(marks_data)
+
+        except Exception:
+            pass  # Fall through to hardcoded defaults
+
+        # Fall back to hardcoded defaults (kept for backward compatibility)
+        return self._get_hardcoded_marks()
+
+    @staticmethod
+    def _get_hardcoded_marks() -> dict[str, Decimal]:
+        """Return hardcoded mark prices for fallback."""
+        return {
             "BTC-PERP": Decimal("50000"),
             "ETH-PERP": Decimal("3000"),
             "XRP-PERP": Decimal("0.50"),
         }
-        self._orders: list[Order] = []
-        self._positions: dict[str, Position] = {}
-        self.order_books: dict[
-            str, tuple[list[tuple[Decimal, Decimal]], list[tuple[Decimal, Decimal]]]
-        ] = {}
-        for symbol, mark in self.marks.items():
-            self.order_books[symbol] = self._build_default_order_book(mark)
 
     # ---- Connectivity ----
     def connect(self) -> bool:

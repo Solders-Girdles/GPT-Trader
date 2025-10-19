@@ -1,5 +1,8 @@
 """
-ExecutionCoordinator tests for the coordinator implementation.
+Enhanced ExecutionCoordinator tests for the coordinator implementation.
+
+Tests execution engine initialization, order placement flows, reconciliation,
+async coordination, failure handling, and guard trigger scenarios.
 """
 
 from __future__ import annotations
@@ -10,6 +13,7 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock, Mock
 
 import pytest
+from tests.unit.bot_v2.orchestration.helpers import ScenarioBuilder
 
 from bot_v2.errors import ExecutionError, ValidationError
 from bot_v2.features.brokerages.core.interfaces import (
@@ -298,3 +302,425 @@ async def test_run_order_reconciliation_cycle(
     await coordinator._run_order_reconciliation_cycle(reconciler)
 
     reconciler.record_snapshot.assert_called_once()
+
+
+class TestExecutionCoordinatorAsyncFlows:
+    """Test async execution flows and coordination."""
+
+    @pytest.mark.asyncio
+    async def test_start_background_tasks_initializes_reconciliation_and_guards(
+        coordinator: ExecutionCoordinator, base_context: CoordinatorContext
+    ) -> None:
+        """Test start_background_tasks starts reconciliation and guard loops."""
+        base_context.config.dry_run = False
+        base_context.runtime_state = PerpsBotRuntimeState(["BTC-PERP"])
+        coordinator.update_context(base_context)
+
+        tasks = await coordinator.start_background_tasks()
+
+        assert len(tasks) == 2
+        # Tasks should be running (not done)
+        assert not any(task.done() for task in tasks)
+
+        # Cancel tasks to clean up
+        for task in tasks:
+            task.cancel()
+            try:
+                await task
+            except asyncio.CancelledError:
+                pass
+
+    @pytest.mark.asyncio
+    async def test_start_background_tasks_skips_in_dry_run(
+        coordinator: ExecutionCoordinator, base_context: CoordinatorContext
+    ) -> None:
+        """Test start_background_tasks skips in dry run mode."""
+        base_context.config.dry_run = True
+        coordinator.update_context(base_context)
+
+        tasks = await coordinator.start_background_tasks()
+
+        assert tasks == []
+
+    @pytest.mark.asyncio
+    async def test_run_runtime_guards_loop_handles_exceptions(
+        coordinator: ExecutionCoordinator, base_context: CoordinatorContext
+    ) -> None:
+        """Test _run_runtime_guards_loop handles exceptions gracefully."""
+        base_context.runtime_state.exec_engine = Mock()
+        base_context.runtime_state.exec_engine.run_runtime_guards = Mock(
+            side_effect=Exception("guard_error")
+        )
+        coordinator.update_context(base_context)
+
+        # Run for a short time then cancel
+        import asyncio
+        task = asyncio.create_task(coordinator._run_runtime_guards_loop())
+        await asyncio.sleep(0.1)  # Let it run one iteration
+        task.cancel()
+
+        try:
+            await task
+        except Exception:
+            pass
+
+        # Should have called run_runtime_guards despite exception
+        base_context.runtime_state.exec_engine.run_runtime_guards.assert_called()
+
+    @pytest.mark.asyncio
+    async def test_run_order_reconciliation_loop_with_custom_interval(
+        coordinator: ExecutionCoordinator, base_context: CoordinatorContext
+    ) -> None:
+        """Test _run_order_reconciliation_loop respects custom interval."""
+        # Mock reconciler to avoid actual reconciliation
+        coordinator._get_order_reconciler = Mock(return_value=Mock())
+        coordinator._run_order_reconciliation_cycle = AsyncMock()
+
+        import asyncio
+        task = asyncio.create_task(coordinator._run_order_reconciliation_loop(interval_seconds=1))
+        await asyncio.sleep(2.1)  # Should run ~2 cycles
+        task.cancel()
+
+        try:
+            await task
+        except Exception:
+            pass
+
+        # Should have run multiple cycles
+        assert coordinator._run_order_reconciliation_cycle.call_count >= 2
+
+
+class TestExecutionCoordinatorFailureHandling:
+    """Test failure handling and error recovery."""
+
+    @pytest.mark.asyncio
+    async def test_execute_decision_handles_missing_product(
+        coordinator: ExecutionCoordinator, base_context: CoordinatorContext
+    ) -> None:
+        """Test execute_decision handles missing product gracefully."""
+        base_context.runtime_state.exec_engine = Mock()
+        coordinator.update_context(base_context)
+
+        decision = SimpleNamespace(action=Action.BUY, quantity=Decimal("0.1"))
+
+        await coordinator.execute_decision(
+            symbol="BTC-PERP",
+            decision=decision,
+            mark=Decimal("50000"),
+            product=None,  # Missing product
+            position_state=None,
+        )
+
+        # Should not place order due to missing product
+        base_context.runtime_state.exec_engine.place_order.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_execute_decision_handles_invalid_mark(
+        coordinator: ExecutionCoordinator, base_context: CoordinatorContext
+    ) -> None:
+        """Test execute_decision handles invalid mark price."""
+        base_context.runtime_state.exec_engine = Mock()
+        coordinator.update_context(base_context)
+
+        decision = SimpleNamespace(action=Action.BUY, quantity=Decimal("0.1"))
+        product = ScenarioBuilder.create_product()
+
+        await coordinator.execute_decision(
+            symbol="BTC-PERP",
+            decision=decision,
+            mark=Decimal("0"),  # Invalid mark
+            product=product,
+            position_state=None,
+        )
+
+        # Should not place order due to invalid mark
+        base_context.runtime_state.exec_engine.place_order.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_execute_decision_handles_close_without_position(
+        coordinator: ExecutionCoordinator, base_context: CoordinatorContext
+    ) -> None:
+        """Test execute_decision skips close when no position exists."""
+        base_context.runtime_state.exec_engine = Mock()
+        coordinator.update_context(base_context)
+
+        decision = SimpleNamespace(action=Action.CLOSE, quantity=Decimal("0.1"))
+
+        await coordinator.execute_decision(
+            symbol="BTC-PERP",
+            decision=decision,
+            mark=Decimal("50000"),
+            product=ScenarioBuilder.create_product(),
+            position_state=None,  # No position
+        )
+
+        # Should not place order due to no position to close
+        base_context.runtime_state.exec_engine.place_order.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_execute_decision_handles_execution_exception(
+        coordinator: ExecutionCoordinator, base_context: CoordinatorContext
+    ) -> None:
+        """Test execute_decision handles execution exceptions."""
+        exec_engine = Mock()
+        exec_engine.place_order = Mock(side_effect=Exception("execution_failed"))
+        base_context.runtime_state.exec_engine = exec_engine
+        coordinator.update_context(base_context)
+
+        decision = SimpleNamespace(action=Action.BUY, quantity=Decimal("0.1"))
+        product = ScenarioBuilder.create_product()
+
+        await coordinator.execute_decision(
+            symbol="BTC-PERP",
+            decision=decision,
+            mark=Decimal("50000"),
+            product=product,
+            position_state=None,
+        )
+
+        # Should have attempted to place order despite failure
+        exec_engine.place_order.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_place_order_handles_order_validation_failure(
+        coordinator: ExecutionCoordinator, base_context: CoordinatorContext
+    ) -> None:
+        """Test place_order handles order validation failures."""
+        exec_engine = Mock()
+        exec_engine.place_order = Mock(side_effect=ValidationError("invalid_order"))
+        base_context.runtime_state.exec_engine = exec_engine
+        coordinator.update_context(base_context)
+
+        result = await coordinator.place_order(exec_engine, symbol="BTC-PERP")
+
+        assert result is None
+        assert base_context.runtime_state.order_stats["failed"] == 1
+
+    @pytest.mark.asyncio
+    async def test_place_order_handles_unexpected_errors(
+        coordinator: ExecutionCoordinator, base_context: CoordinatorContext
+    ) -> None:
+        """Test place_order handles unexpected errors."""
+        exec_engine = Mock()
+        exec_engine.place_order = Mock(side_effect=RuntimeError("unexpected"))
+        base_context.runtime_state.exec_engine = exec_engine
+        coordinator.update_context(base_context)
+
+        result = await coordinator.place_order(exec_engine, symbol="BTC-PERP")
+
+        assert result is None
+        assert base_context.runtime_state.order_stats["failed"] == 1
+
+
+class TestExecutionCoordinatorGuardTriggers:
+    """Test guard trigger handling and blocking."""
+
+    @pytest.mark.asyncio
+    async def test_execute_decision_respects_reduce_only_global(
+        coordinator: ExecutionCoordinator, base_context: CoordinatorContext
+    ) -> None:
+        """Test execute_decision respects global reduce-only mode."""
+        exec_engine = Mock()
+        base_context.runtime_state.exec_engine = exec_engine
+        base_context.config_controller.is_reduce_only_mode = Mock(return_value=True)
+        coordinator.update_context(base_context)
+
+        decision = SimpleNamespace(
+            action=Action.BUY,
+            quantity=Decimal("0.1"),
+            reduce_only=False,  # Decision says not reduce-only
+        )
+        product = ScenarioBuilder.create_product()
+
+        await coordinator.execute_decision(
+            symbol="BTC-PERP",
+            decision=decision,
+            mark=Decimal("50000"),
+            product=product,
+            position_state=None,
+        )
+
+        # Should have set reduce_only=True due to global mode
+        call_kwargs = exec_engine.place_order.call_args[1]
+        assert call_kwargs["reduce_only"] is True
+
+    @pytest.mark.asyncio
+    async def test_execute_decision_handles_close_position_side_detection(
+        coordinator: ExecutionCoordinator, base_context: CoordinatorContext
+    ) -> None:
+        """Test execute_decision correctly detects position side for close orders."""
+        exec_engine = Mock()
+        base_context.runtime_state.exec_engine = exec_engine
+        coordinator.update_context(base_context)
+
+        decision = SimpleNamespace(action=Action.CLOSE)
+        product = ScenarioBuilder.create_product()
+        position_state = {"quantity": Decimal("0.5"), "side": "long"}
+
+        await coordinator.execute_decision(
+            symbol="BTC-PERP",
+            decision=decision,
+            mark=Decimal("50000"),
+            product=product,
+            position_state=position_state,
+        )
+
+        # Should sell to close long position
+        call_kwargs = exec_engine.place_order.call_args[1]
+        assert call_kwargs["side"] == OrderSide.SELL
+
+    @pytest.mark.asyncio
+    async def test_execute_decision_handles_leverage_override(
+        coordinator: ExecutionCoordinator, base_context: CoordinatorContext
+    ) -> None:
+        """Test execute_decision handles leverage override in decision."""
+        exec_engine = Mock()
+        base_context.runtime_state.exec_engine = exec_engine
+        coordinator.update_context(base_context)
+
+        decision = SimpleNamespace(
+            action=Action.BUY, quantity=Decimal("0.1"), leverage=Decimal("2.0")
+        )
+        product = ScenarioBuilder.create_product()
+
+        await coordinator.execute_decision(
+            symbol="BTC-PERP",
+            decision=decision,
+            mark=Decimal("50000"),
+            product=product,
+            position_state=None,
+        )
+
+        # Should pass leverage to execution engine
+        call_kwargs = exec_engine.place_order.call_args[1]
+        assert call_kwargs["leverage"] == Decimal("2.0")
+
+
+class TestExecutionCoordinatorAdvancedEngine:
+    """Test advanced execution engine integration."""
+
+    def test_initialize_uses_advanced_engine_for_dynamic_sizing(
+        coordinator: ExecutionCoordinator, base_context: CoordinatorContext
+    ) -> None:
+        """Test initialize uses advanced engine when dynamic sizing enabled."""
+        base_context.risk_manager.config.enable_dynamic_position_sizing = True
+        coordinator.update_context(base_context)
+
+        result = coordinator.initialize(base_context)
+
+        # Should have initialized AdvancedExecutionEngine
+        assert isinstance(result.runtime_state.exec_engine, AdvancedExecutionEngine)
+
+    def test_initialize_uses_advanced_engine_for_market_impact_guard(
+        coordinator: ExecutionCoordinator, base_context: CoordinatorContext
+    ) -> None:
+        """Test initialize uses advanced engine when market impact guard enabled."""
+        base_context.risk_manager.config.enable_market_impact_guard = True
+        coordinator.update_context(base_context)
+
+        result = coordinator.initialize(base_context)
+
+        # Should have initialized AdvancedExecutionEngine
+        assert isinstance(result.runtime_state.exec_engine, AdvancedExecutionEngine)
+
+    def test_build_impact_estimator_creates_estimator_function(
+        coordinator: ExecutionCoordinator, base_context: CoordinatorContext
+    ) -> None:
+        """Test _build_impact_estimator creates impact estimator function."""
+        base_context.broker.get_quote = Mock(
+            return_value=Mock(last=Decimal("50000"), bid=Decimal("49900"), ask=Decimal("50100"))
+        )
+        base_context.broker.order_books = {
+            "BTC-PERP": ([(Decimal("49900"), Decimal("100"))], [(Decimal("50100"), Decimal("100"))])
+        }
+        coordinator.update_context(base_context)
+
+        estimator = coordinator._build_impact_estimator(base_context)
+
+        # Should be callable
+        assert callable(estimator)
+
+        # Test with mock request
+        req = SimpleNamespace(symbol="BTC-PERP", quantity=Decimal("0.1"), side=OrderSide.BUY)
+        result = estimator(req)
+
+        # Should return impact estimate
+        assert isinstance(result, (Decimal, float))
+
+
+class TestExecutionCoordinatorOrderLock:
+    """Test order lock management."""
+
+    def test_ensure_order_lock_creates_lock_when_missing(
+        coordinator: ExecutionCoordinator, base_context: CoordinatorContext
+    ) -> None:
+        """Test ensure_order_lock creates lock when missing."""
+        base_context.runtime_state.order_lock = None
+        coordinator.update_context(base_context)
+
+        lock = coordinator.ensure_order_lock()
+
+        assert lock is not None
+        assert base_context.runtime_state.order_lock is lock
+
+    def test_ensure_order_lock_returns_existing_lock(
+        coordinator: ExecutionCoordinator, base_context: CoordinatorContext
+    ) -> None:
+        """Test ensure_order_lock returns existing lock."""
+        existing_lock = Mock()
+        base_context.runtime_state.order_lock = existing_lock
+        coordinator.update_context(base_context)
+
+        lock = coordinator.ensure_order_lock()
+
+        assert lock is existing_lock
+
+    def test_ensure_order_lock_handles_asyncio_error(
+        coordinator: ExecutionCoordinator, base_context: CoordinatorContext
+    ) -> None:
+        """Test ensure_order_lock handles asyncio initialization errors."""
+        base_context.runtime_state.order_lock = None
+        coordinator.update_context(base_context)
+
+        # Mock asyncio.Lock to raise RuntimeError
+        # import asyncio  # Not needed at module level
+
+        original_lock = asyncio.Lock
+        asyncio.Lock = Mock(side_effect=RuntimeError("no event loop"))
+
+        try:
+            with pytest.raises(RuntimeError):
+                coordinator.ensure_order_lock()
+        finally:
+            asyncio.Lock = original_lock
+
+
+class TestExecutionCoordinatorHealthCheck:
+    """Test health check functionality."""
+
+    def test_health_check_returns_unhealthy_without_engine(
+        coordinator: ExecutionCoordinator, base_context: CoordinatorContext
+    ) -> None:
+        """Test health_check returns unhealthy when no execution engine."""
+        base_context.runtime_state.exec_engine = None
+        coordinator.update_context(base_context)
+
+        status = coordinator.health_check()
+
+        assert status.healthy is False
+        assert status.component == "execution"
+        assert status.details["has_execution_engine"] is False
+
+    def test_health_check_returns_healthy_with_engine(
+        coordinator: ExecutionCoordinator, base_context: CoordinatorContext
+    ) -> None:
+        """Test health_check returns healthy when execution engine present."""
+        base_context.runtime_state.exec_engine = Mock()
+        base_context.runtime_state.order_stats = {"attempted": 5, "successful": 4, "failed": 1}
+        coordinator.update_context(base_context)
+
+        status = coordinator.health_check()
+
+        assert status.healthy is True
+        assert status.details["has_execution_engine"] is True
+        assert status.details["order_stats"]["attempted"] == 5

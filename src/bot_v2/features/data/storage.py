@@ -4,11 +4,12 @@ Local data storage implementation.
 Complete isolation - no external dependencies.
 """
 
-from datetime import datetime
 import json
 import os
 import pickle
-from typing import Any, Dict, List, Optional, cast
+from datetime import datetime
+from pathlib import Path
+from typing import cast
 
 import pandas as pd
 
@@ -18,23 +19,27 @@ from bot_v2.utilities.logging_patterns import get_logger
 
 logger = get_logger(__name__, component="data_storage")
 
+DEFAULT_STORAGE_ROOT = Path("var/data/perps_bot/shared/storage")
+LEGACY_STORAGE_ROOT = Path("data_storage")
+
 
 class DataStorage:
     """Persistent data storage."""
 
-    def __init__(self, base_path: str = "./data_storage"):
+    def __init__(self, base_path: str | os.PathLike[str] | None = None):
         """
         Initialize data storage.
 
         Args:
             base_path: Base directory for storage
         """
-        self.base_path = base_path
-        os.makedirs(base_path, exist_ok=True)
+        resolved_base = self._resolve_base_path(base_path)
+        self.base_path = str(resolved_base)
+        os.makedirs(self.base_path, exist_ok=True)
 
         # Create subdirectories
-        self.ohlcv_path = os.path.join(base_path, "ohlcv")
-        self.metadata_path = os.path.join(base_path, "metadata")
+        self.ohlcv_path = os.path.join(self.base_path, "ohlcv")
+        self.metadata_path = os.path.join(self.base_path, "metadata")
         os.makedirs(self.ohlcv_path, exist_ok=True)
         os.makedirs(self.metadata_path, exist_ok=True)
 
@@ -235,6 +240,41 @@ class DataStorage:
             "newest_record": newest_record,
             "symbols_count": len(symbols),
         }
+
+    @staticmethod
+    def _resolve_base_path(base_path: str | os.PathLike[str] | None) -> Path:
+        """
+        Resolve the storage root, migrating legacy directories when possible.
+
+        Preference order:
+        1. Explicit path provided by the caller.
+        2. Migrated legacy `data_storage` directory (if present and new root missing).
+        3. Default `var/data/perps_bot/shared/storage`.
+        """
+        if base_path is not None:
+            return Path(base_path)
+
+        default_root = DEFAULT_STORAGE_ROOT
+        legacy_root = LEGACY_STORAGE_ROOT
+
+        if legacy_root.exists():
+            try:
+                default_root.parent.mkdir(parents=True, exist_ok=True)
+                if not default_root.exists():
+                    legacy_root.rename(default_root)
+                    logger.info("Migrated legacy data storage to %s", default_root)
+                return default_root
+            except OSError as exc:
+                logger.warning(
+                    "Failed to migrate legacy data storage to %s (%s); using %s",
+                    default_root,
+                    exc,
+                    legacy_root,
+                    exc_info=True,
+                )
+                return legacy_root.resolve()
+
+        return default_root
 
     def _load_index(self) -> dict[str, str]:
         """Load storage index."""

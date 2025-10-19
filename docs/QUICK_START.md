@@ -30,14 +30,14 @@ cp config/environments/.env.template .env
 cp deploy/bot_v2/docker/.env.example deploy/bot_v2/docker/.env
 ```
 
-The root `.env` seeds runtime configuration. The Compose stack reads
-`deploy/bot_v2/docker/.env`; populate the database, Redis, RabbitMQ, JWT, and
-Vault secrets before bringing services online.
+The root `.env` seeds runtime configuration. The base Compose stack reads
+`deploy/bot_v2/docker/.env`; only the bot and Grafana credentials are required for the default
+lightweight stack. Database, Redis, RabbitMQ, and Vault secrets are optional unless you load the
+infrastructure override.
 
 ## 3. Launch the Local Stack
 
-Use the `Makefile` helper to boot the dev profile services (bot, Postgres,
-Redis, RabbitMQ) without pulling the observability stack by default:
+Use the `Makefile` helper to boot the dev profile services (bot only, Prometheus/Grafana opt-in):
 
 ```bash
 make dev-up
@@ -51,8 +51,18 @@ docker compose --project-directory deploy/bot_v2/docker \
 --profile observability up -d
 ```
 
+Want the retired Postgres/Redis/RabbitMQ/Vault helpers? Layer the override and enable the
+`infra` profile:
+
+```bash
+docker compose --project-directory deploy/bot_v2/docker \
+  -f deploy/bot_v2/docker/docker-compose.yaml \
+  -f deploy/bot_v2/docker/docker-compose.infrastructure.yaml \
+  --profile infra up -d
+```
+
 > `make dev-up` automatically passes `deploy/bot_v2/docker/.env`, so the stack
-> runs with the secrets you just populated.
+> runs with the secrets you just populated. Override-only variables are ignored unless you opt in.
 
 ## 4. Smoke-Test the Dev Profile
 

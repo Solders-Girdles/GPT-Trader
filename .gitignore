@@ -86,6 +86,8 @@ coordination/orchestration/*
 .benchmarks/
 .swarm/
 .coverage
+htmlcov/
+var/results/coverage/
 coverage.json
 .pip-audit/
 pip-audit-report.json

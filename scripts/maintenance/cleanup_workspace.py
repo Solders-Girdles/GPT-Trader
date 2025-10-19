@@ -280,6 +280,7 @@ def clean_tool_caches(session: CleanupSession) -> None:
 def clean_coverage_artifacts(session: CleanupSession) -> None:
     targets = [
         "htmlcov",
+        "var/results/coverage/html",
         ".coverage",
         "coverage.json",
         "pip-audit-report.json",
@@ -403,6 +404,7 @@ def main() -> None:
         session,
         [
             REPO_ROOT / "htmlcov",
+            REPO_ROOT / "var" / "results" / "coverage" / "html",
             REPO_ROOT / "var" / "data" / "archive",
             REPO_ROOT / "var" / "logs" / "archive",
         ],

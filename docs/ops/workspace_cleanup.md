@@ -9,7 +9,7 @@ runbook to keep the repository lean and predictable.
 - Before cutting a release branch or handing the workspace to another teammate.
 - When disk usage from `var/logs` or `var/data` starts to grow beyond a few
   hundred megabytes.
-- After large scale local testing that generates `.mypy_cache`, `htmlcov`, or
+- After large scale local testing that generates `.mypy_cache`, `var/results/coverage/html`,
   other tooling by-products.
 
 > **Tip:** Stop any running trading bots before applying the cleanup so active
@@ -37,7 +37,7 @@ runbook to keep the repository lean and predictable.
 ## What Gets Cleaned
 
 - Tool caches: `.mypy_cache/`, `.pytest_cache/`, `.ruff_cache/`, `.benchmarks/`
-- Coverage artifacts: `htmlcov/`, `.coverage`, `coverage.json`,
+- Coverage artifacts: `var/results/coverage/html/`, legacy `htmlcov/`, `.coverage`, `coverage.json`,
   `pip-audit-report.json`
 - Runtime logs (`var/logs`):
   - Keep the two most recent numbered rotations (e.g. `.log.1`, `.log.2`)

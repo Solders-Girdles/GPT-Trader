@@ -28,13 +28,13 @@ poetry run pytest -n auto
 
 ```bash
 # Generate HTML coverage report
-poetry run pytest --cov --cov-report=html
+poetry run pytest --cov --cov-report=html:var/results/coverage/html
 
 # Open in browser (macOS)
-open htmlcov/index.html
+open var/results/coverage/html/index.html
 
 # Open in browser (Linux)
-xdg-open htmlcov/index.html
+xdg-open var/results/coverage/html/index.html
 ```
 
 ## Writing Tests
@@ -367,5 +367,5 @@ source = src/bot_v2  # Should point to your source code
 - [pytest documentation](https://docs.pytest.org/)
 - [pytest-cov documentation](https://pytest-cov.readthedocs.io/)
 - [pytest-mock documentation](https://pytest-mock.readthedocs.io/)
-- Coverage report: `htmlcov/index.html`
-- Coverage summary: `TESTING_COVERAGE.md`
+- Coverage report: `var/results/coverage/html/index.html`
+- Coverage summary: `testing/TESTING_COVERAGE.md`

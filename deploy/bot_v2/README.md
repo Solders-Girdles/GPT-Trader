@@ -2,10 +2,10 @@
 
 This directory hosts the active Docker assets for the bot_v2 trading system. The
 multi-stage Dockerfile builds Poetry-managed dependencies and exposes
-separate targets for development, testing, production, and optional security scanning. The
-compose file (`docker/docker-compose.yaml`) wires the trading bot together with its supporting
-infrastructure: PostgreSQL, Redis, RabbitMQ, Vault, Prometheus, Grafana, Elasticsearch, Kibana,
-Jaeger, and an optional Nginx reverse proxy.
+separate targets for development, testing, production, and optional security scanning. The base
+compose file (`docker/docker-compose.yaml`) now focuses on the essentials: the trading bot and
+opt-in Prometheus/Grafana metrics via the `observability` profile. Heavier infrastructure blocks
+are available through the optional `docker-compose.infrastructure.yaml` override.
 
 ## Image Targets
 The Dockerfile defines several stages selectable via the `BUILD_TARGET` build argument:
@@ -23,17 +23,19 @@ docker build   --file deploy/bot_v2/docker/Dockerfile   --target production   --
 ```
 
 ## Compose Stack
-The compose file expects Docker Compose v2 and can load environment overrides from a `.env`
-file in the same directory. Key variables:
+The compose files expect Docker Compose v2 and can load environment overrides from a `.env`
+file in the same directory. Base stack variables:
 
 - `BUILD_TARGET`: Dockerfile target to use (`development` by default).
 - `ENV` and `LOG_LEVEL`: forwarded to the bot runtime.
-- `JWT_SECRET_KEY`, `VAULT_TOKEN`, database credentials, and other secrets – override them in
-  your local `.env` or secrets manager.
+- `GF_SECURITY_ADMIN_*`: default Grafana credentials when you enable the observability profile.
+
+Override-specific environment variables (database, Redis, RabbitMQ, Vault secrets) only apply
+when you include `docker-compose.infrastructure.yaml`.
 
 ### Development Quick Start
 ```bash
-# Build the dev image and start the full stack
+# Build the dev image and start the lightweight stack
 cd deploy/bot_v2/docker
 cp ../../../config/environments/.env.template .env  # customize as needed
 docker compose build
@@ -41,12 +43,37 @@ docker compose up -d
 ```
 The trading bot container binds the repository root into `/app` for rapid iteration. Restart
 just that container after making code changes: `docker compose restart trading-bot`.
+No profile flag is required in the trimmed stack—the bot starts by default.
+
+Need the historical databases, queues, or Vault mock? Layer the override on top:
+
+```bash
+docker compose \
+  -f docker-compose.yaml \
+  -f docker-compose.infrastructure.yaml \
+  --profile infra \
+  up -d
+```
+
+Enable the `observability` profile alongside the override if you also want Elasticsearch/Kibana
+and Jaeger:
+
+```bash
+docker compose \
+  -f docker-compose.yaml \
+  -f docker-compose.infrastructure.yaml \
+  --profile observability \
+  --profile infra \
+  up -d
+```
 
 ### Production Notes
-- Use `docker compose --profile production` to include the Nginx reverse proxy.
+- Use `docker compose --profile production` (with the infrastructure override) to include the
+  Nginx reverse proxy.
 - Switch `BUILD_TARGET=production` and remove the source bind mount (edit the compose file or
-  supply an override file) before shipping images to a registry.
-- Vault, RabbitMQ, Redis, and PostgreSQL credentials should be replaced with hardened values.
+  supply an additional override file) before shipping images to a registry.
+- Vault, RabbitMQ, Redis, and PostgreSQL credentials should be replaced with hardened values
+  when the override stack is in play.
 
 ### Deployment Script
 - `deploy/scripts/deploy.sh` wraps the build, backup, and stack startup steps.
@@ -54,8 +81,9 @@ just that container after making code changes: `docker compose restart trading-b
 - Override the Dockerfile stage with `BUILD_TARGET=development|testing|production`.
 
 ## Monitoring & Observability
-Prometheus, Grafana, Elasticsearch, Kibana, and Jaeger ship as part of the compose stack. Their
-volumes are declared at the bottom of the file so metrics and logs persist across restarts.
+Prometheus and Grafana are part of the base stack (use `--profile observability`). Elasticsearch,
+Kibana, and Jaeger remain available through the infrastructure override for teams that still need
+their historical traces and log searches.
 
 ## Migrating from the Legacy Stack
 If you previously relied on `deploy/docker/`, consult

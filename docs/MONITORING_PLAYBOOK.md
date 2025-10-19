@@ -18,11 +18,20 @@ its ML pipeline.
 - **Account telemetry**: `poetry run perps-bot account snapshot` when a manual
   check is required.
 
-Start Prometheus/Grafana/ELK/Jaeger only when needed:
+Start Prometheus/Grafana when needed (base stack):
 
 ```bash
 docker compose --project-directory deploy/bot_v2/docker \
   -f deploy/bot_v2/docker/docker-compose.yaml \
+  --profile observability up -d
+```
+
+Need Elasticsearch, Kibana, or Jaeger? Include the infrastructure override:
+
+```bash
+docker compose --project-directory deploy/bot_v2/docker \
+  -f deploy/bot_v2/docker/docker-compose.yaml \
+  -f deploy/bot_v2/docker/docker-compose.infrastructure.yaml \
   --profile observability up -d
 ```
 

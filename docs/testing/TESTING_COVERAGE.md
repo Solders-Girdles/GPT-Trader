@@ -118,9 +118,9 @@ Features that need test creation:
 
 ### Full Coverage Report
 ```bash
-poetry run pytest --cov --cov-report=html --cov-report=term
+poetry run pytest --cov --cov-report=html:var/results/coverage/html --cov-report=term
 ```
-View HTML report: `open htmlcov/index.html`
+View HTML report: `open var/results/coverage/html/index.html`
 
 ### Coverage for Specific Module
 ```bash
@@ -148,7 +148,7 @@ poetry run pytest --cov --cov-report=term -q
 - Current coverage is **48%** across 245 source files
 - 131 test files exist with 800+ tests
 - Coverage configuration tracks all of `src/bot_v2`
-- HTML coverage reports generated in `htmlcov/`
+- HTML coverage reports generated in `var/results/coverage/html/`
 - Coverage baseline established: 2025-10-07
 
 ## Files Modified/Created

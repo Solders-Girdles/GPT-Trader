@@ -31,17 +31,13 @@ use repository-relative references.
 
 ## Bundling Legacy Modules
 
-- Generate a tarball containing the archived modules (run from a commit/tag that
-  still has them in-tree):
-
-  ```bash
-  make legacy-bundle           # writes var/legacy/legacy_bundle_<timestamp>.tar.gz
-  poetry run python scripts/maintenance/create_legacy_bundle.py --output legacy/legacy_bundle.tar.gz
-  ```
-
-- The archive includes `legacy_manifest.json` listing the captured paths. Use
-  `--dry-run` to preview without writing a file. Running the script after removal
-  will report the missing targets instead of failing.
+- Preferred: use the curated tarball checked in under
+  `var/legacy/legacy_bundle_latest.tar.gz`.
+- Need to regenerate the bundle? Check out a commit/tag that still contains
+  `archived/experimental/**` and `src/gpt_trader/**`, then archive the paths
+  manually. The historical helper (`scripts/maintenance/create_legacy_bundle.py`)
+  has been retired to avoid promising tooling that no longer works on the trimmed
+  tree.
 
 ## Immediate Targets
 

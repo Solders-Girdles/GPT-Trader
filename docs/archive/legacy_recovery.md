@@ -8,8 +8,9 @@ removed from the active workspace. Use this guide to restore them when needed.
 - Preferred: use the pre-generated bundle `var/legacy/legacy_bundle_latest.tar.gz`
   (copied before the legacy modules were removed)
 - Recreate from history: check out a commit/tag that still contains the
-  directories and run `make legacy-bundle` or
-  `poetry run python scripts/maintenance/create_legacy_bundle.py --output legacy/legacy_bundle.tar.gz`
+  directories and archive the paths manually. The helper script
+  (`scripts/maintenance/create_legacy_bundle.py`) is now a thin shim that reminds
+  you to use historical commits.
 - The bundle includes:
   - `archived/experimental/**`
   - `src/gpt_trader/**`

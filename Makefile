@@ -3,12 +3,12 @@
 COMPOSE_DIR=deploy/bot_v2/docker
 COMPOSE_FILE=$(COMPOSE_DIR)/docker-compose.yaml
 
-# Start local development stack (databases, broker, bot)
+# Start local development stack (bot by default)
 dev-up:
-	docker compose --project-directory $(COMPOSE_DIR) -f $(COMPOSE_FILE) --env-file $(COMPOSE_DIR)/.env --profile local-dev up -d
+	docker compose --project-directory $(COMPOSE_DIR) -f $(COMPOSE_FILE) --env-file $(COMPOSE_DIR)/.env up -d
 
 dev-down:
-	docker compose --project-directory $(COMPOSE_DIR) -f $(COMPOSE_FILE) --env-file $(COMPOSE_DIR)/.env --profile local-dev down -v
+	docker compose --project-directory $(COMPOSE_DIR) -f $(COMPOSE_FILE) --env-file $(COMPOSE_DIR)/.env down -v
 
 lint:
 	poetry run ruff check .
@@ -32,6 +32,7 @@ cov:
 		--cov=src/bot_v2/config \
 		--cov=src/bot_v2/features/brokerages/coinbase/client \
 		--cov=src/bot_v2/features/brokerages/coinbase/utilities \
+		--cov-report=html:var/results/coverage/html \
 		--cov-report=term --cov-fail-under=80
 
 dash:
@@ -46,4 +47,4 @@ clean-dry-run:
 	poetry run python scripts/maintenance/cleanup_workspace.py
 
 legacy-bundle:
-	poetry run python scripts/maintenance/create_legacy_bundle.py
+	@echo "Legacy bundling helper retired; see docs/archive/legacy_recovery.md for manual recovery steps."

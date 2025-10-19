@@ -64,6 +64,7 @@ organization-updated: 2025-10-07
 - [System Capabilities](reference/system_capabilities.md) - Current state overview
 - [System Reality](reference/system_reality.md) - Honest current state assessment
 - [Compatibility & Troubleshooting](reference/compatibility_troubleshooting.md) - Technical requirements
+- [Tooling Library](tooling/README.md) - Consolidated tooling analyses and quick references
 - Historical validation analysis is available in version control history.
 
 ### Performance & Operations

@@ -18,7 +18,7 @@ poetry run perps-bot run --profile canary                 # live spot (tiny)
 poetry run python scripts/monitoring/export_metrics.py --metrics-file var/data/perps_bot/prod/metrics.json
 
 # Tests
-poetry run pytest --collect-only                      # expect 1555 collected / 1554 selected / 1 deselected
+poetry run pytest --collect-only                      # expect 1484 collected / 1483 selected / 1 deselected
 poetry run pytest -q                                   # full bot_v2 regression suite
 ```
 
@@ -43,7 +43,7 @@ DRY_RUN=1
 
 ## Running Tests
 - Always run `poetry install` after pulling to pick up dependency changes (`pyotp` is required for security tests).
-- Use `poetry run pytest --collect-only` to confirm suite counts (1555 collected / 1554 selected / 1 deselected).
+- Use `poetry run pytest --collect-only` to confirm suite counts (1484 collected / 1483 selected / 1 deselected).
 - The enforcement suite is `poetry run pytest -q`.
 - Real-API or integration flows are archived; build new coverage inside `tests/unit/bot_v2/` when adding features.
 

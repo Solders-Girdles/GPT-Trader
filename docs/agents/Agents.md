@@ -2,6 +2,18 @@
 
 This is the shared orientation document for all AI agents working in this repository. Keep it open while you plan or execute tasks.
 
+## 0. Critical Orientation: Trust & Confusion Awareness
+
+**⚠️ BEFORE ANYTHING ELSE:** The repository contains significant sources of agent confusion due to architectural changes. **YOU CANNOT FULLY TRUST THIS DOCUMENTATION.**
+
+**Essential Reading:** `docs/AGENT_CONFUSION_POINTS.md` - Comprehensive guide to known confusion points and verification protocols.
+
+**Trust Verification:** `docs/agents/Document_Verification_Matrix.md` - Matrix showing which documents are trustworthy vs historical traps.
+
+**Verification Required:** Always cross-check against current command output (`poetry run pytest --collect-only` should report 1484 collected / 1483 selected / 1 deselected).
+
+---
+
 ## 1. Current Mission Snapshot
 - **Live focus:** Coinbase **spot** trading. Perpetual futures logic remains in the tree but real endpoints stay locked behind the Coinbase INTX gate (`COINBASE_ENABLE_DERIVATIVES` must be `1` *and* INTX access is required).
 - **Primary entry point:** `poetry run perps-bot run --profile dev --dev-fast`.
@@ -59,7 +71,7 @@ otherwise in this guide.
 - **Documentation templates:** Copy/paste matrices, interview outlines, and backlog seeds from `docs/archive/agents/templates.md` during Sprint 0 and ongoing maintenance.
 
 ## 7. Testing Expectations
-- **Command:** `poetry run pytest --collect-only` currently discovers 1555 tests (1554 selected / 1 deselected).
+- **Command:** `poetry run pytest --collect-only` currently discovers 1484 tests (1483 selected / 1 deselected).
 - **Dependencies:** `pyotp` remains part of the base Poetry environment; run `poetry install` after pulling to ensure security tests pass.
 - Keep unit tests under `tests/unit/bot_v2/` up to date, and add coverage for new risk or telemetry paths.
 

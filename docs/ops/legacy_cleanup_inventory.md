@@ -20,12 +20,12 @@ use repository-relative references.
   - `docs/agents/Agents.md`, `docs/guides/agents.md`
   - `docs/DASHBOARD_GUIDE.md` (restoration steps for legacy monitoring)
 - Historical bundle already segregated under `docs/archive/**`
-- `docs/reference/system_capabilities.md` is an archived December 2024 snapshot
-  that still highlights perps-first components
+- `docs/reference/system_capabilities.md` now stubs to `docs/archive/2024/system_capabilities.md`,
+  the December 2024 perps-first snapshot (historical context only)
 
 ## Tests
 
-- Active suite: `tests/unit/bot_v2/**` (1554 active tests selected)
+- Active suite: `tests/unit/bot_v2/**` (1484 collected / 1483 selected / 1 deselected)
 - ✅ Legacy PoC test modules removed from the workspace; refer to the legacy
   bundle if historical coverage is required.
 

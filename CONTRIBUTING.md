@@ -30,46 +30,49 @@ That's it! Now, every time you run `git commit`, the pre-commit hooks will run a
 
 ## Testing Requirements
 
-### Current Standards
-- **Active Code**: Must maintain 100% test pass rate
-- **New Features**: Must include comprehensive tests
-- **Legacy Code**: Properly skip with documented reasons
+### Current Expectations
+- Keep the active suite (≈1484 collected / 1483 selected tests) green.
+- Add focused tests for every new feature or regression fix.
+- Document any skips or deselections tied to legacy code paths.
 
-### Running Tests Locally
+### Pre-PR Verification Checklist
+1. Review `docs/agents/Document_Verification_Matrix.md` so you reference current documentation.
+2. Refresh dependencies: `poetry install`.
+3. Snapshot test discovery: `poetry run pytest --collect-only` (expect 1484 collected / 1483 selected / 1 deselected).
+4. Run the full unit suite: `poetry run pytest -q`.
+5. Execute slice-specific suites relevant to your change set (examples below).
 
-Before submitting a pull request, ensure all active tests pass:
+### Recommended Commands
 
 ```bash
-# Run active tests only (MUST be 100% pass)
-poetry run pytest tests/unit/bot_v2 tests/unit/test_foundation.py -q
+# Core suites
+poetry run pytest tests/unit/bot_v2 -q
+poetry run pytest tests/unit/bot_v2/features/brokerages/coinbase -q
+poetry run pytest tests/unit/bot_v2/orchestration -q
 
-# Run with coverage report
+# Coverage snapshot
 poetry run pytest --cov=bot_v2 --cov-report=term-missing
-
-# Run specific component tests
-poetry run pytest tests/unit/bot_v2/features/live_trade/ -v
-
-# Coinbase brokerage smoke (lint + mypy + unit tests)
-poetry run python scripts/validation/validate_perps_e2e.py
-
-# Full suite including legacy (69% overall is expected)
-poetry run pytest -q
 ```
 
-### Test Metrics (December 2024)
-- **Active Tests**: 220 tests - 100% pass rate ✅
-- **Coverage Goal**: >90% on new code
-- **Integration Tests**: Required for exchange interactions
+### Test Metrics (Current)
+- **Active Suite**: 1484 collected / 1483 selected / 1 deselected
+- **Coverage Goal**: Maintain ~73% overall, >90% on new code paths
+- **Integration Paths**: Coordinate with maintainers before toggling derivatives gates
 
 ## Running the Bot Locally
 
-To run the perpetuals trading bot for development, use the `perps-bot` command:
+To run the spot trading bot for development, use the `perps-bot` command (derivatives stay gated behind INTX + `COINBASE_ENABLE_DERIVATIVES=1`):
 
 ```bash
-poetry run perps-bot --profile dev --dev-fast
+poetry run perps-bot run --profile dev --dev-fast
 ```
 
 ## Development Workflow
+
+Before branching, make sure to:
+- Review `docs/agents/Document_Verification_Matrix.md` and confirm the sources you plan to rely on.
+- Sync with the latest `main`.
+- Run `poetry install` to pick up dependency changes.
 
 1. **Fork** the repository
 2. **Create a feature branch** (`git checkout -b feature/amazing-feature`)
@@ -78,6 +81,7 @@ poetry run perps-bot --profile dev --dev-fast
    - Integration tests for API interactions
    - Must maintain 100% pass rate on active tests
 4. **Run the test suite** to ensure nothing is broken
+   - `poetry run pytest --collect-only` must report 1484 collected / 1483 selected / 1 deselected
    - `poetry run pytest tests/unit/bot_v2 -q` must pass
    - No new test failures allowed
 5. **Follow repository organization standards**

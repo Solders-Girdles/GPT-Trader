@@ -29,7 +29,7 @@ This document highlights key areas of confusion for AI agents working with the G
 **Reality Check**:
 - Active stack: `src/bot_v2/**` (all runtime code)
 - Legacy artifacts: packaged under `var/legacy/legacy_bundle_*.tar.gz` (see `docs/archive/legacy_recovery.md`)
-- Tests: `poetry run pytest --collect-only` currently reports 1554 active tests (1 deselected legacy placeholder)
+- Tests: `poetry run pytest --collect-only` currently reports 1484 collected / 1483 selected tests (1 deselected legacy placeholder)
 
 ### 3. Documentation Inconsistencies
 **Critical Issue**: Documentation contains contradictory information.
@@ -38,7 +38,7 @@ This document highlights key areas of confusion for AI agents working with the G
 - `docs/ARCHITECTURE.md` describes archived slices as part of current system
 - `docs/agents/Agents.md` references experimental slices that were removed
 - Multiple guides contain restoration steps for legacy monitoring
-- `docs/reference/system_capabilities.md` is outdated (Dec 2024 snapshot)
+- `docs/reference/system_capabilities.md` now points to an archived December 2024 snapshot
 
 **Reality Check**:
 - Always verify file modification dates
@@ -102,16 +102,48 @@ This document highlights key areas of confusion for AI agents working with the G
 ### 8. Operational Confusion
 **Issue**: Unclear operational procedures and status.
 
-**Confusing Elements**:
+**Confusing Elements:**
 - Multiple monitoring approaches (active vs legacy)
 - Unclear production vs sandbox boundaries
 - Mixed deployment instructions
 - Emergency procedures referencing retired components
 
-**Reality Check**:
+**Reality Check:**
 - Production: Use `canary` or `prod` profiles
 - Development: Use `dev` profile with `--dev-fast`
 - Sandbox: Not recommended (API diverges)
+
+### 9. Document Trustworthiness Confusion
+**Issue**: Inability to trust documents due to mixed currency and inconsistent authority levels.
+
+**Specific Confusing Elements:**
+- **Dated References**: Documents like `docs/archive/2024/system_capabilities.md` appear legitimate until reading fine-print warnings
+- **Authority Hierarchy**: Unclear which documents are authoritative vs historical
+- **Partial Updates**: Some docs mix current facts with obsolete information
+- **Missing Dates**: No standardized "last-updated" headers across all documentation
+
+**Common Misreadings:**
+```markdown
+# ❌ CONFUSING: This looks current but is December 2024
+# Source: docs/archive/2024/system_capabilities.md
+- **Active Tests**: 220 tests - 100% pass rate ✅
+- Perps: BTC-PERP, ETH-PERP (perpetual futures)
+
+# ✅ REALITY: Current state is different
+- **Active Tests**: 1484 collected, 1483 selected (1 deselected legacy placeholder)
+- Spot: BTC-USD, ETH-USD via Coinbase Advanced Trade
+```
+
+**Authority Hierarchy for Agents:**
+1. **✅ PRIMARY**: `README.md`, `docs/ARCHITECTURE.md` (verify last-updated status)
+2. **⚠️ SECONDARY**: Agent-specific guides (`docs/agents/`)
+3. **❌ AVOID**: Documents with "archived", "historical", or before 2025 dates
+4. **🔍 VERIFY**: Always cross-reference before acting
+
+**Reality Check:**
+- **Verification Required**: Check file modification dates before trusting any document
+- **Cross-Reference**: Compare 3+ sources when uncertain
+- **Current Standard**: Spot-first with INTX-gated perps (not perps-first)
 
 ## 🔍 Agent Verification Checklist
 
@@ -122,7 +154,7 @@ Before making changes, agents should:
 - [ ] Verify which codebase section is active vs legacy
 - [ ] Confirm documentation recency (check file dates)
 - [ ] Test with dev profile first: `poetry run perps-bot run --profile dev --dev-fast`
-- [ ] Run test discovery: `poetry run pytest --collect-only`
+- [ ] Run test discovery: `poetry run pytest --collect-only` (1484 collected / 1483 selected / 1 deselected)
 
 ### Code Navigation
 - [ ] Use `src/bot_v2/` imports for active code
@@ -134,7 +166,7 @@ Before making changes, agents should:
 - [ ] Add tests to `tests/unit/bot_v2/` for new features
 - [ ] Run `poetry run pytest -q` for regression testing
 - [ ] Check for skipped/legacy tests in output
-- [ ] Verify test counts match expectations (1554 selected / 1 deselected)
+- [ ] Verify test counts match expectations (1484 collected / 1483 selected / 1 deselected)
 
 ### Documentation Updates
 - [ ] Update relevant docs if behavior changes

@@ -61,7 +61,8 @@ organization-updated: 2025-10-07
 
 ### Implementation Status
 - [Production Readiness](guides/production.md#production-readiness-requirements)
-- [System Capabilities](reference/system_capabilities.md) - Current state overview
+- [Document Verification Matrix](agents/Document_Verification_Matrix.md) - Trust levels + verification workflow
+- [Archived System Capabilities](reference/system_capabilities.md) - Pointer to the December 2024 snapshot (verify before use)
 - [System Reality](reference/system_reality.md) - Honest current state assessment
 - [Compatibility & Troubleshooting](reference/compatibility_troubleshooting.md) - Technical requirements
 - [Tooling Library](tooling/README.md) - Consolidated tooling analyses and quick references
@@ -94,7 +95,7 @@ Use git history if you need to recover earlier runbooks or reports.
 - **Primary**: Coinbase spot trading (perps code paths kept future-ready)
 - **Architecture**: Vertical slice design (production vs experimental slices clearly marked)
 - **ML**: Strategy selection, regime detection, Kelly sizing (experimental slices)
-- **Testing**: 1555 collected / 1554 selected tests (`poetry run pytest --collect-only`)
+- **Testing**: 1484 collected / 1483 selected tests (`poetry run pytest --collect-only`)
 
 ## 📞 Getting Help
 

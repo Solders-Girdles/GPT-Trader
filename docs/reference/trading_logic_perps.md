@@ -1,6 +1,8 @@
 # Coinbase Perpetuals Trading Logic (Future-Ready)
 
 > **Status:** Coinbase currently gates perpetual futures behind the INTX program. GPT-Trader ships with spot trading enabled by default and keeps the perps logic described here in a **dormant, future-ready** state. Enable it only after your account is approved for INTX and `COINBASE_ENABLE_DERIVATIVES=1` is set.
+>
+> 📘 **Trust reminder:** Confirm module references against `docs/agents/Document_Verification_Matrix.md` and `docs/ARCHITECTURE.md` before acting on this guide.
 
 ## Executive Summary
 
@@ -11,9 +13,9 @@ This document captures the architecture and trading flow for the Coinbase Perpet
 ### Core Components
 
 1. **PerpsBot** (`src/bot_v2/orchestration/perps_bot.py`)
-   - Main orchestration layer (also drives spot trading)
+   - Main orchestration layer shared with spot trading
    - Detects `COINBASE_ENABLE_DERIVATIVES` + INTX context before enabling perps
-   - Coordinates between strategy, risk, and execution layers
+   - Coordinates between strategy, risk, and execution layers via the coordinator pattern
 
 2. **CoinbaseBrokerage Adapter** (`src/bot_v2/features/brokerages/coinbase/adapter.py`)
    - Implements broker-agnostic interface
@@ -21,18 +23,18 @@ This document captures the architecture and trading flow for the Coinbase Perpet
    - Manages product discovery and order routing
 
 3. **Strategy Layer**
-   - **Active:** `src/bot_v2/features/live_trade/strategies/perps_baseline.py` (instantiated by `StrategyOrchestrator`)
+   - **Active:** `src/bot_v2/features/live_trade/strategies/perps_baseline/strategy.py` (instantiated by `StrategyOrchestrator`)
      - Baseline MA crossover with optional confirmation windows
      - Maintains trailing stops and per-symbol position counters
      - Delegates all exposure checks to the risk engine
    - **Experimental:** `src/bot_v2/features/live_trade/strategies/perps_baseline_enhanced/strategy.py`
      - Adds liquidity filters, dedicated state management, and additional guards; kept for future iteration but not wired into the bot by default
 
-4. **Risk Management** (`src/bot_v2/features/live_trade/risk.py`)
-   - Leverage limits enforcement (capped at spot-friendly defaults until INTX enabled)
-   - Liquidation buffer checks
-   - Position exposure management
-   - Daily loss limits and kill-switch support
+4. **Risk Management** (`src/bot_v2/features/live_trade/risk/`)
+   - `manager.py` orchestrates leverage limits, liquidation buffers, and exposure controls (defaults mirror spot until INTX is approved)
+   - `pre_trade_checks.py` enforces synchronous validation before orders leave the process
+   - `runtime_monitoring.py` and `state_management.py` maintain guardrails and reduce-only transitions
+   - Daily loss limits and kill-switch support remain available regardless of product type
 
 5. **Execution Engine** (`src/bot_v2/orchestration/live_execution.py`)
    - Market and limit order support with side-aware quantization

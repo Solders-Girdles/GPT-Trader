@@ -22,7 +22,7 @@ An ML-driven Coinbase trading system with market regime detection, built on a cl
   - Account telemetry: `poetry run perps-bot account snapshot` (fees, limits, permissions)
   - Treasury helpers: convert with `poetry run perps-bot treasury convert --from USD --to USDC --amount 1000`
     and move funds via `poetry run perps-bot treasury move --from-portfolio pf-a --to-portfolio pf-b --amount 50`
-  - Order tooling: preview without executing `poetry run perps-bot orders preview --symbol BTC-PERP --side buy --type market --quantity 0.1`
+  - Order tooling: preview without executing `poetry run perps-bot orders preview --symbol BTC-USD --side buy --type market --quantity 0.1`
     and apply edits with `poetry run perps-bot orders apply-edit --order-id ORDER_ID --preview-id PREVIEW_ID`
 - Coinbase adapter: `src/bot_v2/features/brokerages/coinbase/`
   - Tests: `pytest tests/unit/bot_v2/features/brokerages/coinbase/test_*.py -q`
@@ -34,6 +34,8 @@ Legacy experimental slices (backtest, ml_strategy, monitoring dashboards, PoC CL
 now live in the legacy bundle. See `docs/archive/legacy_recovery.md` for details.
 
 ## 🚀 Quick Start
+
+> 📘 **Document trust check:** Confirm guidance against `docs/agents/Document_Verification_Matrix.md` before relying on any reference material.
 
 ```bash
 # Install dependencies
@@ -60,7 +62,7 @@ poetry run pytest -q
 - **Vertical Architecture**: Feature slices under `src/bot_v2/features/` with per-slice tests
 - **Risk Management**: Daily loss guard, liquidation buffers, volatility circuit breakers, correlation checks
 - **Operational Telemetry**: Account snapshots, cycle metrics, Prometheus exporter
-- **Test Coverage**: >73% line coverage across `bot_v2/**`; 1554 active tests selected (`poetry run pytest --collect-only -q`, `poetry run pytest -m "not slow and not performance" --cov=bot_v2 -q`)
+- **Test Coverage**: >73% line coverage across `bot_v2/**`; 1484 collected / 1483 selected tests (`poetry run pytest --collect-only -q`, `poetry run pytest -m "not slow and not performance" --cov=bot_v2 -q`)
 
 ### 🚨 Production vs Sandbox
 
@@ -98,6 +100,8 @@ poetry run pytest -q
 - **[AI Agent Guide](docs/guides/agents.md)** - For AI development
 - **[Production Guide](docs/guides/production.md)** - Deployment guide
 - **[Monitoring Guide](docs/guides/monitoring.md)** - Exporter, Prometheus/Grafana, and alerting setup
+- **[Document Verification Matrix](docs/agents/Document_Verification_Matrix.md)** - Trust levels and verification workflow
+- **[Archived System Snapshot](docs/reference/system_capabilities.md)** - Pointer to the 2024 historical document (verify before use)
 - **Monitoring Exporter**: `poetry run python scripts/monitoring/export_metrics.py --metrics-file var/data/perps_bot/prod/metrics.json`
   - Serves `/metrics` (Prometheus) and `/metrics.json` (raw snapshot); requires the optional `flask` extra (`poetry install -E monitoring`).
   - Sample stack: `scripts/monitoring/docker-compose.yml.example` (Prometheus, Grafana, Loki, Promtail)
@@ -110,13 +114,15 @@ src/bot_v2/
 │   ├── __init__.py           # Entry point + default-command shim
 │   └── commands/             # Subcommand implementations
 ├── features/                 # Vertical slices (production + tooling)
-│   ├── live_trade/          # Production trading
+│   ├── adaptive_portfolio/  # Portfolio allocation tuning + experiments
 │   ├── analyze/             # Market analytics helpers
-│   ├── position_sizing/     # Kelly Criterion + confidence sizing
-│   ├── strategy_tools/      # Shared strategy helpers
 │   ├── brokerages/
 │   │   └── coinbase/        # API integration
-│   └── data/                # Market data and caching
+│   ├── data/                # Market data and caching
+│   ├── live_trade/          # Production trading
+│   ├── optimize/            # Parameter optimisation experiments
+│   ├── position_sizing/     # Kelly Criterion + confidence sizing
+│   └── strategy_tools/      # Shared strategy helpers
 └── orchestration/
     └── perps_bot.py         # Main orchestrator
 ```
@@ -128,7 +134,7 @@ src/bot_v2/
 
 ## 🧪 Test Status
 
-- **Active Code**: 1554 tests collected after deselection ✅
+- **Active Code**: 1484 collected / 1483 selected / 1 deselected ✅
 - **Legacy/archived**: Additional tests skipped/deselected by markers
 - **Command**: `poetry run pytest --collect-only` (run `poetry install` first for new deps like `pyotp`)
 

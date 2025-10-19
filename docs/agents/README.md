@@ -22,7 +22,7 @@ This directory contains documentation specifically for AI agents working with th
 **Active Architecture**: Spot-first trading bot
 - **Primary CLI**: `poetry run perps-bot`
 - **Codebase**: `src/bot_v2/` (vertical slices + coordinators)
-- **Tests**: 1554 active tests (1 deselected legacy placeholder)
+- **Tests**: 1483 active tests (1484 collected; 1 deselected legacy placeholder)
 - **Perpetuals**: Code exists but requires INTX access
 
 **Legacy Components**:

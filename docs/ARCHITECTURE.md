@@ -9,6 +9,8 @@ last-updated: 2025-10-12
 
 GPT-Trader V2 is a production-ready Coinbase **spot** trading system that retains future-ready perpetuals logic. Perps execution remains disabled in live environments until Coinbase grants INTX access, but the architecture keeps those paths compiled and testable.
 
+> 📘 **Trust reminder:** Confirm this document’s details against `docs/agents/Document_Verification_Matrix.md` before acting on them.
+
 ## Trading Capabilities Matrix
 
 | Environment | Products | Authentication | API Version | WebSocket | Use Case |
@@ -25,13 +27,14 @@ The system is organized into vertical feature slices under `src/bot_v2/features/
 
 ```
 src/bot_v2/features/
-├── live_trade/          # Production trading engine
+├── adaptive_portfolio/  # Portfolio allocation tuning + experiments
 ├── analyze/             # Market analytics helpers
-├── position_sizing/     # Kelly & intelligent sizing utilities
-├── strategy_tools/      # Shared helpers for strategy slices
 ├── brokerages/          # Exchange integrations
 ├── data/                # Data acquisition helpers
-└── optimize/            # Parameter optimisation experiments
+├── live_trade/          # Production trading engine
+├── optimize/            # Parameter optimisation experiments
+├── position_sizing/     # Kelly & intelligent sizing utilities
+└── strategy_tools/      # Shared helpers for strategy slices
 ```
 
 Additional cross-cutting packages now live at the top level:
@@ -257,7 +260,7 @@ The orchestration layer provides coordinated control across trading operations t
 - Order placement/management through `LiveExecutionEngine`
 - Account telemetry snapshots and cycle metrics persisted for monitoring
 - Runtime safety rails: daily loss guard, liquidation buffer enforcement, mark staleness detection, volatility circuit breaker, correlation checks
-- 1554 active tests selected at collection time (`poetry run pytest --collect-only`)
+- 1483 active tests selected at collection time (`poetry run pytest --collect-only`; 1484 collected / 1 deselected)
 
 ### ⚠️ Partially Working / Future Activation
 - Perpetual futures execution: code paths compile and tests run, but live trading remains disabled without INTX

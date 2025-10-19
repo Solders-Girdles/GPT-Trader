@@ -24,7 +24,7 @@ src/bot_v2/                    # Main codebase (161 test files)
 └── validation/               # Input validation framework
 
 config/                       # Profile-specific configurations
-tests/unit/bot_v2/           # Active test suite (1554 selected tests)
+tests/unit/bot_v2/           # Active test suite (1484 collected / 1483 selected / 1 deselected)
 docs/agents/                 # Agent-specific guides
 ```
 
@@ -152,8 +152,8 @@ poetry run pytest --collect-only | grep "test session starts"
 ```
 
 ### Expected Results
-- **Collected**: 1555 tests
-- **Selected**: 1554 tests (active)
+- **Collected**: 1484 tests
+- **Selected**: 1483 tests (active)
 - **Deselected**: 1 legacy placeholder
 
 ## 🚨 Common Mistakes to Avoid

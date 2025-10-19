@@ -60,8 +60,8 @@ GET /orders/historical/fills
 
 ### Products (Public Market Data - No Auth Required)
 
-⚠️ **CRITICAL**: Use `/market/*` paths for unauthenticated access
-- `/market/products` returns 200 (no auth)
+⚠️ **CRITICAL**: Use `/market/products/*` paths for unauthenticated access
+- `/market/products/*` returns 200 (no auth)
 - `/products` returns 401 (requires API key)
 
 ```bash
@@ -71,19 +71,21 @@ GET /market/products
 # ✅ Get product details (no auth)
 GET /market/products/BTC-USD
 
-# ✅ Get price candles/OHLCV (no auth)
-GET /market/candles?product_id=BTC-USD&start=<timestamp>&end=<timestamp>&granularity=300
+# ✅ Get OHLCV candles (no auth) - Unix timestamps + enum granularity
+GET /market/products/BTC-USD/candles?start=1697750400&end=1697836800&granularity=ONE_MINUTE
 
-# ✅ Get current ticker (no auth)
-GET /market/ticker?product_id=BTC-USD
+# ✅ Get ticker (no auth) - includes bid/ask + recent trades
+GET /market/products/BTC-USD/ticker
 
 # ✅ Get order book (no auth)
-GET /market/orderbook?product_id=BTC-USD
+GET /market/product_book?product_id=BTC-USD
 
 # ❌ These return 401 (do NOT use):
 GET /products  # Wrong - requires auth
 GET /products/BTC-USD  # Wrong - requires auth
 ```
+
+**Candle Granularities**: ONE_MINUTE, FIVE_MINUTE, FIFTEEN_MINUTE, THIRTY_MINUTE, ONE_HOUR, SIX_HOUR, ONE_DAY
 
 ### Fees
 ```bash

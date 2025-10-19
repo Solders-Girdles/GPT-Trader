@@ -119,17 +119,28 @@ Retrieve market data and product information **without authentication**.
 |----------|--------|-----------|--------------|---------|-------|
 | List Products | `GET /market/products` | Public (10/s) | ❌ No | ❌ | Get all tradeable products (verified 2025-10-19) |
 | Get Product | `GET /market/products/{product_id}` | Public (10/s) | ❌ No | ❌ | Get specific product details |
-| Get Product Candles | `GET /market/candles?product_id={id}` | Public (10/s) | ❌ No | ❌ | OHLCV data for charting |
-| Get Product Ticker | `GET /market/ticker?product_id={id}` | Public (10/s) | ❌ No | ❌ | Current price and volume |
-| Get Product Book | `GET /market/orderbook?product_id={id}` | Public (10/s) | ❌ No | ❌ | Order book (bid/ask levels) |
-| Get Product Trades | `GET /market/trades?product_id={id}` | Public (10/s) | ❌ No | ❌ | Recent trades on product |
+| Get Product Candles | `GET /market/products/{product_id}/candles` | Public (10/s) | ❌ No | ❌ | OHLCV data (Unix seconds + enum granularity: ONE_MINUTE, FIVE_MINUTE, etc.) |
+| Get Product Ticker | `GET /market/products/{product_id}/ticker` | Public (10/s) | ❌ No | ❌ | Current price, best bid/ask, recent trades |
+| Get Product Book | `GET /market/product_book?product_id={id}` | Public (10/s) | ❌ No | ❌ | Order book (bid/ask levels) |
 
-**Correct Unauthenticated Request:**
+**Correct Unauthenticated Request Examples:**
 ```bash
-# ✅ CORRECT - Uses /market/* path, no auth headers
+# ✅ List products (no auth)
+curl -X GET "https://api.coinbase.com/api/v3/brokerage/market/products"
+
+# ✅ Get product details (no auth)
 curl -X GET "https://api.coinbase.com/api/v3/brokerage/market/products/BTC-USD"
 
-# ❌ WRONG - This returns 401 Unauthorized
+# ✅ Get OHLCV candles (Unix timestamps, enum granularity)
+curl -X GET "https://api.coinbase.com/api/v3/brokerage/market/products/BTC-USD/candles?start=1697750400&end=1697836800&granularity=ONE_MINUTE"
+
+# ✅ Get ticker (includes bid/ask + recent trades)
+curl -X GET "https://api.coinbase.com/api/v3/brokerage/market/products/BTC-USD/ticker"
+
+# ✅ Get order book
+curl -X GET "https://api.coinbase.com/api/v3/brokerage/market/product_book?product_id=BTC-USD"
+
+# ❌ WRONG - These return 401 Unauthorized (require API key)
 curl -X GET "https://api.coinbase.com/api/v3/brokerage/products/BTC-USD"
 ```
 

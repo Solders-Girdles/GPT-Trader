@@ -60,7 +60,7 @@ poetry run pytest -q
 - **Vertical Architecture**: Feature slices under `src/bot_v2/features/` with per-slice tests
 - **Risk Management**: Daily loss guard, liquidation buffers, volatility circuit breakers, correlation checks
 - **Operational Telemetry**: Account snapshots, cycle metrics, Prometheus exporter
-- **Test Coverage**: 1554 active tests selected during collection (`poetry run pytest --collect-only -q`)
+- **Test Coverage**: >73% line coverage across `bot_v2/**`; 1554 active tests selected (`poetry run pytest --collect-only -q`, `poetry run pytest -m "not slow and not performance" --cov=bot_v2 -q`)
 
 ### 🚨 Production vs Sandbox
 

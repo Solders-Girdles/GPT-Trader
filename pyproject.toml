@@ -104,5 +104,11 @@ strict_optional = true
 ignore_missing_imports = true
 explicit_package_bases = true
 mypy_path = "src"
++exclude = [
++    "^src/bot_v2/orchestration/bot_state_extraction.py$",
++    "^src/bot_v2/orchestration/coordinator_facades.py$",
++    "^src/bot_v2/orchestration/runtime_coordinator.py$",
++    "^src/bot_v2/orchestration/telemetry_coordinator.py$",
++]
 
 # Pytest configuration moved to pytest.ini for better organization

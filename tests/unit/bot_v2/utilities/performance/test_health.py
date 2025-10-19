@@ -1,5 +1,6 @@
 import pytest
-from src.bot_v2.utilities.performance import health
+
+from bot_v2.utilities.performance import health
 
 
 class StubCollector:

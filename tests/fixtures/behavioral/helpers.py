@@ -386,7 +386,8 @@ def create_market_stress_scenario() -> list[TradeScenario]:
     # Extended funding scenario
     scenarios.append(
         create_funding_scenario(
-            funding_periods=8, funding_rate=Decimal("0.0003")  # 64 hours  # High funding rate
+            funding_periods=8,
+            funding_rate=Decimal("0.0003"),  # 64 hours  # High funding rate
         )
     )
 

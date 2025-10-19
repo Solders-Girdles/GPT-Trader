@@ -4,7 +4,8 @@ import json
 from decimal import Decimal
 
 import pytest
-from src.bot_v2.config.live_trade_config import RiskConfig
+
+from bot_v2.config.live_trade_config import RiskConfig
 
 
 def test_risk_config_from_env_dynamic_fields(monkeypatch: pytest.MonkeyPatch) -> None:

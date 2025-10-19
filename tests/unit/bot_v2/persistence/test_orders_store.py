@@ -13,7 +13,6 @@ from bot_v2.persistence.orders_store import StoredOrder
 
 
 class TestOrdersStore(unittest.TestCase):
-
     def test_from_order_timestamp_conversion(self):
         """
         Verify that StoredOrder correctly converts datetime objects

@@ -93,7 +93,7 @@ class StubPartialFillBroker(IBrokerage):
         leverage: int | None = None,
     ) -> Order:
         now = datetime.utcnow()
-        oid = client_id or f"ord_{len(self.orders)+1}"
+        oid = client_id or f"ord_{len(self.orders) + 1}"
         filled = quantity / 2 if order_type == OrderType.LIMIT else quantity
         status = (
             OrderStatus.PARTIALLY_FILLED if order_type == OrderType.LIMIT else OrderStatus.FILLED

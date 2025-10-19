@@ -57,7 +57,6 @@ def create_brokerage(
     broker = broker_value.lower()
 
     if broker == "coinbase":
-
         sandbox = env("COINBASE_SANDBOX", "0") == "1"
 
         # Determine API mode - sandbox ALWAYS uses exchange mode

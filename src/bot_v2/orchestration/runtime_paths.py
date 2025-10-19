@@ -30,8 +30,9 @@ def resolve_runtime_paths(
     storage_dir = settings.runtime_root / f"{bot_name}/{profile_value}"
     storage_dir.mkdir(parents=True, exist_ok=True)
 
-    event_store_root = settings.event_store_root_override
-    if event_store_root is not None:
+    override_root = settings.event_store_root_override
+    if override_root is not None:
+        event_store_root = override_root
         if bot_name not in set(event_store_root.parts):
             event_store_root = event_store_root / bot_name / profile_value
     else:

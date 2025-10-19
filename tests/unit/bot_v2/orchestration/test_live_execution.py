@@ -82,7 +82,7 @@ class DummyBroker:
         reduce_only: bool | None = None,
         leverage: int | None = None,
     ) -> Order:  # type: ignore[override]
-        oid = f"ord-{len(self._orders)+1}"
+        oid = f"ord-{len(self._orders) + 1}"
         order = Order(
             id=oid,
             client_id=client_id,

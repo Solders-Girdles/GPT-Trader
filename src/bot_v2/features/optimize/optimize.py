@@ -96,7 +96,7 @@ def optimize_strategy(
 
         # Progress update
         if (i + 1) % 10 == 0:
-            print(f"Progress: {i+1}/{grid.total_combinations()} combinations tested")
+            print(f"Progress: {i + 1}/{grid.total_combinations()} combinations tested")
 
     optimization_time = time.time() - start_time
 
@@ -141,7 +141,7 @@ def grid_search(
     results = {}
 
     for strategy in strategies:
-        print(f"\n{'='*50}")
+        print(f"\n{'=' * 50}")
         print(f"Optimizing {strategy}")
         print("=" * 50)
 
@@ -165,7 +165,7 @@ def grid_search(
             best_score = score
             best_strategy = strategy
 
-    print(f"\n{'='*50}")
+    print(f"\n{'=' * 50}")
     print(f"BEST STRATEGY: {best_strategy}")
     print(f"Best {metric}: {best_score:.3f}")
     print("=" * 50)
@@ -269,7 +269,7 @@ def walk_forward_analysis(
     robustness_score = avg_efficiency * 0.6 + consistency_score * 0.4
     robustness_score = min(1.0, max(0.0, robustness_score))
 
-    print(f"\n{'='*50}")
+    print(f"\n{'=' * 50}")
     print("Walk-Forward Complete")
     print(f"Windows analyzed: {len(windows)}")
     print(f"Average efficiency: {avg_efficiency:.2f}")

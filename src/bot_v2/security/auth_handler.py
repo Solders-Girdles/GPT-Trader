@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING, Any, cast
 if TYPE_CHECKING:  # pragma: no cover - type checking only
     import jwt as _jwt_module  # noqa: F401
     import pyotp as _pyotp_module  # noqa: F401
+    from jwt import PyJWTError as _PyJWTError
 else:  # pragma: no cover - runtime import guards
     try:
         import jwt as _jwt_module  # type: ignore[import-not-found]

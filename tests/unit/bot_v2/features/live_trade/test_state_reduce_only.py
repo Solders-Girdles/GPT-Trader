@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from src.bot_v2.config.live_trade_config import RiskConfig
-from src.bot_v2.features.live_trade.risk.state_management import StateManager
+from bot_v2.config.live_trade_config import RiskConfig
+from bot_v2.features.live_trade.risk.state_management import StateManager
 
 
 class StubEventStore:

@@ -70,7 +70,7 @@ class ReduceOnlyStubBroker(IBrokerage):
         leverage: int | None = None,
     ) -> Order:
         now = datetime.utcnow()
-        oid = client_id or f"ord_{len(self.orders)+1}"
+        oid = client_id or f"ord_{len(self.orders) + 1}"
         pos = self.positions.get(symbol)
 
         filled = quantity

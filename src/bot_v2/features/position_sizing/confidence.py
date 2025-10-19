@@ -50,7 +50,7 @@ def confidence_adjusted_size(
     if confidence < adjustment.min_confidence:
         reduction_factor = confidence / adjustment.min_confidence
         adjusted_size = base_size * reduction_factor * 0.5  # Extra conservative
-        explanation = f"Low confidence ({confidence:.2f} < {adjustment.min_confidence:.2f}), reduced to {reduction_factor*0.5:.2f}x"
+        explanation = f"Low confidence ({confidence:.2f} < {adjustment.min_confidence:.2f}), reduced to {reduction_factor * 0.5:.2f}x"
         return adjusted_size, explanation
 
     # Calculate adjustment multiplier based on curve type

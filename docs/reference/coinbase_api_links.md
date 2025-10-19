@@ -14,7 +14,7 @@ Purpose-built quicklinks for agents to jump straight to the right Coinbase docs.
 |------|----------|-----------|-------|
 | Place/cancel orders | POST/DELETE /orders | 30 req/sec | See endpoint catalog |
 | Get fills/executions | GET /orders/historical/fills | 30 req/sec | Execution history |
-| List products | GET /products | 10 req/sec | Public endpoint, no auth |
+| List products | GET /market/products | 10 req/sec | Public market data endpoint, no auth required |
 | Account/balances | GET /accounts | 30 req/sec | Private endpoint |
 | WebSocket real-time | Subscribe to ticker/level2 | 750 req/sec per IP | See WebSocket reference |
 

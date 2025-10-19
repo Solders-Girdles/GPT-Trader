@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any
+from typing import Any, cast
 
 from bot_v2.monitoring.alert_types import AlertSeverity
 from bot_v2.utilities.logging_patterns import get_logger
@@ -107,7 +107,7 @@ class RuntimeGuard:
     # ------------------------------------------------------------------
     def _coerce_decimal(self, raw: Any) -> Decimal | None:
         try:
-            return self._DECIMAL_RULE(raw, "value")
+            return cast(Decimal, self._DECIMAL_RULE(raw, "value"))
         except RuleError:
             return None
 

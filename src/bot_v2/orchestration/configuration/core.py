@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import time
 from decimal import Decimal
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from pydantic_core import PydanticCustomError
@@ -181,12 +181,15 @@ class BotConfig(BaseModel):
     @field_validator("max_position_size", mode="before")
     @classmethod
     def _validate_max_position_size(cls, value: Any) -> Decimal:
-        result = _apply_rule(
-            _DECIMAL_RULE,
-            value,
-            field_label="max_position_size",
-            error_code="max_position_size_invalid",
-            error_template="max_position_size must be numeric, got {value}: {error}",
+        result = cast(
+            Decimal,
+            _apply_rule(
+                _DECIMAL_RULE,
+                value,
+                field_label="max_position_size",
+                error_code="max_position_size_invalid",
+                error_template="max_position_size must be numeric, got {value}: {error}",
+            ),
         )
         _ensure_condition(
             result <= 0,
@@ -199,12 +202,15 @@ class BotConfig(BaseModel):
     @field_validator("daily_loss_limit", mode="before")
     @classmethod
     def _validate_daily_loss_limit(cls, value: Any) -> Decimal:
-        result = _apply_rule(
-            _DECIMAL_RULE,
-            value,
-            field_label="daily_loss_limit",
-            error_code="daily_loss_limit_invalid",
-            error_template="daily_loss_limit must be numeric, got {value}: {error}",
+        result = cast(
+            Decimal,
+            _apply_rule(
+                _DECIMAL_RULE,
+                value,
+                field_label="daily_loss_limit",
+                error_code="daily_loss_limit_invalid",
+                error_template="daily_loss_limit must be numeric, got {value}: {error}",
+            ),
         )
         _ensure_condition(
             result < 0,
@@ -226,7 +232,7 @@ class BotConfig(BaseModel):
                 {"type": type(value).__name__},
             )
         try:
-            symbols = _SYMBOL_LIST_RULE(value, "symbols")
+            symbols = cast(list[str], _SYMBOL_LIST_RULE(value, "symbols"))
         except RuleError as exc:
             raise PydanticCustomError(
                 "symbols_invalid_values",
@@ -247,12 +253,15 @@ class BotConfig(BaseModel):
     def _validate_time_in_force(cls, value: Any) -> str | None:
         if value is None:
             return None
-        raw = _apply_rule(
-            _STRING_RULE,
-            value,
-            field_label="time_in_force",
-            error_code="time_in_force_invalid",
-            error_template="time_in_force must be a non-empty string, got {value}: {error}",
+        raw = cast(
+            str,
+            _apply_rule(
+                _STRING_RULE,
+                value,
+                field_label="time_in_force",
+                error_code="time_in_force_invalid",
+                error_template="time_in_force must be a non-empty string, got {value}: {error}",
+            ),
         )
         tif = raw.upper()
         supported = {"GTC", "IOC", "FOK"}

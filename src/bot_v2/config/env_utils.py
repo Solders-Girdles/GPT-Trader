@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any, NoReturn, TypeVar
+from typing import cast as typing_cast
 
 if TYPE_CHECKING:
     from bot_v2.orchestration.runtime_settings import RuntimeSettings
@@ -222,7 +223,7 @@ def parse_env_list(
         separator=separator,
     )
     try:
-        return rule(value, var_name)
+        return typing_cast(list[T], rule(value, var_name))
     except RuleError as exc:
         _raise_rule_error(var_name, exc)
 
@@ -259,7 +260,7 @@ def parse_env_mapping(
         allow_blank_items=allow_empty,
     )
     try:
-        return rule(value, var_name)
+        return typing_cast(dict[str, T], rule(value, var_name))
     except RuleError as exc:
         _raise_rule_error(var_name, exc)
 

@@ -146,6 +146,7 @@ class MappingRule(BaseValidationRule):
                 return {}
             raise RuleError(f"{field_name} requires a mapping but received None", value=value)
 
+        iterator: Iterable[tuple[Any, Any]]
         if isinstance(value, Mapping):
             iterator = value.items()
         elif isinstance(value, str):

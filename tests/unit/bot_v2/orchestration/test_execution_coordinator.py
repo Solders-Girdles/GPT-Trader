@@ -7,6 +7,7 @@ async coordination, failure handling, and guard trigger scenarios.
 
 from __future__ import annotations
 
+import asyncio
 from datetime import datetime, timezone
 from decimal import Decimal
 from types import SimpleNamespace
@@ -355,6 +356,7 @@ class TestExecutionCoordinatorAsyncFlows:
 
         # Run for a short time then cancel
         import asyncio
+
         task = asyncio.create_task(coordinator._run_runtime_guards_loop())
         await asyncio.sleep(0.1)  # Let it run one iteration
         task.cancel()
@@ -377,6 +379,7 @@ class TestExecutionCoordinatorAsyncFlows:
         coordinator._run_order_reconciliation_cycle = AsyncMock()
 
         import asyncio
+
         task = asyncio.create_task(coordinator._run_order_reconciliation_loop(interval_seconds=1))
         await asyncio.sleep(2.1)  # Should run ~2 cycles
         task.cancel()

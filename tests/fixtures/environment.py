@@ -29,23 +29,32 @@ class VaultKVv2Stub:
 
     def __init__(self, storage: dict[str, VaultSecretRecord]) -> None:
         self._storage = storage
+        # Create real methods that can have side_effect set
+        from unittest.mock import MagicMock
 
-    def create_or_update_secret(self, *, path: str, secret: dict[str, Any]) -> None:
+        self.create_or_update_secret = MagicMock(side_effect=self._create_or_update_secret)
+        self.read_secret_version = MagicMock(side_effect=self._read_secret_version)
+        self.delete_metadata_and_all_versions = MagicMock(
+            side_effect=self._delete_metadata_and_all_versions
+        )
+        self.list_secrets = MagicMock(side_effect=self._list_secrets)
+
+    def _create_or_update_secret(self, *, path: str, secret: dict[str, Any]) -> None:
         self._storage[path] = VaultSecretRecord(
             data=dict(secret),
             metadata={"created": True},
         )
 
-    def read_secret_version(self, *, path: str) -> dict[str, Any]:
+    def _read_secret_version(self, *, path: str) -> dict[str, Any]:
         record = self._storage.get(path)
         if record is None:
             raise KeyError(path)
         return {"data": {"data": dict(record.data)}}
 
-    def delete_metadata_and_all_versions(self, *, path: str) -> None:
+    def _delete_metadata_and_all_versions(self, *, path: str) -> None:
         self._storage.pop(path, None)
 
-    def list_secrets(self, *, path: str) -> dict[str, Any]:
+    def _list_secrets(self, *, path: str) -> dict[str, Any]:
         keys = [key for key in self._storage if key.startswith(path)]
         return {"data": {"keys": keys}}
 

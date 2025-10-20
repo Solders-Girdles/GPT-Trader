@@ -156,8 +156,8 @@ class CDPJWTAuth:
 def _normalize_private_key(private_key_pem: str | bytes) -> str:
     key = private_key_pem.decode() if isinstance(private_key_pem, bytes) else private_key_pem
     key = key.strip().replace("\r\n", "\n").replace("\r", "\n")
-    if not key.startswith("-----BEGIN"):
-        key = key.replace("\\n", "\n")
+    # Always replace escaped newlines with actual newlines
+    key = key.replace("\\n", "\n")
     return key
 
 

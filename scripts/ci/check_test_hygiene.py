@@ -59,6 +59,10 @@ ALLOWLIST = {
     "tests/unit/bot_v2/validation/test_calculation_validator.py",  # calculation validator coverage
     "tests/unit/bot_v2/features/brokerages/coinbase/test_market_data_service.py",  # market data service contract
     "tests/unit/bot_v2/features/data/test_data_module.py",  # 295 lines: comprehensive data module contract with storage/cache stubs
+    "tests/unit/bot_v2/security/security_validator/test_order_validation.py",  # 335 lines: full order validation matrix across pricing/limits/error paths
+    "tests/unit/bot_v2/security/security_validator/test_rate_limiting.py",  # 305 lines: rate limiter escalation, blocking, and reset regression suite
+    "tests/unit/bot_v2/security/security_validator/test_suspicious_activity.py",  # 294 lines: suspicious activity detection heuristics and alert coverage
+    "tests/unit/bot_v2/security/security_validator/test_symbol_validation.py",  # 243 lines: comprehensive symbol/blocklist validation cases
     "tests/unit/bot_v2/features/brokerages/coinbase/rest/test_contract_suite.py",  # REST contract suite covering retries, fallbacks, and error surfaces
     "tests/unit/bot_v2/features/live_trade/strategies/shared/test_shared_helpers.py",  # shared strategy helper permutations across venues
     "tests/unit/bot_v2/features/position_sizing/test_position_sizing.py",  # covers regime, strategy, and kelly sizing permutations in one harness

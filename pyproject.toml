@@ -52,7 +52,7 @@ include = [
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.14.0"
 black = "^25.9.0"
-mypy = "~1.10.0"
+mypy = "~1.18.2"
 pre-commit = "^4.3.0"
 yfinance = "^0.2.40"
 types-requests = "^2.32.0.20240712"

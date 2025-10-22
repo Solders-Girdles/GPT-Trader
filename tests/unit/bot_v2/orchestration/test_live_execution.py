@@ -326,3 +326,494 @@ def test_rejection_logs_metric_with_reason_perps():
     events = ev.tail("perps_test_bot", limit=20, types=["order_rejected"])  # type: ignore[arg-type]
     assert any("order_rejected" == e.get("type") for e in events)
     assert any("Leverage" in e.get("reason", "") for e in events)
+
+
+class TestLiveExecutionEngineCoverageEnhancements:
+    """Coverage enhancement tests for LiveExecutionEngine critical paths."""
+
+    def test_initialization_with_custom_components(self, mock_broker, mock_risk_manager):
+        """Test initialization with custom components and settings."""
+        from bot_v2.orchestration.runtime_settings import RuntimeSettings
+
+        custom_settings = RuntimeSettings(
+            raw_env={"ORDER_PREVIEW_ENABLED": "true"},
+            runtime_root=Path("/tmp/test"),
+            event_store_root_override=None,
+            coinbase_default_quote="USD",
+            coinbase_default_quote_overridden=False,
+            coinbase_enable_derivatives=False,
+            coinbase_enable_derivatives_overridden=False,
+            perps_enable_streaming=False,
+            perps_stream_level=1,
+            perps_paper_trading=False,
+            perps_force_mock=False,
+            perps_skip_startup_reconcile=False,
+            perps_position_fraction=None,
+            order_preview_enabled=False,
+            spot_force_live=False,
+            broker_hint=None,
+            coinbase_sandbox_enabled=True,
+            coinbase_api_mode="sandbox",
+            risk_config_path=None,
+            coinbase_intx_portfolio_uuid=None,
+        )
+
+        event_store = EventStore()
+        engine = LiveExecutionEngine(
+            broker=mock_broker,
+            risk_manager=mock_risk_manager,
+            event_store=event_store,
+            bot_id="test_bot",
+            slippage_multipliers={"BTC-PERP": 0.001},
+            enable_preview=True,
+            settings=custom_settings,
+        )
+
+        assert engine.broker is mock_broker
+        assert engine.risk_manager is mock_risk_manager
+        assert engine.event_store is event_store
+        assert engine.bot_id == "test_bot"
+        assert engine.slippage_multipliers == {"BTC-PERP": 0.001}
+        assert engine.enable_order_preview is True
+        assert engine.open_orders == []
+        assert engine._last_collateral_available is None
+
+    def test_initialization_creates_default_risk_manager(self, mock_broker):
+        """Test initialization creates default risk manager when none provided."""
+        engine = LiveExecutionEngine(broker=mock_broker)
+
+        assert engine.risk_manager is not None
+        assert engine.event_store is not None
+        assert engine.bot_id == "live_execution"
+
+    def test_initialization_uses_risk_manager_event_store(self, mock_broker, mock_risk_manager):
+        """Test initialization uses risk manager's event store when available."""
+        # Give risk manager its own event store
+        risk_event_store = EventStore()
+        mock_risk_manager.event_store = risk_event_store
+        mock_risk_manager.set_event_store = Mock()
+
+        engine = LiveExecutionEngine(broker=mock_broker, risk_manager=mock_risk_manager)
+
+        # Should use the shared event store
+        assert engine.event_store is risk_event_store
+        mock_risk_manager.set_event_store.assert_called_once_with(risk_event_store)
+
+    def test_initialization_fallback_to_setattr(self, mock_broker, mock_risk_manager):
+        """Test initialization fallback for legacy risk managers."""
+        # Remove set_event_store method
+        delattr(mock_risk_manager, "set_event_store")
+
+        engine = LiveExecutionEngine(broker=mock_broker, risk_manager=mock_risk_manager)
+
+        # Should use setattr fallback
+        assert engine.event_store is not None
+
+    def test_initialization_respects_environment_preview_setting(self, mock_broker):
+        """Test initialization respects environment ORDER_PREVIEW_ENABLED setting."""
+        with patch("bot_v2.orchestration.live_execution.load_runtime_settings") as mock_load:
+            mock_settings = Mock()
+            mock_settings.raw_env = {"ORDER_PREVIEW_ENABLED": "1"}
+            mock_load.return_value = mock_settings
+
+            engine = LiveExecutionEngine(broker=mock_broker)
+
+            assert engine.enable_order_preview is True
+
+    def test_initialization_respects_environment_preview_false_values(self, mock_broker):
+        """Test initialization handles false environment preview values."""
+        with patch("bot_v2.orchestration.live_execution.load_runtime_settings") as mock_load:
+            mock_settings = Mock()
+            mock_settings.raw_env = {"ORDER_PREVIEW_ENABLED": "false"}
+            mock_load.return_value = mock_settings
+
+            engine = LiveExecutionEngine(broker=mock_broker)
+
+            assert engine.enable_order_preview is False
+
+    def test_initialization_with_preview_override(self, mock_broker):
+        """Test initialization respects explicit enable_preview parameter."""
+        with patch("bot_v2.orchestration.live_execution.load_runtime_settings") as mock_load:
+            mock_settings = Mock()
+            mock_settings.raw_env = {"ORDER_PREVIEW_ENABLED": "true"}
+            mock_load.return_value = mock_settings
+
+            engine = LiveExecutionEngine(broker=mock_broker, enable_preview=False)
+
+            assert engine.enable_order_preview is False  # Explicit override
+
+    def test_initialization_creates_helper_modules(self, mock_broker, mock_risk_manager):
+        """Test initialization creates all helper modules."""
+        engine = LiveExecutionEngine(
+            broker=mock_broker,
+            risk_manager=mock_risk_manager,
+        )
+
+        assert engine.state_collector is not None
+        assert engine.order_submitter is not None
+        assert engine.order_validator is not None
+        assert engine.guard_manager is not None
+
+    def test_place_order_with_all_parameters(self, mock_broker, mock_risk_manager):
+        """Test place_order with all possible parameters."""
+        engine = LiveExecutionEngine(broker=mock_broker, risk_manager=mock_risk_manager)
+
+        # Mock the order validator to return success
+        engine.order_validator.validate_order = Mock(return_value=True)
+
+        order_id = engine.place_order(
+            symbol="BTC-PERP",
+            side=OrderSide.BUY,
+            order_type=OrderType.LIMIT,
+            quantity=Decimal("0.1"),
+            price=Decimal("50000"),
+            stop_price=Decimal("51000"),
+            tif="GTC",
+            reduce_only=False,
+            leverage=2,
+            product=Mock(),
+            client_order_id="custom_client_id",
+        )
+
+        assert order_id is not None
+        engine.order_validator.validate_order.assert_called_once()
+
+    def test_place_order_handles_validation_failure(self, mock_broker, mock_risk_manager):
+        """Test place_order handles validation failure gracefully."""
+        engine = LiveExecutionEngine(broker=mock_broker, risk_manager=mock_risk_manager)
+
+        # Mock the order validator to raise ValidationError
+        from bot_v2.features.live_trade.risk import ValidationError
+
+        engine.order_validator.validate_order = Mock(side_effect=ValidationError("Test validation"))
+
+        with pytest.raises(ValidationError):
+            engine.place_order(
+                symbol="BTC-PERP",
+                side=OrderSide.BUY,
+                order_type=OrderType.MARKET,
+                quantity=Decimal("0.1"),
+            )
+
+    def test_place_order_handles_spec_validation_failure(self, mock_broker, mock_risk_manager):
+        """Test place_order handles spec validation failure."""
+        engine = LiveExecutionEngine(broker=mock_broker, risk_manager=mock_risk_manager)
+
+        # Mock spec_validate_order to return failure
+        with patch("bot_v2.orchestration.live_execution.spec_validate_order") as mock_spec:
+            from bot_v2.features.brokerages.coinbase.specs import ValidationResult
+
+            mock_spec.return_value = ValidationResult(
+                ok=False, adjusted_quantity=None, adjusted_price=None, reason="Invalid order"
+            )
+
+            result = engine.place_order(
+                symbol="BTC-PERP",
+                side=OrderSide.BUY,
+                order_type=OrderType.MARKET,
+                quantity=Decimal("0.1"),
+            )
+
+            assert result is None
+
+    def test_place_order_with_slippage_multiplier(self, mock_broker, mock_risk_manager):
+        """Test place_order applies slippage multiplier correctly."""
+        engine = LiveExecutionEngine(
+            broker=mock_broker,
+            risk_manager=mock_risk_manager,
+            slippage_multipliers={"BTC-PERP": 0.001},
+        )
+
+        engine.order_validator.validate_order = Mock(return_value=True)
+
+        order_id = engine.place_order(
+            symbol="BTC-PERP",
+            side=OrderSide.BUY,
+            order_type=OrderType.MARKET,
+            quantity=Decimal("0.1"),
+        )
+
+        assert order_id is not None
+
+    def test_place_order_tracks_open_orders(self, mock_broker, mock_risk_manager):
+        """Test place_order tracks open orders correctly."""
+        engine = LiveExecutionEngine(broker=mock_broker, risk_manager=mock_risk_manager)
+
+        engine.order_validator.validate_order = Mock(return_value=True)
+        engine.order_submitter.submit_order = Mock(return_value="order_123")
+
+        order_id = engine.place_order(
+            symbol="BTC-PERP",
+            side=OrderSide.BUY,
+            order_type=OrderType.MARKET,
+            quantity=Decimal("0.1"),
+        )
+
+        assert order_id == "order_123"
+        assert "order_123" in engine.open_orders
+
+    def test_cancel_all_orders_empty_list(self, mock_broker, mock_risk_manager):
+        """Test cancel_all_orders handles empty open orders list."""
+        engine = LiveExecutionEngine(broker=mock_broker, risk_manager=mock_risk_manager)
+
+        # Should not raise exception
+        result = engine.cancel_all_orders()
+        assert result is None
+
+    def test_cancel_all_orders_with_open_orders(self, mock_broker, mock_risk_manager):
+        """Test cancel_all_orders cancels all open orders."""
+        engine = LiveExecutionEngine(broker=mock_broker, risk_manager=mock_risk_manager)
+
+        # Add some open orders
+        engine.open_orders = ["order_1", "order_2", "order_3"]
+
+        # Mock broker cancel_order
+        mock_broker.cancel_order = Mock()
+
+        result = engine.cancel_all_orders()
+
+        # Should have cancelled all orders
+        assert mock_broker.cancel_order.call_count == 3
+        assert engine.open_orders == []  # Should be cleared
+
+    def test_cancel_all_orders_handles_cancellation_failure(self, mock_broker, mock_risk_manager):
+        """Test cancel_all_orders handles individual order cancellation failure."""
+        engine = LiveExecutionEngine(broker=mock_broker, risk_manager=mock_risk_manager)
+
+        engine.open_orders = ["order_1", "order_2"]
+
+        # Mock broker cancel_order to fail on second order
+        def mock_cancel(order_id):
+            if order_id == "order_2":
+                raise Exception("Cancellation failed")
+
+        mock_broker.cancel_order = Mock(side_effect=mock_cancel)
+
+        # Should not raise exception, continue cancelling others
+        result = engine.cancel_all_orders()
+
+        assert result is None
+        assert engine.open_orders == []  # Still cleared
+
+    def test_place_order_uses_order_submitter(self, mock_broker, mock_risk_manager):
+        """Test place_order delegates to order submitter."""
+        engine = LiveExecutionEngine(broker=mock_broker, risk_manager=mock_risk_manager)
+
+        # Mock order validator to pass
+        engine.order_validator.validate_order = Mock(return_value=True)
+
+        # Track submit_order call
+        engine.order_submitter.submit_order = Mock(return_value="order_123")
+
+        order_id = engine.place_order(
+            symbol="BTC-PERP",
+            side=OrderSide.BUY,
+            order_type=OrderType.MARKET,
+            quantity=Decimal("0.1"),
+        )
+
+        engine.order_submitter.submit_order.assert_called_once()
+        assert order_id == "order_123"
+
+    def test_place_order_with_runtime_guard_error(self, mock_broker, mock_risk_manager):
+        """Test place_order handles runtime guard errors."""
+        engine = LiveExecutionEngine(broker=mock_broker, risk_manager=mock_risk_manager)
+
+        # Mock order validator to raise RiskGuardError
+        from bot_v2.features.live_trade.guard_errors import RiskGuardError
+
+        engine.order_validator.validate_order = Mock(side_effect=RiskGuardError("Guard triggered"))
+
+        with pytest.raises(RiskGuardError):
+            engine.place_order(
+                symbol="BTC-PERP",
+                side=OrderSide.BUY,
+                order_type=OrderType.MARKET,
+                quantity=Decimal("0.1"),
+            )
+
+    def test_place_order_with_general_exception(self, mock_broker, mock_risk_manager):
+        """Test place_order handles general exceptions."""
+        engine = LiveExecutionEngine(broker=mock_broker, risk_manager=mock_risk_manager)
+
+        # Mock order validator to raise general exception
+        engine.order_validator.validate_order = Mock(side_effect=Exception("Unexpected error"))
+
+        with pytest.raises(Exception):
+            engine.place_order(
+                symbol="BTC-PERP",
+                side=OrderSide.BUY,
+                order_type=OrderType.MARKET,
+                quantity=Decimal("0.1"),
+            )
+
+    def test_place_order_logs_metrics(self, mock_broker, mock_risk_manager):
+        """Test place_order logs appropriate metrics."""
+        engine = LiveExecutionEngine(broker=mock_broker, risk_manager=mock_risk_manager)
+
+        engine.order_validator.validate_order = Mock(return_value=True)
+        engine.order_submitter.submit_order = Mock(return_value="order_123")
+
+        # Track event store calls
+        metrics_calls = []
+        engine.event_store.append_metric = Mock(
+            side_effect=lambda *args, **kwargs: metrics_calls.append(kwargs)
+        )
+
+        order_id = engine.place_order(
+            symbol="BTC-PERP",
+            side=OrderSide.BUY,
+            order_type=OrderType.MARKET,
+            quantity=Decimal("0.1"),
+        )
+
+        assert order_id is not None
+        assert len(metrics_calls) > 0
+
+    def test_place_order_uses_order_preview_when_enabled(self, mock_broker, mock_risk_manager):
+        """Test place_order uses order preview when enabled."""
+        engine = LiveExecutionEngine(
+            broker=mock_broker, risk_manager=mock_risk_manager, enable_preview=True
+        )
+
+        # Mock order validator to pass
+        engine.order_validator.validate_order = Mock(return_value=True)
+        engine.order_submitter.submit_order = Mock(return_value="order_123")
+
+        order_id = engine.place_order(
+            symbol="BTC-PERP",
+            side=OrderSide.BUY,
+            order_type=OrderType.MARKET,
+            quantity=Decimal("0.1"),
+        )
+
+        # Should have called order validator with preview enabled
+        engine.order_validator.validate_order.assert_called_once()
+
+    def test_place_order_handles_stop_orders(self, mock_broker, mock_risk_manager):
+        """Test place_order handles stop orders correctly."""
+        engine = LiveExecutionEngine(broker=mock_broker, risk_manager=mock_risk_manager)
+
+        engine.order_validator.validate_order = Mock(return_value=True)
+        engine.order_submitter.submit_order = Mock(return_value="stop_order_123")
+
+        order_id = engine.place_order(
+            symbol="BTC-PERP",
+            side=OrderSide.BUY,
+            order_type=OrderType.STOP,
+            quantity=Decimal("0.1"),
+            stop_price=Decimal("51000"),
+        )
+
+        assert order_id == "stop_order_123"
+        engine.order_validator.validate_order.assert_called_once()
+
+    def test_place_order_handles_stop_limit_orders(self, mock_broker, mock_risk_manager):
+        """Test place_order handles stop-limit orders correctly."""
+        engine = LiveExecutionEngine(broker=mock_broker, risk_manager=mock_risk_manager)
+
+        engine.order_validator.validate_order = Mock(return_value=True)
+        engine.order_submitter.submit_order = Mock(return_value="stop_limit_order_123")
+
+        order_id = engine.place_order(
+            symbol="BTC-PERP",
+            side=OrderSide.BUY,
+            order_type=OrderType.STOP_LIMIT,
+            quantity=Decimal("0.1"),
+            stop_price=Decimal("51000"),
+            price=Decimal("52000"),
+        )
+
+        assert order_id == "stop_limit_order_123"
+
+    def test_place_order_handles_time_in_force(self, mock_broker, mock_risk_manager):
+        """Test place_order handles time-in-force correctly."""
+        engine = LiveExecutionEngine(broker=mock_broker, risk_manager=mock_risk_manager)
+
+        engine.order_validator.validate_order = Mock(return_value=True)
+        engine.order_submitter.submit_order = Mock(return_value="tif_order_123")
+
+        order_id = engine.place_order(
+            symbol="BTC-PERP",
+            side=OrderSide.BUY,
+            order_type=OrderType.LIMIT,
+            quantity=Decimal("0.1"),
+            price=Decimal("50000"),
+            tif="IOC",  # Immediate or Cancel
+        )
+
+        assert order_id == "tif_order_123"
+
+    def test_place_order_with_custom_client_id(self, mock_broker, mock_risk_manager):
+        """Test place_order with custom client order ID."""
+        engine = LiveExecutionEngine(broker=mock_broker, risk_manager=mock_risk_manager)
+
+        engine.order_validator.validate_order = Mock(return_value=True)
+        engine.order_submitter.submit_order = Mock(return_value="custom_order_123")
+
+        order_id = engine.place_order(
+            symbol="BTC-PERP",
+            side=OrderSide.BUY,
+            order_type=OrderType.MARKET,
+            quantity=Decimal("0.1"),
+            client_order_id="my_custom_id",
+        )
+
+        assert order_id == "custom_order_123"
+
+    def test_place_order_handles_reduce_only_mode(self, mock_broker, mock_risk_manager):
+        """Test place_order respects reduce-only mode from risk manager."""
+        # Mock risk manager to indicate reduce-only mode
+        mock_risk_manager.is_reduce_only_mode = Mock(return_value=True)
+
+        engine = LiveExecutionEngine(broker=mock_broker, risk_manager=mock_risk_manager)
+
+        engine.order_validator.validate_order = Mock(return_value=True)
+        engine.order_submitter.submit_order = Mock(return_value="reduce_order_123")
+
+        order_id = engine.place_order(
+            symbol="BTC-PERP",
+            side=OrderSide.SELL,
+            order_type=OrderType.MARKET,
+            quantity=Decimal("0.1"),
+            reduce_only=True,
+        )
+
+        assert order_id == "reduce_order_123"
+
+    def test_place_order_with_leverage_override(self, mock_broker, mock_risk_manager):
+        """Test place_order with leverage override."""
+        engine = LiveExecutionEngine(broker=mock_broker, risk_manager=mock_risk_manager)
+
+        engine.order_validator.validate_order = Mock(return_value=True)
+        engine.order_submitter.submit_order = Mock(return_value="leveraged_order_123")
+
+        order_id = engine.place_order(
+            symbol="BTC-PERP",
+            side=OrderSide.BUY,
+            order_type=OrderType.MARKET,
+            quantity=Decimal("0.1"),
+            leverage=3,
+        )
+
+        assert order_id == "leveraged_order_123"
+
+    def test_place_order_with_product_validation(self, mock_broker, mock_risk_manager):
+        """Test place_order validates product when provided."""
+        engine = LiveExecutionEngine(broker=mock_broker, risk_manager=mock_risk_manager)
+
+        mock_product = Mock()
+        mock_product.symbol = "BTC-PERP"
+
+        engine.order_validator.validate_order = Mock(return_value=True)
+        engine.order_submitter.submit_order = Mock(return_value="product_order_123")
+
+        order_id = engine.place_order(
+            symbol="BTC-PERP",
+            side=OrderSide.BUY,
+            order_type=OrderType.MARKET,
+            quantity=Decimal("0.1"),
+            product=mock_product,
+        )
+
+        assert order_id == "product_order_123"

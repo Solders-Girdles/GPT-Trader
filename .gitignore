@@ -101,3 +101,6 @@ var/
 .kilocode/
 .kilocodemodes/
 coverage.xml
+coverage_baseline.json
+claude_code_zai_env.sh
+.kilocodemodes

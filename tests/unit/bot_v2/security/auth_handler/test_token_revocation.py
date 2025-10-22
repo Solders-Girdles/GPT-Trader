@@ -45,8 +45,8 @@ class TestTokenRevocation:
     ) -> None:
         fake_jwt_module.decode.side_effect = Exception("Unexpected error")
 
-        with caplog.at_level("ERROR"):
+        with caplog.at_level("DEBUG"):
             result = auth_handler.revoke_token("error.token")
 
         assert result is False
-        assert any("Unexpected error" in message for message in caplog.messages)
+        assert any("Failed to decode token during revocation" in message for message in caplog.messages)

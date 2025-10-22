@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 
+from bot_v2.config.path_registry import RUNTIME_DATA_DIR
 from bot_v2.orchestration import runtime_settings
 
 
@@ -159,3 +160,220 @@ def test_load_runtime_settings_logs_invalid_boolean(caplog: pytest.LogCaptureFix
     assert "Invalid COINBASE_ENABLE_DERIVATIVES=invalid" in warning_text
     assert "Invalid PERPS_ENABLE_STREAMING=not-bool" in warning_text
     assert "PERPS_PAPER" not in warning_text
+
+
+# ===== Enhanced Tests for Coverage Improvement =====
+
+def test_normalize_bool_edge_cases(caplog: pytest.LogCaptureFixture) -> None:
+    """Test _normalize_bool with various input scenarios."""
+    caplog.set_level(logging.WARNING, runtime_settings.logger.name)
+
+    # Test None input
+    assert runtime_settings._normalize_bool(None) is None
+
+    # Test valid boolean values through interpret_tristate_bool
+    assert runtime_settings._normalize_bool("true") is True
+    assert runtime_settings._normalize_bool("false") is False
+    assert runtime_settings._normalize_bool("1") is True
+    assert runtime_settings._normalize_bool("0") is False
+
+    # Test invalid values with field name (should log warning)
+    result = runtime_settings._normalize_bool("invalid", field_name="TEST_FIELD")
+    assert result is None
+    assert "Invalid TEST_FIELD=invalid" in caplog.text
+
+    # Test invalid values without field name (no warning)
+    caplog.clear()
+    result = runtime_settings._normalize_bool("invalid", field_name=None)
+    assert result is None
+    assert caplog.text == ""  # No warning without field_name
+
+    # Test empty string with field name - only logs if stripped value is truthy
+    caplog.clear()
+    result = runtime_settings._normalize_bool("", field_name="TEST_FIELD")
+    assert result is None  # Empty string is invalid
+    # Empty string doesn't log warning because stripped value is empty
+
+
+def test_safe_int_and_float_error_handling(caplog: pytest.LogCaptureFixture) -> None:
+    """Test _safe_int and _safe_float with invalid inputs."""
+    caplog.set_level(logging.WARNING, runtime_settings.logger.name)
+
+    # Test _safe_int with valid inputs
+    assert runtime_settings._safe_int("42", fallback=10, field_name="TEST_INT") == 42
+    assert runtime_settings._safe_int("-5", fallback=10, field_name="TEST_INT") == -5
+    assert runtime_settings._safe_int("0", fallback=10, field_name="TEST_INT") == 0
+
+    # Test _safe_int with invalid inputs
+    result = runtime_settings._safe_int("not-a-number", fallback=10, field_name="TEST_INT")
+    assert result == 10  # Should return fallback
+    assert "Invalid TEST_INT=not-a-number; defaulting to 10" in caplog.text
+
+    # Test _safe_int with None/empty
+    assert runtime_settings._safe_int(None, fallback=5, field_name="TEST_INT") == 5
+    assert runtime_settings._safe_int("", fallback=5, field_name="TEST_INT") == 5
+    assert runtime_settings._safe_int("   ", fallback=5, field_name="TEST_INT") == 5
+
+    # Test _safe_float with valid inputs
+    assert runtime_settings._safe_float("3.14", field_name="TEST_FLOAT") == 3.14
+    assert runtime_settings._safe_float("-2.5", field_name="TEST_FLOAT") == -2.5
+    assert runtime_settings._safe_float("0", field_name="TEST_FLOAT") == 0.0
+
+    # Test _safe_float with invalid inputs
+    caplog.clear()
+    result = runtime_settings._safe_float("not-a-float", field_name="TEST_FLOAT")
+    assert result is None  # Should return None for floats
+    assert "Invalid TEST_FLOAT=not-a-float; ignoring override" in caplog.text
+
+    # Test _safe_float with None/empty
+    assert runtime_settings._safe_float(None, field_name="TEST_FLOAT") is None
+    assert runtime_settings._safe_float("", field_name="TEST_FLOAT") is None
+    assert runtime_settings._safe_float("   ", field_name="TEST_FLOAT") is None
+
+
+def test_runtime_settings_provider_custom_loader(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Test RuntimeSettingsProvider with custom loader scenarios."""
+    # Create custom loader that returns predictable settings
+    def custom_loader(env):
+        return runtime_settings.RuntimeSettings(
+            raw_env=env or {},
+            runtime_root=Path("/custom"),
+            event_store_root_override=Path("/custom/events"),
+            coinbase_default_quote="USD",
+            coinbase_default_quote_overridden=False,
+            coinbase_enable_derivatives=True,
+            coinbase_enable_derivatives_overridden=False,
+            perps_enable_streaming=False,
+            perps_stream_level=1,
+            perps_paper_trading=False,
+            perps_force_mock=False,
+            perps_skip_startup_reconcile=False,
+            perps_position_fraction=None,
+            order_preview_enabled=None,
+            spot_force_live=False,
+            broker_hint=None,
+            coinbase_sandbox_enabled=False,
+            coinbase_api_mode="advanced",
+            risk_config_path=None,
+            coinbase_intx_portfolio_uuid=None,
+        )
+
+    provider = runtime_settings.RuntimeSettingsProvider(loader=custom_loader)
+
+    # Test with custom env (bypasses caches and uses custom loader)
+    custom_env = {"TEST_VAR": "test_value"}
+    settings = provider.get(env=custom_env)
+    assert settings.runtime_root == Path("/custom")
+    assert settings.coinbase_enable_derivatives is True
+    assert settings.raw_env == custom_env
+
+    # Test override
+    override_settings = _make_settings("override")
+    provider.override(override_settings)
+    assert provider.get() is override_settings
+
+
+def test_load_runtime_settings_edge_cases(caplog: pytest.LogCaptureFixture) -> None:
+    """Test edge cases in load_runtime_settings."""
+    caplog.set_level(logging.WARNING, runtime_settings.logger.name)
+
+    # Test broker hint None/empty - empty string stays empty string after lower() conversion
+    env_empty_broker = {
+        "GPT_TRADER_RUNTIME_ROOT": "/tmp/runtime",
+        "BROKER": "",
+        "COINBASE_DEFAULT_QUOTE": "USD",
+    }
+    settings = runtime_settings.load_runtime_settings(env_empty_broker)
+    assert settings.broker_hint == ""  # Empty string stays empty string after lower() conversion
+    assert settings.runtime_root == Path("/tmp/runtime")
+
+    # Test missing runtime root (should use default)
+    env_missing_root = {
+        "COINBASE_DEFAULT_QUOTE": "USD",
+    }
+    settings = runtime_settings.load_runtime_settings(env_missing_root)
+    assert settings.runtime_root == RUNTIME_DATA_DIR
+
+    # Test intx portfolio uuid with various values
+    env_intx = {
+        "GPT_TRADER_RUNTIME_ROOT": "/tmp/runtime",
+        "COINBASE_DEFAULT_QUOTE": "USD",
+        "COINBASE_INTX_PORTFOLIO_UUID": "portfolio-abc-123",
+        "BROKER": "intx",
+    }
+    settings = runtime_settings.load_runtime_settings(env_intx)
+    assert settings.coinbase_intx_portfolio_uuid == "portfolio-abc-123"
+    assert settings.broker_hint == "intx"
+
+    # Test invalid path values (whitespace creates Path object, empty uses default)
+    env_invalid_path = {
+        "GPT_TRADER_RUNTIME_ROOT": "",  # Empty should use default
+        "EVENT_STORE_ROOT": "   ",  # Whitespace creates Path with whitespace
+        "COINBASE_DEFAULT_QUOTE": "USD",
+    }
+    settings = runtime_settings.load_runtime_settings(env_invalid_path)
+    assert settings.runtime_root == RUNTIME_DATA_DIR  # Default fallback for empty
+    assert settings.event_store_root_override == Path("   ")  # Whitespace becomes Path
+
+
+def test_runtime_settings_snapshot_methods() -> None:
+    """Test RuntimeSettings.snapshot_env with various inputs."""
+    # Create settings with raw_env for snapshot testing
+    settings_with_raw = runtime_settings.RuntimeSettings(
+        raw_env={"COINBASE_DEFAULT_QUOTE": "USD", "PERPS_ENABLE_STREAMING": "true"},
+        runtime_root=Path("/test"),
+        event_store_root_override=None,
+        coinbase_default_quote="USD",
+        coinbase_default_quote_overridden=False,
+        coinbase_enable_derivatives=False,
+        coinbase_enable_derivatives_overridden=False,
+        perps_enable_streaming=True,
+        perps_stream_level=1,
+        perps_paper_trading=False,
+        perps_force_mock=False,
+        perps_skip_startup_reconcile=False,
+        perps_position_fraction=None,
+        order_preview_enabled=None,
+        spot_force_live=False,
+        broker_hint=None,
+        coinbase_sandbox_enabled=False,
+        coinbase_api_mode="advanced",
+        risk_config_path=None,
+        coinbase_intx_portfolio_uuid=None,
+    )
+
+    # Test snapshot with existing keys
+    keys = ["COINBASE_DEFAULT_QUOTE", "PERPS_ENABLE_STREAMING"]
+    snapshot = settings_with_raw.snapshot_env(keys)
+    assert snapshot == {
+        "COINBASE_DEFAULT_QUOTE": "USD",
+        "PERPS_ENABLE_STREAMING": "true",
+    }
+
+    # Test snapshot with tuple of keys
+    snapshot_tuple = settings_with_raw.snapshot_env(("COINBASE_DEFAULT_QUOTE", "NEW_KEY"))
+    assert snapshot_tuple == {
+        "COINBASE_DEFAULT_QUOTE": "USD",
+        "NEW_KEY": None,
+    }
+
+    # Test snapshot with mixed types (list containing non-str)
+    mixed_keys = ["COINBASE_DEFAULT_QUOTE", 123, None]
+    snapshot_mixed = settings_with_raw.snapshot_env(mixed_keys)
+    assert snapshot_mixed == {
+        "COINBASE_DEFAULT_QUOTE": "USD",
+        123: None,
+        None: None,
+    }
+
+    # Test snapshot with empty list
+    empty_snapshot = settings_with_raw.snapshot_env([])
+    assert empty_snapshot == {}
+
+    # Test snapshot with mapping input
+    mapping_keys = {"COINBASE_DEFAULT_QUOTE": "some_value", "PERPS_ENABLE_STREAMING": "another"}
+    mapping_snapshot = settings_with_raw.snapshot_env(mapping_keys)
+    assert mapping_snapshot == {
+        "COINBASE_DEFAULT_QUOTE": "USD",
+        "PERPS_ENABLE_STREAMING": "true",
+    }

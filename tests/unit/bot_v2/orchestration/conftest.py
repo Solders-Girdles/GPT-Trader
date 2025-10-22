@@ -17,6 +17,7 @@ from bot_v2.orchestration.configuration import BotConfig, Profile
 from bot_v2.orchestration.coordinators.base import CoordinatorContext
 from bot_v2.orchestration.perps_bot_state import PerpsBotRuntimeState
 from bot_v2.orchestration.service_registry import ServiceRegistry
+from bot_v2.orchestration.system_monitor import SystemMonitor
 
 
 # from bot_v2.features.live_trade.risk_runtime.circuit_breakers import CircuitBreakerOutcome
@@ -146,3 +147,9 @@ def base_coordinator_context(
         set_running_flag=lambda _: None,
     )
     return context
+
+
+@pytest.fixture
+def monitor(mock_bot):
+    """Create a SystemMonitor instance for testing."""
+    return SystemMonitor(bot=mock_bot, account_telemetry=None)

@@ -1,0 +1,1 @@
+"""State collection test module."""

@@ -1,0 +1,187 @@
+# Alert Rules for GPT-Trader Production Monitoring
+
+groups:
+  - name: trading_system_critical
+    rules:
+      - alert: CircuitBreakerActivated
+        expr: increase(circuit_breaker_triggers_total[5m]) > 0
+        for: 0m
+        labels:
+          severity: critical
+          component: risk_management
+        annotations:
+          summary: "🚨 CIRCUIT BREAKER ACTIVATED - Trading Halted"
+          description: "Circuit breaker has been triggered due to market stress or risk limit breach. All trading has been automatically halted."
+          runbook_url: "https://docs.your-domain.com/runbooks/circuit-breaker"
+          dashboard_url: "https://grafana.your-domain.com/d/risk-management"
+
+      - alert: RiskLimitBreach
+        expr: increase(risk_limit_breaches_total[5m]) > 0
+        for: 1m
+        labels:
+          severity: critical
+          component: risk_management
+        annotations:
+          summary: "⚠️ RISK LIMIT BREACH DETECTED"
+          description: "One or more risk limits have been breached. Immediate investigation required."
+          runbook_url: "https://docs.your-domain.com/runbooks/risk-limits"
+
+      - alert: ReconciliationErrorDetected
+        expr: increase(reconciliation_errors_total[1h]) > 0
+        for: 1m
+        labels:
+          severity: critical
+          component: reconciliation
+        annotations:
+          summary: "🔍 RECONCILIATION ERROR DETECTED"
+          description: "Data reconciliation has failed. System state may be inconsistent."
+          runbook_url: "https://docs.your-domain.com/runbooks/reconciliation"
+
+      - alert: SystemDowntime
+        expr: up{job="gpt-trader"} == 0
+        for: 30s
+        labels:
+          severity: critical
+          component: system
+        annotations:
+          summary: "🔴 SYSTEM DOWN"
+          description: "GPT-Trader application is not responding."
+          runbook_url: "https://docs.your-domain.com/runbooks/system-downtime"
+
+  - name: trading_system_performance
+    rules:
+      - alert: OrderExecutionLatencyHigh
+        expr: histogram_quantile(0.95, rate(order_execution_duration_seconds_bucket[5m])) > 0.1
+        for: 2m
+        labels:
+          severity: warning
+          component: execution
+        annotations:
+          summary: "⚡ ORDER EXECUTION LATENCY HIGH"
+          description: "P95 order execution latency is above 100ms threshold."
+
+      - alert: OrderExecutionLatencyCritical
+        expr: histogram_quantile(0.99, rate(order_execution_duration_seconds_bucket[5m])) > 0.5
+        for: 1m
+        labels:
+          severity: critical
+          component: execution
+        annotations:
+          summary: "🚨 CRITICAL ORDER EXECUTION LATENCY"
+          description: "P99 order execution latency is above 500ms threshold."
+
+      - alert: OrderFailureRateHigh
+        expr: rate(order_failures_total[5m]) / rate(order_attempts_total[5m]) > 0.05
+        for: 3m
+        labels:
+          severity: warning
+          component: execution
+        annotations:
+          summary: "📈 ORDER FAILURE RATE HIGH"
+          description: "Order failure rate is above 5% threshold."
+
+      - alert: BrokerConnectionIssues
+        expr: increase(broker_connection_errors_total[5m]) > 5
+        for: 1m
+        labels:
+          severity: warning
+          component: broker
+        annotations:
+          summary: "🔌 BROKER CONNECTION ISSUES"
+          description: "Multiple broker connection errors detected."
+
+  - name: data_quality
+    rules:
+      - alert: EventStoreDataCorruption
+        expr: increase(event_store_corruption_total[1h]) > 0
+        for: 0m
+        labels:
+          severity: critical
+          component: data_quality
+        annotations:
+          summary: "🗄️ EVENT STORE DATA CORRUPTION"
+          description: "Data corruption detected in event store. Immediate investigation required."
+
+      - alert: MissingMarketData
+        expr: increase(missing_market_data_total[5m]) > 3
+        for: 2m
+        labels:
+          severity: warning
+          component: market_data
+        annotations:
+          summary: "📊 MISSING MARKET DATA"
+          description: "Multiple instances of missing market data detected."
+
+      - alert: PositionStateInconsistency
+        expr: increase(position_state_inconsistencies_total[1h]) > 0
+        for: 1m
+        labels:
+          severity: warning
+          component: reconciliation
+        annotations:
+          summary: "⚖️ POSITION STATE INCONSISTENCY"
+          description: "Position state inconsistencies detected across components."
+
+  - name: system_health
+    rules:
+      - alert: HighMemoryUsage
+        expr: process_resident_memory_bytes / (1024*1024*1024) > 2
+        for: 5m
+        labels:
+          severity: warning
+          component: system
+        annotations:
+          summary: "💾 HIGH MEMORY USAGE"
+          description: "Memory usage is above 2GB threshold."
+
+      - alert: HighCPUUsage
+        expr: rate(process_cpu_seconds_total[5m]) * 100 > 80
+        for: 3m
+        labels:
+          severity: warning
+          component: system
+        annotations:
+          summary: "🖥️ HIGH CPU USAGE"
+          description: "CPU usage is above 80% threshold."
+
+      - alert: DatabaseConnectionPoolExhausted
+        expr: db_connections_active / db_connections_max > 0.9
+        for: 1m
+        labels:
+          severity: warning
+          component: database
+        annotations:
+          summary: "🗄️ DATABASE CONNECTION POOL EXHAUSTED"
+          description: "Database connection pool is near exhaustion."
+
+  - name: business_metrics
+    rules:
+      - alert: DailyLossLimitApproaching
+        expr: daily_pnl_loss / daily_loss_limit > 0.8
+        for: 1m
+        labels:
+          severity: warning
+          component: risk_management
+        annotations:
+          summary: "💰 DAILY LOSS LIMIT APPROACHING"
+          description: "Daily loss is approaching 80% of limit."
+
+      - alert: AbnormalOrderVolume
+        expr: rate(orders_submitted_total[1h]) > rate(orders_submitted_total[24h]) * 3
+        for: 10m
+        labels:
+          severity: warning
+          component: execution
+        annotations:
+          summary: "📈 ABNORMAL ORDER VOLUME"
+          description: "Order volume is 3x higher than 24-hour average."
+
+      - alert: StrategyPerformanceDegradation
+        expr: strategy_sharpe_ratio < 0.5
+        for: 1h
+        labels:
+          severity: warning
+          component: strategy
+        annotations:
+          summary: "📉 STRATEGY PERFORMANCE DEGRADATION"
+          description: "Strategy Sharpe ratio has dropped below 0.5."

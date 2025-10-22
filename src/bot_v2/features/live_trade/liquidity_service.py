@@ -8,7 +8,7 @@ to optimize order execution and sizing decisions.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from enum import Enum
 from typing import Any
@@ -16,6 +16,28 @@ from typing import Any
 from bot_v2.utilities.logging_patterns import get_logger
 
 logger = get_logger(__name__, component="liquidity_service")
+
+
+def _ensure_utc_aware(dt: datetime) -> datetime:
+    """
+    Convert datetime to UTC-aware timestamp.
+
+    If datetime is naive, assume it's UTC and make it aware.
+    If datetime is already aware, convert to UTC.
+
+    This provides backward compatibility with existing code that passes naive datetimes.
+    """
+    if dt.tzinfo is None:
+        # Naive datetime - assume UTC and make it aware
+        return dt.replace(tzinfo=timezone.utc)
+    else:
+        # Aware datetime - convert to UTC
+        return dt.astimezone(timezone.utc)
+
+
+def _get_utc_now() -> datetime:
+    """Get current UTC time as aware datetime."""
+    return datetime.now(tz=timezone.utc)
 
 
 class LiquidityCondition(Enum):
@@ -139,7 +161,9 @@ class LiquidityMetrics:
     def add_trade(self, price: Decimal, size: Decimal, timestamp: datetime | None = None) -> None:
         """Add trade data for volume calculation."""
         if timestamp is None:
-            timestamp = datetime.now()
+            timestamp = _get_utc_now()
+        else:
+            timestamp = _ensure_utc_aware(timestamp)
 
         notional = price * size
         self._volume_data.append((timestamp, notional))
@@ -151,7 +175,9 @@ class LiquidityMetrics:
     def add_spread(self, spread_bps: Decimal, timestamp: datetime | None = None) -> None:
         """Add spread data."""
         if timestamp is None:
-            timestamp = datetime.now()
+            timestamp = _get_utc_now()
+        else:
+            timestamp = _ensure_utc_aware(timestamp)
 
         self._spread_data.append((timestamp, spread_bps))
         self._clean_old_data()
@@ -167,7 +193,7 @@ class LiquidityMetrics:
                 "avg_trade_size": Decimal("0"),
             }
 
-        now = datetime.now()
+        now = _get_utc_now()
 
         # Calculate volumes for different windows
         volumes: dict[str, Decimal] = {
@@ -180,14 +206,20 @@ class LiquidityMetrics:
         for window_name, minutes in windows.items():
             cutoff = now - timedelta(minutes=minutes)
             window_volume = sum(
-                (volume for timestamp, volume in self._volume_data if timestamp >= cutoff),
+                (
+                    volume
+                    for timestamp, volume in self._volume_data
+                    if _ensure_utc_aware(timestamp) >= cutoff
+                ),
                 Decimal("0"),
             )
             volumes[window_name] = window_volume
 
         # Trade metrics
         trades_15m = [
-            (ts, size) for ts, price, size in self._trade_data if ts >= now - timedelta(minutes=15)
+            (ts, size)
+            for ts, price, size in self._trade_data
+            if _ensure_utc_aware(ts) >= now - timedelta(minutes=15)
         ]
 
         trade_count = len(trades_15m)
@@ -214,10 +246,14 @@ class LiquidityMetrics:
             }
 
         # Get spreads from last 5 minutes
-        now = datetime.now()
+        now = _get_utc_now()
         cutoff = now - timedelta(minutes=5)
 
-        recent_spreads = [spread for timestamp, spread in self._spread_data if timestamp >= cutoff]
+        recent_spreads = [
+            spread
+            for timestamp, spread in self._spread_data
+            if _ensure_utc_aware(timestamp) >= cutoff
+        ]
 
         if not recent_spreads:
             return {
@@ -236,12 +272,23 @@ class LiquidityMetrics:
 
     def _clean_old_data(self) -> None:
         """Remove data older than window duration."""
-        cutoff = datetime.now() - self.window_duration
+        cutoff = _get_utc_now() - self.window_duration
 
-        self._volume_data = [(ts, vol) for ts, vol in self._volume_data if ts >= cutoff]
-        self._spread_data = [(ts, spread) for ts, spread in self._spread_data if ts >= cutoff]
+        # Normalize all timestamps to UTC-aware before comparison
+        self._volume_data = [
+            (_ensure_utc_aware(ts), vol)
+            for ts, vol in self._volume_data
+            if _ensure_utc_aware(ts) >= cutoff
+        ]
+        self._spread_data = [
+            (_ensure_utc_aware(ts), spread)
+            for ts, spread in self._spread_data
+            if _ensure_utc_aware(ts) >= cutoff
+        ]
         self._trade_data = [
-            (ts, price, size) for ts, price, size in self._trade_data if ts >= cutoff
+            (_ensure_utc_aware(ts), price, size)
+            for ts, price, size in self._trade_data
+            if _ensure_utc_aware(ts) >= cutoff
         ]
 
 
@@ -299,7 +346,9 @@ class LiquidityService:
             Depth analysis result
         """
         if timestamp is None:
-            timestamp = datetime.now()
+            timestamp = _get_utc_now()
+        else:
+            timestamp = _ensure_utc_aware(timestamp)
 
         if not bids or not asks:
             # Return empty analysis for missing data

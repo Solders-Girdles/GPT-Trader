@@ -259,7 +259,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: src/bot_v2/deployment/docker/Dockerfile
+          file: deploy/bot_v2/docker/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
@@ -359,7 +359,7 @@ jobs:
       - name: Blue-Green Deployment
         run: |
           # Create new deployment (green)
-          kubectl apply -f src/bot_v2/deployment/kubernetes/deployment.yaml \
+          kubectl apply -f deploy/bot_v2/kubernetes/deployment.yaml \
             -n trading-system \
             --dry-run=client -o yaml | \
             sed 's/trading-bot/trading-bot-green/g' | \

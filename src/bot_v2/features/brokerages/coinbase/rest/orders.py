@@ -285,5 +285,133 @@ class OrderRestMixin:
                 raise
             return fallback(close_side, requested_quantity, reduce_only)
 
+    def place_scaled_order(
+        self,
+        *,
+        symbol: str,
+        side: OrderSide,
+        total_quantity: Decimal,
+        price_levels: Sequence[Decimal],
+        distribution: str = "linear",
+        tif: TimeInForce = TimeInForce.GTC,
+        reduce_only: bool | None = None,
+        leverage: int | None = None,
+        post_only: bool = False,
+    ) -> list[Order]:
+        """Place scaled orders across multiple price levels.
+
+        Distributes the total order quantity across multiple price levels,
+        useful for dollar-cost averaging or building positions gradually.
+
+        Args:
+            symbol: Trading symbol (e.g., "BTC-PERP")
+            side: Order side (BUY or SELL)
+            total_quantity: Total quantity to distribute across all levels
+            price_levels: List of price levels (must be sorted: low to high for BUY, high to low for SELL)
+            distribution: Distribution method:
+                - "linear": Equal quantity at each level
+                - "weighted": More quantity at better prices (first levels get more)
+            tif: Time in force (default: GTC)
+            reduce_only: Whether orders can only reduce positions
+            leverage: Position leverage for derivatives
+            post_only: Post-only flag (maker-only)
+
+        Returns:
+            List of placed Order objects
+
+        Raises:
+            ValidationError: If price_levels is empty or total_quantity is invalid
+
+        Example:
+            # Buy 1 BTC across 5 levels from $45k to $50k
+            orders = place_scaled_order(
+                symbol="BTC-PERP",
+                side=OrderSide.BUY,
+                total_quantity=Decimal("1.0"),
+                price_levels=[
+                    Decimal("45000"),
+                    Decimal("46000"),
+                    Decimal("47000"),
+                    Decimal("48000"),
+                    Decimal("50000"),
+                ],
+                distribution="weighted",  # More quantity at lower prices
+            )
+
+        Note:
+            Per Oct 2025 changelog, scaled orders are now officially supported
+            by Coinbase Advanced Trade API. This implementation provides a
+            client-side distribution strategy.
+        """
+        if not price_levels:
+            raise ValidationError("price_levels cannot be empty", field="price_levels")
+
+        if total_quantity <= 0:
+            raise ValidationError(
+                f"total_quantity must be positive, got {total_quantity}", field="total_quantity"
+            )
+
+        num_levels = len(price_levels)
+
+        # Calculate quantity distribution
+        if distribution == "linear":
+            # Equal distribution across all levels
+            quantities = [total_quantity / Decimal(str(num_levels))] * num_levels
+        elif distribution == "weighted":
+            # Weighted distribution: more quantity at better prices
+            # Use triangular distribution: weights = [n, n-1, n-2, ..., 1]
+            weights = [Decimal(str(num_levels - i)) for i in range(num_levels)]
+            total_weight = sum(weights)
+            quantities = [(w / total_weight) * total_quantity for w in weights]
+        else:
+            raise ValidationError(
+                f"Unsupported distribution method: {distribution}. Use 'linear' or 'weighted'.",
+                field="distribution",
+                value=distribution,
+            )
+
+        # Place orders at each level
+        orders: list[Order] = []
+        for price, quantity in zip(price_levels, quantities):
+            try:
+                order = self.place_order(
+                    symbol=symbol,
+                    side=side,
+                    order_type=OrderType.LIMIT,
+                    quantity=quantity,
+                    price=price,
+                    tif=tif,
+                    reduce_only=reduce_only,
+                    leverage=leverage,
+                    post_only=post_only,
+                )
+                orders.append(order)
+                logger.info(
+                    "Scaled order placed: %s %s @ %s (qty: %s)",
+                    side.value,
+                    symbol,
+                    price,
+                    quantity,
+                )
+            except Exception as exc:
+                logger.error(
+                    "Failed to place scaled order at price %s: %s. Placed %d/%d orders.",
+                    price,
+                    exc,
+                    len(orders),
+                    num_levels,
+                )
+                # Return partial results if some orders succeeded
+                if orders:
+                    logger.warning(
+                        "Partial scaled order execution: %d/%d orders placed", len(orders), num_levels
+                    )
+                    return orders
+                # Re-raise if no orders succeeded
+                raise
+
+        logger.info("Scaled order complete: %d orders placed for %s", len(orders), symbol)
+        return orders
+
 
 __all__ = ["OrderRestMixin"]

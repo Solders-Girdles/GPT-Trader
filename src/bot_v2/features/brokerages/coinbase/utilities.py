@@ -20,9 +20,11 @@ __all__ = [
     "quantize_to_increment",
     "enforce_perp_rules",
     "MarkCache",
+    "FundingEvent",
     "FundingCalculator",
     "PositionState",
     "ProductCatalog",
+    "LiquidationCalculator",
 ]
 
 
@@ -129,10 +131,23 @@ class MarkCache:
 
 
 @dataclass
+class FundingEvent:
+    """Represents a single funding accrual event."""
+
+    timestamp: datetime
+    symbol: str
+    rate: Decimal
+    position_size: Decimal
+    position_side: str
+    mark_price: Decimal
+    amount: Decimal  # Negative = payment, positive = receipt
+
+
+@dataclass
 class FundingCalculator:
     """Calculate funding accrual for perpetual positions.
 
-    Implements discrete funding at scheduled times.
+    Implements discrete funding at scheduled times with full history tracking.
 
     Coinbase Perpetuals Funding (as of October 2025):
     ---------------------------------------------------
@@ -157,14 +172,23 @@ class FundingCalculator:
     For accurate PnL tracking:
     - Call `accrue_if_due()` on each market data update
     - Ensure `next_funding_time` is refreshed from the API
-    - Track both accrued and settled funding separately if needed
+    - Use `get_funding_history()` for detailed funding attribution
 
     Convention: Positive funding rate means longs pay shorts.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, *, track_history: bool = True, max_history_per_symbol: int = 1000) -> None:
+        """Initialize funding calculator.
+
+        Args:
+            track_history: Whether to track individual funding events
+            max_history_per_symbol: Maximum number of events to retain per symbol
+        """
         self._last_funding_times: dict[str, datetime] = {}
         self._warned_symbols: set[str] = set()
+        self._track_history = track_history
+        self._max_history = max_history_per_symbol
+        self._funding_history: dict[str, list[FundingEvent]] = {}
 
     def accrue_if_due(
         self,
@@ -242,11 +266,115 @@ class FundingCalculator:
             # Positive funding rate: longs pay (negative delta), shorts receive (positive delta)
             # Negative funding rate: shorts pay (negative delta), longs receive (positive delta)
             if position_side.lower() == "long":
-                return -funding_payment  # Long pays when rate positive
+                funding_delta = -funding_payment  # Long pays when rate positive
             else:  # short
-                return funding_payment  # Short receives when rate positive
+                funding_delta = funding_payment  # Short receives when rate positive
+
+            # Track funding event in history
+            if self._track_history:
+                self._record_funding_event(
+                    timestamp=next_funding_time,
+                    symbol=symbol,
+                    rate=funding_rate,
+                    position_size=position_size,
+                    position_side=position_side,
+                    mark_price=mark_price,
+                    amount=funding_delta,
+                )
+
+            return funding_delta
 
         return Decimal("0")  # No funding due
+
+    def _record_funding_event(
+        self,
+        timestamp: datetime,
+        symbol: str,
+        rate: Decimal,
+        position_size: Decimal,
+        position_side: str,
+        mark_price: Decimal,
+        amount: Decimal,
+    ) -> None:
+        """Record a funding event in history."""
+        event = FundingEvent(
+            timestamp=timestamp,
+            symbol=symbol,
+            rate=rate,
+            position_size=position_size,
+            position_side=position_side,
+            mark_price=mark_price,
+            amount=amount,
+        )
+
+        if symbol not in self._funding_history:
+            self._funding_history[symbol] = []
+
+        self._funding_history[symbol].append(event)
+
+        # Trim history if exceeds max
+        if len(self._funding_history[symbol]) > self._max_history:
+            self._funding_history[symbol] = self._funding_history[symbol][-self._max_history :]
+
+    def get_funding_history(
+        self,
+        symbol: str,
+        *,
+        since: datetime | None = None,
+        limit: int | None = None,
+    ) -> list[FundingEvent]:
+        """Get funding event history for a symbol.
+
+        Args:
+            symbol: Trading symbol
+            since: Only return events after this timestamp
+            limit: Maximum number of events to return (most recent first)
+
+        Returns:
+            List of funding events, newest first
+        """
+        if not self._track_history:
+            logger.warning("Funding history tracking is disabled")
+            return []
+
+        events = self._funding_history.get(symbol, [])
+
+        # Filter by timestamp if requested
+        if since is not None:
+            events = [e for e in events if e.timestamp >= since]
+
+        # Sort newest first
+        events = sorted(events, key=lambda e: e.timestamp, reverse=True)
+
+        # Apply limit
+        if limit is not None:
+            events = events[:limit]
+
+        return events
+
+    def get_total_funding(self, symbol: str) -> Decimal:
+        """Get total funding paid/received for a symbol.
+
+        Returns:
+            Total funding amount (negative = paid, positive = received)
+        """
+        if not self._track_history:
+            logger.warning("Funding history tracking is disabled")
+            return Decimal("0")
+
+        events = self._funding_history.get(symbol, [])
+        return sum((e.amount for e in events), Decimal("0"))
+
+    def clear_history(self, symbol: str | None = None) -> None:
+        """Clear funding history.
+
+        Args:
+            symbol: Symbol to clear, or None to clear all
+        """
+        if symbol is None:
+            self._funding_history.clear()
+        else:
+            self._funding_history.pop(symbol, None)
 
 
 @dataclass
@@ -384,3 +512,178 @@ class ProductCatalog:
         if prod.market_type != MarketType.PERPETUAL:
             return None, None
         return prod.funding_rate, prod.next_funding_time
+
+
+@dataclass
+class LiquidationCalculator:
+    """Calculate liquidation prices for leveraged perpetual positions.
+
+    Coinbase Margin Model (October 2025):
+    --------------------------------------
+    - Initial Margin: 1 / leverage (e.g., 10x leverage = 10% initial margin)
+    - Maintenance Margin: Typically 50% of initial margin
+    - Liquidation: Occurs when equity falls below maintenance margin requirement
+
+    Formula:
+    --------
+    For Long Positions:
+        liquidation_price = entry_price * (1 - (1/leverage) + maintenance_margin_rate)
+
+    For Short Positions:
+        liquidation_price = entry_price * (1 + (1/leverage) - maintenance_margin_rate)
+
+    Where:
+        maintenance_margin_rate = maintenance_margin / initial_margin
+        Typically: 0.5 * (1/leverage) for Coinbase
+
+    Example:
+    --------
+    Long BTC-PERP at $50,000 with 10x leverage:
+        initial_margin = 1/10 = 0.1 (10%)
+        maintenance_margin = 0.05 (5%)
+        liquidation_price = 50000 * (1 - 0.1 + 0.05) = $47,500
+
+    Important Notes:
+    ----------------
+    - Actual liquidation prices may vary based on:
+      * Accumulated funding payments
+      * Position size (larger positions may have higher margin requirements)
+      * Market volatility adjustments
+      * Exchange-specific risk parameters
+    - This calculator provides estimates; always verify with exchange API
+    """
+
+    # Default maintenance margin as fraction of initial margin
+    DEFAULT_MAINTENANCE_MARGIN_RATIO: Decimal = Decimal("0.5")
+
+    def calculate_liquidation_price(
+        self,
+        entry_price: Decimal,
+        leverage: int,
+        side: str,
+        *,
+        maintenance_margin_ratio: Decimal | None = None,
+    ) -> Decimal:
+        """Calculate liquidation price for a leveraged position.
+
+        Args:
+            entry_price: Average entry price
+            leverage: Position leverage (e.g., 10 for 10x)
+            side: Position side ("long" or "short")
+            maintenance_margin_ratio: Maintenance margin as fraction of initial margin
+                                     (default: 0.5 for 50% of initial margin)
+
+        Returns:
+            Estimated liquidation price
+
+        Raises:
+            ValueError: If leverage <= 0 or entry_price <= 0
+        """
+        if leverage <= 0:
+            raise ValueError(f"Leverage must be positive, got {leverage}")
+        if entry_price <= 0:
+            raise ValueError(f"Entry price must be positive, got {entry_price}")
+
+        # Use default maintenance margin ratio if not provided
+        mm_ratio = maintenance_margin_ratio or self.DEFAULT_MAINTENANCE_MARGIN_RATIO
+
+        # Initial margin requirement as decimal (e.g., 0.1 for 10x leverage)
+        initial_margin_rate = Decimal("1") / Decimal(str(leverage))
+
+        # Maintenance margin requirement
+        maintenance_margin_rate = initial_margin_rate * mm_ratio
+
+        # Calculate liquidation price based on position side
+        if side.lower() == "long":
+            # Long: liquidation when price drops
+            # liquidation_price = entry * (1 - initial_margin + maintenance_margin)
+            liq_multiplier = Decimal("1") - initial_margin_rate + maintenance_margin_rate
+            liquidation_price = entry_price * liq_multiplier
+        else:  # short
+            # Short: liquidation when price rises
+            # liquidation_price = entry * (1 + initial_margin - maintenance_margin)
+            liq_multiplier = Decimal("1") + initial_margin_rate - maintenance_margin_rate
+            liquidation_price = entry_price * liq_multiplier
+
+        return liquidation_price
+
+    def calculate_liquidation_distance(
+        self,
+        entry_price: Decimal,
+        current_price: Decimal,
+        leverage: int,
+        side: str,
+        *,
+        maintenance_margin_ratio: Decimal | None = None,
+    ) -> dict[str, Decimal]:
+        """Calculate distance to liquidation in both price and percentage terms.
+
+        Args:
+            entry_price: Average entry price
+            current_price: Current mark price
+            leverage: Position leverage
+            side: Position side ("long" or "short")
+            maintenance_margin_ratio: Maintenance margin as fraction of initial margin
+
+        Returns:
+            Dictionary with:
+                - liquidation_price: Estimated liquidation price
+                - price_distance: Absolute distance to liquidation
+                - percentage_distance: Percentage distance to liquidation
+                - buffer_percent: Buffer as percentage of current price
+        """
+        liq_price = self.calculate_liquidation_price(
+            entry_price, leverage, side, maintenance_margin_ratio=maintenance_margin_ratio
+        )
+
+        # Calculate distances
+        if side.lower() == "long":
+            # For longs, liquidation is below current price
+            price_distance = current_price - liq_price
+            percentage_distance = (price_distance / current_price) * Decimal("100")
+        else:  # short
+            # For shorts, liquidation is above current price
+            price_distance = liq_price - current_price
+            percentage_distance = (price_distance / current_price) * Decimal("100")
+
+        buffer_percent = (price_distance / current_price) * Decimal("100")
+
+        return {
+            "liquidation_price": liq_price,
+            "price_distance": price_distance,
+            "percentage_distance": percentage_distance,
+            "buffer_percent": buffer_percent,
+        }
+
+    def is_at_risk(
+        self,
+        entry_price: Decimal,
+        current_price: Decimal,
+        leverage: int,
+        side: str,
+        *,
+        risk_threshold_percent: Decimal = Decimal("20"),
+        maintenance_margin_ratio: Decimal | None = None,
+    ) -> bool:
+        """Check if position is at risk of liquidation.
+
+        Args:
+            entry_price: Average entry price
+            current_price: Current mark price
+            leverage: Position leverage
+            side: Position side ("long" or "short")
+            risk_threshold_percent: Alert threshold as percentage distance (default: 20%)
+            maintenance_margin_ratio: Maintenance margin as fraction of initial margin
+
+        Returns:
+            True if distance to liquidation is below risk threshold
+        """
+        distances = self.calculate_liquidation_distance(
+            entry_price,
+            current_price,
+            leverage,
+            side,
+            maintenance_margin_ratio=maintenance_margin_ratio,
+        )
+
+        return distances["percentage_distance"] < risk_threshold_percent

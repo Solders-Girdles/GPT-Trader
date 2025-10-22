@@ -88,3 +88,32 @@ jobs:
               body: 'The nightly validation detected a regression in Coinbase endpoint routing. Check the [workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details.',
               labels: ['bug', 'coinbase', 'critical']
             })
+
+  full-test-suite:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Prepare Python environment
+        id: setup-poetry
+        uses: ./.github/actions/setup-poetry
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Run full test suite (including slow tests)
+        run: |
+          set -euo pipefail
+          poetry run pytest
+
+      - name: Report status
+        if: failure()
+        uses: actions/github-script@v8
+        with:
+          script: |
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '🚨 Nightly full test suite failed',
+              body: 'The nightly full test suite (including slow tests) has failed. Check the [workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details.',
+              labels: ['bug', 'tests', 'nightly']
+            })

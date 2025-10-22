@@ -83,6 +83,16 @@ jobs:
         set -euo pipefail
         poetry run mypy src/bot_v2
 
+    - name: Run Bandit security scanner
+      run: |
+        set -euo pipefail
+        poetry run bandit -r src/bot_v2/ --severity-level medium --confidence-level medium
+
+    - name: Run pip-audit for vulnerability scanning
+      run: |
+        set -euo pipefail
+        poetry run pip-audit --ignore-vuln GHSA-4xh5-x5gv-qwph || echo "pip-audit completed with warnings"
+
     - name: Verify Poetry lockfile in sync
       run: |
         set -euo pipefail

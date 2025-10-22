@@ -139,3 +139,94 @@ def execution_context(fake_perps_bot):
 def execution_coordinator(execution_context):
     """Create ExecutionCoordinator instance."""
     return ExecutionCoordinator(execution_context)
+
+
+# Additional fixtures for main file refactoring
+
+
+@pytest.fixture
+def base_context() -> "CoordinatorContext":
+    """Create base CoordinatorContext for tests."""
+    from bot_v2.orchestration.coordinators.base import CoordinatorContext
+
+    config = BotConfig(profile=Profile.PROD, symbols=["BTC-PERP"], dry_run=False)
+    config.time_in_force = "GTC"
+    runtime_state = PerpsBotRuntimeState(["BTC-PERP"])
+
+    broker = Mock()
+    risk_manager = Mock()
+    risk_manager.config = Mock(
+        enable_dynamic_position_sizing=False, enable_market_impact_guard=False
+    )
+    risk_manager.set_impact_estimator = Mock()
+    orders_store = Mock()
+    event_store = Mock()
+
+    registry = ServiceRegistry(
+        config=config,
+        broker=broker,
+        risk_manager=risk_manager,
+        event_store=event_store,
+        orders_store=orders_store,
+    )
+
+    controller = Mock()
+    controller.is_reduce_only_mode.return_value = False
+    controller.sync_with_risk_manager = Mock()
+
+    context = CoordinatorContext(
+        config=config,
+        registry=registry,
+        event_store=event_store,
+        orders_store=orders_store,
+        broker=broker,
+        risk_manager=risk_manager,
+        symbols=("BTC-PERP",),
+        bot_id="coinbase_trader",
+        runtime_state=runtime_state,
+        config_controller=controller,
+        strategy_orchestrator=Mock(),
+        set_running_flag=lambda _: None,
+    )
+    return context
+
+
+@pytest.fixture
+def coordinator(base_context):
+    """Create ExecutionCoordinator instance from base_context."""
+    return ExecutionCoordinator(base_context)
+
+
+@pytest.fixture
+def test_product() -> Product:
+    """Create test product for main file tests."""
+    product = Mock(spec=Product)
+    product.symbol = "BTC-PERP"
+    product.market_type = MarketType.PERPETUAL
+    product.base_increment = Decimal("0.0001")
+    product.quote_increment = Decimal("0.01")
+    return product
+
+
+@pytest.fixture
+def test_order() -> Order:
+    """Create test order for main file tests."""
+    from datetime import datetime, timezone
+
+    now = datetime.now(timezone.utc)
+    return Order(
+        id="order-1",
+        client_id="client-1",
+        symbol="BTC-PERP",
+        side=OrderSide.BUY,
+        type=OrderType.MARKET,
+        quantity=Decimal("0.1"),
+        price=None,
+        stop_price=None,
+        tif="GTC",
+        status=OrderStatus.FILLED,
+        filled_quantity=Decimal("0.1"),
+        avg_fill_price=Decimal("50000"),
+        submitted_at=now,
+        updated_at=now,
+    )

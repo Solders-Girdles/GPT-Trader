@@ -33,7 +33,8 @@ def security_validator() -> Any:
 @pytest.fixture
 def frozen_time() -> Any:
     """Freeze time for deterministic rate limiting tests."""
-    return freeze_time("2024-01-01 12:00:00")
+    with freeze_time("2024-01-01 12:00:00") as frozen:
+        yield frozen
 
 
 @pytest.fixture

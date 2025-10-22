@@ -78,6 +78,8 @@ class TestConvenienceWrappers:
 
     def test_validate_order_with_invalid_input(self) -> None:
         """Test validate_order wrapper with invalid input."""
+        from bot_v2.security.security_validator import ValidationResult
+
         invalid_order = {
             "symbol": "INVALID",
             "quantity": "invalid",
@@ -88,6 +90,7 @@ class TestConvenienceWrappers:
 
         result = security_validator.validate_order(invalid_order, account_value)
 
+        assert isinstance(result, ValidationResult)
         assert not result.is_valid
         assert len(result.errors) > 0
 
@@ -156,6 +159,7 @@ class TestConvenienceWrappers:
         # Test with None inputs
         order_result = security_validator.validate_order(None, 1000)  # type: ignore
         assert not order_result.is_valid
+        assert any("Order payload must be a mapping" in error for error in order_result.errors)
 
         rate_result = security_validator.check_rate_limit(None, "invalid")  # type: ignore
         assert isinstance(rate_result, tuple)

@@ -101,3 +101,11 @@ class TestNumericEdgeBehaviour:
             result = security_validator.validate_numeric(value)
             assert result.is_valid
             assert abs(result.sanitized_value - expected) < 0.0001
+
+    @pytest.mark.parametrize("value", ["inf", "-inf", float("inf"), float("-inf"), float("nan")])
+    def test_numeric_validation_rejects_non_finite(
+        self, security_validator: Any, value: Any
+    ) -> None:
+        result = security_validator.validate_numeric(value)
+        assert not result.is_valid
+        assert any("Invalid numeric value" in error for error in result.errors)

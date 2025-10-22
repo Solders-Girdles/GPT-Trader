@@ -182,7 +182,7 @@ class TestRateLimiting:
         import threading
 
         user_id = "test-user"
-        limit_type = "api_calls"
+        limit_type = "order_submissions"
         results = []
 
         def make_request():
@@ -263,13 +263,11 @@ class TestRateLimiting:
 
     def test_rate_limit_edge_cases(self, security_validator: Any) -> None:
         """Test rate limiting edge cases."""
-        # Test with empty user ID
-        allowed, _ = security_validator.check_rate_limits("", "api_calls")
-        # Behavior depends on implementation
+        allowed_empty, _ = security_validator.check_rate_limit("", "api_calls")
+        assert isinstance(allowed_empty, bool)
 
-        # Test with None user ID (should handle gracefully)
-        allowed, _ = security_validator.check_rate_limits(None, "api_calls")  # type: ignore
-        # Behavior depends on implementation
+        allowed_none, _ = security_validator.check_rate_limit(None, "api_calls")  # type: ignore
+        assert isinstance(allowed_none, bool)
 
     def test_rate_limit_order_submissions(self, security_validator: Any) -> None:
         """Test rate limiting for order submissions."""

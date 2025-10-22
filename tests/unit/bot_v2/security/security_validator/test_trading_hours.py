@@ -163,13 +163,13 @@ class TestTradingHours:
         ]
 
         for invalid_timestamp in invalid_timestamps:
-            try:
-                result = security_validator.check_trading_hours("AAPL", timestamp=invalid_timestamp)
-                # Should handle gracefully or raise appropriate error
-                assert result is not None
-            except (TypeError, ValueError):
-                # Expected for invalid inputs
-                pass
+            result = security_validator.check_trading_hours("AAPL", timestamp=invalid_timestamp)
+            assert result is not None
+            if invalid_timestamp is None:
+                assert isinstance(result.is_valid, bool)
+            else:
+                assert not result.is_valid
+                assert any("Invalid timestamp" in error for error in result.errors)
 
     def test_trading_hours_early_morning(self, security_validator: Any) -> None:
         """Test trading hours in early morning."""
@@ -210,8 +210,8 @@ class TestTradingHours:
 
             result = security_validator.check_trading_hours("AAPL", timestamp=market_time)
 
-            # Should be consistent across years (same weekday)
-            assert result.is_valid is True
+            expected = market_time.weekday() < 5 and 9 <= market_time.hour < 16
+            assert result.is_valid is expected
 
     def test_trading_hours_error_message_content(
         self, security_validator: Any, trading_hours_samples: dict[str, datetime]

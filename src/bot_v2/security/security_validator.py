@@ -53,9 +53,9 @@ class SecurityValidator:
         "email": r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$",
         "alphanumeric": r"^[a-zA-Z0-9]+$",
         "numeric": r"^-?\d+(\.\d+)?$",
-        "sql_injection": r"(\b(SELECT|INSERT|UPDATE|DELETE|DROP|UNION|CREATE|ALTER|EXEC|EXECUTE|SCRIPT|JAVASCRIPT|EVAL)\b)",
+        "sql_injection": r"(\b(SELECT|INSERT|UPDATE|DELETE|DROP|UNION|CREATE|ALTER|EXEC|EXECUTE|EVAL|OR)\b)|((?<![</])\b(SCRIPT|JAVASCRIPT)\b)",
         "xss_tags": r"<[^>]*>",
-        "path_traversal": r"\.\.[\\/]",
+        "path_traversal": r"(\.\.[\\/])|(%2[fF])|(%5[cC])|(%2[eE]%2[eE])|(file://)",
     }
 
     # Trading limits
@@ -106,6 +106,11 @@ class SecurityValidator:
             errors.append(f"Input exceeds maximum length of {max_length}")
             input_str = input_str[:max_length]
 
+        # Check for path traversal
+        if re.search(self.PATTERNS["path_traversal"], input_str, re.IGNORECASE):
+            errors.append("Path traversal attempt detected")
+            return ValidationResult(False, errors)
+
         # Check for SQL injection patterns
         if re.search(self.PATTERNS["sql_injection"], input_str, re.IGNORECASE):
             errors.append("Potential SQL injection detected")
@@ -114,13 +119,7 @@ class SecurityValidator:
         # Check for XSS attempts
         if re.search(self.PATTERNS["xss_tags"], input_str):
             errors.append("HTML tags not allowed")
-            # Strip HTML tags
             input_str = re.sub(self.PATTERNS["xss_tags"], "", input_str)
-
-        # Check for path traversal
-        if re.search(self.PATTERNS["path_traversal"], input_str):
-            errors.append("Path traversal attempt detected")
-            return ValidationResult(False, errors)
 
         # Escape special characters
         sanitized = input_str.replace("'", "''").replace('"', '""').strip()
@@ -163,6 +162,9 @@ class SecurityValidator:
             num_value = self._NUMERIC_RULE(value, "value")
             assert isinstance(num_value, Decimal)
 
+            if not num_value.is_finite():
+                raise InvalidOperation("Non-finite value")
+
             if min_val is not None and num_value < Decimal(str(min_val)):
                 errors.append(f"Value must be at least {min_val}")
 
@@ -175,7 +177,7 @@ class SecurityValidator:
                 sanitized_value=float(num_value) if not errors else None,
             )
 
-        except (InvalidOperation, ValueError, RuleError, AssertionError):
+        except (InvalidOperation, ValueError, RuleError, AssertionError, TypeError):
             return ValidationResult(False, ["Invalid numeric value"])
 
     def validate_order_request(
@@ -193,6 +195,9 @@ class SecurityValidator:
         """
         errors = []
 
+        if not isinstance(order, dict):
+            return ValidationResult(False, ["Order payload must be a mapping"])
+
         # Validate symbol
         symbol_result = self.validate_symbol(order.get("symbol", ""))
         if not symbol_result.is_valid:
@@ -203,16 +208,25 @@ class SecurityValidator:
         quantity_result = self.validate_numeric(quantity, min_val=0.001, max_val=1000000)
         if not quantity_result.is_valid:
             errors.extend(quantity_result.errors)
+        quantity_value = quantity_result.sanitized_value if quantity_result.is_valid else 0.0
 
         # Validate price if limit order
+        price_value = order.get("price", 100)
         if order.get("order_type") == "limit":
             price = order.get("price", 0)
             price_result = self.validate_numeric(price, min_val=0.01, max_val=1000000)
             if not price_result.is_valid:
                 errors.extend(price_result.errors)
+            else:
+                price_value = price_result.sanitized_value
+        elif not isinstance(price_value, (int, float, Decimal)):
+            price_value = 100.0
 
         # Check position size limits
-        order_value = quantity * order.get("price", 100)  # Estimate if market order
+        try:
+            order_value = float(quantity_value) * float(price_value)
+        except (TypeError, ValueError):
+            order_value = 0.0
 
         if order_value < self.TRADING_LIMITS["min_order_value"]:
             errors.append(f"Order value below minimum: ${self.TRADING_LIMITS['min_order_value']}")
@@ -221,7 +235,7 @@ class SecurityValidator:
             errors.append(f"Order value exceeds maximum: ${self.TRADING_LIMITS['max_order_value']}")
 
         # Check position concentration
-        position_pct = order_value / account_value if account_value > 0 else 1.0
+        position_pct = order_value / account_value if account_value and account_value > 0 else 1.0
         if position_pct > self.TRADING_LIMITS["max_position_size"]:
             errors.append(
                 f"Position size exceeds {self.TRADING_LIMITS['max_position_size'] * 100}% limit"
@@ -287,7 +301,12 @@ class SecurityValidator:
     ) -> ValidationResult:
         """Check if trading is allowed at current time"""
         errors = []
-        timestamp = timestamp or datetime.now()
+        if timestamp is None:
+            timestamp = datetime.now()
+        elif not isinstance(timestamp, datetime):
+            return ValidationResult(
+                is_valid=False, errors=["Invalid timestamp provided"], sanitized_value=None
+            )
 
         # Market hours (simplified - NYSE: 9:30 AM - 4:00 PM ET)
         hour = timestamp.hour
@@ -346,7 +365,7 @@ class SecurityValidator:
                 status="alert",
             )
 
-        return suspicious_indicators >= 2
+        return suspicious_indicators >= 1
 
     def validate_request(self, request: dict[str, Any]) -> ValidationResult:
         """

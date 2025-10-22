@@ -70,7 +70,7 @@ class TestTCMC001TCMC005VolatilitySimulation:
         # Verify market condition awareness in system behavior
         # System should have logged or responded to volatile conditions
         all_events = event_store.events
-        volatility_related = [
+        [
             e
             for e in all_events
             if "volatility" in str(e.get("data", {})).lower()
@@ -99,7 +99,7 @@ class TestTCMC001TCMC005VolatilitySimulation:
 
         # System should handle orders during price spikes appropriately
         try:
-            result = await system["execution_coordinator"].place_order(
+            await system["execution_coordinator"].place_order(
                 exec_engine=system["execution_engine"],
                 symbol=order.symbol,
                 side=order.side,
@@ -170,8 +170,8 @@ class TestTCMC001TCMC005VolatilitySimulation:
         system = integrated_trading_system
 
         # Test transition from normal to high volatility
-        normal_scenario = integration_test_scenarios.create_market_scenario("normal")
-        high_vol_scenario = integration_test_scenarios.create_market_scenario("high_volatility")
+        integration_test_scenarios.create_market_scenario("normal")
+        integration_test_scenarios.create_market_scenario("high_volatility")
 
         # Create orders in different volatility regimes
         normal_order = integration_test_scenarios.create_test_order(
@@ -184,7 +184,7 @@ class TestTCMC001TCMC005VolatilitySimulation:
 
         # Test order behavior in normal regime
         try:
-            normal_result = await system["execution_coordinator"].place_order(
+            await system["execution_coordinator"].place_order(
                 exec_engine=system["execution_engine"],
                 symbol=normal_order.symbol,
                 side=normal_order.side,
@@ -198,7 +198,7 @@ class TestTCMC001TCMC005VolatilitySimulation:
 
         # Test order behavior in high volatility regime
         try:
-            high_vol_result = await system["execution_coordinator"].place_order(
+            await system["execution_coordinator"].place_order(
                 exec_engine=system["execution_engine"],
                 symbol=high_vol_order.symbol,
                 side=high_vol_order.side,
@@ -231,7 +231,7 @@ class TestTCMC001TCMC005VolatilitySimulation:
 
         # System should adjust behavior based on implied volatility
         try:
-            result = await system["execution_coordinator"].place_order(
+            await system["execution_coordinator"].place_order(
                 exec_engine=system["execution_engine"],
                 symbol=order.symbol,
                 side=order.side,
@@ -275,7 +275,7 @@ class TestTCMC006TCMC010LiquidityConditionTests:
 
         # System should handle low liquidity appropriately
         try:
-            result = await system["execution_coordinator"].place_order(
+            await system["execution_coordinator"].place_order(
                 exec_engine=system["execution_engine"],
                 symbol=order.symbol,
                 side=order.side,
@@ -308,7 +308,7 @@ class TestTCMC006TCMC010LiquidityConditionTests:
         )
 
         try:
-            initial_result = await system["execution_coordinator"].place_order(
+            await system["execution_coordinator"].place_order(
                 exec_engine=system["execution_engine"],
                 symbol=initial_order.symbol,
                 side=initial_order.side,
@@ -361,7 +361,7 @@ class TestTCMC006TCMC010LiquidityConditionTests:
 
         # System should adapt to changing book depth
         try:
-            result = await system["execution_coordinator"].place_order(
+            await system["execution_coordinator"].place_order(
                 exec_engine=system["execution_engine"],
                 symbol=order.symbol,
                 side=order.side,
@@ -393,7 +393,7 @@ class TestTCMC006TCMC010LiquidityConditionTests:
 
         # System should account for spread widening in execution
         try:
-            result = await system["execution_coordinator"].place_order(
+            await system["execution_coordinator"].place_order(
                 exec_engine=system["execution_engine"],
                 symbol=order.symbol,
                 side=order.side,
@@ -435,7 +435,7 @@ class TestTCMC006TCMC010LiquidityConditionTests:
 
         # Test small order (should have minimal market impact)
         try:
-            small_result = await system["execution_coordinator"].place_order(
+            await system["execution_coordinator"].place_order(
                 exec_engine=system["execution_engine"],
                 symbol=small_order.symbol,
                 side=small_order.side,
@@ -448,7 +448,7 @@ class TestTCMC006TCMC010LiquidityConditionTests:
 
         # Test large order (should account for market impact)
         try:
-            large_result = await system["execution_coordinator"].place_order(
+            await system["execution_coordinator"].place_order(
                 exec_engine=system["execution_engine"],
                 symbol=large_order.symbol,
                 side=large_order.side,
@@ -482,7 +482,7 @@ class TestTCMC011TCMC015MarketStateTransitionTests:
 
         # System should handle market open appropriately
         try:
-            result = await system["execution_coordinator"].place_order(
+            await system["execution_coordinator"].place_order(
                 exec_engine=system["execution_engine"],
                 symbol=order.symbol,
                 side=order.side,
@@ -512,7 +512,7 @@ class TestTCMC011TCMC015MarketStateTransitionTests:
 
         # System should adjust to after-hours conditions
         try:
-            result = await system["execution_coordinator"].place_order(
+            await system["execution_coordinator"].place_order(
                 exec_engine=system["execution_engine"],
                 symbol=order.symbol,
                 side=order.side,
@@ -542,7 +542,7 @@ class TestTCMC011TCMC015MarketStateTransitionTests:
 
         # System should prepare for market close appropriately
         try:
-            result = await system["execution_coordinator"].place_order(
+            await system["execution_coordinator"].place_order(
                 exec_engine=system["execution_engine"],
                 symbol=order.symbol,
                 side=order.side,
@@ -572,7 +572,7 @@ class TestTCMC011TCMC015MarketStateTransitionTests:
 
         # System should handle holiday transitions appropriately
         try:
-            result = await system["execution_coordinator"].place_order(
+            await system["execution_coordinator"].place_order(
                 exec_engine=system["execution_engine"],
                 symbol=order.symbol,
                 side=order.side,
@@ -634,7 +634,7 @@ class TestMarketConditionResilience:
         scenarios = ["normal", "high_volatility", "low_liquidity", "normal"]
 
         for i, scenario_name in enumerate(scenarios):
-            scenario = integration_test_scenarios.create_market_scenario(scenario_name)
+            integration_test_scenarios.create_market_scenario(scenario_name)
 
             order = integration_test_scenarios.create_test_order(
                 order_id=f"rapid_change_{i}",
@@ -645,7 +645,7 @@ class TestMarketConditionResilience:
 
             # System should handle rapid condition changes
             try:
-                result = await system["execution_coordinator"].place_order(
+                await system["execution_coordinator"].place_order(
                     exec_engine=system["execution_engine"],
                     symbol=order.symbol,
                     side=order.side,

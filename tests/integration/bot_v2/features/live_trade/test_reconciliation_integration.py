@@ -52,7 +52,7 @@ class TestTCRC001TCRC005StateReconciliation:
 
         # Place order (may fail, but we're testing reconciliation logic)
         try:
-            result = await system["execution_coordinator"].place_order(
+            await system["execution_coordinator"].place_order(
                 exec_engine=system["execution_engine"],
                 symbol=order.symbol,
                 side=order.side,
@@ -73,7 +73,7 @@ class TestTCRC001TCRC005StateReconciliation:
 
         # Verify reconciliation events were logged
         all_events = event_store.events
-        reconciliation_events = [
+        [
             e
             for e in all_events
             if "reconcil" in str(e.get("type", "")).lower()
@@ -85,7 +85,7 @@ class TestTCRC001TCRC005StateReconciliation:
         assert system["execution_coordinator"] is not None
 
         # Portfolio state should be accessible across components
-        risk_positions = getattr(system["risk_manager"], "positions", None)
+        getattr(system["risk_manager"], "positions", None)
         execution_positions = broker.positions
 
         # At minimum, positions should be accessible from broker
@@ -135,7 +135,7 @@ class TestTCRC001TCRC005StateReconciliation:
     ):
         """TC-RC-003: Balance Reconciliation with Broker"""
         system = integrated_trading_system
-        broker = system["execution_coordinator"].broker
+        system["execution_coordinator"].broker
 
         # Mock broker balance data
         # In a real system, this would come from broker API calls
@@ -147,7 +147,7 @@ class TestTCRC001TCRC005StateReconciliation:
 
         # Place order to trigger balance updates
         try:
-            result = await system["execution_coordinator"].place_order(
+            await system["execution_coordinator"].place_order(
                 exec_engine=system["execution_engine"],
                 symbol=order.symbol,
                 side=order.side,
@@ -204,7 +204,7 @@ class TestTCRC001TCRC005StateReconciliation:
         try:
             # Check broker order status vs internal tracking
             if result and hasattr(result, "id"):
-                broker_status = await broker.get_order_status(result.id)
+                await broker.get_order_status(result.id)
                 # Reconciliation logic would compare broker_status with internal state
         except Exception:
             # Status check may fail, testing reconciliation error handling
@@ -212,7 +212,7 @@ class TestTCRC001TCRC005StateReconciliation:
 
         # Verify order state is tracked somewhere in the system
         all_events = event_store.events
-        order_events = [
+        [
             e
             for e in all_events
             if "order" in str(e.get("type", "")).lower()
@@ -267,7 +267,7 @@ class TestTCRC001TCRC005StateReconciliation:
 
         # Verify system maintains trade history awareness
         all_events = event_store.events
-        trade_events = [
+        [
             e
             for e in all_events
             if "trade" in str(e.get("type", "")).lower()
@@ -365,7 +365,7 @@ class TestTCRC006TCRC010DataConsistency:
         assert isinstance(metrics, list)
 
         # Check for expected telemetry metric types
-        metric_names = [m.get("name") for m in metrics if m.get("name")]
+        [m.get("name") for m in metrics if m.get("name")]
 
         # Telemetry should include performance and system health metrics
         # (specific metrics depend on implementation)
@@ -454,7 +454,7 @@ class TestTCRC006TCRC010DataConsistency:
 
         # Check for risk-related events
         all_events = event_store.events
-        risk_events = [
+        [
             e
             for e in all_events
             if "risk" in str(e.get("type", "")).lower() or "risk" in str(e.get("data", {})).lower()
@@ -547,7 +547,7 @@ class TestTCRC011TCRC015ReconciliationErrorHandling:
 
         # Place order that may create inconsistent state
         try:
-            result = await system["execution_coordinator"].place_order(
+            await system["execution_coordinator"].place_order(
                 exec_engine=system["execution_engine"],
                 symbol=order.symbol,
                 side=order.side,

@@ -355,7 +355,7 @@ class TestBrokerErrorResilience:
 
         # System should still be functional (even if this fails for other reasons)
         try:
-            result = await system["execution_coordinator"].place_order(
+            await system["execution_coordinator"].place_order(
                 exec_engine=system["execution_engine"],
                 symbol=order2.symbol,
                 side=order2.side,

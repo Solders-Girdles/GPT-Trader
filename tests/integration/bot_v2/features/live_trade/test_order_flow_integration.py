@@ -473,7 +473,7 @@ class TestRiskExecutionIntegration:
         """TC-IF-008: Pre-trade Risk Limits Enforced During Execution."""
         system = async_integrated_system
         risk_manager = system["risk_manager"]
-        execution_coordinator = system["execution_coordinator"]
+        system["execution_coordinator"]
 
         # Create order near risk limits
         order = integration_test_scenarios.create_test_order(

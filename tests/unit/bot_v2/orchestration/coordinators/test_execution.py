@@ -182,7 +182,7 @@ class TestExecutionCoordinatorOrderWorkflows:
         """Test order placement with risk validation failure."""
         # Setup
         mock_context.risk_manager.validate_order.return_value = False
-        updated_context = execution_coordinator.initialize(mock_context)
+        execution_coordinator.initialize(mock_context)
 
         order = Order(
             symbol="BTC-PERP",
@@ -637,7 +637,7 @@ class TestIntegrationPatterns:
     ) -> None:
         """Test complete broker integration workflow."""
         # Setup
-        updated_context = integration_coordinator.initialize(integration_context)
+        integration_coordinator.initialize(integration_context)
 
         order = Order(
             symbol="BTC-PERP",

@@ -381,7 +381,7 @@ class TestVolatilityCircuitBreaker:
                 volatile_marks.append(base_price - Decimal("1000"))
             base_price = volatile_marks[-1]
 
-        result = monitor.check_volatility_circuit_breaker(
+        monitor.check_volatility_circuit_breaker(
             symbol="BTC-PERP",
             recent_marks=volatile_marks,
         )

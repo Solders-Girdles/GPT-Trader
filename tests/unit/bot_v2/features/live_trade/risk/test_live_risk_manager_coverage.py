@@ -162,7 +162,7 @@ class TestLiveRiskManagerInitialization:
         """Test that initialization logs configuration details."""
 
         with patch("bot_v2.features.live_trade.risk.manager.logger") as mock_logger:
-            manager = LiveRiskManager()
+            LiveRiskManager()
             mock_logger.info.assert_called()
             call_args = mock_logger.info.call_args[0][0]
             assert "LiveRiskManager initialized with config:" in call_args
@@ -178,7 +178,7 @@ class TestLiveRiskManagerInitialization:
             # This should fail during initialization because NonStandardConfig
             # doesn't have the required attributes
             try:
-                manager = LiveRiskManager(config=NonStandardConfig())
+                LiveRiskManager(config=NonStandardConfig())
                 # If it doesn't fail, at least test the logging path
                 mock_logger.info.assert_called()
                 call_args = mock_logger.info.call_args[0][0]
@@ -517,7 +517,7 @@ class TestLiveRiskManagerMarkTimestampTracking:
         with patch.object(
             manager.last_mark_update, "update_timestamp", return_value=datetime.utcnow()
         ) as mock_update:
-            result = manager.record_mark_update("BTC-USD")
+            manager.record_mark_update("BTC-USD")
 
             mock_update.assert_called_once_with("BTC-USD", None)
 
@@ -572,7 +572,8 @@ class TestLiveRiskManagerTimeProvider:
         """Test that setting _now_provider updates all components."""
         manager = LiveRiskManager(config=conservative_risk_config)
         fixed_time = datetime(2024, 1, 1, 12, 0, 0)
-        new_time_provider = lambda: fixed_time
+        def new_time_provider():
+            return fixed_time
 
         manager._now_provider = new_time_provider
 
@@ -824,7 +825,6 @@ class TestLiveRiskManagerBackwardCompatibility:
     def test_state_reference_updates(self, conservative_risk_config):
         """Test that state references are properly updated."""
         manager = LiveRiskManager(config=conservative_risk_config)
-        original_daily_pnl = manager.daily_pnl
 
         # Update daily PnL through state manager
         manager.state_manager.daily_pnl = Decimal("100")

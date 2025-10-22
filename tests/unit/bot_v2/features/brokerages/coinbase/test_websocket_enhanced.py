@@ -723,7 +723,7 @@ class TestWebSocketErrorHandling:
         self, mock_runtime_settings, message_parsing_error_scenarios
     ):
         """Test handling of malformed messages."""
-        ws = CoinbaseWebSocket(
+        CoinbaseWebSocket(
             url="wss://test.example.com",
             ws_auth_provider=None,
             settings=mock_runtime_settings,

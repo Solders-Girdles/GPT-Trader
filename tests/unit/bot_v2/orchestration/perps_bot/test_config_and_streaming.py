@@ -517,7 +517,7 @@ class TestSymbolStateInitialization:
         bot = perps_bot_instance
         bot.config.derivatives_enabled = True
 
-        state = bot._initialize_symbols_state()
+        bot._initialize_symbols_state()
 
         assert bot._derivatives_enabled is True
 
@@ -552,8 +552,6 @@ class TestCoordinatorContextUpdates:
         self, perps_bot_instance
     ):
         """Test _setup_coordinator_stack creates context with system_monitor None initially."""
-        bot = perps_bot_instance
-        context = bot._coordinator_context
 
         # System monitor should be None initially, then set after creation
         # This is tested implicitly by the successful creation in the fixture

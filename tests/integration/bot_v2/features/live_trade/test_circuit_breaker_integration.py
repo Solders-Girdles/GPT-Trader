@@ -46,7 +46,7 @@ class TestCircuitBreakerTriggering:
         """TC-CB-001: Daily Loss Gate Triggers Mid-Execution."""
         system = async_integrated_system
         risk_manager = system["risk_manager"]
-        execution_coordinator = system["execution_coordinator"]
+        system["execution_coordinator"]
         event_store = system["event_store"]
 
         # Create normal order that should pass initial validation
@@ -88,8 +88,8 @@ class TestCircuitBreakerTriggering:
         """TC-CB-002: Liquidation Buffer Breach During Active Positions."""
         system = async_integrated_system
         risk_manager = system["risk_manager"]
-        execution_coordinator = system["execution_coordinator"]
-        event_store = system["event_store"]
+        system["execution_coordinator"]
+        system["event_store"]
 
         # Create order for testing
         order = integration_test_scenarios.create_test_order(
@@ -97,7 +97,7 @@ class TestCircuitBreakerTriggering:
         )
 
         # Mock liquidation buffer breach
-        scenario = circuit_breaker_test_scenarios["liquidation_buffer_breach"]
+        circuit_breaker_test_scenarios["liquidation_buffer_breach"]
 
         # Simulate dangerous buffer ratio by setting low equity vs position value
         mock_positions = {
@@ -135,8 +135,8 @@ class TestCircuitBreakerTriggering:
         """TC-CB-003: Volatility Spike Circuit Breaker Activation."""
         system = async_integrated_system
         risk_manager = system["risk_manager"]
-        execution_coordinator = system["execution_coordinator"]
-        event_store = system["event_store"]
+        system["execution_coordinator"]
+        system["event_store"]
 
         # Create order for testing
         order = integration_test_scenarios.create_test_order(
@@ -144,7 +144,7 @@ class TestCircuitBreakerTriggering:
         )
 
         # Mock volatility spike scenario
-        scenario = circuit_breaker_test_scenarios["volatility_spike"]
+        circuit_breaker_test_scenarios["volatility_spike"]
 
         # Simulate high volatility by adjusting market conditions
         with patch.object(risk_manager, "_check_market_volatility", return_value=True):
@@ -175,8 +175,8 @@ class TestCircuitBreakerTriggering:
         """TC-CB-004: Correlation Risk Circuit Breaker."""
         system = async_integrated_system
         risk_manager = system["risk_manager"]
-        execution_coordinator = system["execution_coordinator"]
-        event_store = system["event_store"]
+        system["execution_coordinator"]
+        system["event_store"]
 
         # Create correlated orders (same symbol, opposite sides)
         orders = [
@@ -189,7 +189,7 @@ class TestCircuitBreakerTriggering:
         ]
 
         # Mock correlation risk scenario
-        scenario = circuit_breaker_test_scenarios["correlation_risk"]
+        circuit_breaker_test_scenarios["correlation_risk"]
 
         # Simulate high correlation by setting portfolio correlation
         with patch.object(risk_manager, "check_correlation_risk", return_value=True):
@@ -217,7 +217,7 @@ class TestCircuitBreakerTriggering:
         """TC-CB-005: Position Size Limit Circuit Breaker."""
         system = async_integrated_system
         risk_manager = system["risk_manager"]
-        execution_coordinator = system["execution_coordinator"]
+        system["execution_coordinator"]
 
         # Create oversized order
         order = integration_test_scenarios.create_test_order(
@@ -352,7 +352,7 @@ class TestCircuitBreakerRecovery:
         """TC-CB-013: Normal Market Condition Recovery."""
         system = async_integrated_system
         risk_manager = system["risk_manager"]
-        execution_coordinator = system["execution_coordinator"]
+        system["execution_coordinator"]
 
         # Initially trigger circuit breaker
         risk_manager.set_reduce_only_mode(True, "Test trigger")
@@ -450,8 +450,8 @@ class TestCircuitBreakerRecovery:
         """TC-CB-017: System Health Check Post-Recovery."""
         system = async_integrated_system
         risk_manager = system["risk_manager"]
-        execution_coordinator = system["execution_coordinator"]
-        event_store = system["event_store"]
+        system["execution_coordinator"]
+        system["event_store"]
 
         # Trigger and then recover from circuit breaker
         risk_manager.set_reduce_only_mode(True, "Test trigger")
@@ -461,7 +461,7 @@ class TestCircuitBreakerRecovery:
         # Verify system health indicators
         assert not risk_manager.is_reduce_only_mode(), "Should not be in reduce-only mode"
         assert (
-            risk_manager.circuit_breaker_state.get("active", False) == False
+            not risk_manager.circuit_breaker_state.get("active", False)
         ), "Circuit breaker should be inactive"
 
         # Test normal order flow to verify system health

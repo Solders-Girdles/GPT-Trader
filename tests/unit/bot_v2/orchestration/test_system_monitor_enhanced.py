@@ -449,7 +449,7 @@ class TestSystemMonitorInitializationEdgeCases:
         monitor._position_reconciler = mock_reconciler
 
         # Should delegate to position reconciler
-        with patch("asyncio.create_task") as mock_create_task:
+        with patch("asyncio.create_task"):
             monitor.run_position_reconciliation(interval_seconds=60)
 
             mock_reconciler.run.assert_called_once_with(mock_bot, interval_seconds=60)

@@ -11,6 +11,10 @@ from bot_v2.config.live_trade_config import RiskConfig
 from bot_v2.features.live_trade.risk import LiveRiskManager, RiskRuntimeState
 from bot_v2.orchestration.broker_factory import create_brokerage
 from bot_v2.orchestration.configuration import DEFAULT_SPOT_RISK_PATH, Profile
+from bot_v2.orchestration.derivatives_discovery import (
+    DerivativesEligibility,
+    discover_derivatives_eligibility,
+)
 from bot_v2.orchestration.deterministic_broker import DeterministicBroker
 from bot_v2.orchestration.order_reconciler import OrderReconciler
 from bot_v2.orchestration.runtime_settings import RuntimeSettings, load_runtime_settings
@@ -162,6 +166,11 @@ class RuntimeCoordinator(BaseCoordinator):
             stage="connect",
         )
 
+        # Discover derivatives eligibility if enabled
+        derivatives_eligibility = None
+        if bool(getattr(ctx.config, "derivatives_enabled", False)):
+            derivatives_eligibility = self._discover_derivatives_eligibility(broker, ctx)
+
         artifacts = BrokerBootstrapArtifacts(
             broker=broker,
             event_store=event_store,
@@ -170,6 +179,7 @@ class RuntimeCoordinator(BaseCoordinator):
                 "event_store": event_store,
                 "market_data_service": market_data,
                 "product_catalog": product_catalog,
+                "derivatives_eligibility": derivatives_eligibility,
             },
             products=products,
         )
@@ -533,6 +543,82 @@ class RuntimeCoordinator(BaseCoordinator):
                     stage="error_persist",
                 )
             self.set_reduce_only_mode(True, reason="startup_reconcile_failed")
+
+    def _discover_derivatives_eligibility(
+        self, broker: IBrokerage, context: CoordinatorContext
+    ) -> DerivativesEligibility:
+        """Discover derivatives eligibility and apply safety gating if needed.
+
+        Args:
+            broker: The connected broker instance
+            context: The current coordinator context
+
+        Returns:
+            DerivativesEligibility with discovery results
+
+        Raises:
+            RuntimeError: If derivatives are required but not accessible
+        """
+        # Determine which derivatives market to discover
+        # For now, we'll attempt to discover both US and INTX
+        requested_market = "BOTH"
+
+        eligibility = discover_derivatives_eligibility(
+            broker,
+            requested_market=requested_market,
+            fail_on_inaccessible=True,
+        )
+
+        # Log discovery results
+        logger.info(
+            "Derivatives eligibility discovered",
+            operation="derivatives_discovery",
+            stage="complete",
+            us_enabled=eligibility.us_derivatives_enabled,
+            intx_enabled=eligibility.intx_derivatives_enabled,
+            cfm_accessible=eligibility.cfm_portfolio_accessible,
+            intx_accessible=eligibility.intx_portfolio_accessible,
+            reduce_only_required=eligibility.reduce_only_required,
+        )
+
+        # Apply safety gating if needed
+        if eligibility.reduce_only_required:
+            logger.warning(
+                "Derivatives requested but not accessible - enabling reduce-only mode",
+                operation="derivatives_discovery",
+                stage="safety_gate",
+                error_message=eligibility.error_message,
+            )
+            self.set_reduce_only_mode(True, reason="derivatives_not_accessible")
+
+        # Store eligibility in event store
+        event_store = context.event_store
+        if event_store is not None:
+            try:
+                emit_metric(
+                    event_store,
+                    context.bot_id,
+                    {
+                        "event_type": "derivatives_eligibility_discovered",
+                        "us_enabled": eligibility.us_derivatives_enabled,
+                        "intx_enabled": eligibility.intx_derivatives_enabled,
+                        "cfm_accessible": eligibility.cfm_portfolio_accessible,
+                        "intx_accessible": eligibility.intx_portfolio_accessible,
+                        "reduce_only_required": eligibility.reduce_only_required,
+                        "error_message": eligibility.error_message,
+                        "discovery_data": eligibility.discovery_data,
+                    },
+                    logger=logger,
+                )
+            except Exception as exc:
+                logger.debug(
+                    "Failed to emit derivatives discovery metric",
+                    error=str(exc),
+                    operation="derivatives_discovery",
+                    stage="emit_metric",
+                )
+
+        return eligibility
 
     @property
     def _deterministic_broker_cls(self) -> type[DeterministicBroker]:

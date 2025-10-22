@@ -109,7 +109,19 @@ class OrderRestMixin:
         )
         payload["order_id"] = order_id
         if new_client_id:
-            payload["new_client_order_id"] = new_client_id
+            # Enforce client_order_id <= 128 chars per API requirements
+            validated_client_id = new_client_id
+            if len(validated_client_id) > 128:
+                from bot_v2.features.brokerages.coinbase.rest.base import logger
+
+                logger.warning(
+                    "new_client_order_id exceeds 128 chars, truncating: %s",
+                    validated_client_id,
+                    operation="order_edit",
+                    stage="client_id_validation",
+                )
+                validated_client_id = validated_client_id[:128]
+            payload["new_client_order_id"] = validated_client_id
         client = cast("CoinbaseClient", base.client)
         response = client.edit_order_preview(payload)
         return cast(dict[str, Any], response or {})

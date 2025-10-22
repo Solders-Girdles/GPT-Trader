@@ -416,9 +416,6 @@ class TestPreTradeValidatorCoverage:
         mock_effective_mmr.return_value = Decimal("0.1")  # 10% MMR
         validator = PreTradeValidator(conservative_risk_config, mock_event_store)
 
-        current_positions = {
-            "BTC-USD": {"side": "long", "quantity": "0.1", "price": "48000", "mark_price": "50000"}
-        }
 
         try:
             validator.validate_liquidation_buffer(
@@ -439,14 +436,6 @@ class TestPreTradeValidatorCoverage:
         mock_effective_mmr.return_value = Decimal("0.15")  # 15% MMR
         validator = PreTradeValidator(conservative_risk_config, mock_event_store)
 
-        current_positions = {
-            "BTC-USD": {
-                "side": "long",
-                "quantity": "0.8",  # Large position
-                "price": "48000",
-                "mark_price": "50000",
-            }
-        }
 
         with pytest.raises(ValidationError, match="Insufficient liquidation buffer"):
             validator.validate_liquidation_buffer(

@@ -514,7 +514,7 @@ class TestExecutionCoordinatorFailureHandling:
         coordinator.update_context(base_context)
 
         with pytest.raises(ValidationError):
-            result = await coordinator.place_order(exec_engine, symbol="BTC-PERP")
+            await coordinator.place_order(exec_engine, symbol="BTC-PERP")
 
         assert base_context.runtime_state.order_stats["failed"] == 1
 
@@ -799,7 +799,7 @@ class TestExecutionCoordinatorCoverageEnhancements:
 
         with patch(
             "bot_v2.orchestration.coordinators.execution.load_runtime_settings",
-            return_value=RuntimeSettings(),
+            return_value=Mock(spec=RuntimeSettings),
         ):
             result = coordinator.initialize(base_context)
 

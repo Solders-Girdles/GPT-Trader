@@ -583,7 +583,7 @@ class TestRuntimeCoordinatorReconciliation:
         orders_store = Mock()
         event_store = Mock()
         # Create a new context with the mocked services
-        test_context = base_context.with_updates(
+        base_context.with_updates(
             broker=broker,
             orders_store=orders_store,
             event_store=event_store,
@@ -615,7 +615,7 @@ class TestRuntimeCoordinatorReconciliation:
         orders_store = Mock()
         event_store = Mock()
         # Create a new context with the mocked services
-        test_context = base_context.with_updates(
+        base_context.with_updates(
             broker=broker,
             orders_store=orders_store,
             event_store=event_store,

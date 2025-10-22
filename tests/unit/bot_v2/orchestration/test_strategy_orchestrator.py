@@ -849,7 +849,7 @@ class TestKillSwitchLogic:
         # Enable kill switch
         mock_bot.risk_manager.config.kill_switch_enabled = True
 
-        with patch("bot_v2.orchestration.strategy_orchestrator.emit_metric") as mock_emit:
+        with patch("bot_v2.orchestration.strategy_orchestrator.emit_metric"):
             await orchestrator.process_symbol(
                 "BTC-PERP", [test_balance], {"BTC-PERP": test_position}
             )
@@ -1062,7 +1062,7 @@ class TestDecisionRoutingAndGuardChains:
         valid_actions = {Action.BUY, Action.SELL, Action.CLOSE}
 
         for action in valid_actions:
-            orchestrator = StrategyOrchestrator(mock_bot)
+            StrategyOrchestrator(mock_bot)
             mock_context = Mock()
             mock_context.product = Mock()
 

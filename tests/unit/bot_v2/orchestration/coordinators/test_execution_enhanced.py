@@ -178,7 +178,6 @@ class TestExecutionCoordinatorBackgroundTasks:
         coordinator.initialize(context)
 
         # Mock the runtime guard method to raise an exception
-        original_method = coordinator.run_runtime_guards
         coordinator.run_runtime_guards = AsyncMock(side_effect=RuntimeError("Guard failed"))
 
         # Start background tasks
@@ -207,7 +206,6 @@ class TestExecutionCoordinatorBackgroundTasks:
         coordinator.initialize(context)
 
         # Mock the reconciliation method to raise an exception
-        original_method = coordinator.run_order_reconciliation
         coordinator.run_order_reconciliation = AsyncMock(
             side_effect=RuntimeError("Reconciliation failed")
         )
@@ -711,7 +709,6 @@ class TestExecutionCoordinatorIntegration:
         coordinator.initialize(context)
 
         # Slippage multipliers should be loaded and passed to engine
-        engine = coordinator.context.runtime_state.exec_engine
         # Engine should have received slippage multipliers
         # (Implementation details depend on LiveExecutionEngine constructor)
 

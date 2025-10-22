@@ -310,7 +310,7 @@ class TestEnvironmentAndConfigurationErrors:
         ]
 
         for env_value in test_cases:
-            with pytest.MonkeyPatch().context() as m:
+            with pytest.MonkeyPatch().context():
                 # Re-create collector with malformed env
                 mock_settings = MagicMock()
                 mock_settings.raw_env = {"PERPS_COLLATERAL_ASSETS": env_value}

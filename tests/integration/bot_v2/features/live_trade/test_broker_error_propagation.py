@@ -105,7 +105,7 @@ class TestTCBE001TCBE006BrokerCommunicationFailures:
         assert any(keyword in error_msg for keyword in ["rate", "limit", "api", "exceeded"])
 
         # Verify backoff/retry mechanism was triggered
-        retry_events = event_store.get_events_by_type("retry_attempt")
+        event_store.get_events_by_type("retry_attempt")
         # Note: This depends on implementation details
         # The system should attempt retry or queue the order
 
@@ -236,7 +236,7 @@ class TestTCBE001TCBE006BrokerCommunicationFailures:
             assert len(timeout_events) > 0
 
             # Verify cleanup procedures were initiated
-            cleanup_events = event_store.get_events_by_type("cleanup_initiated")
+            event_store.get_events_by_type("cleanup_initiated")
             # Note: Depends on implementation - cleanup might be automatic
 
     @pytest.mark.asyncio
@@ -325,8 +325,8 @@ class TestTCBE007TCBE012ErrorFlowThroughSystemLayers:
 
         # Verify complete error flow was logged
         broker_error_events = event_store.get_events_by_type("broker_error")
-        coordinator_error_events = event_store.get_events_by_type("coordinator_error")
-        risk_error_events = event_store.get_events_by_type("risk_manager_error")
+        event_store.get_events_by_type("coordinator_error")
+        event_store.get_events_by_type("risk_manager_error")
 
         # Should have errors at each layer
         assert len(broker_error_events) > 0
@@ -406,7 +406,7 @@ class TestTCBE007TCBE012ErrorFlowThroughSystemLayers:
             assert len(position_sync_events) > 0
 
             # Verify fallback position state was used
-            fallback_events = event_store.get_events_by_type("fallback_position_state")
+            event_store.get_events_by_type("fallback_position_state")
             # Note: Depends on implementation details
 
     @pytest.mark.asyncio
@@ -449,7 +449,7 @@ class TestTCBE007TCBE012ErrorFlowThroughSystemLayers:
             assert len(balance_error_events) > 0
 
             # Verify system entered conservative mode due to balance issues
-            conservative_events = event_store.get_events_by_type("conservative_mode")
+            event_store.get_events_by_type("conservative_mode")
             # Note: Depends on implementation
 
     @pytest.mark.asyncio
@@ -492,7 +492,7 @@ class TestTCBE007TCBE012ErrorFlowThroughSystemLayers:
             assert len(error_metrics) > 0
 
             # Verify performance metrics were affected
-            latency_metrics = event_store.get_metrics_by_name("order_placement_latency")
+            event_store.get_metrics_by_name("order_placement_latency")
             # May have failed order attempts with high latency
 
     @pytest.mark.asyncio
@@ -648,7 +648,7 @@ class TestTCBE013TCBE017BrokerErrorRecovery:
             assert "duplicate" in str(e).lower() or "exists" in str(e).lower()
 
         # Verify resubmission events were logged
-        resubmission_events = event_store.get_events_by_type("order_resubmission")
+        event_store.get_events_by_type("order_resubmission")
         # Note: Depends on implementation details
 
     @pytest.mark.asyncio
@@ -688,11 +688,11 @@ class TestTCBE013TCBE017BrokerErrorRecovery:
             pass
 
         # Verify synchronization attempt was logged
-        sync_events = event_store.get_events_by_type("state_synchronization")
+        event_store.get_events_by_type("state_synchronization")
         # Note: Depends on implementation details
 
         # Verify system attempted to reconcile state differences
-        reconciliation_events = event_store.get_events_by_type("state_reconciliation")
+        event_store.get_events_by_type("state_reconciliation")
 
     @pytest.mark.asyncio
     async def test_tc_be_016_fallback_broker_switching(
@@ -729,7 +729,7 @@ class TestTCBE013TCBE017BrokerErrorRecovery:
                 )
 
             # Verify fallback attempt was logged
-            fallback_events = event_store.get_events_by_type("broker_fallback")
+            event_store.get_events_by_type("broker_fallback")
             # Note: Depends on multi-broker implementation
 
     @pytest.mark.asyncio
@@ -762,15 +762,15 @@ class TestTCBE013TCBE017BrokerErrorRecovery:
             )
 
         # Verify degradation mode was activated
-        degradation_events = event_store.get_events_by_type("graceful_degradation")
+        event_store.get_events_by_type("graceful_degradation")
         # Note: Depends on implementation details
 
         # Verify system entered conservative operating mode
-        conservative_events = event_store.get_events_by_type("conservative_mode")
+        event_store.get_events_by_type("conservative_mode")
         # Note: Depends on implementation details
 
         # Verify critical operations were still attempted
-        critical_operations = event_store.get_events_by_type("critical_operation_attempt")
+        event_store.get_events_by_type("critical_operation_attempt")
         # Note: Depends on implementation details
 
 
@@ -823,7 +823,7 @@ class TestBrokerErrorPropagationEdgeCases:
         assert all(isinstance(result, Exception) for result in results)
 
         # Verify system remained stable
-        system_events = event_store.get_events_by_type("system_stable")
+        event_store.get_events_by_type("system_stable")
         # Note: Depends on implementation
 
     @pytest.mark.asyncio
@@ -833,7 +833,7 @@ class TestBrokerErrorPropagationEdgeCases:
         """Test broker errors occurring during circuit breaker activation"""
         system = integrated_trading_system
         broker = system["execution_coordinator"].broker
-        risk_manager = system["risk_manager"]
+        system["risk_manager"]
         event_store = system["event_store"]
 
         # Simulate market conditions that would trigger circuit breaker
@@ -862,7 +862,7 @@ class TestBrokerErrorPropagationEdgeCases:
             )
 
         # Verify both circuit breaker and broker error were handled
-        circuit_events = event_store.get_events_by_type("circuit_breaker")
+        event_store.get_events_by_type("circuit_breaker")
         broker_events = event_store.get_events_by_type("broker_error")
 
         # System should handle both types of errors

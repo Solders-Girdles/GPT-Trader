@@ -570,7 +570,7 @@ class TestLiveExecutionEngineCoverageEnhancements:
         # Mock broker cancel_order
         mock_broker.cancel_order = Mock()
 
-        result = engine.cancel_all_orders()
+        engine.cancel_all_orders()
 
         # Should have cancelled all orders
         assert mock_broker.cancel_order.call_count == 3
@@ -680,7 +680,7 @@ class TestLiveExecutionEngineCoverageEnhancements:
         engine.order_validator.validate_order = Mock(return_value=True)
         engine.order_submitter.submit_order = Mock(return_value="order_123")
 
-        order_id = engine.place_order(
+        engine.place_order(
             symbol="BTC-PERP",
             side=OrderSide.BUY,
             order_type=OrderType.MARKET,

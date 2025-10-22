@@ -14,8 +14,34 @@ if TYPE_CHECKING:
 class MarketDataClientMixin:
     """Methods for market product discovery and quotes."""
 
-    def get_products(self: CoinbaseClientProtocol) -> dict[str, Any]:
-        return self._request("GET", self._get_endpoint_path("products"))
+    def get_products(
+        self: CoinbaseClientProtocol,
+        *,
+        product_type: str | None = None,
+        contract_expiry_type: str | None = None,
+    ) -> dict[str, Any]:
+        """Fetch products from Coinbase API.
+
+        Args:
+            product_type: Filter by product type ("spot", "future")
+            contract_expiry_type: Filter by contract expiry ("perpetual", "expiring")
+
+        Returns:
+            API response with products list
+
+        Note:
+            Per Oct 2025 changelog: explicit filtering recommended to avoid
+            implicit behavior when expiry parameters are present.
+        """
+        path = self._get_endpoint_path("products")
+        params: dict[str, str] = {}
+        if product_type:
+            params["product_type"] = product_type
+        if contract_expiry_type:
+            params["contract_expiry_type"] = contract_expiry_type
+        if params:
+            path = self._build_path_with_params(path, params)
+        return self._request("GET", path)
 
     def get_ticker(self: CoinbaseClientProtocol, product_id: str) -> dict[str, Any]:
         path = self._get_endpoint_path("ticker", product_id=product_id)
@@ -105,11 +131,28 @@ class MarketDataClientMixin:
         return self._request("GET", f"{path}?product_ids={query}")
 
     def list_products(
-        self: CoinbaseClientProtocol, product_type: str | None = None
+        self: CoinbaseClientProtocol,
+        product_type: str | None = None,
+        contract_expiry_type: str | None = None,
     ) -> list[dict[str, Any]]:
-        """Return available products, normalising legacy payload shapes."""
+        """Return available products, normalising legacy payload shapes.
 
-        payload = self.get_products()
+        Args:
+            product_type: Filter by product type ("spot", "future")
+            contract_expiry_type: Filter by contract expiry ("perpetual", "expiring")
+
+        Returns:
+            List of product dictionaries
+
+        Note:
+            Per Oct 2025 changelog: explicit filtering recommended.
+            Filters are applied at API level when possible (via get_products),
+            with client-side fallback for additional filtering.
+        """
+        payload = self.get_products(
+            product_type=product_type,
+            contract_expiry_type=contract_expiry_type,
+        )
         products: list[dict[str, Any]] = []
         if isinstance(payload, dict):
             raw_products = payload.get("products")
@@ -118,12 +161,21 @@ class MarketDataClientMixin:
         elif isinstance(payload, list):
             products = [p for p in payload if isinstance(p, dict)]
 
+        # Client-side fallback filtering if API didn't filter
         if product_type:
             target = product_type.upper()
             products = [
                 product
                 for product in products
                 if (product.get("product_type") or "").upper() == target
+            ]
+
+        if contract_expiry_type:
+            target = contract_expiry_type.upper()
+            products = [
+                product
+                for product in products
+                if (product.get("contract_expiry_type") or "").upper() == target
             ]
 
         return products

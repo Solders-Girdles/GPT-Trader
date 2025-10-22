@@ -34,6 +34,33 @@ from bot_v2.utilities.telemetry import emit_metric
 
 logger = get_logger(__name__, component="coinbase_rest")
 
+# Coinbase API limits as of October 2025
+MAX_CLIENT_ORDER_ID_LENGTH = 128
+
+
+def _validate_client_order_id(client_id: str | None) -> None:
+    """Validate client_order_id meets Coinbase API requirements.
+
+    Args:
+        client_id: Client order ID to validate
+
+    Raises:
+        ValidationError: If client_id exceeds maximum length
+
+    Note:
+        Per Coinbase changelog (Oct 2025), client_order_id must be ≤128 characters.
+        This validation prevents API rejections when custom client IDs are provided.
+    """
+    if client_id is None:
+        return
+    if len(client_id) > MAX_CLIENT_ORDER_ID_LENGTH:
+        raise ValidationError(
+            f"client_order_id exceeds maximum length of {MAX_CLIENT_ORDER_ID_LENGTH} characters "
+            f"(got {len(client_id)})",
+            field="client_order_id",
+            value=client_id[:50] + "..." if len(client_id) > 50 else client_id,
+        )
+
 
 class CoinbaseRestServiceBase:
     """Holds shared collaborators and internal helpers."""
@@ -223,7 +250,9 @@ class CoinbaseRestServiceBase:
         if post_only:
             payload["post_only"] = True
         if include_client_id:
-            payload["client_order_id"] = client_id or f"perps_{uuid.uuid4().hex[:12]}"
+            final_client_id = client_id or f"perps_{uuid.uuid4().hex[:12]}"
+            _validate_client_order_id(final_client_id)
+            payload["client_order_id"] = final_client_id
         payload["type"] = payload.get("type", order_type_value)
         payload["size"] = quantity_str
         payload["quantity"] = quantity_str

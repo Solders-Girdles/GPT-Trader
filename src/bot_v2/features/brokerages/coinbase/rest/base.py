@@ -223,7 +223,17 @@ class CoinbaseRestServiceBase:
         if post_only:
             payload["post_only"] = True
         if include_client_id:
-            payload["client_order_id"] = client_id or f"perps_{uuid.uuid4().hex[:12]}"
+            order_id = client_id or f"perps_{uuid.uuid4().hex[:12]}"
+            # Enforce client_order_id <= 128 chars per API requirements
+            if len(order_id) > 128:
+                logger.warning(
+                    "client_order_id exceeds 128 chars, truncating: %s",
+                    order_id,
+                    operation="order_build",
+                    stage="client_id_validation",
+                )
+                order_id = order_id[:128]
+            payload["client_order_id"] = order_id
         payload["type"] = payload.get("type", order_type_value)
         payload["size"] = quantity_str
         payload["quantity"] = quantity_str

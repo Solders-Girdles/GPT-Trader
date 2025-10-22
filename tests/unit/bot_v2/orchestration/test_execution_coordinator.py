@@ -799,7 +799,7 @@ class TestExecutionCoordinatorCoverageEnhancements:
 
         with patch(
             "bot_v2.orchestration.coordinators.execution.load_runtime_settings",
-            return_value=RuntimeSettings(),
+            return_value=Mock(spec=RuntimeSettings),
         ):
             result = coordinator.initialize(base_context)
 

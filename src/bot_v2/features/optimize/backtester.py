@@ -1,4 +1,15 @@
-"""Local backtesting helpers used by the optimization pipeline."""
+"""Local backtesting helpers used by the optimization pipeline.
+
+IMPORTANT: For production-parity backtesting that reuses the live trading strategy,
+use backtest_engine.run_backtest_production() instead of run_backtest_local().
+
+The functions in this module (run_backtest_local, etc.) use simplified strategy
+implementations and are intended for rapid parameter optimization. They do NOT
+guarantee parity with live execution.
+
+For parity validation, always use:
+    from bot_v2.features.optimize.backtest_engine import run_backtest_production
+"""
 
 import logging
 from typing import Any, cast

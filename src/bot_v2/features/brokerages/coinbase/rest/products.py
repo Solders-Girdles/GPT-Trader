@@ -28,11 +28,45 @@ class ProductRestMixin:
     endpoints: CoinbaseEndpoints
     product_catalog: ProductCatalog
 
-    def list_products(self, market: MarketType | None = None) -> list[Product]:
+    def list_products(
+        self,
+        market: MarketType | None = None,
+        *,
+        product_type: str | None = None,
+        contract_expiry_type: str | None = None,
+    ) -> list[Product]:
+        """List tradable products with optional filtering.
+
+        Args:
+            market: Filter by MarketType enum (legacy parameter for backward compatibility)
+            product_type: Filter by product type ("spot", "future")
+            contract_expiry_type: Filter by contract expiry ("perpetual", "expiring")
+
+        Returns:
+            List of Product objects matching the filters
+
+        Note:
+            Per Oct 2025 changelog: explicit filtering recommended to avoid
+            implicit behavior when expiry parameters are present. Use product_type
+            and contract_expiry_type for explicit API-level filtering.
+
+        Examples:
+            # List all perpetual futures
+            products = list_products(product_type="future", contract_expiry_type="perpetual")
+
+            # List all spot products
+            products = list_products(product_type="spot")
+
+            # Legacy usage (still supported)
+            products = list_products(market=MarketType.PERPETUAL)
+        """
         try:
             base = cast("CoinbaseRestServiceBase", self)
             client = cast("CoinbaseClient", base.client)
-            response = client.get_products() or {}
+            response = client.get_products(
+                product_type=product_type,
+                contract_expiry_type=contract_expiry_type,
+            ) or {}
         except Exception as exc:
             logger.error("Failed to list products: %s", exc)
             return []

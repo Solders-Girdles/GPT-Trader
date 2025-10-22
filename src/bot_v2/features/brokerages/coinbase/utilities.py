@@ -133,6 +133,32 @@ class FundingCalculator:
     """Calculate funding accrual for perpetual positions.
 
     Implements discrete funding at scheduled times.
+
+    Coinbase Perpetuals Funding (as of October 2025):
+    ---------------------------------------------------
+    US Perpetuals (CFM):
+    - Accrual: Hourly (every hour on the hour)
+    - Settlement: Twice daily (typically 00:00 UTC and 12:00 UTC)
+    - Rate Convention: Positive funding rate means longs pay shorts
+
+    International Perpetuals (INTX):
+    - Accrual: Every 8 hours (00:00, 08:00, 16:00 UTC)
+    - Settlement: At each funding time
+    - Rate Convention: Positive funding rate means longs pay shorts
+
+    Implementation Notes:
+    ---------------------
+    This calculator tracks accrual events (when funding is calculated).
+    Actual settlement (transfer of funds) may occur at different times
+    depending on the venue. The accrual happens when `now >= next_funding_time`,
+    and the calculator uses the API-provided `next_funding_time` to determine
+    when to apply funding charges.
+
+    For accurate PnL tracking:
+    - Call `accrue_if_due()` on each market data update
+    - Ensure `next_funding_time` is refreshed from the API
+    - Track both accrued and settled funding separately if needed
+
     Convention: Positive funding rate means longs pay shorts.
     """
 

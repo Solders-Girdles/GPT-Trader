@@ -106,3 +106,52 @@ def test_product():
     product.price_increment = Decimal("0.01")
     product.leverage_max = 5
     return product
+
+
+# Additional fixtures for main test file refactoring
+
+
+@pytest.fixture
+def mock_bot():
+    """Create mock PerpsBot instance (for main file tests)."""
+    bot = Mock()
+    bot.config = Mock()
+    bot.config.profile = Profile.PROD  # Non-SPOT profile for perps
+    bot.config.derivatives_enabled = True
+    bot.config.short_ma = 10
+    bot.config.long_ma = 30
+    bot.config.target_leverage = 2
+    bot.config.trailing_stop_pct = Decimal("0.02")
+    bot.config.enable_shorts = True
+    bot.config.perps_position_fraction = None
+    bot.config.symbols = ["BTC-PERP", "ETH-PERP"]
+
+    bot.broker = Mock()
+    bot.risk_manager = Mock()
+    bot.risk_manager.config = Mock()
+    bot.risk_manager.config.kill_switch_enabled = False
+
+    state = PerpsBotRuntimeState(bot.config.symbols or [])
+    bot.runtime_state = state
+    bot.mark_windows = state.mark_windows
+    bot.last_decisions = state.last_decisions
+    bot._symbol_strategies = state.symbol_strategies
+    bot.execute_decision = Mock()
+    bot.get_product = Mock()
+
+    return bot
+
+
+@pytest.fixture
+def mock_spot_profile_service():
+    """Create mock SpotProfileService (for main file tests)."""
+    service = Mock()
+    service.load = Mock(return_value={})
+    service.get = Mock(return_value=None)
+    return service
+
+
+@pytest.fixture
+def orchestrator(mock_bot, mock_spot_profile_service):
+    """Create StrategyOrchestrator instance (for main file tests)."""
+    return StrategyOrchestrator(bot=mock_bot, spot_profile_service=mock_spot_profile_service)

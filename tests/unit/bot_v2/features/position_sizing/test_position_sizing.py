@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from bot_v2.errors import ValidationError
+from bot_v2.features.position_sizing.kelly import kelly_with_volatility_scaling
 from bot_v2.features.position_sizing.position_sizing import calculate_position_size
 from bot_v2.features.position_sizing.regime import (
     RegimeMultipliers,
@@ -293,3 +294,99 @@ def test_validate_regime_inputs():
 def test_safe_regime_calculation(regime, base_multiplier, confidence, expected_range):
     result = safe_regime_calculation(regime, base_multiplier, confidence)
     assert expected_range[0] <= result <= expected_range[1]
+
+
+def test_kelly_with_volatility_scaling_normal_volatility():
+    """Test that normal volatility doesn't reduce position size."""
+    win_rate = 0.6
+    avg_win = 0.05
+    avg_loss = -0.03
+    # Create stable price history (low volatility)
+    recent_prices = [100.0 + i * 0.1 for i in range(100)]
+
+    scaled_kelly, metrics = kelly_with_volatility_scaling(
+        win_rate, avg_win, avg_loss, recent_prices, fraction=0.25
+    )
+
+    assert scaled_kelly > 0
+    assert metrics["regime"] == "normal_volatility"
+    assert metrics["scaling_factor"] == 1.0
+    assert metrics["base_kelly"] == pytest.approx(scaled_kelly)
+
+
+def test_kelly_with_volatility_scaling_high_volatility():
+    """Test that high volatility reduces position size."""
+    win_rate = 0.6
+    avg_win = 0.05
+    avg_loss = -0.03
+
+    # Create volatile price history
+    recent_prices = []
+    for i in range(100):
+        base = 100.0
+        volatility = 5.0 if i > 80 else 0.5  # High volatility in recent bars
+        recent_prices.append(base + (i % 2 - 0.5) * volatility)
+
+    scaled_kelly, metrics = kelly_with_volatility_scaling(
+        win_rate, avg_win, avg_loss, recent_prices, fraction=0.25, high_vol_scaling=0.5
+    )
+
+    assert scaled_kelly > 0
+    assert metrics["regime"] == "high_volatility"
+    assert metrics["scaling_factor"] == 0.5
+    assert scaled_kelly == pytest.approx(metrics["base_kelly"] * 0.5)
+
+
+def test_kelly_with_volatility_scaling_insufficient_data():
+    """Test behavior with insufficient price history."""
+    win_rate = 0.6
+    avg_win = 0.05
+    avg_loss = -0.03
+    recent_prices = [100.0, 101.0, 102.0]  # Not enough data
+
+    scaled_kelly, metrics = kelly_with_volatility_scaling(
+        win_rate, avg_win, avg_loss, recent_prices, fraction=0.25
+    )
+
+    # Should fall back to base Kelly without scaling
+    assert scaled_kelly > 0
+    assert metrics["regime"] == "insufficient_data"
+    assert metrics["scaling_factor"] == 1.0
+
+
+def test_kelly_with_volatility_scaling_custom_percentile():
+    """Test with custom volatility percentile threshold."""
+    win_rate = 0.6
+    avg_win = 0.05
+    avg_loss = -0.03
+
+    # Create moderately volatile price history
+    recent_prices = [100.0 + (i % 5 - 2) * 1.0 for i in range(100)]
+
+    # Use p50 instead of p75 - more restrictive
+    scaled_kelly, metrics = kelly_with_volatility_scaling(
+        win_rate,
+        avg_win,
+        avg_loss,
+        recent_prices,
+        fraction=0.25,
+        high_vol_percentile=0.50,
+        high_vol_scaling=0.5,
+    )
+
+    assert scaled_kelly > 0
+    assert metrics["vol_percentile"] == 0.50
+
+
+def test_position_sizing_with_volatility_aware_kelly():
+    """Test that intelligent position sizing uses volatility-aware Kelly when prices provided."""
+    recent_prices = [100.0 + i * 0.5 for i in range(100)]
+
+    request = _base_request(recent_prices=recent_prices)
+
+    response = calculate_position_size(request)
+
+    assert response.method_used is SizingMethod.INTELLIGENT
+    assert response.recommended_value > 0
+    # Check that volatility-aware sizing was mentioned in notes
+    assert any("Volatility-aware" in note for note in response.calculation_notes)

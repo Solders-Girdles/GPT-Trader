@@ -60,6 +60,7 @@ class PositionSizeRequest:
     confidence: float | None = None
     market_regime: str | None = None
     volatility: float | None = None
+    recent_prices: list[float] | None = None  # For volatility-aware Kelly sizing
 
     # Risk parameters
     risk_params: RiskParameters = field(default_factory=RiskParameters)

@@ -12,6 +12,9 @@ strategy:
       oversold: 40
       overbought: 70
     trend_filter: null
+    regime_filter:
+      window: 14
+      adx_threshold: 25
   eth:
     type: ma
     short_window: 10
@@ -22,6 +25,9 @@ strategy:
       multiplier: 1.1
     momentum_filter: null
     trend_filter: null
+    regime_filter:
+      window: 14
+      adx_threshold: 25
   sol:
     type: ma
     short_window: 8
@@ -34,6 +40,9 @@ strategy:
       oversold: 35
       overbought: 70
     trend_filter: null
+    regime_filter:
+      window: 14
+      adx_threshold: 25
   xrp:
     type: ma
     short_window: 12
@@ -46,6 +55,9 @@ strategy:
       oversold: 30
       overbought: 68
     trend_filter: null
+    regime_filter:
+      window: 14
+      adx_threshold: 28
   ltc:
     type: ma
     short_window: 7
@@ -58,6 +70,9 @@ strategy:
       oversold: 38
       overbought: 72
     trend_filter: null
+    regime_filter:
+      window: 14
+      adx_threshold: 27
   ada:
     type: ma
     short_window: 12
@@ -70,6 +85,9 @@ strategy:
       oversold: 32
       overbought: 68
     trend_filter: null
+    regime_filter:
+      window: 14
+      adx_threshold: 28
   doge:
     type: ma
     short_window: 15
@@ -82,6 +100,9 @@ strategy:
       oversold: 28
       overbought: 65
     trend_filter: null
+    regime_filter:
+      window: 14
+      adx_threshold: 30
   bch:
     type: ma
     short_window: 6
@@ -94,6 +115,9 @@ strategy:
       oversold: 37
       overbought: 70
     trend_filter: null
+    regime_filter:
+      window: 14
+      adx_threshold: 26
   avax:
     type: ma
     short_window: 9
@@ -106,6 +130,9 @@ strategy:
       oversold: 34
       overbought: 70
     trend_filter: null
+    regime_filter:
+      window: 14
+      adx_threshold: 27
   link:
     type: ma
     short_window: 9
@@ -118,6 +145,9 @@ strategy:
       oversold: 35
       overbought: 71
     trend_filter: null
+    regime_filter:
+      window: 14
+      adx_threshold: 27
 risk:
   commission_bps: 2.5
   max_position_pct: 0.2

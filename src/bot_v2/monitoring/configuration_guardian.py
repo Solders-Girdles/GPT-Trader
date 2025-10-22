@@ -14,6 +14,7 @@ from bot_v2.config.schemas import ConfigValidationResult
 from bot_v2.config.types import Profile
 from bot_v2.features.brokerages.core.interfaces import Balance, Position
 from bot_v2.orchestration.runtime_settings import RuntimeSettings, load_runtime_settings
+from bot_v2.persistence.event_store import EventStore
 from bot_v2.utilities.config import ConfigBaselinePayload
 from bot_v2.utilities.logging_patterns import get_logger
 
@@ -471,6 +472,11 @@ class ConfigurationGuardian:
 
     Integrates all monitoring components and provides the external API
     for checking configuration safety before trading cycles.
+
+    Features:
+    - Runtime configuration drift detection
+    - Two-person rule enforcement for critical changes
+    - Event store logging for all configuration deltas
     """
 
     def __init__(
@@ -478,9 +484,13 @@ class ConfigurationGuardian:
         baseline_snapshot: BaselineSnapshot,
         *,
         settings: RuntimeSettings | None = None,
+        event_store: EventStore | None = None,
+        bot_id: str = "config_guardian",
     ) -> None:
         self.baseline = baseline_snapshot
         self._settings = settings or load_runtime_settings()
+        self._event_store = event_store or EventStore()
+        self._bot_id = bot_id
 
         # Initialize monitoring components
         self.environment_monitor = EnvironmentMonitor(baseline_snapshot, settings=self._settings)
@@ -496,8 +506,29 @@ class ConfigurationGuardian:
             baseline_timestamp=baseline_snapshot.timestamp.isoformat(),
         )
 
-    def reset_baseline(self, new_snapshot: BaselineSnapshot) -> None:
-        """Reset baseline snapshot following an intentional configuration change."""
+    def reset_baseline(
+        self, new_snapshot: BaselineSnapshot, *, user_id: str | None = None
+    ) -> None:
+        """Reset baseline snapshot following an intentional configuration change.
+
+        Args:
+            new_snapshot: New baseline snapshot
+            user_id: Optional user ID who authorized the change
+        """
+        # Log configuration delta
+        old_config = self.baseline.config_dict
+        new_config = new_snapshot.config_dict
+
+        changes: dict[str, tuple[Any, Any]] = {}
+        for key in set(old_config.keys()) | set(new_config.keys()):
+            old_val = old_config.get(key)
+            new_val = new_config.get(key)
+            if old_val != new_val:
+                changes[key] = (old_val, new_val)
+
+        if changes:
+            self._log_config_delta("baseline_reset", changes, user_id=user_id)
+
         self.baseline = new_snapshot
         self.environment_monitor.update_baseline(new_snapshot)
         self.state_validator.update_baseline(new_snapshot)
@@ -507,6 +538,8 @@ class ConfigurationGuardian:
             operation="config_guardian",
             stage="reset_baseline",
             baseline_timestamp=new_snapshot.timestamp.isoformat(),
+            user_id=user_id,
+            changes_count=len(changes),
         )
 
     def pre_cycle_check(
@@ -611,6 +644,34 @@ class ConfigurationGuardian:
                 )
 
         return status
+
+    def _log_config_delta(
+        self,
+        change_type: str,
+        changes: dict[str, tuple[Any, Any]],
+        *,
+        user_id: str | None = None,
+    ) -> None:
+        """Log configuration delta to event store."""
+        event_data = {
+            "event_type": "config_delta",
+            "change_type": change_type,
+            "changes": {
+                field: {"old": str(old), "new": str(new)} for field, (old, new) in changes.items()
+            },
+            "user_id": user_id,
+            "timestamp": datetime.now(UTC).isoformat(),
+        }
+
+        self._event_store.append_metric(self._bot_id, event_data)
+
+        logger.info(
+            f"Logged config delta: {change_type}",
+            operation="config_guardian",
+            stage="log_delta",
+            change_type=change_type,
+            field_count=len(changes),
+        )
 
     @staticmethod
     def create_baseline_snapshot(

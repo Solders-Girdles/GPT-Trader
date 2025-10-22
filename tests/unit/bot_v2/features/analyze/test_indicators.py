@@ -149,3 +149,78 @@ def test_calculate_volatility_classifies_regimes(returns: pd.Series, expected: s
     result = indicators.calculate_volatility(returns, period=10)
 
     assert result == expected
+
+
+def test_calculate_adx_returns_three_series():
+    """Test that ADX returns ADX, +DI, and -DI series."""
+    high = series([10, 12, 13, 14, 13, 15, 16, 15, 17, 18, 19, 18, 20, 21, 22])
+    low = series([8, 9, 10, 11, 10, 12, 13, 12, 14, 15, 16, 15, 17, 18, 19])
+    close = series([9, 11, 12, 13, 11, 14, 15, 13, 16, 17, 18, 16, 19, 20, 21])
+
+    adx, plus_di, minus_di = indicators.calculate_adx(high, low, close, period=14)
+
+    assert len(adx) == len(high)
+    assert len(plus_di) == len(high)
+    assert len(minus_di) == len(high)
+    assert (adx >= 0).all()
+    assert (adx <= 100).all()
+    assert (plus_di >= 0).all()
+    assert (minus_di >= 0).all()
+
+
+def test_calculate_adx_trending_market():
+    """Test ADX with a strong trending market."""
+    # Create strong uptrend
+    high = series([10 + i * 0.5 for i in range(30)])
+    low = series([9 + i * 0.5 for i in range(30)])
+    close = series([9.5 + i * 0.5 for i in range(30)])
+
+    adx, plus_di, minus_di = indicators.calculate_adx(high, low, close, period=14)
+
+    # In a strong uptrend, ADX should be high and +DI should exceed -DI
+    assert adx.iloc[-1] > 20  # Strong trend
+    assert plus_di.iloc[-1] > minus_di.iloc[-1]  # Uptrend
+
+
+def test_calculate_adx_choppy_market():
+    """Test ADX with a choppy/ranging market."""
+    # Create sideways price action
+    high = series([10, 11, 10, 11, 10, 11, 10, 11, 10, 11, 10, 11, 10, 11, 10])
+    low = series([8, 9, 8, 9, 8, 9, 8, 9, 8, 9, 8, 9, 8, 9, 8])
+    close = series([9, 10, 9, 10, 9, 10, 9, 10, 9, 10, 9, 10, 9, 10, 9])
+
+    adx, plus_di, minus_di = indicators.calculate_adx(high, low, close, period=14)
+
+    # In choppy markets, ADX should be relatively low
+    assert adx.iloc[-1] < 40  # Weak trend or no trend
+
+
+def test_calculate_adx_handles_flat_prices():
+    """Test ADX with completely flat prices."""
+    high = series([10] * 20)
+    low = series([10] * 20)
+    close = series([10] * 20)
+
+    adx, plus_di, minus_di = indicators.calculate_adx(high, low, close, period=14)
+
+    # All indicators should be zero or close to zero for flat prices
+    assert adx.iloc[-1] < 1
+    assert plus_di.iloc[-1] < 1
+    assert minus_di.iloc[-1] < 1
+
+
+def test_calculate_adx_different_periods():
+    """Test ADX with different period settings."""
+    high = series([10 + i * 0.3 for i in range(30)])
+    low = series([9 + i * 0.3 for i in range(30)])
+    close = series([9.5 + i * 0.3 for i in range(30)])
+
+    adx_14, _, _ = indicators.calculate_adx(high, low, close, period=14)
+    adx_7, _, _ = indicators.calculate_adx(high, low, close, period=7)
+
+    # Shorter period should be more responsive
+    assert len(adx_14) == len(high)
+    assert len(adx_7) == len(high)
+    # Both should detect the trend
+    assert adx_14.iloc[-1] > 0
+    assert adx_7.iloc[-1] > 0

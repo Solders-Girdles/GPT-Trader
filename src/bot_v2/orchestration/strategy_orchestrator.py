@@ -8,6 +8,8 @@ from datetime import datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any, cast
 
+import pandas as pd
+
 from bot_v2.features.brokerages.core.interfaces import Balance, Position, Product
 from bot_v2.features.live_trade.indicators import mean_decimal as _mean_decimal
 from bot_v2.features.live_trade.indicators import (
@@ -15,6 +17,7 @@ from bot_v2.features.live_trade.indicators import (
 )
 from bot_v2.features.live_trade.indicators import to_decimal as _to_decimal
 from bot_v2.features.live_trade.indicators import true_range as _true_range
+from bot_v2.features.analyze.indicators import calculate_adx
 from bot_v2.features.live_trade.risk_runtime import CircuitBreakerAction
 from bot_v2.features.live_trade.strategies.perps_baseline import (
     Action,
@@ -431,6 +434,13 @@ class StrategyOrchestrator:
                 needs_data = True
                 max_window = max(max_window, window)
 
+        regime_config = rules.get("regime_filter") if isinstance(rules, dict) else None
+        if isinstance(regime_config, dict):
+            window = int(regime_config.get("window", 14))
+            if window > 0:
+                needs_data = True
+                max_window = max(max_window, window + 15)
+
         if not needs_data:
             return decision
 
@@ -518,6 +528,51 @@ class StrategyOrchestrator:
                         float(vol_pct),
                     )
                     return Decision(action=Action.HOLD, reason="volatility_filter_blocked")
+
+        if isinstance(regime_config, dict):
+            window = int(regime_config.get("window", 14))
+            adx_threshold = _to_decimal(regime_config.get("adx_threshold", 25))
+            if window > 0:
+                if len(closes) < window + 15:
+                    return Decision(action=Action.HOLD, reason="regime_filter_wait")
+
+                # Convert Decimal lists to pandas Series for ADX calculation
+                high_series = pd.Series([float(h) for h in highs])
+                low_series = pd.Series([float(l) for l in lows])
+                close_series = pd.Series([float(c) for c in closes])
+
+                # Calculate ADX
+                adx, plus_di, minus_di = calculate_adx(high_series, low_series, close_series, window)
+                current_adx = Decimal(str(adx.iloc[-1]))
+
+                # Determine regime
+                regime = "trending" if current_adx >= adx_threshold else "choppy"
+
+                # Log regime info
+                logger.info(
+                    "%s regime=%s ADX=%.2f threshold=%.2f +DI=%.2f -DI=%.2f",
+                    context.symbol,
+                    regime,
+                    float(current_adx),
+                    float(adx_threshold),
+                    float(plus_di.iloc[-1]),
+                    float(minus_di.iloc[-1]),
+                    operation="regime_filter",
+                    symbol=context.symbol,
+                )
+
+                # Block entry if market is choppy (ADX below threshold)
+                if current_adx < adx_threshold:
+                    logger.info(
+                        "%s entry blocked by regime filter (ADX=%.2f < %.2f)",
+                        context.symbol,
+                        float(current_adx),
+                        float(adx_threshold),
+                    )
+                    return Decision(
+                        action=Action.HOLD,
+                        reason=f"regime_filter_blocked_choppy_adx_{float(current_adx):.1f}",
+                    )
 
         return decision
 

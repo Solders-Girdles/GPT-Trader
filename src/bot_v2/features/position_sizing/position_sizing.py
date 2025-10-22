@@ -12,6 +12,7 @@ from bot_v2.features.position_sizing.kelly import (
     fractional_kelly,
     kelly_criterion,
     kelly_position_value,
+    kelly_with_volatility_scaling,
     validate_kelly_inputs,
 )
 from bot_v2.features.position_sizing.regime import regime_adjusted_size
@@ -145,12 +146,28 @@ def _calculate_intelligent_size(request: PositionSizeRequest) -> PositionSizeRes
             win_rate, avg_win, avg_loss = kelly_inputs
             _validate_kelly_safety(win_rate, avg_win, avg_loss)
 
-            base_size = fractional_kelly(
-                win_rate,
-                avg_win,
-                avg_loss,
-                request.risk_params.kelly_fraction,
-            )
+            # Use volatility-aware Kelly if price history is available
+            if request.recent_prices and len(request.recent_prices) >= 20:
+                base_size, vol_metrics = kelly_with_volatility_scaling(
+                    win_rate,
+                    avg_win,
+                    avg_loss,
+                    request.recent_prices,
+                    fraction=request.risk_params.kelly_fraction,
+                )
+                notes.append(
+                    f"Volatility-aware Kelly sizing: {base_size:.4f} "
+                    f"(regime={vol_metrics.get('regime', 'unknown')}, "
+                    f"scaling={vol_metrics.get('scaling_factor', 1.0):.2f}x)"
+                )
+            else:
+                base_size = fractional_kelly(
+                    win_rate,
+                    avg_win,
+                    avg_loss,
+                    request.risk_params.kelly_fraction,
+                )
+                notes.append(f"Base Kelly sizing: {base_size:.4f}")
 
             # Safety check for extreme Kelly values
             if base_size > request.risk_params.max_position_size:
@@ -158,8 +175,6 @@ def _calculate_intelligent_size(request: PositionSizeRequest) -> PositionSizeRes
                     f"Kelly fraction {base_size:.4f} exceeds max position size, capping at {request.risk_params.max_position_size:.4f}"
                 )
                 base_size = request.risk_params.max_position_size
-
-            notes.append(f"Base Kelly sizing: {base_size:.4f}")
         else:
             # Fallback to fixed sizing
             base_size = request.risk_params.max_position_size * 0.5

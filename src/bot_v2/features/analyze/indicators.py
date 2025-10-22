@@ -255,3 +255,62 @@ def calculate_volatility(returns: pd.Series, period: int = 20) -> str:
         return "medium"
     else:
         return "high"
+
+
+def calculate_adx(
+    high: pd.Series, low: pd.Series, close: pd.Series, period: int = 14
+) -> tuple[pd.Series, pd.Series, pd.Series]:
+    """
+    Average Directional Index (ADX) - measures trend strength.
+
+    ADX values:
+    - 0-25: Weak or no trend (choppy/ranging market)
+    - 25-50: Strong trend
+    - 50-75: Very strong trend
+    - 75-100: Extremely strong trend
+
+    Args:
+        high: High prices
+        low: Low prices
+        close: Close prices
+        period: ADX period (default 14)
+
+    Returns:
+        (ADX, +DI, -DI) series
+    """
+    # Calculate directional movements
+    high_diff = high.diff()
+    low_diff = -low.diff()
+
+    # Positive directional movement (+DM)
+    plus_dm = pd.Series(0.0, index=high.index)
+    plus_dm[(high_diff > low_diff) & (high_diff > 0)] = high_diff
+
+    # Negative directional movement (-DM)
+    minus_dm = pd.Series(0.0, index=low.index)
+    minus_dm[(low_diff > high_diff) & (low_diff > 0)] = low_diff
+
+    # Calculate True Range
+    tr1 = high - low
+    tr2 = abs(high - close.shift())
+    tr3 = abs(low - close.shift())
+    tr = pd.concat([tr1, tr2, tr3], axis=1).max(axis=1)
+
+    # Smooth the directional movements and true range using Wilder's smoothing (EMA-like)
+    atr = tr.ewm(alpha=1 / period, min_periods=period, adjust=False).mean()
+    plus_di_smooth = plus_dm.ewm(alpha=1 / period, min_periods=period, adjust=False).mean()
+    minus_di_smooth = minus_dm.ewm(alpha=1 / period, min_periods=period, adjust=False).mean()
+
+    # Calculate directional indicators
+    plus_di = 100 * plus_di_smooth / atr.replace(0, np.nan)
+    minus_di = 100 * minus_di_smooth / atr.replace(0, np.nan)
+
+    # Calculate DX (Directional Movement Index)
+    di_sum = plus_di + minus_di
+    di_diff = abs(plus_di - minus_di)
+    dx = 100 * di_diff / di_sum.replace(0, np.nan)
+
+    # Calculate ADX (smoothed DX)
+    adx = dx.ewm(alpha=1 / period, min_periods=period, adjust=False).mean()
+
+    return adx.fillna(0.0), plus_di.fillna(0.0), minus_di.fillna(0.0)

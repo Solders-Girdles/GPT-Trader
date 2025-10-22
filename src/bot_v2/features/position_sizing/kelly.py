@@ -353,6 +353,133 @@ def kelly_risk_metrics(kelly_fraction: float, avg_loss: float, portfolio_value: 
     }
 
 
+def kelly_with_volatility_scaling(
+    win_rate: float,
+    avg_win: float,
+    avg_loss: float,
+    recent_prices: list[float],
+    fraction: float = 0.25,
+    lookback_window: int = 100,
+    high_vol_percentile: float = 0.75,
+    high_vol_scaling: float = 0.5,
+) -> tuple[float, dict]:
+    """
+    Calculate fractional Kelly with volatility regime scaling.
+
+    Reduces position size during high volatility periods to protect against
+    Kelly's sensitivity to mis-estimated edge. This implements the common
+    practice of scaling fractional Kelly by realized volatility.
+
+    Args:
+        win_rate: Probability of winning trade (0-1)
+        avg_win: Average winning trade return (positive)
+        avg_loss: Average losing trade return (negative)
+        recent_prices: Recent price history for volatility calculation
+        fraction: Base fractional Kelly (default 0.25)
+        lookback_window: Window for volatility percentile calculation
+        high_vol_percentile: Percentile threshold for high volatility (0.75 = p75)
+        high_vol_scaling: Multiplier for high vol regime (0.5 = halve position)
+
+    Returns:
+        Tuple of (scaled_kelly_fraction, volatility_metrics)
+    """
+    # Calculate base fractional Kelly
+    base_kelly = fractional_kelly(win_rate, avg_win, avg_loss, fraction)
+
+    # Need sufficient price history for volatility calculation
+    if len(recent_prices) < max(20, lookback_window):
+        logger.warning(
+            f"Insufficient price history ({len(recent_prices)}) for volatility scaling, "
+            f"using base Kelly"
+        )
+        return base_kelly, {
+            "base_kelly": base_kelly,
+            "scaled_kelly": base_kelly,
+            "current_vol": 0.0,
+            "vol_threshold": 0.0,
+            "regime": "insufficient_data",
+            "scaling_factor": 1.0,
+        }
+
+    # Calculate returns
+    returns = []
+    for i in range(1, len(recent_prices)):
+        if recent_prices[i - 1] != 0:
+            ret = (recent_prices[i] - recent_prices[i - 1]) / recent_prices[i - 1]
+            returns.append(ret)
+
+    if len(returns) < 20:
+        return base_kelly, {
+            "base_kelly": base_kelly,
+            "scaled_kelly": base_kelly,
+            "regime": "insufficient_returns",
+            "scaling_factor": 1.0,
+        }
+
+    # Calculate realized volatility (standard deviation of returns)
+    mean_return = sum(returns) / len(returns)
+    squared_diffs = [(r - mean_return) ** 2 for r in returns]
+    variance = sum(squared_diffs) / len(squared_diffs)
+    current_volatility = variance**0.5
+
+    # Calculate volatility percentile threshold from historical data
+    # Use the lookback window or all available data, whichever is smaller
+    lookback_returns = returns[-min(lookback_window, len(returns)) :]
+    volatilities = []
+
+    # Rolling window volatility calculation
+    vol_window = 20
+    for i in range(vol_window, len(lookback_returns)):
+        window_returns = lookback_returns[i - vol_window : i]
+        window_mean = sum(window_returns) / len(window_returns)
+        window_squared_diffs = [(r - window_mean) ** 2 for r in window_returns]
+        window_variance = sum(window_squared_diffs) / len(window_squared_diffs)
+        volatilities.append(window_variance**0.5)
+
+    if not volatilities:
+        return base_kelly, {
+            "base_kelly": base_kelly,
+            "scaled_kelly": base_kelly,
+            "current_vol": current_volatility,
+            "regime": "insufficient_vol_history",
+            "scaling_factor": 1.0,
+        }
+
+    # Calculate percentile threshold
+    sorted_vols = sorted(volatilities)
+    percentile_idx = int(len(sorted_vols) * high_vol_percentile)
+    vol_threshold = sorted_vols[percentile_idx]
+
+    # Determine regime and apply scaling
+    if current_volatility > vol_threshold:
+        scaling_factor = high_vol_scaling
+        regime = "high_volatility"
+    else:
+        scaling_factor = 1.0
+        regime = "normal_volatility"
+
+    scaled_kelly = base_kelly * scaling_factor
+
+    metrics = {
+        "base_kelly": base_kelly,
+        "scaled_kelly": scaled_kelly,
+        "current_vol": current_volatility,
+        "vol_threshold": vol_threshold,
+        "vol_percentile": high_vol_percentile,
+        "regime": regime,
+        "scaling_factor": scaling_factor,
+        "annualized_vol": current_volatility * (252**0.5),  # Assuming daily returns
+    }
+
+    logger.info(
+        f"Kelly volatility scaling: regime={regime}, "
+        f"vol={current_volatility:.4f}, threshold={vol_threshold:.4f}, "
+        f"base={base_kelly:.4f}, scaled={scaled_kelly:.4f}"
+    )
+
+    return scaled_kelly, metrics
+
+
 def validate_kelly_inputs(win_rate: float, avg_win: float, avg_loss: float) -> list[str]:
     """
     Validate inputs for Kelly Criterion calculation.

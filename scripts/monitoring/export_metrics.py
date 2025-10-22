@@ -185,6 +185,84 @@ def render_prometheus(metrics: dict[str, Any], events_path: Path) -> str:
     lines.append(f"# TYPE {metric('order_preview_failures_total')} counter")
     lines.append(f"{metric('order_preview_failures_total')} {preview_failures}")
 
+    # Circuit breaker state
+    circuit_breaker_triggered = 0
+    latest_cb = load_latest_event(events_path, "circuit_breaker_triggered")
+    if latest_cb:
+        circuit_breaker_triggered = 1
+    lines.append(f"# HELP {metric('circuit_breaker_triggered')} Circuit breaker triggered (1=active, 0=normal)")
+    lines.append(f"# TYPE {metric('circuit_breaker_triggered')} gauge")
+    lines.append(f"{metric('circuit_breaker_triggered')} {circuit_breaker_triggered}")
+
+    # Cycle latency
+    cycle_latency = metrics.get("cycle_latency_ms", 0)
+    lines.append(f"# HELP {metric('cycle_latency_ms')} Trading cycle latency in milliseconds")
+    lines.append(f"# TYPE {metric('cycle_latency_ms')} gauge")
+    lines.append(f"{metric('cycle_latency_ms')} {cycle_latency}")
+
+    # Per-symbol exposure
+    positions = metrics.get("positions", {})
+    if isinstance(positions, dict):
+        lines.append(f"# HELP {metric('symbol_exposure_usd')} Per-symbol exposure in USD")
+        lines.append(f"# TYPE {metric('symbol_exposure_usd')} gauge")
+        for symbol, position_data in positions.items():
+            if isinstance(position_data, dict):
+                exposure = _parse_float(position_data.get("exposure_usd", 0))
+                # Sanitize symbol for prometheus label
+                safe_symbol = symbol.replace("-", "_")
+                lines.append(f'{metric("symbol_exposure_usd")}{{symbol="{safe_symbol}"}} {exposure}')
+
+    # Per-symbol PnL
+    pnl_data = metrics.get("pnl", {})
+    if isinstance(pnl_data, dict):
+        symbol_pnl = pnl_data.get("by_symbol", {})
+        if isinstance(symbol_pnl, dict):
+            lines.append(f"# HELP {metric('symbol_pnl_usd')} Per-symbol total PnL in USD")
+            lines.append(f"# TYPE {metric('symbol_pnl_usd')} gauge")
+            for symbol, pnl_value in symbol_pnl.items():
+                pnl = _parse_float(pnl_value)
+                safe_symbol = symbol.replace("-", "_")
+                lines.append(f'{metric("symbol_pnl_usd")}{{symbol="{safe_symbol}"}} {pnl}')
+
+    # Total PnL metrics
+    total_pnl = _parse_float(pnl_data.get("total", 0))
+    realized_pnl = _parse_float(pnl_data.get("realized", 0))
+    unrealized_pnl = _parse_float(pnl_data.get("unrealized", 0))
+    funding_pnl = _parse_float(pnl_data.get("funding", 0))
+
+    lines.append(f"# HELP {metric('total_pnl_usd')} Total PnL in USD")
+    lines.append(f"# TYPE {metric('total_pnl_usd')} gauge")
+    lines.append(f"{metric('total_pnl_usd')} {total_pnl}")
+
+    lines.append(f"# HELP {metric('realized_pnl_usd')} Realized PnL in USD")
+    lines.append(f"# TYPE {metric('realized_pnl_usd')} gauge")
+    lines.append(f"{metric('realized_pnl_usd')} {realized_pnl}")
+
+    lines.append(f"# HELP {metric('unrealized_pnl_usd')} Unrealized PnL in USD")
+    lines.append(f"# TYPE {metric('unrealized_pnl_usd')} gauge")
+    lines.append(f"{metric('unrealized_pnl_usd')} {unrealized_pnl}")
+
+    lines.append(f"# HELP {metric('funding_pnl_usd')} Funding PnL in USD")
+    lines.append(f"# TYPE {metric('funding_pnl_usd')} gauge")
+    lines.append(f"{metric('funding_pnl_usd')} {funding_pnl}")
+
+    # Health metrics
+    ws_reconnects = count_events(events_path, "websocket_reconnect")
+    stale_marks = count_events(events_path, "stale_mark_detected")
+    unfilled_orders = count_events(events_path, "unfilled_order_alert")
+
+    lines.append(f"# HELP {metric('websocket_reconnects_total')} Total WebSocket reconnections")
+    lines.append(f"# TYPE {metric('websocket_reconnects_total')} counter")
+    lines.append(f"{metric('websocket_reconnects_total')} {ws_reconnects}")
+
+    lines.append(f"# HELP {metric('stale_marks_total')} Total stale mark detections")
+    lines.append(f"# TYPE {metric('stale_marks_total')} counter")
+    lines.append(f"{metric('stale_marks_total')} {stale_marks}")
+
+    lines.append(f"# HELP {metric('unfilled_orders_total')} Total unfilled order alerts")
+    lines.append(f"# TYPE {metric('unfilled_orders_total')} counter")
+    lines.append(f"{metric('unfilled_orders_total')} {unfilled_orders}")
+
     return "\n".join(lines) + "\n"
 
 

@@ -243,10 +243,265 @@ class PerformanceHealthCheck(HealthChecker):
             )
 
 
+class StaleFillsHealthCheck(HealthChecker):
+    """Health check for detecting unfilled orders that are too old."""
+
+    def __init__(
+        self,
+        orders_store: Any,
+        max_age_minutes: float = 10.0,
+        name: str = "stale_fills",
+    ) -> None:
+        super().__init__(name)
+        self.orders_store = orders_store
+        self.max_age_minutes = max_age_minutes
+
+    async def _do_check(self) -> HealthCheckResult:
+        try:
+            from datetime import datetime, timedelta
+
+            # Get all open orders
+            open_orders = getattr(self.orders_store, "get_open_orders", lambda: [])()
+            if not open_orders:
+                return HealthCheckResult(
+                    name=self.name,
+                    status=HealthStatus.HEALTHY,
+                    message="No open orders",
+                    details={"open_orders": 0},
+                )
+
+            # Check for stale orders
+            now = datetime.now()
+            cutoff = now - timedelta(minutes=self.max_age_minutes)
+            stale_orders = []
+
+            for order in open_orders:
+                # Get order timestamp
+                order_time = None
+                if hasattr(order, "created_at"):
+                    order_time = order.created_at
+                elif isinstance(order, dict):
+                    ts = order.get("created_at") or order.get("timestamp")
+                    if ts:
+                        if isinstance(ts, str):
+                            order_time = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+                        else:
+                            order_time = ts
+
+                if order_time and order_time < cutoff:
+                    stale_orders.append({
+                        "order_id": getattr(order, "id", order.get("id", "unknown")),
+                        "symbol": getattr(order, "symbol", order.get("symbol", "unknown")),
+                        "age_minutes": (now - order_time).total_seconds() / 60,
+                    })
+
+            if len(stale_orders) >= 5:
+                status = HealthStatus.UNHEALTHY
+                message = f"{len(stale_orders)} orders unfilled for >{self.max_age_minutes}min"
+            elif stale_orders:
+                status = HealthStatus.DEGRADED
+                message = f"{len(stale_orders)} orders unfilled for >{self.max_age_minutes}min"
+            else:
+                status = HealthStatus.HEALTHY
+                message = f"All {len(open_orders)} open orders are recent"
+
+            return HealthCheckResult(
+                name=self.name,
+                status=status,
+                message=message,
+                details={
+                    "open_orders": len(open_orders),
+                    "stale_orders": len(stale_orders),
+                    "max_age_minutes": self.max_age_minutes,
+                    "stale_order_details": stale_orders[:5],  # First 5
+                },
+            )
+        except Exception as exc:
+            return HealthCheckResult(
+                name=self.name,
+                status=HealthStatus.UNHEALTHY,
+                message=f"Stale fills health check failed: {exc}",
+                details={"error_type": type(exc).__name__},
+            )
+
+
+class StaleMarksHealthCheck(HealthChecker):
+    """Health check for detecting stale market data marks."""
+
+    def __init__(
+        self,
+        market_data_service: Any,
+        max_age_seconds: float = 30.0,
+        name: str = "stale_marks",
+    ) -> None:
+        super().__init__(name)
+        self.market_data_service = market_data_service
+        self.max_age_seconds = max_age_seconds
+
+    async def _do_check(self) -> HealthCheckResult:
+        try:
+            from datetime import datetime, timedelta
+
+            # Get current marks
+            marks = {}
+            if hasattr(self.market_data_service, "get_all_marks"):
+                marks = self.market_data_service.get_all_marks()
+            elif hasattr(self.market_data_service, "marks"):
+                marks = self.market_data_service.marks or {}
+
+            if not marks:
+                return HealthCheckResult(
+                    name=self.name,
+                    status=HealthStatus.DEGRADED,
+                    message="No market marks available",
+                    details={"symbols": 0},
+                )
+
+            # Check staleness
+            now = datetime.now()
+            cutoff = now - timedelta(seconds=self.max_age_seconds)
+            stale_symbols = []
+            total_symbols = len(marks)
+
+            for symbol, mark_data in marks.items():
+                # Extract timestamp
+                mark_time = None
+                if isinstance(mark_data, dict):
+                    ts = mark_data.get("timestamp") or mark_data.get("time")
+                    if ts:
+                        if isinstance(ts, str):
+                            mark_time = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+                        else:
+                            mark_time = ts
+                elif hasattr(mark_data, "timestamp"):
+                    mark_time = mark_data.timestamp
+
+                if mark_time and mark_time < cutoff:
+                    stale_symbols.append({
+                        "symbol": symbol,
+                        "age_seconds": (now - mark_time).total_seconds(),
+                    })
+
+            stale_pct = (len(stale_symbols) / total_symbols * 100) if total_symbols > 0 else 0
+
+            if stale_pct > 50:
+                status = HealthStatus.UNHEALTHY
+                message = f"{len(stale_symbols)}/{total_symbols} marks stale (>{self.max_age_seconds}s)"
+            elif stale_symbols:
+                status = HealthStatus.DEGRADED
+                message = f"{len(stale_symbols)}/{total_symbols} marks stale (>{self.max_age_seconds}s)"
+            else:
+                status = HealthStatus.HEALTHY
+                message = f"All {total_symbols} marks are fresh"
+
+            return HealthCheckResult(
+                name=self.name,
+                status=status,
+                message=message,
+                details={
+                    "total_symbols": total_symbols,
+                    "stale_symbols": len(stale_symbols),
+                    "stale_percentage": round(stale_pct, 1),
+                    "max_age_seconds": self.max_age_seconds,
+                    "stale_symbol_details": stale_symbols[:5],  # First 5
+                },
+            )
+        except Exception as exc:
+            return HealthCheckResult(
+                name=self.name,
+                status=HealthStatus.UNHEALTHY,
+                message=f"Stale marks health check failed: {exc}",
+                details={"error_type": type(exc).__name__},
+            )
+
+
+class WebSocketReconnectHealthCheck(HealthChecker):
+    """Health check for detecting excessive WebSocket reconnections."""
+
+    def __init__(
+        self,
+        websocket_handler: Any,
+        max_reconnects_per_hour: int = 10,
+        reconnect_loop_threshold: int = 5,
+        name: str = "websocket_reconnects",
+    ) -> None:
+        super().__init__(name)
+        self.websocket_handler = websocket_handler
+        self.max_reconnects_per_hour = max_reconnects_per_hour
+        self.reconnect_loop_threshold = reconnect_loop_threshold
+
+    async def _do_check(self) -> HealthCheckResult:
+        try:
+            from datetime import datetime, timedelta
+
+            # Get reconnect history
+            reconnect_times = []
+            if hasattr(self.websocket_handler, "reconnect_history"):
+                reconnect_times = self.websocket_handler.reconnect_history or []
+            elif hasattr(self.websocket_handler, "get_reconnect_count"):
+                # If only count is available, create synthetic history
+                count = self.websocket_handler.get_reconnect_count()
+                if count > 0:
+                    reconnect_times = [datetime.now()] * count
+
+            now = datetime.now()
+            one_hour_ago = now - timedelta(hours=1)
+            one_minute_ago = now - timedelta(minutes=1)
+
+            # Count recent reconnects
+            recent_hour = sum(1 for t in reconnect_times if t >= one_hour_ago)
+            recent_minute = sum(1 for t in reconnect_times if t >= one_minute_ago)
+
+            # Check connection status
+            is_connected = False
+            if hasattr(self.websocket_handler, "is_connected"):
+                is_connected = self.websocket_handler.is_connected()
+            elif hasattr(self.websocket_handler, "connected"):
+                is_connected = self.websocket_handler.connected
+
+            # Determine health
+            if recent_minute >= self.reconnect_loop_threshold:
+                status = HealthStatus.UNHEALTHY
+                message = f"WebSocket reconnect loop detected: {recent_minute} reconnects in last minute"
+            elif recent_hour >= self.max_reconnects_per_hour:
+                status = HealthStatus.DEGRADED
+                message = f"High reconnect rate: {recent_hour} reconnects in last hour"
+            elif not is_connected:
+                status = HealthStatus.DEGRADED
+                message = "WebSocket disconnected"
+            else:
+                status = HealthStatus.HEALTHY
+                message = f"WebSocket stable: {recent_hour} reconnects in last hour"
+
+            return HealthCheckResult(
+                name=self.name,
+                status=status,
+                message=message,
+                details={
+                    "is_connected": is_connected,
+                    "reconnects_last_minute": recent_minute,
+                    "reconnects_last_hour": recent_hour,
+                    "max_reconnects_per_hour": self.max_reconnects_per_hour,
+                    "reconnect_loop_threshold": self.reconnect_loop_threshold,
+                    "total_reconnects": len(reconnect_times),
+                },
+            )
+        except Exception as exc:
+            return HealthCheckResult(
+                name=self.name,
+                status=HealthStatus.UNHEALTHY,
+                message=f"WebSocket health check failed: {exc}",
+                details={"error_type": type(exc).__name__},
+            )
+
+
 __all__ = [
     "DatabaseHealthCheck",
     "APIHealthCheck",
     "BrokerageHealthCheck",
     "MemoryHealthCheck",
     "PerformanceHealthCheck",
+    "StaleFillsHealthCheck",
+    "StaleMarksHealthCheck",
+    "WebSocketReconnectHealthCheck",
 ]

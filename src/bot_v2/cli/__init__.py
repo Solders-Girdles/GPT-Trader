@@ -26,9 +26,9 @@ from . import services as _cli_services  # noqa: E402
 
 _cli_services.OVERRIDE_SETTINGS = RUNTIME_SETTINGS
 
-from bot_v2.cli.commands import account, orders, run, treasury  # noqa: E402
+from bot_v2.cli.commands import account, orders, report, run, treasury  # noqa: E402
 
-COMMAND_NAMES = {"run", "account", "orders", "treasury"}
+COMMAND_NAMES = {"run", "account", "orders", "treasury", "report"}
 __all__ = ["main", "RUNTIME_SETTINGS"]
 
 
@@ -53,6 +53,7 @@ def _build_parser() -> argparse.ArgumentParser:
     account.register(subparsers)
     orders.register(subparsers)
     treasury.register(subparsers)
+    report.register(subparsers)
 
     return parser
 

@@ -1,0 +1,513 @@
+{
+  "dashboard": {
+    "title": "GPT Trader - Live Trading Monitoring",
+    "tags": ["trading", "crypto", "coinbase"],
+    "timezone": "browser",
+    "schemaVersion": 16,
+    "version": 0,
+    "refresh": "10s",
+    "time": {
+      "from": "now-6h",
+      "to": "now"
+    },
+    "panels": [
+      {
+        "id": 1,
+        "title": "Account Equity",
+        "type": "graph",
+        "gridPos": {"x": 0, "y": 0, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "coinbase_trader_equity",
+            "legendFormat": "Equity (USD)",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "currencyUSD",
+            "label": "Equity",
+            "show": true
+          },
+          {
+            "format": "short",
+            "show": false
+          }
+        ],
+        "lines": true,
+        "fill": 2,
+        "linewidth": 2,
+        "pointradius": 5,
+        "points": false,
+        "tooltip": {
+          "shared": true,
+          "sort": 0,
+          "value_type": "individual"
+        },
+        "legend": {
+          "show": true,
+          "values": true,
+          "current": true,
+          "avg": true,
+          "max": true,
+          "min": true
+        }
+      },
+      {
+        "id": 2,
+        "title": "PnL Breakdown",
+        "type": "graph",
+        "gridPos": {"x": 12, "y": 0, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "coinbase_trader_realized_pnl_usd",
+            "legendFormat": "Realized PnL",
+            "refId": "A"
+          },
+          {
+            "expr": "coinbase_trader_unrealized_pnl_usd",
+            "legendFormat": "Unrealized PnL",
+            "refId": "B"
+          },
+          {
+            "expr": "coinbase_trader_funding_pnl_usd",
+            "legendFormat": "Funding PnL",
+            "refId": "C"
+          },
+          {
+            "expr": "coinbase_trader_total_pnl_usd",
+            "legendFormat": "Total PnL",
+            "refId": "D"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "currencyUSD",
+            "label": "PnL",
+            "show": true
+          },
+          {
+            "format": "short",
+            "show": false
+          }
+        ],
+        "lines": true,
+        "fill": 0,
+        "linewidth": 2,
+        "legend": {
+          "show": true,
+          "values": true,
+          "current": true
+        }
+      },
+      {
+        "id": 3,
+        "title": "Per-Symbol Exposure",
+        "type": "graph",
+        "gridPos": {"x": 0, "y": 8, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "coinbase_trader_symbol_exposure_usd",
+            "legendFormat": "{{symbol}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "currencyUSD",
+            "label": "Exposure",
+            "show": true
+          },
+          {
+            "format": "short",
+            "show": false
+          }
+        ],
+        "lines": true,
+        "fill": 1,
+        "stack": true,
+        "legend": {
+          "show": true,
+          "values": true,
+          "current": true,
+          "alignAsTable": true,
+          "rightSide": false
+        }
+      },
+      {
+        "id": 4,
+        "title": "Per-Symbol PnL",
+        "type": "graph",
+        "gridPos": {"x": 12, "y": 8, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "coinbase_trader_symbol_pnl_usd",
+            "legendFormat": "{{symbol}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "currencyUSD",
+            "label": "PnL",
+            "show": true
+          },
+          {
+            "format": "short",
+            "show": false
+          }
+        ],
+        "lines": true,
+        "fill": 0,
+        "linewidth": 2,
+        "legend": {
+          "show": true,
+          "values": true,
+          "current": true,
+          "alignAsTable": true,
+          "rightSide": false
+        }
+      },
+      {
+        "id": 5,
+        "title": "Circuit Breaker State",
+        "type": "stat",
+        "gridPos": {"x": 0, "y": 16, "w": 6, "h": 4},
+        "targets": [
+          {
+            "expr": "coinbase_trader_circuit_breaker_triggered",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "graphMode": "none",
+          "colorMode": "background",
+          "textMode": "value_and_name",
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"]
+          }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "value": 0,
+                  "color": "green"
+                },
+                {
+                  "value": 1,
+                  "color": "red"
+                }
+              ]
+            },
+            "mappings": [
+              {
+                "type": "value",
+                "options": {
+                  "0": {"text": "Normal"},
+                  "1": {"text": "TRIGGERED"}
+                }
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": 6,
+        "title": "Cycle Latency",
+        "type": "graph",
+        "gridPos": {"x": 6, "y": 16, "w": 6, "h": 4},
+        "targets": [
+          {
+            "expr": "coinbase_trader_cycle_latency_ms",
+            "legendFormat": "Latency (ms)",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "ms",
+            "label": "Latency",
+            "show": true
+          },
+          {
+            "format": "short",
+            "show": false
+          }
+        ],
+        "lines": true,
+        "fill": 2,
+        "linewidth": 2,
+        "thresholds": [
+          {
+            "value": 1000,
+            "colorMode": "critical",
+            "fill": true,
+            "line": true,
+            "op": "gt"
+          },
+          {
+            "value": 500,
+            "colorMode": "warning",
+            "fill": true,
+            "line": true,
+            "op": "gt"
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Open Orders",
+        "type": "stat",
+        "gridPos": {"x": 12, "y": 16, "w": 4, "h": 4},
+        "targets": [
+          {
+            "expr": "coinbase_trader_open_orders",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "graphMode": "area",
+          "colorMode": "value",
+          "textMode": "value_and_name",
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"]
+          }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "value": 0,
+                  "color": "green"
+                },
+                {
+                  "value": 10,
+                  "color": "yellow"
+                },
+                {
+                  "value": 20,
+                  "color": "red"
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 8,
+        "title": "Unfilled Orders Alert",
+        "type": "stat",
+        "gridPos": {"x": 16, "y": 16, "w": 4, "h": 4},
+        "targets": [
+          {
+            "expr": "increase(coinbase_trader_unfilled_orders_total[5m])",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "graphMode": "area",
+          "colorMode": "background",
+          "textMode": "value_and_name",
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"]
+          }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "value": 0,
+                  "color": "green"
+                },
+                {
+                  "value": 1,
+                  "color": "orange"
+                },
+                {
+                  "value": 5,
+                  "color": "red"
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 9,
+        "title": "WebSocket Reconnects (1h)",
+        "type": "stat",
+        "gridPos": {"x": 20, "y": 16, "w": 4, "h": 4},
+        "targets": [
+          {
+            "expr": "increase(coinbase_trader_websocket_reconnects_total[1h])",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "graphMode": "area",
+          "colorMode": "background",
+          "textMode": "value_and_name",
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"]
+          }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "value": 0,
+                  "color": "green"
+                },
+                {
+                  "value": 5,
+                  "color": "yellow"
+                },
+                {
+                  "value": 10,
+                  "color": "red"
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 10,
+        "title": "Stale Marks Detected",
+        "type": "stat",
+        "gridPos": {"x": 0, "y": 20, "w": 6, "h": 4},
+        "targets": [
+          {
+            "expr": "increase(coinbase_trader_stale_marks_total[5m])",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "graphMode": "area",
+          "colorMode": "background",
+          "textMode": "value_and_name",
+          "reduceOptions": {
+            "values": false,
+            "calcs": ["lastNotNull"]
+          }
+        },
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "value": 0,
+                  "color": "green"
+                },
+                {
+                  "value": 1,
+                  "color": "yellow"
+                },
+                {
+                  "value": 10,
+                  "color": "red"
+                }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 11,
+        "title": "System Resources - CPU",
+        "type": "graph",
+        "gridPos": {"x": 6, "y": 20, "w": 6, "h": 4},
+        "targets": [
+          {
+            "expr": "coinbase_trader_cpu_percent",
+            "legendFormat": "CPU %",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "percent",
+            "label": "CPU Usage",
+            "show": true,
+            "min": 0,
+            "max": 100
+          },
+          {
+            "format": "short",
+            "show": false
+          }
+        ],
+        "lines": true,
+        "fill": 2
+      },
+      {
+        "id": 12,
+        "title": "System Resources - Memory",
+        "type": "graph",
+        "gridPos": {"x": 12, "y": 20, "w": 6, "h": 4},
+        "targets": [
+          {
+            "expr": "coinbase_trader_memory_percent",
+            "legendFormat": "Memory %",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "percent",
+            "label": "Memory Usage",
+            "show": true,
+            "min": 0,
+            "max": 100
+          },
+          {
+            "format": "short",
+            "show": false
+          }
+        ],
+        "lines": true,
+        "fill": 2
+      },
+      {
+        "id": 13,
+        "title": "Order Preview Failures",
+        "type": "graph",
+        "gridPos": {"x": 18, "y": 20, "w": 6, "h": 4},
+        "targets": [
+          {
+            "expr": "rate(coinbase_trader_order_preview_failures_total[5m])",
+            "legendFormat": "Failures/sec",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {
+            "format": "short",
+            "label": "Rate",
+            "show": true
+          },
+          {
+            "format": "short",
+            "show": false
+          }
+        ],
+        "lines": true,
+        "fill": 2
+      }
+    ]
+  }
+}

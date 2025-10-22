@@ -11,17 +11,18 @@ from __future__ import annotations
 import datetime as dt
 from datetime import datetime, timedelta
 from decimal import Decimal
-from unittest.mock import Mock, call, patch
+from unittest.mock import Mock, patch
 
 import pytest
 
 from bot_v2.config.live_trade_config import RiskConfig
-from bot_v2.features.brokerages.core.interfaces import Product
 from bot_v2.features.live_trade.risk.manager import LiveRiskManager, MarkTimestampRegistry
-from bot_v2.features.live_trade.risk.position_sizing import PositionSizingContext, PositionSizingAdvice
+from bot_v2.features.live_trade.risk.position_sizing import (
+    PositionSizingAdvice,
+    PositionSizingContext,
+)
 from bot_v2.features.live_trade.risk.pre_trade_checks import ValidationError
-from bot_v2.features.live_trade.risk.state_management import RiskRuntimeState
-from bot_v2.features.live_trade.risk_runtime import CircuitBreakerOutcome, CircuitBreakerAction
+from bot_v2.features.live_trade.risk_runtime import CircuitBreakerAction, CircuitBreakerOutcome
 from bot_v2.persistence.event_store import EventStore
 
 
@@ -149,18 +150,18 @@ class TestLiveRiskManagerInitialization:
         manager = LiveRiskManager()
 
         # These should be delegated to state manager
-        assert hasattr(manager, '_state')
-        assert hasattr(manager, 'daily_pnl')
-        assert hasattr(manager, 'start_of_day_equity')
+        assert hasattr(manager, "_state")
+        assert hasattr(manager, "daily_pnl")
+        assert hasattr(manager, "start_of_day_equity")
 
         # These should be delegated to runtime monitor
-        assert hasattr(manager, 'positions')
-        assert hasattr(manager, 'circuit_breaker_state')
+        assert hasattr(manager, "positions")
+        assert hasattr(manager, "circuit_breaker_state")
 
     def test_initialization_logs_configuration(self):
         """Test that initialization logs configuration details."""
-        import logging
-        with patch('bot_v2.features.live_trade.risk.manager.logger') as mock_logger:
+
+        with patch("bot_v2.features.live_trade.risk.manager.logger") as mock_logger:
             manager = LiveRiskManager()
             mock_logger.info.assert_called()
             call_args = mock_logger.info.call_args[0][0]
@@ -168,11 +169,12 @@ class TestLiveRiskManagerInitialization:
 
     def test_initialization_with_non_standard_config(self):
         """Test initialization with non-standard config object."""
+
         class NonStandardConfig:
             pass
 
-        import logging
-        with patch('bot_v2.features.live_trade.risk.manager.logger') as mock_logger:
+
+        with patch("bot_v2.features.live_trade.risk.manager.logger") as mock_logger:
             # This should fail during initialization because NonStandardConfig
             # doesn't have the required attributes
             try:
@@ -275,11 +277,13 @@ class TestLiveRiskManagerPositionSizing:
             mark_price=Decimal("50000"),
         )
 
-        with patch.object(manager.position_sizer, 'size_position', return_value=PositionSizingAdvice(
-            recommended_quantity=Decimal("0.1"),
-            max_quantity=Decimal("0.2"),
-            reason="test"
-        )) as mock_size:
+        with patch.object(
+            manager.position_sizer,
+            "size_position",
+            return_value=PositionSizingAdvice(
+                recommended_quantity=Decimal("0.1"), max_quantity=Decimal("0.2"), reason="test"
+            ),
+        ) as mock_size:
             result = manager.size_position(context)
 
             mock_size.assert_called_once_with(context)
@@ -314,12 +318,8 @@ class TestLiveRiskManagerPreTradeValidation:
         """Test pre-trade validation delegation."""
         manager = LiveRiskManager(config=conservative_risk_config)
 
-        with patch.object(manager.pre_trade_validator, 'pre_trade_validate') as mock_validate:
-            manager.pre_trade_validate(
-                symbol="BTC-USD",
-                side="buy",
-                quantity=Decimal("0.1")
-            )
+        with patch.object(manager.pre_trade_validator, "pre_trade_validate") as mock_validate:
+            manager.pre_trade_validate(symbol="BTC-USD", side="buy", quantity=Decimal("0.1"))
 
             mock_validate.assert_called_once()
 
@@ -327,11 +327,8 @@ class TestLiveRiskManagerPreTradeValidation:
         """Test leverage validation delegation."""
         manager = LiveRiskManager(config=conservative_risk_config)
 
-        with patch.object(manager.pre_trade_validator, 'validate_leverage') as mock_validate:
-            manager.validate_leverage(
-                symbol="BTC-USD",
-                quantity=Decimal("0.1")
-            )
+        with patch.object(manager.pre_trade_validator, "validate_leverage") as mock_validate:
+            manager.validate_leverage(symbol="BTC-USD", quantity=Decimal("0.1"))
 
             mock_validate.assert_called_once()
 
@@ -339,11 +336,10 @@ class TestLiveRiskManagerPreTradeValidation:
         """Test liquidation buffer validation delegation."""
         manager = LiveRiskManager(config=conservative_risk_config)
 
-        with patch.object(manager.pre_trade_validator, 'validate_liquidation_buffer') as mock_validate:
-            manager.validate_liquidation_buffer(
-                symbol="BTC-USD",
-                quantity=Decimal("0.1")
-            )
+        with patch.object(
+            manager.pre_trade_validator, "validate_liquidation_buffer"
+        ) as mock_validate:
+            manager.validate_liquidation_buffer(symbol="BTC-USD", quantity=Decimal("0.1"))
 
             mock_validate.assert_called_once()
 
@@ -351,11 +347,9 @@ class TestLiveRiskManagerPreTradeValidation:
         """Test exposure limits validation delegation."""
         manager = LiveRiskManager(config=conservative_risk_config)
 
-        with patch.object(manager.pre_trade_validator, 'validate_exposure_limits') as mock_validate:
+        with patch.object(manager.pre_trade_validator, "validate_exposure_limits") as mock_validate:
             manager.validate_exposure_limits(
-                symbol="BTC-USD",
-                notional=Decimal("5000"),
-                equity=Decimal("1000")
+                symbol="BTC-USD", notional=Decimal("5000"), equity=Decimal("1000")
             )
 
             mock_validate.assert_called_once()
@@ -364,12 +358,8 @@ class TestLiveRiskManagerPreTradeValidation:
         """Test slippage guard validation delegation."""
         manager = LiveRiskManager(config=conservative_risk_config)
 
-        with patch.object(manager.pre_trade_validator, 'validate_slippage_guard') as mock_validate:
-            manager.validate_slippage_guard(
-                symbol="BTC-USD",
-                side="buy",
-                quantity=Decimal("0.1")
-            )
+        with patch.object(manager.pre_trade_validator, "validate_slippage_guard") as mock_validate:
+            manager.validate_slippage_guard(symbol="BTC-USD", side="buy", quantity=Decimal("0.1"))
 
             mock_validate.assert_called_once()
 
@@ -393,7 +383,9 @@ class TestLiveRiskManagerRuntimeMonitoring:
         current_equity = Decimal("1000")
         positions_pnl = {"BTC-USD": {"unrealized": Decimal("100")}}
 
-        with patch.object(manager.runtime_monitor, 'track_daily_pnl', return_value=(True, Decimal("100"))) as mock_track:
+        with patch.object(
+            manager.runtime_monitor, "track_daily_pnl", return_value=(True, Decimal("100"))
+        ) as mock_track:
             result = manager.track_daily_pnl(current_equity, positions_pnl)
 
             # Should initialize start of day equity
@@ -412,7 +404,9 @@ class TestLiveRiskManagerRuntimeMonitoring:
         current_equity = Decimal("1000")
         positions_pnl = {"BTC-USD": {"unrealized": Decimal("100")}}
 
-        with patch.object(manager.runtime_monitor, 'track_daily_pnl', return_value=(False, Decimal("100"))) as mock_track:
+        with patch.object(
+            manager.runtime_monitor, "track_daily_pnl", return_value=(False, Decimal("100"))
+        ) as mock_track:
             result = manager.track_daily_pnl(current_equity, positions_pnl)
 
             # Should not change start of day equity
@@ -428,7 +422,9 @@ class TestLiveRiskManagerRuntimeMonitoring:
         position_data = {"quantity": Decimal("0.1"), "mark_price": Decimal("50000")}
         equity = Decimal("1000")
 
-        with patch.object(manager.runtime_monitor, 'check_liquidation_buffer', return_value=True) as mock_check:
+        with patch.object(
+            manager.runtime_monitor, "check_liquidation_buffer", return_value=True
+        ) as mock_check:
             result = manager.check_liquidation_buffer("BTC-USD", position_data, equity)
 
             mock_check.assert_called_once_with("BTC-USD", position_data, equity)
@@ -439,7 +435,9 @@ class TestLiveRiskManagerRuntimeMonitoring:
         manager = LiveRiskManager(config=conservative_risk_config)
         timestamp = datetime.utcnow()
 
-        with patch.object(manager.runtime_monitor, 'check_mark_staleness', return_value=True) as mock_check:
+        with patch.object(
+            manager.runtime_monitor, "check_mark_staleness", return_value=True
+        ) as mock_check:
             result = manager.check_mark_staleness("BTC-USD", timestamp)
 
             mock_check.assert_called_once_with("BTC-USD", timestamp)
@@ -451,7 +449,7 @@ class TestLiveRiskManagerRuntimeMonitoring:
         equity = Decimal("1000")
         positions = {"BTC-USD": {"quantity": Decimal("0.1")}}
 
-        with patch.object(manager.runtime_monitor, 'append_risk_metrics') as mock_append:
+        with patch.object(manager.runtime_monitor, "append_risk_metrics") as mock_append:
             manager.append_risk_metrics(equity, positions)
 
             mock_append.assert_called_once_with(
@@ -467,7 +465,9 @@ class TestLiveRiskManagerRuntimeMonitoring:
         manager = LiveRiskManager(config=conservative_risk_config)
         positions = {"BTC-USD": {"quantity": Decimal("0.1")}}
 
-        with patch.object(manager.runtime_monitor, 'check_correlation_risk', return_value=True) as mock_check:
+        with patch.object(
+            manager.runtime_monitor, "check_correlation_risk", return_value=True
+        ) as mock_check:
             result = manager.check_correlation_risk(positions)
 
             mock_check.assert_called_once_with(positions)
@@ -483,10 +483,12 @@ class TestLiveRiskManagerRuntimeMonitoring:
             triggered=True,
             action=CircuitBreakerAction.WARNING,
             volatility=Decimal("0.5"),
-            message="High volatility detected"
+            message="High volatility detected",
         )
 
-        with patch.object(manager.runtime_monitor, 'check_volatility_circuit_breaker', return_value=outcome) as mock_check:
+        with patch.object(
+            manager.runtime_monitor, "check_volatility_circuit_breaker", return_value=outcome
+        ) as mock_check:
             result = manager.check_volatility_circuit_breaker(symbol, recent_marks)
 
             mock_check.assert_called_once_with(symbol, recent_marks)
@@ -512,7 +514,9 @@ class TestLiveRiskManagerMarkTimestampTracking:
         """Test recording mark update without providing timestamp."""
         manager = LiveRiskManager(config=conservative_risk_config)
 
-        with patch.object(manager.last_mark_update, 'update_timestamp', return_value=datetime.utcnow()) as mock_update:
+        with patch.object(
+            manager.last_mark_update, "update_timestamp", return_value=datetime.utcnow()
+        ) as mock_update:
             result = manager.record_mark_update("BTC-USD")
 
             mock_update.assert_called_once_with("BTC-USD", None)
@@ -547,9 +551,9 @@ class TestLiveRiskManagerEventStoreRebinding:
         manager = LiveRiskManager(config=conservative_risk_config)
 
         # Temporarily remove event_store attribute from one component
-        original_attr = getattr(manager.state_manager, 'event_store', None)
-        if hasattr(manager.state_manager, 'event_store'):
-            delattr(manager.state_manager, 'event_store')
+        original_attr = getattr(manager.state_manager, "event_store", None)
+        if hasattr(manager.state_manager, "event_store"):
+            delattr(manager.state_manager, "event_store")
 
         new_event_store = EventStore()
 
@@ -608,11 +612,11 @@ class TestLiveRiskManagerIntegrationScenarios:
         manager.set_reduce_only_mode(True, "test scenario")
 
         # Should delegate to pre_trade_validator which should check reduce-only mode
-        with patch.object(manager.pre_trade_validator, 'pre_trade_validate') as mock_validate:
+        with patch.object(manager.pre_trade_validator, "pre_trade_validate") as mock_validate:
             manager.pre_trade_validate(
                 symbol="BTC-USD",
                 side="buy",  # This should be rejected in reduce-only mode
-                quantity=Decimal("0.1")
+                quantity=Decimal("0.1"),
             )
 
             mock_validate.assert_called_once()
@@ -627,10 +631,12 @@ class TestLiveRiskManagerIntegrationScenarios:
             triggered=True,
             action=CircuitBreakerAction.REDUCE_ONLY,
             volatility=Decimal("0.8"),
-            message="Extreme volatility detected"
+            message="Extreme volatility detected",
         )
 
-        with patch.object(manager.runtime_monitor, 'check_volatility_circuit_breaker', return_value=outcome):
+        with patch.object(
+            manager.runtime_monitor, "check_volatility_circuit_breaker", return_value=outcome
+        ):
             result = manager.check_volatility_circuit_breaker(symbol, recent_marks)
 
             assert result.action is CircuitBreakerAction.REDUCE_ONLY
@@ -644,7 +650,9 @@ class TestLiveRiskManagerIntegrationScenarios:
         current_equity = Decimal("800")  # 20% loss
         positions_pnl = {"BTC-USD": {"unrealized": Decimal("-200")}}
 
-        with patch.object(manager.runtime_monitor, 'track_daily_pnl', return_value=(True, Decimal("-200"))) as mock_track:
+        with patch.object(
+            manager.runtime_monitor, "track_daily_pnl", return_value=(True, Decimal("-200"))
+        ) as mock_track:
             result = manager.track_daily_pnl(current_equity, positions_pnl)
 
             assert result is True  # Loss limit triggered
@@ -657,10 +665,9 @@ class TestLiveRiskManagerIntegrationScenarios:
 
         def custom_impact_estimator(request):
             from bot_v2.features.live_trade.risk.position_sizing import ImpactAssessment
+
             return ImpactAssessment(
-                price_impact=Decimal("0.001"),
-                size_impact=Decimal("0.1"),
-                confidence=Decimal("0.9")
+                price_impact=Decimal("0.001"), size_impact=Decimal("0.1"), confidence=Decimal("0.9")
             )
 
         manager.set_impact_estimator(custom_impact_estimator)
@@ -673,11 +680,15 @@ class TestLiveRiskManagerIntegrationScenarios:
             mark_price=Decimal("50000"),
         )
 
-        with patch.object(manager.position_sizer, 'size_position', return_value=PositionSizingAdvice(
-            recommended_quantity=Decimal("0.15"),
-            max_quantity=Decimal("0.2"),
-            reason="Based on custom impact model"
-        )) as mock_size:
+        with patch.object(
+            manager.position_sizer,
+            "size_position",
+            return_value=PositionSizingAdvice(
+                recommended_quantity=Decimal("0.15"),
+                max_quantity=Decimal("0.2"),
+                reason="Based on custom impact model",
+            ),
+        ) as mock_size:
             result = manager.size_position(context)
 
             mock_size.assert_called_once_with(context)
@@ -695,7 +706,9 @@ class TestLiveRiskManagerIntegrationScenarios:
         }
 
         # Test correlation risk
-        with patch.object(manager.runtime_monitor, 'check_correlation_risk', return_value=False) as mock_check:
+        with patch.object(
+            manager.runtime_monitor, "check_correlation_risk", return_value=False
+        ) as mock_check:
             result = manager.check_correlation_risk(positions)
             mock_check.assert_called_once_with(positions)
             assert result is False
@@ -706,7 +719,7 @@ class TestLiveRiskManagerIntegrationScenarios:
 
         # Scenario 1: Stale market data
         stale_timestamp = datetime.utcnow() - timedelta(minutes=10)
-        with patch.object(manager.runtime_monitor, 'check_mark_staleness', return_value=True):
+        with patch.object(manager.runtime_monitor, "check_mark_staleness", return_value=True):
             assert manager.check_mark_staleness("BTC-USD", stale_timestamp) is True
 
         # Scenario 2: Circuit breaker activation
@@ -715,10 +728,12 @@ class TestLiveRiskManagerIntegrationScenarios:
             triggered=True,
             action=CircuitBreakerAction.KILL_SWITCH,
             volatility=Decimal("1.2"),
-            message="Market chaos - kill switch activated"
+            message="Market chaos - kill switch activated",
         )
 
-        with patch.object(manager.runtime_monitor, 'check_volatility_circuit_breaker', return_value=outcome):
+        with patch.object(
+            manager.runtime_monitor, "check_volatility_circuit_breaker", return_value=outcome
+        ):
             result = manager.check_volatility_circuit_breaker("BTC-USD", volatile_marks)
             assert result.action is CircuitBreakerAction.KILL_SWITCH
 
@@ -726,11 +741,11 @@ class TestLiveRiskManagerIntegrationScenarios:
         position_data = {
             "quantity": Decimal("0.1"),
             "mark_price": Decimal("50000"),
-            "maintenance_margin": Decimal("1000")
+            "maintenance_margin": Decimal("1000"),
         }
         equity = Decimal("1100")  # Very close to liquidation
 
-        with patch.object(manager.runtime_monitor, 'check_liquidation_buffer', return_value=True):
+        with patch.object(manager.runtime_monitor, "check_liquidation_buffer", return_value=True):
             result = manager.check_liquidation_buffer("BTC-USD", position_data, equity)
             assert result is True  # Buffer breached
 
@@ -742,22 +757,23 @@ class TestLiveRiskManagerErrorHandling:
         """Test that validation errors are properly propagated."""
         manager = LiveRiskManager(config=conservative_risk_config)
 
-        with patch.object(manager.pre_trade_validator, 'pre_trade_validate',
-                         side_effect=ValidationError("Test validation error")):
+        with patch.object(
+            manager.pre_trade_validator,
+            "pre_trade_validate",
+            side_effect=ValidationError("Test validation error"),
+        ):
 
             with pytest.raises(ValidationError, match="Test validation error"):
-                manager.pre_trade_validate(
-                    symbol="BTC-USD",
-                    side="buy",
-                    quantity=Decimal("0.1")
-                )
+                manager.pre_trade_validate(symbol="BTC-USD", side="buy", quantity=Decimal("0.1"))
 
     def test_component_error_handling(self, conservative_risk_config):
         """Test handling of component errors."""
         manager = LiveRiskManager(config=conservative_risk_config)
 
         # Test that component errors don't crash the manager
-        with patch.object(manager.state_manager, 'is_reduce_only_mode', side_effect=Exception("Component error")):
+        with patch.object(
+            manager.state_manager, "is_reduce_only_mode", side_effect=Exception("Component error")
+        ):
             with pytest.raises(Exception, match="Component error"):
                 manager.is_reduce_only_mode()
 
@@ -781,8 +797,10 @@ class TestLiveRiskManagerErrorHandling:
     def test_configuration_validation(self):
         """Test configuration validation during initialization."""
         # Test with invalid configuration
-        with patch('bot_v2.features.live_trade.risk.manager.RiskConfig.from_env',
-                  side_effect=Exception("Config error")):
+        with patch(
+            "bot_v2.features.live_trade.risk.manager.RiskConfig.from_env",
+            side_effect=Exception("Config error"),
+        ):
 
             # Should still initialize with some default behavior
             with pytest.raises(Exception, match="Config error"):
@@ -797,11 +815,11 @@ class TestLiveRiskManagerBackwardCompatibility:
         manager = LiveRiskManager(config=conservative_risk_config)
 
         # These should work for backward compatibility
-        assert hasattr(manager, '_state')
-        assert hasattr(manager, 'daily_pnl')
-        assert hasattr(manager, 'start_of_day_equity')
-        assert hasattr(manager, 'positions')
-        assert hasattr(manager, 'circuit_breaker_state')
+        assert hasattr(manager, "_state")
+        assert hasattr(manager, "daily_pnl")
+        assert hasattr(manager, "start_of_day_equity")
+        assert hasattr(manager, "positions")
+        assert hasattr(manager, "circuit_breaker_state")
 
     def test_state_reference_updates(self, conservative_risk_config):
         """Test that state references are properly updated."""
@@ -831,19 +849,11 @@ class TestLiveRiskManagerBackwardCompatibility:
         """Test backward compatibility for both qty and quantity parameters."""
         manager = LiveRiskManager(config=conservative_risk_config)
 
-        with patch.object(manager.pre_trade_validator, 'pre_trade_validate') as mock_validate:
+        with patch.object(manager.pre_trade_validator, "pre_trade_validate") as mock_validate:
             # Test with qty parameter
-            manager.pre_trade_validate(
-                symbol="BTC-USD",
-                side="buy",
-                qty=Decimal("0.1")
-            )
+            manager.pre_trade_validate(symbol="BTC-USD", side="buy", qty=Decimal("0.1"))
 
             # Test with quantity parameter
-            manager.pre_trade_validate(
-                symbol="BTC-USD",
-                side="buy",
-                quantity=Decimal("0.1")
-            )
+            manager.pre_trade_validate(symbol="BTC-USD", side="buy", quantity=Decimal("0.1"))
 
             assert mock_validate.call_count == 2

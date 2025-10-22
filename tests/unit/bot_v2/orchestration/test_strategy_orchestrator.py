@@ -629,9 +629,7 @@ class TestStrategyOrchestratorEdgeCases:
 
         # Mock spot profiles to return invalid fraction
         mock_spot_profiles = Mock()
-        mock_spot_profiles.load.return_value = {
-            "BTC-PERP": {"position_fraction": "invalid_value"}
-        }
+        mock_spot_profiles.load.return_value = {"BTC-PERP": {"position_fraction": "invalid_value"}}
 
         orchestrator._spot_profiles = mock_spot_profiles
 
@@ -645,7 +643,10 @@ class TestStrategyOrchestratorEdgeCases:
             # Should log warning about invalid position_fraction
             mock_logger.warning.assert_called_once()
             call_args = mock_logger.warning.call_args
-            assert "Invalid position_fraction=invalid_value for BTC-PERP; using default" in call_args[0][0] % call_args[0][1:]
+            assert (
+                "Invalid position_fraction=invalid_value for BTC-PERP; using default"
+                in call_args[0][0] % call_args[0][1:]
+            )
             assert call_args[1]["operation"] == "strategy_init"
             assert call_args[1]["stage"] == "spot_fraction"
             assert call_args[1]["symbol"] == "BTC-PERP"
@@ -665,13 +666,17 @@ class TestStrategyOrchestratorEdgeCases:
             # Should log warning about invalid PERPS_POSITION_FRACTION
             mock_logger.warning.assert_called_once()
             call_args = mock_logger.warning.call_args
-            assert "Invalid PERPS_POSITION_FRACTION=not_a_number; using default" in call_args[0][0] % call_args[0][1:]
+            assert (
+                "Invalid PERPS_POSITION_FRACTION=not_a_number; using default"
+                in call_args[0][0] % call_args[0][1:]
+            )
             assert call_args[1]["operation"] == "strategy_init"
             assert call_args[1]["stage"] == "perps_fraction"
 
-    
     @pytest.mark.asyncio
-    async def test_process_symbol_execution_error_logging(self, orchestrator, mock_bot, test_balance):
+    async def test_process_symbol_execution_error_logging(
+        self, orchestrator, mock_bot, test_balance
+    ):
         """Test error logging when execution fails."""
         mock_bot.broker.list_balances = Mock(return_value=[test_balance])
         mock_bot.broker.list_positions = Mock(return_value=[])
@@ -714,7 +719,6 @@ class TestStrategyOrchestratorEdgeCases:
             assert call_args[1]["symbol"] == "BTC-PERP"
             assert call_args[1]["exc_info"] is True
 
-    
     @pytest.mark.asyncio
     async def test_prepare_context_no_marks_warning(self, orchestrator, mock_bot, test_balance):
         """Test warning logged when no marks are available."""
@@ -846,7 +850,9 @@ class TestKillSwitchLogic:
         mock_bot.risk_manager.config.kill_switch_enabled = True
 
         with patch("bot_v2.orchestration.strategy_orchestrator.emit_metric") as mock_emit:
-            await orchestrator.process_symbol("BTC-PERP", [test_balance], {"BTC-PERP": test_position})
+            await orchestrator.process_symbol(
+                "BTC-PERP", [test_balance], {"BTC-PERP": test_position}
+            )
 
         # Should not execute any decisions when kill switch is enabled
         mock_bot.execute_decision.assert_not_called()
@@ -876,7 +882,9 @@ class TestKillSwitchLogic:
         # Enable kill switch
         mock_bot.risk_manager.config.kill_switch_enabled = True
 
-        context = await orchestrator._prepare_context("BTC-PERP", [test_balance], {"BTC-PERP": test_position})
+        context = await orchestrator._prepare_context(
+            "BTC-PERP", [test_balance], {"BTC-PERP": test_position}
+        )
 
         # Should return None when kill switch is engaged
         assert context is None
@@ -890,12 +898,12 @@ class TestKillSwitchLogic:
         mock_bot.risk_manager.config.kill_switch_enabled = True
 
         with patch("bot_v2.orchestration.strategy_orchestrator.logger") as mock_logger:
-            await orchestrator._prepare_context("BTC-PERP", [test_balance], {"BTC-PERP": test_position})
+            await orchestrator._prepare_context(
+                "BTC-PERP", [test_balance], {"BTC-PERP": test_position}
+            )
 
         # Should log warning about kill switch being enabled
-        mock_logger.warning.assert_called_once_with(
-            "Kill switch enabled - skipping trading loop"
-        )
+        mock_logger.warning.assert_called_once_with("Kill switch enabled - skipping trading loop")
 
 
 class TestDecisionRoutingAndGuardChains:
@@ -919,7 +927,9 @@ class TestDecisionRoutingAndGuardChains:
         mock_marks = [Decimal("50000")]
         with patch.object(orchestrator, "_get_marks", return_value=mock_marks):
             with patch.object(orchestrator, "_adjust_equity", return_value=Decimal("1000")):
-                await orchestrator.process_symbol("BTC-PERP", [test_balance], {"BTC-PERP": test_position})
+                await orchestrator.process_symbol(
+                    "BTC-PERP", [test_balance], {"BTC-PERP": test_position}
+                )
 
         # Should execute BUY decision
         mock_bot.execute_decision.assert_called_once()
@@ -942,7 +952,9 @@ class TestDecisionRoutingAndGuardChains:
 
         with patch("bot_v2.orchestration.strategy_orchestrator.logger") as mock_logger:
             # emit_metric patch removed - function doesn't exist in module
-                await orchestrator.process_symbol("BTC-PERP", [test_balance], {"BTC-PERP": test_position})
+            await orchestrator.process_symbol(
+                "BTC-PERP", [test_balance], {"BTC-PERP": test_position}
+            )
 
         # Should not execute decision due to missing product
         mock_bot.execute_decision.assert_not_called()
@@ -1142,7 +1154,9 @@ class TestPositionStateBuildingAndValidation:
         # Mock empty marks
         with patch.object(orchestrator, "_get_marks", return_value=[]):
             with patch("bot_v2.orchestration.strategy_orchestrator.logger") as mock_logger:
-                context = await orchestrator._prepare_context("BTC-PERP", [test_balance], {"BTC-PERP": test_position})
+                context = await orchestrator._prepare_context(
+                    "BTC-PERP", [test_balance], {"BTC-PERP": test_position}
+                )
 
         # Should return None when no marks available
         assert context is None
@@ -1159,7 +1173,9 @@ class TestPositionStateBuildingAndValidation:
         with patch.object(orchestrator, "_get_marks", return_value=[Decimal("50000")]):
             with patch.object(orchestrator, "_adjust_equity", return_value=Decimal("0")):
                 with patch("bot_v2.orchestration.strategy_orchestrator.logger") as mock_logger:
-                    context = await orchestrator._prepare_context("BTC-PERP", [test_balance], {"BTC-PERP": test_position})
+                    context = await orchestrator._prepare_context(
+                        "BTC-PERP", [test_balance], {"BTC-PERP": test_position}
+                    )
 
         # Should return None when equity is zero
         assert context is None

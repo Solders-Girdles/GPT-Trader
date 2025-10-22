@@ -5,7 +5,6 @@ from __future__ import annotations
 from decimal import Decimal
 from types import SimpleNamespace
 from typing import Any
-from unittest.mock import Mock
 
 import pytest
 from tests.unit.bot_v2.orchestration.helpers import ScenarioBuilder
@@ -114,7 +113,9 @@ async def test_record_snapshot_with_empty_order_dicts(reconciler, fake_event_sto
 
 
 @pytest.mark.asyncio
-async def test_record_snapshot_handles_metric_emission_failure(reconciler, fake_event_store, monkeypatch):
+async def test_record_snapshot_handles_metric_emission_failure(
+    reconciler, fake_event_store, monkeypatch
+):
     """Test record_snapshot when metric emission fails."""
     local = {"one": ScenarioBuilder.create_order(id="local1", status=OrderStatus.SUBMITTED)}
     exchange = {"two": ScenarioBuilder.create_order(id="ex1", status=OrderStatus.SUBMITTED)}
@@ -129,5 +130,3 @@ async def test_record_snapshot_handles_metric_emission_failure(reconciler, fake_
     # so we expect it to raise an exception
     with pytest.raises(RuntimeError, match="Metric emission failed"):
         await reconciler.record_snapshot(local, exchange)
-
-

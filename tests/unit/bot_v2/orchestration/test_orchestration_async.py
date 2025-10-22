@@ -178,7 +178,7 @@ class TestStrategyOrchestratorAsync:
         mock_bot.broker.list_balances = AsyncMock(return_value=balances)
         result = await orchestrator._ensure_balances(None)
         # Handle the case where the method returns a coroutine
-        if hasattr(result, '__await__'):
+        if hasattr(result, "__await__"):
             result = await result
         assert result == balances
 
@@ -193,7 +193,7 @@ class TestStrategyOrchestratorAsync:
 
         # Test with None (should call broker)
         # The actual implementation uses asyncio.to_thread, so we need to mock that
-        with patch('asyncio.to_thread') as mock_to_thread:
+        with patch("asyncio.to_thread") as mock_to_thread:
             # Ensure the position has the required symbol attribute
             position = list(positions.values())[0]
             position.symbol = "BTC-USD"
@@ -206,13 +206,13 @@ class TestStrategyOrchestratorAsync:
         """Test spot filters when insufficient candle data."""
         # Configure bot to use SPOT profile
         mock_bot.config.profile.SPOT = "spot"
-        
+
         # Configure spot profile service to return rules that need data
         mock_spot_profile_service = orchestrator._spot_profiles
         mock_spot_profile_service.get.return_value = {
             "volume_filter": {"window": 20, "multiplier": 2.0}
         }
-        
+
         context = SymbolProcessingContext(
             symbol="BTC-USD",
             balances=[],
@@ -225,7 +225,7 @@ class TestStrategyOrchestratorAsync:
         )
 
         # Mock empty candle data
-        with patch('asyncio.to_thread') as mock_to_thread:
+        with patch("asyncio.to_thread") as mock_to_thread:
             mock_to_thread.return_value = []
             decision = Decision(action=Action.BUY, reason="test")
             result = await orchestrator._apply_spot_filters(context, decision)
@@ -258,7 +258,7 @@ class TestStrategyOrchestratorAsync:
         )
 
         # Mock candle data
-        with patch('asyncio.to_thread') as mock_to_thread:
+        with patch("asyncio.to_thread") as mock_to_thread:
             mock_to_thread.return_value = [mock_candle] * 30
 
             # Configure volume filter to block
@@ -300,7 +300,7 @@ class TestStrategyOrchestratorAsync:
             product=None,
         )
 
-        with patch('asyncio.to_thread') as mock_to_thread:
+        with patch("asyncio.to_thread") as mock_to_thread:
             mock_to_thread.return_value = mock_candles
 
             # Configure momentum filter to block
@@ -342,7 +342,7 @@ class TestStrategyOrchestratorAsync:
             product=None,
         )
 
-        with patch('asyncio.to_thread') as mock_to_thread:
+        with patch("asyncio.to_thread") as mock_to_thread:
             mock_to_thread.return_value = mock_candles
 
             # Configure trend filter to block
@@ -387,7 +387,7 @@ class TestStrategyOrchestratorAsync:
             product=None,
         )
 
-        with patch('asyncio.to_thread') as mock_to_thread:
+        with patch("asyncio.to_thread") as mock_to_thread:
             mock_to_thread.return_value = mock_candles
 
             # Configure volatility filter to block

@@ -10,28 +10,26 @@ from __future__ import annotations
 
 import asyncio
 from decimal import Decimal
-from datetime import datetime, timedelta
-from unittest.mock import Mock, AsyncMock, patch
+
 import pytest
 
 from bot_v2.features.brokerages.core.interfaces import (
-    Order,
-    OrderStatus,
-    Position,
     OrderSide as Side,
-    OrderType,
+)
+from bot_v2.features.brokerages.core.interfaces import (
+    OrderStatus,
 )
 from bot_v2.features.live_trade.risk.manager import LiveRiskManager
 from bot_v2.features.live_trade.risk.pre_trade_checks import ValidationError
 from bot_v2.orchestration.coordinators.execution import ExecutionCoordinator
-from bot_v2.orchestration.live_execution import LiveExecutionEngine
 from bot_v2.orchestration.runtime_settings import RuntimeSettings
 
 
 def _get_risk_validation_context(order):
     """Helper to get product and equity for risk validation."""
     from decimal import Decimal
-    from bot_v2.features.brokerages.core.interfaces import Product, MarketType
+
+    from bot_v2.features.brokerages.core.interfaces import MarketType, Product
 
     mock_product = Product(
         symbol=order.symbol,
@@ -41,23 +39,21 @@ def _get_risk_validation_context(order):
         min_size=Decimal("0.001"),
         step_size=Decimal("0.001"),
         min_notional=Decimal("10.0"),
-        price_increment=Decimal("0.01")
+        price_increment=Decimal("0.01"),
     )
 
     mock_equity = Decimal("10000.0")  # $10,000 equity
 
-    return {
-        "product": mock_product,
-        "equity": mock_equity,
-        "current_positions": {}
-    }
+    return {"product": mock_product, "equity": mock_equity, "current_positions": {}}
 
 
 class TestCompleteOrderLifecycle:
     """Test complete order lifecycle from creation to completion."""
 
     @pytest.mark.asyncio
-    async def test_tc_if_001_normal_order_flow_success(self, integrated_trading_system, integration_test_scenarios):
+    async def test_tc_if_001_normal_order_flow_success(
+        self, integrated_trading_system, integration_test_scenarios
+    ):
         """TC-IF-001: Normal Order Flow (Risk Check → Execution → Reconciliation)."""
         risk_manager = integrated_trading_system["risk_manager"]
         execution_coordinator = integrated_trading_system["execution_coordinator"]
@@ -66,10 +62,7 @@ class TestCompleteOrderLifecycle:
 
         # Create a test order
         order = integration_test_scenarios.create_test_order(
-            order_id="normal_flow_001",
-            symbol="BTC-USD",
-            side=Side.BUY,
-            quantity=1.0
+            order_id="normal_flow_001", symbol="BTC-USD", side=Side.BUY, quantity=1.0
         )
 
         # Step 1: Risk validation
@@ -79,10 +72,12 @@ class TestCompleteOrderLifecycle:
                 symbol=order.symbol,
                 side=str(order.side),
                 quantity=order.quantity,
-                price=order.price if order.price is not None else Decimal("50000.0"),  # Default price for market orders
+                price=(
+                    order.price if order.price is not None else Decimal("50000.0")
+                ),  # Default price for market orders
                 product=ctx["product"],
                 equity=ctx["equity"],
-                current_positions=ctx["current_positions"]
+                current_positions=ctx["current_positions"],
             )
         except ValidationError as e:
             pytest.fail(f"Order should pass risk validation but failed with: {e}")
@@ -94,7 +89,7 @@ class TestCompleteOrderLifecycle:
             side=order.side,
             order_type=order.type,
             quantity=order.quantity,
-            price=order.price
+            price=order.price,
         )
         assert placed_order is not None, "Order should be placed"
         assert placed_order.id == order.id, "Order ID should match"
@@ -110,10 +105,14 @@ class TestCompleteOrderLifecycle:
         # Step 5: Event store validation
         order_events = event_store.get_events_by_type("order_placed")
         assert len(order_events) > 0, "Should have order events"
-        assert order_events[-1]["data"]["order_id"] == order.id, "Event should reference correct order"
+        assert (
+            order_events[-1]["data"]["order_id"] == order.id
+        ), "Event should reference correct order"
 
     @pytest.mark.asyncio
-    async def test_tc_if_002_order_rejection_at_risk_validation(self, integrated_trading_system, integration_test_scenarios):
+    async def test_tc_if_002_order_rejection_at_risk_validation(
+        self, integrated_trading_system, integration_test_scenarios
+    ):
         """TC-IF-002: Order Rejection at Risk Validation Stage."""
         risk_manager = integrated_trading_system["risk_manager"]
         execution_coordinator = integrated_trading_system["execution_coordinator"]
@@ -125,7 +124,7 @@ class TestCompleteOrderLifecycle:
             order_id="risk_reject_001",
             symbol="BTC-USD",
             side=Side.BUY,
-            quantity=100.0  # Exceeds typical limits
+            quantity=100.0,  # Exceeds typical limits
         )
 
         # Risk validation should fail
@@ -135,10 +134,12 @@ class TestCompleteOrderLifecycle:
                 symbol=large_order.symbol,
                 side=str(large_order.side),
                 quantity=large_order.quantity,
-                price=large_order.price if large_order.price is not None else Decimal("50000.0"),  # Default price for market orders
+                price=(
+                    large_order.price if large_order.price is not None else Decimal("50000.0")
+                ),  # Default price for market orders
                 product=ctx["product"],
                 equity=ctx["equity"],
-                current_positions=ctx["current_positions"]
+                current_positions=ctx["current_positions"],
             )
         assert exc_info.value is not None, "Should have rejection reason"
 
@@ -150,7 +151,7 @@ class TestCompleteOrderLifecycle:
                 side=large_order.side,
                 order_type=large_order.type,
                 quantity=large_order.quantity,
-                price=large_order.price
+                price=large_order.price,
             )
 
         # Should have risk rejection event
@@ -158,7 +159,9 @@ class TestCompleteOrderLifecycle:
         assert len(risk_events) > 0, "Should have risk rejection event"
 
     @pytest.mark.asyncio
-    async def test_tc_if_003_order_failure_at_execution_stage(self, async_integrated_system, integration_test_scenarios):
+    async def test_tc_if_003_order_failure_at_execution_stage(
+        self, async_integrated_system, integration_test_scenarios
+    ):
         """TC-IF-003: Order Failure at Execution Stage."""
         system = async_integrated_system
         risk_manager = system["risk_manager"]
@@ -167,10 +170,7 @@ class TestCompleteOrderLifecycle:
 
         # Create a valid order
         order = integration_test_scenarios.create_test_order(
-            order_id="exec_fail_001",
-            symbol="BTC-USD",
-            side=Side.BUY,
-            quantity=1.0
+            order_id="exec_fail_001", symbol="BTC-USD", side=Side.BUY, quantity=1.0
         )
 
         # Risk validation should pass
@@ -180,10 +180,12 @@ class TestCompleteOrderLifecycle:
                 symbol=order.symbol,
                 side=str(order.side),
                 quantity=order.quantity,
-                price=order.price if order.price is not None else Decimal("50000.0"),  # Default price for market orders
+                price=(
+                    order.price if order.price is not None else Decimal("50000.0")
+                ),  # Default price for market orders
                 product=ctx["product"],
                 equity=ctx["equity"],
-                current_positions=ctx["current_positions"]
+                current_positions=ctx["current_positions"],
             )
         except ValidationError as e:
             pytest.fail(f"Order should pass risk validation but failed with: {e}")
@@ -198,7 +200,7 @@ class TestCompleteOrderLifecycle:
             side=order.side,
             order_type=order.type,
             quantity=order.quantity,
-            price=order.price
+            price=order.price,
         )
         assert placed_order.status != OrderStatus.FILLED, "Execution should fail"
 
@@ -207,7 +209,9 @@ class TestCompleteOrderLifecycle:
         assert len(exec_events) > 0, "Should have execution failure event"
 
     @pytest.mark.asyncio
-    async def test_tc_if_004_partial_fills_with_reconciliation(self, async_integrated_system, integration_test_scenarios):
+    async def test_tc_if_004_partial_fills_with_reconciliation(
+        self, async_integrated_system, integration_test_scenarios
+    ):
         """TC-IF-004: Partial Fills with Reconciliation."""
         system = async_integrated_system
         risk_manager = system["risk_manager"]
@@ -216,10 +220,7 @@ class TestCompleteOrderLifecycle:
 
         # Create order for partial fill scenario
         order = integration_test_scenarios.create_test_order(
-            order_id="partial_fill_001",
-            symbol="BTC-USD",
-            side=Side.BUY,
-            quantity=2.0
+            order_id="partial_fill_001", symbol="BTC-USD", side=Side.BUY, quantity=2.0
         )
 
         # Risk validation should pass
@@ -229,10 +230,12 @@ class TestCompleteOrderLifecycle:
                 symbol=order.symbol,
                 side=str(order.side),
                 quantity=order.quantity,
-                price=order.price if order.price is not None else Decimal("50000.0"),  # Default price for market orders
+                price=(
+                    order.price if order.price is not None else Decimal("50000.0")
+                ),  # Default price for market orders
                 product=ctx["product"],
                 equity=ctx["equity"],
-                current_positions=ctx["current_positions"]
+                current_positions=ctx["current_positions"],
             )
         except ValidationError as e:
             pytest.fail(f"Order should pass risk validation but failed with: {e}")
@@ -247,7 +250,7 @@ class TestCompleteOrderLifecycle:
             side=order.side,
             order_type=order.type,
             quantity=order.quantity,
-            price=order.price
+            price=order.price,
         )
         assert placed_order.status == OrderStatus.FILLED, "Execution should succeed"
 
@@ -263,7 +266,9 @@ class TestCompleteOrderLifecycle:
         assert position.size == 1.0, "Position should reflect partial fill"
 
     @pytest.mark.asyncio
-    async def test_tc_if_005_order_cancellation_flow(self, async_integrated_system, integration_test_scenarios):
+    async def test_tc_if_005_order_cancellation_flow(
+        self, async_integrated_system, integration_test_scenarios
+    ):
         """TC-IF-005: Order Cancellation Flow."""
         system = async_integrated_system
         risk_manager = system["risk_manager"]
@@ -271,10 +276,7 @@ class TestCompleteOrderLifecycle:
 
         # Create order for cancellation test
         order = integration_test_scenarios.create_test_order(
-            order_id="cancel_test_001",
-            symbol="BTC-USD",
-            side=Side.BUY,
-            quantity=1.0
+            order_id="cancel_test_001", symbol="BTC-USD", side=Side.BUY, quantity=1.0
         )
 
         # Risk validation and execution
@@ -284,10 +286,12 @@ class TestCompleteOrderLifecycle:
                 symbol=order.symbol,
                 side=str(order.side),
                 quantity=order.quantity,
-                price=order.price if order.price is not None else Decimal("50000.0"),  # Default price for market orders
+                price=(
+                    order.price if order.price is not None else Decimal("50000.0")
+                ),  # Default price for market orders
                 product=ctx["product"],
                 equity=ctx["equity"],
-                current_positions=ctx["current_positions"]
+                current_positions=ctx["current_positions"],
             )
         except ValidationError as e:
             pytest.fail(f"Order should pass risk validation but failed with: {e}")
@@ -300,7 +304,7 @@ class TestCompleteOrderLifecycle:
                 side=order.side,
                 order_type=order.type,
                 quantity=order.quantity,
-                price=order.price
+                price=order.price,
             )
         )
 
@@ -319,7 +323,9 @@ class TestCompleteOrderLifecycle:
         assert final_status == OrderStatus.CANCELLED, "Order should be cancelled"
 
     @pytest.mark.asyncio
-    async def test_tc_if_006_order_modification_flow(self, async_integrated_system, integration_test_scenarios):
+    async def test_tc_if_006_order_modification_flow(
+        self, async_integrated_system, integration_test_scenarios
+    ):
         """TC-IF-006: Order Modification Flow."""
         system = async_integrated_system
         risk_manager = system["risk_manager"]
@@ -327,10 +333,7 @@ class TestCompleteOrderLifecycle:
 
         # Create original order
         original_order = integration_test_scenarios.create_test_order(
-            order_id="modify_test_001",
-            symbol="BTC-USD",
-            side=Side.BUY,
-            quantity=1.0
+            order_id="modify_test_001", symbol="BTC-USD", side=Side.BUY, quantity=1.0
         )
 
         # Risk validation and execution
@@ -340,10 +343,12 @@ class TestCompleteOrderLifecycle:
                 symbol=original_order.symbol,
                 side=str(original_order.side),
                 quantity=original_order.quantity,
-                price=original_order.price if original_order.price is not None else Decimal("50000.0"),  # Default price for market orders
+                price=(
+                    original_order.price if original_order.price is not None else Decimal("50000.0")
+                ),  # Default price for market orders
                 product=ctx["product"],
                 equity=ctx["equity"],
-                current_positions=ctx["current_positions"]
+                current_positions=ctx["current_positions"],
             )
         except ValidationError as e:
             pytest.fail(f"Order should pass risk validation but failed with: {e}")
@@ -354,7 +359,7 @@ class TestCompleteOrderLifecycle:
             side=original_order.side,
             order_type=original_order.type,
             quantity=original_order.quantity,
-            price=original_order.price
+            price=original_order.price,
         )
         assert placed_order.status == OrderStatus.FILLED, "Execution should succeed"
 
@@ -363,7 +368,7 @@ class TestCompleteOrderLifecycle:
             order_id="modify_test_001",  # Same ID
             symbol="BTC-USD",
             side=Side.BUY,
-            quantity=1.5  # Increased quantity
+            quantity=1.5,  # Increased quantity
         )
 
         # Risk validation for modified order
@@ -373,10 +378,12 @@ class TestCompleteOrderLifecycle:
                 symbol=modified_order.symbol,
                 side=str(modified_order.side),
                 quantity=modified_order.quantity,
-                price=modified_order.price if modified_order.price is not None else Decimal("50000.0"),  # Default price for market orders
+                price=(
+                    modified_order.price if modified_order.price is not None else Decimal("50000.0")
+                ),  # Default price for market orders
                 product=ctx["product"],
                 equity=ctx["equity"],
-                current_positions=ctx["current_positions"]
+                current_positions=ctx["current_positions"],
             )
         except ValidationError as e:
             pytest.fail(f"Modified order should pass risk validation but failed with: {e}")
@@ -386,7 +393,9 @@ class TestCompleteOrderLifecycle:
         assert modify_result.success, "Order modification should succeed"
 
     @pytest.mark.asyncio
-    async def test_tc_if_007_multi_order_portfolio_execution(self, async_integrated_system, integration_test_scenarios):
+    async def test_tc_if_007_multi_order_portfolio_execution(
+        self, async_integrated_system, integration_test_scenarios
+    ):
         """TC-IF-007: Multi-Order Portfolio Execution."""
         system = async_integrated_system
         risk_manager = system["risk_manager"]
@@ -395,23 +404,14 @@ class TestCompleteOrderLifecycle:
         # Create multiple orders for different symbols
         orders = [
             integration_test_scenarios.create_test_order(
-                order_id="portfolio_001",
-                symbol="BTC-USD",
-                side=Side.BUY,
-                quantity=0.5
+                order_id="portfolio_001", symbol="BTC-USD", side=Side.BUY, quantity=0.5
             ),
             integration_test_scenarios.create_test_order(
-                order_id="portfolio_002",
-                symbol="ETH-USD",
-                side=Side.BUY,
-                quantity=2.0
+                order_id="portfolio_002", symbol="ETH-USD", side=Side.BUY, quantity=2.0
             ),
             integration_test_scenarios.create_test_order(
-                order_id="portfolio_003",
-                symbol="BTC-USD",
-                side=Side.SELL,
-                quantity=0.3
-            )
+                order_id="portfolio_003", symbol="BTC-USD", side=Side.SELL, quantity=0.3
+            ),
         ]
 
         # Execute all orders concurrently
@@ -423,10 +423,12 @@ class TestCompleteOrderLifecycle:
                     symbol=order.symbol,
                     side=str(order.side),
                     quantity=order.quantity,
-                    price=order.price if order.price is not None else Decimal("50000.0"),  # Default price for market orders
+                    price=(
+                        order.price if order.price is not None else Decimal("50000.0")
+                    ),  # Default price for market orders
                     product=ctx["product"],
                     equity=ctx["equity"],
-                    current_positions=ctx["current_positions"]
+                    current_positions=ctx["current_positions"],
                 )
             except ValidationError as e:
                 pytest.fail(f"Order {order.id} should pass risk validation but failed with: {e}")
@@ -438,7 +440,7 @@ class TestCompleteOrderLifecycle:
                     side=order.side,
                     order_type=order.type,
                     quantity=order.quantity,
-                    price=order.price
+                    price=order.price,
                 )
             )
             execution_tasks.append(task)
@@ -448,7 +450,9 @@ class TestCompleteOrderLifecycle:
 
         # Verify all executions succeeded
         for i, placed_order in enumerate(execution_results):
-            assert placed_order.status == OrderStatus.FILLED, f"Order {orders[i].id} should execute successfully"
+            assert (
+                placed_order.status == OrderStatus.FILLED
+            ), f"Order {orders[i].id} should execute successfully"
 
         # Verify portfolio state
         positions = await execution_coordinator.get_positions()
@@ -463,7 +467,9 @@ class TestRiskExecutionIntegration:
     """Test risk and execution system integration."""
 
     @pytest.mark.asyncio
-    async def test_tc_if_008_pre_trade_risk_limits_during_execution(self, async_integrated_system, integration_test_scenarios):
+    async def test_tc_if_008_pre_trade_risk_limits_during_execution(
+        self, async_integrated_system, integration_test_scenarios
+    ):
         """TC-IF-008: Pre-trade Risk Limits Enforced During Execution."""
         system = async_integrated_system
         risk_manager = system["risk_manager"]
@@ -474,7 +480,7 @@ class TestRiskExecutionIntegration:
             order_id="risk_limits_001",
             symbol="BTC-USD",
             side=Side.BUY,
-            quantity=4.5  # Near typical limit of 5.0
+            quantity=4.5,  # Near typical limit of 5.0
         )
 
         # Risk validation should pass but be close to limit
@@ -484,10 +490,12 @@ class TestRiskExecutionIntegration:
                 symbol=order.symbol,
                 side=str(order.side),
                 quantity=order.quantity,
-                price=order.price if order.price is not None else Decimal("50000.0"),  # Default price for market orders
+                price=(
+                    order.price if order.price is not None else Decimal("50000.0")
+                ),  # Default price for market orders
                 product=ctx["product"],
                 equity=ctx["equity"],
-                current_positions=ctx["current_positions"]
+                current_positions=ctx["current_positions"],
             )
         except ValidationError as e:
             pytest.fail(f"Order should pass risk validation but failed with: {e}")
@@ -497,7 +505,7 @@ class TestRiskExecutionIntegration:
             order_id="risk_limits_002",
             symbol="BTC-USD",
             side=Side.BUY,
-            quantity=2.0  # Would exceed limit when combined
+            quantity=2.0,  # Would exceed limit when combined
         )
 
         # Second order should fail risk validation
@@ -507,15 +515,19 @@ class TestRiskExecutionIntegration:
                 symbol=second_order.symbol,
                 side=str(second_order.side),
                 quantity=second_order.quantity,
-                price=second_order.price if second_order.price is not None else Decimal("50000.0"),  # Default price for market orders
+                price=(
+                    second_order.price if second_order.price is not None else Decimal("50000.0")
+                ),  # Default price for market orders
                 product=ctx["product"],
                 equity=ctx["equity"],
-                current_positions=ctx["current_positions"]
+                current_positions=ctx["current_positions"],
             )
         assert "position size" in str(exc_info.value).lower(), "Should mention position size limit"
 
     @pytest.mark.asyncio
-    async def test_tc_if_009_position_sizing_integration_with_order_placement(self, async_integrated_system, integration_test_scenarios):
+    async def test_tc_if_009_position_sizing_integration_with_order_placement(
+        self, async_integrated_system, integration_test_scenarios
+    ):
         """TC-IF-009: Position Sizing Integration with Order Placement."""
         system = async_integrated_system
         risk_manager = system["risk_manager"]
@@ -526,7 +538,7 @@ class TestRiskExecutionIntegration:
             order_id="position_sizing_001",
             symbol="BTC-USD",
             side=Side.BUY,
-            quantity=10.0  # Large order that should be sized down
+            quantity=10.0,  # Large order that should be sized down
         )
 
         # Risk validation should calculate appropriate position size
@@ -536,13 +548,17 @@ class TestRiskExecutionIntegration:
                 symbol=base_order.symbol,
                 side=str(base_order.side),
                 quantity=base_order.quantity,
-                price=base_order.price if base_order.price is not None else Decimal("50000.0"),  # Default price for market orders
+                price=(
+                    base_order.price if base_order.price is not None else Decimal("50000.0")
+                ),  # Default price for market orders
                 product=ctx["product"],
                 equity=ctx["equity"],
-                current_positions=ctx["current_positions"]
+                current_positions=ctx["current_positions"],
             )
         except ValidationError as e:
-            pytest.fail(f"Order should pass risk validation with sizing adjustment but failed with: {e}")
+            pytest.fail(
+                f"Order should pass risk validation with sizing adjustment but failed with: {e}"
+            )
 
         # Execute the sized order
         placed_order = await execution_coordinator.place_order(
@@ -551,12 +567,14 @@ class TestRiskExecutionIntegration:
             side=base_order.side,
             order_type=base_order.type,
             quantity=base_order.quantity,
-            price=base_order.price
+            price=base_order.price,
         )
         assert placed_order.status == OrderStatus.FILLED, "Sized order should execute successfully"
 
     @pytest.mark.asyncio
-    async def test_tc_if_010_leverage_limit_enforcement_throughout_lifecycle(self, async_integrated_system, integration_test_scenarios):
+    async def test_tc_if_010_leverage_limit_enforcement_throughout_lifecycle(
+        self, async_integrated_system, integration_test_scenarios
+    ):
         """TC-IF-010: Leverage Limit Enforcement Throughout Order Lifecycle."""
         system = async_integrated_system
         risk_manager = system["risk_manager"]
@@ -567,7 +585,7 @@ class TestRiskExecutionIntegration:
             order_id="leverage_test_001",
             symbol="BTC-USD",
             side=Side.BUY,
-            quantity=15.0  # High leverage position
+            quantity=15.0,  # High leverage position
         )
 
         # Risk validation should check leverage
@@ -577,10 +595,12 @@ class TestRiskExecutionIntegration:
                 symbol=leverage_order.symbol,
                 side=str(leverage_order.side),
                 quantity=leverage_order.quantity,
-                price=leverage_order.price if leverage_order.price is not None else Decimal("50000.0"),  # Default price for market orders
+                price=(
+                    leverage_order.price if leverage_order.price is not None else Decimal("50000.0")
+                ),  # Default price for market orders
                 product=ctx["product"],
                 equity=ctx["equity"],
-                current_positions=ctx["current_positions"]
+                current_positions=ctx["current_positions"],
             )
             # If it passes, ensure leverage is within limits
             placed_order = await execution_coordinator.place_order(
@@ -589,9 +609,11 @@ class TestRiskExecutionIntegration:
                 side=leverage_order.side,
                 order_type=leverage_order.type,
                 quantity=leverage_order.quantity,
-                price=leverage_order.price
+                price=leverage_order.price,
             )
-            assert placed_order.status == OrderStatus.FILLED, "Order within leverage limits should execute"
+            assert (
+                placed_order.status == OrderStatus.FILLED
+            ), "Order within leverage limits should execute"
 
             # Check final position leverage
             positions = await execution_coordinator.get_positions()
@@ -604,7 +626,9 @@ class TestRiskExecutionIntegration:
             assert "leverage" in str(e).lower(), "Should mention leverage in rejection"
 
     @pytest.mark.asyncio
-    async def test_tc_if_011_exposure_cap_validation_during_concurrent_orders(self, async_integrated_system, integration_test_scenarios):
+    async def test_tc_if_011_exposure_cap_validation_during_concurrent_orders(
+        self, async_integrated_system, integration_test_scenarios
+    ):
         """TC-IF-011: Exposure Cap Validation During Concurrent Orders."""
         system = async_integrated_system
         risk_manager = system["risk_manager"]
@@ -613,23 +637,14 @@ class TestRiskExecutionIntegration:
         # Create multiple concurrent orders that test exposure limits
         orders = [
             integration_test_scenarios.create_test_order(
-                order_id="exposure_001",
-                symbol="BTC-USD",
-                side=Side.BUY,
-                quantity=2.0
+                order_id="exposure_001", symbol="BTC-USD", side=Side.BUY, quantity=2.0
             ),
             integration_test_scenarios.create_test_order(
-                order_id="exposure_002",
-                symbol="ETH-USD",
-                side=Side.BUY,
-                quantity=5.0
+                order_id="exposure_002", symbol="ETH-USD", side=Side.BUY, quantity=5.0
             ),
             integration_test_scenarios.create_test_order(
-                order_id="exposure_003",
-                symbol="BTC-USD",
-                side=Side.BUY,
-                quantity=3.0
-            )
+                order_id="exposure_003", symbol="BTC-USD", side=Side.BUY, quantity=3.0
+            ),
         ]
 
         # Test concurrent risk validation
@@ -637,15 +652,17 @@ class TestRiskExecutionIntegration:
         for order in orders:
             ctx = _get_risk_validation_context(order)
             task = asyncio.create_task(
-                asyncio.coroutine(lambda o=order, ctx=ctx:
-                    risk_manager.pre_trade_validate(
+                asyncio.coroutine(
+                    lambda o=order, ctx=ctx: risk_manager.pre_trade_validate(
                         symbol=o.symbol,
                         side=str(o.side),
                         quantity=o.quantity,
-                        price=o.price if o.price is not None else Decimal("50000.0"),  # Default price for market orders
+                        price=(
+                            o.price if o.price is not None else Decimal("50000.0")
+                        ),  # Default price for market orders
                         product=ctx["product"],
                         equity=ctx["equity"],
-                        current_positions=ctx["current_positions"]
+                        current_positions=ctx["current_positions"],
                     )
                 )()
             )
@@ -667,10 +684,12 @@ class TestRiskExecutionIntegration:
                         symbol=order.symbol,
                         side=str(order.side),
                         quantity=order.quantity,
-                        price=order.price if order.price is not None else Decimal("50000.0"),  # Default price for market orders
+                        price=(
+                            order.price if order.price is not None else Decimal("50000.0")
+                        ),  # Default price for market orders
                         product=ctx["product"],
                         equity=ctx["equity"],
-                        current_positions=ctx["current_positions"]
+                        current_positions=ctx["current_positions"],
                     )
                     passed_orders.append(order)
                 except ValidationError:
@@ -688,7 +707,7 @@ class TestRiskExecutionIntegration:
                     side=order.side,
                     order_type=order.type,
                     quantity=order.quantity,
-                    price=order.price
+                    price=order.price,
                 )
             )
             execution_tasks.append(task)
@@ -697,10 +716,14 @@ class TestRiskExecutionIntegration:
 
         # Verify executed orders
         for i, placed_order in enumerate(execution_results):
-            assert placed_order.status == OrderStatus.FILLED, f"Order {passed_orders[i].id} should execute successfully"
+            assert (
+                placed_order.status == OrderStatus.FILLED
+            ), f"Order {passed_orders[i].id} should execute successfully"
 
     @pytest.mark.asyncio
-    async def test_tc_if_012_correlation_risk_integration_with_multiple_positions(self, async_integrated_system, integration_test_scenarios):
+    async def test_tc_if_012_correlation_risk_integration_with_multiple_positions(
+        self, async_integrated_system, integration_test_scenarios
+    ):
         """TC-IF-012: Correlation Risk Integration with Multiple Positions."""
         system = async_integrated_system
         risk_manager = system["risk_manager"]
@@ -709,17 +732,11 @@ class TestRiskExecutionIntegration:
         # Create correlated positions (BTC and ETH typically have high correlation)
         correlated_orders = [
             integration_test_scenarios.create_test_order(
-                order_id="correlation_001",
-                symbol="BTC-USD",
-                side=Side.BUY,
-                quantity=3.0
+                order_id="correlation_001", symbol="BTC-USD", side=Side.BUY, quantity=3.0
             ),
             integration_test_scenarios.create_test_order(
-                order_id="correlation_002",
-                symbol="ETH-USD",
-                side=Side.BUY,
-                quantity=10.0
-            )
+                order_id="correlation_002", symbol="ETH-USD", side=Side.BUY, quantity=10.0
+            ),
         ]
 
         # Risk validation should consider correlation
@@ -730,10 +747,12 @@ class TestRiskExecutionIntegration:
                     symbol=order.symbol,
                     side=str(order.side),
                     quantity=order.quantity,
-                    price=order.price if order.price is not None else Decimal("50000.0"),  # Default price for market orders
+                    price=(
+                        order.price if order.price is not None else Decimal("50000.0")
+                    ),  # Default price for market orders
                     product=ctx["product"],
                     equity=ctx["equity"],
-                    current_positions=ctx["current_positions"]
+                    current_positions=ctx["current_positions"],
                 )
             except ValidationError as e:
                 # Order failed due to correlation or other risk factors
@@ -750,7 +769,7 @@ class TestRiskExecutionIntegration:
                         side=order.side,
                         order_type=order.type,
                         quantity=order.quantity,
-                        price=order.price
+                        price=order.price,
                     )
                 )
                 execution_tasks.append(task)
@@ -758,19 +777,25 @@ class TestRiskExecutionIntegration:
             execution_results = await asyncio.gather(*execution_tasks)
 
             for i, placed_order in enumerate(execution_results):
-                assert placed_order.status == OrderStatus.FILLED, f"Correlated order {correlated_orders[i].id} should execute"
+                assert (
+                    placed_order.status == OrderStatus.FILLED
+                ), f"Correlated order {correlated_orders[i].id} should execute"
 
             # Check correlation monitoring
             correlation_metrics = system["event_store"].get_metrics_by_name("portfolio_correlation")
             if correlation_metrics:
-                assert correlation_metrics[-1]["value"] <= 0.9, "Portfolio correlation should be monitored"
+                assert (
+                    correlation_metrics[-1]["value"] <= 0.9
+                ), "Portfolio correlation should be monitored"
 
 
 class TestStateManagementIntegration:
     """Test state management integration across components."""
 
     @pytest.mark.asyncio
-    async def test_tc_if_013_state_consistency_across_order_placement(self, async_integrated_system, integration_test_scenarios):
+    async def test_tc_if_013_state_consistency_across_order_placement(
+        self, async_integrated_system, integration_test_scenarios
+    ):
         """TC-IF-013: State Consistency Across Order Placement."""
         system = async_integrated_system
         risk_manager = system["risk_manager"]
@@ -779,10 +804,7 @@ class TestStateManagementIntegration:
 
         # Create order
         order = integration_test_scenarios.create_test_order(
-            order_id="state_consistency_001",
-            symbol="BTC-USD",
-            side=Side.BUY,
-            quantity=1.0
+            order_id="state_consistency_001", symbol="BTC-USD", side=Side.BUY, quantity=1.0
         )
 
         # Track state changes
@@ -795,10 +817,12 @@ class TestStateManagementIntegration:
                 symbol=order.symbol,
                 side=str(order.side),
                 quantity=order.quantity,
-                price=order.price if order.price is not None else Decimal("50000.0"),  # Default price for market orders
+                price=(
+                    order.price if order.price is not None else Decimal("50000.0")
+                ),  # Default price for market orders
                 product=ctx["product"],
                 equity=ctx["equity"],
-                current_positions=ctx["current_positions"]
+                current_positions=ctx["current_positions"],
             )
         except ValidationError as e:
             pytest.fail(f"Order should pass risk validation but failed with: {e}")
@@ -813,7 +837,7 @@ class TestStateManagementIntegration:
             side=order.side,
             order_type=order.type,
             quantity=order.quantity,
-            price=order.price
+            price=order.price,
         )
         assert placed_order.status == OrderStatus.FILLED, "Execution should succeed"
 
@@ -828,10 +852,14 @@ class TestStateManagementIntegration:
         assert len(risk_validation_events) == 1, "Should have one risk validation event"
 
         # Event timestamps should be sequential
-        assert risk_validation_events[0]["timestamp"] <= order_events[0]["timestamp"], "Risk validation should precede order placement"
+        assert (
+            risk_validation_events[0]["timestamp"] <= order_events[0]["timestamp"]
+        ), "Risk validation should precede order placement"
 
     @pytest.mark.asyncio
-    async def test_tc_if_014_position_state_synchronization(self, async_integrated_system, integration_test_scenarios):
+    async def test_tc_if_014_position_state_synchronization(
+        self, async_integrated_system, integration_test_scenarios
+    ):
         """TC-IF-014: Position State Synchronization."""
         system = async_integrated_system
         risk_manager = system["risk_manager"]
@@ -839,10 +867,7 @@ class TestStateManagementIntegration:
 
         # Create and execute order to create position
         order = integration_test_scenarios.create_test_order(
-            order_id="position_sync_001",
-            symbol="BTC-USD",
-            side=Side.BUY,
-            quantity=2.0
+            order_id="position_sync_001", symbol="BTC-USD", side=Side.BUY, quantity=2.0
         )
 
         # Execute order
@@ -852,10 +877,12 @@ class TestStateManagementIntegration:
                 symbol=order.symbol,
                 side=str(order.side),
                 quantity=order.quantity,
-                price=order.price if order.price is not None else Decimal("50000.0"),  # Default price for market orders
+                price=(
+                    order.price if order.price is not None else Decimal("50000.0")
+                ),  # Default price for market orders
                 product=ctx["product"],
                 equity=ctx["equity"],
-                current_positions=ctx["current_positions"]
+                current_positions=ctx["current_positions"],
             )
         except ValidationError as e:
             pytest.fail(f"Order should pass risk validation but failed with: {e}")
@@ -866,7 +893,7 @@ class TestStateManagementIntegration:
             side=order.side,
             order_type=order.type,
             quantity=order.quantity,
-            price=order.price
+            price=order.price,
         )
         assert placed_order.status == OrderStatus.FILLED, "Execution should succeed"
 
@@ -887,7 +914,9 @@ class TestStateManagementIntegration:
         assert abs(exec_pos.entry_price - risk_pos.entry_price) < 1e-6, "Entry prices should match"
 
     @pytest.mark.asyncio
-    async def test_tc_if_015_runtime_settings_update_during_active_orders(self, async_integrated_system, integration_test_scenarios):
+    async def test_tc_if_015_runtime_settings_update_during_active_orders(
+        self, async_integrated_system, integration_test_scenarios
+    ):
         """TC-IF-015: Runtime Settings Update During Active Orders."""
         system = async_integrated_system
         risk_manager = system["risk_manager"]
@@ -896,10 +925,7 @@ class TestStateManagementIntegration:
 
         # Create order
         order = integration_test_scenarios.create_test_order(
-            order_id="settings_update_001",
-            symbol="BTC-USD",
-            side=Side.BUY,
-            quantity=1.0
+            order_id="settings_update_001", symbol="BTC-USD", side=Side.BUY, quantity=1.0
         )
 
         # Validate and execute order
@@ -909,10 +935,12 @@ class TestStateManagementIntegration:
                 symbol=order.symbol,
                 side=str(order.side),
                 quantity=order.quantity,
-                price=order.price if order.price is not None else Decimal("50000.0"),  # Default price for market orders
+                price=(
+                    order.price if order.price is not None else Decimal("50000.0")
+                ),  # Default price for market orders
                 product=ctx["product"],
                 equity=ctx["equity"],
-                current_positions=ctx["current_positions"]
+                current_positions=ctx["current_positions"],
             )
         except ValidationError as e:
             pytest.fail(f"Order should pass risk validation but failed with: {e}")
@@ -924,7 +952,7 @@ class TestStateManagementIntegration:
                 side=order.side,
                 order_type=order.type,
                 quantity=order.quantity,
-                price=order.price
+                price=order.price,
             )
         )
 
@@ -936,7 +964,7 @@ class TestStateManagementIntegration:
             max_daily_loss=1500.0,  # Increased from 1000.0
             circuit_breaker_enabled=True,
             monitoring_enabled=True,
-            raw_env=settings.raw_env
+            raw_env=settings.raw_env,
         )
 
         # Update settings in both components
@@ -945,14 +973,22 @@ class TestStateManagementIntegration:
 
         # Wait for execution to complete
         placed_order = await execution_task
-        assert placed_order.status == OrderStatus.FILLED, "Execution should succeed with updated settings"
+        assert (
+            placed_order.status == OrderStatus.FILLED
+        ), "Execution should succeed with updated settings"
 
         # Verify settings were applied
-        assert risk_manager._settings.max_position_size == 8.0, "Risk manager should have updated settings"
-        assert execution_coordinator._settings.max_position_size == 8.0, "Execution coordinator should have updated settings"
+        assert (
+            risk_manager._settings.max_position_size == 8.0
+        ), "Risk manager should have updated settings"
+        assert (
+            execution_coordinator._settings.max_position_size == 8.0
+        ), "Execution coordinator should have updated settings"
 
     @pytest.mark.asyncio
-    async def test_tc_if_016_event_store_integration_with_order_flow(self, async_integrated_system, integration_test_scenarios):
+    async def test_tc_if_016_event_store_integration_with_order_flow(
+        self, async_integrated_system, integration_test_scenarios
+    ):
         """TC-IF-016: Event Store Integration with Order Flow."""
         system = async_integrated_system
         risk_manager = system["risk_manager"]
@@ -961,10 +997,7 @@ class TestStateManagementIntegration:
 
         # Create order
         order = integration_test_scenarios.create_test_order(
-            order_id="event_store_001",
-            symbol="BTC-USD",
-            side=Side.BUY,
-            quantity=1.5
+            order_id="event_store_001", symbol="BTC-USD", side=Side.BUY, quantity=1.5
         )
 
         # Execute complete order flow
@@ -974,10 +1007,12 @@ class TestStateManagementIntegration:
                 symbol=order.symbol,
                 side=str(order.side),
                 quantity=order.quantity,
-                price=order.price if order.price is not None else Decimal("50000.0"),  # Default price for market orders
+                price=(
+                    order.price if order.price is not None else Decimal("50000.0")
+                ),  # Default price for market orders
                 product=ctx["product"],
                 equity=ctx["equity"],
-                current_positions=ctx["current_positions"]
+                current_positions=ctx["current_positions"],
             )
         except ValidationError as e:
             pytest.fail(f"Order should pass risk validation but failed with: {e}")
@@ -988,7 +1023,7 @@ class TestStateManagementIntegration:
             side=order.side,
             order_type=order.type,
             quantity=order.quantity,
-            price=order.price
+            price=order.price,
         )
         assert placed_order.status == OrderStatus.FILLED, "Execution should succeed"
 
@@ -997,7 +1032,7 @@ class TestStateManagementIntegration:
             "order_validated",
             "risk_check_completed",
             "order_placed",
-            "order_filled"
+            "order_filled",
         ]
 
         for event_type in expected_events:
@@ -1006,12 +1041,20 @@ class TestStateManagementIntegration:
 
         # Verify event data consistency
         order_events = event_store.get_events_by_type("order_placed")
-        assert order_events[-1]["data"]["order_id"] == order.id, "Event should reference correct order"
-        assert order_events[-1]["data"]["symbol"] == order.symbol, "Event should have correct symbol"
-        assert order_events[-1]["data"]["quantity"] == order.quantity, "Event should have correct quantity"
+        assert (
+            order_events[-1]["data"]["order_id"] == order.id
+        ), "Event should reference correct order"
+        assert (
+            order_events[-1]["data"]["symbol"] == order.symbol
+        ), "Event should have correct symbol"
+        assert (
+            order_events[-1]["data"]["quantity"] == order.quantity
+        ), "Event should have correct quantity"
 
     @pytest.mark.asyncio
-    async def test_tc_if_017_state_recovery_after_system_restart(self, async_integrated_system, integration_test_scenarios):
+    async def test_tc_if_017_state_recovery_after_system_restart(
+        self, async_integrated_system, integration_test_scenarios
+    ):
         """TC-IF-017: State Recovery After System Restart."""
         system = async_integrated_system
         risk_manager = system["risk_manager"]
@@ -1020,10 +1063,7 @@ class TestStateManagementIntegration:
 
         # Create and execute order
         order = integration_test_scenarios.create_test_order(
-            order_id="recovery_test_001",
-            symbol="BTC-USD",
-            side=Side.BUY,
-            quantity=2.5
+            order_id="recovery_test_001", symbol="BTC-USD", side=Side.BUY, quantity=2.5
         )
 
         ctx = _get_risk_validation_context(order)
@@ -1032,10 +1072,12 @@ class TestStateManagementIntegration:
                 symbol=order.symbol,
                 side=str(order.side),
                 quantity=order.quantity,
-                price=order.price if order.price is not None else Decimal("50000.0"),  # Default price for market orders
+                price=(
+                    order.price if order.price is not None else Decimal("50000.0")
+                ),  # Default price for market orders
                 product=ctx["product"],
                 equity=ctx["equity"],
-                current_positions=ctx["current_positions"]
+                current_positions=ctx["current_positions"],
             )
         except ValidationError as e:
             pytest.fail(f"Order should pass risk validation but failed with: {e}")
@@ -1046,7 +1088,7 @@ class TestStateManagementIntegration:
             side=order.side,
             order_type=order.type,
             quantity=order.quantity,
-            price=order.price
+            price=order.price,
         )
         assert placed_order.status == OrderStatus.FILLED, "Execution should succeed"
 
@@ -1056,15 +1098,13 @@ class TestStateManagementIntegration:
 
         # Simulate system restart by creating new instances
         new_risk_manager = LiveRiskManager(
-            config=risk_manager._config,
-            event_store=event_store,
-            settings=risk_manager._settings
+            config=risk_manager._config, event_store=event_store, settings=risk_manager._settings
         )
 
         new_execution_coordinator = ExecutionCoordinator(
             settings=execution_coordinator._settings,
             broker=execution_coordinator.broker,
-            event_store=event_store
+            event_store=event_store,
         )
 
         # Initialize state from event store
@@ -1073,12 +1113,18 @@ class TestStateManagementIntegration:
 
         # Verify state recovery
         positions_after = await new_execution_coordinator.get_positions()
-        assert len(positions_after) == len(positions_before), "Should recover same number of positions"
+        assert len(positions_after) == len(
+            positions_before
+        ), "Should recover same number of positions"
 
         events_after = len(event_store.events)
         assert events_after == events_before, "Event store should preserve events"
 
         # Verify position data integrity
         if positions_before and positions_after:
-            assert positions_before[0].symbol == positions_after[0].symbol, "Position symbols should match"
-            assert abs(positions_before[0].size - positions_after[0].size) < 1e-6, "Position sizes should match"
+            assert (
+                positions_before[0].symbol == positions_after[0].symbol
+            ), "Position symbols should match"
+            assert (
+                abs(positions_before[0].size - positions_after[0].size) < 1e-6
+            ), "Position sizes should match"

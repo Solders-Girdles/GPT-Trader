@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-import asyncio
 from decimal import Decimal
-from unittest.mock import MagicMock, AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from bot_v2.features.brokerages.core.interfaces import MarketType, OrderSide, OrderType
+from bot_v2.features.brokerages.core.interfaces import MarketType, OrderSide
 from bot_v2.orchestration.perps_bot import PerpsBot, _CallableSymbolProcessor
 
 
@@ -58,19 +57,27 @@ class TestStrategyCycles:
         bot.strategy_coordinator._fetch_current_state.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_validate_configuration_and_handle_drift_delegates_to_strategy_coordinator(self, perps_bot_instance):
+    async def test_validate_configuration_and_handle_drift_delegates_to_strategy_coordinator(
+        self, perps_bot_instance
+    ):
         """Test _validate_configuration_and_handle_drift delegates to strategy coordinator."""
         bot = perps_bot_instance
-        bot.strategy_coordinator._validate_configuration_and_handle_drift = AsyncMock(return_value=True)
+        bot.strategy_coordinator._validate_configuration_and_handle_drift = AsyncMock(
+            return_value=True
+        )
         current_state = {"test": "state"}
 
         result = await bot._validate_configuration_and_handle_drift(current_state)
 
         assert result is True
-        bot.strategy_coordinator._validate_configuration_and_handle_drift.assert_called_once_with(current_state)
+        bot.strategy_coordinator._validate_configuration_and_handle_drift.assert_called_once_with(
+            current_state
+        )
 
     @pytest.mark.asyncio
-    async def test_execute_trading_cycle_delegates_to_strategy_coordinator(self, perps_bot_instance):
+    async def test_execute_trading_cycle_delegates_to_strategy_coordinator(
+        self, perps_bot_instance
+    ):
         """Test _execute_trading_cycle delegates to strategy coordinator."""
         bot = perps_bot_instance
         bot.strategy_coordinator._execute_trading_cycle = AsyncMock()
@@ -85,12 +92,14 @@ class TestSymbolProcessing:
     """Test symbol processing and decision execution."""
 
     @pytest.mark.asyncio
-    async def test_symbol_processor_property_returns_strategy_coordinator_processor(self, perps_bot_instance):
+    async def test_symbol_processor_property_returns_strategy_coordinator_processor(
+        self, perps_bot_instance
+    ):
         """Test symbol_processor property returns strategy coordinator's processor."""
         bot = perps_bot_instance
         # The symbol_processor property delegates to strategy_coordinator
         # We can't set it directly, but we can verify the delegation works
-        assert hasattr(bot.strategy_coordinator, 'symbol_processor')
+        assert hasattr(bot.strategy_coordinator, "symbol_processor")
 
         # Test that we can get the processor (it should exist on the coordinator)
         processor = bot.symbol_processor
@@ -107,7 +116,9 @@ class TestSymbolProcessing:
         bot.strategy_coordinator.set_symbol_processor.assert_called_once_with(None)
         assert bot._symbol_processor_override is None
 
-    def test_set_symbol_processor_with_callable_processor(self, perps_bot_instance, wrapped_symbol_processor):
+    def test_set_symbol_processor_with_callable_processor(
+        self, perps_bot_instance, wrapped_symbol_processor
+    ):
         """Test set_symbol_processor with _CallableSymbolProcessor."""
         bot = perps_bot_instance
         bot.strategy_coordinator.set_symbol_processor = MagicMock()
@@ -115,7 +126,9 @@ class TestSymbolProcessing:
         bot.set_symbol_processor(wrapped_symbol_processor)
 
         assert bot._symbol_processor_override is wrapped_symbol_processor
-        bot.strategy_coordinator.set_symbol_processor.assert_called_once_with(wrapped_symbol_processor)
+        bot.strategy_coordinator.set_symbol_processor.assert_called_once_with(
+            wrapped_symbol_processor
+        )
 
     def test_set_symbol_processor_with_regular_processor(self, perps_bot_instance):
         """Test set_symbol_processor with regular processor."""
@@ -129,7 +142,9 @@ class TestSymbolProcessing:
         bot.strategy_coordinator.set_symbol_processor.assert_called_once_with(mock_processor)
 
     @pytest.mark.asyncio
-    async def test_process_symbol_delegates_to_strategy_coordinator(self, perps_bot_instance, sample_balances, sample_positions):
+    async def test_process_symbol_delegates_to_strategy_coordinator(
+        self, perps_bot_instance, sample_balances, sample_positions
+    ):
         """Test process_symbol delegates to strategy coordinator."""
         bot = perps_bot_instance
         bot.strategy_coordinator.process_symbol = AsyncMock()
@@ -137,9 +152,13 @@ class TestSymbolProcessing:
 
         await bot.process_symbol("BTC-PERP", sample_balances, position_map)
 
-        bot.strategy_coordinator.process_symbol.assert_called_once_with("BTC-PERP", sample_balances, position_map)
+        bot.strategy_coordinator.process_symbol.assert_called_once_with(
+            "BTC-PERP", sample_balances, position_map
+        )
 
-    def test_process_symbol_expects_context_delegates_to_strategy_coordinator(self, perps_bot_instance):
+    def test_process_symbol_expects_context_delegates_to_strategy_coordinator(
+        self, perps_bot_instance
+    ):
         """Test _process_symbol_expects_context delegates to strategy coordinator."""
         bot = perps_bot_instance
         bot.strategy_coordinator._process_symbol_expects_context = MagicMock(return_value=True)
@@ -154,7 +173,9 @@ class TestDecisionExecution:
     """Test decision execution and order placement."""
 
     @pytest.mark.asyncio
-    async def test_execute_decision_delegates_to_strategy_coordinator(self, perps_bot_instance, sample_positions):
+    async def test_execute_decision_delegates_to_strategy_coordinator(
+        self, perps_bot_instance, sample_positions
+    ):
         """Test execute_decision delegates to strategy coordinator."""
         bot = perps_bot_instance
         bot.strategy_coordinator.execute_decision = AsyncMock()
@@ -165,7 +186,9 @@ class TestDecisionExecution:
 
         await bot.execute_decision("BTC-PERP", decision, mark, product, position_state)
 
-        bot.strategy_coordinator.execute_decision.assert_called_once_with("BTC-PERP", decision, mark, product, position_state)
+        bot.strategy_coordinator.execute_decision.assert_called_once_with(
+            "BTC-PERP", decision, mark, product, position_state
+        )
 
     def test_ensure_order_lock_delegates_to_strategy_coordinator(self, perps_bot_instance):
         """Test _ensure_order_lock delegates to strategy coordinator."""
@@ -185,10 +208,14 @@ class TestDecisionExecution:
         mock_order = MagicMock()
         bot.strategy_coordinator.place_order = AsyncMock(return_value=mock_order)
 
-        order = await bot._place_order(symbol="BTC-PERP", side=OrderSide.BUY, quantity=Decimal("0.01"))
+        order = await bot._place_order(
+            symbol="BTC-PERP", side=OrderSide.BUY, quantity=Decimal("0.01")
+        )
 
         assert order is mock_order
-        bot.strategy_coordinator.place_order.assert_called_once_with(symbol="BTC-PERP", side=OrderSide.BUY, quantity=Decimal("0.01"))
+        bot.strategy_coordinator.place_order.assert_called_once_with(
+            symbol="BTC-PERP", side=OrderSide.BUY, quantity=Decimal("0.01")
+        )
 
     @pytest.mark.asyncio
     async def test_place_order_inner_delegates_to_strategy_coordinator(self, perps_bot_instance):
@@ -197,10 +224,14 @@ class TestDecisionExecution:
         mock_order = MagicMock()
         bot.strategy_coordinator.place_order_inner = AsyncMock(return_value=mock_order)
 
-        order = await bot._place_order_inner(symbol="ETH-PERP", side=OrderSide.SELL, quantity=Decimal("0.02"))
+        order = await bot._place_order_inner(
+            symbol="ETH-PERP", side=OrderSide.SELL, quantity=Decimal("0.02")
+        )
 
         assert order is mock_order
-        bot.strategy_coordinator.place_order_inner.assert_called_once_with(symbol="ETH-PERP", side=OrderSide.SELL, quantity=Decimal("0.02"))
+        bot.strategy_coordinator.place_order_inner.assert_called_once_with(
+            symbol="ETH-PERP", side=OrderSide.SELL, quantity=Decimal("0.02")
+        )
 
 
 class TestReduceOnlyMode:
@@ -307,7 +338,9 @@ class TestSystemMonitoring:
 
         bot.write_health_status(ok=True, message="All good", error="")
 
-        bot.system_monitor.write_health_status.assert_called_once_with(ok=True, message="All good", error="")
+        bot.system_monitor.write_health_status.assert_called_once_with(
+            ok=True, message="All good", error=""
+        )
 
     @pytest.mark.asyncio
     async def test_shutdown_delegates_to_lifecycle_manager(self, perps_bot_instance):
@@ -395,7 +428,9 @@ class TestUtilityMethods:
         assert bps > Decimal("500")
 
     @pytest.mark.asyncio
-    async def test_run_account_telemetry_delegates_to_telemetry_coordinator(self, perps_bot_instance):
+    async def test_run_account_telemetry_delegates_to_telemetry_coordinator(
+        self, perps_bot_instance
+    ):
         """Test _run_account_telemetry delegates to telemetry coordinator."""
         bot = perps_bot_instance
         bot.telemetry_coordinator.run_account_telemetry = AsyncMock()
@@ -408,7 +443,9 @@ class TestUtilityMethods:
 class TestSymbolProcessorOverride:
     """Test symbol processor override functionality."""
 
-    def test_wrap_symbol_processor_with_callable(self, perps_bot_instance, callable_symbol_processor):
+    def test_wrap_symbol_processor_with_callable(
+        self, perps_bot_instance, callable_symbol_processor
+    ):
         """Test _wrap_symbol_processor with callable function."""
         wrapped = perps_bot_instance._wrap_symbol_processor(callable_symbol_processor)
 
@@ -423,6 +460,7 @@ class TestSymbolProcessorOverride:
 
     def test_wrap_symbol_processor_with_zero_param_function(self, perps_bot_instance):
         """Test _wrap_symbol_processor with function taking no parameters."""
+
         def zero_param_func():
             return "test"
 
@@ -439,7 +477,9 @@ class TestSymbolProcessorOverride:
         assert perps_bot_instance._symbol_processor_override is None
         perps_bot_instance.strategy_coordinator.set_symbol_processor.assert_called_once_with(None)
 
-    def test_install_symbol_processor_override_with_callable(self, perps_bot_instance, callable_symbol_processor):
+    def test_install_symbol_processor_override_with_callable(
+        self, perps_bot_instance, callable_symbol_processor
+    ):
         """Test _install_symbol_processor_override with callable."""
         perps_bot_instance.strategy_coordinator.set_symbol_processor = MagicMock()
 
@@ -449,7 +489,9 @@ class TestSymbolProcessorOverride:
         assert isinstance(perps_bot_instance._symbol_processor_override, _CallableSymbolProcessor)
         perps_bot_instance.strategy_coordinator.set_symbol_processor.assert_called_once()
 
-    def test_setattr_process_symbol_with_callable(self, perps_bot_instance, callable_symbol_processor):
+    def test_setattr_process_symbol_with_callable(
+        self, perps_bot_instance, callable_symbol_processor
+    ):
         """Test __setattr__ with process_symbol callable override."""
         # Set the attribute directly to trigger the custom setter
         perps_bot_instance.process_symbol = callable_symbol_processor
@@ -473,4 +515,7 @@ class TestSymbolProcessorOverride:
         perps_bot_instance.custom_attribute = "test_value"
 
         assert perps_bot_instance.custom_attribute == "test_value"
-        assert not hasattr(perps_bot_instance, "_symbol_processor_override") or perps_bot_instance._symbol_processor_override is None
+        assert (
+            not hasattr(perps_bot_instance, "_symbol_processor_override")
+            or perps_bot_instance._symbol_processor_override is None
+        )

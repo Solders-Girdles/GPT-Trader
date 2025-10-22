@@ -319,11 +319,9 @@ class TestRuntimeCoordinatorBootstrapFailures:
         """Test _init_broker handles missing broker or risk manager."""
         # Mock the _build_real_broker method to avoid validation
         from bot_v2.orchestration.coordinators.runtime import BrokerBootstrapArtifacts
+
         artifacts = BrokerBootstrapArtifacts(
-            broker=None,
-            registry_updates={},
-            event_store=base_context.event_store,
-            products=[]
+            broker=None, registry_updates={}, event_store=base_context.event_store, products=[]
         )
         coordinator._build_real_broker = Mock(return_value=(artifacts, base_context))
         # Set broker to None in context (registry keeps original risk_manager)
@@ -340,16 +338,21 @@ class TestRuntimeCoordinatorBootstrapFailures:
         assert result.orders_store == base_context.orders_store
 
     def test_init_risk_manager_handles_missing_config(
-        self, coordinator: RuntimeCoordinator, base_context: CoordinatorContext, monkeypatch: pytest.MonkeyPatch
+        self,
+        coordinator: RuntimeCoordinator,
+        base_context: CoordinatorContext,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """Test _init_risk_manager handles missing risk config gracefully."""
-        base_context = base_context.with_updates(registry=base_context.registry.with_updates(risk_manager=None))
+        base_context = base_context.with_updates(
+            registry=base_context.registry.with_updates(risk_manager=None)
+        )
 
         # Mock risk config loading to fail
-        from bot_v2.config.live_trade_config import RiskConfig
+
         mock_config = Mock(side_effect=Exception("config_load_failed"))
         monkeypatch.setattr("bot_v2.config.live_trade_config.RiskConfig", mock_config)
-        
+
         result = coordinator._init_risk_manager(base_context)
 
         # Should still create risk manager with defaults
@@ -362,6 +365,7 @@ class TestRuntimeCoordinatorBootstrapFailures:
         settings = SimpleNamespace(broker_hint="invalid_broker")
         # Create a new config with derivatives_enabled=True
         from bot_v2.orchestration.configuration.core import BotConfig
+
         new_config = BotConfig(
             profile=base_context.config.profile,
             dry_run=base_context.config.dry_run,
@@ -404,6 +408,7 @@ class TestRuntimeCoordinatorBootstrapFailures:
         settings = SimpleNamespace(broker_hint="coinbase", coinbase_sandbox_enabled=True)
         # Create a new config with derivatives_enabled=True
         from bot_v2.orchestration.configuration.core import BotConfig
+
         new_config = BotConfig(
             profile=base_context.config.profile,
             dry_run=base_context.config.dry_run,
@@ -451,6 +456,7 @@ class TestRuntimeCoordinatorBootstrapFailures:
         )
         # Create a new config with derivatives_enabled=True
         from bot_v2.orchestration.configuration.core import BotConfig
+
         new_config = BotConfig(
             profile=base_context.config.profile,
             dry_run=base_context.config.dry_run,
@@ -498,6 +504,7 @@ class TestRuntimeCoordinatorBootstrapFailures:
         )
         # Create a new config with derivatives_enabled=False
         from bot_v2.orchestration.configuration.core import BotConfig
+
         new_config = BotConfig(
             profile=base_context.config.profile,
             dry_run=base_context.config.dry_run,
@@ -566,7 +573,8 @@ class TestRuntimeCoordinatorReconciliation:
 
     @pytest.mark.asyncio
     async def test_reconcile_state_on_startup_handles_reconciler_errors(
-        self, coordinator: RuntimeCoordinator,
+        self,
+        coordinator: RuntimeCoordinator,
         base_context: CoordinatorContext,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
@@ -597,7 +605,8 @@ class TestRuntimeCoordinatorReconciliation:
 
     @pytest.mark.asyncio
     async def test_reconcile_state_on_startup_emits_error_event_on_failure(
-        self, coordinator: RuntimeCoordinator,
+        self,
+        coordinator: RuntimeCoordinator,
         base_context: CoordinatorContext,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
@@ -693,7 +702,9 @@ class TestRuntimeCoordinatorBrokerBootstrap:
         assert result.event_store == artifacts.event_store
         assert "BTC-PERP" in result.product_cache
 
-    def test_hydrate_product_cache_handles_empty_products(self, coordinator: RuntimeCoordinator) -> None:
+    def test_hydrate_product_cache_handles_empty_products(
+        self, coordinator: RuntimeCoordinator
+    ) -> None:
         """Test _hydrate_product_cache handles empty product list."""
         coordinator._hydrate_product_cache([])
 
@@ -701,7 +712,8 @@ class TestRuntimeCoordinatorBrokerBootstrap:
         assert coordinator._product_cache is None
 
     def test_hydrate_product_cache_creates_cache_when_needed(
-        self, coordinator: RuntimeCoordinator,
+        self,
+        coordinator: RuntimeCoordinator,
     ) -> None:
         """Test _hydrate_product_cache creates cache dict when needed."""
         products = [SimpleNamespace(symbol="BTC-PERP"), SimpleNamespace(symbol="ETH-PERP")]
@@ -716,7 +728,9 @@ class TestRuntimeCoordinatorBrokerBootstrap:
 class TestRuntimeCoordinatorProperties:
     """Test property accessors and factory methods."""
 
-    def test_deterministic_broker_cls_returns_correct_type(self, coordinator: RuntimeCoordinator) -> None:
+    def test_deterministic_broker_cls_returns_correct_type(
+        self, coordinator: RuntimeCoordinator
+    ) -> None:
         """Test _deterministic_broker_cls returns DeterministicBroker type."""
         from bot_v2.orchestration.deterministic_broker import DeterministicBroker
 
@@ -737,7 +751,9 @@ class TestRuntimeCoordinatorProperties:
         cls = coordinator._risk_manager_cls
         assert cls == LiveRiskManager
 
-    def test_order_reconciler_cls_returns_correct_type(self, coordinator: RuntimeCoordinator) -> None:
+    def test_order_reconciler_cls_returns_correct_type(
+        self, coordinator: RuntimeCoordinator
+    ) -> None:
         """Test _order_reconciler_cls returns OrderReconciler type."""
         from bot_v2.orchestration.order_reconciler import OrderReconciler
 

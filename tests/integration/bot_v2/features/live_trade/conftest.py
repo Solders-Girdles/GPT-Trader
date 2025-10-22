@@ -7,40 +7,43 @@ realistic trading system validation.
 """
 
 from __future__ import annotations
-from datetime import datetime, timedelta
-from unittest.mock import Mock, AsyncMock
-from typing import Dict, List, Any, Optional
+
+from datetime import datetime
+from typing import Any, Dict, List, Optional
+
 import pytest
 
-from bot_v2.features.live_trade.risk.manager import LiveRiskManager
 from bot_v2.config.live_trade_config import RiskConfig
 from bot_v2.config.types import Profile
-from bot_v2.orchestration.coordinators.execution import ExecutionCoordinator
-from bot_v2.orchestration.coordinators.base import CoordinatorContext
-from bot_v2.orchestration.live_execution import LiveExecutionEngine
-from bot_v2.orchestration.runtime_settings import RuntimeSettings, load_runtime_settings
-from bot_v2.persistence.event_store import EventStore
-from bot_v2.orchestration.service_registry import ServiceRegistry
-from bot_v2.orchestration.configuration.core import BotConfig
-from bot_v2.orchestration.perps_bot_state import PerpsBotRuntimeState
 from bot_v2.features.brokerages.core.interfaces import (
     IBrokerage,
     Order,
     OrderStatus,
-    Position,
-    OrderSide as Side,
     OrderType,
+    Position,
     TimeInForce,
 )
+from bot_v2.features.brokerages.core.interfaces import (
+    OrderSide as Side,
+)
+from bot_v2.features.live_trade.risk.manager import LiveRiskManager
+from bot_v2.orchestration.configuration.core import BotConfig
+from bot_v2.orchestration.coordinators.base import CoordinatorContext
+from bot_v2.orchestration.coordinators.execution import ExecutionCoordinator
+from bot_v2.orchestration.live_execution import LiveExecutionEngine
+from bot_v2.orchestration.perps_bot_state import PerpsBotRuntimeState
+from bot_v2.orchestration.runtime_settings import load_runtime_settings
+from bot_v2.orchestration.service_registry import ServiceRegistry
+from bot_v2.persistence.event_store import EventStore
 
 
 class MockIntegrationBroker(IBrokerage):
     """Mock broker for integration testing with realistic failure modes."""
 
-    def __init__(self, failure_mode: Optional[str] = None):
+    def __init__(self, failure_mode: str | None = None):
         self.failure_mode = failure_mode
-        self.orders: Dict[str, Order] = {}
-        self.positions: Dict[str, Position] = {}
+        self.orders: dict[str, Order] = {}
+        self.positions: dict[str, Position] = {}
         self.connection_dropped = False
         self.api_rate_limited = False
         self.maintenance_mode = False
@@ -82,7 +85,7 @@ class MockIntegrationBroker(IBrokerage):
             return True
         return False
 
-    async def get_positions(self) -> List[Position]:
+    async def get_positions(self) -> list[Position]:
         """Mock position retrieval."""
         return list(self.positions.values())
 
@@ -121,31 +124,35 @@ class MockIntegrationEventStore(EventStore):
     """Mock event store for integration testing."""
 
     def __init__(self):
-        self.events: List[Dict[str, Any]] = []
-        self.metrics: List[Dict[str, Any]] = []
+        self.events: list[dict[str, Any]] = []
+        self.metrics: list[dict[str, Any]] = []
 
-    def store_event(self, event_type: str, data: Dict[str, Any]) -> None:
+    def store_event(self, event_type: str, data: dict[str, Any]) -> None:
         """Store an integration event."""
-        self.events.append({
-            "type": event_type,
-            "data": data,
-            "timestamp": datetime.utcnow(),
-        })
+        self.events.append(
+            {
+                "type": event_type,
+                "data": data,
+                "timestamp": datetime.utcnow(),
+            }
+        )
 
-    def store_metric(self, metric_name: str, value: float, tags: Dict[str, str] = None) -> None:
+    def store_metric(self, metric_name: str, value: float, tags: dict[str, str] = None) -> None:
         """Store a performance metric."""
-        self.metrics.append({
-            "name": metric_name,
-            "value": value,
-            "tags": tags or {},
-            "timestamp": datetime.utcnow(),
-        })
+        self.metrics.append(
+            {
+                "name": metric_name,
+                "value": value,
+                "tags": tags or {},
+                "timestamp": datetime.utcnow(),
+            }
+        )
 
-    def get_events_by_type(self, event_type: str) -> List[Dict[str, Any]]:
+    def get_events_by_type(self, event_type: str) -> list[dict[str, Any]]:
         """Get events by type."""
         return [event for event in self.events if event["type"] == event_type]
 
-    def get_metrics_by_name(self, metric_name: str) -> List[Dict[str, Any]]:
+    def get_metrics_by_name(self, metric_name: str) -> list[dict[str, Any]]:
         """Get metrics by name."""
         return [metric for metric in self.metrics if metric["name"] == metric_name]
 
@@ -154,14 +161,17 @@ class IntegrationTestScenarios:
     """Test scenario utilities for integration testing."""
 
     @staticmethod
-    def create_test_order(order_id: str = "test_order_001",
-                         symbol: str = "BTC-USD",
-                         side: Side = Side.BUY,
-                         order_type: OrderType = OrderType.MARKET,
-                         quantity: float = 1.0,
-                         price: Optional[float] = None) -> Order:
+    def create_test_order(
+        order_id: str = "test_order_001",
+        symbol: str = "BTC-USD",
+        side: Side = Side.BUY,
+        order_type: OrderType = OrderType.MARKET,
+        quantity: float = 1.0,
+        price: float | None = None,
+    ) -> Order:
         """Create a test order with realistic parameters."""
         from decimal import Decimal
+
         now = datetime.utcnow()
 
         order = Order(
@@ -176,15 +186,14 @@ class IntegrationTestScenarios:
             tif=TimeInForce.GTC,
             status=OrderStatus.PENDING,
             submitted_at=now,
-            updated_at=now
+            updated_at=now,
         )
         return order
 
     @staticmethod
-    def create_test_position(symbol: str = "BTC-USD",
-                            side: str = "long",
-                            size: float = 1.0,
-                            entry_price: float = 50000.0) -> Position:
+    def create_test_position(
+        symbol: str = "BTC-USD", side: str = "long", size: float = 1.0, entry_price: float = 50000.0
+    ) -> Position:
         """Create a test position with realistic parameters."""
         from decimal import Decimal
 
@@ -195,12 +204,12 @@ class IntegrationTestScenarios:
             entry_price=Decimal(str(entry_price)),
             mark_price=Decimal(str(entry_price)),
             unrealized_pnl=Decimal("0.0"),
-            realized_pnl=Decimal("0.0")
+            realized_pnl=Decimal("0.0"),
         )
         return position
 
     @staticmethod
-    def create_market_scenario(scenario_type: str = "normal") -> Dict[str, Any]:
+    def create_market_scenario(scenario_type: str = "normal") -> dict[str, Any]:
         """Create market condition scenarios for testing."""
         scenarios = {
             "normal": {
@@ -226,7 +235,7 @@ class IntegrationTestScenarios:
                 "liquidity": "very_low",
                 "trend": "crash",
                 "spread_bps": 200,
-            }
+            },
         }
         return scenarios.get(scenario_type, scenarios["normal"])
 
@@ -272,12 +281,12 @@ def integration_risk_config():
     return RiskConfig(
         kill_switch_enabled=False,
         enable_pre_trade_liq_projection=True,
-        max_leverage=3,                     # Conservative leverage
+        max_leverage=3,  # Conservative leverage
         leverage_max_per_symbol={"BTC-USD": 2, "ETH-USD": 2},
-        min_liquidation_buffer_pct=0.15,    # 15% buffer
-        max_market_impact_bps=5,            # 5 bps max impact
+        min_liquidation_buffer_pct=0.15,  # 15% buffer
+        max_market_impact_bps=5,  # 5 bps max impact
         enable_market_impact_guard=True,
-        default_maintenance_margin_rate=0.01  # 1% MMR
+        default_maintenance_margin_rate=0.01,  # 1% MMR
     )
 
 
@@ -296,10 +305,7 @@ def mock_integration_event_store():
 @pytest.fixture
 def integration_live_risk_manager(integration_risk_config, mock_integration_event_store):
     """Live Risk Manager configured for integration testing."""
-    return LiveRiskManager(
-        config=integration_risk_config,
-        event_store=mock_integration_event_store
-    )
+    return LiveRiskManager(config=integration_risk_config, event_store=mock_integration_event_store)
 
 
 @pytest.fixture
@@ -352,20 +358,29 @@ def integration_execution_coordinator(
 
 
 @pytest.fixture
-def integration_live_execution_engine(integration_runtime_settings, mock_integration_broker, mock_integration_event_store, integration_live_risk_manager):
+def integration_live_execution_engine(
+    integration_runtime_settings,
+    mock_integration_broker,
+    mock_integration_event_store,
+    integration_live_risk_manager,
+):
     """Live Execution Engine configured for integration testing."""
     return LiveExecutionEngine(
         broker=mock_integration_broker,
         risk_manager=integration_live_risk_manager,
         event_store=mock_integration_event_store,
         settings=integration_runtime_settings,
-        bot_id="integration_test_engine"
+        bot_id="integration_test_engine",
     )
 
 
 @pytest.fixture
-def integrated_trading_system(integration_live_risk_manager, integration_execution_coordinator,
-                             integration_live_execution_engine, mock_integration_event_store):
+def integrated_trading_system(
+    integration_live_risk_manager,
+    integration_execution_coordinator,
+    integration_live_execution_engine,
+    mock_integration_event_store,
+):
     """Fully integrated trading system for end-to-end testing."""
     return {
         "risk_manager": integration_live_risk_manager,
@@ -397,23 +412,23 @@ def circuit_breaker_test_scenarios():
         "daily_loss_breach": {
             "current_loss": 600.0,
             "daily_limit": 500.0,
-            "expected_action": "stop_trading"
+            "expected_action": "stop_trading",
         },
         "liquidation_buffer_breach": {
             "buffer_ratio": 0.08,
             "min_buffer": 0.15,
-            "expected_action": "reduce_positions"
+            "expected_action": "reduce_positions",
         },
         "volatility_spike": {
             "current_volatility": 0.25,
             "volatility_threshold": 0.10,
-            "expected_action": "reduce_size"
+            "expected_action": "reduce_size",
         },
         "correlation_risk": {
             "correlation": 0.95,
             "correlation_limit": 0.8,
-            "expected_action": "halt_new_positions"
-        }
+            "expected_action": "halt_new_positions",
+        },
     }
 
 
@@ -424,21 +439,21 @@ def broker_error_scenarios():
         "connection_drop": {
             "error_type": "ConnectionError",
             "recovery_action": "reconnect",
-            "expected_orders": "retry"
+            "expected_orders": "retry",
         },
         "rate_limit": {
             "error_type": "RateLimitError",
             "recovery_action": "backoff",
-            "expected_orders": "queue"
+            "expected_orders": "queue",
         },
         "maintenance": {
             "error_type": "MaintenanceError",
             "recovery_action": "wait",
-            "expected_orders": "reject"
+            "expected_orders": "reject",
         },
         "insufficient_liquidity": {
             "error_type": "LiquidityError",
             "recovery_action": "reduce_size",
-            "expected_orders": "modify"
-        }
+            "expected_orders": "modify",
+        },
     }

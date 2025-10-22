@@ -14,7 +14,9 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from bot_v2.features.brokerages.coinbase.transports import MockTransport, NoopTransport, RealTransport
+from bot_v2.features.brokerages.coinbase.transports import (
+    MockTransport,
+)
 from bot_v2.features.brokerages.coinbase.ws import (
     CoinbaseWebSocket,
     SequenceGuard,
@@ -386,7 +388,7 @@ class TestWebSocketCoreCoverage:
         subscription = WSSubscription(
             channels=["ticker", "matches"],
             product_ids=["BTC-USD", "ETH-USD"],
-            auth_data={"token": "test_token"}
+            auth_data={"token": "test_token"},
         )
 
         result = subscription.to_dict()
@@ -395,7 +397,7 @@ class TestWebSocketCoreCoverage:
             "type": "subscribe",
             "channels": ["ticker", "matches"],
             "product_ids": ["BTC-USD", "ETH-USD"],
-            "auth_data": {"token": "test_token"}
+            "auth_data": {"token": "test_token"},
         }
 
         assert result == expected

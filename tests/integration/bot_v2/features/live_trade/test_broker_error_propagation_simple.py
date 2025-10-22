@@ -6,18 +6,16 @@ It focuses on the core integration patterns rather than specific error types.
 """
 
 from __future__ import annotations
-import pytest
-from unittest.mock import patch, AsyncMock
 
-from bot_v2.features.brokerages.core.interfaces import (
-    OrderStatus,
-    OrderSide,
-    OrderType,
-)
+from unittest.mock import patch
+
+import pytest
+
 from bot_v2.errors import (
-    TradingError,
-    NetworkError,
     ExecutionError,
+)
+from bot_v2.features.brokerages.core.interfaces import (
+    OrderSide,
 )
 
 
@@ -38,10 +36,7 @@ class TestBrokerErrorPropagationCore:
 
         # Create test order
         order = integration_test_scenarios.create_test_order(
-            order_id="connection_error_test",
-            symbol="BTC-USD",
-            side=OrderSide.BUY,
-            quantity=0.1
+            order_id="connection_error_test", symbol="BTC-USD", side=OrderSide.BUY, quantity=0.1
         )
 
         # Attempt order placement should fail
@@ -52,7 +47,7 @@ class TestBrokerErrorPropagationCore:
                 side=order.side,
                 order_type=order.type,
                 quantity=order.quantity,
-                price=order.price
+                price=order.price,
             )
 
         # Verify error occurred and was propagated through system
@@ -83,10 +78,7 @@ class TestBrokerErrorPropagationCore:
 
         # Create test order
         order = integration_test_scenarios.create_test_order(
-            order_id="rate_limit_test",
-            symbol="ETH-USD",
-            side=OrderSide.BUY,
-            quantity=0.5
+            order_id="rate_limit_test", symbol="ETH-USD", side=OrderSide.BUY, quantity=0.5
         )
 
         # Attempt order placement should handle rate limit
@@ -97,7 +89,7 @@ class TestBrokerErrorPropagationCore:
                 side=order.side,
                 order_type=order.type,
                 quantity=order.quantity,
-                price=order.price
+                price=order.price,
             )
 
         # Verify error was properly caught and propagated
@@ -120,10 +112,7 @@ class TestBrokerErrorPropagationCore:
 
         # Create test order
         order = integration_test_scenarios.create_test_order(
-            order_id="maintenance_test",
-            symbol="BTC-USD",
-            side=OrderSide.SELL,
-            quantity=0.2
+            order_id="maintenance_test", symbol="BTC-USD", side=OrderSide.SELL, quantity=0.2
         )
 
         # Attempt order placement should fail gracefully
@@ -134,7 +123,7 @@ class TestBrokerErrorPropagationCore:
                 side=order.side,
                 order_type=order.type,
                 quantity=order.quantity,
-                price=order.price
+                price=order.price,
             )
 
         # Verify maintenance mode error handling
@@ -157,10 +146,7 @@ class TestBrokerErrorPropagationCore:
 
         # Create test order
         order = integration_test_scenarios.create_test_order(
-            order_id="recovery_test",
-            symbol="BTC-USD",
-            side=OrderSide.BUY,
-            quantity=0.1
+            order_id="recovery_test", symbol="BTC-USD", side=OrderSide.BUY, quantity=0.1
         )
 
         # First attempt should fail
@@ -171,7 +157,7 @@ class TestBrokerErrorPropagationCore:
                 side=order.side,
                 order_type=order.type,
                 quantity=order.quantity,
-                price=order.price
+                price=order.price,
             )
 
         # Restore broker connection
@@ -185,7 +171,7 @@ class TestBrokerErrorPropagationCore:
                 side=order.side,
                 order_type=order.type,
                 quantity=order.quantity,
-                price=order.price
+                price=order.price,
             )
             # If successful, system has recovered properly
             assert result is not None
@@ -213,13 +199,14 @@ class TestBrokerErrorPropagationCore:
                 order_id=f"concurrent_error_{i}",
                 symbol="BTC-USD" if i % 2 == 0 else "ETH-USD",
                 side=OrderSide.BUY,
-                quantity=0.1
+                quantity=0.1,
             )
             for i in range(3)
         ]
 
         # Attempt concurrent order placements
         import asyncio
+
         tasks = []
         for order in orders:
             task = system["execution_coordinator"].place_order(
@@ -228,7 +215,7 @@ class TestBrokerErrorPropagationCore:
                 side=order.side,
                 order_type=order.type,
                 quantity=order.quantity,
-                price=order.price
+                price=order.price,
             )
             tasks.append(task)
 
@@ -253,9 +240,7 @@ class TestBrokerErrorPropagationCore:
 
         # Mock order status check failure
         with patch.object(
-            broker,
-            'get_order_status',
-            side_effect=Exception("Order status check failed")
+            broker, "get_order_status", side_effect=Exception("Order status check failed")
         ):
 
             # Create test order
@@ -263,7 +248,7 @@ class TestBrokerErrorPropagationCore:
                 order_id="status_check_error_test",
                 symbol="BTC-USD",
                 side=OrderSide.BUY,
-                quantity=0.1
+                quantity=0.1,
             )
 
             # Place order first (may fail, that's ok)
@@ -274,7 +259,7 @@ class TestBrokerErrorPropagationCore:
                     side=order.side,
                     order_type=order.type,
                     quantity=order.quantity,
-                    price=order.price
+                    price=order.price,
                 )
                 order_id = placed_order.id if placed_order else "test_order"
             except Exception:
@@ -301,16 +286,13 @@ class TestBrokerErrorPropagationCore:
         # Mock broker error at the lowest level
         with patch.object(
             broker,
-            'place_order',
-            side_effect=ExecutionError("Broker execution failure", order_id="test_123")
+            "place_order",
+            side_effect=ExecutionError("Broker execution failure", order_id="test_123"),
         ):
 
             # Create test order
             order = integration_test_scenarios.create_test_order(
-                order_id="layer_flow_test",
-                symbol="BTC-USD",
-                side=OrderSide.BUY,
-                quantity=0.1
+                order_id="layer_flow_test", symbol="BTC-USD", side=OrderSide.BUY, quantity=0.1
             )
 
             # Error should flow through: Broker → Execution Engine → Execution Coordinator
@@ -321,7 +303,7 @@ class TestBrokerErrorPropagationCore:
                     side=order.side,
                     order_type=order.type,
                     quantity=order.quantity,
-                    price=order.price
+                    price=order.price,
                 )
 
             # Verify error propagated correctly through layers
@@ -350,10 +332,7 @@ class TestBrokerErrorResilience:
 
         # Try operation that fails
         order = integration_test_scenarios.create_test_order(
-            order_id="operational_test_1",
-            symbol="BTC-USD",
-            side=OrderSide.BUY,
-            quantity=0.1
+            order_id="operational_test_1", symbol="BTC-USD", side=OrderSide.BUY, quantity=0.1
         )
 
         with pytest.raises(Exception):
@@ -363,7 +342,7 @@ class TestBrokerErrorResilience:
                 side=order.side,
                 order_type=order.type,
                 quantity=order.quantity,
-                price=order.price
+                price=order.price,
             )
 
         # Restore broker
@@ -371,10 +350,7 @@ class TestBrokerErrorResilience:
 
         # Try different operation
         order2 = integration_test_scenarios.create_test_order(
-            order_id="operational_test_2",
-            symbol="ETH-USD",
-            side=OrderSide.BUY,
-            quantity=0.1
+            order_id="operational_test_2", symbol="ETH-USD", side=OrderSide.BUY, quantity=0.1
         )
 
         # System should still be functional (even if this fails for other reasons)
@@ -385,7 +361,7 @@ class TestBrokerErrorResilience:
                 side=order2.side,
                 order_type=order2.type,
                 quantity=order2.quantity,
-                price=order2.price
+                price=order2.price,
             )
             # Success indicates full recovery
         except Exception as e:

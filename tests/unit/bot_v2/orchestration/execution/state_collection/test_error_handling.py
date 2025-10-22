@@ -45,7 +45,9 @@ class TestBalanceParsingErrors:
         balance_with_none = Balance(asset=None, available=None, total=None, hold=None)
 
         # Should handle None gracefully by treating as non-collateral
-        equity, collateral_balances, total_balance = state_collector.calculate_equity_from_balances([balance_with_none])
+        equity, collateral_balances, total_balance = state_collector.calculate_equity_from_balances(
+            [balance_with_none]
+        )
 
         assert equity == Decimal("0")
         assert collateral_balances == []
@@ -97,10 +99,14 @@ class TestPositionParsingErrors:
         """Test handling of quantity_from function errors."""
         # Mock quantity_from to raise an exception
         with pytest.MonkeyPatch().context() as m:
+
             def mock_quantity_from_error(pos):
                 raise ValueError("Quantity parsing failed")
 
-            m.setattr("bot_v2.orchestration.execution.state_collection.quantity_from", mock_quantity_from_error)
+            m.setattr(
+                "bot_v2.orchestration.execution.state_collection.quantity_from",
+                mock_quantity_from_error,
+            )
 
             position = MagicMock()
             position.symbol = "BTC-PERP"
@@ -147,7 +153,9 @@ class TestPositionParsingErrors:
 class TestPriceResolutionErrors:
     """Test error handling in price resolution fallbacks."""
 
-    def test_resolve_effective_price_broker_method_missing(self, broker_with_missing_methods) -> None:
+    def test_resolve_effective_price_broker_method_missing(
+        self, broker_with_missing_methods
+    ) -> None:
         """Test price resolution when broker methods are missing."""
         collector = StateCollector(broker_with_missing_methods)
         product = MagicMock()
@@ -161,7 +169,9 @@ class TestPriceResolutionErrors:
         # Should fall back through all mechanisms to default
         assert result == Decimal("1.0")
 
-    def test_resolve_effective_price_broker_method_attributes_missing(self, state_collector) -> None:
+    def test_resolve_effective_price_broker_method_attributes_missing(
+        self, state_collector
+    ) -> None:
         """Test price resolution when broker has methods but they lack attributes."""
         # Mock broker to return None for mark price (missing attributes)
         state_collector.broker.get_mark_price.return_value = None
@@ -207,8 +217,12 @@ class TestPriceResolutionErrors:
         minimal_product.quote_increment = None
 
         # Mock all broker methods to raise errors
-        state_collector.broker.get_mark_price = MagicMock(side_effect=RuntimeError("Service unavailable"))
-        state_collector.broker.get_quote = MagicMock(side_effect=RuntimeError("Service unavailable"))
+        state_collector.broker.get_mark_price = MagicMock(
+            side_effect=RuntimeError("Service unavailable")
+        )
+        state_collector.broker.get_quote = MagicMock(
+            side_effect=RuntimeError("Service unavailable")
+        )
 
         # Should not cause infinite recursion
         result = state_collector.resolve_effective_price("BTC-PERP", "buy", None, minimal_product)
@@ -231,7 +245,9 @@ class TestBrokerCommunicationErrors:
     def test_collect_account_state_position_service_error(self, state_collector) -> None:
         """Test account state collection when position service fails."""
         state_collector.broker.list_balances.return_value = []
-        state_collector.broker.list_positions.side_effect = RuntimeError("Position service unavailable")
+        state_collector.broker.list_positions.side_effect = RuntimeError(
+            "Position service unavailable"
+        )
 
         with pytest.raises(RuntimeError, match="Position service unavailable"):
             state_collector.collect_account_state()
@@ -259,6 +275,7 @@ class TestBrokerCommunicationErrors:
         """Test that state collection can recover from temporary failures."""
         # Simulate temporary failure then recovery
         call_count = 0
+
         def mock_list_balances():
             nonlocal call_count
             call_count += 1
@@ -274,7 +291,9 @@ class TestBrokerCommunicationErrors:
             state_collector.collect_account_state()
 
         # Second call should succeed
-        balances, equity, collateral_balances, total_balance, positions = state_collector.collect_account_state()
+        balances, equity, collateral_balances, total_balance, positions = (
+            state_collector.collect_account_state()
+        )
         assert len(balances) == 1
 
 
@@ -309,10 +328,12 @@ class TestEnvironmentAndConfigurationErrors:
 
         # Test with settings that don't have raw_env (should handle gracefully)
         invalid_settings = MagicMock()
+
         # Configure raw_env to raise AttributeError when accessed
         def raise_attr_error(*args, **kwargs):
             raise AttributeError("raw_env")
-        invalid_settings.configure_mock(**{'raw_env.side_effect': raise_attr_error})
+
+        invalid_settings.configure_mock(**{"raw_env.side_effect": raise_attr_error})
 
         # Should handle missing raw_env gracefully by using defaults
         collector = StateCollector(mock_brokerage, settings=invalid_settings)
@@ -326,10 +347,17 @@ class TestEdgeCaseScenarios:
     def test_very_large_balance_values(self, state_collector) -> None:
         """Test handling of very large balance values."""
         large_balances = [
-            Balance(asset="USD", available=Decimal("999999999999999999.99"), total=Decimal("999999999999999999.99"), hold=Decimal("0")),
+            Balance(
+                asset="USD",
+                available=Decimal("999999999999999999.99"),
+                total=Decimal("999999999999999999.99"),
+                hold=Decimal("0"),
+            ),
         ]
 
-        equity, collateral_balances, total_balance = state_collector.calculate_equity_from_balances(large_balances)
+        equity, collateral_balances, total_balance = state_collector.calculate_equity_from_balances(
+            large_balances
+        )
 
         assert equity == Decimal("999999999999999999.99")
         assert total_balance == Decimal("999999999999999999.99")
@@ -354,15 +382,23 @@ class TestEdgeCaseScenarios:
     def test_unicode_and_special_characters(self, state_collector) -> None:
         """Test handling of Unicode and special characters in asset names."""
         unicode_balances = [
-            Balance(asset="USD©", available=Decimal("100.0"), total=Decimal("100.0"), hold=Decimal("0")),
-            Balance(asset="USDC™", available=Decimal("200.0"), total=Decimal("200.0"), hold=Decimal("0")),
+            Balance(
+                asset="USD©", available=Decimal("100.0"), total=Decimal("100.0"), hold=Decimal("0")
+            ),
+            Balance(
+                asset="USDC™", available=Decimal("200.0"), total=Decimal("200.0"), hold=Decimal("0")
+            ),
         ]
 
-        equity, collateral_balances, total_balance = state_collector.calculate_equity_from_balances(unicode_balances)
+        equity, collateral_balances, total_balance = state_collector.calculate_equity_from_balances(
+            unicode_balances
+        )
 
         # Should handle Unicode characters in asset names (they won't match USD/USDC collateral assets)
         assert equity == Decimal("0.0")  # No matching collateral assets
-        assert len(collateral_balances) == 0  # Unicode chars shouldn't match default collateral assets
+        assert (
+            len(collateral_balances) == 0
+        )  # Unicode chars shouldn't match default collateral assets
 
     def test_concurrent_access_safety(self, state_collector) -> None:
         """Test that state collection is safe under concurrent access patterns."""

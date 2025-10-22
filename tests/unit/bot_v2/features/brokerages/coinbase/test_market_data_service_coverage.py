@@ -8,12 +8,9 @@ classes which are critical for market data management, caching, and WebSocket in
 from __future__ import annotations
 
 import threading
-import time
-from datetime import datetime, timezone, timedelta
-from decimal import Decimal, InvalidOperation
+from datetime import datetime, timedelta, timezone
+from decimal import Decimal
 from unittest.mock import Mock, patch
-
-import pytest
 
 from bot_v2.features.brokerages.coinbase.market_data_service import (
     CoinbaseTicker,
@@ -22,7 +19,6 @@ from bot_v2.features.brokerages.coinbase.market_data_service import (
     MarketSnapshot,
     TickerCache,
 )
-from bot_v2.features.brokerages.coinbase.ws import CoinbaseWebSocket, WSSubscription
 
 
 class TestCoinbaseTickerCoverage:
@@ -39,7 +35,7 @@ class TestCoinbaseTickerCoverage:
             ask=Decimal("50100.00"),
             last=Decimal("50000.00"),
             timestamp=timestamp,
-            raw=raw_data
+            raw=raw_data,
         )
 
         assert ticker.symbol == "BTC-USD"
@@ -54,11 +50,7 @@ class TestCoinbaseTickerCoverage:
         timestamp = datetime.now(timezone.utc)
 
         ticker = CoinbaseTicker(
-            symbol="ETH-USD",
-            bid=None,
-            ask=None,
-            last=None,
-            timestamp=timestamp
+            symbol="ETH-USD", bid=None, ask=None, last=None, timestamp=timestamp
         )
 
         assert ticker.symbol == "ETH-USD"
@@ -75,7 +67,7 @@ class TestCoinbaseTickerCoverage:
             bid=Decimal("49900.123456"),
             ask=Decimal("50100.789012"),
             last=Decimal("50000.333666"),
-            timestamp=datetime.now(timezone.utc)
+            timestamp=datetime.now(timezone.utc),
         )
 
         assert isinstance(ticker.bid, Decimal)
@@ -113,7 +105,7 @@ class TestMarketSnapshotCoverage:
             spread_bps=40.0,
             depth_l1=Decimal("1000.00"),
             depth_l10=Decimal("10000.00"),
-            last_update=timestamp
+            last_update=timestamp,
         )
 
         assert snapshot.bid == Decimal("49900.00")
@@ -129,9 +121,7 @@ class TestMarketSnapshotCoverage:
         """Test MarketSnapshot with partial data."""
         timestamp = datetime.now(timezone.utc)
         snapshot = MarketSnapshot(
-            bid=Decimal("49900.00"),
-            last=Decimal("50000.00"),
-            last_update=timestamp
+            bid=Decimal("49900.00"), last=Decimal("50000.00"), last_update=timestamp
         )
 
         assert snapshot.bid == Decimal("49900.00")
@@ -169,7 +159,7 @@ class TestTickerCacheCoverage:
             bid=Decimal("49900.00"),
             ask=Decimal("50100.00"),
             last=Decimal("50000.00"),
-            timestamp=datetime.now(timezone.utc)
+            timestamp=datetime.now(timezone.utc),
         )
 
         cache.set("BTC-USD", ticker)
@@ -201,7 +191,7 @@ class TestTickerCacheCoverage:
             bid=Decimal("49900.00"),
             ask=Decimal("50100.00"),
             last=Decimal("50000.00"),
-            timestamp=datetime.now(timezone.utc)
+            timestamp=datetime.now(timezone.utc),
         )
 
         cache.set("BTC-USD", ticker)
@@ -218,11 +208,13 @@ class TestTickerCacheCoverage:
             bid=Decimal("49900.00"),
             ask=Decimal("50100.00"),
             last=Decimal("50000.00"),
-            timestamp=recent_timestamp
+            timestamp=recent_timestamp,
         )
 
         # Patch utc_now to keep the recent timestamp when setting
-        with patch("bot_v2.features.brokerages.coinbase.market_data_service.utc_now") as mock_utc_now:
+        with patch(
+            "bot_v2.features.brokerages.coinbase.market_data_service.utc_now"
+        ) as mock_utc_now:
             mock_utc_now.return_value = recent_timestamp
             cache.set("BTC-USD", ticker)
 
@@ -237,14 +229,14 @@ class TestTickerCacheCoverage:
             bid=Decimal("49900.00"),
             ask=Decimal("50100.00"),
             last=Decimal("50000.00"),
-            timestamp=datetime.now(timezone.utc)
+            timestamp=datetime.now(timezone.utc),
         )
         ticker2 = CoinbaseTicker(
             symbol="ETH-USD",
             bid=Decimal("2990.00"),
             ask=Decimal("3010.00"),
             last=Decimal("3000.00"),
-            timestamp=datetime.now(timezone.utc)
+            timestamp=datetime.now(timezone.utc),
         )
 
         cache.set("BTC-USD", ticker1)
@@ -266,14 +258,14 @@ class TestTickerCacheCoverage:
             bid=Decimal("49900.00"),
             ask=Decimal("50100.00"),
             last=Decimal("50000.00"),
-            timestamp=datetime.now(timezone.utc)
+            timestamp=datetime.now(timezone.utc),
         )
         ticker2 = CoinbaseTicker(
             symbol="ETH-USD",
             bid=Decimal("2990.00"),
             ask=Decimal("3010.00"),
             last=Decimal("3000.00"),
-            timestamp=datetime.now(timezone.utc)
+            timestamp=datetime.now(timezone.utc),
         )
 
         cache.set("BTC-USD", ticker1)
@@ -296,7 +288,7 @@ class TestTickerCacheCoverage:
                 bid=Decimal(str(49900 + index)),
                 ask=Decimal(str(50100 + index)),
                 last=Decimal(str(50000 + index)),
-                timestamp=datetime.now(timezone.utc)
+                timestamp=datetime.now(timezone.utc),
             )
             cache.set(symbol, ticker)
             retrieved = cache.get(symbol)
@@ -330,7 +322,7 @@ class TestCoinbaseTickerServiceCoverage:
         assert service._reconnect_delay == 5.0
         assert service._stop_event is not None
         assert service._resubscribe_event is not None
-        assert hasattr(service._lock, 'acquire') and hasattr(service._lock, 'release')
+        assert hasattr(service._lock, "acquire") and hasattr(service._lock, "release")
         assert service._thread is None
         assert service._ws is None
 
@@ -346,7 +338,7 @@ class TestCoinbaseTickerServiceCoverage:
             symbols=symbols,
             cache=cache,
             on_update=on_update,
-            reconnect_delay=10.0
+            reconnect_delay=10.0,
         )
 
         assert service._websocket_factory is websocket_factory
@@ -369,7 +361,7 @@ class TestCoinbaseTickerServiceCoverage:
         websocket_factory = Mock()
         service = CoinbaseTickerService(websocket_factory=websocket_factory)
 
-        with patch.object(service, '_thread') as mock_thread:
+        with patch.object(service, "_thread") as mock_thread:
             mock_thread.is_alive.return_value = True
 
             service.start()
@@ -448,7 +440,7 @@ class TestCoinbaseTickerServiceCoverage:
         websocket_factory = Mock()
         service = CoinbaseTickerService(websocket_factory=websocket_factory)
 
-        with patch.object(service, 'start') as mock_start:
+        with patch.object(service, "start") as mock_start:
             service.ensure_started()
 
             mock_start.assert_called_once()
@@ -463,7 +455,7 @@ class TestMarketDataServiceCoverage:
 
         assert service._market_data == {}
         assert service._rolling_windows == {}
-        assert hasattr(service, '_mark_cache')
+        assert hasattr(service, "_mark_cache")
 
     def test_market_data_service_mark_cache_property(self):
         """Test MarketDataService mark_cache property."""
@@ -517,7 +509,7 @@ class TestMarketDataServiceCoverage:
             bid=Decimal("49900.00"),
             ask=Decimal("50100.00"),
             last=Decimal("50000.00"),
-            timestamp=timestamp
+            timestamp=timestamp,
         )
 
         snapshot = service._market_data["BTC-USD"]
@@ -538,7 +530,7 @@ class TestMarketDataServiceCoverage:
             bid=Decimal("49900.00"),
             ask=None,
             last=Decimal("50000.00"),
-            timestamp=timestamp
+            timestamp=timestamp,
         )
 
         snapshot = service._market_data["BTC-USD"]
@@ -555,11 +547,7 @@ class TestMarketDataServiceCoverage:
         timestamp = datetime.now(timezone.utc)
 
         service.update_ticker(
-            "BTC-USD",
-            bid=None,
-            ask=None,
-            last=Decimal("50000.00"),
-            timestamp=timestamp
+            "BTC-USD", bid=None, ask=None, last=Decimal("50000.00"), timestamp=timestamp
         )
 
         snapshot = service._market_data["BTC-USD"]
@@ -654,6 +642,7 @@ class TestMarketDataServiceCoverage:
         service = MarketDataService()
         # MarketDataService.is_stale() uses datetime.utcnow(), so use the same for consistency
         from datetime import datetime as dt
+
         timestamp = dt.utcnow()
 
         # Initialise the symbol first
@@ -664,7 +653,7 @@ class TestMarketDataServiceCoverage:
             bid=Decimal("49900.00"),
             ask=Decimal("50100.00"),
             last=Decimal("50000.00"),
-            timestamp=timestamp
+            timestamp=timestamp,
         )
 
         assert service.is_stale("BTC-USD", threshold_seconds=3600) is False
@@ -679,7 +668,7 @@ class TestMarketDataServiceCoverage:
             bid=Decimal("49900.00"),
             ask=Decimal("50100.00"),
             last=Decimal("50000.00"),
-            timestamp=old_timestamp
+            timestamp=old_timestamp,
         )
 
         assert service.is_stale("BTC-USD", threshold_seconds=1) is True
@@ -711,7 +700,7 @@ class TestMarketDataServiceCoverage:
             bid=Decimal("49900.00"),
             ask=Decimal("50100.00"),
             last=Decimal("50000.00"),
-            timestamp=timestamp
+            timestamp=timestamp,
         )
         service.update_depth("BTC-USD", [["buy", "49950.00", "1.0"]])
 
@@ -748,7 +737,7 @@ class TestMarketDataServiceCoverage:
             bid=Decimal("49900.00"),
             ask=Decimal("50100.00"),
             last=Decimal("50000.00"),
-            timestamp=timestamp
+            timestamp=timestamp,
         )
         service.record_trade("BTC-USD", Decimal("0.1"), timestamp)
 
@@ -811,7 +800,7 @@ class TestMarketDataServiceCoverage:
             bid=Decimal("0"),
             ask=Decimal("50100.00"),
             last=Decimal("50000.00"),
-            timestamp=timestamp
+            timestamp=timestamp,
         )
 
         snapshot = service._market_data["BTC-USD"]
@@ -828,6 +817,8 @@ class TestMarketDataServiceCoverage:
 
         service.update_depth("BTC-USD", changes)
 
-        expected_depth_l1 = Decimal("49950.123456") * Decimal("1.234567") + Decimal("50100.789012") * Decimal("0.987654")
+        expected_depth_l1 = Decimal("49950.123456") * Decimal("1.234567") + Decimal(
+            "50100.789012"
+        ) * Decimal("0.987654")
         snapshot = service._market_data["BTC-USD"]
         assert snapshot.depth_l1 == expected_depth_l1

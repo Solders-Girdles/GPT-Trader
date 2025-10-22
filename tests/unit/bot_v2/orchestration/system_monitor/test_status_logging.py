@@ -2,13 +2,9 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
 from decimal import Decimal
 from unittest.mock import MagicMock, patch
 
-import pytest
-
-from bot_v2.features.live_trade.strategies.perps_baseline import Action, Decision
 from bot_v2.orchestration.system_monitor import SystemMonitor
 
 
@@ -121,9 +117,14 @@ class TestStatusLogging:
         await system_monitor.log_status()
 
         # Verify banner and summary logged
-        log_messages = [record.message for record in caplog.records if "Banner" not in record.message]
+        log_messages = [
+            record.message for record in caplog.records if "Banner" not in record.message
+        ]
         assert any("=" * 60 in msg for msg in log_messages)
-        assert any("Bot Status" in msg and "Equity: $8500" in msg and "Positions: 2" in msg for msg in log_messages)
+        assert any(
+            "Bot Status" in msg and "Equity: $8500" in msg and "Positions: 2" in msg
+            for msg in log_messages
+        )
 
     async def test_log_status_logs_decisions_iteration(
         self, system_monitor: SystemMonitor, mock_bot, sample_balances, sample_decisions, caplog
@@ -161,7 +162,12 @@ class TestStatusLogging:
         assert metrics_payload["open_orders"] == 0
 
     async def test_log_status_constructs_full_metrics_payload(
-        self, system_monitor: SystemMonitor, mock_bot, sample_positions, sample_balances, sample_decisions
+        self,
+        system_monitor: SystemMonitor,
+        mock_bot,
+        sample_positions,
+        sample_balances,
+        sample_decisions,
     ) -> None:
         """Test log_status constructs complete metrics payload with all fields."""
         mock_bot.broker.list_positions.return_value = sample_positions
@@ -207,6 +213,7 @@ class TestStatusLogging:
 
         # Mock quantity_from to raise for bad position
         with patch("bot_v2.orchestration.system_monitor.quantity_from") as mock_quantity:
+
             def quantity_side_effect(pos):
                 if pos == bad_pos:
                     raise ValueError("Invalid position data")

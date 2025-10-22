@@ -59,6 +59,7 @@ class TestPositionProcessing:
 
         # Mock quantity_from to raise for bad position
         with patch("bot_v2.orchestration.system_monitor_positions.quantity_from") as mock_quantity:
+
             def quantity_side_effect(pos):
                 if pos == bad_pos:
                     raise ValueError("Cannot convert quantity")
@@ -148,7 +149,10 @@ class TestPositionProcessing:
         self, reconciler: PositionReconciler
     ) -> None:
         """Test _calculate_diff returns empty dict for identical snapshots."""
-        snapshot = {"BTC-PERP": {"quantity": "0.5", "side": "long"}, "ETH-PERP": {"quantity": "1.0", "side": "short"}}
+        snapshot = {
+            "BTC-PERP": {"quantity": "0.5", "side": "long"},
+            "ETH-PERP": {"quantity": "1.0", "side": "short"},
+        }
 
         result = reconciler._calculate_diff(snapshot, snapshot)
 

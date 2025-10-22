@@ -63,7 +63,9 @@ class TestRealTransportCoverage:
         """Test _refresh_settings when static settings are disabled."""
         transport = RealTransport()
 
-        with patch("bot_v2.features.brokerages.coinbase.transports._load_runtime_settings_snapshot") as mock_loader:
+        with patch(
+            "bot_v2.features.brokerages.coinbase.transports._load_runtime_settings_snapshot"
+        ) as mock_loader:
             new_settings = Mock()
             mock_loader.return_value = new_settings
 
@@ -91,16 +93,20 @@ class TestRealTransportCoverage:
     def test_connect_with_environment_options(self, mock_runtime_settings):
         """Test connection with environment-based options."""
         # Set environment variables in settings
-        mock_runtime_settings.raw_env.update({
-            "COINBASE_WS_CONNECT_TIMEOUT": "30.0",
-            "COINBASE_WS_SUBPROTOCOLS": "v1,v2",
-            "COINBASE_WS_ENABLE_TRACE": "true",
-        })
+        mock_runtime_settings.raw_env.update(
+            {
+                "COINBASE_WS_CONNECT_TIMEOUT": "30.0",
+                "COINBASE_WS_SUBPROTOCOLS": "v1,v2",
+                "COINBASE_WS_ENABLE_TRACE": "true",
+            }
+        )
 
         transport = RealTransport(settings=mock_runtime_settings)
 
-        with patch("websocket.create_connection") as mock_create, \
-             patch("websocket.enableTrace") as mock_trace:
+        with (
+            patch("websocket.create_connection") as mock_create,
+            patch("websocket.enableTrace") as mock_trace,
+        ):
 
             mock_ws = Mock()
             mock_create.return_value = mock_ws
@@ -146,8 +152,10 @@ class TestRealTransportCoverage:
 
         transport = RealTransport(settings=mock_runtime_settings)
 
-        with patch("websocket.create_connection") as mock_create, \
-             patch("websocket.enableTrace", side_effect=Exception("Trace failed")):
+        with (
+            patch("websocket.create_connection") as mock_create,
+            patch("websocket.enableTrace", side_effect=Exception("Trace failed")),
+        ):
 
             mock_ws = Mock()
             mock_create.return_value = mock_ws
@@ -286,7 +294,7 @@ class TestMockTransportCoverage:
 
         assert transport.connected is True
         # MockTransport always stores headers, so we check they're None when not provided
-        assert getattr(transport, 'headers', None) is None
+        assert getattr(transport, "headers", None) is None
 
     def test_mock_transport_disconnect(self):
         """Test MockTransport disconnection."""
@@ -396,7 +404,7 @@ class TestTransportHelperFunctions:
         settings = _load_runtime_settings_snapshot()
 
         assert isinstance(settings, RuntimeSettings)
-        assert hasattr(settings, 'raw_env')
+        assert hasattr(settings, "raw_env")
 
     def test_runtime_settings_type_checking(self):
         """Test RuntimeSettings type checking at runtime."""
@@ -469,8 +477,10 @@ class TestTransportEdgeCases:
 
             transport = RealTransport(settings=mock_runtime_settings)
 
-            with patch("websocket.create_connection") as mock_create, \
-                 patch("websocket.enableTrace") as mock_trace:
+            with (
+                patch("websocket.create_connection") as mock_create,
+                patch("websocket.enableTrace") as mock_trace,
+            ):
 
                 mock_ws = Mock()
                 mock_create.return_value = mock_ws

@@ -22,16 +22,20 @@ def controlled_sleep(interval_seconds: int) -> None:
 @pytest.fixture(autouse=True)
 def patch_asyncio_functions():
     """Autouse patches to control async behavior in tests."""
+
     # Replace asyncio.to_thread with direct call for predictable behavior
     def sync_to_thread(func, *args, **kwargs):
         return func(*args, **kwargs)
 
-    with patch(
-        "bot_v2.orchestration.system_monitor_positions.asyncio.to_thread",
-        side_effect=sync_to_thread,
-    ), patch(
-        "bot_v2.orchestration.system_monitor_positions.asyncio.sleep",
-        side_effect=controlled_sleep,
+    with (
+        patch(
+            "bot_v2.orchestration.system_monitor_positions.asyncio.to_thread",
+            side_effect=sync_to_thread,
+        ),
+        patch(
+            "bot_v2.orchestration.system_monitor_positions.asyncio.sleep",
+            side_effect=controlled_sleep,
+        ),
     ):
         yield
 
@@ -69,12 +73,15 @@ def emit_metric_spy() -> MagicMock:
 @pytest.fixture(autouse=True)
 def patch_dependencies(fake_plog: MagicMock, emit_metric_spy: MagicMock):
     """Patch external dependencies for all tests."""
-    with patch(
-        "bot_v2.orchestration.system_monitor_positions._get_plog",
-        return_value=fake_plog,
-    ), patch(
-        "bot_v2.orchestration.system_monitor_positions.emit_metric",
-        emit_metric_spy,
+    with (
+        patch(
+            "bot_v2.orchestration.system_monitor_positions._get_plog",
+            return_value=fake_plog,
+        ),
+        patch(
+            "bot_v2.orchestration.system_monitor_positions.emit_metric",
+            emit_metric_spy,
+        ),
     ):
         yield
 

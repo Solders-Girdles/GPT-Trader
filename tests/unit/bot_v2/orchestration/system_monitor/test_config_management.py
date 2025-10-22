@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock
 
-import pytest
-
 from bot_v2.orchestration.configuration import ConfigValidationError
 from bot_v2.orchestration.system_monitor import SystemMonitor
 
@@ -42,7 +40,9 @@ class TestConfigManagement:
         self, system_monitor: SystemMonitor, mock_bot, caplog
     ) -> None:
         """Test check_config_updates handles ConfigValidationError correctly."""
-        mock_bot.config_controller.refresh_if_changed.side_effect = ConfigValidationError("Invalid config")
+        mock_bot.config_controller.refresh_if_changed.side_effect = ConfigValidationError(
+            "Invalid config"
+        )
 
         # Set log level to capture error messages
         caplog.set_level("ERROR", logger="bot_v2.orchestration.system_monitor")
@@ -155,7 +155,9 @@ class TestConfigManagement:
         mock_change.diff = {"some.setting": "old -> new"}
         mock_bot.config_controller.refresh_if_changed.return_value = mock_change
         mock_bot.apply_config_change.side_effect = RuntimeError("Application failed")
-        mock_bot.config_controller.consume_pending_change.side_effect = RuntimeError("Cleanup failed")
+        mock_bot.config_controller.consume_pending_change.side_effect = RuntimeError(
+            "Cleanup failed"
+        )
 
         # Should not raise exception even if cleanup fails
         system_monitor.check_config_updates()

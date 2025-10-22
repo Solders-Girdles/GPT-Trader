@@ -164,6 +164,7 @@ def test_load_runtime_settings_logs_invalid_boolean(caplog: pytest.LogCaptureFix
 
 # ===== Enhanced Tests for Coverage Improvement =====
 
+
 def test_normalize_bool_edge_cases(caplog: pytest.LogCaptureFixture) -> None:
     """Test _normalize_bool with various input scenarios."""
     caplog.set_level(logging.WARNING, runtime_settings.logger.name)
@@ -233,6 +234,7 @@ def test_safe_int_and_float_error_handling(caplog: pytest.LogCaptureFixture) -> 
 
 def test_runtime_settings_provider_custom_loader(monkeypatch: pytest.MonkeyPatch) -> None:
     """Test RuntimeSettingsProvider with custom loader scenarios."""
+
     # Create custom loader that returns predictable settings
     def custom_loader(env):
         return runtime_settings.RuntimeSettings(

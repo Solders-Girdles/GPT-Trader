@@ -3,9 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-import threading
 from datetime import datetime
-from decimal import Decimal
 from unittest.mock import MagicMock
 
 import pytest
@@ -48,17 +46,31 @@ class TestPerpsBotInitialization:
         assert bot.lifecycle_manager is not None
         assert bot._state is not None
 
-    def test_perps_bot_initializes_symbols_from_config(self, perps_bot_instance, minimal_bot_config):
+    def test_perps_bot_initializes_symbols_from_config(
+        self, perps_bot_instance, minimal_bot_config
+    ):
         """Test PerpsBot initializes symbols from configuration."""
         bot = perps_bot_instance
         assert bot.symbols == minimal_bot_config.symbols
 
-    def test_perps_bot_initializes_derivatives_enabled_flag(self, perps_bot_instance, minimal_bot_config):
+    def test_perps_bot_initializes_derivatives_enabled_flag(
+        self, perps_bot_instance, minimal_bot_config
+    ):
         """Test PerpsBot sets derivatives_enabled flag from config."""
         bot = perps_bot_instance
-        assert bot._derivatives_enabled == bool(getattr(minimal_bot_config, "derivatives_enabled", False))
+        assert bot._derivatives_enabled == bool(
+            getattr(minimal_bot_config, "derivatives_enabled", False)
+        )
 
-    def test_perps_bot_handles_empty_symbols_config(self, mock_config_controller, service_registry, mock_event_store, mock_orders_store, mock_session_guard, mock_baseline_snapshot):
+    def test_perps_bot_handles_empty_symbols_config(
+        self,
+        mock_config_controller,
+        service_registry,
+        mock_event_store,
+        mock_orders_store,
+        mock_session_guard,
+        mock_baseline_snapshot,
+    ):
         """Test PerpsBot handles empty symbols configuration gracefully."""
         # Create config with empty symbols
         empty_config = MagicMock()
@@ -68,6 +80,7 @@ class TestPerpsBotInitialization:
 
         # Create bot with empty symbols
         original_init = PerpsBot.__init__
+
         def patched_init(self, *args, **kwargs):
             original_init(self, *args, **kwargs)
             self._start_streaming_background = lambda: None
@@ -90,7 +103,9 @@ class TestPerpsBotInitialization:
         bot = perps_bot_instance
         assert bot.registry.config is bot.config
 
-    def test_perps_bot_configuration_guardian_resolution(self, perps_bot_instance, mock_configuration_guardian):
+    def test_perps_bot_configuration_guardian_resolution(
+        self, perps_bot_instance, mock_configuration_guardian
+    ):
         """Test PerpsBot resolves configuration guardian correctly."""
         bot = perps_bot_instance
         assert bot.configuration_guardian is mock_configuration_guardian
@@ -102,11 +117,12 @@ class TestPerpsBotInitialization:
         mock_event_store,
         mock_orders_store,
         mock_session_guard,
-        mock_baseline_snapshot
+        mock_baseline_snapshot,
     ):
         """Test PerpsBot creates configuration guardian when none provided."""
         # Create bot without configuration guardian
         original_init = PerpsBot.__init__
+
         def patched_init(self, *args, **kwargs):
             original_init(self, *args, **kwargs)
             self._start_streaming_background = lambda: None
@@ -125,7 +141,7 @@ class TestPerpsBotInitialization:
 
         # Should create a new configuration guardian
         assert bot.configuration_guardian is not None
-        assert hasattr(bot.configuration_guardian, 'reset_baseline')
+        assert hasattr(bot.configuration_guardian, "reset_baseline")
 
 
 class TestCoordinatorSetup:
@@ -225,7 +241,9 @@ class TestPropertyAccessors:
         coordinator = bot.telemetry_coordinator
         assert isinstance(coordinator, TelemetryCoordinator)
 
-    def test_settings_property_with_registry_settings(self, perps_bot_instance, mock_runtime_settings):
+    def test_settings_property_with_registry_settings(
+        self, perps_bot_instance, mock_runtime_settings
+    ):
         """Test settings property returns registry settings when available."""
         bot = perps_bot_instance
         # Mock the registry to have runtime_settings
@@ -295,8 +313,8 @@ class TestPropertyAccessors:
         bot = perps_bot_instance
         mark_lock = bot._mark_lock
         # Check that it's a proper RLock (threading.RLock is actually _thread.RLock)
-        assert hasattr(mark_lock, 'acquire') and hasattr(mark_lock, 'release')
-        assert mark_lock.__class__.__name__ == 'RLock'
+        assert hasattr(mark_lock, "acquire") and hasattr(mark_lock, "release")
+        assert mark_lock.__class__.__name__ == "RLock"
 
     def test_symbol_strategies_property(self, perps_bot_instance):
         """Test _symbol_strategies property returns state data."""
@@ -309,21 +327,21 @@ class TestPropertyAccessors:
         bot = perps_bot_instance
         strategy = bot.strategy
         # Can be None initially
-        assert strategy is None or hasattr(strategy, '__call__')
+        assert strategy is None or hasattr(strategy, "__call__")
 
     def test_exec_engine_property(self, perps_bot_instance):
         """Test _exec_engine property returns state data."""
         bot = perps_bot_instance
         exec_engine = bot._exec_engine
         # Can be None initially
-        assert exec_engine is None or hasattr(exec_engine, 'place_order')
+        assert exec_engine is None or hasattr(exec_engine, "place_order")
 
     def test_process_symbol_dispatch_property(self, perps_bot_instance):
         """Test _process_symbol_dispatch property returns state data."""
         bot = perps_bot_instance
         dispatch = bot._process_symbol_dispatch
         # Can be None initially
-        assert dispatch is None or hasattr(dispatch, '__call__')
+        assert dispatch is None or hasattr(dispatch, "__call__")
 
     def test_process_symbol_needs_context_property(self, perps_bot_instance):
         """Test _process_symbol_needs_context property returns state data."""
@@ -462,15 +480,18 @@ class TestBaselineSnapshotCreation:
     def test_build_baseline_snapshot_creates_correct_structure(self, minimal_bot_config):
         """Test build_baseline_snapshot creates correct structure."""
         from bot_v2.monitoring.configuration_guardian import BaselineSnapshot
+
         snapshot = PerpsBot.build_baseline_snapshot(minimal_bot_config, derivatives_enabled=True)
 
         assert isinstance(snapshot, BaselineSnapshot)
-        assert hasattr(snapshot, 'config_dict')
-        assert hasattr(snapshot, 'active_symbols')
-        assert hasattr(snapshot, 'open_positions')  # Note: field is 'open_positions' not 'positions'
-        assert hasattr(snapshot, 'account_equity')
-        assert hasattr(snapshot, 'profile')
-        assert hasattr(snapshot, 'broker_type')
+        assert hasattr(snapshot, "config_dict")
+        assert hasattr(snapshot, "active_symbols")
+        assert hasattr(
+            snapshot, "open_positions"
+        )  # Note: field is 'open_positions' not 'positions'
+        assert hasattr(snapshot, "account_equity")
+        assert hasattr(snapshot, "profile")
+        assert hasattr(snapshot, "broker_type")
         # settings field doesn't exist in BaselineSnapshot
 
     def test_build_baseline_snapshot_sets_active_symbols(self, minimal_bot_config):

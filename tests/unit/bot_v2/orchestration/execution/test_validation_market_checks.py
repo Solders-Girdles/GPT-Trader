@@ -3,13 +3,11 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from unittest.mock import MagicMock
 
 import pytest
 
 from bot_v2.features.brokerages.core.interfaces import OrderSide
 from bot_v2.features.live_trade.risk import ValidationError
-from bot_v2.orchestration.execution.validation import OrderValidator
 
 
 class TestMarketFreshnessValidation:
@@ -30,7 +28,9 @@ class TestMarketFreshnessValidation:
         symbol = "ETH-PERP"
         order_validator.risk_manager.check_mark_staleness.return_value = True
 
-        with pytest.raises(ValidationError, match="Mark price is stale for ETH-PERP; halting order placement"):
+        with pytest.raises(
+            ValidationError, match="Mark price is stale for ETH-PERP; halting order placement"
+        ):
             order_validator.ensure_mark_is_fresh(symbol)
 
         order_validator.risk_manager.check_mark_staleness.assert_called_once_with(symbol)
@@ -38,7 +38,9 @@ class TestMarketFreshnessValidation:
     def test_ensure_mark_fresh_handles_risk_manager_exception(self, order_validator) -> None:
         """Test graceful handling of risk manager exceptions."""
         symbol = "BTC-PERP"
-        order_validator.risk_manager.check_mark_staleness.side_effect = RuntimeError("Risk service unavailable")
+        order_validator.risk_manager.check_mark_staleness.side_effect = RuntimeError(
+            "Risk service unavailable"
+        )
 
         # Should not raise any error - should be caught and ignored
         order_validator.ensure_mark_is_fresh(symbol)
@@ -48,7 +50,9 @@ class TestMarketFreshnessValidation:
     def test_ensure_mark_fresh_handles_validation_error_passthrough(self, order_validator) -> None:
         """Test that ValidationError from risk manager is passed through."""
         symbol = "BTC-PERP"
-        order_validator.risk_manager.check_mark_staleness.side_effect = ValidationError("Custom validation error")
+        order_validator.risk_manager.check_mark_staleness.side_effect = ValidationError(
+            "Custom validation error"
+        )
 
         # ValidationError should be passed through, not caught
         with pytest.raises(ValidationError, match="Custom validation error"):
@@ -162,9 +166,7 @@ class TestSlippageGuardValidation:
         effective_price = Decimal("50000.0")
 
         # Mock market snapshot with missing fields
-        order_validator.broker.get_market_snapshot.return_value = {
-            "some_other_field": "value"
-        }
+        order_validator.broker.get_market_snapshot.return_value = {"some_other_field": "value"}
         order_validator.risk_manager.config.slippage_guard_bps = 1000000  # Very high limit
 
         # Should not raise any error
@@ -178,7 +180,9 @@ class TestSlippageGuardValidation:
         effective_price = Decimal("50000.0")
 
         # Mock broker exception
-        order_validator.broker.get_market_snapshot.side_effect = RuntimeError("Market data unavailable")
+        order_validator.broker.get_market_snapshot.side_effect = RuntimeError(
+            "Market data unavailable"
+        )
 
         # Should not raise any error
         order_validator.enforce_slippage_guard(symbol, side, order_quantity, effective_price)

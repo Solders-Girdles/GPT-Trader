@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from bot_v2.orchestration.system_monitor import SystemMonitor
 
 
@@ -16,7 +14,10 @@ class TestResourceMonitoring:
         self, mock_bot, fake_account_telemetry, caplog
     ) -> None:
         """Test system_monitor handles psutil unavailable during initialization."""
-        with patch("bot_v2.orchestration.system_monitor.ResourceCollector", side_effect=ImportError("No psutil")):
+        with patch(
+            "bot_v2.orchestration.system_monitor.ResourceCollector",
+            side_effect=ImportError("No psutil"),
+        ):
             # Set log level to capture debug messages
             caplog.set_level("DEBUG", logger="bot_v2.orchestration.system_monitor")
 
@@ -49,6 +50,7 @@ class TestResourceMonitoring:
 
         # Trigger status logging which includes resource collection
         import asyncio
+
         asyncio.run(system_monitor.log_status())
 
         # Verify error logged
@@ -70,6 +72,7 @@ class TestResourceMonitoring:
 
         # Trigger status logging
         import asyncio
+
         asyncio.run(system_monitor.log_status())
 
         # Verify system metrics included in payload
@@ -97,6 +100,7 @@ class TestResourceMonitoring:
 
         # Trigger status logging
         import asyncio
+
         asyncio.run(system_monitor_no_resource_collector.log_status())
 
         # Verify system metrics NOT included in payload
@@ -127,6 +131,7 @@ class TestResourceMonitoring:
 
         # Trigger status logging
         import asyncio
+
         asyncio.run(system_monitor.log_status())
 
         # Verify partial metrics are included and missing ones are handled
@@ -168,6 +173,7 @@ class TestResourceMonitoring:
 
         # Trigger status logging
         import asyncio
+
         asyncio.run(system_monitor.log_status())
 
         # Verify payload structure includes both regular and system metrics
@@ -195,10 +201,13 @@ class TestResourceMonitoring:
 
         # Make resource collector raise exception
         system_monitor._resource_collector = MagicMock()
-        system_monitor._resource_collector.collect.side_effect = Exception("Resource collection failed")
+        system_monitor._resource_collector.collect.side_effect = Exception(
+            "Resource collection failed"
+        )
 
         # Trigger status logging - should not raise exception
         import asyncio
+
         asyncio.run(system_monitor.log_status())
 
         # Verify metrics still published despite resource collection failure

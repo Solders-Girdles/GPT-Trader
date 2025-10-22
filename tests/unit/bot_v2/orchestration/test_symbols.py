@@ -3,14 +3,13 @@
 from __future__ import annotations
 
 import logging
-from collections.abc import Sequence
 from unittest.mock import Mock
 
 import pytest
 
+from bot_v2.orchestration import symbols
 from bot_v2.orchestration.configuration import Profile
 from bot_v2.orchestration.runtime_settings import RuntimeSettings
-from bot_v2.orchestration import symbols
 
 
 @pytest.fixture(autouse=True)
@@ -74,16 +73,14 @@ def test_derivatives_enabled_with_runtime_override() -> None:
     """Test derivatives_enabled respects runtime settings override."""
     # Test when runtime settings override derivatives to enabled
     settings = _make_runtime_settings(
-        coinbase_enable_derivatives=True,
-        coinbase_enable_derivatives_overridden=True
+        coinbase_enable_derivatives=True, coinbase_enable_derivatives_overridden=True
     )
     result = symbols.derivatives_enabled(Profile.PROD, settings=settings)  # Use PROD, not SPOT
     assert result is True  # Runtime override should take precedence
 
     # Test when runtime settings override derivatives to disabled
     settings = _make_runtime_settings(
-        coinbase_enable_derivatives=False,
-        coinbase_enable_derivatives_overridden=True
+        coinbase_enable_derivatives=False, coinbase_enable_derivatives_overridden=True
     )
     result = symbols.derivatives_enabled(Profile.PROD, settings=settings)
     assert result is False  # Runtime override should take precedence
@@ -109,10 +106,7 @@ def test_normalize_symbol_list_with_derivatives_enabled() -> None:
     # Test with allowed perps
     symbols_list = ["BTC-PERP", "ETH-PERP", "INVALID-PERP", "BTC-USD"]
     result, logs = symbols.normalize_symbol_list(
-        symbols_list,
-        allow_derivatives=True,
-        quote="USD",
-        allowed_perps=["BTC-PERP", "ETH-PERP"]
+        symbols_list, allow_derivatives=True, quote="USD", allowed_perps=["BTC-PERP", "ETH-PERP"]
     )
 
     assert result == ["BTC-PERP", "ETH-PERP", "BTC-USD"]
@@ -125,11 +119,7 @@ def test_normalize_symbol_list_with_derivatives_enabled() -> None:
 def test_normalize_symbol_list_with_derivatives_disabled() -> None:
     """Test normalize_symbol_list with derivatives disabled."""
     symbols_list = ["BTC-PERP", "ETH-USD"]
-    result, logs = symbols.normalize_symbol_list(
-        symbols_list,
-        allow_derivatives=False,
-        quote="USD"
-    )
+    result, logs = symbols.normalize_symbol_list(symbols_list, allow_derivatives=False, quote="USD")
 
     assert result == ["BTC-USD", "ETH-USD"]
     assert len(logs) == 1
@@ -141,11 +131,7 @@ def test_normalize_symbol_list_with_derivatives_disabled() -> None:
 def test_normalize_symbol_list_empty_and_whitespace() -> None:
     """Test normalize_symbol_list with empty and whitespace inputs."""
     # Test with None input
-    result, logs = symbols.normalize_symbol_list(
-        None,
-        allow_derivatives=True,
-        quote="USD"
-    )
+    result, logs = symbols.normalize_symbol_list(None, allow_derivatives=True, quote="USD")
 
     assert result == ["BTC-PERP", "ETH-PERP"]  # Default fallback for derivatives
     assert len(logs) == 1
@@ -154,11 +140,7 @@ def test_normalize_symbol_list_empty_and_whitespace() -> None:
 
     # Test with empty strings and whitespace
     symbols_list = ["", "  ", "\t\n", "BTC-PERP"]
-    result, logs = symbols.normalize_symbol_list(
-        symbols_list,
-        allow_derivatives=True,
-        quote="USD"
-    )
+    result, logs = symbols.normalize_symbol_list(symbols_list, allow_derivatives=True, quote="USD")
 
     assert result == ["BTC-PERP"]
     assert logs == []  # No logs when valid symbols exist
@@ -167,11 +149,7 @@ def test_normalize_symbol_list_empty_and_whitespace() -> None:
 def test_normalize_symbol_list_case_and_whitespace_normalization() -> None:
     """Test symbol normalization with various cases and whitespace."""
     symbols_list = ["  btc-perp  ", "\tETH-USD\n", "sol-usd"]
-    result, logs = symbols.normalize_symbol_list(
-        symbols_list,
-        allow_derivatives=True,
-        quote="USD"
-    )
+    result, logs = symbols.normalize_symbol_list(symbols_list, allow_derivatives=True, quote="USD")
 
     assert result == ["BTC-PERP", "ETH-USD", "SOL-USD"]
     assert logs == []
@@ -184,7 +162,7 @@ def test_normalize_symbol_list_custom_fallback_bases() -> None:
         [],  # Empty symbols to trigger fallback
         allow_derivatives=False,
         quote="EUR",
-        fallback_bases=["SOL", "AVAX"]
+        fallback_bases=["SOL", "AVAX"],
     )
 
     assert result == ["SOL-EUR", "AVAX-EUR"]
@@ -196,11 +174,7 @@ def test_normalize_symbol_list_custom_fallback_bases() -> None:
 def test_normalize_symbol_list_duplicate_removal() -> None:
     """Test that duplicate symbols are removed while preserving order."""
     symbols_list = ["BTC-PERP", "ETH-PERP", "BTC-PERP", "BTC-USD", "ETH-PERP"]
-    result, logs = symbols.normalize_symbol_list(
-        symbols_list,
-        allow_derivatives=True,
-        quote="USD"
-    )
+    result, logs = symbols.normalize_symbol_list(symbols_list, allow_derivatives=True, quote="USD")
 
     # Duplicates should be removed, first occurrence preserved
     assert result == ["BTC-PERP", "ETH-PERP", "BTC-USD"]
@@ -211,7 +185,7 @@ def test_normalize_symbols_integration() -> None:
     settings = _make_runtime_settings(
         coinbase_default_quote="EUR",
         coinbase_enable_derivatives=True,
-        coinbase_enable_derivatives_overridden=True
+        coinbase_enable_derivatives_overridden=True,
     )
 
     # Mock logger to capture log calls
@@ -221,9 +195,7 @@ def test_normalize_symbols_integration() -> None:
 
         symbols_list = ["btc-perp", "invalid-perp"]
         result, derivatives_enabled = symbols.normalize_symbols(
-            Profile.PROD,
-            symbols_list,
-            settings=settings
+            Profile.PROD, symbols_list, settings=settings
         )
 
         assert derivatives_enabled is True
@@ -239,14 +211,11 @@ def test_normalize_symbols_custom_quote_and_settings() -> None:
     settings = _make_runtime_settings(
         coinbase_default_quote="USD",
         coinbase_enable_derivatives=False,
-        coinbase_enable_derivatives_overridden=True
+        coinbase_enable_derivatives_overridden=True,
     )
 
     result, derivatives_enabled = symbols.normalize_symbols(
-        Profile.SPOT,
-        ["BTC-PERP"],
-        quote="JPY",  # Custom quote override
-        settings=settings
+        Profile.SPOT, ["BTC-PERP"], quote="JPY", settings=settings  # Custom quote override
     )
 
     assert derivatives_enabled is False  # SPOT profile
@@ -256,9 +225,7 @@ def test_normalize_symbols_custom_quote_and_settings() -> None:
 def test_symbol_normalization_log_dataclass() -> None:
     """Test SymbolNormalizationLog dataclass."""
     log = symbols.SymbolNormalizationLog(
-        level=logging.WARNING,
-        message="Test message %s",
-        args=("test_arg",)
+        level=logging.WARNING, message="Test message %s", args=("test_arg",)
     )
 
     assert log.level == logging.WARNING
@@ -266,10 +233,7 @@ def test_symbol_normalization_log_dataclass() -> None:
     assert log.args == ("test_arg",)
 
     # Test with default args
-    log_default = symbols.SymbolNormalizationLog(
-        level=logging.INFO,
-        message="Test message"
-    )
+    log_default = symbols.SymbolNormalizationLog(level=logging.INFO, message="Test message")
 
     assert log_default.args == ()
 

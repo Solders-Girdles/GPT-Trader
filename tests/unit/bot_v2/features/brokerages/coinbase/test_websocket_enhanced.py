@@ -12,16 +12,15 @@ This comprehensive test suite covers:
 
 from __future__ import annotations
 
-import json
-import logging
 from datetime import datetime, timezone
 from decimal import Decimal
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 
-from bot_v2.features.brokerages.coinbase.models import APIConfig
-from bot_v2.features.brokerages.coinbase.transports import MockTransport, NoopTransport, RealTransport
+from bot_v2.features.brokerages.coinbase.transports import (
+    MockTransport,
+)
 from bot_v2.features.brokerages.coinbase.ws import (
     CoinbaseWebSocket,
     SequenceGuard,
@@ -96,7 +95,9 @@ class TestCoinbaseWebSocketConnection:
             ws.connect()
 
             expected_headers = {"Authorization": "Bearer token123"}
-            mock_transport.connect.assert_called_once_with("wss://test.example.com", expected_headers)
+            mock_transport.connect.assert_called_once_with(
+                "wss://test.example.com", expected_headers
+            )
 
     def test_connect_already_connected(self, mock_runtime_settings):
         """Test connecting when already connected."""
@@ -289,7 +290,9 @@ class TestCoinbaseWebSocketSubscription:
 
     def test_get_subscription_message_format(self, mock_runtime_settings):
         """Test subscription message format."""
-        subscription = WSSubscription(channels=["ticker", "matches"], product_ids=["BTC-USD", "ETH-USD"])
+        subscription = WSSubscription(
+            channels=["ticker", "matches"], product_ids=["BTC-USD", "ETH-USD"]
+        )
 
         message = subscription.to_dict()
 
@@ -305,7 +308,9 @@ class TestCoinbaseWebSocketSubscription:
 class TestCoinbaseWebSocketMessageHandling:
     """Test WebSocket message processing and streaming."""
 
-    def test_stream_messages_with_mock_transport(self, mock_runtime_settings, ticker_message_factory):
+    def test_stream_messages_with_mock_transport(
+        self, mock_runtime_settings, ticker_message_factory
+    ):
         """Test streaming messages from mock transport."""
         ws = CoinbaseWebSocket(
             url="wss://test.example.com",
@@ -714,7 +719,9 @@ class TestWebSocketErrorHandling:
                 with pytest.raises(type(error)):
                     ws.connect()
 
-    def test_message_parsing_error_handling(self, mock_runtime_settings, message_parsing_error_scenarios):
+    def test_message_parsing_error_handling(
+        self, mock_runtime_settings, message_parsing_error_scenarios
+    ):
         """Test handling of malformed messages."""
         ws = CoinbaseWebSocket(
             url="wss://test.example.com",
@@ -781,7 +788,9 @@ class TestWebSocketErrorHandling:
 class TestWebSocketIntegration:
     """Test WebSocket integration scenarios."""
 
-    def test_full_lifecycle_connection_message_disconnection(self, mock_runtime_settings, ticker_message_factory):
+    def test_full_lifecycle_connection_message_disconnection(
+        self, mock_runtime_settings, ticker_message_factory
+    ):
         """Test complete WebSocket lifecycle: connect -> receive messages -> disconnect."""
         ws = CoinbaseWebSocket(
             url="wss://test.example.com",
@@ -843,7 +852,9 @@ class TestWebSocketIntegration:
             assert len(connect_attempts) == 3
             assert ws.is_connected()
 
-    def test_multiple_subscriptions_streaming(self, mock_runtime_settings, ticker_message_factory, trade_message_factory):
+    def test_multiple_subscriptions_streaming(
+        self, mock_runtime_settings, ticker_message_factory, trade_message_factory
+    ):
         """Test streaming with multiple active subscriptions."""
         ws = CoinbaseWebSocket(
             url="wss://test.example.com",

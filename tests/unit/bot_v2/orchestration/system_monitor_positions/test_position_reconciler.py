@@ -21,7 +21,9 @@ class TestPositionReconciler:
         assert reconciler._event_store == fake_event_store
         assert reconciler._bot_id == "test-bot"
 
-    async def test_fetch_positions_happy_path(self, reconciler: PositionReconciler, fake_bot) -> None:
+    async def test_fetch_positions_happy_path(
+        self, reconciler: PositionReconciler, fake_bot
+    ) -> None:
         """Test _fetch_positions returns broker list on success."""
         sample_positions = [
             MagicMock(symbol="BTC-PERP", quantity=Decimal("0.5"), side="long"),
@@ -34,7 +36,9 @@ class TestPositionReconciler:
         assert result == sample_positions
         fake_bot.broker.list_positions.assert_called_once()
 
-    async def test_fetch_positions_failure_path(self, reconciler: PositionReconciler, fake_bot) -> None:
+    async def test_fetch_positions_failure_path(
+        self, reconciler: PositionReconciler, fake_bot
+    ) -> None:
         """Test _fetch_positions returns empty list on broker exception."""
         fake_bot.broker.list_positions.side_effect = Exception("Broker error")
 
@@ -84,6 +88,7 @@ class TestPositionReconciler:
 
         # Mock quantity_from to raise for bad position
         with patch("bot_v2.orchestration.system_monitor_positions.quantity_from") as mock_quantity:
+
             def quantity_side_effect(pos):
                 if pos == bad_pos:
                     raise ValueError("Invalid quantity")

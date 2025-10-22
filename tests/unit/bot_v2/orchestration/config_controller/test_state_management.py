@@ -18,8 +18,10 @@ class TestStateManagement:
     ) -> None:
         """Test ConfigController stores manager and initializes reduce-only mode from config."""
         with pytest.MonkeyPatch().context() as m:
-            m.setattr("bot_v2.orchestration.config_controller.ConfigManager.from_config",
-                      lambda config, settings=None: mock_config_manager)
+            m.setattr(
+                "bot_v2.orchestration.config_controller.ConfigManager.from_config",
+                lambda config, settings=None: mock_config_manager,
+            )
 
             controller = ConfigController(sample_bot_config)
 
@@ -34,12 +36,15 @@ class TestStateManagement:
         with pytest.MonkeyPatch().context() as m:
             mock_manager = MagicMock()
             mock_from_config = MagicMock(return_value=mock_manager)
-            m.setattr("bot_v2.orchestration.config_controller.ConfigManager.from_config",
-                      mock_from_config)
+            m.setattr(
+                "bot_v2.orchestration.config_controller.ConfigManager.from_config", mock_from_config
+            )
 
             ConfigController(sample_bot_config, settings=mock_runtime_settings)
 
-            mock_from_config.assert_called_once_with(sample_bot_config, settings=mock_runtime_settings)
+            mock_from_config.assert_called_once_with(
+                sample_bot_config, settings=mock_runtime_settings
+            )
 
     def test_current_property_returns_config_from_manager(
         self, config_controller, sample_bot_config
@@ -77,7 +82,9 @@ class TestStateManagement:
         result = config_controller.reduce_only_mode
         assert result is False
 
-    def test_set_current_config_updates_manager_and_cache(self, config_controller, sample_bot_config) -> None:
+    def test_set_current_config_updates_manager_and_cache(
+        self, config_controller, sample_bot_config
+    ) -> None:
         """Test _set_current_config updates manager and cached reduce_only mode."""
         new_config = MagicMock(spec=BotConfig)
         new_config.reduce_only_mode = True
@@ -102,7 +109,9 @@ class TestStateManagement:
         config_controller._set_current_config(new_config)
         assert config_controller._reduce_only_mode_state is False
 
-    def test_consume_pending_change_returns_and_clears_pending_change(self, config_controller) -> None:
+    def test_consume_pending_change_returns_and_clears_pending_change(
+        self, config_controller
+    ) -> None:
         """Test consume_pending_change returns pending change and clears it."""
         mock_change = MagicMock(spec=ConfigChange)
         config_controller._pending_change = mock_change
@@ -112,7 +121,9 @@ class TestStateManagement:
         assert result == mock_change
         assert config_controller._pending_change is None
 
-    def test_consume_pending_change_returns_none_when_no_pending_change(self, config_controller) -> None:
+    def test_consume_pending_change_returns_none_when_no_pending_change(
+        self, config_controller
+    ) -> None:
         """Test consume_pending_change returns None when no pending change."""
         config_controller._pending_change = None
 
@@ -120,7 +131,9 @@ class TestStateManagement:
 
         assert result is None
 
-    def test_consume_pending_change_clears_state_even_if_change_is_none(self, config_controller) -> None:
+    def test_consume_pending_change_clears_state_even_if_change_is_none(
+        self, config_controller
+    ) -> None:
         """Test consume_pending_change clears state even when change is None."""
         config_controller._pending_change = None
 
@@ -147,8 +160,10 @@ class TestStateManagement:
         with pytest.MonkeyPatch().context() as m:
             mock_manager1 = MagicMock()
             mock_manager2 = MagicMock()
-            m.setattr("bot_v2.orchestration.config_controller.ConfigManager.from_config",
-                      MagicMock(side_effect=[mock_manager1, mock_manager2]))
+            m.setattr(
+                "bot_v2.orchestration.config_controller.ConfigManager.from_config",
+                MagicMock(side_effect=[mock_manager1, mock_manager2]),
+            )
 
             config1 = sample_bot_config
             config2 = MagicMock(spec=BotConfig)

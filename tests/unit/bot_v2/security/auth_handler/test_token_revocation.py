@@ -49,4 +49,6 @@ class TestTokenRevocation:
             result = auth_handler.revoke_token("error.token")
 
         assert result is False
-        assert any("Failed to decode token during revocation" in message for message in caplog.messages)
+        assert any(
+            "Failed to decode token during revocation" in message for message in caplog.messages
+        )

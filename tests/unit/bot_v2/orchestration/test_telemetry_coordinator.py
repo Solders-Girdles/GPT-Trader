@@ -6,7 +6,6 @@ market monitoring, and telemetry event handling.
 
 from __future__ import annotations
 
-import asyncio
 from decimal import Decimal
 from unittest.mock import AsyncMock, Mock
 
@@ -201,7 +200,7 @@ class TestTelemetryCoordinatorStreaming:
             perps_enable_streaming=True,
             reduce_only_mode=True,
             max_leverage=1,
-            time_in_force="IOC"
+            time_in_force="IOC",
         )
         telemetry_context = telemetry_context.with_updates(config=canary_config)
         telemetry_coordinator.update_context(telemetry_context)
@@ -210,10 +209,7 @@ class TestTelemetryCoordinatorStreaming:
 
         # Create a new config with PROD settings
         prod_config = BotConfig(
-            profile=Profile.PROD,
-            symbols=("BTC-PERP",),
-            dry_run=False,
-            perps_enable_streaming=True
+            profile=Profile.PROD, symbols=("BTC-PERP",), dry_run=False, perps_enable_streaming=True
         )
         telemetry_context = telemetry_context.with_updates(config=prod_config)
         telemetry_coordinator.update_context(telemetry_context)
@@ -251,12 +247,11 @@ class TestTelemetryCoordinatorStreaming:
             symbols=("BTC-PERP", "ETH-PERP"),
             dry_run=telemetry_context.config.dry_run,
             perps_enable_streaming=telemetry_context.config.perps_enable_streaming,
-            perps_stream_level=2
+            perps_stream_level=2,
         )
-        
+
         telemetry_context = telemetry_context.with_updates(
-            symbols=("BTC-PERP", "ETH-PERP"),
-            config=new_config
+            symbols=("BTC-PERP", "ETH-PERP"), config=new_config
         )
         telemetry_coordinator.update_context(telemetry_context)
 
@@ -289,25 +284,26 @@ class TestTelemetryCoordinatorStreaming:
         # Set up a mock task
         mock_task = AsyncMock()
         mock_task.done.return_value = False
-        
+
         telemetry_coordinator._stream_task = mock_task
         telemetry_coordinator._ws_stop = Mock()
 
         # Mock the _stop_streaming method to avoid the await issue
         with pytest.MonkeyPatch().context() as m:
+
             async def mock_stop_streaming(self):
                 self._pending_stream_config = None
                 if self._ws_stop:
                     self._ws_stop.set()
                     self._ws_stop = None
-                
+
                 if self._stream_task and not self._stream_task.done():
                     self._stream_task.cancel()
                 self._stream_task = None
                 self._loop_task_handle = None
-            
+
             m.setattr(TelemetryCoordinator, "_stop_streaming", mock_stop_streaming)
-            
+
             await telemetry_coordinator._stop_streaming()
 
         mock_task.cancel.assert_called_once()

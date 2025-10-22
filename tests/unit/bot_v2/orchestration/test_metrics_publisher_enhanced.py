@@ -37,7 +37,9 @@ def metrics_publisher(mock_event_store, temp_base_dir: Path) -> MetricsPublisher
     )
 
 
-def test_publisher_initialization_and_attributes(metrics_publisher: MetricsPublisher, mock_event_store, temp_base_dir: Path) -> None:
+def test_publisher_initialization_and_attributes(
+    metrics_publisher: MetricsPublisher, mock_event_store, temp_base_dir: Path
+) -> None:
     """Test MetricsPublisher initialization and attribute assignment."""
     assert metrics_publisher._event_store is mock_event_store
     assert metrics_publisher._bot_id == "test_bot"
@@ -45,7 +47,9 @@ def test_publisher_initialization_and_attributes(metrics_publisher: MetricsPubli
     assert metrics_publisher._base_dir is temp_base_dir
 
 
-def test_target_dirs_modern_and_legacy_paths_different(metrics_publisher: MetricsPublisher, temp_base_dir: Path) -> None:
+def test_target_dirs_modern_and_legacy_paths_different(
+    metrics_publisher: MetricsPublisher, temp_base_dir: Path
+) -> None:
     """Test _target_dirs returns both modern and legacy paths when different."""
     target_dirs = metrics_publisher._target_dirs()
 
@@ -78,7 +82,9 @@ def test_target_dirs_single_path_when_identical(temp_base_dir: Path) -> None:
     assert expected_legacy in target_dirs
 
 
-def test_publish_emits_metric_to_event_store(metrics_publisher: MetricsPublisher, mock_event_store) -> None:
+def test_publish_emits_metric_to_event_store(
+    metrics_publisher: MetricsPublisher, mock_event_store
+) -> None:
     """Test publish method calls emit_metric with correct parameters."""
     test_metrics = {
         "equity": 10000.0,
@@ -97,12 +103,16 @@ def test_publish_emits_metric_to_event_store(metrics_publisher: MetricsPublisher
         )
 
 
-def test_publish_writes_snapshot_and_logs_update(metrics_publisher: MetricsPublisher, temp_base_dir: Path) -> None:
+def test_publish_writes_snapshot_and_logs_update(
+    metrics_publisher: MetricsPublisher, temp_base_dir: Path
+) -> None:
     """Test publish method calls _write_snapshot and _log_update."""
     test_metrics = {"equity": 10000.0, "profile": "prod"}
 
-    with patch.object(metrics_publisher, "_write_snapshot") as mock_snapshot, \
-         patch.object(metrics_publisher, "_log_update") as mock_log:
+    with (
+        patch.object(metrics_publisher, "_write_snapshot") as mock_snapshot,
+        patch.object(metrics_publisher, "_log_update") as mock_log,
+    ):
 
         metrics_publisher.publish(test_metrics)
 
@@ -130,15 +140,19 @@ def test_publish_with_complex_metrics_data(metrics_publisher: MetricsPublisher) 
         "timestamp": "2025-10-20T21:00:00Z",
     }
 
-    with patch("bot_v2.orchestration.system_monitor_metrics.emit_metric"), \
-         patch.object(metrics_publisher, "_write_snapshot"), \
-         patch.object(metrics_publisher, "_log_update"):
+    with (
+        patch("bot_v2.orchestration.system_monitor_metrics.emit_metric"),
+        patch.object(metrics_publisher, "_write_snapshot"),
+        patch.object(metrics_publisher, "_log_update"),
+    ):
 
         # Should not raise any exceptions with complex data
         metrics_publisher.publish(complex_metrics)
 
 
-def test_write_snapshot_creates_directories(metrics_publisher: MetricsPublisher, temp_base_dir: Path) -> None:
+def test_write_snapshot_creates_directories(
+    metrics_publisher: MetricsPublisher, temp_base_dir: Path
+) -> None:
     """Test _write_snapshot creates target directories if they don't exist."""
     test_metrics = {"equity": 10000.0, "profile": "prod"}
 
@@ -154,7 +168,9 @@ def test_write_snapshot_creates_directories(metrics_publisher: MetricsPublisher,
     assert legacy_dir.is_dir()
 
 
-def test_write_snapshot_handles_json_serialization(metrics_publisher: MetricsPublisher, temp_base_dir: Path) -> None:
+def test_write_snapshot_handles_json_serialization(
+    metrics_publisher: MetricsPublisher, temp_base_dir: Path
+) -> None:
     """Test _write_snapshot properly serializes metrics to JSON."""
     test_metrics = {
         "equity": 10000.0,
@@ -183,7 +199,9 @@ def test_write_snapshot_handles_json_serialization(metrics_publisher: MetricsPub
     assert legacy_data == test_metrics
 
 
-def test_write_snapshot_atomic_write_operations(metrics_publisher: MetricsPublisher, temp_base_dir: Path) -> None:
+def test_write_snapshot_atomic_write_operations(
+    metrics_publisher: MetricsPublisher, temp_base_dir: Path
+) -> None:
     """Test _write_snapshot writes to both target paths atomically."""
     test_metrics = {"equity": 10000.0, "profile": "prod"}
 
@@ -201,7 +219,9 @@ def test_write_snapshot_atomic_write_operations(metrics_publisher: MetricsPublis
         assert mock_file.__enter__.return_value.write.call_count >= 2
 
 
-def test_write_snapshot_handles_permission_denied(metrics_publisher: MetricsPublisher, caplog: pytest.LogCaptureFixture) -> None:
+def test_write_snapshot_handles_permission_denied(
+    metrics_publisher: MetricsPublisher, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test _write_snapshot handles permission denied errors gracefully."""
     caplog.set_level(logging.DEBUG, "bot_v2.orchestration.system_monitor_metrics")
 
@@ -217,7 +237,9 @@ def test_write_snapshot_handles_permission_denied(metrics_publisher: MetricsPubl
     assert "write_snapshot" in caplog.text
 
 
-def test_write_snapshot_handles_disk_full_error(metrics_publisher: MetricsPublisher, caplog: pytest.LogCaptureFixture) -> None:
+def test_write_snapshot_handles_disk_full_error(
+    metrics_publisher: MetricsPublisher, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test _write_snapshot handles disk full errors gracefully."""
     caplog.set_level(logging.DEBUG, metrics_publisher.logger.name)
 
@@ -232,7 +254,9 @@ def test_write_snapshot_handles_disk_full_error(metrics_publisher: MetricsPublis
     assert "No space left on device" in caplog.text
 
 
-def test_write_snapshot_handles_invalid_json_data(metrics_publisher: MetricsPublisher, caplog: pytest.LogCaptureFixture) -> None:
+def test_write_snapshot_handles_invalid_json_data(
+    metrics_publisher: MetricsPublisher, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test _write_snapshot handles non-serializable data gracefully."""
     caplog.set_level(logging.DEBUG, metrics_publisher.logger.name)
 
@@ -255,8 +279,8 @@ def test_log_update_logs_success_case(metrics_publisher: MetricsPublisher) -> No
         "equity": 10000.0,
         "profile": "prod",
         "positions": [{"symbol": "BTC-PERP"}],  # Should be filtered out
-        "decisions": {"BTC-PERP": "BUY"},       # Should be filtered out
-        "event_type": "cycle_metrics",         # Should be filtered out
+        "decisions": {"BTC-PERP": "BUY"},  # Should be filtered out
+        "event_type": "cycle_metrics",  # Should be filtered out
         "custom_field": "value",
     }
 
@@ -277,7 +301,9 @@ def test_log_update_logs_success_case(metrics_publisher: MetricsPublisher) -> No
         )
 
 
-def test_log_update_handles_logging_failure(metrics_publisher: MetricsPublisher, caplog: pytest.LogCaptureFixture) -> None:
+def test_log_update_handles_logging_failure(
+    metrics_publisher: MetricsPublisher, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test _log_update handles logging failures gracefully."""
     caplog.set_level(logging.DEBUG, metrics_publisher.logger.name)
 
@@ -297,7 +323,9 @@ def test_log_update_handles_logging_failure(metrics_publisher: MetricsPublisher,
     assert "log_update" in caplog.text
 
 
-def test_write_health_status_success_case(metrics_publisher: MetricsPublisher, temp_base_dir: Path) -> None:
+def test_write_health_status_success_case(
+    metrics_publisher: MetricsPublisher, temp_base_dir: Path
+) -> None:
     """Test write_health_status writes success status to disk."""
     metrics_publisher.write_health_status(ok=True, message="System healthy")
 
@@ -315,7 +343,9 @@ def test_write_health_status_success_case(metrics_publisher: MetricsPublisher, t
         assert "timestamp" in health_data
 
 
-def test_write_health_status_failure_case(metrics_publisher: MetricsPublisher, temp_base_dir: Path) -> None:
+def test_write_health_status_failure_case(
+    metrics_publisher: MetricsPublisher, temp_base_dir: Path
+) -> None:
     """Test write_health_status writes failure status to disk."""
     error_message = "Connection timeout"
     metrics_publisher.write_health_status(ok=False, message="System error", error=error_message)
@@ -334,7 +364,9 @@ def test_write_health_status_failure_case(metrics_publisher: MetricsPublisher, t
         assert "timestamp" in health_data
 
 
-def test_write_health_status_creates_directories(metrics_publisher: MetricsPublisher, temp_base_dir: Path) -> None:
+def test_write_health_status_creates_directories(
+    metrics_publisher: MetricsPublisher, temp_base_dir: Path
+) -> None:
     """Test write_health_status creates target directories if they don't exist."""
     metrics_publisher.write_health_status(ok=True, message="Test")
 
@@ -348,14 +380,18 @@ def test_write_health_status_creates_directories(metrics_publisher: MetricsPubli
     assert legacy_dir.is_dir()
 
 
-def test_publish_gracefully_degrades_on_file_errors(metrics_publisher: MetricsPublisher, caplog: pytest.LogCaptureFixture) -> None:
+def test_publish_gracefully_degrades_on_file_errors(
+    metrics_publisher: MetricsPublisher, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test publish gracefully degrades when file operations fail."""
     caplog.set_level(logging.DEBUG, metrics_publisher.logger.name)
 
     test_metrics = {"equity": 10000.0}
 
-    with patch("builtins.open", side_effect=PermissionError("Permission denied")), \
-         patch("bot_v2.orchestration.system_monitor_metrics.emit_metric") as mock_emit:
+    with (
+        patch("builtins.open", side_effect=PermissionError("Permission denied")),
+        patch("bot_v2.orchestration.system_monitor_metrics.emit_metric") as mock_emit,
+    ):
 
         # Should not raise exception
         metrics_publisher.publish(test_metrics)
@@ -369,9 +405,11 @@ def test_publish_gracefully_degrades_on_file_errors(metrics_publisher: MetricsPu
 
 def test_publish_with_none_or_empty_metrics(metrics_publisher: MetricsPublisher) -> None:
     """Test publish handles None or empty metrics gracefully."""
-    with patch("bot_v2.orchestration.system_monitor_metrics.emit_metric") as mock_emit, \
-         patch.object(metrics_publisher, "_write_snapshot") as mock_snapshot, \
-         patch.object(metrics_publisher, "_log_update") as mock_log:
+    with (
+        patch("bot_v2.orchestration.system_monitor_metrics.emit_metric") as mock_emit,
+        patch.object(metrics_publisher, "_write_snapshot") as mock_snapshot,
+        patch.object(metrics_publisher, "_log_update") as mock_log,
+    ):
 
         # Test with empty dict
         metrics_publisher.publish({})
@@ -390,9 +428,11 @@ def test_publish_with_large_complex_metrics(metrics_publisher: MetricsPublisher)
         "system_data": {f"metric_{i}": i for i in range(200)},
     }
 
-    with patch("bot_v2.orchestration.system_monitor_metrics.emit_metric"), \
-         patch.object(metrics_publisher, "_write_snapshot"), \
-         patch.object(metrics_publisher, "_log_update"):
+    with (
+        patch("bot_v2.orchestration.system_monitor_metrics.emit_metric"),
+        patch.object(metrics_publisher, "_write_snapshot"),
+        patch.object(metrics_publisher, "_log_update"),
+    ):
 
         # Should handle large data without issues
         metrics_publisher.publish(large_metrics)
@@ -401,7 +441,6 @@ def test_publish_with_large_complex_metrics(metrics_publisher: MetricsPublisher)
 def test_concurrent_publish_operations(metrics_publisher: MetricsPublisher) -> None:
     """Test MetricsPublisher handles concurrent publish operations safely."""
     import threading
-    import time
 
     results = []
     errors = []
@@ -409,9 +448,11 @@ def test_concurrent_publish_operations(metrics_publisher: MetricsPublisher) -> N
     def publish_metrics(thread_id: int):
         try:
             metrics = {"thread_id": thread_id, "equity": 10000.0 + thread_id}
-            with patch("bot_v2.orchestration.system_monitor_metrics.emit_metric"), \
-                 patch.object(metrics_publisher, "_write_snapshot"), \
-                 patch.object(metrics_publisher, "_log_update"):
+            with (
+                patch("bot_v2.orchestration.system_monitor_metrics.emit_metric"),
+                patch.object(metrics_publisher, "_write_snapshot"),
+                patch.object(metrics_publisher, "_log_update"),
+            ):
                 metrics_publisher.publish(metrics)
             results.append(thread_id)
         except Exception as e:
@@ -460,7 +501,9 @@ def test_profile_specific_directory_structure(temp_base_dir: Path) -> None:
         assert f"Profile {profile} test" in health_data["message"]
 
 
-def test_error_context_logging_with_debug_level(metrics_publisher: MetricsPublisher, caplog: pytest.LogCaptureFixture) -> None:
+def test_error_context_logging_with_debug_level(
+    metrics_publisher: MetricsPublisher, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test error logging includes proper context information."""
     caplog.set_level(logging.DEBUG, metrics_publisher.logger.name)
 

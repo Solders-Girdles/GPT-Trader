@@ -3,27 +3,17 @@
 from __future__ import annotations
 
 import pytest
-from decimal import Decimal
-from pathlib import Path
-from unittest.mock import Mock, patch
-
 from pydantic_core import PydanticCustomError, ValidationError
 
 from bot_v2.orchestration.configuration.core import (
+    BotConfig,
+    Profile,
     _apply_rule,
     _ensure_condition,
-    BotConfig,
-    ConfigState,
-    Profile,
 )
 from bot_v2.utilities.config import ConfigBaselinePayload
 from bot_v2.validation import (
-    DecimalRule,
-    FloatRule,
     IntegerRule,
-    ListRule,
-    RuleError,
-    StripStringRule,
     SymbolRule,
 )
 
@@ -334,7 +324,10 @@ class TestErrorHandlingAndValidation:
         error_str = str(error)
 
         # Error message should be informative
-        assert any(keyword in error_str.lower() for keyword in ["invalid", "error", "failed", "empty", "positive"])
+        assert any(
+            keyword in error_str.lower()
+            for keyword in ["invalid", "error", "failed", "empty", "positive"]
+        )
 
     def test_config_with_path_like_values(self) -> None:
         """Test config handling of path-like values."""

@@ -14,7 +14,9 @@ from bot_v2.orchestration.execution.state_collection import StateCollector
 class TestBuildPositionsDict:
     """Test position dictionary building and transformation."""
 
-    def test_build_positions_dict_with_valid_positions(self, state_collector, sample_positions) -> None:
+    def test_build_positions_dict_with_valid_positions(
+        self, state_collector, sample_positions
+    ) -> None:
         """Test building positions dict with valid position data."""
         result = state_collector.build_positions_dict(sample_positions)
 
@@ -57,7 +59,9 @@ class TestBuildPositionsDict:
 
         assert result == {}  # Should be empty
 
-    def test_build_positions_dict_handles_parsing_errors(self, state_collector, error_positions) -> None:
+    def test_build_positions_dict_handles_parsing_errors(
+        self, state_collector, error_positions
+    ) -> None:
         """Test graceful handling of position parsing errors."""
         result = state_collector.build_positions_dict(error_positions)
 
@@ -109,12 +113,15 @@ class TestBuildPositionsDict:
         """Test quantity conversion from different formats."""
         # Mock the quantity_from function to return specific values
         with pytest.MonkeyPatch().context() as m:
+
             def mock_quantity_from(pos):
-                if hasattr(pos, 'quantity'):
+                if hasattr(pos, "quantity"):
                     return Decimal(str(pos.quantity))
                 return None
 
-            m.setattr("bot_v2.orchestration.execution.state_collection.quantity_from", mock_quantity_from)
+            m.setattr(
+                "bot_v2.orchestration.execution.state_collection.quantity_from", mock_quantity_from
+            )
 
             position = MagicMock()
             position.symbol = "BTC-PERP"
@@ -131,27 +138,35 @@ class TestBuildPositionsDict:
 class TestResolveEffectivePrice:
     """Test price resolution with multiple fallback mechanisms."""
 
-    def test_resolve_effective_price_with_valid_price(self, state_collector, sample_product) -> None:
+    def test_resolve_effective_price_with_valid_price(
+        self, state_collector, sample_product
+    ) -> None:
         """Test price resolution when valid price is provided."""
         price = Decimal("50000.0")
         result = state_collector.resolve_effective_price("BTC-PERP", "buy", price, sample_product)
 
         assert result == price
 
-    def test_resolve_effective_price_zero_price_fallback(self, state_collector, sample_product) -> None:
+    def test_resolve_effective_price_zero_price_fallback(
+        self, state_collector, sample_product
+    ) -> None:
         """Test price resolution when provided price is zero."""
         price = Decimal("0")
         result = state_collector.resolve_effective_price("BTC-PERP", "buy", price, sample_product)
 
         assert result > Decimal("0")  # Should fallback to mark price
 
-    def test_resolve_effective_price_none_price_fallback(self, state_collector, sample_product) -> None:
+    def test_resolve_effective_price_none_price_fallback(
+        self, state_collector, sample_product
+    ) -> None:
         """Test price resolution when provided price is None."""
         result = state_collector.resolve_effective_price("BTC-PERP", "buy", None, sample_product)
 
         assert result == Decimal("50005.0")  # Should use mark price
 
-    def test_resolve_effective_price_negative_price_fallback(self, state_collector, sample_product) -> None:
+    def test_resolve_effective_price_negative_price_fallback(
+        self, state_collector, sample_product
+    ) -> None:
         """Test price resolution when provided price is negative."""
         price = Decimal("-100")
         result = state_collector.resolve_effective_price("BTC-PERP", "buy", price, sample_product)
@@ -167,7 +182,9 @@ class TestResolveEffectivePrice:
         assert result == Decimal("50100.0")
         state_collector.broker.get_mark_price.assert_called_once_with("BTC-PERP")
 
-    def test_resolve_effective_price_mark_price_zero_fallback(self, state_collector, sample_product) -> None:
+    def test_resolve_effective_price_mark_price_zero_fallback(
+        self, state_collector, sample_product
+    ) -> None:
         """Test mark price fallback when mark price is zero."""
         state_collector.broker.get_mark_price.return_value = Decimal("0")
 
@@ -177,7 +194,9 @@ class TestResolveEffectivePrice:
         expected_mid = (Decimal("50000.0") + Decimal("50010.0")) / Decimal("2")
         assert result == expected_mid
 
-    def test_resolve_effective_price_mark_price_error_fallback(self, state_collector, sample_product) -> None:
+    def test_resolve_effective_price_mark_price_error_fallback(
+        self, state_collector, sample_product
+    ) -> None:
         """Test mark price fallback when mark price service errors."""
         state_collector.broker.get_mark_price.side_effect = RuntimeError("Mark price unavailable")
 
@@ -204,11 +223,15 @@ class TestResolveEffectivePrice:
         incomplete_product.price = Decimal("50005.0")
         incomplete_product.quote_increment = Decimal("0.1")
 
-        result = state_collector.resolve_effective_price("BTC-PERP", "buy", None, incomplete_product)
+        result = state_collector.resolve_effective_price(
+            "BTC-PERP", "buy", None, incomplete_product
+        )
 
         assert result == Decimal("50005.0")  # Should use product price
 
-    def test_resolve_effective_price_uses_quote_fallback(self, state_collector, sample_product) -> None:
+    def test_resolve_effective_price_uses_quote_fallback(
+        self, state_collector, sample_product
+    ) -> None:
         """Test price resolution uses broker quote as fallback."""
         # Make mark price and mid-price unavailable
         state_collector.broker.get_mark_price.side_effect = RuntimeError("Mark price unavailable")
@@ -225,7 +248,9 @@ class TestResolveEffectivePrice:
         assert result == Decimal("50200.0")
         state_collector.broker.get_quote.assert_called_once_with("BTC-PERP")
 
-    def test_resolve_effective_price_quote_fallback_errors(self, state_collector, sample_product) -> None:
+    def test_resolve_effective_price_quote_fallback_errors(
+        self, state_collector, sample_product
+    ) -> None:
         """Test quote fallback when quote service errors."""
         # Make mark price and mid-price unavailable
         state_collector.broker.get_mark_price.side_effect = RuntimeError("Mark price unavailable")
@@ -250,7 +275,9 @@ class TestResolveEffectivePrice:
         state_collector.broker.get_mark_price.side_effect = RuntimeError("Mark price unavailable")
         state_collector.broker.get_quote.side_effect = RuntimeError("Quote unavailable")
 
-        result = state_collector.resolve_effective_price("BTC-PERP", "buy", None, product_with_price)
+        result = state_collector.resolve_effective_price(
+            "BTC-PERP", "buy", None, product_with_price
+        )
 
         assert result == Decimal("50300.0")
 
@@ -271,7 +298,9 @@ class TestResolveEffectivePrice:
         # Should use quote_increment * 100
         assert result == Decimal("1.0")  # 0.01 * 100
 
-    def test_resolve_effective_price_final_default_no_quote_increment(self, state_collector) -> None:
+    def test_resolve_effective_price_final_default_no_quote_increment(
+        self, state_collector
+    ) -> None:
         """Test final default when no quote_increment available."""
         minimal_product = MagicMock()
         minimal_product.bid_price = None  # Set explicitly to None
@@ -288,7 +317,9 @@ class TestResolveEffectivePrice:
         # Should use default 0.01 * 100
         assert result == Decimal("1.0")
 
-    def test_resolve_effective_price_all_methods_unavailable(self, broker_with_missing_methods) -> None:
+    def test_resolve_effective_price_all_methods_unavailable(
+        self, broker_with_missing_methods
+    ) -> None:
         """Test price resolution when broker has no optional methods."""
         collector = StateCollector(broker_with_missing_methods)
         minimal_product = MagicMock()

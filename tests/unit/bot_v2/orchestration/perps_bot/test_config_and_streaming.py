@@ -2,10 +2,8 @@
 
 from __future__ import annotations
 
-import asyncio
-import threading
 from decimal import Decimal
-from unittest.mock import MagicMock, AsyncMock
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -38,7 +36,11 @@ class TestConfigurationChanges:
         """Test apply_config_change updates session guard."""
         bot = perps_bot_instance
         change = MagicMock(spec=ConfigChange)
-        change.diff = {"trading_window_start": "09:00", "trading_window_end": "17:00", "trading_days": ["monday", "friday"]}
+        change.diff = {
+            "trading_window_start": "09:00",
+            "trading_window_end": "17:00",
+            "trading_days": ["monday", "friday"],
+        }
         change.updated = MagicMock()
         change.updated.trading_window_start = "09:00"
         change.updated.trading_window_end = "17:00"
@@ -62,7 +64,9 @@ class TestConfigurationChanges:
 
         bot.execution_coordinator.reset_order_reconciler.assert_called_once()
 
-    def test_apply_config_change_syncs_with_risk_manager(self, perps_bot_instance, mock_risk_manager):
+    def test_apply_config_change_syncs_with_risk_manager(
+        self, perps_bot_instance, mock_risk_manager
+    ):
         """Test apply_config_change syncs config controller with risk manager."""
         bot = perps_bot_instance
         bot.config_controller.sync_with_risk_manager = MagicMock()
@@ -131,7 +135,9 @@ class TestConfigurationChanges:
 
         bot.telemetry_coordinator.restart_streaming_if_needed.assert_called_once_with(change.diff)
 
-    def test_apply_config_change_updates_baseline_snapshot(self, perps_bot_instance, mock_baseline_snapshot):
+    def test_apply_config_change_updates_baseline_snapshot(
+        self, perps_bot_instance, mock_baseline_snapshot
+    ):
         """Test apply_config_change updates baseline snapshot."""
         bot = perps_bot_instance
         change = MagicMock(spec=ConfigChange)
@@ -147,10 +153,14 @@ class TestConfigurationChanges:
 
             bot.apply_config_change(change)
 
-            PerpsBot.build_baseline_snapshot.assert_called_once_with(change.updated, bot._derivatives_enabled)
+            PerpsBot.build_baseline_snapshot.assert_called_once_with(
+                change.updated, bot._derivatives_enabled
+            )
             assert bot.baseline_snapshot is new_snapshot
 
-    def test_apply_config_change_resets_configuration_guardian(self, perps_bot_instance, mock_configuration_guardian):
+    def test_apply_config_change_resets_configuration_guardian(
+        self, perps_bot_instance, mock_configuration_guardian
+    ):
         """Test apply_config_change resets configuration guardian baseline."""
         bot = perps_bot_instance
         change = MagicMock(spec=ConfigChange)
@@ -171,23 +181,27 @@ class TestConfigurationChanges:
 class TestStreamingFunctionality:
     """Test streaming background tasks and management."""
 
-    def test_start_streaming_background_delegates_to_telemetry_coordinator(self, perps_bot_instance):
+    def test_start_streaming_background_delegates_to_telemetry_coordinator(
+        self, perps_bot_instance
+    ):
         """Test _start_streaming_background delegates to telemetry coordinator."""
         bot = perps_bot_instance
         # The method is patched in the constructor, so it won't call the real method
         # We can verify the telemetry_coordinator has the method available
-        assert hasattr(bot.telemetry_coordinator, 'start_streaming_background')
-        assert callable(getattr(bot.telemetry_coordinator, 'start_streaming_background', None))
+        assert hasattr(bot.telemetry_coordinator, "start_streaming_background")
+        assert callable(getattr(bot.telemetry_coordinator, "start_streaming_background", None))
 
     def test_stop_streaming_background_delegates_to_telemetry_coordinator(self, perps_bot_instance):
         """Test _stop_streaming_background delegates to telemetry coordinator."""
         bot = perps_bot_instance
         # The method is patched in the constructor, so it won't call the real method
         # We can verify the telemetry_coordinator has the method available
-        assert hasattr(bot.telemetry_coordinator, 'stop_streaming_background')
-        assert callable(getattr(bot.telemetry_coordinator, 'stop_streaming_background', None))
+        assert hasattr(bot.telemetry_coordinator, "stop_streaming_background")
+        assert callable(getattr(bot.telemetry_coordinator, "stop_streaming_background", None))
 
-    def test_restart_streaming_if_needed_delegates_to_telemetry_coordinator(self, perps_bot_instance):
+    def test_restart_streaming_if_needed_delegates_to_telemetry_coordinator(
+        self, perps_bot_instance
+    ):
         """Test _restart_streaming_if_needed delegates to telemetry coordinator."""
         bot = perps_bot_instance
         bot.telemetry_coordinator.restart_streaming_if_needed = MagicMock()
@@ -206,7 +220,9 @@ class TestStreamingFunctionality:
 
         bot._run_stream_loop(symbols, level)
 
-        bot.telemetry_coordinator._run_stream_loop.assert_called_once_with(symbols, level, stop_signal=None)
+        bot.telemetry_coordinator._run_stream_loop.assert_called_once_with(
+            symbols, level, stop_signal=None
+        )
 
 
 class TestMarkWindowManagement:
@@ -325,9 +341,10 @@ class TestBackwardCompatibility:
         mock_session_guard,
     ):
         """Test CoinbaseTrader can be instantiated like PerpsBot."""
-        from bot_v2.orchestration.perps_bot import CoinbaseTrader
+        from datetime import UTC, datetime
+
         from bot_v2.monitoring.configuration_guardian import BaselineSnapshot
-        from datetime import datetime, UTC
+        from bot_v2.orchestration.perps_bot import CoinbaseTrader
 
         # Create proper baseline snapshot with timestamp
         proper_baseline = BaselineSnapshot(
@@ -342,10 +359,11 @@ class TestBackwardCompatibility:
             total_exposure=Decimal("0"),
             profile="dev",
             broker_type="mock",
-            risk_limits={}
+            risk_limits={},
         )
 
         original_init = CoinbaseTrader.__init__
+
         def patched_init(self, *args, **kwargs):
             original_init(self, *args, **kwargs)
             self._start_streaming_background = lambda: None
@@ -376,11 +394,12 @@ class TestConfigurationGuardianIntegration:
         mock_orders_store,
         mock_session_guard,
         mock_baseline_snapshot,
-        mock_configuration_guardian
+        mock_configuration_guardian,
     ):
         """Test _resolve_configuration_guardian returns existing guardian."""
         # Test with existing guardian
         original_init = PerpsBot.__init__
+
         def patched_init(self, *args, **kwargs):
             original_init(self, *args, **kwargs)
             self._start_streaming_background = lambda: None
@@ -407,11 +426,12 @@ class TestConfigurationGuardianIntegration:
         mock_event_store,
         mock_orders_store,
         mock_session_guard,
-        mock_baseline_snapshot
+        mock_baseline_snapshot,
     ):
         """Test _resolve_configuration_guardian creates new guardian when none provided."""
         # Test without existing guardian
         original_init = PerpsBot.__init__
+
         def patched_init(self, *args, **kwargs):
             original_init(self, *args, **kwargs)
             self._start_streaming_background = lambda: None
@@ -421,7 +441,10 @@ class TestConfigurationGuardianIntegration:
             mock_guardian_class = MagicMock()
             mock_guardian_instance = MagicMock()
             mock_guardian_class.return_value = mock_guardian_instance
-            m.setattr("bot_v2.monitoring.configuration_guardian.ConfigurationGuardian", mock_guardian_class)
+            m.setattr(
+                "bot_v2.monitoring.configuration_guardian.ConfigurationGuardian",
+                mock_guardian_class,
+            )
 
             bot = PerpsBot(
                 config_controller=mock_config_controller,
@@ -448,7 +471,9 @@ class TestRegistryAlignment:
         result = bot._align_registry_with_config(bot.registry)
         assert result is bot.registry
 
-    def test_align_registry_with_config_different_config_returns_updated_registry(self, perps_bot_instance):
+    def test_align_registry_with_config_different_config_returns_updated_registry(
+        self, perps_bot_instance
+    ):
         """Test _align_registry_with_config returns updated registry when config differs."""
         bot = perps_bot_instance
         # Create a new registry with different config to test alignment
@@ -523,7 +548,9 @@ class TestServicePlaceholderReset:
 class TestCoordinatorContextUpdates:
     """Test coordinator context updates and wiring."""
 
-    def test_setup_coordinator_stack_creates_context_with_system_monitor_none(self, perps_bot_instance):
+    def test_setup_coordinator_stack_creates_context_with_system_monitor_none(
+        self, perps_bot_instance
+    ):
         """Test _setup_coordinator_stack creates context with system_monitor None initially."""
         bot = perps_bot_instance
         context = bot._coordinator_context
@@ -531,7 +558,9 @@ class TestCoordinatorContextUpdates:
         # System monitor should be None initially, then set after creation
         # This is tested implicitly by the successful creation in the fixture
 
-    def test_setup_coordinator_stack_updates_context_after_system_monitor_creation(self, perps_bot_instance):
+    def test_setup_coordinator_stack_updates_context_after_system_monitor_creation(
+        self, perps_bot_instance
+    ):
         """Test _setup_coordinator_stack updates context after system monitor creation."""
         bot = perps_bot_instance
         context = bot._coordinator_context
@@ -575,7 +604,7 @@ class TestCoordinatorContextMethodCalls:
         # Mock the update_context method for each coordinator
         for coordinator_name in ["runtime", "execution", "strategy", "telemetry"]:
             coordinator = bot._coordinator_registry.get(coordinator_name)
-            if hasattr(coordinator, 'update_context'):
+            if hasattr(coordinator, "update_context"):
                 coordinator.update_context = MagicMock()
 
         # Re-run the update process

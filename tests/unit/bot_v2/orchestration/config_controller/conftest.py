@@ -67,8 +67,10 @@ def sample_bot_config():
 def config_controller(sample_bot_config, mock_config_manager):
     """Create ConfigController with mocked dependencies."""
     with pytest.MonkeyPatch().context() as m:
-        m.setattr("bot_v2.orchestration.config_controller.ConfigManager.from_config",
-                  lambda config, settings=None: mock_config_manager)
+        m.setattr(
+            "bot_v2.orchestration.config_controller.ConfigManager.from_config",
+            lambda config, settings=None: mock_config_manager,
+        )
 
         controller = ConfigController(sample_bot_config)
         controller._manager = mock_config_manager  # Ensure we have the mock
@@ -81,8 +83,10 @@ def config_controller_with_settings(sample_bot_config, mock_runtime_settings):
     """Create ConfigController with runtime settings."""
     with pytest.MonkeyPatch().context() as m:
         mock_manager = MagicMock()
-        m.setattr("bot_v2.orchestration.config_controller.ConfigManager.from_config",
-                  lambda config, settings=None: mock_manager)
+        m.setattr(
+            "bot_v2.orchestration.config_controller.ConfigManager.from_config",
+            lambda config, settings=None: mock_manager,
+        )
 
         controller = ConfigController(sample_bot_config, settings=mock_runtime_settings)
         controller._manager = mock_manager

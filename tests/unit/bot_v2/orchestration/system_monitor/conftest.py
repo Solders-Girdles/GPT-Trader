@@ -9,7 +9,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from bot_v2.features.brokerages.core.interfaces import Balance, Position
 from bot_v2.orchestration.configuration import Profile
 from bot_v2.orchestration.perps_bot_state import PerpsBotRuntimeState
 from bot_v2.orchestration.system_monitor import SystemMonitor
@@ -77,6 +76,7 @@ def fake_position_reconciler():
 @pytest.fixture(autouse=True)
 def patch_asyncio_to_thread():
     """Patch asyncio.to_thread for deterministic async testing."""
+
     def sync_to_thread(func, *args, **kwargs):
         return func(*args, **kwargs)
 
@@ -126,17 +126,30 @@ def sample_decisions():
 
 
 @pytest.fixture
-def system_monitor(mock_bot, fake_account_telemetry, fake_metrics_publisher, fake_position_reconciler):
+def system_monitor(
+    mock_bot, fake_account_telemetry, fake_metrics_publisher, fake_position_reconciler
+):
     """Real SystemMonitor instance with external dependencies patched."""
-    with patch("bot_v2.orchestration.system_monitor.MetricsPublisher", return_value=fake_metrics_publisher), \
-         patch("bot_v2.orchestration.system_monitor.PositionReconciler", return_value=fake_position_reconciler):
+    with (
+        patch(
+            "bot_v2.orchestration.system_monitor.MetricsPublisher",
+            return_value=fake_metrics_publisher,
+        ),
+        patch(
+            "bot_v2.orchestration.system_monitor.PositionReconciler",
+            return_value=fake_position_reconciler,
+        ),
+    ):
         return SystemMonitor(bot=mock_bot, account_telemetry=fake_account_telemetry)
 
 
 @pytest.fixture
 def system_monitor_no_resource_collector(mock_bot, fake_account_telemetry):
     """SystemMonitor instance for testing psutil unavailable scenarios."""
-    with patch("bot_v2.orchestration.system_monitor.ResourceCollector", side_effect=ImportError("No psutil")):
+    with patch(
+        "bot_v2.orchestration.system_monitor.ResourceCollector",
+        side_effect=ImportError("No psutil"),
+    ):
         return SystemMonitor(bot=mock_bot, account_telemetry=fake_account_telemetry)
 
 

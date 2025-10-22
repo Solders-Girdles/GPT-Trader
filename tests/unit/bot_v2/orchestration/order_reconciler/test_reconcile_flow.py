@@ -177,11 +177,19 @@ def test_parse_timestamp_invalid_returns_none():
     assert parsed is None
 
 
-def test_persist_exchange_update_handles_upsert_error(reconciler, fake_orders_store, fake_event_store, monkeypatch):
+def test_persist_exchange_update_handles_upsert_error(
+    reconciler, fake_orders_store, fake_event_store, monkeypatch
+):
     """Test _persist_exchange_update error handling when upsert fails."""
-    from bot_v2.features.brokerages.core.interfaces import OrderStatus, OrderSide, OrderType, TimeInForce
     from datetime import UTC, datetime
     from decimal import Decimal
+
+    from bot_v2.features.brokerages.core.interfaces import (
+        OrderSide,
+        OrderStatus,
+        OrderType,
+        TimeInForce,
+    )
 
     # Create a test order
     test_order = Order(
@@ -204,6 +212,7 @@ def test_persist_exchange_update_handles_upsert_error(reconciler, fake_orders_st
     # Mock metric emission to prevent errors during cleanup
     def mock_emit(*args, **kwargs):
         pass
+
     monkeypatch.setattr("bot_v2.orchestration.order_reconciler.emit_metric", mock_emit)
 
     # Should not raise exception despite upsert failure
@@ -215,9 +224,10 @@ def test_persist_exchange_update_handles_upsert_error(reconciler, fake_orders_st
     fake_orders_store.upsert.assert_called_once_with(test_order)
 
 
-def test_assume_cancelled_handles_outer_exception(reconciler, fake_orders_store, fake_event_store, monkeypatch):
+def test_assume_cancelled_handles_outer_exception(
+    reconciler, fake_orders_store, fake_event_store, monkeypatch
+):
     """Test _assume_cancelled outer exception handling when upsert and metric emission fail."""
-    from bot_v2.features.brokerages.core.interfaces import OrderStatus
 
     # Mock upsert to fail
     fake_orders_store.upsert.side_effect = RuntimeError("Upsert failed")
@@ -225,6 +235,7 @@ def test_assume_cancelled_handles_outer_exception(reconciler, fake_orders_store,
     # Mock metric emission to also fail
     def failing_emit(*args, **kwargs):
         raise RuntimeError("Metric emission failed")
+
     monkeypatch.setattr("bot_v2.orchestration.order_reconciler.emit_metric", failing_emit)
 
     # Should handle both failures gracefully without crashing
@@ -235,7 +246,9 @@ def test_assume_cancelled_handles_outer_exception(reconciler, fake_orders_store,
     assert fake_orders_store.upsert.call_count == 1
 
 
-def test_assume_cancelled_handles_malformed_order_data(reconciler, fake_orders_store, fake_event_store, monkeypatch):
+def test_assume_cancelled_handles_malformed_order_data(
+    reconciler, fake_orders_store, fake_event_store, monkeypatch
+):
     """Test _assume_cancelled with malformed order data."""
     # Create malformed order data with missing/invalid fields
     malformed_order = SimpleNamespace(
@@ -248,6 +261,7 @@ def test_assume_cancelled_handles_malformed_order_data(reconciler, fake_orders_s
     # Mock metric emission to prevent errors
     def mock_emit(*args, **kwargs):
         pass
+
     monkeypatch.setattr("bot_v2.orchestration.order_reconciler.emit_metric", mock_emit)
 
     # Should handle malformed order without crashing
@@ -258,7 +272,9 @@ def test_assume_cancelled_handles_malformed_order_data(reconciler, fake_orders_s
 
 
 @pytest.mark.asyncio
-async def test_reconcile_missing_on_exchange_handles_complex_order_data(reconciler, fake_broker, monkeypatch):
+async def test_reconcile_missing_on_exchange_handles_complex_order_data(
+    reconciler, fake_broker, monkeypatch
+):
     """Test reconciliation with complex/malformed order data from broker."""
     diff = OrderDiff(
         missing_on_exchange={"complex": ScenarioBuilder.create_order(id="complex")},

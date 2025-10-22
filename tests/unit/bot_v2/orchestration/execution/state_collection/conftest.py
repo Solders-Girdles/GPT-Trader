@@ -19,9 +19,13 @@ def mock_brokerage():
 
     # Mock balance list
     broker.list_balances.return_value = [
-        Balance(asset="USD", available=Decimal("10000.0"), total=Decimal("10000.0"), hold=Decimal("0")),
+        Balance(
+            asset="USD", available=Decimal("10000.0"), total=Decimal("10000.0"), hold=Decimal("0")
+        ),
         Balance(asset="BTC", available=Decimal("0.5"), total=Decimal("0.5"), hold=Decimal("0")),
-        Balance(asset="USDC", available=Decimal("5000.0"), total=Decimal("5000.0"), hold=Decimal("0")),
+        Balance(
+            asset="USDC", available=Decimal("5000.0"), total=Decimal("5000.0"), hold=Decimal("0")
+        ),
     ]
 
     # Mock position list
@@ -33,7 +37,7 @@ def mock_brokerage():
         bid_price=Decimal("50000.0"),
         ask_price=Decimal("50010.0"),
         price=Decimal("50005.0"),
-        quote_increment=Decimal("0.1")
+        quote_increment=Decimal("0.1"),
     )
 
     # Mock price methods
@@ -48,9 +52,7 @@ def mock_brokerage():
 def mock_runtime_settings():
     """Mock runtime settings for tests."""
     settings = MagicMock(spec=RuntimeSettings)
-    settings.raw_env = {
-        "PERPS_COLLATERAL_ASSETS": "USD,USDC,ETH"
-    }
+    settings.raw_env = {"PERPS_COLLATERAL_ASSETS": "USD,USDC,ETH"}
     return settings
 
 
@@ -70,8 +72,12 @@ def state_collector_with_settings(mock_brokerage, mock_runtime_settings):
 def sample_balances():
     """Sample balance data for testing."""
     return [
-        Balance(asset="USD", available=Decimal("15000.0"), total=Decimal("15000.0"), hold=Decimal("0")),
-        Balance(asset="USDC", available=Decimal("25000.0"), total=Decimal("25000.0"), hold=Decimal("0")),
+        Balance(
+            asset="USD", available=Decimal("15000.0"), total=Decimal("15000.0"), hold=Decimal("0")
+        ),
+        Balance(
+            asset="USDC", available=Decimal("25000.0"), total=Decimal("25000.0"), hold=Decimal("0")
+        ),
         Balance(asset="ETH", available=Decimal("2.0"), total=Decimal("2.0"), hold=Decimal("0")),
         Balance(asset="BTC", available=Decimal("0.1"), total=Decimal("0.1"), hold=Decimal("0")),
     ]
@@ -118,12 +124,22 @@ def sample_product():
 def complex_balances():
     """Complex balance scenarios for edge case testing."""
     return [
-        Balance(asset="USD", available=Decimal("1000.0"), total=Decimal("1000.0"), hold=Decimal("0")),
+        Balance(
+            asset="USD", available=Decimal("1000.0"), total=Decimal("1000.0"), hold=Decimal("0")
+        ),
         Balance(asset="USDC", available=Decimal("0.0"), total=Decimal("0.0"), hold=Decimal("0")),
-        Balance(asset="ETH", available=Decimal("-10.0"), total=Decimal("-10.0"), hold=Decimal("0")),  # Negative balance
-        Balance(asset="", available=Decimal("100.0"), total=Decimal("100.0"), hold=Decimal("0")),  # Empty asset
-        Balance(asset="usdc", available=Decimal("2000.0"), total=Decimal("2000.0"), hold=Decimal("0")),  # Lowercase
-        Balance(asset="  BTC  ", available=Decimal("0.5"), total=Decimal("0.5"), hold=Decimal("0")),  # Whitespace
+        Balance(
+            asset="ETH", available=Decimal("-10.0"), total=Decimal("-10.0"), hold=Decimal("0")
+        ),  # Negative balance
+        Balance(
+            asset="", available=Decimal("100.0"), total=Decimal("100.0"), hold=Decimal("0")
+        ),  # Empty asset
+        Balance(
+            asset="usdc", available=Decimal("2000.0"), total=Decimal("2000.0"), hold=Decimal("0")
+        ),  # Lowercase
+        Balance(
+            asset="  BTC  ", available=Decimal("0.5"), total=Decimal("0.5"), hold=Decimal("0")
+        ),  # Whitespace
     ]
 
 
@@ -151,13 +167,17 @@ def error_positions():
 def broker_with_missing_methods():
     """Broker that doesn't have optional methods."""
     broker = MagicMock(spec=IBrokerage)
-    broker.list_balances.return_value = [Balance(asset="USD", available=Decimal("1000.0"), total=Decimal("1000.0"), hold=Decimal("0"))]
+    broker.list_balances.return_value = [
+        Balance(
+            asset="USD", available=Decimal("1000.0"), total=Decimal("1000.0"), hold=Decimal("0")
+        )
+    ]
     broker.list_positions.return_value = []
 
     # Remove optional methods
-    if hasattr(broker, 'get_mark_price'):
+    if hasattr(broker, "get_mark_price"):
         del broker.get_mark_price
-    if hasattr(broker, 'get_quote'):
+    if hasattr(broker, "get_quote"):
         del broker.get_quote
 
     return broker
@@ -167,7 +187,11 @@ def broker_with_missing_methods():
 def broker_with_errors():
     """Broker that raises errors in optional methods."""
     broker = MagicMock(spec=IBrokerage)
-    broker.list_balances.return_value = [Balance(asset="USD", available=Decimal("1000.0"), total=Decimal("1000.0"), hold=Decimal("0"))]
+    broker.list_balances.return_value = [
+        Balance(
+            asset="USD", available=Decimal("1000.0"), total=Decimal("1000.0"), hold=Decimal("0")
+        )
+    ]
     broker.list_positions.return_value = []
     broker.get_product.return_value = None  # Product not found
 

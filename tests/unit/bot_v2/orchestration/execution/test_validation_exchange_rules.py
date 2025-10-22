@@ -9,7 +9,6 @@ import pytest
 
 from bot_v2.features.brokerages.core.interfaces import OrderSide, OrderType
 from bot_v2.features.live_trade.risk import ValidationError
-from bot_v2.orchestration.execution.validation import OrderValidator
 
 
 class TestExchangeRulesValidation:
@@ -25,7 +24,7 @@ class TestExchangeRulesValidation:
         effective_price = Decimal("50000.0")
 
         # Mock spec validation to pass
-        with patch('bot_v2.orchestration.execution.validation.spec_validate_order') as mock_spec:
+        with patch("bot_v2.orchestration.execution.validation.spec_validate_order") as mock_spec:
             mock_spec.return_value = MagicMock(ok=True, adjusted_price=None, adjusted_quantity=None)
 
             result_quantity, result_price = order_validator.validate_exchange_rules(
@@ -43,7 +42,9 @@ class TestExchangeRulesValidation:
                 price=None,
             )
 
-    def test_validate_limit_order_with_price_quantization(self, order_validator, sample_product) -> None:
+    def test_validate_limit_order_with_price_quantization(
+        self, order_validator, sample_product
+    ) -> None:
         """Test limit order validation with price quantization."""
         symbol = "BTC-PERP"
         side = OrderSide.BUY
@@ -53,8 +54,12 @@ class TestExchangeRulesValidation:
         effective_price = Decimal("50000.05")
 
         # Mock spec validation and quantization
-        with patch('bot_v2.orchestration.execution.validation.spec_validate_order') as mock_spec, \
-             patch('bot_v2.orchestration.execution.validation.quantize_price_side_aware') as mock_quantize:
+        with (
+            patch("bot_v2.orchestration.execution.validation.spec_validate_order") as mock_spec,
+            patch(
+                "bot_v2.orchestration.execution.validation.quantize_price_side_aware"
+            ) as mock_quantize,
+        ):
 
             mock_spec.return_value = MagicMock(ok=True, adjusted_price=None, adjusted_quantity=None)
             mock_quantize.return_value = Decimal("50000.0")  # Quantized price
@@ -69,7 +74,9 @@ class TestExchangeRulesValidation:
                 Decimal("50000.05"), sample_product.price_increment, side.value
             )
 
-    def test_validate_limit_order_with_spec_adjustments(self, order_validator, sample_product) -> None:
+    def test_validate_limit_order_with_spec_adjustments(
+        self, order_validator, sample_product
+    ) -> None:
         """Test limit order validation with spec-provided adjustments."""
         symbol = "BTC-PERP"
         side = OrderSide.SELL
@@ -79,7 +86,7 @@ class TestExchangeRulesValidation:
         effective_price = Decimal("50000.0")
 
         # Mock spec validation with adjustments
-        with patch('bot_v2.orchestration.execution.validation.spec_validate_order') as mock_spec:
+        with patch("bot_v2.orchestration.execution.validation.spec_validate_order") as mock_spec:
             mock_result = MagicMock()
             mock_result.ok = True
             mock_result.adjusted_price = Decimal("50000.10")  # Price adjusted by spec
@@ -93,7 +100,9 @@ class TestExchangeRulesValidation:
             assert result_quantity == Decimal("0.099")
             assert result_price == Decimal("50000.10")
 
-    def test_validate_limit_order_uses_effective_price_when_none(self, order_validator, sample_product) -> None:
+    def test_validate_limit_order_uses_effective_price_when_none(
+        self, order_validator, sample_product
+    ) -> None:
         """Test limit order uses effective_price when price is None."""
         symbol = "BTC-PERP"
         side = OrderSide.BUY
@@ -102,7 +111,7 @@ class TestExchangeRulesValidation:
         price = None
         effective_price = Decimal("50000.0")
 
-        with patch('bot_v2.orchestration.execution.validation.spec_validate_order') as mock_spec:
+        with patch("bot_v2.orchestration.execution.validation.spec_validate_order") as mock_spec:
             mock_spec.return_value = MagicMock(ok=True, adjusted_price=None, adjusted_quantity=None)
 
             result_quantity, result_price = order_validator.validate_exchange_rules(
@@ -127,7 +136,7 @@ class TestExchangeRulesValidation:
         price = Decimal("50000.0")
         effective_price = Decimal("50000.0")
 
-        with patch('bot_v2.orchestration.execution.validation.spec_validate_order') as mock_spec:
+        with patch("bot_v2.orchestration.execution.validation.spec_validate_order") as mock_spec:
             mock_result = MagicMock()
             mock_result.ok = False
             mock_result.reason = "invalid_quantity"
@@ -152,7 +161,7 @@ class TestExchangeRulesValidation:
         price = Decimal("50000.0")
         effective_price = Decimal("50000.0")
 
-        with patch('bot_v2.orchestration.execution.validation.spec_validate_order') as mock_spec:
+        with patch("bot_v2.orchestration.execution.validation.spec_validate_order") as mock_spec:
             mock_result = MagicMock()
             mock_result.ok = False
             mock_result.reason = None
@@ -168,7 +177,9 @@ class TestExchangeRulesValidation:
                 symbol, side.value, order_quantity, price, "spec_violation"
             )
 
-    def test_validate_spec_failure_uses_effective_price_for_rejection(self, order_validator, sample_product) -> None:
+    def test_validate_spec_failure_uses_effective_price_for_rejection(
+        self, order_validator, sample_product
+    ) -> None:
         """Test spec failure rejection uses effective_price when price is None."""
         symbol = "BTC-PERP"
         side = OrderSide.BUY
@@ -177,7 +188,7 @@ class TestExchangeRulesValidation:
         price = None
         effective_price = Decimal("50000.0")
 
-        with patch('bot_v2.orchestration.execution.validation.spec_validate_order') as mock_spec:
+        with patch("bot_v2.orchestration.execution.validation.spec_validate_order") as mock_spec:
             mock_result = MagicMock()
             mock_result.ok = False
             mock_result.reason = "invalid_quantity"
@@ -193,7 +204,9 @@ class TestExchangeRulesValidation:
                 symbol, side.value, order_quantity, effective_price, "invalid_quantity"
             )
 
-    def test_validate_limit_order_no_quantization_when_no_price(self, order_validator, sample_product) -> None:
+    def test_validate_limit_order_no_quantization_when_no_price(
+        self, order_validator, sample_product
+    ) -> None:
         """Test limit order skips quantization when price is None."""
         symbol = "BTC-PERP"
         side = OrderSide.BUY
@@ -202,8 +215,12 @@ class TestExchangeRulesValidation:
         price = None
         effective_price = Decimal("50000.0")
 
-        with patch('bot_v2.orchestration.execution.validation.spec_validate_order') as mock_spec, \
-             patch('bot_v2.orchestration.execution.validation.quantize_price_side_aware') as mock_quantize:
+        with (
+            patch("bot_v2.orchestration.execution.validation.spec_validate_order") as mock_spec,
+            patch(
+                "bot_v2.orchestration.execution.validation.quantize_price_side_aware"
+            ) as mock_quantize,
+        ):
 
             mock_spec.return_value = MagicMock(ok=True, adjusted_price=None, adjusted_quantity=None)
 
@@ -223,7 +240,7 @@ class TestExchangeRulesValidation:
         price = None
         effective_price = 50000.0  # Float instead of Decimal
 
-        with patch('bot_v2.orchestration.execution.validation.spec_validate_order') as mock_spec:
+        with patch("bot_v2.orchestration.execution.validation.spec_validate_order") as mock_spec:
             mock_spec.return_value = MagicMock(ok=True, adjusted_price=None, adjusted_quantity=None)
 
             order_validator.validate_exchange_rules(

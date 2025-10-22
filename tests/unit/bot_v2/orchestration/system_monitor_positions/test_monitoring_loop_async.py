@@ -72,6 +72,7 @@ class TestMonitoringLoop:
         """Test run handles exceptions gracefully and continues running."""
         # Make _normalize_positions raise an exception
         with pytest.MonkeyPatch().context() as m:
+
             def normalize_that_raises(positions):
                 raise RuntimeError("Test exception")
 
@@ -146,13 +147,17 @@ class TestMonitoringLoop:
         # Setup positions that change each iteration
         positions_by_iteration = [
             [],  # First iteration: empty
-            [SimpleNamespace(symbol="BTC-PERP", quantity=Decimal("0.5"), side="long")],  # Second iteration
+            [
+                SimpleNamespace(symbol="BTC-PERP", quantity=Decimal("0.5"), side="long")
+            ],  # Second iteration
         ]
 
         iteration_count = {"calls": 0}
 
         def positions_side_effect(*args, **kwargs):
-            result = positions_by_iteration[min(iteration_count["calls"], len(positions_by_iteration) - 1)]
+            result = positions_by_iteration[
+                min(iteration_count["calls"], len(positions_by_iteration) - 1)
+            ]
             iteration_count["calls"] += 1
             return result
 

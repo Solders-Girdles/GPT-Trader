@@ -8,30 +8,27 @@ emergency scenarios.
 
 from __future__ import annotations
 
-import os
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from decimal import Decimal
+from pathlib import Path
 from typing import Any
-from unittest.mock import Mock
 
 import pytest
 
 from bot_v2.config.live_trade_config import RiskConfig
 from bot_v2.features.brokerages.core.interfaces import MarketType, Product
-from bot_v2.features.live_trade.risk_calculations import effective_mmr, effective_symbol_leverage_cap
-from bot_v2.persistence.event_store import EventStore
 from bot_v2.orchestration.runtime_settings import RuntimeSettings
-from pathlib import Path
-
 
 # =============================================================================
 # SYNTHETIC POSITION AND BALANCE FIXTURES
 # =============================================================================
 
+
 @dataclass(frozen=True)
 class SyntheticPosition:
     """Synthetic position for testing."""
+
     symbol: str
     side: str  # "long" or "short"
     quantity: Decimal
@@ -40,27 +37,40 @@ class SyntheticPosition:
     unrealized_pnl: Decimal
 
     @classmethod
-    def create_long(cls, symbol: str, quantity: Decimal, entry_price: Decimal,
-                    mark_price: Decimal) -> SyntheticPosition:
+    def create_long(
+        cls, symbol: str, quantity: Decimal, entry_price: Decimal, mark_price: Decimal
+    ) -> SyntheticPosition:
         """Create a long position."""
         unrealized_pnl = (mark_price - entry_price) * quantity
-        return cls(symbol=symbol, side="long", quantity=quantity,
-                   entry_price=entry_price, mark_price=mark_price,
-                   unrealized_pnl=unrealized_pnl)
+        return cls(
+            symbol=symbol,
+            side="long",
+            quantity=quantity,
+            entry_price=entry_price,
+            mark_price=mark_price,
+            unrealized_pnl=unrealized_pnl,
+        )
 
     @classmethod
-    def create_short(cls, symbol: str, quantity: Decimal, entry_price: Decimal,
-                     mark_price: Decimal) -> SyntheticPosition:
+    def create_short(
+        cls, symbol: str, quantity: Decimal, entry_price: Decimal, mark_price: Decimal
+    ) -> SyntheticPosition:
         """Create a short position."""
         unrealized_pnl = (entry_price - mark_price) * quantity
-        return cls(symbol=symbol, side="short", quantity=quantity,
-                   entry_price=entry_price, mark_price=mark_price,
-                   unrealized_pnl=unrealized_pnl)
+        return cls(
+            symbol=symbol,
+            side="short",
+            quantity=quantity,
+            entry_price=entry_price,
+            mark_price=mark_price,
+            unrealized_pnl=unrealized_pnl,
+        )
 
 
 @dataclass(frozen=True)
 class SyntheticPortfolio:
     """Synthetic portfolio state for testing."""
+
     positions: dict[str, SyntheticPosition]
     cash_balance: Decimal
     total_equity: Decimal
@@ -75,12 +85,13 @@ class SyntheticPortfolio:
             cash_balance=equity,
             total_equity=equity,
             available_margin=equity * Decimal("0.9"),  # 90% available
-            maintenance_margin=Decimal("0")
+            maintenance_margin=Decimal("0"),
         )
 
     @classmethod
-    def with_positions(cls, positions: list[SyntheticPosition],
-                      equity: Decimal) -> SyntheticPortfolio:
+    def with_positions(
+        cls, positions: list[SyntheticPosition], equity: Decimal
+    ) -> SyntheticPortfolio:
         """Create portfolio with positions."""
         total_unrealized = sum(pos.unrealized_pnl for pos in positions)
         cash_balance = equity - total_unrealized
@@ -95,7 +106,7 @@ class SyntheticPortfolio:
             cash_balance=cash_balance,
             total_equity=equity,
             available_margin=max(available_margin, Decimal("0")),
-            maintenance_margin=maintenance_margin
+            maintenance_margin=maintenance_margin,
         )
 
 
@@ -106,7 +117,7 @@ def synthetic_btc_position() -> SyntheticPosition:
         symbol="BTC-USD",
         quantity=Decimal("0.5"),
         entry_price=Decimal("50000"),
-        mark_price=Decimal("52000")
+        mark_price=Decimal("52000"),
     )
 
 
@@ -117,7 +128,7 @@ def synthetic_eth_position() -> SyntheticPosition:
         symbol="ETH-USD",
         quantity=Decimal("10"),
         entry_price=Decimal("3000"),
-        mark_price=Decimal("2900")
+        mark_price=Decimal("2900"),
     )
 
 
@@ -128,11 +139,12 @@ def synthetic_portfolio_empty() -> SyntheticPortfolio:
 
 
 @pytest.fixture
-def synthetic_portfolio_with_positions(synthetic_btc_position, synthetic_eth_position) -> SyntheticPortfolio:
+def synthetic_portfolio_with_positions(
+    synthetic_btc_position, synthetic_eth_position
+) -> SyntheticPortfolio:
     """Portfolio with multiple positions for testing."""
     return SyntheticPortfolio.with_positions(
-        positions=[synthetic_btc_position, synthetic_eth_position],
-        equity=Decimal("15000")
+        positions=[synthetic_btc_position, synthetic_eth_position], equity=Decimal("15000")
     )
 
 
@@ -140,9 +152,11 @@ def synthetic_portfolio_with_positions(synthetic_btc_position, synthetic_eth_pos
 # MARKET SCENARIO FIXTURES
 # =============================================================================
 
+
 @dataclass(frozen=True)
 class MarketScenario:
     """Market scenario for testing risk responses."""
+
     symbol: str
     current_price: Decimal
     price_volatility: float  # Annualized volatility
@@ -159,10 +173,7 @@ class MarketScenario:
             price_volatility=0.25,  # 25% annual vol
             price_change_pct=0.01,  # 1% change
             timestamp=datetime.now(timezone.utc),
-            liquidity_depth={
-                "bid_5": Decimal("100"),  # $100K at 5 bps
-                "ask_5": Decimal("100")
-            }
+            liquidity_depth={"bid_5": Decimal("100"), "ask_5": Decimal("100")},  # $100K at 5 bps
         )
 
     @classmethod
@@ -171,13 +182,10 @@ class MarketScenario:
         return cls(
             symbol=symbol,
             current_price=price,
-            price_volatility=0.8,   # 80% annual vol
+            price_volatility=0.8,  # 80% annual vol
             price_change_pct=-0.15,  # -15% drop
             timestamp=datetime.now(timezone.utc),
-            liquidity_depth={
-                "bid_5": Decimal("20"),   # Thin liquidity
-                "ask_5": Decimal("20")
-            }
+            liquidity_depth={"bid_5": Decimal("20"), "ask_5": Decimal("20")},  # Thin liquidity
         )
 
     @classmethod
@@ -189,10 +197,7 @@ class MarketScenario:
             price_volatility=0.3,
             price_change_pct=0.05,
             timestamp=datetime.now(timezone.utc),
-            liquidity_depth={
-                "bid_5": Decimal("5"),    # Very thin
-                "ask_5": Decimal("5")
-            }
+            liquidity_depth={"bid_5": Decimal("5"), "ask_5": Decimal("5")},  # Very thin
         )
 
 
@@ -218,18 +223,19 @@ def illiquid_market() -> MarketScenario:
 # RISK CONFIGURATION FIXTURES
 # =============================================================================
 
+
 @pytest.fixture
 def conservative_risk_config() -> RiskConfig:
     """Conservative risk configuration for testing."""
     return RiskConfig(
         kill_switch_enabled=False,
         enable_pre_trade_liq_projection=True,
-        max_leverage=3,                     # Conservative leverage
+        max_leverage=3,  # Conservative leverage
         leverage_max_per_symbol={"BTC-USD": 1, "ETH-USD": 1},
-        min_liquidation_buffer_pct=0.2,    # 20% buffer
-        max_market_impact_bps=2,           # 2 bps max impact
+        min_liquidation_buffer_pct=0.2,  # 20% buffer
+        max_market_impact_bps=2,  # 2 bps max impact
         enable_market_impact_guard=True,
-        default_maintenance_margin_rate=0.01  # 1% MMR
+        default_maintenance_margin_rate=0.01,  # 1% MMR
     )
 
 
@@ -239,12 +245,12 @@ def aggressive_risk_config() -> RiskConfig:
     return RiskConfig(
         kill_switch_enabled=False,
         enable_pre_trade_liq_projection=True,
-        max_leverage=10,                    # Aggressive leverage
+        max_leverage=10,  # Aggressive leverage
         leverage_max_per_symbol={"BTC-USD": 3, "ETH-USD": 4},
-        min_liquidation_buffer_pct=0.1,    # 10% buffer
-        max_market_impact_bps=10,          # 10 bps max impact
+        min_liquidation_buffer_pct=0.1,  # 10% buffer
+        max_market_impact_bps=10,  # 10 bps max impact
         enable_market_impact_guard=True,
-        default_maintenance_margin_rate=0.005  # 0.5% MMR
+        default_maintenance_margin_rate=0.005,  # 0.5% MMR
     )
 
 
@@ -254,12 +260,12 @@ def emergency_risk_config() -> RiskConfig:
     return RiskConfig(
         kill_switch_enabled=True,
         enable_pre_trade_liq_projection=True,
-        max_leverage=2,                     # Very conservative leverage
+        max_leverage=2,  # Very conservative leverage
         leverage_max_per_symbol={"BTC-USD": 0.5},  # Reduced leverage
-        min_liquidation_buffer_pct=0.3,    # 30% buffer
-        max_market_impact_bps=1,           # 1 bps max impact
+        min_liquidation_buffer_pct=0.3,  # 30% buffer
+        max_market_impact_bps=1,  # 1 bps max impact
         enable_market_impact_guard=True,
-        default_maintenance_margin_rate=0.02  # 2% MMR
+        default_maintenance_margin_rate=0.02,  # 2% MMR
     )
 
 
@@ -267,9 +273,11 @@ def emergency_risk_config() -> RiskConfig:
 # PRODUCT AND MARKET TYPE FIXTURES
 # =============================================================================
 
+
 @dataclass(frozen=True)
 class TestProduct:
     """Test product implementation."""
+
     symbol: str
     market_type: MarketType
     min_order_size: Decimal
@@ -278,7 +286,7 @@ class TestProduct:
     step_size: Decimal
 
     def __post_init__(self):
-        object.__setattr__(self, 'id', self.symbol)
+        object.__setattr__(self, "id", self.symbol)
 
     @property
     def base_increment(self) -> Decimal:
@@ -298,7 +306,7 @@ def btc_perpetual_product() -> TestProduct:
         min_order_size=Decimal("0.001"),
         max_order_size=Decimal("100"),
         tick_size=Decimal("0.1"),
-        step_size=Decimal("0.001")
+        step_size=Decimal("0.001"),
     )
 
 
@@ -311,13 +319,14 @@ def eth_spot_product() -> TestProduct:
         min_order_size=Decimal("0.01"),
         max_order_size=Decimal("1000"),
         tick_size=Decimal("0.01"),
-        step_size=Decimal("0.01")
+        step_size=Decimal("0.01"),
     )
 
 
 # =============================================================================
 # EVENT STORE AND TELEMETRY FIXTURES
 # =============================================================================
+
 
 class MockEventStore:
     """Mock event store for testing."""
@@ -361,9 +370,11 @@ def mock_event_store() -> MockEventStore:
 # MARKET IMPACT AND LIQUIDITY FIXTURES
 # =============================================================================
 
+
 @dataclass(frozen=True)
 class MarketImpactResult:
     """Market impact calculation result."""
+
     estimated_impact_bps: Decimal
     slippage_cost: Decimal
     liquidity_sufficient: bool
@@ -378,7 +389,7 @@ class MarketImpactResult:
             slippage_cost=Decimal("0.25"),
             liquidity_sufficient=True,
             recommended_slicing=1,
-            max_slice_size=Decimal("100")
+            max_slice_size=Decimal("100"),
         )
 
     @classmethod
@@ -389,7 +400,7 @@ class MarketImpactResult:
             slippage_cost=Decimal("7.5"),
             liquidity_sufficient=False,
             recommended_slicing=5,
-            max_slice_size=Decimal("1")
+            max_slice_size=Decimal("1"),
         )
 
     @classmethod
@@ -400,7 +411,7 @@ class MarketImpactResult:
             slippage_cost=Decimal("25"),
             liquidity_sufficient=False,
             recommended_slicing=10,
-            max_slice_size=Decimal("0.1")
+            max_slice_size=Decimal("0.1"),
         )
 
 
@@ -425,6 +436,7 @@ def insufficient_liquidity_impact() -> MarketImpactResult:
 # =============================================================================
 # RUNTIME SETTINGS FIXTURE
 # =============================================================================
+
 
 @pytest.fixture
 def risk_runtime_settings() -> RuntimeSettings:
@@ -464,6 +476,7 @@ def risk_runtime_settings() -> RuntimeSettings:
 # UTILITY FUNCTIONS
 # =============================================================================
 
+
 def create_position_dict(positions: list[SyntheticPosition]) -> dict[str, dict[str, Any]]:
     """Convert synthetic positions to dict format expected by risk functions."""
     result = {}
@@ -473,17 +486,13 @@ def create_position_dict(positions: list[SyntheticPosition]) -> dict[str, dict[s
             "quantity": str(pos.quantity),
             "price": str(pos.entry_price),
             "mark_price": str(pos.mark_price),
-            "unrealized_pnl": str(pos.unrealized_pnl)
+            "unrealized_pnl": str(pos.unrealized_pnl),
         }
     return result
 
 
 def create_trade_request(
-    symbol: str,
-    side: str,
-    quantity: Decimal,
-    price: Decimal,
-    product: Product
+    symbol: str, side: str, quantity: Decimal, price: Decimal, product: Product
 ) -> dict[str, Any]:
     """Create a trade request for testing."""
     return {
@@ -493,7 +502,7 @@ def create_trade_request(
         "price": price,
         "product": product,
         "order_type": "limit",
-        "time_in_force": "gtc"
+        "time_in_force": "gtc",
     }
 
 
@@ -501,9 +510,11 @@ def create_trade_request(
 # EMERGENCY SCENARIO FACTORIES
 # =============================================================================
 
+
 @dataclass(frozen=True)
 class EmergencyScenario:
     """Emergency scenario for testing risk responses."""
+
     name: str
     description: str
     trigger_conditions: dict[str, Any]
@@ -515,12 +526,18 @@ class EmergencyScenario:
     def flash_crash(cls) -> EmergencyScenario:
         """Flash crash emergency scenario."""
         btc_crash = MarketScenario.volatile_market("BTC-USD", Decimal("30000"))  # -40%
-        eth_crash = MarketScenario.volatile_market("ETH-USD", Decimal("1500"))   # -50%
+        eth_crash = MarketScenario.volatile_market("ETH-USD", Decimal("1500"))  # -50%
 
         # Create losing portfolio
-        btc_pos = SyntheticPosition.create_long("BTC-USD", Decimal("1"), Decimal("50000"), Decimal("30000"))
-        eth_pos = SyntheticPosition.create_long("ETH-USD", Decimal("10"), Decimal("3000"), Decimal("1500"))
-        portfolio = SyntheticPortfolio.with_positions([btc_pos, eth_pos], Decimal("5000"))  # -75% equity
+        btc_pos = SyntheticPosition.create_long(
+            "BTC-USD", Decimal("1"), Decimal("50000"), Decimal("30000")
+        )
+        eth_pos = SyntheticPosition.create_long(
+            "ETH-USD", Decimal("10"), Decimal("3000"), Decimal("1500")
+        )
+        portfolio = SyntheticPortfolio.with_positions(
+            [btc_pos, eth_pos], Decimal("5000")
+        )  # -75% equity
 
         return cls(
             name="flash_crash",
@@ -528,11 +545,11 @@ class EmergencyScenario:
             trigger_conditions={
                 "price_drop_pct": 0.4,
                 "volatility_spike": 2.0,
-                "portfolio_loss_pct": 0.75
+                "portfolio_loss_pct": 0.75,
             },
             expected_response="kill_switch_triggered",
             portfolio_state=portfolio,
-            market_conditions={"BTC-USD": btc_crash, "ETH-USD": eth_crash}
+            market_conditions={"BTC-USD": btc_crash, "ETH-USD": eth_crash},
         )
 
     @classmethod
@@ -541,7 +558,9 @@ class EmergencyScenario:
         illiquid_market = MarketScenario.illiquid_market("SOL-USD", Decimal("100"))
 
         # Large position in illiquid asset
-        sol_pos = SyntheticPosition.create_long("SOL-USD", Decimal("1000"), Decimal("120"), Decimal("100"))
+        sol_pos = SyntheticPosition.create_long(
+            "SOL-USD", Decimal("1000"), Decimal("120"), Decimal("100")
+        )
         portfolio = SyntheticPortfolio.with_positions([sol_pos], Decimal("10000"))
 
         return cls(
@@ -550,21 +569,27 @@ class EmergencyScenario:
             trigger_conditions={
                 "liquidity_depth_usd": 5,
                 "position_notional_usd": 100000,
-                "market_impact_estimate_bps": 50
+                "market_impact_estimate_bps": 50,
             },
             expected_response="trade_blocked_liquidation_risk",
             portfolio_state=portfolio,
-            market_conditions={"SOL-USD": illiquid_market}
+            market_conditions={"SOL-USD": illiquid_market},
         )
 
     @classmethod
     def margin_call_cascade(cls) -> EmergencyScenario:
         """Margin call cascade scenario."""
         # Multiple positions approaching liquidation
-        btc_pos = SyntheticPosition.create_short("BTC-USD", Decimal("2"), Decimal("40000"), Decimal("45000"))
-        eth_pos = SyntheticPosition.create_short("ETH-USD", Decimal("20"), Decimal("2500"), Decimal("2800"))
+        btc_pos = SyntheticPosition.create_short(
+            "BTC-USD", Decimal("2"), Decimal("40000"), Decimal("45000")
+        )
+        eth_pos = SyntheticPosition.create_short(
+            "ETH-USD", Decimal("20"), Decimal("2500"), Decimal("2800")
+        )
 
-        portfolio = SyntheticPortfolio.with_positions([btc_pos, eth_pos], Decimal("2000"))  # Low margin
+        portfolio = SyntheticPortfolio.with_positions(
+            [btc_pos, eth_pos], Decimal("2000")
+        )  # Low margin
 
         normal_btc = MarketScenario.normal_market("BTC-USD", Decimal("45000"))
         normal_eth = MarketScenario.normal_market("ETH-USD", Decimal("2800"))
@@ -575,11 +600,11 @@ class EmergencyScenario:
             trigger_conditions={
                 "margin_utilization_pct": 0.95,
                 "maintenance_margin_ratio": 0.15,
-                "equity_buffer_pct": 0.1
+                "equity_buffer_pct": 0.1,
             },
             expected_response="reduce_only_mode_activated",
             portfolio_state=portfolio,
-            market_conditions={"BTC-USD": normal_btc, "ETH-USD": normal_eth}
+            market_conditions={"BTC-USD": normal_btc, "ETH-USD": normal_eth},
         )
 
 

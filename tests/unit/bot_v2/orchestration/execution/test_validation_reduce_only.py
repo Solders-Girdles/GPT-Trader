@@ -73,7 +73,9 @@ class TestReduceOnlyFinalization:
         reduce_only = False
 
         # Mock risk manager to raise exception
-        order_validator.risk_manager.is_reduce_only_mode.side_effect = RuntimeError("Risk service unavailable")
+        order_validator.risk_manager.is_reduce_only_mode.side_effect = RuntimeError(
+            "Risk service unavailable"
+        )
 
         # Should return original value when risk manager fails - the method doesn't catch exceptions
         # Let's test the actual behavior - it should propagate the exception
@@ -120,8 +122,11 @@ class TestOrderValidatorInitialization:
         assert validator._record_preview == preview_callback
         assert validator._record_rejection == rejection_callback
 
-    def test_initialization_stores_callbacks_correctly(self, mock_brokerage, mock_risk_manager) -> None:
+    def test_initialization_stores_callbacks_correctly(
+        self, mock_brokerage, mock_risk_manager
+    ) -> None:
         """Test that callbacks are stored correctly during initialization."""
+
         def custom_preview(*args, **kwargs):
             pass
 
@@ -143,8 +148,11 @@ class TestOrderValidatorInitialization:
 class TestOrderValidatorIntegration:
     """Integration tests for OrderValidator scenarios."""
 
-    def test_order_validator_with_mock_brokerage_methods(self, mock_brokerage, mock_risk_manager) -> None:
+    def test_order_validator_with_mock_brokerage_methods(
+        self, mock_brokerage, mock_risk_manager
+    ) -> None:
         """Test OrderValidator works with brokerage that has optional methods."""
+
         # Add optional preview method
         def preview_order(**kwargs):
             return {"order_id": "test_preview", "cost": 1000}
@@ -164,13 +172,23 @@ class TestOrderValidatorIntegration:
         )
 
         # Should work with brokerage that has preview method
-        assert hasattr(validator.broker, 'preview_order')
+        assert hasattr(validator.broker, "preview_order")
 
-    def test_order_validator_without_optional_methods(self, mock_brokerage, mock_risk_manager) -> None:
+    def test_order_validator_without_optional_methods(
+        self, mock_brokerage, mock_risk_manager
+    ) -> None:
         """Test OrderValidator works with minimal brokerage interface."""
         # Ensure broker only has required methods
-        delattr(mock_brokerage, 'preview_order') if hasattr(mock_brokerage, 'preview_order') else None
-        delattr(mock_brokerage, 'get_market_snapshot') if hasattr(mock_brokerage, 'get_market_snapshot') else None
+        (
+            delattr(mock_brokerage, "preview_order")
+            if hasattr(mock_brokerage, "preview_order")
+            else None
+        )
+        (
+            delattr(mock_brokerage, "get_market_snapshot")
+            if hasattr(mock_brokerage, "get_market_snapshot")
+            else None
+        )
 
         validator = OrderValidator(
             broker=mock_brokerage,
@@ -181,8 +199,8 @@ class TestOrderValidatorIntegration:
         )
 
         # Should work without optional methods
-        assert not hasattr(validator.broker, 'preview_order')
-        assert not hasattr(validator.broker, 'get_market_snapshot')
+        assert not hasattr(validator.broker, "preview_order")
+        assert not hasattr(validator.broker, "get_market_snapshot")
 
     def test_order_validator_callback_invocation_chain(self, order_validator) -> None:
         """Test that callbacks are properly invoked during validation scenarios."""

@@ -12,7 +12,6 @@ This test suite targets critical runtime protection mechanisms:
 
 from __future__ import annotations
 
-import datetime as dt
 from datetime import datetime, timedelta
 from decimal import Decimal
 
@@ -55,10 +54,13 @@ class TestDailyLossGate:
 
         # Mock the reduce_only setter to capture calls
         reduce_only_calls = []
+
         def mock_set_reduce_only(enabled: bool, reason: str):
             reduce_only_calls.append((enabled, reason))
 
-        monitor = RuntimeMonitor(config, mock_event_store, set_reduce_only_mode=mock_set_reduce_only)
+        monitor = RuntimeMonitor(
+            config, mock_event_store, set_reduce_only_mode=mock_set_reduce_only
+        )
 
         # P&L exceeding limit (-$1500 loss)
         positions_pnl = {
@@ -169,7 +171,9 @@ class TestLiquidationBufferMonitoring:
         assert result is False  # No reduce-only triggered
 
         # Verify position is not marked as reduce-only
-        assert "BTC-PERP" not in monitor.positions or not monitor.positions["BTC-PERP"].get("reduce_only", False)
+        assert "BTC-PERP" not in monitor.positions or not monitor.positions["BTC-PERP"].get(
+            "reduce_only", False
+        )
 
     def test_liquidation_buffer_breach_triggers_reduce_only(self, mock_event_store):
         """Test liquidation buffer breach triggers reduce-only mode."""
@@ -321,10 +325,13 @@ class TestVolatilityCircuitBreaker:
 
         # Mock the reduce_only setter
         reduce_only_calls = []
+
         def mock_set_reduce_only(enabled: bool, reason: str):
             reduce_only_calls.append((enabled, reason))
 
-        monitor = RuntimeMonitor(config, mock_event_store, set_reduce_only_mode=mock_set_reduce_only)
+        monitor = RuntimeMonitor(
+            config, mock_event_store, set_reduce_only_mode=mock_set_reduce_only
+        )
 
         # Generate a simple price series
         recent_marks = [Decimal("50000") + Decimal(i * 100) for i in range(25)]
@@ -336,8 +343,8 @@ class TestVolatilityCircuitBreaker:
 
         # Should return a CircuitBreakerOutcome
         assert isinstance(result, CircuitBreakerOutcome)
-        assert hasattr(result, 'triggered')
-        assert hasattr(result, 'action')
+        assert hasattr(result, "triggered")
+        assert hasattr(result, "action")
         # Note: volatility might be named 'value' in the actual implementation
 
     def test_volatility_circuit_breaker_with_short_marks(self, mock_event_store):
@@ -412,10 +419,7 @@ class TestMarkStalenessDetection:
         # Fresh timestamp
         fresh_timestamp = datetime.utcnow() - timedelta(seconds=30)
 
-        result = monitor.check_mark_staleness(
-            symbol="BTC-PERP",
-            mark_timestamp=fresh_timestamp
-        )
+        result = monitor.check_mark_staleness(symbol="BTC-PERP", mark_timestamp=fresh_timestamp)
 
         assert result is False  # Not stale
 
@@ -430,6 +434,7 @@ class TestMarkStalenessDetection:
 
         # Mock time provider for deterministic testing
         fixed_now = datetime.utcnow()
+
         def mock_now():
             return fixed_now
 
@@ -441,9 +446,7 @@ class TestMarkStalenessDetection:
         # Pre-populate last_mark_update with stale timestamp
         monitor.last_mark_update["BTC-PERP"] = stale_timestamp
 
-        result = monitor.check_mark_staleness(
-            symbol="BTC-PERP"
-        )
+        result = monitor.check_mark_staleness(symbol="BTC-PERP")
 
         # Should detect staleness or handle gracefully depending on implementation
         assert isinstance(result, bool)
@@ -456,9 +459,7 @@ class TestMarkStalenessDetection:
         monitor = RuntimeMonitor(config, mock_event_store)
 
         # Check with no previous timestamp
-        result = monitor.check_mark_staleness(
-            symbol="BTC-PERP"
-        )
+        result = monitor.check_mark_staleness(symbol="BTC-PERP")
 
         # Should handle gracefully (likely return False or True based on implementation)
         assert isinstance(result, bool)
@@ -475,7 +476,7 @@ class TestMarkStalenessDetection:
         # Update timestamps for multiple symbols
         timestamps = {
             "BTC-PERP": now - timedelta(seconds=30),  # Fresh
-            "ETH-PERP": now - timedelta(minutes=2),   # Stale
+            "ETH-PERP": now - timedelta(minutes=2),  # Stale
             "SOL-PERP": now - timedelta(seconds=10),  # Fresh
         }
 
@@ -485,7 +486,7 @@ class TestMarkStalenessDetection:
             results[symbol] = monitor.check_mark_staleness(symbol)
 
         assert results["BTC-PERP"] is False  # Fresh
-        assert results["ETH-PERP"] is True   # Stale
+        assert results["ETH-PERP"] is True  # Stale
         assert results["SOL-PERP"] is False  # Fresh
 
 
@@ -608,17 +609,14 @@ class TestRuntimeMonitoringErrorHandling:
 
         # Mock event store to raise exception using a proper Mock
         from unittest.mock import Mock
+
         mock_event_store.append_metric = Mock(side_effect=Exception("Event store error"))
 
         monitor = RuntimeMonitor(config, mock_event_store)
 
         # Should raise RiskGuardTelemetryError when logging fails
         with pytest.raises(Exception):
-            monitor._log_risk_event(
-                "test_event",
-                {"detail": "test"},
-                guard="test_guard"
-            )
+            monitor._log_risk_event("test_event", {"detail": "test"}, guard="test_guard")
 
     def test_now_provider_uses_default(self, mock_event_store):
         """Test that default now provider is used when none specified."""
@@ -637,11 +635,7 @@ class TestRuntimeMonitoringErrorHandling:
         config = RiskConfig()
 
         fixed_time = datetime(2024, 1, 1, 12, 0, 0)
-        monitor = RuntimeMonitor(
-            config,
-            mock_event_store,
-            now_provider=lambda: fixed_time
-        )
+        monitor = RuntimeMonitor(config, mock_event_store, now_provider=lambda: fixed_time)
 
         assert monitor._now_provider() == fixed_time
 
@@ -656,11 +650,7 @@ class TestRuntimeMonitoringErrorHandling:
             "SOL-PERP": now - timedelta(minutes=1),
         }
 
-        monitor = RuntimeMonitor(
-            config,
-            mock_event_store,
-            last_mark_update=last_mark_update
-        )
+        monitor = RuntimeMonitor(config, mock_event_store, last_mark_update=last_mark_update)
 
         # Should only include non-None timestamps
         assert "BTC-PERP" in monitor.last_mark_update

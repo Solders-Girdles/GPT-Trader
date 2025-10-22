@@ -121,12 +121,11 @@ class TestTradingCycle:
         system_monitor.log_status = AsyncMock()
         session_guard = Mock()
         session_guard.should_trade = Mock(return_value=True)
-        
+
         test_context = base_context.with_updates(
-            system_monitor=system_monitor,
-            session_guard=session_guard
+            system_monitor=system_monitor, session_guard=session_guard
         )
-        
+
         test_context.broker.list_balances = AsyncMock(return_value=[])
         test_context.broker.list_positions = AsyncMock(return_value=[])
         test_context.broker.get_account_info = AsyncMock(return_value=None)
@@ -153,10 +152,9 @@ class TestTradingCycle:
         system_monitor.log_status = AsyncMock()
         session_guard = Mock()
         session_guard.should_trade = Mock(return_value=False)
-        
+
         test_context = base_context.with_updates(
-            system_monitor=system_monitor,
-            session_guard=session_guard
+            system_monitor=system_monitor, session_guard=session_guard
         )
 
         coordinator.update_context(test_context)
@@ -327,9 +325,7 @@ class TestConfigurationDriftHandling:
         guardian.pre_cycle_check = Mock(return_value=validation_result)
 
         test_context = base_context.with_updates(
-            configuration_guardian=guardian,
-            set_running_flag=Mock(),
-            shutdown_hook=AsyncMock()
+            configuration_guardian=guardian, set_running_flag=Mock(), shutdown_hook=AsyncMock()
         )
 
         coordinator.update_context(test_context)
@@ -358,8 +354,7 @@ class TestConfigurationDriftHandling:
         guardian.pre_cycle_check = Mock(return_value=validation_result)
 
         test_context = base_context.with_updates(
-            configuration_guardian=guardian,
-            set_reduce_only_mode=Mock()
+            configuration_guardian=guardian, set_reduce_only_mode=Mock()
         )
 
         coordinator.update_context(test_context)
@@ -458,10 +453,9 @@ class TestExecutionDelegation:
         # Create a new runtime state with exec_engine
         runtime_state = PerpsBotRuntimeState(["BTC-PERP"])
         runtime_state.exec_engine = Mock()
-        
+
         test_context = base_context.with_updates(
-            execution_coordinator=execution_coordinator,
-            runtime_state=runtime_state
+            execution_coordinator=execution_coordinator, runtime_state=runtime_state
         )
         coordinator.update_context(test_context)
 
@@ -483,10 +477,9 @@ class TestHealthCheck:
         # Create a new runtime state with last_decisions
         runtime_state = PerpsBotRuntimeState(["BTC-PERP", "ETH-PERP"])
         runtime_state.last_decisions = {"BTC-PERP": Mock()}
-        
+
         test_context = base_context.with_updates(
-            symbols=("BTC-PERP", "ETH-PERP"),
-            runtime_state=runtime_state
+            symbols=("BTC-PERP", "ETH-PERP"), runtime_state=runtime_state
         )
         coordinator.update_context(test_context)
 

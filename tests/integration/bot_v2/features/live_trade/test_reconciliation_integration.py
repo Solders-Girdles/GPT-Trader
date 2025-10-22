@@ -17,20 +17,13 @@ consistency across all components, even during failures and restarts.
 """
 
 from __future__ import annotations
-import pytest
-from unittest.mock import patch, AsyncMock
+
 from datetime import datetime, timedelta
-from decimal import Decimal
+
+import pytest
 
 from bot_v2.features.brokerages.core.interfaces import (
-    OrderStatus,
     OrderSide,
-    OrderType,
-    Position,
-)
-from bot_v2.errors import (
-    TradingError,
-    ExecutionError,
 )
 
 
@@ -48,19 +41,13 @@ class TestTCRC001TCRC005StateReconciliation:
 
         # Create initial portfolio state
         initial_position = integration_test_scenarios.create_test_position(
-            symbol="BTC-USD",
-            side="long",
-            size=1.0,
-            entry_price=50000.0
+            symbol="BTC-USD", side="long", size=1.0, entry_price=50000.0
         )
         broker.positions["BTC-USD"] = initial_position
 
         # Create and place orders to modify portfolio state
         order = integration_test_scenarios.create_test_order(
-            order_id="reconciliation_test_001",
-            symbol="BTC-USD",
-            side=OrderSide.BUY,
-            quantity=0.5
+            order_id="reconciliation_test_001", symbol="BTC-USD", side=OrderSide.BUY, quantity=0.5
         )
 
         # Place order (may fail, but we're testing reconciliation logic)
@@ -71,9 +58,9 @@ class TestTCRC001TCRC005StateReconciliation:
                 side=order.side,
                 order_type=order.type,
                 quantity=order.quantity,
-                price=order.price
+                price=order.price,
             )
-        except Exception as e:
+        except Exception:
             # Order may fail, but reconciliation should still work
             pass
 
@@ -86,16 +73,19 @@ class TestTCRC001TCRC005StateReconciliation:
 
         # Verify reconciliation events were logged
         all_events = event_store.events
-        reconciliation_events = [e for e in all_events
-                                if "reconcil" in str(e.get("type", "")).lower()
-                                or "reconcil" in str(e.get("data", {})).lower()]
+        reconciliation_events = [
+            e
+            for e in all_events
+            if "reconcil" in str(e.get("type", "")).lower()
+            or "reconcil" in str(e.get("data", {})).lower()
+        ]
 
         # Key integration test: System maintains portfolio state consistency
         assert system["risk_manager"] is not None
         assert system["execution_coordinator"] is not None
 
         # Portfolio state should be accessible across components
-        risk_positions = getattr(system["risk_manager"], 'positions', None)
+        risk_positions = getattr(system["risk_manager"], "positions", None)
         execution_positions = broker.positions
 
         # At minimum, positions should be accessible from broker
@@ -112,16 +102,10 @@ class TestTCRC001TCRC005StateReconciliation:
 
         # Create positions in broker
         btc_position = integration_test_scenarios.create_test_position(
-            symbol="BTC-USD",
-            side="long",
-            size=1.5,
-            entry_price=51000.0
+            symbol="BTC-USD", side="long", size=1.5, entry_price=51000.0
         )
         eth_position = integration_test_scenarios.create_test_position(
-            symbol="ETH-USD",
-            side="short",
-            size=2.0,
-            entry_price=3100.0
+            symbol="ETH-USD", side="short", size=2.0, entry_price=3100.0
         )
 
         broker.positions["BTC-USD"] = btc_position
@@ -158,10 +142,7 @@ class TestTCRC001TCRC005StateReconciliation:
 
         # Create orders that would affect balance
         order = integration_test_scenarios.create_test_order(
-            order_id="balance_reconcile_test",
-            symbol="BTC-USD",
-            side=OrderSide.BUY,
-            quantity=0.2
+            order_id="balance_reconcile_test", symbol="BTC-USD", side=OrderSide.BUY, quantity=0.2
         )
 
         # Place order to trigger balance updates
@@ -172,9 +153,9 @@ class TestTCRC001TCRC005StateReconciliation:
                 side=order.side,
                 order_type=order.type,
                 quantity=order.quantity,
-                price=order.price
+                price=order.price,
             )
-        except Exception as e:
+        except Exception:
             # Order may fail, but balance reconciliation logic should be tested
             pass
 
@@ -202,10 +183,7 @@ class TestTCRC001TCRC005StateReconciliation:
 
         # Create order with different states
         order = integration_test_scenarios.create_test_order(
-            order_id="status_reconcile_test",
-            symbol="ETH-USD",
-            side=OrderSide.SELL,
-            quantity=0.3
+            order_id="status_reconcile_test", symbol="ETH-USD", side=OrderSide.SELL, quantity=0.3
         )
 
         # Place order to create state differences
@@ -216,16 +194,16 @@ class TestTCRC001TCRC005StateReconciliation:
                 side=order.side,
                 order_type=order.type,
                 quantity=order.quantity,
-                price=order.price
+                price=order.price,
             )
-        except Exception as e:
+        except Exception:
             # Order may fail at various stages creating reconciliation needs
             pass
 
         # Test order status reconciliation
         try:
             # Check broker order status vs internal tracking
-            if result and hasattr(result, 'id'):
+            if result and hasattr(result, "id"):
                 broker_status = await broker.get_order_status(result.id)
                 # Reconciliation logic would compare broker_status with internal state
         except Exception:
@@ -234,9 +212,12 @@ class TestTCRC001TCRC005StateReconciliation:
 
         # Verify order state is tracked somewhere in the system
         all_events = event_store.events
-        order_events = [e for e in all_events
-                       if "order" in str(e.get("type", "")).lower()
-                       or "order" in str(e.get("data", {})).lower()]
+        order_events = [
+            e
+            for e in all_events
+            if "order" in str(e.get("type", "")).lower()
+            or "order" in str(e.get("data", {})).lower()
+        ]
 
         # System should maintain order state awareness
         assert system["execution_coordinator"] is not None
@@ -255,7 +236,7 @@ class TestTCRC001TCRC005StateReconciliation:
                 order_id=f"trade_history_{i}",
                 symbol="BTC-USD" if i % 2 == 0 else "ETH-USD",
                 side=OrderSide.BUY if i % 2 == 0 else OrderSide.SELL,
-                quantity=0.1
+                quantity=0.1,
             )
             for i in range(3)
         ]
@@ -269,7 +250,7 @@ class TestTCRC001TCRC005StateReconciliation:
                     side=order.side,
                     order_type=order.type,
                     quantity=order.quantity,
-                    price=order.price
+                    price=order.price,
                 )
             except Exception:
                 # Orders may fail, but history reconciliation should still work
@@ -286,9 +267,12 @@ class TestTCRC001TCRC005StateReconciliation:
 
         # Verify system maintains trade history awareness
         all_events = event_store.events
-        trade_events = [e for e in all_events
-                       if "trade" in str(e.get("type", "")).lower()
-                       or "trade" in str(e.get("data", {})).lower()]
+        trade_events = [
+            e
+            for e in all_events
+            if "trade" in str(e.get("type", "")).lower()
+            or "trade" in str(e.get("data", {})).lower()
+        ]
 
         # Critical: System should maintain consistent trade tracking
         assert system["risk_manager"] is not None
@@ -308,10 +292,7 @@ class TestTCRC006TCRC010DataConsistency:
 
         # Create orders to generate events
         order = integration_test_scenarios.create_test_order(
-            order_id="event_consistency_test",
-            symbol="BTC-USD",
-            side=OrderSide.BUY,
-            quantity=0.15
+            order_id="event_consistency_test", symbol="BTC-USD", side=OrderSide.BUY, quantity=0.15
         )
 
         # Place order to generate events
@@ -322,7 +303,7 @@ class TestTCRC006TCRC010DataConsistency:
                 side=order.side,
                 order_type=order.type,
                 quantity=order.quantity,
-                price=order.price
+                price=order.price,
             )
         except Exception:
             # Order may fail, but events should still be generated
@@ -362,7 +343,7 @@ class TestTCRC006TCRC010DataConsistency:
             order_id="telemetry_consistency_test",
             symbol="ETH-USD",
             side=OrderSide.SELL,
-            quantity=0.2
+            quantity=0.2,
         )
 
         # Place order to generate telemetry
@@ -373,7 +354,7 @@ class TestTCRC006TCRC010DataConsistency:
                 side=order.side,
                 order_type=order.type,
                 quantity=order.quantity,
-                price=order.price
+                price=order.price,
             )
         except Exception:
             # Order may fail, but telemetry should still be collected
@@ -409,10 +390,7 @@ class TestTCRC006TCRC010DataConsistency:
 
         # Create order to test settings application
         order = integration_test_scenarios.create_test_order(
-            order_id="settings_consistency_test",
-            symbol="BTC-USD",
-            side=OrderSide.BUY,
-            quantity=0.1
+            order_id="settings_consistency_test", symbol="BTC-USD", side=OrderSide.BUY, quantity=0.1
         )
 
         # Place order using current settings
@@ -423,7 +401,7 @@ class TestTCRC006TCRC010DataConsistency:
                 side=order.side,
                 order_type=order.type,
                 quantity=order.quantity,
-                price=order.price
+                price=order.price,
             )
         except Exception:
             # Order may fail, but settings should still be consistent
@@ -453,7 +431,7 @@ class TestTCRC006TCRC010DataConsistency:
             order_id="risk_metrics_consistency_test",
             symbol="ETH-USD",
             side=OrderSide.SELL,
-            quantity=0.25
+            quantity=0.25,
         )
 
         # Place order to trigger risk calculations
@@ -464,7 +442,7 @@ class TestTCRC006TCRC010DataConsistency:
                 side=order.side,
                 order_type=order.type,
                 quantity=order.quantity,
-                price=order.price
+                price=order.price,
             )
         except Exception:
             # Order may fail due to risk controls, which is expected
@@ -476,9 +454,11 @@ class TestTCRC006TCRC010DataConsistency:
 
         # Check for risk-related events
         all_events = event_store.events
-        risk_events = [e for e in all_events
-                      if "risk" in str(e.get("type", "")).lower()
-                      or "risk" in str(e.get("data", {})).lower()]
+        risk_events = [
+            e
+            for e in all_events
+            if "risk" in str(e.get("type", "")).lower() or "risk" in str(e.get("data", {})).lower()
+        ]
 
         # Risk metrics should be consistent and accessible
         risk_metrics = event_store.get_metrics_by_name("risk_metrics")
@@ -505,7 +485,7 @@ class TestTCRC006TCRC010DataConsistency:
             order_id="timestamp_consistency_test",
             symbol="BTC-USD",
             side=OrderSide.BUY,
-            quantity=0.1
+            quantity=0.1,
         )
 
         # Place order to generate timestamped events
@@ -516,7 +496,7 @@ class TestTCRC006TCRC010DataConsistency:
                 side=order.side,
                 order_type=order.type,
                 quantity=order.quantity,
-                price=order.price
+                price=order.price,
             )
         except Exception:
             # Order may fail, but events should still be timestamped
@@ -534,8 +514,9 @@ class TestTCRC006TCRC010DataConsistency:
                 if isinstance(event_time, str):
                     # Parse ISO timestamp if string
                     from datetime import datetime as dt
+
                     try:
-                        event_time = dt.fromisoformat(event_time.replace('Z', '+00:00'))
+                        event_time = dt.fromisoformat(event_time.replace("Z", "+00:00"))
                     except:
                         continue
 
@@ -561,10 +542,7 @@ class TestTCRC011TCRC015ReconciliationErrorHandling:
         # Simulate reconciliation dispute scenario
         # Create order that may cause state discrepancies
         order = integration_test_scenarios.create_test_order(
-            order_id="dispute_resolution_test",
-            symbol="ETH-USD",
-            side=OrderSide.BUY,
-            quantity=0.3
+            order_id="dispute_resolution_test", symbol="ETH-USD", side=OrderSide.BUY, quantity=0.3
         )
 
         # Place order that may create inconsistent state
@@ -575,7 +553,7 @@ class TestTCRC011TCRC015ReconciliationErrorHandling:
                 side=order.side,
                 order_type=order.type,
                 quantity=order.quantity,
-                price=order.price
+                price=order.price,
             )
         except Exception:
             # Order failure may create reconciliation disputes
@@ -602,10 +580,7 @@ class TestTCRC011TCRC015ReconciliationErrorHandling:
 
         # Simulate missing data scenario
         order = integration_test_scenarios.create_test_order(
-            order_id="missing_data_test",
-            symbol="BTC-USD",
-            side=OrderSide.SELL,
-            quantity=0.2
+            order_id="missing_data_test", symbol="BTC-USD", side=OrderSide.SELL, quantity=0.2
         )
 
         # Place order that may result in missing data
@@ -616,7 +591,7 @@ class TestTCRC011TCRC015ReconciliationErrorHandling:
                 side=order.side,
                 order_type=order.type,
                 quantity=order.quantity,
-                price=order.price
+                price=order.price,
             )
         except Exception:
             # System should handle missing data gracefully
@@ -647,7 +622,7 @@ class TestTCRC011TCRC015ReconciliationErrorHandling:
             order_id="corruption_detection_test",
             symbol="ETH-USD",
             side=OrderSide.BUY,
-            quantity=0.15
+            quantity=0.15,
         )
 
         # Place order and validate data integrity
@@ -658,7 +633,7 @@ class TestTCRC011TCRC015ReconciliationErrorHandling:
                 side=order.side,
                 order_type=order.type,
                 quantity=order.quantity,
-                price=order.price
+                price=order.price,
             )
         except Exception:
             # System should detect corruption even on failures
@@ -686,10 +661,7 @@ class TestTCRC011TCRC015ReconciliationErrorHandling:
 
         # Test reconciliation retry mechanism
         order = integration_test_scenarios.create_test_order(
-            order_id="retry_logic_test",
-            symbol="BTC-USD",
-            side=OrderSide.BUY,
-            quantity=0.1
+            order_id="retry_logic_test", symbol="BTC-USD", side=OrderSide.BUY, quantity=0.1
         )
 
         # Place order that may require reconciliation retries
@@ -700,7 +672,7 @@ class TestTCRC011TCRC015ReconciliationErrorHandling:
                 side=order.side,
                 order_type=order.type,
                 quantity=order.quantity,
-                price=order.price
+                price=order.price,
             )
         except Exception:
             # System should retry reconciliation on failures
@@ -729,7 +701,7 @@ class TestTCRC011TCRC015ReconciliationErrorHandling:
             order_id="manual_intervention_test",
             symbol="ETH-USD",
             side=OrderSide.SELL,
-            quantity=0.25
+            quantity=0.25,
         )
 
         # Place order that may require manual intervention
@@ -740,7 +712,7 @@ class TestTCRC011TCRC015ReconciliationErrorHandling:
                 side=order.side,
                 order_type=order.type,
                 quantity=order.quantity,
-                price=order.price
+                price=order.price,
             )
         except Exception:
             # System should provide manual intervention points
@@ -771,10 +743,7 @@ class TestReconciliationResilience:
 
         # Simulate pre-restart state
         order = integration_test_scenarios.create_test_order(
-            order_id="restart_recovery_test",
-            symbol="BTC-USD",
-            side=OrderSide.BUY,
-            quantity=0.2
+            order_id="restart_recovery_test", symbol="BTC-USD", side=OrderSide.BUY, quantity=0.2
         )
 
         # Place order to create state
@@ -785,7 +754,7 @@ class TestReconciliationResilience:
                 side=order.side,
                 order_type=order.type,
                 quantity=order.quantity,
-                price=order.price
+                price=order.price,
             )
         except Exception:
             pass
@@ -812,10 +781,7 @@ class TestReconciliationResilience:
 
         # Create activity that affects all components
         order = integration_test_scenarios.create_test_order(
-            order_id="sync_test",
-            symbol="ETH-USD",
-            side=OrderSide.BUY,
-            quantity=0.15
+            order_id="sync_test", symbol="ETH-USD", side=OrderSide.BUY, quantity=0.15
         )
 
         # Place order to create state changes
@@ -826,7 +792,7 @@ class TestReconciliationResilience:
                 side=order.side,
                 order_type=order.type,
                 quantity=order.quantity,
-                price=order.price
+                price=order.price,
             )
         except Exception:
             pass
@@ -849,7 +815,7 @@ class TestReconciliationResilience:
             system["risk_manager"],
             system["execution_coordinator"],
             system["execution_engine"],
-            system["event_store"]
+            system["event_store"],
         ]
 
         for component in components:

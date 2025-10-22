@@ -7,19 +7,13 @@ for message processing, subscription management, and market data lifecycle.
 
 from __future__ import annotations
 
-import json
-from datetime import datetime, timezone
+from datetime import datetime
 from decimal import Decimal
-from unittest.mock import AsyncMock, Mock, patch
-
-import pytest
+from unittest.mock import Mock, patch
 
 from bot_v2.features.brokerages.coinbase.market_data_service import MarketDataService
-from bot_v2.features.brokerages.coinbase.models import APIConfig
-from bot_v2.features.brokerages.coinbase.transports import MockTransport
 from bot_v2.features.brokerages.coinbase.utilities import ProductCatalog
 from bot_v2.features.brokerages.coinbase.websocket_handler import CoinbaseWebSocketHandler
-from bot_v2.features.brokerages.coinbase.ws import CoinbaseWebSocket, WSSubscription
 
 
 class TestWebSocketHandlerCoverage:
@@ -134,7 +128,7 @@ class TestWebSocketHandlerCoverage:
             settings=mock_runtime_settings,
         )
 
-        with patch.object(handler, '_create_ws_instance') as mock_create:
+        with patch.object(handler, "_create_ws_instance") as mock_create:
             mock_ws = Mock()
             mock_create.return_value = mock_ws
 
@@ -278,7 +272,7 @@ class TestWebSocketHandlerCoverage:
             settings=mock_runtime_settings,
         )
 
-        with patch.object(handler, '_create_ws_instance') as mock_create:
+        with patch.object(handler, "_create_ws_instance") as mock_create:
             mock_ws = Mock()
             mock_create.return_value = mock_ws
 
@@ -307,7 +301,7 @@ class TestWebSocketHandlerCoverage:
         existing_client = Mock()
         handler._ws_client = existing_client
 
-        with patch.object(handler, '_create_ws_instance') as mock_create:
+        with patch.object(handler, "_create_ws_instance") as mock_create:
             result = handler._ensure_ws_client()
 
             mock_create.assert_not_called()
@@ -329,7 +323,7 @@ class TestWebSocketHandlerCoverage:
             settings=mock_runtime_settings,
         )
 
-        with patch.object(handler, '_create_ws_instance') as mock_create:
+        with patch.object(handler, "_create_ws_instance") as mock_create:
             mock_ws = Mock()
             mock_messages = [
                 {"type": "match", "product_id": "BTC-USD", "price": "50000.00", "size": "0.1"},
@@ -360,11 +354,21 @@ class TestWebSocketHandlerCoverage:
             settings=mock_runtime_settings,
         )
 
-        with patch.object(handler, '_create_ws_instance') as mock_create:
+        with patch.object(handler, "_create_ws_instance") as mock_create:
             mock_ws = Mock()
             mock_messages = [
-                {"type": "ticker", "product_id": "BTC-USD", "best_bid": "49900.00", "best_ask": "50100.00"},
-                {"type": "ticker", "product_id": "ETH-USD", "best_bid": "2990.00", "best_ask": "3010.00"},
+                {
+                    "type": "ticker",
+                    "product_id": "BTC-USD",
+                    "best_bid": "49900.00",
+                    "best_ask": "50100.00",
+                },
+                {
+                    "type": "ticker",
+                    "product_id": "ETH-USD",
+                    "best_bid": "2990.00",
+                    "best_ask": "3010.00",
+                },
             ]
             mock_ws.stream_messages.return_value = iter(mock_messages)
             mock_create.return_value = mock_ws
@@ -391,7 +395,7 @@ class TestWebSocketHandlerCoverage:
             settings=mock_runtime_settings,
         )
 
-        with patch.object(handler, '_create_ws_instance') as mock_create:
+        with patch.object(handler, "_create_ws_instance") as mock_create:
             mock_ws = Mock()
             mock_messages = [
                 {"type": "fill", "product_id": "BTC-USD", "size": "0.1", "price": "50000.00"},
@@ -502,7 +506,9 @@ class TestWebSocketHandlerCoverage:
 
         handler._handle_ws_message(message)
 
-        market_data.update_depth.assert_called_once_with("BTC-USD", [["buy", "49950.00", "0.5"], ["sell", "50100.00", "0.3"]])
+        market_data.update_depth.assert_called_once_with(
+            "BTC-USD", [["buy", "49950.00", "0.5"], ["sell", "50100.00", "0.3"]]
+        )
 
     def test_handle_ws_message_invalid_symbol(self, mock_api_config, mock_runtime_settings):
         """Test handling WebSocket message with invalid symbol."""

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from unittest.mock import Mock
+
 import pytest
 from tests.unit.bot_v2.orchestration.helpers import ScenarioBuilder
 
@@ -121,8 +122,12 @@ async def test_fetch_exchange_open_orders_fallback_success_filters_status(reconc
         ScenarioBuilder.create_order(id="pending-order", status=OrderStatus.PENDING),
         ScenarioBuilder.create_order(id="submitted-order", status=OrderStatus.SUBMITTED),
         ScenarioBuilder.create_order(id="partial-order", status=OrderStatus.PARTIALLY_FILLED),
-        ScenarioBuilder.create_order(id="filled-order", status=OrderStatus.FILLED),  # Should be filtered out
-        ScenarioBuilder.create_order(id="cancelled-order", status=OrderStatus.CANCELLED),  # Should be filtered out
+        ScenarioBuilder.create_order(
+            id="filled-order", status=OrderStatus.FILLED
+        ),  # Should be filtered out
+        ScenarioBuilder.create_order(
+            id="cancelled-order", status=OrderStatus.CANCELLED
+        ),  # Should be filtered out
     ]
 
     def list_orders(status=None):

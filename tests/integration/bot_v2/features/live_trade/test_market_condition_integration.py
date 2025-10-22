@@ -13,19 +13,11 @@ market environments while maintaining risk controls and operational stability.
 """
 
 from __future__ import annotations
+
 import pytest
-from unittest.mock import patch, AsyncMock
-from datetime import datetime, timedelta
 
 from bot_v2.features.brokerages.core.interfaces import (
-    OrderStatus,
     OrderSide,
-    OrderType,
-)
-from bot_v2.errors import (
-    TradingError,
-    RiskLimitExceeded,
-    ExecutionError,
 )
 
 
@@ -54,7 +46,7 @@ class TestTCMC001TCMC005VolatilitySimulation:
             order_id="high_vol_test",
             symbol="BTC-USD",
             side=OrderSide.BUY,
-            quantity=0.5  # Larger size to test risk limits
+            quantity=0.5,  # Larger size to test risk limits
         )
 
         # Order placement should consider volatility in risk checks
@@ -65,7 +57,7 @@ class TestTCMC001TCMC005VolatilitySimulation:
                 side=order.side,
                 order_type=order.type,
                 quantity=order.quantity,
-                price=order.price
+                price=order.price,
             )
             # If successful, verify it was processed appropriately
             assert result is not None
@@ -78,9 +70,12 @@ class TestTCMC001TCMC005VolatilitySimulation:
         # Verify market condition awareness in system behavior
         # System should have logged or responded to volatile conditions
         all_events = event_store.events
-        volatility_related = [e for e in all_events
-                             if "volatility" in str(e.get("data", {})).lower()
-                             or "volatility" in str(e.get("type", "")).lower()]
+        volatility_related = [
+            e
+            for e in all_events
+            if "volatility" in str(e.get("data", {})).lower()
+            or "volatility" in str(e.get("type", "")).lower()
+        ]
 
         # Key integration test: System remains stable under high volatility
         assert risk_manager is not None
@@ -99,10 +94,7 @@ class TestTCMC001TCMC005VolatilitySimulation:
 
         # Create order during price spike scenario
         order = integration_test_scenarios.create_test_order(
-            order_id="price_spike_test",
-            symbol="ETH-USD",
-            side=OrderSide.BUY,
-            quantity=0.3
+            order_id="price_spike_test", symbol="ETH-USD", side=OrderSide.BUY, quantity=0.3
         )
 
         # System should handle orders during price spikes appropriately
@@ -113,7 +105,7 @@ class TestTCMC001TCMC005VolatilitySimulation:
                 side=order.side,
                 order_type=order.type,
                 quantity=order.quantity,
-                price=order.price
+                price=order.price,
             )
             # Success indicates system handled price spike appropriately
         except Exception as e:
@@ -146,7 +138,7 @@ class TestTCMC001TCMC005VolatilitySimulation:
             order_id="flash_crash_test",
             symbol="BTC-USD",
             side=OrderSide.SELL,  # Panic selling
-            quantity=1.0  # Large position
+            quantity=1.0,  # Large position
         )
 
         # System should implement protective measures during flash crash
@@ -157,7 +149,7 @@ class TestTCMC001TCMC005VolatilitySimulation:
                 side=order.side,
                 order_type=order.type,
                 quantity=order.quantity,
-                price=order.price
+                price=order.price,
             )
 
         # Flash crash should trigger protective risk controls
@@ -183,17 +175,11 @@ class TestTCMC001TCMC005VolatilitySimulation:
 
         # Create orders in different volatility regimes
         normal_order = integration_test_scenarios.create_test_order(
-            order_id="normal_regime_test",
-            symbol="BTC-USD",
-            side=OrderSide.BUY,
-            quantity=0.1
+            order_id="normal_regime_test", symbol="BTC-USD", side=OrderSide.BUY, quantity=0.1
         )
 
         high_vol_order = integration_test_scenarios.create_test_order(
-            order_id="high_vol_regime_test",
-            symbol="BTC-USD",
-            side=OrderSide.BUY,
-            quantity=0.1
+            order_id="high_vol_regime_test", symbol="BTC-USD", side=OrderSide.BUY, quantity=0.1
         )
 
         # Test order behavior in normal regime
@@ -204,9 +190,9 @@ class TestTCMC001TCMC005VolatilitySimulation:
                 side=normal_order.side,
                 order_type=normal_order.type,
                 quantity=normal_order.quantity,
-                price=normal_order.price
+                price=normal_order.price,
             )
-        except Exception as e:
+        except Exception:
             # May fail for various reasons, that's acceptable
             pass
 
@@ -218,9 +204,9 @@ class TestTCMC001TCMC005VolatilitySimulation:
                 side=high_vol_order.side,
                 order_type=high_vol_order.type,
                 quantity=high_vol_order.quantity,
-                price=high_vol_order.price
+                price=high_vol_order.price,
             )
-        except Exception as e:
+        except Exception:
             # High volatility may trigger additional risk controls
             pass
 
@@ -240,10 +226,7 @@ class TestTCMC001TCMC005VolatilitySimulation:
         # This could affect options pricing or risk calculations
 
         order = integration_test_scenarios.create_test_order(
-            order_id="implied_vol_surge_test",
-            symbol="ETH-USD",
-            side=OrderSide.BUY,
-            quantity=0.2
+            order_id="implied_vol_surge_test", symbol="ETH-USD", side=OrderSide.BUY, quantity=0.2
         )
 
         # System should adjust behavior based on implied volatility
@@ -254,7 +237,7 @@ class TestTCMC001TCMC005VolatilitySimulation:
                 side=order.side,
                 order_type=order.type,
                 quantity=order.quantity,
-                price=order.price
+                price=order.price,
             )
         except Exception as e:
             # Risk controls may be more stringent during high implied volatility
@@ -287,7 +270,7 @@ class TestTCMC006TCMC010LiquidityConditionTests:
             order_id="low_liquidity_test",
             symbol="BTC-USD",
             side=OrderSide.BUY,
-            quantity=0.5  # Larger size to test liquidity constraints
+            quantity=0.5,  # Larger size to test liquidity constraints
         )
 
         # System should handle low liquidity appropriately
@@ -298,7 +281,7 @@ class TestTCMC006TCMC010LiquidityConditionTests:
                 side=order.side,
                 order_type=order.type,
                 quantity=order.quantity,
-                price=order.price
+                price=order.price,
             )
         except Exception as e:
             # May fail due to liquidity-based risk controls
@@ -321,10 +304,7 @@ class TestTCMC006TCMC010LiquidityConditionTests:
 
         # Initial order in normal liquidity
         initial_order = integration_test_scenarios.create_test_order(
-            order_id="initial_liquidity_test",
-            symbol="ETH-USD",
-            side=OrderSide.BUY,
-            quantity=0.1
+            order_id="initial_liquidity_test", symbol="ETH-USD", side=OrderSide.BUY, quantity=0.1
         )
 
         try:
@@ -334,9 +314,9 @@ class TestTCMC006TCMC010LiquidityConditionTests:
                 side=initial_order.side,
                 order_type=initial_order.type,
                 quantity=initial_order.quantity,
-                price=initial_order.price
+                price=initial_order.price,
             )
-        except Exception as e:
+        except Exception:
             pass  # Initial order may fail for other reasons
 
         # Create order during liquidity drain
@@ -344,7 +324,7 @@ class TestTCMC006TCMC010LiquidityConditionTests:
             order_id="liquidity_drain_test",
             symbol="ETH-USD",
             side=OrderSide.SELL,
-            quantity=0.3  # Larger size to stress low liquidity
+            quantity=0.3,  # Larger size to stress low liquidity
         )
 
         # System should handle liquidity drain gracefully
@@ -355,7 +335,7 @@ class TestTCMC006TCMC010LiquidityConditionTests:
                 side=drain_order.side,
                 order_type=drain_order.type,
                 quantity=drain_order.quantity,
-                price=drain_order.price
+                price=drain_order.price,
             )
 
         # Liquidity drain should trigger protective measures
@@ -376,10 +356,7 @@ class TestTCMC006TCMC010LiquidityConditionTests:
         # This affects market impact calculations and execution strategies
 
         order = integration_test_scenarios.create_test_order(
-            order_id="depth_change_test",
-            symbol="BTC-USD",
-            side=OrderSide.BUY,
-            quantity=0.2
+            order_id="depth_change_test", symbol="BTC-USD", side=OrderSide.BUY, quantity=0.2
         )
 
         # System should adapt to changing book depth
@@ -390,7 +367,7 @@ class TestTCMC006TCMC010LiquidityConditionTests:
                 side=order.side,
                 order_type=order.type,
                 quantity=order.quantity,
-                price=order.price
+                price=order.price,
             )
         except Exception as e:
             # Book depth changes may affect execution strategy
@@ -411,10 +388,7 @@ class TestTCMC006TCMC010LiquidityConditionTests:
         # This affects execution costs and strategy decisions
 
         order = integration_test_scenarios.create_test_order(
-            order_id="spread_widen_test",
-            symbol="ETH-USD",
-            side=OrderSide.BUY,
-            quantity=0.15
+            order_id="spread_widen_test", symbol="ETH-USD", side=OrderSide.BUY, quantity=0.15
         )
 
         # System should account for spread widening in execution
@@ -425,7 +399,7 @@ class TestTCMC006TCMC010LiquidityConditionTests:
                 side=order.side,
                 order_type=order.type,
                 quantity=order.quantity,
-                price=order.price
+                price=order.price,
             )
         except Exception as e:
             # Wide spreads may trigger different execution logic
@@ -449,14 +423,14 @@ class TestTCMC006TCMC010LiquidityConditionTests:
             order_id="small_impact_test",
             symbol="BTC-USD",
             side=OrderSide.BUY,
-            quantity=0.05  # Small order
+            quantity=0.05,  # Small order
         )
 
         large_order = integration_test_scenarios.create_test_order(
             order_id="large_impact_test",
             symbol="BTC-USD",
             side=OrderSide.BUY,
-            quantity=1.0  # Large order
+            quantity=1.0,  # Large order
         )
 
         # Test small order (should have minimal market impact)
@@ -467,9 +441,9 @@ class TestTCMC006TCMC010LiquidityConditionTests:
                 side=small_order.side,
                 order_type=small_order.type,
                 quantity=small_order.quantity,
-                price=small_order.price
+                price=small_order.price,
             )
-        except Exception as e:
+        except Exception:
             pass  # May fail for other reasons
 
         # Test large order (should account for market impact)
@@ -480,7 +454,7 @@ class TestTCMC006TCMC010LiquidityConditionTests:
                 side=large_order.side,
                 order_type=large_order.type,
                 quantity=large_order.quantity,
-                price=large_order.price
+                price=large_order.price,
             )
         except Exception as e:
             # Large orders may fail due to market impact concerns
@@ -503,10 +477,7 @@ class TestTCMC011TCMC015MarketStateTransitionTests:
 
         # Test system behavior during market open transition
         order = integration_test_scenarios.create_test_order(
-            order_id="market_open_test",
-            symbol="BTC-USD",
-            side=OrderSide.BUY,
-            quantity=0.1
+            order_id="market_open_test", symbol="BTC-USD", side=OrderSide.BUY, quantity=0.1
         )
 
         # System should handle market open appropriately
@@ -517,7 +488,7 @@ class TestTCMC011TCMC015MarketStateTransitionTests:
                 side=order.side,
                 order_type=order.type,
                 quantity=order.quantity,
-                price=order.price
+                price=order.price,
             )
         except Exception as e:
             # Market open transitions may have specific controls
@@ -536,10 +507,7 @@ class TestTCMC011TCMC015MarketStateTransitionTests:
 
         # Test transition to after-hours trading
         order = integration_test_scenarios.create_test_order(
-            order_id="after_hours_test",
-            symbol="ETH-USD",
-            side=OrderSide.SELL,
-            quantity=0.1
+            order_id="after_hours_test", symbol="ETH-USD", side=OrderSide.SELL, quantity=0.1
         )
 
         # System should adjust to after-hours conditions
@@ -550,7 +518,7 @@ class TestTCMC011TCMC015MarketStateTransitionTests:
                 side=order.side,
                 order_type=order.type,
                 quantity=order.quantity,
-                price=order.price
+                price=order.price,
             )
         except Exception as e:
             # After-hours may have different execution rules
@@ -569,10 +537,7 @@ class TestTCMC011TCMC015MarketStateTransitionTests:
 
         # Test system behavior approaching market close
         order = integration_test_scenarios.create_test_order(
-            order_id="close_preparation_test",
-            symbol="BTC-USD",
-            side=OrderSide.BUY,
-            quantity=0.1
+            order_id="close_preparation_test", symbol="BTC-USD", side=OrderSide.BUY, quantity=0.1
         )
 
         # System should prepare for market close appropriately
@@ -583,7 +548,7 @@ class TestTCMC011TCMC015MarketStateTransitionTests:
                 side=order.side,
                 order_type=order.type,
                 quantity=order.quantity,
-                price=order.price
+                price=order.price,
             )
         except Exception as e:
             # Market close may have position reduction requirements
@@ -602,10 +567,7 @@ class TestTCMC011TCMC015MarketStateTransitionTests:
 
         # Test system behavior during holiday/weekend transitions
         order = integration_test_scenarios.create_test_order(
-            order_id="holiday_transition_test",
-            symbol="ETH-USD",
-            side=OrderSide.BUY,
-            quantity=0.1
+            order_id="holiday_transition_test", symbol="ETH-USD", side=OrderSide.BUY, quantity=0.1
         )
 
         # System should handle holiday transitions appropriately
@@ -616,7 +578,7 @@ class TestTCMC011TCMC015MarketStateTransitionTests:
                 side=order.side,
                 order_type=order.type,
                 quantity=order.quantity,
-                price=order.price
+                price=order.price,
             )
         except Exception as e:
             # Holiday periods may restrict trading
@@ -635,10 +597,7 @@ class TestTCMC011TCMC015MarketStateTransitionTests:
 
         # Test system response to emergency market halts
         order = integration_test_scenarios.create_test_order(
-            order_id="market_halt_test",
-            symbol="BTC-USD",
-            side=OrderSide.BUY,
-            quantity=0.1
+            order_id="market_halt_test", symbol="BTC-USD", side=OrderSide.BUY, quantity=0.1
         )
 
         # System should respect market halts
@@ -649,7 +608,7 @@ class TestTCMC011TCMC015MarketStateTransitionTests:
                 side=order.side,
                 order_type=order.type,
                 quantity=order.quantity,
-                price=order.price
+                price=order.price,
             )
 
         # Market halt should prevent order execution
@@ -681,7 +640,7 @@ class TestMarketConditionResilience:
                 order_id=f"rapid_change_{i}",
                 symbol="BTC-USD",
                 side=OrderSide.BUY if i % 2 == 0 else OrderSide.SELL,
-                quantity=0.1
+                quantity=0.1,
             )
 
             # System should handle rapid condition changes
@@ -692,9 +651,9 @@ class TestMarketConditionResilience:
                     side=order.side,
                     order_type=order.type,
                     quantity=order.quantity,
-                    price=order.price
+                    price=order.price,
                 )
-            except Exception as e:
+            except Exception:
                 # Errors are acceptable under rapidly changing conditions
                 pass
 
@@ -716,7 +675,7 @@ class TestMarketConditionResilience:
             order_id="extreme_conditions_test",
             symbol="ETH-USD",
             side=OrderSide.SELL,
-            quantity=0.5  # Larger size to stress test
+            quantity=0.5,  # Larger size to stress test
         )
 
         # System should handle extreme conditions gracefully
@@ -727,7 +686,7 @@ class TestMarketConditionResilience:
                 side=order.side,
                 order_type=order.type,
                 quantity=order.quantity,
-                price=order.price
+                price=order.price,
             )
 
         # Extreme conditions should trigger protective measures

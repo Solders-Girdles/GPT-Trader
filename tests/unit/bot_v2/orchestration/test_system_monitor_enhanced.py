@@ -3,17 +3,17 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime, timezone, UTC
+from datetime import UTC, datetime
 from decimal import Decimal
-from unittest.mock import AsyncMock, Mock, patch, MagicMock
+from unittest.mock import Mock, patch
+
 import pytest
 
 from bot_v2.features.brokerages.core.interfaces import Balance, Position
 from bot_v2.features.live_trade.strategies.perps_baseline import Action, Decision
-from bot_v2.orchestration.configuration import Profile, ConfigValidationError
+from bot_v2.orchestration.configuration import ConfigValidationError, Profile
 from bot_v2.orchestration.perps_bot_state import PerpsBotRuntimeState
 from bot_v2.orchestration.system_monitor import SystemMonitor
-from bot_v2.orchestration.system_monitor_metrics import MetricsPublisher
 
 
 @pytest.fixture
@@ -89,7 +89,10 @@ class TestSystemMonitorResourceCollector:
         """Test gracefully degrades when psutil is completely unavailable."""
         # The actual implementation checks if ResourceCollector is None, but ResourceCollectorType is used
         # Let's patch the import to simulate psutil unavailability
-        with patch("bot_v2.orchestration.system_monitor.ResourceCollector", side_effect=ImportError("psutil not available")):
+        with patch(
+            "bot_v2.orchestration.system_monitor.ResourceCollector",
+            side_effect=ImportError("psutil not available"),
+        ):
             # Should not raise
             monitor = SystemMonitor(bot=mock_bot)
 
@@ -117,7 +120,9 @@ class TestSystemMonitorLogStatusEnhanced:
     """Enhanced tests for log_status method to improve coverage."""
 
     @pytest.mark.asyncio
-    async def test_log_status_complete_flow_with_all_components(self, monitor, mock_bot, test_balance, test_position):
+    async def test_log_status_complete_flow_with_all_components(
+        self, monitor, mock_bot, test_balance, test_position
+    ):
         """Test complete log_status flow with all components including resource monitoring."""
         # Set up comprehensive test data
         mock_bot.broker.list_positions = Mock(return_value=[test_position])
@@ -151,6 +156,7 @@ class TestSystemMonitorLogStatusEnhanced:
 
         # Mock metrics publisher
         metrics_published = None
+
         def capture_metrics(metrics):
             nonlocal metrics_published
             metrics_published = metrics
@@ -237,6 +243,7 @@ class TestSystemMonitorLogStatusEnhanced:
         mock_bot.orders_store.get_open_orders = Mock(return_value=[])
 
         metrics_published = None
+
         def capture_metrics(metrics):
             nonlocal metrics_published
             metrics_published = metrics
@@ -261,6 +268,7 @@ class TestSystemMonitorLogStatusEnhanced:
         mock_bot.start_time = datetime.now(UTC) - asyncio.sleep(3600)  # 1 hour
 
         metrics_published = None
+
         def capture_metrics(metrics):
             nonlocal metrics_published
             metrics_published = metrics
@@ -275,7 +283,9 @@ class TestSystemMonitorLogStatusEnhanced:
         assert uptime < 3700
 
     @pytest.mark.asyncio
-    async def test_log_status_handles_system_metrics_collection_failure(self, monitor, mock_bot, test_balance):
+    async def test_log_status_handles_system_metrics_collection_failure(
+        self, monitor, mock_bot, test_balance
+    ):
         """Test log_status handles system metrics collection failure gracefully."""
         mock_bot.broker.list_positions = Mock(return_value=[])
         mock_bot.broker.list_balances = Mock(return_value=[test_balance])
@@ -337,7 +347,9 @@ class TestSystemMonitorConfigUpdatesEnhanced:
     def test_config_updates_logs_validation_rejection_with_details(self, monitor, mock_bot):
         """Test configuration updates logs detailed validation rejection."""
         controller = Mock()
-        controller.refresh_if_changed = Mock(side_effect=ConfigValidationError("Invalid risk setting"))
+        controller.refresh_if_changed = Mock(
+            side_effect=ConfigValidationError("Invalid risk setting")
+        )
         mock_bot.config_controller = controller
 
         with patch("bot_v2.orchestration.system_monitor.logger") as mock_logger:
@@ -459,7 +471,9 @@ class TestSystemMonitorErrorHandling:
             await monitor.log_status()
 
     @pytest.mark.asyncio
-    async def test_log_status_handles_malformed_position_data(self, monitor, mock_bot, test_balance):
+    async def test_log_status_handles_malformed_position_data(
+        self, monitor, mock_bot, test_balance
+    ):
         """Test log_status handles malformed position data gracefully."""
         # Create malformed position
         malformed_position = Mock()
@@ -487,6 +501,7 @@ class TestSystemMonitorErrorHandling:
         mock_bot.orders_store.get_open_orders = Mock(return_value=[])
 
         metrics_published = None
+
         def capture_metrics(metrics):
             nonlocal metrics_published
             metrics_published = metrics

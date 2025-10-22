@@ -23,7 +23,9 @@ class TestRefreshAndDiff:
         assert config_controller._pending_change is None
         config_controller._manager.refresh_if_changed.assert_called_once()
 
-    def test_refresh_if_changed_creates_config_change_when_updated(self, config_controller, sample_bot_config) -> None:
+    def test_refresh_if_changed_creates_config_change_when_updated(
+        self, config_controller, sample_bot_config
+    ) -> None:
         """Test refresh_if_changed creates ConfigChange when config is updated."""
         # Setup
         previous_config = MagicMock(spec=BotConfig)
@@ -36,7 +38,9 @@ class TestRefreshAndDiff:
 
         # Mock diff computation
         expected_diff = {"test.setting": "old -> new"}
-        with patch.object(config_controller, '_summarize_diff', return_value=expected_diff) as mock_diff:
+        with patch.object(
+            config_controller, "_summarize_diff", return_value=expected_diff
+        ) as mock_diff:
             result = config_controller.refresh_if_changed()
 
         # Verify result and state
@@ -60,7 +64,7 @@ class TestRefreshAndDiff:
         config_controller._manager.get_config.return_value = previous_config
         config_controller._manager.refresh_if_changed.return_value = updated_config
 
-        with patch.object(config_controller, '_summarize_diff', return_value={}):
+        with patch.object(config_controller, "_summarize_diff", return_value={}):
             config_controller.refresh_if_changed()
 
         assert config_controller._reduce_only_mode_state is True
@@ -75,7 +79,7 @@ class TestRefreshAndDiff:
         config_controller._manager.get_config.return_value = previous_config
         config_controller._manager.refresh_if_changed.return_value = updated_config
 
-        with patch.object(config_controller, '_summarize_diff', return_value={}):
+        with patch.object(config_controller, "_summarize_diff", return_value={}):
             config_controller.refresh_if_changed()
 
         assert config_controller._reduce_only_mode_state is True
@@ -88,7 +92,9 @@ class TestRefreshAndDiff:
         updated_config.derivatives_enabled = False
 
         # Test that ConfigBaselinePayload.from_config is called with correct arguments
-        with patch('bot_v2.orchestration.config_controller.ConfigBaselinePayload.from_config') as mock_from_config:
+        with patch(
+            "bot_v2.orchestration.config_controller.ConfigBaselinePayload.from_config"
+        ) as mock_from_config:
             # Setup mock payloads
             current_payload = MagicMock()
             updated_payload = MagicMock()
@@ -112,7 +118,9 @@ class TestRefreshAndDiff:
         del current_config.derivatives_enabled  # Remove attribute
         updated_config = MagicMock(spec=BotConfig)
 
-        with patch('bot_v2.orchestration.config_controller.ConfigBaselinePayload.from_config') as mock_from_config:
+        with patch(
+            "bot_v2.orchestration.config_controller.ConfigBaselinePayload.from_config"
+        ) as mock_from_config:
             current_payload = MagicMock()
             updated_payload = MagicMock()
             expected_diff = {"test": "diff"}
@@ -133,7 +141,9 @@ class TestRefreshAndDiff:
         current_config = MagicMock(spec=BotConfig)
         updated_config = MagicMock(spec=BotConfig)
 
-        with patch('bot_v2.orchestration.config_controller.ConfigBaselinePayload.from_config') as mock_from_config:
+        with patch(
+            "bot_v2.orchestration.config_controller.ConfigBaselinePayload.from_config"
+        ) as mock_from_config:
             current_payload = MagicMock()
             updated_payload = MagicMock()
             expected_diff = {"risk.max_position": "0.5 -> 0.7"}
@@ -155,7 +165,9 @@ class TestRefreshAndDiff:
         with pytest.raises(RuntimeError, match="Config unavailable"):
             config_controller.refresh_if_changed()
 
-    def test_refresh_if_changed_stores_pending_change_even_with_empty_diff(self, config_controller) -> None:
+    def test_refresh_if_changed_stores_pending_change_even_with_empty_diff(
+        self, config_controller
+    ) -> None:
         """Test refresh_if_changed stores pending change even when diff is empty."""
         previous_config = MagicMock(spec=BotConfig)
         updated_config = MagicMock(spec=BotConfig)
@@ -164,7 +176,7 @@ class TestRefreshAndDiff:
         config_controller._manager.get_config.return_value = previous_config
         config_controller._manager.refresh_if_changed.return_value = updated_config
 
-        with patch.object(config_controller, '_summarize_diff', return_value={}):
+        with patch.object(config_controller, "_summarize_diff", return_value={}):
             result = config_controller.refresh_if_changed()
 
         # Should still create and store ConfigChange even with empty diff
@@ -183,7 +195,7 @@ class TestRefreshAndDiff:
         config_controller._manager.get_config.return_value = previous_config
         config_controller._manager.refresh_if_changed.return_value = first_updated
 
-        with patch.object(config_controller, '_summarize_diff', return_value={"first": "change"}):
+        with patch.object(config_controller, "_summarize_diff", return_value={"first": "change"}):
             first_result = config_controller.refresh_if_changed()
 
         # Second refresh
@@ -193,7 +205,7 @@ class TestRefreshAndDiff:
         config_controller._manager.get_config.return_value = first_updated
         config_controller._manager.refresh_if_changed.return_value = second_updated
 
-        with patch.object(config_controller, '_summarize_diff', return_value={"second": "change"}):
+        with patch.object(config_controller, "_summarize_diff", return_value={"second": "change"}):
             second_result = config_controller.refresh_if_changed()
 
         # Verify each refresh stored its own change
@@ -202,14 +214,16 @@ class TestRefreshAndDiff:
         assert config_controller._pending_change == second_result
         assert config_controller._reduce_only_mode_state is False
 
-    def test_refresh_if_changed_preserves_pending_change_until_consumed(self, config_controller) -> None:
+    def test_refresh_if_changed_preserves_pending_change_until_consumed(
+        self, config_controller
+    ) -> None:
         """Test refresh_if_changed preserves pending change until consumed."""
         updated_config = MagicMock(spec=BotConfig)
         updated_config.reduce_only_mode = True
         config_controller._manager.get_config.return_value = MagicMock(spec=BotConfig)
         config_controller._manager.refresh_if_changed.return_value = updated_config
 
-        with patch.object(config_controller, '_summarize_diff', return_value={"test": "diff"}):
+        with patch.object(config_controller, "_summarize_diff", return_value={"test": "diff"}):
             refresh_result = config_controller.refresh_if_changed()
 
         # Should be the same instance

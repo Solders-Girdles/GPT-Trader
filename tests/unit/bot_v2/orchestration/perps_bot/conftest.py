@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 import asyncio
-import threading
 from datetime import UTC, datetime
 from decimal import Decimal
-from pathlib import Path
-from unittest.mock import MagicMock, Mock
+from unittest.mock import MagicMock
 
 import pytest
+
+# Import helpers for reusable test data
+from tests.unit.bot_v2.orchestration.helpers import ScenarioBuilder
 
 from bot_v2.features.brokerages.core.interfaces import (
     Balance,
@@ -19,22 +20,15 @@ from bot_v2.features.brokerages.core.interfaces import (
     OrderType,
     Product,
 )
+from bot_v2.monitoring.configuration_guardian import ConfigurationGuardian
 from bot_v2.orchestration.config_controller import ConfigController
 from bot_v2.orchestration.configuration import BotConfig, Profile
-from bot_v2.orchestration.lifecycle_manager import LifecycleManager
 from bot_v2.orchestration.perps_bot import PerpsBot, _CallableSymbolProcessor
 from bot_v2.orchestration.perps_bot_state import PerpsBotRuntimeState
 from bot_v2.orchestration.runtime_settings import RuntimeSettings
 from bot_v2.orchestration.service_registry import ServiceRegistry
-from bot_v2.orchestration.session_guard import TradingSessionGuard
-from bot_v2.orchestration.strategy_orchestrator import StrategyOrchestrator
-from bot_v2.orchestration.system_monitor import SystemMonitor
-from bot_v2.monitoring.configuration_guardian import ConfigurationGuardian
 from bot_v2.persistence.event_store import EventStore
 from bot_v2.persistence.orders_store import OrdersStore
-
-# Import helpers for reusable test data
-from tests.unit.bot_v2.orchestration.helpers import ScenarioBuilder
 
 
 @pytest.fixture
@@ -71,8 +65,10 @@ def mock_session_guard():
 @pytest.fixture
 def mock_baseline_snapshot():
     """Mock baseline snapshot for configuration drift detection."""
+    from datetime import UTC, datetime
+
     from bot_v2.monitoring.configuration_guardian import BaselineSnapshot
-    from datetime import datetime, UTC
+
     return BaselineSnapshot(
         timestamp=datetime(2024, 1, 1, tzinfo=UTC),
         config_dict={"symbols": ["BTC-PERP"], "mock_broker": True},
@@ -85,7 +81,7 @@ def mock_baseline_snapshot():
         total_exposure=Decimal("0"),
         profile="dev",
         broker_type="mock",
-        risk_limits={}
+        risk_limits={},
     )
 
 
@@ -143,8 +139,12 @@ def mock_brokerage():
 
     # Mock balance operations
     broker.list_balances.return_value = [
-        Balance(asset="USD", available=Decimal("10000.0"), total=Decimal("10000.0"), hold=Decimal("0")),
-        Balance(asset="USDC", available=Decimal("5000.0"), total=Decimal("5000.0"), hold=Decimal("0")),
+        Balance(
+            asset="USD", available=Decimal("10000.0"), total=Decimal("10000.0"), hold=Decimal("0")
+        ),
+        Balance(
+            asset="USDC", available=Decimal("5000.0"), total=Decimal("5000.0"), hold=Decimal("0")
+        ),
     ]
 
     # Mock position operations
@@ -206,13 +206,15 @@ def mock_risk_manager():
 def mock_state_collector():
     """Mock state collector."""
     collector = MagicMock(spec=StateCollector)
-    collector.collect_account_state = MagicMock(return_value=(
-        [],  # balances
-        Decimal("10000.0"),  # equity
-        [],  # collateral_balances
-        Decimal("10000.0"),  # total_balance
-        [],  # positions
-    ))
+    collector.collect_account_state = MagicMock(
+        return_value=(
+            [],  # balances
+            Decimal("10000.0"),  # equity
+            [],  # collateral_balances
+            Decimal("10000.0"),  # total_balance
+            [],  # positions
+        )
+    )
     return collector
 
 
@@ -254,6 +256,7 @@ def mock_config_controller(minimal_bot_config):
             setattr(new_config, key, value)
 
         from bot_v2.orchestration.config_controller import ConfigChange
+
         change = MagicMock(spec=ConfigChange)
         change.diff = diff
         change.updated = new_config
@@ -307,26 +310,30 @@ def perps_bot_instance(
 @pytest.fixture
 def callable_symbol_processor():
     """Sample callable symbol processor for testing."""
+
     def processor(symbol: str, balances=None, position_map=None):
         return {
             "symbol": symbol,
             "decision": "BUY",
             "quantity": Decimal("0.01"),
-            "reason": "test_signal"
+            "reason": "test_signal",
         }
+
     return processor
 
 
 @pytest.fixture
 def callable_symbol_processor_no_context():
     """Sample callable symbol processor that doesn't need context."""
+
     def processor(symbol: str):
         return {
             "symbol": symbol,
             "decision": "SELL",
             "quantity": Decimal("0.02"),
-            "reason": "simple_signal"
+            "reason": "simple_signal",
         }
+
     return processor
 
 

@@ -12,20 +12,16 @@ while maintaining data integrity and system stability.
 """
 
 from __future__ import annotations
-import pytest
-from unittest.mock import patch, AsyncMock
-from datetime import datetime, timedelta
 
-from bot_v2.features.brokerages.core.interfaces import (
-    OrderStatus,
-    OrderSide,
-    OrderType,
-)
+from unittest.mock import patch
+
+import pytest
+
 from bot_v2.errors import (
-    TradingError,
-    NetworkError,
-    ExecutionError,
     TimeoutError,
+)
+from bot_v2.features.brokerages.core.interfaces import (
+    OrderSide,
 )
 
 
@@ -46,10 +42,7 @@ class TestTCBE001TCBE006BrokerCommunicationFailures:
 
         # Create test order
         order = integration_test_scenarios.create_test_order(
-            order_id="be_001_test",
-            symbol="BTC-USD",
-            side=OrderSide.BUY,
-            quantity=0.1
+            order_id="be_001_test", symbol="BTC-USD", side=OrderSide.BUY, quantity=0.1
         )
 
         # Attempt order placement should fail with connection error
@@ -60,12 +53,15 @@ class TestTCBE001TCBE006BrokerCommunicationFailures:
                 side=order.side,
                 order_type=order.type,
                 quantity=order.quantity,
-                price=order.price
+                price=order.price,
             )
 
         # Verify error propagation (any error indicates the system is working)
         error_msg = str(exc_info.value).lower()
-        assert any(keyword in error_msg for keyword in ["connection", "product", "not found", "invalid", "error"])
+        assert any(
+            keyword in error_msg
+            for keyword in ["connection", "product", "not found", "invalid", "error"]
+        )
 
         # Verify error event was stored
         error_events = event_store.get_events_by_type("broker_error")
@@ -90,10 +86,7 @@ class TestTCBE001TCBE006BrokerCommunicationFailures:
 
         # Create test order
         order = integration_test_scenarios.create_test_order(
-            order_id="be_002_test",
-            symbol="ETH-USD",
-            side=OrderSide.BUY,
-            quantity=0.5
+            order_id="be_002_test", symbol="ETH-USD", side=OrderSide.BUY, quantity=0.5
         )
 
         # Attempt order placement should handle rate limit gracefully
@@ -104,7 +97,7 @@ class TestTCBE001TCBE006BrokerCommunicationFailures:
                 side=order.side,
                 order_type=order.type,
                 quantity=order.quantity,
-                price=order.price
+                price=order.price,
             )
 
         # Verify rate limit error propagation
@@ -131,16 +124,13 @@ class TestTCBE001TCBE006BrokerCommunicationFailures:
         # Mock authentication failure at the broker level
         with patch.object(
             system["execution_coordinator"].broker,
-            'place_order',
-            side_effect=Exception("Authentication failed: Invalid API credentials")
+            "place_order",
+            side_effect=Exception("Authentication failed: Invalid API credentials"),
         ) as mock_place_order:
 
             # Create test order
             order = integration_test_scenarios.create_test_order(
-                order_id="be_003_test",
-                symbol="BTC-USD",
-                side=OrderSide.BUY,
-                quantity=0.1
+                order_id="be_003_test", symbol="BTC-USD", side=OrderSide.BUY, quantity=0.1
             )
 
             # Attempt order placement should fail with auth error
@@ -151,7 +141,7 @@ class TestTCBE001TCBE006BrokerCommunicationFailures:
                     side=order.side,
                     order_type=order.type,
                     quantity=order.quantity,
-                    price=order.price
+                    price=order.price,
                 )
 
             # Verify authentication error propagation
@@ -179,10 +169,7 @@ class TestTCBE001TCBE006BrokerCommunicationFailures:
 
         # Create test order
         order = integration_test_scenarios.create_test_order(
-            order_id="be_004_test",
-            symbol="BTC-USD",
-            side=OrderSide.SELL,
-            quantity=0.2
+            order_id="be_004_test", symbol="BTC-USD", side=OrderSide.SELL, quantity=0.2
         )
 
         # Attempt order placement should fail gracefully
@@ -193,7 +180,7 @@ class TestTCBE001TCBE006BrokerCommunicationFailures:
                 side=order.side,
                 order_type=order.type,
                 quantity=order.quantity,
-                price=order.price
+                price=order.price,
             )
 
         # Verify maintenance mode error propagation
@@ -205,8 +192,9 @@ class TestTCBE001TCBE006BrokerCommunicationFailures:
         assert len(maintenance_events) > 0
 
         # Verify no orders were placed during maintenance
-        assert all(event["data"].get("order_placed", False) is False
-                  for event in maintenance_events)
+        assert all(
+            event["data"].get("order_placed", False) is False for event in maintenance_events
+        )
 
     @pytest.mark.asyncio
     async def test_tc_be_005_network_timeout_during_order_placement(
@@ -219,16 +207,13 @@ class TestTCBE001TCBE006BrokerCommunicationFailures:
         # Mock network timeout
         with patch.object(
             system["execution_coordinator"].broker,
-            'place_order',
-            side_effect=TimeoutError("Network timeout: Request timed out after 30 seconds")
+            "place_order",
+            side_effect=TimeoutError("Network timeout: Request timed out after 30 seconds"),
         ):
 
             # Create test order
             order = integration_test_scenarios.create_test_order(
-                order_id="be_005_test",
-                symbol="ETH-USD",
-                side=OrderSide.BUY,
-                quantity=0.3
+                order_id="be_005_test", symbol="ETH-USD", side=OrderSide.BUY, quantity=0.3
             )
 
             # Attempt order placement should handle timeout
@@ -239,7 +224,7 @@ class TestTCBE001TCBE006BrokerCommunicationFailures:
                     side=order.side,
                     order_type=order.type,
                     quantity=order.quantity,
-                    price=order.price
+                    price=order.price,
                 )
 
             # Verify timeout error propagation
@@ -265,16 +250,13 @@ class TestTCBE001TCBE006BrokerCommunicationFailures:
         # Mock invalid broker response
         with patch.object(
             system["execution_coordinator"].broker,
-            'place_order',
-            return_value=None  # Invalid response
+            "place_order",
+            return_value=None,  # Invalid response
         ):
 
             # Create test order
             order = integration_test_scenarios.create_test_order(
-                order_id="be_006_test",
-                symbol="BTC-USD",
-                side=OrderSide.BUY,
-                quantity=0.1
+                order_id="be_006_test", symbol="BTC-USD", side=OrderSide.BUY, quantity=0.1
             )
 
             # Attempt order placement should handle invalid response
@@ -285,7 +267,7 @@ class TestTCBE001TCBE006BrokerCommunicationFailures:
                     side=order.side,
                     order_type=order.type,
                     quantity=order.quantity,
-                    price=order.price
+                    price=order.price,
                 )
 
             # Verify invalid response error handling
@@ -312,20 +294,17 @@ class TestTCBE007TCBE012ErrorFlowThroughSystemLayers:
         # Mock broker error
         with patch.object(
             system["execution_coordinator"].broker,
-            'place_order',
-            side_effect=Exception("Broker API error: Invalid symbol")
+            "place_order",
+            side_effect=Exception("Broker API error: Invalid symbol"),
         ):
 
             # Create test order
             order = integration_test_scenarios.create_test_order(
-                order_id="be_007_test",
-                symbol="INVALID-SYMBOL",
-                side=OrderSide.BUY,
-                quantity=0.1
+                order_id="be_007_test", symbol="INVALID-SYMBOL", side=OrderSide.BUY, quantity=0.1
             )
 
             # Track error propagation through layers
-            with patch.object(risk_manager, 'handle_broker_error') as mock_risk_handler:
+            with patch.object(risk_manager, "handle_broker_error") as mock_risk_handler:
 
                 # Attempt order placement
                 with pytest.raises(Exception):
@@ -335,7 +314,7 @@ class TestTCBE007TCBE012ErrorFlowThroughSystemLayers:
                         side=order.side,
                         order_type=order.type,
                         quantity=order.quantity,
-                        price=order.price
+                        price=order.price,
                     )
 
                 # Verify risk manager was notified of broker error
@@ -365,8 +344,8 @@ class TestTCBE007TCBE012ErrorFlowThroughSystemLayers:
         # Mock order status update failure
         with patch.object(
             broker,
-            'get_order_status',
-            side_effect=Exception("Order status check failed: Network error")
+            "get_order_status",
+            side_effect=Exception("Order status check failed: Network error"),
         ):
 
             # First place an order successfully
@@ -374,10 +353,7 @@ class TestTCBE007TCBE012ErrorFlowThroughSystemLayers:
             broker.disable_maintenance_mode()
 
             order = integration_test_scenarios.create_test_order(
-                order_id="be_008_test",
-                symbol="BTC-USD",
-                side=OrderSide.BUY,
-                quantity=0.1
+                order_id="be_008_test", symbol="BTC-USD", side=OrderSide.BUY, quantity=0.1
             )
 
             # Place order
@@ -387,7 +363,7 @@ class TestTCBE007TCBE012ErrorFlowThroughSystemLayers:
                 side=order.side,
                 order_type=order.type,
                 quantity=order.quantity,
-                price=order.price
+                price=order.price,
             )
 
             # Attempt to get order status should fail
@@ -413,8 +389,8 @@ class TestTCBE007TCBE012ErrorFlowThroughSystemLayers:
         # Mock position sync failure
         with patch.object(
             system["execution_coordinator"].broker,
-            'get_positions',
-            side_effect=Exception("Position sync failed: Database connection error")
+            "get_positions",
+            side_effect=Exception("Position sync failed: Database connection error"),
         ):
 
             # Attempt position synchronization
@@ -444,16 +420,13 @@ class TestTCBE007TCBE012ErrorFlowThroughSystemLayers:
         # Mock balance update failure
         with patch.object(
             system["execution_coordinator"],
-            '_update_balance',
-            side_effect=Exception("Balance update failed: Account service unavailable")
+            "_update_balance",
+            side_effect=Exception("Balance update failed: Account service unavailable"),
         ):
 
             # Create and place order
             order = integration_test_scenarios.create_test_order(
-                order_id="be_010_test",
-                symbol="BTC-USD",
-                side=OrderSide.BUY,
-                quantity=0.1
+                order_id="be_010_test", symbol="BTC-USD", side=OrderSide.BUY, quantity=0.1
             )
 
             # Order placement should handle balance update failure
@@ -464,7 +437,7 @@ class TestTCBE007TCBE012ErrorFlowThroughSystemLayers:
                     side=order.side,
                     order_type=order.type,
                     quantity=order.quantity,
-                    price=order.price
+                    price=order.price,
                 )
 
             # Verify balance update error propagation
@@ -490,16 +463,13 @@ class TestTCBE007TCBE012ErrorFlowThroughSystemLayers:
         # Mock broker error
         with patch.object(
             system["execution_coordinator"].broker,
-            'place_order',
-            side_effect=Exception("Telemetry test error")
+            "place_order",
+            side_effect=Exception("Telemetry test error"),
         ):
 
             # Create test order
             order = integration_test_scenarios.create_test_order(
-                order_id="be_011_test",
-                symbol="BTC-USD",
-                side=OrderSide.BUY,
-                quantity=0.1
+                order_id="be_011_test", symbol="BTC-USD", side=OrderSide.BUY, quantity=0.1
             )
 
             # Attempt order placement
@@ -510,7 +480,7 @@ class TestTCBE007TCBE012ErrorFlowThroughSystemLayers:
                     side=order.side,
                     order_type=order.type,
                     quantity=order.quantity,
-                    price=order.price
+                    price=order.price,
                 )
 
             # Verify telemetry metrics were recorded
@@ -536,16 +506,13 @@ class TestTCBE007TCBE012ErrorFlowThroughSystemLayers:
         # Mock broker error
         with patch.object(
             system["execution_coordinator"].broker,
-            'place_order',
-            side_effect=Exception("Event store test error")
+            "place_order",
+            side_effect=Exception("Event store test error"),
         ):
 
             # Create test order
             order = integration_test_scenarios.create_test_order(
-                order_id="be_012_test",
-                symbol="ETH-USD",
-                side=OrderSide.BUY,
-                quantity=0.2
+                order_id="be_012_test", symbol="ETH-USD", side=OrderSide.BUY, quantity=0.2
             )
 
             # Attempt order placement
@@ -556,7 +523,7 @@ class TestTCBE007TCBE012ErrorFlowThroughSystemLayers:
                     side=order.side,
                     order_type=order.type,
                     quantity=order.quantity,
-                    price=order.price
+                    price=order.price,
                 )
 
             # Verify comprehensive error logging across event types
@@ -595,10 +562,7 @@ class TestTCBE013TCBE017BrokerErrorRecovery:
 
         # Create test order
         order = integration_test_scenarios.create_test_order(
-            order_id="be_013_test",
-            symbol="BTC-USD",
-            side=OrderSide.BUY,
-            quantity=0.1
+            order_id="be_013_test", symbol="BTC-USD", side=OrderSide.BUY, quantity=0.1
         )
 
         # First attempt should fail
@@ -609,7 +573,7 @@ class TestTCBE013TCBE017BrokerErrorRecovery:
                 side=order.side,
                 order_type=order.type,
                 quantity=order.quantity,
-                price=order.price
+                price=order.price,
             )
 
         # Restore connection
@@ -626,7 +590,7 @@ class TestTCBE013TCBE017BrokerErrorRecovery:
                 side=order.side,
                 order_type=order.type,
                 quantity=order.quantity,
-                price=order.price
+                price=order.price,
             )
             assert result is not None
         except Exception as e:
@@ -651,10 +615,7 @@ class TestTCBE013TCBE017BrokerErrorRecovery:
 
         # Create test order
         order = integration_test_scenarios.create_test_order(
-            order_id="be_014_test",
-            symbol="ETH-USD",
-            side=OrderSide.BUY,
-            quantity=0.2
+            order_id="be_014_test", symbol="ETH-USD", side=OrderSide.BUY, quantity=0.2
         )
 
         # First attempt should fail
@@ -665,7 +626,7 @@ class TestTCBE013TCBE017BrokerErrorRecovery:
                 side=order.side,
                 order_type=order.type,
                 quantity=order.quantity,
-                price=order.price
+                price=order.price,
             )
 
         # Clear failure mode
@@ -679,7 +640,7 @@ class TestTCBE013TCBE017BrokerErrorRecovery:
                 side=order.side,
                 order_type=order.type,
                 quantity=order.quantity,
-                price=order.price
+                price=order.price,
             )
             assert result is not None
         except Exception as e:
@@ -702,9 +663,7 @@ class TestTCBE013TCBE017BrokerErrorRecovery:
         # Create some initial state
         initial_positions = [
             integration_test_scenarios.create_test_position(
-                symbol="BTC-USD",
-                size=1.0,
-                entry_price=50000.0
+                symbol="BTC-USD", size=1.0, entry_price=50000.0
             )
         ]
         broker.positions.update({pos.symbol: pos for pos in initial_positions})
@@ -714,9 +673,7 @@ class TestTCBE013TCBE017BrokerErrorRecovery:
 
         # Modify state while disconnected (simulate external changes)
         external_position = integration_test_scenarios.create_test_position(
-            symbol="ETH-USD",
-            size=0.5,
-            entry_price=3000.0
+            symbol="ETH-USD", size=0.5, entry_price=3000.0
         )
         broker.positions["ETH-USD"] = external_position
 
@@ -751,16 +708,13 @@ class TestTCBE013TCBE017BrokerErrorRecovery:
         # Mock primary broker failure
         with patch.object(
             system["execution_coordinator"].broker,
-            'place_order',
-            side_effect=Exception("Primary broker unavailable")
+            "place_order",
+            side_effect=Exception("Primary broker unavailable"),
         ):
 
             # Create test order
             order = integration_test_scenarios.create_test_order(
-                order_id="be_016_test",
-                symbol="BTC-USD",
-                side=OrderSide.BUY,
-                quantity=0.1
+                order_id="be_016_test", symbol="BTC-USD", side=OrderSide.BUY, quantity=0.1
             )
 
             # Attempt order placement
@@ -771,7 +725,7 @@ class TestTCBE013TCBE017BrokerErrorRecovery:
                     side=order.side,
                     order_type=order.type,
                     quantity=order.quantity,
-                    price=order.price
+                    price=order.price,
                 )
 
             # Verify fallback attempt was logged
@@ -793,10 +747,7 @@ class TestTCBE013TCBE017BrokerErrorRecovery:
 
         # Create test order
         order = integration_test_scenarios.create_test_order(
-            order_id="be_017_test",
-            symbol="BTC-USD",
-            side=OrderSide.BUY,
-            quantity=0.1
+            order_id="be_017_test", symbol="BTC-USD", side=OrderSide.BUY, quantity=0.1
         )
 
         # Attempt order placement should trigger degradation mode
@@ -807,7 +758,7 @@ class TestTCBE013TCBE017BrokerErrorRecovery:
                 side=order.side,
                 order_type=order.type,
                 quantity=order.quantity,
-                price=order.price
+                price=order.price,
             )
 
         # Verify degradation mode was activated
@@ -845,13 +796,14 @@ class TestBrokerErrorPropagationEdgeCases:
                 order_id=f"concurrent_{i}",
                 symbol="BTC-USD" if i % 2 == 0 else "ETH-USD",
                 side=OrderSide.BUY,
-                quantity=0.1
+                quantity=0.1,
             )
             for i in range(3)
         ]
 
         # Attempt concurrent order placements
         import asyncio
+
         tasks = []
         for order in orders:
             task = system["execution_coordinator"].place_order(
@@ -860,7 +812,7 @@ class TestBrokerErrorPropagationEdgeCases:
                 side=order.side,
                 order_type=order.type,
                 quantity=order.quantity,
-                price=order.price
+                price=order.price,
             )
             tasks.append(task)
 
@@ -895,7 +847,7 @@ class TestBrokerErrorPropagationEdgeCases:
             order_id="circuit_broker_error",
             symbol="BTC-USD",
             side=OrderSide.BUY,
-            quantity=10.0  # Large size to trigger risk limits
+            quantity=10.0,  # Large size to trigger risk limits
         )
 
         # Attempt order placement
@@ -906,7 +858,7 @@ class TestBrokerErrorPropagationEdgeCases:
                 side=order.side,
                 order_type=order.type,
                 quantity=order.quantity,
-                price=order.price
+                price=order.price,
             )
 
         # Verify both circuit breaker and broker error were handled

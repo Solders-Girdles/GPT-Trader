@@ -8,7 +8,9 @@ from unittest.mock import MagicMock
 class TestReduceOnlyAndRisk:
     """Test ConfigController reduce-only mode management and risk manager integration."""
 
-    def test_sync_with_risk_manager_when_risk_manager_enforces_reduce_only(self, config_controller, mock_risk_manager) -> None:
+    def test_sync_with_risk_manager_when_risk_manager_enforces_reduce_only(
+        self, config_controller, mock_risk_manager
+    ) -> None:
         """Test sync_with_risk_manager updates config when risk manager enforces reduce-only."""
         # Setup: risk manager says reduce-only, config doesn't
         config = MagicMock()
@@ -26,7 +28,9 @@ class TestReduceOnlyAndRisk:
         # Verify cache was updated
         assert config_controller._reduce_only_mode_state is True
 
-    def test_sync_with_risk_manager_when_config_already_reduce_only(self, config_controller, mock_risk_manager) -> None:
+    def test_sync_with_risk_manager_when_config_already_reduce_only(
+        self, config_controller, mock_risk_manager
+    ) -> None:
         """Test sync_with_risk_manager doesn't update when config already matches risk manager."""
         config = MagicMock()
         config.reduce_only_mode = True
@@ -42,7 +46,9 @@ class TestReduceOnlyAndRisk:
         # Cache should still be updated to match
         assert config_controller._reduce_only_mode_state is True
 
-    def test_sync_with_risk_manager_when_both_not_reduce_only(self, config_controller, mock_risk_manager) -> None:
+    def test_sync_with_risk_manager_when_both_not_reduce_only(
+        self, config_controller, mock_risk_manager
+    ) -> None:
         """Test sync_with_risk_manager when neither config nor risk manager require reduce-only."""
         config = MagicMock()
         config.reduce_only_mode = False
@@ -58,7 +64,9 @@ class TestReduceOnlyAndRisk:
         # Cache should be updated
         assert config_controller._reduce_only_mode_state is False
 
-    def test_sync_with_risk_manager_updates_cache_directly_when_no_config_change(self, config_controller, mock_risk_manager) -> None:
+    def test_sync_with_risk_manager_updates_cache_directly_when_no_config_change(
+        self, config_controller, mock_risk_manager
+    ) -> None:
         """Test sync_with_risk_manager updates cache directly when config already matches."""
         config = MagicMock()
         config.reduce_only_mode = True
@@ -71,16 +79,22 @@ class TestReduceOnlyAndRisk:
         # Cache should be updated even though config wasn't changed
         assert config_controller._reduce_only_mode_state is True
 
-    def test_set_reduce_only_mode_returns_false_when_no_change(self, config_controller, mock_risk_manager) -> None:
+    def test_set_reduce_only_mode_returns_false_when_no_change(
+        self, config_controller, mock_risk_manager
+    ) -> None:
         """Test set_reduce_only_mode returns False when mode is already set."""
         config_controller._reduce_only_mode_state = True
 
-        result = config_controller.set_reduce_only_mode(True, reason="test", risk_manager=mock_risk_manager)
+        result = config_controller.set_reduce_only_mode(
+            True, reason="test", risk_manager=mock_risk_manager
+        )
 
         assert result is False
         mock_risk_manager.set_reduce_only_mode.assert_not_called()
 
-    def test_set_reduce_only_mode_enables_with_risk_manager(self, config_controller, mock_risk_manager) -> None:
+    def test_set_reduce_only_mode_enables_with_risk_manager(
+        self, config_controller, mock_risk_manager
+    ) -> None:
         """Test set_reduce_only_mode enables mode and updates risk manager."""
         config = MagicMock()
         config.reduce_only_mode = False
@@ -89,7 +103,9 @@ class TestReduceOnlyAndRisk:
         config_controller._manager.get_config.return_value = config
         config_controller._reduce_only_mode_state = False
 
-        result = config_controller.set_reduce_only_mode(True, reason="test reason", risk_manager=mock_risk_manager)
+        result = config_controller.set_reduce_only_mode(
+            True, reason="test reason", risk_manager=mock_risk_manager
+        )
 
         # Verify returns True for change
         assert result is True
@@ -101,7 +117,9 @@ class TestReduceOnlyAndRisk:
         # Verify cache updated
         assert config_controller._reduce_only_mode_state is True
 
-    def test_set_reduce_only_mode_disables_with_risk_manager(self, config_controller, mock_risk_manager) -> None:
+    def test_set_reduce_only_mode_disables_with_risk_manager(
+        self, config_controller, mock_risk_manager
+    ) -> None:
         """Test set_reduce_only_mode disables mode and updates risk manager."""
         config = MagicMock()
         config.reduce_only_mode = True
@@ -110,11 +128,15 @@ class TestReduceOnlyAndRisk:
         config_controller._manager.get_config.return_value = config
         config_controller._reduce_only_mode_state = True
 
-        result = config_controller.set_reduce_only_mode(False, reason="disable reason", risk_manager=mock_risk_manager)
+        result = config_controller.set_reduce_only_mode(
+            False, reason="disable reason", risk_manager=mock_risk_manager
+        )
 
         assert result is True
         config.with_overrides.assert_called_once_with(reduce_only_mode=False)
-        mock_risk_manager.set_reduce_only_mode.assert_called_once_with(False, reason="disable reason")
+        mock_risk_manager.set_reduce_only_mode.assert_called_once_with(
+            False, reason="disable reason"
+        )
         assert config_controller._reduce_only_mode_state is False
 
     def test_set_reduce_only_mode_without_risk_manager(self, config_controller) -> None:
@@ -133,7 +155,9 @@ class TestReduceOnlyAndRisk:
         config_controller._manager.replace_config.assert_called_once()
         assert config_controller._reduce_only_mode_state is True
 
-    def test_is_reduce_only_mode_returns_true_when_risk_manager_enforces(self, config_controller, mock_risk_manager) -> None:
+    def test_is_reduce_only_mode_returns_true_when_risk_manager_enforces(
+        self, config_controller, mock_risk_manager
+    ) -> None:
         """Test is_reduce_only_mode returns True when risk manager enforces reduce-only."""
         config_controller._reduce_only_mode_state = False
         mock_risk_manager.is_reduce_only_mode.return_value = True
@@ -142,7 +166,9 @@ class TestReduceOnlyAndRisk:
 
         assert result is True
 
-    def test_is_reduce_only_mode_returns_cached_when_risk_manager_allows(self, config_controller, mock_risk_manager) -> None:
+    def test_is_reduce_only_mode_returns_cached_when_risk_manager_allows(
+        self, config_controller, mock_risk_manager
+    ) -> None:
         """Test is_reduce_only_mode returns cached state when risk manager allows."""
         config_controller._reduce_only_mode_state = True
         mock_risk_manager.is_reduce_only_mode.return_value = False
@@ -216,7 +242,9 @@ class TestReduceOnlyAndRisk:
         assert result is False  # No change occurred
         config_controller._manager.get_config.return_value.with_overrides.assert_not_called()
 
-    def test_reduce_only_mode_precedence_with_risk_manager(self, config_controller, mock_risk_manager) -> None:
+    def test_reduce_only_mode_precedence_with_risk_manager(
+        self, config_controller, mock_risk_manager
+    ) -> None:
         """Test that risk manager takes precedence over cached state."""
         # Cache says not reduce-only, risk manager says reduce-only
         config_controller._reduce_only_mode_state = False

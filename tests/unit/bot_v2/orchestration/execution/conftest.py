@@ -12,9 +12,8 @@ from bot_v2.features.brokerages.core.interfaces import (
     OrderSide,
     OrderType,
     Product,
-    TimeInForce,
 )
-from bot_v2.features.live_trade.risk import LiveRiskManager, ValidationError
+from bot_v2.features.live_trade.risk import LiveRiskManager
 from bot_v2.orchestration.execution.validation import OrderValidator
 
 
@@ -24,10 +23,12 @@ def mock_brokerage():
     broker = MagicMock(spec=IBrokerage)
 
     # Add optional methods that tests might need
-    broker.get_market_snapshot = MagicMock(return_value={
-        "spread_bps": 5,
-        "depth_l1": Decimal("1000000"),
-    })
+    broker.get_market_snapshot = MagicMock(
+        return_value={
+            "spread_bps": 5,
+            "depth_l1": Decimal("1000000"),
+        }
+    )
 
     return broker
 
@@ -115,10 +116,12 @@ def preview_broker():
     broker = MagicMock(spec=_PreviewBroker)  # Use _PreviewBroker spec instead
 
     # Add optional methods
-    broker.get_market_snapshot = MagicMock(return_value={
-        "spread_bps": 5,
-        "depth_l1": Decimal("1000000"),
-    })
+    broker.get_market_snapshot = MagicMock(
+        return_value={
+            "spread_bps": 5,
+            "depth_l1": Decimal("1000000"),
+        }
+    )
 
     # Mock preview_order method
     preview_data = {

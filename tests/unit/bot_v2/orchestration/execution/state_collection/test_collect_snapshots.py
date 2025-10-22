@@ -23,7 +23,9 @@ class TestStateCollectorInitialization:
         assert "USD" in collector.collateral_assets
         assert "USDC" in collector.collateral_assets
 
-    def test_initialization_with_custom_settings(self, mock_brokerage, mock_runtime_settings) -> None:
+    def test_initialization_with_custom_settings(
+        self, mock_brokerage, mock_runtime_settings
+    ) -> None:
         """Test StateCollector initialization with custom runtime settings."""
         collector = StateCollector(mock_brokerage, settings=mock_runtime_settings)
 
@@ -106,9 +108,13 @@ class TestCollateralAssetResolution:
 class TestCalculateEquityFromBalances:
     """Test equity calculation from balance lists."""
 
-    def test_calculate_equity_with_collateral_assets(self, state_collector, sample_balances) -> None:
+    def test_calculate_equity_with_collateral_assets(
+        self, state_collector, sample_balances
+    ) -> None:
         """Test equity calculation with multiple collateral assets."""
-        equity, collateral_balances, total_balance = state_collector.calculate_equity_from_balances(sample_balances)
+        equity, collateral_balances, total_balance = state_collector.calculate_equity_from_balances(
+            sample_balances
+        )
 
         # Should include USD, USDC (collateral assets)
         expected_equity = Decimal("15000.0") + Decimal("25000.0")  # USD + USDC
@@ -123,7 +129,9 @@ class TestCalculateEquityFromBalances:
             Balance(asset="BTC", available=Decimal("0.1"), total=Decimal("0.1"), hold=Decimal("0")),
         ]
 
-        equity, collateral_balances, total_balance = state_collector.calculate_equity_from_balances(non_collateral_balances)
+        equity, collateral_balances, total_balance = state_collector.calculate_equity_from_balances(
+            non_collateral_balances
+        )
 
         assert equity == Decimal("0")
         assert collateral_balances == []
@@ -133,11 +141,15 @@ class TestCalculateEquityFromBalances:
         """Test equity calculation falls back to USD when no collateral assets found."""
         balances_with_usd = [
             Balance(asset="ETH", available=Decimal("2.0"), total=Decimal("2.0"), hold=Decimal("0")),
-            Balance(asset="USD", available=Decimal("1000.0"), total=Decimal("1000.0"), hold=Decimal("0")),
+            Balance(
+                asset="USD", available=Decimal("1000.0"), total=Decimal("1000.0"), hold=Decimal("0")
+            ),
             Balance(asset="BTC", available=Decimal("0.1"), total=Decimal("0.1"), hold=Decimal("0")),
         ]
 
-        equity, collateral_balances, total_balance = state_collector.calculate_equity_from_balances(balances_with_usd)
+        equity, collateral_balances, total_balance = state_collector.calculate_equity_from_balances(
+            balances_with_usd
+        )
 
         assert equity == Decimal("1000.0")
         assert len(collateral_balances) == 1
@@ -151,7 +163,9 @@ class TestCalculateEquityFromBalances:
             Balance(asset="BTC", available=Decimal("0.1"), total=Decimal("0.1"), hold=Decimal("0")),
         ]
 
-        equity, collateral_balances, total_balance = state_collector.calculate_equity_from_balances(balances_no_usd)
+        equity, collateral_balances, total_balance = state_collector.calculate_equity_from_balances(
+            balances_no_usd
+        )
 
         assert equity == Decimal("0")
         assert collateral_balances == []
@@ -159,11 +173,15 @@ class TestCalculateEquityFromBalances:
 
     def test_calculate_equity_complex_scenarios(self, state_collector, complex_balances) -> None:
         """Test equity calculation with complex balance scenarios."""
-        equity, collateral_balances, total_balance = state_collector.calculate_equity_from_balances(complex_balances)
+        equity, collateral_balances, total_balance = state_collector.calculate_equity_from_balances(
+            complex_balances
+        )
 
         # Should include USD (1000.0) and USDC (0.0) and usdc (2000.0) - case insensitive matching
         # Should exclude negative ETH, empty/None assets
-        expected_equity = Decimal("1000.0") + Decimal("0.0") + Decimal("2000.0")  # USD + USDC + usdc
+        expected_equity = (
+            Decimal("1000.0") + Decimal("0.0") + Decimal("2000.0")
+        )  # USD + USDC + usdc
         assert equity == expected_equity
         assert len(collateral_balances) == 3  # USD, USDC, and usdc (case insensitive)
         assert total_balance == expected_equity
@@ -172,10 +190,14 @@ class TestCalculateEquityFromBalances:
         """Test equity calculation with zero balances."""
         zero_balances = [
             Balance(asset="USD", available=Decimal("0.0"), total=Decimal("0.0"), hold=Decimal("0")),
-            Balance(asset="USDC", available=Decimal("0.0"), total=Decimal("0.0"), hold=Decimal("0")),
+            Balance(
+                asset="USDC", available=Decimal("0.0"), total=Decimal("0.0"), hold=Decimal("0")
+            ),
         ]
 
-        equity, collateral_balances, total_balance = state_collector.calculate_equity_from_balances(zero_balances)
+        equity, collateral_balances, total_balance = state_collector.calculate_equity_from_balances(
+            zero_balances
+        )
 
         assert equity == Decimal("0")
         assert len(collateral_balances) == 2
@@ -184,11 +206,17 @@ class TestCalculateEquityFromBalances:
     def test_calculate_equity_negative_balances(self, state_collector) -> None:
         """Test equity calculation with negative balances."""
         negative_balances = [
-            Balance(asset="USD", available=Decimal("-100.0"), total=Decimal("-100.0"), hold=Decimal("0")),
-            Balance(asset="USDC", available=Decimal("500.0"), total=Decimal("500.0"), hold=Decimal("0")),
+            Balance(
+                asset="USD", available=Decimal("-100.0"), total=Decimal("-100.0"), hold=Decimal("0")
+            ),
+            Balance(
+                asset="USDC", available=Decimal("500.0"), total=Decimal("500.0"), hold=Decimal("0")
+            ),
         ]
 
-        equity, collateral_balances, total_balance = state_collector.calculate_equity_from_balances(negative_balances)
+        equity, collateral_balances, total_balance = state_collector.calculate_equity_from_balances(
+            negative_balances
+        )
 
         # Should include both balances in calculation
         expected_equity = Decimal("-100.0") + Decimal("500.0")
@@ -200,12 +228,16 @@ class TestCalculateEquityFromBalances:
 class TestCollectAccountState:
     """Test complete account state collection."""
 
-    def test_collect_account_state_success(self, state_collector, sample_balances, sample_positions) -> None:
+    def test_collect_account_state_success(
+        self, state_collector, sample_balances, sample_positions
+    ) -> None:
         """Test successful account state collection."""
         state_collector.broker.list_balances.return_value = sample_balances
         state_collector.broker.list_positions.return_value = sample_positions
 
-        balances, equity, collateral_balances, total_balance, positions = state_collector.collect_account_state()
+        balances, equity, collateral_balances, total_balance, positions = (
+            state_collector.collect_account_state()
+        )
 
         # Verify all components are returned
         assert balances == sample_balances
@@ -223,7 +255,9 @@ class TestCollectAccountState:
         state_collector.broker.list_balances.return_value = []
         state_collector.broker.list_positions.return_value = []
 
-        balances, equity, collateral_balances, total_balance, positions = state_collector.collect_account_state()
+        balances, equity, collateral_balances, total_balance, positions = (
+            state_collector.collect_account_state()
+        )
 
         assert balances == []
         assert equity == Decimal("0")
@@ -236,7 +270,9 @@ class TestCollectAccountState:
         state_collector.broker.list_balances.return_value = sample_balances
         state_collector.broker.list_positions.return_value = []
 
-        balances, equity, collateral_balances, total_balance, positions = state_collector.collect_account_state()
+        balances, equity, collateral_balances, total_balance, positions = (
+            state_collector.collect_account_state()
+        )
 
         assert balances == sample_balances
         assert equity > Decimal("0")
@@ -246,19 +282,27 @@ class TestCollectAccountState:
 
     def test_collect_account_state_broker_errors(self, state_collector) -> None:
         """Test account state collection handles broker errors gracefully."""
-        state_collector.broker.list_balances.side_effect = RuntimeError("Balance service unavailable")
+        state_collector.broker.list_balances.side_effect = RuntimeError(
+            "Balance service unavailable"
+        )
 
         with pytest.raises(RuntimeError, match="Balance service unavailable"):
             state_collector.collect_account_state()
 
-    def test_collect_account_state_integration(self, state_collector_with_settings, sample_balances) -> None:
+    def test_collect_account_state_integration(
+        self, state_collector_with_settings, sample_balances
+    ) -> None:
         """Test account state collection with custom settings integration."""
         state_collector_with_settings.broker.list_balances.return_value = sample_balances
         state_collector_with_settings.broker.list_positions.return_value = []
 
-        balances, equity, collateral_balances, total_balance, positions = state_collector_with_settings.collect_account_state()
+        balances, equity, collateral_balances, total_balance, positions = (
+            state_collector_with_settings.collect_account_state()
+        )
 
         # Should use custom collateral assets (USD, USDC, ETH)
-        expected_equity = Decimal("15000.0") + Decimal("25000.0") + Decimal("2.0")  # USD + USDC + ETH
+        expected_equity = (
+            Decimal("15000.0") + Decimal("25000.0") + Decimal("2.0")
+        )  # USD + USDC + ETH
         assert equity == expected_equity
         assert len(collateral_balances) == 3  # USD, USDC, and ETH

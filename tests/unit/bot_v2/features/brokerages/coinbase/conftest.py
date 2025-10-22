@@ -4,7 +4,6 @@ import os
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
-from typing import Any
 from unittest.mock import Mock
 
 import pytest
@@ -14,12 +13,13 @@ try:
 except ModuleNotFoundError:  # pragma: no cover - optional dependency
     load_dotenv = None  # type: ignore
 
+from pathlib import Path
+
 from bot_v2.features.brokerages.coinbase.market_data_service import MarketDataService
 from bot_v2.features.brokerages.coinbase.models import APIConfig
 from bot_v2.features.brokerages.coinbase.transports import MockTransport, NoopTransport
 from bot_v2.features.brokerages.coinbase.utilities import ProductCatalog
 from bot_v2.orchestration.runtime_settings import RuntimeSettings
-from pathlib import Path
 
 
 @dataclass(frozen=True)
@@ -85,6 +85,7 @@ def fake_clock():
 # =============================================================================
 # MARKET DATA TEST INFRASTRUCTURE
 # =============================================================================
+
 
 @pytest.fixture
 def mock_api_config() -> APIConfig:
@@ -197,9 +198,25 @@ def mock_websocket_with_reconnect_backoff():
 def mock_transport():
     """Create MockTransport with predefined messages."""
     messages = [
-        {"type": "ticker", "product_id": "BTC-USD", "price": "50000.00", "bid": "49900.00", "ask": "50100.00"},
-        {"type": "match", "product_id": "BTC-USD", "price": "50050.00", "size": "0.1", "side": "buy"},
-        {"type": "l2update", "product_id": "BTC-USD", "changes": [["buy", "49950.00", "0.5"], ["sell", "50100.00", "0.3"]]},
+        {
+            "type": "ticker",
+            "product_id": "BTC-USD",
+            "price": "50000.00",
+            "bid": "49900.00",
+            "ask": "50100.00",
+        },
+        {
+            "type": "match",
+            "product_id": "BTC-USD",
+            "price": "50050.00",
+            "size": "0.1",
+            "side": "buy",
+        },
+        {
+            "type": "l2update",
+            "product_id": "BTC-USD",
+            "changes": [["buy", "49950.00", "0.5"], ["sell", "50100.00", "0.3"]],
+        },
     ]
     return MockTransport(messages=messages)
 
@@ -223,7 +240,12 @@ def mock_transport_with_connection_failure():
 def ticker_message_factory():
     """Factory for creating ticker messages with deterministic content."""
 
-    def create_ticker(symbol: str = "BTC-USD", price: str = "50000.00", bid: str = "49900.00", ask: str = "50100.00"):
+    def create_ticker(
+        symbol: str = "BTC-USD",
+        price: str = "50000.00",
+        bid: str = "49900.00",
+        ask: str = "50100.00",
+    ):
         return {
             "type": "ticker",
             "product_id": symbol,
@@ -241,7 +263,9 @@ def ticker_message_factory():
 def trade_message_factory():
     """Factory for creating trade/match messages."""
 
-    def create_trade(symbol: str = "BTC-USD", price: str = "50050.00", size: str = "0.1", side: str = "buy"):
+    def create_trade(
+        symbol: str = "BTC-USD", price: str = "50050.00", size: str = "0.1", side: str = "buy"
+    ):
         return {
             "type": "match",
             "product_id": symbol,
@@ -387,7 +411,12 @@ def websocket_lifecycle_states():
         "connected": {"connected": True, "connecting": False, "authenticated": False},
         "authenticated": {"connected": True, "connecting": False, "authenticated": True},
         "disconnected": {"connected": False, "connecting": False, "authenticated": False},
-        "error": {"connected": False, "connecting": False, "authenticated": False, "error": "Connection failed"},
+        "error": {
+            "connected": False,
+            "connecting": False,
+            "authenticated": False,
+            "error": "Connection failed",
+        },
     }
 
 

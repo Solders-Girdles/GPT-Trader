@@ -11,11 +11,9 @@ from bot_v2.features.brokerages.core.interfaces import (
     IBrokerage,
     OrderSide,
     OrderType,
-    Product,
     TimeInForce,
 )
 from bot_v2.features.live_trade.risk import ValidationError
-from bot_v2.orchestration.execution.validation import OrderValidator
 
 
 class TestPreTradeValidation:
@@ -52,7 +50,9 @@ class TestPreTradeValidation:
             current_positions=current_positions,
         )
 
-    def test_pre_trade_validation_propagates_validation_error(self, order_validator, sample_product) -> None:
+    def test_pre_trade_validation_propagates_validation_error(
+        self, order_validator, sample_product
+    ) -> None:
         """Test that ValidationError from risk manager is propagated."""
         symbol = "BTC-PERP"
         side = OrderSide.BUY
@@ -77,7 +77,9 @@ class TestPreTradeValidation:
                 current_positions=current_positions,
             )
 
-    def test_pre_trade_validation_with_complex_positions(self, order_validator, sample_product) -> None:
+    def test_pre_trade_validation_with_complex_positions(
+        self, order_validator, sample_product
+    ) -> None:
         """Test pre-trade validation with complex position scenarios."""
         symbol = "ETH-PERP"
         side = OrderSide.SELL
@@ -177,15 +179,16 @@ class TestOrderPreview:
 
     def test_order_preview_successful(self, order_validator) -> None:
         """Test successful order preview."""
-        from bot_v2.orchestration.execution.validation import _PreviewBroker
 
         # Create a broker that implements the _PreviewBroker protocol
         class MockPreviewBroker:
             def __init__(self):
-                self.get_market_snapshot = MagicMock(return_value={
-                    "spread_bps": 5,
-                    "depth_l1": Decimal("1000000"),
-                })
+                self.get_market_snapshot = MagicMock(
+                    return_value={
+                        "spread_bps": 5,
+                        "depth_l1": Decimal("1000000"),
+                    }
+                )
                 self.preview_order = MagicMock()
                 self.edit_order_preview = MagicMock()
 

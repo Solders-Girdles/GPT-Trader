@@ -109,6 +109,11 @@ class BotConfig(BaseModel):
     dry_run: bool = False
     symbols: list[str] | None = None
     derivatives_enabled: bool = False
+    us_futures_enabled: bool = False
+    intx_perpetuals_enabled: bool = False
+    adx_filter_enabled: bool = False
+    adx_period: int = 14
+    adx_threshold: float = 25.0
     update_interval: int = 5
     short_ma: int = 5
     long_ma: int = 20
@@ -349,6 +354,54 @@ class BotConfig(BaseModel):
             context={"value": result},
         )
         return int(result)
+
+    @field_validator("adx_period", mode="before")
+    @classmethod
+    def _validate_adx_period(cls, value: Any) -> int:
+        result = _apply_rule(
+            _INT_RULE,
+            value,
+            field_label="adx_period",
+            error_code="adx_period_invalid",
+            error_template="adx_period must be a valid integer, got {value}: {error}",
+        )
+        _ensure_condition(
+            result < 7,
+            error_code="adx_period_too_small",
+            error_template="adx_period must be at least 7, got {value}",
+            context={"value": result},
+        )
+        _ensure_condition(
+            result > 50,
+            error_code="adx_period_too_large",
+            error_template="adx_period must be <= 50, got {value}",
+            context={"value": result},
+        )
+        return int(result)
+
+    @field_validator("adx_threshold", mode="before")
+    @classmethod
+    def _validate_adx_threshold(cls, value: Any) -> float:
+        result = _apply_rule(
+            _FLOAT_RULE,
+            value,
+            field_label="adx_threshold",
+            error_code="adx_threshold_invalid",
+            error_template="adx_threshold must be numeric, got {value}: {error}",
+        )
+        _ensure_condition(
+            result < 0,
+            error_code="adx_threshold_negative",
+            error_template="adx_threshold must be non-negative, got {value}",
+            context={"value": result},
+        )
+        _ensure_condition(
+            result > 100,
+            error_code="adx_threshold_too_high",
+            error_template="adx_threshold must be <= 100, got {value}",
+            context={"value": result},
+        )
+        return float(result)
 
     @field_validator("trailing_stop_pct", mode="before")
     @classmethod

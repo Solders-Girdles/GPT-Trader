@@ -16,6 +16,7 @@ from bot_v2.utilities.logging_patterns import get_logger
 logger = get_logger(__name__, component="symbols")
 
 PERPS_ALLOWLIST = frozenset({"BTC-PERP", "ETH-PERP", "SOL-PERP", "XRP-PERP"})
+US_FUTURES_ALLOWLIST = frozenset({"BTC-FUTURES", "ETH-FUTURES", "SOL-FUTURES", "XRP-FUTURES"})
 
 
 @dataclass(frozen=True)
@@ -52,18 +53,62 @@ def derivatives_enabled(profile: Profile, *, settings: RuntimeSettings | None = 
     return True
 
 
+def us_futures_enabled(profile: Profile, *, settings: RuntimeSettings | None = None) -> bool:
+    """Determine whether US futures trading should be enabled for the profile."""
+
+    runtime_settings = settings or load_runtime_settings()
+
+    # Check if derivatives are enabled at all
+    if not derivatives_enabled(profile, settings=settings):
+        return False
+
+    # Check US futures specific flag
+    if runtime_settings.coinbase_us_futures_enabled:
+        return True
+
+    # Check derivatives type
+    if runtime_settings.coinbase_derivatives_type == "us_futures":
+        return True
+
+    return False
+
+
+def intx_perpetuals_enabled(profile: Profile, *, settings: RuntimeSettings | None = None) -> bool:
+    """Determine whether INTX perpetuals trading should be enabled for the profile."""
+
+    runtime_settings = settings or load_runtime_settings()
+
+    # Check if derivatives are enabled at all
+    if not derivatives_enabled(profile, settings=settings):
+        return False
+
+    # Check INTX perpetuals specific flag
+    if runtime_settings.coinbase_intx_perpetuals_enabled:
+        return True
+
+    # Check derivatives type (default to INTX)
+    if runtime_settings.coinbase_derivatives_type in ("intx_perps", "perpetuals"):
+        return True
+
+    return True
+
+
 def normalize_symbol_list(
     symbols: Sequence[str] | None,
     *,
     allow_derivatives: bool,
     quote: str,
     allowed_perps: Iterable[str] | None = None,
+    allowed_us_futures: Iterable[str] | None = None,
     fallback_bases: Sequence[str] | None = None,
 ) -> tuple[list[str], list[SymbolNormalizationLog]]:
     """Produce a normalised symbol list and captured log records."""
 
     logs: list[SymbolNormalizationLog] = []
-    allowed_set = set(allowed_perps) if allowed_perps is not None else set(PERPS_ALLOWLIST)
+    allowed_perps_set = set(allowed_perps) if allowed_perps is not None else set(PERPS_ALLOWLIST)
+    allowed_us_futures_set = (
+        set(allowed_us_futures) if allowed_us_futures is not None else set(US_FUTURES_ALLOWLIST)
+    )
     normalized: list[str] = []
 
     for raw in symbols or []:
@@ -73,14 +118,25 @@ def normalize_symbol_list(
 
         if allow_derivatives:
             if token.endswith("-PERP"):
-                if token in allowed_set:
+                if token in allowed_perps_set:
                     normalized.append(token)
                 else:
                     logs.append(
                         SymbolNormalizationLog(
                             logging.WARNING,
                             "Filtering unsupported perpetual symbol %s. Allowed perps: %s",
-                            (token, sorted(allowed_set)),
+                            (token, sorted(allowed_perps_set)),
+                        )
+                    )
+            elif token.endswith("-FUTURES"):
+                if token in allowed_us_futures_set:
+                    normalized.append(token)
+                else:
+                    logs.append(
+                        SymbolNormalizationLog(
+                            logging.WARNING,
+                            "Filtering unsupported US futures symbol %s. Allowed US futures: %s",
+                            (token, sorted(allowed_us_futures_set)),
                         )
                     )
             else:
@@ -106,7 +162,7 @@ def normalize_symbol_list(
         return normalized, logs
 
     if allow_derivatives:
-        fallback = ["BTC-PERP", "ETH-PERP"]
+        fallback = ["BTC-PERP", "ETH-PERP", "BTC-FUTURES", "ETH-FUTURES"]
     else:
         if fallback_bases is None:
             from bot_v2.orchestration.configuration import TOP_VOLUME_BASES

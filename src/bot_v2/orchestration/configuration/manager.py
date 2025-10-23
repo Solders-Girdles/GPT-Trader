@@ -237,6 +237,9 @@ class ConfigManager:
             perps_stream_level=settings.perps_stream_level,
             perps_paper_trading=settings.perps_paper_trading,
             perps_force_mock=settings.perps_force_mock,
+            us_futures_enabled=settings.coinbase_us_futures_enabled,
+            intx_perpetuals_enabled=settings.coinbase_intx_perpetuals_enabled,
+            derivatives_type=settings.coinbase_derivatives_type,
             perps_skip_startup_reconcile=settings.perps_skip_startup_reconcile,
             perps_position_fraction=settings.perps_position_fraction,
         )

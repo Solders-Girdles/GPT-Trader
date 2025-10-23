@@ -82,6 +82,9 @@ class RuntimeSettings:
     coinbase_default_quote_overridden: bool
     coinbase_enable_derivatives: bool
     coinbase_enable_derivatives_overridden: bool
+    coinbase_us_futures_enabled: bool
+    coinbase_intx_perpetuals_enabled: bool
+    coinbase_derivatives_type: str
     perps_enable_streaming: bool
     perps_stream_level: int
     perps_paper_trading: bool
@@ -124,6 +127,19 @@ def load_runtime_settings(env: Mapping[str, str] | None = None) -> RuntimeSettin
         derivatives_flag_raw, field_name="COINBASE_ENABLE_DERIVATIVES"
     )
     coinbase_enable_derivatives = bool(derivatives_bool)
+
+    us_futures_flag_raw = env_map.get("COINBASE_US_FUTURES_ENABLED")
+    coinbase_us_futures_enabled = bool(
+        _normalize_bool(us_futures_flag_raw, field_name="COINBASE_US_FUTURES_ENABLED")
+    )
+
+    intx_perps_flag_raw = env_map.get("COINBASE_INTX_PERPETUALS_ENABLED")
+    coinbase_intx_perpetuals_enabled = bool(
+        _normalize_bool(intx_perps_flag_raw, field_name="COINBASE_INTX_PERPETUALS_ENABLED")
+    )
+
+    derivatives_type_raw = env_map.get("COINBASE_DERIVATIVES_TYPE")
+    coinbase_derivatives_type = (derivatives_type_raw or "intx_perps").lower()
 
     perps_enable_streaming = bool(
         _normalize_bool(env_map.get("PERPS_ENABLE_STREAMING"), field_name="PERPS_ENABLE_STREAMING")
@@ -168,6 +184,9 @@ def load_runtime_settings(env: Mapping[str, str] | None = None) -> RuntimeSettin
         coinbase_default_quote_overridden=default_quote_raw is not None,
         coinbase_enable_derivatives=coinbase_enable_derivatives,
         coinbase_enable_derivatives_overridden=derivatives_flag_raw is not None,
+        coinbase_us_futures_enabled=coinbase_us_futures_enabled,
+        coinbase_intx_perpetuals_enabled=coinbase_intx_perpetuals_enabled,
+        coinbase_derivatives_type=coinbase_derivatives_type,
         perps_enable_streaming=perps_enable_streaming,
         perps_stream_level=perps_stream_level,
         perps_paper_trading=perps_paper,

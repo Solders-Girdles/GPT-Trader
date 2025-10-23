@@ -88,7 +88,7 @@ def build_ohlc_frame(
     return frame
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def ohlc_data_factory() -> Callable[..., pd.DataFrame]:
     """
     Factory for building deterministic OHLC frames.
@@ -103,7 +103,7 @@ def ohlc_data_factory() -> Callable[..., pd.DataFrame]:
     return _factory
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def seeded_ohlc_sets(ohlc_data_factory):
     """
     Provide a suite of representative OHLC datasets.
@@ -147,13 +147,13 @@ class MetricsBuilder:
         return BacktestMetrics(**data)
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def backtest_metrics_factory() -> MetricsBuilder:
     """Fixture returning a BacktestMetrics builder."""
     return MetricsBuilder()
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def fake_backtest_runner(backtest_metrics_factory):
     """
     Factory for patching ``run_backtest_local`` in tests that only need canned metrics.

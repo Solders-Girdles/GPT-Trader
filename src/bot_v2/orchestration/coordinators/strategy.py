@@ -10,6 +10,13 @@ from decimal import Decimal
 from typing import Any
 
 from bot_v2.features.brokerages.core.interfaces import Balance, Order, Position, Product
+from bot_v2.logging import (
+    correlation_context,
+    get_orchestration_logger,
+    log_execution_error,
+    log_market_data_update,
+    symbol_context,
+)
 from bot_v2.utilities import utc_now
 from bot_v2.utilities.async_tools import gather_with_concurrency
 from bot_v2.utilities.config import ConfigBaselinePayload
@@ -20,6 +27,7 @@ from .base import BaseCoordinator, CoordinatorContext, HealthStatus
 from .execution import ExecutionCoordinator
 
 logger = get_logger(__name__, component="strategy_coordinator")
+json_logger = get_orchestration_logger("strategy_coordinator")
 
 MAX_QUOTE_FETCH_CONCURRENCY = 10
 
@@ -77,51 +85,68 @@ class StrategyCoordinator(BaseCoordinator):
 
     # ------------------------------------------------------------------ trading cycle
     async def run_cycle(self) -> None:
-        ctx = self.context
-        logger.debug(
-            "Running update cycle",
-            operation="strategy_cycle",
-            stage="start",
-        )
-
-        current_state = await self._fetch_current_state()
-        if not await self._validate_configuration_and_handle_drift(current_state):
-            return
-
-        await self.update_marks()
-
-        system_monitor = getattr(ctx, "system_monitor", None)
-        session_guard = getattr(ctx, "session_guard", None)
-
-        if session_guard is not None and hasattr(session_guard, "should_trade"):
-            try:
-                should_trade = bool(session_guard.should_trade())
-            except Exception as exc:  # pragma: no cover - defensive logging
-                logger.warning(
-                    "Session guard failed during should_trade",
-                    error=str(exc),
-                    operation="strategy_cycle",
-                    stage="session_guard",
-                )
-                should_trade = True
-        else:
-            should_trade = True
-
-        if not should_trade:
-            logger.info(
-                "Outside trading window; skipping trading actions this cycle",
+        # Create correlation context for this trading cycle
+        with correlation_context(operation="strategy_cycle"):
+            ctx = self.context
+            logger.debug(
+                "Running update cycle",
                 operation="strategy_cycle",
-                stage="skip",
+                stage="start",
             )
+            json_logger.debug(
+                "Running update cycle", extra={"operation": "strategy_cycle", "stage": "start"}
+            )
+
+            current_state = await self._fetch_current_state()
+            if not await self._validate_configuration_and_handle_drift(current_state):
+                return
+
+            await self.update_marks()
+
+            system_monitor = getattr(ctx, "system_monitor", None)
+            session_guard = getattr(ctx, "session_guard", None)
+
+            if session_guard is not None and hasattr(session_guard, "should_trade"):
+                try:
+                    should_trade = bool(session_guard.should_trade())
+                except Exception as exc:  # pragma: no cover - defensive logging
+                    logger.warning(
+                        "Session guard failed during should_trade",
+                        error=str(exc),
+                        operation="strategy_cycle",
+                        stage="session_guard",
+                    )
+                    json_logger.warning(
+                        "Session guard failed during should_trade",
+                        extra={
+                            "error": str(exc),
+                            "operation": "strategy_cycle",
+                            "stage": "session_guard",
+                        },
+                    )
+                    should_trade = True
+            else:
+                should_trade = True
+
+            if not should_trade:
+                logger.info(
+                    "Outside trading window; skipping trading actions this cycle",
+                    operation="strategy_cycle",
+                    stage="skip",
+                )
+                json_logger.info(
+                    "Outside trading window; skipping trading actions this cycle",
+                    extra={"operation": "strategy_cycle", "stage": "skip"},
+                )
+                if system_monitor is not None:
+                    await system_monitor.log_status()
+                return
+
+            trading_state = dict(current_state)
+            await self._execute_trading_cycle(trading_state)
+
             if system_monitor is not None:
                 await system_monitor.log_status()
-            return
-
-        trading_state = dict(current_state)
-        await self._execute_trading_cycle(trading_state)
-
-        if system_monitor is not None:
-            await system_monitor.log_status()
 
     async def process_symbol(
         self,
@@ -129,21 +154,45 @@ class StrategyCoordinator(BaseCoordinator):
         balances: Sequence[Balance] | None = None,
         position_map: dict[str, Position] | None = None,
     ) -> None:
-        processor = self._resolve_symbol_processor()
-        needs_context = self._process_symbol_expects_context()
-        args: list[Any] = [symbol]
-        if needs_context:
-            args.extend([balances, position_map])
-        result = processor.process_symbol(*args)
-        if inspect.isawaitable(result):
-            await result
-        elif result is not None:
-            logger.debug(
-                "Symbol processor returned non-awaitable result",
-                processor=str(processor),
-                operation="process_symbol",
-                stage="result",
-            )
+        # Create symbol-specific context
+        with symbol_context(symbol):
+            processor = self._resolve_symbol_processor()
+            needs_context = self._process_symbol_expects_context()
+            args: list[Any] = [symbol]
+            if needs_context:
+                args.extend([balances, position_map])
+
+            try:
+                result = processor.process_symbol(*args)
+                if inspect.isawaitable(result):
+                    await result
+                elif result is not None:
+                    logger.debug(
+                        "Symbol processor returned non-awaitable result",
+                        processor=str(processor),
+                        operation="process_symbol",
+                        stage="result",
+                    )
+                    json_logger.debug(
+                        "Symbol processor returned non-awaitable result",
+                        extra={
+                            "processor": str(processor),
+                            "operation": "process_symbol",
+                            "stage": "result",
+                            "symbol": symbol,
+                        },
+                    )
+            except Exception as exc:
+                logger.error(
+                    "Error processing symbol",
+                    symbol=symbol,
+                    error=str(exc),
+                    exc_info=True,
+                    operation="process_symbol",
+                    stage="exception",
+                )
+                # Use the structured execution error logger
+                log_execution_error(error=exc, operation="process_symbol", symbol=symbol)
 
     async def execute_decision(
         self,
@@ -212,6 +261,8 @@ class StrategyCoordinator(BaseCoordinator):
                     stage="fetch",
                     exc_info=True,
                 )
+                # Use the structured execution error logger
+                log_execution_error(error=result, operation="update_marks_fetch", symbol=symbol)
                 continue
             try:
                 self._process_quote_update(symbol, result)
@@ -224,22 +275,33 @@ class StrategyCoordinator(BaseCoordinator):
                     stage="process",
                     exc_info=True,
                 )
+                # Use the structured execution error logger
+                log_execution_error(error=exc, operation="update_marks_process", symbol=symbol)
 
     def _process_quote_update(self, symbol: str, quote: Any) -> None:
-        if quote is None:
-            raise RuntimeError(f"No quote for {symbol}")
+        # Create symbol context for this quote update
+        with symbol_context(symbol):
+            if quote is None:
+                raise RuntimeError(f"No quote for {symbol}")
 
-        last_price = getattr(quote, "last", getattr(quote, "last_price", None))
-        if last_price is None:
-            raise RuntimeError(f"Quote missing price for {symbol}")
+            last_price = getattr(quote, "last", getattr(quote, "last_price", None))
+            if last_price is None:
+                raise RuntimeError(f"Quote missing price for {symbol}")
 
-        mark = Decimal(str(last_price))
-        if mark <= 0:
-            raise RuntimeError(f"Invalid mark price: {mark} for {symbol}")
+            mark = Decimal(str(last_price))
+            if mark <= 0:
+                raise RuntimeError(f"Invalid mark price: {mark} for {symbol}")
 
-        self._update_mark_window(symbol, mark)
-        timestamp = getattr(quote, "ts", datetime.now(UTC))
-        self._record_mark_timestamp(symbol, timestamp)
+            self._update_mark_window(symbol, mark)
+            timestamp = getattr(quote, "ts", datetime.now(UTC))
+            self._record_mark_timestamp(symbol, timestamp)
+
+            # Use the structured market data logger
+            log_market_data_update(
+                symbol=symbol,
+                price=mark,
+                timestamp=timestamp.timestamp() if hasattr(timestamp, "timestamp") else None,
+            )
 
     def update_mark_window(self, symbol: str, mark: Decimal) -> None:
         """Public facade retained for legacy call sites."""

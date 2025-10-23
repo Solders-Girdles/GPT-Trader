@@ -7,8 +7,10 @@ import tempfile
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
+from unittest.mock import Mock, patch
 
 import pytest
+from tests.shared.mock_brokers import create_mock_broker_with_async_methods
 from tests.support.deterministic_broker import DeterministicBroker
 
 from bot_v2.config.live_trade_config import RiskConfig
@@ -41,6 +43,20 @@ class DummyBroker:
             price_increment=Decimal("0.01"),
         )
         self._orders = {}
+
+        # Use shared mock broker for async methods
+        mock_broker = create_mock_broker_with_async_methods()
+        self.place_order = mock_broker.place_order
+        self.cancel_order = mock_broker.cancel_order
+        self.get_order = mock_broker.get_order
+        self.list_orders = mock_broker.list_orders
+        self.positions = mock_broker.positions
+        self.position = mock_broker.position
+        self.balances = mock_broker.balances
+        self.balance = mock_broker.balance
+        self.equity = mock_broker.equity
+        self.margin_info = mock_broker.margin_info
+        self.fills = mock_broker.fills
 
     # IBrokerage minimal surface
     def get_product(self, symbol: str) -> Product:  # type: ignore[override]

@@ -31,6 +31,9 @@ ALLOWLIST = {
     "tests/unit/app/test_container.py",  # exhaustive container unit scenarios
     "tests/integration/test_reduce_only_state_manager_integration.py",  # comprehensive reduce-only state manager integration coverage
     "tests/unit/bot_v2/orchestration/test_state_manager.py",  # exhaustive reduce-only state manager unit scenarios
+    "tests/integration/bot_v2/features/live_trade/test_circuit_breaker_integration.py",  # extensive circuit breaker regression suite
+    "tests/unit/bot_v2/orchestration/configuration/test_core.py",  # configuration validation matrix
+    "tests/unit/bot_v2/logging/test_orchestration_helpers.py",  # structured logging helper coverage
     "tests/unit/bot_v2/orchestration/test_system_monitor.py",  # monitoring integration matrix
     "tests/unit/bot_v2/test_broker_behavioral_contract.py",  # 358 lines: broker contract validation suite
     "tests/unit/bot_v2/utilities/test_async_utils_advanced.py",  # legacy async helpers coverage

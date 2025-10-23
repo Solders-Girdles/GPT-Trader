@@ -5,9 +5,15 @@ from __future__ import annotations
 import logging
 import logging.handlers
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from bot_v2.config.path_registry import LOG_DIR, ensure_directories
-from bot_v2.orchestration.runtime_settings import RuntimeSettings, load_runtime_settings
+from bot_v2.logging.json_formatter import (
+    StructuredJSONFormatterWithTimestamp,
+)
+
+if TYPE_CHECKING:
+    from bot_v2.orchestration.runtime_settings import RuntimeSettings
 
 
 def _env_flag(
@@ -16,7 +22,12 @@ def _env_flag(
     *,
     settings: RuntimeSettings | None = None,
 ) -> bool:
-    runtime_settings = settings or load_runtime_settings()
+    if settings is None:
+        from bot_v2.orchestration.runtime_settings import load_runtime_settings
+
+        runtime_settings = load_runtime_settings()
+    else:
+        runtime_settings = settings
     raw_value = runtime_settings.raw_env.get(name, default)
     return str(raw_value).strip().lower() in {"1", "true", "yes", "on"}
 
@@ -34,7 +45,12 @@ def _env_lookup(raw_env: dict[str, str], *keys: str, default: str | None = None)
 def configure_logging(settings: RuntimeSettings | None = None) -> None:
     """Configure rotating file logging and debug levels."""
 
-    runtime_settings = settings or load_runtime_settings()
+    if settings is None:
+        from bot_v2.orchestration.runtime_settings import load_runtime_settings
+
+        runtime_settings = load_runtime_settings()
+    else:
+        runtime_settings = settings
     raw_env = runtime_settings.raw_env
 
     ensure_directories((LOG_DIR,))
@@ -123,7 +139,11 @@ def configure_logging(settings: RuntimeSettings | None = None) -> None:
         for handler in json_logger.handlers
         if hasattr(handler, "baseFilename")
     }
-    json_formatter = logging.Formatter("%(message)s")
+    # Use the enhanced JSON formatter with correlation ID and domain field support
+    json_formatter = StructuredJSONFormatterWithTimestamp(
+        ensure_ascii=False,
+        sort_keys=True,
+    )
 
     json_general_path = str(log_dir / "coinbase_trader.jsonl")
     if json_general_path not in existing_json_targets:

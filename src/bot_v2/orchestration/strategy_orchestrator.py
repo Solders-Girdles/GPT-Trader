@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Any, cast
 
 import pandas as pd
 
+from bot_v2.features.analyze.indicators import calculate_adx
 from bot_v2.features.brokerages.core.interfaces import Balance, Position, Product
 from bot_v2.features.live_trade.indicators import mean_decimal as _mean_decimal
 from bot_v2.features.live_trade.indicators import (
@@ -17,13 +18,19 @@ from bot_v2.features.live_trade.indicators import (
 )
 from bot_v2.features.live_trade.indicators import to_decimal as _to_decimal
 from bot_v2.features.live_trade.indicators import true_range as _true_range
-from bot_v2.features.analyze.indicators import calculate_adx
 from bot_v2.features.live_trade.risk_runtime import CircuitBreakerAction
 from bot_v2.features.live_trade.strategies.perps_baseline import (
     Action,
     BaselinePerpsStrategy,
     Decision,
     StrategyConfig,
+)
+from bot_v2.logging import (
+    correlation_context,
+    get_orchestration_logger,
+    log_execution_error,
+    log_strategy_decision,
+    symbol_context,
 )
 from bot_v2.monitoring.system import get_logger as _get_plog
 from bot_v2.orchestration.configuration import Profile
@@ -35,6 +42,7 @@ if TYPE_CHECKING:  # pragma: no cover - type checking only
     from bot_v2.orchestration.perps_bot import PerpsBot
 
 logger = get_logger(__name__, component="strategy_orchestrator")
+json_logger = get_orchestration_logger("strategy_orchestrator")
 
 
 @dataclass(slots=True)
@@ -140,43 +148,55 @@ class StrategyOrchestrator:
         balances: Sequence[Balance] | None = None,
         position_map: dict[str, Position] | None = None,
     ) -> None:
-        bot = self._bot
-        try:
-            context = await self._prepare_context(symbol, balances, position_map)
-            if context is None:
-                return
-
-            decision = await self._resolve_decision(context)
-            self._record_decision(symbol, decision)
-
-            if decision.action in {Action.BUY, Action.SELL, Action.CLOSE}:
-                product = context.product
-                if product is None:
-                    logger.warning(
-                        "Skipping execution for %s: missing product metadata",
-                        symbol,
-                        operation="strategy_execute",
-                        stage="missing_product",
-                        symbol=symbol,
-                    )
+        # Create correlation context for this symbol processing
+        with correlation_context(operation="process_symbol"), symbol_context(symbol):
+            bot = self._bot
+            try:
+                context = await self._prepare_context(symbol, balances, position_map)
+                if context is None:
                     return
-                await bot.execute_decision(
+
+                decision = await self._resolve_decision(context)
+                self._record_decision(symbol, decision)
+
+                if decision.action in {Action.BUY, Action.SELL, Action.CLOSE}:
+                    product = context.product
+                    if product is None:
+                        logger.warning(
+                            "Skipping execution for %s: missing product metadata",
+                            symbol,
+                            operation="strategy_execute",
+                            stage="missing_product",
+                            symbol=symbol,
+                        )
+                        json_logger.warning(
+                            "Skipping execution: missing product metadata",
+                            extra={
+                                "symbol": symbol,
+                                "operation": "strategy_execute",
+                                "stage": "missing_product",
+                            },
+                        )
+                        return
+                    await bot.execute_decision(
+                        symbol,
+                        decision,
+                        context.marks[-1],
+                        product,
+                        context.position_state,
+                    )
+            except Exception as exc:
+                logger.error(
+                    "Error processing %s: %s",
                     symbol,
-                    decision,
-                    context.marks[-1],
-                    product,
-                    context.position_state,
+                    exc,
+                    exc_info=True,
+                    operation="strategy_execute",
+                    stage="process_symbol",
+                    symbol=symbol,
                 )
-        except Exception as exc:
-            logger.error(
-                "Error processing %s: %s",
-                symbol,
-                exc,
-                exc_info=True,
-                operation="strategy_execute",
-                stage="process_symbol",
-                symbol=symbol,
-            )
+                # Use the structured execution error logger
+                log_execution_error(error=exc, operation="process_symbol", symbol=symbol)
 
     async def _prepare_context(
         self,
@@ -389,6 +409,14 @@ class StrategyOrchestrator:
         self._bot.last_decisions[symbol] = decision
         logger.info(f"{symbol} Decision: {decision.action.value} - {decision.reason}")
 
+        # Use the structured strategy decision logger
+        log_strategy_decision(
+            symbol=symbol,
+            decision=decision.action.value,
+            reason=getattr(decision, "reason", None),
+            confidence=getattr(decision, "confidence", None),
+        )
+
     async def _apply_spot_filters(
         self, context: SymbolProcessingContext, decision: Decision
     ) -> Decision:
@@ -538,11 +566,13 @@ class StrategyOrchestrator:
 
                 # Convert Decimal lists to pandas Series for ADX calculation
                 high_series = pd.Series([float(h) for h in highs])
-                low_series = pd.Series([float(l) for l in lows])
+                low_series = pd.Series([float(low_value) for low_value in lows])
                 close_series = pd.Series([float(c) for c in closes])
 
                 # Calculate ADX
-                adx, plus_di, minus_di = calculate_adx(high_series, low_series, close_series, window)
+                adx, plus_di, minus_di = calculate_adx(
+                    high_series, low_series, close_series, window
+                )
                 current_adx = Decimal(str(adx.iloc[-1]))
 
                 # Determine regime

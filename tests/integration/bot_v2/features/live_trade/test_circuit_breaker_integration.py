@@ -12,14 +12,13 @@ and that the system responds appropriately across all components:
 from __future__ import annotations
 
 import asyncio
-import os
-
-# Import conftest fixtures with absolute paths
-import sys
 from decimal import Decimal
 from unittest.mock import patch
 
 import pytest
+from tests.integration.bot_v2.features.live_trade.conftest import (
+    circuit_breaker_test_scenarios,
+)
 
 from bot_v2.features.brokerages.core.interfaces import (
     OrderSide as Side,
@@ -28,12 +27,6 @@ from bot_v2.features.brokerages.core.interfaces import (
     OrderStatus,
 )
 from bot_v2.features.live_trade.risk.pre_trade_checks import ValidationError
-
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-
-from conftest import (
-    circuit_breaker_test_scenarios,
-)
 
 
 class TestCircuitBreakerTriggering:
@@ -460,8 +453,8 @@ class TestCircuitBreakerRecovery:
 
         # Verify system health indicators
         assert not risk_manager.is_reduce_only_mode(), "Should not be in reduce-only mode"
-        assert (
-            not risk_manager.circuit_breaker_state.get("active", False)
+        assert not risk_manager.circuit_breaker_state.get(
+            "active", False
         ), "Circuit breaker should be inactive"
 
         # Test normal order flow to verify system health

@@ -7,7 +7,14 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Any, cast
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    FieldValidationInfo,
+    field_validator,
+    model_validator,
+)
 from pydantic_core import PydanticCustomError
 
 from bot_v2.config.types import Profile
@@ -149,7 +156,7 @@ class BotConfig(BaseModel):
 
     @field_validator("max_leverage", mode="before")
     @classmethod
-    def _validate_max_leverage(cls, value: Any) -> int:
+    def _validate_max_leverage(cls, value: Any, info: FieldValidationInfo) -> int:
         result = _apply_rule(
             _INT_RULE,
             value,
@@ -157,11 +164,21 @@ class BotConfig(BaseModel):
             error_code="max_leverage_invalid",
             error_template="max_leverage must be a valid integer, got {value}: {error}",
         )
+        profile = info.data.get("profile")
+        profile_value = (
+            profile.value
+            if isinstance(profile, Profile)
+            else str(profile) if profile is not None else "unknown"
+        )
         _ensure_condition(
             result <= 0,
             error_code="max_leverage_too_small",
-            error_template="max_leverage must be positive, got {value}",
-            context={"value": result},
+            error_template="max_leverage must be positive for profile {profile}, got {value}",
+            context={
+                "value": result,
+                "profile": profile_value,
+                "field": "max_leverage",
+            },
         )
         return int(result)
 

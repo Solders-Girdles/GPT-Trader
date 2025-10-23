@@ -22,9 +22,14 @@ from bot_v2.errors import (
     handle_error,
     log_error,
 )
+from bot_v2.logging import (
+    get_log_context,
+    get_orchestration_logger,
+)
 from bot_v2.utilities.logging_patterns import get_logger
 
 logger = get_logger(__name__, component="error_handler")
+json_logger = get_orchestration_logger("error_handler")
 
 P = ParamSpec("P")
 T = TypeVar("T")
@@ -87,6 +92,10 @@ class CircuitBreaker:
                 self.state = CircuitBreakerState.CLOSED
                 self.success_count = 0
                 logger.info("Circuit breaker closed after successful recovery")
+                json_logger.info(
+                    "Circuit breaker closed after successful recovery",
+                    extra={"circuit_breaker_state": "closed", "event": "recovery"},
+                )
 
     def record_failure(self, error: Exception) -> None:
         """Record a failed call"""
@@ -99,6 +108,14 @@ class CircuitBreaker:
         if self.failure_count >= self.config.failure_threshold:
             self.state = CircuitBreakerState.OPEN
             logger.warning(f"Circuit breaker opened after {self.failure_count} failures")
+            json_logger.warning(
+                f"Circuit breaker opened after {self.failure_count} failures",
+                extra={
+                    "circuit_breaker_state": "open",
+                    "failure_count": self.failure_count,
+                    "error_type": error.__class__.__name__,
+                },
+            )
 
     def should_attempt_call(self) -> bool:
         """Check if we should attempt the call"""
@@ -113,6 +130,10 @@ class CircuitBreaker:
                     self.state = CircuitBreakerState.HALF_OPEN
                     self.success_count = 0
                     logger.info("Circuit breaker entering half-open state")
+                    json_logger.info(
+                        "Circuit breaker entering half-open state",
+                        extra={"circuit_breaker_state": "half_open", "event": "recovery_attempt"},
+                    )
                     return True
             return False
 
@@ -182,6 +203,14 @@ class ErrorHandler:
                     fallback = self._get_fallback(type(e))
                     if fallback:
                         logger.info(f"Using fallback for {e.__class__.__name__}")
+                        json_logger.info(
+                            f"Using fallback for {e.__class__.__name__}",
+                            extra={
+                                "fallback_used": True,
+                                "error_type": e.__class__.__name__,
+                                "recovery_strategy": "fallback",
+                            },
+                        )
                         return cast(T, fallback(*args, **kwargs))
 
                 # Calculate retry delay
@@ -190,6 +219,17 @@ class ErrorHandler:
                     logger.warning(
                         f"Attempt {attempt}/{self.retry_config.max_attempts} failed: {e}. "
                         f"Retrying in {delay:.2f} seconds..."
+                    )
+                    json_logger.warning(
+                        f"Attempt {attempt}/{self.retry_config.max_attempts} failed: {e}. "
+                        f"Retrying in {delay:.2f} seconds...",
+                        extra={
+                            "attempt": attempt,
+                            "max_attempts": self.retry_config.max_attempts,
+                            "error_type": e.__class__.__name__,
+                            "retry_delay": delay,
+                            "recovery_strategy": "retry",
+                        },
                     )
                     time.sleep(delay)
 
@@ -236,6 +276,22 @@ class ErrorHandler:
             self.error_history.pop(0)
         log_error(error)
 
+        # Also log to JSON with correlation context
+        correlation_context = get_log_context()
+        json_logger.error(
+            f"Error recorded: {error.error_code}",
+            extra={
+                "error_code": error.error_code,
+                "error_message": error.message,
+                "error_type": (
+                    type(error.original_error).__name__ if error.original_error else "Unknown"
+                ),
+                "recoverable": error.recoverable,
+                "context": error.context,
+                **correlation_context,
+            },
+        )
+
     def handle_error(
         self,
         error: Exception,
@@ -248,6 +304,15 @@ class ErrorHandler:
 
         if recovery_strategy == RecoveryStrategy.DEGRADE:
             logger.warning(f"Degrading functionality due to: {trading_error.message}")
+            json_logger.warning(
+                f"Degrading functionality due to: {trading_error.message}",
+                extra={
+                    "recovery_strategy": "degrade",
+                    "error_code": trading_error.error_code,
+                    "error_message": trading_error.message,
+                    **get_log_context(),
+                },
+            )
             return None  # Return None to indicate degraded operation
 
         if not trading_error.recoverable:
@@ -283,6 +348,10 @@ class ErrorHandler:
         self.circuit_breaker.failure_count = 0
         self.circuit_breaker.success_count = 0
         logger.info("Circuit breaker manually reset")
+        json_logger.info(
+            "Circuit breaker manually reset",
+            extra={"circuit_breaker_state": "closed", "event": "manual_reset", **get_log_context()},
+        )
 
 
 # Global error handler instance

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from unittest.mock import MagicMock, Mock
+from unittest.mock import AsyncMock, MagicMock, Mock
 
 import pytest
 
@@ -55,3 +55,23 @@ def reconciler(
         event_store=fake_event_store,
         bot_id="test-bot",
     )
+
+
+@pytest.fixture
+def mock_async_reconciler() -> MagicMock:
+    """Create a mock reconciler with async methods properly mocked."""
+
+    reconciler = MagicMock(spec=OrderReconciler)
+
+    # Async methods should use AsyncMock
+    reconciler.fetch_exchange_open_orders = AsyncMock(return_value={})
+    reconciler.record_snapshot = AsyncMock()
+    reconciler.reconcile_missing_on_exchange = AsyncMock()
+    reconciler.snapshot_positions = AsyncMock(return_value={})
+
+    # Sync methods can use regular Mock
+    reconciler.fetch_local_open_orders = Mock(return_value={})
+    reconciler.diff_orders = Mock()
+    reconciler.reconcile_missing_locally = Mock()
+
+    return reconciler

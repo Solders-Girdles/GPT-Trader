@@ -275,7 +275,7 @@ def integration_runtime_settings(tmp_path):
     return load_runtime_settings(env_map)
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def integration_risk_config():
     """Risk configuration for integration testing."""
     return RiskConfig(
@@ -390,7 +390,7 @@ def integrated_trading_system(
     }
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def integration_test_scenarios():
     """Test scenario utilities."""
     return IntegrationTestScenarios()
@@ -405,7 +405,7 @@ def async_integrated_system(integrated_trading_system):
     return integrated_trading_system
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def circuit_breaker_test_scenarios():
     """Circuit breaker test scenarios."""
     return {
@@ -432,7 +432,7 @@ def circuit_breaker_test_scenarios():
     }
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def broker_error_scenarios():
     """Broker error scenarios for testing."""
     return {

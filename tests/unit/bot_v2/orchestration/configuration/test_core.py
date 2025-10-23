@@ -117,7 +117,16 @@ class TestBotConfigEdgeCases:
             )
 
         error = exc_info.value
-        assert "max_leverage" in str(error).lower()
+        message = str(error).lower()
+        assert "max_leverage must be positive" in message
+        assert "profile dev" in message
+
+        errors = error.errors()
+        assert errors, "Expected at least one validation error"
+        first_error = errors[0]
+        assert first_error.get("ctx", {}).get("profile") == "dev"
+        assert first_error.get("ctx", {}).get("field") == "max_leverage"
+        assert first_error.get("ctx", {}).get("value") == 0
 
     def test_bot_config_with_invalid_time_in_force(self) -> None:
         """Test BotConfig validation with invalid time in force."""
@@ -178,6 +187,15 @@ class TestBotConfigEdgeCases:
         )
         assert config.update_interval == 86400
         assert config.max_leverage == 100
+
+    def test_bot_config_with_boundary_max_leverage(self) -> None:
+        """Boundary test for smallest allowed max leverage."""
+        config = BotConfig(
+            profile=Profile.DEV,
+            symbols=["BTC-PERP"],
+            max_leverage=1,
+        )
+        assert config.max_leverage == 1
 
 
 class TestConfigBaselinePayload:

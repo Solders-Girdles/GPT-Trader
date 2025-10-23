@@ -156,7 +156,7 @@ def patched_runtime_settings(
     return settings
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def yahoo_provider_stub() -> Any:
     """Simple Yahoo provider stub returning injected data frames."""
 

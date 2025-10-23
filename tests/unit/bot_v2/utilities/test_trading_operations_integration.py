@@ -8,6 +8,7 @@ from decimal import Decimal
 from unittest.mock import Mock, patch
 
 import pytest
+from tests.shared.mock_brokers import create_mock_broker_with_async_methods
 
 from bot_v2.errors import ExecutionError, NetworkError, ValidationError
 from bot_v2.features.brokerages.core.interfaces import (
@@ -30,7 +31,7 @@ class TestIntegration:
     @pytest.fixture
     def mock_broker(self):
         """Create a mock broker client."""
-        broker = Mock()
+        broker = create_mock_broker_with_async_methods()
         broker.place_order.return_value = None
         broker.cancel_order.return_value = False
         broker.get_positions.return_value = []

@@ -17,6 +17,15 @@ from bot_v2.features.brokerages.core.interfaces import (
 from bot_v2.features.live_trade.advanced_execution import AdvancedExecutionEngine
 from bot_v2.features.live_trade.risk import ValidationError as RiskValidationError
 from bot_v2.features.live_trade.strategies.perps_baseline import Action
+from bot_v2.logging import (
+    add_domain_field,
+    correlation_context,
+    get_orchestration_logger,
+    log_execution_error,
+    log_order_event,
+    order_context,
+    symbol_context,
+)
 from bot_v2.orchestration.live_execution import LiveExecutionEngine
 from bot_v2.orchestration.order_reconciler import OrderReconciler
 from bot_v2.orchestration.runtime_settings import RuntimeSettings, load_runtime_settings
@@ -33,6 +42,7 @@ if TYPE_CHECKING:  # pragma: no cover - type checking only
     from bot_v2.orchestration.perps_bot_state import PerpsBotRuntimeState
 
 logger = get_logger(__name__, component="execution_coordinator")
+json_logger = get_orchestration_logger("execution_coordinator")
 
 
 class ExecutionCoordinator(BaseCoordinator):
@@ -179,251 +189,328 @@ class ExecutionCoordinator(BaseCoordinator):
         product: Product,
         position_state: dict[str, Any] | None,
     ) -> None:
-        ctx = self.context
-        runtime_state_obj = ctx.runtime_state
-        if runtime_state_obj is None:
-            logger.debug(
-                "Runtime state missing; skipping decision execution",
-                symbol=symbol,
-                operation="execution_decision",
-                stage="runtime_state",
-            )
-            return
-        runtime_state = cast("PerpsBotRuntimeState", runtime_state_obj)
-        try:
-            assert product is not None, "Missing product metadata"
-            assert mark is not None and mark > 0, f"Invalid mark: {mark}"
-            if position_state is not None and "quantity" not in position_state:
-                raise AssertionError("Position state missing quantity")
-
-            if ctx.config.dry_run:
-                logger.info(
-                    "DRY RUN: Would execute %s for %s",
-                    decision.action.value,
-                    symbol,
-                    operation="execution_decision",
-                    stage="dry_run",
+        # Create correlation context for this decision execution
+        with correlation_context(operation="execute_decision"), symbol_context(symbol):
+            ctx = self.context
+            runtime_state_obj = ctx.runtime_state
+            if runtime_state_obj is None:
+                logger.debug(
+                    "Runtime state missing; skipping decision execution",
                     symbol=symbol,
-                    action=decision.action.value,
+                    operation="execution_decision",
+                    stage="runtime_state",
+                )
+                json_logger.debug(
+                    "Runtime state missing; skipping decision execution",
+                    extra={
+                        "symbol": symbol,
+                        "operation": "execution_decision",
+                        "stage": "runtime_state",
+                    },
                 )
                 return
+            runtime_state = cast("PerpsBotRuntimeState", runtime_state_obj)
+            try:
+                assert product is not None, "Missing product metadata"
+                assert mark is not None and mark > 0, f"Invalid mark: {mark}"
+                if position_state is not None and "quantity" not in position_state:
+                    raise AssertionError("Position state missing quantity")
 
-            position_quantity_raw = quantity_from(position_state)
-            position_quantity = (
-                position_quantity_raw
-                if isinstance(position_quantity_raw, Decimal)
-                else Decimal("0")
-            )
-
-            if decision.action == Action.CLOSE:
-                if not position_state or position_quantity == 0:
-                    logger.warning(
-                        "No position to close for %s",
+                if ctx.config.dry_run:
+                    logger.info(
+                        "DRY RUN: Would execute %s for %s",
+                        decision.action.value,
                         symbol,
                         operation="execution_decision",
-                        stage="close",
+                        stage="dry_run",
+                        symbol=symbol,
+                        action=decision.action.value,
+                    )
+                    json_logger.info(
+                        f"DRY RUN: Would execute {decision.action.value} for {symbol}",
+                        extra={
+                            "symbol": symbol,
+                            "action": decision.action.value,
+                            "operation": "execution_decision",
+                            "stage": "dry_run",
+                        },
                     )
                     return
-                order_quantity = abs(position_quantity)
-            elif getattr(decision, "target_notional", None):
-                order_quantity = Decimal(str(decision.target_notional)) / mark
-            elif getattr(decision, "quantity", None) is not None:
-                order_quantity = Decimal(str(decision.quantity))
-            else:
-                logger.warning(
-                    "No quantity or notional in decision for %s",
-                    symbol,
-                    operation="execution_decision",
-                    stage="quantity",
-                )
-                return
 
-            side = OrderSide.BUY if decision.action == Action.BUY else OrderSide.SELL
-            if decision.action == Action.CLOSE:
-                side = (
-                    OrderSide.SELL
-                    if position_state and position_state.get("side") == "long"
-                    else OrderSide.BUY
+                position_quantity_raw = quantity_from(position_state)
+                position_quantity = (
+                    position_quantity_raw
+                    if isinstance(position_quantity_raw, Decimal)
+                    else Decimal("0")
                 )
 
-            reduce_only_global = False
-            if self._config_controller is not None:
-                try:
-                    reduce_only_global = bool(
-                        self._config_controller.is_reduce_only_mode(ctx.risk_manager)
+                if decision.action == Action.CLOSE:
+                    if not position_state or position_quantity == 0:
+                        logger.warning(
+                            "No position to close for %s",
+                            symbol,
+                            operation="execution_decision",
+                            stage="close",
+                        )
+                        return
+                    order_quantity = abs(position_quantity)
+                elif getattr(decision, "target_notional", None):
+                    order_quantity = Decimal(str(decision.target_notional)) / mark
+                elif getattr(decision, "quantity", None) is not None:
+                    order_quantity = Decimal(str(decision.quantity))
+                else:
+                    logger.warning(
+                        "No quantity or notional in decision for %s",
+                        symbol,
+                        operation="execution_decision",
+                        stage="quantity",
                     )
+                    return
+
+                side = OrderSide.BUY if decision.action == Action.BUY else OrderSide.SELL
+                if decision.action == Action.CLOSE:
+                    side = (
+                        OrderSide.SELL
+                        if position_state and position_state.get("side") == "long"
+                        else OrderSide.BUY
+                    )
+
+                reduce_only_global = False
+                if self._config_controller is not None:
+                    try:
+                        reduce_only_global = bool(
+                            self._config_controller.is_reduce_only_mode(ctx.risk_manager)
+                        )
+                    except Exception:
+                        reduce_only_global = False
+
+                reduce_only = (
+                    getattr(decision, "reduce_only", False)
+                    or reduce_only_global
+                    or decision.action == Action.CLOSE
+                )
+
+                order_type = getattr(decision, "order_type", OrderType.MARKET)
+                limit_price = getattr(decision, "limit_price", None)
+                stop_price = getattr(decision, "stop_trigger", None)
+                tif = getattr(decision, "time_in_force", None)
+                try:
+                    if isinstance(tif, str):
+                        tif = TimeInForce[tif.upper()]
+                    elif tif is None and isinstance(ctx.config.time_in_force, str):
+                        tif = TimeInForce[ctx.config.time_in_force.upper()]
                 except Exception:
-                    reduce_only_global = False
+                    tif = None
 
-            reduce_only = (
-                getattr(decision, "reduce_only", False)
-                or reduce_only_global
-                or decision.action == Action.CLOSE
-            )
+                if isinstance(order_type, OrderType):
+                    normalised_order_type = order_type
+                else:
+                    normalised_order_type = (
+                        OrderType[order_type.upper()]
+                        if isinstance(order_type, str)
+                        else OrderType.MARKET
+                    )
 
-            order_type = getattr(decision, "order_type", OrderType.MARKET)
-            limit_price = getattr(decision, "limit_price", None)
-            stop_price = getattr(decision, "stop_trigger", None)
-            tif = getattr(decision, "time_in_force", None)
-            try:
-                if isinstance(tif, str):
-                    tif = TimeInForce[tif.upper()]
-                elif tif is None and isinstance(ctx.config.time_in_force, str):
-                    tif = TimeInForce[ctx.config.time_in_force.upper()]
-            except Exception:
-                tif = None
+                exec_engine = runtime_state.exec_engine
+                if exec_engine is None:
+                    logger.warning(
+                        "Execution engine not initialized; cannot place order for %s",
+                        symbol,
+                        operation="execution_decision",
+                        stage="engine_missing",
+                        symbol=symbol,
+                    )
+                    return
 
-            if isinstance(order_type, OrderType):
-                normalised_order_type = order_type
-            else:
-                normalised_order_type = (
-                    OrderType[order_type.upper()]
-                    if isinstance(order_type, str)
-                    else OrderType.MARKET
-                )
+                place_kwargs: dict[str, Any] = {
+                    "symbol": symbol,
+                    "side": side,
+                    "quantity": order_quantity,
+                    "order_type": normalised_order_type,
+                    "reduce_only": reduce_only,
+                    "leverage": getattr(decision, "leverage", None),
+                }
 
-            exec_engine = runtime_state.exec_engine
-            if exec_engine is None:
-                logger.warning(
-                    "Execution engine not initialized; cannot place order for %s",
-                    symbol,
-                    operation="execution_decision",
-                    stage="engine_missing",
+                if isinstance(exec_engine, AdvancedExecutionEngine):
+                    place_kwargs.update(
+                        {
+                            "limit_price": limit_price,
+                            "stop_price": stop_price,
+                            "time_in_force": tif or TimeInForce.GTC,
+                        }
+                    )
+                else:
+                    place_kwargs.update(
+                        {
+                            "product": product,
+                            "price": limit_price,
+                            "stop_price": stop_price,
+                            "tif": tif or None,
+                        }
+                    )
+
+                order = await self.place_order(exec_engine, **place_kwargs)
+                if order:
+                    logger.info(
+                        "Order placed successfully",
+                        order_id=str(order.id),
+                        symbol=symbol,
+                        operation="execution_decision",
+                        stage="placed",
+                    )
+                    # Use the structured order event logger
+                    log_order_event(
+                        event_type="order_placed",
+                        order_id=str(order.id),
+                        symbol=symbol,
+                        side=order.side.value,
+                        quantity=float(order_quantity) if "order_quantity" in locals() else None,
+                        price=float(limit_price) if limit_price else None,
+                    )
+                else:
+                    logger.warning(
+                        "Order rejected or failed",
+                        symbol=symbol,
+                        operation="execution_decision",
+                        stage="placed",
+                    )
+                    json_logger.warning(
+                        "Order rejected or failed",
+                        extra={
+                            "symbol": symbol,
+                            "operation": "execution_decision",
+                            "stage": "placed",
+                        },
+                    )
+            except Exception as exc:  # pragma: no cover - defensive logging
+                logger.error(
+                    "Error executing decision",
                     symbol=symbol,
-                )
-                return
-
-            place_kwargs: dict[str, Any] = {
-                "symbol": symbol,
-                "side": side,
-                "quantity": order_quantity,
-                "order_type": normalised_order_type,
-                "reduce_only": reduce_only,
-                "leverage": getattr(decision, "leverage", None),
-            }
-
-            if isinstance(exec_engine, AdvancedExecutionEngine):
-                place_kwargs.update(
-                    {
-                        "limit_price": limit_price,
-                        "stop_price": stop_price,
-                        "time_in_force": tif or TimeInForce.GTC,
-                    }
-                )
-            else:
-                place_kwargs.update(
-                    {
-                        "product": product,
-                        "price": limit_price,
-                        "stop_price": stop_price,
-                        "tif": tif or None,
-                    }
-                )
-
-            order = await self.place_order(exec_engine, **place_kwargs)
-            if order:
-                logger.info(
-                    "Order placed successfully",
-                    order_id=str(order.id),
-                    symbol=symbol,
+                    error=str(exc),
+                    exc_info=True,
                     operation="execution_decision",
-                    stage="placed",
+                    stage="exception",
                 )
-            else:
-                logger.warning(
-                    "Order rejected or failed",
-                    symbol=symbol,
-                    operation="execution_decision",
-                    stage="placed",
-                )
-        except Exception as exc:  # pragma: no cover - defensive logging
-            logger.error(
-                "Error executing decision",
-                symbol=symbol,
-                error=str(exc),
-                exc_info=True,
-                operation="execution_decision",
-                stage="exception",
-            )
+                # Use the structured execution error logger
+                log_execution_error(error=exc, operation="execute_decision", symbol=symbol)
 
     async def place_order(self, exec_engine: Any, **kwargs: Any) -> Order | None:
-        lock = self.ensure_order_lock()
-        try:
-            async with lock:
-                return await self.place_order_inner(exec_engine, **kwargs)
-        except (ValidationError, RiskValidationError, ExecutionError) as exc:
-            logger.warning(
-                "Order validation/execution failed",
-                error=str(exc),
-                operation="execution_order",
-                stage="validation",
-            )
-            self._increment_order_stat("failed")
-            raise
-        except Exception as exc:  # pragma: no cover - defensive logging
-            logger.error(
-                "Failed to place order",
-                error=str(exc),
-                exc_info=True,
-                operation="execution_order",
-                stage="submit_exception",
-            )
-            self._increment_order_stat("failed")
-            return None
+        symbol = kwargs.get("symbol", "unknown")
+        with correlation_context(operation="place_order"), symbol_context(symbol):
+            lock = self.ensure_order_lock()
+            try:
+                async with lock:
+                    return await self.place_order_inner(exec_engine, **kwargs)
+            except (ValidationError, RiskValidationError, ExecutionError) as exc:
+                logger.warning(
+                    "Order validation/execution failed",
+                    error=str(exc),
+                    operation="execution_order",
+                    stage="validation",
+                )
+                json_logger.warning(
+                    "Order validation/execution failed",
+                    extra={
+                        "error": str(exc),
+                        "operation": "execution_order",
+                        "stage": "validation",
+                        "symbol": symbol,
+                    },
+                )
+                self._increment_order_stat("failed")
+                raise
+            except Exception as exc:  # pragma: no cover - defensive logging
+                logger.error(
+                    "Failed to place order",
+                    error=str(exc),
+                    exc_info=True,
+                    operation="execution_order",
+                    stage="submit_exception",
+                )
+                # Use the structured execution error logger
+                log_execution_error(error=exc, operation="place_order", symbol=symbol)
+                self._increment_order_stat("failed")
+                return None
 
     async def place_order_inner(self, exec_engine: Any, **kwargs: Any) -> Order | None:
-        self._increment_order_stat("attempted")
-        orders_store = self.context.orders_store
-        broker = self.context.broker
-        runtime_state_obj = self.context.runtime_state
+        symbol = kwargs.get("symbol", "unknown")
+        with order_context("pending", symbol):
+            self._increment_order_stat("attempted")
+            orders_store = self.context.orders_store
+            broker = self.context.broker
+            runtime_state_obj = self.context.runtime_state
 
-        if runtime_state_obj is None:
-            logger.debug(
-                "Runtime state missing; cannot record order",
-                operation="execution_order",
-                stage="runtime_state",
-            )
-            return None
+            if runtime_state_obj is None:
+                logger.debug(
+                    "Runtime state missing; cannot record order",
+                    operation="execution_order",
+                    stage="runtime_state",
+                )
+                json_logger.debug(
+                    "Runtime state missing; cannot record order",
+                    extra={
+                        "operation": "execution_order",
+                        "stage": "runtime_state",
+                        "symbol": symbol,
+                    },
+                )
+                return None
 
-        def _place() -> Any:
-            return exec_engine.place_order(**kwargs)
+            def _place() -> Any:
+                return exec_engine.place_order(**kwargs)
 
-        result = await run_in_thread(_place)
+            result = await run_in_thread(_place)
 
-        if isinstance(exec_engine, AdvancedExecutionEngine):
-            order = cast(Order | None, result)
-        else:
-            order = None
-            if result and broker is not None:
-                order = await run_in_thread(broker.get_order, result)
-                order = cast(Order | None, order)
+            if isinstance(exec_engine, AdvancedExecutionEngine):
+                order = cast(Order | None, result)
+            else:
+                order = None
+                if result and broker is not None:
+                    order = await run_in_thread(broker.get_order, result)
+                    order = cast(Order | None, order)
 
-        if order:
-            if orders_store is not None:
-                orders_store.upsert(order)
-            self._increment_order_stat("successful")
-            order_quantity_raw = quantity_from(order)
-            order_quantity = (
-                order_quantity_raw if isinstance(order_quantity_raw, Decimal) else Decimal("0")
-            )
-            logger.info(
-                "Order recorded",
-                order_id=str(order.id),
-                side=order.side.value,
-                quantity=float(order_quantity),
-                symbol=order.symbol,
+            if order:
+                # Update order context with the actual order ID
+                add_domain_field("order_id", str(order.id))
+
+                if orders_store is not None:
+                    orders_store.upsert(order)
+                self._increment_order_stat("successful")
+                order_quantity_raw = quantity_from(order)
+                order_quantity = (
+                    order_quantity_raw if isinstance(order_quantity_raw, Decimal) else Decimal("0")
+                )
+                logger.info(
+                    "Order recorded",
+                    order_id=str(order.id),
+                    side=order.side.value,
+                    quantity=float(order_quantity),
+                    symbol=order.symbol,
+                    operation="execution_order",
+                    stage="record",
+                )
+                # Use the structured order event logger
+                log_order_event(
+                    event_type="order_recorded",
+                    order_id=str(order.id),
+                    symbol=order.symbol,
+                    side=order.side.value,
+                    quantity=order_quantity,
+                    price=getattr(order, "price", None),
+                )
+                return order
+
+            self._increment_order_stat("failed")
+            logger.warning(
+                "Order attempt failed (no order returned)",
                 operation="execution_order",
                 stage="record",
             )
-            return order
-
-        self._increment_order_stat("failed")
-        logger.warning(
-            "Order attempt failed (no order returned)",
-            operation="execution_order",
-            stage="record",
-        )
-        return None
+            json_logger.warning(
+                "Order attempt failed (no order returned)",
+                extra={"operation": "execution_order", "stage": "record", "symbol": symbol},
+            )
+            return None
 
     def _get_order_reconciler(self) -> OrderReconciler:
         if self._order_reconciler is None:

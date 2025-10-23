@@ -15,6 +15,11 @@ from bot_v2.features.brokerages.core.interfaces import (
     Position,
     Product,
 )
+from bot_v2.logging import (
+    correlation_context,
+    get_orchestration_logger,
+    symbol_context,
+)
 from bot_v2.orchestration.config_controller import ConfigChange, ConfigController
 from bot_v2.orchestration.configuration import BotConfig
 from bot_v2.orchestration.coordinators import (
@@ -51,6 +56,7 @@ if TYPE_CHECKING:  # pragma: no cover - imports for type checking only
     from bot_v2.persistence.orders_store import OrdersStore
 
 logger = get_logger(__name__, component="coinbase_trader")
+json_logger = get_orchestration_logger("coinbase_trader")
 
 
 class _CallableSymbolProcessor:
@@ -574,10 +580,14 @@ class PerpsBot:
 
     # ------------------------------------------------------------------
     async def run(self, single_cycle: bool = False) -> None:
-        await self.lifecycle_manager.run(single_cycle)
+        # Create correlation context for the entire bot run
+        with correlation_context(operation="bot_run", bot_id=self.bot_id):
+            await self.lifecycle_manager.run(single_cycle)
 
     async def run_cycle(self) -> None:
-        await self.strategy_coordinator.run_cycle()
+        # Create correlation context for each trading cycle
+        with correlation_context(operation="trading_cycle", bot_id=self.bot_id):
+            await self.strategy_coordinator.run_cycle()
 
     async def _fetch_current_state(self) -> dict[str, Any]:
         state = await self.strategy_coordinator._fetch_current_state()
@@ -609,6 +619,7 @@ class PerpsBot:
         balances: Sequence[Balance] | None = None,
         position_map: dict[str, Position] | None = None,
     ) -> None:
+        # Symbol context will be added by the strategy coordinator
         await self.strategy_coordinator.process_symbol(symbol, balances, position_map)
 
     def _process_symbol_expects_context(self) -> bool:
@@ -622,9 +633,11 @@ class PerpsBot:
         product: Product,
         position_state: dict[str, Any] | None,
     ) -> None:
-        await self.strategy_coordinator.execute_decision(
-            symbol, decision, mark, product, position_state
-        )
+        # Create symbol context for decision execution
+        with symbol_context(symbol):
+            await self.strategy_coordinator.execute_decision(
+                symbol, decision, mark, product, position_state
+            )
 
     def _ensure_order_lock(self) -> asyncio.Lock:
         lock = self.strategy_coordinator.ensure_order_lock()
@@ -670,7 +683,9 @@ class PerpsBot:
         self.system_monitor.write_health_status(ok=ok, message=message, error=error)
 
     async def shutdown(self) -> None:
-        await self.lifecycle_manager.shutdown()
+        # Create correlation context for shutdown
+        with correlation_context(operation="bot_shutdown", bot_id=self.bot_id):
+            await self.lifecycle_manager.shutdown()
 
     # ------------------------------------------------------------------
     def apply_config_change(self, change: ConfigChange) -> None:

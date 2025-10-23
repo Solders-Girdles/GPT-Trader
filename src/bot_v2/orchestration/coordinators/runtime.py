@@ -18,6 +18,7 @@ from bot_v2.orchestration.derivatives_discovery import (
 from bot_v2.orchestration.deterministic_broker import DeterministicBroker
 from bot_v2.orchestration.order_reconciler import OrderReconciler
 from bot_v2.orchestration.runtime_settings import RuntimeSettings, load_runtime_settings
+from bot_v2.orchestration.state_manager import ReduceOnlyModeSource
 from bot_v2.utilities.logging_patterns import get_logger
 from bot_v2.utilities.telemetry import emit_metric
 
@@ -383,48 +384,111 @@ class RuntimeCoordinator(BaseCoordinator):
     def set_reduce_only_mode(self, enabled: bool, reason: str) -> None:
         controller = self._config_controller
         risk_manager = self.context.risk_manager
-        if controller is None:
-            logger.debug(
-                "No config controller available to toggle reduce-only mode",
-                operation="reduce_only_toggle",
-                stage="controller_missing",
+
+        # Try to use the centralized state manager first
+        state_manager = getattr(self.context.registry, "reduce_only_state_manager", None)
+        if state_manager is not None:
+            changed = state_manager.set_reduce_only_mode(
+                enabled=enabled,
+                reason=reason,
+                source=ReduceOnlyModeSource.RUNTIME_COORDINATOR,
+                metadata={"context": "runtime_coordinator"},
             )
-            return
-        if not controller.set_reduce_only_mode(enabled, reason=reason, risk_manager=risk_manager):
-            return
-        logger.warning(
-            "Reduce-only mode %s (%s)",
-            "enabled" if enabled else "disabled",
-            reason,
-            operation="reduce_only_toggle",
-            stage="set",
-            enabled=bool(enabled),
-            reason=reason,
-        )
-        self._emit_reduce_only_metric(enabled, reason)
+            if changed:
+                # Update config controller and risk manager for backward compatibility
+                if controller is not None:
+                    updated = controller.current.with_overrides(reduce_only_mode=enabled)
+                    controller._set_current_config(updated)
+                if risk_manager is not None:
+                    risk_manager.set_reduce_only_mode(enabled, reason=reason)
+                logger.warning(
+                    "Reduce-only mode %s (%s)",
+                    "enabled" if enabled else "disabled",
+                    reason,
+                    operation="reduce_only_toggle",
+                    stage="set",
+                    enabled=bool(enabled),
+                    reason=reason,
+                )
+                self._emit_reduce_only_metric(enabled, reason)
+        else:
+            # Fallback to legacy behavior
+            if controller is None:
+                logger.debug(
+                    "No config controller available to toggle reduce-only mode",
+                    operation="reduce_only_toggle",
+                    stage="controller_missing",
+                )
+                return
+            if not controller.set_reduce_only_mode(
+                enabled, reason=reason, risk_manager=risk_manager
+            ):
+                return
+            logger.warning(
+                "Reduce-only mode %s (%s)",
+                "enabled" if enabled else "disabled",
+                reason,
+                operation="reduce_only_toggle",
+                stage="set",
+                enabled=bool(enabled),
+                reason=reason,
+            )
+            self._emit_reduce_only_metric(enabled, reason)
 
     def is_reduce_only_mode(self) -> bool:
+        # Try to get state from the centralized state manager first
+        state_manager = getattr(self.context.registry, "reduce_only_state_manager", None)
+        if state_manager is not None:
+            return state_manager.is_reduce_only_mode
+
+        # Fallback to legacy behavior
         controller = self._config_controller
         if controller is None:
             return False
         return bool(controller.is_reduce_only_mode(self.context.risk_manager))
 
     def on_risk_state_change(self, state: RiskRuntimeState) -> None:
-        controller = self._config_controller
-        if controller is None:
-            return
-        reduce_only = bool(state.reduce_only_mode)
-        if not controller.apply_risk_update(reduce_only):
-            return
-        reason = state.last_reduce_only_reason or "unspecified"
-        logger.warning(
-            "Risk manager toggled reduce-only mode",
-            enabled=reduce_only,
-            reason=reason,
-            operation="reduce_only_toggle",
-            stage="risk_update",
-        )
-        self._emit_reduce_only_metric(reduce_only, reason)
+        # Try to use the centralized state manager first
+        state_manager = getattr(self.context.registry, "reduce_only_state_manager", None)
+        if state_manager is not None:
+            reduce_only = bool(state.reduce_only_mode)
+            reason = state.last_reduce_only_reason or "unspecified"
+            changed = state_manager.set_reduce_only_mode(
+                enabled=reduce_only,
+                reason=reason,
+                source=ReduceOnlyModeSource.RISK_MANAGER,
+                metadata={"context": "risk_state_change"},
+            )
+            if changed:
+                # Update config controller for backward compatibility
+                controller = self._config_controller
+                if controller is not None:
+                    controller.apply_risk_update(reduce_only)
+                logger.warning(
+                    "Risk manager toggled reduce-only mode",
+                    enabled=reduce_only,
+                    reason=reason,
+                    operation="reduce_only_toggle",
+                    stage="risk_update",
+                )
+                self._emit_reduce_only_metric(reduce_only, reason)
+        else:
+            # Fallback to legacy behavior
+            controller = self._config_controller
+            if controller is None:
+                return
+            reduce_only = bool(state.reduce_only_mode)
+            if not controller.apply_risk_update(reduce_only):
+                return
+            reason = state.last_reduce_only_reason or "unspecified"
+            logger.warning(
+                "Risk manager toggled reduce-only mode",
+                enabled=reduce_only,
+                reason=reason,
+                operation="reduce_only_toggle",
+                stage="risk_update",
+            )
+            self._emit_reduce_only_metric(reduce_only, reason)
 
     def _emit_reduce_only_metric(self, enabled: bool, reason: str) -> None:
         event_store = self.context.event_store
@@ -542,7 +606,18 @@ class RuntimeCoordinator(BaseCoordinator):
                     operation="startup_reconcile",
                     stage="error_persist",
                 )
-            self.set_reduce_only_mode(True, reason="startup_reconcile_failed")
+            # Try to use the centralized state manager first
+            state_manager = getattr(self.context.registry, "reduce_only_state_manager", None)
+            if state_manager is not None:
+                state_manager.set_reduce_only_mode(
+                    enabled=True,
+                    reason="startup_reconcile_failed",
+                    source=ReduceOnlyModeSource.STARTUP_RECONCILE_FAILED,
+                    metadata={"context": "startup_reconcile"},
+                )
+            else:
+                # Fallback to legacy behavior
+                self.set_reduce_only_mode(True, reason="startup_reconcile_failed")
 
     def _discover_derivatives_eligibility(
         self, broker: IBrokerage, context: CoordinatorContext
@@ -589,7 +664,18 @@ class RuntimeCoordinator(BaseCoordinator):
                 stage="safety_gate",
                 error_message=eligibility.error_message,
             )
-            self.set_reduce_only_mode(True, reason="derivatives_not_accessible")
+            # Try to use the centralized state manager first
+            state_manager = getattr(self.context.registry, "reduce_only_state_manager", None)
+            if state_manager is not None:
+                state_manager.set_reduce_only_mode(
+                    enabled=True,
+                    reason="derivatives_not_accessible",
+                    source=ReduceOnlyModeSource.DERIVATIVES_NOT_ACCESSIBLE,
+                    metadata={"context": "derivatives_discovery"},
+                )
+            else:
+                # Fallback to legacy behavior
+                self.set_reduce_only_mode(True, reason="derivatives_not_accessible")
 
         # Store eligibility in event store
         event_store = context.event_store

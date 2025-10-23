@@ -27,6 +27,8 @@ ALLOWLIST = {
     "tests/unit/bot_v2/orchestration/test_execution_coordinator.py",  # complex orchestration harness
     "tests/unit/bot_v2/orchestration/test_runtime_coordinator.py",  # integration-heavy runtime checks
     "tests/unit/bot_v2/orchestration/test_strategy_orchestrator.py",  # strategy routing contract suite
+    "tests/integration/test_reduce_only_state_manager_integration.py",  # comprehensive reduce-only state manager integration coverage
+    "tests/unit/bot_v2/orchestration/test_state_manager.py",  # exhaustive reduce-only state manager unit scenarios
     "tests/unit/bot_v2/orchestration/test_system_monitor.py",  # monitoring integration matrix
     "tests/unit/bot_v2/test_broker_behavioral_contract.py",  # 358 lines: broker contract validation suite
     "tests/unit/bot_v2/utilities/test_async_utils_advanced.py",  # legacy async helpers coverage

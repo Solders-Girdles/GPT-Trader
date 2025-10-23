@@ -37,6 +37,7 @@ from bot_v2.orchestration.execution import (
     StateCollector,
 )
 from bot_v2.orchestration.runtime_settings import RuntimeSettings, load_runtime_settings
+from bot_v2.orchestration.state_manager import ReduceOnlyModeSource
 from bot_v2.persistence.event_store import EventStore
 from bot_v2.utilities.logging_patterns import get_logger
 
@@ -399,7 +400,20 @@ class LiveExecutionEngine:
             )
             if not err.recoverable:
                 try:
-                    self.risk_manager.set_reduce_only_mode(True, reason="guard_failure")
+                    # Try to use the centralized state manager first
+                    state_manager = getattr(
+                        self.context.registry, "reduce_only_state_manager", None
+                    )
+                    if state_manager is not None:
+                        state_manager.set_reduce_only_mode(
+                            enabled=True,
+                            reason="guard_failure",
+                            source=ReduceOnlyModeSource.GUARD_FAILURE,
+                            metadata={"context": "live_execution_guard"},
+                        )
+                    else:
+                        # Fallback to legacy behavior
+                        self.risk_manager.set_reduce_only_mode(True, reason="guard_failure")
                 except Exception:
                     logger.warning(
                         "Failed to set reduce-only mode after guard failure",

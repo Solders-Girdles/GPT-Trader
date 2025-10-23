@@ -33,6 +33,7 @@ from bot_v2.features.live_trade.risk_runtime.guards import (
 from bot_v2.features.live_trade.risk_runtime.metrics import (
     append_risk_metrics as runtime_append_risk_metrics,
 )
+from bot_v2.orchestration.state_manager import ReduceOnlyModeSource
 from bot_v2.persistence.event_store import EventStore
 from bot_v2.utilities.logging_patterns import get_logger
 from bot_v2.utilities.telemetry import emit_metric
@@ -64,6 +65,7 @@ class RuntimeMonitor:
         self.config = config
         self.event_store = event_store
         self._set_reduce_only_mode = set_reduce_only_mode or (lambda enabled, reason: None)
+        self._centralized_state_manager = None  # Will be injected if available
         self._now_provider = now_provider or (lambda: datetime.utcnow())
         if last_mark_update is not None:
             self.last_mark_update: dict[str, datetime] = {
@@ -113,7 +115,17 @@ class RuntimeMonitor:
 
         if daily_loss_abs > self.config.daily_loss_limit:
             # Trip reduce-only mode
-            self._set_reduce_only_mode(True, "daily_loss_limit")
+            # Try to use the centralized state manager first
+            if self._centralized_state_manager is not None:
+                self._centralized_state_manager.set_reduce_only_mode(
+                    enabled=True,
+                    reason="daily_loss_limit",
+                    source=ReduceOnlyModeSource.DAILY_LOSS_LIMIT,
+                    metadata={"loss_amount": str(daily_loss_abs)},
+                )
+            else:
+                # Fallback to legacy behavior
+                self._set_reduce_only_mode(True, "daily_loss_limit")
 
             # Log risk event
             self._log_risk_event(
@@ -295,6 +307,7 @@ class RuntimeMonitor:
             last_trigger=self._cb_last_trigger,
             set_reduce_only=lambda enabled, reason: self._set_reduce_only_mode(enabled, reason),
             log_event=self._log_risk_event,
+            centralized_state_manager=self._centralized_state_manager,
             logger=logger,
         )
 

@@ -12,6 +12,7 @@ if TYPE_CHECKING:  # pragma: no cover - import guards for type checkers only
     from bot_v2.features.live_trade.risk import LiveRiskManager
     from bot_v2.orchestration.configuration import BotConfig
     from bot_v2.orchestration.runtime_settings import RuntimeSettings
+    from bot_v2.orchestration.state_manager import ReduceOnlyModeStateManager
     from bot_v2.persistence.event_store import EventStore
     from bot_v2.persistence.orders_store import OrdersStore
 
@@ -35,6 +36,7 @@ class ServiceRegistry:
     market_data_service: MarketDataService | None = None
     product_catalog: ProductCatalog | None = None
     runtime_settings: RuntimeSettings | None = None
+    reduce_only_state_manager: ReduceOnlyModeStateManager | None = None
     extras: dict[str, Any] = field(default_factory=dict)
 
     def with_updates(self, **overrides: Any) -> ServiceRegistry:

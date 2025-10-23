@@ -8,6 +8,7 @@ from typing import Any
 from bot_v2.features.live_trade.risk import LiveRiskManager
 from bot_v2.orchestration.configuration import BotConfig, ConfigManager
 from bot_v2.orchestration.runtime_settings import RuntimeSettings
+from bot_v2.orchestration.state_manager import ReduceOnlyModeSource
 from bot_v2.utilities.config import ConfigBaselinePayload
 
 
@@ -22,9 +23,16 @@ class ConfigChange:
 class ConfigController:
     """Owns the active bot configuration and synchronizes runtime state."""
 
-    def __init__(self, config: BotConfig, *, settings: RuntimeSettings | None = None) -> None:
+    def __init__(
+        self,
+        config: BotConfig,
+        *,
+        settings: RuntimeSettings | None = None,
+        reduce_only_state_manager: Any = None,
+    ) -> None:
         self._manager = ConfigManager.from_config(config, settings=settings)
         self._pending_change: ConfigChange | None = None
+        self._reduce_only_state_manager = reduce_only_state_manager
         self._reduce_only_mode_state = bool(config.reduce_only_mode)
 
     # ------------------------------------------------------------------
@@ -42,6 +50,15 @@ class ConfigController:
     def _set_current_config(self, config: BotConfig) -> None:
         self._manager.replace_config(config)
         self._reduce_only_mode_state = bool(config.reduce_only_mode)
+
+        # Update state manager if available
+        if self._reduce_only_state_manager is not None:
+            self._reduce_only_state_manager.set_reduce_only_mode(
+                enabled=config.reduce_only_mode,
+                reason="config_update",
+                source=ReduceOnlyModeSource.CONFIG,
+                metadata={"config_source": "config_update"},
+            )
 
     # ------------------------------------------------------------------
     def refresh_if_changed(self) -> ConfigChange | None:
@@ -80,11 +97,29 @@ class ConfigController:
 
         if enabled == self._reduce_only_mode_state:
             return False
-        updated = self.current.with_overrides(reduce_only_mode=enabled)
-        self._set_current_config(updated)
-        if risk_manager is not None:
-            risk_manager.set_reduce_only_mode(enabled, reason=reason)
-        return True
+
+        # Use state manager if available
+        if self._reduce_only_state_manager is not None:
+            changed = self._reduce_only_state_manager.set_reduce_only_mode(
+                enabled=enabled,
+                reason=reason,
+                source=ReduceOnlyModeSource.CONFIG,
+                metadata={"requested_by": "config_controller"},
+            )
+            if changed:
+                updated = self.current.with_overrides(reduce_only_mode=enabled)
+                self._manager.replace_config(updated)
+                self._reduce_only_mode_state = enabled
+                if risk_manager is not None:
+                    risk_manager.set_reduce_only_mode(enabled, reason=reason)
+            return changed
+        else:
+            # Fallback to legacy behavior
+            updated = self.current.with_overrides(reduce_only_mode=enabled)
+            self._set_current_config(updated)
+            if risk_manager is not None:
+                risk_manager.set_reduce_only_mode(enabled, reason=reason)
+            return True
 
     def is_reduce_only_mode(self, risk_manager: LiveRiskManager | None = None) -> bool:
         if risk_manager is not None:
@@ -95,9 +130,25 @@ class ConfigController:
     def apply_risk_update(self, enabled: bool) -> bool:
         if enabled == self._reduce_only_mode_state:
             return False
-        updated = self.current.with_overrides(reduce_only_mode=enabled)
-        self._set_current_config(updated)
-        return True
+
+        # Use state manager if available
+        if self._reduce_only_state_manager is not None:
+            changed = self._reduce_only_state_manager.set_reduce_only_mode(
+                enabled=enabled,
+                reason="risk_update",
+                source=ReduceOnlyModeSource.RISK_MANAGER,
+                metadata={"requested_by": "config_controller"},
+            )
+            if changed:
+                updated = self.current.with_overrides(reduce_only_mode=enabled)
+                self._manager.replace_config(updated)
+                self._reduce_only_mode_state = enabled
+            return changed
+        else:
+            # Fallback to legacy behavior
+            updated = self.current.with_overrides(reduce_only_mode=enabled)
+            self._set_current_config(updated)
+            return True
 
     # ------------------------------------------------------------------
     def _summarize_diff(self, current: BotConfig, updated: BotConfig) -> dict[str, Any]:

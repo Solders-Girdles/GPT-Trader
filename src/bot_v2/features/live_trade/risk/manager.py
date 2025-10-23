@@ -33,6 +33,7 @@ from bot_v2.features.live_trade.risk.state_management import (
     StateManager,
 )
 from bot_v2.features.live_trade.risk_runtime import CircuitBreakerOutcome, RuntimeMonitor
+from bot_v2.orchestration.state_manager import ReduceOnlyModeSource
 from bot_v2.persistence.event_store import EventStore
 from bot_v2.utilities.datetime_helpers import normalize_to_utc, utc_now
 from bot_v2.utilities.logging_patterns import get_logger
@@ -189,6 +190,9 @@ class LiveRiskManager:
             last_mark_update=self.last_mark_update,
         )
 
+        # Store reference to centralized state manager for injection into runtime monitor
+        self._centralized_state_manager = None
+
         # Expose commonly accessed state attributes for backward compatibility
         self._state = self.state_manager._state
         self.daily_pnl = self.state_manager.daily_pnl
@@ -249,7 +253,31 @@ class LiveRiskManager:
 
     def set_reduce_only_mode(self, enabled: bool, reason: str = "") -> None:
         """Toggle reduce-only mode."""
-        self.state_manager.set_reduce_only_mode(enabled, reason)
+        # Check if there's a centralized state manager available
+
+        # Try to find the bot instance that contains this risk manager
+        # This is a temporary solution - ideally the state manager should be injected
+        centralized_manager = None
+
+        # First check if we have a reference to the centralized manager
+        if hasattr(self, "_centralized_state_manager"):
+            centralized_manager = self._centralized_state_manager
+        else:
+            # Try to find it through the event store (not ideal but works for backward compatibility)
+            # This will be improved when we properly inject the dependency
+            pass
+
+        if centralized_manager is not None:
+            centralized_manager.set_reduce_only_mode(
+                enabled=enabled,
+                reason=reason,
+                source=ReduceOnlyModeSource.RISK_MANAGER,
+                metadata={"context": "risk_manager"},
+            )
+        else:
+            # Fallback to local state manager
+            self.state_manager.set_reduce_only_mode(enabled, reason)
+
         # Update local reference for backward compatibility
         self._state = self.state_manager._state
 

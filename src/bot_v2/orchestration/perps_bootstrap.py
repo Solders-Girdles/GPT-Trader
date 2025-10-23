@@ -7,6 +7,7 @@ from dataclasses import dataclass
 
 from bot_v2.persistence.event_store import EventStore
 from bot_v2.persistence.orders_store import OrdersStore
+from bot_v2.utilities.logging_patterns import get_logger
 
 from .configuration import TOP_VOLUME_BASES, BotConfig, Profile
 from .runtime_paths import RuntimePaths
@@ -14,6 +15,8 @@ from .runtime_paths import resolve_runtime_paths as compute_runtime_paths
 from .runtime_settings import RuntimeSettings, load_runtime_settings
 from .service_registry import ServiceRegistry, empty_registry
 from .symbols import PERPS_ALLOWLIST, normalize_symbol_list
+
+logger = get_logger(__name__, component="perps_bootstrap")
 
 
 @dataclass(frozen=True)
@@ -77,6 +80,7 @@ def prepare_perps_bot(
     *,
     env: Mapping[str, str] | None = None,
     settings: RuntimeSettings | None = None,
+    use_container: bool = False,
 ) -> PerpsBootstrapResult:
     """Prepare directories and registry dependencies for :class:`PerpsBot`."""
 
@@ -159,7 +163,7 @@ def prepare_perps_bot(
 
     prepared_registry = prepared_registry.with_updates(runtime_settings=settings)
 
-    return PerpsBootstrapResult(
+    result = PerpsBootstrapResult(
         config=config,
         registry=prepared_registry,
         runtime_paths=runtime_paths,
@@ -169,11 +173,37 @@ def prepare_perps_bot(
         logs=logs,
     )
 
+    # If using container, store container reference in result for convenience
+    if use_container:
+        from app.container import create_application_container
+
+        container = create_application_container(config, settings)
+        # Add container to result extras
+        result.registry.extras["container"] = container
+        logger.debug(
+            "Prepared PerpsBot with container",
+            operation="perps_bootstrap",
+            stage="container_enabled",
+        )
+
+    return result
+
+
+def prepare_perps_bot_with_container(
+    config: BotConfig,
+    *,
+    env: Mapping[str, str] | None = None,
+    settings: RuntimeSettings | None = None,
+) -> PerpsBootstrapResult:
+    """Prepare directories and registry dependencies for :class:`PerpsBot` using container."""
+    return prepare_perps_bot(config, registry=None, env=env, settings=settings, use_container=True)
+
 
 __all__ = [
     "BootstrapLogRecord",
     "PerpsBootstrapResult",
     "prepare_perps_bot",
+    "prepare_perps_bot_with_container",
     "normalise_symbols",
     "resolve_runtime_paths",
     "RuntimePaths",

@@ -36,6 +36,7 @@ from bot_v2.utilities.config import ConfigBaselinePayload
 from bot_v2.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:  # pragma: no cover - imports for type checking only
+    from app.container import ApplicationContainer
     from bot_v2.features.brokerages.coinbase.account_manager import CoinbaseAccountManager
     from bot_v2.features.brokerages.core.interfaces import IBrokerage
     from bot_v2.features.live_trade.advanced_execution import AdvancedExecutionEngine
@@ -47,7 +48,7 @@ if TYPE_CHECKING:  # pragma: no cover - imports for type checking only
     from bot_v2.orchestration.market_monitor import MarketActivityMonitor
     from bot_v2.orchestration.symbol_processor import SymbolProcessor
     from bot_v2.persistence.event_store import EventStore
-from bot_v2.persistence.orders_store import OrdersStore
+    from bot_v2.persistence.orders_store import OrdersStore
 
 logger = get_logger(__name__, component="coinbase_trader")
 
@@ -122,11 +123,15 @@ class PerpsBot:
         session_guard: TradingSessionGuard,
         baseline_snapshot: Any,
         configuration_guardian: ConfigurationGuardian | None = None,
+        container: ApplicationContainer | None = None,
     ) -> None:
         # Basic attributes
         self.bot_id = "coinbase_trader"
         self.start_time = datetime.now(UTC)
         self.running = False
+
+        # Store container reference if provided
+        self._container = container
 
         # Core dependencies
         self.config_controller = config_controller
@@ -157,6 +162,92 @@ class PerpsBot:
         # Initialize lifecycle management
         self.lifecycle_manager = LifecycleManager(self)
         self._initialize_service_placeholders()
+
+    @classmethod
+    def from_container(
+        cls,
+        container: ApplicationContainer,
+        *,
+        session_guard: TradingSessionGuard | None = None,
+        baseline_snapshot: Any | None = None,
+        configuration_guardian: ConfigurationGuardian | None = None,
+    ) -> PerpsBot:
+        """
+        Create a PerpsBot instance from an ApplicationContainer.
+
+        This class method provides a convenient way to create a PerpsBot
+        using dependencies from an ApplicationContainer. This is the
+        recommended way to create PerpsBot instances when using the
+        composition root pattern.
+
+        Args:
+            container: The application container with dependencies
+            session_guard: Optional session guard (created from config if not provided)
+            baseline_snapshot: Optional baseline snapshot (created if not provided)
+            configuration_guardian: Optional configuration guardian (created if not provided)
+
+        Returns:
+            Configured PerpsBot instance
+        """
+        # Get dependencies from container
+        config_controller = container.config_controller
+        config = config_controller.current
+        registry = container.create_service_registry()
+        event_store = container.event_store
+        orders_store = container.orders_store
+
+        # Create session guard if not provided
+        if session_guard is None:
+            session_guard = TradingSessionGuard(
+                start=config.trading_window_start,
+                end=config.trading_window_end,
+                trading_days=config.trading_days,
+            )
+
+        # Create baseline snapshot if not provided
+        if baseline_snapshot is None:
+            baseline_snapshot = cls.build_baseline_snapshot(
+                config,
+                getattr(config, "derivatives_enabled", False),
+            )
+
+        # Create configuration guardian if not provided
+        if configuration_guardian is None:
+            from bot_v2.monitoring.configuration_guardian import (
+                ConfigurationGuardian as _ConfigurationGuardian,
+            )
+
+            configuration_guardian = _ConfigurationGuardian(baseline_snapshot)
+
+        # Create bot instance
+        bot = cls(
+            config_controller=config_controller,
+            registry=registry,
+            event_store=event_store,
+            orders_store=orders_store,
+            session_guard=session_guard,
+            baseline_snapshot=baseline_snapshot,
+            configuration_guardian=configuration_guardian,
+            container=container,
+        )
+
+        # Bootstrap the bot lifecycle
+        bot.lifecycle_manager.bootstrap()
+
+        logger.info(
+            "Created PerpsBot from container",
+            operation="perps_bot_from_container",
+            bot_id=bot.bot_id,
+            symbol_count=len(bot.symbols),
+            symbols=bot.symbols or ["<none>"],
+        )
+
+        return bot
+
+    @property
+    def container(self) -> ApplicationContainer | None:
+        """Get the application container if available."""
+        return self._container
 
     def _align_registry_with_config(self, registry: ServiceRegistry) -> ServiceRegistry:
         """Ensure the registry reflects the runtime configuration."""
@@ -274,6 +365,16 @@ class PerpsBot:
         self._coordinator_registry.register(execution)
         self._coordinator_registry.register(strategy)
         self._coordinator_registry.register(telemetry)
+
+        # Inject the centralized state manager into the risk manager if available
+        if (
+            hasattr(self.registry, "reduce_only_state_manager")
+            and self.registry.reduce_only_state_manager is not None
+        ):
+            if hasattr(self.registry.risk_manager, "_centralized_state_manager"):
+                self.registry.risk_manager._centralized_state_manager = (
+                    self.registry.reduce_only_state_manager
+                )
 
     # ------------------------------------------------------------------
     @property

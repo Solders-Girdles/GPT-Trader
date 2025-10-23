@@ -27,6 +27,8 @@ ALLOWLIST = {
     "tests/unit/bot_v2/orchestration/test_execution_coordinator.py",  # complex orchestration harness
     "tests/unit/bot_v2/orchestration/test_runtime_coordinator.py",  # integration-heavy runtime checks
     "tests/unit/bot_v2/orchestration/test_strategy_orchestrator.py",  # strategy routing contract suite
+    "tests/integration/test_composition_root.py",  # composition root integration coverage
+    "tests/unit/app/test_container.py",  # exhaustive container unit scenarios
     "tests/integration/test_reduce_only_state_manager_integration.py",  # comprehensive reduce-only state manager integration coverage
     "tests/unit/bot_v2/orchestration/test_state_manager.py",  # exhaustive reduce-only state manager unit scenarios
     "tests/unit/bot_v2/orchestration/test_system_monitor.py",  # monitoring integration matrix

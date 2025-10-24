@@ -5,7 +5,7 @@ Main entry point for intelligent position sizing combining Kelly Criterion,
 confidence adjustments, and regime-based scaling. Complete isolation maintained.
 """
 
-from bot_v2.config import get_config
+# Note: Removed deprecated get_config import - using defaults instead
 from bot_v2.errors import RiskLimitExceeded, ValidationError, log_error
 from bot_v2.features.position_sizing.confidence import confidence_adjusted_size
 from bot_v2.features.position_sizing.kelly import (
@@ -100,12 +100,18 @@ def calculate_position_size(request: PositionSizeRequest) -> PositionSizeRespons
         Position sizing response with recommendation and details
     """
     try:
-        # Get configuration with defaults
-        config = get_config("position_sizing")
+        # Use default position sizing configuration
+        # TODO: Replace with proper ConfigManager integration if needed
+        default_config = {
+            "max_position_size": 0.25,
+            "min_position_size": 0.01,
+            "default_leverage": 2.0,
+            "volatility_adjustment": True,
+        }
 
         # Apply configuration overrides to risk parameters if needed
         if hasattr(request.risk_params, "__dict__"):
-            for key, value in config.items():
+            for key, value in default_config.items():
                 if hasattr(request.risk_params, key) and getattr(request.risk_params, key) is None:
                     setattr(request.risk_params, key, value)
 

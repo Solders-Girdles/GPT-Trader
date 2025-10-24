@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import pytest
 
-from app.container import ApplicationContainer, create_application_container
+from bot_v2.app.container import ApplicationContainer, create_application_container
 from bot_v2.orchestration.configuration import BotConfig, Profile
 from bot_v2.orchestration.perps_bootstrap import (
     prepare_perps_bot,

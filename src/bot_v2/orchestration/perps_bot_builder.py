@@ -75,7 +75,7 @@ class PerpsBotBuilder:
 
     def _build_with_container(self) -> PerpsBot:
         """Build PerpsBot using the application container."""
-        from app.container import create_application_container
+        from bot_v2.app.container import create_application_container
 
         # Get settings
         settings = self._settings

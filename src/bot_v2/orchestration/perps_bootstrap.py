@@ -175,7 +175,7 @@ def prepare_perps_bot(
 
     # If using container, store container reference in result for convenience
     if use_container:
-        from app.container import create_application_container
+        from bot_v2.app.container import create_application_container
 
         container = create_application_container(config, settings)
         # Add container to result extras

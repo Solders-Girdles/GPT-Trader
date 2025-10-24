@@ -160,7 +160,7 @@ class ApplicationContainer:
         """
         if self._orders_store is None:
             # Use a default path based on settings
-            storage_path = self.settings.data_dir / "orders"
+            storage_path = self.settings.runtime_root / "orders"
             self._orders_store = OrdersStore(storage_path=storage_path)
             logger.debug(
                 "Created orders store",

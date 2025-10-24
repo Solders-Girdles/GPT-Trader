@@ -3,9 +3,21 @@ Comprehensive configuration system for GPT-Trader V2
 
 Provides centralized configuration management with JSON/YAML support,
 environment variable overrides, validation, and hot-reload capabilities.
+
+.. warning::
+    The ConfigLoader system in this module is deprecated.
+    Use ConfigManager from bot_v2.orchestration.configuration.manager instead.
+    ConfigManager provides better validation, profile support, and integration
+    with the orchestration system.
+
+    Migration guide:
+    - Replace ConfigLoader with ConfigManager
+    - Replace get_config() with ConfigManager.from_profile()
+    - Update your configuration to use profiles instead of config slices
 """
 
 import json
+import warnings
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
@@ -44,7 +56,14 @@ class ConfigMetadata:
 
 
 class ConfigLoader:
-    """Centralized configuration loader with caching and validation"""
+    """Centralized configuration loader with caching and validation
+
+    .. deprecated::
+        ConfigLoader is deprecated and will be removed in a future version.
+        Use ConfigManager from bot_v2.orchestration.configuration.manager instead.
+        ConfigManager provides better validation, profile support, and integration
+        with the orchestration system.
+    """
 
     def __init__(
         self,
@@ -57,7 +76,17 @@ class ConfigLoader:
         Args:
             config_dir: Directory containing config files.
                        Defaults to project_root/config
+
+        .. deprecated::
+            ConfigLoader is deprecated. Use ConfigManager from
+            bot_v2.orchestration.configuration.manager instead.
         """
+        warnings.warn(
+            "ConfigLoader is deprecated and will be removed in a future version. "
+            "Use ConfigManager from bot_v2.orchestration.configuration.manager instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         if config_dir is None:
             # Default to config directory in project root
             project_root = Path(__file__).parent.parent.parent.parent
@@ -331,7 +360,18 @@ _config_loader = None
 
 
 def get_config_loader() -> ConfigLoader:
-    """Get global config loader instance"""
+    """Get global config loader instance
+
+    .. deprecated::
+        ConfigLoader is deprecated. Use ConfigManager from
+        bot_v2.orchestration.configuration.manager instead.
+    """
+    warnings.warn(
+        "get_config_loader() is deprecated. Use ConfigManager from "
+        "bot_v2.orchestration.configuration.manager instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     global _config_loader
     if _config_loader is None:
         _config_loader = ConfigLoader()
@@ -339,19 +379,52 @@ def get_config_loader() -> ConfigLoader:
 
 
 def get_config(slice_name: str, force_reload: bool = False) -> dict[str, Any]:
-    """Convenience function to get config for a slice"""
+    """Convenience function to get config for a slice
+
+    .. deprecated::
+        ConfigLoader is deprecated. Use ConfigManager from
+        bot_v2.orchestration.configuration.manager instead.
+    """
+    warnings.warn(
+        "get_config() is deprecated. Use ConfigManager from "
+        "bot_v2.orchestration.configuration.manager instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     return get_config_loader().get_config(slice_name, force_reload)
 
 
 def set_config_loader(loader: ConfigLoader) -> None:
-    """Set custom config loader"""
+    """Set custom config loader
+
+    .. deprecated::
+        ConfigLoader is deprecated. Use ConfigManager from
+        bot_v2.orchestration.configuration.manager instead.
+    """
+    warnings.warn(
+        "set_config_loader() is deprecated. Use ConfigManager from "
+        "bot_v2.orchestration.configuration.manager instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     global _config_loader
     _config_loader = loader
 
 
 # Configuration decorator
 def with_config(slice_name: str) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
-    """Decorator to inject configuration into function"""
+    """Decorator to inject configuration into function
+
+    .. deprecated::
+        ConfigLoader is deprecated. Use ConfigManager from
+        bot_v2.orchestration.configuration.manager instead.
+    """
+    warnings.warn(
+        "with_config() is deprecated. Use ConfigManager from "
+        "bot_v2.orchestration.configuration.manager instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
 
     def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
         def wrapper(*args: Any, **kwargs: Any) -> Any:
@@ -363,10 +436,11 @@ def with_config(slice_name: str) -> Callable[[Callable[..., Any]], Callable[...,
     return decorator
 
 
-# Export main components
+# Export main components (ConfigLoader deprecated - use ConfigManager instead)
 __all__ = [
-    "ConfigLoader",
     "ConfigMetadata",
+    # Deprecated ConfigLoader components (will be removed in future version)
+    "ConfigLoader",
     "get_config_loader",
     "get_config",
     "set_config_loader",

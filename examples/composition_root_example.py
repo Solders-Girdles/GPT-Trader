@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import asyncio
 
-from app.container import create_application_container
+from bot_v2.app.container import create_application_container
 from bot_v2.orchestration.configuration import BotConfig, Profile
 
 

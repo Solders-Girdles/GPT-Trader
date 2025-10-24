@@ -1,4 +1,16 @@
-"""Service registry scaffolding for orchestration dependencies."""
+"""Service registry scaffolding for orchestration dependencies.
+
+.. deprecated::
+    ServiceRegistry is deprecated for construction duties. Use the composition root
+    pattern with bot_v2.app.ApplicationContainer instead. ServiceRegistry remains
+    available for runtime dependency access in existing code, but new code should
+    use the container for service construction and dependency injection.
+
+    Migration guide:
+    - Replace ServiceRegistry construction with ApplicationContainer
+    - Use container.create_service_registry() for backward compatibility
+    - See bot_v2.app.container for the modern dependency injection approach
+"""
 
 from __future__ import annotations
 

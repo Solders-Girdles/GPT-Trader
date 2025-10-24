@@ -41,7 +41,7 @@ from bot_v2.utilities.config import ConfigBaselinePayload
 from bot_v2.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:  # pragma: no cover - imports for type checking only
-    from app.container import ApplicationContainer
+    from bot_v2.app.container import ApplicationContainer
     from bot_v2.features.brokerages.coinbase.account_manager import CoinbaseAccountManager
     from bot_v2.features.brokerages.core.interfaces import IBrokerage
     from bot_v2.features.live_trade.advanced_execution import AdvancedExecutionEngine

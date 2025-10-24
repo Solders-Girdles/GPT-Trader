@@ -8,7 +8,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from app.container import ApplicationContainer, create_application_container
+from bot_v2.app.container import ApplicationContainer, create_application_container
 from bot_v2.orchestration.configuration import BotConfig, Profile
 from bot_v2.orchestration.runtime_settings import RuntimeSettings
 from bot_v2.persistence.event_store import EventStore

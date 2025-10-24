@@ -39,6 +39,8 @@ def _load_system_config() -> dict[str, Any]:
     pkg = sys.modules.get("bot_v2.features.brokerages.coinbase.client")
     if pkg and hasattr(pkg, "get_config"):
         return cast(dict[str, Any], pkg.get_config("system"))  # type: ignore[attr-defined]
+
+    # Intentional fallback usage for test compatibility - deprecation warning expected
     from bot_v2.config import get_config as fallback_get_config
 
     return cast(dict[str, Any], fallback_get_config("system"))

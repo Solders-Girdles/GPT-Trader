@@ -35,7 +35,7 @@ from bot_v2.orchestration.perps_bot_builder import create_perps_bot
 bot = create_perps_bot(config)
 
 # New approach (recommended)
-from app.container import create_application_container
+from bot_v2.app.container import create_application_container
 container = create_application_container(config)
 bot = container.create_perps_bot()
 ```
@@ -44,7 +44,7 @@ bot = container.create_perps_bot()
 
 ```python
 # New approach using class method
-from app.container import create_application_container
+from bot_v2.app.container import create_application_container
 from bot_v2.orchestration.perps_bot import PerpsBot
 
 container = create_application_container(config)
@@ -98,7 +98,7 @@ bot = PerpsBot.from_container(container)
 ```python
 # Unit testing with container
 def test_bot_with_mocked_dependencies():
-    from app.container import ApplicationContainer
+    from bot_v2.app.container import ApplicationContainer
     from unittest.mock import Mock
 
     container = ApplicationContainer(config)
@@ -126,7 +126,7 @@ def test_bot_with_mocked_dependencies():
 Make sure to import from the correct module:
 ```python
 # Correct
-from app.container import ApplicationContainer
+from bot_v2.app.container import ApplicationContainer
 
 # Incorrect
 from src.app.container import ApplicationContainer
@@ -153,7 +153,7 @@ broker = container.broker  # This triggers broker creation
 ### Complete Example with Container
 
 ```python
-from app.container import create_application_container
+from bot_v2.app.container import create_application_container
 from bot_v2.orchestration.configuration import BotConfig, Profile
 
 # Create configuration
@@ -173,7 +173,7 @@ asyncio.run(bot.run())
 ### Example with Custom Settings
 
 ```python
-from app.container import create_application_container
+from bot_v2.app.container import create_application_container
 from bot_v2.orchestration.runtime_settings import RuntimeSettings
 
 # Custom settings

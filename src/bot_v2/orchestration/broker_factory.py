@@ -6,7 +6,8 @@ from __future__ import annotations
 
 from typing import Any, Literal, cast
 
-from bot_v2.config import get_config
+# Note: Removed deprecated get_config import
+# TODO: Replace with proper configuration system if needed
 from bot_v2.features.brokerages.coinbase.market_data_service import MarketDataService
 from bot_v2.features.brokerages.coinbase.models import APIConfig
 from bot_v2.features.brokerages.coinbase.utilities import ProductCatalog
@@ -53,7 +54,7 @@ def create_brokerage(
         value = raw_env.get(key)
         return value if value is not None else default
 
-    broker_value = env("BROKER") or get_config("system").get("broker") or "coinbase"
+    broker_value = env("BROKER") or "coinbase"  # Removed deprecated get_config fallback
     broker = broker_value.lower()
 
     if broker == "coinbase":

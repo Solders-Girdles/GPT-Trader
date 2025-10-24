@@ -21,9 +21,7 @@ class TestStateChangeRequest:
     def test_state_change_request_creation(self):
         """Test StateChangeRequest creation and defaults."""
         request = StateChangeRequest(
-            enabled=True,
-            reason="test",
-            source=ReduceOnlyModeSource.USER_REQUEST
+            enabled=True, reason="test", source=ReduceOnlyModeSource.USER_REQUEST
         )
 
         assert request.enabled is True
@@ -39,7 +37,7 @@ class TestStateChangeRequest:
             enabled=True,
             reason="test",
             source=ReduceOnlyModeSource.DAILY_LOSS_LIMIT,
-            metadata=metadata
+            metadata=metadata,
         )
 
         assert request.metadata == metadata
@@ -56,7 +54,7 @@ class TestReduceOnlyModeState:
             reason="test",
             source=ReduceOnlyModeSource.USER_REQUEST,
             timestamp=timestamp,
-            previous_state=False
+            previous_state=False,
         )
 
         state_dict = state.to_dict()

@@ -4,18 +4,15 @@ These tests verify that the centralized state manager works correctly
 for state transitions, validation, and concurrent access patterns.
 """
 
-import asyncio
-from datetime import datetime, timedelta
-from unittest.mock import Mock, patch
+from datetime import datetime
+from unittest.mock import Mock
 
 import pytest
 
 from bot_v2.orchestration.state_manager import (
     ReduceOnlyModeSource,
-    ReduceOnlyModeStateManager,
     ReduceOnlyModeState,
-    StateChangeRequest,
-    create_reduce_only_state_manager,
+    ReduceOnlyModeStateManager,
 )
 from bot_v2.persistence.event_store import EventStore
 
@@ -47,9 +44,7 @@ class TestReduceOnlyModeStateManager:
 
         # Enable reduce-only mode
         result = manager.set_reduce_only_mode(
-            enabled=True,
-            reason="test_enable",
-            source=ReduceOnlyModeSource.USER_REQUEST
+            enabled=True, reason="test_enable", source=ReduceOnlyModeSource.USER_REQUEST
         )
 
         assert result is True  # State changed
@@ -69,9 +64,7 @@ class TestReduceOnlyModeStateManager:
 
         # Disable reduce-only mode
         result = manager.set_reduce_only_mode(
-            enabled=False,
-            reason="test_disable",
-            source=ReduceOnlyModeSource.CONFIG
+            enabled=False, reason="test_disable", source=ReduceOnlyModeSource.CONFIG
         )
 
         assert result is True  # State changed
@@ -92,9 +85,7 @@ class TestReduceOnlyModeStateManager:
 
         # Set to same state (False -> False)
         result = manager.set_reduce_only_mode(
-            enabled=False,
-            reason="no_change",
-            source=ReduceOnlyModeSource.CONFIG
+            enabled=False, reason="no_change", source=ReduceOnlyModeSource.CONFIG
         )
 
         assert result is False  # No state change
@@ -103,16 +94,12 @@ class TestReduceOnlyModeStateManager:
 
         # Enable first
         manager.set_reduce_only_mode(
-            enabled=True,
-            reason="enable",
-            source=ReduceOnlyModeSource.USER_REQUEST
+            enabled=True, reason="enable", source=ReduceOnlyModeSource.USER_REQUEST
         )
 
         # Then set to same state (True -> True)
         result = manager.set_reduce_only_mode(
-            enabled=True,
-            reason="no_change",
-            source=ReduceOnlyModeSource.CONFIG
+            enabled=True, reason="no_change", source=ReduceOnlyModeSource.CONFIG
         )
 
         assert result is False  # No state change
@@ -127,9 +114,7 @@ class TestReduceOnlyModeStateManager:
         # Test empty reason
         with pytest.raises(ValueError, match="Reason cannot be empty"):
             manager.set_reduce_only_mode(
-                enabled=True,
-                reason="",  # Empty reason
-                source=ReduceOnlyModeSource.USER_REQUEST
+                enabled=True, reason="", source=ReduceOnlyModeSource.USER_REQUEST  # Empty reason
             )
 
         # Test whitespace-only reason
@@ -137,7 +122,7 @@ class TestReduceOnlyModeStateManager:
             manager.set_reduce_only_mode(
                 enabled=True,
                 reason="   ",  # Whitespace only
-                source=ReduceOnlyModeSource.USER_REQUEST
+                source=ReduceOnlyModeSource.USER_REQUEST,
             )
 
     def test_validation_disabled_empty_reason(self):
@@ -147,9 +132,7 @@ class TestReduceOnlyModeStateManager:
 
         # Should not raise error when validation is disabled
         result = manager.set_reduce_only_mode(
-            enabled=True,
-            reason="",  # Empty reason
-            source=ReduceOnlyModeSource.USER_REQUEST
+            enabled=True, reason="", source=ReduceOnlyModeSource.USER_REQUEST  # Empty reason
         )
 
         assert result is True
@@ -166,7 +149,7 @@ class TestReduceOnlyModeStateManager:
                 enabled=True,
                 reason="daily loss exceeded",
                 source=ReduceOnlyModeSource.DAILY_LOSS_LIMIT,
-                metadata={}  # Missing loss_amount
+                metadata={},  # Missing loss_amount
             )
 
         # Should work with proper metadata
@@ -174,7 +157,7 @@ class TestReduceOnlyModeStateManager:
             enabled=True,
             reason="daily loss exceeded",
             source=ReduceOnlyModeSource.DAILY_LOSS_LIMIT,
-            metadata={"loss_amount": 1000.0}
+            metadata={"loss_amount": 1000.0},
         )
 
         assert result is True
@@ -190,9 +173,7 @@ class TestReduceOnlyModeStateManager:
 
         # Change state
         manager.set_reduce_only_mode(
-            enabled=True,
-            reason="listener_test",
-            source=ReduceOnlyModeSource.USER_REQUEST
+            enabled=True, reason="listener_test", source=ReduceOnlyModeSource.USER_REQUEST
         )
 
         # Verify listener was called
@@ -207,9 +188,7 @@ class TestReduceOnlyModeStateManager:
 
         # Change state again
         manager.set_reduce_only_mode(
-            enabled=False,
-            reason="listener_removed",
-            source=ReduceOnlyModeSource.CONFIG
+            enabled=False, reason="listener_removed", source=ReduceOnlyModeSource.CONFIG
         )
 
         # Verify listener was not called again
@@ -228,9 +207,7 @@ class TestReduceOnlyModeStateManager:
 
         # State change should still succeed despite listener error
         result = manager.set_reduce_only_mode(
-            enabled=True,
-            reason="faulty_listener_test",
-            source=ReduceOnlyModeSource.USER_REQUEST
+            enabled=True, reason="faulty_listener_test", source=ReduceOnlyModeSource.USER_REQUEST
         )
 
         assert result is True
@@ -243,9 +220,7 @@ class TestReduceOnlyModeStateManager:
 
         # Set initial state
         manager.set_reduce_only_mode(
-            enabled=True,
-            reason="initial",
-            source=ReduceOnlyModeSource.USER_REQUEST
+            enabled=True, reason="initial", source=ReduceOnlyModeSource.USER_REQUEST
         )
         assert manager.is_reduce_only_mode is True
 
@@ -276,9 +251,7 @@ class TestReduceOnlyModeStateManager:
 
         # Make some changes
         manager.set_reduce_only_mode(
-            enabled=True,
-            reason="summary_test",
-            source=ReduceOnlyModeSource.USER_REQUEST
+            enabled=True, reason="summary_test", source=ReduceOnlyModeSource.USER_REQUEST
         )
 
         # Updated summary
@@ -295,9 +268,7 @@ class TestReduceOnlyModeStateManager:
         # Add multiple changes
         for i in range(5):
             manager.set_reduce_only_mode(
-                enabled=i % 2 == 0,
-                reason=f"change_{i}",
-                source=ReduceOnlyModeSource.USER_REQUEST
+                enabled=i % 2 == 0, reason=f"change_{i}", source=ReduceOnlyModeSource.USER_REQUEST
             )
 
         # Get full audit log
@@ -334,18 +305,13 @@ class TestReduceOnlyModeStateManager:
         # Fixed time for testing - note that StateChangeRequest uses datetime.utcnow()
         # so this test verifies the time provider is accepted even if not used for timestamps
         fixed_time = datetime(2023, 1, 1, 12, 0, 0)
-        manager = ReduceOnlyModeStateManager(
-            event_store,
-            now_provider=lambda: fixed_time
-        )
+        manager = ReduceOnlyModeStateManager(event_store, now_provider=lambda: fixed_time)
 
         # Verify the custom time provider was stored (even if StateChangeRequest uses utcnow)
         assert manager._now_provider() == fixed_time
 
         manager.set_reduce_only_mode(
-            enabled=True,
-            reason="time_test",
-            source=ReduceOnlyModeSource.USER_REQUEST
+            enabled=True, reason="time_test", source=ReduceOnlyModeSource.USER_REQUEST
         )
 
         # Verify the state change worked (timestamp will be from StateChangeRequest.default_factory)
@@ -366,9 +332,7 @@ class TestReduceOnlyModeStateManager:
         for source in critical_sources:
             # Test that critical sources work correctly
             result = manager.set_reduce_only_mode(
-                enabled=True,
-                reason=f"critical_{source.value}",
-                source=source
+                enabled=True, reason=f"critical_{source.value}", source=source
             )
 
             assert result is True

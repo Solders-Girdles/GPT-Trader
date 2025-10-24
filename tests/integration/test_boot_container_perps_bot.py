@@ -5,9 +5,10 @@ PerpsBot can be created and started using the ApplicationContainer.
 """
 
 import pytest
+
+from bot_v2.app.container import create_application_container
 from bot_v2.orchestration.configuration import BotConfig
 from bot_v2.orchestration.runtime_settings import load_runtime_settings
-from bot_v2.app.container import create_application_container
 
 
 def test_container_perps_bot_boot_roundtrip():
@@ -17,14 +18,16 @@ def test_container_perps_bot_boot_roundtrip():
     config = BotConfig.from_profile("dev", symbols=["BTC-USD"])
 
     # Load runtime settings for the test environment
-    settings = load_runtime_settings({
-        "PERPS_FORCE_MOCK": "true",
-        "PERPS_PAPER_TRADING": "true",
-        "PERPS_ENABLE_STREAMING": "false",  # Disable for test stability
-        "COINBASE_SANDBOX": "true",
-        "GPT_TRADER_RUNTIME_ROOT": "/tmp/test_gpt_trader",
-        "EVENT_STORE_ROOT": "/tmp/test_gpt_trader/events",
-    })
+    settings = load_runtime_settings(
+        {
+            "PERPS_FORCE_MOCK": "true",
+            "PERPS_PAPER_TRADING": "true",
+            "PERPS_ENABLE_STREAMING": "false",  # Disable for test stability
+            "COINBASE_SANDBOX": "true",
+            "GPT_TRADER_RUNTIME_ROOT": "/tmp/test_gpt_trader",
+            "EVENT_STORE_ROOT": "/tmp/test_gpt_trader/events",
+        }
+    )
 
     # Create application container
     container = create_application_container(config, settings)
@@ -92,11 +95,13 @@ def test_container_service_registry_compatibility():
     """Test that container can create ServiceRegistry for backward compatibility."""
 
     config = BotConfig.from_profile("dev", symbols=["ETH-USD"])
-    settings = load_runtime_settings({
-        "PERPS_FORCE_MOCK": "true",
-        "PERPS_PAPER_TRADING": "true",
-        "COINBASE_SANDBOX": "true",
-    })
+    settings = load_runtime_settings(
+        {
+            "PERPS_FORCE_MOCK": "true",
+            "PERPS_PAPER_TRADING": "true",
+            "COINBASE_SANDBOX": "true",
+        }
+    )
 
     # Create container
     container = create_application_container(config, settings)

@@ -29,9 +29,7 @@ class TestReduceOnlyModeStateManagerFactory:
 
         # Test with custom parameters
         manager_custom = create_reduce_only_state_manager(
-            event_store,
-            initial_state=True,
-            validation_enabled=False
+            event_store, initial_state=True, validation_enabled=False
         )
         assert manager_custom.is_reduce_only_mode is True
         assert manager_custom._validation_enabled is False

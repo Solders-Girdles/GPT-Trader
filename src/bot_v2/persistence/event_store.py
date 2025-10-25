@@ -230,6 +230,86 @@ class EventStore:
         results.reverse()
         return results
 
+    def _tail_file(
+        self, limit: int, types_set: set[str] | None = None, bot_id: str | None = None
+    ) -> list[dict[str, Any]]:
+        if limit <= 0:
+            return []
+
+        path = self._store.path
+        if not path.exists():
+            return []
+
+        results: list[dict[str, Any]] = []
+        try:
+            lock = getattr(self._store, "_lock", None)
+            lock_cm = lock if lock is not None else contextlib.nullcontext()
+            with lock_cm:
+                with path.open("rb") as handle:
+                    handle.seek(0, os.SEEK_END)
+                    buffer = bytearray()
+                    position = handle.tell()
+                    while position > 0 and len(results) < limit:
+                        read_size = min(4096, position)
+                        position -= read_size
+                        handle.seek(position)
+                        chunk = handle.read(read_size)
+                        buffer[:0] = chunk
+
+                        while True:
+                            newline_index = buffer.rfind(b"\n")
+                            if newline_index == -1:
+                                break
+                            line = buffer[newline_index + 1 :]
+                            buffer = buffer[:newline_index]
+                            if not line:
+                                continue
+                            event = self._decode_line(line)
+                            if event is None:
+                                continue
+                            if bot_id is not None and event.get("bot_id") != bot_id:
+                                continue
+                            if types_set and event.get("type") not in types_set:
+                                continue
+                            results.append(event)
+                            if len(results) == limit:
+                                break
+
+                    if len(results) < limit and buffer:
+                        event = self._decode_line(buffer)
+                        if event is not None:
+                            if bot_id is not None and event.get("bot_id") != bot_id:
+                                pass
+                            elif types_set and event.get("type") not in types_set:
+                                pass
+                            else:
+                                results.append(event)
+        except Exception:
+            return []
+
+        results.reverse()
+        return results
+
+    def get_events(
+        self,
+        limit: int = 50,
+        *,
+        bot_id: str | None = None,
+        event_type: str | None = None,
+    ) -> list[dict[str, Any]]:
+        """Compatibility helper returning recent events.
+
+        Legacy integrations relied on ``get_events`` with optional ``limit``
+        and ``event_type`` arguments. This method mirrors the previous API by
+        delegating to :meth:`tail` when a bot_id is provided and otherwise
+        returning the most recent events regardless of bot identifier.
+        """
+
+        types_set = {event_type} if event_type else None
+        if bot_id is not None:
+            return self.tail(bot_id, limit=limit, types=types_set)
+        return self._tail_file(limit, types_set)
+
     @staticmethod
     def _decode_line(raw_line: bytes) -> dict[str, Any] | None:
         try:

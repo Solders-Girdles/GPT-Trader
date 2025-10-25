@@ -21,14 +21,15 @@ package directly. See ADR 002 for detailed rationale and migration notes.
 """
 
 from .base import BaseCoordinator, Coordinator, CoordinatorContext, HealthStatus
-from .execution import ExecutionCoordinator
+from .execution import ExecutionCoordinator  # Legacy ExecutionCoordinator
 from .registry import CoordinatorRegistry
-from .runtime import RuntimeCoordinator
+from .runtime import BrokerBootstrapError, RuntimeCoordinator
 from .strategy import StrategyCoordinator
 from .telemetry import TelemetryCoordinator
 
 __all__ = [
     "BaseCoordinator",
+    "BrokerBootstrapError",
     "Coordinator",
     "CoordinatorContext",
     "CoordinatorRegistry",

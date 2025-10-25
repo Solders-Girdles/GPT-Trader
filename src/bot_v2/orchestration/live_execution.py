@@ -119,6 +119,8 @@ class LiveExecutionEngine:
 
         runtime_settings = settings or load_runtime_settings()
         self._production_logger = get_prod_logger(settings=runtime_settings)
+        raw_integration = runtime_settings.raw_env.get("INTEGRATION_TEST_MODE", "")
+        self._integration_mode = str(raw_integration).lower() in {"1", "true", "yes"}
 
         # Determine order preview setting
         preview_env = runtime_settings.raw_env.get("ORDER_PREVIEW_ENABLED")
@@ -141,6 +143,7 @@ class LiveExecutionEngine:
             self.event_store,
             bot_id,
             self.open_orders,
+            integration_mode=self._integration_mode,
         )
         self.order_validator: OrderValidator = OrderValidator(
             broker,
@@ -330,7 +333,7 @@ class LiveExecutionEngine:
                 )
             except Exception:
                 pass
-            return None
+            raise
 
         finally:
             self.guard_manager.invalidate_cache()

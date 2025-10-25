@@ -320,3 +320,34 @@ class OrderReconciler:
             return datetime.fromisoformat(str(raw))
         except Exception:
             return None
+
+
+def create_order_reconciler(
+    event_store: EventStore,
+    orders_store: OrdersStore,
+    execution_engine: Any,  # Could be LiveExecutionEngine or other execution interface
+) -> OrderReconciler:
+    """Factory function to create an OrderReconciler with proper dependencies.
+
+    Args:
+        event_store: Event store for persisting reconciliation events
+        orders_store: Orders store for local order tracking
+        execution_engine: Execution engine that provides broker access
+
+    Returns:
+        Configured OrderReconciler instance
+    """
+    # Extract broker from execution engine
+    broker = getattr(execution_engine, "broker", None)
+    if broker is None:
+        raise ValueError("Execution engine must provide a broker instance")
+
+    # Extract bot_id from execution engine
+    bot_id = getattr(execution_engine, "bot_id", "default_bot")
+
+    return OrderReconciler(
+        broker=broker,
+        orders_store=orders_store,
+        event_store=event_store,
+        bot_id=bot_id,
+    )

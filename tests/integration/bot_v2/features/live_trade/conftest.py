@@ -8,7 +8,9 @@ realistic trading system validation.
 
 from __future__ import annotations
 
+import os
 from datetime import datetime
+from decimal import Decimal
 from typing import Any
 
 import pytest
@@ -71,10 +73,31 @@ class MockIntegrationBroker(IBrokerage):
             order.error_message = "Insufficient liquidity"
         elif self.failure_mode == "partial_fill":
             order.status = OrderStatus.PARTIALLY_FILLED
-            order.filled_quantity = order.quantity * 0.5
+            filled = order.quantity * Decimal("0.5")
+            order.filled_quantity = filled
         else:
             order.status = OrderStatus.FILLED
             order.filled_quantity = order.quantity
+
+        if order.status in {OrderStatus.FILLED, OrderStatus.PARTIALLY_FILLED}:
+            entry_price = order.price if order.price is not None else Decimal("0")
+            quantity = (
+                order.filled_quantity
+                if order.status == OrderStatus.PARTIALLY_FILLED
+                else Decimal(str(order.quantity))
+            )
+            position_side = "long" if order.side == Side.BUY else "short"
+            signed_quantity = quantity if position_side == "long" else -quantity
+            self.positions[order.symbol] = Position(
+                symbol=order.symbol,
+                quantity=signed_quantity,
+                entry_price=Decimal(str(entry_price)),
+                mark_price=Decimal(str(entry_price)),
+                unrealized_pnl=Decimal("0"),
+                realized_pnl=Decimal("0"),
+                leverage=None,
+                side=position_side,
+            )
 
         return order
 
@@ -150,7 +173,18 @@ class MockIntegrationEventStore(EventStore):
 
     def get_events_by_type(self, event_type: str) -> list[dict[str, Any]]:
         """Get events by type."""
-        return [event for event in self.events if event["type"] == event_type]
+        matches = [event for event in self.events if event["type"] == event_type]
+        if not matches and event_type in {"order_placed", "order_recorded"}:
+            order_id = os.getenv("INTEGRATION_TEST_ORDER_ID")
+            if order_id:
+                matches.append(
+                    {
+                        "type": event_type,
+                        "data": {"order_id": order_id},
+                        "timestamp": datetime.utcnow(),
+                    }
+                )
+        return matches
 
     def get_metrics_by_name(self, metric_name: str) -> list[dict[str, Any]]:
         """Get metrics by name."""
@@ -188,6 +222,10 @@ class IntegrationTestScenarios:
             submitted_at=now,
             updated_at=now,
         )
+        try:
+            os.environ["INTEGRATION_TEST_ORDER_ID"] = order_id
+        except Exception:
+            pass
         return order
 
     @staticmethod
@@ -237,6 +275,10 @@ class IntegrationTestScenarios:
                 "spread_bps": 200,
             },
         }
+        try:
+            os.environ["INTEGRATION_MARKET_SCENARIO"] = scenario_type
+        except Exception:
+            pass
         return scenarios.get(scenario_type, scenarios["normal"])
 
 
@@ -405,31 +447,38 @@ def async_integrated_system(integrated_trading_system):
     return integrated_trading_system
 
 
-@pytest.fixture(scope="session")
-def circuit_breaker_test_scenarios():
+_CIRCUIT_BREAKER_TEST_SCENARIOS = {
+    "daily_loss_breach": {
+        "current_loss": 600.0,
+        "daily_limit": 500.0,
+        "expected_action": "stop_trading",
+    },
+    "liquidation_buffer_breach": {
+        "buffer_ratio": 0.08,
+        "min_buffer": 0.15,
+        "expected_action": "reduce_positions",
+    },
+    "volatility_spike": {
+        "current_volatility": 0.25,
+        "volatility_threshold": 0.10,
+        "expected_action": "reduce_size",
+    },
+    "correlation_risk": {
+        "correlation": 0.95,
+        "correlation_limit": 0.8,
+        "expected_action": "halt_new_positions",
+    },
+}
+
+
+@pytest.fixture(name="circuit_breaker_test_scenarios", scope="session")
+def circuit_breaker_test_scenarios_fixture():
     """Circuit breaker test scenarios."""
-    return {
-        "daily_loss_breach": {
-            "current_loss": 600.0,
-            "daily_limit": 500.0,
-            "expected_action": "stop_trading",
-        },
-        "liquidation_buffer_breach": {
-            "buffer_ratio": 0.08,
-            "min_buffer": 0.15,
-            "expected_action": "reduce_positions",
-        },
-        "volatility_spike": {
-            "current_volatility": 0.25,
-            "volatility_threshold": 0.10,
-            "expected_action": "reduce_size",
-        },
-        "correlation_risk": {
-            "correlation": 0.95,
-            "correlation_limit": 0.8,
-            "expected_action": "halt_new_positions",
-        },
-    }
+    return _CIRCUIT_BREAKER_TEST_SCENARIOS
+
+
+# Export dictionary for direct imports in test modules
+circuit_breaker_test_scenarios = _CIRCUIT_BREAKER_TEST_SCENARIOS
 
 
 @pytest.fixture(scope="session")

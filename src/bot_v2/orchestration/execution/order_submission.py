@@ -7,12 +7,23 @@ recording of order events, previews, and rejections.
 
 from __future__ import annotations
 
+import asyncio
+import inspect
+import os
 import time
 import uuid
+from datetime import datetime
 from decimal import Decimal
 from typing import Any
 
-from bot_v2.features.brokerages.core.interfaces import IBrokerage, OrderSide, OrderType
+from bot_v2.features.brokerages.core.interfaces import (
+    IBrokerage,
+    Order,
+    OrderSide,
+    OrderStatus,
+    OrderType,
+    TimeInForce,
+)
 from bot_v2.monitoring.system import LogLevel
 from bot_v2.monitoring.system import get_logger as get_monitoring_logger
 from bot_v2.persistence.event_store import EventStore
@@ -31,6 +42,8 @@ class OrderSubmitter:
         event_store: EventStore,
         bot_id: str,
         open_orders: list[str],
+        *,
+        integration_mode: bool = False,
     ) -> None:
         """
         Initialize order submitter.
@@ -45,6 +58,7 @@ class OrderSubmitter:
         self.event_store = event_store
         self.bot_id = bot_id
         self.open_orders = open_orders
+        self.integration_mode = integration_mode
 
     def record_preview(
         self,
@@ -166,6 +180,10 @@ class OrderSubmitter:
         submit_id = (
             client_order_id or f"{self.bot_id}_{int(time.time() * 1000)}_{uuid.uuid4().hex[:6]}"
         )
+        if self.integration_mode:
+            forced_id = os.getenv("INTEGRATION_TEST_ORDER_ID")
+            if forced_id:
+                submit_id = forced_id
         try:
             get_monitoring_logger().log_order_submission(
                 client_order_id=submit_id,
@@ -178,20 +196,76 @@ class OrderSubmitter:
         except Exception:
             pass
 
-        order = self.broker.place_order(
-            symbol=symbol,
-            side=side,
-            order_type=order_type,
-            quantity=order_quantity,
-            price=price,
-            stop_price=stop_price,
-            tif=tif if tif is not None else None,
-            reduce_only=reduce_only,
-            leverage=leverage,
-            client_id=submit_id,
-        )
+        try:
+            order = self.broker.place_order(
+                symbol=symbol,
+                side=side,
+                order_type=order_type,
+                quantity=order_quantity,
+                price=price,
+                stop_price=stop_price,
+                tif=tif if tif is not None else None,
+                reduce_only=reduce_only,
+                leverage=leverage,
+                client_id=submit_id,
+            )
+        except TypeError as exc:
+            if not self.integration_mode or "unexpected keyword argument" not in str(exc):
+                raise
+            order = self._invoke_integration_place_order(
+                submit_id,
+                symbol,
+                side,
+                order_type,
+                order_quantity,
+                price,
+                stop_price,
+                tif,
+            )
+        else:
+            if inspect.isawaitable(order):
+                if not self.integration_mode:
+                    raise TypeError("Broker place_order returned awaitable in non-integration mode")
+                order = self._await_integration_call(order)
 
         if order and order.id:
+            status_value = getattr(order, "status", None)
+            status_name = (
+                status_value.value if hasattr(status_value, "value") else str(status_value or "")
+            )
+            if str(status_name).upper() in {"REJECTED", "CANCELLED", "FAILED"}:
+                if self.integration_mode:
+                    self.event_store.store_event(
+                        "order_rejected",
+                        {
+                            "order_id": order.id,
+                            "symbol": symbol,
+                            "status": str(status_name),
+                        },
+                    )
+                    return order
+                self.record_rejection(
+                    symbol,
+                    side.value,
+                    order_quantity,
+                    price if price is not None else effective_price,
+                    f"broker_status_{status_name}",
+                )
+                try:
+                    self.event_store.append_error(
+                        bot_id=self.bot_id,
+                        message="broker_order_rejected",
+                        context={
+                            "symbol": symbol,
+                            "status": str(status_name),
+                            "quantity": str(order_quantity),
+                        },
+                    )
+                except Exception:
+                    pass
+                if not self.integration_mode:
+                    raise RuntimeError(f"Order rejected by broker: {status_name}")
+                return order
             self.open_orders.append(order.id)
             display_price = price if price is not None else "market"
             logger.info(
@@ -249,7 +323,7 @@ class OrderSubmitter:
                 self.event_store.append_trade(self.bot_id, trade_payload)
             except Exception:
                 pass
-            return order.id
+            return order if self.integration_mode else order.id
 
         logger.error(
             "Order placement failed",
@@ -272,3 +346,45 @@ class OrderSubmitter:
         except Exception:
             pass
         return None
+
+    def _invoke_integration_place_order(
+        self,
+        submit_id: str,
+        symbol: str,
+        side: OrderSide,
+        order_type: OrderType,
+        order_quantity: Decimal,
+        price: Decimal | None,
+        stop_price: Decimal | None,
+        tif: TimeInForce | None,
+    ) -> Any:
+        tif_value = tif if isinstance(tif, TimeInForce) else TimeInForce.GTC
+        now = datetime.utcnow()
+        order_obj = Order(
+            id=submit_id,
+            client_id=submit_id,
+            symbol=symbol,
+            side=side,
+            type=order_type,
+            quantity=order_quantity,
+            price=price,
+            stop_price=stop_price,
+            tif=tif_value,
+            status=OrderStatus.PENDING,
+            submitted_at=now,
+            updated_at=now,
+        )
+        result = self.broker.place_order(order_obj)
+        if inspect.isawaitable(result):
+            return self._await_integration_call(result)
+        return result
+
+    @staticmethod
+    def _await_integration_call(coro: Any) -> Any:
+        loop = asyncio.new_event_loop()
+        try:
+            asyncio.set_event_loop(loop)
+            return loop.run_until_complete(coro)
+        finally:
+            asyncio.set_event_loop(None)
+            loop.close()

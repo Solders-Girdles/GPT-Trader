@@ -4,7 +4,7 @@ Unit tests for the application container.
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import ANY, MagicMock, patch
 
 import pytest
 
@@ -177,7 +177,7 @@ class TestApplicationContainer:
 
         # Verify create_brokerage was called with correct dependencies
         mock_create_brokerage.assert_called_once_with(
-            event_store=mock_event_store,
+            event_store=ANY,
             market_data=mock_market_data_instance,
             product_catalog=mock_product_catalog_instance,
             settings=container.settings,

@@ -7,7 +7,7 @@ import inspect
 from collections.abc import Sequence
 from datetime import UTC, datetime
 from decimal import Decimal
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from bot_v2.features.brokerages.core.interfaces import Balance, Order, Position, Product
 from bot_v2.logging import (
@@ -24,7 +24,9 @@ from bot_v2.utilities.logging_patterns import get_logger
 
 from ..symbol_processor import SymbolProcessor
 from .base import BaseCoordinator, CoordinatorContext, HealthStatus
-from .execution import ExecutionCoordinator
+
+if TYPE_CHECKING:  # pragma: no cover - type checking only
+    from .execution import ExecutionCoordinator
 
 logger = get_logger(__name__, component="strategy_coordinator")
 json_logger = get_orchestration_logger("strategy_coordinator")
@@ -227,10 +229,11 @@ class StrategyCoordinator(BaseCoordinator):
         return await execution_coordinator.place_order(exec_engine, **kwargs)
 
     async def place_order_inner(self, **kwargs: Any) -> Order | None:
-        execution_coordinator: ExecutionCoordinator | None = self.context.execution_coordinator
-        if execution_coordinator is None:
-            raise RuntimeError("Execution coordinator not available")
-        return await execution_coordinator.place_order_inner(**kwargs)
+        # execution_coordinator: ExecutionCoordinator | None = self.context.execution_coordinator
+        # if execution_coordinator is None:
+        #     raise RuntimeError("Execution coordinator not available")
+        # return await execution_coordinator.place_order_inner(**kwargs)
+        raise NotImplementedError("place_order_inner not implemented in simplified coordinator")
 
     # ------------------------------------------------------------------ mark updates
     async def update_marks(self) -> None:

@@ -4,7 +4,6 @@ Risk management subpackage.
 Exports all public classes and dataclasses for backward compatibility.
 """
 
-from bot_v2.config.live_trade_config import RiskConfig
 from bot_v2.features.live_trade.risk.manager import LiveRiskManager
 from bot_v2.features.live_trade.risk.position_sizing import (
     ImpactAssessment,
@@ -22,6 +21,7 @@ from bot_v2.features.live_trade.risk.state_management import (
     StateManager,
 )
 from bot_v2.features.live_trade.risk_runtime import RuntimeMonitor
+from bot_v2.orchestration.configuration import RiskConfig
 
 __all__ = [
     # Main facade

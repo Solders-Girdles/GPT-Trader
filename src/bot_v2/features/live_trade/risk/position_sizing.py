@@ -10,8 +10,8 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from decimal import Decimal
 
-from bot_v2.config.live_trade_config import RiskConfig
 from bot_v2.features.brokerages.core.interfaces import Product
+from bot_v2.orchestration.configuration import RiskConfig
 from bot_v2.persistence.event_store import EventStore
 from bot_v2.utilities.logging_patterns import get_logger
 from bot_v2.utilities.telemetry import emit_metric

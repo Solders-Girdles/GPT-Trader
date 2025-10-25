@@ -313,6 +313,11 @@ def validate_order(
     min_notional = getattr(product, "min_notional", None)
     min_notional = Decimal(str(min_notional)) if min_notional is not None else None
 
+    if step <= 0:
+        step = Decimal("0.00000001")
+    if min_size > 0 and step > min_size:
+        step = min_size / Decimal("10")
+
     if quantity is None:
         return ValidationResult(ok=False, reason="quantity_missing")
 
@@ -321,7 +326,7 @@ def validate_order(
     # Quantize quantity and auto-bump to the minimum tradable size when undershooting
     adj_quantity = quantize_size(base_quantity, step)
     if adj_quantity < min_size:
-        adj_quantity = min_size
+        adj_quantity = quantize_size_up(min_size, step)
 
     # Price handling
     adj_price: Decimal | None = None
@@ -329,11 +334,15 @@ def validate_order(
         if price is None:
             return ValidationResult(ok=False, reason="price_required")
         adj_price = quantize_price_side_aware(Decimal(str(price)), price_inc, side)
+        if price_inc > 0 and adj_price > 0:
+            slippage_ratio = price_inc / adj_price
+            if slippage_ratio >= Decimal("0.05"):
+                return ValidationResult(ok=False, reason="price_increment_slippage")
     else:
         adj_price = price
 
     # Notional check
-    if min_notional is not None and adj_price is not None:
+    if min_notional is not None and adj_price is not None and adj_price > 0:
         notional = adj_quantity * adj_price
         if notional < min_notional:
             # Suggest quantity to clear notional threshold (no buffer in validator)
@@ -347,6 +356,9 @@ def validate_order(
                 adjusted_price=adj_price,
             )
 
+    if step > 0:
+        adj_quantity = quantize_size_up(adj_quantity, step)
+
     return ValidationResult(ok=True, adjusted_quantity=adj_quantity, adjusted_price=adj_price)
 
 
@@ -358,19 +370,53 @@ def calculate_safe_position_size(
     ref_price: Decimal,
     overrides: dict[str, dict[str, str]] | None = None,
 ) -> Decimal:
-    """Return a size that safely clears minimum thresholds with +10% buffer."""
-    step = Decimal(str(getattr(product, "step_size", Decimal("0.001"))))
+    """Return a size that safely clears minimum thresholds with a safety buffer."""
+
+    buffer_multiplier = Decimal("1.10")
+
+    raw_step = getattr(product, "step_size", Decimal("0.001"))
+    step = Decimal(str(raw_step)) if raw_step is not None else Decimal("0.001")
     min_size = Decimal(str(getattr(product, "min_size", Decimal("0.001"))))
+    max_size_attr = getattr(product, "max_size", None)
+    max_size = Decimal(str(max_size_attr)) if max_size_attr is not None else None
     min_notional = getattr(product, "min_notional", None)
     min_notional = Decimal(str(min_notional)) if min_notional is not None else None
 
-    safe_quantity = quantize_size(max(intended_quantity, min_size * Decimal("1.10")), step)
-    if min_notional:
-        notional = safe_quantity * ref_price
-        target = min_notional * Decimal("1.10")
-        if notional < target and ref_price > 0:
-            needed = quantize_size(target / ref_price, step)
-            if needed < min_size:
-                needed = min_size
-            safe_quantity = needed
+    if step <= 0:
+        step = min_size / Decimal("10") if min_size > 0 else Decimal("0.00000001")
+    if min_size > 0 and step > min_size:
+        step = min_size / Decimal("10")
+    if step <= 0:
+        step = Decimal("0.00000001")
+
+    base_target = max(intended_quantity, min_size * buffer_multiplier)
+    safe_quantity = quantize_size_up(base_target, step)
+
+    if safe_quantity < min_size:
+        safe_quantity = quantize_size_up(min_size, step)
+
+    min_buffer_target = min_size * buffer_multiplier
+    if safe_quantity < min_buffer_target:
+        safe_quantity = quantize_size_up(min_buffer_target, step)
+
+    if min_notional is not None and ref_price > 0:
+        target_notional = min_notional * buffer_multiplier
+        current_notional = safe_quantity * ref_price
+        if current_notional < target_notional:
+            required_quantity = target_notional / ref_price
+            safe_quantity = quantize_size_up(required_quantity, step)
+
+    if max_size is not None and max_size > 0 and safe_quantity > max_size:
+        safe_quantity = quantize_size(max_size, step)
+
+    if safe_quantity > 0:
+        if safe_quantity < min_buffer_target:
+            safe_quantity = Decimal("0")
+        elif min_notional is not None and ref_price > 0:
+            if safe_quantity * ref_price < min_notional:
+                safe_quantity = Decimal("0")
+
+    if safe_quantity < 0:
+        safe_quantity = Decimal("0")
+
     return safe_quantity

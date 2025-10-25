@@ -11,7 +11,6 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any
 
-from bot_v2.config.live_trade_config import RiskConfig
 from bot_v2.features.live_trade.guard_errors import (
     RiskGuardComputationError,
     RiskGuardDataCorrupt,
@@ -33,6 +32,7 @@ from bot_v2.features.live_trade.risk_runtime.guards import (
 from bot_v2.features.live_trade.risk_runtime.metrics import (
     append_risk_metrics as runtime_append_risk_metrics,
 )
+from bot_v2.orchestration.configuration import RiskConfig
 from bot_v2.orchestration.state_manager import ReduceOnlyModeSource
 from bot_v2.persistence.event_store import EventStore
 from bot_v2.utilities.logging_patterns import get_logger

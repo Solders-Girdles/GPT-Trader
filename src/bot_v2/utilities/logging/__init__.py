@@ -1,21 +1,17 @@
-"""Compatibility shim for logging utilities."""
+"""Structured logging utilities."""
 
-from __future__ import annotations
-
-from bot_v2.utilities.logging import (
-    LOG_FIELDS,
-    StructuredLogger,
-    UnifiedLogger,
-    get_logger,
+from .contexts import log_operation
+from .decorators import log_execution
+from .events import (
     log_configuration_change,
     log_error_with_context,
-    log_execution,
     log_market_data_update,
-    log_operation,
     log_position_update,
     log_system_health,
     log_trade_event,
 )
+from .factory import get_logger
+from .logger import LOG_FIELDS, StructuredLogger, UnifiedLogger
 
 __all__ = [
     "UnifiedLogger",
@@ -28,6 +24,6 @@ __all__ = [
     "log_configuration_change",
     "log_market_data_update",
     "log_system_health",
-    "get_logger",
     "log_execution",
+    "get_logger",
 ]

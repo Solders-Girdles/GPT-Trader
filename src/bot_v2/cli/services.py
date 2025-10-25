@@ -71,5 +71,6 @@ def build_config_from_args(
 
 
 def instantiate_bot(config: BotConfig) -> PerpsBot:
-    bot, _registry = build_bot(config, settings_provider=SETTINGS_PROVIDER)
+    """Instantiate a PerpsBot using the modern ApplicationContainer approach."""
+    bot, _ = build_bot(config, settings_provider=SETTINGS_PROVIDER)
     return bot

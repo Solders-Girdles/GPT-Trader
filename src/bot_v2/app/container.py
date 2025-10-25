@@ -26,6 +26,7 @@ from bot_v2.features.brokerages.core.interfaces import IBrokerage
 from bot_v2.orchestration.broker_factory import create_brokerage
 from bot_v2.orchestration.config_controller import ConfigController
 from bot_v2.orchestration.configuration import BotConfig
+from bot_v2.orchestration.runtime_settings import load_runtime_settings
 from bot_v2.orchestration.state_manager import (
     ReduceOnlyModeStateManager,
     create_reduce_only_state_manager,
@@ -35,6 +36,9 @@ from bot_v2.persistence.orders_store import OrdersStore
 from bot_v2.utilities.logging_patterns import get_logger
 
 logger = get_logger(__name__, component="application_container")
+
+PerpsBot: Any | None = None
+ConfigurationGuardian: Any | None = None
 
 
 class ApplicationContainer:
@@ -73,8 +77,6 @@ class ApplicationContainer:
     def settings(self) -> RuntimeSettings:
         """Get runtime settings, loading if necessary."""
         if self._settings is None:
-            from bot_v2.orchestration.runtime_settings import load_runtime_settings
-
             self._settings = load_runtime_settings()
         return self._settings
 
@@ -110,15 +112,15 @@ class ApplicationContainer:
         and product catalog.
         """
         if self._broker is None:
-            # Ensure event store, market data service, and product catalog are created
-            _ = self.event_store
-            _ = self.market_data_service
-            _ = self.product_catalog
+            # Ensure downstream factories receive fully initialized dependencies
+            event_store = self.event_store
+            market_data = self.market_data_service
+            product_catalog = self.product_catalog
 
             self._broker, event_store, market_data, product_catalog = create_brokerage(
-                event_store=self._event_store,
-                market_data=self._market_data_service,
-                product_catalog=self._product_catalog,
+                event_store=event_store,
+                market_data=market_data,
+                product_catalog=product_catalog,
                 settings=self.settings,
             )
 
@@ -283,8 +285,14 @@ class ApplicationContainer:
         Returns:
             Configured PerpsBot instance
         """
-        from bot_v2.orchestration.perps_bot import PerpsBot
         from bot_v2.orchestration.session_guard import TradingSessionGuard
+
+        perps_bot_cls = globals().get("PerpsBot")
+        if perps_bot_cls is None:
+            from bot_v2.orchestration.perps_bot import PerpsBot as _PerpsBot
+
+            perps_bot_cls = _PerpsBot
+            globals()["PerpsBot"] = _PerpsBot
 
         # Get dependencies from container
         config = self.config_controller.current
@@ -300,7 +308,7 @@ class ApplicationContainer:
         )
 
         # Create baseline snapshot for configuration drift detection
-        baseline_snapshot = PerpsBot.build_baseline_snapshot(
+        baseline_snapshot = perps_bot_cls.build_baseline_snapshot(
             config,
             getattr(config, "derivatives_enabled", False),
         )
@@ -314,14 +322,21 @@ class ApplicationContainer:
         baseline_snapshot = overrides.get("baseline_snapshot", baseline_snapshot)
 
         # Create configuration guardian
-        from bot_v2.monitoring.configuration_guardian import ConfigurationGuardian
+        configuration_guardian_cls = globals().get("ConfigurationGuardian")
+        if configuration_guardian_cls is None:
+            from bot_v2.monitoring.configuration_guardian import (
+                ConfigurationGuardian as _ConfigurationGuardian,
+            )
+
+            configuration_guardian_cls = _ConfigurationGuardian
+            globals()["ConfigurationGuardian"] = _ConfigurationGuardian
 
         configuration_guardian = overrides.get(
             "configuration_guardian",
-            ConfigurationGuardian(baseline_snapshot),
+            configuration_guardian_cls(baseline_snapshot),
         )
 
-        bot = PerpsBot(
+        bot = perps_bot_cls(
             config_controller=config_controller,
             registry=registry,
             event_store=event_store,
@@ -329,6 +344,7 @@ class ApplicationContainer:
             session_guard=session_guard,
             baseline_snapshot=baseline_snapshot,
             configuration_guardian=configuration_guardian,
+            container=self,
         )
 
         # Ensure the StateManager is properly injected into the risk manager
@@ -420,4 +436,22 @@ def create_application_container(
 __all__ = [
     "ApplicationContainer",
     "create_application_container",
+    "PerpsBot",
+    "ConfigurationGuardian",
 ]
+
+
+def __getattr__(name: str):
+    if name == "PerpsBot":
+        from bot_v2.orchestration.perps_bot import PerpsBot as _PerpsBot
+
+        globals()["PerpsBot"] = _PerpsBot
+        return _PerpsBot
+    if name == "ConfigurationGuardian":
+        from bot_v2.monitoring.configuration_guardian import (
+            ConfigurationGuardian as _ConfigurationGuardian,
+        )
+
+        globals()["ConfigurationGuardian"] = _ConfigurationGuardian
+        return _ConfigurationGuardian
+    raise AttributeError(name)

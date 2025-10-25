@@ -83,7 +83,9 @@ class ConfigController:
     def sync_with_risk_manager(self, risk_manager: LiveRiskManager) -> None:
         """Ensure reduce-only mode matches risk manager state."""
 
-        reduce_only = bool(self.current.reduce_only_mode) or risk_manager.is_reduce_only_mode()
+        reduce_only_current = bool(self.current.reduce_only_mode)
+        reduce_only_risk = bool(risk_manager.is_reduce_only_mode())
+        reduce_only = reduce_only_current or reduce_only_risk
         if reduce_only != self.current.reduce_only_mode:
             updated = self.current.with_overrides(reduce_only_mode=reduce_only)
             self._set_current_config(updated)

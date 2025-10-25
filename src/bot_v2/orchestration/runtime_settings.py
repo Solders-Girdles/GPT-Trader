@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 from collections.abc import Callable, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 from bot_v2.config.path_registry import RUNTIME_DATA_DIR
@@ -71,33 +71,39 @@ def _safe_float(value: str | None, *, field_name: str) -> float | None:
         return None
 
 
-@dataclass(frozen=True)
+@dataclass
 class RuntimeSettings:
     """Normalized snapshot of runtime-affecting environment toggles."""
 
-    raw_env: dict[str, str]
-    runtime_root: Path
-    event_store_root_override: Path | None
-    coinbase_default_quote: str
-    coinbase_default_quote_overridden: bool
-    coinbase_enable_derivatives: bool
-    coinbase_enable_derivatives_overridden: bool
-    coinbase_us_futures_enabled: bool
-    coinbase_intx_perpetuals_enabled: bool
-    coinbase_derivatives_type: str
-    perps_enable_streaming: bool
-    perps_stream_level: int
-    perps_paper_trading: bool
-    perps_force_mock: bool
-    perps_skip_startup_reconcile: bool
-    perps_position_fraction: float | None
-    order_preview_enabled: bool | None
-    spot_force_live: bool
-    broker_hint: str | None
-    coinbase_sandbox_enabled: bool
-    coinbase_api_mode: str
-    risk_config_path: Path | None
-    coinbase_intx_portfolio_uuid: str | None
+    raw_env: dict[str, str] = field(default_factory=dict)
+    runtime_root: Path = Path(".")
+    event_store_root_override: Path | None = None
+    coinbase_default_quote: str = "USD"
+    coinbase_default_quote_overridden: bool = False
+    coinbase_enable_derivatives: bool = False
+    coinbase_enable_derivatives_overridden: bool = False
+    coinbase_us_futures_enabled: bool = False
+    coinbase_intx_perpetuals_enabled: bool = False
+    coinbase_derivatives_type: str = "intx_perps"
+    perps_enable_streaming: bool = False
+    perps_stream_level: int = 1
+    perps_paper_trading: bool = False
+    perps_force_mock: bool = False
+    perps_skip_startup_reconcile: bool = False
+    perps_position_fraction: float | None = None
+    order_preview_enabled: bool | None = None
+    spot_force_live: bool = False
+    broker_hint: str | None = None
+    coinbase_sandbox_enabled: bool = False
+    coinbase_api_mode: str = "advanced"
+    risk_config_path: Path | None = None
+    coinbase_intx_portfolio_uuid: str | None = None
+    environment: str | None = None
+    trading_enabled: bool | None = None
+    max_position_size: float | None = None
+    max_daily_loss: float | None = None
+    circuit_breaker_enabled: bool | None = None
+    monitoring_enabled: bool | None = None
 
     def snapshot_env(
         self, keys: Mapping[str, object] | list[str] | tuple[str, ...]
@@ -200,6 +206,12 @@ def load_runtime_settings(env: Mapping[str, str] | None = None) -> RuntimeSettin
         coinbase_api_mode=coinbase_api_mode,
         risk_config_path=risk_config_path,
         coinbase_intx_portfolio_uuid=coinbase_intx_portfolio_uuid,
+        environment=env_map.get("ENVIRONMENT"),
+        trading_enabled=None,
+        max_position_size=None,
+        max_daily_loss=None,
+        circuit_breaker_enabled=None,
+        monitoring_enabled=None,
     )
 
 

@@ -284,7 +284,9 @@ class ErrorHandler:
                 "error_code": error.error_code,
                 "error_message": error.message,
                 "error_type": (
-                    type(error.original_error).__name__ if error.original_error else "Unknown"
+                    type(getattr(error, "original_error", None)).__name__
+                    if getattr(error, "original_error", None)
+                    else "Unknown"
                 ),
                 "recoverable": error.recoverable,
                 "context": error.context,

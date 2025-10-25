@@ -49,6 +49,7 @@ class TradingError(Exception):
         error_code: str | None = None,
         context: dict[str, Any] | None = None,
         recoverable: bool = True,
+        original_error: Exception | None = None,
     ) -> None:
         super().__init__(message)
         self.message = message
@@ -57,6 +58,7 @@ class TradingError(Exception):
         self.recoverable = recoverable
         self.timestamp = datetime.now()
         self.traceback = _capture_traceback()
+        self.original_error = original_error
 
     def add_context(self, **kwargs: Any) -> "TradingError":
         """Add additional context to the error"""
@@ -171,11 +173,21 @@ class RiskLimitExceeded(TradingError):
 
 
 class TimeoutError(TradingError):
-    """Raised when an operation times out"""
+    """Raised when an operation times out."""
 
-    def __init__(self, message: str, operation: str, timeout_seconds: float, **kwargs: Any) -> None:
+    def __init__(
+        self,
+        message: str,
+        operation: str | None = None,
+        timeout_seconds: float | None = None,
+        **kwargs: Any,
+    ) -> None:
         super().__init__(message, error_code="TIMEOUT_ERROR", **kwargs)
-        self.add_context(operation=operation, timeout_seconds=timeout_seconds)
+        if operation is not None:
+            self.add_context(
+                operation=operation,
+                timeout_seconds=timeout_seconds if timeout_seconds is not None else 0.0,
+            )
 
 
 class SliceIsolationError(TradingError):
@@ -207,11 +219,16 @@ def handle_error(error: Exception, context: dict[str, Any] | None = None) -> Tra
     if isinstance(error, TradingError):
         if context:
             error.add_context(**context)
+        if not hasattr(error, "original_error"):
+            error.original_error = None  # type: ignore[attr-defined]
         return error
 
     # Wrap non-trading errors
     wrapped = TradingError(
-        message=str(error), error_code=error.__class__.__name__, context=context or {}
+        message=str(error),
+        error_code=error.__class__.__name__,
+        context=context or {},
+        original_error=error,
     )
     wrapped.traceback = _capture_traceback()
     return wrapped

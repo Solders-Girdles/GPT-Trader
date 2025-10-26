@@ -7,6 +7,7 @@ from decimal import Decimal
 
 from bot_v2.features.brokerages.core.interfaces import MarketType, Product
 from bot_v2.features.live_trade.strategies.decisions import Action, Decision
+from bot_v2.features.live_trade.strategies.shared.trailing_stop import clear_trailing_stop_state
 from bot_v2.utilities.quantities import quantity_from
 
 
@@ -51,7 +52,8 @@ def create_entry_decision(
             leverage_value = None
 
     position_adds[symbol] = 0
-    trailing_stops.pop(symbol, None)
+    if trailing_stops.pop(symbol, None) is not None:
+        clear_trailing_stop_state(symbol)
 
     return Decision(
         action=action,
@@ -71,7 +73,8 @@ def create_close_decision(
 ) -> Decision:
     """Return a reduce-only close decision and reset tracking state."""
     position_adds.pop(symbol, None)
-    trailing_stops.pop(symbol, None)
+    if trailing_stops.pop(symbol, None) is not None:
+        clear_trailing_stop_state(symbol)
 
     raw_quantity = quantity_from(position_state)
     close_quantity = abs(raw_quantity) if raw_quantity is not None else Decimal("0")

@@ -271,7 +271,12 @@ class RiskConfig(BaseModel):
             error_code=f"{info.field_name}_invalid",
             error_template=f"{info.field_name} must be a percentage, got {{value}}: {{error}}",
         )
-        if not 0 <= result <= 1:
+        if result > 1:
+            if result <= 100:
+                result = result / 100
+            else:
+                raise ValueError(f"{info.field_name} must be between 0 and 1")
+        if result < 0 or result > 1:
             raise ValueError(f"{info.field_name} must be between 0 and 1")
         return float(result)
 

@@ -11,6 +11,8 @@ from decimal import Decimal
 from enum import Enum
 from typing import Any
 
+from bot_v2.orchestration.state_manager import ReduceOnlyModeSource
+
 from .types import AnyLogger, LogEventFn
 
 
@@ -114,6 +116,7 @@ def check_volatility_circuit_breaker(
     last_trigger: MutableMapping[str, datetime] | None = None,
     set_reduce_only: Callable[[bool, str], None] | None = None,
     log_event: LogEventFn | None = None,
+    centralized_state_manager: Any | None = None,
     logger: AnyLogger,
 ) -> CircuitBreakerOutcome:
     """Evaluate rolling volatility and trigger progressive actions."""
@@ -192,7 +195,22 @@ def check_volatility_circuit_breaker(
             config.kill_switch_enabled = True
         outcome_action = CircuitBreakerAction.KILL_SWITCH
     elif rolling_vol >= reduce_only_th:
-        set_reduce_only(True, "volatility_circuit_breaker")
+        if centralized_state_manager is not None:
+            try:
+                centralized_state_manager.set_reduce_only_mode(
+                    enabled=True,
+                    reason="volatility_circuit_breaker",
+                    source=ReduceOnlyModeSource.VOLATILITY,
+                    metadata={"symbol": symbol, "volatility": str(rolling_vol_decimal)},
+                )
+            except Exception:  # pragma: no cover - defensive fallback
+                logger.debug(
+                    "Centralized reduce-only manager failed, falling back to legacy setter",
+                    exc_info=True,
+                )
+                set_reduce_only(True, "volatility_circuit_breaker")
+        else:
+            set_reduce_only(True, "volatility_circuit_breaker")
         outcome_action = CircuitBreakerAction.REDUCE_ONLY
     elif rolling_vol >= warn_th:
         outcome_action = CircuitBreakerAction.WARNING

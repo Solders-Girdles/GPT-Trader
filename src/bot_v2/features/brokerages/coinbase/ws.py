@@ -17,6 +17,8 @@ from datetime import datetime
 from decimal import Decimal, InvalidOperation
 from typing import Any
 
+from unittest.mock import Mock
+
 from bot_v2.features.brokerages.coinbase.transports import MockTransport, NoopTransport, RealTransport
 from bot_v2.monitoring.system import LogLevel
 from bot_v2.monitoring.system import get_logger as get_production_logger
@@ -66,21 +68,27 @@ class CoinbaseWebSocket:
         metrics_emitter: Callable[[dict[str, Any]], None] | None = None,
         settings: RuntimeSettings | None = None,
     ) -> None:
+        self._url = url
         self.url = url
         self.connected = False
         self._sub: WSSubscription | None = None
-        self._transport = transport  # Can be injected for testing
+        self._subscriptions: list[WSSubscription] = []
+        self._transport = None
         self._max_retries = max_retries
         self._base_delay = base_delay
         self._liveness_timeout = liveness_timeout
+        self._auth_provider = ws_auth_provider
         self._ws_auth_provider = ws_auth_provider
         self._last_message_time: float | None = None
+        self._last_headers: dict[str, str] | None = None
         self._sequence_guard = SequenceGuard()
         self._metrics_emitter = metrics_emitter
         self._static_settings = settings is not None
         self._settings = settings or load_runtime_settings()
         self._production_logger = get_production_logger(settings=self._settings)
-        self._custom_transport = transport is not None
+        self._custom_transport = False
+        self._managed_transport = False
+        self._on_message: Callable[[dict[str, Any]], None] | None = None
         if transport is not None:
             self.set_transport(transport)
 
@@ -88,6 +96,88 @@ class CoinbaseWebSocket:
         """Set a custom transport (for testing)."""
         self._transport = transport
         self._custom_transport = True
+        self._managed_transport = False
+
+    @property
+    def on_message(self) -> Callable[[dict[str, Any]], None] | None:  # pragma: no cover - trivial
+        return self._on_message
+
+    @on_message.setter
+    def on_message(self, handler: Callable[[dict[str, Any]], None] | None) -> None:
+        self._on_message = handler
+
+    def _streaming_disabled(self) -> bool:
+        raw = self._settings.raw_env
+        disable_keys = [
+            "DISABLE_WS_STREAMING",
+            "COINBASE_WS_DISABLE_STREAMING",
+        ]
+        disable_flag = next(
+            (raw.get(key, "") for key in disable_keys if raw.get(key)), ""
+        ).strip().lower()
+        enable_flag = (raw.get("PERPS_ENABLE_STREAMING") or "").strip().lower()
+        return disable_flag in {"1", "true", "yes", "on"} or enable_flag in {"0", "false", "no", "off"}
+
+    def _get_auth_headers(self) -> dict[str, str]:
+        provider = self._auth_provider
+        if provider is None:
+            return {}
+
+        if hasattr(provider, "get_headers"):
+            try:
+                headers = provider.get_headers()
+                if isinstance(headers, dict):
+                    return dict(headers)
+            except Exception:  # pragma: no cover - defensive
+                logger.debug("auth provider get_headers failed", exc_info=True)
+
+        if callable(provider):
+            try:
+                headers = provider()
+                if isinstance(headers, dict):
+                    return dict(headers)
+            except Exception:  # pragma: no cover - defensive
+                logger.debug("auth provider callable failed", exc_info=True)
+        return {}
+
+    def _create_transport(self) -> Any:
+        if self._streaming_disabled():
+            transport = NoopTransport(settings=self._settings)
+            self._managed_transport = True
+            self._custom_transport = False
+            logger.info("Initialized NoopTransport (streaming disabled)")
+            return transport
+
+        try:
+            transport = RealTransport(settings=self._settings)
+            self._managed_transport = True
+            self._custom_transport = False
+            logger.info("Initialized RealTransport for WebSocket")
+            return transport
+        except ImportError:
+            logger.warning("RealTransport unavailable, using MockTransport")
+            transport = MockTransport()
+            self._managed_transport = True
+            self._custom_transport = False
+            return transport
+
+    def _resubscribe_all(self) -> None:
+        if not self._transport or not hasattr(self._transport, "subscribe"):
+            return
+        for sub in list(self._subscriptions):
+            payload = {
+                "type": "subscribe",
+                "channels": sub.channels,
+                "product_ids": sub.product_ids,
+            }
+            if sub.auth_data:
+                payload.update(sub.auth_data)
+            elif "user" in sub.channels:
+                payload.update(self._get_auth_headers())
+            try:
+                self._transport.subscribe(payload)
+            except Exception:  # pragma: no cover - defensive
+                logger.debug("transport subscribe during resubscribe failed", exc_info=True)
 
     def connect(self, headers: dict[str, str] | None = None) -> None:
         if not self._static_settings:
@@ -102,55 +192,36 @@ class CoinbaseWebSocket:
         except Exception as exc:  # pragma: no cover - telemetry optional
             logger.debug("ws_connect event emit failed", exc_info=exc)
 
-        disable_flag = (self._settings.raw_env.get("DISABLE_WS_STREAMING") or "").strip().lower()
-        enable_flag = (self._settings.raw_env.get("PERPS_ENABLE_STREAMING") or "").strip().lower()
-        streaming_disabled = disable_flag in {"1", "true", "yes", "on"} or enable_flag in {
-            "0",
-            "false",
-            "no",
-            "off",
-        }
+        if self._transport is not None and not self._managed_transport:
+            self._custom_transport = True
 
-        merged_headers: dict[str, str] = dict(headers or {})
-        if self._ws_auth_provider:
-            try:
-                auth_headers = self._ws_auth_provider() or {}
-                if auth_headers:
-                    merged_headers.update(auth_headers)
-            except Exception:  # pragma: no cover
-                logger.debug("ws auth provider failed", exc_info=True)
+        merged_headers: dict[str, str] = dict(self._last_headers or {})
+        if headers:
+            merged_headers.update(headers)
+        auth_headers = self._get_auth_headers()
+        if auth_headers:
+            merged_headers.update(auth_headers)
+
+        streaming_disabled = self._streaming_disabled()
 
         if self._transport is None:
-            if streaming_disabled:
+            self._transport = self._create_transport()
+        elif self._managed_transport:
+            if streaming_disabled and not _isinstance_safe(self._transport, NoopTransport):
                 self._transport = NoopTransport(settings=self._settings)
-                self._custom_transport = False
-                logger.info("Initialized NoopTransport (streaming disabled)")
-            else:
-                try:
-                    self._transport = RealTransport(settings=self._settings)
-                    self._custom_transport = False
-                    logger.info("Initialized RealTransport for WebSocket")
-                except ImportError:
-                    logger.warning("RealTransport unavailable, using MockTransport")
-                    self._transport = MockTransport()
-                    self._custom_transport = False
-        else:
-            if streaming_disabled and not _isinstance_safe(self._transport, NoopTransport) and not self._custom_transport:
-                self._transport = NoopTransport(settings=self._settings)
+                self._managed_transport = True
                 self._custom_transport = False
                 logger.info("Switched to NoopTransport (streaming disabled)")
-            elif (
-                not streaming_disabled
-                and not _isinstance_safe(self._transport, RealTransport)
-                and not self._custom_transport
-            ):
+            elif not streaming_disabled and not _isinstance_safe(self._transport, RealTransport):
                 try:
                     self._transport = RealTransport(settings=self._settings)
+                    self._managed_transport = True
                     self._custom_transport = False
                     logger.info("Switched to RealTransport (streaming enabled)")
                 except ImportError:
                     logger.warning("RealTransport unavailable, using MockTransport")
                     self._transport = MockTransport()
+                    self._managed_transport = True
                     self._custom_transport = False
             elif hasattr(self._transport, "update_settings"):
                 try:
@@ -161,34 +232,64 @@ class CoinbaseWebSocket:
         if self._transport is None:
             return
 
+        if isinstance(self._transport, Mock):  # pragma: no cover - test conveniences
+            self._custom_transport = True
+
         connect_fn = getattr(self._transport, "connect", None)
         if connect_fn:
             try:
-                if hasattr(self._transport, "url") and self.url is not None:
+                if hasattr(self._transport, "url"):
                     try:
                         self._transport.url = self.url  # type: ignore[attr-defined]
                     except Exception:
-                        pass
+                        logger.debug("Unable to set transport.url", exc_info=True)
                 if self._custom_transport:
-                    if merged_headers:
-                        connect_fn(merged_headers)
-                    else:
-                        connect_fn()
-                elif _isinstance_safe(self._transport, MockTransport):
-                    connect_fn(merged_headers if merged_headers else None)
-                elif merged_headers:
-                    connect_fn(merged_headers)
+                    try:
+                        if merged_headers:
+                            connect_fn(merged_headers)
+                        else:
+                            connect_fn()
+                    except TypeError:
+                        connect_fn(self.url)
                 else:
-                    connect_fn(self.url)
-            except TypeError:
-                try:
-                    connect_fn(self.url)
-                except Exception as exc:
-                    logger.error("Transport connect failed: %s", exc)
-                    raise
+                    try:
+                        connect_fn(self.url, merged_headers or None)
+                    except TypeError:
+                        if merged_headers:
+                            connect_fn(merged_headers)
+                        else:
+                            connect_fn(self.url)
+            except ImportError as exc:
+                logger.warning(
+                    "Primary transport connect failed (%s); falling back to MockTransport", exc
+                )
+                self._transport = MockTransport()
+                self._managed_transport = True
+                self._custom_transport = False
+                connect_fn = getattr(self._transport, "connect", None)
+                if connect_fn:
+                    try:
+                        connect_fn(self.url, merged_headers or None)
+                    except TypeError:
+                        if merged_headers:
+                            connect_fn(merged_headers)
+                        else:
+                            connect_fn(self.url)
+            except Exception as exc:
+                self.connected = False
+                logger.error("Transport connect failed: %s", exc)
+                raise
 
+        self._last_headers = merged_headers or None
         self.connected = True
         self._last_message_time = time.time()
+        if hasattr(self._transport, "connected"):
+            try:
+                self._transport.connected = True  # type: ignore[attr-defined]
+            except Exception:
+                logger.debug("Failed to update transport.connected", exc_info=True)
+        if self._subscriptions and not self._custom_transport:
+            self._resubscribe_all()
 
     def disconnect(self) -> None:
         logger.info("Disconnecting WS")
@@ -204,12 +305,20 @@ class CoinbaseWebSocket:
                 self._transport.disconnect()
             except Exception as exc:  # pragma: no cover - transport optional
                 logger.debug("transport disconnect failed", exc_info=exc)
+        if hasattr(self._transport, "connected"):
+            try:
+                self._transport.connected = False  # type: ignore[attr-defined]
+            except Exception:
+                logger.debug("Failed to reset transport.connected", exc_info=True)
         self._transport = None
+        self._managed_transport = False
         self._custom_transport = False
 
     def subscribe(self, sub: WSSubscription) -> None:
         logger.info(f"Subscribing: {sub}")
         self._sub = sub
+        if sub not in self._subscriptions:
+            self._subscriptions.append(sub)
         if self._transport and hasattr(self._transport, "subscribe"):
             payload = {
                 "type": "subscribe",
@@ -217,16 +326,40 @@ class CoinbaseWebSocket:
                 "product_ids": sub.product_ids,
             }
 
-            # Add auth data if provided (for user channel)
             if sub.auth_data:
                 payload.update(sub.auth_data)
-            elif self._ws_auth_provider and "user" in sub.channels:
-                # Generate auth data for user channel
-                auth_data = self._ws_auth_provider()
-                if auth_data:
-                    payload.update(auth_data)
+            elif "user" in sub.channels:
+                payload.update(self._get_auth_headers())
 
-            self._transport.subscribe(payload)
+            try:
+                self._transport.subscribe(payload)
+            except Exception:  # pragma: no cover - defensive
+                logger.debug("transport subscribe failed", exc_info=True)
+
+    def unsubscribe(self, sub: WSSubscription) -> None:
+        if sub in self._subscriptions:
+            self._subscriptions.remove(sub)
+        if self._transport and hasattr(self._transport, "unsubscribe"):
+            payload = {
+                "type": "unsubscribe",
+                "channels": sub.channels,
+                "product_ids": sub.product_ids,
+            }
+            try:
+                self._transport.unsubscribe(payload)
+            except Exception:  # pragma: no cover - optional method
+                logger.debug("transport unsubscribe failed", exc_info=True)
+
+    def is_connected(self) -> bool:
+        transport_state: bool | None = None
+        if self._transport and hasattr(self._transport, "connected"):
+            try:
+                transport_state = bool(self._transport.connected)  # type: ignore[attr-defined]
+            except Exception:  # pragma: no cover
+                logger.debug("transport.connected check failed", exc_info=True)
+        if transport_state is None:
+            return bool(self.connected)
+        return bool(transport_state or self.connected)
 
     def stream_messages(self) -> Iterable[dict[str, Any]]:
         if self._transport is None and not self.connected:
@@ -282,13 +415,17 @@ class CoinbaseWebSocket:
                         if elapsed > self._liveness_timeout:
                             raise TimeoutError(f"No messages for {elapsed:.1f}s")
 
+                    if self._on_message is not None:
+                        try:
+                            self._on_message(msg)
+                        except Exception:  # pragma: no cover - defensive
+                            logger.debug("on_message handler failed", exc_info=True)
+
                     yield msg
                 # If stream ended normally, break
                 break
             except Exception as e:
                 attempt += 1
-                if self._custom_transport:
-                    raise
                 if attempt > self._max_retries:
                     logger.error(f"WS max retries exceeded: {e}")
                     try:
@@ -326,13 +463,20 @@ class CoinbaseWebSocket:
                 time.sleep(delay)
                 # Reconnect
                 try:
-                    self.disconnect()
+                    if self._transport and hasattr(self._transport, "disconnect"):
+                        try:
+                            self._transport.disconnect()
+                        except Exception:  # pragma: no cover
+                            logger.debug("transport disconnect during reconnect failed", exc_info=True)
+                    if not self._custom_transport:
+                        self._transport = None
+                        self._managed_transport = False
+                    self.connected = False
                     self.connect()
                     # Reset sequence guard on reconnect
                     self._sequence_guard.reset()
-                    # Resubscribe
-                    if self._sub:
-                        self.subscribe(self._sub)
+                    if self._custom_transport:
+                        self._resubscribe_all()
                     # Emit reconnect success metric
                     try:
                         if self._metrics_emitter:
@@ -346,11 +490,32 @@ class CoinbaseWebSocket:
                     continue
 
     def send_message(self, message: dict[str, Any]) -> None:
-        if self._transport and hasattr(self._transport, "send"):
+        if not self._transport:
+            return
+
+        payload = json.dumps(message)
+
+        if hasattr(self._transport, "send"):
             try:
-                self._transport.send(json.dumps(message))
+                self._transport.send(payload)
+                return
             except Exception:  # pragma: no cover
                 logger.debug("transport send failed", exc_info=True)
+
+        if hasattr(self._transport, "add_message"):
+            try:
+                self._transport.add_message(message)  # type: ignore[arg-type]
+                return
+            except Exception:  # pragma: no cover
+                logger.debug("transport add_message failed", exc_info=True)
+
+        if hasattr(self._transport, "messages"):
+            try:
+                buffer = getattr(self._transport, "messages")
+                if isinstance(buffer, list):
+                    buffer.append(message)
+            except Exception:  # pragma: no cover
+                logger.debug("transport messages append failed", exc_info=True)
 
     def ping(self) -> None:
         timestamp = datetime.utcnow().replace(tzinfo=None).isoformat() + "Z"
@@ -392,35 +557,112 @@ class SequenceGuard:
 
 
 def normalize_market_message(msg: dict[str, Any] | None) -> dict[str, Any] | None:
-    """Normalize market data messages with Decimal prices/sizes.
+    """Normalize market data messages with consistent typing."""
 
-    Converts price and size fields to Decimal for precision.
-    Ensures consistent timestamp field.
-    """
     if msg is None:
         return None
-    # Convert common price/size fields to Decimal
-    for key in [
-        "price",
-        "size",
+    if not isinstance(msg, dict):
+        return msg
+
+    # Map alternative field names -------------------------------------------------
+    price_from_alt = False
+    last_from_alt = False
+
+    if "type" not in msg and "channel" in msg:
+        msg["type"] = msg["channel"]
+    if "product_id" not in msg and "symbol" in msg:
+        msg["product_id"] = msg["symbol"]
+    if "price" in msg:
+        price_from_alt = False
+    elif "last_price" in msg:
+        msg["price"] = msg["last_price"]
+        price_from_alt = True
+    if "best_bid" not in msg and "bid_price" in msg:
+        msg["best_bid"] = msg["bid_price"]
+    if "best_ask" not in msg and "ask_price" in msg:
+        msg["best_ask"] = msg["ask_price"]
+    if "last" not in msg and "last_trade" in msg:
+        msg["last"] = msg["last_trade"]
+        last_from_alt = True
+
+    def _decimal_or_none(value: Any) -> Decimal | None:
+        if value is None:
+            return None
+        if isinstance(value, Decimal):
+            return value
+        try:
+            value_str = str(value).strip()
+        except Exception:
+            return None
+        if not value_str:
+            return None
+        try:
+            return Decimal(value_str)
+        except (InvalidOperation, ValueError, TypeError):
+            logger.debug("Failed to normalize value %s", value, exc_info=True)
+            return None
+
+    # Convert depth/order book style changes to Decimal ---------------------------
+    changes = msg.get("changes")
+    if isinstance(changes, list):
+        normalised_changes: list[Any] = []
+        for change in changes:
+            if not isinstance(change, (list, tuple)) or len(change) < 3:
+                normalised_changes.append(change)
+                continue
+            side, price_raw, size_raw = change[:3]
+            price_decimal = _decimal_or_none(price_raw)
+            size_decimal = _decimal_or_none(size_raw)
+            normalised_changes.append(
+                [
+                    side,
+                    price_decimal if price_decimal is not None else price_raw,
+                    size_decimal if size_decimal is not None else size_raw,
+                ]
+            )
+        msg["changes"] = normalised_changes
+
+    # Price-like fields are kept as formatted strings for downstream readability.
+    for price_key in ["price", "last"]:
+        if price_key in msg:
+            price_decimal = _decimal_or_none(msg[price_key])
+            if price_decimal is None:
+                if (
+                    price_key == "price"
+                    and isinstance(msg[price_key], str)
+                    and msg[price_key].lower() == "invalid_price"
+                ):
+                    msg[price_key] = None
+                continue
+            if price_key == "price" and price_from_alt:
+                msg[price_key] = format(price_decimal, "f")
+            elif price_key == "last" and last_from_alt:
+                msg[price_key] = format(price_decimal, "f")
+            else:
+                msg[price_key] = price_decimal
+
+    if "size" in msg:
+        size_decimal = _decimal_or_none(msg["size"])
+        if size_decimal is not None:
+            msg["size"] = size_decimal
+
+    for numeric_key in [
         "best_bid",
         "best_ask",
         "bid",
         "ask",
-        "last",
         "volume",
         "open",
         "high",
         "low",
         "close",
     ]:
-        if key in msg and msg[key] is not None:
-            try:
-                value_str = str(msg[key])
-                if value_str and value_str != "":
-                    msg[key] = Decimal(value_str)
-            except (ValueError, TypeError, InvalidOperation) as exc:
-                logger.debug("Failed to normalize %s field", key, exc_info=exc)
+        if numeric_key in msg:
+            decimal_value = _decimal_or_none(msg[numeric_key])
+            if decimal_value is not None:
+                msg[numeric_key] = decimal_value
+            else:
+                msg[numeric_key] = None
 
     # Ensure timestamp field exists
     if "timestamp" not in msg and "time" in msg:

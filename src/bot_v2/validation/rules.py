@@ -434,6 +434,15 @@ class PercentageRule(BaseValidationRule):
                 value=value,
             ) from exc
 
+        if numeric_value > 1:
+            if 0 <= numeric_value <= 100:
+                numeric_value = numeric_value / 100
+            else:
+                raise RuleError(
+                    f"{field_name} must be between 0 and 1 inclusive",
+                    value=value,
+                )
+
         if not 0 <= numeric_value <= 1:
             raise RuleError(
                 f"{field_name} must be between 0 and 1 inclusive",

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterable, Sequence
 from datetime import datetime
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from typing import Any
 
 from bot_v2.features.brokerages.coinbase.auth import build_ws_auth_provider
@@ -86,9 +86,16 @@ class CoinbaseWebSocketHandler:
         for message in ws.stream_messages():
             normalised = normalize_market_message(message)
             product_id = normalised.get("product_id") or normalised.get("symbol")
-            price = normalised.get("price")
-            if isinstance(product_id, str) and isinstance(price, Decimal):
-                self._market_data.set_mark(product_id, price)
+            price_raw = normalised.get("price")
+            price_decimal: Decimal | None = None
+            if price_raw is not None:
+                try:
+                    price_decimal = Decimal(str(price_raw))
+                except (InvalidOperation, ValueError, TypeError):
+                    price_decimal = None
+            if isinstance(product_id, str) and price_decimal is not None:
+                normalised["price"] = price_decimal
+                self._market_data.set_mark(product_id, price_decimal)
                 self._rest_service.update_position_metrics(product_id)
             yield normalised
 
@@ -106,10 +113,28 @@ class CoinbaseWebSocketHandler:
             normalised = normalize_market_message(message)
             product_id = normalised.get("product_id") or normalised.get("symbol")
             if channel == "ticker" and isinstance(product_id, str):
-                bid = normalised.get("best_bid") or normalised.get("bid")
-                ask = normalised.get("best_ask") or normalised.get("ask")
-                if isinstance(bid, Decimal) and isinstance(ask, Decimal):
-                    mid = (bid + ask) / 2
+                bid_raw = normalised.get("best_bid") or normalised.get("bid")
+                ask_raw = normalised.get("best_ask") or normalised.get("ask")
+                bid_dec: Decimal | None = None
+                ask_dec: Decimal | None = None
+                try:
+                    if bid_raw is not None:
+                        bid_dec = Decimal(str(bid_raw))
+                except (InvalidOperation, ValueError, TypeError):
+                    bid_dec = None
+                try:
+                    if ask_raw is not None:
+                        ask_dec = Decimal(str(ask_raw))
+                except (InvalidOperation, ValueError, TypeError):
+                    ask_dec = None
+                if bid_dec is not None and ask_dec is not None:
+                    normalised["best_bid"] = bid_dec
+                    normalised["best_ask"] = ask_dec
+                    if bid_raw is not None:
+                        normalised["bid"] = bid_dec
+                    if ask_raw is not None:
+                        normalised["ask"] = ask_dec
+                    mid = (bid_dec + ask_dec) / 2
                     self._market_data.set_mark(product_id, mid)
                     self._rest_service.update_position_metrics(product_id)
             yield normalised

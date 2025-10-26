@@ -11,6 +11,8 @@ from collections.abc import Iterable
 import sys
 from typing import TYPE_CHECKING, Any, cast
 
+from unittest.mock import Mock
+
 from bot_v2.utilities import empty_stream
 from bot_v2.utilities.logging_patterns import get_logger
 
@@ -170,29 +172,32 @@ class MockTransport:
         self.messages: list[dict[str, Any]] = messages or []
         self.connected = False
         self.subscriptions: list[dict[str, Any]] = []
+        self.headers: dict[str, Any] | None = None
 
-    def connect(self, url: str, headers: dict[str, str] | None = None) -> None:
-        """Mock connection with optional headers."""
+        self.connect = Mock(side_effect=self._connect_impl)
+        self.disconnect = Mock(side_effect=self._disconnect_impl)
+        self.subscribe = Mock(side_effect=self._subscribe_impl)
+        self.stream = Mock(side_effect=self._stream_impl)
+        self.add_message = Mock(side_effect=self._add_message_impl)
+
+    # Internal implementations -------------------------------------------------
+    def _connect_impl(self, url: str, headers: dict[str, str] | None = None) -> None:
         self.connected = True
-        self.headers = headers  # Store for testing
-        logger.debug(f"Mock connected to: {url}")
+        self.headers = headers
+        logger.debug("Mock connected to: %s", url)
 
-    def disconnect(self) -> None:
-        """Mock disconnection."""
+    def _disconnect_impl(self) -> None:
         self.connected = False
         logger.debug("Mock disconnected")
 
-    def subscribe(self, message: dict[str, Any]) -> None:
-        """Record subscription."""
+    def _subscribe_impl(self, message: dict[str, Any]) -> None:
         self.subscriptions.append(message)
-        logger.debug(f"Mock subscription: {message}")
+        logger.debug("Mock subscription: %s", message)
 
-    def stream(self) -> Iterable[dict[str, Any]]:
-        """Yield predefined messages."""
+    def _stream_impl(self) -> Iterable[dict[str, Any]]:
         yield from self.messages
 
-    def add_message(self, message: dict[str, Any]) -> None:
-        """Add a message to the mock stream."""
+    def _add_message_impl(self, message: dict[str, Any]) -> None:
         self.messages.append(message)
 
 

@@ -10,6 +10,7 @@ from bot_v2.features.live_trade.strategies.shared import (
     update_mark_window as _update_mark_window,
 )
 from bot_v2.features.live_trade.strategies.shared import (
+    clear_trailing_stop_state,
     update_trailing_stop as _update_trailing_stop,
 )
 
@@ -41,12 +42,14 @@ class StrategyState:
         if symbol is not None:
             self.mark_windows.pop(symbol, None)
             self.position_adds.pop(symbol, None)
-            self.trailing_stops.pop(symbol, None)
+            if self.trailing_stops.pop(symbol, None) is not None:
+                clear_trailing_stop_state(symbol)
             return
 
         self.mark_windows.clear()
         self.position_adds.clear()
         self.trailing_stops.clear()
+        clear_trailing_stop_state()
         self.rejection_counts.clear()
         self.rejection_counts.update(_default_rejection_counts())
 

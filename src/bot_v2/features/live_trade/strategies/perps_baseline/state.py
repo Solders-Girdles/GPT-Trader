@@ -6,7 +6,10 @@ from collections.abc import MutableMapping
 from dataclasses import dataclass, field
 from decimal import Decimal
 
-from bot_v2.features.live_trade.strategies.shared import update_trailing_stop
+from bot_v2.features.live_trade.strategies.shared import (
+    clear_trailing_stop_state,
+    update_trailing_stop,
+)
 
 
 @dataclass
@@ -20,10 +23,12 @@ class StrategyState:
         """Reset state for a single symbol or the entire strategy."""
         if symbol is not None:
             self.position_adds.pop(symbol, None)
-            self.trailing_stops.pop(symbol, None)
+            if self.trailing_stops.pop(symbol, None) is not None:
+                clear_trailing_stop_state(symbol)
             return
         self.position_adds.clear()
         self.trailing_stops.clear()
+        clear_trailing_stop_state()
 
     def update_trailing_stop(
         self,

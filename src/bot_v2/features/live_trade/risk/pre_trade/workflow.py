@@ -232,6 +232,12 @@ class PreTradeValidationWorkflow:
         except Exception:
             exposure_cap_decimal = Decimal("0.2")
 
+        buffer_threshold_value = getattr(self.config, "min_liquidation_buffer_pct", 0)
+        try:
+            buffer_threshold_decimal = Decimal(str(buffer_threshold_value))
+        except Exception:
+            buffer_threshold_decimal = Decimal("0")
+
         explicit_exposure_flag = getattr(
             self.config,
             "enforce_pre_trade_exposure_limits",
@@ -245,7 +251,9 @@ class PreTradeValidationWorkflow:
         if guard_disabled and not has_symbol_cap and not enforce_exposure_limits_flag:
             skip_limits = True
 
-        enforce_liq_buffer = bool(getattr(self.config, "enable_pre_trade_liq_projection", True))
+        enforce_liq_buffer = bool(getattr(self.config, "enable_pre_trade_liq_projection", True)) and (
+            buffer_threshold_decimal > Decimal("0")
+        )
 
         return ValidationPlan(
             skip_limits=skip_limits,
@@ -284,8 +292,8 @@ class PreTradeValidationWorkflow:
     # Limit enforcement                                                  #
     # ------------------------------------------------------------------ #
     def _run_liq_and_leverage_checks(self, plan: ValidationPlan) -> None:
-        def _safe_call(check: Callable[[], None]) -> None:
-            if plan.skip_limits:
+        def _safe_call(check: Callable[[], None], *, allow_skip: bool = True) -> None:
+            if plan.skip_limits and allow_skip:
                 try:
                     check()
                 except ValidationError:
@@ -311,15 +319,18 @@ class PreTradeValidationWorkflow:
             self.inputs.equity,
         )
 
+        leverage_allow_skip = not plan.enforce_liq_buffer
+
         if plan.leverage_priority:
-            _safe_call(leverage_callable)
+            _safe_call(leverage_callable, allow_skip=False)
             if liquidation_callable:
                 _safe_call(liquidation_callable)
         else:
             if liquidation_callable:
                 _safe_call(liquidation_callable)
             _safe_call(
-                leverage_callable
+                leverage_callable,
+                allow_skip=leverage_allow_skip,
             )
 
     def _enforce_exposure_limits(self, plan: ValidationPlan) -> None:

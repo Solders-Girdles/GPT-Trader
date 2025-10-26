@@ -1,22 +1,33 @@
-"""Order policy matrix that coordinates symbol capabilities and limits."""
+"""Order policy matrix orchestration."""
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import datetime, timedelta
 from decimal import Decimal, InvalidOperation
-from typing import Any, Mapping, cast
+from typing import Any, cast
 
 from bot_v2.utilities.logging_patterns import get_logger
 
-from .enums import OrderTypeSupport
-from .models import OrderCapability, SymbolPolicy
-from .types import OrderConfig, SupportedOrderConfig
+from .models import (
+    OrderCapability,
+    OrderConfig,
+    OrderTypeSupport,
+    SupportedOrderConfig,
+    SymbolPolicy,
+    cast_supported_capabilities,
+)
 
 logger = get_logger(__name__, component="live_trade_policy")
 
 
 class OrderPolicyMatrix:
-    """Production order policy matrix."""
+    """
+    Production order policy matrix.
+
+    Manages order type support, TIF capabilities, and trading
+    policies across symbols and environments.
+    """
 
     COINBASE_PERP_CAPABILITIES = [
         OrderCapability("MARKET", "IOC", OrderTypeSupport.SUPPORTED, post_only_supported=False),
@@ -36,7 +47,7 @@ class OrderPolicyMatrix:
         self.environment = environment
         self._symbol_policies: dict[str, SymbolPolicy] = {}
         self._rate_limits: dict[str, list[datetime]] = {}
-        logger.info(f"OrderPolicyMatrix initialized for {environment} environment")
+        logger.info("OrderPolicyMatrix initialized for %s environment", environment)
 
     def add_symbol(
         self,
@@ -44,8 +55,9 @@ class OrderPolicyMatrix:
         capabilities: list[OrderCapability] | None = None,
         **policy_kwargs: Any,
     ) -> SymbolPolicy:
+        """Add a symbol with trading policy."""
         if capabilities is None:
-            capabilities = self.COINBASE_PERP_CAPABILITIES.copy()
+            capabilities = [cap for cap in self.COINBASE_PERP_CAPABILITIES]
 
         policy = SymbolPolicy(
             symbol=symbol,
@@ -54,10 +66,11 @@ class OrderPolicyMatrix:
             **policy_kwargs,
         )
         self._symbol_policies[symbol] = policy
-        logger.info(f"Added symbol policy: {symbol} ({len(capabilities)} capabilities)")
+        logger.info("Added symbol policy: %s (%d capabilities)", symbol, len(capabilities))
         return policy
 
     def get_symbol_policy(self, symbol: str) -> SymbolPolicy | None:
+        """Get policy for symbol."""
         return self._symbol_policies.get(symbol)
 
     def validate_order(
@@ -70,6 +83,7 @@ class OrderPolicyMatrix:
         post_only: bool = False,
         reduce_only: bool = False,
     ) -> tuple[bool, str]:
+        """Validate order against policy matrix."""
         policy = self.get_symbol_policy(symbol)
         if not policy:
             return False, f"No policy defined for symbol {symbol}"
@@ -81,36 +95,28 @@ class OrderPolicyMatrix:
         capability = policy.get_capability(order_type, tif)
         if not capability:
             return False, f"No capability for {order_type}/{tif}"
+
         if post_only and not capability.post_only_supported:
             return False, "Post-only not supported for this order type"
+
         if reduce_only and not capability.reduce_only_supported:
             return False, "Reduce-only not supported for this order type"
+
         if not self._check_rate_limit(symbol, capability.rate_limit_per_minute):
             return False, f"Rate limit exceeded ({capability.rate_limit_per_minute}/min)"
-        if self.environment == "paper" and order_type in {"STOP", "STOP_LIMIT"} and tif == "GTD":
-            return False, "GTD stop orders not allowed in paper trading"
+
+        if self.environment == "paper":
+            if order_type in {"STOP", "STOP_LIMIT"} and tif == "GTD":
+                return False, "GTD stop orders not allowed in paper trading"
+
         return True, "Order validated"
 
     def get_supported_order_types(self, symbol: str) -> list[SupportedOrderConfig]:
+        """Get supported order types for symbol."""
         policy = self.get_symbol_policy(symbol)
         if not policy:
             return []
-
-        supported: list[SupportedOrderConfig] = []
-        for capability in policy.capabilities:
-            if capability.support_level == OrderTypeSupport.SUPPORTED:
-                supported.append(
-                    cast(
-                        SupportedOrderConfig,
-                        {
-                            "order_type": capability.order_type,
-                            "tif": capability.tif,
-                            "post_only": capability.post_only_supported,
-                            "reduce_only": capability.reduce_only_supported,
-                        },
-                    )
-                )
-        return supported
+        return cast_supported_capabilities(policy.capabilities)
 
     def recommend_order_config(
         self,
@@ -120,6 +126,7 @@ class OrderPolicyMatrix:
         urgency: str = "normal",
         market_conditions: Mapping[str, float | int | str | bool] | None = None,
     ) -> OrderConfig:
+        """Recommend an order configuration based on current conditions."""
         policy = self.get_symbol_policy(symbol)
         if not policy:
             return cast(OrderConfig, {"error": f"No policy for {symbol}"})
@@ -133,11 +140,10 @@ class OrderPolicyMatrix:
         }
 
         if urgency == "urgent":
-            if market_conditions and market_conditions.get("liquidity_condition") in {
-                "good",
-                "excellent",
-            }:
-                config.update({"order_type": "MARKET", "tif": "IOC", "use_market": True})
+            if market_conditions and market_conditions.get("liquidity_condition") in {"good", "excellent"}:
+                config["order_type"] = "MARKET"
+                config["tif"] = "IOC"
+                config["use_market"] = True
             else:
                 config["tif"] = "IOC"
         elif urgency == "patient":
@@ -149,6 +155,7 @@ class OrderPolicyMatrix:
                 spread_bps = Decimal(str(spread_raw))
             except (InvalidOperation, ValueError, TypeError):
                 spread_bps = Decimal("0")
+
             if policy.spread_threshold_bps and spread_bps > policy.spread_threshold_bps:
                 config["post_only"] = True
                 config["order_type"] = "LIMIT"
@@ -159,6 +166,7 @@ class OrderPolicyMatrix:
                 volatility_percentile = float(volatility_raw)
             except (TypeError, ValueError):
                 volatility_percentile = 0.0
+
             if volatility_percentile > 90:
                 config["tif"] = "IOC"
 
@@ -187,6 +195,7 @@ class OrderPolicyMatrix:
         return config
 
     def enable_gtd_orders(self, symbol: str) -> bool:
+        """Enable GTD orders for symbol if they were gated."""
         policy = self.get_symbol_policy(symbol)
         if not policy:
             return False
@@ -198,16 +207,19 @@ class OrderPolicyMatrix:
                 gtd_enabled = True
 
         if gtd_enabled:
-            logger.info(f"GTD orders enabled for {symbol}")
+            logger.info("GTD orders enabled for %s", symbol)
+
         return gtd_enabled
 
     def set_reduce_only_mode(self, symbol: str, enabled: bool = True) -> None:
+        """Enable reduce-only mode for symbol."""
         policy = self.get_symbol_policy(symbol)
         if policy:
             policy.reduce_only_mode = enabled
-            logger.info(f"Reduce-only mode {'enabled' if enabled else 'disabled'} for {symbol}")
+            logger.info("Reduce-only mode %s for %s", "enabled" if enabled else "disabled", symbol)
 
     def get_policy_summary(self) -> dict[str, Any]:
+        """Get summary of all symbol policies."""
         summary: dict[str, Any] = {
             "environment": self.environment,
             "symbols": len(self._symbol_policies),
@@ -215,24 +227,26 @@ class OrderPolicyMatrix:
         }
 
         for symbol, policy in self._symbol_policies.items():
-            supported_types = {
+            supported_types = [
                 cap.order_type
                 for cap in policy.capabilities
                 if cap.support_level == OrderTypeSupport.SUPPORTED
-            }
+            ]
             summary["policies"][symbol] = {
                 "trading_enabled": policy.trading_enabled,
                 "reduce_only_mode": policy.reduce_only_mode,
-                "supported_order_types": list(supported_types),
+                "supported_order_types": list(set(supported_types)),
                 "min_order_size": float(policy.min_order_size),
                 "capabilities_count": len(policy.capabilities),
             }
         return summary
 
     async def get_capabilities(self, symbol: str) -> dict[str, bool]:
+        """Placeholder for get_capabilities."""
         return {"limit": True, "stop_limit": True, "gtd_gated": True}
 
     def _check_rate_limit(self, symbol: str, limit_per_minute: int) -> bool:
+        """Check if symbol is within rate limit."""
         now = datetime.now()
         cutoff = now - timedelta(minutes=1)
 
@@ -240,6 +254,7 @@ class OrderPolicyMatrix:
             self._rate_limits[symbol] = []
 
         self._rate_limits[symbol] = [ts for ts in self._rate_limits[symbol] if ts >= cutoff]
+
         if len(self._rate_limits[symbol]) >= limit_per_minute:
             return False
 
@@ -247,4 +262,44 @@ class OrderPolicyMatrix:
         return True
 
 
-__all__ = ["OrderPolicyMatrix"]
+def create_standard_policy_matrix(environment: str = "sandbox") -> OrderPolicyMatrix:
+    """Create standard policy matrix with common perpetuals."""
+    matrix = OrderPolicyMatrix(environment=environment)
+
+    symbols = ["BTC-USD", "ETH-USD", "SOL-USD", "XRP-USD"]
+    increments = {
+        "BTC-USD": {"size": Decimal("0.001"), "price": Decimal("1")},
+        "ETH-USD": {"size": Decimal("0.01"), "price": Decimal("0.1")},
+        "SOL-USD": {"size": Decimal("0.1"), "price": Decimal("0.001")},
+        "XRP-USD": {"size": Decimal("1"), "price": Decimal("0.0001")},
+    }
+
+    for symbol in symbols:
+        increment = increments.get(symbol, {"size": Decimal("0.001"), "price": Decimal("0.01")})
+        matrix.add_symbol(
+            symbol=symbol,
+            min_order_size=increment["size"],
+            size_increment=increment["size"],
+            price_increment=increment["price"],
+            max_order_size=Decimal("1000"),
+            trading_enabled=True,
+            reduce_only_mode=False,
+            spread_threshold_bps=Decimal("20"),
+        )
+
+    logger.info("Standard policy matrix created with %d symbols", len(symbols))
+    return matrix
+
+
+async def create_order_policy_matrix(environment: str = "sandbox") -> OrderPolicyMatrix:
+    """Create and initialize order policy matrix."""
+    matrix = create_standard_policy_matrix(environment=environment)
+    logger.info("OrderPolicyMatrix created for %s", environment)
+    return matrix
+
+
+__all__ = [
+    "OrderPolicyMatrix",
+    "create_order_policy_matrix",
+    "create_standard_policy_matrix",
+]

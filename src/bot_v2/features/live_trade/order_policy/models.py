@@ -1,32 +1,53 @@
-"""Dataclasses describing order policy capabilities and symbol policies."""
+"""Order policy data structures and enums."""
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from decimal import Decimal
-from typing import Any
+from enum import Enum
+from typing import Any, TypedDict, cast
 
-from .enums import OrderTypeSupport
+
+class OrderTypeSupport(Enum):
+    """Order type support levels."""
+
+    SUPPORTED = "supported"
+    GATED = "gated"
+    UNSUPPORTED = "unsupported"
+
+
+class TIFSupport(Enum):
+    """Time-in-force support levels."""
+
+    SUPPORTED = "supported"
+    GATED = "gated"
+    UNSUPPORTED = "unsupported"
 
 
 @dataclass
 class OrderCapability:
     """Order type capability definition."""
 
-    order_type: str
-    tif: str
+    order_type: str  # "MARKET", "LIMIT", "STOP", "STOP_LIMIT", "BRACKET"
+    tif: str  # "GTC", "IOC", "FOK", "GTD"
     support_level: OrderTypeSupport
     min_quantity: Decimal | None = None
     max_quantity: Decimal | None = None
     quantity_increment: Decimal | None = None
     price_increment: Decimal | None = None
+
+    # Special flags
     post_only_supported: bool = True
     reduce_only_supported: bool = True
     bracket_supported: bool = False
+
+    # Risk limits
     max_notional: Decimal | None = None
     rate_limit_per_minute: int = 60
 
     def to_dict(self) -> dict[str, Any]:
+        """Convert to dict for serialization."""
         return {
             "order_type": self.order_type,
             "tif": self.tif,
@@ -50,70 +71,91 @@ class SymbolPolicy:
     """Trading policy for a specific symbol."""
 
     symbol: str
-    environment: str
+    environment: str  # "paper", "sandbox", "live"
+
+    # Supported capabilities
     capabilities: list[OrderCapability] = field(default_factory=list)
+
+    # Symbol-specific limits
     min_order_size: Decimal = Decimal("0.001")
     max_order_size: Decimal | None = None
     size_increment: Decimal = Decimal("0.001")
     price_increment: Decimal = Decimal("0.01")
+
+    # Risk limits
     max_position_size: Decimal | None = None
     max_daily_volume: Decimal | None = None
+
+    # Operational settings
     trading_enabled: bool = True
     reduce_only_mode: bool = False
+
+    # Market conditions
     requires_post_only: bool = False
-    spread_threshold_bps: Decimal | None = None
+    spread_threshold_bps: Decimal | None = None  # Require post-only if spread > threshold
 
     def get_capability(self, order_type: str, tif: str) -> OrderCapability | None:
+        """Get capability for specific order type and TIF."""
         for cap in self.capabilities:
             if cap.order_type == order_type and cap.tif == tif:
                 return cap
         return None
 
     def is_order_allowed(
-        self,
-        order_type: str,
-        tif: str,
-        quantity: Decimal,
-        price: Decimal | None = None,
+        self, order_type: str, tif: str, quantity: Decimal, price: Decimal | None = None
     ) -> tuple[bool, str]:
-        capability = self.get_capability(order_type, tif)
+        """
+        Check if order is allowed under current policy.
+
+        Returns:
+            Tuple of (allowed, reason)
+        """
         if not self.trading_enabled:
             return False, "Trading disabled for symbol"
-        if self.reduce_only_mode and order_type not in {"MARKET", "LIMIT"}:
-            return False, "Reduce-only mode: only market/limit orders allowed"
-        if capability is None:
-            return False, f"No capability for {order_type}/{tif}"
+
+        capability = self.get_capability(order_type, tif)
+        if not capability:
+            return False, f"Order type {order_type} with TIF {tif} not supported"
+
         if capability.support_level == OrderTypeSupport.UNSUPPORTED:
-            return False, f"{order_type} with {tif} unsupported"
+            return False, f"Order type {order_type} unsupported"
+
         if capability.support_level == OrderTypeSupport.GATED:
-            return False, f"{order_type} with {tif} gated"
+            return False, f"Order type {order_type} currently gated"
+
         if quantity < self.min_order_size:
             return False, f"Quantity {quantity} below minimum {self.min_order_size}"
+
         if self.max_order_size and quantity > self.max_order_size:
             return False, f"Quantity {quantity} exceeds maximum {self.max_order_size}"
+
         if capability.min_quantity and quantity < capability.min_quantity:
-            return False, f"Quantity {quantity} below min {capability.min_quantity}"
+            return False, f"Quantity {quantity} below capability minimum {capability.min_quantity}"
+
         if capability.max_quantity and quantity > capability.max_quantity:
-            return False, f"Quantity {quantity} exceeds max {capability.max_quantity}"
-        if self.requires_post_only and tif != "GTC":
-            return False, "Post-only mode requires GTC"
-        if capability.quantity_increment:
-            quantity_remainder = quantity % capability.quantity_increment
-            if quantity_remainder != 0:
-                return False, (
-                    f"Quantity {quantity} not aligned to increment {capability.quantity_increment}"
-                )
-        if capability.price_increment and price is not None:
-            price_remainder = price % capability.price_increment
+            return (
+                False,
+                f"Quantity {quantity} exceeds capability maximum {capability.max_quantity}",
+            )
+
+        remainder = quantity % self.size_increment
+        if remainder != 0:
+            return False, f"Quantity {quantity} not aligned to increment {self.size_increment}"
+
+        if price and self.price_increment:
+            price_remainder = price % self.price_increment
             if price_remainder != 0:
-                return False, f"Price {price} not aligned to increment {capability.price_increment}"
+                return False, f"Price {price} not aligned to increment {self.price_increment}"
+
         if price and capability.max_notional:
             notional = quantity * price
             if notional > capability.max_notional:
                 return False, f"Notional {notional} exceeds maximum {capability.max_notional}"
+
         return True, "Order allowed"
 
     def to_dict(self) -> dict[str, Any]:
+        """Convert to dict for serialization."""
         return {
             "symbol": self.symbol,
             "environment": self.environment,
@@ -133,4 +175,50 @@ class SymbolPolicy:
         }
 
 
-__all__ = ["OrderCapability", "SymbolPolicy"]
+class OrderConfig(TypedDict, total=False):
+    order_type: str
+    tif: str
+    post_only: bool
+    reduce_only: bool
+    use_market: bool
+    fallback_reason: str
+    error: str
+
+
+class SupportedOrderConfig(TypedDict):
+    order_type: str
+    tif: str
+    post_only: bool
+    reduce_only: bool
+
+
+def cast_supported_capabilities(
+    capabilities: list[OrderCapability],
+) -> list[SupportedOrderConfig]:
+    """Helper to convert supported capabilities into dict structures."""
+    supported: list[SupportedOrderConfig] = []
+    for capability in capabilities:
+        if capability.support_level == OrderTypeSupport.SUPPORTED:
+            supported.append(
+                cast(
+                    SupportedOrderConfig,
+                    {
+                        "order_type": capability.order_type,
+                        "tif": capability.tif,
+                        "post_only": capability.post_only_supported,
+                        "reduce_only": capability.reduce_only_supported,
+                    },
+                )
+            )
+    return supported
+
+
+__all__ = [
+    "OrderCapability",
+    "OrderConfig",
+    "OrderTypeSupport",
+    "SupportedOrderConfig",
+    "SymbolPolicy",
+    "TIFSupport",
+    "cast_supported_capabilities",
+]

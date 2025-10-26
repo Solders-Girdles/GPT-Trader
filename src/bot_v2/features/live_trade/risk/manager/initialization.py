@@ -25,7 +25,6 @@ from bot_v2.orchestration.configuration import RiskConfig
 from bot_v2.persistence.event_store import EventStore
 
 from .circuit_breaker import CircuitBreakerStateAdapter
-from .logging import logger
 from .registries import MarkTimestampRegistry
 
 
@@ -54,11 +53,15 @@ class LiveRiskManagerInitializationMixin:
             position_size_estimator: Optional dynamic position sizing calculator
             impact_estimator: Optional callable returning market impact assessments
         """
-        if isinstance(config, RiskConfig):
-            self.config = config.model_copy(deep=True)
+        if config is None:
+            resolved_config = RiskConfig.from_env()
+        elif isinstance(config, RiskConfig):
+            resolved_config = config
         else:
-            self.config = config or RiskConfig.from_env()
-        self._config = self.config
+            resolved_config = config
+
+        self.config = resolved_config
+        self._config = resolved_config
         self._settings = settings
         self.event_store = event_store or EventStore()
 
@@ -133,7 +136,7 @@ class LiveRiskManagerInitializationMixin:
         self._cb_state_adapter = CircuitBreakerStateAdapter(
             self.runtime_monitor.circuit_breaker_state, self.state_manager
         )
-        self.circuit_breaker_state = self._cb_state_adapter
+        self.circuit_breaker_state = self.runtime_monitor.circuit_breaker_state
 
         # Private attributes
         self._risk_info_provider = risk_info_provider
@@ -142,10 +145,14 @@ class LiveRiskManagerInitializationMixin:
         self._state_listener: Callable[[RiskRuntimeState], None] | None = None
 
         # Log configuration
+        from . import logger as package_logger
+
         if hasattr(self.config, "to_dict"):
-            logger.info(f"LiveRiskManager initialized with config: {self.config.to_dict()}")
+            package_logger.info(
+                f"LiveRiskManager initialized with config: {self.config.to_dict()}"
+            )
         else:
-            logger.info("LiveRiskManager initialized with a non-standard config object")
+            package_logger.info("LiveRiskManager initialized with a non-standard config object")
 
     @property
     def settings(self) -> Any | None:
@@ -194,10 +201,44 @@ class LiveRiskManagerInitializationMixin:
         self.state_manager.set_state_listener(listener)
         self._state_listener = listener
 
+    @property
+    def daily_pnl(self) -> Decimal:
+        """Mirror state manager daily PnL for backward compatibility."""
+        state_manager = getattr(self, "state_manager", None)
+        if state_manager is not None:
+            self._daily_pnl_cache = state_manager.daily_pnl
+            return state_manager.daily_pnl
+        return getattr(self, "_daily_pnl_cache", Decimal("0"))
+
+    @daily_pnl.setter
+    def daily_pnl(self, value: Decimal) -> None:
+        state_manager = getattr(self, "state_manager", None)
+        if state_manager is not None:
+            state_manager.daily_pnl = value
+        self._daily_pnl_cache = value
+
+    @property
+    def start_of_day_equity(self) -> Decimal:
+        """Mirror state manager start-of-day equity."""
+        state_manager = getattr(self, "state_manager", None)
+        if state_manager is not None:
+            self._start_of_day_equity_cache = state_manager.start_of_day_equity
+            return state_manager.start_of_day_equity
+        return getattr(self, "_start_of_day_equity_cache", Decimal("0"))
+
+    @start_of_day_equity.setter
+    def start_of_day_equity(self, value: Decimal) -> None:
+        state_manager = getattr(self, "state_manager", None)
+        if state_manager is not None:
+            state_manager.start_of_day_equity = value
+        self._start_of_day_equity_cache = value
+
     def reset_daily_tracking(self, current_equity: Decimal) -> None:
         """Reset daily tracking at start of new day."""
         self.state_manager.reset_daily_tracking(current_equity)
         # Update local references for backward compatibility
+        self._daily_pnl_cache = self.state_manager.daily_pnl
+        self._start_of_day_equity_cache = self.state_manager.start_of_day_equity
         self.daily_pnl = self.state_manager.daily_pnl
         self.start_of_day_equity = self.state_manager.start_of_day_equity
 

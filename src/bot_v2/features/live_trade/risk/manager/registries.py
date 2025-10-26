@@ -68,7 +68,12 @@ class MarkTimestampRegistry(MutableMapping[str, datetime | None]):
     def update_timestamp(self, symbol: str, timestamp: datetime | None = None) -> datetime:
         """Record the latest mark timestamp for a symbol."""
         ts_source = timestamp or self._now_provider()
-        normalized = normalize_to_utc(ts_source)
+        if timestamp is None:
+            normalized = normalize_to_utc(ts_source)
+        elif ts_source.tzinfo is None:
+            normalized = ts_source
+        else:
+            normalized = normalize_to_utc(ts_source)
         with self._lock:
             self._data[symbol] = normalized
         return normalized

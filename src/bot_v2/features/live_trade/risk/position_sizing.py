@@ -7,8 +7,9 @@ Handles position size calculations with dynamic estimator fallback.
 from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from decimal import Decimal
+from typing import Any
 
 from bot_v2.features.brokerages.core.interfaces import Product
 from bot_v2.orchestration.configuration import RiskConfig
@@ -23,30 +24,48 @@ logger = get_logger(__name__, component="live_trade_risk")
 class PositionSizingContext:
     """Context for position sizing requests."""
 
-    symbol: str
-    side: str  # "buy" or "sell"
-    equity: Decimal
-    current_price: Decimal
-    strategy_name: str
-    method: str
-    target_leverage: Decimal
+    symbol: str = ""
+    side: str = ""  # "buy" or "sell"
+    equity: Decimal | None = None
+    available_equity: Decimal | None = None
+    current_price: Decimal | None = None
+    mark_price: Decimal | None = None
+    strategy_name: str = ""
+    method: str = "intelligent"
+    target_leverage: Decimal | None = None
     product: Product | None = None
     current_position_quantity: Decimal = Decimal("0")
     strategy_multiplier: float = 1.0
+    current_positions: dict[str, Any] | None = None
+    risk_metrics: dict[str, Any] | None = None
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
 class PositionSizingAdvice:
     """Advice from position sizing calculation."""
 
-    symbol: str
-    side: str
-    target_notional: Decimal
-    target_quantity: Decimal
+    symbol: str = ""
+    side: str = ""
+    target_notional: Decimal = Decimal("0")
+    target_quantity: Decimal = Decimal("0")
     used_dynamic: bool = False
     reduce_only: bool = False
     reason: str | None = None
     fallback_used: bool = False
+    recommended_quantity: Decimal | None = None
+    max_quantity: Decimal | None = None
+    min_quantity: Decimal | None = None
+    confidence: float | None = None
+    notes: list[str] | None = None
+
+    def __post_init__(self) -> None:
+        if self.recommended_quantity is None:
+            self.recommended_quantity = self.target_quantity
+        if self.max_quantity is None:
+            self.max_quantity = self.target_quantity
+        if self.min_quantity is None:
+            self.min_quantity = Decimal("0")
 
 
 @dataclass
@@ -63,11 +82,14 @@ class ImpactRequest:
 class ImpactAssessment:
     """Assessment of market impact for a trade."""
 
-    symbol: str
-    side: str
-    quantity: Decimal
-    estimated_impact_bps: Decimal
-    slippage_cost: Decimal
+    symbol: str = ""
+    side: str = ""
+    quantity: Decimal = Decimal("0")
+    estimated_impact_bps: Decimal = Decimal("0")
+    slippage_cost: Decimal = Decimal("0")
+    price_impact: Decimal | None = None
+    size_impact: Decimal | None = None
+    confidence: Decimal | None = None
     liquidity_sufficient: bool = True
     reason: str | None = None
     recommended_slicing: bool | None = None
@@ -122,6 +144,8 @@ class PositionSizer:
                 target_quantity=Decimal("0"),
                 reduce_only=True,
                 reason="reduce_only_mode",
+                recommended_quantity=Decimal("0"),
+                max_quantity=Decimal("0"),
             )
             self._record_sizing_metric(context, advice)
             return advice
@@ -146,12 +170,20 @@ class PositionSizer:
                 )
 
         # Fallback: simple target_leverage-based sizing
-        target_notional = (
-            context.equity * context.target_leverage * Decimal(str(context.strategy_multiplier))
-        )
-        target_quantity = (
-            target_notional / context.current_price if context.current_price > 0 else Decimal("0")
-        )
+        equity = context.equity
+        if equity is None:
+            equity = context.available_equity
+        equity = equity if equity is not None else Decimal("0")
+
+        price = context.current_price
+        if price is None or price <= 0:
+            price = context.mark_price
+        price = price if price is not None else Decimal("0")
+
+        leverage = context.target_leverage if context.target_leverage is not None else Decimal("1")
+
+        target_notional = equity * leverage * Decimal(str(context.strategy_multiplier))
+        target_quantity = target_notional / price if price and price > 0 else Decimal("0")
 
         advice = PositionSizingAdvice(
             symbol=context.symbol,
@@ -160,6 +192,8 @@ class PositionSizer:
             target_quantity=target_quantity,
             fallback_used=True,
             reason="fallback",
+            recommended_quantity=target_quantity,
+            max_quantity=target_quantity,
         )
         self._record_sizing_metric(context, advice)
         return advice
@@ -168,6 +202,18 @@ class PositionSizer:
         self, context: PositionSizingContext, advice: PositionSizingAdvice
     ) -> None:
         """Record position sizing metrics to event store."""
+        target_notional = advice.target_notional
+        price_reference = context.current_price or context.mark_price
+        if target_notional == 0 and advice.recommended_quantity and price_reference:
+            try:
+                target_notional = advice.recommended_quantity * price_reference
+            except Exception:
+                target_notional = Decimal("0")
+
+        target_quantity = advice.target_quantity
+        if target_quantity == 0 and advice.recommended_quantity is not None:
+            target_quantity = advice.recommended_quantity
+
         emit_metric(
             self.event_store,
             "risk_engine",
@@ -175,8 +221,8 @@ class PositionSizer:
                 "event_type": "position_sizing_advice",
                 "symbol": context.symbol,
                 "side": context.side,
-                "target_notional": float(advice.target_notional),
-                "target_quantity": float(advice.target_quantity),
+                "target_notional": float(target_notional),
+                "target_quantity": float(target_quantity),
                 "used_dynamic": advice.used_dynamic,
                 "reduce_only": advice.reduce_only,
                 "fallback_used": advice.fallback_used,

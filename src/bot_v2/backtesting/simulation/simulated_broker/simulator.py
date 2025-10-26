@@ -163,5 +163,53 @@ class SimulatedBroker:
     def generate_report(self) -> BacktestResult:
         return self._portfolio.generate_report()
 
+    # Compatibility ----------------------------------------------------
+    def __getattr__(self, name: str) -> Any:  # pragma: no cover - compatibility shim
+        """Provide read-only access to legacy private attributes."""
+        if name == "_initial_equity":
+            return self._portfolio._initial_equity
+        if name == "_cash_balance":
+            return self._portfolio.cash_balance
+        if name == "_positions":
+            return self._portfolio._positions
+        if name == "_orders":
+            return self._orders._orders
+        if name == "_open_orders":
+            return self._orders._open_orders
+        if name == "_products":
+            return self._portfolio.products
+        if name == "_current_time":
+            return self._market_state.current_time
+        if name == "_current_bar":
+            return self._market_state.bars
+        if name == "_current_quotes":
+            return self._market_state.quotes
+        if name == "_next_bar":
+            return self._market_state.next_bars
+        if name == "_fee_calculator":
+            return self._portfolio.fee_calculator
+        if name == "_fill_model":
+            return self._orders._fill_model
+        if name == "_funding_tracker":
+            return self._portfolio.funding_tracker
+        if name == "_realized_pnl":
+            return self._portfolio._realized_pnl
+        if name == "_fees_paid":
+            return self._portfolio._fees_paid
+        if name == "_total_trades":
+            return self._portfolio._total_trades
+        if name == "_winning_trades":
+            return self._portfolio._winning_trades
+        if name == "_losing_trades":
+            return self._portfolio._losing_trades
+        if name == "_peak_equity":
+            return self._portfolio._peak_equity
+        if name == "_max_drawdown":
+            return self._portfolio._max_drawdown
+        if name == "_equity_history":
+            return self._portfolio._equity_history
+
+        raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
+
 
 __all__ = ["SimulatedBroker"]

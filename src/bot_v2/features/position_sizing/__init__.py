@@ -10,11 +10,11 @@ from bot_v2.features.position_sizing.confidence import (
     confidence_adjusted_size,
 )
 from bot_v2.features.position_sizing.kelly import fractional_kelly, kelly_criterion
-from bot_v2.features.position_sizing.position_sizing import (
-    PositionSizingResult,
+from bot_v2.features.position_sizing.engine import (
     calculate_portfolio_allocation,
     calculate_position_size,
 )
+from bot_v2.features.position_sizing.types import PositionSizingResult
 from bot_v2.features.position_sizing.regime import RegimeMultipliers, regime_adjusted_size
 from bot_v2.features.position_sizing.types import (
     KellyParameters,

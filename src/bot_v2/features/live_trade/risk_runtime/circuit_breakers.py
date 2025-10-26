@@ -45,6 +45,14 @@ class CircuitBreakerOutcome:
     action: CircuitBreakerAction
     reason: str | None = None
     value: Decimal | None = None
+    volatility: Decimal | None = None
+    message: str | None = None
+
+    def __post_init__(self) -> None:
+        if self.reason is None and self.message is not None:
+            self.reason = self.message
+        elif self.message is None and self.reason is not None:
+            self.message = self.reason
 
     def to_payload(self) -> dict[str, Any]:
         return {
@@ -52,6 +60,8 @@ class CircuitBreakerOutcome:
             "action": self.action.value,
             "reason": self.reason,
             "value": float(self.value) if self.value is not None else None,
+            "volatility": float(self.volatility) if self.volatility is not None else None,
+            "message": self.message,
         }
 
 
@@ -150,6 +160,7 @@ def check_volatility_circuit_breaker(
                 triggered=False,
                 action=CircuitBreakerAction.NONE,
                 value=rolling_vol_decimal,
+                volatility=rolling_vol_decimal,
             )
         warn_th = float(rule.warning_threshold)
         reduce_only_th = float(rule.reduce_only_threshold)
@@ -168,6 +179,7 @@ def check_volatility_circuit_breaker(
                 triggered=False,
                 action=CircuitBreakerAction.NONE,
                 value=rolling_vol_decimal,
+                volatility=rolling_vol_decimal,
             )
         warn_th = float(getattr(config, "volatility_warning_threshold", 0.10))
         reduce_only_th = float(getattr(config, "volatility_reduce_only_threshold", 0.12))
@@ -217,12 +229,14 @@ def check_volatility_circuit_breaker(
             action=outcome_action,
             reason=outcome_action.value,
             value=rolling_vol_decimal,
+            volatility=rolling_vol_decimal,
         )
 
     return CircuitBreakerOutcome(
         triggered=False,
         action=CircuitBreakerAction.NONE,
         value=rolling_vol_decimal,
+        volatility=rolling_vol_decimal,
     )
 
 

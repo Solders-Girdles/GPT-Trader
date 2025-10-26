@@ -20,7 +20,6 @@ class LiveRiskManagerRuntimeMixin:
         if self.state_manager.start_of_day_equity == 0:
             self.state_manager.start_of_day_equity = current_equity
             self.start_of_day_equity = current_equity
-            return False
 
         triggered, updated_pnl = self.runtime_monitor.track_daily_pnl(
             current_equity=current_equity,

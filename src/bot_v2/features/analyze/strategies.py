@@ -4,6 +4,8 @@ Local strategy analysis for the analyze feature.
 Complete duplication from other slices - intentional for isolation!
 """
 
+from math import isclose
+
 import pandas as pd
 
 from bot_v2.features.analyze.types import StrategySignals
@@ -72,12 +74,12 @@ def analyze_ma_strategy(data: pd.DataFrame, fast: int = 10, slow: int = 30) -> S
         confidence = 0.7
     else:
         signal = 0
-        if curr_fast > curr_slow:
-            reason = f"Bullish: {fast}MA above {slow}MA"
-        elif curr_fast < curr_slow:
-            reason = f"Bearish: {fast}MA below {slow}MA"
-        else:
+        if isclose(curr_fast, curr_slow, rel_tol=1e-9, abs_tol=1e-9):
             reason = f"Neutral: {fast}MA equals {slow}MA"
+        elif curr_fast > curr_slow:
+            reason = f"Bullish: {fast}MA above {slow}MA"
+        else:
+            reason = f"Bearish: {fast}MA below {slow}MA"
         confidence = 0.4
 
     return StrategySignals(

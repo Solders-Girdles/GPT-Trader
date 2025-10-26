@@ -73,13 +73,13 @@ class StateManager:
         ):
             return
 
-        self._state.reduce_only_mode = enabled
-        if enabled:
-            self._state.last_reduce_only_reason = reason or "unspecified"
-            self._state.last_reduce_only_at = self._now_provider()
-        else:
-            self._state.last_reduce_only_reason = None
-            self._state.last_reduce_only_at = None
+        timestamp = self._now_provider() if enabled else None
+        new_state = RiskRuntimeState(
+            reduce_only_mode=enabled,
+            last_reduce_only_reason=(reason or "unspecified") if enabled else None,
+            last_reduce_only_at=timestamp,
+        )
+        self._state = new_state
 
         # Mirror change onto config so legacy access patterns remain valid
         try:
@@ -95,8 +95,8 @@ class StateManager:
                 "enabled": enabled,
                 "reason": reason or "unspecified",
                 "timestamp": (
-                    self._state.last_reduce_only_at.isoformat()
-                    if self._state.last_reduce_only_at
+                    timestamp.isoformat()
+                    if timestamp
                     else None
                 ),
             },
@@ -105,7 +105,7 @@ class StateManager:
 
         if self._state_listener:
             try:
-                self._state_listener(self._state)
+                self._state_listener(new_state)
             except Exception:
                 logger.exception("Reduce-only state listener failed")
 

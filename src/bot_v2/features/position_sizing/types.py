@@ -118,7 +118,7 @@ class ConfidenceAdjustment:
 class RegimeMultipliers:
     """Position size multipliers by market regime."""
 
-    bull_quiet: float = 1.2  # Steady uptrend - increase positions
+    bull_quiet: float = 1.5  # Steady uptrend - increase positions
     bull_volatile: float = 0.9  # Volatile uptrend - slight reduction
     bear_quiet: float = 0.6  # Steady downtrend - reduce positions
     bear_volatile: float = 0.4  # Volatile downtrend - major reduction

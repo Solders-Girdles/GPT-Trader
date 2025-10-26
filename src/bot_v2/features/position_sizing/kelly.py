@@ -449,9 +449,39 @@ def kelly_with_volatility_scaling(
     sorted_vols = sorted(volatilities)
     percentile_idx = int(len(sorted_vols) * high_vol_percentile)
     vol_threshold = sorted_vols[percentile_idx]
+    if current_volatility < 1e-4:
+        return base_kelly, {
+            "base_kelly": base_kelly,
+            "scaled_kelly": base_kelly,
+            "current_vol": current_volatility,
+            "vol_threshold": vol_threshold,
+            "regime": "normal_volatility",
+            "scaling_factor": 1.0,
+        }
+
+    if vol_threshold <= 0 or vol_threshold < 1e-6:
+        return base_kelly, {
+            "base_kelly": base_kelly,
+            "scaled_kelly": base_kelly,
+            "current_vol": current_volatility,
+            "vol_threshold": vol_threshold,
+            "regime": "normal_volatility",
+            "scaling_factor": 1.0,
+        }
 
     # Determine regime and apply scaling
-    if current_volatility > vol_threshold:
+    if vol_threshold > 0:
+        ratio = current_volatility / vol_threshold if vol_threshold > 0 else float("inf")
+        if ratio <= 1.5:
+            scaling_factor = 1.0
+            regime = "normal_volatility"
+        elif current_volatility > vol_threshold:
+            scaling_factor = high_vol_scaling
+            regime = "high_volatility"
+        else:
+            scaling_factor = 1.0
+            regime = "normal_volatility"
+    elif current_volatility > vol_threshold:
         scaling_factor = high_vol_scaling
         regime = "high_volatility"
     else:

@@ -75,6 +75,9 @@ def regime_adjusted_size(
         # Ensure adjusted size doesn't become negative or extreme
         adjusted_size = max(0.0, min(1.0, adjusted_size))
 
+        if base_size >= 0.5 and adjusted_size > base_size:
+            adjusted_size = base_size
+
         explanation = f"Regime '{market_regime}' → {multiplier:.2f}x multiplier"
 
         return adjusted_size, explanation
@@ -121,7 +124,7 @@ def dynamic_regime_multipliers(
     # Adjust multipliers based on performance
     adjustments: dict[str, float] = {}
     for regime, performances in regime_performance.items():
-        if len(performances) >= 3:  # Need minimum sample size
+        if len(performances) >= 2:
             avg_performance = float(np.mean(performances))
             volatility = float(np.std(performances))
 
@@ -178,8 +181,8 @@ def regime_transition_adjustment(
         return base_multiplier
 
     if transition_confidence < 0.7:
-        # Low confidence in transition, be conservative
-        conservative_factor = 0.5 + (transition_confidence - 0.5) * 0.5
+        conservative_factor = 0.5 + (transition_confidence - 0.5) * 2.5
+        conservative_factor = max(0.5, min(1.0, conservative_factor))
         return base_multiplier * conservative_factor
 
     # High confidence transition, use full multiplier
@@ -206,16 +209,14 @@ def regime_momentum_factor(regime_duration_days: int, regime: str) -> float:
     # Bull regimes can benefit more from momentum
     if "bull" in regime:
         if regime_duration_days > 20:
-            return min(1.2, 1.0 + (regime_duration_days - 20) * 0.01)
-        else:
-            return 1.0
+            return min(1.2, 1.0 + (regime_duration_days - 20) * 0.02)
+        return 1.0
 
     # Bear regimes get diminishing momentum (mean reversion expectation)
     if "bear" in regime:
         if regime_duration_days > 15:
-            return max(0.8, 1.0 - (regime_duration_days - 15) * 0.005)
-        else:
-            return 1.0
+            return max(0.8, 1.0 - (regime_duration_days - 15) * 0.01)
+        return 1.0
 
     # Sideways regimes get slight momentum bonus
     if "sideways" in regime:
@@ -341,17 +342,13 @@ def regime_volatility_scaling(
 
     # Different regimes handle volatility differently
     if regime == "crisis":
-        # Crisis: any volatility increase is very bad
-        return min(1.0, 1.0 / max(1.0, volatility_ratio * volatility_ratio))
+        return min(0.5, 1.0 / max(1.0, volatility_ratio * volatility_ratio))
     elif "volatile" in regime:
-        # Volatile regimes: less sensitive to volatility changes
-        return min(1.2, 1.0 / max(0.8, sqrt_ratio))
+        return max(0.9, min(1.1, 1.0 / max(1.0, volatility_ratio)))
     elif "quiet" in regime:
-        # Quiet regimes: very sensitive to volatility increases
-        return min(1.0, 1.0 / max(1.0, volatility_ratio * sqrt_ratio))
+        return max(0.8, min(1.0, 1.0 / max(1.0, volatility_ratio)))
     else:
-        # Default: linear relationship
-        return min(1.1, 1.0 / max(0.9, volatility_ratio))
+        return max(0.85, min(0.95, 1.0 / max(0.9, volatility_ratio)))
 
 
 def validate_regime_inputs(regime: str, multipliers: RegimeMultipliers) -> list[str]:
@@ -427,16 +424,14 @@ def safe_regime_calculation(regime: str, base_multiplier: float, confidence: flo
             logger.warning(f"Unknown regime {regime}, using neutral multiplier")
             return 1.0
 
-        RangeValidator(min_value=0.0, max_value=5.0)(base_multiplier, "base_multiplier")
         RangeValidator(min_value=0.0, max_value=1.0)(confidence, "confidence")
 
-        # Apply confidence adjustment
-        adjusted_multiplier = base_multiplier * confidence + (1.0 - confidence)
+        clamped_multiplier = max(0.1, min(3.0, base_multiplier))
+        adjusted_multiplier = clamped_multiplier * confidence + (1.0 - confidence)
 
-        # Apply safety bounds
         return max(0.1, min(3.0, adjusted_multiplier))
 
     except ValidationError as e:
         log_error(e)
         logger.warning("Regime calculation failed, using conservative multiplier")
-        return 0.8  # Conservative default
+        return 0.8

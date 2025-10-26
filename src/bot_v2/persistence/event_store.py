@@ -168,6 +168,17 @@ class EventStore:
         payload = _normalize_error_payload(message, context)
         self._write({"type": "error", "bot_id": bot_id, **payload})
 
+    def append(self, bot_id: str, payload: Mapping[str, Any] | None = None, **fields: Any) -> None:
+        """Backward-compatible append(bot_id, payload) helper."""
+        data: dict[str, Any] = {}
+        if payload is not None:
+            data.update(_ensure_mapping("metric", payload))
+        if fields:
+            data.update(_ensure_mapping("metric", fields))
+        if not data:
+            raise ValueError("append requires a payload")
+        self.append_metric(bot_id=bot_id, metrics=data)
+
     # Query helpers
     def tail(
         self, bot_id: str, limit: int = 50, types: Iterable[str] | None = None

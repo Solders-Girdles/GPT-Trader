@@ -5,12 +5,11 @@ from __future__ import annotations
 import pytest
 from pydantic_core import PydanticCustomError, ValidationError
 
-from bot_v2.orchestration.configuration.core import (
-    BotConfig,
-    Profile,
-    _apply_rule,
-    _ensure_condition,
+from bot_v2.orchestration.configuration.bot_config.rules import (
+    apply_rule as _apply_rule,
+    ensure_condition as _ensure_condition,
 )
+from bot_v2.orchestration.configuration.core import BotConfig, Profile
 from bot_v2.utilities.config import ConfigBaselinePayload
 from bot_v2.validation import (
     IntegerRule,

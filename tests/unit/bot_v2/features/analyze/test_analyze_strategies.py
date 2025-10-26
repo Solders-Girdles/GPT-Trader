@@ -28,10 +28,10 @@ def _dataframe_from_close(close: list[float]) -> pd.DataFrame:
     [
         ([3, 2, 1, 2, 3], 1, "Golden cross: 2MA crossed above 3MA"),
         ([1, 2, 3, 2, 1], -1, "Death cross: 2MA crossed below 3MA"),
-        ([1, 1, 1, 1, 1], 0, "Bullish: 2MA above 3MA"),
-        ([3, 3, 3, 3, 3], 0, "Bearish: 2MA below 3MA"),
-        ([1, 2, 2, 2, 2], 0, "Bullish: 2MA above 3MA"),
-        ([3, 2, 2, 2, 2], 0, "Bearish: 2MA below 3MA"),
+        ([1, 1, 1, 1, 1], 0, "Neutral: 2MA equals 3MA"),
+        ([3, 3, 3, 3, 3], 0, "Neutral: 2MA equals 3MA"),
+        ([1, 2, 2, 2, 2], 0, "Neutral: 2MA equals 3MA"),
+        ([3, 2, 2, 2, 2], 0, "Neutral: 2MA equals 3MA"),
     ],
 )
 def test_analyze_ma_strategy_detects_crossovers(

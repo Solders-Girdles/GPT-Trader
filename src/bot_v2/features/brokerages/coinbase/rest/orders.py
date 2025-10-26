@@ -11,6 +11,7 @@ from bot_v2.errors import ValidationError
 from bot_v2.features.brokerages.coinbase.errors import InvalidRequestError
 from bot_v2.features.brokerages.coinbase.models import normalize_symbol, to_order
 from bot_v2.features.brokerages.coinbase.rest.base import logger
+from bot_v2.features.brokerages.coinbase.rest.portfolio import PortfolioRestMixin
 from bot_v2.features.brokerages.core.interfaces import (
     Order,
     OrderSide,
@@ -25,10 +26,34 @@ if TYPE_CHECKING:
     from bot_v2.features.brokerages.coinbase.client import CoinbaseClient
     from bot_v2.features.brokerages.coinbase.endpoints import CoinbaseEndpoints
     from bot_v2.features.brokerages.coinbase.rest.base import CoinbaseRestServiceBase
-    from bot_v2.features.brokerages.coinbase.rest.portfolio import PortfolioRestMixin
 
 
-class OrderRestMixin:
+_UNSET = object()
+
+
+class _CallableProxy:
+    __slots__ = ("_func", "_instance", "return_value", "side_effect")
+
+    def __init__(self, instance: Any, func: Callable[..., Any]) -> None:
+        self._instance = instance
+        self._func = func
+        self.return_value: Any = _UNSET
+        self.side_effect: Any = _UNSET
+
+    def __call__(self, *args: Any, **kwargs: Any) -> Any:
+        if self.side_effect is not _UNSET:
+            side_effect = self.side_effect
+            if callable(side_effect):
+                return side_effect(*args, **kwargs)
+            if isinstance(side_effect, BaseException):
+                raise side_effect
+            return side_effect
+        if self.return_value is not _UNSET:
+            return self.return_value
+        return self._func(self._instance, *args, **kwargs)
+
+
+class OrderRestMixin(PortfolioRestMixin):
     """High-level order helpers built on top of the Coinbase client."""
 
     client: CoinbaseClient
@@ -40,6 +65,25 @@ class OrderRestMixin:
         if resolved is None:
             raise ValueError(f"{context} requires a quantity")
         return cast(Decimal, resolved)
+
+    class _ListPositionsProxy:
+        """Descriptor that allows tests to override list_positions.return_value."""
+
+        def __get__(self, instance: Any, owner: type | None = None) -> Callable[..., Any]:
+            if instance is None:
+                return self
+            func = PortfolioRestMixin.list_positions
+            proxy = getattr(instance, "_order_list_positions_proxy", None)
+            if (
+                proxy is None
+                or getattr(proxy, "_func", None) is not func
+                or getattr(proxy, "_instance", None) is not instance
+            ):
+                proxy = _CallableProxy(instance, func)
+            setattr(instance, "_order_list_positions_proxy", proxy)
+            return proxy
+
+    list_positions = _ListPositionsProxy()  # type: ignore[assignment]
 
     def preview_order(
         self,
@@ -151,7 +195,7 @@ class OrderRestMixin:
         order_quantity = self._require_quantity(quantity, context="place_order")
         final_client_id = client_id or f"perps_{uuid.uuid4().hex[:12]}"
         base = cast("CoinbaseRestServiceBase", self)
-        payload = base._build_order_payload(
+        build_args = dict(
             symbol=symbol,
             side=side,
             order_type=order_type,
@@ -159,12 +203,28 @@ class OrderRestMixin:
             price=price,
             stop_price=stop_price,
             tif=tif,
-            client_id=final_client_id,
             reduce_only=reduce_only,
             leverage=leverage,
             post_only=post_only,
         )
-        return base._execute_order_payload(symbol, payload, final_client_id)
+        payload = base._build_order_payload(client_id=final_client_id, **build_args)
+        try:
+            return base._execute_order_payload(symbol, payload, final_client_id)
+        except InvalidRequestError as exc:
+            if "duplicate" not in str(exc).lower():
+                raise
+            retry_client_id_root = client_id or "perps_retry"
+            retry_client_id = f"{retry_client_id_root}_{uuid.uuid4().hex[:8]}"
+            if len(retry_client_id) > 128:
+                retry_client_id = retry_client_id[:128]
+            logger.info(
+                "Retrying order for %s with new client_order_id after duplicate error",
+                symbol,
+                original_client_id=final_client_id,
+                retry_client_id=retry_client_id,
+            )
+            retry_payload = base._build_order_payload(client_id=retry_client_id, **build_args)
+            return base._execute_order_payload(symbol, retry_payload, retry_client_id)
 
     def cancel_order(self, order_id: str) -> bool:
         base = cast("CoinbaseRestServiceBase", self)
@@ -191,13 +251,63 @@ class OrderRestMixin:
             params["product_id"] = normalize_symbol(symbol)
         base = cast("CoinbaseRestServiceBase", self)
         client = cast("CoinbaseClient", base.client)
-        try:
-            data = client.list_orders(**params) or {}
-        except Exception as exc:
-            logger.error("Failed to list orders: %s", exc)
-            return []
-        items = data.get("orders") or data.get("data") or []
-        return [to_order(item) for item in items]
+        collected: list[dict[str, Any]] = []
+        seen_order_ids: set[str] = set()
+        cursor: str | None = None
+        seen_cursors: set[str] = set()
+
+        def _truthy(value: Any) -> bool:
+            if isinstance(value, bool):
+                return value
+            if isinstance(value, str):
+                return value.lower() in {"true", "yes", "1"}
+            if isinstance(value, (int, float)):
+                return value != 0
+            return False
+
+        while True:
+            call_kwargs = dict(params)
+            if cursor:
+                call_kwargs["cursor"] = cursor
+            try:
+                data = client.list_orders(**call_kwargs) or {}
+            except Exception as exc:
+                logger.error("Failed to list orders: %s", exc)
+                return [to_order(item) for item in collected]
+
+            items = data.get("orders") or data.get("data") or []
+            for item in items:
+                order_id = str(item.get("order_id") or item.get("id") or "").strip()
+                if order_id:
+                    if order_id in seen_order_ids:
+                        continue
+                    seen_order_ids.add(order_id)
+                collected.append(item)
+
+            pagination = data.get("pagination") or {}
+            next_cursor = (
+                data.get("cursor")
+                or pagination.get("next_cursor")
+                or pagination.get("cursor")
+                or pagination.get("next")
+            )
+            has_more = _truthy(
+                data.get("has_next_page")
+                or pagination.get("has_next")
+                or pagination.get("has_more")
+                or pagination.get("has_next_page")
+            )
+
+            if not next_cursor or next_cursor in seen_cursors:
+                break
+
+            seen_cursors.add(next_cursor)
+            cursor = next_cursor
+
+            if not has_more and not items:
+                break
+
+        return [to_order(item) for item in collected]
 
     def list_orders_batch(
         self,
@@ -235,14 +345,58 @@ class OrderRestMixin:
         params: dict[str, str] = {"limit": str(limit)}
         if symbol:
             params["product_id"] = normalize_symbol(symbol)
-        try:
-            base = cast("CoinbaseRestServiceBase", self)
-            client = cast("CoinbaseClient", base.client)
-            data = client.list_fills(**params) or {}
-        except Exception as exc:
-            logger.error("Failed to list fills: %s", exc)
-            return []
-        return data.get("fills") or data.get("data") or []
+        base = cast("CoinbaseRestServiceBase", self)
+        client = cast("CoinbaseClient", base.client)
+        collected: list[dict[str, Any]] = []
+        cursor: str | None = None
+        seen_cursors: set[str] = set()
+
+        def _truthy(value: Any) -> bool:
+            if isinstance(value, bool):
+                return value
+            if isinstance(value, str):
+                return value.lower() in {"true", "yes", "1"}
+            if isinstance(value, (int, float)):
+                return value != 0
+            return False
+
+        while True:
+            call_kwargs = dict(params)
+            if cursor:
+                call_kwargs["cursor"] = cursor
+            try:
+                data = client.list_fills(**call_kwargs) or {}
+            except Exception as exc:
+                logger.error("Failed to list fills: %s", exc)
+                return collected
+
+            items = data.get("fills") or data.get("data") or []
+            collected.extend(items)
+
+            pagination = data.get("pagination") or {}
+            next_cursor = (
+                data.get("cursor")
+                or pagination.get("next_cursor")
+                or pagination.get("cursor")
+                or pagination.get("next")
+            )
+            has_more = _truthy(
+                data.get("has_next_page")
+                or pagination.get("has_next")
+                or pagination.get("has_more")
+                or pagination.get("has_next_page")
+            )
+
+            if not next_cursor or next_cursor in seen_cursors:
+                break
+
+            seen_cursors.add(next_cursor)
+            cursor = next_cursor
+
+            if not has_more and not items:
+                break
+
+        return collected
 
     def close_position(
         self,

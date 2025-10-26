@@ -74,8 +74,10 @@ def analyze_ma_strategy(data: pd.DataFrame, fast: int = 10, slow: int = 30) -> S
         signal = 0
         if curr_fast > curr_slow:
             reason = f"Bullish: {fast}MA above {slow}MA"
-        else:
+        elif curr_fast < curr_slow:
             reason = f"Bearish: {fast}MA below {slow}MA"
+        else:
+            reason = f"Neutral: {fast}MA equals {slow}MA"
         confidence = 0.4
 
     return StrategySignals(
@@ -98,11 +100,19 @@ def analyze_momentum_strategy(
     if momentum > threshold:
         signal = 1
         reason = f"Strong positive momentum: {momentum:.2%}"
-        confidence = min(0.9, 0.5 + abs(momentum) * 5)
+        if threshold > 0 and abs(momentum) <= threshold * 3:
+            confidence = 0.5
+        else:
+            excess = max(0.0, abs(momentum) - threshold * 3)
+            confidence = min(0.9, 0.5 + excess * 5)
     elif momentum < -threshold:
         signal = -1
         reason = f"Strong negative momentum: {momentum:.2%}"
-        confidence = min(0.9, 0.5 + abs(momentum) * 5)
+        if threshold > 0 and abs(momentum) <= threshold * 3:
+            confidence = 0.5
+        else:
+            excess = max(0.0, abs(momentum) - threshold * 3)
+            confidence = min(0.9, 0.5 + excess * 5)
     else:
         signal = 0
         reason = f"Neutral momentum: {momentum:.2%}"

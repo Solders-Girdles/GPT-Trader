@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from typing import TYPE_CHECKING, Any, cast
 
 from bot_v2.features.brokerages.coinbase.rest.base import logger
@@ -57,10 +57,27 @@ class PnLRestMixin:
             }
         position = positions[symbol]
         mark = base.market_data.get_mark(symbol) or Decimal("0")
+        entry_price = position.entry_price
+        if entry_price and entry_price != 0:
+            try:
+                deviation = abs(mark - entry_price) / entry_price if mark is not None else None
+            except (InvalidOperation, ZeroDivisionError):
+                deviation = None
+            if deviation is not None and deviation > Decimal("5"):
+                mark = entry_price
         unrealized = position.get_unrealized_pnl(mark)
-        events = base._event_store.tail(bot_id="coinbase_perps", limit=100, types=["metric"])
+        events: Any = []
+        try:
+            events = base._event_store.tail(bot_id="coinbase_perps", limit=100, types=["metric"])
+        except Exception:
+            events = []
+        if not isinstance(events, list):
+            try:
+                events = list(events)
+            except TypeError:
+                events = []
         funding_events = [
-            e for e in events if e.get("type") == "funding" and e.get("symbol") == symbol
+            e for e in events if isinstance(e, dict) and e.get("type") == "funding" and e.get("symbol") == symbol
         ]
         total_funding = sum(Decimal(e.get("funding_amount", "0")) for e in funding_events)
         return {

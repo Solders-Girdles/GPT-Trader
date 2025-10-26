@@ -230,15 +230,14 @@ class TestPreTradeValidatorCoverage:
         except ValidationError:
             pytest.fail("Should not raise ValidationError for position reduction")
 
-    def test_reduce_only_mode_allows_new_position_when_no_existing(
+    def test_reduce_only_mode_blocks_new_position_when_no_existing(
         self, conservative_risk_config, mock_event_store, btc_perpetual_product
     ):
-        """Test reduce-only mode allows new positions when no existing position."""
+        """Test reduce-only mode blocks new positions when no existing position."""
         config = RiskConfig(enable_pre_trade_liq_projection=False)
         validator = PreTradeValidator(config, mock_event_store, is_reduce_only_mode=lambda: True)
 
-        # This should be allowed - reducing from zero to a position
-        try:
+        with pytest.raises(ValidationError, match="Reduce-only mode"):
             validator.pre_trade_validate(
                 "BTC-USD",
                 "sell",
@@ -248,8 +247,6 @@ class TestPreTradeValidatorCoverage:
                 equity=Decimal("10000"),
                 current_positions={},
             )
-        except ValidationError:
-            pytest.fail("Should not raise ValidationError for new position in reduce-only mode")
 
     # -------------------------------------------------------------------------
     # LEVERAGE VALIDATION TESTS

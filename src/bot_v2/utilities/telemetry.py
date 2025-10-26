@@ -59,17 +59,48 @@ def emit_metric(
         metrics_payload.setdefault("type", "metric")
 
     caught_exc: Exception | None = None
-    try:
-        event_store.append_metric(bot_id=bot_id, metrics=metrics_payload)
-        return
-    except TypeError:
+    appended = False
+
+    append_method = getattr(event_store, "append", None)
+    if callable(append_method):
         try:
-            event_store.append_metric(bot_id, metrics_payload)
-            return
-        except Exception as exc:  # fall through to shared handler
+            append_method(bot_id=bot_id, payload=metrics_payload)
+            appended = True
+        except TypeError:
+            try:
+                append_method(bot_id, metrics_payload)
+                appended = True
+            except Exception as exc:
+                caught_exc = exc
+        except Exception as exc:
             caught_exc = exc
-    except Exception as exc:
-        caught_exc = exc
+
+    if not appended:
+        try:
+            event_store.append_metric(bot_id=bot_id, metrics=metrics_payload)
+            appended = True
+        except TypeError:
+            try:
+                event_store.append_metric(bot_id, metrics_payload)
+                appended = True
+            except Exception as exc:
+                caught_exc = caught_exc or exc
+        except Exception as exc:
+            caught_exc = caught_exc or exc
+
+    if appended and hasattr(event_store, "metrics"):
+        try:
+            metrics_buffer = getattr(event_store, "metrics")
+            if isinstance(metrics_buffer, list) and metrics_buffer:
+                entry = metrics_buffer[-1]
+                if isinstance(entry, dict):
+                    entry.setdefault("metrics", metrics_payload)
+                    entry.setdefault("event_type", metrics_payload.get("event_type"))
+        except Exception:
+            pass
+
+    if appended:
+        return
 
     if caught_exc is None:
         return

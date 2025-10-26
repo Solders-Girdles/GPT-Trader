@@ -15,6 +15,7 @@ from pydantic import (
     Field,
     FieldValidationInfo,
     field_validator,
+    model_validator,
 )
 
 from .constants import RISK_CONFIG_ENV_ALIASES
@@ -416,6 +417,12 @@ class RiskConfig(BaseModel):
             error_template="must be boolean, got {value}: {error}",
         )
         return bool(result)
+
+    @model_validator(mode="after")
+    def _apply_legacy_aliases(self) -> "RiskConfig":
+        if self.max_total_exposure_pct is not None:
+            object.__setattr__(self, "max_exposure_pct", float(self.max_total_exposure_pct))
+        return self
 
     def to_dict(self) -> dict[str, Any]:
         def _convert(value: Any) -> Any:

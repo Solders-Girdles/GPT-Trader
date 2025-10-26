@@ -182,7 +182,9 @@ class UnifiedLogger:
             elif raw_message:
                 message_to_emit = rendered_message
             else:
-                message_to_emit = self._format_context(dict(extra), message_to_emit)
+                context_text = self._format_context(dict(extra))
+                if context_text:
+                    message_to_emit = f"{message_to_emit} | {context_text}"
 
             self._emit_console(message_to_emit, prefix=prefix)
 

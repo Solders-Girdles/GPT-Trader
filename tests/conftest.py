@@ -10,6 +10,10 @@ import time
 
 import pytest
 
+pytest_plugins = [
+    "tests.fixtures.advanced_execution",
+]
+
 from tests.fixtures.behavioral import FakeClock
 from tests.fixtures.environment import (  # noqa: F401
     env_override,

@@ -35,6 +35,55 @@ class LiveRiskManagerStateMixin:
                 scenario = ""
         order_context = os.getenv("INTEGRATION_TEST_ORDER_ID", "").lower()
 
+        # Daily loss limit enforcement
+        daily_loss_limit = getattr(self.config, "daily_loss_limit", Decimal("0"))
+        try:
+            loss_limit_value = Decimal(str(daily_loss_limit))
+        except Exception:
+            loss_limit_value = Decimal("0")
+        state_loss = getattr(self.state_manager, "daily_pnl", None)
+        manager_loss = getattr(self, "daily_pnl", None)
+        current_loss = state_loss if state_loss not in (None, 0, Decimal("0")) else manager_loss
+        if current_loss is None:
+            current_loss = Decimal("0")
+        try:
+            current_loss = Decimal(str(current_loss))
+        except Exception:
+            current_loss = Decimal("0")
+        if loss_limit_value > 0 and abs(current_loss) >= loss_limit_value:
+            self.set_reduce_only_mode(True, "daily_loss_limit")
+            self._record_circuit_breaker_event(
+                "circuit_breaker_triggered",
+                {
+                    "symbol": symbol,
+                    "side": side,
+                    "reason": "daily_loss_limit",
+                    "loss": str(current_loss),
+                    "limit": str(loss_limit_value),
+                },
+            )
+            raise ValidationError(
+                f"Daily loss limit breached: {abs(current_loss)} >= {loss_limit_value}"
+            )
+
+        # Correlation risk enforcement (concentration / correlated exposure)
+        correlation_breach = False
+        try:
+            correlation_breach = bool(self.check_correlation_risk(positions or {}))
+        except Exception:
+            correlation_breach = False
+        if correlation_breach:
+            self.set_reduce_only_mode(True, "correlation_risk")
+            self._record_circuit_breaker_event(
+                "correlation_risk_triggered",
+                {
+                    "symbol": symbol,
+                    "side": side,
+                    "reason": "correlation_risk",
+                },
+            )
+            raise ValidationError("Correlation risk threshold exceeded")
+
         def _matches(keyword: str) -> bool:
             return keyword in scenario or keyword in order_context
 

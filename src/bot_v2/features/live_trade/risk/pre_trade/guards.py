@@ -66,16 +66,22 @@ class GuardChecksMixin:
             status = "blocked"
             reason = "insufficient_liquidity"
 
+        def _safe_float(value: Any) -> float | None:
+            try:
+                return float(value)
+            except (TypeError, ValueError):
+                return None
+
         metrics = {
             "event_type": "market_impact_guard",
             "symbol": symbol,
             "side": side,
-            "impact_bps": float(assessment.estimated_impact_bps),
-            "threshold_bps": float(threshold),
-            "quantity": float(quantity),
-            "price": float(price),
-            "slippage_cost": float(assessment.slippage_cost),
-            "liquidity_sufficient": bool(assessment.liquidity_sufficient),
+            "impact_bps": _safe_float(assessment.estimated_impact_bps),
+            "threshold_bps": _safe_float(threshold),
+            "quantity": _safe_float(quantity),
+            "price": _safe_float(price),
+            "slippage_cost": _safe_float(getattr(assessment, "slippage_cost", None)),
+            "liquidity_sufficient": bool(getattr(assessment, "liquidity_sufficient", False)),
             "status": status,
         }
 
@@ -100,9 +106,9 @@ class GuardChecksMixin:
         if status == "blocked":
             if reason == "impact_exceeds_threshold":
                 raise ValidationError(
-                    f"Market impact {assessment.estimated_impact_bps} bps exceeds cap {threshold} bps"
+                    f"Trade exceeds maximum market impact: {assessment.estimated_impact_bps} bps > {threshold} bps"
                 )
-            raise ValidationError("Market impact guard blocked trade due to liquidity")
+            raise ValidationError("Market impact guard blocked trade due to insufficient liquidity")
 
     def validate_slippage_guard(
         self,

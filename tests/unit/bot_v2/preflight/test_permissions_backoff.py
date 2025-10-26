@@ -3,7 +3,7 @@ from __future__ import annotations
 from urllib.error import URLError
 
 import pytest
-from scripts.production_preflight import PreflightCheck
+from bot_v2.preflight import PreflightCheck
 
 
 class StubClient:
@@ -49,7 +49,7 @@ def test_key_permission_retry_behaviour(
     monkeypatch.setenv("COINBASE_ENABLE_DERIVATIVES", "1")
     monkeypatch.setenv("COINBASE_PREFLIGHT_FORCE_REMOTE", "1")
     monkeypatch.setattr(checker, "_build_cdp_client", lambda: (client, None))
-    monkeypatch.setattr("scripts.production_preflight.time.sleep", lambda _seconds: None)
+    monkeypatch.setattr("bot_v2.preflight.checks.connectivity.time.sleep", lambda _seconds: None)
 
     result = checker.check_key_permissions()
 

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import UTC, datetime
 from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -66,7 +67,7 @@ class TestMetricEmission:
         status = telemetry_coordinator.health_check()
 
         assert status.healthy is True
-        assert status.component == "TelemetryCoordinator"
+        assert status.component == telemetry_coordinator.name
         assert status.details["has_account_telemetry"] is True
         assert status.details["streaming_active"] is True
         assert status.details["background_tasks"] == 1
@@ -280,11 +281,13 @@ class TestMetricEmission:
         telemetry_coordinator._stream_task = mock_task
         telemetry_coordinator._ws_stop = MagicMock()
 
+        stop_event = telemetry_coordinator._ws_stop
+
         with patch("asyncio.get_running_loop"):
             await telemetry_coordinator._stop_streaming()
 
             # Verify stop signal set and task cancelled
-            telemetry_coordinator._ws_stop.set.assert_called_once()
+            stop_event.set.assert_called_once()
             mock_task.cancel.assert_called_once()
             assert telemetry_coordinator._stream_task is None
 

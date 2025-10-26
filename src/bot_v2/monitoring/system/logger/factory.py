@@ -95,6 +95,14 @@ def log_error(error: Exception, context: str | None = None, **kwargs: Any) -> No
     get_logger().log_error(error, context, **kwargs)
 
 
+def set_correlation_id(correlation_id: str | None = None) -> None:
+    get_logger().set_correlation_id(correlation_id)
+
+
+def get_correlation_id() -> str:
+    return get_logger().get_correlation_id()
+
+
 __all__ = [
     "get_logger",
     "log_event",
@@ -102,4 +110,6 @@ __all__ = [
     "log_ml_prediction",
     "log_performance",
     "log_error",
+    "set_correlation_id",
+    "get_correlation_id",
 ]

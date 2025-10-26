@@ -118,7 +118,7 @@ class ExecutionCoordinatorCoreMixin:
 
     @staticmethod
     def _build_context_from_legacy(**kwargs: Any) -> CoordinatorContext:
-        from .base import CoordinatorContext  # Deferred import to avoid cycles
+        from bot_v2.orchestration.coordinators.base import CoordinatorContext
 
         settings = kwargs.get("settings")
         broker = kwargs.get("broker")
@@ -273,7 +273,7 @@ class ExecutionCoordinatorCoreMixin:
         exec_engine = getattr(runtime_state, "exec_engine", None) if runtime_state else None
         order_stats = getattr(runtime_state, "order_stats", {}) if runtime_state else {}
 
-        from .base import HealthStatus  # Deferred import to avoid circular dependency
+        from bot_v2.orchestration.coordinators.base import HealthStatus
 
         return HealthStatus(
             healthy=exec_engine is not None,

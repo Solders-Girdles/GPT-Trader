@@ -32,7 +32,7 @@ if TYPE_CHECKING:  # pragma: no cover - type checking only
     from bot_v2.persistence.orders_store import OrdersStore
 
 
-@dataclass(frozen=True)
+@dataclass
 class CoordinatorContext:
     """Shared dependency snapshot exchanged between coordinators.
 

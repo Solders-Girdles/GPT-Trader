@@ -11,3 +11,4 @@ class Profile(Enum):
     PROD = "prod"
     CANARY = "canary"
     SPOT = "spot"
+    TEST = "test"

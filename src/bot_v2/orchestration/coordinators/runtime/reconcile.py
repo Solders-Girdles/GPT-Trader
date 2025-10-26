@@ -129,6 +129,15 @@ class RuntimeCoordinatorReconcileMixin:
 
     @property
     def _order_reconciler_cls(self):
+        try:
+            from bot_v2.orchestration.coordinators import runtime as runtime_pkg
+
+            reconciler_cls = getattr(runtime_pkg, "OrderReconciler", None)
+            if reconciler_cls is not None:
+                return reconciler_cls
+        except Exception:  # pragma: no cover - defensive guard for import issues
+            pass
+
         from bot_v2.orchestration.order_reconciler import OrderReconciler
 
         return OrderReconciler

@@ -7,6 +7,8 @@ from .factory import (
     log_ml_prediction,
     log_performance,
     log_trade,
+    set_correlation_id,
+    get_correlation_id,
 )
 from .levels import LogLevel
 from .production import ProductionLogger
@@ -20,4 +22,6 @@ __all__ = [
     "log_ml_prediction",
     "log_performance",
     "log_error",
+    "set_correlation_id",
+    "get_correlation_id",
 ]

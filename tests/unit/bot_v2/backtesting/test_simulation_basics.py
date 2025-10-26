@@ -110,8 +110,9 @@ class TestSimulatedBroker:
         )
 
         assert broker.get_equity() == Decimal("100000")
-        assert broker._cash_balance == Decimal("100000")
-        assert len(broker._positions) == 0
+        account_info = broker.get_account_info()
+        assert account_info["cash"] == Decimal("100000")
+        assert len(broker.list_positions()) == 0
 
     def test_product_registration(self):
         """Test product registration."""

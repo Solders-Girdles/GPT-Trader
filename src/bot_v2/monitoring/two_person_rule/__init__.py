@@ -1,17 +1,13 @@
-"""
-Compatibility shim for the legacy two_person_rule module.
-
-All functionality is now provided by :mod:`bot_v2.monitoring.two_person_rule`.
-"""
+"""Two-person approval workflow package."""
 
 from __future__ import annotations
 
-from bot_v2.monitoring.two_person_rule import (
+from .manager import TwoPersonRule
+from .models import (
     ApprovalRequest,
     ApprovalStatus,
     ChangeType,
     ConfigChange,
-    TwoPersonRule,
 )
 
 __all__ = [

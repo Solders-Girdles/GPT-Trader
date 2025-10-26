@@ -155,15 +155,15 @@ class SpecsService:
 
         # Quantize to step size
         quantized_size = self.quantize_size(product_id, float(safe_size))
+        reason = "within_limits"
 
         # Check minimum size
         if quantized_size < spec.min_size:
-            # Try to meet minimum with buffer
             buffered_min = spec.min_size * (Decimal("1") + spec.safe_buffer)
-            if buffered_min * Decimal(str(mark_price)) <= Decimal(str(target_notional)):
-                return buffered_min, "adjusted_to_min_with_buffer"
-            else:
-                return Decimal("0"), "below_minimum_notional"
+            quantized_size = self.quantize_size(product_id, float(buffered_min))
+            if quantized_size < spec.min_size:
+                quantized_size = spec.min_size
+            reason = "adjusted_to_min_with_buffer"
 
         # Check maximum size
         if quantized_size > spec.max_size:
@@ -182,7 +182,7 @@ class SpecsService:
             else:
                 return Decimal("0"), "cannot_meet_min_notional"
 
-        return quantized_size, "within_limits"
+        return quantized_size, reason
 
     def validate_order(
         self, product_id: str, side: str, order_type: str, size: float, price: float | None = None

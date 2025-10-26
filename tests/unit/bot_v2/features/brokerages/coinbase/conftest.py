@@ -103,13 +103,7 @@ def mock_api_config() -> APIConfig:
 def mock_runtime_settings() -> RuntimeSettings:
     """Mock runtime settings with WebSocket configuration."""
     return RuntimeSettings(
-        raw_env={
-            "COINBASE_WS_CONNECT_TIMEOUT": "30.0",
-            "COINBASE_WS_SUBPROTOCOLS": "v1,v2",
-            "COINBASE_WS_ENABLE_TRACE": "false",
-            "COINBASE_WS_RECONNECT_DELAY": "1.0",
-            "COINBASE_WS_MAX_RECONNECT_ATTEMPTS": "5",
-        },
+        raw_env={},
         runtime_root=Path("/tmp/test"),
         event_store_root_override=None,
         coinbase_default_quote="USD",

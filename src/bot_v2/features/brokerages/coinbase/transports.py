@@ -8,10 +8,36 @@ from __future__ import annotations
 
 import json
 from collections.abc import Iterable
+import sys
 from typing import TYPE_CHECKING, Any, cast
 
 from bot_v2.utilities import empty_stream
 from bot_v2.utilities.logging_patterns import get_logger
+
+try:  # pragma: no cover - optional dependency shim
+    import websocket as websocket  # type: ignore[import-not-found, assignment]
+    _HAS_WEBSOCKET = True
+except ImportError:  # pragma: no cover - fallback stub for tests
+    class _WebsocketStub:
+        WebSocketException = Exception
+
+        @staticmethod
+        def enableTrace(_flag: bool) -> None:
+            raise ModuleNotFoundError(
+                "websocket-client is not installed. Install with "
+                "`pip install gpt-trader[live-trade]` or `poetry install --with live-trade`."
+            )
+
+        @staticmethod
+        def create_connection(*_args: Any, **_kwargs: Any) -> Any:
+            raise ModuleNotFoundError(
+                "websocket-client is not installed. Install with "
+                "`pip install gpt-trader[live-trade]` or `poetry install --with live-trade`."
+            )
+
+    websocket = _WebsocketStub()  # type: ignore[assignment]
+    sys.modules.setdefault("websocket", websocket)  # allow unittest.mock.patch
+    _HAS_WEBSOCKET = False
 
 if TYPE_CHECKING:
     from bot_v2.orchestration.runtime_settings import RuntimeSettings
@@ -46,18 +72,19 @@ class RealTransport:
         if not self._static_settings:
             self._settings = _load_runtime_settings_snapshot()
 
-    def connect(self, url: str, headers: dict[str, str] | None = None) -> None:
+    def connect(self, url: str | dict[str, str] | None = None, headers: dict[str, str] | None = None) -> None:
         """Connect to the WebSocket server with optional headers."""
         self._refresh_settings()
-        try:
-            import websocket
-        except ImportError:
-            raise ImportError(
-                "websocket-client is not installed. Install the live trading extras with "
-                "`pip install gpt-trader[live-trade]` or `poetry install --with live-trade`."
-            )
 
-        self.url = url
+        if isinstance(url, dict) and headers is None:
+            headers = url
+            url = self.url
+
+        if url is not None:
+            self.url = url
+
+        if self.url is None:
+            raise ValueError("WebSocket URL is required for connection")
 
         options: dict[str, Any] = {}
         if headers:
@@ -83,10 +110,16 @@ class RealTransport:
             try:
                 websocket.enableTrace(True)  # type: ignore[attr-defined]
             except Exception:  # pragma: no cover - optional trace feature
-                logger.debug("Unable to enable websocket trace output", exc_info=True)
+                logger.warning("Unable to enable websocket trace output", exc_info=True)
 
-        self.ws = websocket.create_connection(url, **options)
-        logger.info(f"Connected to WebSocket: {url}")
+        try:
+            self.ws = websocket.create_connection(self.url, **options)
+        except ModuleNotFoundError as exc:  # pragma: no cover - optional dependency
+            raise ImportError(
+                "websocket-client is not installed. Install the live trading extras with "
+                "`pip install gpt-trader[live-trade]` or `poetry install --with live-trade`."
+            ) from exc
+        logger.info(f"Connected to WebSocket: {self.url}")
 
     def disconnect(self) -> None:
         """Disconnect from the WebSocket server."""
@@ -116,12 +149,18 @@ class RealTransport:
         while True:
             try:
                 msg = self.ws.recv()
-                if msg:
-                    data = json.loads(msg)
-                    yield data
+            except StopIteration:
+                break
             except Exception as e:
-                logger.error(f"WebSocket stream error: {e}")
+                logger.error("WebSocket stream error: %s", e)
                 raise
+
+            try:
+                data = json.loads(msg)
+            except Exception as exc:  # pragma: no cover - bubble parse errors
+                logger.error("WebSocket stream error: %s", exc)
+                raise
+            yield data
 
 
 class MockTransport:

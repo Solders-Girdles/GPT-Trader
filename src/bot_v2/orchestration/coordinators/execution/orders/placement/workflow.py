@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from bot_v2.errors import ExecutionError, ValidationError
+from bot_v2.errors import ExecutionError, TradingError, ValidationError
 from bot_v2.features.live_trade.risk import ValidationError as RiskValidationError
 from bot_v2.logging import log_execution_error, order_context
 from bot_v2.utilities.async_utils import run_in_thread
@@ -40,10 +40,15 @@ async def place_order(
                 stage="submit_exception",
             )
             log_execution_error(error=exc, operation="place_order", symbol=symbol)
-            mixin._record_broker_error(exc, symbol=symbol)
-            handle_risk_callback(mixin, exc, symbol)
+            error_to_raise: Exception
+            if isinstance(exc, (ExecutionError, TradingError)):
+                error_to_raise = exc
+            else:
+                error_to_raise = ExecutionError(str(exc))
+            mixin._record_broker_error(error_to_raise, symbol=symbol)
+            handle_risk_callback(mixin, error_to_raise, symbol)
             mixin._increment_order_stat("failed")
-            return None
+            raise error_to_raise from exc if error_to_raise is not exc else exc
 
 
 async def place_order_inner(

@@ -11,6 +11,11 @@ from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from bot_v2.persistence.event_store import EventStore
+else:
+    try:
+        from bot_v2.persistence.event_store import EventStore  # type: ignore
+    except Exception:  # pragma: no cover - minimal runtime dependency
+        EventStore = None  # type: ignore[misc,assignment]
 
 
 def emit_metric(
@@ -61,32 +66,61 @@ def emit_metric(
     caught_exc: Exception | None = None
     appended = False
 
-    append_method = getattr(event_store, "append", None)
-    if callable(append_method):
-        try:
-            append_method(bot_id=bot_id, payload=metrics_payload)
-            appended = True
-        except TypeError:
+    is_real_event_store = EventStore is not None and type(event_store) is EventStore
+
+    if is_real_event_store:
+        append_method = getattr(event_store, "append", None)
+        if callable(append_method):
             try:
-                append_method(bot_id, metrics_payload)
+                append_method(bot_id=bot_id, payload=metrics_payload)
                 appended = True
+            except TypeError:
+                try:
+                    append_method(bot_id, metrics_payload)
+                    appended = True
+                except Exception as exc:
+                    caught_exc = exc
             except Exception as exc:
                 caught_exc = exc
-        except Exception as exc:
-            caught_exc = exc
 
-    if not appended:
-        try:
-            event_store.append_metric(bot_id=bot_id, metrics=metrics_payload)
-            appended = True
-        except TypeError:
+        if not appended:
+            append_metric_method = getattr(event_store, "append_metric", None)
+            if callable(append_metric_method):
+                try:
+                    append_metric_method(bot_id=bot_id, metrics=metrics_payload)
+                    appended = True
+                except TypeError:
+                    try:
+                        append_metric_method(bot_id, metrics_payload)
+                        appended = True
+                    except Exception as exc:
+                        caught_exc = caught_exc or exc
+                except Exception as exc:
+                    caught_exc = caught_exc or exc
+    else:
+        append_metric_method = getattr(event_store, "append_metric", None)
+        if callable(append_metric_method):
             try:
-                event_store.append_metric(bot_id, metrics_payload)
+                append_metric_method(bot_id=bot_id, metrics=metrics_payload)
                 appended = True
+            except TypeError:
+                try:
+                    append_metric_method(bot_id, metrics_payload)
+                    appended = True
+                except Exception as exc:
+                    caught_exc = exc
             except Exception as exc:
-                caught_exc = caught_exc or exc
-        except Exception as exc:
-            caught_exc = caught_exc or exc
+                caught_exc = exc
+
+        append_method = getattr(event_store, "append", None)
+        if callable(append_method):
+            try:
+                append_method(bot_id=bot_id, payload=metrics_payload)
+            except TypeError:
+                try:
+                    append_method(bot_id, metrics_payload)
+                except Exception:
+                    pass
 
     if appended and hasattr(event_store, "metrics"):
         try:

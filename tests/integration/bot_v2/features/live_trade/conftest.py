@@ -9,25 +9,31 @@ realistic trading system validation.
 from __future__ import annotations
 
 import os
+import uuid
 from datetime import datetime
 from decimal import Decimal
+from threading import RLock
 from typing import Any
 
 import pytest
 
 from bot_v2.config.live_trade_config import RiskConfig
 from bot_v2.config.types import Profile
+from bot_v2.errors import ExecutionError
 from bot_v2.features.brokerages.core.interfaces import (
+    Balance,
+    Candle,
     IBrokerage,
+    MarketType,
     Order,
     OrderStatus,
     OrderType,
     Position,
+    Product,
+    Quote,
     TimeInForce,
 )
-from bot_v2.features.brokerages.core.interfaces import (
-    OrderSide as Side,
-)
+from bot_v2.features.brokerages.core.interfaces import OrderSide as Side
 from bot_v2.features.live_trade.risk.manager import LiveRiskManager
 from bot_v2.orchestration.configuration.core import BotConfig
 from bot_v2.orchestration.coordinators.base import CoordinatorContext
@@ -49,21 +55,109 @@ class MockIntegrationBroker(IBrokerage):
         self.connection_dropped = False
         self.api_rate_limited = False
         self.maintenance_mode = False
+        self._balances = [
+            Balance(
+                asset="USD",
+                total=Decimal("100000"),
+                available=Decimal("100000"),
+                hold=Decimal("0"),
+            )
+        ]
+        base_product = Product(
+            symbol="BTC-USD",
+            base_asset="BTC",
+            quote_asset="USD",
+            market_type=MarketType.SPOT,
+            min_size=Decimal("0.001"),
+            step_size=Decimal("0.0001"),
+            min_notional=Decimal("10"),
+            price_increment=Decimal("0.01"),
+            leverage_max=None,
+        )
+        alt_product = Product(
+            symbol="ETH-USD",
+            base_asset="ETH",
+            quote_asset="USD",
+            market_type=MarketType.SPOT,
+            min_size=Decimal("0.01"),
+            step_size=Decimal("0.001"),
+            min_notional=Decimal("10"),
+            price_increment=Decimal("0.01"),
+            leverage_max=None,
+        )
+        self.products: dict[str, Product] = {
+            base_product.symbol: base_product,
+            alt_product.symbol: alt_product,
+        }
+        now = datetime.utcnow()
+        self.quotes: dict[str, Quote] = {
+            base_product.symbol: Quote(
+                symbol=base_product.symbol,
+                bid=Decimal("29950"),
+                ask=Decimal("30050"),
+                last=Decimal("30000"),
+                ts=now,
+            ),
+            alt_product.symbol: Quote(
+                symbol=alt_product.symbol,
+                bid=Decimal("1995"),
+                ask=Decimal("2005"),
+                last=Decimal("2000"),
+                ts=now,
+            ),
+        }
+        self.candles: dict[str, Candle] = {
+            symbol: Candle(
+                ts=now,
+                open=quote.last,
+                high=quote.last,
+                low=quote.last,
+                close=quote.last,
+                volume=Decimal("0"),
+            )
+            for symbol, quote in self.quotes.items()
+        }
 
-    async def place_order(self, order: Order) -> Order:
+    def place_order(
+        self,
+        symbol: str,
+        side: Side,
+        order_type: OrderType,
+        quantity: Decimal,
+        price: Decimal | None = None,
+        stop_price: Decimal | None = None,
+        tif: TimeInForce = TimeInForce.GTC,
+        client_id: str | None = None,
+        reduce_only: bool | None = None,
+        leverage: int | None = None,
+    ) -> Order:
         """Mock order placement with configurable failure modes."""
         if self.connection_dropped:
-            raise ConnectionError("WebSocket connection dropped")
+            raise ExecutionError("WebSocket connection dropped")
 
         if self.api_rate_limited:
-            raise Exception("API rate limit exceeded")
+            raise ExecutionError("API rate limit exceeded")
 
         if self.maintenance_mode:
-            raise Exception("Broker under maintenance")
+            raise ExecutionError("Broker under maintenance")
 
-        # Simulate realistic order processing
-        order.status = OrderStatus.SUBMITTED
-        order.broker_order_id = f"broker_{order.id}"
+        order_id = client_id or f"mock_{uuid.uuid4().hex}"
+        submitted_at = datetime.utcnow()
+        order = Order(
+            id=order_id,
+            client_id=client_id,
+            symbol=symbol,
+            side=side,
+            type=order_type,
+            quantity=Decimal(str(quantity)),
+            price=Decimal(str(price)) if price is not None else None,
+            stop_price=Decimal(str(stop_price)) if stop_price is not None else None,
+            tif=tif,
+            status=OrderStatus.PENDING,
+            submitted_at=submitted_at,
+            updated_at=submitted_at,
+            filled_quantity=Decimal("0"),
+        )
 
         self.orders[order.id] = order
 
@@ -101,18 +195,79 @@ class MockIntegrationBroker(IBrokerage):
 
         return order
 
-    async def cancel_order(self, order_id: str) -> bool:
+    def cancel_order(self, order_id: str) -> bool:
         """Mock order cancellation."""
         if order_id in self.orders:
             self.orders[order_id].status = OrderStatus.CANCELLED
             return True
         return False
 
-    async def get_positions(self) -> list[Position]:
+    def get_positions(self) -> list[Position]:
         """Mock position retrieval."""
         return list(self.positions.values())
 
-    async def get_order_status(self, order_id: str) -> OrderStatus:
+    def get_order(self, order_id: str) -> Order | None:
+        return self.orders.get(order_id)
+
+    def list_orders(
+        self, status: OrderStatus | None = None, symbol: str | None = None
+    ) -> list[Order]:
+        orders = list(self.orders.values())
+        if status is not None:
+            orders = [order for order in orders if order.status == status]
+        if symbol is not None:
+            orders = [order for order in orders if order.symbol == symbol]
+        return orders
+
+    def list_balances(self) -> list[Balance]:
+        return list(self._balances)
+
+    def get_account_id(self) -> str:
+        return "MOCK_INTEGRATION_ACCOUNT"
+
+    def connect(self) -> bool:
+        return True
+
+    def disconnect(self) -> None:
+        return None
+
+    def validate_connection(self) -> bool:
+        return True
+
+    def list_products(self, market: MarketType | None = None) -> list[Product]:
+        products = list(self.products.values())
+        if market is not None:
+            products = [product for product in products if product.market_type == market]
+        return products
+
+    def get_product(self, symbol: str) -> Product:
+        if symbol not in self.products:
+            raise ExecutionError(f"Broker error: product lookup failed for {symbol}")
+        return self.products[symbol]
+
+    def register_product(self, product: Product) -> None:
+        self.products[product.symbol] = product
+
+    def get_quote(self, symbol: str) -> Quote:
+        quote = self.quotes.get(symbol)
+        if quote is None:
+            raise ValueError(f"No quote for {symbol}")
+        return quote
+
+    def get_candles(self, symbol: str, granularity: str, limit: int = 200) -> list[Candle]:
+        candle = self.candles.get(symbol)
+        return [candle] if candle is not None else []
+
+    def list_fills(self, symbol: str | None = None, limit: int = 200) -> list[dict]:
+        return []
+
+    def stream_trades(self, symbols: list[str]) -> Any:
+        return iter(())
+
+    def stream_orderbook(self, symbols: list[str], level: int = 1) -> Any:
+        return iter(())
+
+    def get_order_status(self, order_id: str) -> OrderStatus:
         """Mock order status retrieval."""
         if order_id in self.orders:
             return self.orders[order_id].status
@@ -149,6 +304,7 @@ class MockIntegrationEventStore(EventStore):
     def __init__(self):
         self.events: list[dict[str, Any]] = []
         self.metrics: list[dict[str, Any]] = []
+        self._lock = RLock()
 
     def store_event(self, event_type: str, data: dict[str, Any]) -> None:
         """Store an integration event."""
@@ -170,6 +326,34 @@ class MockIntegrationEventStore(EventStore):
                 "timestamp": datetime.utcnow(),
             }
         )
+
+    # Telemetry compatibility -------------------------------------------------
+    def append_metric(self, bot_id: str, metrics: dict[str, Any]) -> None:
+        """Record metrics via telemetry helper."""
+        self.store_metric(
+            metric_name=metrics.get("event_type", "metric"),
+            value=1.0,
+            tags={"bot_id": bot_id},
+        )
+        self.events.append(
+            {
+                "type": metrics.get("event_type", "metric"),
+                "bot_id": bot_id,
+                "data": metrics,
+                "timestamp": datetime.utcnow(),
+            }
+        )
+
+    def append(self, bot_id: str, payload: dict[str, Any] | None = None, **fields: Any) -> None:
+        """Support generic append used by telemetry emit helper."""
+        data = {}
+        if payload:
+            data.update(payload)
+        if fields:
+            data.update(fields)
+        if not data:
+            return
+        self.append_metric(bot_id=bot_id, metrics=data)
 
     def get_events_by_type(self, event_type: str) -> list[dict[str, Any]]:
         """Get events by type."""
@@ -329,6 +513,7 @@ def integration_risk_config():
         max_market_impact_bps=5,  # 5 bps max impact
         enable_market_impact_guard=True,
         default_maintenance_margin_rate=0.01,  # 1% MMR
+        reduce_only_mode=False,
     )
 
 
@@ -347,7 +532,12 @@ def mock_integration_event_store():
 @pytest.fixture
 def integration_live_risk_manager(integration_risk_config, mock_integration_event_store):
     """Live Risk Manager configured for integration testing."""
-    return LiveRiskManager(config=integration_risk_config, event_store=mock_integration_event_store)
+    manager = LiveRiskManager(config=integration_risk_config, event_store=mock_integration_event_store)
+    try:
+        manager.set_reduce_only_mode(False, "integration_initialization")
+    except Exception:
+        pass
+    return manager
 
 
 @pytest.fixture

@@ -50,7 +50,7 @@ include = [
 ]
 
 [tool.poetry.group.dev.dependencies]
-ruff = "^0.14.0"
+ruff = "^0.14.2"
 black = "^25.9.0"
 mypy = "~1.10.0"
 pre-commit = "^4.3.0"

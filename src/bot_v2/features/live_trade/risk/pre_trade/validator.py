@@ -5,10 +5,12 @@ from __future__ import annotations
 from collections.abc import Callable, MutableMapping
 from datetime import datetime
 from decimal import Decimal
-from typing import Any
+from typing import Any, TYPE_CHECKING
 
 from bot_v2.features.brokerages.core.interfaces import Product
-from bot_v2.orchestration.configuration import RiskConfig
+
+if TYPE_CHECKING:
+    from bot_v2.orchestration.configuration import RiskConfig
 
 from .exceptions import ValidationError
 from .guards import GuardChecksMixin
@@ -22,7 +24,7 @@ class PreTradeValidator(IntegrationContextMixin, GuardChecksMixin, LimitChecksMi
 
     def __init__(
         self,
-        config: RiskConfig,
+        config: "RiskConfig",
         event_store: Any,
         risk_info_provider: Callable[[str], dict[str, Any]] | None = None,
         impact_estimator: Any | None = None,

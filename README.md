@@ -10,6 +10,16 @@ An ML-driven Coinbase trading system with market regime detection, built on a cl
 
 > **Update (INTX required)**: Coinbase now gates perpetual futures behind the INTX program. The bot runs **spot trading by default** and keeps perpetual logic in place for future activation. Enable derivatives only if your account has INTX access and you set `COINBASE_ENABLE_DERIVATIVES=1` alongside CDP credentials.
 
+## 🗺️ Current Priorities
+
+**Looking for what to work on?** See **[PROJECT_ROADMAP.md](PROJECT_ROADMAP.md)** - the single source of truth for:
+- Current status and what's working
+- Immediate priorities (next 2 weeks)
+- Short-term goals (1-3 months)
+- Long-term vision (6-12 months)
+
+> **For AI agents**: Read PROJECT_ROADMAP.md first before making changes to align with current priorities.
+
 ## 🔎 What's Active Today
 
 - Coinbase trading stack (spot-first): `src/bot_v2/orchestration/perps_bot.py`

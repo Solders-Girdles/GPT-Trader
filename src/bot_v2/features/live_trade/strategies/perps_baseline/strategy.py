@@ -82,6 +82,17 @@ class BaselinePerpsStrategy:
             config=self.config,
         )
 
+        logger.info(
+            f"Strategy decision debug: symbol={symbol} "
+            f"marks={len(recent_marks) if recent_marks else 0} "
+            f"short_ma={signal.snapshot.short_ma} "
+            f"long_ma={signal.snapshot.long_ma} "
+            f"bullish={signal.snapshot.bullish_cross} "
+            f"bearish={signal.snapshot.bearish_cross} "
+            f"label={signal.label} "
+            f"force={self.config.force_entry_on_trend}"
+        )
+
         position_quantity = quantity_from(position_state, default=Decimal("0"))
         has_position = position_state is not None and position_quantity not in (None, Decimal("0"))
 

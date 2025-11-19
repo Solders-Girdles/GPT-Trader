@@ -22,17 +22,28 @@ from bot_v2.errors import (
     handle_error,
     log_error,
 )
-from bot_v2.logging import (
-    get_log_context,
-    get_orchestration_logger,
-)
+# REMOVED: from bot_v2.logging import get_log_context, get_orchestration_logger
+# These are now imported lazily inside functions to break circular import
 from bot_v2.utilities.logging_patterns import get_logger
 
 logger = get_logger(__name__, component="error_handler")
-json_logger = get_orchestration_logger("error_handler")
+# json_logger = get_orchestration_logger("error_handler")  # Removed, created lazily
 
 P = ParamSpec("P")
 T = TypeVar("T")
+
+
+# Lazy import helpers to break circular dependency
+def _get_json_logger():
+    """Lazily get orchestration logger to avoid circular import."""
+    from bot_v2.logging import get_orchestration_logger
+    return get_orchestration_logger("error_handler")
+
+
+def _get_log_context():
+    """Lazily get log context to avoid circular import."""
+    from bot_v2.logging import get_log_context
+    return get_log_context()
 
 
 class RecoveryStrategy(Enum):
@@ -92,7 +103,7 @@ class CircuitBreaker:
                 self.state = CircuitBreakerState.CLOSED
                 self.success_count = 0
                 logger.info("Circuit breaker closed after successful recovery")
-                json_logger.info(
+                _get_json_logger().info(
                     "Circuit breaker closed after successful recovery",
                     extra={"circuit_breaker_state": "closed", "event": "recovery"},
                 )
@@ -108,7 +119,7 @@ class CircuitBreaker:
         if self.failure_count >= self.config.failure_threshold:
             self.state = CircuitBreakerState.OPEN
             logger.warning(f"Circuit breaker opened after {self.failure_count} failures")
-            json_logger.warning(
+            _get_json_logger().warning(
                 f"Circuit breaker opened after {self.failure_count} failures",
                 extra={
                     "circuit_breaker_state": "open",
@@ -130,7 +141,7 @@ class CircuitBreaker:
                     self.state = CircuitBreakerState.HALF_OPEN
                     self.success_count = 0
                     logger.info("Circuit breaker entering half-open state")
-                    json_logger.info(
+                    _get_json_logger().info(
                         "Circuit breaker entering half-open state",
                         extra={"circuit_breaker_state": "half_open", "event": "recovery_attempt"},
                     )
@@ -203,7 +214,7 @@ class ErrorHandler:
                     fallback = self._get_fallback(type(e))
                     if fallback:
                         logger.info(f"Using fallback for {e.__class__.__name__}")
-                        json_logger.info(
+                        _get_json_logger().info(
                             f"Using fallback for {e.__class__.__name__}",
                             extra={
                                 "fallback_used": True,
@@ -220,7 +231,7 @@ class ErrorHandler:
                         f"Attempt {attempt}/{self.retry_config.max_attempts} failed: {e}. "
                         f"Retrying in {delay:.2f} seconds..."
                     )
-                    json_logger.warning(
+                    _get_json_logger().warning(
                         f"Attempt {attempt}/{self.retry_config.max_attempts} failed: {e}. "
                         f"Retrying in {delay:.2f} seconds...",
                         extra={
@@ -277,8 +288,8 @@ class ErrorHandler:
         log_error(error)
 
         # Also log to JSON with correlation context
-        correlation_context = get_log_context()
-        json_logger.error(
+        correlation_context = _get_log_context()
+        _get_json_logger().error(
             f"Error recorded: {error.error_code}",
             extra={
                 "error_code": error.error_code,
@@ -306,13 +317,13 @@ class ErrorHandler:
 
         if recovery_strategy == RecoveryStrategy.DEGRADE:
             logger.warning(f"Degrading functionality due to: {trading_error.message}")
-            json_logger.warning(
+            _get_json_logger().warning(
                 f"Degrading functionality due to: {trading_error.message}",
                 extra={
                     "recovery_strategy": "degrade",
                     "error_code": trading_error.error_code,
                     "error_message": trading_error.message,
-                    **get_log_context(),
+                    **_get_log_context(),
                 },
             )
             return None  # Return None to indicate degraded operation
@@ -350,9 +361,9 @@ class ErrorHandler:
         self.circuit_breaker.failure_count = 0
         self.circuit_breaker.success_count = 0
         logger.info("Circuit breaker manually reset")
-        json_logger.info(
+        _get_json_logger().info(
             "Circuit breaker manually reset",
-            extra={"circuit_breaker_state": "closed", "event": "manual_reset", **get_log_context()},
+            extra={"circuit_breaker_state": "closed", "event": "manual_reset", **_get_log_context()},
         )
 
 

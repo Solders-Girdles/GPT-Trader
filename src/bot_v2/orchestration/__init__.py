@@ -23,11 +23,7 @@ if TYPE_CHECKING:  # pragma: no cover - import-time cycle guard
     # Legacy service registry
     from bot_v2.orchestration.service_registry import ServiceRegistry
 
-# Modern alternatives - these should be preferred
-from bot_v2.orchestration.bootstrap import (
-    bot_from_profile_modern,
-    build_bot_modern,
-)
+
 
 __all__ = [
     # Legacy functions (deprecated)

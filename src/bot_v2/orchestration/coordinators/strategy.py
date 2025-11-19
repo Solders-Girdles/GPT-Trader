@@ -40,6 +40,7 @@ class StrategyCoordinator(BaseCoordinator):
     def __init__(self, context: CoordinatorContext) -> None:
         super().__init__(context)
         self._symbol_processor: SymbolProcessor | None = None
+        self._history_backfilled = False
 
     @property
     def name(self) -> str:
@@ -98,6 +99,16 @@ class StrategyCoordinator(BaseCoordinator):
             json_logger.debug(
                 "Running update cycle", extra={"operation": "strategy_cycle", "stage": "start"}
             )
+
+            print(f"DEBUG PRINT: Symbols: {self.context.symbols}", flush=True)
+            if not self._history_backfilled and self.context.symbols:
+                print("DEBUG PRINT: Attempting backfill", flush=True)
+                logger.info(f"DEBUG: Attempting backfill. Symbols: {self.context.symbols}")
+                await self._backfill_history()
+                self._history_backfilled = True
+            else:
+                print(f"DEBUG PRINT: Skipping backfill. Backfilled: {self._history_backfilled}, Symbols: {self.context.symbols}", flush=True)
+                logger.info(f"DEBUG: Skipping backfill. Backfilled: {self._history_backfilled}, Symbols: {self.context.symbols}")
 
             current_state = await self._fetch_current_state()
             if not await self._validate_configuration_and_handle_drift(current_state):
@@ -518,6 +529,60 @@ class StrategyCoordinator(BaseCoordinator):
             runtime_state.process_symbol_needs_context = needs_context
             runtime_state.process_symbol_dispatch = dispatch
         return bool(needs_context)
+
+    async def _backfill_history(self) -> None:
+        ctx = self.context
+        broker = ctx.broker
+        if broker is None:
+            return
+
+        symbols = tuple(ctx.symbols)
+        if not symbols:
+            return
+
+        logger.info(
+            "Backfilling market history",
+            operation="strategy_backfill",
+            stage="start",
+            symbols=len(symbols),
+        )
+
+        limit = max(ctx.config.long_ma, 20) * 2
+        candle_coroutines = [
+            asyncio.to_thread(broker.get_candles, symbol, "1m", limit)
+            for symbol in symbols
+        ]
+
+        results = await gather_with_concurrency(
+            candle_coroutines,
+            max_concurrency=MAX_QUOTE_FETCH_CONCURRENCY,
+            return_exceptions=True,
+        )
+
+        for symbol, result in zip(symbols, results):
+            if isinstance(result, Exception):
+                logger.warning(
+                    "Failed to backfill history",
+                    symbol=symbol,
+                    error=str(result),
+                    operation="strategy_backfill",
+                )
+                continue
+
+            candles = result
+            if not candles:
+                continue
+
+            # Sort by time to ensure correct order (oldest first)
+            sorted_candles = sorted(candles, key=lambda c: c.start)
+            for candle in sorted_candles:
+                self._update_mark_window(symbol, candle.close)
+
+        logger.info(
+            "Backfill complete",
+            operation="strategy_backfill",
+            stage="complete",
+        )
 
     @staticmethod
     def calculate_spread_bps(bid_price: Decimal, ask_price: Decimal) -> Decimal:

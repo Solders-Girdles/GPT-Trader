@@ -45,6 +45,7 @@ class StrategyInitializationMixin:
                     "target_leverage": 1,
                     "trailing_stop_pct": bot.config.trailing_stop_pct,
                     "enable_shorts": False,
+                    "force_entry_on_trend": True,  # Ignition Phase: Allow trend entry
                 }
                 fraction_override = rule.get("position_fraction")
                 if fraction_override is None:
@@ -72,6 +73,7 @@ class StrategyInitializationMixin:
                 "target_leverage": bot.config.target_leverage if derivatives_enabled else 1,
                 "trailing_stop_pct": bot.config.trailing_stop_pct,
                 "enable_shorts": bot.config.enable_shorts if derivatives_enabled else False,
+                "force_entry_on_trend": True,  # Ignition Phase: Allow trend entry
             }
             fraction_override = bot.config.perps_position_fraction
             if fraction_override is not None:

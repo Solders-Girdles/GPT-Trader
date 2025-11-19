@@ -69,7 +69,8 @@ class RuntimeCoordinatorBrokerMixin:
         return paper_env or force_mock or is_dev or bool(getattr(config, "mock_broker", False))
 
     def _build_mock_broker(self: RuntimeCoordinator) -> BrokerBootstrapArtifacts:
-        broker = self._deterministic_broker_cls()
+        is_dev = self.context.config.profile == Profile.DEV
+        broker = self._deterministic_broker_cls(simulate_trend=is_dev)
         logger.info(
             "Using deterministic broker (REST-first marks)",
             operation="broker_bootstrap",

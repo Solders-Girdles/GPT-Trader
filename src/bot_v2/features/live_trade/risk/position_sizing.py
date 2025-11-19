@@ -9,11 +9,13 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from decimal import Decimal
-from typing import Any
+from typing import Any, TYPE_CHECKING
 
 from bot_v2.features.brokerages.core.interfaces import Product
-from bot_v2.orchestration.configuration import RiskConfig
 from bot_v2.persistence.event_store import EventStore
+
+if TYPE_CHECKING:
+    from bot_v2.orchestration.configuration.risk.model import RiskConfig
 from bot_v2.utilities.logging_patterns import get_logger
 from bot_v2.utilities.telemetry import emit_metric
 
@@ -101,7 +103,7 @@ class PositionSizer:
 
     def __init__(
         self,
-        config: RiskConfig,
+        config: "RiskConfig",
         event_store: EventStore,
         position_size_estimator: (
             Callable[[PositionSizingContext], PositionSizingAdvice] | None

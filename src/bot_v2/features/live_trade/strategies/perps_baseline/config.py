@@ -42,6 +42,9 @@ class StrategyConfig:
     # Bars to confirm crossover persistence (0 = no confirmation)
     ma_cross_confirm_bars: int = 0
 
+    # Ignition: Allow entry if trend is already established (not just on cross)
+    force_entry_on_trend: bool = False
+
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> StrategyConfig:
         """Create config from dictionary."""

@@ -44,9 +44,11 @@ class DeterministicBroker(IBrokerage):
     - Uses structured fixtures for consistent test data.
     """
 
-    def __init__(self, equity: Decimal = Decimal("100000")) -> None:
+    def __init__(self, equity: Decimal = Decimal("100000"), simulate_trend: bool = False) -> None:
         self._connected = False
         self.equity = Decimal(str(equity))
+        self._simulate_trend = simulate_trend
+        self._tick_count = 0
 
         # Try to load from fixtures, fall back to hardcoded defaults
         self._products: dict[str, Product] = self._load_products_from_fixtures()
@@ -196,6 +198,14 @@ class DeterministicBroker(IBrokerage):
 
     def get_quote(self, symbol: str) -> Quote:
         last = self.marks.get(symbol, Decimal("1000"))
+        
+        if self._simulate_trend:
+            # Simulate a slow upward drift (0.01% per tick)
+            # This ensures MA(short) > MA(long) eventually
+            self._tick_count += 1
+            drift = last * Decimal("0.0001") * Decimal(self._tick_count)
+            last += drift
+
         # Tight, deterministic spread: 2 bps total width
         half_spread = last * Decimal("0.0001")
         return Quote(
@@ -214,7 +224,32 @@ class DeterministicBroker(IBrokerage):
         start: datetime | None = None,
         end: datetime | None = None,
     ) -> list[Candle]:
-        return []
+        """Generate synthetic candles for testing."""
+        current_price = self.marks.get(symbol, Decimal("1000"))
+        candles = []
+        now = datetime.utcnow()
+        
+        # Generate candles simulating a slight uptrend so MA_short > MA_long
+        # We go backwards from now
+        for i in range(limit):
+            # Price decreases as we go back in time (uptrend)
+            # 0.05% difference per candle to create separation
+            historical_price = current_price * (Decimal("1") - (Decimal("0.0005") * Decimal(i)))
+            
+            candles.append(
+                Candle(
+                    product_id=symbol,
+                    start=now,  # Timestamps don't strictly matter for this simple strategy
+                    low=historical_price,
+                    high=historical_price,
+                    open=historical_price,
+                    close=historical_price,
+                    volume=Decimal("100"),
+                )
+            )
+        
+        # Return in chronological order (oldest first)
+        return list(reversed(candles))
 
     # ---- Orders ----
     @staticmethod

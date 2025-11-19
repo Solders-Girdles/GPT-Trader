@@ -73,6 +73,11 @@ jobs:
         set -euo pipefail
         poetry run ruff check .
 
+    - name: Check test file complexity
+      run: |
+        set -euo pipefail
+        poetry run python scripts/analysis/check_complexity.py --path tests --max-lines 300
+
     - name: Check formatting with black
       run: |
         set -euo pipefail

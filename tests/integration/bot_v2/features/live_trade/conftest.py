@@ -36,7 +36,7 @@ from bot_v2.features.brokerages.core.interfaces import (
 from bot_v2.features.brokerages.core.interfaces import OrderSide as Side
 from bot_v2.features.live_trade.risk.manager import LiveRiskManager
 from bot_v2.orchestration.configuration.core import BotConfig
-from bot_v2.orchestration.coordinators.base import CoordinatorContext
+from bot_v2.orchestration.engines.base import CoordinatorContext
 from bot_v2.orchestration.engines.execution import ExecutionEngine
 from bot_v2.orchestration.live_execution import LiveExecutionEngine
 from bot_v2.orchestration.perps_bot_state import PerpsBotRuntimeState

@@ -8,10 +8,10 @@ from datetime import datetime
 
 import pytest
 
-from bot_v2.orchestration.state_manager import (
+from bot_v2.orchestration.state.unified_state import (
     ReduceOnlyModeSource,
     ReduceOnlyModeState,
-    StateChangeRequest,
+    StateChange as StateChangeRequest,
 )
 
 

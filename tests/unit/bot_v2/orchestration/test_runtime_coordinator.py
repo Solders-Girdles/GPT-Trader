@@ -1,5 +1,5 @@
 """
-Enhanced RuntimeCoordinator tests for the coordinator implementation.
+Enhanced RuntimeEngine tests for the coordinator implementation.
 
 Tests broker bootstrapping, risk manager initialization, state transitions,
 reconciliation flows, bootstrap failures, and runtime safety toggles.
@@ -18,7 +18,7 @@ from bot_v2.orchestration.engines.base import CoordinatorContext
 from bot_v2.orchestration.engines.runtime import (
     BrokerBootstrapArtifacts,
     BrokerBootstrapError,
-    RuntimeCoordinator,
+    RuntimeEngine,
 )
 from bot_v2.orchestration.perps_bot_state import PerpsBotRuntimeState
 from bot_v2.orchestration.service_registry import ServiceRegistry
@@ -70,8 +70,8 @@ def base_context() -> CoordinatorContext:
 
 
 @pytest.fixture
-def coordinator(base_context: CoordinatorContext) -> RuntimeCoordinator:
-    return RuntimeCoordinator(base_context)
+def coordinator(base_context: CoordinatorContext) -> RuntimeEngine:
+    return RuntimeEngine(base_context)
 
 
 def test_init_broker_uses_deterministic_for_dev(
@@ -89,7 +89,7 @@ def test_init_broker_uses_deterministic_for_dev(
         lambda: stub_broker,
     )
 
-    coordinator = RuntimeCoordinator(base_context)
+    coordinator = RuntimeEngine(base_context)
     updated = coordinator._init_broker(base_context)
 
     assert updated.broker is stub_broker
@@ -114,18 +114,18 @@ def test_init_broker_raises_on_connection_failure(
         lambda *args, **kwargs: (real_broker, base_context.event_store, Mock(), Mock()),
     )
     monkeypatch.setattr(
-        RuntimeCoordinator,
+        RuntimeEngine,
         "_validate_broker_environment",
         lambda self, context, settings=None: None,
     )
 
-    coordinator = RuntimeCoordinator(base_context)
+    coordinator = RuntimeEngine(base_context)
     with pytest.raises(BrokerBootstrapError):
         coordinator._init_broker(base_context)
 
 
 def test_apply_broker_bootstrap_populates_registry(base_context: CoordinatorContext) -> None:
-    coordinator = RuntimeCoordinator(base_context)
+    coordinator = RuntimeEngine(base_context)
     artifacts = BrokerBootstrapArtifacts(
         broker=Mock(),
         registry_updates={"market_data_service": Mock()},
@@ -143,7 +143,7 @@ def test_apply_broker_bootstrap_populates_registry(base_context: CoordinatorCont
 def test_validate_broker_environment_checks_settings(
     base_context: CoordinatorContext,
 ) -> None:
-    coordinator = RuntimeCoordinator(base_context)
+    coordinator = RuntimeEngine(base_context)
     settings = SimpleNamespace(
         broker_hint="other",
         coinbase_sandbox_enabled=False,
@@ -159,7 +159,7 @@ def test_validate_broker_environment_checks_settings(
         coordinator._validate_broker_environment(base_context, settings)
 
 
-def test_set_reduce_only_mode_updates_controller(coordinator: RuntimeCoordinator) -> None:
+def test_set_reduce_only_mode_updates_controller(coordinator: RuntimeEngine) -> None:
     coordinator.context.config_controller.set_reduce_only_mode.return_value = True
 
     coordinator.set_reduce_only_mode(True, "test")
@@ -169,7 +169,7 @@ def test_set_reduce_only_mode_updates_controller(coordinator: RuntimeCoordinator
     )
 
 
-def test_is_reduce_only_mode_uses_controller(coordinator: RuntimeCoordinator) -> None:
+def test_is_reduce_only_mode_uses_controller(coordinator: RuntimeEngine) -> None:
     coordinator.context.config_controller.is_reduce_only_mode.return_value = True
 
     assert coordinator.is_reduce_only_mode() is True
@@ -177,7 +177,7 @@ def test_is_reduce_only_mode_uses_controller(coordinator: RuntimeCoordinator) ->
 
 @pytest.mark.asyncio
 async def test_reconcile_state_on_startup_handles_missing_broker(
-    coordinator: RuntimeCoordinator,
+    coordinator: RuntimeEngine,
 ) -> None:
     context = coordinator.context.with_updates(broker=None, registry=coordinator.context.registry)
     coordinator.update_context(context)
@@ -189,7 +189,7 @@ async def test_reconcile_state_on_startup_handles_missing_broker(
 
 @pytest.mark.asyncio
 async def test_reconcile_state_on_startup_runs_reconciler(
-    coordinator: RuntimeCoordinator, monkeypatch: pytest.MonkeyPatch
+    coordinator: RuntimeEngine, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     broker = Mock()
     orders_store = Mock()
@@ -225,7 +225,7 @@ async def test_reconcile_state_on_startup_runs_reconciler(
 
 
 def test_on_risk_state_change_emits_metrics(
-    coordinator: RuntimeCoordinator, monkeypatch: pytest.MonkeyPatch
+    coordinator: RuntimeEngine, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     state = RiskRuntimeState(reduce_only_mode=True, last_reduce_only_reason="risk")
     emit_metric = Mock()
@@ -237,11 +237,11 @@ def test_on_risk_state_change_emits_metrics(
     emit_metric.assert_called_once()
 
 
-class TestRuntimeCoordinatorStateTransitions:
+class TestRuntimeEngineStateTransitions:
     """Test runtime state transitions and safety toggles."""
 
     def test_set_reduce_only_mode_calls_controller(
-        self, coordinator: RuntimeCoordinator, base_context: CoordinatorContext
+        self, coordinator: RuntimeEngine, base_context: CoordinatorContext
     ) -> None:
         """Test set_reduce_only_mode calls config controller."""
         base_context.config_controller.set_reduce_only_mode = Mock(return_value=True)
@@ -254,7 +254,7 @@ class TestRuntimeCoordinatorStateTransitions:
 
     def test_set_reduce_only_mode_emits_metric_on_success(
         self,
-        coordinator: RuntimeCoordinator,
+        coordinator: RuntimeEngine,
         base_context: CoordinatorContext,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
@@ -268,7 +268,7 @@ class TestRuntimeCoordinatorStateTransitions:
         emit_metric.assert_called_once()
 
     def test_is_reduce_only_mode_delegates_to_controller(
-        self, coordinator: RuntimeCoordinator, base_context: CoordinatorContext
+        self, coordinator: RuntimeEngine, base_context: CoordinatorContext
     ) -> None:
         """Test is_reduce_only_mode delegates to config controller."""
         base_context.config_controller.is_reduce_only_mode = Mock(return_value=True)
@@ -281,7 +281,7 @@ class TestRuntimeCoordinatorStateTransitions:
         )
 
     def test_on_risk_state_change_handles_reduce_only_toggle(
-        self, coordinator: RuntimeCoordinator, base_context: CoordinatorContext
+        self, coordinator: RuntimeEngine, base_context: CoordinatorContext
     ) -> None:
         """Test on_risk_state_change handles reduce-only mode changes."""
         base_context.config_controller.apply_risk_update = Mock(return_value=True)
@@ -294,7 +294,7 @@ class TestRuntimeCoordinatorStateTransitions:
 
     def test_on_risk_state_change_emits_metric_on_toggle(
         self,
-        coordinator: RuntimeCoordinator,
+        coordinator: RuntimeEngine,
         base_context: CoordinatorContext,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
@@ -310,11 +310,11 @@ class TestRuntimeCoordinatorStateTransitions:
         emit_metric.assert_called_once()
 
 
-class TestRuntimeCoordinatorBootstrapFailures:
+class TestRuntimeEngineBootstrapFailures:
     """Test bootstrap failure handling and error recovery."""
 
     def test_init_broker_handles_missing_dependencies(
-        self, coordinator: RuntimeCoordinator, base_context: CoordinatorContext
+        self, coordinator: RuntimeEngine, base_context: CoordinatorContext
     ) -> None:
         """Test _init_broker handles missing broker or risk manager."""
         # Mock the _build_real_broker method to avoid validation
@@ -339,7 +339,7 @@ class TestRuntimeCoordinatorBootstrapFailures:
 
     def test_init_risk_manager_handles_missing_config(
         self,
-        coordinator: RuntimeCoordinator,
+        coordinator: RuntimeEngine,
         base_context: CoordinatorContext,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
@@ -359,7 +359,7 @@ class TestRuntimeCoordinatorBootstrapFailures:
         assert result.risk_manager is not None
 
     def test_validate_broker_environment_blocks_invalid_broker_hint(
-        self, coordinator: RuntimeCoordinator, base_context: CoordinatorContext
+        self, coordinator: RuntimeEngine, base_context: CoordinatorContext
     ) -> None:
         """Test _validate_broker_environment blocks invalid broker hints."""
         settings = SimpleNamespace(broker_hint="invalid_broker")
@@ -402,7 +402,7 @@ class TestRuntimeCoordinatorBootstrapFailures:
             coordinator._validate_broker_environment(base_context, settings)
 
     def test_validate_broker_environment_blocks_sandbox_for_live_trading(
-        self, coordinator: RuntimeCoordinator, base_context: CoordinatorContext
+        self, coordinator: RuntimeEngine, base_context: CoordinatorContext
     ) -> None:
         """Test _validate_broker_environment blocks sandbox for live trading."""
         settings = SimpleNamespace(broker_hint="coinbase", coinbase_sandbox_enabled=True)
@@ -445,7 +445,7 @@ class TestRuntimeCoordinatorBootstrapFailures:
             coordinator._validate_broker_environment(base_context, settings)
 
     def test_validate_broker_environment_requires_cdp_for_derivatives(
-        self, coordinator: RuntimeCoordinator, base_context: CoordinatorContext
+        self, coordinator: RuntimeEngine, base_context: CoordinatorContext
     ) -> None:
         """Test _validate_broker_environment requires CDP credentials for derivatives."""
         settings = SimpleNamespace(
@@ -493,7 +493,7 @@ class TestRuntimeCoordinatorBootstrapFailures:
             coordinator._validate_broker_environment(base_context, settings)
 
     def test_validate_broker_environment_blocks_perps_without_derivatives_enabled(
-        self, coordinator: RuntimeCoordinator, base_context: CoordinatorContext
+        self, coordinator: RuntimeEngine, base_context: CoordinatorContext
     ) -> None:
         """Test _validate_broker_environment blocks perps symbols when derivatives disabled."""
         settings = SimpleNamespace(
@@ -544,12 +544,12 @@ class TestRuntimeCoordinatorBootstrapFailures:
             coordinator._validate_broker_environment(base_context, settings)
 
 
-class TestRuntimeCoordinatorReconciliation:
+class TestRuntimeEngineReconciliation:
     """Test state reconciliation and startup flows."""
 
     @pytest.mark.asyncio
     async def test_reconcile_state_on_startup_skips_dry_run(
-        self, coordinator: RuntimeCoordinator, base_context: CoordinatorContext
+        self, coordinator: RuntimeEngine, base_context: CoordinatorContext
     ) -> None:
         """Test reconcile_state_on_startup skips in dry run mode."""
         base_context.config.dry_run = True
@@ -561,7 +561,7 @@ class TestRuntimeCoordinatorReconciliation:
 
     @pytest.mark.asyncio
     async def test_reconcile_state_on_startup_skips_when_skip_flag_set(
-        self, coordinator: RuntimeCoordinator, base_context: CoordinatorContext
+        self, coordinator: RuntimeEngine, base_context: CoordinatorContext
     ) -> None:
         """Test reconcile_state_on_startup skips when skip flag is set."""
         base_context.config.perps_skip_startup_reconcile = True
@@ -574,7 +574,7 @@ class TestRuntimeCoordinatorReconciliation:
     @pytest.mark.asyncio
     async def test_reconcile_state_on_startup_handles_reconciler_errors(
         self,
-        coordinator: RuntimeCoordinator,
+        coordinator: RuntimeEngine,
         base_context: CoordinatorContext,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
@@ -606,7 +606,7 @@ class TestRuntimeCoordinatorReconciliation:
     @pytest.mark.asyncio
     async def test_reconcile_state_on_startup_emits_error_event_on_failure(
         self,
-        coordinator: RuntimeCoordinator,
+        coordinator: RuntimeEngine,
         base_context: CoordinatorContext,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
@@ -636,11 +636,11 @@ class TestRuntimeCoordinatorReconciliation:
         await coordinator.reconcile_state_on_startup()
 
 
-class TestRuntimeCoordinatorInitialization:
+class TestRuntimeEngineInitialization:
     """Test initialization and bootstrap flows."""
 
     def test_initialize_calls_broker_and_risk_init(
-        self, coordinator: RuntimeCoordinator, base_context: CoordinatorContext
+        self, coordinator: RuntimeEngine, base_context: CoordinatorContext
     ) -> None:
         """Test initialize calls both broker and risk manager initialization."""
         # Mock the init methods
@@ -654,7 +654,7 @@ class TestRuntimeCoordinatorInitialization:
         assert result == base_context
 
     def test_bootstrap_delegates_to_initialize(
-        self, coordinator: RuntimeCoordinator, base_context: CoordinatorContext
+        self, coordinator: RuntimeEngine, base_context: CoordinatorContext
     ) -> None:
         """Test bootstrap delegates to initialize (legacy compatibility)."""
         coordinator.initialize = Mock(return_value=base_context)
@@ -664,7 +664,7 @@ class TestRuntimeCoordinatorInitialization:
         coordinator.initialize.assert_called_once_with(base_context)
 
     def test_update_context_updates_internals(
-        self, coordinator: RuntimeCoordinator, base_context: CoordinatorContext
+        self, coordinator: RuntimeEngine, base_context: CoordinatorContext
     ) -> None:
         """Test update_context updates internal references."""
         new_context = base_context.with_updates(
@@ -682,11 +682,11 @@ class TestRuntimeCoordinatorInitialization:
         assert coordinator._product_cache == new_context.product_cache
 
 
-class TestRuntimeCoordinatorBrokerBootstrap:
+class TestRuntimeEngineBrokerBootstrap:
     """Test broker bootstrap artifacts and context updates."""
 
     def test_apply_broker_bootstrap_updates_context(
-        self, coordinator: RuntimeCoordinator, base_context: CoordinatorContext
+        self, coordinator: RuntimeEngine, base_context: CoordinatorContext
     ) -> None:
         """Test _apply_broker_bootstrap updates context with artifacts."""
         artifacts = BrokerBootstrapArtifacts(
@@ -703,7 +703,7 @@ class TestRuntimeCoordinatorBrokerBootstrap:
         assert "BTC-PERP" in result.product_cache
 
     def test_hydrate_product_cache_handles_empty_products(
-        self, coordinator: RuntimeCoordinator
+        self, coordinator: RuntimeEngine
     ) -> None:
         """Test _hydrate_product_cache handles empty product list."""
         coordinator._hydrate_product_cache([])
@@ -713,7 +713,7 @@ class TestRuntimeCoordinatorBrokerBootstrap:
 
     def test_hydrate_product_cache_creates_cache_when_needed(
         self,
-        coordinator: RuntimeCoordinator,
+        coordinator: RuntimeEngine,
     ) -> None:
         """Test _hydrate_product_cache creates cache dict when needed."""
         products = [SimpleNamespace(symbol="BTC-PERP"), SimpleNamespace(symbol="ETH-PERP")]
@@ -725,11 +725,11 @@ class TestRuntimeCoordinatorBrokerBootstrap:
         assert "ETH-PERP" in coordinator._product_cache
 
 
-class TestRuntimeCoordinatorProperties:
+class TestRuntimeEngineProperties:
     """Test property accessors and factory methods."""
 
     def test_deterministic_broker_cls_returns_correct_type(
-        self, coordinator: RuntimeCoordinator
+        self, coordinator: RuntimeEngine
     ) -> None:
         """Test _deterministic_broker_cls returns DeterministicBroker type."""
         from bot_v2.orchestration.deterministic_broker import DeterministicBroker
@@ -737,14 +737,14 @@ class TestRuntimeCoordinatorProperties:
         cls = coordinator._deterministic_broker_cls
         assert cls == DeterministicBroker
 
-    def test_risk_config_cls_returns_correct_type(self, coordinator: RuntimeCoordinator) -> None:
+    def test_risk_config_cls_returns_correct_type(self, coordinator: RuntimeEngine) -> None:
         """Test _risk_config_cls returns RiskConfig type."""
         from bot_v2.config.live_trade_config import RiskConfig
 
         cls = coordinator._risk_config_cls
         assert cls == RiskConfig
 
-    def test_risk_manager_cls_returns_correct_type(self, coordinator: RuntimeCoordinator) -> None:
+    def test_risk_manager_cls_returns_correct_type(self, coordinator: RuntimeEngine) -> None:
         """Test _risk_manager_cls returns LiveRiskManager type."""
         from bot_v2.features.live_trade.risk import LiveRiskManager
 
@@ -752,7 +752,7 @@ class TestRuntimeCoordinatorProperties:
         assert cls == LiveRiskManager
 
     def test_order_reconciler_cls_returns_correct_type(
-        self, coordinator: RuntimeCoordinator
+        self, coordinator: RuntimeEngine
     ) -> None:
         """Test _order_reconciler_cls returns OrderReconciler type."""
         from bot_v2.orchestration.order_reconciler import OrderReconciler

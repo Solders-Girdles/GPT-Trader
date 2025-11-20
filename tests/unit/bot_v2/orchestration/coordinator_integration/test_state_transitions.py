@@ -21,7 +21,7 @@ class TestStateTransitionIntegration:
         runtime_coord.set_reduce_only_mode(True, "test_transition")
 
         # In new architecture, check if risk manager or config controller updated
-        # as RuntimeCoordinator doesn't expose is_reduce_only_mode directly
+        # as RuntimeEngine doesn't expose is_reduce_only_mode directly
 
         # Verify call to config controller/risk manager
         # If unified state manager exists, check it

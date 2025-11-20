@@ -4,10 +4,13 @@ import asyncio
 import threading
 from typing import Any, Tuple
 
+from bot_v2.monitoring.system import get_logger as _get_plog
+from bot_v2.orchestration.account_telemetry import AccountTelemetryService
 from bot_v2.orchestration.market_monitor import MarketActivityMonitor
 from bot_v2.utilities.logging_patterns import get_logger
+from bot_v2.utilities.telemetry import emit_metric
 
-from .base import BaseCoordinator, CoordinatorContext
+from .base import BaseEngine, CoordinatorContext
 from .telemetry_background import start_background_tasks as _start_background_tasks
 from .telemetry_health import (
     extract_mark_from_message as _extract_mark_from_message_impl,
@@ -34,25 +37,25 @@ from .telemetry_streaming import (
     stop_streaming_background as _stop_streaming_background_impl,
 )
 
-logger = get_logger(__name__, component="telemetry_coordinator")
+logger = get_logger(__name__, component="telemetry_engine")
 
 
 def _resolve_initialize_target(
     target: Any, context: CoordinatorContext | None
-) -> Tuple["TelemetryCoordinator", CoordinatorContext]:
+) -> Tuple["TelemetryEngine", CoordinatorContext]:
     if isinstance(target, type):
         if context is None:
             raise ValueError("Context must be provided when calling initialize on the class")
         instance = target(context)
         return instance, context
     if isinstance(target, CoordinatorContext):
-        instance = TelemetryCoordinator(target)
+        instance = TelemetryEngine(target)
         return instance, target
-    coordinator: TelemetryCoordinator = target  # type: ignore[assignment]
+    coordinator: TelemetryEngine = target  # type: ignore[assignment]
     return coordinator, context or coordinator.context
 
 
-class TelemetryCoordinator(BaseCoordinator):
+class TelemetryEngine(BaseEngine):
     """Manages account telemetry services and market streaming for the bot."""
 
     def __init__(self, context: CoordinatorContext) -> None:
@@ -75,10 +78,10 @@ class TelemetryCoordinator(BaseCoordinator):
             instance = self(context)
             return instance.initialize(context)
         if isinstance(self, CoordinatorContext):
-            instance = TelemetryCoordinator(self)
+            instance = TelemetryEngine(self)
             return instance.initialize(self)
 
-        coordinator: TelemetryCoordinator = self  # type: ignore[assignment]
+        coordinator: TelemetryEngine = self  # type: ignore[assignment]
         if context is None and not hasattr(coordinator, "context"):
             return None
         ctx = context or coordinator.context
@@ -100,7 +103,7 @@ class TelemetryCoordinator(BaseCoordinator):
         return await _start_background_tasks(self)
 
     async def shutdown(self) -> None:
-        logger.info("Shutting down telemetry coordinator...")
+        logger.info("Shutting down telemetry engine...")
         await self._stop_streaming()
         await super().shutdown()
 
@@ -117,4 +120,4 @@ class TelemetryCoordinator(BaseCoordinator):
     _update_mark_and_metrics = _update_mark_and_metrics_impl
 
 
-__all__ = ["TelemetryCoordinator"]
+__all__ = ["TelemetryEngine"]

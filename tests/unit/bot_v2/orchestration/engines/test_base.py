@@ -6,7 +6,7 @@ from types import SimpleNamespace
 import pytest
 
 from bot_v2.orchestration.engines.base import (
-    BaseCoordinator,
+    BaseEngine,
     CoordinatorContext,
 )
 
@@ -34,7 +34,7 @@ def test_coordinator_context_with_updates() -> None:
     assert updated.symbols == context.symbols
 
 
-class DummyCoordinator(BaseCoordinator):
+class DummyCoordinator(BaseEngine):
     @property
     def name(self) -> str:  # pragma: no cover - trivial delegation
         return "dummy"
@@ -60,7 +60,7 @@ async def test_base_coordinator_defaults() -> None:
     assert coordinator.health_check().details["shutdown_complete"] is True
 
 
-class BackgroundTaskCoordinator(BaseCoordinator):
+class BackgroundTaskCoordinator(BaseEngine):
     @property
     def name(self) -> str:
         return "background"

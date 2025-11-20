@@ -67,9 +67,9 @@ class TestErrorHandlingIntegration:
         self, coordinators, integration_context
     ):
         # This test depends on the legacy mixin `reconcile_state_on_startup`.
-        # The new RuntimeCoordinator does not expose this method directly on itself
+        # The new RuntimeEngine does not expose this method directly on itself
         # but uses OrderReconciliationService or delegates to startup routines.
-        # However, RuntimeCoordinator in new arch is focused on Broker/Risk setup.
+        # However, RuntimeEngine in new arch is focused on Broker/Risk setup.
         # ExecutionEngine has the OrderReconciliationService.
 
         # If we want to test reconciliation failures triggering reduce-only,

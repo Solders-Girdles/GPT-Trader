@@ -17,7 +17,7 @@ import pytest
 
 from bot_v2.features.brokerages.coinbase.adapter import CoinbaseBrokerage
 from bot_v2.orchestration.configuration import Profile
-from bot_v2.orchestration.engines.telemetry_coordinator import TelemetryCoordinator
+from bot_v2.orchestration.engines.telemetry_coordinator import TelemetryEngine
 
 
 class TestAsyncCoroutineScheduling:
@@ -28,7 +28,7 @@ class TestAsyncCoroutineScheduling:
         broker = Mock(spec=CoinbaseBrokerage)
         broker.__class__ = CoinbaseBrokerage
         context = make_context(broker=broker)
-        coordinator = TelemetryCoordinator(context)
+        coordinator = TelemetryEngine(context)
         coordinator.initialize(context)
 
         # Mock the event loop to be running
@@ -56,7 +56,7 @@ class TestAsyncCoroutineScheduling:
         broker = Mock(spec=CoinbaseBrokerage)
         broker.__class__ = CoinbaseBrokerage
         context = make_context(broker=broker)
-        coordinator = TelemetryCoordinator(context)
+        coordinator = TelemetryEngine(context)
         coordinator.initialize(context)
 
         # Mock get_running_loop to raise RuntimeError
@@ -91,7 +91,7 @@ class TestAsyncCoroutineScheduling:
         broker = Mock(spec=CoinbaseBrokerage)
         broker.__class__ = CoinbaseBrokerage
         context = make_context(broker=broker)
-        coordinator = TelemetryCoordinator(context)
+        coordinator = TelemetryEngine(context)
         coordinator.initialize(context)
 
         # Create mock loop task handle
@@ -126,7 +126,7 @@ class TestAsyncCoroutineScheduling:
         broker = Mock(spec=CoinbaseBrokerage)
         broker.__class__ = CoinbaseBrokerage
         context = make_context(broker=broker)
-        coordinator = TelemetryCoordinator(context)
+        coordinator = TelemetryEngine(context)
         coordinator.initialize(context)
 
         # Create mock loop task handle that raises exception
@@ -167,7 +167,7 @@ class TestAsyncCoroutineScheduling:
         broker = Mock(spec=CoinbaseBrokerage)
         broker.__class__ = CoinbaseBrokerage
         context = make_context(broker=broker)
-        coordinator = TelemetryCoordinator(context)
+        coordinator = TelemetryEngine(context)
         coordinator.initialize(context)
 
         # Mock the event loop to be available but not running
@@ -195,7 +195,7 @@ class TestAsyncCoroutineScheduling:
         broker = Mock(spec=CoinbaseBrokerage)
         broker.__class__ = CoinbaseBrokerage
         context = make_context(broker=broker)
-        coordinator = TelemetryCoordinator(context)
+        coordinator = TelemetryEngine(context)
         coordinator.initialize(context)
 
         # Mock get_running_loop to raise RuntimeError (which is the expected exception)
@@ -238,7 +238,7 @@ class TestAsyncCoroutineScheduling:
         )
         context = context.with_updates(config=updated_config)
 
-        coordinator = TelemetryCoordinator(context)
+        coordinator = TelemetryEngine(context)
         coordinator.initialize(context)
 
         # Mock _schedule_coroutine to track calls
@@ -257,7 +257,7 @@ class TestAsyncCoroutineScheduling:
         broker = Mock(spec=CoinbaseBrokerage)
         broker.__class__ = CoinbaseBrokerage
         context = make_context(broker=broker)
-        coordinator = TelemetryCoordinator(context)
+        coordinator = TelemetryEngine(context)
         coordinator.initialize(context)
 
         # Mock _schedule_coroutine to track calls
@@ -277,15 +277,15 @@ class TestAsyncCoroutineScheduling:
         broker = Mock(spec=CoinbaseBrokerage)
         broker.__class__ = CoinbaseBrokerage
         context = make_context(broker=broker)
-        coordinator = TelemetryCoordinator(context)
+        coordinator = TelemetryEngine(context)
         coordinator.initialize(context)
 
         # In new architecture, run_account_telemetry delegates to account_telemetry service.
         # We need to check if coordinator.account_telemetry.run() is called
         # or if coordinator._run_account_telemetry is internal.
 
-        # If using the mixin-based TelemetryCoordinator, it has _run_account_telemetry.
-        # But if using Service-based (which TelemetryCoordinator likely is or uses),
+        # If using the mixin-based TelemetryEngine, it has _run_account_telemetry.
+        # But if using Service-based (which TelemetryEngine likely is or uses),
         # check implementation.
 
         # The test failure showed assert_called_once_with failure (Called 0 times).

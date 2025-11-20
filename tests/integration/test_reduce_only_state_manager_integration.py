@@ -8,7 +8,7 @@ import pytest
 
 from bot_v2.orchestration.config_controller import ConfigController
 from bot_v2.orchestration.configuration import BotConfig
-from bot_v2.orchestration.coordinators.runtime import RuntimeCoordinator
+from bot_v2.orchestration.engines.runtime import RuntimeEngine
 from bot_v2.orchestration.service_registry import ServiceRegistry
 from bot_v2.orchestration.state.unified_state import (
     ReduceOnlyModeSource,
@@ -56,7 +56,7 @@ class TestReduceOnlyStateManagerIntegration:
         assert audit_log[0].reason == "test"
 
     def test_state_manager_with_runtime_coordinator(self) -> None:
-        """Test StateManager integration with RuntimeCoordinator."""
+        """Test StateManager integration with RuntimeEngine."""
         event_store = EventStore()
         state_manager = create_reduce_only_state_manager(
             event_store=event_store,
@@ -71,7 +71,7 @@ class TestReduceOnlyStateManagerIntegration:
         )
 
         # Create a mock coordinator context
-        from bot_v2.orchestration.coordinators.base import CoordinatorContext
+        from bot_v2.orchestration.engines.base import CoordinatorContext
 
         context = CoordinatorContext(
             config=config,
@@ -81,7 +81,7 @@ class TestReduceOnlyStateManagerIntegration:
             bot_id="test",
         )
 
-        runtime_coordinator = RuntimeCoordinator(
+        runtime_coordinator = RuntimeEngine(
             context,
             config_controller=None,
         )
@@ -124,7 +124,7 @@ class TestReduceOnlyStateManagerIntegration:
             reduce_only_state_manager=state_manager,
         )
 
-        from bot_v2.orchestration.coordinators.base import CoordinatorContext
+        from bot_v2.orchestration.engines.base import CoordinatorContext
 
         context = CoordinatorContext(
             config=config,
@@ -134,7 +134,7 @@ class TestReduceOnlyStateManagerIntegration:
             bot_id="test",
         )
 
-        runtime_coordinator = RuntimeCoordinator(
+        runtime_coordinator = RuntimeEngine(
             context,
             config_controller=config_controller,
         )
@@ -274,7 +274,7 @@ class TestReduceOnlyStateManagerIntegration:
             initial_state=False,
         )
 
-        with patch("bot_v2.orchestration.state_manager.logger") as mock_logger:
+        with patch("bot_v2.orchestration.state.unified_state.logger") as mock_logger:
             # Change state with critical source
             state_manager.set_reduce_only_mode(
                 enabled=True,

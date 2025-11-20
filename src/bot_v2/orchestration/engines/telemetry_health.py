@@ -38,7 +38,7 @@ def extract_mark_from_message(msg: dict[str, Any]) -> Decimal | None:
 
 
 def update_mark_and_metrics(
-    coordinator: "TelemetryCoordinator",
+    coordinator: "TelemetryEngine",
     ctx: "CoordinatorContext",
     symbol: str,
     mark: Decimal,
@@ -125,7 +125,7 @@ def update_mark_and_metrics(
     )
 
 
-def health_check(coordinator: "TelemetryCoordinator"):
+def health_check(coordinator: "TelemetryEngine"):
     from bot_v2.orchestration.engines.base import HealthStatus
 
     raw_extras = getattr(coordinator.context.registry, "extras", {})

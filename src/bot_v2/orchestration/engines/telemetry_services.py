@@ -19,22 +19,32 @@ class NullAccountTelemetry:
         return False
 
 
-def ensure_account_telemetry_stub(coordinator: "TelemetryCoordinator") -> None:
+def ensure_account_telemetry_stub(coordinator: "TelemetryEngine") -> None:
     extras = getattr(coordinator.context.registry, "extras", None)
     if isinstance(extras, dict) and "account_telemetry" not in extras:
         extras["account_telemetry"] = NullAccountTelemetry()
 
 
 def initialize_services(
-    coordinator: "TelemetryCoordinator", ctx: "CoordinatorContext"
+    coordinator: "TelemetryEngine", ctx: "CoordinatorContext"
 ) -> "CoordinatorContext":
-    from bot_v2.features.brokerages.coinbase.adapter import CoinbaseBrokerage
-    from bot_v2.features.brokerages.coinbase.account_manager import CoinbaseAccountManager
-    from bot_v2.orchestration.intx_portfolio_service import IntxPortfolioService
-    from bot_v2.orchestration.account_telemetry import AccountTelemetryService
-    from bot_v2.orchestration.market_monitor import MarketActivityMonitor
-    # from bot_v2.orchestration.engines import telemetry as telemetry_module
-    # _patched_get_plog = telemetry_module._get_plog
+    try:
+        from bot_v2.features.brokerages.coinbase.adapter import CoinbaseBrokerage
+        from bot_v2.features.brokerages.coinbase.account_manager import CoinbaseAccountManager
+        from bot_v2.orchestration.intx_portfolio_service import IntxPortfolioService
+        from bot_v2.orchestration.account_telemetry import AccountTelemetryService
+        from bot_v2.orchestration.market_monitor import MarketActivityMonitor
+        from bot_v2.orchestration.engines import telemetry_coordinator as telemetry_module
+
+        _patched_get_plog = telemetry_module._get_plog
+    except ImportError as exc:
+        logger.warning(
+            "Failed to import required telemetry dependencies",
+            error=str(exc),
+            operation="telemetry_init",
+            stage="import_failed",
+        )
+        return ctx
 
     ensure_account_telemetry_stub(coordinator)
 
@@ -136,13 +146,13 @@ def initialize_services(
     return ctx.with_updates(registry=updated_registry)
 
 
-def init_market_services(coordinator: "TelemetryCoordinator") -> None:
+def init_market_services(coordinator: "TelemetryEngine") -> None:
     updated = initialize_services(coordinator, coordinator.context)
     coordinator.update_context(updated)
 
 
 async def run_account_telemetry(
-    coordinator: "TelemetryCoordinator", interval_seconds: int
+    coordinator: "TelemetryEngine", interval_seconds: int
 ) -> None:
     extras = getattr(coordinator.context.registry, "extras", {})
     account_telemetry = extras.get("account_telemetry") if isinstance(extras, dict) else None

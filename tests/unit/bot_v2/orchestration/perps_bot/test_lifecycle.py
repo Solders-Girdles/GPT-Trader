@@ -10,9 +10,9 @@ import pytest
 
 from bot_v2.orchestration.engines import (
     ExecutionEngine,
-    RuntimeCoordinator,
+    RuntimeEngine,
     TradingEngine,
-    TelemetryCoordinator,
+    TelemetryEngine,
 )
 from bot_v2.orchestration.perps_bot import PerpsBot
 
@@ -179,7 +179,7 @@ class TestCoordinatorSetup:
 
         # Check that we can get all coordinators
         assert bot.runtime_coordinator is not None
-        assert isinstance(bot.runtime_coordinator, RuntimeCoordinator)
+        assert isinstance(bot.runtime_coordinator, RuntimeEngine)
 
         assert bot.execution_coordinator is not None
         assert isinstance(bot.execution_coordinator, ExecutionEngine)
@@ -188,7 +188,7 @@ class TestCoordinatorSetup:
         assert isinstance(bot.strategy_coordinator, TradingEngine)
 
         assert bot.telemetry_coordinator is not None
-        assert isinstance(bot.telemetry_coordinator, TelemetryCoordinator)
+        assert isinstance(bot.telemetry_coordinator, TelemetryEngine)
 
     def test_coordinator_context_updates(self, perps_bot_instance):
         """Test coordinator context is properly updated after coordinator registration."""
@@ -221,7 +221,7 @@ class TestPropertyAccessors:
         """Test runtime_coordinator property returns correct coordinator."""
         bot = perps_bot_instance
         coordinator = bot.runtime_coordinator
-        assert isinstance(coordinator, RuntimeCoordinator)
+        assert isinstance(coordinator, RuntimeEngine)
 
     def test_execution_coordinator_property(self, perps_bot_instance):
         """Test execution_coordinator property returns correct coordinator."""
@@ -239,7 +239,7 @@ class TestPropertyAccessors:
         """Test telemetry_coordinator property returns correct coordinator."""
         bot = perps_bot_instance
         coordinator = bot.telemetry_coordinator
-        assert isinstance(coordinator, TelemetryCoordinator)
+        assert isinstance(coordinator, TelemetryEngine)
 
     def test_settings_property_with_registry_settings(
         self, perps_bot_instance, mock_runtime_settings

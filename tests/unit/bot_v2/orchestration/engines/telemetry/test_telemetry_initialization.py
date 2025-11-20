@@ -1,4 +1,4 @@
-"""Tests for TelemetryCoordinator initialization, broker integration, and health checks.
+"""Tests for TelemetryEngine initialization, broker integration, and health checks.
 
 This module tests:
 - Coordinator initialization with and without broker
@@ -14,13 +14,13 @@ from unittest.mock import Mock
 import pytest
 
 from bot_v2.features.brokerages.coinbase.adapter import CoinbaseBrokerage
-from bot_v2.orchestration.engines.telemetry_coordinator import TelemetryCoordinator
+from bot_v2.orchestration.engines.telemetry_coordinator import TelemetryEngine
 
 
 def test_initialize_without_broker(make_context) -> None:
     """Test initialization without a broker returns empty extras."""
     context = make_context(broker=None)
-    coordinator = TelemetryCoordinator(context)
+    coordinator = TelemetryEngine(context)
 
     updated = coordinator.initialize(context)
 
@@ -46,7 +46,7 @@ def test_initialize_with_broker(make_context) -> None:
     risk_manager = Mock()
     context = make_context(broker=broker, risk_manager=risk_manager)
 
-    coordinator = TelemetryCoordinator(context)
+    coordinator = TelemetryEngine(context)
     updated = coordinator.initialize(context)
 
     extras = updated.registry.extras
@@ -76,7 +76,7 @@ class TestDynamicImportAndInitialization:
 
         broker = Mock()
         context = make_context(broker=broker)
-        coordinator = TelemetryCoordinator(context)
+        coordinator = TelemetryEngine(context)
 
         updated = coordinator.initialize(context)
 
@@ -98,7 +98,7 @@ class TestDynamicImportAndInitialization:
         broker.__class__.__name__ = "OtherBrokerage"
 
         context = make_context(broker=broker)
-        coordinator = TelemetryCoordinator(context)
+        coordinator = TelemetryEngine(context)
 
         updated = coordinator.initialize(context)
 
@@ -115,7 +115,7 @@ class TestDynamicImportAndInitialization:
         broker.__class__ = CoinbaseBrokerage
 
         context = make_context(broker=broker)
-        coordinator = TelemetryCoordinator(context)
+        coordinator = TelemetryEngine(context)
 
         # Mock account telemetry to not support snapshots
         with pytest.MonkeyPatch().context() as m:
@@ -126,7 +126,7 @@ class TestDynamicImportAndInitialization:
                 return mock_telemetry
 
             m.setattr(
-                "bot_v2.orchestration.engines.telemetry.AccountTelemetryService",
+                "bot_v2.orchestration.engines.telemetry_coordinator.AccountTelemetryService",
                 mock_account_telemetry,
             )
 
@@ -145,7 +145,7 @@ class TestDynamicImportAndInitialization:
         broker.__class__ = CoinbaseBrokerage
 
         context = make_context(broker=broker)
-        coordinator = TelemetryCoordinator(context)
+        coordinator = TelemetryEngine(context)
 
         # Mock the plog to raise an exception
         with pytest.MonkeyPatch().context() as m:
@@ -155,7 +155,7 @@ class TestDynamicImportAndInitialization:
             def mock_get_plog():
                 return mock_plog
 
-            m.setattr("bot_v2.orchestration.engines.telemetry._get_plog", mock_get_plog)
+            m.setattr("bot_v2.orchestration.engines.telemetry_coordinator._get_plog", mock_get_plog)
 
             # Should not raise exception even when heartbeat logging fails
             updated = coordinator.initialize(context)
@@ -182,7 +182,7 @@ class TestMetricEmissionAndErrorHandling:
         broker.stream_trades.return_value = iter([{"price": "50001"}])
 
         context = make_context(broker=broker, symbols=("BTC-PERP",))
-        coordinator = TelemetryCoordinator(context)
+        coordinator = TelemetryEngine(context)
         coordinator.initialize(context)
 
         # Should fallback to trades when orderbook fails
@@ -198,7 +198,7 @@ class TestMetricEmissionAndErrorHandling:
         import threading
 
         context = make_context(broker=None)
-        coordinator = TelemetryCoordinator(context)
+        coordinator = TelemetryEngine(context)
         coordinator.initialize(context)
 
         # Should handle missing broker gracefully
@@ -213,7 +213,7 @@ class TestMetricEmissionAndErrorHandling:
         broker.__class__ = CoinbaseBrokerage
 
         context = make_context(broker=broker)
-        coordinator = TelemetryCoordinator(context)
+        coordinator = TelemetryEngine(context)
         coordinator.initialize(context)
 
         # Remove account telemetry from context to test missing case
@@ -223,7 +223,7 @@ class TestMetricEmissionAndErrorHandling:
         # Should handle missing account telemetry gracefully
         with pytest.MonkeyPatch().context() as m:
             mock_emit = Mock()
-            m.setattr("bot_v2.orchestration.engines.telemetry.emit_metric", mock_emit)
+            m.setattr("bot_v2.orchestration.engines.telemetry_coordinator.emit_metric", mock_emit)
 
             coordinator.run_account_telemetry()
 
@@ -236,7 +236,7 @@ class TestMetricEmissionAndErrorHandling:
         broker.__class__ = CoinbaseBrokerage
 
         context = make_context(broker=broker)
-        coordinator = TelemetryCoordinator(context)
+        coordinator = TelemetryEngine(context)
         coordinator.initialize(context)
 
         # Remove market monitor to test missing service
@@ -256,7 +256,7 @@ class TestMetricEmissionAndErrorHandling:
         broker.__class__ = CoinbaseBrokerage
 
         context = make_context(broker=broker)
-        coordinator = TelemetryCoordinator(context)
+        coordinator = TelemetryEngine(context)
         coordinator.initialize(context)
 
         # Mock emit_metric to raise exception
@@ -265,7 +265,7 @@ class TestMetricEmissionAndErrorHandling:
             def mock_emit_error(*args, **kwargs):
                 raise Exception("Emission failed")
 
-            m.setattr("bot_v2.orchestration.engines.telemetry.emit_metric", mock_emit_error)
+            m.setattr("bot_v2.orchestration.engines.telemetry_coordinator.emit_metric", mock_emit_error)
 
             # Should handle emission errors gracefully
             # This would be tested through methods that call emit_metric internally

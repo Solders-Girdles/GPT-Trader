@@ -1,4 +1,4 @@
-"""Tests for TelemetryCoordinator metric emission functionality."""
+"""Tests for TelemetryEngine metric emission functionality."""
 
 from __future__ import annotations
 
@@ -10,22 +10,22 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from bot_v2.config.types import Profile
-from bot_v2.orchestration.engines.telemetry import TelemetryCoordinator
+from bot_v2.orchestration.engines.telemetry_coordinator import TelemetryEngine
 
 
 class TestMetricEmission:
     """Test metric emission helpers and payload generation."""
 
     def test_initialize_creates_telemetry_coordinator_with_dependencies(self, fake_context) -> None:
-        """Test initialize method properly creates TelemetryCoordinator with required dependencies."""
+        """Test initialize method properly creates TelemetryEngine with required dependencies."""
         # Initialize with real broker mock
         with patch(
-            "bot_v2.orchestration.engines.telemetry.CoinbaseBrokerage"
+            "bot_v2.orchestration.engines.telemetry_coordinator.CoinbaseBrokerage"
         ) as mock_broker_class:
             mock_broker = MagicMock()
             mock_broker_class.return_value = mock_broker
 
-            result = TelemetryCoordinator.initialize(fake_context)
+            result = TelemetryEngine.initialize(fake_context)
 
             # Verify registry updated with new services
             assert "account_manager" in result.registry.extras
@@ -40,7 +40,7 @@ class TestMetricEmission:
         """Test initialize returns unchanged context when context is None."""
         fake_context = None
 
-        result = TelemetryCoordinator.initialize(fake_context)
+        result = TelemetryEngine.initialize(fake_context)
 
         assert result is None
 
@@ -180,7 +180,7 @@ class TestMetricEmission:
                 telemetry_coordinator, "_stop_streaming", new_callable=AsyncMock
             ) as mock_stop,
             patch(
-                "bot_v2.orchestration.engines.base_coordinator.BaseCoordinator.shutdown",
+                "bot_v2.orchestration.engines.base_coordinator.BaseEngine.shutdown",
                 new_callable=AsyncMock,
             ) as mock_super_shutdown,
         ):
@@ -251,7 +251,7 @@ class TestMetricEmission:
             mock_loop.create_task.return_value = MagicMock()
 
             # Set log level to capture warnings
-            caplog.set_level("WARNING", logger="bot_v2.orchestration.engines.telemetry")
+            caplog.set_level("WARNING", logger="bot_v2.orchestration.engines.telemetry_coordinator")
 
             await telemetry_coordinator._start_streaming()
 
@@ -267,7 +267,7 @@ class TestMetricEmission:
 
         with patch("asyncio.get_running_loop", side_effect=RuntimeError("No running loop")):
             # Set log level to capture debug
-            caplog.set_level("DEBUG", logger="bot_v2.orchestration.engines.telemetry")
+            caplog.set_level("DEBUG", logger="bot_v2.orchestration.engines.telemetry_coordinator")
 
             result = await telemetry_coordinator._start_streaming()
 
@@ -299,7 +299,7 @@ class TestMetricEmission:
         mock_task.result.side_effect = asyncio.CancelledError()
 
         # Set log level to capture info
-        caplog.set_level("INFO", logger="bot_v2.orchestration.engines.telemetry")
+        caplog.set_level("INFO", logger="bot_v2.orchestration.engines.telemetry_coordinator")
 
         telemetry_coordinator._handle_stream_task_completion(mock_task)
 
@@ -317,7 +317,7 @@ class TestMetricEmission:
         mock_task.result.side_effect = test_error
 
         # Set log level to capture exceptions
-        caplog.set_level("ERROR", logger="bot_v2.orchestration.engines.telemetry")
+        caplog.set_level("ERROR", logger="bot_v2.orchestration.engines.telemetry_coordinator")
 
         telemetry_coordinator._handle_stream_task_completion(mock_task)
 
@@ -331,7 +331,7 @@ class TestMetricEmission:
         """Test _extract_mark_from_message calculates mark from bid and ask."""
         msg = {"best_bid": "50000", "best_ask": "50100"}
 
-        result = TelemetryCoordinator._extract_mark_from_message(msg)
+        result = TelemetryEngine._extract_mark_from_message(msg)
 
         assert result == Decimal("50050")
 
@@ -339,7 +339,7 @@ class TestMetricEmission:
         """Test _extract_mark_from_message extracts mark from last price."""
         msg = {"last": "50075"}
 
-        result = TelemetryCoordinator._extract_mark_from_message(msg)
+        result = TelemetryEngine._extract_mark_from_message(msg)
 
         assert result == Decimal("50075")
 
@@ -347,7 +347,7 @@ class TestMetricEmission:
         """Test _extract_mark_from_message extracts mark from price field."""
         msg = {"price": "50025"}
 
-        result = TelemetryCoordinator._extract_mark_from_message(msg)
+        result = TelemetryEngine._extract_mark_from_message(msg)
 
         assert result == Decimal("50025")
 
@@ -356,7 +356,7 @@ class TestMetricEmission:
         # Test with negative price
         msg = {"best_bid": "-100", "best_ask": "100"}
 
-        result = TelemetryCoordinator._extract_mark_from_message(msg)
+        result = TelemetryEngine._extract_mark_from_message(msg)
 
         assert result is None
 
@@ -364,7 +364,7 @@ class TestMetricEmission:
         """Test _extract_mark_from_message returns None for non-numeric data."""
         msg = {"best_bid": "invalid", "best_ask": "50100"}
 
-        result = TelemetryCoordinator._extract_mark_from_message(msg)
+        result = TelemetryEngine._extract_mark_from_message(msg)
 
         assert result is None
 

@@ -18,7 +18,7 @@ import pytest
 
 from bot_v2.features.brokerages.coinbase.adapter import CoinbaseBrokerage
 from bot_v2.orchestration.configuration import Profile
-from bot_v2.orchestration.engines.telemetry_coordinator import TelemetryCoordinator
+from bot_v2.orchestration.engines.telemetry_coordinator import TelemetryEngine
 
 
 class TestStreamingRestartLifecycle:
@@ -31,7 +31,7 @@ class TestStreamingRestartLifecycle:
         broker = Mock(spec=CoinbaseBrokerage)
         broker.__class__ = CoinbaseBrokerage
         context = make_context(broker=broker)
-        coordinator = TelemetryCoordinator(context)
+        coordinator = TelemetryEngine(context)
         coordinator.initialize(context)
 
         # Mock the streaming methods to track if they're called
@@ -60,7 +60,7 @@ class TestStreamingRestartLifecycle:
         broker = Mock(spec=CoinbaseBrokerage)
         broker.__class__ = CoinbaseBrokerage
         context = make_context(broker=broker)
-        coordinator = TelemetryCoordinator(context)
+        coordinator = TelemetryEngine(context)
         coordinator.initialize(context)
 
         # Mock the streaming methods
@@ -87,7 +87,7 @@ class TestStreamingRestartLifecycle:
         broker = Mock(spec=CoinbaseBrokerage)
         broker.__class__ = CoinbaseBrokerage
         context = make_context(broker=broker)
-        coordinator = TelemetryCoordinator(context)
+        coordinator = TelemetryEngine(context)
         coordinator.initialize(context)
 
         # Mock the streaming methods
@@ -123,7 +123,7 @@ class TestStreamingRestartLifecycle:
         )
         context = context.with_updates(config=updated_config)
 
-        coordinator = TelemetryCoordinator(context)
+        coordinator = TelemetryEngine(context)
         coordinator.initialize(context)
 
         # Mock streaming methods
@@ -154,7 +154,7 @@ class TestStreamingRestartLifecycle:
         updated_config = context.config.model_copy(update={"perps_enable_streaming": False})
         context = context.with_updates(config=updated_config)
 
-        coordinator = TelemetryCoordinator(context)
+        coordinator = TelemetryEngine(context)
         coordinator.initialize(context)
 
         # Mock streaming methods
@@ -185,7 +185,7 @@ class TestStreamingRestartLifecycle:
         )
         context = context.with_updates(config=updated_config)
 
-        coordinator = TelemetryCoordinator(context)
+        coordinator = TelemetryEngine(context)
         coordinator.initialize(context)
 
         # Mock streaming to fail on stop
@@ -216,7 +216,7 @@ class TestStreamingRestartLifecycle:
         )
         context = context.with_updates(config=updated_config)
 
-        coordinator = TelemetryCoordinator(context)
+        coordinator = TelemetryEngine(context)
         coordinator.initialize(context)
 
         # Mock streaming to fail on start
@@ -239,7 +239,7 @@ class TestStreamingRestartLifecycle:
         broker = Mock(spec=CoinbaseBrokerage)
         broker.__class__ = CoinbaseBrokerage
         context = make_context(broker=broker)
-        coordinator = TelemetryCoordinator(context)
+        coordinator = TelemetryEngine(context)
         coordinator.initialize(context)
 
         # Mock the streaming methods
@@ -259,7 +259,7 @@ class TestStreamingRestartLifecycle:
         broker = Mock(spec=CoinbaseBrokerage)
         broker.__class__ = CoinbaseBrokerage
         context = make_context(broker=broker)
-        coordinator = TelemetryCoordinator(context)
+        coordinator = TelemetryEngine(context)
         coordinator.initialize(context)
 
         # Mock the streaming methods
@@ -279,7 +279,7 @@ class TestStreamingRestartLifecycle:
         broker = Mock(spec=CoinbaseBrokerage)
         broker.__class__ = CoinbaseBrokerage
         context = make_context(broker=broker)
-        coordinator = TelemetryCoordinator(context)
+        coordinator = TelemetryEngine(context)
         coordinator.initialize(context)
 
         # Mock the streaming methods
@@ -307,7 +307,7 @@ class TestStreamingRestartLifecycle:
         )
         context = context.with_updates(config=updated_config)
 
-        coordinator = TelemetryCoordinator(context)
+        coordinator = TelemetryEngine(context)
         coordinator.initialize(context)
 
         # Mock streaming methods

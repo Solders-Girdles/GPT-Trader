@@ -9,10 +9,10 @@ from unittest.mock import Mock
 
 import pytest
 
-from bot_v2.orchestration.state_manager import (
+from bot_v2.orchestration.state.unified_state import (
     ReduceOnlyModeSource,
     ReduceOnlyModeState,
-    ReduceOnlyModeStateManager,
+    SystemState as ReduceOnlyModeStateManager,
 )
 from bot_v2.persistence.event_store import EventStore
 

@@ -15,7 +15,7 @@ from bot_v2.features.brokerages.coinbase.account_manager import CoinbaseAccountM
 from bot_v2.features.brokerages.coinbase.adapter import CoinbaseBrokerage
 from bot_v2.orchestration.configuration import BotConfig, Profile
 from bot_v2.orchestration.engines.base import CoordinatorContext
-from bot_v2.orchestration.engines.telemetry import TelemetryCoordinator
+from bot_v2.orchestration.engines.telemetry_coordinator import TelemetryEngine
 from bot_v2.orchestration.perps_bot import PerpsBot
 from bot_v2.orchestration.perps_bot_builder import create_perps_bot
 from bot_v2.orchestration.perps_bot_state import PerpsBotRuntimeState
@@ -137,12 +137,12 @@ def telemetry_context():
 
 @pytest.fixture
 def telemetry_coordinator(telemetry_context):
-    """TelemetryCoordinator instance."""
-    return TelemetryCoordinator(telemetry_context)
+    """TelemetryEngine instance."""
+    return TelemetryEngine(telemetry_context)
 
 
-class TestTelemetryCoordinatorInitialization:
-    """Test TelemetryCoordinator initialization."""
+class TestTelemetryEngineInitialization:
+    """Test TelemetryEngine initialization."""
 
     def test_initialization_sets_context(self, telemetry_coordinator, telemetry_context):
         """Test coordinator initializes with context."""
@@ -185,7 +185,7 @@ class TestTelemetryCoordinatorInitialization:
         telemetry_coordinator.initialize.assert_called_once_with(telemetry_coordinator.context)
 
 
-class TestTelemetryCoordinatorStreaming:
+class TestTelemetryEngineStreaming:
     """Test streaming functionality and configuration."""
 
     def test_should_enable_streaming_returns_true_for_canary_prod(
@@ -302,7 +302,7 @@ class TestTelemetryCoordinatorStreaming:
                 self._stream_task = None
                 self._loop_task_handle = None
 
-            m.setattr(TelemetryCoordinator, "_stop_streaming", mock_stop_streaming)
+            m.setattr(TelemetryEngine, "_stop_streaming", mock_stop_streaming)
 
             await telemetry_coordinator._stop_streaming()
 
@@ -341,7 +341,7 @@ class TestTelemetryCoordinatorStreaming:
         assert telemetry_coordinator._ws_stop is None
 
 
-class TestTelemetryCoordinatorAccountTelemetry:
+class TestTelemetryEngineAccountTelemetry:
     """Test account telemetry functionality."""
 
     @pytest.mark.asyncio
@@ -410,7 +410,7 @@ class TestTelemetryCoordinatorAccountTelemetry:
         telemetry_coordinator._start_streaming.assert_called_once()
 
 
-class TestTelemetryCoordinatorMessageProcessing:
+class TestTelemetryEngineMessageProcessing:
     """Test WebSocket message processing and mark updates."""
 
     def test_extract_mark_from_message_handles_bid_ask(self, telemetry_coordinator):
@@ -491,7 +491,7 @@ class TestTelemetryCoordinatorMessageProcessing:
         """Test _update_mark_and_metrics emits telemetry event."""
         from unittest.mock import patch
 
-        with patch("bot_v2.orchestration.engines.telemetry.emit_metric") as mock_emit:
+        with patch("bot_v2.orchestration.engines.telemetry_coordinator.emit_metric") as mock_emit:
             telemetry_coordinator._update_mark_and_metrics(
                 telemetry_context, "BTC-PERP", Decimal("50000")
             )
@@ -504,7 +504,7 @@ class TestTelemetryCoordinatorMessageProcessing:
             assert call_args[1]["mark"] == "50000"
 
 
-class TestTelemetryCoordinatorBackgroundTasks:
+class TestTelemetryEngineBackgroundTasks:
     """Test background task management."""
 
     @pytest.mark.asyncio
@@ -517,7 +517,7 @@ class TestTelemetryCoordinatorBackgroundTasks:
         telemetry_coordinator._stop_streaming.assert_called_once()
 
 
-class TestTelemetryCoordinatorHealthCheck:
+class TestTelemetryEngineHealthCheck:
     """Test health check functionality."""
 
     def test_health_check_returns_unhealthy_without_account_telemetry(
@@ -554,7 +554,7 @@ class TestTelemetryCoordinatorHealthCheck:
         assert status.details["streaming_active"] is True
 
 
-class TestTelemetryCoordinatorLegacyMethods:
+class TestTelemetryEngineLegacyMethods:
     """Test legacy method compatibility."""
 
     def test_start_streaming_background_delegates_to_schedule(self, telemetry_coordinator):
@@ -574,7 +574,7 @@ class TestTelemetryCoordinatorLegacyMethods:
         telemetry_coordinator._schedule_coroutine.assert_called_once()
 
 
-class TestTelemetryCoordinatorAggregatorBatching:
+class TestTelemetryEngineAggregatorBatching:
     """Test telemetry aggregator batching scenarios."""
 
     def test_telemetry_batching_accumulates_events(self, telemetry_coordinator):

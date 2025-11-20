@@ -471,7 +471,12 @@ def create_reduce_only_state_manager(
     return manager
 
 
+# Alias for backward compatibility
+ReduceOnlyModeState = OriginalReduceOnlyModeState
+
 __all__ = [
+    "ReduceOnlyModeState",
+    "ReduceOnlyModeSource",
     "StateType",
     "StateChange",
     "SystemState",

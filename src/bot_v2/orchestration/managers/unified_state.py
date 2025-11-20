@@ -21,12 +21,41 @@ from threading import RLock
 from typing import Any, cast
 
 from ..base import BaseManager
-from ..state_manager import ReduceOnlyModeSource
 
-# Import original state manager for compatibility
-from ..state_manager import (
-    ReduceOnlyModeState as OriginalReduceOnlyModeState,
-)
+
+class ReduceOnlyModeSource(Enum):
+    """Enumeration of valid sources for reduce_only_mode changes."""
+
+    CONFIG = "config"
+    RISK_MANAGER = "risk_manager"
+    RUNTIME_COORDINATOR = "runtime_coordinator"
+    GUARD_FAILURE = "guard_failure"
+    STARTUP_RECONCILE_FAILED = "startup_reconcile_failed"
+    DERIVATIVES_NOT_ACCESSIBLE = "derivatives_not_accessible"
+    DAILY_LOSS_LIMIT = "daily_loss_limit"
+    USER_REQUEST = "user_request"
+    SYSTEM_MONITOR = "system_monitor"
+
+
+@dataclass
+class OriginalReduceOnlyModeState:
+    """State data for reduce_only_mode tracking (compatibility wrapper)."""
+
+    enabled: bool = False
+    reason: str | None = None
+    source: ReduceOnlyModeSource | None = None
+    timestamp: datetime | None = None
+    previous_state: bool = False
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert state to dictionary for logging/serialization."""
+        return {
+            "enabled": self.enabled,
+            "reason": self.reason,
+            "source": self.source.value if self.source else None,
+            "timestamp": self.timestamp.isoformat() if self.timestamp else None,
+            "previous_state": self.previous_state,
+        }
 
 
 class StateType(Enum):

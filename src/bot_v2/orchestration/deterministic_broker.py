@@ -44,9 +44,17 @@ class DeterministicBroker(IBrokerage):
     - Uses structured fixtures for consistent test data.
     """
 
-    def __init__(self, equity: Decimal = Decimal("100000"), simulate_trend: bool = False) -> None:
+    def __init__(
+        self,
+        equity: Decimal = Decimal("100000"),
+        simulate_trend: bool = False,
+        *,
+        initial_balance: Decimal | None = None,
+        symbols: Sequence[str] | None = None,
+        product_catalog: Any | None = None,
+    ) -> None:
         self._connected = False
-        self.equity = Decimal(str(equity))
+        self.equity = Decimal(str(initial_balance)) if initial_balance else Decimal(str(equity))
         self._simulate_trend = simulate_trend
         self._tick_count = 0
 

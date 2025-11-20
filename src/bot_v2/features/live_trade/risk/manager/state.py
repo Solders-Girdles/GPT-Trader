@@ -7,7 +7,7 @@ from decimal import Decimal
 from typing import Any
 
 from bot_v2.features.live_trade.risk.pre_trade_checks import ValidationError
-from bot_v2.orchestration.state_manager import ReduceOnlyModeSource
+from bot_v2.orchestration.state.unified_state import ReduceOnlyModeSource
 
 
 class LiveRiskManagerStateMixin:

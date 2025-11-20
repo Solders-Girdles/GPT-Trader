@@ -21,9 +21,9 @@ from bot_v2.features.brokerages.core.interfaces import (
     TimeInForce,
 )
 from bot_v2.orchestration.configuration import BotConfig, Profile
-from bot_v2.orchestration.coordinators.base import CoordinatorContext
-from bot_v2.orchestration.coordinators.runtime import RuntimeCoordinator
-from bot_v2.orchestration.coordinators.strategy import StrategyCoordinator
+from bot_v2.orchestration.engines.base import CoordinatorContext
+from bot_v2.orchestration.engines.runtime import RuntimeCoordinator
+from bot_v2.orchestration.engines.strategy import TradingEngine
 from bot_v2.orchestration.perps_bot import PerpsBot
 from bot_v2.orchestration.perps_bot_builder import create_perps_bot
 from bot_v2.orchestration.perps_bot_state import PerpsBotRuntimeState
@@ -51,7 +51,7 @@ def test_runtime_coordinator_uses_deterministic_broker_for_dev(monkeypatch):
 
     stub_broker = object()
     monkeypatch.setattr(
-        "bot_v2.orchestration.coordinators.runtime.DeterministicBroker",
+        "bot_v2.orchestration.engines.runtime.DeterministicBroker",
         lambda: stub_broker,
     )
 
@@ -95,7 +95,7 @@ def test_update_mark_window_trims() -> None:
         runtime_state=runtime_state,
         set_running_flag=lambda _: None,
     )
-    coordinator = StrategyCoordinator(context)
+    coordinator = TradingEngine(context)
 
     for i in range(50):
         coordinator.update_mark_window("BTC-PERP", Decimal(str(50000 + i)))

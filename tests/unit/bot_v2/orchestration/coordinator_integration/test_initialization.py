@@ -18,7 +18,7 @@ class TestCoordinatorLifecycleIntegration:
         runtime_coord = coordinators["runtime"]
 
         # Use patching to avoid modifying strict Pydantic config
-        with unittest.mock.patch("bot_v2.orchestration.coordinators.runtime.broker_management.discover_derivatives_eligibility") as mock_discover:
+        with unittest.mock.patch("bot_v2.orchestration.engines.runtime.broker_management.discover_derivatives_eligibility") as mock_discover:
             mock_discover.return_value = Mock(eligibility=True)
 
             result = runtime_coord.initialize(integration_context)
@@ -108,7 +108,7 @@ class TestTradingCycleIntegration:
         product = scenario_builder.create_product()
 
         # Ensure execution coordinator is wired in strategy coord
-        # (StrategyCoordinator.execute_decision calls context.execution_coordinator.execute_decision)
+        # (TradingEngine.execute_decision calls context.execution_coordinator.execute_decision)
         strategy_coord.update_context(strategy_coord.context.with_updates(
             execution_coordinator=execution_coord
         ))

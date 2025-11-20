@@ -14,8 +14,8 @@ import pytest
 from bot_v2.features.brokerages.coinbase.account_manager import CoinbaseAccountManager
 from bot_v2.features.brokerages.coinbase.adapter import CoinbaseBrokerage
 from bot_v2.orchestration.configuration import BotConfig, Profile
-from bot_v2.orchestration.coordinators.base import CoordinatorContext
-from bot_v2.orchestration.coordinators.telemetry import TelemetryCoordinator
+from bot_v2.orchestration.engines.base import CoordinatorContext
+from bot_v2.orchestration.engines.telemetry import TelemetryCoordinator
 from bot_v2.orchestration.perps_bot import PerpsBot
 from bot_v2.orchestration.perps_bot_builder import create_perps_bot
 from bot_v2.orchestration.perps_bot_state import PerpsBotRuntimeState
@@ -491,7 +491,7 @@ class TestTelemetryCoordinatorMessageProcessing:
         """Test _update_mark_and_metrics emits telemetry event."""
         from unittest.mock import patch
 
-        with patch("bot_v2.orchestration.coordinators.telemetry.emit_metric") as mock_emit:
+        with patch("bot_v2.orchestration.engines.telemetry.emit_metric") as mock_emit:
             telemetry_coordinator._update_mark_and_metrics(
                 telemetry_context, "BTC-PERP", Decimal("50000")
             )

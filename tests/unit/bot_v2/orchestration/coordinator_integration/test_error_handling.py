@@ -70,7 +70,7 @@ class TestErrorHandlingIntegration:
         # The new RuntimeCoordinator does not expose this method directly on itself
         # but uses OrderReconciliationService or delegates to startup routines.
         # However, RuntimeCoordinator in new arch is focused on Broker/Risk setup.
-        # ExecutionCoordinator has the OrderReconciliationService.
+        # ExecutionEngine has the OrderReconciliationService.
 
         # If we want to test reconciliation failures triggering reduce-only,
         # we should look at where that happens in the new architecture.

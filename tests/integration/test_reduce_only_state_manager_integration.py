@@ -10,9 +10,9 @@ from bot_v2.orchestration.config_controller import ConfigController
 from bot_v2.orchestration.configuration import BotConfig
 from bot_v2.orchestration.coordinators.runtime import RuntimeCoordinator
 from bot_v2.orchestration.service_registry import ServiceRegistry
-from bot_v2.orchestration.state_manager import (
+from bot_v2.orchestration.state.unified_state import (
     ReduceOnlyModeSource,
-    create_reduce_only_state_manager,
+    SystemState,
 )
 from bot_v2.persistence.event_store import EventStore
 

@@ -8,10 +8,10 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from bot_v2.orchestration.coordinators import (
-    ExecutionCoordinator,
+from bot_v2.orchestration.engines import (
+    ExecutionEngine,
     RuntimeCoordinator,
-    StrategyCoordinator,
+    TradingEngine,
     TelemetryCoordinator,
 )
 from bot_v2.orchestration.perps_bot import PerpsBot
@@ -182,10 +182,10 @@ class TestCoordinatorSetup:
         assert isinstance(bot.runtime_coordinator, RuntimeCoordinator)
 
         assert bot.execution_coordinator is not None
-        assert isinstance(bot.execution_coordinator, ExecutionCoordinator)
+        assert isinstance(bot.execution_coordinator, ExecutionEngine)
 
         assert bot.strategy_coordinator is not None
-        assert isinstance(bot.strategy_coordinator, StrategyCoordinator)
+        assert isinstance(bot.strategy_coordinator, TradingEngine)
 
         assert bot.telemetry_coordinator is not None
         assert isinstance(bot.telemetry_coordinator, TelemetryCoordinator)
@@ -227,13 +227,13 @@ class TestPropertyAccessors:
         """Test execution_coordinator property returns correct coordinator."""
         bot = perps_bot_instance
         coordinator = bot.execution_coordinator
-        assert isinstance(coordinator, ExecutionCoordinator)
+        assert isinstance(coordinator, ExecutionEngine)
 
     def test_strategy_coordinator_property(self, perps_bot_instance):
         """Test strategy_coordinator property returns correct coordinator."""
         bot = perps_bot_instance
         coordinator = bot.strategy_coordinator
-        assert isinstance(coordinator, StrategyCoordinator)
+        assert isinstance(coordinator, TradingEngine)
 
     def test_telemetry_coordinator_property(self, perps_bot_instance):
         """Test telemetry_coordinator property returns correct coordinator."""

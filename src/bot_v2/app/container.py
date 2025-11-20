@@ -27,8 +27,8 @@ from bot_v2.orchestration.broker_factory import create_brokerage
 from bot_v2.orchestration.config_controller import ConfigController
 from bot_v2.orchestration.configuration import BotConfig
 from bot_v2.orchestration.runtime_settings import load_runtime_settings
-from bot_v2.orchestration.state_manager import (
-    ReduceOnlyModeStateManager,
+from bot_v2.orchestration.state.unified_state import (
+    SystemState,
     create_reduce_only_state_manager,
 )
 from bot_v2.persistence.event_store import EventStore
@@ -66,7 +66,7 @@ class ApplicationContainer:
         self._orders_store: OrdersStore | None = None
         self._market_data_service: MarketDataService | None = None
         self._product_catalog: ProductCatalog | None = None
-        self._reduce_only_state_manager: ReduceOnlyModeStateManager | None = None
+        self._reduce_only_state_manager: SystemState | None = None
 
     @property
     def config(self) -> BotConfig:
@@ -207,7 +207,7 @@ class ApplicationContainer:
         return self._product_catalog
 
     @property
-    def reduce_only_state_manager(self) -> ReduceOnlyModeStateManager:
+    def reduce_only_state_manager(self) -> SystemState:
         """
         Get the reduce-only state manager, creating if necessary.
 

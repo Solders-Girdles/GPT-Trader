@@ -12,7 +12,7 @@ from bot_v2.features.brokerages.core.interfaces import (
 )
 from bot_v2.features.live_trade.risk.pre_trade_checks import ValidationError
 from bot_v2.features.live_trade.risk.manager import LiveRiskManager
-from bot_v2.orchestration.coordinators.execution import ExecutionCoordinator
+from bot_v2.orchestration.engines.execution import ExecutionEngine
 from bot_v2.orchestration.runtime_settings import RuntimeSettings
 
 
@@ -141,10 +141,8 @@ class TestStateRecoveryAndSettings:
             config=risk_manager._config, event_store=event_store, settings=risk_manager._settings
         )
 
-        new_execution_coordinator = ExecutionCoordinator(
-            settings=execution_coordinator._settings,
-            broker=execution_coordinator.broker,
-            event_store=event_store,
+        new_execution_coordinator = ExecutionEngine(
+            context=execution_coordinator.context
         )
 
         # Initialize state from event store

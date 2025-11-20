@@ -12,7 +12,7 @@ from bot_v2.features.brokerages.core.interfaces import (
 )
 from bot_v2.features.live_trade.risk.pre_trade_checks import ValidationError
 from bot_v2.features.live_trade.risk.manager import LiveRiskManager
-from bot_v2.orchestration.coordinators.execution import ExecutionCoordinator
+from bot_v2.orchestration.engines.execution import ExecutionEngine
 from bot_v2.orchestration.runtime_settings import RuntimeSettings
 
 

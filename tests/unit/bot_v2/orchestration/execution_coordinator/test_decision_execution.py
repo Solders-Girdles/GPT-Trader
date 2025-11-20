@@ -4,14 +4,14 @@ from decimal import Decimal
 from types import SimpleNamespace
 from bot_v2.features.live_trade.strategies.perps_baseline import Action
 from bot_v2.features.brokerages.core.interfaces import OrderType, TimeInForce, OrderSide
-from bot_v2.orchestration.coordinators.execution import ExecutionCoordinator
-from bot_v2.orchestration.coordinators.base import CoordinatorContext
+from bot_v2.orchestration.engines.execution import ExecutionEngine
+from bot_v2.orchestration.engines.base import CoordinatorContext
 from bot_v2.features.brokerages.core.interfaces import Product
 from tests.unit.bot_v2.orchestration.helpers import ScenarioBuilder
 
 @pytest.mark.asyncio
 async def test_execute_decision_skips_in_dry_run(
-    coordinator: ExecutionCoordinator,
+    coordinator: ExecutionEngine,
     test_product: Product,
 ) -> None:
     # In new architecture, dry run is handled at config level or within broker,
@@ -29,7 +29,7 @@ async def test_execute_decision_skips_in_dry_run(
         coordinator._order_placement.execution_engine = mock_engine
     else:
         # Fallback for mixin based if test setup uses it (which it seems to be based on file path)
-        # But we replaced ExecutionCoordinator implementation.
+        # But we replaced ExecutionEngine implementation.
         # If 'coordinator' fixture provides the new class, we adapt.
         pass
 
@@ -46,9 +46,9 @@ async def test_execute_decision_skips_in_dry_run(
     )
 
     # Mock log_execution_error to avoid signature issues if triggered
-    with patch("bot_v2.orchestration.coordinators.execution.order_placement.log_execution_error"):
+    with patch("bot_v2.orchestration.engines.execution.order_placement.log_execution_error"):
          # Patch logger in the coordinator module where execute_decision is defined
-         with patch("bot_v2.orchestration.coordinators.execution.coordinator.logger"):
+         with patch("bot_v2.orchestration.engines.execution.coordinator.logger"):
             await coordinator.execute_decision(
                 action=decision.action,
                 symbol="BTC-PERP",
@@ -73,7 +73,7 @@ async def test_execute_decision_skips_in_dry_run(
 
 @pytest.mark.asyncio
 async def test_execute_decision_invokes_engine(
-    coordinator: ExecutionCoordinator,
+    coordinator: ExecutionEngine,
     test_product: Product,
 ) -> None:
     # Inject engine into service
@@ -109,7 +109,7 @@ async def test_execute_decision_invokes_engine(
     exec_engine.place_order.return_value = mock_order
 
     # Patch logger to avoid 'operation' kwarg error
-    with patch("bot_v2.orchestration.coordinators.execution.coordinator.logger"):
+    with patch("bot_v2.orchestration.engines.execution.coordinator.logger"):
         await coordinator.execute_decision(
             action=decision.action,
             symbol="BTC-PERP",
@@ -124,7 +124,7 @@ async def test_execute_decision_invokes_engine(
 
 @pytest.mark.asyncio
 async def test_execute_decision_handles_missing_product(
-    coordinator: ExecutionCoordinator, base_context: CoordinatorContext
+    coordinator: ExecutionEngine, base_context: CoordinatorContext
 ) -> None:
     """Test execute_decision handles missing product gracefully."""
     # Legacy logic might handle this.
@@ -132,7 +132,7 @@ async def test_execute_decision_handles_missing_product(
 
 @pytest.mark.asyncio
 async def test_execute_decision_handles_invalid_mark(
-    coordinator: ExecutionCoordinator, base_context: CoordinatorContext
+    coordinator: ExecutionEngine, base_context: CoordinatorContext
 ) -> None:
     """Test execute_decision handles invalid mark price."""
     pass
@@ -140,7 +140,7 @@ async def test_execute_decision_handles_invalid_mark(
 
 @pytest.mark.asyncio
 async def test_execute_decision_handles_close_without_position(
-    coordinator: ExecutionCoordinator, base_context: CoordinatorContext
+    coordinator: ExecutionEngine, base_context: CoordinatorContext
 ) -> None:
     """Test execute_decision skips close when no position exists."""
     pass
@@ -148,7 +148,7 @@ async def test_execute_decision_handles_close_without_position(
 
 @pytest.mark.asyncio
 async def test_execute_decision_handles_execution_exception(
-    coordinator: ExecutionCoordinator, base_context: CoordinatorContext
+    coordinator: ExecutionEngine, base_context: CoordinatorContext
 ) -> None:
     """Test execute_decision handles execution exceptions."""
     # Inject engine into service
@@ -161,7 +161,7 @@ async def test_execute_decision_handles_execution_exception(
     product = ScenarioBuilder.create_product()
 
     # We need to ensure logger mock supports 'operation' kwarg if it fails on logging
-    with patch("bot_v2.orchestration.coordinators.execution.coordinator.logger"):
+    with patch("bot_v2.orchestration.engines.execution.coordinator.logger"):
         await coordinator.execute_decision(
             action=decision.action,
             symbol="BTC-PERP",
@@ -177,7 +177,7 @@ async def test_execute_decision_handles_execution_exception(
 
 @pytest.mark.asyncio
 async def test_execute_decision_respects_reduce_only_global(
-    coordinator: ExecutionCoordinator, base_context: CoordinatorContext
+    coordinator: ExecutionEngine, base_context: CoordinatorContext
 ) -> None:
     # This logic depends on how LiveExecutionEngine processes reduce_only or how OrderPlacementService passes it.
     # Skip for now as we are verifying basic architecture swap.
@@ -186,7 +186,7 @@ async def test_execute_decision_respects_reduce_only_global(
 
 @pytest.mark.asyncio
 async def test_execute_decision_handles_close_position_side_detection(
-    coordinator: ExecutionCoordinator, base_context: CoordinatorContext
+    coordinator: ExecutionEngine, base_context: CoordinatorContext
 ) -> None:
     """Test execute_decision correctly detects position side for close orders."""
     # Similar to above, skip legacy logic test
@@ -195,7 +195,7 @@ async def test_execute_decision_handles_close_position_side_detection(
 
 @pytest.mark.asyncio
 async def test_execute_decision_handles_leverage_override(
-    coordinator: ExecutionCoordinator, base_context: CoordinatorContext
+    coordinator: ExecutionEngine, base_context: CoordinatorContext
 ) -> None:
     """Test execute_decision handles leverage override in decision."""
     # Skip legacy logic test
@@ -204,7 +204,7 @@ async def test_execute_decision_handles_leverage_override(
 
 @pytest.mark.asyncio
 async def test_execute_decision_missing_runtime_state_logs_and_returns(
-    coordinator: ExecutionCoordinator, base_context: CoordinatorContext
+    coordinator: ExecutionEngine, base_context: CoordinatorContext
 ):
     """Test execute_decision handles missing runtime state gracefully."""
     # Skip legacy logic test
@@ -213,7 +213,7 @@ async def test_execute_decision_missing_runtime_state_logs_and_returns(
 
 @pytest.mark.asyncio
 async def test_execute_decision_missing_position_quantity_logs_error(
-    coordinator: ExecutionCoordinator, base_context: CoordinatorContext
+    coordinator: ExecutionEngine, base_context: CoordinatorContext
 ):
     """Test execute_decision handles position state missing quantity."""
     # Skip legacy logic test
@@ -222,7 +222,7 @@ async def test_execute_decision_missing_position_quantity_logs_error(
 
 @pytest.mark.asyncio
 async def test_execute_decision_close_without_position_logs_and_returns(
-    coordinator: ExecutionCoordinator, base_context: CoordinatorContext
+    coordinator: ExecutionEngine, base_context: CoordinatorContext
 ):
     """Test execute_decision handles close action with no position."""
     # Skip legacy logic test

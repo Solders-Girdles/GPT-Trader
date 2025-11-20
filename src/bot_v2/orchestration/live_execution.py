@@ -37,7 +37,7 @@ from bot_v2.orchestration.execution import (
     StateCollector,
 )
 from bot_v2.orchestration.runtime_settings import RuntimeSettings, load_runtime_settings
-from bot_v2.orchestration.state_manager import ReduceOnlyModeSource
+from bot_v2.orchestration.state.unified_state import ReduceOnlyModeSource
 from bot_v2.persistence.event_store import EventStore
 from bot_v2.utilities.logging_patterns import get_logger
 

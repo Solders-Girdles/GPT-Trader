@@ -11,7 +11,7 @@ from decimal import Decimal
 from enum import Enum
 from typing import Any
 
-from bot_v2.orchestration.state_manager import ReduceOnlyModeSource
+from bot_v2.orchestration.state.unified_state import ReduceOnlyModeSource
 
 from .types import AnyLogger, LogEventFn
 

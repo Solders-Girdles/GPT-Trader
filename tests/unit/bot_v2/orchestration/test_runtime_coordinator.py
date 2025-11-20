@@ -14,8 +14,8 @@ import pytest
 
 from bot_v2.features.live_trade.risk import RiskRuntimeState
 from bot_v2.orchestration.configuration import BotConfig, Profile
-from bot_v2.orchestration.coordinators.base import CoordinatorContext
-from bot_v2.orchestration.coordinators.runtime import (
+from bot_v2.orchestration.engines.base import CoordinatorContext
+from bot_v2.orchestration.engines.runtime import (
     BrokerBootstrapArtifacts,
     BrokerBootstrapError,
     RuntimeCoordinator,
@@ -85,7 +85,7 @@ def test_init_broker_uses_deterministic_for_dev(
 
     stub_broker = object()
     monkeypatch.setattr(
-        "bot_v2.orchestration.coordinators.runtime.DeterministicBroker",
+        "bot_v2.orchestration.engines.runtime.DeterministicBroker",
         lambda: stub_broker,
     )
 
@@ -110,7 +110,7 @@ def test_init_broker_raises_on_connection_failure(
     real_broker.connect.return_value = False
 
     monkeypatch.setattr(
-        "bot_v2.orchestration.coordinators.runtime.create_brokerage",
+        "bot_v2.orchestration.engines.runtime.create_brokerage",
         lambda *args, **kwargs: (real_broker, base_context.event_store, Mock(), Mock()),
     )
     monkeypatch.setattr(
@@ -215,7 +215,7 @@ async def test_reconcile_state_on_startup_runs_reconciler(
     reconciler.snapshot_positions = AsyncMock(return_value={})
 
     monkeypatch.setattr(
-        "bot_v2.orchestration.coordinators.runtime.OrderReconciler",
+        "bot_v2.orchestration.engines.runtime.OrderReconciler",
         lambda **kwargs: reconciler,
     )
 
@@ -229,7 +229,7 @@ def test_on_risk_state_change_emits_metrics(
 ) -> None:
     state = RiskRuntimeState(reduce_only_mode=True, last_reduce_only_reason="risk")
     emit_metric = Mock()
-    monkeypatch.setattr("bot_v2.orchestration.coordinators.runtime.emit_metric", emit_metric)
+    monkeypatch.setattr("bot_v2.orchestration.engines.runtime.emit_metric", emit_metric)
 
     coordinator.update_context(coordinator.context.with_updates(event_store=Mock()))
     coordinator.on_risk_state_change(state)
@@ -261,7 +261,7 @@ class TestRuntimeCoordinatorStateTransitions:
         """Test set_reduce_only_mode emits metric when successful."""
         base_context.config_controller.set_reduce_only_mode = Mock(return_value=True)
         emit_metric = Mock()
-        monkeypatch.setattr("bot_v2.orchestration.coordinators.runtime.emit_metric", emit_metric)
+        monkeypatch.setattr("bot_v2.orchestration.engines.runtime.emit_metric", emit_metric)
 
         coordinator.set_reduce_only_mode(True, "test_reason")
 
@@ -301,7 +301,7 @@ class TestRuntimeCoordinatorStateTransitions:
         """Test on_risk_state_change emits metric when reduce-only toggled."""
         base_context.config_controller.apply_risk_update = Mock(return_value=True)
         emit_metric = Mock()
-        monkeypatch.setattr("bot_v2.orchestration.coordinators.runtime.emit_metric", emit_metric)
+        monkeypatch.setattr("bot_v2.orchestration.engines.runtime.emit_metric", emit_metric)
 
         state = RiskRuntimeState(reduce_only_mode=True, last_reduce_only_reason="risk_trigger")
 
@@ -318,7 +318,7 @@ class TestRuntimeCoordinatorBootstrapFailures:
     ) -> None:
         """Test _init_broker handles missing broker or risk manager."""
         # Mock the _build_real_broker method to avoid validation
-        from bot_v2.orchestration.coordinators.runtime import BrokerBootstrapArtifacts
+        from bot_v2.orchestration.engines.runtime import BrokerBootstrapArtifacts
 
         artifacts = BrokerBootstrapArtifacts(
             broker=None, registry_updates={}, event_store=base_context.event_store, products=[]
@@ -596,7 +596,7 @@ class TestRuntimeCoordinatorReconciliation:
         reconciler = Mock()
         reconciler.fetch_local_open_orders = Mock(side_effect=Exception("reconcile_failed"))
         monkeypatch.setattr(
-            "bot_v2.orchestration.coordinators.runtime.OrderReconciler",
+            "bot_v2.orchestration.engines.runtime.OrderReconciler",
             lambda **kwargs: reconciler,
         )
 
@@ -628,7 +628,7 @@ class TestRuntimeCoordinatorReconciliation:
         reconciler = Mock()
         reconciler.fetch_local_open_orders = Mock(side_effect=Exception("reconcile_failed"))
         monkeypatch.setattr(
-            "bot_v2.orchestration.coordinators.runtime.OrderReconciler",
+            "bot_v2.orchestration.engines.runtime.OrderReconciler",
             lambda **kwargs: reconciler,
         )
 

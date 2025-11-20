@@ -1,5 +1,5 @@
 """
-Comprehensive unit tests for StrategyCoordinator.
+Comprehensive unit tests for TradingEngine.
 
 Tests strategy cycle orchestration, mark updates, trading cycle execution,
 configuration drift handling, and symbol processing flows.
@@ -14,8 +14,8 @@ import pytest
 from tests.unit.bot_v2.orchestration.helpers import ScenarioBuilder
 
 from bot_v2.orchestration.configuration import BotConfig, Profile
-from bot_v2.orchestration.coordinators.base import CoordinatorContext
-from bot_v2.orchestration.coordinators.strategy import StrategyCoordinator
+from bot_v2.orchestration.engines.base import CoordinatorContext
+from bot_v2.orchestration.engines.strategy import TradingEngine
 from bot_v2.orchestration.perps_bot_state import PerpsBotRuntimeState
 from bot_v2.orchestration.service_registry import ServiceRegistry
 
@@ -52,12 +52,12 @@ def base_context():
 
 @pytest.fixture
 def coordinator(base_context):
-    """StrategyCoordinator instance."""
-    return StrategyCoordinator(base_context)
+    """TradingEngine instance."""
+    return TradingEngine(base_context)
 
 
-class TestStrategyCoordinatorInitialization:
-    """Test StrategyCoordinator initialization."""
+class TestTradingEngineInitialization:
+    """Test TradingEngine initialization."""
 
     def test_initialization_sets_context(self, coordinator, base_context):
         """Test coordinator initializes with context."""
@@ -499,7 +499,7 @@ class TestStaticUtilities:
         bid = Decimal("49900")
         ask = Decimal("50100")
 
-        result = StrategyCoordinator.calculate_spread_bps(bid, ask)
+        result = TradingEngine.calculate_spread_bps(bid, ask)
 
         # Spread = (50100 - 49900) / ((49900 + 50100) / 2) * 10000
         # = 200 / 50000 * 10000 = 40 bps
@@ -510,7 +510,7 @@ class TestStaticUtilities:
         bid = Decimal("0")
         ask = Decimal("0")
 
-        result = StrategyCoordinator.calculate_spread_bps(bid, ask)
+        result = TradingEngine.calculate_spread_bps(bid, ask)
 
         assert result == Decimal("0")
 
@@ -519,6 +519,6 @@ class TestStaticUtilities:
         bid = None
         ask = None
 
-        result = StrategyCoordinator.calculate_spread_bps(bid, ask)  # type: ignore
+        result = TradingEngine.calculate_spread_bps(bid, ask)  # type: ignore
 
         assert result == Decimal("0")

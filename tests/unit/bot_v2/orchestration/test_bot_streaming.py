@@ -4,8 +4,8 @@ from decimal import Decimal
 from types import SimpleNamespace
 
 from bot_v2.orchestration.configuration import BotConfig, Profile
-from bot_v2.orchestration.coordinators.base import CoordinatorContext
-from bot_v2.orchestration.coordinators.telemetry import TelemetryCoordinator
+from bot_v2.orchestration.engines.base import CoordinatorContext
+from bot_v2.orchestration.engines.telemetry import TelemetryCoordinator
 from bot_v2.orchestration.perps_bot_state import PerpsBotRuntimeState
 from bot_v2.orchestration.service_registry import ServiceRegistry
 

@@ -3,8 +3,8 @@ from unittest.mock import Mock
 from decimal import Decimal
 from datetime import datetime, timezone
 
-from bot_v2.orchestration.coordinators.base import CoordinatorContext
-from bot_v2.orchestration.coordinators.execution import ExecutionCoordinator
+from bot_v2.orchestration.engines.base import CoordinatorContext
+from bot_v2.orchestration.engines.execution import ExecutionEngine
 from bot_v2.orchestration.configuration import BotConfig, Profile
 from bot_v2.orchestration.perps_bot_state import PerpsBotRuntimeState
 from bot_v2.orchestration.service_registry import ServiceRegistry
@@ -65,8 +65,8 @@ def base_context() -> CoordinatorContext:
 
 
 @pytest.fixture
-def coordinator(base_context: CoordinatorContext) -> ExecutionCoordinator:
-    return ExecutionCoordinator(base_context)
+def coordinator(base_context: CoordinatorContext) -> ExecutionEngine:
+    return ExecutionEngine(base_context)
 
 
 @pytest.fixture

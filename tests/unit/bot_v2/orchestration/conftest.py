@@ -14,7 +14,7 @@ import pytest
 
 from bot_v2.features.brokerages.core.interfaces import Balance, Position
 from bot_v2.orchestration.configuration import BotConfig, Profile
-from bot_v2.orchestration.coordinators.base import CoordinatorContext
+from bot_v2.orchestration.engines.base import CoordinatorContext
 from bot_v2.orchestration.perps_bot_state import PerpsBotRuntimeState
 from bot_v2.orchestration.service_registry import ServiceRegistry
 from bot_v2.orchestration.system_monitor import SystemMonitor

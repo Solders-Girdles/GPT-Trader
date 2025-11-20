@@ -122,7 +122,7 @@ class OrderPlacementService:
                 "Order placement failed",
                 operation="order_placement",
                 action=action.__class__.__name__,
-                symbol=action.symbol,
+                symbol=getattr(action, "symbol", "unknown"),
                 error=str(exc),
                 exc_info=True,
             )
@@ -130,14 +130,17 @@ class OrderPlacementService:
 
     def _validate_action_parameters(self, action: Action, **kwargs: Any) -> None:
         """Validate action parameters before order placement."""
-        if not hasattr(action, "symbol") or not action.symbol:
+        symbol = getattr(action, "symbol", kwargs.get("symbol"))
+        if not symbol:
             raise ValidationError("Action must have a valid symbol")
 
-        if not hasattr(action, "quantity") or action.quantity <= 0:
+        quantity = getattr(action, "quantity", kwargs.get("quantity"))
+        if not quantity or quantity <= 0:
             raise ValidationError("Action must have a positive quantity")
 
-        if hasattr(action, "side") and action.side not in {OrderSide.BUY, OrderSide.SELL}:
-            raise ValidationError(f"Invalid order side: {action.side}")
+        if hasattr(action, "side"):
+             if action.side not in {OrderSide.BUY, OrderSide.SELL}:
+                 raise ValidationError(f"Invalid order side: {action.side}")
 
         # Validate additional parameters
         if "limit_price" in kwargs and kwargs["limit_price"] is not None:
@@ -155,17 +158,34 @@ class OrderPlacementService:
         """Prepare order parameters from action and additional arguments."""
         config = self.context.config
 
+        # Determine side from action (Enum) or attribute
+        if isinstance(action, Action):
+             # Map Action Enum to OrderSide
+             if action == Action.BUY:
+                 side = OrderSide.BUY
+             elif action == Action.SELL:
+                 side = OrderSide.SELL
+             else:
+                 side = kwargs.get("side")
+        else:
+             side = getattr(action, "side", kwargs.get("side"))
+
+        if not side:
+             # Fallback to kwargs or error
+             side = kwargs.get("side")
+
         # Base order parameters
         order_params = {
-            "symbol": action.symbol,
-            "side": action.side,
-            "order_type": getattr(action, "order_type", OrderType.MARKET),
-            "time_in_force": time_in_force or config.time_in_force,
+            "symbol": getattr(action, "symbol", kwargs.get("symbol")),
+            "side": side,
+            "order_type": getattr(action, "order_type", kwargs.get("order_type", OrderType.MARKET)),
+            "tif": time_in_force or config.time_in_force,
         }
 
         # Quantity handling
-        if hasattr(action, "quantity"):
-            order_params["quantity"] = quantity_from(action.quantity)
+        quantity = getattr(action, "quantity", kwargs.get("quantity"))
+        if quantity is not None:
+            order_params["quantity"] = quantity_from(quantity)
 
         # Price handling
         if limit_price is not None:
@@ -187,7 +207,7 @@ class OrderPlacementService:
         self,
         exec_engine: LiveExecutionEngine | AdvancedExecutionEngine,
         order_params: dict[str, Any],
-    ) -> Order:
+    ) -> Order | None:
         """Core order placement logic."""
         # Log order placement attempt
         logger.info(
@@ -200,33 +220,47 @@ class OrderPlacementService:
         )
 
         # Place the order
-        order = exec_engine.place_order(**order_params)
+        result = exec_engine.place_order(**order_params)
 
-        if order:
+        if result:
+            if isinstance(result, str):
+                # Result is order ID, fetch the full order object
+                try:
+                    order = exec_engine.broker.get_order(result)
+                    if not order:
+                        logger.warning(f"Order placed with ID {result} but could not be fetched")
+                        return None
+                except Exception as exc:
+                    logger.error(f"Failed to fetch placed order {result}: {exc}")
+                    return None
+            else:
+                # Result is likely the order object
+                order = result
+
             self._log_order_success(order)
             self._increment_order_stat("placed")
+            return order
         else:
             self._log_order_failure(order_params)
-
-        return order
+            return None
 
     def _log_order_success(self, order: Order) -> None:
         """Log successful order placement."""
         log_order_event(
             "order_submitted",
-            order_id=order.order_id,
+            order_id=order.id,
             symbol=order.symbol,
             side=order.side,
             quantity=order.quantity,
-            order_type=order.order_type,
+            order_type=getattr(order, "type", order.type),  # Handle type vs order_type naming if needed, but Order uses 'type'
             price=order.price,
-            time_in_force=order.time_in_force,
+            time_in_force=getattr(order, "tif", None),
         )
 
         logger.info(
             "Order placed successfully",
             operation="order_placement",
-            order_id=order.order_id,
+            order_id=order.id,
             symbol=order.symbol,
             side=order.side,
             quantity=order.quantity,
@@ -248,11 +282,12 @@ class OrderPlacementService:
         """Log order placement error."""
         log_execution_error(
             error,
+            operation="order_placement",
             context={
                 "symbol": getattr(action, "symbol", "unknown"),
                 "side": getattr(action, "side", "unknown"),
                 "action_type": action.__class__.__name__,
-                "operation": "order_placement",
+                "action_value": str(action),
             },
         )
 

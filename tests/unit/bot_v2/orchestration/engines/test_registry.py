@@ -5,7 +5,7 @@ import asyncio
 import pytest
 
 from bot_v2.orchestration.engines.base import (
-    BaseCoordinator,
+    BaseEngine,
     CoordinatorContext,
     HealthStatus,
 )
@@ -20,7 +20,7 @@ def _make_context() -> CoordinatorContext:
     )
 
 
-class InitCoordinator(BaseCoordinator):
+class InitCoordinator(BaseEngine):
     def __init__(self, context: CoordinatorContext, name: str, broker_value: str):
         super().__init__(context)
         self._name = name
@@ -34,7 +34,7 @@ class InitCoordinator(BaseCoordinator):
         return context.with_updates(broker=self._broker_value)
 
 
-class ObserverCoordinator(BaseCoordinator):
+class ObserverCoordinator(BaseEngine):
     def __init__(self, context: CoordinatorContext, name: str):
         super().__init__(context)
         self._name = name
@@ -74,7 +74,7 @@ def test_registry_rejects_duplicate_registration() -> None:
         registry.register(coordinator)
 
 
-class TaskCoordinator(BaseCoordinator):
+class TaskCoordinator(BaseEngine):
     def __init__(self, context: CoordinatorContext, name: str, recorder: list[str]):
         super().__init__(context)
         self._name = name

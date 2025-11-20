@@ -12,7 +12,7 @@ from .telemetry_services import run_account_telemetry as _run_account_telemetry_
 logger = get_logger(__name__, component="telemetry_coordinator")
 
 
-async def start_background_tasks(coordinator: "TelemetryCoordinator") -> list[asyncio.Task[Any]]:
+async def start_background_tasks(coordinator: "TelemetryEngine") -> list[asyncio.Task[Any]]:
     tasks: list[asyncio.Task[Any]] = []
 
     extras = getattr(coordinator.context.registry, "extras", {})

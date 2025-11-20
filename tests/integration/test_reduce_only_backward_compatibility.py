@@ -6,7 +6,7 @@ from unittest.mock import MagicMock
 
 from bot_v2.orchestration.config_controller import ConfigController
 from bot_v2.orchestration.configuration import BotConfig
-from bot_v2.orchestration.coordinators.runtime import RuntimeCoordinator
+from bot_v2.orchestration.engines.runtime import RuntimeEngine
 from bot_v2.orchestration.service_registry import ServiceRegistry
 from bot_v2.persistence.event_store import EventStore
 
@@ -40,7 +40,7 @@ class TestReduceOnlyBackwardCompatibility:
         assert config_controller.is_reduce_only_mode() is False
 
     def test_runtime_coordinator_without_state_manager(self) -> None:
-        """Test that RuntimeCoordinator works without StateManager."""
+        """Test that RuntimeEngine works without StateManager."""
         event_store = EventStore()
         config = BotConfig.from_profile("dev")
 
@@ -49,7 +49,7 @@ class TestReduceOnlyBackwardCompatibility:
             event_store=event_store,
         )
 
-        from bot_v2.orchestration.coordinators.base import CoordinatorContext
+        from bot_v2.orchestration.engines.base import CoordinatorContext
 
         context = CoordinatorContext(
             config=config,
@@ -59,7 +59,7 @@ class TestReduceOnlyBackwardCompatibility:
             bot_id="test",
         )
 
-        runtime_coordinator = RuntimeCoordinator(
+        runtime_coordinator = RuntimeEngine(
             context,
             config_controller=None,
         )
@@ -77,7 +77,7 @@ class TestReduceOnlyBackwardCompatibility:
         config = BotConfig.from_profile("dev")
 
         # Create config controller with StateManager
-        from bot_v2.orchestration.state_manager import create_reduce_only_state_manager
+        from bot_v2.orchestration.state.unified_state import create_reduce_only_state_manager
 
         state_manager = create_reduce_only_state_manager(event_store)
         config_controller = ConfigController(
@@ -91,7 +91,7 @@ class TestReduceOnlyBackwardCompatibility:
             event_store=event_store,
         )
 
-        from bot_v2.orchestration.coordinators.base import CoordinatorContext
+        from bot_v2.orchestration.engines.base import CoordinatorContext
 
         context = CoordinatorContext(
             config=config,
@@ -101,7 +101,7 @@ class TestReduceOnlyBackwardCompatibility:
             bot_id="test",
         )
 
-        runtime_coordinator = RuntimeCoordinator(
+        runtime_coordinator = RuntimeEngine(
             context,
             config_controller=config_controller,
         )
@@ -163,7 +163,7 @@ class TestReduceOnlyBackwardCompatibility:
         config = BotConfig.from_profile("dev")
 
         # Create config controller with StateManager
-        from bot_v2.orchestration.state_manager import create_reduce_only_state_manager
+        from bot_v2.orchestration.state.unified_state import create_reduce_only_state_manager
 
         state_manager = create_reduce_only_state_manager(event_store)
         config_controller = ConfigController(
@@ -191,7 +191,7 @@ class TestReduceOnlyBackwardCompatibility:
         config = BotConfig.from_profile("dev")
 
         # Create config controller with StateManager
-        from bot_v2.orchestration.state_manager import create_reduce_only_state_manager
+        from bot_v2.orchestration.state.unified_state import create_reduce_only_state_manager
 
         state_manager = create_reduce_only_state_manager(event_store)
         config_controller = ConfigController(

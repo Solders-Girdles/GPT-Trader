@@ -22,7 +22,7 @@ from bot_v2.features.brokerages.core.interfaces import (
 )
 from bot_v2.orchestration.configuration import BotConfig, Profile
 from bot_v2.orchestration.engines.base import CoordinatorContext
-from bot_v2.orchestration.engines.runtime import RuntimeCoordinator
+from bot_v2.orchestration.engines.runtime import RuntimeEngine
 from bot_v2.orchestration.engines.strategy import TradingEngine
 from bot_v2.orchestration.perps_bot import PerpsBot
 from bot_v2.orchestration.perps_bot_builder import create_perps_bot
@@ -55,7 +55,7 @@ def test_runtime_coordinator_uses_deterministic_broker_for_dev(monkeypatch):
         lambda: stub_broker,
     )
 
-    coordinator = RuntimeCoordinator(context)
+    coordinator = RuntimeEngine(context)
     updated = coordinator._init_broker(context)
 
     assert updated.broker is stub_broker

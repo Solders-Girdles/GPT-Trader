@@ -23,7 +23,7 @@ from bot_v2.utilities.config import ConfigBaselinePayload
 from bot_v2.utilities.logging_patterns import get_logger
 
 from ..symbol_processor import SymbolProcessor
-from .base import BaseCoordinator, CoordinatorContext, HealthStatus
+from .base import BaseEngine, CoordinatorContext, HealthStatus
 
 if TYPE_CHECKING:  # pragma: no cover - type checking only
     from .execution import ExecutionEngine
@@ -34,7 +34,7 @@ json_logger = get_orchestration_logger("strategy_coordinator")
 MAX_QUOTE_FETCH_CONCURRENCY = 10
 
 
-class TradingEngine(BaseCoordinator):
+class TradingEngine(BaseEngine):
     """Owns the trading cycle and execution hand-off."""
 
     def __init__(self, context: CoordinatorContext) -> None:

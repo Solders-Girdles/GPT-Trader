@@ -1,4 +1,4 @@
-"""Tests for TelemetryCoordinator error handling and fallback paths."""
+"""Tests for TelemetryEngine error handling and fallback paths."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from bot_v2.orchestration.engines.telemetry import TelemetryCoordinator
+from bot_v2.orchestration.engines.telemetry_coordinator import TelemetryEngine
 
 
 class TestErrorHandling:
@@ -75,7 +75,7 @@ class TestErrorHandling:
         relevant_diff = {"symbols": "BTC-PERP"}
 
         # Set log level to capture exceptions
-        caplog.set_level("ERROR", logger="bot_v2.orchestration.engines.telemetry")
+        caplog.set_level("ERROR", logger="bot_v2.orchestration.engines.telemetry_coordinator")
 
         with (
             patch.object(
@@ -110,7 +110,7 @@ class TestErrorHandling:
         relevant_diff = {"perps_enable_streaming": "true"}
 
         # Set log level to capture exceptions
-        caplog.set_level("ERROR", logger="bot_v2.orchestration.engines.telemetry")
+        caplog.set_level("ERROR", logger="bot_v2.orchestration.engines.telemetry_coordinator")
 
         with (
             patch.object(telemetry_coordinator, "_stop_streaming", new_callable=AsyncMock),
@@ -204,7 +204,7 @@ class TestErrorHandling:
         stop_signal = MagicMock()
 
         # Set log level to capture errors
-        caplog.set_level("ERROR", logger="bot_v2.orchestration.engines.telemetry")
+        caplog.set_level("ERROR", logger="bot_v2.orchestration.engines.telemetry_coordinator")
 
         telemetry_coordinator._run_stream_loop(["BTC-PERP"], 1, stop_signal)
 
@@ -221,7 +221,7 @@ class TestErrorHandling:
         stop_signal = MagicMock()
 
         # Set log level to capture warnings
-        caplog.set_level("WARNING", logger="bot_v2.orchestration.engines.telemetry")
+        caplog.set_level("WARNING", logger="bot_v2.orchestration.engines.telemetry_coordinator")
 
         telemetry_coordinator._run_stream_loop(["BTC-PERP"], 1, stop_signal)
 
@@ -241,7 +241,7 @@ class TestErrorHandling:
         stop_signal = MagicMock()
 
         # Set log level to capture errors
-        caplog.set_level("ERROR", logger="bot_v2.orchestration.engines.telemetry")
+        caplog.set_level("ERROR", logger="bot_v2.orchestration.engines.telemetry_coordinator")
 
         telemetry_coordinator._run_stream_loop(["BTC-PERP"], 1, stop_signal)
 
@@ -264,7 +264,7 @@ class TestErrorHandling:
         telemetry_coordinator.context.broker = mock_broker
         stop_signal = MagicMock()
 
-        with patch("bot_v2.orchestration.engines.telemetry.emit_metric") as mock_emit:
+        with patch("bot_v2.orchestration.engines.telemetry_coordinator.emit_metric") as mock_emit:
             telemetry_coordinator._run_stream_loop(["BTC-PERP"], 1, stop_signal)
 
             # Verify error metric emitted
@@ -326,7 +326,7 @@ class TestErrorHandling:
         telemetry_coordinator.context.broker = mock_broker
         stop_signal = MagicMock()
 
-        with patch("bot_v2.orchestration.engines.telemetry.emit_metric") as mock_emit:
+        with patch("bot_v2.orchestration.engines.telemetry_coordinator.emit_metric") as mock_emit:
             telemetry_coordinator._run_stream_loop(["BTC-PERP"], 1, stop_signal)
 
             # Verify exit metric emitted
@@ -344,7 +344,7 @@ class TestErrorHandling:
         telemetry_coordinator.context.strategy_coordinator = mock_strategy_coordinator
 
         # Set log level to capture debug
-        caplog.set_level("DEBUG", logger="bot_v2.orchestration.engines.telemetry")
+        caplog.set_level("DEBUG", logger="bot_v2.orchestration.engines.telemetry_coordinator")
 
         telemetry_coordinator._update_mark_and_metrics(
             telemetry_coordinator.context, "BTC-PERP", Decimal("50000")
@@ -363,7 +363,7 @@ class TestErrorHandling:
         telemetry_coordinator._market_monitor = mock_market_monitor
 
         # Set log level to capture debug
-        caplog.set_level("DEBUG", logger="bot_v2.orchestration.engines.telemetry")
+        caplog.set_level("DEBUG", logger="bot_v2.orchestration.engines.telemetry_coordinator")
 
         telemetry_coordinator._update_mark_and_metrics(
             telemetry_coordinator.context, "BTC-PERP", Decimal("50000")
@@ -382,7 +382,7 @@ class TestErrorHandling:
         telemetry_coordinator.context.risk_manager = mock_risk_manager
 
         # Set log level to capture exceptions
-        caplog.set_level("ERROR", logger="bot_v2.orchestration.engines.telemetry")
+        caplog.set_level("ERROR", logger="bot_v2.orchestration.engines.telemetry_coordinator")
 
         telemetry_coordinator._update_mark_and_metrics(
             telemetry_coordinator.context, "BTC-PERP", Decimal("50000")
@@ -412,21 +412,21 @@ class TestErrorHandling:
     async def test_initialize_handles_broker_creation_failure(self, fake_context) -> None:
         """Test initialize handles broker creation failure gracefully."""
         with patch(
-            "bot_v2.orchestration.engines.telemetry.CoinbaseBrokerage",
+            "bot_v2.orchestration.engines.telemetry_coordinator.CoinbaseBrokerage",
             side_effect=Exception("Broker creation failed"),
         ):
             # Should propagate exception - broker creation is critical
             with pytest.raises(Exception, match="Broker creation failed"):
-                TelemetryCoordinator.initialize(fake_context)
+                TelemetryEngine.initialize(fake_context)
 
     def test_initialize_handles_market_monitor_creation_failure(self, fake_context) -> None:
         """Test initialize handles market monitor creation failure gracefully."""
         with (
             patch(
-                "bot_v2.orchestration.engines.telemetry.CoinbaseBrokerage"
+                "bot_v2.orchestration.engines.telemetry_coordinator.CoinbaseBrokerage"
             ) as mock_broker_class,
             patch(
-                "bot_v2.orchestration.engines.telemetry.MarketActivityMonitor",
+                "bot_v2.orchestration.engines.telemetry_coordinator.MarketActivityMonitor",
                 side_effect=Exception("Monitor creation failed"),
             ),
         ):
@@ -435,7 +435,7 @@ class TestErrorHandling:
             mock_broker_class.return_value = mock_broker
 
             # Should still create coordinator even if market monitor fails
-            result = TelemetryCoordinator.initialize(fake_context)
+            result = TelemetryEngine.initialize(fake_context)
 
             # Should have other services but market monitor might be None
             assert "account_manager" in result.registry.extras

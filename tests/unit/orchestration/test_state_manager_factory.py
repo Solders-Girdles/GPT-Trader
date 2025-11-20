@@ -7,8 +7,8 @@ from unittest.mock import Mock
 
 import pytest
 
-from bot_v2.orchestration.state_manager import (
-    ReduceOnlyModeStateManager,
+from bot_v2.orchestration.state.unified_state import (
+    SystemState as ReduceOnlyModeStateManager,
     create_reduce_only_state_manager,
 )
 from bot_v2.persistence.event_store import EventStore

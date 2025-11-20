@@ -1,4 +1,4 @@
-"""Simple tests for TelemetryCoordinator core functionality."""
+"""Simple tests for TelemetryEngine core functionality."""
 
 from __future__ import annotations
 
@@ -6,15 +6,15 @@ from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from bot_v2.config.types import Profile
-from bot_v2.orchestration.engines.telemetry import TelemetryCoordinator
+from bot_v2.orchestration.engines.telemetry_coordinator import TelemetryEngine
 
 
-class TestTelemetryCoordinatorCore:
-    """Test core TelemetryCoordinator functionality with minimal dependencies."""
+class TestTelemetryEngineCore:
+    """Test core TelemetryEngine functionality with minimal dependencies."""
 
     def test_telemetry_coordinator_initialization(self, fake_context) -> None:
-        """Test TelemetryCoordinator can be initialized with basic context."""
-        coordinator = TelemetryCoordinator(context=fake_context)
+        """Test TelemetryEngine can be initialized with basic context."""
+        coordinator = TelemetryEngine(context=fake_context)
 
         assert coordinator.name == "telemetry"
         assert coordinator.context == fake_context
@@ -72,7 +72,7 @@ class TestTelemetryCoordinatorCore:
         """Test _extract_mark_from_message calculates mark from bid and ask."""
         msg = {"best_bid": "50000", "best_ask": "50100"}
 
-        result = TelemetryCoordinator._extract_mark_from_message(msg)
+        result = TelemetryEngine._extract_mark_from_message(msg)
 
         assert result == Decimal("50050")
 
@@ -80,7 +80,7 @@ class TestTelemetryCoordinatorCore:
         """Test _extract_mark_from_message extracts mark from last price."""
         msg = {"last": "50075"}
 
-        result = TelemetryCoordinator._extract_mark_from_message(msg)
+        result = TelemetryEngine._extract_mark_from_message(msg)
 
         assert result == Decimal("50075")
 
@@ -88,7 +88,7 @@ class TestTelemetryCoordinatorCore:
         """Test _extract_mark_from_message extracts mark from price field."""
         msg = {"price": "50025"}
 
-        result = TelemetryCoordinator._extract_mark_from_message(msg)
+        result = TelemetryEngine._extract_mark_from_message(msg)
 
         assert result == Decimal("50025")
 
@@ -97,7 +97,7 @@ class TestTelemetryCoordinatorCore:
         # Test with negative price - it actually calculates the average
         msg = {"best_bid": "-100", "best_ask": "100"}
 
-        result = TelemetryCoordinator._extract_mark_from_message(msg)
+        result = TelemetryEngine._extract_mark_from_message(msg)
 
         # The updated logic returns None for non-positive prices
         assert result is None
@@ -106,7 +106,7 @@ class TestTelemetryCoordinatorCore:
         """Test _extract_mark_from_message returns None for non-numeric data."""
         msg = {"best_bid": "invalid", "best_ask": "50100"}
 
-        result = TelemetryCoordinator._extract_mark_from_message(msg)
+        result = TelemetryEngine._extract_mark_from_message(msg)
 
         assert result is None
 
@@ -114,7 +114,7 @@ class TestTelemetryCoordinatorCore:
         """Test _extract_mark_from_message returns None for no price data."""
         msg = {"symbol": "BTC-PERP"}
 
-        result = TelemetryCoordinator._extract_mark_from_message(msg)
+        result = TelemetryEngine._extract_mark_from_message(msg)
 
         assert result is None
 
@@ -156,7 +156,7 @@ class TestTelemetryCoordinatorCore:
         """Test _update_mark_and_metrics emits mark update metric."""
         mark_price = Decimal("50000")
 
-        with patch("bot_v2.orchestration.engines.telemetry.emit_metric") as mock_emit:
+        with patch("bot_v2.orchestration.engines.telemetry_coordinator.emit_metric") as mock_emit:
             telemetry_coordinator._update_mark_and_metrics(
                 telemetry_coordinator.context, "BTC-PERP", mark_price
             )
@@ -227,7 +227,7 @@ class TestTelemetryCoordinatorCore:
             symbols=[],
         )
 
-        coordinator = TelemetryCoordinator(context=context_without_risk)
+        coordinator = TelemetryEngine(context=context_without_risk)
         mark_price = Decimal("50000")
 
         # Should not raise exception
@@ -276,7 +276,7 @@ class TestTelemetryCoordinatorCore:
     async def test_shutdown_calls_parent_shutdown(self, telemetry_coordinator) -> None:
         """Test shutdown calls parent shutdown method."""
         with patch(
-            "bot_v2.orchestration.engines.base.BaseCoordinator.shutdown",
+            "bot_v2.orchestration.engines.base.BaseEngine.shutdown",
             new_callable=AsyncMock,
         ) as mock_super_shutdown:
             await telemetry_coordinator.shutdown()

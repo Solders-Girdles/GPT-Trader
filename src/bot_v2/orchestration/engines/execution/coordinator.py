@@ -23,7 +23,7 @@ if TYPE_CHECKING:  # pragma: no cover - type checking only
 from bot_v2.features.live_trade.strategies.perps_baseline import Action
 from bot_v2.logging import get_orchestration_logger
 
-from ..base import BaseCoordinator, CoordinatorContext, HealthStatus
+from ..base import BaseEngine, CoordinatorContext, HealthStatus
 
 # Import the new focused services
 from .order_placement import OrderPlacementService
@@ -33,7 +33,7 @@ from .runtime_guards import RuntimeGuardsService
 logger = get_orchestration_logger("execution_coordinator")
 
 
-class ExecutionEngine(BaseCoordinator):
+class ExecutionEngine(BaseEngine):
     """Execution coordinator using focused services.
 
     This coordinator delegates execution responsibilities to specialized services,
@@ -223,16 +223,45 @@ class ExecutionEngine(BaseCoordinator):
     async def place_order(self, exec_engine: Any, **kwargs: Any) -> Any:
         """Delegate order placement to the order placement service."""
         # Convert legacy call to service call
-        from bot_v2.features.live_trade.strategies.perps_baseline import Action
+        # Try importing Action from the decisions module first as it seems to be the source of truth
+        try:
+            from bot_v2.features.live_trade.strategies.decisions import Action
+        except ImportError:
+            from bot_v2.features.live_trade.strategies.perps_baseline import Action
 
         # Extract action from kwargs if available
         if "action" in kwargs:
             action = kwargs.pop("action")
         else:
-            raise ValueError("Action parameter is required for place_order")
+            # Try to infer action from side
+            side = kwargs.get("side")
+            if side:
+                # Handle OrderSide enum or string
+                if hasattr(side, "value"):
+                     side_str = str(side.value).lower()
+                elif hasattr(side, "name"):
+                     side_str = str(side.name).lower()
+                else:
+                     side_str = str(side).lower()
+
+                # Handle "OrderSide.BUY" string representation case if passed as string
+                if "buy" in side_str:
+                    action = Action.BUY
+                elif "sell" in side_str:
+                    action = Action.SELL
+                else:
+                     raise ValueError(f"Cannot infer Action from side: {side}")
+            else:
+                # Default to BUY if mostly testing buy flows or raise error
+                # Better to raise error if we can't infer
+                raise ValueError("Action parameter is required for place_order and cannot be inferred from kwargs")
 
         if not isinstance(action, Action):
-            raise ValueError("Action parameter must be an Action instance")
+            # Try to convert string to Action
+            try:
+                action = Action(str(action).lower())
+            except ValueError:
+                raise ValueError(f"Invalid Action: {action}")
 
         return self._order_placement.place_order(action, **kwargs)
 
@@ -291,6 +320,17 @@ class ExecutionEngine(BaseCoordinator):
         stats = self._order_placement.get_order_stats()
         _ = stats.get(key, 0)
         # Note: Simplified coordinator does not persist stats yet; retrieval is a placeholder.
+
+    async def get_positions(self) -> list[Any]:
+        """Get current positions from the broker."""
+        if self.context.broker:
+            return await asyncio.to_thread(self.context.broker.list_positions)
+        return []
+
+    @property
+    def settings(self) -> Any:
+        """Get runtime settings."""
+        return getattr(self.context, "settings", self.context.config)
 
 
 __all__ = [

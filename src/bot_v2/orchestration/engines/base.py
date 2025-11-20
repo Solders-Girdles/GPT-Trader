@@ -6,7 +6,7 @@ management to :class:`bot_v2.orchestration.engines.registry.CoordinatorRegistry`
 
 Most concrete coordinators should:
 
-1. Inherit from :class:`BaseCoordinator`.
+1. Inherit from :class:`BaseEngine`.
 2. Override :py:meth:`initialize` to build dependencies and return an updated context.
 3. Optionally implement :py:meth:`start_background_tasks` to launch long-running jobs (register tasks
    with :py:meth:`_register_background_task` for automatic shutdown).
@@ -104,8 +104,8 @@ class Coordinator(Protocol):
         """Return the current health status for monitoring."""
 
 
-class BaseCoordinator(ABC):
-    """Abstract base class implementing the coordinator lifecycle contract."""
+class BaseEngine(ABC):
+    """Abstract base class implementing the engine lifecycle contract."""
 
     def __init__(self, context: CoordinatorContext) -> None:
         self._context = context
@@ -129,7 +129,7 @@ class BaseCoordinator(ABC):
         self._context = context
 
     def initialize(self, context: CoordinatorContext) -> CoordinatorContext:
-        """Perform synchronous initialisation and return an updated context snapshot."""
+        """Perform synchronous initialization and return an updated context snapshot."""
 
         return context
 
@@ -173,7 +173,7 @@ class BaseCoordinator(ABC):
 
 
 __all__ = [
-    "BaseCoordinator",
+    "BaseEngine",
     "Coordinator",
     "CoordinatorContext",
     "HealthStatus",

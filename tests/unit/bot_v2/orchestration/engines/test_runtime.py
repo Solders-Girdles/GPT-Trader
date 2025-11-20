@@ -1,4 +1,4 @@
-"""Comprehensive tests for RuntimeCoordinator covering broker bootstrap, risk management, and runtime safety."""
+"""Comprehensive tests for RuntimeEngine covering broker bootstrap, risk management, and runtime safety."""
 
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ from bot_v2.orchestration.engines.base import CoordinatorContext
 from bot_v2.orchestration.engines.runtime import (
     BrokerBootstrapArtifacts,
     BrokerBootstrapError,
-    RuntimeCoordinator,
+    RuntimeEngine,
 )
 from bot_v2.orchestration.perps_bot_state import PerpsBotRuntimeState
 from bot_v2.orchestration.runtime_settings import RuntimeSettings
@@ -112,9 +112,9 @@ def coordinator_context(mock_config, mock_service_registry, mock_event_store, mo
 
 @pytest.fixture
 def runtime_coordinator(coordinator_context, mock_config_controller):
-    """Create RuntimeCoordinator instance with mocked dependencies."""
+    """Create RuntimeEngine instance with mocked dependencies."""
     # Simplified coordinator takes only context
-    return RuntimeCoordinator(coordinator_context.with_updates(
+    return RuntimeEngine(coordinator_context.with_updates(
         config_controller=mock_config_controller,
         strategy_orchestrator=Mock(),
         execution_coordinator=Mock(),
@@ -122,15 +122,15 @@ def runtime_coordinator(coordinator_context, mock_config_controller):
     ))
 
 
-class TestRuntimeCoordinatorInitialization:
-    """Test RuntimeCoordinator initialization and basic properties."""
+class TestRuntimeEngineInitialization:
+    """Test RuntimeEngine initialization and basic properties."""
 
     def test_coordinator_name(self, runtime_coordinator):
         """Test coordinator name property."""
         assert runtime_coordinator.name == "runtime"
 
     def test_initialization_with_context(self, coordinator_context, mock_config_controller):
-        """Test RuntimeCoordinator initialization with context."""
+        """Test RuntimeEngine initialization with context."""
         # In new architecture, we pass context, and controller is in context or None
         # If we want to set it explicitly, we pass it in context or use with_updates
 
@@ -138,7 +138,7 @@ class TestRuntimeCoordinatorInitialization:
             config_controller=mock_config_controller
         )
 
-        coordinator = RuntimeCoordinator(context_with_controller)
+        coordinator = RuntimeEngine(context_with_controller)
 
         # Check that it picked up controller from context if implemented that way
         # (Simplified runtime doesn't store _config_controller directly usually,
@@ -217,7 +217,7 @@ class TestBrokerBootstrap:
             runtime_coordinator.update_context(coordinator_context)
 
             # Access the broker manager to check logic, or call via runtime if it delegates
-            # RuntimeCoordinator delegates _should_use_mock_broker to _broker_manager
+            # RuntimeEngine delegates _should_use_mock_broker to _broker_manager
             assert runtime_coordinator._broker_manager._should_use_mock_broker(coordinator_context.config) is False
 
     @patch("bot_v2.orchestration.deterministic_broker.DeterministicBroker")
@@ -426,7 +426,7 @@ class TestReduceOnlyMode:
     """Test reduce-only mode functionality."""
 
     # Reduce-only mode logic has moved to RiskManagementService and SessionCoordinationService
-    # The RuntimeCoordinator only delegates if method exists.
+    # The RuntimeEngine only delegates if method exists.
     # Legacy tests relying on mixin implementation are skipped or removed.
     pass
 

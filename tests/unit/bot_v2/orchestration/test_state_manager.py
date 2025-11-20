@@ -7,13 +7,15 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from bot_v2.orchestration.state_manager import (
+from bot_v2.orchestration.state.unified_state import (
     ReduceOnlyModeSource,
     ReduceOnlyModeState,
-    ReduceOnlyModeStateManager,
-    StateChangeRequest,
+    SystemState as ReduceOnlyModeStateManager,
+    StateChange,  # Replaced StateChangeRequest
     create_reduce_only_state_manager,
 )
+# Alias StateChangeRequest to StateChange for test compatibility if needed, or just update usage
+StateChangeRequest = StateChange
 
 
 class TestReduceOnlyModeSource:
@@ -373,7 +375,7 @@ class TestReduceOnlyModeStateManager:
         assert summary["validation_enabled"] is True
         assert "last_change" in summary
 
-    @patch("bot_v2.orchestration.state_manager.emit_metric")
+    @patch("bot_v2.orchestration.state.unified_state.emit_metric")
     def test_emit_state_change_metric(self, mock_emit_metric: MagicMock) -> None:
         """Test that metrics are emitted for state changes."""
         event_store = MagicMock()
@@ -387,7 +389,7 @@ class TestReduceOnlyModeStateManager:
 
         mock_emit_metric.assert_called_once()
 
-    @patch("bot_v2.orchestration.state_manager.emit_metric")
+    @patch("bot_v2.orchestration.state.unified_state.emit_metric")
     def test_emit_metric_error_handling(self, mock_emit_metric: MagicMock) -> None:
         """Test that metric emission errors don't break state changes."""
         event_store = MagicMock()

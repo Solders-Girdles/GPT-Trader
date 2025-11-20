@@ -9,7 +9,7 @@ import pytest
 
 from bot_v2.config.types import Profile
 from bot_v2.orchestration.engines.base import CoordinatorContext
-from bot_v2.orchestration.engines.telemetry import TelemetryCoordinator
+from bot_v2.orchestration.engines.telemetry_coordinator import TelemetryEngine
 from bot_v2.orchestration.service_registry import ServiceRegistry
 
 
@@ -54,8 +54,8 @@ def fake_context():
 
 @pytest.fixture
 def telemetry_coordinator(fake_context):
-    """Create TelemetryCoordinator instance with basic context."""
-    coordinator = TelemetryCoordinator(context=fake_context)
+    """Create TelemetryEngine instance with basic context."""
+    coordinator = TelemetryEngine(context=fake_context)
     return coordinator
 
 
@@ -131,7 +131,7 @@ def mock_risk_manager():
 def telemetry_coordinator_with_services(
     fake_context, mock_account_telemetry, mock_market_monitor, mock_risk_manager
 ):
-    """Create TelemetryCoordinator with mock services already in registry."""
+    """Create TelemetryEngine with mock services already in registry."""
     # Add mock services to registry extras
     fake_context.registry.extras.update(
         {
@@ -141,5 +141,5 @@ def telemetry_coordinator_with_services(
     )
     fake_context.risk_manager = mock_risk_manager
 
-    coordinator = TelemetryCoordinator(context=fake_context)
+    coordinator = TelemetryEngine(context=fake_context)
     return coordinator

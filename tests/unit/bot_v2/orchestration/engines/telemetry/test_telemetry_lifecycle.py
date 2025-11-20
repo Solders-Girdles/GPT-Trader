@@ -18,7 +18,7 @@ import pytest
 
 from bot_v2.features.brokerages.coinbase.adapter import CoinbaseBrokerage
 from bot_v2.orchestration.configuration import Profile
-from bot_v2.orchestration.engines.telemetry_coordinator import TelemetryCoordinator
+from bot_v2.orchestration.engines.telemetry_coordinator import TelemetryEngine
 
 
 @pytest.mark.asyncio
@@ -33,7 +33,7 @@ async def test_start_background_tasks_starts_account_telemetry(
     account_telemetry.run = AsyncMock()
 
     context = make_context(broker=broker, risk_manager=risk_manager)
-    coordinator = TelemetryCoordinator(context)
+    coordinator = TelemetryEngine(context)
     updated_context = coordinator.initialize(context)
 
     extras = dict(updated_context.registry.extras)
@@ -61,7 +61,7 @@ async def test_shutdown_cancels_streaming(make_context, monkeypatch: pytest.Monk
     risk_manager.last_mark_update = {}
 
     context = make_context(broker=broker, risk_manager=risk_manager)
-    coordinator = TelemetryCoordinator(context)
+    coordinator = TelemetryEngine(context)
     updated = coordinator.initialize(context)
     coordinator.update_context(
         updated.with_updates(
@@ -85,7 +85,7 @@ class TestStreamingLifecycleManagement:
         broker = Mock(spec=CoinbaseBrokerage)
         broker.__class__ = CoinbaseBrokerage
         context = make_context(broker=broker, symbols=())  # Empty symbols
-        coordinator = TelemetryCoordinator(context)
+        coordinator = TelemetryEngine(context)
         coordinator.initialize(context)
 
         result = await coordinator._start_streaming()
@@ -107,7 +107,7 @@ class TestStreamingLifecycleManagement:
         updated_config = context.config.model_copy(update={"perps_stream_level": "invalid"})
         context = context.with_updates(config=updated_config)
 
-        coordinator = TelemetryCoordinator(context)
+        coordinator = TelemetryEngine(context)
         coordinator.initialize(context)
 
         # Mock the event loop to prevent actual streaming
@@ -133,7 +133,7 @@ class TestStreamingLifecycleManagement:
         broker = Mock(spec=CoinbaseBrokerage)
         broker.__class__ = CoinbaseBrokerage
         context = make_context(broker=broker, symbols=("BTC-PERP",))
-        coordinator = TelemetryCoordinator(context)
+        coordinator = TelemetryEngine(context)
         coordinator.initialize(context)
 
         # Mock get_running_loop to raise RuntimeError
@@ -154,7 +154,7 @@ class TestStreamingLifecycleManagement:
         broker = Mock(spec=CoinbaseBrokerage)
         broker.__class__ = CoinbaseBrokerage
         context = make_context(broker=broker, symbols=("BTC-PERP",))
-        coordinator = TelemetryCoordinator(context)
+        coordinator = TelemetryEngine(context)
         coordinator.initialize(context)
 
         # Test the state cleanup parts of _stop_streaming
@@ -180,7 +180,7 @@ class TestStreamingLifecycleManagement:
         broker = Mock(spec=CoinbaseBrokerage)
         broker.__class__ = CoinbaseBrokerage
         context = make_context(broker=broker, symbols=("BTC-PERP",))
-        coordinator = TelemetryCoordinator(context)
+        coordinator = TelemetryEngine(context)
         coordinator.initialize(context)
 
         # Create a mock task that raises CancelledError when awaited
@@ -206,7 +206,7 @@ class TestStreamingLifecycleManagement:
         broker = Mock(spec=CoinbaseBrokerage)
         broker.__class__ = CoinbaseBrokerage
         context = make_context(broker=broker, symbols=("BTC-PERP",))
-        coordinator = TelemetryCoordinator(context)
+        coordinator = TelemetryEngine(context)
         coordinator.initialize(context)
 
         # Create a mock task that's already done
@@ -232,7 +232,7 @@ class TestStreamingLifecycleManagement:
         broker = Mock(spec=CoinbaseBrokerage)
         broker.__class__ = CoinbaseBrokerage
         context = make_context(broker=broker, symbols=("BTC-PERP",))
-        coordinator = TelemetryCoordinator(context)
+        coordinator = TelemetryEngine(context)
         coordinator.initialize(context)
 
         # No active streaming task
@@ -250,7 +250,7 @@ class TestStreamingLifecycleManagement:
         broker = Mock(spec=CoinbaseBrokerage)
         broker.__class__ = CoinbaseBrokerage
         context = make_context(broker=broker, symbols=("BTC-PERP",))
-        coordinator = TelemetryCoordinator(context)
+        coordinator = TelemetryEngine(context)
         coordinator.initialize(context)
 
         # Create a mock successful task
@@ -270,7 +270,7 @@ class TestStreamingLifecycleManagement:
         broker = Mock(spec=CoinbaseBrokerage)
         broker.__class__ = CoinbaseBrokerage
         context = make_context(broker=broker, symbols=("BTC-PERP",))
-        coordinator = TelemetryCoordinator(context)
+        coordinator = TelemetryEngine(context)
         coordinator.initialize(context)
 
         # Create a mock cancelled task
@@ -290,7 +290,7 @@ class TestStreamingLifecycleManagement:
         broker = Mock(spec=CoinbaseBrokerage)
         broker.__class__ = CoinbaseBrokerage
         context = make_context(broker=broker, symbols=("BTC-PERP",))
-        coordinator = TelemetryCoordinator(context)
+        coordinator = TelemetryEngine(context)
         coordinator.initialize(context)
 
         # Create a mock failed task
@@ -320,7 +320,7 @@ class TestStreamingLifecycleManagement:
         )
         context = context.with_updates(config=updated_config)
 
-        coordinator = TelemetryCoordinator(context)
+        coordinator = TelemetryEngine(context)
         coordinator.initialize(context)
 
         # Start streaming
@@ -357,7 +357,7 @@ class TestStreamingLifecycleManagement:
         )
         context = context.with_updates(config=updated_config)
 
-        coordinator = TelemetryCoordinator(context)
+        coordinator = TelemetryEngine(context)
         coordinator.initialize(context)
 
         # Perform multiple start/stop cycles
@@ -387,7 +387,7 @@ class TestStreamingLifecycleManagement:
         broker = Mock(spec=CoinbaseBrokerage)
         broker.__class__ = CoinbaseBrokerage
         context = make_context(broker=broker, symbols=("BTC-PERP",))
-        coordinator = TelemetryCoordinator(context)
+        coordinator = TelemetryEngine(context)
         coordinator.initialize(context)
 
         # Set up streaming state
@@ -421,7 +421,7 @@ class TestStreamingLifecycleManagement:
                 update={"perps_enable_streaming": True, "profile": Profile.CANARY}
             )
         )
-        coordinator_canary = TelemetryCoordinator(context_canary_enabled)
+        coordinator_canary = TelemetryEngine(context_canary_enabled)
         assert coordinator_canary._should_enable_streaming() is True
 
         # Test PROD profile with streaming enabled
@@ -431,7 +431,7 @@ class TestStreamingLifecycleManagement:
                 update={"perps_enable_streaming": True, "profile": Profile.PROD}
             )
         )
-        coordinator_prod = TelemetryCoordinator(context_prod_enabled)
+        coordinator_prod = TelemetryEngine(context_prod_enabled)
         assert coordinator_prod._should_enable_streaming() is True
 
         # Test DEV profile (should not enable streaming)
@@ -441,7 +441,7 @@ class TestStreamingLifecycleManagement:
                 update={"perps_enable_streaming": True, "profile": Profile.DEV}
             )
         )
-        coordinator_dev = TelemetryCoordinator(context_dev)
+        coordinator_dev = TelemetryEngine(context_dev)
         assert coordinator_dev._should_enable_streaming() is False
 
         # Test streaming disabled
@@ -451,5 +451,5 @@ class TestStreamingLifecycleManagement:
                 update={"perps_enable_streaming": False, "profile": Profile.PROD}
             )
         )
-        coordinator_disabled = TelemetryCoordinator(context_disabled)
+        coordinator_disabled = TelemetryEngine(context_disabled)
         assert coordinator_disabled._should_enable_streaming() is False

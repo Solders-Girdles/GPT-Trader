@@ -21,17 +21,17 @@ if TYPE_CHECKING:  # pragma: no cover - type checking only
 
 from bot_v2.utilities.logging_patterns import get_logger
 
-from ..base import BaseCoordinator, CoordinatorContext, HealthStatus
+from ..base import BaseEngine, CoordinatorContext, HealthStatus
 from .broker_management import BrokerBootstrapArtifacts, BrokerManagerService
 from .risk_management import RiskManagementService
 
-logger = get_logger(__name__, component="runtime_coordinator")
+logger = get_logger(__name__, component="runtime_engine")
 
 
-class RuntimeCoordinator(BaseCoordinator):
-    """Runtime coordinator using focused services.
+class RuntimeEngine(BaseEngine):
+    """Runtime engine using focused services.
 
-    This coordinator delegates runtime management responsibilities to specialized
+    This engine delegates runtime management responsibilities to specialized
     services, providing clean separation of concerns and improved
     maintainability compared to the monolithic runtime coordinator.
     """
@@ -51,18 +51,18 @@ class RuntimeCoordinator(BaseCoordinator):
         }
 
         logger.info(
-            "Runtime coordinator initialized",
-            operation="runtime_coordinator_init",
+            "Runtime engine initialized",
+            operation="runtime_engine_init",
             services=list(self._service_health.keys()),
         )
 
     @property
     def name(self) -> str:
-        """Get coordinator name."""
+        """Get engine name."""
         return "runtime"
 
     def update_context(self, context: CoordinatorContext) -> None:
-        """Update coordinator context."""
+        """Update engine context."""
         super().update_context(context)
 
         # Update services with new context
@@ -70,8 +70,8 @@ class RuntimeCoordinator(BaseCoordinator):
         self._risk_management.context = context
 
     def initialize(self, context: CoordinatorContext | None = None) -> CoordinatorContext:
-        """Initialize runtime coordinator and all services."""
-        logger.info("Initializing runtime coordinator")
+        """Initialize runtime engine and all services."""
+        logger.info("Initializing runtime engine")
 
         # Update context if provided
         if context is not None:
@@ -95,8 +95,8 @@ class RuntimeCoordinator(BaseCoordinator):
         )
 
         logger.info(
-            "Runtime coordinator initialized successfully",
-            operation="runtime_coordinator_ready",
+            "Runtime engine initialized successfully",
+            operation="runtime_engine_ready",
             broker_type=type(broker_artifacts.broker).__name__,
             risk_manager_type=type(risk_manager).__name__,
         )
@@ -162,14 +162,14 @@ class RuntimeCoordinator(BaseCoordinator):
 
         return HealthStatus(
             healthy=all_healthy,
-            component="runtime_coordinator",
+            component="runtime_engine",
             details={"service_health": service_health},
             error=None if all_healthy else "Some runtime services unhealthy",
         )
 
     async def start_background_tasks(self) -> list:
         """Start background tasks for runtime services."""
-        logger.info("Starting runtime coordinator background tasks")
+        logger.info("Starting runtime engine background tasks")
 
         # The focused services manage their own background tasks
         # Return empty list since services are self-managing
@@ -177,7 +177,7 @@ class RuntimeCoordinator(BaseCoordinator):
 
     def shutdown(self) -> None:
         """Shutdown all runtime services."""
-        logger.info("Shutting down runtime coordinator")
+        logger.info("Shutting down runtime engine")
 
         # Services don't currently have explicit shutdown methods
         # This would be added to the individual service classes
@@ -187,7 +187,7 @@ class RuntimeCoordinator(BaseCoordinator):
     def bootstrap(self) -> None:
         """Legacy bootstrap method - delegates to new initialization."""
         # This method maintains compatibility with existing code that calls
-        # the original runtime coordinator's bootstrap method
+        # the original runtime engine's bootstrap method
         self.initialize(self.context)
 
     def _init_broker(self, context: CoordinatorContext | None = None) -> CoordinatorContext:
@@ -237,12 +237,12 @@ class RuntimeCoordinator(BaseCoordinator):
     def set_reduce_only_mode(self, enabled: bool, reason: str) -> None:
         """Set reduce-only mode using unified state management."""
         # This method maintains compatibility with existing code that expects
-        # this interface on the runtime coordinator
+        # this interface on the runtime engine
 
         # If unified state manager is available, use it
         if hasattr(self.context, "reduce_only_state_manager"):
             state_manager = self.context.reduce_only_state_manager
-            state_manager.set_reduce_only_mode(enabled, "runtime_coordinator", reason)
+            state_manager.set_reduce_only_mode(enabled, "runtime_engine", reason)
 
         # Fallback to risk manager method if available
         risk_manager = self.get_risk_manager()
@@ -250,7 +250,7 @@ class RuntimeCoordinator(BaseCoordinator):
             risk_manager.set_reduce_only_mode(enabled, reason)
 
         logger.info(
-            f"Reduce-only mode set to {enabled} via simplified coordinator",
+            f"Reduce-only mode set to {enabled} via simplified engine",
             operation="set_reduce_only_mode",
             enabled=enabled,
             reason=reason,
@@ -295,5 +295,5 @@ class RuntimeCoordinator(BaseCoordinator):
 
 
 __all__ = [
-    "RuntimeCoordinator",
+    "RuntimeEngine",
 ]

@@ -14,9 +14,9 @@ from bot_v2.features.live_trade.strategies.perps_baseline import Action
 from bot_v2.orchestration.configuration import BotConfig, Profile
 from bot_v2.orchestration.engines.base import CoordinatorContext
 from bot_v2.orchestration.engines.execution import ExecutionEngine
-from bot_v2.orchestration.engines.runtime import RuntimeCoordinator
+from bot_v2.orchestration.engines.runtime import RuntimeEngine
 from bot_v2.orchestration.engines.strategy import TradingEngine
-from bot_v2.orchestration.engines.telemetry import TelemetryCoordinator
+from bot_v2.orchestration.engines.telemetry_coordinator import TelemetryEngine
 from bot_v2.orchestration.perps_bot_state import PerpsBotRuntimeState
 from bot_v2.orchestration.service_registry import ServiceRegistry
 
@@ -56,10 +56,10 @@ def integration_context():
 @pytest.fixture
 def coordinators(integration_context):
     """All coordinators initialized for integration testing."""
-    runtime_coord = RuntimeCoordinator(integration_context)
+    runtime_coord = RuntimeEngine(integration_context)
     strategy_coord = TradingEngine(integration_context)
     execution_coord = ExecutionEngine(integration_context)
-    telemetry_coord = TelemetryCoordinator(integration_context)
+    telemetry_coord = TelemetryEngine(integration_context)
 
     mutable_context = integration_context.with_updates(
         execution_coordinator=execution_coord,

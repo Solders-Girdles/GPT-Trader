@@ -5,7 +5,7 @@ from types import SimpleNamespace
 
 from bot_v2.orchestration.configuration import BotConfig, Profile
 from bot_v2.orchestration.engines.base import CoordinatorContext
-from bot_v2.orchestration.engines.telemetry import TelemetryCoordinator
+from bot_v2.orchestration.engines.telemetry_coordinator import TelemetryEngine
 from bot_v2.orchestration.perps_bot_state import PerpsBotRuntimeState
 from bot_v2.orchestration.service_registry import ServiceRegistry
 
@@ -87,7 +87,7 @@ def test_stream_loop_updates_mark_window_and_metrics() -> None:
         strategy_coordinator=strategy,
     )
 
-    coordinator = TelemetryCoordinator(context)
+    coordinator = TelemetryEngine(context)
     coordinator.update_context(context)
     coordinator._market_monitor = None  # type: ignore[attr-defined]
 
@@ -121,7 +121,7 @@ def test_streaming_disabled_returns_none() -> None:
         set_running_flag=lambda _: None,
     )
 
-    coordinator = TelemetryCoordinator(context)
+    coordinator = TelemetryEngine(context)
     coordinator.update_context(context)
 
     assert coordinator._should_enable_streaming() is False

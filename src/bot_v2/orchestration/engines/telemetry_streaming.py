@@ -11,28 +11,33 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 def _logger():
-    from bot_v2.orchestration.engines import telemetry as telemetry_module
+    from bot_v2.orchestration.engines import telemetry_coordinator as telemetry_module
 
     return telemetry_module.logger
 
 
 def _emit_metric(event_store, bot_id: str, payload: dict[str, Any]) -> None:
-    from bot_v2.orchestration.engines import telemetry as telemetry_module
+    from bot_v2.orchestration.engines import telemetry_coordinator as telemetry_module
 
-    telemetry_module.emit_metric(event_store, bot_id, payload)
+    # If emit_metric is not in telemetry_coordinator, import from utility
+    if hasattr(telemetry_module, "emit_metric"):
+        telemetry_module.emit_metric(event_store, bot_id, payload)
+    else:
+        from bot_v2.utilities.telemetry import emit_metric
+        emit_metric(event_store, bot_id, payload)
 
 
-def start_streaming_background(coordinator: "TelemetryCoordinator") -> None:
+def start_streaming_background(coordinator: "TelemetryEngine") -> None:
     if not coordinator._should_enable_streaming():
         return
     coordinator._schedule_coroutine(coordinator._start_streaming())
 
 
-def stop_streaming_background(coordinator: "TelemetryCoordinator") -> None:
+def stop_streaming_background(coordinator: "TelemetryEngine") -> None:
     coordinator._schedule_coroutine(coordinator._stop_streaming())
 
 
-def _should_enable_streaming(coordinator: "TelemetryCoordinator") -> bool:
+def _should_enable_streaming(coordinator: "TelemetryEngine") -> bool:
     config = coordinator.context.config
     profile = getattr(config, "profile", None)
     if hasattr(profile, "value"):
@@ -49,7 +54,7 @@ def _should_enable_streaming(coordinator: "TelemetryCoordinator") -> bool:
 
 
 def restart_streaming_if_needed(
-    coordinator: "TelemetryCoordinator", diff: dict[str, Any]
+    coordinator: "TelemetryEngine", diff: dict[str, Any]
 ) -> None:
     relevant = {"perps_enable_streaming", "perps_stream_level", "symbols"}
     if not relevant.intersection(diff.keys()):
@@ -114,7 +119,7 @@ def restart_streaming_if_needed(
 
 
 def _schedule_coroutine(
-    coordinator: "TelemetryCoordinator", coro: Coroutine[Any, Any, Any]
+    coordinator: "TelemetryEngine", coro: Coroutine[Any, Any, Any]
 ) -> None:
     try:
         loop = asyncio.get_running_loop()
@@ -141,7 +146,7 @@ def _schedule_coroutine(
         loop.run_until_complete(coro)
 
 
-async def _start_streaming(coordinator: "TelemetryCoordinator") -> asyncio.Task[Any] | None:
+async def _start_streaming(coordinator: "TelemetryEngine") -> asyncio.Task[Any] | None:
     symbols = list(coordinator.context.symbols)
     if not symbols:
         _logger().debug(
@@ -192,7 +197,7 @@ async def _start_streaming(coordinator: "TelemetryCoordinator") -> asyncio.Task[
     return task
 
 
-async def _stop_streaming(coordinator: "TelemetryCoordinator") -> None:
+async def _stop_streaming(coordinator: "TelemetryEngine") -> None:
     coordinator._pending_stream_config = None
     stop_signal = coordinator._ws_stop
     if stop_signal is not None:
@@ -230,7 +235,7 @@ async def _stop_streaming(coordinator: "TelemetryCoordinator") -> None:
 
 
 def _handle_stream_task_completion(
-    coordinator: "TelemetryCoordinator", task: asyncio.Task[Any]
+    coordinator: "TelemetryEngine", task: asyncio.Task[Any]
 ) -> None:
     coordinator._stream_task = None
     coordinator._ws_stop = None
@@ -252,7 +257,7 @@ def _handle_stream_task_completion(
 
 
 async def _run_stream_loop_async(
-    coordinator: "TelemetryCoordinator",
+    coordinator: "TelemetryEngine",
     symbols: list[str],
     level: int,
     stop_signal: threading.Event | None,
@@ -273,7 +278,7 @@ async def _run_stream_loop_async(
 
 
 def _run_stream_loop(
-    coordinator: "TelemetryCoordinator",
+    coordinator: "TelemetryEngine",
     symbols: list[str],
     level: int,
     stop_signal: threading.Event | None,

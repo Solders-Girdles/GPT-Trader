@@ -100,6 +100,15 @@ Before branching, make sure to:
 - Type hints where beneficial
 - Maximum line length: 100 characters
 
+### Naming Standards
+- Follow conventions in `docs/naming.md` for all code, configuration, and CLI surfaces
+- Avoid banned abbreviations (`qty`, `cfg`, `svc`, `mgr`, `util`)
+- Use descriptive, unambiguous names
+- Run `python scripts/agents/naming_inventory.py` before submitting PRs
+- Document exceptions for external API field names with `# naming: allow` comments
+
+See **[Naming Standards](docs/naming.md)** for complete rules and examples.
+
 ### Test Quality
 - Descriptive test names that explain what's being tested
 - One assertion per test when possible

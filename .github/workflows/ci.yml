@@ -83,6 +83,23 @@ jobs:
         set -euo pipefail
         poetry run black --check .
 
+    - name: Check naming standards
+      run: |
+        set -euo pipefail
+        python scripts/agents/naming_inventory.py \
+          --summary naming_inventory.md \
+          --json naming_inventory.json
+        echo "📊 Naming inventory generated. See artifacts for details."
+        cat naming_inventory.md
+
+    - name: Upload naming inventory report
+      uses: actions/upload-artifact@v4
+      with:
+        name: naming-inventory
+        path: |
+          naming_inventory.md
+          naming_inventory.json
+
     - name: Type-check with mypy
       run: |
         set -euo pipefail

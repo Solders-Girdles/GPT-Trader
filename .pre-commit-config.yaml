@@ -34,3 +34,10 @@ repos:
         language: python
         pass_filenames: true
         files: ^tests/.*\.py$
+    -   id: naming-inventory
+        name: naming-inventory
+        entry: python scripts/agents/naming_inventory.py --quiet
+        language: system
+        pass_filenames: false
+        always_run: true
+        verbose: true

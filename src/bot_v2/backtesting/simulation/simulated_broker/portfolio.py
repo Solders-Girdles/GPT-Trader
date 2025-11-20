@@ -132,10 +132,10 @@ class PortfolioManager:
         symbol = order.symbol
         if symbol not in self._positions:
             side = "long" if order.side == OrderSide.BUY else "short"
-            qty = fill_quantity if side == "long" else -fill_quantity
+            quantity = fill_quantity if side == "long" else -fill_quantity
             self._positions[symbol] = Position(
                 symbol=symbol,
-                quantity=qty,
+                quantity=quantity,
                 entry_price=fill_price,
                 mark_price=fill_price,
                 unrealized_pnl=Decimal("0"),
@@ -160,18 +160,18 @@ class PortfolioManager:
         price: Decimal,
     ) -> None:
         position = self._positions[symbol]
-        current_qty = position.quantity
+        current_quantity = position.quantity
         entry_price = position.entry_price
 
-        new_qty = current_qty + quantity if side == OrderSide.BUY else current_qty - quantity
+        new_quantity = current_quantity + quantity if side == OrderSide.BUY else current_quantity - quantity
 
-        closing = (current_qty > 0 and new_qty < current_qty) or (current_qty < 0 and new_qty > current_qty)
+        closing = (current_quantity > 0 and new_quantity < current_quantity) or (current_quantity < 0 and new_quantity > current_quantity)
         if closing:
-            closed_qty = min(abs(quantity), abs(current_qty))
-            if current_qty > 0:
-                pnl = (price - entry_price) * closed_qty
+            closed_quantity = min(abs(quantity), abs(current_quantity))
+            if current_quantity > 0:
+                pnl = (price - entry_price) * closed_quantity
             else:
-                pnl = (entry_price - price) * closed_qty
+                pnl = (entry_price - price) * closed_quantity
 
             self._realized_pnl += pnl
             position.realized_pnl += pnl
@@ -180,17 +180,17 @@ class PortfolioManager:
             else:
                 self._losing_trades += 1
 
-        if abs(new_qty) < Decimal("0.00000001"):
+        if abs(new_quantity) < Decimal("0.00000001"):
             del self._positions[symbol]
             return
 
-        position.quantity = new_qty
-        if (current_qty > 0 and new_qty > current_qty) or (current_qty < 0 and new_qty < current_qty):
-            total_cost = (abs(current_qty) * entry_price) + (quantity * price)
-            total_qty = abs(new_qty)
-            if total_qty > 0:
-                position.entry_price = total_cost / total_qty
-        position.side = "long" if new_qty > 0 else "short"
+        position.quantity = new_quantity
+        if (current_quantity > 0 and new_quantity > current_quantity) or (current_quantity < 0 and new_quantity < current_quantity):
+            total_cost = (abs(current_quantity) * entry_price) + (quantity * price)
+            total_quantity = abs(new_quantity)
+            if total_quantity > 0:
+                position.entry_price = total_cost / total_quantity
+        position.side = "long" if new_quantity > 0 else "short"
 
     # ------------------------------------------------------------------
     def get_equity(self) -> Decimal:

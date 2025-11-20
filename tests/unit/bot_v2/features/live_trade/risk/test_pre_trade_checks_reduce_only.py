@@ -36,7 +36,7 @@ class TestPreTradeValidatorReduceOnly:
             validator.pre_trade_validate(
                 "BTC-USD",
                 "buy",
-                qty=Decimal("0.5"),
+                quantity=Decimal("0.5"),
                 price=Decimal("50000"),
                 product=btc_perpetual_product,
                 equity=Decimal("10000"),
@@ -48,7 +48,7 @@ class TestPreTradeValidatorReduceOnly:
             validator.pre_trade_validate(
                 "BTC-USD",
                 "sell",
-                qty=Decimal("0.5"),
+                quantity=Decimal("0.5"),
                 price=Decimal("50000"),
                 product=btc_perpetual_product,
                 equity=Decimal("10000"),
@@ -70,7 +70,7 @@ class TestPreTradeValidatorReduceOnly:
             validator.pre_trade_validate(
                 "BTC-USD",
                 "sell",
-                qty=Decimal("0.005"),  # Small reduction to stay within exposure limits
+                quantity=Decimal("0.005"),  # Small reduction to stay within exposure limits
                 price=Decimal("50000"),
                 product=btc_perpetual_product,
                 equity=Decimal("10000"),
@@ -87,7 +87,7 @@ class TestPreTradeValidatorReduceOnly:
             validator.pre_trade_validate(
                 "BTC-USD",
                 "buy",
-                qty=Decimal("0.005"),  # Small reduction to stay within exposure limits
+                quantity=Decimal("0.005"),  # Small reduction to stay within exposure limits
                 price=Decimal("50000"),
                 product=btc_perpetual_product,
                 equity=Decimal("10000"),
@@ -107,7 +107,7 @@ class TestPreTradeValidatorReduceOnly:
             validator.pre_trade_validate(
                 "BTC-USD",
                 "sell",
-                qty=Decimal("0.1"),
+                quantity=Decimal("0.1"),
                 price=Decimal("50000"),
                 product=btc_perpetual_product,
                 equity=Decimal("10000"),

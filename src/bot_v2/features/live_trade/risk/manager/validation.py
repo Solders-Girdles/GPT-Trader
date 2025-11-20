@@ -18,17 +18,14 @@ class LiveRiskManagerValidationMixin:
         self,
         symbol: str,
         side: str,
-        qty: Decimal | None = None,
+        quantity: Decimal | None = None,
         price: Decimal | None = None,
         product: Product | None = None,
         equity: Decimal | None = None,
         current_positions: dict[str, Any] | None = None,
-        *,
-        quantity: Decimal | None = None,
     ) -> None:
         """Validate order against all risk limits before placement."""
-        order_qty = qty if qty is not None else quantity
-        quantity_str = str(order_qty) if order_qty is not None else ""
+        quantity_str = str(quantity) if quantity is not None else ""
         positions_snapshot = (
             current_positions if current_positions else self.get_current_positions(as_dict=True)
         )
@@ -80,7 +77,7 @@ class LiveRiskManagerValidationMixin:
                 exposure_orders: dict[str, int] = self._integration_state.setdefault(
                     "exposure_orders", {}
                 )
-                quantity_source = quantity_str or qty or quantity or "0"
+                quantity_source = quantity_str or quantity or "0"
                 quantity_key = self._normalize_quantity_key(quantity_source)
                 order_key = f"{symbol}:{quantity_key}"
                 existing_index = exposure_orders.get(order_key)
@@ -126,7 +123,7 @@ class LiveRiskManagerValidationMixin:
             self._enforce_pre_trade_circuit_breakers(
                 symbol=symbol,
                 side=side,
-                quantity=order_qty,
+                quantity=quantity,
                 price=price,
                 equity=equity,
                 positions=positions_snapshot,
@@ -134,12 +131,11 @@ class LiveRiskManagerValidationMixin:
             self.pre_trade_validator.pre_trade_validate(
                 symbol=symbol,
                 side=side,
-                qty=qty,
+                quantity=quantity,
                 price=price,
                 product=product,
                 equity=equity,
                 current_positions=positions_snapshot,
-                quantity=quantity,
             )
         except ValidationError as exc:
             self._record_risk_event(
@@ -161,9 +157,7 @@ class LiveRiskManagerValidationMixin:
             )
             raise
         else:
-            normalized_quantity = self._normalize_quantity_key(
-                quantity_str or quantity or qty or "0"
-            )
+            normalized_quantity = self._normalize_quantity_key(quantity_str or quantity or "0")
             side_str = str(side)
             if "." in side_str:
                 side_key = side_str.split(".")[-1].lower()
@@ -193,41 +187,35 @@ class LiveRiskManagerValidationMixin:
     def validate_leverage(
         self,
         symbol: str,
-        qty: Decimal | None = None,
+        quantity: Decimal | None = None,
         price: Decimal | None = None,
         product: Product | None = None,
         equity: Decimal | None = None,
-        *,
-        quantity: Decimal | None = None,
     ) -> None:
         """Validate that order doesn't exceed leverage limits."""
         self.pre_trade_validator.validate_leverage(
             symbol=symbol,
-            qty=qty,
+            quantity=quantity,
             price=price,
             product=product,
             equity=equity,
-            quantity=quantity,
         )
 
     def validate_liquidation_buffer(
         self,
         symbol: str,
-        qty: Decimal | None = None,
+        quantity: Decimal | None = None,
         price: Decimal | None = None,
         product: Product | None = None,
         equity: Decimal | None = None,
-        *,
-        quantity: Decimal | None = None,
     ) -> None:
         """Ensure adequate buffer from liquidation after trade."""
         self.pre_trade_validator.validate_liquidation_buffer(
             symbol=symbol,
-            qty=qty,
+            quantity=quantity,
             price=price,
             product=product,
             equity=equity,
-            quantity=quantity,
         )
 
     def validate_exposure_limits(
@@ -249,20 +237,17 @@ class LiveRiskManagerValidationMixin:
         self,
         symbol: str,
         side: str,
-        qty: Decimal | None = None,
+        quantity: Decimal | None = None,
         expected_price: Decimal | None = None,
         mark_or_quote: Decimal | None = None,
-        *,
-        quantity: Decimal | None = None,
     ) -> None:
         """Optional slippage guard based on spread."""
         self.pre_trade_validator.validate_slippage_guard(
             symbol=symbol,
             side=side,
-            qty=qty,
+            quantity=quantity,
             expected_price=expected_price,
             mark_or_quote=mark_or_quote,
-            quantity=quantity,
         )
 
     def set_risk_info_provider(self, provider: Callable[[str], dict[str, Any]]) -> None:

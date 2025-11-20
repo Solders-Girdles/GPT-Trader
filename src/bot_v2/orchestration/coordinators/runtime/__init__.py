@@ -3,7 +3,6 @@
 from bot_v2.orchestration.order_reconciler import OrderReconciler
 
 from .coordinator import RuntimeCoordinator
-from .logging_utils import logger
 from .models import BrokerBootstrapArtifacts, BrokerBootstrapError
 
 __all__ = [
@@ -11,5 +10,4 @@ __all__ = [
     "BrokerBootstrapArtifacts",
     "BrokerBootstrapError",
     "OrderReconciler",
-    "logger",
 ]

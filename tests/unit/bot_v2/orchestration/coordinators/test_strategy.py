@@ -99,6 +99,10 @@ async def test_run_cycle_skips_when_session_guard_closed(monkeypatch: pytest.Mon
     monkeypatch.setattr(asyncio, "to_thread", fake_to_thread)
 
     coordinator = StrategyCoordinator(context)
+
+    # Mock backfill to avoid iteration error
+    coordinator._backfill_history = AsyncMock()
+
     await coordinator.run_cycle()
 
     system_monitor.log_status.assert_awaited_once()

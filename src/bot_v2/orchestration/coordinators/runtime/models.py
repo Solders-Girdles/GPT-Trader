@@ -19,6 +19,9 @@ class BrokerBootstrapArtifacts:
     registry_updates: dict[str, Any]
     event_store: object | None = None
     products: Sequence[object] = ()
+    market_data: Any | None = None
+    product_catalog: Any | None = None
+    account_manager: Any | None = None
 
 
 __all__ = ["BrokerBootstrapArtifacts", "BrokerBootstrapError"]

@@ -99,8 +99,8 @@ class TestTelemetryCoordinatorCore:
 
         result = TelemetryCoordinator._extract_mark_from_message(msg)
 
-        # The function calculates (-100 + 100) / 2 = 0
-        assert result == Decimal("0")
+        # The updated logic returns None for non-positive prices
+        assert result is None
 
     def test_extract_mark_from_message_with_non_numeric_data(self) -> None:
         """Test _extract_mark_from_message returns None for non-numeric data."""

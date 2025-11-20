@@ -58,6 +58,9 @@ class CoordinatorContext:
     session_guard: Any | None = None
     configuration_guardian: Any | None = None
     system_monitor: Any | None = None
+    market_data: Any | None = None
+    product_catalog: Any | None = None
+    account_manager: Any | None = None
     set_reduce_only_mode: Callable[[bool, str], None] | None = None
     shutdown_hook: Callable[[], Awaitable[None]] | None = None
     set_running_flag: Callable[[bool], None] | None = None

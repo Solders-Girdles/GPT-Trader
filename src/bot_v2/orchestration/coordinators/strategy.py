@@ -218,8 +218,15 @@ class StrategyCoordinator(BaseCoordinator):
         execution_coordinator: ExecutionCoordinator | None = self.context.execution_coordinator
         if execution_coordinator is None:
             raise RuntimeError("Execution coordinator not available for decision execution")
+
+        # Map to new API: execute_decision(action, **kwargs)
         await execution_coordinator.execute_decision(
-            symbol, decision, mark, product, position_state
+            action=decision.action,
+            symbol=symbol,
+            price=mark,
+            product=product,
+            position_state=position_state,
+            quantity=getattr(decision, "quantity", None)
         )
 
     def ensure_order_lock(self) -> asyncio.Lock:

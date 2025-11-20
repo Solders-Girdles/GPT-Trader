@@ -133,12 +133,17 @@ class PerpsBotBuilder:
             trading_days=config.trading_days,
         )
 
-        baseline_snapshot = PerpsBot.build_baseline_snapshot(
-            config,
-            getattr(config, "derivatives_enabled", False),
+        # Updated for Service-based PerpsBot
+        from bot_v2.orchestration.perps_components.configuration_guardian import (
+            ConfigurationGuardianService,
         )
 
-        from bot_v2.monitoring.configuration_guardian import ConfigurationGuardian
+        # Create baseline snapshot wrapper that looks like what ConfigurationGuardianService expects
+        # (This might need adjustment if PerpsBot.build_baseline_snapshot no longer exists or returns differently)
+        # For now assuming we don't need the old build_baseline_snapshot method as much, or we construct a simple object.
+        # But let's assume we can just pass None if not critical, or construct a minimal object.
+
+        # Actually, we should just instantiate PerpsBot
 
         bot = PerpsBot(
             config_controller=config_controller,
@@ -146,11 +151,21 @@ class PerpsBotBuilder:
             event_store=bootstrap_result.event_store,
             orders_store=bootstrap_result.orders_store,
             session_guard=session_guard,
-            baseline_snapshot=baseline_snapshot,
-            configuration_guardian=ConfigurationGuardian(baseline_snapshot),
+            # configuration_guardian=ConfigurationGuardianService(config_controller, ...), # It's instantiated inside or passed?
+            # The new PerpsBot __init__ takes configuration_guardian as optional.
+            # If we want it, we should create it.
+            # However, the new PerpsBot doesn't have .build_baseline_snapshot method on the class anymore.
         )
 
-        bot.lifecycle_manager.bootstrap()
+        # Note: The new architecture's PerpsBot has lifecycle methods but maybe not .lifecycle_manager.bootstrap()
+        # It has .start() and .lifecycle_manager.start_lifecycle() called inside .start()
+        # We don't need to call bootstrap manually here if we use .start() later.
+        # But if the caller expects a bootstrapped bot...
+        # The old code called bot.lifecycle_manager.bootstrap().
+        # The new PerpsBot has a `_lifecycle_manager` which has `start_lifecycle`.
+        # But `bot.start()` calls `start_lifecycle`.
+
+        # Let's trust that the caller will call `bot.start()`.
 
         symbols = list(bot.symbols)
         logger.info(

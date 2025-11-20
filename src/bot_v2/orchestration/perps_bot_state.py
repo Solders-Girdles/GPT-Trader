@@ -19,9 +19,11 @@ class PerpsBotRuntimeState:
     """Mutable state tracked by ``PerpsBot`` during execution."""
 
     def __init__(self, symbols: Sequence[str]) -> None:
+        self.symbols = list(symbols)
         self.reset(symbols)
 
     def reset(self, symbols: Sequence[str]) -> None:
+        self.symbols = list(symbols)
         self.product_map: dict[str, Any] = {}
         self.mark_windows: dict[str, list[Decimal]] = {symbol: [] for symbol in symbols}
         self.last_decisions: dict[str, Any] = {}

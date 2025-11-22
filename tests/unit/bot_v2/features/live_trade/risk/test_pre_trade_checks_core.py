@@ -109,7 +109,7 @@ class TestPreTradeValidatorCore:
             validator.pre_trade_validate(
                 "BTC-USD",
                 "buy",
-                qty=Decimal("0.1"),
+                quantity=Decimal("0.1"),
                 price=Decimal("50000"),
                 product=btc_perpetual_product,
                 equity=Decimal("10000"),
@@ -133,7 +133,7 @@ class TestPreTradeValidatorCore:
             validator.pre_trade_validate(
                 "BTC-USD",
                 "buy",
-                qty=Decimal("0.01"),  # Reduced to stay within 20% exposure limit ($500/$10000 = 5%)
+                quantity=Decimal("0.01"),  # Reduced to stay within 20% exposure limit ($500/$10000 = 5%)
                 price=Decimal("50000"),
                 product=btc_perpetual_product,
                 equity=Decimal("10000"),

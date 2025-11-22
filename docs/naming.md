@@ -1,6 +1,6 @@
-# GPT-Trader Naming Standards (Draft Outline)
+# GPT-Trader Naming Standards
 
-This draft will be socialized during Sprint 0 before landing as policy in `CONTRIBUTING.md`. Use it as the working source of truth while we solicit feedback from maintainers and agents.
+This document establishes the naming conventions for the GPT-Trader codebase. Adherence to these standards ensures clarity, consistency, and maintainability across the repository.
 
 ## 1. Scope & Goals
 - Increase clarity and consistency across code, configuration, CLI surfaces, and docs.
@@ -50,18 +50,6 @@ This draft will be socialized during Sprint 0 before landing as policy in `CONTR
 - Any new abbreviation requires maintainer approval; add to glossary when accepted.
 
 ## 4. Review & Enforcement
-- Incorporate naming checks into `scripts/agents/preflight.py` once implemented.
+- Incorporate naming checks into `scripts/agents/preflight.py` (planned).
 - Require code review to flag deviations; reference this document in feedback.
 - Add a Definition of Done item: "Naming complies with standards or documented exception is provided."
-
-## 5. Adoption Plan
-1. Sprint 0: socialization, collect feedback, finalize glossary.
-2. Sprint 1: codify in `CONTRIBUTING.md` and integrate into automation.
-3. Sprint 2: enforce via governance (rename changelog, dashboards).
-
-## 6. Open Questions
-- How to handle legacy third-party conventions embedded in archived tests?
-- Should we auto-generate reports for config/env var mismatches or rely on manual review initially?
-- Do we need temporary aliases for external integrators (if any) beyond our repo?
-
-Please leave comments in Pull Requests or the shared discussion doc so we can refine this outline before publishing the final standard.

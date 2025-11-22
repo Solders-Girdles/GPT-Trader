@@ -45,7 +45,7 @@ def test_pre_trade_validator_kill_switch_blocks_trade():
         validator.pre_trade_validate(
             "BTC-USD",
             "buy",
-            qty=Decimal("1"),
+            quantity=Decimal("1"),
             price=Decimal("100"),
             product=product,
             equity=Decimal("10000"),
@@ -72,7 +72,7 @@ def test_pre_trade_validator_reduce_only_blocks_increase():
         validator.pre_trade_validate(
             "BTC-USD",
             "buy",
-            qty=Decimal("0.5"),
+            quantity=Decimal("0.5"),
             price=Decimal("200"),
             product=product,
             equity=Decimal("10000"),
@@ -106,7 +106,7 @@ def test_market_impact_guard_blocks_when_threshold_exceeded():
         validator.pre_trade_validate(
             "BTC-USD",
             "buy",
-            qty=Decimal("0.1"),
+            quantity=Decimal("0.1"),
             price=Decimal("100"),
             product=product,
             equity=Decimal("10000"),
@@ -133,7 +133,7 @@ def test_validate_leverage_raises_when_cap_exceeded():
     with pytest.raises(ValidationError):
         validator.validate_leverage(
             "BTC-USD",
-            qty=Decimal("2"),
+            quantity=Decimal("2"),
             price=Decimal("10000"),
             product=product,
             equity=Decimal("5000"),

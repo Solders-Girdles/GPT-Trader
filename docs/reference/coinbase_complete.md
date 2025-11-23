@@ -116,52 +116,23 @@ if os.getenv("COINBASE_SANDBOX"):
 
 **Status**: OAuth2 is officially supported (confirmed in official changelog and docs). Exact launch date is not publicly documented. See changelog at https://docs.cdp.coinbase.com/coinbase-app/introduction/changelog
 
+> For end-to-end authentication walkthroughs (JWT generation, NULL-byte-safe HMAC signatures, OAuth2 token refresh flows), use the dedicated [coinbase_auth_guide.md](coinbase_auth_guide.md).
+
 ## API Endpoints & Products
 
-### Supported Products
+Refer to [coinbase_api_endpoints.md](coinbase_api_endpoints.md) for the canonical endpoint catalog (production vs sandbox availability, rate limits, and request examples) and to [coinbase_quick_reference.md](coinbase_quick_reference.md) for the day-to-day cheat sheet. This guide stays focused on how GPT-Trader consumes those surfaces:
 
-- **Spot (default)**: BTC-USD, ETH-USD, and other Advanced Trade spot pairs
-- **Derivatives (INTX required)**: BTC-PERP, ETH-PERP, SOL-PERP, XRP-PERP (dormant until enabled)
-- **Sandbox**: Spot-only environment (no derivatives, static responses)
-  - Note: Sandbox Accounts and Orders endpoints only; responses are pre-defined and not live
-
-### API Endpoints
-
-```python
-# Production (Advanced Trade v3)
-BASE_URL = "https://api.coinbase.com/api/v3/brokerage"
-WS_URL = "wss://advanced-trade-ws.coinbase.com"
-# Sandbox (Advanced Trade v3 - CDP Sandbox)
-BASE_URL = "https://api-public.sandbox.exchange.coinbase.com/api/v3/brokerage"
-WS_URL = "wss://ws-feed-sandbox.exchange.coinbase.com"
-```
+- **Spot runtime**: Uses Accounts, Orders, and unauthenticated `/market/*` product endpoints. Sandbox responses are static and limited to Accounts + Orders.
+- **Perpetuals runtime**: All INTX-only endpoints remain dormant until `COINBASE_ENABLE_DERIVATIVES=1` and JWT auth is configured.
+- **Coverage tracking**: The [coinbase coverage matrix](../testing/coinbase_coverage_matrix.md) maps each endpoint to its client/adapter/tests—use it when auditing behavior changes.
 
 ## Order Types & Compatibility
 
-### Fully Supported Order Types
+The full matrix of supported order configurations and time-in-force combinations lives in [coinbase_quick_reference.md](coinbase_quick_reference.md#order-types-quick-reference). Within GPT-Trader:
 
-| Order Type | API Support | Implementation | Notes |
-|------------|-------------|----------------|-------|
-| Market | ✅ Full | ✅ Complete | Immediate execution |
-| Limit | ✅ Full | ✅ Complete | Post-only option available |
-| Stop Loss | ✅ Full | ✅ Complete | Stop market orders |
-| Stop Limit | ✅ Full | ✅ Complete | Stop with limit price |
-
-### Time-In-Force (TIF) Support
-
-| TIF | Support | Notes |
-|-----|---------|-------|
-| GTC (Good Till Cancelled) | ✅ | Default for most orders |
-| IOC (Immediate or Cancel) | ✅ | For immediate fills |
-| GTD (Good Till Date) | ✅ | With expiry time |
-| FOK (Fill or Kill) | ❌ | Not supported by Coinbase |
-
-### Advanced Features
-
-- **Post-Only**: Maker-only orders for limit orders
-- **Reduce-Only**: Can only reduce position size
-- **Client Order ID**: Idempotency support
-- **Leverage**: Available for perpetual contracts
+- Spot profiles expose market/limit order paths by default, with post-only exposed via adapter flags.
+- Perpetuals profiles add stop-market and stop-limit variants once INTX is available.
+- Reduce-only enforcement and leverage handling are implemented in the brokerage adapter and validated by the unit suite noted in the coverage matrix.
 
 ### Order Preview Gating (Production Safety)
 
@@ -174,40 +145,7 @@ Perpetuals orders in Advanced/PROD can be preflighted via Coinbase’s `preview_
 
 ## WebSocket Integration
 
-### Connection Setup
-
-```python
-from bot_v2.features.brokerages.coinbase.ws import CoinbaseWebSocket
-
-ws = CoinbaseWebSocket(
-    api_key=os.getenv("COINBASE_API_KEY"),
-    api_secret=os.getenv("COINBASE_API_SECRET"),
-    sandbox=bool(os.getenv("COINBASE_SANDBOX"))
-)
-
-# Subscribe to channels
-await ws.subscribe(["ticker", "matches", "level2"], ["BTC-PERP"])
-```
-
-### Supported Channels
-
-| Channel | Purpose | Implementation |
-|---------|---------|----------------|
-| ticker | Price updates | ✅ Normalized |
-| matches | Trade data | ✅ Volume tracking |
-| level2 | Order book | ✅ Depth calculation |
-
-### Heartbeat & Reconnection
-
-- Automatic heartbeat every 30 seconds
-- Exponential backoff reconnection
-- **Channel subscriptions**: Up to 100 per connection (⚠️ not explicitly documented; may be tier-specific)
-
-### Rate Limiting
-
-**WebSocket API**: 750 requests per second **per IP address** (applies to all connections from the same IP combined)
-
-**Engineering note**: Current codebase uses 100 requests/min throttle (much more conservative than API limits)
+Channel payloads, authentication recipes, and rate limits are documented in detail in [coinbase_websocket_reference.md](coinbase_websocket_reference.md). Use that reference for schemas and subscription examples; this section captures GPT-Trader-operational notes only.
 
 ### Streaming Toggles (CANARY/PROD)
 
@@ -360,25 +298,11 @@ If migrating from older equities-based system:
 
 ### API Rate Limits
 
-**REST API (Official Coinbase Advanced Trade API):**
-- **Private endpoints**: 30 requests/second (per user account)
-- **Public endpoints**: 10 requests/second (per IP address)
-- **Rate limit algorithm**: Token bucket (lazy-fill, starts full, refills continuously)
+The full limit tables and header examples live in [coinbase_quick_reference.md](coinbase_quick_reference.md#rate-limits-at-a-glance). For GPT-Trader operations remember:
 
-**WebSocket API:**
-- **750 requests/second per IP address** (applies to all WebSocket connections from same IP combined)
-
-**Rate Limit Response Headers** (available in HTTP responses):
-- `CB-RATELIMIT-LIMIT` - Total request limit for current window
-- `CB-RATELIMIT-REMAINING` - Requests remaining in current window
-- `CB-RATELIMIT-RESET` - Unix timestamp when limit window resets
-- `CB-BEFORE`, `CB-AFTER` - Pagination cursors (for list endpoints)
-
-**HTTP 429 Response**: When rate limit exceeded, API responds with status 429 "Too Many Requests" and `retry-after` header (in seconds)
-
-**Engineering implementation note**:
-- Current codebase uses conservative 100 requests/min client-side throttle (well below API limits)
-- See `src/bot_v2/features/brokerages/coinbase/client/base.py` for implementation
+- The adapters cap outbound REST traffic at ~100 req/min, well below Coinbase ceilings.
+- WebSocket clients share a single connection per profile and monitor 30-second heartbeat cadence.
+- On any 429, rely on the retry-after header and log the incident in `var/logs/coinbase_trader.log` for follow-up.
 
 ## Support Resources
 

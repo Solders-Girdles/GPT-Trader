@@ -275,6 +275,45 @@ curl -X GET "https://api.coinbase.com/api/v3/brokerage/orders/batch?limit=10&cur
 - **Verification Schedule**: Quarterly
 - **Changes**: Check [Changelog](https://docs.cdp.coinbase.com/coinbase-app/introduction/changelog)
 
+## Quarterly Verification Playbook
+
+**Cadence**: First full week of each calendar quarter (Jan/Apr/Jul/Oct)
+**Owner**: Coinbase surface steward (Trading Platform) — see [Document Verification Matrix](../agents/Document_Verification_Matrix.md) for the current name.
+**Goal**: Re-confirm live API behavior, keep doc anchors in sync, and update `last-verified` metadata across the Coinbase reference set.
+
+### 1. Prep & Changelog Sweep
+- Skim the [Advanced Trade changelog](https://docs.cdp.coinbase.com/coinbase-app/introduction/changelog) and Coinbase status page for breaking changes.
+- Capture findings in `logs/doc-verification/coinbase/<YYYY-QX>.md` (create if missing).
+- Update the `last-verified` front matter date in:
+  - `coinbase_api_endpoints.md`
+  - `coinbase_websocket_reference.md`
+  - `coinbase_auth_guide.md`
+  - `coinbase_quick_reference.md`
+  - `coinbase_complete.md`
+
+### 2. REST Smoke Checklist
+Use sandbox keys for Accounts/Orders and read-only production keys for items the sandbox does not expose.
+
+| Surface | Endpoint(s) | Env | Suggested Command |
+|---------|-------------|-----|-------------------|
+| Accounts | `GET /accounts` | Sandbox | `curl -sS "$SANDBOX_BASE/accounts" -H "CB-ACCESS-*"` |
+| Orders | `GET /orders/batch?limit=1` | Sandbox | Same headers; confirm static payload |
+| Market Data | `GET /market/products/BTC-USD` | Production (public) | `curl -sS "$PROD_BASE/market/products/BTC-USD"` |
+| Fees | `GET /transaction_summary` | Production (HMAC/JWT) | `curl -sS "$PROD_BASE/transaction_summary" -H "CB-ACCESS-*"` |
+| Portfolios | `GET /portfolios` | Production (read-only) | `curl -sS "$PROD_BASE/portfolios" -H "CB-ACCESS-*"` |
+| Perpetuals (INTX only) | `GET /positions/BTC-PERP` & `POST /orders/preview` | Production (JWT) | Use canary INTX credentials; document results |
+
+Record HTTP status, notable response deltas, and any schema shifts in the verification log.
+
+### 3. WebSocket Pulse
+- Run `poetry run pytest tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_websocket.py -q` to confirm client contracts.
+- Perform a manual connect for ticker + user channels (e.g., `scripts/perps_dashboard.py --profile canary --ws-only`) and capture the first payload + any subscription warnings.
+
+### 4. Documentation Cross-Checks
+- Click every entry in the [coverage matrix](../testing/coinbase_coverage_matrix.md) to ensure anchor links still resolve to the correct sections.
+- Confirm `docs/reference/coinbase_api_links.md` still highlights `/market/*` paths and current rate limits.
+- File follow-up issues or PRs for any drift; note blockers in the quarterly log.
+
 ---
 
 ## See Also

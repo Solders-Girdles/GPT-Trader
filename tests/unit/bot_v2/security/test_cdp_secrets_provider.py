@@ -75,7 +75,9 @@ def test_get_cdp_credentials(provider, mock_secrets_manager, sample_credentials)
 
 
 @patch("bot_v2.security.cdp_secrets_provider.create_cdp_jwt_auth")
-def test_generate_short_lived_jwt(mock_create_auth, provider, mock_secrets_manager, sample_credentials):
+def test_generate_short_lived_jwt(
+    mock_create_auth, provider, mock_secrets_manager, sample_credentials
+):
     """Test generating short-lived JWT"""
     now = datetime.now(UTC)
     mock_secrets_manager.get_secret.return_value = {

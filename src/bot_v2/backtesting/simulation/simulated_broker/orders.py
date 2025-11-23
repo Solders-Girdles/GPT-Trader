@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import uuid
+from datetime import datetime
 from decimal import Decimal
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from bot_v2.features.brokerages.core.interfaces import (
     InsufficientFunds,
@@ -24,7 +25,7 @@ class OrderEngine:
         self,
         portfolio: PortfolioManager,
         market_state: MarketState,
-        fill_model,
+        fill_model: Any,
     ) -> None:
         self._portfolio = portfolio
         self._market_state = market_state
@@ -36,7 +37,7 @@ class OrderEngine:
     def place_order(
         self,
         *,
-        current_time,
+        current_time: datetime,
         symbol: str,
         side: str,
         order_type: str,
@@ -64,9 +65,7 @@ class OrderEngine:
             raise InvalidRequestError(f"Unknown product: {symbol}") from exc
 
         if qty < product.min_size:
-            raise InvalidRequestError(
-                f"Order size {qty} below minimum {product.min_size}"
-            )
+            raise InvalidRequestError(f"Order size {qty} below minimum {product.min_size}")
 
         quote = self._market_state.get_quote(symbol)
         notional = qty * (limit_px or quote.last)
@@ -101,7 +100,7 @@ class OrderEngine:
 
         return order
 
-    def cancel_order(self, order_id: str, current_time) -> bool:
+    def cancel_order(self, order_id: str, current_time: datetime) -> bool:
         if order_id not in self._orders:
             raise NotFoundError(f"Order not found: {order_id}")
 

@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping, Sequence
 from datetime import datetime
 from decimal import Decimal
-from typing import Literal
+from typing import Any, Literal
 
 from bot_v2.features.brokerages.core.interfaces import (
     Balance,
@@ -206,7 +206,7 @@ class DeterministicBroker(IBrokerage):
 
     def get_quote(self, symbol: str) -> Quote:
         last = self.marks.get(symbol, Decimal("1000"))
-        
+
         if self._simulate_trend:
             # Simulate a slow upward drift (0.01% per tick)
             # This ensures MA(short) > MA(long) eventually
@@ -236,14 +236,14 @@ class DeterministicBroker(IBrokerage):
         current_price = self.marks.get(symbol, Decimal("1000"))
         candles = []
         now = datetime.utcnow()
-        
+
         # Generate candles simulating a slight uptrend so MA_short > MA_long
         # We go backwards from now
         for i in range(limit):
             # Price decreases as we go back in time (uptrend)
             # 0.05% difference per candle to create separation
             historical_price = current_price * (Decimal("1") - (Decimal("0.0005") * Decimal(i)))
-            
+
             candles.append(
                 Candle(
                     product_id=symbol,
@@ -255,7 +255,7 @@ class DeterministicBroker(IBrokerage):
                     volume=Decimal("100"),
                 )
             )
-        
+
         # Return in chronological order (oldest first)
         return list(reversed(candles))
 

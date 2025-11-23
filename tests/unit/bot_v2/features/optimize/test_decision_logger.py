@@ -1,6 +1,5 @@
 """Tests for decision logger."""
 
-import json
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
@@ -92,7 +91,9 @@ def test_decision_logger_logs_decision(sample_context, sample_decision, sample_e
     """Test logging a decision."""
     logger = DecisionLogger(enabled=True)
 
-    logger.log_decision(context=sample_context, decision=sample_decision, execution=sample_execution)
+    logger.log_decision(
+        context=sample_context, decision=sample_decision, execution=sample_execution
+    )
 
     assert logger.get_decision_count() == 1
     assert logger.get_execution_count() == 1
@@ -108,7 +109,9 @@ def test_decision_logger_save_and_load(tmp_path, sample_context, sample_decision
     logger = DecisionLogger(enabled=True, base_directory=str(tmp_path))
 
     # Log a decision
-    logger.log_decision(context=sample_context, decision=sample_decision, execution=sample_execution)
+    logger.log_decision(
+        context=sample_context, decision=sample_decision, execution=sample_execution
+    )
 
     # Create a backtest result
     result = BacktestResult(
@@ -315,10 +318,14 @@ def test_compare_decision_logs_with_differences(tmp_path):
     assert comparison["parity_rate"] == 0.0  # 0% match
 
 
-def test_load_decision_log_convenience_function(tmp_path, sample_context, sample_decision, sample_execution):
+def test_load_decision_log_convenience_function(
+    tmp_path, sample_context, sample_decision, sample_execution
+):
     """Test the load_decision_log convenience function."""
     logger = DecisionLogger(enabled=True, base_directory=str(tmp_path))
-    logger.log_decision(context=sample_context, decision=sample_decision, execution=sample_execution)
+    logger.log_decision(
+        context=sample_context, decision=sample_decision, execution=sample_execution
+    )
 
     result = BacktestResult(
         run_id="test",

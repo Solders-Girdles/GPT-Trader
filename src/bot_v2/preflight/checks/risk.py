@@ -38,7 +38,9 @@ def check_risk_configuration(checker: "PreflightCheck") -> bool:
             checker.log_warning("Reduce-only mode ENABLED - can only close positions")
 
         if config.daily_loss_limit > Decimal("1000"):
-            checker.log_warning(f"Daily loss limit ${config.daily_loss_limit} seems high for testing")
+            checker.log_warning(
+                f"Daily loss limit ${config.daily_loss_limit} seems high for testing"
+            )
 
         if config.max_leverage > 5:
             checker.log_warning(f"Leverage {config.max_leverage}x is aggressive")

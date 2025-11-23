@@ -104,7 +104,9 @@ class LiquidityService:
             "depth_5": self._score_depth(depth_usd_5, mid_price),
             "imbalance": self._score_imbalance(abs(depth_imbalance)),
         }
-        liquidity_score = sum(score_components.values(), Decimal("0")) / Decimal(len(score_components))
+        liquidity_score = sum(score_components.values(), Decimal("0")) / Decimal(
+            len(score_components)
+        )
         condition = self._determine_condition(liquidity_score)
 
         self._get_metrics(symbol).add_spread(spread_bps, ts)
@@ -134,7 +136,9 @@ class LiquidityService:
         symbol: str,
         side: str,
         quantity: Decimal,
-        book_data: tuple[list[tuple[Decimal, Decimal]], list[tuple[Decimal, Decimal]]] | None = None,
+        book_data: (
+            tuple[list[tuple[Decimal, Decimal]], list[tuple[Decimal, Decimal]]] | None
+        ) = None,
     ) -> ImpactEstimate:
         analysis = self._latest_analysis.get(symbol)
         if not analysis:
@@ -194,7 +198,8 @@ class LiquidityService:
             max_slice_size = target_notional / mid_price if mid_price > 0 else None
 
         use_post_only = (
-            analysis.condition in {LiquidityCondition.FAIR, LiquidityCondition.POOR, LiquidityCondition.CRITICAL}
+            analysis.condition
+            in {LiquidityCondition.FAIR, LiquidityCondition.POOR, LiquidityCondition.CRITICAL}
             or final_impact_bps > self.max_impact_bps / 2
         )
 

@@ -3,8 +3,6 @@
 from datetime import datetime, timezone
 from decimal import Decimal
 
-import pytest
-
 from bot_v2.backtesting.simulation import FeeCalculator, FundingPnLTracker, SimulatedBroker
 from bot_v2.backtesting.types import FeeTier
 from bot_v2.features.brokerages.core.interfaces import MarketType, Product
@@ -78,14 +76,10 @@ class TestFundingPnLTracker:
         current_time = datetime(2024, 1, 1, 0, 0, tzinfo=timezone.utc)
 
         # Accrue some funding
-        tracker.accrue(
-            symbol, Decimal("10"), Decimal("3000"), Decimal("0.0001"), current_time
-        )
+        tracker.accrue(symbol, Decimal("10"), Decimal("3000"), Decimal("0.0001"), current_time)
 
         current_time = datetime(2024, 1, 1, 1, 0, tzinfo=timezone.utc)
-        tracker.accrue(
-            symbol, Decimal("10"), Decimal("3000"), Decimal("0.0001"), current_time
-        )
+        tracker.accrue(symbol, Decimal("10"), Decimal("3000"), Decimal("0.0001"), current_time)
 
         accrued = tracker.get_accrued(symbol)
         assert accrued > Decimal("0")

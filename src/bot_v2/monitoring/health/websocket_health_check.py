@@ -54,7 +54,9 @@ class WebSocketReconnectHealthCheck(HealthChecker):
             # Determine health
             if recent_minute >= self.reconnect_loop_threshold:
                 status = HealthStatus.UNHEALTHY
-                message = f"WebSocket reconnect loop detected: {recent_minute} reconnects in last minute"
+                message = (
+                    f"WebSocket reconnect loop detected: {recent_minute} reconnects in last minute"
+                )
             elif recent_hour >= self.max_reconnects_per_hour:
                 status = HealthStatus.DEGRADED
                 message = f"High reconnect rate: {recent_hour} reconnects in last hour"

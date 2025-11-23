@@ -532,7 +532,9 @@ def mock_integration_event_store():
 @pytest.fixture
 def integration_live_risk_manager(integration_risk_config, mock_integration_event_store):
     """Live Risk Manager configured for integration testing."""
-    manager = LiveRiskManager(config=integration_risk_config, event_store=mock_integration_event_store)
+    manager = LiveRiskManager(
+        config=integration_risk_config, event_store=mock_integration_event_store
+    )
     try:
         manager.set_reduce_only_mode(False, "integration_initialization")
     except Exception:

@@ -7,10 +7,6 @@ from unittest.mock import MagicMock
 import pytest
 
 from bot_v2.orchestration.config_controller import ConfigChange, ConfigController
-from bot_v2.orchestration.state.unified_state import (
-    ReduceOnlyModeSource,
-    SystemState,
-)
 from bot_v2.orchestration.configuration import BotConfig
 
 

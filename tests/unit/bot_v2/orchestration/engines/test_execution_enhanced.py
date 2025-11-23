@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from datetime import UTC, datetime
 from decimal import Decimal
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -19,7 +19,6 @@ from bot_v2.features.brokerages.core.interfaces import (
     Product,
     TimeInForce,
 )
-from bot_v2.features.live_trade.advanced_execution import AdvancedExecutionEngine
 from bot_v2.orchestration.configuration import BotConfig, Profile
 from bot_v2.orchestration.engines.base import CoordinatorContext
 from bot_v2.orchestration.engines.execution import ExecutionEngine
@@ -126,7 +125,7 @@ class TestExecutionEngineBackgroundTasks:
         await coordinator.initialize(context)
 
         # New architecture: tasks are internal.
-        tasks = await coordinator.start_background_tasks()
+        _ = await coordinator.start_background_tasks()
 
         # Assert services are running instead of checking returned tasks list
         assert coordinator._order_reconciliation.is_running()
@@ -134,6 +133,7 @@ class TestExecutionEngineBackgroundTasks:
 
         # Cleanup
         await coordinator.shutdown()
+
     @pytest.mark.asyncio
     async def test_start_background_tasks_skips_in_dry_run(self) -> None:
         """Test that background tasks are skipped in dry run mode."""
@@ -399,7 +399,7 @@ class TestExecutionEngineErrorResilience:
         coordinator = ExecutionEngine(context)
         await coordinator.initialize(context)
 
-        decision = Mock()
+        _ = Mock()
         # New signature requires action
         from bot_v2.features.live_trade.strategies.perps_baseline import Action
 
@@ -407,13 +407,13 @@ class TestExecutionEngineErrorResilience:
         # Mock logger to avoid TypeError on 'operation' arg if logger mock is strict
         # Also patch order placement logger just in case
         with patch("bot_v2.orchestration.engines.execution.coordinator.logger"):
-             with patch("bot_v2.orchestration.engines.execution.order_placement.logger"):
-                 await coordinator.execute_decision(
+            with patch("bot_v2.orchestration.engines.execution.order_placement.logger"):
+                await coordinator.execute_decision(
                     action=Action.BUY,
                     symbol="BTC-PERP",
                     price=Decimal("50000"),
                     product=_create_test_product(),
-                    quantity=Decimal("1.0")
+                    quantity=Decimal("1.0"),
                 )
         # Should not raise an exception
 
@@ -445,15 +445,20 @@ class TestExecutionEngineErrorResilience:
 
         # Need Action object
         from bot_v2.features.live_trade.strategies.perps_baseline import Action
+
         action = Action.BUY
         action.symbol = "BTC-PERP"
         action.quantity = Decimal("1")
 
         # Mock logger to avoid signature issues
-        with patch("bot_v2.orchestration.engines.execution.order_placement.log_execution_error") as mock_log:
-             # Patch logger on the coordinator too as backup
-             with patch("bot_v2.orchestration.engines.execution.order_placement.logger"):
-                result = await coordinator.place_order(exec_engine, action=action, time_in_force=None)
+        with patch(
+            "bot_v2.orchestration.engines.execution.order_placement.log_execution_error"
+        ) as _:
+            # Patch logger on the coordinator too as backup
+            with patch("bot_v2.orchestration.engines.execution.order_placement.logger"):
+                result = await coordinator.place_order(
+                    exec_engine, action=action, time_in_force=None
+                )
         assert result is None
 
     @pytest.mark.asyncio
@@ -470,14 +475,19 @@ class TestExecutionEngineErrorResilience:
 
         # Need Action object
         from bot_v2.features.live_trade.strategies.perps_baseline import Action
+
         action = Action.BUY
         action.symbol = "BTC-PERP"
         action.quantity = Decimal("1")
 
         # Should return None (and log error) instead of raising exception in new architecture
-        with patch("bot_v2.orchestration.engines.execution.order_placement.log_execution_error") as mock_log_error:
-             with patch("bot_v2.orchestration.engines.execution.order_placement.logger"):
-                result = await coordinator.place_order(exec_engine, action=action, time_in_force=None)
+        with patch(
+            "bot_v2.orchestration.engines.execution.order_placement.log_execution_error"
+        ) as _:
+            with patch("bot_v2.orchestration.engines.execution.order_placement.logger"):
+                result = await coordinator.place_order(
+                    exec_engine, action=action, time_in_force=None
+                )
                 assert result is None
 
     @pytest.mark.asyncio
@@ -607,7 +617,7 @@ class TestExecutionEngineIntegration:
         context = _make_context()
         coordinator = ExecutionEngine(context)
 
-        updated = await coordinator.initialize(context)
+        _ = await coordinator.initialize(context)
 
         # Should create execution engine internally
         assert coordinator._order_placement.execution_engine is not None

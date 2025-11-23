@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-import pytest
 from unittest.mock import Mock
+
+import pytest
 
 from bot_v2.orchestration.configuration import BotConfig, Profile
 from bot_v2.orchestration.engines.base import CoordinatorContext

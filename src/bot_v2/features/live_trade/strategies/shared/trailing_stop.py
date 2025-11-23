@@ -54,7 +54,9 @@ def update_trailing_stop(
         else:
             peak = max(peak, entry_price)
 
-        movement_threshold = (entry_price * trailing_pct) + (_MIN_MOVEMENT if trailing_pct > 0 else Decimal("0"))
+        movement_threshold = (entry_price * trailing_pct) + (
+            _MIN_MOVEMENT if trailing_pct > 0 else Decimal("0")
+        )
         triggered = current_price < stop_price and (peak - current_price) > movement_threshold
         stops[symbol] = (peak, stop_price if trailing_pct > 0 else entry_price)
         return triggered

@@ -87,7 +87,11 @@ class LiquidityMetrics:
     def get_spread_metrics(self) -> dict[str, Decimal]:
         """Calculate spread metrics."""
         if not self._spread_data:
-            return {"avg_spread_bps": Decimal("0"), "min_spread_bps": Decimal("0"), "max_spread_bps": Decimal("0")}
+            return {
+                "avg_spread_bps": Decimal("0"),
+                "min_spread_bps": Decimal("0"),
+                "max_spread_bps": Decimal("0"),
+            }
 
         now = utc_now()
         cutoff = now - timedelta(minutes=5)
@@ -99,7 +103,11 @@ class LiquidityMetrics:
         ]
 
         if not recent_spreads:
-            return {"avg_spread_bps": Decimal("0"), "min_spread_bps": Decimal("0"), "max_spread_bps": Decimal("0")}
+            return {
+                "avg_spread_bps": Decimal("0"),
+                "min_spread_bps": Decimal("0"),
+                "max_spread_bps": Decimal("0"),
+            }
 
         total_spread = sum(recent_spreads, Decimal("0"))
         count = Decimal(len(recent_spreads))
@@ -114,15 +122,15 @@ class LiquidityMetrics:
         """Remove data older than window duration."""
         cutoff = utc_now() - self.window_duration
 
-        def _filter(data: Iterable[Tuple], transformer):
-            return [
-                transformer(ts, *rest)
-                for ts, *rest in data
-                if ensure_utc_aware(ts) >= cutoff
-            ]
+        from typing import Any, Callable
+
+        def _filter(data: Iterable[Tuple], transformer: Callable[..., Any]) -> list[Any]:
+            return [transformer(ts, *rest) for ts, *rest in data if ensure_utc_aware(ts) >= cutoff]
 
         self._volume_data = _filter(self._volume_data, lambda ts, vol: (ensure_utc_aware(ts), vol))
-        self._spread_data = _filter(self._spread_data, lambda ts, spread: (ensure_utc_aware(ts), spread))
+        self._spread_data = _filter(
+            self._spread_data, lambda ts, spread: (ensure_utc_aware(ts), spread)
+        )
         self._trade_data = _filter(
             self._trade_data, lambda ts, price, size: (ensure_utc_aware(ts), price, size)
         )

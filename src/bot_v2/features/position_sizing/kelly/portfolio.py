@@ -32,7 +32,9 @@ def kelly_position_value(
         if max_position_value <= 0:
             raise ValidationError("Max position value must be positive", field="max_position_size")
         if min_position_value < 0:
-            raise ValidationError("Min position value cannot be negative", field="min_position_size")
+            raise ValidationError(
+                "Min position value cannot be negative", field="min_position_size"
+            )
         if min_position_value > max_position_value:
             raise ValidationError(
                 "Min position size exceeds max position size", field="position_limits"

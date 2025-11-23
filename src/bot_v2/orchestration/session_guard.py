@@ -3,7 +3,19 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import datetime, time
+from typing import Any
+
+
+@dataclass
+class SessionStatus:
+    is_trading_allowed: bool
+    in_window: bool
+    window_start: Any
+    window_end: Any
+    trading_days: list[str]
+    next_change: str
 
 
 class TradingSessionGuard:
@@ -64,15 +76,3 @@ class TradingSessionGuard:
             trading_days=self._days,
             next_change=next_change,
         )
-
-from dataclasses import dataclass
-from typing import Any
-
-@dataclass
-class SessionStatus:
-    is_trading_allowed: bool
-    in_window: bool
-    window_start: Any
-    window_end: Any
-    trading_days: list[str]
-    next_change: str

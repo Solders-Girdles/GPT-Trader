@@ -7,7 +7,6 @@ to protect against injection attacks and ensure safe trading operations.
 This module acts as a facade, delegating to specialized security modules.
 """
 
-import re
 from datetime import datetime
 from typing import Any
 

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from bot_v2.errors import ValidationError, log_error
 from bot_v2.features.position_sizing.confidence import confidence_adjusted_size
 from bot_v2.features.position_sizing.kelly import (
     fractional_kelly,
@@ -98,9 +97,7 @@ def calculate_fractional_kelly_size(request: PositionSizeRequest) -> PositionSiz
 
 def calculate_confidence_size(request: PositionSizeRequest) -> PositionSizeResponse:
     if request.confidence is None:
-        return create_error_response(
-            request, ["Confidence sizing requires confidence score"]
-        )
+        return create_error_response(request, ["Confidence sizing requires confidence score"])
 
     base_size = request.risk_params.max_position_size * 0.5
     adj_params = ConfidenceAdjustment(confidence=request.confidence)

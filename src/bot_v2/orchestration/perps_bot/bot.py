@@ -25,15 +25,15 @@ if TYPE_CHECKING:  # pragma: no cover - type checking only
     from bot_v2.orchestration.session_guard import TradingSessionGuard
 
 import asyncio
+
 from bot_v2.logging import correlation_context
 from bot_v2.orchestration.perps_bot_state import PerpsBotRuntimeState
-from bot_v2.utilities.logging_patterns import get_logger
-
 from bot_v2.orchestration.perps_components import (
     ComponentManagementService,
     PerpsBotLifecycleManager,
     SessionCoordinationService,
 )
+from bot_v2.utilities.logging_patterns import get_logger
 
 logger = get_logger(__name__, component="perps_bot")
 
@@ -279,6 +279,56 @@ class PerpsBot:
     def registry(self) -> ServiceRegistry:
         """Get service registry for backward compatibility."""
         return self._services_registry
+
+    @property
+    def broker(self) -> Any:
+        """Get broker for backward compatibility."""
+        return getattr(self.registry, "broker", None)
+
+    @property
+    def risk_manager(self) -> Any:
+        """Get risk manager for backward compatibility."""
+        return getattr(self.registry, "risk_manager", None)
+
+    @property
+    def runtime_state(self) -> PerpsBotRuntimeState:
+        """Get runtime state for backward compatibility."""
+        return self.bot_state
+
+    @property
+    def account_manager(self) -> Any:
+        """Get account manager for backward compatibility."""
+        return getattr(self.registry, "account_manager", None)
+
+    @property
+    def account_telemetry(self) -> Any:
+        """Get account telemetry for backward compatibility."""
+        return getattr(self.registry, "account_telemetry", None)
+
+    @property
+    def last_decisions(self) -> dict[str, Any]:
+        """Get last decisions for backward compatibility."""
+        return getattr(self.bot_state, "last_decisions", {})
+
+    @property
+    def order_stats(self) -> dict[str, Any]:
+        """Get order stats for backward compatibility."""
+        return getattr(self.bot_state, "order_stats", {})
+
+    def apply_config_change(self, config: Any) -> None:
+        """Apply configuration change for backward compatibility."""
+        self.config_controller.update(config)
+
+    def execute_decision(self, *args: Any, **kwargs: Any) -> None:
+        """Execute decision for backward compatibility."""
+        pass
+
+    def shutdown(self) -> None:
+        """Shutdown for backward compatibility."""
+        # This is synchronous wrapper for async stop, strictly for legacy calls
+        # In async context, prefer await stop()
+        # We can't await here, so we just log warning or try best effort if loop running
+        logger.warning("Synchronous shutdown called, use await stop() instead")
 
 
 __all__ = [

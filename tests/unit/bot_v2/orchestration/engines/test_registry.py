@@ -7,7 +7,6 @@ import pytest
 from bot_v2.orchestration.engines.base import (
     BaseEngine,
     CoordinatorContext,
-    HealthStatus,
 )
 from bot_v2.orchestration.engines.registry import CoordinatorRegistry
 

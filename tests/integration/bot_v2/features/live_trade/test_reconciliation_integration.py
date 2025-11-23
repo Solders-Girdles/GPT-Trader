@@ -517,7 +517,7 @@ class TestTCRC006TCRC010DataConsistency:
 
                     try:
                         event_time = dt.fromisoformat(event_time.replace("Z", "+00:00"))
-                    except:
+                    except (ValueError, TypeError):
                         continue
 
                 if isinstance(event_time, datetime):

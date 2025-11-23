@@ -2,17 +2,14 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 
-from bot_v2.config.live_trade_config import RiskConfig
-from bot_v2.features.live_trade.risk import LiveRiskManager, RiskRuntimeState
+from bot_v2.features.live_trade.risk import LiveRiskManager
 from bot_v2.orchestration.configuration import BotConfig, Profile
 from bot_v2.orchestration.engines.base import CoordinatorContext
 from bot_v2.orchestration.engines.runtime import (
-    BrokerBootstrapArtifacts,
-    BrokerBootstrapError,
     RuntimeEngine,
 )
 from bot_v2.orchestration.perps_bot_state import PerpsBotRuntimeState
@@ -114,12 +111,14 @@ def coordinator_context(mock_config, mock_service_registry, mock_event_store, mo
 def runtime_coordinator(coordinator_context, mock_config_controller):
     """Create RuntimeEngine instance with mocked dependencies."""
     # Simplified coordinator takes only context
-    return RuntimeEngine(coordinator_context.with_updates(
-        config_controller=mock_config_controller,
-        strategy_orchestrator=Mock(),
-        execution_coordinator=Mock(),
-        product_cache={}
-    ))
+    return RuntimeEngine(
+        coordinator_context.with_updates(
+            config_controller=mock_config_controller,
+            strategy_orchestrator=Mock(),
+            execution_coordinator=Mock(),
+            product_cache={},
+        )
+    )
 
 
 class TestRuntimeEngineInitialization:
@@ -180,28 +179,40 @@ class TestBrokerBootstrap:
         runtime_coordinator.update_context(coordinator_context)
 
         # Access via broker_manager
-        assert runtime_coordinator._broker_manager._should_use_mock_broker(coordinator_context.config) is True
+        assert (
+            runtime_coordinator._broker_manager._should_use_mock_broker(coordinator_context.config)
+            is True
+        )
 
     def test_should_use_mock_broker_paper_trading(self, runtime_coordinator, coordinator_context):
         """Test mock broker selection for paper trading."""
         coordinator_context.config.perps_paper_trading = True
         runtime_coordinator.update_context(coordinator_context)
 
-        assert runtime_coordinator._broker_manager._should_use_mock_broker(coordinator_context.config) is True
+        assert (
+            runtime_coordinator._broker_manager._should_use_mock_broker(coordinator_context.config)
+            is True
+        )
 
     def test_should_use_mock_broker_force_mock(self, runtime_coordinator, coordinator_context):
         """Test mock broker selection when force mock is enabled."""
         coordinator_context.config.perps_force_mock = True
         runtime_coordinator.update_context(coordinator_context)
 
-        assert runtime_coordinator._broker_manager._should_use_mock_broker(coordinator_context.config) is True
+        assert (
+            runtime_coordinator._broker_manager._should_use_mock_broker(coordinator_context.config)
+            is True
+        )
 
     def test_should_use_mock_broker_explicit_mock(self, runtime_coordinator, coordinator_context):
         """Test mock broker selection when mock_broker is explicitly set."""
         coordinator_context.config.mock_broker = True
         runtime_coordinator.update_context(coordinator_context)
 
-        assert runtime_coordinator._broker_manager._should_use_mock_broker(coordinator_context.config) is True
+        assert (
+            runtime_coordinator._broker_manager._should_use_mock_broker(coordinator_context.config)
+            is True
+        )
 
     def test_should_not_use_mock_broker_production(self, runtime_coordinator, coordinator_context):
         """Test real broker selection for production profile."""
@@ -212,22 +223,33 @@ class TestBrokerBootstrap:
         coordinator_context.config.perps_force_mock = False
 
         # Mock discover_derivatives_eligibility to return eligible
-        with patch("bot_v2.orchestration.engines.runtime.broker_management.discover_derivatives_eligibility") as mock_discover:
+        with patch(
+            "bot_v2.orchestration.engines.runtime.broker_management.discover_derivatives_eligibility"
+        ) as mock_discover:
             mock_discover.return_value = Mock(eligibility=True)
             runtime_coordinator.update_context(coordinator_context)
 
             # Access the broker manager to check logic, or call via runtime if it delegates
             # RuntimeEngine delegates _should_use_mock_broker to _broker_manager
-            assert runtime_coordinator._broker_manager._should_use_mock_broker(coordinator_context.config) is False
+            assert (
+                runtime_coordinator._broker_manager._should_use_mock_broker(
+                    coordinator_context.config
+                )
+                is False
+            )
 
     @patch("bot_v2.orchestration.deterministic_broker.DeterministicBroker")
-    def test_build_mock_broker(self, mock_deterministic_broker, runtime_coordinator, coordinator_context):
+    def test_build_mock_broker(
+        self, mock_deterministic_broker, runtime_coordinator, coordinator_context
+    ):
         """Test mock broker building."""
         mock_broker = Mock()
         mock_deterministic_broker.return_value = mock_broker
 
         # Use broker manager directly
-        artifacts = runtime_coordinator._broker_manager._create_mock_broker(coordinator_context.config)
+        artifacts = runtime_coordinator._broker_manager._create_mock_broker(
+            coordinator_context.config
+        )
 
         assert artifacts.broker == mock_broker
         # Assert relevant fields
@@ -249,8 +271,8 @@ class TestBrokerBootstrap:
 
         # Ensure the context's registry has the broker to trigger the skip condition
         context_with_broker = coordinator_context.with_updates(
-             registry=coordinator_context.registry.with_updates(broker=mock_broker),
-             broker=mock_broker
+            registry=coordinator_context.registry.with_updates(broker=mock_broker),
+            broker=mock_broker,
         )
 
         result = runtime_coordinator._init_broker(context_with_broker)
@@ -337,7 +359,9 @@ class TestEnvironmentValidation:
         coordinator_context.config.profile = Profile.PROD  # Real mode
 
         # Use broker manager directly
-        result = runtime_coordinator._broker_manager.validate_broker_environment(coordinator_context.config)
+        result = runtime_coordinator._broker_manager.validate_broker_environment(
+            coordinator_context.config
+        )
         assert result["valid"] is True
 
 
@@ -351,8 +375,8 @@ class TestRiskManagerInitialization:
 
         # Create a context that actually has the risk manager
         context_with_risk = coordinator_context.with_updates(
-             registry=coordinator_context.registry.with_updates(risk_manager=mock_risk_manager),
-             risk_manager=mock_risk_manager
+            registry=coordinator_context.registry.with_updates(risk_manager=mock_risk_manager),
+            risk_manager=mock_risk_manager,
         )
 
         result = runtime_coordinator._init_risk_manager(context_with_risk)
@@ -384,7 +408,9 @@ class TestRiskManagerInitialization:
         # Or verify the integration.
 
         # Let's test the coordinator's delegation
-        runtime_coordinator._risk_management.create_risk_manager = Mock(return_value=mock_risk_manager)
+        runtime_coordinator._risk_management.create_risk_manager = Mock(
+            return_value=mock_risk_manager
+        )
 
         result = runtime_coordinator._init_risk_manager(coordinator_context)
 
@@ -414,7 +440,9 @@ class TestRiskManagerInitialization:
         mock_live_risk_manager.return_value = mock_risk_manager
 
         # Mock service creation
-        runtime_coordinator._risk_management.create_risk_manager = Mock(return_value=mock_risk_manager)
+        runtime_coordinator._risk_management.create_risk_manager = Mock(
+            return_value=mock_risk_manager
+        )
 
         result = runtime_coordinator._init_risk_manager(new_context)
 
@@ -430,7 +458,6 @@ class TestReduceOnlyMode:
     # Legacy tests relying on mixin implementation are skipped or removed.
     pass
 
-
     # Startup reconciliation tests removed as functionality moved to OrderReconciliationService
     # in ExecutionEngine or separate startup logic.
     pass
@@ -442,7 +469,9 @@ class TestErrorHandling:
     def test_broker_bootstrap_error_propagation(self, runtime_coordinator, coordinator_context):
         """Test that broker bootstrap errors are properly wrapped and propagated."""
         # Mock the service method, not the coordinator internal method
-        runtime_coordinator._broker_manager.create_broker = Mock(side_effect=Exception("Original error"))
+        runtime_coordinator._broker_manager.create_broker = Mock(
+            side_effect=Exception("Original error")
+        )
 
         # Ensure we don't hit the 'skip' logic
         coordinator_context = coordinator_context.with_updates(broker=None)
@@ -453,7 +482,7 @@ class TestErrorHandling:
         # if not explicitly wrapped in the service call.
         # Let's check for Exception for now.
         with pytest.raises(Exception):
-             runtime_coordinator._init_broker(coordinator_context)
+            runtime_coordinator._init_broker(coordinator_context)
 
     # Legacy internal method tests removed
     pass

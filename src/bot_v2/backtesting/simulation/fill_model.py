@@ -3,7 +3,6 @@
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
-from typing import Literal
 
 from bot_v2.features.brokerages.core.interfaces import Candle, Order, OrderSide, OrderType
 

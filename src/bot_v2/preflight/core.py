@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from .context import Colors, PreflightContext
-from .report import generate_report
 from .checks import (
     check_api_connectivity,
     check_dependencies,
@@ -17,6 +15,8 @@ from .checks import (
     check_test_suite,
     simulate_dry_run,
 )
+from .context import PreflightContext
+from .report import generate_report
 
 
 @dataclass

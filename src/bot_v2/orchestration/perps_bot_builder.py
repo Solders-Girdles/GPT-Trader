@@ -134,9 +134,6 @@ class PerpsBotBuilder:
         )
 
         # Updated for Service-based PerpsBot
-        from bot_v2.orchestration.perps_components.configuration_guardian import (
-            ConfigurationGuardianService,
-        )
 
         # Create baseline snapshot wrapper that looks like what ConfigurationGuardianService expects
         # (This might need adjustment if PerpsBot.build_baseline_snapshot no longer exists or returns differently)

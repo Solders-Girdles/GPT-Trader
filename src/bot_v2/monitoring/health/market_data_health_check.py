@@ -53,11 +53,13 @@ class StaleFillsHealthCheck(HealthChecker):
                             order_time = ts
 
                 if order_time and order_time < cutoff:
-                    stale_orders.append({
-                        "order_id": getattr(order, "id", order.get("id", "unknown")),
-                        "symbol": getattr(order, "symbol", order.get("symbol", "unknown")),
-                        "age_minutes": (now - order_time).total_seconds() / 60,
-                    })
+                    stale_orders.append(
+                        {
+                            "order_id": getattr(order, "id", order.get("id", "unknown")),
+                            "symbol": getattr(order, "symbol", order.get("symbol", "unknown")),
+                            "age_minutes": (now - order_time).total_seconds() / 60,
+                        }
+                    )
 
             if len(stale_orders) >= 5:
                 status = HealthStatus.UNHEALTHY
@@ -141,19 +143,25 @@ class StaleMarksHealthCheck(HealthChecker):
                     mark_time = mark_data.timestamp
 
                 if mark_time and mark_time < cutoff:
-                    stale_symbols.append({
-                        "symbol": symbol,
-                        "age_seconds": (now - mark_time).total_seconds(),
-                    })
+                    stale_symbols.append(
+                        {
+                            "symbol": symbol,
+                            "age_seconds": (now - mark_time).total_seconds(),
+                        }
+                    )
 
             stale_pct = (len(stale_symbols) / total_symbols * 100) if total_symbols > 0 else 0
 
             if stale_pct > 50:
                 status = HealthStatus.UNHEALTHY
-                message = f"{len(stale_symbols)}/{total_symbols} marks stale (>{self.max_age_seconds}s)"
+                message = (
+                    f"{len(stale_symbols)}/{total_symbols} marks stale (>{self.max_age_seconds}s)"
+                )
             elif stale_symbols:
                 status = HealthStatus.DEGRADED
-                message = f"{len(stale_symbols)}/{total_symbols} marks stale (>{self.max_age_seconds}s)"
+                message = (
+                    f"{len(stale_symbols)}/{total_symbols} marks stale (>{self.max_age_seconds}s)"
+                )
             else:
                 status = HealthStatus.HEALTHY
                 message = f"All {total_symbols} marks are fresh"

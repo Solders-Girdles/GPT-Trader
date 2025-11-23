@@ -45,9 +45,13 @@ def build_signal(
         confirm_bars=config.ma_cross_confirm_bars,
     )
 
-    if snapshot.bullish_cross or (config.force_entry_on_trend and snapshot.short_ma > snapshot.long_ma):
+    if snapshot.bullish_cross or (
+        config.force_entry_on_trend and snapshot.short_ma > snapshot.long_ma
+    ):
         label = "bullish"
-    elif snapshot.bearish_cross or (config.force_entry_on_trend and snapshot.short_ma < snapshot.long_ma):
+    elif snapshot.bearish_cross or (
+        config.force_entry_on_trend and snapshot.short_ma < snapshot.long_ma
+    ):
         label = "bearish"
     else:
         label = "neutral"

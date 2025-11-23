@@ -11,7 +11,6 @@ from __future__ import annotations
 import threading
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
-from typing import Any
 
 from bot_v2.features.brokerages.coinbase.auth import CDPJWTAuth, create_cdp_jwt_auth
 from bot_v2.security.secrets_manager import SecretsManager, get_secrets_manager
@@ -116,9 +115,7 @@ class CDPSecretsProvider:
                 "private_key_pem": credentials.private_key_pem,
                 "created_at": credentials.created_at.isoformat(),
                 "last_rotated_at": (
-                    credentials.last_rotated_at.isoformat()
-                    if credentials.last_rotated_at
-                    else None
+                    credentials.last_rotated_at.isoformat() if credentials.last_rotated_at else None
                 ),
                 "rotation_policy_days": credentials.rotation_policy_days,
                 "allowed_ips": credentials.allowed_ips or [],
@@ -183,7 +180,9 @@ class CDPSecretsProvider:
                     if secret_data.get("last_rotated_at")
                     else None
                 ),
-                rotation_policy_days=secret_data.get("rotation_policy_days", self._default_rotation_days),
+                rotation_policy_days=secret_data.get(
+                    "rotation_policy_days", self._default_rotation_days
+                ),
                 allowed_ips=secret_data.get("allowed_ips"),
             )
 
@@ -401,7 +400,9 @@ class CDPSecretsProvider:
                 self._credentials_cache[service_name] = new_credentials
                 # Clear auth cache to force new auth instance
                 self._auth_cache = {
-                    k: v for k, v in self._auth_cache.items() if not k.startswith(f"{service_name}:")
+                    k: v
+                    for k, v in self._auth_cache.items()
+                    if not k.startswith(f"{service_name}:")
                 }
 
                 logger.info(
@@ -466,7 +467,11 @@ class CDPSecretsProvider:
     def list_credentials(self) -> list[str]:
         """List all stored CDP credential service names"""
         all_secrets = self._secrets_manager.list_secrets()
-        return [s.replace("cdp_credentials/", "") for s in all_secrets if s.startswith("cdp_credentials/")]
+        return [
+            s.replace("cdp_credentials/", "")
+            for s in all_secrets
+            if s.startswith("cdp_credentials/")
+        ]
 
 
 # Global instance

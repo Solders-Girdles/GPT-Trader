@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from bot_v2.features.position_sizing.types import TradeStatistics
 
-from .calculations import fractional_kelly, kelly_criterion
+from .calculations import kelly_criterion
 
 
 def simulate_kelly_growth(

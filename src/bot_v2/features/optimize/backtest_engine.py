@@ -18,7 +18,7 @@ from bot_v2.utilities.logging_patterns import get_logger
 from .backtest_portfolio import BacktestPortfolio
 from .backtester import calculate_metrics
 from .decision_logger import DecisionLogger
-from .types_v2 import BacktestConfig, BacktestResult, DecisionContext, ExecutionResult
+from .types_v2 import BacktestConfig, BacktestResult, DecisionContext
 
 logger = get_logger(__name__, component="optimize")
 

@@ -9,7 +9,10 @@ from bot_v2.utilities.logging_patterns import get_logger
 logger = get_logger(__name__, component="coinbase_provider")
 
 if TYPE_CHECKING:
-    from bot_v2.features.brokerages.coinbase.market_data_service import CoinbaseTickerService, TickerCache
+    from bot_v2.features.brokerages.coinbase.market_data_service import (
+        CoinbaseTickerService,
+        TickerCache,
+    )
     from bot_v2.features.brokerages.coinbase.ws import CoinbaseWebSocket
     from bot_v2.orchestration.runtime_settings import RuntimeSettings
 

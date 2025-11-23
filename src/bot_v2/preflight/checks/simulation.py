@@ -13,12 +13,12 @@ def simulate_dry_run(checker: "PreflightCheck") -> bool:
     print("Simulating dry-run execution...")
 
     try:
-        from bot_v2.orchestration.bootstrap import build_bot
-        from bot_v2.orchestration.broker_factory import create_brokerage
-        from bot_v2.orchestration.configuration import BotConfig
         from bot_v2.features.live_trade.strategies.perps_baseline import (
             BaselinePerpsStrategy,
         )
+        from bot_v2.orchestration.bootstrap import build_bot
+        from bot_v2.orchestration.broker_factory import create_brokerage
+        from bot_v2.orchestration.configuration import BotConfig
 
         config = BotConfig.from_profile(profile=checker.profile, dry_run=True, mock_broker=True)
         checker.log_info(f"Config: {checker.profile} profile, dry_run=True, deterministic broker")
@@ -30,7 +30,7 @@ def simulate_dry_run(checker: "PreflightCheck") -> bool:
         except Exception as exc:
             checker.log_warning(f"Broker initialization warning: {exc}")
 
-        strategy = BaselinePerpsStrategy()
+        _ = BaselinePerpsStrategy()
         checker.log_success("Strategy initialized")
 
         bot, registry = build_bot(config)

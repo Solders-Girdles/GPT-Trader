@@ -191,7 +191,9 @@ class TestDecisionRoutingAndGuardChains:
     """Test decision routing through different action paths and guard chains."""
 
     @pytest.mark.asyncio
-    async def test_decision_routing_buy_action_with_product(self, mock_bot, test_balance, test_position) -> None:
+    async def test_decision_routing_buy_action_with_product(
+        self, mock_bot, test_balance, test_position
+    ) -> None:
         """Test routing of BUY action when product metadata is available."""
         orchestrator = StrategyOrchestrator(mock_bot)
 
@@ -219,7 +221,9 @@ class TestDecisionRoutingAndGuardChains:
         assert args[1].action == Action.BUY  # decision
 
     @pytest.mark.asyncio
-    async def test_decision_routing_missing_product_metadata(self, mock_bot, test_balance, test_position) -> None:
+    async def test_decision_routing_missing_product_metadata(
+        self, mock_bot, test_balance, test_position
+    ) -> None:
         """Test decision routing when product metadata is missing."""
         orchestrator = StrategyOrchestrator(mock_bot)
 
@@ -243,7 +247,9 @@ class TestDecisionRoutingAndGuardChains:
         assert "missing product metadata" in str(mock_logger.warning.call_args)
 
     @pytest.mark.asyncio
-    async def test_decision_routing_sell_action_execution(self, mock_bot, test_balance, test_position) -> None:
+    async def test_decision_routing_sell_action_execution(
+        self, mock_bot, test_balance, test_position
+    ) -> None:
         """Test routing of SELL action through execution path."""
         orchestrator = StrategyOrchestrator(mock_bot)
 
@@ -263,7 +269,9 @@ class TestDecisionRoutingAndGuardChains:
         assert args[1].action == Action.SELL
 
     @pytest.mark.asyncio
-    async def test_decision_routing_close_action_execution(self, mock_bot, test_balance, test_position) -> None:
+    async def test_decision_routing_close_action_execution(
+        self, mock_bot, test_balance, test_position
+    ) -> None:
         """Test routing of CLOSE action through execution path."""
         orchestrator = StrategyOrchestrator(mock_bot)
 

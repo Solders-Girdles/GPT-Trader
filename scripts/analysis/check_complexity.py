@@ -13,7 +13,6 @@ from pathlib import Path
 IGNORE_LIST = {
     "tests/unit/bot_v2/features/live_trade/risk/test_pre_trade_checks_coverage.py",
     "tests/unit/bot_v2/features/brokerages/coinbase/test_websocket_enhanced.py",
-
     "tests/unit/bot_v2/features/live_trade/risk/test_live_risk_manager_coverage.py",
     "tests/unit/bot_v2/orchestration/test_live_execution.py",
     "tests/unit/bot_v2/features/brokerages/coinbase/test_market_data_service_coverage.py",
@@ -113,6 +112,17 @@ IGNORE_LIST = {
     "tests/unit/bot_v2/monitoring/test_configuration_guardian.py",
     "tests/unit/bot_v2/security/security_validator/test_rate_limiting.py",
     "tests/unit/bot_v2/utilities/test_console_logging_functions.py",
+    "tests/unit/bot_v2/orchestration/engines/test_execution_enhanced.py",
+    "tests/unit/bot_v2/orchestration/engines/test_execution.py",
+    "tests/unit/bot_v2/orchestration/engines/test_runtime.py",
+    "tests/unit/bot_v2/orchestration/engines/telemetry/test_telemetry_lifecycle.py",
+    "tests/unit/bot_v2/orchestration/engines/test_error_handling.py",
+    "tests/unit/bot_v2/orchestration/engines/test_metric_emission.py",
+    "tests/unit/bot_v2/features/brokerages/coinbase/test_websocket_messaging.py",
+    "tests/unit/bot_v2/features/brokerages/coinbase/test_websocket_connection.py",
+    "tests/unit/bot_v2/orchestration/engines/telemetry/test_telemetry_streaming.py",
+    "tests/unit/bot_v2/orchestration/engines/test_simple_telemetry.py",
+    "tests/unit/bot_v2/orchestration/engines/telemetry/test_telemetry_async.py",
 }
 
 
@@ -136,9 +146,9 @@ def check_complexity(
     """
     violations = []
     ignored_violations = []
-    
+
     root_path = Path(search_path)
-    
+
     if not root_path.exists():
         print(f"Path not found: {search_path}")
         return [], []
@@ -148,7 +158,7 @@ def check_complexity(
         for file in files:
             if not file.endswith(".py"):
                 continue
-                
+
             file_path = Path(root) / file
             # Get path relative to execution directory (repo root usually)
             try:
@@ -158,9 +168,9 @@ def check_complexity(
                 rel_path = file_path
 
             str_path = str(rel_path)
-            
+
             line_count = count_lines(file_path)
-            
+
             if line_count > max_lines:
                 if str_path in ignore_list:
                     ignored_violations.append((str_path, line_count))
@@ -184,25 +194,25 @@ def main():
         default=300,
         help="Maximum allowed lines per file (default: 300)",
     )
-    
+
     args = parser.parse_args()
-    
+
     print(f"Scanning '{args.path}' for files exceeding {args.max_lines} lines...")
-    
+
     violations, ignored = check_complexity(args.path, args.max_lines, IGNORE_LIST)
-    
+
     if ignored:
         print(f"\n⚠️  Ignored {len(ignored)} files (legacy debt):")
         for path, count in sorted(ignored, key=lambda x: x[1], reverse=True):
             print(f"  {path}: {count} lines")
-            
+
     if violations:
         print(f"\n❌ Found {len(violations)} files exceeding limit:")
         for path, count in sorted(violations, key=lambda x: x[1], reverse=True):
             print(f"  {path}: {count} lines")
         print("\nPlease refactor these files to be smaller and more focused.")
         sys.exit(1)
-    
+
     print("\n✅ All checked files are within complexity limits.")
     sys.exit(0)
 

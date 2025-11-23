@@ -148,9 +148,7 @@ class LiveRiskManagerInitializationMixin:
         from . import logger as package_logger
 
         if hasattr(self.config, "to_dict"):
-            package_logger.info(
-                f"LiveRiskManager initialized with config: {self.config.to_dict()}"
-            )
+            package_logger.info(f"LiveRiskManager initialized with config: {self.config.to_dict()}")
         else:
             package_logger.info("LiveRiskManager initialized with a non-standard config object")
 

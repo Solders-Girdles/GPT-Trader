@@ -1,13 +1,15 @@
-import pytest
-from unittest.mock import Mock, patch
 from decimal import Decimal
 from types import SimpleNamespace
-from bot_v2.features.live_trade.strategies.perps_baseline import Action
-from bot_v2.features.brokerages.core.interfaces import OrderType, TimeInForce, OrderSide
-from bot_v2.orchestration.engines.execution import ExecutionEngine
-from bot_v2.orchestration.engines.base import CoordinatorContext
-from bot_v2.features.brokerages.core.interfaces import Product
+from unittest.mock import Mock, patch
+
+import pytest
 from tests.unit.bot_v2.orchestration.helpers import ScenarioBuilder
+
+from bot_v2.features.brokerages.core.interfaces import OrderType, Product, TimeInForce
+from bot_v2.features.live_trade.strategies.perps_baseline import Action
+from bot_v2.orchestration.engines.base import CoordinatorContext
+from bot_v2.orchestration.engines.execution import ExecutionEngine
+
 
 @pytest.mark.asyncio
 async def test_execute_decision_skips_in_dry_run(
@@ -47,8 +49,8 @@ async def test_execute_decision_skips_in_dry_run(
 
     # Mock log_execution_error to avoid signature issues if triggered
     with patch("bot_v2.orchestration.engines.execution.order_placement.log_execution_error"):
-         # Patch logger in the coordinator module where execute_decision is defined
-         with patch("bot_v2.orchestration.engines.execution.coordinator.logger"):
+        # Patch logger in the coordinator module where execute_decision is defined
+        with patch("bot_v2.orchestration.engines.execution.coordinator.logger"):
             await coordinator.execute_decision(
                 action=decision.action,
                 symbol="BTC-PERP",
@@ -56,7 +58,7 @@ async def test_execute_decision_skips_in_dry_run(
                 price=Decimal("50000"),
                 product=test_product,
                 position_state=None,
-                quantity=decision.quantity
+                quantity=decision.quantity,
             )
 
     # If dry run logic is inside engine (which is often mocked), we might see a call.
@@ -116,7 +118,7 @@ async def test_execute_decision_invokes_engine(
             price=Decimal("50000"),
             product=test_product,
             position_state={"quantity": Decimal("0")},
-            quantity=decision.quantity
+            quantity=decision.quantity,
         )
 
     exec_engine.place_order.assert_called_once()
@@ -129,6 +131,7 @@ async def test_execute_decision_handles_missing_product(
     """Test execute_decision handles missing product gracefully."""
     # Legacy logic might handle this.
     pass
+
 
 @pytest.mark.asyncio
 async def test_execute_decision_handles_invalid_mark(
@@ -168,7 +171,7 @@ async def test_execute_decision_handles_execution_exception(
             price=Decimal("50000"),
             product=product,
             position_state=None,
-            quantity=decision.quantity
+            quantity=decision.quantity,
         )
 
     # Should have attempted to place order despite failure

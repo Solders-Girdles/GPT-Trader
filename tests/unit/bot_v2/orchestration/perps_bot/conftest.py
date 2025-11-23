@@ -15,6 +15,7 @@ from tests.unit.bot_v2.orchestration.helpers import ScenarioBuilder
 from bot_v2.features.brokerages.core.interfaces import (
     Balance,
     IBrokerage,
+    Order,
     OrderSide,
     OrderStatus,
     OrderType,
@@ -23,12 +24,14 @@ from bot_v2.features.brokerages.core.interfaces import (
 from bot_v2.monitoring.configuration_guardian import ConfigurationGuardian
 from bot_v2.orchestration.config_controller import ConfigController
 from bot_v2.orchestration.configuration import BotConfig, Profile
+from bot_v2.orchestration.execution.state_collection import StateCollector
 from bot_v2.orchestration.perps_bot import PerpsBot, _CallableSymbolProcessor
 from bot_v2.orchestration.perps_bot_state import PerpsBotRuntimeState
 from bot_v2.orchestration.runtime_settings import RuntimeSettings
 from bot_v2.orchestration.service_registry import ServiceRegistry
 from bot_v2.persistence.event_store import EventStore
 from bot_v2.persistence.orders_store import OrdersStore
+from bot_v2.security.order_validator import OrderValidator
 
 
 @pytest.fixture

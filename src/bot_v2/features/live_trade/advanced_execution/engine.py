@@ -11,8 +11,6 @@ from bot_v2.features.brokerages.core.interfaces import (
     OrderSide,
     OrderType,
     Position,
-    Product,
-    Quote,
     TimeInForce,
 )
 from bot_v2.features.live_trade.execution import (
@@ -25,8 +23,8 @@ from bot_v2.features.live_trade.risk import LiveRiskManager, PositionSizingAdvic
 from bot_v2.utilities.config import load_slippage_multipliers
 from bot_v2.utilities.logging_patterns import get_logger
 
-from .config import OrderConfig
 from . import impact, order_utils, risk
+from .config import OrderConfig
 
 logger = get_logger(__name__, component="live_trade_execution")
 

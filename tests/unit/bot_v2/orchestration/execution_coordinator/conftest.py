@@ -1,13 +1,9 @@
-import pytest
-from unittest.mock import Mock
-from decimal import Decimal
 from datetime import datetime, timezone
+from decimal import Decimal
+from unittest.mock import Mock
 
-from bot_v2.orchestration.engines.base import CoordinatorContext
-from bot_v2.orchestration.engines.execution import ExecutionEngine
-from bot_v2.orchestration.configuration import BotConfig, Profile
-from bot_v2.orchestration.perps_bot_state import PerpsBotRuntimeState
-from bot_v2.orchestration.service_registry import ServiceRegistry
+import pytest
+
 from bot_v2.features.brokerages.core.interfaces import (
     MarketType,
     Order,
@@ -17,8 +13,14 @@ from bot_v2.features.brokerages.core.interfaces import (
     Product,
     TimeInForce,
 )
+from bot_v2.orchestration.configuration import BotConfig, Profile
+from bot_v2.orchestration.engines.base import CoordinatorContext
+from bot_v2.orchestration.engines.execution import ExecutionEngine
+from bot_v2.orchestration.perps_bot_state import PerpsBotRuntimeState
+from bot_v2.orchestration.service_registry import ServiceRegistry
 
 BOT_ID = "coinbase_trader"
+
 
 @pytest.fixture
 def base_context() -> CoordinatorContext:

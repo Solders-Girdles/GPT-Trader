@@ -67,11 +67,7 @@ class DerivativesProductCache:
 
     def get_all_perpetuals(self) -> list[DerivativesProductSpec]:
         """Get all cached perpetual specs."""
-        return [
-            spec
-            for spec in self._specs.values()
-            if spec.contract_expiry_type == "PERPETUAL"
-        ]
+        return [spec for spec in self._specs.values() if spec.contract_expiry_type == "PERPETUAL"]
 
     def get_all_futures(self) -> list[DerivativesProductSpec]:
         """Get all cached future specs (non-perpetual derivatives)."""

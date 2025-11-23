@@ -36,7 +36,7 @@ class TestPreTradeValidatorScenarios:
             validator.pre_trade_validate(
                 "BTC-USD",
                 "buy",
-                qty=Decimal("0.05"),
+                quantity=Decimal("0.05"),
                 price=Decimal("50000"),
                 product=btc_perpetual_product,
                 equity=Decimal("10000"),
@@ -59,7 +59,7 @@ class TestPreTradeValidatorScenarios:
             validator.pre_trade_validate(
                 "BTC-USD",
                 "buy",
-                qty=Decimal("10"),  # Also excessive leverage
+                quantity=Decimal("10"),  # Also excessive leverage
                 price=Decimal("50000"),
                 product=btc_perpetual_product,
                 equity=Decimal("100"),
@@ -88,7 +88,7 @@ class TestPreTradeValidatorScenarios:
             validator.pre_trade_validate(
                 "BTC-USD",
                 "buy",
-                qty=Decimal("0.05"),
+                quantity=Decimal("0.05"),
                 price=Decimal("50000"),
                 product=btc_perpetual_product,
                 equity=Decimal("10000"),
@@ -99,7 +99,7 @@ class TestPreTradeValidatorScenarios:
             validator.pre_trade_validate(
                 "ETH-USD",
                 "buy",
-                qty=Decimal("1"),
+                quantity=Decimal("1"),
                 price=Decimal("3000"),
                 product=eth_spot_product,
                 equity=Decimal("10000"),
@@ -127,7 +127,7 @@ class TestPreTradeValidatorScenarios:
             validator.pre_trade_validate(
                 "BTC-USD",
                 "buy",
-                qty=Decimal("0.3"),  # 3x leverage allowed
+                quantity=Decimal("0.3"),  # 3x leverage allowed
                 price=Decimal("50000"),
                 product=btc_perpetual_product,
                 equity=Decimal("10000"),
@@ -156,7 +156,7 @@ class TestPreTradeValidatorScenarios:
             validator.pre_trade_validate(
                 "BTC-USD",
                 "buy",
-                qty=Decimal("0.2"),  # Exceeds 0.5x leverage
+                quantity=Decimal("0.2"),  # Exceeds 0.5x leverage
                 price=Decimal("50000"),
                 product=btc_perpetual_product,
                 equity=Decimal("10000"),

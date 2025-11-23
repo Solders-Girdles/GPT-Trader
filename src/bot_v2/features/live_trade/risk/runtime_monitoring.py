@@ -159,7 +159,7 @@ class RuntimeMonitor:
         guard_name = "liquidation_buffer"
 
         try:
-            qty = Decimal(str(position_data.get("quantity", position_data.get("qty", 0))))
+            quantity = Decimal(str(position_data.get("quantity", position_data.get("qty", 0))))
             mark = Decimal(str(position_data.get("mark", 0)))
         except Exception as exc:
             raise RiskGuardDataCorrupt(
@@ -183,10 +183,10 @@ class RuntimeMonitor:
                 original=exc,
             ) from exc
 
-        if qty == 0 or mark == 0:
+        if quantity == 0 or mark == 0:
             return False
 
-        notional = abs(qty * mark)
+        notional = abs(quantity * mark)
 
         # If we have a true liquidation price, compute distance-to-liquidation as buffer
         buffer_pct = Decimal("0")

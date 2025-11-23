@@ -114,17 +114,16 @@ class GuardChecksMixin:
         self,
         symbol: str,
         side: str,
-        qty: Decimal | None = None,
+        quantity: Decimal | None = None,
         expected_price: Decimal | None = None,
         mark_or_quote: Decimal | None = None,
-        *,
-        quantity: Decimal | None = None,
     ) -> None:
         """Optional slippage guard based on spread."""
         if expected_price is None or mark_or_quote is None:
             raise TypeError("expected_price and mark_or_quote are required")
 
-        _ = coalesce_quantity(qty, quantity)
+        if quantity is None:
+            raise TypeError("quantity must be provided")
 
         if self.config.slippage_guard_bps <= 0:
             return
@@ -157,7 +156,7 @@ class GuardChecksMixin:
         self,
         symbol: str,
         side: str,
-        qty: Decimal,
+        quantity: Decimal,
         price: Decimal,
         equity: Decimal,
         current_positions: dict[str, Any],
@@ -166,26 +165,26 @@ class GuardChecksMixin:
         guard_name = "liquidation_projection"
         try:
             pos = current_positions.get(symbol) or {}
-            cur_qty = abs(to_decimal(pos.get("quantity", pos.get("qty"))))
+            current_quantity = abs(to_decimal(pos.get("quantity", pos.get("qty"))))
             cur_side = str(pos.get("side", "")).lower()
             order_side = side.lower()
 
-            if cur_qty == 0:
-                new_qty = abs(qty)
+            if current_quantity == 0:
+                new_quantity = abs(quantity)
             else:
                 if (cur_side == "long" and order_side == "buy") or (
                     cur_side == "short" and order_side == "sell"
                 ):
-                    new_qty = cur_qty + abs(qty)
+                    new_quantity = current_quantity + abs(quantity)
                 else:
-                    reduce_qty = min(cur_qty, abs(qty))
-                    residual = cur_qty - reduce_qty
-                    new_qty = residual if residual > 0 else (abs(qty) - reduce_qty)
+                    reduce_quantity = min(current_quantity, abs(quantity))
+                    residual = current_quantity - reduce_quantity
+                    new_quantity = residual if residual > 0 else (abs(quantity) - reduce_quantity)
 
-            if new_qty <= 0:
+            if new_quantity <= 0:
                 return Decimal("1")
 
-            notional = new_qty * price
+            notional = new_quantity * price
             if equity <= 0 or notional <= 0:
                 return Decimal("0")
 

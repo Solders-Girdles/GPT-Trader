@@ -846,14 +846,11 @@ class TestLiveRiskManagerBackwardCompatibility:
         assert callable(manager.check_volatility_circuit_breaker)
 
     def test_quantity_parameter_backward_compatibility(self, conservative_risk_config):
-        """Test backward compatibility for both qty and quantity parameters."""
+        """Test that quantity parameter is strictly enforced."""
         manager = LiveRiskManager(config=conservative_risk_config)
 
         with patch.object(manager.pre_trade_validator, "pre_trade_validate") as mock_validate:
-            # Test with qty parameter
-            manager.pre_trade_validate(symbol="BTC-USD", side="buy", qty=Decimal("0.1"))
-
             # Test with quantity parameter
             manager.pre_trade_validate(symbol="BTC-USD", side="buy", quantity=Decimal("0.1"))
 
-            assert mock_validate.call_count == 2
+            assert mock_validate.call_count == 1

@@ -56,25 +56,22 @@ class PreTradeValidator(IntegrationContextMixin, GuardChecksMixin, LimitChecksMi
         self,
         symbol: str,
         side: str,
-        qty: Decimal | None = None,
+        quantity: Decimal | None = None,
         price: Decimal | None = None,
         product: Product | None = None,
         equity: Decimal | None = None,
         current_positions: dict[str, Any] | None = None,
-        *,
-        quantity: Decimal | None = None,
     ) -> None:
         """Validate order against all risk limits before placement."""
         workflow = PreTradeValidationWorkflow(
             self,
             symbol=symbol,
             side=side,
-            qty=qty,
+            quantity=quantity,
             price=price,
             product=product,
             equity=equity,
             current_positions=current_positions,
-            quantity=quantity,
             now_provider=self._now_provider,
             last_mark_update=self.last_mark_update,
         )

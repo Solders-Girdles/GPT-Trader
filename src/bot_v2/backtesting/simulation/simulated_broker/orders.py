@@ -50,7 +50,7 @@ class OrderEngine:
         client_order_id: str | None,
     ) -> Order:
         try:
-            qty = Decimal(quantity)
+            quantity_decimal = Decimal(quantity)
             side_enum = OrderSide.BUY if side.upper() == "BUY" else OrderSide.SELL
             type_enum = OrderType[order_type.upper()]
             tif = TimeInForce[time_in_force.upper()] if time_in_force else TimeInForce.GTC
@@ -64,11 +64,13 @@ class OrderEngine:
         except KeyError as exc:
             raise InvalidRequestError(f"Unknown product: {symbol}") from exc
 
-        if qty < product.min_size:
-            raise InvalidRequestError(f"Order size {qty} below minimum {product.min_size}")
+        if quantity_decimal < product.min_size:
+            raise InvalidRequestError(
+                f"Order size {quantity_decimal} below minimum {product.min_size}"
+            )
 
         quote = self._market_state.get_quote(symbol)
-        notional = qty * (limit_px or quote.last)
+        notional = quantity_decimal * (limit_px or quote.last)
         if side_enum == OrderSide.BUY and not self._portfolio.has_sufficient_margin(notional):
             raise InsufficientFunds(f"Insufficient funds for order (need {notional})")
 
@@ -79,7 +81,7 @@ class OrderEngine:
             symbol=symbol,
             side=side_enum,
             type=type_enum,
-            quantity=qty,
+            quantity=quantity_decimal,
             price=limit_px,
             stop_price=stop_px,
             tif=tif,

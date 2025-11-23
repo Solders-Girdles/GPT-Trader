@@ -51,21 +51,22 @@ class PreTradeValidationWorkflow:
         *,
         symbol: str,
         side: str,
-        qty: Decimal | None,
+        quantity: Decimal | None,
         price: Decimal | None,
         product: Product | None,
         equity: Decimal | None,
         current_positions: dict[str, Any] | None,
-        quantity: Decimal | None,
         now_provider: Callable[[], datetime],
         last_mark_update: MutableMapping[str, datetime | None],
     ) -> None:
         if price is None or product is None or equity is None:
             raise TypeError("price, product, and equity are required")
 
-        order_qty = coalesce_quantity(qty, quantity)
+        if quantity is None:
+             raise TypeError("quantity must be provided")
+
         side_str = self._normalize_side(side)
-        if order_qty <= 0:
+        if quantity <= 0:
             raise ValidationError("Order quantity must be positive")
 
         self.validator = validator
@@ -74,7 +75,7 @@ class PreTradeValidationWorkflow:
         self.inputs = ValidationInputs(
             symbol=symbol,
             side=side_str,
-            quantity=order_qty,
+            quantity=quantity,
             price=price,
             product=product,
             equity=equity,
@@ -357,7 +358,7 @@ class PreTradeValidationWorkflow:
             return self.validator._project_liquidation_distance(
                 symbol=self.inputs.symbol,
                 side=self.inputs.side,
-                qty=self.inputs.quantity,
+                quantity=self.inputs.quantity,
                 price=self.inputs.price,
                 equity=self.inputs.equity,
                 current_positions=self.inputs.current_positions,

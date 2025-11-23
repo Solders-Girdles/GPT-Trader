@@ -96,6 +96,7 @@ Before branching, make sure to:
 
 ### Code Quality
 - Clean, readable code with meaningful variable names
+- Adhere to [Naming Standards](docs/naming.md)
 - Comprehensive docstrings for public functions
 - Type hints where beneficial
 - Maximum line length: 100 characters

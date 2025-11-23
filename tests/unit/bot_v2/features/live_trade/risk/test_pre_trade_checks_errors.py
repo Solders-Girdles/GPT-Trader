@@ -30,7 +30,7 @@ class TestPreTradeValidatorErrors:
             validator.pre_trade_validate(
                 "BTC-USD",
                 "invalid_side",
-                qty=Decimal("0.1"),
+                quantity=Decimal("0.1"),
                 price=Decimal("50000"),
                 product=btc_perpetual_product,
                 equity=Decimal("10000"),
@@ -42,7 +42,7 @@ class TestPreTradeValidatorErrors:
             validator.pre_trade_validate(
                 "BTC-USD",
                 "buy",
-                qty=Decimal("-0.1"),
+                quantity=Decimal("-0.1"),
                 price=Decimal("50000"),
                 product=btc_perpetual_product,
                 equity=Decimal("10000"),
@@ -71,7 +71,7 @@ class TestPreTradeValidatorErrors:
             validator.pre_trade_validate(
                 "BTC-USD",
                 "buy",
-                qty=Decimal("0.01"),
+                quantity=Decimal("0.01"),
                 price=Decimal("50000"),
                 product=btc_perpetual_product,
                 equity=Decimal("10000"),
@@ -93,7 +93,7 @@ class TestPreTradeValidatorErrors:
             validator.pre_trade_validate(
                 "BTC-USD",
                 "buy",
-                qty=Decimal("0.1"),
+                quantity=Decimal("0.1"),
                 price=Decimal("50000"),
                 product=btc_perpetual_product,
                 equity=Decimal("10000"),
@@ -115,7 +115,7 @@ class TestPreTradeValidatorErrors:
             validator.pre_trade_validate(
                 "BTC-USD",
                 "buy",
-                qty=Decimal("0.00000001"),
+                quantity=Decimal("0.00000001"),
                 price=Decimal("50000.00000001"),
                 product=btc_perpetual_product,
                 equity=Decimal("10000.00000001"),
@@ -136,7 +136,7 @@ class TestPreTradeValidatorErrors:
                 validator.pre_trade_validate(
                     "BTC-USD",
                     "buy",
-                    qty=Decimal("0.01"),
+                    quantity=Decimal("0.01"),
                     price=Decimal("50000"),
                     product=btc_perpetual_product,
                     equity=Decimal("10000"),

@@ -27,18 +27,16 @@ class LimitChecksMixin:
     def validate_leverage(
         self,
         symbol: str,
-        qty: Decimal | None = None,
+        quantity: Decimal | None = None,
         price: Decimal | None = None,
         product: Product | None = None,
         equity: Decimal | None = None,
-        *,
-        quantity: Decimal | None = None,
     ) -> None:
         leverage_mod.validate_leverage(
             config=self.config,
             symbol=symbol,
-            quantity=qty,
-            quantity_override=quantity,
+            quantity=quantity,
+            quantity_override=None,
             price=price,
             product=product,
             equity=equity,
@@ -49,18 +47,16 @@ class LimitChecksMixin:
     def validate_liquidation_buffer(
         self,
         symbol: str,
-        qty: Decimal | None = None,
+        quantity: Decimal | None = None,
         price: Decimal | None = None,
         product: Product | None = None,
         equity: Decimal | None = None,
-        *,
-        quantity: Decimal | None = None,
     ) -> None:
         liquidation_mod.validate_liquidation_buffer(
             config=self.config,
             symbol=symbol,
-            quantity=qty,
-            quantity_override=quantity,
+            quantity=quantity,
+            quantity_override=None,
             price=price,
             product=product,
             equity=equity,

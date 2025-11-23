@@ -31,7 +31,7 @@ class TestPreTradeValidatorMarketImpact:
             validator.pre_trade_validate(
                 "BTC-USD",
                 "buy",
-                qty=Decimal("10"),
+                quantity=Decimal("10"),
                 price=Decimal("50000"),
                 product=btc_perpetual_product,
                 equity=Decimal("10000"),
@@ -67,7 +67,7 @@ class TestPreTradeValidatorMarketImpact:
             validator.pre_trade_validate(
                 "BTC-USD",
                 "buy",
-                qty=Decimal("10"),
+                quantity=Decimal("10"),
                 price=Decimal("50000"),
                 product=btc_perpetual_product,
                 equity=Decimal("10000"),
@@ -105,7 +105,7 @@ class TestPreTradeValidatorMarketImpact:
             validator.pre_trade_validate(
                 "BTC-USD",
                 "buy",
-                qty=Decimal("1"),
+                quantity=Decimal("1"),
                 price=Decimal("50000"),
                 product=btc_perpetual_product,
                 equity=Decimal("10000"),
@@ -141,7 +141,7 @@ class TestPreTradeValidatorMarketImpact:
             validator.pre_trade_validate(
                 "BTC-USD",
                 "buy",
-                qty=Decimal("10"),
+                quantity=Decimal("10"),
                 price=Decimal("50000"),
                 product=btc_perpetual_product,
                 equity=Decimal("10000"),
@@ -171,7 +171,7 @@ class TestPreTradeValidatorMarketImpact:
             validator.pre_trade_validate(
                 "BTC-USD",
                 "buy",
-                qty=Decimal("10"),
+                quantity=Decimal("10"),
                 price=Decimal("50000"),
                 product=btc_perpetual_product,
                 equity=Decimal("10000"),

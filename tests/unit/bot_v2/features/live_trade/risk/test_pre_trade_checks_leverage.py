@@ -32,7 +32,7 @@ class TestPreTradeValidatorLeverage:
         try:
             validator.validate_leverage(
                 "BTC-USD",
-                qty=Decimal("0.1"),
+                quantity=Decimal("0.1"),
                 price=Decimal("50000"),
                 product=btc_perpetual_product,
                 equity=Decimal("10000"),
@@ -50,7 +50,7 @@ class TestPreTradeValidatorLeverage:
         with pytest.raises(ValidationError, match="Leverage.*exceeds.*cap"):
             validator.validate_leverage(
                 "BTC-USD",
-                qty=Decimal("1"),
+                quantity=Decimal("1"),
                 price=Decimal("50000"),
                 product=btc_perpetual_product,
                 equity=Decimal("10000"),
@@ -66,7 +66,7 @@ class TestPreTradeValidatorLeverage:
         with pytest.raises(ValidationError, match="Leverage.*exceeds.*cap"):
             validator.validate_leverage(
                 "BTC-USD",
-                qty=Decimal("0.1"),
+                quantity=Decimal("0.1"),
                 price=Decimal("50000"),
                 product=btc_perpetual_product,
                 equity=Decimal("0"),
@@ -76,7 +76,7 @@ class TestPreTradeValidatorLeverage:
         try:
             validator.validate_leverage(
                 "BTC-USD",
-                qty=Decimal("0"),
+                quantity=Decimal("0"),
                 price=Decimal("50000"),
                 product=btc_perpetual_product,
                 equity=Decimal("10000"),
@@ -88,7 +88,7 @@ class TestPreTradeValidatorLeverage:
         try:
             validator.validate_leverage(
                 "BTC-USD",
-                qty=Decimal("0.0001"),
+                quantity=Decimal("0.0001"),
                 price=Decimal("50000"),
                 product=btc_perpetual_product,
                 equity=Decimal("10000"),
@@ -106,7 +106,7 @@ class TestPreTradeValidatorLeverage:
         with pytest.raises(ValidationError, match="Leverage.*exceeds.*cap"):
             validator.validate_leverage(
                 "BTC-USD",
-                qty=Decimal("5"),
+                quantity=Decimal("5"),
                 price=Decimal("50000"),
                 product=btc_perpetual_product,
                 equity=Decimal("10000"),
@@ -127,7 +127,7 @@ class TestPreTradeValidatorLeverage:
         try:
             validator.validate_liquidation_buffer(
                 "BTC-USD",
-                qty=Decimal("0.01"),
+                quantity=Decimal("0.01"),
                 price=Decimal("50000"),
                 product=btc_perpetual_product,
                 equity=Decimal("10000"),
@@ -146,7 +146,7 @@ class TestPreTradeValidatorLeverage:
         with pytest.raises(ValidationError, match="Insufficient liquidation buffer"):
             validator.validate_liquidation_buffer(
                 "BTC-USD",
-                qty=Decimal("0.1"),
+                quantity=Decimal("0.1"),
                 price=Decimal("50000"),
                 product=btc_perpetual_product,
                 equity=Decimal("1000"),  # Low equity
@@ -163,7 +163,7 @@ class TestPreTradeValidatorLeverage:
         with pytest.raises(ValidationError, match="Insufficient liquidation buffer"):
             validator.validate_liquidation_buffer(
                 "BTC-USD",
-                qty=Decimal("0.1"),
+                quantity=Decimal("0.1"),
                 price=Decimal("50000"),
                 product=btc_perpetual_product,
                 equity=Decimal("0"),

@@ -6,8 +6,11 @@ from collections.abc import Sequence
 from typing import TYPE_CHECKING, Any
 from urllib.parse import urlencode
 
-from bot_v2.features.brokerages.coinbase.errors import InvalidRequestError
-from bot_v2.features.brokerages.core.interfaces import BrokerageError, NotFoundError
+from bot_v2.features.brokerages.coinbase.errors import (
+    BrokerageError,
+    InvalidRequestError,
+    NotFoundError,
+)
 
 if TYPE_CHECKING:
     from bot_v2.features.brokerages.coinbase.client._typing import CoinbaseClientProtocol

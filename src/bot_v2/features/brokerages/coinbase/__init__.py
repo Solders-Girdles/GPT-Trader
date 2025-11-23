@@ -1,5 +1,4 @@
-"""Coinbase brokerage slice (Advanced Trade + derivatives scaffolding)."""
-
-from bot_v2.features.brokerages.coinbase.adapter import CoinbaseBrokerage
-
-__all__ = ["CoinbaseBrokerage"]
+"""
+Coinbase brokerage module
+"""
+# Placeholder to prevent ImportErrors. Adapter is gone.

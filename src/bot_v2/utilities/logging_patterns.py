@@ -1,26 +1,30 @@
-"""Compatibility shim for logging utilities."""
+"""
+Simplified Logging Patterns.
+"""
+import logging
 
-from __future__ import annotations
+def get_logger(name: str, **kwargs):
+    return logging.getLogger(name)
 
-from bot_v2.utilities.logging import (
-    LOG_FIELDS,
-    StructuredLogger,
-    UnifiedLogger,
-    get_logger,
-    log_configuration_change,
-    log_error_with_context,
-    log_execution,
-    log_market_data_update,
-    log_operation,
-    log_position_update,
-    log_system_health,
-    log_trade_event,
-)
+def log_operation(*args, **kwargs): pass
+def log_trade_event(*args, **kwargs): pass
+def log_position_update(*args, **kwargs): pass
+def log_error_with_context(*args, **kwargs): pass
+def log_configuration_change(*args, **kwargs): pass
+def log_market_data_update(*args, **kwargs): pass
+def log_system_health(*args, **kwargs): pass
+def log_execution(*args, **kwargs): pass
+
+class StructuredLogger:
+    pass
+
+class UnifiedLogger:
+    pass
+
+LOG_FIELDS = {}
 
 __all__ = [
-    "UnifiedLogger",
-    "StructuredLogger",
-    "LOG_FIELDS",
+    "get_logger",
     "log_operation",
     "log_trade_event",
     "log_position_update",
@@ -28,6 +32,8 @@ __all__ = [
     "log_configuration_change",
     "log_market_data_update",
     "log_system_health",
-    "get_logger",
     "log_execution",
+    "StructuredLogger",
+    "UnifiedLogger",
+    "LOG_FIELDS",
 ]

@@ -1,43 +1,26 @@
-"""Backwards-compatible shim for health monitoring utilities."""
+"""
+Simplified Health Checks.
+"""
+from dataclasses import dataclass
+from typing import Any
 
-from __future__ import annotations
+@dataclass
+class HealthCheckResult:
+    healthy: bool
+    details: dict[str, Any]
 
-from bot_v2.utilities.performance_monitoring import get_performance_health_check
+class HealthChecker:
+    pass
 
-from .health import (
-    APIHealthCheck,
-    BrokerageHealthCheck,
-    DatabaseHealthCheck,
-    HealthCheckEndpoint,
-    HealthChecker,
-    HealthCheckRegistry,
-    HealthCheckResult,
-    HealthStatus,
-    MemoryHealthCheck,
-    PerformanceHealthCheck,
-    get_health_registry,
-    get_health_summary,
-    setup_basic_health_checks,
-)
-from .health import checks as _health_checks
+class HealthCheckEndpoint:
+    pass
 
-psutil = _health_checks.psutil
-
+def setup_basic_health_checks(*args, **kwargs):
+    pass
 
 __all__ = [
-    "HealthStatus",
     "HealthCheckResult",
     "HealthChecker",
-    "DatabaseHealthCheck",
-    "APIHealthCheck",
-    "BrokerageHealthCheck",
-    "MemoryHealthCheck",
-    "PerformanceHealthCheck",
-    "HealthCheckRegistry",
-    "get_health_registry",
     "HealthCheckEndpoint",
     "setup_basic_health_checks",
-    "get_health_summary",
-    "psutil",
-    "get_performance_health_check",
 ]

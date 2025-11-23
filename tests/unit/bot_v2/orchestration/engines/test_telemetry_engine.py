@@ -106,7 +106,7 @@ async def test_run_account_telemetry_respects_snapshot_support(monkeypatch, tmp_
 
 @pytest.fixture
 def telemetry_context():
-    """Base coordinator context for telemetry coordinator tests."""
+    """Base coordinator context for telemetry engine tests."""
     config = BotConfig(profile=Profile.PROD, symbols=["BTC-PERP"], dry_run=False)
     runtime_state = PerpsBotRuntimeState(["BTC-PERP"])
 
@@ -145,7 +145,7 @@ class TestTelemetryEngineInitialization:
     """Test TelemetryEngine initialization."""
 
     def test_initialization_sets_context(self, telemetry_coordinator, telemetry_context):
-        """Test coordinator initializes with context."""
+        """Test engine initializes with context."""
         assert telemetry_coordinator.context == telemetry_context
         assert telemetry_coordinator.name == "telemetry"
 

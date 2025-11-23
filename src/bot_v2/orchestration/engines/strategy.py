@@ -100,16 +100,15 @@ class TradingEngine(BaseEngine):
                 "Running update cycle", extra={"operation": "strategy_cycle", "stage": "start"}
             )
 
-            print(f"DEBUG PRINT: Symbols: {self.context.symbols}", flush=True)
+            logger.debug(f"DEBUG: Symbols: {self.context.symbols}")
             if not self._history_backfilled and self.context.symbols:
-                print("DEBUG PRINT: Attempting backfill", flush=True)
+                logger.debug("DEBUG: Attempting backfill")
                 logger.info(f"DEBUG: Attempting backfill. Symbols: {self.context.symbols}")
                 await self._backfill_history()
                 self._history_backfilled = True
             else:
-                print(
-                    f"DEBUG PRINT: Skipping backfill. Backfilled: {self._history_backfilled}, Symbols: {self.context.symbols}",
-                    flush=True,
+                logger.debug(
+                    f"DEBUG: Skipping backfill. Backfilled: {self._history_backfilled}, Symbols: {self.context.symbols}"
                 )
                 logger.info(
                     f"DEBUG: Skipping backfill. Backfilled: {self._history_backfilled}, Symbols: {self.context.symbols}"

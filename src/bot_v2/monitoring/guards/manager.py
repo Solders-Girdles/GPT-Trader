@@ -57,7 +57,7 @@ class RuntimeGuardManager:
     def _handle_alert(self, alert: Alert, guard: RuntimeGuard) -> None:
         log_method = getattr(logger, alert.severity.value, logger.info)
         log_method(
-            "Runtime guard alert",
+            f"Runtime guard alert: {alert.guard_name}",
             operation="guard_manager",
             stage="handle_alert",
             guard_name=alert.guard_name,

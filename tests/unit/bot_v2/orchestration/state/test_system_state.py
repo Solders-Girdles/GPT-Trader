@@ -1,4 +1,4 @@
-"""Tests for the ReduceOnlyModeStateManager."""
+"""Tests for the SystemState."""
 
 from __future__ import annotations
 
@@ -15,7 +15,6 @@ from bot_v2.orchestration.state.unified_state import (
     StateType,
 )
 from bot_v2.orchestration.state.unified_state import (
-    SystemState as ReduceOnlyModeStateManager,
     SystemState,
 )
 

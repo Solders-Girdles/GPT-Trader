@@ -23,7 +23,7 @@ class StrategyConfig:
     max_trade_usd: Decimal | None = None  # cap notional if set
 
     # Feature flags
-    enable_shorts: bool = False
+    enable_shorts: bool = True
     max_adds: int = 0  # Disable pyramiding by default
     disable_new_entries: bool = False
     # Advanced entries (deprecated/no-op in simplified baseline)
@@ -43,7 +43,7 @@ class StrategyConfig:
     ma_cross_confirm_bars: int = 0
 
     # Ignition: Allow entry if trend is already established (not just on cross)
-    force_entry_on_trend: bool = False
+    force_entry_on_trend: bool = True
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> StrategyConfig:

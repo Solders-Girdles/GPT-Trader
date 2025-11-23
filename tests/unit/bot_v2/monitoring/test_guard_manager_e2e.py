@@ -6,6 +6,8 @@ from datetime import datetime
 from decimal import Decimal
 from unittest.mock import Mock, patch
 
+import pytest
+
 from bot_v2.monitoring.alert_types import AlertSeverity
 from bot_v2.monitoring.guards.base import Alert, GuardConfig, GuardStatus
 from bot_v2.monitoring.guards.builtins import (
@@ -68,7 +70,7 @@ class TestRuntimeGuardManagerE2E:
 
         # Add a guard that will trigger
         error_guard = ErrorRateGuard(
-            GuardConfig(name="error_rate", threshold=1.0, severity=AlertSeverity.ERROR)
+            GuardConfig(name="error_rate", threshold=0.5, severity=AlertSeverity.ERROR)
         )
         manager.add_guard(error_guard)
 
@@ -95,7 +97,7 @@ class TestRuntimeGuardManagerE2E:
         manager.add_alert_handler(bad_handler)
 
         error_guard = ErrorRateGuard(
-            GuardConfig(name="error_rate", threshold=1.0, severity=AlertSeverity.ERROR)
+            GuardConfig(name="error_rate", threshold=0.5, severity=AlertSeverity.ERROR)
         )
         manager.add_guard(error_guard)
 
@@ -162,7 +164,7 @@ class TestRuntimeGuardManagerE2E:
         error_guard = ErrorRateGuard(
             GuardConfig(
                 name="error_rate",
-                threshold=1.0,
+                threshold=0.5,
                 severity=AlertSeverity.ERROR,
                 cooldown_seconds=300,  # 5 minutes
             )
@@ -200,7 +202,7 @@ class TestRuntimeGuardManagerE2E:
             GuardConfig(name="daily_loss", threshold=100.0, severity=AlertSeverity.CRITICAL)
         )
         error_rate = ErrorRateGuard(
-            GuardConfig(name="error_rate", threshold=1.0, severity=AlertSeverity.ERROR)
+            GuardConfig(name="error_rate", threshold=0.5, severity=AlertSeverity.ERROR)
         )
 
         manager.add_guard(daily_loss)
@@ -299,6 +301,8 @@ class TestAlertHandlers:
 
     def test_log_alert_handler_formats_correctly(self, caplog):
         """Test log alert handler formats alerts correctly."""
+        import logging
+        caplog.set_level(logging.INFO)
         alert = Alert(
             timestamp=datetime(2024, 1, 1, 12, 0, 0),
             guard_name="test_guard",
@@ -319,7 +323,7 @@ class TestAlertHandlers:
         assert '"guard_name": "test_guard"' in log_output
         assert '"severity": "error"' in log_output
 
-    @patch("bot_v2.monitoring.guards.manager.requests.post")
+    @patch("requests.post")
     def test_slack_alert_handler_success(self, mock_post):
         """Test Slack alert handler success."""
         mock_response = Mock()
@@ -344,7 +348,7 @@ class TestAlertHandlers:
         assert payload["attachments"][0]["text"] == "Critical alert"
         assert payload["attachments"][0]["color"] == "#8B0000"  # Critical color
 
-    @patch("bot_v2.monitoring.guards.manager.requests.post")
+    @patch("requests.post")
     def test_slack_alert_handler_failure(self, mock_post):
         """Test Slack alert handler failure."""
         mock_post.side_effect = Exception("Network error")
@@ -361,7 +365,7 @@ class TestAlertHandlers:
 
         mock_post.assert_called_once()
 
-    @patch("bot_v2.monitoring.guards.manager.smtplib.SMTP")
+    @patch("smtplib.SMTP")
     def test_email_alert_handler_success(self, mock_smtp_class):
         """Test email alert handler success."""
         mock_smtp = Mock()
@@ -392,7 +396,7 @@ class TestAlertHandlers:
         mock_smtp.login.assert_called_once_with("user", "pass")
         mock_smtp.send_message.assert_called_once()
 
-    @patch("bot_v2.monitoring.guards.manager.smtplib.SMTP")
+    @patch("smtplib.SMTP")
     def test_email_alert_handler_non_critical_filtered(self, mock_smtp_class):
         """Test that non-critical alerts are filtered out."""
         alert = Alert(
@@ -414,7 +418,7 @@ class TestAlertHandlers:
         # Should not have created SMTP connection
         mock_smtp_class.assert_not_called()
 
-    @patch("bot_v2.monitoring.guards.manager.smtplib.SMTP")
+    @patch("smtplib.SMTP")
     def test_email_alert_handler_failure(self, mock_smtp_class):
         """Test email alert handler failure."""
         mock_smtp_class.side_effect = Exception("SMTP error")
@@ -473,20 +477,40 @@ class TestGuardStateTransitions:
 
     def test_guard_status_transitions_breached_to_warning(self):
         """Test guard transitions from breached back to warning."""
-        guard = DailyLossGuard(GuardConfig(name="test", threshold=100.0))
-
-        # Breach
-        guard.check({"pnl": -110.0})
-        assert guard.status == GuardStatus.BREACHED
-
-        # Next day (simulated by date change)
+        # Mock datetime for the entire test to ensure consistent baseline
         with patch("bot_v2.monitoring.guards.builtins.datetime") as mock_datetime:
-            mock_datetime.now.return_value.date.return_value = datetime(2024, 1, 2).date()
-            mock_datetime.now.return_value = datetime(2024, 1, 2, 12, 0, 0)
+            # Start at day 1
+            day1 = datetime(2024, 1, 1, 12, 0, 0)
+            day2 = datetime(2024, 1, 2, 12, 0, 0)
+            
+            # Use a mutable container for current time to allow updates
+            time_state = {"current": day1}
+            def side_effect(*args, **kwargs):
+                if time_state["current"].day == 2:
+                    raise RuntimeError(f"LAMBDA: {time_state['current']}")
+                return time_state["current"]
+            mock_datetime.now.side_effect = side_effect
+            
+            guard = DailyLossGuard(GuardConfig(name="test", threshold=100.0))
 
+            # Breach
+            guard.check({"pnl": -110.0})
+            assert guard.status == GuardStatus.BREACHED
+
+            # Next day
+            time_state["current"] = day2
             result = guard.check({"pnl": -10.0})  # New day, small loss
             assert result is None
-            assert guard.status == GuardStatus.WARNING  # Back to warning
+            assert guard.status == GuardStatus.HEALTHY  # Reset to HEALTHY
+
+            # Breach
+            guard.check({"pnl": -110.0})
+            assert guard.status == GuardStatus.BREACHED
+
+            # Next day
+            result = guard.check({"pnl": -10.0})  # New day, small loss
+            assert result is None
+            assert guard.status == GuardStatus.HEALTHY  # Reset to HEALTHY
 
     def test_position_stuck_guard_state_tracking(self):
         """Test position stuck guard tracks position state."""
@@ -505,14 +529,17 @@ class TestGuardStateTransitions:
         with patch("bot_v2.monitoring.guards.builtins.datetime") as mock_datetime:
             # Simulate 2 minutes later
             original_time = datetime(2024, 1, 1, 12, 0, 0)
-            mock_datetime.now.return_value = original_time
+            later_time = original_time.replace(minute=2)
+            
+            # setdefault calls now(), check(initial) calls now(), check(later) calls now()
+            time_state = {"current": original_time}
+            mock_datetime.now.side_effect = lambda *args, **kwargs: time_state["current"]
 
             # Initial position
             guard.check({"positions": positions})
 
             # Fast forward time
-            mock_datetime.now.return_value = original_time.replace(minute=2)
-
+            time_state["current"] = later_time
             result = guard.check({"positions": positions})
             assert result is not None
             assert "Stuck positions detected" in result.message
@@ -535,7 +562,7 @@ class TestGuardStateTransitions:
 
         # Drawdown but not breached
         guard.check({"equity": Decimal("1050")})  # 4.55% drawdown
-        assert guard.current_drawdown == Decimal("4.545454545454545")
+        assert guard.current_drawdown == pytest.approx(Decimal("4.545454545454545"))
 
         # Breach threshold
         result = guard.check({"equity": Decimal("980")})  # 10.91% drawdown

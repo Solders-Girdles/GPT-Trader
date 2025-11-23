@@ -22,7 +22,7 @@ from bot_v2.orchestration.service_registry import ServiceRegistry
 
 @pytest.fixture
 def base_context():
-    """Base coordinator context for strategy coordinator tests."""
+    """Base coordinator context for trading engine tests."""
     config = BotConfig(profile=Profile.PROD, symbols=["BTC-PERP"], dry_run=False)
     runtime_state = PerpsBotRuntimeState(["BTC-PERP"])
 
@@ -65,7 +65,7 @@ class TestTradingEngineInitialization:
         assert coordinator.name == "strategy"
 
     def test_initialize_returns_updated_context(self, coordinator, base_context):
-        """Test initialize returns context (no-op for strategy coordinator)."""
+        """Test initialize returns context (no-op for trading engine)."""
         result = coordinator.initialize(base_context)
         assert result == base_context
 

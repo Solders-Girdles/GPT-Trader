@@ -22,7 +22,7 @@ An ML-driven Coinbase trading system with market regime detection, built on a cl
 
 ## 🔎 What's Active Today
 
-- Coinbase trading stack (spot-first): `src/bot_v2/orchestration/perps_bot.py`
+- Coinbase trading stack (spot-first): `src/bot_v2/orchestration/perps_bot/bot.py`
   - Run spot mode: `poetry run coinbase-trader run --profile dev --dev-fast`
     - The dev profile uses the built-in `DeterministicBroker` for safety; enable real spot execution with `SPOT_FORCE_LIVE=1` plus Coinbase API keys.
     - Default universe: top-ten USD spot markets by Coinbase volume (`BTC`, `ETH`, `SOL`, `XRP`, `LTC`, `ADA`, `DOGE`, `BCH`, `AVAX`, `LINK`).

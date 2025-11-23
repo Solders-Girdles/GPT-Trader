@@ -97,7 +97,7 @@ class ExecutionEngine(BaseEngine):
         if hasattr(context, "risk_manager"):
             self._order_placement.risk_manager = context.risk_manager
         if hasattr(context, "order_reconciler"):
-        if hasattr(context, "order_reconciler"):
+
             self._order_reconciliation.order_reconciler = context.order_reconciler
 
     def update_settings(self, settings: Any) -> None:

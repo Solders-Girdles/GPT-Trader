@@ -1,5 +1,5 @@
 """
-Enhanced RuntimeEngine tests for the coordinator implementation.
+Enhanced RuntimeEngine tests.
 
 Tests broker bootstrapping, risk manager initialization, state transitions,
 reconciliation flows, bootstrap failures, and runtime safety toggles.

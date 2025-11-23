@@ -175,7 +175,7 @@ class TestExecutionEngineOrderWorkflows:
 
         # Return an Order object, not ID
         mock_order = Mock(spec=Order)
-        mock_order.order_id = "order_123"
+        mock_order.id = "order_123"
         mock_order.symbol = "BTC-PERP"
         mock_order.side = OrderSide.BUY
         mock_order.quantity = Decimal("1.0")
@@ -183,6 +183,7 @@ class TestExecutionEngineOrderWorkflows:
         mock_order.filled_quantity = Decimal("0")
         mock_order.avg_fill_price = None
         mock_order.order_type = OrderType.MARKET
+        mock_order.type = OrderType.MARKET
         mock_order.time_in_force = None
 
         execution_engine.place_order.side_effect = lambda **k: mock_order

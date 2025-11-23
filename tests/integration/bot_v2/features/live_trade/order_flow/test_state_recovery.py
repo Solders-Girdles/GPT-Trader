@@ -74,7 +74,7 @@ class TestStateRecoveryAndSettings:
             max_daily_loss=1500.0,  # Increased from 1000.0
             circuit_breaker_enabled=True,
             monitoring_enabled=True,
-            raw_env=settings.raw_env,
+            raw_env=getattr(settings, "raw_env", {}),
         )
 
         # Update settings in both components

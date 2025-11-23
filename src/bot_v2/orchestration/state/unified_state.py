@@ -460,13 +460,15 @@ def create_reduce_only_state_manager(
         Configured SystemState instance
     """
     manager = SystemState(name="ReduceOnlyStateManager")
-
-    # Set initial state
-    manager.set_reduce_only_mode(
-        enabled=initial_state,
-        source="system_initialization",
-        reason="Initial state configuration",
-    )
+    manager.initialize()
+    
+    # Set initial state if provided
+    if initial_state:
+        manager.set_reduce_only_mode(
+            enabled=initial_state,
+            source="system_initialization",
+            reason="Initial state configuration",
+        )
 
     return manager
 

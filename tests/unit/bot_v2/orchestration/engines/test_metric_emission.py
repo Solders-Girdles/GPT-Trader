@@ -20,7 +20,7 @@ class TestMetricEmission:
         """Test initialize method properly creates TelemetryEngine with required dependencies."""
         # Initialize with real broker mock
         with patch(
-            "bot_v2.orchestration.engines.telemetry_coordinator.CoinbaseBrokerage"
+            "bot_v2.features.brokerages.coinbase.adapter.CoinbaseBrokerage"
         ) as mock_broker_class:
             mock_broker = MagicMock()
             mock_broker_class.return_value = mock_broker
@@ -180,7 +180,7 @@ class TestMetricEmission:
                 telemetry_coordinator, "_stop_streaming", new_callable=AsyncMock
             ) as mock_stop,
             patch(
-                "bot_v2.orchestration.engines.base_coordinator.BaseEngine.shutdown",
+                "bot_v2.orchestration.engines.base.BaseEngine.shutdown",
                 new_callable=AsyncMock,
             ) as mock_super_shutdown,
         ):

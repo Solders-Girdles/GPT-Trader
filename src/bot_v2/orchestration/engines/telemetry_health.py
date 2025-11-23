@@ -11,13 +11,13 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 def _logger():
-    from bot_v2.orchestration.engines import telemetry as telemetry_module
+    from bot_v2.orchestration.engines import telemetry_coordinator as telemetry_module
 
     return telemetry_module.logger
 
 
-def _emit_metric(event_store: Any, bot_id: str, payload: dict[str, Any]) -> None:
-    from bot_v2.orchestration.engines import telemetry as telemetry_module
+def _emit_metric(event_store, bot_id: str, payload: dict[str, Any]) -> None:
+    from bot_v2.orchestration.engines import telemetry_coordinator as telemetry_module
 
     telemetry_module.emit_metric(event_store, bot_id, payload)
 

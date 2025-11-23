@@ -412,7 +412,7 @@ class TestErrorHandling:
     async def test_initialize_handles_broker_creation_failure(self, fake_context) -> None:
         """Test initialize handles broker creation failure gracefully."""
         with patch(
-            "bot_v2.orchestration.engines.telemetry_coordinator.CoinbaseBrokerage",
+            "bot_v2.features.brokerages.coinbase.adapter.CoinbaseBrokerage",
             side_effect=Exception("Broker creation failed"),
         ):
             # Should propagate exception - broker creation is critical
@@ -423,10 +423,10 @@ class TestErrorHandling:
         """Test initialize handles market monitor creation failure gracefully."""
         with (
             patch(
-                "bot_v2.orchestration.engines.telemetry_coordinator.CoinbaseBrokerage"
+                "bot_v2.features.brokerages.coinbase.adapter.CoinbaseBrokerage"
             ) as mock_broker_class,
             patch(
-                "bot_v2.orchestration.engines.telemetry_coordinator.MarketActivityMonitor",
+                "bot_v2.orchestration.market_monitor.MarketActivityMonitor",
                 side_effect=Exception("Monitor creation failed"),
             ),
         ):

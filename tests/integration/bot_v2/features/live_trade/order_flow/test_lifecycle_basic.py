@@ -119,8 +119,8 @@ class TestCompleteOrderLifecycle:
         assert exc_info.value is not None, "Should have rejection reason"
 
         # Order should not reach execution
-        # Updated: Service now returns None on failure instead of raising exception
-        result = await execution_coordinator.place_order(
+        # New behavior: returns None on failure (caught by service)
+        placed_order = await execution_coordinator.place_order(
             exec_engine=execution_engine,
             symbol=large_order.symbol,
             side=large_order.side,
@@ -128,7 +128,7 @@ class TestCompleteOrderLifecycle:
             quantity=large_order.quantity,
             price=large_order.price,
         )
-        assert result is None, "Order should be rejected by risk checks"
+        assert placed_order is None, "Order should be rejected (return None)"
 
         # Should have risk rejection event
         risk_events = event_store.get_events_by_type("risk_rejection")
@@ -170,6 +170,7 @@ class TestCompleteOrderLifecycle:
         # Simulate broker failure
         broker.failure_mode = "order_failure"
 
+        # Execution should fail
         # Execution should fail
         placed_order = await execution_coordinator.place_order(
             exec_engine=system["execution_engine"],

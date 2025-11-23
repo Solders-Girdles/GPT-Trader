@@ -63,10 +63,13 @@ class ProductRestMixin:
         try:
             base = cast("CoinbaseRestServiceBase", self)
             client = cast("CoinbaseClient", base.client)
-            response = client.get_products(
-                product_type=product_type,
-                contract_expiry_type=contract_expiry_type,
-            ) or {}
+            response = (
+                client.get_products(
+                    product_type=product_type,
+                    contract_expiry_type=contract_expiry_type,
+                )
+                or {}
+            )
         except Exception as exc:
             logger.error("Failed to list products: %s", exc)
             return []

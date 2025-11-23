@@ -1,14 +1,11 @@
 from __future__ import annotations
 
-import asyncio
-from datetime import datetime, timedelta
 from decimal import Decimal
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 
-from bot_v2.features.brokerages.core.interfaces import Order, OrderSide, OrderStatus, OrderType
-from bot_v2.features.live_trade.advanced_execution import AdvancedExecutionEngine
+from bot_v2.features.brokerages.core.interfaces import Order, OrderSide, OrderType
 from bot_v2.orchestration.configuration import BotConfig, Profile
 from bot_v2.orchestration.engines.base import CoordinatorContext
 from bot_v2.orchestration.engines.execution import ExecutionEngine
@@ -45,7 +42,7 @@ async def test_initialize_creates_execution_engine() -> None:
     context = _make_context()
     coordinator = ExecutionEngine(context)
 
-    updated = await coordinator.initialize(context)
+    _ = await coordinator.initialize(context)
 
     # In new architecture, execution engine is stored in internal service, not exposed in runtime state
     # However, for test compatibility, we can check internal state
@@ -57,7 +54,7 @@ async def test_initialize_advanced_engine(monkeypatch: pytest.MonkeyPatch) -> No
     context = _make_context(advanced=True)
     coordinator = ExecutionEngine(context)
 
-    updated = await coordinator.initialize(context)
+    _ = await coordinator.initialize(context)
 
     # Check internal service
     engine = coordinator._order_placement.execution_engine
@@ -172,7 +169,7 @@ class TestExecutionEngineOrderWorkflows:
     ) -> None:
         """Test successful order placement with validation."""
         # Setup
-        updated_context = await execution_coordinator.initialize(mock_context)
+        _ = await execution_coordinator.initialize(mock_context)
         execution_engine = Mock()
         execution_coordinator._order_placement.execution_engine = execution_engine
 
@@ -207,7 +204,9 @@ class TestExecutionEngineOrderWorkflows:
         action.side = order.side
         action.order_type = order.order_type
 
-        result = await execution_coordinator.place_order(execution_engine, action=action, time_in_force=None)
+        result = await execution_coordinator.place_order(
+            execution_engine, action=action, time_in_force=None
+        )
 
         # Verify
         assert result == mock_order
@@ -228,6 +227,7 @@ class TestExecutionEngineOrderWorkflows:
         order.order_type = OrderType.MARKET
 
         from bot_v2.features.live_trade.strategies.perps_baseline import Action
+
         action = Action.BUY
         action.symbol = order.symbol
         action.quantity = order.quantity
@@ -305,7 +305,7 @@ class TestReconciliationLogic:
         await execution_coordinator_with_reconciliation.initialize(mock_context_with_reconciliation)
 
         # Execute
-        tasks = await execution_coordinator_with_reconciliation.start_background_tasks()
+        _ = await execution_coordinator_with_reconciliation.start_background_tasks()
 
         # Verify
         # In new architecture, tasks are internal. We check services running.
@@ -325,7 +325,7 @@ class TestReconciliationLogic:
         """Test that shutdown cancels background tasks."""
         # Setup
         await execution_coordinator_with_reconciliation.initialize(mock_context_with_reconciliation)
-        tasks = await execution_coordinator_with_reconciliation.start_background_tasks()
+        _ = await execution_coordinator_with_reconciliation.start_background_tasks()
 
         # Verify running
         assert execution_coordinator_with_reconciliation._order_reconciliation.is_running()
@@ -353,7 +353,9 @@ class TestReconciliationLogic:
         # We need to mock reconcile_orders which is what the service calls
         reconciler.reconcile_orders = AsyncMock()
 
-        execution_coordinator_with_reconciliation._order_reconciliation.order_reconciler = reconciler
+        execution_coordinator_with_reconciliation._order_reconciliation.order_reconciler = (
+            reconciler
+        )
 
         # Execute
         await execution_coordinator_with_reconciliation._order_reconciliation._run_reconciliation_cycle()
@@ -377,7 +379,9 @@ class TestReconciliationLogic:
         reconciler = Mock()
         reconciler.reconcile_orders = AsyncMock()
 
-        execution_coordinator_with_reconciliation._order_reconciliation.order_reconciler = reconciler
+        execution_coordinator_with_reconciliation._order_reconciliation.order_reconciler = (
+            reconciler
+        )
 
         # Execute
         await execution_coordinator_with_reconciliation._order_reconciliation._run_reconciliation_cycle()
@@ -488,9 +492,7 @@ class TestIntegrationPatterns:
         )
 
     @pytest.fixture
-    def integration_coordinator(
-        self, integration_context: CoordinatorContext
-    ) -> ExecutionEngine:
+    def integration_coordinator(self, integration_context: CoordinatorContext) -> ExecutionEngine:
         """Create execution coordinator for integration testing."""
         return ExecutionEngine(integration_context)
 
@@ -546,7 +548,7 @@ class TestExecutionEngineEdgeCases:
         )
 
         coordinator = ExecutionEngine(edge_case_context)
-        updated_context = await coordinator.initialize(edge_case_context)
+        _ = await coordinator.initialize(edge_case_context)
 
         # Verify multi-symbol initialization
         assert coordinator._order_placement.execution_engine is not None
@@ -588,12 +590,14 @@ class TestExecutionEngineEdgeCases:
             pytest.fail("start_background_tasks failed")
 
     @pytest.mark.asyncio
-    async def test_execution_engine_factory_methods(self, edge_case_context: CoordinatorContext) -> None:
+    async def test_execution_engine_factory_methods(
+        self, edge_case_context: CoordinatorContext
+    ) -> None:
         """Test execution engine factory methods."""
         coordinator = ExecutionEngine(edge_case_context)
 
         # Test different execution engine creation paths
-        updated_context = await coordinator.initialize(edge_case_context)
+        _ = await coordinator.initialize(edge_case_context)
         execution_engine = coordinator._order_placement.execution_engine
 
         # Verify execution engine was created

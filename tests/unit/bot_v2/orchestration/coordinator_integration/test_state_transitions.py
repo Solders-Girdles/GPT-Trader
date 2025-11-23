@@ -2,8 +2,6 @@
 State transition integration tests across coordinators.
 """
 
-import asyncio
-from contextlib import suppress
 from unittest.mock import AsyncMock, Mock
 
 import pytest

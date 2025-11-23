@@ -198,12 +198,12 @@ class RuntimeEngine(BaseEngine):
 
         # Skip if broker already exists in context/registry
         if self.context.broker or (self.context.registry and self.context.registry.broker):
-             logger.info(
-                 "Broker already initialized, skipping bootstrap",
-                 operation="runtime_init_broker",
-                 stage="skip"
-             )
-             return self.context
+            logger.info(
+                "Broker already initialized, skipping bootstrap",
+                operation="runtime_init_broker",
+                stage="skip",
+            )
+            return self.context
 
         broker_artifacts = self._broker_manager.create_broker()
 
@@ -222,13 +222,15 @@ class RuntimeEngine(BaseEngine):
             self.update_context(context)
 
         # Skip if risk manager already exists in context/registry
-        if self.context.risk_manager or (self.context.registry and self.context.registry.risk_manager):
-             logger.info(
-                 "Risk manager already initialized, skipping bootstrap",
-                 operation="runtime_init_risk",
-                 stage="skip"
-             )
-             return self.context
+        if self.context.risk_manager or (
+            self.context.registry and self.context.registry.risk_manager
+        ):
+            logger.info(
+                "Risk manager already initialized, skipping bootstrap",
+                operation="runtime_init_risk",
+                stage="skip",
+            )
+            return self.context
 
         risk_manager = self._risk_management.create_risk_manager()
 

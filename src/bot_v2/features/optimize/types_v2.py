@@ -84,7 +84,9 @@ class ExecutionResult:
         return cls(
             filled=data["filled"],
             fill_price=Decimal(data["fill_price"]) if data.get("fill_price") else None,
-            filled_quantity=Decimal(data["filled_quantity"]) if data.get("filled_quantity") else None,
+            filled_quantity=(
+                Decimal(data["filled_quantity"]) if data.get("filled_quantity") else None
+            ),
             commission=Decimal(data["commission"]) if data.get("commission") else None,
             slippage=Decimal(data["slippage"]) if data.get("slippage") else None,
             rejection_reason=data.get("rejection_reason"),

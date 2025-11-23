@@ -129,7 +129,9 @@ class TestKillSwitchLogic:
     """Test kill-switch engagement and emergency logic."""
 
     @pytest.mark.asyncio
-    async def test_kill_switch_enabled_skips_processing(self, mock_bot, test_balance, test_position) -> None:
+    async def test_kill_switch_enabled_skips_processing(
+        self, mock_bot, test_balance, test_position
+    ) -> None:
         """Test that enabled kill switch prevents all processing."""
         orchestrator = StrategyOrchestrator(mock_bot)
 
@@ -162,7 +164,9 @@ class TestKillSwitchLogic:
         assert orchestrator._kill_switch_engaged() is False
 
     @pytest.mark.asyncio
-    async def test_kill_switch_preparation_context_early_return(self, mock_bot, test_balance, test_position) -> None:
+    async def test_kill_switch_preparation_context_early_return(
+        self, mock_bot, test_balance, test_position
+    ) -> None:
         """Test that kill switch causes _prepare_context to return None early."""
         orchestrator = StrategyOrchestrator(mock_bot)
 
@@ -177,7 +181,9 @@ class TestKillSwitchLogic:
         assert context is None
 
     @pytest.mark.asyncio
-    async def test_kill_switch_logs_warning_message(self, mock_bot, test_balance, test_position) -> None:
+    async def test_kill_switch_logs_warning_message(
+        self, mock_bot, test_balance, test_position
+    ) -> None:
         """Test that kill switch engagement logs appropriate warning."""
         orchestrator = StrategyOrchestrator(mock_bot)
 

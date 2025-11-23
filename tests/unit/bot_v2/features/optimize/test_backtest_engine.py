@@ -1,6 +1,6 @@
 """Tests for production-parity backtest engine."""
 
-from datetime import datetime, timezone
+from datetime import datetime
 from decimal import Decimal
 
 import numpy as np
@@ -201,7 +201,7 @@ def test_backtest_decision_logging(strategy, sample_data, product):
 def test_backtest_portfolio_state_tracking(strategy, sample_data, product):
     """Test that portfolio state is tracked correctly through backtest."""
     engine = BacktestEngine(strategy=strategy)
-    result = engine.run(data=sample_data, symbol="BTC-USD", product=product)
+    _ = engine.run(data=sample_data, symbol="BTC-USD", product=product)
 
     # Get portfolio stats
     stats = engine.portfolio.get_stats()

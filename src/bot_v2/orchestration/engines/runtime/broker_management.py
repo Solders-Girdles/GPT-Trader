@@ -12,28 +12,21 @@ embedded in the large runtime.py file. It provides:
 
 from __future__ import annotations
 
-from collections.abc import Sequence
-from dataclasses import dataclass
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:  # pragma: no cover - type checking only
-    from bot_v2.features.brokerages.coinbase.account_manager import CoinbaseAccountManager
-    from bot_v2.features.brokerages.core.interfaces import IBrokerage, Product
     from bot_v2.orchestration.engines.base import CoordinatorContext
 
-from bot_v2.features.brokerages.coinbase.market_data_service import MarketDataService
-from bot_v2.features.brokerages.coinbase.utilities import ProductCatalog
 from bot_v2.orchestration.derivatives_discovery import (
     discover_derivatives_eligibility,
 )
 from bot_v2.orchestration.runtime_settings import RuntimeSettings, load_runtime_settings
 from bot_v2.utilities.logging_patterns import get_logger
 
-logger = get_logger(__name__, component="broker_management")
-
-
 from .models import BrokerBootstrapArtifacts
+
+logger = get_logger(__name__, component="broker_management")
 
 
 class BrokerManagerService:
@@ -106,7 +99,7 @@ class BrokerManagerService:
         )
         # If it needs configuring, we do it after? Or maybe it just works.
         if hasattr(mock_broker, "deposit"):
-             mock_broker.deposit("USD", Decimal("10000"))
+            mock_broker.deposit("USD", Decimal("10000"))
 
         # Get real services for hybrid approach
         services = self._create_base_services(config)

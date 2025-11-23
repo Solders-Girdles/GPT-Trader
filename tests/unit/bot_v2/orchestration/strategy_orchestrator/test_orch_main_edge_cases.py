@@ -327,7 +327,9 @@ class TestPositionStateBuildingAndValidation:
         assert "BTC-PERP" in result
 
     @pytest.mark.asyncio
-    async def test_prepare_context_no_marks_early_return(self, mock_bot, test_balance, test_position) -> None:
+    async def test_prepare_context_no_marks_early_return(
+        self, mock_bot, test_balance, test_position
+    ) -> None:
         """Test that missing marks causes _prepare_context to return None."""
         orchestrator = StrategyOrchestrator(mock_bot)
 
@@ -345,7 +347,9 @@ class TestPositionStateBuildingAndValidation:
         assert "No marks for" in str(mock_logger.warning.call_args)
 
     @pytest.mark.asyncio
-    async def test_prepare_context_zero_equity_early_return(self, mock_bot, test_balance, test_position) -> None:
+    async def test_prepare_context_zero_equity_early_return(
+        self, mock_bot, test_balance, test_position
+    ) -> None:
         """Test that zero equity causes _prepare_context to return None."""
         orchestrator = StrategyOrchestrator(mock_bot)
 

@@ -2,12 +2,14 @@
 Tests for risk and execution system integration.
 """
 
-import asyncio
 from decimal import Decimal
+
 import pytest
 
 from bot_v2.features.brokerages.core.interfaces import (
     OrderSide as Side,
+)
+from bot_v2.features.brokerages.core.interfaces import (
     OrderStatus,
 )
 from bot_v2.features.live_trade.risk.pre_trade_checks import ValidationError
@@ -174,5 +176,3 @@ class TestRiskExecutionIntegration:
         except ValidationError as e:
             # Should fail due to leverage limits
             assert "leverage" in str(e).lower(), "Should mention leverage in rejection"
-
-

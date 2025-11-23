@@ -14,9 +14,7 @@ from bot_v2.monitoring.daily_report import DailyReportGenerator
 
 def register(subparsers: Any) -> None:
     """Register report commands."""
-    parser: ArgumentParser = subparsers.add_parser(
-        "report", help="Generate performance reports"
-    )
+    parser: ArgumentParser = subparsers.add_parser("report", help="Generate performance reports")
     options.add_profile_option(parser)
 
     report_subparsers = parser.add_subparsers(dest="report_command", required=True)
@@ -73,9 +71,7 @@ def _handle_daily_report(args: Namespace) -> int:
     # Generate report
     try:
         print(f"Generating daily report for {profile}...")
-        report = generator.generate(
-            date=report_date, lookback_hours=args.lookback_hours
-        )
+        report = generator.generate(date=report_date, lookback_hours=args.lookback_hours)
 
         # Output based on format
         if args.format in ("text", "both"):

@@ -220,9 +220,7 @@ class PreTradeValidationWorkflow:
                 sequence_override=sequence_hint,
             )
 
-        leverage_priority = (
-            validator._integration_leverage_priority or "leverage" in order_context
-        )
+        leverage_priority = validator._integration_leverage_priority or "leverage" in order_context
 
         guard_disabled = not getattr(self.config, "enable_market_impact_guard", False)
         has_symbol_cap = bool(getattr(self.config, "leverage_max_per_symbol", {}))
@@ -252,9 +250,9 @@ class PreTradeValidationWorkflow:
         if guard_disabled and not has_symbol_cap and not enforce_exposure_limits_flag:
             skip_limits = True
 
-        enforce_liq_buffer = bool(getattr(self.config, "enable_pre_trade_liq_projection", True)) and (
-            buffer_threshold_decimal > Decimal("0")
-        )
+        enforce_liq_buffer = bool(
+            getattr(self.config, "enable_pre_trade_liq_projection", True)
+        ) and (buffer_threshold_decimal > Decimal("0"))
 
         return ValidationPlan(
             skip_limits=skip_limits,
@@ -304,21 +302,24 @@ class PreTradeValidationWorkflow:
 
         liquidation_callable: Callable[[], None] | None = None
         if plan.enforce_liq_buffer:
-            liquidation_callable = lambda: self.validator.validate_liquidation_buffer(
+
+            def liquidation_callable() -> None:
+                self.validator.validate_liquidation_buffer(
+                    self.inputs.symbol,
+                    self.inputs.quantity,
+                    self.inputs.price,
+                    self.inputs.product,
+                    self.inputs.equity,
+                )
+
+        def leverage_callable() -> None:
+            self.validator.validate_leverage(
                 self.inputs.symbol,
                 self.inputs.quantity,
                 self.inputs.price,
                 self.inputs.product,
                 self.inputs.equity,
             )
-
-        leverage_callable = lambda: self.validator.validate_leverage(
-            self.inputs.symbol,
-            self.inputs.quantity,
-            self.inputs.price,
-            self.inputs.product,
-            self.inputs.equity,
-        )
 
         leverage_allow_skip = not plan.enforce_liq_buffer
 

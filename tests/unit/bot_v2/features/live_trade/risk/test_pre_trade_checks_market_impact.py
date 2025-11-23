@@ -6,6 +6,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 from unittest.mock import Mock
+
 import pytest
 
 from bot_v2.config.live_trade_config import RiskConfig

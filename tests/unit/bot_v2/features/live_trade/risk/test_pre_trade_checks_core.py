@@ -141,5 +141,3 @@ class TestPreTradeValidatorCore:
             )
         except ValidationError as e:
             pytest.fail(f"Unexpected ValidationError: {e}")
-
-

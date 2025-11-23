@@ -4,9 +4,10 @@ Error handling and edge case tests for pre-trade validation.
 
 from __future__ import annotations
 
-from decimal import Decimal
-import pytest
 import threading
+from decimal import Decimal
+
+import pytest
 
 from bot_v2.config.live_trade_config import RiskConfig
 from bot_v2.features.live_trade.risk.pre_trade_checks import (

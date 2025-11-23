@@ -13,9 +13,10 @@ from bot_v2.features.live_trade.strategies.perps_baseline.strategy import Baseli
 from bot_v2.features.live_trade.strategies.perps_baseline.config import StrategyConfig
 from bot_v2.features.brokerages.core.interfaces import Product, MarketType
 
+
 def run_repro():
     print("--- Starting Reproduction ---")
-    
+
     # 1. Setup Config
     config = StrategyConfig(
         short_ma_period=5,
@@ -26,15 +27,15 @@ def run_repro():
 
     # 2. Initialize Strategy
     strategy = BaselinePerpsStrategy(config=config)
-    
+
     # 3. Create Mock Data (Trending Scenario - No Fresh Cross)
     # Price consistently above MA.
-    recent_marks = [Decimal("110") for _ in range(25)] 
-    current_mark = Decimal("112") # Higher than recent to ensure Short > Long
-    
+    recent_marks = [Decimal("110") for _ in range(25)]
+    current_mark = Decimal("112")  # Higher than recent to ensure Short > Long
+
     # Enable force_entry_on_trend
     config.force_entry_on_trend = True
-    
+
     print(f"Recent Marks (last 5): {recent_marks[-5:]}")
     print(f"Current Mark: {current_mark}")
 
@@ -50,18 +51,19 @@ def run_repro():
     decision = strategy.decide(
         symbol="BTC-USD",
         current_mark=current_mark,
-        position_state=None, # No position
+        position_state=None,  # No position
         recent_marks=recent_marks,
         equity=Decimal("1000"),
-        product=product
+        product=product,
     )
 
     print(f"\nDecision: {decision.action} - {decision.reason}")
-    
+
     if decision.action == "hold":
         print("\n[FAIL] Strategy returned HOLD despite bullish data.")
     else:
         print(f"\n[SUCCESS] Strategy returned {decision.action}!")
+
 
 if __name__ == "__main__":
     run_repro()

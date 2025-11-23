@@ -16,10 +16,13 @@ from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
 from typing import Any
-
 from unittest.mock import Mock
 
-from bot_v2.features.brokerages.coinbase.transports import MockTransport, NoopTransport, RealTransport
+from bot_v2.features.brokerages.coinbase.transports import (
+    MockTransport,
+    NoopTransport,
+    RealTransport,
+)
 from bot_v2.monitoring.system import LogLevel
 from bot_v2.monitoring.system import get_logger as get_production_logger
 from bot_v2.orchestration.runtime_settings import RuntimeSettings, load_runtime_settings
@@ -112,11 +115,16 @@ class CoinbaseWebSocket:
             "DISABLE_WS_STREAMING",
             "COINBASE_WS_DISABLE_STREAMING",
         ]
-        disable_flag = next(
-            (raw.get(key, "") for key in disable_keys if raw.get(key)), ""
-        ).strip().lower()
+        disable_flag = (
+            next((raw.get(key, "") for key in disable_keys if raw.get(key)), "").strip().lower()
+        )
         enable_flag = (raw.get("PERPS_ENABLE_STREAMING") or "").strip().lower()
-        return disable_flag in {"1", "true", "yes", "on"} or enable_flag in {"0", "false", "no", "off"}
+        return disable_flag in {"1", "true", "yes", "on"} or enable_flag in {
+            "0",
+            "false",
+            "no",
+            "off",
+        }
 
     def _get_auth_headers(self) -> dict[str, str]:
         provider = self._auth_provider
@@ -467,7 +475,9 @@ class CoinbaseWebSocket:
                         try:
                             self._transport.disconnect()
                         except Exception:  # pragma: no cover
-                            logger.debug("transport disconnect during reconnect failed", exc_info=True)
+                            logger.debug(
+                                "transport disconnect during reconnect failed", exc_info=True
+                            )
                     if not self._custom_transport:
                         self._transport = None
                         self._managed_transport = False

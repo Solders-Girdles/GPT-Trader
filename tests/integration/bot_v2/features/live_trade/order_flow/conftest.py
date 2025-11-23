@@ -2,14 +2,17 @@
 Shared fixtures for order flow integration tests.
 """
 
-import pytest
 from decimal import Decimal
+
+import pytest
+
 from bot_v2.features.brokerages.core.interfaces import MarketType, Product
 
 
 @pytest.fixture
 def get_risk_validation_context():
     """Helper to get product and equity for risk validation."""
+
     def _get_context(order):
         mock_product = Product(
             symbol=order.symbol,
@@ -25,5 +28,5 @@ def get_risk_validation_context():
         mock_equity = Decimal("1000000.0")  # $1,000,000 equity to avoid leverage limits
 
         return {"product": mock_product, "equity": mock_equity, "current_positions": {}}
-    
+
     return _get_context

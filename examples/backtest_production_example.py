@@ -38,7 +38,7 @@ def create_sample_data(days: int = 30) -> pd.DataFrame:
     )
 
 
-def main():
+def main() -> None:
     """Run production-parity backtest example."""
 
     # 1. Create sample historical data
@@ -99,14 +99,11 @@ def main():
     if filled_decisions:
         print(f"\n  Filled trades: {len(filled_decisions)}")
 
-        total_commission = sum(
-            float(d.execution.commission or 0) for d in filled_decisions
-        )
+        total_commission = sum(float(d.execution.commission or 0) for d in filled_decisions)
         print(f"  Total commission: ${total_commission:.2f}")
 
-        avg_slippage = (
-            sum(float(d.execution.slippage or 0) for d in filled_decisions)
-            / len(filled_decisions)
+        avg_slippage = sum(float(d.execution.slippage or 0) for d in filled_decisions) / len(
+            filled_decisions
         )
         print(f"  Average slippage: ${avg_slippage:.2f}")
 
@@ -128,9 +125,7 @@ def main():
     # 10. Example: Inspect a specific decision
     if result.decisions:
         print("\nSample Decision (first trade):")
-        first_trade = next(
-            (d for d in result.decisions if d.execution.filled), None
-        )
+        first_trade = next((d for d in result.decisions if d.execution.filled), None)
 
         if first_trade:
             print(f"  Timestamp: {first_trade.context.timestamp}")

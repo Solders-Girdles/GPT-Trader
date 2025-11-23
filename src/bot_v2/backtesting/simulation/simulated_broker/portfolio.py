@@ -89,7 +89,9 @@ class PortfolioManager:
             if position.side == "long":
                 position.unrealized_pnl = (mid_price - position.entry_price) * position.quantity
             else:
-                position.unrealized_pnl = (position.entry_price - mid_price) * abs(position.quantity)
+                position.unrealized_pnl = (position.entry_price - mid_price) * abs(
+                    position.quantity
+                )
 
     def accrue_funding(self, current_time: datetime) -> None:
         if not self._funding_tracker:
@@ -146,9 +148,9 @@ class PortfolioManager:
             self._update_existing_position(symbol, order.side, fill_quantity, fill_price)
 
         if order.side == OrderSide.BUY:
-            self._cash_balance -= (notional + fee)
+            self._cash_balance -= notional + fee
         else:
-            self._cash_balance += (notional - fee)
+            self._cash_balance += notional - fee
 
         self._total_trades += 1
 
@@ -238,9 +240,7 @@ class PortfolioManager:
         )
 
         funding_pnl = (
-            self._funding_tracker.get_total_funding_pnl()
-            if self._funding_tracker
-            else Decimal("0")
+            self._funding_tracker.get_total_funding_pnl() if self._funding_tracker else Decimal("0")
         )
 
         unrealized_total = sum(p.unrealized_pnl for p in self._positions.values())
@@ -262,7 +262,8 @@ class PortfolioManager:
             losing_trades=self._losing_trades,
             win_rate=win_rate,
             max_drawdown=self._max_drawdown * Decimal("100"),
-            max_drawdown_usd=self._peak_equity - (self._peak_equity * (Decimal("1") - self._max_drawdown)),
+            max_drawdown_usd=self._peak_equity
+            - (self._peak_equity * (Decimal("1") - self._max_drawdown)),
         )
 
     # ------------------------------------------------------------------

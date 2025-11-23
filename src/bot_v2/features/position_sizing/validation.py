@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from decimal import Decimal
 from typing import Tuple
 
 from bot_v2.errors import ValidationError

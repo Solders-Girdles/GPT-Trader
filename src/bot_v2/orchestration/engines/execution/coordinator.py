@@ -238,11 +238,11 @@ class ExecutionEngine(BaseEngine):
             if side:
                 # Handle OrderSide enum or string
                 if hasattr(side, "value"):
-                     side_str = str(side.value).lower()
+                    side_str = str(side.value).lower()
                 elif hasattr(side, "name"):
-                     side_str = str(side.name).lower()
+                    side_str = str(side.name).lower()
                 else:
-                     side_str = str(side).lower()
+                    side_str = str(side).lower()
 
                 # Handle "OrderSide.BUY" string representation case if passed as string
                 if "buy" in side_str:
@@ -250,11 +250,13 @@ class ExecutionEngine(BaseEngine):
                 elif "sell" in side_str:
                     action = Action.SELL
                 else:
-                     raise ValueError(f"Cannot infer Action from side: {side}")
+                    raise ValueError(f"Cannot infer Action from side: {side}")
             else:
                 # Default to BUY if mostly testing buy flows or raise error
                 # Better to raise error if we can't infer
-                raise ValueError("Action parameter is required for place_order and cannot be inferred from kwargs")
+                raise ValueError(
+                    "Action parameter is required for place_order and cannot be inferred from kwargs"
+                )
 
         if not isinstance(action, Action):
             # Try to convert string to Action
@@ -324,7 +326,9 @@ class ExecutionEngine(BaseEngine):
     async def get_positions(self) -> list[Any]:
         """Get current positions from the broker."""
         if self.context.broker:
-            return await asyncio.to_thread(self.context.broker.list_positions)
+            if asyncio.iscoroutinefunction(self.context.broker.list_positions):
+                return await self.context.broker.list_positions()
+            return self.context.broker.list_positions()
         return []
 
     @property

@@ -107,8 +107,13 @@ class TradingEngine(BaseEngine):
                 await self._backfill_history()
                 self._history_backfilled = True
             else:
-                print(f"DEBUG PRINT: Skipping backfill. Backfilled: {self._history_backfilled}, Symbols: {self.context.symbols}", flush=True)
-                logger.info(f"DEBUG: Skipping backfill. Backfilled: {self._history_backfilled}, Symbols: {self.context.symbols}")
+                print(
+                    f"DEBUG PRINT: Skipping backfill. Backfilled: {self._history_backfilled}, Symbols: {self.context.symbols}",
+                    flush=True,
+                )
+                logger.info(
+                    f"DEBUG: Skipping backfill. Backfilled: {self._history_backfilled}, Symbols: {self.context.symbols}"
+                )
 
             current_state = await self._fetch_current_state()
             if not await self._validate_configuration_and_handle_drift(current_state):
@@ -226,7 +231,7 @@ class TradingEngine(BaseEngine):
             price=mark,
             product=product,
             position_state=position_state,
-            quantity=getattr(decision, "quantity", None)
+            quantity=getattr(decision, "quantity", None),
         )
 
     def ensure_order_lock(self) -> asyncio.Lock:
@@ -556,8 +561,7 @@ class TradingEngine(BaseEngine):
 
         limit = max(ctx.config.long_ma, 20) * 2
         candle_coroutines = [
-            asyncio.to_thread(broker.get_candles, symbol, "1m", limit)
-            for symbol in symbols
+            asyncio.to_thread(broker.get_candles, symbol, "1m", limit) for symbol in symbols
         ]
 
         results = await gather_with_concurrency(

@@ -1,14 +1,15 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from bot_v2.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:  # pragma: no cover
-    from bot_v2.orchestration.engines.base import CoordinatorContext
+    from bot_v2.orchestration.engines.telemetry_coordinator import TelemetryEngine
 
 from .telemetry_services import run_account_telemetry as _run_account_telemetry_impl
+
 logger = get_logger(__name__, component="telemetry_coordinator")
 
 

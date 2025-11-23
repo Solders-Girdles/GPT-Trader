@@ -6,8 +6,8 @@ metrics calculators. Existing code may continue importing from
 bot_v2.features.live_trade.liquidity_service thanks to the compatibility layer.
 """
 
-from .models import DepthAnalysis, ImpactEstimate, LiquidityCondition, OrderBookLevel
 from .metrics import LiquidityMetrics
+from .models import DepthAnalysis, ImpactEstimate, LiquidityCondition, OrderBookLevel
 from .service import LiquidityService, create_liquidity_service
 
 __all__ = [

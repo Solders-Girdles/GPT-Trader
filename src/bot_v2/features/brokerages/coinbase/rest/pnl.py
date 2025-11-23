@@ -77,7 +77,9 @@ class PnLRestMixin:
             except TypeError:
                 events = []
         funding_events = [
-            e for e in events if isinstance(e, dict) and e.get("type") == "funding" and e.get("symbol") == symbol
+            e
+            for e in events
+            if isinstance(e, dict) and e.get("type") == "funding" and e.get("symbol") == symbol
         ]
         total_funding = sum(Decimal(e.get("funding_amount", "0")) for e in funding_events)
         return {

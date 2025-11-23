@@ -7,6 +7,8 @@ from pydantic_core import PydanticCustomError, ValidationError
 
 from bot_v2.orchestration.configuration.bot_config.rules import (
     apply_rule as _apply_rule,
+)
+from bot_v2.orchestration.configuration.bot_config.rules import (
     ensure_condition as _ensure_condition,
 )
 from bot_v2.orchestration.configuration.core import BotConfig, Profile

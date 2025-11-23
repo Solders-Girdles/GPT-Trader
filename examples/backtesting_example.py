@@ -13,14 +13,15 @@ from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
 
+from bot_v2.features.brokerages.coinbase.client.client import CoinbaseClient
+
 from bot_v2.backtesting import ClockedBarRunner, SimulatedBroker
 from bot_v2.backtesting.data import CoinbaseHistoricalFetcher, HistoricalDataManager
 from bot_v2.backtesting.types import ClockSpeed, FeeTier
-from bot_v2.features.brokerages.coinbase.client.client import CoinbaseClient
 from bot_v2.features.brokerages.core.interfaces import MarketType, Product
 
 
-async def run_backtest_example():
+async def run_backtest_example() -> None:
     """Run a simple backtest example."""
 
     # 1. Initialize Coinbase client for data fetching
@@ -143,7 +144,9 @@ async def run_backtest_example():
         # Print progress every 100 bars
         if bars_processed % 100 == 0:
             equity = broker.get_equity()
-            print(f"Progress: {runner.progress_pct:.1f}% | Bars: {bars_processed} | Equity: ${equity:,.2f}")
+            print(
+                f"Progress: {runner.progress_pct:.1f}% | Bars: {bars_processed} | Equity: ${equity:,.2f}"
+            )
 
     # 7. Generate performance report
     print("\n" + "=" * 60)
@@ -154,21 +157,21 @@ async def run_backtest_example():
 
     print(f"\nPeriod: {report.start_date} to {report.end_date}")
     print(f"Duration: {report.duration_days} days")
-    print(f"\nEquity:")
+    print("\nEquity:")
     print(f"  Initial: ${report.initial_equity:,.2f}")
     print(f"  Final:   ${report.final_equity:,.2f}")
     print(f"  Return:  {report.total_return:+.2f}% (${report.total_return_usd:+,.2f})")
-    print(f"\nPnL Breakdown:")
+    print("\nPnL Breakdown:")
     print(f"  Realized:    ${report.realized_pnl:+,.2f}")
     print(f"  Unrealized:  ${report.unrealized_pnl:+,.2f}")
     print(f"  Funding:     ${report.funding_pnl:+,.2f}")
     print(f"  Fees:        ${report.fees_paid:,.2f}")
-    print(f"\nTrade Statistics:")
+    print("\nTrade Statistics:")
     print(f"  Total Trades:   {report.total_trades}")
     print(f"  Winning:        {report.winning_trades}")
     print(f"  Losing:         {report.losing_trades}")
     print(f"  Win Rate:       {report.win_rate:.1f}%")
-    print(f"\nRisk Metrics:")
+    print("\nRisk Metrics:")
     print(f"  Max Drawdown:   {report.max_drawdown:.2f}% (${report.max_drawdown_usd:,.2f})")
 
     print("\n" + "=" * 60)

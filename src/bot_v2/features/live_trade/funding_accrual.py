@@ -102,9 +102,7 @@ class FundingAccrualTracker:
             timestamp = datetime.now(UTC)
 
         # Get or create current bucket for this hour
-        bucket = self._get_or_create_bucket(
-            symbol, timestamp, position_size, side, funding_rate
-        )
+        bucket = self._get_or_create_bucket(symbol, timestamp, position_size, side, funding_rate)
 
         # Add mark price sample
         bucket.mark_price_samples.append((timestamp, mark_price))
@@ -258,10 +256,7 @@ class FundingAccrualTracker:
             return current_time >= settlement_datetime
 
         # Check if we need a new settlement (past settlement time and haven't settled today)
-        return (
-            current_time >= settlement_datetime
-            and last_settlement.date() < current_time.date()
-        )
+        return current_time >= settlement_datetime and last_settlement.date() < current_time.date()
 
     def _execute_settlement(
         self, event_type: str, timestamp: datetime
@@ -376,9 +371,7 @@ class FundingAccrualTracker:
         history = self._historical_buckets.get(symbol, [])
         return sum(b.accrued_funding for b in history)
 
-    def get_settlement_history(
-        self, event_type: str | None = None
-    ) -> list[FundingSettlementEvent]:
+    def get_settlement_history(self, event_type: str | None = None) -> list[FundingSettlementEvent]:
         """Get settlement history, optionally filtered by event type."""
         if event_type is None:
             return list(self._settlement_history)

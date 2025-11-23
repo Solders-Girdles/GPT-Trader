@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import List
 
-from bot_v2.errors import RiskLimitExceeded, ValidationError, log_error
+from bot_v2.errors import ValidationError, log_error
 from bot_v2.features.position_sizing.confidence import confidence_adjusted_size
 from bot_v2.features.position_sizing.kelly import (
     fractional_kelly,
@@ -21,7 +21,7 @@ from bot_v2.features.position_sizing.types import (
 )
 from bot_v2.utilities.logging_patterns import get_logger
 
-from .utils import optional_float, estimate_position_risk
+from .utils import estimate_position_risk, optional_float
 from .validation import extract_kelly_params, validate_kelly_safety
 
 logger = get_logger(__name__, component="position_sizing")
@@ -125,9 +125,7 @@ def calculate_intelligent_size(request: PositionSizeRequest) -> PositionSizeResp
         raise ValidationError("Position size cannot be negative", field="base_size")
 
     if base_size > request.risk_params.max_position_size:
-        warnings.append(
-            "Position size capped at max allowed"
-        )
+        warnings.append("Position size capped at max allowed")
         base_size = request.risk_params.max_position_size
 
     try:

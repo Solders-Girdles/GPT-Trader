@@ -19,7 +19,9 @@ def kelly_criterion(win_rate: float, avg_win: float, avg_loss: float) -> float:
             raise ValidationError("Average loss must be negative", field="avg_loss", value=avg_loss)
 
         if abs(avg_loss) < 1e-10:
-            raise ValidationError("Average loss too close to zero", field="avg_loss", value=avg_loss)
+            raise ValidationError(
+                "Average loss too close to zero", field="avg_loss", value=avg_loss
+            )
 
         odds_ratio = abs(avg_win / avg_loss)
         if odds_ratio > 100:
@@ -44,7 +46,9 @@ def kelly_criterion(win_rate: float, avg_win: float, avg_loss: float) -> float:
         ) from exc
 
 
-def fractional_kelly(win_rate: float, avg_win: float, avg_loss: float, fraction: float = 0.25) -> float:
+def fractional_kelly(
+    win_rate: float, avg_win: float, avg_loss: float, fraction: float = 0.25
+) -> float:
     """Apply fractional Kelly sizing for a more conservative position."""
     full_kelly = kelly_criterion(win_rate, avg_win, avg_loss)
     return full_kelly * fraction

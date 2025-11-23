@@ -1,6 +1,7 @@
 """Production logging package for system monitoring."""
 
 from .factory import (
+    get_correlation_id,
     get_logger,
     log_error,
     log_event,
@@ -8,7 +9,6 @@ from .factory import (
     log_performance,
     log_trade,
     set_correlation_id,
-    get_correlation_id,
 )
 from .levels import LogLevel
 from .production import ProductionLogger

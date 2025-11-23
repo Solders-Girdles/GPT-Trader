@@ -3,11 +3,14 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from bot_v2.utilities.logging_patterns import get_logger
 
 from .config import SizingMode
+
+if TYPE_CHECKING:
+    from .engine import AdvancedExecutionEngine
 
 logger = get_logger(__name__, component="live_trade_execution")
 
@@ -53,9 +56,7 @@ def calculate_impact_aware_size(
 
     sizing_mode = engine.config.sizing_mode
     if sizing_mode == SizingMode.STRICT and best_size < target_notional:
-        logger.warning(
-            f"Strict mode: Cannot fit {target_notional} within {max_impact} bps impact"
-        )
+        logger.warning(f"Strict mode: Cannot fit {target_notional} within {max_impact} bps impact")
         return Decimal("0"), Decimal("0")
     if sizing_mode == SizingMode.AGGRESSIVE and target_notional <= l10_depth:
         return (

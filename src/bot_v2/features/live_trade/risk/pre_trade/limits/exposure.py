@@ -121,7 +121,9 @@ def _extract_notional(position_payload: Mapping[str, Any]) -> Decimal:
 
     qty_value = to_decimal(position_payload.get("quantity", position_payload.get("qty")))
     price_value = to_decimal(
-        position_payload.get("mark_price", position_payload.get("mark", position_payload.get("price")))
+        position_payload.get(
+            "mark_price", position_payload.get("mark", position_payload.get("price"))
+        )
     )
     return abs(qty_value * price_value)
 

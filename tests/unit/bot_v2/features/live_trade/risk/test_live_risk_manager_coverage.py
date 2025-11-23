@@ -173,7 +173,6 @@ class TestLiveRiskManagerInitialization:
         class NonStandardConfig:
             pass
 
-
         with patch("bot_v2.features.live_trade.risk.manager.logger") as mock_logger:
             # This should fail during initialization because NonStandardConfig
             # doesn't have the required attributes
@@ -572,6 +571,7 @@ class TestLiveRiskManagerTimeProvider:
         """Test that setting _now_provider updates all components."""
         manager = LiveRiskManager(config=conservative_risk_config)
         fixed_time = datetime(2024, 1, 1, 12, 0, 0)
+
         def new_time_provider():
             return fixed_time
 

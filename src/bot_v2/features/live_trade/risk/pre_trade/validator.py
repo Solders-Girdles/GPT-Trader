@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable, MutableMapping
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from bot_v2.features.brokerages.core.interfaces import Product
 

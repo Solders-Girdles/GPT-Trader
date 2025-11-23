@@ -5,11 +5,9 @@ Exposure and correlation risk tests for pre-trade checks.
 from __future__ import annotations
 
 from decimal import Decimal
-from unittest.mock import Mock
 
 import pytest
 
-from bot_v2.config.live_trade_config import RiskConfig
 from bot_v2.features.live_trade.risk.pre_trade_checks import (
     PreTradeValidator,
     ValidationError,
@@ -133,5 +131,3 @@ class TestPreTradeValidatorExposure:
             )
         except ValidationError:
             pytest.fail("Should not raise ValidationError with no existing positions")
-
-

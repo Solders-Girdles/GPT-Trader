@@ -94,11 +94,7 @@ class StateManager:
                 "event_type": "reduce_only_mode_changed",
                 "enabled": enabled,
                 "reason": reason or "unspecified",
-                "timestamp": (
-                    timestamp.isoformat()
-                    if timestamp
-                    else None
-                ),
+                "timestamp": (timestamp.isoformat() if timestamp else None),
             },
             logger=logger,
         )

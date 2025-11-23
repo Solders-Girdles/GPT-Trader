@@ -109,9 +109,7 @@ class TestStreamingRestartLifecycle:
         coordinator._schedule_coroutine.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_restart_streaming_full_cycle_with_streaming_enabled(
-        self, make_context
-    ) -> None:
+    async def test_restart_streaming_full_cycle_with_streaming_enabled(self, make_context) -> None:
         """Test complete restart cycle when streaming should be enabled."""
         broker = Mock(spec=CoinbaseBrokerage)
         broker.__class__ = CoinbaseBrokerage
@@ -142,9 +140,7 @@ class TestStreamingRestartLifecycle:
         coordinator._start_streaming.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_restart_streaming_full_cycle_with_streaming_disabled(
-        self, make_context
-    ) -> None:
+    async def test_restart_streaming_full_cycle_with_streaming_disabled(self, make_context) -> None:
         """Test complete restart cycle when streaming should be disabled."""
         broker = Mock(spec=CoinbaseBrokerage)
         broker.__class__ = CoinbaseBrokerage

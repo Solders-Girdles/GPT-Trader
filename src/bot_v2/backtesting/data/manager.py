@@ -257,8 +257,7 @@ class HistoricalDataManager:
                 self._coverage_index[symbol] = {}
                 for granularity, ranges in granularities.items():
                     self._coverage_index[symbol][granularity] = [
-                        (datetime.fromisoformat(r[0]), datetime.fromisoformat(r[1]))
-                        for r in ranges
+                        (datetime.fromisoformat(r[0]), datetime.fromisoformat(r[1])) for r in ranges
                     ]
         except (json.JSONDecodeError, KeyError):
             pass
@@ -272,9 +271,7 @@ class HistoricalDataManager:
         for symbol, granularities in self._coverage_index.items():
             data[symbol] = {}
             for granularity, ranges in granularities.items():
-                data[symbol][granularity] = [
-                    (r[0].isoformat(), r[1].isoformat()) for r in ranges
-                ]
+                data[symbol][granularity] = [(r[0].isoformat(), r[1].isoformat()) for r in ranges]
 
         with open(index_path, "w") as f:
             json.dump(data, f, indent=2)

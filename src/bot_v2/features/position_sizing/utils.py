@@ -2,14 +2,11 @@
 
 from __future__ import annotations
 
-from decimal import Decimal
 from typing import List
 
 from bot_v2.features.position_sizing.types import (
     PositionSizeRequest,
     PositionSizeResponse,
-    PositionSizingResult,
-    SizingMethod,
 )
 from bot_v2.utilities.logging_patterns import get_logger
 

@@ -5,7 +5,6 @@ Adjusts position sizes based on current market regime.
 No external dependencies - all logic local to this slice.
 """
 
-import math
 
 import numpy as np
 
@@ -338,7 +337,7 @@ def regime_volatility_scaling(
         return 1.0
 
     volatility_ratio = realized_volatility / expected_volatility
-    sqrt_ratio = math.sqrt(volatility_ratio)
+    # sqrt_ratio = math.sqrt(volatility_ratio)  # Previously unused
 
     # Different regimes handle volatility differently
     if regime == "crisis":

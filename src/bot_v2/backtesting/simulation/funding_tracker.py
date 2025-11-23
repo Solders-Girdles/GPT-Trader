@@ -1,6 +1,6 @@
 """Funding PnL tracking for perpetual futures contracts."""
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from decimal import Decimal
 
 

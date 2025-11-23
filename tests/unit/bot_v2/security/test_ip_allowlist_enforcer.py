@@ -1,14 +1,11 @@
 """Tests for IP Allowlist Enforcer"""
 
-from datetime import UTC, datetime
 from unittest.mock import Mock
 
 import pytest
 
 from bot_v2.security.ip_allowlist_enforcer import (
     IPAllowlistEnforcer,
-    IPAllowlistRule,
-    IPValidationResult,
 )
 
 

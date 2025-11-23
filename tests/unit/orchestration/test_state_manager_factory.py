@@ -9,6 +9,8 @@ import pytest
 
 from bot_v2.orchestration.state.unified_state import (
     SystemState as ReduceOnlyModeStateManager,
+)
+from bot_v2.orchestration.state.unified_state import (
     create_reduce_only_state_manager,
 )
 from bot_v2.persistence.event_store import EventStore

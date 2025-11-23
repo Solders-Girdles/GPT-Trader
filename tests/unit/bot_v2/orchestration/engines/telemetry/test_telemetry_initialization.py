@@ -36,6 +36,7 @@ def test_initialize_without_broker(make_context) -> None:
 
     if "account_telemetry" in updated.registry.extras:
         from bot_v2.orchestration.engines.telemetry_services import NullAccountTelemetry
+
         assert isinstance(updated.registry.extras["account_telemetry"], NullAccountTelemetry)
 
 
@@ -83,6 +84,7 @@ class TestDynamicImportAndInitialization:
         # Should return context with Null fallback when import fails
         if "account_telemetry" in updated.registry.extras:
             from bot_v2.orchestration.engines.telemetry_services import NullAccountTelemetry
+
             assert isinstance(updated.registry.extras["account_telemetry"], NullAccountTelemetry)
 
         assert coordinator._market_monitor is None
@@ -105,6 +107,7 @@ class TestDynamicImportAndInitialization:
         # Should return context with Null fallback
         if "account_telemetry" in updated.registry.extras:
             from bot_v2.orchestration.engines.telemetry_services import NullAccountTelemetry
+
             assert isinstance(updated.registry.extras["account_telemetry"], NullAccountTelemetry)
 
         assert coordinator._market_monitor is None
@@ -265,7 +268,9 @@ class TestMetricEmissionAndErrorHandling:
             def mock_emit_error(*args, **kwargs):
                 raise Exception("Emission failed")
 
-            m.setattr("bot_v2.orchestration.engines.telemetry_coordinator.emit_metric", mock_emit_error)
+            m.setattr(
+                "bot_v2.orchestration.engines.telemetry_coordinator.emit_metric", mock_emit_error
+            )
 
             # Should handle emission errors gracefully
             # This would be tested through methods that call emit_metric internally

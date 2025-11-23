@@ -24,7 +24,6 @@ if TYPE_CHECKING:  # pragma: no cover - import-time cycle guard
     from bot_v2.orchestration.service_registry import ServiceRegistry
 
 
-
 __all__ = [
     # Legacy functions (deprecated)
     "build_bot",

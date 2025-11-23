@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import Any
+from typing import TYPE_CHECKING
 
 from bot_v2.errors import ValidationError
 from bot_v2.features.brokerages.core.interfaces import OrderSide, OrderType, Product, Quote
+
+if TYPE_CHECKING:
+    from .engine import AdvancedExecutionEngine
 from bot_v2.utilities.logging_patterns import get_logger
 
 logger = get_logger(__name__, component="live_trade_execution")

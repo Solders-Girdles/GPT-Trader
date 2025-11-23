@@ -11,6 +11,8 @@ import pytest
 from bot_v2.orchestration.state.unified_state import (
     ReduceOnlyModeSource,
     ReduceOnlyModeState,
+)
+from bot_v2.orchestration.state.unified_state import (
     StateChange as StateChangeRequest,
 )
 

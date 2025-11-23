@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Literal, cast
+from typing import Any, Literal, cast
 
 from bot_v2.data_providers import DataProvider
 from bot_v2.features.brokerages.coinbase.adapter import CoinbaseBrokerage
@@ -68,7 +68,11 @@ class CoinbaseDataProvider(
             api_mode = "advanced"
 
         if client is None:
-            base_url = "https://api.coinbase.com" if api_mode == "advanced" else "https://api.exchange.coinbase.com"
+            base_url = (
+                "https://api.coinbase.com"
+                if api_mode == "advanced"
+                else "https://api.exchange.coinbase.com"
+            )
             self.client = CoinbaseClient(
                 base_url=base_url,
                 auth=None,
@@ -96,7 +100,9 @@ class CoinbaseDataProvider(
 
         streaming_env = runtime_settings.raw_env.get("COINBASE_ENABLE_STREAMING")
         env_streaming = bool(
-            streaming_env and streaming_env.strip().lower() in cast(tuple[TruthFlag, ...], ("1", "true", "yes", "on"))
+            streaming_env
+            and streaming_env.strip().lower()
+            in cast(tuple[TruthFlag, ...], ("1", "true", "yes", "on"))
         )
 
         effective_streaming = enable_streaming or env_streaming
@@ -116,9 +122,9 @@ class CoinbaseDataProvider(
 
     def __exit__(
         self,
-        exc_type,
-        exc_val,
-        exc_tb,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: Any | None,
     ) -> None:
         self.stop_streaming()
 

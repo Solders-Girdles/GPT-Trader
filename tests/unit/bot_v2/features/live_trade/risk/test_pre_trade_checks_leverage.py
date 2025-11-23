@@ -9,7 +9,6 @@ from unittest.mock import patch
 
 import pytest
 
-from bot_v2.config.live_trade_config import RiskConfig
 from bot_v2.features.live_trade.risk.pre_trade_checks import (
     PreTradeValidator,
     ValidationError,

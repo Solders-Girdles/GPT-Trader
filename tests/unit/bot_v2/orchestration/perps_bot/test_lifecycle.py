@@ -11,8 +11,8 @@ import pytest
 from bot_v2.orchestration.engines import (
     ExecutionEngine,
     RuntimeEngine,
-    TradingEngine,
     TelemetryEngine,
+    TradingEngine,
 )
 from bot_v2.orchestration.perps_bot import PerpsBot
 

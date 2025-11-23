@@ -12,6 +12,7 @@ from .base_validators import Validator
 def _get_logger():
     """Lazy load logger to avoid circular imports"""
     from bot_v2.utilities.logging_patterns import get_logger
+
     return get_logger(__name__, component="validation")
 
 

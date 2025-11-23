@@ -12,7 +12,7 @@ from bot_v2.persistence.event_store import EventStore
 from bot_v2.security.auth_handler import User
 from bot_v2.utilities.logging_patterns import get_logger
 
-from .models import ApprovalRequest, ApprovalStatus, ChangeType, ConfigChange
+from .models import ApprovalRequest, ApprovalStatus, ConfigChange
 
 logger = get_logger(__name__, component="two_person_rule")
 
@@ -188,7 +188,11 @@ class TwoPersonRule:
     def get_pending_requests(self) -> list[ApprovalRequest]:
         with self._lock:
             self._cleanup_expired_requests()
-            return [req for req in self._pending_requests.values() if req.status == ApprovalStatus.PENDING]
+            return [
+                req
+                for req in self._pending_requests.values()
+                if req.status == ApprovalStatus.PENDING
+            ]
 
     def get_request(self, request_id: str) -> ApprovalRequest | None:
         with self._lock:

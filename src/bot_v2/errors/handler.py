@@ -22,6 +22,7 @@ from bot_v2.errors import (
     handle_error,
     log_error,
 )
+
 # REMOVED: from bot_v2.logging import get_log_context, get_orchestration_logger
 # These are now imported lazily inside functions to break circular import
 from bot_v2.utilities.logging_patterns import get_logger
@@ -37,12 +38,14 @@ T = TypeVar("T")
 def _get_json_logger():
     """Lazily get orchestration logger to avoid circular import."""
     from bot_v2.logging import get_orchestration_logger
+
     return get_orchestration_logger("error_handler")
 
 
 def _get_log_context():
     """Lazily get log context to avoid circular import."""
     from bot_v2.logging import get_log_context
+
     return get_log_context()
 
 
@@ -363,7 +366,11 @@ class ErrorHandler:
         logger.info("Circuit breaker manually reset")
         _get_json_logger().info(
             "Circuit breaker manually reset",
-            extra={"circuit_breaker_state": "closed", "event": "manual_reset", **_get_log_context()},
+            extra={
+                "circuit_breaker_state": "closed",
+                "event": "manual_reset",
+                **_get_log_context(),
+            },
         )
 
 

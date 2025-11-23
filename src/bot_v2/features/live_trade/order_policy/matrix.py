@@ -140,7 +140,10 @@ class OrderPolicyMatrix:
         }
 
         if urgency == "urgent":
-            if market_conditions and market_conditions.get("liquidity_condition") in {"good", "excellent"}:
+            if market_conditions and market_conditions.get("liquidity_condition") in {
+                "good",
+                "excellent",
+            }:
                 config["order_type"] = "MARKET"
                 config["tif"] = "IOC"
                 config["use_market"] = True

@@ -702,9 +702,7 @@ class TestRuntimeEngineBrokerBootstrap:
         assert result.event_store == artifacts.event_store
         assert "BTC-PERP" in result.product_cache
 
-    def test_hydrate_product_cache_handles_empty_products(
-        self, coordinator: RuntimeEngine
-    ) -> None:
+    def test_hydrate_product_cache_handles_empty_products(self, coordinator: RuntimeEngine) -> None:
         """Test _hydrate_product_cache handles empty product list."""
         coordinator._hydrate_product_cache([])
 
@@ -751,9 +749,7 @@ class TestRuntimeEngineProperties:
         cls = coordinator._risk_manager_cls
         assert cls == LiveRiskManager
 
-    def test_order_reconciler_cls_returns_correct_type(
-        self, coordinator: RuntimeEngine
-    ) -> None:
+    def test_order_reconciler_cls_returns_correct_type(self, coordinator: RuntimeEngine) -> None:
         """Test _order_reconciler_cls returns OrderReconciler type."""
         from bot_v2.orchestration.order_reconciler import OrderReconciler
 

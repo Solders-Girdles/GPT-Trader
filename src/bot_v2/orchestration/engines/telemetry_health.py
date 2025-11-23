@@ -7,6 +7,7 @@ from bot_v2.utilities import utc_now
 
 if TYPE_CHECKING:  # pragma: no cover
     from bot_v2.orchestration.engines.base import CoordinatorContext
+    from bot_v2.orchestration.engines.telemetry_coordinator import TelemetryEngine
 
 
 def _logger():
@@ -15,7 +16,7 @@ def _logger():
     return telemetry_module.logger
 
 
-def _emit_metric(event_store, bot_id: str, payload: dict[str, Any]) -> None:
+def _emit_metric(event_store: Any, bot_id: str, payload: dict[str, Any]) -> None:
     from bot_v2.orchestration.engines import telemetry as telemetry_module
 
     telemetry_module.emit_metric(event_store, bot_id, payload)
@@ -78,11 +79,11 @@ def update_mark_and_metrics(
             except Exception:  # pragma: no cover - defensive logging
                 _logger().debug(
                     "Failed to record market update",
-                symbol=symbol,
-                exc_info=True,
-                operation="telemetry_stream",
-                stage="market_monitor",
-            )
+                    symbol=symbol,
+                    exc_info=True,
+                    operation="telemetry_stream",
+                    stage="market_monitor",
+                )
 
     risk_manager = ctx.risk_manager
     if risk_manager is not None:
@@ -125,7 +126,7 @@ def update_mark_and_metrics(
     )
 
 
-def health_check(coordinator: "TelemetryEngine"):
+def health_check(coordinator: "TelemetryEngine") -> Any:
     from bot_v2.orchestration.engines.base import HealthStatus
 
     raw_extras = getattr(coordinator.context.registry, "extras", {})

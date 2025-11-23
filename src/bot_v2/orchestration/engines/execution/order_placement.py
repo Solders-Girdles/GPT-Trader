@@ -139,8 +139,8 @@ class OrderPlacementService:
             raise ValidationError("Action must have a positive quantity")
 
         if hasattr(action, "side"):
-             if action.side not in {OrderSide.BUY, OrderSide.SELL}:
-                 raise ValidationError(f"Invalid order side: {action.side}")
+            if action.side not in {OrderSide.BUY, OrderSide.SELL}:
+                raise ValidationError(f"Invalid order side: {action.side}")
 
         # Validate additional parameters
         if "limit_price" in kwargs and kwargs["limit_price"] is not None:
@@ -160,19 +160,19 @@ class OrderPlacementService:
 
         # Determine side from action (Enum) or attribute
         if isinstance(action, Action):
-             # Map Action Enum to OrderSide
-             if action == Action.BUY:
-                 side = OrderSide.BUY
-             elif action == Action.SELL:
-                 side = OrderSide.SELL
-             else:
-                 side = kwargs.get("side")
+            # Map Action Enum to OrderSide
+            if action == Action.BUY:
+                side = OrderSide.BUY
+            elif action == Action.SELL:
+                side = OrderSide.SELL
+            else:
+                side = kwargs.get("side")
         else:
-             side = getattr(action, "side", kwargs.get("side"))
+            side = getattr(action, "side", kwargs.get("side"))
 
         if not side:
-             # Fallback to kwargs or error
-             side = kwargs.get("side")
+            # Fallback to kwargs or error
+            side = kwargs.get("side")
 
         # Base order parameters
         order_params = {
@@ -252,7 +252,9 @@ class OrderPlacementService:
             symbol=order.symbol,
             side=order.side,
             quantity=order.quantity,
-            order_type=getattr(order, "type", order.type),  # Handle type vs order_type naming if needed, but Order uses 'type'
+            order_type=getattr(
+                order, "type", order.type
+            ),  # Handle type vs order_type naming if needed, but Order uses 'type'
             price=order.price,
             time_in_force=getattr(order, "tif", None),
         )

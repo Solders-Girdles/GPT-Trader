@@ -7,10 +7,9 @@ Provides both real and mock transports for production and testing.
 from __future__ import annotations
 
 import json
-from collections.abc import Iterable
 import sys
+from collections.abc import Iterable
 from typing import TYPE_CHECKING, Any, cast
-
 from unittest.mock import Mock
 
 from bot_v2.utilities import empty_stream
@@ -18,8 +17,10 @@ from bot_v2.utilities.logging_patterns import get_logger
 
 try:  # pragma: no cover - optional dependency shim
     import websocket as websocket  # type: ignore[import-not-found, assignment]
+
     _HAS_WEBSOCKET = True
 except ImportError:  # pragma: no cover - fallback stub for tests
+
     class _WebsocketStub:
         WebSocketException = Exception
 
@@ -74,7 +75,9 @@ class RealTransport:
         if not self._static_settings:
             self._settings = _load_runtime_settings_snapshot()
 
-    def connect(self, url: str | dict[str, str] | None = None, headers: dict[str, str] | None = None) -> None:
+    def connect(
+        self, url: str | dict[str, str] | None = None, headers: dict[str, str] | None = None
+    ) -> None:
         """Connect to the WebSocket server with optional headers."""
         self._refresh_settings()
 

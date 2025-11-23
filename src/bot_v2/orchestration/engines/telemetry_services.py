@@ -7,6 +7,7 @@ from bot_v2.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:  # pragma: no cover
     from bot_v2.orchestration.engines.base import CoordinatorContext
+    from bot_v2.orchestration.engines.telemetry_coordinator import TelemetryEngine
 
 logger = get_logger(__name__, component="telemetry_coordinator")
 
@@ -29,12 +30,12 @@ def initialize_services(
     coordinator: "TelemetryEngine", ctx: "CoordinatorContext"
 ) -> "CoordinatorContext":
     try:
-        from bot_v2.features.brokerages.coinbase.adapter import CoinbaseBrokerage
         from bot_v2.features.brokerages.coinbase.account_manager import CoinbaseAccountManager
-        from bot_v2.orchestration.intx_portfolio_service import IntxPortfolioService
+        from bot_v2.features.brokerages.coinbase.adapter import CoinbaseBrokerage
         from bot_v2.orchestration.account_telemetry import AccountTelemetryService
-        from bot_v2.orchestration.market_monitor import MarketActivityMonitor
         from bot_v2.orchestration.engines import telemetry_coordinator as telemetry_module
+        from bot_v2.orchestration.intx_portfolio_service import IntxPortfolioService
+        from bot_v2.orchestration.market_monitor import MarketActivityMonitor
 
         _patched_get_plog = telemetry_module._get_plog
     except ImportError as exc:
@@ -151,9 +152,7 @@ def init_market_services(coordinator: "TelemetryEngine") -> None:
     coordinator.update_context(updated)
 
 
-async def run_account_telemetry(
-    coordinator: "TelemetryEngine", interval_seconds: int
-) -> None:
+async def run_account_telemetry(coordinator: "TelemetryEngine", interval_seconds: int) -> None:
     extras = getattr(coordinator.context.registry, "extras", {})
     account_telemetry = extras.get("account_telemetry") if isinstance(extras, dict) else None
     if not account_telemetry or not account_telemetry.supports_snapshots():

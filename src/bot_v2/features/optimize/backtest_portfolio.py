@@ -13,7 +13,7 @@ from bot_v2.features.brokerages.core.interfaces import Product
 from bot_v2.features.live_trade.strategies.decisions import Action, Decision
 from bot_v2.utilities.logging_patterns import get_logger
 
-from .types_v2 import BacktestConfig, ExecutionResult
+from .types_v2 import ExecutionResult
 
 logger = get_logger(__name__, component="optimize")
 
@@ -157,7 +157,9 @@ class BacktestPortfolio:
                 timestamp=timestamp,
             )
         else:
-            return ExecutionResult(filled=False, rejection_reason=f"Unknown action: {decision.action}")
+            return ExecutionResult(
+                filled=False, rejection_reason=f"Unknown action: {decision.action}"
+            )
 
     def _execute_buy(
         self,
@@ -177,14 +179,17 @@ class BacktestPortfolio:
             exec_price = current_price * (Decimal("1") + self.slippage_rate)
             quantity = decision.target_notional / exec_price
         else:
-            return ExecutionResult(filled=False, rejection_reason="No quantity or notional specified")
+            return ExecutionResult(
+                filled=False, rejection_reason="No quantity or notional specified"
+            )
 
         # Round to product step size
         quantity = self._round_quantity(quantity, product)
 
         if quantity < product.min_size:
             return ExecutionResult(
-                filled=False, rejection_reason=f"Quantity {quantity} below min_size {product.min_size}"
+                filled=False,
+                rejection_reason=f"Quantity {quantity} below min_size {product.min_size}",
             )
 
         # Apply slippage
@@ -247,14 +252,17 @@ class BacktestPortfolio:
             exec_price = current_price * (Decimal("1") - self.slippage_rate)
             quantity = decision.target_notional / exec_price
         else:
-            return ExecutionResult(filled=False, rejection_reason="No quantity or notional specified")
+            return ExecutionResult(
+                filled=False, rejection_reason="No quantity or notional specified"
+            )
 
         # Round to product step size
         quantity = self._round_quantity(quantity, product)
 
         if quantity < product.min_size:
             return ExecutionResult(
-                filled=False, rejection_reason=f"Quantity {quantity} below min_size {product.min_size}"
+                filled=False,
+                rejection_reason=f"Quantity {quantity} below min_size {product.min_size}",
             )
 
         # Apply slippage (sell = receive lower price)

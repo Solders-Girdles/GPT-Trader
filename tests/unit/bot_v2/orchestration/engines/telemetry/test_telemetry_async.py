@@ -297,13 +297,13 @@ class TestAsyncCoroutineScheduling:
 
         # For now, let's assume it delegates to service
         if hasattr(coordinator, "account_telemetry") and coordinator.account_telemetry:
-             coordinator.account_telemetry.run_cycle = AsyncMock()
-             await coordinator.run_account_telemetry(interval_seconds=150)
-             coordinator.account_telemetry.run_cycle.assert_called_once()
+            coordinator.account_telemetry.run_cycle = AsyncMock()
+            await coordinator.run_account_telemetry(interval_seconds=150)
+            coordinator.account_telemetry.run_cycle.assert_called_once()
         else:
-             # Fallback if service not exposed directly or mocked differently
-             # Mock the method on coordinator itself if it exists
-             if hasattr(coordinator, "_run_account_telemetry"):
-                 coordinator._run_account_telemetry = AsyncMock()
-                 await coordinator.run_account_telemetry(interval_seconds=150)
-                 coordinator._run_account_telemetry.assert_called_once_with(150)
+            # Fallback if service not exposed directly or mocked differently
+            # Mock the method on coordinator itself if it exists
+            if hasattr(coordinator, "_run_account_telemetry"):
+                coordinator._run_account_telemetry = AsyncMock()
+                await coordinator.run_account_telemetry(interval_seconds=150)
+                coordinator._run_account_telemetry.assert_called_once_with(150)

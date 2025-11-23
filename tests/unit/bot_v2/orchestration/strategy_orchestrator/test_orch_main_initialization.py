@@ -1,7 +1,7 @@
 """Tests for StrategyOrchestrator initialization, strategy selection, and configuration.
 
 This module tests:
-- Orchestrator initialization with/without SpotProfileService  
+- Orchestrator initialization with/without SpotProfileService
 - Strategy initialization (single perps vs per-symbol spot)
 - Position fraction overrides
 - Leverage configuration
@@ -11,8 +11,6 @@ This module tests:
 from __future__ import annotations
 
 from unittest.mock import Mock
-
-import pytest
 
 from bot_v2.features.live_trade.strategies.perps_baseline import BaselinePerpsStrategy
 from bot_v2.orchestration.configuration import Profile

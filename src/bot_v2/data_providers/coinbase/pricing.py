@@ -61,7 +61,9 @@ class CoinbasePricingMixin:
             )
             return 100.0
 
-    def get_multiple_symbols(self, symbols: list[str], period: str = "60d") -> dict[str, pd.DataFrame]:
+    def get_multiple_symbols(
+        self, symbols: list[str], period: str = "60d"
+    ) -> dict[str, pd.DataFrame]:
         """
         Fetch historical data for multiple symbols with optional streaming subscription.
         """

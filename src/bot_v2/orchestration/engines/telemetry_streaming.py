@@ -7,7 +7,7 @@ from collections.abc import Coroutine
 from typing import TYPE_CHECKING, Any, Awaitable, cast
 
 if TYPE_CHECKING:  # pragma: no cover
-    from bot_v2.orchestration.engines.base import CoordinatorContext
+    from bot_v2.orchestration.engines.telemetry_coordinator import TelemetryEngine
 
 
 def _logger():
@@ -16,7 +16,7 @@ def _logger():
     return telemetry_module.logger
 
 
-def _emit_metric(event_store, bot_id: str, payload: dict[str, Any]) -> None:
+def _emit_metric(event_store: Any, bot_id: str, payload: dict[str, Any]) -> None:
     from bot_v2.orchestration.engines import telemetry_coordinator as telemetry_module
 
     # If emit_metric is not in telemetry_coordinator, import from utility
@@ -24,20 +24,21 @@ def _emit_metric(event_store, bot_id: str, payload: dict[str, Any]) -> None:
         telemetry_module.emit_metric(event_store, bot_id, payload)
     else:
         from bot_v2.utilities.telemetry import emit_metric
+
         emit_metric(event_store, bot_id, payload)
 
 
-def start_streaming_background(coordinator: "TelemetryEngine") -> None:
+def start_streaming_background(coordinator: "TelemetryEngine") -> None:  # type: ignore[name-defined]
     if not coordinator._should_enable_streaming():
         return
     coordinator._schedule_coroutine(coordinator._start_streaming())
 
 
-def stop_streaming_background(coordinator: "TelemetryEngine") -> None:
+def stop_streaming_background(coordinator: "TelemetryEngine") -> None:  # type: ignore[name-defined]
     coordinator._schedule_coroutine(coordinator._stop_streaming())
 
 
-def _should_enable_streaming(coordinator: "TelemetryEngine") -> bool:
+def _should_enable_streaming(coordinator: "TelemetryEngine") -> bool:  # type: ignore[name-defined]
     config = coordinator.context.config
     profile = getattr(config, "profile", None)
     if hasattr(profile, "value"):
@@ -54,7 +55,8 @@ def _should_enable_streaming(coordinator: "TelemetryEngine") -> bool:
 
 
 def restart_streaming_if_needed(
-    coordinator: "TelemetryEngine", diff: dict[str, Any]
+    coordinator: "TelemetryEngine",  # type: ignore[name-defined]
+    diff: dict[str, Any],
 ) -> None:
     relevant = {"perps_enable_streaming", "perps_stream_level", "symbols"}
     if not relevant.intersection(diff.keys()):
@@ -94,7 +96,7 @@ def restart_streaming_if_needed(
 
     coro = _apply_restart()
     try:
-            coordinator._schedule_coroutine(coro)
+        coordinator._schedule_coroutine(coro)
     except RuntimeError as exc:
         message = str(exc)
         if "asyncio.run()" in message and "running event loop" in message:
@@ -119,7 +121,8 @@ def restart_streaming_if_needed(
 
 
 def _schedule_coroutine(
-    coordinator: "TelemetryEngine", coro: Coroutine[Any, Any, Any]
+    coordinator: "TelemetryEngine",  # type: ignore[name-defined]
+    coro: Coroutine[Any, Any, Any],
 ) -> None:
     try:
         loop = asyncio.get_running_loop()
@@ -146,7 +149,9 @@ def _schedule_coroutine(
         loop.run_until_complete(coro)
 
 
-async def _start_streaming(coordinator: "TelemetryEngine") -> asyncio.Task[Any] | None:
+async def _start_streaming(
+    coordinator: "TelemetryEngine",  # type: ignore[name-defined]
+) -> asyncio.Task[Any] | None:
     symbols = list(coordinator.context.symbols)
     if not symbols:
         _logger().debug(
@@ -197,7 +202,7 @@ async def _start_streaming(coordinator: "TelemetryEngine") -> asyncio.Task[Any] 
     return task
 
 
-async def _stop_streaming(coordinator: "TelemetryEngine") -> None:
+async def _stop_streaming(coordinator: "TelemetryEngine") -> None:  # type: ignore[name-defined]
     coordinator._pending_stream_config = None
     stop_signal = coordinator._ws_stop
     if stop_signal is not None:
@@ -235,7 +240,8 @@ async def _stop_streaming(coordinator: "TelemetryEngine") -> None:
 
 
 def _handle_stream_task_completion(
-    coordinator: "TelemetryEngine", task: asyncio.Task[Any]
+    coordinator: "TelemetryEngine",  # type: ignore[name-defined]
+    task: asyncio.Task[Any],
 ) -> None:
     coordinator._stream_task = None
     coordinator._ws_stop = None
@@ -257,7 +263,7 @@ def _handle_stream_task_completion(
 
 
 async def _run_stream_loop_async(
-    coordinator: "TelemetryEngine",
+    coordinator: "TelemetryEngine",  # type: ignore[name-defined]
     symbols: list[str],
     level: int,
     stop_signal: threading.Event | None,
@@ -278,7 +284,7 @@ async def _run_stream_loop_async(
 
 
 def _run_stream_loop(
-    coordinator: "TelemetryEngine",
+    coordinator: "TelemetryEngine",  # type: ignore[name-defined]
     symbols: list[str],
     level: int,
     stop_signal: threading.Event | None,

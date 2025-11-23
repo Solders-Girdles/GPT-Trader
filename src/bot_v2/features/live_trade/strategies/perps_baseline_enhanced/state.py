@@ -7,10 +7,12 @@ from dataclasses import dataclass, field
 from decimal import Decimal
 
 from bot_v2.features.live_trade.strategies.shared import (
+    clear_trailing_stop_state,
+)
+from bot_v2.features.live_trade.strategies.shared import (
     update_mark_window as _update_mark_window,
 )
 from bot_v2.features.live_trade.strategies.shared import (
-    clear_trailing_stop_state,
     update_trailing_stop as _update_trailing_stop,
 )
 

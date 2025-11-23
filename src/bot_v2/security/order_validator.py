@@ -48,7 +48,9 @@ class OrderValidator:
 
         # Validate quantity
         quantity = order.get("quantity", 0)
-        quantity_result = NumericValidator.validate_numeric(quantity, min_val=0.001, max_val=1000000)
+        quantity_result = NumericValidator.validate_numeric(
+            quantity, min_val=0.001, max_val=1000000
+        )
         if not quantity_result.is_valid:
             errors.extend(quantity_result.errors)
         quantity_value = quantity_result.sanitized_value if quantity_result.is_valid else 0.0

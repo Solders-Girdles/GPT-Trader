@@ -10,10 +10,13 @@ import pytest
 from bot_v2.orchestration.state.unified_state import (
     ReduceOnlyModeSource,
     ReduceOnlyModeState,
-    SystemState as ReduceOnlyModeStateManager,
     StateChange,  # Replaced StateChangeRequest
     create_reduce_only_state_manager,
 )
+from bot_v2.orchestration.state.unified_state import (
+    SystemState as ReduceOnlyModeStateManager,
+)
+
 # Alias StateChangeRequest to StateChange for test compatibility if needed, or just update usage
 StateChangeRequest = StateChange
 

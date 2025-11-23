@@ -190,7 +190,9 @@ def render_prometheus(metrics: dict[str, Any], events_path: Path) -> str:
     latest_cb = load_latest_event(events_path, "circuit_breaker_triggered")
     if latest_cb:
         circuit_breaker_triggered = 1
-    lines.append(f"# HELP {metric('circuit_breaker_triggered')} Circuit breaker triggered (1=active, 0=normal)")
+    lines.append(
+        f"# HELP {metric('circuit_breaker_triggered')} Circuit breaker triggered (1=active, 0=normal)"
+    )
     lines.append(f"# TYPE {metric('circuit_breaker_triggered')} gauge")
     lines.append(f"{metric('circuit_breaker_triggered')} {circuit_breaker_triggered}")
 
@@ -210,7 +212,9 @@ def render_prometheus(metrics: dict[str, Any], events_path: Path) -> str:
                 exposure = _parse_float(position_data.get("exposure_usd", 0))
                 # Sanitize symbol for prometheus label
                 safe_symbol = symbol.replace("-", "_")
-                lines.append(f'{metric("symbol_exposure_usd")}{{symbol="{safe_symbol}"}} {exposure}')
+                lines.append(
+                    f'{metric("symbol_exposure_usd")}{{symbol="{safe_symbol}"}} {exposure}'
+                )
 
     # Per-symbol PnL
     pnl_data = metrics.get("pnl", {})

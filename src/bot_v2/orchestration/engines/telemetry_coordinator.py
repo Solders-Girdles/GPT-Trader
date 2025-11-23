@@ -4,8 +4,10 @@ import asyncio
 import threading
 from typing import Any, Tuple
 
+from bot_v2.monitoring.system import get_logger as _get_plog
 from bot_v2.orchestration.market_monitor import MarketActivityMonitor
 from bot_v2.utilities.logging_patterns import get_logger
+from bot_v2.utilities.telemetry import emit_metric
 
 from .base import BaseEngine, CoordinatorContext
 from .telemetry_background import start_background_tasks as _start_background_tasks

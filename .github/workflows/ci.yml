@@ -28,7 +28,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
       with:
         fetch-depth: 0
 
@@ -147,7 +147,7 @@ jobs:
         env_mode: ['prod', 'sandbox', 'prod_fallback', 'sandbox_fallback']
 
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
 
     - name: Prepare Python environment
       id: setup-poetry

@@ -25,7 +25,7 @@ jobs:
   quick-validation:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Prepare Python environment
         id: setup-poetry
@@ -92,7 +92,7 @@ jobs:
   full-test-suite:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Prepare Python environment
         id: setup-poetry

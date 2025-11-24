@@ -17,7 +17,7 @@ The cleanup initiative focuses on:
 ### Completed Changes
 
 #### 1. Trading Operations Utilities
-**File**: `src/bot_v2/utilities/trading_operations.py`
+**File**: `src/gpt_trader/utilities/trading_operations.py`
 
 **Purpose**: Extract common trading patterns from legacy code into reusable utilities.
 
@@ -30,17 +30,17 @@ The cleanup initiative focuses on:
 **Migration**:
 ```python
 # Before (legacy)
-from bot_v2.features.live_trade.live_trade import place_order
+from gpt_trader.features.live_trade.live_trade import place_order
 order = place_order(symbol="BTC-USD", side=OrderSide.BUY, quantity=1.0)
 
 # After (new utilities)
-from bot_v2.utilities import create_trading_operations
+from gpt_trader.utilities import create_trading_operations
 trading_ops = create_trading_operations(broker, risk_manager)
 order = trading_ops.place_order(symbol="BTC-USD", side=OrderSide.BUY, quantity=1.0)
 ```
 
 #### 2. Simplified Legacy Interface
-**File**: (removed) `src/bot_v2/features/live_trade/live_trade_simplified.py`
+**File**: (removed) `src/gpt_trader/features/live_trade/live_trade_simplified.py`
 
 **Purpose**: Provide a cleaned-up version of the legacy interface that uses new utilities.
 
@@ -53,7 +53,7 @@ order = trading_ops.place_order(symbol="BTC-USD", side=OrderSide.BUY, quantity=1
 **Migration**:
 ```python
 # Before (legacy)
-from bot_v2.features.live_trade.live_trade import place_order, get_positions
+from gpt_trader.features.live_trade.live_trade import place_order, get_positions
 
 # After (simplified)
 # Legacy facade removed; use trading_operations instead
@@ -65,7 +65,7 @@ from bot_v2.features.live_trade.live_trade import place_order, get_positions
 ### Completed Changes
 
 #### 1. Console Logging Utilities
-**File**: `src/bot_v2/utilities/console_logging.py`
+**File**: `src/gpt_trader/utilities/console_logging.py`
 
 **Purpose**: Replace print statements with structured logging while maintaining user-friendly console output.
 
@@ -83,14 +83,14 @@ print(f"❌ Failed to place order: {error}")
 print("📊 Current Positions:")
 
 # After (structured logging)
-from bot_v2.utilities import console_order, console_error, console_position
+from gpt_trader.utilities import console_order, console_error, console_position
 console_order(f"Order placed: {order.id}", order_id=order.id)
 console_error(f"Failed to place order: {error}", error=str(error))
 console_position("Current Positions:", count=len(positions))
 ```
 
 #### 2. Error Handling Patterns
-**File**: `src/bot_v2/errors/error_patterns.py` (existing, enhanced)
+**File**: `src/gpt_trader/errors/error_patterns.py` (existing, enhanced)
 
 **Usage**: All new utilities use the established error handling patterns with decorators and context managers.
 
@@ -99,7 +99,7 @@ console_position("Current Positions:", count=len(positions))
 ### Completed Changes
 
 #### 1. Trading Operations Tests
-**File**: `tests/unit/bot_v2/utilities/test_trading_operations.py`
+**File**: `tests/unit/gpt_trader/utilities/test_trading_operations.py`
 
 **Coverage**:
 - Complete test coverage for `TradingOperations` class
@@ -118,7 +118,7 @@ console_position("Current Positions:", count=len(positions))
 ### Existing Utilities (Enhanced Usage)
 
 #### 1. Import Optimization
-**File**: `src/bot_v2/utilities/import_utils.py`
+**File**: `src/gpt_trader/utilities/import_utils.py`
 
 **Features Applied**:
 - Lazy imports for heavy dependencies
@@ -132,13 +132,13 @@ import tensorflow as tf
 import pandas as pd
 
 # After (lazy loading)
-from bot_v2.utilities import lazy_import, optional_import
+from gpt_trader.utilities import lazy_import, optional_import
 tensorflow = lazy_import("tensorflow")
 pandas = optional_import("pandas")
 ```
 
 #### 2. Performance Monitoring
-**File**: `src/bot_v2/utilities/performance_monitoring.py`
+**File**: `src/gpt_trader/utilities/performance_monitoring.py`
 
 **Features Applied**:
 - Performance decorators for critical operations
@@ -153,7 +153,7 @@ def expensive_operation():
     pass
 
 # After (with monitoring)
-from bot_v2.utilities import measure_performance_decorator
+from gpt_trader.utilities import measure_performance_decorator
 
 @measure_performance_decorator("expensive_operation")
 def expensive_operation():
@@ -168,10 +168,10 @@ def expensive_operation():
 #### 1. Gradual Migration Approach
 ```python
 # Step 1: Keep existing imports
-from bot_v2.features.live_trade.live_trade import place_order
+from gpt_trader.features.live_trade.live_trade import place_order
 
 # Step 2: Add new utilities
-from bot_v2.utilities import create_trading_operations
+from gpt_trader.utilities import create_trading_operations
 
 # Step 3: Gradually replace calls
 # ... transition existing code ...
@@ -195,7 +195,7 @@ from bot_v2.utilities import create_trading_operations
 #### 1. Error Handling
 ```python
 # Use standardized error patterns
-from bot_v2.errors.error_patterns import handle_brokerage_errors
+from gpt_trader.errors.error_patterns import handle_brokerage_errors
 
 @handle_brokerage_errors("operation_name")
 def risky_operation():
@@ -206,7 +206,7 @@ def risky_operation():
 #### 2. Logging
 ```python
 # Use structured logging with context
-from bot_v2.utilities import console_trading, log_operation
+from gpt_trader.utilities import console_trading, log_operation
 
 with log_operation("place_order", logger, symbol=symbol):
     console_trading(f"Placing order for {symbol}", symbol=symbol)
@@ -216,7 +216,7 @@ with log_operation("place_order", logger, symbol=symbol):
 #### 3. Performance Monitoring
 ```python
 # Add performance monitoring to critical paths
-from bot_v2.utilities import measure_performance_decorator
+from gpt_trader.utilities import measure_performance_decorator
 
 @measure_performance_decorator("critical_operation")
 def critical_operation():
@@ -227,7 +227,7 @@ def critical_operation():
 #### 4. Async/Sync Boundaries
 ```python
 # Use established async utilities
-from bot_v2.utilities import async_to_sync, sync_to_async
+from gpt_trader.utilities import async_to_sync, sync_to_async
 
 @async_to_sync
 async def async_operation():
@@ -303,7 +303,7 @@ python scripts/cleanup/validate_cleanup.py
 ### 2. Testing Tools
 ```bash
 # Run enhanced test suite
-pytest tests/ --cov=src/bot_v2 --cov-report=html
+pytest tests/ --cov=src/gpt_trader --cov-report=html
 
 # Run property-based tests
 pytest tests/property/ -v
@@ -315,7 +315,7 @@ pytest tests/integration/ -v
 ### 3. Performance Tools
 ```bash
 # Profile import performance
-python -c "from bot_v2.utilities import profile_imports; profile_imports()"
+python -c "from gpt_trader.utilities import profile_imports; profile_imports()"
 
 # Run performance benchmarks
 python scripts/performance/benchmark.py

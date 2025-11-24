@@ -6,9 +6,9 @@ PerpsBot can be created and started using the ApplicationContainer.
 
 import pytest
 
-from bot_v2.app.container import create_application_container
-from bot_v2.orchestration.configuration import BotConfig
-from bot_v2.orchestration.runtime_settings import load_runtime_settings
+from gpt_trader.app.container import create_application_container
+from gpt_trader.orchestration.configuration import BotConfig
+from gpt_trader.config.runtime_settings import load_runtime_settings
 
 
 @pytest.mark.xfail(reason="Container boot integration mismatch")

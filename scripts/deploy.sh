@@ -98,7 +98,7 @@ run_integration_tests() {
     pkill -f pytest || true
 
     # Run the integration test suite
-    if poetry run pytest tests/integration/bot_v2/features/live_trade/ \
+    if poetry run pytest tests/integration/gpt_trader/features/live_trade/ \
         -v --tb=short --maxfail=3 \
         --junitxml=reports/integration-test-results.xml; then
         success "✅ Integration tests passed"

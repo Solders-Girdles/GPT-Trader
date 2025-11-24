@@ -27,7 +27,7 @@ This document highlights key areas of confusion for AI agents working with the G
 - Older test counts included legacy suites.
 
 **Reality Check**:
-- Active stack: `src/bot_v2/**` (all runtime code)
+- Active stack: `src/gpt_trader/**` (all runtime code)
 - Legacy artifacts: packaged under `var/legacy/legacy_bundle_*.tar.gz` (see `docs/archive/legacy_recovery.md`)
 - Tests: `poetry run pytest --collect-only` currently reports 1484 collected / 1483 selected tests (1 deselected legacy placeholder)
 
@@ -68,7 +68,7 @@ This document highlights key areas of confusion for AI agents working with the G
 - Multiple entry points mentioned historically.
 
 **Reality Check**:
-- Primary CLI: `poetry run coinbase-trader` (legacy alias `poetry run perps-bot` remains available for older scripts)
+- Primary CLI: `poetry run coinbase-trader`
 - Legacy CLI prototypes live only in the legacy bundle/tag; do not expect them in the workspace.
 
 ### 6. Testing and Validation Confusion
@@ -96,7 +96,7 @@ This document highlights key areas of confusion for AI agents working with the G
 
 **Reality Check**:
 - Use `quantity` not `qty`
-- `coinbase-trader` is the canonical CLI/runtime name (legacy `perps-bot` remains as an alias during migration)
+- `coinbase-trader` is the canonical CLI/runtime name
 - Check naming standards in `docs/agents/naming_standards_outline.md`
 
 ### 8. Operational Confusion
@@ -157,13 +157,13 @@ Before making changes, agents should:
 - [ ] Run test discovery: `poetry run pytest --collect-only` (1484 collected / 1483 selected / 1 deselected)
 
 ### Code Navigation
-- [ ] Use `src/bot_v2/` imports for active code
+- [ ] Use `src/gpt_trader/` imports for active code
 - [ ] Avoid `archived/` unless specifically needed
 - [ ] Check coordinator pattern usage (new architecture)
 - [ ] Verify configuration actually exists and is used
 
 ### Testing Approach
-- [ ] Add tests to `tests/unit/bot_v2/` for new features
+- [ ] Add tests to `tests/unit/gpt_trader/` for new features
 - [ ] Run `poetry run pytest -q` for regression testing
 - [ ] Check for skipped/legacy tests in output
 - [ ] Verify test counts match expectations (1484 collected / 1483 selected / 1 deselected)
@@ -177,7 +177,7 @@ Before making changes, agents should:
 ## 🚨 Common Pitfalls
 
 1. **Assuming perps are enabled** - They're gated behind INTX access
-2. **Using legacy imports** - Stick to `src/bot_v2/` paths
+2. **Using legacy imports** - Stick to `src/gpt_trader/` paths
 3. **Trusting outdated docs** - Always verify with current code
 4. **Missing profile context** - Dev uses mock broker, prod uses live
 5. **Ignoring test selection** - Many tests are deselected/skipped
@@ -192,7 +192,7 @@ poetry run coinbase-trader run --profile dev --dev-fast
 
 # Testing
 poetry run pytest -q
-poetry run pytest tests/unit/bot_v2/ -q
+poetry run pytest tests/unit/gpt_trader/ -q
 
 # Account verification
 poetry run coinbase-trader account snapshot
@@ -205,7 +205,7 @@ poetry run python scripts/monitoring/export_metrics.py --metrics-file var/data/c
 
 The codebase is transitioning from:
 - Legacy: Monolithic `src/bot` + experimental slices
-- Current: Vertical slices `src/bot_v2/` + coordinators
+- Current: Vertical slices `src/gpt_trader/` + coordinators
 - Future: Cleaner separation of concerns
 
 Always check the modification date and context before trusting any documentation or code patterns.

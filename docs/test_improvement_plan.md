@@ -194,7 +194,7 @@ Based on analysis of the test suite structure, documentation, and codebase, this
 ```
 tests/
 ├── unit/
-│   ├── bot_v2/
+│   ├── gpt_trader/
 │   │   ├── features/
 │   │   │   ├── live_trade/
 │   │   │   │   ├── execution/          # Order execution tests

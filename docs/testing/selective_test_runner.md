@@ -11,13 +11,14 @@ CI workflow to run only the tests impacted by a change set.
    poetry run python scripts/analysis/test_categorizer.py --output test_categories.json
    ```
 2. Dry-run the selection to preview which tests will execute:
-   ```bash
-   poetry run python scripts/testing/selective_runner.py --paths src/bot_v2/orchestration/perps_bot.py --dry-run
-   ```
+   poetry run python scripts/testing/selective_runner.py --paths src/gpt_trader/orchestration/trading_bot/bot.py --dry-run
+
+   # Or execute it
+   poetry run python scripts/testing/selective_runner.py --paths src/gpt_trader/orchestration/trading_bot/bot.py
 3. Execute the selected tests (the command honours `PYTEST_ADDOPTS`):
    ```bash
    PYTEST_ADDOPTS='-m "not slow and not performance" -q' \
-     poetry run python scripts/testing/selective_runner.py --paths src/bot_v2/orchestration/perps_bot.py
+     poetry run python scripts/testing/selective_runner.py --paths src/gpt_trader/orchestration/trading_bot/bot.py
    ```
 
 Passing test paths (e.g. `tests/unit/...`) forces those files to run directly.
@@ -35,7 +36,7 @@ Pull request builds use the selective runner with these safeguards:
 - `PYTEST_ADDOPTS` enforces the standard unit-test markers.
 - The runner upgrades to the full suite if the selected set exceeds 70% of the
   total catalogued tests.
-- Changes touching `bot_v2.features.brokerages.core.interfaces` force a full
+- Changes touching `gpt_trader.features.brokerages.core.interfaces` force a full
   run and log the trigger.
 - Push builds (including merges to `main`) continue to run the full coverage
   suite.
@@ -44,7 +45,7 @@ Pull request builds use the selective runner with these safeguards:
 
 1. Push a PR that only touches a leaf helper (e.g. a strategy helper) and
    confirm the action log shows `poetry run python scripts/testing/selective_runner.py --paths ...` followed by a short pytest run.
-2. Modify `bot_v2/features/brokerages/core/interfaces.py` and ensure the log
+2. Modify `gpt_trader/features/brokerages/core/interfaces.py` and ensure the log
    prints `Full run triggered by high-impact module` and the job executes the
    full suite.
 3. Push to `main` (or run the workflow on a branch with `workflow_dispatch`) and

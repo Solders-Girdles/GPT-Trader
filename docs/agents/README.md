@@ -21,7 +21,7 @@ This directory contains documentation specifically for AI agents working with th
 
 **Active Architecture**: Spot-first trading bot
 - **Primary CLI**: `poetry run coinbase-trader`
-- **Codebase**: `src/bot_v2/` (vertical slices + coordinators)
+- **Codebase**: `src/gpt_trader/` (vertical slices + coordinators)
 - **Tests**: 1483 active tests (1484 collected; 1 deselected legacy placeholder)
 - **Perpetuals**: Code exists but requires INTX access
 
@@ -32,7 +32,7 @@ This directory contains documentation specifically for AI agents working with th
 ## 🚨 Critical Gotchas
 
 1. **Don't assume perps are enabled** - They're gated behind `COINBASE_ENABLE_DERIVATIVES=1` + INTX access
-2. **Use `src/bot_v2/` imports only** - Legacy paths will cause import errors
+2. **Use `src/gpt_trader/` imports only** - Legacy paths will cause import errors
 3. **Verify documentation recency** - Many docs contain outdated information
 4. **Test with dev profile first** - Use `--dev-fast` for safe mock trading
 5. **Check test selection** - Many tests are deselected/skipped
@@ -47,9 +47,9 @@ poetry run coinbase-trader run --profile dev --dev-fast # Quick smoke test
 ```
 
 ### During Development
-- Use `src/bot_v2/` imports exclusively
+- Use `src/gpt_trader/` imports exclusively
 - Test with dev profile before production profiles
-- Add tests to `tests/unit/bot_v2/`
+- Add tests to `tests/unit/gpt_trader/`
 - Run `poetry run pytest -q` regularly
 
 ### Before Finishing

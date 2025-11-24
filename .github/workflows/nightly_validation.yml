@@ -41,7 +41,7 @@ jobs:
       - name: Run Coinbase websocket regression test
         run: |
           set -euo pipefail
-          poetry run pytest tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_websocket.py -k sequence_guard -v
+          poetry run pytest tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_websocket.py -k sequence_guard -v
 
       - name: Quick WebSocket smoke
         run: |
@@ -59,7 +59,7 @@ jobs:
           if workspace not in sys.path:
             sys.path.insert(0, workspace)
 
-          from src.bot_v2.features.brokerages.coinbase.ws import CoinbaseWebSocket, SequenceGuard
+          from src.gpt_trader.features.brokerages.coinbase.ws import CoinbaseWebSocket, SequenceGuard
 
           mock_ws = types.ModuleType('websocket')
           mock_ws.create_connection = lambda url: None

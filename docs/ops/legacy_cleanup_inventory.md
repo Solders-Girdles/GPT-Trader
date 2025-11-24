@@ -5,12 +5,14 @@ use repository-relative references.
 
 ## Code
 
-- Active stack: `src/bot_v2/**` (CLI, orchestration, Coinbase adapters, risk)
+- Active stack: `src/gpt_trader/**` (CLI, orchestration, Coinbase adapters, risk)
 - Legacy bundle: `var/legacy/legacy_bundle_latest.tar.gz` (contains the former
   `archived/experimental/**` tree and the `src/gpt_trader/**` PoC CLI)
-- ✅ Rebranded metrics exporter outputs to the `coinbase_trader_*` prefix (update dashboards to match)
-- ✅ Removed stale `ml_strategy` block from `config/system_config.yaml`; keep an eye
-  out for reintroductions when syncing configs across environments
+- ✅ Renamed `PerpsBot` to `TradingBot` and moved package to `src/gpt_trader/orchestration/trading_bot`.
+- ✅ Rebranded metrics exporter outputs to the `coinbase_trader_*` prefix
+- ✅ Removed explicit compatibility shims (`coinbase_provider.py`, `import_utils.py`, `schemas.py`)
+- ✅ Removed legacy path constants (`PERPS_RUNTIME_DIR`, `LEGACY_EVENT_STORE_DIR`)
+- ✅ Cleaned up tooling references (`check_complexity.py`, `check_test_hygiene.py`)
 
 ## Documentation
 
@@ -25,9 +27,8 @@ use repository-relative references.
 
 ## Tests
 
-- Active suite: `tests/unit/bot_v2/**` (1484 collected / 1483 selected / 1 deselected)
-- ✅ Legacy PoC test modules removed from the workspace; refer to the legacy
-  bundle if historical coverage is required.
+- Active suite: `tests/unit/gpt_trader/**` (1484 collected / 1483 selected / 1 deselected)
+- ✅ Legacy PoC test modules removed from the workspace.
 
 ## Bundling Legacy Modules
 
@@ -45,5 +46,5 @@ use repository-relative references.
    archived code remains easy to retrieve.
 2. Continue collapsing legacy recovery instructions into `docs/archive/legacy_recovery.md`
    and prune remaining doc references to removed modules.
-3. Audit lingering environment/database naming for legacy branding (e.g.,
+3. ✅ Audit lingering environment/database naming for legacy branding (e.g.,
    `gpt_trader` defaults) and plan follow-up remediation if necessary.

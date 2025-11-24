@@ -5,15 +5,15 @@ This is a condensed reference for AI agents working with the GPT-Trader reposito
 ## 🎯 Current State (2025-10)
 
 **Active System**: Spot trading bot with Coinbase Advanced Trade
-**Primary CLI**: `poetry run coinbase-trader` (legacy alias: `poetry run perps-bot`)
-**Architecture**: Vertical slices under `src/bot_v2/`
+**Primary CLI**: `poetry run coinbase-trader`
+**Architecture**: Vertical slices under `src/gpt_trader/`
 **Perpetuals**: ⚠️ Code exists but requires INTX access + `COINBASE_ENABLE_DERIVATIVES=1`
 
 ## 📁 Directory Navigation
 
 ### ✅ Active Areas
 ```
-src/bot_v2/                    # Main codebase (161 test files)
+src/gpt_trader/                    # Main codebase (161 test files)
 ├── cli/                       # CLI commands (run, account, orders, treasury)
 ├── orchestration/             # Coordinators and service management
 ├── features/                  # Vertical feature slices
@@ -24,7 +24,7 @@ src/bot_v2/                    # Main codebase (161 test files)
 └── validation/               # Input validation framework
 
 config/                       # Profile-specific configurations
-tests/unit/bot_v2/           # Active test suite (1484 collected / 1483 selected / 1 deselected)
+tests/unit/gpt_trader/           # Active test suite (1484 collected / 1483 selected / 1 deselected)
 docs/agents/                 # Agent-specific guides
 ```
 
@@ -96,14 +96,14 @@ DRY_RUN=1                     # Dry run mode
 ### Coordinator Pattern (New)
 ```python
 # Services are managed by coordinators
-from bot_v2.orchestration.coordinators import (
+from gpt_trader.orchestration.coordinators import (
     RuntimeCoordinator,
     ExecutionCoordinator,
     StrategyCoordinator,
     TelemetryCoordinator
 )
 
-# Access through PerpsBot instance
+# Access through TradingBot instance
 bot.runtime_coordinator
 bot.execution_coordinator
 bot.strategy_coordinator
@@ -113,19 +113,19 @@ bot.telemetry_coordinator
 ### Feature Slices
 ```python
 # Import from active slices
-from bot_v2.features.live_trade.risk import LiveRiskManager
-from bot_v2.features.brokerages.coinbase import CoinbaseClient
-from bot_v2.features.position_sizing import calculate_position_size
+from gpt_trader.features.live_trade.risk import LiveRiskManager
+from gpt_trader.features.brokerages.coinbase import CoinbaseClient
+from gpt_trader.features.position_sizing import calculate_position_size
 ```
 
 ### Configuration
 ```python
 # Load configuration
-from bot_v2.orchestration.configuration import BotConfig
+from gpt_trader.orchestration.configuration import BotConfig
 config = BotConfig.from_profile("dev")
 
 # Service registry
-from bot_v2.orchestration.service_registry import ServiceRegistry
+from gpt_trader.orchestration.service_registry import ServiceRegistry
 registry = ServiceRegistry.from_config(config)
 ```
 
@@ -133,7 +133,7 @@ registry = ServiceRegistry.from_config(config)
 
 ### Test Structure
 ```bash
-tests/unit/bot_v2/            # Active tests
+tests/unit/gpt_trader/            # Active tests
 ├── features/                 # Feature-specific tests
 ├── orchestration/            # Core orchestration tests
 ├── cli/                      # CLI tests
@@ -146,7 +146,7 @@ tests/unit/bot_v2/            # Active tests
 poetry run pytest -q
 
 # Run specific module
-poetry run pytest tests/unit/bot_v2/features/live_trade/ -q
+poetry run pytest tests/unit/gpt_trader/features/live_trade/ -q
 
 # Check test discovery
 poetry run pytest --collect-only | grep "test session starts"
@@ -176,8 +176,8 @@ data_provider = config.data_provider.default  # Contains legacy settings
 ### ✅ Do This Instead
 ```python
 # Active imports
-from bot_v2.features.live_trade.risk import LiveRiskManager
-from bot_v2.orchestration.live_execution import LiveExecutionEngine
+from gpt_trader.features.live_trade.risk import LiveRiskManager
+from gpt_trader.orchestration.live_execution import LiveExecutionEngine
 
 # Check derivatives gate explicitly
 if config.derivatives_enabled and config.intx_access:
@@ -196,9 +196,9 @@ profile_config = config.load_profile_config(config.profile)
 - [ ] Check if task involves spot or perps features
 
 ### During Development
-- [ ] Use `src/bot_v2/` imports only
+- [ ] Use `src/gpt_trader/` imports only
 - [ ] Test with dev profile first
-- [ ] Add tests to `tests/unit/bot_v2/`
+- [ ] Add tests to `tests/unit/gpt_trader/`
 - [ ] Run `poetry run pytest -q` regularly
 
 ### Before Finishing

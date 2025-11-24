@@ -15,26 +15,26 @@ This document provides per-package coverage badges and status for the GPT-Trader
 
 | Package | Coverage | Status | Description |
 |---------|----------|--------|-------------|
-| `bot_v2.config` | ![90%+](https://img.shields.io/badge/coverage-90%2B%25-brightgreen) | ✅ Excellent | Configuration management and validation |
-| `bot_v2.utilities` | ![85%+](https://img.shields.io/badge/coverage-85%2B%25-brightgreen) | ✅ Good | Shared utilities and helpers |
-| `bot_v2.persistence` | ![90%+](https://img.shields.io/badge/coverage-90%2B%25-brightgreen) | ✅ Excellent | Data persistence layer |
+| `gpt_trader.config` | ![90%+](https://img.shields.io/badge/coverage-90%2B%25-brightgreen) | ✅ Excellent | Configuration management and validation |
+| `gpt_trader.utilities` | ![85%+](https://img.shields.io/badge/coverage-85%2B%25-brightgreen) | ✅ Good | Shared utilities and helpers |
+| `gpt_trader.persistence` | ![90%+](https://img.shields.io/badge/coverage-90%2B%25-brightgreen) | ✅ Excellent | Data persistence layer |
 
 ### Features
 
 | Package | Coverage | Status | Description |
 |---------|----------|--------|-------------|
-| `bot_v2.features.analyze` | ![85%+](https://img.shields.io/badge/coverage-85%2B%25-brightgreen) | ✅ Good | Strategy analysis and signals |
-| `bot_v2.features.brokerages.coinbase` | ![80%+](https://img.shields.io/badge/coverage-80%2B%25-brightgreen) | ✅ Good | Coinbase integration and APIs |
-| `bot_v2.features.live_trade` | ![75%+](https://img.shields.io/badge/coverage-75%2B%25-brightgreen) | ✅ Good | Live trading strategies |
-| `bot_v2.features.position_sizing` | ![80%+](https://img.shields.io/badge/coverage-80%2B%25-brightgreen) | ✅ Good | Position sizing logic |
+| `gpt_trader.features.analyze` | ![85%+](https://img.shields.io/badge/coverage-85%2B%25-brightgreen) | ✅ Good | Strategy analysis and signals |
+| `gpt_trader.features.brokerages.coinbase` | ![80%+](https://img.shields.io/badge/coverage-80%2B%25-brightgreen) | ✅ Good | Coinbase integration and APIs |
+| `gpt_trader.features.live_trade` | ![75%+](https://img.shields.io/badge/coverage-75%2B%25-brightgreen) | ✅ Good | Live trading strategies |
+| `gpt_trader.features.position_sizing` | ![80%+](https://img.shields.io/badge/coverage-80%2B%25-brightgreen) | ✅ Good | Position sizing logic |
 
 ### Infrastructure
 
 | Package | Coverage | Status | Description |
 |---------|----------|--------|-------------|
-| `bot_v2.orchestration` | ![70%+](https://img.shields.io/badge/coverage-70%2B%25-yellow) | ⚠️ Needs Work | System orchestration and coordination |
-| `bot_v2.monitoring` | ![75%+](https://img.shields.io/badge/coverage-75%2B%25-brightgreen) | ✅ Good | System monitoring and alerting |
-| `bot_v2.security` | ![60%+](https://img.shields.io/badge/coverage-60%2B%25-yellow) | ⚠️ Needs Work | Security and authentication |
+| `gpt_trader.orchestration` | ![70%+](https://img.shields.io/badge/coverage-70%2B%25-yellow) | ⚠️ Needs Work | System orchestration and coordination |
+| `gpt_trader.monitoring` | ![75%+](https://img.shields.io/badge/coverage-75%2B%25-brightgreen) | ✅ Good | System monitoring and alerting |
+| `gpt_trader.security` | ![60%+](https://img.shields.io/badge/coverage-60%2B%25-yellow) | ⚠️ Needs Work | Security and authentication |
 
 ## Coverage Goals
 

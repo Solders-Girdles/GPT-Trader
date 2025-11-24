@@ -1,14 +1,14 @@
-# Development Guidelines (bot_v2)
+# Development Guidelines (gpt_trader)
 
-These guidelines cover contributions to the spot-first `bot_v2` stack. Older
+These guidelines cover contributions to the spot-first `gpt_trader` stack. Older
 rules that referenced the monolithic `src/bot` package have been archived.
 
 ## Architectural Principles
 
-- **Vertical slices**: Add features within `src/bot_v2/features/<slice>/` and
+- **Vertical slices**: Add features within `src/gpt_trader/features/<slice>/` and
   keep cross-slice coupling minimal.
 - **Explicit wiring**: Register new dependencies in
-  `bot_v2/orchestration/service_registry.py` instead of hidden imports.
+  `gpt_trader/orchestration/service_registry.py` instead of hidden imports.
 - **Configuration-first**: Extend `BotConfig` when new runtime options are
   required; expose overrides through the CLI when appropriate.
 - **Modular refactoring**: Extract large modules (>500 lines) into focused
@@ -21,12 +21,12 @@ rules that referenced the monolithic `src/bot` package have been archived.
 - Type annotations for public interfaces; prefer `typing.Protocol` for guard or
   strategy contracts.
 - Prefer `pathlib.Path` for filesystem access.
-- Use structured logging via `bot_v2/logging` helpers (call `configure_logging`)
+- Use structured logging via `gpt_trader/logging` helpers (call `configure_logging`)
   whenever a new module emits logs.
 
 ## Error Handling
 
-- Raise domain-specific exceptions from `bot_v2/features/live_trade/guard_errors`
+- Raise domain-specific exceptions from `gpt_trader/features/live_trade/guard_errors`
   or define new ones in the relevant slice.
 - Avoid swallowing exceptions; propagate up to the orchestrator so guard rails
   can respond.
@@ -34,7 +34,7 @@ rules that referenced the monolithic `src/bot` package have been archived.
 
 ## Testing
 
-- Place unit tests under `tests/unit/bot_v2/` mirroring the module path.
+- Place unit tests under `tests/unit/gpt_trader/` mirroring the module path.
 - Use fixtures for Coinbase mocks (`tests/fixtures/coinbase_*` when available).
 - Run `poetry run pytest -q` locally before submitting a pull request.
 - Add regression coverage for new guard conditions, telemetry counters, or CLI

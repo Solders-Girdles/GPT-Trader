@@ -41,16 +41,16 @@
 
 | Package | Coverage | Status | Priority |
 |---------|----------|--------|----------|
-| `bot_v2.config` | 90%+ | ✅ Excellent | Maintain |
-| `bot_v2.utilities` | 85%+ | ✅ Good | Maintain |
-| `bot_v2.persistence` | 90%+ | ✅ Excellent | Maintain |
-| `bot_v2.features.analyze` | 85%+ | ✅ Good | Maintain |
-| `bot_v2.features.brokerages.coinbase` | 80%+ | ✅ Good | Maintain |
-| `bot_v2.features.live_trade` | 75%+ | ✅ Good | Maintain |
-| `bot_v2.features.position_sizing` | 80%+ | ✅ Good | Maintain |
-| `bot_v2.monitoring` | 75%+ | ✅ Good | Maintain |
-| `bot_v2.orchestration` | 70%+ | ⚠️ Needs Work | High |
-| `bot_v2.security` | 60%+ | ⚠️ Needs Work | High |
+| `gpt_trader.config` | 90%+ | ✅ Excellent | Maintain |
+| `gpt_trader.utilities` | 85%+ | ✅ Good | Maintain |
+| `gpt_trader.persistence` | 90%+ | ✅ Excellent | Maintain |
+| `gpt_trader.features.analyze` | 85%+ | ✅ Good | Maintain |
+| `gpt_trader.features.brokerages.coinbase` | 80%+ | ✅ Good | Maintain |
+| `gpt_trader.features.live_trade` | 75%+ | ✅ Good | Maintain |
+| `gpt_trader.features.position_sizing` | 80%+ | ✅ Good | Maintain |
+| `gpt_trader.monitoring` | 75%+ | ✅ Good | Maintain |
+| `gpt_trader.orchestration` | 70%+ | ⚠️ Needs Work | High |
+| `gpt_trader.security` | 60%+ | ⚠️ Needs Work | High |
 
 ## Sprint 2025-11: Target 80% Overall Coverage 🎯
 
@@ -166,7 +166,7 @@ poetry run pytest --cov=src --cov-report=html:htmlcov
 poetry run pytest -m "not slow and not integration"
 
 # Run specific package
-poetry run pytest tests/unit/bot_v2/features/brokerages/coinbase/
+poetry run pytest tests/unit/gpt_trader/features/brokerages/coinbase/
 ```
 
 ## Success Metrics

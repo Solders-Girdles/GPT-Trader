@@ -29,7 +29,7 @@ def main() -> int:
     parser.add_argument("--live", action="store_true", help="Place live order (otherwise preview)")
     args = parser.parse_args()
 
-    from bot_v2.features.brokerages.coinbase.client import CoinbaseClient, create_cdp_jwt_auth
+    from gpt_trader.features.brokerages.coinbase.client import CoinbaseClient, create_cdp_jwt_auth
 
     # Build CDP auth from env (prod)
     import os

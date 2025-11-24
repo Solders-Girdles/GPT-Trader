@@ -61,16 +61,16 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Run Black formatter check
-        run: poetry run black --check src/bot_v2/
+        run: poetry run black --check src/gpt_trader/
 
       - name: Run Ruff linter
-        run: poetry run ruff check src/bot_v2/
+        run: poetry run ruff check src/gpt_trader/
 
       - name: Run MyPy type checker
-        run: poetry run mypy src/bot_v2/
+        run: poetry run mypy src/gpt_trader/
 
       - name: Run Bandit security checker
-        run: poetry run bandit -r src/bot_v2/ --severity-level high --confidence-level high -f json -o bandit-report.json
+        run: poetry run bandit -r src/gpt_trader/ --severity-level high --confidence-level high -f json -o bandit-report.json
 
       - name: Run pip-audit
         run: poetry run pip-audit -f json -o pip-audit-report.json --ignore-vuln GHSA-4xh5-x5gv-qwph
@@ -130,10 +130,10 @@ jobs:
           ENV: test
         run: |
           poetry run pytest -m "not slow and not performance" -q \
-            --cov=src/bot_v2/cli \
-            --cov=src/bot_v2/config \
-            --cov=src/bot_v2/features/brokerages/coinbase/client \
-            --cov=src/bot_v2/features/brokerages/coinbase/utilities \
+            --cov=src/gpt_trader/cli \
+            --cov=src/gpt_trader/config \
+            --cov=src/gpt_trader/features/brokerages/coinbase/client \
+            --cov=src/gpt_trader/features/brokerages/coinbase/utilities \
             --cov-report=term \
             --cov-report=xml \
             --cov-report=html \
@@ -207,8 +207,8 @@ jobs:
           ENV: test
         run: |
           set -euo pipefail
-          if [ -d tests/integration/bot_v2 ]; then
-            poetry run pytest tests/integration/bot_v2/ -v --tb=short
+          if [ -d tests/integration/gpt_trader ]; then
+            poetry run pytest tests/integration/gpt_trader/ -v --tb=short
           else
             echo "Integration suite not present; skipping run."
           fi
@@ -259,7 +259,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: deploy/bot_v2/docker/Dockerfile
+          file: deploy/gpt_trader/docker/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
@@ -359,7 +359,7 @@ jobs:
       - name: Blue-Green Deployment
         run: |
           # Create new deployment (green)
-          kubectl apply -f deploy/bot_v2/kubernetes/deployment.yaml \
+          kubectl apply -f deploy/gpt_trader/kubernetes/deployment.yaml \
             -n trading-system \
             --dry-run=client -o yaml | \
             sed 's/trading-bot/trading-bot-green/g' | \

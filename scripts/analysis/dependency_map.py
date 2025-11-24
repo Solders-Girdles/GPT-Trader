@@ -1,4 +1,4 @@
-"""Dependency analysis tooling for the bot_v2 codebase.
+"""Dependency analysis tooling for the gpt_trader codebase.
 
 This script parses the Python modules under ``src`` and builds an import
 graph.  It emits JSON reports describing the dependency structure, highlights
@@ -19,7 +19,7 @@ from collections.abc import Iterable, Iterator
 
 
 DEFAULT_SOURCE_ROOT = Path("src")
-DEFAULT_PACKAGE = "bot_v2"
+DEFAULT_PACKAGE = "gpt_trader"
 
 
 @dataclass

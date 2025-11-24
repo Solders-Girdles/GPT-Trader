@@ -35,25 +35,25 @@ Generate a daily report:
 
 ```bash
 # Generate today's report (text format)
-python -m bot_v2.cli report daily
+python -m gpt_trader.cli report daily
 
 # Generate report for specific date
-python -m bot_v2.cli report daily --date 2025-10-22
+python -m gpt_trader.cli report daily --date 2025-10-22
 
 # Generate JSON report
-python -m bot_v2.cli report daily --format json
+python -m gpt_trader.cli report daily --format json
 
 # Generate both formats
-python -m bot_v2.cli report daily --format both
+python -m gpt_trader.cli report daily --format both
 
 # Custom lookback period (default: 24 hours)
-python -m bot_v2.cli report daily --lookback-hours 48
+python -m gpt_trader.cli report daily --lookback-hours 48
 
 # Specify profile
-python -m bot_v2.cli report daily --profile prod
+python -m gpt_trader.cli report daily --profile prod
 
 # Print to stdout without saving
-python -m bot_v2.cli report daily --no-save
+python -m gpt_trader.cli report daily --no-save
 ```
 
 #### Report Output
@@ -246,7 +246,7 @@ The system includes several health checks that monitor critical subsystems.
 Detects orders that remain unfilled for too long.
 
 ```python
-from bot_v2.monitoring.health.checks import StaleFillsHealthCheck
+from gpt_trader.monitoring.health.checks import StaleFillsHealthCheck
 
 checker = StaleFillsHealthCheck(
     orders_store=orders_store,
@@ -265,7 +265,7 @@ result = await checker.check()
 Monitors market data freshness.
 
 ```python
-from bot_v2.monitoring.health.checks import StaleMarksHealthCheck
+from gpt_trader.monitoring.health.checks import StaleMarksHealthCheck
 
 checker = StaleMarksHealthCheck(
     market_data_service=market_data,
@@ -284,7 +284,7 @@ result = await checker.check()
 Detects connection instability and reconnect loops.
 
 ```python
-from bot_v2.monitoring.health.checks import WebSocketReconnectHealthCheck
+from gpt_trader.monitoring.health.checks import WebSocketReconnectHealthCheck
 
 checker = WebSocketReconnectHealthCheck(
     websocket_handler=ws_handler,
@@ -304,7 +304,7 @@ result = await checker.check()
 Add health checks to your monitoring system:
 
 ```python
-from bot_v2.monitoring.health.registry import HealthCheckRegistry
+from gpt_trader.monitoring.health.registry import HealthCheckRegistry
 
 registry = HealthCheckRegistry()
 
@@ -415,7 +415,7 @@ Set up a cron job to generate and email daily reports:
 crontab -e
 
 # Add daily report job (runs at 6 AM every day)
-0 6 * * * cd /path/to/GPT-Trader && python -m bot_v2.cli report daily --profile prod && cat var/data/coinbase_trader/prod/reports/daily_report_$(date +\%Y-\%m-\%d).txt | mail -s "GPT Trader Daily Report" your-email@example.com
+0 6 * * * cd /path/to/GPT-Trader && python -m gpt_trader.cli report daily --profile prod && cat var/data/coinbase_trader/prod/reports/daily_report_$(date +\%Y-\%m-\%d).txt | mail -s "GPT Trader Daily Report" your-email@example.com
 ```
 
 ### Alternative: Script with Email
@@ -432,7 +432,7 @@ DATE=$(date +%Y-%m-%d)
 cd /path/to/GPT-Trader
 
 # Generate report
-python -m bot_v2.cli report daily --profile "$PROFILE" --format both
+python -m gpt_trader.cli report daily --profile "$PROFILE" --format both
 
 # Send email with text report
 REPORT_FILE="var/data/coinbase_trader/$PROFILE/reports/daily_report_$DATE.txt"
@@ -460,7 +460,7 @@ chmod +x scripts/send_daily_report.sh
 - [ ] Configure Prometheus to scrape metrics (see above)
 - [ ] Import Grafana dashboard from `monitoring/grafana_dashboard.json`
 - [ ] Set up Prometheus alert rules in `monitoring/alert_rules.yml`
-- [ ] Test daily report generation: `python -m bot_v2.cli report daily --no-save`
+- [ ] Test daily report generation: `python -m gpt_trader.cli report daily --no-save`
 - [ ] Set up cron job for daily reports
 - [ ] Configure AlertManager for email/Slack notifications
 
@@ -508,7 +508,7 @@ For large event files, optimize report generation:
 
 ```bash
 # Reduce lookback period
-python -m bot_v2.cli report daily --lookback-hours 12
+python -m gpt_trader.cli report daily --lookback-hours 12
 
 # Or rotate events.jsonl periodically
 mv var/data/coinbase_trader/prod/events.jsonl var/data/coinbase_trader/prod/events.$(date +%Y%m%d).jsonl

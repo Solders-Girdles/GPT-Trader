@@ -10,10 +10,10 @@ from decimal import Decimal
 import numpy as np
 import pandas as pd
 
-from bot_v2.features.live_trade.strategies.perps_baseline.config import StrategyConfig
-from bot_v2.features.live_trade.strategies.perps_baseline.strategy import BaselinePerpsStrategy
-from bot_v2.features.optimize.backtest_engine import run_backtest_production
-from bot_v2.features.optimize.types_v2 import BacktestConfig
+from gpt_trader.features.live_trade.strategies.perps_baseline.config import StrategyConfig
+from gpt_trader.features.live_trade.strategies.perps_baseline.strategy import BaselinePerpsStrategy
+from gpt_trader.features.optimize.backtest_engine import run_backtest_production
+from gpt_trader.features.optimize.types_v2 import BacktestConfig
 
 
 def create_sample_data(days: int = 30) -> pd.DataFrame:

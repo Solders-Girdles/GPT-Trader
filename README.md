@@ -22,24 +22,23 @@ An ML-driven Coinbase trading system with market regime detection, built on a cl
 
 ## 🔎 What's Active Today
 
-- Coinbase trading stack (spot-first): `src/bot_v2/orchestration/perps_bot/bot.py`
+- Coinbase trading stack (spot-first): `src/gpt_trader/orchestration/trading_bot/bot.py`
   - Run spot mode: `poetry run coinbase-trader run --profile dev --dev-fast`
     - The dev profile uses the built-in `DeterministicBroker` for safety; enable real spot execution with `SPOT_FORCE_LIVE=1` plus Coinbase API keys.
     - Default universe: top-ten USD spot markets by Coinbase volume (`BTC`, `ETH`, `SOL`, `XRP`, `LTC`, `ADA`, `DOGE`, `BCH`, `AVAX`, `LINK`).
     - Shortcut: omitting `run` still works (`poetry run coinbase-trader --profile dev`) thanks to the default-command shim.
   - Optional perps (future-ready): requires INTX + `COINBASE_ENABLE_DERIVATIVES=1`
-  - Adapter: `src/bot_v2/features/brokerages/coinbase/`
+  - Adapter: `src/gpt_trader/features/brokerages/coinbase/`
   - Account telemetry: `poetry run coinbase-trader account snapshot` (fees, limits, permissions)
   - Treasury helpers: convert with `poetry run coinbase-trader treasury convert --from USD --to USDC --amount 1000`
     and move funds via `poetry run coinbase-trader treasury move --from-portfolio pf-a --to-portfolio pf-b --amount 50`
   - Order tooling: preview without executing `poetry run coinbase-trader orders preview --symbol BTC-USD --side buy --type market --quantity 0.1`
     and apply edits with `poetry run coinbase-trader orders apply-edit --order-id ORDER_ID --preview-id PREVIEW_ID`
-- Coinbase adapter: `src/bot_v2/features/brokerages/coinbase/`
-  - Tests: `pytest tests/unit/bot_v2/features/brokerages/coinbase/test_*.py -q`
-- CLI entrypoint: `src/bot_v2/cli/__init__.py`
+- Coinbase adapter: `src/gpt_trader/features/brokerages/coinbase/`
+  - Tests: `pytest tests/unit/gpt_trader/features/brokerages/coinbase/test_*.py -q`
+- CLI entrypoint: `src/gpt_trader/cli/__init__.py`
   - Commands: `run`, `account`, `orders`, `treasury` (default to `run` if omitted)
   - Invoke: `poetry run coinbase-trader <command> [options]`
-  - Legacy alias: `poetry run perps-bot …` continues to function for existing scripts; prefer `coinbase-trader` for new automation.
 
 
 ## 🚀 Quick Start
@@ -68,10 +67,10 @@ poetry run pytest -q
 ### ✅ What's Working
 - **Spot Trading**: BTC-USD, ETH-USD via Coinbase Advanced Trade with mock broker support for dev/canary
 - **Perps Support (dormant)**: Code paths remain ready; enable only with INTX credentials and derivatives flag
-- **Vertical Architecture**: Feature slices under `src/bot_v2/features/` with per-slice tests
+- **Vertical Architecture**: Feature slices under `src/gpt_trader/features/` with per-slice tests
 - **Risk Management**: Daily loss guard, liquidation buffers, volatility circuit breakers, correlation checks
 - **Operational Telemetry**: Account snapshots, cycle metrics, Prometheus exporter
-- **Test Coverage**: >73% line coverage across `bot_v2/**`; 1484 collected / 1483 selected tests (`poetry run pytest --collect-only -q`, `poetry run pytest -m "not slow and not performance" --cov=bot_v2 -q`)
+- **Test Coverage**: >73% line coverage across `gpt_trader/**`; 1484 collected / 1483 selected tests (`poetry run pytest --collect-only -q`, `poetry run pytest -m "not slow and not performance" --cov=gpt_trader -q`)
 
 ### 🚨 Production vs Sandbox
 
@@ -118,7 +117,7 @@ poetry run pytest -q
 ## 🏗️ Architecture
 
 ```
-src/bot_v2/
+src/gpt_trader/
 ├── cli/                      # CLI package (run/account/orders/treasury)
 │   ├── __init__.py           # Entry point + default-command shim
 │   └── commands/             # Subcommand implementations
@@ -133,7 +132,7 @@ src/bot_v2/
 │   ├── position_sizing/     # Kelly Criterion + confidence sizing
 │   └── strategy_tools/      # Shared strategy helpers
 └── orchestration/
-    └── perps_bot.py         # Main orchestrator
+    └── trading_bot/bot.py   # Main orchestrator
 ```
 
 ### Workspace highlights

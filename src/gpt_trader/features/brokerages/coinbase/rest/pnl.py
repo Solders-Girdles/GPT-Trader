@@ -1,0 +1,2 @@
+class PnLRestMixin:
+    pass

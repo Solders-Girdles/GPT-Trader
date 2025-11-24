@@ -13,7 +13,7 @@ from collections.abc import Iterable
 DEFAULT_DEP_REPORT = Path("dependency_report.json")
 DEFAULT_TEST_CATEGORIES = Path("test_categories.json")
 DEFAULT_SOURCE_ROOT = Path("src")
-DEFAULT_PACKAGE = "bot_v2"
+DEFAULT_PACKAGE = "gpt_trader"
 
 
 def load_json(path: Path) -> dict[str, object]:
@@ -157,7 +157,7 @@ def main() -> None:
         "--package",
         type=str,
         default=DEFAULT_PACKAGE,
-        help="Root package name for module translation (default: bot_v2)",
+        help="Root package name for module translation (default: gpt_trader)",
     )
     parser.add_argument(
         "--auto-full-module",

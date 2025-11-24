@@ -6,7 +6,7 @@ This codebase targets a **100% pass rate** on the actively maintained spot tradi
 
 ## Suite Layout
 
-- `tests/unit/bot_v2/` – orchestration, broker adapters, risk, CLI, and feature slices
+- `tests/unit/gpt_trader/` – orchestration, broker adapters, risk, CLI, and feature slices
 - `tests/unit/coinbase/` – Coinbase-specific utilities (quantisation, spec validation)
 - `tests/support/` – reserved for shared fixtures when co-located fixtures are insufficient (currently minimal)
 
@@ -37,29 +37,29 @@ poetry run pytest --collect-only
 poetry run pytest -q
 
 # Component-focused slices (optional, targeted)
-poetry run pytest tests/unit/bot_v2/features/live_trade/ -v
-poetry run pytest tests/unit/bot_v2/orchestration/ -v
-poetry run pytest tests/unit/bot_v2/features/brokerages/ -v
+poetry run pytest tests/unit/gpt_trader/features/live_trade/ -v
+poetry run pytest tests/unit/gpt_trader/orchestration/ -v
+poetry run pytest tests/unit/gpt_trader/features/brokerages/ -v
 
 # Run with coverage
-poetry run pytest --cov=bot_v2 --cov-report=term-missing tests/unit/bot_v2
+poetry run pytest --cov=gpt_trader --cov-report=term-missing tests/unit/gpt_trader
 ```
 
 ## Test Organization
 
 ### Active Test Suites
 
-#### 1. **Live Trade Tests** (`tests/unit/bot_v2/features/live_trade/`)
+#### 1. **Live Trade Tests** (`tests/unit/gpt_trader/features/live_trade/`)
 - **Purpose**: Validate live execution and risk rails for spot trading (perps code paths remain covered for INTX accounts)
 - **Coverage**: Order execution, risk management, PnL tracking
 - **Status**: Passing (tracked via CI and manual runs)
 
-#### 2. **Orchestration Tests** (`tests/unit/bot_v2/orchestration/`)
+#### 2. **Orchestration Tests** (`tests/unit/gpt_trader/orchestration/`)
 - **Purpose**: Validate bot coordination and paper trading
 - **Coverage**: Bot lifecycle, mock trading, event handling
 - **Status**: Fully passing
 
-#### 3. **Brokerage Tests** (`tests/unit/bot_v2/features/brokerages/`)
+#### 3. **Brokerage Tests** (`tests/unit/gpt_trader/features/brokerages/`)
 - **Purpose**: Validate exchange integrations
 - **Coverage**: Coinbase API, WebSocket streaming, order management
 - **Status**: Core functionality passing
@@ -80,10 +80,10 @@ available in version control history for reference.
 ### Test Structure
 
 ```python
-# Standard test structure for bot_v2
+# Standard test structure for gpt_trader
 import pytest
 from decimal import Decimal
-from bot_v2.features.live_trade.risk import LiveRiskManager
+from gpt_trader.features.live_trade.risk import LiveRiskManager
 
 class TestRiskValidation:
     """Test risk management validation."""
@@ -106,15 +106,15 @@ class TestRiskValidation:
 ### Key Testing Utilities
 
 #### Quantization Helpers
-Located in `src/bot_v2/features/quantization.py`:
+Located in `src/gpt_trader/features/quantization.py`:
 - `quantize_size()` - Round order sizes to exchange requirements
 - `quantize_price()` - Round prices to tick size
 
 #### Broker Test Doubles
-- `DeterministicBroker` (src/bot_v2/orchestration/deterministic_broker.py): Stable IBrokerage stub for unit and orchestration tests.
+- `DeterministicBroker` (src/gpt_trader/orchestration/deterministic_broker.py): Stable IBrokerage stub for unit and orchestration tests.
 - `ReduceOnlyStubBroker`: Specialized for reduce-only testing (if present).
 
-Note: Real-API and sandbox integration harnesses were removed with the legacy suites. Recreate targeted coverage inside `tests/unit/bot_v2/` when new external behavior needs validation.
+Note: Real-API and sandbox integration harnesses were removed with the legacy suites. Recreate targeted coverage inside `tests/unit/gpt_trader/` when new external behavior needs validation.
 
 ## Test Conventions
 
@@ -143,7 +143,7 @@ pre-commit run --all-files
 
 ### Issue: Import Errors
 **Solutions**:
-- Ensure you're using `bot_v2` imports, not legacy `src` paths
+- Ensure you're using `gpt_trader` imports, not legacy `src` paths
 - Use `poetry install --with security` when you need the optional auth dependencies (e.g., `pyotp`) for security tests.
 
 ### Issue: Decimal Precision
@@ -178,26 +178,26 @@ pre-commit run --all-files
 
 ```bash
 # Run with verbose output
-poetry run pytest -xvs tests/unit/bot_v2/features/live_trade/
+poetry run pytest -xvs tests/unit/gpt_trader/features/live_trade/
 
 # Run specific test
-poetry run pytest tests/unit/bot_v2/features/live_trade/test_risk_validation.py::TestBasicRiskValidation::test_leverage_validation
+poetry run pytest tests/unit/gpt_trader/features/live_trade/test_risk_validation.py::TestBasicRiskValidation::test_leverage_validation
 
 # Drop into debugger on failure
-poetry run pytest --pdb tests/unit/bot_v2/
+poetry run pytest --pdb tests/unit/gpt_trader/
 
 # Show local variables on failure
-poetry run pytest -l tests/unit/bot_v2/
+poetry run pytest -l tests/unit/gpt_trader/
 ```
 
 ## Performance Testing
 
 ```bash
 # Run with benchmark
-poetry run pytest tests/unit/bot_v2/ --benchmark-only
+poetry run pytest tests/unit/gpt_trader/ --benchmark-only
 
 # Profile slow tests
-poetry run pytest tests/unit/bot_v2/ --durations=10
+poetry run pytest tests/unit/gpt_trader/ --durations=10
 ```
 
 ## Conclusion

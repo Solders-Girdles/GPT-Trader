@@ -170,7 +170,7 @@ Use the following checks during reviews:
 
 ```bash
 # Security-focused unit tests
-poetry run pytest tests/unit/bot_v2/security -q
+poetry run pytest tests/unit/gpt_trader/security -q
 
 # Repository-wide secret scan (requires detect-secrets)
 detect-secrets scan

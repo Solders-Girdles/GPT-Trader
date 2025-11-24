@@ -6,8 +6,8 @@ from typing import Any
 from hypothesis import given, seed, settings
 from hypothesis import strategies as st
 
-from bot_v2.features.brokerages.coinbase.client.base import CoinbaseClientBase
-from bot_v2.features.brokerages.coinbase.specs import (
+from gpt_trader.features.brokerages.coinbase.client.base import CoinbaseClientBase
+from gpt_trader.features.brokerages.coinbase.specs import (
     ProductSpec,
     SpecsService,
     calculate_safe_position_size,
@@ -76,7 +76,7 @@ class _PaginationClient(CoinbaseClientBase):
         super().__init__(
             base_url="https://example.com",
             auth=None,
-            enable_keep_alive=False,
+            # Removed enable_keep_alive as it's not in CoinbaseClientBase anymore
         )
         self._pages = pages
         self._cursor_calls = 0
@@ -92,6 +92,28 @@ class _PaginationClient(CoinbaseClientBase):
         current = self._pages[index]
         next_cursor = str(index + 1) if index + 1 < len(self._pages) else None
         return {"items": current, "next_cursor": next_cursor}
+
+    def paginate(self, path: str, params: dict[str, Any], items_key: str) -> list[Any]:
+        all_items: list[Any] = []
+        next_cursor: str | None = None
+
+        while True:
+            current_params = params.copy()
+            if next_cursor:
+                current_params["cursor"] = next_cursor
+
+            # Build the path with parameters for a GET request
+            request_path = self._build_path_with_params(path, current_params)
+
+            # Call _request without the 'payload' keyword argument for GET
+            response = self._request("GET", request_path)
+
+            all_items.extend(response.get(items_key, []))
+            next_cursor = response.get("next_cursor")
+
+            if not next_cursor:
+                break
+        return all_items
 
 
 @seed(4242)

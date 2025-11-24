@@ -85,7 +85,7 @@ When confused about system state:
 ### Trap 2: "Partial Updates"
 **Example**: Testing guides mention legacy suites still active
 **Detection**: References to paths/code that no longer exist
-**Reality**: Only `src/bot_v2/` is active, legacy is bundled
+**Reality**: Only `src/gpt_trader/` is active, legacy is bundled
 
 ### Trap 3: "Authority Ambiguity"
 **Example**: Multiple docs with conflicting test counts

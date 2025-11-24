@@ -13,11 +13,11 @@ The documentation (`PROJECT_ROADMAP.md`) is up-to-date and accurately reflects r
 
 | Aspect | Status | Assessment |
 | :--- | :--- | :--- |
-| **Architecture** | 🟢 Healthy | Clean "Vertical Slice" architecture (`src/bot_v2/features`). Dependencies are well-managed with Poetry. |
+| **Architecture** | 🟢 Healthy | Clean "Vertical Slice" architecture (`src/gpt_trader/features`). Dependencies are well-managed with Poetry. |
 | **Testing** | 🟢 Strong | **3,698 tests** collected. Refactoring is in progress but the suite is comprehensive. |
 | **Documentation** | 🟢 Excellent | `PROJECT_ROADMAP.md` and `README.md` are current (Nov 18). |
 | **Functionality** | 🟡 Partial | Bot starts and runs cycles. **Critical Gap**: Strategy logic returns "HOLD" 100% of the time. |
-| **Legacy Code** | 🟢 Minimal | No obvious "dead" V1 code cluttering the main `src/bot_v2` directory. |
+| **Legacy Code** | 🟢 Minimal | No obvious "dead" V1 code cluttering the main `src/gpt_trader` directory. |
 
 ### Key Findings
 *   **Strategy Logic**: The `BaselinePerpsStrategy` relies on a simple Moving Average (MA) crossover (5/20 periods). If the bot doesn't fetch enough historical data on startup, or if the market is ranging, it will never trade. This is the "Hold" bug.

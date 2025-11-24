@@ -15,7 +15,7 @@ from typing import List
 DEPRECATED_PATTERNS = [
     "ConfigLoader(",
     "get_config_loader(",
-    "from bot_v2.config import.*get_config",  # Specific import pattern
+    "from gpt_trader.config import.*get_config",  # Specific import pattern
     "set_config_loader(",
     "with_config(",
 ]
@@ -32,9 +32,9 @@ EXCLUDE_PATHS = {
     ".md:",
     "docs/",  # Documentation files
     "scripts/ci/check_config_deprecated_usage.py",  # This script itself
-    "src/bot_v2/features/brokerages/coinbase/client/base.py",  # Intentional fallback for test compatibility
-    "src/bot_v2/orchestration/perps_bot_builder.py",  # Has legit with_config method
-    "src/bot_v2/orchestration/perps_bot.py",  # Has legit _align_registry_with_config method
+    "src/gpt_trader/features/brokerages/coinbase/client/base.py",  # Intentional fallback for test compatibility
+    "src/gpt_trader/orchestration/perps_bot_builder.py",  # Has legit with_config method
+    "src/gpt_trader/orchestration/perps_bot.py",  # Has legit _align_registry_with_config method
 }
 
 
@@ -95,7 +95,7 @@ def main() -> int:
     if not findings:
         print("✅ No deprecated ConfigLoader usage found!")
         print(
-            "✅ All configuration should use ConfigManager from bot_v2.orchestration.configuration.manager"
+            "✅ All configuration should use ConfigManager from gpt_trader.orchestration.configuration.manager"
         )
         return 0
 
@@ -107,7 +107,7 @@ def main() -> int:
 
     print()
     print("Please replace deprecated ConfigLoader usage with ConfigManager:")
-    print("  - Use ConfigManager from bot_v2.orchestration.configuration.manager")
+    print("  - Use ConfigManager from gpt_trader.orchestration.configuration.manager")
     print("  - Use BotConfig.from_profile() instead of get_config()")
     print("  - See tests/integration/test_config_migration.py for examples")
 

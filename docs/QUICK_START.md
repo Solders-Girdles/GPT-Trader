@@ -27,11 +27,11 @@ Copy the templates to keep credentials out of version control:
 
 ```bash
 cp config/environments/.env.template .env
-cp deploy/bot_v2/docker/.env.example deploy/bot_v2/docker/.env
+cp deploy/gpt_trader/docker/.env.example deploy/gpt_trader/docker/.env
 ```
 
 The root `.env` seeds runtime configuration. The base Compose stack reads
-`deploy/bot_v2/docker/.env`; only the bot and Grafana credentials are required for the default
+`deploy/gpt_trader/docker/.env`; only the bot and Grafana credentials are required for the default
 lightweight stack. Database, Redis, RabbitMQ, and Vault secrets are optional unless you load the
 infrastructure override.
 
@@ -46,8 +46,8 @@ make dev-up
 Need metrics and tracing? Opt into the observability profile when required:
 
 ```bash
-docker compose --project-directory deploy/bot_v2/docker \
-  -f deploy/bot_v2/docker/docker-compose.yaml \
+docker compose --project-directory deploy/gpt_trader/docker \
+  -f deploy/gpt_trader/docker/docker-compose.yaml \
 --profile observability up -d
 ```
 
@@ -55,13 +55,13 @@ Want the retired Postgres/Redis/RabbitMQ/Vault helpers? Layer the override and e
 `infra` profile:
 
 ```bash
-docker compose --project-directory deploy/bot_v2/docker \
-  -f deploy/bot_v2/docker/docker-compose.yaml \
-  -f deploy/bot_v2/docker/docker-compose.infrastructure.yaml \
+docker compose --project-directory deploy/gpt_trader/docker \
+  -f deploy/gpt_trader/docker/docker-compose.yaml \
+  -f deploy/gpt_trader/docker/docker-compose.infrastructure.yaml \
   --profile infra up -d
 ```
 
-> `make dev-up` automatically passes `deploy/bot_v2/docker/.env`, so the stack
+> `make dev-up` automatically passes `deploy/gpt_trader/docker/.env`, so the stack
 > runs with the secrets you just populated. Override-only variables are ignored unless you opt in.
 
 ## 4. Smoke-Test the Dev Profile
@@ -76,8 +76,6 @@ What to expect:
 - Orders are routed through the built-in `DeterministicBroker`, so no live trades are
   placed.
 - Metrics land under `var/data/coinbase_trader/dev/` for inspection.
-
-> Legacy alias: `poetry run perps-bot …` continues to work for existing automation, but new workflows should prefer `coinbase-trader`.
 
 ## 5. Enable Real Spot Trading (optional)
 

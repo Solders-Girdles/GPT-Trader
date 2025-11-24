@@ -16,13 +16,8 @@ from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_METRICS = REPO_ROOT / "var" / "data" / "coinbase_trader" / "prod" / "metrics.json"
-LEGACY_DEFAULT_METRICS = REPO_ROOT / "var" / "data" / "perps_bot" / "prod" / "metrics.json"
 DEFAULT_EVENTS = REPO_ROOT / "var" / "data" / "coinbase_trader" / "prod" / "events.jsonl"
-LEGACY_DEFAULT_EVENTS = REPO_ROOT / "var" / "data" / "perps_bot" / "prod" / "events.jsonl"
-METRIC_PREFIX = os.getenv(
-    "COINBASE_TRADER_METRIC_PREFIX",
-    os.getenv("PERPS_BOT_METRIC_PREFIX", "coinbase_trader"),
-)
+METRIC_PREFIX = os.getenv("COINBASE_TRADER_METRIC_PREFIX", "coinbase_trader")
 
 from flask import Flask, Response, jsonify
 
@@ -295,16 +290,7 @@ def main():
     args = parser.parse_args()
 
     metrics_path = Path(args.metrics_file)
-    if args.metrics_file == str(DEFAULT_METRICS) and not metrics_path.exists():
-        legacy_metrics = LEGACY_DEFAULT_METRICS
-        if legacy_metrics.exists():
-            metrics_path = legacy_metrics
-
     events_path = Path(args.events_file)
-    if args.events_file == str(DEFAULT_EVENTS) and not events_path.exists():
-        legacy_events = LEGACY_DEFAULT_EVENTS
-        if legacy_events.exists():
-            events_path = legacy_events
 
     app = create_app(metrics_path, events_path)
     app.run(host=args.host, port=args.port)

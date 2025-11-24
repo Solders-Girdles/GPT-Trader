@@ -306,7 +306,7 @@ Use sandbox keys for Accounts/Orders and read-only production keys for items the
 Record HTTP status, notable response deltas, and any schema shifts in the verification log.
 
 ### 3. WebSocket Pulse
-- Run `poetry run pytest tests/unit/bot_v2/features/brokerages/coinbase/test_coinbase_websocket.py -q` to confirm client contracts.
+- Run `poetry run pytest tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_websocket.py -q` to confirm client contracts.
 - Perform a manual connect for ticker + user channels (e.g., `scripts/perps_dashboard.py --profile canary --ws-only`) and capture the first payload + any subscription warnings.
 
 ### 4. Documentation Cross-Checks

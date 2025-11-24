@@ -99,15 +99,15 @@ TOTAL                                                     4401   1851   1164    
 ### Files Added/Modified
 
 #### New Files
-- `tests/unit/bot_v2/orchestration/conftest.py` (102 lines)
-- `tests/unit/bot_v2/orchestration/helpers.py` (236 lines)
-- `tests/unit/bot_v2/orchestration/test_strategy_coordinator.py` (467 lines)
-- `tests/unit/bot_v2/orchestration/test_coordinator_integration.py` (378 lines)
+- `tests/unit/gpt_trader/orchestration/conftest.py` (102 lines)
+- `tests/unit/gpt_trader/orchestration/helpers.py` (236 lines)
+- `tests/unit/gpt_trader/orchestration/test_strategy_coordinator.py` (467 lines)
+- `tests/unit/gpt_trader/orchestration/test_coordinator_integration.py` (378 lines)
 
 #### Enhanced Files
-- `tests/unit/bot_v2/orchestration/test_execution_coordinator.py` (+200 lines)
-- `tests/unit/bot_v2/orchestration/test_runtime_coordinator.py` (+150 lines)
-- `tests/unit/bot_v2/orchestration/test_telemetry_coordinator.py` (+200 lines)
+- `tests/unit/gpt_trader/orchestration/test_execution_coordinator.py` (+200 lines)
+- `tests/unit/gpt_trader/orchestration/test_runtime_coordinator.py` (+150 lines)
+- `tests/unit/gpt_trader/orchestration/test_telemetry_coordinator.py` (+200 lines)
 
 ### Test Execution
 - **Total tests**: 68 tests passing

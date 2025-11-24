@@ -1,4 +1,4 @@
-# Risk Integration Guide (bot_v2)
+# Risk Integration Guide (gpt_trader)
 
 The spot-first `coinbase-trader` architecture layers risk controls throughout the
 execution stack. This guide highlights the active components and how they work
@@ -16,11 +16,11 @@ together. Legacy material describing `src/bot/risk/*` has been archived.
 
 ## Execution Path
 
-1. `bot_v2/cli/__init__.py` builds a `BotConfig` with risk-specific overrides via the `run` command.
-2. `bot_v2/orchestration/bootstrap.py` seeds a `ServiceRegistry` for the active
-   profile and passes it into `PerpsBot`.
-3. `bot_v2/orchestration/perps_bot.py` constructs the
-   `LiveExecutionEngine` (defined in `bot_v2/orchestration/live_execution.py`),
+1. `gpt_trader/cli/__init__.py` builds a `BotConfig` with risk-specific overrides via the `run` command.
+2. `gpt_trader/orchestration/bootstrap.py` seeds a `ServiceRegistry` for the active
+   profile and passes it into `TradingBot`.
+3. `gpt_trader/orchestration/trading_bot/bot.py` constructs the
+   `LiveExecutionEngine` (defined in `gpt_trader/orchestration/live_execution.py`),
    which wires:
    - `RiskEngine` (`features/live_trade/risk.py`)
    - Guard classes under `features/live_trade/guards/`
@@ -59,15 +59,15 @@ instances defined in `features/live_trade/guard_errors.py`.
 
 - Inject a custom `LiveRiskManager` into the `ServiceRegistry` before calling
   `build_bot()` when you need bespoke guard behaviour.
-- Extend `PerpsBot._init_risk_manager()` for one-off experiments while we build
+- Extend `TradingBot._init_risk_manager()` for one-off experiments while we build
   the dedicated guard bootstrapper.
 - When derivatives become available, supply a derivative-specific risk config
   file; guard thresholds should account for funding rates and leverage.
 
 ## Testing
 
-- See `tests/unit/bot_v2/live_trade/test_risk_guards.py` (if present) or the
-  guard-specific tests under `tests/unit/bot_v2/live_trade/` for regression
+- See `tests/unit/gpt_trader/live_trade/test_risk_guards.py` (if present) or the
+  guard-specific tests under `tests/unit/gpt_trader/live_trade/` for regression
   coverage.
 - Add targeted tests whenever guard logic changes to maintain deterministic
   behaviour.

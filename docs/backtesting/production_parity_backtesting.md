@@ -21,10 +21,10 @@ The production-parity backtesting system ensures that backtests use the **exact 
 ```python
 from decimal import Decimal
 import pandas as pd
-from bot_v2.features.live_trade.strategies.perps_baseline.config import StrategyConfig
-from bot_v2.features.live_trade.strategies.perps_baseline.strategy import BaselinePerpsStrategy
-from bot_v2.features.optimize.backtest_engine import run_backtest_production
-from bot_v2.features.optimize.types_v2 import BacktestConfig
+from gpt_trader.features.live_trade.strategies.perps_baseline.config import StrategyConfig
+from gpt_trader.features.live_trade.strategies.perps_baseline.strategy import BaselinePerpsStrategy
+from gpt_trader.features.optimize.backtest_engine import run_backtest_production
+from gpt_trader.features.optimize.types_v2 import BacktestConfig
 
 # Load historical data
 data = pd.read_csv("historical_btc.csv")  # Must have 'close' column
@@ -131,7 +131,7 @@ Example: `backtesting/decision_logs/2025-01-22/bt_20250122_143052_BTC-USD.json`
 
 ```python
 from pathlib import Path
-from bot_v2.features.optimize.decision_logger import compare_decision_logs
+from gpt_trader.features.optimize.decision_logger import compare_decision_logs
 
 # Compare decision logs
 comparison = compare_decision_logs(
@@ -164,8 +164,8 @@ for mismatch in comparison['mismatches']:
 ### Custom Portfolio Simulation
 
 ```python
-from bot_v2.features.optimize.backtest_engine import BacktestEngine
-from bot_v2.features.optimize.types_v2 import BacktestConfig
+from gpt_trader.features.optimize.backtest_engine import BacktestEngine
+from gpt_trader.features.optimize.types_v2 import BacktestConfig
 
 # Create engine with custom config
 config = BacktestConfig(
@@ -187,7 +187,7 @@ print(f"Trade Count: {stats['trade_count']}")
 ### Loading and Analyzing Logs
 
 ```python
-from bot_v2.features.optimize.decision_logger import load_decision_log
+from gpt_trader.features.optimize.decision_logger import load_decision_log
 from pathlib import Path
 
 # Load a saved backtest
@@ -250,7 +250,7 @@ result = run_backtest_production(
 
 ```python
 # In your live trading loop, add decision logging:
-from bot_v2.features.optimize.decision_logger import DecisionLogger
+from gpt_trader.features.optimize.decision_logger import DecisionLogger
 
 logger = DecisionLogger(enabled=True, base_directory="live_trading/decision_logs")
 

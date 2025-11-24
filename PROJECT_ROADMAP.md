@@ -67,7 +67,7 @@ GPT-Trader is a production-ready Coinbase **spot trading bot** with future-ready
 **Tasks**:
 1. Split `test_execution_coordinator.py` into 3 files per [TEST_REFACTORING_PLAN.md](docs/archive/planning/TEST_REFACTORING_PLAN.md)
 2. Verify all 39 tests pass individually and together
-3. Run parallel execution test: `pytest tests/unit/bot_v2/orchestration/ -n auto`
+3. Run parallel execution test: `pytest tests/unit/gpt_trader/orchestration/ -n auto`
 4. Document completion and archive planning docs
 
 **Success Criteria**:

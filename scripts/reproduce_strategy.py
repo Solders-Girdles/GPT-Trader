@@ -9,9 +9,9 @@ from unittest.mock import MagicMock
 # Add src to path
 sys.path.append("src")
 
-from bot_v2.features.live_trade.strategies.perps_baseline.strategy import BaselinePerpsStrategy
-from bot_v2.features.live_trade.strategies.perps_baseline.config import StrategyConfig
-from bot_v2.features.brokerages.core.interfaces import Product, MarketType
+from gpt_trader.features.live_trade.strategies.perps_baseline.strategy import BaselinePerpsStrategy
+from gpt_trader.features.live_trade.strategies.perps_baseline.config import StrategyConfig
+from gpt_trader.features.brokerages.core.interfaces import Product, MarketType
 
 
 def run_repro():

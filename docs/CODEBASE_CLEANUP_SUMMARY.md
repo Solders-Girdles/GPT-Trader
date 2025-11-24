@@ -16,15 +16,15 @@ The cleanup focused on key areas:
 
 ## Key Improvements
 
-### 0. Orchestration Facade Decomposition (`src/bot_v2/orchestration/`)
+### 0. Orchestration Facade Decomposition (`src/gpt_trader/orchestration/`)
 
 #### Highlights:
 - Introduced dedicated coordinators: `LifecycleManager`, `StrategyCoordinator`, and `TelemetryCoordinator` to isolate startup/shutdown, trading-loop orchestration, and telemetry/stream management.
-- Slimmed `PerpsBot` into a thin facade that now delegates to collaborators instantiated during construction, eliminating bespoke `_construct_services` and `_init_*` helpers.
-- Enhanced telemetry tests with `tests/unit/bot_v2/orchestration/test_telemetry_coordinator.py` and protected legacy shim behaviour via `tests/unit/bot_v2/features/live_trade/test_live_trade_shim.py`.
-- Added focused coverage for `calculate_position_size` flows (`tests/unit/bot_v2/features/position_sizing/test_position_sizing.py`) to close a previously untested slice.
+- Slimmed `TradingBot` into a thin facade that now delegates to collaborators instantiated during construction, eliminating bespoke `_construct_services` and `_init_*` helpers.
+- Enhanced telemetry tests with `tests/unit/gpt_trader/orchestration/test_telemetry_coordinator.py` and protected legacy shim behaviour via `tests/unit/gpt_trader/features/live_trade/test_live_trade_shim.py`.
+- Added focused coverage for `calculate_position_size` flows (`tests/unit/gpt_trader/features/position_sizing/test_position_sizing.py`) to close a previously untested slice.
 
-### 1. Configuration Management (`src/bot_v2/config/`)
+### 1. Configuration Management (`src/gpt_trader/config/`)
 
 #### New Files:
 - **`config_utilities.py`** - Centralized configuration parsing utilities
@@ -51,7 +51,7 @@ config = load_config_with_overrides(
 config = get_default_config_for_profile(Profile.PAPER_TRADE)
 ```
 
-### 2. Import Organization and Optimization (`src/bot_v2/utilities/import_utils.py`)
+### 2. Import Organization and Optimization (`src/gpt_trader/utilities/import_utils.py`)
 
 #### New Features:
 - **Lazy imports**: Defer heavy imports until first use
@@ -81,7 +81,7 @@ with ImportProfiler() as profiler:
 profiler.print_report()
 ```
 
-### 3. Async/Sync Boundary Management (`src/bot_v2/utilities/async_utils.py`)
+### 3. Async/Sync Boundary Management (`src/gpt_trader/utilities/async_utils.py`)
 
 #### New Features:
 - **Async-to-sync wrappers**: Call async code from sync contexts
@@ -120,7 +120,7 @@ async def expensive_operation():
     return await compute_result()
 ```
 
-### 4. Performance Monitoring (`src/bot_v2/utilities/performance_monitoring.py`)
+### 4. Performance Monitoring (`src/gpt_trader/utilities/performance_monitoring.py`)
 
 #### New Features:
 - **Metrics collection**: Comprehensive performance metrics
@@ -155,7 +155,7 @@ reporter = PerformanceReporting()
 reporter.log_report()
 ```
 
-### 5. Health Check System (`src/bot_v2/monitoring/health_checks.py`)
+### 5. Health Check System (`src/gpt_trader/monitoring/health_checks.py`)
 
 #### New Features:
 - **Modular health checks**: Pluggable health check system
@@ -190,10 +190,10 @@ endpoint = HealthCheckEndpoint()
 health_status = await endpoint.get_health_status()
 ```
 
-### 2. Builder Pattern Implementation (`src/bot_v2/orchestration/`)
+### 2. Builder Pattern Implementation (`src/gpt_trader/orchestration/`)
 
 #### New Files:
-- **`coinbase_trader_builder.py`** - Builder pattern for PerpsBot construction
+- **`coinbase_trader_builder.py`** - Builder pattern for TradingBot construction
 
 #### Benefits:
 - **Simplified construction**: Complex object initialization made readable
@@ -217,7 +217,7 @@ bot = (
 ### 3. Structured Test Fixtures (`tests/fixtures/`)
 
 #### New Files:
-- **`src/bot_v2/features/brokerages/fixtures/mock_products.yaml`** - Structured product data for testing
+- **`src/gpt_trader/features/brokerages/fixtures/mock_products.yaml`** - Structured product data for testing
 - **`product_factory.py`** - Factory for creating test data from fixtures
 
 #### Benefits:
@@ -239,7 +239,7 @@ broker = create_test_broker(
 micro_btc = factory.create_edge_case_product("MICRO-BTC-PERP")
 ```
 
-### 4. Standardized Error Handling (`src/bot_v2/errors/`)
+### 4. Standardized Error Handling (`src/gpt_trader/errors/`)
 
 #### New Files:
 - **`error_patterns.py`** - Standardized error handling patterns
@@ -270,7 +270,7 @@ def fetch_market_data():
     pass
 ```
 
-### 5. Structured Logging (`src/bot_v2/utilities/`)
+### 5. Structured Logging (`src/gpt_trader/utilities/`)
 
 #### New Files:
 - **`logging_patterns.py`** - Standardized logging patterns
@@ -299,12 +299,12 @@ log_position_update("BTC-PERP", Decimal("0.1"), unrealized_pnl=Decimal("100"))
 
 ### 6. Updated Components
 
-#### DeterministicBroker (`src/bot_v2/orchestration/deterministic_broker.py`)
+#### DeterministicBroker (`src/gpt_trader/orchestration/deterministic_broker.py`)
 - **Fixture integration**: Loads product data from structured fixtures
 - **Fallback behavior**: Graceful fallback to hardcoded defaults if fixtures unavailable
 - **Logging**: Improved logging for debugging test scenarios
 
-#### PerpsBot Constructor (`src/bot_v2/orchestration/perps_bot.py`)
+#### TradingBot Constructor (`src/gpt_trader/orchestration/trading_bot/bot.py`)
 - **Simplified**: Cleaner constructor with better separation of concerns
 - **Validation**: Improved input validation with meaningful errors
 - **Documentation**: Enhanced docstrings and type hints
@@ -403,7 +403,7 @@ log_position_update("BTC-PERP", Decimal("0.1"), unrealized_pnl=Decimal("100"))
 
 ## Additional Cleanup Enhancements
 
-### 7. Console Logging Standardization (`src/bot_v2/utilities/console_logging.py`)
+### 7. Console Logging Standardization (`src/gpt_trader/utilities/console_logging.py`)
 
 #### New Features:
 - **ConsoleLogger class**: Provides console output utilities that complement structured logging
@@ -468,21 +468,22 @@ console_key_value("Account Equity", "$100,000", indent=1)
 ## Current Status Summary
 
 ### ✅ Completed Improvements
-1. **Configuration Management**: Centralized utilities with validation
-2. **Import Organization**: Lazy loading and optimization utilities
-3. **Async/Sync Boundaries**: Proper async utilities and wrappers
-4. **Performance Monitoring**: Comprehensive metrics and monitoring
-5. **Health Checks**: Modular health check system
-6. **Error Handling**: Standardized error patterns
-7. **Logging**: Structured logging with console integration
-8. **Test Fixtures**: Structured test data factories
-9. **Builder Pattern**: Clean object construction
+1.  **Configuration Management**: Centralized utilities with validation
+2.  **Import Organization**: Lazy loading and optimization utilities
+3.  **Async/Sync Boundaries**: Proper async utilities and wrappers
+4.  **Performance Monitoring**: Comprehensive metrics and monitoring
+5.  **Health Checks**: Modular health check system
+6.  **Error Handling**: Standardized error patterns
+7.  **Logging**: Structured logging with console integration
+8.  **Test Fixtures**: Structured test data factories
+9.  **Builder Pattern**: Clean object construction
 10. **Trading Operations**: Simplified trading utilities
 11. **Console Logging**: Standardized console output
 12. **Testing Coverage**: Comprehensive test suite
 13. **Import Optimization**: Applied lazy imports and optimization to key modules
 14. **Async/Sync Standardization**: Applied operation logging and async utilities
 15. **Test Utility Consolidation**: Complete test coverage with property-based testing
+16. **Legacy Migration**: Full removal of v1 shims, legacy config, and dual logging paths (See [Migration Completion Report](MIGRATION_COMPLETION_REPORT.md)).
 
 ### 🔄 In Progress
 None - All cleanup initiatives completed successfully!
@@ -497,14 +498,14 @@ None - All cleanup initiatives completed successfully!
 ### 1. Logging Standards
 ```python
 # Use console logging for user-facing output
-from bot_v2.utilities import console_order, console_error, console_data
+from gpt_trader.utilities import console_order, console_error, console_data
 
 console_order("Order placed", order_id=order.id, symbol=symbol)
 console_error("Order failed", error=str(error), order_id=order.id)
 console_data("Data received", records=len(data), symbol=symbol)
 
 # Use structured logging for system events
-from bot_v2.utilities.logging_patterns import log_operation
+from gpt_trader.utilities.logging_patterns import log_operation
 
 with log_operation("process_data", logger, symbol=symbol):
     # Data processing logic
@@ -514,7 +515,7 @@ with log_operation("process_data", logger, symbol=symbol):
 ### 2. Error Handling Standards
 ```python
 # Use standardized error patterns
-from bot_v2.errors.error_patterns import handle_brokerage_errors
+from gpt_trader.errors.error_patterns import handle_brokerage_errors
 
 @handle_brokerage_errors("place_order")
 def place_order(symbol, side, quantity):

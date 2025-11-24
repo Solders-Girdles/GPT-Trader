@@ -540,13 +540,13 @@ class ChaosEngine:
 ## Integration Example
 
 ```python
-from bot_v2.backtesting import (
+from gpt_trader.backtesting import (
     SimulatedBroker,
     HistoricalDataManager,
     ClockedBarRunner,
     GoldenPathValidator,
 )
-from bot_v2.orchestration.coordinators import StrategyCoordinator
+from gpt_trader.orchestration.coordinators import StrategyCoordinator
 
 async def run_backtest():
     # 1. Initialize historical data

@@ -2,13 +2,13 @@
 """
 Production preflight entry point.
 
-Delegates to the modular bot_v2.preflight package which encapsulates the
+Delegates to the modular gpt_trader.preflight package which encapsulates the
 individual validation steps and CLI orchestration.
 """
 
 from __future__ import annotations
 
-from bot_v2.preflight import PreflightCheck, run_preflight_cli
+from gpt_trader.preflight import PreflightCheck, run_preflight_cli
 
 
 def main() -> int:

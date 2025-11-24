@@ -1,1 +1,1 @@
-"""Unit tests package for bot_v2."""
+"""Unit tests package for gpt_trader."""

@@ -1,1 +1,0 @@
-"""System monitor module tests."""

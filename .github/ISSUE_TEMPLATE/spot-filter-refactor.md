@@ -8,7 +8,7 @@ labels: refactoring, code-quality, strategy, enhancement
 Refactor `_apply_spot_filters()` into composable filter strategies to eliminate repeated window/multiplier boilerplate and make future filter rules easier to add.
 
 ## Current State
-**Location:** `src/bot_v2/orchestration/strategy_orchestrator.py:282-391`
+**Location:** `src/gpt_trader/orchestration/strategy_orchestrator.py:282-391`
 
 Current implementation has:
 - Repeated config extraction pattern (`rules.get("volume_filter")`, `rules.get("momentum_filter")`, etc.)
@@ -61,7 +61,7 @@ async def _apply_spot_filters(self, decision, symbol, rules, position_state):
 - [ ] All filters return appropriate `Decision(HOLD, reason=...)` when blocking
 
 ### Testing Requirements
-- [ ] Create `tests/unit/bot_v2/orchestration/test_strategy_filters.py`
+- [ ] Create `tests/unit/gpt_trader/orchestration/test_strategy_filters.py`
 - [ ] Test each filter in isolation with synthetic candle data
 - [ ] Verify volume filter with various multiplier values
 - [ ] Verify momentum filter with RSI edge cases (exactly at threshold, just above/below)
@@ -102,10 +102,10 @@ async def _apply_spot_filters(self, decision, symbol, rules, position_state):
 ## Files to Change
 
 **Modified:**
-- `src/bot_v2/orchestration/strategy_orchestrator.py` - extract filters, add registry
+- `src/gpt_trader/orchestration/strategy_orchestrator.py` - extract filters, add registry
 
 **Created:**
-- `tests/unit/bot_v2/orchestration/test_strategy_filters.py` - comprehensive filter tests
+- `tests/unit/gpt_trader/orchestration/test_strategy_filters.py` - comprehensive filter tests
 
 ## Related Work
 
@@ -116,7 +116,7 @@ This cleanup was identified during the broader code quality improvements tracked
 
 ## References
 
-**Current implementation:** `src/bot_v2/orchestration/strategy_orchestrator.py:282-391`
+**Current implementation:** `src/gpt_trader/orchestration/strategy_orchestrator.py:282-391`
 
 **Filter logic locations:**
 - Volume filter: lines 323-334

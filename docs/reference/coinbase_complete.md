@@ -12,8 +12,8 @@ documentation-venues:
 consolidates:
   - docs/reference/coinbase.md (retired)
   - docs/reference/coinbase_troubleshooting.md
-  - src/bot_v2/features/brokerages/coinbase/README.md
-  - src/bot_v2/features/brokerages/coinbase/COMPATIBILITY.md
+  - src/gpt_trader/features/brokerages/coinbase/README.md
+  - src/gpt_trader/features/brokerages/coinbase/COMPATIBILITY.md
   - 10+ archived Coinbase documentation files
 ---
 
@@ -152,7 +152,7 @@ Channel payloads, authentication recipes, and rate limits are documented in deta
 Environment toggles to safely enable streaming in production:
 
 ```bash
-# Enable background streaming in PerpsBot (CANARY/PROD only)
+# Enable background streaming in TradingBot (CANARY/PROD only)
 PERPS_ENABLE_STREAMING=1
 
 # Attach JWT for WS user channel (when using CDP/JWT auth)
@@ -349,9 +349,9 @@ export RISK_KILL_SWITCH_ENABLED=1 && pkill -f coinbase-trader
 
 ### Key Files
 
-- Main entry: `src/bot_v2/cli/__init__.py`
-- Coinbase client: `src/bot_v2/features/brokerages/coinbase/client.py`
-- WebSocket handler: `src/bot_v2/features/brokerages/coinbase/ws.py`
+- Main entry: `src/gpt_trader/cli/__init__.py`
+- Coinbase client: `src/gpt_trader/features/brokerages/coinbase/client.py`
+- WebSocket handler: `src/gpt_trader/features/brokerages/coinbase/ws.py`
 - Configuration: `config/environments/.env.template`
 
 ---

@@ -14,30 +14,30 @@ DEFAULT_REPORT = Path("dependency_report.json")
 
 TARGET_CATEGORIES = {
     "orchestration": {
-        "bot_v2.orchestration",
-        "bot_v2.cli",
+        "gpt_trader.orchestration",
+        "gpt_trader.cli",
     },
     "execution_helper": {
-        "bot_v2.orchestration.live_execution",
-        "bot_v2.features.live_trade.advanced_execution",
-        "bot_v2.features.live_trade.order_policy",
+        "gpt_trader.orchestration.live_execution",
+        "gpt_trader.features.live_trade.advanced_execution",
+        "gpt_trader.features.live_trade.order_policy",
     },
     "strategy_helper": {
-        "bot_v2.features.live_trade.strategies",
-        "bot_v2.features.live_trade.risk",
-        "bot_v2.features.strategy_tools",
+        "gpt_trader.features.live_trade.strategies",
+        "gpt_trader.features.live_trade.risk",
+        "gpt_trader.features.strategy_tools",
     },
     "pipeline_stage": {
-        "bot_v2.orchestration.perps_bot",
+        "gpt_trader.orchestration.trading_bot",
     },
     "integration": {
-        "bot_v2.features.brokerages",
-        "bot_v2.persistence",
-        "bot_v2.data_providers",
+        "gpt_trader.features.brokerages",
+        "gpt_trader.persistence",
+        "gpt_trader.data_providers",
     },
     "smoke": {
-        "bot_v2.scripts",
-        "bot_v2.monitoring",
+        "gpt_trader.scripts",
+        "gpt_trader.monitoring",
     },
 }
 

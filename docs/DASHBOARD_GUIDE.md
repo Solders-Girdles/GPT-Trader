@@ -13,7 +13,7 @@ retired.
 - `poetry run coinbase-trader account snapshot` prints balances, fee tiers, and
   permissions without executing the trading loop.
 - The risk manager records periodic snapshots via
-  `bot_v2/features/live_trade/risk_metrics.py`; these feed dashboards and the
+  `gpt_trader/features/live_trade/risk_metrics.py`; these feed dashboards and the
   monitoring APIs.
 - Application logs stream to stdout. Ship them to your logging stack (e.g.,
   Loki, Splunk, CloudWatch) for long-term retention and alerting.
@@ -48,16 +48,16 @@ poetry run python scripts/perps_dashboard.py \
 - Supports local terminal output and optional curses-based rendering.
 - Displays runtime guard statuses (healthy/warning/breached), recent alerts, and
   equity/notional snapshots.
-- Pulls resource telemetry from `bot_v2/monitoring/system/` collectors when
+- Pulls resource telemetry from `gpt_trader/monitoring/system/` collectors when
   available.
 
 ## Runtime Monitoring Components
 
-- **Runtime guards** (`bot_v2/monitoring/runtime_guards.py`): support comparison
+- **Runtime guards** (`gpt_trader/monitoring/runtime_guards.py`): support comparison
   modes (`gt`, `lt`, `abs_gt`, etc.), warning bands, and contextual messaging.
-- **Guard alert dispatcher** (`bot_v2/features/live_trade/guard_errors.py`):
+- **Guard alert dispatcher** (`gpt_trader/features/live_trade/guard_errors.py`):
   wraps `AlertManager` to emit guard failures without the archived alert stack.
-- **Validation framework** (`bot_v2/validation`): declarative validators with
+- **Validation framework** (`gpt_trader/validation`): declarative validators with
   inline predicate support keep inputs clean before they reach monitoring
   surfaces.
 

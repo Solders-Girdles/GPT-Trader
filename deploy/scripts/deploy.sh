@@ -9,7 +9,7 @@ NC='[0m'
 
 DEPLOY_ENV="${1:-production}"
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-COMPOSE_DIR="$PROJECT_ROOT/deploy/bot_v2/docker"
+COMPOSE_DIR="$PROJECT_ROOT/deploy/gpt_trader/docker"
 COMPOSE_FILE="$COMPOSE_DIR/docker-compose.yaml"
 COMPOSE_ENV_FILE="$COMPOSE_DIR/.env"
 ENV_TEMPLATE="$PROJECT_ROOT/config/environments/.env.template"
@@ -33,7 +33,7 @@ compose() {
 
 print_header() {
     echo -e "${GREEN}========================================${NC}"
-    echo -e "${GREEN}GPT-Trader bot_v2 Deployment${NC}"
+    echo -e "${GREEN}GPT-Trader gpt_trader Deployment${NC}"
     echo -e "${GREEN}========================================${NC}"
     echo "Environment: $DEPLOY_ENV"
     echo "Project Root: $PROJECT_ROOT"
@@ -56,7 +56,7 @@ check_prerequisites() {
     fi
 
     if [[ ! -d "$COMPOSE_DIR" || ! -f "$COMPOSE_FILE" ]]; then
-        echo -e "${RED}bot_v2 deployment assets not found (${COMPOSE_FILE})${NC}"
+        echo -e "${RED}gpt_trader deployment assets not found (${COMPOSE_FILE})${NC}"
         exit 1
     fi
 

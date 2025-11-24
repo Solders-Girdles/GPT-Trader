@@ -1,0 +1,159 @@
+"""Centralized logging setup for GPT-Trader V2."""
+
+from __future__ import annotations
+
+import logging
+import logging.handlers
+from pathlib import Path
+from typing import TYPE_CHECKING
+
+from gpt_trader.config.path_registry import LOG_DIR, ensure_directories
+from gpt_trader.logging.json_formatter import (
+    StructuredJSONFormatterWithTimestamp,
+)
+
+from gpt_trader.config.runtime_settings import RuntimeSettings
+from gpt_trader.config.runtime_settings import load_runtime_settings
+
+
+def _env_flag(
+    name: str,
+    default: str = "0",
+    *,
+    settings: RuntimeSettings | None = None,
+) -> bool:
+    if settings is None:
+        from gpt_trader.config.runtime_settings import load_runtime_settings
+
+        runtime_settings = load_runtime_settings()
+    else:
+        runtime_settings = settings
+    raw_value = runtime_settings.raw_env.get(name, default)
+    return str(raw_value).strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _env_lookup(raw_env: dict[str, str], *keys: str, default: str | None = None) -> str | None:
+    """Return the first non-empty environment value for the given keys."""
+
+    for key in keys:
+        value = raw_env.get(key)
+        if value is not None and str(value).strip():
+            return str(value)
+    return default
+
+
+def configure_logging(settings: RuntimeSettings | None = None) -> None:
+    """Configure rotating file logging and debug levels."""
+
+    if settings is None:
+        from gpt_trader.config.runtime_settings import load_runtime_settings
+
+        runtime_settings = load_runtime_settings()
+    else:
+        runtime_settings = settings
+    raw_env = runtime_settings.raw_env
+
+    ensure_directories((LOG_DIR,))
+    log_dir_raw = _env_lookup(raw_env, "COINBASE_TRADER_LOG_DIR", "PERPS_LOG_DIR")
+    log_dir = Path(log_dir_raw) if log_dir_raw else Path(LOG_DIR)
+    log_dir.mkdir(parents=True, exist_ok=True)
+
+    root = logging.getLogger()
+    root.setLevel(logging.INFO)
+
+    existing_targets = {
+        getattr(handler, "baseFilename", None)
+        for handler in root.handlers
+        if hasattr(handler, "baseFilename")
+    }
+
+    if not any(isinstance(handler, logging.StreamHandler) for handler in root.handlers):
+        console = logging.StreamHandler()
+        console.setLevel(logging.INFO)
+        console.setFormatter(
+            logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+        )
+        root.addHandler(console)
+
+    general_max_bytes = int(
+        _env_lookup(raw_env, "COINBASE_TRADER_LOG_MAX_BYTES")
+        or str(50 * 1024 * 1024)
+    )
+    general_backups = int(
+        _env_lookup(raw_env, "COINBASE_TRADER_LOG_BACKUP_COUNT") or "10"
+    )
+    critical_max_bytes = int(
+        _env_lookup(raw_env, "COINBASE_TRADER_CRIT_LOG_MAX_BYTES")
+        or str(10 * 1024 * 1024)
+    )
+    critical_backups = int(
+        _env_lookup(raw_env, "COINBASE_TRADER_CRIT_LOG_BACKUP_COUNT")
+        or "5"
+    )
+
+    general_path = str(log_dir / "coinbase_trader.log")
+    if general_path not in existing_targets:
+        general_handler = logging.handlers.RotatingFileHandler(
+            general_path,
+            maxBytes=general_max_bytes,
+            backupCount=general_backups,
+        )
+        general_handler.setLevel(logging.INFO)
+        general_handler.setFormatter(
+            logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+        )
+        root.addHandler(general_handler)
+
+    critical_path = str(log_dir / "critical_events.log")
+    if critical_path not in existing_targets:
+        critical_handler = logging.handlers.RotatingFileHandler(
+            critical_path,
+            maxBytes=critical_max_bytes,
+            backupCount=critical_backups,
+        )
+        critical_handler.setLevel(logging.WARNING)
+        critical_handler.setFormatter(
+            logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+        )
+        root.addHandler(critical_handler)
+
+    json_logger = logging.getLogger("gpt_trader.json")
+    json_logger.setLevel(logging.DEBUG)
+    json_logger.propagate = False
+
+    existing_json_targets = {
+        getattr(handler, "baseFilename", None)
+        for handler in json_logger.handlers
+        if hasattr(handler, "baseFilename")
+    }
+    # Use the enhanced JSON formatter with correlation ID and domain field support
+    json_formatter = StructuredJSONFormatterWithTimestamp(
+        ensure_ascii=False,
+        sort_keys=True,
+    )
+
+    json_general_path = str(log_dir / "coinbase_trader.jsonl")
+    if json_general_path not in existing_json_targets:
+        json_general_handler = logging.handlers.RotatingFileHandler(
+            json_general_path,
+            maxBytes=general_max_bytes,
+            backupCount=general_backups,
+        )
+        json_general_handler.setLevel(logging.DEBUG)
+        json_general_handler.setFormatter(json_formatter)
+        json_logger.addHandler(json_general_handler)
+
+    json_critical_path = str(log_dir / "critical_events.jsonl")
+    if json_critical_path not in existing_json_targets:
+        json_critical_handler = logging.handlers.RotatingFileHandler(
+            json_critical_path,
+            maxBytes=critical_max_bytes,
+            backupCount=critical_backups,
+        )
+        json_critical_handler.setLevel(logging.WARNING)
+        json_critical_handler.setFormatter(json_formatter)
+        json_logger.addHandler(json_critical_handler)
+
+    if _env_flag("COINBASE_TRADER_DEBUG", "0", settings=runtime_settings):
+        logging.getLogger("gpt_trader.features.brokerages.coinbase").setLevel(logging.DEBUG)
+        logging.getLogger("gpt_trader.orchestration").setLevel(logging.DEBUG)

@@ -191,7 +191,7 @@ Track these during implementation:
 
 ### Utilities Analyzed
 ```
-src/bot_v2/utilities/
+src/gpt_trader/utilities/
 ├── async_tools/         (7 modules)
 ├── performance/         (7 modules)
 ├── logging_patterns.py
@@ -204,7 +204,7 @@ src/bot_v2/utilities/
 
 ### Orchestration Analyzed
 ```
-src/bot_v2/orchestration/
+src/gpt_trader/orchestration/
 ├── coordinators/        (5 coordinators)
 ├── perps_bot.py
 └── [17+ other files]    (20 total)
@@ -212,7 +212,7 @@ src/bot_v2/orchestration/
 
 ### Monitoring Analyzed
 ```
-src/bot_v2/monitoring/
+src/gpt_trader/monitoring/
 ├── guards/              (base, manager, builtins)
 ├── health/              (checks, registry, endpoint)
 ├── system/              (engine, collectors, alerting)

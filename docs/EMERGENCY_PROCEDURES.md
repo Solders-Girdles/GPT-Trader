@@ -217,7 +217,7 @@ poetry run coinbase-trader run --profile canary --reduce-only
 2. Inspect recent activity in `var/logs/coinbase_trader.log` and the EventStore metrics.
 3. Reproduce issues with the dev profile: `poetry run coinbase-trader run --profile dev --dev-fast`.
 4. Capture telemetry snapshots via `poetry run coinbase-trader account snapshot` for audit trails.
-5. Use `poetry run pytest tests/unit/bot_v2 -k <keyword>` to target suspect components.
+5. Use `poetry run pytest tests/unit/gpt_trader -k <keyword>` to target suspect components.
 
 ## 🔍 PERFORMANCE ANALYSIS
 

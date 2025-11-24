@@ -45,7 +45,7 @@ This workflow applies to every subsystem we touch until the codebase is consiste
 ## 2. Addressing Monolithic Core Files
 
 ### Problem Statement
-The GPT-Trader codebase contains monolithic files with excessive responsibilities, most notably the 786-line `PerpsBot` class with a 670-line constructor. This creates maintenance, testing, and cognitive overhead challenges.
+The GPT-Trader codebase contains monolithic files with excessive responsibilities, most notably the 786-line `TradingBot` class with a 670-line constructor. This creates maintenance, testing, and cognitive overhead challenges.
 
 ### Best Practices
 
@@ -57,7 +57,7 @@ The GPT-Trader codebase contains monolithic files with excessive responsibilitie
 
 ```python
 # ❌ AVOID: Monolithic class with multiple responsibilities
-class PerpsBot:  # 786 lines
+class TradingBot:  # 786 lines
     def __init__(self, ...):  # 670 lines
         # Environment parsing
         # Storage setup
@@ -89,30 +89,30 @@ Break down complex initialization into focused builder classes:
 
 ```python
 # ✅ PREFER: Builder pattern for complex object construction
-class PerpsBotBuilder:
+class TradingBotBuilder:
     def __init__(self):
         self._config = None
         self._dependencies = {}
         self._coordinators = {}
 
-    def with_config(self, config: BotConfig) -> 'PerpsBotBuilder':
+    def with_config(self, config: BotConfig) -> 'TradingBotBuilder':
         self._config = config
         return self
 
-    def with_broker(self, broker: IBrokerage) -> 'PerpsBotBuilder':
+    def with_broker(self, broker: IBrokerage) -> 'TradingBotBuilder':
         self._dependencies['broker'] = broker
         return self
 
-    def with_risk_manager(self, risk_manager: RiskManager) -> 'PerpsBotBuilder':
+    def with_risk_manager(self, risk_manager: RiskManager) -> 'TradingBotBuilder':
         self._dependencies['risk_manager'] = risk_manager
         return self
 
-    def build(self) -> 'PerpsBot':
+    def build(self) -> 'TradingBot':
         # Validate all dependencies are present
         self._validate_dependencies()
 
         # Create bot instance with clean constructor
-        return PerpsBot(
+        return TradingBot(
             config=self._config,
             **self._dependencies
         )
@@ -134,14 +134,14 @@ class BotCompositionRoot:
         self.config = config
         self._service_container = ServiceContainer()
 
-    def create_bot(self) -> 'PerpsBot':
+    def create_bot(self) -> 'TradingBot':
         # Build all dependencies in proper order
         broker = self._create_broker()
         risk_manager = self._create_risk_manager()
         orchestrator = self._create_orchestrator()
 
         # Create bot with all dependencies injected
-        return PerpsBot(
+        return TradingBot(
             config=self.config,
             broker=broker,
             risk_manager=risk_manager,
@@ -163,7 +163,7 @@ Adopt a consistent directory hierarchy based on domain boundaries:
 
 ```
 src/
-├── bot_v2/
+├── gpt_trader/
 │   ├── core/                    # Core business logic and entities
 │   │   ├── models/              # Domain models
 │   │   ├── services/             # Business services
@@ -267,11 +267,11 @@ The GPT-Trader codebase has deep nesting with inconsistent structure, creating n
 
 ```
 # ❌ AVOID: Excessive nesting
-src/bot_v2/features/live_trade/strategies/perps_baseline_enhanced/signals.py
-# Level 6 nesting: src -> bot_v2 -> features -> live_trade -> strategies -> perps_baseline_enhanced -> signals
+src/gpt_trader/features/live_trade/strategies/perps_baseline_enhanced/signals.py
+# Level 6 nesting: src -> gpt_trader -> features -> live_trade -> strategies -> perps_baseline_enhanced -> signals
 
 # ✅ PREFER: Shallow structure with clear boundaries
-src/bot_v2/features/
+src/gpt_trader/features/
 ├── live_trade/
 │   ├── strategies/
 │   │   ├── baseline/
@@ -289,7 +289,7 @@ Organize by business domain rather than technical layers:
 
 ```python
 # ✅ PREFER: Domain-based organization
-src/bot_v2/domains/
+src/gpt_trader/domains/
 ├── trading/
 │   ├── execution/
 │   │   ├── order_service.py
@@ -310,7 +310,7 @@ For feature development, organize by capability:
 
 ```python
 # ✅ PREFER: Feature-based organization
-src/bot_v2/features/
+src/gpt_trader/features/
 ├── order_management/
 │   ├── order_service.py
 │   ├── order_repository.py
@@ -459,7 +459,7 @@ Isolate legacy code with clear boundaries:
 ```python
 # ✅ PREFER: Clear legacy code containment
 src/
-├── bot_v2/                    # Current active code
+├── gpt_trader/                    # Current active code
 ├── legacy/                      # Deprecated code clearly marked
 │   ├── README.md               # Documentation of deprecation timeline
 │   ├── v1/                     # Old version
@@ -487,7 +487,7 @@ Implement clear deprecation pathways:
 - **Phase 4** (Beyond 6 months): Archive completely
 
 ## Migration Strategy
-1. Create compatibility adapters in `bot_v2/compatibility/`
+1. Create compatibility adapters in `gpt_trader/compatibility/`
 2. Update imports gradually to use adapters
 3. Provide clear migration documentation
 4. Remove legacy code after deprecation period
@@ -503,7 +503,7 @@ Create thin compatibility layers for gradual migration:
 
 ```python
 # ✅ PREFER: Compatibility layers for gradual migration
-# bot_v2/compatibility/legacy_adapters.py
+# gpt_trader/compatibility/legacy_adapters.py
 class LegacyTradingBotAdapter:
     """Adapter to bridge new architecture with legacy trading bot"""
 
@@ -524,7 +524,7 @@ class LegacyTradingBotAdapter:
         )
 
 # Usage in new code
-from bot_v2.compatibility.legacy_adapters import LegacyTradingBotAdapter
+from gpt_trader.compatibility.legacy_adapters import LegacyTradingBotAdapter
 
 # Initialize with legacy adapter for backward compatibility
 legacy_bot = LegacyTradingBot()  # Old implementation
@@ -766,13 +766,13 @@ class OrderService:
 
 ## 9. Applying Best Practices to GPT-Trader
 
-### 8.1 Refactoring PerpsBot Class
+### 8.1 Refactoring TradingBot Class
 
-The current 786-line `PerpsBot` class should be refactored using the Builder pattern:
+The current 786-line `TradingBot` class should be refactored using the Builder pattern:
 
 ```python
-# Current monolithic PerpsBot (786 lines)
-class PerpsBot:
+# Current monolithic TradingBot (786 lines)
+class TradingBot:
     def __init__(self, config, registry, event_store, orders_store,
                  session_guard, baseline_snapshot,
                  configuration_guardian=None, container=None):
@@ -781,7 +781,7 @@ class PerpsBot:
         # Configuration validation, symbol normalization, service initialization
 
 # Refactored using Builder pattern
-class PerpsBotBuilder:
+class TradingBotBuilder:
     def __init__(self):
         self._config = None
         self._registry = None
@@ -791,40 +791,40 @@ class PerpsBotBuilder:
         self._baseline_snapshot = None
         self._configuration_guardian = None
 
-    def with_config(self, config: BotConfig) -> 'PerpsBotBuilder':
+    def with_config(self, config: BotConfig) -> 'TradingBotBuilder':
         self._config = config
         return self
 
-    def with_registry(self, registry: ServiceRegistry) -> 'PerpsBotBuilder':
+    def with_registry(self, registry: ServiceRegistry) -> 'TradingBotBuilder':
         self._registry = registry
         return self
 
-    def with_event_store(self, event_store: EventStore) -> 'PerpsBotBuilder':
+    def with_event_store(self, event_store: EventStore) -> 'TradingBotBuilder':
         self._event_store = event_store
         return self
 
-    def with_orders_store(self, orders_store: OrdersStore) -> 'PerpsBotBuilder':
+    def with_orders_store(self, orders_store: OrdersStore) -> 'TradingBotBuilder':
         self._orders_store = orders_store
         return self
 
-    def with_session_guard(self, session_guard: SessionGuard) -> 'PerpsBotBuilder':
+    def with_session_guard(self, session_guard: SessionGuard) -> 'TradingBotBuilder':
         self._session_guard = session_guard
         return self
 
-    def with_baseline_snapshot(self, baseline_snapshot: Any) -> 'PerpsBotBuilder':
+    def with_baseline_snapshot(self, baseline_snapshot: Any) -> 'TradingBotBuilder':
         self._baseline_snapshot = baseline_snapshot
         return self
 
-    def with_configuration_guardian(self, guardian: ConfigurationGuardian) -> 'PerpsBotBuilder':
+    def with_configuration_guardian(self, guardian: ConfigurationGuardian) -> 'TradingBotBuilder':
         self._configuration_guardian = guardian
         return self
 
-    def build(self) -> 'PerpsBot':
+    def build(self) -> 'TradingBot':
         # Validate all required components
         self._validate_requirements()
 
         # Create bot with clean constructor
-        return PerpsBot(
+        return TradingBot(
             config=self._config,
             registry=self._registry,
             event_store=self._event_store,
@@ -840,8 +840,8 @@ class PerpsBotBuilder:
         if missing:
             raise ValueError(f"Missing required components: {missing}")
 
-# Simplified PerpsBot class
-class PerpsBot:
+# Simplified TradingBot class
+class TradingBot:
     def __init__(self, config: BotConfig, registry: ServiceRegistry,
                  event_store: EventStore, orders_store: OrdersStore,
                  session_guard: SessionGuard, baseline_snapshot: Any,
@@ -870,7 +870,7 @@ class PerpsBot:
 Apply consistent module organization to GPT-Trader:
 
 ```
-src/bot_v2/
+src/gpt_trader/
 ├── core/                           # Core domain logic
 │   ├── models/
 │   │   ├── order.py
@@ -958,7 +958,7 @@ risk:
   max_daily_loss: 10000
   position_size_limit: 50000
 
-# bot_v2/core/config/configuration.py
+# gpt_trader/core/config/configuration.py
 from pydantic import BaseModel, Field
 from typing import List, Optional
 import yaml
@@ -1013,13 +1013,13 @@ class ConfigurationService:
 ## Implementation Roadmap
 
 ### Phase 1: Foundation (Weeks 1-2)
-1. **Extract core models and services** from PerpsBot
+1. **Extract core models and services** from TradingBot
 2. **Implement dependency injection container**
 3. **Create configuration service** with validation
 4. **Set up testing infrastructure** for new structure
 
 ### Phase 2: Refactoring (Weeks 3-6)
-1. **Refactor PerpsBot** using Builder pattern
+1. **Refactor TradingBot** using Builder pattern
 2. **Reorganize directory structure** following domain boundaries
 3. **Implement interface segregation** for major components
 4. **Create compatibility layer** for legacy code

@@ -8,9 +8,9 @@ The GPT-Trader codebase has developed a well-organized but compartmentalized too
 
 ## 1. CURRENT TOOLS AND UTILITIES INVENTORY
 
-### 1.1 Async Utilities (`src/bot_v2/utilities/async_tools/`)
+### 1.1 Async Utilities (`src/gpt_trader/utilities/async_tools/`)
 
-**Location**: `/Users/rj/PycharmProjects/GPT-Trader/src/bot_v2/utilities/async_tools/`
+**Location**: `/Users/rj/PycharmProjects/GPT-Trader/src/gpt_trader/utilities/async_tools/`
 
 **Components**:
 - **AsyncRetry** – Exponential backoff retry mechanism
@@ -31,7 +31,7 @@ The GPT-Trader codebase has developed a well-organized but compartmentalized too
 async def expensive_operation(): ...
 ```
 
-### 1.2 Logging and Monitoring (`src/bot_v2/utilities/`)
+### 1.2 Logging and Monitoring (`src/gpt_trader/utilities/`)
 
 **Components**:
 - **ConsoleLogger** – Rich console output with domain-specific categories
@@ -50,7 +50,7 @@ async def expensive_operation(): ...
 - `telemetry.py` (Metric emission)
 - `performance/` subdirectory (5 modules)
 
-### 1.3 Trading Operations (`src/bot_v2/utilities/trading_operations.py`)
+### 1.3 Trading Operations (`src/gpt_trader/utilities/trading_operations.py`)
 
 **Classes**:
 - **TradingOperations** – Order placement, position management, unified error handling
@@ -63,7 +63,7 @@ async def expensive_operation(): ...
 - Retry logic with circuit breaker patterns
 - Standardized validation and logging
 
-### 1.4 Error Handling (`src/bot_v2/errors/`)
+### 1.4 Error Handling (`src/gpt_trader/errors/`)
 
 **Error Hierarchy**:
 - Base: `TradingError` (with context, timestamps, tracebacks)
@@ -80,7 +80,7 @@ async def expensive_operation(): ...
 - `log_error()` – Structured error logging
 - `handle_error()` – Exception normalization
 
-### 1.5 Strategy Tools (`src/bot_v2/features/strategy_tools/`)
+### 1.5 Strategy Tools (`src/gpt_trader/features/strategy_tools/`)
 
 **Components**:
 - **MarketConditionFilters** – Spread, depth, volume, RSI checks
@@ -90,7 +90,7 @@ async def expensive_operation(): ...
 
 **Pattern**: Dataclass-based configuration with boolean-returning validation methods
 
-### 1.6 Orchestration Coordinators (`src/bot_v2/orchestration/coordinators/`)
+### 1.6 Orchestration Coordinators (`src/gpt_trader/orchestration/coordinators/`)
 
 **Base Pattern** (`base.py`):
 - **CoordinatorContext** – Immutable dependency snapshot
@@ -113,7 +113,7 @@ for coord in coordinators:
     context = coord.initialize(context)  # Returns updated context
 ```
 
-### 1.7 Monitoring and Guards (`src/bot_v2/monitoring/`)
+### 1.7 Monitoring and Guards (`src/gpt_trader/monitoring/`)
 
 **Components**:
 - **ConfigurationGuardian** – Configuration drift detection
@@ -124,7 +124,7 @@ for coord in coordinators:
 - **PerpsLiquidationMonitor** – Perps-specific liquidation tracking
 - **PerpsMarginMonitor** – Margin tracking
 
-### 1.8 Configuration Utilities (`src/bot_v2/config/`, `src/bot_v2/utilities/config.py`)
+### 1.8 Configuration Utilities (`src/gpt_trader/config/`, `src/gpt_trader/utilities/config.py`)
 
 **Components**:
 - **ConfigBaselinePayload** – Configuration snapshots with diffing
@@ -139,9 +139,9 @@ for coord in coordinators:
 ### 2.1 Import Analysis
 
 **High-frequency utilities** (found in 30+ files):
-- `from bot_v2.utilities import` – General utilities
-- `from bot_v2.utilities.async_tools import` – Async patterns
-- `from bot_v2.logging_patterns import log_operation, get_logger`
+- `from gpt_trader.utilities import` – General utilities
+- `from gpt_trader.utilities.async_tools import` – Async patterns
+- `from gpt_trader.logging_patterns import log_operation, get_logger`
 - Error handling classes
 
 **Test Coverage**:
@@ -711,7 +711,7 @@ The recommended roadmap prioritizes foundational improvements (observability, va
 ## APPENDIX: File Structure Reference
 
 ```
-src/bot_v2/
+src/gpt_trader/
 ├── utilities/
 │   ├── __init__.py (exports 50+ utilities)
 │   ├── async_tools/

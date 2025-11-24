@@ -12,7 +12,7 @@ The composition root pattern provides a centralized way to manage application de
 
 1. **`src/app/container.py`** - Main dependency injection container
 2. **`src/app/__init__.py`** - Package exports for the app module
-3. **Updated PerpsBot** - Added `from_container` class method and container support
+3. **Updated TradingBot** - Added `from_container` class method and container support
 4. **Updated PerpsBotBuilder** - Added container-based construction option
 5. **Updated bootstrap** - Added container-enabled bootstrap functions
 
@@ -31,31 +31,31 @@ All existing code continues to work without changes. The container approach is o
 
 ```python
 # Old approach
-from bot_v2.orchestration.perps_bot_builder import create_perps_bot
+from gpt_trader.orchestration.perps_bot_builder import create_perps_bot
 bot = create_perps_bot(config)
 
 # New approach (recommended)
-from bot_v2.app.container import create_application_container
+from gpt_trader.app.container import create_application_container
 container = create_application_container(config)
-bot = container.create_perps_bot()
+bot = container.create_bot()
 ```
 
-### 2. PerpsBot.from_container() Method
+### 2. TradingBot.from_container() Method
 
 ```python
 # New approach using class method
-from bot_v2.app.container import create_application_container
-from bot_v2.orchestration.perps_bot import PerpsBot
+from gpt_trader.app.container import create_application_container
+from gpt_trader.orchestration.trading_bot import TradingBot
 
 container = create_application_container(config)
-bot = PerpsBot.from_container(container)
+bot = TradingBot.from_container(container)
 ```
 
 ### 3. Builder with Container Flag
 
 ```python
 # Existing builder with container enabled
-from bot_v2.orchestration.perps_bot_builder import PerpsBotBuilder
+from gpt_trader.orchestration.perps_bot_builder import PerpsBotBuilder
 
 bot = PerpsBotBuilder(use_container=True).with_config(config).build()
 ```
@@ -64,11 +64,12 @@ bot = PerpsBotBuilder(use_container=True).with_config(config).build()
 
 ```python
 # Bootstrap with container
-from bot_v2.orchestration.perps_bootstrap import prepare_perps_bot_with_container
+from gpt_trader.orchestration.bootstrap import prepare_bot_with_container
+from gpt_trader.orchestration.trading_bot import TradingBot
 
-result = prepare_perps_bot_with_container(config)
+result = prepare_bot_with_container(config)
 container = result.registry.extras["container"]
-bot = PerpsBot.from_container(container)
+bot = TradingBot.from_container(container)
 ```
 
 ## Benefits of Container Approach
@@ -98,7 +99,7 @@ bot = PerpsBot.from_container(container)
 ```python
 # Unit testing with container
 def test_bot_with_mocked_dependencies():
-    from bot_v2.app.container import ApplicationContainer
+    from gpt_trader.app.container import ApplicationContainer
     from unittest.mock import Mock
 
     container = ApplicationContainer(config)
@@ -107,7 +108,7 @@ def test_bot_with_mocked_dependencies():
     container._broker = Mock()
     container._event_store = Mock()
 
-    bot = container.create_perps_bot()
+    bot = container.create_bot()
     # Test bot with mocked dependencies
 ```
 
@@ -126,7 +127,7 @@ def test_bot_with_mocked_dependencies():
 Make sure to import from the correct module:
 ```python
 # Correct
-from bot_v2.app.container import ApplicationContainer
+from gpt_trader.app.container import ApplicationContainer
 
 # Incorrect
 from src.app.container import ApplicationContainer
@@ -153,8 +154,8 @@ broker = container.broker  # This triggers broker creation
 ### Complete Example with Container
 
 ```python
-from bot_v2.app.container import create_application_container
-from bot_v2.orchestration.configuration import BotConfig, Profile
+from gpt_trader.app.container import create_application_container
+from gpt_trader.orchestration.configuration import BotConfig, Profile
 
 # Create configuration
 config = BotConfig.from_profile(Profile.DEV, symbols=["BTC-USD"])
@@ -163,7 +164,7 @@ config = BotConfig.from_profile(Profile.DEV, symbols=["BTC-USD"])
 container = create_application_container(config)
 
 # Create bot
-bot = container.create_perps_bot()
+bot = container.create_bot()
 
 # Run bot
 import asyncio
@@ -173,8 +174,8 @@ asyncio.run(bot.run())
 ### Example with Custom Settings
 
 ```python
-from bot_v2.app.container import create_application_container
-from bot_v2.orchestration.runtime_settings import RuntimeSettings
+from gpt_trader.app.container import create_application_container
+from gpt_trader.config.runtime_settings import RuntimeSettings
 
 # Custom settings
 settings = RuntimeSettings()
@@ -183,7 +184,7 @@ settings.data_dir = Path("/custom/data/path")
 
 # Create container with custom settings
 container = create_application_container(config, settings)
-bot = container.create_perps_bot()
+bot = container.create_bot()
 ```
 
 ## Future Roadmap
@@ -198,4 +199,4 @@ bot = container.create_perps_bot()
 For questions about the composition root migration:
 - Check the test files in `tests/unit/app/` and `tests/integration/test_composition_root.py`
 - Review the container implementation in `src/app/container.py`
-- Consult the existing bot creation code in `src/bot_v2/orchestration/`
+- Consult the existing bot creation code in `src/gpt_trader/orchestration/`

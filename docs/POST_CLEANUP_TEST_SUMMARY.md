@@ -91,7 +91,7 @@ Tests: 24/24 validation error tests passing, 24/24 trading operations tests pass
 ```
 
 #### Files to Commit
-- All new utility modules in `src/bot_v2/utilities/`
+- All new utility modules in `src/gpt_trader/utilities/`
 - Updated source files with optimized imports
 - New test files and enhanced test coverage
 - Documentation files

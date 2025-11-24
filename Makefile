@@ -1,6 +1,6 @@
 .PHONY: dev-up dev-down lint typecheck test smoke preflight dash cov clean clean-dry-run legacy-bundle
 
-COMPOSE_DIR=deploy/bot_v2/docker
+COMPOSE_DIR=deploy/gpt_trader/docker
 COMPOSE_FILE=$(COMPOSE_DIR)/docker-compose.yaml
 
 # Start local development stack (bot by default)
@@ -28,10 +28,10 @@ preflight:
 
 cov:
 	poetry run pytest -m "not slow and not performance" -q \
-		--cov=src/bot_v2/cli \
-		--cov=src/bot_v2/config \
-		--cov=src/bot_v2/features/brokerages/coinbase/client \
-		--cov=src/bot_v2/features/brokerages/coinbase/utilities \
+		--cov=src/gpt_trader/cli \
+		--cov=src/gpt_trader/config \
+		--cov=src/gpt_trader/features/brokerages/coinbase/client \
+		--cov=src/gpt_trader/features/brokerages/coinbase/utilities \
 		--cov-report=html:var/results/coverage/html \
 		--cov-report=term --cov-fail-under=80
 

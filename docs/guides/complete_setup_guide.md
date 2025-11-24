@@ -78,7 +78,7 @@ poetry install
 ### Step 3: Verify Installation
 ```bash
 # Test import of main module
-poetry run python -c "from bot_v2 import cli; print('✅ Installation successful')"
+poetry run python -c "from gpt_trader import cli; print('✅ Installation successful')"
 ```
 
 ## Environment Configuration

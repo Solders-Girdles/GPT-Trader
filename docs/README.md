@@ -32,9 +32,9 @@ organization-updated: 2025-10-07
 ### Architecture & Design
 - [System Architecture](ARCHITECTURE.md) - Component overview
 - [Perpetuals Trading Logic](reference/trading_logic_perps.md) - Future-ready INTX implementation details
-- [Orchestration Bootstrap](src/bot_v2/orchestration/bootstrap.py) - Shared bot wiring helpers
+- [Orchestration Bootstrap](src/gpt_trader/orchestration/bootstrap.py) - Shared bot wiring helpers
 - Historical slice diagrams can be recovered from repository history if needed.
-- Legacy acceptance/performance/system suites were removed from the tree; recover them from git history if you need the old coverage. The active CI target is `poetry run pytest`, which exercises the `bot_v2` codebase.
+- Legacy acceptance/performance/system suites were removed from the tree; recover them from git history if you need the old coverage. The active CI target is `poetry run pytest`, which exercises the `gpt_trader` codebase.
 
 ### Trading Operations
 - [Monitoring Playbook](MONITORING_PLAYBOOK.md) - Metrics, alerting, and dashboards

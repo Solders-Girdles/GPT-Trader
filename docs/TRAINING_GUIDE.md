@@ -1,4 +1,4 @@
-# GPT-Trader Training Guide (bot_v2)
+# GPT-Trader Training Guide (gpt_trader)
 
 This guide orients new contributors to the current spot-first stack. It replaces
 legacy onboarding material that referenced the deprecated `src/bot` package and
@@ -7,7 +7,7 @@ its ML workflows.
 ## Module 1 – System Overview
 
 - **Architecture**: Review `docs/ARCHITECTURE.md` for the vertical slice layout
-  under `src/bot_v2/`.
+  under `src/gpt_trader/`.
 - **Execution loop**: `LiveExecutionEngine` (in
   `features/live_trade/live_trade.py`) coordinates guards, orders, and telemetry.
 - **Brokerage**: `features/brokerages/coinbase` contains REST/WS adapters for
@@ -48,7 +48,7 @@ its ML workflows.
 ## Module 4 – Development Workflow
 
 1. Create a feature branch and implement changes in the relevant slice.
-2. Add or update tests under `tests/unit/bot_v2/`.
+2. Add or update tests under `tests/unit/gpt_trader/`.
 3. Run `poetry run pytest -q` before opening a pull request.
 4. Update documentation (`docs/README.md`, architecture/risk guides) alongside
    code changes.

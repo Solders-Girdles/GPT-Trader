@@ -1,7 +1,7 @@
 [run]
 branch = True
 source =
-    src/bot_v2
+    src/gpt_trader
 parallel = True
 omit =
     **/__init__.py

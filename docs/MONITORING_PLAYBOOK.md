@@ -21,17 +21,17 @@ its ML pipeline.
 Start Prometheus/Grafana when needed (base stack):
 
 ```bash
-docker compose --project-directory deploy/bot_v2/docker \
-  -f deploy/bot_v2/docker/docker-compose.yaml \
+docker compose --project-directory deploy/gpt_trader/docker \
+  -f deploy/gpt_trader/docker/docker-compose.yaml \
   --profile observability up -d
 ```
 
 Need Elasticsearch, Kibana, or Jaeger? Include the infrastructure override:
 
 ```bash
-docker compose --project-directory deploy/bot_v2/docker \
-  -f deploy/bot_v2/docker/docker-compose.yaml \
-  -f deploy/bot_v2/docker/docker-compose.infrastructure.yaml \
+docker compose --project-directory deploy/gpt_trader/docker \
+  -f deploy/gpt_trader/docker/docker-compose.yaml \
+  -f deploy/gpt_trader/docker/docker-compose.infrastructure.yaml \
   --profile observability up -d
 ```
 

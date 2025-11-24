@@ -13,9 +13,9 @@
 ### Phase 1: Fix Broken Tests & Expand Coverage Tracking ✅
 
 #### 1. Fixed test_base.py Imports
-- **File**: `tests/unit/bot_v2/errors/test_base.py`
+- **File**: `tests/unit/gpt_trader/errors/test_base.py`
 - **Changes**:
-  - Updated imports to match current `bot_v2.errors` module
+  - Updated imports to match current `gpt_trader.errors` module
   - Replaced `ConfigError` → `ConfigurationError`
   - Replaced `RiskError` → `RiskLimitExceeded`
   - Removed non-existent `MarketDataError` and `BrokerageError`
@@ -25,7 +25,7 @@
 #### 2. Expanded .coveragerc Configuration
 - **File**: `.coveragerc`
 - **Changes**:
-  - Changed `source` from 4 specific paths to entire `src/bot_v2`
+  - Changed `source` from 4 specific paths to entire `src/gpt_trader`
   - Added comprehensive `omit` patterns (__init__.py, __main__.py, scripts, demos, archived)
   - Added detailed `[report]` section with exclusions
   - Added `[html]` section for HTML reports
@@ -41,8 +41,8 @@
   - Added instructions for running coverage reports
 
 #### 4. Created Comprehensive Tests for Types Module
-- **New File**: `tests/unit/bot_v2/types/test_trading.py` (21 tests)
-- **Coverage**: Tests for all 6 dataclasses in `src/bot_v2/types/trading.py`
+- **New File**: `tests/unit/gpt_trader/types/test_trading.py` (21 tests)
+- **Coverage**: Tests for all 6 dataclasses in `src/gpt_trader/types/trading.py`
   - `TradingPosition` - 3 tests
   - `AccountSnapshot` - 3 tests
   - `TradeFill` - 3 tests
@@ -55,36 +55,36 @@
 ## Coverage Breakdown
 
 ### Well-Tested Modules (>70% coverage)
-- `src/bot_v2/config/types.py` - 100%
-- `src/bot_v2/features/brokerages/coinbase/rest_service.py` - 100%
-- `src/bot_v2/features/analyze/types.py` - 94%
-- `src/bot_v2/data_providers/coinbase_provider.py` - 91%
-- `src/bot_v2/config/env_utils.py` - 86%
-- `src/bot_v2/config/schemas.py` - 86%
-- `src/bot_v2/features/data/types.py` - 86%
-- `src/bot_v2/config/path_registry.py` - 74%
-- `src/bot_v2/features/brokerages/core/interfaces.py` - 71%
+- `src/gpt_trader/config/types.py` - 100%
+- `src/gpt_trader/features/brokerages/coinbase/rest_service.py` - 100%
+- `src/gpt_trader/features/analyze/types.py` - 94%
+- `src/gpt_trader/data_providers/coinbase_provider.py` - 91%
+- `src/gpt_trader/config/env_utils.py` - 86%
+- `src/gpt_trader/config/schemas.py` - 86%
+- `src/gpt_trader/features/data/types.py` - 86%
+- `src/gpt_trader/config/path_registry.py` - 74%
+- `src/gpt_trader/features/brokerages/core/interfaces.py` - 71%
 
 ### Modules Needing Improvement (30-70% coverage)
-- `src/bot_v2/config/live_trade_config.py` - 65%
-- `src/bot_v2/features/live_trade/risk/position_sizing.py` - 61%
-- `src/bot_v2/features/live_trade/guard_errors.py` - 58%
-- `src/bot_v2/features/brokerages/coinbase/adapter.py` - 49%
-- `src/bot_v2/features/brokerages/coinbase/client/base.py` - 41%
-- `src/bot_v2/features/brokerages/coinbase/endpoints.py` - 39%
-- `src/bot_v2/features/brokerages/coinbase/auth.py` - 27%
+- `src/gpt_trader/config/live_trade_config.py` - 65%
+- `src/gpt_trader/features/live_trade/risk/position_sizing.py` - 61%
+- `src/gpt_trader/features/live_trade/guard_errors.py` - 58%
+- `src/gpt_trader/features/brokerages/coinbase/adapter.py` - 49%
+- `src/gpt_trader/features/brokerages/coinbase/client/base.py` - 41%
+- `src/gpt_trader/features/brokerages/coinbase/endpoints.py` - 39%
+- `src/gpt_trader/features/brokerages/coinbase/auth.py` - 27%
 
 ### Modules with Low Coverage (<30%)
 Need significant test additions:
-- `src/bot_v2/features/live_trade/live_trade.py` - 13%
-- `src/bot_v2/features/analyze/analyze.py` - 14%
+- `src/gpt_trader/features/live_trade/live_trade.py` - 13%
+- `src/gpt_trader/features/analyze/analyze.py` - 14%
 - And many others...
 
 ### Modules with NO Tests
 Features that need test creation:
-- `src/bot_v2/features/market_data/` - NO TESTS
-- `src/bot_v2/features/position_sizing/` - NO TESTS
-- `src/bot_v2/features/strategy_tools/` - NO TESTS
+- `src/gpt_trader/features/market_data/` - NO TESTS
+- `src/gpt_trader/features/position_sizing/` - NO TESTS
+- `src/gpt_trader/features/strategy_tools/` - NO TESTS
 
 ## Remaining Work
 
@@ -98,7 +98,7 @@ Features that need test creation:
    - Priority: `features/live_trade/`, `features/brokerages/coinbase/`, `monitoring/`
 
 3. **Add logging tests**
-   - `src/bot_v2/logging/setup.py` - needs dedicated tests
+   - `src/gpt_trader/logging/setup.py` - needs dedicated tests
 
 ### Medium Priority
 4. **Improve moderate-coverage modules**
@@ -124,7 +124,7 @@ View HTML report: `open var/results/coverage/html/index.html`
 
 ### Coverage for Specific Module
 ```bash
-poetry run pytest tests/unit/bot_v2/config/ --cov=src/bot_v2/config --cov-report=term-missing
+poetry run pytest tests/unit/gpt_trader/config/ --cov=src/gpt_trader/config --cov-report=term-missing
 ```
 
 ### Quick Coverage Check
@@ -147,29 +147,29 @@ poetry run pytest --cov --cov-report=term -q
 
 - Current coverage is **48%** across 245 source files
 - 131 test files exist with 800+ tests
-- Coverage configuration tracks all of `src/bot_v2`
+- Coverage configuration tracks all of `src/gpt_trader`
 - HTML coverage reports generated in `var/results/coverage/html/`
 - Coverage baseline established: 2025-10-07
 
 ## Files Modified/Created
 
 ### Configuration Files
-1. ✅ `.coveragerc` - Expanded coverage tracking to all of `src/bot_v2`
+1. ✅ `.coveragerc` - Expanded coverage tracking to all of `src/gpt_trader`
 2. ✅ `pytest.ini` - Added coverage documentation and goals
 
 ### Fixed Tests
-3. ✅ `tests/unit/bot_v2/errors/test_base.py` - Fixed imports and test logic (30 tests)
+3. ✅ `tests/unit/gpt_trader/errors/test_base.py` - Fixed imports and test logic (30 tests)
 
 ### New Test Modules Created
-4. ✅ `tests/unit/bot_v2/types/test_trading.py` - Trading domain types (21 tests)
-5. ✅ `tests/unit/bot_v2/logging/test_setup.py` - Logging configuration (18 tests)
-6. ✅ `tests/unit/bot_v2/features/strategies/test_interfaces.py` - Strategy base classes (15 tests) *(archived 2025-10-09)*
-7. ✅ `tests/unit/bot_v2/features/strategies/test_momentum.py` - Momentum strategy (14 tests) *(archived 2025-10-09)*
+4. ✅ `tests/unit/gpt_trader/types/test_trading.py` - Trading domain types (21 tests)
+5. ✅ `tests/unit/gpt_trader/logging/test_setup.py` - Logging configuration (18 tests)
+6. ✅ `tests/unit/gpt_trader/features/strategies/test_interfaces.py` - Strategy base classes (15 tests) *(archived 2025-10-09)*
+7. ✅ `tests/unit/gpt_trader/features/strategies/test_momentum.py` - Momentum strategy (14 tests) *(archived 2025-10-09)*
 
 ### New Test Package Directories
-- `tests/unit/bot_v2/types/`
-- `tests/unit/bot_v2/logging/`
-- `tests/unit/bot_v2/features/strategies/` *(archived)*
+- `tests/unit/gpt_trader/types/`
+- `tests/unit/gpt_trader/logging/`
+- `tests/unit/gpt_trader/features/strategies/` *(archived)*
 
 ### Documentation
 8. ✅ `TESTING_COVERAGE.md` - This file

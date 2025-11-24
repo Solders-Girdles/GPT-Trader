@@ -12,31 +12,31 @@ This document captures the architecture and trading flow for the Coinbase Perpet
 
 ### Core Components
 
-1. **PerpsBot** (`src/bot_v2/orchestration/perps_bot.py`)
+1. **TradingBot** (`src/gpt_trader/orchestration/trading_bot/bot.py`)
    - Main orchestration layer shared with spot trading
    - Detects `COINBASE_ENABLE_DERIVATIVES` + INTX context before enabling perps
    - Coordinates between strategy, risk, and execution layers via the coordinator pattern
 
-2. **CoinbaseBrokerage Adapter** (`src/bot_v2/features/brokerages/coinbase/adapter.py`)
+2. **CoinbaseBrokerage Adapter** (`src/gpt_trader/features/brokerages/coinbase/adapter.py`)
    - Implements broker-agnostic interface
    - Handles REST API and WebSocket connections
    - Manages product discovery and order routing
 
 3. **Strategy Layer**
-   - **Active:** `src/bot_v2/features/live_trade/strategies/perps_baseline/strategy.py` (instantiated by `StrategyOrchestrator`)
+   - **Active:** `src/gpt_trader/features/live_trade/strategies/perps_baseline/strategy.py` (instantiated by `StrategyOrchestrator`)
      - Baseline MA crossover with optional confirmation windows
      - Maintains trailing stops and per-symbol position counters
      - Delegates all exposure checks to the risk engine
-   - **Experimental:** `src/bot_v2/features/live_trade/strategies/perps_baseline_enhanced/strategy.py`
+   - **Experimental:** `src/gpt_trader/features/live_trade/strategies/perps_baseline_enhanced/strategy.py`
      - Adds liquidity filters, dedicated state management, and additional guards; kept for future iteration but not wired into the bot by default
 
-4. **Risk Management** (`src/bot_v2/features/live_trade/risk/`)
+4. **Risk Management** (`src/gpt_trader/features/live_trade/risk/`)
    - `manager.py` orchestrates leverage limits, liquidation buffers, and exposure controls (defaults mirror spot until INTX is approved)
    - `pre_trade_checks.py` enforces synchronous validation before orders leave the process
    - `runtime_monitoring.py` and `state_management.py` maintain guardrails and reduce-only transitions
    - Daily loss limits and kill-switch support remain available regardless of product type
 
-5. **Execution Engine** (`src/bot_v2/orchestration/live_execution.py`)
+5. **Execution Engine** (`src/gpt_trader/orchestration/live_execution.py`)
    - Market and limit order support with side-aware quantization
    - TIF support (GTC, IOC)
    - Slippage guard rails based on snapshot depth
@@ -299,7 +299,7 @@ rejection_counts = {
 8. ✅ Review position size calculations
 
 ### Monitoring Setup
-`EVENT_STORE_ROOT` should point to the parent runtime directory (for example `/srv/gpt-trader-runtime`). The bot automatically creates `coinbase_trader/{profile}` underneath it (and continues writing to the legacy `perps_bot/{profile}` path during the migration window), so do not append the profile when exporting the variable.
+`EVENT_STORE_ROOT` should point to the parent runtime directory (for example `/srv/gpt-trader-runtime`). The bot automatically creates `coinbase_trader/{profile}` underneath it (and continues writing to the legacy `trading_bot/{profile}` path during the migration window), so do not append the profile when exporting the variable.
 ```bash
 # Health status location
 $EVENT_STORE_ROOT/coinbase_trader/{profile}/health.json

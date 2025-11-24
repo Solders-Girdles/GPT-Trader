@@ -6,11 +6,11 @@ import logging
 import os
 from typing import TYPE_CHECKING
 
-from bot_v2.orchestration.configuration import BotConfig
-from bot_v2.orchestration.bootstrap import build_bot
+from gpt_trader.orchestration.configuration import BotConfig
+from gpt_trader.orchestration.bootstrap import build_bot
 
 if TYPE_CHECKING:
-    from bot_v2.orchestration.perps_bot import PerpsBot
+    from gpt_trader.orchestration.trading_bot import PerpsBot
 
 
 async def main() -> int:

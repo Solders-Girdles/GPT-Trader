@@ -26,7 +26,7 @@ The security enhancements provide:
 #### Storing CDP Credentials
 
 ```python
-from bot_v2.security.cdp_secrets_provider import store_cdp_credentials
+from gpt_trader.security.cdp_secrets_provider import store_cdp_credentials
 
 # Store credentials with IP allowlist
 store_cdp_credentials(
@@ -41,7 +41,7 @@ store_cdp_credentials(
 #### Generating Short-Lived JWT
 
 ```python
-from bot_v2.security.cdp_secrets_provider import generate_cdp_jwt
+from gpt_trader.security.cdp_secrets_provider import generate_cdp_jwt
 
 # Generate JWT for API request
 token = generate_cdp_jwt(
@@ -62,7 +62,7 @@ else:
 #### Rotating Credentials
 
 ```python
-from bot_v2.security.cdp_secrets_provider import get_cdp_secrets_provider
+from gpt_trader.security.cdp_secrets_provider import get_cdp_secrets_provider
 
 provider = get_cdp_secrets_provider()
 
@@ -82,7 +82,7 @@ Use HashiCorp Vault for production:
 # Environment variables
 export VAULT_ADDR=https://vault.example.com:8200
 export VAULT_TOKEN=your-vault-token
-export BOT_V2_ENCRYPTION_KEY=your-encryption-key
+export GPT_TRADER_ENCRYPTION_KEY=your-encryption-key
 ```
 
 ### Security Specifications
@@ -119,7 +119,7 @@ export IP_ALLOWLIST_COINBASE_PRODUCTION=203.0.113.0/24
 #### Programmatic Configuration
 
 ```python
-from bot_v2.security.ip_allowlist_enforcer import add_ip_allowlist_rule, validate_ip
+from gpt_trader.security.ip_allowlist_enforcer import add_ip_allowlist_rule, validate_ip
 
 # Add rule
 add_ip_allowlist_rule(
@@ -140,7 +140,7 @@ else:
 #### Managing Rules
 
 ```python
-from bot_v2.security.ip_allowlist_enforcer import get_ip_allowlist_enforcer
+from gpt_trader.security.ip_allowlist_enforcer import get_ip_allowlist_enforcer
 
 enforcer = get_ip_allowlist_enforcer()
 
@@ -194,12 +194,12 @@ Coinbase International Exchange (INTX) **requires** IP allowlisting for API keys
 #### Creating Approval Request
 
 ```python
-from bot_v2.monitoring.two_person_rule import (
+from gpt_trader.monitoring.two_person_rule import (
     create_approval_request,
     ConfigChange,
     ChangeType,
 )
-from bot_v2.security.auth_handler import User, Role
+from gpt_trader.security.auth_handler import User, Role
 
 # Define requester
 requester = User(
@@ -244,7 +244,7 @@ print(f"Expires at: {request.expires_at}")
 #### Approving Request
 
 ```python
-from bot_v2.monitoring.two_person_rule import approve_request
+from gpt_trader.monitoring.two_person_rule import approve_request
 
 # Define approver (must be different from requester)
 approver = User(
@@ -269,7 +269,7 @@ else:
 #### Rejecting Request
 
 ```python
-from bot_v2.monitoring.two_person_rule import get_two_person_rule
+from gpt_trader.monitoring.two_person_rule import get_two_person_rule
 
 rule = get_two_person_rule()
 
@@ -324,8 +324,8 @@ The following configuration fields automatically require two-person approval:
 ### Integration with ConfigurationGuardian
 
 ```python
-from bot_v2.monitoring.configuration_guardian import ConfigurationGuardian
-from bot_v2.monitoring.two_person_rule import get_two_person_rule
+from gpt_trader.monitoring.configuration_guardian import ConfigurationGuardian
+from gpt_trader.monitoring.two_person_rule import get_two_person_rule
 
 # ConfigurationGuardian now logs all deltas to event store
 guardian = ConfigurationGuardian(baseline_snapshot)
@@ -354,7 +354,7 @@ All configuration changes are automatically logged to the event store for audit 
 ### Configuration Delta Events
 
 ```python
-from bot_v2.monitoring.two_person_rule import log_config_delta
+from gpt_trader.monitoring.two_person_rule import log_config_delta
 
 # Log configuration changes
 changes = {
@@ -376,7 +376,7 @@ log_config_delta(
 ### Querying Event Store
 
 ```python
-from bot_v2.persistence.event_store import EventStore
+from gpt_trader.persistence.event_store import EventStore
 
 event_store = EventStore()
 
@@ -400,7 +400,7 @@ for event in events:
 ### 1. Secrets Management
 
 - [ ] Configure HashiCorp Vault endpoint and token
-- [ ] Set `BOT_V2_ENCRYPTION_KEY` for local encryption
+- [ ] Set `GPT_TRADER_ENCRYPTION_KEY` for local encryption
 - [ ] Store CDP credentials with IP allowlists
 - [ ] Set rotation policy (recommended: 90 days)
 - [ ] Test JWT generation for all services

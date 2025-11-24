@@ -30,4 +30,4 @@ if [[ $# -gt 0 ]]; then
   ARGS+=("$@")
 fi
 
-exec python -m bot_v2.cli "${ARGS[@]}"
+exec python -m gpt_trader.cli "${ARGS[@]}"

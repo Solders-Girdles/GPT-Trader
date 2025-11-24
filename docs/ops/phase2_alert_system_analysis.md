@@ -29,17 +29,17 @@ The two modules serve distinct architectural layers with minimal duplication. Co
 **Import Patterns (16 files):**
 ```python
 # Most common - fundamental types used across monitoring
-from bot_v2.monitoring.alerts import Alert, AlertLevel, AlertSeverity
+from gpt_trader.monitoring.alerts import Alert, AlertLevel, AlertSeverity
 
 # Less common - infrastructure usage
-from bot_v2.monitoring.alerts import AlertDispatcher, AlertChannel
+from gpt_trader.monitoring.alerts import AlertDispatcher, AlertChannel
 ```
 
 **Key Call Sites:**
-- `src/bot_v2/monitoring/__init__.py:10` - Public API exports
-- `src/bot_v2/monitoring/alerts_manager.py:18` - Wraps AlertDispatcher
-- `src/bot_v2/monitoring/runtime_guards/` - Uses AlertSeverity enum
-- `src/bot_v2/features/live_trade/guard_errors.py` - Uses AlertLevel enum
+- `src/gpt_trader/monitoring/__init__.py:10` - Public API exports
+- `src/gpt_trader/monitoring/alerts_manager.py:18` - Wraps AlertDispatcher
+- `src/gpt_trader/monitoring/runtime_guards/` - Uses AlertSeverity enum
+- `src/gpt_trader/features/live_trade/guard_errors.py` - Uses AlertLevel enum
 - Tests: `test_alerts_dispatcher.py`, `test_alert_channels.py`
 
 **Test Coverage:**
@@ -67,18 +67,18 @@ from bot_v2.monitoring.alerts import AlertDispatcher, AlertChannel
 **Import Patterns (4 files):**
 ```python
 # Only used in monitoring module
-from bot_v2.monitoring.alerts_manager import AlertManager
+from gpt_trader.monitoring.alerts_manager import AlertManager
 ```
 
 **Key Call Sites:**
-- `src/bot_v2/monitoring/system/engine.py:22,67-82` - **Primary consumer**:
+- `src/gpt_trader/monitoring/system/engine.py:22,67-82` - **Primary consumer**:
   ```python
   # MonitoringSystem creates AlertManager via profile/settings
   self.alert_manager = AlertManager.from_profile_yaml(path=..., profile=...)
   # or
   self.alert_manager = AlertManager.from_settings(alert_settings)
   ```
-- `src/bot_v2/monitoring/system/engine.py:161,207-323` - Uses `create_alert()`, `get_active_alerts()`
+- `src/gpt_trader/monitoring/system/engine.py:161,207-323` - Uses `create_alert()`, `get_active_alerts()`
 - Tests: `test_alerts_manager.py`, `test_evaluator_frozen_time.py`
 
 **Test Coverage:**

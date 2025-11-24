@@ -46,12 +46,12 @@ That's it! Now, every time you run `git commit`, the pre-commit hooks will run a
 
 ```bash
 # Core suites
-poetry run pytest tests/unit/bot_v2 -q
-poetry run pytest tests/unit/bot_v2/features/brokerages/coinbase -q
-poetry run pytest tests/unit/bot_v2/orchestration -q
+poetry run pytest tests/unit/gpt_trader -q
+poetry run pytest tests/unit/gpt_trader/features/brokerages/coinbase -q
+poetry run pytest tests/unit/gpt_trader/orchestration -q
 
 # Coverage snapshot
-poetry run pytest --cov=bot_v2 --cov-report=term-missing
+poetry run pytest --cov=gpt_trader --cov-report=term-missing
 ```
 
 ### Test Metrics (Current)
@@ -61,7 +61,7 @@ poetry run pytest --cov=bot_v2 --cov-report=term-missing
 
 ## Running the Bot Locally
 
-To run the spot trading bot for development, use the `coinbase-trader` command (legacy alias `perps-bot` remains available; derivatives stay gated behind INTX + `COINBASE_ENABLE_DERIVATIVES=1`):
+To run the spot trading bot for development, use the `coinbase-trader` command (derivatives stay gated behind INTX + `COINBASE_ENABLE_DERIVATIVES=1`):
 
 ```bash
 poetry run coinbase-trader run --profile dev --dev-fast
@@ -82,7 +82,7 @@ Before branching, make sure to:
    - Must maintain 100% pass rate on active tests
 4. **Run the test suite** to ensure nothing is broken
    - `poetry run pytest --collect-only` must report 1484 collected / 1483 selected / 1 deselected
-   - `poetry run pytest tests/unit/bot_v2 -q` must pass
+   - `poetry run pytest tests/unit/gpt_trader -q` must pass
    - No new test failures allowed
 5. **Follow repository organization standards**
    - Place files in correct directories (see Repository Organization below)
@@ -114,7 +114,7 @@ Before branching, make sure to:
 The repository follows a standardized organization optimized for both human developers and AI agents:
 
 #### Source Code & Configuration
-- `/src/bot_v2/` - Active trading system (vertical slice architecture)
+- `/src/gpt_trader/` - Active trading system (vertical slice architecture)
 - `/tests/` - Test files organized by component
 - `/config/` - Configuration files, trading profiles, and templates
 - `/scripts/` - Operational scripts organized by domain:

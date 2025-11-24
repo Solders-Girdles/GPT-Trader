@@ -13,12 +13,12 @@ from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
 
-from bot_v2.features.brokerages.coinbase.client.client import CoinbaseClient
+from gpt_trader.features.brokerages.coinbase.client.client import CoinbaseClient
 
-from bot_v2.backtesting import ClockedBarRunner, SimulatedBroker
-from bot_v2.backtesting.data import CoinbaseHistoricalFetcher, HistoricalDataManager
-from bot_v2.backtesting.types import ClockSpeed, FeeTier
-from bot_v2.features.brokerages.core.interfaces import MarketType, Product
+from gpt_trader.backtesting import ClockedBarRunner, SimulatedBroker
+from gpt_trader.backtesting.data import CoinbaseHistoricalFetcher, HistoricalDataManager
+from gpt_trader.backtesting.types import ClockSpeed, FeeTier
+from gpt_trader.features.brokerages.core.interfaces import MarketType, Product
 
 
 async def run_backtest_example() -> None:

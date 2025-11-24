@@ -41,7 +41,7 @@ The pattern is intentional, well-tested, and should be preserved with improved d
 
 **Dependencies:**
 ```python
-from bot_v2.orchestration.execution import (
+from gpt_trader.orchestration.execution import (
     GuardManager,
     OrderSubmitter,
     OrderValidator,
@@ -87,14 +87,14 @@ from bot_v2.orchestration.execution import (
 
 **Dependencies:**
 ```python
-from bot_v2.features.live_trade.advanced_execution_models.models import (
+from gpt_trader.features.live_trade.advanced_execution_models.models import (
     NormalizedOrderRequest,
     OrderConfig,
     SizingMode,
     StopTrigger,
 )
-from bot_v2.features.live_trade.broker_adapter import BrokerAdapter
-from bot_v2.features.live_trade.dynamic_sizing_helper import DynamicSizingHelper
+from gpt_trader.features.live_trade.broker_adapter import BrokerAdapter
+from gpt_trader.features.live_trade.dynamic_sizing_helper import DynamicSizingHelper
 # ... 5 more dedicated components
 ```
 
@@ -118,7 +118,7 @@ from bot_v2.features.live_trade.dynamic_sizing_helper import DynamicSizingHelper
 
 ### RiskConfig Feature Flags
 
-Defined in `src/bot_v2/config/live_trade_config.py:158-162`:
+Defined in `src/gpt_trader/config/live_trade_config.py:158-162`:
 
 ```python
 enable_market_impact_guard: bool = False
@@ -188,7 +188,7 @@ monitoring:
 
 **LiveExecutionEngine:**
 ```python
-# tests/unit/bot_v2/orchestration/test_live_execution.py:115
+# tests/unit/gpt_trader/orchestration/test_live_execution.py:115
 engine = LiveExecutionEngine(broker=broker, risk_manager=risk)
 ```
 
@@ -227,14 +227,14 @@ def create_engine(
     use_advanced = cls.should_use_advanced_engine(risk_manager)
 
     if use_advanced:
-        from bot_v2.features.live_trade.advanced_execution import AdvancedExecutionEngine
+        from gpt_trader.features.live_trade.advanced_execution import AdvancedExecutionEngine
         engine = AdvancedExecutionEngine(
             broker=broker,
             risk_manager=risk_manager,
         )
         logger.info("Initialized AdvancedExecutionEngine with dynamic sizing integration")
     else:
-        from bot_v2.orchestration.live_execution import LiveExecutionEngine
+        from gpt_trader.orchestration.live_execution import LiveExecutionEngine
         slippage_map = cls.parse_slippage_multipliers()
         engine = LiveExecutionEngine(
             broker=broker,
@@ -369,35 +369,35 @@ If we merged into a single engine:
 ## Appendix: Related Files
 
 ### Execution Engines
-- `src/bot_v2/orchestration/live_execution.py` - LiveExecutionEngine (401 lines)
-- `src/bot_v2/features/live_trade/advanced_execution.py` - AdvancedExecutionEngine (456 lines)
+- `src/gpt_trader/orchestration/live_execution.py` - LiveExecutionEngine (401 lines)
+- `src/gpt_trader/features/live_trade/advanced_execution.py` - AdvancedExecutionEngine (456 lines)
 
 ### Factory
-- `src/bot_v2/orchestration/execution/engine_factory.py` - ExecutionEngineFactory (198 lines)
+- `src/gpt_trader/orchestration/execution/engine_factory.py` - ExecutionEngineFactory (198 lines)
 
 ### LiveExecutionEngine Helpers
-- `src/bot_v2/orchestration/execution/guards.py` - GuardManager
-- `src/bot_v2/orchestration/execution/validation.py` - OrderValidator
-- `src/bot_v2/orchestration/execution/order_submission.py` - OrderSubmitter
-- `src/bot_v2/orchestration/execution/state_collection.py` - StateCollector
+- `src/gpt_trader/orchestration/execution/guards.py` - GuardManager
+- `src/gpt_trader/orchestration/execution/validation.py` - OrderValidator
+- `src/gpt_trader/orchestration/execution/order_submission.py` - OrderSubmitter
+- `src/gpt_trader/orchestration/execution/state_collection.py` - StateCollector
 
 ### AdvancedExecutionEngine Helpers
-- `src/bot_v2/features/live_trade/broker_adapter.py` - BrokerAdapter
-- `src/bot_v2/features/live_trade/order_request_normalizer.py` - OrderRequestNormalizer
-- `src/bot_v2/features/live_trade/stop_trigger_manager.py` - StopTriggerManager
-- `src/bot_v2/features/live_trade/dynamic_sizing_helper.py` - DynamicSizingHelper
-- `src/bot_v2/features/live_trade/order_validation_pipeline.py` - OrderValidationPipeline
-- `src/bot_v2/features/live_trade/order_metrics_reporter.py` - OrderMetricsReporter
+- `src/gpt_trader/features/live_trade/broker_adapter.py` - BrokerAdapter
+- `src/gpt_trader/features/live_trade/order_request_normalizer.py` - OrderRequestNormalizer
+- `src/gpt_trader/features/live_trade/stop_trigger_manager.py` - StopTriggerManager
+- `src/gpt_trader/features/live_trade/dynamic_sizing_helper.py` - DynamicSizingHelper
+- `src/gpt_trader/features/live_trade/order_validation_pipeline.py` - OrderValidationPipeline
+- `src/gpt_trader/features/live_trade/order_metrics_reporter.py` - OrderMetricsReporter
 
 ### Tests
 - LiveExecutionEngine: 10+ test files (runtime guards, preflight, partial fills, etc.)
 - AdvancedExecutionEngine: 6+ test files (characterization, components, integration)
-- Factory: `tests/unit/bot_v2/orchestration/execution/test_engine_factory.py`
+- Factory: `tests/unit/gpt_trader/orchestration/execution/test_engine_factory.py`
 
 ### Config
 - `config/risk/dev_dynamic.json` - Production config (both flags = true)
 - `config/profiles/dev_entry.yaml` - Profile config (both flags = true)
-- `src/bot_v2/config/live_trade_config.py` - RiskConfig definition
+- `src/gpt_trader/config/live_trade_config.py` - RiskConfig definition
 
 ---
 

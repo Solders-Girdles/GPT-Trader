@@ -169,7 +169,7 @@ diff = baseline.diff(new_baseline)  # Detect changes
 
 ### Async Tools
 ```
-src/bot_v2/utilities/async_tools/
+src/gpt_trader/utilities/async_tools/
 ├── retry.py (AsyncRetry class)
 ├── rate_limit.py (AsyncRateLimiter class)
 ├── cache.py (AsyncCache class)
@@ -179,14 +179,14 @@ src/bot_v2/utilities/async_tools/
 
 ### Error Handling
 ```
-src/bot_v2/errors/
+src/gpt_trader/errors/
 ├── __init__.py (Error hierarchy)
 └── handler.py (CircuitBreaker, RecoveryStrategy)
 ```
 
 ### Orchestration
 ```
-src/bot_v2/orchestration/
+src/gpt_trader/orchestration/
 ├── coordinators/
 │   ├── base.py (CoordinatorContext, BaseCoordinator)
 │   ├── registry.py (CoordinatorRegistry)
@@ -199,7 +199,7 @@ src/bot_v2/orchestration/
 
 ### Monitoring
 ```
-src/bot_v2/monitoring/
+src/gpt_trader/monitoring/
 ├── configuration_guardian.py
 ├── runtime_guards.py
 ├── health_checks.py
@@ -209,7 +209,7 @@ src/bot_v2/monitoring/
 
 ### Logging
 ```
-src/bot_v2/utilities/
+src/gpt_trader/utilities/
 ├── logging_patterns.py (StructuredLogger, log_operation)
 ├── console_logging.py (ConsoleLogger)
 └── telemetry.py (emit_metric)
@@ -217,14 +217,14 @@ src/bot_v2/utilities/
 
 ### Configuration
 ```
-src/bot_v2/config/
+src/gpt_trader/config/
 ├── live_trade_config.py (LiveTradeConfig)
 └── utilities/config.py (ConfigBaselinePayload)
 ```
 
 ### Strategy Tools
 ```
-src/bot_v2/features/strategy_tools/
+src/gpt_trader/features/strategy_tools/
 ├── filters.py (MarketConditionFilters)
 ├── guards.py (RiskGuards)
 └── enhancements.py (StrategyEnhancements)

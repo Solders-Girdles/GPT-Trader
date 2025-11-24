@@ -34,7 +34,7 @@ SRC_PATH = REPO_ROOT / "src"
 if str(SRC_PATH) not in sys.path:
     sys.path.append(str(SRC_PATH))
 
-from bot_v2.config.path_registry import RUNTIME_DATA_DIR
+from gpt_trader.config.path_registry import RUNTIME_DATA_DIR
 
 
 def clear():
@@ -131,10 +131,6 @@ def main():
 
     # Resolve base dir for this profile (aligns with Coinbase Trader EventStore root)
     default_root = RUNTIME_DATA_DIR / "coinbase_trader" / args.profile
-    legacy_root = RUNTIME_DATA_DIR / "perps_bot" / args.profile
-    if not default_root.exists() and legacy_root.exists():
-        default_root = legacy_root
-
     base_dir = Path(os.getenv("EVENT_STORE_ROOT", str(default_root)))
     events_path = base_dir / "events.jsonl"
     health_path = base_dir / "health.json"

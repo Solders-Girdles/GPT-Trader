@@ -19,7 +19,7 @@ poetry run python scripts/monitoring/export_metrics.py --metrics-file var/data/c
 
 # Tests
 poetry run pytest --collect-only                      # expect 1484 collected / 1483 selected / 1 deselected
-poetry run pytest -q                                   # full bot_v2 regression suite
+poetry run pytest -q                                   # full gpt_trader regression suite
 ```
 
 Perps execution remains dormant until INTX access is approved and `COINBASE_ENABLE_DERIVATIVES=1` is set.
@@ -45,7 +45,7 @@ DRY_RUN=1
 - After pulling, run `poetry install --with security` when working on authentication flows so optional dependencies like `pyotp` are available for the security tests.
 - Use `poetry run pytest --collect-only` to confirm suite counts (1484 collected / 1483 selected / 1 deselected).
 - The enforcement suite is `poetry run pytest -q`.
-- Real-API or integration flows are archived; build new coverage inside `tests/unit/bot_v2/` when adding features.
+- Real-API or integration flows are archived; build new coverage inside `tests/unit/gpt_trader/` when adding features.
 
 ## Operational Notes
 - Metrics exporter lives at `scripts/monitoring/export_metrics.py`.

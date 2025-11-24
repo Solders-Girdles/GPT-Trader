@@ -36,7 +36,7 @@ def fail(msg: str):
 
 
 def check_files():
-    cli_entry = REPO_ROOT / "src" / "bot_v2" / "cli" / "__init__.py"
+    cli_entry = REPO_ROOT / "src" / "gpt_trader" / "cli" / "__init__.py"
     runbook = REPO_ROOT / "docs" / "ops" / "operations_runbook.md"
     if not cli_entry.exists():
         fail(f"CLI entry point not found: {cli_entry}")
@@ -52,7 +52,7 @@ def check_cli_command():
     existing = env.get("PYTHONPATH")
     src_path = str(REPO_ROOT / "src")
     env["PYTHONPATH"] = src_path if not existing else f"{src_path}{os.pathsep}{existing}"
-    p = run([sys.executable, "-m", "bot_v2.cli", "--help"], capture_output=True, text=True, env=env)
+    p = run([sys.executable, "-m", "gpt_trader.cli", "--help"], capture_output=True, text=True, env=env)
     if p.returncode != 0:
         fail(f"CLI help failed: {p.stderr}")
     if "--profile" not in p.stdout:
@@ -62,8 +62,8 @@ def check_cli_command():
 
 def check_quantization_helper():
     try:
-        from bot_v2.features.brokerages.core.interfaces import Product, MarketType
-        from bot_v2.features.brokerages.coinbase.utilities import enforce_perp_rules
+        from gpt_trader.features.brokerages.core.interfaces import Product, MarketType
+        from gpt_trader.features.brokerages.coinbase.utilities import enforce_perp_rules
     except ImportError as e:
         fail(f"Import failed: {e}\nInstall project deps and run from repo root: pip install -e .")
 
@@ -88,8 +88,8 @@ def run_minimal_cycle():
     """Instantiate PerpsBot (dev) and run a small cycle to ensure wiring works."""
     try:
         import asyncio
-        from bot_v2.orchestration.bootstrap import build_bot
-        from bot_v2.orchestration.configuration import BotConfig
+        from gpt_trader.orchestration.bootstrap import build_bot
+        from gpt_trader.orchestration.configuration import BotConfig
     except ImportError as e:
         fail(f"Import failed: {e}\nEnsure orchestration modules are importable")
 

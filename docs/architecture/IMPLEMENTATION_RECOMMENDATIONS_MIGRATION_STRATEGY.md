@@ -24,7 +24,7 @@ We continue to rank refactor targets using the following dimensions:
 
 ### 1.2 Current Target Order
 
-1. **Orchestration (PerpsBot & Coordinators)** – largest remaining monoliths, highest operational impact.
+1. **Orchestration (TradingBot & Coordinators)** – largest remaining monoliths, highest operational impact.
 2. **Risk Engine & Validation Pipelines** – complex logic benefiting from modular guards and clearer telemetry.
 3. **Monitoring / Reporting** – historically monolithic modules with cross-cutting responsibilities.
 4. **Configuration & Runtime Settings** – scattered definitions that should share schemas and loaders.

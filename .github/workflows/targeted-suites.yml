@@ -68,15 +68,15 @@ jobs:
         if: matrix.category == 'coinbase-api'
         run: |
           set -euo pipefail
-          poetry run pytest tests/unit/bot_v2/features/brokerages/coinbase -v --maxfail=1 --durations=10
-          poetry run pytest tests/unit/bot_v2/orchestration/test_broker_factory.py -v
+          poetry run pytest tests/unit/gpt_trader/features/brokerages/coinbase -v --maxfail=1 --durations=10
+          poetry run pytest tests/unit/gpt_trader/orchestration/test_broker_factory.py -v
 
       - name: Run Coinbase integration smoke
         if: matrix.category == 'coinbase-integration'
         run: |
           set -euo pipefail
           export PYTHONPATH="${GITHUB_WORKSPACE}/src:${GITHUB_WORKSPACE}${PYTHONPATH:+:$PYTHONPATH}"
-          poetry run pytest tests/unit/bot_v2/features/brokerages/coinbase/test_adapter_integration.py -v
+          poetry run pytest tests/unit/gpt_trader/features/brokerages/coinbase/test_adapter_integration.py -v
           poetry run python - <<'PY'
           import os
           import sys
@@ -89,7 +89,7 @@ jobs:
           if workspace not in sys.path:
             sys.path.insert(0, workspace)
 
-          from src.bot_v2.features.brokerages.coinbase.ws import CoinbaseWebSocket, SequenceGuard
+          from src.gpt_trader.features.brokerages.coinbase.ws import CoinbaseWebSocket, SequenceGuard
 
           mock_ws = types.ModuleType('websocket')
           mock_ws.create_connection = lambda url: None
@@ -116,13 +116,13 @@ jobs:
 
           export EVENT_STORE_ROOT="$RUNNER_TEMP/event_store_unit"
           mkdir -p "$EVENT_STORE_ROOT"
-          poetry run pytest tests/unit/bot_v2/features/live_trade -q --tb=short
+          poetry run pytest tests/unit/gpt_trader/features/live_trade -q --tb=short
 
           export EVENT_STORE_ROOT="$RUNNER_TEMP/event_store_orchestration"
           mkdir -p "$EVENT_STORE_ROOT"
           poetry run pytest \
-            tests/unit/bot_v2/orchestration/test_live_execution.py \
-            tests/unit/bot_v2/orchestration/test_execution_coordinator.py \
+            tests/unit/gpt_trader/orchestration/test_live_execution.py \
+            tests/unit/gpt_trader/orchestration/test_execution_coordinator.py \
             -q --tb=short
 
           export EVENT_STORE_ROOT="$RUNNER_TEMP/event_store_validation"
@@ -133,12 +133,12 @@ jobs:
           mkdir -p "$EVENT_STORE_ROOT"
           poetry run python scripts/validation/paper_mode_e2e.py
 
-          poetry run python -m bot_v2.cli --help
+          poetry run python -m gpt_trader.cli --help
 
           export EVENT_STORE_ROOT="$RUNNER_TEMP/event_store_dev"
           export GPT_TRADER_RUNTIME_ROOT="$RUNNER_TEMP/event_store_dev"
           mkdir -p "$EVENT_STORE_ROOT"
-          poetry run python -m bot_v2.cli run --profile dev --dry-run --dev-fast --symbols BTC-PERP
+          poetry run python -m gpt_trader.cli run --profile dev --dry-run --dev-fast --symbols BTC-PERP
 
           export EVENT_STORE_ROOT="$RUNNER_TEMP/event_store_demo"
           export GPT_TRADER_RUNTIME_ROOT="$RUNNER_TEMP/event_store_demo"

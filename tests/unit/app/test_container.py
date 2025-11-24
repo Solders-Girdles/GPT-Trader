@@ -8,11 +8,11 @@ from unittest.mock import ANY, MagicMock, patch
 
 import pytest
 
-from bot_v2.app.container import ApplicationContainer, create_application_container
-from bot_v2.orchestration.configuration import BotConfig, Profile
-from bot_v2.orchestration.runtime_settings import RuntimeSettings
-from bot_v2.persistence.event_store import EventStore
-from bot_v2.persistence.orders_store import OrdersStore
+from gpt_trader.app.container import ApplicationContainer, create_application_container
+from gpt_trader.orchestration.configuration import BotConfig, Profile
+from gpt_trader.config.runtime_settings import RuntimeSettings
+from gpt_trader.persistence.event_store import EventStore
+from gpt_trader.persistence.orders_store import OrdersStore
 
 
 class TestApplicationContainer:
@@ -44,7 +44,7 @@ class TestApplicationContainer:
         container = ApplicationContainer(mock_config)
 
         # Settings should be loaded when accessed
-        with patch("app.container.load_runtime_settings") as mock_load:
+        with patch("gpt_trader.app.container.load_runtime_settings") as mock_load:
             mock_settings = RuntimeSettings()
             mock_load.return_value = mock_settings
 
@@ -70,7 +70,6 @@ class TestApplicationContainer:
         config_controller2 = container.config_controller
         assert config_controller is config_controller2
 
-    @pytest.mark.xfail(reason="Container internal state access mismatch")
     @pytest.mark.xfail(reason="Container internal state access mismatch")
     def test_event_store_creation(self, mock_config: BotConfig) -> None:
         """Test that event store is created correctly."""
@@ -100,7 +99,7 @@ class TestApplicationContainer:
         orders_store2 = container.orders_store
         assert orders_store is orders_store2
 
-    @patch("app.container.MarketDataService")
+    @patch("gpt_trader.app.container.MarketDataService")
     def test_market_data_service_creation(
         self, mock_market_data_service: MagicMock, mock_config: BotConfig
     ) -> None:
@@ -122,7 +121,7 @@ class TestApplicationContainer:
         assert market_data_service is market_data_service2
 
     @pytest.mark.xfail(reason="Container internal state access mismatch")
-    @patch("app.container.ProductCatalog")
+    @patch("gpt_trader.app.container.ProductCatalog")
     def test_product_catalog_creation(
         self, mock_product_catalog: MagicMock, mock_config: BotConfig
     ) -> None:
@@ -144,9 +143,9 @@ class TestApplicationContainer:
         assert product_catalog is product_catalog2
 
     @pytest.mark.xfail(reason="Container internal state access mismatch")
-    @patch("app.container.create_brokerage")
-    @patch("app.container.MarketDataService")
-    @patch("app.container.ProductCatalog")
+    @patch("gpt_trader.app.container.create_brokerage")
+    @patch("gpt_trader.app.container.MarketDataService")
+    @patch("gpt_trader.app.container.ProductCatalog")
     def test_broker_creation(
         self,
         mock_product_catalog: MagicMock,
@@ -192,7 +191,7 @@ class TestApplicationContainer:
     @pytest.mark.xfail(reason="Container internal state access mismatch")
     def test_create_service_registry(self, mock_config: BotConfig) -> None:
         """Test that service registry is created correctly."""
-        with patch("app.container.create_brokerage") as mock_create_brokerage:
+        with patch("gpt_trader.app.container.create_brokerage") as mock_create_brokerage:
             # Setup mocks
             mock_broker = MagicMock()
             mock_event_store = MagicMock()
@@ -228,10 +227,10 @@ class TestApplicationContainer:
             assert registry.runtime_settings == container.settings
 
     @pytest.mark.xfail(reason="Container internal state access mismatch")
-    def test_create_perps_bot(self, mock_config: BotConfig) -> None:
-        """Test that PerpsBot is created correctly from container."""
-        with patch("app.container.create_brokerage") as mock_create_brokerage:
-            with patch("app.container.PerpsBot") as mock_perps_bot_class:
+    def test_create_bot(self, mock_config: BotConfig) -> None:
+        """Test that TradingBot is created correctly from container."""
+        with patch("gpt_trader.app.container.create_brokerage") as mock_create_brokerage:
+            with patch("gpt_trader.app.container.TradingBot") as mock_bot_class:
                 # Setup mocks
                 mock_broker = MagicMock()
                 mock_event_store = MagicMock()
@@ -245,16 +244,16 @@ class TestApplicationContainer:
                     mock_market_data,
                     mock_product_catalog,
                 )
-                mock_perps_bot_class.return_value = mock_bot
+                mock_bot_class.return_value = mock_bot
 
                 container = ApplicationContainer(mock_config)
 
                 # Create bot
-                bot = container.create_perps_bot()
+                bot = container.create_bot()
 
                 # Verify bot was created with correct dependencies
-                mock_perps_bot_class.assert_called_once()
-                call_args = mock_perps_bot_class.call_args
+                mock_bot_class.assert_called_once()
+                call_args = mock_bot_class.call_args
 
                 assert call_args.kwargs["config_controller"] == container.config_controller
                 assert call_args.kwargs["registry"] is not None
@@ -271,10 +270,10 @@ class TestApplicationContainer:
                 assert bot == mock_bot
 
     @pytest.mark.xfail(reason="Container internal state access mismatch")
-    def test_create_perps_bot_with_overrides(self, mock_config: BotConfig) -> None:
-        """Test that PerpsBot can be created with overrides."""
-        with patch("app.container.create_brokerage") as mock_create_brokerage:
-            with patch("app.container.PerpsBot") as mock_perps_bot_class:
+    def test_create_bot_with_overrides(self, mock_config: BotConfig) -> None:
+        """Test that TradingBot can be created with overrides."""
+        with patch("gpt_trader.app.container.create_brokerage") as mock_create_brokerage:
+            with patch("gpt_trader.app.container.TradingBot") as mock_bot_class:
                 # Setup mocks
                 mock_broker = MagicMock()
                 mock_event_store = MagicMock()
@@ -295,12 +294,12 @@ class TestApplicationContainer:
                     mock_market_data,
                     mock_product_catalog,
                 )
-                mock_perps_bot_class.return_value = mock_bot
+                mock_bot_class.return_value = mock_bot
 
                 container = ApplicationContainer(mock_config)
 
                 # Create bot with overrides
-                _ = container.create_perps_bot(
+                _ = container.create_bot(
                     config_controller=mock_override_config_controller,
                     registry=mock_override_registry,
                     event_store=mock_override_event_store,
@@ -311,8 +310,8 @@ class TestApplicationContainer:
                 )
 
                 # Verify bot was created with overrides
-                mock_perps_bot_class.assert_called_once()
-                call_args = mock_perps_bot_class.call_args
+                mock_bot_class.assert_called_once()
+                call_args = mock_bot_class.call_args
 
                 assert call_args.kwargs["config_controller"] == mock_override_config_controller
                 assert call_args.kwargs["registry"] == mock_override_registry
@@ -329,7 +328,7 @@ class TestApplicationContainer:
     @pytest.mark.xfail(reason="Container internal state access mismatch")
     def test_reset_broker(self, mock_config: BotConfig) -> None:
         """Test that broker can be reset."""
-        with patch("app.container.create_brokerage") as mock_create_brokerage:
+        with patch("gpt_trader.app.container.create_brokerage") as mock_create_brokerage:
             mock_broker = MagicMock()
             mock_create_brokerage.return_value = (
                 mock_broker,
@@ -385,7 +384,7 @@ class TestCreateApplicationContainer:
         """Test that application container is created correctly."""
         settings = RuntimeSettings()
 
-        with patch("app.container.ApplicationContainer") as mock_container_class:
+        with patch("gpt_trader.app.container.ApplicationContainer") as mock_container_class:
             mock_container = MagicMock()
             mock_container_class.return_value = mock_container
 
@@ -397,7 +396,7 @@ class TestCreateApplicationContainer:
     @pytest.mark.xfail(reason="Container internal state access mismatch")
     def test_create_application_container_without_settings(self, mock_config: BotConfig) -> None:
         """Test that application container is created correctly without settings."""
-        with patch("app.container.ApplicationContainer") as mock_container_class:
+        with patch("gpt_trader.app.container.ApplicationContainer") as mock_container_class:
             mock_container = MagicMock()
             mock_container_class.return_value = mock_container
 
@@ -411,10 +410,5 @@ class TestCreateApplicationContainer:
 def mock_config() -> BotConfig:
     """Create a mock BotConfig for testing."""
     return BotConfig(
-        profile=Profile.DEV,
-        mock_broker=True,
         symbols=["BTC-USD"],
-        trading_window_start="09:30",
-        trading_window_end="16:00",
-        trading_days=["MON", "TUE", "WED", "THU", "FRI"],
     )

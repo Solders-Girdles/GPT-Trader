@@ -125,11 +125,11 @@ tail -f var/logs/coinbase_trader.log | grep "PnL"
 ```python
 # Custom paper trading settings
 from decimal import Decimal
-from bot_v2.orchestration.deterministic_broker import DeterministicBroker
+from gpt_trader.orchestration.deterministic_broker import DeterministicBroker
 
 broker = DeterministicBroker(equity=Decimal("100000"))
 broker.set_mark("BTC-PERP", Decimal("50000"))
-# Inject `broker` into a custom ServiceRegistry or patch `PerpsBot` during tests
+# Inject `broker` into a custom ServiceRegistry or patch `TradingBot` during tests
 ```
 
 ## Transition to Live Trading

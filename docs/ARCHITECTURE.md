@@ -1,8 +1,20 @@
 # System Architecture
 
+## ⚠️ Architecture Transition (Active)
+
+**Important Note for Developers and Agents:**
+
+This project is currently undergoing a major architectural migration from a legacy "Orchestration" pattern (monolithic builders) to a modern **Dependency Injection** pattern using `ApplicationContainer`.
+
+- **Legacy Core:** `src/gpt_trader/orchestration/` (being phased out/refactored)
+- **Modern Core:** `src/gpt_trader/app/` (Composition Root) and `src/gpt_trader/features/` (Vertical Slices)
+- **Migration Guide:** See [COMPOSITION_ROOT_MIGRATION_GUIDE.md](COMPOSITION_ROOT_MIGRATION_GUIDE.md) for detailed instructions on how to use the new container system.
+
+While this document describes the **target architecture**, you will encounter "zombie" files, legacy shims, and competing patterns (e.g., `PerpsBotBuilder` vs `ApplicationContainer`) in the codebase. Always prefer the patterns defined in `src/gpt_trader/app` and `src/gpt_trader/features` over those in `src/gpt_trader/orchestration` where they conflict.
+
 ---
-status: current
-last-updated: 2025-10-12
+status: transition
+last-updated: 2025-11-23
 ---
 
 ## Current State
@@ -23,10 +35,10 @@ GPT-Trader V2 is a production-ready Coinbase **spot** trading system that retain
 
 ### Vertical Slice Design
 
-The system is organized into vertical feature slices under `src/bot_v2/features/`. Production-critical slices (e.g., `live_trade`, `brokerages`, `position_sizing`) ship with full test coverage.
+The system is organized into vertical feature slices under `src/gpt_trader/features/`. Production-critical slices (e.g., `live_trade`, `brokerages`, `position_sizing`) ship with full test coverage.
 
 ```
-src/bot_v2/features/
+src/gpt_trader/features/
 ├── adaptive_portfolio/  # Portfolio allocation tuning + experiments
 ├── analyze/             # Market analytics helpers
 ├── brokerages/          # Exchange integrations
@@ -40,7 +52,7 @@ src/bot_v2/features/
 Additional cross-cutting packages now live at the top level:
 
 ```
-src/bot_v2/
+src/gpt_trader/
 ├── monitoring/          # Runtime guards, configuration guardian, system logger
 └── validation/          # Declarative validators and decorators
 ```
@@ -54,26 +66,26 @@ Risk Guards → Coinbase Brokerage Adapter → Metrics + Telemetry
 
 ### Entry Point & Service Wiring
 
-- `poetry run coinbase-trader` invokes `bot_v2.cli:main`, producing a `BotConfig` from
+- `poetry run coinbase-trader` invokes `gpt_trader.cli:main`, producing a `BotConfig` from
   CLI arguments and environment overrides.
-- `bot_v2/orchestration/bootstrap.py` hydrates the `ServiceRegistry`, wiring the
+- `gpt_trader/orchestration/bootstrap.py` hydrates the `ServiceRegistry`, wiring the
   broker adapter, risk manager, execution engine, and telemetry surfaces before
-  handing the bundle to `PerpsBot`.
+  handing the bundle to `TradingBot`.
 
 ### Core Subsystems
 
 | Module | Purpose |
 |--------|---------|
-| `bot_v2/features/live_trade` | Main control loop, position tracking, and order routing |
-| `bot_v2/features/live_trade/risk/` | Risk management subpackage: position sizing, pre-trade validation, runtime monitoring, state management |
-| `bot_v2/orchestration/` | Core orchestration layer: config management, execution/runtime/strategy coordination, telemetry, reconciliation |
-| `bot_v2/orchestration/execution/` | Execution subpackage: guards, validation, order submission, state collection |
-| `bot_v2/features/brokerages/coinbase` | REST/WS integration for Coinbase Advanced Trade spot markets |
-| `bot_v2/features/brokerages/coinbase/client/` | Modular client package with mixins (accounts, orders, portfolio, market data) |
-| `bot_v2/features/brokerages/coinbase/rest/` | REST service layer: orders, portfolio, products, P&L calculation |
-| `bot_v2/features/position_sizing` | Kelly-style sizing with guardrails |
-| `bot_v2/monitoring` | Runtime guard orchestration, alert dispatch, system metrics |
-| `bot_v2/validation` | Predicate-based validators and input decorators |
+| `gpt_trader/features/live_trade` | Main control loop, position tracking, and order routing |
+| `gpt_trader/features/live_trade/risk/` | Risk management subpackage: position sizing, pre-trade validation, runtime monitoring, state management |
+| `gpt_trader/orchestration/` | Core orchestration layer: config management, execution/runtime/strategy coordination, telemetry, reconciliation |
+| `gpt_trader/orchestration/execution/` | Execution subpackage: guards, validation, order submission, state collection |
+| `gpt_trader/features/brokerages/coinbase` | REST/WS integration for Coinbase Advanced Trade spot markets |
+| `gpt_trader/features/brokerages/coinbase/client/` | Modular client package with mixins (accounts, orders, portfolio, market data) |
+| `gpt_trader/features/brokerages/coinbase/rest/` | REST service layer: orders, portfolio, products, P&L calculation |
+| `gpt_trader/features/position_sizing` | Kelly-style sizing with guardrails |
+| `gpt_trader/monitoring` | Runtime guard orchestration, alert dispatch, system metrics |
+| `gpt_trader/validation` | Predicate-based validators and input decorators |
 
 #### Coordinator Pattern (new 2025-10)
 
@@ -91,17 +103,17 @@ rationale.
 
 **Registered coordinators**
 
-- Runtime (`bot_v2/orchestration/coordinators/runtime.py`) – broker & risk bootstrap, reconciliation
-- Execution (`bot_v2/orchestration/coordinators/execution.py`) – order placement, guards, locks
-- Strategy (`bot_v2/orchestration/coordinators/strategy.py`) – trading cycle, mark management,
+- Runtime (`gpt_trader/orchestration/coordinators/runtime.py`) – broker & risk bootstrap, reconciliation
+- Execution (`gpt_trader/orchestration/coordinators/execution.py`) – order placement, guards, locks
+- Strategy (`gpt_trader/orchestration/coordinators/strategy.py`) – trading cycle, mark management,
   strategy orchestration
-- Telemetry (`bot_v2/orchestration/coordinators/telemetry.py`) – account telemetry, market monitor,
+- Telemetry (`gpt_trader/orchestration/coordinators/telemetry.py`) – account telemetry, market monitor,
   websocket streaming
 
-_PerpsBot facade_
+_TradingBot facade_
 
 ```
-PerpsBot
+TradingBot
 └── CoordinatorRegistry
     ├── RuntimeCoordinator
     ├── ExecutionCoordinator
@@ -111,13 +123,13 @@ PerpsBot
 
 **Lifecycle flow**
 
-1. `PerpsBot` constructs a `CoordinatorRegistry` using the initial context from the service registry.
+1. `TradingBot` constructs a `CoordinatorRegistry` using the initial context from the service registry.
 2. `LifecycleManager.bootstrap()` calls `initialize_all()` so each coordinator can create
    dependencies and emit context updates.
 3. `LifecycleManager.run()` delegates to `start_all_background_tasks()` to launch async work.
 4. `LifecycleManager.shutdown()` invokes `shutdown_all()` for clean cancellation and teardown.
 
-Legacy facades (e.g., `bot_v2/orchestration/telemetry_coordinator.py`) remain as thin wrappers to
+Legacy facades (e.g., `gpt_trader/orchestration/telemetry_coordinator.py`) remain as thin wrappers to
 preserve existing imports while downstream consumers migrate to the new modules.
 
 #### Coinbase Client Package
@@ -125,7 +137,7 @@ preserve existing imports while downstream consumers migrate to the new modules.
 The previous monolithic `client.py` was replaced with a composable package (`client/__init__.py`
 plus mixins). Each mixin owns a REST surface (accounts, orders, market data, portfolio), while the
 base class centralises retry, throttling, and auth wiring. Scripts and slices now import through
-`bot_v2.features.brokerages.coinbase.client import CoinbaseClient` to ensure consistent
+`gpt_trader.features.brokerages.coinbase.client import CoinbaseClient` to ensure consistent
 initialisation.
 
 A parallel REST service layer (`rest/`) provides higher-level operations:
@@ -151,16 +163,16 @@ This modular design achieves 66% file size reduction with clear separation of co
 
 #### Monitoring & Validation Framework
 
-- **Validators** (`bot_v2/validation`): the base `Validator` now accepts inline predicates and
+- **Validators** (`gpt_trader/validation`): the base `Validator` now accepts inline predicates and
   optional value coercion, enabling concise one-off validations while keeping legacy subclasses.
-- **Runtime guards** (`bot_v2/monitoring/runtime_guards.py`): guard evaluation supports rich
+- **Runtime guards** (`gpt_trader/monitoring/runtime_guards.py`): guard evaluation supports rich
   comparison modes (`gt`, `lt`, `abs_gt`, etc.), warning bands, and contextual messaging to power
   both orchestration checks and monitoring dashboards.
-- **Guard alert dispatcher** (`bot_v2/features/live_trade/guard_errors.py`): wraps the lightweight
+- **Guard alert dispatcher** (`gpt_trader/features/live_trade/guard_errors.py`): wraps the lightweight
   alert manager to emit guard failures without depending on the retired alert stack. Restore the
   multi-channel router from the legacy bundle (`docs/archive/legacy_recovery.md`) if you still need
   email, Slack, or PagerDuty integrations.
-- **Risk metrics aggregation** (`bot_v2/features/live_trade/risk_metrics.py`): periodic EventStore
+- **Risk metrics aggregation** (`gpt_trader/features/live_trade/risk_metrics.py`): periodic EventStore
   snapshots feed into the monitoring stack for dashboards and analytics.
 
 ### Derivatives Gate
@@ -234,7 +246,7 @@ The orchestration layer provides coordinated control across trading operations t
 - `broker_factory.py` - Broker instantiation with environment-based configuration
 - `session_guard.py` - Trading window enforcement
 - `market_monitor.py` - Market data freshness monitoring
-- `perps_bot.py` - Main orchestrator coordinating all components
+- `trading_bot/bot.py` - Main orchestrator coordinating all components
 
 ## What's Actually Working
 
@@ -320,7 +332,7 @@ monitoring: real-time
   Prometheus exporter (`scripts/monitoring/export_metrics.py`). The live risk manager now emits
   snapshot events consumed by dashboards and the monitoring stack.
 - **Account Snapshots**: periodic telemetry via `CoinbaseAccountManager` with fee/limit tracking.
-- **System Monitoring**: `bot_v2/monitoring/system/` provides resource telemetry collectors used by
+- **System Monitoring**: `gpt_trader/monitoring/system/` provides resource telemetry collectors used by
   the runtime guard manager and dashboards.
 - **System Footprint**: bot process typically <50 MB RSS with sub-100 ms WebSocket latency in spot
   mode.

@@ -33,7 +33,7 @@ Closes #<issue-id(s)>
 - [ ] Added/updated sampling examples in tests (if applicable)
 
 ## Configuration
-- [ ] If config changed: `python -m bot_v2.cli.config validate --profile <name>` passes
+- [ ] If config changed: `python -m gpt_trader.cli.config validate --profile <name>` passes
 - [ ] Env docs re-generated (if applicable) and committed
 - [ ] No `ConfigLoader` usages introduced (ConfigManager-only)
 

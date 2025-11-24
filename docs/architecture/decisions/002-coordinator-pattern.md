@@ -4,7 +4,7 @@
 Accepted – Implemented 2025-10-12
 
 ## Context
-- The original orchestration layer coupled coordinator logic tightly to `PerpsBot`, making it difficult to test modules in isolation.
+- The original orchestration layer coupled coordinator logic tightly to `TradingBot` (formerly `PerpsBot`), making it difficult to test modules in isolation.
 - Lifecycle concerns (initialisation, background tasks, shutdown) were scattered across multiple classes, leading to inconsistent behaviour and duplicated logic.
 - Adding new orchestration features required deep knowledge of bot internals because dependencies were pulled directly from the bot instance.
 - Health monitoring for background processes was ad-hoc and incomplete, creating blind spots during production incidents.
@@ -15,7 +15,7 @@ Accepted – Implemented 2025-10-12
   - `BaseCoordinator` & `Coordinator` protocol: Defines a consistent lifecycle contract (`initialize`, `start_background_tasks`, `shutdown`, `health_check`).
   - `CoordinatorRegistry`: Registers coordinators, manages lifecycle orchestration, and propagates context updates.
 - Migrate Runtime, Execution, Strategy, and Telemetry concerns into concrete coordinators that each consume the shared context.
-- Update `PerpsBot` to build coordinators through the registry and expose them via properties for backwards compatibility.
+- Update `TradingBot` to build coordinators through the registry and expose them via properties for backwards compatibility.
 - Refactor `LifecycleManager` to delegate initialisation, task start-up, and shutdown to the registry.
 - Retire legacy facade classes in favour of importing coordinators directly, simplifying the public API.
 
@@ -33,11 +33,11 @@ Accepted – Implemented 2025-10-12
 
 ### Migration Strategy
 - Phase 1 (Completed): Introduced context/registry infrastructure and migrated Runtime/Execution/Strategy coordinators.
-- Phase 2 (Completed): Migrated Telemetry coordinator, wired `PerpsBot` and `LifecycleManager` to the registry, preserved facades.
+- Phase 2 (Completed): Migrated Telemetry coordinator, wired `TradingBot` and `LifecycleManager` to the registry, preserved facades.
 - Phase 3 (Planned): Document deprecation timeline for facade APIs; evaluate moving remaining orchestration helpers (e.g., `SystemMonitor`) into coordinators once stable.
 
 ## References
-- `src/bot_v2/orchestration/coordinators/`
-- `src/bot_v2/orchestration/perps_bot.py`
-- `src/bot_v2/orchestration/lifecycle_manager.py`
-- Tests under `tests/unit/bot_v2/orchestration/coordinators/`
+- `src/gpt_trader/orchestration/coordinators/`
+- `src/gpt_trader/orchestration/trading_bot/bot.py`
+- `src/gpt_trader/orchestration/lifecycle_manager.py`
+- Tests under `tests/unit/gpt_trader/orchestration/coordinators/`

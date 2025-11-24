@@ -123,11 +123,11 @@ def create_engine(cls, broker, risk_manager, event_store, bot_id, enable_preview
     use_advanced = cls.should_use_advanced_engine(risk_manager)
 
     if use_advanced:
-        from bot_v2.features.live_trade.advanced_execution import AdvancedExecutionEngine
+        from gpt_trader.features.live_trade.advanced_execution import AdvancedExecutionEngine
         engine = AdvancedExecutionEngine(broker=broker, risk_manager=risk_manager)
         logger.info("Initialized AdvancedExecutionEngine")
     else:
-        from bot_v2.orchestration.live_execution import LiveExecutionEngine
+        from gpt_trader.orchestration.live_execution import LiveExecutionEngine
         engine = LiveExecutionEngine(
             broker=broker,
             risk_manager=risk_manager,
@@ -226,15 +226,15 @@ This ADR follows the same principle: **modular, composable services** with **fea
 ## References
 
 - **Analysis:** `docs/ops/phase3_execution_layer_analysis.md`
-- **Factory:** `src/bot_v2/orchestration/execution/engine_factory.py`
-- **LiveExecutionEngine:** `src/bot_v2/orchestration/live_execution.py`
-- **AdvancedExecutionEngine:** `src/bot_v2/features/live_trade/advanced_execution.py`
-- **RiskConfig:** `src/bot_v2/config/live_trade_config.py`
+- **Factory:** `src/gpt_trader/orchestration/execution/engine_factory.py`
+- **LiveExecutionEngine:** `src/gpt_trader/orchestration/live_execution.py`
+- **AdvancedExecutionEngine:** `src/gpt_trader/features/live_trade/advanced_execution.py`
+- **RiskConfig:** `src/gpt_trader/config/live_trade_config.py`
 - **Production Config:** `config/risk/dev_dynamic.json`
 - **Tests:**
-  - LiveExecutionEngine: `tests/unit/bot_v2/orchestration/test_live_execution.py` (+9 more)
-  - AdvancedExecutionEngine: `tests/unit/bot_v2/features/live_trade/test_advanced_execution.py` (+5 more)
-  - Factory: `tests/unit/bot_v2/orchestration/execution/test_engine_factory.py`
+  - LiveExecutionEngine: `tests/unit/gpt_trader/orchestration/test_live_execution.py` (+9 more)
+  - AdvancedExecutionEngine: `tests/unit/gpt_trader/features/live_trade/test_advanced_execution.py` (+5 more)
+  - Factory: `tests/unit/gpt_trader/orchestration/execution/test_engine_factory.py`
 
 ---
 

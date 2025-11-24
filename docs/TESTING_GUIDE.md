@@ -12,10 +12,10 @@ poetry run pytest
 poetry run pytest --cov --cov-report=html --cov-report=term
 
 # Run specific test file
-poetry run pytest tests/unit/bot_v2/config/test_schemas.py
+poetry run pytest tests/unit/gpt_trader/config/test_schemas.py
 
 # Run specific test class or function
-poetry run pytest tests/unit/bot_v2/config/test_schemas.py::TestBotConfig::test_valid_config
+poetry run pytest tests/unit/gpt_trader/config/test_schemas.py::TestBotConfig::test_valid_config
 
 # Run tests matching a pattern
 poetry run pytest -k "test_error"
@@ -45,7 +45,7 @@ xdg-open var/results/coverage/html/index.html
 """Tests for module_name."""
 
 import pytest
-from bot_v2.module import ThingToTest
+from gpt_trader.module import ThingToTest
 
 
 class TestThingToTest:
@@ -73,7 +73,7 @@ class TestThingToTest:
 ```
 tests/
 ├── unit/                  # Unit tests (fast, isolated)
-│   └── bot_v2/
+│   └── gpt_trader/
 │       ├── config/        # Mirrors src structure
 │       ├── features/
 │       └── ...
@@ -216,14 +216,14 @@ async def test_async_error_handling(self):
 def test_api_call(mocker):
     """Test API call without hitting real API."""
     mock_response = {"price": "50000.00"}
-    mocker.patch("bot_v2.api.get_price", return_value=mock_response)
+    mocker.patch("gpt_trader.api.get_price", return_value=mock_response)
 
     result = fetch_price("BTC-USD")
     assert result == "50000.00"
 
 def test_api_error_handling(mocker):
     """Test API error handling."""
-    mocker.patch("bot_v2.api.get_price", side_effect=NetworkError("API down"))
+    mocker.patch("gpt_trader.api.get_price", side_effect=NetworkError("API down"))
 
     with pytest.raises(NetworkError):
         fetch_price("BTC-USD")
@@ -257,8 +257,8 @@ def test_api_error_handling(mocker):
 
 ```bash
 # Check coverage for specific module
-poetry run pytest tests/unit/bot_v2/config/ \
-    --cov=src/bot_v2/config \
+poetry run pytest tests/unit/gpt_trader/config/ \
+    --cov=src/gpt_trader/config \
     --cov-report=term-missing
 
 # Find uncovered lines
@@ -325,7 +325,7 @@ def test_complex_logic(self):
 ### Running Single Test
 ```bash
 # Run single test with verbose output
-poetry run pytest tests/unit/bot_v2/config/test_schemas.py::TestBotConfig::test_valid_config -vv
+poetry run pytest tests/unit/gpt_trader/config/test_schemas.py::TestBotConfig::test_valid_config -vv
 ```
 
 ## Common Issues
@@ -348,7 +348,7 @@ echo $PYTHONPATH
 tests/
 ├── conftest.py           # Project-level fixtures
 └── unit/
-    └── bot_v2/
+    └── gpt_trader/
         └── conftest.py   # Module-level fixtures
 ```
 
@@ -359,7 +359,7 @@ cat .coveragerc
 
 # Check that source path is correct
 [run]
-source = src/bot_v2  # Should point to your source code
+source = src/gpt_trader  # Should point to your source code
 ```
 
 ## Resources

@@ -30,12 +30,12 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT))
 sys.path.insert(0, str(REPO_ROOT / "src"))
 
-from bot_v2.orchestration.configuration import BotConfig
-from bot_v2.orchestration.bootstrap import bot_from_profile
+from gpt_trader.orchestration.configuration import BotConfig
+from gpt_trader.orchestration.bootstrap import bot_from_profile
 
 if TYPE_CHECKING:
-    from bot_v2.orchestration.perps_bot import PerpsBot
-from bot_v2.features.brokerages.core.interfaces import OrderSide, OrderType, OrderStatus
+    from gpt_trader.orchestration.trading_bot import PerpsBot
+from gpt_trader.features.brokerages.core.interfaces import OrderSide, OrderType, OrderStatus
 
 
 def ok(label: str):

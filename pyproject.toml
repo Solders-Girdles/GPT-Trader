@@ -37,18 +37,12 @@ testing-extended = ["faker>=37.11.0,<38.0.0", "freezegun>=1.2.0,<2.0.0", "respon
 ci = ["pre-commit>=4.3.0,<5.0.0", "pip-audit>=2.9.0,<3.0.0", "bandit>=1.7.9,<2.0.0"]
 
 [project.scripts]
-coinbase-trader = "bot_v2.cli:main"
-perps-bot = "bot_v2.cli:main"  # legacy alias kept for backwards compatibility
+coinbase-trader = "gpt_trader.cli:main"
 
 [tool.poetry]
 packages = [
-    { include = "bot_v2", from = "src" },
+    { include = "gpt_trader", from = "src" },
 ]
-include = [
-    { path = "src/bot_v2/features/brokerages/fixtures/*.yaml", format = "sdist" },
-    { path = "src/bot_v2/features/brokerages/fixtures/*.yaml", format = "wheel" },
-]
-
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.14.0"
 black = "^25.9.0"
@@ -123,9 +117,7 @@ ignore_missing_imports = true
 explicit_package_bases = true
 mypy_path = "src"
 files = [
-    "src/bot_v2",
+    "src/gpt_trader",
 ]
-exclude = [
-    "^src/scripts/",
-]
+
 # Pytest configuration moved to pytest.ini for better organization

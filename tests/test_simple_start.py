@@ -1,8 +1,8 @@
 import asyncio
 import pytest
 from unittest.mock import MagicMock
-from bot_v2.orchestration.configuration import BotConfig
-from bot_v2.orchestration.perps_bot.bot import PerpsBot
+from gpt_trader.orchestration.configuration import BotConfig
+from gpt_trader.orchestration.trading_bot.bot import TradingBot
 
 @pytest.mark.asyncio
 async def test_bot_startup_shutdown(monkeypatch):
@@ -17,13 +17,13 @@ async def test_bot_startup_shutdown(monkeypatch):
     mock_client.get_ticker.return_value = {"price": "50000"}
 
     # Monkeypatch the client instantiation in TradingEngine
-    # Since TradingEngine instantiates it in __init__, we need to patch before PerpsBot init
+    # Since TradingEngine instantiates it in __init__, we need to patch before TradingBot init
     # Or patch the class
 
     with pytest.MonkeyPatch.context() as m:
-        m.setattr("bot_v2.orchestration.engines.strategy.CoinbaseClient", lambda **kwargs: mock_client)
+        m.setattr("gpt_trader.features.live_trade.engines.strategy.CoinbaseClient", lambda **kwargs: mock_client)
 
-        bot = PerpsBot(config)
+        bot = TradingBot(config)
 
         # Run a single cycle
         await bot.run(single_cycle=True)

@@ -10,8 +10,8 @@ from __future__ import annotations
 
 import asyncio
 
-from bot_v2.app.container import create_application_container
-from bot_v2.orchestration.configuration import BotConfig, Profile
+from gpt_trader.app.container import create_application_container
+from gpt_trader.orchestration.configuration import BotConfig, Profile
 
 
 async def main() -> None:

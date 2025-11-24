@@ -17,18 +17,18 @@ This is the shared orientation document for all AI agents working in this reposi
 ## 1. Current Mission Snapshot
 - **Live focus:** Coinbase **spot** trading. Perpetual futures logic remains in the tree but real endpoints stay locked behind the Coinbase INTX gate (`COINBASE_ENABLE_DERIVATIVES` must be `1` *and* INTX access is required).
 - **Primary entry point:** `poetry run coinbase-trader run --profile dev --dev-fast`.
-- **Architecture style:** Vertical slices under `src/bot_v2/features/`, but the codebase has grown to 181 Python files—expect multi-file workflows instead of single 500-token modules.
+- **Architecture style:** Vertical slices under `src/gpt_trader/features/`, but the codebase has grown to 181 Python files—expect multi-file workflows instead of single 500-token modules.
 
 ## 2. Directory Compass
 | Area | Purpose |
 |------|---------|
-| `src/bot_v2/orchestration/perps_bot.py` | Core orchestrator used for spot profiles; enforces risk guards, telemetry, and optional perps hooks. |
-| `src/bot_v2/cli/` | CLI wiring (run/account/orders/treasury subcommands). |
-| `src/bot_v2/features/brokerages/coinbase/` | Coinbase adapter, account manager, telemetry helpers. |
-| `src/bot_v2/features/brokerages/coinbase/account_manager.py` | Fee/limit snapshots plus treasury helpers (`convert`, `move-funds`). |
-| `src/bot_v2/orchestration/live_execution.py` | Runtime safety rails (PnL caps, liquidation buffer, volatility CB, correlation checks). |
+| `src/gpt_trader/orchestration/trading_bot/bot.py` | Core orchestrator used for spot profiles; enforces risk guards, telemetry, and optional perps hooks. |
+| `src/gpt_trader/cli/` | CLI wiring (run/account/orders/treasury subcommands). |
+| `src/gpt_trader/features/brokerages/coinbase/` | Coinbase adapter, account manager, telemetry helpers. |
+| `src/gpt_trader/features/brokerages/coinbase/account_manager.py` | Fee/limit snapshots plus treasury helpers (`convert`, `move-funds`). |
+| `src/gpt_trader/orchestration/live_execution.py` | Runtime safety rails (PnL caps, liquidation buffer, volatility CB, correlation checks). |
 | `scripts/monitoring/export_metrics.py` | Prometheus/JSON metrics service for runtime telemetry. |
-| `src/bot_v2/monitoring/` | Additional observability helpers (metrics serialisation, dashboards). |
+| `src/gpt_trader/monitoring/` | Additional observability helpers (metrics serialisation, dashboards). |
 | `docs/guides/paper_trading.md` | Deep dive on mock/paper trading workflows. |
 | `docs/ARCHITECTURE.md` | High-level design doc—update alongside code changes. |
 | `README.md` | Fast-install + day-to-day runbook. |
@@ -50,7 +50,7 @@ poetry run pytest -q                             # Full unit suite
 ## 4. Trading Modes & Perps Status
 1. **Spot (default)**
    - Profiles `dev`, `demo`, `prod`, `canary` auto-normalize symbols to spot markets.
-   - `perps_bot` turns on the deterministic broker stub unless derivatives are explicitly enabled *and* credentials pass validation.
+   - `trading_bot` turns on the deterministic broker stub unless derivatives are explicitly enabled *and* credentials pass validation.
 2. **Perps (future-ready)**
    - Keep the code paths compiling and tested, but call out the INTX dependency in any user-facing change.
    - Guard new work behind checks for `COINBASE_ENABLE_DERIVATIVES` to avoid surprise production enablement.
@@ -58,7 +58,7 @@ poetry run pytest -q                             # Full unit suite
 ## 5. Experimental vs Production Slices
 All legacy experimental slices were removed from the active tree. Retrieve them
 through the legacy bundle when explicitly required (`docs/archive/legacy_recovery.md`).
-Everything under `src/bot_v2/features/` is considered current unless marked
+Everything under `src/gpt_trader/features/` is considered current unless marked
 otherwise in this guide.
 
 ## 6. Operational Tooling
@@ -73,7 +73,7 @@ otherwise in this guide.
 ## 7. Testing Expectations
 - **Command:** `poetry run pytest --collect-only` currently discovers 1484 tests (1483 selected / 1 deselected).
 - **Dependencies:** Install the security extras (`poetry install --with security`) when working on auth flows so libraries like `pyotp` are available for tests.
-- Keep unit tests under `tests/unit/bot_v2/` up to date, and add coverage for new risk or telemetry paths.
+- Keep unit tests under `tests/unit/gpt_trader/` up to date, and add coverage for new risk or telemetry paths.
 
 ## 8. Common Workflows for Agents
 1. **Feature work:**

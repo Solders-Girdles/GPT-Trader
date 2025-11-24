@@ -12,7 +12,7 @@ from decimal import Decimal
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
-from bot_v2.features.brokerages.core.interfaces import (
+from gpt_trader.features.brokerages.core.interfaces import (
     Balance,
     Candle,
     IBrokerage,
@@ -364,7 +364,7 @@ class MockBrokerWithAsyncMethods:
 
     def configure_place_order_success(self, order_id: str = "test_order"):
         """Configure place_order to return a successful order."""
-        from bot_v2.features.brokerages.core.interfaces import OrderSide, OrderType, TimeInForce
+        from gpt_trader.features.brokerages.core.interfaces import OrderSide, OrderType, TimeInForce
 
         test_order = Order(
             id=order_id,

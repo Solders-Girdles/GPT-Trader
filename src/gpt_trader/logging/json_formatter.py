@@ -13,7 +13,7 @@ from .correlation import get_log_context
 
 
 class StructuredJSONFormatter(logging.Formatter):
-    """JSON formatter that includes correlation IDs and domain fields."""
+    """JSON formatter that includes correlation IDs and domain field support."""
 
     def __init__(
         self,
@@ -56,7 +56,7 @@ class StructuredJSONFormatter(logging.Formatter):
             "logger": record.name,
             "message": record.getMessage(),
             "module": record.module,
-            "function": record.funcName,
+            "function": record.funcName if record.funcName is not None else "<module>", # Handle None funcName
             "line": record.lineno,
             "thread": record.thread,
             "process": record.process,
@@ -75,10 +75,18 @@ class StructuredJSONFormatter(logging.Formatter):
         if record.stack_info:
             log_entry["stack_trace"] = record.stack_info
 
-        # Add any extra fields from the log record
-        extra_fields = self._extract_extra_fields(record)
-        if extra_fields:
-            log_entry.update(extra_fields)
+        # Extract extra fields, including those from StructuredLogger
+        if hasattr(record, 'extra'): # StructuredLogger passes extra fields here
+            for key, value in record.extra.items():
+                if key not in log_entry: # Avoid overwriting standard fields
+                    log_entry[key] = value
+
+        # Handle context_ attributes from original _extract_extra_fields (if still needed)
+        # This part of _extract_extra_fields will now become redundant if StructuredLogger always uses 'extra'
+        # but leaving it for backward compatibility if any old records are passed directly.
+        extra_fields_from_record_dict = self._extract_extra_fields(record)
+        if extra_fields_from_record_dict:
+            log_entry.update(extra_fields_from_record_dict)
 
         # Special handling for reserved attributes that might have been added as extra
         for attr in record.__dict__:
@@ -93,7 +101,7 @@ class StructuredJSONFormatter(logging.Formatter):
             return json.dumps(
                 log_entry,
                 ensure_ascii=self.ensure_ascii,
-                default=self.default,
+                default=None, # Pass default=None so cls=DecimalEncoder is always used for Decimals
                 sort_keys=self.sort_keys,
                 cls=DecimalEncoder,
             )

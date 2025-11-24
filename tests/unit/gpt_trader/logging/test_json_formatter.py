@@ -28,6 +28,7 @@ def test_structured_json_formatter_basic():
         msg="Test message",
         args=(),
         exc_info=None,
+        funcName="<module>",
     )
 
     # Format the record

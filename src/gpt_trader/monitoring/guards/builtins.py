@@ -19,16 +19,11 @@ class DailyLossGuard(RuntimeGuard):
         self.last_reset = datetime.now().date()
 
     def _evaluate(self, context: dict[str, Any]) -> tuple[bool, str]:
-        raise RuntimeError("EVALUATE CALLED")
         current_date = datetime.now().date()
-        if current_date.day != 1:
-            raise RuntimeError(f"DEBUG: current={current_date}, last={self.last_reset}, type_cur={type(current_date)}, type_last={type(self.last_reset)}")
         if current_date > self.last_reset:
             self.daily_pnl = Decimal("0")
             self.last_reset = current_date
             self.status = self.status.HEALTHY
-        
-        # raise RuntimeError(f"DEBUG: POST CHECK: current={current_date}, last={self.last_reset}, pnl={self.daily_pnl}")
 
         try:
             pnl = Decimal(str(context.get("pnl", 0)))
@@ -144,7 +139,6 @@ class PositionStuckGuard(RuntimeGuard):
         stuck_positions: list[tuple[str, float]] = []
         for symbol, open_time in list(self.position_times.items()):
             age_seconds = (datetime.now() - open_time).total_seconds()
-            print(f"DEBUG: symbol={symbol}, open_time={open_time}, now={datetime.now()}, age={age_seconds}, threshold={self.config.threshold}")
             if age_seconds > self.config.threshold:
                 stuck_positions.append((symbol, age_seconds))
 

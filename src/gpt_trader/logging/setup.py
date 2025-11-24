@@ -76,18 +76,18 @@ def configure_logging(settings: RuntimeSettings | None = None) -> None:
         root.addHandler(console)
 
     general_max_bytes = int(
-        _env_lookup(raw_env, "COINBASE_TRADER_LOG_MAX_BYTES")
+        _env_lookup(raw_env, "COINBASE_TRADER_LOG_MAX_BYTES", "PERPS_LOG_MAX_BYTES")
         or str(50 * 1024 * 1024)
     )
     general_backups = int(
-        _env_lookup(raw_env, "COINBASE_TRADER_LOG_BACKUP_COUNT") or "10"
+        _env_lookup(raw_env, "COINBASE_TRADER_LOG_BACKUP_COUNT", "PERPS_LOG_BACKUP_COUNT") or "10"
     )
     critical_max_bytes = int(
-        _env_lookup(raw_env, "COINBASE_TRADER_CRIT_LOG_MAX_BYTES")
+        _env_lookup(raw_env, "COINBASE_TRADER_CRIT_LOG_MAX_BYTES", "PERPS_CRIT_LOG_MAX_BYTES")
         or str(10 * 1024 * 1024)
     )
     critical_backups = int(
-        _env_lookup(raw_env, "COINBASE_TRADER_CRIT_LOG_BACKUP_COUNT")
+        _env_lookup(raw_env, "COINBASE_TRADER_CRIT_LOG_BACKUP_COUNT", "PERPS_CRIT_LOG_BACKUP_COUNT")
         or "5"
     )
 
@@ -154,6 +154,8 @@ def configure_logging(settings: RuntimeSettings | None = None) -> None:
         json_critical_handler.setFormatter(json_formatter)
         json_logger.addHandler(json_critical_handler)
 
-    if _env_flag("COINBASE_TRADER_DEBUG", "0", settings=runtime_settings):
+    if _env_flag("COINBASE_TRADER_DEBUG", "0", settings=runtime_settings) or _env_flag(
+        "PERPS_DEBUG", "0", settings=runtime_settings
+    ):
         logging.getLogger("gpt_trader.features.brokerages.coinbase").setLevel(logging.DEBUG)
         logging.getLogger("gpt_trader.orchestration").setLevel(logging.DEBUG)

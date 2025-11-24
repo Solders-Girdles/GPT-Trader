@@ -72,6 +72,7 @@ def log_trading_operation(
     # Get the current log context (includes correlation ID)
     context = get_log_context()
     context.update(kwargs)
+    context["operation"] = operation
 
     logger.log(level, operation, extra=context)
 
@@ -235,9 +236,9 @@ def log_risk_event(
     if symbol:
         context["symbol"] = symbol
     if trigger_value is not None:
-        context["trigger_value"] = str(trigger_value)
+        context["trigger_value"] = f"{trigger_value:.2f}"
     if threshold is not None:
-        context["threshold"] = str(threshold)
+        context["threshold"] = f"{threshold:.2f}"
     if action:
         context["action"] = action
 

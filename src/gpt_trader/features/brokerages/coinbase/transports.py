@@ -229,4 +229,4 @@ class NoopTransport:
         logger.debug("NoopTransport subscribe called (ignored)")
 
     def stream(self) -> Iterable[dict[str, Any]]:
-        return cast(Iterable[dict[str, Any]], empty_stream())
+        return iter([])

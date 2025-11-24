@@ -143,7 +143,7 @@ class PortfolioClientMixin:
         return self._request("GET", path)
 
     def cfm_intraday_current_margin_window(self: CoinbaseClientProtocol) -> dict[str, Any]:
-        path = self._get_endpoint_path("cfm_intraday_margin_window")
+        path = self._get_endpoint_path("cfm_intraday_current_margin_window")
         return self._request("GET", path)
 
     def cfm_intraday_margin_setting(

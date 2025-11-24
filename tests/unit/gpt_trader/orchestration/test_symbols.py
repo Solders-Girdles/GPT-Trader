@@ -133,7 +133,7 @@ def test_normalize_symbol_list_empty_and_whitespace() -> None:
     # Test with None input
     result, logs = symbols.normalize_symbol_list(None, allow_derivatives=True, quote="USD")
 
-    assert result == ["BTC-PERP", "ETH-PERP"]  # Default fallback for derivatives
+    assert result == ["BTC-PERP", "ETH-PERP", "BTC-FUTURES", "ETH-FUTURES"]  # Default fallback for derivatives
     assert len(logs) == 1
     assert logs[0].level == logging.INFO
     assert "No valid symbols provided. Falling back to" in logs[0].message

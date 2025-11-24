@@ -35,9 +35,7 @@ class MinimalCoinbaseBrokerage(IBrokerage):
     def __init__(self, config: APIConfig):
         self.config = config
         self.endpoints = CoinbaseEndpoints(
-            mode=config.api_mode,
-            sandbox=config.sandbox,
-            enable_derivatives=config.enable_derivatives,
+            config
         )
         self.product_catalog = ProductCatalog(ttl_seconds=900)
 

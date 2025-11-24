@@ -51,4 +51,9 @@ class CoinbaseTickerService:
     def _run(self):
         pass
 
+    def get_mark(self, symbol: str) -> Optional[float]:
+        # Assuming 'last' price is the mark for now, or mocked
+        # Since this is mostly a stub/mock service in this context
+        return None
+
 MarketDataService = CoinbaseTickerService

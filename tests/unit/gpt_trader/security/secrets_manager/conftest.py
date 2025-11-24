@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock
+import sys
 
 import pytest
 from cryptography.fernet import Fernet
@@ -76,6 +77,57 @@ def sample_secrets() -> dict[str, dict[str, Any]]:
             "password": "testpassword",
         },
     }
+
+
+@pytest.fixture
+def hvac_stub(monkeypatch: pytest.MonkeyPatch) -> Any:
+    """Mock hvac client stub."""
+    class MockHvacClient:
+        def __init__(self):
+            self._storage = {}
+            self.secrets = MagicMock()
+            self.secrets.kv.v2.create_or_update_secret.side_effect = self._create_or_update
+            self.secrets.kv.v2.read_secret_version.side_effect = self._read
+            self.secrets.kv.v2.delete_metadata_and_all_versions.side_effect = self._delete
+            self.secrets.kv.v2.list_secrets.side_effect = self._list
+            self._authenticated = True
+
+        def is_authenticated(self):
+            return self._authenticated
+
+        def set_authenticated(self, value: bool):
+            self._authenticated = value
+
+        def _create_or_update(self, path, secret, **kwargs):
+            # Wrap secret in an object with .data to match test expectations
+            self._storage[path] = type("Record", (), {"data": secret})()
+            return {"data": {"created_time": "now"}}
+
+        def _read(self, path, **kwargs):
+            if path in self._storage:
+                stored_obj = self._storage[path]
+                # Tests insert objects with .data, but _read returns nested dict structure
+                secret_data = stored_obj.data if hasattr(stored_obj, "data") else stored_obj
+                return {"data": {"data": secret_data}}
+            raise Exception("Secret not found")
+
+        def _delete(self, path, **kwargs):
+            if path in self._storage:
+                del self._storage[path]
+
+        def _list(self, path, **kwargs):
+            keys = list(self._storage.keys())
+            return {"data": {"keys": keys}}
+
+    mock_client = MockHvacClient()
+    
+    # Mock the hvac module
+    mock_hvac = MagicMock()
+    mock_hvac.Client.return_value = mock_client
+    
+    monkeypatch.setitem(sys.modules, "hvac", mock_hvac)
+    
+    return mock_client
 
 
 @pytest.fixture

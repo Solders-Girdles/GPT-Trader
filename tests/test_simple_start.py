@@ -12,22 +12,19 @@ async def test_bot_startup_shutdown(monkeypatch):
         interval=0.1  # Fast interval
     )
 
-    # Mock CoinbaseClient
-    mock_client = MagicMock()
-    mock_client.get_ticker.return_value = {"price": "50000"}
+    # Mock Broker
+    mock_broker = MagicMock()
+    mock_broker.get_ticker.return_value = {"price": "50000"}
 
-    # Monkeypatch the client instantiation in TradingEngine
-    # Since TradingEngine instantiates it in __init__, we need to patch before TradingBot init
-    # Or patch the class
+    # Mock Registry
+    mock_registry = MagicMock()
+    mock_registry.broker = mock_broker
 
-    with pytest.MonkeyPatch.context() as m:
-        m.setattr("gpt_trader.features.live_trade.engines.strategy.CoinbaseClient", lambda **kwargs: mock_client)
+    bot = TradingBot(config, registry=mock_registry)
 
-        bot = TradingBot(config)
+    # Run a single cycle
+    await bot.run(single_cycle=True)
 
-        # Run a single cycle
-        await bot.run(single_cycle=True)
-
-        assert bot.running is False
-        # Verify ticker was called
-        mock_client.get_ticker.assert_called_with("BTC-USD")
+    assert bot.running is False
+    # Verify ticker was called
+    mock_broker.get_ticker.assert_called_with("BTC-USD")

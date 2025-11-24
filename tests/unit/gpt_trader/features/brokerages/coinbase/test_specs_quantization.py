@@ -627,6 +627,7 @@ class TestEnforcePerpsRules:
             min_size=Decimal("0.001"),
             price_increment=Decimal("0.05"),  # 5c ticks to observe rounding
             min_notional=Decimal("10"),
+            leverage_max=20,
         )
 
     @pytest.mark.perps

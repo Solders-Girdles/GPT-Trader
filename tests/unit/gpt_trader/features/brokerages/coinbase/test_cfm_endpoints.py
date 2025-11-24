@@ -106,7 +106,7 @@ def test_cfm_sweep_not_implemented():
 
 def test_cfm_methods_require_advanced_mode():
     """Test that CFM methods are not available in exchange mode."""
-    from gpt_trader.features.brokerages.core.interfaces import InvalidRequestError
+    from gpt_trader.features.brokerages.coinbase.errors import InvalidRequestError
 
     client_ex = make_client(api_mode="exchange")
 

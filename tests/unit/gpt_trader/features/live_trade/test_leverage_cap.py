@@ -17,6 +17,7 @@ def make_product():
         min_size=Decimal("0.001"),
         price_increment=Decimal("0.01"),
         min_notional=Decimal("10"),
+        leverage_max=10,
     )
 
 

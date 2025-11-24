@@ -44,6 +44,10 @@ def log_market_data_update(*args, **kwargs): pass
 def log_system_health(*args, **kwargs): pass
 def log_execution(*args, **kwargs): pass
 
+def get_correlation_id() -> str | None:
+    """Return None for simplified context."""
+    return None
+
 class StructuredLogger:
     pass
 
@@ -54,6 +58,7 @@ LOG_FIELDS = {}
 
 __all__ = [
     "get_logger",
+    "get_correlation_id",
     "log_operation",
     "log_trade_event",
     "log_position_update",

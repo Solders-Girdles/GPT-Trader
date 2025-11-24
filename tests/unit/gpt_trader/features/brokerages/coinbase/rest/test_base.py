@@ -244,7 +244,7 @@ class TestCoinbaseRestServiceBase:
         """Test building order payload with quantity below minimum size."""
         self.product_catalog.get.return_value = self.mock_product
 
-        with pytest.raises(ValidationError, match="quantity .* is below min_size"):
+        with pytest.raises(InvalidRequestError) as exc:
             self.service._build_order_payload(
                 symbol="BTC-USD",
                 side=OrderSide.BUY,
@@ -257,6 +257,7 @@ class TestCoinbaseRestServiceBase:
                 reduce_only=False,
                 leverage=None,
             )
+        assert "Order quantity 0.00010000 is below minimum size 0.001" in str(exc.value)
 
     def test_build_order_payload_notional_below_min_notional(self) -> None:
         """Test building order payload with notional below minimum."""
@@ -266,7 +267,7 @@ class TestCoinbaseRestServiceBase:
         mock_quote.last = Decimal("50.00")  # Low price makes notional too small
         self.service.get_rest_quote = Mock(return_value=mock_quote)
 
-        with pytest.raises(ValidationError, match="notional .* below min_notional"):
+        with pytest.raises(InvalidRequestError) as exc:
             self.service._build_order_payload(
                 symbol="BTC-USD",
                 side=OrderSide.BUY,
@@ -279,6 +280,7 @@ class TestCoinbaseRestServiceBase:
                 reduce_only=False,
                 leverage=None,
             )
+        assert "Order notional 0.0500000000 is below minimum 10" in str(exc.value)
 
     def test_build_order_payload_limit_order_requires_price(self) -> None:
         """Test that limit orders require a price."""
@@ -365,7 +367,7 @@ class TestCoinbaseRestServiceBase:
         mock_order.id = "order_123"
         self.client.place_order.return_value = {"order_id": "order_123"}
 
-        with patch("gpt_trader.features.brokerages.coinbase.models.to_order", return_value=mock_order):
+        with patch("gpt_trader.features.brokerages.coinbase.rest.base.to_order", return_value=mock_order):
             result = self.service._execute_order_payload("BTC-USD", payload, "client_123")
 
         assert result == mock_order
@@ -379,7 +381,7 @@ class TestCoinbaseRestServiceBase:
         self.client.preview_order.return_value = {"success": True}
         self.client.place_order.return_value = {"order_id": "order_123"}
 
-        with patch("gpt_trader.features.brokerages.coinbase.models.to_order", return_value=mock_order):
+        with patch("gpt_trader.features.brokerages.coinbase.rest.base.to_order", return_value=mock_order):
             result = self.service._execute_order_payload("BTC-USD", payload, "client_123")
 
         assert result == mock_order
@@ -437,8 +439,10 @@ class TestCoinbaseRestServiceBase:
         self.client.list_orders.return_value = {"orders": [mock_order_data]}
         mock_order = Mock(spec=Order)
         mock_order.id = "order_123"
+        mock_order.client_id = "client_123"
+        mock_order.created_at = datetime(2024, 1, 1)
 
-        with patch("gpt_trader.features.brokerages.coinbase.models.to_order", return_value=mock_order):
+        with patch("gpt_trader.features.brokerages.coinbase.rest.base.to_order", return_value=mock_order):
             result = self.service._find_existing_order_by_client_id("BTC-USD", "client_123")
 
         assert result == mock_order
@@ -474,8 +478,10 @@ class TestCoinbaseRestServiceBase:
         self.client.list_orders.return_value = {"orders": [order1, order2]}
         mock_order = Mock(spec=Order)
         mock_order.id = "order_2"
+        mock_order.client_id = "client_123"
+        mock_order.created_at = datetime(2024, 1, 1, 1)
 
-        with patch("gpt_trader.features.brokerages.coinbase.models.to_order", return_value=mock_order):
+        with patch("gpt_trader.features.brokerages.coinbase.rest.base.to_order", return_value=mock_order):
             result = self.service._find_existing_order_by_client_id("BTC-USD", "client_123")
 
         assert result == mock_order
@@ -490,7 +496,7 @@ class TestCoinbaseRestServiceBase:
 
     def test_update_position_metrics_no_position(self) -> None:
         """Test updating position metrics when no position exists."""
-        self.service._update_position_metrics("BTC-USD")
+        self.service.update_position_metrics("BTC-USD")
 
         # Should not raise any errors
         self.market_data.get_mark.assert_not_called()
@@ -505,7 +511,7 @@ class TestCoinbaseRestServiceBase:
         self.service._positions["BTC-USD"] = position
         self.market_data.get_mark.return_value = None
 
-        self.service._update_position_metrics("BTC-USD")
+        self.service.update_position_metrics("BTC-USD")
 
         # Should not raise any errors
         self.event_store.append_position.assert_not_called()
@@ -524,7 +530,7 @@ class TestCoinbaseRestServiceBase:
             datetime(2024, 1, 1, 12, 0, 0),
         )
 
-        self.service._update_position_metrics("BTC-USD")
+        self.service.update_position_metrics("BTC-USD")
 
         # Should call event store methods
         self.event_store.append_metric.assert_called()
@@ -554,12 +560,14 @@ class TestCoinbaseRestServiceBase:
         with patch.object(
             self.service._funding_calculator, "accrue_if_due", return_value=Decimal("5.0")
         ):
-            self.service._update_position_metrics("BTC-USD")
+            self.service.update_position_metrics("BTC-USD")
 
         # Should have recorded funding metric
-        metric_call = self.event_store.append_metric.call_args
-        assert metric_call[1]["metrics"]["type"] == "funding"
-        assert metric_call[1]["metrics"]["funding_amount"] == "5.0"
+        # First call should be funding, second call is position state
+        assert self.event_store.append_metric.call_count >= 1
+        funding_call = self.event_store.append_metric.call_args_list[0]
+        assert funding_call.kwargs["metrics"]["type"] == "funding"
+        assert funding_call.kwargs["metrics"]["funding_amount"] == "5.0"
 
         # Position should have updated realized PnL
         assert position.realized_pnl == Decimal("5.0")
@@ -588,6 +596,7 @@ class TestCoinbaseRestServiceBase:
         )
         self.service._positions["BTC-USD"] = position
         self.market_data.get_mark.return_value = Decimal("51000")
+        self.product_catalog.get_funding.return_value = (Decimal("0"), None)
 
         self.service.update_position_metrics("BTC-USD")
 

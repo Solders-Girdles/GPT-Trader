@@ -4,11 +4,14 @@ Acts as the main entry point runner.
 """
 import asyncio
 import logging
-from typing import Any
+from typing import Any, TYPE_CHECKING
 
 from gpt_trader.orchestration.configuration import BotConfig
 from gpt_trader.features.live_trade.engines.strategy import TradingEngine
 from gpt_trader.features.live_trade.engines.base import CoordinatorContext
+
+if TYPE_CHECKING:
+    from gpt_trader.app.container import ApplicationContainer
 
 logger = logging.getLogger(__name__)
 
@@ -16,18 +19,11 @@ class TradingBot:
     def __init__(
         self, 
         config: BotConfig,
-        container: Any = None,
+        container: "ApplicationContainer | None" = None,
         registry: Any = None,
         event_store: Any = None,
         orders_store: Any = None,
     ):
-        if container is None:
-            logger.warning(
-                "TradingBot instantiated without ApplicationContainer. "
-                "This is a legacy pattern and will be removed. "
-                "Please use ApplicationContainer.create_bot() instead."
-            )
-        
         self.config = config
         self.container = container
         self.running = False

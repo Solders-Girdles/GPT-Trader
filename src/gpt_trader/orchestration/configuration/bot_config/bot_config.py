@@ -22,6 +22,7 @@ class ConfigState(Enum):
 class BotConfig:
     # Trading Parameters
     max_position_size: Decimal = Decimal("1000")
+    max_leverage: int = 5
     stop_loss_pct: Decimal = Decimal("0.02")
     take_profit_pct: Decimal = Decimal("0.04")
 
@@ -36,6 +37,12 @@ class BotConfig:
     # System
     log_level: str = "INFO"
     dry_run: bool = False
+    profile: object = None
+
+    @classmethod
+    def from_profile(cls, profile: object) -> "BotConfig":
+        """Create a config from a profile name or enum."""
+        return cls(profile=profile)
 
     @classmethod
     def from_env(cls) -> "BotConfig":
@@ -49,6 +56,7 @@ class BotConfig:
 
         return cls(
             max_position_size=parse_decimal_env("MAX_POSITION_SIZE", Decimal("1000")),
+            max_leverage=parse_int_env("MAX_LEVERAGE", 5),
             stop_loss_pct=parse_decimal_env("STOP_LOSS_PCT", Decimal("0.02")),
             take_profit_pct=parse_decimal_env("TAKE_PROFIT_PCT", Decimal("0.04")),
             short_ma=parse_int_env("SHORT_MA", 10),

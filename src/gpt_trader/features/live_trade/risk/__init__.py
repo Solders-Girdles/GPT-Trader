@@ -1,5 +1,1 @@
-from .manager import LiveRiskManager
-
-class ValidationError(Exception):
-    pass
-
+from .manager import LiveRiskManager, ValidationError

@@ -428,7 +428,7 @@ class TestCoinbaseMarketData:
         with pytest.raises(NotFoundError) as exc_info:
             catalog.get(mock_client, "MISSING-PERP")
         assert "Product not found: MISSING-PERP" in str(exc_info.value)
-        assert mock_client.get_products.call_count == 2
+        assert mock_client.get_products.call_count == 1
 
     def test_catalog_get_funding_for_perpetual(self) -> None:
         catalog = self.make_catalog()

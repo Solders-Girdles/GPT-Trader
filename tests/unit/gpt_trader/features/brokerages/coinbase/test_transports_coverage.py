@@ -142,7 +142,12 @@ class TestRealTransportCoverage:
         """Test connection when websocket-client is not installed."""
         transport = RealTransport(settings=mock_runtime_settings)
 
-        with patch("builtins.__import__", side_effect=ImportError("No module named 'websocket'")):
+        # We patch create_connection on the imported websocket module in transports.py
+        # to simulate the module being missing/broken at runtime
+        with patch(
+            "gpt_trader.features.brokerages.coinbase.transports.websocket.create_connection",
+            side_effect=ModuleNotFoundError("No module named 'websocket'"),
+        ):
             with pytest.raises(ImportError, match="websocket-client is not installed"):
                 transport.connect("wss://test.example.com")
 

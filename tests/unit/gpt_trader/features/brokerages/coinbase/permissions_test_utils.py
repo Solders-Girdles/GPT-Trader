@@ -9,6 +9,7 @@ from gpt_trader.features.brokerages.coinbase.client import CoinbaseClient
 from gpt_trader.features.brokerages.coinbase.auth import CDPJWTAuth
 from gpt_trader.features.brokerages.coinbase.client import CoinbaseClient
 from gpt_trader.features.brokerages.coinbase.models import APIConfig
+from tests.unit.gpt_trader.features.brokerages.coinbase.test_helpers import CoinbaseBrokerage
 
 
 def make_client(**overrides: Any) -> CoinbaseClient:

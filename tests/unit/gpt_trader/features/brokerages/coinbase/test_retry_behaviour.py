@@ -11,17 +11,13 @@ def _make_client() -> CoinbaseClient:
     return CoinbaseClient(base_url="https://api.test", auth=None, enable_keep_alive=False)
 
 
-def _patch_retry_config(mocker) -> None:
-    mocker.patch(
-        "gpt_trader.features.brokerages.coinbase.client.base._load_system_config",
-        return_value={"max_retries": 2, "retry_delay": 0, "jitter_factor": 0},
-    )
+def _patch_sleep(mocker) -> None:
     mocker.patch("gpt_trader.features.brokerages.coinbase.client.base.time.sleep", lambda _s: None)
 
 
 def test_request_retries_on_429_and_5xx_then_succeeds(mocker) -> None:
     client = _make_client()
-    _patch_retry_config(mocker)
+    _patch_sleep(mocker)
     responses = [
         (429, {"retry-after": "0.05"}, '{"message": "rate limit"}'),
         (502, {}, '{"message": "server error"}'),
@@ -44,7 +40,7 @@ def test_request_retries_on_429_and_5xx_then_succeeds(mocker) -> None:
 
 def test_request_fast_fails_on_auth_errors(mocker) -> None:
     client = _make_client()
-    _patch_retry_config(mocker)
+    _patch_sleep(mocker)
 
     def transport(
         method: str, url: str, headers: dict[str, str], body: bytes | None, timeout: int
@@ -61,7 +57,7 @@ def test_request_fast_fails_on_auth_errors(mocker) -> None:
 
 def test_non_json_response_yields_brokerage_error(mocker) -> None:
     client = _make_client()
-    _patch_retry_config(mocker)
+    _patch_sleep(mocker)
 
     def transport(
         method: str, url: str, headers: dict[str, str], body: bytes | None, timeout: int

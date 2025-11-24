@@ -4,10 +4,11 @@ Replaces the complex auth hierarchy with a direct JWT generator.
 """
 import time
 import secrets
-import hashlib
 import json
+import hmac # Use hmac module
+import hashlib
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Optional, Dict # Import Dict
 
 import jwt
 from cryptography.hazmat.backends import default_backend
@@ -18,16 +19,50 @@ class APIKey:
     name: str
     private_key: str
 
+
 class CoinbaseAuth:
-    def __init__(self, api_key, api_secret):
-        pass
+    def __init__(self, api_key: str, api_secret: str, passphrase: Optional[str] = None):
+        self.api_key = api_key
+        self.api_secret = api_secret
+        self.passphrase = passphrase
 
 class CDPJWTAuth(CoinbaseAuth):
-    def __init__(self, api_key, private_key):
-        pass
+    def __init__(self, api_key: str, private_key: str): # Type hints added
+        super().__init__(api_key, private_key) # private_key used as api_secret
+        # For JWT, api_key is actually key_name
+        self.key_name = api_key
+        self.private_key = self._normalize_key(private_key)
 
-class SimpleAuth(CoinbaseAuth):
+    def _normalize_key(self, key: str) -> str: # Method was missing
+        return key.replace("\\n", "\n")
+
+import base64 # Added base64 import
+
+class HMACAuth(CoinbaseAuth):
+    def __init__(self, api_key: str, api_secret: str, passphrase: Optional[str] = None):
+        super().__init__(api_key, api_secret, passphrase)
+        # Decode api_secret from base64 string to bytes for hmac key
+        self._decoded_api_secret = base64.b64decode(self.api_secret)
+
+    def sign(self, method: str, path: str, body: Any = None) -> Dict[str, str]:
+        timestamp = str(int(time.time()))
+        message = timestamp + method + path
+        if body is not None:
+            message += json.dumps(body)
+
+        signature = hmac.new(self._decoded_api_secret, message.encode("utf-8"), hashlib.sha256).hexdigest() # Corrected hmac usage
+
+        return {
+            "CB-ACCESS-KEY": self.api_key,
+            "CB-ACCESS-SIGN": signature,
+            "CB-ACCESS-TIMESTAMP": timestamp,
+            "CB-ACCESS-PASSPHRASE": self.passphrase or "",
+            "Content-Type": "application/json",
+        }
+
+class SimpleAuth(CoinbaseAuth): # SimpleAuth should inherit CDPJWTAuth if it's based on JWT
     def __init__(self, key_name: str, private_key: str):
+        super().__init__(key_name, private_key) 
         self.key_name = key_name
         self.private_key = self._normalize_key(private_key)
 
@@ -35,11 +70,6 @@ class SimpleAuth(CoinbaseAuth):
         return key.replace("\\n", "\n")
 
     def generate_jwt(self, method: str, path: str) -> str:
-        # The provided snippet changes this method's implementation.
-        # Assuming the intent is to mock it as shown in the snippet.
-        return "mock_jwt"
-
-    def _original_generate_jwt(self, method: str, path: str) -> str: # Renamed original for preservation
         request_path = path if path.startswith("/") else f"/{path}"
         uri = f"{method} api.coinbase.com{request_path}"
 
@@ -64,7 +94,7 @@ class SimpleAuth(CoinbaseAuth):
             headers=headers
         )
 
-    def get_headers(self, method: str, path: str) -> dict[str, str]:
+    def get_headers(self, method: str, path: str, body: Any = None) -> dict[str, str]:
         token = self.generate_jwt(method, path)
         return {
             "Authorization": f"Bearer {token}",

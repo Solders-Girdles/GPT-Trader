@@ -1,4 +1,6 @@
 from __future__ import annotations
+import json
+from pathlib import Path
 from typing import Any, Optional, Tuple
 
 from gpt_trader.orchestration.configuration import BotConfig
@@ -9,6 +11,7 @@ from gpt_trader.persistence.orders_store import OrdersStore
 from gpt_trader.features.brokerages.coinbase.market_data_service import MarketDataService
 from gpt_trader.features.brokerages.coinbase.utilities import ProductCatalog
 from gpt_trader.features.brokerages.coinbase.client.client import CoinbaseClient
+from gpt_trader.features.brokerages.coinbase.auth import SimpleAuth
 from gpt_trader.orchestration.trading_bot.bot import TradingBot
 from gpt_trader.orchestration.service_registry import ServiceRegistry
 
@@ -21,9 +24,38 @@ def create_brokerage(
     """
     Factory function to create the brokerage and verify dependencies.
     """
+    api_key_name = None
+    private_key = None
+
+    # Check for credentials file first
+    creds_file = settings.raw_env.get("COINBASE_CREDENTIALS_FILE")
+    if creds_file:
+        path = Path(creds_file)
+        if path.exists():
+            try:
+                with open(path) as f:
+                    data = json.load(f)
+                    api_key_name = data.get("name")
+                    private_key = data.get("privateKey")
+            except Exception as e:
+                raise ValueError(f"Failed to read credentials file {creds_file}: {e}")
+
+    # Fallback to direct env vars
+    if not api_key_name:
+        api_key_name = settings.raw_env.get("COINBASE_API_KEY_NAME")
+    if not private_key:
+        private_key = settings.raw_env.get("COINBASE_PRIVATE_KEY")
+
+    if not api_key_name or not private_key:
+        raise ValueError(
+            "Coinbase Credentials not found. Set COINBASE_CREDENTIALS_FILE to a JSON key file, "
+            "or set COINBASE_API_KEY_NAME and COINBASE_PRIVATE_KEY environment variables."
+        )
+
+    auth_client = SimpleAuth(key_name=api_key_name, private_key=private_key)
+
     broker = CoinbaseClient(
-        api_key=settings.coinbase_api_key,
-        api_secret=settings.coinbase_api_secret,
+        auth=auth_client,
     )
     return broker, event_store, market_data, product_catalog
 
@@ -54,7 +86,7 @@ class ApplicationContainer:
     @property
     def event_store(self) -> EventStore:
         if self._event_store is None:
-             self._event_store = EventStore(root="var/data/events") 
+             self._event_store = EventStore() 
         return self._event_store
 
     @property
@@ -72,7 +104,7 @@ class ApplicationContainer:
     @property
     def product_catalog(self) -> ProductCatalog:
         if self._product_catalog is None:
-            self._product_catalog = ProductCatalog(ttl_seconds=900)
+            self._product_catalog = ProductCatalog()
         return self._product_catalog
 
     @property

@@ -18,6 +18,7 @@ def make_product(symbol: str) -> Product:
         step_size=Decimal("0.001"),
         min_notional=Decimal("10"),
         price_increment=Decimal("0.01"),
+        leverage_max=None,
     )
 
 

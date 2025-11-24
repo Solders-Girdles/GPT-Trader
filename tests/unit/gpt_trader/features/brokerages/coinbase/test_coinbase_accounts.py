@@ -18,6 +18,7 @@ from gpt_trader.features.brokerages.coinbase.models import APIConfig
 from gpt_trader.features.brokerages.core.interfaces import InvalidRequestError, MarketType, Product
 from tests.unit.gpt_trader.features.brokerages.coinbase.test_helpers import (
     ACCOUNT_ENDPOINT_CASES,
+    CoinbaseBrokerage,
     StubBroker,
     StubEventStore,
     _decode_body,
@@ -111,6 +112,7 @@ class TestCoinbaseAccounts:
                     step_size=Decimal("0.001"),
                     min_notional=None,
                     price_increment=Decimal("0.01"),
+                    leverage_max=None,
                 )
 
             def get_funding(self, client, symbol):

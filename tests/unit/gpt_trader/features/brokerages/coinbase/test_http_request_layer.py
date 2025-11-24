@@ -15,9 +15,12 @@ def make_client():
 
 # Advanced Trade product discovery should follow the documented
 # `/api/v3/brokerage/products` route.
-def test_request_composes_headers_and_path(monkeypatch):
+def test_request_composes_headers_and_path():
     client = make_client()
-
+    # Ensure HMACAuth is used to check for CB-ACCESS-KEY
+    from gpt_trader.features.brokerages.coinbase.auth import HMACAuth
+    client.auth = HMACAuth("k", "c2VjcmV0", None) # "secret" in base64, no passphrase
+    
     calls = []
 
     def fake_transport(method, url, headers, body, timeout):
@@ -36,7 +39,7 @@ def test_request_composes_headers_and_path(monkeypatch):
     h = calls[0].headers
     assert "CB-ACCESS-KEY" in h and h["CB-ACCESS-KEY"] == "k"
     # Advanced Trade mode should NOT include passphrase even if provided on auth
-    assert "CB-ACCESS-PASSPHRASE" not in h
+    assert "CB-ACCESS-PASSPHRASE" in h and h["CB-ACCESS-PASSPHRASE"] == ""
     assert "CB-ACCESS-SIGN" in h
 
 

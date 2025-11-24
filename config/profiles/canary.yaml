@@ -17,7 +17,7 @@ trading:
   enabled_strategies:
     - "momentum"  # Start with single, well-tested strategy
   symbols:
-    - "BTC-PERP"  # Single symbol initially
+    - "BTC-USD"  # Single symbol initially (Spot fallback for US clients)
 
   # Position Sizing - EXTREMELY CONSERVATIVE
   position_sizing:

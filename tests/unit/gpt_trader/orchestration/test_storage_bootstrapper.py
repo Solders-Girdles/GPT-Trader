@@ -42,9 +42,11 @@ def test_bootstrapper_creates_context_with_defaults(
 def test_bootstrapper_respects_event_store_override(
     monkeypatch: pytest.MonkeyPatch,
     runtime_settings_factory,
+    tmp_path,
 ) -> None:
     config = _make_config(Profile.SPOT)
-    settings = runtime_settings_factory(event_store_override=True)
+    override_path = tmp_path / "override"
+    settings = runtime_settings_factory(event_store_root_override=override_path, runtime_root=tmp_path)
 
     real_loader = runtime_settings_module.load_runtime_settings
     monkeypatch.setattr(
@@ -82,7 +84,7 @@ def test_bootstrapper_reuses_registry_components(runtime_settings_factory, tmp_p
 
     registry = ServiceRegistry(
         config=config,
-        runtime_settings=runtime_settings_factory(),
+        runtime_settings=runtime_settings_factory(runtime_root=tmp_path),
         orders_store=orders_store,
         event_store=event_store,
     )

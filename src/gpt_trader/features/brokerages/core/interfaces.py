@@ -128,3 +128,6 @@ class BrokerageError(Exception):
 
 class RateLimitError(Exception):
     pass
+
+class PermissionDeniedError(Exception):
+    pass

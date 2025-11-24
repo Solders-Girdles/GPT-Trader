@@ -9,7 +9,8 @@ import requests
 from typing import Any, Callable
 
 from gpt_trader.features.brokerages.coinbase.auth import SimpleAuth
-from gpt_trader.features.brokerages.coinbase.errors import InvalidRequestError
+from gpt_trader.features.brokerages.coinbase.errors import InvalidRequestError, map_http_error
+from gpt_trader.utilities.logging_patterns import get_correlation_id
 
 logger = logging.getLogger(__name__)
 
@@ -73,13 +74,39 @@ class CoinbaseClientBase:
                 "close_position": "/api/v3/brokerage/orders/close_position",
                 "fills": "/api/v3/brokerage/orders/historical/fills",
                 "time": "/api/v3/brokerage/time",
+                "key_permissions": "/api/v3/brokerage/key_permissions",
+                # INTX Endpoints
+                "intx_portfolio": "/api/v3/brokerage/intx/portfolio/{portfolio_uuid}",
+                "intx_allocate": "/api/v3/brokerage/intx/allocate",
+                "intx_balances": "/api/v3/brokerage/intx/balances/{portfolio_uuid}",
+                "intx_positions": "/api/v3/brokerage/intx/positions/{portfolio_uuid}",
+                "intx_position": "/api/v3/brokerage/intx/positions/{portfolio_uuid}/{symbol}",
+                "intx_multi_asset_collateral": "/api/v3/brokerage/intx/multi_asset_collateral",
                 "portfolios": "/api/v3/brokerage/portfolios",
                 "portfolio": "/api/v3/brokerage/portfolios/{portfolio_uuid}",
+                "fees": "/api/v3/brokerage/fees",
+                "limits": "/api/v3/brokerage/limits",
+                "payment_methods": "/api/v3/brokerage/payment_methods",
+                "payment_method": "/api/v3/brokerage/payment_methods/{payment_method_id}",
+                "convert_trade": "/api/v3/brokerage/convert/trade/{trade_id}",
+                "convert_quote": "/api/v3/brokerage/convert/quote",
+                # CFM Endpoints
+                "cfm_balance_summary": "/api/v3/brokerage/cfm/balance_summary",
+                "cfm_positions": "/api/v3/brokerage/cfm/positions",
+                "cfm_position": "/api/v3/brokerage/cfm/positions/{product_id}",
+                "cfm_intraday_current_margin_window": "/api/v3/brokerage/cfm/intraday/current_margin_window", # Corrected
+                "cfm_intraday_margin_setting": "/api/v3/brokerage/cfm/intraday/margin_setting", # Corrected
+                "cfm_sweeps": "/api/v3/brokerage/cfm/sweeps",
+                "cfm_schedule_sweep": "/api/v3/brokerage/cfm/sweeps/schedule", # Added
+                # Portfolio endpoints
+                "portfolio_breakdown": "/api/v3/brokerage/portfolios/{portfolio_uuid}/breakdown",
+                "move_funds": "/api/v3/brokerage/portfolios/move_funds", # Corrected
             },
             "exchange": {
                 "products": "/products",
                 "product": "/products/{product_id}",
                 "accounts": "/accounts",
+                "order_book": "/products/{product_id}/book",
             }
         }
 
@@ -123,6 +150,64 @@ class CoinbaseClientBase:
         connector = "&" if "?" in path else "?"
         return f"{path}{connector}{'&'.join(query_parts)}"
 
+    def paginate(
+        self, 
+        path: str, 
+        params: dict = None, 
+        pagination_key: str = None,
+        cursor_param: str = "cursor",
+        cursor_field: str = None
+    ) -> Any:
+        """
+        Generator that yields items from paginated endpoints.
+        """
+        params = params or {}
+        cursor = params.get(cursor_param)
+        has_more = True
+
+        while has_more:
+            current_params = params.copy()
+            if cursor:
+                current_params[cursor_param] = cursor
+
+            response = self.get(path, current_params)
+
+            # Extract data list
+            data = response
+            if pagination_key and isinstance(response, dict):
+                data = response.get(pagination_key, [])
+
+            if isinstance(data, list):
+                for item in data:
+                    yield item
+            elif data:
+                # Yield single item if not a list (rare for pagination but possible)
+                yield data
+
+            # Update cursor
+            if isinstance(response, dict):
+                # Coinbase APIs vary: 'cursor', 'next_cursor', 'pagination' dict
+                next_cursor = None
+                
+                if cursor_field:
+                    next_cursor = response.get(cursor_field)
+                else:
+                    next_cursor = response.get("cursor") or response.get("next_cursor")
+                
+                # Some APIs return a 'pagination' object
+                if not next_cursor and "pagination" in response:
+                     # If cursor_field is inside pagination, we assume standard structure
+                     # or user must handle complex extraction. 
+                     # For now, fallback to standard pagination.next_cursor
+                    next_cursor = response["pagination"].get("next_cursor")
+
+                if next_cursor and next_cursor != cursor:
+                    cursor = next_cursor
+                else:
+                    has_more = False
+            else:
+                has_more = False
+
     def _check_rate_limit(self) -> None:
         if not self.enable_throttle:
             return
@@ -165,65 +250,49 @@ class CoinbaseClientBase:
                 if path.startswith("http"):
                      auth_path = "/" + path.split("/", 3)[-1]
                 
-                headers.update(self.auth.get_headers(method, auth_path))
+                if payload:
+                    headers.update(self.auth.get_headers(method, auth_path, payload))
+                else:
+                    headers.update(self.auth.get_headers(method, auth_path))
             elif hasattr(self.auth, "sign"):
                  # Legacy interface
                  headers.update(self.auth.sign(method, path, payload))
         
         # Add correlation ID if available
-        # (Simplified: assuming we might add it later or it's handled elsewhere, 
-        # but tests expect it if patched)
-        # For now, rely on tests patching get_correlation_id if needed or add it here if imported.
-        from gpt_trader.utilities.logging_patterns import get_correlation_id
         corr_id = get_correlation_id()
         if corr_id:
             headers["X-Correlation-Id"] = corr_id
 
-        if self._transport:
-             # Use mock transport
-             status, resp_headers, text = self._transport(method, url, headers, json.dumps(payload) if payload else None, self.timeout)
-             # Mimic requests response
-             class MockResponse:
-                 def __init__(self, status_code, text, headers):
-                     self.status_code = status_code
-                     self.text = text
-                     self.content = text.encode()
-                     self.headers = headers
-                 def json(self):
-                     return json.loads(self.text)
-                 def raise_for_status(self):
-                     if 400 <= self.status_code < 600:
-                         # Simplified error raising
-                         if self.status_code == 429:
-                             raise Exception("Rate limit exceeded") # Should be requests.HTTPError
-                         msg = "Error"
-                         try:
-                             data = self.json()
-                             msg = data.get("message", msg)
-                         except: pass
-                         raise InvalidRequestError(msg)
-
-             resp = MockResponse(status, text, resp_headers)
-             resp.raise_for_status()
-             if resp.content:
-                return resp.json()
-             return {}
+        def perform_request():
+            if self._transport:
+                # Use mock transport
+                status, resp_headers, text = self._transport(method, url, headers, json.dumps(payload) if payload else None, self.timeout)
+                resp = requests.Response()
+                resp.status_code = status
+                resp._content = text.encode() if text else b""
+                resp.headers = resp_headers
+                return resp
+            else:
+                return self.session.request(
+                    method,
+                    url,
+                    json=payload,
+                    headers=headers,
+                    timeout=self.timeout
+                )
 
         try:
-            # Retry logic (simplified)
+            # Retry logic
             max_retries = 3
             for attempt in range(max_retries + 1):
                 try:
-                    resp = self.session.request(
-                        method,
-                        url,
-                        json=payload,
-                        headers=headers,
-                        timeout=self.timeout
-                    )
+                    resp = perform_request()
                     
                     if resp.status_code == 429:
-                        retry_after = int(resp.headers.get("retry-after", 1))
+                        try:
+                            retry_after = float(resp.headers.get("retry-after", 1))
+                        except ValueError:
+                            retry_after = 1.0
                         time.sleep(retry_after)
                         continue
                         
@@ -233,27 +302,54 @@ class CoinbaseClientBase:
                             continue
                     
                     if 400 <= resp.status_code < 500:
-                         # Map 400s to InvalidRequestError
-                         try:
-                             data = resp.json()
-                             msg = data.get("message", "Bad request")
-                         except:
-                             msg = resp.text
-                         raise InvalidRequestError(msg)
+                        # Map 400s to specific errors
+                        try:
+                            data = resp.json()
+                            msg = data.get("message", "Bad request")
+                            code = data.get("error")
+                        except:
+                            msg = resp.text
+                            code = None
+                        
+                        if resp.status_code == 400:
+                            raise InvalidRequestError(msg)
+                        raise map_http_error(resp.status_code, code, msg)
 
                     resp.raise_for_status()
 
                     if resp.content:
                         try:
                             return resp.json()
-                        except json.JSONDecodeError:
+                        except ValueError:
                             return {"raw": resp.text}
                     return {}
-                except (requests.ConnectionError, requests.Timeout):
+                    
+                except requests.exceptions.HTTPError as e:
+                    # Catch HTTPError from raise_for_status (e.g. 500s)
+                    try:
+                        data = e.response.json()
+                        msg = data.get("message", str(e))
+                        code = data.get("error")
+                    except:
+                        msg = str(e)
+                        code = None
+                    raise map_http_error(e.response.status_code, code, msg)
+
+                except (requests.ConnectionError, requests.Timeout, ConnectionError):
                     if attempt < max_retries:
                         time.sleep(0.5 * (2 ** attempt))
                         continue
                     raise
+            
+            # If loop finishes without return (e.g. all 429s handled but retries exhausted)
+            if 'resp' in locals() and resp is not None and resp.status_code == 429:
+                 raise map_http_error(429, "rate_limited", "Rate limit exceeded (rate_limited)")
+            
+            return {}
+
+        except Exception as e:
+                    # Catch other errors during request performance (like map_http_error raises)
+                    raise e
 
         except Exception as e:
             logger.error(f"Request failed: {method} {url} - {e}")

@@ -1,24 +1,34 @@
 """Error types and mappers for Coinbase adapter."""
 
-class BrokerageError(Exception):
+from gpt_trader.features.brokerages.core.interfaces import (
+    BrokerageError as CoreBrokerageError,
+    AuthError as CoreAuthError,
+    NotFoundError as CoreNotFoundError,
+    InvalidRequestError as CoreInvalidRequestError,
+    InsufficientFunds as CoreInsufficientFunds,
+    RateLimitError as CoreRateLimitError,
+    PermissionDeniedError as CorePermissionDeniedError,
+)
+
+class BrokerageError(CoreBrokerageError):
     """Base error for brokerage adapters."""
 
-class RateLimitError(BrokerageError):
+class RateLimitError(CoreRateLimitError, BrokerageError):
     pass
 
-class AuthError(BrokerageError):
+class AuthError(CoreAuthError, BrokerageError):
     pass
 
-class NotFoundError(BrokerageError):
+class NotFoundError(CoreNotFoundError, BrokerageError):
     pass
 
-class InvalidRequestError(BrokerageError):
+class InvalidRequestError(CoreInvalidRequestError, BrokerageError):
     pass
 
-class InsufficientFunds(BrokerageError):
+class InsufficientFunds(CoreInsufficientFunds, BrokerageError):
     pass
 
-class PermissionDeniedError(BrokerageError):
+class PermissionDeniedError(CorePermissionDeniedError, BrokerageError):
     pass
 
 def map_http_error(status: int, code: str | None, message: str | None) -> BrokerageError:

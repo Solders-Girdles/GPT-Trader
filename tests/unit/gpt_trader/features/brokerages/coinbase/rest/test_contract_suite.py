@@ -25,6 +25,7 @@ from gpt_trader.features.brokerages.core.interfaces import (
     OrderSide,
     OrderType,
     Position,
+    TimeInForce,
 )
 from gpt_trader.persistence.event_store import EventStore
 
@@ -90,7 +91,7 @@ class TestCoinbaseRestContractSuite:
         """Create a service with OrderRestMixin."""
         service_base.__class__ = type(
             "TestOrderService",
-            (CoinbaseRestServiceBase, OrderRestMixin),
+            (CoinbaseRestServiceBase, OrderRestMixin, PortfolioRestMixin),
             {},
         )
         return service_base
@@ -147,7 +148,8 @@ class TestCoinbaseRestContractSuite:
         """Test order placement with quantity below minimum."""
         mock_product_catalog.get.return_value = mock_product
 
-        with pytest.raises(ValidationError, match="quantity .* is below min_size"):
+        # Quantity < min_size
+        with pytest.raises(InvalidRequestError, match="quantity .* is below minimum size"):
             order_service.place_order(
                 symbol="BTC-USD",
                 side=OrderSide.BUY,
@@ -276,7 +278,7 @@ class TestCoinbaseRestContractSuite:
         mock_position = Mock(spec=Position)
         mock_position.symbol = "BTC-USD"
         mock_position.quantity = Decimal("1.0")
-        portfolio_service.list_positions.return_value = [mock_position]
+        portfolio_service.list_positions = Mock(return_value=[mock_position])
 
         # Mock close_position API
         order_service.client.close_position.return_value = {"order": {"order_id": "close_123"}}
@@ -289,7 +291,7 @@ class TestCoinbaseRestContractSuite:
 
     def test_close_position_no_position(self, portfolio_service, order_service):
         """Test position closing when no position exists."""
-        portfolio_service.list_positions.return_value = []
+        portfolio_service.list_positions = Mock(return_value=[])
 
         with pytest.raises(ValidationError, match="No open position"):
             order_service.close_position("BTC-USD")
@@ -304,7 +306,7 @@ class TestCoinbaseRestContractSuite:
         mock_position = Mock(spec=Position)
         mock_position.symbol = "BTC-USD"
         mock_position.quantity = Decimal("1.0")
-        portfolio_service.list_positions.return_value = [mock_position]
+        portfolio_service.list_positions = Mock(return_value=[mock_position])
 
         # Mock API failure and fallback success
         order_service.client.close_position.side_effect = Exception("API failed")
@@ -442,7 +444,7 @@ class TestCoinbaseRestContractSuite:
 
         assert result["allocation_id"] == "alloc_123"
         # Verify telemetry emission
-        portfolio_service._event_store.append.assert_called()
+        portfolio_service._event_store.append_metric.assert_called()
 
     def test_intx_allocate_error_handling(self, portfolio_service):
         """Test INTX allocation error handling."""
@@ -468,7 +470,7 @@ class TestCoinbaseRestContractSuite:
 
         assert result["total_balance"] == Decimal("10000.00")
         # Verify telemetry emission
-        portfolio_service._event_store.append.assert_called()
+        portfolio_service._event_store.append_metric.assert_called()
 
     def test_cfm_sweeps_telemetry(self, portfolio_service):
         """Test CFM sweeps with telemetry."""
@@ -484,7 +486,7 @@ class TestCoinbaseRestContractSuite:
         assert len(result) == 2
         assert result[0]["amount"] == Decimal("100.00")
         # Verify telemetry emission
-        portfolio_service._event_store.append.assert_called()
+        portfolio_service._event_store.append_metric.assert_called()
 
     def test_update_cfm_margin_window_success(self, portfolio_service):
         """Test successful CFM margin window update."""
@@ -496,7 +498,7 @@ class TestCoinbaseRestContractSuite:
 
         assert result["margin_window"] == "maintenance"
         # Verify telemetry emission
-        portfolio_service._event_store.append.assert_called()
+        portfolio_service._event_store.append_metric.assert_called()
 
     # ------------------------------------------------------------------
     # PnLRestMixin Contract Tests
@@ -602,7 +604,15 @@ class TestCoinbaseRestContractSuite:
             entry_price=Decimal("3000.00"),
             realized_pnl=Decimal("500.00"),
         )
-        mock_market_data.get_mark.return_value = Decimal("51000")  # For BTC
+        
+        def get_mark_side_effect(symbol):
+            if symbol == "BTC-USD":
+                return Decimal("51000")
+            if symbol == "ETH-USD":
+                return Decimal("3000")
+            return Decimal("0")
+            
+        mock_market_data.get_mark.side_effect = get_mark_side_effect
 
         portfolio_pnl = pnl_service.get_portfolio_pnl()
 
@@ -656,7 +666,7 @@ class TestCoinbaseRestContractSuite:
         portfolio_service.get_cfm_balance_summary()
 
         # Verify telemetry was emitted for both calls
-        assert portfolio_service._event_store.append.call_count >= 2
+        assert portfolio_service._event_store.append_metric.call_count >= 2
 
     def test_pagination_cursor_handling(self, order_service):
         """Test pagination cursor handling in list operations."""

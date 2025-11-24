@@ -15,6 +15,40 @@ import pytest
 from gpt_trader.features.brokerages.core.interfaces import Balance, Position
 from gpt_trader.orchestration.configuration import BotConfig, Profile
 from gpt_trader.features.live_trade.engines.base import CoordinatorContext
+from gpt_trader.orchestration.service_registry import ServiceRegistry
+from gpt_trader.config.runtime_settings import RuntimeSettings
+
+# Mock imports for missing types
+try:
+    from gpt_trader.features.risk.circuit_breaker import CircuitBreakerOutcome
+except ImportError:
+    CircuitBreakerOutcome = Mock()
+
+try:
+    from gpt_trader.orchestration.system_monitor_metrics import SystemMonitor
+except ImportError:
+    SystemMonitor = Mock()
+
+@pytest.fixture
+def patched_runtime_settings(monkeypatch, tmp_path):
+    """Mock runtime settings."""
+    settings = RuntimeSettings(raw_env={}, runtime_root=tmp_path)
+    monkeypatch.setattr("gpt_trader.config.runtime_settings.load_runtime_settings", lambda: settings)
+    monkeypatch.setattr("gpt_trader.orchestration.storage.load_runtime_settings", lambda: settings)
+    return settings
+
+@pytest.fixture
+def fake_guard_manager():
+    return Mock()
+
+@pytest.fixture
+def fake_event_bus():
+    return Mock()
+
+@pytest.fixture
+def fake_trade_service():
+    return Mock()
+
 @pytest.fixture
 def fake_runtime_state():
     """Mock runtime state with common test data."""
@@ -57,6 +91,7 @@ def base_coordinator_context(
     fake_guard_manager, fake_event_bus, fake_trade_service, fake_runtime_state
 ):
     """Base coordinator context with mocked dependencies."""
+    # Use Profile if available, else use a dummy profile object or value
     config = BotConfig(profile=Profile.PROD, symbols=["BTC-PERP"], dry_run=False)
     registry = ServiceRegistry(config=config)
 
@@ -102,3 +137,7 @@ def base_coordinator_context(
 def monitor(mock_bot):
     """Create a SystemMonitor instance for testing."""
     return SystemMonitor(bot=mock_bot, account_telemetry=None)
+
+@pytest.fixture
+def mock_bot():
+    return Mock()

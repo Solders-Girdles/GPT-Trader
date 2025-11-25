@@ -71,6 +71,12 @@ bandit = "^1.7.9"
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
+[dependency-groups]
+dev = [
+    "types-pyyaml>=6.0.12.20250915",
+    "types-requests>=2.32.4.20250913",
+]
+
 [tool.black]
 line-length = 100
 target-version = ["py312"]

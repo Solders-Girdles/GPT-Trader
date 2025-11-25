@@ -5,7 +5,7 @@ from __future__ import annotations
 import time as _time
 from collections.abc import Sequence
 from decimal import Decimal
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, Protocol, cast
 
 from gpt_trader.features.brokerages.core.interfaces import Product
 from gpt_trader.features.live_trade.strategies.perps_baseline import (
@@ -19,8 +19,17 @@ from gpt_trader.orchestration.configuration import Profile
 from .logging_utils import logger
 from .models import SymbolProcessingContext
 
+if TYPE_CHECKING:
+    from gpt_trader.orchestration.trading_bot import TradingBot
 
-class DecisionEngineMixin:
+
+class _HasBotAndStrategy(Protocol):
+    """Protocol for mixins that expect _bot and get_strategy."""
+    _bot: TradingBot
+    def get_strategy(self, symbol: str) -> BaselinePerpsStrategy: ...
+
+
+class DecisionEngineMixin(_HasBotAndStrategy):
     """Evaluate strategy decisions and record results."""
 
     async def _resolve_decision(self, symbol_context: SymbolProcessingContext) -> Decision:

@@ -78,9 +78,24 @@ class TradingBot:
         """Alias for stop() to match CLI interface."""
         await self.stop()
 
-    def execute_decision(self, decision: Any) -> Any:
+    def execute_decision(
+        self,
+        symbol: str,
+        decision: Any,
+        mark: Any = None,
+        product: Any = None,
+        position_state: Any = None,
+    ) -> Any:
         """Execute a trading decision. Stub for interface compatibility."""
-        return self.engine.execute_decision(decision) if hasattr(self.engine, "execute_decision") else None
+        if hasattr(self.engine, "execute_decision"):
+            return self.engine.execute_decision(symbol, decision, mark, product, position_state)
+        return None
+
+    def get_product(self, symbol: str) -> Any:
+        """Get product metadata for a symbol."""
+        if self.broker and hasattr(self.broker, "get_product"):
+            return self.broker.get_product(symbol)
+        return None
 
 
 __all__ = ["TradingBot"]

@@ -41,7 +41,7 @@ def store_data(symbol: str, data: pd.DataFrame, **kwargs: Any) -> bool:
         )
         if success and _cache:
             _cache.put(symbol, data)
-        return success
+        return bool(success)
     return False
 
 
@@ -74,7 +74,7 @@ def download_from_yahoo(*args: Any, **kwargs: Any) -> Any:
 
 def cache_data(key: str, data: Any, ttl_seconds: int = 3600) -> bool:
     if _cache:
-        return _cache.put(key, data, ttl_seconds)
+        return bool(_cache.put(key, data, ttl_seconds))
     return False
 
 
@@ -86,7 +86,7 @@ def clean_old_data(days_to_keep: int) -> int:
         deleted = _storage.delete_before(cutoff)
         if _cache:
             _cache.clear_expired()
-        return deleted
+        return int(deleted)
     return 0
 
 

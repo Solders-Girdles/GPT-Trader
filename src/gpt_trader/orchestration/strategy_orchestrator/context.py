@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Sequence
 from decimal import Decimal
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, Protocol, cast
 
 from gpt_trader.features.brokerages.core.interfaces import Balance, Position
 from gpt_trader.features.live_trade.risk_runtime import CircuitBreakerAction
@@ -14,8 +14,16 @@ from gpt_trader.utilities.quantities import quantity_from
 from .logging_utils import logger
 from .models import SymbolProcessingContext
 
+if TYPE_CHECKING:
+    from gpt_trader.orchestration.trading_bot import TradingBot
 
-class ContextBuilderMixin:
+
+class _HasBot(Protocol):
+    """Protocol for mixins that expect a _bot attribute."""
+    _bot: TradingBot
+
+
+class ContextBuilderMixin(_HasBot):
     """Prepare symbol processing context for strategies."""
 
     async def _prepare_context(

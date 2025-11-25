@@ -9,6 +9,9 @@ logger = logging.getLogger("gpt_trader.features.live_trade.guard_errors")
 
 
 class GuardError(Exception):
+    category: str = "generic"
+    recoverable: bool = False
+
     def __init__(self, guard_name: str, message: str, details: dict | None = None):
         self.guard_name = guard_name
         self.message = message

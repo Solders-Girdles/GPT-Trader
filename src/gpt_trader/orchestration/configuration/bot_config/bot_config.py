@@ -4,9 +4,11 @@ Replaces the 550-line enterprise configuration system.
 """
 
 import os
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields, replace
 from decimal import Decimal
 from enum import Enum, auto
+from typing import Any
+
 
 # Constants expected by core.py shim
 DEFAULT_SPOT_RISK_PATH = "config/risk.json"
@@ -49,6 +51,20 @@ class BotConfig:
     dry_run: bool = False
     mock_broker: bool = False
     profile: object = None
+
+    # Metadata (Pydantic compatibility)
+    metadata: dict[str, Any] = field(default_factory=dict)
+
+    @property
+    def model_fields(self) -> dict[str, Any]:
+        """Pydantic-compatible property to list field names."""
+        return {f.name: f for f in fields(self)}
+
+    def model_copy(self, update: dict[str, Any] | None = None) -> "BotConfig":
+        """Pydantic-compatible method to create a copy with updates."""
+        if update is None:
+            return replace(self)
+        return replace(self, **update)
 
     @classmethod
     def from_profile(

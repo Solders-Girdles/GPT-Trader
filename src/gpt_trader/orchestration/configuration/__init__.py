@@ -2,7 +2,11 @@
 Configuration module.
 """
 
-from gpt_trader.orchestration.configuration.bot_config import BotConfig, config
+from gpt_trader.orchestration.configuration.bot_config import (
+    BotConfig,
+    TOP_VOLUME_BASES,
+    config,
+)
 from gpt_trader.orchestration.configuration.core import Profile
 from gpt_trader.orchestration.configuration.risk.model import (
     RISK_CONFIG_ENV_ALIASES,
@@ -23,4 +27,5 @@ __all__ = [
     "ConfigValidationError",
     "ConfigValidationResult",
     "Profile",
+    "TOP_VOLUME_BASES",
 ]

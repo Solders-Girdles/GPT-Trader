@@ -60,6 +60,11 @@ class StructuredLogger:
         extracted_kwargs, extra_kwargs = self._prepare_extra_and_standard_kwargs(kwargs)
         self.logger.log(level, msg, *args, extra=extra_kwargs, **extracted_kwargs)
 
+    def exception(self, msg: str, *args: Any, **kwargs: Any) -> None:
+        extracted_kwargs, extra_kwargs = self._prepare_extra_and_standard_kwargs(kwargs)
+        extracted_kwargs["exc_info"] = True
+        self.logger.error(msg, *args, extra=extra_kwargs, **extracted_kwargs)
+
 
 def get_logger(name: str, component: str | None = None, **kwargs: Any) -> StructuredLogger:
     return StructuredLogger(name, component=component)

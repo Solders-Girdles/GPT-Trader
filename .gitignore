@@ -39,7 +39,6 @@ archived/claudia_20250812_151036/
 # Generated artifacts
 *.png
 *.csv
-logs/
 
 # Data outputs (keep sample universe only)
 data/**
@@ -65,7 +64,7 @@ secrets/
 credentials/
 
 # Claude settings
-.claude/settings.local.json
+.claude/
 .mcp.json
 memory/sessions/*
 !memory/sessions/README.md
@@ -92,10 +91,8 @@ coverage.json
 .pip-audit/
 pip-audit-report.json
 .claude-flow/
-.mcp.json
 .hypothesis/
 var/
-.claude/
 .mypy_cache/
 .pytest_cache/
 .kilocode/
@@ -103,4 +100,8 @@ var/
 coverage.xml
 coverage_baseline.json
 claude_code_zai_env.sh
-.kilocodemodes
+
+# Generated reports (CI artifacts)
+naming_inventory.md
+naming_inventory.json
+docs/agents/naming_inventory.md

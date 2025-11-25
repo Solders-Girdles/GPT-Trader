@@ -206,4 +206,4 @@ jobs:
         BROKER: coinbase
       run: |
         set -euo pipefail
-        poetry run pytest tests/unit/gpt_trader/orchestration/test_config_manager.py tests/unit/gpt_trader/orchestration/test_configuration.py
+        poetry run pytest tests/unit/gpt_trader/config/test_config_utilities.py tests/unit/gpt_trader/features/live_trade/test_config_dict_json.py -v

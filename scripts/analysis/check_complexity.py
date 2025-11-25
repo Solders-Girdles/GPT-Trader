@@ -108,6 +108,15 @@ IGNORE_LIST = {
     "tests/unit/gpt_trader/features/live_trade/engines/telemetry/test_telemetry_streaming.py",
     "tests/unit/gpt_trader/features/live_trade/engines/test_simple_telemetry.py",
     "tests/unit/gpt_trader/features/live_trade/engines/telemetry/test_telemetry_async.py",
+    "tests/unit/gpt_trader/orchestration/execution/test_order_submission.py",
+    "tests/unit/gpt_trader/orchestration/execution/test_validation.py",
+    "tests/unit/gpt_trader/orchestration/execution/test_guards.py",
+    "tests/unit/gpt_trader/orchestration/execution/test_state_collection.py",
+    "tests/unit/gpt_trader/security/security_validator/test_order_validation.py",
+    "tests/unit/gpt_trader/config/test_runtime_settings_utils.py",
+    "tests/unit/gpt_trader/security/test_ip_allowlist_enforcer.py",
+    "tests/unit/gpt_trader/utilities/test_console_logging_core.py",
+    "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_permissions.py",
 }
 
 

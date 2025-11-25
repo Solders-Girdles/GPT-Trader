@@ -1,16 +1,23 @@
 """Helper utilities for CLI command implementations."""
 
 from argparse import Namespace
+from typing import TYPE_CHECKING, Any
 
 from gpt_trader.app.container import create_application_container
 from gpt_trader.orchestration.configuration import BotConfig
 from gpt_trader.orchestration.trading_bot.bot import TradingBot
 from gpt_trader.utilities.logging_patterns import get_logger
 
+if TYPE_CHECKING:
+    from gpt_trader.config.runtime_settings import RuntimeSettings
+
 logger = get_logger(__name__, component="cli_services")
 
+# Module-level settings storage (set by cli/__init__.py)
+OVERRIDE_SETTINGS: "RuntimeSettings | None" = None
 
-def build_config_from_args(args: Namespace, **kwargs) -> BotConfig:
+
+def build_config_from_args(args: Namespace, **kwargs: Any) -> BotConfig:
     """
     Build configuration from environment, profile, and CLI arguments.
     Precedence: CLI Args > Profile > Environment > Defaults

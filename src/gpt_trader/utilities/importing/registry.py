@@ -27,8 +27,8 @@ def is_test_environment() -> bool:
 
 
 # Conditional helpers for interactive usage
-test_utils = optional_import("pytest") if is_test_environment() else None
-dev_utils = optional_import("IPython") if not is_test_environment() else None
+test_utils = optional_import("pytest") if is_test_environment() else None  # naming: allow
+dev_utils = optional_import("IPython") if not is_test_environment() else None  # naming: allow
 
 
 __all__ = [
@@ -42,6 +42,6 @@ __all__ = [
     "torch",
     "cvxpy",
     "is_test_environment",
-    "test_utils",
-    "dev_utils",
+    "test_utils",  # naming: allow
+    "dev_utils",  # naming: allow
 ]

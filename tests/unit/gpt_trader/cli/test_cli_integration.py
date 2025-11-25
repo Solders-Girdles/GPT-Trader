@@ -17,7 +17,7 @@ import tempfile
 
 import pytest
 
-from tests.unit.gpt_trader.cli_test_utils import cli_env
+from tests.unit.gpt_trader.cli_test_utils import cli_env  # naming: allow
 
 # Marker for tests requiring full environment setup (credentials, mock broker)
 requires_credentials = pytest.mark.integration

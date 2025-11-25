@@ -73,6 +73,30 @@ jobs:
         set -euo pipefail
         poetry run ruff check .
 
+    - name: Check naming standards
+      run: |
+        set -euo pipefail
+        poetry run python scripts/agents/naming_inventory.py \
+          --summary naming_inventory.md \
+          --json naming_inventory.json
+
+        # Display summary in job log
+        if [ -f naming_inventory.md ]; then
+          echo "::group::Naming Inventory Summary"
+          cat naming_inventory.md
+          echo "::endgroup::"
+        fi
+
+    - name: Upload naming inventory report
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: naming-inventory-report
+        path: |
+          naming_inventory.md
+          naming_inventory.json
+        retention-days: 30
+
     - name: Check test file complexity
       run: |
         set -euo pipefail

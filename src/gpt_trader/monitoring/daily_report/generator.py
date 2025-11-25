@@ -13,7 +13,7 @@ from .analytics import (
     calculate_trade_metrics,
 )
 from .loaders import load_events_since, load_metrics
-from .logging_utils import logger
+from .logging_utils import logger  # naming: allow
 from .models import DailyReport
 
 

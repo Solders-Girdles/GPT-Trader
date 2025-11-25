@@ -9,7 +9,6 @@ from decimal import Decimal
 from enum import Enum, auto
 from typing import Any
 
-
 # Constants expected by core.py shim
 DEFAULT_SPOT_RISK_PATH = "config/risk.json"
 DEFAULT_SPOT_SYMBOLS = ["BTC-USD", "ETH-USD"]

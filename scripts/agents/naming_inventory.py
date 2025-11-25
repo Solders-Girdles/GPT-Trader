@@ -81,6 +81,11 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         action="store_true",
         help="Suppress stdout summary output.",
     )
+    parser.add_argument(
+        "--strict",
+        action="store_true",
+        help="Exit with code 1 if any violations are found (for pre-commit hooks).",
+    )
     return parser.parse_args(argv)
 
 
@@ -103,6 +108,9 @@ def iter_files(paths: Sequence[str]) -> Iterator[Path]:
         if any(part == "__pycache__" for part in path.parts):
             return True
         if path.suffix in {".pyc", ".pyo"}:
+            return True
+        # Skip markdown files - they're documentation and often reference existing filenames
+        if path.suffix in {".md", ".rst"}:
             return True
         return False
 
@@ -230,6 +238,13 @@ def main(argv: Sequence[str] | None = None) -> int:
             print(f"Saved summary to {args.summary}")
         else:
             print("No matches found for provided patterns.")
+
+    # In strict mode, return non-zero exit code if violations found
+    if args.strict and records:
+        if not args.quiet:
+            print(f"\nStrict mode: {len(records)} naming violation(s) found. Commit blocked.")
+            print("Add '# naming: allow' to suppress specific lines, or fix the violations.")
+        return 1
     return 0
 
 

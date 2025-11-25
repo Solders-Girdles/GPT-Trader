@@ -11,7 +11,7 @@ from gpt_trader.features.brokerages.core.interfaces import Balance, Position
 from gpt_trader.features.live_trade.risk_runtime import CircuitBreakerAction
 from gpt_trader.utilities.quantities import quantity_from
 
-from .logging_utils import logger
+from .logging_utils import logger  # naming: allow
 from .models import SymbolProcessingContext
 
 if TYPE_CHECKING:
@@ -20,6 +20,7 @@ if TYPE_CHECKING:
 
 class _HasBot(Protocol):
     """Protocol for mixins that expect a _bot attribute."""
+
     _bot: TradingBot
 
 

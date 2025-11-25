@@ -36,7 +36,7 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/logging/test_orchestration_helpers.py",  # structured logging helper coverage
     "tests/unit/gpt_trader/orchestration/test_system_monitor.py",  # monitoring integration matrix
     "tests/unit/gpt_trader/test_broker_behavioral_contract.py",  # 358 lines: broker contract validation suite
-    "tests/unit/gpt_trader/utilities/test_async_utils_advanced.py",  # legacy async helpers coverage
+    "tests/unit/gpt_trader/utilities/test_async_utils_advanced.py",  # legacy async helpers coverage  # naming: allow
     "tests/unit/gpt_trader/persistence/test_event_store.py",  # event store contract and normalization coverage
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_helpers.py",  # scenario builder helpers consolidated
     "tests/unit/gpt_trader/utilities/test_performance_monitoring_advanced.py",  # needs refactor but tracked separately
@@ -58,7 +58,7 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/errors/test_base.py",  # error taxonomy coverage
     "tests/unit/gpt_trader/monitoring/test_configuration_guardian.py",  # guardian behaviour matrix
     "tests/unit/gpt_trader/utilities/test_trading_operations_integration.py",  # trading ops integration harness
-    "tests/unit/gpt_trader/utilities/test_async_utils_core.py",  # async helper regression suite
+    "tests/unit/gpt_trader/utilities/test_async_utils_core.py",  # async helper regression suite  # naming: allow
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_trading.py",  # trading API coverage
     "tests/unit/gpt_trader/logging/test_setup.py",  # logging stack regression suite
     "tests/unit/gpt_trader/validation/test_calculation_validator.py",  # calculation validator coverage
@@ -83,7 +83,7 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/orchestration/execution/test_state_collection.py",  # state collection aggregation matrix
     "tests/unit/gpt_trader/security/test_ip_allowlist_enforcer.py",  # IP allowlist enforcement scenarios
     "tests/unit/gpt_trader/orchestration/execution/test_order_submission.py",  # order submission flow coverage
-    "tests/unit/gpt_trader/config/test_runtime_settings_utils.py",  # runtime settings validation matrix
+    "tests/unit/gpt_trader/config/test_runtime_settings_utils.py",  # runtime settings validation matrix  # naming: allow
     "tests/unit/gpt_trader/preflight/test_context.py",  # preflight context scenarios
     "tests/unit/gpt_trader/security/test_request_validator.py",  # request validation coverage
     "tests/unit/gpt_trader/orchestration/execution/test_validation.py",  # execution validation matrix

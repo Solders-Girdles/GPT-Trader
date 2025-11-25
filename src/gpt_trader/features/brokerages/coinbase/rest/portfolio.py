@@ -14,7 +14,7 @@ from gpt_trader.utilities.logging_patterns import get_logger
 logger = get_logger(__name__, component="coinbase_portfolio")
 
 if TYPE_CHECKING:
-    from gpt_trader.features.brokerages.coinbase.rest._typing import CoinbaseRestServiceProtocol
+    pass
 
 
 class PortfolioRestMixin:

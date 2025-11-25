@@ -3,8 +3,8 @@ Configuration module.
 """
 
 from gpt_trader.orchestration.configuration.bot_config import (
-    BotConfig,
     TOP_VOLUME_BASES,
+    BotConfig,
     config,
 )
 from gpt_trader.orchestration.configuration.core import Profile

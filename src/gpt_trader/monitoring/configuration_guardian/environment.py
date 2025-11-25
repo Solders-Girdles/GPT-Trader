@@ -8,7 +8,7 @@ from typing import Any
 from gpt_trader.config.runtime_settings import RuntimeSettings, load_runtime_settings
 
 from .base import ConfigurationMonitor
-from .logging_utils import logger
+from .logging_utils import logger  # naming: allow
 from .models import DriftEvent
 from .responses import DriftResponse
 

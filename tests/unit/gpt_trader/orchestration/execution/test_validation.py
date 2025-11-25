@@ -272,7 +272,7 @@ class TestValidateExchangeRules:
         )
         mock_quantize.return_value = Decimal("49000.50")
 
-        qty, price = validator.validate_exchange_rules(
+        qty, price = validator.validate_exchange_rules(  # naming: allow
             symbol="BTC-PERP",
             side=OrderSide.BUY,
             order_type=OrderType.LIMIT,
@@ -300,7 +300,7 @@ class TestValidateExchangeRules:
             adjusted_price=Decimal("49000.00"),
         )
 
-        qty, price = validator.validate_exchange_rules(
+        qty, price = validator.validate_exchange_rules(  # naming: allow
             symbol="BTC-PERP",
             side=OrderSide.BUY,
             order_type=OrderType.MARKET,
@@ -310,7 +310,7 @@ class TestValidateExchangeRules:
             product=mock_product,
         )
 
-        assert qty == Decimal("1.001")
+        assert qty == Decimal("1.001")  # naming: allow
         assert price == Decimal("49000.00")
 
 
@@ -821,7 +821,7 @@ class TestValidationIntegration:
         )
 
         # Step 1: Validate exchange rules
-        qty, price = validator.validate_exchange_rules(
+        qty, price = validator.validate_exchange_rules(  # naming: allow
             symbol="BTC-PERP",
             side=OrderSide.BUY,
             order_type=OrderType.MARKET,
@@ -830,7 +830,7 @@ class TestValidationIntegration:
             effective_price=Decimal("50000"),
             product=mock_product,
         )
-        assert qty == Decimal("1.001")
+        assert qty == Decimal("1.001")  # naming: allow
 
         # Step 2: Ensure mark is fresh
         validator.ensure_mark_is_fresh("BTC-PERP")
@@ -839,7 +839,7 @@ class TestValidationIntegration:
         validator.enforce_slippage_guard(
             symbol="BTC-PERP",
             side=OrderSide.BUY,
-            order_quantity=qty,
+            order_quantity=qty,  # naming: allow
             effective_price=Decimal("50000"),
         )
 
@@ -847,7 +847,7 @@ class TestValidationIntegration:
         validator.run_pre_trade_validation(
             symbol="BTC-PERP",
             side=OrderSide.BUY,
-            order_quantity=qty,
+            order_quantity=qty,  # naming: allow
             effective_price=Decimal("50000"),
             product=mock_product,
             equity=Decimal("100000"),

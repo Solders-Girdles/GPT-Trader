@@ -7,7 +7,7 @@ import time
 
 import pytest
 
-from gpt_trader.utilities.async_utils import (
+from gpt_trader.utilities.async_utils import (  # naming: allow
     gather_with_concurrency,
     is_async_func,
     run_async_if_needed,
@@ -286,7 +286,10 @@ class TestAsyncIntegrationScenarios:
     @pytest.mark.asyncio
     async def test_rate_limiting_with_batch_processing(self) -> None:
         """Test combining rate limiting with batch processing."""
-        from gpt_trader.utilities.async_utils import AsyncBatchProcessor, AsyncRateLimiter
+        from gpt_trader.utilities.async_utils import (  # naming: allow
+            AsyncBatchProcessor,
+            AsyncRateLimiter,
+        )
 
         limiter = AsyncRateLimiter(rate_limit=50.0, burst_limit=5)
         processor = AsyncBatchProcessor(batch_size=3, delay_between_batches=0.01)
@@ -305,7 +308,7 @@ class TestAsyncIntegrationScenarios:
     @pytest.mark.asyncio
     async def test_caching_with_retry(self) -> None:
         """Test combining caching with retry logic."""
-        from gpt_trader.utilities.async_utils import AsyncCache, AsyncRetry
+        from gpt_trader.utilities.async_utils import AsyncCache, AsyncRetry  # naming: allow
 
         cache = AsyncCache(ttl=1.0)
         retry = AsyncRetry(max_attempts=3, base_delay=0.01)
@@ -345,7 +348,7 @@ class TestAsyncIntegrationScenarios:
     @pytest.mark.asyncio
     async def test_timeout_with_concurrency(self) -> None:
         """Test combining timeout with concurrent execution."""
-        from gpt_trader.utilities.async_utils import async_timeout
+        from gpt_trader.utilities.async_utils import async_timeout  # naming: allow
 
         @async_timeout(0.1)
         async def timed_operation(x: int) -> int:
@@ -361,7 +364,7 @@ class TestAsyncIntegrationScenarios:
     @pytest.mark.asyncio
     async def test_complex_async_workflow(self) -> None:
         """Test a complex workflow combining multiple utilities."""
-        from gpt_trader.utilities.async_utils import (
+        from gpt_trader.utilities.async_utils import (  # naming: allow
             AsyncCache,
             AsyncRateLimiter,
             AsyncRetry,

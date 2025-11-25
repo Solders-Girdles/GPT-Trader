@@ -2,7 +2,7 @@
 
 from .environment import EnvironmentMonitor
 from .guardian import ConfigurationGuardian
-from .logging_utils import logger
+from .logging_utils import logger  # naming: allow
 from .models import BaselineSnapshot, DriftEvent
 from .responses import DriftResponse
 

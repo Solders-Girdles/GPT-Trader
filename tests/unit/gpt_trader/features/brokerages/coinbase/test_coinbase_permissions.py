@@ -11,7 +11,7 @@ import pytest
 from gpt_trader.features.brokerages.coinbase.auth import CDPJWTAuth
 from gpt_trader.features.brokerages.coinbase.client import CoinbaseClient
 from gpt_trader.features.brokerages.coinbase.errors import AuthError
-from tests.unit.gpt_trader.features.brokerages.coinbase.permissions_test_utils import (
+from tests.unit.gpt_trader.features.brokerages.coinbase.permissions_test_utils import (  # naming: allow
     make_broker,
     make_client,
 )

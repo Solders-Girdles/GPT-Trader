@@ -41,11 +41,14 @@ class EventStore:
         """Append an error event."""
         error_message = message or error or "unknown_error"
         error_details = context or details or {}
-        self.append("error", {
-            "bot_id": bot_id,
-            "error": error_message,
-            "details": error_details,
-        })
+        self.append(
+            "error",
+            {
+                "bot_id": bot_id,
+                "error": error_message,
+                "details": error_details,
+            },
+        )
 
     def append_trade(
         self,

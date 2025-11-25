@@ -24,12 +24,12 @@ def service():
     endpoints = Mock()
     event_store = Mock()
     event_store.append_metric = Mock()
-    svc = DummyPortfolioService(client, endpoints, event_store)
-    return svc, client, endpoints, event_store
+    svc = DummyPortfolioService(client, endpoints, event_store)  # naming: allow
+    return svc, client, endpoints, event_store  # naming: allow
 
 
 def test_get_cfm_balance_summary_normalises_decimals_and_emits_metric(service):
-    svc, client, endpoints, event_store = service
+    svc, client, endpoints, event_store = service  # naming: allow
     endpoints.supports_derivatives.return_value = True
     client.cfm_balance_summary.return_value = {
         "balance_summary": {
@@ -39,7 +39,7 @@ def test_get_cfm_balance_summary_normalises_decimals_and_emits_metric(service):
         }
     }
 
-    summary = svc.get_cfm_balance_summary()
+    summary = svc.get_cfm_balance_summary()  # naming: allow
 
     assert summary["portfolio_value"] == Decimal("100.50")
     assert summary["available_margin"] == Decimal("25.75")
@@ -50,17 +50,17 @@ def test_get_cfm_balance_summary_normalises_decimals_and_emits_metric(service):
 
 
 def test_list_cfm_sweeps_returns_empty_when_derivatives_disabled(service):
-    svc, client, endpoints, _ = service
+    svc, client, endpoints, _ = service  # naming: allow
     endpoints.supports_derivatives.return_value = False
 
-    sweeps = svc.list_cfm_sweeps()
+    sweeps = svc.list_cfm_sweeps()  # naming: allow
 
     assert sweeps == []
     client.cfm_sweeps.assert_not_called()
 
 
 def test_list_cfm_sweeps_normalises_entries(service):
-    svc, client, endpoints, event_store = service
+    svc, client, endpoints, event_store = service  # naming: allow
     endpoints.supports_derivatives.return_value = True
     client.cfm_sweeps.return_value = {
         "sweeps": [
@@ -69,7 +69,7 @@ def test_list_cfm_sweeps_normalises_entries(service):
         ]
     }
 
-    sweeps = svc.list_cfm_sweeps()
+    sweeps = svc.list_cfm_sweeps()  # naming: allow
 
     assert sweeps[0]["amount"] == Decimal("10.0")
     assert sweeps[1]["amount"] == Decimal("5.5")
@@ -77,29 +77,29 @@ def test_list_cfm_sweeps_normalises_entries(service):
 
 
 def test_get_cfm_margin_window_handles_errors(service):
-    svc, client, endpoints, _ = service
+    svc, client, endpoints, _ = service  # naming: allow
     endpoints.supports_derivatives.return_value = True
     client.cfm_intraday_current_margin_window.side_effect = RuntimeError("boom")
 
-    result = svc.get_cfm_margin_window()
+    result = svc.get_cfm_margin_window()  # naming: allow
 
     assert result == {}
 
 
 def test_update_cfm_margin_window_enforces_derivatives(service):
-    svc, _, endpoints, _ = service
+    svc, _, endpoints, _ = service  # naming: allow
     endpoints.supports_derivatives.return_value = False
 
     with pytest.raises(InvalidRequestError):
-        svc.update_cfm_margin_window("INTRADAY_STANDARD")
+        svc.update_cfm_margin_window("INTRADAY_STANDARD")  # naming: allow
 
 
 def test_update_cfm_margin_window_calls_client_and_emits(service):
-    svc, client, endpoints, event_store = service
+    svc, client, endpoints, event_store = service  # naming: allow
     endpoints.supports_derivatives.return_value = True
     client.cfm_intraday_margin_setting.return_value = {"status": "accepted", "leverage": "3"}
 
-    response = svc.update_cfm_margin_window(
+    response = svc.update_cfm_margin_window(  # naming: allow
         "INTRADAY_STANDARD", effective_time="2024-05-01T00:00:00Z"
     )
 

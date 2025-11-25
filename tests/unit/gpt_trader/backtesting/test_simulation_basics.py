@@ -13,17 +13,17 @@ class TestFeeCalculator:
 
     def test_tier_2_fees(self):
         """Test TIER_2 fee rates (0.25% maker, 0.40% taker)."""
-        calc = FeeCalculator(tier=FeeTier.TIER_2)
+        calc = FeeCalculator(tier=FeeTier.TIER_2)  # naming: allow
 
         # Maker fee
-        maker_fee = calc.calculate(
+        maker_fee = calc.calculate(  # naming: allow
             notional_usd=Decimal("10000"),
             is_maker=True,
         )
         assert maker_fee == Decimal("25")  # 0.25% of 10000
 
         # Taker fee
-        taker_fee = calc.calculate(
+        taker_fee = calc.calculate(  # naming: allow
             notional_usd=Decimal("10000"),
             is_maker=False,
         )
@@ -31,12 +31,12 @@ class TestFeeCalculator:
 
     def test_tier_0_fees(self):
         """Test TIER_0 fee rates (0.60% maker, 0.80% taker)."""
-        calc = FeeCalculator(tier=FeeTier.TIER_0)
+        calc = FeeCalculator(tier=FeeTier.TIER_0)  # naming: allow
 
-        maker_fee = calc.calculate(Decimal("1000"), is_maker=True)
+        maker_fee = calc.calculate(Decimal("1000"), is_maker=True)  # naming: allow
         assert maker_fee == Decimal("6")  # 0.60% of 1000
 
-        taker_fee = calc.calculate(Decimal("1000"), is_maker=False)
+        taker_fee = calc.calculate(Decimal("1000"), is_maker=False)  # naming: allow
         assert taker_fee == Decimal("8")  # 0.80% of 1000
 
 

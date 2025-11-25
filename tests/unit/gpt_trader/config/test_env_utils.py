@@ -2,7 +2,7 @@ from decimal import Decimal
 
 import pytest
 
-from gpt_trader.config.env_utils import (
+from gpt_trader.config.env_utils import (  # naming: allow
     EnvVarError,
     coerce_env_value,
     get_env_bool,

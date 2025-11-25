@@ -7,7 +7,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from .logging_utils import logger
+from .logging_utils import logger  # naming: allow
 
 
 def load_metrics(metrics_file: Path) -> dict[str, Any]:

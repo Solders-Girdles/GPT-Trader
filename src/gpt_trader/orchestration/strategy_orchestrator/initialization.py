@@ -11,7 +11,7 @@ from gpt_trader.features.live_trade.strategies.perps_baseline import (
 from gpt_trader.orchestration.configuration import Profile
 from gpt_trader.orchestration.spot_profile_service import SpotProfileService
 
-from .logging_utils import logger
+from .logging_utils import logger  # naming: allow
 
 if TYPE_CHECKING:  # pragma: no cover
     from gpt_trader.orchestration.trading_bot import TradingBot

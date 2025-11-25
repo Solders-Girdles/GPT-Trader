@@ -287,12 +287,14 @@ class CoinbaseRestServiceBase:
 
         # Funding
         funding_rate, next_funding = self.product_catalog.get_funding(symbol)
-        funding_amt = self._funding_calculator.accrue_if_due(position, funding_rate, next_funding)
-        if funding_amt:
-            position.realized_pnl += funding_amt
+        funding_amt = self._funding_calculator.accrue_if_due(  # naming: allow
+            position, funding_rate, next_funding
+        )
+        if funding_amt:  # naming: allow
+            position.realized_pnl += funding_amt  # naming: allow
             self._event_store.append_metric(
                 bot_id="coinbase_perps",
-                metrics={"type": "funding", "funding_amount": str(funding_amt)},
+                metrics={"type": "funding", "funding_amount": str(funding_amt)},  # naming: allow
             )
 
         # Append metrics

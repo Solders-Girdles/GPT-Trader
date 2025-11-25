@@ -63,8 +63,8 @@ IGNORE_LIST = {
     "tests/unit/gpt_trader/orchestration/coordinators/test_metric_emission.py",
     "tests/unit/gpt_trader/orchestration/execution/test_validation_pre_trade.py",
     "tests/support/deterministic_broker.py",
-    "tests/unit/gpt_trader/utilities/test_async_utils_core.py",
-    "tests/unit/gpt_trader/utilities/test_async_utils_advanced.py",
+    "tests/unit/gpt_trader/utilities/test_async_utils_core.py",  # naming: allow
+    "tests/unit/gpt_trader/utilities/test_async_utils_advanced.py",  # naming: allow
     "tests/unit/gpt_trader/orchestration/test_state_manager.py",
     "tests/unit/gpt_trader/orchestration/execution/state_collection/test_error_handling.py",
     "tests/unit/gpt_trader/persistence/test_event_store.py",
@@ -77,7 +77,7 @@ IGNORE_LIST = {
     "tests/unit/gpt_trader/orchestration/configuration/test_core.py",
     "tests/unit/gpt_trader/orchestration/execution/state_collection/test_state_diff.py",
     "tests/unit/gpt_trader/utilities/test_performance_monitoring_advanced.py",
-    "tests/unit/gpt_trader/orchestration/test_runtime_settings_utils.py",
+    "tests/unit/gpt_trader/orchestration/test_runtime_settings_utils.py",  # naming: allow
     "tests/unit/gpt_trader/persistence/test_json_file_store_contract.py",
     "tests/unit/gpt_trader/orchestration/perps_bot/conftest.py",
     "tests/unit/gpt_trader/types/test_trading.py",
@@ -113,7 +113,7 @@ IGNORE_LIST = {
     "tests/unit/gpt_trader/orchestration/execution/test_guards.py",
     "tests/unit/gpt_trader/orchestration/execution/test_state_collection.py",
     "tests/unit/gpt_trader/security/security_validator/test_order_validation.py",
-    "tests/unit/gpt_trader/config/test_runtime_settings_utils.py",
+    "tests/unit/gpt_trader/config/test_runtime_settings_utils.py",  # naming: allow
     "tests/unit/gpt_trader/security/test_ip_allowlist_enforcer.py",
     "tests/unit/gpt_trader/utilities/test_console_logging_core.py",
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_permissions.py",

@@ -1,8 +1,8 @@
+import time
 from collections import defaultdict
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from decimal import Decimal
 from typing import Any
-import time
 
 
 class ValidationError(Exception):
@@ -12,6 +12,7 @@ class ValidationError(Exception):
 @dataclass
 class VolatilityCheckOutcome:
     """Result of a volatility circuit breaker check."""
+
     triggered: bool = False
     symbol: str = ""
     reason: str = ""
@@ -149,7 +150,9 @@ class LiveRiskManager:
         metrics = {
             "timestamp": time.time(),
             "equity": str(equity),
-            "positions": {k: {kk: str(vv) for kk, vv in v.items()} for k, v in positions_dict.items()},
+            "positions": {
+                k: {kk: str(vv) for kk, vv in v.items()} for k, v in positions_dict.items()
+            },
             "reduce_only_mode": self._reduce_only_mode,
         }
         self._risk_metrics.append(metrics)
@@ -157,9 +160,7 @@ class LiveRiskManager:
         if len(self._risk_metrics) > 100:
             self._risk_metrics = self._risk_metrics[-100:]
 
-    def check_correlation_risk(
-        self, positions_dict: dict[str, dict[str, Decimal]]
-    ) -> None:
+    def check_correlation_risk(self, positions_dict: dict[str, dict[str, Decimal]]) -> None:
         """
         Check correlation risk across positions.
         Currently a no-op placeholder for future implementation.

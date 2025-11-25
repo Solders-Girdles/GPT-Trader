@@ -147,9 +147,9 @@ def calculate_symbol_metrics(events: list[dict[str, Any]]) -> list[SymbolPerform
             symbol_data[symbol]["regime"] = event["regime"]
 
         if event_type == "position_update":
-            qty = event.get("quantity", 0)
+            qty = event.get("quantity", 0)  # naming: allow
             price = event.get("price", 0)
-            symbol_data[symbol]["exposure"] = abs(qty * price)
+            symbol_data[symbol]["exposure"] = abs(qty * price)  # naming: allow
 
     performances: list[SymbolPerformance] = []
     for symbol, data in symbol_data.items():

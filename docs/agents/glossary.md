@@ -1,0 +1,76 @@
+# GPT-Trader Approved Abbreviations
+
+This glossary lists abbreviations approved for use in the GPT-Trader codebase.
+Any abbreviation not listed here should be spelled out in full.
+
+## Approved Abbreviations
+
+| Abbreviation | Full Form | Context | Notes |
+|--------------|-----------|---------|-------|
+| `API` | Application Programming Interface | All | Industry standard |
+| `CLI` | Command Line Interface | All | Industry standard |
+| `JSON` | JavaScript Object Notation | All | Industry standard |
+| `YAML` | YAML Ain't Markup Language | All | Industry standard |
+| `HTTP` | Hypertext Transfer Protocol | All | Industry standard |
+| `REST` | Representational State Transfer | All | Industry standard |
+| `URL` | Uniform Resource Locator | All | Industry standard |
+| `ID` | Identifier | All | Industry standard |
+| `UUID` | Universally Unique Identifier | All | Industry standard |
+| `PnL` | Profit and Loss | Trading domain | Trading standard |
+| `BTC` | Bitcoin | Trading domain | Cryptocurrency ticker |
+| `ETH` | Ethereum | Trading domain | Cryptocurrency ticker |
+| `USD` | US Dollar | Trading domain | Currency code |
+| `USDC` | USD Coin | Trading domain | Stablecoin ticker |
+| `WS` | WebSocket | Networking | Common abbreviation |
+| `CDP` | Coinbase Developer Platform | Coinbase API | Coinbase-specific |
+| `INTX` | Coinbase International Exchange | Coinbase API | Coinbase-specific |
+| `HMAC` | Hash-based Message Authentication Code | Security | Cryptography standard |
+| `JWT` | JSON Web Token | Security | Authentication standard |
+| `MVP` | Minimum Viable Product | Project management | Industry standard |
+| `PR` | Pull Request | Development | Git/GitHub standard |
+| `CI` | Continuous Integration | Development | Industry standard |
+| `CD` | Continuous Deployment | Development | Industry standard |
+| `E2E` | End-to-End | Testing | Industry standard |
+
+## Banned Abbreviations
+
+These abbreviations are banned and must be spelled out:
+
+| Banned | Use Instead | Rationale |
+|--------|-------------|-----------|
+| `cfg` | `config` | Clarity over brevity |
+| `svc` | `service` | Clarity over brevity |
+| `mgr` | `manager` | Clarity over brevity |
+| `util` / `utils` | `utilities` | Clarity over brevity |
+| `qty` | `quantity` | Clarity over brevity |
+| `amt` | `amount` | Clarity over brevity |
+| `calc` | `calculate` | Clarity over brevity |
+| `upd` | `update` | Clarity over brevity |
+| `Impl` | (describe the implementation) | Avoid generic suffixes |
+
+## Exception Process
+
+To add a new approved abbreviation:
+
+1. Open a PR with the proposed addition to this glossary
+2. Include rationale for why the abbreviation improves clarity
+3. Require maintainer approval
+4. If the abbreviation was previously banned, update `scripts/agents/naming_inventory.py`
+
+## Inline Exceptions
+
+For legacy code or external API compatibility, use `# naming: allow` comments:
+
+```python
+# External API field - cannot rename
+response_qty = api_response["qty"]  # naming: allow
+```
+
+## Enforcement
+
+Naming standards are enforced via:
+- **Pre-commit hook**: Blocks commits with violations (use `SKIP=naming-check git commit` to bypass)
+- **CI check**: Generates reports uploaded as artifacts
+- **Code review**: Reviewers flag deviations
+
+See `docs/naming.md` for complete naming conventions.

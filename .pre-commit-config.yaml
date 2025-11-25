@@ -34,3 +34,9 @@ repos:
         language: python
         pass_filenames: true
         files: ^tests/.*\.py$
+    -   id: naming-check
+        name: naming-standards
+        entry: python scripts/agents/naming_inventory.py --strict --quiet
+        language: python
+        pass_filenames: false
+        always_run: true

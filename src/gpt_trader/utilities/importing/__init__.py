@@ -5,7 +5,7 @@ from .optional import OptionalImport, conditional_import, optional_import
 from .profiling import ImportProfiler, get_import_stats, optimize_imports
 from .registry import (
     cvxpy,
-    dev_utils,
+    dev_utils,  # naming: allow
     is_test_environment,
     matplotlib,
     numpy,
@@ -14,7 +14,7 @@ from .registry import (
     scipy,
     sklearn,
     tensorflow,
-    test_utils,
+    test_utils,  # naming: allow
     torch,
 )
 
@@ -41,6 +41,6 @@ __all__ = [
     "torch",
     "cvxpy",
     "is_test_environment",
-    "test_utils",
-    "dev_utils",
+    "test_utils",  # naming: allow
+    "dev_utils",  # naming: allow
 ]

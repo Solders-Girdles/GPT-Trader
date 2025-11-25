@@ -6,7 +6,7 @@ from collections.abc import Callable
 from decimal import Decimal
 from typing import TypeVar
 
-from gpt_trader.config.env_utils import (
+from gpt_trader.config.env_utils import (  # naming: allow
     EnvVarError,
     get_env_bool,
     get_env_decimal,

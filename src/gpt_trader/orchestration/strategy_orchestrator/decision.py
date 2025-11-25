@@ -16,7 +16,7 @@ from gpt_trader.logging import log_strategy_decision
 from gpt_trader.monitoring.system import get_logger as _get_plog
 from gpt_trader.orchestration.configuration import Profile
 
-from .logging_utils import logger
+from .logging_utils import logger  # naming: allow
 from .models import SymbolProcessingContext
 
 if TYPE_CHECKING:
@@ -25,7 +25,9 @@ if TYPE_CHECKING:
 
 class _HasBotAndStrategy(Protocol):
     """Protocol for mixins that expect _bot and get_strategy."""
+
     _bot: TradingBot
+
     def get_strategy(self, symbol: str) -> BaselinePerpsStrategy: ...
 
 

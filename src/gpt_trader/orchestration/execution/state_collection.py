@@ -195,12 +195,12 @@ class StateCollector:
         """
         positions_dict: dict[str, dict[str, Any]] = {}
         for pos in positions:
-            qty = quantity_from(pos)
-            if qty is None or qty == Decimal("0"):
+            qty = quantity_from(pos)  # naming: allow
+            if qty is None or qty == Decimal("0"):  # naming: allow
                 continue
             try:
                 positions_dict[pos.symbol] = {
-                    "quantity": qty,
+                    "quantity": qty,  # naming: allow
                     "side": getattr(pos, "side", "long").lower(),
                     "entry_price": Decimal(str(getattr(pos, "entry_price", "0"))),
                     "mark_price": Decimal(str(getattr(pos, "mark_price", "0"))),

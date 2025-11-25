@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from .base import ConfigurationMonitor
-from .logging_utils import logger
+from .logging_utils import logger  # naming: allow
 from .models import BaselineSnapshot, DriftEvent
 
 

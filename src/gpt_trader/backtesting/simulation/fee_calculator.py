@@ -57,10 +57,10 @@ class FeeCalculator:
             Fee amount in USD
 
         Examples:
-            >>> calc = FeeCalculator(tier=FeeTier.TIER_2)
-            >>> calc.calculate(notional_usd=Decimal("10000"), is_maker=True)
+            >>> calc = FeeCalculator(tier=FeeTier.TIER_2)  # naming: allow
+            >>> calc.calculate(notional_usd=Decimal("10000"), is_maker=True)  # naming: allow
             Decimal("25.00")  # 0.25% maker fee
-            >>> calc.calculate(notional_usd=Decimal("10000"), is_maker=False)
+            >>> calc.calculate(notional_usd=Decimal("10000"), is_maker=False)  # naming: allow
             Decimal("40.00")  # 0.40% taker fee
         """
         rate_bps = self.maker_bps if is_maker else self.taker_bps

@@ -11,7 +11,7 @@ from gpt_trader.logging import correlation_context, log_execution_error, symbol_
 from .context import ContextBuilderMixin
 from .decision import DecisionEngineMixin
 from .initialization import StrategyInitializationMixin
-from .logging_utils import json_logger, logger
+from .logging_utils import json_logger, logger  # naming: allow
 from .models import SymbolProcessingContext
 from .spot_filters import SpotFiltersMixin
 

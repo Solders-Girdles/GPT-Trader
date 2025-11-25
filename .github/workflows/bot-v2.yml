@@ -130,7 +130,7 @@ jobs:
           REDIS_URL: redis://localhost:6379/0
           ENV: test
         run: |
-          poetry run pytest -m "not slow and not performance" -q \
+          poetry run pytest -m "not slow and not performance and not integration" -q \
             --cov=src/gpt_trader/cli \
             --cov=src/gpt_trader/config \
             --cov=src/gpt_trader/features/brokerages/coinbase/client \

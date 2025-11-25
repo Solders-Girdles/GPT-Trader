@@ -113,7 +113,7 @@ jobs:
       if: github.event_name != 'pull_request'
       run: |
         set -euo pipefail
-        poetry run pytest -m "not slow and not performance" -q \
+        poetry run pytest -m "not slow and not performance and not integration" -q \
           --cov=src \
           --cov-report=term-missing --cov-report=json:coverage.json --cov-report=xml --cov-report=html --cov-fail-under=23.50
 

@@ -306,7 +306,7 @@ def get_data_provider(
     Factory function to get appropriate data provider
 
     Args:
-        provider_type: Optional provider type ('yfinance', 'mock', 'coinbase')
+        provider_type: Optional provider type ('yfinance', 'mock')
                       If None, auto-detects based on environment
 
     Returns:
@@ -341,23 +341,22 @@ def get_data_provider(
         if testing_mode:
             provider_type = "mock"
         else:
-            real_data_flag = env_map.get("COINBASE_USE_REAL_DATA", "")
-            real_data_enabled = real_data_flag.strip().lower() in {"1", "true"}
-            provider_type = "coinbase" if real_data_enabled else "yfinance"
+            provider_type = "yfinance"
 
-    # Handle legacy aliases
+    # Handle removed providers with helpful errors
     if provider_type == "alpaca":
-        logger.warning("Alpaca data provider has been deprecated; falling back to yfinance")
-        provider_type = "yfinance"
+        raise ValueError(
+            "Alpaca data provider has been removed. Use 'yfinance' or 'mock' instead."
+        )
+    if provider_type == "coinbase":
+        raise ValueError(
+            "CoinbaseDataProvider has been removed. "
+            "Use ApplicationContainer.create_perps_bot() for live Coinbase trading."
+        )
 
     # Create appropriate provider
     if provider_type == "mock":
         _provider_instance = MockProvider()
-    elif provider_type == "coinbase":
-        # Lazy import to avoid circular dependencies
-        from gpt_trader.data_providers.coinbase.provider import CoinbaseDataProvider
-
-        _provider_instance = CoinbaseDataProvider(settings=runtime_settings)
     else:
         _provider_instance = YFinanceProvider()
 

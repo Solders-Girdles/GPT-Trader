@@ -109,3 +109,27 @@ class TestNumericEdgeBehaviour:
         result = security_validator.validate_numeric(value)
         assert not result.is_valid
         assert any("Invalid numeric value" in error for error in result.errors)
+
+
+class TestNumericValidationExceptionHandling:
+    """Test exception handling in numeric validation."""
+
+    def test_numeric_validation_non_decimal_return(self) -> None:
+        """Test that TypeError is raised if DecimalRule returns non-Decimal.
+
+        This covers the type assertion (line 27) in numeric_validator.py.
+        The DecimalRule should always return a Decimal, but if it doesn't,
+        the validator catches the TypeError and returns an error.
+        """
+        from unittest.mock import patch
+
+        from gpt_trader.security.numeric_validator import NumericValidator
+
+        # Mock the DecimalRule to return a float instead of Decimal
+        with patch.object(NumericValidator, "_NUMERIC_RULE") as mock_rule:
+            mock_rule.return_value = 123.45  # Return float instead of Decimal
+
+            result = NumericValidator.validate_numeric("123.45")
+
+            assert not result.is_valid
+            assert "Invalid numeric value" in result.errors

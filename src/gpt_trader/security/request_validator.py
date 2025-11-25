@@ -33,10 +33,14 @@ class RequestValidator:
             if not action_result.is_valid:
                 errors.extend(action_result.errors)
 
-        # Check request size
-        import sys
+        # Check request size using JSON serialization for accurate payload size
+        import json
 
-        request_size = sys.getsizeof(request)
+        try:
+            request_size = len(json.dumps(request, default=str).encode("utf-8"))
+        except (TypeError, ValueError):
+            request_size = 0  # If serialization fails, skip size check
+
         if request_size > 1048576:  # 1MB
             errors.append("Request size exceeds 1MB limit")
 

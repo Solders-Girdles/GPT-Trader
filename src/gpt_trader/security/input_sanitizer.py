@@ -25,13 +25,16 @@ class InputSanitizer:
     }
 
     @classmethod
-    def sanitize_string(cls, input_str: str, max_length: int = 255) -> ValidationResult:
+    def sanitize_string(
+        cls, input_str: str, max_length: int = 255, reject_blank: bool = False
+    ) -> ValidationResult:
         """
         Sanitize string input and check for injection attempts.
 
         Args:
             input_str: Input string to sanitize
             max_length: Maximum allowed length
+            reject_blank: If True, reject whitespace-only strings after stripping
 
         Returns:
             ValidationResult with sanitized value
@@ -40,6 +43,10 @@ class InputSanitizer:
 
         if not input_str:
             return ValidationResult(False, ["Input cannot be empty"])
+
+        # Check for whitespace-only strings if reject_blank is enabled
+        if reject_blank and not input_str.strip():
+            return ValidationResult(False, ["Input cannot be blank (whitespace-only)"])
 
         # Check length
         if len(input_str) > max_length:

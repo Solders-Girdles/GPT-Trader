@@ -1,5 +1,6 @@
 import os
 import pytest
+from datetime import datetime
 from decimal import Decimal
 from typing import Generator
 
@@ -10,7 +11,57 @@ from gpt_trader.features.brokerages.coinbase.models import APIConfig
 from gpt_trader.features.brokerages.coinbase.utilities import ProductCatalog
 from gpt_trader.features.brokerages.coinbase.market_data_service import MarketDataService
 from gpt_trader.persistence.event_store import EventStore
-from tests.shared.mock_brokers import MockAsyncBroker
+from gpt_trader.features.brokerages.core.interfaces import (
+    Balance, Order, OrderSide, OrderStatus, OrderType, Product, MarketType, TimeInForce
+)
+
+
+class MockAsyncBroker:
+    """Minimal mock broker for contract tests."""
+
+    def __init__(self):
+        self.orders: dict[str, Order] = {}
+        self._balances = [
+            Balance(asset="USD", total=Decimal("100000"), available=Decimal("100000"), hold=Decimal("0"))
+        ]
+        self._products = {
+            "BTC-PERP": Product(
+                symbol="BTC-PERP", base_asset="BTC", quote_asset="USD",
+                market_type=MarketType.PERPETUAL, min_size=Decimal("0.001"),
+                step_size=Decimal("0.001"), min_notional=Decimal("10"),
+                price_increment=Decimal("0.01"), leverage_max=10,
+            ),
+        }
+
+    def get_product(self, symbol: str) -> Product | None:
+        return self._products.get(symbol)
+
+    async def balances(self) -> list[Balance]:
+        return self._balances
+
+    async def place_order(
+        self, symbol: str, side: OrderSide, order_type: OrderType,
+        quantity: Decimal | None = None, price: Decimal | None = None,
+        tif: TimeInForce = TimeInForce.GTC, **kwargs
+    ) -> Order:
+        order_id = f"mock_order_{len(self.orders)}"
+        order = Order(
+            id=order_id, client_id=order_id, symbol=symbol, side=side, type=order_type,
+            quantity=quantity or Decimal("0"), price=price, stop_price=None, tif=tif,
+            status=OrderStatus.SUBMITTED, filled_quantity=Decimal("0"), avg_fill_price=None,
+            submitted_at=datetime.utcnow(), updated_at=datetime.utcnow(),
+        )
+        self.orders[order_id] = order
+        return order
+
+    async def get_order(self, order_id: str) -> Order | None:
+        return self.orders.get(order_id)
+
+    async def cancel_order(self, order_id: str) -> bool:
+        if order_id in self.orders:
+            self.orders[order_id].status = OrderStatus.CANCELLED
+            return True
+        return False
 
 # Define a marker for contract tests
 pytestmark = [pytest.mark.anyio, pytest.mark.contract]

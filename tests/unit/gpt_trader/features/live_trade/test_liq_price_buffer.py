@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from gpt_trader.config.live_trade_config import RiskConfig
+from gpt_trader.orchestration.configuration import RiskConfig
 from gpt_trader.features.live_trade.risk import LiveRiskManager
 
 

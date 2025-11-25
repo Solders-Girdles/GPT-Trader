@@ -16,12 +16,6 @@ from .pricing import CoinbasePricingMixin
 from .streaming import CoinbaseStreamingMixin
 from .symbols import CoinbaseSymbolMixin
 
-# Placeholder for missing adapter class to prevent NameError
-# TODO: Locate correct replacement for CoinbaseBrokerage
-class CoinbaseBrokerage:
-    def __init__(self, config: Any, settings: Any):
-        pass
-
 logger = get_logger(__name__, component="coinbase_provider")
 
 TruthFlag = Literal["1", "true", "yes", "on"]

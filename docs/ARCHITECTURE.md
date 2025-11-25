@@ -177,15 +177,12 @@ This modular design achieves 66% file size reduction with clear separation of co
 
 #### Filter Pipeline Pattern
 
-The strategy orchestration now uses a **Filter Pipeline** pattern to evaluate trade signals against a series of composable checks. This replaces monolithic "God Methods" with small, focused classes.
+The strategy orchestration uses a **Filter Pipeline** pattern to evaluate trade signals.
 
 - **Interface**: `Filter` (abstract base class)
-- **Implementation**: `src/gpt_trader/orchestration/strategy_orchestrator/filters.py`
-- **Usage**: `SpotFiltersMixin` iterates through configured filters (`VolumeFilter`, `MomentumFilter`, `TrendFilter`, etc.).
-- **Benefits**:
-  - **Open/Closed Principle**: New filters can be added without modifying the orchestrator.
-  - **Testability**: Each filter is unit-tested in isolation.
-  - **Configurability**: Filters are enabled/disabled and tuned via runtime configuration.
+- **Implementation**: `src/gpt_trader/orchestration/strategy_orchestrator/spot_filters.py`
+- **Current Status**: The pipeline is currently a pass-through. Specific filter implementations (Volume, Momentum, Trend) have been removed and will be reintroduced as needed.
+- **Usage**: `SpotFiltersMixin` provides the hook for these checks.
 
 
 ### Derivatives Gate

@@ -6,7 +6,7 @@ from gpt_trader.orchestration.configuration import BotConfig
 from gpt_trader.orchestration.trading_bot.bot import TradingBot
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_end_to_end_buy_execution():
     # 1. Setup Config
     config = BotConfig(

@@ -171,23 +171,23 @@ class CoinbaseAccountManager:
             self._event_store.append_metric(
                 bot_id="account_manager", metrics={"event_type": "convert_commit", "data": result}
             )
-            return result
-        return quote
+            return result  # type: ignore[no-any-return]
+        return quote  # type: ignore[no-any-return]
 
     def move_funds(self, payload: dict[str, Any]) -> dict[str, Any]:
         result = self.broker.move_portfolio_funds(payload)
         self._event_store.append_metric(
             bot_id="account_manager", metrics={"event_type": "portfolio_move", "data": result}
         )
-        return result
+        return result  # type: ignore[no-any-return]
 
     def supports_intx(self) -> bool:
         """Check if INTX is supported by the broker."""
-        return self.broker.supports_intx()
+        return self.broker.supports_intx()  # type: ignore[no-any-return]
 
     def get_intx_portfolio_uuid(self, *, refresh: bool = False) -> str | None:
         """Get the INTX portfolio UUID, with optional refresh."""
-        return self.broker.resolve_intx_portfolio(refresh=refresh)
+        return self.broker.resolve_intx_portfolio(refresh=refresh)  # type: ignore[no-any-return]
 
     def invalidate_intx_cache(self) -> None:
         """Invalidate the cached INTX portfolio UUID."""

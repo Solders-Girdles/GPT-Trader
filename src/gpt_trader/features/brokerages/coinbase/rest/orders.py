@@ -93,7 +93,7 @@ class OrderRestMixin:
             results = response.get("results", [])
             for res in results:
                 if res.get("order_id") == order_id:
-                    return res.get("success", False)
+                    return res.get("success", False)  # type: ignore[no-any-return]
             return False
         except Exception as exc:
             logger.error(
@@ -118,7 +118,7 @@ class OrderRestMixin:
 
         while has_more:
             try:
-                kwargs = {"limit": limit}
+                kwargs: dict[str, Any] = {"limit": limit}
                 if product_id:
                     kwargs["product_id"] = product_id
                 if status:
@@ -234,5 +234,5 @@ class OrderRestMixin:
             return to_order(response.get("order", {}))
         except Exception as e:
             if fallback:
-                return fallback()
+                return fallback()  # type: ignore[no-any-return]
             raise e

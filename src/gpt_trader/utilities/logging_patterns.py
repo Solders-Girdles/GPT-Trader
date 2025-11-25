@@ -83,7 +83,7 @@ def _ensure_structured(logger: Any) -> StructuredLogger | None:
     if logger is None:
         return None
     if _is_structured(logger):
-        return logger
+        return logger  # type: ignore[no-any-return]
     if isinstance(logger, logging.Logger):
         return StructuredLogger(logger.name)
     if hasattr(logger, "name"):

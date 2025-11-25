@@ -148,7 +148,7 @@ class PortfolioRestMixin:
             self._event_store.append_metric(
                 metrics={"event_type": "intx_allocation", "response": response}
             )
-            return response
+            return response  # type: ignore[no-any-return]
         except Exception as e:
             raise e
 
@@ -172,7 +172,7 @@ class PortfolioRestMixin:
                     "data": {"portfolio_id": portfolio_id, "count": len(balances)},
                 }
             )
-            return balances
+            return balances  # type: ignore[no-any-return]
         except Exception as exc:
             logger.error(
                 "Failed to get INTX balances",
@@ -191,7 +191,7 @@ class PortfolioRestMixin:
             response = self.client.get_intx_portfolio(portfolio_id)
             if "portfolio_value" in response:
                 response["portfolio_value"] = Decimal(str(response["portfolio_value"]))
-            return response
+            return response  # type: ignore[no-any-return]
         except Exception as exc:
             logger.error(
                 "Failed to get INTX portfolio",
@@ -251,7 +251,7 @@ class PortfolioRestMixin:
             self._event_store.append_metric(
                 metrics={"event_type": "intx_multi_asset_collateral", "data": response}
             )
-            return response
+            return response  # type: ignore[no-any-return]
         except Exception as exc:
             logger.error(
                 "Failed to get INTX multi-asset collateral",
@@ -280,7 +280,7 @@ class PortfolioRestMixin:
                 "summary": {k: str(v) for k, v in summary.items()},
             }
         )
-        return summary
+        return summary  # type: ignore[no-any-return]
 
     def list_cfm_sweeps(self) -> list[dict[str, Any]]:
         """List CFM sweeps."""
@@ -308,7 +308,7 @@ class PortfolioRestMixin:
 
         try:
             response = self.client.cfm_sweeps_schedule()
-            return response.get("schedule", {})
+            return response.get("schedule", {})  # type: ignore[no-any-return]
         except Exception as exc:
             logger.error(
                 "Failed to get CFM sweeps schedule",
@@ -325,7 +325,7 @@ class PortfolioRestMixin:
 
         try:
             response = self.client.cfm_intraday_current_margin_window()
-            return response
+            return response  # type: ignore[no-any-return]
         except Exception as exc:
             logger.error(
                 "Failed to get CFM margin window",
@@ -361,4 +361,4 @@ class PortfolioRestMixin:
                 "response": {k: str(v) for k, v in response.items()},
             }
         )
-        return response
+        return response  # type: ignore[no-any-return]

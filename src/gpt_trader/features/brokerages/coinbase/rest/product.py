@@ -61,7 +61,7 @@ class ProductRestMixin:
                             product.next_funding_time = next_funding
                         except Exception:
                             pass
-                    return product
+                    return product  # type: ignore[no-any-return]
                 except Exception as e:
                     logger.debug("ProductRestMixin catalog get failed: %s", e)
                     pass

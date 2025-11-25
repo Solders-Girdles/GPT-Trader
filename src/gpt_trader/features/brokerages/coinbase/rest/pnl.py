@@ -53,7 +53,7 @@ class PnLRestMixin:
                 symbol=product_id_str, side=fill_pos_side, quantity=size_dec, entry_price=price_dec
             )
         else:
-            position = self.positions[product_id]
+            position = self.positions[product_id_str]
 
             if position.side == fill_pos_side:
                 # Increasing position

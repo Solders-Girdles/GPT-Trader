@@ -16,6 +16,9 @@ from gpt_trader.features.brokerages.core.interfaces import (
     OrderType,
     TimeInForce,
 )
+from gpt_trader.utilities.logging_patterns import get_logger
+
+logger = get_logger(__name__, component="coinbase_orders")
 
 
 class OrderRestMixin:
@@ -92,7 +95,14 @@ class OrderRestMixin:
                 if res.get("order_id") == order_id:
                     return res.get("success", False)
             return False
-        except Exception:
+        except Exception as exc:
+            logger.error(
+                "Failed to cancel order",
+                error_type=type(exc).__name__,
+                error_message=str(exc),
+                operation="cancel_order",
+                order_id=order_id,
+            )
             return False
 
     def list_orders(
@@ -125,7 +135,14 @@ class OrderRestMixin:
                 cursor = response.get("cursor")
                 if not cursor or not page_orders:
                     has_more = False
-            except Exception:
+            except Exception as exc:
+                logger.error(
+                    "Failed to list orders from broker",
+                    error_type=type(exc).__name__,
+                    error_message=str(exc),
+                    operation="list_orders",
+                    product_id=product_id,
+                )
                 has_more = False
 
         return orders
@@ -138,7 +155,14 @@ class OrderRestMixin:
             if order_data:
                 return to_order(order_data)
             return None
-        except Exception:
+        except Exception as exc:
+            logger.error(
+                "Failed to get order details",
+                error_type=type(exc).__name__,
+                error_message=str(exc),
+                operation="get_order",
+                order_id=order_id,
+            )
             return None
 
     def list_fills(
@@ -170,7 +194,15 @@ class OrderRestMixin:
                 cursor = response.get("cursor")
                 if not cursor or not page_fills:
                     has_more = False
-            except Exception:
+            except Exception as exc:
+                logger.error(
+                    "Failed to list fills from broker",
+                    error_type=type(exc).__name__,
+                    error_message=str(exc),
+                    operation="list_fills",
+                    product_id=product_id,
+                    order_id=order_id,
+                )
                 has_more = False
 
         return fills

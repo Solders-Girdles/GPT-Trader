@@ -126,8 +126,14 @@ class OrderValidator:
                 raise ValidationError(f"Mark price is stale for {symbol}; halting order placement")
         except ValidationError:
             raise
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.error(
+                "Failed to check mark price staleness",
+                error_type=type(exc).__name__,
+                error_message=str(exc),
+                operation="ensure_mark_is_fresh",
+                symbol=symbol,
+            )
 
     def enforce_slippage_guard(
         self,
@@ -166,8 +172,15 @@ class OrderValidator:
                     )
         except ValidationError:
             raise
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.error(
+                "Failed to enforce slippage guard",
+                error_type=type(exc).__name__,
+                error_message=str(exc),
+                operation="enforce_slippage_guard",
+                symbol=symbol,
+                side=side.value,
+            )
 
     def run_pre_trade_validation(
         self,

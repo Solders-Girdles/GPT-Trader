@@ -95,7 +95,14 @@ class AccountTelemetryService:
         try:
             server_time = self._broker.get_server_time()
             snapshot["server_time"] = server_time.isoformat() if server_time else None
-        except Exception:
+        except Exception as exc:
+            logger.error(
+                "Failed to get server time",
+                error_type=type(exc).__name__,
+                error_message=str(exc),
+                operation="collect_snapshot",
+                stage="server_time",
+            )
             snapshot.setdefault("server_time", None)
         snapshot["timestamp"] = datetime.now(UTC).isoformat()
         self._latest_snapshot = snapshot

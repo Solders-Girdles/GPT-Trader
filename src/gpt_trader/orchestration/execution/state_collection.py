@@ -80,8 +80,14 @@ class StateCollector:
                 equity=float(equity),
                 change=float(change_value) if change_value is not None else None,
             )
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.error(
+                "Failed to log balance update to telemetry",
+                error_type=type(exc).__name__,
+                error_message=str(exc),
+                operation="log_collateral_update",
+                equity=float(equity),
+            )
 
     def _resolve_collateral_assets(self) -> set[str]:
         """Resolve collateral assets from environment or use defaults."""
@@ -238,8 +244,14 @@ class StateCollector:
                 mark = self.broker.get_mark_price(symbol)  # type: ignore[attr-defined]
                 if mark and mark > Decimal("0"):
                     return Decimal(str(mark))
-            except Exception:
-                pass
+            except Exception as exc:
+                logger.error(
+                    "Failed to get mark price from broker",
+                    error_type=type(exc).__name__,
+                    error_message=str(exc),
+                    operation="resolve_effective_price",
+                    symbol=symbol,
+                )
 
         # Fallback to mid-price
         if hasattr(product, "bid_price") and hasattr(product, "ask_price"):
@@ -258,8 +270,14 @@ class StateCollector:
                     last_decimal = Decimal(str(last))
                     if last_decimal > Decimal("0"):
                         return last_decimal
-            except Exception:
-                pass
+            except Exception as exc:
+                logger.error(
+                    "Failed to get quote from broker",
+                    error_type=type(exc).__name__,
+                    error_message=str(exc),
+                    operation="resolve_effective_price",
+                    symbol=symbol,
+                )
 
         # Last resort: use last price or quote_increment
         if hasattr(product, "price") and product.price:

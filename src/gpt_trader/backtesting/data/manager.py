@@ -6,6 +6,9 @@ from pathlib import Path
 
 from gpt_trader.backtesting.data.fetcher import CoinbaseHistoricalFetcher
 from gpt_trader.features.brokerages.core.interfaces import Candle
+from gpt_trader.utilities.logging_patterns import get_logger
+
+logger = get_logger(__name__, component="historical_data")
 
 
 class HistoricalDataManager:
@@ -135,7 +138,16 @@ class HistoricalDataManager:
                     )
 
             return candles
-        except (json.JSONDecodeError, KeyError):
+        except (json.JSONDecodeError, KeyError) as exc:
+            logger.error(
+                "Failed to read candles from cache",
+                error_type=type(exc).__name__,
+                error_message=str(exc),
+                operation="read_from_cache",
+                symbol=symbol,
+                granularity=granularity,
+                cache_path=str(cache_path),
+            )
             return []
 
     def _write_to_cache(
@@ -154,7 +166,16 @@ class HistoricalDataManager:
                 with open(cache_path) as f:
                     data = json.load(f)
                     existing = data.get("candles", [])
-            except json.JSONDecodeError:
+            except json.JSONDecodeError as exc:
+                logger.error(
+                    "Failed to decode existing cache file",
+                    error_type=type(exc).__name__,
+                    error_message=str(exc),
+                    operation="write_to_cache",
+                    symbol=symbol,
+                    granularity=granularity,
+                    cache_path=str(cache_path),
+                )
                 existing = []
 
         # Convert new candles to dicts
@@ -259,8 +280,14 @@ class HistoricalDataManager:
                     self._coverage_index[symbol][granularity] = [
                         (datetime.fromisoformat(r[0]), datetime.fromisoformat(r[1])) for r in ranges
                     ]
-        except (json.JSONDecodeError, KeyError):
-            pass
+        except (json.JSONDecodeError, KeyError) as exc:
+            logger.error(
+                "Failed to load coverage index",
+                error_type=type(exc).__name__,
+                error_message=str(exc),
+                operation="load_coverage_index",
+                index_path=str(index_path),
+            )
 
     def _save_coverage_index(self) -> None:
         """Save coverage index to disk."""

@@ -9,6 +9,9 @@ from typing import TYPE_CHECKING, Any
 
 from gpt_trader.features.brokerages.coinbase.models import to_position
 from gpt_trader.features.brokerages.core.interfaces import Balance, InvalidRequestError, Position
+from gpt_trader.utilities.logging_patterns import get_logger
+
+logger = get_logger(__name__, component="coinbase_portfolio")
 
 if TYPE_CHECKING:
     from gpt_trader.features.brokerages.coinbase.rest._typing import CoinbaseRestServiceProtocol
@@ -70,10 +73,22 @@ class PortfolioRestMixin:
                     balances.append(
                         Balance(asset=currency, total=total, available=available, hold=hold)
                     )
-                except Exception:
+                except Exception as exc:
+                    logger.error(
+                        "Failed to parse account balance entry",
+                        error_type=type(exc).__name__,
+                        error_message=str(exc),
+                        operation="list_balances",
+                        account_id=acc.get("uuid", "unknown"),
+                    )
                     continue
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.error(
+                "Failed to fetch accounts from broker",
+                error_type=type(exc).__name__,
+                error_message=str(exc),
+                operation="list_balances",
+            )
         return balances
 
     def get_portfolio_balances(self) -> list[Balance]:
@@ -89,8 +104,13 @@ class PortfolioRestMixin:
                 raw_positions = response.get("positions", [])
                 for p in raw_positions:
                     positions.append(to_position(p))
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.error(
+                "Failed to list positions from broker",
+                error_type=type(exc).__name__,
+                error_message=str(exc),
+                operation="list_positions",
+            )
         return positions
 
     def get_position(self, symbol: str) -> Position | None:
@@ -99,8 +119,14 @@ class PortfolioRestMixin:
             if self.endpoints.supports_derivatives():
                 response = self.client.get_position(product_id=symbol)
                 return to_position(response)
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.error(
+                "Failed to get position from broker",
+                error_type=type(exc).__name__,
+                error_message=str(exc),
+                operation="get_position",
+                symbol=symbol,
+            )
         return None
 
     def intx_allocate(self, amount_dict: dict[str, Any]) -> dict[str, Any]:
@@ -147,7 +173,14 @@ class PortfolioRestMixin:
                 }
             )
             return balances
-        except Exception:
+        except Exception as exc:
+            logger.error(
+                "Failed to get INTX balances",
+                error_type=type(exc).__name__,
+                error_message=str(exc),
+                operation="get_intx_balances",
+                portfolio_id=portfolio_id,
+            )
             return []
 
     def get_intx_portfolio(self, portfolio_id: str) -> dict[str, Any]:
@@ -159,7 +192,14 @@ class PortfolioRestMixin:
             if "portfolio_value" in response:
                 response["portfolio_value"] = Decimal(str(response["portfolio_value"]))
             return response
-        except Exception:
+        except Exception as exc:
+            logger.error(
+                "Failed to get INTX portfolio",
+                error_type=type(exc).__name__,
+                error_message=str(exc),
+                operation="get_intx_portfolio",
+                portfolio_id=portfolio_id,
+            )
             return {}
 
     def list_intx_positions(self, portfolio_id: str) -> list[Position]:
@@ -172,7 +212,14 @@ class PortfolioRestMixin:
             for p in response.get("positions", []):
                 positions.append(to_position(p))
             return positions
-        except Exception:
+        except Exception as exc:
+            logger.error(
+                "Failed to list INTX positions",
+                error_type=type(exc).__name__,
+                error_message=str(exc),
+                operation="list_intx_positions",
+                portfolio_id=portfolio_id,
+            )
             return []
 
     def get_intx_position(self, portfolio_id: str, symbol: str) -> Position | None:
@@ -182,7 +229,15 @@ class PortfolioRestMixin:
         try:
             response = self.client.get_intx_position(portfolio_id, symbol)
             return to_position(response)
-        except Exception:
+        except Exception as exc:
+            logger.error(
+                "Failed to get INTX position",
+                error_type=type(exc).__name__,
+                error_message=str(exc),
+                operation="get_intx_position",
+                portfolio_id=portfolio_id,
+                symbol=symbol,
+            )
             return None
 
     def get_intx_multi_asset_collateral(self) -> dict[str, Any]:
@@ -197,7 +252,13 @@ class PortfolioRestMixin:
                 metrics={"event_type": "intx_multi_asset_collateral", "data": response}
             )
             return response
-        except Exception:
+        except Exception as exc:
+            logger.error(
+                "Failed to get INTX multi-asset collateral",
+                error_type=type(exc).__name__,
+                error_message=str(exc),
+                operation="get_intx_multi_asset_collateral",
+            )
             return {}
 
     def get_cfm_balance_summary(self) -> dict[str, Any]:
@@ -248,7 +309,13 @@ class PortfolioRestMixin:
         try:
             response = self.client.cfm_sweeps_schedule()
             return response.get("schedule", {})
-        except Exception:
+        except Exception as exc:
+            logger.error(
+                "Failed to get CFM sweeps schedule",
+                error_type=type(exc).__name__,
+                error_message=str(exc),
+                operation="get_cfm_sweeps_schedule",
+            )
             return {}
 
     def get_cfm_margin_window(self) -> dict[str, Any]:
@@ -259,7 +326,13 @@ class PortfolioRestMixin:
         try:
             response = self.client.cfm_intraday_current_margin_window()
             return response
-        except Exception:
+        except Exception as exc:
+            logger.error(
+                "Failed to get CFM margin window",
+                error_type=type(exc).__name__,
+                error_message=str(exc),
+                operation="get_cfm_margin_window",
+            )
             return {}
 
     def update_cfm_margin_window(

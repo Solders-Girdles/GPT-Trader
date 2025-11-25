@@ -114,8 +114,14 @@ class GuardManager:
                             "unrealized_pnl": Decimal(str(pnl_data.get("unrealized_pnl", "0"))),
                         }
                         continue
-                except Exception:
-                    pass
+                except Exception as exc:
+                    logger.error(
+                        "Failed to get position PnL from broker",
+                        error_type=type(exc).__name__,
+                        error_message=str(exc),
+                        operation="collect_runtime_guard_state",
+                        symbol=pos.symbol,
+                    )
 
             try:
                 entry_price = Decimal(str(getattr(pos, "entry_price", "0")))
@@ -124,7 +130,14 @@ class GuardManager:
                 side = getattr(pos, "side", "").lower()
                 side_multiplier = Decimal("1") if side == "long" else Decimal("-1")
                 unrealized = (mark_price - entry_price) * position_quantity * side_multiplier
-            except Exception:
+            except Exception as exc:
+                logger.error(
+                    "Failed to calculate unrealized PnL for position",
+                    error_type=type(exc).__name__,
+                    error_message=str(exc),
+                    operation="collect_runtime_guard_state",
+                    symbol=pos.symbol,
+                )
                 unrealized = Decimal("0")
             positions_pnl[pos.symbol] = {
                 "realized_pnl": Decimal("0"),
@@ -139,7 +152,14 @@ class GuardManager:
                     "mark": Decimal(str(getattr(pos, "mark_price", "0"))),
                     "entry": Decimal(str(getattr(pos, "entry_price", "0"))),
                 }
-            except Exception:
+            except Exception as exc:
+                logger.error(
+                    "Failed to parse position data for positions_dict",
+                    error_type=type(exc).__name__,
+                    error_message=str(exc),
+                    operation="collect_runtime_guard_state",
+                    symbol=getattr(pos, "symbol", "unknown"),
+                )
                 continue
 
         return RuntimeGuardState(

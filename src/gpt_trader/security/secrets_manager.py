@@ -371,8 +371,14 @@ class SecretsManager:
             # Store with updated secret
             try:
                 return self.store_secret(path, updated_secret)
-            except Exception:
-                # Handle storage errors gracefully
+            except Exception as exc:
+                logger.error(
+                    "Failed to store rotated secret",
+                    error_type=type(exc).__name__,
+                    error_message=str(exc),
+                    operation="rotate_key",
+                    path=path,
+                )
                 return False
 
     def delete_secret(self, path: str) -> bool:

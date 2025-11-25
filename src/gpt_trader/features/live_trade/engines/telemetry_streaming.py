@@ -119,7 +119,14 @@ def _schedule_coroutine(
 ) -> None:
     try:
         loop = asyncio.get_running_loop()
-    except RuntimeError:
+    except RuntimeError as exc:
+        logger.error(
+            "No running event loop for schedule_coroutine",
+            error_type=type(exc).__name__,
+            error_message=str(exc),
+            operation="schedule_coroutine",
+            stage="get_loop",
+        )
         loop = None
 
     if loop and loop.is_running():
@@ -133,8 +140,14 @@ def _schedule_coroutine(
             if task_loop.is_running():
                 task_loop.call_soon_threadsafe(asyncio.create_task, coro)
                 return
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.error(
+                "Failed to schedule coroutine via loop_task_handle",
+                error_type=type(exc).__name__,
+                error_message=str(exc),
+                operation="schedule_coroutine",
+                stage="task_handle",
+            )
 
     if loop is None:
         asyncio.run(coro)
@@ -215,8 +228,14 @@ async def _stop_streaming(coordinator: Any) -> None:  # type: ignore[name-define
                 if callable(result):
                     try:
                         result()
-                    except Exception:
-                        pass
+                    except Exception as exc:
+                        logger.error(
+                            "Failed to get streaming task result",
+                            error_type=type(exc).__name__,
+                            error_message=str(exc),
+                            operation="stop_streaming",
+                            stage="get_result",
+                        )
         except asyncio.CancelledError:
             logger.info(
                 "WS streaming task cancelled",
@@ -322,7 +341,14 @@ def _run_stream_loop(
                     try:
                         result = checker()
                         should_stop = bool(result) if isinstance(result, bool) else False
-                    except Exception:
+                    except Exception as exc:
+                        logger.error(
+                            "Failed to check stop signal",
+                            error_type=type(exc).__name__,
+                            error_message=str(exc),
+                            operation="run_stream_loop",
+                            stage="stop_signal_check",
+                        )
                         should_stop = False
                 elif isinstance(stop_signal, bool):
                     should_stop = stop_signal

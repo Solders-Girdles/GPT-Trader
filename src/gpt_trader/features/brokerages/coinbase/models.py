@@ -21,7 +21,10 @@ from gpt_trader.features.brokerages.core.interfaces import (
     Quote,
     TimeInForce,
 )
+from gpt_trader.utilities.logging_patterns import get_logger
 from gpt_trader.utilities.quantities import quantity_from
+
+logger = get_logger(__name__, component="coinbase_models")
 
 
 @dataclass
@@ -67,8 +70,14 @@ def to_product(payload: dict) -> Product:
     if payload.get("next_funding_time"):
         try:
             next_funding_time = datetime.fromisoformat(payload["next_funding_time"])
-        except (ValueError, TypeError):
-            pass
+        except (ValueError, TypeError) as exc:
+            logger.error(
+                "Failed to parse next_funding_time",
+                error_type=type(exc).__name__,
+                error_message=str(exc),
+                operation="to_product",
+                symbol=payload.get("product_id", "unknown"),
+            )
 
     return Product(
         symbol=normalize_symbol(payload.get("product_id") or payload.get("id") or ""),
@@ -111,15 +120,28 @@ def to_quote(payload: dict) -> Quote:
     if (last_raw in (None, "", 0, "0")) and payload.get("trades"):
         try:
             last_raw = payload["trades"][0].get("price") or last_raw
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.error(
+                "Failed to extract trade price from quote payload",
+                error_type=type(exc).__name__,
+                error_message=str(exc),
+                operation="to_quote",
+                symbol=symbol,
+            )
     last = Decimal(str(last_raw or "0"))
 
     ts_raw = payload.get("time") or payload.get("ts")
     if not ts_raw and payload.get("trades"):
         try:
             ts_raw = payload["trades"][0].get("time")
-        except Exception:
+        except Exception as exc:
+            logger.error(
+                "Failed to extract trade time from quote payload",
+                error_type=type(exc).__name__,
+                error_message=str(exc),
+                operation="to_quote",
+                symbol=symbol,
+            )
             ts_raw = None
     ts = datetime.fromisoformat(
         ts_raw.replace("Z", "+00:00") if isinstance(ts_raw, str) else datetime.utcnow().isoformat()

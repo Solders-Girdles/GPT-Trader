@@ -26,7 +26,15 @@ def extract_mark_from_message(msg: dict[str, Any]) -> Decimal | None:
         if raw_mark is not None:
             mark = Decimal(str(raw_mark))
             return mark if mark > 0 else None
-    except Exception:
+    except Exception as exc:
+        logger.error(
+            "Failed to extract mark from message",
+            error_type=type(exc).__name__,
+            error_message=str(exc),
+            operation="extract_mark",
+            bid=str(bid) if bid else None,
+            ask=str(ask) if ask else None,
+        )
         return None
     return None
 
@@ -135,7 +143,14 @@ def health_check(
     if not isinstance(raw_extras, dict):
         try:
             raw_extras = dict(raw_extras)
-        except Exception:
+        except Exception as exc:
+            logger.error(
+                "Failed to convert raw_extras to dict",
+                error_type=type(exc).__name__,
+                error_message=str(exc),
+                operation="health_check",
+                extras_type=type(raw_extras).__name__,
+            )
             raw_extras = {}
     account_telemetry = raw_extras.get("account_telemetry")
     healthy = account_telemetry is not None

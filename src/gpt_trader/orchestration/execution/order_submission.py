@@ -96,8 +96,15 @@ class OrderSubmitter:
                 side=side.value,
                 order_type=order_type.value,
             )
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.error(
+                "Failed to log order preview event",
+                error_type=type(exc).__name__,
+                error_message=str(exc),
+                operation="record_preview",
+                symbol=symbol,
+                side=side.value,
+            )
 
     def record_rejection(
         self, symbol: str, side: str, quantity: Decimal, price: Decimal | None, reason: str
@@ -140,8 +147,15 @@ class OrderSubmitter:
                 to_status="REJECTED",
                 reason=reason,
             )
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.error(
+                "Failed to log order rejection status change",
+                error_type=type(exc).__name__,
+                error_message=str(exc),
+                operation="record_rejection",
+                symbol=symbol,
+                reason=reason,
+            )
 
     def submit_order(
         self,
@@ -236,8 +250,16 @@ class OrderSubmitter:
                 quantity=float(quantity),
                 price=float(price) if price is not None else None,
             )
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.error(
+                "Failed to log order submission attempt",
+                error_type=type(exc).__name__,
+                error_message=str(exc),
+                operation="log_submission_attempt",
+                submit_id=submit_id,
+                symbol=symbol,
+                side=side.value,
+            )
 
     def _execute_broker_order(
         self,
@@ -364,8 +386,15 @@ class OrderSubmitter:
                     "quantity": str(quantity),
                 },
             )
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.error(
+                "Failed to record order rejection to event store",
+                error_type=type(exc).__name__,
+                error_message=str(exc),
+                operation="process_rejection",
+                symbol=symbol,
+                status=str(status_name),
+            )
 
         raise RuntimeError(f"Order rejected by broker: {status_name}")
 
@@ -430,8 +459,15 @@ class OrderSubmitter:
                 from_status=None,
                 to_status=getattr(order, "status", "SUBMITTED"),
             )
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.error(
+                "Failed to log order status change",
+                error_type=type(exc).__name__,
+                error_message=str(exc),
+                operation="record_trade_event",
+                order_id=str(order.id),
+                symbol=symbol,
+            )
 
         try:
             trade_quantity = getattr(order, "quantity", quantity)
@@ -445,8 +481,16 @@ class OrderSubmitter:
                 "status": getattr(order, "status", "SUBMITTED"),
             }
             self.event_store.append_trade(self.bot_id, trade_payload)
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.error(
+                "Failed to record trade event to event store",
+                error_type=type(exc).__name__,
+                error_message=str(exc),
+                operation="record_trade_event",
+                order_id=str(order.id),
+                symbol=symbol,
+                side=side.value,
+            )
 
     def _handle_order_failure(
         self,
@@ -474,8 +518,15 @@ class OrderSubmitter:
                     "quantity": str(quantity),
                 },
             )
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.error(
+                "Failed to record order failure to event store",
+                error_type=type(exc).__name__,
+                error_message=str(exc),
+                operation="handle_order_failure",
+                symbol=symbol,
+                side=side.value,
+            )
         return None
 
     def _invoke_integration_place_order(

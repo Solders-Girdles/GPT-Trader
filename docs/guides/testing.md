@@ -2,204 +2,301 @@
 
 ## Overview
 
-This codebase targets a **100% pass rate** on the actively maintained spot trading suites. Legacy code from v1 architecture is properly quarantined with skip markers.
+This codebase targets a **100% pass rate** on actively maintained spot trading suites. The test infrastructure supports unit, integration, and behavioral testing with comprehensive coverage tracking.
 
-## Suite Layout
+## Quick Start
 
-- `tests/unit/gpt_trader/` – orchestration, broker adapters, risk, CLI, and feature slices
-- `tests/unit/coinbase/` – Coinbase-specific utilities (quantisation, spec validation)
-- `tests/support/` – reserved for shared fixtures when co-located fixtures are insufficient (currently minimal)
-
-Historical integration, performance, and experimental suites were archived in September 2024; pull them from git history if you need a reference.
-
-## Current Test Metrics
-
-### Active Test Suites (Maintained)
-- **Collection Snapshot**: 1484 collected / 1 deselected / 1483 selected (`poetry run pytest --collect-only`)
-- **Pass Target**: **100%** ✅ for the selected suites
-- **Coverage Focus**: Spot trading orchestration, Coinbase integration, risk controls
-
-### Legacy Context
-- V1/v1.5 test suites have been removed from the active tree; fetch them from
-  repository history if needed.
-- Real-API and performance harnesses were archived alongside the legacy code in
-  git history.
-
-## Running Tests
-
-### Quick Commands
+### Running Tests
 
 ```bash
-# Discover suites & verify dependency setup
-poetry run pytest --collect-only
-
-# Run primary regression suite (must pass)
-poetry run pytest -q
-
-# Component-focused slices (optional, targeted)
-poetry run pytest tests/unit/gpt_trader/features/live_trade/ -v
-poetry run pytest tests/unit/gpt_trader/orchestration/ -v
-poetry run pytest tests/unit/gpt_trader/features/brokerages/ -v
+# Run all tests
+poetry run pytest
 
 # Run with coverage
-poetry run pytest --cov=gpt_trader --cov-report=term-missing tests/unit/gpt_trader
+poetry run pytest --cov --cov-report=html --cov-report=term
+
+# Run specific test file
+poetry run pytest tests/unit/gpt_trader/config/test_schemas.py
+
+# Run specific test class or function
+poetry run pytest tests/unit/gpt_trader/config/test_schemas.py::TestBotConfig::test_valid_config
+
+# Run tests matching a pattern
+poetry run pytest -k "test_error"
+
+# Run in parallel (faster)
+poetry run pytest -n auto
+
+# Run with verbose output
+poetry run pytest -xvs tests/unit/gpt_trader/features/live_trade/
+```
+
+### Coverage Reports
+
+```bash
+# Full HTML report
+poetry run pytest --cov --cov-report=html:var/results/coverage/html --cov-report=term
+
+# Open report (macOS)
+open var/results/coverage/html/index.html
+
+# Coverage for specific module
+poetry run pytest tests/unit/gpt_trader/config/ --cov=src/gpt_trader/config --cov-report=term-missing
+
+# Quick coverage check
+poetry run pytest --cov --cov-report=term -q
 ```
 
 ## Test Organization
 
+### Directory Structure
+
+```
+tests/
+├── unit/                  # Unit tests (fast, isolated)
+│   ├── gpt_trader/
+│   │   ├── config/        # Mirrors src structure
+│   │   ├── features/
+│   │   │   ├── live_trade/
+│   │   │   └── brokerages/
+│   │   └── orchestration/
+│   └── coinbase/          # Coinbase-specific utilities
+├── support/               # Shared fixtures (when co-located insufficient)
+└── fixtures/              # Test fixtures including behavioral scenarios
+```
+
 ### Active Test Suites
 
-#### 1. **Live Trade Tests** (`tests/unit/gpt_trader/features/live_trade/`)
-- **Purpose**: Validate live execution and risk rails for spot trading (perps code paths remain covered for INTX accounts)
-- **Coverage**: Order execution, risk management, PnL tracking
-- **Status**: Passing (tracked via CI and manual runs)
+| Suite | Path | Purpose |
+|-------|------|---------|
+| **Live Trade** | `tests/unit/gpt_trader/features/live_trade/` | Order execution, risk management, PnL tracking |
+| **Orchestration** | `tests/unit/gpt_trader/orchestration/` | Bot lifecycle, mock trading, event handling |
+| **Brokerage** | `tests/unit/gpt_trader/features/brokerages/` | Coinbase API, WebSocket, order management |
+| **Foundation** | `tests/unit/test_foundation.py` | Core system assumptions |
 
-#### 2. **Orchestration Tests** (`tests/unit/gpt_trader/orchestration/`)
-- **Purpose**: Validate bot coordination and paper trading
-- **Coverage**: Bot lifecycle, mock trading, event handling
-- **Status**: Fully passing
+### Current Metrics
 
-#### 3. **Brokerage Tests** (`tests/unit/gpt_trader/features/brokerages/`)
-- **Purpose**: Validate exchange integrations
-- **Coverage**: Coinbase API, WebSocket streaming, order management
-- **Status**: Core functionality passing
-
-#### 4. **Foundation Tests** (`tests/unit/test_foundation.py`)
-- **Purpose**: Validate core system assumptions
-- **Coverage**: Basic data flow, configuration, initialization
-- **Status**: 4/4 passing (100%)
-
-### Legacy Test Suites
-
-Legacy V1/V1.5 suites (backtest, portfolio, risk, strategy, performance, etc.)
-have been removed from the active repository. Historical copies remain
-available in version control history for reference.
+- **Collection**: 1484 collected / 1 deselected / 1483 selected
+- **Pass Target**: 100% for selected suites
+- **Coverage Baseline**: 72.87%
 
 ## Writing Tests
 
-### Test Structure
+### Test File Structure
 
 ```python
-# Standard test structure for gpt_trader
+"""Tests for module_name."""
 import pytest
 from decimal import Decimal
-from gpt_trader.features.live_trade.risk import LiveRiskManager
+from gpt_trader.module import ThingToTest
 
-class TestRiskValidation:
-    """Test risk management validation."""
+
+class TestThingToTest:
+    """Test the ThingToTest class."""
 
     @pytest.fixture
-    def risk_manager(self):
-        """Create risk manager with test config."""
-        config = RiskConfig(
-            max_leverage=5,
-            daily_loss_limit=Decimal("100")
-        )
-        return LiveRiskManager(config)
+    def sample_instance(self):
+        """Provide standard test instance."""
+        return ThingToTest(value=Decimal("100.00"))
 
-    def test_leverage_validation(self, risk_manager):
-        """Test leverage limits are enforced."""
-        # Test implementation
-        assert risk_manager.validate_leverage(10) is False
+    def test_creation(self) -> None:
+        """Test basic object creation."""
+        thing = ThingToTest()
+        assert thing is not None
+
+    def test_method_behavior(self, sample_instance) -> None:
+        """Test a specific method."""
+        result = sample_instance.method()
+        assert result == expected_value
+
+    def test_error_handling(self) -> None:
+        """Test that errors are raised correctly."""
+        with pytest.raises(ValueError):
+            ThingToTest(invalid_param="bad")
 ```
 
-### Key Testing Utilities
+### Best Practices
 
-#### Quantization Helpers
-Located in `src/gpt_trader/features/quantization.py`:
-- `quantize_size()` - Round order sizes to exchange requirements
-- `quantize_price()` - Round prices to tick size
+1. **Test Behavior, Not Implementation** - Focus on outcomes
+2. **Use Fixtures** - Share setup via pytest fixtures
+3. **Keep Tests Fast** - Mock external dependencies
+4. **Clear Names** - `test_order_rejected_when_insufficient_funds`
+5. **One Assertion Per Test** (guideline) - Makes failures clear
+6. **Document Skips** - Always provide reason for skipped tests
 
-#### Broker Test Doubles
-- `DeterministicBroker` (src/gpt_trader/orchestration/deterministic_broker.py): Stable IBrokerage stub for unit and orchestration tests.
-- `ReduceOnlyStubBroker`: Specialized for reduce-only testing (if present).
+### Testing Patterns
 
-Note: Real-API and sandbox integration harnesses were removed with the legacy suites. Recreate targeted coverage inside `tests/unit/gpt_trader/` when new external behavior needs validation.
+#### Async Code
+```python
+@pytest.mark.asyncio
+async def test_async_function(self):
+    """Test async function."""
+    result = await async_fetch_data()
+    assert result is not None
+```
 
-## Test Conventions
+#### Mocking External Dependencies
+```python
+def test_api_call(mocker):
+    """Test API call without hitting real API."""
+    mock_response = {"price": "50000.00"}
+    mocker.patch("gpt_trader.api.get_price", return_value=mock_response)
+    result = fetch_price("BTC-USD")
+    assert result == "50000.00"
+```
 
-- Markers for `integration`, `real_api`, and `perf` remain defined in `pytest.ini` for forward compatibility, even though no tests currently use them.
-- Async tests should rely on `anyio` helpers and injected clocks (avoid `time.sleep`).
-- New tests belong beside the slice they exercise—co-locate fixtures in the nearest `conftest.py` to keep ownership clear.
-- The `test-hygiene` pre-commit hook checks for extremely long test modules and accidental `sleep` calls; keep the hook green or update it when the heuristics change.
+#### Exceptions
+```python
+def test_custom_exception_message(self):
+    """Test custom exception includes correct message."""
+    error = ConfigurationError("Missing API key", config_key="api_key")
+    assert str(error) == "Missing API key"
+    assert error.context["config_key"] == "api_key"
+```
 
-## Continuous Integration
+## Test Markers
 
-### Pre-commit Hooks
+```python
+# Integration test (skipped by default)
+@pytest.mark.integration
+def test_full_trading_cycle(self): ...
+
+# Performance benchmark (opt-in with -m perf)
+@pytest.mark.perf
+def test_performance_benchmark(self): ...
+
+# Requires real API (opt-in)
+@pytest.mark.real_api
+def test_live_api_connection(self): ...
+```
+
 ```bash
-# Install hooks (one-time)
-pre-commit install
+# Run only integration tests
+poetry run pytest -m integration
 
-# Run manually
-pre-commit run --all-files
+# Skip integration tests (default)
+poetry run pytest -m "not integration"
 ```
 
-### GitHub Actions
-- Runs on every PR
-- Tests active suites only
-- Requires 100% pass rate for merge
+## Coverage Guidelines
 
-## Common Issues and Solutions
+### Coverage Goals
 
-### Issue: Import Errors
-**Solutions**:
-- Ensure you're using `gpt_trader` imports, not legacy `src` paths
-- Use `poetry install --with security` when you need the optional auth dependencies (e.g., `pyotp`) for security tests.
+- **New Code**: 80-90% coverage
+- **Critical Paths**: 100% (trading logic, risk management)
+- **Short-term Goal**: 80% overall
+- **Long-term Goal**: 90% overall
 
-### Issue: Decimal Precision
-**Solution**: Use quantization helpers for consistent rounding
+### What to Cover
 
-### Issue: Mock Complexity
-**Solution**: Use dependency injection instead of patching globals
+**Always Test:**
+- Public API methods and functions
+- Error handling and edge cases
+- Business logic and calculations
+- Data validation and state transitions
 
-## Test Coverage Goals
-
-### Current Coverage
-- **Critical Path**: >90% coverage on spot orchestration and Coinbase adapter
-- **Integration Points**: Major APIs exercised via unit and integration suites
-- **Edge Cases**: Risk guard failures, telemetry persistence, error handling
-
-### Areas Needing Coverage
-1. WebSocket streaming edge cases (especially user events)
-2. Multi-symbol position management under stress
-3. Advanced order types and optional derivatives flows
-4. Funding rate calculations (future derivatives work)
-
-## Best Practices
-
-1. **Test Behavior, Not Implementation**: Focus on outcomes, not internal details
-2. **Use Fixtures**: Share setup code via pytest fixtures
-3. **Keep Tests Fast**: Mock external dependencies
-4. **Clear Names**: Test names should describe what's being tested
-5. **One Assertion Per Test**: Makes failures clear
-6. **Document Skips**: Always provide reason for skipped tests
+**Don't Need to Test:**
+- Third-party libraries
+- Python built-ins
+- Simple getters/setters (unless they have logic)
 
 ## Debugging Tests
 
 ```bash
-# Run with verbose output
-poetry run pytest -xvs tests/unit/gpt_trader/features/live_trade/
+# Show print statements
+poetry run pytest -s
 
-# Run specific test
-poetry run pytest tests/unit/gpt_trader/features/live_trade/test_risk_validation.py::TestBasicRiskValidation::test_leverage_validation
+# Verbose output
+poetry run pytest -sv
 
 # Drop into debugger on failure
 poetry run pytest --pdb tests/unit/gpt_trader/
 
 # Show local variables on failure
 poetry run pytest -l tests/unit/gpt_trader/
-```
-
-## Performance Testing
-
-```bash
-# Run with benchmark
-poetry run pytest tests/unit/gpt_trader/ --benchmark-only
 
 # Profile slow tests
 poetry run pytest tests/unit/gpt_trader/ --durations=10
 ```
 
-## Conclusion
+## Test Utilities
 
-The test suite provides strong confidence in the spot trading stack (with future-ready perps paths) and maintains a 100% pass target on all selected suites. Legacy tests are clearly marked and don't impact active development. Focus remains on sustaining this high standard as new features are added.
+### Key Testing Helpers
+
+- **Quantization**: `src/gpt_trader/features/quantization.py` - `quantize_size()`, `quantize_price()`
+- **Broker Doubles**: `DeterministicBroker` in `src/gpt_trader/orchestration/deterministic_broker.py`
+
+### Behavioral Scenarios
+
+The `tests/fixtures/behavioral` package provides reusable scenarios for validating PnL calculations, funding flows, and risk-limit enforcement:
+
+```python
+from tests.fixtures.behavioral import (
+    create_realistic_btc_scenario,
+    run_behavioral_validation,
+)
+
+scenario = create_realistic_btc_scenario(
+    scenario_type="profit",
+    position_size=Decimal("0.1"),
+    hold_days=1,
+)
+passed, errors = run_behavioral_validation(scenario, actual_results)
+```
+
+Available helpers:
+- `create_realistic_btc_scenario` / `create_realistic_eth_scenario`
+- `create_market_stress_scenario` - Extreme market moves
+- `create_funding_scenario` - Funding cost modeling
+- `create_risk_limit_test_scenario` - Leverage cap testing
+
+## Selective Test Runner
+
+For CI efficiency, the selective runner executes only tests impacted by changes:
+
+```bash
+# Dry-run selection
+poetry run python scripts/testing/selective_runner.py --paths src/gpt_trader/orchestration/trading_bot/bot.py --dry-run
+
+# Execute selected tests
+poetry run python scripts/testing/selective_runner.py --paths src/gpt_trader/orchestration/trading_bot/bot.py
+```
+
+CI safeguards:
+- Upgrades to full suite if selection exceeds 70% of total tests
+- Changes to `gpt_trader.features.brokerages.core.interfaces` force full run
+- Push builds to `main` always run full coverage suite
+
+## Common Issues
+
+### Import Errors
+- Ensure using `gpt_trader` imports, not legacy `src` paths
+- Use `poetry install --with security` for optional auth dependencies
+
+### Fixtures Not Found
+Ensure `conftest.py` is in the right place:
+```
+tests/
+├── conftest.py           # Project-level fixtures
+└── unit/
+    └── gpt_trader/
+        └── conftest.py   # Module-level fixtures
+```
+
+### Coverage Not Tracking
+- Check `.coveragerc` configuration
+- Clear cache: `poetry run pytest --cache-clear`
+- Remove old files: `rm -rf .coverage coverage.xml htmlcov/`
+
+## CI Integration
+
+### Pre-commit Hooks
+```bash
+pre-commit install      # Install hooks (one-time)
+pre-commit run --all-files  # Run manually
+```
+
+### GitHub Actions
+- Runs on every PR
+- Tests active suites only
+- Requires 100% pass rate for merge

@@ -1,62 +1,222 @@
-# AI Agent Development Guide
+# AI Agent Guide
 
-This guide points AI agents to the canonical resources for GPT-Trader V2. The bot operates **spot-first** with dormant perps logic that activates only when Coinbase grants INTX access.
+This is the consolidated reference for AI agents working with the GPT-Trader repository.
 
-## Where to Start
-- `docs/agents/Agents.md` – shared playbook for all assistants
-- `docs/agents/CLAUDE.md`, `docs/agents/Gemini.md` – per-agent quick-start instructions
-- `docs/ARCHITECTURE.md` – architecture overview (spot-first refresh)
-- `docs/guides/complete_setup_guide.md` – environment + credential walkthrough
-- `docs/guides/testing.md` – current test metrics and commands
+## Current State
 
-## Core Commands
+**Active System**: Spot trading bot with Coinbase Advanced Trade
+**Primary CLI**: `poetry run coinbase-trader`
+**Architecture**: Vertical slices under `src/gpt_trader/`
+**Perpetuals**: Code exists but requires INTX access + `COINBASE_ENABLE_DERIVATIVES=1`
+
+### Test Status
 ```bash
-poetry install                                        # install deps
-poetry run coinbase-trader run --profile dev --dev-fast         # spot dev cycle
-poetry run coinbase-trader run --profile canary --dry-run       # canary dry run
-poetry run coinbase-trader run --profile canary                 # live spot (tiny)
-poetry run python scripts/monitoring/export_metrics.py --metrics-file var/data/coinbase_trader/prod/metrics.json
-
-# Tests
-poetry run pytest --collect-only                      # expect 1484 collected / 1483 selected / 1 deselected
-poetry run pytest -q                                   # full gpt_trader regression suite
+poetry run pytest --collect-only  # 1484 collected / 1483 selected / 1 deselected
 ```
 
-Perps execution remains dormant until INTX access is approved and `COINBASE_ENABLE_DERIVATIVES=1` is set.
+## Directory Navigation
 
-## Environment Basics
+### Active Areas
+```
+src/gpt_trader/                    # Main codebase
+├── cli/                           # CLI commands (run, account, orders, treasury)
+├── orchestration/                 # Coordinators and service management
+│   └── trading_bot/bot.py         # Core orchestrator
+├── features/                      # Vertical feature slices
+│   ├── live_trade/                # Production trading engine
+│   ├── brokerages/coinbase/       # Coinbase adapter
+│   └── position_sizing/           # Risk management
+├── monitoring/                    # Runtime guards and metrics
+└── validation/                    # Input validation framework
+
+config/                            # Profile-specific configurations
+tests/unit/gpt_trader/             # Active test suite
+```
+
+### Legacy Artifacts
+- `var/legacy/legacy_bundle_*.tar.gz` - Archived experimental slices
+- Do NOT use legacy imports or paths
+
+## Essential Commands
+
+### Development
 ```bash
-# Spot trading defaults
+# Install dependencies
+poetry install
+
+# Run bot in dev mode (mock broker)
+poetry run coinbase-trader run --profile dev --dev-fast
+
+# Run tests
+poetry run pytest --collect-only  # Check test count
+poetry run pytest -q              # Run active suite
+
+# Account verification
+poetry run coinbase-trader account snapshot
+```
+
+### Trading Operations
+```bash
+# Treasury operations
+poetry run coinbase-trader treasury convert --from USD --to USDC --amount 1000
+poetry run coinbase-trader treasury move --from-portfolio a --to-portfolio b --amount 50
+
+# Order preview (no execution)
+poetry run coinbase-trader orders preview --symbol BTC-USD --side buy --type market --quantity 0.1
+```
+
+### Monitoring
+```bash
+# Export metrics
+poetry run python scripts/monitoring/export_metrics.py \
+  --metrics-file var/data/coinbase_trader/prod/metrics.json
+```
+
+## Configuration
+
+### Profiles
+| Profile | Environment | Use Case |
+|---------|------------|----------|
+| **dev** | Mock broker | Development and testing |
+| **canary** | Production | Ultra-safe validation (tiny positions) |
+| **prod** | Production | Full trading |
+
+### Environment Variables
+```bash
+# Spot trading (default)
 COINBASE_API_KEY=your_hmac_key
 COINBASE_API_SECRET=your_hmac_secret
 COINBASE_ENABLE_DERIVATIVES=0
 
-# Enable derivatives only when Coinbase grants INTX access
+# Perpetuals (requires INTX access)
 # COINBASE_ENABLE_DERIVATIVES=1
 # COINBASE_PROD_CDP_API_KEY=organizations/{org}/apiKeys/{key_id}
-# COINBASE_PROD_CDP_PRIVATE_KEY="""-----BEGIN EC PRIVATE KEY-----\n...\n-----END EC PRIVATE KEY-----"""
+# COINBASE_PROD_CDP_PRIVATE_KEY="-----BEGIN EC PRIVATE KEY-----..."
 
-# Risk controls
-RISK_DAILY_LOSS_LIMIT=100
+# Debug flags
+COINBASE_TRADER_DEBUG=1
 DRY_RUN=1
 ```
 
-## Running Tests
-- After pulling, run `poetry install --with security` when working on authentication flows so optional dependencies like `pyotp` are available for the security tests.
-- Use `poetry run pytest --collect-only` to confirm suite counts (1484 collected / 1483 selected / 1 deselected).
-- The enforcement suite is `poetry run pytest -q`.
-- Real-API or integration flows are archived; build new coverage inside `tests/unit/gpt_trader/` when adding features.
+## Architecture Patterns
 
-## Operational Notes
-- Metrics exporter lives at `scripts/monitoring/export_metrics.py`.
-- Legacy experimental slices are no longer present in the workspace. Retrieve
-  them via `docs/archive/legacy_recovery.md` if a task explicitly requires the
-  historical code.
+### Coordinator Pattern
+```python
+from gpt_trader.orchestration.coordinators import (
+    RuntimeCoordinator,
+    ExecutionCoordinator,
+    StrategyCoordinator,
+    TelemetryCoordinator
+)
 
-## Keeping Docs in Sync
-Whenever behavior changes:
-1. Update README, docs/ARCHITECTURE.md, and the relevant guide.
-2. Sync `docs/agents/Agents.md`, `docs/agents/CLAUDE.md`, `docs/agents/Gemini.md` (and this file).
-3. Note INTX gating in any perps-related instructions.
+# Access through TradingBot instance
+bot.runtime_coordinator
+bot.execution_coordinator
+```
 
-Refer back to the agent-specific guides for deeper workflows and delegation patterns.
+### Feature Imports
+```python
+# Active imports
+from gpt_trader.features.live_trade.risk import LiveRiskManager
+from gpt_trader.features.brokerages.coinbase import CoinbaseClient
+from gpt_trader.features.position_sizing import calculate_position_size
+```
+
+## Common Confusion Points
+
+### 1. Spot vs Perpetuals
+- **Spot trading**: Active (BTC-USD, ETH-USD)
+- **Perpetuals**: Requires INTX access + `COINBASE_ENABLE_DERIVATIVES=1`
+- Default behavior is spot-only
+
+### 2. Legacy vs Active Code
+- **Use**: `src/gpt_trader/**` only
+- **Avoid**: Legacy paths, archived experimental slices
+- Legacy imports will cause errors
+
+### 3. Documentation Trust
+- Always verify file modification dates
+- Cross-reference with actual code
+- Prefer recent docs over older references
+
+### Common Mistakes
+```python
+# DON'T: Legacy imports
+from src.bot.paper_trading import ml_paper_trader
+
+# DO: Active imports
+from gpt_trader.features.live_trade.risk import LiveRiskManager
+
+# DON'T: Assume perps are enabled
+if config.derivatives_enabled:
+    trade_perpetuals()
+
+# DO: Check derivatives gate explicitly
+if config.derivatives_enabled and config.intx_access:
+    trade_perpetuals()
+```
+
+## Agent Workflow
+
+### Before Starting
+- [ ] Run `poetry install`
+- [ ] Check test discovery: `poetry run pytest --collect-only`
+- [ ] Quick smoke test: `poetry run coinbase-trader run --profile dev --dev-fast`
+- [ ] Check if task involves spot or perps features
+
+### During Development
+- [ ] Use `src/gpt_trader/` imports only
+- [ ] Test with dev profile first
+- [ ] Add tests to `tests/unit/gpt_trader/`
+- [ ] Run `poetry run pytest -q` regularly
+
+### Before Finishing
+- [ ] Update relevant documentation
+- [ ] Note INTX gating for perps work
+- [ ] Remove references to archived components
+- [ ] Verify test counts remain stable
+
+## Debugging
+
+```bash
+# Enable debug logging
+export PERPS_DEBUG=1
+export LOG_LEVEL=DEBUG
+poetry run coinbase-trader run --profile dev --dev-fast
+
+# Check system state
+poetry run coinbase-trader account snapshot
+
+# Tail logs
+tail -f var/logs/coinbase_trader.log
+```
+
+## Agent-Specific Tips
+
+### Claude
+- Use planning tool for multi-slice edits
+- Surface risk-impact summaries in responses
+- Include testing commands for reviewers
+
+### Gemini
+- Keep responses concise with numbered follow-ups
+- Include exact commands with `rg`/`fd` snippets
+- Call out environment prerequisites
+
+## Key Documentation
+
+| Document | Purpose |
+|----------|---------|
+| `README.md` | Project overview and quick start |
+| `docs/ARCHITECTURE.md` | System architecture |
+| `docs/guides/testing.md` | Testing guide |
+| `docs/guides/production.md` | Production deployment |
+| `docs/reference/coinbase_complete.md` | Coinbase API reference |
+
+## Source of Truth Checklist
+
+After making changes:
+- [ ] README reflects new instructions
+- [ ] Architecture doc matches live system
+- [ ] Tests pass or document dependency gaps
+- [ ] Note INTX gate for perps-related changes

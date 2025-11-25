@@ -2,6 +2,10 @@
 
 Tests CLI behavior, argument parsing, validation, and execution scenarios
 using subprocess calls to verify end-to-end CLI functionality.
+
+NOTE: Tests that require Coinbase credentials or full bot initialization are
+marked with @pytest.mark.integration and excluded from default test runs.
+Run with: pytest -m integration tests/unit/gpt_trader/test_cli_integration.py
 """
 
 from __future__ import annotations
@@ -14,6 +18,9 @@ import tempfile
 import pytest
 
 from tests.unit.gpt_trader.cli_test_utils import cli_env
+
+# Marker for tests requiring full environment setup (credentials, mock broker)
+requires_credentials = pytest.mark.integration
 
 # ===== Core CLI Behavior =====
 
@@ -49,6 +56,7 @@ def test_cli_invalid_profile_rejected():
     assert "invalid choice: 'invalid_profile'" in result.stderr
 
 
+@requires_credentials
 def test_cli_argument_propagation(tmp_path):
     """CLI-style arguments should flow through to the generated BotConfig."""
     dump_script = tmp_path / "dump_config.py"
@@ -127,6 +135,7 @@ def test_cli_invalid_tif_rejected():
     assert "invalid choice: 'INVALID'" in result.stderr
 
 
+@requires_credentials
 @pytest.mark.parametrize("symbols", [["INVALID-SYMBOL"], ["BTC-PERP", "INVALID"], [""]])
 def test_cli_symbol_validation(symbols):
     """Symbol inputs should be validated before execution."""
@@ -151,6 +160,7 @@ def test_cli_symbol_validation(symbols):
 # ===== Execution Scenarios =====
 
 
+@requires_credentials
 def test_cli_dev_fast_single_cycle(tmp_path):
     """`--dev-fast` should execute a single cycle using mock broker settings."""
     env = cli_env()
@@ -169,6 +179,7 @@ def test_cli_dev_fast_single_cycle(tmp_path):
     assert "Starting Perps Bot" in (result.stderr + result.stdout)
 
 
+@requires_credentials
 def test_cli_handles_missing_env_vars(tmp_path):
     """Missing Coinbase env vars should fall back to mock broker in dev mode."""
     env = cli_env({})

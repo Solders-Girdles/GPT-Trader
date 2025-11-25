@@ -356,4 +356,34 @@ export RISK_KILL_SWITCH_ENABLED=1 && pkill -f coinbase-trader
 
 ---
 
-*This consolidated reference replaces all previous scattered Coinbase documentation. For historical documentation, see `/docs/ARCHIVE/2024_implementation/coinbase/`*
+## System Requirements
+
+### Python & Dependencies
+- **Python**: 3.12+ required
+- **Poetry**: 1.0+ for dependency management
+- **websockets**: >=13.0,<14.0 (Coinbase SDK compatibility)
+
+### Network Requirements
+- Outbound HTTPS (port 443) to api.coinbase.com
+- WebSocket connections to advanced-trade-ws.coinbase.com
+- No inbound connections required
+
+### Hardware (Production)
+- CPU: 4+ cores recommended
+- RAM: 8+ GB
+- Network: <50ms latency to Coinbase
+
+## External Documentation Links
+
+**Coinbase Developer Platform (CDP):**
+- [Advanced Trade Welcome](https://docs.cdp.coinbase.com/advanced-trade/docs/welcome)
+- [REST API Rate Limits](https://docs.cdp.coinbase.com/advanced-trade/docs/rest-api-rate-limits)
+- [WebSocket Channels](https://docs.cdp.coinbase.com/advanced-trade/docs/ws-channels)
+- [API Authentication](https://docs.cdp.coinbase.com/advanced-trade/docs/rest-api-auth)
+- [Python SDK](https://github.com/coinbase/coinbase-advanced-py)
+
+**Note**: Legacy docs at `docs.cloud.coinbase.com` are outdated.
+
+---
+
+*This consolidated reference replaces all previous scattered Coinbase documentation.*

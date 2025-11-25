@@ -72,7 +72,7 @@ def test_safe_execute_returns_default_when_swallowed(caplog: pytest.LogCaptureFi
     assert "Error in order-placement" in caplog.text
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_handle_async_errors_returns_default_and_logs(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -87,7 +87,7 @@ async def test_handle_async_errors_returns_default_and_logs(
     assert "async boom" in caplog.text
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_handle_async_errors_reraises_when_specified() -> None:
     @handle_async_errors("collect", reraise=ValueError)
     async def failing_async_call() -> int:

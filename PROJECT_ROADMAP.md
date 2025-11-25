@@ -1,6 +1,6 @@
 # GPT-Trader Project Roadmap
 
-**Last Updated**: 2025-11-18  
+**Last Updated**: 2025-11-24
 **Status**: Active (Single Source of Truth)
 
 ---
@@ -29,7 +29,7 @@ GPT-Trader is a production-ready Coinbase **spot trading bot** with future-ready
 - **Spot Trading**: Fully operational on Coinbase Advanced Trade (BTC, ETH, SOL, etc.)
 - **Strategy Execution**: BaselinePerpsStrategy processes symbols (currently executing "HOLD" logic correctly).
 - **Architecture**: Coordinator pattern with vertical slices, well-structured and maintainable
-- **Testing**: 3,698 active tests with ~74% coverage
+- **Testing**: 1,484 test functions (~3,700 runtime cases via parametrization), 72.87% coverage baseline
 - **Risk Management**: Daily loss guards, liquidation buffers, volatility circuit breakers
 - **Monitoring**: Prometheus exporter, account telemetry, system health checks
 - **CI/CD**: Multiple workflows (Python CI, targeted suites, nightly validation, security audit)
@@ -37,10 +37,15 @@ GPT-Trader is a production-ready Coinbase **spot trading bot** with future-ready
 - **Strategy Wiring**: BaselinePerpsStrategy is fully connected and executing decisions in the trading loop
 
 ### 🚧 In Progress
-- **Refining Strategy Logic**: Current strategy returns "hold" for all symbols - needs tuning/signals
-- **Test Refactoring Phase 3**: Split `test_execution_coordinator.py` (1,152 lines → 3 focused files)
-  - Phases 1-2 complete (75% done)
-  - Remaining: `test_exec_main_workflows.py`, `test_exec_main_error_handling.py`, `test_exec_main_advanced_features.py`
+- **Refining Strategy Logic**: 60% complete - basic BUY/SELL signals implemented using simple moving average; RSI/crossover logic defined in config but not yet coded
+- **Preflight Module Testing**: 7+ bootstrap/connectivity modules lack test coverage
+- **Pre-existing Test Failures**: `test_event_store.py` (API mismatch), `test_cli_integration.py` (needs credentials)
+
+### ✅ Recently Completed (Nov 2025)
+- **Test Refactoring Phase 3**: Superseded - architecture reorganized from "coordinator" to "engine" naming instead of splitting files
+- **Parallel Test Execution**: Enabled by default (`-n auto` in pytest.ini) - 12 workers, verified working
+- **Security Module Coverage**: Achieved 95% coverage target
+- **StructuredLogger**: Implemented with domain fields and correlation tracking
 
 ### ⏸️ Future Activation
 - **US Perpetual Futures**: Requires Coinbase Financial Markets (CFM) approval and integration of `BIP`/`ETP` product IDs.
@@ -66,38 +71,34 @@ GPT-Trader is a production-ready Coinbase **spot trading bot** with future-ready
 
 ---
 
-### Priority 2: Complete Test Refactoring
-**Why**: Finish in-flight work, achieve 3x parallelization benefit for all orchestration tests
+### Priority 2: Fix Pre-existing Test Failures
+**Why**: Tests reference non-existent API methods, blocking CI reliability
+**Status**: In Progress
 
 **Tasks**:
-**Tasks**:
-1. [x] Split `test_execution_coordinator.py` (Superseded: Replaced by `test_trading_engine.py` for new architecture)
-2. [x] Verify all 39 tests pass individually and together (New engine tests passed)
-3. [ ] Run parallel execution test: `pytest tests/unit/gpt_trader/orchestration/ -n auto`
-4. [ ] Document completion and archive planning docs
+1. [ ] Fix `test_event_store.py` - tests reference `append_trade`, `_normalize_payload` which don't exist
+2. [ ] Mark `test_cli_integration.py` tests with `@pytest.mark.integration` (require credentials)
+3. [x] Enable parallel test execution by default (`-n auto` added to pytest.ini)
+4. [x] Document test execution best practices in TESTING_GUIDE.md (372-line guide exists)
 
 **Success Criteria**:
-- All 3,698 tests still passing
+- All 1,484 test functions passing
 - Average test file size < 500 lines
-- Parallel execution works without flakiness
-
-**Estimated Effort**: 4-6 hours
+- Parallel execution works without flakiness (verified)
 
 ---
 
-### Priority 2: Stabilize Testing Infrastructure
-**Why**: Prevent test flakiness from blocking development
+### Priority 3: Preflight Module Test Coverage
+**Why**: 7+ modules providing critical bootstrap/connectivity checks have zero test coverage
 
 **Tasks**:
-1. Fix any flaky tests discovered during refactoring
-2. Add pytest retry plugin for known-flaky integration tests
-3. Document test execution best practices in TESTING_GUIDE.md
+1. [ ] Add tests for `preflight/cli.py`, `preflight/core.py`, `preflight/context.py`
+2. [ ] Test connectivity, dependencies, and environment checks
+3. [ ] Target 80% coverage for preflight module
 
 **Success Criteria**:
-- <1% test failure rate on CI
-- Clear guidelines for writing deterministic tests
-
-**Estimated Effort**: 2-3 hours
+- 80% coverage on preflight module
+- All bootstrap paths tested
 
 ---
 
@@ -116,9 +117,9 @@ GPT-Trader is a production-ready Coinbase **spot trading bot** with future-ready
 - Liquidity service edge cases
 
 **Success Metrics**:
-- 80% overall coverage (up from 74%)
-- 95% coverage on trading and risk components
-- <5 minute full test suite execution
+- 80% overall coverage (up from 72.87%)
+- 95% coverage on trading and risk components (security already at 95%)
+- <5 minute full test suite execution (currently ~6s with parallel)
 
 ---
 
@@ -144,9 +145,9 @@ GPT-Trader is a production-ready Coinbase **spot trading bot** with future-ready
 ### Month 3: Security & Documentation
 
 **Week 9-10**: Security Hardening
-- Comprehensive auth handler test coverage
-- Secrets manager robustness testing
-- Security validator edge cases
+- ✅ Comprehensive auth handler test coverage (achieved 95%)
+- ✅ Secrets manager robustness testing (13 test files)
+- ✅ Security validator edge cases (6 test files)
 
 **Week 11-12**: Documentation Validation
 - CI/CD integration for doc checks
@@ -154,7 +155,7 @@ GPT-Trader is a production-ready Coinbase **spot trading bot** with future-ready
 - Code example verification in docs
 
 **Success Metrics**:
-- 95% security component coverage
+- ✅ 95% security component coverage (ACHIEVED)
 - 90% API documentation coverage
 - <7 day documentation staleness
 
@@ -213,6 +214,10 @@ GPT-Trader is a production-ready Coinbase **spot trading bot** with future-ready
 
 ## 📋 Backlog (Not Prioritized)
 
+**Technical Debt (Address Soon)**:
+- Refactor `order_submission.py` (536 lines - only file >500 lines, complexity risk)
+- Strategy enhancement: Implement RSI/crossover logic using existing config parameters
+
 **Nice to Have (When Time Permits)**:
 - Funding rate accrual in deterministic broker
 - Order modification/amend flows beyond cancel
@@ -247,7 +252,7 @@ GPT-Trader is a production-ready Coinbase **spot trading bot** with future-ready
 5. Refer to archived plans in `docs/archive/planning/` for detailed context only if needed
 
 ### Updating This Roadmap
-- **Weekly**: Update "In Progress" section
+- **After Milestones**: Update when significant work is completed (preferred cadence)
 - **Monthly**: Review and adjust priorities based on progress
 - **Quarterly**: Reassess long-term vision and goals
 
@@ -275,6 +280,9 @@ GPT-Trader is a production-ready Coinbase **spot trading bot** with future-ready
 
 | Date | Change | Author |
 |------|--------|--------|
+| 2025-11-24 | Enabled parallel test execution (`-n auto`), updated priorities, fixed test count (1,484 functions) | Claude AI |
+| 2025-11-24 | Achieved 95% security module coverage, added StructuredLogger | Claude AI |
+| 2025-11-23 | Live dry-run verified with BTC-USD, architecture reorganization complete | Claude AI |
 | 2025-11-18 | Initial roadmap creation, consolidated from 3 planning docs | Gemini AI |
 
 ---

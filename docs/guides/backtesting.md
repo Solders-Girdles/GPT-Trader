@@ -627,6 +627,135 @@ await validator.validate_last_n_cycles(n=10)
 6. **Phase 6**: Add chaos testing capabilities (Week 4)
 7. **Phase 7**: Full integration test and documentation (Week 4)
 
+## Production-Parity Backtesting
+
+### Key Features
+
+- **Zero Code Duplication**: Reuses `BaselinePerpsStrategy.decide()` directly
+- **Decision Logging**: Records every decision with full context
+- **Parity Validation**: Compare backtest vs live decision logs
+- **Human-Readable Logs**: JSON format for easy inspection
+
+### Quick Start
+
+```python
+from decimal import Decimal
+import pandas as pd
+from gpt_trader.features.live_trade.strategies.perps_baseline.config import StrategyConfig
+from gpt_trader.features.live_trade.strategies.perps_baseline.strategy import BaselinePerpsStrategy
+from gpt_trader.features.optimize.backtest_engine import run_backtest_production
+from gpt_trader.features.optimize.types_v2 import BacktestConfig
+
+# Load historical data
+data = pd.read_csv("historical_btc.csv")  # Must have 'close' column
+
+# Configure strategy (same config you use in production)
+strategy_config = StrategyConfig(
+    short_ma_period=5,
+    long_ma_period=20,
+    position_fraction=0.1,
+    enable_shorts=False,
+)
+
+# Create strategy instance
+strategy = BaselinePerpsStrategy(config=strategy_config)
+
+# Configure backtest
+backtest_config = BacktestConfig(
+    initial_capital=Decimal("10000"),
+    commission_rate=Decimal("0.001"),  # 0.1% = 10 bps
+    slippage_rate=Decimal("0.0005"),   # 0.05% = 5 bps
+    enable_decision_logging=True,
+)
+
+# Run backtest
+result = run_backtest_production(
+    strategy=strategy,
+    data=data,
+    symbol="BTC-USD",
+    config=backtest_config,
+)
+
+print(result.summary())
+```
+
+### Decision Logging
+
+Every decision is logged with complete context in JSON format:
+
+```json
+{
+  "run_id": "bt_20250122_143052_BTC-USD",
+  "decisions": [
+    {
+      "context": {
+        "timestamp": "2025-01-15T10:30:00",
+        "current_mark": "42350.50",
+        "position_state": null,
+        "equity": "10500.00"
+      },
+      "decision": {
+        "action": "buy",
+        "quantity": "0.1",
+        "reason": "Bullish MA crossover"
+      },
+      "execution": {
+        "filled": true,
+        "fill_price": "42352.00"
+      }
+    }
+  ]
+}
+```
+
+Logs stored in: `backtesting/decision_logs/YYYY-MM-DD/bt_{timestamp}_{symbol}.json`
+
+### Parity Validation
+
+Compare backtest decisions against live trading:
+
+```python
+from gpt_trader.features.optimize.decision_logger import compare_decision_logs
+
+comparison = compare_decision_logs(
+    backtest_log=backtest_path,
+    live_log=live_path,
+)
+
+print(f"Parity Rate: {comparison['parity_rate']:.2%}")
+assert comparison['parity_rate'] > 0.99, "Parity validation failed!"
+```
+
+**Go/No-Go Criteria**: Parity rate > 99% on 24-hour shadow run
+
+### API Reference
+
+```python
+def run_backtest_production(
+    *,
+    strategy: BaselinePerpsStrategy,
+    data: pd.DataFrame,
+    symbol: str,
+    product: Product | None = None,
+    config: BacktestConfig | None = None,
+) -> BacktestResult:
+    """Run production-parity backtest."""
+
+@dataclass
+class BacktestConfig:
+    initial_capital: Decimal = Decimal("10000")
+    commission_rate: Decimal = Decimal("0.001")   # 10 bps
+    slippage_rate: Decimal = Decimal("0.0005")    # 5 bps
+    enable_decision_logging: bool = True
+    log_directory: str = "backtesting/decision_logs"
+```
+
+### Troubleshooting
+
+**No trades in backtest**: Ensure `len(data) > long_ma_period` and data contains volatility.
+
+**Parity mismatch**: Check MA periods match, position state format, equity calculations.
+
 ## References
 
 - [Coinbase Advanced Trade API](https://docs.cloud.coinbase.com/advanced-trade-api/docs/rest-api-overview)

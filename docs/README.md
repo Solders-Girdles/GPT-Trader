@@ -2,108 +2,99 @@
 
 ---
 status: current
-last-updated: 2025-10-07
-organization-updated: 2025-10-07
+last-updated: 2025-11-24
 ---
 
-## 🚦 Start Here
+## Start Here
 
-1. **[Quick Start](QUICK_START.md)** – spin up the dev stack with the new `Makefile` helpers.
-2. **[Architecture](ARCHITECTURE.md)** – understand the vertical slices before touching code.
-3. **[Monitoring Playbook](MONITORING_PLAYBOOK.md)** – wire dashboards and alerts prior to live trading.
+1. **[Quick Start](QUICK_START.md)** - Spin up the dev stack with `make` helpers
+2. **[Architecture](ARCHITECTURE.md)** - Understand vertical slices before touching code
+3. **[Monitoring Playbook](MONITORING_PLAYBOOK.md)** - Wire dashboards and alerts before live trading
 
-## 📍 Quick Links
+## Quick Links
 
-- **[Quick Start](QUICK_START.md)** - Development bootstrap + core commands
-- **[Architecture](ARCHITECTURE.md)** - System design and capabilities
-- **[Monitoring Playbook](MONITORING_PLAYBOOK.md)** - Metrics, alerting, dashboards
-- **[Complete Setup Guide](guides/complete_setup_guide.md)** - Full installation and configuration
-- **[Coinbase Reference](reference/coinbase_complete.md)** - Complete integration documentation
-- **[AI Agent Guide](guides/agents.md)** - For AI agents and automation
+| Document | Purpose |
+|----------|---------|
+| [Quick Start](QUICK_START.md) | Development bootstrap + core commands |
+| [Architecture](ARCHITECTURE.md) | System design and capabilities |
+| [Production Guide](guides/production.md) | Deployment, rollout, and emergency procedures |
+| [Coinbase Reference](reference/coinbase_complete.md) | Complete API integration docs |
+| [AI Agent Guide](guides/agents.md) | For AI agents working with this codebase |
 
-## 📚 Core Documentation
+## Core Documentation
 
 ### Getting Started
 - [Quick Start](QUICK_START.md) - Local workflow with `make` and Compose profiles
-- [Complete Setup Guide](guides/complete_setup_guide.md) - Everything from installation to first trade
+- [Complete Setup Guide](guides/complete_setup_guide.md) - Full installation to first trade
 - [Testing Guide](guides/testing.md) - Running and writing tests
-- [Behavioral Scenario Utilities](testing/behavioral_scenarios_demo.md) - Deterministic demos for docs/tutorials
 
 ### Architecture & Design
-- [System Architecture](ARCHITECTURE.md) - Component overview
-- [Perpetuals Trading Logic](reference/trading_logic_perps.md) - Future-ready INTX implementation details
-- [Orchestration Bootstrap](src/gpt_trader/orchestration/bootstrap.py) - Shared bot wiring helpers
-- Historical slice diagrams can be recovered from repository history if needed.
-- Legacy acceptance/performance/system suites were removed from the tree; recover them from git history if you need the old coverage. The active CI target is `poetry run pytest`, which exercises the `gpt_trader` codebase.
+- [System Architecture](ARCHITECTURE.md) - Component overview and vertical slices
+- [Perpetuals Trading Logic](reference/trading_logic_perps.md) - INTX implementation (future-ready)
+- [ADR Index](adr/README.md) - Architecture Decision Records
+- [Tooling Reference](TOOLING.md) - Internal utilities and patterns
 
 ### Trading Operations
+- [Production Deployment](guides/production.md) - Deployment, monitoring, rollback, emergencies
 - [Monitoring Playbook](MONITORING_PLAYBOOK.md) - Metrics, alerting, and dashboards
-- [Production Deployment](guides/production.md) - Deployment guide (spot-first, INTX-gated perps)
-- [Operations Runbook](ops/operations_runbook.md) - Operational procedures
+- [Paper Trading](guides/paper_trading.md) - Safe testing with mock broker
+- [Backtesting](guides/backtesting.md) - Historical strategy validation
+
+### Coinbase Integration
+- [Complete Reference](reference/coinbase_complete.md) - Authentication, endpoints, troubleshooting
+- [Authentication Guide](reference/coinbase_auth_guide.md) - JWT, HMAC, OAuth2 details
+- [WebSocket Reference](reference/coinbase_websocket_reference.md) - Real-time data channels
 
 ### Development
 - [AI Agent Guide](guides/agents.md) - For Claude and other AI agents
-- [Development Guidelines](../DEVELOPMENT_GUIDELINES.md) - Standards for contributing
-- [Contributing Guidelines](../CONTRIBUTING.md) - Development workflow
+- [Development Guidelines](DEVELOPMENT_GUIDELINES.md) - Standards for contributing
+- [Security](SECURITY.md) - Security practices and considerations
 
-## 🔧 Configuration & Setup
-
-### API Configuration
-- [Coinbase Complete Reference](reference/coinbase_complete.md) - All Coinbase integration documentation
-- [Environment Template](../config/environments/.env.template) - Environment variables template
+## Configuration
 
 ### Trading Profiles
-- **Development** - Mock broker, deterministic fills
-- **Canary** - Ultra-safe production testing
-- **Production** - Full trading capabilities
+| Profile | Environment | Use Case |
+|---------|-------------|----------|
+| **dev** | Mock broker | Development and testing |
+| **canary** | Production | Ultra-safe validation (tiny positions) |
+| **prod** | Production | Full trading capabilities |
 
-## 📊 Reports & Analysis
+### Environment Setup
+- [Environment Template](../config/environments/.env.template) - All configuration options
+- Default: Spot trading with HMAC authentication
+- Perpetuals require INTX access + `COINBASE_ENABLE_DERIVATIVES=1`
 
-### Implementation Status
-- [Production Readiness](guides/production.md#production-readiness-requirements)
-- [Document Verification Matrix](agents/Document_Verification_Matrix.md) - Trust levels + verification workflow
-- [Archived System Capabilities](reference/system_capabilities.md) - Pointer to the December 2024 snapshot (verify before use)
-- [System Reality](reference/system_reality.md) - Honest current state assessment
-- [Compatibility & Troubleshooting](reference/compatibility_troubleshooting.md) - Technical requirements
-- [Tooling Library](tooling/README.md) - Consolidated tooling analyses and quick references
-- Historical validation analysis is available in version control history.
+## Additional Resources
 
-### Performance & Operations
-- [Operations Runbook](ops/operations_runbook.md) - Daily operations and monitoring
-- Performance-tuning playbooks were removed from the tree; consult git history if
-  you need the legacy guidance.
+- [Dashboard Guide](DASHBOARD_GUIDE.md) - Monitoring UI setup
+- [Risk Integration](RISK_INTEGRATION_GUIDE.md) - Risk management configuration
+- [Training Guide](TRAINING_GUIDE.md) - ML model training
+- [PnL Calculations](PNL_CALCULATION_DIFFERENCES.md) - Profit/loss methodology
+- [Changelog](CHANGELOG.md) - Version history
 
-## 🗄️ Archive
+## Important Notes
 
-### Legacy Documentation
-Historical documentation was removed from the repository to keep the tree lean.
-Use git history if you need to recover earlier runbooks or reports.
+### Spot vs Perpetuals
 
-## 🚨 Important Notes
+| Mode | Products | Authentication | Flag |
+|------|----------|----------------|------|
+| **Spot (default)** | BTC-USD, ETH-USD, etc. | HMAC (API key/secret) | — |
+| **Perpetuals** | BTC-PERP, ETH-PERP | CDP (JWT) | `COINBASE_ENABLE_DERIVATIVES=1` |
 
-### Production vs Sandbox
-
-| Environment | Products | API | Authentication |
-|------------|----------|-----|----------------|
-| **Production (default)** | Spot (BTC-USD, ETH-USD, …) | Advanced Trade v3 (HMAC) | API key/secret |
-| **Production (perps)** | Perpetuals (INTX-gated) | Advanced Trade v3 | CDP (JWT) + `COINBASE_ENABLE_DERIVATIVES=1` |
-| **Sandbox** | Not used for live trading (API diverges) | — | Use only with `PERPS_PAPER=1` |
-
-**Critical:** Sandbox does **not** support perpetuals. The bot defaults to spot trading and only enables perps when INTX access plus derivatives flag are detected.
+**Note:** Sandbox does not support perpetuals. Bot defaults to spot-only trading.
 
 ### Current Focus
-- **Primary**: Coinbase spot trading (perps code paths kept future-ready)
-- **Architecture**: Vertical slice design (production vs experimental slices clearly marked)
-- **ML**: Strategy selection, regime detection, Kelly sizing (experimental slices)
-- **Testing**: 1484 collected / 1483 selected tests (`poetry run pytest --collect-only`)
+- **Primary**: Coinbase spot trading (perps code future-ready)
+- **Architecture**: Vertical slice design under `src/gpt_trader/`
+- **Testing**: `poetry run pytest` (~1484 tests)
 
-## 📞 Getting Help
+## Getting Help
 
-- **Quick Questions**: Check [QUICK_START.md](./QUICK_START.md)
-- **Architecture**: Review [ARCHITECTURE.md](ARCHITECTURE.md)
-- **AI Development**: See [guides/agents.md](guides/agents.md)
-- **Issues**: GitHub Issues page
+- **Quick Questions**: [QUICK_START.md](QUICK_START.md)
+- **Architecture**: [ARCHITECTURE.md](ARCHITECTURE.md)
+- **AI Development**: [guides/agents.md](guides/agents.md)
+- **Issues**: GitHub Issues
 
 ---
 
-*Last validated: October 2025 (spot-first refresh)*
+*Documentation consolidated November 2025. Historical docs available in git history.*

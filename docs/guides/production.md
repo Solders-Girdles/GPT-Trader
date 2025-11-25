@@ -160,6 +160,56 @@ pkill -f coinbase-trader
 tail -n 1000 var/logs/coinbase_trader.log | grep ERROR
 ```
 
-## Verification
+## Emergency Procedures
 
-For verification procedures, see [Verification Guide](verification.md).
+### Emergency Kill Switch
+```bash
+# STOP ALL TRADING IMMEDIATELY
+export RISK_KILL_SWITCH_ENABLED=1
+pkill -f coinbase-trader
+```
+
+### Close All Positions
+```bash
+# Enable reduce-only mode
+export RISK_REDUCE_ONLY_MODE=1
+
+# Submit market exits via CLI
+poetry run coinbase-trader orders preview \
+  --symbol BTC-USD --side sell --type market --quantity CURRENT_SIZE
+```
+
+### Common Issues
+
+**Excessive Losses**
+1. Check if daily loss guard tripped (`daily_loss_limit_reached`)
+2. Review recent fills in logs
+3. Reduce position sizes or halt trading
+
+**API Authentication Failures**
+1. Run preflight: `poetry run python scripts/production_preflight.py --profile canary`
+2. Check API key permissions
+3. Verify system time sync
+
+**Connection Problems**
+1. Check network: `ping api.coinbase.com`
+2. Check status: https://status.coinbase.com/
+3. Switch to REST-only: `export PERPS_ENABLE_STREAMING=0`
+
+### Recovery After Emergency
+1. Assess situation and document incident
+2. Close or manage positions
+3. Root cause analysis (review logs)
+4. Implement fixes
+5. Restart with paper trading first
+6. Move to canary profile
+7. Monitor closely for 24 hours
+
+## Golden Rules
+
+1. Never disable safety features in production
+2. Always test changes in paper mode first
+3. Start small and scale gradually
+4. Monitor closely for first 24 hours after any change
+5. Document all incidents and changes
+6. When in doubt, reduce risk or stop trading

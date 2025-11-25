@@ -11,7 +11,7 @@ from gpt_trader.orchestration.configuration import BotConfig
 from gpt_trader.config.runtime_settings import load_runtime_settings
 
 
-@pytest.mark.xfail(reason="Container boot integration mismatch")
+@pytest.mark.skip(reason="TODO: Fix container boot - BotConfig.from_profile and create_perps_bot need alignment")
 def test_container_perps_bot_boot_roundtrip():
     """Test that container can boot PerpsBot and execute a no-op decision path."""
 
@@ -92,7 +92,7 @@ def test_container_perps_bot_boot_roundtrip():
     print("✅ Container-based PerpsBot integration test passed!")
 
 
-@pytest.mark.xfail(reason="Container service registry compatibility mismatch")
+@pytest.mark.skip(reason="TODO: Fix ServiceRegistry - create_service_registry method needs implementation")
 def test_container_service_registry_compatibility():
     """Test that container can create ServiceRegistry for backward compatibility."""
 

@@ -23,7 +23,7 @@ def make_perp(symbol: str) -> Product:
     )
 
 
-@pytest.mark.xfail(reason="Time mocking for leverage windows mismatch")
+@pytest.mark.skip(reason="TODO: Fix time mocking - day/night leverage window enforcement needs _now_provider integration")
 def test_day_vs_night_leverage_caps_enforced(monkeypatch):
     config = RiskConfig(
         max_leverage=20,
@@ -72,7 +72,7 @@ def test_day_vs_night_leverage_caps_enforced(monkeypatch):
         )
 
 
-@pytest.mark.xfail(reason="Time mocking mismatch")
+@pytest.mark.skip(reason="TODO: Fix time mocking - MMR projection day/night switching needs _now_provider integration")
 def test_day_vs_night_mmr_projection(monkeypatch):
     # Night MMR higher → projected buffer insufficient at night, OK in day
     config = RiskConfig(

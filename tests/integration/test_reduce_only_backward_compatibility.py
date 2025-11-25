@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+from unittest.mock import MagicMock
+
 import pytest
 
+from gpt_trader.features.live_trade.engines.runtime import RuntimeEngine
 from gpt_trader.orchestration.config_controller import ConfigController
 from gpt_trader.orchestration.configuration import BotConfig
-from gpt_trader.features.live_trade.engines.runtime import RuntimeEngine
 from gpt_trader.orchestration.service_registry import ServiceRegistry
 from gpt_trader.persistence.event_store import EventStore
 
@@ -14,7 +16,9 @@ from gpt_trader.persistence.event_store import EventStore
 class TestReduceOnlyBackwardCompatibility:
     """Tests to ensure backward compatibility is maintained."""
 
-    @pytest.mark.skip(reason="TODO: Fix StateManager fallback - RuntimeEngine needs config_controller=None handling")
+    @pytest.mark.skip(
+        reason="TODO: Fix StateManager fallback - RuntimeEngine needs config_controller=None handling"
+    )
     def test_runtime_coordinator_without_state_manager(self) -> None:
         """Test that RuntimeEngine works without StateManager."""
         event_store = EventStore()
@@ -47,14 +51,16 @@ class TestReduceOnlyBackwardCompatibility:
         runtime_coordinator.set_reduce_only_mode(True, "test")
         assert runtime_coordinator.is_reduce_only_mode() is True
 
-    @pytest.mark.skip(reason="TODO: Fix StateManager fallback - mixed ConfigController/RuntimeEngine interaction")
+    @pytest.mark.skip(
+        reason="TODO: Fix StateManager fallback - mixed ConfigController/RuntimeEngine interaction"
+    )
     def test_mixed_environment_compatibility(self) -> None:
         """Test that components work in a mixed environment with and without StateManager."""
         event_store = EventStore()
         config = BotConfig(symbols=["BTC-USD"])
 
         # Create config controller with StateManager
-        state_manager = MagicMock() # Mocking StateManager
+        state_manager = MagicMock()  # Mocking StateManager
         config_controller = ConfigController(
             config,
             reduce_only_state_manager=state_manager,

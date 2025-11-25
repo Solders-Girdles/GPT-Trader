@@ -15,8 +15,8 @@ from gpt_trader.config.env_utils import (
     parse_env_list,
     parse_env_mapping,
 )
-from gpt_trader.errors import ValidationError
 from gpt_trader.config.runtime_settings import RuntimeSettings, load_runtime_settings
+from gpt_trader.errors import ValidationError
 
 T = TypeVar("T")
 

@@ -1,8 +1,9 @@
 """
 Coinbase Endpoints helper.
 """
-from dataclasses import dataclass
+
 from gpt_trader.features.brokerages.coinbase.models import APIConfig
+
 
 class CoinbaseEndpoints:
     def __init__(self, config: APIConfig):

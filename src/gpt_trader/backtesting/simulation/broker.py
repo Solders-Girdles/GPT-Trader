@@ -1,12 +1,14 @@
 from decimal import Decimal
 from typing import Dict, List, Optional
-from dataclasses import dataclass
 
 from gpt_trader.backtesting.types import FeeTier
-from gpt_trader.features.brokerages.core.interfaces import Product, Balance, Position, Order
+from gpt_trader.features.brokerages.core.interfaces import Balance, Position, Product
+
 
 class SimulatedBroker:
-    def __init__(self, initial_equity_usd: Decimal = Decimal("100000"), fee_tier: FeeTier = FeeTier.TIER_2):
+    def __init__(
+        self, initial_equity_usd: Decimal = Decimal("100000"), fee_tier: FeeTier = FeeTier.TIER_2
+    ):
         self.equity = initial_equity_usd
         self.fee_tier = fee_tier
         self.products: Dict[str, Product] = {}

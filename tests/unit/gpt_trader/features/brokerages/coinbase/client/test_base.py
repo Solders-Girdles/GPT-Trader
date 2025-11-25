@@ -1,11 +1,11 @@
 """Tests for Coinbase client base functionality."""
 
 import json
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 import pytest
 
-from gpt_trader.features.brokerages.coinbase.auth import CDPJWTAuth, CoinbaseAuth, SimpleAuth
+from gpt_trader.features.brokerages.coinbase.auth import CDPJWTAuth, SimpleAuth
 from gpt_trader.features.brokerages.coinbase.client.base import CoinbaseClientBase
 from gpt_trader.features.brokerages.coinbase.errors import InvalidRequestError
 
@@ -121,7 +121,7 @@ class TestCoinbaseClientBase:
         # Some endpoints are only available in advanced mode, e.g. orders
         # In exchange mode, "orders" key is not in map.
         # The code checks if it exists in advanced but not current.
-        
+
         # We use "orders" which is in advanced but not exchange
         with pytest.raises(InvalidRequestError, match="not available in exchange mode"):
             client._get_endpoint_path("orders")
@@ -254,7 +254,7 @@ class TestCoinbaseClientBase:
         # So if len is 8, it warns.
         # So we need to call it 8 times to populate list to 8.
         # Then call it once more to trigger warning.
-        
+
         for i in range(9):
             client._check_rate_limit()
 
@@ -351,7 +351,7 @@ class TestCoinbaseClientBase:
         # Check that body was passed and auth was called with it
         call_args = mock_transport.call_args
         request_body = call_args[0][3]
-        
+
         # request_body is a string (json.dumps), not bytes
         assert json.loads(request_body) == body
 
@@ -438,14 +438,14 @@ class TestCoinbaseClientBase:
         """Test request with network error and retry."""
         client = CoinbaseClientBase(base_url=self.base_url, auth=self.auth)
         mock_transport = Mock()
-        
+
         # Requests logic catches requests.ConnectionError.
         # But when using transport, the perform_request calls transport.
         # The retry loop catches (requests.ConnectionError, requests.Timeout).
         # So transport needs to raise requests.ConnectionError.
-        
+
         import requests
-        
+
         mock_transport.side_effect = [
             requests.ConnectionError("Network error"),
             (200, {}, '{"success": true}'),

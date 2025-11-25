@@ -8,8 +8,7 @@ from collections.abc import Coroutine
 from typing import TYPE_CHECKING, Any, Awaitable, cast
 
 if TYPE_CHECKING:  # pragma: no cover
-    # TelemetryEngine is a missing import. Keeping it here for reference until it's located.
-    # from gpt_trader.orchestration.engines.telemetry_coordinator import TelemetryEngine
+    pass  # TelemetryEngine import placeholder - block must not be empty
 
 logger = logging.getLogger(__name__)
 
@@ -17,6 +16,7 @@ logger = logging.getLogger(__name__)
 def _emit_metric(event_store: Any, bot_id: str, payload: dict[str, Any]) -> None:
     # If emit_metric is not found, import from utility
     from gpt_trader.utilities.telemetry import emit_metric
+
     emit_metric(event_store, bot_id, payload)
 
 

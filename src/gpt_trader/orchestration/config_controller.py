@@ -1,11 +1,13 @@
 """
 Configuration controller for managing bot configuration state.
 """
+
 from typing import Generic, TypeVar
 
 from gpt_trader.orchestration.configuration import BotConfig
 
 T = TypeVar("T", bound=BotConfig)
+
 
 class ConfigController(Generic[T]):
     """
@@ -13,6 +15,7 @@ class ConfigController(Generic[T]):
     Provides a stable interface for accessing the current config
     even if it changes during runtime (reloading).
     """
+
     def __init__(self, initial_config: T):
         self._current = initial_config
 

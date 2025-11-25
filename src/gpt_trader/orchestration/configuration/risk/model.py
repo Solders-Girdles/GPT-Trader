@@ -1,10 +1,11 @@
 """
 Simplified Risk Config.
 """
-from dataclasses import dataclass, field, asdict
-from decimal import Decimal
-import os
+
 import json
+import os
+from dataclasses import asdict, dataclass, field
+from decimal import Decimal
 from typing import Any
 
 RISK_CONFIG_ENV_KEYS = [
@@ -16,13 +17,14 @@ RISK_CONFIG_ENV_KEYS = [
 
 RISK_CONFIG_ENV_ALIASES = {}
 
+
 @dataclass
 class RiskConfig:
     max_leverage: int = 5
     daily_loss_limit: Decimal = Decimal("100")
     max_exposure_pct: float = 0.8
     max_position_pct_per_symbol: float = 0.2
-    
+
     # Added to satisfy tests/unit/gpt_trader/features/live_trade/test_config_dict_json.py
     min_liquidation_buffer_pct: float = 0.1
     leverage_max_per_symbol: dict[str, int] = field(default_factory=dict)
@@ -42,30 +44,32 @@ class RiskConfig:
 
     def to_dict(self) -> dict[str, Any]:
         """Serialize configuration to dictionary with Decimal handling."""
-        def _convert(obj):
+
+        def _convert(obj: Any) -> Any:
             if isinstance(obj, Decimal):
                 return str(obj)
             if isinstance(obj, dict):
                 return {k: _convert(v) for k, v in obj.items()}
             return obj
-        
+
         return {k: _convert(v) for k, v in asdict(self).items()}
 
     @classmethod
     def from_json(cls, path: str) -> "RiskConfig":
         """Load configuration from JSON file."""
-        with open(path, 'r') as f:
+        with open(path, "r") as f:
             data = json.load(f)
-            
+
         # Type conversion
         if "daily_loss_limit" in data:
             data["daily_loss_limit"] = Decimal(str(data["daily_loss_limit"]))
-            
+
         if "max_notional_per_symbol" in data:
             data["max_notional_per_symbol"] = {
                 k: Decimal(str(v)) for k, v in data["max_notional_per_symbol"].items()
             }
-            
+
         return cls(**data)
+
 
 __all__ = ["RiskConfig", "RISK_CONFIG_ENV_KEYS", "RISK_CONFIG_ENV_ALIASES"]

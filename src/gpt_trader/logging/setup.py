@@ -5,15 +5,12 @@ from __future__ import annotations
 import logging
 import logging.handlers
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 from gpt_trader.config.path_registry import LOG_DIR, ensure_directories
+from gpt_trader.config.runtime_settings import RuntimeSettings
 from gpt_trader.logging.json_formatter import (
     StructuredJSONFormatterWithTimestamp,
 )
-
-from gpt_trader.config.runtime_settings import RuntimeSettings
-from gpt_trader.config.runtime_settings import load_runtime_settings
 
 
 def _env_flag(

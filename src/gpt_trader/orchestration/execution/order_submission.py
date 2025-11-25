@@ -178,11 +178,9 @@ class OrderSubmitter:
             Order ID if successful, None otherwise
         """
         submit_id = self._generate_submit_id(client_order_id)
-        
+
         # 1. Log submission attempt
-        self._log_submission_attempt(
-            submit_id, symbol, side, order_type, order_quantity, price
-        )
+        self._log_submission_attempt(submit_id, symbol, side, order_type, order_quantity, price)
 
         try:
             # 2. Execute Broker Request
@@ -201,21 +199,12 @@ class OrderSubmitter:
 
             # 3. Handle Result (Success/Rejection)
             return self._handle_order_result(
-                order, 
-                symbol, 
-                side, 
-                order_quantity, 
-                price, 
-                effective_price, 
-                reduce_only, 
-                submit_id
+                order, symbol, side, order_quantity, price, effective_price, reduce_only, submit_id
             )
 
         except Exception as exc:
             # 4. Handle Failure
-            return self._handle_order_failure(
-                exc, symbol, side, order_quantity
-            )
+            return self._handle_order_failure(exc, symbol, side, order_quantity)
 
     def _generate_submit_id(self, client_order_id: str | None) -> str:
         """Generate or retrieve client order ID."""
@@ -297,7 +286,7 @@ class OrderSubmitter:
                 if not self.integration_mode:
                     raise TypeError("Broker place_order returned awaitable in non-integration mode")
                 order = self._await_integration_call(order)
-        
+
         return order
 
     def _handle_order_result(
@@ -320,7 +309,7 @@ class OrderSubmitter:
         status_name = (
             status_value.value if hasattr(status_value, "value") else str(status_value or "")
         )
-        
+
         # Check for Rejection
         if str(status_name).upper() in {"REJECTED", "CANCELLED", "FAILED"}:
             return self._process_rejection(
@@ -330,13 +319,9 @@ class OrderSubmitter:
         # Process Success
         self.open_orders.append(order.id)
         display_price = price if price is not None else "market"
-        
-        self._log_success(
-            order, symbol, side, quantity, display_price, reduce_only
-        )
-        self._record_trade_event(
-            order, symbol, side, quantity, price, effective_price, submit_id
-        )
+
+        self._log_success(order, symbol, side, quantity, display_price, reduce_only)
+        self._record_trade_event(order, symbol, side, quantity, price, effective_price, submit_id)
 
         return order if self.integration_mode else order.id
 
@@ -381,7 +366,7 @@ class OrderSubmitter:
             )
         except Exception:
             pass
-            
+
         raise RuntimeError(f"Order rejected by broker: {status_name}")
 
     def _log_success(

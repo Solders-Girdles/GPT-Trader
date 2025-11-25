@@ -136,9 +136,7 @@ class TestCheckSystemTime:
         with patch.dict("os.environ", {}, clear=True):
             # Mock datetime to return a reasonable time
             mock_now = datetime(2025, 6, 15, 12, 0, 0, tzinfo=timezone.utc)
-            with patch(
-                "gpt_trader.preflight.checks.system.datetime"
-            ) as mock_datetime:
+            with patch("gpt_trader.preflight.checks.system.datetime") as mock_datetime:
                 mock_datetime.now.return_value = mock_now
                 mock_datetime.fromisoformat = datetime.fromisoformat
                 result = check_system_time(checker)
@@ -153,9 +151,7 @@ class TestCheckSystemTime:
         with patch.dict("os.environ", {}, clear=True):
             # Mock datetime to return an unreasonable time (year 2015)
             mock_now = datetime(2015, 6, 15, 12, 0, 0, tzinfo=timezone.utc)
-            with patch(
-                "gpt_trader.preflight.checks.system.datetime"
-            ) as mock_datetime:
+            with patch("gpt_trader.preflight.checks.system.datetime") as mock_datetime:
                 mock_datetime.now.return_value = mock_now
                 result = check_system_time(checker)
 
@@ -166,9 +162,7 @@ class TestCheckSystemTime:
         """Should handle exceptions gracefully."""
         checker = PreflightCheck()
 
-        with patch(
-            "gpt_trader.preflight.checks.system.datetime"
-        ) as mock_datetime:
+        with patch("gpt_trader.preflight.checks.system.datetime") as mock_datetime:
             mock_datetime.now.side_effect = Exception("Time error")
             result = check_system_time(checker)
 
@@ -181,9 +175,7 @@ class TestCheckSystemTime:
 
         with patch.dict("os.environ", {}, clear=True):
             mock_now = datetime(2025, 6, 15, 12, 0, 0, tzinfo=timezone.utc)
-            with patch(
-                "gpt_trader.preflight.checks.system.datetime"
-            ) as mock_datetime:
+            with patch("gpt_trader.preflight.checks.system.datetime") as mock_datetime:
                 mock_datetime.now.return_value = mock_now
                 check_system_time(checker)
 

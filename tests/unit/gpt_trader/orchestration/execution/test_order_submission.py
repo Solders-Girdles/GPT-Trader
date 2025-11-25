@@ -2,11 +2,9 @@
 
 from __future__ import annotations
 
-import asyncio
 from datetime import datetime
 from decimal import Decimal
-from typing import Any
-from unittest.mock import MagicMock, Mock, patch, AsyncMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -18,7 +16,6 @@ from gpt_trader.features.brokerages.core.interfaces import (
     TimeInForce,
 )
 from gpt_trader.orchestration.execution.order_submission import OrderSubmitter
-
 
 # ============================================================
 # Fixtures
@@ -558,6 +555,7 @@ class TestExecuteBrokerOrder:
         mock_broker: MagicMock,
     ) -> None:
         """Test that awaitable result in non-integration mode raises TypeError."""
+
         async def async_place():
             return MagicMock()
 
@@ -922,6 +920,7 @@ class TestAwaitIntegrationCall:
 
     def test_awaits_coroutine(self) -> None:
         """Test that coroutine is awaited correctly."""
+
         async def async_result():
             return "result"
 
@@ -930,6 +929,7 @@ class TestAwaitIntegrationCall:
 
     def test_handles_async_exception(self) -> None:
         """Test that async exceptions are propagated."""
+
         async def async_error():
             raise ValueError("Async error")
 

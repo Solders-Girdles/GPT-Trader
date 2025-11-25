@@ -8,7 +8,6 @@ import pytest
 
 from gpt_trader.security.simple_auth import APIKey, SimpleAuth
 
-
 # ============================================================
 # Test: APIKey dataclass
 # ============================================================
@@ -93,7 +92,10 @@ class TestGetCoinbaseCredentials:
         # The \\n should be converted to \n
         assert "\\n" not in result.private_key
         assert "\n" in result.private_key
-        assert "-----BEGIN EC PRIVATE KEY-----\nMIHcAgEB\n-----END EC PRIVATE KEY-----" == result.private_key
+        assert (
+            "-----BEGIN EC PRIVATE KEY-----\nMIHcAgEB\n-----END EC PRIVATE KEY-----"
+            == result.private_key
+        )
 
     @patch.dict(
         "os.environ",

@@ -185,7 +185,7 @@ class ErrorHandler:
         **kwargs: Any,
     ) -> T:
         """Execute function with retry logic and error handling.
-        
+
         Args:
             func: Function to execute
             recovery_strategy: Strategy to use for recovery
@@ -196,9 +196,15 @@ class ErrorHandler:
             *args, **kwargs: Arguments passed to func
         """
         # Determine configuration for this call
-        current_max_attempts = max_attempts if max_attempts is not None else self.retry_config.max_attempts
-        current_initial_delay = initial_delay if initial_delay is not None else self.retry_config.initial_delay
-        current_backoff_factor = backoff_factor if backoff_factor is not None else self.retry_config.exponential_base
+        current_max_attempts = (
+            max_attempts if max_attempts is not None else self.retry_config.max_attempts
+        )
+        current_initial_delay = (
+            initial_delay if initial_delay is not None else self.retry_config.initial_delay
+        )
+        current_backoff_factor = (
+            backoff_factor if backoff_factor is not None else self.retry_config.exponential_base
+        )
 
         # Check circuit breaker
         if not self.circuit_breaker.should_attempt_call():
@@ -258,9 +264,10 @@ class ErrorHandler:
                         current_initial_delay * (current_backoff_factor ** (attempt - 1)),
                         self.retry_config.max_delay,
                     )
-                    
+
                     if self.retry_config.jitter:
                         import random
+
                         delay *= 0.5 + random.random()  # nosec B311
 
                     logger.warning(
@@ -293,7 +300,7 @@ class ErrorHandler:
             error_code="RETRY_EXHAUSTED",
             recoverable=False,
             context={"last_error": str(last_error), "attempts": attempt},
-            original_error=last_error
+            original_error=last_error,
         )
 
     def _calculate_delay(self, attempt: int) -> float:

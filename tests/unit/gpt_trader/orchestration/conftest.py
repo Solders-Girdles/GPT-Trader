@@ -8,15 +8,15 @@ trade service, and runtime state to enable isolated unit testing.
 from __future__ import annotations
 
 from decimal import Decimal
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import Mock
 
 import pytest
 
-from gpt_trader.features.brokerages.core.interfaces import Balance, Position
-from gpt_trader.orchestration.configuration import BotConfig, Profile
-from gpt_trader.features.live_trade.engines.base import CoordinatorContext
-from gpt_trader.orchestration.service_registry import ServiceRegistry
 from gpt_trader.config.runtime_settings import RuntimeSettings
+from gpt_trader.features.brokerages.core.interfaces import Balance, Position
+from gpt_trader.features.live_trade.engines.base import CoordinatorContext
+from gpt_trader.orchestration.configuration import BotConfig, Profile
+from gpt_trader.orchestration.service_registry import ServiceRegistry
 
 # Mock imports for missing types
 try:
@@ -29,25 +29,32 @@ try:
 except ImportError:
     SystemMonitor = Mock()
 
+
 @pytest.fixture
 def patched_runtime_settings(monkeypatch, tmp_path):
     """Mock runtime settings."""
     settings = RuntimeSettings(raw_env={}, runtime_root=tmp_path)
-    monkeypatch.setattr("gpt_trader.config.runtime_settings.load_runtime_settings", lambda: settings)
+    monkeypatch.setattr(
+        "gpt_trader.config.runtime_settings.load_runtime_settings", lambda: settings
+    )
     monkeypatch.setattr("gpt_trader.orchestration.storage.load_runtime_settings", lambda: settings)
     return settings
+
 
 @pytest.fixture
 def fake_guard_manager():
     return Mock()
 
+
 @pytest.fixture
 def fake_event_bus():
     return Mock()
 
+
 @pytest.fixture
 def fake_trade_service():
     return Mock()
+
 
 @pytest.fixture
 def fake_runtime_state():
@@ -137,6 +144,7 @@ def base_coordinator_context(
 def monitor(mock_bot):
     """Create a SystemMonitor instance for testing."""
     return SystemMonitor(bot=mock_bot, account_telemetry=None)
+
 
 @pytest.fixture
 def mock_bot():

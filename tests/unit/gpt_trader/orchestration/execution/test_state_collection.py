@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from decimal import Decimal
 from types import SimpleNamespace
-from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -12,7 +11,6 @@ import pytest
 from gpt_trader.features.brokerages.core.interfaces import Balance, MarketType, Product
 from gpt_trader.features.live_trade.risk import ValidationError
 from gpt_trader.orchestration.execution.state_collection import StateCollector
-
 
 # ============================================================
 # Fixtures
@@ -200,9 +198,7 @@ class TestCalculateEquityFromBalances:
         assert len(collateral) == 1
         assert collateral[0].asset == "USD"
 
-    def test_returns_zeros_when_no_balances_match(
-        self, collector: StateCollector
-    ) -> None:
+    def test_returns_zeros_when_no_balances_match(self, collector: StateCollector) -> None:
         """Test returns zeros when no balances match."""
         collector.collateral_assets = {"NONEXISTENT"}
         balances = [
@@ -245,9 +241,7 @@ class TestLogCollateralUpdate:
         collector._production_logger = MagicMock()
         collateral = [Balance(asset="USD", total=Decimal("100"), available=Decimal("50"))]
 
-        collector.log_collateral_update(
-            collateral, Decimal("100"), Decimal("100"), collateral
-        )
+        collector.log_collateral_update(collateral, Decimal("100"), Decimal("100"), collateral)
 
         assert collector._last_collateral_available == Decimal("50")
 
@@ -257,24 +251,18 @@ class TestLogCollateralUpdate:
         collector._last_collateral_available = Decimal("50")
         collateral = [Balance(asset="USD", total=Decimal("110"), available=Decimal("60"))]
 
-        collector.log_collateral_update(
-            collateral, Decimal("100"), Decimal("110"), collateral
-        )
+        collector.log_collateral_update(collateral, Decimal("100"), Decimal("110"), collateral)
 
         collector._production_logger.log_balance_update.assert_called_once()
 
     def test_handles_logger_exception(self, collector: StateCollector) -> None:
         """Test that logger exceptions are suppressed."""
         collector._production_logger = MagicMock()
-        collector._production_logger.log_balance_update.side_effect = RuntimeError(
-            "Log error"
-        )
+        collector._production_logger.log_balance_update.side_effect = RuntimeError("Log error")
         collateral = [Balance(asset="USD", total=Decimal("100"), available=Decimal("50"))]
 
         # Should not raise
-        collector.log_collateral_update(
-            collateral, Decimal("100"), Decimal("100"), collateral
-        )
+        collector.log_collateral_update(collateral, Decimal("100"), Decimal("100"), collateral)
 
 
 # ============================================================
@@ -294,9 +282,7 @@ class TestCollectAccountState:
         ]
         mock_broker.list_positions.return_value = []
 
-        balances, equity, collateral, total, positions = (
-            collector.collect_account_state()
-        )
+        balances, equity, collateral, total, positions = collector.collect_account_state()
 
         assert len(balances) == 1
         assert equity == Decimal("800")
@@ -317,16 +303,12 @@ class TestCollectAccountState:
             mock_load.return_value = mock_settings
             collector = StateCollector(mock_broker, settings=mock_settings)
 
-            balances, equity, collateral, total, positions = (
-                collector.collect_account_state()
-            )
+            balances, equity, collateral, total, positions = collector.collect_account_state()
 
             assert balances == []
             assert equity == Decimal("0")
 
-    def test_handles_balance_exception_in_integration_mode(
-        self, mock_broker: MagicMock
-    ) -> None:
+    def test_handles_balance_exception_in_integration_mode(self, mock_broker: MagicMock) -> None:
         """Test that balance exceptions are suppressed in integration mode."""
         mock_broker.list_balances.side_effect = RuntimeError("API error")
         mock_broker.list_positions.return_value = []
@@ -354,9 +336,7 @@ class TestCollectAccountState:
         with pytest.raises(RuntimeError, match="API error"):
             collector.collect_account_state()
 
-    def test_handles_position_exception_in_integration_mode(
-        self, mock_broker: MagicMock
-    ) -> None:
+    def test_handles_position_exception_in_integration_mode(self, mock_broker: MagicMock) -> None:
         """Test that position exceptions are suppressed in integration mode."""
         mock_broker.list_balances.return_value = [
             Balance(asset="USD", total=Decimal("1000"), available=Decimal("800"))
@@ -375,9 +355,7 @@ class TestCollectAccountState:
 
             assert positions == []
 
-    def test_provides_default_balance_in_integration_mode(
-        self, mock_broker: MagicMock
-    ) -> None:
+    def test_provides_default_balance_in_integration_mode(self, mock_broker: MagicMock) -> None:
         """Test that default balance is provided in integration mode."""
         mock_broker.list_balances.return_value = []
         mock_broker.list_positions.return_value = []
@@ -481,9 +459,7 @@ class TestBuildPositionsDict:
 class TestResolveEffectivePrice:
     """Tests for resolve_effective_price method."""
 
-    def test_returns_provided_price(
-        self, collector: StateCollector, mock_product: Product
-    ) -> None:
+    def test_returns_provided_price(self, collector: StateCollector, mock_product: Product) -> None:
         """Test that provided price is returned directly."""
         result = collector.resolve_effective_price(
             symbol="BTC-PERP",
@@ -537,9 +513,7 @@ class TestResolveEffectivePrice:
     ) -> None:
         """Test fallback to broker quote."""
         mock_broker.get_mark_price = MagicMock(return_value=None)
-        mock_broker.get_quote = MagicMock(
-            return_value=SimpleNamespace(last=Decimal("52000"))
-        )
+        mock_broker.get_quote = MagicMock(return_value=SimpleNamespace(last=Decimal("52000")))
 
         result = collector.resolve_effective_price(
             symbol="BTC-PERP",
@@ -616,9 +590,7 @@ class TestResolveEffectivePrice:
     ) -> None:
         """Test that mark price exceptions are handled."""
         mock_broker.get_mark_price = MagicMock(side_effect=RuntimeError("API error"))
-        mock_broker.get_quote = MagicMock(
-            return_value=SimpleNamespace(last=Decimal("52000"))
-        )
+        mock_broker.get_quote = MagicMock(return_value=SimpleNamespace(last=Decimal("52000")))
 
         product = SimpleNamespace(
             symbol="BTC-PERP",
@@ -672,9 +644,7 @@ class TestRequireProduct:
         with pytest.raises(ValidationError, match="Product not found"):
             collector.require_product("UNKNOWN-PERP", None)
 
-    def test_provides_synthetic_product_in_integration_mode(
-        self, mock_broker: MagicMock
-    ) -> None:
+    def test_provides_synthetic_product_in_integration_mode(self, mock_broker: MagicMock) -> None:
         """Test that synthetic product is provided in integration mode."""
         mock_broker.get_product.return_value = None
 
@@ -693,9 +663,7 @@ class TestRequireProduct:
             assert result.quote_asset == "PERP"
             assert result.market_type == MarketType.PERPETUAL
 
-    def test_synthetic_product_parses_symbol_without_dash(
-        self, mock_broker: MagicMock
-    ) -> None:
+    def test_synthetic_product_parses_symbol_without_dash(self, mock_broker: MagicMock) -> None:
         """Test synthetic product parsing when symbol has no dash."""
         mock_broker.get_product.return_value = None
 
@@ -747,9 +715,7 @@ class TestStateCollectionIntegration:
             collector = StateCollector(mock_broker, settings=mock_settings)
 
             # Collect account state
-            balances, equity, collateral, total, positions = (
-                collector.collect_account_state()
-            )
+            balances, equity, collateral, total, positions = collector.collect_account_state()
 
             # Verify balances
             assert len(balances) == 2

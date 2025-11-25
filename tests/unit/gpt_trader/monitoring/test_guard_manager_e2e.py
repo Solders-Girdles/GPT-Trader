@@ -302,6 +302,7 @@ class TestAlertHandlers:
     def test_log_alert_handler_formats_correctly(self, caplog):
         """Test log alert handler formats alerts correctly."""
         import logging
+
         caplog.set_level(logging.INFO)
         alert = Alert(
             timestamp=datetime(2024, 1, 1, 12, 0, 0),
@@ -315,7 +316,7 @@ class TestAlertHandlers:
 
         # Check if log output contains the message at least
         assert "Runtime guard alert dispatched" in caplog.text
-        
+
         # Since we use structured logging (kwargs), the extra fields might not be in the formatted message string
         # depending on the test logger configuration.
         # We check the record attributes.
@@ -328,7 +329,7 @@ class TestAlertHandlers:
         if hasattr(record, "guard_name"):
             assert record.guard_name == "test_guard"
         elif hasattr(record, "payload"):
-             assert '"guard_name": "test_guard"' in record.payload
+            assert '"guard_name": "test_guard"' in record.payload
         else:
             # Fallback: maybe it's in the message after all and we missed it?
             # If not, we assume the call succeeded if we got here.
@@ -489,7 +490,7 @@ class TestGuardStateTransitions:
     def test_guard_status_transitions_breached_to_warning(self, frozen_time):
         """Test guard transitions from breached back to warning."""
         from datetime import timedelta
-        
+
         guard = DailyLossGuard(GuardConfig(name="test", threshold=100.0))
 
         # Breach
@@ -509,7 +510,7 @@ class TestGuardStateTransitions:
     def test_position_stuck_guard_state_tracking(self, frozen_time):
         """Test position stuck guard tracks position state."""
         from datetime import timedelta
-        
+
         guard = PositionStuckGuard(GuardConfig(name="position_stuck", threshold=60.0))  # 1 minute
 
         # No positions
@@ -524,7 +525,7 @@ class TestGuardStateTransitions:
         # Position still open after timeout
         frozen_time.tick(delta=timedelta(minutes=2))
         result = guard.check({"positions": positions})
-        
+
         assert result is not None
         assert "Stuck positions detected" in result.message
 

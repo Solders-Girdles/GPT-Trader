@@ -1,4 +1,5 @@
-from decimal import Decimal, ROUND_UP, ROUND_DOWN
+from decimal import ROUND_DOWN, ROUND_UP, Decimal
+
 
 def quantize_price_side_aware(price: Decimal, increment: Decimal, side: str) -> Decimal:
     """

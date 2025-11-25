@@ -34,9 +34,7 @@ class MinimalCoinbaseBrokerage(IBrokerage):
 
     def __init__(self, config: APIConfig):
         self.config = config
-        self.endpoints = CoinbaseEndpoints(
-            config
-        )
+        self.endpoints = CoinbaseEndpoints(config)
         self.product_catalog = ProductCatalog(ttl_seconds=900)
 
         # Mock WebSocket data for testing

@@ -2,6 +2,7 @@
 Simple Bot Configuration.
 Replaces the 550-line enterprise configuration system.
 """
+
 import os
 from dataclasses import dataclass, field
 from decimal import Decimal
@@ -12,11 +13,13 @@ DEFAULT_SPOT_RISK_PATH = "config/risk.json"
 DEFAULT_SPOT_SYMBOLS = ["BTC-USD", "ETH-USD"]
 TOP_VOLUME_BASES = ["BTC", "ETH", "SOL"]
 
+
 class ConfigState(Enum):
     INITIALIZED = auto()
     LOADED = auto()
     VALIDATED = auto()
     ERROR = auto()
+
 
 @dataclass
 class BotConfig:
@@ -48,10 +51,10 @@ class BotConfig:
     def from_env(cls) -> "BotConfig":
         """Load configuration from environment variables."""
         from gpt_trader.config.config_utilities import (
+            parse_bool_env,
             parse_decimal_env,
             parse_int_env,
             parse_list_env,
-            parse_bool_env,
         )
 
         return cls(
@@ -66,6 +69,7 @@ class BotConfig:
             log_level=os.getenv("LOG_LEVEL", "INFO"),
             dry_run=parse_bool_env("DRY_RUN", default=False),
         )
+
 
 # Global config instance
 config = BotConfig.from_env()

@@ -25,7 +25,6 @@ from gpt_trader.features.brokerages.core.interfaces import (
     OrderSide,
     OrderType,
     Position,
-    TimeInForce,
 )
 from gpt_trader.persistence.event_store import EventStore
 
@@ -604,14 +603,14 @@ class TestCoinbaseRestContractSuite:
             entry_price=Decimal("3000.00"),
             realized_pnl=Decimal("500.00"),
         )
-        
+
         def get_mark_side_effect(symbol):
             if symbol == "BTC-USD":
                 return Decimal("51000")
             if symbol == "ETH-USD":
                 return Decimal("3000")
             return Decimal("0")
-            
+
         mock_market_data.get_mark.side_effect = get_mark_side_effect
 
         portfolio_pnl = pnl_service.get_portfolio_pnl()

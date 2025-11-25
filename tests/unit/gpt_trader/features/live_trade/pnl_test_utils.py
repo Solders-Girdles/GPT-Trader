@@ -8,7 +8,6 @@ from datetime import datetime
 from decimal import Decimal
 
 import pytest
-
 from gpt_trader.features.live_trade.pnl_tracker import (
     FundingCalculator,
     PnLTracker,

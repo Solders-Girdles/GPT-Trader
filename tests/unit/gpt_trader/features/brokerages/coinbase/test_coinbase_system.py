@@ -6,19 +6,18 @@ import json
 import time
 from decimal import Decimal
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 from urllib.parse import parse_qs, urlparse
 
 import pytest
 
-from gpt_trader.features.brokerages.coinbase.client import CoinbaseClient
 from gpt_trader.features.brokerages.coinbase.errors import InsufficientFunds
 from gpt_trader.features.brokerages.coinbase.models import APIConfig
-from gpt_trader.features.brokerages.core.interfaces import OrderSide, OrderType, Order
+from gpt_trader.features.brokerages.core.interfaces import Order, OrderSide, OrderType
 from tests.unit.gpt_trader.features.brokerages.coinbase.test_helpers import (
     SYSTEM_ENDPOINT_CASES,
-    make_client,
     CoinbaseBrokerage,
+    make_client,
 )
 
 pytestmark = pytest.mark.endpoints
@@ -75,8 +74,6 @@ class TestCoinbaseSystem:
         elapsed_ms = (time.perf_counter() - start) * 1000
         assert elapsed_ms < 10
 
-
-
     def test_connection_validation(self) -> None:
         config = APIConfig(
             api_key="test_key",
@@ -122,10 +119,10 @@ class TestCoinbaseSystem:
             api_mode="advanced",
         )
         broker = CoinbaseBrokerage(config)
-        
+
         # Mock client to raise InsufficientFunds
         broker.client.place_order = MagicMock(side_effect=InsufficientFunds("Not enough funds"))
-        
+
         mock_product = MagicMock()
         mock_product.step_size = Decimal("0.001")
         mock_product.price_increment = Decimal("0.01")
@@ -133,7 +130,7 @@ class TestCoinbaseSystem:
         mock_product.min_notional = None
         mock_product.symbol = "BTC-USD"
         broker.product_catalog.get = MagicMock(return_value=mock_product)
-        
+
         mock_product = MagicMock()
         mock_product.step_size = Decimal("0.001")
         mock_product.price_increment = Decimal("0.01")
@@ -150,6 +147,6 @@ class TestCoinbaseSystem:
                     side=OrderSide.BUY,
                     type=OrderType.MARKET,
                     quantity=Decimal("1.0"),
-                    status=None
+                    status=None,
                 )
             )

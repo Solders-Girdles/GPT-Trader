@@ -12,23 +12,19 @@ This module has been refactored to delegate to focused helper modules:
 
 from __future__ import annotations
 
-import logging
-import time
 from dataclasses import dataclass
 from decimal import Decimal
 from typing import Any, cast
 
+from gpt_trader.config.runtime_settings import RuntimeSettings, load_runtime_settings
 from gpt_trader.features.brokerages.coinbase.specs import validate_order as spec_validate_order
 from gpt_trader.features.brokerages.core.interfaces import (
-    Balance,
     IBrokerage,
     OrderSide,
     OrderType,
     Product,
 )
-from gpt_trader.features.live_trade.guard_errors import RiskGuardError
 from gpt_trader.features.live_trade.risk import LiveRiskManager, ValidationError
-from gpt_trader.monitoring.system import get_logger as get_prod_logger
 from gpt_trader.orchestration.execution import (
     GuardManager,
     OrderSubmitter,
@@ -36,8 +32,6 @@ from gpt_trader.orchestration.execution import (
     RuntimeGuardState,
     StateCollector,
 )
-from gpt_trader.config.runtime_settings import RuntimeSettings, load_runtime_settings
-from gpt_trader.orchestration.state.unified_state import ReduceOnlyModeSource
 from gpt_trader.persistence.event_store import EventStore
 from gpt_trader.utilities.logging_patterns import get_logger
 
@@ -222,7 +216,9 @@ class LiveExecutionEngine:
                 current_positions,
             ) = self.state_collector.collect_account_state()
 
-            self.state_collector.log_collateral_update(collateral_balances, equity, collateral_total, balances)
+            self.state_collector.log_collateral_update(
+                collateral_balances, equity, collateral_total, balances
+            )
 
             # Build positions dict for validation
             current_positions_dict = self.state_collector.build_positions_dict(current_positions)
@@ -381,8 +377,6 @@ class LiveExecutionEngine:
                 operation="daily_tracking",
                 stage="reset",
             )
-
-
 
     def _invalidate_runtime_guard_cache(self) -> None:
         """Backward compatibility wrapper for invalidate_cache."""

@@ -50,7 +50,9 @@ def test_key_permission_retry_behaviour(
     monkeypatch.setenv("COINBASE_ENABLE_DERIVATIVES", "1")
     monkeypatch.setenv("COINBASE_PREFLIGHT_FORCE_REMOTE", "1")
     monkeypatch.setattr(checker, "_build_cdp_client", lambda: (client, None))
-    monkeypatch.setattr("gpt_trader.preflight.checks.connectivity.time.sleep", lambda _seconds: None)
+    monkeypatch.setattr(
+        "gpt_trader.preflight.checks.connectivity.time.sleep", lambda _seconds: None
+    )
 
     result = checker.check_key_permissions()
 

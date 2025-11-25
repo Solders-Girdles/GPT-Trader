@@ -18,23 +18,6 @@ Usage:
 
 from __future__ import annotations
 
-# Re-export interface from logging_patterns (System B) - widely used
-from gpt_trader.utilities.logging_patterns import (
-    LOG_FIELDS,
-    StructuredLogger,
-    UnifiedLogger,
-    get_correlation_id,
-    get_logger,
-    log_configuration_change,
-    log_error_with_context,
-    log_execution,
-    log_market_data_update,
-    log_operation,
-    log_position_update,
-    log_system_health,
-    log_trade_event,
-)
-
 # Re-export backend infrastructure from gpt_trader.logging (System A)
 from gpt_trader.logging import (
     StructuredJSONFormatter,
@@ -59,6 +42,23 @@ from gpt_trader.logging import (
     with_order_context,
     with_symbol_context,
     with_trading_context,
+)
+
+# Re-export interface from logging_patterns (System B) - widely used
+from gpt_trader.utilities.logging_patterns import (
+    LOG_FIELDS,
+    StructuredLogger,
+    UnifiedLogger,
+    get_correlation_id,
+    get_logger,
+    log_configuration_change,
+    log_error_with_context,
+    log_execution,
+    log_market_data_update,
+    log_operation,
+    log_position_update,
+    log_system_health,
+    log_trade_event,
 )
 
 # Note: gpt_trader.logging also exports get_correlation_id, but we prefer

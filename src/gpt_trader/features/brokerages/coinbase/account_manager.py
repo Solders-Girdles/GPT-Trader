@@ -1,21 +1,20 @@
 """
 Manages Coinbase account state, positions, balances, and CFM/INTX specific features.
 """
+
 from __future__ import annotations
 
-from dataclasses import asdict
-from datetime import datetime
-from decimal import Decimal
 from typing import TYPE_CHECKING, Any, Dict
 
-from gpt_trader.features.brokerages.core.interfaces import InvalidRequestError
 from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:
     from gpt_trader.features.brokerages.coinbase.test_helpers import CoinbaseBrokerage
+
     from gpt_trader.persistence.event_store import EventStore
 
 logger = get_logger(__name__, component="coinbase_account")
+
 
 class CoinbaseAccountManager:
     def __init__(self, broker: "CoinbaseBrokerage", event_store: "EventStore"):
@@ -24,7 +23,7 @@ class CoinbaseAccountManager:
 
     def snapshot(self) -> Dict[str, Any]:
         snapshot_data: Dict[str, Any] = {}
-        
+
         # Key Permissions
         try:
             permissions = self.broker.get_key_permissions()
@@ -116,17 +115,21 @@ class CoinbaseAccountManager:
             try:
                 # Resolve INTX portfolio
                 intx_portfolio_uuid = self.broker.resolve_intx_portfolio()
-                
+
                 # Try to get balances, if fails with specific error, refresh portfolio
                 try:
                     if intx_portfolio_uuid:
-                        snapshot_data["intx_balances"] = self.broker.get_intx_balances(intx_portfolio_uuid)
+                        snapshot_data["intx_balances"] = self.broker.get_intx_balances(
+                            intx_portfolio_uuid
+                        )
                 except Exception:
-                     # Retry with refresh
-                     intx_portfolio_uuid = self.broker.resolve_intx_portfolio(refresh=True)
-                     if intx_portfolio_uuid:
-                         snapshot_data["intx_balances"] = self.broker.get_intx_balances(intx_portfolio_uuid)
-                
+                    # Retry with refresh
+                    intx_portfolio_uuid = self.broker.resolve_intx_portfolio(refresh=True)
+                    if intx_portfolio_uuid:
+                        snapshot_data["intx_balances"] = self.broker.get_intx_balances(
+                            intx_portfolio_uuid
+                        )
+
                 if not intx_portfolio_uuid:
                     snapshot_data["intx_available"] = False
                     snapshot_data["intx_unavailable_reason"] = "intx_portfolio_not_found"
@@ -137,24 +140,28 @@ class CoinbaseAccountManager:
                     snapshot_data["intx_portfolio_uuid"] = intx_portfolio_uuid
                     # If balances not set yet (no error or recovered)
                     if "intx_balances" not in snapshot_data:
-                        snapshot_data["intx_balances"] = self.broker.get_intx_balances(intx_portfolio_uuid)
-                        
-                    snapshot_data["intx_positions"] = self.broker.list_intx_positions(intx_portfolio_uuid)
+                        snapshot_data["intx_balances"] = self.broker.get_intx_balances(
+                            intx_portfolio_uuid
+                        )
+
+                    snapshot_data["intx_positions"] = self.broker.list_intx_positions(
+                        intx_portfolio_uuid
+                    )
                     snapshot_data["intx_collateral"] = self.broker.get_intx_multi_asset_collateral()
             except Exception as e:
                 logger.warning(f"Failed to get INTX data: {e}")
                 # Don't mark as unavailable just because data fetch failed (could be temporary)
-                # snapshot_data["intx_available"] = False 
+                # snapshot_data["intx_available"] = False
                 snapshot_data["intx_unavailable_reason"] = str(e)
                 snapshot_data["intx_balances"] = []
                 snapshot_data["intx_positions"] = []
                 snapshot_data["intx_collateral"] = {}
-                
+
         self._event_store.append_metric(
             bot_id="account_manager",
-            metrics={"event_type": "account_manager_snapshot", "data": snapshot_data}
+            metrics={"event_type": "account_manager_snapshot", "data": snapshot_data},
         )
-        
+
         return snapshot_data
 
     def convert(self, payload: Dict[str, Any], commit: bool = False) -> Dict[str, Any]:
@@ -162,8 +169,7 @@ class CoinbaseAccountManager:
         if commit:
             result = self.broker.commit_convert_trade(quote["trade_id"], payload)
             self._event_store.append_metric(
-                bot_id="account_manager",
-                metrics={"event_type": "convert_commit", "data": result}
+                bot_id="account_manager", metrics={"event_type": "convert_commit", "data": result}
             )
             return result
         return quote
@@ -171,7 +177,6 @@ class CoinbaseAccountManager:
     def move_funds(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         result = self.broker.move_portfolio_funds(payload)
         self._event_store.append_metric(
-            bot_id="account_manager",
-            metrics={"event_type": "portfolio_move", "data": result}
+            bot_id="account_manager", metrics={"event_type": "portfolio_move", "data": result}
         )
         return result

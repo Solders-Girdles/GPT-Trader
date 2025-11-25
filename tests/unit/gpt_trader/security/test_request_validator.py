@@ -5,10 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any
 
-import pytest
-
 from gpt_trader.security.request_validator import RequestValidator
-
 
 # ============================================================
 # Test: validate_request - Success cases
@@ -154,7 +151,9 @@ class TestValidateRequestInvalidAction:
         result = RequestValidator.validate_request(request)
 
         assert result.is_valid is False
-        assert any("length" in error.lower() or "exceed" in error.lower() for error in result.errors)
+        assert any(
+            "length" in error.lower() or "exceed" in error.lower() for error in result.errors
+        )
 
     def test_validate_request_path_traversal_action(self) -> None:
         """Test that path traversal in action is detected."""

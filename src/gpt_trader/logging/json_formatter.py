@@ -56,7 +56,9 @@ class StructuredJSONFormatter(logging.Formatter):
             "logger": record.name,
             "message": record.getMessage(),
             "module": record.module,
-            "function": record.funcName if record.funcName is not None else "<module>", # Handle None funcName
+            "function": (
+                record.funcName if record.funcName is not None else "<module>"
+            ),  # Handle None funcName
             "line": record.lineno,
             "thread": record.thread,
             "process": record.process,
@@ -76,9 +78,9 @@ class StructuredJSONFormatter(logging.Formatter):
             log_entry["stack_trace"] = record.stack_info
 
         # Extract extra fields, including those from StructuredLogger
-        if hasattr(record, 'extra'): # StructuredLogger passes extra fields here
+        if hasattr(record, "extra"):  # StructuredLogger passes extra fields here
             for key, value in record.extra.items():
-                if key not in log_entry: # Avoid overwriting standard fields
+                if key not in log_entry:  # Avoid overwriting standard fields
                     log_entry[key] = value
 
         # Handle context_ attributes from original _extract_extra_fields (if still needed)
@@ -101,7 +103,7 @@ class StructuredJSONFormatter(logging.Formatter):
             return json.dumps(
                 log_entry,
                 ensure_ascii=self.ensure_ascii,
-                default=None, # Pass default=None so cls=DecimalEncoder is always used for Decimals
+                default=None,  # Pass default=None so cls=DecimalEncoder is always used for Decimals
                 sort_keys=self.sort_keys,
                 cls=DecimalEncoder,
             )

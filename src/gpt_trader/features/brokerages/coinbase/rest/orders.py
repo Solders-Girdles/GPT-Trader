@@ -1,10 +1,11 @@
 """
 Order management mixin for Coinbase REST service.
 """
+
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import Any, Dict, List, Optional, Callable
+from typing import Any, Callable, Dict, List, Optional
 
 from gpt_trader.errors import ValidationError
 from gpt_trader.features.brokerages.coinbase.models import to_order
@@ -14,6 +15,7 @@ from gpt_trader.features.brokerages.core.interfaces import (
     OrderType,
     TimeInForce,
 )
+
 
 class OrderRestMixin:
     """Mixin for order management operations."""
@@ -70,7 +72,7 @@ class OrderRestMixin:
         orders = []
         cursor = None
         has_more = True
-        
+
         while has_more:
             try:
                 kwargs = {"limit": limit}
@@ -80,19 +82,19 @@ class OrderRestMixin:
                     kwargs["order_status"] = status
                 if cursor:
                     kwargs["cursor"] = cursor
-                    
+
                 response = self.client.list_orders(**kwargs)
-                
+
                 page_orders = response.get("orders", [])
                 for item in page_orders:
                     orders.append(to_order(item))
-                    
+
                 cursor = response.get("cursor")
                 if not cursor or not page_orders:
                     has_more = False
             except Exception:
                 has_more = False
-            
+
         return orders
 
     def get_order(self, order_id: str) -> Optional[Order]:
@@ -116,7 +118,7 @@ class OrderRestMixin:
         fills = []
         cursor = None
         has_more = True
-        
+
         while has_more:
             try:
                 kwargs = {"limit": limit}
@@ -126,25 +128,25 @@ class OrderRestMixin:
                     kwargs["order_id"] = order_id
                 if cursor:
                     kwargs["cursor"] = cursor
-                    
+
                 response = self.client.list_fills(**kwargs)
-                
+
                 page_fills = response.get("fills", [])
                 fills.extend(page_fills)
-                
+
                 cursor = response.get("cursor")
                 if not cursor or not page_fills:
                     has_more = False
             except Exception:
                 has_more = False
-            
+
         return fills
 
     def close_position(
-        self, 
-        symbol: str, 
+        self,
+        symbol: str,
         client_order_id: Optional[str] = None,
-        fallback: Optional[Callable] = None
+        fallback: Optional[Callable] = None,
     ) -> Order:
         """Close position for a symbol."""
         has_pos = False
@@ -154,15 +156,15 @@ class OrderRestMixin:
                 if p.symbol == symbol and p.quantity > 0:
                     has_pos = True
                     break
-        
+
         if not has_pos:
-             raise ValidationError(f"No open position for {symbol}")
+            raise ValidationError(f"No open position for {symbol}")
 
         try:
             payload = {"product_id": symbol}
             if client_order_id:
                 payload["client_order_id"] = client_order_id
-                
+
             response = self.client.close_position(payload)
             return to_order(response.get("order", {}))
         except Exception as e:

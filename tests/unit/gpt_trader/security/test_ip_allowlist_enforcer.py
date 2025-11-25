@@ -217,9 +217,7 @@ def test_update_existing_rule_with_description(enforcer):
     enforcer.add_rule("test_service", ["192.168.1.1"], description="Original")
 
     # Update with new IPs and description
-    success = enforcer.add_rule(
-        "test_service", ["192.168.1.2"], description="Updated description"
-    )
+    success = enforcer.add_rule("test_service", ["192.168.1.2"], description="Updated description")
     assert success
 
     rule = enforcer.get_rule("test_service")
@@ -327,17 +325,13 @@ def test_check_ip_invalid_cidr_fallback(enforcer):
     """Test IP check with invalid CIDR that falls back to IP comparison"""
     # This tests the fallback path when a value is not a valid CIDR
     # but might still be an IP address
-    result = enforcer._check_ip_in_allowlist(
-        "192.168.1.1", ["not-a-cidr", "192.168.1.1"]
-    )
+    result = enforcer._check_ip_in_allowlist("192.168.1.1", ["not-a-cidr", "192.168.1.1"])
     assert result == "192.168.1.1"
 
 
 def test_check_ip_completely_invalid_entry(enforcer):
     """Test IP check skips completely invalid entries"""
-    result = enforcer._check_ip_in_allowlist(
-        "192.168.1.1", ["completely-invalid", "also-invalid"]
-    )
+    result = enforcer._check_ip_in_allowlist("192.168.1.1", ["completely-invalid", "also-invalid"])
     assert result is None
 
 
@@ -360,7 +354,6 @@ def test_environment_empty_allowlist():
 def test_global_singleton_and_convenience_functions():
     """Test global singleton and convenience functions"""
     from gpt_trader.security.ip_allowlist_enforcer import (
-        _ip_allowlist_enforcer,
         add_ip_allowlist_rule,
         get_ip_allowlist_enforcer,
         validate_ip,

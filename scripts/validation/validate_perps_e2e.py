@@ -52,7 +52,9 @@ def check_cli_command():
     existing = env.get("PYTHONPATH")
     src_path = str(REPO_ROOT / "src")
     env["PYTHONPATH"] = src_path if not existing else f"{src_path}{os.pathsep}{existing}"
-    p = run([sys.executable, "-m", "gpt_trader.cli", "--help"], capture_output=True, text=True, env=env)
+    p = run(
+        [sys.executable, "-m", "gpt_trader.cli", "--help"], capture_output=True, text=True, env=env
+    )
     if p.returncode != 0:
         fail(f"CLI help failed: {p.stderr}")
     if "--profile" not in p.stdout:

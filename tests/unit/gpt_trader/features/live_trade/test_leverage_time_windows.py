@@ -5,9 +5,9 @@ from decimal import Decimal
 
 import pytest
 
-from gpt_trader.orchestration.configuration import RiskConfig
 from gpt_trader.features.brokerages.core.interfaces import MarketType, Product
 from gpt_trader.features.live_trade.risk import LiveRiskManager, ValidationError
+from gpt_trader.orchestration.configuration import RiskConfig
 
 
 def make_perp(symbol: str) -> Product:
@@ -23,7 +23,9 @@ def make_perp(symbol: str) -> Product:
     )
 
 
-@pytest.mark.skip(reason="TODO: Fix time mocking - day/night leverage window enforcement needs _now_provider integration")
+@pytest.mark.skip(
+    reason="TODO: Fix time mocking - day/night leverage window enforcement needs _now_provider integration"
+)
 def test_day_vs_night_leverage_caps_enforced(monkeypatch):
     config = RiskConfig(
         max_leverage=20,
@@ -72,7 +74,9 @@ def test_day_vs_night_leverage_caps_enforced(monkeypatch):
         )
 
 
-@pytest.mark.skip(reason="TODO: Fix time mocking - MMR projection day/night switching needs _now_provider integration")
+@pytest.mark.skip(
+    reason="TODO: Fix time mocking - MMR projection day/night switching needs _now_provider integration"
+)
 def test_day_vs_night_mmr_projection(monkeypatch):
     # Night MMR higher → projected buffer insufficient at night, OK in day
     config = RiskConfig(

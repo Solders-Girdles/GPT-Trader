@@ -2,7 +2,7 @@
 
 import time
 from decimal import Decimal
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -11,11 +11,9 @@ from gpt_trader.features.live_trade.guard_errors import (
     RiskGuardComputationError,
     RiskGuardDataCorrupt,
     RiskGuardDataUnavailable,
-    RiskGuardError,
     RiskGuardTelemetryError,
 )
 from gpt_trader.orchestration.execution.guards import GuardManager, RuntimeGuardState
-
 
 # =============================================================================
 # Fixtures
@@ -79,8 +77,16 @@ def sample_guard_state(mock_position):
         balances=[],
         equity=Decimal("10000"),
         positions=[mock_position],
-        positions_pnl={"BTC-PERP": {"realized_pnl": Decimal("0"), "unrealized_pnl": Decimal("100")}},
-        positions_dict={"BTC-PERP": {"quantity": Decimal("0.1"), "mark": Decimal("51000"), "entry": Decimal("50000")}},
+        positions_pnl={
+            "BTC-PERP": {"realized_pnl": Decimal("0"), "unrealized_pnl": Decimal("100")}
+        },
+        positions_dict={
+            "BTC-PERP": {
+                "quantity": Decimal("0.1"),
+                "mark": Decimal("51000"),
+                "entry": Decimal("50000"),
+            }
+        },
         guard_events=[],
     )
 
@@ -102,7 +108,9 @@ def test_invalidate_cache_clears_state(guard_manager):
     guard_manager._invalidate_cache.assert_called_once()
 
 
-def test_invalidate_cache_handles_no_callback(mock_broker, mock_risk_manager, mock_equity_calculator):
+def test_invalidate_cache_handles_no_callback(
+    mock_broker, mock_risk_manager, mock_equity_calculator
+):
     """Test invalidate_cache works when callback is None."""
     gm = GuardManager(
         broker=mock_broker,
@@ -336,7 +344,9 @@ def test_guard_daily_loss_not_triggered(guard_manager, sample_guard_state, mock_
     mock_risk_manager.track_daily_pnl.assert_called_once()
 
 
-def test_guard_daily_loss_triggered_cancels_orders(guard_manager, sample_guard_state, mock_risk_manager):
+def test_guard_daily_loss_triggered_cancels_orders(
+    guard_manager, sample_guard_state, mock_risk_manager
+):
     """Test daily loss guard cancels orders when triggered."""
     mock_risk_manager.track_daily_pnl.return_value = True
 
@@ -368,7 +378,9 @@ def test_guard_liquidation_buffers_basic(guard_manager, sample_guard_state, mock
     mock_risk_manager.check_liquidation_buffer.assert_called_once()
 
 
-def test_guard_liquidation_buffers_full_with_risk_info(guard_manager, sample_guard_state, mock_broker, mock_risk_manager):
+def test_guard_liquidation_buffers_full_with_risk_info(
+    guard_manager, sample_guard_state, mock_broker, mock_risk_manager
+):
     """Test full liquidation buffer check fetches risk info."""
     mock_broker.get_position_risk.return_value = {"liquidation_price": "45000"}
 
@@ -399,7 +411,9 @@ def test_guard_liquidation_buffers_corrupt_data(guard_manager, mock_risk_manager
         guard_manager.guard_liquidation_buffers(state, incremental=True)
 
 
-def test_guard_liquidation_buffers_risk_fetch_failure(guard_manager, sample_guard_state, mock_broker):
+def test_guard_liquidation_buffers_risk_fetch_failure(
+    guard_manager, sample_guard_state, mock_broker
+):
     """Test liquidation buffer raises on risk fetch failure."""
     mock_broker.get_position_risk.side_effect = Exception("API error")
 
@@ -420,7 +434,9 @@ def test_guard_mark_staleness_no_cache(guard_manager, sample_guard_state, mock_b
     guard_manager.guard_mark_staleness(sample_guard_state)
 
 
-def test_guard_mark_staleness_with_cache(guard_manager, sample_guard_state, mock_broker, mock_risk_manager):
+def test_guard_mark_staleness_with_cache(
+    guard_manager, sample_guard_state, mock_broker, mock_risk_manager
+):
     """Test mark staleness guard checks cached marks."""
     mock_broker._mark_cache = MagicMock()
     mock_broker._mark_cache.get_mark.return_value = None
@@ -431,7 +447,9 @@ def test_guard_mark_staleness_with_cache(guard_manager, sample_guard_state, mock
     mock_risk_manager.check_mark_staleness.assert_called_with("BTC-PERP")
 
 
-def test_guard_mark_staleness_fetch_failure(guard_manager, sample_guard_state, mock_broker, mock_risk_manager):
+def test_guard_mark_staleness_fetch_failure(
+    guard_manager, sample_guard_state, mock_broker, mock_risk_manager
+):
     """Test mark staleness raises on fetch failures."""
     mock_broker._mark_cache = MagicMock()
     mock_broker._mark_cache.get_mark.side_effect = Exception("Cache error")
@@ -461,7 +479,9 @@ def test_guard_risk_metrics_failure(guard_manager, sample_guard_state, mock_risk
         guard_manager.guard_risk_metrics(sample_guard_state)
 
 
-def test_guard_risk_metrics_propagates_guard_error(guard_manager, sample_guard_state, mock_risk_manager):
+def test_guard_risk_metrics_propagates_guard_error(
+    guard_manager, sample_guard_state, mock_risk_manager
+):
     """Test risk metrics propagates RiskGuardError."""
     error = RiskGuardComputationError(guard_name="risk_metrics", message="Test", details={})
     mock_risk_manager.append_risk_metrics.side_effect = error
@@ -523,7 +543,9 @@ def test_guard_volatility_skips_no_symbols(guard_manager, mock_risk_manager):
     guard_manager.broker.get_candles.assert_not_called()
 
 
-def test_guard_volatility_checks_symbols(guard_manager, sample_guard_state, mock_broker, mock_risk_manager):
+def test_guard_volatility_checks_symbols(
+    guard_manager, sample_guard_state, mock_broker, mock_risk_manager
+):
     """Test volatility guard checks all relevant symbols."""
     mock_risk_manager.last_mark_update = {"BTC-PERP": time.time()}
     mock_risk_manager.config.volatility_window_periods = 20
@@ -540,7 +562,9 @@ def test_guard_volatility_checks_symbols(guard_manager, sample_guard_state, mock
     mock_risk_manager.check_volatility_circuit_breaker.assert_called()
 
 
-def test_guard_volatility_records_triggered_events(guard_manager, sample_guard_state, mock_broker, mock_risk_manager):
+def test_guard_volatility_records_triggered_events(
+    guard_manager, sample_guard_state, mock_broker, mock_risk_manager
+):
     """Test volatility guard records triggered events."""
     mock_risk_manager.last_mark_update = {"BTC-PERP": time.time()}
     mock_risk_manager.config.volatility_window_periods = 20
@@ -560,7 +584,9 @@ def test_guard_volatility_records_triggered_events(guard_manager, sample_guard_s
     assert sample_guard_state.guard_events[0]["type"] == "volatility_breach"
 
 
-def test_guard_volatility_fetch_failure(guard_manager, sample_guard_state, mock_broker, mock_risk_manager):
+def test_guard_volatility_fetch_failure(
+    guard_manager, sample_guard_state, mock_broker, mock_risk_manager
+):
     """Test volatility raises on candle fetch failures."""
     mock_risk_manager.last_mark_update = {"BTC-PERP": time.time()}
     mock_risk_manager.config.volatility_window_periods = 20
@@ -599,8 +625,10 @@ def test_run_guards_for_state_calls_all_guards(guard_manager, sample_guard_state
 
 def test_run_runtime_guards_first_run(guard_manager):
     """Test first runtime guards run is full."""
-    with patch.object(guard_manager, "collect_runtime_guard_state") as mock_collect, \
-         patch.object(guard_manager, "run_guards_for_state") as mock_run_guards:
+    with (
+        patch.object(guard_manager, "collect_runtime_guard_state") as mock_collect,
+        patch.object(guard_manager, "run_guards_for_state") as mock_run_guards,
+    ):
         mock_state = MagicMock()
         mock_collect.return_value = mock_state
 
@@ -618,8 +646,10 @@ def test_run_runtime_guards_incremental(guard_manager):
     guard_manager._runtime_guard_dirty = False
     guard_manager._runtime_guard_last_full_ts = time.time()
 
-    with patch.object(guard_manager, "collect_runtime_guard_state") as mock_collect, \
-         patch.object(guard_manager, "run_guards_for_state") as mock_run_guards:
+    with (
+        patch.object(guard_manager, "collect_runtime_guard_state") as mock_collect,
+        patch.object(guard_manager, "run_guards_for_state") as mock_run_guards,
+    ):
         state = guard_manager.run_runtime_guards()
 
         assert state == mock_state
@@ -634,8 +664,10 @@ def test_run_runtime_guards_force_full(guard_manager):
     guard_manager._runtime_guard_dirty = False
     guard_manager._runtime_guard_last_full_ts = time.time()
 
-    with patch.object(guard_manager, "collect_runtime_guard_state") as mock_collect, \
-         patch.object(guard_manager, "run_guards_for_state") as mock_run_guards:
+    with (
+        patch.object(guard_manager, "collect_runtime_guard_state") as mock_collect,
+        patch.object(guard_manager, "run_guards_for_state") as mock_run_guards,
+    ):
         new_state = MagicMock()
         mock_collect.return_value = new_state
 

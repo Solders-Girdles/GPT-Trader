@@ -6,7 +6,6 @@ import pytest
 
 from gpt_trader.security.input_sanitizer import InputSanitizer, ValidationResult
 
-
 # ============================================================
 # Test: ValidationResult dataclass
 # ============================================================
@@ -55,10 +54,10 @@ class TestSanitizeStringSuccess:
 
     def test_sanitize_string_escapes_quotes(self) -> None:
         """Test that single and double quotes are escaped."""
-        result = InputSanitizer.sanitize_string("it's a \"test\"")
+        result = InputSanitizer.sanitize_string('it\'s a "test"')
 
         assert result.is_valid is True
-        assert result.sanitized_value == "it''s a \"\"test\"\""
+        assert result.sanitized_value == 'it\'\'s a ""test""'
 
 
 # ============================================================
@@ -207,7 +206,9 @@ class TestSanitizeStringInjection:
         result = InputSanitizer.sanitize_string(input_str)
 
         assert result.is_valid is False
-        assert any("path" in error.lower() or "traversal" in error.lower() for error in result.errors)
+        assert any(
+            "path" in error.lower() or "traversal" in error.lower() for error in result.errors
+        )
 
 
 # ============================================================

@@ -5,16 +5,19 @@ from typing import Any, Sequence
 
 from gpt_trader.features.brokerages.core.interfaces import Product
 
+
 class Action(Enum):
     BUY = "buy"
     SELL = "sell"
     HOLD = "hold"
+
 
 @dataclass
 class Decision:
     action: Action
     reason: str
     confidence: float = 0.0
+
 
 @dataclass
 class StrategyConfig:
@@ -27,6 +30,7 @@ class StrategyConfig:
     take_profit_pct: float = 0.05
     max_leverage: int = 5
     kill_switch_enabled: bool = False
+
 
 class BaselinePerpsStrategy:
     def __init__(self, config: Any = None):
@@ -42,19 +46,19 @@ class BaselinePerpsStrategy:
         product: Product | None,
     ) -> Decision:
         if not recent_marks:
-             return Decision(Action.HOLD, "Insufficient data")
-        
-        # Simple Logic: 
+            return Decision(Action.HOLD, "Insufficient data")
+
+        # Simple Logic:
         # If current > avg of recent -> BUY
         # If current < avg of recent -> SELL
-        
+
         avg = sum(recent_marks) / len(recent_marks)
-        
+
         if current_mark > avg:
             return Decision(Action.BUY, f"Price {current_mark:.2f} > Avg {avg:.2f}", 0.6)
         elif current_mark < avg:
             return Decision(Action.SELL, f"Price {current_mark:.2f} < Avg {avg:.2f}", 0.6)
-            
+
         return Decision(Action.HOLD, "No signal")
 
     def _build_default_product(self, symbol: str) -> Any:

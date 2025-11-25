@@ -21,7 +21,6 @@ from gpt_trader.features.live_trade.guard_errors import (
     RiskGuardComputationError,
     RiskGuardDataCorrupt,
     RiskGuardDataUnavailable,
-    RiskGuardError,
     RiskGuardTelemetryError,
     record_guard_failure,
     record_guard_success,
@@ -86,7 +85,6 @@ class GuardManager:
         self._runtime_guard_dirty = True
         if self._invalidate_cache:
             self._invalidate_cache()
-
 
     def should_run_full_guard(self, now: float) -> bool:
         """Check if a full guard run is needed."""
@@ -163,7 +161,7 @@ class GuardManager:
             if err.recoverable:
                 return
             raise
-        except Exception as exc:
+        except Exception:
             fallback_err = RiskGuardComputationError(
                 guard_name=guard_name,
                 message=f"Unexpected failure in guard '{guard_name}'",

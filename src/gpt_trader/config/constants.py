@@ -5,7 +5,6 @@ These values can be overridden via environment variables where noted.
 Moving hardcoded values here makes them easier to tune without code changes.
 """
 
-from decimal import Decimal
 import os
 
 # =============================================================================

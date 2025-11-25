@@ -4,13 +4,11 @@ from __future__ import annotations
 
 import json
 from types import SimpleNamespace
-from unittest.mock import patch
 
 import pytest
 
-from gpt_trader.features.brokerages.coinbase.client import CoinbaseClient
 from gpt_trader.features.brokerages.coinbase.auth import CDPJWTAuth, HMACAuth
-from gpt_trader.features.brokerages.coinbase.client import CoinbaseAuth, CoinbaseClient
+from gpt_trader.features.brokerages.coinbase.client import CoinbaseClient
 from gpt_trader.features.brokerages.coinbase.models import APIConfig
 from tests.unit.gpt_trader.features.brokerages.coinbase.test_helpers import CoinbaseBrokerage
 
@@ -80,7 +78,6 @@ def test_broker_auth_selection(config_kwargs, expected_auth_type):
     )
     broker = CoinbaseBrokerage(config)
     assert isinstance(broker.client.auth, expected_auth_type)
-
 
     # assert subscribe_payloads[0].get("jwt") == "test_jwt_token"
     pass

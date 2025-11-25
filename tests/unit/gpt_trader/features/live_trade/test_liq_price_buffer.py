@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from gpt_trader.orchestration.configuration import RiskConfig
 from gpt_trader.features.live_trade.risk import LiveRiskManager
+from gpt_trader.orchestration.configuration import RiskConfig
 
 
 def test_liquidation_buffer_with_real_liq_price_triggers_reduce_only():

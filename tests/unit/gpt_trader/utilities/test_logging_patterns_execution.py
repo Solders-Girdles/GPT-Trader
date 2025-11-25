@@ -2,8 +2,6 @@ from __future__ import annotations
 
 import logging
 
-import pytest
-
 from gpt_trader.utilities import logging_patterns
 
 
@@ -28,6 +26,7 @@ def test_log_execution_includes_args_and_result() -> None:
     exec_logger.propagate = False
 
     try:
+
         @logging_patterns.log_execution(
             operation="compute_sum",
             logger=exec_logger,

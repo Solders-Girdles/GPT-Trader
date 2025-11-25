@@ -9,10 +9,9 @@ from __future__ import annotations
 import json
 import sys
 from collections.abc import Iterable
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any
 from unittest.mock import Mock
 
-from gpt_trader.utilities import empty_stream
 from gpt_trader.utilities.logging_patterns import get_logger
 
 try:  # pragma: no cover - optional dependency shim

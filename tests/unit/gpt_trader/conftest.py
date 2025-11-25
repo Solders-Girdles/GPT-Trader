@@ -1,15 +1,19 @@
-import pytest
 from pathlib import Path
+
+import pytest
+
 from gpt_trader.config.runtime_settings import RuntimeSettings
+
 
 @pytest.fixture
 def runtime_settings_factory():
     """Factory for creating RuntimeSettings instances for testing."""
+
     def _factory(
         env_overrides: dict[str, str] | None = None,
         runtime_root: Path | None = None,
         event_store_root_override: Path | None = None,
-        **kwargs
+        **kwargs,
     ) -> RuntimeSettings:
         # Create a basic RuntimeSettings instance, allowing overrides
         settings = RuntimeSettings(
@@ -34,7 +38,8 @@ def runtime_settings_factory():
             coinbase_api_mode="advanced",
             risk_config_path=None,
             coinbase_intx_portfolio_uuid=None,
-            **kwargs
+            **kwargs,
         )
         return settings
+
     return _factory

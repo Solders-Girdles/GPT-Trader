@@ -78,7 +78,7 @@ class TestCheckEnvironmentVariables:
         }
 
         with patch.dict(os.environ, env, clear=True):
-            result = check_environment_variables(checker)
+            check_environment_variables(checker)
 
         # Should still pass because COINBASE_SANDBOX is not strict in dev
         # But will fail for missing credentials unless skip_remote
@@ -123,9 +123,7 @@ class TestCheckEnvironmentVariables:
         assert result is False
         assert any("Invalid private key format" in e for e in checker.errors)
 
-    def test_warns_about_missing_credentials_in_dev(
-        self, capsys: pytest.CaptureFixture
-    ) -> None:
+    def test_warns_about_missing_credentials_in_dev(self, capsys: pytest.CaptureFixture) -> None:
         """Should warn (not fail) about missing credentials in dev profile."""
         checker = PreflightCheck(profile="dev")
 
@@ -135,7 +133,7 @@ class TestCheckEnvironmentVariables:
         }
 
         with patch.dict(os.environ, env, clear=True):
-            result = check_environment_variables(checker)
+            check_environment_variables(checker)
 
         # In dev without credentials, should warn but not fail
         assert any("remote connectivity checks will be skipped" in w for w in checker.warnings)
@@ -157,9 +155,7 @@ class TestCheckEnvironmentVariables:
         captured = capsys.readouterr()
         assert "within safe range" in captured.out
 
-    def test_warns_about_out_of_range_risk_variables(
-        self, capsys: pytest.CaptureFixture
-    ) -> None:
+    def test_warns_about_out_of_range_risk_variables(self, capsys: pytest.CaptureFixture) -> None:
         """Should warn about risk variables outside recommended range."""
         checker = PreflightCheck(profile="dev")
 
@@ -173,9 +169,7 @@ class TestCheckEnvironmentVariables:
 
         assert any("outside recommended range" in w for w in checker.warnings)
 
-    def test_fails_on_invalid_risk_variable_format(
-        self, capsys: pytest.CaptureFixture
-    ) -> None:
+    def test_fails_on_invalid_risk_variable_format(self, capsys: pytest.CaptureFixture) -> None:
         """Should fail on non-numeric risk variable."""
         checker = PreflightCheck(profile="dev")
 
@@ -190,9 +184,7 @@ class TestCheckEnvironmentVariables:
         assert result is False
         assert any("not a valid number" in e for e in checker.errors)
 
-    def test_warns_about_missing_risk_variables(
-        self, capsys: pytest.CaptureFixture
-    ) -> None:
+    def test_warns_about_missing_risk_variables(self, capsys: pytest.CaptureFixture) -> None:
         """Should warn about missing risk variables."""
         checker = PreflightCheck(profile="dev")
 

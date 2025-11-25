@@ -85,7 +85,9 @@ def test_get_resource_monitor_memoizes_instance(monkeypatch):
 
 def test_try_import_psutil_uses_legacy(monkeypatch):
     legacy_psutil = object()
-    sys.modules["gpt_trader.utilities.performance_monitoring"] = SimpleNamespace(psutil=legacy_psutil)
+    sys.modules["gpt_trader.utilities.performance_monitoring"] = SimpleNamespace(
+        psutil=legacy_psutil
+    )
 
     monkeypatch.setattr(resource, "psutil", None)
     monitor = resource.ResourceMonitor()

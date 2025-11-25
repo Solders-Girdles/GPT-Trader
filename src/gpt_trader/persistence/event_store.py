@@ -1,7 +1,9 @@
 """
 Event persistence layer.
 """
+
 from typing import Any, Dict, Optional
+
 
 class EventStore:
     def __init__(self, root: Optional[Any] = None):

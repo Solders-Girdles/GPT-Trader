@@ -9,8 +9,8 @@ from collections.abc import Sequence
 
 from dotenv import load_dotenv
 
-from gpt_trader.logging import configure_logging
 from gpt_trader.config.runtime_settings import RuntimeSettings, load_runtime_settings
+from gpt_trader.logging import configure_logging
 from gpt_trader.utilities.logging_patterns import get_logger
 
 # Preserve host-provided secrets; only fill gaps from .env

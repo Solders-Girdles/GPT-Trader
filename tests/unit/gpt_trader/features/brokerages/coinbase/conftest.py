@@ -15,11 +15,11 @@ except ModuleNotFoundError:  # pragma: no cover - optional dependency
 
 from pathlib import Path
 
+from gpt_trader.config.runtime_settings import RuntimeSettings
 from gpt_trader.features.brokerages.coinbase.market_data_service import MarketDataService
 from gpt_trader.features.brokerages.coinbase.models import APIConfig
 from gpt_trader.features.brokerages.coinbase.transports import MockTransport, NoopTransport
 from gpt_trader.features.brokerages.coinbase.utilities import ProductCatalog
-from gpt_trader.config.runtime_settings import RuntimeSettings
 
 
 @dataclass(frozen=True)

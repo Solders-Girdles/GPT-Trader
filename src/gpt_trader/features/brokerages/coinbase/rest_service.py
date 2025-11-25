@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from gpt_trader.config.runtime_settings import RuntimeSettings, load_runtime_settings
 from gpt_trader.features.brokerages.coinbase.client import CoinbaseClient
 from gpt_trader.features.brokerages.coinbase.endpoints import CoinbaseEndpoints
 from gpt_trader.features.brokerages.coinbase.market_data_service import MarketDataService
@@ -12,7 +13,6 @@ from gpt_trader.features.brokerages.coinbase.rest.pnl import PnLRestMixin
 from gpt_trader.features.brokerages.coinbase.rest.portfolio import PortfolioRestMixin
 from gpt_trader.features.brokerages.coinbase.rest.product import ProductRestMixin
 from gpt_trader.features.brokerages.coinbase.utilities import ProductCatalog
-from gpt_trader.config.runtime_settings import RuntimeSettings, load_runtime_settings
 from gpt_trader.persistence.event_store import EventStore
 
 

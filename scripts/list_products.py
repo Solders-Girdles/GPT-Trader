@@ -1,4 +1,3 @@
-
 import os
 import sys
 import json
@@ -11,8 +10,7 @@ from gpt_trader.config.runtime_settings import RuntimeSettings, load_runtime_set
 
 # Placeholder config for bootstrapping
 config = BotConfig(
-    symbols=[], # No symbols needed for listing products
-    dry_run=True # No actual trading
+    symbols=[], dry_run=True  # No symbols needed for listing products  # No actual trading
 )
 
 # Manually load runtime settings to get env vars
@@ -33,7 +31,9 @@ try:
     if products:
         print(f"Found {len(products)} total products:")
         for product in products:
-            print(f"- ID: {product.get('product_id')}, Status: {product.get('status')}, Type: {product.get('product_type')}, Quote: {product.get('quote_currency_id')}")
+            print(
+                f"- ID: {product.get('product_id')}, Status: {product.get('status')}, Type: {product.get('product_type')}, Quote: {product.get('quote_currency_id')}"
+            )
     else:
         print("No products found at all. Check API key permissions and network.")
 
@@ -41,5 +41,5 @@ try:
 except Exception as e:
     print(f"FAILED to list products: {e}")
     import traceback
-    traceback.print_exc()
 
+    traceback.print_exc()

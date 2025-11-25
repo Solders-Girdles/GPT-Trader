@@ -46,7 +46,9 @@ def test_bootstrapper_respects_event_store_override(
 ) -> None:
     config = _make_config(Profile.SPOT)
     override_path = tmp_path / "override"
-    settings = runtime_settings_factory(event_store_root_override=override_path, runtime_root=tmp_path)
+    settings = runtime_settings_factory(
+        event_store_root_override=override_path, runtime_root=tmp_path
+    )
 
     real_loader = runtime_settings_module.load_runtime_settings
     monkeypatch.setattr(

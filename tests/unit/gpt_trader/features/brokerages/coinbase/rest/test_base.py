@@ -367,7 +367,9 @@ class TestCoinbaseRestServiceBase:
         mock_order.id = "order_123"
         self.client.place_order.return_value = {"order_id": "order_123"}
 
-        with patch("gpt_trader.features.brokerages.coinbase.rest.base.to_order", return_value=mock_order):
+        with patch(
+            "gpt_trader.features.brokerages.coinbase.rest.base.to_order", return_value=mock_order
+        ):
             result = self.service._execute_order_payload("BTC-USD", payload, "client_123")
 
         assert result == mock_order
@@ -381,7 +383,9 @@ class TestCoinbaseRestServiceBase:
         self.client.preview_order.return_value = {"success": True}
         self.client.place_order.return_value = {"order_id": "order_123"}
 
-        with patch("gpt_trader.features.brokerages.coinbase.rest.base.to_order", return_value=mock_order):
+        with patch(
+            "gpt_trader.features.brokerages.coinbase.rest.base.to_order", return_value=mock_order
+        ):
             result = self.service._execute_order_payload("BTC-USD", payload, "client_123")
 
         assert result == mock_order
@@ -442,7 +446,9 @@ class TestCoinbaseRestServiceBase:
         mock_order.client_id = "client_123"
         mock_order.created_at = datetime(2024, 1, 1)
 
-        with patch("gpt_trader.features.brokerages.coinbase.rest.base.to_order", return_value=mock_order):
+        with patch(
+            "gpt_trader.features.brokerages.coinbase.rest.base.to_order", return_value=mock_order
+        ):
             result = self.service._find_existing_order_by_client_id("BTC-USD", "client_123")
 
         assert result == mock_order
@@ -481,7 +487,9 @@ class TestCoinbaseRestServiceBase:
         mock_order.client_id = "client_123"
         mock_order.created_at = datetime(2024, 1, 1, 1)
 
-        with patch("gpt_trader.features.brokerages.coinbase.rest.base.to_order", return_value=mock_order):
+        with patch(
+            "gpt_trader.features.brokerages.coinbase.rest.base.to_order", return_value=mock_order
+        ):
             result = self.service._find_existing_order_by_client_id("BTC-USD", "client_123")
 
         assert result == mock_order

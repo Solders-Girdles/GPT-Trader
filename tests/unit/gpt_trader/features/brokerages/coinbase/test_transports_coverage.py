@@ -12,13 +12,13 @@ from unittest.mock import Mock, patch
 
 import pytest
 
+from gpt_trader.config.runtime_settings import RuntimeSettings
 from gpt_trader.features.brokerages.coinbase.transports import (
     MockTransport,
     NoopTransport,
     RealTransport,
     _load_runtime_settings_snapshot,
 )
-from gpt_trader.config.runtime_settings import RuntimeSettings
 
 
 class TestRealTransportCoverage:

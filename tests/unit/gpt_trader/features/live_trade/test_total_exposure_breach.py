@@ -4,9 +4,9 @@ from decimal import Decimal
 
 import pytest
 
-from gpt_trader.orchestration.configuration import RiskConfig
 from gpt_trader.features.brokerages.core.interfaces import MarketType, Product
 from gpt_trader.features.live_trade.risk import LiveRiskManager, ValidationError
+from gpt_trader.orchestration.configuration import RiskConfig
 
 
 def make_perp(symbol: str = "BTC-PERP") -> Product:
@@ -22,7 +22,9 @@ def make_perp(symbol: str = "BTC-PERP") -> Product:
     )
 
 
-@pytest.mark.skip(reason="TODO: Fix total exposure validation - breach detection logic needs update")
+@pytest.mark.skip(
+    reason="TODO: Fix total exposure validation - breach detection logic needs update"
+)
 def test_total_exposure_breach_while_symbol_cap_ok():
     config = RiskConfig(
         max_leverage=10,

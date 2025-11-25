@@ -34,7 +34,7 @@ def test_get_orchestration_logger():
 def test_log_trading_operation(mock_get_log_context):
     """Test logging a trading operation."""
     # Mock get_log_context to return correlation_id and the expected symbol
-    mock_get_log_context.return_value = {"correlation_id": "test-123", "symbol": "BTC-USD"} 
+    mock_get_log_context.return_value = {"correlation_id": "test-123", "symbol": "BTC-USD"}
 
     with patch("gpt_trader.logging.orchestration_helpers.get_orchestration_logger") as mock_logger:
         mock_log = MagicMock()

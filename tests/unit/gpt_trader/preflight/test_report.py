@@ -146,15 +146,12 @@ class TestGenerateReport:
         assert report_data["details"]["warnings"] == ["W1"]
         assert "timestamp" in report_data
 
-    def test_handles_file_save_error(
-        self, capsys: pytest.CaptureFixture, tmp_path: Path
-    ) -> None:
+    def test_handles_file_save_error(self, capsys: pytest.CaptureFixture, tmp_path: Path) -> None:
         """Should handle file save errors gracefully."""
         checker = PreflightCheck()
         checker.context.successes.append("Success")
 
-        with patch("gpt_trader.preflight.report.Path") as mock_path_class:
-            mock_path = mock_path_class.return_value
+        with patch("gpt_trader.preflight.report.Path"):
             # Simulate open failing
             with patch("builtins.open", side_effect=PermissionError("Cannot write")):
                 success, status = generate_report(checker)

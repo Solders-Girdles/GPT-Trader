@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock
-import sys
 
 import pytest
 from cryptography.fernet import Fernet
@@ -82,6 +82,7 @@ def sample_secrets() -> dict[str, dict[str, Any]]:
 @pytest.fixture
 def hvac_stub(monkeypatch: pytest.MonkeyPatch) -> Any:
     """Mock hvac client stub."""
+
     class MockHvacClient:
         def __init__(self):
             self._storage = {}
@@ -120,13 +121,13 @@ def hvac_stub(monkeypatch: pytest.MonkeyPatch) -> Any:
             return {"data": {"keys": keys}}
 
     mock_client = MockHvacClient()
-    
+
     # Mock the hvac module
     mock_hvac = MagicMock()
     mock_hvac.Client.return_value = mock_client
-    
+
     monkeypatch.setitem(sys.modules, "hvac", mock_hvac)
-    
+
     return mock_client
 
 

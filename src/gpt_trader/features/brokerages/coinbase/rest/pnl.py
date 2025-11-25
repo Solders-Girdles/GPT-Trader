@@ -1,12 +1,14 @@
 """
 PnL management mixin for Coinbase REST service.
 """
+
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 from gpt_trader.features.brokerages.coinbase.utilities import PositionState
+
 
 class PnLRestMixin:
     """Mixin for PnL tracking and calculation."""
@@ -23,21 +25,18 @@ class PnLRestMixin:
 
         size_dec = Decimal(str(size))
         price_dec = Decimal(str(price))
-        side_norm = str(side).lower() # buy/sell
+        side_norm = str(side).lower()  # buy/sell
 
         # Map fill side to position side
         fill_pos_side = "long" if side_norm == "buy" else "short"
 
         if product_id not in self.positions:
             self._positions[product_id] = PositionState(
-                symbol=product_id,
-                side=fill_pos_side,
-                quantity=size_dec,
-                entry_price=price_dec
+                symbol=product_id, side=fill_pos_side, quantity=size_dec, entry_price=price_dec
             )
         else:
             position = self.positions[product_id]
-            
+
             if position.side == fill_pos_side:
                 # Increasing position
                 total_cost = (position.quantity * position.entry_price) + (size_dec * price_dec)
@@ -48,14 +47,14 @@ class PnLRestMixin:
                 # Reducing position (Closing)
                 # Calculate Realized PnL on the closed portion
                 close_quantity = min(position.quantity, size_dec)
-                
+
                 pnl = (price_dec - position.entry_price) * close_quantity
                 if position.side == "short":
                     pnl = -pnl
-                
+
                 position.realized_pnl += pnl
                 position.quantity -= close_quantity
-                
+
                 # If flipped or zeroed, we handle simplistically for now (test only checks reduction)
                 if position.quantity == 0:
                     # Could remove, but keeping with 0 size preserves PnL record for now
@@ -68,17 +67,17 @@ class PnLRestMixin:
                 "symbol": symbol,
                 "quantity": Decimal("0"),
                 "unrealized_pnl": Decimal("0"),
-                "realized_pnl": Decimal("0")
+                "realized_pnl": Decimal("0"),
             }
 
         position = self.positions[symbol]
         mark_price = self.market_data.get_mark(symbol) or position.entry_price
-        
+
         # Calc unrealized
         upnl = (mark_price - position.entry_price) * position.quantity
         if position.side == "short":
             upnl = -upnl
-            
+
         return {
             "symbol": symbol,
             "quantity": position.quantity,
@@ -86,7 +85,7 @@ class PnLRestMixin:
             "mark": mark_price,
             "unrealized_pnl": upnl,
             "realized_pnl": position.realized_pnl,
-            "side": position.side
+            "side": position.side,
         }
 
     def get_portfolio_pnl(self) -> Dict[str, Any]:
@@ -105,5 +104,5 @@ class PnLRestMixin:
             "total_realized_pnl": total_rpnl,
             "total_unrealized_pnl": total_upnl,
             "total_pnl": total_rpnl + total_upnl,
-            "positions": position_details
+            "positions": position_details,
         }

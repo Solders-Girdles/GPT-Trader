@@ -3,21 +3,19 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import Any
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from gpt_trader.features.brokerages.core.interfaces import (
+    MarketType,
     OrderSide,
     OrderType,
     Product,
     TimeInForce,
-    MarketType,
 )
 from gpt_trader.features.live_trade.risk import ValidationError
 from gpt_trader.orchestration.execution.validation import OrderValidator
-
 
 # ============================================================
 # Fixtures
@@ -365,9 +363,7 @@ class TestEnsureMarkIsFresh:
         mock_risk_manager: MagicMock,
     ) -> None:
         """Test that ValidationError from check_mark_staleness propagates."""
-        mock_risk_manager.check_mark_staleness.side_effect = ValidationError(
-            "Custom stale error"
-        )
+        mock_risk_manager.check_mark_staleness.side_effect = ValidationError("Custom stale error")
 
         with pytest.raises(ValidationError, match="Custom stale error"):
             validator.ensure_mark_is_fresh("BTC-PERP")
@@ -663,9 +659,7 @@ class TestMaybePreviewOrder:
     ) -> None:
         """Test that ValidationError from preview propagates."""
         broker = MagicMock()
-        broker.preview_order = MagicMock(
-            side_effect=ValidationError("Insufficient margin")
-        )
+        broker.preview_order = MagicMock(side_effect=ValidationError("Insufficient margin"))
         broker.edit_order_preview = MagicMock()
 
         validator = OrderValidator(

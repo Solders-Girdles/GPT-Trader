@@ -4,8 +4,6 @@ This test ensures that the ConfigManager-based configuration system works
 correctly and can replace the deprecated ConfigLoader.
 """
 
-import warnings
-
 from gpt_trader.orchestration.configuration.core import BotConfig
 
 
@@ -20,7 +18,8 @@ def test_config_manager_basic_functionality():
 
     # Test overrides work
     config_with_overrides = BotConfig(
-        symbols=["BTC-USD"], dry_run=True, # max_leverage removed from new BotConfig
+        symbols=["BTC-USD"],
+        dry_run=True,  # max_leverage removed from new BotConfig
     )
 
     assert config_with_overrides.symbols == ["BTC-USD"]

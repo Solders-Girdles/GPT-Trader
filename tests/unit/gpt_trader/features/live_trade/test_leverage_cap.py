@@ -2,9 +2,9 @@ from decimal import Decimal
 
 import pytest
 
-from gpt_trader.orchestration.configuration import RiskConfig
 from gpt_trader.features.brokerages.core.interfaces import MarketType, Product
 from gpt_trader.features.live_trade.risk import LiveRiskManager, ValidationError
+from gpt_trader.orchestration.configuration import RiskConfig
 
 
 def make_product():

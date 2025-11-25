@@ -12,8 +12,8 @@ from decimal import Decimal
 from types import SimpleNamespace
 from typing import Any, cast
 
-from gpt_trader.features.brokerages.core.interfaces import Balance, IBrokerage, MarketType, Product
 from gpt_trader.config.runtime_settings import RuntimeSettings, load_runtime_settings
+from gpt_trader.features.brokerages.core.interfaces import Balance, IBrokerage, MarketType, Product
 from gpt_trader.utilities.logging_patterns import get_logger
 from gpt_trader.utilities.quantities import quantity_from
 
@@ -36,9 +36,10 @@ class StateCollector:
         self._integration_mode = str(raw_env).lower() in {"1", "true", "yes"}
         self.collateral_assets = self._resolve_collateral_assets()
         self._last_collateral_available: Decimal | None = None
-        
+
         # Initialize production logger for balance updates
         from gpt_trader.monitoring.system import get_logger as get_prod_logger
+
         self._production_logger = get_prod_logger(settings=self._settings)
 
     def log_collateral_update(

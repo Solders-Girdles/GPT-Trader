@@ -19,8 +19,9 @@ def test_request_composes_headers_and_path():
     client = make_client()
     # Ensure HMACAuth is used to check for CB-ACCESS-KEY
     from gpt_trader.features.brokerages.coinbase.auth import HMACAuth
-    client.auth = HMACAuth("k", "c2VjcmV0", None) # "secret" in base64, no passphrase
-    
+
+    client.auth = HMACAuth("k", "c2VjcmV0", None)  # "secret" in base64, no passphrase
+
     calls = []
 
     def fake_transport(method, url, headers, body, timeout):

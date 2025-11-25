@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-import re
 from contextlib import contextmanager
 from decimal import Decimal
 from typing import Any

@@ -1,11 +1,14 @@
 """
 Base class for Coinbase REST service.
 """
+
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
+from gpt_trader.config.runtime_settings import RuntimeSettings
+from gpt_trader.errors import ValidationError
 from gpt_trader.features.brokerages.coinbase.client import CoinbaseClient
 from gpt_trader.features.brokerages.coinbase.endpoints import CoinbaseEndpoints
 from gpt_trader.features.brokerages.coinbase.market_data_service import MarketDataService
@@ -17,21 +20,19 @@ from gpt_trader.features.brokerages.coinbase.utilities import (
     enforce_perp_rules,
     quantize_to_increment,
 )
-from gpt_trader.errors import ValidationError
 from gpt_trader.features.brokerages.core.interfaces import (
     InsufficientFunds,
     InvalidRequestError,
-    NotFoundError,
     Order,
     OrderSide,
     OrderType,
     TimeInForce,
 )
-from gpt_trader.config.runtime_settings import RuntimeSettings
 from gpt_trader.persistence.event_store import EventStore
 from gpt_trader.utilities.logging_patterns import get_logger
 
 logger = get_logger(__name__, component="coinbase_rest")
+
 
 class CoinbaseRestServiceBase:
     def __init__(
@@ -51,7 +52,7 @@ class CoinbaseRestServiceBase:
         self.market_data = market_data
         self._event_store = event_store
         self.settings = settings
-        
+
         self._positions: Dict[str, PositionState] = {}
         self._funding_calculator = FundingCalculator()
 
@@ -90,11 +91,11 @@ class CoinbaseRestServiceBase:
             try:
                 order_type = OrderType(order_type.upper())
             except ValueError:
-                 order_type_str = order_type.upper()
+                _order_type_str = order_type.upper()  # noqa: F841
             else:
-                 order_type_str = order_type.value
+                _order_type_str = order_type.value  # noqa: F841
         else:
-            order_type_str = order_type.value
+            _order_type_str = order_type.value  # noqa: F841
 
         if isinstance(tif, str):
             # Handle GTD conversion if needed (tests imply GTD -> GTC mapping)
@@ -105,12 +106,12 @@ class CoinbaseRestServiceBase:
                 try:
                     tif = TimeInForce(tif_upper)
                 except ValueError:
-                    pass # Keep as is or fallback
-        
+                    pass  # Keep as is or fallback
+
         if isinstance(tif, TimeInForce):
-             tif_str = tif.value
+            tif_str = tif.value
         else:
-             tif_str = str(tif).upper()
+            tif_str = str(tif).upper()
 
         # Get Product
         product = self.product_catalog.get(symbol)
@@ -129,61 +130,65 @@ class CoinbaseRestServiceBase:
 
         # Build Configuration
         order_configuration = {}
-        
+
         # Determine config key based on type and tif
         # Logic mapping to Coinbase Advanced Trade keys
         # limit_limit_gtc, limit_limit_ioc, limit_limit_fok
         # market_market_ioc
         # stop_limit_stop_limit_gtc
         # stop_limit_stop_limit_gtd (mapped to gtc here if test says so)
-        
+
         base_size = quantity_string
-        
+
         if order_type == OrderType.MARKET:
-             # Market orders usually quote_size for buy, base_size for sell? 
-             # But PERPS usually use base_size (contracts)
-             # Test says: payload["order_configuration"]["market_market_ioc"]["base_size"] == "0.1"
-             order_configuration["market_market_ioc"] = {
-                 "base_size": base_size
-             }
+            # Market orders usually quote_size for buy, base_size for sell?
+            # But PERPS usually use base_size (contracts)
+            # Test says: payload["order_configuration"]["market_market_ioc"]["base_size"] == "0.1"
+            order_configuration["market_market_ioc"] = {"base_size": base_size}
         elif order_type == OrderType.LIMIT:
             limit_price = str(quantize_to_increment(price, product.price_increment))
             key_suffix = "gtc"
-            if tif == TimeInForce.IOC: key_suffix = "ioc"
-            if tif == TimeInForce.FOK: key_suffix = "fok"
-            
+            if tif == TimeInForce.IOC:
+                key_suffix = "ioc"
+            if tif == TimeInForce.FOK:
+                key_suffix = "fok"
+
             config = {
                 "base_size": base_size,
                 "limit_price": limit_price,
             }
             if post_only:
                 config["post_only"] = True
-                
+
             order_configuration[f"limit_limit_{key_suffix}"] = config
-            
+
         elif order_type == OrderType.STOP_LIMIT:
-             limit_price = str(quantize_to_increment(price, product.price_increment))
-             stop_price_str = str(quantize_to_increment(stop_price, product.price_increment))
-             # Assuming GTC for stop limit
-             order_configuration["stop_limit_stop_limit_gtc"] = {
-                 "base_size": base_size,
-                 "limit_price": limit_price,
-                 "stop_price": stop_price_str,
-                 "stop_direction": "STOP_DIRECTION_STOP_UP" if side == OrderSide.BUY else "STOP_DIRECTION_STOP_DOWN" # simplified
-             }
-        
+            limit_price = str(quantize_to_increment(price, product.price_increment))
+            stop_price_str = str(quantize_to_increment(stop_price, product.price_increment))
+            # Assuming GTC for stop limit
+            order_configuration["stop_limit_stop_limit_gtc"] = {
+                "base_size": base_size,
+                "limit_price": limit_price,
+                "stop_price": stop_price_str,
+                "stop_direction": (
+                    "STOP_DIRECTION_STOP_UP"
+                    if side == OrderSide.BUY
+                    else "STOP_DIRECTION_STOP_DOWN"
+                ),  # simplified
+            }
+
         # Handle fallback for test satisfaction and legacy compatibility
         # If order_configuration is empty (not handled above), fallback to flat dict
         if not order_configuration:
-             payload = {
-                 "product_id": symbol,
-                 "side": side_str,
-                 "type": order_type.value if isinstance(order_type, OrderType) else str(order_type),
-                 "size": base_size,
-                 "time_in_force": tif_str,
-                 "price": str(price) if price else None,
-                 "stop_price": str(stop_price) if stop_price else None
-             }
+            payload = {
+                "product_id": symbol,
+                "side": side_str,
+                "type": order_type.value if isinstance(order_type, OrderType) else str(order_type),
+                "size": base_size,
+                "time_in_force": tif_str,
+                "price": str(price) if price else None,
+                "stop_price": str(stop_price) if stop_price else None,
+            }
         else:
             payload = {
                 "product_id": symbol,
@@ -197,18 +202,19 @@ class CoinbaseRestServiceBase:
         if client_id and include_client_id:
             payload["client_order_id"] = client_id
         elif include_client_id and not client_id:
-             # Generate one? Test `test_build_order_payload_market_order` expects generated one starting with "perps_"
-             import uuid
-             payload["client_order_id"] = f"perps_{uuid.uuid4().hex[:16]}"
+            # Generate one? Test `test_build_order_payload_market_order` expects generated one starting with "perps_"
+            import uuid
+
+            payload["client_order_id"] = f"perps_{uuid.uuid4().hex[:16]}"
 
         if reduce_only:
             payload["reduce_only"] = True
-            
+
         if leverage:
             payload["leverage"] = leverage
-            
+
         if post_only:
-             payload["post_only"] = True
+            payload["post_only"] = True
 
         return payload
 
@@ -216,15 +222,15 @@ class CoinbaseRestServiceBase:
         self, symbol: str, payload: Dict[str, Any], client_id: Optional[str] = None
     ) -> Order:
         import os
-        
+
         # Check for preview
         if os.environ.get("ORDER_PREVIEW_ENABLED") == "1":
-             try:
-                 preview = self.client.preview_order(payload)
-                 logger.info(f"Order Preview: {preview}")
-             except Exception as e:
-                 logger.warning(f"Preview failed: {e}")
-        
+            try:
+                preview = self.client.preview_order(payload)
+                logger.info(f"Order Preview: {preview}")
+            except Exception as e:
+                logger.warning(f"Preview failed: {e}")
+
         try:
             response = self.client.place_order(payload)
             return to_order(response)
@@ -248,20 +254,20 @@ class CoinbaseRestServiceBase:
                     raise e
             raise
         except Exception as e:
-             raise Exception(f"Unexpected error: {e}") from e
+            raise Exception(f"Unexpected error: {e}") from e
 
     def _find_existing_order_by_client_id(self, symbol: str, client_id: str) -> Optional[Order]:
         if not client_id:
             return None
-            
+
         try:
             response = self.client.list_orders(product_id=symbol)
             orders = [to_order(o) for o in response.get("orders", [])]
-            
+
             matches = [o for o in orders if o.client_id == client_id]
             if not matches:
                 return None
-            
+
             # Return newest
             matches.sort(key=lambda x: x.created_at, reverse=True)
             return matches[0]
@@ -272,39 +278,39 @@ class CoinbaseRestServiceBase:
     def update_position_metrics(self, symbol: str) -> None:
         if symbol not in self._positions:
             return
-            
+
         mark_price = self.market_data.get_mark(symbol)
         if mark_price is None:
             return
 
         position = self._positions[symbol]
-        
+
         # Funding
         funding_rate, next_funding = self.product_catalog.get_funding(symbol)
         funding_amt = self._funding_calculator.accrue_if_due(position, funding_rate, next_funding)
         if funding_amt:
-             position.realized_pnl += funding_amt
-             self._event_store.append_metric(
-                 bot_id="coinbase_perps",
-                 metrics={"type": "funding", "funding_amount": str(funding_amt)}
-             )
+            position.realized_pnl += funding_amt
+            self._event_store.append_metric(
+                bot_id="coinbase_perps",
+                metrics={"type": "funding", "funding_amount": str(funding_amt)},
+            )
 
         # Append metrics
         self._event_store.append_metric(
-             bot_id="coinbase_perps",
-             metrics={
-                 "symbol": symbol,
-                 "mark_price": str(mark_price),
-                 "position_size": str(position.quantity)
-             }
+            bot_id="coinbase_perps",
+            metrics={
+                "symbol": symbol,
+                "mark_price": str(mark_price),
+                "position_size": str(position.quantity),
+            },
         )
-        
+
         self._event_store.append_position(
             bot_id="coinbase_perps",
             position={
                 "symbol": symbol,
                 "mark_price": str(mark_price),
                 "size": str(position.quantity),
-                "entry": str(position.entry_price)
-            }
+                "entry": str(position.entry_price),
+            },
         )

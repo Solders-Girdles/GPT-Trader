@@ -7,7 +7,8 @@ from typing import TYPE_CHECKING, Any
 from gpt_trader.utilities import utc_now
 
 if TYPE_CHECKING:  # pragma: no cover
-    from gpt_trader.features.live_trade.engines.base import CoordinatorContext, HealthStatus
+    from gpt_trader.features.live_trade.engines.base import CoordinatorContext
+
     # TelemetryEngine is a missing import. Keeping it here for reference until it's located.
     # from gpt_trader.orchestration.engines.telemetry_coordinator import TelemetryEngine
 
@@ -31,7 +32,7 @@ def extract_mark_from_message(msg: dict[str, Any]) -> Decimal | None:
 
 
 def update_mark_and_metrics(
-    coordinator: Any, # Changed from "TelemetryEngine" to Any due to missing import
+    coordinator: Any,  # Changed from "TelemetryEngine" to Any due to missing import
     ctx: "CoordinatorContext",
     symbol: str,
     mark: Decimal,
@@ -118,12 +119,16 @@ def update_mark_and_metrics(
     # )
     logger.debug(
         "Emitting metric (placeholder)",
-        event_type="ws_mark_update", symbol=symbol, mark=str(mark),
-        bot_id=ctx.bot_id
+        event_type="ws_mark_update",
+        symbol=symbol,
+        mark=str(mark),
+        bot_id=ctx.bot_id,
     )
 
 
-def health_check(coordinator: Any) -> Any: # Changed from "TelemetryEngine" to Any due to missing import
+def health_check(
+    coordinator: Any,
+) -> Any:  # Changed from "TelemetryEngine" to Any due to missing import
     from gpt_trader.features.live_trade.engines.base import HealthStatus
 
     raw_extras = getattr(coordinator.context.registry, "extras", {})

@@ -2,13 +2,16 @@
 Simple Authentication Module
 Reads API keys from environment variables.
 """
+
 import os
 from dataclasses import dataclass
+
 
 @dataclass
 class APIKey:
     name: str
     private_key: str
+
 
 class SimpleAuth:
     @staticmethod
@@ -18,7 +21,9 @@ class SimpleAuth:
         key = os.getenv("COINBASE_PRIVATE_KEY")
 
         if not name or not key:
-            raise ValueError("COINBASE_API_KEY_NAME and COINBASE_PRIVATE_KEY must be set in environment.")
+            raise ValueError(
+                "COINBASE_API_KEY_NAME and COINBASE_PRIVATE_KEY must be set in environment."
+            )
 
         # Handle newlines in PEM key if they are escaped
         key = key.replace("\\n", "\n")

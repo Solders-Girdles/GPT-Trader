@@ -1,39 +1,61 @@
 """Error types and mappers for Coinbase adapter."""
 
 from gpt_trader.features.brokerages.core.interfaces import (
-    BrokerageError as CoreBrokerageError,
     AuthError as CoreAuthError,
-    NotFoundError as CoreNotFoundError,
-    InvalidRequestError as CoreInvalidRequestError,
+)
+from gpt_trader.features.brokerages.core.interfaces import (
+    BrokerageError as CoreBrokerageError,
+)
+from gpt_trader.features.brokerages.core.interfaces import (
     InsufficientFunds as CoreInsufficientFunds,
-    RateLimitError as CoreRateLimitError,
+)
+from gpt_trader.features.brokerages.core.interfaces import (
+    InvalidRequestError as CoreInvalidRequestError,
+)
+from gpt_trader.features.brokerages.core.interfaces import (
+    NotFoundError as CoreNotFoundError,
+)
+from gpt_trader.features.brokerages.core.interfaces import (
     PermissionDeniedError as CorePermissionDeniedError,
 )
+from gpt_trader.features.brokerages.core.interfaces import (
+    RateLimitError as CoreRateLimitError,
+)
+
 
 class BrokerageError(CoreBrokerageError):
     """Base error for brokerage adapters."""
 
+
 class RateLimitError(CoreRateLimitError, BrokerageError):
     pass
+
 
 class AuthError(CoreAuthError, BrokerageError):
     pass
 
+
 class NotFoundError(CoreNotFoundError, BrokerageError):
     pass
+
 
 class InvalidRequestError(CoreInvalidRequestError, BrokerageError):
     pass
 
+
 class InsufficientFunds(CoreInsufficientFunds, BrokerageError):
     pass
+
 
 class PermissionDeniedError(CorePermissionDeniedError, BrokerageError):
     pass
 
+
 def map_http_error(status: int, code: str | None, message: str | None) -> BrokerageError:
     text = (message or code or "").lower()
-    if status in (401, 407) or (code and code.lower() in {"invalid_api_key", "invalid_signature", "authentication_error"}):
+    if status in (401, 407) or (
+        code and code.lower() in {"invalid_api_key", "invalid_signature", "authentication_error"}
+    ):
         return AuthError(message or code or "authentication failed")
     if status == 404:
         return NotFoundError(message or "not found")

@@ -5,9 +5,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
+from gpt_trader.config.runtime_settings import RuntimeSettings, load_runtime_settings
 from gpt_trader.orchestration.configuration import BotConfig
 from gpt_trader.orchestration.runtime_paths import resolve_runtime_paths
-from gpt_trader.config.runtime_settings import RuntimeSettings, load_runtime_settings
 from gpt_trader.orchestration.service_registry import ServiceRegistry
 from gpt_trader.persistence.event_store import EventStore
 from gpt_trader.persistence.orders_store import OrdersStore

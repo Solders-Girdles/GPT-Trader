@@ -5,7 +5,6 @@ from __future__ import annotations
 from typing import Any
 from unittest.mock import Mock
 
-from gpt_trader.features.brokerages.coinbase.client import CoinbaseClient
 from gpt_trader.features.brokerages.coinbase.auth import CDPJWTAuth
 from gpt_trader.features.brokerages.coinbase.client import CoinbaseClient
 from gpt_trader.features.brokerages.coinbase.models import APIConfig

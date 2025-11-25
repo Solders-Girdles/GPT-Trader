@@ -6,7 +6,12 @@ from datetime import datetime
 from decimal import Decimal
 
 from gpt_trader.features.brokerages.coinbase.models import to_candle, to_order, to_product, to_quote
-from gpt_trader.features.brokerages.core.interfaces import MarketType, OrderSide, OrderType, TimeInForce
+from gpt_trader.features.brokerages.core.interfaces import (
+    MarketType,
+    OrderSide,
+    OrderType,
+    TimeInForce,
+)
 
 
 def test_to_product_handles_spot_payload():

@@ -345,9 +345,7 @@ def get_data_provider(
 
     # Handle removed providers with helpful errors
     if provider_type == "alpaca":
-        raise ValueError(
-            "Alpaca data provider has been removed. Use 'yfinance' or 'mock' instead."
-        )
+        raise ValueError("Alpaca data provider has been removed. Use 'yfinance' or 'mock' instead.")
     if provider_type == "coinbase":
         raise ValueError(
             "CoinbaseDataProvider has been removed. "

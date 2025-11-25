@@ -2,24 +2,26 @@
 Simplified Base Client.
 Handles HTTP requests with basic retries.
 """
-import time
+
 import json
+import time
+from typing import Any
+
 import requests
-from typing import Any, Callable
 
 from gpt_trader.config.constants import (
     DEFAULT_HTTP_TIMEOUT,
     DEFAULT_RATE_LIMIT_PER_MINUTE,
     MAX_HTTP_RETRIES,
     RATE_LIMIT_WARNING_THRESHOLD,
-    RETRY_BASE_DELAY,
     RETRY_BACKOFF_MULTIPLIER,
+    RETRY_BASE_DELAY,
 )
-from gpt_trader.features.brokerages.coinbase.auth import SimpleAuth
 from gpt_trader.features.brokerages.coinbase.errors import InvalidRequestError, map_http_error
 from gpt_trader.utilities.logging_patterns import get_correlation_id, get_logger
 
 logger = get_logger(__name__, component="coinbase_client")
+
 
 class CoinbaseClientBase:
     def __init__(
@@ -32,20 +34,28 @@ class CoinbaseClientBase:
         rate_limit_per_minute: int | None = None,
         enable_throttle: bool = True,
         enable_keep_alive: bool = True,
-        **kwargs
+        **kwargs,
     ):
         self.base_url = base_url.rstrip("/")
         self.auth = auth
         self.api_mode = api_mode
         self.timeout = timeout if timeout is not None else DEFAULT_HTTP_TIMEOUT
         self.api_version = api_version
-        self.rate_limit_per_minute = rate_limit_per_minute if rate_limit_per_minute is not None else DEFAULT_RATE_LIMIT_PER_MINUTE
+        self.rate_limit_per_minute = (
+            rate_limit_per_minute
+            if rate_limit_per_minute is not None
+            else DEFAULT_RATE_LIMIT_PER_MINUTE
+        )
         self.enable_throttle = enable_throttle
         self.enable_keep_alive = enable_keep_alive
-        self._is_cdp = hasattr(auth, "key_name") and auth.key_name.startswith("organizations/") if auth else False
-        
+        self._is_cdp = (
+            hasattr(auth, "key_name") and auth.key_name.startswith("organizations/")
+            if auth
+            else False
+        )
+
         self.session = requests.Session()
-        self._transport = None # For testing
+        self._transport = None  # For testing
         self._request_times = []
 
     def set_transport_for_testing(self, transport: Any) -> None:
@@ -101,33 +111,35 @@ class CoinbaseClientBase:
                 "cfm_balance_summary": "/api/v3/brokerage/cfm/balance_summary",
                 "cfm_positions": "/api/v3/brokerage/cfm/positions",
                 "cfm_position": "/api/v3/brokerage/cfm/positions/{product_id}",
-                "cfm_intraday_current_margin_window": "/api/v3/brokerage/cfm/intraday/current_margin_window", # Corrected
-                "cfm_intraday_margin_setting": "/api/v3/brokerage/cfm/intraday/margin_setting", # Corrected
+                "cfm_intraday_current_margin_window": "/api/v3/brokerage/cfm/intraday/current_margin_window",  # Corrected
+                "cfm_intraday_margin_setting": "/api/v3/brokerage/cfm/intraday/margin_setting",  # Corrected
                 "cfm_sweeps": "/api/v3/brokerage/cfm/sweeps",
-                "cfm_schedule_sweep": "/api/v3/brokerage/cfm/sweeps/schedule", # Added
+                "cfm_schedule_sweep": "/api/v3/brokerage/cfm/sweeps/schedule",  # Added
                 # Portfolio endpoints
                 "portfolio_breakdown": "/api/v3/brokerage/portfolios/{portfolio_uuid}/breakdown",
-                "move_funds": "/api/v3/brokerage/portfolios/move_funds", # Corrected
+                "move_funds": "/api/v3/brokerage/portfolios/move_funds",  # Corrected
             },
             "exchange": {
                 "products": "/products",
                 "product": "/products/{product_id}",
                 "accounts": "/accounts",
                 "order_book": "/products/{product_id}/book",
-            }
+            },
         }
 
         if self.api_mode not in ENDPOINT_MAP:
-             raise InvalidRequestError(f"Unknown API mode: {self.api_mode}")
+            raise InvalidRequestError(f"Unknown API mode: {self.api_mode}")
 
         mode_map = ENDPOINT_MAP.get(self.api_mode, {})
         path = mode_map.get(endpoint_name)
-        
+
         if path is None:
-             # Check if it exists in advanced mode but not current mode
-             if endpoint_name in ENDPOINT_MAP["advanced"] and self.api_mode != "advanced":
-                 raise InvalidRequestError(f"Endpoint {endpoint_name} not available in {self.api_mode} mode")
-             raise InvalidRequestError(f"Unknown endpoint: {endpoint_name}")
+            # Check if it exists in advanced mode but not current mode
+            if endpoint_name in ENDPOINT_MAP["advanced"] and self.api_mode != "advanced":
+                raise InvalidRequestError(
+                    f"Endpoint {endpoint_name} not available in {self.api_mode} mode"
+                )
+            raise InvalidRequestError(f"Unknown endpoint: {endpoint_name}")
 
         try:
             return path.format(**kwargs)
@@ -135,35 +147,39 @@ class CoinbaseClientBase:
             return path
 
     def _make_url(self, path: str) -> str:
-        if path.startswith("http"): return path
-        if not path.startswith("/"): path = "/" + path
+        if path.startswith("http"):
+            return path
+        if not path.startswith("/"):
+            path = "/" + path
         return f"{self.base_url}{path}"
-    
+
     def _normalize_path(self, path: str) -> str:
         if path.startswith(self.base_url):
-            path = path[len(self.base_url):]
+            path = path[len(self.base_url) :]
         if path.startswith("/"):
             return path
         return path
 
     def _build_path_with_params(self, path: str, params: dict[str, Any] | None) -> str:
-        if not params: return path
+        if not params:
+            return path
         query_parts = []
         for k, v in params.items():
             if v is not None:
                 query_parts.append(f"{k}={v}")
-        if not query_parts: return path
+        if not query_parts:
+            return path
 
         connector = "&" if "?" in path else "?"
         return f"{path}{connector}{'&'.join(query_parts)}"
 
     def paginate(
-        self, 
-        path: str, 
-        params: dict = None, 
+        self,
+        path: str,
+        params: dict = None,
         pagination_key: str = None,
         cursor_param: str = "cursor",
-        cursor_field: str = None
+        cursor_field: str = None,
     ) -> Any:
         """
         Generator that yields items from paginated endpoints.
@@ -195,17 +211,17 @@ class CoinbaseClientBase:
             if isinstance(response, dict):
                 # Coinbase APIs vary: 'cursor', 'next_cursor', 'pagination' dict
                 next_cursor = None
-                
+
                 if cursor_field:
                     next_cursor = response.get(cursor_field)
                 else:
                     next_cursor = response.get("cursor") or response.get("next_cursor")
-                
+
                 # Some APIs return a 'pagination' object
                 if not next_cursor and "pagination" in response:
-                     # If cursor_field is inside pagination, we assume standard structure
-                     # or user must handle complex extraction. 
-                     # For now, fallback to standard pagination.next_cursor
+                    # If cursor_field is inside pagination, we assume standard structure
+                    # or user must handle complex extraction.
+                    # For now, fallback to standard pagination.next_cursor
                     next_cursor = response["pagination"].get("next_cursor")
 
                 if next_cursor and next_cursor != cursor:
@@ -224,7 +240,9 @@ class CoinbaseClientBase:
         self._request_times = [t for t in self._request_times if now - t < 60]
 
         if len(self._request_times) >= self.rate_limit_per_minute:
-            logger.info(f"Rate limit reached ({len(self._request_times)}/{self.rate_limit_per_minute}). throttling...")
+            logger.info(
+                f"Rate limit reached ({len(self._request_times)}/{self.rate_limit_per_minute}). throttling..."
+            )
             sleep_time = 60 - (now - self._request_times[0]) + 1
             if sleep_time > 0:
                 time.sleep(sleep_time)
@@ -233,7 +251,11 @@ class CoinbaseClientBase:
             now = time.time()
             self._request_times = [t for t in self._request_times if now - t < 60]
         elif len(self._request_times) >= self.rate_limit_per_minute * RATE_LIMIT_WARNING_THRESHOLD:
-             logger.warning("Approaching rate limit: %d/%d requests in last minute", len(self._request_times), self.rate_limit_per_minute)
+            logger.warning(
+                "Approaching rate limit: %d/%d requests in last minute",
+                len(self._request_times),
+                self.rate_limit_per_minute,
+            )
 
         self._request_times.append(now)
 
@@ -243,7 +265,7 @@ class CoinbaseClientBase:
         headers = {
             "Content-Type": "application/json",
             "User-Agent": "gpt-trader/v2",
-            "CB-VERSION": self.api_version
+            "CB-VERSION": self.api_version,
         }
 
         # Sign request if auth is available
@@ -255,16 +277,16 @@ class CoinbaseClientBase:
                 auth_path = path if path.startswith("/") else f"/{path}"
                 # normalize path for signing if it's a full url (though _request takes path usually)
                 if path.startswith("http"):
-                     auth_path = "/" + path.split("/", 3)[-1]
-                
+                    auth_path = "/" + path.split("/", 3)[-1]
+
                 if payload:
                     headers.update(self.auth.get_headers(method, auth_path, payload))
                 else:
                     headers.update(self.auth.get_headers(method, auth_path))
             elif hasattr(self.auth, "sign"):
-                 # Legacy interface
-                 headers.update(self.auth.sign(method, path, payload))
-        
+                # Legacy interface
+                headers.update(self.auth.sign(method, path, payload))
+
         # Add correlation ID if available
         corr_id = get_correlation_id()
         if corr_id:
@@ -273,7 +295,9 @@ class CoinbaseClientBase:
         def perform_request():
             if self._transport:
                 # Use mock transport
-                status, resp_headers, text = self._transport(method, url, headers, json.dumps(payload) if payload else None, self.timeout)
+                status, resp_headers, text = self._transport(
+                    method, url, headers, json.dumps(payload) if payload else None, self.timeout
+                )
                 resp = requests.Response()
                 resp.status_code = status
                 resp._content = text.encode() if text else b""
@@ -281,11 +305,7 @@ class CoinbaseClientBase:
                 return resp
             else:
                 return self.session.request(
-                    method,
-                    url,
-                    json=payload,
-                    headers=headers,
-                    timeout=self.timeout
+                    method, url, json=payload, headers=headers, timeout=self.timeout
                 )
 
         try:
@@ -305,9 +325,9 @@ class CoinbaseClientBase:
 
                     if 500 <= resp.status_code < 600:
                         if attempt < max_retries:
-                            time.sleep(RETRY_BASE_DELAY * (RETRY_BACKOFF_MULTIPLIER ** attempt))
+                            time.sleep(RETRY_BASE_DELAY * (RETRY_BACKOFF_MULTIPLIER**attempt))
                             continue
-                    
+
                     if 400 <= resp.status_code < 500:
                         # Map 400s to specific errors
                         try:
@@ -317,7 +337,7 @@ class CoinbaseClientBase:
                         except (json.JSONDecodeError, ValueError, KeyError):
                             msg = resp.text
                             code = None
-                        
+
                         if resp.status_code == 400:
                             raise InvalidRequestError(msg)
                         raise map_http_error(resp.status_code, code, msg)
@@ -330,7 +350,7 @@ class CoinbaseClientBase:
                         except ValueError:
                             return {"raw": resp.text}
                     return {}
-                    
+
                 except requests.exceptions.HTTPError as e:
                     # Catch HTTPError from raise_for_status (e.g. 500s)
                     try:
@@ -344,19 +364,19 @@ class CoinbaseClientBase:
 
                 except (requests.ConnectionError, requests.Timeout, ConnectionError):
                     if attempt < max_retries:
-                        time.sleep(RETRY_BASE_DELAY * (RETRY_BACKOFF_MULTIPLIER ** attempt))
+                        time.sleep(RETRY_BASE_DELAY * (RETRY_BACKOFF_MULTIPLIER**attempt))
                         continue
                     raise
-            
+
             # If loop finishes without return (e.g. all 429s handled but retries exhausted)
-            if 'resp' in locals() and resp is not None and resp.status_code == 429:
-                 raise map_http_error(429, "rate_limited", "Rate limit exceeded (rate_limited)")
-            
+            if "resp" in locals() and resp is not None and resp.status_code == 429:
+                raise map_http_error(429, "rate_limited", "Rate limit exceeded (rate_limited)")
+
             return {}
 
         except Exception as e:
-                    # Catch other errors during request performance (like map_http_error raises)
-                    raise e
+            # Catch other errors during request performance (like map_http_error raises)
+            raise e
 
         except Exception as e:
             logger.error(f"Request failed: {method} {url} - {e}")
@@ -365,13 +385,13 @@ class CoinbaseClientBase:
             raise
 
     # Helper aliases used by mixins
-    def get(self, path, params=None):
+    def get(self, path: str, params: dict[str, Any] | None = None) -> Any:
         if params:
             path = self._build_path_with_params(path, params)
         return self._request("GET", path)
 
-    def post(self, path, payload=None):
+    def post(self, path: str, payload: dict[str, Any] | None = None) -> Any:
         return self._request("POST", path, payload)
 
-    def delete(self, path, payload=None):
+    def delete(self, path: str, payload: dict[str, Any] | None = None) -> Any:
         return self._request("DELETE", path, payload)

@@ -82,7 +82,9 @@ class TestEncryptionBootstrap:
         from gpt_trader.config.runtime_settings import load_runtime_settings
 
         # Test with string key
-        monkeypatch.setenv("GPT_TRADER_ENCRYPTION_KEY", "Z9mB9nKp8sVqLyWsC5uE4oHj7gFdR2aL3xYiN6wTzQc=")
+        monkeypatch.setenv(
+            "GPT_TRADER_ENCRYPTION_KEY", "Z9mB9nKp8sVqLyWsC5uE4oHj7gFdR2aL3xYiN6wTzQc="
+        )
         settings = load_runtime_settings()
 
         manager = SecretsManager(settings=settings)
@@ -145,7 +147,9 @@ class TestEncryptionBootstrap:
     ) -> None:
         """Test dynamic settings loading when not provided."""
         # Set up environment
-        monkeypatch.setenv("GPT_TRADER_ENCRYPTION_KEY", "Z9mB9nKp8sVqLyWsC5uE4oHj7gFdR2aL3xYiN6wTzQc=")
+        monkeypatch.setenv(
+            "GPT_TRADER_ENCRYPTION_KEY", "Z9mB9nKp8sVqLyWsC5uE4oHj7gFdR2aL3xYiN6wTzQc="
+        )
 
         manager = SecretsManager()  # No settings provided
 

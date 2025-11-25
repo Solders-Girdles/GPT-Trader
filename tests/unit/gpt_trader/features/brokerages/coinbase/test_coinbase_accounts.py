@@ -13,7 +13,6 @@ import pytest
 
 import gpt_trader.features.brokerages.coinbase.client as client_mod
 from gpt_trader.features.brokerages.coinbase.account_manager import CoinbaseAccountManager
-from gpt_trader.features.brokerages.coinbase.client import CoinbaseClient
 from gpt_trader.features.brokerages.coinbase.models import APIConfig
 from gpt_trader.features.brokerages.core.interfaces import InvalidRequestError, MarketType, Product
 from tests.unit.gpt_trader.features.brokerages.coinbase.test_helpers import (

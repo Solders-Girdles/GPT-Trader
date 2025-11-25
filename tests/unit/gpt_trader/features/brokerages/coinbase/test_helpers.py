@@ -3,30 +3,39 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime
-from typing import Any
+from datetime import (
+    datetime,  # Add timedelta import
+)
 from decimal import Decimal
-from unittest.mock import Mock # Added this import
+from typing import Any
+from unittest.mock import Mock  # Added this import
 
 import pytest
 
 from gpt_trader.features.brokerages.coinbase.client import CoinbaseClient
-from gpt_trader.features.brokerages.coinbase.rest_service import CoinbaseRestService
 from gpt_trader.features.brokerages.coinbase.endpoints import CoinbaseEndpoints
 from gpt_trader.features.brokerages.coinbase.market_data_service import MarketDataService
-from gpt_trader.features.brokerages.coinbase.utilities import ProductCatalog
-from gpt_trader.persistence.event_store import EventStore
 from gpt_trader.features.brokerages.coinbase.models import APIConfig
-from gpt_trader.features.brokerages.core.interfaces import InvalidRequestError, IBrokerage, Balance, Position, Order, Product, MarketType
-from unittest.mock import Mock
-from datetime import datetime, timedelta # Add timedelta import
+from gpt_trader.features.brokerages.coinbase.rest_service import CoinbaseRestService
+from gpt_trader.features.brokerages.coinbase.utilities import ProductCatalog
+from gpt_trader.features.brokerages.core.interfaces import (
+    Balance,
+    IBrokerage,
+    InvalidRequestError,
+    Order,
+    Position,
+    Product,
+)
+from gpt_trader.persistence.event_store import EventStore
+
 
 # Stub for CoinbaseBrokerage to unblock tests
 class CoinbaseBrokerage(IBrokerage):
     def __init__(self, config: APIConfig):
         self.config = config
         # Create auth from config
-        from gpt_trader.features.brokerages.coinbase.auth import HMACAuth, CDPJWTAuth
+        from gpt_trader.features.brokerages.coinbase.auth import CDPJWTAuth, HMACAuth
+
         auth = None
         if config.cdp_api_key and config.cdp_private_key:
             auth = CDPJWTAuth(config.cdp_api_key, config.cdp_private_key)
@@ -36,23 +45,24 @@ class CoinbaseBrokerage(IBrokerage):
             except Exception:
                 # Fallback for tests with invalid base64 secrets
                 import base64
+
                 dummy_secret = base64.b64encode(b"dummy_secret_for_testing_only").decode()
                 auth = HMACAuth(config.api_key, dummy_secret, config.passphrase)
-            
+
         self.client = make_client(api_mode=config.api_mode, auth=auth)
-        
+
         self.endpoints = CoinbaseEndpoints(config)
         self._product_catalog = Mock(spec=ProductCatalog)
         self.market_data = Mock(spec=MarketDataService)
         self.event_store = Mock(spec=EventStore)
-        
+
         self.rest_service = CoinbaseRestService(
             client=self.client,
             endpoints=self.endpoints,
             config=config,
             product_catalog=self._product_catalog,
             market_data=self.market_data,
-            event_store=self.event_store
+            event_store=self.event_store,
         )
         self._connected = False
         self._account_id = None
@@ -96,9 +106,13 @@ class CoinbaseBrokerage(IBrokerage):
                 Position(
                     symbol=p.get("product_id"),
                     quantity=quantity,
-                    entry_price=Decimal(str(p.get("entry_price") or p.get("avg_entry_price") or "0")),
+                    entry_price=Decimal(
+                        str(p.get("entry_price") or p.get("avg_entry_price") or "0")
+                    ),
                     mark_price=Decimal(str(p.get("mark_price") or p.get("index_price") or "0")),
-                    unrealized_pnl=Decimal(str(p.get("unrealized_pnl") or p.get("unrealizedPnl") or "0")),
+                    unrealized_pnl=Decimal(
+                        str(p.get("unrealized_pnl") or p.get("unrealizedPnl") or "0")
+                    ),
                     realized_pnl=Decimal(str(p.get("realized_pnl") or p.get("realizedPnl") or "0")),
                     side=p.get("side"),
                 )
@@ -122,14 +136,14 @@ class CoinbaseBrokerage(IBrokerage):
                 # leverage and reduce_only are not in base Order but might be needed?
                 # For now, pass what we have.
             )
-        return order # Fallback if rest_service is None, though it should always be present.
+        return order  # Fallback if rest_service is None, though it should always be present.
 
     def cancel_order(self, order_id: str) -> bool:
         return self.rest_service.cancel_order(order_id)
 
     def get_order(self, order_id: str) -> Order:
         return self.rest_service.get_order(order_id)
-        
+
     def get_product(self, product_id: str) -> Product:
         return self.rest_service.get_product(product_id)
 
@@ -147,7 +161,9 @@ class CoinbaseBrokerage(IBrokerage):
         return self.rest_service.get_cfm_margin_window()
 
     def update_cfm_margin_window(self, margin_window, effective_time=None, extra_payload=None):
-        return self.rest_service.update_cfm_margin_window(margin_window, effective_time=effective_time, extra_payload=extra_payload)
+        return self.rest_service.update_cfm_margin_window(
+            margin_window, effective_time=effective_time, extra_payload=extra_payload
+        )
 
     # INTX methods
     def intx_allocate(self, payload):
@@ -168,8 +184,6 @@ class CoinbaseBrokerage(IBrokerage):
 
     def get_intx_multi_asset_collateral(self):
         return self.rest_service.get_intx_multi_asset_collateral()
-
-
 
 
 def make_client(api_mode: str = "advanced", auth=None) -> CoinbaseClient:
@@ -808,6 +822,7 @@ class StubBroker:
     def move_portfolio_funds(self, payload):
         self.calls.append(("move_funds", payload))
         return {"status": "ok", "transfer_id": "tf-1"}
+
     def get_intx_multi_asset_collateral(self):
         self.calls.append("intx_collateral")
         if not self.intx_supported:

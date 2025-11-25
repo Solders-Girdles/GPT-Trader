@@ -1,11 +1,13 @@
 """
 Simplified Base Engine & Context.
 """
+
 import asyncio
 from dataclasses import dataclass, field, replace
-from typing import Any, Callable
+from typing import Any
 
 from gpt_trader.orchestration.configuration import BotConfig
+
 
 @dataclass
 class CoordinatorContext:
@@ -17,12 +19,14 @@ class CoordinatorContext:
     def with_updates(self, **overrides: Any) -> "CoordinatorContext":
         return replace(self, **overrides)
 
+
 @dataclass
 class HealthStatus:
     healthy: bool
     component: str
     details: dict[str, Any] = field(default_factory=dict)
     error: str | None = None
+
 
 class BaseEngine:
     def __init__(self, context: CoordinatorContext) -> None:
@@ -59,5 +63,6 @@ class BaseEngine:
 
     def _register_background_task(self, task: asyncio.Task[Any]) -> None:
         self._background_tasks.append(task)
+
 
 __all__ = ["BaseEngine", "CoordinatorContext", "HealthStatus"]

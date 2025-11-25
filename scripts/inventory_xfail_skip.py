@@ -58,7 +58,7 @@ def find_xfail_tests() -> list[dict[str, Any]]:
                             test_name = None
                             for j in range(i + 1, min(i + 6, len(lines))):
                                 if "def test_" in lines[j]:
-                                    match = re.search(r'def (test_\w+)', lines[j])
+                                    match = re.search(r"def (test_\w+)", lines[j])
                                     if match:
                                         test_name = match.group(1)
                                     break
@@ -73,13 +73,15 @@ def find_xfail_tests() -> list[dict[str, Any]]:
                                     pass
 
                             if test_name:
-                                results.append({
-                                    "file": file_path,
-                                    "line": line_num,
-                                    "test_name": test_name,
-                                    "reason": reason or "No reason provided",
-                                    "marker": "xfail",
-                                })
+                                results.append(
+                                    {
+                                        "file": file_path,
+                                        "line": line_num,
+                                        "test_name": test_name,
+                                        "reason": reason or "No reason provided",
+                                        "marker": "xfail",
+                                    }
+                                )
     except Exception:
         pass
 
@@ -122,7 +124,7 @@ def find_skip_tests() -> list[dict[str, Any]]:
                             test_name = None
                             for j in range(i + 1, min(i + 6, len(lines))):
                                 if "def test_" in lines[j]:
-                                    match = re.search(r'def (test_\w+)', lines[j])
+                                    match = re.search(r"def (test_\w+)", lines[j])
                                     if match:
                                         test_name = match.group(1)
                                     break
@@ -137,13 +139,15 @@ def find_skip_tests() -> list[dict[str, Any]]:
                                     pass
 
                             if test_name:
-                                results.append({
-                                    "file": file_path,
-                                    "line": line_num,
-                                    "test_name": test_name,
-                                    "reason": reason or "No reason provided",
-                                    "marker": "skip",
-                                })
+                                results.append(
+                                    {
+                                        "file": file_path,
+                                        "line": line_num,
+                                        "test_name": test_name,
+                                        "reason": reason or "No reason provided",
+                                        "marker": "skip",
+                                    }
+                                )
     except Exception:
         pass
 
@@ -174,13 +178,15 @@ def find_inline_skips() -> list[dict[str, Any]]:
                     if match:
                         reason = match.group(1)
 
-                    results.append({
-                        "file": file_path,
-                        "line": line_num,
-                        "code": code[:100],  # Truncate long lines
-                        "reason": reason or "No reason provided",
-                        "marker": "inline_skip",
-                    })
+                    results.append(
+                        {
+                            "file": file_path,
+                            "line": line_num,
+                            "code": code[:100],  # Truncate long lines
+                            "reason": reason or "No reason provided",
+                            "marker": "inline_skip",
+                        }
+                    )
     except Exception:
         pass
 
@@ -241,7 +247,11 @@ def main():
     if xfail_tests:
         print(f"## Xfail Tests ({len(xfail_tests)} found)\n")
         for test in xfail_tests[:15]:  # Show first 15
-            file_name = Path(test["file"]).relative_to(TESTS_DIR) if TESTS_DIR in Path(test["file"]).parents else Path(test["file"]).name
+            file_name = (
+                Path(test["file"]).relative_to(TESTS_DIR)
+                if TESTS_DIR in Path(test["file"]).parents
+                else Path(test["file"]).name
+            )
             print(f"- {file_name}:{test['line']} → {test['test_name']}")
             print(f"  Reason: {test['reason']}")
 
@@ -253,7 +263,11 @@ def main():
     if skip_tests:
         print(f"## Skip Tests ({len(skip_tests)} found)\n")
         for test in skip_tests[:10]:  # Show first 10
-            file_name = Path(test["file"]).relative_to(TESTS_DIR) if TESTS_DIR in Path(test["file"]).parents else Path(test["file"]).name
+            file_name = (
+                Path(test["file"]).relative_to(TESTS_DIR)
+                if TESTS_DIR in Path(test["file"]).parents
+                else Path(test["file"]).name
+            )
             print(f"- {file_name}:{test['line']} → {test['test_name']}")
             print(f"  Reason: {test['reason']}")
 
@@ -265,7 +279,11 @@ def main():
     if inline_skips:
         print(f"## Inline Skips ({len(inline_skips)} found)\n")
         for test in inline_skips[:10]:  # Show first 10
-            file_name = Path(test["file"]).relative_to(TESTS_DIR) if TESTS_DIR in Path(test["file"]).parents else Path(test["file"]).name
+            file_name = (
+                Path(test["file"]).relative_to(TESTS_DIR)
+                if TESTS_DIR in Path(test["file"]).parents
+                else Path(test["file"]).name
+            )
             print(f"- {file_name}:{test['line']}")
             print(f"  Code: {test['code']}")
             print(f"  Reason: {test['reason']}")

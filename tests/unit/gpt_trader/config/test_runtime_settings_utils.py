@@ -5,8 +5,8 @@ from pathlib import Path
 
 import pytest
 
-from gpt_trader.config.path_registry import RUNTIME_DATA_DIR
 from gpt_trader.config import runtime_settings
+from gpt_trader.config.path_registry import RUNTIME_DATA_DIR
 
 
 @pytest.fixture(autouse=True)

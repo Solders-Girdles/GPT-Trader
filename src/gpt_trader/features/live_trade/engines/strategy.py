@@ -2,23 +2,24 @@
 Simplified Strategy Engine.
 Replaces the 608-line enterprise coordinator with a simple loop.
 """
+
 import asyncio
 import logging
-from typing import Any
-from decimal import Decimal
 from collections import defaultdict
-
-from gpt_trader.features.live_trade.strategies.perps_baseline import BaselinePerpsStrategy, Action
+from decimal import Decimal
+from typing import Any
 
 from gpt_trader.features.live_trade.engines.base import BaseEngine, CoordinatorContext, HealthStatus
-
+from gpt_trader.features.live_trade.strategies.perps_baseline import Action, BaselinePerpsStrategy
 
 logger = logging.getLogger(__name__)
+
 
 class TradingEngine(BaseEngine):
     """
     Simple trading loop that fetches data and executes strategy.
     """
+
     def __init__(self, context: CoordinatorContext) -> None:
         super().__init__(context)
         self.running = False
@@ -54,8 +55,8 @@ class TradingEngine(BaseEngine):
             try:
                 ticker = await asyncio.to_thread(self.context.broker.get_ticker, symbol)
             except Exception as e:
-                 logger.error(f"Failed to fetch ticker for {symbol}: {e}")
-                 continue
+                logger.error(f"Failed to fetch ticker for {symbol}: {e}")
+                continue
 
             price = Decimal(str(ticker.get("price", 0)))
             logger.info(f"{symbol} price: {price}")
@@ -70,9 +71,9 @@ class TradingEngine(BaseEngine):
                 position_state=None,
                 recent_marks=self.price_history[symbol],
                 equity=Decimal("1000"),
-                product=None
+                product=None,
             )
-            
+
             logger.info(f"Strategy Decision for {symbol}: {decision.action} ({decision.reason})")
 
             if decision.action in (Action.BUY, Action.SELL):
@@ -82,10 +83,8 @@ class TradingEngine(BaseEngine):
                         "product_id": symbol,
                         "side": decision.action.value.upper(),
                         "order_configuration": {
-                            "market_market_ioc": {
-                                "quote_size": "10" # Dummy size for test
-                            }
-                        }
+                            "market_market_ioc": {"quote_size": "10"}  # Dummy size for test
+                        },
                     }
                     # Offload blocking network call
                     await asyncio.to_thread(self.context.broker.place_order, order_payload)

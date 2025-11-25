@@ -1,11 +1,14 @@
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
-from enum import Enum, auto
+from enum import Enum
+from typing import List, Protocol
+
 
 class OrderSide(str, Enum):
     BUY = "BUY"
     SELL = "SELL"
+
 
 class OrderType(str, Enum):
     MARKET = "MARKET"
@@ -13,16 +16,19 @@ class OrderType(str, Enum):
     STOP = "STOP"
     STOP_LIMIT = "STOP_LIMIT"
 
+
 class TimeInForce(str, Enum):
     GTC = "GTC"  # Good Till Cancelled
     IOC = "IOC"  # Immediate Or Cancel
     FOK = "FOK"  # Fill Or Kill
 
+
 class MarketType(str, Enum):
     SPOT = "SPOT"
     FUTURE = "FUTURE"
     PERPETUAL = "PERPETUAL"
-    FUTURES = "FUTURES" # Alias for compatibility
+    FUTURES = "FUTURES"  # Alias for compatibility
+
 
 class OrderStatus(str, Enum):
     PENDING = "PENDING"
@@ -34,6 +40,7 @@ class OrderStatus(str, Enum):
     EXPIRED = "EXPIRED"
     FAILED = "FAILED"
 
+
 @dataclass
 class Candle:
     ts: datetime
@@ -43,6 +50,7 @@ class Candle:
     close: Decimal
     volume: Decimal
 
+
 @dataclass
 class Quote:
     symbol: str
@@ -50,6 +58,7 @@ class Quote:
     ask: Decimal
     last: Decimal
     ts: datetime
+
 
 @dataclass
 class Product:
@@ -66,6 +75,7 @@ class Product:
     contract_size: Decimal | None = None
     funding_rate: Decimal | None = None
     next_funding_time: datetime | None = None
+
 
 @dataclass
 class Order:
@@ -84,6 +94,7 @@ class Order:
     submitted_at: datetime | None = None
     updated_at: datetime | None = None
 
+
 @dataclass
 class Position:
     symbol: str
@@ -92,8 +103,9 @@ class Position:
     mark_price: Decimal
     unrealized_pnl: Decimal
     realized_pnl: Decimal
-    side: str # "long" or "short"
+    side: str  # "long" or "short"
     leverage: int | None = None
+
 
 @dataclass
 class Balance:
@@ -102,7 +114,6 @@ class Balance:
     available: Decimal
     hold: Decimal = Decimal("0")
 
-from typing import Protocol, List, Dict, Any
 
 class IBrokerage(Protocol):
     def get_balances(self) -> List[Balance]: ...
@@ -111,23 +122,30 @@ class IBrokerage(Protocol):
     def cancel_order(self, order_id: str) -> bool: ...
     def get_order(self, order_id: str) -> Order: ...
 
+
 class InvalidRequestError(Exception):
     pass
+
 
 class InsufficientFunds(Exception):
     pass
 
+
 class NotFoundError(Exception):
     pass
+
 
 class AuthError(Exception):
     pass
 
+
 class BrokerageError(Exception):
     pass
 
+
 class RateLimitError(Exception):
     pass
+
 
 class PermissionDeniedError(Exception):
     pass

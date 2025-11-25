@@ -1,15 +1,17 @@
 """
 Product and market data mixin for Coinbase REST service.
 """
+
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
-from gpt_trader.features.brokerages.coinbase.models import to_product, to_quote, to_candle
-from gpt_trader.features.brokerages.core.interfaces import Product, Quote, Candle
+from gpt_trader.features.brokerages.coinbase.models import to_candle, to_product, to_quote
+from gpt_trader.features.brokerages.core.interfaces import Candle, Product, Quote
 from gpt_trader.utilities.logging_patterns import get_logger
 
 logger = get_logger(__name__, component="coinbase_product")
+
 
 class ProductRestMixin:
     """Mixin for product and market data operations."""
@@ -39,11 +41,13 @@ class ProductRestMixin:
                     # Assuming catalog has a get method that takes client and symbol
                     # based on test_funding_enrichment_uses_product_catalog
                     product = self.product_catalog.get(self.client, product_id)
-                    
+
                     # Enrich with funding if available
                     if hasattr(self.product_catalog, "get_funding"):
                         try:
-                            funding_rate, next_funding = self.product_catalog.get_funding(self.client, product_id)
+                            funding_rate, next_funding = self.product_catalog.get_funding(
+                                self.client, product_id
+                            )
                             product.funding_rate = funding_rate
                             product.next_funding_time = next_funding
                         except Exception:

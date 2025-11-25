@@ -2,9 +2,10 @@
 Simple WebSocket Client for Coinbase.
 Replaces the complex 681-line WebSocket manager with a lightweight implementation.
 """
+
 import json
-import time
 import threading
+import time
 from collections.abc import Callable
 from typing import Any
 
@@ -16,13 +17,14 @@ from gpt_trader.utilities.logging_patterns import get_logger
 
 logger = get_logger(__name__, component="coinbase_websocket")
 
+
 class CoinbaseWebSocket:
     def __init__(
         self,
         url: str = "wss://advanced-trade-ws.coinbase.com",
         api_key: str | None = None,
         private_key: str | None = None,
-        on_message: Callable[[dict], None] | None = None
+        on_message: Callable[[dict], None] | None = None,
     ):
         self.url = url
         self.api_key = api_key
@@ -33,7 +35,7 @@ class CoinbaseWebSocket:
         self.running = False
         self.subscriptions: list[dict] = []
 
-    def connect(self):
+    def connect(self) -> None:
         if self.running:
             return
 
@@ -51,24 +53,21 @@ class CoinbaseWebSocket:
         self.wst.start()
         logger.info("WebSocket thread started")
 
-    def disconnect(self):
+    def disconnect(self) -> None:
         self.running = False
         if self.ws:
             self.ws.close()
         if self.wst:
             self.wst.join(timeout=WS_JOIN_TIMEOUT)
 
-    def subscribe(self, product_ids: list[str], channels: list[str]):
+    def subscribe(self, product_ids: list[str], channels: list[str]) -> None:
         """Subscribe to channels for products."""
-        sub_msg = {
-            "type": "subscribe",
-            "product_ids": product_ids,
-            "channels": channels
-        }
+        sub_msg = {"type": "subscribe", "product_ids": product_ids, "channels": channels}
 
         # Add auth if keys are present (required for some channels)
         if self.api_key and self.private_key:
             from gpt_trader.features.brokerages.coinbase.auth import SimpleAuth
+
             auth = SimpleAuth(self.api_key, self.private_key)
             # Coinbase WS Auth requires a signature on the subscribe message usually?
             # Actually, newer Advanced Trade WS uses a JWT token or signature.
@@ -92,13 +91,13 @@ class CoinbaseWebSocket:
         if self.ws:
             self.ws.send(json.dumps(msg))
 
-    def _on_open(self, ws):
+    def _on_open(self, ws: Any) -> None:
         logger.info("WebSocket connected")
         # Resubscribe
         for sub in self.subscriptions:
             self._send(sub)
 
-    def _on_message(self, ws, message):
+    def _on_message(self, ws: Any, message: str) -> None:
         try:
             data = json.loads(message)
             if self.on_message:
@@ -106,10 +105,10 @@ class CoinbaseWebSocket:
         except Exception as e:
             logger.error(f"Error processing message: {e}")
 
-    def _on_error(self, ws, error):
+    def _on_error(self, ws: Any, error: Exception) -> None:
         logger.error(f"WebSocket error: {error}")
 
-    def _on_close(self, ws, close_status_code, close_msg):
+    def _on_close(self, ws: Any, close_status_code: int | None, close_msg: str | None) -> None:
         logger.info("WebSocket closed")
         if self.running:
             logger.info("Attempting reconnect in %ds...", WS_RECONNECT_DELAY)

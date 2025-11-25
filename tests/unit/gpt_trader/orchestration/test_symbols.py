@@ -7,9 +7,9 @@ from unittest.mock import Mock
 
 import pytest
 
+from gpt_trader.config.runtime_settings import RuntimeSettings
 from gpt_trader.orchestration import symbols
 from gpt_trader.orchestration.configuration import Profile
-from gpt_trader.config.runtime_settings import RuntimeSettings
 
 
 @pytest.fixture(autouse=True)
@@ -133,7 +133,12 @@ def test_normalize_symbol_list_empty_and_whitespace() -> None:
     # Test with None input
     result, logs = symbols.normalize_symbol_list(None, allow_derivatives=True, quote="USD")
 
-    assert result == ["BTC-PERP", "ETH-PERP", "BTC-FUTURES", "ETH-FUTURES"]  # Default fallback for derivatives
+    assert result == [
+        "BTC-PERP",
+        "ETH-PERP",
+        "BTC-FUTURES",
+        "ETH-FUTURES",
+    ]  # Default fallback for derivatives
     assert len(logs) == 1
     assert logs[0].level == logging.INFO
     assert "No valid symbols provided. Falling back to" in logs[0].message

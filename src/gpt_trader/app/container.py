@@ -1,25 +1,27 @@
 from __future__ import annotations
+
 import json
 from pathlib import Path
 from typing import Any, Optional, Tuple
 
-from gpt_trader.orchestration.configuration import BotConfig
-from gpt_trader.orchestration.config_controller import ConfigController
 from gpt_trader.config.runtime_settings import RuntimeSettings, load_runtime_settings
-from gpt_trader.persistence.event_store import EventStore
-from gpt_trader.persistence.orders_store import OrdersStore
+from gpt_trader.features.brokerages.coinbase.auth import SimpleAuth
+from gpt_trader.features.brokerages.coinbase.client.client import CoinbaseClient
 from gpt_trader.features.brokerages.coinbase.market_data_service import MarketDataService
 from gpt_trader.features.brokerages.coinbase.utilities import ProductCatalog
-from gpt_trader.features.brokerages.coinbase.client.client import CoinbaseClient
-from gpt_trader.features.brokerages.coinbase.auth import SimpleAuth
-from gpt_trader.orchestration.trading_bot.bot import TradingBot
+from gpt_trader.orchestration.config_controller import ConfigController
+from gpt_trader.orchestration.configuration import BotConfig
 from gpt_trader.orchestration.service_registry import ServiceRegistry
+from gpt_trader.orchestration.trading_bot.bot import TradingBot
+from gpt_trader.persistence.event_store import EventStore
+from gpt_trader.persistence.orders_store import OrdersStore
+
 
 def create_brokerage(
     event_store: EventStore,
     market_data: MarketDataService,
     product_catalog: ProductCatalog,
-    settings: RuntimeSettings
+    settings: RuntimeSettings,
 ) -> Tuple[CoinbaseClient, EventStore, MarketDataService, ProductCatalog]:
     """
     Factory function to create the brokerage and verify dependencies.
@@ -59,11 +61,12 @@ def create_brokerage(
     )
     return broker, event_store, market_data, product_catalog
 
+
 class ApplicationContainer:
     def __init__(self, config: BotConfig, settings: Optional[RuntimeSettings] = None):
         self.config = config
         self._settings = settings
-        
+
         self._config_controller: Optional[ConfigController] = None
         self._broker: Optional[CoinbaseClient] = None
         self._event_store: Optional[EventStore] = None
@@ -86,13 +89,13 @@ class ApplicationContainer:
     @property
     def event_store(self) -> EventStore:
         if self._event_store is None:
-             self._event_store = EventStore() 
+            self._event_store = EventStore()
         return self._event_store
 
     @property
     def orders_store(self) -> OrdersStore:
         if self._orders_store is None:
-             self._orders_store = OrdersStore(storage_path="var/data/orders")
+            self._orders_store = OrdersStore(storage_path="var/data/orders")
         return self._orders_store
 
     @property
@@ -114,7 +117,7 @@ class ApplicationContainer:
                 event_store=self.event_store,
                 market_data=self.market_data_service,
                 product_catalog=self.product_catalog,
-                settings=self.settings
+                settings=self.settings,
             )
         return self._broker
 
@@ -132,7 +135,7 @@ class ApplicationContainer:
             broker=self.broker,
             market_data_service=self.market_data_service,
             product_catalog=self.product_catalog,
-            runtime_settings=self.settings
+            runtime_settings=self.settings,
         )
         return registry
 
@@ -146,12 +149,12 @@ class ApplicationContainer:
         baseline_snapshot: Any = None,
         configuration_guardian: Any = None,
     ) -> TradingBot:
-        
+
         cc = config_controller or self.config_controller
         reg = registry or self.create_service_registry()
         es = event_store or self.event_store
         os = orders_store or self.orders_store
-        
+
         return TradingBot(
             config=cc.current,
             container=self,
@@ -160,5 +163,8 @@ class ApplicationContainer:
             orders_store=os,
         )
 
-def create_application_container(config: BotConfig, settings: Optional[RuntimeSettings] = None) -> ApplicationContainer:
+
+def create_application_container(
+    config: BotConfig, settings: Optional[RuntimeSettings] = None
+) -> ApplicationContainer:
     return ApplicationContainer(config, settings)

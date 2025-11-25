@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -194,7 +194,7 @@ class TestPreflightCheckDelegations:
 
         with patch("gpt_trader.preflight.core.check_api_connectivity") as mock:
             mock.return_value = True
-            result = check.check_api_connectivity()
+            check.check_api_connectivity()
 
             mock.assert_called_once_with(check)
 
@@ -204,7 +204,7 @@ class TestPreflightCheckDelegations:
 
         with patch("gpt_trader.preflight.core.check_key_permissions") as mock:
             mock.return_value = True
-            result = check.check_key_permissions()
+            check.check_key_permissions()
 
             mock.assert_called_once_with(check)
 
@@ -214,7 +214,7 @@ class TestPreflightCheckDelegations:
 
         with patch("gpt_trader.preflight.core.check_risk_configuration") as mock:
             mock.return_value = True
-            result = check.check_risk_configuration()
+            check.check_risk_configuration()
 
             mock.assert_called_once_with(check)
 
@@ -224,7 +224,7 @@ class TestPreflightCheckDelegations:
 
         with patch("gpt_trader.preflight.core.check_test_suite") as mock:
             mock.return_value = True
-            result = check.check_test_suite()
+            check.check_test_suite()
 
             mock.assert_called_once_with(check)
 
@@ -234,7 +234,7 @@ class TestPreflightCheckDelegations:
 
         with patch("gpt_trader.preflight.core.check_profile_configuration") as mock:
             mock.return_value = True
-            result = check.check_profile_configuration()
+            check.check_profile_configuration()
 
             mock.assert_called_once_with(check)
 
@@ -244,7 +244,7 @@ class TestPreflightCheckDelegations:
 
         with patch("gpt_trader.preflight.core.check_system_time") as mock:
             mock.return_value = True
-            result = check.check_system_time()
+            check.check_system_time()
 
             mock.assert_called_once_with(check)
 
@@ -254,7 +254,7 @@ class TestPreflightCheckDelegations:
 
         with patch("gpt_trader.preflight.core.check_disk_space") as mock:
             mock.return_value = True
-            result = check.check_disk_space()
+            check.check_disk_space()
 
             mock.assert_called_once_with(check)
 
@@ -264,7 +264,7 @@ class TestPreflightCheckDelegations:
 
         with patch("gpt_trader.preflight.core.simulate_dry_run") as mock:
             mock.return_value = True
-            result = check.simulate_dry_run()
+            check.simulate_dry_run()
 
             mock.assert_called_once_with(check)
 

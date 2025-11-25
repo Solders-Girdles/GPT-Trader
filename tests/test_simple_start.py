@@ -1,16 +1,14 @@
-import asyncio
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
+
 from gpt_trader.orchestration.configuration import BotConfig
 from gpt_trader.orchestration.trading_bot.bot import TradingBot
 
+
 @pytest.mark.asyncio
 async def test_bot_startup_shutdown(monkeypatch):
-    config = BotConfig(
-        symbols=["BTC-USD"],
-        dry_run=True,
-        interval=0.1  # Fast interval
-    )
+    config = BotConfig(symbols=["BTC-USD"], dry_run=True, interval=0.1)  # Fast interval
 
     # Mock Broker
     mock_broker = MagicMock()

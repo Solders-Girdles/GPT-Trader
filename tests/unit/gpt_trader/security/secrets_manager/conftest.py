@@ -158,8 +158,14 @@ def secrets_manager_with_vault(
     secrets_dir: Path,
 ) -> Any:
     """SecretsManager instance with mocked vault."""
+    from cryptography.fernet import Fernet
+
     from gpt_trader.config.runtime_settings import load_runtime_settings
     from gpt_trader.security.secrets_manager import SecretsManager
+
+    # Set required environment variables for SecretsManager
+    monkeypatch.setenv("ENV", "development")
+    monkeypatch.setenv("GPT_TRADER_ENCRYPTION_KEY", Fernet.generate_key().decode())
 
     # Enable vault with stub
     monkeypatch.setenv("VAULT_TOKEN", "test-token")

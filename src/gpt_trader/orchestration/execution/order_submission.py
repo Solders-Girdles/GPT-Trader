@@ -177,6 +177,48 @@ class OrderSubmitter:
         Returns:
             Order ID if successful, None otherwise
         """
+        submit_id = self._generate_submit_id(client_order_id)
+        
+        # 1. Log submission attempt
+        self._log_submission_attempt(
+            submit_id, symbol, side, order_type, order_quantity, price
+        )
+
+        try:
+            # 2. Execute Broker Request
+            order = self._execute_broker_order(
+                submit_id=submit_id,
+                symbol=symbol,
+                side=side,
+                order_type=order_type,
+                order_quantity=order_quantity,
+                price=price,
+                stop_price=stop_price,
+                tif=tif,
+                reduce_only=reduce_only,
+                leverage=leverage,
+            )
+
+            # 3. Handle Result (Success/Rejection)
+            return self._handle_order_result(
+                order, 
+                symbol, 
+                side, 
+                order_quantity, 
+                price, 
+                effective_price, 
+                reduce_only, 
+                submit_id
+            )
+
+        except Exception as exc:
+            # 4. Handle Failure
+            return self._handle_order_failure(
+                exc, symbol, side, order_quantity
+            )
+
+    def _generate_submit_id(self, client_order_id: str | None) -> str:
+        """Generate or retrieve client order ID."""
         submit_id = (
             client_order_id or f"{self.bot_id}_{int(time.time() * 1000)}_{uuid.uuid4().hex[:6]}"
         )
@@ -184,18 +226,44 @@ class OrderSubmitter:
             forced_id = os.getenv("INTEGRATION_TEST_ORDER_ID")
             if forced_id:
                 submit_id = forced_id
+        return submit_id
+
+    def _log_submission_attempt(
+        self,
+        submit_id: str,
+        symbol: str,
+        side: OrderSide,
+        order_type: OrderType,
+        quantity: Decimal,
+        price: Decimal | None,
+    ) -> None:
+        """Log the order submission attempt to monitoring."""
         try:
             get_monitoring_logger().log_order_submission(
                 client_order_id=submit_id,
                 symbol=symbol,
                 side=side.value,
                 order_type=order_type.value,
-                quantity=float(order_quantity),
+                quantity=float(quantity),
                 price=float(price) if price is not None else None,
             )
         except Exception:
             pass
 
+    def _execute_broker_order(
+        self,
+        submit_id: str,
+        symbol: str,
+        side: OrderSide,
+        order_type: OrderType,
+        order_quantity: Decimal,
+        price: Decimal | None,
+        stop_price: Decimal | None,
+        tif: Any | None,
+        reduce_only: bool,
+        leverage: int | None,
+    ) -> Any:
+        """Execute the order placement against the broker."""
         try:
             order = self.broker.place_order(
                 symbol=symbol,
@@ -210,6 +278,7 @@ class OrderSubmitter:
                 client_id=submit_id,
             )
         except TypeError as exc:
+            # Handle integration test fallback for legacy signatures
             if not self.integration_mode or "unexpected keyword argument" not in str(exc):
                 raise
             order = self._invoke_integration_place_order(
@@ -223,113 +292,190 @@ class OrderSubmitter:
                 tif,
             )
         else:
+            # Handle async results in integration mode
             if inspect.isawaitable(order):
                 if not self.integration_mode:
                     raise TypeError("Broker place_order returned awaitable in non-integration mode")
                 order = self._await_integration_call(order)
+        
+        return order
 
-        if order and order.id:
-            status_value = getattr(order, "status", None)
-            status_name = (
-                status_value.value if hasattr(status_value, "value") else str(status_value or "")
+    def _handle_order_result(
+        self,
+        order: Any,
+        symbol: str,
+        side: OrderSide,
+        quantity: Decimal,
+        price: Decimal | None,
+        effective_price: Decimal,
+        reduce_only: bool,
+        submit_id: str,
+    ) -> str | None:
+        """Process the result from the broker, handling rejections and successes."""
+        if not (order and order.id):
+            # Should have raised exception if failed, but handle None case just in case
+            return None
+
+        status_value = getattr(order, "status", None)
+        status_name = (
+            status_value.value if hasattr(status_value, "value") else str(status_value or "")
+        )
+        
+        # Check for Rejection
+        if str(status_name).upper() in {"REJECTED", "CANCELLED", "FAILED"}:
+            return self._process_rejection(
+                order, status_name, symbol, side, quantity, price, effective_price
             )
-            if str(status_name).upper() in {"REJECTED", "CANCELLED", "FAILED"}:
-                if self.integration_mode:
-                    self.event_store.store_event(
-                        "order_rejected",
-                        {
-                            "order_id": order.id,
-                            "symbol": symbol,
-                            "status": str(status_name),
-                        },
-                    )
-                    return order
-                self.record_rejection(
-                    symbol,
-                    side.value,
-                    order_quantity,
-                    price if price is not None else effective_price,
-                    f"broker_status_{status_name}",
-                )
-                try:
-                    self.event_store.append_error(
-                        bot_id=self.bot_id,
-                        message="broker_order_rejected",
-                        context={
-                            "symbol": symbol,
-                            "status": str(status_name),
-                            "quantity": str(order_quantity),
-                        },
-                    )
-                except Exception:
-                    pass
-                if not self.integration_mode:
-                    raise RuntimeError(f"Order rejected by broker: {status_name}")
-                return order
-            self.open_orders.append(order.id)
-            display_price = price if price is not None else "market"
-            logger.info(
-                "Order placed: %s %s %s @ %s (reduce_only=%s)",
-                side.value,
-                order_quantity,
-                symbol,
-                display_price,
-                reduce_only,
-                order_id=str(order.id),
-                symbol=symbol,
-                side=side.value,
-                quantity=float(order_quantity),
-                price=float(display_price) if isinstance(display_price, Decimal) else display_price,
-                reduce_only=reduce_only,
-                operation="order_submit",
-                stage="placed",
-            )
-            logger.info(
-                "Trade recorded: %s %s %s @ %s (reduce_only=%s)",
-                side.value,
-                order_quantity,
-                symbol,
-                display_price,
-                reduce_only,
-                order_id=str(order.id),
-                symbol=symbol,
-                side=side.value,
-                quantity=float(order_quantity),
-                price=float(display_price) if isinstance(display_price, Decimal) else display_price,
-                reduce_only=reduce_only,
-                operation="order_submit",
-                stage="trade_record",
-            )
-            try:
-                get_monitoring_logger().log_order_status_change(
-                    order_id=str(order.id),
-                    client_order_id=getattr(order, "client_order_id", submit_id),
-                    from_status=None,
-                    to_status=getattr(order, "status", "SUBMITTED"),
-                )
-            except Exception:
-                pass
-            try:
-                trade_quantity = getattr(order, "quantity", order_quantity)
-                trade_payload = {
+
+        # Process Success
+        self.open_orders.append(order.id)
+        display_price = price if price is not None else "market"
+        
+        self._log_success(
+            order, symbol, side, quantity, display_price, reduce_only
+        )
+        self._record_trade_event(
+            order, symbol, side, quantity, price, effective_price, submit_id
+        )
+
+        return order if self.integration_mode else order.id
+
+    def _process_rejection(
+        self,
+        order: Any,
+        status_name: str,
+        symbol: str,
+        side: OrderSide,
+        quantity: Decimal,
+        price: Decimal | None,
+        effective_price: Decimal,
+    ) -> Any:
+        """Handle rejected orders."""
+        if self.integration_mode:
+            self.event_store.store_event(
+                "order_rejected",
+                {
                     "order_id": order.id,
-                    "client_order_id": getattr(order, "client_order_id", submit_id),
                     "symbol": symbol,
-                    "side": side.value,
-                    "quantity": str(trade_quantity),
-                    "price": str(order.price or price or effective_price or "market"),
-                    "status": getattr(order, "status", "SUBMITTED"),
-                }
-                self.event_store.append_trade(self.bot_id, trade_payload)
-            except Exception:
-                pass
-            return order if self.integration_mode else order.id
+                    "status": str(status_name),
+                },
+            )
+            return order
 
+        self.record_rejection(
+            symbol,
+            side.value,
+            quantity,
+            price if price is not None else effective_price,
+            f"broker_status_{status_name}",
+        )
+        try:
+            self.event_store.append_error(
+                bot_id=self.bot_id,
+                message="broker_order_rejected",
+                context={
+                    "symbol": symbol,
+                    "status": str(status_name),
+                    "quantity": str(quantity),
+                },
+            )
+        except Exception:
+            pass
+            
+        raise RuntimeError(f"Order rejected by broker: {status_name}")
+
+    def _log_success(
+        self,
+        order: Any,
+        symbol: str,
+        side: OrderSide,
+        quantity: Decimal,
+        display_price: Any,
+        reduce_only: bool,
+    ) -> None:
+        """Log successful order placement."""
+        logger.info(
+            "Order placed: %s %s %s @ %s (reduce_only=%s)",
+            side.value,
+            quantity,
+            symbol,
+            display_price,
+            reduce_only,
+            order_id=str(order.id),
+            symbol=symbol,
+            side=side.value,
+            quantity=float(quantity),
+            price=float(display_price) if isinstance(display_price, Decimal) else display_price,
+            reduce_only=reduce_only,
+            operation="order_submit",
+            stage="placed",
+        )
+        logger.info(
+            "Trade recorded: %s %s %s @ %s (reduce_only=%s)",
+            side.value,
+            quantity,
+            symbol,
+            display_price,
+            reduce_only,
+            order_id=str(order.id),
+            symbol=symbol,
+            side=side.value,
+            quantity=float(quantity),
+            price=float(display_price) if isinstance(display_price, Decimal) else display_price,
+            reduce_only=reduce_only,
+            operation="order_submit",
+            stage="trade_record",
+        )
+
+    def _record_trade_event(
+        self,
+        order: Any,
+        symbol: str,
+        side: OrderSide,
+        quantity: Decimal,
+        price: Decimal | None,
+        effective_price: Decimal,
+        submit_id: str,
+    ) -> None:
+        """Record trade event to event store and monitoring."""
+        try:
+            get_monitoring_logger().log_order_status_change(
+                order_id=str(order.id),
+                client_order_id=getattr(order, "client_order_id", submit_id),
+                from_status=None,
+                to_status=getattr(order, "status", "SUBMITTED"),
+            )
+        except Exception:
+            pass
+
+        try:
+            trade_quantity = getattr(order, "quantity", quantity)
+            trade_payload = {
+                "order_id": order.id,
+                "client_order_id": getattr(order, "client_order_id", submit_id),
+                "symbol": symbol,
+                "side": side.value,
+                "quantity": str(trade_quantity),
+                "price": str(order.price or price or effective_price or "market"),
+                "status": getattr(order, "status", "SUBMITTED"),
+            }
+            self.event_store.append_trade(self.bot_id, trade_payload)
+        except Exception:
+            pass
+
+    def _handle_order_failure(
+        self,
+        exc: Exception,
+        symbol: str,
+        side: OrderSide,
+        quantity: Decimal,
+    ) -> None:
+        """Handle exceptions during order placement."""
         logger.error(
             "Order placement failed",
             symbol=symbol,
             side=side.value,
-            quantity=float(order_quantity),
+            quantity=float(quantity),
             operation="order_submit",
             stage="failed",
         )
@@ -340,7 +486,7 @@ class OrderSubmitter:
                 context={
                     "symbol": symbol,
                     "side": side.value,
-                    "quantity": str(order_quantity),
+                    "quantity": str(quantity),
                 },
             )
         except Exception:

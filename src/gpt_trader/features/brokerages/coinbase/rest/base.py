@@ -3,7 +3,6 @@ Base class for Coinbase REST service.
 """
 from __future__ import annotations
 
-import logging
 from decimal import Decimal
 from typing import Any, Dict, List, Optional
 
@@ -30,8 +29,9 @@ from gpt_trader.features.brokerages.core.interfaces import (
 )
 from gpt_trader.config.runtime_settings import RuntimeSettings
 from gpt_trader.persistence.event_store import EventStore
+from gpt_trader.utilities.logging_patterns import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="coinbase_rest")
 
 class CoinbaseRestServiceBase:
     def __init__(
@@ -118,11 +118,11 @@ class CoinbaseRestServiceBase:
         # Validate & Quantize
         # Quantize quantity
         # Normalize to remove trailing zeros for string representation
-        qty_dec = quantize_to_increment(quantity, product.step_size)
-        qty_str = "{:f}".format(qty_dec.normalize())
+        quantity_decimal = quantize_to_increment(quantity, product.step_size)
+        quantity_string = "{:f}".format(quantity_decimal.normalize())
 
         # Enforce rules
-        enforce_perp_rules(product, qty_dec, price)
+        enforce_perp_rules(product, quantity_decimal, price)
 
         if order_type == OrderType.LIMIT and price is None:
             raise ValidationError("price is required for limit orders")
@@ -137,7 +137,7 @@ class CoinbaseRestServiceBase:
         # stop_limit_stop_limit_gtc
         # stop_limit_stop_limit_gtd (mapped to gtc here if test says so)
         
-        base_size = qty_str
+        base_size = quantity_string
         
         if order_type == OrderType.MARKET:
              # Market orders usually quote_size for buy, base_size for sell? 

@@ -15,6 +15,7 @@ from datetime import datetime, timedelta
 from types import ModuleType
 from typing import TYPE_CHECKING, Any, cast
 
+from gpt_trader.config.constants import MARKET_CLOSE_HOUR, MARKET_OPEN_HOUR
 from gpt_trader.config.runtime_settings import RuntimeSettings, load_runtime_settings
 from gpt_trader.utilities import get_logger, log_operation, optional_import
 
@@ -173,14 +174,14 @@ class YFinanceProvider(DataProvider):
         return result
 
     def is_market_open(self) -> bool:
-        """Check if US market is open"""
+        """Check if US market is open (configurable via GPT_TRADER_MARKET_*_HOUR)"""
         now = datetime.now()
-        # Simple check - US market hours (9:30 AM - 4:00 PM ET)
+        # Simple check - US market hours (default 9:00 AM - 4:00 PM ET)
         # This is simplified - doesn't account for holidays
         if now.weekday() >= 5:  # Weekend
             return False
         hour = now.hour
-        return 9 <= hour < 16
+        return MARKET_OPEN_HOUR <= hour < MARKET_CLOSE_HOUR
 
     def _get_mock_data(self, symbol: str, period: str) -> pd.DataFrame:
         """Generate mock data as fallback"""

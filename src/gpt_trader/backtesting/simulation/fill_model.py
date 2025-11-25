@@ -140,7 +140,8 @@ class OrderFillModel:
         Returns:
             FillResult indicating if order filled
         """
-        assert order.price is not None, "Limit order must have price"
+        if order.price is None:
+            raise ValueError("Limit order must have price")
 
         limit_price = order.price
         is_buy = order.side == OrderSide.BUY
@@ -222,7 +223,8 @@ class OrderFillModel:
         Returns:
             FillResult indicating if order triggered and filled
         """
-        assert order.stop_price is not None, "Stop order must have stop_price"
+        if order.stop_price is None:
+            raise ValueError("Stop order must have stop_price")
 
         stop_price = order.stop_price
         is_buy_stop = order.side == OrderSide.BUY  # Buy stop triggers on upward move

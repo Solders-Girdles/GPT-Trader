@@ -43,13 +43,45 @@ def calculate_volatility(data: pd.DataFrame) -> str:
     return "medium"
 
 def determine_regime(data: pd.DataFrame, indicators: TechnicalIndicators) -> MarketRegime:
-    # Stub implementation
+    """Determine market regime based on technical indicators.
+
+    Uses RSI and MACD histogram for momentum assessment,
+    and OBV for volume profile classification.
+    """
+    # Determine momentum based on RSI and MACD histogram
+    rsi = indicators.rsi
+    macd_hist = indicators.macd_histogram
+
+    if rsi > 60 and macd_hist > 0:
+        momentum = "strong_up"
+    elif rsi < 40 and macd_hist < 0:
+        momentum = "strong_down"
+    elif rsi > 50 or macd_hist > 0:
+        momentum = "up" if rsi > 50 else "down"
+    elif rsi < 50 or macd_hist < 0:
+        momentum = "down"
+    else:
+        momentum = "neutral"
+
+    # Determine volume profile based on OBV trend
+    obv = indicators.obv
+    if obv > 0:
+        volume_profile = "accumulation"
+    elif obv < 0:
+        volume_profile = "distribution"
+    else:
+        volume_profile = "neutral"
+
+    # Calculate regime strength (0-100 scale based on indicator extremity)
+    rsi_strength = abs(rsi - 50) * 2  # 0-100 scale
+    strength = min(100.0, max(0.0, rsi_strength))
+
     return MarketRegime(
         trend="neutral",
         volatility="medium",
-        momentum="strong_up" if indicators.volume_sma > 0 else "neutral", # Hack to pass test
-        volume_profile="accumulation" if indicators.volume_sma > 0 else "neutral", # Hack to pass test
-        strength=50.0
+        momentum=momentum,
+        volume_profile=volume_profile,
+        strength=strength
     )
 
 def generate_recommendation(

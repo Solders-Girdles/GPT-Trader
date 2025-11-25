@@ -7,6 +7,9 @@ from typing import Any, Dict, List, Optional
 
 from gpt_trader.features.brokerages.coinbase.models import to_product, to_quote, to_candle
 from gpt_trader.features.brokerages.core.interfaces import Product, Quote, Candle
+from gpt_trader.utilities.logging_patterns import get_logger
+
+logger = get_logger(__name__, component="coinbase_product")
 
 class ProductRestMixin:
     """Mixin for product and market data operations."""
@@ -47,7 +50,7 @@ class ProductRestMixin:
                             pass
                     return product
                 except Exception as e:
-                    print(f"DEBUG: ProductRestMixin catalog get failed: {e}")
+                    logger.debug("ProductRestMixin catalog get failed: %s", e)
                     pass
 
             p = self.client.get_product(product_id)

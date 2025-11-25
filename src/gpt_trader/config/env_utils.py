@@ -117,7 +117,8 @@ def require_env_value(
 ) -> T:
     """Return ``cast`` applied to ``var_name`` and raise if unset."""
     value = coerce_env_value(var_name, cast, required=True, settings=settings)
-    assert value is not None  # pragma: no cover - required=True guarantees value
+    if value is None:  # pragma: no cover - required=True guarantees value
+        raise ValueError(f"Required environment variable {var_name} returned None after coercion")
     return value
 
 
@@ -172,7 +173,8 @@ def get_env_decimal(
             _ensure_required(var_name)
         return default
     coerced = _coerce_with_rule(var_name, value, _DECIMAL_RULE)
-    assert isinstance(coerced, Decimal)
+    if not isinstance(coerced, Decimal):
+        raise TypeError(f"Expected Decimal for {var_name}, got {type(coerced).__name__}")
     return coerced
 
 

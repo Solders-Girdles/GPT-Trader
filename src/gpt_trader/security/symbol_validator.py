@@ -1,5 +1,6 @@
 """Symbol validation for trading symbols."""
 
+from gpt_trader.config.constants import BLOCKED_SYMBOLS
 from gpt_trader.validation import RuleError, SymbolRule
 
 from .input_sanitizer import ValidationResult
@@ -24,10 +25,9 @@ class SymbolValidator:
             errors.append("Invalid symbol format")
             normalised = None
 
-        # Check against blocklist (simplified)
-        blocked_symbols = {"TEST", "DEBUG", "HACK"}
+        # Check against blocklist (configurable via GPT_TRADER_BLOCKED_SYMBOLS)
         candidate = normalised or (symbol.upper() if isinstance(symbol, str) else "")
-        if candidate in blocked_symbols:
+        if candidate in BLOCKED_SYMBOLS:
             errors.append("Symbol is blocked")
 
         return ValidationResult(

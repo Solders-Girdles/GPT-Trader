@@ -175,6 +175,19 @@ This modular design achieves 66% file size reduction with clear separation of co
 - **Risk metrics aggregation** (`gpt_trader/features/live_trade/risk_metrics.py`): periodic EventStore
   snapshots feed into the monitoring stack for dashboards and analytics.
 
+#### Filter Pipeline Pattern
+
+The strategy orchestration now uses a **Filter Pipeline** pattern to evaluate trade signals against a series of composable checks. This replaces monolithic "God Methods" with small, focused classes.
+
+- **Interface**: `Filter` (abstract base class)
+- **Implementation**: `src/gpt_trader/orchestration/strategy_orchestrator/filters.py`
+- **Usage**: `SpotFiltersMixin` iterates through configured filters (`VolumeFilter`, `MomentumFilter`, `TrendFilter`, etc.).
+- **Benefits**:
+  - **Open/Closed Principle**: New filters can be added without modifying the orchestrator.
+  - **Testability**: Each filter is unit-tested in isolation.
+  - **Configurability**: Filters are enabled/disabled and tuned via runtime configuration.
+
+
 ### Derivatives Gate
 
 Perpetual futures remain behind `COINBASE_ENABLE_DERIVATIVES` and Coinbase INTX

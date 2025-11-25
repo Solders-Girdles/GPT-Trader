@@ -5,14 +5,16 @@ Replaces the complex 681-line WebSocket manager with a lightweight implementatio
 import json
 import time
 import threading
-import logging
 from collections.abc import Callable
 from typing import Any
 
 # We use websocket-client as it is in the optional dependencies and simpler for threading
 import websocket
 
-logger = logging.getLogger(__name__)
+from gpt_trader.config.constants import WS_JOIN_TIMEOUT, WS_RECONNECT_DELAY
+from gpt_trader.utilities.logging_patterns import get_logger
+
+logger = get_logger(__name__, component="coinbase_websocket")
 
 class CoinbaseWebSocket:
     def __init__(
@@ -54,7 +56,7 @@ class CoinbaseWebSocket:
         if self.ws:
             self.ws.close()
         if self.wst:
-            self.wst.join(timeout=2)
+            self.wst.join(timeout=WS_JOIN_TIMEOUT)
 
     def subscribe(self, product_ids: list[str], channels: list[str]):
         """Subscribe to channels for products."""
@@ -110,6 +112,6 @@ class CoinbaseWebSocket:
     def _on_close(self, ws, close_status_code, close_msg):
         logger.info("WebSocket closed")
         if self.running:
-            logger.info("Attempting reconnect in 5s...")
-            time.sleep(5)
+            logger.info("Attempting reconnect in %ds...", WS_RECONNECT_DELAY)
+            time.sleep(WS_RECONNECT_DELAY)
             self.connect()

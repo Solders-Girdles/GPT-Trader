@@ -16,6 +16,18 @@ class Decision:
     reason: str
     confidence: float = 0.0
 
+@dataclass
+class StrategyConfig:
+    long_ma: int = 20
+    short_ma: int = 5
+    rsi_period: int = 14
+    rsi_overbought: int = 70
+    rsi_oversold: int = 30
+    stop_loss_pct: float = 0.02
+    take_profit_pct: float = 0.05
+    max_leverage: int = 5
+    kill_switch_enabled: bool = False
+
 class BaselinePerpsStrategy:
     def __init__(self, config: Any = None):
         self.config = config

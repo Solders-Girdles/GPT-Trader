@@ -7,6 +7,7 @@ liquidation buffers, mark price staleness, and volatility circuit breakers.
 
 from __future__ import annotations
 
+import logging
 import time
 from collections.abc import Callable
 from dataclasses import dataclass, field
@@ -15,6 +16,7 @@ from typing import Any
 
 from gpt_trader.features.brokerages.core.interfaces import Balance, IBrokerage
 from gpt_trader.features.live_trade.guard_errors import (
+    GuardError,
     RiskGuardActionError,
     RiskGuardComputationError,
     RiskGuardDataCorrupt,
@@ -53,7 +55,7 @@ class GuardManager:
         broker: IBrokerage,
         risk_manager: LiveRiskManager,
         equity_calculator: Callable[[list[Balance]], tuple[Decimal, list[Balance], Decimal]],
-        cancel_orders_callback: Callable[[], int],
+        open_orders: list[str],
         invalidate_cache_callback: Callable[[], None],
     ) -> None:
         """
@@ -63,13 +65,13 @@ class GuardManager:
             broker: Brokerage adapter
             risk_manager: Risk manager instance
             equity_calculator: Function to calculate equity from balances
-            cancel_orders_callback: Function to cancel all orders
+            open_orders: List of open order IDs to manage
             invalidate_cache_callback: Function to invalidate guard cache
         """
         self.broker = broker
         self.risk_manager = risk_manager
         self._calculate_equity = equity_calculator
-        self._cancel_all_orders = cancel_orders_callback
+        self.open_orders = open_orders
         self._invalidate_cache = invalidate_cache_callback
 
         # Guard state caching
@@ -82,6 +84,9 @@ class GuardManager:
         """Force the next runtime guard invocation to refresh cached state."""
         self._runtime_guard_state = None
         self._runtime_guard_dirty = True
+        if self._invalidate_cache:
+            self._invalidate_cache()
+
 
     def should_run_full_guard(self, now: float) -> bool:
         """Check if a full guard run is needed."""
@@ -153,17 +158,16 @@ class GuardManager:
         """Execute a guard step and apply unified error handling."""
         try:
             func()
-        except RiskGuardError as err:
+        except GuardError as err:
             record_guard_failure(err)
             if err.recoverable:
                 return
             raise
         except Exception as exc:
             fallback_err = RiskGuardComputationError(
-                guard=guard_name,
+                guard_name=guard_name,
                 message=f"Unexpected failure in guard '{guard_name}'",
                 details={},
-                original=exc,
             )
             record_guard_failure(fallback_err)
             raise fallback_err
@@ -188,7 +192,7 @@ class GuardManager:
 
         if failures:
             raise RiskGuardTelemetryError(
-                guard=guard_name,
+                guard_name=guard_name,
                 message="Failed to emit PnL telemetry for one or more symbols",
                 details={"failures": failures},
             )
@@ -200,13 +204,12 @@ class GuardManager:
         triggered = self.risk_manager.track_daily_pnl(state.equity, state.positions_pnl)
         if triggered:
             try:
-                self._cancel_all_orders()
+                self.cancel_all_orders()
             except Exception as exc:
                 raise RiskGuardActionError(
-                    guard=guard_name,
+                    guard_name=guard_name,
                     message="Failed to cancel orders after daily loss breach",
                     details={"equity": str(state.equity)},
-                    original=exc,
                 ) from exc
             self._invalidate_cache()
 
@@ -220,10 +223,9 @@ class GuardManager:
                 mark = Decimal(str(getattr(pos, "mark_price", "0")))
             except Exception as exc:
                 raise RiskGuardDataCorrupt(
-                    guard=guard_name,
+                    guard_name=guard_name,
                     message="Position payload missing numeric fields",
                     details={"symbol": getattr(pos, "symbol", "unknown")},
-                    original=exc,
                 ) from exc
 
             pos_data: dict[str, Any] = {
@@ -236,10 +238,9 @@ class GuardManager:
                     risk_info = self.broker.get_position_risk(pos.symbol)  # type: ignore[attr-defined]
                 except Exception as exc:
                     raise RiskGuardDataUnavailable(
-                        guard=guard_name,
+                        guard_name=guard_name,
                         message="Failed to fetch position risk from broker",
                         details={"symbol": pos.symbol},
-                        original=exc,
                     ) from exc
                 if isinstance(risk_info, dict) and "liquidation_price" in risk_info:
                     pos_data["liquidation_price"] = risk_info["liquidation_price"]
@@ -264,7 +265,7 @@ class GuardManager:
 
         if failures:
             raise RiskGuardDataUnavailable(
-                guard=guard_name,
+                guard_name=guard_name,
                 message="Failed to refresh mark data for one or more symbols",
                 details={"failures": failures},
             )
@@ -274,14 +275,13 @@ class GuardManager:
         guard_name = "risk_metrics"
         try:
             self.risk_manager.append_risk_metrics(state.equity, state.positions_dict)
-        except RiskGuardError as err:
+        except GuardError as err:
             raise err
         except Exception as exc:
             raise RiskGuardTelemetryError(
-                guard=guard_name,
+                guard_name=guard_name,
                 message="Failed to append risk metrics",
                 details={"equity": str(state.equity)},
-                original=exc,
             ) from exc
 
     def guard_correlation(self, state: RuntimeGuardState) -> None:
@@ -289,14 +289,13 @@ class GuardManager:
         guard_name = "correlation_risk"
         try:
             self.risk_manager.check_correlation_risk(state.positions_dict)
-        except RiskGuardError as err:
+        except GuardError as err:
             raise err
         except Exception as exc:
             raise RiskGuardComputationError(
-                guard=guard_name,
+                guard_name=guard_name,
                 message="Correlation risk check failed",
                 details={"positions": list(state.positions_dict.keys())},
-                original=exc,
             ) from exc
 
     def guard_volatility(self, state: RuntimeGuardState) -> None:
@@ -325,7 +324,7 @@ class GuardManager:
 
         if failures:
             raise RiskGuardDataUnavailable(
-                guard=guard_name,
+                guard_name=guard_name,
                 message="Failed to fetch candles for volatility guard",
                 details={"failures": failures},
             )
@@ -366,3 +365,84 @@ class GuardManager:
 
         self.run_guards_for_state(state, incremental)
         return state
+
+    def cancel_all_orders(self) -> int:
+        """
+        Cancel all open orders (used on risk trips).
+
+        Returns:
+            Number of orders cancelled
+        """
+        cancelled = 0
+
+        for order_id in self.open_orders[:]:  # Copy list to avoid modification during iteration
+            try:
+                if self.broker.cancel_order(order_id):
+                    cancelled += 1
+                    self.open_orders.remove(order_id)
+                    logger.info(
+                        "Cancelled order",
+                        order_id=order_id,
+                        operation="order_cancel",
+                        stage="single",
+                    )
+            except Exception as e:
+                logger.error(
+                    "Failed to cancel order %s: %s",
+                    order_id,
+                    e,
+                    operation="order_cancel",
+                    stage="single",
+                    order_id=order_id,
+                )
+
+        if cancelled > 0:
+            logger.info(
+                "Cancelled open orders due to risk trip",
+                cancelled=cancelled,
+                operation="order_cancel",
+                stage="bulk",
+            )
+            self.invalidate_cache()
+
+        return cancelled
+
+    def safe_run_runtime_guards(self, force_full: bool = False) -> None:
+        """
+        Run runtime risk guards and take action if needed.
+        Handles exceptions and fallback logic.
+        """
+        try:
+            self.run_runtime_guards(force_full=force_full)
+
+        except GuardError as err:
+            level = logging.WARNING if err.recoverable else logging.ERROR
+            logger.log(
+                level,
+                "Runtime guard failure: %s",
+                err,
+                exc_info=not err.recoverable,
+                operation="runtime_guards",
+                stage="guard_failure",
+                recoverable=err.recoverable,
+            )
+            if not err.recoverable:
+                try:
+                    # Fallback to legacy behavior
+                    self.risk_manager.set_reduce_only_mode(True, reason="guard_failure")
+                except Exception:
+                    logger.warning(
+                        "Failed to set reduce-only mode after guard failure",
+                        exc_info=True,
+                        operation="runtime_guards",
+                        stage="reduce_only",
+                    )
+                self.invalidate_cache()
+
+        except Exception as exc:
+            logger.error(
+                "Runtime guards error: %s",
+                exc,
+                operation="runtime_guards",
+                stage="exception",
+            )

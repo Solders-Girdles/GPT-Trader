@@ -61,6 +61,7 @@ class MockAsyncBroker(IBrokerage):
                 step_size=Decimal("0.001"),
                 min_notional=Decimal("10"),
                 price_increment=Decimal("0.01"),
+                leverage_max=10,
             ),
             "ETH-PERP": Product(
                 symbol="ETH-PERP",
@@ -71,6 +72,7 @@ class MockAsyncBroker(IBrokerage):
                 step_size=Decimal("0.001"),
                 min_notional=Decimal("10"),
                 price_increment=Decimal("0.01"),
+                leverage_max=10,
             ),
         }
 

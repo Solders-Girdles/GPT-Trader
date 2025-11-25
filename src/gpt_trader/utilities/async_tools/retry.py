@@ -41,7 +41,8 @@ class AsyncRetry:
                     raise
                 await asyncio.sleep(min(delay, self.max_delay))
                 delay *= self.backoff_factor
-        assert last_exception is not None
+        if last_exception is None:
+            raise RuntimeError("Retry loop completed without exception - this should not happen")
         raise last_exception
 
 

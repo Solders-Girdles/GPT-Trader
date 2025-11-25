@@ -23,7 +23,8 @@ class NumericValidator:
         try:
             # Convert to Decimal for precise financial calculations
             num_value = cls._NUMERIC_RULE(value, "value")
-            assert isinstance(num_value, Decimal)
+            if not isinstance(num_value, Decimal):
+                raise TypeError(f"Expected Decimal, got {type(num_value).__name__}")
 
             if not num_value.is_finite():
                 raise InvalidOperation("Non-finite value")
@@ -40,5 +41,5 @@ class NumericValidator:
                 sanitized_value=float(num_value) if not errors else None,
             )
 
-        except (InvalidOperation, ValueError, RuleError, AssertionError, TypeError):
+        except (InvalidOperation, ValueError, RuleError, TypeError):
             return ValidationResult(False, ["Invalid numeric value"])

@@ -118,7 +118,7 @@ class LiveExecutionEngine:
         self.slippage_multipliers = slippage_multipliers or {}
 
         runtime_settings = settings or load_runtime_settings()
-        self._production_logger = get_prod_logger(settings=runtime_settings)
+        # self._production_logger removed as it's now in StateCollector
         raw_integration = runtime_settings.raw_env.get("INTEGRATION_TEST_MODE", "")
         self._integration_mode = str(raw_integration).lower() in {"1", "true", "yes"}
 
@@ -133,8 +133,8 @@ class LiveExecutionEngine:
 
         # Track open orders for cancellation on risk trips
         self.open_orders: list[str] = []
-        # Track last seen collateral availability for balance change logs
-        self._last_collateral_available: Decimal | None = None
+        # Track open orders for cancellation on risk trips
+        self.open_orders: list[str] = []
 
         # Initialize helper modules
         self.state_collector: StateCollector = StateCollector(broker, settings=runtime_settings)
@@ -156,7 +156,7 @@ class LiveExecutionEngine:
             broker,
             self.risk_manager,
             self.state_collector.calculate_equity_from_balances,
-            self.cancel_all_orders,
+            self.open_orders,
             lambda: None,  # Cache invalidation handled by guard_manager itself
         )
 
@@ -222,7 +222,7 @@ class LiveExecutionEngine:
                 current_positions,
             ) = self.state_collector.collect_account_state()
 
-            self._log_collateral_update(collateral_balances, equity, collateral_total, balances)
+            self.state_collector.log_collateral_update(collateral_balances, equity, collateral_total, balances)
 
             # Build positions dict for validation
             current_positions_dict = self.state_collector.build_positions_dict(current_positions)
@@ -345,39 +345,7 @@ class LiveExecutionEngine:
         Returns:
             Number of orders cancelled
         """
-        cancelled = 0
-
-        for order_id in self.open_orders[:]:  # Copy list to avoid modification during iteration
-            try:
-                if self.broker.cancel_order(order_id):
-                    cancelled += 1
-                    self.open_orders.remove(order_id)
-                    logger.info(
-                        "Cancelled order",
-                        order_id=order_id,
-                        operation="order_cancel",
-                        stage="single",
-                    )
-            except Exception as e:
-                logger.error(
-                    "Failed to cancel order %s: %s",
-                    order_id,
-                    e,
-                    operation="order_cancel",
-                    stage="single",
-                    order_id=order_id,
-                )
-
-        if cancelled > 0:
-            logger.info(
-                "Cancelled open orders due to risk trip",
-                cancelled=cancelled,
-                operation="order_cancel",
-                stage="bulk",
-            )
-            self.guard_manager.invalidate_cache()
-
-        return cancelled
+        return self.guard_manager.cancel_all_orders()
 
     def run_runtime_guards(self) -> None:
         """
@@ -385,54 +353,7 @@ class LiveExecutionEngine:
 
         Should be called periodically (e.g., every minute).
         """
-        try:
-            now = time.time()
-            force_full = self.guard_manager.should_run_full_guard(now)
-            self.guard_manager.run_runtime_guards(force_full=force_full)
-
-        except RiskGuardError as err:
-            level = logging.WARNING if err.recoverable else logging.ERROR
-            logger.log(
-                level,
-                "Runtime guard failure: %s",
-                err,
-                exc_info=not err.recoverable,
-                operation="runtime_guards",
-                stage="guard_failure",
-                recoverable=err.recoverable,
-            )
-            if not err.recoverable:
-                try:
-                    # Try to use the centralized state manager first
-                    state_manager = getattr(
-                        self.context.registry, "reduce_only_state_manager", None
-                    )
-                    if state_manager is not None:
-                        state_manager.set_reduce_only_mode(
-                            enabled=True,
-                            reason="guard_failure",
-                            source=ReduceOnlyModeSource.GUARD_FAILURE,
-                            metadata={"context": "live_execution_guard"},
-                        )
-                    else:
-                        # Fallback to legacy behavior
-                        self.risk_manager.set_reduce_only_mode(True, reason="guard_failure")
-                except Exception:
-                    logger.warning(
-                        "Failed to set reduce-only mode after guard failure",
-                        exc_info=True,
-                        operation="runtime_guards",
-                        stage="reduce_only",
-                    )
-                self.guard_manager.invalidate_cache()
-
-        except Exception as exc:
-            logger.error(
-                "Runtime guards error: %s",
-                exc,
-                operation="runtime_guards",
-                stage="exception",
-            )
+        self.guard_manager.safe_run_runtime_guards()
 
     def reset_daily_tracking(self) -> None:
         """Reset daily PnL tracking (call at start of trading day)."""
@@ -461,47 +382,8 @@ class LiveExecutionEngine:
                 stage="reset",
             )
 
+
+
     def _invalidate_runtime_guard_cache(self) -> None:
         """Backward compatibility wrapper for invalidate_cache."""
         self.guard_manager.invalidate_cache()
-
-    def _log_collateral_update(
-        self,
-        collateral_balances: list[Balance],
-        equity: Decimal,
-        collateral_total: Decimal,
-        all_balances: list[Balance],
-    ) -> None:
-        """Log collateral balance changes."""
-        if not collateral_balances:
-            return
-
-        total_available = sum((b.available for b in collateral_balances), Decimal("0"))
-
-        change_value: Decimal | None = None
-        if self._last_collateral_available is not None:
-            diff = total_available - self._last_collateral_available
-            change_value = diff
-            if abs(diff) > Decimal("0.01"):
-                logger.info(
-                    "Collateral available changed",
-                    previous=float(self._last_collateral_available),
-                    current=float(total_available),
-                    delta=float(diff),
-                    operation="collateral_update",
-                )
-
-        self._last_collateral_available = total_available
-
-        # Log to telemetry
-        try:
-            currency = collateral_balances[0].asset if collateral_balances else "USD"
-            self._production_logger.log_balance_update(
-                currency=currency,
-                available=float(total_available),
-                total=float(collateral_total),
-                equity=float(equity),
-                change=float(change_value) if change_value is not None else None,
-            )
-        except Exception:
-            pass

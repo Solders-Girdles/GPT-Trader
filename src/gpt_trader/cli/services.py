@@ -4,6 +4,9 @@ from argparse import Namespace
 from gpt_trader.orchestration.configuration import BotConfig
 from gpt_trader.orchestration.trading_bot.bot import TradingBot
 from gpt_trader.app.container import create_application_container
+from gpt_trader.utilities.logging_patterns import get_logger
+
+logger = get_logger(__name__, component="cli_services")
 
 def build_config_from_args(args: Namespace, **kwargs) -> BotConfig:
     """
@@ -36,7 +39,7 @@ def build_config_from_args(args: Namespace, **kwargs) -> BotConfig:
             
         except Exception as e:
             # Log warning but proceed
-            print(f"Warning: Failed to load profile {profile_name}: {e}")
+            logger.warning("Failed to load profile %s: %s", profile_name, e)
 
     # 3. Override with CLI Args
     if getattr(args, "dry_run", False):

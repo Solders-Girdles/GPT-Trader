@@ -3,19 +3,19 @@ Manages Coinbase account state, positions, balances, and CFM/INTX specific featu
 """
 from __future__ import annotations
 
-import logging
 from dataclasses import asdict
 from datetime import datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any, Dict
 
 from gpt_trader.features.brokerages.core.interfaces import InvalidRequestError
+from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:
     from gpt_trader.features.brokerages.coinbase.test_helpers import CoinbaseBrokerage
     from gpt_trader.persistence.event_store import EventStore
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="coinbase_account")
 
 class CoinbaseAccountManager:
     def __init__(self, broker: "CoinbaseBrokerage", event_store: "EventStore"):

@@ -35,17 +35,28 @@ def messages(handler: ListHandler) -> list[str]:
     return [record.getMessage() for record in handler.records]
 
 
+def has_attr(record: logging.LogRecord, attr: str, value: Any = None) -> bool:
+    """Check if a log record has an attribute, optionally with a specific value."""
+    if not hasattr(record, attr):
+        return False
+    if value is None:
+        return True
+    return getattr(record, attr) == value
+
+
 def test_log_operation_with_plain_logger():
     with captured_logger("operation") as (logger, handler):
         with lp.log_operation("fetch", logger=logger, symbol="BTC"):
             pass
 
-    start, end = messages(handler)
-    assert "Started fetch" in start
-    assert "operation=fetch" in start
-    assert "symbol=BTC" in start
-    assert "Completed fetch" in end
-    assert re.search(r"duration_ms=\d+(\.\d+)?", end)
+    start_msg, end_msg = messages(handler)
+    start_rec, end_rec = handler.records
+
+    assert "Started fetch" in start_msg
+    assert has_attr(start_rec, "operation", "fetch")
+    assert has_attr(start_rec, "symbol", "BTC")
+    assert "Completed fetch" in end_msg
+    assert has_attr(end_rec, "duration_ms")
     assert handler.records[0].name == "operation"
 
 
@@ -71,22 +82,22 @@ def test_log_trade_event_includes_all_context():
             logger=logger,
         )
 
-    [message] = messages(handler)
-    assert "operation=trade_event" in message
-    assert "symbol=BTC-PERP" in message
-    assert "side=buy" in message
-    assert "quantity=0.1" in message
-    assert "price=42000" in message
-    assert "order_id=abc" in message
+    record = handler.records[0]
+    assert has_attr(record, "operation", "trade_event")
+    assert has_attr(record, "symbol", "BTC-PERP")
+    assert has_attr(record, "side", "buy")
+    assert has_attr(record, "quantity", Decimal("0.1"))
+    assert has_attr(record, "price", Decimal("42000"))
+    assert has_attr(record, "order_id", "abc")
 
 
 def test_log_trade_event_defaults_to_structured_logger():
     with captured_logger("trading") as (_, handler):
         lp.log_trade_event("order_cancelled", "ETH-PERP")
 
-    [message] = messages(handler)
-    assert "operation=trade_event" in message
-    assert "symbol=ETH-PERP" in message
+    record = handler.records[0]
+    assert has_attr(record, "operation", "trade_event")
+    assert has_attr(record, "symbol", "ETH-PERP")
 
 
 def test_log_trade_event_with_structured_logger():
@@ -94,10 +105,10 @@ def test_log_trade_event_with_structured_logger():
         structured = lp.StructuredLogger("trade_structured", component="desk")
         lp.log_trade_event("fill", "SOL", logger=structured)
 
-    [message] = messages(handler)
-    assert "operation=trade_event" in message
-    assert "symbol=SOL" in message
-    assert "component=desk" in message
+    record = handler.records[0]
+    assert has_attr(record, "operation", "trade_event")
+    assert has_attr(record, "symbol", "SOL")
+    assert has_attr(record, "component", "desk")
 
 
 def test_log_position_update_adds_metrics():
@@ -111,29 +122,29 @@ def test_log_position_update_adds_metrics():
             logger=logger,
         )
 
-    [message] = messages(handler)
-    assert "operation=position_update" in message
-    assert "position_size=2" in message
-    assert "pnl=5.5" in message
-    assert "equity=100" in message
-    assert "leverage=3.5" in message
+    record = handler.records[0]
+    assert has_attr(record, "operation", "position_update")
+    assert has_attr(record, "position_size", Decimal("2"))
+    assert has_attr(record, "unrealized_pnl", Decimal("5.5"))
+    assert has_attr(record, "equity", Decimal("100"))
+    assert has_attr(record, "leverage", 3.5)
 
 
 def test_log_position_update_defaults_to_structured_logger():
     with captured_logger("position") as (_, handler):
         lp.log_position_update("BTC", position_size=Decimal("1"))
 
-    [message] = messages(handler)
-    assert "operation=position_update" in message
+    record = handler.records[0]
+    assert has_attr(record, "operation", "position_update")
 
 
 def test_log_position_update_with_plain_logger():
     with captured_logger("plain-position") as (logger, handler):
         lp.log_position_update("DOGE", position_size=Decimal("5"), logger=logger)
 
-    [message] = messages(handler)
-    assert handler.records[0].name == "plain-position"
-    assert "operation=position_update" in message
+    record = handler.records[0]
+    assert record.name == "plain-position"
+    assert has_attr(record, "operation", "position_update")
 
 
 def test_log_position_update_plain_logger_branch(caplog):
@@ -142,7 +153,7 @@ def test_log_position_update_plain_logger_branch(caplog):
     lp.log_position_update("SOL", position_size=Decimal("3"), logger=logger)
 
     assert any(
-        rec.name == "position-branch" and "operation=position_update" in rec.getMessage()
+        rec.name == "position-branch" and has_attr(rec, "operation", "position_update")
         for rec in caplog.records
     )
 
@@ -175,9 +186,8 @@ def test_log_system_health_warns_on_non_healthy():
 
     record = handler.records[0]
     assert record.levelno == logging.WARNING
-    msg = record.getMessage()
-    assert "operation=health_check" in msg
-    assert "component=monitor" in msg
+    assert has_attr(record, "operation", "health_check")
+    assert has_attr(record, "component", "monitor")
 
 
 def test_log_system_health_wraps_logging_logger(monkeypatch):
@@ -215,7 +225,7 @@ def test_log_system_health_defaults_to_structured_logger():
 
     record = handler.records[0]
     assert record.levelno == logging.INFO
-    assert "status=healthy" in record.getMessage()
+    assert has_attr(record, "status", "healthy")
 
 
 def test_log_system_health_plain_logger_branch(caplog):
@@ -224,7 +234,7 @@ def test_log_system_health_plain_logger_branch(caplog):
     lp.log_system_health("degraded", component="risk", metrics={"error_rate": 0.2}, logger=logger)
 
     assert any(
-        rec.name == "health-branch" and "operation=health_check" in rec.getMessage()
+        rec.name == "health-branch" and has_attr(rec, "operation", "health_check")
         for rec in caplog.records
     )
 
@@ -236,11 +246,11 @@ def test_log_error_with_context():
         except ValueError as exc:
             lp.log_error_with_context(exc, "sync", component="orders", order_id="xyz")
 
-    [message] = messages(handler)
-    assert "operation=sync" in message
-    assert "error_type=ValueError" in message
-    assert "order_id=xyz" in message
-    assert "component=orders" in message
+    record = handler.records[0]
+    assert has_attr(record, "operation", "sync")
+    assert has_attr(record, "error_type", "ValueError")
+    assert has_attr(record, "order_id", "xyz")
+    assert has_attr(record, "component", "orders")
 
 
 def test_log_error_with_context_without_component():
@@ -250,36 +260,36 @@ def test_log_error_with_context_without_component():
         except RuntimeError as exc:
             lp.log_error_with_context(exc, "sync")
 
-    [message] = messages(handler)
-    assert "operation=sync" in message
-    assert "component=" not in message
+    record = handler.records[0]
+    assert has_attr(record, "operation", "sync")
+    assert not has_attr(record, "component")
 
 
 def test_log_configuration_change_includes_component():
     with captured_logger("config") as (_, handler):
         lp.log_configuration_change("api_url", "old", "new", component="service")
 
-    [message] = messages(handler)
-    assert "operation=config_change" in message
-    assert "component=service" in message
+    record = handler.records[0]
+    assert has_attr(record, "operation", "config_change")
+    assert has_attr(record, "component", "service")
 
 
 def test_log_configuration_change_without_component():
     with captured_logger("config") as (_, handler):
         lp.log_configuration_change("mode", "old", "new")
 
-    [message] = messages(handler)
-    assert "operation=config_change" in message
-    assert "component=" not in message
+    record = handler.records[0]
+    assert has_attr(record, "operation", "config_change")
+    assert not has_attr(record, "component")
 
 
 def test_log_configuration_change_with_plain_logger():
     with captured_logger("config_plain") as (logger, handler):
         lp.log_configuration_change("timeout", None, 30, logger=logger)
 
-    [message] = messages(handler)
-    assert handler.records[0].name == "config_plain"
-    assert "operation=config_change" in message
+    record = handler.records[0]
+    assert record.name == "config_plain"
+    assert has_attr(record, "operation", "config_change")
 
 
 def test_log_configuration_change_wraps_logging_logger(monkeypatch):
@@ -305,7 +315,7 @@ def test_log_configuration_change_plain_logger_branch(caplog):
     lp.log_configuration_change("api_mode", "old", "new", logger=logger)
 
     assert any(
-        rec.name == "config-branch" and "operation=config_change" in rec.getMessage()
+        rec.name == "config-branch" and has_attr(rec, "operation", "config_change")
         for rec in caplog.records
     )
 
@@ -319,21 +329,21 @@ def test_log_market_data_update_supports_optional_fields():
             timestamp=123456.0,
         )
 
-    [message] = messages(handler)
-    assert "operation=market_data_update" in message
-    assert "symbol=BTC" in message
-    assert "price=42000" in message
+    record = handler.records[0]
+    assert has_attr(record, "operation", "market_data_update")
+    assert has_attr(record, "symbol", "BTC")
+    assert has_attr(record, "price", Decimal("42000"))
 
 
 def test_log_market_data_update_without_optional_fields():
     with captured_logger("market_data") as (_, handler):
         lp.log_market_data_update("DOGE", price=Decimal("0.01"))
 
-    [message] = messages(handler)
-    assert "operation=market_data_update" in message
-    assert "symbol=DOGE" in message
-    assert "volume=" not in message
-    assert "timestamp=" not in message
+    record = handler.records[0]
+    assert has_attr(record, "operation", "market_data_update")
+    assert has_attr(record, "symbol", "DOGE")
+    assert not has_attr(record, "volume")
+    assert not has_attr(record, "timestamp")
 
 
 def test_log_market_data_update_with_plain_logger_and_optional_fields():
@@ -346,10 +356,10 @@ def test_log_market_data_update_with_plain_logger_and_optional_fields():
             logger=logger,
         )
 
-    [message] = messages(handler)
-    assert handler.records[0].name == "market_plain"
-    assert "symbol=ETH" in message
-    assert "price=1234.56" in message
+    record = handler.records[0]
+    assert record.name == "market_plain"
+    assert has_attr(record, "symbol", "ETH")
+    assert has_attr(record, "price", Decimal("1234.56"))
 
 
 def test_log_market_data_update_plain_logger_branch(caplog):
@@ -360,7 +370,7 @@ def test_log_market_data_update_plain_logger_branch(caplog):
     )
 
     assert any(
-        rec.name == "market-branch" and "operation=market_data_update" in rec.getMessage()
+        rec.name == "market-branch" and has_attr(rec, "operation", "market_data_update")
         for rec in caplog.records
     )
 
@@ -476,10 +486,10 @@ def test_structured_logger_methods_apply_component():
         slog.critical("critical message", operation="test")
         slog.log(logging.INFO, "generic message", operation="test")
 
-    messages_list = messages(handler)
-    assert len(messages_list) == 6
-    assert all("component=orders" in msg for msg in messages_list)
-    assert messages_list[0].startswith("info message")
+    assert len(handler.records) == 6
+    # Check that all records have component in extra (not in message)
+    assert all(has_attr(rec, "component", "orders") for rec in handler.records)
+    assert handler.records[0].getMessage().startswith("info message")
 
 
 def test_get_logger_returns_structured_logger():
@@ -487,5 +497,5 @@ def test_get_logger_returns_structured_logger():
     assert isinstance(slog, lp.StructuredLogger)
     with captured_logger("custom") as (_, handler):
         slog.info("hello", operation="greet")
-    [message] = messages(handler)
-    assert "operation=greet" in message
+    record = handler.records[0]
+    assert has_attr(record, "operation", "greet")

@@ -41,20 +41,20 @@ class PnLRestMixin:
             if position.side == fill_pos_side:
                 # Increasing position
                 total_cost = (position.quantity * position.entry_price) + (size_dec * price_dec)
-                new_qty = position.quantity + size_dec
-                position.entry_price = total_cost / new_qty
-                position.quantity = new_qty
+                new_quantity = position.quantity + size_dec
+                position.entry_price = total_cost / new_quantity
+                position.quantity = new_quantity
             else:
                 # Reducing position (Closing)
                 # Calculate Realized PnL on the closed portion
-                close_qty = min(position.quantity, size_dec)
+                close_quantity = min(position.quantity, size_dec)
                 
-                pnl = (price_dec - position.entry_price) * close_qty
+                pnl = (price_dec - position.entry_price) * close_quantity
                 if position.side == "short":
                     pnl = -pnl
                 
                 position.realized_pnl += pnl
-                position.quantity -= close_qty
+                position.quantity -= close_quantity
                 
                 # If flipped or zeroed, we handle simplistically for now (test only checks reduction)
                 if position.quantity == 0:

@@ -35,6 +35,52 @@ class StateCollector:
         raw_env = self._settings.raw_env.get("INTEGRATION_TEST_MODE", "")
         self._integration_mode = str(raw_env).lower() in {"1", "true", "yes"}
         self.collateral_assets = self._resolve_collateral_assets()
+        self._last_collateral_available: Decimal | None = None
+        
+        # Initialize production logger for balance updates
+        from gpt_trader.monitoring.system import get_logger as get_prod_logger
+        self._production_logger = get_prod_logger(settings=self._settings)
+
+    def log_collateral_update(
+        self,
+        collateral_balances: list[Balance],
+        equity: Decimal,
+        collateral_total: Decimal,
+        all_balances: list[Balance],
+    ) -> None:
+        """Log collateral balance changes."""
+        if not collateral_balances:
+            return
+
+        total_available = sum((b.available for b in collateral_balances), Decimal("0"))
+
+        change_value: Decimal | None = None
+        if self._last_collateral_available is not None:
+            diff = total_available - self._last_collateral_available
+            change_value = diff
+            if abs(diff) > Decimal("0.01"):
+                logger.info(
+                    "Collateral available changed",
+                    previous=float(self._last_collateral_available),
+                    current=float(total_available),
+                    delta=float(diff),
+                    operation="collateral_update",
+                )
+
+        self._last_collateral_available = total_available
+
+        # Log to telemetry
+        try:
+            currency = collateral_balances[0].asset if collateral_balances else "USD"
+            self._production_logger.log_balance_update(
+                currency=currency,
+                available=float(total_available),
+                total=float(collateral_total),
+                equity=float(equity),
+                change=float(change_value) if change_value is not None else None,
+            )
+        except Exception:
+            pass
 
     def _resolve_collateral_assets(self) -> set[str]:
         """Resolve collateral assets from environment or use defaults."""

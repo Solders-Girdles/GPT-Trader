@@ -6,6 +6,7 @@ import json
 from collections.abc import Callable, Mapping
 from typing import Any
 
+from gpt_trader.config.constants import WEBHOOK_TIMEOUT
 from gpt_trader.monitoring.alert_types import AlertSeverity
 from gpt_trader.utilities.logging_patterns import get_logger
 
@@ -116,10 +117,10 @@ def _to_float(value: Any, default: float) -> float:
 def create_default_runtime_guard_manager(config: Mapping[str, Any]) -> RuntimeGuardManager:
     manager = RuntimeGuardManager()
 
-    circuit_cfg = config.get("circuit_breakers", {})
-    risk_cfg = config.get("risk_management", {})
+    circuit_config = config.get("circuit_breakers", {})
+    risk_config = config.get("risk_management", {})
 
-    daily_loss_limit = _to_float(circuit_cfg.get("daily_loss_limit"), 500.0)
+    daily_loss_limit = _to_float(circuit_config.get("daily_loss_limit"), 500.0)
     manager.add_guard(
         DailyLossGuard(
             GuardConfig(
@@ -131,7 +132,7 @@ def create_default_runtime_guard_manager(config: Mapping[str, Any]) -> RuntimeGu
         )
     )
 
-    stale_mark_seconds = _to_float(circuit_cfg.get("stale_mark_seconds"), 15.0)
+    stale_mark_seconds = _to_float(circuit_config.get("stale_mark_seconds"), 15.0)
     manager.add_guard(
         StaleMarkGuard(
             GuardConfig(
@@ -142,7 +143,7 @@ def create_default_runtime_guard_manager(config: Mapping[str, Any]) -> RuntimeGu
         )
     )
 
-    error_threshold = _to_float(circuit_cfg.get("error_threshold"), 10.0)
+    error_threshold = _to_float(circuit_config.get("error_threshold"), 10.0)
     manager.add_guard(
         ErrorRateGuard(
             GuardConfig(
@@ -159,13 +160,13 @@ def create_default_runtime_guard_manager(config: Mapping[str, Any]) -> RuntimeGu
         PositionStuckGuard(
             GuardConfig(
                 name="position_stuck",
-                threshold=_to_float(circuit_cfg.get("position_timeout_seconds"), 1800),
+                threshold=_to_float(circuit_config.get("position_timeout_seconds"), 1800),
                 severity=AlertSeverity.WARNING,
             )
         )
     )
 
-    max_drawdown = _to_float(risk_cfg.get("max_drawdown_pct"), 5.0)
+    max_drawdown = _to_float(risk_config.get("max_drawdown_pct"), 5.0)
     manager.add_guard(
         DrawdownGuard(
             GuardConfig(
@@ -219,7 +220,7 @@ def slack_alert_handler(alert: Alert, webhook_url: str) -> None:  # pragma: no c
     }
 
     try:
-        response = requests.post(webhook_url, json=payload, timeout=5)
+        response = requests.post(webhook_url, json=payload, timeout=WEBHOOK_TIMEOUT)
         response.raise_for_status()
     except Exception as exc:
         logger.error(

@@ -7,42 +7,58 @@ import pytest
 from gpt_trader.utilities import logging_patterns
 
 
-def test_log_execution_includes_args_and_result(
-    caplog: pytest.LogCaptureFixture, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    caplog.clear()
-    exec_logger = logging.getLogger("execution.logger")
-    caplog.set_level(logging.DEBUG, "execution.logger")
+class ListHandler(logging.Handler):
+    """Handler that captures log records for inspection."""
 
-    captured_kwargs: list[dict[str, object]] = []
-    original_format = logging_patterns.StructuredLogger._format_message
+    def __init__(self) -> None:
+        super().__init__()
+        self.records: list[logging.LogRecord] = []
 
-    def spy_format(self, message: str, **kwargs: object) -> str:  # type: ignore[override]
-        captured_kwargs.append(dict(kwargs))
-        return original_format(self, message, **kwargs)
+    def emit(self, record: logging.LogRecord) -> None:
+        self.records.append(record)
 
-    monkeypatch.setattr(logging_patterns.StructuredLogger, "_format_message", spy_format)
 
-    @logging_patterns.log_execution(
-        operation="compute_sum",
-        logger=exec_logger,
-        include_args=True,
-        include_result=True,
-    )
-    def compute(a: int, b: int) -> int:
-        return a + b
+def test_log_execution_includes_args_and_result() -> None:
+    """Test that log_execution decorator captures args and results."""
+    # Set up a logger with our custom handler
+    exec_logger = logging.getLogger("execution.test.logger")
+    handler = ListHandler()
+    exec_logger.handlers = [handler]
+    exec_logger.setLevel(logging.DEBUG)
+    exec_logger.propagate = False
 
-    result = compute(3, 4)
+    try:
+        @logging_patterns.log_execution(
+            operation="compute_sum",
+            logger=exec_logger,
+            include_args=True,
+            include_result=True,
+        )
+        def compute(a: int, b: int) -> int:
+            return a + b
 
-    assert result == 7
-    assert len(caplog.records) == 3
-    start, debug_msg, end = (record.message for record in caplog.records)
-    assert start.startswith("Started compute_sum")
-    assert end.startswith("Completed compute_sum")
-    duration_token = next(part for part in end.split() if part.startswith("duration_ms="))
-    assert float(duration_token.split("=")[1]) >= 0
-    assert debug_msg == "Result: 7"
-    assert captured_kwargs[0]["operation"] == "compute_sum"
-    assert captured_kwargs[0]["arg_0"] == "3"
-    assert captured_kwargs[2]["operation"] == "compute_sum"
-    assert captured_kwargs[2]["arg_1"] == "4"
+        result = compute(3, 4)
+
+        assert result == 7
+        assert len(handler.records) == 3
+
+        start_rec, result_rec, end_rec = handler.records
+
+        # Check start message
+        assert "Started compute_sum" in start_rec.getMessage()
+        assert hasattr(start_rec, "operation")
+        assert start_rec.operation == "compute_sum"
+        assert hasattr(start_rec, "arg_0")
+        assert start_rec.arg_0 == "3"
+        assert hasattr(start_rec, "arg_1")
+        assert start_rec.arg_1 == "4"
+
+        # Check result message
+        assert "Result: 7" in result_rec.getMessage()
+
+        # Check end message
+        assert "Completed compute_sum" in end_rec.getMessage()
+        assert hasattr(end_rec, "duration_ms")
+        assert float(end_rec.duration_ms) >= 0
+    finally:
+        exec_logger.handlers = []

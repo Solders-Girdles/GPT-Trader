@@ -42,7 +42,8 @@ async def gather_with_concurrency(
     if first_exception is not None:
         raise first_exception
 
-    assert all(result is not None for result in results)
+    if not all(result is not None for result in results):
+        raise RuntimeError("Not all coroutines completed - this should not happen")
     return [cast(T | BaseException, result) for result in results]
 
 

@@ -4,15 +4,22 @@ Handles HTTP requests with basic retries.
 """
 import time
 import json
-import logging
 import requests
 from typing import Any, Callable
 
+from gpt_trader.config.constants import (
+    DEFAULT_HTTP_TIMEOUT,
+    DEFAULT_RATE_LIMIT_PER_MINUTE,
+    MAX_HTTP_RETRIES,
+    RATE_LIMIT_WARNING_THRESHOLD,
+    RETRY_BASE_DELAY,
+    RETRY_BACKOFF_MULTIPLIER,
+)
 from gpt_trader.features.brokerages.coinbase.auth import SimpleAuth
 from gpt_trader.features.brokerages.coinbase.errors import InvalidRequestError, map_http_error
-from gpt_trader.utilities.logging_patterns import get_correlation_id
+from gpt_trader.utilities.logging_patterns import get_correlation_id, get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="coinbase_client")
 
 class CoinbaseClientBase:
     def __init__(
@@ -20,9 +27,9 @@ class CoinbaseClientBase:
         base_url: str = "https://api.coinbase.com",
         auth: Any | None = None,
         api_mode: str = "advanced",
-        timeout: int = 30,
+        timeout: int | None = None,
         api_version: str = "2024-10-24",
-        rate_limit_per_minute: int = 100,
+        rate_limit_per_minute: int | None = None,
         enable_throttle: bool = True,
         enable_keep_alive: bool = True,
         **kwargs
@@ -30,9 +37,9 @@ class CoinbaseClientBase:
         self.base_url = base_url.rstrip("/")
         self.auth = auth
         self.api_mode = api_mode
-        self.timeout = timeout
+        self.timeout = timeout if timeout is not None else DEFAULT_HTTP_TIMEOUT
         self.api_version = api_version
-        self.rate_limit_per_minute = rate_limit_per_minute
+        self.rate_limit_per_minute = rate_limit_per_minute if rate_limit_per_minute is not None else DEFAULT_RATE_LIMIT_PER_MINUTE
         self.enable_throttle = enable_throttle
         self.enable_keep_alive = enable_keep_alive
         self._is_cdp = hasattr(auth, "key_name") and auth.key_name.startswith("organizations/") if auth else False
@@ -225,7 +232,7 @@ class CoinbaseClientBase:
             # Clean up again
             now = time.time()
             self._request_times = [t for t in self._request_times if now - t < 60]
-        elif len(self._request_times) >= self.rate_limit_per_minute * 0.8:
+        elif len(self._request_times) >= self.rate_limit_per_minute * RATE_LIMIT_WARNING_THRESHOLD:
              logger.warning("Approaching rate limit: %d/%d requests in last minute", len(self._request_times), self.rate_limit_per_minute)
 
         self._request_times.append(now)
@@ -282,12 +289,12 @@ class CoinbaseClientBase:
                 )
 
         try:
-            # Retry logic
-            max_retries = 3
+            # Retry logic with configurable parameters
+            max_retries = MAX_HTTP_RETRIES
             for attempt in range(max_retries + 1):
                 try:
                     resp = perform_request()
-                    
+
                     if resp.status_code == 429:
                         try:
                             retry_after = float(resp.headers.get("retry-after", 1))
@@ -295,10 +302,10 @@ class CoinbaseClientBase:
                             retry_after = 1.0
                         time.sleep(retry_after)
                         continue
-                        
+
                     if 500 <= resp.status_code < 600:
                         if attempt < max_retries:
-                            time.sleep(0.5 * (2 ** attempt))
+                            time.sleep(RETRY_BASE_DELAY * (RETRY_BACKOFF_MULTIPLIER ** attempt))
                             continue
                     
                     if 400 <= resp.status_code < 500:
@@ -307,7 +314,7 @@ class CoinbaseClientBase:
                             data = resp.json()
                             msg = data.get("message", "Bad request")
                             code = data.get("error")
-                        except:
+                        except (json.JSONDecodeError, ValueError, KeyError):
                             msg = resp.text
                             code = None
                         
@@ -330,14 +337,14 @@ class CoinbaseClientBase:
                         data = e.response.json()
                         msg = data.get("message", str(e))
                         code = data.get("error")
-                    except:
+                    except (json.JSONDecodeError, ValueError, KeyError, AttributeError):
                         msg = str(e)
                         code = None
                     raise map_http_error(e.response.status_code, code, msg)
 
                 except (requests.ConnectionError, requests.Timeout, ConnectionError):
                     if attempt < max_retries:
-                        time.sleep(0.5 * (2 ** attempt))
+                        time.sleep(RETRY_BASE_DELAY * (RETRY_BACKOFF_MULTIPLIER ** attempt))
                         continue
                     raise
             

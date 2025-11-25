@@ -1,3 +1,3 @@
-from .strategy import BaselinePerpsStrategy, Decision, Action
+from .strategy import BaselinePerpsStrategy, Decision, Action, StrategyConfig
 
-__all__ = ["BaselinePerpsStrategy", "Decision", "Action"]
+__all__ = ["BaselinePerpsStrategy", "Decision", "Action", "StrategyConfig"]

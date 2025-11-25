@@ -7,7 +7,7 @@ from gpt_trader.orchestration.trading_bot.bot import TradingBot
 from gpt_trader.orchestration.configuration import BotConfig
 from gpt_trader.features.live_trade.strategies.perps_baseline import Action
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_end_to_end_buy_execution():
     # 1. Setup Config
     config = BotConfig(

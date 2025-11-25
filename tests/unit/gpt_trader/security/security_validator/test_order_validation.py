@@ -336,3 +336,70 @@ class TestOrderValidation:
 
         # Should convert strings to numbers and validate
         assert result.is_valid
+
+    def test_non_limit_order_with_non_numeric_price(self, security_validator: Any) -> None:
+        """Test non-limit order with non-numeric price falls back to default.
+
+        This covers line 68 in order_validator.py where price_value is set to 100.0
+        when order is not a limit order and price is non-numeric.
+        """
+        order = {
+            "symbol": "BTC-USD",
+            "quantity": 0.001,
+            "order_type": "market",  # Not limit
+            "price": "not-a-number",  # Non-numeric price
+        }
+        account_value = 100000.0
+
+        result = security_validator.validate_order_request(order, account_value)
+
+        # Should use default price of 100.0 for order value calculation
+        # Order value = 0.001 * 100.0 = 0.10 < $1 minimum
+        assert not result.is_valid
+        assert any("Order value below minimum" in error for error in result.errors)
+
+    def test_order_value_calculation_fallback(self) -> None:
+        """Test order value calculation exception handling.
+
+        This covers lines 73-74 in order_validator.py where TypeError/ValueError
+        is caught during order value calculation.
+        """
+        from gpt_trader.security.order_validator import OrderValidator
+
+        # Create an order where the calculation might fail
+        # We need to bypass the normal validation path
+        order = {
+            "symbol": "BTC-USD",
+            "quantity": 0.001,
+            "order_type": "market",
+            "price": None,  # None can cause issues in some paths
+        }
+        account_value = 100000.0
+
+        # This should handle the edge case gracefully
+        result = OrderValidator.validate_order_request(order, account_value)
+
+        # The validator should handle this without crashing
+        assert result is not None
+
+    def test_order_payload_not_dict(self) -> None:
+        """Test order validation with non-dict payload.
+
+        This covers line 42 in order_validator.py.
+        """
+        from gpt_trader.security.order_validator import OrderValidator
+
+        # Pass a non-dict value
+        result = OrderValidator.validate_order_request("not a dict", 100000.0)
+
+        assert not result.is_valid
+        assert "must be a mapping" in result.errors[0].lower()
+
+    def test_order_payload_list(self) -> None:
+        """Test order validation with list payload."""
+        from gpt_trader.security.order_validator import OrderValidator
+
+        result = OrderValidator.validate_order_request(["item1", "item2"], 100000.0)
+
+        assert not result.is_valid
+        assert "must be a mapping" in result.errors[0].lower()

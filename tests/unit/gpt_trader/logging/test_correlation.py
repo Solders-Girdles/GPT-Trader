@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
-
 from gpt_trader.logging.correlation import (
     add_domain_field,
     correlation_context,
@@ -113,9 +111,6 @@ def test_symbol_context_manager():
         assert context["quantity"] == 1.5
 
 
-@pytest.mark.skip(
-    reason="TODO: Fix context manager cleanup - domain context not properly restored on exit"
-)
 def test_order_context_manager():
     """Test the order context manager."""
     # Test with symbol
@@ -132,9 +127,6 @@ def test_order_context_manager():
         assert "symbol" not in context
 
 
-@pytest.mark.skip(
-    reason="TODO: Fix nested context manager cleanup - outer context not preserved on exit"
-)
 def test_nested_context_managers():
     """Test nesting context managers."""
     with correlation_context("outer-id", operation="outer"):

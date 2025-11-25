@@ -96,16 +96,15 @@ def symbol_context(symbol: str, **additional_fields: Any) -> Iterator[None]:
     Yields:
         None
     """
-    add_domain_field("symbol", symbol)
-    if additional_fields:
-        update_domain_context(**additional_fields)
+    # Store current context to restore later
+    current_domain = get_domain_context()
+    token = domain_context_var.set({**current_domain, "symbol": symbol, **additional_fields})
 
     try:
         yield
     finally:
-        # Note: We don't clean up the symbol context as it might be needed
-        # for the duration of the operation
-        pass
+        # Restore the previous context
+        domain_context_var.reset(token)
 
 
 @contextmanager
@@ -122,19 +121,19 @@ def order_context(
     Yields:
         None
     """
+    # Store current context to restore later
+    current_domain = get_domain_context()
     fields = {"order_id": order_id}
     if symbol:
         fields["symbol"] = symbol
     fields.update(additional_fields)
-
-    update_domain_context(**fields)
+    token = domain_context_var.set({**current_domain, **fields})
 
     try:
         yield
     finally:
-        # Note: We don't clean up the order context as it might be needed
-        # for the duration of the operation
-        pass
+        # Restore the previous context
+        domain_context_var.reset(token)
 
 
 def get_log_context() -> dict[str, Any]:

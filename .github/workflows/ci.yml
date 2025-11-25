@@ -89,7 +89,7 @@ jobs:
 
     - name: Upload naming inventory report
       if: always()
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: naming-inventory-report
         path: |
@@ -152,14 +152,14 @@ jobs:
 
     - name: Upload coverage to Artifacts
       if: github.event_name != 'pull_request'
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: coverage-xml
         path: coverage.xml
 
     - name: Upload HTML coverage report
       if: github.event_name != 'pull_request'
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: coverage-html
         path: htmlcov

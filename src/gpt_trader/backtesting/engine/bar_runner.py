@@ -1,9 +1,8 @@
 """Bar-by-bar runner for backtesting simulations."""
 
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Callable
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Callable
 
 from gpt_trader.backtesting.engine.clock import SimulationClock
 from gpt_trader.backtesting.types import ClockSpeed

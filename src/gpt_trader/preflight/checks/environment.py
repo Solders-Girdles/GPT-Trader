@@ -7,7 +7,7 @@ if TYPE_CHECKING:
     from gpt_trader.preflight.core import PreflightCheck
 
 
-def check_environment_variables(checker: "PreflightCheck") -> bool:
+def check_environment_variables(checker: PreflightCheck) -> bool:
     """Validate critical environment configuration and credential presence."""
     checker.section_header("3. ENVIRONMENT CONFIGURATION")
 

@@ -4,8 +4,9 @@ Order management mixin for Coinbase REST service.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from decimal import Decimal
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any
 
 from gpt_trader.errors import ValidationError
 from gpt_trader.features.brokerages.coinbase.models import to_order
@@ -26,12 +27,12 @@ class OrderRestMixin:
         side: OrderSide,
         order_type: OrderType,
         quantity: Decimal,
-        price: Optional[Decimal] = None,
-        stop_price: Optional[Decimal] = None,
+        price: Decimal | None = None,
+        stop_price: Decimal | None = None,
         tif: TimeInForce = TimeInForce.GTC,
-        client_id: Optional[str] = None,
+        client_id: str | None = None,
         reduce_only: bool = False,
-        leverage: Optional[int] = None,
+        leverage: int | None = None,
         post_only: bool = False,
     ) -> Order:
         """Place a new order."""
@@ -64,10 +65,10 @@ class OrderRestMixin:
 
     def list_orders(
         self,
-        product_id: Optional[str] = None,
-        status: Optional[List[str]] = None,
+        product_id: str | None = None,
+        status: list[str] | None = None,
         limit: int = 100,
-    ) -> List[Order]:
+    ) -> list[Order]:
         """List orders with pagination."""
         orders = []
         cursor = None
@@ -97,7 +98,7 @@ class OrderRestMixin:
 
         return orders
 
-    def get_order(self, order_id: str) -> Optional[Order]:
+    def get_order(self, order_id: str) -> Order | None:
         """Get details of a single order."""
         try:
             response = self.client.get_order_historical(order_id)
@@ -110,10 +111,10 @@ class OrderRestMixin:
 
     def list_fills(
         self,
-        product_id: Optional[str] = None,
-        order_id: Optional[str] = None,
+        product_id: str | None = None,
+        order_id: str | None = None,
         limit: int = 100,
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """List fills with pagination."""
         fills = []
         cursor = None
@@ -145,8 +146,8 @@ class OrderRestMixin:
     def close_position(
         self,
         symbol: str,
-        client_order_id: Optional[str] = None,
-        fallback: Optional[Callable] = None,
+        client_order_id: str | None = None,
+        fallback: Callable | None = None,
     ) -> Order:
         """Close position for a symbol."""
         has_pos = False

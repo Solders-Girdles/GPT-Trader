@@ -8,7 +8,7 @@ import traceback
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Literal, Optional, Tuple
+from typing import Any, Literal
 
 from gpt_trader.features.brokerages.coinbase.models import to_product
 from gpt_trader.features.brokerages.core.interfaces import (
@@ -26,17 +26,17 @@ class PositionState:
     entry_price: Decimal
     realized_pnl: Decimal = Decimal("0")
     unrealized_pnl: Decimal = Decimal("0")
-    leverage: Optional[int] = None
+    leverage: int | None = None
 
 
 class ProductCatalog:
     def __init__(self, ttl_seconds: int = 3600):
-        self._cache: Dict[str, Product] = {}
-        self._funding: Dict[str, tuple[Decimal, Any]] = {}
+        self._cache: dict[str, Product] = {}
+        self._funding: dict[str, tuple[Decimal, Any]] = {}
         self.ttl_seconds = ttl_seconds
         self._last_refresh = datetime.min
 
-    def update_products(self, products: List[Product]) -> None:
+    def update_products(self, products: list[Product]) -> None:
         for p in products:
             self._cache[p.symbol] = p
 
@@ -92,7 +92,7 @@ class ProductCatalog:
             raise NotFoundError(f"Product not found: {product_id}")
         return product
 
-    def get_funding(self, *args) -> Tuple[Optional[Decimal], Optional[datetime]]:
+    def get_funding(self, *args) -> tuple[Decimal | None, datetime | None]:
         if len(args) == 2:
             client, product_id = args
         elif len(args) == 1:
@@ -109,21 +109,21 @@ class ProductCatalog:
 
 class FundingCalculator:
     def accrue_if_due(
-        self, position: PositionState, rate: Decimal, next_funding: Optional[datetime]
+        self, position: PositionState, rate: Decimal, next_funding: datetime | None
     ) -> Decimal:
         # simplified logic for now
         return Decimal("0")
 
 
-def quantize_to_increment(value: Decimal, increment: Optional[Decimal]) -> Decimal:
+def quantize_to_increment(value: Decimal, increment: Decimal | None) -> Decimal:
     if not increment or increment == 0:
         return value
     return (value // increment) * increment
 
 
 def enforce_perp_rules(
-    product: Product, quantity: Decimal, price: Optional[Decimal] = None
-) -> Tuple[Decimal, Optional[Decimal]]:
+    product: Product, quantity: Decimal, price: Decimal | None = None
+) -> tuple[Decimal, Decimal | None]:
     # Quantize quantity
     quantity = quantize_to_increment(quantity, product.step_size)
 

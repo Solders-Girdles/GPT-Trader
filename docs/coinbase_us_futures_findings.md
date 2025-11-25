@@ -6,13 +6,13 @@ We investigated the availability of Perpetual Futures for US-based clients via t
 
 ### Key Discoveries
 
-1.  **Product Availability:** 
+1.  **Product Availability:**
     *   Coinbase *does* offer perpetual-style futures for US clients (launched July 2025) through **Coinbase Financial Markets (CFM)**.
     *   These products are legally distinct from the international "Perpetual Futures" and are technically "long-dated" futures (e.g., 5-year expiry) to comply with CFTC regulations.
 
 2.  **Product IDs:**
     *   **International Exchange:** Uses IDs like `BTC-PERP`.
-    *   **US (CFM) Futures:** Uses different IDs. 
+    *   **US (CFM) Futures:** Uses different IDs.
         *   **Nano Bitcoin Perp-Style:** `BIP` (or potentially `BIT` for standard futures).
         *   **Nano Ether Perp-Style:** `ETP`.
     *   *The standard `BTC-PERP` ID is NOT visible to US spot-only API keys.*
@@ -23,7 +23,7 @@ We investigated the availability of Perpetual Futures for US-based clients via t
 
 ### Impact on Project Road Map
 
-*   **Immediate Testing (Dry-Run):** 
+*   **Immediate Testing (Dry-Run):**
     *   We cannot use `BTC-PERP` for the initial dry-run because the current API key is restricted to Spot trading.
     *   **Decision:** We will fallback to **Spot Trading (`BTC-USD`)** for the initial `canary` profile dry-run to verify the bot's infrastructure, connectivity, and logic.
 

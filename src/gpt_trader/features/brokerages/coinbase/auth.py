@@ -10,7 +10,7 @@ import json
 import secrets
 import time
 from dataclasses import dataclass
-from typing import Any, Dict, Optional  # Import Dict
+from typing import Any  # Import Dict
 
 import jwt
 
@@ -22,7 +22,7 @@ class APIKey:
 
 
 class CoinbaseAuth:
-    def __init__(self, api_key: str, api_secret: str, passphrase: Optional[str] = None):
+    def __init__(self, api_key: str, api_secret: str, passphrase: str | None = None):
         self.api_key = api_key
         self.api_secret = api_secret
         self.passphrase = passphrase
@@ -40,12 +40,12 @@ class CDPJWTAuth(CoinbaseAuth):
 
 
 class HMACAuth(CoinbaseAuth):
-    def __init__(self, api_key: str, api_secret: str, passphrase: Optional[str] = None):
+    def __init__(self, api_key: str, api_secret: str, passphrase: str | None = None):
         super().__init__(api_key, api_secret, passphrase)
         # Decode api_secret from base64 string to bytes for hmac key
         self._decoded_api_secret = base64.b64decode(self.api_secret)
 
-    def sign(self, method: str, path: str, body: Any = None) -> Dict[str, str]:
+    def sign(self, method: str, path: str, body: Any = None) -> dict[str, str]:
         timestamp = str(int(time.time()))
         message = timestamp + method + path
         if body is not None:

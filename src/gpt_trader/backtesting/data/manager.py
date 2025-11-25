@@ -116,7 +116,7 @@ class HistoricalDataManager:
             return []
 
         try:
-            with open(cache_path, "r") as f:
+            with open(cache_path) as f:
                 data = json.load(f)
 
             candles = []
@@ -151,7 +151,7 @@ class HistoricalDataManager:
         existing = []
         if cache_path.exists():
             try:
-                with open(cache_path, "r") as f:
+                with open(cache_path) as f:
                     data = json.load(f)
                     existing = data.get("candles", [])
             except json.JSONDecodeError:
@@ -249,7 +249,7 @@ class HistoricalDataManager:
             return
 
         try:
-            with open(index_path, "r") as f:
+            with open(index_path) as f:
                 data = json.load(f)
 
             # Deserialize datetimes

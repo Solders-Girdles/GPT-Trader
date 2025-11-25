@@ -2,7 +2,7 @@
 Simplified Utilities.
 """
 
-from typing import AsyncIterator
+from collections.abc import AsyncIterator
 
 from .importing import optional_import
 from .logging_patterns import get_logger, log_operation

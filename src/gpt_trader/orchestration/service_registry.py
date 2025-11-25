@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field, replace
-from typing import Any, Dict
+from typing import Any
 
 from gpt_trader.orchestration.configuration import BotConfig
 
@@ -18,7 +18,7 @@ class ServiceRegistry:
     market_data_service: Any = None
     product_catalog: Any = None
     runtime_settings: Any = None
-    extras: Dict[str, Any] = field(default_factory=dict)
+    extras: dict[str, Any] = field(default_factory=dict)
 
     def with_updates(self, **kwargs) -> "ServiceRegistry":
         return replace(self, **kwargs)

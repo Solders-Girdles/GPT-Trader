@@ -4,8 +4,8 @@ import asyncio
 import inspect
 import logging
 import threading
-from collections.abc import Coroutine
-from typing import TYPE_CHECKING, Any, Awaitable, cast
+from collections.abc import Awaitable, Coroutine
+from typing import TYPE_CHECKING, Any, cast
 
 if TYPE_CHECKING:  # pragma: no cover
     pass  # TelemetryEngine import placeholder - block must not be empty

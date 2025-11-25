@@ -15,10 +15,10 @@ GPT-Trader is a production-ready Coinbase **spot trading bot** with future-ready
 
 ### ✅ **MAJOR BREAKTHROUGH: Bot is Operational & Verified (Nov 2025)**
 
-**Update 2025-11-23**: 
+**Update 2025-11-23**:
 - **Live Dry-Run Successful**: Bot successfully connected to Coinbase, authenticated using ECDSA keys from a secure file, and executed trading cycles on `BTC-USD`.
 - **US Futures Discovery**: Confirmed that US-based API keys require specific approval for Futures products (IDs like `BIP` vs `BTC-PERP`). Current dry-runs will use Spot (`BTC-USD`) until Futures access is provisioned.
-- **Infrastructure Hardening**: 
+- **Infrastructure Hardening**:
     - Implemented file-based credential loading (`secrets/`) for improved security.
     - Fixed async blocking issues in `TradingEngine` by offloading network calls.
     - Resolved circular import dependencies in logging utilities.

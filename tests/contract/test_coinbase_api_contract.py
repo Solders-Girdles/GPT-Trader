@@ -1,7 +1,7 @@
 import os
+from collections.abc import Generator
 from datetime import datetime
 from decimal import Decimal
-from typing import Generator
 
 import pytest
 

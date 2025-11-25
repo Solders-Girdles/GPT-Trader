@@ -5,7 +5,7 @@ Portfolio management mixin for Coinbase REST service.
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from gpt_trader.features.brokerages.coinbase.models import to_position
 from gpt_trader.features.brokerages.core.interfaces import Balance, InvalidRequestError, Position
@@ -14,7 +14,7 @@ from gpt_trader.features.brokerages.core.interfaces import Balance, InvalidReque
 class PortfolioRestMixin:
     """Mixin for portfolio management operations."""
 
-    def list_balances(self) -> List[Balance]:
+    def list_balances(self) -> list[Balance]:
         """List all balances."""
         balances = []
         try:
@@ -61,11 +61,11 @@ class PortfolioRestMixin:
             pass
         return balances
 
-    def get_portfolio_balances(self) -> List[Balance]:
+    def get_portfolio_balances(self) -> list[Balance]:
         """Get portfolio balances. Fallback to list_balances if not available."""
         return self.list_balances()
 
-    def list_positions(self) -> List[Position]:
+    def list_positions(self) -> list[Position]:
         """List all open positions."""
         positions = []
         try:
@@ -78,7 +78,7 @@ class PortfolioRestMixin:
             pass
         return positions
 
-    def get_position(self, symbol: str) -> Optional[Position]:
+    def get_position(self, symbol: str) -> Position | None:
         """Get position for a symbol."""
         try:
             if self.endpoints.supports_derivatives():
@@ -88,7 +88,7 @@ class PortfolioRestMixin:
             pass
         return None
 
-    def intx_allocate(self, amount_dict: Dict[str, Any]) -> Dict[str, Any]:
+    def intx_allocate(self, amount_dict: dict[str, Any]) -> dict[str, Any]:
         """Allocate funds to/from INTX portfolio."""
         if self.endpoints.mode != "advanced":
             raise InvalidRequestError("INTX allocation requires advanced mode")
@@ -111,7 +111,7 @@ class PortfolioRestMixin:
         except Exception as e:
             raise e
 
-    def get_intx_balances(self, portfolio_id: str) -> List[Dict[str, Any]]:
+    def get_intx_balances(self, portfolio_id: str) -> list[dict[str, Any]]:
         """Get INTX portfolio balances."""
         if self.endpoints.mode != "advanced":
             return []  # Or raise, test expects empty if not advanced
@@ -135,7 +135,7 @@ class PortfolioRestMixin:
         except Exception:
             return []
 
-    def get_intx_portfolio(self, portfolio_id: str) -> Dict[str, Any]:
+    def get_intx_portfolio(self, portfolio_id: str) -> dict[str, Any]:
         """Get INTX portfolio details."""
         if self.endpoints.mode != "advanced":
             return {}
@@ -147,7 +147,7 @@ class PortfolioRestMixin:
         except Exception:
             return {}
 
-    def list_intx_positions(self, portfolio_id: str) -> List[Position]:
+    def list_intx_positions(self, portfolio_id: str) -> list[Position]:
         """List INTX positions."""
         if self.endpoints.mode != "advanced":
             return []
@@ -160,7 +160,7 @@ class PortfolioRestMixin:
         except Exception:
             return []
 
-    def get_intx_position(self, portfolio_id: str, symbol: str) -> Optional[Position]:
+    def get_intx_position(self, portfolio_id: str, symbol: str) -> Position | None:
         """Get a single INTX position."""
         if self.endpoints.mode != "advanced":
             return None
@@ -170,7 +170,7 @@ class PortfolioRestMixin:
         except Exception:
             return None
 
-    def get_intx_multi_asset_collateral(self) -> Dict[str, Any]:
+    def get_intx_multi_asset_collateral(self) -> dict[str, Any]:
         """Get INTX multi-asset collateral details."""
         if self.endpoints.mode != "advanced":
             return {}
@@ -185,7 +185,7 @@ class PortfolioRestMixin:
         except Exception:
             return {}
 
-    def get_cfm_balance_summary(self) -> Dict[str, Any]:
+    def get_cfm_balance_summary(self) -> dict[str, Any]:
         """Get CFM balance summary."""
         if not self.endpoints.supports_derivatives():
             return {}
@@ -206,7 +206,7 @@ class PortfolioRestMixin:
         )
         return summary
 
-    def list_cfm_sweeps(self) -> List[Dict[str, Any]]:
+    def list_cfm_sweeps(self) -> list[dict[str, Any]]:
         """List CFM sweeps."""
         if not self.endpoints.supports_derivatives():
             return []
@@ -225,7 +225,7 @@ class PortfolioRestMixin:
         )
         return processed_sweeps
 
-    def get_cfm_sweeps_schedule(self) -> Dict[str, Any]:
+    def get_cfm_sweeps_schedule(self) -> dict[str, Any]:
         """Get CFM sweeps schedule."""
         if not self.endpoints.supports_derivatives():
             return {}
@@ -236,7 +236,7 @@ class PortfolioRestMixin:
         except Exception:
             return {}
 
-    def get_cfm_margin_window(self) -> Dict[str, Any]:
+    def get_cfm_margin_window(self) -> dict[str, Any]:
         """Get current CFM margin window."""
         if not self.endpoints.supports_derivatives():
             return {}
@@ -250,9 +250,9 @@ class PortfolioRestMixin:
     def update_cfm_margin_window(
         self,
         margin_window: str,
-        effective_time: Optional[str] = None,
-        extra_payload: Optional[Dict[str, Any]] = None,
-    ) -> Dict[str, Any]:
+        effective_time: str | None = None,
+        extra_payload: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         """Update CFM margin window."""
         if not self.endpoints.supports_derivatives():
             raise InvalidRequestError("Derivatives not supported")

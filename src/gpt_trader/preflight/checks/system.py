@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from gpt_trader.preflight.core import PreflightCheck
 
 
-def check_python_version(checker: "PreflightCheck") -> bool:
+def check_python_version(checker: PreflightCheck) -> bool:
     """Verify Python version meets minimum requirement."""
     checker.section_header("1. PYTHON VERSION CHECK")
 
@@ -24,7 +24,7 @@ def check_python_version(checker: "PreflightCheck") -> bool:
     return False
 
 
-def check_system_time(checker: "PreflightCheck") -> bool:
+def check_system_time(checker: PreflightCheck) -> bool:
     """Verify system clock synchronization against Coinbase server time."""
     checker.section_header("9. SYSTEM TIME SYNC")
 
@@ -87,7 +87,7 @@ def check_system_time(checker: "PreflightCheck") -> bool:
         return False
 
 
-def check_disk_space(checker: "PreflightCheck") -> bool:
+def check_disk_space(checker: PreflightCheck) -> bool:
     """Ensure adequate disk space available."""
     checker.section_header("10. DISK SPACE CHECK")
 

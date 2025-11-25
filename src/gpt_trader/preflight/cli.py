@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import argparse
+from collections.abc import Callable, Sequence
 from datetime import datetime, timezone
-from typing import Callable, Sequence
 
 from .context import Colors
 from .core import PreflightCheck

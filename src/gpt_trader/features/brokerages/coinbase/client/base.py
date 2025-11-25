@@ -201,8 +201,7 @@ class CoinbaseClientBase:
                 data = response.get(pagination_key, [])
 
             if isinstance(data, list):
-                for item in data:
-                    yield item
+                yield from data
             elif data:
                 # Yield single item if not a list (rare for pagination but possible)
                 yield data

@@ -7,7 +7,7 @@ if TYPE_CHECKING:
     from gpt_trader.preflight.core import PreflightCheck
 
 
-def check_risk_configuration(checker: "PreflightCheck") -> bool:
+def check_risk_configuration(checker: PreflightCheck) -> bool:
     """Validate risk management configuration."""
     checker.section_header("6. RISK MANAGEMENT VALIDATION")
 

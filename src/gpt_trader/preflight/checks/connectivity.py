@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from gpt_trader.preflight.core import PreflightCheck
 
 
-def check_api_connectivity(checker: "PreflightCheck") -> bool:
+def check_api_connectivity(checker: PreflightCheck) -> bool:
     """Test connectivity to Coinbase API endpoints."""
     checker.section_header("4. API CONNECTIVITY TEST")
 
@@ -69,7 +69,7 @@ def check_api_connectivity(checker: "PreflightCheck") -> bool:
     return all_good
 
 
-def check_key_permissions(checker: "PreflightCheck") -> bool:
+def check_key_permissions(checker: PreflightCheck) -> bool:
     """Validate Coinbase key permissions and INTX portfolio readiness."""
     checker.section_header("5. KEY PERMISSIONS & INTX READINESS")
 

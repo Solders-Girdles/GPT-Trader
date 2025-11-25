@@ -115,7 +115,7 @@ def count_lines(file_path: Path) -> int:
     """Count lines in a file, ignoring empty lines and comments might be too complex for now,
     so we just count total lines as a proxy for complexity."""
     try:
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, encoding="utf-8") as f:
             return sum(1 for _ in f)
     except Exception as e:
         print(f"Error reading {file_path}: {e}")

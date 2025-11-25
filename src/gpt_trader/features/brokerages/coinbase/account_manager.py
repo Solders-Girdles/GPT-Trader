@@ -4,7 +4,7 @@ Manages Coinbase account state, positions, balances, and CFM/INTX specific featu
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Dict
+from typing import TYPE_CHECKING, Any
 
 from gpt_trader.utilities.logging_patterns import get_logger
 
@@ -17,12 +17,12 @@ logger = get_logger(__name__, component="coinbase_account")
 
 
 class CoinbaseAccountManager:
-    def __init__(self, broker: "CoinbaseBrokerage", event_store: "EventStore"):
+    def __init__(self, broker: CoinbaseBrokerage, event_store: EventStore):
         self.broker = broker
         self._event_store = event_store
 
-    def snapshot(self) -> Dict[str, Any]:
-        snapshot_data: Dict[str, Any] = {}
+    def snapshot(self) -> dict[str, Any]:
+        snapshot_data: dict[str, Any] = {}
 
         # Key Permissions
         try:
@@ -164,7 +164,7 @@ class CoinbaseAccountManager:
 
         return snapshot_data
 
-    def convert(self, payload: Dict[str, Any], commit: bool = False) -> Dict[str, Any]:
+    def convert(self, payload: dict[str, Any], commit: bool = False) -> dict[str, Any]:
         quote = self.broker.create_convert_quote(payload)
         if commit:
             result = self.broker.commit_convert_trade(quote["trade_id"], payload)
@@ -174,7 +174,7 @@ class CoinbaseAccountManager:
             return result
         return quote
 
-    def move_funds(self, payload: Dict[str, Any]) -> Dict[str, Any]:
+    def move_funds(self, payload: dict[str, Any]) -> dict[str, Any]:
         result = self.broker.move_portfolio_funds(payload)
         self._event_store.append_metric(
             bot_id="account_manager", metrics={"event_type": "portfolio_move", "data": result}

@@ -80,6 +80,19 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/monitoring/test_system_logger.py",  # structured logging sink contract covering emit and fallback paths
     "tests/unit/gpt_trader/orchestration/test_orchestration_async.py",  # async orchestration behaviours with concurrency guard rails
     "tests/unit/gpt_trader/persistence/test_json_file_store_contract.py",  # persistence contract with locking, rotation, and corruption scenarios
+    "tests/unit/gpt_trader/orchestration/execution/test_state_collection.py",  # state collection aggregation matrix
+    "tests/unit/gpt_trader/security/test_ip_allowlist_enforcer.py",  # IP allowlist enforcement scenarios
+    "tests/unit/gpt_trader/orchestration/execution/test_order_submission.py",  # order submission flow coverage
+    "tests/unit/gpt_trader/config/test_runtime_settings_utils.py",  # runtime settings validation matrix
+    "tests/unit/gpt_trader/preflight/test_context.py",  # preflight context scenarios
+    "tests/unit/gpt_trader/security/test_request_validator.py",  # request validation coverage
+    "tests/unit/gpt_trader/orchestration/execution/test_validation.py",  # execution validation matrix
+    "tests/unit/gpt_trader/features/brokerages/coinbase/test_transports_coverage.py",  # transport layer coverage
+    "tests/unit/gpt_trader/security/test_input_sanitizer.py",  # input sanitization edge cases
+    "tests/contract/test_coinbase_api_contract.py",  # API contract compliance suite
+    "tests/unit/gpt_trader/preflight/test_core.py",  # preflight core validation
+    "tests/unit/gpt_trader/orchestration/execution/test_guards.py",  # execution guard scenarios
+    "tests/unit/gpt_trader/orchestration/test_symbols.py",  # symbol management coverage
 }
 
 SLEEP_ALLOWLIST = {

@@ -33,7 +33,7 @@ def extract_mark_from_message(msg: dict[str, Any]) -> Decimal | None:
 
 def update_mark_and_metrics(
     coordinator: Any,  # Changed from "TelemetryEngine" to Any due to missing import
-    ctx: "CoordinatorContext",
+    ctx: CoordinatorContext,
     symbol: str,
     mark: Decimal,
 ) -> None:

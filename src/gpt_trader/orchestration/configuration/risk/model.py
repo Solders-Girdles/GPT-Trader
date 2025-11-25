@@ -57,7 +57,7 @@ class RiskConfig:
     @classmethod
     def from_json(cls, path: str) -> "RiskConfig":
         """Load configuration from JSON file."""
-        with open(path, "r") as f:
+        with open(path) as f:
             data = json.load(f)
 
         # Type conversion

@@ -1,7 +1,8 @@
+from collections.abc import Sequence
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Sequence
+from typing import Any
 
 from gpt_trader.features.brokerages.core.interfaces import Product
 

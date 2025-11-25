@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from gpt_trader.preflight.core import PreflightCheck
 
 
-def generate_report(checker: "PreflightCheck") -> tuple[bool, str]:
+def generate_report(checker: PreflightCheck) -> tuple[bool, str]:
     """Render terminal summary and persist JSON report."""
     ctx = checker.context
     checker.section_header("PREFLIGHT REPORT")

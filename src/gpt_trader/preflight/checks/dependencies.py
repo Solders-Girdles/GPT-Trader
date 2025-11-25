@@ -6,7 +6,7 @@ if TYPE_CHECKING:
     from gpt_trader.preflight.core import PreflightCheck
 
 
-def check_dependencies(checker: "PreflightCheck") -> bool:
+def check_dependencies(checker: PreflightCheck) -> bool:
     """Ensure required Python packages are installed."""
     checker.section_header("2. DEPENDENCY CHECK")
 

@@ -5,7 +5,7 @@ Base class for Coinbase REST service.
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import Any, Dict, Optional
+from typing import Any
 
 from gpt_trader.config.runtime_settings import RuntimeSettings
 from gpt_trader.errors import ValidationError
@@ -43,7 +43,7 @@ class CoinbaseRestServiceBase:
         product_catalog: ProductCatalog,
         market_data: MarketDataService,
         event_store: EventStore,
-        settings: Optional[RuntimeSettings] = None,
+        settings: RuntimeSettings | None = None,
     ):
         self.client = client
         self.endpoints = endpoints
@@ -53,11 +53,11 @@ class CoinbaseRestServiceBase:
         self._event_store = event_store
         self.settings = settings
 
-        self._positions: Dict[str, PositionState] = {}
+        self._positions: dict[str, PositionState] = {}
         self._funding_calculator = FundingCalculator()
 
     @property
-    def positions(self) -> Dict[str, PositionState]:
+    def positions(self) -> dict[str, PositionState]:
         return self._positions
 
     def _build_order_payload(
@@ -66,15 +66,15 @@ class CoinbaseRestServiceBase:
         side: OrderSide | str,
         order_type: OrderType | str,
         quantity: Decimal,
-        price: Optional[Decimal] = None,
-        stop_price: Optional[Decimal] = None,
+        price: Decimal | None = None,
+        stop_price: Decimal | None = None,
         tif: TimeInForce | str = TimeInForce.GTC,
-        client_id: Optional[str] = None,
+        client_id: str | None = None,
         reduce_only: bool = False,
-        leverage: Optional[int] = None,
+        leverage: int | None = None,
         post_only: bool = False,
         include_client_id: bool = True,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         # Coerce enums
         if isinstance(side, str):
             try:
@@ -120,7 +120,7 @@ class CoinbaseRestServiceBase:
         # Quantize quantity
         # Normalize to remove trailing zeros for string representation
         quantity_decimal = quantize_to_increment(quantity, product.step_size)
-        quantity_string = "{:f}".format(quantity_decimal.normalize())
+        quantity_string = f"{quantity_decimal.normalize():f}"
 
         # Enforce rules
         enforce_perp_rules(product, quantity_decimal, price)
@@ -219,7 +219,7 @@ class CoinbaseRestServiceBase:
         return payload
 
     def _execute_order_payload(
-        self, symbol: str, payload: Dict[str, Any], client_id: Optional[str] = None
+        self, symbol: str, payload: dict[str, Any], client_id: str | None = None
     ) -> Order:
         import os
 
@@ -256,7 +256,7 @@ class CoinbaseRestServiceBase:
         except Exception as e:
             raise Exception(f"Unexpected error: {e}") from e
 
-    def _find_existing_order_by_client_id(self, symbol: str, client_id: str) -> Optional[Order]:
+    def _find_existing_order_by_client_id(self, symbol: str, client_id: str) -> Order | None:
         if not client_id:
             return None
 

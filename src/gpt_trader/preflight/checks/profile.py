@@ -7,7 +7,7 @@ if TYPE_CHECKING:
     from gpt_trader.preflight.core import PreflightCheck
 
 
-def check_profile_configuration(checker: "PreflightCheck") -> bool:
+def check_profile_configuration(checker: PreflightCheck) -> bool:
     """Validate the selected trading profile configuration file."""
     checker.section_header("8. PROFILE CONFIGURATION")
 

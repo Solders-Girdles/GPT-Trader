@@ -8,7 +8,7 @@ if TYPE_CHECKING:
     from gpt_trader.preflight.core import PreflightCheck
 
 
-def check_test_suite(checker: "PreflightCheck") -> bool:
+def check_test_suite(checker: PreflightCheck) -> bool:
     """Run a targeted subset of the test suite."""
     checker.section_header("7. TEST SUITE VALIDATION")
 

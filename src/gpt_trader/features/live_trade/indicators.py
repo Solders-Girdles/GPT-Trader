@@ -1,5 +1,6 @@
+from collections.abc import Sequence
 from decimal import Decimal
-from typing import Any, Sequence
+from typing import Any
 
 
 def mean_decimal(values: Sequence[Decimal]) -> Decimal:

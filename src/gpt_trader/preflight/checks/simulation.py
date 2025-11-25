@@ -6,7 +6,7 @@ if TYPE_CHECKING:
     from gpt_trader.preflight.core import PreflightCheck
 
 
-def simulate_dry_run(checker: "PreflightCheck") -> bool:
+def simulate_dry_run(checker: PreflightCheck) -> bool:
     """Simulate a dry-run execution to ensure components wire together."""
     checker.section_header("11. DRY-RUN SIMULATION")
 

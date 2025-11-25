@@ -5,7 +5,7 @@ PnL management mixin for Coinbase REST service.
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import Any, Dict
+from typing import Any
 
 from gpt_trader.features.brokerages.coinbase.utilities import PositionState
 
@@ -13,7 +13,7 @@ from gpt_trader.features.brokerages.coinbase.utilities import PositionState
 class PnLRestMixin:
     """Mixin for PnL tracking and calculation."""
 
-    def process_fill_for_pnl(self, fill: Dict[str, Any]) -> None:
+    def process_fill_for_pnl(self, fill: dict[str, Any]) -> None:
         """Update position state and PnL based on a fill."""
         product_id = fill.get("product_id")
         size = fill.get("size")
@@ -60,7 +60,7 @@ class PnLRestMixin:
                     # Could remove, but keeping with 0 size preserves PnL record for now
                     pass
 
-    def get_position_pnl(self, symbol: str) -> Dict[str, Any]:
+    def get_position_pnl(self, symbol: str) -> dict[str, Any]:
         """Get PnL metrics for a specific position."""
         if symbol not in self.positions:
             return {
@@ -88,7 +88,7 @@ class PnLRestMixin:
             "side": position.side,
         }
 
-    def get_portfolio_pnl(self) -> Dict[str, Any]:
+    def get_portfolio_pnl(self) -> dict[str, Any]:
         """Get aggregated PnL for the portfolio."""
         total_upnl = Decimal("0")
         total_rpnl = Decimal("0")

@@ -4,8 +4,6 @@ Product and market data mixin for Coinbase REST service.
 
 from __future__ import annotations
 
-from typing import List, Optional
-
 from gpt_trader.features.brokerages.coinbase.models import to_candle, to_product, to_quote
 from gpt_trader.features.brokerages.core.interfaces import Candle, Product, Quote
 from gpt_trader.utilities.logging_patterns import get_logger
@@ -16,7 +14,7 @@ logger = get_logger(__name__, component="coinbase_product")
 class ProductRestMixin:
     """Mixin for product and market data operations."""
 
-    def list_products(self) -> List[Product]:
+    def list_products(self) -> list[Product]:
         """List all available products."""
         try:
             response = self.client.get_products()
@@ -32,7 +30,7 @@ class ProductRestMixin:
         except Exception:
             return []
 
-    def get_product(self, product_id: str) -> Optional[Product]:
+    def get_product(self, product_id: str) -> Product | None:
         """Get details of a single product."""
         try:
             # Try catalog first for enrichment
@@ -62,7 +60,7 @@ class ProductRestMixin:
         except Exception:
             return None
 
-    def get_rest_quote(self, symbol: str) -> Optional[Quote]:
+    def get_rest_quote(self, symbol: str) -> Quote | None:
         """Get current quote (bid/ask/last) for a symbol via REST."""
         try:
             # This might need a specific endpoint or ticker
@@ -71,7 +69,7 @@ class ProductRestMixin:
         except Exception:
             return None
 
-    def get_candles(self, symbol: str, **kwargs) -> List[Candle]:
+    def get_candles(self, symbol: str, **kwargs) -> list[Candle]:
         """Get historical OHLCV candles for a symbol."""
         try:
             response = self.client.get_candles(symbol, **kwargs)
@@ -86,12 +84,12 @@ class ProductRestMixin:
         except Exception:
             return []
 
-    def get_perpetuals(self) -> List[Product]:
+    def get_perpetuals(self) -> list[Product]:
         """List perpetual products."""
         products = self.list_products()
         return [p for p in products if p.market_type == "PERPETUAL"]
 
-    def get_futures(self) -> List[Product]:
+    def get_futures(self) -> list[Product]:
         """List futures products."""
         products = self.list_products()
         return [p for p in products if p.market_type == "FUTURE"]

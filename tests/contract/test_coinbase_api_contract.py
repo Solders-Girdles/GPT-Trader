@@ -141,6 +141,7 @@ def broker(request) -> Generator:
         yield broker
 
 
+@pytest.mark.asyncio
 async def test_list_balances_contract(broker):
     """
     Contract: list_balances should return a list of Balance objects.
@@ -167,6 +168,7 @@ async def test_list_balances_contract(broker):
         assert isinstance(balance.available, Decimal)
 
 
+@pytest.mark.asyncio
 async def test_product_structure_contract(broker):
     """
     Contract: get_product should return a Product object with specific fields.
@@ -187,6 +189,7 @@ async def test_product_structure_contract(broker):
         assert isinstance(product.min_size, Decimal)
 
 
+@pytest.mark.asyncio
 async def test_order_lifecycle_contract(broker):
     """
     Contract: Place order -> Get order -> Cancel order.

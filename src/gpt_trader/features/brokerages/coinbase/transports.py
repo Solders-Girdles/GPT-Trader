@@ -84,7 +84,7 @@ class RealTransport:
             headers = url
             url = self.url
 
-        if url is not None:
+        if url is not None and isinstance(url, str):
             self.url = url
 
         if self.url is None:

@@ -35,14 +35,14 @@ T = TypeVar("T")
 
 
 # Lazy import helpers to break circular dependency
-def _get_json_logger():
+def _get_json_logger() -> Any:
     """Lazily get orchestration logger to avoid circular import."""
     from gpt_trader.logging import get_orchestration_logger
 
     return get_orchestration_logger("error_handler")
 
 
-def _get_log_context():
+def _get_log_context() -> dict[str, Any]:
     """Lazily get log context to avoid circular import."""
     from gpt_trader.logging import get_log_context
 
@@ -448,7 +448,7 @@ def with_error_handling(
             if fallback:
                 handler.fallback_handlers[Exception] = fallback
 
-            return handler.with_retry(func, *args, recovery_strategy=recovery_strategy, **kwargs)
+            return handler.with_retry(func, *args, recovery_strategy=recovery_strategy, **kwargs)  # type: ignore[arg-type]
 
         return wrapper
 

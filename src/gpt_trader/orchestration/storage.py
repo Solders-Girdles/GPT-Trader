@@ -30,7 +30,7 @@ class StorageBootstrapper:
         self._registry = registry
 
     def bootstrap(self) -> StorageContext:
-        profile = self._config.profile.value
+        profile = self._config.profile.value  # type: ignore[attr-defined]
         settings = self._resolve_settings()
         runtime_paths = resolve_runtime_paths(settings=settings, profile=profile)
         storage_dir = runtime_paths.storage_dir

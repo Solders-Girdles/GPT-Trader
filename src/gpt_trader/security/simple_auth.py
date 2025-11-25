@@ -40,4 +40,4 @@ class SimpleAuth:
         # Note: In a real "no abstraction" world, we might put the JWT generation here.
         # But `coinbase.auth` might still exist. Let's check if we can reuse the existing simple auth logic
         # or if we need to implement a tiny JWT generator here.
-        pass
+        raise NotImplementedError("Auth header generation not yet implemented")

@@ -44,7 +44,7 @@ if not hasattr(asyncio, "coroutine"):  # pragma: no cover - compatibility shim
 
         return wrapper
 
-    asyncio.coroutine = _asyncio_coroutine
+    asyncio.coroutine = _asyncio_coroutine  # type: ignore[attr-defined]
 
 from . import cli
 

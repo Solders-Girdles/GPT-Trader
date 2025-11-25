@@ -105,7 +105,7 @@ def test_invalidate_cache_clears_state(guard_manager):
 
     assert guard_manager._runtime_guard_state is None
     assert guard_manager._runtime_guard_dirty is True
-    guard_manager._invalidate_cache.assert_called_once()
+    guard_manager._invalidate_cache_callback.assert_called_once()
 
 
 def test_invalidate_cache_handles_no_callback(
@@ -354,7 +354,7 @@ def test_guard_daily_loss_triggered_cancels_orders(
         guard_manager.guard_daily_loss(sample_guard_state)
 
     mock_cancel.assert_called_once()
-    guard_manager._invalidate_cache.assert_called()
+    guard_manager._invalidate_cache_callback.assert_called()
 
 
 def test_guard_daily_loss_cancel_failure(guard_manager, sample_guard_state, mock_risk_manager):
@@ -692,7 +692,7 @@ def test_cancel_all_orders_success(guard_manager, mock_broker):
     assert cancelled_count == 2
     assert mock_broker.cancel_order.call_count == 2
     assert len(guard_manager.open_orders) == 0
-    guard_manager._invalidate_cache.assert_called()
+    guard_manager._invalidate_cache_callback.assert_called()
 
 
 def test_cancel_all_orders_partial_failure(guard_manager, mock_broker):
@@ -713,7 +713,7 @@ def test_cancel_all_orders_none_cancelled(guard_manager, mock_broker):
     cancelled_count = guard_manager.cancel_all_orders()
 
     assert cancelled_count == 0
-    guard_manager._invalidate_cache.assert_not_called()
+    guard_manager._invalidate_cache_callback.assert_not_called()
 
 
 def test_cancel_all_orders_empty_list(mock_broker, mock_risk_manager, mock_equity_calculator):
@@ -770,7 +770,7 @@ def test_safe_run_runtime_guards_unrecoverable_error(guard_manager, mock_risk_ma
         guard_manager.safe_run_runtime_guards()
 
     mock_risk_manager.set_reduce_only_mode.assert_called_with(True, reason="guard_failure")
-    guard_manager._invalidate_cache.assert_called()
+    guard_manager._invalidate_cache_callback.assert_called()
 
 
 def test_safe_run_runtime_guards_unexpected_error(guard_manager):
@@ -789,4 +789,4 @@ def test_safe_run_runtime_guards_reduce_only_failure(guard_manager, mock_risk_ma
         # Should not raise even if set_reduce_only_mode fails
         guard_manager.safe_run_runtime_guards()
 
-    guard_manager._invalidate_cache.assert_called()
+    guard_manager._invalidate_cache_callback.assert_called()

@@ -71,7 +71,7 @@ class GuardManager:
         self.risk_manager = risk_manager
         self._calculate_equity = equity_calculator
         self.open_orders = open_orders
-        self._invalidate_cache = invalidate_cache_callback
+        self._invalidate_cache_callback = invalidate_cache_callback
 
         # Guard state caching
         self._runtime_guard_state: RuntimeGuardState | None = None
@@ -83,8 +83,8 @@ class GuardManager:
         """Force the next runtime guard invocation to refresh cached state."""
         self._runtime_guard_state = None
         self._runtime_guard_dirty = True
-        if self._invalidate_cache:
-            self._invalidate_cache()
+        if self._invalidate_cache_callback is not None:
+            self._invalidate_cache_callback()
 
     def should_run_full_guard(self, now: float) -> bool:
         """Check if a full guard run is needed."""
@@ -229,7 +229,7 @@ class GuardManager:
                     message="Failed to cancel orders after daily loss breach",
                     details={"equity": str(state.equity)},
                 ) from exc
-            self._invalidate_cache()
+            self.invalidate_cache()
 
     def guard_liquidation_buffers(self, state: RuntimeGuardState, incremental: bool) -> None:
         """Check liquidation price buffers for all positions."""

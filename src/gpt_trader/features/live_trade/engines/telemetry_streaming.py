@@ -34,7 +34,7 @@ def stop_streaming_background(coordinator: Any) -> None:  # type: ignore[name-de
 def _should_enable_streaming(coordinator: Any) -> bool:  # type: ignore[name-defined] # Changed to Any
     config = coordinator.context.config
     profile = getattr(config, "profile", None)
-    if hasattr(profile, "value"):
+    if profile is not None and hasattr(profile, "value"):
         profile_name = profile.value
     else:
         profile_name = str(profile or "").lower()

@@ -178,7 +178,7 @@ class OrderRestMixin:
 
         while has_more:
             try:
-                kwargs = {"limit": limit}
+                kwargs: dict[str, Any] = {"limit": limit}
                 if product_id:
                     kwargs["product_id"] = product_id
                 if order_id:

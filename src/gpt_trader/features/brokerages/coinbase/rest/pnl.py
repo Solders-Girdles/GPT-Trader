@@ -47,9 +47,10 @@ class PnLRestMixin:
         # Map fill side to position side
         fill_pos_side: Literal["long", "short"] = "long" if side_norm == "buy" else "short"
 
-        if product_id not in self.positions:
-            self._positions[product_id] = PositionState(
-                symbol=str(product_id), side=fill_pos_side, quantity=size_dec, entry_price=price_dec
+        product_id_str = str(product_id)
+        if product_id_str not in self.positions:
+            self._positions[product_id_str] = PositionState(
+                symbol=product_id_str, side=fill_pos_side, quantity=size_dec, entry_price=price_dec
             )
         else:
             position = self.positions[product_id]
@@ -88,7 +89,8 @@ class PnLRestMixin:
             }
 
         position = self.positions[symbol]
-        mark_price = self.market_data.get_mark(symbol) or position.entry_price
+        raw_mark = self.market_data.get_mark(symbol)
+        mark_price = Decimal(str(raw_mark)) if raw_mark is not None else position.entry_price
 
         # Calc unrealized
         upnl = (mark_price - position.entry_price) * position.quantity

@@ -218,7 +218,8 @@ class OrderSubmitter:
 
         except Exception as exc:
             # 4. Handle Failure
-            return self._handle_order_failure(exc, symbol, side, order_quantity)
+            self._handle_order_failure(exc, symbol, side, order_quantity)
+            return None
 
     def _generate_submit_id(self, client_order_id: str | None) -> str:
         """Generate or retrieve client order ID."""
@@ -328,9 +329,10 @@ class OrderSubmitter:
             return None
 
         status_value = getattr(order, "status", None)
-        status_name = (
-            status_value.value if hasattr(status_value, "value") else str(status_value or "")
-        )
+        if status_value is not None and hasattr(status_value, "value"):
+            status_name = status_value.value
+        else:
+            status_name = str(status_value or "")
 
         # Check for Rejection
         if str(status_name).upper() in {"REJECTED", "CANCELLED", "FAILED"}:
@@ -556,7 +558,7 @@ class OrderSubmitter:
             submitted_at=now,
             updated_at=now,
         )
-        result = self.broker.place_order(order_obj)
+        result = self.broker.place_order(order_obj)  # type: ignore[arg-type]
         if inspect.isawaitable(result):
             return self._await_integration_call(result)
         return result

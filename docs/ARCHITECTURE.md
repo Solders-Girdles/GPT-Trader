@@ -14,7 +14,7 @@ While this document describes the **target architecture**, you will encounter "z
 
 ---
 status: transition
-last-updated: 2025-11-23
+last-updated: 2025-11-25
 ---
 
 ## Current State
@@ -66,7 +66,7 @@ Risk Guards → Coinbase Brokerage Adapter → Metrics + Telemetry
 
 ### Entry Point & Service Wiring
 
-- `poetry run coinbase-trader` invokes `gpt_trader.cli:main`, producing a `BotConfig` from
+- `uv run coinbase-trader` invokes `gpt_trader.cli:main`, producing a `BotConfig` from
   CLI arguments and environment overrides.
 - `gpt_trader/orchestration/bootstrap.py` hydrates the `ServiceRegistry`, wiring the
   broker adapter, risk manager, execution engine, and telemetry surfaces before
@@ -265,7 +265,7 @@ The orchestration layer provides coordinated control across trading operations t
 - Order placement/management through `LiveExecutionEngine`
 - Account telemetry snapshots and cycle metrics persisted for monitoring
 - Runtime safety rails: daily loss guard, liquidation buffer enforcement, mark staleness detection, volatility circuit breaker, correlation checks
-- 1483 active tests selected at collection time (`poetry run pytest --collect-only`; 1484 collected / 1 deselected)
+- 1557 active tests selected at collection time (`uv run pytest --collect-only`; 1564 collected / 7 deselected)
 
 ### ⚠️ Partially Working / Future Activation
 - Perpetual futures execution: code paths compile and tests run, but live trading remains disabled without INTX
@@ -346,13 +346,12 @@ monitoring: real-time
   the runtime guard manager and dashboards.
 - **System Footprint**: bot process typically <50 MB RSS with sub-100 ms WebSocket latency in spot
   mode.
-- **Test Discovery** (`pytest --collect-only`): 476 discovered / 472 selected / 4 deselected /
-  4 skipped (a duplicate-named test file is tracked for follow-up).
+- **Test Discovery** (`uv run pytest --collect-only`): 1557 collected / 7 deselected.
 
 ## Verification Path
 
-1. **Regression Suite**: `poetry run pytest -q`
-2. **Smoke Test**: `poetry run coinbase-trader run --profile dev --dev-fast`
+1. **Regression Suite**: `uv run pytest -q`
+2. **Smoke Test**: `uv run coinbase-trader run --profile dev --dev-fast`
 3. **Validation**: `python scripts/validation/verify_core.py --check all`
 
 ## Dependencies

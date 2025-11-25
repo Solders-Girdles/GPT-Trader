@@ -24,7 +24,7 @@ class TradingEngine(BaseEngine):
         super().__init__(context)
         self.running = False
         self.strategy = BaselinePerpsStrategy(config=self.context.config)
-        self.price_history = defaultdict(list)
+        self.price_history: dict[str, list[Decimal]] = defaultdict(list)
 
     @property
     def name(self) -> str:
@@ -37,7 +37,7 @@ class TradingEngine(BaseEngine):
         self._register_background_task(task)
         return [task]
 
-    async def _run_loop(self):
+    async def _run_loop(self) -> None:
         logger.info("Starting strategy loop...")
         while self.running:
             try:
@@ -47,7 +47,7 @@ class TradingEngine(BaseEngine):
 
             await asyncio.sleep(self.context.config.interval)
 
-    async def _cycle(self):
+    async def _cycle(self) -> None:
         """One trading cycle."""
         # 1. Fetch Data
         for symbol in self.context.config.symbols:

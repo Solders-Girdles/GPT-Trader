@@ -2,14 +2,17 @@
 Configuration validators for validating config dictionaries.
 """
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from gpt_trader.errors import ValidationError
+
+if TYPE_CHECKING:
+    from gpt_trader.utilities.logging_patterns import StructuredLogger
 
 from .base_validators import Validator
 
 
-def _get_logger():
+def _get_logger() -> "StructuredLogger":
     """Lazy load logger to avoid circular imports"""
     from gpt_trader.utilities.logging_patterns import get_logger
 

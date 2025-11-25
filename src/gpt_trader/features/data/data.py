@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Any
+from typing import Any, cast
 import pandas as pd
 from gpt_trader.features.data.types import DataQuery
 
@@ -51,7 +51,7 @@ def fetch_data(query: DataQuery) -> pd.DataFrame | None:
     if _cache:
         cached = _cache.get(cache_key)
         if cached is not None:
-            return cached
+            return cast(pd.DataFrame, cached)
 
     # Check storage
     if _storage:
@@ -59,13 +59,13 @@ def fetch_data(query: DataQuery) -> pd.DataFrame | None:
         if data is not None:
             if _cache:
                 _cache.put(cache_key, data)
-            return data
+            return cast(pd.DataFrame, data)
 
     # Download (mock)
     result = download_from_yahoo(query.symbols, query.start_date, query.end_date, query.interval)
     if isinstance(result, dict) and len(query.symbols) == 1:
-        return result.get(query.symbols[0])
-    return result
+        return cast(pd.DataFrame, result.get(query.symbols[0]))
+    return cast(pd.DataFrame | None, result)
 
 
 def download_from_yahoo(*args: Any, **kwargs: Any) -> Any:

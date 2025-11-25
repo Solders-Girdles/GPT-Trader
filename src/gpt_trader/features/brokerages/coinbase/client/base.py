@@ -5,7 +5,7 @@ Handles HTTP requests with basic retries.
 
 import json
 import time
-from typing import Any
+from typing import Any, cast
 
 import requests
 
@@ -345,7 +345,7 @@ class CoinbaseClientBase:
 
                     if resp.content:
                         try:
-                            return resp.json()
+                            return cast(dict[Any, Any], resp.json())
                         except ValueError:
                             return {"raw": resp.text}
                     return {}

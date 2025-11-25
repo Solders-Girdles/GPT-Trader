@@ -10,31 +10,31 @@ _quality_checker: Any = None
 
 
 # Console helpers
-def console_success(*args):
+def console_success(*args: Any) -> None:
     pass
 
 
-def console_warning(*args):
+def console_warning(*args: Any) -> None:
     pass
 
 
-def console_error(*args):
+def console_error(*args: Any) -> None:
     pass
 
 
-def console_cache(*args):
+def console_cache(*args: Any) -> None:
     pass
 
 
-def console_storage(*args):
+def console_storage(*args: Any) -> None:
     pass
 
 
-def console_data(*args):
+def console_data(*args: Any) -> None:
     pass
 
 
-def store_data(symbol: str, data: pd.DataFrame, **kwargs) -> bool:
+def store_data(symbol: str, data: pd.DataFrame, **kwargs: Any) -> bool:
     if _storage:
         success = _storage.store(
             symbol=symbol, data=data, data_type=kwargs.get("data_type"), source=kwargs.get("source")
@@ -68,7 +68,7 @@ def fetch_data(query: DataQuery) -> pd.DataFrame | None:
     return result
 
 
-def download_from_yahoo(*args, **kwargs):
+def download_from_yahoo(*args: Any, **kwargs: Any) -> Any:
     return None
 
 
@@ -96,12 +96,12 @@ def get_storage_stats() -> Any:
 
         # The test expects an object with attributes
         class StatsObj:
-            def __init__(self, **kwargs):
+            def __init__(self, **kwargs: Any) -> None:
                 for k, v in kwargs.items():
                     setattr(self, k, v)
 
             @property
-            def cache_entries(self):
+            def cache_entries(self) -> int:
                 return 0
 
         return StatsObj(**stats)

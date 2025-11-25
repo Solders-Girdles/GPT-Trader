@@ -37,15 +37,29 @@ class BotConfig:
     # Symbols
     symbols: list[str] = field(default_factory=lambda: ["BTC-USD", "ETH-USD"])
 
+    # Derivatives/Perpetuals Parameters
+    derivatives_enabled: bool = False
+    trailing_stop_pct: Decimal = Decimal("0.01")
+    perps_position_fraction: Decimal = Decimal("0.1")
+    target_leverage: int = 1
+    enable_shorts: bool = False
+
     # System
     log_level: str = "INFO"
     dry_run: bool = False
+    mock_broker: bool = False
     profile: object = None
 
     @classmethod
-    def from_profile(cls, profile: object) -> "BotConfig":
+    def from_profile(
+        cls,
+        profile: object,
+        dry_run: bool = False,
+        mock_broker: bool = False,
+        **kwargs: object,
+    ) -> "BotConfig":
         """Create a config from a profile name or enum."""
-        return cls(profile=profile)
+        return cls(profile=profile, dry_run=dry_run, mock_broker=mock_broker)
 
     @classmethod
     def from_env(cls) -> "BotConfig":

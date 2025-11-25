@@ -34,8 +34,8 @@ class CoinbaseClientBase:
         rate_limit_per_minute: int | None = None,
         enable_throttle: bool = True,
         enable_keep_alive: bool = True,
-        **kwargs,
-    ):
+        **kwargs: Any,
+    ) -> None:
         self.base_url = base_url.rstrip("/")
         self.auth = auth
         self.api_mode = api_mode
@@ -55,8 +55,8 @@ class CoinbaseClientBase:
         )
 
         self.session = requests.Session()
-        self._transport = None  # For testing
-        self._request_times = []
+        self._transport: Any | None = None  # For testing
+        self._request_times: list[float] = []
 
     def set_transport_for_testing(self, transport: Any) -> None:
         self._transport = transport
@@ -176,10 +176,10 @@ class CoinbaseClientBase:
     def paginate(
         self,
         path: str,
-        params: dict = None,
-        pagination_key: str = None,
+        params: dict[str, Any] | None = None,
+        pagination_key: str | None = None,
         cursor_param: str = "cursor",
-        cursor_field: str = None,
+        cursor_field: str | None = None,
     ) -> Any:
         """
         Generator that yields items from paginated endpoints.
@@ -291,7 +291,7 @@ class CoinbaseClientBase:
         if corr_id:
             headers["X-Correlation-Id"] = corr_id
 
-        def perform_request():
+        def perform_request() -> requests.Response:
             if self._transport:
                 # Use mock transport
                 status, resp_headers, text = self._transport(

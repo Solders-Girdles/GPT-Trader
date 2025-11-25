@@ -377,7 +377,7 @@ class UnifiedLogger:
             self.logger.info(content)  # This should be fine as it's a single line
 
 
-LOG_FIELDS = {}
+LOG_FIELDS: dict[str, Any] = {}
 
 __all__ = [
     "get_logger",

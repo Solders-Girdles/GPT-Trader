@@ -25,16 +25,26 @@ class TradingBot:
         registry: Any = None,
         event_store: Any = None,
         orders_store: Any = None,
-    ):
+    ) -> None:
         self.config = config
         self.container = container
         self.running = False
+
+        # Store registry components for CLI access
+        self._registry = registry
+        self.broker: Any = registry.broker if registry else None
+        self.account_manager: Any = getattr(registry, "account_manager", None) if registry else None
+        self.account_telemetry: Any = (
+            getattr(registry, "account_telemetry", None) if registry else None
+        )
+        self.risk_manager: Any = getattr(registry, "risk_manager", None) if registry else None
+        self.runtime_state: Any = getattr(registry, "runtime_state", None) if registry else None
 
         # Setup context (simplified)
         self.context = CoordinatorContext(
             config=config,
             registry=registry,
-            broker=registry.broker if registry else None,
+            broker=self.broker,
             symbols=tuple(config.symbols),
         )
 
@@ -63,6 +73,14 @@ class TradingBot:
     async def stop(self) -> None:
         self.running = False
         await self.engine.shutdown()
+
+    async def shutdown(self) -> None:
+        """Alias for stop() to match CLI interface."""
+        await self.stop()
+
+    def execute_decision(self, decision: Any) -> Any:
+        """Execute a trading decision. Stub for interface compatibility."""
+        return self.engine.execute_decision(decision) if hasattr(self.engine, "execute_decision") else None
 
 
 __all__ = ["TradingBot"]

@@ -92,7 +92,7 @@ class ProductCatalog:
             raise NotFoundError(f"Product not found: {product_id}")
         return product
 
-    def get_funding(self, *args) -> tuple[Decimal | None, datetime | None]:
+    def get_funding(self, *args: Any) -> tuple[Decimal | None, datetime | None]:
         if len(args) == 2:
             client, product_id = args
         elif len(args) == 1:

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import contextvars
 import uuid
-from collections.abc import Generator
+from collections.abc import Iterator
 from contextlib import contextmanager
 from typing import Any
 
@@ -59,7 +59,7 @@ def add_domain_field(key: str, value: Any) -> None:
 
 
 @contextmanager
-def correlation_context(correlation_id: str | None = None, **domain_fields: Any) -> Generator[None]:
+def correlation_context(correlation_id: str | None = None, **domain_fields: Any) -> Iterator[None]:
     """Context manager for setting correlation ID and domain fields.
 
     Args:
@@ -86,7 +86,7 @@ def correlation_context(correlation_id: str | None = None, **domain_fields: Any)
 
 
 @contextmanager
-def symbol_context(symbol: str, **additional_fields: Any) -> Generator[None]:
+def symbol_context(symbol: str, **additional_fields: Any) -> Iterator[None]:
     """Context manager for setting symbol-specific context.
 
     Args:
@@ -111,7 +111,7 @@ def symbol_context(symbol: str, **additional_fields: Any) -> Generator[None]:
 @contextmanager
 def order_context(
     order_id: str, symbol: str | None = None, **additional_fields: Any
-) -> Generator[None]:
+) -> Iterator[None]:
     """Context manager for setting order-specific context.
 
     Args:

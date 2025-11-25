@@ -31,7 +31,7 @@ class TickerCache:
 
 
 class CoinbaseTickerService:
-    def __init__(self, symbols: list[str] = None):
+    def __init__(self, symbols: list[str] | None = None):
         self._symbols = symbols or []
         self._running = False
         self._thread: threading.Thread | None = None
@@ -50,7 +50,7 @@ class CoinbaseTickerService:
     def set_symbols(self, symbols: list[str]) -> None:
         self._symbols = symbols
 
-    def _run(self):
+    def _run(self) -> None:
         pass
 
     def get_mark(self, symbol: str) -> float | None:

@@ -12,12 +12,12 @@ from datetime import datetime
 from typing import TYPE_CHECKING, Any, Optional
 
 if TYPE_CHECKING:  # pragma: no cover
-    from gpt_trader.utilities.logging_patterns import UnifiedLogger
+    from gpt_trader.utilities.logging_patterns import StructuredLogger
 
-_logger: Optional["UnifiedLogger"] = None
+_logger: Optional["StructuredLogger"] = None
 
 
-def _get_logger() -> "UnifiedLogger":
+def _get_logger() -> "StructuredLogger":
     global _logger
     if _logger is None:
         from gpt_trader.utilities.logging_patterns import get_logger as _get_structured_logger

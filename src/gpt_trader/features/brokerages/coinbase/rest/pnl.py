@@ -5,13 +5,30 @@ PnL management mixin for Coinbase REST service.
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import Any
+from typing import TYPE_CHECKING, Any, Literal
 
 from gpt_trader.features.brokerages.coinbase.utilities import PositionState
 
+if TYPE_CHECKING:
+    from gpt_trader.features.brokerages.coinbase.market_data_service import MarketDataService
+
 
 class PnLRestMixin:
-    """Mixin for PnL tracking and calculation."""
+    """Mixin for PnL tracking and calculation.
+
+    This mixin is designed to be used with CoinbaseRestServiceBase which provides:
+    - positions: dict[str, PositionState]
+    - _positions: dict[str, PositionState]
+    - market_data: MarketDataService
+    """
+
+    if TYPE_CHECKING:
+        # Type hints for attributes provided by the base class
+        _positions: dict[str, PositionState]
+        market_data: MarketDataService
+
+        @property
+        def positions(self) -> dict[str, PositionState]: ...
 
     def process_fill_for_pnl(self, fill: dict[str, Any]) -> None:
         """Update position state and PnL based on a fill."""
@@ -28,11 +45,11 @@ class PnLRestMixin:
         side_norm = str(side).lower()  # buy/sell
 
         # Map fill side to position side
-        fill_pos_side = "long" if side_norm == "buy" else "short"
+        fill_pos_side: Literal["long", "short"] = "long" if side_norm == "buy" else "short"
 
         if product_id not in self.positions:
             self._positions[product_id] = PositionState(
-                symbol=product_id, side=fill_pos_side, quantity=size_dec, entry_price=price_dec
+                symbol=str(product_id), side=fill_pos_side, quantity=size_dec, entry_price=price_dec
             )
         else:
             position = self.positions[product_id]

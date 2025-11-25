@@ -4,6 +4,8 @@ Product and market data mixin for Coinbase REST service.
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING, Any
+
 from gpt_trader.features.brokerages.coinbase.models import to_candle, to_product, to_quote
 from gpt_trader.features.brokerages.core.interfaces import Candle, Product, Quote
 from gpt_trader.utilities.logging_patterns import get_logger
@@ -12,7 +14,16 @@ logger = get_logger(__name__, component="coinbase_product")
 
 
 class ProductRestMixin:
-    """Mixin for product and market data operations."""
+    """Mixin for product and market data operations.
+
+    This mixin is designed to be used with CoinbaseRestServiceBase which provides:
+    - client: CoinbaseClient
+    """
+
+    if TYPE_CHECKING:
+        # Type hints for attributes provided by the base class
+        client: Any
+        product_catalog: Any
 
     def list_products(self) -> list[Product]:
         """List all available products."""
@@ -69,7 +80,7 @@ class ProductRestMixin:
         except Exception:
             return None
 
-    def get_candles(self, symbol: str, **kwargs) -> list[Candle]:
+    def get_candles(self, symbol: str, **kwargs: Any) -> list[Candle]:
         """Get historical OHLCV candles for a symbol."""
         try:
             response = self.client.get_candles(symbol, **kwargs)

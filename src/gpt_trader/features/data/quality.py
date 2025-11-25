@@ -4,9 +4,9 @@ import pandas as pd
 
 
 class DataQualityChecker:
-    def __init__(self):
-        self.quality_history = []
-        self.scores = []
+    def __init__(self) -> None:
+        self.quality_history: list[DataQualityChecker.QualityResult] = []
+        self.scores: list[float] = []
 
     class QualityResult:
         def __init__(self, acceptable: bool = True, score: float = 1.0):

@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from decimal import Decimal
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from gpt_trader.errors import ValidationError
 from gpt_trader.features.brokerages.coinbase.models import to_order
@@ -19,7 +19,39 @@ from gpt_trader.features.brokerages.core.interfaces import (
 
 
 class OrderRestMixin:
-    """Mixin for order management operations."""
+    """Mixin for order management operations.
+
+    This mixin is designed to be used with CoinbaseRestServiceBase which provides:
+    - client: CoinbaseClient
+    - _build_order_payload: method
+    - _execute_order_payload: method
+    """
+
+    if TYPE_CHECKING:
+        # Type hints for attributes provided by the base class
+        client: Any
+
+        def _build_order_payload(
+            self,
+            symbol: str,
+            side: OrderSide | str,
+            order_type: OrderType | str,
+            quantity: Decimal,
+            price: Decimal | None = None,
+            stop_price: Decimal | None = None,
+            tif: TimeInForce | str = TimeInForce.GTC,
+            client_id: str | None = None,
+            reduce_only: bool = False,
+            leverage: int | None = None,
+            post_only: bool = False,
+            include_client_id: bool = True,
+        ) -> dict[str, Any]: ...
+
+        def _execute_order_payload(
+            self, symbol: str, payload: dict[str, Any], client_id: str | None = None
+        ) -> Order: ...
+
+        def list_positions(self) -> list[Any]: ...
 
     def place_order(
         self,

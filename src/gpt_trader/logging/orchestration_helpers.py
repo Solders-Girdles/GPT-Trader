@@ -102,7 +102,7 @@ def log_order_event(
     logger = get_orchestration_logger("order_events")
 
     # Add order context
-    context = {
+    context: dict[str, Any] = {
         "event_type": event_type,
         "order_id": order_id,
     }
@@ -146,7 +146,7 @@ def log_strategy_decision(
     logger = get_orchestration_logger("strategy_decisions")
 
     # Add strategy context
-    context = {
+    context: dict[str, Any] = {
         "symbol": symbol,
         "decision": decision,
     }
@@ -306,7 +306,7 @@ def with_trading_context(operation: str) -> Callable[[F], F]:
 
     def decorator(func: F) -> F:
         @wraps(func)
-        def wrapper(*args: Any, **kwargs: Any):
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
             with correlation_context(operation=operation):
                 return func(*args, **kwargs)
 
@@ -327,7 +327,7 @@ def with_symbol_context(symbol: str) -> Callable[[F], F]:
 
     def decorator(func: F) -> F:
         @wraps(func)
-        def wrapper(*args: Any, **kwargs: Any):
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
             with symbol_context(symbol):
                 return func(*args, **kwargs)
 
@@ -349,7 +349,7 @@ def with_order_context(order_id: str, symbol: str | None = None) -> Callable[[F]
 
     def decorator(func: F) -> F:
         @wraps(func)
-        def wrapper(*args: Any, **kwargs: Any):
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
             with order_context(order_id, symbol):
                 return func(*args, **kwargs)
 

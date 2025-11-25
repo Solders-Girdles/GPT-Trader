@@ -85,7 +85,7 @@ class SimulationConfig:
     enable_golden_path_validation: bool = False
     enable_chaos_testing: bool = False
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Set default slippage if not provided."""
         if self.slippage_bps is None:
             # Default slippage: 2 bps for BTC/ETH, 5 bps for others

@@ -5,14 +5,29 @@ Portfolio management mixin for Coinbase REST service.
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from gpt_trader.features.brokerages.coinbase.models import to_position
 from gpt_trader.features.brokerages.core.interfaces import Balance, InvalidRequestError, Position
 
+if TYPE_CHECKING:
+    from gpt_trader.features.brokerages.coinbase.rest._typing import CoinbaseRestServiceProtocol
+
 
 class PortfolioRestMixin:
-    """Mixin for portfolio management operations."""
+    """Mixin for portfolio management operations.
+
+    This mixin is designed to be used with CoinbaseRestServiceBase which provides:
+    - client: CoinbaseClient
+    - endpoints: CoinbaseEndpoints
+    - _event_store: EventStore
+    """
+
+    if TYPE_CHECKING:
+        # Type hints for attributes provided by the base class
+        client: Any
+        endpoints: Any
+        _event_store: Any
 
     def list_balances(self) -> list[Balance]:
         """List all balances."""

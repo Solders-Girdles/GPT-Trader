@@ -15,7 +15,7 @@ RISK_CONFIG_ENV_KEYS = [
     "MAX_POSITION_PCT_PER_SYMBOL",
 ]
 
-RISK_CONFIG_ENV_ALIASES = {}
+RISK_CONFIG_ENV_ALIASES: dict[str, str] = {}
 
 
 @dataclass

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import Any
 
 from .checks import (
     check_api_connectivity,
@@ -76,7 +77,7 @@ class PreflightCheck:
     def _expected_env_defaults(self) -> dict[str, tuple[str, bool]]:
         return self.context.expected_env_defaults()
 
-    def _build_cdp_client(self):
+    def _build_cdp_client(self) -> Any:
         return self.context.build_cdp_client()
 
     # ----- Check delegations ------------------------------------------------

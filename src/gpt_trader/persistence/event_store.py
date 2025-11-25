@@ -24,3 +24,38 @@ class EventStore:
 
     def append_position(self, bot_id: str, position: dict[str, Any]) -> None:
         self.append("position", {"bot_id": bot_id, "position": position})
+
+    def store_event(self, event_type: str, data: dict[str, Any]) -> None:
+        """Alias for append - stores an event with given type and data."""
+        self.append(event_type, data)
+
+    def append_error(
+        self,
+        error: str | None = None,
+        details: dict[str, Any] | None = None,
+        *,
+        bot_id: str | None = None,
+        message: str | None = None,
+        context: dict[str, Any] | None = None,
+    ) -> None:
+        """Append an error event."""
+        error_message = message or error or "unknown_error"
+        error_details = context or details or {}
+        self.append("error", {
+            "bot_id": bot_id,
+            "error": error_message,
+            "details": error_details,
+        })
+
+    def append_trade(
+        self,
+        bot_id_or_trade: str | dict[str, Any],
+        trade: dict[str, Any] | None = None,
+    ) -> None:
+        """Append a trade event."""
+        if isinstance(bot_id_or_trade, dict):
+            # Called as append_trade(trade_dict)
+            self.append("trade", bot_id_or_trade)
+        else:
+            # Called as append_trade(bot_id, trade_dict)
+            self.append("trade", {"bot_id": bot_id_or_trade, **(trade or {})})

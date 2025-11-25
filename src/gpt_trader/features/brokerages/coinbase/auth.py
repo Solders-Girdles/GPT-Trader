@@ -104,3 +104,8 @@ def get_auth() -> SimpleAuth:
         # Fallback for tests or if not set, though ideally should raise
         return SimpleAuth("test", "test_key")
     return SimpleAuth(name, key)
+
+
+def create_cdp_jwt_auth(api_key: str, private_key: str) -> CDPJWTAuth:
+    """Factory function to create a CDP JWT auth instance."""
+    return CDPJWTAuth(api_key, private_key)

@@ -11,6 +11,7 @@ class Action(Enum):
     BUY = "buy"
     SELL = "sell"
     HOLD = "hold"
+    CLOSE = "close"
 
 
 @dataclass

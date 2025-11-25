@@ -2,15 +2,16 @@ from __future__ import annotations
 
 import asyncio
 import inspect
-import logging
 import threading
 from collections.abc import Awaitable, Coroutine
 from typing import TYPE_CHECKING, Any, cast
 
+from gpt_trader.utilities.logging_patterns import get_logger
+
 if TYPE_CHECKING:  # pragma: no cover
     pass  # TelemetryEngine import placeholder - block must not be empty
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="telemetry_streaming")
 
 
 def _emit_metric(event_store: Any, bot_id: str, payload: dict[str, Any]) -> None:

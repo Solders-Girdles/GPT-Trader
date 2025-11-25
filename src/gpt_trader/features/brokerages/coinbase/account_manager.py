@@ -180,3 +180,16 @@ class CoinbaseAccountManager:
             bot_id="account_manager", metrics={"event_type": "portfolio_move", "data": result}
         )
         return result
+
+    def supports_intx(self) -> bool:
+        """Check if INTX is supported by the broker."""
+        return self.broker.supports_intx()
+
+    def get_intx_portfolio_uuid(self, *, refresh: bool = False) -> str | None:
+        """Get the INTX portfolio UUID, with optional refresh."""
+        return self.broker.resolve_intx_portfolio(refresh=refresh)
+
+    def invalidate_intx_cache(self) -> None:
+        """Invalidate the cached INTX portfolio UUID."""
+        if hasattr(self.broker, "invalidate_intx_cache"):
+            self.broker.invalidate_intx_cache()

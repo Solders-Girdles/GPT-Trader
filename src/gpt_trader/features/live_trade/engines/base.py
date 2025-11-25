@@ -15,6 +15,9 @@ class CoordinatorContext:
     registry: Any = None
     broker: Any = None
     symbols: tuple[str, ...] = ()
+    runtime_state: Any = None
+    risk_manager: Any = None
+    bot_id: str = ""
 
     def with_updates(self, **overrides: Any) -> "CoordinatorContext":
         return replace(self, **overrides)

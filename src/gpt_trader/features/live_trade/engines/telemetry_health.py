@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-import logging
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
 from gpt_trader.utilities import utc_now
+from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:  # pragma: no cover
     from gpt_trader.features.live_trade.engines.base import CoordinatorContext
@@ -12,7 +12,7 @@ if TYPE_CHECKING:  # pragma: no cover
     # TelemetryEngine is a missing import. Keeping it here for reference until it's located.
     # from gpt_trader.orchestration.engines.telemetry_coordinator import TelemetryEngine
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="telemetry_health")
 
 
 def extract_mark_from_message(msg: dict[str, Any]) -> Decimal | None:

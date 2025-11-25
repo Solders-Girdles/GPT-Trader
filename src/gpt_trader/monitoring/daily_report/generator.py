@@ -49,10 +49,10 @@ class DailyReportGenerator:
             profile=self.profile,
             generated_at=datetime.now().isoformat(),
             symbol_performance=symbol_metrics,
-            **pnl_metrics,
-            **trade_metrics,
+            **pnl_metrics,  # type: ignore[arg-type]
+            **trade_metrics,  # type: ignore[arg-type]
             **risk_metrics,
-            **health_metrics,
+            **health_metrics,  # type: ignore[arg-type]
         )
 
     def save_report(self, report: DailyReport, output_dir: Path | None = None) -> Path:

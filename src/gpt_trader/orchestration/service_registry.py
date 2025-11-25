@@ -20,7 +20,7 @@ class ServiceRegistry:
     runtime_settings: Any = None
     extras: dict[str, Any] = field(default_factory=dict)
 
-    def with_updates(self, **kwargs) -> "ServiceRegistry":
+    def with_updates(self, **kwargs: Any) -> "ServiceRegistry":
         return replace(self, **kwargs)
 
 

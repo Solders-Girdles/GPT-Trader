@@ -87,13 +87,15 @@ class BotConfig:
         )
 
         return cls(
-            max_position_size=parse_decimal_env("MAX_POSITION_SIZE", Decimal("1000")),
-            max_leverage=parse_int_env("MAX_LEVERAGE", 5),
-            stop_loss_pct=parse_decimal_env("STOP_LOSS_PCT", Decimal("0.02")),
-            take_profit_pct=parse_decimal_env("TAKE_PROFIT_PCT", Decimal("0.04")),
-            short_ma=parse_int_env("SHORT_MA", 10),
-            long_ma=parse_int_env("LONG_MA", 20),
-            interval=parse_int_env("INTERVAL", 60),
+            max_position_size=parse_decimal_env("MAX_POSITION_SIZE", Decimal("1000"))
+            or Decimal("1000"),
+            max_leverage=parse_int_env("MAX_LEVERAGE", 5) or 5,
+            stop_loss_pct=parse_decimal_env("STOP_LOSS_PCT", Decimal("0.02")) or Decimal("0.02"),
+            take_profit_pct=parse_decimal_env("TAKE_PROFIT_PCT", Decimal("0.04"))
+            or Decimal("0.04"),
+            short_ma=parse_int_env("SHORT_MA", 10) or 10,
+            long_ma=parse_int_env("LONG_MA", 20) or 20,
+            interval=parse_int_env("INTERVAL", 60) or 60,
             symbols=parse_list_env("SYMBOLS", str, default=["BTC-USD", "ETH-USD"]),
             log_level=os.getenv("LOG_LEVEL", "INFO"),
             dry_run=parse_bool_env("DRY_RUN", default=False),

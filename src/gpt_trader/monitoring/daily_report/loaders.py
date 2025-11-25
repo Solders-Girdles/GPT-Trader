@@ -18,7 +18,7 @@ def load_metrics(metrics_file: Path) -> dict[str, Any]:
 
     try:
         with open(metrics_file) as f:
-            return json.load(f)
+            return json.load(f)  # type: ignore[no-any-return]
     except Exception as exc:
         logger.error(f"Failed to load metrics: {exc}")
         return {}

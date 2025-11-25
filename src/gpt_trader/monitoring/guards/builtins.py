@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 from decimal import Decimal, DecimalException
 from typing import Any
 
-from .base import GuardConfig, RuntimeGuard
+from .base import GuardConfig, GuardStatus, RuntimeGuard
 
 
 class DailyLossGuard(RuntimeGuard):
@@ -23,7 +23,7 @@ class DailyLossGuard(RuntimeGuard):
         if current_date > self.last_reset:
             self.daily_pnl = Decimal("0")
             self.last_reset = current_date
-            self.status = self.status.HEALTHY
+            self.status = GuardStatus.HEALTHY
 
         try:
             pnl = Decimal(str(context.get("pnl", 0)))

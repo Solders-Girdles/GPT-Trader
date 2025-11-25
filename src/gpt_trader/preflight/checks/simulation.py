@@ -22,8 +22,8 @@ def simulate_dry_run(checker: PreflightCheck) -> bool:
         container = create_application_container(config)
         checker.log_success("Application container initialized")
 
-        bot = container.create_perps_bot()
-        checker.log_success("PerpsBot constructed via container")
+        bot = container.create_bot()
+        checker.log_success("TradingBot constructed via container")
 
         if bot.engine:
             checker.log_success("Trading engine available")

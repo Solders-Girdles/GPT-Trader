@@ -114,9 +114,8 @@ class PreflightContext:
 
         try:
             auth = create_cdp_jwt_auth(
-                api_key_name=api_key,
-                private_key_pem=private_key,
-                base_url="https://api.coinbase.com",
+                api_key=api_key,
+                private_key=private_key,
             )
         except Exception as exc:
             self.log_error(f"Failed to initialize CDP JWT auth: {exc}")

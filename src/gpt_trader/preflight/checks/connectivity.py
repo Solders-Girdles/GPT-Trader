@@ -108,7 +108,7 @@ def check_key_permissions(checker: PreflightCheck) -> bool:
 
     can_trade = bool(permissions.get("can_trade"))
     can_view = bool(permissions.get("can_view"))
-    portfolio_type = (permissions.get("portfolio_type") or "").upper()
+    portfolio_type = str(permissions.get("portfolio_type") or "").upper()
     portfolio_uuid = permissions.get("portfolio_uuid")
 
     all_good = True

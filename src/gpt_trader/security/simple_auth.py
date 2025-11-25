@@ -31,7 +31,7 @@ class SimpleAuth:
         return APIKey(name=name, private_key=key)
 
     @staticmethod
-    def get_auth_headers(method: str, path: str, body: str = "") -> dict[str, str]:
+    def get_auth_headers(method: str, path: str, body: str = "") -> dict[str, str] | None:
         """
         Generates authentication headers for Coinbase Advanced Trade API.
         This uses the CDP SDK or manual JWT generation if we want to avoid the SDK.
@@ -40,4 +40,4 @@ class SimpleAuth:
         # Note: In a real "no abstraction" world, we might put the JWT generation here.
         # But `coinbase.auth` might still exist. Let's check if we can reuse the existing simple auth logic
         # or if we need to implement a tiny JWT generator here.
-        raise NotImplementedError("Auth header generation not yet implemented")
+        return None  # Not yet implemented

@@ -336,7 +336,7 @@ class OrderSubmitter:
 
         # Check for Rejection
         if str(status_name).upper() in {"REJECTED", "CANCELLED", "FAILED"}:
-            return self._process_rejection(
+            return self._process_rejection(  # type: ignore[no-any-return]
                 order, status_name, symbol, side, quantity, price, effective_price
             )
 
@@ -347,7 +347,7 @@ class OrderSubmitter:
         self._log_success(order, symbol, side, quantity, display_price, reduce_only)
         self._record_trade_event(order, symbol, side, quantity, price, effective_price, submit_id)
 
-        return order if self.integration_mode else order.id
+        return order if self.integration_mode else order.id  # type: ignore[no-any-return]
 
     def _process_rejection(
         self,

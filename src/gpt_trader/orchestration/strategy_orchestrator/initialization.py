@@ -63,7 +63,7 @@ class StrategyInitializationMixin:
                             symbol=symbol,
                         )
                 state.symbol_strategies[symbol] = BaselinePerpsStrategy(
-                    config=StrategyConfig(**strategy_kwargs),
+                    config=StrategyConfig(**strategy_kwargs),  # type: ignore[arg-type]
                     risk_manager=bot.risk_manager,
                 )
         else:
@@ -88,7 +88,7 @@ class StrategyInitializationMixin:
                     )
 
             state.strategy = BaselinePerpsStrategy(
-                config=StrategyConfig(**strategy_kwargs),
+                config=StrategyConfig(**strategy_kwargs),  # type: ignore[arg-type]
                 risk_manager=bot.risk_manager,
             )
 
@@ -100,8 +100,8 @@ class StrategyInitializationMixin:
             if strat is None:
                 strat = BaselinePerpsStrategy(risk_manager=bot.risk_manager)
                 state.symbol_strategies[symbol] = strat
-            return strat
-        return state.strategy  # type: ignore[return-value]
+            return strat  # type: ignore[no-any-return]
+        return state.strategy  # type: ignore[no-any-return]
 
 
 __all__ = ["StrategyInitializationMixin"]

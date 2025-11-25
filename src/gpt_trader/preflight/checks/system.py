@@ -35,15 +35,14 @@ def check_system_time(checker: PreflightCheck) -> bool:
         api_key, private_key = ctx.resolve_cdp_credentials()
         if api_key and private_key:
             try:
-                from gpt_trader.features.brokerages.coinbase.client import (
-                    CoinbaseClient,
+                from gpt_trader.features.brokerages.coinbase.auth import (
                     create_cdp_jwt_auth,
                 )
+                from gpt_trader.features.brokerages.coinbase.client import CoinbaseClient
 
                 auth = create_cdp_jwt_auth(
-                    api_key_name=api_key,
-                    private_key_pem=private_key,
-                    base_url="https://api.coinbase.com",
+                    api_key=api_key,
+                    private_key=private_key,
                 )
                 client = CoinbaseClient(
                     base_url="https://api.coinbase.com",

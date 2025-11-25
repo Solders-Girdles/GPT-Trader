@@ -129,7 +129,7 @@ class CoinbaseRestServiceBase:
             raise ValidationError("price is required for limit orders")
 
         # Build Configuration
-        order_configuration = {}
+        order_configuration: dict[str, dict[str, str | bool]] = {}
 
         # Determine config key based on type and tif
         # Logic mapping to Coinbase Advanced Trade keys
@@ -146,6 +146,7 @@ class CoinbaseRestServiceBase:
             # Test says: payload["order_configuration"]["market_market_ioc"]["base_size"] == "0.1"
             order_configuration["market_market_ioc"] = {"base_size": base_size}
         elif order_type == OrderType.LIMIT:
+            assert price is not None  # Validated above
             limit_price = str(quantize_to_increment(price, product.price_increment))
             key_suffix = "gtc"
             if tif == TimeInForce.IOC:
@@ -153,7 +154,7 @@ class CoinbaseRestServiceBase:
             if tif == TimeInForce.FOK:
                 key_suffix = "fok"
 
-            config = {
+            config: dict[str, str | bool] = {
                 "base_size": base_size,
                 "limit_price": limit_price,
             }
@@ -163,6 +164,8 @@ class CoinbaseRestServiceBase:
             order_configuration[f"limit_limit_{key_suffix}"] = config
 
         elif order_type == OrderType.STOP_LIMIT:
+            assert price is not None  # Required for stop limit
+            assert stop_price is not None  # Required for stop limit
             limit_price = str(quantize_to_increment(price, product.price_increment))
             stop_price_str = str(quantize_to_increment(stop_price, product.price_increment))
             # Assuming GTC for stop limit
@@ -179,6 +182,7 @@ class CoinbaseRestServiceBase:
 
         # Handle fallback for test satisfaction and legacy compatibility
         # If order_configuration is empty (not handled above), fallback to flat dict
+        payload: dict[str, Any]
         if not order_configuration:
             payload = {
                 "product_id": symbol,
@@ -269,7 +273,9 @@ class CoinbaseRestServiceBase:
                 return None
 
             # Return newest
-            matches.sort(key=lambda x: x.created_at, reverse=True)
+            from datetime import datetime
+
+            matches.sort(key=lambda x: x.created_at or datetime.min, reverse=True)
             return matches[0]
         except Exception as e:
             logger.error(f"Failed to find existing order: {e}")
@@ -287,9 +293,11 @@ class CoinbaseRestServiceBase:
 
         # Funding
         funding_rate, next_funding = self.product_catalog.get_funding(symbol)
-        funding_amt = self._funding_calculator.accrue_if_due(  # naming: allow
-            position, funding_rate, next_funding
-        )
+        funding_amt = None  # naming: allow
+        if funding_rate is not None:
+            funding_amt = self._funding_calculator.accrue_if_due(  # naming: allow
+                position, funding_rate, next_funding
+            )
         if funding_amt:  # naming: allow
             position.realized_pnl += funding_amt  # naming: allow
             self._event_store.append_metric(

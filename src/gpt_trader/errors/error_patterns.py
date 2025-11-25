@@ -389,8 +389,8 @@ def retry_on_error(
                 initial_delay=delay,
                 backoff_factor=backoff_factor,
                 retry_on=retry_on,
-                **kwargs,
-            )  # type: ignore[arg-type]
+                **kwargs,  # type: ignore[arg-type]
+            )
 
         return wrapper
 

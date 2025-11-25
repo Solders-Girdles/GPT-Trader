@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
+from typing import cast
 
 from gpt_trader.persistence.event_store import EventStore
 from gpt_trader.persistence.orders_store import OrdersStore
@@ -144,7 +145,7 @@ def prepare_bot(
             for record in fallback_logs
         ]
 
-    runtime_paths = resolve_runtime_paths(config.profile, settings)
+    runtime_paths = resolve_runtime_paths(cast(Profile, config.profile), settings)
 
     prepared_registry = registry or empty_registry(config)
     if prepared_registry.config is not config:

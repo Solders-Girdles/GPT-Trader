@@ -242,4 +242,4 @@ class IHistoricalDataProvider:
         end: datetime,
     ) -> list[Candle]:
         """Fetch candles for symbol in time range."""
-        ...
+        raise NotImplementedError

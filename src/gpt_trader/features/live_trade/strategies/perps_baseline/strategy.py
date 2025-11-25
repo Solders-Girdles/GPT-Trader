@@ -35,8 +35,9 @@ class StrategyConfig:
 
 
 class BaselinePerpsStrategy:
-    def __init__(self, config: Any = None):
+    def __init__(self, config: Any = None, risk_manager: Any = None):
         self.config = config
+        self.risk_manager = risk_manager
 
     def decide(
         self,

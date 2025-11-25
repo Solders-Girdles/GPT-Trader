@@ -63,5 +63,5 @@ class StorageBootstrapper:
     def _resolve_settings(self) -> RuntimeSettings:
         registry_settings = self._registry.runtime_settings
         if registry_settings is not None:
-            return registry_settings
+            return registry_settings  # type: ignore[no-any-return]
         return load_runtime_settings()

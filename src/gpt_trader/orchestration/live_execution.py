@@ -127,8 +127,6 @@ class LiveExecutionEngine:
 
         # Track open orders for cancellation on risk trips
         self.open_orders: list[str] = []
-        # Track open orders for cancellation on risk trips
-        self.open_orders: list[str] = []
 
         # Initialize helper modules
         self.state_collector: StateCollector = StateCollector(broker, settings=runtime_settings)
@@ -359,7 +357,7 @@ class LiveExecutionEngine:
             equity, _, _ = self.state_collector.calculate_equity_from_balances(balances)
 
             # Reset risk manager daily tracking
-            self.risk_manager.reset_daily_tracking(equity)
+            self.risk_manager.reset_daily_tracking()
             logger.info(
                 "Daily tracking reset",
                 operation="daily_tracking",

@@ -6,7 +6,7 @@ from typing import Any
 def mean_decimal(values: Sequence[Decimal]) -> Decimal:
     if not values:
         return Decimal("0")
-    return sum(values) / len(values)
+    return sum(values, Decimal("0")) / len(values)
 
 
 def relative_strength_index(values: Sequence[Decimal], period: int = 14) -> list[Decimal]:

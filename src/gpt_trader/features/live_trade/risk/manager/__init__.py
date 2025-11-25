@@ -187,7 +187,7 @@ class LiveRiskManager:
             return VolatilityCheckOutcome(triggered=False, symbol=symbol)
 
         # Calculate simple volatility as max deviation from mean
-        avg_close = sum(closes) / len(closes)
+        avg_close = sum(closes, Decimal("0")) / len(closes)
         if avg_close == 0:
             return VolatilityCheckOutcome(triggered=False, symbol=symbol)
 

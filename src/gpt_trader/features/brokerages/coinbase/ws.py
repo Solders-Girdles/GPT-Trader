@@ -87,7 +87,7 @@ class CoinbaseWebSocket:
         if self.ws and self.ws.sock and self.ws.sock.connected:
             self._send(sub_msg)
 
-    def _send(self, msg: dict):
+    def _send(self, msg: dict) -> None:
         if self.ws:
             self.ws.send(json.dumps(msg))
 

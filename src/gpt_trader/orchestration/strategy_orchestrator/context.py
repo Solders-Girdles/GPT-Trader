@@ -139,7 +139,7 @@ class ContextBuilderMixin(_HasBot):
         return state, quantity
 
     def _get_marks(self, symbol: str) -> list[Decimal]:
-        raw_marks = self._bot.mark_windows.get(symbol, [])
+        raw_marks = self._bot.mark_windows.get(symbol, [])  # type: ignore[attr-defined]
         return [Decimal(str(mark)) for mark in raw_marks]
 
     def _adjust_equity(

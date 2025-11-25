@@ -46,7 +46,7 @@ class DecisionEngineMixin(_HasBotAndStrategy):
         )
 
         if self._bot.config.profile == Profile.SPOT:
-            decision = await self._apply_spot_filters(symbol_context, decision)
+            decision = await self._apply_spot_filters(symbol_context, decision)  # type: ignore[attr-defined]
         return decision
 
     def _evaluate_strategy(
@@ -84,7 +84,7 @@ class DecisionEngineMixin(_HasBotAndStrategy):
         return decision
 
     def _record_decision(self, symbol: str, decision: Decision) -> None:
-        self._bot.last_decisions[symbol] = decision
+        self._bot.last_decisions[symbol] = decision  # type: ignore[attr-defined]
         logger.info(f"{symbol} Decision: {decision.action.value} - {decision.reason}")
         log_strategy_decision(
             symbol=symbol,

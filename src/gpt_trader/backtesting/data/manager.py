@@ -2,7 +2,9 @@
 
 import json
 from datetime import datetime
+from decimal import Decimal
 from pathlib import Path
+from typing import Any
 
 from gpt_trader.backtesting.data.fetcher import CoinbaseHistoricalFetcher
 from gpt_trader.features.brokerages.core.interfaces import Candle
@@ -129,11 +131,11 @@ class HistoricalDataManager:
                     candles.append(
                         Candle(
                             ts=ts,
-                            open=float(item["open"]),
-                            high=float(item["high"]),
-                            low=float(item["low"]),
-                            close=float(item["close"]),
-                            volume=float(item["volume"]),
+                            open=Decimal(str(item["open"])),
+                            high=Decimal(str(item["high"])),
+                            low=Decimal(str(item["low"])),
+                            close=Decimal(str(item["close"])),
+                            volume=Decimal(str(item["volume"])),
                         )
                     )
 
@@ -294,7 +296,7 @@ class HistoricalDataManager:
         index_path = self.cache_dir / "_coverage_index.json"
 
         # Serialize datetimes
-        data = {}
+        data: dict[str, Any] = {}
         for symbol, granularities in self._coverage_index.items():
             data[symbol] = {}
             for granularity, ranges in granularities.items():

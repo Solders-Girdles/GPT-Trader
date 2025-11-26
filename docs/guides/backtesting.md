@@ -64,93 +64,52 @@ The backtesting simulation harness provides a production-grade framework for val
 
 ## Key Interfaces
 
-### IMarketData
-Provides historical and real-time market data abstraction.
+### IBrokerage
+The backtesting framework uses the same `IBrokerage` interface as live trading:
 
 ```python
-class IMarketData(Protocol):
-    """Market data interface for both live and simulated environments."""
+class IBrokerage(Protocol):
+    """Core brokerage interface used by both live and simulated environments."""
 
-    def candles(
+    def get_quote(self, symbol: str) -> Quote:
+        """Get current bid/ask quote."""
+        ...
+
+    def get_candles(
         self,
         symbol: str,
         granularity: str,
-        start: datetime,
-        end: datetime,
+        start: datetime | None = None,
+        end: datetime | None = None,
     ) -> list[Candle]:
-        """Fetch candles for the given symbol and time range."""
+        """Fetch historical candles."""
         ...
 
-    def best_bid_ask(self, symbol: str) -> tuple[Decimal, Decimal]:
-        """Get current best bid/ask quotes."""
-        ...
-
-    def mark_price(self, symbol: str) -> Decimal:
-        """Get current mark price (mid of best bid/ask)."""
-        ...
-```
-
-**Implementations:**
-- `LiveMarketData`: Wraps `CoinbaseBrokerage.get_quote()` and `get_candles()`
-- `SimulatedMarketData`: Replays historical candles from cache
-
-### IExecution
-Abstracts order placement and position tracking.
-
-```python
-class IExecution(Protocol):
-    """Execution interface for order management."""
-
-    async def place(self, order_spec: OrderSpec) -> Order:
+    def place_order(
+        self,
+        symbol: str,
+        side: OrderSide,
+        order_type: OrderType,
+        quantity: Decimal,
+        price: Decimal | None = None,
+    ) -> Order:
         """Place a new order."""
         ...
 
-    async def cancel(self, order_id: str) -> bool:
-        """Cancel an existing order."""
-        ...
-
-    async def fills(self, symbol: str | None = None) -> list[Fill]:
-        """Fetch fill history."""
-        ...
-
-    async def positions(self) -> list[Position]:
+    def list_positions(self) -> list[Position]:
         """Get current positions."""
         ...
-```
 
-**Implementations:**
-- `LiveExecution`: Wraps `CoinbaseBrokerage` REST API
-- `SimulatedExecution`: In-memory order matching with fill model
-
-### IPortfolio
-Tracks balances and enables transfers between spot/futures portfolios.
-
-```python
-class IPortfolio(Protocol):
-    """Portfolio management interface."""
-
-    async def balances(self) -> list[Balance]:
-        """Get current asset balances."""
-        ...
-
-    async def equity(self) -> Decimal:
-        """Calculate total portfolio equity in USD."""
-        ...
-
-    async def transfer(
-        self,
-        amount: Decimal,
-        currency: str,
-        from_portfolio: PortfolioType,
-        to_portfolio: PortfolioType,
-    ) -> bool:
-        """Transfer funds between portfolios."""
+    def list_balances(self) -> list[Balance]:
+        """Get account balances."""
         ...
 ```
 
 **Implementations:**
-- `LivePortfolio`: Wraps `CoinbaseAccountManager`
-- `SimulatedPortfolio`: In-memory balance tracking
+- `CoinbaseBrokerage`: Live trading via Coinbase Advanced Trade API
+- `SimulatedBroker`: In-memory simulation with order fill model
+
+This single interface ensures **zero logic drift** between live and backtest environments - the strategy coordinator and risk manager interact identically with either implementation.
 
 ## Simulation Engine
 

@@ -109,31 +109,15 @@ Refactored from single 467 LOC file to modular subpackage:
 **Status:** Partially addressed - `BrokerProtocol` now defines unified interface
 **Next Step:** Consider shared implementation via composition
 
-### 3.5 Integration Mode Pattern in Execution Layer (IN PROGRESS)
-**Locations:**
-- `orchestration/execution/broker_executor.py` - Legacy signature fallback, async handling
-- `orchestration/execution/state_collection.py` - Error suppression, synthetic fallbacks
-- `orchestration/execution/order_submission.py` - ID override, return type variance
-- `orchestration/live_execution.py` - Environment-based flag propagation
+### 3.5 Integration Mode Pattern ✓ COMPLETED
+**Completed:** 2025-11-27
 
-**Issue:** `INTEGRATION_TEST_MODE` env var triggers runtime behavior changes in production code
-**Impact:** Test-specific logic mixed into production paths, runtime type checking
-**Complexity:** High - deeply embedded with 15+ test cases depending on behavior
-
-**Progress (2025-11-27):**
-- ✅ Added deprecation warning when `INTEGRATION_TEST_MODE` env var is used
-- ✅ Added explicit `integration_mode` parameter to `StateCollector.__init__`
-- ✅ Updated tests in `test_state_collection.py` to use explicit parameter
-- ✅ Updated tests in `test_live_execution_engine.py` to expect deprecation warning
-- ⏳ Remaining: Remove `INTEGRATION_TEST_MODE` from `tests/constants.py`
-- ⏳ Remaining: Remove `inspect.isawaitable()` checks
-- ⏳ Remaining: Remove legacy signature fallback in `broker_executor.py`
-
-**Recommendation (unchanged):**
-1. Migrate integration tests to use `DeterministicBroker` directly
-2. Remove runtime `isawaitable()` checks
-3. Remove legacy signature fallback handling
-4. Remove `INTEGRATION_TEST_MODE` environment variable
+Removed anti-pattern of environment-variable-triggered runtime behavior:
+- Removed `INTEGRATION_TEST_MODE` from `tests/constants.py`
+- Removed `inspect.isawaitable()` runtime checks from `state_collection.py`
+- Removed legacy signature fallback from `broker_executor.py`
+- Simplified to explicit `integration_mode` parameter only
+- Deleted ~800 lines of legacy test code
 
 ### 3.6 Inconsistent Broker Abstraction
 **Issue:** Two broker abstractions not interchangeable:

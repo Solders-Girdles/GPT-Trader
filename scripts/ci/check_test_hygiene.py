@@ -105,12 +105,15 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/orchestration/test_live_execution_engine.py",  # LiveExecutionEngine orchestration, order flow, risk validation
     "tests/unit/gpt_trader/orchestration/test_derivatives_discovery.py",  # derivatives eligibility discovery and safety gating
     "tests/unit/gpt_trader/orchestration/test_account_telemetry.py",  # account telemetry collection and publishing
+    "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming.py",  # WebSocket streaming telemetry with async/threading patterns
+    "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_health.py",  # telemetry health check and mark extraction coverage
 }
 
 SLEEP_ALLOWLIST = {
     "tests/unit/gpt_trader/utilities/test_performance_monitoring_advanced.py",
     "tests/unit/gpt_trader/utilities/test_performance_monitoring_core.py",
     "tests/unit/gpt_trader/persistence/test_json_file_store_contract.py",  # uses real sleep to validate file system based locking semantics
+    "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming.py",  # uses time.sleep for run_in_executor cancellation test
 }
 
 

@@ -11,6 +11,7 @@ from gpt_trader.features.brokerages.coinbase.market_data_service import MarketDa
 from gpt_trader.features.brokerages.coinbase.utilities import ProductCatalog
 from gpt_trader.orchestration.config_controller import ConfigController
 from gpt_trader.orchestration.configuration import BotConfig
+from gpt_trader.orchestration.deterministic_broker import DeterministicBroker
 from gpt_trader.orchestration.service_registry import ServiceRegistry
 from gpt_trader.orchestration.trading_bot.bot import TradingBot
 from gpt_trader.persistence.event_store import EventStore
@@ -22,10 +23,18 @@ def create_brokerage(
     market_data: MarketDataService,
     product_catalog: ProductCatalog,
     settings: RuntimeSettings,
-) -> tuple[CoinbaseClient, EventStore, MarketDataService, ProductCatalog]:
+) -> tuple[CoinbaseClient | DeterministicBroker, EventStore, MarketDataService, ProductCatalog]:
     """
     Factory function to create the brokerage and verify dependencies.
+
+    Returns DeterministicBroker when PERPS_FORCE_MOCK=1 is set.
     """
+    # Check for mock mode FIRST - before credential validation
+    if settings.perps_force_mock:
+        from gpt_trader.orchestration.deterministic_broker import DeterministicBroker
+
+        return DeterministicBroker(), event_store, market_data, product_catalog
+
     api_key_name = None
     private_key = None
 
@@ -68,7 +77,7 @@ class ApplicationContainer:
         self._settings = settings
 
         self._config_controller: ConfigController | None = None
-        self._broker: CoinbaseClient | None = None
+        self._broker: CoinbaseClient | DeterministicBroker | None = None
         self._event_store: EventStore | None = None
         self._orders_store: OrdersStore | None = None
         self._market_data_service: MarketDataService | None = None
@@ -111,7 +120,7 @@ class ApplicationContainer:
         return self._product_catalog
 
     @property
-    def broker(self) -> CoinbaseClient:
+    def broker(self) -> CoinbaseClient | DeterministicBroker:
         if self._broker is None:
             self._broker, _, _, _ = create_brokerage(
                 event_store=self.event_store,

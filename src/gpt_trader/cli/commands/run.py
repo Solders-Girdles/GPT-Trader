@@ -41,6 +41,11 @@ def execute(args: Namespace) -> int:
         else:
             logger.error(message)
         return 1
+
+    # Auto-reduce interval for fast development iteration
+    if args.dev_fast and getattr(args, "interval", None) is None:
+        config.interval = 1  # 1 second instead of default 60
+
     bot = services.instantiate_bot(config)
     return _run_bot(bot, single_cycle=args.dev_fast)
 

@@ -46,7 +46,10 @@ def test_execute_logs_generic_validation_error(monkeypatch, caplog):
 
 
 def test_execute_invokes_run_bot(monkeypatch):
-    monkeypatch.setattr(run_cmd.services, "build_config_from_args", lambda *_, **__: "config")
+    class MockConfig:
+        interval = 60
+
+    monkeypatch.setattr(run_cmd.services, "build_config_from_args", lambda *_, **__: MockConfig())
 
     class StubBot:
         pass

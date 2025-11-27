@@ -61,6 +61,21 @@ def build_config_from_args(args: Namespace, **kwargs: Any) -> BotConfig:
     if getattr(args, "interval", None):
         config.interval = args.interval
 
+    if getattr(args, "target_leverage", None):
+        config.target_leverage = args.target_leverage
+
+    if getattr(args, "reduce_only_mode", False):
+        config.reduce_only_mode = True
+
+    if getattr(args, "time_in_force", None):
+        config.time_in_force = args.time_in_force
+
+    if getattr(args, "enable_order_preview", False):
+        config.enable_order_preview = True
+
+    if getattr(args, "account_telemetry_interval", None):
+        config.account_telemetry_interval = args.account_telemetry_interval
+
     return config
 
 

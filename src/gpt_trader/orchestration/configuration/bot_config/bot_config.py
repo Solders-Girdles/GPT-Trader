@@ -45,6 +45,12 @@ class BotConfig:
     target_leverage: int = 1
     enable_shorts: bool = False
 
+    # Risk/Order Parameters
+    reduce_only_mode: bool = False
+    time_in_force: str = "GTC"
+    enable_order_preview: bool = False
+    account_telemetry_interval: int | None = None
+
     # System
     log_level: str = "INFO"
     dry_run: bool = False

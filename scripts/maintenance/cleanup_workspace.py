@@ -66,6 +66,11 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Suppress console output (audit log is still written).",
     )
+    parser.add_argument(
+        "--preserve-hypothesis",
+        action="store_true",
+        help="Keep .hypothesis directory (preserves property-based test examples).",
+    )
     return parser.parse_args()
 
 
@@ -264,17 +269,36 @@ def parse_rotation(file_path: Path) -> tuple[str, int] | None:
     return base_name, int(rotation)
 
 
-def clean_tool_caches(session: CleanupSession) -> None:
+def clean_tool_caches(session: CleanupSession, *, preserve_hypothesis: bool = False) -> None:
     cache_dirs = [
         ".mypy_cache",
         ".pytest_cache",
         ".ruff_cache",
         ".benchmarks",
     ]
+    if not preserve_hypothesis:
+        cache_dirs.append(".hypothesis")
+
     for rel in cache_dirs:
         remove_path(
             session, REPO_ROOT / rel, category="tool_cache", reason="regenerated_by_tooling"
         )
+
+
+def clean_pycache_directories(session: CleanupSession) -> None:
+    """Remove __pycache__ directories from source and test trees."""
+    # Remove root-level __pycache__
+    root_pycache = REPO_ROOT / "__pycache__"
+    if root_pycache.exists():
+        remove_path(session, root_pycache, category="python_cache", reason="bytecode_cache")
+
+    # Remove __pycache__ from source and test trees
+    search_roots = [REPO_ROOT / "src", REPO_ROOT / "tests"]
+    for root in search_roots:
+        if not root.exists():
+            continue
+        for pycache in root.rglob("__pycache__"):
+            remove_path(session, pycache, category="python_cache", reason="bytecode_cache")
 
 
 def clean_coverage_artifacts(session: CleanupSession) -> None:
@@ -385,7 +409,8 @@ def main() -> None:
     args = parse_args()
     session = CleanupSession(apply=args.apply, quiet=args.quiet)
 
-    clean_tool_caches(session)
+    clean_tool_caches(session, preserve_hypothesis=args.preserve_hypothesis)
+    clean_pycache_directories(session)
     clean_coverage_artifacts(session)
     clean_var_logs(
         session,

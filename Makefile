@@ -11,23 +11,23 @@ dev-down:
 	docker compose --project-directory $(COMPOSE_DIR) -f $(COMPOSE_FILE) --env-file $(COMPOSE_DIR)/.env down -v
 
 lint:
-	poetry run ruff check .
-	poetry run black --check .
+	uv run ruff check .
+	uv run black --check .
 
 typecheck:
-	poetry run mypy src
+	uv run mypy src
 
 test:
-	poetry run pytest -q
+	uv run pytest -q
 
 smoke:
-	poetry run python scripts/production_preflight.py --profile dev --verbose
+	uv run python scripts/production_preflight.py --profile dev --verbose
 
 preflight:
-	poetry run python scripts/production_preflight.py --profile canary --verbose
+	uv run python scripts/production_preflight.py --profile canary --verbose
 
 cov:
-	poetry run pytest -m "not slow and not performance" -q \
+	uv run pytest -m "not slow and not performance" -q \
 		--cov=src/gpt_trader/cli \
 		--cov=src/gpt_trader/config \
 		--cov=src/gpt_trader/features/brokerages/coinbase/client \
@@ -36,15 +36,15 @@ cov:
 		--cov-report=term --cov-fail-under=80
 
 dash:
-	poetry run python scripts/monitoring/export_metrics.py \
+	uv run python scripts/monitoring/export_metrics.py \
 		--metrics-file var/data/coinbase_trader/prod/metrics.json \
 		--port 9102
 
 clean:
-	poetry run python scripts/maintenance/cleanup_workspace.py --apply
+	uv run python scripts/maintenance/cleanup_workspace.py --apply
 
 clean-dry-run:
-	poetry run python scripts/maintenance/cleanup_workspace.py
+	uv run python scripts/maintenance/cleanup_workspace.py
 
 legacy-bundle:
 	@echo "Legacy bundling helper retired; see docs/archive/legacy_recovery.md for manual recovery steps."

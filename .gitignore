@@ -9,6 +9,15 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Build artifacts
+*.egg-info/
+dist/
+build/
+
+# Test automation
+.tox/
+.nox/
+
 # Backup and temporary files from refactoring
 *.backup
 *.bak
@@ -30,6 +39,10 @@ _tmp_status.txt
 
 # macOS
 .DS_Store
+
+# IDE settings
+.vscode/
+.idea/
 
 # Archives (moved to external storage)
 archived/claudia_*/

@@ -151,15 +151,22 @@ def prepare_bot(
     if prepared_registry.config is not config:
         prepared_registry = prepared_registry.with_updates(config=config)
 
-    event_store = prepared_registry.event_store
-    if event_store is None:
-        event_store = EventStore(root=runtime_paths.event_store_root)  # type: ignore[assignment]
-        prepared_registry = prepared_registry.with_updates(event_store=event_store)
+    # Get or create event store (using concrete type for BootstrapResult)
+    registry_event_store = prepared_registry.event_store
+    if registry_event_store is None:
+        final_event_store: EventStore = EventStore(root=runtime_paths.event_store_root)
+        prepared_registry = prepared_registry.with_updates(event_store=final_event_store)
+    else:
+        # Registry may hold a protocol; cast to concrete type
+        final_event_store = cast(EventStore, registry_event_store)
 
-    orders_store = prepared_registry.orders_store
-    if orders_store is None:
-        orders_store = OrdersStore(storage_path=runtime_paths.storage_dir)
-        prepared_registry = prepared_registry.with_updates(orders_store=orders_store)
+    # Get or create orders store (using concrete type for BootstrapResult)
+    registry_orders_store = prepared_registry.orders_store
+    if registry_orders_store is None:
+        final_orders_store: OrdersStore = OrdersStore(storage_path=runtime_paths.storage_dir)
+        prepared_registry = prepared_registry.with_updates(orders_store=final_orders_store)
+    else:
+        final_orders_store = cast(OrdersStore, registry_orders_store)
 
     prepared_registry = prepared_registry.with_updates(runtime_settings=settings)
 
@@ -167,8 +174,8 @@ def prepare_bot(
         config=config,
         registry=prepared_registry,
         runtime_paths=runtime_paths,
-        event_store=event_store,  # type: ignore[arg-type]
-        orders_store=orders_store,  # type: ignore[arg-type]
+        event_store=final_event_store,
+        orders_store=final_orders_store,
         settings=settings,
         logs=logs,
     )

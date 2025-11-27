@@ -75,3 +75,129 @@ def test_quality_trend_returns_average() -> None:
 
     trend = checker.get_quality_trend()
     assert 0.0 <= trend["timeliness"] <= 1.0
+
+
+class TestQualityResult:
+    """Tests for QualityResult inner class."""
+
+    def test_overall_score(self) -> None:
+        result = DataQualityChecker.QualityResult(acceptable=True, score=0.9)
+        assert result.overall_score() == 0.9
+
+    def test_is_acceptable_true(self) -> None:
+        result = DataQualityChecker.QualityResult(acceptable=True, score=0.9)
+        assert result.is_acceptable(threshold=0.8) is True
+
+    def test_is_acceptable_false_by_score(self) -> None:
+        result = DataQualityChecker.QualityResult(acceptable=True, score=0.7)
+        assert result.is_acceptable(threshold=0.8) is False
+
+    def test_is_acceptable_false_by_flag(self) -> None:
+        result = DataQualityChecker.QualityResult(acceptable=False, score=0.9)
+        assert result.is_acceptable(threshold=0.8) is False
+
+    def test_completeness_property(self) -> None:
+        result = DataQualityChecker.QualityResult(acceptable=True, score=0.75)
+        assert result.completeness == 0.75
+
+
+class TestCheckQualityExtended:
+    """Extended tests for check_quality method."""
+
+    def test_handles_none_data(self) -> None:
+        checker = DataQualityChecker()
+        result = checker.check_quality(None)  # type: ignore[arg-type]
+        assert result.overall_score() == 0.0
+        assert not result.is_acceptable()
+
+    def test_handles_nulls_in_data(self) -> None:
+        checker = DataQualityChecker()
+        frame = pd.DataFrame({"a": [1, 2, np.nan], "b": [4, 5, 6]})
+        result = checker.check_quality(frame)
+        assert result.overall_score() == 0.5
+        assert not result.is_acceptable()
+
+
+class TestValidateOhlcvExtended:
+    """Extended tests for validate_ohlcv method."""
+
+    def test_handles_none_data(self) -> None:
+        checker = DataQualityChecker()
+        issues = checker.validate_ohlcv(None)  # type: ignore[arg-type]
+        assert issues == ["Empty dataframe"]
+
+    def test_missing_columns(self) -> None:
+        checker = DataQualityChecker()
+        frame = pd.DataFrame({"open": [100], "close": [101]})
+        issues = checker.validate_ohlcv(frame)
+        assert any("Missing columns" in issue for issue in issues)
+
+    def test_negative_high(self) -> None:
+        checker = DataQualityChecker()
+        index = pd.date_range("2024-01-01", periods=2, freq="D")
+        frame = pd.DataFrame(
+            {
+                "open": [100, 100],
+                "high": [-5, 101],
+                "low": [99, 99],
+                "close": [100, 100],
+                "volume": [1000, 1000],
+            },
+            index=index,
+        )
+        issues = checker.validate_ohlcv(frame)
+        assert any("Negative high" in issue for issue in issues)
+
+    def test_negative_low(self) -> None:
+        checker = DataQualityChecker()
+        index = pd.date_range("2024-01-01", periods=2, freq="D")
+        frame = pd.DataFrame(
+            {
+                "open": [100, 100],
+                "high": [105, 105],
+                "low": [-5, 99],
+                "close": [100, 100],
+                "volume": [1000, 1000],
+            },
+            index=index,
+        )
+        issues = checker.validate_ohlcv(frame)
+        assert any("Negative low" in issue for issue in issues)
+
+    def test_negative_close(self) -> None:
+        checker = DataQualityChecker()
+        index = pd.date_range("2024-01-01", periods=2, freq="D")
+        frame = pd.DataFrame(
+            {
+                "open": [100, 100],
+                "high": [105, 105],
+                "low": [95, 95],
+                "close": [-5, 100],
+                "volume": [1000, 1000],
+            },
+            index=index,
+        )
+        issues = checker.validate_ohlcv(frame)
+        assert any("Negative close" in issue for issue in issues)
+
+    def test_valid_frame_no_issues(self) -> None:
+        checker = DataQualityChecker()
+        frame = _build_frame()
+        issues = checker.validate_ohlcv(frame)
+        assert issues == []
+
+
+class TestGetQualityTrendExtended:
+    """Extended tests for get_quality_trend method."""
+
+    def test_empty_scores(self) -> None:
+        checker = DataQualityChecker()
+        trend = checker.get_quality_trend()
+        assert trend["completeness"] == 0.0
+        assert trend["overall"] == 0.0
+
+    def test_multiple_scores(self) -> None:
+        checker = DataQualityChecker()
+        checker.scores = [1.0, 0.5, 0.5]
+        trend = checker.get_quality_trend()
+        assert trend["completeness"] == 2.0 / 3.0

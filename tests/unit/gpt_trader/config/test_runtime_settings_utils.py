@@ -379,3 +379,18 @@ def test_runtime_settings_snapshot_methods() -> None:
         "COINBASE_DEFAULT_QUOTE": "USD",
         "PERPS_ENABLE_STREAMING": "true",
     }
+
+
+def test_runtime_settings_provider_clear(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Test RuntimeSettingsProvider.clear() method."""
+    provider = runtime_settings.RuntimeSettingsProvider()
+
+    # Set up initial state
+    initial = _make_settings("initial")
+    monkeypatch.setattr(runtime_settings, "_SNAPSHOT_CACHE", initial)
+
+    # Call clear on provider
+    provider.clear()
+
+    # Verify cache was cleared
+    assert runtime_settings._SNAPSHOT_CACHE is None

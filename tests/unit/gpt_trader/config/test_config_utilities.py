@@ -52,3 +52,44 @@ def test_validate_required_env_raises_when_missing():
     with patch.dict(os.environ, {}, clear=True):
         with pytest.raises(ValidationError):
             validate_required_env(["MISSING_VAR"])
+
+
+def test_validate_required_env_passes_when_present():
+    with patch.dict(os.environ, {"PRESENT_VAR": "value"}, clear=True):
+        # Should not raise
+        validate_required_env(["PRESENT_VAR"])
+
+
+def test_parse_list_env_with_invalid_cast():
+    with patch.dict(os.environ, {"TEST_LIST": "a,b,c"}, clear=True):
+        with pytest.raises(ValidationError) as exc:
+            parse_list_env("TEST_LIST", int)
+        assert "Failed to parse TEST_LIST" in str(exc.value)
+
+
+def test_parse_bool_env_with_invalid_value():
+    with patch.dict(os.environ, {"BAD_BOOL": "not_a_bool"}, clear=True):
+        with pytest.raises(ValidationError) as exc:
+            parse_bool_env("BAD_BOOL")
+        assert "Failed to parse BAD_BOOL" in str(exc.value)
+
+
+def test_parse_decimal_env_with_invalid_value():
+    with patch.dict(os.environ, {"BAD_DECIMAL": "not_a_decimal"}, clear=True):
+        with pytest.raises(ValidationError) as exc:
+            parse_decimal_env("BAD_DECIMAL")
+        assert "Failed to parse BAD_DECIMAL" in str(exc.value)
+
+
+def test_parse_int_env_with_invalid_value():
+    with patch.dict(os.environ, {"BAD_INT": "not_an_int"}, clear=True):
+        with pytest.raises(ValidationError) as exc:
+            parse_int_env("BAD_INT")
+        assert "Failed to parse BAD_INT" in str(exc.value)
+
+
+def test_parse_float_env_with_invalid_value():
+    with patch.dict(os.environ, {"BAD_FLOAT": "not_a_float"}, clear=True):
+        with pytest.raises(ValidationError) as exc:
+            parse_float_env("BAD_FLOAT")
+        assert "Failed to parse BAD_FLOAT" in str(exc.value)

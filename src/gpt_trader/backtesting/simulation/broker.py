@@ -383,17 +383,38 @@ class SimulatedBroker:
         # Get bid/ask for fill model
         if quote:
             best_bid, best_ask = quote.bid, quote.ask
-        else:
+        elif bar:
             # Estimate spread from bar
-            spread = bar.high - bar.low  # type: ignore[union-attr]
-            mid = bar.close  # type: ignore[union-attr]
+            spread = bar.high - bar.low
+            mid = bar.close
             best_bid = mid - spread / Decimal("4")
             best_ask = mid + spread / Decimal("4")
+        else:
+            # Should never reach here due to earlier check, but satisfy type checker
+            order.status = OrderStatus.REJECTED
+            return order
+
+        # Use bar if available, otherwise create minimal bar from quote
+        fill_bar = bar
+        if fill_bar is None and quote:
+            mid = (quote.bid + quote.ask) / 2
+            fill_bar = Candle(
+                ts=quote.ts,
+                open=mid,
+                high=quote.ask,
+                low=quote.bid,
+                close=mid,
+                volume=Decimal("0"),
+            )
+
+        if fill_bar is None:
+            order.status = OrderStatus.REJECTED
+            return order
 
         # Simulate fill
         fill_result = self._fill_model.fill_market_order(
             order=order,
-            current_bar=bar,  # type: ignore[arg-type]
+            current_bar=fill_bar,
             best_bid=best_bid,
             best_ask=best_ask,
         )
@@ -815,7 +836,8 @@ class SimulatedBroker:
 
             if fill_result and fill_result.filled:
                 del self._open_orders[order_id]
-                self._process_fill(order, fill_result, order.price)  # type: ignore[arg-type]
+                # For pending orders, leverage is not tracked on Order; use None
+                self._process_fill(order, fill_result, None)
 
     def update_equity_curve(self) -> None:
         """Record current equity to the equity curve."""

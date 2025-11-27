@@ -248,3 +248,175 @@ def test_perps_allowlist_constant() -> None:
     expected_symbols = {"BTC-PERP", "ETH-PERP", "SOL-PERP", "XRP-PERP"}
     assert symbols.PERPS_ALLOWLIST == expected_symbols
     assert isinstance(symbols.PERPS_ALLOWLIST, frozenset)
+
+
+def test_us_futures_allowlist_constant() -> None:
+    """Test US_FUTURES_ALLOWLIST constant contains expected symbols."""
+    expected_symbols = {"BTC-FUTURES", "ETH-FUTURES", "SOL-FUTURES", "XRP-FUTURES"}
+    assert symbols.US_FUTURES_ALLOWLIST == expected_symbols
+
+
+def _make_runtime_settings_extended(
+    *,
+    coinbase_enable_derivatives: bool = False,
+    coinbase_enable_derivatives_overridden: bool = False,
+    coinbase_default_quote: str = "USD",
+    coinbase_us_futures_enabled: bool = False,
+    coinbase_intx_perpetuals_enabled: bool = False,
+    coinbase_derivatives_type: str = "",
+    **kwargs: dict,
+) -> RuntimeSettings:
+    """Create RuntimeSettings instance with extended options."""
+    return RuntimeSettings(
+        raw_env={},
+        runtime_root=kwargs.get("runtime_root", "/tmp"),
+        event_store_root_override=kwargs.get("event_store_root_override"),
+        coinbase_default_quote=coinbase_default_quote,
+        coinbase_default_quote_overridden=kwargs.get("coinbase_default_quote_overridden", False),
+        coinbase_enable_derivatives=coinbase_enable_derivatives,
+        coinbase_enable_derivatives_overridden=coinbase_enable_derivatives_overridden,
+        perps_enable_streaming=kwargs.get("perps_enable_streaming", False),
+        perps_stream_level=kwargs.get("perps_stream_level", 1),
+        perps_paper_trading=kwargs.get("perps_paper_trading", False),
+        perps_force_mock=kwargs.get("perps_force_mock", False),
+        perps_skip_startup_reconcile=kwargs.get("perps_skip_startup_reconcile", False),
+        perps_position_fraction=kwargs.get("perps_position_fraction"),
+        order_preview_enabled=kwargs.get("order_preview_enabled"),
+        spot_force_live=kwargs.get("spot_force_live", False),
+        broker_hint=kwargs.get("broker_hint"),
+        coinbase_sandbox_enabled=kwargs.get("coinbase_sandbox_enabled", False),
+        coinbase_api_mode=kwargs.get("coinbase_api_mode", "advanced"),
+        risk_config_path=kwargs.get("risk_config_path"),
+        coinbase_intx_portfolio_uuid=kwargs.get("coinbase_intx_portfolio_uuid"),
+        coinbase_us_futures_enabled=coinbase_us_futures_enabled,
+        coinbase_intx_perpetuals_enabled=coinbase_intx_perpetuals_enabled,
+        coinbase_derivatives_type=coinbase_derivatives_type,
+    )
+
+
+class TestUsFuturesEnabled:
+    """Tests for us_futures_enabled function."""
+
+    def test_returns_false_when_derivatives_disabled(self) -> None:
+        settings = _make_runtime_settings_extended(
+            coinbase_enable_derivatives=False,
+            coinbase_enable_derivatives_overridden=True,
+        )
+        result = symbols.us_futures_enabled(Profile.PROD, settings=settings)
+        assert result is False
+
+    def test_returns_true_when_us_futures_flag_enabled(self) -> None:
+        settings = _make_runtime_settings_extended(
+            coinbase_enable_derivatives=True,
+            coinbase_enable_derivatives_overridden=True,
+            coinbase_us_futures_enabled=True,
+        )
+        result = symbols.us_futures_enabled(Profile.PROD, settings=settings)
+        assert result is True
+
+    def test_returns_true_when_derivatives_type_is_us_futures(self) -> None:
+        settings = _make_runtime_settings_extended(
+            coinbase_enable_derivatives=True,
+            coinbase_enable_derivatives_overridden=True,
+            coinbase_derivatives_type="us_futures",
+        )
+        result = symbols.us_futures_enabled(Profile.PROD, settings=settings)
+        assert result is True
+
+    def test_returns_false_by_default(self) -> None:
+        settings = _make_runtime_settings_extended(
+            coinbase_enable_derivatives=True,
+            coinbase_enable_derivatives_overridden=True,
+        )
+        result = symbols.us_futures_enabled(Profile.PROD, settings=settings)
+        assert result is False
+
+
+class TestIntxPerpetualsEnabled:
+    """Tests for intx_perpetuals_enabled function."""
+
+    def test_returns_false_when_derivatives_disabled(self) -> None:
+        settings = _make_runtime_settings_extended(
+            coinbase_enable_derivatives=False,
+            coinbase_enable_derivatives_overridden=True,
+        )
+        result = symbols.intx_perpetuals_enabled(Profile.PROD, settings=settings)
+        assert result is False
+
+    def test_returns_true_when_intx_flag_enabled(self) -> None:
+        settings = _make_runtime_settings_extended(
+            coinbase_enable_derivatives=True,
+            coinbase_enable_derivatives_overridden=True,
+            coinbase_intx_perpetuals_enabled=True,
+        )
+        result = symbols.intx_perpetuals_enabled(Profile.PROD, settings=settings)
+        assert result is True
+
+    def test_returns_true_when_derivatives_type_is_intx_perps(self) -> None:
+        settings = _make_runtime_settings_extended(
+            coinbase_enable_derivatives=True,
+            coinbase_enable_derivatives_overridden=True,
+            coinbase_derivatives_type="intx_perps",
+        )
+        result = symbols.intx_perpetuals_enabled(Profile.PROD, settings=settings)
+        assert result is True
+
+    def test_returns_true_when_derivatives_type_is_perpetuals(self) -> None:
+        settings = _make_runtime_settings_extended(
+            coinbase_enable_derivatives=True,
+            coinbase_enable_derivatives_overridden=True,
+            coinbase_derivatives_type="perpetuals",
+        )
+        result = symbols.intx_perpetuals_enabled(Profile.PROD, settings=settings)
+        assert result is True
+
+    def test_returns_true_by_default(self) -> None:
+        settings = _make_runtime_settings_extended(
+            coinbase_enable_derivatives=True,
+            coinbase_enable_derivatives_overridden=True,
+        )
+        result = symbols.intx_perpetuals_enabled(Profile.PROD, settings=settings)
+        assert result is True
+
+
+class TestNormalizeSymbolListUsFutures:
+    """Tests for normalize_symbol_list with US futures."""
+
+    def test_allows_valid_us_futures(self) -> None:
+        symbols_list = ["BTC-FUTURES", "ETH-FUTURES"]
+        result, logs = symbols.normalize_symbol_list(
+            symbols_list,
+            allow_derivatives=True,
+            quote="USD",
+            allowed_us_futures=["BTC-FUTURES", "ETH-FUTURES"],
+        )
+        assert result == ["BTC-FUTURES", "ETH-FUTURES"]
+        assert logs == []
+
+    def test_filters_unsupported_us_futures(self) -> None:
+        symbols_list = ["BTC-FUTURES", "INVALID-FUTURES"]
+        result, logs = symbols.normalize_symbol_list(
+            symbols_list,
+            allow_derivatives=True,
+            quote="USD",
+            allowed_us_futures=["BTC-FUTURES"],
+        )
+        assert result == ["BTC-FUTURES"]
+        assert len(logs) == 1
+        assert "Filtering unsupported US futures symbol" in logs[0].message
+
+
+class TestNormalizeSymbolListFallback:
+    """Tests for normalize_symbol_list fallback behavior."""
+
+    def test_uses_default_fallback_bases_when_none(self) -> None:
+        result, logs = symbols.normalize_symbol_list(
+            [],  # Empty to trigger fallback
+            allow_derivatives=False,
+            quote="USD",
+            fallback_bases=None,  # Explicitly None to use default
+        )
+        # Should use TOP_VOLUME_BASES from configuration
+        assert len(result) > 0
+        assert all("-USD" in sym for sym in result)
+        assert len(logs) == 1

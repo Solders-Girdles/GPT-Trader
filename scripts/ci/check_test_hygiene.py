@@ -116,6 +116,23 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/validation/test_data_validators.py",  # data validation edge cases and error handling
     "tests/unit/gpt_trader/orchestration/strategy_orchestrator/test_orchestrator.py",  # strategy orchestration routing and signal aggregation
     "tests/unit/gpt_trader/orchestration/trading_bot/test_bot.py",  # trading bot lifecycle and state management scenarios
+    # Coverage expansion tests (C1 task)
+    "tests/unit/gpt_trader/features/live_trade/test_indicators.py",  # indicator calculation coverage
+    "tests/unit/gpt_trader/utilities/performance/test_timing.py",  # timing utilities coverage
+    "tests/unit/gpt_trader/backtesting/metrics/test_risk.py",  # risk metrics calculation matrix
+    "tests/unit/gpt_trader/errors/test_error_patterns.py",  # error pattern decorator coverage
+    "tests/unit/gpt_trader/backtesting/validation/test_decision_logger.py",  # decision logging scenarios
+    "tests/unit/gpt_trader/monitoring/test_alert_types.py",  # alert type coverage
+    "tests/unit/gpt_trader/app/test_health_server.py",  # health server endpoint coverage
+    "tests/unit/gpt_trader/validation/test_rules.py",  # validation rule matrix
+    "tests/unit/gpt_trader/monitoring/daily_report/test_analytics.py",  # daily report analytics
+    "tests/unit/gpt_trader/backtesting/metrics/test_statistics.py",  # trade statistics coverage
+    "tests/unit/gpt_trader/backtesting/engine/test_clock.py",  # simulation clock scenarios
+    "tests/unit/gpt_trader/backtesting/engine/test_bar_runner.py",  # bar runner orchestration
+    "tests/unit/gpt_trader/monitoring/daily_report/test_models.py",  # daily report model coverage
+    "tests/unit/gpt_trader/backtesting/metrics/test_report.py",  # backtest report generation
+    "tests/unit/gpt_trader/backtesting/validation/test_validator.py",  # validation scenarios
+    "tests/unit/gpt_trader/features/live_trade/strategies/test_perps_baseline.py",  # baseline strategy coverage
 }
 
 SLEEP_ALLOWLIST = {
@@ -123,6 +140,7 @@ SLEEP_ALLOWLIST = {
     "tests/unit/gpt_trader/utilities/test_performance_monitoring_core.py",
     "tests/unit/gpt_trader/persistence/test_json_file_store_contract.py",  # uses real sleep to validate file system based locking semantics
     "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming.py",  # uses time.sleep for run_in_executor cancellation test
+    "tests/unit/gpt_trader/utilities/performance/test_timing.py",  # timing utility coverage requires real sleep for precision tests
 }
 
 

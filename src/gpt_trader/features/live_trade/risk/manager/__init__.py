@@ -1,6 +1,8 @@
 import time
 from collections import defaultdict
+from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
 from decimal import Decimal
 from typing import Any
 
@@ -36,6 +38,8 @@ class LiveRiskManager:
         self._daily_pnl_triggered: bool = False
         self._risk_metrics: list[dict[str, Any]] = []
         self._start_of_day_equity: Decimal | None = None
+        # Allows time mocking for tests; defaults to real datetime.utcnow
+        self._now_provider: Callable[[], datetime] = datetime.utcnow
 
     def check_order(self, order: Any) -> bool:
         return True
@@ -88,14 +92,107 @@ class LiveRiskManager:
         equity: Decimal,
         current_positions: dict[str, Any],
     ) -> None:
-        if self.config:
-            notional = quantity * price
-            if equity > 0:
-                leverage = notional / equity
-                if leverage > self.config.max_leverage:
-                    raise ValidationError(
-                        f"Leverage {leverage} exceeds max {self.config.max_leverage}"
-                    )
+        if not self.config:
+            return
+
+        notional = quantity * price
+
+        if equity <= 0:
+            return
+
+        leverage = notional / equity
+
+        # 1. Global max leverage check
+        if leverage > self.config.max_leverage:
+            raise ValidationError(f"Leverage {leverage} exceeds max {self.config.max_leverage}")
+
+        # 2. Day/night leverage cap check (per-symbol)
+        is_daytime = self._is_daytime()
+        symbol_leverage_cap = self._get_symbol_leverage_cap(symbol, is_daytime)
+        if symbol_leverage_cap is not None and leverage > symbol_leverage_cap:
+            time_period = "day" if is_daytime else "night"
+            raise ValidationError(
+                f"Leverage {leverage:.1f}x exceeds {symbol} cap of {symbol_leverage_cap}x ({time_period})"
+            )
+
+        # 3. Total exposure validation
+        self._validate_total_exposure(symbol, notional, equity, current_positions)
+
+        # 4. MMR projection check (liquidation buffer)
+        if getattr(self.config, "enable_pre_trade_liq_projection", False):
+            self._validate_mmr_projection(symbol, notional, equity, is_daytime)
+
+    def _is_daytime(self) -> bool:
+        """Check if current time is within daytime window."""
+        now = self._now_provider()
+        current_time_str = now.strftime("%H:%M")
+
+        daytime_start = getattr(self.config, "daytime_start_utc", "09:00")
+        daytime_end = getattr(self.config, "daytime_end_utc", "17:00")
+
+        return daytime_start <= current_time_str < daytime_end
+
+    def _get_symbol_leverage_cap(self, symbol: str, is_daytime: bool) -> int | None:
+        """Get the leverage cap for a symbol based on time of day."""
+        if is_daytime:
+            caps = getattr(self.config, "day_leverage_max_per_symbol", {})
+        else:
+            caps = getattr(self.config, "night_leverage_max_per_symbol", {})
+
+        return caps.get(symbol)
+
+    def _validate_total_exposure(
+        self,
+        symbol: str,
+        new_notional: Decimal,
+        equity: Decimal,
+        current_positions: dict[str, Any],
+    ) -> None:
+        """Validate that total exposure doesn't exceed cap."""
+        max_exposure_pct = getattr(self.config, "max_exposure_pct", 1.0)
+
+        # Calculate current total exposure
+        current_exposure = Decimal("0")
+        for pos_symbol, pos_data in current_positions.items():
+            if isinstance(pos_data, dict):
+                quantity = Decimal(str(pos_data.get("quantity", 0)))
+                mark = Decimal(str(pos_data.get("mark", pos_data.get("price", 0))))
+                current_exposure += abs(quantity * mark)
+
+        # Add the new position notional
+        total_exposure = current_exposure + new_notional
+        exposure_pct = total_exposure / equity
+
+        if exposure_pct > Decimal(str(max_exposure_pct)):
+            raise ValidationError(
+                f"Total exposure {exposure_pct:.2%} would exceed cap of {max_exposure_pct:.0%}"
+            )
+
+    def _validate_mmr_projection(
+        self, symbol: str, notional: Decimal, equity: Decimal, is_daytime: bool
+    ) -> None:
+        """Validate that projected liquidation buffer is sufficient."""
+        # Get the appropriate MMR based on time of day
+        if is_daytime:
+            mmr_map = getattr(self.config, "day_mmr_per_symbol", {})
+        else:
+            mmr_map = getattr(self.config, "night_mmr_per_symbol", {})
+
+        mmr = mmr_map.get(symbol, 0.0)
+        if mmr == 0:
+            return
+
+        # Calculate projected margin requirement
+        margin_required = notional * Decimal(str(mmr))
+
+        # Check against minimum liquidation buffer
+        min_buffer = getattr(self.config, "min_liquidation_buffer_pct", 0.0)
+        buffer_pct = (equity - margin_required) / equity if equity > 0 else Decimal("0")
+
+        if buffer_pct < Decimal(str(min_buffer)):
+            raise ValidationError(
+                f"Projected liquidation buffer {buffer_pct:.2%} below minimum {min_buffer:.0%}"
+            )
 
     def track_daily_pnl(
         self, equity: Decimal, positions_pnl: dict[str, dict[str, Decimal]]

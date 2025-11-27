@@ -190,6 +190,7 @@ class MockConfig:
     daily_loss_limit_pct: Decimal | None = None
     mark_staleness_threshold: float = 120.0
     volatility_threshold_pct: Decimal | None = None
+    max_exposure_pct: float = 100.0  # 10000% - effectively no limit for leverage tests
 
 
 class TestCheckLiquidationBuffer:

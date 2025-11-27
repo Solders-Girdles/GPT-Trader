@@ -20,12 +20,10 @@ def make_perp(symbol: str) -> Product:
         min_size=Decimal("0.001"),
         price_increment=Decimal("0.01"),
         min_notional=Decimal("10"),
+        leverage_max=20,
     )
 
 
-@pytest.mark.skip(
-    reason="TODO: Fix time mocking - day/night leverage window enforcement needs _now_provider integration"
-)
 def test_day_vs_night_leverage_caps_enforced(monkeypatch):
     config = RiskConfig(
         max_leverage=20,
@@ -74,9 +72,6 @@ def test_day_vs_night_leverage_caps_enforced(monkeypatch):
         )
 
 
-@pytest.mark.skip(
-    reason="TODO: Fix time mocking - MMR projection day/night switching needs _now_provider integration"
-)
 def test_day_vs_night_mmr_projection(monkeypatch):
     # Night MMR higher → projected buffer insufficient at night, OK in day
     config = RiskConfig(

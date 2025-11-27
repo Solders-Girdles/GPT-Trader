@@ -33,6 +33,17 @@ class RiskConfig:
     kill_switch_enabled: bool = False
     reduce_only_mode: bool = False
 
+    # Day/night time window configuration
+    daytime_start_utc: str = "09:00"
+    daytime_end_utc: str = "17:00"
+    day_leverage_max_per_symbol: dict[str, int] = field(default_factory=dict)
+    night_leverage_max_per_symbol: dict[str, int] = field(default_factory=dict)
+
+    # MMR (Maintenance Margin Requirement) projection configuration
+    day_mmr_per_symbol: dict[str, float] = field(default_factory=dict)
+    night_mmr_per_symbol: dict[str, float] = field(default_factory=dict)
+    enable_pre_trade_liq_projection: bool = False
+
     @classmethod
     def from_env(cls) -> "RiskConfig":
         return cls(

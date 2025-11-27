@@ -19,12 +19,10 @@ def make_perp(symbol: str = "BTC-PERP") -> Product:
         min_size=Decimal("0.001"),
         price_increment=Decimal("0.01"),
         min_notional=Decimal("10"),
+        leverage_max=20,
     )
 
 
-@pytest.mark.skip(
-    reason="TODO: Fix total exposure validation - breach detection logic needs update"
-)
 def test_total_exposure_breach_while_symbol_cap_ok():
     config = RiskConfig(
         max_leverage=10,

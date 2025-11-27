@@ -102,6 +102,9 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/orchestration/execution/test_order_event_recorder.py",  # order event recording and telemetry coverage
     "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_orders.py",  # comprehensive REST orders mixin coverage
     "tests/unit/gpt_trader/features/live_trade/test_risk_manager.py",  # LiveRiskManager risk validation, volatility breakers, daily PnL tracking
+    "tests/unit/gpt_trader/orchestration/test_live_execution_engine.py",  # LiveExecutionEngine orchestration, order flow, risk validation
+    "tests/unit/gpt_trader/orchestration/test_derivatives_discovery.py",  # derivatives eligibility discovery and safety gating
+    "tests/unit/gpt_trader/orchestration/test_account_telemetry.py",  # account telemetry collection and publishing
 }
 
 SLEEP_ALLOWLIST = {

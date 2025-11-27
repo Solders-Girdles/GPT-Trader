@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from .logging_utils import logger  # naming: allow
 
@@ -18,7 +18,7 @@ def load_metrics(metrics_file: Path) -> dict[str, Any]:
 
     try:
         with open(metrics_file) as f:
-            return json.load(f)  # type: ignore[no-any-return]
+            return cast(dict[str, Any], json.load(f))
     except Exception as exc:
         logger.error(f"Failed to load metrics: {exc}")
         return {}

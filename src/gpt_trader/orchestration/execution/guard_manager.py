@@ -11,9 +11,10 @@ import logging
 import time
 from collections.abc import Callable
 from decimal import Decimal
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from gpt_trader.features.brokerages.core.interfaces import Balance
+from gpt_trader.features.brokerages.core.protocols import BrokerProtocol
 from gpt_trader.features.live_trade.guard_errors import (
     GuardError,
     RiskGuardComputationError,
@@ -80,10 +81,10 @@ class GuardManager:
                 cancel_all_orders=self.cancel_all_orders,  # type: ignore[arg-type]
                 invalidate_cache=self._cache.invalidate,
             ),
-            LiquidationBufferGuard(broker=broker, risk_manager=risk_manager),  # type: ignore[arg-type]
+            LiquidationBufferGuard(broker=cast(BrokerProtocol, broker), risk_manager=risk_manager),
             MarkStalenessGuard(broker=broker, risk_manager=risk_manager),
             RiskMetricsGuard(risk_manager=risk_manager),
-            VolatilityGuard(broker=broker, risk_manager=risk_manager),  # type: ignore[arg-type]
+            VolatilityGuard(broker=cast(BrokerProtocol, broker), risk_manager=risk_manager),
         ]
 
     # Backward compatibility properties

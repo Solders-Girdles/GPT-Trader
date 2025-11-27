@@ -271,7 +271,7 @@ def to_position(payload: dict) -> Position:
         unrealized_pnl=Decimal(str(upnl)),
         realized_pnl=Decimal(str(rpnl)),
         leverage=int(lev) if lev is not None else None,
-        side=side,  # type: ignore[arg-type]
+        side=side,
     )
 
     return position

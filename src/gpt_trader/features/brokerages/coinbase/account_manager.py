@@ -4,7 +4,7 @@ Manages Coinbase account state, positions, balances, and CFM/INTX specific featu
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from gpt_trader.utilities.logging_patterns import get_logger
 
@@ -171,15 +171,15 @@ class CoinbaseAccountManager:
             self._event_store.append_metric(
                 bot_id="account_manager", metrics={"event_type": "convert_commit", "data": result}
             )
-            return result  # type: ignore[no-any-return]
-        return quote  # type: ignore[no-any-return]
+            return cast(dict[str, Any], result)
+        return cast(dict[str, Any], quote)
 
     def move_funds(self, payload: dict[str, Any]) -> dict[str, Any]:
         result = self.broker.move_portfolio_funds(payload)
         self._event_store.append_metric(
             bot_id="account_manager", metrics={"event_type": "portfolio_move", "data": result}
         )
-        return result  # type: ignore[no-any-return]
+        return cast(dict[str, Any], result)
 
     def supports_intx(self) -> bool:
         """Check if INTX is supported by the broker."""
@@ -187,7 +187,7 @@ class CoinbaseAccountManager:
 
     def get_intx_portfolio_uuid(self, *, refresh: bool = False) -> str | None:
         """Get the INTX portfolio UUID, with optional refresh."""
-        return self.broker.resolve_intx_portfolio(refresh=refresh)  # type: ignore[no-any-return]
+        return cast(str | None, self.broker.resolve_intx_portfolio(refresh=refresh))
 
     def invalidate_intx_cache(self) -> None:
         """Invalidate the cached INTX portfolio UUID."""

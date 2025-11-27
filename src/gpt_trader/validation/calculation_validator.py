@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 from gpt_trader.utilities.logging_patterns import get_logger
 
@@ -85,7 +85,7 @@ def manual_backtest_example() -> (
     capital = 10000
     position = 0
     cash = capital
-    trades: list[dict[str, object]] = []
+    trades: list[dict[str, Any]] = []
 
     logger.info("\nStarting capital: $%s", f"{capital:,.2f}")
     logger.info("\nTrade Log:")
@@ -119,7 +119,7 @@ def manual_backtest_example() -> (
         elif signal == "SELL" and position > 0:
             proceeds = position * prices[i]
             cash += proceeds
-            last_cost_val = float(trades[-1]["cost"])  # type: ignore[arg-type]
+            last_cost_val = float(cast(int, trades[-1]["cost"]))
             pnl = proceeds - last_cost_val
             trades.append(
                 {

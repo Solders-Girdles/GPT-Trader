@@ -7,7 +7,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from gpt_trader.features.live_trade.guard_errors import GuardError, RiskGuardTelemetryError
-from gpt_trader.orchestration.execution.guards.protocol import Guard, RuntimeGuardState
+from gpt_trader.orchestration.execution.guards.protocol import RuntimeGuardState
 
 if TYPE_CHECKING:
     from gpt_trader.features.live_trade.risk import LiveRiskManager
@@ -47,8 +47,5 @@ class RiskMetricsGuard:
                 details={"equity": str(state.equity)},
             ) from exc
 
-
-# Verify protocol compliance
-_: Guard = RiskMetricsGuard(None)  # type: ignore[arg-type]
 
 __all__ = ["RiskMetricsGuard"]

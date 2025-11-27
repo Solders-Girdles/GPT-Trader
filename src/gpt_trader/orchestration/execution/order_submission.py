@@ -11,13 +11,14 @@ import os
 import time
 import uuid
 from decimal import Decimal
-from typing import Any
+from typing import Any, cast
 
 from gpt_trader.features.brokerages.coinbase.rest_service import CoinbaseRestService
 from gpt_trader.features.brokerages.core.interfaces import (
     OrderSide,
     OrderType,
 )
+from gpt_trader.features.brokerages.core.protocols import BrokerProtocol
 from gpt_trader.orchestration.execution.broker_executor import BrokerExecutor
 from gpt_trader.orchestration.execution.order_event_recorder import OrderEventRecorder
 from gpt_trader.persistence.event_store import EventStore
@@ -54,7 +55,9 @@ class OrderSubmitter:
         self.open_orders = open_orders
         self.integration_mode = integration_mode
         self._event_recorder = OrderEventRecorder(event_store, bot_id)
-        self._broker_executor = BrokerExecutor(broker, integration_mode=integration_mode)  # type: ignore[arg-type]
+        self._broker_executor = BrokerExecutor(
+            cast(BrokerProtocol, broker), integration_mode=integration_mode
+        )
 
     def record_preview(
         self,
@@ -214,8 +217,11 @@ class OrderSubmitter:
 
         # Check for Rejection
         if str(status_name).upper() in {"REJECTED", "CANCELLED", "FAILED"}:
-            return self._process_rejection(  # type: ignore[no-any-return]
-                order, status_name, symbol, side, quantity, price, effective_price
+            return cast(
+                str | None,
+                self._process_rejection(
+                    order, status_name, symbol, side, quantity, price, effective_price
+                ),
             )
 
         # Process Success
@@ -225,7 +231,7 @@ class OrderSubmitter:
         self._log_success(order, symbol, side, quantity, display_price, reduce_only)
         self._record_trade_event(order, symbol, side, quantity, price, effective_price, submit_id)
 
-        return order if self.integration_mode else order.id  # type: ignore[no-any-return]
+        return cast(str | None, order if self.integration_mode else order.id)
 
     def _process_rejection(
         self,

@@ -5,7 +5,7 @@ Product and market data mixin for Coinbase REST service.
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from gpt_trader.features.brokerages.coinbase.models import to_candle, to_product, to_quote
 from gpt_trader.features.brokerages.core.interfaces import Candle, Product, Quote
@@ -64,7 +64,7 @@ class ProductRestMixin:
                             product.next_funding_time = next_funding
                         except Exception:
                             pass
-                    return product  # type: ignore[no-any-return]
+                    return cast(Product, product)
                 except Exception as e:
                     logger.debug("ProductRestMixin catalog get failed: %s", e)
                     pass

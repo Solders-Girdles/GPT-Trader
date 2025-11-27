@@ -7,7 +7,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from gpt_trader.features.live_trade.guard_errors import RiskGuardDataUnavailable
-from gpt_trader.orchestration.execution.guards.protocol import Guard, RuntimeGuardState
+from gpt_trader.orchestration.execution.guards.protocol import RuntimeGuardState
 
 if TYPE_CHECKING:
     from gpt_trader.features.brokerages.core.protocols import BrokerProtocol
@@ -71,8 +71,5 @@ class VolatilityGuard:
                 details={"failures": failures},
             )
 
-
-# Verify protocol compliance
-_: Guard = VolatilityGuard(None, None)  # type: ignore[arg-type]
 
 __all__ = ["VolatilityGuard"]

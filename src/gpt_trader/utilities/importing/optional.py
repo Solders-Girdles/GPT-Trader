@@ -43,7 +43,7 @@ class OptionalImport:
         if not self.is_available():
             msg = error_message or f"Optional dependency {self.module_path} is required but missing"
             raise ImportError(msg)
-        return self._module  # type: ignore[return-value]
+        return self._module
 
     def __getattr__(self, name: str) -> Any:
         module = self._try_load()

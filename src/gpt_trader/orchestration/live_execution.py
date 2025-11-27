@@ -24,6 +24,7 @@ from gpt_trader.features.brokerages.core.interfaces import (
     OrderType,
     Product,
 )
+from gpt_trader.features.brokerages.core.protocols import ExtendedBrokerProtocol
 from gpt_trader.features.live_trade.risk import LiveRiskManager, ValidationError
 from gpt_trader.orchestration.execution import (
     GuardManager,
@@ -131,7 +132,9 @@ class LiveExecutionEngine:
 
         # Initialize helper modules
         self.state_collector: StateCollector = StateCollector(
-            broker, settings=runtime_settings, integration_mode=self._integration_mode  # type: ignore[arg-type]
+            cast(ExtendedBrokerProtocol, broker),
+            settings=runtime_settings,
+            integration_mode=self._integration_mode,
         )
         self.order_submitter: OrderSubmitter = OrderSubmitter(
             broker,

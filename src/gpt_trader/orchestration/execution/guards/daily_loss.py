@@ -8,7 +8,7 @@ from collections.abc import Callable
 from typing import TYPE_CHECKING
 
 from gpt_trader.features.live_trade.guard_errors import RiskGuardActionError
-from gpt_trader.orchestration.execution.guards.protocol import Guard, RuntimeGuardState
+from gpt_trader.orchestration.execution.guards.protocol import RuntimeGuardState
 
 if TYPE_CHECKING:
     from gpt_trader.features.live_trade.risk import LiveRiskManager
@@ -58,8 +58,5 @@ class DailyLossGuard:
                 ) from exc
             self._invalidate_cache()
 
-
-# Verify protocol compliance
-_: Guard = DailyLossGuard(None, lambda: None, lambda: None)  # type: ignore[arg-type]
 
 __all__ = ["DailyLossGuard"]

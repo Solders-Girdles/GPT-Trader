@@ -220,7 +220,7 @@ def handle_error(error: Exception, context: dict[str, Any] | None = None) -> Tra
         if context:
             error.add_context(**context)
         if not hasattr(error, "original_error"):
-            error.original_error = None  # type: ignore[attr-defined]
+            error.original_error = None
         return error
 
     # Wrap non-trading errors

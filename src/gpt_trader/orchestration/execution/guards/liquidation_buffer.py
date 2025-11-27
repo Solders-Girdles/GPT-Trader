@@ -11,7 +11,7 @@ from gpt_trader.features.live_trade.guard_errors import (
     RiskGuardDataCorrupt,
     RiskGuardDataUnavailable,
 )
-from gpt_trader.orchestration.execution.guards.protocol import Guard, RuntimeGuardState
+from gpt_trader.orchestration.execution.guards.protocol import RuntimeGuardState
 from gpt_trader.utilities.quantities import quantity_from
 
 if TYPE_CHECKING:
@@ -78,8 +78,5 @@ class LiquidationBufferGuard:
 
             self._risk_manager.check_liquidation_buffer(pos.symbol, pos_data, state.equity)
 
-
-# Verify protocol compliance
-_: Guard = LiquidationBufferGuard(None, None)  # type: ignore[arg-type]
 
 __all__ = ["LiquidationBufferGuard"]

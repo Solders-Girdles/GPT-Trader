@@ -8,7 +8,7 @@ import logging
 import sys
 import time
 from collections.abc import Generator
-from typing import Any
+from typing import Any, cast
 
 
 class StructuredLogger:
@@ -83,7 +83,7 @@ def _ensure_structured(logger: Any) -> StructuredLogger | None:
     if logger is None:
         return None
     if _is_structured(logger):
-        return logger  # type: ignore[no-any-return]
+        return cast(StructuredLogger, logger)
     if isinstance(logger, logging.Logger):
         return StructuredLogger(logger.name)
     if hasattr(logger, "name"):

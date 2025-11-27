@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from gpt_trader.features.live_trade.strategies.perps_baseline import (
     BaselinePerpsStrategy,
@@ -102,8 +102,8 @@ class StrategyInitializationMixin:
             if strat is None:
                 strat = BaselinePerpsStrategy(risk_manager=bot.risk_manager)
                 state.symbol_strategies[symbol] = strat
-            return strat  # type: ignore[no-any-return]
-        return state.strategy  # type: ignore[no-any-return]
+            return cast(BaselinePerpsStrategy, strat)
+        return cast(BaselinePerpsStrategy, state.strategy)
 
 
 __all__ = ["StrategyInitializationMixin"]

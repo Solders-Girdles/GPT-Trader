@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from gpt_trader.config.runtime_settings import RuntimeSettings, load_runtime_settings
 from gpt_trader.features.brokerages.coinbase.auth import SimpleAuth
@@ -12,6 +12,7 @@ from gpt_trader.features.brokerages.coinbase.utilities import ProductCatalog
 from gpt_trader.orchestration.config_controller import ConfigController
 from gpt_trader.orchestration.configuration import BotConfig
 from gpt_trader.orchestration.deterministic_broker import DeterministicBroker
+from gpt_trader.orchestration.protocols import EventStoreProtocol, ServiceRegistryProtocol
 from gpt_trader.orchestration.service_registry import ServiceRegistry
 from gpt_trader.orchestration.trading_bot.bot import TradingBot
 from gpt_trader.persistence.event_store import EventStore
@@ -167,8 +168,8 @@ class ApplicationContainer:
         return TradingBot(
             config=cc.current,
             container=self,
-            registry=reg,  # type: ignore[arg-type]
-            event_store=es,  # type: ignore[arg-type]
+            registry=cast(ServiceRegistryProtocol, reg),
+            event_store=cast(EventStoreProtocol, es),
             orders_store=os,
         )
 

@@ -10,9 +10,9 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import Any, Protocol, cast, runtime_checkable
 
+from gpt_trader.features.brokerages.coinbase.rest_service import CoinbaseRestService
 from gpt_trader.features.brokerages.coinbase.specs import validate_order as spec_validate_order
 from gpt_trader.features.brokerages.core.interfaces import (
-    IBrokerage,
     OrderSide,
     OrderType,
     Product,
@@ -30,7 +30,7 @@ class OrderValidator:
 
     def __init__(
         self,
-        broker: IBrokerage,
+        broker: CoinbaseRestService,
         risk_manager: LiveRiskManager,
         enable_order_preview: bool,
         record_preview_callback: Any,
@@ -157,7 +157,7 @@ class OrderValidator:
         try:
             snapshot = None
             if hasattr(self.broker, "get_market_snapshot"):
-                snapshot = self.broker.get_market_snapshot(symbol)  # type: ignore[attr-defined]
+                snapshot = self.broker.get_market_snapshot(symbol)
             if snapshot:
                 spread_bps = Decimal(str(snapshot.get("spread_bps", 0)))
                 depth_l1 = Decimal(str(snapshot.get("depth_l1", 0)))

@@ -20,7 +20,6 @@ from gpt_trader.features.brokerages.coinbase.rest_service import CoinbaseRestSer
 from gpt_trader.features.brokerages.coinbase.utilities import ProductCatalog
 from gpt_trader.features.brokerages.core.interfaces import (
     Balance,
-    IBrokerage,
     InvalidRequestError,
     Order,
     Position,
@@ -30,7 +29,7 @@ from gpt_trader.persistence.event_store import EventStore
 
 
 # Stub for CoinbaseBrokerage to unblock tests
-class CoinbaseBrokerage(IBrokerage):
+class CoinbaseBrokerage:
     def __init__(self, config: APIConfig):
         self.config = config
         # Create auth from config

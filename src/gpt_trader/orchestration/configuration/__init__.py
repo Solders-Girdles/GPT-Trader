@@ -2,12 +2,12 @@
 Configuration module.
 """
 
+from gpt_trader.config.types import Profile
 from gpt_trader.orchestration.configuration.bot_config import (
     TOP_VOLUME_BASES,
     BotConfig,
     config,
 )
-from gpt_trader.orchestration.configuration.core import Profile
 from gpt_trader.orchestration.configuration.risk.model import (
     RISK_CONFIG_ENV_ALIASES,
     RISK_CONFIG_ENV_KEYS,

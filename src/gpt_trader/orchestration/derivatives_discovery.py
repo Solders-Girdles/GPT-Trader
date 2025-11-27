@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING, Any, Literal
 from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:
-    from gpt_trader.features.brokerages.core.interfaces import IBrokerage
+    from gpt_trader.features.brokerages.coinbase.rest_service import CoinbaseRestService
 
 logger = get_logger(__name__, component="derivatives_discovery")
 
@@ -35,7 +35,7 @@ DerivativesMarket = Literal["US", "INTX", "BOTH", "NONE"]
 
 
 def discover_derivatives_eligibility(
-    broker: IBrokerage,
+    broker: CoinbaseRestService,
     *,
     requested_market: DerivativesMarket = "BOTH",
     fail_on_inaccessible: bool = True,
@@ -154,7 +154,7 @@ def discover_derivatives_eligibility(
     )
 
 
-def _discover_us_derivatives(broker: IBrokerage) -> tuple[bool, bool, str | None]:
+def _discover_us_derivatives(broker: CoinbaseRestService) -> tuple[bool, bool, str | None]:
     """Discover US derivatives (CFM) eligibility.
 
     Returns:
@@ -171,7 +171,7 @@ def _discover_us_derivatives(broker: IBrokerage) -> tuple[bool, bool, str | None
             return False, False, "Broker does not support CFM endpoints"
 
         # Try to fetch CFM balance summary
-        balance_summary = broker.get_cfm_balance_summary()  # type: ignore[attr-defined]
+        balance_summary = broker.get_cfm_balance_summary()
 
         if not balance_summary or not isinstance(balance_summary, dict):
             logger.debug(
@@ -209,7 +209,7 @@ def _discover_us_derivatives(broker: IBrokerage) -> tuple[bool, bool, str | None
         return True, False, f"CFM discovery error: {exc}"
 
 
-def _discover_intx_derivatives(broker: IBrokerage) -> tuple[bool, bool, str | None]:
+def _discover_intx_derivatives(broker: CoinbaseRestService) -> tuple[bool, bool, str | None]:
     """Discover INTX (International) derivatives eligibility.
 
     Returns:
@@ -226,7 +226,7 @@ def _discover_intx_derivatives(broker: IBrokerage) -> tuple[bool, bool, str | No
             return False, False, "Broker does not support portfolio listing"
 
         # Try to list portfolios to find INTX portfolio
-        portfolios = broker.list_portfolios()  # type: ignore[attr-defined]
+        portfolios = broker.list_portfolios()
 
         if not portfolios or not isinstance(portfolios, list):
             logger.debug(
@@ -278,7 +278,7 @@ def _discover_intx_derivatives(broker: IBrokerage) -> tuple[bool, bool, str | No
             )
             return True, False, "INTX portfolio endpoints not available"
 
-        portfolio_details = broker.get_intx_portfolio(portfolio_uuid)  # type: ignore[attr-defined]
+        portfolio_details = broker.get_intx_portfolio(portfolio_uuid)
 
         if not portfolio_details or not isinstance(portfolio_details, dict):
             logger.debug(

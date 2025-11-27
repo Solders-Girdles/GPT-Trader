@@ -93,6 +93,11 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/preflight/test_core.py",  # preflight core validation
     "tests/unit/gpt_trader/orchestration/execution/test_guards.py",  # execution guard scenarios
     "tests/unit/gpt_trader/orchestration/test_symbols.py",  # symbol management coverage
+    "tests/property/test_fee_invariants.py",  # property-based fee calculation invariants with comprehensive edge cases
+    "tests/property/test_liquidation_invariants.py",  # property-based liquidation safety invariants across margin scenarios
+    "tests/property/test_margin_invariants.py",  # property-based margin requirement invariants with leverage permutations
+    "tests/property/test_pnl_invariants.py",  # property-based PnL calculation invariants covering all position/entry combinations
+    "tests/unit/gpt_trader/preflight/test_checks_connectivity.py",  # comprehensive connectivity check scenarios with retry/timeout coverage
 }
 
 SLEEP_ALLOWLIST = {

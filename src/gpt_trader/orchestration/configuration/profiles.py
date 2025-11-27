@@ -10,7 +10,7 @@ from gpt_trader.config import path_registry
 from gpt_trader.config.types import Profile
 from gpt_trader.utilities.logging_patterns import get_logger
 
-from .core import BotConfig
+from .bot_config import BotConfig
 
 ConfigFactory = Callable[..., BotConfig]
 

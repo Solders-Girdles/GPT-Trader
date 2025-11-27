@@ -49,11 +49,14 @@ src/gpt_trader/features/
 └── strategy_tools/      # Shared helpers for strategy slices
 ```
 
-Additional cross-cutting packages now live at the top level:
+Additional cross-cutting packages now live at the top level. These intentionally span feature slices:
 
 ```
 src/gpt_trader/
+├── errors/              # Centralized error hierarchy providing consistent exception types
 ├── monitoring/          # Runtime guards, configuration guardian, system logger
+├── preflight/           # Production preflight verification and startup checks
+├── security/            # Security primitives: input sanitization, secrets management
 └── validation/          # Declarative validators and decorators
 ```
 
@@ -378,16 +381,16 @@ monitoring: real-time
 - [ ] Partial fill handling
 
 ### Medium Term (Q2 2025)
-- [ ] Multi-exchange support
-- [ ] Advanced order types
+- [ ] Advanced order types (OCO, bracket orders)
 - [ ] Portfolio-level risk management
 - [ ] Real-time ML adaptation
+- [ ] Enhanced Coinbase INTX integration
 
 ### Long Term (2025+)
 - [ ] Distributed execution
-- [ ] Cross-exchange arbitrage
-- [ ] Options integration
+- [ ] Options integration (when Coinbase supports)
 - [ ] Institutional features
+- [ ] Advanced derivatives strategies
 
 ---
 

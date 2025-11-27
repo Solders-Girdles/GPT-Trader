@@ -117,20 +117,11 @@ class AccountTelemetryService:
             logger=logger,
         )
         try:
-            target_dirs = [
-                RUNTIME_DATA_DIR / "coinbase_trader" / self._profile,
-                RUNTIME_DATA_DIR / "perps_bot" / self._profile,
-            ]
-            seen: set[str] = set()
-            for target_dir in target_dirs:
-                key = str(target_dir)
-                if key in seen:
-                    continue
-                seen.add(key)
-                output_path = target_dir / "account.json"
-                output_path.parent.mkdir(parents=True, exist_ok=True)
-                with output_path.open("w") as fh:
-                    json.dump(snapshot, fh, indent=2)
+            target_dir = RUNTIME_DATA_DIR / "coinbase_trader" / self._profile
+            output_path = target_dir / "account.json"
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            with output_path.open("w") as fh:
+                json.dump(snapshot, fh, indent=2)
         except Exception as exc:
             logger.debug(
                 "Failed to write account snapshot: %s",

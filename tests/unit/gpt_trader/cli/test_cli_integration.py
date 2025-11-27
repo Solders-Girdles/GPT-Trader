@@ -25,6 +25,7 @@ requires_credentials = pytest.mark.integration
 # ===== Core CLI Behavior =====
 
 
+@pytest.mark.integration
 def test_cli_help_output():
     """CLI should display help text with key options."""
     result = subprocess.run(
@@ -43,6 +44,7 @@ def test_cli_help_output():
     assert "--reduce-only" in stdout
 
 
+@pytest.mark.integration
 def test_cli_invalid_profile_rejected():
     """Passing an unsupported profile should fail fast."""
     result = subprocess.run(
@@ -122,6 +124,7 @@ print(json.dumps({
 # ===== Validation Scenarios =====
 
 
+@pytest.mark.integration
 def test_cli_invalid_tif_rejected():
     """An unsupported time-in-force value should trigger parser error output."""
     result = subprocess.run(

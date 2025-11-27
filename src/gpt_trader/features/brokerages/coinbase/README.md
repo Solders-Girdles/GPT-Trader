@@ -7,7 +7,7 @@ Complete implementation of Coinbase Advanced Trade API v3 and Legacy Exchange AP
 ### Core Components
 - ✅ **REST Client** (`client.py`): Full HTTP client with auth, retries, and rate limiting
 - ✅ **WebSocket Streaming** (`ws.py`): Real-time data with auto-reconnect and transport abstraction
-- ✅ **Brokerage Adapter** (`adapter.py`): Implements `IBrokerage` interface for Coinbase
+- ✅ **REST Service** (`rest_service.py`): High-level service layer for Coinbase operations
 - ✅ **Data Models** (`models.py`): Type-safe data mappers and helpers
 - ✅ **Error Handling** (`errors.py`): Comprehensive error mapping
 - ✅ **Authentication**: Both HMAC and CDP JWT (v2) authentication supported

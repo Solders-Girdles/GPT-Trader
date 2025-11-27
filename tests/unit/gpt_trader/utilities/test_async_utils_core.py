@@ -8,7 +8,7 @@ import time
 
 import pytest
 
-from gpt_trader.utilities.async_utils import (  # naming: allow
+from gpt_trader.utilities.async_tools import (  # naming: allow
     AsyncBatchProcessor,
     AsyncCache,
     AsyncContextManager,

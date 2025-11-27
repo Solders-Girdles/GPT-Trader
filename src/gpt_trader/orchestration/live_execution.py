@@ -17,9 +17,9 @@ from decimal import Decimal
 from typing import Any, cast
 
 from gpt_trader.config.runtime_settings import RuntimeSettings, load_runtime_settings
+from gpt_trader.features.brokerages.coinbase.rest_service import CoinbaseRestService
 from gpt_trader.features.brokerages.coinbase.specs import validate_order as spec_validate_order
 from gpt_trader.features.brokerages.core.interfaces import (
-    IBrokerage,
     OrderSide,
     OrderType,
     Product,
@@ -68,7 +68,7 @@ class LiveExecutionEngine:
 
     def __init__(
         self,
-        broker: IBrokerage,
+        broker: CoinbaseRestService,
         risk_manager: LiveRiskManager | None = None,
         event_store: EventStore | None = None,
         bot_id: str = "live_execution",

@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from gpt_trader.monitoring.runtime_guards import (
-    AlertSeverity,
+from gpt_trader.monitoring.alert_types import AlertSeverity
+from gpt_trader.monitoring.guards import (
     GuardConfig,
     GuardStatus,
     RuntimeGuard,

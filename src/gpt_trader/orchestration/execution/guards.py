@@ -14,7 +14,8 @@ from dataclasses import dataclass, field
 from decimal import Decimal
 from typing import Any
 
-from gpt_trader.features.brokerages.core.interfaces import Balance, IBrokerage
+from gpt_trader.features.brokerages.coinbase.rest_service import CoinbaseRestService
+from gpt_trader.features.brokerages.core.interfaces import Balance
 from gpt_trader.features.live_trade.guard_errors import (
     GuardError,
     RiskGuardActionError,
@@ -51,7 +52,7 @@ class GuardManager:
 
     def __init__(
         self,
-        broker: IBrokerage,
+        broker: CoinbaseRestService,
         risk_manager: LiveRiskManager,
         equity_calculator: Callable[[list[Balance]], tuple[Decimal, list[Balance], Decimal]],
         open_orders: list[str],
@@ -107,7 +108,7 @@ class GuardManager:
         for pos in positions:
             if hasattr(self.broker, "get_position_pnl"):
                 try:
-                    pnl_data = self.broker.get_position_pnl(pos.symbol)  # type: ignore[attr-defined]
+                    pnl_data = self.broker.get_position_pnl(pos.symbol)
                     if isinstance(pnl_data, dict):
                         positions_pnl[pos.symbol] = {
                             "realized_pnl": Decimal(str(pnl_data.get("realized_pnl", "0"))),
@@ -253,7 +254,7 @@ class GuardManager:
 
             if not incremental and hasattr(self.broker, "get_position_risk"):
                 try:
-                    risk_info = self.broker.get_position_risk(pos.symbol)  # type: ignore[attr-defined]
+                    risk_info = self.broker.get_position_risk(pos.symbol)
                 except Exception as exc:
                     raise RiskGuardDataUnavailable(
                         guard_name=guard_name,
@@ -274,7 +275,7 @@ class GuardManager:
         failures: list[dict[str, Any]] = []
         for symbol in list(self.risk_manager.last_mark_update.keys()):
             try:
-                mark = self.broker._mark_cache.get_mark(symbol)  # type: ignore[attr-defined]
+                mark = self.broker._mark_cache.get_mark(symbol)
             except Exception as exc:
                 failures.append({"symbol": symbol, "error": repr(exc)})
                 continue

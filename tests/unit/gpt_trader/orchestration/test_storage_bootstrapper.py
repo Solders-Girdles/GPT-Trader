@@ -4,7 +4,7 @@ import pytest
 
 import gpt_trader.config.runtime_settings as runtime_settings_module
 from gpt_trader.config.types import Profile
-from gpt_trader.orchestration.configuration.core import BotConfig
+from gpt_trader.orchestration.configuration import BotConfig
 from gpt_trader.orchestration.service_registry import ServiceRegistry
 from gpt_trader.orchestration.storage import StorageBootstrapper
 from gpt_trader.persistence.event_store import EventStore

@@ -17,9 +17,9 @@ This document captures the architecture and trading flow for the Coinbase Perpet
    - Detects `COINBASE_ENABLE_DERIVATIVES` + INTX context before enabling perps
    - Coordinates between strategy, risk, and execution layers via the coordinator pattern
 
-2. **CoinbaseBrokerage Adapter** (`src/gpt_trader/features/brokerages/coinbase/adapter.py`)
-   - Implements broker-agnostic interface
-   - Handles REST API and WebSocket connections
+2. **CoinbaseRestService** (`src/gpt_trader/features/brokerages/coinbase/rest_service.py`)
+   - High-level service layer for Coinbase operations
+   - Handles REST API operations via modular mixins (orders, portfolio, products, P&L)
    - Manages product discovery and order routing
 
 3. **Strategy Layer**

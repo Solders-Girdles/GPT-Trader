@@ -183,7 +183,7 @@ class CoinbaseAccountManager:
 
     def supports_intx(self) -> bool:
         """Check if INTX is supported by the broker."""
-        return self.broker.supports_intx()  # type: ignore[no-any-return]
+        return bool(self.broker.supports_intx())
 
     def get_intx_portfolio_uuid(self, *, refresh: bool = False) -> str | None:
         """Get the INTX portfolio UUID, with optional refresh."""

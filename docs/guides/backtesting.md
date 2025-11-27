@@ -9,7 +9,7 @@ The backtesting simulation harness provides a production-grade framework for val
 ### 1. Zero Logic Drift
 - Same strategy coordinator, execution coordinator, and risk manager
 - Same circuit breakers, position sizing, and PnL tracking
-- Only difference: swappable broker implementation (`IBrokerage` interface)
+- Only difference: swappable broker implementation (live `CoinbaseRestService` vs `SimulatedBroker`)
 
 ### 2. Production Parity
 - Realistic order fills with slippage and spread modeling
@@ -62,54 +62,25 @@ The backtesting simulation harness provides a production-grade framework for val
                        └────────────┘
 ```
 
-## Key Interfaces
+## Key Components
 
-### IBrokerage
-The backtesting framework uses the same `IBrokerage` interface as live trading:
+### Broker Implementations
+The backtesting framework uses concrete broker implementations that share a common API surface:
 
-```python
-class IBrokerage(Protocol):
-    """Core brokerage interface used by both live and simulated environments."""
+**Live Trading:**
+- `CoinbaseRestService`: Production REST service for Coinbase Advanced Trade API
 
-    def get_quote(self, symbol: str) -> Quote:
-        """Get current bid/ask quote."""
-        ...
-
-    def get_candles(
-        self,
-        symbol: str,
-        granularity: str,
-        start: datetime | None = None,
-        end: datetime | None = None,
-    ) -> list[Candle]:
-        """Fetch historical candles."""
-        ...
-
-    def place_order(
-        self,
-        symbol: str,
-        side: OrderSide,
-        order_type: OrderType,
-        quantity: Decimal,
-        price: Decimal | None = None,
-    ) -> Order:
-        """Place a new order."""
-        ...
-
-    def list_positions(self) -> list[Position]:
-        """Get current positions."""
-        ...
-
-    def list_balances(self) -> list[Balance]:
-        """Get account balances."""
-        ...
-```
-
-**Implementations:**
-- `CoinbaseBrokerage`: Live trading via Coinbase Advanced Trade API
+**Backtesting:**
 - `SimulatedBroker`: In-memory simulation with order fill model
 
-This single interface ensures **zero logic drift** between live and backtest environments - the strategy coordinator and risk manager interact identically with either implementation.
+Both implementations provide the same core methods used by the orchestration layer:
+- `list_balances()` - Get account balances
+- `list_positions()` - Get current positions
+- `place_order(...)` - Place a new order
+- `get_quote(symbol)` - Get current bid/ask quote
+- `get_candles(...)` - Fetch historical candles
+
+This API surface ensures **zero logic drift** between live and backtest environments - the strategy coordinator and risk manager interact identically with either implementation.
 
 ## Simulation Engine
 

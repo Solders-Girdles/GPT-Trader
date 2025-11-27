@@ -2,7 +2,6 @@ from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Protocol
 
 
 class OrderSide(str, Enum):
@@ -114,30 +113,6 @@ class Balance:
     total: Decimal
     available: Decimal
     hold: Decimal = Decimal("0")
-
-
-class IBrokerage(Protocol):
-    def get_balances(self) -> list[Balance]: ...
-    def get_positions(self) -> list[Position]: ...
-    def list_balances(self) -> list[Balance]: ...
-    def list_positions(self) -> list[Position]: ...
-    def get_product(self, symbol: str) -> Product | None: ...
-    def place_order(
-        self,
-        symbol: str | None = None,
-        side: OrderSide | None = None,
-        order_type: OrderType | None = None,
-        quantity: Decimal | None = None,
-        price: Decimal | None = None,
-        stop_price: Decimal | None = None,
-        tif: TimeInForce | None = None,
-        reduce_only: bool = False,
-        leverage: int | None = None,
-        client_id: str | None = None,
-        order: Order | None = None,
-    ) -> Order: ...
-    def cancel_order(self, order_id: str) -> bool: ...
-    def get_order(self, order_id: str) -> Order: ...
 
 
 class InvalidRequestError(Exception):

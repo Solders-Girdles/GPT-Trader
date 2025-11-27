@@ -93,7 +93,7 @@ class OrderRestMixin:
             results = response.get("results", [])
             for res in results:
                 if res.get("order_id") == order_id:
-                    return res.get("success", False)  # type: ignore[no-any-return]
+                    return bool(res.get("success", False))
             return False
         except Exception as exc:
             logger.error(
@@ -211,7 +211,7 @@ class OrderRestMixin:
         self,
         symbol: str,
         client_order_id: str | None = None,
-        fallback: Callable | None = None,
+        fallback: Callable[[], Order] | None = None,
     ) -> Order:
         """Close position for a symbol."""
         has_pos = False
@@ -234,5 +234,5 @@ class OrderRestMixin:
             return to_order(response.get("order", {}))
         except Exception as e:
             if fallback:
-                return fallback()  # type: ignore[no-any-return]
+                return fallback()
             raise e

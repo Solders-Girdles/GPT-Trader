@@ -13,7 +13,8 @@ from types import SimpleNamespace
 from typing import Any, cast
 
 from gpt_trader.config.runtime_settings import RuntimeSettings, load_runtime_settings
-from gpt_trader.features.brokerages.core.interfaces import Balance, IBrokerage, MarketType, Product
+from gpt_trader.features.brokerages.coinbase.rest_service import CoinbaseRestService
+from gpt_trader.features.brokerages.core.interfaces import Balance, MarketType, Product
 from gpt_trader.utilities.logging_patterns import get_logger
 from gpt_trader.utilities.quantities import quantity_from
 
@@ -23,7 +24,9 @@ logger = get_logger(__name__, component="state_collection")
 class StateCollector:
     """Collects and transforms account state for execution and risk management."""
 
-    def __init__(self, broker: IBrokerage, *, settings: RuntimeSettings | None = None) -> None:
+    def __init__(
+        self, broker: CoinbaseRestService, *, settings: RuntimeSettings | None = None
+    ) -> None:
         """
         Initialize state collector.
 
@@ -241,7 +244,7 @@ class StateCollector:
         # For market orders, use mark price or bid/ask
         if hasattr(self.broker, "get_mark_price"):
             try:
-                mark = self.broker.get_mark_price(symbol)  # type: ignore[attr-defined]
+                mark = self.broker.get_mark_price(symbol)
                 if mark and mark > Decimal("0"):
                     return Decimal(str(mark))
             except Exception as exc:
@@ -264,7 +267,7 @@ class StateCollector:
         # Broker quote fallback
         if hasattr(self.broker, "get_quote"):
             try:
-                quote = self.broker.get_quote(symbol)  # type: ignore[attr-defined]
+                quote = self.broker.get_quote(symbol)
                 last = getattr(quote, "last", None)
                 if last is not None:
                     last_decimal = Decimal(str(last))

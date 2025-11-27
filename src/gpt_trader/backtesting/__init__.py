@@ -6,7 +6,7 @@ live trading with swappable broker adapters, realistic order fills, and
 comprehensive validation.
 
 Key Components:
-- SimulatedBroker: IBrokerage implementation for backtesting
+- SimulatedBroker: Broker implementation for backtesting
 - ClockedBarRunner: Bar-by-bar historical data replay
 - FeeCalculator: Coinbase Advanced Trade fee modeling
 - OrderFillModel: Realistic fill simulation with slippage

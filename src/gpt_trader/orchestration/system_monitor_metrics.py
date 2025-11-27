@@ -46,11 +46,7 @@ class MetricsPublisher:
         self._log_update(metrics)
 
     def _target_dirs(self) -> list[Path]:
-        modern = self._base_dir / "coinbase_trader" / self._profile
-        legacy = self._base_dir / "perps_bot" / self._profile
-        if legacy == modern:
-            return [modern]
-        return [modern, legacy]
+        return [self._base_dir / "coinbase_trader" / self._profile]
 
     # ------------------------------------------------------------------
     def _write_snapshot(self, metrics: dict[str, Any]) -> None:

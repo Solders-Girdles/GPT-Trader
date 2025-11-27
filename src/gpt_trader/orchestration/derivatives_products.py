@@ -14,7 +14,8 @@ from typing import TYPE_CHECKING, Any
 from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:
-    from gpt_trader.features.brokerages.core.interfaces import IBrokerage, Product
+    from gpt_trader.features.brokerages.coinbase.rest_service import CoinbaseRestService
+    from gpt_trader.features.brokerages.core.interfaces import Product
 
 logger = get_logger(__name__, component="derivatives_products")
 
@@ -84,7 +85,7 @@ class DerivativesProductCache:
 
 
 def discover_derivatives_products(
-    broker: IBrokerage,
+    broker: CoinbaseRestService,
     *,
     cache: DerivativesProductCache | None = None,
 ) -> DerivativesProductDiscoveryResult:
@@ -116,7 +117,7 @@ def discover_derivatives_products(
 
     try:
         # List all products
-        all_products = broker.list_products()  # type: ignore[attr-defined]
+        all_products = broker.list_products()
 
         if not all_products or not isinstance(all_products, list):
             error_message = "No products returned from broker"

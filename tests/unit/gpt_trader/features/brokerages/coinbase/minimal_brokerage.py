@@ -14,7 +14,6 @@ from gpt_trader.features.brokerages.coinbase.utilities import ProductCatalog
 from gpt_trader.features.brokerages.core.interfaces import (
     Balance,
     Candle,
-    IBrokerage,
     MarketType,
     Order,
     OrderSide,
@@ -29,7 +28,7 @@ from gpt_trader.features.brokerages.core.interfaces import (
 logger = logging.getLogger(__name__)
 
 
-class MinimalCoinbaseBrokerage(IBrokerage):
+class MinimalCoinbaseBrokerage:
     """Minimal adapter for Week 1 validation testing."""
 
     def __init__(self, config: APIConfig):

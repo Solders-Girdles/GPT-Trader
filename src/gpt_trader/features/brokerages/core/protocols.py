@@ -27,7 +27,8 @@ class BrokerProtocol(Protocol):
     Core protocol for broker implementations.
 
     Defines the minimal interface required for trading operations.
-    Implemented by: CoinbaseClient, DeterministicBroker, SimulatedBroker.
+    Implemented by: CoinbaseRestService, DeterministicBroker.
+    Partially implemented by: SimulatedBroker (backtesting only, missing place_order/cancel_order).
     """
 
     def get_product(self, symbol: str) -> Product | None:

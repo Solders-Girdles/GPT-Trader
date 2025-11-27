@@ -33,6 +33,7 @@ This document tracks identified technical debt for systematic cleanup. Items are
 | 2025-11-27 | Integration mode deprecation | Added deprecation warning for `INTEGRATION_TEST_MODE` env var |
 | 2025-11-27 | StateCollector explicit mode | Added `integration_mode` parameter to avoid env var dependency |
 | 2025-11-27 | Integration mode pattern removal | Completed full removal of `INTEGRATION_TEST_MODE`, `isawaitable()` checks, and legacy signature fallback |
+| 2025-11-27 | Broker abstraction unification | Protocol-first approach: added missing methods to `CoinbaseRestService`, changed `StateCollector` to use `ExtendedBrokerProtocol` |
 
 ---
 
@@ -98,16 +99,17 @@ Refactored from single 467 LOC file to modular subpackage:
 - `pnl_telemetry.py` - PnLTelemetryGuard
 - `guard_manager.py` - GuardManager orchestrator (moved from guards.py)
 
-### 3.4 Duplicate Broker Implementations
-**Locations:**
-- `backtesting/simulation/broker.py` - `get_product()`
-- `orchestration/deterministic_broker.py` - `get_product()`
-- `brokerages/coinbase/rest/product.py` - `get_product()`
-- `orchestration/trading_bot/bot.py` - `get_product()`
+### 3.4 Duplicate Broker Implementations ✓ ADDRESSED
+**Completed:** 2025-11-27
 
-**Issue:** Four separate implementations with similar logic
-**Status:** Partially addressed - `BrokerProtocol` now defines unified interface
-**Next Step:** Consider shared implementation via composition
+Protocol-based unification provides common interface without forcing shared implementation:
+- `BrokerProtocol` defines canonical `get_product()` signature
+- Each implementation retains context-specific logic (backtesting vs live vs mock)
+- `TradingBot.get_product()` delegates to any protocol-compliant broker
+
+**Rationale:** Different implementations serve different purposes (backtesting needs
+registered products, live needs API+catalog enrichment, mock needs synthetic generation).
+Shared implementation via composition would add complexity without benefit.
 
 ### 3.5 Integration Mode Pattern ✓ COMPLETED
 **Completed:** 2025-11-27
@@ -119,12 +121,16 @@ Removed anti-pattern of environment-variable-triggered runtime behavior:
 - Simplified to explicit `integration_mode` parameter only
 - Deleted ~800 lines of legacy test code
 
-### 3.6 Inconsistent Broker Abstraction
-**Issue:** Two broker abstractions not interchangeable:
-- Core Interfaces (classes): Used by backtesting
-- REST Service (mixins): Used by live trading
+### 3.6 Broker Abstraction Unification ✓ COMPLETED
+**Completed:** 2025-11-27
 
-**Recommendation:** Unify or explicitly document the separation
+Unified via Protocol-first approach:
+- Added `get_quote()`, `get_ticker()`, `get_mark_price()` to `CoinbaseRestService`
+- Changed `StateCollector` to use `ExtendedBrokerProtocol` instead of `CoinbaseRestService`
+- `DeterministicBroker` and `CoinbaseRestService` both implement full protocol
+- `SimulatedBroker` remains backtesting-only (documented in protocol docstring)
+
+Brokers are now interchangeable where protocol compliance is required.
 
 ---
 
@@ -141,6 +147,7 @@ Removed anti-pattern of environment-variable-triggered runtime behavior:
 - `features/live_trade/engines/base.py` - `CoordinatorContext` uses Protocol types
 - `orchestration/service_registry.py` - `ServiceRegistry` typed with Protocols
 - `orchestration/execution/broker_executor.py` - Uses `BrokerProtocol`
+- `orchestration/execution/state_collection.py` - Uses `ExtendedBrokerProtocol`
 
 **Remaining:** Some `Any` types remain for `account_manager`, `account_telemetry`, `orders_store`
 

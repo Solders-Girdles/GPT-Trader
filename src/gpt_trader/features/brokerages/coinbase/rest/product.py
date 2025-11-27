@@ -4,6 +4,7 @@ Product and market data mixin for Coinbase REST service.
 
 from __future__ import annotations
 
+from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
 from gpt_trader.features.brokerages.coinbase.models import to_candle, to_product, to_quote
@@ -18,12 +19,14 @@ class ProductRestMixin:
 
     This mixin is designed to be used with CoinbaseRestServiceBase which provides:
     - client: CoinbaseClient
+    - market_data: MarketDataService
     """
 
     if TYPE_CHECKING:
         # Type hints for attributes provided by the base class
         client: Any
         product_catalog: Any
+        market_data: Any
 
     def list_products(self) -> list[Product]:
         """List all available products."""
@@ -104,3 +107,36 @@ class ProductRestMixin:
         """List futures products."""
         products = self.list_products()
         return [p for p in products if p.market_type == "FUTURE"]
+
+    # =========================================================================
+    # BrokerProtocol / ExtendedBrokerProtocol methods
+    # =========================================================================
+
+    def get_quote(self, symbol: str) -> Quote | None:
+        """Get current quote for a symbol (BrokerProtocol).
+
+        Delegates to get_rest_quote() for REST-based quote retrieval.
+        """
+        return self.get_rest_quote(symbol)
+
+    def get_ticker(self, product_id: str) -> dict[str, Any]:
+        """Get ticker data for a product (BrokerProtocol).
+
+        Returns raw ticker dict from the Coinbase API.
+        """
+        try:
+            result: dict[str, Any] = self.client.get_ticker(product_id)
+            return result
+        except Exception:
+            return {}
+
+    def get_mark_price(self, symbol: str) -> Decimal | None:
+        """Get current mark price for a symbol (ExtendedBrokerProtocol).
+
+        Uses market data service for real-time mark price.
+        """
+        try:
+            mark = self.market_data.get_mark(symbol)
+            return Decimal(str(mark)) if mark is not None else None
+        except Exception:
+            return None

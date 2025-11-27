@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
+from typing import cast
 
 from gpt_trader.config.runtime_settings import RuntimeSettings, load_runtime_settings
 from gpt_trader.orchestration.configuration import BotConfig
@@ -41,13 +42,13 @@ class StorageBootstrapper:
             registry = registry.with_updates(runtime_settings=settings)
 
         if registry.event_store is not None:
-            event_store = registry.event_store
+            event_store = cast(EventStore, registry.event_store)
         else:
             event_store = EventStore(root=event_store_root)
             registry = registry.with_updates(event_store=event_store)
 
         if registry.orders_store is not None:
-            orders_store = registry.orders_store
+            orders_store = cast(OrdersStore, registry.orders_store)
         else:
             orders_store = OrdersStore(storage_path=storage_dir)
             registry = registry.with_updates(orders_store=orders_store)

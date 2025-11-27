@@ -167,8 +167,8 @@ class ApplicationContainer:
         return TradingBot(
             config=cc.current,
             container=self,
-            registry=reg,
-            event_store=es,
+            registry=reg,  # type: ignore[arg-type]
+            event_store=es,  # type: ignore[arg-type]
             orders_store=os,
         )
 

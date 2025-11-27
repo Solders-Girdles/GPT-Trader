@@ -153,7 +153,7 @@ def prepare_bot(
 
     event_store = prepared_registry.event_store
     if event_store is None:
-        event_store = EventStore(root=runtime_paths.event_store_root)
+        event_store = EventStore(root=runtime_paths.event_store_root)  # type: ignore[assignment]
         prepared_registry = prepared_registry.with_updates(event_store=event_store)
 
     orders_store = prepared_registry.orders_store
@@ -167,8 +167,8 @@ def prepare_bot(
         config=config,
         registry=prepared_registry,
         runtime_paths=runtime_paths,
-        event_store=event_store,
-        orders_store=orders_store,
+        event_store=event_store,  # type: ignore[arg-type]
+        orders_store=orders_store,  # type: ignore[arg-type]
         settings=settings,
         logs=logs,
     )

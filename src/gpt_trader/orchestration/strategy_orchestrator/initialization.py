@@ -32,6 +32,7 @@ class StrategyInitializationMixin:
     def init_strategy(self) -> None:
         bot = self._bot
         state = bot.runtime_state
+        assert state is not None, "Runtime state not initialized"
         derivatives_enabled = bot.config.derivatives_enabled
         if bot.config.profile == Profile.SPOT:
             rules = self._spot_profiles.load(bot.config.symbols or [])
@@ -95,6 +96,7 @@ class StrategyInitializationMixin:
     def get_strategy(self, symbol: str) -> BaselinePerpsStrategy:
         bot = self._bot
         state = bot.runtime_state
+        assert state is not None, "Runtime state not initialized"
         if bot.config.profile == Profile.SPOT:
             strat = state.symbol_strategies.get(symbol)
             if strat is None:

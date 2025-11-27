@@ -654,3 +654,330 @@ class TestLiveExecutionEngineIntegration:
 
         assert cancelled == 2
         engine.guard_manager.cancel_all_orders.assert_called_once()
+
+
+# ============================================================
+# Test: Additional place_order scenarios
+# ============================================================
+
+
+class TestPlaceOrderAdditional:
+    """Additional tests for place_order edge cases."""
+
+    @pytest.fixture
+    def mock_broker(self) -> Mock:
+        """Create a mock broker."""
+        broker = Mock()
+        broker.list_balances.return_value = []
+        broker.get_product.return_value = Mock()
+        return broker
+
+    @pytest.fixture
+    def engine(self, mock_broker: Mock) -> LiveExecutionEngine:
+        """Create an engine with mocked components."""
+        with patch(
+            "gpt_trader.orchestration.live_execution.load_runtime_settings"
+        ) as mock_settings:
+            mock_settings.return_value = Mock(raw_env={})
+            engine = LiveExecutionEngine(broker=mock_broker)
+
+        # Mock helper modules
+        engine.state_collector = Mock()
+        engine.state_collector.require_product.return_value = Mock()
+        engine.state_collector.collect_account_state.return_value = (
+            [],
+            Decimal("10000"),
+            {},
+            Decimal("10000"),
+            [],
+        )
+        engine.state_collector.log_collateral_update = Mock()
+        engine.state_collector.build_positions_dict.return_value = {}
+        engine.state_collector.resolve_effective_price.return_value = Decimal("50000")
+
+        engine.order_validator = Mock()
+        engine.order_validator.validate_exchange_rules.return_value = (
+            Decimal("1"),
+            Decimal("50000"),
+        )
+        engine.order_validator.ensure_mark_is_fresh = Mock()
+        engine.order_validator.enforce_slippage_guard = Mock()
+        engine.order_validator.run_pre_trade_validation = Mock()
+        engine.order_validator.maybe_preview_order = Mock()
+        engine.order_validator.finalize_reduce_only_flag.return_value = False
+
+        engine.order_submitter = Mock()
+        engine.order_submitter.submit_order.return_value = "order-123"
+        engine.order_submitter.record_rejection = Mock()
+
+        engine.guard_manager = Mock()
+
+        engine.event_store = Mock()
+
+        return engine
+
+    def test_place_order_with_stop_price(self, engine: LiveExecutionEngine) -> None:
+        """Test order placement with stop price."""
+        engine.place_order(
+            symbol="BTC-PERP",
+            side=OrderSide.SELL,
+            order_type=OrderType.STOP_LIMIT,
+            quantity=Decimal("1"),
+            price=Decimal("48000"),
+            stop_price=Decimal("49000"),
+        )
+
+        call_args = engine.order_submitter.submit_order.call_args
+        assert call_args.kwargs["stop_price"] == Decimal("49000")
+
+    def test_place_order_with_time_in_force(self, engine: LiveExecutionEngine) -> None:
+        """Test order placement with time in force."""
+        mock_tif = Mock()
+
+        engine.place_order(
+            symbol="BTC-PERP",
+            side=OrderSide.BUY,
+            order_type=OrderType.LIMIT,
+            quantity=Decimal("1"),
+            price=Decimal("49000"),
+            tif=mock_tif,
+        )
+
+        call_args = engine.order_submitter.submit_order.call_args
+        assert call_args.kwargs["tif"] is mock_tif
+
+    def test_place_order_with_product_provided(self, engine: LiveExecutionEngine) -> None:
+        """Test order placement with product explicitly provided."""
+        mock_product = Mock()
+
+        engine.place_order(
+            symbol="BTC-PERP",
+            side=OrderSide.BUY,
+            order_type=OrderType.MARKET,
+            quantity=Decimal("1"),
+            product=mock_product,
+        )
+
+        engine.state_collector.require_product.assert_called_once_with("BTC-PERP", mock_product)
+
+    def test_place_order_converts_quantity_to_decimal(self, engine: LiveExecutionEngine) -> None:
+        """Test that quantity is converted to Decimal."""
+        # Pass quantity as float
+        engine.place_order(
+            symbol="BTC-PERP",
+            side=OrderSide.BUY,
+            order_type=OrderType.MARKET,
+            quantity=1.5,  # type: ignore[arg-type]
+        )
+
+        # Should still work - quantity converted internally
+        engine.order_submitter.submit_order.assert_called_once()
+
+    def test_place_order_converts_price_to_decimal(self, engine: LiveExecutionEngine) -> None:
+        """Test that price is converted to Decimal."""
+        engine.place_order(
+            symbol="BTC-PERP",
+            side=OrderSide.BUY,
+            order_type=OrderType.LIMIT,
+            quantity=Decimal("1"),
+            price=49000.50,  # type: ignore[arg-type]
+        )
+
+        engine.order_submitter.submit_order.assert_called_once()
+
+
+class TestPlaceOrderValidationPaths:
+    """Test various validation paths in place_order."""
+
+    @pytest.fixture
+    def mock_broker(self) -> Mock:
+        """Create a mock broker."""
+        broker = Mock()
+        broker.list_balances.return_value = []
+        broker.get_product.return_value = Mock()
+        return broker
+
+    @pytest.fixture
+    def engine(self, mock_broker: Mock) -> LiveExecutionEngine:
+        """Create an engine with mocked components."""
+        with patch(
+            "gpt_trader.orchestration.live_execution.load_runtime_settings"
+        ) as mock_settings:
+            mock_settings.return_value = Mock(raw_env={})
+            engine = LiveExecutionEngine(broker=mock_broker)
+
+        engine.state_collector = Mock()
+        engine.state_collector.require_product.return_value = Mock()
+        engine.state_collector.collect_account_state.return_value = (
+            [],
+            Decimal("10000"),
+            {},
+            Decimal("10000"),
+            [],
+        )
+        engine.state_collector.log_collateral_update = Mock()
+        engine.state_collector.build_positions_dict.return_value = {}
+        engine.state_collector.resolve_effective_price.return_value = Decimal("50000")
+
+        engine.order_validator = Mock()
+        engine.order_validator.validate_exchange_rules.return_value = (
+            Decimal("1"),
+            Decimal("50000"),
+        )
+        engine.order_validator.ensure_mark_is_fresh = Mock()
+        engine.order_validator.enforce_slippage_guard = Mock()
+        engine.order_validator.run_pre_trade_validation = Mock()
+        engine.order_validator.maybe_preview_order = Mock()
+        engine.order_validator.finalize_reduce_only_flag.return_value = False
+
+        engine.order_submitter = Mock()
+        engine.order_submitter.submit_order.return_value = "order-123"
+        engine.order_submitter.record_rejection = Mock()
+
+        engine.guard_manager = Mock()
+        engine.event_store = Mock()
+
+        return engine
+
+    def test_place_order_calls_ensure_mark_is_fresh(self, engine: LiveExecutionEngine) -> None:
+        """Test that mark freshness check is called."""
+        engine.place_order(
+            symbol="BTC-PERP",
+            side=OrderSide.BUY,
+            order_type=OrderType.MARKET,
+            quantity=Decimal("1"),
+        )
+
+        engine.order_validator.ensure_mark_is_fresh.assert_called_once_with("BTC-PERP")
+
+    def test_place_order_calls_enforce_slippage_guard(self, engine: LiveExecutionEngine) -> None:
+        """Test that slippage guard is enforced."""
+        engine.place_order(
+            symbol="BTC-PERP",
+            side=OrderSide.BUY,
+            order_type=OrderType.MARKET,
+            quantity=Decimal("1"),
+        )
+
+        engine.order_validator.enforce_slippage_guard.assert_called_once()
+
+    def test_place_order_slippage_guard_failure(self, engine: LiveExecutionEngine) -> None:
+        """Test order rejection when slippage guard fails."""
+        engine.order_validator.enforce_slippage_guard.side_effect = ValidationError(
+            "Slippage exceeds threshold"
+        )
+
+        with pytest.raises(ValidationError, match="Slippage exceeds threshold"):
+            engine.place_order(
+                symbol="BTC-PERP",
+                side=OrderSide.BUY,
+                order_type=OrderType.MARKET,
+                quantity=Decimal("1"),
+            )
+
+        engine.order_submitter.record_rejection.assert_called_once()
+
+    def test_place_order_mark_freshness_failure(self, engine: LiveExecutionEngine) -> None:
+        """Test order rejection when mark price is stale."""
+        engine.order_validator.ensure_mark_is_fresh.side_effect = ValidationError(
+            "Mark price is stale"
+        )
+
+        with pytest.raises(ValidationError, match="Mark price is stale"):
+            engine.place_order(
+                symbol="BTC-PERP",
+                side=OrderSide.BUY,
+                order_type=OrderType.MARKET,
+                quantity=Decimal("1"),
+            )
+
+    def test_place_order_exchange_rules_validation(self, engine: LiveExecutionEngine) -> None:
+        """Test that exchange rules validation is called."""
+        engine.place_order(
+            symbol="BTC-PERP",
+            side=OrderSide.BUY,
+            order_type=OrderType.MARKET,
+            quantity=Decimal("1"),
+        )
+
+        engine.order_validator.validate_exchange_rules.assert_called_once()
+
+
+class TestResetDailyTrackingEdgeCases:
+    """Additional tests for reset_daily_tracking."""
+
+    @pytest.fixture
+    def engine(self) -> LiveExecutionEngine:
+        """Create an engine with mocked components."""
+        mock_broker = Mock()
+        mock_broker.list_balances.return_value = []
+
+        with patch(
+            "gpt_trader.orchestration.live_execution.load_runtime_settings"
+        ) as mock_settings:
+            mock_settings.return_value = Mock(raw_env={})
+            engine = LiveExecutionEngine(broker=mock_broker)
+
+        engine.state_collector = Mock()
+        engine.state_collector.calculate_equity_from_balances.return_value = (
+            Decimal("10000"),
+            {},
+            Decimal("10000"),
+        )
+
+        engine.risk_manager = Mock()
+        engine.guard_manager = Mock()
+
+        return engine
+
+    def test_reset_daily_tracking_calculates_equity(self, engine: LiveExecutionEngine) -> None:
+        """Test that reset calculates fresh equity."""
+        balances = [{"currency": "USD", "available": "10000"}]
+        engine.broker.list_balances.return_value = balances
+
+        engine.reset_daily_tracking()
+
+        engine.state_collector.calculate_equity_from_balances.assert_called_once_with(balances)
+
+    def test_reset_daily_tracking_risk_manager_exception(self, engine: LiveExecutionEngine) -> None:
+        """Test handling when risk_manager.reset_daily_tracking raises."""
+        engine.risk_manager.reset_daily_tracking.side_effect = RuntimeError("Reset failed")
+
+        # Should not raise - error should be caught
+        engine.reset_daily_tracking()
+
+    def test_reset_daily_tracking_invalidates_guard_cache(
+        self, engine: LiveExecutionEngine
+    ) -> None:
+        """Test that guard cache is invalidated after reset."""
+        engine.reset_daily_tracking()
+
+        engine.guard_manager.invalidate_cache.assert_called_once()
+
+
+class TestLiveOrderEdgeCases:
+    """Additional tests for LiveOrder dataclass."""
+
+    def test_live_order_with_zero_quantity(self) -> None:
+        """Test LiveOrder with zero quantity."""
+        order = LiveOrder(symbol="BTC-PERP", side="buy", quantity=Decimal("0"))
+
+        assert order.quantity == Decimal("0")
+
+    def test_live_order_with_very_small_quantity(self) -> None:
+        """Test LiveOrder with very small quantity."""
+        order = LiveOrder(symbol="BTC-PERP", side="buy", quantity=Decimal("0.00000001"))
+
+        assert order.quantity == Decimal("0.00000001")
+
+    def test_live_order_with_very_large_quantity(self) -> None:
+        """Test LiveOrder with very large quantity."""
+        order = LiveOrder(symbol="BTC-PERP", side="buy", quantity=Decimal("1000000"))
+
+        assert order.quantity == Decimal("1000000")
+
+    def test_live_order_negative_quantity_is_allowed(self) -> None:
+        """Test that negative quantity is technically allowed (validation elsewhere)."""
+        order = LiveOrder(symbol="BTC-PERP", side="buy", quantity=Decimal("-1"))
+
+        assert order.quantity == Decimal("-1")

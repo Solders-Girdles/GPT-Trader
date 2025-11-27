@@ -107,6 +107,15 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/orchestration/test_account_telemetry.py",  # account telemetry collection and publishing
     "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming.py",  # WebSocket streaming telemetry with async/threading patterns
     "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_health.py",  # telemetry health check and mark extraction coverage
+    "tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker.py",  # comprehensive funding rate tracking with perpetuals scenarios
+    "tests/unit/gpt_trader/backtesting/simulation/test_fee_calculator.py",  # fee tier matrix coverage across volume brackets
+    "tests/unit/gpt_trader/backtesting/simulation/test_simulated_broker.py",  # broker protocol contract with order lifecycle scenarios
+    "tests/unit/gpt_trader/backtesting/simulation/test_fill_model.py",  # order fill simulation covering slippage/liquidity/partial fills
+    "tests/unit/gpt_trader/validation/test_composite_validators.py",  # composite validator chain permutations
+    "tests/unit/gpt_trader/validation/test_config_validators.py",  # configuration validation matrix
+    "tests/unit/gpt_trader/validation/test_data_validators.py",  # data validation edge cases and error handling
+    "tests/unit/gpt_trader/orchestration/strategy_orchestrator/test_orchestrator.py",  # strategy orchestration routing and signal aggregation
+    "tests/unit/gpt_trader/orchestration/trading_bot/test_bot.py",  # trading bot lifecycle and state management scenarios
 }
 
 SLEEP_ALLOWLIST = {

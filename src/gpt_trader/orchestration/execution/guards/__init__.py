@@ -34,7 +34,7 @@ __all__ = [
 ]
 
 
-def __getattr__(name: str):
+def __getattr__(name: str) -> type:
     """Lazy import GuardManager for backward compatibility."""
     if name == "GuardManager":
         from gpt_trader.orchestration.execution.guard_manager import GuardManager

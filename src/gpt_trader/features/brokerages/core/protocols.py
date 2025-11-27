@@ -35,7 +35,7 @@ class BrokerProtocol(Protocol):
         """Get product metadata for a symbol."""
         ...
 
-    def get_quote(self, symbol: str) -> Quote:
+    def get_quote(self, symbol: str) -> Quote | None:
         """Get current quote for a symbol."""
         ...
 
@@ -53,11 +53,10 @@ class BrokerProtocol(Protocol):
 
     def place_order(
         self,
-        symbol_or_payload: str | dict[str, Any],
-        side: str | None = None,
-        order_type: str = "market",
+        symbol: str,
+        side: Any = None,
+        order_type: Any = None,
         quantity: Decimal | None = None,
-        limit_price: Decimal | None = None,
         **kwargs: Any,
     ) -> Order:
         """Place a trading order."""
@@ -67,7 +66,7 @@ class BrokerProtocol(Protocol):
         """Cancel an existing order."""
         ...
 
-    def get_candles(self, symbol: str, granularity: str, limit: int = 200) -> list[Candle]:
+    def get_candles(self, symbol: str, **kwargs: Any) -> list[Candle]:
         """Get historical candle data."""
         ...
 

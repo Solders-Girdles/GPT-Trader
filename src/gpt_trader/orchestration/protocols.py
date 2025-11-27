@@ -60,6 +60,14 @@ class RuntimeStateProtocol(Protocol):
     positions_pnl: dict[str, dict[str, Any]]
     positions_dict: dict[str, dict[str, Any]]
 
+    # Strategy state
+    strategy: Any  # BaselinePerpsStrategy for perps profile
+    symbol_strategies: dict[str, Any]  # Per-symbol strategies for spot profile
+
+    # Mark data state (for telemetry)
+    mark_lock: Any  # threading.Lock
+    mark_windows: dict[str, Any]  # Per-symbol mark price windows
+
     def update_equity(self, value: Any) -> None:
         """Update current equity value."""
         ...

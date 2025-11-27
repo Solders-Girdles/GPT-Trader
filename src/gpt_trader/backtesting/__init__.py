@@ -38,16 +38,20 @@ Example:
     print(report)
 """
 
+from .chaos import ChaosEngine
 from .engine import ClockedBarRunner, SimulationClock
+from .metrics import BacktestReporter, RiskMetrics, TradeStatistics, generate_backtest_report
 from .simulation import FeeCalculator, FundingPnLTracker, OrderFillModel, SimulatedBroker
 from .types import (
     BacktestResult,
+    ChaosScenario,
     ClockSpeed,
     FeeTier,
     SimulationConfig,
     ValidationDivergence,
     ValidationReport,
 )
+from .validation import DecisionLogger, GoldenPathValidator, StrategyDecision
 
 __version__ = "1.0.0"
 
@@ -60,11 +64,23 @@ __all__ = [
     "OrderFillModel",
     "FeeCalculator",
     "FundingPnLTracker",
+    # Metrics
+    "TradeStatistics",
+    "RiskMetrics",
+    "BacktestReporter",
+    "generate_backtest_report",
+    # Validation
+    "DecisionLogger",
+    "StrategyDecision",
+    "GoldenPathValidator",
+    # Chaos Testing
+    "ChaosEngine",
     # Types
     "SimulationConfig",
     "BacktestResult",
     "ValidationReport",
     "ValidationDivergence",
+    "ChaosScenario",
     "ClockSpeed",
     "FeeTier",
 ]

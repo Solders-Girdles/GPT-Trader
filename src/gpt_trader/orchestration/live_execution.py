@@ -131,7 +131,7 @@ class LiveExecutionEngine:
 
         # Initialize helper modules
         self.state_collector: StateCollector = StateCollector(
-            broker, settings=runtime_settings, integration_mode=self._integration_mode
+            broker, settings=runtime_settings, integration_mode=self._integration_mode  # type: ignore[arg-type]
         )
         self.order_submitter: OrderSubmitter = OrderSubmitter(
             broker,

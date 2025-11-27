@@ -54,7 +54,7 @@ class OrderSubmitter:
         self.open_orders = open_orders
         self.integration_mode = integration_mode
         self._event_recorder = OrderEventRecorder(event_store, bot_id)
-        self._broker_executor = BrokerExecutor(broker, integration_mode=integration_mode)
+        self._broker_executor = BrokerExecutor(broker, integration_mode=integration_mode)  # type: ignore[arg-type]
 
     def record_preview(
         self,

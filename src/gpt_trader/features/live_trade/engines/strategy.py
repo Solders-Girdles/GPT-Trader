@@ -49,6 +49,7 @@ class TradingEngine(BaseEngine):
 
     async def _cycle(self) -> None:
         """One trading cycle."""
+        assert self.context.broker is not None, "Broker not initialized"
         # 1. Fetch Data
         for symbol in self.context.config.symbols:
             # Offload blocking network call
@@ -79,15 +80,17 @@ class TradingEngine(BaseEngine):
             if decision.action in (Action.BUY, Action.SELL):
                 logger.info(f"EXECUTING {decision.action} for {symbol}")
                 try:
-                    order_payload = {
-                        "product_id": symbol,
-                        "side": decision.action.value.upper(),
-                        "order_configuration": {
-                            "market_market_ioc": {"quote_size": "10"}  # Dummy size for test
-                        },
-                    }
+                    from gpt_trader.features.brokerages.core.interfaces import OrderSide, OrderType
+
+                    side = OrderSide.BUY if decision.action == Action.BUY else OrderSide.SELL
                     # Offload blocking network call
-                    await asyncio.to_thread(self.context.broker.place_order, order_payload)
+                    await asyncio.to_thread(
+                        self.context.broker.place_order,
+                        symbol,
+                        side,
+                        OrderType.MARKET,
+                        Decimal("0.001"),  # Dummy size for test
+                    )
                 except Exception as e:
                     logger.error(f"Order placement failed: {e}")
 

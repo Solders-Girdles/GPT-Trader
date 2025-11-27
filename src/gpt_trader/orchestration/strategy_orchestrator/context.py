@@ -8,7 +8,6 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, Any, Protocol, cast
 
 from gpt_trader.features.brokerages.core.interfaces import Balance, Position
-from gpt_trader.features.live_trade.risk_runtime import CircuitBreakerAction
 from gpt_trader.utilities.quantities import quantity_from
 
 from .logging_utils import logger  # naming: allow
@@ -94,6 +93,7 @@ class ContextBuilderMixin(_HasBot):
     async def _ensure_balances(self, balances: Sequence[Balance] | None) -> Sequence[Balance]:
         if balances is not None:
             return balances
+        assert self._bot.broker is not None, "Broker not initialized"
         return await asyncio.to_thread(self._bot.broker.list_balances)
 
     def _extract_equity(self, balances: Sequence[Balance]) -> Decimal:
@@ -106,6 +106,8 @@ class ContextBuilderMixin(_HasBot):
 
     def _kill_switch_engaged(self) -> bool:
         bot = self._bot
+        if bot.risk_manager is None:
+            return False
         if getattr(bot.risk_manager.config, "kill_switch_enabled", False):
             logger.warning("Kill switch enabled - skipping trading loop")
             return True
@@ -116,6 +118,7 @@ class ContextBuilderMixin(_HasBot):
     ) -> dict[str, Position]:
         if position_map is not None:
             return position_map
+        assert self._bot.broker is not None, "Broker not initialized"
         positions = await asyncio.to_thread(self._bot.broker.list_positions)
         return {p.symbol: p for p in positions if hasattr(p, "symbol")}
 
@@ -156,11 +159,16 @@ class ContextBuilderMixin(_HasBot):
 
     def _run_risk_gates(self, context: SymbolProcessingContext) -> bool:
         bot = self._bot
+        if bot.risk_manager is None:
+            return True  # Skip risk checks if no risk manager
+
         try:
             window = context.marks[-max(bot.config.long_ma, 20) :]
             cb = bot.risk_manager.check_volatility_circuit_breaker(context.symbol, list(window))
-            if cb.triggered and cb.action is CircuitBreakerAction.KILL_SWITCH:
-                logger.warning("Kill switch tripped by volatility CB for %s", context.symbol)
+            if cb is not None and cb.triggered:
+                logger.warning(
+                    "Volatility circuit breaker tripped for %s: %s", context.symbol, cb.reason
+                )
                 return False
         except Exception as exc:
             logger.debug(

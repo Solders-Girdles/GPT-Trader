@@ -562,7 +562,6 @@ await validator.validate_last_n_cycles(n=10)
 > **Note:** This section documents a planned feature that has not been implemented.
 > The `gpt_trader.features.optimize` module does not exist. The code examples below
 > are specifications for future development, not working code.
-> See `docs/TECHNICAL_DEBT.md` for tracking.
 
 ### Key Features
 

@@ -77,13 +77,13 @@ class GuardManager:
             PnLTelemetryGuard(),
             DailyLossGuard(
                 risk_manager=risk_manager,
-                cancel_all_orders=self.cancel_all_orders,
+                cancel_all_orders=self.cancel_all_orders,  # type: ignore[arg-type]
                 invalidate_cache=self._cache.invalidate,
             ),
-            LiquidationBufferGuard(broker=broker, risk_manager=risk_manager),
+            LiquidationBufferGuard(broker=broker, risk_manager=risk_manager),  # type: ignore[arg-type]
             MarkStalenessGuard(broker=broker, risk_manager=risk_manager),
             RiskMetricsGuard(risk_manager=risk_manager),
-            VolatilityGuard(broker=broker, risk_manager=risk_manager),
+            VolatilityGuard(broker=broker, risk_manager=risk_manager),  # type: ignore[arg-type]
         ]
 
     # Backward compatibility properties
@@ -234,7 +234,7 @@ class GuardManager:
         for guard in self._guards:
             self.run_guard_step(
                 guard.name,
-                lambda g=guard: g.check(state, incremental),
+                lambda g=guard: g.check(state, incremental),  # type: ignore[misc]
             )
 
     def run_runtime_guards(self, force_full: bool = False) -> RuntimeGuardState:

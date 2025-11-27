@@ -98,6 +98,8 @@ ALLOWLIST = {
     "tests/property/test_margin_invariants.py",  # property-based margin requirement invariants with leverage permutations
     "tests/property/test_pnl_invariants.py",  # property-based PnL calculation invariants covering all position/entry combinations
     "tests/unit/gpt_trader/preflight/test_checks_connectivity.py",  # comprehensive connectivity check scenarios with retry/timeout coverage
+    "tests/unit/gpt_trader/orchestration/execution/test_broker_executor.py",  # broker communication contract and async handling coverage
+    "tests/unit/gpt_trader/orchestration/execution/test_order_event_recorder.py",  # order event recording and telemetry coverage
 }
 
 SLEEP_ALLOWLIST = {

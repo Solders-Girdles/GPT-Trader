@@ -5,11 +5,14 @@ from __future__ import annotations
 import asyncio
 import json
 from datetime import UTC, datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from gpt_trader.config.path_registry import RUNTIME_DATA_DIR
 from gpt_trader.utilities.logging_patterns import get_logger
 from gpt_trader.utilities.telemetry import emit_metric
+
+if TYPE_CHECKING:
+    from gpt_trader.orchestration.protocols import AccountManagerProtocol, EventStoreProtocol
 
 logger = get_logger(__name__, component="account_telemetry")
 
@@ -30,8 +33,8 @@ class AccountTelemetryService:
         self,
         *,
         broker: Any,
-        account_manager: Any,
-        event_store: Any,
+        account_manager: AccountManagerProtocol,
+        event_store: EventStoreProtocol,
         bot_id: str,
         profile: str,
     ) -> None:

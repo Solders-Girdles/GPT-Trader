@@ -91,15 +91,18 @@ if api_key.startswith("organizations/"):
 - API Key: `organizations/{org_id}/apiKeys/{key_id}`
 - API Secret: Full EC private key including headers/footers
 
-### HMAC Authentication - Spot & Sandbox
+### SimpleAuth (JWT) - Spot Trading
 
-**Used for**: Default spot trading and sandbox testing (sandbox has no perps)
+**Used for**: Default spot trading
 
 ```python
-# Legacy authentication for sandbox
-if os.getenv("COINBASE_SANDBOX"):
-    auth = HMACAuth(api_key, api_secret, passphrase)
+# JWT-based authentication for spot trading
+from gpt_trader.features.brokerages.coinbase.auth import SimpleAuth
+
+auth = SimpleAuth(key_name=api_key, private_key=api_secret)
 ```
+
+> **Note**: `HMACAuth` has been removed. All authentication now uses JWT-based methods. See [coinbase_auth_guide.md](coinbase_auth_guide.md) for historical HMAC reference.
 
 **Important**: Sandbox does NOT support perpetuals. Use production with canary profile for safe perpetuals testing.
 

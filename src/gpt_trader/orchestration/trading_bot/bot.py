@@ -19,6 +19,7 @@ if TYPE_CHECKING:
     from gpt_trader.features.brokerages.core.protocols import BrokerProtocol
     from gpt_trader.features.live_trade.risk.protocols import RiskManagerProtocol
     from gpt_trader.orchestration.protocols import (
+        AccountManagerProtocol,
         EventStoreProtocol,
         RuntimeStateProtocol,
         ServiceRegistryProtocol,
@@ -43,7 +44,9 @@ class TradingBot:
         # Store registry components for CLI access
         self._registry = registry
         self.broker: BrokerProtocol | None = registry.broker if registry else None
-        self.account_manager: Any = getattr(registry, "account_manager", None) if registry else None
+        self.account_manager: AccountManagerProtocol | None = (
+            getattr(registry, "account_manager", None) if registry else None
+        )
         self.account_telemetry: Any = (
             getattr(registry, "account_telemetry", None) if registry else None
         )

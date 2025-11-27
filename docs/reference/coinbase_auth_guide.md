@@ -9,17 +9,18 @@ scope: Advanced Trade API v3 authentication methods
 documentation-venue: docs.cdp.coinbase.com/advanced-trade/docs/rest-api-auth
 ---
 
-> **Status**: This guide covers three authentication methods: CDP/JWT (production perps), HMAC (spot + sandbox), and OAuth2 (delegated access). Verify current status and any breaking changes at https://docs.cdp.coinbase.com/coinbase-app/introduction/changelog
+> **Status**: This guide covers JWT-based authentication methods: CDP/JWT (production perps) and SimpleAuth/JWT (spot trading), plus OAuth2 (delegated access). HMAC documentation is retained for historical reference only. Verify current status at https://docs.cdp.coinbase.com/coinbase-app/introduction/changelog
 
 ## Overview
 
-Coinbase Advanced Trade API supports three authentication methods depending on your use case:
+Coinbase Advanced Trade API authentication in GPT-Trader uses JWT-based methods:
 
 | Method | Use Case | Rate Limit | Recommended |
 |--------|----------|-----------|-------------|
 | **CDP (JWT)** | Production perpetuals (INTX) | 30 req/sec private | ✅ Perps |
-| **HMAC** | Spot trading + sandbox | 30 req/sec private | ✅ Spot |
+| **SimpleAuth (JWT)** | Spot trading | 30 req/sec private | ✅ Spot |
 | **OAuth2** | User-delegated access | 30 req/sec private | Multiuser apps |
+| **HMAC** | ⚠️ Historical reference only | N/A | ❌ Removed |
 
 ---
 
@@ -173,9 +174,11 @@ def make_request_with_retry(method, path, body=None, max_retries=3):
 
 ---
 
-## 2. HMAC Authentication
+## 2. HMAC Authentication (Historical Reference)
 
-**Best for**: Spot trading and sandbox testing
+> ⚠️ **DEPRECATED**: HMACAuth has been removed from GPT-Trader. All authentication now uses JWT-based methods (`CDPJWTAuth` or `SimpleAuth`). This section is retained for historical reference and understanding the Coinbase API only.
+
+**Was used for**: Spot trading and sandbox testing (now use SimpleAuth)
 
 ### API Key Generation
 

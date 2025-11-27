@@ -1,15 +1,10 @@
 """
 Simple Authentication Module for Coinbase.
-Replaces the complex auth hierarchy with a direct JWT generator.
+Provides JWT-based authentication for Coinbase Advanced Trade API.
 """
 
-import base64
-import hashlib
-import hmac  # Use hmac module
-import json
 import secrets
 import time
-import warnings
 from dataclasses import dataclass
 from typing import Any
 
@@ -65,40 +60,7 @@ class CDPJWTAuth(CoinbaseAuth):
         return {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
 
 
-class HMACAuth(CoinbaseAuth):
-    """Legacy HMAC authentication (deprecated, use SimpleAuth or CDPJWTAuth instead)."""
-
-    def __init__(self, api_key: str, api_secret: str, passphrase: str | None = None):
-        warnings.warn(
-            "HMACAuth is deprecated and will be removed in a future version. "
-            "Use SimpleAuth or CDPJWTAuth instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        super().__init__(api_key, api_secret, passphrase)
-        # Decode api_secret from base64 string to bytes for hmac key
-        self._decoded_api_secret = base64.b64decode(self.api_secret)
-
-    def sign(self, method: str, path: str, body: Any = None) -> dict[str, str]:
-        timestamp = str(int(time.time()))
-        message = timestamp + method + path
-        if body is not None:
-            message += json.dumps(body)
-
-        signature = hmac.new(
-            self._decoded_api_secret, message.encode("utf-8"), hashlib.sha256
-        ).hexdigest()  # Corrected hmac usage
-
-        return {
-            "CB-ACCESS-KEY": self.api_key,
-            "CB-ACCESS-SIGN": signature,
-            "CB-ACCESS-TIMESTAMP": timestamp,
-            "CB-ACCESS-PASSPHRASE": self.passphrase or "",
-            "Content-Type": "application/json",
-        }
-
-
-class SimpleAuth(CoinbaseAuth):  # SimpleAuth should inherit CDPJWTAuth if it's based on JWT
+class SimpleAuth(CoinbaseAuth):
     def __init__(self, key_name: str, private_key: str):
         super().__init__(key_name, private_key)
         self.key_name = key_name

@@ -15,12 +15,14 @@ def make_client():
 
 # Advanced Trade product discovery should follow the documented
 # `/api/v3/brokerage/products` route.
-def test_request_composes_headers_and_path():
-    client = make_client()
-    # Ensure HMACAuth is used to check for CB-ACCESS-KEY
-    from gpt_trader.features.brokerages.coinbase.auth import HMACAuth
+def test_request_composes_headers_and_path(monkeypatch):
+    from gpt_trader.features.brokerages.coinbase.auth import SimpleAuth
 
-    client.auth = HMACAuth("k", "c2VjcmV0", None)  # "secret" in base64, no passphrase
+    # Mock JWT generation to avoid needing a real EC key
+    monkeypatch.setattr(SimpleAuth, "generate_jwt", lambda self, method, path: "mock_jwt_token")
+
+    client = make_client()
+    client.auth = SimpleAuth("test_key_name", "mock_private_key")
 
     calls = []
 
@@ -36,12 +38,10 @@ def test_request_composes_headers_and_path():
     assert calls[0].method == "GET"
     # Advanced Trade 'products' endpoint path
     assert calls[0].url.endswith("/api/v3/brokerage/products")
-    # Signed headers present
+    # JWT auth should use Bearer token in Authorization header
     h = calls[0].headers
-    assert "CB-ACCESS-KEY" in h and h["CB-ACCESS-KEY"] == "k"
-    # Advanced Trade mode should NOT include passphrase even if provided on auth
-    assert "CB-ACCESS-PASSPHRASE" in h and h["CB-ACCESS-PASSPHRASE"] == ""
-    assert "CB-ACCESS-SIGN" in h
+    assert "Authorization" in h
+    assert h["Authorization"] == "Bearer mock_jwt_token"
 
 
 def test_retries_on_429_then_succeeds(monkeypatch, fake_clock):

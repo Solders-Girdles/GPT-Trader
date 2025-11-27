@@ -33,20 +33,14 @@ class CoinbaseBrokerage:
     def __init__(self, config: APIConfig):
         self.config = config
         # Create auth from config
-        from gpt_trader.features.brokerages.coinbase.auth import CDPJWTAuth, HMACAuth
+        from gpt_trader.features.brokerages.coinbase.auth import CDPJWTAuth, SimpleAuth
 
         auth = None
         if config.cdp_api_key and config.cdp_private_key:
             auth = CDPJWTAuth(config.cdp_api_key, config.cdp_private_key)
         elif config.api_key and config.api_secret:
-            try:
-                auth = HMACAuth(config.api_key, config.api_secret, config.passphrase)
-            except Exception:
-                # Fallback for tests with invalid base64 secrets
-                import base64
-
-                dummy_secret = base64.b64encode(b"dummy_secret_for_testing_only").decode()
-                auth = HMACAuth(config.api_key, dummy_secret, config.passphrase)
+            # Use SimpleAuth (JWT-based) instead of deprecated HMACAuth
+            auth = SimpleAuth(config.api_key, config.api_secret)
 
         self.client = make_client(api_mode=config.api_mode, auth=auth)
 

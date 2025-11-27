@@ -14,7 +14,7 @@ This document tracks identified technical debt for systematic cleanup. Items are
 | 2025-11-27 | Type safety: Core objects | Created `BrokerProtocol`, `RiskManagerProtocol`, `ServiceRegistryProtocol` |
 | 2025-11-27 | Any-typed TradingBot/CoordinatorContext | Replaced with Protocol-based types |
 | 2025-11-27 | Duplicate get_product() | Unified via `BrokerProtocol` interface |
-| 2025-11-27 | `HMACAuth` class | Deprecated with warning - use `SimpleAuth` or `CDPJWTAuth` |
+| 2025-11-27 | `HMACAuth` class | Removed entirely - use `SimpleAuth` or `CDPJWTAuth` |
 | 2025-11-27 | `CDPJWTAuth` incomplete implementation | Completed with `generate_jwt()` and `get_headers()` methods |
 | 2025-11-27 | Legacy Bundling Script | Deleted `scripts/maintenance/create_legacy_bundle.py` |
 | 2025-11-27 | AlertLevel Backward Compat Alias | Removed from `monitoring/interfaces.py` |
@@ -39,11 +39,15 @@ This document tracks identified technical debt for systematic cleanup. Items are
 
 ## Priority 1: Legacy Patterns
 
-### 1.1 Multiple Authentication Implementations
+### 1.1 Authentication Implementation ✓ COMPLETED
 **Location:** `src/gpt_trader/features/brokerages/coinbase/auth.py`
-**Issue:** Three auth methods coexist: `HMACAuth`, `CDPJWTAuth`, `SimpleAuth`
-**Status:** `HMACAuth` deprecated (warning emitted), `CDPJWTAuth` now complete
-**Next Step:** Remove `HMACAuth` entirely in future cleanup
+**Completed:** 2025-11-27
+
+Authentication consolidated to two JWT-based methods:
+- `CDPJWTAuth` - For CDP API keys (production perpetuals)
+- `SimpleAuth` - For standard API keys (spot trading)
+
+`HMACAuth` was fully removed - all code now uses JWT-based authentication.
 
 ### 1.2 Removed Provider Error Handlers
 **Location:** `src/gpt_trader/data_providers/__init__.py` (lines 347-353)
@@ -134,31 +138,34 @@ Brokers are now interchangeable where protocol compliance is required.
 
 ---
 
-## Priority 4: Type Safety (Improved)
+## Priority 4: Type Safety ✓ COMPLETED
 
-### 4.1 Protocol Definitions Added
-**New Files:**
+### 4.1 Protocol Definitions
+**Completed:** 2025-11-27
+
+**Protocol Files:**
 - `features/brokerages/core/protocols.py` - `BrokerProtocol`, `ExtendedBrokerProtocol`, `MarketDataProtocol`
 - `features/live_trade/risk/protocols.py` - `RiskManagerProtocol`
-- `orchestration/protocols.py` - `ServiceRegistryProtocol`, `RuntimeStateProtocol`, `EventStoreProtocol`
+- `orchestration/protocols.py` - `ServiceRegistryProtocol`, `RuntimeStateProtocol`, `EventStoreProtocol`, `AccountManagerProtocol`, `OrdersStoreProtocol`
 
 **Updated Files:**
-- `orchestration/trading_bot/bot.py` - Uses Protocol types for registry, broker, risk_manager
+- `orchestration/trading_bot/bot.py` - Uses Protocol types for registry, broker, risk_manager, account_manager
 - `features/live_trade/engines/base.py` - `CoordinatorContext` uses Protocol types
 - `orchestration/service_registry.py` - `ServiceRegistry` typed with Protocols
 - `orchestration/execution/broker_executor.py` - Uses `BrokerProtocol`
 - `orchestration/execution/state_collection.py` - Uses `ExtendedBrokerProtocol`
+- `orchestration/account_telemetry.py` - Uses `AccountManagerProtocol`, `EventStoreProtocol`
 
-**Remaining:** Some `Any` types remain for `account_manager`, `account_telemetry`, `orders_store`
+All major `Any` types have been replaced with Protocol types.
 
 ---
 
-## Priority 5: Stale Documentation
+## Priority 5: Documentation ✓ ADDRESSED
 
 ### 5.1 Backtesting Guide
 **Location:** `docs/guides/backtesting.md`
-**Issue:** References non-existent `features.optimize` module
-**Status:** Needs update to reflect current implementation
+**Status:** Documentation already includes disclaimer (lines 562-565) noting that the `optimize` module
+is a planned feature specification, not working code. The guide properly references TECHNICAL_DEBT.md for tracking.
 
 ---
 

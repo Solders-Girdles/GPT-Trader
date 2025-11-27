@@ -7,6 +7,7 @@ and runtime state, enabling structural typing and better testability.
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 
 if TYPE_CHECKING:
@@ -25,6 +26,25 @@ class EventStoreProtocol(Protocol):
     def get_recent(self, count: int = 100) -> list[Any]:
         """Get recent events."""
         ...
+
+
+@runtime_checkable
+class AccountManagerProtocol(Protocol):
+    """Protocol for account manager implementations.
+
+    Provides account snapshot and treasury operations.
+    """
+
+    def snapshot(self, emit_metric: bool = True) -> dict[str, Any]:
+        """Collect account state snapshot."""
+        ...
+
+
+@runtime_checkable
+class OrdersStoreProtocol(Protocol):
+    """Protocol for order persistence implementations."""
+
+    storage_path: Path
 
 
 @runtime_checkable
@@ -58,7 +78,7 @@ class ServiceRegistryProtocol(Protocol):
     config: BotConfig
     broker: BrokerProtocol | None
     event_store: EventStoreProtocol | None
-    orders_store: Any
+    orders_store: OrdersStoreProtocol | None
 
     def with_updates(self, **kwargs: Any) -> ServiceRegistryProtocol:
         """Return a new registry with updated values."""
@@ -66,7 +86,9 @@ class ServiceRegistryProtocol(Protocol):
 
 
 __all__ = [
+    "AccountManagerProtocol",
     "EventStoreProtocol",
+    "OrdersStoreProtocol",
     "RuntimeStateProtocol",
     "ServiceRegistryProtocol",
 ]

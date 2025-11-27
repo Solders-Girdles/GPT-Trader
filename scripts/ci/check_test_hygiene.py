@@ -100,6 +100,7 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/preflight/test_checks_connectivity.py",  # comprehensive connectivity check scenarios with retry/timeout coverage
     "tests/unit/gpt_trader/orchestration/execution/test_broker_executor.py",  # broker communication contract and async handling coverage
     "tests/unit/gpt_trader/orchestration/execution/test_order_event_recorder.py",  # order event recording and telemetry coverage
+    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_orders.py",  # comprehensive REST orders mixin coverage
 }
 
 SLEEP_ALLOWLIST = {

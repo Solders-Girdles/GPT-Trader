@@ -12,21 +12,6 @@ class HealthCheckResult:
     details: dict[str, Any]
 
 
-class HealthChecker:
-    pass
-
-
-class HealthCheckEndpoint:
-    pass
-
-
-def setup_basic_health_checks(*args: Any, **kwargs: Any) -> None:
-    pass
-
-
 __all__ = [
     "HealthCheckResult",
-    "HealthChecker",
-    "HealthCheckEndpoint",
-    "setup_basic_health_checks",
 ]

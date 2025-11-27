@@ -303,20 +303,6 @@ class GuardManager:
                 details={"equity": str(state.equity)},
             ) from exc
 
-    def guard_correlation(self, state: RuntimeGuardState) -> None:
-        """Check correlation risk across positions."""
-        guard_name = "correlation_risk"
-        try:
-            self.risk_manager.check_correlation_risk(state.positions_dict)
-        except GuardError as err:
-            raise err
-        except Exception as exc:
-            raise RiskGuardComputationError(
-                guard_name=guard_name,
-                message="Correlation risk check failed",
-                details={"positions": list(state.positions_dict.keys())},
-            ) from exc
-
     def guard_volatility(self, state: RuntimeGuardState) -> None:
         """Check volatility circuit breakers."""
         guard_name = "volatility_circuit_breaker"
@@ -358,7 +344,6 @@ class GuardManager:
         )
         self.run_guard_step("mark_staleness", lambda: self.guard_mark_staleness(state))
         self.run_guard_step("risk_metrics", lambda: self.guard_risk_metrics(state))
-        self.run_guard_step("correlation_risk", lambda: self.guard_correlation(state))
         self.run_guard_step("volatility_circuit_breaker", lambda: self.guard_volatility(state))
 
     def run_runtime_guards(self, force_full: bool = False) -> RuntimeGuardState:

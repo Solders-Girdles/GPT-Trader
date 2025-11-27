@@ -160,13 +160,6 @@ class LiveRiskManager:
         if len(self._risk_metrics) > 100:
             self._risk_metrics = self._risk_metrics[-100:]
 
-    def check_correlation_risk(self, positions_dict: dict[str, dict[str, Decimal]]) -> None:
-        """
-        Check correlation risk across positions.
-        Currently a no-op placeholder for future implementation.
-        """
-        pass
-
     def check_volatility_circuit_breaker(
         self, symbol: str, closes: list[Decimal]
     ) -> VolatilityCheckOutcome:

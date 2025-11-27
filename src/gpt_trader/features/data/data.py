@@ -9,31 +9,6 @@ _cache: Any = None
 _quality_checker: Any = None
 
 
-# Console helpers
-def console_success(*args: Any) -> None:
-    pass
-
-
-def console_warning(*args: Any) -> None:
-    pass
-
-
-def console_error(*args: Any) -> None:
-    pass
-
-
-def console_cache(*args: Any) -> None:
-    pass
-
-
-def console_storage(*args: Any) -> None:
-    pass
-
-
-def console_data(*args: Any) -> None:
-    pass
-
-
 def store_data(symbol: str, data: pd.DataFrame, **kwargs: Any) -> bool:
     if _storage:
         success = _storage.store(

@@ -166,14 +166,6 @@ class TestLiveRiskManagerStubs:
         manager.update_position(None)
         manager.update_position({"symbol": "BTC-USD"})
 
-    def test_check_correlation_risk_is_noop(self) -> None:
-        """Test check_correlation_risk is a no-op placeholder."""
-        manager = LiveRiskManager()
-
-        # Should not raise
-        manager.check_correlation_risk({})
-        manager.check_correlation_risk({"BTC-USD": {"pnl": Decimal("100")}})
-
 
 # ============================================================
 # Test: check_liquidation_buffer

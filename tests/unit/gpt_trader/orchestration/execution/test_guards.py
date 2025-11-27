@@ -491,26 +491,6 @@ def test_guard_risk_metrics_propagates_guard_error(
 
 
 # =============================================================================
-# Tests for guard_correlation
-# =============================================================================
-
-
-def test_guard_correlation_success(guard_manager, sample_guard_state, mock_risk_manager):
-    """Test successful correlation check."""
-    guard_manager.guard_correlation(sample_guard_state)
-
-    mock_risk_manager.check_correlation_risk.assert_called_once()
-
-
-def test_guard_correlation_failure(guard_manager, sample_guard_state, mock_risk_manager):
-    """Test correlation raises on failure."""
-    mock_risk_manager.check_correlation_risk.side_effect = Exception("Correlation error")
-
-    with pytest.raises(RiskGuardComputationError):
-        guard_manager.guard_correlation(sample_guard_state)
-
-
-# =============================================================================
 # Tests for guard_volatility
 # =============================================================================
 
@@ -606,15 +586,14 @@ def test_run_guards_for_state_calls_all_guards(guard_manager, sample_guard_state
     with patch.object(guard_manager, "run_guard_step") as mock_step:
         guard_manager.run_guards_for_state(sample_guard_state, incremental=False)
 
-    # Should call all 7 guards
-    assert mock_step.call_count == 7
+    # Should call all 6 guards
+    assert mock_step.call_count == 6
     guard_names = [call[0][0] for call in mock_step.call_args_list]
     assert "pnl_telemetry" in guard_names
     assert "daily_loss" in guard_names
     assert "liquidation_buffer" in guard_names
     assert "mark_staleness" in guard_names
     assert "risk_metrics" in guard_names
-    assert "correlation_risk" in guard_names
     assert "volatility_circuit_breaker" in guard_names
 
 

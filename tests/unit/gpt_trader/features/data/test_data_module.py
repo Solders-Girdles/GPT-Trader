@@ -120,17 +120,6 @@ def data_stubs(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setattr(data_module, "_cache", cache)
     monkeypatch.setattr(data_module, "_quality_checker", quality)
 
-    # Silence console helpers
-    for attr in (
-        "console_success",
-        "console_warning",
-        "console_error",
-        "console_cache",
-        "console_storage",
-        "console_data",
-    ):
-        monkeypatch.setattr(data_module, attr, lambda *_, **__: None)
-
     return {"storage": storage, "cache": cache, "quality": quality}
 
 

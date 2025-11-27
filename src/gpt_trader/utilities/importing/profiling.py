@@ -32,15 +32,6 @@ def get_import_stats() -> dict[str, int]:
     }
 
 
-def optimize_imports() -> None:
-    """Placeholder for future import optimization routines."""
-    # Potential enhancements:
-    # - Detect unused modules
-    # - Unload seldom-used heavy modules
-    # - Compile .pyc files eagerly
-    return None
-
-
 class ImportProfiler:
     """Profile import wall clock times for debugging slow startup."""
 
@@ -92,4 +83,4 @@ class ImportProfiler:
             print(f"Average import time: {avg_time:.3f}s")
 
 
-__all__ = ["ImportProfiler", "get_import_stats", "optimize_imports"]
+__all__ = ["ImportProfiler", "get_import_stats"]

@@ -9,8 +9,9 @@ import hmac  # Use hmac module
 import json
 import secrets
 import time
+import warnings
 from dataclasses import dataclass
-from typing import Any  # Import Dict
+from typing import Any
 
 import jwt
 
@@ -29,18 +30,51 @@ class CoinbaseAuth:
 
 
 class CDPJWTAuth(CoinbaseAuth):
-    def __init__(self, api_key: str, private_key: str):  # Type hints added
+    """CDP JWT Authentication for Coinbase Advanced Trade API."""
+
+    def __init__(self, api_key: str, private_key: str):
         super().__init__(api_key, private_key)  # private_key used as api_secret
         # For JWT, api_key is actually key_name
         self.key_name = api_key
         self.private_key = self._normalize_key(private_key)
 
-    def _normalize_key(self, key: str) -> str:  # Method was missing
+    def _normalize_key(self, key: str) -> str:
         return key.replace("\\n", "\n")
+
+    def generate_jwt(self, method: str, path: str) -> str:
+        """Generate a JWT token for the given HTTP method and path."""
+        request_path = path if path.startswith("/") else f"/{path}"
+        uri = f"{method} api.coinbase.com{request_path}"
+
+        current_time = int(time.time())
+        claims = {
+            "sub": self.key_name,
+            "iss": "cdp",
+            "nbf": current_time,
+            "exp": current_time + 120,
+            "uri": uri,
+        }
+
+        headers = {"kid": self.key_name, "nonce": secrets.token_hex()}
+
+        return jwt.encode(claims, self.private_key, algorithm="ES256", headers=headers)
+
+    def get_headers(self, method: str, path: str, body: Any = None) -> dict[str, str]:
+        """Generate HTTP headers with JWT authorization."""
+        token = self.generate_jwt(method, path)
+        return {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
 
 
 class HMACAuth(CoinbaseAuth):
+    """Legacy HMAC authentication (deprecated, use SimpleAuth or CDPJWTAuth instead)."""
+
     def __init__(self, api_key: str, api_secret: str, passphrase: str | None = None):
+        warnings.warn(
+            "HMACAuth is deprecated and will be removed in a future version. "
+            "Use SimpleAuth or CDPJWTAuth instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         super().__init__(api_key, api_secret, passphrase)
         # Decode api_secret from base64 string to bytes for hmac key
         self._decoded_api_secret = base64.b64decode(self.api_secret)

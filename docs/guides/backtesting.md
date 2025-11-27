@@ -559,6 +559,11 @@ await validator.validate_last_n_cycles(n=10)
 
 ## Production-Parity Backtesting
 
+> **Note:** This section documents a planned feature that has not been implemented.
+> The `gpt_trader.features.optimize` module does not exist. The code examples below
+> are specifications for future development, not working code.
+> See `docs/TECHNICAL_DEBT.md` for tracking.
+
 ### Key Features
 
 - **Zero Code Duplication**: Reuses `BaselinePerpsStrategy.decide()` directly
@@ -571,10 +576,13 @@ await validator.validate_last_n_cycles(n=10)
 ```python
 from decimal import Decimal
 import pandas as pd
-from gpt_trader.features.live_trade.strategies.perps_baseline.config import StrategyConfig
-from gpt_trader.features.live_trade.strategies.perps_baseline.strategy import BaselinePerpsStrategy
-from gpt_trader.features.optimize.backtest_engine import run_backtest_production
-from gpt_trader.features.optimize.types_v2 import BacktestConfig
+# NOTE: These imports reference unimplemented modules
+from gpt_trader.features.live_trade.strategies.perps_baseline.strategy import (
+    BaselinePerpsStrategy,
+    StrategyConfig,  # StrategyConfig is in strategy.py, not config.py
+)
+from gpt_trader.features.optimize.backtest_engine import run_backtest_production  # NOT IMPLEMENTED
+from gpt_trader.features.optimize.types_v2 import BacktestConfig  # NOT IMPLEMENTED
 
 # Load historical data
 data = pd.read_csv("historical_btc.csv")  # Must have 'close' column

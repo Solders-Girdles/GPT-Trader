@@ -9,13 +9,6 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Literal
 
-from gpt_trader.monitoring.alert_types import Alert as AlertType
-from gpt_trader.monitoring.alert_types import AlertSeverity
-
-# Backwards-compatible alias – code should transition to ``AlertSeverity``
-AlertLevel = AlertSeverity
-Alert = AlertType
-
 
 class ComponentStatus(Enum):
     """Component health status."""

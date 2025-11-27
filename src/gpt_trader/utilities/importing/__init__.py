@@ -2,7 +2,7 @@
 
 from .lazy import LazyImport, lazy_import, with_lazy_imports
 from .optional import OptionalImport, conditional_import, optional_import
-from .profiling import ImportProfiler, get_import_stats, optimize_imports
+from .profiling import ImportProfiler, get_import_stats
 from .registry import (
     cvxpy,
     dev_utils,  # naming: allow
@@ -29,7 +29,6 @@ __all__ = [
     # Profiling utilities
     "ImportProfiler",
     "get_import_stats",
-    "optimize_imports",
     # Registry exports
     "pandas",
     "numpy",

@@ -12,7 +12,8 @@ Internal modules (used by order_submission):
 - broker_executor: Broker communication and integration mode handling
 """
 
-from gpt_trader.orchestration.execution.guards import GuardManager, RuntimeGuardState
+from gpt_trader.orchestration.execution.guard_manager import GuardManager
+from gpt_trader.orchestration.execution.guards import RuntimeGuardState
 from gpt_trader.orchestration.execution.order_submission import OrderSubmitter
 from gpt_trader.orchestration.execution.state_collection import StateCollector
 from gpt_trader.orchestration.execution.validation import OrderValidator

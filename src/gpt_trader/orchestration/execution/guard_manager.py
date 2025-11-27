@@ -1,8 +1,8 @@
 """
 Runtime guard management for live trading execution.
 
-This module handles all runtime safety checks including daily loss limits,
-liquidation buffers, mark price staleness, and volatility circuit breakers.
+This module provides the GuardManager orchestrator that coordinates runtime
+safety checks using individual guard implementations from the guards subpackage.
 """
 
 from __future__ import annotations
@@ -10,45 +10,36 @@ from __future__ import annotations
 import logging
 import time
 from collections.abc import Callable
-from dataclasses import dataclass, field
 from decimal import Decimal
-from typing import Any
+from typing import TYPE_CHECKING
 
-from gpt_trader.features.brokerages.coinbase.rest_service import CoinbaseRestService
 from gpt_trader.features.brokerages.core.interfaces import Balance
 from gpt_trader.features.live_trade.guard_errors import (
     GuardError,
-    RiskGuardActionError,
     RiskGuardComputationError,
-    RiskGuardDataCorrupt,
-    RiskGuardDataUnavailable,
-    RiskGuardTelemetryError,
     record_guard_failure,
     record_guard_success,
 )
-from gpt_trader.features.live_trade.risk import LiveRiskManager
-from gpt_trader.monitoring.system import get_logger as _get_plog
+from gpt_trader.orchestration.execution.guards.cache import GuardStateCache
+from gpt_trader.orchestration.execution.guards.daily_loss import DailyLossGuard
+from gpt_trader.orchestration.execution.guards.liquidation_buffer import LiquidationBufferGuard
+from gpt_trader.orchestration.execution.guards.mark_staleness import MarkStalenessGuard
+from gpt_trader.orchestration.execution.guards.pnl_telemetry import PnLTelemetryGuard
+from gpt_trader.orchestration.execution.guards.protocol import Guard, RuntimeGuardState
+from gpt_trader.orchestration.execution.guards.risk_metrics import RiskMetricsGuard
+from gpt_trader.orchestration.execution.guards.volatility import VolatilityGuard
 from gpt_trader.utilities.logging_patterns import get_logger
 from gpt_trader.utilities.quantities import quantity_from
+
+if TYPE_CHECKING:
+    from gpt_trader.features.brokerages.coinbase.rest_service import CoinbaseRestService
+    from gpt_trader.features.live_trade.risk import LiveRiskManager
 
 logger = get_logger(__name__, component="execution_guards")
 
 
-@dataclass
-class RuntimeGuardState:
-    """Cached snapshot of account risk state used by runtime guards."""
-
-    timestamp: float
-    balances: list[Balance]
-    equity: Decimal
-    positions: list[Any]
-    positions_pnl: dict[str, dict[str, Decimal]]
-    positions_dict: dict[str, dict[str, Decimal]]
-    guard_events: list[dict[str, Any]] = field(default_factory=list)
-
-
 class GuardManager:
-    """Manages runtime safety guards for live trading execution."""
+    """Orchestrates runtime safety guards for live trading execution."""
 
     def __init__(
         self,
@@ -72,28 +63,73 @@ class GuardManager:
         self.risk_manager = risk_manager
         self._calculate_equity = equity_calculator
         self.open_orders = open_orders
+        # Backward compat: store callback reference for tests
         self._invalidate_cache_callback = invalidate_cache_callback
 
-        # Guard state caching
-        self._runtime_guard_state: RuntimeGuardState | None = None
-        self._runtime_guard_dirty = True
-        self._runtime_guard_last_full_ts = 0.0
-        self._runtime_guard_full_interval = 60.0
+        # Initialize cache with callback
+        self._cache = GuardStateCache(
+            full_interval=60.0,
+            invalidate_callback=invalidate_cache_callback,
+        )
+
+        # Initialize individual guards
+        self._guards: list[Guard] = [
+            PnLTelemetryGuard(),
+            DailyLossGuard(
+                risk_manager=risk_manager,
+                cancel_all_orders=self.cancel_all_orders,
+                invalidate_cache=self._cache.invalidate,
+            ),
+            LiquidationBufferGuard(broker=broker, risk_manager=risk_manager),
+            MarkStalenessGuard(broker=broker, risk_manager=risk_manager),
+            RiskMetricsGuard(risk_manager=risk_manager),
+            VolatilityGuard(broker=broker, risk_manager=risk_manager),
+        ]
+
+    # Backward compatibility properties
+    @property
+    def _runtime_guard_state(self) -> RuntimeGuardState | None:
+        return self._cache.state
+
+    @_runtime_guard_state.setter
+    def _runtime_guard_state(self, value: RuntimeGuardState | None) -> None:
+        if value is not None:
+            self._cache.update(value, time.time())
+        else:
+            self._cache.invalidate()
+
+    @property
+    def _runtime_guard_dirty(self) -> bool:
+        return self._cache._dirty
+
+    @_runtime_guard_dirty.setter
+    def _runtime_guard_dirty(self, value: bool) -> None:
+        if value:
+            self._cache._dirty = True
+
+    @property
+    def _runtime_guard_last_full_ts(self) -> float:
+        return self._cache._last_full_ts
+
+    @_runtime_guard_last_full_ts.setter
+    def _runtime_guard_last_full_ts(self, value: float) -> None:
+        self._cache._last_full_ts = value
+
+    @property
+    def _runtime_guard_full_interval(self) -> float:
+        return self._cache._full_interval
+
+    @_runtime_guard_full_interval.setter
+    def _runtime_guard_full_interval(self, value: float) -> None:
+        self._cache._full_interval = value
 
     def invalidate_cache(self) -> None:
         """Force the next runtime guard invocation to refresh cached state."""
-        self._runtime_guard_state = None
-        self._runtime_guard_dirty = True
-        if self._invalidate_cache_callback is not None:
-            self._invalidate_cache_callback()
+        self._cache.invalidate()
 
     def should_run_full_guard(self, now: float) -> bool:
         """Check if a full guard run is needed."""
-        if self._runtime_guard_dirty:
-            return True
-        if self._runtime_guard_state is None:
-            return True
-        return (now - self._runtime_guard_last_full_ts) >= self._runtime_guard_full_interval
+        return self._cache.should_run_full(now)
 
     def collect_runtime_guard_state(self) -> RuntimeGuardState:
         """Collect current account state for guard evaluation."""
@@ -193,158 +229,13 @@ class GuardManager:
         else:
             record_guard_success(guard_name)
 
-    def log_guard_telemetry(self, state: RuntimeGuardState) -> None:
-        """Log P&L telemetry for all positions."""
-        guard_name = "pnl_telemetry"
-        plog = _get_plog()
-        failures: list[dict[str, Any]] = []
-
-        for sym, pnl in state.positions_pnl.items():
-            rp = pnl.get("realized_pnl")
-            up = pnl.get("unrealized_pnl")
-            rp_f = float(rp) if rp is not None else None
-            up_f = float(up) if up is not None else None
-            try:
-                plog.log_pnl(symbol=sym, realized_pnl=rp_f, unrealized_pnl=up_f)
-            except Exception as exc:
-                failures.append({"symbol": sym, "error": repr(exc)})
-
-        if failures:
-            raise RiskGuardTelemetryError(
-                guard_name=guard_name,
-                message="Failed to emit PnL telemetry for one or more symbols",
-                details={"failures": failures},
-            )
-
-    def guard_daily_loss(self, state: RuntimeGuardState) -> None:
-        """Check daily loss limits and cancel orders if breached."""
-        guard_name = "daily_loss"
-
-        triggered = self.risk_manager.track_daily_pnl(state.equity, state.positions_pnl)
-        if triggered:
-            try:
-                self.cancel_all_orders()
-            except Exception as exc:
-                raise RiskGuardActionError(
-                    guard_name=guard_name,
-                    message="Failed to cancel orders after daily loss breach",
-                    details={"equity": str(state.equity)},
-                ) from exc
-            self.invalidate_cache()
-
-    def guard_liquidation_buffers(self, state: RuntimeGuardState, incremental: bool) -> None:
-        """Check liquidation price buffers for all positions."""
-        guard_name = "liquidation_buffer"
-
-        for pos in state.positions:
-            try:
-                position_quantity = quantity_from(pos) or Decimal("0")
-                mark = Decimal(str(getattr(pos, "mark_price", "0")))
-            except Exception as exc:
-                raise RiskGuardDataCorrupt(
-                    guard_name=guard_name,
-                    message="Position payload missing numeric fields",
-                    details={"symbol": getattr(pos, "symbol", "unknown")},
-                ) from exc
-
-            pos_data: dict[str, Any] = {
-                "quantity": position_quantity,
-                "mark": mark,
-            }
-
-            if not incremental and hasattr(self.broker, "get_position_risk"):
-                try:
-                    risk_info = self.broker.get_position_risk(pos.symbol)
-                except Exception as exc:
-                    raise RiskGuardDataUnavailable(
-                        guard_name=guard_name,
-                        message="Failed to fetch position risk from broker",
-                        details={"symbol": pos.symbol},
-                    ) from exc
-                if isinstance(risk_info, dict) and "liquidation_price" in risk_info:
-                    pos_data["liquidation_price"] = risk_info["liquidation_price"]
-
-            self.risk_manager.check_liquidation_buffer(pos.symbol, pos_data, state.equity)
-
-    def guard_mark_staleness(self, state: RuntimeGuardState) -> None:
-        """Check if mark prices are stale."""
-        guard_name = "mark_staleness"
-        if not hasattr(self.broker, "_mark_cache"):
-            return
-
-        failures: list[dict[str, Any]] = []
-        for symbol in list(self.risk_manager.last_mark_update.keys()):
-            try:
-                mark = self.broker._mark_cache.get_mark(symbol)
-            except Exception as exc:
-                failures.append({"symbol": symbol, "error": repr(exc)})
-                continue
-            if mark is None:
-                self.risk_manager.check_mark_staleness(symbol)
-
-        if failures:
-            raise RiskGuardDataUnavailable(
-                guard_name=guard_name,
-                message="Failed to refresh mark data for one or more symbols",
-                details={"failures": failures},
-            )
-
-    def guard_risk_metrics(self, state: RuntimeGuardState) -> None:
-        """Append risk metrics for monitoring."""
-        guard_name = "risk_metrics"
-        try:
-            self.risk_manager.append_risk_metrics(state.equity, state.positions_dict)
-        except GuardError as err:
-            raise err
-        except Exception as exc:
-            raise RiskGuardTelemetryError(
-                guard_name=guard_name,
-                message="Failed to append risk metrics",
-                details={"equity": str(state.equity)},
-            ) from exc
-
-    def guard_volatility(self, state: RuntimeGuardState) -> None:
-        """Check volatility circuit breakers."""
-        guard_name = "volatility_circuit_breaker"
-        symbols: list[str] = list(self.risk_manager.last_mark_update.keys())
-        symbols.extend([str(p) for p in state.positions_dict.keys() if p not in symbols])
-        window = getattr(self.risk_manager.config, "volatility_window_periods", 20)
-        if not symbols or not window or window <= 5:
-            return
-
-        failures: list[dict[str, Any]] = []
-        for sym in symbols:
-            if not hasattr(self.broker, "get_candles"):
-                continue
-            try:
-                candles = self.broker.get_candles(sym, granularity="1m", limit=int(window))
-            except Exception as exc:
-                failures.append({"symbol": sym, "error": repr(exc)})
-                continue
-            closes = [c.close for c in candles if hasattr(c, "close")]
-            if len(closes) >= window:
-                outcome = self.risk_manager.check_volatility_circuit_breaker(sym, closes[-window:])
-                if outcome.triggered:
-                    state.guard_events.append(outcome.to_payload())
-
-        if failures:
-            raise RiskGuardDataUnavailable(
-                guard_name=guard_name,
-                message="Failed to fetch candles for volatility guard",
-                details={"failures": failures},
-            )
-
     def run_guards_for_state(self, state: RuntimeGuardState, incremental: bool) -> None:
         """Run all guards for the given state."""
-        self.run_guard_step("pnl_telemetry", lambda: self.log_guard_telemetry(state))
-        self.run_guard_step("daily_loss", lambda: self.guard_daily_loss(state))
-        self.run_guard_step(
-            "liquidation_buffer",
-            lambda: self.guard_liquidation_buffers(state, incremental),
-        )
-        self.run_guard_step("mark_staleness", lambda: self.guard_mark_staleness(state))
-        self.run_guard_step("risk_metrics", lambda: self.guard_risk_metrics(state))
-        self.run_guard_step("volatility_circuit_breaker", lambda: self.guard_volatility(state))
+        for guard in self._guards:
+            self.run_guard_step(
+                guard.name,
+                lambda g=guard: g.check(state, incremental),
+            )
 
     def run_runtime_guards(self, force_full: bool = False) -> RuntimeGuardState:
         """
@@ -357,15 +248,13 @@ class GuardManager:
             RuntimeGuardState snapshot after guard execution
         """
         now = time.time()
-        incremental = not force_full and not self.should_run_full_guard(now)
+        incremental = not force_full and not self._cache.should_run_full(now)
 
-        if not incremental or self._runtime_guard_state is None:
+        if not incremental or self._cache.state is None:
             state = self.collect_runtime_guard_state()
-            self._runtime_guard_state = state
-            self._runtime_guard_last_full_ts = now
-            self._runtime_guard_dirty = False
+            self._cache.update(state, now)
         else:
-            state = self._runtime_guard_state
+            state = self._cache.state
 
         self.run_guards_for_state(state, incremental)
         return state
@@ -407,7 +296,7 @@ class GuardManager:
                 operation="order_cancel",
                 stage="bulk",
             )
-            self.invalidate_cache()
+            self._cache.invalidate()
 
         return cancelled
 
@@ -432,7 +321,6 @@ class GuardManager:
             )
             if not err.recoverable:
                 try:
-                    # Fallback to legacy behavior
                     self.risk_manager.set_reduce_only_mode(True, reason="guard_failure")
                 except Exception:
                     logger.warning(
@@ -441,7 +329,7 @@ class GuardManager:
                         operation="runtime_guards",
                         stage="reduce_only",
                     )
-                self.invalidate_cache()
+                self._cache.invalidate()
 
         except Exception as exc:
             logger.error(
@@ -450,3 +338,28 @@ class GuardManager:
                 operation="runtime_guards",
                 stage="exception",
             )
+
+    # Backward compatibility: legacy method names that delegate to guards
+    def log_guard_telemetry(self, state: RuntimeGuardState) -> None:
+        """Log P&L telemetry for all positions."""
+        PnLTelemetryGuard().check(state)
+
+    def guard_daily_loss(self, state: RuntimeGuardState) -> None:
+        """Check daily loss limits and cancel orders if breached."""
+        self._guards[1].check(state)  # DailyLossGuard is at index 1
+
+    def guard_liquidation_buffers(self, state: RuntimeGuardState, incremental: bool) -> None:
+        """Check liquidation price buffers for all positions."""
+        self._guards[2].check(state, incremental)  # LiquidationBufferGuard
+
+    def guard_mark_staleness(self, state: RuntimeGuardState) -> None:
+        """Check if mark prices are stale."""
+        self._guards[3].check(state)  # MarkStalenessGuard
+
+    def guard_risk_metrics(self, state: RuntimeGuardState) -> None:
+        """Append risk metrics for monitoring."""
+        self._guards[4].check(state)  # RiskMetricsGuard
+
+    def guard_volatility(self, state: RuntimeGuardState) -> None:
+        """Check volatility circuit breakers."""
+        self._guards[5].check(state)  # VolatilityGuard

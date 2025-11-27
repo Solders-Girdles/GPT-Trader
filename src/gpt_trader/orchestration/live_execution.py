@@ -113,8 +113,9 @@ class LiveExecutionEngine:
 
         runtime_settings = settings or load_runtime_settings()
         # self._production_logger removed as it's now in StateCollector
-        raw_integration = runtime_settings.raw_env.get("INTEGRATION_TEST_MODE", "")
-        self._integration_mode = str(raw_integration).lower() in {"1", "true", "yes"}
+
+        # Integration mode is disabled by default
+        self._integration_mode = False
 
         # Determine order preview setting
         preview_env = runtime_settings.raw_env.get("ORDER_PREVIEW_ENABLED")
@@ -129,7 +130,9 @@ class LiveExecutionEngine:
         self.open_orders: list[str] = []
 
         # Initialize helper modules
-        self.state_collector: StateCollector = StateCollector(broker, settings=runtime_settings)
+        self.state_collector: StateCollector = StateCollector(
+            broker, settings=runtime_settings, integration_mode=self._integration_mode
+        )
         self.order_submitter: OrderSubmitter = OrderSubmitter(
             broker,
             self.event_store,

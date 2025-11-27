@@ -7,7 +7,6 @@ balances, positions, equity calculations, and collateral asset resolution.
 
 from __future__ import annotations
 
-import inspect
 from decimal import Decimal
 from types import SimpleNamespace
 from typing import Any, cast
@@ -25,18 +24,24 @@ class StateCollector:
     """Collects and transforms account state for execution and risk management."""
 
     def __init__(
-        self, broker: CoinbaseRestService, *, settings: RuntimeSettings | None = None
+        self,
+        broker: CoinbaseRestService,
+        *,
+        settings: RuntimeSettings | None = None,
+        integration_mode: bool = False,
     ) -> None:
         """
         Initialize state collector.
 
         Args:
             broker: Brokerage adapter
+            settings: Runtime settings (loaded from env if None)
+            integration_mode: Enable integration test mode with synthetic fallbacks.
         """
         self.broker = broker
         self._settings = settings or load_runtime_settings()
-        raw_env = self._settings.raw_env.get("INTEGRATION_TEST_MODE", "")
-        self._integration_mode = str(raw_env).lower() in {"1", "true", "yes"}
+        self._integration_mode = integration_mode
+
         self.collateral_assets = self._resolve_collateral_assets()
         self._last_collateral_available: Decimal | None = None
 
@@ -148,11 +153,6 @@ class StateCollector:
             except Exception:
                 if not self._integration_mode:
                     raise
-        if inspect.isawaitable(balances_data):
-            if self._integration_mode:
-                balances_data = []
-            else:  # pragma: no cover - unexpected
-                raise TypeError("Broker list_balances returned awaitable in synchronous context")
         if balances_data is None:
             balances_data = []
         balances = list(balances_data)
@@ -173,11 +173,6 @@ class StateCollector:
             except Exception:
                 if not self._integration_mode:
                     raise
-        if inspect.isawaitable(positions_data):
-            if self._integration_mode:
-                positions_data = []
-            else:  # pragma: no cover - unexpected
-                raise TypeError("Broker list_positions returned awaitable in synchronous context")
         if positions_data is None:
             positions_data = []
         positions = list(positions_data)
@@ -316,10 +311,7 @@ class StateCollector:
             # Import here to avoid circular dependency
             from gpt_trader.features.live_trade.risk import ValidationError
 
-            integration_mode = str(
-                self._settings.raw_env.get("INTEGRATION_TEST_MODE", "")
-            ).lower() in {"1", "true", "yes"}
-            if integration_mode:
+            if self._integration_mode:
                 # Provide a permissive synthetic product for integration scenarios.
                 base_asset, quote_asset = symbol.split("-", 1) if "-" in symbol else (symbol, "USD")
                 return cast(

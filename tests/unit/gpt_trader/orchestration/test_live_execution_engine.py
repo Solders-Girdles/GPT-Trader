@@ -186,17 +186,6 @@ class TestLiveExecutionEngineInit:
 
             assert engine.enable_order_preview is True
 
-    def test_init_integration_mode_from_env(self, mock_broker: Mock) -> None:
-        """Test initialization reads INTEGRATION_TEST_MODE from env."""
-        with patch(
-            "gpt_trader.orchestration.live_execution.load_runtime_settings"
-        ) as mock_settings:
-            mock_settings.return_value = Mock(raw_env={"INTEGRATION_TEST_MODE": "1"})
-
-            engine = LiveExecutionEngine(broker=mock_broker)
-
-            assert engine._integration_mode is True
-
     def test_init_creates_helper_modules(self, mock_broker: Mock) -> None:
         """Test initialization creates all helper modules."""
         with patch(

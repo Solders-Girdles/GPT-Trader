@@ -15,7 +15,6 @@ from gpt_trader.features.brokerages.core.interfaces import (
     OrderType,
     TimeInForce,
 )
-from gpt_trader.orchestration.execution.broker_executor import BrokerExecutor
 from gpt_trader.orchestration.execution.order_submission import OrderSubmitter
 
 # ============================================================
@@ -498,71 +497,15 @@ class TestExecuteBrokerOrder:
         assert result is mock_order
         mock_broker.place_order.assert_called_once()
 
-    def test_type_error_in_non_integration_mode_raises(
+    def test_type_error_propagates(
         self,
         submitter: OrderSubmitter,
         mock_broker: MagicMock,
     ) -> None:
-        """Test that TypeError is raised in non-integration mode."""
+        """Test that TypeError from broker is propagated."""
         mock_broker.place_order.side_effect = TypeError("unexpected keyword argument")
 
         with pytest.raises(TypeError):
-            submitter._execute_broker_order(
-                submit_id="test-id",
-                symbol="BTC-PERP",
-                side=OrderSide.BUY,
-                order_type=OrderType.LIMIT,
-                order_quantity=Decimal("1.0"),
-                price=Decimal("50000"),
-                stop_price=None,
-                tif=TimeInForce.GTC,
-                reduce_only=False,
-                leverage=10,
-            )
-
-    def test_type_error_without_keyword_message_raises(
-        self,
-        mock_broker: MagicMock,
-        mock_event_store: MagicMock,
-        open_orders: list[str],
-    ) -> None:
-        """Test that TypeError without keyword message is raised even in integration mode."""
-        submitter = OrderSubmitter(
-            broker=mock_broker,
-            event_store=mock_event_store,
-            bot_id="test-bot",
-            open_orders=open_orders,
-            integration_mode=True,
-        )
-        mock_broker.place_order.side_effect = TypeError("some other error")
-
-        with pytest.raises(TypeError, match="some other error"):
-            submitter._execute_broker_order(
-                submit_id="test-id",
-                symbol="BTC-PERP",
-                side=OrderSide.BUY,
-                order_type=OrderType.LIMIT,
-                order_quantity=Decimal("1.0"),
-                price=Decimal("50000"),
-                stop_price=None,
-                tif=TimeInForce.GTC,
-                reduce_only=False,
-                leverage=10,
-            )
-
-    def test_awaitable_in_non_integration_mode_raises(
-        self,
-        submitter: OrderSubmitter,
-        mock_broker: MagicMock,
-    ) -> None:
-        """Test that awaitable result in non-integration mode raises TypeError."""
-
-        async def async_place():
-            return MagicMock()
-
-        mock_broker.place_order.return_value = async_place()
-
-        with pytest.raises(TypeError, match="awaitable"):
             submitter._execute_broker_order(
                 submit_id="test-id",
                 symbol="BTC-PERP",
@@ -829,103 +772,6 @@ class TestHandleOrderFailure:
         )
 
         assert result is None
-
-
-# ============================================================
-# Test: BrokerExecutor._invoke_legacy_place_order
-# ============================================================
-
-
-class TestInvokeLegacyPlaceOrder:
-    """Tests for BrokerExecutor._invoke_legacy_place_order method."""
-
-    def test_creates_order_object_and_calls_broker(
-        self,
-        mock_broker: MagicMock,
-    ) -> None:
-        """Test that an Order object is created and passed to broker."""
-        executor = BrokerExecutor(
-            broker=mock_broker,
-            integration_mode=True,
-        )
-
-        mock_order = MagicMock()
-        mock_broker.place_order.return_value = mock_order
-
-        result = executor._invoke_legacy_place_order(
-            submit_id="test-id",
-            symbol="BTC-PERP",
-            side=OrderSide.BUY,
-            order_type=OrderType.LIMIT,
-            quantity=Decimal("1.0"),
-            price=Decimal("50000"),
-            stop_price=None,
-            tif=TimeInForce.IOC,
-        )
-
-        assert result is mock_order
-        mock_broker.place_order.assert_called_once()
-
-        # Verify the order object passed to place_order
-        call_args = mock_broker.place_order.call_args[0]
-        order = call_args[0]
-        assert isinstance(order, Order)
-        assert order.id == "test-id"
-        assert order.symbol == "BTC-PERP"
-
-    def test_defaults_tif_to_gtc(
-        self,
-        mock_broker: MagicMock,
-    ) -> None:
-        """Test that None tif defaults to GTC."""
-        executor = BrokerExecutor(
-            broker=mock_broker,
-            integration_mode=True,
-        )
-
-        mock_broker.place_order.return_value = MagicMock()
-
-        executor._invoke_legacy_place_order(
-            submit_id="test-id",
-            symbol="BTC-PERP",
-            side=OrderSide.BUY,
-            order_type=OrderType.MARKET,
-            quantity=Decimal("1.0"),
-            price=None,
-            stop_price=None,
-            tif=None,
-        )
-
-        call_args = mock_broker.place_order.call_args[0]
-        order = call_args[0]
-        assert order.tif == TimeInForce.GTC
-
-
-# ============================================================
-# Test: BrokerExecutor._await_coroutine
-# ============================================================
-
-
-class TestAwaitCoroutine:
-    """Tests for BrokerExecutor._await_coroutine static method."""
-
-    def test_awaits_coroutine(self) -> None:
-        """Test that coroutine is awaited correctly."""
-
-        async def async_result():
-            return "result"
-
-        result = BrokerExecutor._await_coroutine(async_result())
-        assert result == "result"
-
-    def test_handles_async_exception(self) -> None:
-        """Test that async exceptions are propagated."""
-
-        async def async_error():
-            raise ValueError("Async error")
-
-        with pytest.raises(ValueError, match="Async error"):
-            BrokerExecutor._await_coroutine(async_error())
 
 
 # ============================================================

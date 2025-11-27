@@ -2,24 +2,34 @@
 Simplified Base Engine & Context.
 """
 
+from __future__ import annotations
+
 import asyncio
 from dataclasses import dataclass, field, replace
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from gpt_trader.orchestration.configuration import BotConfig
+
+if TYPE_CHECKING:
+    from gpt_trader.features.brokerages.core.protocols import BrokerProtocol
+    from gpt_trader.features.live_trade.risk.protocols import RiskManagerProtocol
+    from gpt_trader.orchestration.protocols import (
+        RuntimeStateProtocol,
+        ServiceRegistryProtocol,
+    )
 
 
 @dataclass
 class CoordinatorContext:
     config: BotConfig
-    registry: Any = None
-    broker: Any = None
+    registry: ServiceRegistryProtocol | None = None
+    broker: BrokerProtocol | None = None
     symbols: tuple[str, ...] = ()
-    runtime_state: Any = None
-    risk_manager: Any = None
+    runtime_state: RuntimeStateProtocol | None = None
+    risk_manager: RiskManagerProtocol | None = None
     bot_id: str = ""
 
-    def with_updates(self, **overrides: Any) -> "CoordinatorContext":
+    def with_updates(self, **overrides: Any) -> CoordinatorContext:
         return replace(self, **overrides)
 
 

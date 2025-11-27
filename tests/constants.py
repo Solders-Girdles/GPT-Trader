@@ -140,7 +140,6 @@ TEST_ENV_VARS = {
     "COINBASE_SANDBOX": "true",
     "COINBASE_API_MODE": "sandbox",
     "LOG_LEVEL": "DEBUG",
-    "INTEGRATION_TEST_MODE": "true",
 }
 
 # Test file paths

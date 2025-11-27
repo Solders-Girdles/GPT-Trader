@@ -3,6 +3,8 @@ Simplified TradingBot.
 Acts as the main entry point runner.
 """
 
+from __future__ import annotations
+
 import asyncio
 import logging
 from typing import TYPE_CHECKING, Any
@@ -13,6 +15,14 @@ from gpt_trader.orchestration.configuration import BotConfig
 
 if TYPE_CHECKING:
     from gpt_trader.app.container import ApplicationContainer
+    from gpt_trader.features.brokerages.core.interfaces import Product
+    from gpt_trader.features.brokerages.core.protocols import BrokerProtocol
+    from gpt_trader.features.live_trade.risk.protocols import RiskManagerProtocol
+    from gpt_trader.orchestration.protocols import (
+        EventStoreProtocol,
+        RuntimeStateProtocol,
+        ServiceRegistryProtocol,
+    )
 
 logger = logging.getLogger(__name__)
 
@@ -21,9 +31,9 @@ class TradingBot:
     def __init__(
         self,
         config: BotConfig,
-        container: "ApplicationContainer | None" = None,
-        registry: Any = None,
-        event_store: Any = None,
+        container: ApplicationContainer | None = None,
+        registry: ServiceRegistryProtocol | None = None,
+        event_store: EventStoreProtocol | None = None,
         orders_store: Any = None,
     ) -> None:
         self.config = config
@@ -32,13 +42,17 @@ class TradingBot:
 
         # Store registry components for CLI access
         self._registry = registry
-        self.broker: Any = registry.broker if registry else None
+        self.broker: BrokerProtocol | None = registry.broker if registry else None
         self.account_manager: Any = getattr(registry, "account_manager", None) if registry else None
         self.account_telemetry: Any = (
             getattr(registry, "account_telemetry", None) if registry else None
         )
-        self.risk_manager: Any = getattr(registry, "risk_manager", None) if registry else None
-        self.runtime_state: Any = getattr(registry, "runtime_state", None) if registry else None
+        self.risk_manager: RiskManagerProtocol | None = (
+            getattr(registry, "risk_manager", None) if registry else None
+        )
+        self.runtime_state: RuntimeStateProtocol | None = (
+            getattr(registry, "runtime_state", None) if registry else None
+        )
 
         # Setup context (simplified)
         self.context = CoordinatorContext(
@@ -91,7 +105,7 @@ class TradingBot:
             return self.engine.execute_decision(symbol, decision, mark, product, position_state)
         return None
 
-    def get_product(self, symbol: str) -> Any:
+    def get_product(self, symbol: str) -> Product | None:
         """Get product metadata for a symbol."""
         if self.broker and hasattr(self.broker, "get_product"):
             return self.broker.get_product(symbol)

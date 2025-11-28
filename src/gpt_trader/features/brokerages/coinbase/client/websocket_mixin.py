@@ -1,0 +1,216 @@
+"""
+WebSocket Client Mixin for streaming market data.
+
+Provides stream_orderbook and stream_trades methods that bridge the
+CoinbaseWebSocket class with the broker interface, enabling real-time
+data consumption via blocking generators.
+"""
+
+import queue
+import threading
+from collections.abc import Iterator
+from typing import TYPE_CHECKING, Any
+
+from gpt_trader.features.brokerages.coinbase.ws import CoinbaseWebSocket
+from gpt_trader.utilities.logging_patterns import get_logger
+
+if TYPE_CHECKING:
+    from gpt_trader.features.brokerages.coinbase.auth import SimpleAuth
+
+logger = get_logger(__name__, component="websocket_mixin")
+
+# Sentinel value to signal stream termination
+_STREAM_STOP = object()
+
+# Default timeout for queue.get() to allow periodic stop checks
+_QUEUE_TIMEOUT = 1.0
+
+
+class WebSocketClientMixin:
+    """
+    Mixin providing WebSocket streaming capabilities for CoinbaseClient.
+
+    Implements stream_orderbook and stream_trades methods that return
+    blocking generators suitable for `for msg in stream:` consumption.
+
+    The mixin maintains a singleton WebSocket connection per client instance.
+    Messages are buffered through a queue and yielded to consumers.
+    """
+
+    # Type hints for attributes provided by base class
+    auth: "SimpleAuth | None"
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        self._ws: CoinbaseWebSocket | None = None
+        self._ws_lock = threading.Lock()
+        self._message_queue: queue.Queue[dict | object] = queue.Queue()
+        self._stream_active = False
+
+    def _get_websocket(self) -> CoinbaseWebSocket:
+        """Get or create the singleton WebSocket instance."""
+        with self._ws_lock:
+            if self._ws is None:
+                api_key = None
+                private_key = None
+
+                # Extract credentials from auth if available
+                if self.auth is not None:
+                    if hasattr(self.auth, "api_key"):
+                        api_key = self.auth.api_key
+                    if hasattr(self.auth, "private_key"):
+                        private_key = self.auth.private_key
+
+                self._ws = CoinbaseWebSocket(
+                    api_key=api_key,
+                    private_key=private_key,
+                    on_message=self._on_websocket_message,
+                )
+            return self._ws
+
+    def _on_websocket_message(self, message: dict) -> None:
+        """Callback for WebSocket messages - routes to the queue."""
+        if self._stream_active:
+            self._message_queue.put(message)
+
+    def _stream_messages(self, stop_event: threading.Event | None = None) -> Iterator[dict]:
+        """
+        Generator that yields messages from the queue.
+
+        Args:
+            stop_event: Optional threading.Event to signal stream termination.
+
+        Yields:
+            Message dicts from the WebSocket.
+        """
+        while self._stream_active:
+            try:
+                msg = self._message_queue.get(timeout=_QUEUE_TIMEOUT)
+                if msg is _STREAM_STOP:
+                    break
+                if isinstance(msg, dict):
+                    yield msg
+            except queue.Empty:
+                # Check if we should continue
+                if stop_event is not None and stop_event.is_set():
+                    break
+                continue
+
+    def stream_orderbook(
+        self,
+        symbols: list[str],
+        level: int = 1,
+        stop_event: threading.Event | None = None,
+    ) -> Iterator[dict]:
+        """
+        Stream orderbook updates for the given symbols.
+
+        Args:
+            symbols: List of product IDs to subscribe to (e.g., ["BTC-USD", "ETH-USD"]).
+            level: Orderbook depth level (1 for top-of-book, 2 for full depth).
+            stop_event: Optional threading.Event to signal stream termination.
+
+        Yields:
+            Orderbook update messages as dicts.
+
+        Example:
+            >>> for msg in client.stream_orderbook(["BTC-USD"], level=2):
+            ...     print(msg["type"], msg.get("product_id"))
+        """
+        websocket = self._get_websocket()
+
+        # Clear any stale messages
+        self._clear_queue()
+
+        # Determine channel based on level
+        # level2 provides full orderbook, ticker provides best bid/ask
+        channel = "level2" if level >= 2 else "ticker"
+
+        logger.info(
+            "Starting orderbook stream",
+            symbols=symbols,
+            level=level,
+            channel=channel,
+        )
+
+        self._stream_active = True
+
+        try:
+            # Connect and subscribe
+            websocket.connect()
+            websocket.subscribe(symbols, [channel])
+
+            # Yield messages
+            yield from self._stream_messages(stop_event)
+
+        finally:
+            self._stream_active = False
+            logger.info("Orderbook stream stopped", symbols=symbols)
+
+    def stream_trades(
+        self,
+        symbols: list[str],
+        stop_event: threading.Event | None = None,
+    ) -> Iterator[dict]:
+        """
+        Stream trade updates for the given symbols.
+
+        Args:
+            symbols: List of product IDs to subscribe to (e.g., ["BTC-USD", "ETH-USD"]).
+            stop_event: Optional threading.Event to signal stream termination.
+
+        Yields:
+            Trade messages as dicts.
+
+        Example:
+            >>> for msg in client.stream_trades(["BTC-USD"]):
+            ...     print(msg["type"], msg.get("price"))
+        """
+        websocket = self._get_websocket()
+
+        # Clear any stale messages
+        self._clear_queue()
+
+        logger.info("Starting trades stream", symbols=symbols)
+
+        self._stream_active = True
+
+        try:
+            # Connect and subscribe
+            websocket.connect()
+            websocket.subscribe(symbols, ["market_trades"])
+
+            # Yield messages
+            yield from self._stream_messages(stop_event)
+
+        finally:
+            self._stream_active = False
+            logger.info("Trades stream stopped", symbols=symbols)
+
+    def _clear_queue(self) -> None:
+        """Clear any pending messages from the queue."""
+        while True:
+            try:
+                self._message_queue.get_nowait()
+            except queue.Empty:
+                break
+
+    def stop_streaming(self) -> None:
+        """Stop any active stream and disconnect the WebSocket."""
+        self._stream_active = False
+        self._message_queue.put(_STREAM_STOP)
+
+        with self._ws_lock:
+            if self._ws is not None:
+                try:
+                    self._ws.disconnect()
+                except Exception as e:
+                    logger.warning("Error disconnecting WebSocket", error=str(e))
+                self._ws = None
+
+    def is_streaming(self) -> bool:
+        """Check if a stream is currently active."""
+        return self._stream_active
+
+
+__all__ = ["WebSocketClientMixin"]

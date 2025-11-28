@@ -1,0 +1,353 @@
+"""
+Unit tests for WebSocketClientMixin.
+
+Tests the stream_orderbook and stream_trades methods that bridge
+CoinbaseWebSocket with the broker interface.
+"""
+
+from __future__ import annotations
+
+import threading
+import time
+from unittest.mock import MagicMock, patch
+
+from gpt_trader.features.brokerages.coinbase.client.websocket_mixin import (
+    WebSocketClientMixin,
+)
+
+
+class MockClientBase:
+    """Mock base class providing auth attribute."""
+
+    def __init__(self, auth: MagicMock | None = None) -> None:
+        self.auth = auth
+
+
+class TestableWebSocketClient(WebSocketClientMixin, MockClientBase):
+    """Testable client combining mixin with mock base."""
+
+    def __init__(self, auth: MagicMock | None = None) -> None:
+        super().__init__(auth=auth)
+
+
+class TestWebSocketClientMixinInitialization:
+    """Tests for mixin initialization."""
+
+    def test_initialization_creates_attributes(self):
+        """Mixin should initialize WebSocket-related attributes."""
+        client = TestableWebSocketClient()
+
+        assert client._ws is None
+        assert client._ws_lock is not None
+        assert client._message_queue is not None
+        assert client._stream_active is False
+
+    def test_initialization_with_auth(self):
+        """Mixin should accept auth from base class."""
+        mock_auth = MagicMock()
+        mock_auth.api_key = "test_key"
+        mock_auth.private_key = "test_secret"
+
+        client = TestableWebSocketClient(auth=mock_auth)
+
+        assert client.auth is mock_auth
+
+
+class TestWebSocketClientMixinGetWebSocket:
+    """Tests for _get_websocket singleton management."""
+
+    @patch("gpt_trader.features.brokerages.coinbase.client.websocket_mixin.CoinbaseWebSocket")
+    def test_creates_websocket_on_first_call(self, mock_ws_class):
+        """First call should create a new WebSocket instance."""
+        mock_ws_instance = MagicMock()
+        mock_ws_class.return_value = mock_ws_instance
+
+        client = TestableWebSocketClient()
+        result = client._get_websocket()
+
+        mock_ws_class.assert_called_once()
+        assert result is mock_ws_instance
+        assert client._ws is mock_ws_instance
+
+    @patch("gpt_trader.features.brokerages.coinbase.client.websocket_mixin.CoinbaseWebSocket")
+    def test_returns_same_websocket_on_subsequent_calls(self, mock_ws_class):
+        """Subsequent calls should return the same WebSocket instance."""
+        mock_ws_instance = MagicMock()
+        mock_ws_class.return_value = mock_ws_instance
+
+        client = TestableWebSocketClient()
+
+        first = client._get_websocket()
+        second = client._get_websocket()
+
+        # Should only create once
+        mock_ws_class.assert_called_once()
+        assert first is second
+
+    @patch("gpt_trader.features.brokerages.coinbase.client.websocket_mixin.CoinbaseWebSocket")
+    def test_passes_auth_credentials_to_websocket(self, mock_ws_class):
+        """WebSocket should receive auth credentials if available."""
+        mock_auth = MagicMock()
+        mock_auth.api_key = "my_api_key"
+        mock_auth.private_key = "my_private_key"
+
+        client = TestableWebSocketClient(auth=mock_auth)
+        client._get_websocket()
+
+        mock_ws_class.assert_called_once()
+        call_kwargs = mock_ws_class.call_args.kwargs
+        assert call_kwargs["api_key"] == "my_api_key"
+        assert call_kwargs["private_key"] == "my_private_key"
+
+    @patch("gpt_trader.features.brokerages.coinbase.client.websocket_mixin.CoinbaseWebSocket")
+    def test_handles_no_auth(self, mock_ws_class):
+        """WebSocket should work without auth credentials."""
+        client = TestableWebSocketClient(auth=None)
+        client._get_websocket()
+
+        mock_ws_class.assert_called_once()
+        call_kwargs = mock_ws_class.call_args.kwargs
+        assert call_kwargs["api_key"] is None
+        assert call_kwargs["private_key"] is None
+
+
+class TestStreamOrderbook:
+    """Tests for stream_orderbook method."""
+
+    @patch("gpt_trader.features.brokerages.coinbase.client.websocket_mixin.CoinbaseWebSocket")
+    def test_connects_and_subscribes_to_level2(self, mock_ws_class):
+        """stream_orderbook with level>=2 should subscribe to level2 channel."""
+        mock_ws = MagicMock()
+        mock_ws_class.return_value = mock_ws
+
+        client = TestableWebSocketClient()
+
+        # Start stream in background thread
+        stop_event = threading.Event()
+
+        def consume_stream():
+            for _ in client.stream_orderbook(
+                ["BTC-USD", "ETH-USD"], level=2, stop_event=stop_event
+            ):
+                pass
+
+        thread = threading.Thread(target=consume_stream)
+        thread.start()
+
+        # Give time for subscribe to be called
+        time.sleep(0.1)
+        stop_event.set()
+        thread.join(timeout=2)
+
+        mock_ws.connect.assert_called_once()
+        mock_ws.subscribe.assert_called_once_with(["BTC-USD", "ETH-USD"], ["level2"])
+
+    @patch("gpt_trader.features.brokerages.coinbase.client.websocket_mixin.CoinbaseWebSocket")
+    def test_subscribes_to_ticker_for_level1(self, mock_ws_class):
+        """stream_orderbook with level=1 should subscribe to ticker channel."""
+        mock_ws = MagicMock()
+        mock_ws_class.return_value = mock_ws
+
+        client = TestableWebSocketClient()
+
+        stop_event = threading.Event()
+
+        def consume_stream():
+            for _ in client.stream_orderbook(["BTC-USD"], level=1, stop_event=stop_event):
+                pass
+
+        thread = threading.Thread(target=consume_stream)
+        thread.start()
+
+        time.sleep(0.1)
+        stop_event.set()
+        thread.join(timeout=2)
+
+        mock_ws.subscribe.assert_called_once_with(["BTC-USD"], ["ticker"])
+
+    @patch("gpt_trader.features.brokerages.coinbase.client.websocket_mixin.CoinbaseWebSocket")
+    def test_yields_messages_from_callback(self, mock_ws_class):
+        """Messages pushed via callback should be yielded by stream."""
+        mock_ws = MagicMock()
+        mock_ws_class.return_value = mock_ws
+
+        client = TestableWebSocketClient()
+
+        # Directly test the message callback and queue mechanism
+        # Set stream_active manually to simulate an active stream
+        client._stream_active = True
+
+        # Push messages via callback
+        client._on_websocket_message({"type": "level2", "product_id": "BTC-USD", "price": "50000"})
+        client._on_websocket_message({"type": "level2", "product_id": "BTC-USD", "price": "50001"})
+
+        # Verify messages are in queue
+        msg1 = client._message_queue.get(timeout=1)
+        msg2 = client._message_queue.get(timeout=1)
+
+        assert msg1["price"] == "50000"
+        assert msg2["price"] == "50001"
+
+
+class TestStreamTrades:
+    """Tests for stream_trades method."""
+
+    @patch("gpt_trader.features.brokerages.coinbase.client.websocket_mixin.CoinbaseWebSocket")
+    def test_connects_and_subscribes_to_market_trades(self, mock_ws_class):
+        """stream_trades should subscribe to market_trades channel."""
+        mock_ws = MagicMock()
+        mock_ws_class.return_value = mock_ws
+
+        client = TestableWebSocketClient()
+
+        stop_event = threading.Event()
+
+        def consume_stream():
+            for _ in client.stream_trades(["BTC-USD", "ETH-USD"], stop_event=stop_event):
+                pass
+
+        thread = threading.Thread(target=consume_stream)
+        thread.start()
+
+        time.sleep(0.1)
+        stop_event.set()
+        thread.join(timeout=2)
+
+        mock_ws.connect.assert_called_once()
+        mock_ws.subscribe.assert_called_once_with(["BTC-USD", "ETH-USD"], ["market_trades"])
+
+    @patch("gpt_trader.features.brokerages.coinbase.client.websocket_mixin.CoinbaseWebSocket")
+    def test_yields_trade_messages(self, mock_ws_class):
+        """Trade messages should be yielded via the queue mechanism."""
+        mock_ws = MagicMock()
+        mock_ws_class.return_value = mock_ws
+
+        client = TestableWebSocketClient()
+
+        # Directly test the message callback and queue mechanism
+        client._stream_active = True
+
+        client._on_websocket_message(
+            {"type": "market_trades", "product_id": "BTC-USD", "price": "49999", "size": "0.1"}
+        )
+
+        # Verify message is in queue
+        msg = client._message_queue.get(timeout=1)
+
+        assert msg["price"] == "49999"
+        assert msg["size"] == "0.1"
+
+
+class TestStreamControl:
+    """Tests for stream control methods."""
+
+    @patch("gpt_trader.features.brokerages.coinbase.client.websocket_mixin.CoinbaseWebSocket")
+    def test_stop_streaming_disconnects_websocket(self, mock_ws_class):
+        """stop_streaming should disconnect WebSocket and reset state."""
+        mock_ws = MagicMock()
+        mock_ws_class.return_value = mock_ws
+
+        client = TestableWebSocketClient()
+
+        # Start a stream
+        stop_event = threading.Event()
+
+        def consume_stream():
+            for _ in client.stream_orderbook(["BTC-USD"], stop_event=stop_event):
+                pass
+
+        thread = threading.Thread(target=consume_stream)
+        thread.start()
+
+        time.sleep(0.1)
+
+        # Stop streaming
+        client.stop_streaming()
+        thread.join(timeout=2)
+
+        mock_ws.disconnect.assert_called_once()
+        assert client._ws is None
+        assert client._stream_active is False
+
+    @patch("gpt_trader.features.brokerages.coinbase.client.websocket_mixin.CoinbaseWebSocket")
+    def test_is_streaming_returns_correct_state(self, mock_ws_class):
+        """is_streaming should reflect _stream_active flag."""
+        mock_ws = MagicMock()
+        mock_ws_class.return_value = mock_ws
+
+        client = TestableWebSocketClient()
+
+        # Initially not streaming
+        assert client.is_streaming() is False
+
+        # Manually set stream active
+        client._stream_active = True
+        assert client.is_streaming() is True
+
+        # Manually set stream inactive
+        client._stream_active = False
+        assert client.is_streaming() is False
+
+
+class TestMessageFiltering:
+    """Tests for message filtering behavior."""
+
+    @patch("gpt_trader.features.brokerages.coinbase.client.websocket_mixin.CoinbaseWebSocket")
+    def test_ignores_non_dict_messages(self, mock_ws_class):
+        """Non-dict messages should be ignored."""
+        mock_ws = MagicMock()
+        mock_ws_class.return_value = mock_ws
+
+        client = TestableWebSocketClient()
+        received_messages = []
+        stop_event = threading.Event()
+
+        def consume_stream():
+            for msg in client.stream_orderbook(["BTC-USD"], stop_event=stop_event):
+                received_messages.append(msg)
+
+        thread = threading.Thread(target=consume_stream)
+        thread.start()
+
+        time.sleep(0.1)
+
+        # Push non-dict messages (these would be filtered by _stream_messages)
+        client._message_queue.put("string message")
+        client._message_queue.put(123)
+        client._message_queue.put({"valid": "message"})
+
+        time.sleep(0.2)
+        stop_event.set()
+        thread.join(timeout=2)
+
+        # Only dict message should be yielded
+        assert len(received_messages) == 1
+        assert received_messages[0] == {"valid": "message"}
+
+    @patch("gpt_trader.features.brokerages.coinbase.client.websocket_mixin.CoinbaseWebSocket")
+    def test_clears_queue_before_streaming(self, mock_ws_class):
+        """_clear_queue should remove all pending messages."""
+        mock_ws = MagicMock()
+        mock_ws_class.return_value = mock_ws
+
+        client = TestableWebSocketClient()
+
+        # Pre-populate queue with stale messages
+        client._message_queue.put({"stale": "message1"})
+        client._message_queue.put({"stale": "message2"})
+
+        # Verify queue has messages
+        assert not client._message_queue.empty()
+
+        # Clear the queue
+        client._clear_queue()
+
+        # Verify queue is now empty
+        assert client._message_queue.empty()
+
+        # Push fresh message and verify it's received
+        client._stream_active = True
+        client._on_websocket_message({"fresh": "message"})
+
+        msg = client._message_queue.get(timeout=1)
+        assert msg == {"fresh": "message"}

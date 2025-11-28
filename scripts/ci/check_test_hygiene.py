@@ -134,6 +134,7 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/backtesting/metrics/test_report.py",  # backtest report generation
     "tests/unit/gpt_trader/backtesting/validation/test_validator.py",  # validation scenarios
     "tests/unit/gpt_trader/features/live_trade/strategies/test_perps_baseline.py",  # baseline strategy coverage
+    "tests/unit/gpt_trader/features/brokerages/coinbase/test_websocket_mixin.py",  # WebSocket streaming mixin with threading patterns
 }
 
 SLEEP_ALLOWLIST = {
@@ -142,6 +143,7 @@ SLEEP_ALLOWLIST = {
     "tests/unit/gpt_trader/persistence/test_json_file_store_contract.py",  # uses real sleep to validate file system based locking semantics
     "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming.py",  # uses time.sleep for run_in_executor cancellation test
     "tests/unit/gpt_trader/utilities/performance/test_timing.py",  # timing utility coverage requires real sleep for precision tests
+    "tests/unit/gpt_trader/features/brokerages/coinbase/test_websocket_mixin.py",  # uses time.sleep for WebSocket thread synchronization
 }
 
 

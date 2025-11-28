@@ -8,6 +8,9 @@ from gpt_trader.features.brokerages.coinbase.client.base import CoinbaseClientBa
 from gpt_trader.features.brokerages.coinbase.client.market import MarketDataClientMixin
 from gpt_trader.features.brokerages.coinbase.client.orders import OrderClientMixin
 from gpt_trader.features.brokerages.coinbase.client.portfolio import PortfolioClientMixin
+from gpt_trader.features.brokerages.coinbase.client.websocket_mixin import (
+    WebSocketClientMixin,
+)
 
 
 class CoinbaseClient(
@@ -16,10 +19,12 @@ class CoinbaseClient(
     OrderClientMixin,
     AccountClientMixin,
     PortfolioClientMixin,
+    WebSocketClientMixin,
 ):
     """
     The unified Coinbase Client.
     Inherits base HTTP machinery and specific endpoint mixins.
+    Includes WebSocket streaming for real-time market data.
     """
 
     pass

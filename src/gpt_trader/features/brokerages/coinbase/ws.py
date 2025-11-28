@@ -9,13 +9,56 @@ import time
 from collections.abc import Callable
 from typing import Any
 
-# We use websocket-client as it is in the optional dependencies and simpler for threading
-import websocket
+# websocket-client is an optional dependency (live-trade extra)
+try:
+    import websocket
+except ImportError:
+    websocket = None  # type: ignore[assignment]
 
 from gpt_trader.config.constants import WS_JOIN_TIMEOUT, WS_RECONNECT_DELAY
 from gpt_trader.utilities.logging_patterns import get_logger
 
 logger = get_logger(__name__, component="coinbase_websocket")
+
+
+class SequenceGuard:
+    """
+    Track WebSocket message sequence numbers and detect gaps.
+
+    Coinbase WebSocket messages include sequence numbers. A gap indicates
+    messages may have been missed (e.g., network issues, reconnection).
+    """
+
+    def __init__(self) -> None:
+        self._last_sequence: int | None = None
+
+    def annotate(self, message: dict) -> dict:
+        """
+        Annotate a message with gap detection.
+
+        Args:
+            message: WebSocket message dict with optional 'sequence' key
+
+        Returns:
+            Message dict with 'gap_detected': True added if gap found
+        """
+        sequence = message.get("sequence")
+        if sequence is None:
+            return message
+
+        result = dict(message)
+
+        if self._last_sequence is not None:
+            expected = self._last_sequence + 1
+            if sequence > expected:
+                result["gap_detected"] = True
+
+        self._last_sequence = sequence
+        return result
+
+    def reset(self) -> None:
+        """Reset sequence tracking state."""
+        self._last_sequence = None
 
 
 class CoinbaseWebSocket:
@@ -30,14 +73,22 @@ class CoinbaseWebSocket:
         self.api_key = api_key
         self.private_key = private_key
         self.on_message = on_message
-        self.ws: websocket.WebSocketApp | None = None
+        self.ws: Any = None
         self.wst: threading.Thread | None = None
         self.running = False
         self.subscriptions: list[dict] = []
+        self._transport: Any = None
+        self._sequence_guard = SequenceGuard()
 
     def connect(self) -> None:
         if self.running:
             return
+
+        if websocket is None:
+            raise ImportError(
+                "websocket-client is not installed. "
+                "Install with: pip install gpt-trader[live-trade]"
+            )
 
         self.running = True
         self.ws = websocket.WebSocketApp(
@@ -48,6 +99,7 @@ class CoinbaseWebSocket:
             on_close=self._on_close,
         )
 
+        self._transport = self.ws
         self.wst = threading.Thread(target=self.ws.run_forever)
         self.wst.daemon = True
         self.wst.start()
@@ -114,3 +166,6 @@ class CoinbaseWebSocket:
             logger.info("Attempting reconnect in %ds...", WS_RECONNECT_DELAY)
             time.sleep(WS_RECONNECT_DELAY)
             self.connect()
+
+
+__all__ = ["CoinbaseWebSocket", "SequenceGuard"]

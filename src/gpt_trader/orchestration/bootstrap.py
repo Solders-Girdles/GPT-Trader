@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 from gpt_trader.config.runtime_settings import RuntimeSettings, load_runtime_settings
 from gpt_trader.persistence.event_store import EventStore
@@ -16,6 +16,9 @@ from .runtime_paths import RuntimePaths
 from .runtime_paths import resolve_runtime_paths as compute_runtime_paths
 from .service_registry import ServiceRegistry, empty_registry
 from .symbols import PERPS_ALLOWLIST, normalize_symbol_list
+
+if TYPE_CHECKING:
+    from .trading_bot import TradingBot
 
 logger = get_logger(__name__, component="bot_bootstrap")
 
@@ -204,6 +207,78 @@ def prepare_bot_with_container(
     return prepare_bot(config, registry=None, env=env, settings=settings)
 
 
+def build_bot(
+    config: BotConfig,
+    settings: RuntimeSettings | None = None,
+) -> tuple[TradingBot, ServiceRegistry]:
+    """
+    Build a TradingBot from a BotConfig.
+
+    Returns:
+        Tuple of (TradingBot, ServiceRegistry) for access to all components.
+    """
+    from gpt_trader.features.live_trade.risk.manager import LiveRiskManager
+    from gpt_trader.orchestration.trading_bot.bot import TradingBot
+
+    result = prepare_bot(config, registry=None, settings=settings)
+
+    # Get the container from extras (created by prepare_bot)
+    container = result.registry.extras.get("container")
+
+    # Get broker from container
+    broker = container.broker if container else None
+
+    # Create risk manager with config and event store
+    risk_manager = LiveRiskManager(config=result.config, event_store=result.event_store)
+
+    # Update registry with broker and risk manager
+    registry = result.registry.with_updates(
+        broker=broker,
+        risk_manager=risk_manager,
+    )
+
+    # Create the bot with full registry
+    bot = TradingBot(
+        config=result.config,
+        container=container,
+        registry=registry,
+        event_store=result.event_store,
+        orders_store=result.orders_store,
+    )
+
+    return bot, registry
+
+
+def bot_from_profile(profile: str) -> tuple[TradingBot, ServiceRegistry]:
+    """
+    Create a TradingBot from a profile name.
+
+    Args:
+        profile: One of 'dev', 'demo', 'prod', 'test', 'spot', 'canary'
+
+    Returns:
+        Tuple of (TradingBot, ServiceRegistry)
+    """
+    # Convert string to Profile enum
+    profile_enum = Profile(profile.lower())
+
+    # Create config with mock broker for dev/test profiles
+    mock_broker = profile_enum in (Profile.DEV, Profile.TEST)
+    config = BotConfig.from_profile(
+        profile=profile_enum,
+        mock_broker=mock_broker,
+    )
+
+    # Load settings with mock mode for dev/test
+    env_overrides: dict[str, str] = {}
+    if mock_broker:
+        env_overrides["PERPS_FORCE_MOCK"] = "1"
+
+    settings = load_runtime_settings(env_overrides)
+
+    return build_bot(config, settings=settings)
+
+
 __all__ = [
     "BootstrapLogRecord",
     "BootstrapResult",
@@ -212,4 +287,6 @@ __all__ = [
     "normalise_symbols",
     "resolve_runtime_paths",
     "RuntimePaths",
+    "build_bot",
+    "bot_from_profile",
 ]

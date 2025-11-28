@@ -22,7 +22,7 @@ env:
   PYTHON_VERSION: "3.12"
 
 jobs:
-  quick-validation:
+  integration-tests:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -33,58 +33,10 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
-      # TODO: Re-enable after verify_core.py is updated for TradingBot API
-      # The script references outdated PerpsBot class and methods that no longer exist
-      # See: https://github.com/Solders-Girdles/GPT-Trader/issues/xxx for tracking
-      - name: Run core validation harness
-        if: false  # Disabled - script uses outdated API
+      - name: Run integration tests
         run: |
           set -euo pipefail
-          poetry run python scripts/validation/verify_core.py --check all
-
-      # TODO: Re-enable after test file is created/located
-      # The test file path doesn't exist anymore
-      - name: Run Coinbase websocket regression test
-        if: false  # Disabled - test file doesn't exist
-        run: |
-          set -euo pipefail
-          poetry run pytest tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_websocket.py -k sequence_guard -v
-
-      # TODO: Re-enable after ws module path is fixed
-      # The import path src.gpt_trader.features.brokerages.coinbase.ws doesn't exist
-      - name: Quick WebSocket smoke
-        if: false  # Disabled - import path doesn't exist
-        run: |
-          set -euo pipefail
-          export PYTHONPATH="${GITHUB_WORKSPACE}${PYTHONPATH:+:$PYTHONPATH}"
-          poetry run python - <<'PY'
-          import os
-          import sys
-          import types
-
-          workspace = os.getcwd()
-          src_path = os.path.join(workspace, "src")
-          if src_path not in sys.path:
-            sys.path.insert(0, src_path)
-          if workspace not in sys.path:
-            sys.path.insert(0, workspace)
-
-          from src.gpt_trader.features.brokerages.coinbase.ws import CoinbaseWebSocket, SequenceGuard
-
-          mock_ws = types.ModuleType('websocket')
-          mock_ws.create_connection = lambda url: None
-          sys.modules['websocket'] = mock_ws
-
-          ws = CoinbaseWebSocket('wss://test')
-          ws.connect()
-          assert ws._transport is not None
-
-          guard = SequenceGuard()
-          first = guard.annotate({'sequence': 1})
-          assert 'gap_detected' not in first
-          second = guard.annotate({'sequence': 3})
-          assert second.get('gap_detected') is True
-          PY
+          poetry run pytest tests/integration -m integration -v --tb=short
 
       - name: Report status
         if: failure()
@@ -94,9 +46,9 @@ jobs:
             github.rest.issues.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              title: '🚨 Nightly validation failed - Coinbase routing regression',
-              body: 'The nightly validation detected a regression in Coinbase endpoint routing. Check the [workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details.',
-              labels: ['bug', 'coinbase', 'critical']
+              title: '🚨 Nightly integration tests failed',
+              body: 'The nightly integration tests detected a regression. Check the [workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details.',
+              labels: ['bug', 'integration', 'nightly']
             })
 
   full-test-suite:

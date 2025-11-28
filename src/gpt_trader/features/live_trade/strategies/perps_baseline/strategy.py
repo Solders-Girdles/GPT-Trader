@@ -38,12 +38,12 @@ class Decision:
 
 
 @dataclass
-class StrategyConfig:
-    """Configuration for the baseline perps strategy."""
+class BaseStrategyConfig:
+    """Common configuration for all trading strategies."""
 
-    # Moving average settings
-    long_ma: int = 20
-    short_ma: int = 5
+    # Moving average settings (using *_period naming for consistency with orchestrator)
+    short_ma_period: int = 5
+    long_ma_period: int = 20
 
     # RSI settings
     rsi_period: int = 14
@@ -53,16 +53,62 @@ class StrategyConfig:
     # Risk management
     stop_loss_pct: float = 0.02
     take_profit_pct: float = 0.05
-    max_leverage: int = 5
+    trailing_stop_pct: float | None = None
 
     # Confidence thresholds
-    min_confidence: float = 0.5  # Minimum confidence to act
-    crossover_weight: float = 0.4  # Weight for crossover signal
-    rsi_weight: float = 0.3  # Weight for RSI signal
-    trend_weight: float = 0.3  # Weight for trend alignment
+    min_confidence: float = 0.5
+    crossover_weight: float = 0.4
+    rsi_weight: float = 0.3
+    trend_weight: float = 0.3
 
-    # Kill switch
+    # Control flags
     kill_switch_enabled: bool = False
+    force_entry_on_trend: bool = False
+
+    # Position sizing
+    position_fraction: float | None = None
+
+    # Backward compatibility aliases for legacy code
+    @property
+    def short_ma(self) -> int:
+        """Alias for short_ma_period (backward compat)."""
+        return self.short_ma_period
+
+    @property
+    def long_ma(self) -> int:
+        """Alias for long_ma_period (backward compat)."""
+        return self.long_ma_period
+
+
+@dataclass
+class SpotStrategyConfig(BaseStrategyConfig):
+    """Configuration for spot trading strategies.
+
+    Spot trading has no leverage and no short positions.
+    """
+
+    enable_shorts: bool = False
+
+    @property
+    def target_leverage(self) -> int:
+        """Spot trading always uses 1x leverage."""
+        return 1
+
+
+@dataclass
+class PerpsStrategyConfig(BaseStrategyConfig):
+    """Configuration for perpetuals trading strategies.
+
+    Supports configurable leverage and short positions.
+    """
+
+    target_leverage: int = 5
+    enable_shorts: bool = True
+    max_leverage: int = 10
+
+
+# Backward compatibility alias - legacy code uses StrategyConfig
+StrategyConfig = PerpsStrategyConfig
 
 
 @dataclass

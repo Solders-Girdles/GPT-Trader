@@ -58,12 +58,12 @@ class TestStrategyConfig:
 
     def test_custom_values(self) -> None:
         config = StrategyConfig(
-            long_ma=50,
-            short_ma=10,
+            long_ma_period=50,
+            short_ma_period=10,
             rsi_period=7,
         )
-        assert config.long_ma == 50
-        assert config.short_ma == 10
+        assert config.long_ma == 50  # Property alias
+        assert config.short_ma == 10  # Property alias
         assert config.rsi_period == 7
 
 
@@ -92,9 +92,9 @@ class TestBaselinePerpsStrategyInit:
         assert strategy.config.short_ma == 5
 
     def test_custom_config(self) -> None:
-        config = StrategyConfig(long_ma=50, rsi_period=21)
+        config = StrategyConfig(long_ma_period=50, rsi_period=21)
         strategy = BaselinePerpsStrategy(config=config)
-        assert strategy.config.long_ma == 50
+        assert strategy.config.long_ma == 50  # Property alias
         assert strategy.config.rsi_period == 21
 
 

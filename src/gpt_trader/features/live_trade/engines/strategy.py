@@ -9,8 +9,17 @@ from collections import defaultdict
 from decimal import Decimal
 from typing import Any
 
-from gpt_trader.features.live_trade.engines.base import BaseEngine, CoordinatorContext, HealthStatus
-from gpt_trader.features.live_trade.strategies.perps_baseline import Action, BaselinePerpsStrategy
+from gpt_trader.features.live_trade.engines.base import (
+    BaseEngine,
+    CoordinatorContext,
+    HealthStatus,
+)
+from gpt_trader.features.live_trade.risk.manager import ValidationError
+from gpt_trader.features.live_trade.strategies.perps_baseline import (
+    Action,
+    BaselinePerpsStrategy,
+    Decision,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -80,19 +89,57 @@ class TradingEngine(BaseEngine):
             if decision.action in (Action.BUY, Action.SELL):
                 logger.info(f"EXECUTING {decision.action} for {symbol}")
                 try:
-                    from gpt_trader.features.brokerages.core.interfaces import OrderSide, OrderType
-
-                    side = OrderSide.BUY if decision.action == Action.BUY else OrderSide.SELL
-                    # Offload blocking network call
-                    await asyncio.to_thread(
-                        self.context.broker.place_order,
-                        symbol,
-                        side,
-                        OrderType.MARKET,
-                        Decimal("0.001"),  # Dummy size for test
+                    await self._validate_and_place_order(
+                        symbol=symbol,
+                        decision=decision,
+                        price=price,
                     )
+                except ValidationError as e:
+                    logger.warning(f"Risk validation failed for {symbol}: {e}")
                 except Exception as e:
                     logger.error(f"Order placement failed: {e}")
+
+    async def _validate_and_place_order(
+        self,
+        symbol: str,
+        decision: Decision,
+        price: Decimal,
+    ) -> None:
+        """Validate order with risk manager before execution.
+
+        Raises:
+            ValidationError: If risk validation fails.
+        """
+        from gpt_trader.features.brokerages.core.interfaces import OrderSide, OrderType
+
+        side = OrderSide.BUY if decision.action == Action.BUY else OrderSide.SELL
+        quantity = Decimal("0.001")  # TODO: Use proper position sizing
+        equity = Decimal("1000")  # TODO: Get real equity from runtime state
+
+        # Run pre-trade validation if risk manager is available
+        if self.context.risk_manager is not None:
+            self.context.risk_manager.pre_trade_validate(
+                symbol=symbol,
+                side=side.value,
+                quantity=quantity,
+                price=price,
+                product=None,
+                equity=equity,
+                current_positions={},  # TODO: Track positions from runtime state
+            )
+            logger.info(f"Risk validation passed for {symbol} {side.value}")
+        else:
+            logger.warning("No risk manager configured - skipping validation")
+
+        # Place order only after validation passes
+        assert self.context.broker is not None, "Broker not initialized"
+        await asyncio.to_thread(
+            self.context.broker.place_order,
+            symbol,
+            side,
+            OrderType.MARKET,
+            quantity,
+        )
 
     async def shutdown(self) -> None:
         self.running = False

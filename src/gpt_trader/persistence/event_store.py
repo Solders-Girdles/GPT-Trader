@@ -62,3 +62,22 @@ class EventStore:
         else:
             # Called as append_trade(bot_id, trade_dict)
             self.append("trade", {"bot_id": bot_id_or_trade, **(trade or {})})
+
+    def store(self, event: Any) -> None:
+        """Store an event (protocol compliance).
+
+        Satisfies EventStoreProtocol.store() interface.
+        """
+        if isinstance(event, dict):
+            event_type = event.get("type", "unknown")
+            data = event.get("data", event)
+            self.append(event_type, data)
+        else:
+            self.append("event", {"payload": event})
+
+    def get_recent(self, count: int = 100) -> list[Any]:
+        """Get recent events (protocol compliance).
+
+        Satisfies EventStoreProtocol.get_recent() interface.
+        """
+        return self.events[-count:] if count > 0 else []

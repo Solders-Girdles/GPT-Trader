@@ -42,6 +42,30 @@ class LiveRiskManager:
         self._now_provider: Callable[[], datetime] = datetime.utcnow
 
     def check_order(self, order: Any) -> bool:
+        """Check if an order is allowed by risk rules.
+
+        This is a quick check for order-level validation.
+        For comprehensive pre-trade validation, use pre_trade_validate() instead.
+
+        Returns:
+            True if order is allowed, False if blocked by risk rules.
+        """
+        # Check if daily loss limit was triggered
+        if self._daily_pnl_triggered:
+            return False
+
+        # Check reduce-only mode
+        if self._reduce_only_mode:
+            # In reduce-only mode, only allow orders that reduce position
+            reduce_only = False
+            if hasattr(order, "reduce_only"):
+                reduce_only = order.reduce_only
+            elif isinstance(order, dict):
+                reduce_only = order.get("reduce_only", False)
+
+            if not reduce_only:
+                return False
+
         return True
 
     def update_position(self, position: Any) -> None:

@@ -29,6 +29,11 @@ class ServiceRegistry:
     extras: dict[str, Any] = field(default_factory=dict)
 
     def with_updates(self, **kwargs: Any) -> ServiceRegistry:
+        """Return a new registry with updated values.
+
+        Note: Returns concrete ServiceRegistry type for compatibility with
+        frozen dataclass pattern. Satisfies ServiceRegistryProtocol semantically.
+        """
         return replace(self, **kwargs)
 
 

@@ -6,7 +6,8 @@ from typing import TYPE_CHECKING, Any, cast
 
 from gpt_trader.features.live_trade.strategies.perps_baseline import (
     BaselinePerpsStrategy,
-    StrategyConfig,
+    PerpsStrategyConfig,
+    SpotStrategyConfig,
 )
 from gpt_trader.orchestration.configuration import Profile
 from gpt_trader.orchestration.spot_profile_service import SpotProfileService
@@ -43,9 +44,9 @@ class StrategyInitializationMixin:
                 strategy_kwargs = {
                     "short_ma_period": short,
                     "long_ma_period": long,
-                    "target_leverage": 1,
+                    # target_leverage is a read-only property in SpotStrategyConfig (always 1)
                     "trailing_stop_pct": bot.config.trailing_stop_pct,
-                    "enable_shorts": False,
+                    # enable_shorts defaults to False in SpotStrategyConfig
                     "force_entry_on_trend": True,  # Ignition Phase: Allow trend entry
                 }
                 fraction_override = rule.get("position_fraction")
@@ -64,7 +65,8 @@ class StrategyInitializationMixin:
                             symbol=symbol,
                         )
                 state.symbol_strategies[symbol] = BaselinePerpsStrategy(
-                    config=StrategyConfig(**strategy_kwargs),  # type: ignore[arg-type]
+                    # Dict spread from dynamic config; mypy can't infer types
+                    config=SpotStrategyConfig(**strategy_kwargs),  # type: ignore[arg-type]
                     risk_manager=bot.risk_manager,
                 )
         else:
@@ -89,7 +91,8 @@ class StrategyInitializationMixin:
                     )
 
             state.strategy = BaselinePerpsStrategy(
-                config=StrategyConfig(**strategy_kwargs),  # type: ignore[arg-type]
+                # Dict spread from dynamic config; mypy can't infer types
+                config=PerpsStrategyConfig(**strategy_kwargs),  # type: ignore[arg-type]
                 risk_manager=bot.risk_manager,
             )
 

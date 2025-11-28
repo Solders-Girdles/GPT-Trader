@@ -141,10 +141,11 @@ class BaselinePerpsStrategy:
     - Close short: RSI oversold or bullish crossover
     """
 
-    def __init__(self, config: StrategyConfig | Any = None, risk_manager: Any = None):
+    def __init__(self, config: BaseStrategyConfig | Any = None, risk_manager: Any = None):
+        self.config: BaseStrategyConfig
         if config is None:
             self.config = StrategyConfig()
-        elif isinstance(config, StrategyConfig):
+        elif isinstance(config, BaseStrategyConfig):
             self.config = config
         else:
             # Convert dict or other config object to StrategyConfig
@@ -421,3 +422,96 @@ class BaselinePerpsStrategy:
     def _build_default_product(self, symbol: str) -> Any:
         """Build a default product specification."""
         return None
+
+
+class SpotStrategy(BaselinePerpsStrategy):
+    """Spot trading strategy - no shorting allowed.
+
+    Inherits all technical analysis from BaselinePerpsStrategy but
+    converts SELL signals to HOLD since spot markets don't support shorting.
+    Always uses SpotStrategyConfig with 1x leverage.
+    """
+
+    def __init__(
+        self,
+        config: SpotStrategyConfig | BaseStrategyConfig | None = None,
+        risk_manager: Any = None,
+    ):
+        if config is None:
+            config = SpotStrategyConfig()
+        elif not isinstance(config, SpotStrategyConfig):
+            # Convert base config to spot config
+            config = SpotStrategyConfig(
+                short_ma_period=config.short_ma_period,
+                long_ma_period=config.long_ma_period,
+                rsi_period=config.rsi_period,
+                rsi_overbought=config.rsi_overbought,
+                rsi_oversold=config.rsi_oversold,
+                stop_loss_pct=config.stop_loss_pct,
+                take_profit_pct=config.take_profit_pct,
+                trailing_stop_pct=config.trailing_stop_pct,
+                min_confidence=config.min_confidence,
+                crossover_weight=config.crossover_weight,
+                rsi_weight=config.rsi_weight,
+                trend_weight=config.trend_weight,
+                kill_switch_enabled=config.kill_switch_enabled,
+                force_entry_on_trend=config.force_entry_on_trend,
+                position_fraction=config.position_fraction,
+            )
+        super().__init__(config=config, risk_manager=risk_manager)
+
+    def _decide_entry(
+        self,
+        symbol: str,
+        current_mark: Decimal,
+        indicators: IndicatorState,
+    ) -> Decision:
+        """Generate entry decision - converts SELL to HOLD for spot markets."""
+        decision = super()._decide_entry(symbol, current_mark, indicators)
+
+        # Spot markets don't support shorting - convert SELL to HOLD
+        if decision.action == Action.SELL:
+            return Decision(
+                Action.HOLD,
+                reason=f"Spot mode - no shorting ({decision.reason})",
+                confidence=decision.confidence,
+                indicators=decision.indicators,
+            )
+
+        return decision
+
+
+class PerpsStrategy(BaselinePerpsStrategy):
+    """Perpetuals trading strategy with full functionality.
+
+    Supports shorting and configurable leverage.
+    This is a semantic alias for BaselinePerpsStrategy for clarity.
+    """
+
+    def __init__(
+        self,
+        config: PerpsStrategyConfig | BaseStrategyConfig | None = None,
+        risk_manager: Any = None,
+    ):
+        if config is None:
+            config = PerpsStrategyConfig()
+        elif not isinstance(config, PerpsStrategyConfig):
+            # Convert base config to perps config with defaults
+            config = PerpsStrategyConfig(
+                short_ma_period=config.short_ma_period,
+                long_ma_period=config.long_ma_period,
+                rsi_period=config.rsi_period,
+                rsi_overbought=config.rsi_overbought,
+                rsi_oversold=config.rsi_oversold,
+                stop_loss_pct=config.stop_loss_pct,
+                take_profit_pct=config.take_profit_pct,
+                trailing_stop_pct=config.trailing_stop_pct,
+                min_confidence=config.min_confidence,
+                crossover_weight=config.crossover_weight,
+                rsi_weight=config.rsi_weight,
+                trend_weight=config.trend_weight,
+                kill_switch_enabled=config.kill_switch_enabled,
+                force_entry_on_trend=config.force_entry_on_trend,
+                position_fraction=config.position_fraction,
+            )
+        super().__init__(config=config, risk_manager=risk_manager)

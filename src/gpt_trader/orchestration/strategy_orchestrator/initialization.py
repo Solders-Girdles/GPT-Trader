@@ -6,7 +6,9 @@ from typing import TYPE_CHECKING, Any, cast
 
 from gpt_trader.features.live_trade.strategies.perps_baseline import (
     BaselinePerpsStrategy,
+    PerpsStrategy,
     PerpsStrategyConfig,
+    SpotStrategy,
     SpotStrategyConfig,
 )
 from gpt_trader.orchestration.configuration import Profile
@@ -64,7 +66,7 @@ class StrategyInitializationMixin:
                             stage="spot_fraction",
                             symbol=symbol,
                         )
-                state.symbol_strategies[symbol] = BaselinePerpsStrategy(
+                state.symbol_strategies[symbol] = SpotStrategy(
                     # Dict spread from dynamic config; mypy can't infer types
                     config=SpotStrategyConfig(**strategy_kwargs),  # type: ignore[arg-type]
                     risk_manager=bot.risk_manager,
@@ -90,7 +92,7 @@ class StrategyInitializationMixin:
                         stage="perps_fraction",
                     )
 
-            state.strategy = BaselinePerpsStrategy(
+            state.strategy = PerpsStrategy(
                 # Dict spread from dynamic config; mypy can't infer types
                 config=PerpsStrategyConfig(**strategy_kwargs),  # type: ignore[arg-type]
                 risk_manager=bot.risk_manager,
@@ -103,7 +105,8 @@ class StrategyInitializationMixin:
         if bot.config.profile == Profile.SPOT:
             strat = state.symbol_strategies.get(symbol)
             if strat is None:
-                strat = BaselinePerpsStrategy(risk_manager=bot.risk_manager)
+                # Fallback: Create SpotStrategy for missing symbol
+                strat = SpotStrategy(risk_manager=bot.risk_manager)
                 state.symbol_strategies[symbol] = strat
             return cast(BaselinePerpsStrategy, strat)
         return cast(BaselinePerpsStrategy, state.strategy)

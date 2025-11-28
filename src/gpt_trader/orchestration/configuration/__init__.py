@@ -6,6 +6,7 @@ from gpt_trader.config.types import Profile
 from gpt_trader.orchestration.configuration.bot_config import (
     TOP_VOLUME_BASES,
     BotConfig,
+    BotRiskConfig,
     config,
 )
 from gpt_trader.orchestration.configuration.risk.model import (
@@ -20,6 +21,7 @@ from gpt_trader.orchestration.configuration.validation import (
 
 __all__ = [
     "BotConfig",
+    "BotRiskConfig",
     "config",
     "RiskConfig",
     "RISK_CONFIG_ENV_KEYS",

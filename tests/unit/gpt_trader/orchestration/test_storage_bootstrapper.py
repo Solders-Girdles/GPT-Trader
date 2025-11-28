@@ -4,7 +4,7 @@ import pytest
 
 import gpt_trader.config.runtime_settings as runtime_settings_module
 from gpt_trader.config.types import Profile
-from gpt_trader.orchestration.configuration import BotConfig
+from gpt_trader.orchestration.configuration import BotConfig, BotRiskConfig
 from gpt_trader.orchestration.service_registry import ServiceRegistry
 from gpt_trader.orchestration.storage import StorageBootstrapper
 from gpt_trader.persistence.event_store import EventStore
@@ -13,8 +13,8 @@ from gpt_trader.persistence.orders_store import OrdersStore
 
 def _make_config(profile: Profile = Profile.DEV, **overrides) -> BotConfig:
     payload: dict[str, object] = {"profile": profile}
-    if profile == Profile.SPOT and "max_leverage" not in overrides:
-        payload["max_leverage"] = 1
+    if profile == Profile.SPOT and "risk" not in overrides:
+        payload["risk"] = BotRiskConfig(max_leverage=1)
     payload.update(overrides)
     return BotConfig(**payload)
 

@@ -5,29 +5,43 @@ from __future__ import annotations
 import asyncio
 import uuid
 from argparse import Namespace
+from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from gpt_trader.backtesting.data.manager import HistoricalDataManager, create_coinbase_data_provider
 from gpt_trader.cli.commands.optimize.config_loader import (
     OBJECTIVE_PRESETS,
     ConfigValidationError,
+    OptimizeCliConfig,
     build_optimization_config,
     build_parameter_space_from_config,
     create_default_config,
     create_objective_from_preset,
-    get_objective_direction,
     load_config_file,
     merge_cli_overrides,
     parse_config,
 )
 from gpt_trader.cli.commands.optimize.formatters import format_run_summary_text
 from gpt_trader.cli.response import CliErrorCode, CliResponse
+from gpt_trader.features.brokerages.coinbase.auth import SimpleAuth
+from gpt_trader.features.brokerages.coinbase.client.client import CoinbaseClient
+from gpt_trader.features.live_trade.strategies.base import StrategyProtocol
+from gpt_trader.features.live_trade.strategies.perps_baseline.strategy import (
+    PerpsStrategy,
+    PerpsStrategyConfig,
+    SpotStrategy,
+    SpotStrategyConfig,
+)
 from gpt_trader.features.optimize.persistence.storage import (
     OptimizationRun,
     OptimizationStorage,
 )
-from gpt_trader.features.optimize.runner.batch_runner import BatchBacktestRunner, TrialResult
+from gpt_trader.features.optimize.runner.batch_runner import (
+    BatchBacktestRunner,
+    TrialResult,
+)
 from gpt_trader.features.optimize.study.manager import OptimizationStudyManager
 from gpt_trader.utilities.logging_patterns import get_logger
 
@@ -240,7 +254,9 @@ def _extract_cli_overrides(args: Namespace) -> dict[str, Any]:
     return overrides
 
 
-def _handle_dry_run(config, args: Namespace, output_format: str) -> CliResponse | int:
+def _handle_dry_run(
+    config: OptimizeCliConfig, args: Namespace, output_format: str
+) -> CliResponse | int:
     """Handle dry run mode - validate and show configuration."""
     # Build parameter space info
     param_info = []
@@ -270,8 +286,12 @@ def _handle_dry_run(config, args: Namespace, output_format: str) -> CliResponse 
         }
         if config.backtest:
             data["backtest"] = {
-                "start_date": config.backtest.start_date.isoformat() if config.backtest.start_date else None,
-                "end_date": config.backtest.end_date.isoformat() if config.backtest.end_date else None,
+                "start_date": (
+                    config.backtest.start_date.isoformat() if config.backtest.start_date else None
+                ),
+                "end_date": (
+                    config.backtest.end_date.isoformat() if config.backtest.end_date else None
+                ),
                 "granularity": config.backtest.granularity,
             }
         return CliResponse.success_response(
@@ -308,8 +328,92 @@ def _handle_dry_run(config, args: Namespace, output_format: str) -> CliResponse 
     return 0
 
 
-def _run_optimization(config, args: Namespace, output_format: str) -> CliResponse | int:
+def _create_data_provider() -> HistoricalDataManager:
+    """Create data provider using existing RuntimeSettings credential pattern."""
+    from gpt_trader.config.runtime_settings import load_runtime_settings
+
+    settings = load_runtime_settings()
+
+    # Reuse existing credential loading logic from container.py
+    api_key_name = None
+    private_key = None
+
+    creds_file = settings.raw_env.get("COINBASE_CREDENTIALS_FILE")
+    if creds_file:
+        path = Path(creds_file)
+        if path.exists():
+            import json
+
+            with open(path) as f:
+                data = json.load(f)
+                api_key_name = data.get("name")
+                private_key = data.get("privateKey")
+
+    if not api_key_name:
+        api_key_name = settings.raw_env.get("COINBASE_API_KEY_NAME")
+    if not private_key:
+        private_key = settings.raw_env.get("COINBASE_PRIVATE_KEY")
+
+    if not api_key_name or not private_key:
+        raise ValueError(
+            "Coinbase credentials required for optimization. "
+            "Set COINBASE_CREDENTIALS_FILE or COINBASE_API_KEY_NAME + COINBASE_PRIVATE_KEY"
+        )
+
+    auth = SimpleAuth(key_name=api_key_name, private_key=private_key)
+    client = CoinbaseClient(auth=auth)
+
+    return create_coinbase_data_provider(client=client, validate_quality=True)
+
+
+def _create_strategy_factory(
+    strategy_type: str,
+) -> Callable[[dict[str, Any]], StrategyProtocol]:
+    """Create a strategy factory for the given strategy type."""
+
+    def factory(params: dict[str, Any]) -> StrategyProtocol:
+        if strategy_type == "spot":
+            # Filter params for SpotStrategyConfig?
+            # For now, we assume params are valid kwargs, but in reality Optuna
+            # might pass extra stuff if we aren't careful.
+            # Ideally we'd filter against the dataclass fields.
+            # But BaseStrategyConfig allows extra kwargs usually via ** if set up right,
+            # or we rely on the parameter space builder to only provide valid keys.
+            # For now, pass all params.
+            try:
+                config = SpotStrategyConfig(**params)
+                return SpotStrategy(config=config)
+            except TypeError:
+                # If strict typing fails, try filtering or fallback
+                # Simplified for now as per plan
+                config = SpotStrategyConfig(**params)
+                return SpotStrategy(config=config)
+        else:  # perps_baseline or default
+            config = PerpsStrategyConfig(**params)
+            return PerpsStrategy(config=config)
+
+    return factory
+
+
+def _run_optimization(
+    config: OptimizeCliConfig, args: Namespace, output_format: str
+) -> CliResponse | int:
     """Run the actual optimization study."""
+    # Validate backtest settings are present
+    if not config.backtest or not config.backtest.start_date or not config.backtest.end_date:
+        message = (
+            "Optimization requires a backtest period. "
+            "Please specify --start-date and --end-date, or provide them in the configuration file."
+        )
+        if output_format == "json":
+            return CliResponse.error_response(
+                command=COMMAND_NAME,
+                code=CliErrorCode.CONFIG_INVALID,
+                message=message,
+            )
+        logger.error(message)
+        return 1
+
     run_id = f"opt_{datetime.now().strftime('%Y%m%d')}_{uuid.uuid4().hex[:8]}"
     storage = OptimizationStorage()
     warnings: list[str] = []
@@ -350,6 +454,31 @@ def _run_optimization(config, args: Namespace, output_format: str) -> CliRespons
         logger.error(f"Failed to create objective: {e}")
         return 1
 
+    # Initialize Data and Strategy Factory
+    try:
+        data_provider = _create_data_provider()
+        strategy_factory = _create_strategy_factory(config.strategy_type)
+
+        # Initialize Batch Runner
+        runner = BatchBacktestRunner(
+            data_provider=data_provider,
+            symbols=config.symbols,
+            granularity=config.backtest.granularity,
+            start_date=config.backtest.start_date,
+            end_date=config.backtest.end_date,
+            strategy_factory=strategy_factory,
+            objective=objective,
+        )
+    except Exception as e:
+        if output_format == "json":
+            return CliResponse.error_response(
+                command=COMMAND_NAME,
+                code=CliErrorCode.OPERATION_FAILED,
+                message=f"Failed to initialize runner: {e}",
+            )
+        logger.error(f"Failed to initialize runner: {e}")
+        return 1
+
     # Create study manager
     study_manager = OptimizationStudyManager(opt_config)
 
@@ -373,43 +502,55 @@ def _run_optimization(config, args: Namespace, output_format: str) -> CliRespons
     interrupted = False
 
     # Run optimization loop
+    async def run_optimization_loop():
+        nonlocal best_value, best_trial, interrupted
+        try:
+            for trial_num in range(opt_config.number_of_trials):
+                trial = study.ask()
+                params = study_manager.suggest_parameters(trial)
+
+                if not args.quiet and output_format == "text":
+                    print(
+                        f"Trial {trial_num + 1}/{opt_config.number_of_trials}...",
+                        end=" ",
+                        flush=True,
+                    )
+
+                # Run the actual trial
+                trial_result = await runner.run_trial(trial.number, params)
+
+                # Report to Optuna
+                study.tell(trial, trial_result.objective_value)
+
+                # Track results
+                trial_results.append(trial_result)
+
+                if trial_result.is_feasible:
+                    is_better = (
+                        trial_result.objective_value > best_value
+                        if opt_config.direction == "maximize"
+                        else trial_result.objective_value < best_value
+                    )
+                    if is_better:
+                        best_value = trial_result.objective_value
+                        best_trial = trial_result
+
+                if not args.quiet and output_format == "text":
+                    status = "OK" if trial_result.is_feasible else "FAIL"
+                    print(f"{status} value={trial_result.objective_value:.4f}")
+
+        except KeyboardInterrupt:
+            interrupted = True
+            warnings.append("Optimization interrupted by user")
+            if not args.quiet and output_format == "text":
+                print("\nOptimization interrupted by user")
+
+    # Execute loop
     try:
-        for trial_num in range(opt_config.number_of_trials):
-            trial = study.ask()
-            params = study_manager.suggest_parameters(trial)
-
-            if not args.quiet and output_format == "text":
-                print(f"Trial {trial_num + 1}/{opt_config.number_of_trials}...", end=" ")
-
-            trial_value = _placeholder_evaluate(params, objective)
-            study.tell(trial, trial_value)
-
-            # Track results
-            trial_result = TrialResult(
-                trial_number=trial_num,
-                parameters=params,
-                objective_value=trial_value,
-                is_feasible=trial_value > float("-inf"),
-            )
-            trial_results.append(trial_result)
-
-            is_better = (
-                trial_value > best_value
-                if opt_config.direction == "maximize"
-                else trial_value < best_value
-            )
-            if is_better:
-                best_value = trial_value
-                best_trial = trial_result
-
-            if not args.quiet and output_format == "text":
-                print(f"value={trial_value:.4f}")
-
-    except KeyboardInterrupt:
-        interrupted = True
-        warnings.append("Optimization interrupted by user")
-        if not args.quiet and output_format == "text":
-            print("\nOptimization interrupted by user")
+        asyncio.run(run_optimization_loop())
+    except Exception as e:
+        logger.error(f"Optimization loop failed: {e}")
+        warnings.append(f"Optimization failed: {e}")
 
     completed_at = datetime.now()
 
@@ -459,24 +600,3 @@ def _run_optimization(config, args: Namespace, output_format: str) -> CliRespons
     print(format_run_summary_text(run_data))
 
     return 0
-
-
-def _placeholder_evaluate(params: dict[str, Any], objective) -> float:
-    """
-    Placeholder evaluation function.
-
-    In a real implementation, this would:
-    1. Configure a strategy with the given parameters
-    2. Run a backtest using BatchBacktestRunner
-    3. Calculate metrics and evaluate the objective
-
-    For now, returns a random-ish value based on params.
-    """
-    # Simple placeholder that varies with parameters
-    # This should be replaced with actual backtest execution
-    import hashlib
-    import json
-
-    param_str = json.dumps(params, sort_keys=True)
-    hash_val = int(hashlib.md5(param_str.encode()).hexdigest()[:8], 16)
-    return (hash_val % 1000) / 100.0 - 5.0  # Range roughly [-5, 5]

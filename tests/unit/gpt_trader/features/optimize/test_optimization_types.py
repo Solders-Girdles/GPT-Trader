@@ -1,6 +1,7 @@
 """Unit tests for optimization types."""
 
 import pytest
+
 from gpt_trader.features.optimize.types import (
     OptimizationConfig,
     ParameterDefinition,
@@ -20,7 +21,7 @@ class TestParameterDefinition:
             high=10,
         )
         assert param.name == "test_int"
-        
+
         # Missing bounds
         with pytest.raises(ValueError, match="requires low and high"):
             ParameterDefinition(
@@ -28,7 +29,7 @@ class TestParameterDefinition:
                 parameter_type=ParameterType.INTEGER,
                 low=1,
             )
-            
+
         # Invalid bounds
         with pytest.raises(ValueError, match="low must be less than high"):
             ParameterDefinition(
@@ -47,7 +48,7 @@ class TestParameterDefinition:
             choices=["a", "b"],
         )
         assert param.choices == ["a", "b"]
-        
+
         # Missing choices
         with pytest.raises(ValueError, match="requires at least 2 choices"):
             ParameterDefinition(
@@ -63,13 +64,13 @@ class TestParameterSpace:
         p1 = ParameterDefinition("p1", ParameterType.INTEGER, low=1, high=10)
         p2 = ParameterDefinition("p2", ParameterType.FLOAT, low=0.1, high=1.0)
         p3 = ParameterDefinition("p3", ParameterType.CATEGORICAL, choices=["x", "y"])
-        
+
         space = ParameterSpace(
             strategy_parameters=[p1],
             risk_parameters=[p2],
             simulation_parameters=[p3],
         )
-        
+
         assert len(space.all_parameters) == 3
         assert space.parameter_count == 3
         assert space.get_parameter("p1") == p1
@@ -82,7 +83,7 @@ class TestOptimizationConfig:
     def test_validation(self):
         """Test configuration validation."""
         space = ParameterSpace()
-        
+
         # Valid
         config = OptimizationConfig(
             study_name="test",
@@ -90,7 +91,7 @@ class TestOptimizationConfig:
             objective_name="sharpe",
         )
         assert config.direction == "maximize"
-        
+
         # Invalid direction
         with pytest.raises(ValueError, match="direction must be"):
             OptimizationConfig(
@@ -99,7 +100,7 @@ class TestOptimizationConfig:
                 objective_name="sharpe",
                 direction="invalid",
             )
-            
+
         # Invalid sampler
         with pytest.raises(ValueError, match="Unknown sampler_type"):
             OptimizationConfig(

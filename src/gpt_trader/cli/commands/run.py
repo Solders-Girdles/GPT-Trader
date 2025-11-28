@@ -23,6 +23,12 @@ def register(subparsers: Any) -> None:
     )
     options.add_profile_option(parser)
     options.add_runtime_options(parser)
+    parser.add_argument(
+        "--config",
+        type=str,
+        metavar="PATH",
+        help="Path to YAML config file (supports nested optimize output format)",
+    )
     parser.add_argument("--dev-fast", action="store_true", help="Run single cycle and exit")
     parser.set_defaults(handler=execute)
 

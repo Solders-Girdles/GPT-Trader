@@ -107,6 +107,7 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/orchestration/test_account_telemetry.py",  # account telemetry collection and publishing
     "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_streaming.py",  # WebSocket streaming telemetry with async/threading patterns
     "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_health.py",  # telemetry health check and mark extraction coverage
+    "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine.py",  # strategy engine dynamic sizing, position tracking, risk format validation
     "tests/unit/gpt_trader/backtesting/simulation/test_funding_tracker.py",  # comprehensive funding rate tracking with perpetuals scenarios
     "tests/unit/gpt_trader/backtesting/simulation/test_fee_calculator.py",  # fee tier matrix coverage across volume brackets
     "tests/unit/gpt_trader/backtesting/simulation/test_simulated_broker.py",  # broker protocol contract with order lifecycle scenarios

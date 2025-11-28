@@ -6,6 +6,7 @@ from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import cast
 
+from gpt_trader.config.runtime_settings import RuntimeSettings, load_runtime_settings
 from gpt_trader.persistence.event_store import EventStore
 from gpt_trader.persistence.orders_store import OrdersStore
 from gpt_trader.utilities.logging_patterns import get_logger
@@ -13,7 +14,6 @@ from gpt_trader.utilities.logging_patterns import get_logger
 from .configuration import TOP_VOLUME_BASES, BotConfig, Profile
 from .runtime_paths import RuntimePaths
 from .runtime_paths import resolve_runtime_paths as compute_runtime_paths
-from .runtime_settings import RuntimeSettings, load_runtime_settings
 from .service_registry import ServiceRegistry, empty_registry
 from .symbols import PERPS_ALLOWLIST, normalize_symbol_list
 

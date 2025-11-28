@@ -1,0 +1,386 @@
+#!/usr/bin/env python3
+"""Generate machine-readable test inventory for AI agent consumption.
+
+This script scans the test suite to create a comprehensive inventory including:
+- Test paths and names
+- Pytest markers (categories)
+- Test file organization
+- Marker-based test selection
+
+Usage:
+    python scripts/agents/generate_test_inventory.py [--output-dir DIR]
+    python scripts/agents/generate_test_inventory.py --by-marker risk
+    python scripts/agents/generate_test_inventory.py --by-path tests/unit/gpt_trader/cli
+
+Output:
+    var/agents/testing/
+    - test_inventory.json (complete test listing)
+    - markers.json (marker definitions and counts)
+    - index.json (discovery file)
+"""
+
+from __future__ import annotations
+
+import argparse
+import ast
+import configparser
+import json
+import re
+import sys
+from collections import defaultdict
+from pathlib import Path
+from typing import Any
+
+PROJECT_ROOT = Path(__file__).parent.parent.parent
+
+
+def parse_pytest_ini() -> dict[str, Any]:
+    """Parse pytest.ini to extract marker definitions."""
+    ini_path = PROJECT_ROOT / "pytest.ini"
+    if not ini_path.exists():
+        return {"markers": {}, "default_addopts": ""}
+
+    config = configparser.ConfigParser()
+    config.read(ini_path)
+
+    markers = {}
+    if config.has_option("pytest", "markers"):
+        marker_text = config.get("pytest", "markers")
+        for line in marker_text.strip().split("\n"):
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+            # Parse "marker_name: description"
+            if ":" in line:
+                name, desc = line.split(":", 1)
+                markers[name.strip()] = desc.strip()
+
+    addopts = ""
+    if config.has_option("pytest", "addopts"):
+        addopts = config.get("pytest", "addopts").strip()
+
+    return {
+        "markers": markers,
+        "default_addopts": addopts,
+    }
+
+
+def extract_test_info(file_path: Path) -> list[dict[str, Any]]:
+    """Extract test function information from a Python test file."""
+    tests = []
+
+    try:
+        content = file_path.read_text()
+        tree = ast.parse(content)
+    except Exception:
+        return tests
+
+    # Get file-level markers (decorators on class or module)
+    file_markers: set[str] = set()
+
+    for node in ast.walk(tree):
+        if isinstance(node, ast.FunctionDef) and node.name.startswith("test_"):
+            test_info = {
+                "name": node.name,
+                "line": node.lineno,
+                "markers": list(file_markers.copy()),
+                "docstring": ast.get_docstring(node) or "",
+            }
+
+            # Extract pytest markers from decorators
+            for decorator in node.decorator_list:
+                marker = extract_marker(decorator)
+                if marker:
+                    test_info["markers"].append(marker)
+
+            tests.append(test_info)
+
+        elif isinstance(node, ast.ClassDef) and node.name.startswith("Test"):
+            # Extract class-level markers
+            class_markers = list(file_markers.copy())
+            for decorator in node.decorator_list:
+                marker = extract_marker(decorator)
+                if marker:
+                    class_markers.append(marker)
+
+            # Extract methods from test class
+            for item in node.body:
+                if isinstance(item, ast.FunctionDef) and item.name.startswith("test_"):
+                    test_info = {
+                        "name": f"{node.name}::{item.name}",
+                        "line": item.lineno,
+                        "markers": list(class_markers),
+                        "docstring": ast.get_docstring(item) or "",
+                        "class": node.name,
+                    }
+
+                    # Extract method-level markers
+                    for decorator in item.decorator_list:
+                        marker = extract_marker(decorator)
+                        if marker:
+                            test_info["markers"].append(marker)
+
+                    tests.append(test_info)
+
+    return tests
+
+
+def extract_marker(decorator: ast.expr) -> str | None:
+    """Extract pytest marker name from a decorator AST node."""
+    # Handle @pytest.mark.marker_name
+    if isinstance(decorator, ast.Attribute):
+        if isinstance(decorator.value, ast.Attribute):
+            if (
+                isinstance(decorator.value.value, ast.Name)
+                and decorator.value.value.id == "pytest"
+                and decorator.value.attr == "mark"
+            ):
+                return decorator.attr
+    # Handle @pytest.mark.marker_name() with call
+    elif isinstance(decorator, ast.Call):
+        if isinstance(decorator.func, ast.Attribute):
+            if isinstance(decorator.func.value, ast.Attribute):
+                if (
+                    isinstance(decorator.func.value.value, ast.Name)
+                    and decorator.func.value.value.id == "pytest"
+                    and decorator.func.value.attr == "mark"
+                ):
+                    return decorator.func.attr
+    return None
+
+
+def scan_test_files(test_dir: Path) -> dict[str, Any]:
+    """Scan test directory and collect all test information."""
+    inventory: dict[str, list[dict[str, Any]]] = {}
+    marker_counts: dict[str, int] = defaultdict(int)
+    total_tests = 0
+
+    for test_file in test_dir.rglob("test_*.py"):
+        if "__pycache__" in str(test_file):
+            continue
+
+        rel_path = str(test_file.relative_to(PROJECT_ROOT))
+        tests = extract_test_info(test_file)
+
+        if tests:
+            inventory[rel_path] = tests
+            total_tests += len(tests)
+
+            for test in tests:
+                for marker in test.get("markers", []):
+                    marker_counts[marker] += 1
+
+    return {
+        "inventory": inventory,
+        "marker_counts": dict(marker_counts),
+        "total_tests": total_tests,
+        "total_files": len(inventory),
+    }
+
+
+def categorize_by_path(inventory: dict[str, list[dict[str, Any]]]) -> dict[str, list[str]]:
+    """Organize tests by path structure."""
+    categories: dict[str, list[str]] = defaultdict(list)
+
+    for file_path in inventory.keys():
+        parts = Path(file_path).parts
+
+        # Extract category from path (e.g., tests/unit/gpt_trader/cli -> cli)
+        if len(parts) >= 4:
+            category = parts[3]  # e.g., "cli", "features", "config"
+            categories[category].append(file_path)
+
+    return dict(categories)
+
+
+def generate_test_inventory(
+    scan_results: dict[str, Any],
+    marker_defs: dict[str, str],
+) -> dict[str, Any]:
+    """Generate the complete test inventory."""
+    inventory = scan_results["inventory"]
+    path_categories = categorize_by_path(inventory)
+
+    # Group markers by category (from pytest.ini comments)
+    marker_categories = {
+        "test_type": ["unit", "integration", "property", "behavioral", "contract", "e2e"],
+        "component": [
+            "api", "endpoints", "cli", "monitoring", "risk", "execution",
+            "backtesting", "orchestration", "persistence", "security", "utilities"
+        ],
+        "trading": ["perps", "spot", "portfolio", "strategy", "liquidity"],
+        "performance": ["perf", "performance", "slow", "load", "stress"],
+        "environment": [
+            "real_api", "uses_mock_broker", "requires_db",
+            "requires_network", "requires_secrets"
+        ],
+        "async": ["asyncio", "anyio"],
+        "special": ["regression", "flaky", "manual", "deprecated"],
+    }
+
+    return {
+        "version": "1.0",
+        "description": "Machine-readable test inventory for GPT-Trader",
+        "summary": {
+            "total_tests": scan_results["total_tests"],
+            "total_files": scan_results["total_files"],
+            "markers_used": len(scan_results["marker_counts"]),
+        },
+        "marker_definitions": marker_defs,
+        "marker_categories": marker_categories,
+        "marker_counts": dict(
+            sorted(scan_results["marker_counts"].items(), key=lambda x: -x[1])
+        ),
+        "path_categories": path_categories,
+        "tests_by_file": inventory,
+    }
+
+
+def filter_by_marker(inventory: dict[str, Any], marker: str) -> list[str]:
+    """Return test paths matching a specific marker."""
+    matches = []
+    for file_path, tests in inventory.get("tests_by_file", {}).items():
+        for test in tests:
+            if marker in test.get("markers", []):
+                test_id = f"{file_path}::{test['name']}"
+                matches.append(test_id)
+    return matches
+
+
+def filter_by_path(inventory: dict[str, Any], path_prefix: str) -> list[str]:
+    """Return test paths matching a path prefix."""
+    matches = []
+    for file_path, tests in inventory.get("tests_by_file", {}).items():
+        if file_path.startswith(path_prefix):
+            for test in tests:
+                test_id = f"{file_path}::{test['name']}"
+                matches.append(test_id)
+    return matches
+
+
+def main() -> int:
+    """Main entry point."""
+    parser = argparse.ArgumentParser(
+        description="Generate test inventory for AI agents"
+    )
+    parser.add_argument(
+        "--output-dir",
+        type=Path,
+        default=Path("var/agents/testing"),
+        help="Output directory for inventory files",
+    )
+    parser.add_argument(
+        "--test-dir",
+        type=Path,
+        default=Path("tests"),
+        help="Test directory to scan",
+    )
+    parser.add_argument(
+        "--by-marker",
+        type=str,
+        help="Filter tests by marker and output test IDs",
+    )
+    parser.add_argument(
+        "--by-path",
+        type=str,
+        help="Filter tests by path prefix and output test IDs",
+    )
+    parser.add_argument(
+        "--stdout",
+        action="store_true",
+        help="Output to stdout instead of files",
+    )
+
+    args = parser.parse_args()
+
+    # Parse pytest.ini for marker definitions
+    pytest_config = parse_pytest_ini()
+    marker_defs = pytest_config["markers"]
+
+    # Scan test files
+    print(f"Scanning {args.test_dir} for tests...")
+    scan_results = scan_test_files(PROJECT_ROOT / args.test_dir)
+
+    # Generate inventory
+    inventory = generate_test_inventory(scan_results, marker_defs)
+
+    # Handle filtering options
+    if args.by_marker:
+        matches = filter_by_marker(inventory, args.by_marker)
+        if args.stdout:
+            print(json.dumps(matches, indent=2))
+        else:
+            for m in matches:
+                print(m)
+        print(f"\nFound {len(matches)} tests with marker '{args.by_marker}'", file=sys.stderr)
+        return 0
+
+    if args.by_path:
+        matches = filter_by_path(inventory, args.by_path)
+        if args.stdout:
+            print(json.dumps(matches, indent=2))
+        else:
+            for m in matches:
+                print(m)
+        print(f"\nFound {len(matches)} tests under '{args.by_path}'", file=sys.stderr)
+        return 0
+
+    if args.stdout:
+        print(json.dumps(inventory, indent=2))
+        return 0
+
+    # Write output files
+    output_dir: Path = args.output_dir
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    # Write main inventory
+    inventory_path = output_dir / "test_inventory.json"
+    with open(inventory_path, "w") as f:
+        json.dump(inventory, f, indent=2)
+    print(f"Test inventory written to: {inventory_path}")
+
+    # Write markers reference
+    markers_ref = {
+        "definitions": marker_defs,
+        "categories": inventory["marker_categories"],
+        "counts": inventory["marker_counts"],
+        "usage": {
+            "run_by_marker": "pytest -m <marker>",
+            "exclude_marker": "pytest -m 'not <marker>'",
+            "combine_markers": "pytest -m '<marker1> and <marker2>'",
+        },
+    }
+    markers_path = output_dir / "markers.json"
+    with open(markers_path, "w") as f:
+        json.dump(markers_ref, f, indent=2)
+    print(f"Markers reference written to: {markers_path}")
+
+    # Write index
+    index = {
+        "version": "1.0",
+        "description": "Test inventory for AI agent consumption",
+        "files": {
+            "test_inventory": "test_inventory.json",
+            "markers": "markers.json",
+        },
+        "summary": inventory["summary"],
+        "quick_commands": {
+            "run_unit_tests": "pytest -m unit",
+            "run_cli_tests": "pytest tests/unit/gpt_trader/cli",
+            "run_fast_tests": "pytest -m 'not slow and not performance'",
+            "run_risk_tests": "pytest -m risk",
+            "list_all_markers": "pytest --markers",
+        },
+    }
+    index_path = output_dir / "index.json"
+    with open(index_path, "w") as f:
+        json.dump(index, f, indent=2)
+    print(f"Index written to: {index_path}")
+
+    print(f"\nFound {inventory['summary']['total_tests']} tests in {inventory['summary']['total_files']} files")
+
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

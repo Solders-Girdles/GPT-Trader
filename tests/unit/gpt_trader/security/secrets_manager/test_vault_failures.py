@@ -89,6 +89,8 @@ class TestVaultFailures:
         hvac_stub: Any,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
+        # Set development environment for test
+        monkeypatch.setenv("ENV", "development")
         monkeypatch.setenv("VAULT_TOKEN", "env-token")
         monkeypatch.setenv("VAULT_ADDR", "https://vault.example.com")
 

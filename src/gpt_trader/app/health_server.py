@@ -111,7 +111,7 @@ class HealthServer:
 
     def __init__(
         self,
-        host: str = "0.0.0.0",
+        host: str = "0.0.0.0",  # nosec B104 - Health server must bind to all interfaces for container orchestration
         port: int = DEFAULT_HEALTH_PORT,
     ) -> None:
         self.host = host
@@ -235,7 +235,7 @@ class HealthServer:
 
 
 async def start_health_server(
-    host: str = "0.0.0.0",
+    host: str = "0.0.0.0",  # nosec B104 - Health server must bind to all interfaces for container orchestration
     port: int = DEFAULT_HEALTH_PORT,
 ) -> HealthServer:
     """Start a health server and return the instance."""

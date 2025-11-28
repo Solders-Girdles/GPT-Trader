@@ -185,7 +185,9 @@ def main() -> None:
             if module:
                 changed_modules.add(module)
             elif normalized.parts and normalized.parts[0] == "tests":
-                tests_to_run.add(str(normalized))
+                # Only add test files that actually exist (skip deleted files from git diff)
+                if normalized.exists():
+                    tests_to_run.add(str(normalized))
 
     if changed_modules:
         tests_to_run.update(

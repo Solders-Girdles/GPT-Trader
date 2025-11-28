@@ -1,38 +1,55 @@
 """Historical data manager with caching."""
 
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from gpt_trader.backtesting.data.fetcher import CoinbaseHistoricalFetcher
+from gpt_trader.backtesting.engine.bar_runner import IHistoricalDataProvider
 from gpt_trader.features.brokerages.core.interfaces import Candle
+from gpt_trader.features.data.quality import CandleQualityReport, DataQualityChecker
 from gpt_trader.utilities.logging_patterns import get_logger
+
+if TYPE_CHECKING:
+    from gpt_trader.features.brokerages.coinbase.client.client import CoinbaseClient
 
 logger = get_logger(__name__, component="historical_data")
 
+# Granularity to timedelta mapping for quality checking
+GRANULARITY_TO_TIMEDELTA = {
+    "ONE_MINUTE": timedelta(minutes=1),
+    "FIVE_MINUTE": timedelta(minutes=5),
+    "FIFTEEN_MINUTE": timedelta(minutes=15),
+    "THIRTY_MINUTE": timedelta(minutes=30),
+    "ONE_HOUR": timedelta(hours=1),
+    "TWO_HOUR": timedelta(hours=2),
+    "SIX_HOUR": timedelta(hours=6),
+    "ONE_DAY": timedelta(days=1),
+}
 
-class HistoricalDataManager:
+
+class HistoricalDataManager(IHistoricalDataProvider):
     """
-    Manage historical candle data with file-based caching.
+    Manage historical candle data with file-based caching and quality validation.
 
     This manager:
     - Checks cache for requested data
     - Fetches missing data from API
+    - Validates data quality (gaps, spikes, anomalies)
     - Stores fetched data in cache
     - Provides efficient access to historical candles
-
-    Future Enhancement:
-    - Migrate from JSON to Parquet for better compression and query performance
-    - Add DuckDB integration for SQL queries
-    - Implement data quality checks
     """
 
     def __init__(
         self,
         fetcher: CoinbaseHistoricalFetcher,
         cache_dir: Path,
+        validate_quality: bool = True,
+        reject_on_quality_failure: bool = False,
+        spike_threshold_pct: float = 15.0,
+        volume_anomaly_std: float = 3.0,
     ):
         """
         Initialize data manager.
@@ -40,14 +57,29 @@ class HistoricalDataManager:
         Args:
             fetcher: Historical data fetcher
             cache_dir: Directory for cache storage
+            validate_quality: Whether to run quality checks on fetched data
+            reject_on_quality_failure: If True, reject data that fails quality checks
+            spike_threshold_pct: Price change threshold for spike detection
+            volume_anomaly_std: Standard deviations for volume anomaly detection
         """
         self.fetcher = fetcher
         self.cache_dir = Path(cache_dir)
         self.cache_dir.mkdir(parents=True, exist_ok=True)
 
+        # Quality validation settings
+        self.validate_quality = validate_quality
+        self.reject_on_quality_failure = reject_on_quality_failure
+        self._quality_checker = DataQualityChecker(
+            spike_threshold_pct=spike_threshold_pct,
+            volume_anomaly_std=volume_anomaly_std,
+        )
+
         # Cache metadata {symbol: {granularity: [(start, end)]}}
         self._coverage_index: dict[str, dict[str, list[tuple[datetime, datetime]]]] = {}
         self._load_coverage_index()
+
+        # Track recent quality reports
+        self._recent_quality_reports: dict[str, CandleQualityReport] = {}
 
     async def get_candles(
         self,
@@ -100,7 +132,99 @@ class HistoricalDataManager:
         # Filter to requested range
         all_candles = [c for c in all_candles if start <= c.ts < end]
 
+        # Run quality validation if enabled
+        if self.validate_quality and all_candles:
+            report = self._validate_candles(symbol, granularity, all_candles)
+            self._recent_quality_reports[f"{symbol}:{granularity}"] = report
+
+            if not report.is_acceptable and self.reject_on_quality_failure:
+                logger.error(
+                    "Data quality check failed - rejecting data",
+                    symbol=symbol,
+                    granularity=granularity,
+                    score=report.overall_score,
+                    gaps=len(report.gaps_detected),
+                    spikes=len(report.spikes_detected),
+                    volume_anomalies=len(report.volume_anomalies),
+                    operation="get_candles",
+                )
+                return []
+
         return all_candles
+
+    def _validate_candles(
+        self,
+        symbol: str,
+        granularity: str,
+        candles: list[Candle],
+    ) -> CandleQualityReport:
+        """
+        Validate candle data quality and log any issues.
+
+        Args:
+            symbol: Trading pair symbol
+            granularity: Candle granularity
+            candles: List of candles to validate
+
+        Returns:
+            CandleQualityReport with detected issues
+        """
+        expected_interval = GRANULARITY_TO_TIMEDELTA.get(granularity, timedelta(hours=1))
+
+        report = self._quality_checker.check_candles(candles, expected_interval)
+
+        # Log issues if any detected
+        if report.has_issues:
+            for issue in report.gaps_detected:
+                log_func = logger.error if issue.severity == "error" else logger.warning
+                log_func(
+                    issue.description,
+                    issue_type=issue.issue_type,
+                    symbol=symbol,
+                    granularity=granularity,
+                    timestamp=issue.timestamp.isoformat(),
+                    operation="validate_candles",
+                    **issue.details,
+                )
+
+            for issue in report.spikes_detected:
+                log_func = logger.error if issue.severity == "error" else logger.warning
+                log_func(
+                    issue.description,
+                    issue_type=issue.issue_type,
+                    symbol=symbol,
+                    granularity=granularity,
+                    timestamp=issue.timestamp.isoformat(),
+                    operation="validate_candles",
+                    **issue.details,
+                )
+
+            for issue in report.volume_anomalies:
+                log_func = logger.error if issue.severity == "error" else logger.warning
+                log_func(
+                    issue.description,
+                    issue_type=issue.issue_type,
+                    symbol=symbol,
+                    granularity=granularity,
+                    timestamp=issue.timestamp.isoformat(),
+                    operation="validate_candles",
+                    **issue.details,
+                )
+
+        return report
+
+    def get_quality_report(self, symbol: str, granularity: str) -> CandleQualityReport | None:
+        """
+        Get the most recent quality report for a symbol/granularity.
+
+        Args:
+            symbol: Trading pair symbol
+            granularity: Candle granularity
+
+        Returns:
+            Most recent CandleQualityReport or None if not available
+        """
+        return self._recent_quality_reports.get(f"{symbol}:{granularity}")
 
     def _get_cache_path(self, symbol: str, granularity: str) -> Path:
         """Get cache file path for symbol and granularity."""
@@ -304,3 +428,67 @@ class HistoricalDataManager:
 
         with open(index_path, "w") as f:
             json.dump(data, f, indent=2)
+
+
+def create_coinbase_data_provider(
+    client: "CoinbaseClient",
+    cache_dir: Path | str | None = None,
+    rate_limit_rps: int = 10,
+    validate_quality: bool = True,
+    reject_on_quality_failure: bool = False,
+    spike_threshold_pct: float = 15.0,
+    volume_anomaly_std: float = 3.0,
+) -> HistoricalDataManager:
+    """
+    Factory function to create a HistoricalDataManager with Coinbase fetcher.
+
+    This is the primary way to get an IHistoricalDataProvider for backtesting.
+
+    Args:
+        client: Coinbase API client
+        cache_dir: Directory for cache storage. Defaults to ~/.gpt_trader/cache/candles
+        rate_limit_rps: Rate limit for Coinbase API (requests per second)
+        validate_quality: Whether to run quality checks on fetched data
+        reject_on_quality_failure: If True, reject data that fails quality checks
+        spike_threshold_pct: Price change threshold for spike detection (default 15%)
+        volume_anomaly_std: Standard deviations for volume anomaly detection
+
+    Returns:
+        Configured HistoricalDataManager instance
+
+    Example:
+        ```python
+        from gpt_trader.features.brokerages.coinbase.client import CoinbaseClient
+        from gpt_trader.backtesting.data.manager import create_coinbase_data_provider
+        from gpt_trader.backtesting.engine.bar_runner import ClockedBarRunner
+
+        client = CoinbaseClient(api_key=..., api_secret=...)
+        data_provider = create_coinbase_data_provider(client)
+
+        runner = ClockedBarRunner(
+            data_provider=data_provider,
+            symbols=["BTC-USD"],
+            granularity="FIVE_MINUTE",
+            start_date=...,
+            end_date=...,
+        )
+        ```
+    """
+    if cache_dir is None:
+        cache_dir = Path.home() / ".gpt_trader" / "cache" / "candles"
+    else:
+        cache_dir = Path(cache_dir)
+
+    fetcher = CoinbaseHistoricalFetcher(
+        client=client,
+        rate_limit_rps=rate_limit_rps,
+    )
+
+    return HistoricalDataManager(
+        fetcher=fetcher,
+        cache_dir=cache_dir,
+        validate_quality=validate_quality,
+        reject_on_quality_failure=reject_on_quality_failure,
+        spike_threshold_pct=spike_threshold_pct,
+        volume_anomaly_std=volume_anomaly_std,
+    )

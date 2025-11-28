@@ -7,6 +7,8 @@ from datetime import datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
+from gpt_trader.backtesting.types import CompletedTrade, TradeOutcome
+
 if TYPE_CHECKING:
     from gpt_trader.backtesting.simulation.broker import SimulatedBroker
     from gpt_trader.features.brokerages.core.interfaces import Order
@@ -70,15 +72,26 @@ def calculate_trade_statistics(broker: SimulatedBroker) -> TradeStatistics:
     Returns:
         TradeStatistics with all computed metrics
     """
+    # Get completed trades for accurate PnL calculation
+    completed_trades = broker.get_completed_trades()
+
     # Get all filled orders
     filled_orders = list(broker._filled_orders.values())
     cancelled_orders = list(broker._cancelled_orders.values())
 
-    # Basic counts
-    total_trades = broker._total_trades
-    winning_trades = broker._winning_trades
-    losing_trades = broker._losing_trades
-    breakeven_trades = total_trades - winning_trades - losing_trades
+    # Use completed trades if available, otherwise fall back to broker counters
+    # (for backwards compatibility with tests that mock broker state directly)
+    if completed_trades:
+        total_trades = len(completed_trades)
+        winning_trades = sum(1 for t in completed_trades if t.outcome == TradeOutcome.WIN)
+        losing_trades = sum(1 for t in completed_trades if t.outcome == TradeOutcome.LOSS)
+        breakeven_trades = sum(1 for t in completed_trades if t.outcome == TradeOutcome.BREAKEVEN)
+    else:
+        # Fall back to broker counters
+        total_trades = broker._total_trades
+        winning_trades = broker._winning_trades
+        losing_trades = broker._losing_trades
+        breakeven_trades = total_trades - winning_trades - losing_trades
 
     # Win/loss rates
     win_rate = (
@@ -88,8 +101,11 @@ def calculate_trade_statistics(broker: SimulatedBroker) -> TradeStatistics:
         Decimal(losing_trades) / Decimal(total_trades) * 100 if total_trades > 0 else Decimal("0")
     )
 
-    # Calculate PnL metrics from order history
-    pnl_data = _calculate_pnl_metrics(filled_orders)
+    # Calculate PnL metrics from completed trades (accurate) or fallback to legacy
+    if completed_trades:
+        pnl_data = _calculate_pnl_metrics_from_trades(completed_trades)
+    else:
+        pnl_data = _calculate_pnl_metrics(filled_orders)
 
     # Profit factor
     profit_factor = (
@@ -107,8 +123,11 @@ def calculate_trade_statistics(broker: SimulatedBroker) -> TradeStatistics:
         pnl_data["gross_loss"] / Decimal(losing_trades) if losing_trades > 0 else Decimal("0")
     )
 
-    # Position metrics
-    position_data = _calculate_position_metrics(filled_orders, broker)
+    # Position metrics from completed trades or fallback to legacy
+    if completed_trades:
+        position_data = _calculate_position_metrics_from_trades(completed_trades, broker)
+    else:
+        position_data = _calculate_position_metrics(filled_orders, broker)
 
     # Execution quality
     limit_filled = sum(1 for o in filled_orders if o.type.value == "LIMIT")
@@ -121,12 +140,22 @@ def calculate_trade_statistics(broker: SimulatedBroker) -> TradeStatistics:
     )
 
     avg_slippage = (
-        broker._total_slippage_bps / Decimal(total_trades) if total_trades > 0 else Decimal("0")
+        broker._total_slippage_bps / Decimal(broker._total_trades)
+        if broker._total_trades > 0
+        else Decimal("0")
     )
 
-    # Hold time and streaks
-    timing_data = _calculate_timing_metrics(filled_orders)
-    streak_data = _calculate_streak_metrics(filled_orders)
+    # Hold time from completed trades (accurate) or fallback to legacy
+    if completed_trades:
+        timing_data = _calculate_timing_metrics_from_trades(completed_trades)
+    else:
+        timing_data = _calculate_timing_metrics(filled_orders)
+
+    # Streak analysis from completed trades (accurate) or fallback to legacy
+    if completed_trades:
+        streak_data = _calculate_streak_metrics_from_trades(completed_trades)
+    else:
+        streak_data = _calculate_streak_metrics(filled_orders)
 
     return TradeStatistics(
         total_trades=total_trades,
@@ -271,4 +300,189 @@ def _calculate_streak_metrics(orders: list[Order]) -> dict[str, int]:
         "max_wins": 0,
         "max_losses": 0,
         "current": 0,
+    }
+
+
+# =============================================================================
+# New functions using CompletedTrade for accurate metrics
+# =============================================================================
+
+
+def _calculate_pnl_metrics_from_trades(trades: list[CompletedTrade]) -> dict[str, Decimal]:
+    """
+    Calculate accurate PnL metrics from completed trades.
+
+    Args:
+        trades: List of CompletedTrade objects
+
+    Returns:
+        Dictionary with PnL metrics:
+        - total_pnl: Net PnL after fees
+        - gross_profit: Sum of winning trades (before fees)
+        - gross_loss: Sum of losing trades (before fees, negative)
+        - largest_win: Largest winning net PnL
+        - largest_loss: Largest losing net PnL (negative)
+    """
+    if not trades:
+        return {
+            "total_pnl": Decimal("0"),
+            "gross_profit": Decimal("0"),
+            "gross_loss": Decimal("0"),
+            "largest_win": Decimal("0"),
+            "largest_loss": Decimal("0"),
+        }
+
+    total_pnl = Decimal("0")
+    gross_profit = Decimal("0")
+    gross_loss = Decimal("0")
+    largest_win = Decimal("0")
+    largest_loss = Decimal("0")
+
+    for trade in trades:
+        total_pnl += trade.net_pnl
+
+        if trade.outcome == TradeOutcome.WIN:
+            gross_profit += trade.realized_pnl
+            if trade.net_pnl > largest_win:
+                largest_win = trade.net_pnl
+        elif trade.outcome == TradeOutcome.LOSS:
+            gross_loss += trade.realized_pnl  # Will be negative
+            if trade.net_pnl < largest_loss:
+                largest_loss = trade.net_pnl
+
+    return {
+        "total_pnl": total_pnl,
+        "gross_profit": gross_profit,
+        "gross_loss": gross_loss,
+        "largest_win": largest_win,
+        "largest_loss": largest_loss,
+    }
+
+
+def _calculate_position_metrics_from_trades(
+    trades: list[CompletedTrade],
+    broker: SimulatedBroker,
+) -> dict[str, Decimal]:
+    """
+    Calculate position size and leverage metrics from completed trades.
+
+    Args:
+        trades: List of CompletedTrade objects
+        broker: SimulatedBroker for additional context
+
+    Returns:
+        Dictionary with position metrics
+    """
+    if not trades:
+        return {
+            "avg_size": Decimal("0"),
+            "max_size": Decimal("0"),
+            "avg_leverage": Decimal("1"),
+            "max_leverage": Decimal("1"),
+        }
+
+    position_sizes: list[Decimal] = []
+    leverages: list[int] = []
+
+    for trade in trades:
+        # Calculate notional value (position size in USD)
+        notional = trade.quantity * trade.entry_price
+        position_sizes.append(notional)
+
+        # Try to get leverage from current position or default to 1
+        pos = broker.positions.get(trade.symbol)
+        leverage = pos.leverage if pos and pos.leverage else 1
+        leverages.append(leverage)
+
+    avg_size = (
+        sum(position_sizes, Decimal("0")) / len(position_sizes) if position_sizes else Decimal("0")
+    )
+    max_size = max(position_sizes) if position_sizes else Decimal("0")
+    avg_leverage = (
+        Decimal(str(sum(leverages))) / Decimal(str(len(leverages))) if leverages else Decimal("1")
+    )
+    max_leverage = Decimal(str(max(leverages))) if leverages else Decimal("1")
+
+    return {
+        "avg_size": avg_size,
+        "max_size": max_size,
+        "avg_leverage": avg_leverage,
+        "max_leverage": max_leverage,
+    }
+
+
+def _calculate_timing_metrics_from_trades(trades: list[CompletedTrade]) -> dict[str, Decimal]:
+    """
+    Calculate hold time metrics from completed trades.
+
+    Args:
+        trades: List of CompletedTrade objects
+
+    Returns:
+        Dictionary with timing metrics:
+        - avg_hold: Average hold time in minutes
+        - max_hold: Maximum hold time in minutes
+    """
+    if not trades:
+        return {"avg_hold": Decimal("0"), "max_hold": Decimal("0")}
+
+    hold_times_minutes = [Decimal(str(trade.hold_time_seconds)) / Decimal("60") for trade in trades]
+
+    if not hold_times_minutes:
+        return {"avg_hold": Decimal("0"), "max_hold": Decimal("0")}
+
+    avg_hold = sum(hold_times_minutes, Decimal("0")) / Decimal(len(hold_times_minutes))
+    max_hold = max(hold_times_minutes)
+
+    return {"avg_hold": avg_hold, "max_hold": max_hold}
+
+
+def _calculate_streak_metrics_from_trades(trades: list[CompletedTrade]) -> dict[str, int]:
+    """
+    Calculate win/loss streak metrics from completed trades.
+
+    Args:
+        trades: List of CompletedTrade objects sorted by exit time
+
+    Returns:
+        Dictionary with streak metrics:
+        - max_wins: Maximum consecutive winning trades
+        - max_losses: Maximum consecutive losing trades
+        - current: Current streak (positive = wins, negative = losses)
+    """
+    if not trades:
+        return {"max_wins": 0, "max_losses": 0, "current": 0}
+
+    # Sort trades by exit time for accurate streak calculation
+    sorted_trades = sorted(trades, key=lambda t: t.exit_time)
+
+    max_wins = 0
+    max_losses = 0
+    current_win_streak = 0
+    current_loss_streak = 0
+    current_streak = 0
+
+    for trade in sorted_trades:
+        if trade.outcome == TradeOutcome.WIN:
+            current_win_streak += 1
+            current_loss_streak = 0
+            current_streak = current_win_streak
+            if current_win_streak > max_wins:
+                max_wins = current_win_streak
+        elif trade.outcome == TradeOutcome.LOSS:
+            current_loss_streak += 1
+            current_win_streak = 0
+            current_streak = -current_loss_streak
+            if current_loss_streak > max_losses:
+                max_losses = current_loss_streak
+        else:  # BREAKEVEN
+            # Breakeven doesn't affect streaks but resets them
+            current_win_streak = 0
+            current_loss_streak = 0
+            current_streak = 0
+
+    return {
+        "max_wins": max_wins,
+        "max_losses": max_losses,
+        "current": current_streak,
     }

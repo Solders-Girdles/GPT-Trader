@@ -1,5 +1,6 @@
 """Bar-by-bar runner for backtesting simulations."""
 
+from abc import ABC, abstractmethod
 from collections.abc import AsyncIterator, Callable
 from datetime import datetime, timedelta
 from decimal import Decimal
@@ -225,15 +226,15 @@ class ClockedBarRunner:
         return int(remaining_duration.total_seconds() / bar_duration)
 
 
-# Historical data provider interface (to be implemented)
-class IHistoricalDataProvider:
+class IHistoricalDataProvider(ABC):
     """
-    Interface for historical data provider.
+    Abstract interface for historical data providers.
 
     This is implemented by HistoricalDataManager which fetches from
-    cache or API.
+    cache or Coinbase API.
     """
 
+    @abstractmethod
     async def get_candles(
         self,
         symbol: str,
@@ -241,5 +242,16 @@ class IHistoricalDataProvider:
         start: datetime,
         end: datetime,
     ) -> list[Candle]:
-        """Fetch candles for symbol in time range."""
-        raise NotImplementedError
+        """
+        Fetch candles for symbol in time range.
+
+        Args:
+            symbol: Trading pair (e.g., "BTC-USD", "ETH-PERP-USDC")
+            granularity: Candle granularity (e.g., "ONE_MINUTE", "FIVE_MINUTE")
+            start: Start time (inclusive)
+            end: End time (exclusive)
+
+        Returns:
+            List of candles sorted by timestamp
+        """
+        ...

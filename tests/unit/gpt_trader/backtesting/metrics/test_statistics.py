@@ -256,6 +256,8 @@ class TestCalculateTradeStatistics:
         broker._total_slippage_bps = Decimal("10")
         broker._total_fees_paid = Decimal("50")
         broker.positions = {}
+        # Return empty list for completed trades to use legacy fallback path
+        broker.get_completed_trades.return_value = []
         return broker
 
     def test_calculates_win_rate(self) -> None:

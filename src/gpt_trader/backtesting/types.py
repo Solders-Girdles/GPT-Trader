@@ -208,10 +208,115 @@ class ChaosScenario:
     network_latency_ms: int = 0
 
 
-@dataclass
 class PortfolioType(Enum):
     """Portfolio type for transfers."""
 
     SPOT = "spot"
     FUTURES = "futures"
     PERPS = "perps"
+
+
+class TradeSide(Enum):
+    """Side of a trade position."""
+
+    LONG = "long"
+    SHORT = "short"
+
+
+class TradeOutcome(Enum):
+    """Outcome of a completed trade."""
+
+    WIN = "win"
+    LOSS = "loss"
+    BREAKEVEN = "breakeven"
+
+
+@dataclass
+class CompletedTrade:
+    """
+    Represents a completed round-trip trade.
+
+    This tracks a position from entry to exit, including all
+    relevant PnL calculations and timing information.
+    """
+
+    trade_id: str
+    symbol: str
+    side: TradeSide
+    entry_time: datetime
+    entry_price: Decimal
+    exit_time: datetime
+    exit_price: Decimal
+    quantity: Decimal
+    realized_pnl: Decimal  # Before fees
+    fees_paid: Decimal
+    net_pnl: Decimal  # realized_pnl - fees_paid
+    outcome: TradeOutcome
+    hold_time_seconds: int
+
+    @classmethod
+    def from_position_close(
+        cls,
+        trade_id: str,
+        symbol: str,
+        side: str,
+        entry_time: datetime,
+        entry_price: Decimal,
+        exit_time: datetime,
+        exit_price: Decimal,
+        quantity: Decimal,
+        fees_paid: Decimal,
+    ) -> "CompletedTrade":
+        """
+        Create a CompletedTrade from position close data.
+
+        Args:
+            trade_id: Unique trade identifier
+            symbol: Trading pair symbol
+            side: "long" or "short"
+            entry_time: Time position was opened
+            entry_price: Entry price
+            exit_time: Time position was closed
+            exit_price: Exit price
+            quantity: Position size
+            fees_paid: Total fees for entry and exit
+
+        Returns:
+            CompletedTrade with calculated PnL and outcome
+        """
+        # Calculate realized PnL
+        if side == "long":
+            realized_pnl = (exit_price - entry_price) * quantity
+        else:
+            realized_pnl = (entry_price - exit_price) * quantity
+
+        # Calculate net PnL after fees
+        net_pnl = realized_pnl - fees_paid
+
+        # Determine outcome
+        if net_pnl > 0:
+            outcome = TradeOutcome.WIN
+        elif net_pnl < 0:
+            outcome = TradeOutcome.LOSS
+        else:
+            outcome = TradeOutcome.BREAKEVEN
+
+        # Calculate hold time
+        hold_time = exit_time - entry_time
+        hold_time_seconds = int(hold_time.total_seconds())
+
+        return cls(
+            trade_id=trade_id,
+            symbol=symbol,
+            side=TradeSide.LONG if side == "long" else TradeSide.SHORT,
+            entry_time=entry_time,
+            entry_price=entry_price,
+            exit_time=exit_time,
+            exit_price=exit_price,
+            quantity=quantity,
+            realized_pnl=realized_pnl,
+            fees_paid=fees_paid,
+            net_pnl=net_pnl,
+            outcome=outcome,
+            hold_time_seconds=hold_time_seconds,
+        )

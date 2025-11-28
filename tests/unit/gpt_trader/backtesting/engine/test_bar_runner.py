@@ -456,14 +456,7 @@ class TestBarRunnerRun:
 class TestIHistoricalDataProvider:
     """Tests for the IHistoricalDataProvider interface."""
 
-    @pytest.mark.asyncio
-    async def test_interface_raises_not_implemented(self) -> None:
-        provider = IHistoricalDataProvider()
-
-        with pytest.raises(NotImplementedError):
-            await provider.get_candles(
-                symbol="BTC-USD",
-                granularity="ONE_HOUR",
-                start=datetime(2024, 1, 1),
-                end=datetime(2024, 1, 2),
-            )
+    def test_interface_cannot_be_instantiated(self) -> None:
+        """Verify that IHistoricalDataProvider is an abstract base class."""
+        with pytest.raises(TypeError, match="Can't instantiate abstract class"):
+            IHistoricalDataProvider()  # type: ignore[abstract]

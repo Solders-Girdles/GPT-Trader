@@ -15,7 +15,7 @@ from typing import Any
 from gpt_trader.backtesting.simulation.fee_calculator import FeeCalculator
 from gpt_trader.backtesting.simulation.fill_model import FillResult, OrderFillModel
 from gpt_trader.backtesting.simulation.funding_tracker import FundingPnLTracker
-from gpt_trader.backtesting.types import FeeTier, SimulationConfig
+from gpt_trader.backtesting.types import CompletedTrade, FeeTier, SimulationConfig
 from gpt_trader.features.brokerages.core.interfaces import (
     Balance,
     Candle,
@@ -115,6 +115,11 @@ class SimulatedBroker:
         self._winning_trades = 0
         self._losing_trades = 0
         self._total_slippage_bps = Decimal("0")
+
+        # Trade history tracking
+        self._completed_trades: list[CompletedTrade] = []
+        self._position_entry_times: dict[str, datetime] = {}
+        self._position_entry_fees: dict[str, Decimal] = {}
 
         # Connection state
         self.connected = False
@@ -438,6 +443,13 @@ class SimulatedBroker:
         fee = self._fee_calculator.calculate(notional, is_maker=fill.is_maker)
         self._total_fees_paid += fee
 
+        # Track fees for completed trade calculation
+        symbol = order.symbol
+        if symbol in self._position_entry_fees:
+            self._position_entry_fees[symbol] += fee
+        else:
+            self._position_entry_fees[symbol] = fee
+
         # Update balance for fee
         self._deduct_fee(fee)
 
@@ -491,6 +503,11 @@ class SimulatedBroker:
                 side=side,
                 leverage=leverage,
             )
+
+            # Record entry time and reset entry fees for trade tracking
+            if self._simulation_time is not None:
+                self._position_entry_times[symbol] = self._simulation_time
+            self._position_entry_fees[symbol] = Decimal("0")
 
             # Lock margin
             self._lock_margin(quantity * fill_price, leverage)
@@ -558,8 +575,32 @@ class SimulatedBroker:
             # Credit realized PnL to balance
             self._credit_pnl(realized_pnl)
 
+            # Calculate fees for this trade (proportional for partial close)
+            total_fees = self._position_entry_fees.get(symbol, Decimal("0"))
+            close_ratio = close_quantity / old_quantity if old_quantity > 0 else Decimal("1")
+            trade_fees = total_fees * close_ratio
+
+            # Record completed trade
+            entry_time = self._position_entry_times.get(symbol)
+            exit_time = self._simulation_time
+            if entry_time and exit_time:
+                completed_trade = CompletedTrade.from_position_close(
+                    trade_id=str(uuid.uuid4())[:12],
+                    symbol=symbol,
+                    side=position.side,
+                    entry_time=entry_time,
+                    entry_price=old_entry,
+                    exit_time=exit_time,
+                    exit_price=fill_price,
+                    quantity=close_quantity,
+                    fees_paid=trade_fees,
+                )
+                self._completed_trades.append(completed_trade)
+
             if remaining_quantity > Decimal("0"):
-                # Partial close
+                # Partial close - update remaining fees
+                self._position_entry_fees[symbol] = total_fees - trade_fees
+
                 signed_quantity = remaining_quantity if is_long else -remaining_quantity
 
                 self.positions[symbol] = Position(
@@ -573,7 +614,9 @@ class SimulatedBroker:
                     leverage=position.leverage,
                 )
             else:
-                # Full close
+                # Full close - clean up tracking data
+                self._position_entry_times.pop(symbol, None)
+                self._position_entry_fees.pop(symbol, None)
                 del self.positions[symbol]
 
                 # Check if order flips position
@@ -593,6 +636,11 @@ class SimulatedBroker:
                         leverage=leverage,
                     )
                     self._lock_margin(flip_quantity * fill_price, leverage)
+
+                    # New position starts fresh entry tracking
+                    if self._simulation_time is not None:
+                        self._position_entry_times[symbol] = self._simulation_time
+                    self._position_entry_fees[symbol] = Decimal("0")
 
     def _lock_margin(self, notional: Decimal, leverage: int | None) -> None:
         """Lock margin for a position."""
@@ -935,6 +983,10 @@ class SimulatedBroker:
         """Get the equity curve time series."""
         return self._equity_curve.copy()
 
+    def get_completed_trades(self) -> list[CompletedTrade]:
+        """Get all completed trades from the simulation."""
+        return self._completed_trades.copy()
+
     def reset(self) -> None:
         """Reset broker to initial state."""
         # Preserve settings
@@ -991,6 +1043,11 @@ class SimulatedBroker:
         self._winning_trades = 0
         self._losing_trades = 0
         self._total_slippage_bps = Decimal("0")
+
+        # Reset trade history tracking
+        self._completed_trades = []
+        self._position_entry_times = {}
+        self._position_entry_fees = {}
 
         # Reset connection state
         self.connected = False

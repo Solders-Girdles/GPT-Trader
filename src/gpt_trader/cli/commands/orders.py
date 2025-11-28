@@ -10,6 +10,7 @@ from decimal import Decimal
 from typing import Any, Protocol, cast, runtime_checkable
 
 from gpt_trader.cli import options, services
+from gpt_trader.cli.response import CliErrorCode, CliResponse
 from gpt_trader.features.brokerages.core.interfaces import OrderSide, OrderType, TimeInForce
 
 _CONFIG_SKIP_KEYS = {
@@ -37,7 +38,8 @@ def register(subparsers: Any) -> None:
     preview = orders_subparsers.add_parser("preview", help="Preview a new order and exit")
     options.add_profile_option(preview)
     options.add_order_arguments(preview)
-    preview.set_defaults(handler=_handle_preview)
+    options.add_output_options(preview, include_quiet=False)
+    preview.set_defaults(handler=_handle_preview, subcommand="preview")
 
     edit_preview = orders_subparsers.add_parser(
         "edit-preview", help="Preview edits for an existing order"
@@ -45,7 +47,8 @@ def register(subparsers: Any) -> None:
     options.add_profile_option(edit_preview)
     edit_preview.add_argument("--order-id", required=True, help="Order identifier to edit")
     options.add_order_arguments(edit_preview)
-    edit_preview.set_defaults(handler=_handle_edit_preview)
+    options.add_output_options(edit_preview, include_quiet=False)
+    edit_preview.set_defaults(handler=_handle_edit_preview, subcommand="edit-preview")
 
     apply_edit = orders_subparsers.add_parser(
         "apply-edit", help="Apply a previously previewed order edit"
@@ -53,55 +56,139 @@ def register(subparsers: Any) -> None:
     options.add_profile_option(apply_edit)
     apply_edit.add_argument("--order-id", required=True, help="Order identifier")
     apply_edit.add_argument("--preview-id", required=True, help="Preview identifier to apply")
-    apply_edit.set_defaults(handler=_handle_apply_edit)
+    options.add_output_options(apply_edit, include_quiet=False)
+    apply_edit.set_defaults(handler=_handle_apply_edit, subcommand="apply-edit")
 
 
-def _handle_preview(args: Namespace) -> int:
-    config = services.build_config_from_args(args, skip=_CONFIG_SKIP_KEYS)
-    bot = services.instantiate_bot(config)
+def _handle_preview(args: Namespace) -> CliResponse | int:
+    output_format = getattr(args, "output_format", "text")
+    command_name = "orders preview"
+
+    try:
+        config = services.build_config_from_args(args, skip=_CONFIG_SKIP_KEYS)
+        bot = services.instantiate_bot(config)
+    except Exception as e:
+        if output_format == "json":
+            return CliResponse.error_response(
+                command=command_name,
+                code=CliErrorCode.CONFIG_INVALID,
+                message=f"Failed to initialize: {e}",
+            )
+        raise
+
     broker = bot.broker
     if not isinstance(broker, OrderPreviewBroker):
+        if output_format == "json":
+            return CliResponse.error_response(
+                command=command_name,
+                code=CliErrorCode.OPERATION_FAILED,
+                message="Broker does not support order previews",
+            )
         raise RuntimeError("Broker does not support order previews")
+
     preview_broker = cast(OrderPreviewBroker, broker)
     try:
         payload = _build_order_payload(args)
         result = preview_broker.preview_order(**payload)
+
+        if output_format == "json":
+            return CliResponse.success_response(
+                command=command_name,
+                data=result,
+                was_noop=True,  # Preview is a no-op
+            )
+
         print(json.dumps(result, indent=2, default=str))
+        return 0
     finally:
         asyncio.run(bot.shutdown())
-    return 0
 
 
-def _handle_edit_preview(args: Namespace) -> int:
-    config = services.build_config_from_args(args, skip=_CONFIG_SKIP_KEYS)
-    bot = services.instantiate_bot(config)
+def _handle_edit_preview(args: Namespace) -> CliResponse | int:
+    output_format = getattr(args, "output_format", "text")
+    command_name = "orders edit-preview"
+
+    try:
+        config = services.build_config_from_args(args, skip=_CONFIG_SKIP_KEYS)
+        bot = services.instantiate_bot(config)
+    except Exception as e:
+        if output_format == "json":
+            return CliResponse.error_response(
+                command=command_name,
+                code=CliErrorCode.CONFIG_INVALID,
+                message=f"Failed to initialize: {e}",
+            )
+        raise
+
     broker = bot.broker
     if not isinstance(broker, OrderPreviewBroker):
+        if output_format == "json":
+            return CliResponse.error_response(
+                command=command_name,
+                code=CliErrorCode.OPERATION_FAILED,
+                message="Broker does not support order edit previews",
+            )
         raise RuntimeError("Broker does not support order edit previews")
+
     preview_broker = cast(OrderPreviewBroker, broker)
     try:
         payload = _build_order_payload(args)
         result = preview_broker.edit_order_preview(order_id=args.order_id, **payload)
+
+        if output_format == "json":
+            return CliResponse.success_response(
+                command=command_name,
+                data=result,
+                was_noop=True,
+            )
+
         print(json.dumps(result, indent=2, default=str))
+        return 0
     finally:
         asyncio.run(bot.shutdown())
-    return 0
 
 
-def _handle_apply_edit(args: Namespace) -> int:
-    config = services.build_config_from_args(args, skip=_CONFIG_SKIP_KEYS)
-    bot = services.instantiate_bot(config)
+def _handle_apply_edit(args: Namespace) -> CliResponse | int:
+    output_format = getattr(args, "output_format", "text")
+    command_name = "orders apply-edit"
+
+    try:
+        config = services.build_config_from_args(args, skip=_CONFIG_SKIP_KEYS)
+        bot = services.instantiate_bot(config)
+    except Exception as e:
+        if output_format == "json":
+            return CliResponse.error_response(
+                command=command_name,
+                code=CliErrorCode.CONFIG_INVALID,
+                message=f"Failed to initialize: {e}",
+            )
+        raise
+
     broker = bot.broker
     if not isinstance(broker, OrderPreviewBroker):
+        if output_format == "json":
+            return CliResponse.error_response(
+                command=command_name,
+                code=CliErrorCode.OPERATION_FAILED,
+                message="Broker does not support order edit application",
+            )
         raise RuntimeError("Broker does not support order edit application")
+
     preview_broker = cast(OrderPreviewBroker, broker)
     try:
         order = preview_broker.edit_order(args.order_id, args.preview_id)
         data = asdict(order) if hasattr(order, "__dataclass_fields__") else order
+
+        if output_format == "json":
+            return CliResponse.success_response(
+                command=command_name,
+                data=data,
+            )
+
         print(json.dumps(data, indent=2, default=str))
+        return 0
     finally:
         asyncio.run(bot.shutdown())
-    return 0
 
 
 def _build_order_payload(args: Namespace) -> dict[str, object]:

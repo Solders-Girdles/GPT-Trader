@@ -3,8 +3,40 @@
 from __future__ import annotations
 
 from argparse import ArgumentParser
+from pathlib import Path
 
 PROFILE_CHOICES = ["dev", "demo", "prod", "canary", "spot"]
+OUTPUT_FORMAT_CHOICES = ["text", "json"]
+
+
+def add_output_options(parser: ArgumentParser, include_quiet: bool = True) -> None:
+    """Add standard output format options for AI agent compatibility.
+
+    Args:
+        parser: ArgumentParser to add options to
+        include_quiet: Whether to include --quiet option
+    """
+    parser.add_argument(
+        "--format",
+        dest="output_format",
+        type=str,
+        choices=OUTPUT_FORMAT_CHOICES,
+        default="text",
+        help="Output format: text for human-readable, json for machine-readable",
+    )
+    if include_quiet:
+        parser.add_argument(
+            "--quiet",
+            "-q",
+            action="store_true",
+            help="Suppress informational output (only show results/errors)",
+        )
+    parser.add_argument(
+        "--output",
+        "-o",
+        type=Path,
+        help="Write output to file instead of stdout",
+    )
 
 # Keys that can be forwarded as BotConfig overrides for the run command.
 RUNTIME_CONFIG_KEYS = {

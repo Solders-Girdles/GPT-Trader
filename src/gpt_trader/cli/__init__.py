@@ -5,7 +5,10 @@ from __future__ import annotations
 import argparse
 import logging
 import sys
+import traceback
 from collections.abc import Sequence
+from pathlib import Path
+from typing import Any
 
 from dotenv import load_dotenv
 
@@ -23,12 +26,13 @@ configure_logging(settings=RUNTIME_SETTINGS)
 logger = get_logger(__name__, component="cli")
 
 from . import services as _cli_services  # noqa: E402
+from .response import CliErrorCode, CliResponse, format_response  # noqa: E402
 
 _cli_services.OVERRIDE_SETTINGS = RUNTIME_SETTINGS
 
-from gpt_trader.cli.commands import account, orders, report, run, treasury  # noqa: E402
+from gpt_trader.cli.commands import account, optimize, orders, report, run, treasury  # noqa: E402
 
-COMMAND_NAMES = {"run", "account", "orders", "treasury", "report"}
+COMMAND_NAMES = {"run", "account", "orders", "treasury", "report", "optimize"}
 __all__ = ["main", "RUNTIME_SETTINGS"]
 
 
@@ -38,11 +42,107 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = parser.parse_args(normalized)
     _maybe_enable_debug_logging()
 
+    # Determine output format from args (may not be set by all commands yet)
+    output_format = getattr(args, "output_format", "text")
+    output_file: Path | None = getattr(args, "output", None)
+    command_name = _get_command_name(args)
+
     handler = getattr(args, "handler", None)
     if handler is None:
         parser.error("No command handler configured.")
-    result = handler(args)
-    return int(result) if result is not None else 0
+
+    # Execute command with error handling
+    try:
+        result = handler(args)
+        exit_code = _handle_result(result, output_format, output_file, command_name)
+    except Exception as e:
+        exit_code = _handle_exception(e, output_format, output_file, command_name)
+
+    return exit_code
+
+
+def _handle_result(
+    result: Any, output_format: str, output_file: Path | None, command_name: str
+) -> int:
+    """Process command result based on type and output format.
+
+    Args:
+        result: Command result (CliResponse, int, or None)
+        output_format: "text" or "json"
+        output_file: Optional file to write output to
+        command_name: Command name for envelope
+
+    Returns:
+        Exit code
+    """
+    if isinstance(result, CliResponse):
+        # New-style response - format according to output_format
+        output = format_response(result, output_format)
+        _write_output(output, output_file)
+        return result.exit_code
+    elif isinstance(result, int):
+        # Legacy int return - wrap in envelope for JSON mode
+        if output_format == "json":
+            response = CliResponse(
+                success=result == 0,
+                command=command_name,
+                exit_code=result,
+            )
+            _write_output(response.to_json(), output_file)
+        # Text mode: command already printed output
+        return result
+    else:
+        # None or unexpected return
+        if output_format == "json":
+            response = CliResponse.success_response(command_name)
+            _write_output(response.to_json(), output_file)
+        return 0
+
+
+def _handle_exception(
+    error: Exception, output_format: str, output_file: Path | None, command_name: str
+) -> int:
+    """Handle unexpected exceptions with structured error output.
+
+    Args:
+        error: The exception that occurred
+        output_format: "text" or "json"
+        output_file: Optional file to write output to
+        command_name: Command name for envelope
+
+    Returns:
+        Exit code (always 1)
+    """
+    logger.exception("Command failed with exception")
+
+    if output_format == "json":
+        response = CliResponse.error_response(
+            command=command_name,
+            code=CliErrorCode.INTERNAL_ERROR,
+            message=str(error),
+            details={"exception_type": type(error).__name__},
+        )
+        _write_output(response.to_json(), output_file)
+    else:
+        print(f"Error: {error}", file=sys.stderr)
+
+    return 1
+
+
+def _write_output(content: str, output_file: Path | None) -> None:
+    """Write output to file or stdout."""
+    if output_file:
+        output_file.write_text(content)
+    else:
+        print(content)
+
+
+def _get_command_name(args: argparse.Namespace) -> str:
+    """Extract full command name from parsed args."""
+    parts = [args.command] if hasattr(args, "command") and args.command else []
+    if hasattr(args, "subcommand") and args.subcommand:
+        parts.append(args.subcommand)
+    return " ".join(parts) if parts else "unknown"
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -54,6 +154,7 @@ def _build_parser() -> argparse.ArgumentParser:
     orders.register(subparsers)
     treasury.register(subparsers)
     report.register(subparsers)
+    optimize.register(subparsers)
 
     return parser
 

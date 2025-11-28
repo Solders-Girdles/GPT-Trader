@@ -28,7 +28,8 @@ class TestEncryptionBootstrap:
         caplog: pytest.LogCaptureFixture,
     ) -> None:
         """Test bootstrap generates key in development when none provided."""
-        # Remove encryption key from environment
+        # Set development environment and remove encryption key
+        monkeypatch.setenv("ENV", "development")
         monkeypatch.setenv("GPT_TRADER_ENCRYPTION_KEY", "")
 
         from gpt_trader.config.runtime_settings import load_runtime_settings
@@ -165,7 +166,8 @@ class TestEncryptionBootstrap:
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """Test bootstrap with vault enabled."""
-        # Enable vault
+        # Set development environment and enable vault
+        monkeypatch.setenv("ENV", "development")
         monkeypatch.setenv("VAULT_TOKEN", "test-token")
         monkeypatch.setenv("VAULT_ADDR", "http://vault.local")
 

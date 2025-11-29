@@ -146,6 +146,11 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/orchestration/test_bootstrap.py",  # comprehensive bootstrap module coverage with profile loading and container initialization
     "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful_indicators.py",  # Welford algorithm accuracy, numerical stability, and reset behavior
     "tests/unit/gpt_trader/orchestration/configuration/test_profiles.py",  # YAML-first profile loading with validation and fallback testing
+    # Phase 2 pain points remediation: critical service coverage
+    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service.py",  # OrderService protocol coverage: place/cancel/list/get orders
+    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service.py",  # PortfolioService coverage: balances, positions, INTX/CFM ops
+    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_product_service.py",  # ProductService coverage: products, quotes, candles, tickers
+    "tests/unit/gpt_trader/orchestration/test_hybrid_paper_broker.py",  # HybridPaperBroker paper trading simulation: orders, positions, market data
 }
 
 SLEEP_ALLOWLIST = {

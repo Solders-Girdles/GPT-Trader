@@ -39,7 +39,6 @@ The system is organized into vertical feature slices under `src/gpt_trader/featu
 
 ```
 src/gpt_trader/features/
-├── adaptive_portfolio/  # Portfolio allocation tuning + experiments
 ├── analyze/             # Market analytics helpers
 ├── brokerages/          # Exchange integrations
 ├── data/                # Data acquisition helpers
@@ -215,7 +214,7 @@ behaviour until the derivatives gate opens.
             market_regime="bull_quiet",
         )
     )
-- **Integration hooks:** Built to ingest ML strategy signals and market-regime detectors without cross-slice imports.
+- **Integration hooks:** Built to ingest future ML strategy signals and market-regime detectors without cross-slice imports.
 
 ### Key Design Principles
 
@@ -368,7 +367,7 @@ monitoring: real-time
 ### Key Libraries
 - `coinbase-advanced-py` - Official Coinbase SDK
 - `pandas` - Data manipulation
-- `scikit-learn` - ML models
+- `scikit-learn` - Statistical utilities (ML integration future-ready)
 - `websocket-client` - Real-time data
 - `pydantic` - Data validation
 

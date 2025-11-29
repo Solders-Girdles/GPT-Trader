@@ -8,6 +8,7 @@ from gpt_trader.orchestration.configuration import BotConfig
 if TYPE_CHECKING:
     from gpt_trader.features.brokerages.core.protocols import BrokerProtocol
     from gpt_trader.features.live_trade.risk.protocols import RiskManagerProtocol
+    from gpt_trader.monitoring.notifications.service import NotificationService
     from gpt_trader.orchestration.protocols import EventStoreProtocol, OrdersStoreProtocol
 
 
@@ -23,6 +24,7 @@ class ServiceRegistry:
     orders_store: OrdersStoreProtocol | None = None
     broker: BrokerProtocol | None = None
     risk_manager: RiskManagerProtocol | None = None
+    notification_service: NotificationService | None = None
     market_data_service: Any = None
     product_catalog: Any = None
     runtime_settings: Any = None

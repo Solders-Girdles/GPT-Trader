@@ -119,3 +119,73 @@ class TestEventStore:
 
         assert len(store.events) == 1
         assert store.events[0] == {"type": "custom", "data": {"foo": "bar"}}
+
+
+class TestEventStorePruning:
+    """Test the EventStore pruning functionality."""
+
+    def test_prune_memory_only_is_noop(self) -> None:
+        """Prune on in-memory store returns 0."""
+        store = EventStore()
+        for i in range(10):
+            store.append("test", {"i": i})
+
+        # Memory-only stores don't have a database to prune
+        pruned = store.prune(max_rows=5)
+        assert pruned == 0
+        # Events still in memory (limited by deque maxlen, not prune)
+        assert len(store.events) == 10
+
+    def test_prune_persistent_removes_oldest(self, tmp_path: Path) -> None:
+        """Prune on persistent store removes oldest events."""
+        store = EventStore(root=tmp_path, max_cache_size=100)
+
+        # Add 20 events
+        for i in range(20):
+            store.append("test", {"index": i})
+
+        # Prune to keep only 10
+        pruned = store.prune(max_rows=10)
+        assert pruned == 10
+
+        # Verify by reading from database directly
+        assert store._database is not None
+        remaining = store._database.event_count()
+        assert remaining == 10
+
+        # Verify the oldest events were removed
+        events = store._database.read_all_events()
+        indices = [e["data"]["index"] for e in events]
+        # Should keep indices 10-19 (newest)
+        assert indices == list(range(10, 20))
+
+        store.close()
+
+    def test_prune_when_under_limit_is_noop(self, tmp_path: Path) -> None:
+        """Prune when under limit returns 0."""
+        store = EventStore(root=tmp_path)
+
+        for i in range(5):
+            store.append("test", {"i": i})
+
+        # Prune to 10, but we only have 5
+        pruned = store.prune(max_rows=10)
+        assert pruned == 0
+
+        assert store._database is not None
+        assert store._database.event_count() == 5
+
+        store.close()
+
+    def test_prune_with_zero_max_rows(self, tmp_path: Path) -> None:
+        """Prune with max_rows=0 is a no-op (safety)."""
+        store = EventStore(root=tmp_path)
+
+        for i in range(5):
+            store.append("test", {"i": i})
+
+        # max_rows=0 should not delete anything (edge case protection)
+        pruned = store.prune(max_rows=0)
+        assert pruned == 0
+
+        store.close()

@@ -20,10 +20,10 @@ from gpt_trader.features.live_trade.engines.base import (
     CoordinatorContext,
     HealthStatus,
 )
+from gpt_trader.features.live_trade.factory import create_strategy
 from gpt_trader.features.live_trade.risk.manager import ValidationError
 from gpt_trader.features.live_trade.strategies.perps_baseline import (
     Action,
-    BaselinePerpsStrategy,
     Decision,
 )
 from gpt_trader.monitoring.alert_types import AlertSeverity
@@ -46,8 +46,8 @@ class TradingEngine(BaseEngine):
     def __init__(self, context: CoordinatorContext) -> None:
         super().__init__(context)
         self.running = False
-        # Pass strategy config directly (BotConfig.strategy is a PerpsStrategyConfig)
-        self.strategy = BaselinePerpsStrategy(config=self.context.config.strategy)
+        # Create strategy via factory (supports baseline and mean_reversion)
+        self.strategy = create_strategy(self.context.config)
         self.price_history: dict[str, list[Decimal]] = defaultdict(list)
         self._current_positions: dict[str, Position] = {}
         self._rehydrated = False
@@ -69,6 +69,10 @@ class TradingEngine(BaseEngine):
             enabled=getattr(context.config, "status_enabled", True),
         )
         self._status_reporter.set_heartbeat_service(self._heartbeat)
+
+        # Pruning configuration
+        self._prune_interval_seconds = 3600  # 1 hour
+        self._prune_max_rows = 1_000_000  # Keep 1M events max
 
     async def _notify(
         self,
@@ -125,6 +129,11 @@ class TradingEngine(BaseEngine):
         if status_task:
             self._register_background_task(status_task)
             tasks.append(status_task)
+
+        # Start database pruning task
+        prune_task = asyncio.create_task(self._prune_loop())
+        self._register_background_task(prune_task)
+        tasks.append(prune_task)
 
         return tasks
 
@@ -196,6 +205,27 @@ class TradingEngine(BaseEngine):
                 )
 
             await asyncio.sleep(self.context.config.interval)
+
+    async def _prune_loop(self) -> None:
+        """Periodically prune the event store to prevent unbounded growth."""
+        logger.info(
+            f"Starting database prune task (interval={self._prune_interval_seconds}s, "
+            f"max_rows={self._prune_max_rows})"
+        )
+        while self.running:
+            await asyncio.sleep(self._prune_interval_seconds)
+
+            if self.context.event_store is None:
+                continue
+
+            try:
+                # Check if the event store supports pruning
+                if hasattr(self.context.event_store, "prune"):
+                    pruned = self.context.event_store.prune(max_rows=self._prune_max_rows)
+                    if pruned > 0:
+                        logger.info(f"Pruned {pruned} old events from database")
+            except Exception as e:
+                logger.error(f"Database pruning failed: {e}")
 
     async def _cycle(self) -> None:
         """One trading cycle."""

@@ -11,7 +11,7 @@ import os
 from dataclasses import dataclass, field, fields, replace
 from decimal import Decimal
 from enum import Enum, auto
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 # Constants expected by core.py shim
 DEFAULT_SPOT_RISK_PATH = "config/risk.json"
@@ -52,6 +52,37 @@ class BotRiskConfig:
     reduce_only_threshold: Decimal | None = None
 
 
+@dataclass
+class MeanReversionConfig:
+    """Configuration for mean reversion strategy.
+
+    Uses Z-Score based entries with volatility-targeted position sizing.
+    """
+
+    # Z-Score thresholds for entry/exit
+    z_score_entry_threshold: float = 2.0  # Enter when |z-score| > this
+    z_score_exit_threshold: float = 0.5  # Exit when |z-score| < this (near mean)
+
+    # Lookback window for rolling statistics
+    lookback_window: int = 20
+
+    # Volatility targeting for position sizing
+    target_daily_volatility: float = 0.02  # 2% target daily vol
+    max_position_pct: float = 0.25  # Max 25% of equity per position
+
+    # Risk controls
+    stop_loss_pct: float = 0.03  # 3% stop loss
+    take_profit_pct: float = 0.06  # 6% take profit
+
+    # Control flags
+    enable_shorts: bool = True
+    kill_switch_enabled: bool = False
+
+
+# Strategy type literal for type safety
+StrategyType = Literal["baseline", "mean_reversion"]
+
+
 def _get_default_strategy_config() -> "PerpsStrategyConfig":
     """Lazy factory to avoid circular imports."""
     from gpt_trader.features.live_trade.strategies.perps_baseline import (
@@ -73,6 +104,10 @@ class BotConfig:
     # Nested configurations
     strategy: Any = field(default_factory=_get_default_strategy_config)
     risk: BotRiskConfig = field(default_factory=BotRiskConfig)
+    mean_reversion: MeanReversionConfig = field(default_factory=MeanReversionConfig)
+
+    # Strategy selection (baseline = RSI+MA, mean_reversion = Z-Score)
+    strategy_type: StrategyType = "baseline"
 
     # General config (not nested)
     symbols: list[str] = field(default_factory=lambda: ["BTC-USD", "ETH-USD"])
@@ -89,6 +124,14 @@ class BotConfig:
     dry_run: bool = False
     mock_broker: bool = False
     profile: object = None
+
+    # Notifications (Slack/Discord webhook URL)
+    webhook_url: str | None = None
+
+    # Operational monitoring
+    status_file: str = "var/data/status.json"
+    status_interval: int = 60  # Seconds between status file updates
+    status_enabled: bool = True
 
     # Metadata (Pydantic compatibility)
     metadata: dict[str, Any] = field(default_factory=dict)
@@ -206,6 +249,10 @@ class BotConfig:
             symbols=parse_list_env("SYMBOLS", str, default=["BTC-USD", "ETH-USD"]),
             log_level=os.getenv("LOG_LEVEL", "INFO"),
             dry_run=parse_bool_env("DRY_RUN", default=False),
+            webhook_url=os.getenv("WEBHOOK_URL"),
+            status_file=os.getenv("STATUS_FILE", "var/data/status.json"),
+            status_interval=parse_int_env("STATUS_INTERVAL", 60) or 60,
+            status_enabled=parse_bool_env("STATUS_ENABLED", default=True),
         )
 
 

@@ -141,6 +141,7 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/monitoring/test_heartbeat.py",  # heartbeat monitoring scenarios
     "tests/unit/gpt_trader/monitoring/test_status_reporter.py",  # status reporting coverage
     "tests/integration/test_funding_pnl_integration.py",  # funding and PnL calculation scenarios
+    "tests/unit/gpt_trader/features/live_trade/strategies/mean_reversion/test_strategy.py",  # comprehensive Z-Score, volatility targeting, and exit logic coverage
 }
 
 SLEEP_ALLOWLIST = {

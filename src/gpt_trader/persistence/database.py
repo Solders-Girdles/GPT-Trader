@@ -166,6 +166,41 @@ class DatabaseEngine:
         row = cursor.fetchone()
         return row[0] if row else 0
 
+    def prune_by_count(self, max_rows: int) -> int:
+        """
+        Prune database to keep only the most recent events.
+
+        Deletes the oldest events, keeping only max_rows newest events.
+        This is a safe operation that prevents unbounded database growth.
+
+        Args:
+            max_rows: Maximum number of rows to keep
+
+        Returns:
+            Number of rows deleted
+        """
+        if max_rows <= 0:
+            return 0
+
+        connection = self._get_connection()
+
+        # Get current count
+        current_count = self.event_count()
+        if current_count <= max_rows:
+            return 0
+
+        # Delete oldest events (those with the smallest IDs)
+        rows_to_delete = current_count - max_rows
+        cursor = connection.execute(
+            """
+            DELETE FROM events WHERE id IN (
+                SELECT id FROM events ORDER BY id ASC LIMIT ?
+            )
+            """,
+            (rows_to_delete,),
+        )
+        return cursor.rowcount
+
     def close(self) -> None:
         """Close database connection for current thread."""
         if hasattr(self._local, "connection"):

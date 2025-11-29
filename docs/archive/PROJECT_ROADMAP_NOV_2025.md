@@ -1,13 +1,15 @@
 # GPT-Trader Project Roadmap
 
 **Last Updated**: 2025-11-26
-**Status**: Active (Single Source of Truth)
+**Status**: Archived (Historical Snapshot)
+
+> **Archive Note**: This document is preserved as a historical snapshot. The "ML-driven" claim below was aspirational; actual implementation uses technical analysis (RSI, moving averages). See the main PROJECT_ROADMAP.md for current status.
 
 ---
 
 ## 🎯 Project Vision
 
-GPT-Trader is a production-ready Coinbase **spot trading bot** with future-ready perpetuals support. The system uses ML-driven strategies with comprehensive risk management, built on a clean coordinator-based architecture optimized for AI-assisted development.
+GPT-Trader is a production-ready Coinbase **spot trading bot** with future-ready perpetuals support. The system uses technical analysis strategies with comprehensive risk management, built on a clean coordinator-based architecture optimized for AI-assisted development.
 
 ---
 

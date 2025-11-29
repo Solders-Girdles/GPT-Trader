@@ -218,6 +218,7 @@ def build_bot(
         Tuple of (TradingBot, ServiceRegistry) for access to all components.
     """
     from gpt_trader.features.live_trade.risk.manager import LiveRiskManager
+    from gpt_trader.monitoring.notifications import create_notification_service
     from gpt_trader.orchestration.trading_bot.bot import TradingBot
 
     result = prepare_bot(config, registry=None, settings=settings)
@@ -231,10 +232,23 @@ def build_bot(
     # Create risk manager with config and event store
     risk_manager = LiveRiskManager(config=result.config, event_store=result.event_store)
 
-    # Update registry with broker and risk manager
+    # Create notification service with webhook if configured
+    notification_service = create_notification_service(
+        webhook_url=config.webhook_url,
+        console_enabled=True,
+    )
+    if config.webhook_url:
+        logger.info(
+            "Webhook notifications enabled",
+            operation="bot_bootstrap",
+            stage="notifications_enabled",
+        )
+
+    # Update registry with broker, risk manager, and notification service
     registry = result.registry.with_updates(
         broker=broker,
         risk_manager=risk_manager,
+        notification_service=notification_service,
     )
 
     # Create the bot with full registry
@@ -244,6 +258,7 @@ def build_bot(
         registry=registry,
         event_store=result.event_store,
         orders_store=result.orders_store,
+        notification_service=notification_service,
     )
 
     return bot, registry

@@ -165,6 +165,23 @@ class EventStore:
         events_list = list(self._events)
         return events_list[-count:] if count > 0 else []
 
+    def prune(self, max_rows: int = 1_000_000) -> int:
+        """
+        Prune the event store to prevent unbounded growth.
+
+        In persistent mode, deletes oldest events from SQLite keeping max_rows.
+        In memory-only mode, the deque already limits cache size, so this is a no-op.
+
+        Args:
+            max_rows: Maximum number of events to keep in database (default: 1M)
+
+        Returns:
+            Number of events pruned (0 in memory-only mode)
+        """
+        if self._database is None:
+            return 0
+        return self._database.prune_by_count(max_rows)
+
     def close(self) -> None:
         """Close database connection (if persistent mode)."""
         if self._database is not None:

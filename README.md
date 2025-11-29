@@ -6,7 +6,9 @@
 [![Poetry](https://img.shields.io/badge/poetry-1.0+-orange.svg)](https://python-poetry.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-An ML-driven Coinbase trading system with market regime detection, built on a clean vertical slice architecture optimized for AI development.
+An AI-assisted Coinbase trading system built on clean vertical slice architecture designed for maintainability by AI coding assistants.
+
+> **About the name**: "GPT-Trader" reflects that AI coding assistants (Claude, GPT, Gemini) actively collaborate in developing this codebase. The trading strategies themselves use technical analysis, not LLM inference.
 
 > **Update (INTX required)**: Coinbase now gates perpetual futures behind the INTX program. The bot runs **spot trading by default** and keeps perpetual logic in place for future activation. Enable derivatives only if your account has INTX access and you set `COINBASE_ENABLE_DERIVATIVES=1` alongside CDP credentials.
 
@@ -118,7 +120,6 @@ src/gpt_trader/
 │   ├── __init__.py           # Entry point + default-command shim
 │   └── commands/             # Subcommand implementations
 ├── features/                 # Vertical slices (production + tooling)
-│   ├── adaptive_portfolio/  # Portfolio allocation tuning + experiments
 │   ├── analyze/             # Market analytics helpers
 │   ├── brokerages/
 │   │   └── coinbase/        # API integration

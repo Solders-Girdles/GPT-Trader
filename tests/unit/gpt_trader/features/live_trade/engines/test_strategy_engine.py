@@ -63,7 +63,7 @@ def context(mock_broker):
 @pytest.fixture
 def engine(context, mock_strategy):
     with patch(
-        "gpt_trader.features.live_trade.engines.strategy.BaselinePerpsStrategy",
+        "gpt_trader.features.live_trade.engines.strategy.create_strategy",
         return_value=mock_strategy,
     ):
         engine = TradingEngine(context)

@@ -12,6 +12,7 @@ def mock_context():
     context = MagicMock()
     context.config.symbols = ["BTC-USD"]
     context.config.interval = 0.1
+    context.config.strategy_type = "baseline"  # Required for factory
     context.broker.get_ticker.return_value = {"price": "50000.00"}
     return context
 

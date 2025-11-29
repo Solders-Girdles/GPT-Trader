@@ -211,6 +211,7 @@ tail -f var/logs/coinbase_trader.log
 | `docs/ARCHITECTURE.md` | System architecture |
 | `docs/guides/testing.md` | Testing guide |
 | `docs/guides/production.md` | Production deployment |
+| `docs/guides/agent-tools.md` | **Agent tools reference** |
 | `docs/reference/coinbase_complete.md` | Coinbase API reference |
 
 ## Source of Truth Checklist

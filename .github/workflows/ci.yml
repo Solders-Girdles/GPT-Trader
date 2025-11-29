@@ -97,6 +97,20 @@ jobs:
           naming_inventory.json
         retention-days: 30
 
+    - name: Verify agent context freshness
+      run: |
+        set -euo pipefail
+        # Regenerate agent context files
+        poetry run python scripts/agents/regenerate_all.py || true
+
+        # Check for uncommitted changes in var/agents/
+        if ! git diff --quiet var/agents/; then
+          echo "::warning::Agent context files may be stale. Run 'uv run agent-regenerate' and commit changes."
+          git diff --stat var/agents/
+        else
+          echo "Agent context files are up to date."
+        fi
+
     - name: Check test file complexity
       run: |
         set -euo pipefail

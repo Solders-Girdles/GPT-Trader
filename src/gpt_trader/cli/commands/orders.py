@@ -11,7 +11,7 @@ from typing import Any, Protocol, cast, runtime_checkable
 
 from gpt_trader.cli import options, services
 from gpt_trader.cli.response import CliErrorCode, CliResponse
-from gpt_trader.features.brokerages.core.interfaces import OrderSide, OrderType, TimeInForce
+from gpt_trader.core import OrderSide, OrderType, TimeInForce
 
 _CONFIG_SKIP_KEYS = {
     "orders_command",

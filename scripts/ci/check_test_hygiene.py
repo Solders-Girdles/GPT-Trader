@@ -143,6 +143,7 @@ ALLOWLIST = {
     "tests/integration/test_funding_pnl_integration.py",  # funding and PnL calculation scenarios
     "tests/unit/gpt_trader/features/live_trade/strategies/mean_reversion/test_strategy.py",  # comprehensive Z-Score, volatility targeting, and exit logic coverage
     "tests/unit/gpt_trader/persistence/test_orders_store.py",  # comprehensive order persistence contract with lifecycle, recovery, and integrity validation
+    "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_events.py",  # WebSocket event dispatcher testing with typed handlers and dispatcher routing
 }
 
 SLEEP_ALLOWLIST = {

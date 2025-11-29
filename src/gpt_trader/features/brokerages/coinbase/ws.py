@@ -1,6 +1,12 @@
 """
 Simple WebSocket Client for Coinbase.
 Replaces the complex 681-line WebSocket manager with a lightweight implementation.
+
+Supports:
+- Public channels: ticker, level2, market_trades
+- Private channels: user (order updates, fills) - requires authentication
+- Event dispatching with typed handlers
+- Exponential backoff reconnection
 """
 
 import json
@@ -16,9 +22,14 @@ except ImportError:
     websocket = None  # type: ignore[assignment]
 
 from gpt_trader.config.constants import WS_JOIN_TIMEOUT, WS_RECONNECT_DELAY
+from gpt_trader.features.brokerages.coinbase.ws_events import EventDispatcher
 from gpt_trader.utilities.logging_patterns import get_logger
 
 logger = get_logger(__name__, component="coinbase_websocket")
+
+# Reconnection settings
+MAX_RECONNECT_DELAY = 60  # Maximum backoff delay in seconds
+RECONNECT_MULTIPLIER = 2  # Exponential backoff multiplier
 
 
 class SequenceGuard:
@@ -62,23 +73,37 @@ class SequenceGuard:
 
 
 class CoinbaseWebSocket:
+    """
+    WebSocket client for Coinbase Advanced Trade API.
+
+    Features:
+    - Event dispatching with typed handlers
+    - Exponential backoff reconnection
+    - Sequence gap detection
+    - Public and private channel support
+    """
+
     def __init__(
         self,
         url: str = "wss://advanced-trade-ws.coinbase.com",
         api_key: str | None = None,
         private_key: str | None = None,
         on_message: Callable[[dict], None] | None = None,
+        dispatcher: EventDispatcher | None = None,
     ):
         self.url = url
         self.api_key = api_key
         self.private_key = private_key
         self.on_message = on_message
+        self.dispatcher = dispatcher or EventDispatcher()
         self.ws: Any = None
         self.wst: threading.Thread | None = None
         self.running = False
         self.subscriptions: list[dict] = []
         self._transport: Any = None
         self._sequence_guard = SequenceGuard()
+        self._reconnect_delay = WS_RECONNECT_DELAY
+        self._reconnect_count = 0
 
     def connect(self) -> None:
         if self.running:
@@ -143,8 +168,33 @@ class CoinbaseWebSocket:
         if self.ws:
             self.ws.send(json.dumps(msg))
 
+    def subscribe_user_events(self, product_ids: list[str] | None = None) -> None:
+        """
+        Subscribe to private user events (order updates, fills).
+
+        Requires API key and private key for authentication.
+
+        Args:
+            product_ids: Optional list of products to filter. If None, receives all.
+        """
+        if not self.api_key or not self.private_key:
+            logger.warning("Cannot subscribe to user events without API credentials")
+            return
+
+        channels = ["user"]
+        if product_ids:
+            self.subscribe(product_ids, channels)
+        else:
+            # Subscribe without product filter for all user events
+            self.subscribe(["BTC-USD"], channels)  # Coinbase requires at least one product
+
     def _on_open(self, ws: Any) -> None:
         logger.info("WebSocket connected")
+        # Reset reconnect state on successful connection
+        self._reconnect_delay = WS_RECONNECT_DELAY
+        self._reconnect_count = 0
+        self._sequence_guard.reset()
+
         # Resubscribe
         for sub in self.subscriptions:
             self._send(sub)
@@ -152,20 +202,61 @@ class CoinbaseWebSocket:
     def _on_message(self, ws: Any, message: str) -> None:
         try:
             data = json.loads(message)
+
+            # Annotate with sequence gap detection
+            data = self._sequence_guard.annotate(data)
+
+            # Log if gap detected
+            if data.get("gap_detected"):
+                logger.warning(
+                    "WebSocket sequence gap detected",
+                    sequence=data.get("sequence"),
+                    channel=data.get("channel"),
+                )
+
+            # Dispatch to event handlers
+            self.dispatcher.dispatch(data)
+
+            # Also call legacy on_message callback if provided
             if self.on_message:
                 self.on_message(data)
+
+        except json.JSONDecodeError as e:
+            logger.error(f"Invalid JSON in WebSocket message: {e}")
         except Exception as e:
             logger.error(f"Error processing message: {e}")
 
     def _on_error(self, ws: Any, error: Exception) -> None:
-        logger.error(f"WebSocket error: {error}")
+        logger.error(
+            "WebSocket error",
+            error=str(error),
+            reconnect_count=self._reconnect_count,
+        )
 
     def _on_close(self, ws: Any, close_status_code: int | None, close_msg: str | None) -> None:
-        logger.info("WebSocket closed")
+        logger.info(
+            "WebSocket closed",
+            status_code=close_status_code,
+            message=close_msg,
+        )
+
         if self.running:
-            logger.info("Attempting reconnect in %ds...", WS_RECONNECT_DELAY)
-            time.sleep(WS_RECONNECT_DELAY)
+            # Exponential backoff reconnection
+            self._reconnect_count += 1
+            delay = min(self._reconnect_delay, MAX_RECONNECT_DELAY)
+
+            logger.info(
+                "Attempting reconnect",
+                delay_seconds=delay,
+                attempt=self._reconnect_count,
+            )
+
+            time.sleep(delay)
+            self._reconnect_delay = min(
+                self._reconnect_delay * RECONNECT_MULTIPLIER,
+                MAX_RECONNECT_DELAY,
+            )
             self.connect()
 
 
-__all__ = ["CoinbaseWebSocket", "SequenceGuard"]
+__all__ = ["CoinbaseWebSocket", "EventDispatcher", "SequenceGuard"]

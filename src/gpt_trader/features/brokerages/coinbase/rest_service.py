@@ -17,7 +17,6 @@ from collections.abc import Callable
 from decimal import Decimal
 from typing import Any
 
-from gpt_trader.config.runtime_settings import RuntimeSettings, load_runtime_settings
 from gpt_trader.features.brokerages.coinbase.client import CoinbaseClient
 from gpt_trader.features.brokerages.coinbase.endpoints import CoinbaseEndpoints
 from gpt_trader.features.brokerages.coinbase.market_data_service import MarketDataService
@@ -40,6 +39,7 @@ from gpt_trader.features.brokerages.core.interfaces import (
     Quote,
     TimeInForce,
 )
+from gpt_trader.orchestration.configuration import BotConfig
 from gpt_trader.persistence.event_store import EventStore
 
 
@@ -66,10 +66,8 @@ class CoinbaseRestService:
         product_catalog: ProductCatalog,
         market_data: MarketDataService,
         event_store: EventStore,
-        settings: RuntimeSettings | None = None,
+        bot_config: BotConfig | None = None,
     ) -> None:
-        runtime_settings = settings or load_runtime_settings()
-
         # Create shared position state store
         self._position_store = PositionStateStore()
 
@@ -82,7 +80,7 @@ class CoinbaseRestService:
             market_data=market_data,
             event_store=event_store,
             position_store=self._position_store,
-            settings=runtime_settings,
+            bot_config=bot_config,
         )
 
         # Create composed services
@@ -117,7 +115,7 @@ class CoinbaseRestService:
         self._product_catalog = product_catalog
         self.market_data = market_data
         self._event_store = event_store
-        self.settings = runtime_settings
+        self.bot_config = bot_config
         self._funding_calculator = self._core._funding_calculator
 
     @property

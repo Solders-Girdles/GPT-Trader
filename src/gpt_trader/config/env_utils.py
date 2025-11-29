@@ -2,15 +2,11 @@
 
 from __future__ import annotations
 
+import os
 from collections.abc import Callable
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any, NoReturn, TypeVar
+from typing import Any, NoReturn, TypeVar
 from typing import cast as typing_cast
-
-if TYPE_CHECKING:
-    from gpt_trader.config.runtime_settings import RuntimeSettings
-else:  # pragma: no cover - runtime alias for type checking
-    RuntimeSettings = Any  # type: ignore[misc]
 
 from gpt_trader.validation import (
     BooleanRule,
@@ -35,19 +31,9 @@ class EnvVarError(ValueError):
         self.value = value
 
 
-def _load_runtime_settings() -> RuntimeSettings:
-    from gpt_trader.config.runtime_settings import load_runtime_settings as _loader
-
-    return _loader()
-
-
-def _resolve_settings(settings: RuntimeSettings | None) -> RuntimeSettings:
-    return settings if settings is not None else _load_runtime_settings()
-
-
-def _get_env(var_name: str, runtime_settings: RuntimeSettings) -> str | None:
+def _get_env(var_name: str) -> str | None:
     """Fetch and normalise the value of an environment variable."""
-    raw = runtime_settings.raw_env.get(var_name)
+    raw = os.environ.get(var_name)
     if raw is None:
         return None
     value = raw.strip()
@@ -94,11 +80,9 @@ def coerce_env_value(
     *,
     default: T | None = None,
     required: bool = False,
-    settings: RuntimeSettings | None = None,
 ) -> T | None:
     """Return ``cast`` applied to ``var_name`` if it is set."""
-    runtime_settings = _resolve_settings(settings)
-    value = _get_env(var_name, runtime_settings)
+    value = _get_env(var_name)
     if value is None:
         if required:
             _ensure_required(var_name)
@@ -112,11 +96,9 @@ def coerce_env_value(
 def require_env_value(
     var_name: str,
     cast: Callable[[str], T],
-    *,
-    settings: RuntimeSettings | None = None,
 ) -> T:
     """Return ``cast`` applied to ``var_name`` and raise if unset."""
-    value = coerce_env_value(var_name, cast, required=True, settings=settings)
+    value = coerce_env_value(var_name, cast, required=True)
     if value is None:  # pragma: no cover - required=True guarantees value
         raise ValueError(f"Required environment variable {var_name} returned None after coercion")
     return value
@@ -127,11 +109,9 @@ def get_env_int(
     *,
     default: int | None = None,
     required: bool = False,
-    settings: RuntimeSettings | None = None,
 ) -> int | None:
     """Read an integer from ``var_name``."""
-    runtime_settings = _resolve_settings(settings)
-    value = _get_env(var_name, runtime_settings)
+    value = _get_env(var_name)
     if value is None:
         if required:
             _ensure_required(var_name)
@@ -145,11 +125,9 @@ def get_env_float(
     *,
     default: float | None = None,
     required: bool = False,
-    settings: RuntimeSettings | None = None,
 ) -> float | None:
     """Read a float from ``var_name``."""
-    runtime_settings = _resolve_settings(settings)
-    value = _get_env(var_name, runtime_settings)
+    value = _get_env(var_name)
     if value is None:
         if required:
             _ensure_required(var_name)
@@ -163,11 +141,9 @@ def get_env_decimal(
     *,
     default: Decimal | None = None,
     required: bool = False,
-    settings: RuntimeSettings | None = None,
 ) -> Decimal | None:
     """Read a :class:`~decimal.Decimal` from ``var_name``."""
-    runtime_settings = _resolve_settings(settings)
-    value = _get_env(var_name, runtime_settings)
+    value = _get_env(var_name)
     if value is None:
         if required:
             _ensure_required(var_name)
@@ -183,7 +159,6 @@ def get_env_bool(
     *,
     default: bool | None = None,
     required: bool = False,
-    settings: RuntimeSettings | None = None,
 ) -> bool | None:
     """Parse a boolean value from ``var_name``.
 
@@ -191,8 +166,7 @@ def get_env_bool(
     Accepted falsy values: ``{"0", "false", "f", "no", "n", "off"}``
     """
 
-    runtime_settings = _resolve_settings(settings)
-    value = _get_env(var_name, runtime_settings)
+    value = _get_env(var_name)
     if value is None:
         if required:
             _ensure_required(var_name)
@@ -208,11 +182,9 @@ def parse_env_list(
     allow_empty: bool = True,
     default: list[T] | None = None,
     required: bool = False,
-    settings: RuntimeSettings | None = None,
 ) -> list[T]:
     """Parse a delimited list from an environment variable."""
-    runtime_settings = _resolve_settings(settings)
-    value = _get_env(var_name, runtime_settings)
+    value = _get_env(var_name)
     if value is None:
         if required:
             _ensure_required(var_name)
@@ -239,7 +211,6 @@ def parse_env_mapping(
     allow_empty: bool = True,
     default: dict[str, T] | None = None,
     required: bool = False,
-    settings: RuntimeSettings | None = None,
 ) -> dict[str, T]:
     """Parse a mapping from an environment variable.
 
@@ -247,8 +218,7 @@ def parse_env_mapping(
     ``cast`` is applied to each value; errors raise :class:`EnvVarError`.
     """
 
-    runtime_settings = _resolve_settings(settings)
-    value = _get_env(var_name, runtime_settings)
+    value = _get_env(var_name)
     if value is None:
         if required:
             _ensure_required(var_name)

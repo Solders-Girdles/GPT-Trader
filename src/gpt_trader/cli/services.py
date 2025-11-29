@@ -4,7 +4,7 @@ from argparse import Namespace
 from dataclasses import fields as dataclass_fields
 from decimal import Decimal
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import yaml
 
@@ -13,13 +13,7 @@ from gpt_trader.orchestration.configuration.bot_config import BotConfig, BotRisk
 from gpt_trader.orchestration.trading_bot.bot import TradingBot
 from gpt_trader.utilities.logging_patterns import get_logger
 
-if TYPE_CHECKING:
-    from gpt_trader.config.runtime_settings import RuntimeSettings
-
 logger = get_logger(__name__, component="cli_services")
-
-# Module-level settings storage (set by cli/__init__.py)
-OVERRIDE_SETTINGS: "RuntimeSettings | None" = None
 
 
 def _filter_dataclass_fields(data: dict[str, Any], dataclass_type: type) -> dict[str, Any]:

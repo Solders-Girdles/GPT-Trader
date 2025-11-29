@@ -8,9 +8,8 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:  # pragma: no cover - import for type checking only
-    from gpt_trader.orchestration.configuration import Profile
+    from gpt_trader.orchestration.configuration import BotConfig, Profile
 
-from gpt_trader.config.runtime_settings import RuntimeSettings, load_runtime_settings
 from gpt_trader.utilities.logging_patterns import get_logger
 
 logger = get_logger(__name__, component="symbols")
@@ -28,10 +27,8 @@ class SymbolNormalizationLog:
     args: tuple[object, ...] = ()
 
 
-def derivatives_enabled(profile: Profile, *, settings: RuntimeSettings | None = None) -> bool:
+def derivatives_enabled(profile: Profile, *, config: BotConfig) -> bool:
     """Determine whether derivatives trading should be enabled for the profile."""
-
-    runtime_settings = settings or load_runtime_settings()
 
     try:  # Local import to avoid circular at module load time.
         from gpt_trader.orchestration.configuration import Profile as _Profile
@@ -48,46 +45,41 @@ def derivatives_enabled(profile: Profile, *, settings: RuntimeSettings | None = 
         if profile_value == "spot":
             return False
 
-    if runtime_settings.coinbase_enable_derivatives_overridden:
-        return runtime_settings.coinbase_enable_derivatives
-    return True
+    # Use strict config toggle
+    return config.derivatives_enabled
 
 
-def us_futures_enabled(profile: Profile, *, settings: RuntimeSettings | None = None) -> bool:
+def us_futures_enabled(profile: Profile, *, config: BotConfig) -> bool:
     """Determine whether US futures trading should be enabled for the profile."""
 
-    runtime_settings = settings or load_runtime_settings()
-
     # Check if derivatives are enabled at all
-    if not derivatives_enabled(profile, settings=settings):
+    if not derivatives_enabled(profile, config=config):
         return False
 
     # Check US futures specific flag
-    if runtime_settings.coinbase_us_futures_enabled:
+    if config.coinbase_us_futures_enabled:
         return True
 
     # Check derivatives type
-    if runtime_settings.coinbase_derivatives_type == "us_futures":
+    if config.coinbase_derivatives_type == "us_futures":
         return True
 
     return False
 
 
-def intx_perpetuals_enabled(profile: Profile, *, settings: RuntimeSettings | None = None) -> bool:
+def intx_perpetuals_enabled(profile: Profile, *, config: BotConfig) -> bool:
     """Determine whether INTX perpetuals trading should be enabled for the profile."""
 
-    runtime_settings = settings or load_runtime_settings()
-
     # Check if derivatives are enabled at all
-    if not derivatives_enabled(profile, settings=settings):
+    if not derivatives_enabled(profile, config=config):
         return False
 
     # Check INTX perpetuals specific flag
-    if runtime_settings.coinbase_intx_perpetuals_enabled:
+    if config.coinbase_intx_perpetuals_enabled:
         return True
 
     # Check derivatives type (default to INTX)
-    if runtime_settings.coinbase_derivatives_type in ("intx_perps", "perpetuals"):
+    if config.coinbase_derivatives_type in ("intx_perps", "perpetuals"):
         return True
 
     return True
@@ -184,14 +176,13 @@ def normalize_symbols(
     profile: Profile,
     symbols: Sequence[str] | None,
     *,
+    config: BotConfig,
     quote: str | None = None,
-    settings: RuntimeSettings | None = None,
 ) -> tuple[list[str], bool]:
     """Normalize configured symbols, applying per-profile defaults and gating."""
 
-    runtime_settings = settings or load_runtime_settings()
-    quote_currency = (quote or runtime_settings.coinbase_default_quote).upper()
-    allow_derivatives = derivatives_enabled(profile, settings=runtime_settings)
+    quote_currency = (quote or config.coinbase_default_quote).upper()
+    allow_derivatives = derivatives_enabled(profile, config=config)
     normalized, logs = normalize_symbol_list(
         symbols,
         allow_derivatives=allow_derivatives,

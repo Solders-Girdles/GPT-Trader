@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from collections.abc import Callable
 from decimal import Decimal
 from typing import TypeVar
@@ -15,7 +16,6 @@ from gpt_trader.config.env_utils import (  # naming: allow
     parse_env_list,
     parse_env_mapping,
 )
-from gpt_trader.config.runtime_settings import RuntimeSettings, load_runtime_settings
 from gpt_trader.errors import ValidationError
 
 T = TypeVar("T")
@@ -100,10 +100,8 @@ def parse_float_env(var_name: str, default: float | None = None) -> float | None
         raise _wrap_env_error(var_name, exc) from exc
 
 
-def validate_required_env(var_names: list[str], *, settings: RuntimeSettings | None = None) -> None:
+def validate_required_env(var_names: list[str]) -> None:
     """Validate that required environment variables are present."""
-    runtime_settings = settings or load_runtime_settings()
-    env_map = runtime_settings.raw_env
-    missing = [name for name in var_names if not env_map.get(name)]
+    missing = [name for name in var_names if not os.environ.get(name)]
     if missing:
         raise ValidationError(f"Missing required environment variables: {', '.join(missing)}")

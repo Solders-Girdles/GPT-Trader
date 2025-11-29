@@ -27,7 +27,6 @@ class ServiceRegistry:
     notification_service: NotificationService | None = None
     market_data_service: Any = None
     product_catalog: Any = None
-    runtime_settings: Any = None
     extras: dict[str, Any] = field(default_factory=dict)
 
     def with_updates(self, **kwargs: Any) -> ServiceRegistry:

@@ -133,6 +133,30 @@ class BotConfig:
     status_interval: int = 60  # Seconds between status file updates
     status_enabled: bool = True
 
+    # Broker / Exchange Settings
+    coinbase_default_quote: str = "USD"
+    coinbase_us_futures_enabled: bool = False
+    coinbase_intx_perpetuals_enabled: bool = False
+    coinbase_derivatives_type: str = "intx_perps"
+    coinbase_sandbox_enabled: bool = False
+    coinbase_api_mode: str = "advanced"
+    coinbase_intx_portfolio_uuid: str | None = None
+    broker_hint: str | None = None
+
+    # Perps / Futures Specifics
+    perps_enable_streaming: bool = False
+    perps_stream_level: int = 1
+    perps_paper_trading: bool = False
+    perps_skip_startup_reconcile: bool = False
+    perps_position_fraction: float | None = None
+
+    # Paths & Environments
+    runtime_root: str = "."
+    event_store_root_override: str | None = None
+    risk_config_path: str | None = None
+    environment: str | None = None
+    spot_force_live: bool = False
+
     # Metadata (Pydantic compatibility)
     metadata: dict[str, Any] = field(default_factory=dict)
 
@@ -181,7 +205,7 @@ class BotConfig:
         return self.risk.trailing_stop_pct
 
     @property
-    def perps_position_fraction(self) -> Decimal:
+    def perps_position_fraction_decimal(self) -> Decimal:
         """Alias for risk.position_fraction (backward compat)."""
         return self.risk.position_fraction
 
@@ -205,7 +229,7 @@ class BotConfig:
         **kwargs: object,
     ) -> "BotConfig":
         """Create a config from a profile name or enum."""
-        return cls(profile=profile, dry_run=dry_run, mock_broker=mock_broker)
+        return cls(profile=profile, dry_run=dry_run, mock_broker=mock_broker, **kwargs)
 
     @classmethod
     def from_env(cls) -> "BotConfig":
@@ -242,6 +266,8 @@ class BotConfig:
             or Decimal("0.1"),
         )
 
+        derivatives_enabled = parse_bool_env("COINBASE_ENABLE_DERIVATIVES", default=False)
+
         return cls(
             strategy=strategy,
             risk=risk,
@@ -253,8 +279,31 @@ class BotConfig:
             status_file=os.getenv("STATUS_FILE", "var/data/status.json"),
             status_interval=parse_int_env("STATUS_INTERVAL", 60) or 60,
             status_enabled=parse_bool_env("STATUS_ENABLED", default=True),
+            derivatives_enabled=derivatives_enabled,
+            # Inherited from RuntimeSettings
+            coinbase_default_quote=os.getenv("COINBASE_DEFAULT_QUOTE", "USD"),
+            coinbase_us_futures_enabled=parse_bool_env(
+                "COINBASE_US_FUTURES_ENABLED", default=False
+            ),
+            coinbase_intx_perpetuals_enabled=parse_bool_env(
+                "COINBASE_INTX_PERPETUALS_ENABLED", default=False
+            ),
+            coinbase_derivatives_type=os.getenv("COINBASE_DERIVATIVES_TYPE", "intx_perps"),
+            coinbase_sandbox_enabled=parse_bool_env("COINBASE_SANDBOX", default=False),
+            coinbase_api_mode=os.getenv("COINBASE_API_MODE", "advanced"),
+            coinbase_intx_portfolio_uuid=os.getenv("COINBASE_INTX_PORTFOLIO_UUID"),
+            broker_hint=os.getenv("BROKER"),
+            perps_enable_streaming=parse_bool_env("PERPS_ENABLE_STREAMING", default=False),
+            perps_stream_level=parse_int_env("PERPS_STREAM_LEVEL", 1) or 1,
+            perps_paper_trading=parse_bool_env("PERPS_PAPER", default=False),
+            perps_skip_startup_reconcile=parse_bool_env("PERPS_SKIP_RECONCILE", default=False),
+            perps_position_fraction=float(
+                parse_decimal_env("PERPS_POSITION_FRACTION", Decimal("0.1")) or Decimal("0.1")
+            ),
+            runtime_root=os.getenv("GPT_TRADER_RUNTIME_ROOT", "."),
+            event_store_root_override=os.getenv("EVENT_STORE_ROOT"),
+            risk_config_path=os.getenv("RISK_CONFIG_PATH"),
+            environment=os.getenv("ENVIRONMENT"),
+            spot_force_live=parse_bool_env("SPOT_FORCE_LIVE", default=False),
+            enable_order_preview=parse_bool_env("ORDER_PREVIEW_ENABLED", default=False),
         )
-
-
-# Global config instance
-config = BotConfig.from_env()

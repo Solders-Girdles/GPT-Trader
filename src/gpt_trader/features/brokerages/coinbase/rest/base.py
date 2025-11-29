@@ -13,7 +13,6 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
-from gpt_trader.config.runtime_settings import RuntimeSettings
 from gpt_trader.errors import ValidationError
 from gpt_trader.features.brokerages.coinbase.client import CoinbaseClient
 from gpt_trader.features.brokerages.coinbase.endpoints import CoinbaseEndpoints
@@ -34,6 +33,7 @@ from gpt_trader.features.brokerages.core.interfaces import (
     OrderType,
     TimeInForce,
 )
+from gpt_trader.orchestration.configuration import BotConfig
 from gpt_trader.persistence.event_store import EventStore
 from gpt_trader.utilities.logging_patterns import get_logger
 
@@ -58,7 +58,7 @@ class CoinbaseRestServiceCore:
         product_catalog: ProductCatalog,
         market_data: MarketDataService,
         event_store: EventStore,
-        settings: RuntimeSettings | None = None,
+        bot_config: BotConfig | None = None,
         position_store: PositionStateStore | None = None,
     ):
         self.client = client
@@ -67,7 +67,7 @@ class CoinbaseRestServiceCore:
         self.product_catalog = product_catalog
         self.market_data = market_data
         self._event_store = event_store
-        self.settings = settings
+        self.bot_config = bot_config
 
         # Use injected position store or create internal dict for backward compat
         if position_store is not None:
@@ -260,10 +260,8 @@ class CoinbaseRestServiceCore:
 
         Implements the OrderPayloadExecutor protocol.
         """
-        import os
-
         # Check for preview
-        if os.environ.get("ORDER_PREVIEW_ENABLED") == "1":
+        if self.bot_config and self.bot_config.enable_order_preview:
             try:
                 preview = self.client.preview_order(payload)
                 logger.info(f"Order Preview: {preview}")

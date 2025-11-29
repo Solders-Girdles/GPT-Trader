@@ -9,6 +9,7 @@ Handles:
 """
 
 import math
+import os
 from collections.abc import Mapping
 from dataclasses import dataclass
 from decimal import ROUND_DOWN, ROUND_UP, Decimal
@@ -17,7 +18,6 @@ from typing import Any
 
 import yaml
 
-from gpt_trader.config.runtime_settings import RuntimeSettings, load_runtime_settings
 from gpt_trader.utilities.logging_patterns import get_logger
 from gpt_trader.utilities.quantization import quantize_price_side_aware
 
@@ -45,16 +45,13 @@ class ProductSpec:
 class SpecsService:
     """Manages product specifications with YAML overrides."""
 
-    def __init__(
-        self, config_path: str | None = None, *, settings: RuntimeSettings | None = None
-    ) -> None:
+    def __init__(self, config_path: str | None = None) -> None:
         self.specs_cache: dict[str, ProductSpec] = {}
         self.overrides: dict[str, dict[str, Any]] = {}
-        runtime_settings = settings or load_runtime_settings()
 
         # Load overrides from YAML if available
         if config_path is None:
-            config_path = runtime_settings.raw_env.get(
+            config_path = os.environ.get(
                 "PERPS_SPECS_PATH", "config/brokers/coinbase_perp_specs.yaml"
             )
 

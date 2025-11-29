@@ -7,13 +7,11 @@ from .bot_config import (
     BotConfig,
     BotRiskConfig,
     ConfigState,
-    config,
 )
 
 __all__ = [
     "BotConfig",
     "BotRiskConfig",
-    "config",
     "ConfigState",
     "DEFAULT_SPOT_RISK_PATH",
     "DEFAULT_SPOT_SYMBOLS",

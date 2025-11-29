@@ -4,36 +4,31 @@ from __future__ import annotations
 
 import argparse
 import logging
+import os
 import sys
-import traceback
 from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
 from dotenv import load_dotenv
 
-from gpt_trader.config.runtime_settings import RuntimeSettings, load_runtime_settings
 from gpt_trader.logging import configure_logging
 from gpt_trader.utilities.logging_patterns import get_logger
 
 # Preserve host-provided secrets; only fill gaps from .env
 load_dotenv()
 
-RUNTIME_SETTINGS: RuntimeSettings = load_runtime_settings()
-
 # Configure logging (rotating files + console)
-configure_logging(settings=RUNTIME_SETTINGS)
+configure_logging()
 logger = get_logger(__name__, component="cli")
-
-from . import services as _cli_services  # noqa: E402
-from .response import CliErrorCode, CliResponse, format_response  # noqa: E402
-
-_cli_services.OVERRIDE_SETTINGS = RUNTIME_SETTINGS
 
 from gpt_trader.cli.commands import account, optimize, orders, report, run, treasury  # noqa: E402
 
+from . import services as _cli_services  # noqa: E402, F401
+from .response import CliErrorCode, CliResponse, format_response  # noqa: E402
+
 COMMAND_NAMES = {"run", "account", "orders", "treasury", "report", "optimize"}
-__all__ = ["main", "RUNTIME_SETTINGS"]
+__all__ = ["main"]
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -186,7 +181,7 @@ def _maybe_enable_debug_logging() -> None:
 
 
 def _env_flag(name: str) -> bool:
-    value = RUNTIME_SETTINGS.raw_env.get(name, "")
+    value = os.environ.get(name, "")
     return value.strip().lower() in {"1", "true", "yes", "on"}
 
 

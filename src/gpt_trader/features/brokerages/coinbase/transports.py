@@ -7,6 +7,7 @@ Provides both real and mock transports for production and testing.
 from __future__ import annotations
 
 import json
+import os
 import sys
 from collections.abc import Iterable
 from typing import TYPE_CHECKING, Any
@@ -42,43 +43,25 @@ except ImportError:  # pragma: no cover - fallback stub for tests
     _HAS_WEBSOCKET = False
 
 if TYPE_CHECKING:
-    from gpt_trader.config.runtime_settings import RuntimeSettings
-else:  # pragma: no cover - runtime type alias
-    RuntimeSettings = Any  # type: ignore[misc]
+    from gpt_trader.orchestration.configuration import BotConfig
 
 _TRUTHY = {"1", "true", "yes", "on"}
 
 logger = get_logger(__name__, component="coinbase_transport")
 
 
-def _load_runtime_settings_snapshot() -> RuntimeSettings:
-    from gpt_trader.config.runtime_settings import load_runtime_settings as _loader
-
-    return _loader()
-
-
 class RealTransport:
     """Real WebSocket transport using websocket-client library."""
 
-    def __init__(self, *, settings: RuntimeSettings | None = None) -> None:
+    def __init__(self, *, config: BotConfig | None = None) -> None:
         self.ws = None
         self.url: str | None = None
-        self._static_settings = settings is not None
-        self._settings = settings or _load_runtime_settings_snapshot()
-
-    def update_settings(self, settings: RuntimeSettings) -> None:
-        """Update runtime settings snapshot used by the transport."""
-        self._settings = settings
-
-    def _refresh_settings(self) -> None:
-        if not self._static_settings:
-            self._settings = _load_runtime_settings_snapshot()
+        self._config = config
 
     def connect(
         self, url: str | dict[str, str] | None = None, headers: dict[str, str] | None = None
     ) -> None:
         """Connect to the WebSocket server with optional headers."""
-        self._refresh_settings()
 
         if isinstance(url, dict) and headers is None:
             headers = url
@@ -94,7 +77,7 @@ class RealTransport:
         if headers:
             options["header"] = headers
 
-        timeout_raw = self._settings.raw_env.get("COINBASE_WS_CONNECT_TIMEOUT")
+        timeout_raw = os.getenv("COINBASE_WS_CONNECT_TIMEOUT")
         if timeout_raw:
             try:
                 options["timeout"] = float(timeout_raw)
@@ -103,13 +86,13 @@ class RealTransport:
                     "Ignoring invalid COINBASE_WS_CONNECT_TIMEOUT=%s (expected float)", timeout_raw
                 )
 
-        subprotocols_raw = self._settings.raw_env.get("COINBASE_WS_SUBPROTOCOLS")
+        subprotocols_raw = os.getenv("COINBASE_WS_SUBPROTOCOLS")
         if subprotocols_raw:
             subprotocols = [token.strip() for token in subprotocols_raw.split(",") if token.strip()]
             if subprotocols:
                 options["subprotocols"] = subprotocols
 
-        trace_flag = (self._settings.raw_env.get("COINBASE_WS_ENABLE_TRACE") or "").strip().lower()
+        trace_flag = (os.getenv("COINBASE_WS_ENABLE_TRACE") or "").strip().lower()
         if trace_flag in _TRUTHY:
             try:
                 websocket.enableTrace(True)  # type: ignore[attr-defined]
@@ -211,10 +194,9 @@ class NoopTransport:
     tests want to avoid network dependencies without monkeypatching imports.
     """
 
-    def __init__(self, *, settings: RuntimeSettings | None = None) -> None:
+    def __init__(self, *, config: BotConfig | None = None) -> None:
         self.connected = False
-        self._static_settings = settings is not None
-        self._settings = settings or _load_runtime_settings_snapshot()
+        self._config = config
 
     def connect(self, url: str, headers: dict[str, str] | None = None) -> None:  # noqa: ARG002
         self.connected = True

@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import logging
 import logging.handlers
+import os
 from pathlib import Path
+from typing import Any
 
 from gpt_trader.config.path_registry import LOG_DIR, ensure_directories
-from gpt_trader.config.runtime_settings import RuntimeSettings
 from gpt_trader.logging.json_formatter import (
     StructuredJSONFormatterWithTimestamp,
 )
@@ -16,42 +17,26 @@ from gpt_trader.logging.json_formatter import (
 def _env_flag(
     name: str,
     default: str = "0",
-    *,
-    settings: RuntimeSettings | None = None,
 ) -> bool:
-    if settings is None:
-        from gpt_trader.config.runtime_settings import load_runtime_settings
-
-        runtime_settings = load_runtime_settings()
-    else:
-        runtime_settings = settings
-    raw_value = runtime_settings.raw_env.get(name, default)
+    raw_value = os.environ.get(name, default)
     return str(raw_value).strip().lower() in {"1", "true", "yes", "on"}
 
 
-def _env_lookup(raw_env: dict[str, str], *keys: str, default: str | None = None) -> str | None:
+def _env_lookup(*keys: str, default: str | None = None) -> str | None:
     """Return the first non-empty environment value for the given keys."""
 
     for key in keys:
-        value = raw_env.get(key)
+        value = os.environ.get(key)
         if value is not None and str(value).strip():
             return str(value)
     return default
 
 
-def configure_logging(settings: RuntimeSettings | None = None) -> None:
+def configure_logging(config: Any = None) -> None:
     """Configure rotating file logging and debug levels."""
 
-    if settings is None:
-        from gpt_trader.config.runtime_settings import load_runtime_settings
-
-        runtime_settings = load_runtime_settings()
-    else:
-        runtime_settings = settings
-    raw_env = runtime_settings.raw_env
-
     ensure_directories((LOG_DIR,))
-    log_dir_raw = _env_lookup(raw_env, "COINBASE_TRADER_LOG_DIR", "PERPS_LOG_DIR")
+    log_dir_raw = _env_lookup("COINBASE_TRADER_LOG_DIR", "PERPS_LOG_DIR")
     log_dir = Path(log_dir_raw) if log_dir_raw else Path(LOG_DIR)
     log_dir.mkdir(parents=True, exist_ok=True)
 
@@ -73,19 +58,17 @@ def configure_logging(settings: RuntimeSettings | None = None) -> None:
         root.addHandler(console)
 
     general_max_bytes = int(
-        _env_lookup(raw_env, "COINBASE_TRADER_LOG_MAX_BYTES", "PERPS_LOG_MAX_BYTES")
-        or str(50 * 1024 * 1024)
+        _env_lookup("COINBASE_TRADER_LOG_MAX_BYTES", "PERPS_LOG_MAX_BYTES") or str(50 * 1024 * 1024)
     )
     general_backups = int(
-        _env_lookup(raw_env, "COINBASE_TRADER_LOG_BACKUP_COUNT", "PERPS_LOG_BACKUP_COUNT") or "10"
+        _env_lookup("COINBASE_TRADER_LOG_BACKUP_COUNT", "PERPS_LOG_BACKUP_COUNT") or "10"
     )
     critical_max_bytes = int(
-        _env_lookup(raw_env, "COINBASE_TRADER_CRIT_LOG_MAX_BYTES", "PERPS_CRIT_LOG_MAX_BYTES")
+        _env_lookup("COINBASE_TRADER_CRIT_LOG_MAX_BYTES", "PERPS_CRIT_LOG_MAX_BYTES")
         or str(10 * 1024 * 1024)
     )
     critical_backups = int(
-        _env_lookup(raw_env, "COINBASE_TRADER_CRIT_LOG_BACKUP_COUNT", "PERPS_CRIT_LOG_BACKUP_COUNT")
-        or "5"
+        _env_lookup("COINBASE_TRADER_CRIT_LOG_BACKUP_COUNT", "PERPS_CRIT_LOG_BACKUP_COUNT") or "5"
     )
 
     general_path = str(log_dir / "coinbase_trader.log")
@@ -151,8 +134,6 @@ def configure_logging(settings: RuntimeSettings | None = None) -> None:
         json_critical_handler.setFormatter(json_formatter)
         json_logger.addHandler(json_critical_handler)
 
-    if _env_flag("COINBASE_TRADER_DEBUG", "0", settings=runtime_settings) or _env_flag(
-        "PERPS_DEBUG", "0", settings=runtime_settings
-    ):
+    if _env_flag("COINBASE_TRADER_DEBUG", "0") or _env_flag("PERPS_DEBUG", "0"):
         logging.getLogger("gpt_trader.features.brokerages.coinbase").setLevel(logging.DEBUG)
         logging.getLogger("gpt_trader.orchestration").setLevel(logging.DEBUG)

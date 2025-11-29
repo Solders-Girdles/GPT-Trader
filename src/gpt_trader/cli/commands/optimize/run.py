@@ -329,30 +329,27 @@ def _handle_dry_run(
 
 
 def _create_data_provider() -> HistoricalDataManager:
-    """Create data provider using existing RuntimeSettings credential pattern."""
-    from gpt_trader.config.runtime_settings import load_runtime_settings
-
-    settings = load_runtime_settings()
+    """Create data provider using environment variables for credentials."""
+    import json
+    import os
 
     # Reuse existing credential loading logic from container.py
     api_key_name = None
     private_key = None
 
-    creds_file = settings.raw_env.get("COINBASE_CREDENTIALS_FILE")
+    creds_file = os.environ.get("COINBASE_CREDENTIALS_FILE")
     if creds_file:
         path = Path(creds_file)
         if path.exists():
-            import json
-
             with open(path) as f:
                 data = json.load(f)
                 api_key_name = data.get("name")
                 private_key = data.get("privateKey")
 
     if not api_key_name:
-        api_key_name = settings.raw_env.get("COINBASE_API_KEY_NAME")
+        api_key_name = os.environ.get("COINBASE_API_KEY_NAME")
     if not private_key:
-        private_key = settings.raw_env.get("COINBASE_PRIVATE_KEY")
+        private_key = os.environ.get("COINBASE_PRIVATE_KEY")
 
     if not api_key_name or not private_key:
         raise ValueError(

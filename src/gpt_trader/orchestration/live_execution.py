@@ -16,12 +16,12 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import Any, cast
 
-from gpt_trader.config.runtime_settings import RuntimeSettings, load_runtime_settings
 from gpt_trader.core import OrderSide, OrderType, Product
 from gpt_trader.features.brokerages.coinbase.rest_service import CoinbaseRestService
 from gpt_trader.features.brokerages.coinbase.specs import validate_order as spec_validate_order
 from gpt_trader.features.brokerages.core.protocols import ExtendedBrokerProtocol
 from gpt_trader.features.live_trade.risk import LiveRiskManager, ValidationError
+from gpt_trader.orchestration.configuration import BotConfig
 from gpt_trader.orchestration.execution import (
     GuardManager,
     OrderSubmitter,
@@ -66,25 +66,27 @@ class LiveExecutionEngine:
     def __init__(
         self,
         broker: CoinbaseRestService,
+        config: BotConfig,
         risk_manager: LiveRiskManager | None = None,
         event_store: EventStore | None = None,
         bot_id: str = "live_execution",
         slippage_multipliers: dict[str, float] | None = None,
         enable_preview: bool | None = None,
-        settings: RuntimeSettings | None = None,
     ) -> None:
         """
         Initialize live execution engine.
 
         Args:
             broker: Brokerage adapter (must support perpetuals)
+            config: Bot configuration
             risk_manager: Risk manager instance (creates default if None)
             event_store: Event store for metrics
             bot_id: Bot identifier for logging
             slippage_multipliers: Symbol-specific slippage multipliers
-            enable_preview: Enable order preview (defaults to env var)
+            enable_preview: Enable order preview (defaults to config)
         """
         self.broker = broker
+        self._config = config
 
         provided_manager = risk_manager is not None
         store = event_store
@@ -108,20 +110,14 @@ class LiveExecutionEngine:
         self.bot_id = bot_id
         self.slippage_multipliers = slippage_multipliers or {}
 
-        runtime_settings = settings or load_runtime_settings()
-        # self._production_logger removed as it's now in StateCollector
-
         # Integration mode is disabled by default
         self._integration_mode = False
 
         # Determine order preview setting
-        preview_env = runtime_settings.raw_env.get("ORDER_PREVIEW_ENABLED")
         if enable_preview is not None:
             self.enable_order_preview = enable_preview
-        elif preview_env is not None:
-            self.enable_order_preview = preview_env.lower() in ("1", "true", "yes")
         else:
-            self.enable_order_preview = False
+            self.enable_order_preview = config.enable_order_preview
 
         # Track open orders for cancellation on risk trips
         self.open_orders: list[str] = []
@@ -129,7 +125,7 @@ class LiveExecutionEngine:
         # Initialize helper modules
         self.state_collector: StateCollector = StateCollector(
             cast(ExtendedBrokerProtocol, broker),
-            settings=runtime_settings,
+            config=config,
             integration_mode=self._integration_mode,
         )
         self.order_submitter: OrderSubmitter = OrderSubmitter(

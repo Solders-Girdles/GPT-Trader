@@ -4,13 +4,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from gpt_trader.config.runtime_settings import (
-    RuntimeSettings,
-    get_runtime_settings,
-)
-
 if TYPE_CHECKING:  # pragma: no cover - typing convenience
     from gpt_trader.features.brokerages.coinbase.account_manager import CoinbaseAccountManager
+    from gpt_trader.orchestration.configuration import BotConfig
 
 
 class IntxPortfolioService:
@@ -20,18 +16,13 @@ class IntxPortfolioService:
         self,
         *,
         account_manager: CoinbaseAccountManager,
-        runtime_settings: RuntimeSettings | None = None,
+        config: BotConfig | None = None,
     ) -> None:
         self._account_manager = account_manager
-        self._settings = runtime_settings or getattr(account_manager, "runtime_settings", None)
-        if self._settings is None:
-            try:
-                self._settings = get_runtime_settings()
-            except Exception:  # pragma: no cover - defensive fallback
-                self._settings = None
+        self._config = config
         override_uuid = (
-            getattr(self._settings, "coinbase_intx_portfolio_uuid", None)
-            if self._settings is not None
+            getattr(self._config, "coinbase_intx_portfolio_uuid", None)
+            if self._config is not None
             else None
         )
         if override_uuid and not getattr(self._account_manager, "intx_portfolio_uuid", None):
@@ -78,8 +69,8 @@ class IntxPortfolioService:
             "supports_intx": self.supports_intx(),
             "portfolio_uuid": uuid,
             "override_uuid": (
-                getattr(self._settings, "coinbase_intx_portfolio_uuid", None)
-                if self._settings is not None
+                getattr(self._config, "coinbase_intx_portfolio_uuid", None)
+                if self._config is not None
                 else None
             ),
         }

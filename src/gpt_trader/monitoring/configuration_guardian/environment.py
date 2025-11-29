@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
+import os
 from datetime import UTC, datetime
 from typing import Any
 
-from gpt_trader.config.runtime_settings import RuntimeSettings, load_runtime_settings
+from gpt_trader.orchestration.configuration import BotConfig
 
 from .base import ConfigurationMonitor
-from .logging_utils import logger  # naming: allow
 from .models import DriftEvent
 from .responses import DriftResponse
 
@@ -37,10 +37,10 @@ class EnvironmentMonitor(ConfigurationMonitor):
         self,
         baseline_snapshot: Any,
         *,
-        settings: RuntimeSettings | None = None,
+        config: BotConfig | None = None,
     ) -> None:
         self.baseline = baseline_snapshot
-        self._settings = settings or load_runtime_settings()
+        self._config = config
         self._last_state = self._capture_current_state()
 
     def update_baseline(self, baseline_snapshot: Any) -> None:
@@ -51,16 +51,6 @@ class EnvironmentMonitor(ConfigurationMonitor):
     def check_changes(self) -> list[DriftEvent]:
         """Check for environment variable changes."""
         events: list[DriftEvent] = []
-        try:
-            self._settings = load_runtime_settings()
-        except Exception as exc:  # pragma: no cover - defensive guard
-            logger.warning(
-                "Failed to reload runtime settings",
-                operation="config_guardian",
-                stage="environment_monitor",
-                error=str(exc),
-                exc_info=True,
-            )
         current_state = self._capture_current_state()
 
         for var in self.CRITICAL_ENV_VARS:
@@ -143,7 +133,7 @@ class EnvironmentMonitor(ConfigurationMonitor):
         all_vars = self.CRITICAL_ENV_VARS | self.RISK_ENV_VARS | self.MONITOR_ENV_VARS
 
         for var in all_vars:
-            value = self._settings.raw_env.get(var)
+            value = os.environ.get(var)
             if value is not None:
                 if var.upper().endswith(("_KEY", "_SECRET", "_TOKEN")):
                     state[var] = "[REDACTED]"

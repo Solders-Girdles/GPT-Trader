@@ -8,12 +8,12 @@ Critical for INTX (Coinbase International Exchange) and production trading.
 from __future__ import annotations
 
 import ipaddress
+import os
 import threading
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any
 
-from gpt_trader.config.runtime_settings import RuntimeSettings, load_runtime_settings
 from gpt_trader.utilities.logging_patterns import get_logger
 
 logger = get_logger(__name__, component="ip_allowlist")
@@ -57,10 +57,8 @@ class IPAllowlistEnforcer:
     def __init__(
         self,
         *,
-        settings: RuntimeSettings | None = None,
         enable_enforcement: bool = True,
     ) -> None:
-        self._settings = settings or load_runtime_settings()
         self._enable_enforcement = enable_enforcement
         self._lock = threading.RLock()
         self._rules: dict[str, IPAllowlistRule] = {}
@@ -72,15 +70,13 @@ class IPAllowlistEnforcer:
 
     def _load_rules_from_environment(self) -> None:
         """Load IP allowlist rules from environment variables"""
-        env_map = self._settings.raw_env
-
         # Check if enforcement is enabled
-        enforcement_enabled = env_map.get("IP_ALLOWLIST_ENABLED", "1")
+        enforcement_enabled = os.environ.get("IP_ALLOWLIST_ENABLED", "1")
         self._enable_enforcement = enforcement_enabled.lower() in ("1", "true", "yes")
 
         # Load service-specific allowlists
         # Format: IP_ALLOWLIST_<SERVICE>=ip1,ip2,cidr1,cidr2
-        for key, value in env_map.items():
+        for key, value in os.environ.items():
             if key.startswith("IP_ALLOWLIST_") and key != "IP_ALLOWLIST_ENABLED":
                 service_name = key.replace("IP_ALLOWLIST_", "").lower()
                 allowed_ips = [ip.strip() for ip in value.split(",") if ip.strip()]

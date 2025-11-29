@@ -4,9 +4,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from gpt_trader.config.runtime_settings import RuntimeSettings
+if TYPE_CHECKING:
+    from gpt_trader.orchestration.configuration import BotConfig
 
 
 @dataclass(frozen=True)
@@ -19,7 +20,7 @@ class RuntimePaths:
 
 def resolve_runtime_paths(
     *,
-    settings: RuntimeSettings,
+    config: BotConfig,
     profile: Any,
     bot_name: str = "coinbase_trader",
 ) -> RuntimePaths:
@@ -27,11 +28,13 @@ def resolve_runtime_paths(
 
     profile_value = profile.value if hasattr(profile, "value") else str(profile)
 
-    storage_dir = settings.runtime_root / f"{bot_name}/{profile_value}"
+    runtime_root = Path(config.runtime_root)
+    storage_dir = runtime_root / f"{bot_name}/{profile_value}"
     storage_dir.mkdir(parents=True, exist_ok=True)
 
-    override_root = settings.event_store_root_override
-    if override_root is not None:
+    override_root_str = config.event_store_root_override
+    if override_root_str is not None:
+        override_root = Path(override_root_str)
         event_store_root = override_root
         if bot_name not in set(event_store_root.parts):
             event_store_root = event_store_root / bot_name / profile_value

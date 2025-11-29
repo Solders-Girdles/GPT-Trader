@@ -10,13 +10,14 @@ import base64
 
 # Removed unused imports - Fernet handles encryption directly
 import json
+import os
 import threading
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
-from gpt_trader.config.runtime_settings import RuntimeSettings, load_runtime_settings
+from gpt_trader.orchestration.configuration import BotConfig
 from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:  # pragma: no cover - type hints only
@@ -61,7 +62,7 @@ class SecretsManager:
         self,
         vault_enabled: bool = True,
         *,
-        settings: RuntimeSettings | None = None,
+        config: BotConfig | None = None,
         secrets_dir: Path | None = None,
     ) -> None:
         self._lock = threading.RLock()
@@ -69,8 +70,7 @@ class SecretsManager:
         self._secrets_cache: dict[str, dict[str, Any]] = {}
         self._vault_client: Any | None = None
         self._vault_enabled = vault_enabled
-        self._static_settings = settings is not None
-        self._settings = settings or load_runtime_settings()
+        self._config = config
         self._secrets_dir = secrets_dir or (Path.home() / ".gpt_trader" / "secrets")
         self._initialize_encryption()
 
@@ -79,14 +79,11 @@ class SecretsManager:
 
     def _initialize_encryption(self) -> None:
         """Initialize encryption using environment key or generate new"""
-        env_map = (
-            self._settings.raw_env if self._static_settings else load_runtime_settings().raw_env
-        )
-        encryption_key = env_map.get("GPT_TRADER_ENCRYPTION_KEY")
+        encryption_key = os.getenv("GPT_TRADER_ENCRYPTION_KEY")
 
         if not encryption_key:
             # Generate new key for development
-            environment = (env_map.get("ENV") or "development").lower()
+            environment = os.getenv("ENV", "development").lower()
             if environment == "development":
                 fernet_cls = _require_fernet()
                 encryption_key = fernet_cls.generate_key().decode()
@@ -138,11 +135,8 @@ class SecretsManager:
 
             logger.debug("Successfully imported hvac module")
 
-            env_map = (
-                self._settings.raw_env if self._static_settings else load_runtime_settings().raw_env
-            )
-            vault_addr = env_map.get("VAULT_ADDR", "http://localhost:8200")
-            vault_token = env_map.get("VAULT_TOKEN")
+            vault_addr = os.getenv("VAULT_ADDR", "http://localhost:8200")
+            vault_token = os.getenv("VAULT_TOKEN")
             logger.debug(
                 f"Vault config - addr: {vault_addr}, token: {'*' * len(vault_token) if vault_token else 'None'}"
             )

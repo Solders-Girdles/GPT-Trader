@@ -7,13 +7,14 @@ balances, positions, equity calculations, and collateral asset resolution.
 
 from __future__ import annotations
 
+import os
 from decimal import Decimal
 from types import SimpleNamespace
 from typing import Any, cast
 
-from gpt_trader.config.runtime_settings import RuntimeSettings, load_runtime_settings
 from gpt_trader.core import Balance, MarketType, Product
 from gpt_trader.features.brokerages.core.protocols import ExtendedBrokerProtocol
+from gpt_trader.orchestration.configuration import BotConfig
 from gpt_trader.utilities.logging_patterns import get_logger
 from gpt_trader.utilities.quantities import quantity_from
 
@@ -26,8 +27,8 @@ class StateCollector:
     def __init__(
         self,
         broker: ExtendedBrokerProtocol,
+        config: BotConfig,
         *,
-        settings: RuntimeSettings | None = None,
         integration_mode: bool = False,
     ) -> None:
         """
@@ -35,11 +36,11 @@ class StateCollector:
 
         Args:
             broker: Brokerage adapter implementing ExtendedBrokerProtocol
-            settings: Runtime settings (loaded from env if None)
+            config: Bot configuration
             integration_mode: Enable integration test mode with synthetic fallbacks.
         """
         self.broker = broker
-        self._settings = settings or load_runtime_settings()
+        self._config = config
         self._integration_mode = integration_mode
 
         self.collateral_assets = self._resolve_collateral_assets()
@@ -48,7 +49,7 @@ class StateCollector:
         # Initialize production logger for balance updates
         from gpt_trader.monitoring.system import get_logger as get_prod_logger
 
-        self._production_logger = get_prod_logger(settings=self._settings)
+        self._production_logger = get_prod_logger(settings=None)
 
     def log_collateral_update(
         self,
@@ -99,7 +100,7 @@ class StateCollector:
 
     def _resolve_collateral_assets(self) -> set[str]:
         """Resolve collateral assets from environment or use defaults."""
-        env_value = self._settings.raw_env.get("PERPS_COLLATERAL_ASSETS", "")
+        env_value = os.getenv("PERPS_COLLATERAL_ASSETS", "")
         default_assets = {"USD", "USDC"}
         parsed = {token.strip().upper() for token in env_value.split(",") if token.strip()}
         return parsed or set(default_assets)

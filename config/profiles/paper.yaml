@@ -1,0 +1,33 @@
+# Paper Trading Profile
+# Conservative settings for testing with real market data and simulated execution
+
+strategy:
+  btc:
+    type: ma
+    short_window: 10
+    long_window: 50
+    volatility_filter: null
+    volume_filter:
+      window: 10
+      multiplier: 1.2
+    momentum_filter:
+      window: 14
+      oversold: 35
+      overbought: 70
+    trend_filter: null
+    regime_filter:
+      window: 14
+      adx_threshold: 25
+
+risk:
+  commission_bps: 5  # Conservative fee estimate
+  max_position_pct: 0.10  # Max 10% of equity per position
+  max_daily_loss: 50  # Conservative daily loss limit for paper trading
+
+symbols:
+  - BTC-USD
+
+# Paper trading metadata
+paper_mode: true
+initial_equity_usd: 10000
+log_simulated_orders: true

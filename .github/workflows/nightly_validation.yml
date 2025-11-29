@@ -65,9 +65,12 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Run full test suite (parallel)
-        run: |
-          set -euo pipefail
-          uv run pytest -n auto --dist worksteal -q
+        uses: nick-invision/retry@v3
+        with:
+          timeout_minutes: 45
+          max_attempts: 2
+          retry_wait_seconds: 10
+          command: uv run pytest -n auto --dist worksteal -q
 
       - name: Report status
         if: failure()

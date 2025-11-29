@@ -1,0 +1,90 @@
+name: Setup Coinbase Credentials
+description: Configure Coinbase API credentials for testing
+
+inputs:
+  mode:
+    description: 'Environment mode: prod, sandbox, prod_fallback, sandbox_fallback, or api (for targeted suites)'
+    required: true
+  api-mode:
+    description: 'API mode for targeted suites (advanced or exchange)'
+    required: false
+    default: ''
+  api-base:
+    description: 'API base URL for targeted suites'
+    required: false
+    default: ''
+  needs-passphrase:
+    description: 'Whether to set API passphrase (for exchange mode)'
+    required: false
+    default: 'false'
+
+runs:
+  using: composite
+  steps:
+    - name: Configure credentials
+      shell: bash
+      env:
+        MODE: ${{ inputs.mode }}
+        API_MODE: ${{ inputs.api-mode }}
+        API_BASE: ${{ inputs.api-base }}
+        NEEDS_PASSPHRASE: ${{ inputs.needs-passphrase }}
+        # Test placeholder values (not real credentials)
+        TEST_PROD_KEY: "test-prod-key"
+        TEST_PROD_SECRET: "test-prod-secret"
+        TEST_SANDBOX_KEY: "test-sandbox-key"
+        TEST_SANDBOX_SECRET: "test-sandbox-secret"
+        TEST_FALLBACK_KEY: "test-fallback-key"
+        TEST_FALLBACK_SECRET: "test-fallback-secret"
+        TEST_API_KEY: "test-api-key"
+        TEST_API_SECRET: "test-api-secret"
+        TEST_PASSPHRASE: "test-passphrase"
+      run: |
+        set -euo pipefail
+
+        # Initialize defaults
+        echo "COINBASE_SANDBOX=0" >> "$GITHUB_ENV"
+
+        case "$MODE" in
+          prod)
+            {
+              echo "COINBASE_PROD_API_KEY=$TEST_PROD_KEY"
+              echo "COINBASE_PROD_API_SECRET=$TEST_PROD_SECRET"
+            } >> "$GITHUB_ENV"
+            ;;
+          sandbox)
+            {
+              echo "COINBASE_SANDBOX=1"
+              echo "COINBASE_SANDBOX_API_KEY=$TEST_SANDBOX_KEY"
+              echo "COINBASE_SANDBOX_API_SECRET=$TEST_SANDBOX_SECRET"
+            } >> "$GITHUB_ENV"
+            ;;
+          prod_fallback)
+            {
+              echo "COINBASE_API_KEY=$TEST_FALLBACK_KEY"
+              echo "COINBASE_API_SECRET=$TEST_FALLBACK_SECRET"
+            } >> "$GITHUB_ENV"
+            ;;
+          sandbox_fallback)
+            {
+              echo "COINBASE_SANDBOX=1"
+              echo "COINBASE_API_KEY=$TEST_FALLBACK_KEY"
+              echo "COINBASE_API_SECRET=$TEST_FALLBACK_SECRET"
+            } >> "$GITHUB_ENV"
+            ;;
+          api)
+            # For targeted suites with API mode configuration
+            {
+              echo "COINBASE_API_MODE=$API_MODE"
+              echo "COINBASE_API_BASE=$API_BASE"
+              echo "COINBASE_API_KEY=$TEST_API_KEY"
+              echo "COINBASE_API_SECRET=$TEST_API_SECRET"
+            } >> "$GITHUB_ENV"
+            if [ "$NEEDS_PASSPHRASE" = "true" ]; then
+              echo "COINBASE_API_PASSPHRASE=$TEST_PASSPHRASE" >> "$GITHUB_ENV"
+            fi
+            ;;
+          *)
+            echo "Unknown mode: $MODE" >&2
+            exit 1
+            ;;
+        esac

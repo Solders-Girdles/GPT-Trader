@@ -2,6 +2,16 @@ name: Targeted Suites
 
 on:
   workflow_dispatch:
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'src/gpt_trader/features/brokerages/coinbase/**'
+      - 'src/gpt_trader/features/live_trade/**'
+      - 'tests/unit/gpt_trader/features/brokerages/coinbase/**'
+      - 'tests/unit/gpt_trader/features/live_trade/**'
+      - 'tests/unit/gpt_trader/orchestration/test_broker_factory.py'
+      - 'tests/unit/gpt_trader/orchestration/test_live_execution.py'
+      - 'tests/unit/gpt_trader/orchestration/test_execution_coordinator.py'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -53,26 +63,14 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
-      # Configure test credentials - intentionally placeholder values for unit tests
       - name: Configure Coinbase API mode
         if: startsWith(matrix.suite, 'coinbase')
-        env:
-          API_MODE: ${{ matrix.api_mode }}
-          API_BASE: ${{ matrix.base_url }}
-          NEEDS_PASSPHRASE: ${{ matrix.needs_passphrase }}
-          # Test placeholder values (not real credentials)
-          TEST_API_KEY: "test-api-key"
-          TEST_API_SECRET: "test-api-secret"
-          TEST_PASSPHRASE: "test-passphrase"
-        run: |
-          set -euo pipefail
-          echo "COINBASE_API_MODE=$API_MODE" >> $GITHUB_ENV
-          echo "COINBASE_API_BASE=$API_BASE" >> $GITHUB_ENV
-          echo "COINBASE_API_KEY=$TEST_API_KEY" >> $GITHUB_ENV
-          echo "COINBASE_API_SECRET=$TEST_API_SECRET" >> $GITHUB_ENV
-          if [ "$NEEDS_PASSPHRASE" = "true" ]; then
-            echo "COINBASE_API_PASSPHRASE=$TEST_PASSPHRASE" >> $GITHUB_ENV
-          fi
+        uses: ./.github/actions/setup-coinbase-creds
+        with:
+          mode: api
+          api-mode: ${{ matrix.api_mode }}
+          api-base: ${{ matrix.base_url }}
+          needs-passphrase: ${{ matrix.needs_passphrase }}
 
       - name: Run Coinbase unit suite
         if: matrix.category == 'coinbase-api'

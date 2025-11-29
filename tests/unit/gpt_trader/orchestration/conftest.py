@@ -12,7 +12,6 @@ from unittest.mock import Mock
 
 import pytest
 
-from gpt_trader.config.runtime_settings import RuntimeSettings
 from gpt_trader.features.brokerages.core.interfaces import Balance, Position
 from gpt_trader.features.live_trade.engines.base import CoordinatorContext
 from gpt_trader.orchestration.configuration import BotConfig, Profile
@@ -31,14 +30,15 @@ except ImportError:
 
 
 @pytest.fixture
-def patched_runtime_settings(monkeypatch, tmp_path):
-    """Mock runtime settings."""
-    settings = RuntimeSettings(raw_env={}, runtime_root=tmp_path)
-    monkeypatch.setattr(
-        "gpt_trader.config.runtime_settings.load_runtime_settings", lambda: settings
+def test_bot_config(tmp_path) -> BotConfig:
+    """Provide a BotConfig for orchestration tests."""
+    return BotConfig(
+        symbols=["BTC-PERP"],
+        profile=Profile.DEV,
+        mock_broker=True,
+        dry_run=True,
+        runtime_root=str(tmp_path),
     )
-    monkeypatch.setattr("gpt_trader.orchestration.storage.load_runtime_settings", lambda: settings)
-    return settings
 
 
 @pytest.fixture

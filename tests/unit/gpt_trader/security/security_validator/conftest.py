@@ -9,17 +9,13 @@ from typing import Any
 import pytest
 from freezegun import freeze_time
 
-from gpt_trader.config.runtime_settings import RuntimeSettings
+from gpt_trader.orchestration.configuration import BotConfig
 
 
 @pytest.fixture
-def validator_runtime_settings(runtime_settings_factory) -> RuntimeSettings:
-    """Runtime settings tailored for security_validator tests."""
-    return runtime_settings_factory(
-        env_overrides={
-            "ENV": "development",
-        }
-    )
+def validator_bot_config(bot_config_factory) -> BotConfig:
+    """Bot config tailored for security_validator tests."""
+    return bot_config_factory()
 
 
 @pytest.fixture

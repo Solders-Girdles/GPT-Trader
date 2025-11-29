@@ -14,11 +14,6 @@ from gpt_trader.config.env_utils import (  # naming: allow
 )
 
 
-class StubSettings:
-    def __init__(self, raw_env: dict[str, str]) -> None:
-        self.raw_env = raw_env
-
-
 def test_parse_env_mapping_success(monkeypatch):
     monkeypatch.setenv("TEST_MAPPING", "BTC-PERP:10, ETH-PERP: 5")
 
@@ -82,75 +77,75 @@ def test_get_env_int_default(monkeypatch):
     assert get_env_int("TEST_INT", default=7) == 7
 
 
-def test_coerce_env_value_uses_default_when_missing():
-    settings = StubSettings({})
+def test_coerce_env_value_uses_default_when_missing(monkeypatch):
+    monkeypatch.delenv("MISSING", raising=False)
 
-    result = coerce_env_value("MISSING", int, default=5, settings=settings)
+    result = coerce_env_value("MISSING", int, default=5)
 
     assert result == 5
 
 
-def test_coerce_env_value_required_raises():
-    settings = StubSettings({})
+def test_coerce_env_value_required_raises(monkeypatch):
+    monkeypatch.delenv("REQUIRED", raising=False)
 
     with pytest.raises(EnvVarError):
-        coerce_env_value("REQUIRED", int, required=True, settings=settings)
+        coerce_env_value("REQUIRED", int, required=True)
 
 
-def test_require_env_value_returns_cast_result():
-    settings = StubSettings({"REQUIRED": "42"})
+def test_require_env_value_returns_cast_result(monkeypatch):
+    monkeypatch.setenv("REQUIRED", "42")
 
-    value = require_env_value("REQUIRED", int, settings=settings)
+    value = require_env_value("REQUIRED", int)
 
     assert value == 42
 
 
-def test_parse_env_list_disallows_empty_entries():
-    settings = StubSettings({"TEST_LIST": "alpha,,beta"})
+def test_parse_env_list_disallows_empty_entries(monkeypatch):
+    monkeypatch.setenv("TEST_LIST", "alpha,,beta")
 
     with pytest.raises(EnvVarError) as exc:
-        parse_env_list("TEST_LIST", str, allow_empty=False, settings=settings)
+        parse_env_list("TEST_LIST", str, allow_empty=False)
 
     assert "empty list entry" in str(exc.value)
 
 
-def test_parse_env_list_cast_failure():
-    settings = StubSettings({"TEST_LIST": "1, two"})
+def test_parse_env_list_cast_failure(monkeypatch):
+    monkeypatch.setenv("TEST_LIST", "1, two")
 
     with pytest.raises(EnvVarError) as exc:
-        parse_env_list("TEST_LIST", int, settings=settings)
+        parse_env_list("TEST_LIST", int)
 
     assert "could not cast value 'two'" in str(exc.value)
 
 
-def test_parse_env_mapping_disallows_empty_key():
-    settings = StubSettings({"TEST_MAP": ":1"})
+def test_parse_env_mapping_disallows_empty_key(monkeypatch):
+    monkeypatch.setenv("TEST_MAP", ":1")
 
     with pytest.raises(EnvVarError) as exc:
-        parse_env_mapping("TEST_MAP", int, settings=settings)
+        parse_env_mapping("TEST_MAP", int)
 
     assert "empty key" in str(exc.value)
 
 
-def test_parse_env_mapping_disallows_empty_value():
-    settings = StubSettings({"TEST_MAP": "BTC-PERP:"})
+def test_parse_env_mapping_disallows_empty_value(monkeypatch):
+    monkeypatch.setenv("TEST_MAP", "BTC-PERP:")
 
     with pytest.raises(EnvVarError) as exc:
-        parse_env_mapping("TEST_MAP", int, settings=settings)
+        parse_env_mapping("TEST_MAP", int)
 
     assert "empty value" in str(exc.value)
 
 
-def test_parse_env_mapping_required_missing():
-    settings = StubSettings({})
+def test_parse_env_mapping_required_missing(monkeypatch):
+    monkeypatch.delenv("MAPPING", raising=False)
 
     with pytest.raises(EnvVarError):
-        parse_env_mapping("MAPPING", int, required=True, settings=settings)
+        parse_env_mapping("MAPPING", int, required=True)
 
 
-def test_parse_env_mapping_skips_empty_entries_when_allowed():
-    settings = StubSettings({"TEST_MAP": "BTC:1,,ETH:2"})
+def test_parse_env_mapping_skips_empty_entries_when_allowed(monkeypatch):
+    monkeypatch.setenv("TEST_MAP", "BTC:1,,ETH:2")
 
-    result = parse_env_mapping("TEST_MAP", int, allow_empty=True, settings=settings)
+    result = parse_env_mapping("TEST_MAP", int, allow_empty=True)
 
     assert result == {"BTC": 1, "ETH": 2}

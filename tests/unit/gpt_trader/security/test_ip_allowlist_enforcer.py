@@ -1,7 +1,5 @@
 """Tests for IP Allowlist Enforcer"""
 
-from unittest.mock import Mock
-
 import pytest
 
 from gpt_trader.security.ip_allowlist_enforcer import (
@@ -10,14 +8,11 @@ from gpt_trader.security.ip_allowlist_enforcer import (
 
 
 @pytest.fixture
-def enforcer():
+def enforcer(monkeypatch):
     """IP Allowlist Enforcer instance"""
-    settings = Mock()
-    settings.raw_env = {
-        "IP_ALLOWLIST_ENABLED": "1",
-        "IP_ALLOWLIST_COINBASE_INTX": "192.168.1.1,10.0.0.0/24",
-    }
-    return IPAllowlistEnforcer(settings=settings)
+    monkeypatch.setenv("IP_ALLOWLIST_ENABLED", "1")
+    monkeypatch.setenv("IP_ALLOWLIST_COINBASE_INTX", "192.168.1.1,10.0.0.0/24")
+    return IPAllowlistEnforcer(enable_enforcement=True)
 
 
 def test_load_rules_from_environment(enforcer):
@@ -139,12 +134,11 @@ def test_remove_rule(enforcer):
     assert rule is None
 
 
-def test_enforcement_disabled():
+def test_enforcement_disabled(monkeypatch):
     """Test with enforcement disabled"""
-    settings = Mock()
-    settings.raw_env = {"IP_ALLOWLIST_ENABLED": "0"}
+    monkeypatch.setenv("IP_ALLOWLIST_ENABLED", "0")
 
-    enforcer = IPAllowlistEnforcer(settings=settings)
+    enforcer = IPAllowlistEnforcer(enable_enforcement=False)
 
     # Should allow all IPs when enforcement is disabled
     result = enforcer.validate_ip("any-ip", "any-service")
@@ -238,41 +232,37 @@ def test_update_existing_rule_without_description(enforcer):
     assert rule.description == "Original"  # Should be preserved
 
 
-def test_enable_rule_nonexistent():
+def test_enable_rule_nonexistent(monkeypatch):
     """Test enabling nonexistent rule returns False"""
-    settings = Mock()
-    settings.raw_env = {}
-    enforcer = IPAllowlistEnforcer(settings=settings)
+    monkeypatch.setenv("IP_ALLOWLIST_ENABLED", "1")
+    enforcer = IPAllowlistEnforcer(enable_enforcement=True)
 
     success = enforcer.enable_rule("nonexistent_service")
     assert not success
 
 
-def test_disable_rule_nonexistent():
+def test_disable_rule_nonexistent(monkeypatch):
     """Test disabling nonexistent rule returns False"""
-    settings = Mock()
-    settings.raw_env = {}
-    enforcer = IPAllowlistEnforcer(settings=settings)
+    monkeypatch.setenv("IP_ALLOWLIST_ENABLED", "1")
+    enforcer = IPAllowlistEnforcer(enable_enforcement=True)
 
     success = enforcer.disable_rule("nonexistent_service")
     assert not success
 
 
-def test_remove_rule_nonexistent():
+def test_remove_rule_nonexistent(monkeypatch):
     """Test removing nonexistent rule returns False"""
-    settings = Mock()
-    settings.raw_env = {}
-    enforcer = IPAllowlistEnforcer(settings=settings)
+    monkeypatch.setenv("IP_ALLOWLIST_ENABLED", "1")
+    enforcer = IPAllowlistEnforcer(enable_enforcement=True)
 
     success = enforcer.remove_rule("nonexistent_service")
     assert not success
 
 
-def test_validation_log_trimming():
+def test_validation_log_trimming(monkeypatch):
     """Test that validation log is trimmed when exceeding max size"""
-    settings = Mock()
-    settings.raw_env = {}
-    enforcer = IPAllowlistEnforcer(settings=settings)
+    monkeypatch.setenv("IP_ALLOWLIST_ENABLED", "1")
+    enforcer = IPAllowlistEnforcer(enable_enforcement=True)
     enforcer._max_log_size = 5  # Small size for testing
     enforcer.add_rule("test_service", ["192.168.1.1"])
 
@@ -335,15 +325,12 @@ def test_check_ip_completely_invalid_entry(enforcer):
     assert result is None
 
 
-def test_environment_empty_allowlist():
+def test_environment_empty_allowlist(monkeypatch):
     """Test that empty IP list from environment is skipped"""
-    settings = Mock()
-    settings.raw_env = {
-        "IP_ALLOWLIST_ENABLED": "1",
-        "IP_ALLOWLIST_EMPTY_SERVICE": "",  # Empty value
-        "IP_ALLOWLIST_VALID_SERVICE": "192.168.1.1",
-    }
-    enforcer = IPAllowlistEnforcer(settings=settings)
+    monkeypatch.setenv("IP_ALLOWLIST_ENABLED", "1")
+    monkeypatch.setenv("IP_ALLOWLIST_EMPTY_SERVICE", "")  # Empty value
+    monkeypatch.setenv("IP_ALLOWLIST_VALID_SERVICE", "192.168.1.1")
+    enforcer = IPAllowlistEnforcer(enable_enforcement=True)
 
     # Empty service should not create a rule
     assert enforcer.get_rule("empty_service") is None

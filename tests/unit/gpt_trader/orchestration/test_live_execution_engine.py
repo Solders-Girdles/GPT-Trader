@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 import pytest
 
@@ -99,126 +99,102 @@ class TestLiveExecutionEngineInit:
         manager.event_store = None
         return manager
 
-    def test_init_minimal(self, mock_broker: Mock) -> None:
+    def test_init_minimal(self, mock_broker: Mock, bot_config_factory) -> None:
         """Test initialization with minimal arguments."""
-        with patch(
-            "gpt_trader.orchestration.live_execution.load_runtime_settings"
-        ) as mock_settings:
-            mock_settings.return_value = Mock(raw_env={})
+        config = bot_config_factory()
+        engine = LiveExecutionEngine(broker=mock_broker, config=config)
 
-            engine = LiveExecutionEngine(broker=mock_broker)
+        assert engine.broker is mock_broker
+        assert engine.bot_id == "live_execution"
+        assert engine.event_store is not None
+        assert engine.risk_manager is not None
+        assert engine.slippage_multipliers == {}
+        assert engine.enable_order_preview is False
+        assert engine.open_orders == []
 
-            assert engine.broker is mock_broker
-            assert engine.bot_id == "live_execution"
-            assert engine.event_store is not None
-            assert engine.risk_manager is not None
-            assert engine.slippage_multipliers == {}
-            assert engine.enable_order_preview is False
-            assert engine.open_orders == []
-
-    def test_init_with_custom_bot_id(self, mock_broker: Mock) -> None:
+    def test_init_with_custom_bot_id(self, mock_broker: Mock, bot_config_factory) -> None:
         """Test initialization with custom bot_id."""
-        with patch(
-            "gpt_trader.orchestration.live_execution.load_runtime_settings"
-        ) as mock_settings:
-            mock_settings.return_value = Mock(raw_env={})
+        config = bot_config_factory()
+        engine = LiveExecutionEngine(broker=mock_broker, config=config, bot_id="my_bot")
 
-            engine = LiveExecutionEngine(broker=mock_broker, bot_id="my_bot")
+        assert engine.bot_id == "my_bot"
 
-            assert engine.bot_id == "my_bot"
-
-    def test_init_with_risk_manager(self, mock_broker: Mock, mock_risk_manager: Mock) -> None:
+    def test_init_with_risk_manager(
+        self, mock_broker: Mock, mock_risk_manager: Mock, bot_config_factory
+    ) -> None:
         """Test initialization with provided risk manager."""
-        with patch(
-            "gpt_trader.orchestration.live_execution.load_runtime_settings"
-        ) as mock_settings:
-            mock_settings.return_value = Mock(raw_env={})
+        config = bot_config_factory()
+        engine = LiveExecutionEngine(
+            broker=mock_broker, config=config, risk_manager=mock_risk_manager
+        )
 
-            engine = LiveExecutionEngine(broker=mock_broker, risk_manager=mock_risk_manager)
+        assert engine.risk_manager is mock_risk_manager
 
-            assert engine.risk_manager is mock_risk_manager
-
-    def test_init_with_event_store(self, mock_broker: Mock) -> None:
+    def test_init_with_event_store(self, mock_broker: Mock, bot_config_factory) -> None:
         """Test initialization with provided event store."""
         mock_event_store = Mock()
+        config = bot_config_factory()
 
-        with patch(
-            "gpt_trader.orchestration.live_execution.load_runtime_settings"
-        ) as mock_settings:
-            mock_settings.return_value = Mock(raw_env={})
+        engine = LiveExecutionEngine(
+            broker=mock_broker, config=config, event_store=mock_event_store
+        )
 
-            engine = LiveExecutionEngine(broker=mock_broker, event_store=mock_event_store)
+        assert engine.event_store is mock_event_store
 
-            assert engine.event_store is mock_event_store
-
-    def test_init_with_slippage_multipliers(self, mock_broker: Mock) -> None:
+    def test_init_with_slippage_multipliers(self, mock_broker: Mock, bot_config_factory) -> None:
         """Test initialization with slippage multipliers."""
         slippage = {"BTC-PERP": 1.5, "ETH-PERP": 2.0}
+        config = bot_config_factory()
 
-        with patch(
-            "gpt_trader.orchestration.live_execution.load_runtime_settings"
-        ) as mock_settings:
-            mock_settings.return_value = Mock(raw_env={})
+        engine = LiveExecutionEngine(
+            broker=mock_broker, config=config, slippage_multipliers=slippage
+        )
 
-            engine = LiveExecutionEngine(broker=mock_broker, slippage_multipliers=slippage)
+        assert engine.slippage_multipliers == slippage
 
-            assert engine.slippage_multipliers == slippage
-
-    def test_init_with_order_preview_enabled(self, mock_broker: Mock) -> None:
+    def test_init_with_order_preview_enabled(self, mock_broker: Mock, bot_config_factory) -> None:
         """Test initialization with order preview explicitly enabled."""
-        with patch(
-            "gpt_trader.orchestration.live_execution.load_runtime_settings"
-        ) as mock_settings:
-            mock_settings.return_value = Mock(raw_env={})
+        config = bot_config_factory()
 
-            engine = LiveExecutionEngine(broker=mock_broker, enable_preview=True)
+        engine = LiveExecutionEngine(broker=mock_broker, config=config, enable_preview=True)
 
-            assert engine.enable_order_preview is True
+        assert engine.enable_order_preview is True
 
-    def test_init_order_preview_from_env(self, mock_broker: Mock) -> None:
-        """Test initialization reads ORDER_PREVIEW_ENABLED from env."""
-        with patch(
-            "gpt_trader.orchestration.live_execution.load_runtime_settings"
-        ) as mock_settings:
-            mock_settings.return_value = Mock(raw_env={"ORDER_PREVIEW_ENABLED": "true"})
+    def test_init_order_preview_from_config(self, mock_broker: Mock, bot_config_factory) -> None:
+        """Test initialization reads enable_order_preview from config."""
+        config = bot_config_factory(enable_order_preview=True)
 
-            engine = LiveExecutionEngine(broker=mock_broker)
+        engine = LiveExecutionEngine(broker=mock_broker, config=config)
 
-            assert engine.enable_order_preview is True
+        assert engine.enable_order_preview is True
 
-    def test_init_creates_helper_modules(self, mock_broker: Mock) -> None:
+    def test_init_creates_helper_modules(self, mock_broker: Mock, bot_config_factory) -> None:
         """Test initialization creates all helper modules."""
-        with patch(
-            "gpt_trader.orchestration.live_execution.load_runtime_settings"
-        ) as mock_settings:
-            mock_settings.return_value = Mock(raw_env={})
+        config = bot_config_factory()
 
-            engine = LiveExecutionEngine(broker=mock_broker)
+        engine = LiveExecutionEngine(broker=mock_broker, config=config)
 
-            assert engine.state_collector is not None
-            assert engine.order_submitter is not None
-            assert engine.order_validator is not None
-            assert engine.guard_manager is not None
+        assert engine.state_collector is not None
+        assert engine.order_submitter is not None
+        assert engine.order_validator is not None
+        assert engine.guard_manager is not None
 
-    def test_init_risk_manager_set_event_store(self, mock_broker: Mock) -> None:
+    def test_init_risk_manager_set_event_store(self, mock_broker: Mock, bot_config_factory) -> None:
         """Test that risk manager's event store is updated if different."""
         mock_event_store = Mock()
         mock_risk_manager = Mock()
         mock_risk_manager.event_store = Mock()  # Different store
         mock_risk_manager.set_event_store = Mock()
+        config = bot_config_factory()
 
-        with patch(
-            "gpt_trader.orchestration.live_execution.load_runtime_settings"
-        ) as mock_settings:
-            mock_settings.return_value = Mock(raw_env={})
+        LiveExecutionEngine(
+            broker=mock_broker,
+            config=config,
+            risk_manager=mock_risk_manager,
+            event_store=mock_event_store,
+        )
 
-            LiveExecutionEngine(
-                broker=mock_broker,
-                risk_manager=mock_risk_manager,
-                event_store=mock_event_store,
-            )
-
-            mock_risk_manager.set_event_store.assert_called_once_with(mock_event_store)
+        mock_risk_manager.set_event_store.assert_called_once_with(mock_event_store)
 
 
 # ============================================================
@@ -238,13 +214,10 @@ class TestPlaceOrder:
         return broker
 
     @pytest.fixture
-    def engine(self, mock_broker: Mock) -> LiveExecutionEngine:
+    def engine(self, mock_broker: Mock, bot_config_factory) -> LiveExecutionEngine:
         """Create an engine with mocked components."""
-        with patch(
-            "gpt_trader.orchestration.live_execution.load_runtime_settings"
-        ) as mock_settings:
-            mock_settings.return_value = Mock(raw_env={})
-            engine = LiveExecutionEngine(broker=mock_broker)
+        config = bot_config_factory()
+        engine = LiveExecutionEngine(broker=mock_broker, config=config)
 
         # Mock helper modules
         engine.state_collector = Mock()
@@ -423,14 +396,11 @@ class TestCancelAllOrders:
     """Tests for cancel_all_orders method."""
 
     @pytest.fixture
-    def engine(self) -> LiveExecutionEngine:
+    def engine(self, bot_config_factory) -> LiveExecutionEngine:
         """Create an engine with mocked guard_manager."""
         mock_broker = Mock()
-        with patch(
-            "gpt_trader.orchestration.live_execution.load_runtime_settings"
-        ) as mock_settings:
-            mock_settings.return_value = Mock(raw_env={})
-            engine = LiveExecutionEngine(broker=mock_broker)
+        config = bot_config_factory()
+        engine = LiveExecutionEngine(broker=mock_broker, config=config)
 
         engine.guard_manager = Mock()
         engine.guard_manager.cancel_all_orders.return_value = 3
@@ -462,14 +432,11 @@ class TestRunRuntimeGuards:
     """Tests for run_runtime_guards method."""
 
     @pytest.fixture
-    def engine(self) -> LiveExecutionEngine:
+    def engine(self, bot_config_factory) -> LiveExecutionEngine:
         """Create an engine with mocked guard_manager."""
         mock_broker = Mock()
-        with patch(
-            "gpt_trader.orchestration.live_execution.load_runtime_settings"
-        ) as mock_settings:
-            mock_settings.return_value = Mock(raw_env={})
-            engine = LiveExecutionEngine(broker=mock_broker)
+        config = bot_config_factory()
+        engine = LiveExecutionEngine(broker=mock_broker, config=config)
 
         engine.guard_manager = Mock()
 
@@ -491,16 +458,13 @@ class TestResetDailyTracking:
     """Tests for reset_daily_tracking method."""
 
     @pytest.fixture
-    def engine(self) -> LiveExecutionEngine:
+    def engine(self, bot_config_factory) -> LiveExecutionEngine:
         """Create an engine with mocked components."""
         mock_broker = Mock()
         mock_broker.list_balances.return_value = []
 
-        with patch(
-            "gpt_trader.orchestration.live_execution.load_runtime_settings"
-        ) as mock_settings:
-            mock_settings.return_value = Mock(raw_env={})
-            engine = LiveExecutionEngine(broker=mock_broker)
+        config = bot_config_factory()
+        engine = LiveExecutionEngine(broker=mock_broker, config=config)
 
         engine.state_collector = Mock()
         engine.state_collector.calculate_equity_from_balances.return_value = (
@@ -543,14 +507,11 @@ class TestInvalidateRuntimeGuardCache:
     """Tests for _invalidate_runtime_guard_cache backward compatibility."""
 
     @pytest.fixture
-    def engine(self) -> LiveExecutionEngine:
+    def engine(self, bot_config_factory) -> LiveExecutionEngine:
         """Create an engine with mocked guard_manager."""
         mock_broker = Mock()
-        with patch(
-            "gpt_trader.orchestration.live_execution.load_runtime_settings"
-        ) as mock_settings:
-            mock_settings.return_value = Mock(raw_env={})
-            engine = LiveExecutionEngine(broker=mock_broker)
+        config = bot_config_factory()
+        engine = LiveExecutionEngine(broker=mock_broker, config=config)
 
         engine.guard_manager = Mock()
 
@@ -584,13 +545,10 @@ class TestLiveExecutionEngineIntegration:
         broker.place_order.return_value = {"order_id": "integration-order-123"}
         return broker
 
-    def test_full_order_flow(self, mock_broker: Mock) -> None:
+    def test_full_order_flow(self, mock_broker: Mock, bot_config_factory) -> None:
         """Test complete order flow from place_order to submission."""
-        with patch(
-            "gpt_trader.orchestration.live_execution.load_runtime_settings"
-        ) as mock_settings:
-            mock_settings.return_value = Mock(raw_env={})
-            engine = LiveExecutionEngine(broker=mock_broker)
+        config = bot_config_factory()
+        engine = LiveExecutionEngine(broker=mock_broker, config=config)
 
         # Mock state collector
         engine.state_collector = Mock()
@@ -634,13 +592,10 @@ class TestLiveExecutionEngineIntegration:
 
         assert order_id == "order-999"
 
-    def test_risk_guard_trip_cancels_orders(self, mock_broker: Mock) -> None:
+    def test_risk_guard_trip_cancels_orders(self, mock_broker: Mock, bot_config_factory) -> None:
         """Test that risk guard trips can cancel open orders."""
-        with patch(
-            "gpt_trader.orchestration.live_execution.load_runtime_settings"
-        ) as mock_settings:
-            mock_settings.return_value = Mock(raw_env={})
-            engine = LiveExecutionEngine(broker=mock_broker)
+        config = bot_config_factory()
+        engine = LiveExecutionEngine(broker=mock_broker, config=config)
 
         # Simulate open orders
         engine.open_orders = ["order-1", "order-2"]
@@ -673,13 +628,10 @@ class TestPlaceOrderAdditional:
         return broker
 
     @pytest.fixture
-    def engine(self, mock_broker: Mock) -> LiveExecutionEngine:
+    def engine(self, mock_broker: Mock, bot_config_factory) -> LiveExecutionEngine:
         """Create an engine with mocked components."""
-        with patch(
-            "gpt_trader.orchestration.live_execution.load_runtime_settings"
-        ) as mock_settings:
-            mock_settings.return_value = Mock(raw_env={})
-            engine = LiveExecutionEngine(broker=mock_broker)
+        config = bot_config_factory()
+        engine = LiveExecutionEngine(broker=mock_broker, config=config)
 
         # Mock helper modules
         engine.state_collector = Mock()
@@ -798,13 +750,10 @@ class TestPlaceOrderValidationPaths:
         return broker
 
     @pytest.fixture
-    def engine(self, mock_broker: Mock) -> LiveExecutionEngine:
+    def engine(self, mock_broker: Mock, bot_config_factory) -> LiveExecutionEngine:
         """Create an engine with mocked components."""
-        with patch(
-            "gpt_trader.orchestration.live_execution.load_runtime_settings"
-        ) as mock_settings:
-            mock_settings.return_value = Mock(raw_env={})
-            engine = LiveExecutionEngine(broker=mock_broker)
+        config = bot_config_factory()
+        engine = LiveExecutionEngine(broker=mock_broker, config=config)
 
         engine.state_collector = Mock()
         engine.state_collector.require_product.return_value = Mock()
@@ -907,16 +856,13 @@ class TestResetDailyTrackingEdgeCases:
     """Additional tests for reset_daily_tracking."""
 
     @pytest.fixture
-    def engine(self) -> LiveExecutionEngine:
+    def engine(self, bot_config_factory) -> LiveExecutionEngine:
         """Create an engine with mocked components."""
         mock_broker = Mock()
         mock_broker.list_balances.return_value = []
 
-        with patch(
-            "gpt_trader.orchestration.live_execution.load_runtime_settings"
-        ) as mock_settings:
-            mock_settings.return_value = Mock(raw_env={})
-            engine = LiveExecutionEngine(broker=mock_broker)
+        config = bot_config_factory()
+        engine = LiveExecutionEngine(broker=mock_broker, config=config)
 
         engine.state_collector = Mock()
         engine.state_collector.calculate_equity_from_balances.return_value = (

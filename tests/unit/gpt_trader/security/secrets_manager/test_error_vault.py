@@ -28,7 +28,7 @@ class TestVaultErrors:
 
         from gpt_trader.security.secrets_manager import SecretsManager
 
-        manager = SecretsManager(vault_enabled=True, settings=secrets_runtime_settings)
+        manager = SecretsManager(vault_enabled=True, config=secrets_runtime_settings)
         assert manager._vault_enabled is False
 
     def test_vault_authentication_error(
@@ -44,7 +44,7 @@ class TestVaultErrors:
 
         from gpt_trader.security.secrets_manager import SecretsManager
 
-        manager = SecretsManager(vault_enabled=True, settings=secrets_runtime_settings)
+        manager = SecretsManager(vault_enabled=True, config=secrets_runtime_settings)
         assert manager._vault_enabled is False
 
     def test_vault_operation_timeout(

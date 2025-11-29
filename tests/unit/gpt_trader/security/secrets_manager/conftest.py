@@ -10,18 +10,27 @@ from unittest.mock import MagicMock
 import pytest
 from cryptography.fernet import Fernet
 
-from gpt_trader.config.runtime_settings import RuntimeSettings
+from gpt_trader.orchestration.configuration import BotConfig
 
 
 @pytest.fixture
-def secrets_runtime_settings(runtime_settings_factory) -> RuntimeSettings:
-    """Runtime settings tailored for secrets_manager tests."""
-    return runtime_settings_factory(
-        env_overrides={
-            "ENV": "development",
-            "GPT_TRADER_ENCRYPTION_KEY": Fernet.generate_key().decode(),
-        }
-    )
+def secrets_bot_config(bot_config_factory) -> BotConfig:
+    """Bot config tailored for secrets_manager tests."""
+    return bot_config_factory()
+
+
+@pytest.fixture
+def secrets_runtime_settings(
+    secrets_bot_config: BotConfig, monkeypatch: pytest.MonkeyPatch
+) -> BotConfig:
+    """Backward-compatible fixture for tests expecting RuntimeSettings.
+
+    Returns BotConfig (the replacement for RuntimeSettings).
+    Sets up required environment variables for encryption.
+    """
+    monkeypatch.setenv("ENV", "development")
+    monkeypatch.setenv("GPT_TRADER_ENCRYPTION_KEY", Fernet.generate_key().decode())
+    return secrets_bot_config
 
 
 @pytest.fixture
@@ -133,7 +142,7 @@ def hvac_stub(monkeypatch: pytest.MonkeyPatch) -> Any:
 
 @pytest.fixture
 def secrets_manager_with_fallback(
-    secrets_runtime_settings: RuntimeSettings,
+    secrets_bot_config: BotConfig,
     patched_require_fernet: None,
     monkeypatch: pytest.MonkeyPatch,
     secrets_dir: Path,
@@ -143,15 +152,16 @@ def secrets_manager_with_fallback(
 
     # Force vault to be disabled
     monkeypatch.setenv("VAULT_TOKEN", "")
+    # Set required env vars
+    monkeypatch.setenv("ENV", "development")
+    monkeypatch.setenv("GPT_TRADER_ENCRYPTION_KEY", Fernet.generate_key().decode())
 
-    return SecretsManager(
-        vault_enabled=False, settings=secrets_runtime_settings, secrets_dir=secrets_dir
-    )
+    return SecretsManager(vault_enabled=False, config=secrets_bot_config, secrets_dir=secrets_dir)
 
 
 @pytest.fixture
 def secrets_manager_with_vault(
-    secrets_runtime_settings: RuntimeSettings,
+    secrets_bot_config: BotConfig,
     patched_require_fernet: None,
     hvac_stub: Any,
     monkeypatch: pytest.MonkeyPatch,
@@ -160,7 +170,6 @@ def secrets_manager_with_vault(
     """SecretsManager instance with mocked vault."""
     from cryptography.fernet import Fernet
 
-    from gpt_trader.config.runtime_settings import load_runtime_settings
     from gpt_trader.security.secrets_manager import SecretsManager
 
     # Set required environment variables for SecretsManager
@@ -171,10 +180,7 @@ def secrets_manager_with_vault(
     monkeypatch.setenv("VAULT_TOKEN", "test-token")
     monkeypatch.setenv("VAULT_ADDR", "http://vault.local")
 
-    # Create new settings with the updated environment
-    updated_settings = load_runtime_settings()
-
-    return SecretsManager(vault_enabled=True, settings=updated_settings, secrets_dir=secrets_dir)
+    return SecretsManager(vault_enabled=True, config=secrets_bot_config, secrets_dir=secrets_dir)
 
 
 @pytest.fixture

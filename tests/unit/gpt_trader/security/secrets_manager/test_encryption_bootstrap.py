@@ -16,10 +16,10 @@ class TestEncryptionBootstrap:
         self, secrets_runtime_settings: Any, patched_require_fernet: None
     ) -> None:
         """Test bootstrap with encryption key from environment."""
-        manager = SecretsManager(settings=secrets_runtime_settings)
+        manager = SecretsManager(vault_enabled=False, config=secrets_runtime_settings)
 
         assert manager._cipher_suite is not None
-        assert manager._vault_enabled is False  # Disabled by default in fixture
+        assert manager._vault_enabled is False
 
     def test_bootstrap_development_generates_key(
         self,
@@ -30,14 +30,10 @@ class TestEncryptionBootstrap:
         """Test bootstrap generates key in development when none provided."""
         # Set development environment and remove encryption key
         monkeypatch.setenv("ENV", "development")
-        monkeypatch.setenv("GPT_TRADER_ENCRYPTION_KEY", "")
-
-        from gpt_trader.config.runtime_settings import load_runtime_settings
-
-        settings = load_runtime_settings()
+        monkeypatch.delenv("GPT_TRADER_ENCRYPTION_KEY", raising=False)
 
         with caplog.at_level("WARNING"):
-            manager = SecretsManager(settings=settings)
+            manager = SecretsManager(vault_enabled=False)
 
         assert manager._cipher_suite is not None
         assert any(
@@ -50,14 +46,10 @@ class TestEncryptionBootstrap:
         """Test bootstrap requires key in production environment."""
         # Set production environment and remove key
         monkeypatch.setenv("ENV", "production")
-        monkeypatch.setenv("GPT_TRADER_ENCRYPTION_KEY", "")
-
-        from gpt_trader.config.runtime_settings import load_runtime_settings
-
-        settings = load_runtime_settings()
+        monkeypatch.delenv("GPT_TRADER_ENCRYPTION_KEY", raising=False)
 
         with pytest.raises(ValueError, match="ENCRYPTION_KEY must be set in production"):
-            SecretsManager(settings=settings)
+            SecretsManager(vault_enabled=False)
 
     def test_bootstrap_invalid_key_error(
         self, monkeypatch: pytest.MonkeyPatch, patched_require_fernet: None
@@ -66,12 +58,8 @@ class TestEncryptionBootstrap:
         # Set invalid key
         monkeypatch.setenv("GPT_TRADER_ENCRYPTION_KEY", "invalid-key")
 
-        from gpt_trader.config.runtime_settings import load_runtime_settings
-
-        settings = load_runtime_settings()
-
         with pytest.raises(ValueError, match="Invalid encryption key"):
-            SecretsManager(settings=settings)
+            SecretsManager(vault_enabled=False)
 
     def test_bootstrap_key_types(
         self,
@@ -80,25 +68,21 @@ class TestEncryptionBootstrap:
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """Test bootstrap with different key types."""
-        from gpt_trader.config.runtime_settings import load_runtime_settings
+        from cryptography.fernet import Fernet
 
         # Test with string key
         monkeypatch.setenv(
             "GPT_TRADER_ENCRYPTION_KEY", "Z9mB9nKp8sVqLyWsC5uE4oHj7gFdR2aL3xYiN6wTzQc="
         )
-        settings = load_runtime_settings()
 
-        manager = SecretsManager(settings=settings)
+        manager = SecretsManager(vault_enabled=False, config=secrets_runtime_settings)
         assert manager._cipher_suite is not None
 
         # Test with bytes key represented as hex
-        from cryptography.fernet import Fernet
-
         bytes_key = Fernet.generate_key().decode()
         monkeypatch.setenv("GPT_TRADER_ENCRYPTION_KEY", bytes_key)
-        settings = load_runtime_settings()
 
-        manager = SecretsManager(settings=settings)
+        manager = SecretsManager(vault_enabled=False, config=secrets_runtime_settings)
         assert manager._cipher_suite is not None
 
     def test_deterministic_encryption(
@@ -123,7 +107,7 @@ class TestEncryptionBootstrap:
         self, secrets_runtime_settings: Any, patched_require_fernet: None
     ) -> None:
         """Test _require_cipher validation."""
-        manager = SecretsManager(settings=secrets_runtime_settings)
+        manager = SecretsManager(vault_enabled=False, config=secrets_runtime_settings)
 
         # Should return cipher suite
         cipher = manager._require_cipher()
@@ -134,28 +118,26 @@ class TestEncryptionBootstrap:
         with pytest.raises(RuntimeError, match="Encryption subsystem not initialised"):
             manager._require_cipher()
 
-    def test_static_settings_preservation(
+    def test_config_preservation(
         self, secrets_runtime_settings: Any, patched_require_fernet: None
     ) -> None:
-        """Test static settings are preserved during bootstrap."""
-        manager = SecretsManager(settings=secrets_runtime_settings)
+        """Test config is preserved during bootstrap."""
+        manager = SecretsManager(vault_enabled=False, config=secrets_runtime_settings)
 
-        assert manager._static_settings is True
-        assert manager._settings is secrets_runtime_settings
+        assert manager._config is secrets_runtime_settings
 
-    def test_dynamic_settings_loading(
+    def test_dynamic_config_loading(
         self, patched_require_fernet: None, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        """Test dynamic settings loading when not provided."""
+        """Test without config provided."""
         # Set up environment
         monkeypatch.setenv(
             "GPT_TRADER_ENCRYPTION_KEY", "Z9mB9nKp8sVqLyWsC5uE4oHj7gFdR2aL3xYiN6wTzQc="
         )
 
-        manager = SecretsManager()  # No settings provided
+        manager = SecretsManager(vault_enabled=False)  # No config provided
 
-        assert manager._static_settings is False
-        assert manager._settings is not None
+        assert manager._config is None
         assert manager._cipher_suite is not None
 
     def test_bootstrap_with_vault_enabled(
@@ -171,12 +153,7 @@ class TestEncryptionBootstrap:
         monkeypatch.setenv("VAULT_TOKEN", "test-token")
         monkeypatch.setenv("VAULT_ADDR", "http://vault.local")
 
-        # Create new settings with the updated environment
-        from gpt_trader.config.runtime_settings import load_runtime_settings
-
-        updated_settings = load_runtime_settings()
-
-        manager = SecretsManager(vault_enabled=True, settings=updated_settings)
+        manager = SecretsManager(vault_enabled=True, config=secrets_runtime_settings)
 
         assert manager._cipher_suite is not None
         assert manager._vault_enabled is True
@@ -186,20 +163,18 @@ class TestEncryptionBootstrap:
         self,
         secrets_runtime_settings: Any,
         patched_require_fernet: None,
-        mock_vault_failure: Any,
+        hvac_stub: Any,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """Test fallback when vault initialization fails."""
-        # Enable vault but mock failure
+        # Enable vault but mock authentication to fail
         monkeypatch.setenv("VAULT_TOKEN", "test-token")
         monkeypatch.setenv("VAULT_ADDR", "http://vault.local")
 
-        # Mock vault to fail
-        import sys
+        # Set the hvac stub to report auth failure
+        hvac_stub.set_authenticated(False)
 
-        monkeypatch.setitem(sys.modules, "hvac", mock_vault_failure)
-
-        manager = SecretsManager(vault_enabled=True, settings=secrets_runtime_settings)
+        manager = SecretsManager(vault_enabled=True, config=secrets_runtime_settings)
 
         assert manager._cipher_suite is not None
         assert manager._vault_enabled is False  # Should fallback to file storage

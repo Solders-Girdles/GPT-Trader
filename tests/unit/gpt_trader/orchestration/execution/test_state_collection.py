@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 from types import SimpleNamespace
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -28,21 +28,16 @@ def mock_broker() -> MagicMock:
 
 
 @pytest.fixture
-def mock_settings() -> MagicMock:
-    """Create mock runtime settings."""
-    settings = MagicMock()
-    settings.raw_env = {"PERPS_COLLATERAL_ASSETS": "USD,USDC"}
-    return settings
+def mock_config(bot_config_factory):
+    """Create mock BotConfig for state collection tests."""
+    return bot_config_factory()
 
 
 @pytest.fixture
-def collector(mock_broker: MagicMock, mock_settings: MagicMock) -> StateCollector:
+def collector(mock_broker: MagicMock, mock_config, monkeypatch) -> StateCollector:
     """Create a StateCollector instance."""
-    with patch(
-        "gpt_trader.orchestration.execution.state_collection.load_runtime_settings"
-    ) as mock_load:
-        mock_load.return_value = mock_settings
-        return StateCollector(mock_broker, settings=mock_settings)
+    monkeypatch.setenv("PERPS_COLLATERAL_ASSETS", "USD,USDC")
+    return StateCollector(mock_broker, mock_config)
 
 
 @pytest.fixture
@@ -69,61 +64,39 @@ def mock_product() -> Product:
 class TestStateCollectorInit:
     """Tests for StateCollector initialization."""
 
-    def test_init_stores_broker(self, mock_broker: MagicMock) -> None:
+    def test_init_stores_broker(self, mock_broker: MagicMock, mock_config) -> None:
         """Test that broker is stored correctly."""
-        with patch(
-            "gpt_trader.orchestration.execution.state_collection.load_runtime_settings"
-        ) as mock_load:
-            mock_settings = MagicMock()
-            mock_settings.raw_env = {}
-            mock_load.return_value = mock_settings
+        collector = StateCollector(mock_broker, mock_config)
+        assert collector.broker is mock_broker
 
-            collector = StateCollector(mock_broker)
+    def test_init_resolves_collateral_assets(
+        self, mock_broker: MagicMock, mock_config, monkeypatch
+    ) -> None:
+        """Test that collateral assets are resolved from environment."""
+        monkeypatch.setenv("PERPS_COLLATERAL_ASSETS", "USDT,DAI,USDC")
+        collector = StateCollector(mock_broker, mock_config)
+        assert collector.collateral_assets == {"USDT", "DAI", "USDC"}
 
-            assert collector.broker is mock_broker
-
-    def test_init_resolves_collateral_assets(self, mock_broker: MagicMock) -> None:
-        """Test that collateral assets are resolved from settings."""
-        with patch(
-            "gpt_trader.orchestration.execution.state_collection.load_runtime_settings"
-        ) as mock_load:
-            mock_settings = MagicMock()
-            mock_settings.raw_env = {"PERPS_COLLATERAL_ASSETS": "USDT,DAI,USDC"}
-            mock_load.return_value = mock_settings
-
-            collector = StateCollector(mock_broker, settings=mock_settings)
-
-            assert collector.collateral_assets == {"USDT", "DAI", "USDC"}
-
-    def test_init_uses_defaults_when_no_env(self, mock_broker: MagicMock) -> None:
+    def test_init_uses_defaults_when_no_env(
+        self, mock_broker: MagicMock, mock_config, monkeypatch
+    ) -> None:
         """Test that default collateral assets are used when env is empty."""
-        with patch(
-            "gpt_trader.orchestration.execution.state_collection.load_runtime_settings"
-        ) as mock_load:
-            mock_settings = MagicMock()
-            mock_settings.raw_env = {}
-            mock_load.return_value = mock_settings
+        monkeypatch.delenv("PERPS_COLLATERAL_ASSETS", raising=False)
+        collector = StateCollector(mock_broker, mock_config)
+        assert collector.collateral_assets == {"USD", "USDC"}
 
-            collector = StateCollector(mock_broker, settings=mock_settings)
-
-            assert collector.collateral_assets == {"USD", "USDC"}
-
-    def test_init_integration_mode_explicit_parameter(self, mock_broker: MagicMock) -> None:
+    def test_init_integration_mode_explicit_parameter(
+        self, mock_broker: MagicMock, mock_config
+    ) -> None:
         """Test integration mode can be set via explicit parameter."""
-        mock_settings = MagicMock()
-        mock_settings.raw_env = {}
-
-        collector = StateCollector(mock_broker, settings=mock_settings, integration_mode=True)
-
+        collector = StateCollector(mock_broker, mock_config, integration_mode=True)
         assert collector._integration_mode is True
 
-    def test_init_integration_mode_defaults_false(self, mock_broker: MagicMock) -> None:
+    def test_init_integration_mode_defaults_false(
+        self, mock_broker: MagicMock, mock_config
+    ) -> None:
         """Test integration_mode defaults to False."""
-        mock_settings = MagicMock()
-        mock_settings.raw_env = {}
-
-        collector = StateCollector(mock_broker, settings=mock_settings)
-
+        collector = StateCollector(mock_broker, mock_config)
         assert collector._integration_mode is False
 
 
@@ -136,34 +109,26 @@ class TestResolveCollateralAssets:
     """Tests for _resolve_collateral_assets method."""
 
     def test_parses_comma_separated_values(
-        self, collector: StateCollector, mock_settings: MagicMock
+        self, mock_broker: MagicMock, mock_config, monkeypatch
     ) -> None:
         """Test parsing comma-separated collateral assets."""
-        mock_settings.raw_env = {"PERPS_COLLATERAL_ASSETS": "USD, USDC, USDT"}
-
-        result = collector._resolve_collateral_assets()
-
-        assert result == {"USD", "USDC", "USDT"}
+        monkeypatch.setenv("PERPS_COLLATERAL_ASSETS", "USD, USDC, USDT")
+        collector = StateCollector(mock_broker, mock_config)
+        assert collector.collateral_assets == {"USD", "USDC", "USDT"}
 
     def test_uppercase_normalization(
-        self, collector: StateCollector, mock_settings: MagicMock
+        self, mock_broker: MagicMock, mock_config, monkeypatch
     ) -> None:
         """Test that asset names are uppercased."""
-        mock_settings.raw_env = {"PERPS_COLLATERAL_ASSETS": "usd,usdc"}
+        monkeypatch.setenv("PERPS_COLLATERAL_ASSETS", "usd,usdc")
+        collector = StateCollector(mock_broker, mock_config)
+        assert collector.collateral_assets == {"USD", "USDC"}
 
-        result = collector._resolve_collateral_assets()
-
-        assert result == {"USD", "USDC"}
-
-    def test_empty_returns_defaults(
-        self, collector: StateCollector, mock_settings: MagicMock
-    ) -> None:
+    def test_empty_returns_defaults(self, mock_broker: MagicMock, mock_config, monkeypatch) -> None:
         """Test that empty env returns defaults."""
-        mock_settings.raw_env = {"PERPS_COLLATERAL_ASSETS": ""}
-
-        result = collector._resolve_collateral_assets()
-
-        assert result == {"USD", "USDC"}
+        monkeypatch.setenv("PERPS_COLLATERAL_ASSETS", "")
+        collector = StateCollector(mock_broker, mock_config)
+        assert collector.collateral_assets == {"USD", "USDC"}
 
 
 # ============================================================
@@ -296,22 +261,17 @@ class TestCollectAccountState:
         assert positions == []
 
     def test_handles_broker_without_list_balances(
-        self, mock_broker: MagicMock, mock_settings: MagicMock
+        self, mock_broker: MagicMock, mock_config
     ) -> None:
         """Test handling broker without list_balances method."""
         del mock_broker.list_balances
         mock_broker.list_positions.return_value = []
 
-        with patch(
-            "gpt_trader.orchestration.execution.state_collection.load_runtime_settings"
-        ) as mock_load:
-            mock_load.return_value = mock_settings
-            collector = StateCollector(mock_broker, settings=mock_settings)
+        collector = StateCollector(mock_broker, mock_config)
+        balances, equity, collateral, total, positions = collector.collect_account_state()
 
-            balances, equity, collateral, total, positions = collector.collect_account_state()
-
-            assert balances == []
-            assert equity == Decimal("0")
+        assert balances == []
+        assert equity == Decimal("0")
 
     def test_handles_balance_exception_in_integration_mode(self, mock_broker: MagicMock) -> None:
         """Test that balance exceptions are suppressed in integration mode."""
@@ -321,7 +281,7 @@ class TestCollectAccountState:
         mock_settings = MagicMock()
         mock_settings.raw_env = {}
 
-        collector = StateCollector(mock_broker, settings=mock_settings, integration_mode=True)
+        collector = StateCollector(mock_broker, mock_config, integration_mode=True)
         balances, equity, _, _, _ = collector.collect_account_state()
 
         # Should use default balance in integration mode
@@ -347,7 +307,7 @@ class TestCollectAccountState:
         mock_settings = MagicMock()
         mock_settings.raw_env = {}
 
-        collector = StateCollector(mock_broker, settings=mock_settings, integration_mode=True)
+        collector = StateCollector(mock_broker, mock_config, integration_mode=True)
         _, _, _, _, positions = collector.collect_account_state()
 
         assert positions == []
@@ -360,7 +320,7 @@ class TestCollectAccountState:
         mock_settings = MagicMock()
         mock_settings.raw_env = {}
 
-        collector = StateCollector(mock_broker, settings=mock_settings, integration_mode=True)
+        collector = StateCollector(mock_broker, mock_config, integration_mode=True)
         balances, equity, _, _, _ = collector.collect_account_state()
 
         assert len(balances) == 1
@@ -644,7 +604,7 @@ class TestRequireProduct:
         mock_settings = MagicMock()
         mock_settings.raw_env = {}
 
-        collector = StateCollector(mock_broker, settings=mock_settings, integration_mode=True)
+        collector = StateCollector(mock_broker, mock_config, integration_mode=True)
         result = collector.require_product("BTC-PERP", None)
 
         assert result.symbol == "BTC-PERP"
@@ -659,7 +619,7 @@ class TestRequireProduct:
         mock_settings = MagicMock()
         mock_settings.raw_env = {}
 
-        collector = StateCollector(mock_broker, settings=mock_settings, integration_mode=True)
+        collector = StateCollector(mock_broker, mock_config, integration_mode=True)
         result = collector.require_product("BTCUSD", None)
 
         assert result.symbol == "BTCUSD"
@@ -676,9 +636,10 @@ class TestStateCollectionIntegration:
     """Integration tests for state collection workflows."""
 
     def test_full_state_collection_flow(
-        self, mock_broker: MagicMock, mock_settings: MagicMock
+        self, mock_broker: MagicMock, mock_config, monkeypatch
     ) -> None:
         """Test complete state collection flow."""
+        monkeypatch.setenv("PERPS_COLLATERAL_ASSETS", "USD,USDC")
         mock_broker.list_balances.return_value = [
             Balance(asset="USD", total=Decimal("10000"), available=Decimal("8000")),
             Balance(asset="USDC", total=Decimal("5000"), available=Decimal("5000")),
@@ -693,23 +654,19 @@ class TestStateCollectionIntegration:
             ),
         ]
 
-        with patch(
-            "gpt_trader.orchestration.execution.state_collection.load_runtime_settings"
-        ) as mock_load:
-            mock_load.return_value = mock_settings
-            collector = StateCollector(mock_broker, settings=mock_settings)
+        collector = StateCollector(mock_broker, mock_config)
 
-            # Collect account state
-            balances, equity, collateral, total, positions = collector.collect_account_state()
+        # Collect account state
+        balances, equity, collateral, total, positions = collector.collect_account_state()
 
-            # Verify balances
-            assert len(balances) == 2
-            assert equity == Decimal("13000")  # 8000 + 5000
-            assert len(collateral) == 2
-            assert total == Decimal("15000")  # 10000 + 5000
+        # Verify balances
+        assert len(balances) == 2
+        assert equity == Decimal("13000")  # 8000 + 5000
+        assert len(collateral) == 2
+        assert total == Decimal("15000")  # 10000 + 5000
 
-            # Build positions dict
-            pos_dict = collector.build_positions_dict(positions)
+        # Build positions dict
+        pos_dict = collector.build_positions_dict(positions)
 
-            assert "BTC-PERP" in pos_dict
-            assert pos_dict["BTC-PERP"]["quantity"] == Decimal("0.5")
+        assert "BTC-PERP" in pos_dict
+        assert pos_dict["BTC-PERP"]["quantity"] == Decimal("0.5")

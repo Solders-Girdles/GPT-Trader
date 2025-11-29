@@ -13,13 +13,11 @@ try:
 except ModuleNotFoundError:  # pragma: no cover - optional dependency
     load_dotenv = None  # type: ignore
 
-from pathlib import Path
-
-from gpt_trader.config.runtime_settings import RuntimeSettings
 from gpt_trader.features.brokerages.coinbase.market_data_service import MarketDataService
 from gpt_trader.features.brokerages.coinbase.models import APIConfig
 from gpt_trader.features.brokerages.coinbase.transports import MockTransport, NoopTransport
 from gpt_trader.features.brokerages.coinbase.utilities import ProductCatalog
+from gpt_trader.orchestration.configuration import BotConfig
 
 
 @dataclass(frozen=True)
@@ -100,29 +98,11 @@ def mock_api_config() -> APIConfig:
 
 
 @pytest.fixture
-def mock_runtime_settings() -> RuntimeSettings:
-    """Mock runtime settings with WebSocket configuration."""
-    return RuntimeSettings(
-        raw_env={},
-        runtime_root=Path("/tmp/test"),
-        event_store_root_override=None,
-        coinbase_default_quote="USD",
-        coinbase_default_quote_overridden=False,
-        coinbase_enable_derivatives=False,
-        coinbase_enable_derivatives_overridden=False,
-        perps_enable_streaming=False,
-        perps_stream_level=1,
-        perps_paper_trading=False,
-        perps_force_mock=False,
-        perps_skip_startup_reconcile=False,
-        perps_position_fraction=None,
-        order_preview_enabled=False,
-        spot_force_live=False,
-        broker_hint=None,
+def mock_bot_config(bot_config_factory) -> BotConfig:
+    """Mock bot config for Coinbase brokerage tests."""
+    return bot_config_factory(
         coinbase_sandbox_enabled=True,
         coinbase_api_mode="sandbox",
-        risk_config_path=None,
-        coinbase_intx_portfolio_uuid=None,
     )
 
 

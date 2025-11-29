@@ -11,7 +11,6 @@ class StubAccountManager:
     def __init__(self, *, supports_intx: bool = True) -> None:
         self._supports_intx = supports_intx
         self.intx_portfolio_uuid: str | None = None
-        self.runtime_settings = type("StubSettings", (), {"coinbase_intx_portfolio_uuid": None})()
         self.calls: list[tuple[str, bool]] = []
 
     def supports_intx(self) -> bool:
@@ -27,12 +26,10 @@ class StubAccountManager:
         self.calls.append(("invalidate", False))
 
 
-def test_service_honours_runtime_override() -> None:
+def test_service_honours_config_override() -> None:
     manager = StubAccountManager()
-    manager.runtime_settings.coinbase_intx_portfolio_uuid = "pf-config"
-    service = IntxPortfolioService(
-        account_manager=manager, runtime_settings=manager.runtime_settings
-    )
+    mock_config = type("MockConfig", (), {"coinbase_intx_portfolio_uuid": "pf-config"})()
+    service = IntxPortfolioService(account_manager=manager, config=mock_config)
 
     assert manager.intx_portfolio_uuid == "pf-config"
     assert service.get_portfolio_uuid() == "pf-config"

@@ -12,12 +12,10 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from gpt_trader.config.runtime_settings import RuntimeSettings
 from gpt_trader.features.brokerages.coinbase.transports import (
     MockTransport,
     NoopTransport,
     RealTransport,
-    _load_runtime_settings_snapshot,
 )
 
 
@@ -30,53 +28,17 @@ class TestRealTransportCoverage:
 
         assert transport.ws is None
         assert transport.url is None
-        assert transport._static_settings is False
-        assert transport._settings is not None
+        assert transport._config is None
 
-    def test_real_transport_initialization_with_settings(self, mock_runtime_settings):
-        """Test RealTransport initialization with custom settings."""
-        transport = RealTransport(settings=mock_runtime_settings)
+    def test_real_transport_initialization_with_config(self, mock_bot_config):
+        """Test RealTransport initialization with custom config."""
+        transport = RealTransport(config=mock_bot_config)
 
-        assert transport._settings is mock_runtime_settings
-        assert transport._static_settings is True
+        assert transport._config is mock_bot_config
 
-    def test_update_settings(self, mock_runtime_settings):
-        """Test updating runtime settings."""
-        transport = RealTransport()
-        new_settings = mock_runtime_settings
-
-        transport.update_settings(new_settings)
-
-        assert transport._settings is new_settings
-
-    def test_refresh_settings_with_static_settings(self, mock_runtime_settings):
-        """Test _refresh_settings when static settings are enabled."""
-        transport = RealTransport(settings=mock_runtime_settings)
-        original_settings = transport._settings
-
-        transport._refresh_settings()
-
-        # Should not change settings when static
-        assert transport._settings is original_settings
-
-    def test_refresh_settings_without_static_settings(self):
-        """Test _refresh_settings when static settings are disabled."""
-        transport = RealTransport()
-
-        with patch(
-            "gpt_trader.features.brokerages.coinbase.transports._load_runtime_settings_snapshot"
-        ) as mock_loader:
-            new_settings = Mock()
-            mock_loader.return_value = new_settings
-
-            transport._refresh_settings()
-
-            mock_loader.assert_called_once()
-            assert transport._settings is new_settings
-
-    def test_connect_success(self, mock_runtime_settings):
+    def test_connect_success(self, mock_bot_config):
         """Test successful WebSocket connection."""
-        transport = RealTransport(settings=mock_runtime_settings)
+        transport = RealTransport(config=mock_bot_config)
 
         with patch("websocket.create_connection") as mock_create:
             mock_ws = Mock()
@@ -90,18 +52,14 @@ class TestRealTransportCoverage:
             assert transport.ws is mock_ws
             mock_create.assert_called_once_with(url, header=headers)
 
-    def test_connect_with_environment_options(self, mock_runtime_settings):
+    def test_connect_with_environment_options(self, mock_bot_config, monkeypatch):
         """Test connection with environment-based options."""
-        # Set environment variables in settings
-        mock_runtime_settings.raw_env.update(
-            {
-                "COINBASE_WS_CONNECT_TIMEOUT": "30.0",
-                "COINBASE_WS_SUBPROTOCOLS": "v1,v2",
-                "COINBASE_WS_ENABLE_TRACE": "true",
-            }
-        )
+        # Set environment variables via monkeypatch
+        monkeypatch.setenv("COINBASE_WS_CONNECT_TIMEOUT", "30.0")
+        monkeypatch.setenv("COINBASE_WS_SUBPROTOCOLS", "v1,v2")
+        monkeypatch.setenv("COINBASE_WS_ENABLE_TRACE", "true")
 
-        transport = RealTransport(settings=mock_runtime_settings)
+        transport = RealTransport(config=mock_bot_config)
 
         with (
             patch("websocket.create_connection") as mock_create,
@@ -121,11 +79,11 @@ class TestRealTransportCoverage:
             mock_create.assert_called_once_with(url, **expected_options)
             mock_trace.assert_called_once_with(True)
 
-    def test_connect_invalid_timeout(self, mock_runtime_settings, caplog):
+    def test_connect_invalid_timeout(self, mock_bot_config, monkeypatch, caplog):
         """Test connection with invalid timeout value."""
-        mock_runtime_settings.raw_env["COINBASE_WS_CONNECT_TIMEOUT"] = "invalid"
+        monkeypatch.setenv("COINBASE_WS_CONNECT_TIMEOUT", "invalid")
 
-        transport = RealTransport(settings=mock_runtime_settings)
+        transport = RealTransport(config=mock_bot_config)
 
         with patch("websocket.create_connection") as mock_create:
             mock_ws = Mock()
@@ -138,9 +96,9 @@ class TestRealTransportCoverage:
             assert "Ignoring invalid COINBASE_WS_CONNECT_TIMEOUT" in caplog.text
             mock_create.assert_called_once_with(url)
 
-    def test_connect_missing_websocket_client(self, mock_runtime_settings):
+    def test_connect_missing_websocket_client(self, mock_bot_config):
         """Test connection when websocket-client is not installed."""
-        transport = RealTransport(settings=mock_runtime_settings)
+        transport = RealTransport(config=mock_bot_config)
 
         # We patch create_connection on the imported websocket module in transports.py
         # to simulate the module being missing/broken at runtime
@@ -151,11 +109,11 @@ class TestRealTransportCoverage:
             with pytest.raises(ImportError, match="websocket-client is not installed"):
                 transport.connect("wss://test.example.com")
 
-    def test_connect_trace_enable_failure(self, mock_runtime_settings, caplog):
+    def test_connect_trace_enable_failure(self, mock_bot_config, monkeypatch, caplog):
         """Test connection when trace enable fails."""
-        mock_runtime_settings.raw_env["COINBASE_WS_ENABLE_TRACE"] = "true"
+        monkeypatch.setenv("COINBASE_WS_ENABLE_TRACE", "true")
 
-        transport = RealTransport(settings=mock_runtime_settings)
+        transport = RealTransport(config=mock_bot_config)
 
         with (
             patch("websocket.create_connection") as mock_create,
@@ -167,12 +125,12 @@ class TestRealTransportCoverage:
 
             transport.connect("wss://test.example.com")
 
-            # Should log debug message about trace failure
+            # Should log warning message about trace failure
             assert "Unable to enable websocket trace output" in caplog.text
 
-    def test_disconnect_success(self, mock_runtime_settings):
+    def test_disconnect_success(self, mock_bot_config):
         """Test successful WebSocket disconnection."""
-        transport = RealTransport(settings=mock_runtime_settings)
+        transport = RealTransport(config=mock_bot_config)
         mock_ws = Mock()
         transport.ws = mock_ws
 
@@ -181,9 +139,9 @@ class TestRealTransportCoverage:
         mock_ws.close.assert_called_once()
         assert transport.ws is None
 
-    def test_disconnect_with_error(self, mock_runtime_settings, caplog):
+    def test_disconnect_with_error(self, mock_bot_config, caplog):
         """Test disconnection when close raises an error."""
-        transport = RealTransport(settings=mock_runtime_settings)
+        transport = RealTransport(config=mock_bot_config)
         mock_ws = Mock()
         mock_ws.close.side_effect = Exception("Close failed")
         transport.ws = mock_ws
@@ -194,18 +152,18 @@ class TestRealTransportCoverage:
         assert "Error disconnecting" in caplog.text
         assert transport.ws is None
 
-    def test_disconnect_no_websocket(self, mock_runtime_settings):
+    def test_disconnect_no_websocket(self, mock_bot_config):
         """Test disconnection when no WebSocket is connected."""
-        transport = RealTransport(settings=mock_runtime_settings)
+        transport = RealTransport(config=mock_bot_config)
 
         # Should not raise exception
         transport.disconnect()
 
         assert transport.ws is None
 
-    def test_subscribe_success(self, mock_runtime_settings):
+    def test_subscribe_success(self, mock_bot_config):
         """Test successful subscription message sending."""
-        transport = RealTransport(settings=mock_runtime_settings)
+        transport = RealTransport(config=mock_bot_config)
         mock_ws = Mock()
         transport.ws = mock_ws
 
@@ -214,18 +172,18 @@ class TestRealTransportCoverage:
 
         mock_ws.send.assert_called_once_with(json.dumps(message))
 
-    def test_subscribe_not_connected(self, mock_runtime_settings):
+    def test_subscribe_not_connected(self, mock_bot_config):
         """Test subscription when not connected."""
-        transport = RealTransport(settings=mock_runtime_settings)
+        transport = RealTransport(config=mock_bot_config)
 
         message = {"type": "subscribe", "channels": ["ticker"]}
 
         with pytest.raises(RuntimeError, match="Not connected to WebSocket"):
             transport.subscribe(message)
 
-    def test_stream_success(self, mock_runtime_settings):
+    def test_stream_success(self, mock_bot_config):
         """Test successful message streaming."""
-        transport = RealTransport(settings=mock_runtime_settings)
+        transport = RealTransport(config=mock_bot_config)
         mock_ws = Mock()
         transport.ws = mock_ws
 
@@ -241,16 +199,16 @@ class TestRealTransportCoverage:
         ]
         assert result == expected
 
-    def test_stream_not_connected(self, mock_runtime_settings):
+    def test_stream_not_connected(self, mock_bot_config):
         """Test streaming when not connected."""
-        transport = RealTransport(settings=mock_runtime_settings)
+        transport = RealTransport(config=mock_bot_config)
 
         with pytest.raises(RuntimeError, match="Not connected to WebSocket"):
             list(transport.stream())
 
-    def test_stream_with_error(self, mock_runtime_settings, caplog):
+    def test_stream_with_error(self, mock_bot_config, caplog):
         """Test streaming when WebSocket recv raises an error."""
-        transport = RealTransport(settings=mock_runtime_settings)
+        transport = RealTransport(config=mock_bot_config)
         mock_ws = Mock()
         transport.ws = mock_ws
         mock_ws.recv.side_effect = Exception("Connection lost")
@@ -298,8 +256,8 @@ class TestMockTransportCoverage:
         transport.connect("wss://test.example.com")
 
         assert transport.connected is True
-        # MockTransport always stores headers, so we check they're None when not provided
-        assert getattr(transport, "headers", None) is None
+        # MockTransport stores headers as None when not provided
+        assert transport.headers is None
 
     def test_mock_transport_disconnect(self):
         """Test MockTransport disconnection."""
@@ -348,15 +306,13 @@ class TestNoopTransportCoverage:
         transport = NoopTransport()
 
         assert transport.connected is False
-        assert transport._static_settings is False
-        assert transport._settings is not None
+        assert transport._config is None
 
-    def test_noop_transport_initialization_with_settings(self, mock_runtime_settings):
-        """Test NoopTransport initialization with custom settings."""
-        transport = NoopTransport(settings=mock_runtime_settings)
+    def test_noop_transport_initialization_with_config(self, mock_bot_config):
+        """Test NoopTransport initialization with custom config."""
+        transport = NoopTransport(config=mock_bot_config)
 
-        assert transport._settings is mock_runtime_settings
-        assert transport._static_settings is True
+        assert transport._config is mock_bot_config
 
     def test_noop_transport_connect(self):
         """Test NoopTransport connection."""
@@ -401,32 +357,12 @@ class TestNoopTransportCoverage:
         assert result == []
 
 
-class TestTransportHelperFunctions:
-    """Test helper functions and utilities."""
-
-    def test_load_runtime_settings_snapshot(self):
-        """Test _load_runtime_settings_snapshot function."""
-        settings = _load_runtime_settings_snapshot()
-
-        assert isinstance(settings, RuntimeSettings)
-        assert hasattr(settings, "raw_env")
-
-    def test_runtime_settings_type_checking(self):
-        """Test RuntimeSettings type checking at runtime."""
-        # This should work without type errors
-        transport = RealTransport()
-        assert transport._settings is not None
-
-        noop_transport = NoopTransport()
-        assert noop_transport._settings is not None
-
-
 class TestTransportEdgeCases:
     """Test edge cases and error scenarios."""
 
-    def test_real_transport_malformed_json_stream(self, mock_runtime_settings):
+    def test_real_transport_malformed_json_stream(self, mock_bot_config):
         """Test streaming malformed JSON messages."""
-        transport = RealTransport(settings=mock_runtime_settings)
+        transport = RealTransport(config=mock_bot_config)
         mock_ws = Mock()
         transport.ws = mock_ws
 
@@ -435,9 +371,9 @@ class TestTransportEdgeCases:
         with pytest.raises(json.JSONDecodeError):
             list(transport.stream())
 
-    def test_real_transport_empty_message_stream(self, mock_runtime_settings):
+    def test_real_transport_empty_message_stream(self, mock_bot_config):
         """Test streaming empty messages."""
-        transport = RealTransport(settings=mock_runtime_settings)
+        transport = RealTransport(config=mock_bot_config)
         mock_ws = Mock()
         transport.ws = mock_ws
 
@@ -447,9 +383,9 @@ class TestTransportEdgeCases:
         with pytest.raises(json.JSONDecodeError):
             list(transport.stream())
 
-    def test_real_transport_none_message_stream(self, mock_runtime_settings):
+    def test_real_transport_none_message_stream(self, mock_bot_config):
         """Test streaming None messages."""
-        transport = RealTransport(settings=mock_runtime_settings)
+        transport = RealTransport(config=mock_bot_config)
         mock_ws = Mock()
         transport.ws = mock_ws
 
@@ -474,13 +410,13 @@ class TestTransportEdgeCases:
         assert len(transport.subscriptions) == 3
         assert transport.subscriptions == messages
 
-    def test_transport_environment_variable_parsing(self, mock_runtime_settings):
+    def test_transport_environment_variable_parsing(self, mock_bot_config, monkeypatch):
         """Test various environment variable parsing scenarios."""
         # Test various truthy values
         for truthy_value in ["1", "true", "yes", "on", "TRUE", "Yes", "ON"]:
-            mock_runtime_settings.raw_env["COINBASE_WS_ENABLE_TRACE"] = truthy_value
+            monkeypatch.setenv("COINBASE_WS_ENABLE_TRACE", truthy_value)
 
-            transport = RealTransport(settings=mock_runtime_settings)
+            transport = RealTransport(config=mock_bot_config)
 
             with (
                 patch("websocket.create_connection") as mock_create,
@@ -493,11 +429,11 @@ class TestTransportEdgeCases:
 
                 mock_trace.assert_called_once_with(True)
 
-    def test_transport_empty_subprotocols(self, mock_runtime_settings):
+    def test_transport_empty_subprotocols(self, mock_bot_config, monkeypatch):
         """Test empty subprotocols configuration."""
-        mock_runtime_settings.raw_env["COINBASE_WS_SUBPROTOCOLS"] = "   ,  , "
+        monkeypatch.setenv("COINBASE_WS_SUBPROTOCOLS", "   ,  , ")
 
-        transport = RealTransport(settings=mock_runtime_settings)
+        transport = RealTransport(config=mock_bot_config)
 
         with patch("websocket.create_connection") as mock_create:
             mock_ws = Mock()
@@ -509,11 +445,11 @@ class TestTransportEdgeCases:
             call_args = mock_create.call_args[1]
             assert "subprotocols" not in call_args
 
-    def test_transport_mixed_whitespace_subprotocols(self, mock_runtime_settings):
+    def test_transport_mixed_whitespace_subprotocols(self, mock_bot_config, monkeypatch):
         """Test subprotocols with mixed whitespace."""
-        mock_runtime_settings.raw_env["COINBASE_WS_SUBPROTOCOLS"] = " v1 , v2 , v3 "
+        monkeypatch.setenv("COINBASE_WS_SUBPROTOCOLS", " v1 , v2 , v3 ")
 
-        transport = RealTransport(settings=mock_runtime_settings)
+        transport = RealTransport(config=mock_bot_config)
 
         with patch("websocket.create_connection") as mock_create:
             mock_ws = Mock()

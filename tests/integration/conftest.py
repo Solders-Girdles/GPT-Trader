@@ -29,9 +29,12 @@ def dev_bot() -> Generator[tuple[TradingBot, ServiceRegistry]]:
     """Create a TradingBot with dev profile (DeterministicBroker).
 
     Yields:
-        Tuple of (TradingBot, ServiceRegistry) for test access.
+        Tuple of (TradingBot, ServiceRegistry) for backward compatibility.
+        Access container via bot.container for modern usage.
     """
-    bot, registry = bot_from_profile("dev")
+    bot = bot_from_profile("dev")
+    # Create registry from container for backward compatibility
+    registry = bot.container.create_service_registry()
 
     # Ensure clean state for risk manager
     if bot.risk_manager:
@@ -53,7 +56,8 @@ def fast_signal_bot() -> Generator[tuple[TradingBot, ServiceRegistry]]:
     Uses short_ma=3, long_ma=5 and interval=1 for rapid signal generation.
 
     Yields:
-        Tuple of (TradingBot, ServiceRegistry) for test access.
+        Tuple of (TradingBot, ServiceRegistry) for backward compatibility.
+        Access container via bot.container for modern usage.
     """
     config = BotConfig.from_profile(
         "dev",
@@ -63,7 +67,9 @@ def fast_signal_bot() -> Generator[tuple[TradingBot, ServiceRegistry]]:
         interval=1,  # Fast interval for testing
         mock_broker=True,
     )
-    bot, registry = build_bot(config)
+    bot = build_bot(config)
+    # Create registry from container for backward compatibility
+    registry = bot.container.create_service_registry()
 
     # Ensure clean state for risk manager
     if bot.risk_manager:

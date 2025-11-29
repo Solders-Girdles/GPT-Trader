@@ -8,10 +8,6 @@ from gpt_trader.orchestration.configuration.bot_config.state import ConfigState
 class TestConfigStateInit:
     """Tests for ConfigState initialization."""
 
-    def test_runtime_settings_is_none(self) -> None:
-        state = ConfigState()
-        assert state.runtime_settings is None
-
     def test_profile_value_is_none(self) -> None:
         state = ConfigState()
         assert state.profile_value is None

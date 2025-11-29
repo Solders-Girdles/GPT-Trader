@@ -1,6 +1,5 @@
 """Tests for Coinbase REST service base functionality."""
 
-import os
 from datetime import datetime
 from decimal import Decimal
 from unittest.mock import Mock, patch
@@ -375,13 +374,17 @@ class TestCoinbaseRestServiceBase:
         assert result == mock_order
         self.client.place_order.assert_called_once_with(payload)
 
-    @patch.dict(os.environ, {"ORDER_PREVIEW_ENABLED": "1"})
     def test_execute_order_payload_with_preview(self) -> None:
         """Test order execution with preview enabled."""
         payload = {"product_id": "BTC-USD", "side": "BUY"}
         mock_order = Mock(spec=Order)
         self.client.preview_order.return_value = {"success": True}
         self.client.place_order.return_value = {"order_id": "order_123"}
+
+        # Enable order preview via bot_config (previously was os.environ["ORDER_PREVIEW_ENABLED"])
+        mock_bot_config = Mock()
+        mock_bot_config.enable_order_preview = True
+        self.service.bot_config = mock_bot_config
 
         with patch(
             "gpt_trader.features.brokerages.coinbase.rest.base.to_order", return_value=mock_order

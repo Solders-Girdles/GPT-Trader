@@ -1,43 +1,27 @@
-"""Integration test for container-based PerpsBot boot and basic functionality.
+"""Integration test for container-based bot boot and basic functionality.
 
 This test verifies that the composition root pattern works correctly and that
-PerpsBot can be created and started using the ApplicationContainer.
+TradingBot can be created and started using the ApplicationContainer.
 """
 
 import pytest
 
-from gpt_trader.app.container import create_application_container
-from gpt_trader.config.runtime_settings import load_runtime_settings
+from gpt_trader.app.container import ApplicationContainer
 from gpt_trader.orchestration.configuration import BotConfig
 
 
-@pytest.mark.skip(
-    reason="TODO: Fix container boot - BotConfig.from_profile and create_perps_bot need alignment"
-)
-def test_container_perps_bot_boot_roundtrip():
-    """Test that container can boot PerpsBot and execute a no-op decision path."""
+@pytest.mark.skip(reason="TODO: Update for new container pattern - needs PerpsBot equivalent")
+def test_container_bot_boot_roundtrip():
+    """Test that container can boot TradingBot and verify wiring."""
 
     # Create a simple configuration for testing
-    config = BotConfig.from_profile("dev", symbols=["BTC-USD"])
-
-    # Load runtime settings for the test environment
-    settings = load_runtime_settings(
-        {
-            "PERPS_FORCE_MOCK": "true",
-            "PERPS_PAPER_TRADING": "true",
-            "PERPS_ENABLE_STREAMING": "false",  # Disable for test stability
-            "COINBASE_SANDBOX": "true",
-            "GPT_TRADER_RUNTIME_ROOT": "/tmp/test_gpt_trader",
-            "EVENT_STORE_ROOT": "/tmp/test_gpt_trader/events",
-        }
-    )
+    config = BotConfig.from_profile("dev", symbols=["BTC-USD"], mock_broker=True)
 
     # Create application container
-    container = create_application_container(config, settings)
+    container = ApplicationContainer(config)
 
     # Verify container can create core services
     assert container.config is not None
-    assert container.settings is not None
 
     # Test service creation
     event_store = container.event_store
@@ -53,64 +37,29 @@ def test_container_perps_bot_boot_roundtrip():
     broker = container.broker
     assert broker is not None
 
-    # Create PerpsBot from container
-    bot = container.create_perps_bot()
+    # Create TradingBot from container
+    bot = container.create_bot()
 
     # Verify bot was created successfully
     assert bot is not None
-    assert bot.bot_id is not None
-    assert len(bot.symbols) == 1
-    assert "BTC-USD" in bot.symbols
+    assert bot.config is not None
+    assert len(bot.config.symbols) == 1
+    assert "BTC-USD" in bot.config.symbols
 
-    # Test that bot lifecycle works and dependencies are properly wired
-    try:
-        # Verify the bot is properly constructed with all dependencies
-        assert bot.config_controller is not None
-        assert bot.registry is not None
-        assert bot.event_store is not None
-        assert bot.orders_store is not None
-        assert bot.lifecycle_manager is not None
+    # Verify all dependencies are properly injected from container
+    assert bot.broker == broker
+    assert bot.container == container
 
-        # Verify all dependencies are properly injected from container
-        assert bot.registry.broker == broker
-        assert bot.registry.event_store == event_store
-        assert bot.registry.orders_store == orders_store
-
-        # Test that the bot can access its basic configuration
-        assert bot.bot_id is not None
-        assert len(bot.symbols) > 0
-        assert "BTC-USD" in bot.symbols
-
-        # Verify the bot is in proper initialized state
-        # (Note: We don't actually start trading in this test - just verify wiring)
-
-    except Exception as e:
-        pytest.fail(f"Bot wiring verification failed: {e}")
-
-    # Clean shutdown
-    # In a real scenario, you would call bot.lifecycle_manager.shutdown()
-    # For this integration test, we just verify the bot is properly constructed
-
-    print("✅ Container-based PerpsBot integration test passed!")
+    print("Container-based TradingBot integration test passed!")
 
 
-@pytest.mark.skip(
-    reason="TODO: Fix ServiceRegistry - create_service_registry method needs implementation"
-)
 def test_container_service_registry_compatibility():
     """Test that container can create ServiceRegistry for backward compatibility."""
 
-    config = BotConfig.from_profile("dev", symbols=["ETH-USD"])
-    settings = load_runtime_settings(
-        {
-            "PERPS_FORCE_MOCK": "true",
-            "PERPS_PAPER_TRADING": "true",
-            "COINBASE_SANDBOX": "true",
-        }
-    )
+    config = BotConfig.from_profile("dev", symbols=["ETH-USD"], mock_broker=True)
 
     # Create container
-    container = create_application_container(config, settings)
+    container = ApplicationContainer(config)
 
     # Create service registry from container
     registry = container.create_service_registry()
@@ -120,13 +69,13 @@ def test_container_service_registry_compatibility():
     assert registry.broker is not None
     assert registry.event_store is not None
     assert registry.orders_store is not None
-    assert registry.runtime_settings is not None
+    assert registry.risk_manager is not None
+    assert registry.notification_service is not None
 
-    print("✅ Container ServiceRegistry compatibility test passed!")
+    print("Container ServiceRegistry compatibility test passed!")
 
 
 if __name__ == "__main__":
     # Run the tests directly
-    test_container_perps_bot_boot_roundtrip()
     test_container_service_registry_compatibility()
-    print("\n🎉 All container integration tests passed!")
+    print("\nAll container integration tests passed!")

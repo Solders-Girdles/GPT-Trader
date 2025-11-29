@@ -14,24 +14,16 @@ class TestBootstrapErrors:
 
     def test_missing_encryption_key_error(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setenv("ENV", "production")
-        monkeypatch.setenv("GPT_TRADER_ENCRYPTION_KEY", "")
-
-        from gpt_trader.config.runtime_settings import load_runtime_settings
-
-        settings = load_runtime_settings()
+        monkeypatch.delenv("GPT_TRADER_ENCRYPTION_KEY", raising=False)
 
         with pytest.raises(ValueError, match="ENCRYPTION_KEY must be set in production"):
-            SecretsManager(settings=settings)
+            SecretsManager(vault_enabled=False)
 
     def test_invalid_encryption_key_format(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setenv("GPT_TRADER_ENCRYPTION_KEY", "invalid_key_format")
 
-        from gpt_trader.config.runtime_settings import load_runtime_settings
-
-        settings = load_runtime_settings()
-
         with pytest.raises(ValueError, match="Invalid encryption key"):
-            SecretsManager(settings=settings)
+            SecretsManager(vault_enabled=False)
 
     def test_cipher_not_initialized_error(self, secrets_manager_with_fallback: Any) -> None:
         manager = secrets_manager_with_fallback

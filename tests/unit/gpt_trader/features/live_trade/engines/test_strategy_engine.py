@@ -253,7 +253,8 @@ def test_calculate_order_quantity_with_strategy_config(engine):
 def test_calculate_order_quantity_fallback_to_bot_config(engine):
     """Test quantity calculation falls back to bot config."""
     engine.strategy.config.position_fraction = None
-    engine.context.config.risk.position_fraction = Decimal("0.2")
+    # Production code looks for perps_position_fraction on the config, not risk.position_fraction
+    engine.context.config.perps_position_fraction = Decimal("0.2")
 
     equity = Decimal("10000")
     price = Decimal("50000")

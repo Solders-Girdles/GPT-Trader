@@ -41,13 +41,16 @@ class TestCacheConcurrency:
     def test_cache_isolation_between_managers(
         self,
         secrets_manager_with_fallback: Any,
-        secrets_runtime_settings: Any,
+        secrets_bot_config: Any,
         patched_require_fernet: None,
     ) -> None:
+        # Note: Don't use secrets_runtime_settings here as it sets a NEW encryption key,
+        # but manager1 was already created with a different key from secrets_manager_with_fallback.
+        # Both managers must use the same encryption key to read each other's files.
         manager1 = secrets_manager_with_fallback
         manager2 = SecretsManager(
-            settings=secrets_runtime_settings,
             vault_enabled=False,
+            config=secrets_bot_config,
             secrets_dir=manager1._secrets_dir,
         )
 

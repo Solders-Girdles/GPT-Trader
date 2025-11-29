@@ -6,7 +6,6 @@ from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, cast
 
-from gpt_trader.config.runtime_settings import RuntimeSettings, load_runtime_settings
 from gpt_trader.persistence.event_store import EventStore
 from gpt_trader.persistence.orders_store import OrdersStore
 from gpt_trader.utilities.logging_patterns import get_logger
@@ -41,23 +40,22 @@ class BootstrapResult:
     runtime_paths: RuntimePaths
     event_store: EventStore
     orders_store: OrdersStore
-    settings: RuntimeSettings
     logs: list[BootstrapLogRecord]
 
 
 def normalise_symbols(
     requested: Sequence[str] | None,
     *,
-    settings: RuntimeSettings,
+    config: BotConfig,
     allowed_perps: Iterable[str] = PERPS_ALLOWLIST,
     fallback_bases: Sequence[str] = TOP_VOLUME_BASES,
 ) -> tuple[list[str], list[BootstrapLogRecord]]:
     """Return canonical symbol list for the configured runtime."""
 
-    symbol_quote = settings.coinbase_default_quote
+    symbol_quote = config.coinbase_default_quote
     normalised, records = normalize_symbol_list(
         requested,
-        allow_derivatives=settings.coinbase_enable_derivatives,
+        allow_derivatives=config.derivatives_enabled,
         quote=symbol_quote,
         allowed_perps=allowed_perps,
         fallback_bases=fallback_bases,
@@ -71,11 +69,11 @@ def normalise_symbols(
 
 def resolve_runtime_paths(
     profile: Profile,
-    settings: RuntimeSettings,
+    config: BotConfig,
 ) -> RuntimePaths:
     """Determine and materialise storage directories for the bot."""
 
-    return compute_runtime_paths(settings=settings, profile=profile)
+    return compute_runtime_paths(config=config, profile=profile)
 
 
 def prepare_bot(
@@ -83,52 +81,8 @@ def prepare_bot(
     registry: ServiceRegistry | None = None,
     *,
     env: Mapping[str, str] | None = None,
-    settings: RuntimeSettings | None = None,
 ) -> BootstrapResult:
     """Prepare directories and registry dependencies for :class:`TradingBot`."""
-
-    if settings is None:
-        if registry is not None and registry.runtime_settings is not None:
-            settings = registry.runtime_settings
-        else:
-            settings = load_runtime_settings(env)
-
-    metadata = dict(config.metadata)
-    existing_overrides_raw = metadata.get("symbol_normalization_overrides")
-    overrides = dict(existing_overrides_raw) if isinstance(existing_overrides_raw, dict) else {}
-    metadata_changed = False
-
-    if settings.coinbase_default_quote_overridden:
-        if overrides.get("quote") != settings.coinbase_default_quote:
-            overrides["quote"] = settings.coinbase_default_quote
-            metadata_changed = True
-
-    if settings.coinbase_enable_derivatives_overridden:
-        allow_override = settings.coinbase_enable_derivatives
-        if overrides.get("allow_derivatives") != allow_override:
-            overrides["allow_derivatives"] = allow_override
-            metadata_changed = True
-
-    cleaned_overrides = {key: value for key, value in overrides.items() if value is not None}
-
-    current_overrides = (
-        dict(existing_overrides_raw) if isinstance(existing_overrides_raw, dict) else {}
-    )
-
-    if cleaned_overrides:
-        if current_overrides != cleaned_overrides:
-            metadata["symbol_normalization_overrides"] = cleaned_overrides
-            metadata_changed = True
-    else:
-        if existing_overrides_raw is not None:
-            metadata.pop("symbol_normalization_overrides", None)
-            metadata_changed = True
-
-    if metadata_changed:
-        rebuilt = config.model_copy(update={"metadata": metadata})
-        for field_name in config.model_fields:
-            setattr(config, field_name, getattr(rebuilt, field_name))
-        metadata = dict(config.metadata)
 
     normalization_log_payload = config.metadata.get("symbol_normalization_logs", [])
     if normalization_log_payload:
@@ -142,13 +96,13 @@ def prepare_bot(
             if isinstance(entry, dict)
         ]
     else:
-        _, fallback_logs = normalise_symbols(config.symbols, settings=settings)
+        _, fallback_logs = normalise_symbols(config.symbols, config=config)
         logs = [
             BootstrapLogRecord(level=record.level, message=record.message, args=record.args)
             for record in fallback_logs
         ]
 
-    runtime_paths = resolve_runtime_paths(cast(Profile, config.profile), settings)
+    runtime_paths = resolve_runtime_paths(cast(Profile, config.profile), config)
 
     prepared_registry = registry or empty_registry(config)
     if prepared_registry.config is not config:
@@ -171,21 +125,18 @@ def prepare_bot(
     else:
         final_orders_store = cast(OrdersStore, registry_orders_store)
 
-    prepared_registry = prepared_registry.with_updates(runtime_settings=settings)
-
     result = BootstrapResult(
         config=config,
         registry=prepared_registry,
         runtime_paths=runtime_paths,
         event_store=final_event_store,
         orders_store=final_orders_store,
-        settings=settings,
         logs=logs,
     )
 
     from gpt_trader.app.container import create_application_container
 
-    container = create_application_container(config, settings)
+    container = create_application_container(config)
     # Add container to result extras
     result.registry.extras["container"] = container
     logger.debug(
@@ -201,42 +152,28 @@ def prepare_bot_with_container(
     config: BotConfig,
     *,
     env: Mapping[str, str] | None = None,
-    settings: RuntimeSettings | None = None,
 ) -> BootstrapResult:
     """Prepare directories and registry dependencies for :class:`TradingBot` using container."""
-    return prepare_bot(config, registry=None, env=env, settings=settings)
+    return prepare_bot(config, registry=None, env=env)
 
 
-def build_bot(
-    config: BotConfig,
-    settings: RuntimeSettings | None = None,
-) -> tuple[TradingBot, ServiceRegistry]:
+def build_bot(config: BotConfig) -> TradingBot:
     """
-    Build a TradingBot from a BotConfig.
+    Build a TradingBot from a BotConfig using ApplicationContainer.
+
+    This is the canonical way to create a TradingBot. The container
+    handles all dependency wiring.
+
+    Args:
+        config: The bot configuration.
 
     Returns:
-        Tuple of (TradingBot, ServiceRegistry) for access to all components.
+        A fully configured TradingBot ready to run.
     """
-    from gpt_trader.features.live_trade.risk.manager import LiveRiskManager
-    from gpt_trader.monitoring.notifications import create_notification_service
-    from gpt_trader.orchestration.trading_bot.bot import TradingBot
+    from gpt_trader.app.container import ApplicationContainer
 
-    result = prepare_bot(config, registry=None, settings=settings)
+    container = ApplicationContainer(config)
 
-    # Get the container from extras (created by prepare_bot)
-    container = result.registry.extras.get("container")
-
-    # Get broker from container
-    broker = container.broker if container else None
-
-    # Create risk manager with config and event store
-    risk_manager = LiveRiskManager(config=result.config, event_store=result.event_store)
-
-    # Create notification service with webhook if configured
-    notification_service = create_notification_service(
-        webhook_url=config.webhook_url,
-        console_enabled=True,
-    )
     if config.webhook_url:
         logger.info(
             "Webhook notifications enabled",
@@ -244,27 +181,41 @@ def build_bot(
             stage="notifications_enabled",
         )
 
-    # Update registry with broker, risk manager, and notification service
-    registry = result.registry.with_updates(
-        broker=broker,
-        risk_manager=risk_manager,
-        notification_service=notification_service,
-    )
+    return container.create_bot()
 
-    # Create the bot with full registry
-    bot = TradingBot(
-        config=result.config,
-        container=container,
-        registry=registry,
-        event_store=result.event_store,
-        orders_store=result.orders_store,
-        notification_service=notification_service,
-    )
+
+def build_bot_with_registry(config: BotConfig) -> tuple[TradingBot, ServiceRegistry]:
+    """
+    Build a TradingBot and return both bot and registry.
+
+    .. deprecated::
+        Use `build_bot()` instead and access registry via `bot.container.create_service_registry()`
+        if needed. This function is maintained for backward compatibility.
+
+    Args:
+        config: The bot configuration.
+
+    Returns:
+        Tuple of (TradingBot, ServiceRegistry) for backward compatibility.
+    """
+    from gpt_trader.app.container import ApplicationContainer
+
+    container = ApplicationContainer(config)
+
+    if config.webhook_url:
+        logger.info(
+            "Webhook notifications enabled",
+            operation="bot_bootstrap",
+            stage="notifications_enabled",
+        )
+
+    bot = container.create_bot()
+    registry = container.create_service_registry()
 
     return bot, registry
 
 
-def bot_from_profile(profile: str) -> tuple[TradingBot, ServiceRegistry]:
+def bot_from_profile(profile: str) -> TradingBot:
     """
     Create a TradingBot from a profile name.
 
@@ -272,7 +223,7 @@ def bot_from_profile(profile: str) -> tuple[TradingBot, ServiceRegistry]:
         profile: One of 'dev', 'demo', 'prod', 'test', 'spot', 'canary'
 
     Returns:
-        Tuple of (TradingBot, ServiceRegistry)
+        A fully configured TradingBot ready to run.
     """
     # Convert string to Profile enum
     profile_enum = Profile(profile.lower())
@@ -284,14 +235,7 @@ def bot_from_profile(profile: str) -> tuple[TradingBot, ServiceRegistry]:
         mock_broker=mock_broker,
     )
 
-    # Load settings with mock mode for dev/test
-    env_overrides: dict[str, str] = {}
-    if mock_broker:
-        env_overrides["PERPS_FORCE_MOCK"] = "1"
-
-    settings = load_runtime_settings(env_overrides)
-
-    return build_bot(config, settings=settings)
+    return build_bot(config)
 
 
 __all__ = [
@@ -303,5 +247,6 @@ __all__ = [
     "resolve_runtime_paths",
     "RuntimePaths",
     "build_bot",
+    "build_bot_with_registry",  # Deprecated - use build_bot instead
     "bot_from_profile",
 ]

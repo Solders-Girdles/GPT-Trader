@@ -1,7 +1,7 @@
 """Tests for EventStore persistence functionality.
 
 NOTE: The EventStore is currently a minimal in-memory implementation.
-See PROJECT_ROADMAP.md "Future Activation" section - "EventStore need production hardening".
+See docs/archive/PROJECT_ROADMAP_NOV_2025.md "Future Activation" section - "EventStore need production hardening".
 """
 
 from pathlib import Path

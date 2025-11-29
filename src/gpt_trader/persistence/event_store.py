@@ -1,28 +1,110 @@
 """
-Event persistence layer.
+Event persistence layer with optional SQLite durability.
 """
 
+from __future__ import annotations
+
+from collections import deque
+from pathlib import Path
 from typing import Any
+
+from gpt_trader.persistence.database import DatabaseEngine
+
+DEFAULT_CACHE_SIZE = 10_000
 
 
 class EventStore:
-    def __init__(self, root: Any | None = None):
-        self.root = root
-        self.events: list[dict[str, Any]] = []
+    """
+    Event store with optional SQLite persistence.
+
+    Modes:
+    - In-memory (root=None): Pure deque storage, identical to legacy behavior
+    - Persistent (root provided): Write-through to SQLite with bounded cache
+
+    The `events` property always returns a list for backward compatibility.
+    """
+
+    def __init__(
+        self,
+        root: Path | None = None,
+        max_cache_size: int = DEFAULT_CACHE_SIZE,
+    ) -> None:
+        """
+        Initialize event store.
+
+        Args:
+            root: Storage root directory. If None, operates in memory-only mode.
+            max_cache_size: Maximum events to keep in memory cache (default: 10,000)
+        """
+        self._root = root
+        self._max_cache_size = max_cache_size
+        self._events: deque[dict[str, Any]] = deque(maxlen=max_cache_size)
+        self._database: DatabaseEngine | None = None
+
+        if root is not None:
+            database_path = root / "events.db"
+            self._database = DatabaseEngine(database_path)
+            self._database.initialize()
+            # Load recent events into cache for restart recovery
+            for event in self._database.read_recent_events(max_cache_size):
+                self._events.append(event)
 
     @property
-    def path(self) -> Any | None:
-        if self.root:
-            return self.root / "events.jsonl"
+    def root(self) -> Path | None:
+        """Storage root directory."""
+        return self._root
+
+    @property
+    def path(self) -> Path | None:
+        """Legacy path property for backward compatibility."""
+        if self._root:
+            return self._root / "events.jsonl"
+        return None
+
+    @property
+    def events(self) -> list[dict[str, Any]]:
+        """
+        Direct access to events list.
+
+        Returns a list copy of the internal deque for backward compatibility
+        with tests that use store.events[0], len(store.events), etc.
+        """
+        return list(self._events)
+
+    def _extract_bot_id(self, data: dict[str, Any]) -> str | None:
+        """Extract bot_id from event data for database indexing."""
+        # Direct field
+        if "bot_id" in data:
+            return data["bot_id"]
+        # Nested in position/trade payloads
+        for key in ("position", "trade"):
+            if key in data and isinstance(data[key], dict):
+                if "bot_id" in data[key]:
+                    return data[key]["bot_id"]
         return None
 
     def append(self, event_type: str, data: dict[str, Any]) -> None:
-        self.events.append({"type": event_type, "data": data})
+        """
+        Append an event to the store.
+
+        In persistent mode, writes through to SQLite before adding to cache.
+        """
+        event = {"type": event_type, "data": data}
+
+        # Write to database first (if persistent mode)
+        if self._database is not None:
+            bot_id = self._extract_bot_id(data)
+            self._database.write_event(event_type, data, bot_id)
+
+        # Always update in-memory cache (deque auto-evicts oldest if full)
+        self._events.append(event)
 
     def append_metric(self, bot_id: str = "unknown", metrics: dict[str, Any] | None = None) -> None:
+        """Append a metric event."""
         self.append("metric", {"bot_id": bot_id, "metrics": metrics or {}})
 
     def append_position(self, bot_id: str, position: dict[str, Any]) -> None:
+        """Append a position event."""
         self.append("position", {"bot_id": bot_id, "position": position})
 
     def store_event(self, event_type: str, data: dict[str, Any]) -> None:
@@ -80,4 +162,23 @@ class EventStore:
 
         Satisfies EventStoreProtocol.get_recent() interface.
         """
-        return self.events[-count:] if count > 0 else []
+        events_list = list(self._events)
+        return events_list[-count:] if count > 0 else []
+
+    def close(self) -> None:
+        """Close database connection (if persistent mode)."""
+        if self._database is not None:
+            self._database.close()
+
+    def __enter__(self) -> EventStore:
+        """Context manager entry."""
+        return self
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: Any,
+    ) -> None:
+        """Context manager exit - ensures database connection is closed."""
+        self.close()

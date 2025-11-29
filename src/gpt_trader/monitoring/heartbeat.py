@@ -14,6 +14,10 @@ import time
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
+from gpt_trader.config.constants import (
+    HEARTBEAT_HEALTH_MULTIPLIER,
+    HEARTBEAT_PING_TIMEOUT_SECONDS,
+)
 from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:
@@ -142,7 +146,7 @@ class HeartbeatService:
         try:
             import aiohttp
 
-            timeout = aiohttp.ClientTimeout(total=10)
+            timeout = aiohttp.ClientTimeout(total=HEARTBEAT_PING_TIMEOUT_SECONDS)
             async with aiohttp.ClientSession(timeout=timeout) as session:
                 async with session.get(self.ping_url) as response:
                     if response.status == 200:
@@ -179,7 +183,9 @@ class HeartbeatService:
         if self._last_heartbeat == 0:
             return True  # Just started, no heartbeat yet
         # Healthy if last heartbeat within 2x interval
-        return (time.time() - self._last_heartbeat) < (self.interval_seconds * 2)
+        return (time.time() - self._last_heartbeat) < (
+            self.interval_seconds * HEARTBEAT_HEALTH_MULTIPLIER
+        )
 
 
 __all__ = ["HeartbeatService", "EVENT_HEARTBEAT"]

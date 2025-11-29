@@ -7,6 +7,8 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import TYPE_CHECKING
 
+from gpt_trader.config.constants import DEFAULT_GUARD_CACHE_INTERVAL_SECONDS
+
 if TYPE_CHECKING:
     from gpt_trader.orchestration.execution.guards.protocol import RuntimeGuardState
 
@@ -16,7 +18,7 @@ class GuardStateCache:
 
     def __init__(
         self,
-        full_interval: float = 60.0,
+        full_interval: float = DEFAULT_GUARD_CACHE_INTERVAL_SECONDS,
         invalidate_callback: Callable[[], None] | None = None,
     ) -> None:
         """

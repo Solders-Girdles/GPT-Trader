@@ -14,6 +14,7 @@ from gpt_trader.config.constants import (
     DEFAULT_RATE_LIMIT_PER_MINUTE,
     MAX_HTTP_RETRIES,
     RATE_LIMIT_WARNING_THRESHOLD,
+    RATE_LIMIT_WINDOW_SECONDS,
     RETRY_BACKOFF_MULTIPLIER,
     RETRY_BASE_DELAY,
 )
@@ -236,19 +237,23 @@ class CoinbaseClientBase:
 
         now = time.time()
         # Remove requests older than 1 minute
-        self._request_times = [t for t in self._request_times if now - t < 60]
+        self._request_times = [
+            t for t in self._request_times if now - t < RATE_LIMIT_WINDOW_SECONDS
+        ]
 
         if len(self._request_times) >= self.rate_limit_per_minute:
             logger.info(
                 f"Rate limit reached ({len(self._request_times)}/{self.rate_limit_per_minute}). throttling..."
             )
-            sleep_time = 60 - (now - self._request_times[0]) + 1
+            sleep_time = RATE_LIMIT_WINDOW_SECONDS - (now - self._request_times[0]) + 1
             if sleep_time > 0:
                 time.sleep(sleep_time)
             # After sleep, we can proceed (or check again, but simple sleep is ok)
             # Clean up again
             now = time.time()
-            self._request_times = [t for t in self._request_times if now - t < 60]
+            self._request_times = [
+                t for t in self._request_times if now - t < RATE_LIMIT_WINDOW_SECONDS
+            ]
         elif len(self._request_times) >= self.rate_limit_per_minute * RATE_LIMIT_WARNING_THRESHOLD:
             logger.warning(
                 "Approaching rate limit: %d/%d requests in last minute",

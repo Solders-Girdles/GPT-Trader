@@ -21,15 +21,16 @@ try:
 except ImportError:
     websocket = None  # type: ignore[assignment]
 
-from gpt_trader.config.constants import WS_JOIN_TIMEOUT, WS_RECONNECT_DELAY
+from gpt_trader.config.constants import (
+    MAX_WS_RECONNECT_DELAY_SECONDS,
+    WS_JOIN_TIMEOUT,
+    WS_RECONNECT_BACKOFF_MULTIPLIER,
+    WS_RECONNECT_DELAY,
+)
 from gpt_trader.features.brokerages.coinbase.ws_events import EventDispatcher
 from gpt_trader.utilities.logging_patterns import get_logger
 
 logger = get_logger(__name__, component="coinbase_websocket")
-
-# Reconnection settings
-MAX_RECONNECT_DELAY = 60  # Maximum backoff delay in seconds
-RECONNECT_MULTIPLIER = 2  # Exponential backoff multiplier
 
 
 class SequenceGuard:
@@ -243,7 +244,7 @@ class CoinbaseWebSocket:
         if self.running:
             # Exponential backoff reconnection
             self._reconnect_count += 1
-            delay = min(self._reconnect_delay, MAX_RECONNECT_DELAY)
+            delay = min(self._reconnect_delay, MAX_WS_RECONNECT_DELAY_SECONDS)
 
             logger.info(
                 "Attempting reconnect",
@@ -253,8 +254,8 @@ class CoinbaseWebSocket:
 
             time.sleep(delay)
             self._reconnect_delay = min(
-                self._reconnect_delay * RECONNECT_MULTIPLIER,
-                MAX_RECONNECT_DELAY,
+                self._reconnect_delay * WS_RECONNECT_BACKOFF_MULTIPLIER,
+                MAX_WS_RECONNECT_DELAY_SECONDS,
             )
             self.connect()
 

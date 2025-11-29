@@ -6,6 +6,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from gpt_trader.config.constants import (
+    DEFAULT_VOLATILITY_WINDOW_PERIODS,
+    MIN_VOLATILITY_WINDOW_THRESHOLD,
+)
 from gpt_trader.features.live_trade.guard_errors import RiskGuardDataUnavailable
 from gpt_trader.orchestration.execution.guards.protocol import RuntimeGuardState
 
@@ -45,8 +49,12 @@ class VolatilityGuard:
         """Check volatility circuit breakers."""
         symbols: list[str] = list(self._risk_manager.last_mark_update.keys())
         symbols.extend([str(p) for p in state.positions_dict.keys() if p not in symbols])
-        window = getattr(self._risk_manager.config, "volatility_window_periods", 20)
-        if not symbols or not window or window <= 5:
+        window = getattr(
+            self._risk_manager.config,
+            "volatility_window_periods",
+            DEFAULT_VOLATILITY_WINDOW_PERIODS,
+        )
+        if not symbols or not window or window <= MIN_VOLATILITY_WINDOW_THRESHOLD:
             return
 
         failures: list[dict[str, Any]] = []

@@ -67,3 +67,60 @@ DEFAULT_RATE_LIMIT_PER_MINUTE: int = int(os.getenv("GPT_TRADER_RATE_LIMIT_PER_MI
 
 # Rate limit warning threshold (percentage of limit)
 RATE_LIMIT_WARNING_THRESHOLD: float = float(os.getenv("GPT_TRADER_RATE_LIMIT_WARNING_PCT", "0.8"))
+
+# Rate limit window in seconds (1 minute)
+RATE_LIMIT_WINDOW_SECONDS: int = int(os.getenv("GPT_TRADER_RATE_LIMIT_WINDOW", "60"))
+
+# =============================================================================
+# Database Configuration
+# =============================================================================
+
+# SQLite busy timeout in milliseconds
+SQLITE_BUSY_TIMEOUT_MS: int = int(os.getenv("GPT_TRADER_SQLITE_BUSY_TIMEOUT", "5000"))
+
+# Maximum number of database integrity issues to log before suppressing
+MAX_INTEGRITY_ISSUES_TO_LOG: int = int(os.getenv("GPT_TRADER_MAX_INTEGRITY_LOG", "5"))
+
+# =============================================================================
+# WebSocket Advanced Configuration
+# =============================================================================
+
+# Maximum WebSocket reconnect delay in seconds (caps exponential backoff)
+MAX_WS_RECONNECT_DELAY_SECONDS: int = int(os.getenv("GPT_TRADER_MAX_WS_RECONNECT_DELAY", "60"))
+
+# WebSocket exponential backoff multiplier
+WS_RECONNECT_BACKOFF_MULTIPLIER: float = float(os.getenv("GPT_TRADER_WS_BACKOFF_MULTIPLIER", "2.0"))
+
+# =============================================================================
+# Health & Monitoring Configuration
+# =============================================================================
+
+# Health check request read timeout in seconds
+HEALTH_CHECK_READ_TIMEOUT_SECONDS: float = float(os.getenv("GPT_TRADER_HEALTH_READ_TIMEOUT", "5.0"))
+
+# External heartbeat ping timeout in seconds
+HEARTBEAT_PING_TIMEOUT_SECONDS: int = int(os.getenv("GPT_TRADER_HEARTBEAT_PING_TIMEOUT", "10"))
+
+# Heartbeat health multiplier (healthy if last beat within interval * multiplier)
+HEARTBEAT_HEALTH_MULTIPLIER: int = int(os.getenv("GPT_TRADER_HEARTBEAT_HEALTH_MULT", "2"))
+
+# Default guard state cache interval in seconds
+DEFAULT_GUARD_CACHE_INTERVAL_SECONDS: float = float(
+    os.getenv("GPT_TRADER_GUARD_CACHE_INTERVAL", "60.0")
+)
+
+# =============================================================================
+# Trading Calculation Defaults
+# =============================================================================
+
+# Default quote increment for price calculations
+DEFAULT_QUOTE_INCREMENT: float = float(os.getenv("GPT_TRADER_DEFAULT_QUOTE_INCREMENT", "0.01"))
+
+# Minimum collateral change to trigger logging (in dollars)
+MIN_COLLATERAL_CHANGE_TO_LOG: float = float(os.getenv("GPT_TRADER_MIN_COLLATERAL_LOG", "0.01"))
+
+# Default volatility window periods for risk calculations
+DEFAULT_VOLATILITY_WINDOW_PERIODS: int = int(os.getenv("GPT_TRADER_VOLATILITY_WINDOW", "20"))
+
+# Minimum volatility window threshold
+MIN_VOLATILITY_WINDOW_THRESHOLD: int = int(os.getenv("GPT_TRADER_MIN_VOLATILITY_WINDOW", "5"))

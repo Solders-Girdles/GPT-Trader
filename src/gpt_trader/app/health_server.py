@@ -16,6 +16,7 @@ from dataclasses import dataclass, field
 from http import HTTPStatus
 from typing import Any
 
+from gpt_trader.config.constants import HEALTH_CHECK_READ_TIMEOUT_SECONDS
 from gpt_trader.utilities.logging_patterns import get_logger
 from gpt_trader.utilities.performance.health import get_performance_health_check
 
@@ -150,7 +151,9 @@ class HealthServer:
     ) -> None:
         """Handle incoming HTTP request."""
         try:
-            request_line = await asyncio.wait_for(reader.readline(), timeout=5.0)
+            request_line = await asyncio.wait_for(
+                reader.readline(), timeout=HEALTH_CHECK_READ_TIMEOUT_SECONDS
+            )
             if not request_line:
                 return
 

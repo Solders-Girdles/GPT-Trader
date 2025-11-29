@@ -12,6 +12,10 @@ from decimal import Decimal
 from types import SimpleNamespace
 from typing import Any, cast
 
+from gpt_trader.config.constants import (
+    DEFAULT_QUOTE_INCREMENT,
+    MIN_COLLATERAL_CHANGE_TO_LOG,
+)
 from gpt_trader.core import Balance, MarketType, Product
 from gpt_trader.features.brokerages.core.protocols import ExtendedBrokerProtocol
 from gpt_trader.orchestration.configuration import BotConfig
@@ -68,7 +72,7 @@ class StateCollector:
         if self._last_collateral_available is not None:
             diff = total_available - self._last_collateral_available
             change_value = diff
-            if abs(diff) > Decimal("0.01"):
+            if abs(diff) > Decimal(str(MIN_COLLATERAL_CHANGE_TO_LOG)):
                 logger.info(
                     "Collateral available changed",
                     previous=float(self._last_collateral_available),
@@ -286,7 +290,7 @@ class StateCollector:
         if hasattr(product, "quote_increment") and product.quote_increment:
             quote_inc = Decimal(str(product.quote_increment))
         else:
-            quote_inc = Decimal("0.01")
+            quote_inc = Decimal(str(DEFAULT_QUOTE_INCREMENT))
         return quote_inc * Decimal("100")
 
     def require_product(self, symbol: str, product: Product | None) -> Product:

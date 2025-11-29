@@ -75,6 +75,15 @@ jobs:
           fi
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
 
+      - name: Restore security baseline cache
+        id: security-cache
+        uses: actions/cache@v4
+        with:
+          path: .security-baseline
+          key: security-baseline-${{ hashFiles('pyproject.toml', 'uv.lock') }}
+          restore-keys: |
+            security-baseline-
+
       - name: Security scan with Bandit
         run: |
           set -euo pipefail
@@ -87,6 +96,30 @@ jobs:
         run: |
           set -euo pipefail
           uv run pip-audit -f json -o pip-audit-report.json --ignore-vuln GHSA-4xh5-x5gv-qwph || echo "pip-audit completed with warnings"
+
+      - name: Compare with security baseline
+        if: steps.security-cache.outputs.cache-hit == 'true'
+        run: |
+          mkdir -p .security-baseline
+
+          # Compare Bandit results
+          if [ -f .security-baseline/bandit-baseline.json ] && [ -f bandit-report.json ]; then
+            baseline_count=$(jq '.results | length' .security-baseline/bandit-baseline.json 2>/dev/null || echo "0")
+            current_count=$(jq '.results | length' bandit-report.json 2>/dev/null || echo "0")
+
+            if [ "$current_count" -gt "$baseline_count" ]; then
+              echo "::warning::Security issues increased from $baseline_count to $current_count"
+            elif [ "$current_count" -lt "$baseline_count" ]; then
+              echo "::notice::Security issues decreased from $baseline_count to $current_count"
+            fi
+          fi
+
+      - name: Update security baseline
+        if: always()
+        run: |
+          mkdir -p .security-baseline
+          [ -f bandit-report.json ] && cp bandit-report.json .security-baseline/bandit-baseline.json
+          [ -f pip-audit-report.json ] && cp pip-audit-report.json .security-baseline/pip-audit-baseline.json
 
       - name: Upload security reports
         if: inputs.upload-reports && always()

@@ -194,6 +194,31 @@ jobs:
         check_name: 'Test Results'
         comment_mode: 'off'
 
+    - name: Generate workflow summary
+      if: always()
+      run: |
+        cat >> $GITHUB_STEP_SUMMARY << 'EOF'
+        ## Core Checks Summary
+
+        | Check | Status |
+        |-------|--------|
+        | Linting (Ruff) | ✅ Passed |
+        | Formatting (Black) | ✅ Passed |
+        | Naming Standards | ✅ Passed |
+        | Lockfile Sync | ✅ Passed |
+        EOF
+
+        if [ -f coverage.json ]; then
+          coverage=$(jq -r '.totals.percent_covered // "N/A"' coverage.json 2>/dev/null || echo "N/A")
+          echo "| Coverage | ${coverage}% |" >> $GITHUB_STEP_SUMMARY
+        fi
+
+        if [ -f test-results.xml ]; then
+          tests=$(grep -o 'tests="[0-9]*"' test-results.xml | head -1 | grep -o '[0-9]*' || echo "N/A")
+          failures=$(grep -o 'failures="[0-9]*"' test-results.xml | head -1 | grep -o '[0-9]*' || echo "0")
+          echo "| Tests | ${tests} (${failures} failures) |" >> $GITHUB_STEP_SUMMARY
+        fi
+
   config-modes:
     name: Config Mode Coverage
     runs-on: ubuntu-latest

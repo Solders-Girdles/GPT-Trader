@@ -1,3 +1,4 @@
+from .stateful import StatefulBaselineStrategy, StatefulPerpsStrategy
 from .strategy import (
     Action,
     BaselinePerpsStrategy,
@@ -12,10 +13,13 @@ from .strategy import (
 )
 
 __all__ = [
-    # Strategy classes
+    # Stateless strategy classes
     "BaselinePerpsStrategy",  # Base technical strategy
     "SpotStrategy",  # Spot trading (no shorts)
     "PerpsStrategy",  # Perpetuals trading (full functionality)
+    # Stateful strategy classes (O(1) incremental updates)
+    "StatefulBaselineStrategy",  # Stateful version with serialization
+    "StatefulPerpsStrategy",  # Alias for StatefulBaselineStrategy
     # Types
     "Decision",
     "Action",

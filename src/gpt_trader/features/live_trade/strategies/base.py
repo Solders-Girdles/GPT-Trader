@@ -1,6 +1,13 @@
 """Base strategy protocol and abstract types.
 
 This module defines the interface that all trading strategies must implement.
+
+Includes:
+- StrategyProtocol: Core interface for trading decisions
+- RehydratableStrategy: Protocol for crash recovery
+- StatefulStrategy: Protocol for strategies with O(1) incremental updates
+- BaseStrategy: Abstract base class for stateless strategies
+- StatefulStrategyBase: Abstract base class for stateful strategies
 """
 
 from abc import ABC, abstractmethod
@@ -103,4 +110,134 @@ class BaseStrategy(ABC):
         return 0
 
 
-__all__ = ["BaseStrategy", "RehydratableStrategy", "StrategyProtocol"]
+@runtime_checkable
+class StatefulStrategy(Protocol):
+    """Protocol for strategies with O(1) incremental state updates.
+
+    Stateful strategies maintain internal state (indicator values, statistics)
+    that updates incrementally with each price tick, rather than recalculating
+    from the full price history each cycle.
+
+    Benefits:
+    - O(1) per-tick updates instead of O(n) recalculation
+    - Reduced memory usage (no need to store full history)
+    - Better crash recovery through state serialization
+    """
+
+    def update(self, symbol: str, price: Decimal) -> None:
+        """Update internal state with new price. O(1) operation.
+
+        Args:
+            symbol: Trading pair symbol
+            price: Latest mark/spot price
+        """
+        ...
+
+    def serialize_state(self) -> dict[str, Any]:
+        """Serialize all indicator state for persistence.
+
+        Returns:
+            Dictionary of serializable state that can be stored
+            and later passed to deserialize_state().
+        """
+        ...
+
+    def deserialize_state(self, state: dict[str, Any]) -> None:
+        """Restore indicator state from serialized data.
+
+        Args:
+            state: Previously serialized state from serialize_state()
+        """
+        ...
+
+
+class StatefulStrategyBase(BaseStrategy):
+    """Abstract base class for stateful trading strategies.
+
+    Extends BaseStrategy with incremental state management using
+    O(1) algorithms like Welford's for running statistics.
+
+    Subclasses should:
+    1. Initialize indicator bundles in __init__
+    2. Implement update() to feed prices to indicators
+    3. Implement serialize_state() and deserialize_state() for crash recovery
+    4. Use indicator values in decide() instead of recalculating
+    """
+
+    def update(self, symbol: str, price: Decimal) -> None:
+        """Update internal state with new price.
+
+        Default implementation does nothing. Override to feed prices
+        to stateful indicators.
+
+        Args:
+            symbol: Trading pair symbol
+            price: Latest mark/spot price
+        """
+        pass
+
+    def serialize_state(self) -> dict[str, Any]:
+        """Serialize all indicator state for persistence.
+
+        Default returns empty dict. Override to persist indicator state.
+
+        Returns:
+            Dictionary of serializable indicator state
+        """
+        return {}
+
+    def deserialize_state(self, state: dict[str, Any]) -> None:
+        """Restore indicator state from serialized data.
+
+        Default does nothing. Override to restore indicator state.
+
+        Args:
+            state: Previously serialized state
+        """
+        pass
+
+    def rehydrate(self, events: Sequence[dict[str, Any]]) -> int:
+        """Restore strategy state from historical events.
+
+        For stateful strategies, this:
+        1. Looks for a state snapshot event (most recent)
+        2. Deserializes the snapshot if found
+        3. Processes any price events after the snapshot
+
+        Args:
+            events: List of persisted events (oldest first)
+
+        Returns:
+            Number of events processed
+        """
+        processed = 0
+
+        # Look for most recent state snapshot (iterate backwards)
+        for event in reversed(events):
+            if event.get("type") == "strategy_state_snapshot":
+                state_data = event.get("data", {}).get("state", {})
+                if state_data:
+                    self.deserialize_state(state_data)
+                    processed += 1
+                    break
+
+        # Process price events after state snapshot
+        for event in events:
+            if event.get("type") == "price_tick":
+                data = event.get("data", {})
+                symbol = data.get("symbol")
+                price_str = data.get("price")
+                if symbol and price_str:
+                    self.update(symbol, Decimal(price_str))
+                    processed += 1
+
+        return processed
+
+
+__all__ = [
+    "BaseStrategy",
+    "RehydratableStrategy",
+    "StatefulStrategy",
+    "StatefulStrategyBase",
+    "StrategyProtocol",
+]

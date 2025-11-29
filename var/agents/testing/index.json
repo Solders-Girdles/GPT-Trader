@@ -1,0 +1,20 @@
+{
+  "version": "1.0",
+  "description": "Test inventory for AI agent consumption",
+  "files": {
+    "test_inventory": "test_inventory.json",
+    "markers": "markers.json"
+  },
+  "summary": {
+    "total_tests": 6261,
+    "total_files": 205,
+    "markers_used": 8
+  },
+  "quick_commands": {
+    "run_unit_tests": "pytest -m unit",
+    "run_cli_tests": "pytest tests/unit/gpt_trader/cli",
+    "run_fast_tests": "pytest -m 'not slow and not performance'",
+    "run_risk_tests": "pytest -m risk",
+    "list_all_markers": "pytest --markers"
+  }
+}

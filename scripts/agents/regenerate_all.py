@@ -1,0 +1,278 @@
+#!/usr/bin/env python3
+"""Regenerate all static context files in var/agents/.
+
+This script runs all generator tools to refresh the static context files
+that are committed to the repository for AI agent consumption.
+
+Usage:
+    python scripts/agents/regenerate_all.py           # Regenerate all
+    python scripts/agents/regenerate_all.py --verify  # Check freshness only
+    python scripts/agents/regenerate_all.py --list    # List generators
+
+Entry point:
+    uv run agent-regenerate
+"""
+from __future__ import annotations
+
+import argparse
+import subprocess
+import sys
+import time
+from pathlib import Path
+from typing import NamedTuple
+
+PROJECT_ROOT = Path(__file__).parent.parent.parent
+
+# Map of generator scripts to their output directories
+# Format: (script_name, output_subdir, description)
+GENERATORS: list[tuple[str, str, str]] = [
+    ("generate_config_schemas.py", "schemas", "Configuration schemas"),
+    ("export_model_schemas.py", "models", "Domain model schemas"),
+    ("generate_event_catalog.py", "logging", "Event catalog"),
+    ("generate_test_inventory.py", "testing", "Test inventory"),
+    ("generate_validator_registry.py", "validation", "Validator registry"),
+    ("generate_broker_api_docs.py", "broker", "Broker API docs"),
+]
+
+
+class GeneratorResult(NamedTuple):
+    """Result of running a generator script."""
+
+    script: str
+    success: bool
+    duration: float
+    output_dir: str
+    error: str | None = None
+
+
+def run_generator(script_name: str, output_dir: str) -> GeneratorResult:
+    """Run a single generator script.
+
+    Args:
+        script_name: Name of the script file
+        output_dir: Expected output subdirectory
+
+    Returns:
+        GeneratorResult with success status and timing
+    """
+    scripts_dir = PROJECT_ROOT / "scripts" / "agents"
+    script_path = scripts_dir / script_name
+
+    if not script_path.exists():
+        return GeneratorResult(
+            script=script_name,
+            success=False,
+            duration=0.0,
+            output_dir=output_dir,
+            error=f"Script not found: {script_path}",
+        )
+
+    start = time.time()
+    try:
+        result = subprocess.run(
+            [sys.executable, str(script_path)],
+            cwd=PROJECT_ROOT,
+            capture_output=True,
+            text=True,
+            timeout=120,  # 2 minute timeout per generator
+        )
+        duration = time.time() - start
+
+        if result.returncode != 0:
+            error_msg = result.stderr.strip() or result.stdout.strip() or "Unknown error"
+            return GeneratorResult(
+                script=script_name,
+                success=False,
+                duration=duration,
+                output_dir=output_dir,
+                error=error_msg[:500],  # Truncate long errors
+            )
+
+        return GeneratorResult(
+            script=script_name,
+            success=True,
+            duration=duration,
+            output_dir=output_dir,
+        )
+
+    except subprocess.TimeoutExpired:
+        return GeneratorResult(
+            script=script_name,
+            success=False,
+            duration=120.0,
+            output_dir=output_dir,
+            error="Timed out after 120 seconds",
+        )
+    except Exception as e:
+        return GeneratorResult(
+            script=script_name,
+            success=False,
+            duration=time.time() - start,
+            output_dir=output_dir,
+            error=str(e),
+        )
+
+
+def regenerate_all(verbose: bool = True) -> tuple[list[GeneratorResult], bool]:
+    """Run all generators.
+
+    Args:
+        verbose: Print progress to stderr
+
+    Returns:
+        Tuple of (results list, overall success)
+    """
+    results: list[GeneratorResult] = []
+    var_agents = PROJECT_ROOT / "var" / "agents"
+
+    # Ensure output directory exists
+    var_agents.mkdir(parents=True, exist_ok=True)
+
+    for script_name, output_dir, description in GENERATORS:
+        if verbose:
+            print(f"Running {script_name}... ", end="", flush=True, file=sys.stderr)
+
+        result = run_generator(script_name, output_dir)
+        results.append(result)
+
+        if verbose:
+            if result.success:
+                print(f"OK ({result.duration:.1f}s)", file=sys.stderr)
+            else:
+                print(f"FAILED", file=sys.stderr)
+                if result.error:
+                    # Print first line of error
+                    error_line = result.error.split("\n")[0]
+                    print(f"  Error: {error_line}", file=sys.stderr)
+
+    success = all(r.success for r in results)
+    return results, success
+
+
+def verify_freshness() -> int:
+    """Verify that generated files are up-to-date.
+
+    Runs all generators and checks if there are uncommitted changes
+    in var/agents/. Returns 0 if fresh, 1 if stale.
+    """
+    import shutil
+
+    var_agents = PROJECT_ROOT / "var" / "agents"
+
+    # Check if git is available
+    if shutil.which("git") is None:
+        print("Error: git not found", file=sys.stderr)
+        return 1
+
+    print("Regenerating context files...", file=sys.stderr)
+    results, success = regenerate_all(verbose=True)
+
+    if not success:
+        print("\nSome generators failed. Cannot verify freshness.", file=sys.stderr)
+        return 1
+
+    # Check for git changes
+    result = subprocess.run(
+        ["git", "diff", "--quiet", str(var_agents)],
+        cwd=PROJECT_ROOT,
+        capture_output=True,
+    )
+
+    if result.returncode != 0:
+        print("\n" + "=" * 50, file=sys.stderr)
+        print("STALE: Agent context files have changed!", file=sys.stderr)
+        print("=" * 50, file=sys.stderr)
+        print("\nRun 'uv run agent-regenerate' and commit the changes.", file=sys.stderr)
+
+        # Show what changed
+        diff_result = subprocess.run(
+            ["git", "diff", "--stat", str(var_agents)],
+            cwd=PROJECT_ROOT,
+            capture_output=True,
+            text=True,
+        )
+        if diff_result.stdout:
+            print("\nChanged files:", file=sys.stderr)
+            print(diff_result.stdout, file=sys.stderr)
+
+        return 1
+
+    print("\nAll context files are up-to-date.", file=sys.stderr)
+    return 0
+
+
+def list_generators() -> None:
+    """List all available generators."""
+    print("Available generators:")
+    print("-" * 60)
+    for script_name, output_dir, description in GENERATORS:
+        script_path = PROJECT_ROOT / "scripts" / "agents" / script_name
+        status = "OK" if script_path.exists() else "MISSING"
+        print(f"  {script_name:<35} {description:<20} [{status}]")
+    print("-" * 60)
+    print(f"Output directory: var/agents/")
+
+
+def main() -> int:
+    """Main entry point."""
+    parser = argparse.ArgumentParser(
+        description="Regenerate all agent context files in var/agents/",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+    %(prog)s                 # Regenerate all context files
+    %(prog)s --verify        # Check if files are up-to-date (for CI)
+    %(prog)s --list          # List available generators
+    %(prog)s --quiet         # Suppress progress output
+        """,
+    )
+    parser.add_argument(
+        "--verify",
+        action="store_true",
+        help="Verify freshness only (returns non-zero if stale)",
+    )
+    parser.add_argument(
+        "--list",
+        action="store_true",
+        help="List available generators and exit",
+    )
+    parser.add_argument(
+        "--quiet",
+        action="store_true",
+        help="Suppress progress output",
+    )
+
+    args = parser.parse_args()
+
+    if args.list:
+        list_generators()
+        return 0
+
+    if args.verify:
+        return verify_freshness()
+
+    # Normal regeneration
+    results, success = regenerate_all(verbose=not args.quiet)
+
+    # Summary
+    passed = len([r for r in results if r.success])
+    failed = len([r for r in results if not r.success])
+    total_time = sum(r.duration for r in results)
+
+    if not args.quiet:
+        print("-" * 50, file=sys.stderr)
+        print(f"Completed: {passed} passed, {failed} failed ({total_time:.1f}s)", file=sys.stderr)
+
+        if success:
+            print("\nAll generators completed successfully.", file=sys.stderr)
+        else:
+            print("\nSome generators failed. Check errors above.", file=sys.stderr)
+            for r in results:
+                if not r.success:
+                    print(f"  - {r.script}: {r.error}", file=sys.stderr)
+
+    return 0 if success else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

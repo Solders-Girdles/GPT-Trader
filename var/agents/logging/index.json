@@ -1,0 +1,39 @@
+{
+  "version": "1.0",
+  "description": "Logging event catalog for AI agent consumption",
+  "files": {
+    "event_catalog": "event_catalog.json",
+    "log_schema": "log_schema.json"
+  },
+  "summary": {
+    "total_events": 95,
+    "categories": [
+      "trading",
+      "data",
+      "monitoring",
+      "security",
+      "configuration",
+      "system",
+      "strategy",
+      "risk",
+      "other"
+    ],
+    "top_operations": [
+      "health_server_start",
+      "health_server_stop",
+      "health_request",
+      "readiness_update",
+      "encryption_init",
+      "vault_init",
+      "secret_store",
+      "secret_retrieve",
+      "rotate_key",
+      "suspicious_activity"
+    ]
+  },
+  "usage": {
+    "parsing": "Use log_schema.json to validate/parse JSON log entries",
+    "filtering": "Use event_catalog.json to filter logs by operation type",
+    "correlation": "Use correlation_id field to trace requests across logs"
+  }
+}

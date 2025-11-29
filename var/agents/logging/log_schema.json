@@ -1,0 +1,90 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "GPT-Trader Structured Log Entry",
+  "description": "Schema for JSON log entries produced by StructuredJSONFormatter",
+  "type": "object",
+  "properties": {
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp in UTC"
+    },
+    "level": {
+      "type": "string",
+      "enum": [
+        "DEBUG",
+        "INFO",
+        "WARNING",
+        "ERROR",
+        "CRITICAL"
+      ],
+      "description": "Log severity level"
+    },
+    "logger": {
+      "type": "string",
+      "description": "Logger name (usually module path)"
+    },
+    "message": {
+      "type": "string",
+      "description": "Human-readable log message"
+    },
+    "module": {
+      "type": "string",
+      "description": "Python module name"
+    },
+    "function": {
+      "type": "string",
+      "description": "Function name where log was called"
+    },
+    "line": {
+      "type": "integer",
+      "description": "Line number in source file"
+    },
+    "thread": {
+      "type": "integer",
+      "description": "Thread ID"
+    },
+    "process": {
+      "type": "integer",
+      "description": "Process ID"
+    },
+    "correlation_id": {
+      "type": "string",
+      "description": "Request correlation ID for tracing"
+    },
+    "operation": {
+      "type": "string",
+      "description": "Operation type identifier for event categorization"
+    },
+    "component": {
+      "type": "string",
+      "description": "System component name"
+    },
+    "status": {
+      "type": "string",
+      "description": "Operation status (success, error, pending, etc.)"
+    },
+    "exception": {
+      "type": "object",
+      "description": "Exception information if error",
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "module": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "required": [
+    "timestamp",
+    "level",
+    "logger",
+    "message"
+  ],
+  "additionalProperties": true
+}

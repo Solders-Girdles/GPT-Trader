@@ -39,6 +39,14 @@ ci = ["pre-commit>=4.3.0,<5.0.0", "pip-audit>=2.9.0,<3.0.0", "bandit>=1.7.9,<2.0
 
 [project.scripts]
 coinbase-trader = "gpt_trader.cli:main"
+# Agent tools - first-class commands for AI-assisted development
+agent-check = "gpt_trader.agents.cli:check"
+agent-impact = "gpt_trader.agents.cli:impact"
+agent-map = "gpt_trader.agents.cli:map_deps"
+agent-tests = "gpt_trader.agents.cli:tests"
+agent-risk = "gpt_trader.agents.cli:risk"
+agent-naming = "gpt_trader.agents.cli:naming"
+agent-regenerate = "gpt_trader.agents.cli:regenerate"
 
 [tool.poetry]
 packages = [

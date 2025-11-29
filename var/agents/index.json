@@ -1,0 +1,96 @@
+{
+  "version": "1.1",
+  "description": "AI Agent Tools Index for GPT-Trader",
+  "generated_by": "scripts/agents/",
+  "resources": {
+    "schemas": {
+      "path": "schemas/",
+      "description": "JSON schemas for configuration dataclasses",
+      "files": ["bot_config_schema.json", "risk_config_schema.json", "runtime_settings_schema.json"],
+      "generator": "scripts/agents/generate_config_schemas.py"
+    },
+    "models": {
+      "path": "models/",
+      "description": "Domain model schemas (interfaces, enums, errors)",
+      "files": ["interfaces_schema.json", "enums_schema.json", "errors_schema.json"],
+      "generator": "scripts/agents/export_model_schemas.py"
+    },
+    "logging": {
+      "path": "logging/",
+      "description": "Structured logging event catalog and schema",
+      "files": ["event_catalog.json", "log_schema.json"],
+      "generator": "scripts/agents/generate_event_catalog.py"
+    },
+    "testing": {
+      "path": "testing/",
+      "description": "Test inventory with markers and fixtures",
+      "files": ["test_inventory.json", "markers.json"],
+      "generator": "scripts/agents/generate_test_inventory.py"
+    },
+    "validation": {
+      "path": "validation/",
+      "description": "Validator and validation rules registry",
+      "files": ["validator_registry.json", "rules_registry.json"],
+      "generator": "scripts/agents/generate_validator_registry.py"
+    },
+    "broker": {
+      "path": "broker/",
+      "description": "Broker API reference and examples",
+      "files": ["api_reference.json", "examples.json"],
+      "generator": "scripts/agents/generate_broker_api_docs.py"
+    }
+  },
+  "tools": {
+    "query_risk_config": {
+      "script": "scripts/agents/query_risk_config.py",
+      "description": "Query risk configuration values",
+      "usage": [
+        "python scripts/agents/query_risk_config.py --with-docs",
+        "python scripts/agents/query_risk_config.py --field max_leverage",
+        "python scripts/agents/query_risk_config.py --generate-schema"
+      ]
+    },
+    "generate_test_inventory": {
+      "script": "scripts/agents/generate_test_inventory.py",
+      "description": "Generate test inventory and filter tests",
+      "usage": [
+        "python scripts/agents/generate_test_inventory.py --by-marker risk",
+        "python scripts/agents/generate_test_inventory.py --by-path tests/unit/gpt_trader/cli"
+      ]
+    },
+    "quality_gate": {
+      "script": "scripts/agents/quality_gate.py",
+      "description": "Run all quality checks with JSON output",
+      "usage": [
+        "python scripts/agents/quality_gate.py --format json",
+        "python scripts/agents/quality_gate.py --check lint,types,tests",
+        "python scripts/agents/quality_gate.py --files src/gpt_trader/cli/"
+      ]
+    },
+    "change_impact": {
+      "script": "scripts/agents/change_impact.py",
+      "description": "Analyze changed files and suggest relevant tests",
+      "usage": [
+        "python scripts/agents/change_impact.py --from-git",
+        "python scripts/agents/change_impact.py --files src/gpt_trader/cli/orders.py",
+        "python scripts/agents/change_impact.py --from-git --format text"
+      ]
+    },
+    "dependency_graph": {
+      "script": "scripts/agents/dependency_graph.py",
+      "description": "Map module import relationships",
+      "usage": [
+        "python scripts/agents/dependency_graph.py --component-summary",
+        "python scripts/agents/dependency_graph.py --depends-on gpt_trader.cli",
+        "python scripts/agents/dependency_graph.py --check-circular"
+      ]
+    }
+  },
+  "usage_guide": {
+    "config_validation": "Load schemas/ to validate configuration before use",
+    "error_handling": "Use models/errors_schema.json for recovery guidance",
+    "log_parsing": "Use logging/log_schema.json to parse JSON logs",
+    "test_selection": "Use testing/ to select appropriate tests for changes",
+    "api_calls": "Use broker/ for constructing valid API requests"
+  }
+}

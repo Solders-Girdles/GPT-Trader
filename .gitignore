@@ -105,7 +105,11 @@ coverage.json
 pip-audit-report.json
 .claude-flow/
 .hypothesis/
-var/
+# var/ directory - ignore all except agents/
+var/*
+!var/agents/
+# Large generated file - regenerate with agent-tests
+var/agents/testing/test_inventory.json
 .mypy_cache/
 .pytest_cache/
 .kilocode/

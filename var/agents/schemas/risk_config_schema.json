@@ -1,0 +1,114 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "RiskConfig",
+  "type": "object",
+  "properties": {
+    "max_leverage": {
+      "type": "integer",
+      "default": 5,
+      "description": "Maximum allowed leverage multiplier"
+    },
+    "daily_loss_limit": {
+      "type": "string",
+      "format": "decimal",
+      "description": "Maximum daily loss in quote currency",
+      "default": "100"
+    },
+    "max_exposure_pct": {
+      "type": "number",
+      "default": 0.8,
+      "description": "Maximum portfolio exposure as decimal (0.8 = 80%)"
+    },
+    "max_position_pct_per_symbol": {
+      "type": "number",
+      "default": 0.2,
+      "description": "Maximum position size per symbol as decimal"
+    },
+    "min_liquidation_buffer_pct": {
+      "type": "number",
+      "default": 0.1,
+      "description": "Minimum buffer before liquidation as decimal"
+    },
+    "leverage_max_per_symbol": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer"
+      },
+      "default": {},
+      "description": "Per-symbol maximum leverage overrides"
+    },
+    "max_notional_per_symbol": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string",
+        "format": "decimal",
+        "description": "Decimal number as string"
+      },
+      "default": {},
+      "description": "Per-symbol maximum notional value"
+    },
+    "slippage_guard_bps": {
+      "type": "integer",
+      "default": 50,
+      "description": "Slippage guard in basis points (100 = 1%)"
+    },
+    "kill_switch_enabled": {
+      "type": "boolean",
+      "default": false,
+      "description": "Enable emergency kill switch"
+    },
+    "reduce_only_mode": {
+      "type": "boolean",
+      "default": false,
+      "description": "Force reduce-only mode for all orders"
+    },
+    "daytime_start_utc": {
+      "type": "string",
+      "default": "09:00",
+      "description": "Daytime period start (HH:MM UTC)"
+    },
+    "daytime_end_utc": {
+      "type": "string",
+      "default": "17:00",
+      "description": "Daytime period end (HH:MM UTC)"
+    },
+    "day_leverage_max_per_symbol": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer"
+      },
+      "default": {},
+      "description": "Per-symbol leverage limits during daytime"
+    },
+    "night_leverage_max_per_symbol": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer"
+      },
+      "default": {},
+      "description": "Per-symbol leverage limits during nighttime"
+    },
+    "day_mmr_per_symbol": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "number"
+      },
+      "default": {},
+      "description": "Maintenance margin requirement overrides (day)"
+    },
+    "night_mmr_per_symbol": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "number"
+      },
+      "default": {},
+      "description": "Maintenance margin requirement overrides (night)"
+    },
+    "enable_pre_trade_liq_projection": {
+      "type": "boolean",
+      "default": false,
+      "description": "Enable pre-trade liquidation projection"
+    }
+  },
+  "description": "RiskConfig(max_leverage: int = 5, daily_loss_limit: decimal.Decimal = Decimal('100'), max_exposure_pct: float = 0.8, max_position_pct_per_symbol: float = 0.2, min_liquidation_buffer_pct: float = 0.1, leverage_max_per_symbol: dict[str, int] = <factory>, max_notional_per_symbol: dict[str, decimal.Decimal] = <factory>, slippage_guard_bps: int = 50, kill_switch_enabled: bool = False, reduce_only_mode: bool = False, daytime_start_utc: str = '09:00', daytime_end_utc: str = '17:00', day_leverage_max_per_symbol: dict[str, int] = <factory>, night_leverage_max_per_symbol: dict[str, int] = <factory>, day_mmr_per_symbol: dict[str, float] = <factory>, night_mmr_per_symbol: dict[str, float] = <factory>, enable_pre_trade_liq_projection: bool = False)"
+}

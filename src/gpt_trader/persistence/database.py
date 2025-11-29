@@ -8,6 +8,16 @@ import threading
 from pathlib import Path
 from typing import Any
 
+from gpt_trader.persistence.durability import (
+    WriteError,
+    WriteResult,
+    check_sqlite_integrity,
+    repair_sqlite_database,
+)
+from gpt_trader.utilities.logging_patterns import get_logger
+
+logger = get_logger(__name__, component="database_engine")
+
 
 class DatabaseEngine:
     """
@@ -49,8 +59,14 @@ class DatabaseEngine:
             self._local.connection = connection
         return self._local.connection
 
-    def initialize(self) -> None:
-        """Initialize database schema."""
+    def initialize(self, *, check_integrity: bool = True, auto_repair: bool = False) -> None:
+        """
+        Initialize database schema.
+
+        Args:
+            check_integrity: Run integrity check on existing database
+            auto_repair: Attempt automatic repair if corruption detected
+        """
         if self._initialized:
             return
 
@@ -61,10 +77,38 @@ class DatabaseEngine:
             # Ensure parent directory exists
             self._database_path.parent.mkdir(parents=True, exist_ok=True)
 
+            # Check integrity of existing database
+            if check_integrity and self._database_path.exists():
+                is_ok, issues = check_sqlite_integrity(self._database_path)
+                if not is_ok:
+                    logger.error(
+                        "Database corruption detected",
+                        operation="database_init",
+                        path=str(self._database_path),
+                        issues=issues[:5],  # Log first 5 issues
+                    )
+                    if auto_repair:
+                        if repair_sqlite_database(self._database_path):
+                            logger.info(
+                                "Database repaired successfully",
+                                operation="database_init",
+                            )
+                        else:
+                            logger.error(
+                                "Database repair failed",
+                                operation="database_init",
+                            )
+
             connection = self._get_connection()
             schema = self._load_schema()
             connection.executescript(schema)
             self._initialized = True
+
+            logger.debug(
+                "Database initialized",
+                operation="database_init",
+                path=str(self._database_path),
+            )
 
     def _load_schema(self) -> str:
         """Load SQL schema from embedded resource."""
@@ -76,7 +120,9 @@ class DatabaseEngine:
         event_type: str,
         data: dict[str, Any],
         bot_id: str | None = None,
-    ) -> int:
+        *,
+        raise_on_error: bool = False,
+    ) -> WriteResult:
         """
         Write event to database.
 
@@ -84,19 +130,58 @@ class DatabaseEngine:
             event_type: Type of event
             data: Event payload
             bot_id: Optional bot identifier for indexing
+            raise_on_error: If True, raise WriteError on failure
 
         Returns:
-            Row ID of inserted event
+            WriteResult with success status and row_id
+
+        Raises:
+            WriteError: If raise_on_error is True and write fails
         """
-        connection = self._get_connection()
-        cursor = connection.execute(
-            """
-            INSERT INTO events (event_type, payload, bot_id)
-            VALUES (?, ?, ?)
-            """,
-            (event_type, json.dumps(data), bot_id),
-        )
-        return cursor.lastrowid or 0
+        try:
+            connection = self._get_connection()
+            payload = json.dumps(data)
+            cursor = connection.execute(
+                """
+                INSERT INTO events (event_type, payload, bot_id)
+                VALUES (?, ?, ?)
+                """,
+                (event_type, payload, bot_id),
+            )
+            row_id = cursor.lastrowid or 0
+
+            logger.debug(
+                "Event written",
+                operation="write_event",
+                event_type=event_type,
+                row_id=row_id,
+            )
+
+            return WriteResult.ok(row_id=row_id)
+
+        except sqlite3.Error as e:
+            error_msg = f"Database write failed: {e}"
+            logger.error(
+                error_msg,
+                operation="write_event",
+                event_type=event_type,
+                error=str(e),
+            )
+            if raise_on_error:
+                raise WriteError(error_msg) from e
+            return WriteResult.fail(error_msg)
+
+        except (TypeError, ValueError) as e:
+            error_msg = f"JSON serialization failed: {e}"
+            logger.error(
+                error_msg,
+                operation="write_event",
+                event_type=event_type,
+                error=str(e),
+            )
+            if raise_on_error:
+                raise WriteError(error_msg) from e
+            return WriteResult.fail(error_msg)
 
     def read_all_events(self) -> list[dict[str, Any]]:
         """

@@ -34,7 +34,8 @@ jobs:
   core-checks:
     name: Core Checks
     runs-on: ubuntu-latest
-    needs: quality
+    timeout-minutes: 30
+    # Runs in parallel with quality checks for faster CI
 
     steps:
     - uses: actions/checkout@v6
@@ -177,6 +178,7 @@ jobs:
   config-modes:
     name: Config Mode Coverage
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     strategy:
       matrix:
         env_mode: ['prod', 'sandbox', 'prod_fallback', 'sandbox_fallback']
@@ -190,13 +192,23 @@ jobs:
       with:
         python-version: ${{ env.PYTHON_VERSION }}
 
+    # Configure test credentials for config parsing tests
+    # These are intentionally placeholder values - not real API credentials
     - name: Configure Coinbase credentials
       shell: bash
       env:
         ENV_MODE: ${{ matrix.env_mode }}
+        # Test placeholder values for config validation
+        TEST_PROD_KEY: "test-prod-key"
+        TEST_PROD_SECRET: "test-prod-secret"
+        TEST_SANDBOX_KEY: "test-sandbox-key"
+        TEST_SANDBOX_SECRET: "test-sandbox-secret"
+        TEST_FALLBACK_KEY: "test-fallback-key"
+        TEST_FALLBACK_SECRET: "test-fallback-secret"
       run: |
         set -euo pipefail
 
+        # Initialize all credential variables as empty
         {
           echo "COINBASE_SANDBOX=0"
           echo "COINBASE_PROD_API_KEY="
@@ -210,28 +222,28 @@ jobs:
         case "$ENV_MODE" in
           prod)
             {
-              echo "COINBASE_PROD_API_KEY=prod_key"
-              echo "COINBASE_PROD_API_SECRET=prod_secret"
+              echo "COINBASE_PROD_API_KEY=$TEST_PROD_KEY"
+              echo "COINBASE_PROD_API_SECRET=$TEST_PROD_SECRET"
             } >> "$GITHUB_ENV"
             ;;
           sandbox)
             {
               echo "COINBASE_SANDBOX=1"
-              echo "COINBASE_SANDBOX_API_KEY=sandbox_key"
-              echo "COINBASE_SANDBOX_API_SECRET=sandbox_secret"
+              echo "COINBASE_SANDBOX_API_KEY=$TEST_SANDBOX_KEY"
+              echo "COINBASE_SANDBOX_API_SECRET=$TEST_SANDBOX_SECRET"
             } >> "$GITHUB_ENV"
             ;;
           prod_fallback)
             {
-              echo "COINBASE_API_KEY=fallback_key"
-              echo "COINBASE_API_SECRET=fallback_secret"
+              echo "COINBASE_API_KEY=$TEST_FALLBACK_KEY"
+              echo "COINBASE_API_SECRET=$TEST_FALLBACK_SECRET"
             } >> "$GITHUB_ENV"
             ;;
           sandbox_fallback)
             {
               echo "COINBASE_SANDBOX=1"
-              echo "COINBASE_API_KEY=fallback_key"
-              echo "COINBASE_API_SECRET=fallback_secret"
+              echo "COINBASE_API_KEY=$TEST_FALLBACK_KEY"
+              echo "COINBASE_API_SECRET=$TEST_FALLBACK_SECRET"
             } >> "$GITHUB_ENV"
             ;;
         esac

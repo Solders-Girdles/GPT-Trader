@@ -24,6 +24,7 @@ jobs:
   quality:
     name: Code Quality
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
       - uses: actions/checkout@v6
@@ -46,10 +47,33 @@ jobs:
           uv run black --check .
 
       - name: Type-check with MyPy
+        id: mypy
         continue-on-error: true
         run: |
           set -euo pipefail
-          uv run mypy src/gpt_trader/ || echo "::warning::mypy found type errors (see above)"
+          uv run mypy src/gpt_trader/ 2>&1 | tee mypy-output.txt || true
+
+          # Count errors for summary
+          error_count=$(grep -c "^src/gpt_trader" mypy-output.txt || echo "0")
+          echo "error_count=$error_count" >> $GITHUB_OUTPUT
+
+          # Fail step if errors found (but continue-on-error allows workflow to proceed)
+          if [ "$error_count" -gt 0 ]; then
+            echo "::warning::MyPy found $error_count type errors"
+            exit 1
+          fi
+
+      - name: Add MyPy results to summary
+        if: always() && steps.mypy.outcome == 'failure'
+        run: |
+          echo "### MyPy Type Errors" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          head -50 mypy-output.txt >> $GITHUB_STEP_SUMMARY
+          if [ $(wc -l < mypy-output.txt) -gt 50 ]; then
+            echo "... (truncated, see full output in job logs)" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
 
       - name: Security scan with Bandit
         run: |

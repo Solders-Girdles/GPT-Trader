@@ -11,7 +11,7 @@ from gpt_trader.cli.response import CliResponse
 from gpt_trader.features.optimize.persistence.storage import OptimizationStorage
 from gpt_trader.utilities.logging_patterns import get_logger
 
-logger = get_logger(__name__, enable_console=True)
+logger = get_logger(__name__, component="cli")
 
 COMMAND_NAME = "optimize list"
 

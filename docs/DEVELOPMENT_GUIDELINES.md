@@ -36,7 +36,7 @@ rules that referenced the monolithic `src/bot` package have been archived.
 
 - Place unit tests under `tests/unit/gpt_trader/` mirroring the module path.
 - Use fixtures for Coinbase mocks (`tests/fixtures/coinbase_*` when available).
-- Run `poetry run pytest -q` locally before submitting a pull request.
+- Run `uv run pytest -q` locally before submitting a pull request.
 - Add regression coverage for new guard conditions, telemetry counters, or CLI
   flags.
 - **Subpackage testing**: When refactoring into subpackages, ensure each
@@ -52,7 +52,7 @@ rules that referenced the monolithic `src/bot` package have been archived.
 - `Nightly Validation`: Coinbase websocket and harness smoke tests on a nightly cadence.
 - `Nightly Full Suite`: Scheduled full pytest run (slow markers included); manually triggerable for debugging.
 - `Security Audit`: Weekly pip-audit export to catch dependency vulnerabilities.
-- `Bot V2 CI/CD Pipeline`: End-to-end build and deployment flow for staging/production releases; Docker publish is skipped on pull requests.
+- `GPT-Trader CI/CD Pipeline`: End-to-end build and deployment flow for staging/production releases; Docker publish is skipped on pull requests.
 
 ## Documentation
 
@@ -64,7 +64,7 @@ rules that referenced the monolithic `src/bot` package have been archived.
 
 ## Operational Hygiene
 
-- Validate new behaviour with `poetry run coinbase-trader run --profile dev --dev-fast`.
+- Validate new behaviour with `uv run coinbase-trader run --profile dev --dev-fast`.
 - Confirm metrics output updates when telemetry changes (`metrics.json`).
 - Coordinate with operations before altering risk guard thresholds or order
   routing.
@@ -73,7 +73,7 @@ rules that referenced the monolithic `src/bot` package have been archived.
 
 1. Create a descriptive branch.
 2. Implement code + tests + docs.
-3. Run `poetry run pytest -q` and any targeted integration scripts.
+3. Run `uv run pytest -q` and any targeted integration scripts.
 4. Open a pull request summarising risk impact, telemetry changes, and rollout
    steps.
 

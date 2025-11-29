@@ -273,7 +273,7 @@ GPT-Trader is a production-ready Coinbase **spot trading bot** with future-ready
 - [README.md](README.md) - Quick start, current capabilities
 - [ARCHITECTURE.md](docs/ARCHITECTURE.md) - System design, components
 - [DEVELOPMENT_GUIDELINES.md](docs/DEVELOPMENT_GUIDELINES.md) - Coding standards
-- [TESTING_GUIDE.md](docs/TESTING_GUIDE.md) - Testing practices
+- [Testing Guide](docs/guides/testing.md) - Testing practices
 - [CONTRIBUTING.md](CONTRIBUTING.md) - How to contribute
 
 ### Archived Planning Docs (Historical Context)

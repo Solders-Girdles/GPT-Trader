@@ -9,9 +9,6 @@ from gpt_trader.utilities.logging_patterns import get_logger
 if TYPE_CHECKING:  # pragma: no cover
     from gpt_trader.features.live_trade.engines.base import CoordinatorContext
 
-    # TelemetryEngine is a missing import. Keeping it here for reference until it's located.
-    # from gpt_trader.orchestration.engines.telemetry_coordinator import TelemetryEngine
-
 logger = get_logger(__name__, component="telemetry_health")
 
 
@@ -40,7 +37,7 @@ def extract_mark_from_message(msg: dict[str, Any]) -> Decimal | None:
 
 
 def update_mark_and_metrics(
-    coordinator: Any,  # Changed from "TelemetryEngine" to Any due to missing import
+    coordinator: Any,  # Accepts various coordinator types
     ctx: CoordinatorContext,
     symbol: str,
     mark: Decimal,
@@ -136,7 +133,7 @@ def update_mark_and_metrics(
 
 def health_check(
     coordinator: Any,
-) -> Any:  # Changed from "TelemetryEngine" to Any due to missing import
+) -> Any:  # Returns HealthStatus but accepts various coordinator types
     from gpt_trader.features.live_trade.engines.base import HealthStatus
 
     raw_extras = getattr(coordinator.context.registry, "extras", {})

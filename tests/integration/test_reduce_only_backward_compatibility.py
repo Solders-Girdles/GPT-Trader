@@ -17,7 +17,7 @@ class TestReduceOnlyBackwardCompatibility:
     """Tests to ensure backward compatibility is maintained."""
 
     @pytest.mark.skip(
-        reason="TODO: Fix StateManager fallback - RuntimeEngine needs config_controller=None handling"
+        reason="Test uses parameters (config_controller) not supported by current API - needs redesign"
     )
     def test_runtime_coordinator_without_state_manager(self) -> None:
         """Test that RuntimeEngine works without StateManager."""
@@ -52,7 +52,7 @@ class TestReduceOnlyBackwardCompatibility:
         assert runtime_coordinator.is_reduce_only_mode() is True
 
     @pytest.mark.skip(
-        reason="TODO: Fix StateManager fallback - mixed ConfigController/RuntimeEngine interaction"
+        reason="Test uses parameters (reduce_only_state_manager) not supported by current API - needs redesign"
     )
     def test_mixed_environment_compatibility(self) -> None:
         """Test that components work in a mixed environment with and without StateManager."""

@@ -31,31 +31,30 @@ That's it! Now, every time you run `git commit`, the pre-commit hooks will run a
 ## Testing Requirements
 
 ### Current Expectations
-- Keep the active suite (≈1484 collected / 1483 selected tests) green.
+- Keep the full test suite green.
 - Add focused tests for every new feature or regression fix.
 - Document any skips or deselections tied to legacy code paths.
 
 ### Pre-PR Verification Checklist
 1. Review `docs/agents/Document_Verification_Matrix.md` so you reference current documentation.
-2. Refresh dependencies: `poetry install`.
-3. Snapshot test discovery: `poetry run pytest --collect-only` (expect 1484 collected / 1483 selected / 1 deselected).
-4. Run the full unit suite: `poetry run pytest -q`.
+2. Refresh dependencies: `uv sync`.
+3. Snapshot test discovery: `uv run pytest --collect-only`.
+4. Run the full unit suite: `uv run pytest tests/unit -q`.
 5. Execute slice-specific suites relevant to your change set (examples below).
 
 ### Recommended Commands
 
 ```bash
 # Core suites
-poetry run pytest tests/unit/gpt_trader -q
-poetry run pytest tests/unit/gpt_trader/features/brokerages/coinbase -q
-poetry run pytest tests/unit/gpt_trader/orchestration -q
+uv run pytest tests/unit/gpt_trader -q
+uv run pytest tests/unit/gpt_trader/features/brokerages/coinbase -q
+uv run pytest tests/unit/gpt_trader/orchestration -q
 
 # Coverage snapshot
-poetry run pytest --cov=gpt_trader --cov-report=term-missing
+uv run pytest --cov=gpt_trader --cov-report=term-missing
 ```
 
-### Test Metrics (Current)
-- **Active Suite**: 1484 collected / 1483 selected / 1 deselected
+### Test Metrics
 - **Coverage Goal**: Maintain ~73% overall, >90% on new code paths
 - **Integration Paths**: Coordinate with maintainers before toggling derivatives gates
 
@@ -64,7 +63,7 @@ poetry run pytest --cov=gpt_trader --cov-report=term-missing
 To run the spot trading bot for development, use the `coinbase-trader` command (derivatives stay gated behind INTX + `COINBASE_ENABLE_DERIVATIVES=1`):
 
 ```bash
-poetry run coinbase-trader run --profile dev --dev-fast
+uv run coinbase-trader run --profile dev --dev-fast
 ```
 
 ## Development Workflow
@@ -72,7 +71,7 @@ poetry run coinbase-trader run --profile dev --dev-fast
 Before branching, make sure to:
 - Review `docs/agents/Document_Verification_Matrix.md` and confirm the sources you plan to rely on.
 - Sync with the latest `main`.
-- Run `poetry install` to pick up dependency changes.
+- Run `uv sync` to pick up dependency changes.
 
 1. **Fork** the repository
 2. **Create a feature branch** (`git checkout -b feature/amazing-feature`)
@@ -81,8 +80,8 @@ Before branching, make sure to:
    - Integration tests for API interactions
    - Must maintain 100% pass rate on active tests
 4. **Run the test suite** to ensure nothing is broken
-   - `poetry run pytest --collect-only` must report 1484 collected / 1483 selected / 1 deselected
-   - `poetry run pytest tests/unit/gpt_trader -q` must pass
+   - `uv run pytest --collect-only` to verify test discovery
+   - `uv run pytest tests/unit/gpt_trader -q` must pass
    - No new test failures allowed
 5. **Follow repository organization standards**
    - Place files in correct directories (see Repository Organization below)
@@ -178,4 +177,3 @@ Our pre-commit hooks enforce:
 - **Black**: Code formatting (line length 100)
 - **Ruff**: Fast Python linting
 - **MyPy**: Type checking (optional types)
-- **Poetry Check**: Dependency validation

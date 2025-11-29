@@ -1,0 +1,93 @@
+name: Setup Python with uv
+description: Configure the requested Python version, install uv, prime the virtualenv cache, and install dependencies.
+
+inputs:
+  python-version:
+    description: Python version to install.
+    required: false
+    default: "3.12"
+  uv-version:
+    description: uv release to install.
+    required: false
+    default: "0.5.6"
+  cache-path:
+    description: Filesystem path to cache (leave blank to disable caching).
+    required: false
+    default: ".venv"
+  cache-prefix:
+    description: Prefix used for the cache key.
+    required: false
+    default: "venv"
+  install-deps:
+    description: When true, run uv sync.
+    required: false
+    default: "true"
+  install-args:
+    description: Arguments forwarded to uv sync.
+    required: false
+    default: "--frozen"
+  working-directory:
+    description: Working directory used for dependency installation.
+    required: false
+    default: "."
+
+outputs:
+  cache-hit:
+    description: Indicates whether the environment cache was restored.
+    value: ${{ steps.deps-cache.outputs.cache-hit }}
+  python-version:
+    description: Resolved Python version.
+    value: ${{ steps.setup-python.outputs.python-version }}
+
+runs:
+  using: composite
+  steps:
+    - name: Install uv
+      uses: astral-sh/setup-uv@v4
+      with:
+        version: ${{ inputs.uv-version }}
+        enable-cache: true
+        cache-dependency-glob: "**/uv.lock"
+
+    - name: Set up Python
+      id: setup-python
+      uses: actions/setup-python@v6
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Load cached venv
+      if: inputs.cache-path != ''
+      id: deps-cache
+      uses: actions/cache@v4
+      with:
+        path: ${{ inputs.cache-path }}
+        key: ${{ inputs.cache-prefix }}-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-uv${{ inputs.uv-version }}-${{ hashFiles('**/uv.lock') }}
+        restore-keys: |
+          ${{ inputs.cache-prefix }}-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-uv${{ inputs.uv-version }}-
+          ${{ inputs.cache-prefix }}-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-
+          ${{ inputs.cache-prefix }}-${{ runner.os }}-
+
+    - name: Install dependencies
+      if: inputs.install-deps == 'true'
+      shell: bash
+      env:
+        CACHE_HIT: ${{ steps.deps-cache.outputs.cache-hit }}
+        CACHE_PATH: ${{ inputs.cache-path }}
+        INSTALL_ARGS: ${{ inputs.install-args }}
+        WORKING_DIRECTORY: ${{ inputs.working-directory }}
+      run: |
+        set -euo pipefail
+
+        WORKSPACE="${GITHUB_WORKSPACE}"
+        if [ -n "${WORKING_DIRECTORY}" ] && [ "${WORKING_DIRECTORY}" != "." ]; then
+          WORKSPACE="${GITHUB_WORKSPACE}/${WORKING_DIRECTORY}"
+        fi
+        cd "$WORKSPACE"
+
+        CACHE_HIT=${CACHE_HIT:-false}
+        if [ -n "$CACHE_PATH" ] && [ "$CACHE_HIT" = "true" ]; then
+          echo "Dependencies cache restored; skipping install."
+          exit 0
+        fi
+
+        uv sync $INSTALL_ARGS

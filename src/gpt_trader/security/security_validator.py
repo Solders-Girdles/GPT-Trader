@@ -1,5 +1,5 @@
 """
-Security Validator for Bot V2 Trading System
+Security Validator for GPT-Trader
 
 Implements input validation, rate limiting, and trading-specific security checks
 to protect against injection attacks and ensure safe trading operations.

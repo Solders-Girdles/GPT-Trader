@@ -26,7 +26,7 @@ The system uses a deterministic broker stub for paper trading that provides:
 ### Configuration
 ```bash
 # Enable paper trading mode
-poetry run coinbase-trader run --profile dev
+uv run coinbase-trader run --profile dev
 
 # The dev profile automatically uses:
 # - Deterministic broker with simulated fills
@@ -115,7 +115,7 @@ Five built-in strategies ship with the slice:
 ### Quick Start
 ```bash
 # Run with deterministic broker
-poetry run coinbase-trader run --profile dev --dev-fast
+uv run coinbase-trader run --profile dev --dev-fast
 
 # Monitor performance
 tail -f var/logs/coinbase_trader.log | grep "PnL"
@@ -143,13 +143,13 @@ broker.set_mark("BTC-PERP", Decimal("50000"))
 ### Migration Process
 ```bash
 # Step 1: Canary testing (tiny real positions)
-poetry run coinbase-trader run --profile canary --dry-run
+uv run coinbase-trader run --profile canary --dry-run
 
 # Step 2: Limited live trading
-poetry run coinbase-trader run --profile canary
+uv run coinbase-trader run --profile canary
 
 # Step 3: Full production
-poetry run coinbase-trader run --profile prod
+uv run coinbase-trader run --profile prod
 ```
 
 ## Performance Metrics

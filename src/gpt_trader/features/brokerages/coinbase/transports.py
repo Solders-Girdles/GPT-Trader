@@ -28,14 +28,14 @@ except ImportError:  # pragma: no cover - fallback stub for tests
         def enableTrace(_flag: bool) -> None:
             raise ModuleNotFoundError(
                 "websocket-client is not installed. Install with "
-                "`pip install gpt-trader[live-trade]` or `poetry install --with live-trade`."
+                "`pip install gpt-trader[live-trade]` or `uv sync`."
             )
 
         @staticmethod
         def create_connection(*_args: Any, **_kwargs: Any) -> Any:
             raise ModuleNotFoundError(
                 "websocket-client is not installed. Install with "
-                "`pip install gpt-trader[live-trade]` or `poetry install --with live-trade`."
+                "`pip install gpt-trader[live-trade]` or `uv sync`."
             )
 
     websocket = _WebsocketStub()  # type: ignore[assignment]
@@ -104,7 +104,7 @@ class RealTransport:
         except ModuleNotFoundError as exc:  # pragma: no cover - optional dependency
             raise ImportError(
                 "websocket-client is not installed. Install the live trading extras with "
-                "`pip install gpt-trader[live-trade]` or `poetry install --with live-trade`."
+                "`pip install gpt-trader[live-trade]` or `uv sync`."
             ) from exc
         logger.info(f"Connected to WebSocket: {self.url}")
 

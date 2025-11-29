@@ -18,10 +18,10 @@ from gpt_trader.features.optimize.persistence.storage import (
 )
 from gpt_trader.features.optimize.runner.batch_runner import TrialResult
 from gpt_trader.features.optimize.study.manager import OptimizationStudyManager
-from gpt_trader.features.optimize.types import OptimizationConfig, ParameterSpace
+from gpt_trader.features.optimize.types import OptimizationConfig
 from gpt_trader.utilities.logging_patterns import get_logger
 
-logger = get_logger(__name__, enable_console=True)
+logger = get_logger(__name__, component="cli")
 
 COMMAND_NAME = "optimize resume"
 
@@ -197,7 +197,6 @@ def execute(args: Namespace) -> CliResponse | int:
         return 1
 
     # Track results
-    started_at = datetime.now()
     trial_results: list[TrialResult] = list(run.trials) if run.trials else []
     interrupted = False
 
@@ -223,7 +222,9 @@ def execute(args: Namespace) -> CliResponse | int:
             params = study_manager.suggest_parameters(trial)
 
             if not args.quiet and output_format == "text":
-                print(f"Trial {trial_num + 1}/{original_trials + args.additional_trials}...", end=" ")
+                print(
+                    f"Trial {trial_num + 1}/{original_trials + args.additional_trials}...", end=" "
+                )
 
             trial_value = _placeholder_evaluate(params, objective)
             study.tell(trial, trial_value)
@@ -329,7 +330,7 @@ def _reconstruct_config(run_data: dict[str, Any], trials: int) -> OptimizationCo
     )
 
 
-def _placeholder_evaluate(params: dict[str, Any], objective) -> float:
+def _placeholder_evaluate(params: dict[str, Any], objective: Any) -> float:
     """Placeholder evaluation function (same as run.py)."""
     import hashlib
     import json

@@ -595,7 +595,5 @@ access_token = token_manager.get_valid_token()
 
 ## See Also
 
-- [coinbase_api_endpoints.md](coinbase_api_endpoints.md) - REST API endpoints
-- [coinbase_websocket_reference.md](coinbase_websocket_reference.md) - WebSocket authentication
-- [coinbase_quick_reference.md](coinbase_quick_reference.md) - Quick reference
+- [coinbase_websocket_reference.md](coinbase_websocket_reference.md) - WebSocket integration
 - [coinbase_complete.md](coinbase_complete.md) - Complete integration guide

@@ -23,9 +23,18 @@ env:
   PYTHON_VERSION: "3.12"
 
 jobs:
+  # Reusable quality checks (linting, formatting, security)
+  quality:
+    name: Quality Checks
+    uses: ./.github/workflows/quality-checks.yml
+    with:
+      python-version: "3.12"
+      security-severity: "medium"
+
   core-checks:
     name: Core Checks
     runs-on: ubuntu-latest
+    needs: quality
 
     steps:
     - uses: actions/checkout@v6
@@ -33,8 +42,8 @@ jobs:
         fetch-depth: 0
 
     - name: Prepare Python environment
-      id: setup-poetry
-      uses: ./.github/actions/setup-poetry
+      id: setup-uv
+      uses: ./.github/actions/setup-uv
       with:
         python-version: ${{ env.PYTHON_VERSION }}
 
@@ -42,25 +51,26 @@ jobs:
       if: github.event_name == 'pull_request'
       run: |
         set -euo pipefail
-        poetry run python scripts/analysis/dependency_map.py --tests "tests/**/*.py" --output dependency_report.json
-        poetry run python scripts/analysis/test_categorizer.py --output test_categories.json
+        uv run python scripts/analysis/dependency_map.py --tests "tests/**/*.py" --output dependency_report.json
+        uv run python scripts/analysis/test_categorizer.py --output test_categories.json
 
     - name: Run selective tests
       if: github.event_name == 'pull_request'
       env:
         PYTEST_ADDOPTS: '-m "not slow and not performance" -q'
+        BASE_REF: ${{ github.event.pull_request.base.ref }}
       run: |
         set -euo pipefail
-        git fetch origin ${{ github.event.pull_request.base.ref }} --depth=1
-        CHANGED=$(git diff --name-only origin/${{ github.event.pull_request.base.ref }} HEAD -- '*.py' | tr '\n' ' ')
+        git fetch origin "$BASE_REF" --depth=1
+        CHANGED=$(git diff --name-only "origin/$BASE_REF" HEAD -- '*.py' | tr '\n' ' ')
         if [ -z "$CHANGED" ]; then
-          poetry run python scripts/testing/selective_runner.py \
+          uv run python scripts/testing/selective_runner.py \
             --deps dependency_report.json \
             --categories test_categories.json \
             --max-selective-ratio 0.7 \
             --auto-full-module gpt_trader.features.brokerages.core.interfaces
         else
-          poetry run python scripts/testing/selective_runner.py \
+          uv run python scripts/testing/selective_runner.py \
             --deps dependency_report.json \
             --categories test_categories.json \
             --paths $CHANGED \
@@ -68,15 +78,10 @@ jobs:
             --auto-full-module gpt_trader.features.brokerages.core.interfaces
         fi
 
-    - name: Lint with ruff
-      run: |
-        set -euo pipefail
-        poetry run ruff check .
-
     - name: Check naming standards
       run: |
         set -euo pipefail
-        poetry run python scripts/agents/naming_inventory.py \
+        uv run python scripts/agents/naming_inventory.py \
           --summary naming_inventory.md \
           --json naming_inventory.json
 
@@ -101,7 +106,7 @@ jobs:
       run: |
         set -euo pipefail
         # Regenerate agent context files
-        poetry run python scripts/agents/regenerate_all.py || true
+        uv run python scripts/agents/regenerate_all.py || true
 
         # Check for uncommitted changes in var/agents/
         if ! git diff --quiet var/agents/; then
@@ -114,44 +119,23 @@ jobs:
     - name: Check test file complexity
       run: |
         set -euo pipefail
-        poetry run python scripts/analysis/check_complexity.py --path tests --max-lines 300
+        uv run python scripts/analysis/check_complexity.py --path tests --max-lines 300
 
-    - name: Check formatting with black
+    - name: Verify uv lockfile in sync
       run: |
         set -euo pipefail
-        poetry run black --check .
-
-    - name: Type-check with mypy
-      continue-on-error: true  # TODO: Fix 337 pre-existing mypy errors and remove this
-      run: |
-        set -euo pipefail
-        poetry run mypy src/gpt_trader || echo "::warning::mypy found type errors (see above)"
-
-    - name: Run Bandit security scanner
-      run: |
-        set -euo pipefail
-        poetry run bandit -r src/gpt_trader/ --severity-level medium --confidence-level medium
-
-    - name: Run pip-audit for vulnerability scanning
-      run: |
-        set -euo pipefail
-        poetry run pip-audit --ignore-vuln GHSA-4xh5-x5gv-qwph || echo "pip-audit completed with warnings"
-
-    - name: Verify Poetry lockfile in sync
-      run: |
-        set -euo pipefail
-        poetry check --lock
+        uv lock --check
 
     - name: Run Coinbase core checks
       run: |
         set -euo pipefail
-        poetry run pytest tests/unit/gpt_trader/features/brokerages/coinbase -q
+        uv run pytest tests/unit/gpt_trader/features/brokerages/coinbase -q
 
     - name: Run tests with pytest and generate coverage report
       if: github.event_name != 'pull_request'
       run: |
         set -euo pipefail
-        poetry run pytest -m "not slow and not performance and not integration" -q \
+        uv run pytest -m "not slow and not performance and not integration" -q \
           --cov=src \
           --cov-report=term-missing --cov-report=json:coverage.json --cov-report=xml --cov-report=html --cov-fail-under=23.50
 
@@ -161,8 +145,20 @@ jobs:
         set -euo pipefail
         # Compare against baseline coverage.json if it exists
         if [ -f coverage.json ]; then
-          poetry run python -c "import json, sys; current=json.load(open('coverage.json')); overall_pct=current.get('totals', {}).get('percent_covered', 0); print(f\"Current overall coverage: {overall_pct:.2f}%\"); (overall_pct >= 23.50) or sys.exit(f\"ERROR: Coverage regression detected. Current: {overall_pct:.2f}%, Baseline: 23.50%\"); print('Coverage check passed.')"
+          uv run python -c "import json, sys; current=json.load(open('coverage.json')); overall_pct=current.get('totals', {}).get('percent_covered', 0); print(f\"Current overall coverage: {overall_pct:.2f}%\"); (overall_pct >= 23.50) or sys.exit(f\"ERROR: Coverage regression detected. Current: {overall_pct:.2f}%, Baseline: 23.50%\"); print('Coverage check passed.')"
         fi
+
+    - name: Generate coverage delta for PR
+      if: github.event_name == 'pull_request'
+      env:
+        BASE_REF: ${{ github.base_ref }}
+      run: |
+        set -euo pipefail
+        uv run pytest -m "not slow and not performance and not integration" -q \
+          --cov=src --cov-report=xml
+        uv run diff-cover coverage.xml \
+          --compare-branch="origin/$BASE_REF" \
+          --fail-under=70 || echo "::warning::Coverage delta below 70% threshold"
 
     - name: Upload coverage to Artifacts
       if: github.event_name != 'pull_request'
@@ -189,8 +185,8 @@ jobs:
     - uses: actions/checkout@v6
 
     - name: Prepare Python environment
-      id: setup-poetry
-      uses: ./.github/actions/setup-poetry
+      id: setup-uv
+      uses: ./.github/actions/setup-uv
       with:
         python-version: ${{ env.PYTHON_VERSION }}
 
@@ -245,4 +241,4 @@ jobs:
         BROKER: coinbase
       run: |
         set -euo pipefail
-        poetry run pytest tests/unit/gpt_trader/config/test_config_utilities.py tests/unit/gpt_trader/features/live_trade/test_config_dict_json.py -v
+        uv run pytest tests/unit/gpt_trader/config/test_config_utilities.py tests/unit/gpt_trader/features/live_trade/test_config_dict_json.py -v

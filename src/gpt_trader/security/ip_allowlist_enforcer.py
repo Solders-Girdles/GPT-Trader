@@ -1,5 +1,5 @@
 """
-IP Allowlist Enforcer for Bot V2 Trading System
+IP Allowlist Enforcer for GPT-Trader
 
 Enforces IP allowlisting for API keys to prevent unauthorized access.
 Critical for INTX (Coinbase International Exchange) and production trading.

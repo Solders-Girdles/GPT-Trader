@@ -1,4 +1,4 @@
-name: Bot V2 CI/CD Pipeline
+name: GPT-Trader CI/CD Pipeline
 
 on:
   push:
@@ -26,7 +26,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}/bot-v2
+  IMAGE_NAME: ${{ github.repository }}/gpt-trader
   PYTHON_VERSION: '3.12'
 
 concurrency:
@@ -44,46 +44,14 @@ defaults:
     shell: bash --noprofile --norc {0}
 
 jobs:
-  # Code Quality Checks
+  # Reusable quality checks (linting, formatting, security)
   quality-checks:
     name: Code Quality
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-
-      - name: Prepare Python environment
-        id: setup-poetry
-        uses: ./.github/actions/setup-poetry
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-
-      - name: Run Black formatter check
-        run: poetry run black --check src/gpt_trader/
-
-      - name: Run Ruff linter
-        run: poetry run ruff check src/gpt_trader/
-
-      - name: Run MyPy type checker
-        continue-on-error: true  # TODO: Fix 337 pre-existing mypy errors and remove this
-        run: poetry run mypy src/gpt_trader/ || echo "::warning::mypy found type errors (see above)"
-
-      - name: Run Bandit security checker
-        run: poetry run bandit -r src/gpt_trader/ --severity-level high --confidence-level high -f json -o bandit-report.json
-
-      - name: Run pip-audit
-        run: poetry run pip-audit -f json -o pip-audit-report.json --ignore-vuln GHSA-4xh5-x5gv-qwph
-
-      - name: Upload security reports
-        uses: actions/upload-artifact@v5
-        if: always()
-        with:
-          name: security-reports
-          path: |
-            bandit-report.json
-            pip-audit-report.json
+    uses: ./.github/workflows/quality-checks.yml
+    with:
+      python-version: "3.12"
+      security-severity: "high"
+      upload-reports: true
 
   # Unit Tests
   unit-tests:
@@ -119,8 +87,8 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Prepare Python environment
-        id: setup-poetry
-        uses: ./.github/actions/setup-poetry
+        id: setup-uv
+        uses: ./.github/actions/setup-uv
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
@@ -130,7 +98,7 @@ jobs:
           REDIS_URL: redis://localhost:6379/0
           ENV: test
         run: |
-          poetry run pytest -m "not slow and not performance and not integration" -q \
+          uv run pytest -m "not slow and not performance and not integration" -q \
             --cov=src/gpt_trader/cli \
             --cov=src/gpt_trader/config \
             --cov=src/gpt_trader/features/brokerages/coinbase/client \
@@ -195,8 +163,8 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Prepare Python environment
-        id: setup-poetry
-        uses: ./.github/actions/setup-poetry
+        id: setup-uv
+        uses: ./.github/actions/setup-uv
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
@@ -209,7 +177,7 @@ jobs:
         run: |
           set -euo pipefail
           if [ -d tests/integration/gpt_trader ]; then
-            poetry run pytest tests/integration/gpt_trader/ -v --tb=short
+            uv run pytest tests/integration/gpt_trader/ -v --tb=short
           else
             echo "Integration suite not present; skipping run."
           fi

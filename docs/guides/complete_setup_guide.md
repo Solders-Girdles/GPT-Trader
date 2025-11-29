@@ -40,13 +40,13 @@ This guide provides the complete setup process for GPT-Trader. The bot ships **s
    python --version  # Should show 3.12.0 or higher
    ```
 
-2. **Poetry** (Package Manager)
+2. **uv** (Package Manager)
    ```bash
-   # Install Poetry if not present
-   curl -sSL https://install.python-poetry.org | python3 -
+   # Install uv if not present
+   curl -LsSf https://astral.sh/uv/install.sh | sh
 
    # Verify installation
-   poetry --version
+   uv --version
    ```
 
 3. **Git**
@@ -70,7 +70,7 @@ cd GPT-Trader
 ### Step 2: Install Dependencies
 ```bash
 # Install all dependencies
-poetry install
+uv sync
 
 # This installs ~50 packages and takes 1-2 minutes
 ```
@@ -78,7 +78,7 @@ poetry install
 ### Step 3: Verify Installation
 ```bash
 # Test import of main module
-poetry run python -c "from gpt_trader import cli; print('✅ Installation successful')"
+uv run python -c "from gpt_trader import cli; print('✅ Installation successful')"
 ```
 
 ## Environment Configuration
@@ -192,7 +192,7 @@ GPT-Trader includes three trading profiles:
 ### Step 1: Run Preflight Checks
 ```bash
 # Verify environment, credentials, and risk settings
-poetry run python scripts/production_preflight.py --profile canary
+uv run python scripts/production_preflight.py --profile canary
 
 # Expected output: Python version, dependency checks, credential status, and risk toggle summary
 ```
@@ -200,7 +200,7 @@ poetry run python scripts/production_preflight.py --profile canary
 ### Step 2: Test with Development Profile
 ```bash
 # Run with mock broker (no real trades)
-poetry run coinbase-trader run --profile dev --dev-fast
+uv run coinbase-trader run --profile dev --dev-fast
 
 # This runs for 60 seconds with simulated data
 ```
@@ -208,7 +208,7 @@ poetry run coinbase-trader run --profile dev --dev-fast
 ### Step 3: Test with Dry Run
 ```bash
 # Test with real market data but no trades
-poetry run coinbase-trader run --profile canary --dry-run
+uv run coinbase-trader run --profile canary --dry-run
 
 # Monitor the output for proper data reception
 ```
@@ -216,7 +216,7 @@ poetry run coinbase-trader run --profile canary --dry-run
 ### Step 4: First Live Trade (Canary)
 ```bash
 # When ready for real (tiny) trades
-poetry run coinbase-trader run --profile canary
+uv run coinbase-trader run --profile canary
 
 # This will trade with minimal position sizes
 ```
@@ -225,30 +225,29 @@ poetry run coinbase-trader run --profile canary
 
 ### Run Test Suite
 ```bash
-# Discover active tests (markers deselect optional suites)
-poetry run pytest --collect-only -q
-# Expected: 1484 collected / 1483 selected / 1 deselected / 0 skipped
+# Discover active tests
+uv run pytest --collect-only -q
 
 # Quick targeted run for spot orchestration
-poetry run pytest -q
+uv run pytest -q
 ```
 
 ### Check Streaming Health
 ```bash
 # Smoke test the trading loop (mock broker)
-poetry run coinbase-trader run --profile dev --dev-fast
+uv run coinbase-trader run --profile dev --dev-fast
 
 # Inspect heartbeat metrics and mark timestamps
-poetry run python scripts/perps_dashboard.py --profile dev --refresh 5 --window-min 5
+uv run python scripts/perps_dashboard.py --profile dev --refresh 5 --window-min 5
 ```
 
 ### Monitor System Health
 ```bash
 # Validate credentials, env, and risk settings
-poetry run python scripts/production_preflight.py --profile canary
+uv run python scripts/production_preflight.py --profile canary
 
 # Export Prometheus-compatible metrics
-poetry run python scripts/monitoring/export_metrics.py --metrics-file var/data/coinbase_trader/prod/metrics.json
+uv run python scripts/monitoring/export_metrics.py --metrics-file var/data/coinbase_trader/prod/metrics.json
 ```
 
 ## Troubleshooting
@@ -256,10 +255,10 @@ poetry run python scripts/monitoring/export_metrics.py --metrics-file var/data/c
 ### Common Issues
 
 #### 1. "Module not found" Errors
-**Solution**: Ensure Poetry environment is activated
+**Solution**: Ensure dependencies are installed
 ```bash
-poetry shell  # Activate environment
-# or prefix commands with: poetry run
+uv sync  # Install dependencies
+# Then prefix commands with: uv run
 ```
 
 #### 2. API Authentication Failures
@@ -292,7 +291,7 @@ poetry shell  # Activate environment
 
 ```bash
 # Check environment variables
-poetry run python -c "import os; print(os.getenv('COINBASE_API_KEY')[:20])"
+uv run python -c "import os; print(os.getenv('COINBASE_API_KEY')[:20])"
 
 # Monitor real-time logs
 tail -f var/logs/coinbase_trader.log
@@ -331,7 +330,7 @@ After successful setup:
    - Gradually increase position sizes once telemetry looks healthy
 
 3. **Monitor Performance**:
-   - Use metrics exporter: `poetry run python scripts/monitoring/export_metrics.py --metrics-file var/data/coinbase_trader/prod/metrics.json`
+   - Use metrics exporter: `uv run python scripts/monitoring/export_metrics.py --metrics-file var/data/coinbase_trader/prod/metrics.json`
    - Track logs in `var/logs/coinbase_trader.log`
    - Schedule regular performance and risk reviews
 

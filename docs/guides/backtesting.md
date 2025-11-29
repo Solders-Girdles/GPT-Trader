@@ -559,9 +559,11 @@ await validator.validate_last_n_cycles(n=10)
 
 ## Production-Parity Backtesting
 
-> **Note:** This section documents a planned feature that has not been implemented.
-> The `gpt_trader.features.optimize` module does not exist. The code examples below
-> are specifications for future development, not working code.
+> **WARNING: NOT IMPLEMENTED**
+>
+> This section documents a **planned feature** that does not exist yet.
+> The imports below (`gpt_trader.features.optimize.*`) will fail.
+> For existing backtesting functionality, see `gpt_trader.backtesting` module.
 
 ### Key Features
 

@@ -222,7 +222,7 @@ behaviour until the derivatives gate opens.
 1. **Slice Isolation**: Production slices limit cross-dependencies; experimental ones stay sandboxed.
 2. **Token Awareness**: Documentation highlights slice entry points so agents can load only what they need.
 3. **Type Safety**: Shared interfaces defined in `features/brokerages/core/interfaces.py`.
-4. **Environment Separation**: `perps_bot` normalizes symbols to spot unless INTX derivatives access is detected.
+4. **Environment Separation**: GPT-Trader normalizes symbols to spot unless INTX derivatives access is detected.
 
 ### Orchestration Infrastructure
 
@@ -268,7 +268,7 @@ The orchestration layer provides coordinated control across trading operations t
 - Order placement/management through `LiveExecutionEngine`
 - Account telemetry snapshots and cycle metrics persisted for monitoring
 - Runtime safety rails: daily loss guard, liquidation buffer enforcement, mark staleness detection, volatility circuit breaker, correlation checks
-- 1557 active tests selected at collection time (`uv run pytest --collect-only`; 1564 collected / 7 deselected)
+- Active test suite (`uv run pytest --collect-only` to verify)
 
 ### ⚠️ Partially Working / Future Activation
 - Perpetual futures execution: code paths compile and tests run, but live trading remains disabled without INTX
@@ -349,7 +349,7 @@ monitoring: real-time
   the runtime guard manager and dashboards.
 - **System Footprint**: bot process typically <50 MB RSS with sub-100 ms WebSocket latency in spot
   mode.
-- **Test Discovery** (`uv run pytest --collect-only`): 1557 collected / 7 deselected.
+- **Test Discovery**: `uv run pytest --collect-only`
 
 ## Verification Path
 
@@ -361,7 +361,7 @@ monitoring: real-time
 
 ### Core Requirements
 - Python 3.12+
-- Poetry 1.0+
+- uv (package manager)
 - Coinbase Advanced Trade API (for perpetuals)
 - CDP API keys (for production)
 

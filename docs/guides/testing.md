@@ -10,41 +10,41 @@ This codebase targets a **100% pass rate** on actively maintained spot trading s
 
 ```bash
 # Run all tests
-poetry run pytest
+uv run pytest
 
 # Run with coverage
-poetry run pytest --cov --cov-report=html --cov-report=term
+uv run pytest --cov --cov-report=html --cov-report=term
 
 # Run specific test file
-poetry run pytest tests/unit/gpt_trader/config/test_schemas.py
+uv run pytest tests/unit/gpt_trader/config/test_schemas.py
 
 # Run specific test class or function
-poetry run pytest tests/unit/gpt_trader/config/test_schemas.py::TestBotConfig::test_valid_config
+uv run pytest tests/unit/gpt_trader/config/test_schemas.py::TestBotConfig::test_valid_config
 
 # Run tests matching a pattern
-poetry run pytest -k "test_error"
+uv run pytest -k "test_error"
 
 # Run in parallel (faster)
-poetry run pytest -n auto
+uv run pytest -n auto
 
 # Run with verbose output
-poetry run pytest -xvs tests/unit/gpt_trader/features/live_trade/
+uv run pytest -xvs tests/unit/gpt_trader/features/live_trade/
 ```
 
 ### Coverage Reports
 
 ```bash
 # Full HTML report
-poetry run pytest --cov --cov-report=html:var/results/coverage/html --cov-report=term
+uv run pytest --cov --cov-report=html:var/results/coverage/html --cov-report=term
 
 # Open report (macOS)
 open var/results/coverage/html/index.html
 
 # Coverage for specific module
-poetry run pytest tests/unit/gpt_trader/config/ --cov=src/gpt_trader/config --cov-report=term-missing
+uv run pytest tests/unit/gpt_trader/config/ --cov=src/gpt_trader/config --cov-report=term-missing
 
 # Quick coverage check
-poetry run pytest --cov --cov-report=term -q
+uv run pytest --cov --cov-report=term -q
 ```
 
 ## Test Organization
@@ -76,9 +76,8 @@ tests/
 
 ### Current Metrics
 
-- **Collection**: 1484 collected / 1 deselected / 1483 selected
 - **Pass Target**: 100% for selected suites
-- **Coverage Baseline**: 72.87%
+- **Coverage Baseline**: ~73%
 
 ## Writing Tests
 
@@ -172,10 +171,10 @@ def test_live_api_connection(self): ...
 
 ```bash
 # Run only integration tests
-poetry run pytest -m integration
+uv run pytest -m integration
 
 # Skip integration tests (default)
-poetry run pytest -m "not integration"
+uv run pytest -m "not integration"
 ```
 
 ## Coverage Guidelines
@@ -204,19 +203,19 @@ poetry run pytest -m "not integration"
 
 ```bash
 # Show print statements
-poetry run pytest -s
+uv run pytest -s
 
 # Verbose output
-poetry run pytest -sv
+uv run pytest -sv
 
 # Drop into debugger on failure
-poetry run pytest --pdb tests/unit/gpt_trader/
+uv run pytest --pdb tests/unit/gpt_trader/
 
 # Show local variables on failure
-poetry run pytest -l tests/unit/gpt_trader/
+uv run pytest -l tests/unit/gpt_trader/
 
 # Profile slow tests
-poetry run pytest tests/unit/gpt_trader/ --durations=10
+uv run pytest tests/unit/gpt_trader/ --durations=10
 ```
 
 ## Test Utilities
@@ -256,10 +255,10 @@ For CI efficiency, the selective runner executes only tests impacted by changes:
 
 ```bash
 # Dry-run selection
-poetry run python scripts/testing/selective_runner.py --paths src/gpt_trader/orchestration/trading_bot/bot.py --dry-run
+uv run python scripts/testing/selective_runner.py --paths src/gpt_trader/orchestration/trading_bot/bot.py --dry-run
 
 # Execute selected tests
-poetry run python scripts/testing/selective_runner.py --paths src/gpt_trader/orchestration/trading_bot/bot.py
+uv run python scripts/testing/selective_runner.py --paths src/gpt_trader/orchestration/trading_bot/bot.py
 ```
 
 CI safeguards:
@@ -271,7 +270,7 @@ CI safeguards:
 
 ### Import Errors
 - Ensure using `gpt_trader` imports, not legacy `src` paths
-- Use `poetry install --with security` for optional auth dependencies
+- Use `uv sync --with security` for optional auth dependencies
 
 ### Fixtures Not Found
 Ensure `conftest.py` is in the right place:
@@ -285,7 +284,7 @@ tests/
 
 ### Coverage Not Tracking
 - Check `.coveragerc` configuration
-- Clear cache: `poetry run pytest --cache-clear`
+- Clear cache: `uv run pytest --cache-clear`
 - Remove old files: `rm -rf .coverage coverage.xml htmlcov/`
 
 ## CI Integration

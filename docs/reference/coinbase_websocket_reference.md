@@ -500,7 +500,5 @@ async def process_level2_updates(message):
 
 ## See Also
 
-- [coinbase_api_endpoints.md](coinbase_api_endpoints.md) - REST API endpoint catalog
 - [coinbase_auth_guide.md](coinbase_auth_guide.md) - Authentication methods
-- [coinbase_quick_reference.md](coinbase_quick_reference.md) - Quick reference card
 - [coinbase_complete.md](coinbase_complete.md) - Complete integration guide

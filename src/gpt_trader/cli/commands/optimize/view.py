@@ -15,7 +15,7 @@ from gpt_trader.cli.response import CliErrorCode, CliResponse
 from gpt_trader.features.optimize.persistence.storage import OptimizationStorage
 from gpt_trader.utilities.logging_patterns import get_logger
 
-logger = get_logger(__name__, enable_console=True)
+logger = get_logger(__name__, component="cli")
 
 COMMAND_NAME = "optimize view"
 
@@ -122,11 +122,13 @@ def execute(args: Namespace) -> CliResponse | int:
         trials = run_data.get("trials", [])
         if trials:
             print()
-            print(format_trials_text(
-                trials,
-                limit=args.trials,
-                show_all_params=args.show_params,
-            ))
+            print(
+                format_trials_text(
+                    trials,
+                    limit=args.trials,
+                    show_all_params=args.show_params,
+                )
+            )
 
     for warning in warnings:
         print(f"Note: {warning}")

@@ -12,7 +12,7 @@ from gpt_trader.cli import options, services
 from gpt_trader.orchestration.configuration import ConfigValidationError
 from gpt_trader.utilities.logging_patterns import get_logger
 
-logger = get_logger(__name__, enable_console=True)
+logger = get_logger(__name__, component="cli")
 
 
 def register(subparsers: Any) -> None:

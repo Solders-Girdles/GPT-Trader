@@ -7,8 +7,7 @@ from gpt_trader.orchestration.configuration import BotConfig
 def bot_config_factory():
     """Factory for creating BotConfig instances for testing.
 
-    Replaces runtime_settings_factory. Provides sensible defaults
-    for all configuration fields used in unit tests.
+    Provides sensible defaults for all configuration fields used in unit tests.
     """
 
     def _factory(

@@ -5,13 +5,13 @@ This is the consolidated reference for AI agents working with the GPT-Trader rep
 ## Current State
 
 **Active System**: Spot trading bot with Coinbase Advanced Trade
-**Primary CLI**: `poetry run coinbase-trader`
+**Primary CLI**: `uv run coinbase-trader`
 **Architecture**: Vertical slices under `src/gpt_trader/`
 **Perpetuals**: Code exists but requires INTX access + `COINBASE_ENABLE_DERIVATIVES=1`
 
 ### Test Status
 ```bash
-poetry run pytest --collect-only  # 1484 collected / 1483 selected / 1 deselected
+uv run pytest --collect-only  # Verify test discovery
 ```
 
 ## Directory Navigation
@@ -42,33 +42,33 @@ tests/unit/gpt_trader/             # Active test suite
 ### Development
 ```bash
 # Install dependencies
-poetry install
+uv sync
 
 # Run bot in dev mode (mock broker)
-poetry run coinbase-trader run --profile dev --dev-fast
+uv run coinbase-trader run --profile dev --dev-fast
 
 # Run tests
-poetry run pytest --collect-only  # Check test count
-poetry run pytest -q              # Run active suite
+uv run pytest --collect-only  # Check test count
+uv run pytest -q              # Run active suite
 
 # Account verification
-poetry run coinbase-trader account snapshot
+uv run coinbase-trader account snapshot
 ```
 
 ### Trading Operations
 ```bash
 # Treasury operations
-poetry run coinbase-trader treasury convert --from USD --to USDC --amount 1000
-poetry run coinbase-trader treasury move --from-portfolio a --to-portfolio b --amount 50
+uv run coinbase-trader treasury convert --from USD --to USDC --amount 1000
+uv run coinbase-trader treasury move --from-portfolio a --to-portfolio b --amount 50
 
 # Order preview (no execution)
-poetry run coinbase-trader orders preview --symbol BTC-USD --side buy --type market --quantity 0.1
+uv run coinbase-trader orders preview --symbol BTC-USD --side buy --type market --quantity 0.1
 ```
 
 ### Monitoring
 ```bash
 # Export metrics
-poetry run python scripts/monitoring/export_metrics.py \
+uv run python scripts/monitoring/export_metrics.py \
   --metrics-file var/data/coinbase_trader/prod/metrics.json
 ```
 
@@ -159,16 +159,16 @@ if config.derivatives_enabled and config.intx_access:
 ## Agent Workflow
 
 ### Before Starting
-- [ ] Run `poetry install`
-- [ ] Check test discovery: `poetry run pytest --collect-only`
-- [ ] Quick smoke test: `poetry run coinbase-trader run --profile dev --dev-fast`
+- [ ] Run `uv sync`
+- [ ] Check test discovery: `uv run pytest --collect-only`
+- [ ] Quick smoke test: `uv run coinbase-trader run --profile dev --dev-fast`
 - [ ] Check if task involves spot or perps features
 
 ### During Development
 - [ ] Use `src/gpt_trader/` imports only
 - [ ] Test with dev profile first
 - [ ] Add tests to `tests/unit/gpt_trader/`
-- [ ] Run `poetry run pytest -q` regularly
+- [ ] Run `uv run pytest -q` regularly
 
 ### Before Finishing
 - [ ] Update relevant documentation
@@ -182,10 +182,10 @@ if config.derivatives_enabled and config.intx_access:
 # Enable debug logging
 export PERPS_DEBUG=1
 export LOG_LEVEL=DEBUG
-poetry run coinbase-trader run --profile dev --dev-fast
+uv run coinbase-trader run --profile dev --dev-fast
 
 # Check system state
-poetry run coinbase-trader account snapshot
+uv run coinbase-trader account snapshot
 
 # Tail logs
 tail -f var/logs/coinbase_trader.log

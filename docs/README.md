@@ -86,7 +86,7 @@ last-updated: 2025-11-24
 ### Current Focus
 - **Primary**: Coinbase spot trading (perps code future-ready)
 - **Architecture**: Vertical slice design under `src/gpt_trader/`
-- **Testing**: `poetry run pytest` (~1484 tests)
+- **Testing**: `uv run pytest`
 
 ## Getting Help
 

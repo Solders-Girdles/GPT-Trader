@@ -1,6 +1,5 @@
 """
-Security module for Bot V2
+Security module for GPT-Trader.
 """
 
-# Placeholder imports until we implement Phase 2 (SimpleAuth)
-# We removed cdp_secrets_provider and auth_handler, so we clear this out to avoid ImportErrors
+# Authentication is handled via SimpleAuth in the brokerages module

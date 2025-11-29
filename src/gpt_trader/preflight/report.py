@@ -43,9 +43,9 @@ def generate_report(checker: PreflightCheck) -> tuple[bool, str]:
 
     print(f"\n{Colors.BOLD}Recommendations:{Colors.RESET}")
     if status == "READY":
-        print(f"1. Start with: poetry run coinbase-trader --profile {checker.profile} --dry-run")
+        print(f"1. Start with: uv run coinbase-trader --profile {checker.profile} --dry-run")
         print("2. Monitor for 1 hour in dry-run mode")
-        print(f"3. Begin live with: poetry run coinbase-trader --profile {checker.profile}")
+        print(f"3. Begin live with: uv run coinbase-trader --profile {checker.profile}")
         print("4. Use tiny positions (0.001 BTC) initially")
         print("5. Monitor closely for first 24 hours")
     elif status == "REVIEW":
@@ -56,7 +56,7 @@ def generate_report(checker: PreflightCheck) -> tuple[bool, str]:
     else:
         print("1. Fix all critical errors listed above")
         print("2. Review config/environments/.env.production for configuration guidance")
-        print("3. Run tests: poetry run pytest tests/unit/gpt_trader")
+        print("3. Run tests: uv run pytest tests/unit/gpt_trader")
         print("4. Verify credentials and API connectivity")
 
     timestamp = datetime.now(timezone.utc)

@@ -7,13 +7,13 @@ This playbook covers the spot-first `coinbase-trader` monitoring stack including
 ### 1. Install Monitoring Dependencies
 
 ```bash
-poetry install -E monitoring
+uv sync --extra monitoring
 ```
 
 ### 2. Start the Metrics Exporter
 
 ```bash
-poetry run python scripts/monitoring/export_metrics.py \
+uv run python scripts/monitoring/export_metrics.py \
   --metrics-file var/data/coinbase_trader/prod/metrics.json \
   --events-file var/data/coinbase_trader/prod/events.jsonl \
   --host 0.0.0.0 --port 9000
@@ -187,7 +187,7 @@ Import dashboard from `monitoring/grafana_dashboard.json`:
 1. Review guard output in logs (`risk.guards.daily_loss.*`)
 2. Flatten positions if needed:
    ```bash
-   poetry run coinbase-trader orders preview \
+   uv run coinbase-trader orders preview \
      --symbol BTC-USD --side sell --type market \
      --quantity 0.01 --reduce-only
    ```
@@ -212,7 +212,7 @@ Import dashboard from `monitoring/grafana_dashboard.json`:
 
 - [ ] Exporter metrics recovered (no alerting)
 - [ ] `cycle_errors_total` stopped incrementing
-- [ ] Run `poetry run pytest -q` for code-related incidents
+- [ ] Run `uv run pytest -q` for code-related incidents
 - [ ] Update runbooks if threshold changes needed
 
 ## Health Checks

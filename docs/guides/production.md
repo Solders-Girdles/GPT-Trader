@@ -18,7 +18,7 @@ This guide consolidates all production deployment documentation for GPT-Trader w
 
 ### System Requirements
 - [ ] Python 3.12+ installed
-- [ ] Poetry dependency manager configured
+- [ ] uv package manager installed
 - [ ] Git repository cloned
 - [ ] Environment variables configured (.env)
 
@@ -43,7 +43,7 @@ git clone https://github.com/your-org/GPT-Trader.git
 cd GPT-Trader
 
 # Install dependencies
-poetry install
+uv sync
 
 # Configure environment
 cp config/environments/.env.template .env
@@ -53,33 +53,33 @@ cp config/environments/.env.template .env
 ### 2. Pre-flight Validation
 ```bash
 # Run comprehensive checks (env, credentials, risk toggles)
-poetry run python scripts/production_preflight.py --profile canary
+uv run python scripts/production_preflight.py --profile canary
 
 # Smoke test the trading loop
-poetry run coinbase-trader run --profile dev --dev-fast
+uv run coinbase-trader run --profile dev --dev-fast
 
 # Inspect streaming telemetry
-poetry run python scripts/perps_dashboard.py --profile dev --refresh 5 --window-min 5
+uv run python scripts/perps_dashboard.py --profile dev --refresh 5 --window-min 5
 ```
 
 ### 3. Canary Deployment
 ```bash
 # Start with canary profile (ultra-safe)
-poetry run coinbase-trader run --profile canary --dry-run
+uv run coinbase-trader run --profile canary --dry-run
 
 # Monitor for 24 hours
 # Check logs: tail -f var/logs/coinbase_trader.log
 
 # If successful, enable live spot trading
-poetry run coinbase-trader run --profile canary
+uv run coinbase-trader run --profile canary
 ```
 
 ### 4. Production Rollout
 ```bash
 # Gradual scaling approach (spot)
-poetry run coinbase-trader run --profile prod --dry-run             # Validate config under prod settings
-poetry run coinbase-trader run --profile prod --reduce-only         # Warm start with exits only
-poetry run coinbase-trader run --profile prod                       # Full trading once stable
+uv run coinbase-trader run --profile prod --dry-run             # Validate config under prod settings
+uv run coinbase-trader run --profile prod --reduce-only         # Warm start with exits only
+uv run coinbase-trader run --profile prod                       # Full trading once stable
 ```
 
 ## Phased Rollout Plan
@@ -109,7 +109,7 @@ poetry run coinbase-trader run --profile prod                       # Full tradi
 ## Production Readiness Requirements
 
 ### Technical Requirements
-- ✅ 100% pass rate on required spot test suite (`poetry run pytest -q`)
+- ✅ 100% pass rate on required spot test suite (`uv run pytest -q`)
 - ✅ WebSocket reconnection logic
 - ✅ Rate limiting implementation
 - ✅ Error handling and recovery
@@ -175,7 +175,7 @@ pkill -f coinbase-trader
 export RISK_REDUCE_ONLY_MODE=1
 
 # Submit market exits via CLI
-poetry run coinbase-trader orders preview \
+uv run coinbase-trader orders preview \
   --symbol BTC-USD --side sell --type market --quantity CURRENT_SIZE
 ```
 
@@ -187,7 +187,7 @@ poetry run coinbase-trader orders preview \
 3. Reduce position sizes or halt trading
 
 **API Authentication Failures**
-1. Run preflight: `poetry run python scripts/production_preflight.py --profile canary`
+1. Run preflight: `uv run python scripts/production_preflight.py --profile canary`
 2. Check API key permissions
 3. Verify system time sync
 

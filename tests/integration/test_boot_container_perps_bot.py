@@ -1,4 +1,4 @@
-"""Integration test for container-based bot boot and basic functionality.
+"""Integration test for container-based TradingBot boot and basic functionality.
 
 This test verifies that the composition root pattern works correctly and that
 TradingBot can be created and started using the ApplicationContainer.
@@ -10,7 +10,7 @@ from gpt_trader.app.container import ApplicationContainer
 from gpt_trader.orchestration.configuration import BotConfig
 
 
-@pytest.mark.skip(reason="TODO: Update for new container pattern - needs PerpsBot equivalent")
+@pytest.mark.skip(reason="TODO: Fix container boot test - verify TradingBot wiring")
 def test_container_bot_boot_roundtrip():
     """Test that container can boot TradingBot and verify wiring."""
 

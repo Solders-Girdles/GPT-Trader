@@ -123,15 +123,15 @@ auth = SimpleAuth(key_name=api_key, private_key=api_secret)
 
 ## API Endpoints & Products
 
-Refer to [coinbase_api_endpoints.md](coinbase_api_endpoints.md) for the canonical endpoint catalog (production vs sandbox availability, rate limits, and request examples) and to [coinbase_quick_reference.md](coinbase_quick_reference.md) for the day-to-day cheat sheet. This guide stays focused on how GPT-Trader consumes those surfaces:
+This guide covers how GPT-Trader consumes Coinbase API surfaces:
 
 - **Spot runtime**: Uses Accounts, Orders, and unauthenticated `/market/*` product endpoints. Sandbox responses are static and limited to Accounts + Orders.
 - **Perpetuals runtime**: All INTX-only endpoints remain dormant until `COINBASE_ENABLE_DERIVATIVES=1` and JWT auth is configured.
-- **Coverage tracking**: The [coinbase coverage matrix](../testing/coinbase_coverage_matrix.md) maps each endpoint to its client/adapter/tests—use it when auditing behavior changes.
+- **Coverage tracking**: Run `uv run pytest tests/unit/gpt_trader/features/brokerages/coinbase/ -v` to verify endpoint coverage.
 
 ## Order Types & Compatibility
 
-The full matrix of supported order configurations and time-in-force combinations lives in [coinbase_quick_reference.md](coinbase_quick_reference.md#order-types-quick-reference). Within GPT-Trader:
+GPT-Trader supports the following order configurations:
 
 - Spot profiles expose market/limit order paths by default, with post-only exposed via adapter flags.
 - Perpetuals profiles add stop-market and stop-limit variants once INTX is available.
@@ -212,16 +212,16 @@ Notes:
 
 ```bash
 # Validate environment + credentials
-poetry run python scripts/production_preflight.py --profile canary
+uv run python scripts/production_preflight.py --profile canary
 
 # Smoke test the trading loop (mock broker)
-poetry run coinbase-trader run --profile dev --dev-fast
+uv run coinbase-trader run --profile dev --dev-fast
 
 # Inspect streaming telemetry
-poetry run python scripts/perps_dashboard.py --profile dev --refresh 5 --window-min 5
+uv run python scripts/perps_dashboard.py --profile dev --refresh 5 --window-min 5
 
 # Export Prometheus-compatible metrics
-poetry run python scripts/monitoring/export_metrics.py --metrics-file var/data/coinbase_trader/prod/metrics.json
+uv run python scripts/monitoring/export_metrics.py --metrics-file var/data/coinbase_trader/prod/metrics.json
 ```
 
 ## Testing & Development
@@ -231,7 +231,7 @@ poetry run python scripts/monitoring/export_metrics.py --metrics-file var/data/c
 For development without API calls:
 
 ```bash
-PERPS_FORCE_MOCK=1 poetry run coinbase-trader run --profile dev
+PERPS_FORCE_MOCK=1 uv run coinbase-trader run --profile dev
 ```
 
 Features:
@@ -245,7 +245,7 @@ Features:
 For integration testing with real API:
 
 ```bash
-COINBASE_SANDBOX=1 poetry run coinbase-trader run --profile dev
+COINBASE_SANDBOX=1 uv run coinbase-trader run --profile dev
 ```
 
 **Limitations**:
@@ -258,7 +258,7 @@ COINBASE_SANDBOX=1 poetry run coinbase-trader run --profile dev
 For safe production testing:
 
 ```bash
-poetry run coinbase-trader run --profile canary --dry-run
+uv run coinbase-trader run --profile canary --dry-run
 ```
 
 Features:
@@ -301,7 +301,7 @@ If migrating from older equities-based system:
 
 ### API Rate Limits
 
-The full limit tables and header examples live in [coinbase_quick_reference.md](coinbase_quick_reference.md#rate-limits-at-a-glance). For GPT-Trader operations remember:
+For GPT-Trader operations:
 
 - The adapters cap outbound REST traffic at ~100 req/min, well below Coinbase ceilings.
 - WebSocket clients share a single connection per profile and monitor 30-second heartbeat cadence.
@@ -338,13 +338,13 @@ The full limit tables and header examples live in [coinbase_quick_reference.md](
 
 ```bash
 # Run spot bot in production profile
-poetry run coinbase-trader run --profile prod
+uv run coinbase-trader run --profile prod
 
 # Check system health
-poetry run python scripts/production_preflight.py --profile canary
+uv run python scripts/production_preflight.py --profile canary
 
 # Account snapshot (balances, permissions, fee schedule)
-poetry run coinbase-trader account snapshot
+uv run coinbase-trader account snapshot
 
 # Emergency stop
 export RISK_KILL_SWITCH_ENABLED=1 && pkill -f coinbase-trader

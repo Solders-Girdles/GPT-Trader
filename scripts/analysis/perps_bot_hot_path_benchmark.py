@@ -1,13 +1,13 @@
-"""Quick benchmark for PerpsBot mark updates and symbol processing dispatch.
+"""Quick benchmark for TradingBot mark updates and symbol processing dispatch.
 
 The script simulates quote fetching latency and compares the historical
 sequential update path with the new concurrent batching implemented in
-``PerpsBot.update_marks``. Results are printed in milliseconds along with the
+``TradingBot.update_marks``. Results are printed in milliseconds along with the
 expected speed-up factor so we have an easy before/after datapoint.
 
 Usage example::
 
-    poetry run python scripts/analysis/perps_bot_hot_path_benchmark.py --symbols 6 --latency-ms 25
+    uv run python scripts/analysis/perps_bot_hot_path_benchmark.py --symbols 6 --latency-ms 25
 
 The defaults keep the run very short (<1s) while still demonstrating the
 performance delta.
@@ -105,7 +105,7 @@ async def run_benchmark(symbol_count: int, iterations: int, latency_seconds: flo
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Benchmark PerpsBot mark update strategies")
+    parser = argparse.ArgumentParser(description="Benchmark TradingBot mark update strategies")
     parser.add_argument("--symbols", type=int, default=6, help="Number of symbols to simulate")
     parser.add_argument(
         "--latency-ms",

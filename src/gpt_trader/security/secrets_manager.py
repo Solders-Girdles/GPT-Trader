@@ -1,5 +1,5 @@
 """
-Secrets Manager for Bot V2 Trading System
+Secrets Manager for GPT-Trader
 
 Provides secure storage and retrieval of sensitive data including API keys,
 database credentials, and encryption keys. Supports HashiCorp Vault integration
@@ -38,7 +38,7 @@ def _require_fernet() -> type[FernetType]:
     if _RuntimeFernet is None:
         raise RuntimeError(
             "cryptography is not installed. Install extras with `pip install gpt-trader[security]` "
-            "or `poetry install --with security`."
+            "or `uv sync`."
         )
     return cast(type[FernetType], _RuntimeFernet)
 

@@ -10,7 +10,7 @@ retired.
 - `var/data/coinbase_trader/<profile>/metrics.json` captures the latest cycle metrics
   for each profile. Tools like `jq` or spreadsheets work well for ad-hoc
   reviews.
-- `poetry run coinbase-trader account snapshot` prints balances, fee tiers, and
+- `uv run coinbase-trader account snapshot` prints balances, fee tiers, and
   permissions without executing the trading loop.
 - The risk manager records periodic snapshots via
   `gpt_trader/features/live_trade/risk_metrics.py`; these feed dashboards and the
@@ -21,7 +21,7 @@ retired.
 ## Prometheus Exporter
 
 ```bash
-poetry run python scripts/monitoring/export_metrics.py \
+uv run python scripts/monitoring/export_metrics.py \
   --metrics-file var/data/coinbase_trader/prod/metrics.json \
   --port 9102
 ```
@@ -40,7 +40,7 @@ status, risk metrics, and system health. The script consumes the same telemetry
 as the exporter without depending on the deprecated dashboard stack.
 
 ```bash
-poetry run python scripts/perps_dashboard.py \
+uv run python scripts/perps_dashboard.py \
   --metrics-file var/data/coinbase_trader/canary/metrics.json \
   --refresh-seconds 5
 ```

@@ -7,8 +7,8 @@ This script runs a 30-day paper trade simulation with:
 - EventStore persistence validation (optional)
 
 Usage:
-    poetry run python scripts/analysis/paper_trade_stress_test.py
-    poetry run python scripts/analysis/paper_trade_stress_test.py --days 7 --persist
+    uv run python scripts/analysis/paper_trade_stress_test.py
+    uv run python scripts/analysis/paper_trade_stress_test.py --days 7 --persist
 """
 
 from __future__ import annotations

@@ -13,8 +13,7 @@ Usage:
   python scripts/perps_dashboard.py --profile dev --refresh 5 --window-min 5
 
 Env overrides:
-  EVENT_STORE_ROOT: base directory for events/health (defaults to var/data/coinbase_trader/<profile>;
-  falls back to the legacy var/data/perps_bot/<profile> if present)
+  EVENT_STORE_ROOT: base directory for events/health (defaults to var/data/coinbase_trader/<profile>)
 """
 
 from __future__ import annotations

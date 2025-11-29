@@ -7,10 +7,10 @@ Defaults to PREVIEW mode (no live order). Use --live to actually place.
 
 Usage:
   # Dry-run preview (safe)
-  poetry run python scripts/canary_reduce_only_test.py --symbol BTC-PERP --price 10 --quantity 0.001
+  uv run python scripts/monitoring/canary_reduce_only_test.py --symbol BTC-PERP --price 10 --quantity 0.001
 
   # Live (use only with proper guardrails configured)
-  poetry run python scripts/canary_reduce_only_test.py --live --symbol BTC-PERP --price 10 --quantity 0.001
+  uv run python scripts/monitoring/canary_reduce_only_test.py --live --symbol BTC-PERP --price 10 --quantity 0.001
 """
 
 from __future__ import annotations

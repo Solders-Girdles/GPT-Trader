@@ -151,22 +151,22 @@
 
 ### Full CI Simulation
 ```bash
-poetry run pytest --cov=src --cov-report=json:coverage.json --cov-fail-under=72.87
+uv run pytest --cov=src --cov-report=json:coverage.json --cov-fail-under=72.87
 ```
 
 ### HTML Report Generation
 ```bash
-poetry run pytest --cov=src --cov-report=html:htmlcov
+uv run pytest --cov=src --cov-report=html:htmlcov
 # Open htmlcov/index.html
 ```
 
 ### Selective Testing
 ```bash
 # Run only fast tests
-poetry run pytest -m "not slow and not integration"
+uv run pytest -m "not slow and not integration"
 
 # Run specific package
-poetry run pytest tests/unit/gpt_trader/features/brokerages/coinbase/
+uv run pytest tests/unit/gpt_trader/features/brokerages/coinbase/
 ```
 
 ## Success Metrics

@@ -31,7 +31,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 from gpt_trader.orchestration.hybrid_paper_broker import HybridPaperBroker
 from gpt_trader.utilities.logging_patterns import get_logger
 
-logger = get_logger(__name__, enable_console=True)
+logger = get_logger(__name__, component="paper_trading")
 
 
 class PaperTradingEngine:

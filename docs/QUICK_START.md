@@ -12,14 +12,14 @@ hit real Coinbase endpoints when you are ready.
 ## 1. Install Dependencies
 
 ```bash
-python3 -m pip install --user pipx  # optional convenience
-pipx install poetry                 # or use your existing Poetry install
+# Install uv if not present
+curl -LsSf https://astral.sh/uv/install.sh | sh
 
-poetry install
+uv sync
 ```
 
 The project targets Python 3.12+. If you manage Python with `pyenv`, run
-`pyenv local 3.12.4` (or later) before `poetry install`.
+`pyenv local 3.12.4` (or later) before `uv sync`.
 
 ## 2. Configure Environment Files (optional)
 
@@ -67,7 +67,7 @@ docker compose --project-directory deploy/gpt_trader/docker \
 ## 4. Smoke-Test the Dev Profile
 
 ```bash
-poetry run coinbase-trader run --profile dev --dev-fast
+uv run coinbase-trader run --profile dev --dev-fast
 ```
 
 What to expect:
@@ -89,7 +89,7 @@ export COINBASE_API_SECRET="..."
 export COINBASE_API_PASSPHRASE="..."
 export SPOT_FORCE_LIVE=1
 
-poetry run coinbase-trader run --profile spot --dev-fast
+uv run coinbase-trader run --profile spot --dev-fast
 ```
 
 Use the `spot` profile for live spot execution; it keeps leverage at 1x and
@@ -113,10 +113,10 @@ placement is disabled by design.
 
 ```bash
 # Full regression suite (spot + orchestration)
-poetry run pytest -q
+uv run pytest -q
 
 # Optional: offline verification bundle
-poetry run python scripts/validation/verify_core.py --check all
+uv run python scripts/validation/verify_core.py --check all
 ```
 
 These commands stay within local resources—no network calls are made unless you

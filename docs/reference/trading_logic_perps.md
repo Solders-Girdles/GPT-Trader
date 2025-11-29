@@ -246,7 +246,7 @@ risk_management:
 # RUN_SANDBOX_VALIDATIONS=1 python scripts/validate_ws_week1.py
 
 # Full cycle test
-poetry run coinbase-trader run --profile dev --dry-run --dev-fast
+uv run coinbase-trader run --profile dev --dry-run --dev-fast
 ```
 
 ## Performance Metrics
@@ -314,16 +314,16 @@ $EVENT_STORE_ROOT/coinbase_trader/{profile}/orders/
 ### Operational Commands
 ```bash
 # Start production trading
-poetry run coinbase-trader run --profile prod
+uv run coinbase-trader run --profile prod
 
 # Emergency reduce-only mode
-poetry run coinbase-trader run --profile prod --reduce-only
+uv run coinbase-trader run --profile prod --reduce-only
 
 # Canary deployment
-poetry run coinbase-trader run --profile canary
+uv run coinbase-trader run --profile canary
 
 # Single cycle validation
-poetry run coinbase-trader run --profile prod --dev-fast --dry-run
+uv run coinbase-trader run --profile prod --dev-fast --dry-run
 ```
 
 ## Future Enhancements

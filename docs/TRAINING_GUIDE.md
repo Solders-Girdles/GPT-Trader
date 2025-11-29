@@ -15,11 +15,11 @@ its ML workflows.
 
 ## Module 2 – Environment Setup
 
-1. Install Poetry (if needed): `pipx install poetry`.
+1. Install uv (if needed): `curl -LsSf https://astral.sh/uv/install.sh | sh`
 2. Install project dependencies:
 
    ```bash
-   poetry install
+   uv sync
    ```
 
 3. Copy environment template and adjust credentials when required:
@@ -31,7 +31,7 @@ its ML workflows.
 4. Run the dev smoke test:
 
    ```bash
-   poetry run coinbase-trader run --profile dev --dev-fast
+   uv run coinbase-trader run --profile dev --dev-fast
    ```
 
    This executes one control cycle using the mock broker.
@@ -49,7 +49,7 @@ its ML workflows.
 
 1. Create a feature branch and implement changes in the relevant slice.
 2. Add or update tests under `tests/unit/gpt_trader/`.
-3. Run `poetry run pytest -q` before opening a pull request.
+3. Run `uv run pytest -q` before opening a pull request.
 4. Update documentation (`docs/README.md`, architecture/risk guides) alongside
    code changes.
 
@@ -60,9 +60,9 @@ its ML workflows.
 - Manual tooling:
 
   ```bash
-  poetry run coinbase-trader account snapshot
-  poetry run coinbase-trader treasury convert --from USD --to USDC --amount 250
-  poetry run coinbase-trader treasury move --from-portfolio from_uuid --to-portfolio to_uuid --amount 25
+  uv run coinbase-trader account snapshot
+  uv run coinbase-trader treasury convert --from USD --to USDC --amount 250
+  uv run coinbase-trader treasury move --from-portfolio from_uuid --to-portfolio to_uuid --amount 25
   ```
 
 - Guardrails default to spot-only. Derivatives remain locked behind INTX access

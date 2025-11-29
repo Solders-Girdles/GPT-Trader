@@ -9,13 +9,13 @@ from typing import TYPE_CHECKING, Any, cast
 from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:  # pragma: no cover
-    pass  # TelemetryEngine import placeholder - block must not be empty
+    pass  # No type-only imports needed currently
 
 logger = get_logger(__name__, component="telemetry_streaming")
 
 
 def _emit_metric(event_store: Any, bot_id: str, payload: dict[str, Any]) -> None:
-    # If emit_metric is not found, import from utility
+    """Emit a metric event via the telemetry utility."""
     from gpt_trader.utilities.telemetry import emit_metric
 
     emit_metric(event_store, bot_id, payload)

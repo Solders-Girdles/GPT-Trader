@@ -103,7 +103,7 @@ export COINBASE_API_SECRET=your-sandbox-secret
 export COINBASE_API_PASSPHRASE=your-sandbox-passphrase
 
 # Run smoke test (spot)
-poetry run coinbase-trader --profile dev --symbols BTC-USD --dry-run --dev-fast
+uv run coinbase-trader --profile dev --symbols BTC-USD --dry-run --dev-fast
 ```
 
 ### WebSocket Streaming
@@ -156,7 +156,7 @@ pytest tests/unit/gpt_trader/features/brokerages/coinbase/test_critical_fixes.py
 4. **WebSocket Requirements**
    - Install the live trading extras to enable websocket-client support:
      - `pip install gpt-trader[live-trade]`, or
-     - `poetry install --with live-trade`
+     - `uv sync --extra live-trade`
 
 ## Troubleshooting
 

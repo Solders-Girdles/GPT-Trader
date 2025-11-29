@@ -2,7 +2,7 @@
 """
 Example demonstrating the new composition root pattern.
 
-This example shows how to create and run a PerpsBot using the new
+This example shows how to create and run a TradingBot using the new
 dependency injection container approach introduced in Issue #91.
 """
 
@@ -38,9 +38,9 @@ async def main() -> None:
     print(f"Container created for profile: {container.config.profile.value}")
     print(f"Settings data dir: {container.settings.data_dir}")
 
-    # Create PerpsBot from container
-    print("\nCreating PerpsBot from container...")
-    bot = container.create_perps_bot()
+    # Create TradingBot from container
+    print("\nCreating TradingBot from container...")
+    bot = container.create_bot()
 
     print(f"Bot ID: {bot.bot_id}")
     print(f"Bot symbols: {bot.symbols}")

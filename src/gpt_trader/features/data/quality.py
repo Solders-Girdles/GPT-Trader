@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any
 import pandas as pd
 
 if TYPE_CHECKING:
-    from gpt_trader.features.brokerages.core.interfaces import Candle
+    from gpt_trader.core import Candle
 
 
 @dataclass

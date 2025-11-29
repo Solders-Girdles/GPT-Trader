@@ -13,7 +13,7 @@ from decimal import Decimal
 from enum import Enum
 from typing import Any
 
-from gpt_trader.features.brokerages.core.interfaces import Product
+from gpt_trader.core import Product
 from gpt_trader.features.live_trade.indicators import (
     compute_ma_series,
     detect_crossover,
@@ -422,6 +422,21 @@ class BaselinePerpsStrategy:
     def _build_default_product(self, symbol: str) -> Any:
         """Build a default product specification."""
         return None
+
+    def rehydrate(self, events: Sequence[dict[str, Any]]) -> int:
+        """Restore strategy state from historical events.
+
+        BaselinePerpsStrategy is stateless - it receives price history
+        externally via the `recent_marks` parameter. No internal state
+        needs restoration.
+
+        Args:
+            events: List of persisted events (oldest first)
+
+        Returns:
+            Number of events processed (always 0 for this strategy)
+        """
+        return 0
 
 
 class SpotStrategy(BaselinePerpsStrategy):

@@ -7,7 +7,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Literal
 
-from gpt_trader.features.brokerages.core.interfaces import OrderSide, OrderType
+from gpt_trader.core import OrderSide, OrderType
 
 
 @dataclass

@@ -10,14 +10,9 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import Any, Protocol, cast, runtime_checkable
 
+from gpt_trader.core import OrderSide, OrderType, Product, TimeInForce
 from gpt_trader.features.brokerages.coinbase.rest_service import CoinbaseRestService
 from gpt_trader.features.brokerages.coinbase.specs import validate_order as spec_validate_order
-from gpt_trader.features.brokerages.core.interfaces import (
-    OrderSide,
-    OrderType,
-    Product,
-    TimeInForce,
-)
 from gpt_trader.features.live_trade.risk import LiveRiskManager, ValidationError
 from gpt_trader.utilities.logging_patterns import get_logger
 from gpt_trader.utilities.quantization import quantize_price_side_aware

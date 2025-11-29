@@ -1,20 +1,20 @@
 """
 Simplified Strategy Engine.
 Replaces the 608-line enterprise coordinator with a simple loop.
+
+State Recovery:
+On startup, reads `price_tick` events from EventStore to restore price history.
+During operation, persists price ticks to EventStore for crash recovery.
 """
 
 import asyncio
 import logging
+import time
 from collections import defaultdict
 from decimal import Decimal
 from typing import Any
 
-from gpt_trader.features.brokerages.core.interfaces import (
-    OrderSide,
-    OrderType,
-    Position,
-    Product,
-)
+from gpt_trader.core import OrderSide, OrderType, Position, Product
 from gpt_trader.features.live_trade.engines.base import (
     BaseEngine,
     CoordinatorContext,
@@ -26,13 +26,21 @@ from gpt_trader.features.live_trade.strategies.perps_baseline import (
     BaselinePerpsStrategy,
     Decision,
 )
+from gpt_trader.monitoring.alert_types import AlertSeverity
+from gpt_trader.monitoring.heartbeat import HeartbeatService
+from gpt_trader.monitoring.status_reporter import StatusReporter
 
 logger = logging.getLogger(__name__)
+
+# Event type for price ticks
+EVENT_PRICE_TICK = "price_tick"
 
 
 class TradingEngine(BaseEngine):
     """
     Simple trading loop that fetches data and executes strategy.
+
+    Supports state recovery via EventStore persistence.
     """
 
     def __init__(self, context: CoordinatorContext) -> None:
@@ -42,25 +50,150 @@ class TradingEngine(BaseEngine):
         self.strategy = BaselinePerpsStrategy(config=self.context.config.strategy)
         self.price_history: dict[str, list[Decimal]] = defaultdict(list)
         self._current_positions: dict[str, Position] = {}
+        self._rehydrated = False
+
+        # Initialize heartbeat service
+        self._heartbeat = HeartbeatService(
+            event_store=context.event_store,
+            ping_url=getattr(context.config, "heartbeat_url", None),
+            interval_seconds=getattr(context.config, "heartbeat_interval", 60),
+            bot_id=context.bot_id,
+            enabled=getattr(context.config, "heartbeat_enabled", True),
+        )
+
+        # Initialize status reporter
+        self._status_reporter = StatusReporter(
+            status_file=getattr(context.config, "status_file", "status.json"),
+            update_interval=getattr(context.config, "status_interval", 10),
+            bot_id=context.bot_id,
+            enabled=getattr(context.config, "status_enabled", True),
+        )
+        self._status_reporter.set_heartbeat_service(self._heartbeat)
+
+    async def _notify(
+        self,
+        title: str,
+        message: str,
+        severity: AlertSeverity = AlertSeverity.WARNING,
+        context: dict[str, Any] | None = None,
+    ) -> None:
+        """Send notification if service is available."""
+        if self.context.notification_service is None:
+            return
+        try:
+            await self.context.notification_service.notify(
+                title=title,
+                message=message,
+                severity=severity,
+                source="TradingEngine",
+                context=context,
+            )
+        except Exception as e:
+            logger.error(f"Failed to send notification: {e}")
 
     @property
     def name(self) -> str:
         return "strategy"
 
     async def start_background_tasks(self) -> list[asyncio.Task[Any]]:
-        """Start the main trading loop."""
+        """Start the main trading loop and heartbeat service.
+
+        Before starting, attempts to rehydrate state from EventStore.
+        """
+        # Rehydrate state from EventStore before starting
+        if not self._rehydrated:
+            self._rehydrate_from_events()
+            self._rehydrated = True
+
         self.running = True
-        task = asyncio.create_task(self._run_loop())
-        self._register_background_task(task)
-        return [task]
+
+        tasks: list[asyncio.Task[Any]] = []
+
+        # Start main trading loop
+        trading_task = asyncio.create_task(self._run_loop())
+        self._register_background_task(trading_task)
+        tasks.append(trading_task)
+
+        # Start heartbeat service
+        heartbeat_task = await self._heartbeat.start()
+        if heartbeat_task:
+            self._register_background_task(heartbeat_task)
+            tasks.append(heartbeat_task)
+
+        # Start status reporter
+        status_task = await self._status_reporter.start()
+        if status_task:
+            self._register_background_task(status_task)
+            tasks.append(status_task)
+
+        return tasks
+
+    def _rehydrate_from_events(self) -> int:
+        """Restore price history from persisted events.
+
+        Returns:
+            Number of price ticks restored
+        """
+        if self.context.event_store is None:
+            logger.debug("No event store configured - skipping rehydration")
+            return 0
+
+        events = self.context.event_store.get_recent(count=1000)
+        restored = 0
+
+        for event in events:
+            if event.get("type") != EVENT_PRICE_TICK:
+                continue
+
+            data = event.get("data", {})
+            symbol = data.get("symbol")
+            price_str = data.get("price")
+
+            if not symbol or not price_str:
+                continue
+
+            # Only restore prices for symbols we're trading
+            if symbol not in self.context.config.symbols:
+                continue
+
+            try:
+                price = Decimal(str(price_str))
+                self.price_history[symbol].append(price)
+                # Keep history bounded
+                if len(self.price_history[symbol]) > 20:
+                    self.price_history[symbol].pop(0)
+                restored += 1
+            except Exception as e:
+                logger.warning(f"Failed to parse price from event: {e}")
+
+        if restored > 0:
+            logger.info(f"Rehydrated {restored} price ticks from EventStore")
+            for symbol, prices in self.price_history.items():
+                logger.info(f"  {symbol}: {len(prices)} prices")
+
+        # Also call strategy rehydration (for future stateful strategies)
+        if hasattr(self.strategy, "rehydrate"):
+            self.strategy.rehydrate(events)
+
+        return restored
 
     async def _run_loop(self) -> None:
         logger.info("Starting strategy loop...")
         while self.running:
             try:
                 await self._cycle()
+                # Record successful cycle
+                self._status_reporter.record_cycle()
             except Exception as e:
                 logger.error(f"Error in strategy cycle: {e}", exc_info=True)
+                # Record error in status reporter
+                self._status_reporter.record_error(str(e))
+                await self._notify(
+                    title="Strategy Cycle Error",
+                    message=f"Error during trading cycle: {e}",
+                    severity=AlertSeverity.ERROR,
+                    context={"error": str(e)},
+                )
 
             await asyncio.sleep(self.context.config.interval)
 
@@ -71,6 +204,9 @@ class TradingEngine(BaseEngine):
         # 1. Fetch positions first (needed for equity calculation)
         positions = await self._fetch_positions()
         self._current_positions = positions
+
+        # Update status reporter with positions
+        self._status_reporter.update_positions(self._positions_to_risk_format(positions))
 
         # 2. Calculate total equity including unrealized PnL
         equity = await self._fetch_total_equity(positions)
@@ -90,9 +226,15 @@ class TradingEngine(BaseEngine):
             price = Decimal(str(ticker.get("price", 0)))
             logger.info(f"{symbol} price: {price}")
 
+            # Update status reporter with price
+            self._status_reporter.update_price(symbol, price)
+
             self.price_history[symbol].append(price)
             if len(self.price_history[symbol]) > 20:
                 self.price_history[symbol].pop(0)
+
+            # Persist price tick for crash recovery
+            self._record_price_tick(symbol, price)
 
             position_state = self._build_position_state(symbol, positions)
 
@@ -118,8 +260,28 @@ class TradingEngine(BaseEngine):
                     )
                 except ValidationError as e:
                     logger.warning(f"Risk validation failed for {symbol}: {e}")
+                    await self._notify(
+                        title="Risk Validation Failed",
+                        message=f"Order blocked by risk manager: {e}",
+                        severity=AlertSeverity.WARNING,
+                        context={
+                            "symbol": symbol,
+                            "action": decision.action.value,
+                            "reason": str(e),
+                        },
+                    )
                 except Exception as e:
                     logger.error(f"Order placement failed: {e}")
+                    await self._notify(
+                        title="Order Placement Failed",
+                        message=f"Failed to execute {decision.action} for {symbol}: {e}",
+                        severity=AlertSeverity.ERROR,
+                        context={
+                            "symbol": symbol,
+                            "action": decision.action.value,
+                            "error": str(e),
+                        },
+                    )
 
             elif decision.action == Action.CLOSE and position_state:
                 # Handle CLOSE action separately if needed, or integrate into place_order
@@ -169,6 +331,23 @@ class TradingEngine(BaseEngine):
             "side": pos.side,
             # Add other fields if needed by strategy
         }
+
+    def _record_price_tick(self, symbol: str, price: Decimal) -> None:
+        """Persist price tick to EventStore for crash recovery."""
+        if self.context.event_store is None:
+            return
+
+        self.context.event_store.store(
+            {
+                "type": EVENT_PRICE_TICK,
+                "data": {
+                    "symbol": symbol,
+                    "price": str(price),
+                    "timestamp": time.time(),
+                    "bot_id": self.context.bot_id,
+                },
+            }
+        )
 
     def _positions_to_risk_format(
         self, positions: dict[str, Position]
@@ -261,8 +440,23 @@ class TradingEngine(BaseEngine):
             quantity,
         )
 
+        # Notify on successful order placement
+        await self._notify(
+            title="Order Executed",
+            message=f"{side.value} {quantity} {symbol} at ~{price}",
+            severity=AlertSeverity.INFO,
+            context={
+                "symbol": symbol,
+                "side": side.value,
+                "quantity": str(quantity),
+                "price": str(price),
+            },
+        )
+
     async def shutdown(self) -> None:
         self.running = False
+        await self._status_reporter.stop()
+        await self._heartbeat.stop()
         await super().shutdown()
 
     def health_check(self) -> HealthStatus:

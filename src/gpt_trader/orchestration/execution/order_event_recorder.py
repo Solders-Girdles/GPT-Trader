@@ -10,10 +10,7 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import Any
 
-from gpt_trader.features.brokerages.core.interfaces import (
-    OrderSide,
-    OrderType,
-)
+from gpt_trader.core import OrderSide, OrderType
 from gpt_trader.monitoring.system import LogLevel
 from gpt_trader.monitoring.system import get_logger as get_monitoring_logger
 from gpt_trader.persistence.event_store import EventStore

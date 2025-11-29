@@ -12,7 +12,7 @@ from gpt_trader.features.data.types import DataQuery, DataSource
 
 if TYPE_CHECKING:
     from gpt_trader.backtesting.data import HistoricalDataManager
-    from gpt_trader.features.brokerages.core.interfaces import Candle
+    from gpt_trader.core import Candle
 
 # Module-level singletons for dependency injection
 _storage: Any = None

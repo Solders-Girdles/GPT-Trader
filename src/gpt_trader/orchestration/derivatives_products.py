@@ -14,8 +14,8 @@ from typing import TYPE_CHECKING, Any
 from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:
+    from gpt_trader.core import Product
     from gpt_trader.features.brokerages.coinbase.rest_service import CoinbaseRestService
-    from gpt_trader.features.brokerages.core.interfaces import Product
 
 logger = get_logger(__name__, component="derivatives_products")
 

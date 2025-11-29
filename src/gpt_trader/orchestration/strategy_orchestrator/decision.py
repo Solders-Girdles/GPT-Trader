@@ -7,7 +7,7 @@ from collections.abc import Sequence
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any, Protocol, cast
 
-from gpt_trader.features.brokerages.core.interfaces import Product
+from gpt_trader.core import Product
 from gpt_trader.features.live_trade.strategies.perps_baseline import (
     BaselinePerpsStrategy,
     Decision,

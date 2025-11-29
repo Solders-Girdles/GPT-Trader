@@ -30,6 +30,8 @@ class TestTradingBotInitialization:
         registry.account_telemetry = Mock()
         registry.risk_manager = Mock()
         registry.runtime_state = Mock()
+        registry.event_store = Mock()
+        registry.notification_service = Mock()
         return registry
 
     def test_init_with_config_only(self, mock_config: Mock) -> None:
@@ -84,6 +86,9 @@ class TestTradingBotInitialization:
                 registry=mock_registry,
                 broker=mock_registry.broker,
                 symbols=tuple(mock_config.symbols),
+                risk_manager=mock_registry.risk_manager,
+                event_store=mock_registry.event_store,
+                notification_service=mock_registry.notification_service,
             )
             assert bot.context is not None
 

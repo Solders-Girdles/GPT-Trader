@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 from typing import Any
 
-from gpt_trader.features.brokerages.core.interfaces import Balance, Position, Product
+from gpt_trader.core import Balance, Position, Product
 
 
 @dataclass(slots=True)

@@ -11,7 +11,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 
 if TYPE_CHECKING:
-    from gpt_trader.features.brokerages.core.interfaces import Balance
+    from gpt_trader.core import Balance
 
 
 @dataclass

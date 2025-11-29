@@ -13,11 +13,8 @@ import uuid
 from decimal import Decimal
 from typing import Any, cast
 
+from gpt_trader.core import OrderSide, OrderType
 from gpt_trader.features.brokerages.coinbase.rest_service import CoinbaseRestService
-from gpt_trader.features.brokerages.core.interfaces import (
-    OrderSide,
-    OrderType,
-)
 from gpt_trader.features.brokerages.core.protocols import BrokerProtocol
 from gpt_trader.orchestration.execution.broker_executor import BrokerExecutor
 from gpt_trader.orchestration.execution.order_event_recorder import OrderEventRecorder

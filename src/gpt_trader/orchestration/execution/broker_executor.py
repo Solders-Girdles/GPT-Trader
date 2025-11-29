@@ -9,10 +9,7 @@ from __future__ import annotations
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
-from gpt_trader.features.brokerages.core.interfaces import (
-    OrderSide,
-    OrderType,
-)
+from gpt_trader.core import OrderSide, OrderType
 from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:

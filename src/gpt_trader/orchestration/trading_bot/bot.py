@@ -15,9 +15,10 @@ from gpt_trader.orchestration.configuration import BotConfig
 
 if TYPE_CHECKING:
     from gpt_trader.app.container import ApplicationContainer
-    from gpt_trader.features.brokerages.core.interfaces import Product
+    from gpt_trader.core import Product
     from gpt_trader.features.brokerages.core.protocols import BrokerProtocol
     from gpt_trader.features.live_trade.risk.protocols import RiskManagerProtocol
+    from gpt_trader.monitoring.notifications.service import NotificationService
     from gpt_trader.orchestration.protocols import (
         AccountManagerProtocol,
         EventStoreProtocol,
@@ -36,6 +37,7 @@ class TradingBot:
         registry: ServiceRegistryProtocol | None = None,
         event_store: EventStoreProtocol | None = None,
         orders_store: Any = None,
+        notification_service: NotificationService | None = None,
     ) -> None:
         self.config = config
         self.container = container
@@ -57,12 +59,25 @@ class TradingBot:
             getattr(registry, "runtime_state", None) if registry else None
         )
 
+        # Get event_store from parameter or registry
+        self._event_store = event_store or (
+            getattr(registry, "event_store", None) if registry else None
+        )
+
+        # Get notification_service from parameter or registry
+        self._notification_service = notification_service or (
+            getattr(registry, "notification_service", None) if registry else None
+        )
+
         # Setup context (simplified)
         self.context = CoordinatorContext(
             config=config,
             registry=registry,
             broker=self.broker,
             symbols=tuple(config.symbols),
+            risk_manager=self.risk_manager,
+            event_store=self._event_store,
+            notification_service=self._notification_service,
         )
 
         self.engine = TradingEngine(self.context)

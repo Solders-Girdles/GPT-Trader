@@ -13,7 +13,7 @@ from collections.abc import Callable
 from decimal import Decimal
 from typing import TYPE_CHECKING, cast
 
-from gpt_trader.features.brokerages.core.interfaces import Balance
+from gpt_trader.core import Balance
 from gpt_trader.features.brokerages.core.protocols import BrokerProtocol
 from gpt_trader.features.live_trade.guard_errors import (
     GuardError,

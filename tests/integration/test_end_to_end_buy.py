@@ -24,6 +24,16 @@ async def test_end_to_end_buy_execution():
     # 2. Mock Broker & Registry
     mock_broker = MagicMock()
     mock_broker.get_ticker.return_value = {"price": "100"}
+
+    # Mock balances to provide collateral for equity calculation
+    mock_balance = MagicMock()
+    mock_balance.asset = "USD"
+    mock_balance.available = 10000  # $10,000 collateral
+    mock_broker.list_balances.return_value = [mock_balance]
+
+    # Mock positions (empty initially)
+    mock_broker.list_positions.return_value = []
+
     mock_broker.place_order = MagicMock(return_value={"id": "order_123", "status": "filled"})
 
     mock_registry = MagicMock()

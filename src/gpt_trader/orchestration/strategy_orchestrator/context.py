@@ -7,7 +7,7 @@ from collections.abc import Sequence
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any, Protocol, cast
 
-from gpt_trader.features.brokerages.core.interfaces import Balance, Position
+from gpt_trader.core import Balance, Position
 from gpt_trader.utilities.quantities import quantity_from
 
 from .logging_utils import logger  # naming: allow

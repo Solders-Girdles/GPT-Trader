@@ -12,7 +12,7 @@ from types import SimpleNamespace
 from typing import Any, cast
 
 from gpt_trader.config.runtime_settings import RuntimeSettings, load_runtime_settings
-from gpt_trader.features.brokerages.core.interfaces import Balance, MarketType, Product
+from gpt_trader.core import Balance, MarketType, Product
 from gpt_trader.features.brokerages.core.protocols import ExtendedBrokerProtocol
 from gpt_trader.utilities.logging_patterns import get_logger
 from gpt_trader.utilities.quantities import quantity_from

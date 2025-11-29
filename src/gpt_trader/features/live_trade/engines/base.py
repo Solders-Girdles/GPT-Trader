@@ -11,9 +11,13 @@ from typing import TYPE_CHECKING, Any
 from gpt_trader.orchestration.configuration import BotConfig
 
 if TYPE_CHECKING:
-    from gpt_trader.features.brokerages.core.protocols import BrokerProtocol
+    from gpt_trader.features.brokerages.core.protocols import (
+        BrokerProtocol,
+    )  # Protocol import is OK
     from gpt_trader.features.live_trade.risk.protocols import RiskManagerProtocol
+    from gpt_trader.monitoring.notifications.service import NotificationService
     from gpt_trader.orchestration.protocols import (
+        EventStoreProtocol,
         RuntimeStateProtocol,
         ServiceRegistryProtocol,
     )
@@ -27,6 +31,8 @@ class CoordinatorContext:
     symbols: tuple[str, ...] = ()
     runtime_state: RuntimeStateProtocol | None = None
     risk_manager: RiskManagerProtocol | None = None
+    event_store: EventStoreProtocol | None = None
+    notification_service: NotificationService | None = None
     bot_id: str = ""
 
     def with_updates(self, **overrides: Any) -> CoordinatorContext:

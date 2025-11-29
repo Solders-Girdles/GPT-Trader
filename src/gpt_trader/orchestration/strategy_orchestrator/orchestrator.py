@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
-from gpt_trader.features.brokerages.core.interfaces import Balance, Position
+from gpt_trader.core import Balance, Position
 from gpt_trader.features.live_trade.strategies.perps_baseline import Action
 from gpt_trader.logging import correlation_context, log_execution_error, symbol_context
 

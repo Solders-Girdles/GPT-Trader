@@ -8,7 +8,7 @@ from collections.abc import Sequence
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 
-from gpt_trader.features.brokerages.core.interfaces import Product
+from gpt_trader.core import Product
 
 if TYPE_CHECKING:
     from .perps_baseline.strategy import Decision
@@ -48,6 +48,26 @@ class StrategyProtocol(Protocol):
         ...
 
 
+@runtime_checkable
+class RehydratableStrategy(Protocol):
+    """Protocol for strategies that support state recovery.
+
+    Strategies implementing this protocol can restore their internal state
+    from persisted events after a restart.
+    """
+
+    def rehydrate(self, events: Sequence[dict[str, Any]]) -> int:
+        """Restore strategy state from historical events.
+
+        Args:
+            events: List of persisted events (oldest first)
+
+        Returns:
+            Number of events processed
+        """
+        ...
+
+
 class BaseStrategy(ABC):
     """Abstract base class for trading strategies.
 
@@ -68,5 +88,19 @@ class BaseStrategy(ABC):
         """Generate a trading decision based on market data."""
         ...
 
+    def rehydrate(self, events: Sequence[dict[str, Any]]) -> int:
+        """Restore strategy state from historical events.
 
-__all__ = ["BaseStrategy", "StrategyProtocol"]
+        Default implementation does nothing. Override in subclasses
+        that need state recovery.
+
+        Args:
+            events: List of persisted events (oldest first)
+
+        Returns:
+            Number of events processed
+        """
+        return 0
+
+
+__all__ = ["BaseStrategy", "RehydratableStrategy", "StrategyProtocol"]

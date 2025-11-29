@@ -140,6 +140,7 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/monitoring/notifications/test_notification_service.py",  # notification backend coverage
     "tests/unit/gpt_trader/monitoring/test_heartbeat.py",  # heartbeat monitoring scenarios
     "tests/unit/gpt_trader/monitoring/test_status_reporter.py",  # status reporting coverage
+    "tests/integration/test_funding_pnl_integration.py",  # funding and PnL calculation scenarios
 }
 
 SLEEP_ALLOWLIST = {

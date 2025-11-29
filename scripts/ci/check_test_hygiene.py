@@ -137,6 +137,9 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_websocket_mixin.py",  # WebSocket streaming mixin with threading patterns
     "tests/integration/test_optimize_feature.py",  # optimization feature integration coverage
     "tests/unit/gpt_trader/features/optimize/test_walk_forward.py",  # walk-forward analysis comprehensive scenarios
+    "tests/unit/gpt_trader/monitoring/notifications/test_notification_service.py",  # notification backend coverage
+    "tests/unit/gpt_trader/monitoring/test_heartbeat.py",  # heartbeat monitoring scenarios
+    "tests/unit/gpt_trader/monitoring/test_status_reporter.py",  # status reporting coverage
 }
 
 SLEEP_ALLOWLIST = {

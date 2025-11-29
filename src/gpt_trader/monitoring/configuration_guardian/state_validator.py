@@ -6,7 +6,7 @@ from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Any
 
-from gpt_trader.features.brokerages.core.interfaces import Balance, Position
+from gpt_trader.core import Balance, Position
 
 from .base import ConfigurationMonitor
 from .models import BaselineSnapshot, DriftEvent

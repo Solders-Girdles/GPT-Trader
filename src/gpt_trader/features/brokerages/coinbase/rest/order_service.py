@@ -1,15 +1,23 @@
-"""
-Order management mixin for Coinbase REST service.
+"""Order management service for Coinbase REST API.
+
+This service handles order operations with explicit dependencies
+injected via constructor, replacing the OrderRestMixin.
 """
 
 from __future__ import annotations
 
 from collections.abc import Callable
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from gpt_trader.errors import ValidationError
+from gpt_trader.features.brokerages.coinbase.client import CoinbaseClient
 from gpt_trader.features.brokerages.coinbase.models import to_order
+from gpt_trader.features.brokerages.coinbase.rest.protocols import (
+    OrderPayloadBuilder,
+    OrderPayloadExecutor,
+    PositionProvider,
+)
 from gpt_trader.features.brokerages.core.interfaces import (
     Order,
     OrderSide,
@@ -21,40 +29,28 @@ from gpt_trader.utilities.logging_patterns import get_logger
 logger = get_logger(__name__, component="coinbase_orders")
 
 
-class OrderRestMixin:
-    """Mixin for order management operations.
+class OrderService:
+    """Handles order management operations.
 
-    This mixin is designed to be used with CoinbaseRestServiceBase which provides:
-    - client: CoinbaseClient
-    - _build_order_payload: method
-    - _execute_order_payload: method
+    Dependencies:
+        client: CoinbaseClient for API calls
+        payload_builder: Builds order payloads (implements OrderPayloadBuilder)
+        payload_executor: Executes order payloads (implements OrderPayloadExecutor)
+        position_provider: Lists positions for close_position validation
     """
 
-    if TYPE_CHECKING:
-        # Type hints for attributes provided by the base class
-        client: Any
-
-        def _build_order_payload(
-            self,
-            symbol: str,
-            side: OrderSide | str,
-            order_type: OrderType | str,
-            quantity: Decimal,
-            price: Decimal | None = None,
-            stop_price: Decimal | None = None,
-            tif: TimeInForce | str = TimeInForce.GTC,
-            client_id: str | None = None,
-            reduce_only: bool = False,
-            leverage: int | None = None,
-            post_only: bool = False,
-            include_client_id: bool = True,
-        ) -> dict[str, Any]: ...
-
-        def _execute_order_payload(
-            self, symbol: str, payload: dict[str, Any], client_id: str | None = None
-        ) -> Order: ...
-
-        def list_positions(self) -> list[Any]: ...
+    def __init__(
+        self,
+        *,
+        client: CoinbaseClient,
+        payload_builder: OrderPayloadBuilder,
+        payload_executor: OrderPayloadExecutor,
+        position_provider: PositionProvider,
+    ) -> None:
+        self._client = client
+        self._payload_builder = payload_builder
+        self._payload_executor = payload_executor
+        self._position_provider = position_provider
 
     def place_order(
         self,
@@ -71,7 +67,7 @@ class OrderRestMixin:
         post_only: bool = False,
     ) -> Order:
         """Place a new order."""
-        payload = self._build_order_payload(
+        payload = self._payload_builder.build_order_payload(
             symbol=symbol,
             side=side,
             order_type=order_type,
@@ -84,12 +80,12 @@ class OrderRestMixin:
             leverage=leverage,
             post_only=post_only,
         )
-        return self._execute_order_payload(symbol, payload, client_id)
+        return self._payload_executor.execute_order_payload(symbol, payload, client_id)
 
     def cancel_order(self, order_id: str) -> bool:
         """Cancel an existing order."""
         try:
-            response = self.client.cancel_orders(order_ids=[order_id])
+            response = self._client.cancel_orders(order_ids=[order_id])
             results = response.get("results", [])
             for res in results:
                 if res.get("order_id") == order_id:
@@ -126,7 +122,7 @@ class OrderRestMixin:
                 if cursor:
                     kwargs["cursor"] = cursor
 
-                response = self.client.list_orders(**kwargs)
+                response = self._client.list_orders(**kwargs)
 
                 page_orders = response.get("orders", [])
                 for item in page_orders:
@@ -150,7 +146,7 @@ class OrderRestMixin:
     def get_order(self, order_id: str) -> Order | None:
         """Get details of a single order."""
         try:
-            response = self.client.get_order_historical(order_id)
+            response = self._client.get_order_historical(order_id)
             order_data = response.get("order")
             if order_data:
                 return to_order(order_data)
@@ -186,7 +182,7 @@ class OrderRestMixin:
                 if cursor:
                     kwargs["cursor"] = cursor
 
-                response = self.client.list_fills(**kwargs)
+                response = self._client.list_fills(**kwargs)
 
                 page_fills = response.get("fills", [])
                 fills.extend(page_fills)
@@ -215,12 +211,12 @@ class OrderRestMixin:
     ) -> Order:
         """Close position for a symbol."""
         has_pos = False
-        if hasattr(self, "list_positions"):
-            pos_list = self.list_positions()
-            for p in pos_list:
-                if p.symbol == symbol and p.quantity > 0:
-                    has_pos = True
-                    break
+        # Use injected position_provider instead of implicit self.list_positions()
+        pos_list = self._position_provider.list_positions()
+        for p in pos_list:
+            if p.symbol == symbol and p.quantity > 0:
+                has_pos = True
+                break
 
         if not has_pos:
             raise ValidationError(f"No open position for {symbol}")
@@ -230,7 +226,7 @@ class OrderRestMixin:
             if client_order_id:
                 payload["client_order_id"] = client_order_id
 
-            response = self.client.close_position(payload)
+            response = self._client.close_position(payload)
             return to_order(response.get("order", {}))
         except Exception as e:
             if fallback:

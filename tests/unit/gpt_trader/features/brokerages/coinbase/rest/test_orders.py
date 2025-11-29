@@ -1,4 +1,4 @@
-"""Tests for coinbase/rest/orders.py - OrderRestMixin."""
+"""Tests for coinbase/rest/order_service.py - OrderService."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from gpt_trader.errors import ValidationError
-from gpt_trader.features.brokerages.coinbase.rest.orders import OrderRestMixin
+from gpt_trader.features.brokerages.coinbase.rest.order_service import OrderService
 from gpt_trader.features.brokerages.core.interfaces import (
     Order,
     OrderSide,
@@ -17,73 +17,6 @@ from gpt_trader.features.brokerages.core.interfaces import (
     OrderType,
     TimeInForce,
 )
-
-# ============================================================
-# Test helper class that combines mixin with required base methods
-# ============================================================
-
-
-class MockOrderService(OrderRestMixin):
-    """Concrete class that uses OrderRestMixin for testing."""
-
-    def __init__(self, client: MagicMock) -> None:
-        self.client = client
-        self._build_payload_calls: list[dict] = []
-        self._execute_payload_calls: list[dict] = []
-
-    def _build_order_payload(
-        self,
-        symbol: str,
-        side: OrderSide | str,
-        order_type: OrderType | str,
-        quantity: Decimal,
-        price: Decimal | None = None,
-        stop_price: Decimal | None = None,
-        tif: TimeInForce | str = TimeInForce.GTC,
-        client_id: str | None = None,
-        reduce_only: bool = False,
-        leverage: int | None = None,
-        post_only: bool = False,
-        include_client_id: bool = True,
-    ) -> dict:
-        """Track calls and return a mock payload."""
-        payload = {
-            "product_id": symbol,
-            "side": side.value if hasattr(side, "value") else side,
-            "order_type": order_type.value if hasattr(order_type, "value") else order_type,
-            "quantity": str(quantity),
-        }
-        if price is not None:
-            payload["price"] = str(price)
-        if client_id:
-            payload["client_order_id"] = client_id
-        self._build_payload_calls.append(payload)
-        return payload
-
-    def _execute_order_payload(
-        self, symbol: str, payload: dict, client_id: str | None = None
-    ) -> Order:
-        """Track calls and return a mock order."""
-        self._execute_payload_calls.append({"symbol": symbol, "payload": payload})
-        return Order(
-            id="order-123",
-            client_id=client_id or "generated-id",
-            symbol=symbol,
-            side=OrderSide.BUY,
-            type=OrderType.LIMIT,
-            quantity=Decimal("1.0"),
-            price=Decimal("50000"),
-            stop_price=None,
-            tif=TimeInForce.GTC,
-            status=OrderStatus.PENDING,
-            submitted_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
-        )
-
-    def list_positions(self) -> list:
-        """Mock list_positions for close_position tests."""
-        return getattr(self, "_mock_positions", [])
-
 
 # ============================================================
 # Fixtures
@@ -98,9 +31,42 @@ def mock_client() -> MagicMock:
 
 
 @pytest.fixture
-def order_service(mock_client: MagicMock) -> MockOrderService:
-    """Create a MockOrderService instance."""
-    return MockOrderService(client=mock_client)
+def mock_payload_builder() -> MagicMock:
+    """Create a mock OrderPayloadBuilder."""
+    builder = MagicMock()
+    return builder
+
+
+@pytest.fixture
+def mock_payload_executor() -> MagicMock:
+    """Create a mock OrderPayloadExecutor."""
+    executor = MagicMock()
+    return executor
+
+
+@pytest.fixture
+def mock_position_provider() -> MagicMock:
+    """Create a mock PositionProvider."""
+    provider = MagicMock()
+    # Default list_positions to empty list
+    provider.list_positions.return_value = []
+    return provider
+
+
+@pytest.fixture
+def order_service(
+    mock_client: MagicMock,
+    mock_payload_builder: MagicMock,
+    mock_payload_executor: MagicMock,
+    mock_position_provider: MagicMock,
+) -> OrderService:
+    """Create an OrderService instance with mocked dependencies."""
+    return OrderService(
+        client=mock_client,
+        payload_builder=mock_payload_builder,
+        payload_executor=mock_payload_executor,
+        position_provider=mock_position_provider,
+    )
 
 
 @pytest.fixture
@@ -130,9 +96,10 @@ class TestPlaceOrder:
 
     def test_place_order_builds_payload(
         self,
-        order_service: MockOrderService,
+        order_service: OrderService,
+        mock_payload_builder: MagicMock,
     ) -> None:
-        """Test that place_order builds correct payload."""
+        """Test that place_order delegates to payload builder."""
         order_service.place_order(
             symbol="BTC-USD",
             side=OrderSide.BUY,
@@ -141,18 +108,38 @@ class TestPlaceOrder:
             price=Decimal("50000"),
         )
 
-        assert len(order_service._build_payload_calls) == 1
-        payload = order_service._build_payload_calls[0]
-        assert payload["product_id"] == "BTC-USD"
-        assert payload["side"] == "BUY"
-        assert payload["quantity"] == "1.5"
-        assert payload["price"] == "50000"
+        mock_payload_builder.build_order_payload.assert_called_once()
+        call_kwargs = mock_payload_builder.build_order_payload.call_args.kwargs
+        assert call_kwargs["symbol"] == "BTC-USD"
+        assert call_kwargs["side"] == OrderSide.BUY
+        assert call_kwargs["quantity"] == Decimal("1.5")
+        assert call_kwargs["price"] == Decimal("50000")
 
     def test_place_order_executes_payload(
         self,
-        order_service: MockOrderService,
+        order_service: OrderService,
+        mock_payload_builder: MagicMock,
+        mock_payload_executor: MagicMock,
     ) -> None:
         """Test that place_order executes the built payload."""
+        mock_payload = {"product_id": "ETH-USD"}
+        mock_payload_builder.build_order_payload.return_value = mock_payload
+
+        mock_order = Order(
+            id="order-123",
+            symbol="ETH-USD",
+            side=OrderSide.SELL,
+            type=OrderType.MARKET,
+            quantity=Decimal("2.0"),
+            price=None,
+            stop_price=None,
+            tif=TimeInForce.GTC,
+            status=OrderStatus.PENDING,
+            submitted_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
+        )
+        mock_payload_executor.execute_order_payload.return_value = mock_order
+
         result = order_service.place_order(
             symbol="ETH-USD",
             side=OrderSide.SELL,
@@ -160,13 +147,15 @@ class TestPlaceOrder:
             quantity=Decimal("2.0"),
         )
 
-        assert len(order_service._execute_payload_calls) == 1
-        assert order_service._execute_payload_calls[0]["symbol"] == "ETH-USD"
-        assert isinstance(result, Order)
+        mock_payload_executor.execute_order_payload.assert_called_once_with(
+            "ETH-USD", mock_payload, None
+        )
+        assert result == mock_order
 
     def test_place_order_passes_all_parameters(
         self,
-        order_service: MockOrderService,
+        order_service: OrderService,
+        mock_payload_builder: MagicMock,
     ) -> None:
         """Test that all optional parameters are passed correctly."""
         order_service.place_order(
@@ -183,15 +172,36 @@ class TestPlaceOrder:
             post_only=True,
         )
 
-        assert len(order_service._build_payload_calls) == 1
-        payload = order_service._build_payload_calls[0]
-        assert payload["client_order_id"] == "my-order-123"
+        mock_payload_builder.build_order_payload.assert_called_once()
+        call_kwargs = mock_payload_builder.build_order_payload.call_args.kwargs
+        assert call_kwargs["client_id"] == "my-order-123"
+        assert call_kwargs["stop_price"] == Decimal("49000")
+        assert call_kwargs["tif"] == TimeInForce.IOC
+        assert call_kwargs["reduce_only"] is True
+        assert call_kwargs["leverage"] == 10
+        assert call_kwargs["post_only"] is True
 
     def test_place_order_returns_order(
         self,
-        order_service: MockOrderService,
+        order_service: OrderService,
+        mock_payload_executor: MagicMock,
     ) -> None:
         """Test that place_order returns an Order object."""
+        mock_order = Order(
+            id="order-123",
+            symbol="BTC-USD",
+            side=OrderSide.BUY,
+            type=OrderType.LIMIT,
+            quantity=Decimal("1.0"),
+            price=Decimal("50000"),
+            stop_price=None,
+            tif=TimeInForce.GTC,
+            status=OrderStatus.PENDING,
+            submitted_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
+        )
+        mock_payload_executor.execute_order_payload.return_value = mock_order
+
         result = order_service.place_order(
             symbol="BTC-USD",
             side=OrderSide.BUY,
@@ -214,7 +224,7 @@ class TestCancelOrder:
 
     def test_cancel_order_success(
         self,
-        order_service: MockOrderService,
+        order_service: OrderService,
         mock_client: MagicMock,
     ) -> None:
         """Test successful order cancellation."""
@@ -229,7 +239,7 @@ class TestCancelOrder:
 
     def test_cancel_order_failure(
         self,
-        order_service: MockOrderService,
+        order_service: OrderService,
         mock_client: MagicMock,
     ) -> None:
         """Test failed order cancellation."""
@@ -243,7 +253,7 @@ class TestCancelOrder:
 
     def test_cancel_order_not_found(
         self,
-        order_service: MockOrderService,
+        order_service: OrderService,
         mock_client: MagicMock,
     ) -> None:
         """Test cancellation when order not in results."""
@@ -257,7 +267,7 @@ class TestCancelOrder:
 
     def test_cancel_order_empty_results(
         self,
-        order_service: MockOrderService,
+        order_service: OrderService,
         mock_client: MagicMock,
     ) -> None:
         """Test cancellation with empty results."""
@@ -269,7 +279,7 @@ class TestCancelOrder:
 
     def test_cancel_order_handles_exception(
         self,
-        order_service: MockOrderService,
+        order_service: OrderService,
         mock_client: MagicMock,
     ) -> None:
         """Test that exceptions are handled gracefully."""
@@ -290,7 +300,7 @@ class TestListOrders:
 
     def test_list_orders_returns_orders(
         self,
-        order_service: MockOrderService,
+        order_service: OrderService,
         mock_client: MagicMock,
         sample_order_response: dict,
     ) -> None:
@@ -307,7 +317,7 @@ class TestListOrders:
 
     def test_list_orders_with_product_filter(
         self,
-        order_service: MockOrderService,
+        order_service: OrderService,
         mock_client: MagicMock,
     ) -> None:
         """Test filtering by product_id."""
@@ -320,7 +330,7 @@ class TestListOrders:
 
     def test_list_orders_with_status_filter(
         self,
-        order_service: MockOrderService,
+        order_service: OrderService,
         mock_client: MagicMock,
     ) -> None:
         """Test filtering by status."""
@@ -333,7 +343,7 @@ class TestListOrders:
 
     def test_list_orders_pagination(
         self,
-        order_service: MockOrderService,
+        order_service: OrderService,
         mock_client: MagicMock,
         sample_order_response: dict,
     ) -> None:
@@ -357,7 +367,7 @@ class TestListOrders:
 
     def test_list_orders_handles_exception(
         self,
-        order_service: MockOrderService,
+        order_service: OrderService,
         mock_client: MagicMock,
     ) -> None:
         """Test that exceptions stop pagination and return partial results."""
@@ -369,7 +379,7 @@ class TestListOrders:
 
     def test_list_orders_respects_limit(
         self,
-        order_service: MockOrderService,
+        order_service: OrderService,
         mock_client: MagicMock,
     ) -> None:
         """Test that limit is passed to API."""
@@ -391,7 +401,7 @@ class TestGetOrder:
 
     def test_get_order_returns_order(
         self,
-        order_service: MockOrderService,
+        order_service: OrderService,
         mock_client: MagicMock,
         sample_order_response: dict,
     ) -> None:
@@ -405,7 +415,7 @@ class TestGetOrder:
 
     def test_get_order_not_found(
         self,
-        order_service: MockOrderService,
+        order_service: OrderService,
         mock_client: MagicMock,
     ) -> None:
         """Test that None is returned when order not found."""
@@ -417,7 +427,7 @@ class TestGetOrder:
 
     def test_get_order_handles_exception(
         self,
-        order_service: MockOrderService,
+        order_service: OrderService,
         mock_client: MagicMock,
     ) -> None:
         """Test that exceptions return None."""
@@ -438,7 +448,7 @@ class TestListFills:
 
     def test_list_fills_returns_fills(
         self,
-        order_service: MockOrderService,
+        order_service: OrderService,
         mock_client: MagicMock,
     ) -> None:
         """Test that list_fills returns fill data."""
@@ -458,7 +468,7 @@ class TestListFills:
 
     def test_list_fills_with_product_filter(
         self,
-        order_service: MockOrderService,
+        order_service: OrderService,
         mock_client: MagicMock,
     ) -> None:
         """Test filtering by product_id."""
@@ -471,7 +481,7 @@ class TestListFills:
 
     def test_list_fills_with_order_filter(
         self,
-        order_service: MockOrderService,
+        order_service: OrderService,
         mock_client: MagicMock,
     ) -> None:
         """Test filtering by order_id."""
@@ -484,7 +494,7 @@ class TestListFills:
 
     def test_list_fills_pagination(
         self,
-        order_service: MockOrderService,
+        order_service: OrderService,
         mock_client: MagicMock,
     ) -> None:
         """Test that pagination is handled correctly."""
@@ -500,7 +510,7 @@ class TestListFills:
 
     def test_list_fills_handles_exception(
         self,
-        order_service: MockOrderService,
+        order_service: OrderService,
         mock_client: MagicMock,
     ) -> None:
         """Test that exceptions stop pagination."""
@@ -521,8 +531,9 @@ class TestClosePosition:
 
     def test_close_position_success(
         self,
-        order_service: MockOrderService,
+        order_service: OrderService,
         mock_client: MagicMock,
+        mock_position_provider: MagicMock,
         sample_order_response: dict,
     ) -> None:
         """Test successful position close."""
@@ -530,7 +541,7 @@ class TestClosePosition:
         mock_position = MagicMock()
         mock_position.symbol = "BTC-PERP"
         mock_position.quantity = Decimal("1.0")
-        order_service._mock_positions = [mock_position]
+        mock_position_provider.list_positions.return_value = [mock_position]
 
         mock_client.close_position.return_value = {"order": sample_order_response}
 
@@ -541,38 +552,41 @@ class TestClosePosition:
 
     def test_close_position_no_position_raises(
         self,
-        order_service: MockOrderService,
+        order_service: OrderService,
+        mock_position_provider: MagicMock,
     ) -> None:
         """Test that ValidationError is raised when no position exists."""
-        order_service._mock_positions = []
+        mock_position_provider.list_positions.return_value = []
 
         with pytest.raises(ValidationError, match="No open position"):
             order_service.close_position("BTC-PERP")
 
     def test_close_position_zero_quantity_raises(
         self,
-        order_service: MockOrderService,
+        order_service: OrderService,
+        mock_position_provider: MagicMock,
     ) -> None:
         """Test that zero quantity position is not considered open."""
         mock_position = MagicMock()
         mock_position.symbol = "BTC-PERP"
         mock_position.quantity = Decimal("0")
-        order_service._mock_positions = [mock_position]
+        mock_position_provider.list_positions.return_value = [mock_position]
 
         with pytest.raises(ValidationError, match="No open position"):
             order_service.close_position("BTC-PERP")
 
     def test_close_position_with_client_order_id(
         self,
-        order_service: MockOrderService,
+        order_service: OrderService,
         mock_client: MagicMock,
+        mock_position_provider: MagicMock,
         sample_order_response: dict,
     ) -> None:
         """Test passing client_order_id."""
         mock_position = MagicMock()
         mock_position.symbol = "ETH-PERP"
         mock_position.quantity = Decimal("2.0")
-        order_service._mock_positions = [mock_position]
+        mock_position_provider.list_positions.return_value = [mock_position]
 
         mock_client.close_position.return_value = {"order": sample_order_response}
 
@@ -583,14 +597,15 @@ class TestClosePosition:
 
     def test_close_position_fallback_on_exception(
         self,
-        order_service: MockOrderService,
+        order_service: OrderService,
         mock_client: MagicMock,
+        mock_position_provider: MagicMock,
     ) -> None:
         """Test that fallback is called on exception."""
         mock_position = MagicMock()
         mock_position.symbol = "BTC-PERP"
         mock_position.quantity = Decimal("1.0")
-        order_service._mock_positions = [mock_position]
+        mock_position_provider.list_positions.return_value = [mock_position]
 
         mock_client.close_position.side_effect = RuntimeError("API error")
 
@@ -617,14 +632,15 @@ class TestClosePosition:
 
     def test_close_position_no_fallback_raises(
         self,
-        order_service: MockOrderService,
+        order_service: OrderService,
         mock_client: MagicMock,
+        mock_position_provider: MagicMock,
     ) -> None:
         """Test that exception is raised when no fallback provided."""
         mock_position = MagicMock()
         mock_position.symbol = "BTC-PERP"
         mock_position.quantity = Decimal("1.0")
-        order_service._mock_positions = [mock_position]
+        mock_position_provider.list_positions.return_value = [mock_position]
 
         mock_client.close_position.side_effect = RuntimeError("API error")
 
@@ -633,8 +649,9 @@ class TestClosePosition:
 
     def test_close_position_finds_correct_symbol(
         self,
-        order_service: MockOrderService,
+        order_service: OrderService,
         mock_client: MagicMock,
+        mock_position_provider: MagicMock,
         sample_order_response: dict,
     ) -> None:
         """Test that correct symbol position is found among multiple."""
@@ -650,7 +667,7 @@ class TestClosePosition:
         pos3.symbol = "SOL-PERP"
         pos3.quantity = Decimal("10.0")
 
-        order_service._mock_positions = [pos1, pos2, pos3]
+        mock_position_provider.list_positions.return_value = [pos1, pos2, pos3]
 
         mock_client.close_position.return_value = {"order": sample_order_response}
 
@@ -665,12 +682,12 @@ class TestClosePosition:
 # ============================================================
 
 
-class TestOrderRestMixinEdgeCases:
+class TestOrderServiceEdgeCases:
     """Tests for edge cases."""
 
     def test_list_orders_empty_response(
         self,
-        order_service: MockOrderService,
+        order_service: OrderService,
         mock_client: MagicMock,
     ) -> None:
         """Test handling of empty orders response."""
@@ -682,7 +699,7 @@ class TestOrderRestMixinEdgeCases:
 
     def test_list_fills_empty_response(
         self,
-        order_service: MockOrderService,
+        order_service: OrderService,
         mock_client: MagicMock,
     ) -> None:
         """Test handling of empty fills response."""
@@ -694,7 +711,7 @@ class TestOrderRestMixinEdgeCases:
 
     def test_cancel_order_missing_results_key(
         self,
-        order_service: MockOrderService,
+        order_service: OrderService,
         mock_client: MagicMock,
     ) -> None:
         """Test handling of response without results key."""
@@ -706,10 +723,27 @@ class TestOrderRestMixinEdgeCases:
 
     def test_place_order_market_without_price(
         self,
-        order_service: MockOrderService,
+        order_service: OrderService,
+        mock_payload_builder: MagicMock,
+        mock_payload_executor: MagicMock,
     ) -> None:
-        """Test placing market order without price."""
-        result = order_service.place_order(
+        """Test placing market order without price delegates correctly."""
+        # Setup execute mock to return something
+        mock_payload_executor.execute_order_payload.return_value = Order(
+            id="order-123",
+            symbol="BTC-USD",
+            side=OrderSide.BUY,
+            type=OrderType.MARKET,
+            quantity=Decimal("1.0"),
+            price=None,
+            stop_price=None,
+            tif=TimeInForce.GTC,
+            status=OrderStatus.PENDING,
+            submitted_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
+        )
+
+        order_service.place_order(
             symbol="BTC-USD",
             side=OrderSide.BUY,
             order_type=OrderType.MARKET,
@@ -717,6 +751,6 @@ class TestOrderRestMixinEdgeCases:
             price=None,
         )
 
-        assert isinstance(result, Order)
-        payload = order_service._build_payload_calls[0]
-        assert "price" not in payload
+        call_kwargs = mock_payload_builder.build_order_payload.call_args.kwargs
+        assert "price" in call_kwargs
+        assert call_kwargs["price"] is None

@@ -1,34 +1,35 @@
-"""
-PnL management mixin for Coinbase REST service.
+"""PnL tracking service for Coinbase REST API.
+
+This service handles PnL calculations with explicit dependencies
+injected via constructor, replacing the PnLRestMixin.
 """
 
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any, Literal
+from typing import Any, Literal
 
+from gpt_trader.features.brokerages.coinbase.market_data_service import MarketDataService
+from gpt_trader.features.brokerages.coinbase.rest.position_state_store import PositionStateStore
 from gpt_trader.features.brokerages.coinbase.utilities import PositionState
 
-if TYPE_CHECKING:
-    from gpt_trader.features.brokerages.coinbase.market_data_service import MarketDataService
 
+class PnLService:
+    """Handles PnL tracking and calculation.
 
-class PnLRestMixin:
-    """Mixin for PnL tracking and calculation.
-
-    This mixin is designed to be used with CoinbaseRestServiceBase which provides:
-    - positions: dict[str, PositionState]
-    - _positions: dict[str, PositionState]
-    - market_data: MarketDataService
+    Dependencies:
+        position_store: Centralized position state storage
+        market_data: MarketDataService for mark prices
     """
 
-    if TYPE_CHECKING:
-        # Type hints for attributes provided by the base class
-        _positions: dict[str, PositionState]
-        market_data: MarketDataService
-
-        @property
-        def positions(self) -> dict[str, PositionState]: ...
+    def __init__(
+        self,
+        *,
+        position_store: PositionStateStore,
+        market_data: MarketDataService,
+    ) -> None:
+        self._position_store = position_store
+        self._market_data = market_data
 
     def process_fill_for_pnl(self, fill: dict[str, Any]) -> None:
         """Update position state and PnL based on a fill."""
@@ -48,12 +49,20 @@ class PnLRestMixin:
         fill_pos_side: Literal["long", "short"] = "long" if side_norm == "buy" else "short"
 
         product_id_str = str(product_id)
-        if product_id_str not in self.positions:
-            self._positions[product_id_str] = PositionState(
-                symbol=product_id_str, side=fill_pos_side, quantity=size_dec, entry_price=price_dec
+        if not self._position_store.contains(product_id_str):
+            self._position_store.set(
+                product_id_str,
+                PositionState(
+                    symbol=product_id_str,
+                    side=fill_pos_side,
+                    quantity=size_dec,
+                    entry_price=price_dec,
+                ),
             )
         else:
-            position = self.positions[product_id_str]
+            position = self._position_store.get(product_id_str)
+            if position is None:
+                return  # Shouldn't happen after contains() check, but type safety
 
             if position.side == fill_pos_side:
                 # Increasing position
@@ -80,7 +89,8 @@ class PnLRestMixin:
 
     def get_position_pnl(self, symbol: str) -> dict[str, Any]:
         """Get PnL metrics for a specific position."""
-        if symbol not in self.positions:
+        position = self._position_store.get(symbol)
+        if position is None:
             return {
                 "symbol": symbol,
                 "quantity": Decimal("0"),
@@ -88,8 +98,7 @@ class PnLRestMixin:
                 "realized_pnl": Decimal("0"),
             }
 
-        position = self.positions[symbol]
-        raw_mark = self.market_data.get_mark(symbol)
+        raw_mark = self._market_data.get_mark(symbol)
         mark_price = Decimal(str(raw_mark)) if raw_mark is not None else position.entry_price
 
         # Calc unrealized
@@ -113,7 +122,7 @@ class PnLRestMixin:
         total_rpnl = Decimal("0")
         position_details = []
 
-        for symbol in list(self.positions.keys()):
+        for symbol in self._position_store.symbols():
             pnl_data = self.get_position_pnl(symbol)
             total_upnl += pnl_data["unrealized_pnl"]
             total_rpnl += pnl_data["realized_pnl"]

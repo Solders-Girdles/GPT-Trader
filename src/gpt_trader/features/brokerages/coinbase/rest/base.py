@@ -1,11 +1,17 @@
 """
-Base class for Coinbase REST service.
+Core infrastructure for Coinbase REST service.
+
+This module provides CoinbaseRestServiceCore which implements the
+OrderPayloadBuilder and OrderPayloadExecutor protocols. It is used
+by the composed service classes and the CoinbaseRestService facade.
+
+Note: CoinbaseRestServiceBase is preserved as an alias for backward compatibility.
 """
 
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from gpt_trader.config.runtime_settings import RuntimeSettings
 from gpt_trader.errors import ValidationError
@@ -31,10 +37,19 @@ from gpt_trader.features.brokerages.core.interfaces import (
 from gpt_trader.persistence.event_store import EventStore
 from gpt_trader.utilities.logging_patterns import get_logger
 
+if TYPE_CHECKING:
+    from gpt_trader.features.brokerages.coinbase.rest.position_state_store import PositionStateStore
+
 logger = get_logger(__name__, component="coinbase_rest")
 
 
-class CoinbaseRestServiceBase:
+class CoinbaseRestServiceCore:
+    """Core infrastructure for Coinbase REST service.
+
+    Implements OrderPayloadBuilder and OrderPayloadExecutor protocols.
+    Used by the composed service classes and the CoinbaseRestService facade.
+    """
+
     def __init__(
         self,
         client: CoinbaseClient,
@@ -44,6 +59,7 @@ class CoinbaseRestServiceBase:
         market_data: MarketDataService,
         event_store: EventStore,
         settings: RuntimeSettings | None = None,
+        position_store: PositionStateStore | None = None,
     ):
         self.client = client
         self.endpoints = endpoints
@@ -53,14 +69,25 @@ class CoinbaseRestServiceBase:
         self._event_store = event_store
         self.settings = settings
 
-        self._positions: dict[str, PositionState] = {}
+        # Use injected position store or create internal dict for backward compat
+        if position_store is not None:
+            self._position_store = position_store
+            self._positions = position_store.all()  # Reference for backward compat
+        else:
+            # Legacy mode: create internal dict (for backward compatibility)
+            self._positions: dict[str, PositionState] = {}
+            self._position_store = None
+
         self._funding_calculator = FundingCalculator()
 
     @property
     def positions(self) -> dict[str, PositionState]:
+        """Get position states (backward compatible)."""
+        if self._position_store is not None:
+            return self._position_store.all()
         return self._positions
 
-    def _build_order_payload(
+    def build_order_payload(
         self,
         symbol: str,
         side: OrderSide | str,
@@ -75,6 +102,10 @@ class CoinbaseRestServiceBase:
         post_only: bool = False,
         include_client_id: bool = True,
     ) -> dict[str, Any]:
+        """Build an order payload for the Coinbase API.
+
+        Implements the OrderPayloadBuilder protocol.
+        """
         # Coerce enums
         if isinstance(side, str):
             try:
@@ -222,9 +253,13 @@ class CoinbaseRestServiceBase:
 
         return payload
 
-    def _execute_order_payload(
+    def execute_order_payload(
         self, symbol: str, payload: dict[str, Any], client_id: str | None = None
     ) -> Order:
+        """Execute an order payload against the Coinbase API.
+
+        Implements the OrderPayloadExecutor protocol.
+        """
         import os
 
         # Check for preview
@@ -281,15 +316,35 @@ class CoinbaseRestServiceBase:
             logger.error(f"Failed to find existing order: {e}")
             return None
 
+    # Backward compatibility aliases for private methods
+    def _build_order_payload(self, **kwargs: Any) -> dict[str, Any]:
+        """Legacy alias for build_order_payload (backward compatibility)."""
+        return self.build_order_payload(**kwargs)
+
+    def _execute_order_payload(
+        self, symbol: str, payload: dict[str, Any], client_id: str | None = None
+    ) -> Order:
+        """Legacy alias for execute_order_payload (backward compatibility)."""
+        return self.execute_order_payload(symbol, payload, client_id)
+
     def update_position_metrics(self, symbol: str) -> None:
-        if symbol not in self._positions:
+        """Update position metrics for a symbol."""
+        # Check position existence using position store or legacy dict
+        if self._position_store is not None:
+            if not self._position_store.contains(symbol):
+                return
+            position = self._position_store.get(symbol)
+        else:
+            if symbol not in self._positions:
+                return
+            position = self._positions[symbol]
+
+        if position is None:
             return
 
         mark_price = self.market_data.get_mark(symbol)
         if mark_price is None:
             return
-
-        position = self._positions[symbol]
 
         # Funding
         funding_rate, next_funding = self.product_catalog.get_funding(symbol)
@@ -324,3 +379,7 @@ class CoinbaseRestServiceBase:
                 "entry": str(position.entry_price),
             },
         )
+
+
+# Backward compatibility alias
+CoinbaseRestServiceBase = CoinbaseRestServiceCore

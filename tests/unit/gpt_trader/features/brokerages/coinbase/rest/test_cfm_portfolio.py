@@ -1,4 +1,4 @@
-"""Tests for CFM telemetry helpers in the Coinbase portfolio REST mixin."""
+"""Tests for CFM telemetry helpers in the Coinbase portfolio REST service."""
 
 from __future__ import annotations
 
@@ -7,15 +7,8 @@ from unittest.mock import Mock
 
 import pytest
 
-from gpt_trader.features.brokerages.coinbase.rest.portfolio import PortfolioRestMixin
+from gpt_trader.features.brokerages.coinbase.rest.portfolio_service import PortfolioService
 from gpt_trader.features.brokerages.core.interfaces import InvalidRequestError
-
-
-class DummyPortfolioService(PortfolioRestMixin):
-    def __init__(self, client, endpoints, event_store):
-        self.client = client
-        self.endpoints = endpoints
-        self._event_store = event_store
 
 
 @pytest.fixture()
@@ -24,7 +17,9 @@ def service():
     endpoints = Mock()
     event_store = Mock()
     event_store.append_metric = Mock()
-    svc = DummyPortfolioService(client, endpoints, event_store)  # naming: allow
+    svc = PortfolioService(  # naming: allow
+        client=client, endpoints=endpoints, event_store=event_store
+    )
     return svc, client, endpoints, event_store  # naming: allow
 
 

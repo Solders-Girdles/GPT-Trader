@@ -1,42 +1,53 @@
-"""
-Portfolio management mixin for Coinbase REST service.
+"""Portfolio management service for Coinbase REST API.
+
+This service handles balance and position management with explicit
+dependencies injected via constructor, replacing the PortfolioRestMixin.
+
+Implements the PositionProvider protocol for use by OrderService.
 """
 
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any, cast
+from typing import Any, cast
 
+from gpt_trader.features.brokerages.coinbase.client import CoinbaseClient
+from gpt_trader.features.brokerages.coinbase.endpoints import CoinbaseEndpoints
 from gpt_trader.features.brokerages.coinbase.models import to_position
 from gpt_trader.features.brokerages.core.interfaces import Balance, InvalidRequestError, Position
+from gpt_trader.persistence.event_store import EventStore
 from gpt_trader.utilities.logging_patterns import get_logger
 
 logger = get_logger(__name__, component="coinbase_portfolio")
 
-if TYPE_CHECKING:
-    pass
 
+class PortfolioService:
+    """Handles balance and position management.
 
-class PortfolioRestMixin:
-    """Mixin for portfolio management operations.
+    Implements PositionProvider protocol for use by OrderService.
 
-    This mixin is designed to be used with CoinbaseRestServiceBase which provides:
-    - client: CoinbaseClient
-    - endpoints: CoinbaseEndpoints
-    - _event_store: EventStore
+    Dependencies:
+        client: CoinbaseClient for API calls
+        endpoints: CoinbaseEndpoints for mode detection
+        event_store: EventStore for telemetry
     """
 
-    if TYPE_CHECKING:
-        # Type hints for attributes provided by the base class
-        client: Any
-        endpoints: Any
-        _event_store: Any
+    def __init__(
+        self,
+        *,
+        client: CoinbaseClient,
+        endpoints: CoinbaseEndpoints,
+        event_store: EventStore,
+    ) -> None:
+        self._client = client
+        self._endpoints = endpoints
+        self._event_store = event_store
 
     def list_balances(self) -> list[Balance]:
         """List all balances."""
         balances = []
         try:
-            response = self.client.get_accounts()
+            response = self._client.get_accounts()
             if isinstance(response, list):
                 accounts = response
             else:
@@ -96,11 +107,14 @@ class PortfolioRestMixin:
         return self.list_balances()
 
     def list_positions(self) -> list[Position]:
-        """List all open positions."""
+        """List all open positions.
+
+        This method satisfies the PositionProvider protocol.
+        """
         positions = []
         try:
-            if self.endpoints.supports_derivatives():
-                response = self.client.list_positions()
+            if self._endpoints.supports_derivatives():
+                response = self._client.list_positions()
                 raw_positions = response.get("positions", [])
                 for p in raw_positions:
                     positions.append(to_position(p))
@@ -116,8 +130,8 @@ class PortfolioRestMixin:
     def get_position(self, symbol: str) -> Position | None:
         """Get position for a symbol."""
         try:
-            if self.endpoints.supports_derivatives():
-                response = self.client.get_position(product_id=symbol)
+            if self._endpoints.supports_derivatives():
+                response = self._client.get_position(product_id=symbol)
                 return to_position(response)
         except Exception as exc:
             logger.error(
@@ -131,11 +145,11 @@ class PortfolioRestMixin:
 
     def intx_allocate(self, amount_dict: dict[str, Any]) -> dict[str, Any]:
         """Allocate funds to/from INTX portfolio."""
-        if self.endpoints.mode != "advanced":
+        if self._endpoints.mode != "advanced":
             raise InvalidRequestError("INTX allocation requires advanced mode")
 
         try:
-            response = self.client.intx_allocate(amount_dict)
+            response = self._client.intx_allocate(amount_dict)
 
             # Normalize decimals in response
             if "allocated_amount" in response:
@@ -154,11 +168,11 @@ class PortfolioRestMixin:
 
     def get_intx_balances(self, portfolio_id: str) -> list[dict[str, Any]]:
         """Get INTX portfolio balances."""
-        if self.endpoints.mode != "advanced":
+        if self._endpoints.mode != "advanced":
             return []  # Or raise, test expects empty if not advanced
 
         try:
-            response = self.client.get_intx_portfolio(portfolio_id)
+            response = self._client.get_intx_portfolio(portfolio_id)
             balances = response.get("balances", [])
             for b in balances:
                 if "amount" in b:
@@ -185,10 +199,10 @@ class PortfolioRestMixin:
 
     def get_intx_portfolio(self, portfolio_id: str) -> dict[str, Any]:
         """Get INTX portfolio details."""
-        if self.endpoints.mode != "advanced":
+        if self._endpoints.mode != "advanced":
             return {}
         try:
-            response = self.client.get_intx_portfolio(portfolio_id)
+            response = self._client.get_intx_portfolio(portfolio_id)
             if "portfolio_value" in response:
                 response["portfolio_value"] = Decimal(str(response["portfolio_value"]))
             return cast(dict[str, Any], response)
@@ -204,10 +218,10 @@ class PortfolioRestMixin:
 
     def list_intx_positions(self, portfolio_id: str) -> list[Position]:
         """List INTX positions."""
-        if self.endpoints.mode != "advanced":
+        if self._endpoints.mode != "advanced":
             return []
         try:
-            response = self.client.list_intx_positions(portfolio_id)
+            response = self._client.list_intx_positions(portfolio_id)
             positions = []
             for p in response.get("positions", []):
                 positions.append(to_position(p))
@@ -224,10 +238,10 @@ class PortfolioRestMixin:
 
     def get_intx_position(self, portfolio_id: str, symbol: str) -> Position | None:
         """Get a single INTX position."""
-        if self.endpoints.mode != "advanced":
+        if self._endpoints.mode != "advanced":
             return None
         try:
-            response = self.client.get_intx_position(portfolio_id, symbol)
+            response = self._client.get_intx_position(portfolio_id, symbol)
             return to_position(response)
         except Exception as exc:
             logger.error(
@@ -242,10 +256,10 @@ class PortfolioRestMixin:
 
     def get_intx_multi_asset_collateral(self) -> dict[str, Any]:
         """Get INTX multi-asset collateral details."""
-        if self.endpoints.mode != "advanced":
+        if self._endpoints.mode != "advanced":
             return {}
         try:
-            response = self.client.get_intx_multi_asset_collateral()
+            response = self._client.get_intx_multi_asset_collateral()
             if "total_usd_value" in response:
                 response["total_usd_value"] = Decimal(str(response["total_usd_value"]))
             self._event_store.append_metric(
@@ -263,10 +277,10 @@ class PortfolioRestMixin:
 
     def get_cfm_balance_summary(self) -> dict[str, Any]:
         """Get CFM balance summary."""
-        if not self.endpoints.supports_derivatives():
+        if not self._endpoints.supports_derivatives():
             return {}
 
-        response = self.client.cfm_balance_summary()
+        response = self._client.cfm_balance_summary()
         summary = response.get("balance_summary", {})
 
         # Convert numeric fields
@@ -284,10 +298,10 @@ class PortfolioRestMixin:
 
     def list_cfm_sweeps(self) -> list[dict[str, Any]]:
         """List CFM sweeps."""
-        if not self.endpoints.supports_derivatives():
+        if not self._endpoints.supports_derivatives():
             return []
 
-        response = self.client.cfm_sweeps()
+        response = self._client.cfm_sweeps()
         sweeps = response.get("sweeps", [])
 
         processed_sweeps = []
@@ -303,11 +317,11 @@ class PortfolioRestMixin:
 
     def get_cfm_sweeps_schedule(self) -> dict[str, Any]:
         """Get CFM sweeps schedule."""
-        if not self.endpoints.supports_derivatives():
+        if not self._endpoints.supports_derivatives():
             return {}
 
         try:
-            response = self.client.cfm_sweeps_schedule()
+            response = self._client.cfm_sweeps_schedule()
             return cast(dict[str, Any], response.get("schedule", {}))
         except Exception as exc:
             logger.error(
@@ -320,11 +334,11 @@ class PortfolioRestMixin:
 
     def get_cfm_margin_window(self) -> dict[str, Any]:
         """Get current CFM margin window."""
-        if not self.endpoints.supports_derivatives():
+        if not self._endpoints.supports_derivatives():
             return {}
 
         try:
-            response = self.client.cfm_intraday_current_margin_window()
+            response = self._client.cfm_intraday_current_margin_window()
             return cast(dict[str, Any], response)
         except Exception as exc:
             logger.error(
@@ -342,14 +356,14 @@ class PortfolioRestMixin:
         extra_payload: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Update CFM margin window."""
-        if not self.endpoints.supports_derivatives():
+        if not self._endpoints.supports_derivatives():
             raise InvalidRequestError("Derivatives not supported")
 
         payload = {"margin_window": margin_window}
         if effective_time:
             payload["effective_time"] = effective_time
 
-        response = self.client.cfm_intraday_margin_setting(payload)
+        response = self._client.cfm_intraday_margin_setting(payload)
 
         if "leverage" in response:
             response["leverage"] = Decimal(str(response["leverage"]))

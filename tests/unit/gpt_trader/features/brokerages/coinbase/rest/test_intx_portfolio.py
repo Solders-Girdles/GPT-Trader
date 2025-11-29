@@ -1,4 +1,4 @@
-"""Tests for INTX helpers in the Coinbase portfolio REST mixin."""
+"""Tests for INTX helpers in the Coinbase portfolio REST service."""
 
 from __future__ import annotations
 
@@ -7,15 +7,8 @@ from unittest.mock import Mock
 
 import pytest
 
-from gpt_trader.features.brokerages.coinbase.rest.portfolio import PortfolioRestMixin
+from gpt_trader.features.brokerages.coinbase.rest.portfolio_service import PortfolioService
 from gpt_trader.features.brokerages.core.interfaces import InvalidRequestError
-
-
-class DummyPortfolioService(PortfolioRestMixin):
-    def __init__(self, client, endpoints, event_store):
-        self.client = client
-        self.endpoints = endpoints
-        self._event_store = event_store
 
 
 @pytest.fixture()
@@ -25,9 +18,11 @@ def service():
     event_store = Mock()
     # test expects append_metric to be mocked
     event_store.append_metric = Mock()
-    # my code uses append for CFM telemetry (but now changed back to append_metric)
-    # The tests check append_metric.
-    return DummyPortfolioService(client, endpoints, event_store), client, endpoints, event_store
+
+    svc = PortfolioService(  # naming: allow
+        client=client, endpoints=endpoints, event_store=event_store
+    )
+    return svc, client, endpoints, event_store  # naming: allow
 
 
 def test_intx_allocate_normalises_and_emits_metric(service):

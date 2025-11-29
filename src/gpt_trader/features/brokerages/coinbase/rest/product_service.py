@@ -1,37 +1,48 @@
-"""
-Product and market data mixin for Coinbase REST service.
+"""Product and market data service for Coinbase REST API.
+
+This service handles product and market data operations with explicit
+dependencies injected via constructor, replacing the ProductRestMixin.
 """
 
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any, cast
+from typing import Any, cast
 
+from gpt_trader.features.brokerages.coinbase.client import CoinbaseClient
+from gpt_trader.features.brokerages.coinbase.market_data_service import MarketDataService
 from gpt_trader.features.brokerages.coinbase.models import to_candle, to_product, to_quote
+from gpt_trader.features.brokerages.coinbase.utilities import ProductCatalog
 from gpt_trader.features.brokerages.core.interfaces import Candle, Product, Quote
 from gpt_trader.utilities.logging_patterns import get_logger
 
 logger = get_logger(__name__, component="coinbase_product")
 
 
-class ProductRestMixin:
-    """Mixin for product and market data operations.
+class ProductService:
+    """Handles product and market data operations.
 
-    This mixin is designed to be used with CoinbaseRestServiceBase which provides:
-    - client: CoinbaseClient
-    - market_data: MarketDataService
+    Dependencies:
+        client: CoinbaseClient for API calls
+        product_catalog: ProductCatalog for caching and enrichment
+        market_data: MarketDataService for real-time prices
     """
 
-    if TYPE_CHECKING:
-        # Type hints for attributes provided by the base class
-        client: Any
-        product_catalog: Any
-        market_data: Any
+    def __init__(
+        self,
+        *,
+        client: CoinbaseClient,
+        product_catalog: ProductCatalog,
+        market_data: MarketDataService,
+    ) -> None:
+        self._client = client
+        self._product_catalog = product_catalog
+        self._market_data = market_data
 
     def list_products(self) -> list[Product]:
         """List all available products."""
         try:
-            response = self.client.get_products()
+            response = self._client.get_products()
             products = []
             # Handle both list and dict response shapes
             items = response if isinstance(response, list) else response.get("products", [])
@@ -48,17 +59,17 @@ class ProductRestMixin:
         """Get details of a single product."""
         try:
             # Try catalog first for enrichment
-            if hasattr(self, "product_catalog") and self.product_catalog:
+            if self._product_catalog:
                 try:
                     # Assuming catalog has a get method that takes client and symbol
                     # based on test_funding_enrichment_uses_product_catalog
-                    product = self.product_catalog.get(self.client, product_id)
+                    product = self._product_catalog.get(self._client, product_id)
 
                     # Enrich with funding if available
-                    if hasattr(self.product_catalog, "get_funding"):
+                    if hasattr(self._product_catalog, "get_funding"):
                         try:
-                            funding_rate, next_funding = self.product_catalog.get_funding(
-                                self.client, product_id
+                            funding_rate, next_funding = self._product_catalog.get_funding(
+                                self._client, product_id
                             )
                             product.funding_rate = funding_rate
                             product.next_funding_time = next_funding
@@ -66,10 +77,10 @@ class ProductRestMixin:
                             pass
                     return cast(Product, product)
                 except Exception as e:
-                    logger.debug("ProductRestMixin catalog get failed: %s", e)
+                    logger.debug("ProductService catalog get failed: %s", e)
                     pass
 
-            p = self.client.get_product(product_id)
+            p = self._client.get_product(product_id)
             return to_product(p)
         except Exception:
             return None
@@ -78,7 +89,7 @@ class ProductRestMixin:
         """Get current quote (bid/ask/last) for a symbol via REST."""
         try:
             # This might need a specific endpoint or ticker
-            ticker = self.client.get_product_ticker(symbol)
+            ticker = self._client.get_product_ticker(symbol)
             return to_quote(ticker)
         except Exception:
             return None
@@ -86,7 +97,7 @@ class ProductRestMixin:
     def get_candles(self, symbol: str, **kwargs: Any) -> list[Candle]:
         """Get historical OHLCV candles for a symbol."""
         try:
-            response = self.client.get_candles(symbol, **kwargs)
+            response = self._client.get_candles(symbol, **kwargs)
             candles = []
             items = response.get("candles", [])
             for c in items:
@@ -125,7 +136,7 @@ class ProductRestMixin:
         Returns raw ticker dict from the Coinbase API.
         """
         try:
-            result: dict[str, Any] = self.client.get_ticker(product_id)
+            result: dict[str, Any] = self._client.get_ticker(product_id)
             return result
         except Exception:
             return {}
@@ -136,7 +147,7 @@ class ProductRestMixin:
         Uses market data service for real-time mark price.
         """
         try:
-            mark = self.market_data.get_mark(symbol)
+            mark = self._market_data.get_mark(symbol)
             return Decimal(str(mark)) if mark is not None else None
         except Exception:
             return None

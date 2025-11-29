@@ -6,17 +6,14 @@ from pprint import pprint
 
 from gpt_trader.app.container import create_application_container
 from gpt_trader.orchestration.configuration import BotConfig
-from gpt_trader.config.runtime_settings import RuntimeSettings, load_runtime_settings
 
-# Placeholder config for bootstrapping
-config = BotConfig(
-    symbols=[], dry_run=True  # No symbols needed for listing products  # No actual trading
-)
+# Create config from env to pick up API credentials if they are in env
+config = BotConfig.from_env()
+# Override to ensure we don't accidentally trade
+config.dry_run = True
+config.symbols = []
 
-# Manually load runtime settings to get env vars
-settings = load_runtime_settings()
-
-container = create_application_container(config, settings=settings)
+container = create_application_container(config)
 
 try:
     # Access the broker client

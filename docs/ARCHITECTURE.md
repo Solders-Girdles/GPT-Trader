@@ -14,7 +14,8 @@ While this document describes the **target architecture**, you will encounter "z
 
 ---
 status: transition
-last-updated: 2025-11-25
+last-updated: 2025-11-29
+roadmap: See PROJECT_ROADMAP.md for implementation phases
 ---
 
 ## Current State

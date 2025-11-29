@@ -49,10 +49,15 @@ class ProductService:
             for p in items:
                 try:
                     products.append(to_product(p))
-                except Exception:
+                except (KeyError, ValueError, TypeError) as e:
+                    logger.debug("Skipping product due to parse error: %s", e)
                     continue
             return products
-        except Exception:
+        except (ConnectionError, TimeoutError) as e:
+            logger.warning("Network error listing products: %s", e)
+            return []
+        except Exception as e:
+            logger.error("Unexpected error listing products: %s", e, exc_info=True)
             return []
 
     def get_product(self, product_id: str) -> Product | None:
@@ -73,16 +78,22 @@ class ProductService:
                             )
                             product.funding_rate = funding_rate
                             product.next_funding_time = next_funding
-                        except Exception:
-                            pass
+                        except (KeyError, ValueError, AttributeError) as e:
+                            logger.debug("Funding enrichment failed for %s: %s", product_id, e)
                     return cast(Product, product)
-                except Exception as e:
+                except (KeyError, ValueError) as e:
                     logger.debug("ProductService catalog get failed: %s", e)
-                    pass
 
             p = self._client.get_product(product_id)
             return to_product(p)
-        except Exception:
+        except (ConnectionError, TimeoutError) as e:
+            logger.warning("Network error getting product %s: %s", product_id, e)
+            return None
+        except (KeyError, ValueError) as e:
+            logger.debug("Product %s not found or invalid: %s", product_id, e)
+            return None
+        except Exception as e:
+            logger.error("Unexpected error getting product %s: %s", product_id, e, exc_info=True)
             return None
 
     def get_rest_quote(self, symbol: str) -> Quote | None:
@@ -91,7 +102,14 @@ class ProductService:
             # This might need a specific endpoint or ticker
             ticker = self._client.get_product_ticker(symbol)
             return to_quote(ticker)
-        except Exception:
+        except (ConnectionError, TimeoutError) as e:
+            logger.warning("Network error getting quote for %s: %s", symbol, e)
+            return None
+        except (KeyError, ValueError) as e:
+            logger.debug("Quote parse error for %s: %s", symbol, e)
+            return None
+        except Exception as e:
+            logger.error("Unexpected error getting quote for %s: %s", symbol, e, exc_info=True)
             return None
 
     def get_candles(self, symbol: str, **kwargs: Any) -> list[Candle]:
@@ -103,10 +121,15 @@ class ProductService:
             for c in items:
                 try:
                     candles.append(to_candle(c))
-                except Exception:
+                except (KeyError, ValueError, TypeError) as e:
+                    logger.debug("Skipping candle due to parse error: %s", e)
                     continue
             return candles
-        except Exception:
+        except (ConnectionError, TimeoutError) as e:
+            logger.warning("Network error getting candles for %s: %s", symbol, e)
+            return []
+        except Exception as e:
+            logger.error("Unexpected error getting candles for %s: %s", symbol, e, exc_info=True)
             return []
 
     def get_perpetuals(self) -> list[Product]:
@@ -138,7 +161,11 @@ class ProductService:
         try:
             result: dict[str, Any] = self._client.get_ticker(product_id)
             return result
-        except Exception:
+        except (ConnectionError, TimeoutError) as e:
+            logger.warning("Network error getting ticker for %s: %s", product_id, e)
+            return {}
+        except Exception as e:
+            logger.error("Unexpected error getting ticker for %s: %s", product_id, e, exc_info=True)
             return {}
 
     def get_mark_price(self, symbol: str) -> Decimal | None:
@@ -149,5 +176,9 @@ class ProductService:
         try:
             mark = self._market_data.get_mark(symbol)
             return Decimal(str(mark)) if mark is not None else None
-        except Exception:
+        except (ValueError, TypeError) as e:
+            logger.debug("Mark price conversion error for %s: %s", symbol, e)
+            return None
+        except Exception as e:
+            logger.error("Unexpected error getting mark price for %s: %s", symbol, e, exc_info=True)
             return None

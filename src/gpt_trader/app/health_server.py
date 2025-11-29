@@ -203,8 +203,11 @@ class HealthServer:
             try:
                 writer.close()
                 await writer.wait_closed()
-            except Exception:
-                pass
+            except Exception as cleanup_error:
+                logger.debug(
+                    "Error closing writer during cleanup: %s",
+                    cleanup_error,
+                )
 
     async def _send_response(
         self,

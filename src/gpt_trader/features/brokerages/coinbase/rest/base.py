@@ -286,12 +286,21 @@ class CoinbaseRestServiceCore:
                 try:
                     response = self.client.place_order(payload)
                     return to_order(response)
-                except Exception:
-                    # If retry fails, raise original or new error
+                except Exception as retry_error:
+                    # If retry fails, log and raise original error
+                    logger.warning(
+                        "Retry after duplicate client_id failed: %s (original: %s)",
+                        retry_error,
+                        e,
+                    )
                     raise e
             raise
+        except (ConnectionError, TimeoutError) as e:
+            logger.error("Network error executing order: %s", e)
+            raise
         except Exception as e:
-            raise Exception(f"Unexpected error: {e}") from e
+            logger.error("Unexpected error executing order: %s", e, exc_info=True)
+            raise RuntimeError(f"Order execution failed: {e}") from e
 
     def _find_existing_order_by_client_id(self, symbol: str, client_id: str) -> Order | None:
         if not client_id:
@@ -310,8 +319,16 @@ class CoinbaseRestServiceCore:
 
             matches.sort(key=lambda x: x.created_at or datetime.min, reverse=True)
             return matches[0]
+        except (ConnectionError, TimeoutError) as e:
+            logger.warning("Network error finding existing order %s: %s", client_id, e)
+            return None
+        except (KeyError, ValueError) as e:
+            logger.debug("Order lookup failed for %s: %s", client_id, e)
+            return None
         except Exception as e:
-            logger.error(f"Failed to find existing order: {e}")
+            logger.error(
+                "Unexpected error finding existing order %s: %s", client_id, e, exc_info=True
+            )
             return None
 
     # Backward compatibility aliases for private methods

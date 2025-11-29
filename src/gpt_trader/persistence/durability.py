@@ -151,8 +151,8 @@ def atomic_write_file(path: Path, content: bytes | str, *, fsync: bool = True) -
             # Clean up temp file on error
             try:
                 os.unlink(temp_path)
-            except OSError:
-                pass
+            except OSError as cleanup_error:
+                logger.debug("Failed to cleanup temp file %s: %s", temp_path, cleanup_error)
             raise
 
     except Exception as e:

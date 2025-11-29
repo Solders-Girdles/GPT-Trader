@@ -28,6 +28,9 @@ build/
 logs/
 *.log
 
+# Runtime data directories
+coinbase_trader/
+
 # Local dev artifacts
 *.tmp
 *.swp

@@ -1,16 +1,23 @@
-"""Profile-specific configuration builders."""
+"""Profile-specific configuration builders.
+
+Provides YAML-first profile loading with hardcoded fallbacks.
+Profile YAML files are located in config/profiles/{profile_name}.yaml.
+
+The loading priority is:
+1. YAML file (if exists)
+2. Hardcoded defaults (fallback)
+3. CLI/environment overrides (applied after)
+"""
 
 from __future__ import annotations
 
-from collections.abc import Callable, Sequence
-from datetime import time
-from decimal import Decimal
+from collections.abc import Callable
 
-from gpt_trader.config import path_registry
 from gpt_trader.config.types import Profile
 from gpt_trader.utilities.logging_patterns import get_logger
 
-from .bot_config import BotConfig
+from .bot_config import BotConfig, BotRiskConfig
+from .profile_loader import ProfileLoader, ProfileSchema, load_profile
 
 ConfigFactory = Callable[..., BotConfig]
 
@@ -18,117 +25,87 @@ logger = get_logger(__name__, component="config_profiles")
 
 
 def build_profile_config(profile: Profile, create_config: ConfigFactory) -> BotConfig:
-    """Construct a configuration tailored to the requested profile."""
+    """Construct a configuration tailored to the requested profile.
 
-    if profile == Profile.CANARY:
-        return build_canary_config(profile, create_config)
-    if profile == Profile.DEV:
-        return create_config(
-            profile=profile,
-            mock_broker=True,
-            mock_fills=True,
-            max_position_size=Decimal("10000"),
-            dry_run=True,
-        )
-    if profile == Profile.DEMO:
-        return create_config(
-            profile=profile,
-            max_position_size=Decimal("100"),
-            max_leverage=1,
-            enable_shorts=False,
-        )
-    if profile == Profile.SPOT:
-        return create_config(
-            profile=profile,
-            max_position_size=Decimal("50000"),
-            max_leverage=1,
-            enable_shorts=False,
-            mock_broker=False,
-            mock_fills=False,
-        )
-    return build_production_config(profile, create_config)
+    Uses YAML-first loading: attempts to load from config/profiles/{profile}.yaml
+    and falls back to hardcoded defaults if the file doesn't exist.
+
+    Args:
+        profile: The profile enum to load
+        create_config: Factory function to create BotConfig
+
+    Returns:
+        BotConfig configured for the specified profile
+    """
+    # Load profile schema (YAML-first with hardcoded fallback)
+    schema = load_profile(profile)
+
+    # Convert schema to BotConfig
+    return _schema_to_bot_config(schema, profile, create_config)
 
 
-def build_canary_config(profile: Profile, create_config: ConfigFactory) -> BotConfig:
-    """Load canary profile configuration, falling back to defaults when YAML is missing."""
+def _schema_to_bot_config(
+    schema: ProfileSchema,
+    profile: Profile,
+    create_config: ConfigFactory,
+) -> BotConfig:
+    """Convert ProfileSchema to BotConfig using the factory.
 
-    symbols: Sequence[str] = ["BTC-USD"]
-    max_leverage = 1
-    reduce_only = True
-    update_interval = 5
-    trading_window_start: time | None = None
-    trading_window_end: time | None = None
-    trading_days: list[str] | None = None
-    daily_loss_limit = Decimal("10")
-    time_in_force = "IOC"
+    Args:
+        schema: The loaded profile schema
+        profile: The profile enum
+        create_config: Factory function to create BotConfig
 
-    profile_path = path_registry.PROJECT_ROOT / "config" / "profiles" / "canary.yaml"
-    if profile_path.exists():
-        try:
-            import yaml  # type: ignore
-
-            with profile_path.open("r") as handle:
-                payload = yaml.safe_load(handle) or {}
-            symbols = payload.get("trading", {}).get("symbols", symbols)
-            reduce_only = payload.get("trading", {}).get("mode") == "reduce_only" or payload.get(
-                "features", {}
-            ).get("reduce_only_mode", True)
-            max_leverage = int(payload.get("risk_management", {}).get("max_leverage", max_leverage))
-            update_interval = int(
-                payload.get("monitoring", {})
-                .get("metrics", {})
-                .get("interval_seconds", update_interval)
-            )
-            session = payload.get("session", {})
-            start_str = session.get("start_time")
-            end_str = session.get("end_time")
-            trading_window_start = time.fromisoformat(start_str) if start_str else None
-            trading_window_end = time.fromisoformat(end_str) if end_str else None
-            trading_days = session.get(
-                "days", ["monday", "tuesday", "wednesday", "thursday", "friday"]
-            )
-            daily_loss_limit = Decimal(
-                str(payload.get("risk_management", {}).get("daily_loss_limit", daily_loss_limit))
-            )
-            time_in_force = payload.get("order_policy", {}).get("time_in_force", time_in_force)
-        except Exception as exc:  # pragma: no cover - defensive logging
-            logger.debug(
-                "Failed to load canary profile YAML",
-                operation="config_profiles",
-                stage="load_canary",
-                error=str(exc),
-                exc_info=True,
-            )
-
-    return create_config(
-        profile=profile,
-        symbols=list(symbols),
-        reduce_only_mode=reduce_only,
-        max_leverage=max_leverage,
-        update_interval=update_interval,
-        dry_run=False,
-        max_position_size=Decimal("500"),
-        trading_window_start=trading_window_start,
-        trading_window_end=trading_window_end,
-        trading_days=trading_days,
-        daily_loss_limit=daily_loss_limit,
-        time_in_force=time_in_force,
+    Returns:
+        BotConfig instance
+    """
+    # Build risk config
+    risk = BotRiskConfig(
+        max_leverage=schema.risk.max_leverage,
+        max_position_size=schema.risk.max_position_size,
+        position_fraction=schema.risk.position_fraction,
+        stop_loss_pct=schema.risk.stop_loss_pct,
+        take_profit_pct=schema.risk.take_profit_pct,
     )
 
+    # Base kwargs
+    kwargs: dict = {
+        "profile": profile,
+        "symbols": schema.trading.symbols,
+        "interval": schema.trading.interval,
+        "risk": risk,
+        "enable_shorts": schema.risk.enable_shorts,
+        "time_in_force": schema.execution.time_in_force,
+        "dry_run": schema.execution.dry_run,
+        "mock_broker": schema.execution.mock_broker,
+        "log_level": schema.monitoring.log_level,
+        "status_interval": schema.monitoring.update_interval,
+        "status_enabled": schema.monitoring.status_enabled,
+        "strategy_type": schema.strategy.type,
+    }
 
-def build_production_config(profile: Profile, create_config: ConfigFactory) -> BotConfig:
-    """Default production configuration (perps capable)."""
+    # Mode mapping
+    if schema.trading.mode == "reduce_only":
+        kwargs["reduce_only_mode"] = True
 
-    return create_config(
-        profile=profile,
-        max_position_size=Decimal("50000"),
-        max_leverage=3,
-        enable_shorts=True,
-    )
+    # Optional session settings
+    if schema.session.start_time is not None:
+        kwargs["trading_window_start"] = schema.session.start_time
+    if schema.session.end_time is not None:
+        kwargs["trading_window_end"] = schema.session.end_time
+    if schema.session.trading_days:
+        kwargs["trading_days"] = schema.session.trading_days
+
+    # Optional daily loss limit
+    if schema.risk.daily_loss_limit is not None:
+        kwargs["daily_loss_limit"] = schema.risk.daily_loss_limit
+
+    return create_config(**kwargs)
 
 
 __all__ = [
-    "build_canary_config",
+    "ProfileLoader",
+    "ProfileSchema",
     "build_profile_config",
-    "build_production_config",
+    "load_profile",
 ]

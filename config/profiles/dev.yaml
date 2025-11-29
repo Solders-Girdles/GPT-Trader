@@ -1,0 +1,41 @@
+# Development Profile - Mock Broker Configuration
+# Purpose: Local development and testing with simulated trading
+
+profile_name: "dev"
+environment: "development"
+description: "Development profile with mock broker for local testing"
+
+trading:
+  mode: "normal"
+  symbols:
+    - "BTC-USD"
+    - "ETH-USD"
+  interval: 60
+
+strategy:
+  type: "baseline"
+  short_ma_period: 5
+  long_ma_period: 20
+  rsi_period: 14
+  rsi_overbought: 70
+  rsi_oversold: 30
+
+risk_management:
+  max_leverage: 5
+  max_position_size: 10000
+  position_fraction: 0.1
+  enable_shorts: true
+  stop_loss_pct: 0.02
+  take_profit_pct: 0.04
+
+execution:
+  time_in_force: "GTC"
+  dry_run: true
+  mock_broker: true
+  mock_fills: true
+
+monitoring:
+  log_level: "DEBUG"
+  metrics:
+    interval_seconds: 60
+  status_enabled: true

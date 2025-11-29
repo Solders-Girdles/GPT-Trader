@@ -1,0 +1,41 @@
+# Production Profile - Full Perpetuals Trading
+# Purpose: Production perpetuals trading with leverage and shorts
+
+profile_name: "prod"
+environment: "production"
+description: "Full production profile for perpetuals trading"
+
+trading:
+  mode: "normal"
+  symbols:
+    - "BTC-USD"
+    - "ETH-USD"
+  interval: 60
+
+strategy:
+  type: "baseline"
+  short_ma_period: 5
+  long_ma_period: 20
+  rsi_period: 14
+  rsi_overbought: 70
+  rsi_oversold: 30
+
+risk_management:
+  max_leverage: 3
+  max_position_size: 50000
+  position_fraction: 0.1
+  enable_shorts: true
+  stop_loss_pct: 0.02
+  take_profit_pct: 0.04
+
+execution:
+  time_in_force: "GTC"
+  dry_run: false
+  mock_broker: false
+  mock_fills: false
+
+monitoring:
+  log_level: "INFO"
+  metrics:
+    interval_seconds: 60
+  status_enabled: true

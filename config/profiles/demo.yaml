@@ -1,0 +1,40 @@
+# Demo Profile - Conservative Demonstration
+# Purpose: Safe demonstrations with minimal risk exposure
+
+profile_name: "demo"
+environment: "demo"
+description: "Conservative demo profile for demonstrations"
+
+trading:
+  mode: "normal"
+  symbols:
+    - "BTC-USD"
+  interval: 60
+
+strategy:
+  type: "baseline"
+  short_ma_period: 5
+  long_ma_period: 20
+  rsi_period: 14
+  rsi_overbought: 70
+  rsi_oversold: 30
+
+risk_management:
+  max_leverage: 1
+  max_position_size: 100
+  position_fraction: 0.05
+  enable_shorts: false
+  stop_loss_pct: 0.01
+  take_profit_pct: 0.02
+
+execution:
+  time_in_force: "GTC"
+  dry_run: false
+  mock_broker: false
+  mock_fills: false
+
+monitoring:
+  log_level: "INFO"
+  metrics:
+    interval_seconds: 60
+  status_enabled: true

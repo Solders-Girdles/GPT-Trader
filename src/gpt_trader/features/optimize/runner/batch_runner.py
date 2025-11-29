@@ -2,20 +2,20 @@
 
 from __future__ import annotations
 
-import asyncio
 import logging
 import time
+from collections.abc import Callable
 from dataclasses import dataclass, replace
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Callable, Optional
+from typing import Any
 
 from gpt_trader.backtesting.engine.bar_runner import ClockedBarRunner, IHistoricalDataProvider
 from gpt_trader.backtesting.metrics.risk import RiskMetrics, calculate_risk_metrics
 from gpt_trader.backtesting.metrics.statistics import TradeStatistics, calculate_trade_statistics
 from gpt_trader.backtesting.simulation.broker import SimulatedBroker
 from gpt_trader.backtesting.types import BacktestResult, SimulationConfig
-from gpt_trader.features.brokerages.core.interfaces import OrderSide, OrderType
+from gpt_trader.core import OrderSide, OrderType
 from gpt_trader.features.live_trade.strategies.base import StrategyProtocol
 from gpt_trader.features.live_trade.strategies.perps_baseline.strategy import Action, Decision
 from gpt_trader.features.optimize.objectives.base import ObjectiveFunction
@@ -31,11 +31,11 @@ class TrialResult:
     parameters: dict[str, Any]
     objective_value: float
     is_feasible: bool
-    backtest_result: Optional[BacktestResult] = None
-    risk_metrics: Optional[RiskMetrics] = None
-    trade_statistics: Optional[TradeStatistics] = None
+    backtest_result: BacktestResult | None = None
+    risk_metrics: RiskMetrics | None = None
+    trade_statistics: TradeStatistics | None = None
     duration_seconds: float = 0.0
-    error_message: Optional[str] = None
+    error_message: str | None = None
 
 
 class BatchBacktestRunner:
@@ -59,7 +59,7 @@ class BatchBacktestRunner:
         end_date: datetime,
         strategy_factory: Callable[[dict[str, Any]], StrategyProtocol],
         objective: ObjectiveFunction,
-        base_simulation_config: Optional[SimulationConfig] = None,
+        base_simulation_config: SimulationConfig | None = None,
     ):
         """
         Initialize batch runner.
@@ -100,25 +100,31 @@ class BatchBacktestRunner:
             Result of the trial including objective value and metrics
         """
         start_time = time.time()
-        
+
         try:
             # 1. Separate parameters
-            strategy_params = {k: v for k, v in parameters.items() if k not in self._get_simulation_param_names()}
-            simulation_params = {k: v for k, v in parameters.items() if k in self._get_simulation_param_names()}
+            strategy_params = {
+                k: v for k, v in parameters.items() if k not in self._get_simulation_param_names()
+            }
+            simulation_params = {
+                k: v for k, v in parameters.items() if k in self._get_simulation_param_names()
+            }
 
             # 2. Build configurations
             strategy = self.strategy_factory(strategy_params)
-            
-            sim_config = self._update_simulation_config(self.base_simulation_config, simulation_params)
+
+            sim_config = self._update_simulation_config(
+                self.base_simulation_config, simulation_params
+            )
 
             # 3. Create broker and runner
             broker = SimulatedBroker(
                 initial_equity_usd=sim_config.initial_equity_usd,
                 fee_tier=sim_config.fee_tier,
-                config=sim_config
+                config=sim_config,
             )
             broker.connect()
-            
+
             runner = ClockedBarRunner(
                 data_provider=self.data_provider,
                 symbols=self.symbols,
@@ -133,9 +139,9 @@ class BatchBacktestRunner:
                 for symbol in self.symbols:
                     if symbol in bars:
                         broker.update_bar(symbol, bars[symbol])
-                
+
                 broker.update_equity_curve()
-                
+
                 # Run strategy for each symbol
                 for symbol in self.symbols:
                     await self._run_strategy_cycle(symbol, strategy, broker)
@@ -143,17 +149,21 @@ class BatchBacktestRunner:
             # 5. Calculate metrics
             risk_metrics = calculate_risk_metrics(broker)
             trade_stats = calculate_trade_statistics(broker)
-            
+
             # Create BacktestResult summary
             backtest_result = self._create_backtest_result(broker, risk_metrics, trade_stats)
-            
+
             # 6. Evaluate objective
             is_feasible = self.objective.is_feasible(backtest_result, risk_metrics, trade_stats)
             if is_feasible:
-                objective_value = self.objective.calculate(backtest_result, risk_metrics, trade_stats)
+                objective_value = self.objective.calculate(
+                    backtest_result, risk_metrics, trade_stats
+                )
             else:
                 # Penalize infeasible solutions
-                objective_value = float("-inf") if self.objective.direction == "maximize" else float("inf")
+                objective_value = (
+                    float("-inf") if self.objective.direction == "maximize" else float("inf")
+                )
 
             duration = time.time() - start_time
 
@@ -173,21 +183,25 @@ class BatchBacktestRunner:
             return TrialResult(
                 trial_number=trial_number,
                 parameters=parameters,
-                objective_value=float("-inf") if self.objective.direction == "maximize" else float("inf"),
+                objective_value=(
+                    float("-inf") if self.objective.direction == "maximize" else float("inf")
+                ),
                 is_feasible=False,
                 duration_seconds=time.time() - start_time,
                 error_message=str(e),
             )
 
-    async def _run_strategy_cycle(self, symbol: str, strategy: StrategyProtocol, broker: SimulatedBroker) -> None:
+    async def _run_strategy_cycle(
+        self, symbol: str, strategy: StrategyProtocol, broker: SimulatedBroker
+    ) -> None:
         """Execute one strategy cycle for a symbol."""
         # Get market data
         mark = broker.get_mark_price(symbol)
         if mark is None:
             return
-            
+
         product = broker.get_product(symbol)
-        
+
         # Get position state
         position = broker.get_position(symbol)
         pos_state = None
@@ -197,14 +211,14 @@ class BatchBacktestRunner:
                 "entry_price": position.entry_price,
                 "unrealized_pnl": position.unrealized_pnl,
                 "side": position.side,
-                "leverage": position.leverage
+                "leverage": position.leverage,
             }
-            
+
         # Get historical data (simplified: using broker's candle history)
         # Note: Strategy expects Sequence[Decimal] of marks/closes
         candles = broker.get_candles(symbol, limit=100)
         recent_marks = [c.close for c in candles]
-        
+
         # Generate decision
         decision = strategy.decide(
             symbol=symbol,
@@ -212,23 +226,23 @@ class BatchBacktestRunner:
             position_state=pos_state,
             recent_marks=recent_marks,
             equity=broker.equity,
-            product=product
+            product=product,
         )
-        
+
         # Execute decision
         await self._execute_decision(symbol, decision, broker, strategy)
 
     async def _execute_decision(
-        self, 
-        symbol: str, 
-        decision: Decision, 
+        self,
+        symbol: str,
+        decision: Decision,
         broker: SimulatedBroker,
-        strategy: Any # typed as Any to access config if available
+        strategy: Any,  # typed as Any to access config if available
     ) -> None:
         """Execute the strategy decision."""
         if decision.action == Action.HOLD:
             return
-            
+
         if decision.action == Action.CLOSE:
             position = broker.get_position(symbol)
             if position:
@@ -239,7 +253,7 @@ class BatchBacktestRunner:
                     side=side,
                     order_type=OrderType.MARKET,
                     quantity=abs(position.quantity),
-                    reduce_only=True
+                    reduce_only=True,
                 )
             return
 
@@ -247,35 +261,36 @@ class BatchBacktestRunner:
         if decision.action in (Action.BUY, Action.SELL):
             # Determine size
             # Try to get position_fraction from strategy config
-            position_fraction = 0.2 # Default
+            position_fraction = 0.2  # Default
             if hasattr(strategy, "config") and hasattr(strategy.config, "position_fraction"):
-                 if strategy.config.position_fraction:
-                     position_fraction = strategy.config.position_fraction
-            
+                if strategy.config.position_fraction:
+                    position_fraction = strategy.config.position_fraction
+
             # Determine leverage
             leverage = 1
             if hasattr(strategy, "config"):
                 if hasattr(strategy.config, "target_leverage"):
                     leverage = strategy.config.target_leverage
-            
+
             equity = broker.equity
             mark = broker.get_mark_price(symbol) or Decimal("0")
-            if mark == 0: return
-            
+            if mark == 0:
+                return
+
             # Calculate quantity
             # quantity = (equity * fraction * leverage) / price
             target_notional = equity * Decimal(str(position_fraction)) * Decimal(str(leverage))
             quantity = target_notional / mark
-            
+
             side = OrderSide.BUY if decision.action == Action.BUY else OrderSide.SELL
-            
+
             try:
                 broker.place_order(
                     symbol=symbol,
                     side=side,
                     order_type=OrderType.MARKET,
                     quantity=quantity,
-                    leverage=leverage
+                    leverage=leverage,
                 )
             except Exception as e:
                 logger.warning(f"Failed to place order: {e}")
@@ -284,7 +299,9 @@ class BatchBacktestRunner:
         """Get names of simulation parameters."""
         return {"fee_tier", "slippage_bps", "spread_impact_pct"}
 
-    def _update_simulation_config(self, base: SimulationConfig, params: dict[str, Any]) -> SimulationConfig:
+    def _update_simulation_config(
+        self, base: SimulationConfig, params: dict[str, Any]
+    ) -> SimulationConfig:
         """Create a new SimulationConfig with updated parameters."""
         # Create a copy with updated values
         # Using replace from dataclasses since SimulationConfig is a dataclass
@@ -293,10 +310,7 @@ class BatchBacktestRunner:
         return replace(base, **filtered_params)
 
     def _create_backtest_result(
-        self, 
-        broker: SimulatedBroker, 
-        risk: RiskMetrics, 
-        stats: TradeStatistics
+        self, broker: SimulatedBroker, risk: RiskMetrics, stats: TradeStatistics
     ) -> BacktestResult:
         """Create BacktestResult summary."""
         return BacktestResult(

@@ -135,6 +135,8 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/backtesting/validation/test_validator.py",  # validation scenarios
     "tests/unit/gpt_trader/features/live_trade/strategies/test_perps_baseline.py",  # baseline strategy coverage
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_websocket_mixin.py",  # WebSocket streaming mixin with threading patterns
+    "tests/integration/test_optimize_feature.py",  # optimization feature integration coverage
+    "tests/unit/gpt_trader/features/optimize/test_walk_forward.py",  # walk-forward analysis comprehensive scenarios
 }
 
 SLEEP_ALLOWLIST = {

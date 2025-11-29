@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import uuid
+import warnings
 from collections.abc import Mapping
 from dataclasses import InitVar, dataclass, field
 from datetime import datetime
@@ -80,12 +81,30 @@ class Alert:
 
     @property
     def id(self) -> str:
-        """Backward compatible alias for :attr:`alert_id`."""
+        """Backward compatible alias for :attr:`alert_id`.
+
+        .. deprecated:: 2.0
+            Use ``alert_id`` attribute directly.
+        """
+        warnings.warn(
+            "Alert.id is deprecated, use alert_id instead",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         return self.alert_id
 
     @property
     def timestamp(self) -> datetime:  # noqa: F811
-        """Alias kept for callers that relied on ``timestamp`` field."""
+        """Alias for ``created_at``.
+
+        .. deprecated:: 2.0
+            Use ``created_at`` attribute directly.
+        """
+        warnings.warn(
+            "Alert.timestamp is deprecated, use created_at instead",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         return self.created_at
 
     def touch(

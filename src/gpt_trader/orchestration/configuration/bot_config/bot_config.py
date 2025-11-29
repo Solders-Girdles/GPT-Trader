@@ -8,6 +8,7 @@ Supports nested configuration structure for optimization framework compatibility
 """
 
 import os
+import warnings
 from dataclasses import dataclass, field, fields, replace
 from decimal import Decimal
 from enum import Enum, auto
@@ -161,52 +162,139 @@ class BotConfig:
     metadata: dict[str, Any] = field(default_factory=dict)
 
     # --- Backward-compatible properties for flat access ---
+    # .. deprecated:: 2.0
+    #     These flat-access properties are deprecated. Access nested config directly:
+    #     - config.strategy.short_ma_period instead of config.short_ma
+    #     - config.risk.max_position_size instead of config.max_position_size
+    #     Removal planned for v3.0.
 
     # Strategy field aliases
     @property
     def short_ma(self) -> int:
-        """Alias for strategy.short_ma_period (backward compat)."""
+        """Alias for strategy.short_ma_period.
+
+        .. deprecated:: 2.0
+            Use ``config.strategy.short_ma_period`` instead.
+        """
+        warnings.warn(
+            "BotConfig.short_ma is deprecated, use config.strategy.short_ma_period",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         return self.strategy.short_ma_period
 
     @property
     def long_ma(self) -> int:
-        """Alias for strategy.long_ma_period (backward compat)."""
+        """Alias for strategy.long_ma_period.
+
+        .. deprecated:: 2.0
+            Use ``config.strategy.long_ma_period`` instead.
+        """
+        warnings.warn(
+            "BotConfig.long_ma is deprecated, use config.strategy.long_ma_period",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         return self.strategy.long_ma_period
 
     # Risk field aliases
     @property
     def max_position_size(self) -> Decimal:
-        """Alias for risk.max_position_size (backward compat)."""
+        """Alias for risk.max_position_size.
+
+        .. deprecated:: 2.0
+            Use ``config.risk.max_position_size`` instead.
+        """
+        warnings.warn(
+            "BotConfig.max_position_size is deprecated, use config.risk.max_position_size",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         return self.risk.max_position_size
 
     @property
     def max_leverage(self) -> int:
-        """Alias for risk.max_leverage (backward compat)."""
+        """Alias for risk.max_leverage.
+
+        .. deprecated:: 2.0
+            Use ``config.risk.max_leverage`` instead.
+        """
+        warnings.warn(
+            "BotConfig.max_leverage is deprecated, use config.risk.max_leverage",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         return self.risk.max_leverage
 
     @property
     def target_leverage(self) -> int:
-        """Alias for risk.target_leverage (backward compat)."""
+        """Alias for risk.target_leverage.
+
+        .. deprecated:: 2.0
+            Use ``config.risk.target_leverage`` instead.
+        """
+        warnings.warn(
+            "BotConfig.target_leverage is deprecated, use config.risk.target_leverage",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         return self.risk.target_leverage
 
     @property
     def stop_loss_pct(self) -> Decimal:
-        """Alias for risk.stop_loss_pct (backward compat)."""
+        """Alias for risk.stop_loss_pct.
+
+        .. deprecated:: 2.0
+            Use ``config.risk.stop_loss_pct`` instead.
+        """
+        warnings.warn(
+            "BotConfig.stop_loss_pct is deprecated, use config.risk.stop_loss_pct",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         return self.risk.stop_loss_pct
 
     @property
     def take_profit_pct(self) -> Decimal:
-        """Alias for risk.take_profit_pct (backward compat)."""
+        """Alias for risk.take_profit_pct.
+
+        .. deprecated:: 2.0
+            Use ``config.risk.take_profit_pct`` instead.
+        """
+        warnings.warn(
+            "BotConfig.take_profit_pct is deprecated, use config.risk.take_profit_pct",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         return self.risk.take_profit_pct
 
     @property
     def trailing_stop_pct(self) -> Decimal:
-        """Alias for risk.trailing_stop_pct (backward compat)."""
+        """Alias for risk.trailing_stop_pct.
+
+        .. deprecated:: 2.0
+            Use ``config.risk.trailing_stop_pct`` instead.
+        """
+        warnings.warn(
+            "BotConfig.trailing_stop_pct is deprecated, use config.risk.trailing_stop_pct",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         return self.risk.trailing_stop_pct
 
     @property
     def perps_position_fraction_decimal(self) -> Decimal:
-        """Alias for risk.position_fraction (backward compat)."""
+        """Alias for risk.position_fraction.
+
+        .. deprecated:: 2.0
+            Use ``config.risk.position_fraction`` instead.
+        """
+        warnings.warn(
+            "BotConfig.perps_position_fraction_decimal is deprecated, "
+            "use config.risk.position_fraction",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         return self.risk.position_fraction
 
     @property

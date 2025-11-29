@@ -397,4 +397,6 @@ class CoinbaseRestServiceCore:
 
 
 # Backward compatibility alias
+# .. deprecated:: 2.0
+#     Use CoinbaseRestServiceCore directly. Removal planned for v3.0.
 CoinbaseRestServiceBase = CoinbaseRestServiceCore

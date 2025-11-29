@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import warnings
 from dataclasses import dataclass, field, replace
 from typing import TYPE_CHECKING, Any
 
@@ -14,9 +15,23 @@ if TYPE_CHECKING:
 
 @dataclass(frozen=True)
 class ServiceRegistry:
-    """
-    Registry for shared services.
-    Legacy composition root pattern.
+    """Registry for shared services.
+
+    .. deprecated:: 2.0
+        ServiceRegistry is a legacy composition root pattern.
+        Use ``ApplicationContainer`` instead for new code.
+
+        Migration::
+
+            # Old pattern
+            registry = ServiceRegistry(config)
+            bot = create_trading_bot(registry)
+
+            # New pattern
+            container = ApplicationContainer(config)
+            bot = container.create_bot()
+
+        Removal planned for v3.0.
     """
 
     config: BotConfig
@@ -29,6 +44,15 @@ class ServiceRegistry:
     product_catalog: Any = None
     extras: dict[str, Any] = field(default_factory=dict)
 
+    def __post_init__(self) -> None:
+        """Emit deprecation warning on instantiation."""
+        warnings.warn(
+            "ServiceRegistry is deprecated. Use ApplicationContainer instead. "
+            "See migration guide in class docstring.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+
     def with_updates(self, **kwargs: Any) -> ServiceRegistry:
         """Return a new registry with updated values.
 
@@ -39,4 +63,9 @@ class ServiceRegistry:
 
 
 def empty_registry(config: BotConfig) -> ServiceRegistry:
+    """Create an empty ServiceRegistry.
+
+    .. deprecated:: 2.0
+        Use ``ApplicationContainer`` instead.
+    """
     return ServiceRegistry(config)

@@ -1,13 +1,32 @@
 """Broker interface types - re-exported from core for backward compatibility.
 
-All types are now defined in gpt_trader.core. This module re-exports them
-to maintain backward compatibility for existing imports from brokerages.core.interfaces.
+.. deprecated:: 2.0
+    All types are now defined in ``gpt_trader.core``. This module re-exports them
+    only for backward compatibility.
 
-Migration: Import directly from gpt_trader.core instead.
+    Migration::
+
+        # Old (deprecated)
+        from gpt_trader.features.brokerages.core.interfaces import Order, Balance
+
+        # New (preferred)
+        from gpt_trader.core import Order, Balance
+
+    Removal planned for v3.0.
 """
 
+import warnings
+
+# Emit deprecation warning on module import
+warnings.warn(
+    "Importing from gpt_trader.features.brokerages.core.interfaces is deprecated. "
+    "Import directly from gpt_trader.core instead.",
+    DeprecationWarning,
+    stacklevel=2,
+)
+
 # Re-export all core types for backward compatibility
-from gpt_trader.core import (
+from gpt_trader.core import (  # noqa: E402
     # Exceptions
     AuthError,
     # Account types

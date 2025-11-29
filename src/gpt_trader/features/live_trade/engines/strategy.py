@@ -8,7 +8,6 @@ During operation, persists price ticks to EventStore for crash recovery.
 """
 
 import asyncio
-import logging
 import time
 from collections import defaultdict
 from decimal import Decimal
@@ -29,8 +28,9 @@ from gpt_trader.features.live_trade.strategies.perps_baseline import (
 from gpt_trader.monitoring.alert_types import AlertSeverity
 from gpt_trader.monitoring.heartbeat import HeartbeatService
 from gpt_trader.monitoring.status_reporter import StatusReporter
+from gpt_trader.utilities.logging_patterns import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="trading_engine")
 
 # Event type for price ticks
 EVENT_PRICE_TICK = "price_tick"

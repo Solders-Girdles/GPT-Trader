@@ -7,7 +7,6 @@ Used when PAPER_MODE=1 to test strategies against live prices without real order
 
 from __future__ import annotations
 
-import logging
 from datetime import datetime
 from decimal import Decimal
 from typing import Any
@@ -27,8 +26,9 @@ from gpt_trader.core import (
 )
 from gpt_trader.features.brokerages.coinbase.auth import SimpleAuth
 from gpt_trader.features.brokerages.coinbase.client import CoinbaseClient
+from gpt_trader.utilities.logging_patterns import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="paper_broker")
 
 
 class HybridPaperBroker:

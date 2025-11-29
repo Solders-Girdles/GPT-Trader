@@ -3,15 +3,15 @@
 from __future__ import annotations
 
 import asyncio
-import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Any
 
 from gpt_trader.monitoring.alert_types import Alert, AlertSeverity
 from gpt_trader.monitoring.notifications.protocol import NotificationBackend
+from gpt_trader.utilities.logging_patterns import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="notifications")
 
 
 @dataclass

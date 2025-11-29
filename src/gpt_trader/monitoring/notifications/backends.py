@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 import json
-import logging
 from dataclasses import dataclass, field
 from typing import Any
 
 from gpt_trader.monitoring.alert_types import Alert, AlertSeverity
+from gpt_trader.utilities.logging_patterns import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="notifications")
 
 
 # ANSI color codes for console output

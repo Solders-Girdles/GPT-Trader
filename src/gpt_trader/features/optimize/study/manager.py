@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-import logging
-from typing import Any, Optional
+from typing import Any
 
 import optuna
 from optuna.pruners import BasePruner, HyperbandPruner, MedianPruner, PercentilePruner
@@ -11,8 +10,9 @@ from optuna.samplers import BaseSampler, CmaEsSampler, RandomSampler, TPESampler
 from optuna.trial import Trial
 
 from gpt_trader.features.optimize.types import OptimizationConfig, ParameterType
+from gpt_trader.utilities.logging_patterns import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="optuna_study")
 
 
 class OptimizationStudyManager:
@@ -25,7 +25,7 @@ class OptimizationStudyManager:
     - Parameter suggestion based on ParameterSpace
     """
 
-    def __init__(self, config: OptimizationConfig, storage_url: Optional[str] = None):
+    def __init__(self, config: OptimizationConfig, storage_url: str | None = None):
         """
         Initialize study manager.
 
@@ -54,7 +54,7 @@ class OptimizationStudyManager:
             pruner=pruner,
             load_if_exists=True,
         )
-        
+
         logger.info(
             f"Study '{self.config.study_name}' loaded with sampler={self.config.sampler_type}, "
             f"pruner={self.config.pruner_type}"
@@ -72,19 +72,19 @@ class OptimizationStudyManager:
             Dictionary of suggested parameter values
         """
         params = {}
-        
+
         for param in self.config.parameter_space.all_parameters:
             if param.parameter_type == ParameterType.INTEGER:
                 if param.low is None or param.high is None:
                     continue
                 params[param.name] = trial.suggest_int(
-                    param.name, 
-                    int(param.low), 
-                    int(param.high), 
+                    param.name,
+                    int(param.low),
+                    int(param.high),
                     step=int(param.step) if param.step else 1,
-                    log=param.log
+                    log=param.log,
                 )
-            
+
             elif param.parameter_type == ParameterType.FLOAT:
                 if param.low is None or param.high is None:
                     continue
@@ -93,27 +93,21 @@ class OptimizationStudyManager:
                     float(param.low),
                     float(param.high),
                     step=float(param.step) if param.step else None,
-                    log=param.log
+                    log=param.log,
                 )
-            
+
             elif param.parameter_type == ParameterType.CATEGORICAL:
                 if not param.choices:
                     continue
-                params[param.name] = trial.suggest_categorical(
-                    param.name,
-                    param.choices
-                )
-                
+                params[param.name] = trial.suggest_categorical(param.name, param.choices)
+
             elif param.parameter_type == ParameterType.LOG_UNIFORM:
                 # Deprecated in favor of suggest_float(log=True) but kept for compatibility if needed
                 # We map it to suggest_float with log=True
                 if param.low is None or param.high is None:
                     continue
                 params[param.name] = trial.suggest_float(
-                    param.name,
-                    float(param.low),
-                    float(param.high),
-                    log=True
+                    param.name, float(param.low), float(param.high), log=True
                 )
 
         return params
@@ -121,7 +115,7 @@ class OptimizationStudyManager:
     def _create_sampler(self) -> BaseSampler:
         """Create the configured sampler."""
         seed = self.config.seed
-        
+
         if self.config.sampler_type == "tpe":
             return TPESampler(seed=seed)
         elif self.config.sampler_type == "cmaes":
@@ -132,7 +126,7 @@ class OptimizationStudyManager:
             logger.warning(f"Unknown sampler type '{self.config.sampler_type}', defaulting to TPE")
             return TPESampler(seed=seed)
 
-    def _create_pruner(self) -> Optional[BasePruner]:
+    def _create_pruner(self) -> BasePruner | None:
         """Create the configured pruner."""
         if self.config.pruner_type == "median":
             return MedianPruner()

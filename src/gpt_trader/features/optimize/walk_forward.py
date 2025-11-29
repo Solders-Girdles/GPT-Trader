@@ -36,7 +36,6 @@ Usage:
 
 from __future__ import annotations
 
-import logging
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -62,8 +61,9 @@ from gpt_trader.features.live_trade.strategies.perps_baseline.strategy import Ac
 from gpt_trader.features.optimize.objectives.base import ObjectiveFunction
 from gpt_trader.features.optimize.study.manager import OptimizationStudyManager
 from gpt_trader.features.optimize.types import OptimizationConfig
+from gpt_trader.utilities.logging_patterns import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="walk_forward")
 
 
 @dataclass

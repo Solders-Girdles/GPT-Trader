@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import asyncio
 import json
-import logging
 import os
 import tempfile
 import time
@@ -19,10 +18,12 @@ from decimal import Decimal
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from gpt_trader.utilities.logging_patterns import get_logger
+
 if TYPE_CHECKING:
     from gpt_trader.monitoring.heartbeat import HeartbeatService
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="status_reporter")
 
 
 @dataclass

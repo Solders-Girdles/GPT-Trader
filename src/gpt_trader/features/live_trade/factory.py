@@ -5,15 +5,15 @@ This module provides a factory function that creates the appropriate
 strategy based on the configuration, enabling runtime strategy selection.
 """
 
-import logging
 from typing import TYPE_CHECKING
 
 from gpt_trader.features.live_trade.interfaces import TradingStrategy
+from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:
     from gpt_trader.orchestration.configuration.bot_config.bot_config import BotConfig
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="strategy_factory")
 
 
 def create_strategy(config: "BotConfig") -> TradingStrategy:

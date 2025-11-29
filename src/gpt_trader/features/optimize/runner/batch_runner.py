@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 import time
 from collections.abc import Callable
 from dataclasses import dataclass, replace
@@ -19,8 +18,9 @@ from gpt_trader.core import OrderSide, OrderType
 from gpt_trader.features.live_trade.strategies.base import StrategyProtocol
 from gpt_trader.features.live_trade.strategies.perps_baseline.strategy import Action, Decision
 from gpt_trader.features.optimize.objectives.base import ObjectiveFunction
+from gpt_trader.utilities.logging_patterns import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="batch_runner")
 
 
 @dataclass

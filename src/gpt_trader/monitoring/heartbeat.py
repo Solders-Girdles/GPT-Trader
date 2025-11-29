@@ -10,15 +10,16 @@ This module provides a HeartbeatService that:
 from __future__ import annotations
 
 import asyncio
-import logging
 import time
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
+from gpt_trader.utilities.logging_patterns import get_logger
+
 if TYPE_CHECKING:
     from gpt_trader.orchestration.protocols import EventStoreProtocol
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="heartbeat")
 
 # Event type for heartbeats
 EVENT_HEARTBEAT = "heartbeat"

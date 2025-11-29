@@ -4,8 +4,9 @@ import logging
 from typing import Any
 
 from gpt_trader.monitoring.alert_types import AlertSeverity
+from gpt_trader.utilities.logging_patterns import get_logger
 
-logger = logging.getLogger("gpt_trader.features.live_trade.guard_errors")
+logger = get_logger("gpt_trader.features.live_trade.guard_errors", component="guards")
 
 
 class GuardError(Exception):
@@ -93,15 +94,16 @@ def record_guard_failure(error: GuardError) -> None:
 
     # Logging
     level = logging.WARNING if recoverable else logging.ERROR
-    extra = {
-        "guard_failure": {
+    logger.log(
+        level,
+        error.message,
+        guard_failure={
             "guard": error.guard_name,
             "category": category,
             "recoverable": recoverable,
             "details": error.details,
-        }
-    }
-    logger.log(level, error.message, extra=extra)
+        },
+    )
 
     # Alerting
     severity = AlertSeverity.WARNING if recoverable else AlertSeverity.CRITICAL

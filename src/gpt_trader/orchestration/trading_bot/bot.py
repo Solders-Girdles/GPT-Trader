@@ -6,12 +6,12 @@ Acts as the main entry point runner.
 from __future__ import annotations
 
 import asyncio
-import logging
 from typing import TYPE_CHECKING, Any
 
 from gpt_trader.features.live_trade.engines.base import CoordinatorContext
 from gpt_trader.features.live_trade.engines.strategy import TradingEngine
 from gpt_trader.orchestration.configuration import BotConfig
+from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:
     from gpt_trader.app.container import ApplicationContainer
@@ -26,7 +26,7 @@ if TYPE_CHECKING:
         ServiceRegistryProtocol,
     )
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="trading_bot")
 
 
 class TradingBot:

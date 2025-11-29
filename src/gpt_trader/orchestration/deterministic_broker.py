@@ -6,7 +6,6 @@ Used when PERPS_FORCE_MOCK=1 to bypass real credentials and API calls.
 
 from __future__ import annotations
 
-import logging
 from datetime import datetime
 from decimal import Decimal
 from typing import Any
@@ -24,8 +23,9 @@ from gpt_trader.core import (
     Quote,
     TimeInForce,
 )
+from gpt_trader.utilities.logging_patterns import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__, component="deterministic_broker")
 
 
 class DeterministicBroker:

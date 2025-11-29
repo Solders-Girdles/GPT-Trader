@@ -11,7 +11,7 @@ from gpt_trader.backtesting.types import CompletedTrade, TradeOutcome
 
 if TYPE_CHECKING:
     from gpt_trader.backtesting.simulation.broker import SimulatedBroker
-    from gpt_trader.features.brokerages.core.interfaces import Order
+    from gpt_trader.core import Order
 
 
 @dataclass

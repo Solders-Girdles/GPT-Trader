@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any
 
 from gpt_trader.backtesting.data.fetcher import CoinbaseHistoricalFetcher
 from gpt_trader.backtesting.engine.bar_runner import IHistoricalDataProvider
-from gpt_trader.features.brokerages.core.interfaces import Candle
+from gpt_trader.core import Candle
 from gpt_trader.features.data.quality import CandleQualityReport, DataQualityChecker
 from gpt_trader.utilities.logging_patterns import get_logger
 

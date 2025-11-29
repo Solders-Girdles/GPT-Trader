@@ -16,7 +16,7 @@ from gpt_trader.backtesting.simulation.fee_calculator import FeeCalculator
 from gpt_trader.backtesting.simulation.fill_model import FillResult, OrderFillModel
 from gpt_trader.backtesting.simulation.funding_tracker import FundingPnLTracker
 from gpt_trader.backtesting.types import CompletedTrade, FeeTier, SimulationConfig
-from gpt_trader.features.brokerages.core.interfaces import (
+from gpt_trader.core import (
     Balance,
     Candle,
     InsufficientFunds,

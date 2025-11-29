@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 
-from gpt_trader.features.brokerages.core.interfaces import Candle, Order, OrderSide, OrderType
+from gpt_trader.core import Candle, Order, OrderSide, OrderType
 
 
 @dataclass

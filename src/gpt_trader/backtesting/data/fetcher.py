@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 
 from gpt_trader.features.brokerages.coinbase.client.client import CoinbaseClient
-from gpt_trader.features.brokerages.core.interfaces import Candle
+from gpt_trader.core import Candle
 
 
 class CoinbaseHistoricalFetcher:

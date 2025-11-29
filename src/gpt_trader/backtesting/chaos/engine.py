@@ -9,7 +9,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
 from gpt_trader.backtesting.types import ChaosScenario
-from gpt_trader.features.brokerages.core.interfaces import Candle, Order, OrderStatus
+from gpt_trader.core import Candle, Order, OrderStatus
 
 if TYPE_CHECKING:
     from gpt_trader.backtesting.simulation.broker import SimulatedBroker

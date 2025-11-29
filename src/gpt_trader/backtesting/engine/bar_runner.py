@@ -2,12 +2,126 @@
 
 from abc import ABC, abstractmethod
 from collections.abc import AsyncIterator, Callable
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from decimal import Decimal
+from typing import TYPE_CHECKING, Protocol
 
 from gpt_trader.backtesting.engine.clock import SimulationClock
 from gpt_trader.backtesting.types import ClockSpeed
-from gpt_trader.features.brokerages.core.interfaces import Candle, Quote
+from gpt_trader.core import Candle, Quote
+
+if TYPE_CHECKING:
+    from gpt_trader.backtesting.simulation.broker import SimulatedBroker
+
+
+class FundingRateProvider(Protocol):
+    """Protocol for providing funding rates."""
+
+    def get_rate(self, symbol: str, at_time: datetime) -> Decimal | None:
+        """Get the funding rate for a symbol at a given time."""
+        ...
+
+
+@dataclass
+class ConstantFundingRates:
+    """Simple provider that returns constant rates per symbol."""
+
+    rates_8h: dict[str, Decimal] = field(default_factory=dict)
+
+    def get_rate(self, symbol: str, at_time: datetime) -> Decimal | None:
+        """Return constant rate regardless of time."""
+        return self.rates_8h.get(symbol)
+
+
+@dataclass
+class FundingProcessor:
+    """
+    Manages funding rate processing during backtesting.
+
+    Tracks the last time funding was processed for each symbol and
+    determines when funding should be applied based on the accrual interval.
+
+    Usage:
+        processor = FundingProcessor(
+            rate_provider=ConstantFundingRates({"BTC-PERP-USDC": Decimal("0.0001")}),
+            accrual_interval_hours=1,
+        )
+
+        async for bar_time, bars, quotes in runner.run():
+            broker.update_bar(bars, quotes, bar_time)
+            processor.process_funding(broker, bar_time, list(bars.keys()))
+            # ... strategy logic ...
+    """
+
+    rate_provider: FundingRateProvider
+    accrual_interval_hours: int = 1
+    enabled: bool = True
+
+    # Internal state
+    _last_funding_time: dict[str, datetime] = field(default_factory=dict)
+    _total_funding_processed: Decimal = field(default=Decimal("0"))
+
+    def should_process(self, symbol: str, current_time: datetime) -> bool:
+        """Check if funding should be processed for a symbol."""
+        if not self.enabled:
+            return False
+
+        if symbol not in self._last_funding_time:
+            return True
+
+        elapsed = current_time - self._last_funding_time[symbol]
+        hours = elapsed.total_seconds() / 3600
+        return hours >= self.accrual_interval_hours
+
+    def process_funding(
+        self,
+        broker: "SimulatedBroker",
+        current_time: datetime,
+        symbols: list[str],
+    ) -> Decimal:
+        """
+        Process funding for all eligible symbols.
+
+        Args:
+            broker: SimulatedBroker instance
+            current_time: Current simulation time
+            symbols: List of symbols to potentially process
+
+        Returns:
+            Total funding processed this call (positive = paid, negative = received)
+        """
+        if not self.enabled:
+            return Decimal("0")
+
+        total_funding = Decimal("0")
+
+        for symbol in symbols:
+            if not self.should_process(symbol, current_time):
+                continue
+
+            rate = self.rate_provider.get_rate(symbol, current_time)
+            if rate is None:
+                continue
+
+            # Process funding through broker
+            funding = broker.process_funding(symbol, rate)
+            total_funding += funding
+
+            # Update tracking
+            self._last_funding_time[symbol] = current_time
+
+        self._total_funding_processed += total_funding
+        return total_funding
+
+    def get_total_funding(self) -> Decimal:
+        """Get total funding processed across all calls."""
+        return self._total_funding_processed
+
+    def reset(self) -> None:
+        """Reset internal state for a new backtest run."""
+        self._last_funding_time.clear()
+        self._total_funding_processed = Decimal("0")
 
 
 class ClockedBarRunner:

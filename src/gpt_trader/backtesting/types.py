@@ -79,7 +79,11 @@ class SimulationConfig:
     # Funding PnL
     enable_funding_pnl: bool = True
     funding_accrual_hours: int = 1  # Accrue every hour
-    funding_settlement_hours: int = 12  # Settle every 12 hours
+    funding_settlement_hours: int = 8  # Settle every 8 hours (Coinbase standard)
+
+    # Funding rates per symbol (8-hour rate, e.g., 0.0001 = 0.01%)
+    # If None, funding processing is skipped even if enable_funding_pnl is True
+    funding_rates_8h: dict[str, Decimal] | None = None
 
     # Validation
     enable_golden_path_validation: bool = False

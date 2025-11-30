@@ -8,7 +8,6 @@ Output:
     Generates JSON Schema v7 documents for:
     - BotConfig (trading parameters)
     - RiskConfig (risk management)
-    - RuntimeSettings (environment settings)
 
 Example:
     python scripts/agents/generate_config_schemas.py --output-dir var/agents/schemas
@@ -247,54 +246,11 @@ def generate_risk_config_schema() -> dict[str, Any]:
     return schema
 
 
-def generate_runtime_settings_schema() -> dict[str, Any]:
-    """Generate schema for RuntimeSettings."""
-    from gpt_trader.config.runtime_settings import RuntimeSettings
-
-    schema = dataclass_to_json_schema(RuntimeSettings, "RuntimeSettings")
-
-    descriptions = {
-        "raw_env": "Raw environment variables snapshot",
-        "runtime_root": "Root directory for runtime data",
-        "event_store_root_override": "Override path for event store",
-        "coinbase_default_quote": "Default quote currency for Coinbase",
-        "coinbase_default_quote_overridden": "Whether quote currency was overridden",
-        "coinbase_enable_derivatives": "Enable Coinbase derivatives trading",
-        "coinbase_enable_derivatives_overridden": "Whether derivatives flag was overridden",
-        "coinbase_us_futures_enabled": "Enable US futures trading",
-        "coinbase_intx_perpetuals_enabled": "Enable INTX perpetuals trading",
-        "coinbase_derivatives_type": "Type of derivatives: intx_perps, us_futures",
-        "perps_enable_streaming": "Enable streaming for perpetuals",
-        "perps_stream_level": "Streaming verbosity level (1-3)",
-        "perps_paper_trading": "Enable paper trading mode for perps",
-        "perps_force_mock": "Force mock broker for perpetuals",
-        "perps_skip_startup_reconcile": "Skip position reconciliation at startup",
-        "perps_position_fraction": "Fraction of balance for perps positions",
-        "order_preview_enabled": "Enable order preview globally",
-        "spot_force_live": "Force live trading for spot",
-        "broker_hint": "Broker selection hint: coinbase, mock",
-        "coinbase_sandbox_enabled": "Use Coinbase sandbox environment",
-        "coinbase_api_mode": "API mode: advanced, simple",
-        "risk_config_path": "Path to risk configuration file",
-        "coinbase_intx_portfolio_uuid": "INTX portfolio UUID",
-        "environment": "Environment name: development, staging, production",
-        "trading_enabled": "Global trading enabled flag",
-        "max_position_size": "Global maximum position size override",
-        "max_daily_loss": "Global maximum daily loss override",
-        "circuit_breaker_enabled": "Enable circuit breaker protection",
-        "monitoring_enabled": "Enable monitoring and telemetry",
-    }
-    add_field_descriptions(schema, descriptions)
-
-    return schema
-
-
 def generate_all_schemas() -> dict[str, dict[str, Any]]:
     """Generate all configuration schemas."""
     return {
         "bot_config": generate_bot_config_schema(),
         "risk_config": generate_risk_config_schema(),
-        "runtime_settings": generate_runtime_settings_schema(),
     }
 
 

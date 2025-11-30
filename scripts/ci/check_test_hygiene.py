@@ -157,6 +157,16 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/cli/commands/optimize/test_commands.py",  # CLI command integration tests
     "tests/unit/gpt_trader/cli/commands/optimize/test_config_loader.py",  # config loader edge cases
     "tests/unit/gpt_trader/cli/test_response.py",  # CLI response formatting coverage
+    # Intelligence and Strategy Dev tests (large modules)
+    "tests/unit/gpt_trader/features/intelligence/ensemble/test_voting.py",
+    "tests/unit/gpt_trader/features/intelligence/ensemble/test_orchestrator.py",
+    "tests/unit/gpt_trader/features/intelligence/ensemble/test_adaptive.py",
+    "tests/unit/gpt_trader/features/intelligence/backtesting/test_batch_regime.py",
+    "tests/unit/gpt_trader/features/intelligence/sizing/test_position_sizer.py",
+    "tests/unit/gpt_trader/features/intelligence/regime/test_detector.py",
+    "tests/unit/gpt_trader/features/strategy_dev/monitor/test_metrics.py",
+    "tests/unit/gpt_trader/features/strategy_dev/monitor/test_alerts.py",
+    "tests/unit/gpt_trader/features/strategy_dev/lab/test_experiment.py",
 }
 
 SLEEP_ALLOWLIST = {

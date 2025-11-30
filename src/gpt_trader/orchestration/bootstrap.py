@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 
 from gpt_trader.persistence.event_store import EventStore
 from gpt_trader.persistence.orders_store import OrdersStore
@@ -13,7 +13,7 @@ from gpt_trader.utilities.logging_patterns import get_logger
 from .configuration import TOP_VOLUME_BASES, BotConfig, Profile
 from .runtime_paths import RuntimePaths
 from .runtime_paths import resolve_runtime_paths as compute_runtime_paths
-from .service_registry import ServiceRegistry, empty_registry
+from .service_registry import ServiceRegistry
 from .symbols import PERPS_ALLOWLIST, normalize_symbol_list
 
 if TYPE_CHECKING:
@@ -102,43 +102,33 @@ def prepare_bot(
             for record in fallback_logs
         ]
 
-    runtime_paths = resolve_runtime_paths(cast(Profile, config.profile), config)
+    from gpt_trader.app.container import ApplicationContainer
 
-    prepared_registry = registry or empty_registry(config)
-    if prepared_registry.config is not config:
-        prepared_registry = prepared_registry.with_updates(config=config)
+    # Create container - this is now the source of truth
+    container = ApplicationContainer(config)
 
-    # Get or create event store (using concrete type for BootstrapResult)
-    registry_event_store = prepared_registry.event_store
-    if registry_event_store is None:
-        final_event_store: EventStore = EventStore(root=runtime_paths.event_store_root)
-        prepared_registry = prepared_registry.with_updates(event_store=final_event_store)
-    else:
-        # Registry may hold a protocol; cast to concrete type
-        final_event_store = cast(EventStore, registry_event_store)
+    # Get registry from container (legacy support)
+    # If a registry was passed in, we ignore it in favor of the container's registry
+    # to ensure consistency, or we could try to merge, but container should be authoritative.
+    # For now, we'll use the container's registry.
+    prepared_registry = container.create_service_registry()
 
-    # Get or create orders store (using concrete type for BootstrapResult)
-    registry_orders_store = prepared_registry.orders_store
-    if registry_orders_store is None:
-        final_orders_store: OrdersStore = OrdersStore(storage_path=runtime_paths.storage_dir)
-        prepared_registry = prepared_registry.with_updates(orders_store=final_orders_store)
-    else:
-        final_orders_store = cast(OrdersStore, registry_orders_store)
+    # Add container to result extras for backward compatibility
+    prepared_registry.extras["container"] = container
+
+    # Get stores from container
+    final_event_store = container.event_store
+    final_orders_store = container.orders_store
 
     result = BootstrapResult(
         config=config,
         registry=prepared_registry,
-        runtime_paths=runtime_paths,
+        runtime_paths=container.runtime_paths,
         event_store=final_event_store,
         orders_store=final_orders_store,
         logs=logs,
     )
 
-    from gpt_trader.app.container import create_application_container
-
-    container = create_application_container(config)
-    # Add container to result extras
-    result.registry.extras["container"] = container
     logger.debug(
         "Prepared TradingBot with container",
         operation="bot_bootstrap",
@@ -198,19 +188,15 @@ def build_bot_with_registry(config: BotConfig) -> tuple[TradingBot, ServiceRegis
     Returns:
         Tuple of (TradingBot, ServiceRegistry) for backward compatibility.
     """
-    from gpt_trader.app.container import ApplicationContainer
+    bot = build_bot(config)
+    # Access registry from container if available, otherwise create one
+    if bot.container:
+        registry = bot.container.create_service_registry()
+    else:
+        # Fallback if for some reason container is missing (shouldn't happen with build_bot)
+        from gpt_trader.orchestration.service_registry import ServiceRegistry
 
-    container = ApplicationContainer(config)
-
-    if config.webhook_url:
-        logger.info(
-            "Webhook notifications enabled",
-            operation="bot_bootstrap",
-            stage="notifications_enabled",
-        )
-
-    bot = container.create_bot()
-    registry = container.create_service_registry()
+        registry = ServiceRegistry(config)
 
     return bot, registry
 

@@ -33,7 +33,7 @@ class TradingBot:
     def __init__(
         self,
         config: BotConfig,
-        container: ApplicationContainer | None = None,
+        container: ApplicationContainer,
         registry: ServiceRegistryProtocol | None = None,
         event_store: EventStoreProtocol | None = None,
         orders_store: Any = None,
@@ -42,6 +42,10 @@ class TradingBot:
         self.config = config
         self.container = container
         self.running = False
+
+        # If registry not provided, create from container (backward compatibility)
+        if registry is None:
+            registry = container.create_service_registry()
 
         # Store registry components for CLI access
         self._registry = registry

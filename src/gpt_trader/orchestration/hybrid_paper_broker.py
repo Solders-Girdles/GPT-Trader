@@ -48,25 +48,32 @@ class HybridPaperBroker:
 
     def __init__(
         self,
-        api_key: str,
-        private_key: str,
+        api_key: str | None = None,
+        private_key: str | None = None,
         initial_equity: Decimal = Decimal("10000"),
         slippage_bps: int = 5,
         commission_bps: Decimal = Decimal("5"),
+        client: CoinbaseClient | None = None,
     ) -> None:
         """
         Initialize the hybrid paper broker.
 
         Args:
-            api_key: Coinbase CDP API key name
-            private_key: Coinbase CDP private key (PEM format)
+            api_key: Coinbase CDP API key name (optional if client provided)
+            private_key: Coinbase CDP private key (optional if client provided)
             initial_equity: Starting equity in USD
             slippage_bps: Simulated slippage in basis points
             commission_bps: Commission per trade in basis points
+            client: Pre-configured CoinbaseClient (preferred)
         """
         # Real broker for market data
-        auth = SimpleAuth(key_name=api_key, private_key=private_key)
-        self._client = CoinbaseClient(auth=auth)
+        if client:
+            self._client = client
+        elif api_key and private_key:
+            auth = SimpleAuth(key_name=api_key, private_key=private_key)
+            self._client = CoinbaseClient(auth=auth)
+        else:
+            raise ValueError("Must provide either client or (api_key, private_key)")
 
         # Simulation state
         self._initial_equity = initial_equity

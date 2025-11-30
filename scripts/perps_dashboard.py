@@ -3,17 +3,10 @@
 Coinbase Trader Metrics Dashboard
 
 Surfaces Coinbase Trader metrics emitted via EventStore and health.json.
-
-Shows:
-- Order success/failure counts and acceptance rate (sliding window)
-- Drift detection frequency (order_drift)
-- Bot health status (from health.json)
+Uses 'rich' library for a professional TUI.
 
 Usage:
-  python scripts/perps_dashboard.py --profile dev --refresh 5 --window-min 5
-
-Env overrides:
-  EVENT_STORE_ROOT: base directory for events/health (defaults to var/data/coinbase_trader/<profile>)
+  python scripts/perps_dashboard.py --profile dev --refresh 1 --window-min 5
 """
 
 from __future__ import annotations
@@ -26,7 +19,15 @@ import time
 from collections import deque
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Deque, Dict, Optional
+from typing import Deque
+
+from rich.layout import Layout
+from rich.live import Live
+from rich.panel import Panel
+from rich.table import Table
+from rich.text import Text
+from rich.console import Console
+from rich import box
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SRC_PATH = REPO_ROOT / "src"
@@ -35,9 +36,7 @@ if str(SRC_PATH) not in sys.path:
 
 from gpt_trader.config.path_registry import RUNTIME_DATA_DIR
 
-
-def clear():
-    os.system("clear" if os.name == "posix" else "cls")
+console = Console()
 
 
 def load_events(path: Path, max_lines: int = 5000) -> Deque[dict]:
@@ -69,17 +68,21 @@ def parse_time(s: str | None) -> datetime | None:
         return None
 
 
-def summarize(events: Deque[dict], window: timedelta) -> dict[str, float | int]:
-    now = datetime.utcnow().astimezone()
+def summarize(events: Deque[dict], window: timedelta) -> dict:
+    now = datetime.now().astimezone()
     cutoff = now - window
     success = 0
     failed = 0
     drift = 0
     pos_drift = 0
+
+    recent_events = []
+
     for evt in events:
         ts = parse_time(evt.get("time"))
         if ts is None or ts < cutoff:
             continue
+
         etype = str(evt.get("type", "")).lower()
         if etype == "order_success":
             success += 1
@@ -89,8 +92,12 @@ def summarize(events: Deque[dict], window: timedelta) -> dict[str, float | int]:
             drift += 1
         elif etype == "position_drift":
             pos_drift += 1
+
+        recent_events.append(evt)
+
     total = success + failed
     acceptance = (success / total * 100.0) if total > 0 else 0.0
+
     return {
         "success": success,
         "failed": failed,
@@ -98,6 +105,9 @@ def summarize(events: Deque[dict], window: timedelta) -> dict[str, float | int]:
         "acceptance_rate": acceptance,
         "drift_events": drift,
         "position_drift_events": pos_drift,
+        "recent_events": list(events)[
+            -15:
+        ],  # Get absolute last 15 events regardless of window for log
     }
 
 
@@ -121,104 +131,164 @@ def load_metrics(metrics_path: Path) -> dict:
         return {}
 
 
+def make_header(profile: str, window_min: int) -> Panel:
+    grid = Table.grid(expand=True)
+    grid.add_column(justify="left")
+    grid.add_column(justify="right")
+    grid.add_row(
+        f"[b]🚀 Coinbase Trader Dashboard[/b]",
+        f"[dim]Profile:[/dim] [cyan]{profile}[/cyan] | [dim]Window:[/dim] [cyan]{window_min}m[/cyan] | [dim]{datetime.now().strftime('%H:%M:%S')}[/dim]",
+    )
+    return Panel(grid, style="white on blue")
+
+
+def make_health_panel(health: dict, metrics: dict) -> Panel:
+    status_color = "green" if health.get("ok") else "red"
+    status_icon = "✅" if health.get("ok") else "❌"
+
+    table = Table.grid(padding=(0, 2))
+    table.add_column(style="bold")
+    table.add_column()
+
+    table.add_row(
+        "Status",
+        f"[{status_color}]{status_icon} {health.get('message', 'Unknown')}[/{status_color}]",
+    )
+    if health.get("error"):
+        table.add_row("Error", f"[red]{health.get('error')}[/red]")
+    table.add_row("Last Update", f"[dim]{health.get('timestamp', '')}[/dim]")
+
+    # System Metrics
+    sys_metrics = metrics.get("system", {})
+    if sys_metrics:
+        table.add_row("", "")
+        table.add_row("[u]System Resources[/u]", "")
+
+        cpu = sys_metrics.get("cpu_percent", 0)
+        mem_pct = sys_metrics.get("memory_percent", 0)
+        mem_mb = sys_metrics.get("memory_used_mb", 0)
+
+        cpu_color = "green" if cpu < 50 else "yellow" if cpu < 80 else "red"
+        mem_color = "green" if mem_pct < 50 else "yellow" if mem_pct < 80 else "red"
+
+        table.add_row("CPU", f"[{cpu_color}]{cpu:.1f}%[/{cpu_color}]")
+        table.add_row("Memory", f"[{mem_color}]{mem_pct:.1f}% ({mem_mb:.0f} MB)[/{mem_color}]")
+
+    return Panel(table, title="System Health", border_style=status_color)
+
+
+def make_orders_panel(summary: dict) -> Panel:
+    table = Table.grid(padding=(0, 2))
+    table.add_column(style="bold")
+    table.add_column(justify="right")
+
+    total = summary["total"]
+    success = summary["success"]
+    failed = summary["failed"]
+    rate = summary["acceptance_rate"]
+
+    table.add_row("Total Orders", str(total))
+    table.add_row("Successful", f"[green]{success}[/green]")
+    table.add_row("Failed", f"[red]{failed}[/red]")
+
+    rate_color = "green" if rate > 90 else "yellow" if rate > 50 else "red"
+    table.add_row("Acceptance Rate", f"[{rate_color}]{rate:.1f}%[/{rate_color}]")
+
+    table.add_row("", "")
+    table.add_row("[u]Reconciliation[/u]", "")
+
+    drift = summary["drift_events"]
+    pos_drift = summary["position_drift_events"]
+
+    drift_style = "green" if drift == 0 else "red"
+    pos_drift_style = "green" if pos_drift == 0 else "red"
+
+    table.add_row("Order Drift", f"[{drift_style}]{drift}[/{drift_style}]")
+    table.add_row("Position Drift", f"[{pos_drift_style}]{pos_drift}[/{pos_drift_style}]")
+
+    return Panel(table, title="Trading Metrics", border_style="cyan")
+
+
+def make_events_panel(events: list[dict]) -> Panel:
+    table = Table(box=None, show_header=False, padding=(0, 1), expand=True)
+    table.add_column("Time", style="dim", width=12)
+    table.add_column("Type", style="bold", width=15)
+    table.add_column("Details")
+
+    for e in reversed(events):  # Show newest first
+        t = parse_time(e.get("time"))
+        t_str = t.strftime("%H:%M:%S") if t else ""
+
+        etype = e.get("type", "")
+        details = ""
+        style = "white"
+
+        sym = e.get("symbol") or e.get("product_id") or ""
+
+        if etype == "order_success":
+            style = "green"
+            details = (
+                f"{e.get('side','').upper()} {sym} {e.get('quantity','')} @ {e.get('price', 'MKT')}"
+            )
+        elif etype == "order_failed":
+            style = "red"
+            details = f"{sym} {e.get('reason', '')}"
+        elif "drift" in etype:
+            style = "yellow"
+            details = f"local={e.get('local_count')} exch={e.get('exchange_count')}"
+        elif etype == "alert":
+            style = "red bold"
+            details = e.get("message", "")
+        else:
+            details = str(e)
+
+        table.add_row(t_str, Text(etype, style=style), details)
+
+    return Panel(table, title="Recent Events", border_style="blue")
+
+
 def main():
     parser = argparse.ArgumentParser(description="Coinbase Trader Metrics Dashboard")
     parser.add_argument("--profile", choices=["dev", "demo", "prod", "canary"], default="dev")
-    parser.add_argument("--refresh", type=int, default=5, help="Refresh interval seconds")
+    parser.add_argument("--refresh", type=int, default=1, help="Refresh interval seconds")
     parser.add_argument("--window-min", type=int, default=5, help="Sliding window in minutes")
     args = parser.parse_args()
 
-    # Resolve base dir for this profile (aligns with Coinbase Trader EventStore root)
-    default_root = RUNTIME_DATA_DIR / "coinbase_trader" / args.profile
-    base_dir = Path(os.getenv("EVENT_STORE_ROOT", str(default_root)))
+    # Load config and container to resolve paths consistently
+    from gpt_trader.app.container import create_application_container
+    from gpt_trader.orchestration.configuration import BotConfig
+
+    config = BotConfig(profile=args.profile)
+    container = create_application_container(config)
+
+    # Use container's runtime paths
+    base_dir = container.runtime_paths.event_store_root
     events_path = base_dir / "events.jsonl"
     health_path = base_dir / "health.json"
     metrics_path = base_dir / "metrics.json"
 
-    # Load once, then loop
     window = timedelta(minutes=args.window_min)
 
-    try:
-        while True:
-            clear()
-            print("=" * 80)
-            print(
-                f"🚀 Coinbase Trader Metrics Dashboard  |  Profile: {args.profile}  |  Window: {args.window_min}m"
-            )
-            print("=" * 80)
+    layout = Layout()
+    layout.split(Layout(name="header", size=3), Layout(name="body"), Layout(name="footer", size=15))
+    layout["body"].split_row(Layout(name="left"), Layout(name="right"))
 
-            events = load_events(events_path)
-            summary = summarize(events, window)
-            health = load_health(health_path)
-            metrics = load_metrics(metrics_path)
+    with Live(layout, refresh_per_second=1) as live:
+        try:
+            while True:
+                events = load_events(events_path)
+                summary = summarize(events, window)
+                health = load_health(health_path)
+                metrics = load_metrics(metrics_path)
 
-            # Health
-            ok_icon = "✅" if health.get("ok") else "❌"
-            print("\n🩺 Health")
-            print("-" * 40)
-            print(
-                f"Status: {ok_icon}  |  Message: {health.get('message','')}  |  Error: {health.get('error','')}"
-            )
-            print(f"Time:   {health.get('timestamp', '')}")
+                layout["header"].update(make_header(args.profile, args.window_min))
+                layout["left"].update(make_health_panel(health, metrics))
+                layout["right"].update(make_orders_panel(summary))
+                layout["footer"].update(make_events_panel(summary["recent_events"]))
 
-            system_metrics = metrics.get("system") or {}
-            if system_metrics:
-                print("\n🖥️  System Resources")
-                print("-" * 40)
-                cpu = system_metrics.get("cpu_percent", 0)
-                mem_pct = system_metrics.get("memory_percent", 0)
-                mem_mb = system_metrics.get("memory_used_mb", system_metrics.get("memory_mb", 0))
-                disk_pct = system_metrics.get("disk_percent", 0)
-                disk_gb = system_metrics.get("disk_used_gb", system_metrics.get("disk_gb", 0))
-                net_tx = system_metrics.get("network_sent_mb", 0)
-                net_rx = system_metrics.get("network_recv_mb", 0)
-                threads = system_metrics.get("threads", system_metrics.get("system_threads", 0))
-                print(f"CPU:     {float(cpu):5.1f}%")
-                print(f"Memory:  {float(mem_pct):5.1f}% ({float(mem_mb):.0f} MB)")
-                print(f"Disk:    {float(disk_pct):5.1f}% ({float(disk_gb):.2f} GB used)")
-                print(f"Network: sent {float(net_tx):.1f} MB  recv {float(net_rx):.1f} MB")
-                print(f"Threads: {int(threads) if str(threads).isdigit() else threads}")
-
-            # Orders
-            print(f"\n📊 Orders (last {args.window_min:d} min)")
-            print("-" * 40)
-            print(f"Total:     {summary['total']}")
-            print(f"Successful:{summary['success']}")
-            print(f"Failed:    {summary['failed']}")
-            print(f"Acceptance:{summary['acceptance_rate']:.1f}%")
-
-            # Drift
-            print("\n🔁 Reconciliation")
-            print("-" * 40)
-            print(f"order_drift events:    {summary['drift_events']}")
-            print(f"position_drift events: {summary['position_drift_events']}")
-
-            # Tail last few events for context
-            tail = list(events)[-10:]
-            if tail:
-                print("\n🧾 Recent Events")
-                print("-" * 40)
-                for e in tail:
-                    t = e.get("time", "")
-                    et = e.get("type", "")
-                    sym = e.get("symbol") or e.get("product_id") or ""
-                    msg = ""
-                    if et == "order_success":
-                        msg = f"{et} {sym} {e.get('side','')} quantity={e.get('quantity','')}"
-                    elif et == "order_failed":
-                        msg = et
-                    elif et == "order_drift":
-                        msg = f"{et} local={e.get('local_count')} exch={e.get('exchange_count')}"
-                    else:
-                        msg = et
-                    print(f"{t}  {msg}")
-
-            print("\n" + "=" * 80)
-            print(f"Events: {events_path}  |  Health: {health_path}")
-            print("Press Ctrl+C to exit")
-            time.sleep(args.refresh)
-    except KeyboardInterrupt:
-        print("\nBye!")
+                time.sleep(args.refresh)
+        except KeyboardInterrupt:
+            pass
 
 
 if __name__ == "__main__":

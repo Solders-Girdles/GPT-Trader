@@ -427,7 +427,11 @@ class BotConfig:
         if "take_profit_pct" in source_risk:
             risk_data["take_profit_pct"] = Decimal(str(source_risk["take_profit_pct"]))
 
-        config_data["risk"] = BotRiskConfig(**risk_data)
+        # Filter unexpected keys to avoid TypeError
+        valid_risk_fields = {f.name for f in fields(BotRiskConfig)}
+        filtered_risk_data = {k: v for k, v in risk_data.items() if k in valid_risk_fields}
+
+        config_data["risk"] = BotRiskConfig(**filtered_risk_data)
 
         # 3. Map Execution Config
         execution = data.get("execution", {})

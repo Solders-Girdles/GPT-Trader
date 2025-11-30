@@ -58,6 +58,8 @@ def context(mock_broker):
     risk = BotRiskConfig(position_fraction=Decimal("0.1"))
     config = BotConfig(symbols=["BTC-USD"], interval=1, risk=risk)
     risk_manager = MagicMock()
+    # Ensure start_of_day_equity is a valid number for comparisons
+    risk_manager._start_of_day_equity = Decimal("1000.0")
     return CoordinatorContext(config=config, broker=mock_broker, risk_manager=risk_manager)
 
 
@@ -204,6 +206,7 @@ async def test_risk_manager_receives_dict_format(engine):
     """Test that risk manager receives correctly formatted dicts."""
     # Setup risk manager
     mock_risk_manager = MagicMock()
+    mock_risk_manager._start_of_day_equity = Decimal("1000.0")
     mock_risk_manager.pre_trade_validate.return_value = MagicMock(is_valid=True)
     engine.context.risk_manager = mock_risk_manager
 

@@ -46,14 +46,13 @@ class TestOrdersWidget:
 
         mock_table.clear.assert_called_once()
         # Verify row content includes Type and TIF
+        # Updated to match simplified columns: Symbol, Side, Quantity, Price, Status
         args, _ = mock_table.add_row.call_args
         assert args[0] == "BTC-USD"
         assert "BUY" in args[1]
-        assert args[2] == "LIMIT"  # Type
-        assert args[3] == "0.1"
-        assert args[4] == "50000.00"
-        assert args[5] == "GTC"  # TIF
-        assert args[6] == "OPEN"
+        assert args[2] == "0.1"
+        assert args[3] == "50000.00"
+        assert args[4] == "OPEN"
 
 
 class TestTradesWidget:

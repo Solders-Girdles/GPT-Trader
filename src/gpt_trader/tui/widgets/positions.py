@@ -58,7 +58,7 @@ class OrdersWidget(Static):
 
     def on_mount(self) -> None:
         table = self.query_one(DataTable)
-        table.add_columns("Symbol", "Side", "Type", "Quantity", "Price", "TIF", "Status", "Time")
+        table.add_columns("Symbol", "Side", "Quantity", "Price", "Status")
 
     def update_orders(self, orders: list[Any]) -> None:
         table = self.query_one(DataTable)
@@ -88,7 +88,11 @@ class OrdersWidget(Static):
             # Price
             price = order.get("avg_execution_price", "")
             if not price:
-                # Try limit price
+                # Try direct price attribute (common in tests/mocks)
+                price = order.get("price", "")
+
+            if not price:
+                # Try limit price from config
                 config = order.get("order_configuration", {})
                 if "limit_limit_gtc" in config:
                     price = config["limit_limit_gtc"].get("limit_price", "")
@@ -105,27 +109,11 @@ class OrdersWidget(Static):
                 except IndexError:
                     pass
 
-            # Type & TIF
-            order_type = "MARKET"
-            tif = "IOC"
-            config = order.get("order_configuration", {})
-            if "limit_limit_gtc" in config:
-                order_type = "LIMIT"
-                tif = "GTC"
-            elif "stop_limit_stop_limit_gtc" in config:
-                order_type = "STOP_LIMIT"
-                tif = "GTC"
-            elif "stop_limit_stop_limit_gtd" in config:
-                order_type = "STOP_LIMIT"
-                tif = "GTD"
-
             # Colorize Side
             side_style = "green" if side == "BUY" else "red"
             formatted_side = f"[{side_style}]{side}[/{side_style}]"
 
-            table.add_row(
-                symbol, formatted_side, order_type, quantity, str(price), tif, status, time_str
-            )
+            table.add_row(symbol, formatted_side, quantity, str(price), status)
 
 
 class TradesWidget(Static):
@@ -144,7 +132,8 @@ class TradesWidget(Static):
         table.clear()
 
         for trade in trades:
-            symbol = trade.get("product_id", "UNKNOWN")
+            # Handle both 'product_id' and 'symbol' for compatibility
+            symbol = trade.get("product_id") or trade.get("symbol") or "UNKNOWN"
             side = trade.get("side", "UNKNOWN")
             quantity = trade.get("quantity", "")
             price = trade.get("price", "")

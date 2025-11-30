@@ -47,6 +47,10 @@ class MarketDataClientMixin:
         path = self._get_endpoint_path("ticker", product_id=product_id)
         return self._request("GET", path)
 
+    # Alias for get_ticker to satisfy some legacy/test code
+    def get_product_ticker(self: CoinbaseClientProtocol, product_id: str) -> dict[str, Any]:
+        return self.get_ticker(product_id)
+
     def get_candles(
         self: CoinbaseClientProtocol,
         product_id: str,

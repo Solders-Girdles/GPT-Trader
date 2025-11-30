@@ -73,19 +73,23 @@ class PortfolioClientMixin:
     # ------------------------------------------------------------------
     # Derivatives & positions
     # ------------------------------------------------------------------
-    def list_positions(self: CoinbaseClientProtocol) -> dict[str, Any]:
+    def list_cfm_positions(self: CoinbaseClientProtocol) -> dict[str, Any]:
         if self.api_mode == "exchange":
             raise InvalidRequestError(
-                "list_positions not available in exchange mode. "
+                "list_cfm_positions not available in exchange mode. "
                 "Set COINBASE_API_MODE=advanced with derivatives enabled."
             )
         path = self._get_endpoint_path("cfm_positions")
         return self._request("GET", path)
 
-    def get_position(self: CoinbaseClientProtocol, product_id: str) -> dict[str, Any]:
+    # Renamed to avoid collision with CoinbaseClient.list_positions (which returns domain objects)
+    def list_positions_raw(self: CoinbaseClientProtocol) -> dict[str, Any]:
+        return self.list_cfm_positions()
+
+    def get_cfm_position(self: CoinbaseClientProtocol, product_id: str) -> dict[str, Any]:
         if self.api_mode == "exchange":
             raise InvalidRequestError(
-                "get_position not available in exchange mode. "
+                "get_cfm_position not available in exchange mode. "
                 "Set COINBASE_API_MODE=advanced with derivatives enabled."
             )
         path = self._get_endpoint_path("cfm_position", product_id=product_id)
@@ -103,9 +107,17 @@ class PortfolioClientMixin:
         path = self._get_endpoint_path("intx_portfolio", portfolio_uuid=portfolio_uuid)
         return self._request("GET", path)
 
+    # Alias for intx_portfolio
+    def get_intx_portfolio(self: CoinbaseClientProtocol, portfolio_uuid: str) -> dict[str, Any]:
+        return self.intx_portfolio(portfolio_uuid)
+
     def intx_positions(self: CoinbaseClientProtocol, portfolio_uuid: str) -> dict[str, Any]:
         path = self._get_endpoint_path("intx_positions", portfolio_uuid=portfolio_uuid)
         return self._request("GET", path)
+
+    # Alias for intx_positions
+    def list_intx_positions(self: CoinbaseClientProtocol, portfolio_uuid: str) -> dict[str, Any]:
+        return self.intx_positions(portfolio_uuid)
 
     def intx_position(
         self: CoinbaseClientProtocol, portfolio_uuid: str, symbol: str
@@ -115,9 +127,19 @@ class PortfolioClientMixin:
         )
         return self._request("GET", path)
 
+    # Alias for intx_position
+    def get_intx_position(
+        self: CoinbaseClientProtocol, portfolio_uuid: str, symbol: str
+    ) -> dict[str, Any]:
+        return self.intx_position(portfolio_uuid, symbol)
+
     def intx_multi_asset_collateral(self: CoinbaseClientProtocol) -> dict[str, Any]:
         path = self._get_endpoint_path("intx_multi_asset_collateral")
         return self._request("GET", path)
+
+    # Alias for intx_multi_asset_collateral
+    def get_intx_multi_asset_collateral(self: CoinbaseClientProtocol) -> dict[str, Any]:
+        return self.intx_multi_asset_collateral()
 
     # ------------------------------------------------------------------
     # Clearing & Treasury (CFM)

@@ -40,6 +40,8 @@ class TestEnsembleSystemExecution:
         mock_registry.broker = mock_broker
         mock_registry.account_manager = MagicMock()
         mock_registry.risk_manager = MagicMock()
+        # Set start_of_day_equity to avoid TypeError in TradingEngine._cycle
+        mock_registry.risk_manager._start_of_day_equity = Decimal("1000.00")
         mock_registry.event_store = MagicMock()
         mock_registry.notification_service = MagicMock()
 

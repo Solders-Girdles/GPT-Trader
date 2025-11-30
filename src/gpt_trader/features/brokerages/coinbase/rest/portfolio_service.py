@@ -114,10 +114,8 @@ class PortfolioService:
         positions = []
         try:
             if self._endpoints.supports_derivatives():
-                response = self._client.list_positions()
-                raw_positions = response.get("positions", [])
-                for p in raw_positions:
-                    positions.append(to_position(p))
+                # Client returns list[Position] now
+                positions = self._client.list_positions()
         except Exception as exc:
             logger.error(
                 "Failed to list positions from broker",
@@ -131,7 +129,10 @@ class PortfolioService:
         """Get position for a symbol."""
         try:
             if self._endpoints.supports_derivatives():
-                response = self._client.get_position(product_id=symbol)
+                # For get_position, client mixin returns dict (get_cfm_position)
+                # But client doesn't override it to return Position object?
+                # Let's use the raw mixin method exposed via client
+                response = self._client.get_cfm_position(product_id=symbol)
                 return to_position(response)
         except Exception as exc:
             logger.error(

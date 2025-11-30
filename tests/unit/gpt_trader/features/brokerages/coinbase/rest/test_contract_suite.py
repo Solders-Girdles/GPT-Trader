@@ -395,18 +395,20 @@ class TestCoinbaseRestContractSuite:
     def test_list_positions_success(self, portfolio_service, mock_endpoints, mock_client):
         """Test successful position listing."""
         mock_endpoints.supports_derivatives.return_value = True
+        # Updated to return Position objects directly
         mock_positions = [
-            {
-                "product_id": "BTC-USD",
-                "side": "long",
-                "size": "1.5",
-                "entry_price": "50000.00",
-                "mark_price": "51000.00",
-                "unrealized_pnl": "750.00",
-                "leverage": 5,
-            }
+            Position(
+                symbol="BTC-USD",
+                side="long",
+                quantity=Decimal("1.5"),
+                entry_price=Decimal("50000.00"),
+                mark_price=Decimal("51000.00"),
+                unrealized_pnl=Decimal("750.00"),
+                realized_pnl=Decimal("0.00"),
+                leverage=5,
+            )
         ]
-        mock_client.list_positions.return_value = {"positions": mock_positions}
+        mock_client.list_positions.return_value = mock_positions
 
         positions = portfolio_service.list_positions()
 
@@ -434,7 +436,8 @@ class TestCoinbaseRestContractSuite:
             "size": "1.0",
             "entry_price": "50000.00",
         }
-        mock_client.get_position.return_value = mock_position
+        # Use get_cfm_position as that's what the service calls now
+        mock_client.get_cfm_position.return_value = mock_position
 
         position = portfolio_service.get_position("BTC-USD")
 
@@ -444,7 +447,7 @@ class TestCoinbaseRestContractSuite:
     def test_get_position_not_found(self, portfolio_service, mock_endpoints, mock_client):
         """Test position retrieval when not found."""
         mock_endpoints.supports_derivatives.return_value = True
-        mock_client.get_position.side_effect = Exception("Position not found")
+        mock_client.get_cfm_position.side_effect = Exception("Position not found")
 
         position = portfolio_service.get_position("BTC-USD")
 

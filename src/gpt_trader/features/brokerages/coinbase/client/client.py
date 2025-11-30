@@ -34,7 +34,7 @@ class CoinbaseClient(
     def list_positions(self) -> list[Position]:
         """Fetch positions and convert to domain objects."""
         # Call the mixin method (which returns dict)
-        response = super().list_positions()
+        response = super().list_positions_raw()
         positions_data = response.get("positions", [])
 
         results = []

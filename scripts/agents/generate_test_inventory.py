@@ -205,14 +205,26 @@ def generate_test_inventory(
     marker_categories = {
         "test_type": ["unit", "integration", "property", "behavioral", "contract", "e2e"],
         "component": [
-            "api", "endpoints", "cli", "monitoring", "risk", "execution",
-            "backtesting", "orchestration", "persistence", "security", "utilities"
+            "api",
+            "endpoints",
+            "cli",
+            "monitoring",
+            "risk",
+            "execution",
+            "backtesting",
+            "orchestration",
+            "persistence",
+            "security",
+            "utilities",
         ],
         "trading": ["perps", "spot", "portfolio", "strategy", "liquidity"],
         "performance": ["perf", "performance", "slow", "load", "stress"],
         "environment": [
-            "real_api", "uses_mock_broker", "requires_db",
-            "requires_network", "requires_secrets"
+            "real_api",
+            "uses_mock_broker",
+            "requires_db",
+            "requires_network",
+            "requires_secrets",
         ],
         "async": ["asyncio", "anyio"],
         "special": ["regression", "flaky", "manual", "deprecated"],
@@ -228,9 +240,7 @@ def generate_test_inventory(
         },
         "marker_definitions": marker_defs,
         "marker_categories": marker_categories,
-        "marker_counts": dict(
-            sorted(scan_results["marker_counts"].items(), key=lambda x: -x[1])
-        ),
+        "marker_counts": dict(sorted(scan_results["marker_counts"].items(), key=lambda x: -x[1])),
         "path_categories": path_categories,
         "tests_by_file": inventory,
     }
@@ -260,9 +270,7 @@ def filter_by_path(inventory: dict[str, Any], path_prefix: str) -> list[str]:
 
 def main() -> int:
     """Main entry point."""
-    parser = argparse.ArgumentParser(
-        description="Generate test inventory for AI agents"
-    )
+    parser = argparse.ArgumentParser(description="Generate test inventory for AI agents")
     parser.add_argument(
         "--output-dir",
         type=Path,
@@ -377,7 +385,9 @@ def main() -> int:
         json.dump(index, f, indent=2)
     print(f"Index written to: {index_path}")
 
-    print(f"\nFound {inventory['summary']['total_tests']} tests in {inventory['summary']['total_files']} files")
+    print(
+        f"\nFound {inventory['summary']['total_tests']} tests in {inventory['summary']['total_files']} files"
+    )
 
     return 0
 

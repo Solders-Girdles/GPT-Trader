@@ -44,23 +44,27 @@ def extract_imports(file_path: Path) -> list[dict[str, Any]]:
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
             for alias in node.names:
-                imports.append({
-                    "type": "import",
-                    "module": alias.name,
-                    "alias": alias.asname,
-                    "line": node.lineno,
-                })
+                imports.append(
+                    {
+                        "type": "import",
+                        "module": alias.name,
+                        "alias": alias.asname,
+                        "line": node.lineno,
+                    }
+                )
         elif isinstance(node, ast.ImportFrom):
             if node.module:
                 for alias in node.names:
-                    imports.append({
-                        "type": "from",
-                        "module": node.module,
-                        "name": alias.name,
-                        "alias": alias.asname,
-                        "level": node.level,
-                        "line": node.lineno,
-                    })
+                    imports.append(
+                        {
+                            "type": "from",
+                            "module": node.module,
+                            "name": alias.name,
+                            "alias": alias.asname,
+                            "level": node.level,
+                            "line": node.lineno,
+                        }
+                    )
 
     return imports
 
@@ -324,20 +328,20 @@ def format_text_report(graph: dict[str, Any]) -> str:
         dep_str = f" -> {', '.join(deps)}" if deps else ""
         lines.append(f"  {component}: {count} modules{dep_str}")
 
-    lines.extend([
-        "",
-        "External Dependencies:",
-        f"  {', '.join(graph['external_dependencies'][:20])}",
-    ])
+    lines.extend(
+        [
+            "",
+            "External Dependencies:",
+            f"  {', '.join(graph['external_dependencies'][:20])}",
+        ]
+    )
 
     return "\n".join(lines)
 
 
 def main() -> int:
     """Main entry point."""
-    parser = argparse.ArgumentParser(
-        description="Generate module dependency graph"
-    )
+    parser = argparse.ArgumentParser(description="Generate module dependency graph")
     parser.add_argument(
         "--format",
         choices=["json", "text", "dot"],

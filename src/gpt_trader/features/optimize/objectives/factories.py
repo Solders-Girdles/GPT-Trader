@@ -180,9 +180,7 @@ def create_streak_resilient_objective(
             (WinRateObjective(min_trades=min_trades), 0.3),
         ],
         constraints=[
-            Constraint(
-                "max_streak", "max_consecutive_losses", "le", float(max_consecutive_losses)
-            ),
+            Constraint("max_streak", "max_consecutive_losses", "le", float(max_consecutive_losses)),
             Constraint("min_win_rate", "win_rate", "ge", min_win_rate),
             Constraint("max_drawdown", "max_drawdown_pct", "le", max_drawdown_pct),
             Constraint("min_trades", "total_trades", "ge", float(min_trades)),
@@ -226,9 +224,7 @@ def create_perpetuals_objective(
     ]
 
     if not allow_circuit_breakers:
-        constraints.append(
-            Constraint("no_circuit_breakers", "circuit_breaker_triggers", "eq", 0.0)
-        )
+        constraints.append(Constraint("no_circuit_breakers", "circuit_breaker_triggers", "eq", 0.0))
 
     return WeightedObjective(
         name="perpetuals_optimized",

@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from gpt_trader.backtesting.metrics.risk import RiskMetrics
@@ -177,9 +178,7 @@ class ConditionalConstraint:
             return True  # If condition can't be evaluated, assume satisfied
 
         # Check if condition triggers
-        condition_met = _compare(
-            condition_value, self.condition_operator, self.condition_threshold
-        )
+        condition_met = _compare(condition_value, self.condition_operator, self.condition_threshold)
 
         if not condition_met:
             return True  # Condition not met, constraint doesn't apply
@@ -191,9 +190,7 @@ class ConditionalConstraint:
         if constraint_value is None:
             return False  # Can't evaluate constraint, consider it failed
 
-        return _compare(
-            constraint_value, self.constraint_operator, self.constraint_threshold
-        )
+        return _compare(constraint_value, self.constraint_operator, self.constraint_threshold)
 
 
 @dataclass(frozen=True)

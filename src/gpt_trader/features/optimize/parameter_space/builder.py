@@ -214,7 +214,9 @@ class ParameterSpaceBuilder:
         elif category == "simulation":
             self._simulation_params.append(param)
         else:
-            raise ValueError(f"Unknown category: {category}. Use 'strategy', 'risk', or 'simulation'")
+            raise ValueError(
+                f"Unknown category: {category}. Use 'strategy', 'risk', or 'simulation'"
+            )
 
     def build(self) -> ParameterSpace:
         """

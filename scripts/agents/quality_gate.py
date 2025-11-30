@@ -82,27 +82,33 @@ def parse_ruff_output(stdout: str) -> list[dict[str, Any]]:
         for line in stdout.strip().split("\n"):
             if line.startswith("{"):
                 finding = json.loads(line)
-                findings.append({
-                    "file": finding.get("filename", ""),
-                    "line": finding.get("location", {}).get("row", 0),
-                    "column": finding.get("location", {}).get("column", 0),
-                    "code": finding.get("code", ""),
-                    "message": finding.get("message", ""),
-                    "severity": "error" if finding.get("code", "").startswith("E") else "warning",
-                })
+                findings.append(
+                    {
+                        "file": finding.get("filename", ""),
+                        "line": finding.get("location", {}).get("row", 0),
+                        "column": finding.get("location", {}).get("column", 0),
+                        "code": finding.get("code", ""),
+                        "message": finding.get("message", ""),
+                        "severity": (
+                            "error" if finding.get("code", "").startswith("E") else "warning"
+                        ),
+                    }
+                )
     except json.JSONDecodeError:
         # Fall back to line-based parsing
         for line in stdout.strip().split("\n"):
             if ":" in line and line.strip():
                 parts = line.split(":", 3)
                 if len(parts) >= 4:
-                    findings.append({
-                        "file": parts[0],
-                        "line": int(parts[1]) if parts[1].isdigit() else 0,
-                        "column": int(parts[2]) if parts[2].isdigit() else 0,
-                        "message": parts[3].strip(),
-                        "severity": "error",
-                    })
+                    findings.append(
+                        {
+                            "file": parts[0],
+                            "line": int(parts[1]) if parts[1].isdigit() else 0,
+                            "column": int(parts[2]) if parts[2].isdigit() else 0,
+                            "message": parts[3].strip(),
+                            "severity": "error",
+                        }
+                    )
     return findings
 
 
@@ -119,12 +125,14 @@ def parse_mypy_output(stdout: str) -> list[dict[str, Any]]:
                     severity = "warning"
                 elif "note" in parts[2]:
                     severity = "info"
-                findings.append({
-                    "file": parts[0],
-                    "line": int(parts[1]) if parts[1].isdigit() else 0,
-                    "message": parts[3].strip(),
-                    "severity": severity,
-                })
+                findings.append(
+                    {
+                        "file": parts[0],
+                        "line": int(parts[1]) if parts[1].isdigit() else 0,
+                        "message": parts[3].strip(),
+                        "severity": severity,
+                    }
+                )
     return findings
 
 
@@ -138,18 +146,22 @@ def parse_pytest_output(stdout: str, stderr: str) -> list[dict[str, Any]]:
             parts = line.split(" - ", 1)
             test_id = parts[0].replace("FAILED ", "").strip()
             reason = parts[1] if len(parts) > 1 else "Test failed"
-            findings.append({
-                "test": test_id,
-                "message": reason,
-                "severity": "error",
-            })
+            findings.append(
+                {
+                    "test": test_id,
+                    "message": reason,
+                    "severity": "error",
+                }
+            )
         elif line.startswith("ERROR "):
             test_id = line.replace("ERROR ", "").strip()
-            findings.append({
-                "test": test_id,
-                "message": "Test error (collection or setup failed)",
-                "severity": "error",
-            })
+            findings.append(
+                {
+                    "test": test_id,
+                    "message": "Test error (collection or setup failed)",
+                    "severity": "error",
+                }
+            )
     return findings
 
 
@@ -217,11 +229,13 @@ def run_format_check(paths: list[str] | None = None) -> CheckResult:
     findings = []
     for line in (stdout + stderr).split("\n"):
         if "Would reformat" in line or "would be reformatted" in line.lower():
-            findings.append({
-                "file": line.split()[-1] if line.split() else "",
-                "message": "File needs formatting",
-                "severity": "warning",
-            })
+            findings.append(
+                {
+                    "file": line.split()[-1] if line.split() else "",
+                    "message": "File needs formatting",
+                    "severity": "warning",
+                }
+            )
 
     return CheckResult(
         name="format",
@@ -335,13 +349,15 @@ def run_security_check() -> CheckResult:
     try:
         data = json.loads(stdout) if stdout.strip() else {}
         for result in data.get("results", []):
-            findings.append({
-                "file": result.get("filename", ""),
-                "line": result.get("line_number", 0),
-                "code": result.get("test_id", ""),
-                "message": result.get("issue_text", ""),
-                "severity": result.get("issue_severity", "").lower(),
-            })
+            findings.append(
+                {
+                    "file": result.get("filename", ""),
+                    "line": result.get("line_number", 0),
+                    "code": result.get("test_id", ""),
+                    "message": result.get("issue_text", ""),
+                    "severity": result.get("issue_severity", "").lower(),
+                }
+            )
     except json.JSONDecodeError:
         pass
 
@@ -413,7 +429,9 @@ def format_text_report(report: dict[str, Any]) -> str:
 
     for result in report["results"]:
         status = "✓" if result["passed"] else "✗"
-        lines.append(f"{status} {result['name']}: {result['summary']} ({result['duration_seconds']}s)")
+        lines.append(
+            f"{status} {result['name']}: {result['summary']} ({result['duration_seconds']}s)"
+        )
 
         if not result["passed"] and result["findings"]:
             for finding in result["findings"][:5]:
@@ -431,9 +449,7 @@ def format_text_report(report: dict[str, Any]) -> str:
 
 def main() -> int:
     """Main entry point."""
-    parser = argparse.ArgumentParser(
-        description="Run quality gate checks with JSON output"
-    )
+    parser = argparse.ArgumentParser(description="Run quality gate checks with JSON output")
     parser.add_argument(
         "--check",
         type=str,

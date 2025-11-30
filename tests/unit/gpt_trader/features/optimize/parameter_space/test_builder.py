@@ -12,11 +12,7 @@ class TestParameterSpaceBuilder:
 
     def test_add_integer(self):
         """Test adding integer parameter."""
-        space = (
-            ParameterSpaceBuilder()
-            .add_integer("p1", 1, 10, category="strategy")
-            .build()
-        )
+        space = ParameterSpaceBuilder().add_integer("p1", 1, 10, category="strategy").build()
         assert space.parameter_count == 1
         param = space.get_parameter("p1")
         assert param.parameter_type == ParameterType.INTEGER
@@ -26,11 +22,7 @@ class TestParameterSpaceBuilder:
 
     def test_add_float(self):
         """Test adding float parameter."""
-        space = (
-            ParameterSpaceBuilder()
-            .add_float("p1", 0.1, 1.0, category="risk")
-            .build()
-        )
+        space = ParameterSpaceBuilder().add_float("p1", 0.1, 1.0, category="risk").build()
         assert space.parameter_count == 1
         param = space.get_parameter("p1")
         assert param.parameter_type == ParameterType.FLOAT
@@ -41,9 +33,7 @@ class TestParameterSpaceBuilder:
     def test_add_categorical(self):
         """Test adding categorical parameter."""
         space = (
-            ParameterSpaceBuilder()
-            .add_categorical("p1", ["a", "b"], category="simulation")
-            .build()
+            ParameterSpaceBuilder().add_categorical("p1", ["a", "b"], category="simulation").build()
         )
         assert space.parameter_count == 1
         param = space.get_parameter("p1")

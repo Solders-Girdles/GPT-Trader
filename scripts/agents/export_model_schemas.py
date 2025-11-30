@@ -278,9 +278,7 @@ def generate_interface_schemas() -> dict[str, Any]:
     ]
 
     for model_cls, descriptions in models:
-        schemas["definitions"][model_cls.__name__] = dataclass_to_schema(
-            model_cls, descriptions
-        )
+        schemas["definitions"][model_cls.__name__] = dataclass_to_schema(model_cls, descriptions)
 
     return schemas
 
@@ -561,9 +559,7 @@ def generate_error_schemas() -> dict[str, Any]:
     # Add CLI error codes
     from gpt_trader.cli.response import CliErrorCode
 
-    schemas["cli_error_codes"] = {
-        code.name: code.value for code in CliErrorCode
-    }
+    schemas["cli_error_codes"] = {code.name: code.value for code in CliErrorCode}
 
     return schemas
 
@@ -579,9 +575,7 @@ def generate_all_schemas() -> dict[str, dict[str, Any]]:
 
 def main() -> int:
     """Main entry point."""
-    parser = argparse.ArgumentParser(
-        description="Export JSON schemas for domain models"
-    )
+    parser = argparse.ArgumentParser(description="Export JSON schemas for domain models")
     parser.add_argument(
         "--output-dir",
         type=Path,

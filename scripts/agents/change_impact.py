@@ -122,7 +122,7 @@ def find_test_file(source_file: str) -> str | None:
     # Direct mapping based on path prefixes
     for src_prefix, test_prefix in PATH_TO_TEST_MAPPING.items():
         if source_file.startswith(src_prefix):
-            relative = source_file[len(src_prefix):]
+            relative = source_file[len(src_prefix) :]
             # Convert source.py to test_source.py
             if relative.endswith(".py"):
                 parts = Path(relative).parts
@@ -322,9 +322,7 @@ def format_text_report(analysis: dict[str, Any]) -> str:
 
 def main() -> int:
     """Main entry point."""
-    parser = argparse.ArgumentParser(
-        description="Analyze change impact and suggest tests"
-    )
+    parser = argparse.ArgumentParser(description="Analyze change impact and suggest tests")
     parser.add_argument(
         "--files",
         nargs="+",

@@ -75,18 +75,20 @@ def scan_logging_calls(source_dir: Path) -> dict[str, Any]:
                     break
 
             # Find other keyword arguments
-            kwarg_pattern = r'(\w+)\s*='
+            kwarg_pattern = r"(\w+)\s*="
             kwargs = set(re.findall(kwarg_pattern, context))
             # Filter out common non-field kwargs
             kwargs -= {"operation", "component", "status", "extra", "exc_info"}
 
-            operations[operation].append({
-                "file": str(py_file.relative_to(source_dir)),
-                "component": component,
-                "status": status,
-                "level": level,
-                "fields": list(kwargs)[:10],  # Limit fields
-            })
+            operations[operation].append(
+                {
+                    "file": str(py_file.relative_to(source_dir)),
+                    "component": component,
+                    "status": status,
+                    "level": level,
+                    "fields": list(kwargs)[:10],  # Limit fields
+                }
+            )
 
             if component:
                 components[component].append(operation)
@@ -258,18 +260,14 @@ def generate_event_catalog(scan_results: dict[str, Any]) -> dict[str, Any]:
         "total_event_types": len(events),
         "categories": categories,
         "events": events,
-        "field_frequency": dict(
-            sorted(scan_results["fields"].items(), key=lambda x: -x[1])[:30]
-        ),
+        "field_frequency": dict(sorted(scan_results["fields"].items(), key=lambda x: -x[1])[:30]),
         "level_distribution": scan_results["levels"],
     }
 
 
 def main() -> int:
     """Main entry point."""
-    parser = argparse.ArgumentParser(
-        description="Generate event catalog from logging patterns"
-    )
+    parser = argparse.ArgumentParser(description="Generate event catalog from logging patterns")
     parser.add_argument(
         "--output-dir",
         type=Path,

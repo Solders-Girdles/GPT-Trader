@@ -67,9 +67,7 @@ def get_validator_info(cls: type) -> dict[str, Any]:
     if hasattr(cls, "validate"):
         try:
             validate_sig = inspect.signature(cls.validate)
-            info["validate_params"] = [
-                p for p in validate_sig.parameters.keys() if p != "self"
-            ]
+            info["validate_params"] = [p for p in validate_sig.parameters.keys() if p != "self"]
         except (ValueError, TypeError):
             pass
 
@@ -295,9 +293,7 @@ def generate_rules_registry() -> dict[str, Any]:
 
 def main() -> int:
     """Main entry point."""
-    parser = argparse.ArgumentParser(
-        description="Generate validator registry for AI agents"
-    )
+    parser = argparse.ArgumentParser(description="Generate validator registry for AI agents")
     parser.add_argument(
         "--output-dir",
         type=Path,
@@ -340,9 +336,7 @@ def main() -> int:
     print(f"Rules registry written to: {rules_path}")
 
     # Write index
-    total_validators = sum(
-        len(cat) for cat in validator_registry["validators"].values()
-    )
+    total_validators = sum(len(cat) for cat in validator_registry["validators"].values())
     total_rules = sum(len(cat) for cat in rules_registry["rules"].values())
 
     index = {

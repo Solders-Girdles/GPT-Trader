@@ -45,7 +45,11 @@ class ParameterDefinition:
 
     def __post_init__(self) -> None:
         """Validate parameter definition."""
-        if self.parameter_type in (ParameterType.INTEGER, ParameterType.FLOAT, ParameterType.LOG_UNIFORM):
+        if self.parameter_type in (
+            ParameterType.INTEGER,
+            ParameterType.FLOAT,
+            ParameterType.LOG_UNIFORM,
+        ):
             if self.low is None or self.high is None:
                 raise ValueError(f"Parameter '{self.name}' requires low and high bounds")
             if self.low >= self.high:
@@ -127,5 +131,9 @@ class OptimizationConfig:
             raise ValueError("parallel_jobs must be at least 1")
         if self.sampler_type not in ("tpe", "cmaes", "random"):
             raise ValueError(f"Unknown sampler_type: {self.sampler_type}")
-        if self.pruner_type is not None and self.pruner_type not in ("median", "hyperband", "percentile"):
+        if self.pruner_type is not None and self.pruner_type not in (
+            "median",
+            "hyperband",
+            "percentile",
+        ):
             raise ValueError(f"Unknown pruner_type: {self.pruner_type}")

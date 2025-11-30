@@ -225,9 +225,7 @@ def format_text(config: dict[str, Any]) -> str:
 
 def main() -> int:
     """Main entry point."""
-    parser = argparse.ArgumentParser(
-        description="Query risk configuration"
-    )
+    parser = argparse.ArgumentParser(description="Query risk configuration")
     parser.add_argument(
         "--profile",
         type=str,

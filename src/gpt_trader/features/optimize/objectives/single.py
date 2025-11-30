@@ -683,10 +683,7 @@ class ExecutionQualityObjective:
         slippage_score = max(0.0, 100.0 - float(trade_statistics.avg_slippage_bps))
         fill_rate_score = float(trade_statistics.limit_fill_rate)
 
-        return (
-            self.slippage_weight * slippage_score
-            + self.fill_rate_weight * fill_rate_score
-        )
+        return self.slippage_weight * slippage_score + self.fill_rate_weight * fill_rate_score
 
     def is_feasible(
         self,

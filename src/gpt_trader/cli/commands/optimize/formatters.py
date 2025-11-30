@@ -31,21 +31,25 @@ def format_run_summary_text(run: dict[str, Any]) -> str:
     if run.get("completed_at"):
         lines.append(f"Completed: {_format_datetime(run['completed_at'])}")
 
-    lines.extend([
-        f"Total Trials: {run['total_trials']}",
-        f"Feasible Trials: {run['feasible_trials']}",
-        "",
-    ])
+    lines.extend(
+        [
+            f"Total Trials: {run['total_trials']}",
+            f"Feasible Trials: {run['feasible_trials']}",
+            "",
+        ]
+    )
 
     if run.get("best_objective_value") is not None:
-        lines.extend([
-            "-" * 40,
-            "BEST TRIAL",
-            "-" * 40,
-            f"Objective Value: {run['best_objective_value']:.4f}",
-            "",
-            "Parameters:",
-        ])
+        lines.extend(
+            [
+                "-" * 40,
+                "BEST TRIAL",
+                "-" * 40,
+                f"Objective Value: {run['best_objective_value']:.4f}",
+                "",
+                "Parameters:",
+            ]
+        )
 
         if run.get("best_parameters"):
             for key, value in sorted(run["best_parameters"].items()):
@@ -255,11 +259,13 @@ def format_comparison_text(runs: list[dict[str, Any]]) -> str:
     ]
 
     # Summary table
-    lines.extend([
-        "-" * 80,
-        f"{'Study':<20} {'Objective':>12} {'Trials':>8} {'Feasible':>8} {'Run ID':<24}",
-        "-" * 80,
-    ])
+    lines.extend(
+        [
+            "-" * 80,
+            f"{'Study':<20} {'Objective':>12} {'Trials':>8} {'Feasible':>8} {'Run ID':<24}",
+            "-" * 80,
+        ]
+    )
 
     for run in runs:
         best_val = run.get("best_objective_value")

@@ -57,9 +57,7 @@ def python_type_to_json_schema(python_type: type, field_name: str = "") -> dict[
                 schema["nullable"] = True
                 return schema
             else:
-                return {
-                    "oneOf": [python_type_to_json_schema(t, field_name) for t in args]
-                }
+                return {"oneOf": [python_type_to_json_schema(t, field_name) for t in args]}
     except ImportError:
         pass
 
@@ -354,9 +352,7 @@ def main() -> int:
         "schemas": list(schemas.keys()),
         "version": "1.0",
         "description": "Configuration schemas for GPT-Trader AI agent consumption",
-        "files": {
-            name: f"{name}_schema.json" for name in schemas.keys()
-        },
+        "files": {name: f"{name}_schema.json" for name in schemas.keys()},
     }
     index_path = output_dir / "index.json"
     with open(index_path, "w") as f:

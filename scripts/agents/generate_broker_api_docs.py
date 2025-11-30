@@ -131,9 +131,7 @@ def generate_interface_examples() -> dict[str, Any]:
     examples = {
         "get_product": {
             "description": "Get product metadata for a trading symbol",
-            "request": {
-                "symbol": "BTC-USD"
-            },
+            "request": {"symbol": "BTC-USD"},
             "response": {
                 "symbol": "BTC-USD",
                 "base_asset": "BTC",
@@ -148,9 +146,7 @@ def generate_interface_examples() -> dict[str, Any]:
         },
         "get_quote": {
             "description": "Get current bid/ask quote for a symbol",
-            "request": {
-                "symbol": "BTC-USD"
-            },
+            "request": {"symbol": "BTC-USD"},
             "response": {
                 "symbol": "BTC-USD",
                 "bid": "67500.00",
@@ -218,9 +214,7 @@ def generate_interface_examples() -> dict[str, Any]:
         },
         "cancel_order": {
             "description": "Cancel an existing order",
-            "request": {
-                "order_id": "ord_123456789"
-            },
+            "request": {"order_id": "ord_123456789"},
             "response": True,
         },
         "get_candles": {
@@ -296,9 +290,7 @@ def generate_error_scenarios() -> dict[str, Any]:
 
 def main() -> int:
     """Main entry point."""
-    parser = argparse.ArgumentParser(
-        description="Generate broker API documentation"
-    )
+    parser = argparse.ArgumentParser(description="Generate broker API documentation")
     parser.add_argument(
         "--output-dir",
         type=Path,

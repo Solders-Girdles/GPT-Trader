@@ -106,15 +106,17 @@ def _ensure_structured(logger: LoggerLike | Any) -> StructuredLogger | None:
 def log_operation(
     operation: str, logger: LoggerLike = None, level: int = logging.INFO, **context: Any
 ) -> Generator[None]:
+    resolved_logger: StructuredLogger
     if logger is None:
-        logger = get_logger("operation")
+        resolved_logger = get_logger("operation")
     else:
-        logger = _ensure_structured(logger)
+        result = _ensure_structured(logger)
+        resolved_logger = result if result is not None else get_logger("operation")
 
     start_context = {"operation": operation}
     start_context.update(context)
 
-    logger.info(f"Started {operation}", **start_context)
+    resolved_logger.info(f"Started {operation}", **start_context)
 
     start_time = time.time()
     try:
@@ -125,29 +127,33 @@ def log_operation(
 
         final_context = start_context.copy()
         final_context.update(end_context)
-        logger.info(f"Completed {operation}", **final_context)
+        resolved_logger.info(f"Completed {operation}", **final_context)
 
 
 def log_trade_event(event: str, symbol: str, logger: LoggerLike = None, **kwargs: Any) -> None:
+    resolved_logger: StructuredLogger
     if logger is None:
-        logger = get_logger("trading")
+        resolved_logger = get_logger("trading")
     else:
-        logger = _ensure_structured(logger)
+        result = _ensure_structured(logger)
+        resolved_logger = result if result is not None else get_logger("trading")
 
     context: dict[str, Any] = {"operation": "trade_event", "symbol": symbol}
     context.update(kwargs)
-    logger.info(event, **context)
+    resolved_logger.info(event, **context)
 
 
 def log_position_update(symbol: str, logger: LoggerLike = None, **kwargs: Any) -> None:
+    resolved_logger: StructuredLogger
     if logger is None:
-        logger = get_logger("position")
+        resolved_logger = get_logger("position")
     else:
-        logger = _ensure_structured(logger)
+        result = _ensure_structured(logger)
+        resolved_logger = result if result is not None else get_logger("position")
 
     context: dict[str, Any] = {"operation": "position_update"}
     context.update(kwargs)
-    logger.info(f"Position update {symbol}", **context)
+    resolved_logger.info(f"Position update {symbol}", **context)
 
 
 def log_system_health(
@@ -156,10 +162,12 @@ def log_system_health(
     metrics: dict[str, Any] | None = None,
     logger: LoggerLike = None,
 ) -> None:
+    resolved_logger: StructuredLogger
     if logger is None:
-        logger = get_logger("health")
+        resolved_logger = get_logger("health")
     else:
-        logger = _ensure_structured(logger)
+        result = _ensure_structured(logger)
+        resolved_logger = result if result is not None else get_logger("health")
 
     context: dict[str, Any] = {"operation": "health_check", "status": status}
     if component:
@@ -168,7 +176,7 @@ def log_system_health(
         context.update(metrics)
 
     level = logging.WARNING if status != "healthy" else logging.INFO
-    logger.log(level, f"System health: {status}", **context)
+    resolved_logger.log(level, f"System health: {status}", **context)
 
 
 def log_error_with_context(
@@ -178,43 +186,49 @@ def log_error_with_context(
     logger: LoggerLike = None,
     **kwargs: Any,
 ) -> None:
+    resolved_logger: StructuredLogger
     if logger is None:
-        logger = get_logger("error")
+        resolved_logger = get_logger("error")
     else:
-        logger = _ensure_structured(logger)
+        result = _ensure_structured(logger)
+        resolved_logger = result if result is not None else get_logger("error")
 
     context: dict[str, Any] = {"operation": operation, "error_type": type(exc).__name__}
     if component:
         context["component"] = component
     context.update(kwargs)
-    logger.error(str(exc), **context)
+    resolved_logger.error(str(exc), **context)
 
 
 def log_configuration_change(
     key: str, old: Any, new: Any, component: str | None = None, logger: LoggerLike = None
 ) -> None:
+    resolved_logger: StructuredLogger
     if logger is None:
-        logger = get_logger("config")
+        resolved_logger = get_logger("config")
     else:
-        logger = _ensure_structured(logger)
+        result = _ensure_structured(logger)
+        resolved_logger = result if result is not None else get_logger("config")
 
     context: dict[str, Any] = {"operation": "config_change"}
     if component:
         context["component"] = component
 
     msg = f"Config change {key}: {old} -> {new}"
-    logger.info(msg, **context)
+    resolved_logger.info(msg, **context)
 
 
 def log_market_data_update(symbol: str, logger: LoggerLike = None, **kwargs: Any) -> None:
+    resolved_logger: StructuredLogger
     if logger is None:
-        logger = get_logger("market_data")
+        resolved_logger = get_logger("market_data")
     else:
-        logger = _ensure_structured(logger)
+        result = _ensure_structured(logger)
+        resolved_logger = result if result is not None else get_logger("market_data")
 
     context: dict[str, Any] = {"operation": "market_data_update", "symbol": symbol}
     context.update(kwargs)
-    logger.debug(f"Market data {symbol}", **context)
+    resolved_logger.debug(f"Market data {symbol}", **context)
 
 
 def log_execution(
@@ -240,18 +254,23 @@ def log_execution(
                         context[k] = str(v)
 
             # Resolve logger for log_execution itself
-            actual_logger = logger
-            if actual_logger is None:
-                actual_logger = get_logger(func.__module__)  # Use module name for structured logger
+            resolved_logger: StructuredLogger
+            if logger is None:
+                resolved_logger = get_logger(
+                    func.__module__
+                )  # Use module name for structured logger
             else:
-                actual_logger = _ensure_structured(actual_logger)  # Ensure it's Structured
+                result_logger = _ensure_structured(logger)  # Ensure it's Structured
+                resolved_logger = (
+                    result_logger if result_logger is not None else get_logger(func.__module__)
+                )
 
             # Pass logger and level explicitly to log_operation
-            with log_operation(op_name, actual_logger, logging.INFO, **context):
+            with log_operation(op_name, resolved_logger, logging.INFO, **context):
                 result = func(*args, **kwargs)
                 if include_result and result is not None:
                     res_msg = f"Result: {result}"
-                    actual_logger.info(res_msg)  # Use the now-structured actual_logger
+                    resolved_logger.info(res_msg)  # Use the now-structured resolved_logger
 
                 return result
 

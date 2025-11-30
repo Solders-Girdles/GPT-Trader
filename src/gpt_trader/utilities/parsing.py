@@ -73,8 +73,11 @@ def coerce_enum(
     if isinstance(value, enum_class):
         return value, value.value
 
+    # At this point, value must be a string (type narrowing)
+    str_value: str = value  # type: ignore[assignment]
+
     # Convert string to normalized form
-    string_value = value if case_sensitive else value.upper()
+    string_value = str_value if case_sensitive else str_value.upper()
 
     # Check aliases first
     if aliases and string_value in aliases:

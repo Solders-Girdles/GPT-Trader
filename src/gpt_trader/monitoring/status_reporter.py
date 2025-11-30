@@ -16,7 +16,7 @@ from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Callable
 
 from gpt_trader.utilities.logging_patterns import get_logger
 
@@ -115,6 +115,18 @@ class StrategyStatus:
 
 
 @dataclass
+class RiskStatus:
+    """Status snapshot of risk management metrics."""
+
+    max_leverage: float = 0.0
+    daily_loss_limit_pct: float = 0.0
+    current_daily_loss_pct: float = 0.0
+    reduce_only_mode: bool = False
+    reduce_only_reason: str = ""
+    active_guards: list[str] = field(default_factory=list)
+
+
+@dataclass
 class SystemStatus:
     """Status snapshot of system health and brokerage connection."""
 
@@ -141,6 +153,7 @@ class BotStatus:
     trades: list[TradeStatus] = field(default_factory=list)
     account: AccountStatus = field(default_factory=AccountStatus)
     strategy: StrategyStatus = field(default_factory=StrategyStatus)
+    risk: RiskStatus = field(default_factory=RiskStatus)
     system: SystemStatus = field(default_factory=SystemStatus)
     heartbeat: HeartbeatStatus = field(default_factory=HeartbeatStatus)
 
@@ -165,12 +178,13 @@ class DecimalEncoder(json.JSONEncoder):
 @dataclass
 class StatusReporter:
     """
-    Periodically writes bot status to a JSON file.
+    Periodically writes bot status to a JSON file and notifies observers.
 
     Features:
     - Atomic file writes (write to temp, then rename)
+    - Observer pattern for event-driven updates
     - Configurable update interval
-    - Includes engine, market, position, and heartbeat status
+    - Includes engine, market, position, risk, and heartbeat status
     - Health summary with issue detection
 
     Usage:
@@ -178,6 +192,7 @@ class StatusReporter:
             status_file="/var/run/gpt-trader/status.json",
             update_interval=10,
         )
+        reporter.add_observer(my_callback)
         await reporter.start()
         # ... later ...
         reporter.update_engine_status(running=True, cycle_count=42)
@@ -195,6 +210,9 @@ class StatusReporter:
     _task: asyncio.Task[None] | None = field(default=None, repr=False)
     _start_time: float = field(default=0.0, repr=False)
     _status: BotStatus = field(default_factory=BotStatus, repr=False)
+
+    # Observers
+    _observers: list[Callable[[dict[str, Any]], None]] = field(default_factory=list, repr=False)
 
     # Mutable status tracking
     _cycle_count: int = field(default=0, repr=False)
@@ -252,11 +270,38 @@ class StatusReporter:
         await self._write_status()
         logger.info("Status reporter stopped")
 
+    def add_observer(self, callback: Callable[[dict[str, Any]], None]) -> None:
+        """
+        Add an observer callback that receives status updates.
+        The callback receives a dictionary of the full status.
+        """
+        self._observers.append(callback)
+
+    def remove_observer(self, callback: Callable[[dict[str, Any]], None]) -> None:
+        """Remove an observer callback."""
+        if callback in self._observers:
+            self._observers.remove(callback)
+
     async def _report_loop(self) -> None:
         """Main reporting loop."""
         while self._running:
             try:
                 await self._write_status()
+                # Notify observers
+                status_dict = asdict(self._status)
+                for observer in self._observers:
+                    try:
+                        # If callback is a coroutine, we should await it?
+                        # For simplicity, we assume sync callbacks or handle async appropriately if needed.
+                        # But Textual callbacks are often async or schedule updates.
+                        # Let's check if it's awaitable.
+                        if asyncio.iscoroutinefunction(observer):
+                            await observer(status_dict)
+                        else:
+                            observer(status_dict)
+                    except Exception as obs_e:
+                        logger.error(f"Observer error: {obs_e}")
+
             except Exception as e:
                 logger.error(f"Status report error: {e}")
 
@@ -485,6 +530,24 @@ class StatusReporter:
         if len(self._status.strategy.last_decisions) > 50:
             self._status.strategy.last_decisions = self._status.strategy.last_decisions[-50:]
 
+    def update_risk(
+        self,
+        max_leverage: float,
+        daily_loss_limit: float,
+        current_daily_loss: float,
+        reduce_only: bool,
+        reduce_reason: str,
+        active_guards: list[str] | None = None,
+    ) -> None:
+        """Update risk status."""
+        self._status.risk.max_leverage = max_leverage
+        self._status.risk.daily_loss_limit_pct = daily_loss_limit
+        self._status.risk.current_daily_loss_pct = current_daily_loss
+        self._status.risk.reduce_only_mode = reduce_only
+        self._status.risk.reduce_only_reason = reduce_reason
+        if active_guards:
+            self._status.risk.active_guards = active_guards
+
     def update_system(
         self, latency: float, connection: str, rate_limit: str, memory: str, cpu: str
     ) -> None:
@@ -510,4 +573,5 @@ __all__ = [
     "OrderStatus",
     "TradeStatus",
     "AccountStatus",
+    "RiskStatus",
 ]

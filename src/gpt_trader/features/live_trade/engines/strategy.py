@@ -296,6 +296,25 @@ class TradingEngine(BaseEngine):
             if triggered:
                 logger.warning("Daily loss limit triggered! Reduce-only mode activated.")
 
+            # Update status reporter with risk metrics
+            rm = self.context.risk_manager
+            # Calculate current daily loss pct if possible
+            # Assuming rm tracks start_of_day_equity
+            daily_loss_pct = 0.0
+            if getattr(rm, "_start_of_day_equity", 0) and rm._start_of_day_equity > 0:
+                daily_pnl = equity - rm._start_of_day_equity
+                daily_loss_pct = float(-daily_pnl / rm._start_of_day_equity)
+
+            self._status_reporter.update_risk(
+                max_leverage=float(getattr(rm.config, "max_leverage", 0.0) if rm.config else 0.0),
+                daily_loss_limit=float(
+                    getattr(rm.config, "daily_loss_limit_pct", 0.0) if rm.config else 0.0
+                ),
+                current_daily_loss=daily_loss_pct,
+                reduce_only=getattr(rm, "_reduce_only_mode", False),
+                reduce_reason=getattr(rm, "_reduce_only_reason", ""),
+            )
+
         # 2. Process Symbols
         for symbol in self.context.config.symbols:
             # Offload blocking network call

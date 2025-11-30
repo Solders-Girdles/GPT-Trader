@@ -46,15 +46,47 @@ class TraderApp(App):
         self.push_screen(MainScreen())
         self.log("TUI Started")
 
+        # Connect to StatusReporter observer if available
+        if hasattr(self.bot.engine, "status_reporter"):
+            self.bot.engine.status_reporter.add_observer(self._on_status_update)
+
         # Start the bot in background if not already running
         if not self.bot.running:
             asyncio.create_task(self.bot.run())
 
-        # Start UI update loop
+        # Start UI update loop (fallback/backup and for fields not in status reporter)
         self._update_task = asyncio.create_task(self._update_loop())
 
         # Bind state to widgets
         self._bind_state()
+
+    async def on_unmount(self) -> None:
+        """Called when app stops."""
+        if hasattr(self.bot.engine, "status_reporter"):
+            self.bot.engine.status_reporter.remove_observer(self._on_status_update)
+
+    def _on_status_update(self, status: dict) -> None:
+        """Callback for StatusReporter updates."""
+        # This might be called from a background thread or loop
+        # Schedule the update on the main thread
+        self.call_from_thread(self._apply_status_update, status)
+
+    def _apply_status_update(self, status: dict) -> None:
+        """Apply status update to state and UI."""
+        # Update State
+        runtime_state = None
+        if hasattr(self.bot.engine.context, "runtime_state"):
+            runtime_state = self.bot.engine.context.runtime_state
+
+        self.tui_state.running = self.bot.running
+        self.tui_state.update_from_bot_status(status, runtime_state)
+
+        # Update UI
+        try:
+            main_screen = self.query_one(MainScreen)
+            main_screen.update_ui(self.tui_state)
+        except Exception:
+            pass
 
     def _bind_state(self) -> None:
         """Bind reactive state to widgets."""
@@ -66,17 +98,17 @@ class TraderApp(App):
         pass
 
     async def _update_loop(self) -> None:
-        """Periodically update UI from bot state."""
+        """Periodically update UI from bot state (Fallback loop)."""
         while True:
             try:
-                self._sync_state_from_bot()
-                # Update UI via Screen
-                try:
-                    main_screen = self.query_one(MainScreen)
-                    main_screen.update_ui(self.tui_state)
-                except Exception:
-                    # Screen might not be mounted yet or found
-                    pass
+                # If we don't have observers, we must poll
+                if not hasattr(self.bot.engine, "status_reporter") or not self.bot.engine.status_reporter._observers:
+                    self._sync_state_from_bot()
+                    try:
+                        main_screen = self.query_one(MainScreen)
+                        main_screen.update_ui(self.tui_state)
+                    except Exception:
+                        pass
             except Exception as e:
                 self.log(f"UI Update Error: {e}")
             await asyncio.sleep(1)
@@ -94,21 +126,6 @@ class TraderApp(App):
         status = {}
         if hasattr(self.bot.engine, "status_reporter"):
             status = self.bot.engine.status_reporter.get_status()
-
-        # Inject Risk Data manually since StatusReporter doesn't have it yet
-        if hasattr(self.bot, "risk_manager") and self.bot.risk_manager:
-            rm = self.bot.risk_manager
-            risk_status = {
-                "max_leverage": getattr(rm.config, "max_leverage", 0.0) if rm.config else 0.0,
-                "daily_loss_limit_pct": (
-                    getattr(rm.config, "daily_loss_limit_pct", 0.0) if rm.config else 0.0
-                ),
-                "reduce_only_mode": getattr(rm, "_reduce_only_mode", False),
-                "reduce_only_reason": getattr(rm, "_reduce_only_reason", ""),
-                # Calculate current daily loss pct if possible
-                "current_daily_loss_pct": 0.0,  # Placeholder, requires calculation
-            }
-            status["risk"] = risk_status
 
         self.tui_state.update_from_bot_status(status, runtime_state)
 

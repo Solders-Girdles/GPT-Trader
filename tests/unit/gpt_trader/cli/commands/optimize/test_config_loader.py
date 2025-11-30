@@ -3,17 +3,12 @@
 from __future__ import annotations
 
 from datetime import datetime
-from pathlib import Path
-from tempfile import NamedTemporaryFile
 
 import pytest
-import yaml
+
 from gpt_trader.cli.commands.optimize.config_loader import (
     OBJECTIVE_PRESETS,
-    BacktestSettings,
     ConfigValidationError,
-    OptimizeCliConfig,
-    StudySettings,
     build_optimization_config,
     build_parameter_space_from_config,
     create_default_config,
@@ -134,9 +129,7 @@ class TestCreateObjectiveFromPreset:
 
     def test_passes_kwargs_to_factory(self):
         """Test kwargs are passed to factory."""
-        objective = create_objective_from_preset(
-            "risk_averse", max_drawdown_pct=10.0
-        )
+        objective = create_objective_from_preset("risk_averse", max_drawdown_pct=10.0)
         # Find drawdown constraint
         constraint_names = [c.name for c in objective.constraints]
         assert "max_drawdown" in constraint_names

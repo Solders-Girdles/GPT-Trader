@@ -67,9 +67,7 @@ class OptimizeCliConfig:
     symbols: list[str] = field(default_factory=lambda: ["BTC-USD"])
     backtest: BacktestSettings | None = None
     parameter_overrides: dict[str, dict[str, Any]] = field(default_factory=dict)
-    include_parameter_groups: list[str] = field(
-        default_factory=lambda: ["strategy", "risk"]
-    )
+    include_parameter_groups: list[str] = field(default_factory=lambda: ["strategy", "risk"])
 
 
 # Mapping of preset names to factory functions
@@ -270,7 +268,7 @@ def merge_cli_overrides(
     return config
 
 
-def create_objective_from_preset(preset_name: str, **kwargs: Any):
+def create_objective_from_preset(preset_name: str, **kwargs: Any) -> Any:
     """
     Create an objective function from a preset name.
 

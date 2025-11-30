@@ -1,6 +1,5 @@
 """Unit tests for objective factory methods."""
 
-import pytest
 from gpt_trader.features.optimize.objectives.composite import WeightedObjective
 from gpt_trader.features.optimize.objectives.factories import (
     create_execution_quality_objective,
@@ -30,9 +29,7 @@ class TestCreateRiskAverseObjective:
 
     def test_has_constraints(self):
         """Test objective has constraints."""
-        objective = create_risk_averse_objective(
-            max_drawdown_pct=15.0, max_var_95=5.0
-        )
+        objective = create_risk_averse_objective(max_drawdown_pct=15.0, max_var_95=5.0)
 
         constraint_names = [c.name for c in objective.constraints]
         assert "max_drawdown" in constraint_names
@@ -45,9 +42,7 @@ class TestCreateRiskAverseObjective:
         )
 
         # Find drawdown constraint
-        dd_constraint = next(
-            c for c in objective.constraints if c.name == "max_drawdown"
-        )
+        dd_constraint = next(c for c in objective.constraints if c.name == "max_drawdown")
         assert dd_constraint.threshold == 10.0
 
 
@@ -69,9 +64,7 @@ class TestCreateExecutionQualityObjective:
 
     def test_has_execution_constraints(self):
         """Test objective has execution-related constraints."""
-        objective = create_execution_quality_objective(
-            max_slippage_bps=10.0, min_fill_rate=80.0
-        )
+        objective = create_execution_quality_objective(max_slippage_bps=10.0, min_fill_rate=80.0)
 
         constraint_names = [c.name for c in objective.constraints]
         assert "max_slippage" in constraint_names
@@ -113,9 +106,7 @@ class TestCreateStreakResilientObjective:
 
     def test_has_streak_constraints(self):
         """Test objective has streak-related constraints."""
-        objective = create_streak_resilient_objective(
-            max_consecutive_losses=5, min_win_rate=50.0
-        )
+        objective = create_streak_resilient_objective(max_consecutive_losses=5, min_win_rate=50.0)
 
         constraint_names = [c.name for c in objective.constraints]
         assert "max_streak" in constraint_names
@@ -179,9 +170,7 @@ class TestCreateTailRiskAwareObjective:
 
     def test_has_tail_risk_constraints(self):
         """Test objective has tail risk constraints."""
-        objective = create_tail_risk_aware_objective(
-            max_var_99=8.0, max_drawdown_pct=25.0
-        )
+        objective = create_tail_risk_aware_objective(max_var_99=8.0, max_drawdown_pct=25.0)
 
         constraint_names = [c.name for c in objective.constraints]
         assert "max_var_99" in constraint_names

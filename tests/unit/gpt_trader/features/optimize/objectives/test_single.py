@@ -4,6 +4,7 @@ from decimal import Decimal
 from unittest.mock import Mock
 
 import pytest
+
 from gpt_trader.backtesting.metrics.risk import RiskMetrics
 from gpt_trader.backtesting.metrics.statistics import TradeStatistics
 from gpt_trader.backtesting.types import BacktestResult
@@ -15,7 +16,6 @@ from gpt_trader.features.optimize.objectives.single import (
     HoldDurationObjective,
     LeverageAdjustedReturnObjective,
     SharpeRatioObjective,
-    SortinoRatioObjective,
     StreakConsistencyObjective,
     TailRiskAdjustedReturnObjective,
     TimeEfficiencyObjective,
@@ -232,9 +232,7 @@ class TestStreakConsistencyObjective:
     def test_feasibility_with_streak_constraint(self, mock_results):
         """Test feasibility with max streak constraint."""
         result, risk, stats = mock_results
-        objective = StreakConsistencyObjective(
-            min_trades=10, max_allowed_consecutive_losses=5
-        )
+        objective = StreakConsistencyObjective(min_trades=10, max_allowed_consecutive_losses=5)
 
         # Should pass: 3 < 5
         assert objective.is_feasible(result, risk, stats)
@@ -271,9 +269,7 @@ class TestExecutionQualityObjective:
     def test_calculate(self, mock_results):
         """Test execution quality calculation."""
         result, risk, stats = mock_results
-        objective = ExecutionQualityObjective(
-            slippage_weight=0.5, fill_rate_weight=0.5
-        )
+        objective = ExecutionQualityObjective(slippage_weight=0.5, fill_rate_weight=0.5)
 
         # slippage_score = 100 - 5 = 95
         # fill_rate_score = 95

@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 
 import pytest
+
 from gpt_trader.cli.commands.optimize.formatters import (
     format_comparison_json,
     format_comparison_text,
@@ -125,7 +126,9 @@ class TestFormatTrialsText:
         result = format_trials_text(sample_trials, limit=2)
         lines = result.split("\n")
         # Data lines contain trial numbers (right-aligned) - look for lines with objective values
-        data_lines = [l for l in lines if l.strip() and "." in l and "Objective" not in l]
+        data_lines = [
+            line for line in lines if line.strip() and "." in line and "Objective" not in line
+        ]
         # Should have 2 data lines (top 2 trials)
         assert len(data_lines) == 2
 

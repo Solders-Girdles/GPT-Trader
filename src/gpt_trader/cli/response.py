@@ -10,7 +10,7 @@ Provides structured, machine-readable output for CLI commands with:
 from __future__ import annotations
 
 import json
-from dataclasses import asdict, dataclass, field
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
 from typing import Any
@@ -78,7 +78,7 @@ class CliError:
         code: CliErrorCode,
         message: str,
         **details: Any,
-    ) -> "CliError":
+    ) -> CliError:
         """Create error from error code enum."""
         return cls(code=code.value, message=message, details=details)
 
@@ -156,12 +156,12 @@ class CliResponse:
         indent = None if compact else 2
         return json.dumps(self.to_dict(), indent=indent, default=str)
 
-    def add_warning(self, message: str) -> "CliResponse":
+    def add_warning(self, message: str) -> CliResponse:
         """Add a warning message (fluent API)."""
         self.warnings.append(message)
         return self
 
-    def add_error(self, error: CliError) -> "CliResponse":
+    def add_error(self, error: CliError) -> CliResponse:
         """Add an error (fluent API)."""
         self.errors.append(error)
         self.success = False
@@ -175,7 +175,7 @@ class CliResponse:
         data: Any = None,
         warnings: list[str] | None = None,
         was_noop: bool = False,
-    ) -> "CliResponse":
+    ) -> CliResponse:
         """Create a success response.
 
         Args:
@@ -201,7 +201,7 @@ class CliResponse:
         message: str,
         details: dict[str, Any] | None = None,
         warnings: list[str] | None = None,
-    ) -> "CliResponse":
+    ) -> CliResponse:
         """Create an error response.
 
         Args:

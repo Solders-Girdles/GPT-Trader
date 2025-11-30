@@ -25,7 +25,8 @@ def register(subparsers: Any) -> None:
     )
 
     # Import and register each subcommand
-    from . import apply, compare, export, list as list_cmd, resume, run, view
+    from . import apply, compare, export, resume, run, view
+    from . import list as list_cmd
 
     run.register(optimize_subparsers)
     view.register(optimize_subparsers)

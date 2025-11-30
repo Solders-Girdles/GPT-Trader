@@ -4,6 +4,7 @@ from decimal import Decimal
 from unittest.mock import Mock
 
 import pytest
+
 from gpt_trader.backtesting.metrics.risk import RiskMetrics
 from gpt_trader.backtesting.metrics.statistics import TradeStatistics
 from gpt_trader.backtesting.types import BacktestResult

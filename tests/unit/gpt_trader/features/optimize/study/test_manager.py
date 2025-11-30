@@ -4,6 +4,7 @@ from unittest.mock import Mock, patch
 
 import optuna
 import pytest
+
 from gpt_trader.features.optimize.study.manager import OptimizationStudyManager
 from gpt_trader.features.optimize.types import (
     OptimizationConfig,
@@ -17,9 +18,7 @@ from gpt_trader.features.optimize.types import (
 def mock_config():
     """Create mock configuration."""
     space = ParameterSpace(
-        strategy_parameters=[
-            ParameterDefinition("p1", ParameterType.INTEGER, low=1, high=10)
-        ]
+        strategy_parameters=[ParameterDefinition("p1", ParameterType.INTEGER, low=1, high=10)]
     )
     return OptimizationConfig(
         study_name="test_study",
@@ -32,10 +31,10 @@ class TestOptimizationStudyManager:
     def test_create_study(self, mock_config):
         """Test study creation."""
         manager = OptimizationStudyManager(mock_config)
-        
+
         with patch("optuna.create_study") as mock_create:
-            study = manager.create_or_load_study()
-            
+            _study = manager.create_or_load_study()
+
             mock_create.assert_called_once()
             call_kwargs = mock_create.call_args[1]
             assert call_kwargs["study_name"] == "test_study"
@@ -44,11 +43,11 @@ class TestOptimizationStudyManager:
     def test_suggest_parameters(self, mock_config):
         """Test parameter suggestion."""
         manager = OptimizationStudyManager(mock_config)
-        
+
         mock_trial = Mock(spec=optuna.Trial)
         mock_trial.suggest_int.return_value = 5
-        
+
         params = manager.suggest_parameters(mock_trial)
-        
+
         assert params["p1"] == 5
         mock_trial.suggest_int.assert_called_with("p1", 1, 10, step=1, log=False)

@@ -4,12 +4,12 @@ from __future__ import annotations
 
 import argparse
 from argparse import Namespace
-from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
-from gpt_trader.cli.commands.optimize import apply, compare, export, list as list_cmd
-from gpt_trader.cli.commands.optimize import resume, run, view
+
+from gpt_trader.cli.commands.optimize import apply, compare, export, resume, run, view
+from gpt_trader.cli.commands.optimize import list as list_cmd
 
 
 class TestOptimizeSubcommandRegistration:
@@ -134,8 +134,9 @@ class TestViewCommand:
         mock_storage.list_runs.return_value = []
 
         with patch.object(view, "OptimizationStorage", return_value=mock_storage):
-            args = Namespace(run_id="latest", format="text", trials=10,
-                           show_params=False, summary_only=False)
+            args = Namespace(
+                run_id="latest", format="text", trials=10, show_params=False, summary_only=False
+            )
             result = view.execute(args)
 
         assert result == 1  # Error: no runs found
@@ -228,9 +229,7 @@ class TestArgumentParsing:
 
     def test_run_parses_symbols(self, parser):
         """Test run command parses symbols."""
-        args = parser.parse_args(
-            ["optimize", "run", "--symbols", "BTC-USD", "ETH-USD"]
-        )
+        args = parser.parse_args(["optimize", "run", "--symbols", "BTC-USD", "ETH-USD"])
         assert args.symbols == ["BTC-USD", "ETH-USD"]
 
     def test_view_parses_run_id(self, parser):
@@ -245,9 +244,7 @@ class TestArgumentParsing:
 
     def test_compare_parses_run_ids(self, parser):
         """Test compare command parses run IDs."""
-        args = parser.parse_args(
-            ["optimize", "compare", "opt_123", "opt_456"]
-        )
+        args = parser.parse_args(["optimize", "compare", "opt_123", "opt_456"])
         assert args.run_ids == ["opt_123", "opt_456"]
 
     def test_export_parses_format(self, parser):

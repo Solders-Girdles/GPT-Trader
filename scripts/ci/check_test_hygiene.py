@@ -151,6 +151,12 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service.py",  # PortfolioService coverage: balances, positions, INTX/CFM ops
     "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_product_service.py",  # ProductService coverage: products, quotes, candles, tickers
     "tests/unit/gpt_trader/orchestration/test_hybrid_paper_broker.py",  # HybridPaperBroker paper trading simulation: orders, positions, market data
+    # Optimization and CLI test suites
+    "tests/unit/gpt_trader/features/optimize/objectives/test_constraints.py",  # constraint objective validation matrix
+    "tests/unit/gpt_trader/features/optimize/objectives/test_single.py",  # single objective validation matrix
+    "tests/unit/gpt_trader/cli/commands/optimize/test_commands.py",  # CLI command integration tests
+    "tests/unit/gpt_trader/cli/commands/optimize/test_config_loader.py",  # config loader edge cases
+    "tests/unit/gpt_trader/cli/test_response.py",  # CLI response formatting coverage
 }
 
 SLEEP_ALLOWLIST = {

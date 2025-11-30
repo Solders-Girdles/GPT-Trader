@@ -20,6 +20,7 @@ dependencies = [
     "pyjwt>=2.9.0,<3.0.0",
     "optuna>=4.0.0,<5.0.0",
     "pandas>=2.3.3",
+    "textual>=0.52.0,<1.0.0",
 ]
 
 [project.optional-dependencies]

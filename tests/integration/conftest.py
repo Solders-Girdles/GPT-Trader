@@ -21,27 +21,24 @@ from gpt_trader.orchestration.bootstrap import bot_from_profile, build_bot
 from gpt_trader.orchestration.configuration import BotConfig
 
 if TYPE_CHECKING:
-    from gpt_trader.orchestration.service_registry import ServiceRegistry
     from gpt_trader.orchestration.trading_bot import TradingBot
 
 
 @pytest.fixture
-def dev_bot() -> Generator[tuple[TradingBot, ServiceRegistry]]:
+def dev_bot() -> Generator[TradingBot]:
     """Create a TradingBot with dev profile (DeterministicBroker).
 
     Yields:
-        Tuple of (TradingBot, ServiceRegistry) for backward compatibility.
-        Access container via bot.container for modern usage.
+        TradingBot: A fully configured trading bot.
+        Access registry via bot.container.create_service_registry() if needed.
     """
     bot = bot_from_profile("dev")
-    # Create registry from container for backward compatibility
-    registry = bot.container.create_service_registry()
 
     # Ensure clean state for risk manager
     if bot.risk_manager:
         bot.risk_manager.set_reduce_only_mode(False, reason="integration_test_setup")
 
-    yield bot, registry
+    yield bot
 
     # Cleanup
     try:
@@ -51,14 +48,13 @@ def dev_bot() -> Generator[tuple[TradingBot, ServiceRegistry]]:
 
 
 @pytest.fixture
-def fast_signal_bot() -> Generator[tuple[TradingBot, ServiceRegistry]]:
+def fast_signal_bot() -> Generator[TradingBot]:
     """Create a TradingBot with fast MA crossover settings for signal testing.
 
     Uses short_ma_period=3, long_ma_period=5 and interval=1 for rapid signal generation.
 
     Yields:
-        Tuple of (TradingBot, ServiceRegistry) for backward compatibility.
-        Access container via bot.container for modern usage.
+        TradingBot: A fully configured trading bot.
     """
     strategy = PerpsStrategyConfig(
         short_ma_period=3,
@@ -72,14 +68,12 @@ def fast_signal_bot() -> Generator[tuple[TradingBot, ServiceRegistry]]:
         mock_broker=True,
     )
     bot = build_bot(config)
-    # Create registry from container for backward compatibility
-    registry = bot.container.create_service_registry()
 
     # Ensure clean state for risk manager
     if bot.risk_manager:
         bot.risk_manager.set_reduce_only_mode(False, reason="integration_test_setup")
 
-    yield bot, registry
+    yield bot
 
     # Cleanup
     try:

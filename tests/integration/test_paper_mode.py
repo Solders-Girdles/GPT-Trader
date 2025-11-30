@@ -16,7 +16,6 @@ from typing import TYPE_CHECKING
 import pytest
 
 if TYPE_CHECKING:
-    from gpt_trader.orchestration.service_registry import ServiceRegistry
     from gpt_trader.orchestration.trading_bot import TradingBot
 
 
@@ -30,16 +29,14 @@ class TestPaperModeTrading:
     """
 
     @pytest.mark.asyncio
-    async def test_multi_cycle_trading_loop(
-        self, fast_signal_bot: tuple[TradingBot, ServiceRegistry]
-    ) -> None:
+    async def test_paper_trading_metrics(self, fast_signal_bot: TradingBot) -> None:
         """Validate trading loop doesn't crash across multiple cycles.
 
         Runs 8 cycles with a price pattern designed to trigger MA crossovers.
         This is the most valuable unique test - nothing else exercises
         multi-cycle behavior end-to-end.
         """
-        bot, _registry = fast_signal_bot
+        bot = fast_signal_bot
 
         # Price pattern designed to trigger signals with short_ma=3, long_ma=5
         price_pattern = [100, 99, 101, 103, 105, 104, 106, 108]
@@ -57,11 +54,9 @@ class TestPaperModeTrading:
         assert isinstance(positions, list), "list_positions should return a list"
 
     @pytest.mark.asyncio
-    async def test_single_cycle_execution(
-        self, fast_signal_bot: tuple[TradingBot, ServiceRegistry]
-    ) -> None:
+    async def test_paper_trading_execution(self, fast_signal_bot: TradingBot) -> None:
         """Validate single cycle execution works correctly."""
-        bot, _registry = fast_signal_bot
+        bot = fast_signal_bot
 
         # Run a single cycle
         await bot.run(single_cycle=True)
@@ -70,11 +65,9 @@ class TestPaperModeTrading:
         assert bot.broker is not None, "Broker should still be available"
 
     @pytest.mark.asyncio
-    async def test_position_tracking_across_cycles(
-        self, fast_signal_bot: tuple[TradingBot, ServiceRegistry]
-    ) -> None:
+    async def test_paper_trading_state_persistence(self, fast_signal_bot: TradingBot) -> None:
         """Validate positions can be tracked across multiple cycles."""
-        bot, _registry = fast_signal_bot
+        bot = fast_signal_bot
 
         # Initial position count (may change after cycles)
         initial_positions = bot.broker.list_positions()

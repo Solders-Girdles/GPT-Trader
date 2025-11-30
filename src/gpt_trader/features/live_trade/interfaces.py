@@ -31,6 +31,7 @@ class TradingStrategy(Protocol):
         recent_marks: Sequence[Decimal],
         equity: Decimal,
         product: Product | None,
+        candles: Sequence[Any] | None = None,
     ) -> Decision:
         """Generate a trading decision based on market data.
 
@@ -41,6 +42,7 @@ class TradingStrategy(Protocol):
             recent_marks: Historical prices (oldest first, typically 20 periods)
             equity: Account equity for position sizing
             product: Product specification (optional)
+            candles: Historical candles for advanced indicators (optional)
 
         Returns:
             Decision with action (BUY/SELL/HOLD/CLOSE), reason, confidence, indicators

@@ -74,6 +74,10 @@ class TradingEngine(BaseEngine):
         self._prune_interval_seconds = 3600  # 1 hour
         self._prune_max_rows = 1_000_000  # Keep 1M events max
 
+    @property
+    def status_reporter(self) -> StatusReporter:
+        return self._status_reporter
+
     async def _notify(
         self,
         title: str,
@@ -227,9 +231,45 @@ class TradingEngine(BaseEngine):
             except Exception as e:
                 logger.error(f"Database pruning failed: {e}")
 
+    def _report_system_status(self) -> None:
+        """Collect and report system health metrics."""
+        try:
+            import psutil
+
+            process = psutil.Process()
+            memory_info = process.memory_info()
+            memory_usage = f"{memory_info.rss / 1024 / 1024:.1f}MB"
+            cpu_usage = f"{process.cpu_percent()}%"
+        except ImportError:
+            memory_usage = "N/A"
+            cpu_usage = "N/A"
+        except Exception:
+            memory_usage = "Unknown"
+            cpu_usage = "Unknown"
+
+        # Estimate API latency (simple ping to broker if possible, or just track last request time)
+        # For now, we'll use a placeholder or track it via a decorator later.
+        # Let's assume 0.0 for now until we instrument the broker client.
+        latency = 0.0
+
+        connection = "CONNECTED" if self.context.broker else "DISCONNECTED"
+        # Rate limit usage is tricky without broker headers, placeholder for now
+        rate_limit = "OK"
+
+        self._status_reporter.update_system(
+            latency=latency,
+            connection=connection,
+            rate_limit=rate_limit,
+            memory=memory_usage,
+            cpu=cpu_usage,
+        )
+
     async def _cycle(self) -> None:
         """One trading cycle."""
         assert self.context.broker is not None, "Broker not initialized"
+
+        # Report system status at start of cycle
+        self._report_system_status()
 
         # 1. Fetch positions first (needed for equity calculation)
         positions = await self._fetch_positions()
@@ -238,11 +278,23 @@ class TradingEngine(BaseEngine):
         # Update status reporter with positions
         self._status_reporter.update_positions(self._positions_to_risk_format(positions))
 
+        # 1b. Audit open orders (Reconciliation)
+        await self._audit_orders()
+
         # 2. Calculate total equity including unrealized PnL
         equity = await self._fetch_total_equity(positions)
         if equity is None:
             logger.warning("Failed to fetch equity, skipping cycle")
             return
+
+        # Update status reporter with equity
+        self._status_reporter.update_equity(equity)
+
+        # Track daily PnL for risk management
+        if self.context.risk_manager:
+            triggered = self.context.risk_manager.track_daily_pnl(equity, {})
+            if triggered:
+                logger.warning("Daily loss limit triggered! Reduce-only mode activated.")
 
         # 2. Process Symbols
         for symbol in self.context.config.symbols:
@@ -268,6 +320,17 @@ class TradingEngine(BaseEngine):
 
             position_state = self._build_position_state(symbol, positions)
 
+            # Fetch candles for advanced strategies (e.g. ADX)
+            candles = []
+            try:
+                # Fetch last 50 candles (enough for ADX 14 + smoothing)
+                # Assuming granularity defaults to ONE_MINUTE or similar
+                candles = await asyncio.to_thread(
+                    self.context.broker.get_candles, symbol, granularity="ONE_MINUTE"
+                )
+            except Exception as e:
+                logger.warning(f"Failed to fetch candles for {symbol}: {e}")
+
             decision = self.strategy.decide(
                 symbol=symbol,
                 current_mark=price,
@@ -275,9 +338,23 @@ class TradingEngine(BaseEngine):
                 recent_marks=self.price_history[symbol],
                 equity=equity,
                 product=None,  # Future: fetch from broker
+                candles=candles,
             )
 
             logger.info(f"Strategy Decision for {symbol}: {decision.action} ({decision.reason})")
+
+            # Report strategy decision
+            active_strats = getattr(
+                self.strategy, "active_strategies", [self.strategy.__class__.__name__]
+            )
+            decision_record = {
+                "symbol": symbol,
+                "action": decision.action.value,
+                "reason": decision.reason,
+                "confidence": str(decision.confidence),
+                "timestamp": time.time(),
+            }
+            self._status_reporter.update_strategy(active_strats, [decision_record])
 
             if decision.action in (Action.BUY, Action.SELL):
                 logger.info(f"EXECUTING {decision.action} for {symbol}")
@@ -403,8 +480,11 @@ class TradingEngine(BaseEngine):
         fraction = Decimal("0.1")  # Default
         if hasattr(self.strategy, "config") and self.strategy.config.position_fraction:
             fraction = Decimal(str(self.strategy.config.position_fraction))
-        elif hasattr(self.context.config, "perps_position_fraction"):
-            fraction = self.context.config.perps_position_fraction
+        elif (
+            hasattr(self.context.config, "perps_position_fraction")
+            and self.context.config.perps_position_fraction is not None
+        ):
+            fraction = Decimal(str(self.context.config.perps_position_fraction))
 
         # 2. Calculate raw quantity
         if price == 0:
@@ -456,12 +536,22 @@ class TradingEngine(BaseEngine):
             "type": "MARKET",
         }
 
+        # Construct dynamic limits from config
+        limits = {}
+        if hasattr(self.context.config, "risk"):
+            risk = self.context.config.risk
+            if risk:
+                limits["max_position_size"] = float(getattr(risk, "max_position_pct", 0.05))
+                limits["max_leverage"] = float(getattr(risk, "max_leverage", 2.0))
+                limits["max_daily_loss"] = float(getattr(risk, "daily_loss_limit_pct", 0.02))
+                # Map other fields if available or use defaults
+
         security_result = get_validator().validate_order_request(
-            security_order, account_value=float(equity)
+            security_order, account_value=float(equity), limits=limits
         )
 
         if not security_result.is_valid:
-            error_msg = f"Security validation failed: {security_result.error_message}"
+            error_msg = f"Security validation failed: {', '.join(security_result.errors)}"
             logger.error(error_msg)
             await self._notify(
                 title="Security Validation Failed",
@@ -509,6 +599,17 @@ class TradingEngine(BaseEngine):
             },
         )
 
+        # Record trade in status reporter
+        self._status_reporter.add_trade(
+            {
+                "symbol": symbol,
+                "side": side.value,
+                "quantity": str(quantity),
+                "price": str(price),
+                "order_id": "N/A",  # We don't get ID back from place_order in this adapter version easily without refactor
+            }
+        )
+
     async def shutdown(self) -> None:
         self.running = False
         await self._status_reporter.stop()
@@ -517,3 +618,44 @@ class TradingEngine(BaseEngine):
 
     def health_check(self) -> HealthStatus:
         return HealthStatus(healthy=self.running, component=self.name)
+
+    async def _audit_orders(self) -> None:
+        """Audit open orders for reconciliation."""
+        assert self.context.broker is not None
+        try:
+            # Fetch open orders
+            # Note: Coinbase API uses 'order_status' for filtering
+            response = await asyncio.to_thread(self.context.broker.list_orders, order_status="OPEN")
+            orders = response.get("orders", [])
+
+            if orders:
+                logger.info(f"AUDIT: Found {len(orders)} OPEN orders")
+                for order in orders:
+                    logger.info(
+                        f"  Order {order.get('order_id')}: {order.get('side')} "
+                        f"{order.get('product_id')} {order.get('order_configuration')}"
+                    )
+
+            # Update status reporter
+            self._status_reporter.update_orders(orders)
+
+            # Update Account Metrics (every 60 cycles ~ 1 minute)
+            if self._cycle_count % 60 == 0:
+                try:
+                    balances = self.context.broker.list_balances()
+                    # Check if broker supports transaction summary (Coinbase specific)
+                    summary = {}
+                    if hasattr(self.context.broker, "client") and hasattr(
+                        self.context.broker.client, "get_transaction_summary"
+                    ):
+                        try:
+                            summary = self.context.broker.client.get_transaction_summary()
+                        except Exception:
+                            pass  # Feature might not be available or API mode issue
+
+                    self._status_reporter.update_account(balances, summary)
+                except Exception as e:
+                    logger.warning(f"Failed to update account metrics: {e}")
+
+        except Exception as e:
+            logger.warning(f"Failed to audit orders: {e}")

@@ -30,6 +30,7 @@ def register(subparsers: Any) -> None:
         help="Path to YAML config file (supports nested optimize output format)",
     )
     parser.add_argument("--dev-fast", action="store_true", help="Run single cycle and exit")
+    parser.add_argument("--tui", action="store_true", help="Run with Terminal User Interface")
     parser.set_defaults(handler=execute)
 
 
@@ -38,7 +39,7 @@ def execute(args: Namespace) -> int:
         config = services.build_config_from_args(
             args,
             include=options.RUNTIME_CONFIG_KEYS,
-            skip={"dev_fast"},
+            skip={"dev_fast", "tui"},
         )
     except ConfigValidationError as exc:
         message = str(exc)
@@ -53,7 +54,24 @@ def execute(args: Namespace) -> int:
         config.interval = 1  # 1 second instead of default 60
 
     bot = services.instantiate_bot(config)
+
+    if args.tui:
+        return _run_tui(bot)
+
     return _run_bot(bot, single_cycle=args.dev_fast)
+
+
+def _run_tui(bot: Any) -> int:
+    """Run the bot with TUI."""
+    try:
+        from gpt_trader.tui.app import TraderApp
+    except ImportError:
+        logger.error("TUI dependencies not installed. Run 'uv sync' to install textual.")
+        return 1
+
+    app = TraderApp(bot)
+    app.run()
+    return 0
 
 
 def _run_bot(bot: Any, *, single_cycle: bool) -> int:

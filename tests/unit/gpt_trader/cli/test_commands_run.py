@@ -25,7 +25,7 @@ def test_execute_logs_specific_message_for_symbol_error(monkeypatch, caplog):
     monkeypatch.setattr(run_cmd.services, "instantiate_bot", lambda config: None)
 
     caplog.set_level(logging.ERROR, logger=run_cmd.logger.name)
-    result = run_cmd.execute(Namespace(dev_fast=False, profile="dev"))
+    result = run_cmd.execute(Namespace(dev_fast=False, profile="dev", tui=False))
 
     assert result == 1
     assert caplog.records[-1].message == "Symbols must be non-empty"
@@ -39,7 +39,7 @@ def test_execute_logs_generic_validation_error(monkeypatch, caplog):
     monkeypatch.setattr(run_cmd.services, "instantiate_bot", lambda config: None)
 
     caplog.set_level(logging.ERROR, logger=run_cmd.logger.name)
-    result = run_cmd.execute(Namespace(dev_fast=False, profile="dev"))
+    result = run_cmd.execute(Namespace(dev_fast=False, profile="dev", tui=False))
 
     assert result == 1
     assert caplog.records[-1].message == "something else failed"
@@ -66,7 +66,7 @@ def test_execute_invokes_run_bot(monkeypatch):
 
     monkeypatch.setattr(run_cmd, "_run_bot", fake_run_bot)
 
-    result = run_cmd.execute(Namespace(dev_fast=True, profile="dev"))
+    result = run_cmd.execute(Namespace(dev_fast=True, profile="dev", tui=False))
 
     assert result == 0
     assert captured["bot"] is stub_bot

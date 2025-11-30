@@ -67,6 +67,7 @@ class MeanReversionStrategy:
         recent_marks: Sequence[Decimal],
         equity: Decimal,
         product: Product | None,
+        candles: Sequence[Any] | None = None,
     ) -> Decision:
         """Generate a trading decision based on Z-Score.
 
@@ -77,6 +78,7 @@ class MeanReversionStrategy:
             recent_marks: Historical mark prices (oldest first)
             equity: Account equity
             product: Product specification
+            candles: Historical candles (optional)
 
         Returns:
             Decision with action, reason, confidence, and indicator state

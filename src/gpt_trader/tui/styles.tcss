@@ -1,0 +1,125 @@
+/* Nord Theme Colors */
+$nord0: #2e3440;
+$nord1: #3b4252;
+$nord2: #434c5e;
+$nord3: #4c566a;
+$nord4: #d8dee9;
+$nord5: #e5e9f0;
+$nord6: #eceff4;
+$nord7: #8fbcbb;
+$nord8: #88c0d0;
+$nord9: #81a1c1;
+$nord10: #5e81ac;
+$nord11: #bf616a;
+$nord12: #d08770;
+$nord13: #ebcb8b;
+$nord14: #a3be8c;
+$nord15: #b48ead;
+
+Screen {
+    layout: vertical;
+    background: $nord0;
+    color: $nord4;
+}
+
+/* Global Styles */
+Label {
+    color: $nord4;
+}
+
+.header {
+    text-align: center;
+    background: $nord8;
+    color: $nord0;
+    text-style: bold;
+    width: 100%;
+    padding: 0 1;
+}
+
+/* Tabs */
+Tabs {
+    background: $nord1;
+    color: $nord4;
+    dock: top;
+}
+
+Tab {
+    padding: 1 2;
+}
+
+Tab.-active {
+    background: $nord2;
+    color: $nord8;
+    text-style: bold;
+    border-bottom: solid $nord8;
+}
+
+/* Content Areas */
+ContentSwitcher {
+    background: $nord0;
+    height: 1fr;
+}
+
+#dashboard-container, #market-container, #positions-container, #system-container {
+    padding: 1;
+    height: 1fr;
+}
+
+/* Dashboard Grid */
+#dashboard-container {
+    layout: grid;
+    grid-size: 2 2;
+    grid-columns: 1fr 1fr;
+    grid-rows: 1fr 1fr;
+    grid-gutter: 1;
+}
+
+.dashboard-item {
+    border: solid $nord3;
+    background: $nord1;
+    padding: 1;
+}
+
+/* Status Bar */
+#bot-status-header {
+    dock: top;
+    height: 3;
+    background: $nord1;
+    color: $nord4;
+    border-bottom: solid $nord8;
+    layout: horizontal;
+    align-vertical: middle;
+    padding: 0 1;
+}
+
+.status-value {
+    color: $nord8;
+    text-style: bold;
+}
+
+.status-running {
+    color: $nord14; /* Green */
+}
+
+.status-stopped {
+    color: $nord11; /* Red */
+}
+
+/* DataTable Overrides */
+DataTable {
+    background: $nord1;
+    color: $nord4;
+    border: none;
+}
+
+DataTable > .datatable--header {
+    background: $nord2;
+    color: $nord8;
+    text-style: bold;
+}
+
+Log {
+    background: $nord1;
+    color: $nord4;
+    border: solid $nord3;
+}

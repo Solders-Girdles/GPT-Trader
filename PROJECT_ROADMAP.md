@@ -26,6 +26,8 @@ This roadmap guides the completion of GPT-Trader's architectural migration to mo
 - No remaining global state issues
 - 3,281 tests use `bot_config_factory` fixture
 - CLI uses ApplicationContainer as entry point
+- Strategy Development Toolkit (Lab, Monitor, Config) completed
+- 82 new tests passing for Strategy Development Toolkit
 
 ### Current DI Pattern State
 
@@ -48,17 +50,14 @@ This roadmap guides the completion of GPT-Trader's architectural migration to mo
 
 | Current | Target |
 |---------|--------|
-| `prepare_bot()` creates ServiceRegistry, stores container in extras | Single `build_bot()` returns TradingBot |
-| `build_bot()` returns `(TradingBot, ServiceRegistry)` tuple | Container accessible via `bot.container` |
+| `prepare_bot()` creates ServiceRegistry, stores container in extras | Single `build_bot()` returns TradingBot (DONE) |
+| `build_bot()` returns `(TradingBot, ServiceRegistry)` tuple | Container accessible via `bot.container` (DONE) |
 
 ### 1.2 Update Integration Test Fixtures
 **Files:** `tests/integration/conftest.py`
 
 ```python
-# Current
-def dev_bot(...) -> tuple[TradingBot, ServiceRegistry]:
-
-# Target
+# Current (DONE)
 def dev_bot(...) -> TradingBot:
     # Access container via bot.container
     # Access registry via bot.container.create_service_registry() if needed
@@ -68,12 +67,12 @@ def dev_bot(...) -> TradingBot:
 **Files:** `src/gpt_trader/orchestration/trading_bot/bot.py`
 
 - Current: Accepts both `container` and `registry` (optional)
-- Target: Require `container`, derive registry internally
+- Target: Require `container`, derive registry internally (DONE)
 
 ### 1.4 Storage Layer Update
 **Files:** `src/gpt_trader/orchestration/storage.py`
 
-Update `StorageBootstrapper` to accept `ApplicationContainer` instead of `ServiceRegistry`.
+Update `StorageBootstrapper` to accept `ApplicationContainer` instead of `ServiceRegistry`. (DONE)
 
 ---
 
@@ -82,23 +81,6 @@ Update `StorageBootstrapper` to accept `ApplicationContainer` instead of `Servic
 **Goal:** Professional-grade stateful strategy execution with O(1) tick processing.
 
 ### 2.1 Incremental Statistics Implementation
-**Files:** `src/gpt_trader/features/live_trade/` (strategy implementations)
-
-| Current | Target |
-|---------|--------|
-| MeanReversionStrategy recalculates mean/stddev from scratch on every tick (O(n)) | Welford's algorithm for online mean/variance calculation (O(1)) |
-
-```python
-# Welford's algorithm structure
-@dataclass
-class IncrementalStats:
-    count: int = 0
-    mean: float = 0.0
-    m2: float = 0.0  # Sum of squared differences
-
-    def update(self, value: float) -> None:
-        self.count += 1
-        delta = value - self.mean
         self.mean += delta / self.count
         delta2 = value - self.mean
         self.m2 += delta * delta2

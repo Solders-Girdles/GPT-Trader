@@ -203,10 +203,12 @@ class TestBotFromProfile:
 
     def test_non_mock_profiles_require_credentials(self) -> None:
         """Test that production profiles require Coinbase credentials."""
-        # These should raise without credentials
-        for profile_name in ["demo", "prod", "spot", "canary"]:
-            with pytest.raises(ValueError, match="Coinbase Credentials"):
-                bot_from_profile(profile_name)
+        # Ensure env vars are unset
+        with patch.dict("os.environ", {}, clear=True):
+            # These should raise without credentials
+            for profile_name in ["demo", "prod", "spot", "canary"]:
+                with pytest.raises(ValueError, match="Coinbase Credentials"):
+                    bot_from_profile(profile_name)
 
 
 class TestBootstrapLogRecord:

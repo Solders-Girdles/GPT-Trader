@@ -16,6 +16,14 @@ from gpt_trader.features.live_trade.risk.manager import (
     VolatilityCheckOutcome,
 )
 
+
+@pytest.fixture(autouse=True)
+def mock_load_state():
+    """Prevent LiveRiskManager from loading state during tests."""
+    with patch("gpt_trader.features.live_trade.risk.manager.LiveRiskManager._load_state"):
+        yield
+
+
 # ============================================================
 # Test: ValidationError exception
 # ============================================================

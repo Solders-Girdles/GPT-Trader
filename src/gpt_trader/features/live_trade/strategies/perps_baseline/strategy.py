@@ -170,6 +170,7 @@ class BaselinePerpsStrategy:
         recent_marks: Sequence[Decimal],
         equity: Decimal,
         product: Product | None,
+        candles: Sequence[Any] | None = None,
     ) -> Decision:
         """Generate a trading decision based on technical indicators.
 
@@ -180,6 +181,7 @@ class BaselinePerpsStrategy:
             recent_marks: Historical mark prices (oldest first)
             equity: Account equity
             product: Product specification
+            candles: Historical candles (optional)
 
         Returns:
             Decision with action, reason, confidence, and indicator state

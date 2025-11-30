@@ -230,25 +230,41 @@ def format_response(response: CliResponse, output_format: str = "text") -> str:
         output_format: "json" for machine-readable, "text" for human-readable
 
     Returns:
-        Formatted string output
+        Formatted string output (or None if printed directly via rich)
     """
     if output_format == "json":
         return response.to_json()
 
-    # Text format - just return data representation or error messages
+    # Text format - use rich for pretty printing
+    from rich.console import Console
+    from rich.panel import Panel
+    from rich.syntax import Syntax
+
+    console = Console()
+
     if response.success:
         if response.data is None:
             return "Operation completed successfully."
+
         if isinstance(response.data, str):
             return response.data
-        # For complex data, defer to command-specific formatters
-        return json.dumps(response.data, indent=2, default=str)
+
+        # For complex data, pretty print as JSON syntax
+        json_str = json.dumps(response.data, indent=2, default=str)
+        syntax = Syntax(json_str, "json", theme="monokai", line_numbers=False)
+        with console.capture() as capture:
+            console.print(syntax)
+        return capture.get()
     else:
         # Format errors for text output
         lines = []
         for error in response.errors:
-            lines.append(f"Error [{error.code}]: {error.message}")
+            lines.append(f"[bold red]Error [{error.code}]:[/bold red] {error.message}")
             if error.details:
                 for key, value in error.details.items():
-                    lines.append(f"  {key}: {value}")
-        return "\n".join(lines)
+                    lines.append(f"  [dim]{key}: {value}[/dim]")
+
+        error_text = "\n".join(lines)
+        with console.capture() as capture:
+            console.print(Panel(error_text, title="Command Failed", border_style="red"))
+        return capture.get()

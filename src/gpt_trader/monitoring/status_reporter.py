@@ -55,6 +55,7 @@ class PositionStatus:
     count: int = 0
     symbols: list[str] = field(default_factory=list)
     total_unrealized_pnl: str = "0"
+    equity: str = "0.00"
 
 
 @dataclass
@@ -69,6 +70,62 @@ class HeartbeatStatus:
 
 
 @dataclass
+class OrderStatus:
+    """Status snapshot of an active order."""
+
+    order_id: str
+    symbol: str
+    side: str
+    quantity: str
+    price: str | None
+    status: str
+    type: str = "MARKET"
+    time_in_force: str = "GTC"
+    timestamp: float = 0.0
+
+
+@dataclass
+class TradeStatus:
+    """Status snapshot of a recent trade."""
+
+    symbol: str
+    side: str
+    quantity: str
+    price: str
+    timestamp: float
+    order_id: str | None = None
+
+
+@dataclass
+class AccountStatus:
+    """Status snapshot of account metrics."""
+
+    volume_30d: str = "0.00"
+    fees_30d: str = "0.00"
+    fee_tier: str = ""
+    balances: list[dict[str, str]] = field(default_factory=list)
+
+
+@dataclass
+class StrategyStatus:
+    """Status snapshot of strategy engine."""
+
+    active_strategies: list[str] = field(default_factory=list)
+    last_decisions: list[dict[str, str]] = field(default_factory=list)
+
+
+@dataclass
+class SystemStatus:
+    """Status snapshot of system health and brokerage connection."""
+
+    api_latency: float = 0.0
+    connection_status: str = "UNKNOWN"
+    rate_limit_usage: str = "0%"
+    memory_usage: str = "0MB"
+    cpu_usage: str = "0%"
+
+
+@dataclass
 class BotStatus:
     """Complete status snapshot of the trading bot."""
 
@@ -80,6 +137,11 @@ class BotStatus:
     engine: EngineStatus = field(default_factory=EngineStatus)
     market: MarketStatus = field(default_factory=MarketStatus)
     positions: PositionStatus = field(default_factory=PositionStatus)
+    orders: list[OrderStatus] = field(default_factory=list)
+    trades: list[TradeStatus] = field(default_factory=list)
+    account: AccountStatus = field(default_factory=AccountStatus)
+    strategy: StrategyStatus = field(default_factory=StrategyStatus)
+    system: SystemStatus = field(default_factory=SystemStatus)
     heartbeat: HeartbeatStatus = field(default_factory=HeartbeatStatus)
 
     # Overall health
@@ -142,6 +204,7 @@ class StatusReporter:
     _last_prices: dict[str, Decimal] = field(default_factory=dict, repr=False)
     _last_price_update: float | None = field(default=None, repr=False)
     _positions: dict[str, Any] = field(default_factory=dict, repr=False)
+    _equity: Decimal = field(default=Decimal("0"), repr=False)
     _heartbeat_service: HeartbeatService | None = field(default=None, repr=False)
 
     async def start(self) -> asyncio.Task[None] | None:
@@ -251,6 +314,7 @@ class StatusReporter:
             Decimal("0"),
         )
         self._status.positions.total_unrealized_pnl = str(total_pnl)
+        self._status.positions.equity = str(self._equity)
 
         # Heartbeat status
         if self._heartbeat_service:
@@ -318,10 +382,132 @@ class StatusReporter:
         """Update the current positions."""
         self._positions = positions
 
+    def update_equity(self, equity: Decimal) -> None:
+        """Update the current equity."""
+        self._equity = equity
+
+    def update_orders(self, orders: list[dict[str, Any]]) -> None:
+        """Update the list of active orders."""
+        order_statuses = []
+        for o in orders:
+            # Extract type and TIF from configuration if available
+            # Coinbase format: order_configuration: { limit_limit_gtc: {...} }
+            config = o.get("order_configuration", {})
+            order_type = "MARKET"
+            tif = "GTC"
+
+            if "market_market_ioc" in config:
+                order_type = "MARKET"
+                tif = "IOC"
+            elif "limit_limit_gtc" in config:
+                order_type = "LIMIT"
+                tif = "GTC"
+            elif "limit_limit_gtd" in config:
+                order_type = "LIMIT"
+                tif = "GTD"
+            elif "stop_limit_stop_limit_gtc" in config:
+                order_type = "STOP_LIMIT"
+                tif = "GTC"
+
+            order_statuses.append(
+                OrderStatus(
+                    order_id=o.get("order_id", ""),
+                    symbol=o.get("product_id", ""),
+                    side=o.get("side", ""),
+                    quantity=str(
+                        o.get("size", "0")
+                        or o.get("order_configuration", {})
+                        .get("market_market_ioc", {})
+                        .get("base_size", "0")
+                    ),
+                    price=str(o.get("price")) if o.get("price") else None,
+                    status=o.get("status", "UNKNOWN"),
+                    type=order_type,
+                    time_in_force=tif,
+                    timestamp=time.time(),  # Or parse creation_time
+                )
+            )
+        self._status.orders = order_statuses
+
+    def add_trade(self, trade: dict[str, Any]) -> None:
+        """Add a recent trade."""
+        new_trade = TradeStatus(
+            symbol=trade.get("symbol", ""),
+            side=trade.get("side", ""),
+            quantity=str(trade.get("quantity", "0")),
+            price=str(trade.get("price", "0")),
+            timestamp=time.time(),
+            order_id=trade.get("order_id"),
+        )
+        # Prepend and keep last 50
+        self._status.trades.insert(0, new_trade)
+        if len(self._status.trades) > 50:
+            self._status.trades.pop()
+
+    def update_account(self, balances: list[Any], summary: dict[str, Any]) -> None:
+        """Update account metrics."""
+        # Format balances
+        bal_list = []
+        for b in balances:
+            # Handle object or dict
+            if hasattr(b, "asset"):
+                asset = b.asset
+                total = str(b.total)
+                avail = str(b.available)
+            else:
+                asset = b.get("currency", "")
+                total = str(b.get("balance", "0"))
+                avail = str(b.get("available", "0"))
+
+            if Decimal(total) > 0:
+                bal_list.append({"asset": asset, "total": total, "available": avail})
+
+        self._status.account = AccountStatus(
+            volume_30d=str(summary.get("total_volume_30d", "0.00")),
+            fees_30d=str(summary.get("total_fees_30d", "0.00")),
+            fee_tier=str(summary.get("fee_tier", {}).get("pricing_tier", "Unknown")),
+            balances=bal_list,
+        )
+
+    def update_strategy(
+        self, active_strategies: list[str], decisions: list[dict[str, Any]]
+    ) -> None:
+        """Update strategy status."""
+        self._status.strategy.active_strategies = active_strategies
+        # Keep last 50 decisions
+        # Decisions are dicts: {symbol, action, reason, confidence, timestamp}
+        # We convert to string dicts for JSON safety
+        new_decisions = []
+        for d in decisions:
+            new_decisions.append({k: str(v) for k, v in d.items()})
+
+        self._status.strategy.last_decisions.extend(new_decisions)
+        if len(self._status.strategy.last_decisions) > 50:
+            self._status.strategy.last_decisions = self._status.strategy.last_decisions[-50:]
+
+    def update_system(
+        self, latency: float, connection: str, rate_limit: str, memory: str, cpu: str
+    ) -> None:
+        """Update system status."""
+        self._status.system.api_latency = latency
+        self._status.system.connection_status = connection
+        self._status.system.rate_limit_usage = rate_limit
+        self._status.system.memory_usage = memory
+        self._status.system.cpu_usage = cpu
+
     def get_status(self) -> dict[str, Any]:
         """Get current status as a dictionary."""
         self._update_status()
         return asdict(self._status)
 
 
-__all__ = ["StatusReporter", "BotStatus", "EngineStatus", "MarketStatus", "PositionStatus"]
+__all__ = [
+    "StatusReporter",
+    "BotStatus",
+    "EngineStatus",
+    "MarketStatus",
+    "PositionStatus",
+    "OrderStatus",
+    "TradeStatus",
+    "AccountStatus",
+]

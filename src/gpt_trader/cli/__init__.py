@@ -126,6 +126,9 @@ def _handle_exception(
 
 def _write_output(content: str, output_file: Path | None) -> None:
     """Write output to file or stdout."""
+    if not content:
+        return  # Already handled by rich console
+
     if output_file:
         output_file.write_text(content)
     else:

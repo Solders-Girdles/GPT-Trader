@@ -11,10 +11,8 @@ from __future__ import annotations
 import warnings
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 
-from gpt_trader.orchestration.configuration import BotConfig
-from gpt_trader.orchestration.runtime_paths import resolve_runtime_paths
 from gpt_trader.orchestration.service_registry import ServiceRegistry
 from gpt_trader.persistence.event_store import EventStore
 from gpt_trader.persistence.orders_store import OrdersStore
@@ -66,39 +64,13 @@ class StorageBootstrapper:
         For backward compatibility, use `create_storage_from_container()`.
     """
 
-    def __init__(self, config: BotConfig, registry: ServiceRegistry) -> None:
+    def __init__(self, container: ApplicationContainer) -> None:
         warnings.warn(
             "StorageBootstrapper is deprecated. Use ApplicationContainer instead.",
             DeprecationWarning,
             stacklevel=2,
         )
-        self._config = config
-        self._registry = registry
+        self._container = container
 
     def bootstrap(self) -> StorageContext:
-        profile = self._config.profile.value  # type: ignore[attr-defined]
-        runtime_paths = resolve_runtime_paths(config=self._config, profile=profile)
-        storage_dir = runtime_paths.storage_dir
-        event_store_root = runtime_paths.event_store_root
-
-        registry = self._registry
-
-        if registry.event_store is not None:
-            event_store = cast(EventStore, registry.event_store)
-        else:
-            event_store = EventStore(root=event_store_root)
-            registry = registry.with_updates(event_store=event_store)
-
-        if registry.orders_store is not None:
-            orders_store = cast(OrdersStore, registry.orders_store)
-        else:
-            orders_store = OrdersStore(storage_path=storage_dir)
-            registry = registry.with_updates(orders_store=orders_store)
-
-        return StorageContext(
-            event_store=event_store,
-            orders_store=orders_store,
-            storage_dir=storage_dir,
-            event_store_root=event_store_root,
-            registry=registry,
-        )
+        return create_storage_from_container(self._container)

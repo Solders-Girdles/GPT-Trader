@@ -65,10 +65,10 @@ class SecurityValidator:
         return NumericValidator.validate_numeric(value, min_val, max_val)
 
     def validate_order_request(
-        self, order: dict[str, Any], account_value: float
+        self, order: dict[str, Any], account_value: float, limits: dict[str, Any] | None = None
     ) -> ValidationResult:
         """Validate trading order request."""
-        return OrderValidator.validate_order_request(order, account_value)
+        return OrderValidator.validate_order_request(order, account_value, limits)
 
     def check_rate_limit(self, identifier: str, limit_type: str) -> tuple[bool, str | None]:
         """Check if request is within rate limits."""

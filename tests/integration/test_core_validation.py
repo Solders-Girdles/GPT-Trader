@@ -19,7 +19,6 @@ from gpt_trader.features.brokerages.core.interfaces import (
 )
 
 if TYPE_CHECKING:
-    from gpt_trader.orchestration.service_registry import ServiceRegistry
     from gpt_trader.orchestration.trading_bot import TradingBot
 
 
@@ -31,18 +30,18 @@ class TestCoreValidation:
     that unit tests cannot cover due to mocking.
     """
 
-    def test_broker_connection(self, dev_bot: tuple[TradingBot, ServiceRegistry]) -> None:
+    def test_broker_connection(self, dev_bot: TradingBot) -> None:
         """Verify broker is initialized and has required methods."""
-        bot, _registry = dev_bot
+        bot = dev_bot
 
         assert bot.broker is not None, "Broker not initialized"
         assert hasattr(bot.broker, "get_ticker"), "Broker missing get_ticker method"
         assert hasattr(bot.broker, "place_order"), "Broker missing place_order method"
         assert hasattr(bot.broker, "list_positions"), "Broker missing list_positions method"
 
-    def test_market_data_updates(self, dev_bot: tuple[TradingBot, ServiceRegistry]) -> None:
+    def test_market_data_updates(self, dev_bot: TradingBot) -> None:
         """Verify market data is accessible via broker."""
-        bot, _registry = dev_bot
+        bot = dev_bot
 
         for symbol in bot.config.symbols:
             ticker = bot.broker.get_ticker(symbol)
@@ -72,9 +71,9 @@ class TestCoreValidation:
         msg3 = guard.annotate({"sequence": 5, "type": "ticker"})
         assert msg3.get("gap_detected") is True, "Gap should be detected (2->5)"
 
-    def test_order_placement(self, dev_bot: tuple[TradingBot, ServiceRegistry]) -> None:
+    def test_order_placement(self, dev_bot: TradingBot) -> None:
         """Verify order placement through broker."""
-        bot, _registry = dev_bot
+        bot = dev_bot
         symbol = bot.config.symbols[0]
 
         order = bot.broker.place_order(
@@ -91,9 +90,9 @@ class TestCoreValidation:
             OrderStatus.SUBMITTED,
         ), f"Unexpected status: {order.status}"
 
-    def test_position_math(self, dev_bot: tuple[TradingBot, ServiceRegistry]) -> None:
+    def test_position_math(self, dev_bot: TradingBot) -> None:
         """Verify position tracking with mark price changes."""
-        bot, _registry = dev_bot
+        bot = dev_bot
         symbol = bot.config.symbols[0]
 
         # Set initial mark price (DeterministicBroker supports set_mark)
@@ -117,9 +116,9 @@ class TestCoreValidation:
         positions = bot.broker.list_positions()
         assert isinstance(positions, list), "list_positions should return a list"
 
-    def test_risk_reduce_only_mode(self, dev_bot: tuple[TradingBot, ServiceRegistry]) -> None:
+    def test_risk_reduce_only_mode(self, dev_bot: TradingBot) -> None:
         """Verify risk manager reduce-only mode enforcement."""
-        bot, _registry = dev_bot
+        bot = dev_bot
 
         assert bot.risk_manager is not None, "Risk manager not initialized"
 
@@ -133,9 +132,10 @@ class TestCoreValidation:
         # Restore previous state
         bot.risk_manager.set_reduce_only_mode(previous, reason="integration_test_restore")
 
-    def test_state_persistence_surface(self, dev_bot: tuple[TradingBot, ServiceRegistry]) -> None:
+    def test_state_persistence_surface(self, dev_bot: TradingBot) -> None:
         """Verify state persistence components are available."""
-        _bot, registry = dev_bot
+        bot = dev_bot
+        registry = bot.container.create_service_registry()
 
         assert registry.orders_store is not None, "OrdersStore not in registry"
         assert hasattr(registry.orders_store, "storage_path"), "OrdersStore missing storage_path"

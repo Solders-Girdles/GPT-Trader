@@ -36,12 +36,21 @@ class TestTradingBotInitialization:
 
     def test_init_with_config_only(self, mock_config: Mock) -> None:
         """Test initialization with only config."""
+        mock_container = Mock()
+        # Ensure container creates a registry with None broker for this test
+        mock_registry = Mock()
+        mock_registry.broker = None
+        mock_registry.account_manager = None
+        mock_registry.risk_manager = None
+        mock_registry.runtime_state = None
+        mock_container.create_service_registry.return_value = mock_registry
+
         with patch("gpt_trader.orchestration.trading_bot.bot.TradingEngine") as mock_engine:
             mock_engine.return_value = Mock()
-            bot = TradingBot(config=mock_config)
+            bot = TradingBot(config=mock_config, container=mock_container)
 
         assert bot.config is mock_config
-        assert bot.container is None
+        assert bot.container is mock_container
         assert bot.running is False
         assert bot.broker is None
         assert bot.account_manager is None
@@ -50,9 +59,12 @@ class TestTradingBotInitialization:
 
     def test_init_with_registry(self, mock_config: Mock, mock_registry: Mock) -> None:
         """Test initialization with registry."""
+        mock_container = Mock()
+        mock_container.create_service_registry.return_value = mock_registry
+
         with patch("gpt_trader.orchestration.trading_bot.bot.TradingEngine") as mock_engine:
             mock_engine.return_value = Mock()
-            bot = TradingBot(config=mock_config, registry=mock_registry)
+            bot = TradingBot(config=mock_config, container=mock_container)
 
         assert bot.broker is mock_registry.broker
         assert bot.account_manager is mock_registry.account_manager
@@ -72,6 +84,7 @@ class TestTradingBotInitialization:
 
     def test_init_creates_context(self, mock_config: Mock, mock_registry: Mock) -> None:
         """Test that initialization creates CoordinatorContext."""
+        mock_container = Mock()
         with (
             patch("gpt_trader.orchestration.trading_bot.bot.TradingEngine") as mock_engine,
             patch("gpt_trader.orchestration.trading_bot.bot.CoordinatorContext") as mock_context,
@@ -79,7 +92,9 @@ class TestTradingBotInitialization:
             mock_engine.return_value = Mock()
             mock_context.return_value = Mock()
 
-            bot = TradingBot(config=mock_config, registry=mock_registry)
+            mock_container.create_service_registry.return_value = mock_registry
+
+            bot = TradingBot(config=mock_config, container=mock_container)
 
             mock_context.assert_called_once_with(
                 config=mock_config,
@@ -94,21 +109,25 @@ class TestTradingBotInitialization:
 
     def test_init_creates_engine(self, mock_config: Mock) -> None:
         """Test that initialization creates TradingEngine."""
+        mock_container = Mock()
         with patch("gpt_trader.orchestration.trading_bot.bot.TradingEngine") as mock_engine:
             mock_engine.return_value = Mock()
-            bot = TradingBot(config=mock_config)
+            bot = TradingBot(config=mock_config, container=mock_container)
 
             assert bot.engine is not None
             mock_engine.assert_called_once()
 
     def test_init_registry_missing_attributes(self, mock_config: Mock) -> None:
         """Test initialization handles registry with missing attributes."""
+        mock_container = Mock()
         minimal_registry = Mock(spec=["broker"])
         minimal_registry.broker = Mock()
 
+        mock_container.create_service_registry.return_value = minimal_registry
+
         with patch("gpt_trader.orchestration.trading_bot.bot.TradingEngine") as mock_engine:
             mock_engine.return_value = Mock()
-            bot = TradingBot(config=mock_config, registry=minimal_registry)
+            bot = TradingBot(config=mock_config, container=mock_container)
 
         assert bot.broker is minimal_registry.broker
         assert bot.account_manager is None
@@ -124,13 +143,14 @@ class TestTradingBotRun:
         config = Mock()
         config.symbols = ["BTC-PERP-USDC"]
         config.interval = 1  # Short interval for testing
+        mock_container = Mock()
 
         with patch("gpt_trader.orchestration.trading_bot.bot.TradingEngine") as mock_engine:
             engine = AsyncMock()
             engine.start_background_tasks = AsyncMock(return_value=[])
             engine.shutdown = AsyncMock()
             mock_engine.return_value = engine
-            bot = TradingBot(config=config)
+            bot = TradingBot(config=config, container=mock_container)
 
         return bot
 
@@ -185,12 +205,13 @@ class TestTradingBotStop:
         config = Mock()
         config.symbols = ["BTC-PERP-USDC"]
         config.interval = 60
+        mock_container = Mock()
 
         with patch("gpt_trader.orchestration.trading_bot.bot.TradingEngine") as mock_engine:
             engine = AsyncMock()
             engine.shutdown = AsyncMock()
             mock_engine.return_value = engine
-            bot = TradingBot(config=config)
+            bot = TradingBot(config=config, container=mock_container)
             bot.running = True
 
         return bot
@@ -227,12 +248,13 @@ class TestTradingBotExecuteDecision:
         config = Mock()
         config.symbols = ["BTC-PERP-USDC"]
         config.interval = 60
+        mock_container = Mock()
 
         with patch("gpt_trader.orchestration.trading_bot.bot.TradingEngine") as mock_engine:
             engine = Mock()
             engine.execute_decision = Mock(return_value="order-123")
             mock_engine.return_value = engine
-            bot = TradingBot(config=config)
+            bot = TradingBot(config=config, container=mock_container)
 
         return bot
 
@@ -261,11 +283,12 @@ class TestTradingBotExecuteDecision:
         config = Mock()
         config.symbols = ["BTC-PERP-USDC"]
         config.interval = 60
+        mock_container = Mock()
 
         with patch("gpt_trader.orchestration.trading_bot.bot.TradingEngine") as mock_engine:
             engine = Mock(spec=[])  # No execute_decision
             mock_engine.return_value = engine
-            bot = TradingBot(config=config)
+            bot = TradingBot(config=config, container=mock_container)
 
         result = bot.execute_decision(
             symbol="BTC-PERP-USDC",
@@ -297,15 +320,18 @@ class TestTradingBotGetProduct:
         config = Mock()
         config.symbols = ["BTC-PERP-USDC"]
         config.interval = 60
+        mock_container = Mock()
 
         registry = Mock()
         mock_product = Mock()
         registry.broker = Mock()
         registry.broker.get_product = Mock(return_value=mock_product)
 
+        mock_container.create_service_registry.return_value = registry
+
         with patch("gpt_trader.orchestration.trading_bot.bot.TradingEngine") as mock_engine:
             mock_engine.return_value = Mock()
-            bot = TradingBot(config=config, registry=registry)
+            bot = TradingBot(config=config, container=mock_container)
 
         result = bot.get_product("BTC-PERP-USDC")
 
@@ -317,10 +343,17 @@ class TestTradingBotGetProduct:
         config = Mock()
         config.symbols = ["BTC-PERP-USDC"]
         config.interval = 60
+        mock_container = Mock()
+
+        # Ensure registry has None broker
+        mock_registry = Mock()
+        mock_registry.broker = None
+
+        mock_container.create_service_registry.return_value = mock_registry
 
         with patch("gpt_trader.orchestration.trading_bot.bot.TradingEngine") as mock_engine:
             mock_engine.return_value = Mock()
-            bot = TradingBot(config=config)
+            bot = TradingBot(config=config, container=mock_container)
 
         result = bot.get_product("BTC-PERP-USDC")
 
@@ -331,13 +364,16 @@ class TestTradingBotGetProduct:
         config = Mock()
         config.symbols = ["BTC-PERP-USDC"]
         config.interval = 60
+        mock_container = Mock()
 
         registry = Mock()
         registry.broker = Mock(spec=[])  # No get_product
 
+        mock_container.create_service_registry.return_value = registry
+
         with patch("gpt_trader.orchestration.trading_bot.bot.TradingEngine") as mock_engine:
             mock_engine.return_value = Mock()
-            bot = TradingBot(config=config, registry=registry)
+            bot = TradingBot(config=config, container=mock_container)
 
         result = bot.get_product("BTC-PERP-USDC")
 
@@ -352,10 +388,11 @@ class TestTradingBotStateManagement:
         config = Mock()
         config.symbols = ["BTC-PERP-USDC"]
         config.interval = 60
+        mock_container = Mock()
 
         with patch("gpt_trader.orchestration.trading_bot.bot.TradingEngine") as mock_engine:
             mock_engine.return_value = Mock()
-            bot = TradingBot(config=config)
+            bot = TradingBot(config=config, container=mock_container)
 
         assert bot.running is False
 
@@ -365,6 +402,7 @@ class TestTradingBotStateManagement:
         config = Mock()
         config.symbols = ["BTC-PERP-USDC"]
         config.interval = 0.01  # Very short for testing
+        mock_container = Mock()
 
         running_states: list[bool] = []
 
@@ -379,7 +417,7 @@ class TestTradingBotStateManagement:
             engine.start_background_tasks = capture_state
             engine.shutdown = AsyncMock()
             mock_engine.return_value = engine
-            bot = TradingBot(config=config)
+            bot = TradingBot(config=config, container=mock_container)
 
         # Before run
         assert bot.running is False

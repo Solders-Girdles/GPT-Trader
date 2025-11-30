@@ -57,7 +57,8 @@ def mock_strategy():
 def context(mock_broker):
     risk = BotRiskConfig(position_fraction=Decimal("0.1"))
     config = BotConfig(symbols=["BTC-USD"], interval=1, risk=risk)
-    return CoordinatorContext(config=config, broker=mock_broker)
+    risk_manager = MagicMock()
+    return CoordinatorContext(config=config, broker=mock_broker, risk_manager=risk_manager)
 
 
 @pytest.fixture
@@ -203,30 +204,37 @@ async def test_risk_manager_receives_dict_format(engine):
     """Test that risk manager receives correctly formatted dicts."""
     # Setup risk manager
     mock_risk_manager = MagicMock()
+    mock_risk_manager.pre_trade_validate.return_value = MagicMock(is_valid=True)
     engine.context.risk_manager = mock_risk_manager
 
-    # Setup engine state to force a trade
-    engine.strategy.decide.return_value = Decision(Action.BUY, "test")
-    engine.strategy.config.position_fraction = Decimal("0.1")
+    # Setup security validator via patch
+    with patch("gpt_trader.security.security_validator.get_validator") as mock_get_validator:
+        mock_validator = MagicMock()
+        mock_validator.validate_order_request.return_value.is_valid = True
+        mock_get_validator.return_value = mock_validator
 
-    # Setup mock broker responses
-    engine.context.broker.list_positions.return_value = [
-        Position(
-            symbol="BTC-USD",
-            quantity=Decimal("1.0"),
-            entry_price=Decimal("40000"),
-            mark_price=Decimal("50000"),
-            unrealized_pnl=Decimal("0"),
-            realized_pnl=Decimal("0"),
-            side="long",
-        )
-    ]
-    engine.context.broker.list_balances.return_value = [
-        Balance(asset="USD", total=Decimal("10000"), available=Decimal("10000"))
-    ]
+        # Setup engine state to force a trade
+        engine.strategy.decide.return_value = Decision(Action.BUY, "test")
+        engine.strategy.config.position_fraction = Decimal("0.1")
 
-    # Run cycle
-    await engine._cycle()
+        # Setup mock broker responses
+        engine.context.broker.list_positions.return_value = [
+            Position(
+                symbol="BTC-USD",
+                quantity=Decimal("1.0"),
+                entry_price=Decimal("40000"),
+                mark_price=Decimal("50000"),
+                unrealized_pnl=Decimal("0"),
+                realized_pnl=Decimal("0"),
+                side="long",
+            )
+        ]
+        engine.context.broker.list_balances.return_value = [
+            Balance(asset="USD", total=Decimal("10000"), available=Decimal("10000"))
+        ]
+
+        # Run cycle
+        await engine._cycle()
 
     # Verify pre_trade_validate call
     mock_risk_manager.pre_trade_validate.assert_called_once()
@@ -293,8 +301,17 @@ async def test_order_placed_with_dynamic_quantity(engine):
     ]
     engine.context.broker.list_positions.return_value = []
 
-    # Execute
-    await engine._cycle()
+    # Setup risk manager
+    engine.context.risk_manager.pre_trade_validate.return_value.is_valid = True
+
+    # Setup security validator via patch
+    with patch("gpt_trader.security.security_validator.get_validator") as mock_get_validator:
+        mock_validator = MagicMock()
+        mock_validator.validate_order_request.return_value.is_valid = True
+        mock_get_validator.return_value = mock_validator
+
+        # Execute
+        await engine._cycle()
 
     # Verify
     # Target notional = 10000 * 0.1 = 1000

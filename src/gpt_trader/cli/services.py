@@ -117,6 +117,12 @@ def build_config_from_args(args: Namespace, **kwargs: Any) -> BotConfig:
                 if "symbols" in trading:
                     config.symbols = trading["symbols"]
 
+                execution = profile_data.get("execution", {})
+                if "mock_broker" in execution:
+                    config.mock_broker = execution["mock_broker"]
+                if "dry_run" in execution:
+                    config.dry_run = execution["dry_run"]
+
             except Exception as e:
                 logger.warning("Failed to load profile %s: %s", profile_name, e)
 

@@ -1,14 +1,12 @@
 {
   "schemas": [
     "bot_config",
-    "risk_config",
-    "runtime_settings"
+    "risk_config"
   ],
   "version": "1.0",
   "description": "Configuration schemas for GPT-Trader AI agent consumption",
   "files": {
     "bot_config": "bot_config_schema.json",
-    "risk_config": "risk_config_schema.json",
-    "runtime_settings": "runtime_settings_schema.json"
+    "risk_config": "risk_config_schema.json"
   }
 }

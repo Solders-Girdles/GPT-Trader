@@ -429,6 +429,13 @@ class BotConfig:
 
         config_data["risk"] = BotRiskConfig(**risk_data)
 
+        # 3. Map Execution Config
+        execution = data.get("execution", {})
+        if "mock_broker" in execution:
+            config_data["mock_broker"] = execution["mock_broker"]
+        if "dry_run" in execution:
+            config_data["dry_run"] = execution["dry_run"]
+
         # 3. Map Strategy Config
         # Legacy profiles often have strategy nested by symbol (e.g. strategy.btc)
         # We'll take the first available strategy config or a default

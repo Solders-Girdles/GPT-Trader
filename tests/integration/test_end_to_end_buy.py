@@ -7,7 +7,6 @@ from gpt_trader.features.live_trade.strategies.perps_baseline import Action, Dec
 from gpt_trader.orchestration.configuration import BotConfig
 
 
-@pytest.mark.skip(reason="TODO: Fix Decimal/float type mismatch in strategy engine position sizing")
 @pytest.mark.asyncio
 async def test_end_to_end_buy_execution():
     """Test that the bot correctly executes a BUY when strategy signals.
@@ -21,7 +20,7 @@ async def test_end_to_end_buy_execution():
         symbols=["BTC-USD"],
         interval=0.01,  # Fast interval for testing
         mock_broker=True,  # Use deterministic broker
-        perps_position_fraction=0.1,  # 10% position sizing
+        perps_position_fraction=0.04,  # 4% position sizing (must be < 5% security limit)
     )
 
     # 2. Create container and bot

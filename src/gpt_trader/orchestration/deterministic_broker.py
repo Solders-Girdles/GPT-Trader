@@ -117,6 +117,10 @@ class DeterministicBroker:
         """Alias for list_balances."""
         return self.list_balances()
 
+    def list_orders(self, **kwargs: Any) -> dict[str, Any]:
+        """Return list of orders (always empty for deterministic broker as orders fill immediately)."""
+        return {"orders": []}
+
     def place_order(
         self,
         symbol_or_payload: str | dict[str, Any],

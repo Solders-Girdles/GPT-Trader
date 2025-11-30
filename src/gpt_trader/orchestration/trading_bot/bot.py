@@ -23,7 +23,6 @@ if TYPE_CHECKING:
         AccountManagerProtocol,
         EventStoreProtocol,
         RuntimeStateProtocol,
-        ServiceRegistryProtocol,
     )
 
 logger = get_logger(__name__, component="trading_bot")
@@ -34,7 +33,6 @@ class TradingBot:
         self,
         config: BotConfig,
         container: ApplicationContainer,
-        registry: ServiceRegistryProtocol | None = None,
         event_store: EventStoreProtocol | None = None,
         orders_store: Any = None,
         notification_service: NotificationService | None = None,
@@ -43,25 +41,18 @@ class TradingBot:
         self.container = container
         self.running = False
 
-        # If registry not provided, create from container (backward compatibility)
-        if registry is None:
-            registry = container.create_service_registry()
+        # Create registry from container
+        registry = container.create_service_registry()
 
         # Store registry components for CLI access
         self._registry = registry
-        self.broker: BrokerProtocol | None = registry.broker if registry else None
-        self.account_manager: AccountManagerProtocol | None = (
-            getattr(registry, "account_manager", None) if registry else None
+        self.broker: BrokerProtocol | None = registry.broker
+        self.account_manager: AccountManagerProtocol | None = getattr(
+            registry, "account_manager", None
         )
-        self.account_telemetry: Any = (
-            getattr(registry, "account_telemetry", None) if registry else None
-        )
-        self.risk_manager: RiskManagerProtocol | None = (
-            getattr(registry, "risk_manager", None) if registry else None
-        )
-        self.runtime_state: RuntimeStateProtocol | None = (
-            getattr(registry, "runtime_state", None) if registry else None
-        )
+        self.account_telemetry: Any = getattr(registry, "account_telemetry", None)
+        self.risk_manager: RiskManagerProtocol | None = getattr(registry, "risk_manager", None)
+        self.runtime_state: RuntimeStateProtocol | None = getattr(registry, "runtime_state", None)
 
         # Get event_store from parameter or registry
         self._event_store = event_store or (

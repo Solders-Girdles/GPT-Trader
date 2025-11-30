@@ -24,7 +24,7 @@ class OrderValidator:
 
     @classmethod
     def validate_order_request(
-        cls, order: dict[str, Any], account_value: float
+        cls, order: dict[str, Any], account_value: float, limits: dict[str, Any] | None = None
     ) -> ValidationResult:
         """
         Validate trading order request.
@@ -32,10 +32,9 @@ class OrderValidator:
         Args:
             order: Order details
             account_value: Current account value
-
-        Returns:
-            ValidationResult
+            limits: Optional dictionary of trading limits to override defaults
         """
+        limits = limits or cls.TRADING_LIMITS
         errors = []
 
         if not isinstance(order, dict):
@@ -73,17 +72,19 @@ class OrderValidator:
         except (TypeError, ValueError):
             order_value = 0.0
 
-        if order_value < cls.TRADING_LIMITS["min_order_value"]:
-            errors.append(f"Order value below minimum: ${cls.TRADING_LIMITS['min_order_value']}")
+        if order_value < limits.get("min_order_value", 1.0):
+            errors.append(f"Order value below minimum: ${limits.get('min_order_value', 1.0)}")
 
-        if order_value > cls.TRADING_LIMITS["max_order_value"]:
-            errors.append(f"Order value exceeds maximum: ${cls.TRADING_LIMITS['max_order_value']}")
+        if order_value > limits.get("max_order_value", 100000.0):
+            errors.append(
+                f"Order value exceeds maximum: ${limits.get('max_order_value', 100000.0)}"
+            )
 
         # Check position concentration
         position_pct = order_value / account_value if account_value and account_value > 0 else 1.0
-        if position_pct > cls.TRADING_LIMITS["max_position_size"]:
+        if position_pct > limits.get("max_position_size", 0.05):
             errors.append(
-                f"Position size exceeds {cls.TRADING_LIMITS['max_position_size'] * 100}% limit"
+                f"Position size exceeds {limits.get('max_position_size', 0.05) * 100}% limit"
             )
 
         return ValidationResult(

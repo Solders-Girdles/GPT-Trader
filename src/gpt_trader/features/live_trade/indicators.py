@@ -266,4 +266,96 @@ __all__ = [
     "true_range",
     "average_true_range",
     "CrossoverSignal",
+    "average_directional_index",
 ]
+
+
+def average_directional_index(
+    highs: Sequence[Decimal],
+    lows: Sequence[Decimal],
+    closes: Sequence[Decimal],
+    period: int = 14,
+) -> Decimal | None:
+    """Calculate Average Directional Index (ADX).
+
+    Args:
+        highs: High prices
+        lows: Low prices
+        closes: Close prices
+        period: ADX period (default 14)
+
+    Returns:
+        ADX value or None if insufficient data
+    """
+    if len(highs) < period * 2 or len(lows) < period * 2 or len(closes) < period * 2:
+        return None
+
+    # Calculate True Range and Directional Movement
+    tr_list: list[Decimal] = []
+    plus_dm_list: list[Decimal] = []
+    minus_dm_list: list[Decimal] = []
+
+    for i in range(1, len(closes)):
+        # True Range
+        tr = true_range(highs[i], lows[i], closes[i - 1])
+        tr_list.append(tr)
+
+        # Directional Movement
+        up_move = highs[i] - highs[i - 1]
+        down_move = lows[i - 1] - lows[i]
+
+        if up_move > down_move and up_move > 0:
+            plus_dm_list.append(up_move)
+        else:
+            plus_dm_list.append(Decimal("0"))
+
+        if down_move > up_move and down_move > 0:
+            minus_dm_list.append(down_move)
+        else:
+            minus_dm_list.append(Decimal("0"))
+
+    if len(tr_list) < period:
+        return None
+
+    # Smooth TR, +DM, -DM (Wilder's smoothing)
+    # First value is simple sum
+    tr_smooth = sum(tr_list[:period], Decimal("0"))
+    plus_dm_smooth = sum(plus_dm_list[:period], Decimal("0"))
+    minus_dm_smooth = sum(minus_dm_list[:period], Decimal("0"))
+
+    dx_list: list[Decimal] = []
+
+    # Calculate subsequent values
+    for i in range(period, len(tr_list)):
+        tr_smooth = tr_smooth - (tr_smooth / period) + tr_list[i]
+        plus_dm_smooth = plus_dm_smooth - (plus_dm_smooth / period) + plus_dm_list[i]
+        minus_dm_smooth = minus_dm_smooth - (minus_dm_smooth / period) + minus_dm_list[i]
+
+        # Calculate DI
+        if tr_smooth == 0:
+            plus_di = Decimal("0")
+            minus_di = Decimal("0")
+        else:
+            plus_di = (plus_dm_smooth / tr_smooth) * 100
+            minus_di = (minus_dm_smooth / tr_smooth) * 100
+
+        # Calculate DX
+        di_sum = plus_di + minus_di
+        if di_sum == 0:
+            dx = Decimal("0")
+        else:
+            dx = (abs(plus_di - minus_di) / di_sum) * 100
+        dx_list.append(dx)
+
+    if len(dx_list) < period:
+        return None
+
+    # Calculate ADX (SMA of DX)
+    # First ADX is average of first 'period' DX values
+    adx = sum(dx_list[:period], Decimal("0")) / period
+
+    # Smooth ADX
+    for i in range(period, len(dx_list)):
+        adx = (adx * (period - 1) + dx_list[i]) / period
+
+    return adx

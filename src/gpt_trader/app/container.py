@@ -12,7 +12,7 @@ from gpt_trader.features.brokerages.coinbase.utilities import ProductCatalog
 from gpt_trader.orchestration.config_controller import ConfigController
 from gpt_trader.orchestration.configuration import BotConfig, Profile
 from gpt_trader.orchestration.deterministic_broker import DeterministicBroker
-from gpt_trader.orchestration.protocols import EventStoreProtocol, ServiceRegistryProtocol
+from gpt_trader.orchestration.protocols import EventStoreProtocol
 from gpt_trader.orchestration.runtime_paths import RuntimePaths, resolve_runtime_paths
 from gpt_trader.orchestration.service_registry import ServiceRegistry
 from gpt_trader.persistence.event_store import EventStore
@@ -59,9 +59,9 @@ def create_brokerage(
 
     # Fallback to direct env vars
     if not api_key_name:
-        api_key_name = os.getenv("COINBASE_API_KEY_NAME")
+        api_key_name = os.getenv("COINBASE_API_KEY_NAME") or os.getenv("COINBASE_CDP_API_KEY")
     if not private_key:
-        private_key = os.getenv("COINBASE_PRIVATE_KEY")
+        private_key = os.getenv("COINBASE_PRIVATE_KEY") or os.getenv("COINBASE_CDP_PRIVATE_KEY")
 
     if not api_key_name or not private_key:
         raise ValueError(
@@ -217,14 +217,9 @@ class ApplicationContainer:
         """
         from gpt_trader.orchestration.trading_bot.bot import TradingBot
 
-        # Create registry for backward compatibility with components
-        # that still expect it
-        registry = self.create_service_registry()
-
         return TradingBot(
             config=self.config,
             container=self,
-            registry=cast(ServiceRegistryProtocol, registry),
             event_store=cast(EventStoreProtocol, self.event_store),
             orders_store=self.orders_store,
             notification_service=self.notification_service,

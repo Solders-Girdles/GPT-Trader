@@ -5,7 +5,7 @@ from __future__ import annotations
 from argparse import ArgumentParser
 from pathlib import Path
 
-PROFILE_CHOICES = ["dev", "demo", "prod", "canary", "spot"]
+PROFILE_CHOICES = ["dev", "demo", "prod", "canary", "spot", "paper"]
 OUTPUT_FORMAT_CHOICES = ["text", "json"]
 
 

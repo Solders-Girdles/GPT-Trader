@@ -59,18 +59,19 @@ class LiveRiskManager:
         self,
         config: RiskConfig | None = None,
         event_store: EventStore | None = None,
+        state_file: str | None = "var/data/risk_state.json",
     ) -> None:
         """
         Initialize the risk manager.
 
         Args:
             config: Risk configuration with leverage limits, loss limits, etc.
-                   If None, risk checks that require config are skipped.
             event_store: Event store for recording risk metrics.
-                        If None, metrics are not persisted.
+            state_file: Path to JSON file for persisting daily risk state.
         """
         self.config = config
         self.event_store = event_store
+        self.state_file = state_file
         self.positions: defaultdict[str, dict[str, Any]] = defaultdict(dict)
         self.last_mark_update: dict[str, float] = {}
         self._reduce_only_mode: bool = False
@@ -80,6 +81,73 @@ class LiveRiskManager:
         self._start_of_day_equity: Decimal | None = None
         # Allows time mocking for tests; defaults to real datetime.utcnow
         self._now_provider: Callable[[], datetime] = datetime.utcnow
+
+        # Load persisted state if available
+        if self.state_file:
+            self._load_state()
+
+    def _load_state(self) -> None:
+        """Load risk state from disk."""
+        import json
+        import os
+
+        if not self.state_file or not os.path.exists(self.state_file):
+            return
+
+        try:
+            with open(self.state_file) as f:
+                state = json.load(f)
+
+            # Check if state is from today (UTC)
+            saved_date = state.get("date")
+            current_date = self._now_provider().strftime("%Y-%m-%d")
+
+            if saved_date == current_date:
+                if state.get("start_of_day_equity"):
+                    self._start_of_day_equity = Decimal(str(state["start_of_day_equity"]))
+                self._daily_pnl_triggered = state.get("daily_pnl_triggered", False)
+                self._reduce_only_mode = state.get("reduce_only_mode", False)
+                self._reduce_only_reason = state.get("reduce_only_reason", "")
+                # Restore reduce-only flags for positions if needed
+                # (For now we just restore global flags)
+            else:
+                # New day, reset state but keep file for history?
+                # Actually, reset_daily_tracking will handle logic, but here we just don't load stale state
+                pass
+
+        except Exception as e:
+            # Log error but don't crash
+            print(f"Failed to load risk state: {e}")
+
+    def _save_state(self) -> None:
+        """Save risk state to disk."""
+        import json
+
+        if not self.state_file:
+            return
+
+        try:
+            # Ensure directory exists
+            from pathlib import Path
+
+            Path(self.state_file).parent.mkdir(parents=True, exist_ok=True)
+
+            state = {
+                "date": self._now_provider().strftime("%Y-%m-%d"),
+                "start_of_day_equity": (
+                    str(self._start_of_day_equity) if self._start_of_day_equity else None
+                ),
+                "daily_pnl_triggered": self._daily_pnl_triggered,
+                "reduce_only_mode": self._reduce_only_mode,
+                "reduce_only_reason": self._reduce_only_reason,
+                "updated_at": time.time(),
+            }
+
+            with open(self.state_file, "w") as f:
+                json.dump(state, f, indent=2)
+
+        except Exception as e:
+            print(f"Failed to save risk state: {e}")
 
     def check_order(self, order: Any) -> bool:
         """Check if an order is allowed by risk rules.
@@ -269,6 +337,7 @@ class LiveRiskManager:
         """
         if self._start_of_day_equity is None:
             self._start_of_day_equity = equity
+            self._save_state()
             return False
 
         if not self.config:
@@ -284,6 +353,7 @@ class LiveRiskManager:
             if loss_pct > Decimal(str(daily_loss_limit)):
                 self._daily_pnl_triggered = True
                 self.set_reduce_only_mode(True, reason="daily_loss_limit_breached")
+                self._save_state()
                 return True
         return False
 
@@ -362,6 +432,7 @@ class LiveRiskManager:
         """Set the reduce-only trading mode."""
         self._reduce_only_mode = value
         self._reduce_only_reason = reason
+        self._save_state()
 
     def is_reduce_only_mode(self) -> bool:
         """Check if reduce-only mode is active."""
@@ -373,3 +444,4 @@ class LiveRiskManager:
         self._daily_pnl_triggered = False
         self._reduce_only_mode = False
         self._reduce_only_reason = ""
+        self._save_state()

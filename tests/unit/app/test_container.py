@@ -232,7 +232,6 @@ class TestApplicationContainer:
 
         assert call_args.kwargs["config"] == mock_config
         assert call_args.kwargs["container"] == container
-        assert call_args.kwargs["registry"] is not None
         assert call_args.kwargs["event_store"] == container.event_store
         assert call_args.kwargs["orders_store"] == container.orders_store
 

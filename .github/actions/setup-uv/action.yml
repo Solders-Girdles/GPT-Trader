@@ -9,7 +9,7 @@ inputs:
   uv-version:
     description: uv release to install.
     required: false
-    default: "0.5.6"
+    default: "0.8.8"
   cache-path:
     description: Filesystem path to cache (leave blank to disable caching).
     required: false

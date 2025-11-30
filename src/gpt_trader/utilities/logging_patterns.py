@@ -105,7 +105,7 @@ def _ensure_structured(logger: LoggerLike | Any) -> StructuredLogger | None:
 @contextlib.contextmanager
 def log_operation(
     operation: str, logger: LoggerLike = None, level: int = logging.INFO, **context: Any
-) -> Generator[None]:
+) -> Generator[None, None, None]:
     resolved_logger: StructuredLogger
     if logger is None:
         resolved_logger = get_logger("operation")

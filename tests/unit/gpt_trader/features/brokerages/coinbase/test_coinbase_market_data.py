@@ -7,7 +7,7 @@ from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from typing import Any
 from unittest.mock import MagicMock
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, unquote, unquote_plus, urlparse
 
 import pytest
 
@@ -162,7 +162,9 @@ class TestCoinbaseMarketData:
 
         client.set_transport_for_testing(transport)
         _ = client.list_orders(filter=["a", "b"])
-        assert "filter=['a', 'b']" in urls[0]
+        # URL should be properly encoded; decode to verify content (use unquote_plus for + as space)
+        decoded_url = unquote_plus(urls[0])
+        assert "filter=['a', 'b']" in decoded_url
 
     def test_unicode_emoji_in_params(self) -> None:
         client = make_client()
@@ -173,7 +175,9 @@ class TestCoinbaseMarketData:
             )
         )
         _ = client.list_orders(note="🚀")
-        assert "🚀" in urls[0]
+        # URL should be properly encoded; decode to verify emoji is preserved
+        decoded_url = unquote(urls[0])
+        assert "🚀" in decoded_url
 
     def test_empty_values_are_included(self) -> None:
         client = make_client()
@@ -197,9 +201,10 @@ class TestCoinbaseMarketData:
 
         client.set_transport_for_testing(transport)
         _ = client.list_orders(path="/foo/bar", email="test+user@example.com")
-        url = urls[0]
-        assert "path=/foo/bar" in url
-        assert "email=test+user@example.com" in url
+        # URL should be properly encoded; decode to verify content
+        decoded_url = unquote(urls[0])
+        assert "path=/foo/bar" in decoded_url
+        assert "test+user@example.com" in decoded_url
 
     def test_depth_snapshot_l1_l10_depth_correctness(self) -> None:
         levels = [

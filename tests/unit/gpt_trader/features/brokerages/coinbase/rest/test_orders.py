@@ -9,6 +9,10 @@ from unittest.mock import MagicMock
 import pytest
 
 from gpt_trader.errors import ValidationError
+from gpt_trader.features.brokerages.coinbase.errors import (
+    OrderCancellationError,
+    OrderQueryError,
+)
 from gpt_trader.features.brokerages.coinbase.rest.order_service import OrderService
 from gpt_trader.features.brokerages.core.interfaces import (
     Order,
@@ -242,52 +246,48 @@ class TestCancelOrder:
         order_service: OrderService,
         mock_client: MagicMock,
     ) -> None:
-        """Test failed order cancellation."""
+        """Test failed order cancellation raises OrderCancellationError."""
         mock_client.cancel_orders.return_value = {
             "results": [{"order_id": "order-123", "success": False}]
         }
 
-        result = order_service.cancel_order("order-123")
-
-        assert result is False
+        with pytest.raises(OrderCancellationError, match="Cancellation rejected"):
+            order_service.cancel_order("order-123")
 
     def test_cancel_order_not_found(
         self,
         order_service: OrderService,
         mock_client: MagicMock,
     ) -> None:
-        """Test cancellation when order not in results."""
+        """Test cancellation raises when order not in results."""
         mock_client.cancel_orders.return_value = {
             "results": [{"order_id": "other-order", "success": True}]
         }
 
-        result = order_service.cancel_order("order-123")
-
-        assert result is False
+        with pytest.raises(OrderCancellationError, match="not found in cancellation response"):
+            order_service.cancel_order("order-123")
 
     def test_cancel_order_empty_results(
         self,
         order_service: OrderService,
         mock_client: MagicMock,
     ) -> None:
-        """Test cancellation with empty results."""
+        """Test cancellation with empty results raises OrderCancellationError."""
         mock_client.cancel_orders.return_value = {"results": []}
 
-        result = order_service.cancel_order("order-123")
-
-        assert result is False
+        with pytest.raises(OrderCancellationError, match="not found in cancellation response"):
+            order_service.cancel_order("order-123")
 
     def test_cancel_order_handles_exception(
         self,
         order_service: OrderService,
         mock_client: MagicMock,
     ) -> None:
-        """Test that exceptions are handled gracefully."""
+        """Test that exceptions raise OrderCancellationError."""
         mock_client.cancel_orders.side_effect = RuntimeError("API error")
 
-        result = order_service.cancel_order("order-123")
-
-        assert result is False
+        with pytest.raises(OrderCancellationError, match="Unexpected error"):
+            order_service.cancel_order("order-123")
 
 
 # ============================================================
@@ -370,12 +370,11 @@ class TestListOrders:
         order_service: OrderService,
         mock_client: MagicMock,
     ) -> None:
-        """Test that exceptions stop pagination and return partial results."""
+        """Test that exceptions raise OrderQueryError."""
         mock_client.list_orders.side_effect = RuntimeError("API error")
 
-        result = order_service.list_orders()
-
-        assert result == []
+        with pytest.raises(OrderQueryError, match="Failed to list orders"):
+            order_service.list_orders()
 
     def test_list_orders_respects_limit(
         self,
@@ -430,12 +429,11 @@ class TestGetOrder:
         order_service: OrderService,
         mock_client: MagicMock,
     ) -> None:
-        """Test that exceptions return None."""
+        """Test that exceptions raise OrderQueryError."""
         mock_client.get_order_historical.side_effect = RuntimeError("API error")
 
-        result = order_service.get_order("order-123")
-
-        assert result is None
+        with pytest.raises(OrderQueryError, match="Failed to get order"):
+            order_service.get_order("order-123")
 
 
 # ============================================================
@@ -513,12 +511,11 @@ class TestListFills:
         order_service: OrderService,
         mock_client: MagicMock,
     ) -> None:
-        """Test that exceptions stop pagination."""
+        """Test that exceptions raise OrderQueryError."""
         mock_client.list_fills.side_effect = RuntimeError("API error")
 
-        result = order_service.list_fills()
-
-        assert result == []
+        with pytest.raises(OrderQueryError, match="Failed to list fills"):
+            order_service.list_fills()
 
 
 # ============================================================
@@ -714,12 +711,11 @@ class TestOrderServiceEdgeCases:
         order_service: OrderService,
         mock_client: MagicMock,
     ) -> None:
-        """Test handling of response without results key."""
+        """Test handling of response without results key raises error."""
         mock_client.cancel_orders.return_value = {}
 
-        result = order_service.cancel_order("order-123")
-
-        assert result is False
+        with pytest.raises(OrderCancellationError, match="not found in cancellation response"):
+            order_service.cancel_order("order-123")
 
     def test_place_order_market_without_price(
         self,

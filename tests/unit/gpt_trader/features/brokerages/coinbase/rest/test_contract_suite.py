@@ -10,6 +10,10 @@ import pytest
 from gpt_trader.errors import ValidationError
 from gpt_trader.features.brokerages.coinbase.client import CoinbaseClient
 from gpt_trader.features.brokerages.coinbase.endpoints import CoinbaseEndpoints
+from gpt_trader.features.brokerages.coinbase.errors import (
+    OrderCancellationError,
+    OrderQueryError,
+)
 from gpt_trader.features.brokerages.coinbase.market_data_service import MarketDataService
 from gpt_trader.features.brokerages.coinbase.models import APIConfig, Product
 from gpt_trader.features.brokerages.coinbase.rest.base import CoinbaseRestServiceCore
@@ -212,14 +216,13 @@ class TestCoinbaseRestContractSuite:
         assert result is True
 
     def test_cancel_order_failure(self, order_service, mock_client):
-        """Test order cancellation failure."""
+        """Test order cancellation failure raises OrderCancellationError."""
         mock_client.cancel_orders.return_value = {
             "results": [{"order_id": "test_123", "success": False}]
         }
 
-        result = order_service.cancel_order("test_123")
-
-        assert result is False
+        with pytest.raises(OrderCancellationError, match="Cancellation rejected"):
+            order_service.cancel_order("test_123")
 
     def test_list_orders_with_pagination(self, order_service, mock_client):
         """Test order listing with pagination handling."""
@@ -240,12 +243,11 @@ class TestCoinbaseRestContractSuite:
         assert mock_client.list_orders.call_count == 2
 
     def test_list_orders_error_handling(self, order_service, mock_client):
-        """Test order listing with error handling."""
+        """Test order listing raises OrderQueryError on error."""
         mock_client.list_orders.side_effect = Exception("API error")
 
-        orders = order_service.list_orders()
-
-        assert orders == []
+        with pytest.raises(OrderQueryError, match="Failed to list orders"):
+            order_service.list_orders()
 
     def test_get_order_success(self, order_service, mock_client):
         """Test successful order retrieval."""
@@ -261,12 +263,11 @@ class TestCoinbaseRestContractSuite:
         assert order is not None
 
     def test_get_order_not_found(self, order_service, mock_client):
-        """Test order retrieval when not found."""
+        """Test order retrieval raises OrderQueryError when exception occurs."""
         mock_client.get_order_historical.side_effect = Exception("Order not found")
 
-        order = order_service.get_order("test_123")
-
-        assert order is None
+        with pytest.raises(OrderQueryError, match="Failed to get order"):
+            order_service.get_order("test_123")
 
     def test_list_fills_with_pagination(self, order_service, mock_client):
         """Test fills listing with pagination."""
@@ -280,12 +281,11 @@ class TestCoinbaseRestContractSuite:
         assert len(fills) == 3
 
     def test_list_fills_error_handling(self, order_service, mock_client):
-        """Test fills listing error handling."""
+        """Test fills listing raises OrderQueryError on error."""
         mock_client.list_fills.side_effect = Exception("API error")
 
-        fills = order_service.list_fills()
-
-        assert fills == []
+        with pytest.raises(OrderQueryError, match="Failed to list fills"):
+            order_service.list_fills()
 
     def test_close_position_success(self, portfolio_service, order_service, mock_client):
         """Test successful position closing."""

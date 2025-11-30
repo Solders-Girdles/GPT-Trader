@@ -13,21 +13,34 @@ class Ticker:
 
 
 class TickerCache:
+    """Thread-safe cache for ticker data.
+
+    WebSocket threads update this cache while trading threads read from it.
+    All operations are protected by an RLock for safe concurrent access.
+    """
+
     def __init__(self, ttl_seconds: int = 5):
         self.ttl = ttl_seconds
+        self._lock = threading.RLock()
         self._cache: dict[str, Ticker] = {}
 
     def update(self, ticker: Ticker) -> None:
-        self._cache[ticker.symbol] = ticker
+        """Update ticker data (called by WebSocket thread)."""
+        with self._lock:
+            self._cache[ticker.symbol] = ticker
 
     def get(self, symbol: str) -> Ticker | None:
-        return self._cache.get(symbol)
+        """Get ticker data (called by trading thread)."""
+        with self._lock:
+            return self._cache.get(symbol)
 
     def is_stale(self, symbol: str) -> bool:
-        ticker = self.get(symbol)
-        if not ticker:
-            return True
-        return (datetime.utcnow() - ticker.ts).total_seconds() > self.ttl
+        """Check if ticker data is stale (thread-safe)."""
+        with self._lock:
+            ticker = self._cache.get(symbol)
+            if not ticker:
+                return True
+            return (datetime.utcnow() - ticker.ts).total_seconds() > self.ttl
 
 
 class CoinbaseTickerService:

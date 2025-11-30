@@ -12,6 +12,12 @@ from typing import Any
 
 from gpt_trader.errors import ValidationError
 from gpt_trader.features.brokerages.coinbase.client import CoinbaseClient
+from gpt_trader.features.brokerages.coinbase.errors import (
+    BrokerageError,
+    NotFoundError,
+    OrderCancellationError,
+    OrderQueryError,
+)
 from gpt_trader.features.brokerages.coinbase.models import to_order
 from gpt_trader.features.brokerages.coinbase.rest.protocols import (
     OrderPayloadBuilder,
@@ -83,14 +89,39 @@ class OrderService:
         return self._payload_executor.execute_order_payload(symbol, payload, client_id)
 
     def cancel_order(self, order_id: str) -> bool:
-        """Cancel an existing order."""
+        """Cancel an existing order.
+
+        Args:
+            order_id: The ID of the order to cancel.
+
+        Returns:
+            True if cancellation succeeded.
+
+        Raises:
+            OrderCancellationError: If cancellation failed or order not found in response.
+            BrokerageError: If API call failed (network, auth, etc).
+        """
         try:
             response = self._client.cancel_orders(order_ids=[order_id])
             results = response.get("results", [])
             for res in results:
                 if res.get("order_id") == order_id:
-                    return bool(res.get("success", False))
-            return False
+                    if res.get("success", False):
+                        return True
+                    # API explicitly reported failure
+                    failure_reason = res.get("failure_reason", "unknown")
+                    raise OrderCancellationError(
+                        f"Cancellation rejected: {failure_reason}",
+                        order_id=order_id,
+                    )
+            # Order not found in response
+            raise OrderCancellationError(
+                f"Order {order_id} not found in cancellation response",
+                order_id=order_id,
+            )
+        except BrokerageError:
+            # Re-raise brokerage errors (includes OrderCancellationError)
+            raise
         except Exception as exc:
             logger.error(
                 "Failed to cancel order",
@@ -99,7 +130,10 @@ class OrderService:
                 operation="cancel_order",
                 order_id=order_id,
             )
-            return False
+            raise OrderCancellationError(
+                f"Unexpected error: {exc}",
+                order_id=order_id,
+            ) from exc
 
     def list_orders(
         self,
@@ -107,8 +141,20 @@ class OrderService:
         status: list[str] | None = None,
         limit: int = 100,
     ) -> list[Order]:
-        """List orders with pagination."""
-        orders = []
+        """List orders with pagination.
+
+        Args:
+            product_id: Filter by product ID.
+            status: Filter by order status.
+            limit: Maximum orders per page.
+
+        Returns:
+            List of Order objects.
+
+        Raises:
+            OrderQueryError: If listing failed due to API or unexpected error.
+        """
+        orders: list[Order] = []
         cursor = None
         has_more = True
 
@@ -131,6 +177,9 @@ class OrderService:
                 cursor = response.get("cursor")
                 if not cursor or not page_orders:
                     has_more = False
+            except BrokerageError:
+                # Re-raise brokerage errors
+                raise
             except Exception as exc:
                 logger.error(
                     "Failed to list orders from broker",
@@ -139,18 +188,34 @@ class OrderService:
                     operation="list_orders",
                     product_id=product_id,
                 )
-                has_more = False
+                raise OrderQueryError(f"Failed to list orders: {exc}") from exc
 
         return orders
 
     def get_order(self, order_id: str) -> Order | None:
-        """Get details of a single order."""
+        """Get details of a single order.
+
+        Args:
+            order_id: The ID of the order to retrieve.
+
+        Returns:
+            Order object if found, None if order doesn't exist.
+
+        Raises:
+            OrderQueryError: If query failed due to API or unexpected error.
+        """
         try:
             response = self._client.get_order_historical(order_id)
             order_data = response.get("order")
             if order_data:
                 return to_order(order_data)
             return None
+        except NotFoundError:
+            # Order doesn't exist - this is expected, return None
+            return None
+        except BrokerageError:
+            # Re-raise brokerage errors (auth, rate limit, etc)
+            raise
         except Exception as exc:
             logger.error(
                 "Failed to get order details",
@@ -159,7 +224,7 @@ class OrderService:
                 operation="get_order",
                 order_id=order_id,
             )
-            return None
+            raise OrderQueryError(f"Failed to get order {order_id}: {exc}") from exc
 
     def list_fills(
         self,
@@ -167,8 +232,20 @@ class OrderService:
         order_id: str | None = None,
         limit: int = 100,
     ) -> list[dict[str, Any]]:
-        """List fills with pagination."""
-        fills = []
+        """List fills with pagination.
+
+        Args:
+            product_id: Filter by product ID.
+            order_id: Filter by order ID.
+            limit: Maximum fills per page.
+
+        Returns:
+            List of fill dictionaries.
+
+        Raises:
+            OrderQueryError: If listing failed due to API or unexpected error.
+        """
+        fills: list[dict[str, Any]] = []
         cursor = None
         has_more = True
 
@@ -190,6 +267,9 @@ class OrderService:
                 cursor = response.get("cursor")
                 if not cursor or not page_fills:
                     has_more = False
+            except BrokerageError:
+                # Re-raise brokerage errors
+                raise
             except Exception as exc:
                 logger.error(
                     "Failed to list fills from broker",
@@ -199,7 +279,7 @@ class OrderService:
                     product_id=product_id,
                     order_id=order_id,
                 )
-                has_more = False
+                raise OrderQueryError(f"Failed to list fills: {exc}") from exc
 
         return fills
 

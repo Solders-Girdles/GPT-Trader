@@ -15,6 +15,8 @@ def cli_env(base: Mapping[str, str] | None = None) -> dict[str, str]:
     existing = env.get("PYTHONPATH", "")
     env["PYTHONPATH"] = str(src_path) + (os.pathsep + existing if existing else "")
     env.setdefault("PYTHONASYNCIODEBUG", "0")
+    # Set ENV=test to allow test credentials fallback in auth module
+    env.setdefault("ENV", "test")
     return env
 
 

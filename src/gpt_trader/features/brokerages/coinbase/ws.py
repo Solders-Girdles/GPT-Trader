@@ -82,6 +82,10 @@ class CoinbaseWebSocket:
     - Exponential backoff reconnection
     - Sequence gap detection
     - Public and private channel support
+
+    Thread Safety:
+        Connection state is protected by a lock to prevent race conditions
+        when connect() or disconnect() are called from multiple threads.
     """
 
     def __init__(
@@ -99,44 +103,52 @@ class CoinbaseWebSocket:
         self.dispatcher = dispatcher or EventDispatcher()
         self.ws: Any = None
         self.wst: threading.Thread | None = None
-        self.running = False
+        self._running = threading.Event()  # Thread-safe running flag
+        self._state_lock = threading.Lock()  # Protects connection state changes
         self.subscriptions: list[dict] = []
         self._transport: Any = None
         self._sequence_guard = SequenceGuard()
         self._reconnect_delay = WS_RECONNECT_DELAY
         self._reconnect_count = 0
 
-    def connect(self) -> None:
-        if self.running:
-            return
+    @property
+    def running(self) -> bool:
+        """Thread-safe check if WebSocket is running."""
+        return self._running.is_set()
 
-        if websocket is None:
-            raise ImportError(
-                "websocket-client is not installed. "
-                "Install with: pip install gpt-trader[live-trade]"
+    def connect(self) -> None:
+        with self._state_lock:
+            if self._running.is_set():
+                return
+
+            if websocket is None:
+                raise ImportError(
+                    "websocket-client is not installed. "
+                    "Install with: pip install gpt-trader[live-trade]"
+                )
+
+            self._running.set()
+            self.ws = websocket.WebSocketApp(
+                self.url,
+                on_open=self._on_open,
+                on_message=self._on_message,
+                on_error=self._on_error,
+                on_close=self._on_close,
             )
 
-        self.running = True
-        self.ws = websocket.WebSocketApp(
-            self.url,
-            on_open=self._on_open,
-            on_message=self._on_message,
-            on_error=self._on_error,
-            on_close=self._on_close,
-        )
-
-        self._transport = self.ws
-        self.wst = threading.Thread(target=self.ws.run_forever)
-        self.wst.daemon = True
-        self.wst.start()
-        logger.info("WebSocket thread started")
+            self._transport = self.ws
+            self.wst = threading.Thread(target=self.ws.run_forever)
+            self.wst.daemon = True
+            self.wst.start()
+            logger.info("WebSocket thread started")
 
     def disconnect(self) -> None:
-        self.running = False
-        if self.ws:
-            self.ws.close()
-        if self.wst:
-            self.wst.join(timeout=WS_JOIN_TIMEOUT)
+        with self._state_lock:
+            self._running.clear()
+            if self.ws:
+                self.ws.close()
+            if self.wst:
+                self.wst.join(timeout=WS_JOIN_TIMEOUT)
 
     def subscribe(self, product_ids: list[str], channels: list[str]) -> None:
         """Subscribe to channels for products."""
@@ -241,10 +253,18 @@ class CoinbaseWebSocket:
             message=close_msg,
         )
 
-        if self.running:
-            # Exponential backoff reconnection
-            self._reconnect_count += 1
-            delay = min(self._reconnect_delay, MAX_WS_RECONNECT_DELAY_SECONDS)
+        # Check running state thread-safely
+        if self._running.is_set():
+            # Update reconnect state under lock
+            with self._state_lock:
+                self._reconnect_count += 1
+                delay = min(self._reconnect_delay, MAX_WS_RECONNECT_DELAY_SECONDS)
+                self._reconnect_delay = min(
+                    self._reconnect_delay * WS_RECONNECT_BACKOFF_MULTIPLIER,
+                    MAX_WS_RECONNECT_DELAY_SECONDS,
+                )
+                # Clear running to allow reconnect
+                self._running.clear()
 
             logger.info(
                 "Attempting reconnect",
@@ -253,10 +273,6 @@ class CoinbaseWebSocket:
             )
 
             time.sleep(delay)
-            self._reconnect_delay = min(
-                self._reconnect_delay * WS_RECONNECT_BACKOFF_MULTIPLIER,
-                MAX_WS_RECONNECT_DELAY_SECONDS,
-            )
             self.connect()
 
 

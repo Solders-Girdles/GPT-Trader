@@ -7,6 +7,10 @@ import pytest
 
 from gpt_trader.errors import ValidationError
 from gpt_trader.features.brokerages.coinbase.client import CoinbaseClient
+from gpt_trader.features.brokerages.coinbase.errors import (
+    OrderCancellationError,
+    OrderQueryError,
+)
 from gpt_trader.features.brokerages.coinbase.rest.order_service import OrderService
 from gpt_trader.features.brokerages.coinbase.rest.protocols import (
     OrderPayloadBuilder,
@@ -114,32 +118,29 @@ class TestOrderService:
         assert result is True
 
     def test_cancel_order_failure(self) -> None:
-        """Test failed order cancellation."""
+        """Test failed order cancellation raises OrderCancellationError."""
         self.client.cancel_orders.return_value = {
             "results": [{"order_id": "order_123", "success": False}]
         }
 
-        result = self.service.cancel_order("order_123")
-
-        assert result is False
+        with pytest.raises(OrderCancellationError, match="Cancellation rejected"):
+            self.service.cancel_order("order_123")
 
     def test_cancel_order_not_found_in_results(self) -> None:
-        """Test cancellation when order not in results."""
+        """Test cancellation raises when order not in results."""
         self.client.cancel_orders.return_value = {
             "results": [{"order_id": "other_order", "success": True}]
         }
 
-        result = self.service.cancel_order("order_123")
-
-        assert result is False
+        with pytest.raises(OrderCancellationError, match="not found in cancellation response"):
+            self.service.cancel_order("order_123")
 
     def test_cancel_order_exception(self) -> None:
-        """Test cancellation when exception occurs."""
+        """Test cancellation raises OrderCancellationError on exception."""
         self.client.cancel_orders.side_effect = Exception("API error")
 
-        result = self.service.cancel_order("order_123")
-
-        assert result is False
+        with pytest.raises(OrderCancellationError, match="Unexpected error"):
+            self.service.cancel_order("order_123")
 
     def test_list_orders_returns_orders(self) -> None:
         """Test listing orders returns parsed orders."""
@@ -210,32 +211,12 @@ class TestOrderService:
         assert len(result) == 2
         assert self.client.list_orders.call_count == 2
 
-    def test_list_orders_exception_returns_partial(self) -> None:
-        """Test list orders returns partial results on exception."""
-        self.client.list_orders.side_effect = [
-            {
-                "orders": [
-                    {
-                        "order_id": "order_1",
-                        "product_id": "BTC-USD",
-                        "side": "BUY",
-                        "status": "FILLED",
-                        "order_type": "LIMIT",
-                        "base_size": "0.1",
-                        "filled_size": "0.1",
-                        "filled_value": "5000.00",
-                        "average_filled_price": "50000.00",
-                        "created_time": "2024-01-01T00:00:00Z",
-                    }
-                ],
-                "cursor": "next_page",
-            },
-            Exception("API error"),
-        ]
+    def test_list_orders_exception_raises_query_error(self) -> None:
+        """Test list orders raises OrderQueryError on exception."""
+        self.client.list_orders.side_effect = Exception("API error")
 
-        result = self.service.list_orders()
-
-        assert len(result) == 1
+        with pytest.raises(OrderQueryError, match="Failed to list orders"):
+            self.service.list_orders()
 
     def test_get_order_returns_order(self) -> None:
         """Test getting a single order."""
@@ -268,12 +249,11 @@ class TestOrderService:
         assert result is None
 
     def test_get_order_exception(self) -> None:
-        """Test get_order handles exception."""
-        self.client.get_order_historical.side_effect = Exception("API error")
+        """Test get_order raises OrderQueryError on exception."""
+        self.client.get_order_historical.side_effect = Exception("Order not found")
 
-        result = self.service.get_order("order_123")
-
-        assert result is None
+        with pytest.raises(OrderQueryError, match="Failed to get order"):
+            self.service.get_order("test_123")
 
     def test_list_fills_returns_fills(self) -> None:
         """Test listing fills."""

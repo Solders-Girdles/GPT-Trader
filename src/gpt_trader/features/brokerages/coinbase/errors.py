@@ -51,6 +51,33 @@ class PermissionDeniedError(CorePermissionDeniedError, BrokerageError):
     pass
 
 
+class TransientBrokerError(BrokerageError):
+    """Retryable error (network timeout, temporary unavailability).
+
+    Callers should implement retry logic with backoff for this error type.
+    """
+
+    pass
+
+
+class OrderCancellationError(BrokerageError):
+    """Order cancellation failed.
+
+    Attributes:
+        order_id: The ID of the order that failed to cancel.
+    """
+
+    def __init__(self, message: str, order_id: str | None = None) -> None:
+        super().__init__(message)
+        self.order_id = order_id
+
+
+class OrderQueryError(BrokerageError):
+    """Failed to query order information."""
+
+    pass
+
+
 def map_http_error(status: int, code: str | None, message: str | None) -> BrokerageError:
     text = (message or code or "").lower()
     if status in (401, 407) or (

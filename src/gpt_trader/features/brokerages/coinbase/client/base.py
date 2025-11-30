@@ -4,6 +4,7 @@ Handles HTTP requests with basic retries.
 """
 
 import json
+import random
 import time
 from typing import Any, cast
 
@@ -20,6 +21,13 @@ from gpt_trader.config.constants import (
 )
 from gpt_trader.features.brokerages.coinbase.errors import InvalidRequestError, map_http_error
 from gpt_trader.utilities.logging_patterns import get_correlation_id, get_logger
+
+# Maximum delay for retry backoff to prevent excessive waits
+MAX_RETRY_DELAY_SECONDS = 30.0
+# Maximum value for retry-after header to prevent DoS via server response
+MAX_RETRY_AFTER_SECONDS = 60.0
+# Jitter range to add randomness to backoff timing
+RETRY_JITTER_MAX_SECONDS = 0.5
 
 logger = get_logger(__name__, component="coinbase_client")
 
@@ -324,12 +332,18 @@ class CoinbaseClientBase:
                             retry_after = float(resp.headers.get("retry-after", 1))
                         except ValueError:
                             retry_after = 1.0
+                        # Cap retry-after to prevent DoS via malicious server response
+                        retry_after = min(retry_after, MAX_RETRY_AFTER_SECONDS)
                         time.sleep(retry_after)
                         continue
 
                     if 500 <= resp.status_code < 600:
                         if attempt < max_retries:
-                            time.sleep(RETRY_BASE_DELAY * (RETRY_BACKOFF_MULTIPLIER**attempt))
+                            # Exponential backoff with jitter and cap
+                            base_delay = RETRY_BASE_DELAY * (RETRY_BACKOFF_MULTIPLIER**attempt)
+                            jitter = random.uniform(0, RETRY_JITTER_MAX_SECONDS)
+                            delay = min(base_delay + jitter, MAX_RETRY_DELAY_SECONDS)
+                            time.sleep(delay)
                             continue
 
                     if 400 <= resp.status_code < 500:
@@ -368,7 +382,11 @@ class CoinbaseClientBase:
 
                 except (requests.ConnectionError, requests.Timeout, ConnectionError):
                     if attempt < max_retries:
-                        time.sleep(RETRY_BASE_DELAY * (RETRY_BACKOFF_MULTIPLIER**attempt))
+                        # Exponential backoff with jitter and cap
+                        base_delay = RETRY_BASE_DELAY * (RETRY_BACKOFF_MULTIPLIER**attempt)
+                        jitter = random.uniform(0, RETRY_JITTER_MAX_SECONDS)
+                        delay = min(base_delay + jitter, MAX_RETRY_DELAY_SECONDS)
+                        time.sleep(delay)
                         continue
                     raise
 

@@ -73,7 +73,7 @@ class OrderClientMixin:
         return self._request("GET", path)
 
     def list_orders(self: CoinbaseClientProtocol, **params: Any) -> dict[str, Any]:
-        query = "&".join(f"{key}={value}" for key, value in params.items())
+        query = urlencode(params) if params else ""
         suffix = f"?{query}" if query else ""
 
         if self.api_mode == "exchange":
@@ -120,7 +120,7 @@ class OrderClientMixin:
 
     def list_fills(self: CoinbaseClientProtocol, **params: Any) -> dict[str, Any]:
         path = self._get_endpoint_path("fills")
-        query = "&".join(f"{key}={value}" for key, value in params.items())
+        query = urlencode(params) if params else ""
         suffix = f"?{query}" if query else ""
         return self._request("GET", f"{path}{suffix}")
 

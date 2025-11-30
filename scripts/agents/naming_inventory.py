@@ -241,9 +241,10 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     # In strict mode, return non-zero exit code if violations found
     if args.strict and records:
-        if not args.quiet:
-            print(f"\nStrict mode: {len(records)} naming violation(s) found. Commit blocked.")
-            print("Add '# naming: allow' to suppress specific lines, or fix the violations.")
+        print(f"\n[!] Strict mode: {len(records)} naming violation(s) found. Commit blocked.")
+        for rec in records:
+            print(f"{rec.path}:{rec.line}: found '{rec.pattern}' in: {rec.context.strip()}")
+        print("\nAdd '# naming: allow' to suppress specific lines, or fix the violations.")
         return 1
     return 0
 

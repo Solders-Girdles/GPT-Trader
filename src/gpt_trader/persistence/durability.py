@@ -320,7 +320,7 @@ def repair_sqlite_database(database_path: Path, backup_path: Path | None = None)
             recovered_data: dict[str, list[tuple[Any, ...]]] = {}
             for table in tables:
                 try:
-                    cursor = conn.execute(f"SELECT * FROM {table}")  # noqa: S608
+                    cursor = conn.execute(f"SELECT * FROM {table}")  # noqa: S608  # nosec B608
                     recovered_data[table] = cursor.fetchall()
                 except sqlite3.Error:
                     logger.warning(

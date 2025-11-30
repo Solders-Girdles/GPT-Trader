@@ -336,5 +336,6 @@ def _placeholder_evaluate(params: dict[str, Any], objective: Any) -> float:
     import json
 
     param_str = json.dumps(params, sort_keys=True)
-    hash_val = int(hashlib.md5(param_str.encode()).hexdigest()[:8], 16)
+    # MD5 used for deterministic parameter hashing, not security
+    hash_val = int(hashlib.md5(param_str.encode(), usedforsecurity=False).hexdigest()[:8], 16)
     return (hash_val % 1000) / 100.0 - 5.0

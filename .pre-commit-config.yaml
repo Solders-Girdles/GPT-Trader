@@ -25,6 +25,9 @@ repos:
     hooks:
     -   id: pyupgrade
         args: [--py312-plus]
+        # Exclude files where pyupgrade incorrectly simplifies Generator[None, None, None]
+        # to Generator[None], which breaks mypy type checking
+        exclude: ^src/gpt_trader/utilities/logging_patterns\.py$
 
 -   repo: local
     hooks:

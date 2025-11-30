@@ -98,6 +98,9 @@ class StructuredJSONFormatter(logging.Formatter):
                 if clean_name not in log_entry:
                     log_entry[clean_name] = getattr(record, attr)
 
+        # Redact sensitive data
+        log_entry = self._redact_data(log_entry)
+
         # Serialize to JSON
         try:
             return json.dumps(
@@ -114,7 +117,7 @@ class StructuredJSONFormatter(logging.Formatter):
                 "level": log_entry["level"],
                 "logger": log_entry["logger"],
                 "message": f"JSON serialization failed: {exc}",
-                "original_message": log_entry["message"],
+                "original_message": str(log_entry.get("message", "")),
                 "serialization_error": str(exc),
             }
             return json.dumps(
@@ -123,6 +126,31 @@ class StructuredJSONFormatter(logging.Formatter):
                 default=self.default,
                 sort_keys=self.sort_keys,
             )
+
+    def _redact_data(self, data: Any) -> Any:
+        """Recursively redact sensitive keys in dictionaries."""
+        if isinstance(data, dict):
+            return {
+                k: self._redact_data(v) if k.lower() not in self.SENSITIVE_KEYS else "[REDACTED]"
+                for k, v in data.items()
+            }
+        elif isinstance(data, list):
+            return [self._redact_data(item) for item in data]
+        return data
+
+    SENSITIVE_KEYS = {
+        "api_key",
+        "private_key",
+        "secret",
+        "password",
+        "token",
+        "access_token",
+        "authorization",
+        "cookie",
+        "credentials",
+        "key_name",
+        "passphrase",
+    }
 
     def _format_timestamp(self, created: float) -> str:
         """Format a timestamp from the log record.

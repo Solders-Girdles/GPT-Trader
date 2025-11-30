@@ -445,6 +445,32 @@ class TradingEngine(BaseEngine):
             logger.warning(f"Calculated quantity is {quantity}, skipping order")
             return
 
+        # Security Validation (Hard Limits)
+        from gpt_trader.security.security_validator import get_validator
+
+        security_order = {
+            "symbol": symbol,
+            "side": side.value,
+            "quantity": float(quantity),
+            "price": float(price),
+            "type": "MARKET",
+        }
+
+        security_result = get_validator().validate_order_request(
+            security_order, account_value=float(equity)
+        )
+
+        if not security_result.is_valid:
+            error_msg = f"Security validation failed: {security_result.error_message}"
+            logger.error(error_msg)
+            await self._notify(
+                title="Security Validation Failed",
+                message=error_msg,
+                severity=AlertSeverity.ERROR,
+                context=security_order,
+            )
+            return
+
         # Run pre-trade validation if risk manager is available
         if self.context.risk_manager is not None:
             self.context.risk_manager.pre_trade_validate(

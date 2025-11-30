@@ -1,13 +1,34 @@
+"""
+Live risk management for perpetuals trading.
+
+This module provides the LiveRiskManager class which enforces:
+- Maximum leverage limits (global and per-symbol)
+- Day/night leverage caps with configurable time windows
+- Daily loss limits with automatic reduce-only mode
+- Position exposure limits
+- Volatility circuit breakers
+- Mark price staleness detection
+- Liquidation buffer monitoring
+"""
+
+from __future__ import annotations
+
 import time
 from collections import defaultdict
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from gpt_trader.orchestration.configuration.risk import RiskConfig
+    from gpt_trader.persistence.event_store import EventStore
 
 
 class ValidationError(Exception):
+    """Raised when a trade fails risk validation checks."""
+
     pass
 
 
@@ -28,7 +49,26 @@ class VolatilityCheckOutcome:
 
 
 class LiveRiskManager:
-    def __init__(self, config: Any = None, event_store: Any = None) -> None:
+    """Manages risk controls for live perpetuals trading.
+
+    Enforces leverage limits, daily loss limits, exposure caps, and circuit breakers.
+    Integrates with EventStore for metrics/alerting.
+    """
+
+    def __init__(
+        self,
+        config: RiskConfig | None = None,
+        event_store: EventStore | None = None,
+    ) -> None:
+        """
+        Initialize the risk manager.
+
+        Args:
+            config: Risk configuration with leverage limits, loss limits, etc.
+                   If None, risk checks that require config are skipped.
+            event_store: Event store for recording risk metrics.
+                        If None, metrics are not persisted.
+        """
         self.config = config
         self.event_store = event_store
         self.positions: defaultdict[str, dict[str, Any]] = defaultdict(dict)

@@ -3,6 +3,39 @@ Simulated broker for backtesting with full BrokerProtocol support.
 
 This broker simulates realistic order execution, position management,
 and market data for backtesting trading strategies.
+
+Architecture
+------------
+SimulatedBroker uses composition to delegate specialized logic:
+
+- ``FeeCalculator``: Trading fee calculation by tier
+- ``OrderFillModel``: Slippage and fill simulation
+- ``FundingPnLTracker``: Perpetuals funding rate tracking
+
+The main class coordinates these components and implements the BrokerProtocol
+interface for drop-in replacement of live brokers.
+
+Section Overview
+----------------
+- **Connection Methods**: Simulated connection state
+- **Product Registry**: Product metadata management
+- **Balance & Account**: Cash and collateral tracking
+- **Position Methods**: Position state queries
+- **Market Data Methods**: Quote and candle access
+- **Order Methods**: Order placement and execution (largest section)
+- **Extended Protocol**: Risk management interface methods
+- **Simulation Update**: Bar-by-bar state updates
+- **Statistics Methods**: Performance metric calculations
+
+Future Refactoring
+------------------
+The Order Methods section (~400 lines) is a candidate for extraction into
+a dedicated ``OrderExecutionEngine`` class. This would:
+- Separate order matching logic from broker state
+- Enable independent testing of execution logic
+- Reduce the class's line count to ~600
+
+Currently deferred to minimize backward-compatibility risk.
 """
 
 from __future__ import annotations

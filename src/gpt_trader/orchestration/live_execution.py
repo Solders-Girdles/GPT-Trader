@@ -14,9 +14,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Any, cast
+from typing import cast
 
-from gpt_trader.core import OrderSide, OrderType, Product
+from gpt_trader.core import OrderSide, OrderType, Product, TimeInForce
 from gpt_trader.features.brokerages.coinbase.rest_service import CoinbaseRestService
 from gpt_trader.features.brokerages.coinbase.specs import validate_order as spec_validate_order
 from gpt_trader.features.brokerages.core.protocols import ExtendedBrokerProtocol
@@ -164,7 +164,7 @@ class LiveExecutionEngine:
         quantity: Decimal | None = None,
         price: Decimal | None = None,
         stop_price: Decimal | None = None,
-        tif: Any | None = None,
+        tif: TimeInForce | str | None = None,
         reduce_only: bool = False,
         leverage: int | None = None,
         product: Product | None = None,

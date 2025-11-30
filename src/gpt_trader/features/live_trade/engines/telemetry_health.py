@@ -1,3 +1,37 @@
+"""
+Telemetry and health monitoring for live trading coordinators.
+
+This module provides utilities for real-time market data processing and system health:
+
+Functions
+---------
+- ``extract_mark_from_message``: Extract mark price from WebSocket messages
+- ``update_mark_and_metrics``: Update mark price windows and risk manager state
+- ``health_check``: Check coordinator health status
+
+Mark Price Extraction
+---------------------
+The ``extract_mark_from_message`` function handles various WebSocket message formats:
+
+1. If ``best_bid`` and ``best_ask`` are present, calculates mid-price
+2. Falls back to ``last`` or ``price`` fields
+3. Returns ``None`` for invalid/missing data
+
+Health Checks
+-------------
+The ``health_check`` function validates:
+
+- Account telemetry service availability
+- Market monitor connectivity
+- WebSocket stream status
+- Background task health
+
+Integration
+-----------
+These utilities are used by the ``TelemetryCoordinator`` and ``PerpsCoordinator`` engines
+to maintain real-time market state and detect connectivity issues.
+"""
+
 from __future__ import annotations
 
 from decimal import Decimal

@@ -8,6 +8,7 @@ balances, positions, equity calculations, and collateral asset resolution.
 from __future__ import annotations
 
 import os
+from collections.abc import Iterable
 from decimal import Decimal
 from types import SimpleNamespace
 from typing import Any, cast
@@ -151,16 +152,14 @@ class StateCollector:
         Returns:
             Tuple of (balances, equity, collateral_balances, total_balance, positions)
         """
-        balances_data: Any = None
+        balances_data: Iterable[Balance] | None = None
         if hasattr(self.broker, "list_balances"):
             try:
                 balances_data = self.broker.list_balances()
             except Exception:
                 if not self._integration_mode:
                     raise
-        if balances_data is None:
-            balances_data = []
-        balances = list(balances_data)
+        balances: list[Balance] = list(balances_data) if balances_data is not None else []
         if not balances and self._integration_mode:
             balances = [
                 SimpleNamespace(
@@ -171,16 +170,14 @@ class StateCollector:
                 )
             ]
         equity, collateral_balances, total_balance = self.calculate_equity_from_balances(balances)
-        positions_data: Any = None
+        positions_data: Iterable[Any] | None = None
         if hasattr(self.broker, "list_positions"):
             try:
                 positions_data = self.broker.list_positions()
             except Exception:
                 if not self._integration_mode:
                     raise
-        if positions_data is None:
-            positions_data = []
-        positions = list(positions_data)
+        positions: list[Any] = list(positions_data) if positions_data is not None else []
         if self._integration_mode and not positions:
             positions = []
 

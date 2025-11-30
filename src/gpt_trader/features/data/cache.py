@@ -1,3 +1,38 @@
+"""
+In-memory data cache with TTL expiration.
+
+This module provides a simple in-memory cache for market data with:
+
+- **TTL expiration**: Entries automatically expire after a configurable duration
+- **Size limits**: Configurable maximum cache size (evicts oldest entries)
+- **Statistics tracking**: Hit/miss counts for monitoring cache effectiveness
+
+Usage
+-----
+::
+
+    cache = DataCache(max_size_mb=50.0)
+
+    # Store data with 1-hour TTL
+    cache.put("BTC-USD:1h:2024-01-01", ohlcv_data, ttl_seconds=3600)
+
+    # Retrieve (returns None if expired or missing)
+    data = cache.get("BTC-USD:1h:2024-01-01")
+
+    # Check cache stats
+    stats = cache.get_stats()  # {"entries": 10, "total_hits": 100, "total_misses": 5}
+
+Eviction Policy
+---------------
+When ``max_size_mb`` is exceeded, the oldest entry (by insertion order) is evicted.
+This provides approximate LRU behavior using Python dict ordering (3.7+).
+
+Thread Safety
+-------------
+This implementation is NOT thread-safe. For concurrent access, use external locking
+or a thread-safe wrapper.
+"""
+
 from __future__ import annotations
 from typing import Any
 import datetime

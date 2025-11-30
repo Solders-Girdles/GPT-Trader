@@ -36,6 +36,7 @@ from gpt_trader.features.brokerages.core.interfaces import (
 from gpt_trader.orchestration.configuration import BotConfig
 from gpt_trader.persistence.event_store import EventStore
 from gpt_trader.utilities.logging_patterns import get_logger
+from gpt_trader.utilities.parsing import coerce_enum
 
 if TYPE_CHECKING:
     from gpt_trader.features.brokerages.coinbase.rest.position_state_store import PositionStateStore
@@ -48,6 +49,31 @@ class CoinbaseRestServiceCore:
 
     Implements OrderPayloadBuilder and OrderPayloadExecutor protocols.
     Used by the composed service classes and the CoinbaseRestService facade.
+
+    Position State Management
+    -------------------------
+    This class supports two modes of position state management:
+
+    **Injected Mode** (preferred):
+        Pass a ``PositionStateStore`` instance to share state across services.
+        The ``_position_store`` attribute holds the injected store.
+
+    **Legacy Mode** (backward compatibility):
+        When no store is injected, an internal ``_positions`` dict is created.
+        This mode is deprecated and will be removed in v3.0.
+
+    .. warning::
+        In injected mode, ``_positions`` is a **snapshot reference** to the store's
+        state at construction time. It may become stale if the store is modified
+        externally. Always use the ``positions`` property for current state.
+
+    State Synchronization
+    ---------------------
+    The ``positions`` property always returns fresh data:
+    - Injected mode: calls ``_position_store.all()``
+    - Legacy mode: returns ``_positions`` directly
+
+    Code that caches ``_positions`` may see stale data. Prefer using the property.
     """
 
     def __init__(
@@ -60,7 +86,21 @@ class CoinbaseRestServiceCore:
         event_store: EventStore,
         bot_config: BotConfig | None = None,
         position_store: PositionStateStore | None = None,
-    ):
+    ) -> None:
+        """
+        Initialize the Coinbase REST service core.
+
+        Args:
+            client: HTTP client for API calls
+            endpoints: API endpoint configuration
+            config: API configuration (credentials, etc.)
+            product_catalog: Product metadata cache
+            market_data: Market data service for prices
+            event_store: Event persistence for metrics
+            bot_config: Optional bot configuration for order preview
+            position_store: Optional shared position state store (preferred).
+                           If None, creates internal dict (legacy mode).
+        """
         self.client = client
         self.endpoints = endpoints
         self.config = config
@@ -69,12 +109,13 @@ class CoinbaseRestServiceCore:
         self._event_store = event_store
         self.bot_config = bot_config
 
-        # Use injected position store or create internal dict for backward compat
+        # Position state management - see class docstring for details
         if position_store is not None:
             self._position_store = position_store
-            self._positions = position_store.all()  # Reference for backward compat
+            # Snapshot reference for backward compatibility (may become stale)
+            self._positions = position_store.all()
         else:
-            # Legacy mode: create internal dict (for backward compatibility)
+            # Legacy mode: internal dict (deprecated, removal planned for v3.0)
             self._positions: dict[str, PositionState] = {}
             self._position_store = None
 
@@ -106,43 +147,24 @@ class CoinbaseRestServiceCore:
 
         Implements the OrderPayloadBuilder protocol.
         """
-        # Coerce enums
-        if isinstance(side, str):
-            try:
-                side = OrderSide(side.upper())
-            except ValueError:
-                # If not a valid enum, pass as string (though validation might fail later)
-                side_str = side.upper()
-            else:
-                side_str = side.value
+        # Coerce enums using consolidated helper
+        # GTD -> GTC alias for TimeInForce (Coinbase doesn't support GTD directly)
+        tif_aliases: dict[str, TimeInForce] = {"GTD": TimeInForce.GTC}
+
+        side, side_str = coerce_enum(side, OrderSide)
+        if side is None:
+            # Fallback: use the string value if enum coercion failed
+            side_str = side_str  # Already set by coerce_enum
         else:
             side_str = side.value
 
-        if isinstance(order_type, str):
-            try:
-                order_type = OrderType(order_type.upper())
-            except ValueError:
-                _order_type_str = order_type.upper()  # noqa: F841
-            else:
-                _order_type_str = order_type.value  # noqa: F841
-        else:
-            _order_type_str = order_type.value  # noqa: F841
+        order_type, _ = coerce_enum(order_type, OrderType)
 
-        if isinstance(tif, str):
-            # Handle GTD conversion if needed (tests imply GTD -> GTC mapping)
-            tif_upper = tif.upper()
-            if tif_upper == "GTD":
-                tif = TimeInForce.GTC
-            else:
-                try:
-                    tif = TimeInForce(tif_upper)
-                except ValueError:
-                    pass  # Keep as is or fallback
-
-        if isinstance(tif, TimeInForce):
+        tif, tif_str = coerce_enum(tif, TimeInForce, aliases=tif_aliases)
+        if tif is not None:
+            # Use enum value for string representation (handles alias resolution)
             tif_str = tif.value
-        else:
-            tif_str = str(tif).upper()
+        # else: tif_str already contains the normalized fallback string
 
         # Get Product
         product = self.product_catalog.get(symbol)

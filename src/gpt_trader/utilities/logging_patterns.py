@@ -2,13 +2,20 @@
 Simplified Logging Patterns.
 """
 
+from __future__ import annotations
+
 import contextlib
 import functools
 import logging
 import sys
 import time
-from collections.abc import Generator
-from typing import Any, cast
+from collections.abc import Callable, Generator
+from typing import Any, TypeAlias, cast
+
+# Type alias for logger parameters that accept either StructuredLogger,
+# standard logging.Logger, or compatible duck-typed objects with a 'name' attribute.
+# This improves type safety while maintaining backward compatibility.
+LoggerLike: TypeAlias = "StructuredLogger | logging.Logger | None"
 
 
 class StructuredLogger:
@@ -70,8 +77,12 @@ def get_logger(name: str, component: str | None = None, **kwargs: Any) -> Struct
     return StructuredLogger(name, component=component)
 
 
-def _is_structured(logger: Any) -> bool:
-    # Helper to safely check if logger is structured, handling mocked classes
+def _is_structured(logger: LoggerLike | Any) -> bool:
+    """Check if logger is a StructuredLogger instance.
+
+    Handles mocked classes gracefully by catching TypeError when
+    StructuredLogger is patched with a non-type mock.
+    """
     try:
         return isinstance(logger, StructuredLogger)
     except TypeError:
@@ -79,7 +90,7 @@ def _is_structured(logger: Any) -> bool:
         return False
 
 
-def _ensure_structured(logger: Any) -> StructuredLogger | None:
+def _ensure_structured(logger: LoggerLike | Any) -> StructuredLogger | None:
     if logger is None:
         return None
     if _is_structured(logger):
@@ -93,8 +104,8 @@ def _ensure_structured(logger: Any) -> StructuredLogger | None:
 
 @contextlib.contextmanager
 def log_operation(
-    operation: str, logger: Any = None, level: int = logging.INFO, **context: Any
-) -> Generator[None, None, None]:
+    operation: str, logger: LoggerLike = None, level: int = logging.INFO, **context: Any
+) -> Generator[None]:
     if logger is None:
         logger = get_logger("operation")
     else:
@@ -117,7 +128,7 @@ def log_operation(
         logger.info(f"Completed {operation}", **final_context)
 
 
-def log_trade_event(event: str, symbol: str, logger: Any = None, **kwargs: Any) -> None:
+def log_trade_event(event: str, symbol: str, logger: LoggerLike = None, **kwargs: Any) -> None:
     if logger is None:
         logger = get_logger("trading")
     else:
@@ -128,7 +139,7 @@ def log_trade_event(event: str, symbol: str, logger: Any = None, **kwargs: Any) 
     logger.info(event, **context)
 
 
-def log_position_update(symbol: str, logger: Any = None, **kwargs: Any) -> None:
+def log_position_update(symbol: str, logger: LoggerLike = None, **kwargs: Any) -> None:
     if logger is None:
         logger = get_logger("position")
     else:
@@ -143,7 +154,7 @@ def log_system_health(
     status: str,
     component: str | None = None,
     metrics: dict[str, Any] | None = None,
-    logger: Any = None,
+    logger: LoggerLike = None,
 ) -> None:
     if logger is None:
         logger = get_logger("health")
@@ -161,7 +172,11 @@ def log_system_health(
 
 
 def log_error_with_context(
-    exc: Exception, operation: str, component: str | None = None, logger: Any = None, **kwargs: Any
+    exc: Exception,
+    operation: str,
+    component: str | None = None,
+    logger: LoggerLike = None,
+    **kwargs: Any,
 ) -> None:
     if logger is None:
         logger = get_logger("error")
@@ -176,7 +191,7 @@ def log_error_with_context(
 
 
 def log_configuration_change(
-    key: str, old: Any, new: Any, component: str | None = None, logger: Any = None
+    key: str, old: Any, new: Any, component: str | None = None, logger: LoggerLike = None
 ) -> None:
     if logger is None:
         logger = get_logger("config")
@@ -191,7 +206,7 @@ def log_configuration_change(
     logger.info(msg, **context)
 
 
-def log_market_data_update(symbol: str, logger: Any = None, **kwargs: Any) -> None:
+def log_market_data_update(symbol: str, logger: LoggerLike = None, **kwargs: Any) -> None:
     if logger is None:
         logger = get_logger("market_data")
     else:
@@ -204,11 +219,13 @@ def log_market_data_update(symbol: str, logger: Any = None, **kwargs: Any) -> No
 
 def log_execution(
     operation: str | None = None,
-    logger: Any = None,
+    logger: LoggerLike = None,
     include_args: bool = False,
     include_result: bool = False,
-) -> Any:
-    def decorator(func: Any) -> Any:
+) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+    """Decorator to log function entry/exit with optional arguments and result."""
+
+    def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
         op_name = operation or func.__name__
 
         @functools.wraps(func)
@@ -397,5 +414,6 @@ __all__ = [
     "log_execution",
     "StructuredLogger",
     "UnifiedLogger",
+    "LoggerLike",
     "LOG_FIELDS",
 ]

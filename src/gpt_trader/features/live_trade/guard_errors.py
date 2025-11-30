@@ -1,3 +1,56 @@
+"""
+Risk guard error hierarchy and alert dispatch system.
+
+This module defines the exception hierarchy for runtime risk guards and provides
+centralized error recording and alerting infrastructure.
+
+Error Hierarchy
+---------------
+All guard errors inherit from ``GuardError`` which provides:
+
+- ``category``: Classification string (limit, data, action, telemetry, etc.)
+- ``recoverable``: Whether the error is transient and execution can continue
+
+Error Types:
+
+- **RiskLimitExceeded**: Hard risk limit breach (non-recoverable)
+- **RiskGuardError**: Generic guard failure (non-recoverable)
+- **RiskGuardActionError**: Failed remediation action (non-recoverable)
+- **RiskGuardComputationError**: Calculation failure (non-recoverable)
+- **RiskGuardDataCorrupt**: Invalid/corrupted data (non-recoverable)
+- **RiskGuardDataUnavailable**: Temporary data fetch failure (recoverable)
+- **RiskGuardTelemetryError**: Metrics/logging failure (recoverable)
+
+Global Alert System
+-------------------
+The module maintains a global ``_alert_system`` dispatcher for centralized alerting.
+
+**Important**: Call ``configure_guard_alert_system(dispatcher)`` at application startup
+to inject a custom alert dispatcher (e.g., Slack, PagerDuty integration).
+
+If not configured, a no-op ``GuardAlertDispatcher`` is used.
+
+Thread Safety
+-------------
+The global ``_alert_system`` is not thread-safe. Configure it once at startup
+before spawning threads. The alert system should be stateless for concurrent access.
+
+Testing
+-------
+Use ``configure_guard_alert_system(mock_dispatcher)`` in tests to capture alerts.
+Reset to ``None`` after tests to restore default behavior.
+
+Example::
+
+    # Production setup
+    from gpt_trader.monitoring import SlackAlertDispatcher
+    configure_guard_alert_system(SlackAlertDispatcher())
+
+    # Test setup
+    mock = Mock(spec=GuardAlertDispatcher)
+    configure_guard_alert_system(mock)
+"""
+
 from __future__ import annotations
 
 import logging

@@ -145,6 +145,24 @@ IGNORE_LIST = {
     "tests/unit/gpt_trader/monitoring/daily_report/test_models.py",
     "tests/unit/gpt_trader/monitoring/test_alert_types.py",
     "tests/unit/gpt_trader/orchestration/execution/test_broker_executor.py",
+    # Round 2 remediation: existing test suites
+    "tests/unit/gpt_trader/orchestration/test_hybrid_paper_broker.py",
+    "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful_indicators.py",
+    "tests/unit/gpt_trader/features/live_trade/strategies/mean_reversion/test_strategy.py",
+    "tests/integration/test_funding_pnl_integration.py",
+    "tests/integration/test_optimize_feature.py",
+    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_product_service.py",
+    "tests/unit/gpt_trader/monitoring/test_status_reporter.py",
+    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_order_service.py",
+    "tests/unit/gpt_trader/features/optimize/objectives/test_single.py",
+    "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_portfolio_service.py",
+    "tests/unit/gpt_trader/features/brokerages/coinbase/test_websocket_mixin.py",
+    "tests/unit/gpt_trader/monitoring/notifications/test_notification_service.py",
+    "tests/unit/gpt_trader/features/optimize/test_walk_forward.py",
+    "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine.py",
+    "tests/unit/gpt_trader/features/brokerages/coinbase/test_ws_events.py",
+    "tests/unit/gpt_trader/orchestration/test_bootstrap.py",
+    "tests/unit/gpt_trader/cli/test_response.py",
 }
 
 

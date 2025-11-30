@@ -11,7 +11,6 @@ import os
 import warnings
 from dataclasses import dataclass, field, fields, replace
 from decimal import Decimal
-from enum import Enum, auto
 from typing import TYPE_CHECKING, Any, Literal
 
 # Constants expected by core.py shim
@@ -23,13 +22,6 @@ if TYPE_CHECKING:
     from gpt_trader.features.live_trade.strategies.perps_baseline import (
         PerpsStrategyConfig,
     )
-
-
-class ConfigState(Enum):
-    INITIALIZED = auto()
-    LOADED = auto()
-    VALIDATED = auto()
-    ERROR = auto()
 
 
 @dataclass
@@ -81,7 +73,7 @@ class MeanReversionConfig:
 
 
 # Strategy type literal for type safety
-StrategyType = Literal["baseline", "mean_reversion"]
+StrategyType = Literal["baseline", "mean_reversion", "ensemble"]
 
 
 def _get_default_strategy_config() -> "PerpsStrategyConfig":
@@ -107,7 +99,11 @@ class BotConfig:
     risk: BotRiskConfig = field(default_factory=BotRiskConfig)
     mean_reversion: MeanReversionConfig = field(default_factory=MeanReversionConfig)
 
-    # Strategy selection (baseline = RSI+MA, mean_reversion = Z-Score)
+    # Intelligence feature configurations (optional, for ensemble strategy)
+    regime_config: Any = None  # RegimeConfig instance when using ensemble
+    ensemble_config: Any = None  # EnsembleConfig instance when using ensemble
+
+    # Strategy selection (baseline = RSI+MA, mean_reversion = Z-Score, ensemble = multi-strategy)
     strategy_type: StrategyType = "baseline"
 
     # General config (not nested)
@@ -395,3 +391,69 @@ class BotConfig:
             spot_force_live=parse_bool_env("SPOT_FORCE_LIVE", default=False),
             enable_order_preview=parse_bool_env("ORDER_PREVIEW_ENABLED", default=False),
         )
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "BotConfig":
+        """Create configuration from a dictionary (e.g. loaded from YAML).
+
+        Handles mapping from legacy profile structure to BotConfig structure.
+        """
+        from gpt_trader.features.live_trade.strategies.perps_baseline import (
+            PerpsStrategyConfig,
+        )
+
+        # 1. Map top-level fields
+        config_data = {}
+
+        # Direct mappings
+        if "symbols" in data:
+            config_data["symbols"] = data["symbols"]
+        if "paper_mode" in data:
+            config_data["perps_paper_trading"] = data["paper_mode"]
+        if "log_level" in data:
+            config_data["log_level"] = data["log_level"]
+
+        # 2. Map Risk Config
+        risk_data = {}
+        source_risk = data.get("risk", {})
+
+        # Map legacy risk keys to BotRiskConfig keys
+        if "max_position_pct" in source_risk:
+            risk_data["position_fraction"] = Decimal(str(source_risk["max_position_pct"]))
+        if "max_leverage" in source_risk:
+            risk_data["max_leverage"] = int(source_risk["max_leverage"])
+        if "stop_loss_pct" in source_risk:
+            risk_data["stop_loss_pct"] = Decimal(str(source_risk["stop_loss_pct"]))
+        if "take_profit_pct" in source_risk:
+            risk_data["take_profit_pct"] = Decimal(str(source_risk["take_profit_pct"]))
+
+        config_data["risk"] = BotRiskConfig(**risk_data)
+
+        # 3. Map Strategy Config
+        # Legacy profiles often have strategy nested by symbol (e.g. strategy.btc)
+        # We'll take the first available strategy config or a default
+        source_strategy = data.get("strategy", {})
+        strategy_config_data = {}
+
+        # Flatten symbol-specific strategy if present
+        first_strategy = next(iter(source_strategy.values()), {}) if source_strategy else {}
+        if isinstance(first_strategy, dict) and "short_window" in first_strategy:
+            # It's a legacy strategy dict
+            strategy_config_data["short_ma_period"] = first_strategy.get("short_window", 5)
+            strategy_config_data["long_ma_period"] = first_strategy.get("long_window", 20)
+
+            # Map filter configs if needed, or just basic params for now
+
+        config_data["strategy"] = PerpsStrategyConfig(**strategy_config_data)
+
+        return cls(**config_data)
+
+    @classmethod
+    def from_yaml(cls, path: str | os.PathLike) -> "BotConfig":
+        """Load configuration from a YAML file."""
+        import yaml
+
+        with open(path) as f:
+            data = yaml.safe_load(f)
+
+        return cls.from_dict(data)

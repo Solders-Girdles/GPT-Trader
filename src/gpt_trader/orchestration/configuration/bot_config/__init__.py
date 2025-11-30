@@ -6,13 +6,11 @@ from .bot_config import (
     TOP_VOLUME_BASES,
     BotConfig,
     BotRiskConfig,
-    ConfigState,
 )
 
 __all__ = [
     "BotConfig",
     "BotRiskConfig",
-    "ConfigState",
     "DEFAULT_SPOT_RISK_PATH",
     "DEFAULT_SPOT_SYMBOLS",
     "TOP_VOLUME_BASES",

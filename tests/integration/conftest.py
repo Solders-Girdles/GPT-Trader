@@ -16,6 +16,7 @@ import pytest
 # Force mock broker for all integration tests
 os.environ.setdefault("PERPS_FORCE_MOCK", "1")
 
+from gpt_trader.features.live_trade.strategies.perps_baseline import PerpsStrategyConfig
 from gpt_trader.orchestration.bootstrap import bot_from_profile, build_bot
 from gpt_trader.orchestration.configuration import BotConfig
 
@@ -53,17 +54,20 @@ def dev_bot() -> Generator[tuple[TradingBot, ServiceRegistry]]:
 def fast_signal_bot() -> Generator[tuple[TradingBot, ServiceRegistry]]:
     """Create a TradingBot with fast MA crossover settings for signal testing.
 
-    Uses short_ma=3, long_ma=5 and interval=1 for rapid signal generation.
+    Uses short_ma_period=3, long_ma_period=5 and interval=1 for rapid signal generation.
 
     Yields:
         Tuple of (TradingBot, ServiceRegistry) for backward compatibility.
         Access container via bot.container for modern usage.
     """
+    strategy = PerpsStrategyConfig(
+        short_ma_period=3,
+        long_ma_period=5,
+    )
     config = BotConfig.from_profile(
         "dev",
         symbols=["BTC-USD"],
-        short_ma=3,
-        long_ma=5,
+        strategy=strategy,
         interval=1,  # Fast interval for testing
         mock_broker=True,
     )

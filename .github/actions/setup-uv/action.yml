@@ -17,7 +17,7 @@ inputs:
   cache-prefix:
     description: Prefix used for the cache key.
     required: false
-    default: "venv"
+    default: "uv-venv"
   install-deps:
     description: When true, run uv sync.
     required: false

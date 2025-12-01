@@ -375,7 +375,7 @@ class PositionSizer:
 
         # Apply exponent to make scaling non-linear
         # With exponent=1.5: 0.5 confidence -> 0.35x, 0.8 -> 0.72x, 1.0 -> 1.0x
-        return confidence**self.config.confidence_exponent
+        return float(confidence**self.config.confidence_exponent)
 
     def _get_kelly_factor(self, symbol: str) -> float:
         """Calculate Kelly criterion sizing factor.
@@ -432,8 +432,7 @@ class PositionSizer:
             return position_fraction * stop_percent
 
         # Default: assume 2x ATR stop = ~4% typical move
-        from typing import cast
-        return cast(float, position_fraction * 0.04)
+        return float(position_fraction * 0.04)
 
     def _calculate_risk_reward(
         self,
@@ -447,7 +446,7 @@ class PositionSizer:
         if stop_loss_distance <= 0:
             return 0.0
 
-        return float(take_profit_distance) / float(stop_loss_distance)
+        return float(float(take_profit_distance) / float(stop_loss_distance))
 
     def _get_atr_value(self, symbol: str) -> float | None:
         """Get current ATR value for symbol."""

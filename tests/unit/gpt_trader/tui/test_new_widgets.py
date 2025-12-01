@@ -2,6 +2,7 @@ from unittest.mock import MagicMock
 
 from textual.widgets import DataTable
 
+from gpt_trader.tui.types import AccountBalance, AccountSummary, Order, Trade
 from gpt_trader.tui.widgets import AccountWidget, OrdersWidget, TradesWidget
 
 
@@ -19,11 +20,12 @@ class TestAccountWidget:
 
         widget.query_one = MagicMock(side_effect=query_side_effect)
 
-        data = MagicMock()
-        data.volume_30d = "1000.00"
-        data.fees_30d = "5.00"
-        data.fee_tier = "Taker"
-        data.balances = [{"asset": "USD", "total": "100", "available": "50"}]
+        data = AccountSummary(
+            volume_30d="1000.00",
+            fees_30d="5.00",
+            fee_tier="Taker",
+            balances=[AccountBalance(asset="USD", total="100", available="50")],
+        )
 
         widget.update_account(data)
 
@@ -46,14 +48,15 @@ class TestOrdersWidget:
         widget.query_one = MagicMock(return_value=mock_table)
 
         orders = [
-            {
-                "symbol": "BTC",
-                "side": "BUY",
-                "quantity": "1",
-                "price": "100",
-                "status": "OPEN",
-                "timestamp": 1600000000,
-            }
+            Order(
+                order_id="ord_1",
+                symbol="BTC",
+                side="BUY",
+                quantity="1",
+                price="100",
+                status="OPEN",
+                creation_time="1600000000",
+            )
         ]
 
         widget.update_orders(orders)
@@ -75,13 +78,15 @@ class TestTradesWidget:
         widget.query_one = MagicMock(return_value=mock_table)
 
         trades = [
-            {
-                "symbol": "ETH",
-                "side": "SELL",
-                "quantity": "2",
-                "price": "2000",
-                "timestamp": 1600000000,
-            }
+            Trade(
+                trade_id="trd_1",
+                symbol="ETH",
+                side="SELL",
+                quantity="2",
+                price="2000",
+                order_id="ord_2",
+                time="2023-01-01T12:00:00.000Z",
+            )
         ]
 
         widget.update_trades(trades)

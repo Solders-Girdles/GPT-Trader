@@ -2,6 +2,7 @@ from unittest.mock import MagicMock
 
 from textual.widgets import DataTable
 
+from gpt_trader.tui.types import Order, Position, Trade
 from gpt_trader.tui.widgets.positions import OrdersWidget, PositionsWidget, TradesWidget
 
 
@@ -13,7 +14,9 @@ class TestPositionsWidget:
         widget.query_one = MagicMock(return_value=mock_table)
 
         positions = {
-            "BTC-USD": {"quantity": "0.5", "entry_price": "50000.00", "unrealized_pnl": "100.00"}
+            "BTC-USD": Position(
+                symbol="BTC-USD", quantity="0.5", entry_price="50000.00", unrealized_pnl="100.00"
+            )
         }
 
         widget.update_positions(positions, "100.00")
@@ -30,16 +33,17 @@ class TestOrdersWidget:
         widget.query_one = MagicMock(return_value=mock_table)
 
         orders = [
-            {
-                "symbol": "BTC-USD",
-                "side": "BUY",
-                "quantity": "0.1",
-                "price": "50000.00",
-                "status": "OPEN",
-                "type": "LIMIT",
-                "time_in_force": "GTC",
-                "timestamp": 1600000000,
-            }
+            Order(
+                order_id="ord_123",
+                symbol="BTC-USD",
+                side="BUY",
+                quantity="0.1",
+                price="50000.00",
+                status="OPEN",
+                type="LIMIT",
+                time_in_force="GTC",
+                creation_time="1600000000",
+            )
         ]
 
         widget.update_orders(orders)
@@ -63,14 +67,15 @@ class TestTradesWidget:
         widget.query_one = MagicMock(return_value=mock_table)
 
         trades = [
-            {
-                "symbol": "BTC-USD",
-                "side": "SELL",
-                "quantity": "0.1",
-                "price": "51000.00",
-                "order_id": "ord_123",
-                "timestamp": 1600000000,
-            }
+            Trade(
+                trade_id="trd_123",
+                symbol="BTC-USD",
+                side="SELL",
+                quantity="0.1",
+                price="51000.00",
+                order_id="ord_123",
+                time="2023-01-01T12:00:00.000Z",
+            )
         ]
 
         widget.update_trades(trades)

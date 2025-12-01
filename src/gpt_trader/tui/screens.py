@@ -29,13 +29,17 @@ class MainScreen(Screen):
         with TabbedContent(initial="dashboard"):
             with TabPane("Dashboard", id="dashboard"):
                 with Container(id="dashboard-container"):
-                    # We reuse widgets but wrap them for the grid
+                    # Top Row: Market & Strategy
                     yield MarketWatchWidget(id="dash-market", classes="dashboard-item")
                     yield StrategyWidget(id="dash-strategy", classes="dashboard-item")
+
+                    # Bottom Row: Positions & System
                     yield PositionsWidget(id="dash-positions", classes="dashboard-item")
-                    yield RiskWidget(id="dash-risk", classes="dashboard-item")
                     yield SystemHealthWidget(id="dash-system", classes="dashboard-item")
-                    yield LogWidget(id="dash-logs", classes="dashboard-item")
+
+                    # Note: Risk and Logs removed from main dash grid for clarity,
+                    # or could be added if grid size is adjusted.
+                    # For now, keeping 2x2 grid as per styles.tcss
 
             with TabPane("Market", id="market"):
                 yield MarketWatchWidget(id="market-watch-full")
@@ -52,6 +56,7 @@ class MainScreen(Screen):
             with TabPane("System", id="system"):
                 yield SystemHealthWidget(id="system-full")
                 yield LogWidget(id="logs-full")
+                yield RiskWidget(id="risk-full")  # Moved Risk here or own tab
 
         yield Footer()
 

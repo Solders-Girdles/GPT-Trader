@@ -10,10 +10,20 @@ class AccountWidget(Static):
 
     def compose(self) -> ComposeResult:
         yield Label("Account Summary", classes="header")
-        with Container(classes="account-summary"):
-            yield Label("Volume 30d: $0.00", id="acc-volume")
-            yield Label("Fees 30d: $0.00", id="acc-fees")
-            yield Label("Fee Tier: -", id="acc-tier")
+
+        # Metrics Row
+        with Container(classes="account-metrics-row"):
+            with Static(classes="account-metric"):
+                yield Label("Volume 30d", classes="account-metric-label")
+                yield Label("$0.00", id="acc-volume", classes="account-metric-value")
+
+            with Static(classes="account-metric"):
+                yield Label("Fees 30d", classes="account-metric-label")
+                yield Label("$0.00", id="acc-fees", classes="account-metric-value")
+
+            with Static(classes="account-metric"):
+                yield Label("Fee Tier", classes="account-metric-label")
+                yield Label("-", id="acc-tier", classes="account-metric-value")
 
         yield Label("Balances", classes="header")
         yield DataTable()
@@ -22,12 +32,22 @@ class AccountWidget(Static):
         table = self.query_one(DataTable)
         table.add_columns("Asset", "Total", "Available")
 
+        # Add some CSS for the row layout if not present globally
+        self.styles.layout = "vertical"
+
+        # We can inject styles dynamically or rely on tcss.
+        # Let's assume tcss handles .account-metric.
+        # But we need a container for the row.
+        row = self.query_one(".account-metrics-row")
+        row.styles.layout = "horizontal"
+        row.styles.height = "auto"
+
     def update_account(self, data: AccountSummary) -> None:
         # Update Summary
         try:
-            self.query_one("#acc-volume", Label).update(f"Volume 30d: ${data.volume_30d}")
-            self.query_one("#acc-fees", Label).update(f"Fees 30d: ${data.fees_30d}")
-            self.query_one("#acc-tier", Label).update(f"Fee Tier: {data.fee_tier}")
+            self.query_one("#acc-volume", Label).update(f"${data.volume_30d}")
+            self.query_one("#acc-fees", Label).update(f"${data.fees_30d}")
+            self.query_one("#acc-tier", Label).update(f"{data.fee_tier}")
         except Exception:
             pass
 

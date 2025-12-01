@@ -89,9 +89,7 @@ class TestTuiLogHandler:
 
 
 @pytest.mark.asyncio
-async def test_app_instantiation():
-    mock_bot = MagicMock()
-    mock_bot.running = False
+async def test_app_instantiation(mock_bot):
     app = TraderApp(mock_bot)
 
     assert app.bot == mock_bot
@@ -100,11 +98,12 @@ async def test_app_instantiation():
 
 
 @pytest.mark.asyncio
-async def test_app_sync_state():
-    mock_bot = MagicMock()
+async def test_app_sync_state(mock_bot):
     mock_bot.running = True
     # Mock engine and status reporter
-    mock_bot.engine.status_reporter.get_status.return_value = {"positions": {"equity": "999.00"}}
+    mock_bot.engine.status_reporter.get_status = MagicMock(
+        return_value={"positions": {"equity": "999.00"}}
+    )
 
     app = TraderApp(mock_bot)
     app._sync_state_from_bot()

@@ -1,0 +1,35 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.12.4, pytest-8.4.1, pluggy-1.6.0 -- /Users/rj/.pyenv/versions/3.12.4/bin/python3.12
+cachedir: .pytest_cache
+hypothesis profile 'default'
+rootdir: /Users/rj/PycharmProjects/GPT-Trader
+configfile: pytest.ini
+plugins: cov-6.2.1, mock-3.15.1, anyio-4.11.0, hypothesis-6.140.3, asyncio-1.3.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... /Users/rj/.pyenv/versions/3.12.4/lib/python3.12/site-packages/_hypothesis_pytestplugin.py:470: UserWarning: Skipping collection of '.hypothesis' directory - this usually means you've explicitly set the `norecursedirs` pytest config option, replacing rather than extending the default ignores.
+  warnings.warn(
+collected 1 item
+
+tests/unit/gpt_trader/tui/test_app.py::test_app_instantiation ERROR      [100%]
+
+==================================== ERRORS ====================================
+___________________ ERROR at setup of test_app_instantiation ___________________
+file /Users/rj/PycharmProjects/GPT-Trader/tests/unit/gpt_trader/tui/test_app.py, line 91
+  @pytest.mark.asyncio
+  async def test_app_instantiation(mock_bot):
+      app = TraderApp(mock_bot)
+
+      assert app.bot == mock_bot
+      assert hasattr(app, "tui_state")
+      assert app.tui_state is not None
+E       fixture 'mock_bot' not found
+>       available fixtures: _class_scoped_runner, _function_scoped_runner, _module_scoped_runner, _package_scoped_runner, _session_scoped_runner, anyio_backend, anyio_backend_name, anyio_backend_options, bot_config_factory, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, capteesys, class_mocker, cov, doctest_namespace, event_loop_policy, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, mocker, module_mocker, monkeypatch, no_cover, package_mocker, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, reset_correlation_context, session_mocker, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+/Users/rj/PycharmProjects/GPT-Trader/tests/unit/gpt_trader/tui/test_app.py:91
+============================= slowest 10 durations =============================
+0.00s setup    tests/unit/gpt_trader/tui/test_app.py::test_app_instantiation
+0.00s teardown tests/unit/gpt_trader/tui/test_app.py::test_app_instantiation
+=========================== short test summary info ============================
+ERROR tests/unit/gpt_trader/tui/test_app.py::test_app_instantiation
+=============================== 1 error in 0.26s ===============================

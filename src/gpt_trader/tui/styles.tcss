@@ -1,4 +1,4 @@
-/* Nord Theme Colors */
+/* Nord Theme Colors - Refined */
 $nord0: #2e3440;
 $nord1: #3b4252;
 $nord2: #434c5e;
@@ -16,24 +16,55 @@ $nord13: #ebcb8b;
 $nord14: #a3be8c;
 $nord15: #b48ead;
 
+/* Global Styles */
 Screen {
     layout: vertical;
     background: $nord0;
     color: $nord4;
 }
 
-/* Global Styles */
 Label {
     color: $nord4;
 }
 
-.header {
-    text-align: center;
-    background: $nord8;
-    color: $nord0;
+/* Typography & Utilities */
+.text-success {
+    color: $nord14;
+}
+
+.text-error {
+    color: $nord11;
+}
+
+.text-warning {
+    color: $nord13;
+}
+
+.text-info {
+    color: $nord8;
+}
+
+.text-muted {
+    color: $nord3;
+}
+
+.bold {
     text-style: bold;
-    width: 100%;
-    padding: 0 1;
+}
+
+/* Header & Footer */
+Header {
+    dock: top;
+    height: 1;
+    background: $nord1;
+    color: $nord4;
+}
+
+Footer {
+    dock: bottom;
+    height: 1;
+    background: $nord1;
+    color: $nord4;
 }
 
 /* Tabs */
@@ -41,6 +72,7 @@ Tabs {
     background: $nord1;
     color: $nord4;
     dock: top;
+    height: 3;
 }
 
 Tab {
@@ -110,6 +142,7 @@ DataTable {
     background: $nord1;
     color: $nord4;
     border: none;
+    padding: 0 1;
 }
 
 DataTable > .datatable--header {
@@ -118,8 +151,40 @@ DataTable > .datatable--header {
     text-style: bold;
 }
 
+DataTable > .datatable--cursor {
+    background: $nord3;
+    color: $nord6;
+}
+
+/* Log Widget */
 Log {
     background: $nord1;
     color: $nord4;
     border: solid $nord3;
+    padding: 0 1;
+}
+
+/* Specific Widget Styles */
+AccountWidget {
+    layout: vertical;
+    padding: 1;
+}
+
+.account-metric {
+    background: $nord2;
+    border: solid $nord3;
+    padding: 1;
+    margin: 1;
+    height: auto;
+}
+
+.account-metric-label {
+    color: $nord9;
+    text-style: bold;
+}
+
+.account-metric-value {
+    color: $nord6;
+    text-style: bold;
+    text-align: right;
 }

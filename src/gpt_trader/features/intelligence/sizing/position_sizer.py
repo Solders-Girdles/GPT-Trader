@@ -432,7 +432,9 @@ class PositionSizer:
             return position_fraction * stop_percent
 
         # Default: assume 2x ATR stop = ~4% typical move
-        return float(position_fraction * 0.04)
+        from typing import cast
+
+        return cast(float, position_fraction * 0.04)
 
     def _calculate_risk_reward(
         self,

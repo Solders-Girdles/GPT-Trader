@@ -382,7 +382,6 @@ class ExperimentTracker:
             param_keys.update(exp.parameters.keys())
 
         # Helper for type safety
-        from typing import Dict, cast
 
         tmp_map: dict[str, list[Any]] = {}
 
@@ -390,7 +389,7 @@ class ExperimentTracker:
             values = [exp.parameters.get(key) for exp in experiments]
             tmp_map[key] = values
 
-        comparison["parameter_comparison"] = cast(Dict[str, Any], tmp_map)
+        comparison["parameter_comparison"] = tmp_map
 
         # Add experiment summaries
         for exp in experiments:
@@ -434,9 +433,9 @@ class ExperimentTracker:
         }
 
         # Helper for type safety
-        from typing import Dict, cast
+        from typing import cast
 
-        tmp_analysis_map = cast(Dict[str, Any], analysis["value_analysis"])
+        tmp_analysis_map = cast(dict[str, Any], analysis["value_analysis"])
 
         for value, experiments in value_results.items():
             returns = [e.result.total_return for e in experiments if e.result]

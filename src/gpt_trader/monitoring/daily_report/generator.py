@@ -5,6 +5,8 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from pathlib import Path
 
+from gpt_trader.config.path_registry import RUNTIME_DATA_DIR
+
 from .analytics import (
     calculate_health_metrics,
     calculate_pnl_metrics,
@@ -23,7 +25,7 @@ class DailyReportGenerator:
     def __init__(self, profile: str = "demo", data_dir: Path | None = None) -> None:
         self.profile = profile
         if data_dir is None:
-            data_dir = Path("var/data/coinbase_trader") / profile
+            data_dir = RUNTIME_DATA_DIR / profile
         self.data_dir = Path(data_dir)
         self.events_file = self.data_dir / "events.jsonl"
         self.metrics_file = self.data_dir / "metrics.json"

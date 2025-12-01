@@ -60,7 +60,7 @@ class TestMetricsPublisherPublish:
                 publisher.publish({"cycle": 1, "pnl": 100.0})
 
         # Check file was created
-        metrics_path = tmp_path / "coinbase_trader" / "TEST" / "metrics.json"
+        metrics_path = tmp_path / "TEST" / "metrics.json"
         assert metrics_path.exists()
 
         with metrics_path.open() as f:
@@ -83,7 +83,7 @@ class TestMetricsPublisherWriteSnapshot:
 
         publisher._write_snapshot({"test": "data"})
 
-        expected_dir = tmp_path / "coinbase_trader" / "TEST"
+        expected_dir = tmp_path / "TEST"
         assert expected_dir.exists()
 
     def test_handles_write_errors(self, tmp_path: Path) -> None:
@@ -181,7 +181,7 @@ class TestMetricsPublisherWriteHealthStatus:
 
         publisher.write_health_status(ok=True, message="System healthy")
 
-        health_path = tmp_path / "coinbase_trader" / "TEST" / "health.json"
+        health_path = tmp_path / "TEST" / "health.json"
         assert health_path.exists()
 
         with health_path.open() as f:
@@ -202,7 +202,7 @@ class TestMetricsPublisherWriteHealthStatus:
 
         publisher.write_health_status(ok=False, error="Connection lost")
 
-        health_path = tmp_path / "coinbase_trader" / "TEST" / "health.json"
+        health_path = tmp_path / "TEST" / "health.json"
 
         with health_path.open() as f:
             data = json.load(f)
@@ -224,4 +224,4 @@ class TestTargetDirs:
 
         dirs = publisher._target_dirs()
         assert len(dirs) == 1
-        assert dirs[0] == tmp_path / "coinbase_trader" / "CANARY"
+        assert dirs[0] == tmp_path / "CANARY"

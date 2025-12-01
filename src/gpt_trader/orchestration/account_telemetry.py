@@ -120,7 +120,7 @@ class AccountTelemetryService:
             logger=logger,
         )
         try:
-            target_dir = RUNTIME_DATA_DIR / "coinbase_trader" / self._profile
+            target_dir = RUNTIME_DATA_DIR / self._profile
             output_path = target_dir / "account.json"
             output_path.parent.mkdir(parents=True, exist_ok=True)
             with output_path.open("w") as fh:

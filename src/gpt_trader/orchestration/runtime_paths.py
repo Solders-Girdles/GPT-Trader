@@ -22,7 +22,7 @@ def resolve_runtime_paths(
     *,
     config: BotConfig,
     profile: Any,
-    bot_name: str = "coinbase_trader",
+    bot_name: str = "runtime_data",
 ) -> RuntimePaths:
     """Materialise storage+event-store roots for the provided profile."""
 

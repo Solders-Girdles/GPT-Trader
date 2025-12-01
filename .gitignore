@@ -29,7 +29,7 @@ logs/
 *.log
 
 # Runtime data directories
-coinbase_trader/
+runtime_data/
 
 # Local dev artifacts
 *.tmp

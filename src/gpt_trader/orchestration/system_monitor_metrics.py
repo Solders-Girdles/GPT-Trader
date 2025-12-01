@@ -46,7 +46,7 @@ class MetricsPublisher:
         self._log_update(metrics)
 
     def _target_dirs(self) -> list[Path]:
-        return [self._base_dir / "coinbase_trader" / self._profile]
+        return [self._base_dir / self._profile]
 
     # ------------------------------------------------------------------
     def _write_snapshot(self, metrics: dict[str, Any]) -> None:

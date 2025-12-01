@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from textual.app import ComposeResult
 from textual.widgets import DataTable, Label, Static
 
@@ -26,12 +28,10 @@ class StrategyWidget(Static):
             confidence = f"{decision.confidence:.2f}"
             reason = decision.reason
 
-            # Format timestamp if needed, or just use it if it's a string (it's a float in types.py)
-            # In types.py DecisionData.timestamp is float.
-            # Let's format it simply or ignore for now to match previous logic which didn't show time in the loop I saw earlier?
-            # Wait, the previous on_mount had "Time" column.
-            # Let's just put an empty string for time for now or format it if we import datetime.
+            # Format timestamp
             time_str = ""
+            if decision.timestamp > 0:
+                time_str = datetime.fromtimestamp(decision.timestamp).strftime("%H:%M:%S")
 
             # Color code action
             color = "white"

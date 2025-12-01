@@ -13,6 +13,7 @@ class MarketWatchWidget(Static):
     def compose(self) -> ComposeResult:
         yield Label("MARKET WATCH", classes="header")
         yield DataTable(id="market-table", zebra_stripes=True)
+        yield BlockChartWidget(id="market-chart")
 
     def on_mount(self) -> None:
         table = self.query_one(DataTable)
@@ -20,7 +21,12 @@ class MarketWatchWidget(Static):
         self.previous_prices: dict[str, float] = {}
 
     @safe_update
-    def update_prices(self, prices: dict[str, str], last_update: float | None) -> None:
+    def update_prices(
+        self,
+        prices: dict[str, str],
+        last_update: float | None,
+        price_history: dict[str, list[Decimal]] | None = None,
+    ) -> None:
         table = self.query_one(DataTable)
         table.clear()
 
@@ -47,6 +53,13 @@ class MarketWatchWidget(Static):
             # Format price with color
             formatted_price = f"[{color}]{price_str}[/{color}]"
             table.add_row(symbol, formatted_price, updated_str)
+
+        # Update chart with history for the first available symbol
+        if prices and price_history:
+            # Default to the first symbol in the prices list
+            first_symbol = next(iter(prices))
+            history = price_history.get(first_symbol, [])
+            self.query_one(BlockChartWidget).update_chart(history)
 
 
 class BlockChartWidget(Static):

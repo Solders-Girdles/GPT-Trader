@@ -133,6 +133,7 @@ ContentSwitcher {
     width: 40%;
     height: 100%;
     border-right: solid $nord3;
+    layout: vertical;
 }
 
 #logs-column {
@@ -229,4 +230,16 @@ AccountWidget {
     color: $nord6;
     text-style: bold;
     text-align: right;
+}
+
+/* Block Chart */
+BlockChartWidget {
+    height: 5;
+    padding: 0 1;
+    border-top: solid $nord3;
+}
+
+.chart-content {
+    height: 3;
+    color: $nord14;
 }

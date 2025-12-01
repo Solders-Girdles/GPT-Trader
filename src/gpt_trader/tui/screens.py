@@ -5,6 +5,7 @@ from textual.widgets import Footer, Header
 
 from gpt_trader.tui.state import TuiState
 from gpt_trader.tui.widgets import (
+    AccountWidget,
     BotStatusWidget,
     LogWidget,
     MarketWatchWidget,
@@ -41,6 +42,7 @@ class MainScreen(Screen):
                 # Left: System Health
                 with Container(id="system-column"):
                     yield SystemHealthWidget(id="dash-system", classes="dashboard-item")
+                    yield AccountWidget(id="dash-account", classes="dashboard-item")
 
                 # Right: Logs
                 with Container(id="logs-column"):
@@ -68,6 +70,7 @@ class MainScreen(Screen):
             market_widget.update_prices(
                 state.market_data.prices,
                 state.market_data.last_update,
+                state.market_data.price_history,
             )
         except Exception:
             pass
@@ -100,6 +103,13 @@ class MainScreen(Screen):
         try:
             sys_widget = self.query_one("#dash-system", SystemHealthWidget)
             sys_widget.update_system(state.system_data)
+        except Exception:
+            pass
+
+        # Update Account
+        try:
+            acc_widget = self.query_one("#dash-account", AccountWidget)
+            acc_widget.update_account(state.account_data)
         except Exception:
             pass
 

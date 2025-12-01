@@ -57,7 +57,7 @@ class DatabaseEngine:
             connection.execute("PRAGMA busy_timeout=5000")
             connection.row_factory = sqlite3.Row
             self._local.connection = connection
-        return self._local.connection
+        return self._local.connection  # type: ignore[no-any-return]
 
     def initialize(self, *, check_integrity: bool = True, auto_repair: bool = False) -> None:
         """
@@ -249,7 +249,7 @@ class DatabaseEngine:
         connection = self._get_connection()
         cursor = connection.execute("SELECT COUNT(*) FROM events")
         row = cursor.fetchone()
-        return row[0] if row else 0
+        return int(row[0]) if row else 0
 
     def prune_by_count(self, max_rows: int) -> int:
         """

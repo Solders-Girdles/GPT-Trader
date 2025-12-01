@@ -15,7 +15,7 @@ from gpt_trader.core import Product
 from gpt_trader.features.live_trade.strategies.perps_baseline import Action, Decision
 
 from ..regime.detector import MarketRegimeDetector
-from ..regime.models import RegimeConfig, RegimeState
+from ..regime.models import RegimeConfig, RegimeState, RegimeType
 from .adaptive import BayesianWeightConfig, BayesianWeightUpdater
 from .models import EnsembleConfig, StrategyVote
 from .voting import VotingMechanism
@@ -443,12 +443,14 @@ class EnsembleOrchestrator:
             # Only record for strategies that agreed with the final decision
             # or that had the same directional vote
             if action == pending.get("action"):
-                self._bayesian_updater.record_outcome(
-                    strategy_name=strategy_name,
-                    regime=regime,
-                    is_success=is_success,
-                    pnl=pnl,
-                )
+                # Ensure regime is valid type
+                if isinstance(regime, RegimeType):
+                    self._bayesian_updater.record_outcome(
+                        strategy_name=strategy_name,
+                        regime=regime,
+                        is_success=is_success,
+                        pnl=pnl,
+                    )
 
     def get_strategy_performance(self) -> dict[str, dict[str, Any]]:
         """Get performance statistics for all strategies.

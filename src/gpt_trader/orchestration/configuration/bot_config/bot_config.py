@@ -177,7 +177,7 @@ class BotConfig:
             DeprecationWarning,
             stacklevel=2,
         )
-        return self.strategy.short_ma_period
+        return int(self.strategy.short_ma_period)
 
     @property
     def long_ma(self) -> int:
@@ -191,7 +191,7 @@ class BotConfig:
             DeprecationWarning,
             stacklevel=2,
         )
-        return self.strategy.long_ma_period
+        return int(self.strategy.long_ma_period)
 
     # Risk field aliases
     @property
@@ -313,7 +313,8 @@ class BotConfig:
         **kwargs: object,
     ) -> "BotConfig":
         """Create a config from a profile name or enum."""
-        return cls(profile=profile, dry_run=dry_run, mock_broker=mock_broker, **kwargs)
+        # Type ignore: kwargs unpacking is dynamic, but we trust the caller to provide valid fields
+        return cls(profile=profile, dry_run=dry_run, mock_broker=mock_broker, **kwargs)  # type: ignore[arg-type]
 
     @classmethod
     def from_env(cls) -> "BotConfig":
@@ -348,7 +349,7 @@ class BotConfig:
             or Decimal("0.04"),
             position_fraction=parse_decimal_env("POSITION_FRACTION", Decimal("0.1"))
             or Decimal("0.1"),
-        )
+        )  # type: ignore[arg-type]
 
         derivatives_enabled = parse_bool_env("COINBASE_ENABLE_DERIVATIVES", default=False)
 
@@ -414,7 +415,7 @@ class BotConfig:
             config_data["log_level"] = data["log_level"]
 
         # 2. Map Risk Config
-        risk_data = {}
+        risk_data: dict[str, Any] = {}
         source_risk = data.get("risk", {})
 
         # Map legacy risk keys to BotRiskConfig keys
@@ -427,7 +428,15 @@ class BotConfig:
         if "take_profit_pct" in source_risk:
             risk_data["take_profit_pct"] = Decimal(str(source_risk["take_profit_pct"]))
 
-        config_data["risk"] = BotRiskConfig(**risk_data)
+        # Explicit cast to fix mypy assignment error
+        if "max_position_size" in source_risk:
+            risk_data["max_position_size"] = Decimal(str(source_risk["max_position_size"]))
+
+        # Filter unexpected keys to avoid TypeError
+        valid_risk_fields = {f.name for f in fields(BotRiskConfig)}
+        filtered_risk_data = {k: v for k, v in risk_data.items() if k in valid_risk_fields}
+
+        config_data["risk"] = BotRiskConfig(**filtered_risk_data)
 
         # 3. Map Execution Config
         execution = data.get("execution", {})
@@ -443,7 +452,9 @@ class BotConfig:
         strategy_config_data = {}
 
         # Flatten symbol-specific strategy if present
-        first_strategy = next(iter(source_strategy.values()), {}) if source_strategy else {}
+        first_strategy: dict[str, Any] = (
+            next(iter(source_strategy.values()), {}) if source_strategy else {}
+        )
         if isinstance(first_strategy, dict) and "short_window" in first_strategy:
             # It's a legacy strategy dict
             strategy_config_data["short_ma_period"] = first_strategy.get("short_window", 5)

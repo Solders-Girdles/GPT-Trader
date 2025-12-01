@@ -163,7 +163,7 @@ class WebhookNotificationBackend:
         timestamp = alert.created_at.strftime("%Y-%m-%d %H:%M:%S UTC")
 
         # Build Slack blocks for rich formatting
-        blocks = [
+        blocks: list[dict[str, Any]] = [
             {
                 "type": "header",
                 "text": {

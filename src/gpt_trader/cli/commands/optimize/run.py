@@ -186,7 +186,7 @@ def execute(args: Namespace) -> CliResponse | int:
     return _run_optimization(config, args, output_format)
 
 
-def _build_config_from_args(args: Namespace):
+def _build_config_from_args(args: Namespace) -> OptimizeCliConfig:
     """Build configuration from command arguments."""
     if args.config:
         # Load from YAML file
@@ -259,16 +259,17 @@ def _handle_dry_run(
 ) -> CliResponse | int:
     """Handle dry run mode - validate and show configuration."""
     # Build parameter space info
-    param_info = []
+    param_info: list[dict[str, Any]] | None = []
     try:
         param_space = build_parameter_space_from_config(config)
         for param in param_space.all_parameters:
-            info = {"name": param.name}
+            info: dict[str, Any] = {"name": param.name}
             if param.low is not None and param.high is not None:
                 info["range"] = [param.low, param.high]
             elif param.choices:
                 info["choices"] = param.choices
-            param_info.append(info)
+            if param_info is not None:
+                param_info.append(info)
     except Exception as e:
         param_info = None
         logger.warning(f"Could not build parameter space: {e}")
@@ -378,16 +379,16 @@ def _create_strategy_factory(
             # or we rely on the parameter space builder to only provide valid keys.
             # For now, pass all params.
             try:
-                config = SpotStrategyConfig(**params)
-                return SpotStrategy(config=config)
+                spot_config = SpotStrategyConfig(**params)
+                return SpotStrategy(config=spot_config)
             except TypeError:
                 # If strict typing fails, try filtering or fallback
                 # Simplified for now as per plan
-                config = SpotStrategyConfig(**params)
-                return SpotStrategy(config=config)
+                spot_config = SpotStrategyConfig(**params)
+                return SpotStrategy(config=spot_config)
         else:  # perps_baseline or default
-            config = PerpsStrategyConfig(**params)
-            return PerpsStrategy(config=config)
+            perps_config = PerpsStrategyConfig(**params)
+            return PerpsStrategy(config=perps_config)
 
     return factory
 
@@ -499,7 +500,7 @@ def _run_optimization(
     interrupted = False
 
     # Run optimization loop
-    async def run_optimization_loop():
+    async def run_optimization_loop() -> None:
         nonlocal best_value, best_trial, interrupted
         try:
             for trial_num in range(opt_config.number_of_trials):

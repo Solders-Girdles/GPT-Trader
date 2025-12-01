@@ -414,9 +414,9 @@ class EventDispatcher:
         if self._fill_handlers:
             fill = FillEvent.from_message(message)
             if fill:
-                for handler in self._fill_handlers:
+                for fill_handler in self._fill_handlers:
                     try:
-                        handler(fill)
+                        fill_handler(fill)
                     except Exception as e:
                         logger.error("Fill handler error", error=str(e))
 
@@ -424,9 +424,9 @@ class EventDispatcher:
         if self._order_update_handlers:
             updates = OrderUpdateEvent.from_message(message)
             for update in updates:
-                for handler in self._order_update_handlers:
+                for update_handler in self._order_update_handlers:
                     try:
-                        handler(update)
+                        update_handler(update)
                     except Exception as e:
                         logger.error("Order update handler error", error=str(e))
 

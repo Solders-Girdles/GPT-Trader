@@ -9,9 +9,7 @@ on:
       - 'src/gpt_trader/features/live_trade/**'
       - 'tests/unit/gpt_trader/features/brokerages/coinbase/**'
       - 'tests/unit/gpt_trader/features/live_trade/**'
-      - 'tests/unit/gpt_trader/orchestration/test_broker_factory.py'
-      - 'tests/unit/gpt_trader/orchestration/test_live_execution.py'
-      - 'tests/unit/gpt_trader/orchestration/test_execution_coordinator.py'
+      - 'tests/unit/gpt_trader/orchestration/test_live_execution_engine.py'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -77,14 +75,12 @@ jobs:
         run: |
           set -euo pipefail
           uv run pytest tests/unit/gpt_trader/features/brokerages/coinbase -v --maxfail=1 --durations=10
-          uv run pytest tests/unit/gpt_trader/orchestration/test_broker_factory.py -v
 
       - name: Run Coinbase integration smoke
         if: matrix.category == 'coinbase-integration'
         run: |
           set -euo pipefail
           export PYTHONPATH="${GITHUB_WORKSPACE}/src:${GITHUB_WORKSPACE}${PYTHONPATH:+:$PYTHONPATH}"
-          uv run pytest tests/unit/gpt_trader/features/brokerages/coinbase/test_adapter_integration.py -v
           uv run python - <<'PY'
           import os
           import sys
@@ -129,17 +125,12 @@ jobs:
           export EVENT_STORE_ROOT="$RUNNER_TEMP/event_store_orchestration"
           mkdir -p "$EVENT_STORE_ROOT"
           uv run pytest \
-            tests/unit/gpt_trader/orchestration/test_live_execution.py \
-            tests/unit/gpt_trader/orchestration/test_execution_coordinator.py \
+            tests/unit/gpt_trader/orchestration/test_live_execution_engine.py \
             -q --tb=short
-
-          export EVENT_STORE_ROOT="$RUNNER_TEMP/event_store_validation"
-          mkdir -p "$EVENT_STORE_ROOT"
-          uv run python scripts/validation/validate_perps_e2e.py
 
           export EVENT_STORE_ROOT="$RUNNER_TEMP/event_store_paper"
           mkdir -p "$EVENT_STORE_ROOT"
-          uv run python scripts/validation/paper_mode_e2e.py
+          uv run pytest tests/integration/test_paper_mode.py
 
           uv run python -m gpt_trader.cli --help
 

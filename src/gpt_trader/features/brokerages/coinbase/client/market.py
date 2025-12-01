@@ -3,15 +3,13 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
+from gpt_trader.features.brokerages.coinbase.client._typing import CoinbaseClientProtocol
 from gpt_trader.features.brokerages.coinbase.errors import InvalidRequestError
 
-if TYPE_CHECKING:
-    from gpt_trader.features.brokerages.coinbase.client._typing import CoinbaseClientProtocol
 
-
-class MarketDataClientMixin:
+class MarketDataClientMixin(CoinbaseClientProtocol):
     """Methods for market product discovery and quotes."""
 
     def get_products(
@@ -46,6 +44,10 @@ class MarketDataClientMixin:
     def get_ticker(self: CoinbaseClientProtocol, product_id: str) -> dict[str, Any]:
         path = self._get_endpoint_path("ticker", product_id=product_id)
         return self._request("GET", path)
+
+    # Alias for get_ticker to satisfy some legacy/test code
+    def get_product_ticker(self, product_id: str) -> dict[str, Any]:
+        return self.get_ticker(product_id)
 
     def get_candles(
         self: CoinbaseClientProtocol,

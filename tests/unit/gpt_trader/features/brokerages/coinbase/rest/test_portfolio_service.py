@@ -137,19 +137,21 @@ class TestPortfolioService:
 
     def test_list_positions_returns_positions(self) -> None:
         """Test listing positions when derivatives are supported."""
+        from gpt_trader.core import Position
+
         self.endpoints.supports_derivatives.return_value = True
-        self.client.list_positions.return_value = {
-            "positions": [
-                {
-                    "product_id": "BTC-PERP",
-                    "side": "LONG",
-                    "contracts": "0.5",
-                    "entry_price": "50000.00",
-                    "unrealized_pnl": "100.00",
-                    "realized_pnl": "100.00",
-                }
-            ]
-        }
+        # Since service now expects client to return objects
+        self.client.list_positions.return_value = [
+            Position(
+                symbol="BTC-PERP",
+                quantity=Decimal("0.5"),
+                entry_price=Decimal("50000.00"),
+                unrealized_pnl=Decimal("100.00"),
+                mark_price=Decimal("51000.00"),
+                realized_pnl=Decimal("0.00"),
+                side="LONG",
+            )
+        ]
 
         result = self.service.list_positions()
 
@@ -177,7 +179,8 @@ class TestPortfolioService:
     def test_get_position_returns_position(self) -> None:
         """Test getting a single position."""
         self.endpoints.supports_derivatives.return_value = True
-        self.client.get_position.return_value = {
+        # Mock get_cfm_position because service uses it for single position retrieval
+        self.client.get_cfm_position.return_value = {
             "product_id": "BTC-PERP",
             "side": "LONG",
             "contracts": "0.5",

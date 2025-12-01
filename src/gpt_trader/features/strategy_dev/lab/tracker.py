@@ -349,13 +349,13 @@ class ExperimentTracker:
         Returns:
             Comparison data
         """
-        experiments = [self.get_experiment(eid) for eid in experiment_ids]
-        experiments = [e for e in experiments if e and e.result]
+        raw_experiments = [self.get_experiment(eid) for eid in experiment_ids]
+        experiments: list[Experiment] = [e for e in raw_experiments if e and e.result]
 
         if len(experiments) < 2:
             return {"error": "Need at least 2 completed experiments to compare"}
 
-        comparison = {
+        comparison: dict[str, Any] = {
             "experiments": [],
             "metrics_summary": {},
             "parameter_comparison": {},
@@ -377,13 +377,19 @@ class ExperimentTracker:
             }
 
         # Compare parameters
-        param_keys = set()
+        param_keys: set[str] = set()
         for exp in experiments:
             param_keys.update(exp.parameters.keys())
 
+        # Helper for type safety
+        from typing import cast, Dict
+        tmp_map: dict[str, list[Any]] = {}
+
         for key in param_keys:
             values = [exp.parameters.get(key) for exp in experiments]
-            comparison["parameter_comparison"][key] = values
+            tmp_map[key] = values
+
+        comparison["parameter_comparison"] = tmp_map
 
         # Add experiment summaries
         for exp in experiments:

@@ -51,6 +51,7 @@ class TradingEngine(BaseEngine):
         self.price_history: dict[str, list[Decimal]] = defaultdict(list)
         self._current_positions: dict[str, Position] = {}
         self._rehydrated = False
+        self._cycle_count = 0
 
         # Initialize heartbeat service
         self._heartbeat = HeartbeatService(
@@ -267,6 +268,7 @@ class TradingEngine(BaseEngine):
     async def _cycle(self) -> None:
         """One trading cycle."""
         assert self.context.broker is not None, "Broker not initialized"
+        self._cycle_count += 1
 
         # Report system status at start of cycle
         self._report_system_status()
@@ -301,9 +303,10 @@ class TradingEngine(BaseEngine):
             # Calculate current daily loss pct if possible
             # Assuming rm tracks start_of_day_equity
             daily_loss_pct = 0.0
-            if getattr(rm, "_start_of_day_equity", 0) and rm._start_of_day_equity > 0:
-                daily_pnl = equity - rm._start_of_day_equity
-                daily_loss_pct = float(-daily_pnl / rm._start_of_day_equity)
+            start_equity = getattr(rm, "_start_of_day_equity", 0)
+            if start_equity and start_equity > 0:
+                daily_pnl = equity - start_equity
+                daily_loss_pct = float(-daily_pnl / start_equity)
 
             self._status_reporter.update_risk(
                 max_leverage=float(getattr(rm.config, "max_leverage", 0.0) if rm.config else 0.0),
@@ -644,8 +647,13 @@ class TradingEngine(BaseEngine):
         try:
             # Fetch open orders
             # Note: Coinbase API uses 'order_status' for filtering
-            response = await asyncio.to_thread(self.context.broker.list_orders, order_status="OPEN")
-            orders = response.get("orders", [])
+            # Use getattr to safely call list_orders (not part of base BrokerProtocol)
+            list_orders = getattr(self.context.broker, "list_orders", None)
+            if list_orders:
+                response = await asyncio.to_thread(list_orders, order_status="OPEN")
+                orders = response.get("orders", [])
+            else:
+                orders = []
 
             if orders:
                 logger.info(f"AUDIT: Found {len(orders)} OPEN orders")

@@ -6,7 +6,7 @@ Provides:
 
 import json
 import logging
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
@@ -298,7 +298,7 @@ class StrategyRegistry:
         if not profile1 or not profile2:
             raise KeyError("One or both strategies not found")
 
-        comparison = {
+        comparison: dict[str, Any] = {
             "strategies": [name1, name2],
             "differences": {},
         }
@@ -307,7 +307,7 @@ class StrategyRegistry:
         dict1 = profile1.to_dict()
         dict2 = profile2.to_dict()
 
-        def find_differences(d1: dict, d2: dict, path: str = "") -> None:
+        def find_differences(d1: dict[str, Any], d2: dict[str, Any], path: str = "") -> None:
             for key in set(d1.keys()) | set(d2.keys()):
                 full_path = f"{path}.{key}" if path else key
                 v1 = d1.get(key)
@@ -354,8 +354,8 @@ class StrategyRegistry:
         Returns:
             Summary data
         """
-        by_environment = {}
-        by_tag = {}
+        by_environment: dict[str, int] = {}
+        by_tag: dict[str, int] = {}
 
         for entry in self._entries.values():
             profile = entry.profile
@@ -392,6 +392,6 @@ class StrategyRegistry:
         """Check if strategy is registered."""
         return name in self._entries
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[StrategyProfile]:
         """Iterate over strategy profiles."""
         return iter(e.profile for e in self._entries.values())

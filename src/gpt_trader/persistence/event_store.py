@@ -75,12 +75,12 @@ class EventStore:
         """Extract bot_id from event data for database indexing."""
         # Direct field
         if "bot_id" in data:
-            return data["bot_id"]
+            return str(data["bot_id"]) if data["bot_id"] is not None else None
         # Nested in position/trade payloads
         for key in ("position", "trade"):
             if key in data and isinstance(data[key], dict):
                 if "bot_id" in data[key]:
-                    return data[key]["bot_id"]
+                    return str(data[key]["bot_id"]) if data[key]["bot_id"] is not None else None
         return None
 
     def append(self, event_type: str, data: dict[str, Any]) -> None:

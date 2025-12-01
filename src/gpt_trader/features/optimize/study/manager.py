@@ -71,7 +71,7 @@ class OptimizationStudyManager:
         Returns:
             Dictionary of suggested parameter values
         """
-        params = {}
+        params: dict[str, Any] = {}
 
         for param in self.config.parameter_space.all_parameters:
             if param.parameter_type == ParameterType.INTEGER:

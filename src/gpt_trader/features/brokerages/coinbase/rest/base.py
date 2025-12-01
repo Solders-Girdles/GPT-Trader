@@ -110,13 +110,14 @@ class CoinbaseRestServiceCore:
         self.bot_config = bot_config
 
         # Position state management - see class docstring for details
+        self._position_store: PositionStateStore | None
         if position_store is not None:
             self._position_store = position_store
             # Snapshot reference for backward compatibility (may become stale)
             self._positions = position_store.all()
         else:
             # Legacy mode: internal dict (deprecated, removal planned for v3.0)
-            self._positions: dict[str, PositionState] = {}
+            self._positions = {}
             self._position_store = None
 
         self._funding_calculator = FundingCalculator()
@@ -151,19 +152,19 @@ class CoinbaseRestServiceCore:
         # GTD -> GTC alias for TimeInForce (Coinbase doesn't support GTD directly)
         tif_aliases: dict[str, TimeInForce] = {"GTD": TimeInForce.GTC}
 
-        side, side_str = coerce_enum(side, OrderSide)
-        if side is None:
+        coerced_side, side_str = coerce_enum(side, OrderSide)
+        if coerced_side is None:
             # Fallback: use the string value if enum coercion failed
             side_str = side_str  # Already set by coerce_enum
         else:
-            side_str = side.value
+            side_str = coerced_side.value
 
-        order_type, _ = coerce_enum(order_type, OrderType)
+        coerced_order_type, _ = coerce_enum(order_type, OrderType)
 
-        tif, tif_str = coerce_enum(tif, TimeInForce, aliases=tif_aliases)
-        if tif is not None:
+        coerced_tif, tif_str = coerce_enum(tif, TimeInForce, aliases=tif_aliases)
+        if coerced_tif is not None:
             # Use enum value for string representation (handles alias resolution)
-            tif_str = tif.value
+            tif_str = coerced_tif.value
         # else: tif_str already contains the normalized fallback string
 
         # Get Product
@@ -178,7 +179,7 @@ class CoinbaseRestServiceCore:
         # Enforce rules
         enforce_perp_rules(product, quantity_decimal, price)
 
-        if order_type == OrderType.LIMIT and price is None:
+        if coerced_order_type == OrderType.LIMIT and price is None:
             raise ValidationError("price is required for limit orders")
 
         # Build Configuration
@@ -193,18 +194,18 @@ class CoinbaseRestServiceCore:
 
         base_size = quantity_string
 
-        if order_type == OrderType.MARKET:
+        if coerced_order_type == OrderType.MARKET:
             # Market orders usually quote_size for buy, base_size for sell?
             # But PERPS usually use base_size (contracts)
             # Test says: payload["order_configuration"]["market_market_ioc"]["base_size"] == "0.1"
             order_configuration["market_market_ioc"] = {"base_size": base_size}
-        elif order_type == OrderType.LIMIT:
+        elif coerced_order_type == OrderType.LIMIT:
             assert price is not None  # Validated above
             limit_price = str(quantize_to_increment(price, product.price_increment))
             key_suffix = "gtc"
-            if tif == TimeInForce.IOC:
+            if coerced_tif == TimeInForce.IOC:
                 key_suffix = "ioc"
-            if tif == TimeInForce.FOK:
+            if coerced_tif == TimeInForce.FOK:
                 key_suffix = "fok"
 
             config: dict[str, str | bool] = {
@@ -216,7 +217,7 @@ class CoinbaseRestServiceCore:
 
             order_configuration[f"limit_limit_{key_suffix}"] = config
 
-        elif order_type == OrderType.STOP_LIMIT:
+        elif coerced_order_type == OrderType.STOP_LIMIT:
             assert price is not None  # Required for stop limit
             assert stop_price is not None  # Required for stop limit
             limit_price = str(quantize_to_increment(price, product.price_increment))
@@ -228,7 +229,7 @@ class CoinbaseRestServiceCore:
                 "stop_price": stop_price_str,
                 "stop_direction": (
                     "STOP_DIRECTION_STOP_UP"
-                    if side == OrderSide.BUY
+                    if coerced_side == OrderSide.BUY
                     else "STOP_DIRECTION_STOP_DOWN"
                 ),  # simplified
             }
@@ -240,7 +241,11 @@ class CoinbaseRestServiceCore:
             payload = {
                 "product_id": symbol,
                 "side": side_str,
-                "type": order_type.value if isinstance(order_type, OrderType) else str(order_type),
+                "type": (
+                    coerced_order_type.value
+                    if isinstance(coerced_order_type, OrderType)
+                    else str(order_type)
+                ),
                 "size": base_size,
                 "time_in_force": tif_str,
                 "price": str(price) if price else None,
@@ -252,7 +257,11 @@ class CoinbaseRestServiceCore:
                 "side": side_str,
                 "order_configuration": order_configuration,
                 # Mirror fields for tests/legacy compat
-                "type": order_type.value if isinstance(order_type, OrderType) else str(order_type),
+                "type": (
+                    coerced_order_type.value
+                    if isinstance(coerced_order_type, OrderType)
+                    else str(order_type)
+                ),
                 "time_in_force": tif_str,
             }
 

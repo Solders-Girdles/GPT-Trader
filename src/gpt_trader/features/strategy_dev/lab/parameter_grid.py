@@ -8,7 +8,7 @@ Provides:
 
 import itertools
 import random
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -36,6 +36,11 @@ class ParameterRange:
         if self.values is not None:
             return self.values
 
+        # Explicit assertion for mypy
+        if self.min_value is None or self.max_value is None:
+            # Should have been caught by __post_init__, but ensures type safety
+            return []
+
         if self.step is None:
             # Default to 10 steps
             step = (self.max_value - self.min_value) / 10
@@ -62,6 +67,10 @@ class ParameterRange:
         if self.values is not None:
             return random.choice(self.values)
 
+        # Explicit assertion for mypy
+        if self.min_value is None or self.max_value is None:
+            return None
+
         if self.log_scale:
             import math
 
@@ -84,7 +93,7 @@ class ParameterGrid:
     """
 
     parameters: list[ParameterRange] = field(default_factory=list)
-    constraints: list[callable] = field(default_factory=list)
+    constraints: list[Callable[[dict[str, Any]], bool]] = field(default_factory=list)
 
     def add_parameter(
         self,
@@ -119,7 +128,7 @@ class ParameterGrid:
         self.parameters.append(param)
         return self
 
-    def add_constraint(self, constraint: callable) -> "ParameterGrid":
+    def add_constraint(self, constraint: Callable[[dict[str, Any]], bool]) -> "ParameterGrid":
         """Add a constraint function.
 
         The constraint should accept a parameter dict and return True if valid.
@@ -175,7 +184,7 @@ class ParameterGrid:
         if seed is not None:
             random.seed(seed)
 
-        samples = []
+        samples: list[dict[str, Any]] = []
         attempts = 0
         max_attempts = count * 10  # Prevent infinite loops
 

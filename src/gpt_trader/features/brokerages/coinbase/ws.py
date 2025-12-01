@@ -108,7 +108,7 @@ class CoinbaseWebSocket:
         self.subscriptions: list[dict] = []
         self._transport: Any = None
         self._sequence_guard = SequenceGuard()
-        self._reconnect_delay = WS_RECONNECT_DELAY
+        self._reconnect_delay: float = float(WS_RECONNECT_DELAY)
         self._reconnect_count = 0
 
     @property

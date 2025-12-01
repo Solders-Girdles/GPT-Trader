@@ -297,7 +297,7 @@ class EnsembleBacktestAdapter:
         # Create position sizer
         self.enable_sizing = enable_sizing
         if enable_sizing:
-            self.sizer = PositionSizer(
+            self.sizer: PositionSizer | None = PositionSizer(
                 regime_detector=self.regime_detector,
                 config=sizing_config or PositionSizingConfig(),
             )
@@ -399,7 +399,7 @@ class EnsembleBacktestAdapter:
             regime=regime_state.regime,
             confidence=regime_state.confidence,
             volatility_percentile=regime_state.volatility_percentile,
-            trend_percentile=regime_state.trend_percentile,
+            trend_percentile=(regime_state.trend_score + 1.0) / 2.0,
         )
         self._regime_snapshots[symbol].append(snapshot)
 

@@ -1,8 +1,8 @@
-from typing import Any
-
 from textual.app import ComposeResult
 from textual.containers import Container
 from textual.widgets import DataTable, Label, Static
+
+from gpt_trader.tui.types import AccountSummary
 
 
 class AccountWidget(Static):
@@ -22,7 +22,7 @@ class AccountWidget(Static):
         table = self.query_one(DataTable)
         table.add_columns("Asset", "Total", "Available")
 
-    def update_account(self, data: Any) -> None:
+    def update_account(self, data: AccountSummary) -> None:
         # Update Summary
         try:
             self.query_one("#acc-volume", Label).update(f"Volume 30d: ${data.volume_30d}")
@@ -36,7 +36,4 @@ class AccountWidget(Static):
         table.clear()
 
         for bal in data.balances:
-            asset = bal.get("asset", "")
-            total = bal.get("total", "0")
-            avail = bal.get("available", "0")
-            table.add_row(asset, total, avail)
+            table.add_row(bal.asset, bal.total, bal.available)

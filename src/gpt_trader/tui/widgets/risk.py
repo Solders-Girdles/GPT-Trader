@@ -1,8 +1,7 @@
+from gpt_trader.tui.models import RiskData
 from textual.app import ComposeResult
 from textual.containers import Grid
 from textual.widgets import Label, Static
-
-from gpt_trader.tui.models import RiskData
 
 
 class RiskWidget(Static):

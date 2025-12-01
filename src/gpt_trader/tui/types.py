@@ -4,7 +4,7 @@ from typing import Any
 
 
 @dataclass
-class MarketData:
+class MarketState:
     """Data structure for market information."""
 
     prices: dict[str, str] = field(default_factory=dict)
@@ -13,38 +13,87 @@ class MarketData:
 
 
 @dataclass
-class PositionData:
+class Position:
+    """Data structure for a single position."""
+
+    symbol: str
+    quantity: str
+    entry_price: str = "N/A"
+    unrealized_pnl: str = "0.00"
+    mark_price: str = "0.00"
+    side: str = ""
+
+
+@dataclass
+class PortfolioSummary:
     """Data structure for position information."""
 
-    positions: dict[str, Any] = field(default_factory=dict)
+    positions: dict[str, Position] = field(default_factory=dict)
     total_unrealized_pnl: str = "0.00"
     equity: str = "0.00"
 
 
 @dataclass
-class OrderData:
+class Order:
+    """Data structure for a single order."""
+
+    order_id: str
+    symbol: str
+    side: str
+    quantity: str
+    price: str
+    status: str
+    type: str = "UNKNOWN"
+    time_in_force: str = "UNKNOWN"
+    creation_time: str = ""
+
+
+@dataclass
+class ActiveOrders:
     """Data structure for order information."""
 
-    orders: list[dict[str, str]] = field(default_factory=list)
-    # We can also have a more structured list if needed, but dict is flexible for now
-    # Let's define what keys we expect: order_id, symbol, side, quantity, price, status, type, time_in_force
+    orders: list[Order] = field(default_factory=list)
 
 
 @dataclass
-class TradeData:
+class Trade:
+    """Data structure for a single trade."""
+
+    trade_id: str
+    symbol: str
+    side: str
+    quantity: str
+    price: str
+    order_id: str
+    time: str
+    fee: str = "0.00"
+
+
+@dataclass
+class TradeHistory:
     """Data structure for trade information."""
 
-    trades: list[dict[str, Any]] = field(default_factory=list)
+    trades: list[Trade] = field(default_factory=list)
 
 
 @dataclass
-class AccountData:
+class AccountBalance:
+    """Data structure for a single asset balance."""
+
+    asset: str
+    total: str
+    available: str
+    hold: str = "0.00"
+
+
+@dataclass
+class AccountSummary:
     """Data structure for account metrics."""
 
     volume_30d: str = "0.00"
     fees_30d: str = "0.00"
     fee_tier: str = ""
-    balances: list[dict[str, str]] = field(default_factory=list)
+    balances: list[AccountBalance] = field(default_factory=list)
 
 
 @dataclass
@@ -60,7 +109,7 @@ class DecisionData:
 
 
 @dataclass
-class StrategyData:
+class StrategyState:
     """Data structure for strategy information."""
 
     active_strategies: list[str] = field(default_factory=list)
@@ -68,7 +117,7 @@ class StrategyData:
 
 
 @dataclass
-class RiskData:
+class RiskState:
     """Data structure for risk management information."""
 
     max_leverage: float = 0.0
@@ -80,7 +129,7 @@ class RiskData:
 
 
 @dataclass
-class SystemData:
+class SystemStatus:
     """Data structure for system health and brokerage connection."""
 
     api_latency: float = 0.0

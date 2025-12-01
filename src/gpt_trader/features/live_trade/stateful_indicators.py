@@ -198,6 +198,7 @@ class OnlineEMA:
 
                     # Explicit cast for mypy
                     from typing import cast
+
                     decimal_val = cast(Decimal, current_val)
                     self.value = (p * self._multiplier) + (
                         decimal_val * (Decimal("1") - self._multiplier)
@@ -214,6 +215,7 @@ class OnlineEMA:
             return self.value
 
         from typing import cast
+
         decimal_latest = cast(Decimal, latest_val)
         # Cast RHS to avoid any ambiguity
         rhs = (price * self._multiplier) + (decimal_latest * (Decimal("1") - self._multiplier))

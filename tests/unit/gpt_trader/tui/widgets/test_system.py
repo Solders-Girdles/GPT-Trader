@@ -2,7 +2,7 @@ import pytest
 from textual.app import App, ComposeResult
 from textual.widgets import Label
 
-from gpt_trader.tui.models import SystemData
+from gpt_trader.tui.types import SystemStatus
 from gpt_trader.tui.widgets.system import SystemHealthWidget
 
 
@@ -13,7 +13,7 @@ class SystemHealthTestApp(App):
 
 class TestSystemHealthWidget:
     @pytest.mark.asyncio
-    async def test_update_system(self):
+    async def test_update_system(self) -> None:
         app = SystemHealthTestApp()
 
         async with app.run_test():
@@ -23,7 +23,7 @@ class TestSystemHealthWidget:
             assert widget.system_data.connection_status == "UNKNOWN"
 
             # Update with new data
-            new_data = SystemData(
+            new_data = SystemStatus(
                 api_latency=123.45,
                 connection_status="CONNECTED",
                 rate_limit_usage="15%",
@@ -44,11 +44,11 @@ class TestSystemHealthWidget:
             assert app.query_one("#cpu", Label).renderable == "5%"
 
     @pytest.mark.asyncio
-    async def test_disconnected_status(self):
+    async def test_disconnected_status(self) -> None:
         app = SystemHealthTestApp()
         async with app.run_test():
             widget = app.query_one(SystemHealthWidget)
-            new_data = SystemData(connection_status="DISCONNECTED")
+            new_data = SystemStatus(connection_status="DISCONNECTED")
             widget.update_system(new_data)
 
             assert app.query_one("#connection-status", Label).renderable == "DISCONNECTED"

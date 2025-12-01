@@ -2,7 +2,7 @@ from unittest.mock import MagicMock
 
 from textual.widgets import Label
 
-from gpt_trader.tui.models import RiskData
+from gpt_trader.tui.types import RiskState
 from gpt_trader.tui.widgets.risk import RiskWidget
 
 
@@ -19,7 +19,7 @@ class TestRiskWidget:
         widget.query_one = MagicMock(side_effect=query_side_effect)
 
         # Create data
-        data = RiskData(
+        data = RiskState(
             max_leverage=10.0,
             daily_loss_limit_pct=0.05,
             reduce_only_mode=True,

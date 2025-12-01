@@ -2,7 +2,7 @@ from unittest.mock import MagicMock
 
 from textual.widgets import DataTable, Label
 
-from gpt_trader.tui.models import DecisionData, StrategyData
+from gpt_trader.tui.types import DecisionData, StrategyState
 from gpt_trader.tui.widgets.strategy import StrategyWidget
 
 
@@ -24,7 +24,7 @@ class TestStrategyWidget:
         widget.query_one = MagicMock(side_effect=query_side_effect)
 
         # Create data
-        data = StrategyData(
+        data = StrategyState(
             active_strategies=["StrategyA", "StrategyB"],
             last_decisions={
                 "BTC-USD": DecisionData(

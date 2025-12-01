@@ -174,33 +174,6 @@ def build_bot(config: BotConfig) -> TradingBot:
     return container.create_bot()
 
 
-def build_bot_with_registry(config: BotConfig) -> tuple[TradingBot, ServiceRegistry]:
-    """
-    Build a TradingBot and return both bot and registry.
-
-    .. deprecated::
-        Use `build_bot()` instead and access registry via `bot.container.create_service_registry()`
-        if needed. This function is maintained for backward compatibility.
-
-    Args:
-        config: The bot configuration.
-
-    Returns:
-        Tuple of (TradingBot, ServiceRegistry) for backward compatibility.
-    """
-    bot = build_bot(config)
-    # Access registry from container if available, otherwise create one
-    if bot.container:
-        registry = bot.container.create_service_registry()
-    else:
-        # Fallback if for some reason container is missing (shouldn't happen with build_bot)
-        from gpt_trader.orchestration.service_registry import ServiceRegistry
-
-        registry = ServiceRegistry(config)
-
-    return bot, registry
-
-
 def bot_from_profile(profile: str) -> TradingBot:
     """
     Create a TradingBot from a profile name.
@@ -233,6 +206,5 @@ __all__ = [
     "resolve_runtime_paths",
     "RuntimePaths",
     "build_bot",
-    "build_bot_with_registry",  # Deprecated - use build_bot instead
     "bot_from_profile",
 ]

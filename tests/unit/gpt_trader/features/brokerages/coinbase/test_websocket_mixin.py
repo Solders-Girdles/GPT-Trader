@@ -23,7 +23,7 @@ class MockClientBase:
         self.auth = auth
 
 
-class TestableWebSocketClient(WebSocketClientMixin, MockClientBase):
+class MockWebSocketClient(WebSocketClientMixin, MockClientBase):
     """Testable client combining mixin with mock base."""
 
     def __init__(self, auth: MagicMock | None = None) -> None:
@@ -35,7 +35,7 @@ class TestWebSocketClientMixinInitialization:
 
     def test_initialization_creates_attributes(self):
         """Mixin should initialize WebSocket-related attributes."""
-        client = TestableWebSocketClient()
+        client = MockWebSocketClient()
 
         assert client._ws is None
         assert client._ws_lock is not None
@@ -48,7 +48,7 @@ class TestWebSocketClientMixinInitialization:
         mock_auth.api_key = "test_key"
         mock_auth.private_key = "test_secret"
 
-        client = TestableWebSocketClient(auth=mock_auth)
+        client = MockWebSocketClient(auth=mock_auth)
 
         assert client.auth is mock_auth
 
@@ -62,7 +62,7 @@ class TestWebSocketClientMixinGetWebSocket:
         mock_ws_instance = MagicMock()
         mock_ws_class.return_value = mock_ws_instance
 
-        client = TestableWebSocketClient()
+        client = MockWebSocketClient()
         result = client._get_websocket()
 
         mock_ws_class.assert_called_once()
@@ -75,7 +75,7 @@ class TestWebSocketClientMixinGetWebSocket:
         mock_ws_instance = MagicMock()
         mock_ws_class.return_value = mock_ws_instance
 
-        client = TestableWebSocketClient()
+        client = MockWebSocketClient()
 
         first = client._get_websocket()
         second = client._get_websocket()
@@ -91,7 +91,7 @@ class TestWebSocketClientMixinGetWebSocket:
         mock_auth.api_key = "my_api_key"
         mock_auth.private_key = "my_private_key"
 
-        client = TestableWebSocketClient(auth=mock_auth)
+        client = MockWebSocketClient(auth=mock_auth)
         client._get_websocket()
 
         mock_ws_class.assert_called_once()
@@ -102,7 +102,7 @@ class TestWebSocketClientMixinGetWebSocket:
     @patch("gpt_trader.features.brokerages.coinbase.client.websocket_mixin.CoinbaseWebSocket")
     def test_handles_no_auth(self, mock_ws_class):
         """WebSocket should work without auth credentials."""
-        client = TestableWebSocketClient(auth=None)
+        client = MockWebSocketClient(auth=None)
         client._get_websocket()
 
         mock_ws_class.assert_called_once()
@@ -120,7 +120,7 @@ class TestStreamOrderbook:
         mock_ws = MagicMock()
         mock_ws_class.return_value = mock_ws
 
-        client = TestableWebSocketClient()
+        client = MockWebSocketClient()
 
         # Start stream in background thread
         stop_event = threading.Event()
@@ -148,7 +148,7 @@ class TestStreamOrderbook:
         mock_ws = MagicMock()
         mock_ws_class.return_value = mock_ws
 
-        client = TestableWebSocketClient()
+        client = MockWebSocketClient()
 
         stop_event = threading.Event()
 
@@ -171,7 +171,7 @@ class TestStreamOrderbook:
         mock_ws = MagicMock()
         mock_ws_class.return_value = mock_ws
 
-        client = TestableWebSocketClient()
+        client = MockWebSocketClient()
 
         # Directly test the message callback and queue mechanism
         # Set stream_active manually to simulate an active stream
@@ -198,7 +198,7 @@ class TestStreamTrades:
         mock_ws = MagicMock()
         mock_ws_class.return_value = mock_ws
 
-        client = TestableWebSocketClient()
+        client = MockWebSocketClient()
 
         stop_event = threading.Event()
 
@@ -222,7 +222,7 @@ class TestStreamTrades:
         mock_ws = MagicMock()
         mock_ws_class.return_value = mock_ws
 
-        client = TestableWebSocketClient()
+        client = MockWebSocketClient()
 
         # Directly test the message callback and queue mechanism
         client._stream_active = True
@@ -247,7 +247,7 @@ class TestStreamControl:
         mock_ws = MagicMock()
         mock_ws_class.return_value = mock_ws
 
-        client = TestableWebSocketClient()
+        client = MockWebSocketClient()
 
         # Start a stream
         stop_event = threading.Event()
@@ -275,7 +275,7 @@ class TestStreamControl:
         mock_ws = MagicMock()
         mock_ws_class.return_value = mock_ws
 
-        client = TestableWebSocketClient()
+        client = MockWebSocketClient()
 
         # Initially not streaming
         assert client.is_streaming() is False
@@ -298,7 +298,7 @@ class TestMessageFiltering:
         mock_ws = MagicMock()
         mock_ws_class.return_value = mock_ws
 
-        client = TestableWebSocketClient()
+        client = MockWebSocketClient()
         received_messages = []
         stop_event = threading.Event()
 
@@ -330,7 +330,7 @@ class TestMessageFiltering:
         mock_ws = MagicMock()
         mock_ws_class.return_value = mock_ws
 
-        client = TestableWebSocketClient()
+        client = MockWebSocketClient()
 
         # Pre-populate queue with stale messages
         client._message_queue.put({"stale": "message1"})

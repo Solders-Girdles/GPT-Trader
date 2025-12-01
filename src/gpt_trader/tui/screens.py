@@ -1,21 +1,17 @@
 from textual.app import ComposeResult
 from textual.containers import Container
 from textual.screen import Screen
-from textual.widgets import Footer, Header, TabbedContent, TabPane
+from textual.widgets import Footer, Header
 
 from gpt_trader.tui.state import TuiState
 from gpt_trader.tui.widgets import (
-    AccountWidget,
-    BlockChartWidget,
     BotStatusWidget,
     LogWidget,
     MarketWatchWidget,
     OrdersWidget,
     PositionsWidget,
-    RiskWidget,
     StrategyWidget,
     SystemHealthWidget,
-    TradesWidget,
 )
 
 
@@ -26,37 +22,29 @@ class MainScreen(Screen):
         yield Header(show_clock=True)
         yield BotStatusWidget(id="bot-status-header")
 
-        with TabbedContent(initial="dashboard"):
-            with TabPane("Dashboard", id="dashboard"):
-                with Container(id="dashboard-container"):
-                    # Top Row: Market & Strategy
+        # Main Workspace Container
+        with Container(id="main-workspace"):
+            # Top Section: Trading & Execution (70% height)
+            with Container(id="trading-section"):
+                # Left Column: Market & Strategy
+                with Container(id="market-column"):
                     yield MarketWatchWidget(id="dash-market", classes="dashboard-item")
                     yield StrategyWidget(id="dash-strategy", classes="dashboard-item")
 
-                    # Bottom Row: Positions & System
+                # Right Column: Execution & Positions
+                with Container(id="execution-column"):
                     yield PositionsWidget(id="dash-positions", classes="dashboard-item")
+                    yield OrdersWidget(id="dash-orders", classes="dashboard-item")
+
+            # Bottom Section: Monitoring & Logs (30% height)
+            with Container(id="monitoring-section"):
+                # Left: System Health
+                with Container(id="system-column"):
                     yield SystemHealthWidget(id="dash-system", classes="dashboard-item")
 
-                    # Note: Risk and Logs removed from main dash grid for clarity,
-                    # or could be added if grid size is adjusted.
-                    # For now, keeping 2x2 grid as per styles.tcss
-
-            with TabPane("Market", id="market"):
-                yield MarketWatchWidget(id="market-watch-full")
-                yield BlockChartWidget(id="chart-full")
-
-            with TabPane("Positions", id="positions"):
-                yield PositionsWidget(id="positions-full")
-                yield OrdersWidget(id="orders-full")
-                yield TradesWidget(id="trades-full")
-
-            with TabPane("Account", id="account"):
-                yield AccountWidget(id="account-full")
-
-            with TabPane("System", id="system"):
-                yield SystemHealthWidget(id="system-full")
-                yield LogWidget(id="logs-full")
-                yield RiskWidget(id="risk-full")  # Moved Risk here or own tab
+                # Right: Logs
+                with Container(id="logs-column"):
+                    yield LogWidget(id="dash-logs", classes="dashboard-item")
 
         yield Footer()
 
@@ -68,80 +56,51 @@ class MainScreen(Screen):
             status_widget.running = state.running
             status_widget.uptime = state.uptime
             status_widget.equity = state.position_data.equity
+            status_widget.pnl = state.position_data.total_unrealized_pnl
+            # Assuming margin usage might be available in account data or calculated
+            # For now, we can leave it as default or update if available
         except Exception:
             pass
 
-        # Update Market Data (Dashboard and Full)
-        for widget_id in ["#dash-market", "#market-watch-full"]:
-            try:
-                market_widget = self.query_one(widget_id, MarketWatchWidget)
-                market_widget.update_prices(
-                    state.market_data.prices,
-                    state.market_data.last_update,
-                )
-            except Exception:
-                pass
+        # Update Market Data
+        try:
+            market_widget = self.query_one("#dash-market", MarketWatchWidget)
+            market_widget.update_prices(
+                state.market_data.prices,
+                state.market_data.last_update,
+            )
+        except Exception:
+            pass
 
-        # Update Strategy (Dashboard)
+        # Update Strategy
         try:
             strategy_widget = self.query_one("#dash-strategy", StrategyWidget)
             strategy_widget.update_strategy(state.strategy_data)
         except Exception:
             pass
 
-        # Update Risk (Dashboard)
+        # Update Positions
         try:
-            risk_widget = self.query_one("#dash-risk", RiskWidget)
-            risk_widget.update_risk(state.risk_data)
-        except Exception:
-            pass
-
-        # Update System Health (Dashboard and Full)
-        for widget_id in ["#dash-system", "#system-full"]:
-            try:
-                sys_widget = self.query_one(widget_id, SystemHealthWidget)
-                sys_widget.update_system(state.system_data)
-            except Exception:
-                pass
-
-        # Update Positions (Dashboard and Full)
-        for widget_id in ["#dash-positions", "#positions-full"]:
-            try:
-                pos_widget = self.query_one(widget_id, PositionsWidget)
-                pos_widget.update_positions(
-                    state.position_data.positions,
-                    state.position_data.total_unrealized_pnl,
-                )
-            except Exception:
-                pass
-
-        # Update Chart (Full Market Tab)
-        try:
-            chart_widget = self.query_one("#chart-full", BlockChartWidget)
-            if state.market_data.price_history:
-                symbol = next(iter(state.market_data.price_history))
-                history = state.market_data.price_history.get(symbol, [])
-                chart_widget.update_chart(history)
+            pos_widget = self.query_one("#dash-positions", PositionsWidget)
+            pos_widget.update_positions(
+                state.position_data.positions,
+                state.position_data.total_unrealized_pnl,
+            )
         except Exception:
             pass
 
         # Update Orders
         try:
-            orders_widget = self.query_one("#orders-full", OrdersWidget)
+            orders_widget = self.query_one("#dash-orders", OrdersWidget)
             orders_widget.update_orders(state.order_data.orders)
         except Exception:
             pass
 
-        # Update Trades
+        # Update System Health
         try:
-            trades_widget = self.query_one("#trades-full", TradesWidget)
-            trades_widget.update_trades(state.trade_data.trades)
+            sys_widget = self.query_one("#dash-system", SystemHealthWidget)
+            sys_widget.update_system(state.system_data)
         except Exception:
             pass
 
-        # Update Account
-        try:
-            account_widget = self.query_one("#account-full", AccountWidget)
-            account_widget.update_account(state.account_data)
-        except Exception:
-            pass
+        # Logs are updated via the logging handler, not here directly

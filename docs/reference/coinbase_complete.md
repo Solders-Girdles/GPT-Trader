@@ -217,8 +217,8 @@ uv run python scripts/production_preflight.py --profile canary
 # Smoke test the trading loop (mock broker)
 uv run coinbase-trader run --profile dev --dev-fast
 
-# Inspect streaming telemetry
-uv run python scripts/perps_dashboard.py --profile dev --refresh 5 --window-min 5
+# Inspect streaming telemetry via TUI
+uv run coinbase-trader run --profile dev --tui
 
 # Export Prometheus-compatible metrics
 uv run python scripts/monitoring/export_metrics.py --metrics-file var/data/coinbase_trader/prod/metrics.json

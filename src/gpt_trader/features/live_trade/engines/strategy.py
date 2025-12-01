@@ -75,6 +75,10 @@ class TradingEngine(BaseEngine):
         self._prune_interval_seconds = 3600  # 1 hour
         self._prune_max_rows = 1_000_000  # Keep 1M events max
 
+        # System health tracking
+        self._last_latency = 0.0
+        self._connection_status = "UNKNOWN"
+
     @property
     def status_reporter(self) -> StatusReporter:
         return self._status_reporter
@@ -248,18 +252,15 @@ class TradingEngine(BaseEngine):
             memory_usage = "Unknown"
             cpu_usage = "Unknown"
 
-        # Estimate API latency (simple ping to broker if possible, or just track last request time)
-        # For now, we'll use a placeholder or track it via a decorator later.
-        # Let's assume 0.0 for now until we instrument the broker client.
-        latency = 0.0
+        # Use tracked latency and connection status
+        latency = self._last_latency * 1000  # Convert to ms
 
-        connection = "CONNECTED" if self.context.broker else "DISCONNECTED"
         # Rate limit usage is tricky without broker headers, placeholder for now
         rate_limit = "OK"
 
         self._status_reporter.update_system(
             latency=latency,
-            connection=connection,
+            connection=self._connection_status,
             rate_limit=rate_limit,
             memory=memory_usage,
             cpu=cpu_usage,
@@ -322,9 +323,15 @@ class TradingEngine(BaseEngine):
         for symbol in self.context.config.symbols:
             # Offload blocking network call
             try:
+                start_time = time.time()
                 ticker = await asyncio.to_thread(self.context.broker.get_ticker, symbol)
+
+                # Update latency and connection status
+                self._last_latency = time.time() - start_time
+                self._connection_status = "CONNECTED"
             except Exception as e:
                 logger.error(f"Failed to fetch ticker for {symbol}: {e}")
+                self._connection_status = "DISCONNECTED"
                 continue
 
             price = Decimal(str(ticker.get("price", 0)))

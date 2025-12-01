@@ -559,10 +559,10 @@ await validator.validate_last_n_cycles(n=10)
 
 ## Production-Parity Backtesting
 
-> **WARNING: NOT IMPLEMENTED**
+> **WARNING: PARTIALLY IMPLEMENTED**
 >
-> This section documents a **planned feature** that does not exist yet.
-> The imports below (`gpt_trader.features.optimize.*`) will fail.
+> This section documents features that are currently being built in `gpt_trader.features.optimize`.
+> While the `optimize` package exists, the specific `backtest_engine.py` interface described below may differ from the actual implementation in `batch_runner.py`.
 > For existing backtesting functionality, see `gpt_trader.backtesting` module.
 
 ### Key Features

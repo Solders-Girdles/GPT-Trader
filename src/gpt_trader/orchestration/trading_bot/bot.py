@@ -101,6 +101,51 @@ class TradingBot:
         self.running = False
         await self.engine.shutdown()
 
+    async def flatten_and_stop(self) -> list[str]:
+        """
+        Emergency shutdown: Stop bot and close all open positions.
+        Returns a list of messages describing actions taken.
+        """
+        self.running = False
+        logger.warning("EMERGENCY: Initiating Flatten & Stop")
+        messages = ["Bot stopped."]
+
+        if not self.broker:
+            messages.append("Error: No broker connection available.")
+            await self.engine.shutdown()
+            return messages
+
+        try:
+            # 1. Fetch positions
+            positions = await asyncio.to_thread(self.broker.list_positions)
+            if not positions:
+                messages.append("No open positions found.")
+            else:
+                # 2. Close each position
+                from gpt_trader.core import OrderSide, OrderType
+
+                for pos in positions:
+                    try:
+                        # Determine closing side
+                        side = OrderSide.SELL if pos.quantity > 0 else OrderSide.BUY
+                        # Use absolute quantity for order
+                        quantity = abs(pos.quantity)
+
+                        await asyncio.to_thread(
+                            self.broker.place_order, pos.symbol, side, OrderType.MARKET, quantity
+                        )
+                        messages.append(f"Submitted CLOSE for {pos.symbol} ({quantity})")
+                    except Exception as e:
+                        logger.error(f"Failed to close {pos.symbol}: {e}")
+                        messages.append(f"Failed to close {pos.symbol}: {e}")
+
+        except Exception as e:
+            logger.error(f"Flatten failed: {e}")
+            messages.append(f"Critical Error during flatten: {e}")
+
+        await self.engine.shutdown()
+        return messages
+
     async def shutdown(self) -> None:
         """Alias for stop() to match CLI interface."""
         await self.stop()

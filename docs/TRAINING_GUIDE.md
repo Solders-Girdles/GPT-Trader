@@ -57,6 +57,7 @@ its ML workflows.
 
 - Study `docs/ops/operations_runbook.md` and `docs/MONITORING_PLAYBOOK.md` for
   on-call expectations.
+- **Monitoring**: Use the TUI (`--tui`) for real-time monitoring and control.
 - Manual tooling:
 
   ```bash
@@ -72,5 +73,5 @@ its ML workflows.
 
 - Historical guides for the previous generation system were removed from the
   tree; refer to git history if you need them.
-- Review agent-specific docs (`docs/agents/Agents.md`, `docs/agents/CLAUDE.md`, `docs/agents/Gemini.md`) for
+- Review agent-specific docs (`docs/guides/agents.md`, `.claude/CLAUDE.md`) for
   collaboration patterns.

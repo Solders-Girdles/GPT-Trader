@@ -1,6 +1,7 @@
 from textual.app import ComposeResult
 from textual.widgets import DataTable, Label, Static
 
+from gpt_trader.tui.helpers import safe_update
 from gpt_trader.tui.types import StrategyState
 
 
@@ -15,6 +16,7 @@ class StrategyWidget(Static):
         table = self.query_one(DataTable)
         table.add_columns("Symbol", "Action", "Conf", "Reason", "Time")
 
+    @safe_update
     def update_strategy(self, data: StrategyState) -> None:
         table = self.query_one(DataTable)
         table.clear()

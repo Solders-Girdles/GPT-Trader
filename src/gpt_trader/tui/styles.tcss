@@ -97,13 +97,55 @@ ContentSwitcher {
     height: 1fr;
 }
 
-/* Dashboard Grid */
-#dashboard-container {
-    layout: grid;
-    grid-size: 2 2;
-    grid-columns: 1fr 1fr;
-    grid-rows: 1fr 1fr;
-    grid-gutter: 1;
+/* Main Workspace Layout */
+#main-workspace {
+    layout: vertical;
+    height: 100%;
+}
+
+/* Top Section: Trading & Execution */
+#trading-section {
+    height: 70%;
+    layout: horizontal;
+    border-bottom: solid $nord3;
+}
+
+#market-column {
+    width: 50%;
+    height: 100%;
+    border-right: solid $nord3;
+    layout: vertical;
+}
+
+#execution-column {
+    width: 50%;
+    height: 100%;
+    layout: vertical;
+}
+
+/* Bottom Section: Monitoring & Logs */
+#monitoring-section {
+    height: 30%;
+    layout: horizontal;
+}
+
+#system-column {
+    width: 40%;
+    height: 100%;
+    border-right: solid $nord3;
+}
+
+#logs-column {
+    width: 60%;
+    height: 100%;
+}
+
+/* Dashboard Items */
+.dashboard-item {
+    height: 1fr;
+    border: none;
+    background: $nord1;
+    padding: 0;
 }
 
 .dashboard-item {

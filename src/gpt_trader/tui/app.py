@@ -29,6 +29,7 @@ class TraderApp(App):
         ("s", "toggle_bot", "Start/Stop Bot"),
         ("c", "show_config", "Config"),
         ("l", "focus_logs", "Focus Logs"),
+        ("p", "panic", "PANIC"),
     ]
 
     def __init__(self, bot: TradingBot) -> None:
@@ -135,9 +136,13 @@ class TraderApp(App):
     async def action_toggle_bot(self) -> None:
         """Toggle bot running state."""
         if self.bot.running:
+            self.notify("Stopping bot...", title="Status")
             await self.bot.stop()
+            self.notify("Bot stopped.", title="Status")
         else:
+            self.notify("Starting bot...", title="Status")
             asyncio.create_task(self.bot.run())
+            self.notify("Bot started.", title="Status")
 
     async def action_show_config(self) -> None:
         """Show configuration modal."""
@@ -150,6 +155,23 @@ class TraderApp(App):
             self.query_one("#logs-full").focus()
         except Exception:
             pass
+
+    async def action_panic(self) -> None:
+        """Trigger panic modal."""
+        from gpt_trader.tui.widgets.panic import PanicModal
+
+        def handle_panic(confirmed: bool) -> None:
+            if confirmed:
+                asyncio.create_task(self._execute_panic())
+
+        self.push_screen(PanicModal(), handle_panic)
+
+    async def _execute_panic(self) -> None:
+        """Execute panic sequence."""
+        self.notify("Executing FLATTEN & STOP...", severity="error", timeout=10)
+        messages = await self.bot.flatten_and_stop()
+        for msg in messages:
+            self.notify(msg, severity="warning" if "Error" in msg else "information", timeout=10)
 
     async def action_quit(self) -> None:
         """Quit the application."""

@@ -11,6 +11,8 @@ class BotStatusWidget(Static):
     cycle_count = reactive(0)
     running = reactive(False)
     equity = reactive("0.00")
+    pnl = reactive("0.00")
+    margin_usage = reactive("0.00%")
 
     def compose(self) -> ComposeResult:
         with Horizontal():
@@ -27,6 +29,12 @@ class BotStatusWidget(Static):
             yield Label("|", classes="status-item")
             yield Label("Equity: ", classes="status-item")
             yield Label("$0.00", id="equity-label", classes="status-value")
+            yield Label("|", classes="status-item")
+            yield Label("PnL: ", classes="status-item")
+            yield Label("$0.00", id="pnl-label", classes="status-value")
+            yield Label("|", classes="status-item")
+            yield Label("Margin: ", classes="status-item")
+            yield Label("0.00%", id="margin-label", classes="status-value")
 
     def watch_running(self, running: bool) -> None:
         label = self.query_one("#status-label", Label)
@@ -50,3 +58,9 @@ class BotStatusWidget(Static):
 
     def watch_equity(self, equity: str) -> None:
         self.query_one("#equity-label", Label).update(f"${equity}")
+
+    def watch_pnl(self, pnl: str) -> None:
+        self.query_one("#pnl-label", Label).update(f"${pnl}")
+
+    def watch_margin_usage(self, margin: str) -> None:
+        self.query_one("#margin-label", Label).update(f"{margin}")

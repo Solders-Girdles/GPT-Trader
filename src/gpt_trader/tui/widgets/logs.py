@@ -1,7 +1,8 @@
 import logging
 
 from textual.app import ComposeResult
-from textual.widgets import Label, Log, Static
+from textual.containers import Horizontal
+from textual.widgets import Label, Log, Select, Static
 
 
 class TuiLogHandler(logging.Handler):
@@ -25,7 +26,7 @@ class TuiLogHandler(logging.Handler):
             else:
                 msg = f"[#4c566a]{msg}[/#4c566a]"  # Nord Grey
 
-            self.widget.write_log(msg)
+            self.widget.write_log(msg, record.levelno)
         except Exception:
             self.handleError(record)
 
@@ -33,8 +34,38 @@ class TuiLogHandler(logging.Handler):
 class LogWidget(Static):
     """Displays application logs."""
 
+    DEFAULT_CSS = """
+    LogWidget {
+        background: #2e3440;
+        height: 100%;
+    }
+
+    LogWidget .header-row {
+        height: 3;
+        dock: top;
+        padding: 0 1;
+        background: #3b4252;
+    }
+
+    LogWidget Select {
+        width: 20;
+    }
+    """
+
     def compose(self) -> ComposeResult:
-        yield Label("SYSTEM LOGS", classes="header")
+        with Horizontal(classes="header-row"):
+            yield Label("SYSTEM LOGS", classes="header")
+            yield Select(
+                [
+                    ("DEBUG", logging.DEBUG),
+                    ("INFO", logging.INFO),
+                    ("WARNING", logging.WARNING),
+                    ("ERROR", logging.ERROR),
+                ],
+                value=logging.INFO,
+                allow_blank=False,
+                id="log-level-select",
+            )
         yield Log(id="log-stream", highlight=True)
 
     def on_mount(self) -> None:
@@ -46,14 +77,24 @@ class LogWidget(Static):
         handler.setFormatter(formatter)
         logging.getLogger().addHandler(handler)
 
-    def write_log(self, message: str) -> None:
+        # Set initial filter level
+        self._min_level = logging.INFO
+
+    def on_select_changed(self, event: Select.Changed) -> None:
+        """Handle log level selection change."""
+        if event.select.id == "log-level-select" and event.value is not None:
+            self._min_level = int(event.value)
+
+    def write_log(self, message: str, level: int) -> None:
         # Schedule write on the main thread
         if self.app:
-            self.app.call_from_thread(self._write_line, message)
+            self.app.call_from_thread(self._write_line, message, level)
 
-    def _write_line(self, message: str) -> None:
+    def _write_line(self, message: str, level: int) -> None:
         try:
-            log = self.query_one(Log)
-            log.write_line(message)
+            # Only write if level meets minimum requirement
+            if level >= getattr(self, "_min_level", logging.INFO):
+                log = self.query_one(Log)
+                log.write_line(message)
         except Exception:
             pass

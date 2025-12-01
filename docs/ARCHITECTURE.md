@@ -15,7 +15,7 @@ While this document describes the **target architecture**, you will encounter "z
 ---
 status: transition
 last-updated: 2025-11-29
-roadmap: See PROJECT_ROADMAP.md for implementation phases
+roadmap: See docs/TUI_ROADMAP.md for TUI phases
 ---
 
 ## Current State
@@ -57,6 +57,7 @@ src/gpt_trader/
 ├── monitoring/          # Runtime guards, configuration guardian, system logger
 ├── preflight/           # Production preflight verification and startup checks
 ├── security/            # Security primitives: input sanitization, secrets management
+├── tui/                 # Terminal User Interface (Textual-based)
 └── validation/          # Declarative validators and decorators
 ```
 
@@ -88,6 +89,7 @@ Risk Guards → Coinbase Brokerage Adapter → Metrics + Telemetry
 | `gpt_trader/features/brokerages/coinbase/rest/` | REST service layer: orders, portfolio, products, P&L calculation |
 | `gpt_trader/features/position_sizing` | Kelly-style sizing with guardrails |
 | `gpt_trader/monitoring` | Runtime guard orchestration, alert dispatch, system metrics |
+| `gpt_trader/tui` | Terminal User Interface for monitoring and control |
 | `gpt_trader/validation` | Predicate-based validators and input decorators |
 
 #### Coordinator Pattern (new 2025-10)
@@ -186,6 +188,17 @@ The strategy orchestration uses a **Filter Pipeline** pattern to evaluate trade 
 - **Implementation**: `src/gpt_trader/orchestration/strategy_orchestrator/spot_filters.py`
 - **Current Status**: The pipeline is currently a pass-through. Specific filter implementations (Volume, Momentum, Trend) have been removed and will be reintroduced as needed.
 - **Usage**: `SpotFiltersMixin` provides the hook for these checks.
+
+#### Signal Ensemble Architecture
+
+The system now uses a **Signal Ensemble** approach to combine multiple trading signals.
+
+- **Components**:
+    - `Signal`: Individual trading signal (e.g., RSI, MACD).
+    - `Ensemble`: Collection of signals with weights.
+    - `Voter`: Logic to combine signal outputs into a final decision.
+- **Location**: `src/gpt_trader/features/strategy/ensemble/`
+- **Status**: Implemented and integrated into `StrategyEngine`.
 
 
 ### Derivatives Gate

@@ -104,7 +104,7 @@ class TuiState(Widget):
                 items = pos_data.items()
             else:
                 # Fallback or empty if not iterable as dict
-                items = []
+                items = {}.items()
 
             for symbol, p_data in items:
                 if isinstance(p_data, dict):

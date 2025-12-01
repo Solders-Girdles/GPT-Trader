@@ -58,8 +58,8 @@ uv run python scripts/production_preflight.py --profile canary
 # Smoke test the trading loop
 uv run coinbase-trader run --profile dev --dev-fast
 
-# Inspect streaming telemetry
-uv run python scripts/perps_dashboard.py --profile dev --refresh 5 --window-min 5
+# Inspect streaming telemetry via TUI
+uv run coinbase-trader run --profile dev --tui
 ```
 
 ### 3. Canary Deployment
@@ -116,7 +116,7 @@ uv run coinbase-trader run --profile prod                       # Full trading o
 - ✅ Comprehensive logging
 
 ### Operational Requirements
-- ✅ Monitoring dashboards configured
+- ✅ Monitoring dashboards configured (TUI)
 - ✅ Alert thresholds defined
 - ✅ Incident response procedures
 - ✅ Rollback plan documented

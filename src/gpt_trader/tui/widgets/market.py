@@ -4,6 +4,8 @@ from decimal import Decimal
 from textual.app import ComposeResult
 from textual.widgets import DataTable, Label, Static
 
+from gpt_trader.tui.helpers import safe_update
+
 
 class MarketWatchWidget(Static):
     """Displays market data."""
@@ -17,6 +19,7 @@ class MarketWatchWidget(Static):
         table.add_columns("Symbol", "Price", "Updated")
         self.previous_prices: dict[str, float] = {}
 
+    @safe_update
     def update_prices(self, prices: dict[str, str], last_update: float | None) -> None:
         table = self.query_one(DataTable)
         table.clear()
@@ -58,6 +61,7 @@ class BlockChartWidget(Static):
         yield Label("PRICE CHART (Last 20 Ticks)", classes="header")
         yield Static(id="chart-display", classes="chart-content")
 
+    @safe_update
     def update_chart(self, prices: list[Decimal]) -> None:
         if not prices:
             self.query_one("#chart-display", Static).update("No Data")

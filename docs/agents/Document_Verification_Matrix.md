@@ -16,26 +16,28 @@ This matrix helps developers and AI agents determine which documentation sources
 
 | Document | Last Verified | Notes |
 |----------|---------------|-------|
-| `docs/ARCHITECTURE.md` | 2025-11-25 | Core system architecture |
-| `docs/guides/backtesting.md` | 2025-11-25 | Backtesting framework guide |
-| `src/gpt_trader/features/brokerages/coinbase/README.md` | 2025-11-25 | Coinbase integration |
+| `docs/ARCHITECTURE.md` | 2025-12-01 | Core system architecture |
+| `docs/TUI_ROADMAP.md` | 2025-12-01 | TUI development roadmap |
+| `docs/guides/backtesting.md` | 2025-12-01 | Backtesting framework guide |
+| `src/gpt_trader/features/brokerages/coinbase/README.md` | 2025-12-01 | Coinbase integration |
 | `.claude/CLAUDE.md` | Current | Project instructions for AI agents |
 
 ### Medium Trust (Generally Accurate)
 
 | Document | Notes |
 |----------|-------|
-| `docs/guides/production.md` | Production deployment guide |
-| `docs/guides/testing.md` | Testing conventions |
-| `docs/RISK_INTEGRATION_GUIDE.md` | Risk management integration |
-| `docs/reference/trading_logic_perps.md` | Perpetuals trading logic |
+| `docs/guides/production.md` | 2025-12-01 | Production deployment guide |
+| `docs/guides/testing.md` | 2025-12-01 | Testing conventions |
+| `docs/RISK_INTEGRATION_GUIDE.md` | 2025-12-01 | Risk management integration |
+| `docs/reference/trading_logic_perps.md` | 2025-12-01 | Perpetuals trading logic |
+| `docs/TUI_GUIDE.md` | 2025-12-01 | TUI User Guide |
 
 ### Low Trust (May Be Stale)
 
 | Document | Notes |
 |----------|-------|
-| `docs/TRAINING_GUIDE.md` | May reference old patterns |
-| `docs/reference/coinbase_complete.md` | API details may have drifted |
+| `docs/TRAINING_GUIDE.md` | 2025-12-01 | Updated links and TUI reference |
+| `docs/reference/coinbase_complete.md` | 2025-12-01 | Consolidated reference |
 
 ## Verification Workflow
 

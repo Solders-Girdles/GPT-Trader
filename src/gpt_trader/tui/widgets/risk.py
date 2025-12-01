@@ -2,6 +2,7 @@ from textual.app import ComposeResult
 from textual.containers import Grid
 from textual.widgets import Label, Static
 
+from gpt_trader.tui.helpers import safe_update
 from gpt_trader.tui.types import RiskState
 
 
@@ -27,6 +28,7 @@ class RiskWidget(Static):
             yield Label("Active Guards:", classes="risk-label")
             yield Label("None", id="active-guards", classes="risk-value")
 
+    @safe_update
     def update_risk(self, data: RiskState) -> None:
         # Update Max Leverage
         self.query_one("#max-leverage", Label).update(f"{data.max_leverage}x")

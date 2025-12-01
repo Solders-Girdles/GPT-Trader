@@ -1,6 +1,7 @@
 from textual.app import ComposeResult
 from textual.widgets import DataTable, Label, Static
 
+from gpt_trader.tui.helpers import safe_update
 from gpt_trader.tui.types import (
     Order,
     Position,
@@ -19,6 +20,7 @@ class PositionsWidget(Static):
         table = self.query_one(DataTable)
         table.add_columns("Sym", "Qty", "Entry", "PnL")
 
+    @safe_update
     def update_positions(self, positions: dict[str, Position], total_pnl: str) -> None:
         table = self.query_one(DataTable)
         table.clear()
@@ -42,6 +44,7 @@ class OrdersWidget(Static):
         table = self.query_one(DataTable)
         table.add_columns("Symbol", "Side", "Quantity", "Price", "Status")
 
+    @safe_update
     def update_orders(self, orders: list[Order]) -> None:
         table = self.query_one(DataTable)
         table.clear()
@@ -65,6 +68,7 @@ class TradesWidget(Static):
         table = self.query_one(DataTable)
         table.add_columns("Symbol", "Side", "Qty", "Price", "Order ID", "Time")
 
+    @safe_update
     def update_trades(self, trades: list[Trade]) -> None:
         table = self.query_one(DataTable)
         table.clear()

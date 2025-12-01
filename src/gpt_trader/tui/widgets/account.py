@@ -2,6 +2,7 @@ from textual.app import ComposeResult
 from textual.containers import Container
 from textual.widgets import DataTable, Label, Static
 
+from gpt_trader.tui.helpers import safe_update
 from gpt_trader.tui.types import AccountSummary
 
 
@@ -42,6 +43,7 @@ class AccountWidget(Static):
         row.styles.layout = "horizontal"
         row.styles.height = "auto"
 
+    @safe_update
     def update_account(self, data: AccountSummary) -> None:
         # Update Summary
         try:

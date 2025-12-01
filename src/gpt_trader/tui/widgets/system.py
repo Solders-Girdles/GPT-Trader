@@ -3,6 +3,7 @@ from textual.containers import Horizontal, Vertical
 from textual.reactive import reactive
 from textual.widgets import Label, Static
 
+from gpt_trader.tui.helpers import safe_update
 from gpt_trader.tui.types import SystemStatus
 
 
@@ -77,6 +78,7 @@ class SystemHealthWidget(Static):
                 yield Label("CPU:", classes="label")
                 yield Label("0%", id="cpu", classes="value")
 
+    @safe_update
     def update_system(self, data: SystemStatus) -> None:
         """Update the widget with new system data."""
         self.system_data = data

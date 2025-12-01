@@ -1,5 +1,9 @@
 # GPT-Trader Monitoring & Dashboards
 
+> **⚠️ DEPRECATED**: The primary interface for monitoring GPT-Trader is now the Terminal User Interface (TUI). Please refer to [TUI_GUIDE.md](TUI_GUIDE.md) for current instructions.
+
+The legacy monitoring stack (Streamlit, standalone scripts) is being phased out in favor of the TUI.
+
 The current monitoring stack centres on runtime telemetry emitted by
 `coinbase-trader`, the live risk engine, and the Prometheus-compatible exporter. This
 guide covers the primary surfaces now that the legacy Streamlit UI has been

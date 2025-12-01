@@ -1,9 +1,10 @@
-import asyncio
-from unittest.mock import MagicMock, AsyncMock
+from unittest.mock import AsyncMock, MagicMock
+
 import pytest
-from textual.pilot import Pilot
-from gpt_trader.tui.app import TraderApp
+
 from gpt_trader.monitoring.status_reporter import StatusReporter
+from gpt_trader.tui.app import TraderApp
+
 
 @pytest.fixture
 def mock_bot():
@@ -21,17 +22,21 @@ def mock_bot():
 
     return bot
 
+
 @pytest.mark.asyncio
 async def test_app_startup(mock_bot):
     """Test that the app starts up and mounts the main screen."""
     app = TraderApp(bot=mock_bot)
     async with app.run_test() as pilot:
         # Check if MainScreen is mounted
-        assert pilot.app.screen.id is None # MainScreen usually doesn't have an ID unless set, but check type
+        assert (
+            pilot.app.screen.id is None
+        )  # MainScreen usually doesn't have an ID unless set, but check type
         assert "MainScreen" in str(type(pilot.app.screen))
 
         # Check if Bot started
         mock_bot.run.assert_called()
+
 
 @pytest.mark.asyncio
 async def test_tui_receives_status_update(mock_bot):
@@ -43,7 +48,7 @@ async def test_tui_receives_status_update(mock_bot):
         status = {
             "engine": {"running": True},
             "market": {"last_prices": {"BTC-USD": "50000"}},
-            "risk": {"max_leverage": 5.0}
+            "risk": {"max_leverage": 5.0},
         }
 
         # Push update
@@ -61,7 +66,7 @@ async def test_tui_receives_status_update(mock_bot):
         assert len(reporter._observers) > 0
 
         # Trigger manually for test speed
-        obs = reporter._observers[0]
+        reporter._observers[0]
         # It calls call_from_thread, which works in textual test pilot?
         # Textual tests run in async, call_from_thread schedules on main loop.
         # Let's try calling _apply_status_update directly to verify logic,
@@ -73,6 +78,7 @@ async def test_tui_receives_status_update(mock_bot):
         # Check TuiState
         assert app.tui_state.market_data.prices["BTC-USD"] == "50000"
         assert app.tui_state.risk_data.max_leverage == 5.0
+
 
 @pytest.mark.asyncio
 async def test_toggle_bot(mock_bot):

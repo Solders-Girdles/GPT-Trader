@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 import yaml
 
@@ -71,7 +71,7 @@ class OptimizeCliConfig:
 
 
 # Mapping of preset names to factory functions
-OBJECTIVE_PRESETS: dict[str, tuple[type | callable, str]] = {
+OBJECTIVE_PRESETS: dict[str, tuple[type | Callable, str]] = {
     # Simple objectives
     "sharpe": (SharpeRatioObjective, "maximize"),
     "sortino": (SortinoRatioObjective, "maximize"),

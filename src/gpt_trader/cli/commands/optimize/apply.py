@@ -127,7 +127,7 @@ def execute(args: Namespace) -> CliResponse | int:
     run_data = run.to_dict()
 
     # Load base config if provided
-    base_config = {}
+    base_config: dict[str, Any] = {}
     if args.base_config:
         if not args.base_config.exists():
             if output_format == "json":

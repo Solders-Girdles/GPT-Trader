@@ -190,14 +190,34 @@ class OnlineEMA:
                 self.initialized = True
                 # Process any remaining warmup values
                 for p in self.warmup_values[self.period :]:
+                    # Use local var for type narrowing
+                    current_val = self.value
+                    if current_val is None:
+                        self.value = p
+                        continue
+
+                    # Explicit cast for mypy
+                    from typing import cast
+                    decimal_val = cast(Decimal, current_val)
                     self.value = (p * self._multiplier) + (
-                        self.value * (Decimal("1") - self._multiplier)
+                        decimal_val * (Decimal("1") - self._multiplier)
                     )
                 self.warmup_values = []  # Free memory
             return self.value
 
         # Standard EMA update: O(1)
-        self.value = (price * self._multiplier) + (self.value * (Decimal("1") - self._multiplier))
+        # Type narrowing for self.value
+        latest_val = self.value
+        if latest_val is None:
+            # Should not happen if initialized, but safe fallback
+            self.value = price
+            return self.value
+
+        from typing import cast
+        decimal_latest = cast(Decimal, latest_val)
+        # Cast RHS to avoid any ambiguity
+        rhs = (price * self._multiplier) + (decimal_latest * (Decimal("1") - self._multiplier))
+        self.value = cast(Decimal, rhs)
         return self.value
 
     def serialize(self) -> dict[str, Any]:

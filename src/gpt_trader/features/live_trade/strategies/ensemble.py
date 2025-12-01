@@ -88,7 +88,7 @@ class EnsembleStrategy(BaseStrategy):
 
         # Initialize default combiner if not provided
         if combiner is None:
-            self.combiner = RegimeAwareCombiner(self.config.combiner_config)
+            self.combiner: SignalCombiner = RegimeAwareCombiner(self.config.combiner_config)
         else:
             self.combiner = combiner
 
@@ -157,7 +157,7 @@ class EnsembleStrategy(BaseStrategy):
                     reason = f"Signal reversed to bullish ({strength:.2f})"
 
             # Stop Loss / Take Profit (Risk Overlay)
-            entry_price = position_state.get("entry_price")
+            entry_price = position_state.get("entry_price") if position_state else None
             if entry_price:
                 entry = float(entry_price)
                 current = float(current_mark)

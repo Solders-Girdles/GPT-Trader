@@ -61,7 +61,7 @@ class PerformanceMonitor:
     auto_save_interval: int = 100
 
     # Components
-    metrics: MetricsAggregator = field(default=None)
+    metrics: MetricsAggregator | None = field(default=None)
     alerts: AlertManager = field(default_factory=AlertManager)
 
     # State tracking
@@ -98,6 +98,8 @@ class PerformanceMonitor:
         """Save state to storage."""
         if not self.storage_path:
             return
+
+        assert self.metrics is not None, "Metrics aggregator not initialized"
 
         state_file = self.storage_path / "monitor_state.json"
         data = {
@@ -186,6 +188,8 @@ class PerformanceMonitor:
         Returns:
             Created performance snapshot
         """
+        assert self.metrics is not None, "Metrics aggregator not initialized"
+
         # Calculate derived metrics
         total_return = float((equity - self.initial_equity) / self.initial_equity)
         drawdown = (
@@ -267,6 +271,8 @@ class PerformanceMonitor:
             regime_at_entry: Regime when trade opened
             regime_at_exit: Regime when trade closed
         """
+        assert self.metrics is not None, "Metrics aggregator not initialized"
+
         trade = TradeRecord(
             symbol=symbol,
             side=side,
@@ -283,6 +289,8 @@ class PerformanceMonitor:
 
     def _check_milestones(self, snapshot: PerformanceSnapshot) -> None:
         """Check for and emit milestone events."""
+        assert self.metrics is not None, "Metrics aggregator not initialized"
+
         # New equity high
         if snapshot.equity > self.metrics._peak_equity:
             self._emit(
@@ -316,6 +324,7 @@ class PerformanceMonitor:
 
     def get_metrics_summary(self) -> dict[str, Any]:
         """Get metrics summary."""
+        assert self.metrics is not None, "Metrics aggregator not initialized"
         return self.metrics.get_summary()
 
     def get_alert_summary(self) -> dict[str, Any]:
@@ -324,18 +333,22 @@ class PerformanceMonitor:
 
     def get_regime_performance(self) -> dict[str, dict[str, float]]:
         """Get performance breakdown by regime."""
+        assert self.metrics is not None, "Metrics aggregator not initialized"
         return self.metrics.get_regime_performance()
 
     def get_trade_statistics(self) -> dict[str, Any]:
         """Get trade statistics."""
+        assert self.metrics is not None, "Metrics aggregator not initialized"
         return self.metrics.get_trade_statistics()
 
     def get_rolling_metrics(self, window: int = 20) -> dict[str, list[float]]:
         """Get rolling window metrics."""
+        assert self.metrics is not None, "Metrics aggregator not initialized"
         return self.metrics.get_rolling_metrics(window)
 
     def get_summary(self) -> dict[str, Any]:
         """Get comprehensive summary of all monitoring data."""
+        assert self.metrics is not None, "Metrics aggregator not initialized"
         return {
             "overview": {
                 "initial_equity": str(self.initial_equity),
@@ -379,6 +392,7 @@ class PerformanceMonitor:
         Args:
             initial_equity: New initial equity
         """
+        assert self.metrics is not None, "Metrics aggregator not initialized"
         if initial_equity:
             self.initial_equity = initial_equity
 

@@ -133,9 +133,9 @@ class MetricsAggregator:
     initial_equity: Decimal = Decimal("10000")
 
     # Rolling data stores
-    _snapshots: deque = field(default_factory=lambda: deque(maxlen=1000))
+    _snapshots: deque[PerformanceSnapshot] = field(default_factory=lambda: deque(maxlen=1000))
     _trades: list[TradeRecord] = field(default_factory=list)
-    _daily_returns: deque = field(default_factory=lambda: deque(maxlen=252))
+    _daily_returns: deque[float] = field(default_factory=lambda: deque(maxlen=252))
     _regime_performance: dict[str, list[float]] = field(default_factory=dict)
 
     # Peak tracking

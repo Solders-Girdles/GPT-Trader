@@ -7,7 +7,7 @@ classification, enabling fast backtesting without per-bar overhead.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Iterator, Sequence
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
@@ -70,7 +70,7 @@ class RegimeHistory:
     def __len__(self) -> int:
         return len(self.snapshots)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[RegimeSnapshot]:
         return iter(self.snapshots)
 
     def get_regime_at(self, timestamp: datetime) -> RegimeSnapshot | None:

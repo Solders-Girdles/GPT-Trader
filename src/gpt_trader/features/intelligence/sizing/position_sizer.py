@@ -330,7 +330,11 @@ class PositionSizer:
 
         # Scale by regime confidence (uncertain regime = more conservative)
         confidence_adjustment = 0.5 + (0.5 * regime_state.confidence)
-        return base_factor * confidence_adjustment
+        # Ensure explicit float types
+        bf: float = float(base_factor)
+        ca: float = float(confidence_adjustment)
+        # Force return type for mypy
+        return float(bf * ca)
 
     def _get_volatility_factor(self, symbol: str, current_price: Decimal) -> float:
         """Calculate volatility-based sizing factor.
@@ -428,7 +432,8 @@ class PositionSizer:
             return position_fraction * stop_percent
 
         # Default: assume 2x ATR stop = ~4% typical move
-        return position_fraction * 0.04
+        from typing import cast
+        return cast(float, position_fraction * 0.04)
 
     def _calculate_risk_reward(
         self,

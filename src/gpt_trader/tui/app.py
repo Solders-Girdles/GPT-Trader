@@ -102,7 +102,10 @@ class TraderApp(App):
         while True:
             try:
                 # If we don't have observers, we must poll
-                if not hasattr(self.bot.engine, "status_reporter") or not self.bot.engine.status_reporter._observers:
+                if (
+                    not hasattr(self.bot.engine, "status_reporter")
+                    or not self.bot.engine.status_reporter._observers
+                ):
                     self._sync_state_from_bot()
                     try:
                         main_screen = self.query_one(MainScreen)

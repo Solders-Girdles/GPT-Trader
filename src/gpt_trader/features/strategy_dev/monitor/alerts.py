@@ -315,7 +315,7 @@ class AlertManager:
         for severity in AlertSeverity:
             by_severity[severity.value] = len([e for e in recent if e.severity == severity])
 
-        by_condition = {}
+        by_condition: dict[str, int] = {}
         for event in recent:
             cond = event.condition.value
             by_condition[cond] = by_condition.get(cond, 0) + 1

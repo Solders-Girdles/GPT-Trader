@@ -201,7 +201,7 @@ class OrdersStore:
             connection.execute("PRAGMA busy_timeout=5000")
             connection.row_factory = sqlite3.Row
             self._local.connection = connection
-        return self._local.connection
+        return self._local.connection  # type: ignore[no-any-return]
 
     def initialize(self, *, check_integrity: bool = True) -> None:
         """

@@ -162,7 +162,7 @@ class StateCollector:
         balances: list[Balance] = list(balances_data) if balances_data is not None else []
         if not balances and self._integration_mode:
             balances = [
-                SimpleNamespace(
+                Balance(
                     asset="USD",
                     total=Decimal("100000"),
                     available=Decimal("100000"),

@@ -14,6 +14,7 @@ def mock_context():
     context.config.interval = 0.1
     context.config.strategy_type = "baseline"  # Required for factory
     context.broker.get_ticker.return_value = {"price": "50000.00"}
+    context.risk_manager._start_of_day_equity = Decimal("1000.0")
     return context
 
 

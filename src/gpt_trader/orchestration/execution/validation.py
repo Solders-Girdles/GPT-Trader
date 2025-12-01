@@ -160,11 +160,12 @@ class OrderValidator:
                 depth = depth_l1 if depth_l1 and depth_l1 > 0 else Decimal("1")
                 impact_bps = Decimal("10000") * (notional / depth) * Decimal("0.5")
                 expected_bps = spread_bps + impact_bps
-                guard_limit = Decimal(str(self.risk_manager.config.slippage_guard_bps))
-                if expected_bps > guard_limit:
-                    raise ValidationError(
-                        f"Expected slippage {expected_bps:.0f} bps exceeds guard {guard_limit}"
-                    )
+                if self.risk_manager.config:
+                    guard_limit = Decimal(str(self.risk_manager.config.slippage_guard_bps))
+                    if expected_bps > guard_limit:
+                        raise ValidationError(
+                            f"Expected slippage {expected_bps:.0f} bps exceeds guard {guard_limit}"
+                        )
         except ValidationError:
             raise
         except Exception as exc:

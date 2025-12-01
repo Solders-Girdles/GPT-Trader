@@ -83,10 +83,14 @@ class ServiceRegistryProtocol(Protocol):
     or dynamic container objects.
     """
 
-    config: BotConfig
-    broker: BrokerProtocol | None
-    event_store: EventStoreProtocol | None
-    orders_store: OrdersStoreProtocol | None
+    @property
+    def config(self) -> BotConfig: ...
+    @property
+    def broker(self) -> BrokerProtocol | None: ...
+    @property
+    def event_store(self) -> EventStoreProtocol | None: ...
+    @property
+    def orders_store(self) -> OrdersStoreProtocol | None: ...
 
     def with_updates(self, **kwargs: Any) -> ServiceRegistryProtocol:
         """Return a new registry with updated values."""

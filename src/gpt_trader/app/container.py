@@ -156,10 +156,24 @@ class ApplicationContainer:
     def risk_manager(self) -> LiveRiskManager:
         """Create or return the risk manager instance."""
         if self._risk_manager is None:
+            from decimal import Decimal
+
             from gpt_trader.features.live_trade.risk.manager import LiveRiskManager
+            from gpt_trader.orchestration.configuration.risk.model import RiskConfig
+
+            # Adapt BotConfig.risk (BotRiskConfig) to RiskConfig
+            bot_risk = self.config.risk
+            risk_config = RiskConfig(
+                max_leverage=bot_risk.max_leverage,
+                daily_loss_limit=bot_risk.max_drawdown_pct or Decimal("0.1"),
+                max_position_pct_per_symbol=float(bot_risk.position_fraction),
+                # Map other relevant fields if needed, or rely on defaults
+                kill_switch_enabled=self.config.mean_reversion.kill_switch_enabled,
+                reduce_only_mode=self.config.reduce_only_mode,
+            )
 
             self._risk_manager = LiveRiskManager(
-                config=self.config,
+                config=risk_config,
                 event_store=self.event_store,
             )
         return self._risk_manager

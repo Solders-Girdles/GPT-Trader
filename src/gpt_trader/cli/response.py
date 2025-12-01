@@ -67,7 +67,7 @@ class CliError:
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for JSON serialization."""
-        result = {"code": self.code, "message": self.message}
+        result: dict[str, Any] = {"code": self.code, "message": self.message}
         if self.details:
             result["details"] = self.details
         return result

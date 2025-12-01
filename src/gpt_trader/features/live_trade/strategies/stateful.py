@@ -82,6 +82,7 @@ class StatefulStrategy(TradingStrategy, ABC):
         recent_marks: Sequence[Decimal],
         equity: Decimal,
         product: Product | None,
+        candles: Sequence[Any] | None = None,
     ) -> Decision:
         """
         Generate a trading decision.

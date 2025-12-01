@@ -30,7 +30,7 @@ class StrategyInitializationMixin:
         **_: Any,
     ) -> None:
         self._bot = bot
-        self._spot_profiles = spot_profile_service or SpotProfileService()
+        self._spot_profiles = spot_profile_service or SpotProfileService(config=bot.config)
 
     def init_strategy(self) -> None:
         bot = self._bot

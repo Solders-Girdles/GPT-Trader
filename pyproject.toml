@@ -76,7 +76,7 @@ hypothesis = "^6.144.0"
 responses = "^0.23.0"
 coverage = "^7.0.0"
 pip-audit = "^2.9.0"
-bandit = "^1.7.9"
+bandit = "^1.9.2"
 diff-cover = "^9.0.0"
 
 [build-system]

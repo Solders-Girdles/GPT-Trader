@@ -1,0 +1,84 @@
+/* Animations & Transitions
+ *
+ * This module defines all animations and transitions for the TUI.
+ * Smooth, delightful micro-interactions that enhance the user experience.
+ *
+ * Note: Textual's animation support is limited. Some advanced CSS animations
+ * may not work and require JavaScript-like implementation in Python.
+ */
+
+/* === Smooth Transitions for Interactive Elements === */
+
+Button {
+    transition: background 200ms, border 200ms;
+}
+
+DataTable > .datatable--cursor {
+    transition: background 150ms;
+}
+
+.status-value {
+    transition: color 300ms, background 300ms;
+}
+
+/* === Heartbeat Pulse === */
+
+.heartbeat-pulse {
+    margin-left: $spacing-xs;
+    transition: color 500ms ease-in-out, text-style 500ms;
+}
+
+/* === Loading Spinner === */
+
+/* Note: @keyframes and animations may have limited support in Textual.
+ * These are defined for completeness but may require Python implementation.
+ */
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.loading-spinner {
+    color: $accent;
+    text-style: bold;
+    text-align: center;
+    animation: spin 1s linear infinite;
+}
+
+.loading-message {
+    color: $text-secondary;
+    text-align: center;
+    margin-top: $spacing-xs;
+}
+
+.loading-container {
+    padding: $spacing-lg;
+    background: rgba(58, 53, 48, 0.2);
+    border: solid $border-subtle;
+    align-horizontal: center;
+    align-vertical: middle;
+}
+
+/* === Flash Animation for Value Updates === */
+
+@keyframes flash {
+    0% { background: rgba(193, 95, 60, 0.3); }
+    100% { background: transparent; }
+}
+
+.value-updating {
+    background: rgba(193, 95, 60, 0.3);
+    transition: background 300ms ease-out;
+}
+
+/* === Reduced Motion Support === */
+
+/* Respect user's motion preferences for accessibility */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}

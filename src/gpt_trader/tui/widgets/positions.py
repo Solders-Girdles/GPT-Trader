@@ -2,6 +2,7 @@ from textual.app import ComposeResult
 from textual.widgets import DataTable, Label, Static
 
 from gpt_trader.tui.helpers import safe_update
+from gpt_trader.tui.theme import THEME
 from gpt_trader.tui.types import (
     Order,
     Position,
@@ -66,8 +67,8 @@ class OrdersWidget(Static):
             empty_label.display = False
             for order in orders:
                 # Colorize Side
-                side_style = "green" if order.side == "BUY" else "red"
-                formatted_side = f"[{side_style}]{order.side}[/{side_style}]"
+                side_color = THEME.colors.success if order.side == "BUY" else THEME.colors.error
+                formatted_side = f"[{side_color}]{order.side}[/{side_color}]"
 
                 table.add_row(
                     order.symbol, formatted_side, order.quantity, order.price, order.status
@@ -101,8 +102,8 @@ class TradesWidget(Static):
             empty_label.display = False
             for trade in trades:
                 # Colorize Side
-                side_style = "green" if trade.side == "BUY" else "red"
-                formatted_side = f"[{side_style}]{trade.side}[/{side_style}]"
+                side_color = THEME.colors.success if trade.side == "BUY" else THEME.colors.error
+                formatted_side = f"[{side_color}]{trade.side}[/{side_color}]"
 
                 # Simplify time string if needed (already done in state.py or kept raw)
                 # But let's keep it simple here as it's already a string in Trade object

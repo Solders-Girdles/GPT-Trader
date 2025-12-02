@@ -1,0 +1,21 @@
+/* Main Stylesheet - GPT-Trader TUI
+ *
+ * This is the entry point for all TUI styling. It imports all modular
+ * CSS files in the correct order to ensure proper cascade and specificity.
+ *
+ * Module Order:
+ * 1. _theme.tcss - Color palette and spacing variables (must be first)
+ * 2. _layout.tcss - Layout structure and grid systems
+ * 3. _components.tcss - Core reusable components
+ * 4. _widgets.tcss - Widget-specific styles
+ * 5. _animations.tcss - Transitions and animations (last for overrides)
+ *
+ * Theme: Claude Code-inspired warm, editorial aesthetic
+ * Palette: Rust-orange accent (#C15F3C) with warm browns and parchment tones
+ */
+
+@import "_theme.tcss";
+@import "_layout.tcss";
+@import "_components.tcss";
+@import "_widgets.tcss";
+@import "_animations.tcss";

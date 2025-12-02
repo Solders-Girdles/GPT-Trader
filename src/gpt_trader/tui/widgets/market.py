@@ -5,6 +5,7 @@ from textual.app import ComposeResult
 from textual.widgets import DataTable, Label, Static
 
 from gpt_trader.tui.helpers import safe_update
+from gpt_trader.tui.theme import THEME
 
 
 class MarketWatchWidget(Static):
@@ -42,11 +43,11 @@ class MarketWatchWidget(Static):
 
             prev_price = self.previous_prices.get(symbol, current_price)
 
-            color = "white"
+            color = THEME.colors.text_primary
             if current_price > prev_price:
-                color = "#a3be8c"  # Nord Green
+                color = THEME.colors.success
             elif current_price < prev_price:
-                color = "#bf616a"  # Nord Red
+                color = THEME.colors.error
 
             self.previous_prices[symbol] = current_price
 
@@ -99,6 +100,6 @@ class BlockChartWidget(Static):
             chart_str = "".join(chart_chars)
 
         # Add min/max labels and color
-        color = "#a3be8c" if values[-1] >= values[0] else "#bf616a"  # Nord Green / Red
+        color = THEME.colors.success if values[-1] >= values[0] else THEME.colors.error
         display = f"[{color}]{max_val:.2f}\n{chart_str}\n{min_val:.2f}[/{color}]"
         self.query_one("#chart-display", Static).update(display)

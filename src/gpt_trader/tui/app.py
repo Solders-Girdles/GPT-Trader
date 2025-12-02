@@ -23,7 +23,7 @@ logger = get_logger(__name__, component="tui")
 class TraderApp(App):
     """GPT-Trader Terminal User Interface."""
 
-    CSS_PATH = "styles.tcss"
+    CSS_PATH = "styles/main.tcss"
 
     BINDINGS = [
         ("q", "quit", "Quit"),

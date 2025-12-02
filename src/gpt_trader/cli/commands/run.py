@@ -31,15 +31,35 @@ def register(subparsers: Any) -> None:
     )
     parser.add_argument("--dev-fast", action="store_true", help="Run single cycle and exit")
     parser.add_argument("--tui", action="store_true", help="Run with Terminal User Interface")
+    parser.add_argument(
+        "--demo",
+        action="store_true",
+        help="Run in demo mode with mock data (requires --tui)",
+    )
+    parser.add_argument(
+        "--scenario",
+        type=str,
+        choices=["winning", "losing", "volatile", "quiet", "risk_limit", "mixed"],
+        default="mixed",
+        help="Demo scenario to run (default: mixed)",
+    )
     parser.set_defaults(handler=execute)
 
 
 def execute(args: Namespace) -> int:
+    # Handle demo mode
+    if args.demo:
+        if not args.tui:
+            logger.error("--demo flag requires --tui to be set")
+            return 1
+        scenario = getattr(args, "scenario", "mixed")
+        return _run_demo_tui(scenario)
+
     try:
         config = services.build_config_from_args(
             args,
             include=options.RUNTIME_CONFIG_KEYS,
-            skip={"dev_fast", "tui"},
+            skip={"dev_fast", "tui", "demo"},
         )
     except ConfigValidationError as exc:
         message = str(exc)
@@ -59,6 +79,27 @@ def execute(args: Namespace) -> int:
         return _run_tui(bot)
 
     return _run_bot(bot, single_cycle=args.dev_fast)
+
+
+def _run_demo_tui(scenario: str = "mixed") -> int:
+    """Run the TUI in demo mode with mock data."""
+    try:
+        from gpt_trader.tui.app import TraderApp
+        from gpt_trader.tui.demo import DemoBot
+        from gpt_trader.tui.demo.scenarios import get_scenario
+    except ImportError:
+        logger.error("TUI dependencies not installed. Run 'uv sync' to install textual.")
+        return 1
+
+    logger.info(f"Starting TUI in DEMO mode with '{scenario}' scenario")
+    logger.info("No real exchanges or trading will occur")
+
+    # Create demo bot with selected scenario
+    data_generator = get_scenario(scenario)
+    demo_bot = DemoBot(data_generator=data_generator)
+    app = TraderApp(demo_bot)
+    app.run()
+    return 0
 
 
 def _run_tui(bot: Any) -> int:

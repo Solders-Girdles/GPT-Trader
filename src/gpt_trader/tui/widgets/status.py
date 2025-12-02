@@ -19,9 +19,6 @@ class BotStatusWidget(Static):
     class ToggleBotPressed(Message):
         """Message sent when start/stop button is pressed."""
 
-    class PanicPressed(Message):
-        """Message sent when panic button is pressed."""
-
     def compose(self) -> ComposeResult:
         with Horizontal(id="status-bar-container"):
             # Left side: Bot control buttons
@@ -29,7 +26,6 @@ class BotStatusWidget(Static):
                 with Horizontal(classes="button-group"):
                     yield Button("▶ Start", id="start-btn", variant="success")
                     yield Button("⏹ Stop", id="stop-btn", variant="primary", disabled=True)
-                    yield Button("🚨 Panic", id="panic-btn", variant="error")
 
             # Center: Status info
             with Container(id="status-info", classes="status-section"):
@@ -60,12 +56,8 @@ class BotStatusWidget(Static):
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Handle button presses."""
-        if event.button.id == "start-btn":
+        if event.button.id in ("start-btn", "stop-btn"):
             self.post_message(self.ToggleBotPressed())
-        elif event.button.id == "stop-btn":
-            self.post_message(self.ToggleBotPressed())
-        elif event.button.id == "panic-btn":
-            self.post_message(self.PanicPressed())
 
     def watch_running(self, running: bool) -> None:
         """Update UI when bot running state changes."""

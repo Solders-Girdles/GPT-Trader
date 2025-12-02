@@ -32,29 +32,31 @@ class TuiLogHandler(logging.Handler):
 
 
 class LogWidget(Static):
-    """Displays application logs."""
+    """Displays application logs with optional compact mode."""
 
     DEFAULT_CSS = """
     LogWidget {
-        background: #2e3440;
-        height: 100%;
+        layout: vertical;
+        height: 1fr;
     }
 
-    LogWidget .header-row {
-        height: 3;
-        dock: top;
-        padding: 0 1;
-        background: #3b4252;
+    LogWidget Log {
+        height: 1fr;
     }
 
-    LogWidget Select {
-        width: 20;
+    .log-expand-hint {
+        height: 1;
+        text-align: center;
     }
     """
 
+    def __init__(self, compact_mode: bool = True, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.compact_mode = compact_mode
+
     def compose(self) -> ComposeResult:
         with Horizontal(classes="header-row"):
-            yield Label("SYSTEM LOGS", classes="header")
+            yield Label("📋 SYSTEM LOGS", classes="header")
             yield Select(
                 [
                     ("DEBUG", logging.DEBUG),
@@ -66,7 +68,17 @@ class LogWidget(Static):
                 allow_blank=False,
                 id="log-level-select",
             )
-        yield Log(id="log-stream", highlight=True)
+
+        # Use max_lines to limit display in compact mode
+        max_lines = 10 if self.compact_mode else 1000
+        yield Log(id="log-stream", highlight=True, max_lines=max_lines)
+
+        # Show hint only in compact mode
+        if self.compact_mode:
+            yield Label(
+                "Press [L] to expand logs | [1] Full Logs Tab | [2] System Tab",
+                classes="log-expand-hint",
+            )
 
     def on_mount(self) -> None:
         # Attach handler to root logger

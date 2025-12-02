@@ -9,6 +9,13 @@ from gpt_trader.tui.types import RiskState
 class RiskWidget(Static):
     """Widget to display risk management status."""
 
+    DEFAULT_CSS = """
+    RiskWidget {
+        layout: vertical;
+        height: auto;
+    }
+    """
+
     def compose(self) -> ComposeResult:
         yield Label("RISK MANAGEMENT", classes="header")
         with Grid(classes="risk-grid"):

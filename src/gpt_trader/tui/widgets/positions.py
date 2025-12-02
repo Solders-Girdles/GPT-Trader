@@ -13,6 +13,17 @@ from gpt_trader.tui.types import (
 class PositionsWidget(Static):
     """Displays active positions."""
 
+    DEFAULT_CSS = """
+    PositionsWidget {
+        layout: vertical;
+        height: 1fr;
+    }
+
+    PositionsWidget DataTable {
+        height: 1fr;
+    }
+    """
+
     def compose(self) -> ComposeResult:
         yield Label("💼 ACTIVE POSITIONS", classes="header")
         yield DataTable(id="positions-table", zebra_stripes=True)
@@ -20,10 +31,15 @@ class PositionsWidget(Static):
 
     def on_mount(self) -> None:
         table = self.query_one(DataTable)
-        table.add_columns("Symbol", "Quantity", "Entry", "PnL")
+        table.add_columns("Symbol", "Quantity", "Entry", "Current", "PnL", "%", "Leverage")
 
     @safe_update
-    def update_positions(self, positions: dict[str, Position], total_pnl: str) -> None:
+    def update_positions(
+        self,
+        positions: dict[str, Position],
+        total_pnl: str,
+        risk_data: dict[str, float] | None = None,
+    ) -> None:
         table = self.query_one(DataTable)
         empty_label = self.query_one("#positions-empty", Label)
         table.clear()
@@ -41,11 +57,63 @@ class PositionsWidget(Static):
             table.display = True
             empty_label.display = False
             for symbol, pos in positions.items():
-                table.add_row(pos.symbol, pos.quantity, pos.entry_price, pos.unrealized_pnl)
+                # Calculate P&L percentage
+                try:
+                    entry = float(pos.entry_price.replace("$", "").replace(",", ""))
+                    current = float(pos.mark_price.replace("$", "").replace(",", ""))
+                    if entry > 0:
+                        pnl_pct = ((current - entry) / entry) * 100
+                        pnl_pct_str = f"{pnl_pct:+.2f}%"
+                    else:
+                        pnl_pct_str = "N/A"
+                except (ValueError, ZeroDivisionError):
+                    pnl_pct_str = "N/A"
+
+                # Get leverage from risk data
+                leverage_val = 1.0
+                if risk_data and symbol in risk_data:
+                    leverage_val = risk_data[symbol]
+
+                # Format and color-code leverage
+                leverage_str = f"{leverage_val:.1f}x"
+                if leverage_val < 2.0:
+                    leverage_display = f"[green]{leverage_str}[/green]"
+                elif leverage_val < 5.0:
+                    leverage_display = f"[yellow]{leverage_str}[/yellow]"
+                else:
+                    leverage_display = f"[red]{leverage_str}[/red]"
+
+                # Use mark_price as current price, fallback to entry if not available
+                current_price = (
+                    pos.mark_price
+                    if pos.mark_price and pos.mark_price != "0.00"
+                    else pos.entry_price
+                )
+
+                table.add_row(
+                    pos.symbol,
+                    pos.quantity,
+                    pos.entry_price,
+                    current_price,
+                    pos.unrealized_pnl,
+                    pnl_pct_str,
+                    leverage_display,
+                )
 
 
 class OrdersWidget(Static):
     """Widget to display active orders."""
+
+    DEFAULT_CSS = """
+    OrdersWidget {
+        layout: vertical;
+        height: 1fr;
+    }
+
+    OrdersWidget DataTable {
+        height: 1fr;
+    }
+    """
 
     def compose(self) -> ComposeResult:
         yield Label("📋 ACTIVE ORDERS", classes="header")
@@ -83,6 +151,17 @@ class OrdersWidget(Static):
 
 class TradesWidget(Static):
     """Widget to display recent trades."""
+
+    DEFAULT_CSS = """
+    TradesWidget {
+        layout: vertical;
+        height: 1fr;
+    }
+
+    TradesWidget DataTable {
+        height: 1fr;
+    }
+    """
 
     def compose(self) -> ComposeResult:
         yield Label("📈 RECENT TRADES", classes="header")

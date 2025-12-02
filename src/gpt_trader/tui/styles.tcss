@@ -362,12 +362,14 @@ ContextualFooter {
 
 /* Widget Headers */
 .header {
-    color: $nord8;
+    color: #C15F3C;
     text-style: bold;
     text-align: center;
     background: $nord2;
-    padding: 0 1;
+    padding: 1 1;
     border-bottom: solid $nord3;
+    height: auto;
+    width: 100%;
 }
 
 /* Empty States */

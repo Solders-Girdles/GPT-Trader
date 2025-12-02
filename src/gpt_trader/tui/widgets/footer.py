@@ -41,6 +41,19 @@ class ContextualFooter(Static):
 
             yield Label("|", classes="footer-separator")
 
+            # Tab view shortcuts
+            with Horizontal(classes="footer-group"):
+                yield Label("[1]", classes="footer-key")
+                yield Label("Full Logs", classes="footer-label")
+
+            yield Label("|", classes="footer-separator")
+
+            with Horizontal(classes="footer-group"):
+                yield Label("[2]", classes="footer-key")
+                yield Label("System", classes="footer-label")
+
+            yield Label("|", classes="footer-separator")
+
             # Utility shortcuts
             with Horizontal(classes="footer-group"):
                 yield Label("[?]", classes="footer-key")

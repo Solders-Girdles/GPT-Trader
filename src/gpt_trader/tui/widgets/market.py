@@ -11,6 +11,18 @@ from gpt_trader.tui.theme import THEME
 class MarketWatchWidget(Static):
     """Displays market data."""
 
+    DEFAULT_CSS = """
+    MarketWatchWidget {
+        layout: vertical;
+        height: 1fr;
+    }
+
+    MarketWatchWidget DataTable {
+        height: 1fr;
+        padding: 1 2;
+    }
+    """
+
     def compose(self) -> ComposeResult:
         yield Label("📊 MARKET WATCH", classes="header")
         yield DataTable(id="market-table", zebra_stripes=True)
@@ -67,6 +79,14 @@ class BlockChartWidget(Static):
     """
     Renders a simple block-based chart for price history.
     Uses Unicode block characters:  ▂ ▃ ▄ ▅ ▆ ▇ █
+    """
+
+    DEFAULT_CSS = """
+    BlockChartWidget {
+        layout: vertical;
+        height: auto;
+    }
+
     """
 
     BLOCKS = [" ", " ", "▂", "▃", "▄", "▅", "▆", "▇", "█"]

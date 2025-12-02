@@ -126,6 +126,7 @@ class RiskState:
     reduce_only_mode: bool = False
     reduce_only_reason: str = ""
     active_guards: list[str] = field(default_factory=list)
+    position_leverage: dict[str, float] = field(default_factory=dict)  # Per-position leverage
 
 
 @dataclass

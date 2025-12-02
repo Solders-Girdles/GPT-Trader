@@ -1,7 +1,7 @@
 from textual.app import ComposeResult
 from textual.containers import Container
 from textual.screen import Screen
-from textual.widgets import Header
+from textual.widgets import Footer, Header, Label
 
 from gpt_trader.tui.state import TuiState
 from gpt_trader.tui.widgets import (
@@ -28,31 +28,33 @@ class MainScreen(Screen):
         yield Header(show_clock=True)
         yield BotStatusWidget(id="bot-status-header")
 
-        # Main Workspace Container
+        # Main Workspace Container - Now horizontal split (30/70)
         with Container(id="main-workspace"):
-            # Top Section: Trading & Execution (70% height)
-            with Container(id="trading-section"):
-                # Left Column: Market & Strategy
-                with Container(id="market-column"):
-                    yield MarketWatchWidget(id="dash-market", classes="dashboard-item")
-                    yield StrategyWidget(id="dash-strategy", classes="dashboard-item")
+            # Left Column: Market + Strategy (30% width)
+            with Container(id="market-strategy-column"):
+                yield MarketWatchWidget(id="dash-market", classes="dashboard-item")
+                yield StrategyWidget(id="dash-strategy", classes="dashboard-item")
 
-                # Right Column: Execution & Positions
-                with Container(id="execution-column"):
-                    yield PositionsWidget(id="dash-positions", classes="dashboard-item")
-                    yield OrdersWidget(id="dash-orders", classes="dashboard-item")
-                    yield TradesWidget(id="dash-trades", classes="dashboard-item")
+            # Right Column: Execution + Monitoring (70% width)
+            with Container(id="execution-monitoring-column"):
+                # Positions (40% of right column = 28% of total screen - LARGEST)
+                yield PositionsWidget(id="dash-positions", classes="dashboard-item")
 
-            # Bottom Section: Monitoring & Logs (30% height)
-            with Container(id="monitoring-section"):
-                # Left: System Health
-                with Container(id="system-column"):
-                    yield SystemHealthWidget(id="dash-system", classes="dashboard-item")
-                    yield AccountWidget(id="dash-account", classes="dashboard-item")
+                # Orders (20% of right column)
+                yield OrdersWidget(id="dash-orders", classes="dashboard-item")
 
-                # Right: Logs
-                with Container(id="logs-column"):
-                    yield LogWidget(id="dash-logs", classes="dashboard-item")
+                # Trades (20% of right column)
+                yield TradesWidget(id="dash-trades", classes="dashboard-item")
+
+                # Monitoring Row (20% of right column)
+                with Container(id="monitoring-row"):
+                    # System + Account (top half, horizontal split)
+                    with Container(id="system-account-row"):
+                        yield SystemHealthWidget(id="dash-system", classes="dashboard-item")
+                        yield AccountWidget(id="dash-account", classes="dashboard-item")
+
+                    # Logs (bottom half, full width, compressed)
+                    yield LogWidget(id="dash-logs", classes="dashboard-item compact-logs")
 
         yield ContextualFooter()
 
@@ -127,6 +129,7 @@ class MainScreen(Screen):
             pos_widget.update_positions(
                 state.position_data.positions,
                 state.position_data.total_unrealized_pnl,
+                risk_data=state.risk_data.position_leverage,  # Pass risk leverage data
             )
         except AttributeError as e:
             logger.error(
@@ -199,3 +202,45 @@ class MainScreen(Screen):
             logger.error(f"Failed to update account widget: {e}", exc_info=True)
 
         # Logs are updated via the logging handler, not here directly
+
+
+class FullLogsScreen(Screen):
+    """Full-screen log viewer with filtering and expanded view."""
+
+    BINDINGS = [
+        ("escape", "dismiss", "Close"),
+        ("q", "dismiss", "Close"),
+    ]
+
+    def compose(self) -> ComposeResult:
+        yield Header(show_clock=True)
+        yield Label("📋 FULL SYSTEM LOGS", classes="header")
+        yield LogWidget(id="full-logs", compact_mode=False)  # Expanded mode for full logs screen
+        yield Footer()
+
+    def action_dismiss(self) -> None:
+        """Close the full logs screen and return to main view."""
+        self.app.pop_screen()
+
+
+class SystemDetailsScreen(Screen):
+    """Detailed system health and diagnostics screen."""
+
+    BINDINGS = [
+        ("escape", "dismiss", "Close"),
+        ("q", "dismiss", "Close"),
+    ]
+
+    def compose(self) -> ComposeResult:
+        yield Header(show_clock=True)
+        yield Label("⚙️ SYSTEM DETAILS", classes="header")
+        with Container(id="system-details-container"):
+            yield SystemHealthWidget(
+                id="detailed-system", compact_mode=False, classes="dashboard-item"
+            )
+            yield AccountWidget(id="detailed-account", compact_mode=False, classes="dashboard-item")
+        yield Footer()
+
+    def action_dismiss(self) -> None:
+        """Close the system details screen and return to main view."""
+        self.app.pop_screen()

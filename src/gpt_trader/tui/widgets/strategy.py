@@ -11,6 +11,17 @@ from gpt_trader.tui.types import StrategyState
 class StrategyWidget(Static):
     """Displays strategy status and decisions."""
 
+    DEFAULT_CSS = """
+    StrategyWidget {
+        layout: vertical;
+        height: 1fr;
+    }
+
+    StrategyWidget DataTable {
+        height: 1fr;
+    }
+    """
+
     def compose(self) -> ComposeResult:
         yield Label("🎯 STRATEGY DECISIONS", classes="header")
         yield DataTable(id="strategy-table", zebra_stripes=True)

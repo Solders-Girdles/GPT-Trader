@@ -315,6 +315,11 @@ class TuiState(Widget):
 
     def _update_risk_data(self, risk: dict[str, Any]) -> None:
         try:
+            # Extract position leverage data (symbol -> leverage value)
+            position_leverage = risk.get("position_leverage", {})
+            if not isinstance(position_leverage, dict):
+                position_leverage = {}
+
             self.risk_data = RiskState(
                 max_leverage=risk.get("max_leverage", 0.0),
                 daily_loss_limit_pct=risk.get("daily_loss_limit_pct", 0.0),
@@ -322,6 +327,7 @@ class TuiState(Widget):
                 reduce_only_mode=risk.get("reduce_only_mode", False),
                 reduce_only_reason=risk.get("reduce_only_reason", ""),
                 active_guards=risk.get("active_guards", []),
+                position_leverage=position_leverage,
             )
         except (TypeError, ValueError, AttributeError) as e:
             logger.error(

@@ -62,65 +62,103 @@ Label {
     color: $text-primary;
 }
 
-/* === Main Workspace === */
+/* === Main Workspace - Now horizontal split (30/70) === */
 
 #main-workspace {
-    layout: vertical;
+    layout: horizontal;  /* Changed from vertical */
     height: 100%;
 }
 
-/* === Trading Section (70% height) === */
+/* === Left Column: Market + Strategy (30% width) === */
 
-#trading-section {
-    height: 70%;
-    layout: horizontal;
-    border-bottom: tall $border-emphasis;
+#market-strategy-column {
+    width: 30%;
+    height: 100%;
+    layout: vertical;
+    border-right: wide $border-subtle;
 }
 
-#market-column {
+#dash-market {
+    height: 50%;
+}
+
+#dash-strategy {
+    height: 50%;
+}
+
+/* === Right Column: Execution + Monitoring (70% width) === */
+
+#execution-monitoring-column {
+    width: 70%;
+    height: 100%;
+    layout: vertical;
+}
+
+#dash-positions {
+    height: 40%;  /* LARGEST - Priority #1 (28% of total screen) */
+}
+
+#dash-orders {
+    height: 20%;
+}
+
+#dash-trades {
+    height: 20%;
+}
+
+/* === Monitoring Row (20% of right column) === */
+
+#monitoring-row {
+    height: 20%;
+    layout: vertical;
+}
+
+#system-account-row {
+    height: 50%;  /* Top half of monitoring row */
+    layout: horizontal;
+}
+
+#dash-system {
     width: 50%;
     height: 100%;
-    border-right: wide $border-subtle;
-    layout: vertical;
 }
 
-#execution-column {
+#dash-account {
     width: 50%;
     height: 100%;
-    layout: vertical;
 }
 
-/* === Monitoring Section (30% height) === */
-
-#monitoring-section {
-    height: 30%;
-    layout: horizontal;
-}
-
-#system-column {
-    width: 40%;
-    height: 100%;
-    border-right: wide $border-subtle;
-    layout: vertical;
-}
-
-#logs-column {
-    width: 60%;
-    height: 100%;
+#dash-logs {
+    width: 100%;
+    height: 50%;  /* Bottom half of monitoring row */
 }
 
 /* === Dashboard Items === */
 
 .dashboard-item {
+    layout: vertical;
     height: 1fr;
     border: solid $border-subtle;
     background: $bg-secondary;
-    padding: $spacing-sm $spacing-md;  /* More generous horizontal padding */
+    padding: 0;  /* Remove padding to prevent header clipping */
     margin: 0 $spacing-xs;
 }
 
 .dashboard-item-elevated {
     background: $bg-elevated;
+}
+
+/* === Compact Logs Styling === */
+
+.compact-logs {
+    /* Compressed log display in monitoring row */
+}
+
+.log-expand-hint {
+    color: $text-muted;
+    text-style: italic;
+    text-align: center;
+    padding: 0 $spacing-xs;
 }
 
 /* === Panel Style === */
@@ -155,13 +193,15 @@ Footer {
 /* === Widget Headers === */
 
 .header {
-    color: $accent;
+    color: $text-primary;              /* Light warm grey for contrast */
     text-style: bold;
-    text-align: left;              /* Left-aligned editorial style */
-    background: $bg-elevated;
-    padding: $spacing-xs $spacing-md;
-    border-bottom: thick $accent-muted;
-    height: 3;
+    text-align: left;                  /* Left-aligned editorial style */
+    background: $accent-muted;         /* Warmer rust-brown background for prominence */
+    padding: 0 2;                      /* Compact horizontal padding */
+    border-left: solid $accent;        /* Subtle accent left border */
+    border-bottom: solid $accent;      /* Subtle bottom border */
+    height: auto;                      /* Auto height to fit content */
+    content-align: left middle;        /* Vertically center the text */
 }
 
 .header-icon {
@@ -173,27 +213,59 @@ Footer {
 
 Button {
     min-width: 12;
+    height: 3;
     margin: 0 $spacing-xs;
     border: solid $border-emphasis;
-    padding: $spacing-xs $spacing-md;
+    padding: 0 $spacing-md;
     background: $bg-elevated;
     color: $text-primary;
+    text-style: bold;
 }
 
 Button:hover {
-    text-style: bold;
     border: solid $accent;
     background: $accent-muted;
     color: $text-primary;
 }
 
 Button:focus {
-    border: double $accent;
+    border: solid $accent;
+    background: $accent;
+    color: $bg-primary;
 }
 
 Button.-disabled {
-    opacity: 0.4;
+    opacity: 0.5;
     color: $text-muted;
+    border: solid $border-subtle;
+}
+
+/* === Control Buttons (Start/Stop) === */
+
+#start-btn {
+    background: $success;
+    color: $bg-primary;
+    border-left: wide $success;
+}
+
+#start-btn:hover {
+    background: $success;
+    color: $bg-primary;
+    border: solid $success;
+    text-style: bold;
+}
+
+#stop-btn {
+    background: $error;
+    color: $bg-primary;
+    border-left: wide $error;
+}
+
+#stop-btn:hover {
+    background: $error;
+    color: $bg-primary;
+    border: solid $error;
+    text-style: bold;
 }
 
 /* === DataTable === */
@@ -203,7 +275,7 @@ DataTable {
     color: $text-primary;
     border: none;
     padding: 0 $spacing-md;        /* Generous horizontal padding */
-    height: 1fr;
+    /* height controlled by individual widgets via DEFAULT_CSS */
 }
 
 DataTable > .datatable--header {
@@ -493,6 +565,7 @@ ContextualFooter {
 AccountWidget {
     layout: vertical;
     padding: $spacing-xs;
+    /* height controlled by widget DEFAULT_CSS */
 }
 
 .account-metric {
@@ -542,7 +615,7 @@ AccountWidget {
 /* === Block Chart Widget === */
 
 BlockChartWidget {
-    height: 5;
+    /* height controlled by widget DEFAULT_CSS */
     padding: 0 $spacing-xs;
     border-top: solid $border-subtle;
 }

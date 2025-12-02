@@ -5,11 +5,12 @@ Main TUI Application for GPT-Trader.
 from __future__ import annotations
 
 import asyncio
+import signal
 from typing import TYPE_CHECKING, Any
 
 from textual.app import App
 
-from gpt_trader.tui.screens import MainScreen
+from gpt_trader.tui.screens import FullLogsScreen, MainScreen, SystemDetailsScreen
 from gpt_trader.tui.state import TuiState
 from gpt_trader.tui.widgets import ConfigModal
 from gpt_trader.tui.widgets.status import BotStatusWidget
@@ -32,6 +33,8 @@ class TraderApp(App):
         ("c", "show_config", "Config"),
         ("l", "focus_logs", "Focus Logs"),
         ("p", "panic", "PANIC"),
+        ("1", "show_full_logs", "Full Logs"),
+        ("2", "show_system_details", "System"),
     ]
 
     def __init__(self, bot: TradingBot | Any) -> None:  # Accept DemoBot or TradingBot
@@ -42,6 +45,17 @@ class TraderApp(App):
 
         # Initialize State
         self.tui_state: TuiState = TuiState()
+
+        # Register signal handlers for graceful shutdown
+        signal.signal(signal.SIGINT, self._handle_signal)
+        signal.signal(signal.SIGTERM, self._handle_signal)
+
+    def _handle_signal(self, signum: int, frame: Any) -> None:
+        """Handle termination signals for graceful shutdown."""
+        logger.info(f"Received signal {signum}, initiating graceful shutdown")
+        # Schedule the exit on the event loop
+        if hasattr(self, "exit"):
+            self.exit()
 
     async def on_mount(self) -> None:
         """Called when app starts."""
@@ -75,13 +89,39 @@ class TraderApp(App):
             raise
 
     async def on_unmount(self) -> None:
-        """Called when app stops."""
+        """Called when app stops - ensure all cleanup happens."""
         try:
-            logger.info("TUI unmounting, cleaning up observers")
+            logger.info("TUI unmounting, cleaning up observers and tasks")
+
+            # Cancel update task
+            if self._update_task and not self._update_task.done():
+                logger.info("Cancelling UI update task")
+                self._update_task.cancel()
+                try:
+                    await self._update_task
+                except asyncio.CancelledError:
+                    logger.info("UI update task cancelled")
+
+            # Cancel bot task if running
+            if self._bot_task and not self._bot_task.done():
+                logger.info("Cancelling bot task")
+                self._bot_task.cancel()
+                try:
+                    await self._bot_task
+                except asyncio.CancelledError:
+                    logger.info("Bot task cancelled")
+
+            # Stop bot if running
+            if self.bot.running:
+                logger.info("Stopping bot")
+                await self.bot.stop()
+
+            # Remove observer
             if hasattr(self.bot.engine, "status_reporter"):
                 self.bot.engine.status_reporter.remove_observer(self._on_status_update)
                 logger.info("Removed StatusReporter observer")
-            logger.info("TUI unmounted successfully")
+
+            logger.info("TUI unmounted successfully - all cleanup complete")
         except Exception as e:
             logger.error(f"Error during TUI unmount: {e}", exc_info=True)
 
@@ -291,41 +331,29 @@ class TraderApp(App):
             logger.warning(f"Failed to focus log widget: {e}")
             self.notify("Could not focus logs widget", severity="warning")
 
-    async def action_panic(self) -> None:
-        """Trigger panic modal."""
-        from gpt_trader.tui.widgets.panic import PanicModal
-
-        def handle_panic(confirmed: Any) -> None:
-            if confirmed:
-                asyncio.create_task(self._execute_panic())
-
-        self.push_screen(PanicModal(), handle_panic)
-
-    async def _execute_panic(self) -> None:
-        """Execute panic sequence."""
+    async def action_show_full_logs(self) -> None:
+        """Show full logs screen (expanded view)."""
         try:
-            self.notify("Executing FLATTEN & STOP...", severity="error", timeout=10)
-            logger.critical("User initiated PANIC: flatten_and_stop sequence starting")
-            messages = await self.bot.flatten_and_stop()
-            for msg in messages:
-                logger.info(f"Panic sequence message: {msg}")
-                self.notify(
-                    msg, severity="warning" if "Error" in msg else "information", timeout=10
-                )
-            logger.critical("PANIC sequence completed")
+            logger.debug("Opening full logs screen")
+            self.push_screen(FullLogsScreen())
         except Exception as e:
-            logger.critical(f"PANIC sequence failed: {e}", exc_info=True)
-            self.notify(f"PANIC FAILED: {e}", severity="error", timeout=30)
+            logger.error(f"Failed to show full logs screen: {e}", exc_info=True)
+            self.notify(f"Error showing full logs: {e}", severity="error")
+
+    async def action_show_system_details(self) -> None:
+        """Show detailed system metrics screen."""
+        try:
+            logger.debug("Opening system details screen")
+            self.push_screen(SystemDetailsScreen())
+        except Exception as e:
+            logger.error(f"Failed to show system details screen: {e}", exc_info=True)
+            self.notify(f"Error showing system details: {e}", severity="error")
 
     def on_bot_status_widget_toggle_bot_pressed(
         self, message: BotStatusWidget.ToggleBotPressed
     ) -> None:
         """Handle start/stop button press from BotStatusWidget."""
         asyncio.create_task(self.action_toggle_bot())
-
-    def on_bot_status_widget_panic_pressed(self, message: BotStatusWidget.PanicPressed) -> None:
-        """Handle panic button press from BotStatusWidget."""
-        asyncio.create_task(self.action_panic())
 
     async def action_quit(self) -> None:
         """Quit the application."""

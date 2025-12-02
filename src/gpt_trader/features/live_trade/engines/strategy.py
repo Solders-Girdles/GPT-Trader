@@ -278,8 +278,8 @@ class TradingEngine(BaseEngine):
         positions = await self._fetch_positions()
         self._current_positions = positions
 
-        # Update status reporter with positions
-        self._status_reporter.update_positions(self._positions_to_risk_format(positions))
+        # Update status reporter with positions (complete data for TUI)
+        self._status_reporter.update_positions(self._positions_to_status_format(positions))
 
         # 1b. Audit open orders (Reconciliation)
         await self._audit_orders()
@@ -493,6 +493,22 @@ class TradingEngine(BaseEngine):
             symbol: {
                 "quantity": pos.quantity,
                 "mark": pos.mark_price,
+            }
+            for symbol, pos in positions.items()
+        }
+
+    def _positions_to_status_format(
+        self, positions: dict[str, Position]
+    ) -> dict[str, dict[str, Any]]:
+        """Convert Position objects to dict format for StatusReporter with complete TUI data."""
+        return {
+            symbol: {
+                "quantity": str(pos.quantity),
+                "mark_price": str(pos.mark_price),
+                "entry_price": str(pos.entry_price),
+                "unrealized_pnl": str(pos.unrealized_pnl),
+                "realized_pnl": str(pos.realized_pnl),
+                "side": pos.side,
             }
             for symbol, pos in positions.items()
         }

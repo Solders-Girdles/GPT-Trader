@@ -12,11 +12,13 @@ import json
 import os
 import tempfile
 import time
+from collections import deque
+from collections.abc import Callable
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any
 
 from gpt_trader.utilities.logging_patterns import get_logger
 
@@ -46,6 +48,7 @@ class MarketStatus:
     symbols: list[str] = field(default_factory=list)
     last_prices: dict[str, str] = field(default_factory=dict)
     last_price_update: float | None = None
+    price_history: dict[str, list[str]] = field(default_factory=dict)
 
 
 @dataclass
@@ -56,6 +59,7 @@ class PositionStatus:
     symbols: list[str] = field(default_factory=list)
     total_unrealized_pnl: str = "0"
     equity: str = "0.00"
+    positions: dict[str, dict[str, Any]] = field(default_factory=dict)
 
 
 @dataclass
@@ -79,9 +83,9 @@ class OrderStatus:
     quantity: str
     price: str | None
     status: str
-    type: str = "MARKET"
+    order_type: str = "MARKET"
     time_in_force: str = "GTC"
-    timestamp: float = 0.0
+    creation_time: float = 0.0
 
 
 @dataclass
@@ -221,6 +225,7 @@ class StatusReporter:
     _last_error_time: float | None = field(default=None, repr=False)
     _last_prices: dict[str, Decimal] = field(default_factory=dict, repr=False)
     _last_price_update: float | None = field(default=None, repr=False)
+    _price_history: dict[str, deque[Decimal]] = field(default_factory=dict, repr=False)
     _positions: dict[str, Any] = field(default_factory=dict, repr=False)
     _equity: Decimal = field(default=Decimal("0"), repr=False)
     _heartbeat_service: HeartbeatService | None = field(default=None, repr=False)
@@ -350,6 +355,10 @@ class StatusReporter:
         self._status.market.last_prices = {k: str(v) for k, v in self._last_prices.items()}
         self._status.market.last_price_update = self._last_price_update
         self._status.market.symbols = list(self._last_prices.keys())
+        self._status.market.price_history = {
+            symbol: [str(price) for price in prices]
+            for symbol, prices in self._price_history.items()
+        }
 
         # Position status
         self._status.positions.count = len(self._positions)
@@ -360,6 +369,11 @@ class StatusReporter:
         )
         self._status.positions.total_unrealized_pnl = str(total_pnl)
         self._status.positions.equity = str(self._equity)
+        # Include actual position details (ensure all values are strings)
+        self._status.positions.positions = {
+            symbol: {k: str(v) if not isinstance(v, str) else v for k, v in pos.items()}
+            for symbol, pos in self._positions.items()
+        }
 
         # Heartbeat status
         if self._heartbeat_service:
@@ -419,9 +433,14 @@ class StatusReporter:
         self._last_error_time = time.time()
 
     def update_price(self, symbol: str, price: Decimal) -> None:
-        """Update the last known price for a symbol."""
+        """Update the last known price for a symbol and maintain price history."""
         self._last_prices[symbol] = price
         self._last_price_update = time.time()
+
+        # Maintain price history (last 100 prices per symbol)
+        if symbol not in self._price_history:
+            self._price_history[symbol] = deque(maxlen=100)
+        self._price_history[symbol].append(price)
 
     def update_positions(self, positions: dict[str, Any]) -> None:
         """Update the current positions."""
@@ -467,9 +486,9 @@ class StatusReporter:
                     ),
                     price=str(o.get("price")) if o.get("price") else None,
                     status=o.get("status", "UNKNOWN"),
-                    type=order_type,
+                    order_type=order_type,
                     time_in_force=tif,
-                    timestamp=time.time(),  # Or parse creation_time
+                    creation_time=time.time(),  # Or parse creation_time
                 )
             )
         self._status.orders = order_statuses
@@ -499,13 +518,15 @@ class StatusReporter:
                 asset = b.asset
                 total = str(b.total)
                 avail = str(b.available)
+                hold = str(getattr(b, "hold", Decimal("0")))
             else:
                 asset = b.get("currency", "")
                 total = str(b.get("balance", "0"))
                 avail = str(b.get("available", "0"))
+                hold = str(b.get("hold", "0"))
 
             if Decimal(total) > 0:
-                bal_list.append({"asset": asset, "total": total, "available": avail})
+                bal_list.append({"asset": asset, "total": total, "available": avail, "hold": hold})
 
         self._status.account = AccountStatus(
             volume_30d=str(summary.get("total_volume_30d", "0.00")),

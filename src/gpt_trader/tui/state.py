@@ -109,20 +109,33 @@ class TuiState(Widget):
     def _update_position_data(self, pos_data: dict[str, Any] | Any) -> None:
         try:
             positions_map = {}
-            # Handle different potential structures of 'positions'
-            # It might be {symbol: {quantity, ...}} or {symbol: PositionObject}
 
-            # If pos_data is not a dict, it might be an object or list, but we expect dict-like access usually
-            # If it's strictly an object without .items(), this loop will fail.
-            # Let's assume it's a dict for the iteration.
+            # Extract actual positions dict - handle nested structure
+            # pos_data can be:
+            # 1. {"positions": {...}, "total_unrealized_pnl": "...", "equity": "..."}
+            # 2. {"BTC-USD": {...}, "ETH-USD": {...}, "total_unrealized_pnl": "...", "equity": "..."}
+            positions_dict = {}
+            total_upnl = "0.00"
+            equity = "0.00"
 
             if isinstance(pos_data, dict):
-                items = pos_data.items()
-            else:
-                # Fallback or empty if not iterable as dict
-                items = {}.items()
+                # Check if we have nested structure with "positions" key
+                if "positions" in pos_data and isinstance(pos_data["positions"], dict):
+                    positions_dict = pos_data["positions"]
+                else:
+                    # Flat structure - filter out summary fields
+                    positions_dict = {
+                        k: v
+                        for k, v in pos_data.items()
+                        if k not in ("total_unrealized_pnl", "equity", "count", "symbols")
+                    }
 
-            for symbol, p_data in items:
+                # Extract summary fields from top level
+                total_upnl = str(pos_data.get("total_unrealized_pnl", "0.00"))
+                equity = str(pos_data.get("equity", "0.00"))
+
+            # Parse individual positions
+            for symbol, p_data in positions_dict.items():
                 if isinstance(p_data, dict):
                     positions_map[symbol] = Position(
                         symbol=symbol,
@@ -142,13 +155,6 @@ class TuiState(Widget):
                         mark_price=str(getattr(p_data, "mark_price", "0.00")),
                         side=str(getattr(p_data, "side", "")),
                     )
-
-            total_upnl = "0.00"
-            equity = "0.00"
-
-            if isinstance(pos_data, dict):
-                total_upnl = str(pos_data.get("total_unrealized_pnl", "0.00"))
-                equity = str(pos_data.get("equity", "0.00"))
 
             self.position_data = PortfolioSummary(
                 positions=positions_map,

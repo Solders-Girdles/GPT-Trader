@@ -48,8 +48,8 @@ def register(subparsers: Any) -> None:
 
 def execute(args: Namespace) -> int:
     # Handle demo mode
-    if args.demo:
-        if not args.tui:
+    if getattr(args, "demo", False):
+        if not getattr(args, "tui", False):
             logger.error("--demo flag requires --tui to be set")
             return 1
         scenario = getattr(args, "scenario", "mixed")

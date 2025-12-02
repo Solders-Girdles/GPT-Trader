@@ -6,7 +6,6 @@ rather than hardcoding color values.
 """
 
 from dataclasses import dataclass
-from typing import ClassVar
 
 
 @dataclass(frozen=True)
@@ -74,7 +73,7 @@ class Theme:
 
 
 # Global theme instance
-THEME: ClassVar[Theme] = Theme(colors=ColorPalette())
+THEME: Theme = Theme(colors=ColorPalette())
 
 
 def get_color(semantic_name: str) -> str:
@@ -95,4 +94,5 @@ def get_color(semantic_name: str) -> str:
         >>> get_color('accent_primary')
         '#C15F3C'
     """
-    return getattr(THEME.colors, semantic_name)
+    color: str = getattr(THEME.colors, semantic_name)
+    return color

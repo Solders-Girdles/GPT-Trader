@@ -63,7 +63,7 @@ class MainScreen(Screen):
         # Access the app instance to get state and trigger update
         if hasattr(self.app, "_sync_state_from_bot"):
             self.app._sync_state_from_bot()
-            self.update_ui(self.app.tui_state)
+            self.update_ui(self.app.tui_state)  # type: ignore[attr-defined]
             if hasattr(self.app, "_pulse_heartbeat"):
                 self.app._pulse_heartbeat()
             logger.info("Initial UI sync completed successfully")

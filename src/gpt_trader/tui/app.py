@@ -5,11 +5,12 @@ Main TUI Application for GPT-Trader.
 from __future__ import annotations
 
 import asyncio
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from textual.app import App
 
 from gpt_trader.tui.screens import MainScreen
+from gpt_trader.tui.state import TuiState
 from gpt_trader.tui.widgets import ConfigModal
 from gpt_trader.tui.widgets.status import BotStatusWidget
 from gpt_trader.utilities.logging_patterns import get_logger
@@ -33,16 +34,14 @@ class TraderApp(App):
         ("p", "panic", "PANIC"),
     ]
 
-    def __init__(self, bot: TradingBot) -> None:
+    def __init__(self, bot: TradingBot | Any) -> None:  # Accept DemoBot or TradingBot
         super().__init__()
         self.bot = bot
         self._bot_task: asyncio.Task | None = None  # Track bot task for proper cancellation
         self._update_task: asyncio.Task | None = None
 
         # Initialize State
-        from gpt_trader.tui.state import TuiState
-
-        self.tui_state = TuiState()
+        self.tui_state: TuiState = TuiState()
 
     async def on_mount(self) -> None:
         """Called when app starts."""
@@ -195,7 +194,7 @@ class TraderApp(App):
             runtime_state = self.bot.engine.context.runtime_state
 
         # Access StatusReporter for data
-        status = {}
+        status: dict[str, Any] = {}
         if hasattr(self.bot.engine, "status_reporter"):
             status = self.bot.engine.status_reporter.get_status()
             logger.debug(f"Fetched status from StatusReporter: {len(status)} keys")
@@ -296,7 +295,7 @@ class TraderApp(App):
         """Trigger panic modal."""
         from gpt_trader.tui.widgets.panic import PanicModal
 
-        def handle_panic(confirmed: bool) -> None:
+        def handle_panic(confirmed: Any) -> None:
             if confirmed:
                 asyncio.create_task(self._execute_panic())
 

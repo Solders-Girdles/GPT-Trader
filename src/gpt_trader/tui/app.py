@@ -11,6 +11,7 @@ from textual.app import App
 
 from gpt_trader.tui.screens import MainScreen
 from gpt_trader.tui.widgets import ConfigModal
+from gpt_trader.tui.widgets.status import BotStatusWidget
 from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:
@@ -273,6 +274,16 @@ class TraderApp(App):
         except Exception as e:
             logger.critical(f"PANIC sequence failed: {e}", exc_info=True)
             self.notify(f"PANIC FAILED: {e}", severity="error", timeout=30)
+
+    def on_bot_status_widget_toggle_bot_pressed(
+        self, message: BotStatusWidget.ToggleBotPressed
+    ) -> None:
+        """Handle start/stop button press from BotStatusWidget."""
+        asyncio.create_task(self.action_toggle_bot())
+
+    def on_bot_status_widget_panic_pressed(self, message: BotStatusWidget.PanicPressed) -> None:
+        """Handle panic button press from BotStatusWidget."""
+        asyncio.create_task(self.action_panic())
 
     async def action_quit(self) -> None:
         """Quit the application."""

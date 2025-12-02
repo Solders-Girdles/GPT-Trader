@@ -158,18 +158,54 @@ ContentSwitcher {
 /* Status Bar */
 #bot-status-header {
     dock: top;
-    height: 3;
+    height: 5;
     background: $nord1;
     color: $nord4;
     border-bottom: solid $nord8;
-    layout: horizontal;
+    padding: 0;
+}
+
+#status-bar-container {
+    height: 100%;
     align-vertical: middle;
-    padding: 0 1;
+}
+
+.status-section {
+    padding: 0 2;
+    height: 100%;
+    align-vertical: middle;
+}
+
+#bot-controls {
+    width: auto;
+    border-right: solid $nord3;
+}
+
+#status-info {
+    width: 1fr;
+    border-right: solid $nord3;
+}
+
+#performance-metrics {
+    width: auto;
+}
+
+.status-row {
+    height: auto;
+    align-vertical: middle;
+    margin-bottom: 0;
+}
+
+.status-label {
+    color: $nord9;
+    text-style: bold;
+    margin-right: 1;
 }
 
 .status-value {
-    color: $nord8;
+    color: $nord6;
     text-style: bold;
+    margin-right: 2;
 }
 
 .status-running {
@@ -178,6 +214,37 @@ ContentSwitcher {
 
 .status-stopped {
     color: $nord11; /* Red */
+}
+
+.pnl-positive {
+    color: $nord14; /* Green */
+}
+
+.pnl-negative {
+    color: $nord11; /* Red */
+}
+
+.pnl-neutral {
+    color: $nord4;
+}
+
+/* Button Styling */
+Button {
+    min-width: 12;
+    margin: 0 1;
+}
+
+.button-group {
+    align-vertical: middle;
+    height: 100%;
+}
+
+Button:hover {
+    text-style: bold;
+}
+
+Button.-disabled {
+    opacity: 0.5;
 }
 
 /* DataTable Overrides */
@@ -242,4 +309,58 @@ BlockChartWidget {
 .chart-content {
     height: 3;
     color: $nord14;
+}
+
+/* Contextual Footer */
+ContextualFooter {
+    dock: bottom;
+    height: 1;
+    background: $nord1;
+    border-top: solid $nord8;
+}
+
+#contextual-footer {
+    height: 100%;
+    align-vertical: middle;
+    padding: 0 1;
+}
+
+.footer-group {
+    margin-right: 2;
+    align-vertical: middle;
+}
+
+.footer-group-right {
+    dock: right;
+}
+
+.footer-key {
+    color: $nord8;
+    text-style: bold;
+    background: $nord3;
+    padding: 0 1;
+    margin-right: 1;
+}
+
+.footer-label {
+    color: $nord4;
+}
+
+/* Widget Headers */
+.header {
+    color: $nord8;
+    text-style: bold;
+    text-align: center;
+    background: $nord2;
+    padding: 0 1;
+    border-bottom: solid $nord3;
+}
+
+/* Empty States */
+.empty-state {
+    color: $nord3;
+    text-style: italic;
+    text-align: center;
+    padding: 2;
+    display: none; /* Hidden by default */
 }

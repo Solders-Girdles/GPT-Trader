@@ -1,12 +1,13 @@
 from textual.app import ComposeResult
 from textual.containers import Container
 from textual.screen import Screen
-from textual.widgets import Footer, Header
+from textual.widgets import Header
 
 from gpt_trader.tui.state import TuiState
 from gpt_trader.tui.widgets import (
     AccountWidget,
     BotStatusWidget,
+    ContextualFooter,
     LogWidget,
     MarketWatchWidget,
     OrdersWidget,
@@ -53,7 +54,7 @@ class MainScreen(Screen):
                 with Container(id="logs-column"):
                     yield LogWidget(id="dash-logs", classes="dashboard-item")
 
-        yield Footer()
+        yield ContextualFooter()
 
     def update_ui(self, state: TuiState) -> None:
         """Update widgets from TuiState."""

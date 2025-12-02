@@ -91,6 +91,7 @@ DataTable > .datatable--header {
 DataTable > .datatable--cursor {
     background: $accent-muted;
     color: $text-primary;
+    text-style: bold;
 }
 
 DataTable > .datatable--odd-row {
@@ -104,6 +105,12 @@ DataTable > .datatable--even-row {
 DataTable:focus > .datatable--cursor {
     background: $accent;
     color: $bg-primary;
+    text-style: bold;
+}
+
+/* Row hover effect */
+DataTable > .datatable--hover {
+    background: rgba(193, 95, 60, 0.15);  /* Subtle accent tint on hover */
 }
 
 /* === Tabs === */

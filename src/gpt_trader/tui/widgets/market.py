@@ -12,7 +12,7 @@ class MarketWatchWidget(Static):
     """Displays market data."""
 
     def compose(self) -> ComposeResult:
-        yield Label("MARKET WATCH", classes="header")
+        yield Label("📊 MARKET WATCH", classes="header")
         yield DataTable(id="market-table", zebra_stripes=True)
         yield BlockChartWidget(id="market-chart")
 

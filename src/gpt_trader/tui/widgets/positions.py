@@ -14,7 +14,7 @@ class PositionsWidget(Static):
     """Displays active positions."""
 
     def compose(self) -> ComposeResult:
-        yield Label("ACTIVE POSITIONS", classes="header")
+        yield Label("💼 ACTIVE POSITIONS", classes="header")
         yield DataTable(id="positions-table", zebra_stripes=True)
         yield Label("", id="positions-empty", classes="empty-state")
 
@@ -44,7 +44,7 @@ class OrdersWidget(Static):
     """Widget to display active orders."""
 
     def compose(self) -> ComposeResult:
-        yield Label("Active Orders", classes="header")
+        yield Label("📋 ACTIVE ORDERS", classes="header")
         yield DataTable(id="orders-table")
         yield Label("", id="orders-empty", classes="empty-state")
 
@@ -79,7 +79,7 @@ class TradesWidget(Static):
     """Widget to display recent trades."""
 
     def compose(self) -> ComposeResult:
-        yield Label("Recent Trades", classes="header")
+        yield Label("📈 RECENT TRADES", classes="header")
         yield DataTable(id="trades-table")
         yield Label("", id="trades-empty", classes="empty-state")
 

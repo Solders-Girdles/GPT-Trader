@@ -65,17 +65,22 @@
     margin-right: $spacing-md;
     background: $bg-elevated;
     padding: 0 $spacing-md;
-    border-radius: 2;              /* Pill-shaped indicators */
+    border-radius: 2;              /* Pill-shaped base */
+    border: solid $border-subtle;  /* Subtle border */
 }
 
 .status-running {
     color: $success;
     background: rgba(122, 168, 116, 0.2);
+    padding: 0 $spacing-md;
+    border: solid $success;
 }
 
 .status-stopped {
     color: $error;
     background: rgba(212, 115, 110, 0.2);
+    padding: 0 $spacing-md;
+    border: solid $error;
 }
 
 /* === Heartbeat Indicator === */
@@ -144,11 +149,12 @@ ContextualFooter {
     background: $accent;           /* Rust-orange accent */
     padding: 0 $spacing-md;
     margin-right: $spacing-xs;
+    border-radius: 1;              /* Subtle rounding */
 }
 
 .footer-label {
     color: $text-primary;
-    margin-right: $spacing-xs;
+    margin-right: $spacing-md;  /* More spacing between groups */
 }
 
 .footer-separator {

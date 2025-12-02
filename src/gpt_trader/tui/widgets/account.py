@@ -13,7 +13,7 @@ class AccountWidget(Static):
     """Widget to display account metrics."""
 
     def compose(self) -> ComposeResult:
-        yield Label("Account Summary", classes="header")
+        yield Label("💰 ACCOUNT SUMMARY", classes="header")
 
         # Portfolio Summary Row (Primary Metrics)
         with Container(classes="portfolio-summary-row"):

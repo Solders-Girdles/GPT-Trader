@@ -20,18 +20,26 @@ class ContextualFooter(Static):
                 yield Label("[S]", classes="footer-key")
                 yield Label("Start/Stop", classes="footer-label")
 
+            yield Label("|", classes="footer-separator")
+
             with Horizontal(classes="footer-group"):
                 yield Label("[P]", classes="footer-key")
                 yield Label("Panic", classes="footer-label")
+
+            yield Label("|", classes="footer-separator")
 
             # Navigation shortcuts
             with Horizontal(classes="footer-group"):
                 yield Label("[C]", classes="footer-key")
                 yield Label("Config", classes="footer-label")
 
+            yield Label("|", classes="footer-separator")
+
             with Horizontal(classes="footer-group"):
                 yield Label("[L]", classes="footer-key")
                 yield Label("Logs", classes="footer-label")
+
+            yield Label("|", classes="footer-separator")
 
             # Utility shortcuts
             with Horizontal(classes="footer-group"):

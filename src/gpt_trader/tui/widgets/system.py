@@ -55,7 +55,7 @@ class SystemHealthWidget(Static):
     system_data = reactive(SystemStatus())
 
     def compose(self) -> ComposeResult:
-        yield Label("System Health", classes="header")
+        yield Label("⚙️ SYSTEM HEALTH", classes="header")
 
         with Vertical():
             with Horizontal(classes="metric-row"):

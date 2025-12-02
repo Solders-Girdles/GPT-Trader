@@ -94,6 +94,20 @@ def _run_demo_tui(scenario: str = "mixed") -> int:
     logger.info(f"Starting TUI in DEMO mode with '{scenario}' scenario")
     logger.info("No real exchanges or trading will occur")
 
+    # Remove existing StreamHandlers that were added during CLI startup
+    import logging
+
+    root_logger = logging.getLogger()
+    stream_handlers = [h for h in root_logger.handlers if isinstance(h, logging.StreamHandler)]
+    for handler in stream_handlers:
+        root_logger.removeHandler(handler)
+        handler.close()
+
+    # Reconfigure logging in TUI mode (no console output to avoid corrupting display)
+    from gpt_trader.logging.setup import configure_logging
+
+    configure_logging(tui_mode=True)
+
     # Create demo bot with selected scenario
     data_generator = get_scenario(scenario)
     demo_bot = DemoBot(data_generator=data_generator)
@@ -109,6 +123,20 @@ def _run_tui(bot: Any) -> int:
     except ImportError:
         logger.error("TUI dependencies not installed. Run 'uv sync' to install textual.")
         return 1
+
+    # Remove existing StreamHandlers that were added during CLI startup
+    import logging
+
+    root_logger = logging.getLogger()
+    stream_handlers = [h for h in root_logger.handlers if isinstance(h, logging.StreamHandler)]
+    for handler in stream_handlers:
+        root_logger.removeHandler(handler)
+        handler.close()
+
+    # Reconfigure logging in TUI mode (no console output to avoid corrupting display)
+    from gpt_trader.logging.setup import configure_logging
+
+    configure_logging(tui_mode=True)
 
     app = TraderApp(bot)
     app.run()

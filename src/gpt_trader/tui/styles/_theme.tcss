@@ -1,0 +1,42 @@
+/* Theme Variables - Claude Code Palette
+ *
+ * This module defines the core color palette and spacing scale for the
+ * GPT-Trader TUI, inspired by Claude Code's warm, editorial aesthetic.
+ *
+ * Color Philosophy:
+ * - Warm, analog aesthetic ("parchment-toned")
+ * - High contrast without harshness (WCAG AA compliant)
+ * - Signature rust-orange accent (#C15F3C)
+ * - Deep warm brown backgrounds
+ */
+
+/* === Backgrounds === */
+$bg-primary: #1A1815;      /* Deep warm brown "coffee stain" - main background */
+$bg-secondary: #2E2922;    /* Slightly lighter warm brown - containers */
+$bg-elevated: #3A3530;     /* Elevated surfaces - headers, highlights */
+
+/* === Accents === */
+$accent: #C15F3C;          /* Signature rust-orange - primary accent */
+$accent-hover: #D17A5A;    /* Lighter rust - hover states */
+$accent-muted: #8B4428;    /* Darker rust - borders, subtle accents */
+
+/* === Text Colors === */
+$text-primary: #E8E6E3;    /* Light warm grey - primary text */
+$text-secondary: #ABA8A5;  /* Muted grey - labels, secondary text */
+$text-muted: #6B6865;      /* Very muted grey - hints, disabled text */
+
+/* === Semantic Colors === */
+$success: #7AA874;         /* Warm green - positive values, success states */
+$warning: #D8A657;         /* Warm amber - warnings, caution */
+$error: #D4736E;           /* Warm coral-red - errors, negative values */
+$info: #6FA8C4;            /* Warm blue-grey - informational */
+
+/* === Borders === */
+$border-subtle: #3A3530;   /* Subtle warm border - light dividers */
+$border-emphasis: #4A453F; /* Emphasized border - prominent dividers */
+
+/* === Spacing Scale === */
+$spacing-xs: 1;            /* Extra small spacing - tight elements */
+$spacing-sm: 2;            /* Small spacing - compact layouts */
+$spacing-md: 3;            /* Medium spacing - standard padding */
+$spacing-lg: 4;            /* Large spacing - generous padding */

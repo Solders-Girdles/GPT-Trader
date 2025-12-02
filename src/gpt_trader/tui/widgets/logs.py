@@ -82,8 +82,16 @@ class LogWidget(Static):
 
     def on_select_changed(self, event: Select.Changed) -> None:
         """Handle log level selection change."""
-        if event.select.id == "log-level-select" and event.value is not None:
-            self._min_level = int(event.value)
+        from typing import cast
+
+        from textual.widgets._select import NoSelection
+
+        if (
+            event.select.id == "log-level-select"
+            and event.value is not None
+            and not isinstance(event.value, NoSelection)
+        ):
+            self._min_level = int(cast(int, event.value))
 
     def write_log(self, message: str, level: int) -> None:
         # Schedule write on the main thread

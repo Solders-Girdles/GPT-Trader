@@ -12,15 +12,15 @@ class SystemHealthWidget(Static):
 
     DEFAULT_CSS = """
     SystemHealthWidget {
-        background: #3b4252;  /* nord1 */
-        border: solid #4c566a; /* nord3 */
+        background: #2E2922;  /* bg-secondary */
+        border: solid #3A3530; /* border-subtle */
         height: auto;
         padding: 1;
     }
 
     SystemHealthWidget .header {
         text-style: bold;
-        color: #88c0d0; /* nord8 */
+        color: #C15F3C; /* accent */
         margin-bottom: 1;
     }
 
@@ -30,32 +30,32 @@ class SystemHealthWidget(Static):
     }
 
     SystemHealthWidget .label {
-        color: #d8dee9; /* nord4 */
+        color: #ABA8A5; /* text-secondary */
         width: 15;
     }
 
     SystemHealthWidget .value {
-        color: #eceff4; /* nord6 */
+        color: #E8E6E3; /* text-primary */
         text-style: bold;
     }
 
     .status-connected {
-        color: #a3be8c; /* nord14 */
+        color: #7AA874; /* success */
     }
 
     .status-disconnected {
-        color: #bf616a; /* nord11 */
+        color: #D4736E; /* error */
     }
 
     .status-unknown {
-        color: #ebcb8b; /* nord13 */
+        color: #D8A657; /* warning */
     }
     """
 
     system_data = reactive(SystemStatus())
 
     def compose(self) -> ComposeResult:
-        yield Label("System Health", classes="header")
+        yield Label("⚙️ SYSTEM HEALTH", classes="header")
 
         with Vertical():
             with Horizontal(classes="metric-row"):

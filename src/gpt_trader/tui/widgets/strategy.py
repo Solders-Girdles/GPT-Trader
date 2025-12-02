@@ -4,6 +4,7 @@ from textual.app import ComposeResult
 from textual.widgets import DataTable, Label, Static
 
 from gpt_trader.tui.helpers import safe_update
+from gpt_trader.tui.theme import THEME
 from gpt_trader.tui.types import StrategyState
 
 
@@ -11,7 +12,7 @@ class StrategyWidget(Static):
     """Displays strategy status and decisions."""
 
     def compose(self) -> ComposeResult:
-        yield Label("STRATEGY DECISIONS", classes="header")
+        yield Label("🎯 STRATEGY DECISIONS", classes="header")
         yield DataTable(id="strategy-table", zebra_stripes=True)
 
     def on_mount(self) -> None:
@@ -34,13 +35,13 @@ class StrategyWidget(Static):
                 time_str = datetime.fromtimestamp(decision.timestamp).strftime("%H:%M:%S")
 
             # Color code action
-            color = "white"
+            color = THEME.colors.text_primary
             if action == "BUY":
-                color = "#a3be8c"  # Green
+                color = THEME.colors.success
             elif action == "SELL":
-                color = "#bf616a"  # Red
+                color = THEME.colors.error
             elif action == "HOLD":
-                color = "#ebcb8b"  # Yellow
+                color = THEME.colors.warning
 
             formatted_action = f"[{color}]{action}[/{color}]"
             table.add_row(symbol, formatted_action, confidence, reason, time_str)

@@ -311,6 +311,85 @@ class TestConfigureLogging:
             assert "asctime" in fmt or "message" in fmt
             assert "levelname" in fmt or "message" in fmt
 
+    @patch("gpt_trader.logging.setup.ensure_directories")
+    @patch("pathlib.Path.mkdir")
+    def test_configure_logging_tui_mode_suppresses_stream_handler(
+        self, mock_mkdir: MagicMock, mock_ensure: MagicMock, tmp_path: Path
+    ) -> None:
+        """Test that TUI mode suppresses StreamHandler to prevent display corruption."""
+        with patch("gpt_trader.logging.setup.LOG_DIR", str(tmp_path)):
+            configure_logging(tui_mode=True)
+
+        root_logger = logging.getLogger()
+        # Filter for console StreamHandlers only (exclude RotatingFileHandler and test handlers)
+        console_handlers = [
+            h
+            for h in root_logger.handlers
+            if isinstance(h, logging.StreamHandler)
+            and not isinstance(h, logging.handlers.RotatingFileHandler)
+            and type(h).__name__ not in {"LogCaptureHandler", "LogCaptureFixture"}
+        ]
+
+        # No console StreamHandler should be present in TUI mode
+        assert len(console_handlers) == 0, "TUI mode should not have console StreamHandler"
+
+    @patch("gpt_trader.logging.setup.ensure_directories")
+    @patch("pathlib.Path.mkdir")
+    def test_configure_logging_cli_mode_creates_stream_handler(
+        self, mock_mkdir: MagicMock, mock_ensure: MagicMock, tmp_path: Path
+    ) -> None:
+        """Test that CLI mode creates StreamHandler for console output."""
+        with patch("gpt_trader.logging.setup.LOG_DIR", str(tmp_path)):
+            configure_logging(tui_mode=False)
+
+        root_logger = logging.getLogger()
+        # Filter for console StreamHandlers only (exclude RotatingFileHandler and test handlers)
+        console_handlers = [
+            h
+            for h in root_logger.handlers
+            if isinstance(h, logging.StreamHandler)
+            and not isinstance(h, logging.handlers.RotatingFileHandler)
+            and type(h).__name__ not in {"LogCaptureHandler", "LogCaptureFixture"}
+        ]
+
+        # At least one console StreamHandler should be present in CLI mode
+        assert len(console_handlers) >= 1, "CLI mode should have console StreamHandler"
+
+    @patch("gpt_trader.logging.setup.ensure_directories")
+    @patch("pathlib.Path.mkdir")
+    def test_configure_logging_file_handlers_present_in_both_modes(
+        self, mock_mkdir: MagicMock, mock_ensure: MagicMock, tmp_path: Path
+    ) -> None:
+        """Test that file handlers are present in both TUI and CLI modes."""
+        # Test TUI mode
+        with patch("gpt_trader.logging.setup.LOG_DIR", str(tmp_path)):
+            configure_logging(tui_mode=True)
+
+        root_logger = logging.getLogger()
+        tui_file_handlers = [
+            h for h in root_logger.handlers if isinstance(h, logging.handlers.RotatingFileHandler)
+        ]
+        assert len(tui_file_handlers) >= 2, "TUI mode should have file handlers"
+
+        # Reset handlers
+        for handler in root_logger.handlers[:]:
+            root_logger.removeHandler(handler)
+            handler.close()
+
+        # Test CLI mode
+        with patch("gpt_trader.logging.setup.LOG_DIR", str(tmp_path)):
+            configure_logging(tui_mode=False)
+
+        cli_file_handlers = [
+            h for h in root_logger.handlers if isinstance(h, logging.handlers.RotatingFileHandler)
+        ]
+        assert len(cli_file_handlers) >= 2, "CLI mode should have file handlers"
+
+        # Both modes should have same number of file handlers
+        assert len(tui_file_handlers) == len(
+            cli_file_handlers
+        ), "Both modes should have the same file handlers"
+
 
 class TestLoggingIntegration:
     """Integration tests for logging functionality."""

@@ -1,0 +1,227 @@
+/* Widget-Specific Styles
+ *
+ * This module defines styling for specific widgets in the TUI:
+ * - BotStatusWidget (status bar)
+ * - ContextualFooter
+ * - AccountWidget
+ * - Block Chart
+ *
+ * Widget-specific styles that don't fit into core components.
+ */
+
+/* === Status Bar (BotStatusWidget) === */
+
+#bot-status-header {
+    dock: top;
+    height: 6;                     /* Taller for prominence */
+    background: $bg-secondary;
+    color: $text-primary;
+    border-bottom: double $accent;  /* Double border for emphasis */
+    padding: 0;
+}
+
+#status-bar-container {
+    height: 100%;
+    align-vertical: middle;
+}
+
+.status-section {
+    padding: 0 $spacing-md;
+    height: 100%;
+    align-vertical: middle;
+}
+
+#bot-controls {
+    width: auto;
+    border-right: solid $border-subtle;
+}
+
+#status-info {
+    width: 1fr;
+    border-right: solid $border-subtle;
+}
+
+#performance-metrics {
+    width: auto;
+}
+
+.status-row {
+    height: auto;
+    align-vertical: middle;
+    margin-bottom: 0;
+}
+
+/* === Status Labels & Values === */
+
+.status-label {
+    color: $text-secondary;
+    text-style: bold;
+    margin-right: $spacing-xs;
+}
+
+.status-value {
+    color: $text-primary;
+    text-style: bold;
+    margin-right: $spacing-md;
+    background: $bg-elevated;
+    padding: 0 $spacing-md;
+    border-radius: 2;              /* Pill-shaped base */
+    border: solid $border-subtle;  /* Subtle border */
+}
+
+.status-running {
+    color: $success;
+    background: rgba(122, 168, 116, 0.2);
+    padding: 0 $spacing-md;
+    border: solid $success;
+}
+
+.status-stopped {
+    color: $error;
+    background: rgba(212, 115, 110, 0.2);
+    padding: 0 $spacing-md;
+    border: solid $error;
+}
+
+/* === Heartbeat Indicator === */
+
+.heartbeat-pulse {
+    margin-left: $spacing-xs;
+}
+
+.heartbeat-bright {
+    color: $success;
+    text-style: bold;
+}
+
+.heartbeat-dim {
+    color: $text-muted;
+}
+
+/* === P&L Color Coding === */
+
+.pnl-positive {
+    color: $success;
+}
+
+.pnl-negative {
+    color: $error;
+}
+
+.pnl-neutral {
+    color: $text-secondary;
+}
+
+/* === Button Group === */
+
+.button-group {
+    align-vertical: middle;
+    height: 100%;
+}
+
+/* === Contextual Footer === */
+
+ContextualFooter {
+    dock: bottom;
+    height: 1;
+    background: $bg-secondary;
+    border-top: double $accent;     /* Double border to match status bar */
+}
+
+#contextual-footer {
+    height: 100%;
+    align-vertical: middle;
+    padding: 0 $spacing-md;
+}
+
+.footer-group {
+    margin-right: $spacing-md;
+    align-vertical: middle;
+}
+
+.footer-group-right {
+    dock: right;
+}
+
+.footer-key {
+    color: $bg-primary;
+    text-style: bold;
+    background: $accent;           /* Rust-orange accent */
+    padding: 0 $spacing-md;
+    margin-right: $spacing-xs;
+    border-radius: 1;              /* Subtle rounding */
+}
+
+.footer-label {
+    color: $text-primary;
+    margin-right: $spacing-md;  /* More spacing between groups */
+}
+
+.footer-separator {
+    color: $border-subtle;
+    margin: 0 $spacing-xs;
+}
+
+/* === Account Widget === */
+
+AccountWidget {
+    layout: vertical;
+    padding: $spacing-xs;
+}
+
+.account-metric {
+    background: $bg-elevated;
+    border: solid $border-subtle;
+    padding: $spacing-xs $spacing-md;
+    margin: $spacing-xs;
+    height: auto;
+}
+
+.account-metric-label {
+    color: $text-secondary;
+    text-style: bold;
+}
+
+.account-metric-value {
+    color: $text-primary;
+    text-style: bold;
+    text-align: right;
+}
+
+.portfolio-summary-row {
+    margin-bottom: $spacing-sm;
+}
+
+.portfolio-metric {
+    background: $bg-elevated;
+    border: solid $border-subtle;
+    padding: $spacing-xs $spacing-md;
+    margin: $spacing-xs;
+}
+
+.portfolio-metric-label {
+    color: $text-secondary;
+    text-style: bold;
+}
+
+.portfolio-metric-value {
+    color: $text-primary;
+    text-style: bold;
+}
+
+.account-metrics-row {
+    margin-bottom: $spacing-sm;
+}
+
+/* === Block Chart Widget === */
+
+BlockChartWidget {
+    height: 5;
+    padding: 0 $spacing-xs;
+    border-top: solid $border-subtle;
+}
+
+.chart-content {
+    height: 3;
+    color: $success;               /* Default to success color */
+}

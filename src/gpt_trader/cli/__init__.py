@@ -19,7 +19,7 @@ from gpt_trader.utilities.logging_patterns import get_logger
 load_dotenv()
 
 # Configure logging (rotating files + console)
-configure_logging()
+configure_logging(tui_mode=False)  # CLI mode: enable console output
 logger = get_logger(__name__, component="cli")
 
 from gpt_trader.cli.commands import account, optimize, orders, report, run, treasury  # noqa: E402

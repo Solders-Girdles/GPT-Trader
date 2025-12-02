@@ -24,6 +24,9 @@ from gpt_trader.tui.types import (
     Trade,
     TradeHistory,
 )
+from gpt_trader.utilities.logging_patterns import get_logger
+
+logger = get_logger(__name__, component="tui")
 
 
 class TuiState(Widget):
@@ -81,14 +84,27 @@ class TuiState(Widget):
 
     def _update_market_data(self, market: dict[str, Any]) -> None:
         try:
+            prices = market.get("last_prices", {})
+            last_update = market.get("last_price_update", 0.0)
+            price_history = market.get("price_history", {})
+
             self.market_data = MarketState(
-                prices=market.get("last_prices", {}),
-                last_update=market.get("last_price_update", 0.0),
-                price_history=market.get("price_history", {}),
+                prices=prices,
+                last_update=last_update,
+                price_history=price_history,
             )
-        except Exception:
-            # Log error if logging were available, or just suppress to keep UI alive
-            pass
+        except (TypeError, ValueError) as e:
+            logger.error(
+                f"Invalid market data structure: {e}. "
+                f"Received types: prices={type(prices).__name__}, "
+                f"last_update={type(last_update).__name__}, "
+                f"price_history={type(price_history).__name__}",
+                exc_info=True,
+            )
+            # Keep UI alive with current state
+        except Exception as e:
+            logger.error(f"Unexpected error updating market data: {e}", exc_info=True)
+            # Keep UI alive with current state
 
     def _update_position_data(self, pos_data: dict[str, Any] | Any) -> None:
         try:
@@ -139,8 +155,15 @@ class TuiState(Widget):
                 total_unrealized_pnl=total_upnl,
                 equity=equity,
             )
-        except Exception:
-            pass
+        except (TypeError, ValueError, AttributeError) as e:
+            logger.error(
+                f"Invalid position data structure: {e}. "
+                f"Received data type: {type(pos_data).__name__}, "
+                f"positions parsed: {len(positions_map)}",
+                exc_info=True,
+            )
+        except Exception as e:
+            logger.error(f"Unexpected error updating position data: {e}", exc_info=True)
 
     def _update_order_data(self, raw_orders: list[Any]) -> None:
         try:
@@ -161,8 +184,15 @@ class TuiState(Widget):
                         )
                     )
             self.order_data = ActiveOrders(orders=orders_list)
-        except Exception:
-            pass
+        except (TypeError, ValueError, AttributeError) as e:
+            logger.error(
+                f"Invalid order data structure: {e}. "
+                f"Received data type: {type(raw_orders).__name__}, "
+                f"orders parsed: {len(orders_list)}",
+                exc_info=True,
+            )
+        except Exception as e:
+            logger.error(f"Unexpected error updating order data: {e}", exc_info=True)
 
     def _update_trade_data(self, raw_trades: list[Any]) -> None:
         try:
@@ -182,8 +212,15 @@ class TuiState(Widget):
                         )
                     )
             self.trade_data = TradeHistory(trades=trades_list)
-        except Exception:
-            pass
+        except (TypeError, ValueError, AttributeError) as e:
+            logger.error(
+                f"Invalid trade data structure: {e}. "
+                f"Received data type: {type(raw_trades).__name__}, "
+                f"trades parsed: {len(trades_list)}",
+                exc_info=True,
+            )
+        except Exception as e:
+            logger.error(f"Unexpected error updating trade data: {e}", exc_info=True)
 
     def _update_account_data(self, acc: dict[str, Any]) -> None:
         try:
@@ -206,8 +243,15 @@ class TuiState(Widget):
                 fee_tier=str(acc.get("fee_tier", "")),
                 balances=balances_list,
             )
-        except Exception:
-            pass
+        except (TypeError, ValueError, AttributeError) as e:
+            logger.error(
+                f"Invalid account data structure: {e}. "
+                f"Received data type: {type(acc).__name__}, "
+                f"balances parsed: {len(balances_list)}",
+                exc_info=True,
+            )
+        except Exception as e:
+            logger.error(f"Unexpected error updating account data: {e}", exc_info=True)
 
     def _update_strategy_data(self, strat: dict[str, Any]) -> None:
         try:
@@ -253,8 +297,15 @@ class TuiState(Widget):
                 active_strategies=strat.get("active_strategies", []),
                 last_decisions=decisions,
             )
-        except Exception:
-            pass
+        except (TypeError, ValueError, AttributeError) as e:
+            logger.error(
+                f"Invalid strategy data structure: {e}. "
+                f"Received data type: {type(strat).__name__}, "
+                f"decisions parsed: {len(decisions)}",
+                exc_info=True,
+            )
+        except Exception as e:
+            logger.error(f"Unexpected error updating strategy data: {e}", exc_info=True)
 
     def _update_risk_data(self, risk: dict[str, Any]) -> None:
         try:
@@ -266,8 +317,13 @@ class TuiState(Widget):
                 reduce_only_reason=risk.get("reduce_only_reason", ""),
                 active_guards=risk.get("active_guards", []),
             )
-        except Exception:
-            pass
+        except (TypeError, ValueError, AttributeError) as e:
+            logger.error(
+                f"Invalid risk data structure: {e}. " f"Received data type: {type(risk).__name__}",
+                exc_info=True,
+            )
+        except Exception as e:
+            logger.error(f"Unexpected error updating risk data: {e}", exc_info=True)
 
     def _update_system_data(self, sys: dict[str, Any]) -> None:
         try:
@@ -278,13 +334,24 @@ class TuiState(Widget):
                 memory_usage=sys.get("memory_usage", "0MB"),
                 cpu_usage=sys.get("cpu_usage", "0%"),
             )
-        except Exception:
-            pass
+        except (TypeError, ValueError, AttributeError) as e:
+            logger.error(
+                f"Invalid system data structure: {e}. " f"Received data type: {type(sys).__name__}",
+                exc_info=True,
+            )
+        except Exception as e:
+            logger.error(f"Unexpected error updating system data: {e}", exc_info=True)
 
     def _update_runtime_stats(self, runtime_state: Any | None) -> None:
         try:
             if runtime_state:
                 self.uptime = runtime_state.uptime
                 # self.cycle_count = runtime_state.cycle_count # If available
-        except Exception:
-            pass
+        except AttributeError as e:
+            logger.error(
+                f"Runtime state missing expected attribute: {e}. "
+                f"Received type: {type(runtime_state).__name__}",
+                exc_info=True,
+            )
+        except Exception as e:
+            logger.error(f"Unexpected error updating runtime stats: {e}", exc_info=True)

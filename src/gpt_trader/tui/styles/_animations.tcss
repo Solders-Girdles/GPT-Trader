@@ -7,43 +7,55 @@
  * may not work and require JavaScript-like implementation in Python.
  */
 
-/* === Smooth Transitions for Interactive Elements === */
+/* === Global Transition Defaults === */
+
+* {
+    transition-duration: 200ms;
+    transition-timing-function: ease-out;
+}
+
+/* === Component-Specific Transitions === */
 
 Button {
-    transition: background 200ms, border 200ms;
+    transition: background 200ms ease, border 200ms ease, transform 100ms ease;
 }
 
 DataTable > .datatable--cursor {
-    transition: background 150ms;
+    transition: background 150ms ease;
 }
 
 .status-value {
-    transition: color 300ms, background 300ms;
+    transition: color 300ms ease, background 300ms ease;
 }
-
-/* === Heartbeat Pulse === */
 
 .heartbeat-pulse {
     margin-left: $spacing-xs;
-    transition: color 500ms ease-in-out, text-style 500ms;
+    transition: opacity 500ms ease-in-out;
 }
 
 /* === Loading Spinner === */
 
-/* Note: @keyframes and animations may have limited support in Textual.
- * These are defined for completeness but may require Python implementation.
+/* Note: Unicode Braille spinner (⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏) is animated via Python interval,
+ * not CSS animations, for reliable terminal rendering.
  */
 
-@keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+LoadingSpinner {
+    width: auto;
+    height: auto;
+    align-horizontal: center;
+    align-vertical: middle;
+}
+
+#spinner-display {
+    color: $accent;
+    text-style: bold;
+    text-align: center;
 }
 
 .loading-spinner {
     color: $accent;
     text-style: bold;
     text-align: center;
-    animation: spin 1s linear infinite;
 }
 
 .loading-message {
@@ -68,8 +80,7 @@ DataTable > .datatable--cursor {
 }
 
 .value-updating {
-    background: rgba(193, 95, 60, 0.3);
-    transition: background 300ms ease-out;
+    animation: flash 300ms ease-out;
 }
 
 /* === Reduced Motion Support === */

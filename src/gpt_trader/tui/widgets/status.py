@@ -14,7 +14,7 @@ class BotStatusWidget(Static):
     equity = reactive("0.00")
     pnl = reactive("0.00")
     margin_usage = reactive("0.00%")
-    heartbeat = reactive(False)  # Toggles to create visual pulse
+    heartbeat = reactive(0.0)  # Smooth pulse (0.0-1.0 via sine wave)
 
     class ToggleBotPressed(Message):
         """Message sent when start/stop button is pressed."""
@@ -99,11 +99,15 @@ class BotStatusWidget(Static):
 
     def watch_cycle_count(self, count: int) -> None:
         """Update cycle count display."""
-        self.query_one("#cycles-value", Label).update(str(count))
+        label = self.query_one("#cycles-value", Label)
+        label.update(str(count))
+        self._flash_value(label)
 
     def watch_equity(self, equity: str) -> None:
         """Update equity display."""
-        self.query_one("#equity-value", Label).update(f"${equity}")
+        label = self.query_one("#equity-value", Label)
+        label.update(f"${equity}")
+        self._flash_value(label)
 
     def watch_pnl(self, pnl: str) -> None:
         """Update P&L display with color coding."""
@@ -123,16 +127,41 @@ class BotStatusWidget(Static):
         except ValueError:
             pass
 
+        self._flash_value(pnl_label)
+
     def watch_margin_usage(self, margin: str) -> None:
         """Update margin usage display."""
-        self.query_one("#margin-value", Label).update(f"{margin}")
+        label = self.query_one("#margin-value", Label)
+        label.update(f"{margin}")
+        self._flash_value(label)
 
-    def watch_heartbeat(self, heartbeat: bool) -> None:
-        """Update heartbeat indicator to show dashboard is alive."""
+    def _flash_value(self, label: Label) -> None:
+        """
+        Apply a brief flash animation to a value label.
+
+        Adds the 'value-updating' class which triggers a flash effect,
+        then removes it after 300ms to return to normal styling.
+
+        Only applies animation if widget is mounted and has an active app.
+        """
+        # Only animate if widget is mounted and has an event loop
+        if not self.is_mounted or not self.app:
+            return
+
+        label.add_class("value-updating")
+        try:
+            self.set_timer(0.3, lambda: label.remove_class("value-updating"))
+        except RuntimeError:
+            # No event loop available (e.g., in tests), skip animation
+            label.remove_class("value-updating")
+
+    def watch_heartbeat(self, heartbeat: float) -> None:
+        """Update heartbeat with smooth opacity transition."""
         indicator = self.query_one("#heartbeat-indicator", Label)
-        if heartbeat:
-            indicator.remove_class("heartbeat-dim")
-            indicator.add_class("heartbeat-bright")
-        else:
-            indicator.remove_class("heartbeat-bright")
-            indicator.add_class("heartbeat-dim")
+
+        # Map 0.0-1.0 to opacity via sine wave
+        # Range: 0.3 (dim) to 1.0 (bright)
+        opacity = 0.3 + (0.7 * heartbeat)
+
+        # Update CSS with inline opacity
+        indicator.styles.opacity = opacity

@@ -52,6 +52,7 @@ Button {
     padding: $spacing-xs $spacing-md;
     background: $bg-elevated;
     color: $text-primary;
+    transition: background 200ms ease, border 200ms ease, transform 100ms ease;
 }
 
 Button:hover {
@@ -59,15 +60,25 @@ Button:hover {
     border: solid $accent;
     background: $accent-muted;
     color: $text-primary;
+    transform: scale(1.02);  /* Subtle grow on hover */
+}
+
+Button:active {
+    transform: scale(0.98);  /* Subtle shrink on click */
 }
 
 Button:focus {
     border: double $accent;
+    box-shadow: 0 0 0 1 $accent;
 }
 
 Button.-disabled {
     opacity: 0.4;
     color: $text-muted;
+}
+
+Button.-disabled:hover {
+    transform: none;  /* No hover effect when disabled */
 }
 
 /* === DataTable === */
@@ -92,6 +103,7 @@ DataTable > .datatable--cursor {
     background: $accent-muted;
     color: $text-primary;
     text-style: bold;
+    transition: background 150ms ease;
 }
 
 DataTable > .datatable--odd-row {
@@ -111,6 +123,7 @@ DataTable:focus > .datatable--cursor {
 /* Row hover effect */
 DataTable > .datatable--hover {
     background: rgba(193, 95, 60, 0.15);  /* Subtle accent tint on hover */
+    transition: background 150ms ease;
 }
 
 /* === Tabs === */
@@ -194,3 +207,30 @@ Log {
 .text-muted { color: $text-muted; }
 
 .bold { text-style: bold; }
+
+/* === Accessibility === */
+
+/* Focus indicators for keyboard navigation */
+*:focus {
+    border: solid $accent;
+    outline: solid $accent;
+}
+
+Button:focus, DataTable:focus {
+    border: double $accent;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    $text-primary: #FFFFFF;
+    $text-secondary: #CCCCCC;
+    $border-emphasis: #666666;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        transition: none !important;
+        animation: none !important;
+    }
+}

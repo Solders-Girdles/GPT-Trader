@@ -136,13 +136,20 @@ class TraderApp(App):
         pass
 
     def _pulse_heartbeat(self) -> None:
-        """Toggle heartbeat indicator to show dashboard is alive."""
+        """Smooth heartbeat pulse using sine wave."""
+        import math
+        import time
+
         try:
             from gpt_trader.tui.widgets.status import BotStatusWidget
 
             status_widget = self.query_one(BotStatusWidget)
-            # Toggle the heartbeat state to create a visual pulse
-            status_widget.heartbeat = not status_widget.heartbeat
+
+            # Calculate sine wave: 0.0 to 1.0
+            t = time.time()
+            pulse = (math.sin(t * 2) + 1) / 2  # Sine wave normalized to 0-1
+
+            status_widget.heartbeat = pulse
         except Exception as e:
             logger.debug(f"Failed to pulse heartbeat: {e}")
 

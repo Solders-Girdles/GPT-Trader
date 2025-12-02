@@ -20,7 +20,7 @@ class PositionsWidget(Static):
 
     def on_mount(self) -> None:
         table = self.query_one(DataTable)
-        table.add_columns("Sym", "Qty", "Entry", "PnL")
+        table.add_columns("Symbol", "Quantity", "Entry", "PnL")
 
     @safe_update
     def update_positions(self, positions: dict[str, Position], total_pnl: str) -> None:
@@ -32,7 +32,11 @@ class PositionsWidget(Static):
         if not positions:
             table.display = False
             empty_label.display = True
-            empty_label.update("No open positions")
+            empty_label.update(
+                "📊 No open positions\n\n"
+                "💡 Start the bot to begin trading\n"
+                "Press [S] to start"
+            )
         else:
             table.display = True
             empty_label.display = False
@@ -61,7 +65,9 @@ class OrdersWidget(Static):
         if not orders:
             table.display = False
             empty_label.display = True
-            empty_label.update("No active orders")
+            empty_label.update(
+                "📋 No active orders\n\n" "💡 Orders will appear here when the bot places trades"
+            )
         else:
             table.display = True
             empty_label.display = False
@@ -85,7 +91,7 @@ class TradesWidget(Static):
 
     def on_mount(self) -> None:
         table = self.query_one("#trades-table", DataTable)
-        table.add_columns("Symbol", "Side", "Qty", "Price", "Order ID", "Time")
+        table.add_columns("Symbol", "Side", "Quantity", "Price", "Order ID", "Time")
 
     @safe_update
     def update_trades(self, trades: list[Trade]) -> None:
@@ -96,7 +102,9 @@ class TradesWidget(Static):
         if not trades:
             table.display = False
             empty_label.display = True
-            empty_label.update("No recent trades")
+            empty_label.update(
+                "📈 No recent trades\n\n" "💡 Trade history will appear here after execution"
+            )
         else:
             table.display = True
             empty_label.display = False

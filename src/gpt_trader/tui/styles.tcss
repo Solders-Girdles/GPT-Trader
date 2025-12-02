@@ -216,6 +216,20 @@ ContentSwitcher {
     color: $nord11; /* Red */
 }
 
+/* Heartbeat Indicator */
+.heartbeat-pulse {
+    margin-left: 1;
+}
+
+.heartbeat-bright {
+    color: $nord14; /* Green - active pulse */
+    text-style: bold;
+}
+
+.heartbeat-dim {
+    color: $nord3; /* Grey - dim state */
+}
+
 .pnl-positive {
     color: $nord14; /* Green */
 }

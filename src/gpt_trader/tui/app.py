@@ -67,6 +67,8 @@ class TraderApp(App):
 
             # Bind state to widgets
             self._bind_state()
+
+            # Initial UI sync will happen in MainScreen.on_mount() after widgets are ready
             logger.info("TUI mounted successfully")
         except Exception as e:
             logger.critical(f"Failed to mount TUI: {e}", exc_info=True)
@@ -118,6 +120,8 @@ class TraderApp(App):
         try:
             main_screen = self.query_one(MainScreen)
             main_screen.update_ui(self.tui_state)
+            # Toggle heartbeat to show dashboard is alive
+            self._pulse_heartbeat()
             logger.debug("UI updated successfully")
         except Exception as e:
             logger.warning(f"Failed to update main screen from status update: {e}")
@@ -127,9 +131,20 @@ class TraderApp(App):
         # This is where we could set up direct bindings if widgets supported it
         # For now, we'll just rely on the update loop pushing data to state,
         # and then we can push state to widgets or have widgets watch state.
-        # To keep it simple for this refactor, we will manually update widgets from state in _update_ui
-        # but the source of truth is now self.tui_state
+        # To keep it simple for this refactor, we will manually update widgets
+        # from state in _update_ui, but the source of truth is now self.tui_state
         pass
+
+    def _pulse_heartbeat(self) -> None:
+        """Toggle heartbeat indicator to show dashboard is alive."""
+        try:
+            from gpt_trader.tui.widgets.status import BotStatusWidget
+
+            status_widget = self.query_one(BotStatusWidget)
+            # Toggle the heartbeat state to create a visual pulse
+            status_widget.heartbeat = not status_widget.heartbeat
+        except Exception as e:
+            logger.debug(f"Failed to pulse heartbeat: {e}")
 
     async def _update_loop(self) -> None:
         """Periodically update UI from bot state (Fallback loop)."""
@@ -150,13 +165,14 @@ class TraderApp(App):
                     try:
                         main_screen = self.query_one(MainScreen)
                         main_screen.update_ui(self.tui_state)
+                        # Pulse heartbeat to show dashboard is alive
+                        self._pulse_heartbeat()
                     except Exception as e:
                         logger.warning(f"Failed to update main screen from polling: {e}")
                 else:
                     if loop_count % 30 == 0:  # Log every 30 seconds
-                        logger.debug(
-                            f"Observer pattern active, {len(self.bot.engine.status_reporter._observers)} observers"
-                        )
+                        observer_count = len(self.bot.engine.status_reporter._observers)
+                        logger.debug(f"Observer pattern active, {observer_count} observers")
             except Exception as e:
                 self.log(f"UI Update Error: {e}")
                 logger.error(f"UI Update Loop Error: {e}", exc_info=True)
@@ -202,6 +218,16 @@ class TraderApp(App):
                 # Ensure bot.stop() is called for cleanup
                 await self.bot.stop()
 
+                # Immediately sync state to UI
+                self._sync_state_from_bot()
+                try:
+                    main_screen = self.query_one(MainScreen)
+                    main_screen.update_ui(self.tui_state)
+                    self._pulse_heartbeat()
+                    logger.info("UI state synced immediately after bot stop")
+                except Exception as e:
+                    logger.warning(f"Failed to sync UI state after bot stop: {e}")
+
                 self.notify("Bot stopped.", title="Status", severity="information")
                 logger.info("Bot stopped successfully via TUI")
 
@@ -214,7 +240,17 @@ class TraderApp(App):
                 self._bot_task = asyncio.create_task(self.bot.run())
 
                 # Give it a moment to start
-                await asyncio.sleep(0.1)
+                await asyncio.sleep(0.2)
+
+                # Immediately sync state to UI
+                self._sync_state_from_bot()
+                try:
+                    main_screen = self.query_one(MainScreen)
+                    main_screen.update_ui(self.tui_state)
+                    self._pulse_heartbeat()
+                    logger.info("UI state synced immediately after bot start")
+                except Exception as e:
+                    logger.warning(f"Failed to sync UI state after bot start: {e}")
 
                 self.notify("Bot started.", title="Status", severity="information")
                 logger.info("Bot started successfully via TUI")

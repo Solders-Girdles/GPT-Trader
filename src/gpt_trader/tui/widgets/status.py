@@ -14,6 +14,7 @@ class BotStatusWidget(Static):
     equity = reactive("0.00")
     pnl = reactive("0.00")
     margin_usage = reactive("0.00%")
+    heartbeat = reactive(False)  # Toggles to create visual pulse
 
     class ToggleBotPressed(Message):
         """Message sent when start/stop button is pressed."""
@@ -38,6 +39,7 @@ class BotStatusWidget(Static):
                         yield Label(
                             "STOPPED", id="status-value", classes="status-value status-stopped"
                         )
+                        yield Label("●", id="heartbeat-indicator", classes="heartbeat-pulse")
                     with Horizontal(classes="status-row"):
                         yield Label("Uptime:", classes="status-label")
                         yield Label("00:00:00", id="uptime-value", classes="status-value")
@@ -124,3 +126,13 @@ class BotStatusWidget(Static):
     def watch_margin_usage(self, margin: str) -> None:
         """Update margin usage display."""
         self.query_one("#margin-value", Label).update(f"{margin}")
+
+    def watch_heartbeat(self, heartbeat: bool) -> None:
+        """Update heartbeat indicator to show dashboard is alive."""
+        indicator = self.query_one("#heartbeat-indicator", Label)
+        if heartbeat:
+            indicator.remove_class("heartbeat-dim")
+            indicator.add_class("heartbeat-bright")
+        else:
+            indicator.remove_class("heartbeat-bright")
+            indicator.add_class("heartbeat-dim")

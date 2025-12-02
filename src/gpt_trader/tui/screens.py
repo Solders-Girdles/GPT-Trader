@@ -56,6 +56,18 @@ class MainScreen(Screen):
 
         yield ContextualFooter()
 
+    def on_mount(self) -> None:
+        """Called when screen is mounted - trigger initial data load."""
+        logger.info("MainScreen mounted, performing initial UI sync")
+        # Now that all widgets are mounted, we can safely update them
+        # Access the app instance to get state and trigger update
+        if hasattr(self.app, "_sync_state_from_bot"):
+            self.app._sync_state_from_bot()
+            self.update_ui(self.app.tui_state)
+            if hasattr(self.app, "_pulse_heartbeat"):
+                self.app._pulse_heartbeat()
+            logger.info("Initial UI sync completed successfully")
+
     def update_ui(self, state: TuiState) -> None:
         """Update widgets from TuiState."""
         # Update Status

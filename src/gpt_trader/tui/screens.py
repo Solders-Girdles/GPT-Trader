@@ -14,6 +14,9 @@ from gpt_trader.tui.widgets import (
     StrategyWidget,
     SystemHealthWidget,
 )
+from gpt_trader.utilities.logging_patterns import get_logger
+
+logger = get_logger(__name__, component="tui")
 
 
 class MainScreen(Screen):
@@ -61,8 +64,8 @@ class MainScreen(Screen):
             status_widget.pnl = state.position_data.total_unrealized_pnl
             # Assuming margin usage might be available in account data or calculated
             # For now, we can leave it as default or update if available
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"Failed to update bot status widget: {e}")
 
         # Update Market Data
         try:
@@ -72,15 +75,15 @@ class MainScreen(Screen):
                 state.market_data.last_update,
                 state.market_data.price_history,
             )
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"Failed to update market widget: {e}")
 
         # Update Strategy
         try:
             strategy_widget = self.query_one("#dash-strategy", StrategyWidget)
             strategy_widget.update_strategy(state.strategy_data)
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"Failed to update strategy widget: {e}")
 
         # Update Positions
         try:
@@ -89,28 +92,28 @@ class MainScreen(Screen):
                 state.position_data.positions,
                 state.position_data.total_unrealized_pnl,
             )
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"Failed to update positions widget: {e}")
 
         # Update Orders
         try:
             orders_widget = self.query_one("#dash-orders", OrdersWidget)
             orders_widget.update_orders(state.order_data.orders)
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"Failed to update orders widget: {e}")
 
         # Update System Health
         try:
             sys_widget = self.query_one("#dash-system", SystemHealthWidget)
             sys_widget.update_system(state.system_data)
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"Failed to update system health widget: {e}")
 
         # Update Account
         try:
             acc_widget = self.query_one("#dash-account", AccountWidget)
             acc_widget.update_account(state.account_data)
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"Failed to update account widget: {e}")
 
         # Logs are updated via the logging handler, not here directly

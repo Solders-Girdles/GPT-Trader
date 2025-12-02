@@ -24,6 +24,9 @@ from gpt_trader.tui.types import (
     Trade,
     TradeHistory,
 )
+from gpt_trader.utilities.logging_patterns import get_logger
+
+logger = get_logger(__name__, component="tui")
 
 
 class TuiState(Widget):
@@ -86,9 +89,9 @@ class TuiState(Widget):
                 last_update=market.get("last_price_update", 0.0),
                 price_history=market.get("price_history", {}),
             )
-        except Exception:
-            # Log error if logging were available, or just suppress to keep UI alive
-            pass
+        except Exception as e:
+            logger.warning(f"Failed to update market data: {e}", exc_info=True)
+            # Keep UI alive with current state
 
     def _update_position_data(self, pos_data: dict[str, Any] | Any) -> None:
         try:
@@ -139,8 +142,8 @@ class TuiState(Widget):
                 total_unrealized_pnl=total_upnl,
                 equity=equity,
             )
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"Failed to update position data: {e}", exc_info=True)
 
     def _update_order_data(self, raw_orders: list[Any]) -> None:
         try:
@@ -161,8 +164,8 @@ class TuiState(Widget):
                         )
                     )
             self.order_data = ActiveOrders(orders=orders_list)
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"Failed to update order data: {e}", exc_info=True)
 
     def _update_trade_data(self, raw_trades: list[Any]) -> None:
         try:
@@ -182,8 +185,8 @@ class TuiState(Widget):
                         )
                     )
             self.trade_data = TradeHistory(trades=trades_list)
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"Failed to update trade data: {e}", exc_info=True)
 
     def _update_account_data(self, acc: dict[str, Any]) -> None:
         try:
@@ -206,8 +209,8 @@ class TuiState(Widget):
                 fee_tier=str(acc.get("fee_tier", "")),
                 balances=balances_list,
             )
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"Failed to update account data: {e}", exc_info=True)
 
     def _update_strategy_data(self, strat: dict[str, Any]) -> None:
         try:
@@ -253,8 +256,8 @@ class TuiState(Widget):
                 active_strategies=strat.get("active_strategies", []),
                 last_decisions=decisions,
             )
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"Failed to update strategy data: {e}", exc_info=True)
 
     def _update_risk_data(self, risk: dict[str, Any]) -> None:
         try:
@@ -266,8 +269,8 @@ class TuiState(Widget):
                 reduce_only_reason=risk.get("reduce_only_reason", ""),
                 active_guards=risk.get("active_guards", []),
             )
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"Failed to update risk data: {e}", exc_info=True)
 
     def _update_system_data(self, sys: dict[str, Any]) -> None:
         try:
@@ -278,13 +281,13 @@ class TuiState(Widget):
                 memory_usage=sys.get("memory_usage", "0MB"),
                 cpu_usage=sys.get("cpu_usage", "0%"),
             )
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"Failed to update system data: {e}", exc_info=True)
 
     def _update_runtime_stats(self, runtime_state: Any | None) -> None:
         try:
             if runtime_state:
                 self.uptime = runtime_state.uptime
                 # self.cycle_count = runtime_state.cycle_count # If available
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"Failed to update runtime stats: {e}", exc_info=True)

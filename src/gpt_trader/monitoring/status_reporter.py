@@ -10,6 +10,7 @@ from __future__ import annotations
 import asyncio
 import json
 import os
+import random
 import tempfile
 import time
 from collections import deque
@@ -92,12 +93,14 @@ class OrderStatus:
 class TradeStatus:
     """Status snapshot of a recent trade."""
 
+    trade_id: str
     symbol: str
     side: str
     quantity: str
     price: str
-    timestamp: float
-    order_id: str | None = None
+    time: str
+    order_id: str
+    fee: str = "0.00"
 
 
 @dataclass
@@ -495,13 +498,24 @@ class StatusReporter:
 
     def add_trade(self, trade: dict[str, Any]) -> None:
         """Add a recent trade."""
+        # Generate unique trade_id
+        trade_id = (
+            trade.get("trade_id") or f"trade_{int(time.time() * 1000)}_{random.randint(1000, 9999)}"
+        )
+
+        # Convert timestamp to ISO string
+        timestamp = trade.get("timestamp", time.time())
+        time_str = datetime.utcfromtimestamp(timestamp).isoformat() + "Z"
+
         new_trade = TradeStatus(
+            trade_id=trade_id,
             symbol=trade.get("symbol", ""),
             side=trade.get("side", ""),
             quantity=str(trade.get("quantity", "0")),
             price=str(trade.get("price", "0")),
-            timestamp=time.time(),
-            order_id=trade.get("order_id"),
+            time=time_str,
+            order_id=str(trade.get("order_id") or ""),
+            fee=str(trade.get("fee", "0.00")),
         )
         # Prepend and keep last 50
         self._status.trades.insert(0, new_trade)

@@ -246,7 +246,7 @@ class MockDataGenerator:
             "quantity": f"{quantity:.4f}",
             "price": f"{price:.2f}",
             "order_id": order_id,
-            "time": datetime.now().isoformat(),
+            "time": datetime.now().isoformat() + "Z",  # ISO format with UTC marker
             "fee": f"{price * quantity * 0.006:.2f}",  # 0.6% fee
         }
         self.trades.append(trade)

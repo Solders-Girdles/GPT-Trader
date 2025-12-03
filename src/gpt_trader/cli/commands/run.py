@@ -10,6 +10,7 @@ from typing import Any
 
 from gpt_trader.cli import options, services
 from gpt_trader.orchestration.configuration import ConfigValidationError
+from gpt_trader.tui.helpers import run_tui_app_with_cleanup
 from gpt_trader.utilities.logging_patterns import get_logger
 
 logger = get_logger(__name__, component="cli")
@@ -112,7 +113,7 @@ def _run_demo_tui(scenario: str = "mixed") -> int:
     data_generator = get_scenario(scenario)
     demo_bot = DemoBot(data_generator=data_generator)
     app = TraderApp(demo_bot)
-    app.run()
+    run_tui_app_with_cleanup(app)
     return 0
 
 
@@ -139,7 +140,7 @@ def _run_tui(bot: Any) -> int:
     configure_logging(tui_mode=True)
 
     app = TraderApp(bot)
-    app.run()
+    run_tui_app_with_cleanup(app)
     return 0
 
 

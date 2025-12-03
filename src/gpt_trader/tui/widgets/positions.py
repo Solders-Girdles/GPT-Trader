@@ -98,7 +98,7 @@ class PositionsWidget(Static):
                     Text(str(current_price), justify="right"),
                     Text(str(pos.unrealized_pnl), justify="right"),
                     Text(pnl_pct_str, justify="right"),
-                    Text(leverage_display, justify="right"),  # Preserves markup
+                    Text.from_markup(leverage_display, justify="right"),  # Preserves markup
                 )
 
 
@@ -215,6 +215,6 @@ class TradesWidget(Static):
                     formatted_side,  # Preserves color markup
                     Text(str(trade.quantity), justify="right"),
                     Text(str(trade.price), justify="right"),
-                    trade.order_id,
+                    trade.order_id[-8:] if trade.order_id else "",
                     Text(time_str, justify="right"),
                 )

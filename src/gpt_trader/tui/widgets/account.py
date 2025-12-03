@@ -36,7 +36,7 @@ class AccountWidget(Static):
     }
 
     .metric-separator {
-        color: #6B6865;  /* text-muted */
+        color: #7A7672;  /* text-muted - UPDATED */
         margin: 0 1;
     }
     """

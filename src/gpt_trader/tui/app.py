@@ -193,35 +193,41 @@ class TraderApp(App):
             logger.debug(f"Failed to pulse heartbeat: {e}")
 
     async def _update_loop(self) -> None:
-        """Periodically update UI from bot state (Fallback loop)."""
+        """Periodically update UI from bot state (Fallback + heartbeat)."""
         loop_count = 0
         while True:
             try:
                 loop_count += 1
-                # If we don't have observers, we must poll
-                if (
-                    not hasattr(self.bot.engine, "status_reporter")
-                    or not self.bot.engine.status_reporter._observers
-                ):
-                    if loop_count % 10 == 0:  # Log every 10 seconds
-                        logger.debug(
-                            f"Polling bot state (no observers). Bot running: {self.bot.running}"
-                        )
-                    self._sync_state_from_bot()
-                    try:
-                        main_screen = self.query_one(MainScreen)
-                        main_screen.update_ui(self.tui_state)
-                        # Pulse heartbeat to show dashboard is alive
-                        self._pulse_heartbeat()
-                    except Exception as e:
-                        logger.warning(f"Failed to update main screen from polling: {e}")
-                else:
-                    if loop_count % 30 == 0:  # Log every 30 seconds
-                        observer_count = len(self.bot.engine.status_reporter._observers)
-                        logger.debug(f"Observer pattern active, {observer_count} observers")
+
+                # ALWAYS poll and update - provides fallback + heartbeat
+                if loop_count % 10 == 0:  # Log occasionally for debugging
+                    observer_count = (
+                        len(self.bot.engine.status_reporter._observers)
+                        if hasattr(self.bot.engine, "status_reporter")
+                        else 0
+                    )
+                    logger.debug(
+                        f"Update loop tick {loop_count}, "
+                        f"observers: {observer_count}, "
+                        f"bot running: {self.bot.running}"
+                    )
+
+                # Sync state (fast if no changes)
+                self._sync_state_from_bot()
+
+                # Update UI
+                try:
+                    main_screen = self.query_one(MainScreen)
+                    main_screen.update_ui(self.tui_state)
+                    # Pulse heartbeat to show dashboard is alive
+                    self._pulse_heartbeat()
+                except Exception as e:
+                    logger.warning(f"Failed to update main screen: {e}")
+
             except Exception as e:
                 self.log(f"UI Update Error: {e}")
                 logger.error(f"UI Update Loop Error: {e}", exc_info=True)
+
             await asyncio.sleep(1)
 
     def _sync_state_from_bot(self) -> None:

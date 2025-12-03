@@ -1,6 +1,6 @@
+from rich.text import Text
 from textual.app import ComposeResult
 from textual.widgets import DataTable, Label, Static
-from textual.widgets._data_table import Column
 
 from gpt_trader.tui.helpers import safe_update
 from gpt_trader.tui.theme import THEME
@@ -32,16 +32,8 @@ class PositionsWidget(Static):
 
     def on_mount(self) -> None:
         table = self.query_one(DataTable)
-        # Use Column objects with explicit widths for better alignment
-        table.add_columns(
-            Column("Symbol", width=10),  # Left-aligned
-            Column("Quantity", width=12),  # Right-aligned numeric
-            Column("Entry", width=14),  # Right-aligned numeric
-            Column("Current", width=14),  # Right-aligned numeric
-            Column("PnL", width=12),  # Right-aligned numeric
-            Column("%", width=10),  # Right-aligned numeric
-            Column("Leverage", width=10),  # Right-aligned numeric
-        )
+        # Add columns - alignment handled in add_row with Text objects
+        table.add_columns("Symbol", "Quantity", "Entry", "Current", "PnL", "%", "Leverage")
 
     @safe_update
     def update_positions(
@@ -98,15 +90,15 @@ class PositionsWidget(Static):
                     else pos.entry_price
                 )
 
-                # Right-align numeric columns for better readability
+                # Right-align numeric columns using Text objects
                 table.add_row(
                     pos.symbol,  # Left-aligned (symbol)
-                    f"{pos.quantity:>12}",  # Right-aligned
-                    f"{pos.entry_price:>14}",  # Right-aligned
-                    f"{current_price:>14}",  # Right-aligned
-                    f"{pos.unrealized_pnl:>12}",  # Right-aligned
-                    f"{pnl_pct_str:>10}",  # Right-aligned
-                    f"{leverage_display:>10}",  # Right-aligned (includes markup)
+                    Text(str(pos.quantity), justify="right"),
+                    Text(str(pos.entry_price), justify="right"),
+                    Text(str(current_price), justify="right"),
+                    Text(str(pos.unrealized_pnl), justify="right"),
+                    Text(pnl_pct_str, justify="right"),
+                    Text(leverage_display, justify="right"),  # Preserves markup
                 )
 
 
@@ -131,14 +123,8 @@ class OrdersWidget(Static):
 
     def on_mount(self) -> None:
         table = self.query_one("#orders-table", DataTable)
-        # Use Column objects with explicit widths
-        table.add_columns(
-            Column("Symbol", width=12),  # Left-aligned
-            Column("Side", width=6),  # Left-aligned
-            Column("Quantity", width=14),  # Right-aligned numeric
-            Column("Price", width=14),  # Right-aligned numeric
-            Column("Status", width=10),  # Left-aligned
-        )
+        # Add columns - alignment handled in add_row with Text objects
+        table.add_columns("Symbol", "Side", "Quantity", "Price", "Status")
 
     @safe_update
     def update_orders(self, orders: list[Order]) -> None:
@@ -160,12 +146,12 @@ class OrdersWidget(Static):
                 side_color = THEME.colors.success if order.side == "BUY" else THEME.colors.error
                 formatted_side = f"[{side_color}]{order.side}[/{side_color}]"
 
-                # Right-align numeric columns
+                # Right-align numeric columns using Text objects
                 table.add_row(
                     order.symbol,
-                    formatted_side,
-                    f"{order.quantity:>14}",  # Right-aligned
-                    f"{order.price:>14}",  # Right-aligned
+                    formatted_side,  # Preserves color markup
+                    Text(str(order.quantity), justify="right"),
+                    Text(str(order.price), justify="right"),
                     order.status,
                 )
 
@@ -191,15 +177,8 @@ class TradesWidget(Static):
 
     def on_mount(self) -> None:
         table = self.query_one("#trades-table", DataTable)
-        # Use Column objects with explicit widths
-        table.add_columns(
-            Column("Symbol", width=10),  # Left-aligned
-            Column("Side", width=6),  # Left-aligned
-            Column("Quantity", width=12),  # Right-aligned numeric
-            Column("Price", width=14),  # Right-aligned numeric
-            Column("Order ID", width=20),  # Left-aligned
-            Column("Time", width=10),  # Right-aligned
-        )
+        # Add columns - alignment handled in add_row with Text objects
+        table.add_columns("Symbol", "Side", "Quantity", "Price", "Order ID", "Time")
 
     @safe_update
     def update_trades(self, trades: list[Trade]) -> None:
@@ -230,12 +209,12 @@ class TradesWidget(Static):
                     except IndexError:
                         pass
 
-                # Right-align numeric columns
+                # Right-align numeric columns using Text objects
                 table.add_row(
                     trade.symbol,
-                    formatted_side,
-                    f"{trade.quantity:>12}",  # Right-aligned
-                    f"{trade.price:>14}",  # Right-aligned
+                    formatted_side,  # Preserves color markup
+                    Text(str(trade.quantity), justify="right"),
+                    Text(str(trade.price), justify="right"),
                     trade.order_id,
-                    f"{time_str:>10}",  # Right-aligned
+                    Text(time_str, justify="right"),
                 )

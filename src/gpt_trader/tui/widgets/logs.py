@@ -53,6 +53,7 @@ class LogWidget(Static):
     def __init__(self, compact_mode: bool = True, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.compact_mode = compact_mode
+        self._handler: TuiLogHandler | None = None
 
     def compose(self) -> ComposeResult:
         with Horizontal(classes="header-row"):
@@ -82,15 +83,25 @@ class LogWidget(Static):
 
     def on_mount(self) -> None:
         # Attach handler to root logger
-        handler = TuiLogHandler(self)
+        self._handler = TuiLogHandler(self)
         formatter = logging.Formatter(
             "%(asctime)s - %(levelname)s - %(message)s", datefmt="%H:%M:%S"
         )
-        handler.setFormatter(formatter)
-        logging.getLogger().addHandler(handler)
+        self._handler.setFormatter(formatter)
+        logging.getLogger().addHandler(self._handler)
 
         # Set initial filter level
         self._min_level = logging.INFO
+
+    def on_unmount(self) -> None:
+        """Remove handler when widget is unmounted."""
+        if self._handler:
+            try:
+                logging.getLogger().removeHandler(self._handler)
+                self._handler = None
+            except Exception:
+                # Logger may already be cleaned up
+                pass
 
     def on_select_changed(self, event: Select.Changed) -> None:
         """Handle log level selection change."""

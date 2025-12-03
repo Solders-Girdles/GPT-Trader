@@ -195,7 +195,7 @@ Footer {
 
 .header {
     color: $text-primary;              /* Light warm grey for contrast */
-    text-style: normal;                /* CHANGED from bold - reduce emphasis */
+    text-style: none;                  /* FIXED: changed to 'none' to remove bold */
     text-align: left;                  /* Left-aligned editorial style */
     background: $bg-elevated;          /* CHANGED from $accent-muted - subtler */
     padding: 0 2;                      /* Compact horizontal padding */
@@ -282,7 +282,7 @@ DataTable {
 DataTable > .datatable--header {
     background: $bg-elevated;
     color: $text-secondary;        /* CHANGED from $accent - less emphasis */
-    text-style: normal;            /* CHANGED from bold - reduce weight */
+    text-style: none;              /* FIXED: changed to 'none' to remove bold */
     padding: $spacing-xs $spacing-md;
     border-bottom: solid $border-subtle;  /* CHANGED from $accent-muted */
 }

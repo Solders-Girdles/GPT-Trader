@@ -49,9 +49,7 @@ class PositionsWidget(Static):
             table.display = False
             empty_label.display = True
             empty_label.update(
-                "📊 No open positions\n\n"
-                "💡 Start the bot to begin trading\n"
-                "Press [S] to start"
+                "📊 No open positions\n\n💡 Start the bot to begin trading\nPress [S] to start"
             )
         else:
             table.display = True
@@ -134,7 +132,7 @@ class OrdersWidget(Static):
             table.display = False
             empty_label.display = True
             empty_label.update(
-                "📋 No active orders\n\n" "💡 Orders will appear here when the bot places trades"
+                "📋 No active orders\n\n💡 Orders will appear here when the bot places trades"
             )
         else:
             table.display = True
@@ -182,7 +180,7 @@ class TradesWidget(Static):
             table.display = False
             empty_label.display = True
             empty_label.update(
-                "📈 No recent trades\n\n" "💡 Trade history will appear here after execution"
+                "📈 No recent trades\n\n💡 Trade history will appear here after execution"
             )
         else:
             table.display = True

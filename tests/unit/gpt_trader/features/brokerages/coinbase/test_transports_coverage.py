@@ -65,7 +65,6 @@ class TestRealTransportCoverage:
             patch("websocket.create_connection") as mock_create,
             patch("websocket.enableTrace") as mock_trace,
         ):
-
             mock_ws = Mock()
             mock_create.return_value = mock_ws
 
@@ -119,7 +118,6 @@ class TestRealTransportCoverage:
             patch("websocket.create_connection") as mock_create,
             patch("websocket.enableTrace", side_effect=Exception("Trace failed")),
         ):
-
             mock_ws = Mock()
             mock_create.return_value = mock_ws
 
@@ -422,7 +420,6 @@ class TestTransportEdgeCases:
                 patch("websocket.create_connection") as mock_create,
                 patch("websocket.enableTrace") as mock_trace,
             ):
-
                 mock_ws = Mock()
                 mock_create.return_value = mock_ws
                 transport.connect("wss://test.example.com")

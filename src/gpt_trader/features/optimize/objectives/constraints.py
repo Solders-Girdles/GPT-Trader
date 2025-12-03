@@ -148,13 +148,11 @@ class ConditionalConstraint:
         valid_ops = {"lt", "le", "gt", "ge", "eq"}
         if self.condition_operator not in valid_ops:
             raise ValueError(
-                f"condition_operator must be one of {valid_ops}, "
-                f"got '{self.condition_operator}'"
+                f"condition_operator must be one of {valid_ops}, got '{self.condition_operator}'"
             )
         if self.constraint_operator not in valid_ops:
             raise ValueError(
-                f"constraint_operator must be one of {valid_ops}, "
-                f"got '{self.constraint_operator}'"
+                f"constraint_operator must be one of {valid_ops}, got '{self.constraint_operator}'"
             )
 
     def is_satisfied(

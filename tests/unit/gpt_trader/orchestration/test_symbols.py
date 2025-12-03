@@ -211,7 +211,10 @@ def test_normalize_symbols_custom_quote_and_config() -> None:
     )
 
     result, derivatives_enabled = symbols.normalize_symbols(
-        Profile.SPOT, ["BTC-PERP"], quote="JPY", config=config  # Custom quote override
+        Profile.SPOT,
+        ["BTC-PERP"],
+        quote="JPY",
+        config=config,  # Custom quote override
     )
 
     assert derivatives_enabled is False  # SPOT profile

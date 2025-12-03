@@ -331,7 +331,7 @@ class TuiState(Widget):
             )
         except (TypeError, ValueError, AttributeError) as e:
             logger.error(
-                f"Invalid risk data structure: {e}. " f"Received data type: {type(risk).__name__}",
+                f"Invalid risk data structure: {e}. Received data type: {type(risk).__name__}",
                 exc_info=True,
             )
         except Exception as e:
@@ -348,7 +348,7 @@ class TuiState(Widget):
             )
         except (TypeError, ValueError, AttributeError) as e:
             logger.error(
-                f"Invalid system data structure: {e}. " f"Received data type: {type(sys).__name__}",
+                f"Invalid system data structure: {e}. Received data type: {type(sys).__name__}",
                 exc_info=True,
             )
         except Exception as e:

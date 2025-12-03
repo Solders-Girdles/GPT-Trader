@@ -324,9 +324,18 @@ class TraderApp(App):
 
     async def action_focus_logs(self) -> None:
         """Focus the log widget."""
-        # Focus the full log widget and switch tab if needed
         try:
-            self.query_one("#logs-full").focus()
+            # Determine which screen we're on and query appropriate widget
+            if isinstance(self.screen, MainScreen):
+                log_widget = self.query_one("#dash-logs")
+            elif isinstance(self.screen, FullLogsScreen):
+                log_widget = self.query_one("#full-logs")
+            else:
+                # Other screens may not have log widgets
+                self.notify("No log widget on this screen", severity="information")
+                return
+
+            log_widget.focus()
         except Exception as e:
             logger.warning(f"Failed to focus log widget: {e}")
             self.notify("Could not focus logs widget", severity="warning")

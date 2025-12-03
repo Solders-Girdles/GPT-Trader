@@ -3,7 +3,7 @@ import pytest
 
 @pytest.mark.asyncio
 async def test_app_startup(mock_app, mock_bot):
-    """Test that the app starts up and mounts the main screen."""
+    """Test that the app starts up in STOPPED state."""
     async with mock_app.run_test() as pilot:
         # Check if MainScreen is mounted
         assert (
@@ -11,8 +11,14 @@ async def test_app_startup(mock_app, mock_bot):
         )  # MainScreen usually doesn't have an ID unless set, but check type
         assert "MainScreen" in str(type(pilot.app.screen))
 
-        # Check if Bot started
-        mock_bot.run.assert_called()
+        # Bot should NOT auto-start (safety feature - requires manual start)
+        mock_bot.run.assert_not_called()
+        assert not mock_bot.running
+
+        # Verify user can manually start bot with 's' key
+        await pilot.press("s")
+        await pilot.pause()
+        mock_bot.run.assert_called_once()
 
 
 @pytest.mark.asyncio
@@ -49,17 +55,19 @@ async def test_tui_receives_status_update(mock_app, mock_bot):
 async def test_toggle_bot(mock_app, mock_bot):
     """Test start/stop bot action."""
     async with mock_app.run_test() as pilot:
-        # Initial state: bot not running (mock_bot.running = False)
-        # action_toggle_bot calls bot.run() if not running
+        # Initial state: bot NOT running (manual start required)
+        assert not mock_bot.running
+        mock_bot.run.assert_not_called()
 
+        # Press 's' to START bot
         await pilot.press("s")
-        # Since bot.run is async task in app, it should be called
-        # But wait, app.on_mount ALREADY calls bot.run() if not running!
-        # So it might be running already.
+        await pilot.pause()
+        mock_bot.run.assert_called_once()
 
-        # Let's say it started running in on_mount
+        # Simulate bot now running
         mock_bot.running = True
 
-        # Now toggle -> Stop
+        # Press 's' again to STOP bot
         await pilot.press("s")
-        mock_bot.stop.assert_called()
+        await pilot.pause()
+        mock_bot.stop.assert_called_once()

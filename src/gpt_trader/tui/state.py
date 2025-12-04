@@ -9,6 +9,7 @@ from typing import Any
 from textual.reactive import reactive
 from textual.widget import Widget
 
+from gpt_trader.monitoring.status_reporter import BotStatus
 from gpt_trader.tui.types import (
     AccountBalance,
     AccountSummary,
@@ -40,6 +41,12 @@ class TuiState(Widget):
     uptime = reactive(0.0)
     cycle_count = reactive(0)
 
+    # Mode and connection tracking
+    data_source_mode = reactive("demo")  # demo, paper, read_only, live
+    last_update_timestamp = reactive(0.0)
+    update_interval = reactive(2.0)
+    connection_healthy = reactive(True)
+
     # We use reactive for complex objects too, but need to be careful about mutation
     # For simple updates, replacing the whole object triggers the watcher
     market_data = reactive(MarketState())
@@ -63,307 +70,228 @@ class TuiState(Widget):
         self.risk_data = RiskState()
         self.system_data = SystemStatus()
 
-    def update_from_bot_status(
-        self, status: dict[str, Any], runtime_state: Any | None = None
-    ) -> None:
+    def update_from_bot_status(self, status: BotStatus, runtime_state: Any | None = None) -> None:
         """
-        Update state from the bot's status dictionary.
+        Update state from the bot's typed status snapshot.
 
-        This method orchestrates updates for all data components.
-        Failures in one component update do not block others.
+        This method orchestrates updates for all data components using typed
+        dataclasses, eliminating the need for defensive parsing.
+
+        Args:
+            status: Typed BotStatus snapshot from StatusReporter
+            runtime_state: Optional runtime state (engine state, uptime, etc.)
         """
-        self._update_market_data(status.get("market", {}))
-        self._update_position_data(status.get("positions", {}))
-        self._update_order_data(status.get("orders", []))
-        self._update_trade_data(status.get("trades", []))
-        self._update_account_data(status.get("account", {}))
-        self._update_strategy_data(status.get("strategy", {}))
-        self._update_risk_data(status.get("risk", {}))
-        self._update_system_data(status.get("system", {}))
+        self._update_market_data(status.market)
+        self._update_position_data(status.positions)
+        self._update_order_data(status.orders)
+        self._update_trade_data(status.trades)
+        self._update_account_data(status.account)
+        self._update_strategy_data(status.strategy)
+        self._update_risk_data(status.risk)
+        self._update_system_data(status.system)
         self._update_runtime_stats(runtime_state)
 
-    def _update_market_data(self, market: dict[str, Any]) -> None:
-        try:
-            prices = market.get("last_prices", {})
-            last_update = market.get("last_price_update", 0.0)
-            price_history = market.get("price_history", {})
+    def check_connection_health(self) -> bool:
+        """
+        Check if data connection is healthy based on update interval.
 
-            self.market_data = MarketState(
-                prices=prices,
-                last_update=last_update,
-                price_history=price_history,
-            )
-        except (TypeError, ValueError) as e:
-            logger.error(
-                f"Invalid market data structure: {e}. "
-                f"Received types: prices={type(prices).__name__}, "
-                f"last_update={type(last_update).__name__}, "
-                f"price_history={type(price_history).__name__}",
-                exc_info=True,
-            )
-            # Keep UI alive with current state
-        except Exception as e:
-            logger.error(f"Unexpected error updating market data: {e}", exc_info=True)
-            # Keep UI alive with current state
+        Returns:
+            True if data is fresh, False if stale
+        """
+        if self.data_source_mode == "demo":
+            return True  # Demo always healthy
 
-    def _update_position_data(self, pos_data: dict[str, Any] | Any) -> None:
-        try:
-            positions_map = {}
+        import time
 
-            # Extract actual positions dict - handle nested structure
-            # pos_data can be:
-            # 1. {"positions": {...}, "total_unrealized_pnl": "...", "equity": "..."}
-            # 2. {"BTC-USD": {...}, "ETH-USD": {...}, "total_unrealized_pnl": "...", "equity": "..."}
-            positions_dict = {}
-            total_upnl = "0.00"
-            equity = "0.00"
+        time_since_update = time.time() - self.last_update_timestamp
+        staleness_threshold = self.update_interval * 2.5
+        is_healthy = time_since_update < staleness_threshold
 
-            if isinstance(pos_data, dict):
-                # Check if we have nested structure with "positions" key
-                if "positions" in pos_data and isinstance(pos_data["positions"], dict):
-                    positions_dict = pos_data["positions"]
+        # Update connection_healthy if changed
+        if is_healthy != self.connection_healthy:
+            self.connection_healthy = is_healthy
+
+        return is_healthy
+
+    def _update_market_data(self, market: Any) -> None:  # MarketStatus from status_reporter
+        """Update market data from typed MarketStatus."""
+        import time
+
+        # Track update timestamp for connection health monitoring
+        self.last_update_timestamp = time.time()
+
+        # Convert price history from list[str] to dict[str, list[Decimal]] if needed
+        # For now, we just use the data as-is (Phase 5 will handle Decimal conversion)
+        from decimal import Decimal
+
+        price_history_converted = {}
+        if hasattr(market, "price_history") and market.price_history:
+            for symbol, history in market.price_history.items():
+                if isinstance(history, list):
+                    # Convert string history to Decimal
+                    price_history_converted[symbol] = [
+                        Decimal(p) if isinstance(p, str) else p for p in history
+                    ]
                 else:
-                    # Flat structure - filter out summary fields
-                    positions_dict = {
-                        k: v
-                        for k, v in pos_data.items()
-                        if k not in ("total_unrealized_pnl", "equity", "count", "symbols")
-                    }
+                    price_history_converted[symbol] = history
 
-                # Extract summary fields from top level
-                total_upnl = str(pos_data.get("total_unrealized_pnl", "0.00"))
-                equity = str(pos_data.get("equity", "0.00"))
+        self.market_data = MarketState(
+            prices=market.last_prices if hasattr(market, "last_prices") else {},
+            last_update=market.last_price_update if hasattr(market, "last_price_update") else 0.0,
+            price_history=price_history_converted,
+        )
 
-            # Parse individual positions
-            for symbol, p_data in positions_dict.items():
-                if isinstance(p_data, dict):
-                    positions_map[symbol] = Position(
-                        symbol=symbol,
-                        quantity=str(p_data.get("quantity", "0")),
-                        entry_price=str(p_data.get("entry_price", "N/A")),
-                        unrealized_pnl=str(p_data.get("unrealized_pnl", "0.00")),
-                        mark_price=str(p_data.get("mark_price", "0.00")),
-                        side=str(p_data.get("side", "")),
-                    )
-                elif hasattr(p_data, "quantity"):
-                    # Handle object-like position data
-                    positions_map[symbol] = Position(
-                        symbol=symbol,
-                        quantity=str(p_data.quantity),
-                        entry_price=str(getattr(p_data, "entry_price", "N/A")),
-                        unrealized_pnl=str(getattr(p_data, "unrealized_pnl", "0.00")),
-                        mark_price=str(getattr(p_data, "mark_price", "0.00")),
-                        side=str(getattr(p_data, "side", "")),
-                    )
+    def _update_position_data(self, pos_data: Any) -> None:  # PositionStatus from status_reporter
+        """Update position data from typed PositionStatus."""
+        positions_map = {}
 
-            self.position_data = PortfolioSummary(
-                positions=positions_map,
-                total_unrealized_pnl=total_upnl,
-                equity=equity,
-            )
-        except (TypeError, ValueError, AttributeError) as e:
-            logger.error(
-                f"Invalid position data structure: {e}. "
-                f"Received data type: {type(pos_data).__name__}, "
-                f"positions parsed: {len(positions_map)}",
-                exc_info=True,
-            )
-        except Exception as e:
-            logger.error(f"Unexpected error updating position data: {e}", exc_info=True)
-
-    def _update_order_data(self, raw_orders: list[Any]) -> None:
-        try:
-            orders_list = []
-            for o in raw_orders:
-                if isinstance(o, dict):
-                    orders_list.append(
-                        Order(
-                            order_id=str(o.get("order_id", "")),
-                            symbol=str(o.get("symbol", "")),
-                            side=str(o.get("side", "")),
-                            quantity=str(o.get("quantity", "")),
-                            price=str(o.get("avg_execution_price") or o.get("price", "")),
-                            status=str(o.get("status", "UNKNOWN")),
-                            type=str(o.get("order_type", "UNKNOWN")),
-                            time_in_force=str(o.get("time_in_force", "UNKNOWN")),
-                            creation_time=str(o.get("creation_time", "")),
-                        )
-                    )
-            self.order_data = ActiveOrders(orders=orders_list)
-        except (TypeError, ValueError, AttributeError) as e:
-            logger.error(
-                f"Invalid order data structure: {e}. "
-                f"Received data type: {type(raw_orders).__name__}, "
-                f"orders parsed: {len(orders_list)}",
-                exc_info=True,
-            )
-        except Exception as e:
-            logger.error(f"Unexpected error updating order data: {e}", exc_info=True)
-
-    def _update_trade_data(self, raw_trades: list[Any]) -> None:
-        try:
-            trades_list = []
-            for t in raw_trades:
-                if isinstance(t, dict):
-                    trades_list.append(
-                        Trade(
-                            trade_id=str(t.get("trade_id", "")),
-                            symbol=str(t.get("product_id") or t.get("symbol", "")),
-                            side=str(t.get("side", "")),
-                            quantity=str(t.get("quantity", "")),
-                            price=str(t.get("price", "")),
-                            order_id=str(t.get("order_id", "")),
-                            time=str(t.get("time", "")),
-                            fee=str(t.get("fee", "0.00")),
-                        )
-                    )
-            self.trade_data = TradeHistory(trades=trades_list)
-        except (TypeError, ValueError, AttributeError) as e:
-            logger.error(
-                f"Invalid trade data structure: {e}. "
-                f"Received data type: {type(raw_trades).__name__}, "
-                f"trades parsed: {len(trades_list)}",
-                exc_info=True,
-            )
-        except Exception as e:
-            logger.error(f"Unexpected error updating trade data: {e}", exc_info=True)
-
-    def _update_account_data(self, acc: dict[str, Any]) -> None:
-        try:
-            raw_balances = acc.get("balances", [])
-            balances_list = []
-            for b in raw_balances:
-                if isinstance(b, dict):
-                    balances_list.append(
-                        AccountBalance(
-                            asset=str(b.get("asset", "")),
-                            total=str(b.get("total", "0")),
-                            available=str(b.get("available", "0")),
-                            hold=str(b.get("hold", "0.00")),
-                        )
-                    )
-
-            self.account_data = AccountSummary(
-                volume_30d=str(acc.get("volume_30d", "0.00")),
-                fees_30d=str(acc.get("fees_30d", "0.00")),
-                fee_tier=str(acc.get("fee_tier", "")),
-                balances=balances_list,
-            )
-        except (TypeError, ValueError, AttributeError) as e:
-            logger.error(
-                f"Invalid account data structure: {e}. "
-                f"Received data type: {type(acc).__name__}, "
-                f"balances parsed: {len(balances_list)}",
-                exc_info=True,
-            )
-        except Exception as e:
-            logger.error(f"Unexpected error updating account data: {e}", exc_info=True)
-
-    def _update_strategy_data(self, strat: dict[str, Any]) -> None:
-        try:
-            decisions = {}
-
-            # StatusReporter stores last_decisions as a list of dicts
-            raw_decisions = strat.get("last_decisions", [])
-            if isinstance(raw_decisions, dict):
-                # Handle legacy/alternative format if any
-                raw_decisions = list(raw_decisions.values())
-
-            for dec in raw_decisions:
-                if not isinstance(dec, dict):
-                    continue
-
-                symbol = dec.get("symbol")
-                if not symbol:
-                    continue
-
-                # Parse fields (they might be strings from StatusReporter)
-                try:
-                    conf = float(dec.get("confidence", 0.0))
-                except (ValueError, TypeError):
-                    conf = 0.0
-
-                ts = dec.get("timestamp", 0.0)
-                if isinstance(ts, str):
-                    try:
-                        ts = float(ts)
-                    except ValueError:
-                        ts = 0.0
-
-                decisions[symbol] = DecisionData(
+        # PositionStatus has positions dict that contains position data
+        # Each position is a dict with keys: quantity, entry_price, unrealized_pnl, mark_price, side
+        for symbol, p_data in pos_data.positions.items():
+            if isinstance(p_data, dict):
+                positions_map[symbol] = Position(
                     symbol=symbol,
-                    action=dec.get("action", "HOLD"),
-                    reason=dec.get("reason", ""),
-                    confidence=conf,
-                    indicators=dec.get("indicators", {}),
-                    timestamp=ts,
+                    quantity=str(p_data.get("quantity", "0")),
+                    entry_price=str(p_data.get("entry_price", "N/A")),
+                    unrealized_pnl=str(p_data.get("unrealized_pnl", "0.00")),
+                    mark_price=str(p_data.get("mark_price", "0.00")),
+                    side=str(p_data.get("side", "")),
                 )
 
-            self.strategy_data = StrategyState(
-                active_strategies=strat.get("active_strategies", []),
-                last_decisions=decisions,
-            )
-        except (TypeError, ValueError, AttributeError) as e:
-            logger.error(
-                f"Invalid strategy data structure: {e}. "
-                f"Received data type: {type(strat).__name__}, "
-                f"decisions parsed: {len(decisions)}",
-                exc_info=True,
-            )
-        except Exception as e:
-            logger.error(f"Unexpected error updating strategy data: {e}", exc_info=True)
+        self.position_data = PortfolioSummary(
+            positions=positions_map,
+            total_unrealized_pnl=pos_data.total_unrealized_pnl,
+            equity=pos_data.equity,
+        )
 
-    def _update_risk_data(self, risk: dict[str, Any]) -> None:
-        try:
-            # Extract position leverage data (symbol -> leverage value)
-            position_leverage = risk.get("position_leverage", {})
-            if not isinstance(position_leverage, dict):
-                position_leverage = {}
+    def _update_order_data(self, raw_orders: list[Any]) -> None:  # list[OrderStatus]
+        """Update order data from typed list of OrderStatus."""
+        orders_list = []
+        for o in raw_orders:
+            # OrderStatus from status_reporter has order_type field (not type)
+            orders_list.append(
+                Order(
+                    order_id=o.order_id,
+                    symbol=o.symbol,
+                    side=o.side,
+                    quantity=o.quantity,
+                    price=o.price if o.price else "",
+                    status=o.status,
+                    type=o.order_type,  # OrderStatus uses order_type field
+                    time_in_force=o.time_in_force,
+                    creation_time=str(o.creation_time) if o.creation_time else "",
+                )
+            )
+        self.order_data = ActiveOrders(orders=orders_list)
 
-            self.risk_data = RiskState(
-                max_leverage=risk.get("max_leverage", 0.0),
-                daily_loss_limit_pct=risk.get("daily_loss_limit_pct", 0.0),
-                current_daily_loss_pct=risk.get("current_daily_loss_pct", 0.0),
-                reduce_only_mode=risk.get("reduce_only_mode", False),
-                reduce_only_reason=risk.get("reduce_only_reason", ""),
-                active_guards=risk.get("active_guards", []),
-                position_leverage=position_leverage,
+    def _update_trade_data(self, raw_trades: list[Any]) -> None:  # list[TradeStatus]
+        """Update trade data from typed list of TradeStatus."""
+        trades_list = []
+        for t in raw_trades:
+            # TradeStatus from status_reporter has all fields typed
+            trades_list.append(
+                Trade(
+                    trade_id=t.trade_id,
+                    symbol=t.symbol,
+                    side=t.side,
+                    quantity=t.quantity,
+                    price=t.price,
+                    order_id=t.order_id,
+                    time=t.time,
+                    fee=t.fee,
+                )
             )
-        except (TypeError, ValueError, AttributeError) as e:
-            logger.error(
-                f"Invalid risk data structure: {e}. Received data type: {type(risk).__name__}",
-                exc_info=True,
-            )
-        except Exception as e:
-            logger.error(f"Unexpected error updating risk data: {e}", exc_info=True)
+        self.trade_data = TradeHistory(trades=trades_list)
 
-    def _update_system_data(self, sys: dict[str, Any]) -> None:
-        try:
-            self.system_data = SystemStatus(
-                api_latency=sys.get("api_latency", 0.0),
-                connection_status=sys.get("connection_status", "UNKNOWN"),
-                rate_limit_usage=sys.get("rate_limit_usage", "0%"),
-                memory_usage=sys.get("memory_usage", "0MB"),
-                cpu_usage=sys.get("cpu_usage", "0%"),
+    def _update_account_data(self, acc: Any) -> None:  # AccountStatus from status_reporter
+        """Update account data from typed AccountStatus."""
+        balances_list = []
+        for b in acc.balances:
+            if isinstance(b, dict):
+                balances_list.append(
+                    AccountBalance(
+                        asset=b.get("asset", ""),
+                        total=b.get("total", "0"),
+                        available=b.get("available", "0"),
+                        hold=b.get("hold", "0.00"),
+                    )
+                )
+
+        self.account_data = AccountSummary(
+            volume_30d=acc.volume_30d,
+            fees_30d=acc.fees_30d,
+            fee_tier=acc.fee_tier,
+            balances=balances_list,
+        )
+
+    def _update_strategy_data(self, strat: Any) -> None:  # StrategyStatus from status_reporter
+        """Update strategy data from typed StrategyStatus."""
+        decisions = {}
+
+        # StrategyStatus stores last_decisions as list[dict]
+        for dec in strat.last_decisions:
+            if not isinstance(dec, dict):
+                continue
+
+            symbol = dec.get("symbol")
+            if not symbol:
+                continue
+
+            # Parse confidence (may be string from JSON)
+            try:
+                conf = float(dec.get("confidence", 0.0))
+            except (ValueError, TypeError):
+                conf = 0.0
+
+            # Parse timestamp (may be string from JSON)
+            ts = dec.get("timestamp", 0.0)
+            if isinstance(ts, str):
+                try:
+                    ts = float(ts)
+                except ValueError:
+                    ts = 0.0
+
+            decisions[symbol] = DecisionData(
+                symbol=symbol,
+                action=dec.get("action", "HOLD"),
+                reason=dec.get("reason", ""),
+                confidence=conf,
+                indicators=dec.get("indicators", {}),
+                timestamp=ts,
             )
-        except (TypeError, ValueError, AttributeError) as e:
-            logger.error(
-                f"Invalid system data structure: {e}. Received data type: {type(sys).__name__}",
-                exc_info=True,
-            )
-        except Exception as e:
-            logger.error(f"Unexpected error updating system data: {e}", exc_info=True)
+
+        self.strategy_data = StrategyState(
+            active_strategies=strat.active_strategies,
+            last_decisions=decisions,
+        )
+
+    def _update_risk_data(self, risk: Any) -> None:  # RiskStatus from status_reporter
+        """Update risk data from typed RiskStatus."""
+        # Note: RiskStatus doesn't have position_leverage field, but TUI RiskState does
+        # We need to add it to RiskStatus or handle it separately
+        self.risk_data = RiskState(
+            max_leverage=risk.max_leverage,
+            daily_loss_limit_pct=risk.daily_loss_limit_pct,
+            current_daily_loss_pct=risk.current_daily_loss_pct,
+            reduce_only_mode=risk.reduce_only_mode,
+            reduce_only_reason=risk.reduce_only_reason,
+            active_guards=risk.active_guards,
+            position_leverage={},  # Will be populated separately if needed
+        )
+
+    def _update_system_data(self, sys: Any) -> None:  # SystemStatus from status_reporter
+        """Update system data from typed SystemStatus."""
+        self.system_data = SystemStatus(
+            api_latency=sys.api_latency,
+            connection_status=sys.connection_status,
+            rate_limit_usage=sys.rate_limit_usage,
+            memory_usage=sys.memory_usage,
+            cpu_usage=sys.cpu_usage,
+        )
 
     def _update_runtime_stats(self, runtime_state: Any | None) -> None:
-        try:
-            if runtime_state:
-                self.uptime = runtime_state.uptime
-                # self.cycle_count = runtime_state.cycle_count # If available
-        except AttributeError as e:
-            logger.error(
-                f"Runtime state missing expected attribute: {e}. "
-                f"Received type: {type(runtime_state).__name__}",
-                exc_info=True,
-            )
-        except Exception as e:
-            logger.error(f"Unexpected error updating runtime stats: {e}", exc_info=True)
+        """Update runtime statistics (uptime, cycle count, etc.)."""
+        if runtime_state and hasattr(runtime_state, "uptime"):
+            self.uptime = runtime_state.uptime
+        if runtime_state and hasattr(runtime_state, "cycle_count"):
+            self.cycle_count = runtime_state.cycle_count

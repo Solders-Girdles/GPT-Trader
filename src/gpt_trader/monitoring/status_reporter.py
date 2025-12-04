@@ -219,7 +219,7 @@ class StatusReporter:
     _status: BotStatus = field(default_factory=BotStatus, repr=False)
 
     # Observers
-    _observers: list[Callable[[dict[str, Any]], None]] = field(default_factory=list, repr=False)
+    _observers: list[Callable[[BotStatus], None]] = field(default_factory=list, repr=False)
 
     # Mutable status tracking
     _cycle_count: int = field(default=0, repr=False)
@@ -278,14 +278,15 @@ class StatusReporter:
         await self._write_status()
         logger.info("Status reporter stopped")
 
-    def add_observer(self, callback: Callable[[dict[str, Any]], None]) -> None:
+    def add_observer(self, callback: Callable[[BotStatus], None]) -> None:
         """
         Add an observer callback that receives status updates.
-        The callback receives a dictionary of the full status.
+
+        The callback receives a BotStatus dataclass with the full typed status.
         """
         self._observers.append(callback)
 
-    def remove_observer(self, callback: Callable[[dict[str, Any]], None]) -> None:
+    def remove_observer(self, callback: Callable[[BotStatus], None]) -> None:
         """Remove an observer callback."""
         if callback in self._observers:
             self._observers.remove(callback)
@@ -295,18 +296,14 @@ class StatusReporter:
         while self._running:
             try:
                 await self._write_status()
-                # Notify observers
-                status_dict = asdict(self._status)
+                # Notify observers with typed BotStatus
                 for observer in self._observers:
                     try:
-                        # If callback is a coroutine, we should await it?
-                        # For simplicity, we assume sync callbacks or handle async appropriately if needed.
-                        # But Textual callbacks are often async or schedule updates.
-                        # Let's check if it's awaitable.
+                        # Handle both async and sync observer callbacks
                         if asyncio.iscoroutinefunction(observer):
-                            await observer(status_dict)
+                            await observer(self._status)
                         else:
-                            observer(status_dict)
+                            observer(self._status)
                     except Exception as obs_e:
                         logger.error(f"Observer error: {obs_e}")
 
@@ -593,8 +590,23 @@ class StatusReporter:
         self._status.system.memory_usage = memory
         self._status.system.cpu_usage = cpu
 
-    def get_status(self) -> dict[str, Any]:
-        """Get current status as a dictionary."""
+    def get_status(self) -> BotStatus:
+        """
+        Get current status as a BotStatus dataclass.
+
+        Returns:
+            BotStatus: Typed status snapshot (BotStatusSnapshot contract)
+        """
+        self._update_status()
+        return self._status
+
+    def get_status_dict(self) -> dict[str, Any]:
+        """
+        Get current status as a dictionary (backward compatibility).
+
+        Deprecated: Use get_status() for typed access.
+        This method will be removed after TUI migration is complete.
+        """
         self._update_status()
         return asdict(self._status)
 

@@ -1,14 +1,34 @@
 from rich.text import Text
 from textual.app import ComposeResult
+from textual.reactive import reactive
 from textual.widgets import DataTable, Label, Static
 
 from gpt_trader.tui.helpers import safe_update
 from gpt_trader.tui.theme import THEME
+from gpt_trader.tui.trade_matcher import TradeMatcher
 from gpt_trader.tui.types import (
     Order,
     Position,
     Trade,
 )
+
+
+def format_decimal_places(value: str, decimal_places: int = 4) -> str:
+    """Format a numeric string to specified decimal places.
+
+    Args:
+        value: String representation of a number
+        decimal_places: Number of decimal places to keep
+
+    Returns:
+        Formatted string with specified decimal places
+    """
+    try:
+        clean_value = value.replace("$", "").replace(",", "")
+        num = float(clean_value)
+        return f"{num:.{decimal_places}f}"
+    except (ValueError, AttributeError):
+        return value  # Return original if parsing fails
 
 
 class PositionsWidget(Static):
@@ -24,6 +44,19 @@ class PositionsWidget(Static):
         height: 1fr;
     }
     """
+
+    # Reactive state property for automatic updates
+    state = reactive(None)  # Type: TuiState | None
+
+    def watch_state(self, state) -> None:  # type: ignore[no-untyped-def]
+        """React to state changes - update positions automatically."""
+        if state is None:
+            return
+        self.update_positions(
+            state.position_data.positions,
+            state.position_data.total_unrealized_pnl,
+            risk_data=state.risk_data.position_leverage,
+        )
 
     def compose(self) -> ComposeResult:
         yield Label("💼 ACTIVE POSITIONS", classes="header")
@@ -94,7 +127,7 @@ class PositionsWidget(Static):
                 table.add_row(
                     pos.symbol,  # Left-aligned (symbol)
                     Text(str(pos.quantity), justify="right"),
-                    Text(str(pos.entry_price), justify="right"),
+                    Text(format_decimal_places(str(pos.entry_price), 4), justify="right"),
                     Text(str(current_price), justify="right"),
                     Text(str(pos.unrealized_pnl), justify="right"),
                     Text(pnl_pct_str, justify="right"),
@@ -117,7 +150,6 @@ class OrdersWidget(Static):
     """
 
     def compose(self) -> ComposeResult:
-        yield Label("📋 ACTIVE ORDERS", classes="header")
         yield DataTable(id="orders-table")
         yield Label("", id="orders-empty", classes="empty-state")
 
@@ -171,14 +203,15 @@ class TradesWidget(Static):
     """
 
     def compose(self) -> ComposeResult:
-        yield Label("📈 RECENT TRADES", classes="header")
         yield DataTable(id="trades-table")
         yield Label("", id="trades-empty", classes="empty-state")
 
     def on_mount(self) -> None:
         table = self.query_one("#trades-table", DataTable)
         # Add columns - alignment handled in add_row with Text objects
-        table.add_columns("Symbol", "Side", "Quantity", "Price", "Order ID", "Time")
+        table.add_columns("Symbol", "Side", "Quantity", "Price", "Order ID", "P&L", "Time")
+        # Initialize trade matcher
+        self._trade_matcher = TradeMatcher()
 
     @safe_update
     def update_trades(self, trades: list[Trade]) -> None:
@@ -195,6 +228,10 @@ class TradesWidget(Static):
         else:
             table.display = True
             empty_label.display = False
+
+            # Process trades to calculate P&L matches
+            pnl_map = self._trade_matcher.process_trades(trades)
+
             for trade in trades:
                 # Colorize Side
                 side_color = THEME.colors.success if trade.side == "BUY" else THEME.colors.error
@@ -209,6 +246,27 @@ class TradesWidget(Static):
                     except IndexError:
                         pass
 
+                # Get P&L display value and apply color coding
+                pnl_str = pnl_map.get(trade.trade_id, "N/A")
+
+                if pnl_str == "N/A":
+                    pnl_display = Text(pnl_str, style="dim", justify="right")
+                else:
+                    try:
+                        pnl_value = float(pnl_str)
+                        if pnl_value > 0:
+                            pnl_markup = f"[{THEME.colors.success}]{pnl_str}[/{THEME.colors.success}]"
+                            pnl_display = Text.from_markup(pnl_markup, justify="right")
+                        elif pnl_value < 0:
+                            pnl_markup = f"[{THEME.colors.error}]{pnl_str}[/{THEME.colors.error}]"
+                            pnl_display = Text.from_markup(pnl_markup, justify="right")
+                        else:
+                            # Zero P&L - neutral white
+                            pnl_display = Text(pnl_str, justify="right")
+                    except ValueError:
+                        # Fallback if parsing fails
+                        pnl_display = Text(pnl_str, style="dim", justify="right")
+
                 # Right-align numeric columns using Text objects
                 table.add_row(
                     trade.symbol,
@@ -216,5 +274,6 @@ class TradesWidget(Static):
                     Text(str(trade.quantity), justify="right"),
                     Text(str(trade.price), justify="right"),
                     trade.order_id[-8:] if trade.order_id else "",
+                    pnl_display,  # NEW: P&L column
                     Text(time_str, justify="right"),
                 )

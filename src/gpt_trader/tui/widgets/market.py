@@ -2,6 +2,7 @@ from datetime import datetime
 from decimal import Decimal
 
 from textual.app import ComposeResult
+from textual.reactive import reactive
 from textual.widgets import DataTable, Label, Static
 
 from gpt_trader.tui.helpers import safe_update
@@ -22,6 +23,19 @@ class MarketWatchWidget(Static):
         padding: 1 2;
     }
     """
+
+    # Reactive state property for automatic updates
+    state = reactive(None)  # Type: TuiState | None
+
+    def watch_state(self, state) -> None:  # type: ignore[no-untyped-def]
+        """React to state changes - update market data automatically."""
+        if state is None:
+            return
+        self.update_prices(
+            state.market_data.prices,
+            state.market_data.last_update,
+            state.market_data.price_history,
+        )
 
     def compose(self) -> ComposeResult:
         yield Label("📊 MARKET WATCH", classes="header")

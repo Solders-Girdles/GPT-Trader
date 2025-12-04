@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from textual.app import ComposeResult
+from textual.reactive import reactive
 from textual.widgets import DataTable, Label, Static
 
 from gpt_trader.tui.helpers import safe_update
@@ -21,6 +22,15 @@ class StrategyWidget(Static):
         height: 1fr;
     }
     """
+
+    # Reactive state property for automatic updates
+    state = reactive(None)  # Type: TuiState | None
+
+    def watch_state(self, state) -> None:  # type: ignore[no-untyped-def]
+        """React to state changes - update strategy automatically."""
+        if state is None:
+            return
+        self.update_strategy(state.strategy_data)
 
     def compose(self) -> ComposeResult:
         yield Label("🎯 STRATEGY DECISIONS", classes="header")

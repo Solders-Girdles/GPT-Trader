@@ -1,8 +1,8 @@
 """
 UI Coordinator for TUI.
 
-Handles UI update orchestration from bot status updates.
-Extracted from TraderApp to reduce complexity and improve testability.
+Handles UI update orchestration from bot status updates via observer callbacks.
+Provides heartbeat animation loop. Extracted from TraderApp to reduce complexity.
 """
 
 from __future__ import annotations
@@ -20,7 +20,12 @@ logger = get_logger(__name__, component="tui")
 
 
 class UICoordinator:
-    """Coordinates UI updates from bot status changes."""
+    """
+    Coordinates UI updates from bot status changes.
+
+    Data updates are driven by observer callbacks (apply_observer_update).
+    Heartbeat loop provides visual animation (no data polling).
+    """
 
     def __init__(self, app: TraderApp):
         """
@@ -30,7 +35,7 @@ class UICoordinator:
             app: Reference to the TraderApp instance
         """
         self.app = app
-        self._update_task: asyncio.Task | None = None
+        self._update_task: asyncio.Task | None = None  # Heartbeat task
 
     def apply_observer_update(self, status: BotStatus) -> None:
         """
@@ -103,56 +108,49 @@ class UICoordinator:
 
     async def start_update_loop(self) -> None:
         """
-        Start the periodic update loop.
+        Start the periodic heartbeat loop.
 
-        This loop runs every second to:
-        1. Sync state from bot (fallback to observer)
-        2. Update UI
-        3. Pulse heartbeat animation
+        This loop runs every second to pulse the heartbeat animation.
+        Data updates are handled by the observer callback (apply_observer_update).
         """
-        logger.info("Starting UI update loop")
-        self._update_task = asyncio.create_task(self._update_loop())
+        logger.info("Starting UI heartbeat loop")
+        self._update_task = asyncio.create_task(self._heartbeat_loop())
 
     async def stop_update_loop(self) -> None:
-        """Stop the periodic update loop."""
+        """Stop the periodic heartbeat loop."""
         if self._update_task and not self._update_task.done():
             self._update_task.cancel()
             try:
                 await self._update_task
             except asyncio.CancelledError:
-                logger.info("Update loop cancelled successfully")
+                logger.info("Heartbeat loop cancelled successfully")
             self._update_task = None
-            logger.info("UI update loop stopped")
+            logger.info("UI heartbeat loop stopped")
 
-    async def _update_loop(self) -> None:
+    async def _heartbeat_loop(self) -> None:
         """
-        Periodic update loop (runs every 1 second).
+        Periodic heartbeat loop (runs every 1 second).
 
-        This provides:
-        - Fallback if observer updates fail
-        - Regular heartbeat animation
-        - Consistent UI refresh rate
+        Only pulses the heartbeat animation to show the dashboard is alive.
+        Data updates are handled by the observer callback (no polling needed).
         """
         loop_count = 0
         while True:
             try:
                 loop_count += 1
-                if loop_count % 10 == 0:  # Log every 10 seconds
-                    logger.debug(f"Update loop iteration {loop_count}")
+                if loop_count % 30 == 0:  # Log every 30 seconds
+                    logger.debug(f"Heartbeat loop iteration {loop_count}")
 
-                # Sync state from bot
-                self.sync_state_from_bot()
-
-                # Update UI
-                self.update_main_screen()
+                # Only pulse heartbeat - no state sync or UI update
+                self.app._pulse_heartbeat()
 
             except Exception as e:
-                logger.error(f"UI Update Loop Error: {e}", exc_info=True)
+                logger.debug(f"Heartbeat pulse error: {e}")
 
             await asyncio.sleep(1)
 
     def cleanup(self) -> None:
-        """Clean up update tasks on manager destruction."""
+        """Clean up heartbeat tasks on manager destruction."""
         if self._update_task and not self._update_task.done():
             self._update_task.cancel()
-            logger.info("UICoordinator cleaned up update task")
+            logger.info("UICoordinator cleaned up heartbeat task")

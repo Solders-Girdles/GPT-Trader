@@ -7,7 +7,7 @@ from typing import Any
 class MarketState:
     """Data structure for market information."""
 
-    prices: dict[str, str] = field(default_factory=dict)
+    prices: dict[str, Decimal] = field(default_factory=dict)  # Changed from str to Decimal
     last_update: float = 0.0
     price_history: dict[str, list[Decimal]] = field(default_factory=dict)
 
@@ -17,10 +17,10 @@ class Position:
     """Data structure for a single position."""
 
     symbol: str
-    quantity: str
-    entry_price: str = "N/A"
-    unrealized_pnl: str = "0.00"
-    mark_price: str = "0.00"
+    quantity: Decimal  # Changed from str to Decimal
+    entry_price: Decimal = Decimal("0")  # Changed from str to Decimal
+    unrealized_pnl: Decimal = Decimal("0")  # Changed from str to Decimal
+    mark_price: Decimal = Decimal("0")  # Changed from str to Decimal
     side: str = ""
 
 
@@ -29,8 +29,8 @@ class PortfolioSummary:
     """Data structure for position information."""
 
     positions: dict[str, Position] = field(default_factory=dict)
-    total_unrealized_pnl: str = "0.00"
-    equity: str = "0.00"
+    total_unrealized_pnl: Decimal = Decimal("0")  # Changed from str to Decimal
+    equity: Decimal = Decimal("0")  # Changed from str to Decimal
 
 
 @dataclass
@@ -40,8 +40,8 @@ class Order:
     order_id: str
     symbol: str
     side: str
-    quantity: str
-    price: str
+    quantity: Decimal  # Changed from str to Decimal
+    price: Decimal  # Changed from str to Decimal
     status: str
     type: str = "UNKNOWN"
     time_in_force: str = "UNKNOWN"
@@ -62,11 +62,11 @@ class Trade:
     trade_id: str
     symbol: str
     side: str
-    quantity: str
-    price: str
+    quantity: Decimal  # Changed from str to Decimal
+    price: Decimal  # Changed from str to Decimal
     order_id: str
     time: str
-    fee: str = "0.00"
+    fee: Decimal = Decimal("0")  # Changed from str to Decimal
 
 
 @dataclass
@@ -81,17 +81,17 @@ class AccountBalance:
     """Data structure for a single asset balance."""
 
     asset: str
-    total: str
-    available: str
-    hold: str = "0.00"
+    total: Decimal  # Changed from str to Decimal
+    available: Decimal  # Changed from str to Decimal
+    hold: Decimal = Decimal("0")  # Changed from str to Decimal
 
 
 @dataclass
 class AccountSummary:
     """Data structure for account metrics."""
 
-    volume_30d: str = "0.00"
-    fees_30d: str = "0.00"
+    volume_30d: Decimal = Decimal("0")  # Changed from str to Decimal
+    fees_30d: Decimal = Decimal("0")  # Changed from str to Decimal
     fee_tier: str = ""
     balances: list[AccountBalance] = field(default_factory=list)
 

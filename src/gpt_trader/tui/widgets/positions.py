@@ -1,8 +1,16 @@
+from decimal import Decimal
+
 from rich.text import Text
 from textual.app import ComposeResult
 from textual.reactive import reactive
 from textual.widgets import DataTable, Label, Static
 
+from gpt_trader.tui.formatting import (
+    format_currency,
+    format_percentage,
+    format_price,
+    format_quantity,
+)
 from gpt_trader.tui.helpers import safe_update
 from gpt_trader.tui.theme import THEME
 from gpt_trader.tui.trade_matcher import TradeMatcher
@@ -11,24 +19,6 @@ from gpt_trader.tui.types import (
     Position,
     Trade,
 )
-
-
-def format_decimal_places(value: str, decimal_places: int = 4) -> str:
-    """Format a numeric string to specified decimal places.
-
-    Args:
-        value: String representation of a number
-        decimal_places: Number of decimal places to keep
-
-    Returns:
-        Formatted string with specified decimal places
-    """
-    try:
-        clean_value = value.replace("$", "").replace(",", "")
-        num = float(clean_value)
-        return f"{num:.{decimal_places}f}"
-    except (ValueError, AttributeError):
-        return value  # Return original if parsing fails
 
 
 class PositionsWidget(Static):
@@ -48,7 +38,7 @@ class PositionsWidget(Static):
     # Reactive state property for automatic updates
     state = reactive(None)  # Type: TuiState | None
 
-    def watch_state(self, state) -> None:  # type: ignore[no-untyped-def]
+    def watch_state(self, state: "TuiState | None") -> None:
         """React to state changes - update positions automatically."""
         if state is None:
             return
@@ -72,7 +62,7 @@ class PositionsWidget(Static):
     def update_positions(
         self,
         positions: dict[str, Position],
-        total_pnl: str,
+        total_pnl: Decimal,
         risk_data: dict[str, float] | None = None,
     ) -> None:
         table = self.query_one(DataTable)
@@ -90,13 +80,11 @@ class PositionsWidget(Static):
             table.display = True
             empty_label.display = False
             for symbol, pos in positions.items():
-                # Calculate P&L percentage
+                # Calculate P&L percentage (now using Decimal directly)
                 try:
-                    entry = float(pos.entry_price.replace("$", "").replace(",", ""))
-                    current = float(pos.mark_price.replace("$", "").replace(",", ""))
-                    if entry > 0:
-                        pnl_pct = ((current - entry) / entry) * 100
-                        pnl_pct_str = f"{pnl_pct:+.2f}%"
+                    if pos.entry_price > 0:
+                        pnl_pct = ((pos.mark_price - pos.entry_price) / pos.entry_price) * 100
+                        pnl_pct_str = format_percentage(Decimal(str(pnl_pct)))
                     else:
                         pnl_pct_str = "N/A"
                 except (ValueError, ZeroDivisionError):
@@ -119,17 +107,17 @@ class PositionsWidget(Static):
                 # Use mark_price as current price, fallback to entry if not available
                 current_price = (
                     pos.mark_price
-                    if pos.mark_price and pos.mark_price != "0.00"
+                    if pos.mark_price and pos.mark_price != Decimal("0")
                     else pos.entry_price
                 )
 
                 # Right-align numeric columns using Text objects
                 table.add_row(
                     pos.symbol,  # Left-aligned (symbol)
-                    Text(str(pos.quantity), justify="right"),
-                    Text(format_decimal_places(str(pos.entry_price), 4), justify="right"),
-                    Text(str(current_price), justify="right"),
-                    Text(str(pos.unrealized_pnl), justify="right"),
+                    Text(format_quantity(pos.quantity), justify="right"),
+                    Text(format_price(pos.entry_price), justify="right"),
+                    Text(format_price(current_price), justify="right"),
+                    Text(format_currency(pos.unrealized_pnl), justify="right"),
                     Text(pnl_pct_str, justify="right"),
                     Text.from_markup(leverage_display, justify="right"),  # Preserves markup
                 )
@@ -182,8 +170,8 @@ class OrdersWidget(Static):
                 table.add_row(
                     order.symbol,
                     formatted_side,  # Preserves color markup
-                    Text(str(order.quantity), justify="right"),
-                    Text(str(order.price), justify="right"),
+                    Text(format_quantity(order.quantity), justify="right"),
+                    Text(format_price(order.price), justify="right"),
                     order.status,
                 )
 
@@ -255,7 +243,9 @@ class TradesWidget(Static):
                     try:
                         pnl_value = float(pnl_str)
                         if pnl_value > 0:
-                            pnl_markup = f"[{THEME.colors.success}]{pnl_str}[/{THEME.colors.success}]"
+                            pnl_markup = (
+                                f"[{THEME.colors.success}]{pnl_str}[/{THEME.colors.success}]"
+                            )
                             pnl_display = Text.from_markup(pnl_markup, justify="right")
                         elif pnl_value < 0:
                             pnl_markup = f"[{THEME.colors.error}]{pnl_str}[/{THEME.colors.error}]"
@@ -271,8 +261,8 @@ class TradesWidget(Static):
                 table.add_row(
                     trade.symbol,
                     formatted_side,  # Preserves color markup
-                    Text(str(trade.quantity), justify="right"),
-                    Text(str(trade.price), justify="right"),
+                    Text(format_quantity(trade.quantity), justify="right"),
+                    Text(format_price(trade.price), justify="right"),
                     trade.order_id[-8:] if trade.order_id else "",
                     pnl_display,  # NEW: P&L column
                     Text(time_str, justify="right"),

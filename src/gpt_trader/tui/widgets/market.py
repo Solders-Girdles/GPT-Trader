@@ -5,6 +5,7 @@ from textual.app import ComposeResult
 from textual.reactive import reactive
 from textual.widgets import DataTable, Label, Static
 
+from gpt_trader.tui.formatting import format_price
 from gpt_trader.tui.helpers import safe_update
 from gpt_trader.tui.theme import THEME
 
@@ -27,7 +28,7 @@ class MarketWatchWidget(Static):
     # Reactive state property for automatic updates
     state = reactive(None)  # Type: TuiState | None
 
-    def watch_state(self, state) -> None:  # type: ignore[no-untyped-def]
+    def watch_state(self, state: "TuiState | None") -> None:
         """React to state changes - update market data automatically."""
         if state is None:
             return
@@ -50,7 +51,7 @@ class MarketWatchWidget(Static):
     @safe_update
     def update_prices(
         self,
-        prices: dict[str, str],
+        prices: dict[str, Decimal],
         last_update: float | None,
         price_history: dict[str, list[Decimal]] | None = None,
     ) -> None:
@@ -61,12 +62,8 @@ class MarketWatchWidget(Static):
         if last_update:
             updated_str = datetime.fromtimestamp(last_update).strftime("%H:%M:%S")
 
-        for symbol, price_str in prices.items():
-            try:
-                current_price = float(price_str)
-            except ValueError:
-                current_price = 0.0
-
+        for symbol, price_decimal in prices.items():
+            current_price = float(price_decimal)
             prev_price = self.previous_prices.get(symbol, current_price)
 
             color = THEME.colors.text_primary
@@ -78,7 +75,7 @@ class MarketWatchWidget(Static):
             self.previous_prices[symbol] = current_price
 
             # Format price with color
-            formatted_price = f"[{color}]{price_str}[/{color}]"
+            formatted_price = f"[{color}]{format_price(price_decimal)}[/{color}]"
             table.add_row(symbol, formatted_price, updated_str)
 
         # Update chart with history for the first available symbol

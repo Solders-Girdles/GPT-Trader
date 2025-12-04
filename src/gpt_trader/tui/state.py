@@ -10,6 +10,7 @@ from textual.reactive import reactive
 from textual.widget import Widget
 
 from gpt_trader.monitoring.status_reporter import BotStatus
+from gpt_trader.tui.formatting import safe_decimal
 from gpt_trader.tui.types import (
     AccountBalance,
     AccountSummary,
@@ -120,23 +121,23 @@ class TuiState(Widget):
         # Track update timestamp for connection health monitoring
         self.last_update_timestamp = time.time()
 
-        # Convert price history from list[str] to dict[str, list[Decimal]] if needed
-        # For now, we just use the data as-is (Phase 5 will handle Decimal conversion)
-        from decimal import Decimal
+        # Convert prices to Decimal (StatusReporter may provide str or already Decimal)
+        prices_decimal = {}
+        if hasattr(market, "last_prices") and market.last_prices:
+            for symbol, price in market.last_prices.items():
+                prices_decimal[symbol] = safe_decimal(price)
 
+        # Convert price history to Decimal
         price_history_converted = {}
         if hasattr(market, "price_history") and market.price_history:
             for symbol, history in market.price_history.items():
                 if isinstance(history, list):
-                    # Convert string history to Decimal
-                    price_history_converted[symbol] = [
-                        Decimal(p) if isinstance(p, str) else p for p in history
-                    ]
+                    price_history_converted[symbol] = [safe_decimal(p) for p in history]
                 else:
                     price_history_converted[symbol] = history
 
         self.market_data = MarketState(
-            prices=market.last_prices if hasattr(market, "last_prices") else {},
+            prices=prices_decimal,
             last_update=market.last_price_update if hasattr(market, "last_price_update") else 0.0,
             price_history=price_history_converted,
         )
@@ -151,17 +152,17 @@ class TuiState(Widget):
             if isinstance(p_data, dict):
                 positions_map[symbol] = Position(
                     symbol=symbol,
-                    quantity=str(p_data.get("quantity", "0")),
-                    entry_price=str(p_data.get("entry_price", "N/A")),
-                    unrealized_pnl=str(p_data.get("unrealized_pnl", "0.00")),
-                    mark_price=str(p_data.get("mark_price", "0.00")),
+                    quantity=safe_decimal(p_data.get("quantity", "0")),
+                    entry_price=safe_decimal(p_data.get("entry_price", "0")),
+                    unrealized_pnl=safe_decimal(p_data.get("unrealized_pnl", "0")),
+                    mark_price=safe_decimal(p_data.get("mark_price", "0")),
                     side=str(p_data.get("side", "")),
                 )
 
         self.position_data = PortfolioSummary(
             positions=positions_map,
-            total_unrealized_pnl=pos_data.total_unrealized_pnl,
-            equity=pos_data.equity,
+            total_unrealized_pnl=safe_decimal(pos_data.total_unrealized_pnl),
+            equity=safe_decimal(pos_data.equity),
         )
 
     def _update_order_data(self, raw_orders: list[Any]) -> None:  # list[OrderStatus]
@@ -174,8 +175,8 @@ class TuiState(Widget):
                     order_id=o.order_id,
                     symbol=o.symbol,
                     side=o.side,
-                    quantity=o.quantity,
-                    price=o.price if o.price else "",
+                    quantity=safe_decimal(o.quantity),
+                    price=safe_decimal(o.price) if o.price else safe_decimal("0"),
                     status=o.status,
                     type=o.order_type,  # OrderStatus uses order_type field
                     time_in_force=o.time_in_force,
@@ -194,11 +195,11 @@ class TuiState(Widget):
                     trade_id=t.trade_id,
                     symbol=t.symbol,
                     side=t.side,
-                    quantity=t.quantity,
-                    price=t.price,
+                    quantity=safe_decimal(t.quantity),
+                    price=safe_decimal(t.price),
                     order_id=t.order_id,
                     time=t.time,
-                    fee=t.fee,
+                    fee=safe_decimal(t.fee),
                 )
             )
         self.trade_data = TradeHistory(trades=trades_list)
@@ -211,15 +212,15 @@ class TuiState(Widget):
                 balances_list.append(
                     AccountBalance(
                         asset=b.get("asset", ""),
-                        total=b.get("total", "0"),
-                        available=b.get("available", "0"),
-                        hold=b.get("hold", "0.00"),
+                        total=safe_decimal(b.get("total", "0")),
+                        available=safe_decimal(b.get("available", "0")),
+                        hold=safe_decimal(b.get("hold", "0.00")),
                     )
                 )
 
         self.account_data = AccountSummary(
-            volume_30d=acc.volume_30d,
-            fees_30d=acc.fees_30d,
+            volume_30d=safe_decimal(acc.volume_30d),
+            fees_30d=safe_decimal(acc.fees_30d),
             fee_tier=acc.fee_tier,
             balances=balances_list,
         )

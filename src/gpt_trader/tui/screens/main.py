@@ -4,6 +4,7 @@ from textual.reactive import reactive
 from textual.screen import Screen
 from textual.widgets import Footer, Header, Label
 
+from gpt_trader.tui.formatting import format_currency
 from gpt_trader.tui.state import TuiState
 from gpt_trader.tui.widgets import (
     AccountWidget,
@@ -37,7 +38,9 @@ class MainScreen(Screen):
             return
 
         # Propagate to all widgets that have reactive state
-        for widget in self.query("PositionsWidget, ExecutionWidget, MarketWatchWidget, StrategyWidget"):
+        for widget in self.query(
+            "PositionsWidget, ExecutionWidget, MarketWatchWidget, StrategyWidget"
+        ):
             if hasattr(widget, "state"):
                 widget.state = state  # type: ignore[attr-defined]
 
@@ -85,7 +88,9 @@ class MainScreen(Screen):
             mode_selector = self.query_one(ModeSelector)
             mode_selector.current_mode = self.app.data_source_mode  # type: ignore[attr-defined]
             mode_selector.enabled = not self.app.bot.running  # type: ignore[attr-defined]
-            logger.info(f"Initialized ModeSelector: mode={mode_selector.current_mode}, enabled={mode_selector.enabled}")
+            logger.info(
+                f"Initialized ModeSelector: mode={mode_selector.current_mode}, enabled={mode_selector.enabled}"
+            )
         except Exception as e:
             logger.warning(f"Failed to initialize ModeSelector: {e}")
 
@@ -137,8 +142,13 @@ class MainScreen(Screen):
             status_widget = self.query_one(BotStatusWidget)
             status_widget.running = state.running
             status_widget.uptime = state.uptime
-            status_widget.equity = state.position_data.equity
-            status_widget.pnl = state.position_data.total_unrealized_pnl
+            # Format Decimal values to strings for display
+            status_widget.equity = format_currency(state.position_data.equity, decimals=2).replace(
+                "$", ""
+            )
+            status_widget.pnl = format_currency(
+                state.position_data.total_unrealized_pnl, decimals=2
+            ).replace("$", "")
             # Update system health in status bar
             status_widget.connection_status = state.system_data.connection_status
             status_widget.api_latency = state.system_data.api_latency
@@ -168,7 +178,7 @@ class MainScreen(Screen):
                     "workspace--compact",
                     "workspace--standard",
                     "workspace--comfortable",
-                    "workspace--wide"
+                    "workspace--wide",
                 )
                 # Add new state class
                 workspace.add_class(f"workspace--{state}")

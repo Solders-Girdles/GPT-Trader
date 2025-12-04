@@ -93,6 +93,20 @@ class BotLifecycleManager:
         logger.info(f"Data source mode: {self.app.data_source_mode}")
         logger.info("=" * 60)
 
+        # Reset trade matcher on bot start (Phase 6 - Incremental P&L)
+        try:
+            from gpt_trader.tui.widgets.positions import TradesWidget
+            from gpt_trader.tui.screens.main import MainScreen
+
+            main_screen = self.app.query_one(MainScreen)
+            exec_widget = main_screen.query_one("#dash-execution")
+            trades_widget = exec_widget.query_one(TradesWidget)
+            if hasattr(trades_widget, "_trade_matcher"):
+                trades_widget._trade_matcher.reset()
+                logger.info("Reset trade matcher for fresh P&L tracking on bot start")
+        except Exception as e:
+            logger.debug(f"Could not reset trade matcher on start: {e}")
+
         # Store task reference for future cancellation
         self._bot_task = asyncio.create_task(self.app.bot.run())
 
@@ -234,6 +248,21 @@ class BotLifecycleManager:
 
             self.app.tui_state = TuiState()
             self.app.tui_state.data_source_mode = self.app.data_source_mode
+
+            # Step 8.5: Reset trade matcher (Phase 6 - Incremental P&L)
+            # Clear P&L tracking state when switching modes
+            try:
+                from gpt_trader.tui.widgets.positions import TradesWidget
+                from gpt_trader.tui.screens.main import MainScreen
+
+                main_screen = self.app.query_one(MainScreen)
+                exec_widget = main_screen.query_one("#dash-execution")
+                trades_widget = exec_widget.query_one(TradesWidget)
+                if hasattr(trades_widget, "_trade_matcher"):
+                    trades_widget._trade_matcher.reset()
+                    logger.info("Reset trade matcher for fresh P&L tracking")
+            except Exception as e:
+                logger.debug(f"Could not reset trade matcher: {e}")
 
             # Step 9: Sync UI immediately with new bot
             self.app._sync_state_from_bot()

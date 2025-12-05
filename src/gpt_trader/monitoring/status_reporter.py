@@ -17,7 +17,7 @@ from collections import deque
 from collections.abc import Callable
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -104,13 +104,23 @@ class TradeStatus:
 
 
 @dataclass
+class BalanceEntry:
+    """Single balance entry with Decimal amounts."""
+
+    asset: str
+    total: Decimal
+    available: Decimal
+    hold: Decimal = Decimal("0")
+
+
+@dataclass
 class AccountStatus:
     """Status snapshot of account metrics."""
 
     volume_30d: Decimal = Decimal("0")
     fees_30d: Decimal = Decimal("0")
     fee_tier: str = ""
-    balances: list[dict[str, str]] = field(default_factory=list)
+    balances: list[BalanceEntry] = field(default_factory=list)
 
 
 @dataclass
@@ -441,8 +451,39 @@ class StatusReporter:
         self._price_history[symbol].append(price)
 
     def update_positions(self, positions: dict[str, Any]) -> None:
-        """Update the current positions."""
-        self._positions = positions
+        """
+        Update the current positions with Decimal coercion.
+
+        Args:
+            positions: Dict of symbol -> position data (may contain string numerics)
+        """
+        # Normalize positions to ensure Decimal types
+        normalized_positions = {}
+        for symbol, pos_data in positions.items():
+            if not isinstance(pos_data, dict):
+                continue
+
+            normalized_pos = {}
+            for key, value in pos_data.items():
+                # Coerce numeric fields to Decimal
+                if key in (
+                    "quantity",
+                    "mark_price",
+                    "entry_price",
+                    "unrealized_pnl",
+                    "realized_pnl",
+                ):
+                    try:
+                        normalized_pos[key] = Decimal(str(value)) if value else Decimal("0")
+                    except (ValueError, InvalidOperation):
+                        normalized_pos[key] = Decimal("0")
+                else:
+                    # Keep non-numeric fields as-is (e.g., side)
+                    normalized_pos[key] = value
+
+            normalized_positions[symbol] = normalized_pos
+
+        self._positions = normalized_positions
 
     def update_equity(self, equity: Decimal) -> None:
         """Update the current equity."""
@@ -545,24 +586,40 @@ class StatusReporter:
             self._status.trades.pop()
 
     def update_account(self, balances: list[Any], summary: dict[str, Any]) -> None:
-        """Update account metrics."""
-        # Format balances
-        bal_list = []
+        """Update account metrics with Decimal coercion."""
+        # Format balances with Decimal types
+        bal_list: list[BalanceEntry] = []
         for b in balances:
             # Handle object or dict
             if hasattr(b, "asset"):
                 asset = b.asset
-                total = str(b.total)
-                avail = str(b.available)
-                hold = str(getattr(b, "hold", Decimal("0")))
+                total_val = b.total
+                avail_val = b.available
+                hold_val = getattr(b, "hold", Decimal("0"))
             else:
                 asset = b.get("currency", "")
-                total = str(b.get("balance", "0"))
-                avail = str(b.get("available", "0"))
-                hold = str(b.get("hold", "0"))
+                total_val = b.get("balance", "0")
+                avail_val = b.get("available", "0")
+                hold_val = b.get("hold", "0")
 
-            if Decimal(total) > 0:
-                bal_list.append({"asset": asset, "total": total, "available": avail, "hold": hold})
+            # Convert to Decimal
+            try:
+                total = Decimal(str(total_val))
+            except (ValueError, InvalidOperation):
+                total = Decimal("0")
+
+            try:
+                avail = Decimal(str(avail_val))
+            except (ValueError, InvalidOperation):
+                avail = Decimal("0")
+
+            try:
+                hold = Decimal(str(hold_val))
+            except (ValueError, InvalidOperation):
+                hold = Decimal("0")
+
+            if total > 0:
+                bal_list.append(BalanceEntry(asset=asset, total=total, available=avail, hold=hold))
 
         # Parse numeric fields to Decimal
         try:
@@ -656,5 +713,6 @@ __all__ = [
     "OrderStatus",
     "TradeStatus",
     "AccountStatus",
+    "BalanceEntry",
     "RiskStatus",
 ]

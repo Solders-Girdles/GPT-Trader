@@ -213,19 +213,21 @@ class TuiState(Widget):
         """Update account data from typed AccountStatus."""
         balances_list = []
         for b in acc.balances:
-            if isinstance(b, dict):
+            # BalanceEntry from StatusReporter → AccountBalance for TUI
+            # Both have identical fields (asset, total, available, hold as Decimal)
+            if hasattr(b, "asset"):
                 balances_list.append(
                     AccountBalance(
-                        asset=b.get("asset", ""),
-                        total=safe_decimal(b.get("total", "0")),
-                        available=safe_decimal(b.get("available", "0")),
-                        hold=safe_decimal(b.get("hold", "0.00")),
+                        asset=b.asset,
+                        total=b.total,  # Already Decimal from BalanceEntry
+                        available=b.available,
+                        hold=b.hold,
                     )
                 )
 
         self.account_data = AccountSummary(
-            volume_30d=safe_decimal(acc.volume_30d),
-            fees_30d=safe_decimal(acc.fees_30d),
+            volume_30d=acc.volume_30d,  # Already Decimal from AccountStatus
+            fees_30d=acc.fees_30d,
             fee_tier=acc.fee_tier,
             balances=balances_list,
         )

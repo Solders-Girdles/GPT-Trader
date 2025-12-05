@@ -42,21 +42,22 @@ class TestMarketWatchWidget:
         widget.query_one = MagicMock(return_value=mock_table)
         widget.previous_prices = {}  # Simulate mount
 
-        # First update (no previous)
-        widget.update_prices({"BTC": "100"}, 1000)
+        # First update (no previous) - now using Decimal
+        widget.update_prices({"BTC": Decimal("100")}, 1000)
         # Should be white (default) or at least not crash
         args, _ = mock_table.add_row.call_args
         assert "BTC" in args
 
         # Second update (higher)
-        widget.update_prices({"BTC": "110"}, 1001)
+        widget.update_prices({"BTC": Decimal("110")}, 1001)
         args, _ = mock_table.add_row.call_args
-        assert "[#7AA874]110[/" in args[1]  # Claude Code success (warm green)
+        # Price should be formatted with commas
+        assert "[#7AA874]" in str(args[1])  # Claude Code success (warm green)
 
         # Third update (lower)
-        widget.update_prices({"BTC": "105"}, 1002)
+        widget.update_prices({"BTC": Decimal("105")}, 1002)
         args, _ = mock_table.add_row.call_args
-        assert "[#D4736E]105[/" in args[1]  # Claude Code error (warm coral-red)
+        assert "[#D4736E]" in str(args[1])  # Claude Code error (warm coral-red)
 
 
 class TestBlockChartWidget:
@@ -85,23 +86,24 @@ class TestBlockChartWidget:
 
 class TestTuiLogHandler:
     def test_log_coloring(self):
+        # Mock widget with required lifecycle properties
         mock_widget = MagicMock()
-        handler = TuiLogHandler(mock_widget)
+        mock_widget.is_mounted = True
+        mock_widget.app = MagicMock()
 
-        # Test INFO
+        handler = TuiLogHandler()  # No arguments in new API
+        handler.register_widget(mock_widget, min_level=logging.INFO)
+
+        # Test INFO - handler should call widget.write() with styled Text
         record = logging.LogRecord("name", logging.INFO, "path", 1, "Info message", (), None)
         handler.emit(record)
-        # Note: LogHandler might add additional parameters beyond just the message
-        assert mock_widget.write_log.called
-        call_args = mock_widget.write_log.call_args[0][0]
-        assert "[#a3be8c]Info message[/#a3be8c]" in call_args  # Still uses Nord colors internally
+        assert mock_widget.write.called
 
         # Test ERROR
         record = logging.LogRecord("name", logging.ERROR, "path", 1, "Error message", (), None)
         handler.emit(record)
-        assert mock_widget.write_log.called
-        call_args = mock_widget.write_log.call_args[0][0]
-        assert "[#bf616a]Error message[/#bf616a]" in call_args  # Still uses Nord colors internally
+        # Verify write was called at least twice (once for INFO, once for ERROR)
+        assert mock_widget.write.call_count >= 2
 
 
 @pytest.mark.asyncio

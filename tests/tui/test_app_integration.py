@@ -26,11 +26,44 @@ async def test_tui_receives_status_update(mock_app, mock_bot):
     """Test that the TUI updates when status reporter pushes an event."""
     async with mock_app.run_test() as pilot:
         # Simulate status update
-        status = {
+        # Simulate status update with objects (state.py expects attributes, not dicts)
+        from types import SimpleNamespace
+
+        # Helper to create nested object from dict
+        def dict_to_obj(d):
+            if not isinstance(d, dict):
+                return d
+            return SimpleNamespace(**{k: dict_to_obj(v) for k, v in d.items()})
+
+        status_dict = {
             "engine": {"running": True},
-            "market": {"last_prices": {"BTC-USD": "50000"}},
-            "risk": {"max_leverage": 5.0},
+            "market": {
+                "last_prices": {"BTC-USD": "50000"},
+                "last_price_update": 0.0,
+                "price_history": {},
+            },
+            "risk": {
+                "max_leverage": 5.0,
+                "daily_loss_limit_pct": 0.02,
+                "current_daily_loss_pct": 0.0,
+                "reduce_only_mode": False,
+                "active_guards": [],
+            },
+            "positions": {"positions": {}, "total_unrealized_pnl": "0", "equity": "10000"},
+            "orders": [],
+            "trades": [],
+            "account": {"volume_30d": "0", "fees_30d": "0", "fee_tier": 0, "balances": []},
+            "strategy": {"active_strategies": [], "last_decisions": []},
+            "system": {
+                "api_latency": 0.0,
+                "connection_status": "connected",
+                "rate_limit_usage": 0.0,
+                "memory_usage": 0.0,
+                "cpu_usage": 0.0,
+            },
         }
+
+        status = dict_to_obj(status_dict)
 
         # Push update
         await pilot.pause()

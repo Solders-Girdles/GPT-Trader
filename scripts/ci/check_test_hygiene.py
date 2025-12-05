@@ -167,6 +167,7 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/features/strategy_dev/monitor/test_metrics.py",
     "tests/unit/gpt_trader/features/strategy_dev/monitor/test_alerts.py",
     "tests/unit/gpt_trader/features/strategy_dev/lab/test_experiment.py",
+    "tests/unit/gpt_trader/tui/test_log_manager.py",  # comprehensive TUI log handler coverage including threading, markup handling, and error scenarios
 }
 
 SLEEP_ALLOWLIST = {

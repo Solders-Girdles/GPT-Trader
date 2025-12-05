@@ -41,33 +41,63 @@ class UICoordinator:
         """
         Apply typed status update to state and UI.
 
-        Called from observer callback on bot status changes.
+        Called from observer callback on bot status changes. Protected with
+        error boundaries to prevent cascade failures.
 
         Args:
             status: Typed BotStatus snapshot from StatusReporter
         """
-        logger.debug(f"Applying status update to TUI state. Bot running: {self.app.bot.running}")
-
-        # Get runtime state
-        runtime_state = None
-        if hasattr(self.app.bot.engine.context, "runtime_state"):
-            runtime_state = self.app.bot.engine.context.runtime_state
+        try:
             logger.debug(
-                f"Runtime state available: uptime={getattr(runtime_state, 'uptime', 'N/A')}"
+                f"Applying status update to TUI state. Bot running: {self.app.bot.running}"
             )
 
-        # Update TuiState
-        self.app.tui_state.running = self.app.bot.running
-        self.app.tui_state.update_from_bot_status(status, runtime_state)
+            # Get runtime state
+            runtime_state = None
+            if hasattr(self.app.bot.engine.context, "runtime_state"):
+                runtime_state = self.app.bot.engine.context.runtime_state
+                logger.debug(
+                    f"Runtime state available: uptime={getattr(runtime_state, 'uptime', 'N/A')}"
+                )
 
-        # Log key data points for debugging
-        if status.market:
-            logger.debug(f"Market data: {len(status.market.last_prices)} symbols")
-        if status.positions:
-            logger.debug(f"Position data received: {status.positions.count} positions")
+            # Update TuiState (critical operation - isolated error handling)
+            try:
+                self.app.tui_state.running = self.app.bot.running
+                self.app.tui_state.update_from_bot_status(status, runtime_state)
 
-        # Update UI
-        self.update_main_screen()
+                # Log successful update
+                logger.debug(
+                    f"State updated successfully: "
+                    f"positions={len(status.positions.positions) if status.positions else 0}, "
+                    f"market_symbols={len(status.market.last_prices) if status.market else 0}"
+                )
+            except Exception as e:
+                logger.error(f"Failed to update TuiState from bot status: {e}", exc_info=True)
+                self.app.notify(
+                    "Critical: State update failed. UI may show stale data.",
+                    title="State Update Error",
+                    severity="error",
+                    timeout=10,
+                )
+                # Don't proceed to UI update if state update failed
+                return
+
+            # Update UI (already has some error handling in update_main_screen)
+            self.update_main_screen()
+
+        except Exception as e:
+            logger.error(f"Critical error in apply_observer_update: {e}", exc_info=True)
+            # Last resort notification
+            try:
+                self.app.notify(
+                    "Critical UI update failure. Consider restarting TUI.",
+                    title="Critical Error",
+                    severity="error",
+                    timeout=30,
+                )
+            except Exception:
+                # Even notification failed - log and continue
+                logger.critical("Cannot notify user of critical error - TUI may be unresponsive")
 
     def sync_state_from_bot(self) -> None:
         """

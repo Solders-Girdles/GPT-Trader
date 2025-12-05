@@ -1,10 +1,20 @@
 """Tabbed execution widget combining Orders and Trades."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from textual.app import ComposeResult
 from textual.reactive import reactive
 from textual.widgets import Label, Static, TabbedContent, TabPane
 
 from gpt_trader.tui.widgets.positions import OrdersWidget, TradesWidget
+from gpt_trader.utilities.logging_patterns import get_logger
+
+if TYPE_CHECKING:
+    from gpt_trader.tui.state import TuiState
+
+logger = get_logger(__name__, component="tui")
 
 
 class ExecutionWidget(Static):
@@ -13,10 +23,17 @@ class ExecutionWidget(Static):
     # Reactive state property for automatic updates
     state = reactive(None)  # Type: TuiState | None
 
-    def watch_state(self, state) -> None:  # type: ignore[no-untyped-def]
+    def watch_state(self, state: TuiState | None) -> None:
         """React to state changes - update execution automatically."""
         if state is None:
             return
+
+        logger.debug(
+            f"[ExecutionWidget] State update: "
+            f"orders={len(state.order_data.orders)}, "
+            f"trades={len(state.trade_data.trades)}"
+        )
+
         self.update_orders(state.order_data.orders)
         self.update_trades(state.trade_data.trades)
 

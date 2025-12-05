@@ -4,6 +4,10 @@ from textual.app import ComposeResult
 from textual.containers import Horizontal
 from textual.widgets import Label, Log, Select, Static
 
+from gpt_trader.utilities.logging_patterns import get_logger
+
+logger = get_logger(__name__, component="tui")
+
 
 class LogWidget(Static):
     """Displays application logs with optional compact mode."""
@@ -41,7 +45,8 @@ class LogWidget(Static):
     def compose(self) -> ComposeResult:
         # Use max_lines to limit display in compact mode
         max_lines = 50 if self.compact_mode else 1000
-        log_widget = Log(id="log-stream", highlight=False, max_lines=max_lines, auto_scroll=True)
+        # Enable highlight=True to render markup for colored log output
+        log_widget = Log(id="log-stream", highlight=True, max_lines=max_lines, auto_scroll=True)
         log_widget.can_focus = True
         yield log_widget
 
@@ -69,33 +74,51 @@ class LogWidget(Static):
 
     def on_mount(self) -> None:
         """Register with global log handler."""
-        import sys
+        try:
+            from gpt_trader.tui.log_manager import get_tui_log_handler
 
-        from gpt_trader.tui.log_manager import get_tui_log_handler
+            handler = get_tui_log_handler()
+            log_display = self.query_one("#log-stream", Log)
 
-        handler = get_tui_log_handler()
-        log_display = self.query_one("#log-stream", Log)
+            logger.debug(
+                f"LogWidget registering: app_available={self.app is not None}, "
+                f"widget_id={id(log_display)}"
+            )
 
-        # DEBUG
-        print(f"[LOGWIDGET] Registering widget, app={self.app is not None}", file=sys.stderr)
-        print(f"[LOGWIDGET] log_display={log_display}, id={id(log_display)}", file=sys.stderr)
+            handler.register_widget(log_display, self._min_level)
 
-        handler.register_widget(log_display, self._min_level)
+            logger.debug(
+                f"LogWidget registered successfully: total_widgets={len(handler._widgets)}"
+            )
 
-        print(
-            f"[LOGWIDGET] Registration complete, handler has {len(handler._widgets)} widgets",
-            file=sys.stderr,
-        )
+            # Write startup messages after widget is ready
+            self.call_after_refresh(self._write_startup_messages)
 
-        # Write startup messages after widget is ready
-        self.call_after_refresh(self._write_startup_messages)
+        except Exception as e:
+            logger.error(f"Failed to register LogWidget with handler: {e}", exc_info=True)
+            # Notify user that logs may not work
+            if self.app:
+                self.app.notify(
+                    "Log widget initialization failed. Logs may not display.",
+                    severity="warning",
+                    timeout=5,
+                )
 
     def _write_startup_messages(self) -> None:
         """Write startup messages to verify log widget is working."""
         log = self.query_one("#log-stream", Log)
         log.write_line("[#a3be8c]✓ Log system initialized[/#a3be8c]")
         log.write_line("[#a3be8c]Set log level using dropdown above[/#a3be8c]")
-        log.write_line("[#a3be8c]Waiting for bot to start... Press 'S' to begin[/#a3be8c]")
+
+        # Mode-aware hint message
+        if self.app and hasattr(self.app, "data_source_mode"):
+            mode = self.app.data_source_mode  # type: ignore[attr-defined]
+            if mode == "read_only":
+                log.write_line("[#a3be8c]Observing market data (read-only mode)[/#a3be8c]")
+            else:
+                log.write_line("[#a3be8c]Waiting for bot to start... Press 'S' to begin[/#a3be8c]")
+        else:
+            log.write_line("[#a3be8c]Waiting for bot to start... Press 'S' to begin[/#a3be8c]")
 
     def on_unmount(self) -> None:
         """Unregister from global log handler."""

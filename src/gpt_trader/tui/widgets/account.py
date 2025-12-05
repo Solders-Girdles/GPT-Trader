@@ -112,7 +112,7 @@ class AccountWidget(Static):
             except Exception:
                 pass  # Elements don't exist in compact mode
 
-    @safe_update
+    @safe_update(notify_user=True, error_tracker=True, severity="warning")
     def update_account(
         self,
         data: AccountSummary,

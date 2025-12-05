@@ -75,22 +75,39 @@ class TuiState(Widget):
         """
         Update state from the bot's typed status snapshot.
 
-        This method orchestrates updates for all data components using typed
-        dataclasses, eliminating the need for defensive parsing.
+        Each component update is isolated to prevent cascade failures.
+        If one component fails, others still update successfully.
 
         Args:
             status: Typed BotStatus snapshot from StatusReporter
             runtime_state: Optional runtime state (engine state, uptime, etc.)
         """
-        self._update_market_data(status.market)
-        self._update_position_data(status.positions)
-        self._update_order_data(status.orders)
-        self._update_trade_data(status.trades)
-        self._update_account_data(status.account)
-        self._update_strategy_data(status.strategy)
-        self._update_risk_data(status.risk)
-        self._update_system_data(status.system)
-        self._update_runtime_stats(runtime_state)
+        # Define update operations with error isolation
+        update_operations = [
+            ("market", lambda: self._update_market_data(status.market)),
+            ("positions", lambda: self._update_position_data(status.positions)),
+            ("orders", lambda: self._update_order_data(status.orders)),
+            ("trades", lambda: self._update_trade_data(status.trades)),
+            ("account", lambda: self._update_account_data(status.account)),
+            ("strategy", lambda: self._update_strategy_data(status.strategy)),
+            ("risk", lambda: self._update_risk_data(status.risk)),
+            ("system", lambda: self._update_system_data(status.system)),
+            ("runtime", lambda: self._update_runtime_stats(runtime_state)),
+        ]
+
+        failed_updates = []
+        for component_name, update_operation in update_operations:
+            try:
+                update_operation()
+            except Exception as e:
+                logger.error(f"Failed to update {component_name} data: {e}", exc_info=True)
+                failed_updates.append(component_name)
+
+        if failed_updates:
+            logger.warning(
+                f"State update completed with {len(failed_updates)} failures: "
+                f"{', '.join(failed_updates)}"
+            )
 
     def check_connection_health(self) -> bool:
         """

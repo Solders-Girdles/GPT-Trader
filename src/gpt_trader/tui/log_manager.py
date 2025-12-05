@@ -15,6 +15,9 @@ from rich.text import Text
 if TYPE_CHECKING:
     from textual.widgets import Log
 
+# Separate logger for TuiLogHandler errors (not attached to TuiLogHandler to avoid recursion)
+_error_logger = logging.getLogger("tui.log_handler.errors")
+
 
 class TuiLogHandler(logging.Handler):
     """Single handler that distributes logs to all active LogWidgets."""
@@ -44,21 +47,22 @@ class TuiLogHandler(logging.Handler):
 
     def emit(self, record: logging.LogRecord) -> None:
         """Emit log to all registered widgets that accept this level."""
-        import sys
         import threading
 
         try:
             msg = self.format(record)
 
-            # Create Rich Text object with markup for color
+            # Create Rich Text object with style (not markup) to prevent injection
+            # Using style= treats msg as literal text, preventing markup in log messages
+            # from corrupting coloring or injecting formatting
             if record.levelno >= logging.ERROR:
-                styled_msg = Text.from_markup(f"[#bf616a]{msg}[/#bf616a]")  # Nord Red
+                styled_msg = Text(msg, style="#bf616a")  # Nord Red
             elif record.levelno >= logging.WARNING:
-                styled_msg = Text.from_markup(f"[#ebcb8b]{msg}[/#ebcb8b]")  # Nord Yellow
+                styled_msg = Text(msg, style="#ebcb8b")  # Nord Yellow
             elif record.levelno >= logging.INFO:
-                styled_msg = Text.from_markup(f"[#a3be8c]{msg}[/#a3be8c]")  # Nord Green
+                styled_msg = Text(msg, style="#a3be8c")  # Nord Green
             else:
-                styled_msg = Text.from_markup(f"[#4c566a]{msg}[/#4c566a]")  # Nord Grey
+                styled_msg = Text(msg, style="#4c566a")  # Nord Grey
 
             # Check if we're on the main thread
             is_main_thread = threading.current_thread() is threading.main_thread()
@@ -79,12 +83,9 @@ class TuiLogHandler(logging.Handler):
                             widget.app.call_from_thread(self._write_to_widget, widget, styled_msg)
                     except Exception as e:
                         # Log errors for debugging, but don't crash the logger
-                        # Use stderr to avoid recursive logging
+                        # Use separate logger not attached to TuiLogHandler to avoid recursion
                         error_type = type(e).__name__
-                        print(
-                            f"[TuiLogHandler] Error writing to log widget: {error_type}: {e}",
-                            file=sys.stderr,
-                        )
+                        _error_logger.debug(f"Error writing to log widget: {error_type}: {e}")
                         # If widget unmounted, remove it from registry
                         if error_type == "NoActiveAppError" or not widget.is_mounted:
                             self.unregister_widget(widget)
@@ -94,10 +95,16 @@ class TuiLogHandler(logging.Handler):
 
     @staticmethod
     def _write_to_widget(widget: Log, message: Text) -> None:
-        """Write Rich Text to widget on main thread."""
-        # Convert Text object to string (preserving ANSI codes) before writing
-        # This fixes the TypeError: expected string or bytes-like object
-        widget.write(message)
+        """Write Rich Text to widget on main thread.
+
+        IMPORTANT: We manually add \\n because the formatter doesn't include one.
+        If the formatter is ever changed to add \\n, this will cause double-spacing.
+        See test_formatter_does_not_add_newline() for regression detection.
+        """
+        # Log.write() expects strings, not Text objects
+        # Use markup property to get Rich markup string, then add newline
+        # The Log widget's highlight=True will parse the markup for colored output
+        widget.write(message.markup + "\n")
 
 
 # Global singleton instance

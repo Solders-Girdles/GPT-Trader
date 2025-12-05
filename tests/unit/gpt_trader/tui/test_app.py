@@ -94,7 +94,7 @@ class TestTuiLogHandler:
         handler = TuiLogHandler()  # No arguments in new API
         handler.register_widget(mock_widget, min_level=logging.INFO)
 
-        # Test INFO - handler should call widget.write() with styled Text
+        # Test INFO - handler should call widget.write() with markup + newline
         record = logging.LogRecord("name", logging.INFO, "path", 1, "Info message", (), None)
         handler.emit(record)
         assert mock_widget.write.called

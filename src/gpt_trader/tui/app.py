@@ -18,6 +18,7 @@ from gpt_trader.tui.responsive import calculate_responsive_state
 from gpt_trader.tui.screens import FullLogsScreen, MainScreen, SystemDetailsScreen
 from gpt_trader.tui.state import TuiState
 from gpt_trader.tui.widgets import ConfigModal, LiveWarningModal, ModeInfoModal
+from gpt_trader.tui.widgets.error_indicator import ErrorIndicatorWidget
 from gpt_trader.tui.widgets.status import BotStatusWidget
 from gpt_trader.utilities.logging_patterns import get_logger
 
@@ -74,7 +75,10 @@ def _create_bot_for_mode(mode: str, demo_scenario: str = "mixed") -> Any:
 class TraderApp(App):
     """GPT-Trader Terminal User Interface."""
 
-    CSS_PATH = "styles/main.tcss"
+    # Use absolute path resolving relative to this file
+    from pathlib import Path
+
+    CSS_PATH = Path(__file__).parent / "styles" / "main.tcss"
 
     # Responsive design properties
     terminal_width = reactive(120)
@@ -115,6 +119,9 @@ class TraderApp(App):
         # Initialize State
         self.tui_state: TuiState = TuiState()
 
+        # Initialize error tracker widget (singleton for whole app)
+        self.error_tracker: ErrorIndicatorWidget = ErrorIndicatorWidget(max_errors=10)
+
         # Create managers (only after bot is set)
         self.lifecycle_manager: BotLifecycleManager | None = None
         self.ui_coordinator: UICoordinator | None = None
@@ -152,16 +159,14 @@ class TraderApp(App):
 
     async def on_mount(self) -> None:
         """Called when app starts."""
-        import sys
-
-        print("[APP] TraderApp.on_mount() called", file=sys.stderr)
+        logger.debug("TraderApp.on_mount() called")
         try:
             # ATTACH LOG HANDLER FIRST - before any widgets mount
-            print("[APP] About to attach TUI log handler", file=sys.stderr)
+            logger.debug("About to attach TUI log handler")
             from gpt_trader.tui.log_manager import attach_tui_log_handler
 
             attach_tui_log_handler()
-            print("[APP] Attach complete, testing logger", file=sys.stderr)
+            logger.debug("TUI log handler attached, testing logger")
             logger.info("TUI log handler attached globally")
 
             logger.info("TUI mounting, initializing components")

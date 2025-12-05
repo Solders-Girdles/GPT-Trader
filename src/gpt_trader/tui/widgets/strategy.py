@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from textual.app import ComposeResult
 from textual.reactive import reactive
@@ -7,6 +10,12 @@ from textual.widgets import DataTable, Label, Static
 from gpt_trader.tui.helpers import safe_update
 from gpt_trader.tui.theme import THEME
 from gpt_trader.tui.types import StrategyState
+from gpt_trader.utilities.logging_patterns import get_logger
+
+if TYPE_CHECKING:
+    from gpt_trader.tui.state import TuiState
+
+logger = get_logger(__name__, component="tui")
 
 
 class StrategyWidget(Static):
@@ -26,10 +35,17 @@ class StrategyWidget(Static):
     # Reactive state property for automatic updates
     state = reactive(None)  # Type: TuiState | None
 
-    def watch_state(self, state) -> None:  # type: ignore[no-untyped-def]
+    def watch_state(self, state: TuiState | None) -> None:
         """React to state changes - update strategy automatically."""
         if state is None:
             return
+
+        logger.debug(
+            f"[StrategyWidget] State update: "
+            f"strategies={len(state.strategy_data.active_strategies)}, "
+            f"decisions={len(state.strategy_data.last_decisions)}"
+        )
+
         self.update_strategy(state.strategy_data)
 
     def compose(self) -> ComposeResult:

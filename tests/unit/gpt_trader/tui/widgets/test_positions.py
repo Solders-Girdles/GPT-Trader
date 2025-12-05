@@ -36,11 +36,14 @@ class TestPositionsWidget:
 
         positions = {
             "BTC-USD": Position(
-                symbol="BTC-USD", quantity="0.5", entry_price="50000.00", unrealized_pnl="100.00"
+                symbol="BTC-USD",
+                quantity=Decimal("0.5"),
+                entry_price=Decimal("50000.00"),
+                unrealized_pnl=Decimal("100.00"),
             )
         }
 
-        widget.update_positions(positions, "100.00")
+        widget.update_positions(positions, Decimal("100.00"))
 
         mock_table.clear.assert_called_once()
         # Verify row content
@@ -48,9 +51,9 @@ class TestPositionsWidget:
         assert args[0] == "BTC-USD"
         # Quantity, Entry, Current, PnL, %, Leverage are now Text objects
         assert str(args[1]) == "0.5"
-        assert str(args[2]) == "50000.0000"  # Now formatted to 4 decimal places
-        assert str(args[3]) == "50000.00"  # Current defaults to entry if mark_price missing
-        assert str(args[4]) == "100.00"
+        assert str(args[2]) == "50,000.0000"  # Formatted with commas and 4 decimal places
+        assert str(args[3]) == "50,000.0000"  # Current defaults to entry if mark_price missing
+        assert str(args[4]) == "$100.00"  # P&L formatted as currency with $ sign
         # Leverage check
         assert "1.0x" in str(args[6])
 
@@ -67,8 +70,8 @@ class TestOrdersWidget:
                 order_id="ord_123",
                 symbol="BTC-USD",
                 side="BUY",
-                quantity="0.1",
-                price="50000.00",
+                quantity=Decimal("0.1"),
+                price=Decimal("50000.00"),
                 status="OPEN",
                 type="LIMIT",
                 time_in_force="GTC",
@@ -85,7 +88,7 @@ class TestOrdersWidget:
         assert args[0] == "BTC-USD"
         assert "BUY" in args[1]
         assert str(args[2]) == "0.1"
-        assert str(args[3]) == "50000.00"
+        assert str(args[3]) == "50,000.0000"  # Formatted with commas and 4 decimal places
         assert args[4] == "OPEN"
 
 
@@ -103,8 +106,8 @@ class TestTradesWidget:
                 trade_id="trd_123",
                 symbol="BTC-USD",
                 side="SELL",
-                quantity="0.1",
-                price="51000.00",
+                quantity=Decimal("0.1"),
+                price=Decimal("51000.00"),
                 order_id="ord_123",
                 time="2023-01-01T12:00:00.000Z",
             )
@@ -118,7 +121,7 @@ class TestTradesWidget:
         assert args[0] == "BTC-USD"
         assert "SELL" in args[1]
         assert str(args[2]) == "0.1"
-        assert str(args[3]) == "51000.00"
+        assert str(args[3]) == "51,000.0000"  # Formatted with commas and 4 decimal places
         assert args[4] == "ord_123"  # Order ID (short enough to not be truncated)
         # P&L column should be present (args[5]) - unmatched trade shows N/A
         assert "N/A" in str(args[5])
@@ -137,8 +140,8 @@ class TestTradesWidget:
                 trade_id="trd_123",
                 symbol="BTC-USD",
                 side="SELL",
-                quantity="0.1",
-                price="51000.00",
+                quantity=Decimal("0.1"),
+                price=Decimal("51000.00"),
                 order_id=long_id,
                 time="2023-01-01T12:00:00.000Z",
             )
@@ -163,21 +166,21 @@ class TestTradesWidget:
                 trade_id="trd_1",
                 symbol="BTC-USD",
                 side="BUY",
-                quantity="1.0",
-                price="50000.00",
+                quantity=Decimal("1.0"),
+                price=Decimal("50000.00"),
                 order_id="ord_1",
                 time="2023-01-01T12:00:00.000Z",
-                fee="30.00",
+                fee=Decimal("30.00"),
             ),
             Trade(
                 trade_id="trd_2",
                 symbol="BTC-USD",
                 side="SELL",
-                quantity="1.0",
-                price="51000.00",
+                quantity=Decimal("1.0"),
+                price=Decimal("51000.00"),
                 order_id="ord_2",
                 time="2023-01-01T12:01:00.000Z",
-                fee="30.60",
+                fee=Decimal("30.60"),
             ),
         ]
 
@@ -213,11 +216,11 @@ class TestTradesWidget:
                 trade_id="trd_1",
                 symbol="BTC-USD",
                 side="BUY",
-                quantity="1.0",
-                price="50000.00",
+                quantity=Decimal("1.0"),
+                price=Decimal("50000.00"),
                 order_id="ord_1",
                 time="2023-01-01T12:00:00.000Z",
-                fee="30.00",
+                fee=Decimal("30.00"),
             ),
         ]
 

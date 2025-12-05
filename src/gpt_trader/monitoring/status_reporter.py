@@ -47,9 +47,9 @@ class MarketStatus:
     """Status snapshot of market data."""
 
     symbols: list[str] = field(default_factory=list)
-    last_prices: dict[str, str] = field(default_factory=dict)
+    last_prices: dict[str, Decimal] = field(default_factory=dict)
     last_price_update: float | None = None
-    price_history: dict[str, list[str]] = field(default_factory=dict)
+    price_history: dict[str, list[Decimal]] = field(default_factory=dict)
 
 
 @dataclass
@@ -58,8 +58,8 @@ class PositionStatus:
 
     count: int = 0
     symbols: list[str] = field(default_factory=list)
-    total_unrealized_pnl: str = "0"
-    equity: str = "0.00"
+    total_unrealized_pnl: Decimal = Decimal("0")
+    equity: Decimal = Decimal("0")
     positions: dict[str, dict[str, Any]] = field(default_factory=dict)
 
 
@@ -81,8 +81,8 @@ class OrderStatus:
     order_id: str
     symbol: str
     side: str
-    quantity: str
-    price: str | None
+    quantity: Decimal
+    price: Decimal | None
     status: str
     order_type: str = "MARKET"
     time_in_force: str = "GTC"
@@ -96,19 +96,19 @@ class TradeStatus:
     trade_id: str
     symbol: str
     side: str
-    quantity: str
-    price: str
+    quantity: Decimal
+    price: Decimal
     time: str
     order_id: str
-    fee: str = "0.00"
+    fee: Decimal = Decimal("0")
 
 
 @dataclass
 class AccountStatus:
     """Status snapshot of account metrics."""
 
-    volume_30d: str = "0.00"
-    fees_30d: str = "0.00"
+    volume_30d: Decimal = Decimal("0")
+    fees_30d: Decimal = Decimal("0")
     fee_tier: str = ""
     balances: list[dict[str, str]] = field(default_factory=list)
 
@@ -351,28 +351,26 @@ class StatusReporter:
         self._status.engine.last_error = self._last_error
         self._status.engine.last_error_time = self._last_error_time
 
-        # Market status
-        self._status.market.last_prices = {k: str(v) for k, v in self._last_prices.items()}
+        # Market status - keep Decimal types
+        self._status.market.last_prices = dict(self._last_prices)
         self._status.market.last_price_update = self._last_price_update
         self._status.market.symbols = list(self._last_prices.keys())
         self._status.market.price_history = {
-            symbol: [str(price) for price in prices]
-            for symbol, prices in self._price_history.items()
+            symbol: list(prices) for symbol, prices in self._price_history.items()
         }
 
-        # Position status
+        # Position status - keep Decimal types
         self._status.positions.count = len(self._positions)
         self._status.positions.symbols = list(self._positions.keys())
         total_pnl = sum(
             (p.get("unrealized_pnl", Decimal("0")) for p in self._positions.values()),
             Decimal("0"),
         )
-        self._status.positions.total_unrealized_pnl = str(total_pnl)
-        self._status.positions.equity = str(self._equity)
-        # Include actual position details (ensure all values are strings)
+        self._status.positions.total_unrealized_pnl = total_pnl
+        self._status.positions.equity = self._equity
+        # Include actual position details (keep Decimal for numeric values)
         self._status.positions.positions = {
-            symbol: {k: str(v) if not isinstance(v, str) else v for k, v in pos.items()}
-            for symbol, pos in self._positions.items()
+            symbol: dict(pos) for symbol, pos in self._positions.items()
         }
 
         # Heartbeat status
@@ -473,18 +471,29 @@ class StatusReporter:
                 order_type = "STOP_LIMIT"
                 tif = "GTC"
 
+            # Parse quantity
+            quantity_raw = o.get("size") or o.get("order_configuration", {}).get(
+                "market_market_ioc", {}
+            ).get("base_size", "0")
+            try:
+                quantity = Decimal(str(quantity_raw)) if quantity_raw else Decimal("0")
+            except Exception:
+                quantity = Decimal("0")
+
+            # Parse price
+            price_raw = o.get("price")
+            try:
+                price = Decimal(str(price_raw)) if price_raw else None
+            except Exception:
+                price = None
+
             order_statuses.append(
                 OrderStatus(
                     order_id=o.get("order_id", ""),
                     symbol=o.get("product_id", ""),
                     side=o.get("side", ""),
-                    quantity=str(
-                        o.get("size", "0")
-                        or o.get("order_configuration", {})
-                        .get("market_market_ioc", {})
-                        .get("base_size", "0")
-                    ),
-                    price=str(o.get("price")) if o.get("price") else None,
+                    quantity=quantity,
+                    price=price,
                     status=o.get("status", "UNKNOWN"),
                     order_type=order_type,
                     time_in_force=tif,
@@ -504,15 +513,31 @@ class StatusReporter:
         timestamp = trade.get("timestamp", time.time())
         time_str = datetime.utcfromtimestamp(timestamp).isoformat() + "Z"
 
+        # Parse numeric fields to Decimal
+        try:
+            quantity = Decimal(str(trade.get("quantity", "0")))
+        except Exception:
+            quantity = Decimal("0")
+
+        try:
+            price = Decimal(str(trade.get("price", "0")))
+        except Exception:
+            price = Decimal("0")
+
+        try:
+            fee = Decimal(str(trade.get("fee", "0")))
+        except Exception:
+            fee = Decimal("0")
+
         new_trade = TradeStatus(
             trade_id=trade_id,
             symbol=trade.get("symbol", ""),
             side=trade.get("side", ""),
-            quantity=str(trade.get("quantity", "0")),
-            price=str(trade.get("price", "0")),
+            quantity=quantity,
+            price=price,
             time=time_str,
             order_id=str(trade.get("order_id") or ""),
-            fee=str(trade.get("fee", "0.00")),
+            fee=fee,
         )
         # Prepend and keep last 50
         self._status.trades.insert(0, new_trade)
@@ -539,9 +564,20 @@ class StatusReporter:
             if Decimal(total) > 0:
                 bal_list.append({"asset": asset, "total": total, "available": avail, "hold": hold})
 
+        # Parse numeric fields to Decimal
+        try:
+            volume_30d = Decimal(str(summary.get("total_volume_30d", "0")))
+        except Exception:
+            volume_30d = Decimal("0")
+
+        try:
+            fees_30d = Decimal(str(summary.get("total_fees_30d", "0")))
+        except Exception:
+            fees_30d = Decimal("0")
+
         self._status.account = AccountStatus(
-            volume_30d=str(summary.get("total_volume_30d", "0.00")),
-            fees_30d=str(summary.get("total_fees_30d", "0.00")),
+            volume_30d=volume_30d,
+            fees_30d=fees_30d,
             fee_tier=str(summary.get("fee_tier", {}).get("pricing_tier", "Unknown")),
             balances=bal_list,
         )

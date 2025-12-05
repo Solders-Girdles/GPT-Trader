@@ -2,7 +2,6 @@
 
 from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
-from typing import Optional
 
 from gpt_trader.tui.types import Trade
 
@@ -45,9 +44,9 @@ class TradeMatcher:
 
         # NEW: Track processed trades for incremental updates (Phase 6)
         self._processed_trade_ids: set[str] = set()
-        self._pnl_display_cache: dict[str, Optional[str]] = {}
+        self._pnl_display_cache: dict[str, str | None] = {}
 
-    def process_trades(self, trades: list[Trade]) -> dict[str, Optional[str]]:
+    def process_trades(self, trades: list[Trade]) -> dict[str, str | None]:
         """
         Process a list of trades and return P&L display values.
 
@@ -61,9 +60,7 @@ class TradeMatcher:
             Dict mapping trade_id to P&L display string (e.g., "+150.25", "-42.10", "N/A")
         """
         # Identify new trades that haven't been processed yet
-        new_trades = [
-            trade for trade in trades if trade.trade_id not in self._processed_trade_ids
-        ]
+        new_trades = [trade for trade in trades if trade.trade_id not in self._processed_trade_ids]
 
         # Track which trade IDs had P&L changes (for cache updates)
         affected_trade_ids: set[str] = set()
@@ -93,8 +90,7 @@ class TradeMatcher:
 
         # Return display map for ALL trades (uses cached values + updated calculations)
         return {
-            trade.trade_id: self._pnl_display_cache.get(trade.trade_id, "N/A")
-            for trade in trades
+            trade.trade_id: self._pnl_display_cache.get(trade.trade_id, "N/A") for trade in trades
         }
 
     def _match_trade(self, trade: Trade) -> None:
@@ -123,17 +119,17 @@ class TradeMatcher:
     def _match_buy(self, trade: Trade, quantity: Decimal, price: Decimal, fee: Decimal) -> None:
         """Match a BUY trade (could close SHORT or open LONG)."""
         symbol = trade.symbol
-        remaining_qty = quantity
+        remaining_quantity = quantity
 
         # Check if this BUY closes any SHORT positions (SELL entries)
         unmatched_sells = self._unmatched_sells[symbol]
 
         i = 0
-        while i < len(unmatched_sells) and remaining_qty > 0:
-            sell_trade, sell_qty = unmatched_sells[i]
+        while i < len(unmatched_sells) and remaining_quantity > 0:
+            sell_trade, sell_quantity = unmatched_sells[i]
 
             # Calculate match quantity
-            match_qty = min(remaining_qty, sell_qty)
+            match_quantity = min(remaining_quantity, sell_quantity)
 
             # Calculate P&L for SHORT position
             # SHORT P&L: (entry_price - exit_price) * quantity - fees
@@ -141,10 +137,10 @@ class TradeMatcher:
             sell_fee = Decimal(str(sell_trade.fee))
 
             # Proportional fees
-            entry_fee_portion = (sell_fee * match_qty) / sell_qty
-            exit_fee_portion = (fee * match_qty) / quantity
+            entry_fee_portion = (sell_fee * match_quantity) / sell_quantity
+            exit_fee_portion = (fee * match_quantity) / quantity
 
-            pnl = (sell_price - price) * match_qty - (entry_fee_portion + exit_fee_portion)
+            pnl = (sell_price - price) * match_quantity - (entry_fee_portion + exit_fee_portion)
 
             # Accumulate P&L for both entry and exit trades
             self._pnl_accumulator[sell_trade.trade_id] = (
@@ -155,35 +151,35 @@ class TradeMatcher:
             )
 
             # Update remaining quantities
-            remaining_qty -= match_qty
-            sell_qty -= match_qty
+            remaining_quantity -= match_quantity
+            sell_quantity -= match_quantity
 
-            if sell_qty == 0:
+            if sell_quantity == 0:
                 # Fully matched - remove from queue
                 unmatched_sells.pop(i)
             else:
                 # Partially matched - update queue
-                unmatched_sells[i] = (sell_trade, sell_qty)
+                unmatched_sells[i] = (sell_trade, sell_quantity)
                 i += 1
 
         # If quantity remains, add as unmatched BUY (opens LONG)
-        if remaining_qty > 0:
-            self._unmatched_buys[symbol].append((trade, remaining_qty))
+        if remaining_quantity > 0:
+            self._unmatched_buys[symbol].append((trade, remaining_quantity))
 
     def _match_sell(self, trade: Trade, quantity: Decimal, price: Decimal, fee: Decimal) -> None:
         """Match a SELL trade (could close LONG or open SHORT)."""
         symbol = trade.symbol
-        remaining_qty = quantity
+        remaining_quantity = quantity
 
         # Check if this SELL closes any LONG positions (BUY entries)
         unmatched_buys = self._unmatched_buys[symbol]
 
         i = 0
-        while i < len(unmatched_buys) and remaining_qty > 0:
-            buy_trade, buy_qty = unmatched_buys[i]
+        while i < len(unmatched_buys) and remaining_quantity > 0:
+            buy_trade, buy_quantity = unmatched_buys[i]
 
             # Calculate match quantity
-            match_qty = min(remaining_qty, buy_qty)
+            match_quantity = min(remaining_quantity, buy_quantity)
 
             # Calculate P&L for LONG position
             # LONG P&L: (exit_price - entry_price) * quantity - fees
@@ -191,10 +187,10 @@ class TradeMatcher:
             buy_fee = Decimal(str(buy_trade.fee))
 
             # Proportional fees
-            entry_fee_portion = (buy_fee * match_qty) / buy_qty
-            exit_fee_portion = (fee * match_qty) / quantity
+            entry_fee_portion = (buy_fee * match_quantity) / buy_quantity
+            exit_fee_portion = (fee * match_quantity) / quantity
 
-            pnl = (price - buy_price) * match_qty - (entry_fee_portion + exit_fee_portion)
+            pnl = (price - buy_price) * match_quantity - (entry_fee_portion + exit_fee_portion)
 
             # Accumulate P&L for both entry and exit trades
             self._pnl_accumulator[buy_trade.trade_id] = (
@@ -205,20 +201,20 @@ class TradeMatcher:
             )
 
             # Update remaining quantities
-            remaining_qty -= match_qty
-            buy_qty -= match_qty
+            remaining_quantity -= match_quantity
+            buy_quantity -= match_quantity
 
-            if buy_qty == 0:
+            if buy_quantity == 0:
                 # Fully matched - remove from queue
                 unmatched_buys.pop(i)
             else:
                 # Partially matched - update queue
-                unmatched_buys[i] = (buy_trade, buy_qty)
+                unmatched_buys[i] = (buy_trade, buy_quantity)
                 i += 1
 
         # If quantity remains, add as unmatched SELL (opens SHORT)
-        if remaining_qty > 0:
-            self._unmatched_sells[symbol].append((trade, remaining_qty))
+        if remaining_quantity > 0:
+            self._unmatched_sells[symbol].append((trade, remaining_quantity))
 
     def reset(self) -> None:
         """
@@ -232,7 +228,7 @@ class TradeMatcher:
         self._processed_trade_ids.clear()
         self._pnl_display_cache.clear()
 
-    def _get_pnl_display(self, trade_id: str) -> Optional[str]:
+    def _get_pnl_display(self, trade_id: str) -> str | None:
         """Get P&L display string for a trade."""
         if trade_id not in self._pnl_accumulator:
             return "N/A"

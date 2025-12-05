@@ -17,7 +17,7 @@ class RiskWidget(Static):
     """
 
     def compose(self) -> ComposeResult:
-        yield Label("RISK MANAGEMENT", classes="header")
+        yield Label("⚠️ RISK MANAGEMENT", classes="header")
         with Grid(classes="risk-grid"):
             # Max Leverage
             yield Label("Max Leverage:", classes="risk-label")

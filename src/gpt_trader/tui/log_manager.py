@@ -8,15 +8,47 @@ shared by all LogWidget instances.
 from __future__ import annotations
 
 import logging
+from collections.abc import Callable
 from typing import TYPE_CHECKING
 
 from rich.text import Text
+
+from gpt_trader.tui.theme import THEME
 
 if TYPE_CHECKING:
     from textual.widgets import Log
 
 # Separate logger for TuiLogHandler errors (not attached to TuiLogHandler to avoid recursion)
 _error_logger = logging.getLogger("tui.log_handler.errors")
+_error_logger.propagate = False  # Prevent recursion through root logger's TUI handler
+_error_logger.addHandler(logging.NullHandler())  # Suppress "no handler" warnings
+
+
+class ImprovedExceptionFormatter(logging.Formatter):
+    """Custom formatter that improves exception/traceback display."""
+
+    def format(self, record: logging.LogRecord) -> str:
+        """Format log record with improved exception formatting."""
+        # Use parent formatter for base message
+        base_message = super().format(record)
+
+        # If there's exception info, format it better
+        if record.exc_info:
+            # Get the formatted exception from the record
+            if record.exc_text:
+                exc_text = record.exc_text
+            else:
+                exc_text = self.formatException(record.exc_info)
+
+            # Add indentation to exception lines for better readability
+            indented_exc = "\n".join(
+                f"  │ {line}" if line.strip() else "  │" for line in exc_text.split("\n")
+            )
+
+            # Combine base message with formatted exception
+            return f"{base_message}\n  ╰─ Exception:\n{indented_exc}"
+
+        return base_message
 
 
 class TuiLogHandler(logging.Handler):
@@ -25,25 +57,50 @@ class TuiLogHandler(logging.Handler):
     def __init__(self) -> None:
         super().__init__()
         self._widgets: dict[Log, int] = {}  # widget -> min_level mapping
-        formatter = logging.Formatter(
-            "%(asctime)s - %(levelname)s - %(message)s",
+        self._callbacks: dict[Log, Callable[[int], None]] = {}  # widget -> callback mapping
+        self._logger_filters: dict[Log, str] = {}  # widget -> logger_filter mapping
+        # Use improved formatter for better exception display
+        formatter = ImprovedExceptionFormatter(
+            "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
             datefmt="%H:%M:%S",
         )
         self.setFormatter(formatter)
         self.setLevel(logging.DEBUG)
 
-    def register_widget(self, widget: Log, min_level: int = logging.INFO) -> None:
-        """Register a Log widget to receive logs at or above min_level."""
+    def register_widget(
+        self,
+        widget: Log,
+        min_level: int = logging.INFO,
+        on_log_callback: Callable[[int], None] | None = None,
+    ) -> None:
+        """
+        Register a Log widget to receive logs at or above min_level.
+
+        Args:
+            widget: The Log widget to register
+            min_level: Minimum log level to display
+            on_log_callback: Optional callback called with log level on each log
+        """
         self._widgets[widget] = min_level
+        self._logger_filters[widget] = ""  # Default: show all loggers
+        if on_log_callback:
+            self._callbacks[widget] = on_log_callback
 
     def update_widget_level(self, widget: Log, min_level: int) -> None:
         """Update the minimum level for a registered widget."""
         if widget in self._widgets:
             self._widgets[widget] = min_level
 
+    def update_widget_logger_filter(self, widget: Log, logger_filter: str) -> None:
+        """Update the logger filter pattern for a registered widget."""
+        if widget in self._widgets:
+            self._logger_filters[widget] = logger_filter.lower()
+
     def unregister_widget(self, widget: Log) -> None:
         """Unregister a Log widget."""
         self._widgets.pop(widget, None)
+        self._callbacks.pop(widget, None)
+        self._logger_filters.pop(widget, None)
 
     def emit(self, record: logging.LogRecord) -> None:
         """Emit log to all registered widgets that accept this level."""
@@ -56,20 +113,25 @@ class TuiLogHandler(logging.Handler):
             # Using style= treats msg as literal text, preventing markup in log messages
             # from corrupting coloring or injecting formatting
             if record.levelno >= logging.ERROR:
-                styled_msg = Text(msg, style="#bf616a")  # Nord Red
+                styled_msg = Text(msg, style=THEME.colors.error)  # Warm coral-red
             elif record.levelno >= logging.WARNING:
-                styled_msg = Text(msg, style="#ebcb8b")  # Nord Yellow
+                styled_msg = Text(msg, style=THEME.colors.warning)  # Warm amber
             elif record.levelno >= logging.INFO:
-                styled_msg = Text(msg, style="#a3be8c")  # Nord Green
+                styled_msg = Text(msg, style=THEME.colors.success)  # Warm green
             else:
-                styled_msg = Text(msg, style="#4c566a")  # Nord Grey
+                styled_msg = Text(msg, style=THEME.colors.text_muted)  # Muted grey
 
             # Check if we're on the main thread
             is_main_thread = threading.current_thread() is threading.main_thread()
 
-            # Write to widgets that accept this level
+            # Write to widgets that accept this level and logger filter
             for widget, min_level in list(self._widgets.items()):
                 if record.levelno >= min_level:
+                    # Check logger filter (case-insensitive substring match)
+                    logger_filter = self._logger_filters.get(widget, "")
+                    if logger_filter and logger_filter not in record.name.lower():
+                        continue  # Skip this log - doesn't match filter
+
                     # Lifecycle guard: only write to mounted widgets with active app
                     if not widget.is_mounted or not widget.app:
                         continue
@@ -78,9 +140,15 @@ class TuiLogHandler(logging.Handler):
                         if is_main_thread:
                             # Already on main thread, call directly
                             self._write_to_widget(widget, styled_msg)
+                            # Call counter callback if registered
+                            if widget in self._callbacks:
+                                self._callbacks[widget](record.levelno)
                         else:
                             # On background thread, use call_from_thread
                             widget.app.call_from_thread(self._write_to_widget, widget, styled_msg)
+                            # Call counter callback if registered
+                            if widget in self._callbacks:
+                                widget.app.call_from_thread(self._callbacks[widget], record.levelno)
                     except Exception as e:
                         # Log errors for debugging, but don't crash the logger
                         # Use separate logger not attached to TuiLogHandler to avoid recursion

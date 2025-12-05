@@ -14,6 +14,11 @@ logger = get_logger(__name__, component="demo")
 
 def main() -> None:
     """Run the demo TUI."""
+    # Configure logging for TUI mode BEFORE any other initialization
+    from gpt_trader.logging.setup import configure_logging
+
+    configure_logging(tui_mode=True)
+
     logger.info("Starting TUI Demo Mode")
 
     # Create demo bot

@@ -48,9 +48,9 @@ class ErrorIndicatorWidget(Static):
         height: auto;
         max-height: 15;
         min-height: 1;
-        background: $error;
-        color: #E8E6E3;
-        border: solid #8B4428;
+        background: #E08580;  /* Theme error background */
+        color: #F0EDE9;  /* Theme primary text */
+        border: thick #D4744F;  /* Theme emphasized border */
         padding: 0 1;
     }
 
@@ -78,13 +78,13 @@ class ErrorIndicatorWidget(Static):
     }
 
     ErrorIndicatorWidget .error-badge {
-        background: #3A3530;
-        color: #E8E6E3;
+        background: #3D3833;  /* Theme elevated bg */
+        color: #F0EDE9;  /* Theme primary text */
         text-style: bold;
     }
 
     ErrorIndicatorWidget .error-detail {
-        color: #ABA8A5;
+        color: #B8B4AF;  /* Theme secondary text */
         height: auto;
         margin: 0 0 0 2;
     }

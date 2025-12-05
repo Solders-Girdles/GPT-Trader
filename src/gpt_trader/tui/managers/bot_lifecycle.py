@@ -95,8 +95,8 @@ class BotLifecycleManager:
 
         # Reset trade matcher on bot start (Phase 6 - Incremental P&L)
         try:
-            from gpt_trader.tui.widgets.positions import TradesWidget
             from gpt_trader.tui.screens.main import MainScreen
+            from gpt_trader.tui.widgets.positions import TradesWidget
 
             main_screen = self.app.query_one(MainScreen)
             exec_widget = main_screen.query_one("#dash-execution")
@@ -178,6 +178,42 @@ class BotLifecycleManager:
         self.app.notify("Bot stopped.", title="Status", severity="information")
         logger.info("Bot stopped successfully via TUI")
 
+    def panic_stop(self) -> None:
+        """
+        Emergency panic stop: stop bot and flatten all positions.
+
+        This is a critical safety mechanism. Errors are logged but
+        do not prevent the stop sequence from completing.
+        """
+        try:
+            # 1. Stop bot immediately
+            if self.app.bot and hasattr(self.app.bot, "running") and self.app.bot.running:
+                logger.warning("Panic stop: Stopping bot")
+                # Use asyncio to run the async stop_bot method
+                import asyncio
+
+                try:
+                    asyncio.create_task(self.stop_bot())
+                except RuntimeError:
+                    # If event loop not running, try synchronous stop
+                    if hasattr(self.app.bot, "stop"):
+                        self.app.bot.stop()
+
+            # 2. Flatten all positions (if broker supports it)
+            logger.warning("Panic stop: Attempting to flatten all positions")
+            if self.app.bot and hasattr(self.app.bot, "flatten_all_positions"):
+                try:
+                    self.app.bot.flatten_all_positions()
+                    logger.info("Panic stop: Position flattening initiated")
+                except Exception as e:
+                    logger.error(f"Panic stop: Position flattening failed: {e}", exc_info=True)
+            else:
+                logger.warning("Bot does not support flatten_all_positions()")
+
+        except Exception as e:
+            logger.error(f"Panic stop encountered error: {e}", exc_info=True)
+            # Don't re-raise - panic must complete even if errors occur
+
     async def switch_mode(self, target_mode: str) -> bool:
         """
         Switch to a new bot mode safely.
@@ -252,8 +288,8 @@ class BotLifecycleManager:
             # Step 8.5: Reset trade matcher (Phase 6 - Incremental P&L)
             # Clear P&L tracking state when switching modes
             try:
-                from gpt_trader.tui.widgets.positions import TradesWidget
                 from gpt_trader.tui.screens.main import MainScreen
+                from gpt_trader.tui.widgets.positions import TradesWidget
 
                 main_screen = self.app.query_one(MainScreen)
                 exec_widget = main_screen.query_one("#dash-execution")

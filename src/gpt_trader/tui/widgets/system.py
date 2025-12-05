@@ -12,27 +12,27 @@ class SystemHealthWidget(Static):
 
     DEFAULT_CSS = """
     SystemHealthWidget {
-        background: #2A2520;  /* bg-secondary - UPDATED */
-        border: none;  /* REMOVED: solid border */
+        background: #2A2520;  /* Theme bg-secondary */
+        border: none;
         height: auto;
         padding: 1;
     }
 
     SystemHealthWidget .value {
-        color: #F0EDE9; /* text-primary - UPDATED */
+        color: #F0EDE9;  /* Theme text-primary */
         text-style: bold;
     }
 
     .status-connected {
-        color: #85B77F; /* success - UPDATED */
+        color: #85B77F;  /* Theme success */
     }
 
     .status-disconnected {
-        color: #E08580; /* error - UPDATED */
+        color: #E08580;  /* Theme error */
     }
 
     .status-unknown {
-        color: #E0B366; /* warning - UPDATED */
+        color: #E0B366;  /* Theme warning */
     }
 
     .compact-metrics {
@@ -41,7 +41,7 @@ class SystemHealthWidget(Static):
     }
 
     .metric-separator {
-        color: #7A7672;  /* text-muted - UPDATED */
+        color: #7A7672;  /* Theme text-muted */
         margin: 0 1;
     }
     """

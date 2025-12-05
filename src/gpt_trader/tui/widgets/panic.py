@@ -12,18 +12,18 @@ class PanicModal(ModalScreen):
     CSS = """
     PanicModal {
         align: center middle;
-        background: rgba(46, 52, 64, 0.8);
+        background: rgba(58, 53, 48, 0.5);  /* Theme overlay-disabled */
     }
 
     #panic-dialog {
         height: auto;
-        background: #2e3440;
-        border: thick #bf616a; /* Nord Red */
+        background: #2A2520;  /* Theme bg-secondary */
+        border: thick #E08580;  /* Theme error */
         padding: 2;
     }
 
     #panic-title {
-        color: #bf616a;
+        color: #E08580;  /* Theme error */
         text-style: bold;
         text-align: center;
         width: 100%;
@@ -31,14 +31,14 @@ class PanicModal(ModalScreen):
     }
 
     #panic-message {
-        color: #d8dee9;
+        color: #F0EDE9;  /* Theme text-primary */
         text-align: center;
         margin-bottom: 2;
     }
 
     #panic-input {
         margin-bottom: 2;
-        border: solid #bf616a;
+        border: solid #E08580;  /* Theme error */
     }
 
     #panic-actions {
@@ -48,13 +48,13 @@ class PanicModal(ModalScreen):
     }
 
     #btn-panic-confirm {
-        background: #bf616a;
-        color: #eceff4;
+        background: #E08580;  /* Theme error */
+        color: #F0EDE9;  /* Theme text-primary */
         margin-right: 2;
     }
 
     #btn-panic-cancel {
-        background: #4c566a;
+        background: #3D3833;  /* Theme bg-elevated */
     }
     """
 

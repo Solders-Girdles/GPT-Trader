@@ -79,11 +79,52 @@ Label {
 }
 
 #dash-market {
-    height: 50%;
+    height: 1fr;           /* Flex-grow to fill available space */
 }
 
 #dash-strategy {
-    height: 50%;
+    height: auto;          /* Shrink to content */
+    max-height: 30%;       /* Cap at 30% to prevent domination */
+    min-height: 5;         /* Minimum 5 lines (header + empty state) */
+}
+
+/* === Responsive Column Ratios === */
+/* Applied via Python reactive properties based on terminal width */
+
+/* Compact (100-119 cols): Wider left for more ticker visibility */
+.workspace--compact #market-strategy-column {
+    width: 35%;
+}
+
+.workspace--compact #execution-monitoring-column {
+    width: 65%;
+}
+
+/* Standard (120-139 cols): Slightly narrower left */
+.workspace--standard #market-strategy-column {
+    width: 32%;
+}
+
+.workspace--standard #execution-monitoring-column {
+    width: 68%;
+}
+
+/* Comfortable (140-159 cols): Default balanced split */
+.workspace--comfortable #market-strategy-column {
+    width: 30%;
+}
+
+.workspace--comfortable #execution-monitoring-column {
+    width: 70%;
+}
+
+/* Wide (160+ cols): More space for execution monitoring */
+.workspace--wide #market-strategy-column {
+    width: 25%;
+}
+
+.workspace--wide #execution-monitoring-column {
+    width: 75%;
 }
 
 /* === Right Column: Execution + Monitoring (70% width) === */
@@ -95,42 +136,45 @@ Label {
 }
 
 #dash-positions {
-    height: 40%;  /* LARGEST - Priority #1 (28% of total screen) */
+    height: auto;          /* Shrink to content */
+    max-height: 40%;       /* Cap at 40% to prevent domination */
+    min-height: 5;         /* Minimum 5 lines (header + empty state) */
 }
 
-#dash-orders {
-    height: 20%;
+#dash-execution {
+    height: auto;          /* Shrink to content */
+    max-height: 40%;       /* Cap at 40% to prevent domination */
+    min-height: 5;         /* Minimum 5 lines (header + tabs + empty) */
 }
 
-#dash-trades {
-    height: 20%;
+/* === Execution Widget (Tabbed Orders/Trades) === */
+
+ExecutionWidget {
+    layout: vertical;
+    height: 1fr;
+    border-top: solid $border-subtle;
+    background: $bg-secondary;
+    padding: 0;
 }
 
-/* === Monitoring Row (20% of right column) === */
+ExecutionWidget TabbedContent {
+    height: 1fr;
+    border: none;
+}
+
+ExecutionWidget TabPane {
+    padding: 0;
+}
+
+/* === Monitoring Row (30% of right column - increased for better log visibility) === */
 
 #monitoring-row {
-    height: 20%;
-    layout: vertical;
-}
-
-#system-account-row {
-    height: 50%;  /* Top half of monitoring row */
-    layout: horizontal;
-}
-
-#dash-system {
-    width: 50%;
-    height: 100%;
-}
-
-#dash-account {
-    width: 50%;
-    height: 100%;
+    height: 30%;
 }
 
 #dash-logs {
     width: 100%;
-    height: 50%;  /* Bottom half of monitoring row */
+    height: 1fr;  /* Take all monitoring row space - maximizes log visibility */
 }
 
 /* === Dashboard Items === */
@@ -213,10 +257,10 @@ Footer {
 /* === Buttons === */
 
 Button {
-    min-width: 12;
-    height: 3;
+    min-width: 10;  /* Compact width */
+    height: 3;      /* Restored from 1 to 3 for readability */
     margin: 0 $spacing-xs;
-    border: solid $border-emphasis;
+    border: solid $border-emphasis;  /* Restored border for visual separation */
     padding: 0 $spacing-md;
     background: $bg-elevated;
     color: $text-primary;
@@ -224,13 +268,13 @@ Button {
 }
 
 Button:hover {
-    border: solid $accent;
+    border: solid $accent;  /* Restored border for hover state */
     background: $accent-muted;
     color: $text-primary;
 }
 
 Button:focus {
-    border: solid $accent;
+    border: solid $accent;  /* Restored border for focus state */
     background: $accent;
     color: $bg-primary;
 }
@@ -252,7 +296,7 @@ Button.-disabled {
 #start-btn:hover {
     background: $success;
     color: $bg-primary;
-    border: solid $success;
+    border: solid $success;  /* Restored border for consistency */
     text-style: bold;
 }
 
@@ -265,7 +309,7 @@ Button.-disabled {
 #stop-btn:hover {
     background: $error;
     color: $bg-primary;
-    border: solid $error;
+    border: solid $error;  /* Restored border for consistency */
     text-style: bold;
 }
 
@@ -402,8 +446,8 @@ Log {
     outline: solid $accent;
 }
 
-Button:focus, DataTable:focus {
-    border: double $accent;
+DataTable:focus {
+    border: solid $accent;
 }
 
 /* ========================================================================== */
@@ -413,11 +457,10 @@ Button:focus, DataTable:focus {
 /* === Status Bar (BotStatusWidget) === */
 
 #bot-status-header {
-    dock: top;
-    height: 6;                     /* Taller for prominence */
+    height: 5;                     /* Increased from 3 to 5 for better readability */
     background: $bg-secondary;
     color: $text-primary;
-    border-bottom: double $accent;  /* Double border for emphasis */
+    border-bottom: solid $accent;   /* CHANGED: double -> solid */
     padding: 0;
 }
 
@@ -433,7 +476,7 @@ Button:focus, DataTable:focus {
 }
 
 #bot-controls {
-    width: auto;
+    width: 2fr;  /* Expanded to accommodate mode controls */
     border-right: solid $border-subtle;
 }
 
@@ -444,10 +487,15 @@ Button:focus, DataTable:focus {
 
 #performance-metrics {
     width: auto;
+    border-right: solid $border-subtle;
+}
+
+#system-health-section {
+    width: auto;
 }
 
 .status-row {
-    height: auto;
+    height: auto;           /* Changed from 1 to auto for flexible content */
     align-vertical: middle;
     margin-bottom: 0;
 }
@@ -481,6 +529,20 @@ Button:focus, DataTable:focus {
     background: rgba(212, 115, 110, 0.2);
     padding: 0 $spacing-md;
     border: solid $error;
+}
+
+/* === Connection Status Indicators === */
+
+.status-connected {
+    color: $success;
+}
+
+.status-disconnected {
+    color: $error;
+}
+
+.status-unknown {
+    color: $warning;
 }
 
 /* === Heartbeat Indicator === */
@@ -519,13 +581,38 @@ Button:focus, DataTable:focus {
     height: 100%;
 }
 
+/* === Mode Controls Row === */
+
+/* === Compact Mode Controls === */
+
+.mode-controls-compact {
+    height: auto;
+    align-vertical: middle;
+    margin-right: $spacing-md;
+    border-right: solid $border-subtle;
+    padding-right: $spacing-md;
+}
+
+/* Compact mode indicator */
+#mode-indicator {
+    width: auto;
+    height: 1;
+    margin-right: $spacing-xs;
+}
+
+/* Compact mode selector */
+#mode-selector {
+    width: 20;
+    height: 1;
+}
+
 /* === Contextual Footer === */
 
 ContextualFooter {
     dock: bottom;
     height: 1;
     background: $bg-secondary;
-    border-top: double $accent;     /* Double border to match status bar */
+    border-top: solid $accent;      /* CHANGED: double -> solid */
 }
 
 #contextual-footer {
@@ -676,3 +763,82 @@ LoadingSpinner {
 /* Note: Textual doesn't support @keyframes or @media queries
  * Advanced animations and media queries must be implemented in Python
  */
+
+/* ========================================================================== */
+/* MODE SELECTION SCREEN                                                      */
+/* ========================================================================== */
+
+ModeSelectionScreen {
+    align: center middle;
+    background: $bg-primary;
+}
+
+#mode-selection-container {
+    width: 80;
+    height: auto;
+    background: $bg-secondary;
+    border: solid $accent;
+    padding: 2;
+    align: center middle;
+}
+
+#selection-title {
+    text-align: center;
+    text-style: bold;
+    color: $accent;
+    width: 100%;
+    margin-bottom: 2;
+}
+
+#selection-subtitle {
+    text-align: center;
+    color: $text-secondary;
+    width: 100%;
+    margin-bottom: 3;
+}
+
+.mode-option {
+    width: 100%;
+    height: auto;
+    background: $bg-elevated;
+    border: solid $border-subtle;
+    padding: 1 2;
+    margin: 1 0;
+}
+
+.mode-option:hover {
+    border: solid $accent;
+    background: $accent-muted;
+}
+
+.mode-option-header {
+    text-style: bold;
+    color: $text-primary;
+    margin-bottom: 1;
+}
+
+.mode-option-description {
+    color: $text-secondary;
+    margin-left: 2;
+}
+
+.mode-demo {
+    border-left: wide $info;
+}
+
+.mode-paper {
+    border-left: wide $success;
+}
+
+.mode-observe {
+    border-left: wide $warning;
+}
+
+.mode-live {
+    border-left: wide $error;
+}
+
+#quit-button {
+    width: 100%;
+    margin-top: 2;
+}

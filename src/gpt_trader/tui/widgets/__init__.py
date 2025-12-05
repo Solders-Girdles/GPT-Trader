@@ -1,8 +1,13 @@
 from .account import AccountWidget
 from .config import ConfigModal
+from .execution import ExecutionWidget
 from .footer import ContextualFooter
-from .logs import LogWidget, TuiLogHandler
+from .live_warning_modal import LiveWarningModal
+from .logs import LogWidget
 from .market import BlockChartWidget, MarketWatchWidget
+from .mode_indicator import ModeIndicator
+from .mode_info_modal import ModeInfoModal
+from .mode_selector import ModeSelector
 from .positions import OrdersWidget, PositionsWidget, TradesWidget
 from .risk import RiskWidget
 from .status import BotStatusWidget
@@ -15,13 +20,17 @@ __all__ = [
     "BlockChartWidget",
     "ConfigModal",
     "ContextualFooter",
+    "ExecutionWidget",
+    "LiveWarningModal",
     "LogWidget",
     "MarketWatchWidget",
+    "ModeIndicator",
+    "ModeInfoModal",
+    "ModeSelector",
     "OrdersWidget",
     "PositionsWidget",
     "RiskWidget",
     "StrategyWidget",
     "SystemHealthWidget",
     "TradesWidget",
-    "TuiLogHandler",
 ]

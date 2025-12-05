@@ -5,32 +5,6 @@ from textual.containers import Horizontal
 from textual.widgets import Label, Log, Select, Static
 
 
-class TuiLogHandler(logging.Handler):
-    """Custom logging handler that pushes logs to a Textual Log widget."""
-
-    def __init__(self, widget: "LogWidget"):
-        super().__init__()
-        self.widget = widget
-
-    def emit(self, record: logging.LogRecord) -> None:
-        try:
-            msg = self.format(record)
-
-            # Add color based on level
-            if record.levelno >= logging.ERROR:
-                msg = f"[#bf616a]{msg}[/#bf616a]"  # Nord Red
-            elif record.levelno >= logging.WARNING:
-                msg = f"[#ebcb8b]{msg}[/#ebcb8b]"  # Nord Yellow
-            elif record.levelno >= logging.INFO:
-                msg = f"[#a3be8c]{msg}[/#a3be8c]"  # Nord Green
-            else:
-                msg = f"[#4c566a]{msg}[/#4c566a]"  # Nord Grey
-
-            self.widget.write_log(msg, record.levelno)
-        except Exception:
-            self.handleError(record)
-
-
 class LogWidget(Static):
     """Displays application logs with optional compact mode."""
 
@@ -40,8 +14,17 @@ class LogWidget(Static):
         height: 1fr;
     }
 
+    LogWidget Horizontal {
+        height: auto;
+        max-height: 3;
+        dock: top;  /* Ensure header stays at top despite being last in DOM */
+    }
+
     LogWidget Log {
         height: 1fr;
+        min-height: 5;
+        border: solid $border;
+        background: $surface;
     }
 
     .log-expand-hint {
@@ -53,9 +36,16 @@ class LogWidget(Static):
     def __init__(self, compact_mode: bool = True, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.compact_mode = compact_mode
-        self._handler: TuiLogHandler | None = None
+        self._min_level = logging.INFO  # Default filter level
 
     def compose(self) -> ComposeResult:
+        # Use max_lines to limit display in compact mode
+        max_lines = 50 if self.compact_mode else 1000
+        log_widget = Log(id="log-stream", highlight=False, max_lines=max_lines, auto_scroll=True)
+        log_widget.can_focus = True
+        yield log_widget
+
+        # Header row yielded AFTER log widget to ensure it paints ON TOP (z-index fix)
         with Horizontal(classes="header-row"):
             yield Label("📋 SYSTEM LOGS", classes="header")
             yield Select(
@@ -70,10 +60,6 @@ class LogWidget(Static):
                 id="log-level-select",
             )
 
-        # Use max_lines to limit display in compact mode
-        max_lines = 10 if self.compact_mode else 1000
-        yield Log(id="log-stream", highlight=True, max_lines=max_lines)
-
         # Show hint only in compact mode
         if self.compact_mode:
             yield Label(
@@ -82,26 +68,46 @@ class LogWidget(Static):
             )
 
     def on_mount(self) -> None:
-        # Attach handler to root logger
-        self._handler = TuiLogHandler(self)
-        formatter = logging.Formatter(
-            "%(asctime)s - %(levelname)s - %(message)s", datefmt="%H:%M:%S"
-        )
-        self._handler.setFormatter(formatter)
-        logging.getLogger().addHandler(self._handler)
+        """Register with global log handler."""
+        import sys
 
-        # Set initial filter level
-        self._min_level = logging.INFO
+        from gpt_trader.tui.log_manager import get_tui_log_handler
+
+        handler = get_tui_log_handler()
+        log_display = self.query_one("#log-stream", Log)
+
+        # DEBUG
+        print(f"[LOGWIDGET] Registering widget, app={self.app is not None}", file=sys.stderr)
+        print(f"[LOGWIDGET] log_display={log_display}, id={id(log_display)}", file=sys.stderr)
+
+        handler.register_widget(log_display, self._min_level)
+
+        print(
+            f"[LOGWIDGET] Registration complete, handler has {len(handler._widgets)} widgets",
+            file=sys.stderr,
+        )
+
+        # Write startup messages after widget is ready
+        self.call_after_refresh(self._write_startup_messages)
+
+    def _write_startup_messages(self) -> None:
+        """Write startup messages to verify log widget is working."""
+        log = self.query_one("#log-stream", Log)
+        log.write_line("[#a3be8c]✓ Log system initialized[/#a3be8c]")
+        log.write_line("[#a3be8c]Set log level using dropdown above[/#a3be8c]")
+        log.write_line("[#a3be8c]Waiting for bot to start... Press 'S' to begin[/#a3be8c]")
 
     def on_unmount(self) -> None:
-        """Remove handler when widget is unmounted."""
-        if self._handler:
-            try:
-                logging.getLogger().removeHandler(self._handler)
-                self._handler = None
-            except Exception:
-                # Logger may already be cleaned up
-                pass
+        """Unregister from global log handler."""
+        from gpt_trader.tui.log_manager import get_tui_log_handler
+
+        try:
+            handler = get_tui_log_handler()
+            log_display = self.query_one("#log-stream", Log)
+            handler.unregister_widget(log_display)
+        except Exception:
+            # Widget may already be cleaned up
+            pass
 
     def on_select_changed(self, event: Select.Changed) -> None:
         """Handle log level selection change."""
@@ -109,23 +115,15 @@ class LogWidget(Static):
 
         from textual.widgets._select import NoSelection
 
+        from gpt_trader.tui.log_manager import get_tui_log_handler
+
         if (
             event.select.id == "log-level-select"
             and event.value is not None
             and not isinstance(event.value, NoSelection)
         ):
             self._min_level = int(cast(int, event.value))
-
-    def write_log(self, message: str, level: int) -> None:
-        # Schedule write on the main thread
-        if self.app:
-            self.app.call_from_thread(self._write_line, message, level)
-
-    def _write_line(self, message: str, level: int) -> None:
-        try:
-            # Only write if level meets minimum requirement
-            if level >= getattr(self, "_min_level", logging.INFO):
-                log = self.query_one(Log)
-                log.write_line(message)
-        except Exception:
-            pass
+            # Update handler's level filter for this widget
+            handler = get_tui_log_handler()
+            log_display = self.query_one("#log-stream", Log)
+            handler.update_widget_level(log_display, self._min_level)

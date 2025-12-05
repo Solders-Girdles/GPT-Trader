@@ -3,6 +3,8 @@ from textual.containers import Vertical
 from textual.screen import ModalScreen
 from textual.widgets import Button, Input, Label, Static
 
+from gpt_trader.tui.responsive import calculate_modal_width
+
 
 class PanicModal(ModalScreen):
     """Modal for emergency panic button confirmation."""
@@ -14,7 +16,6 @@ class PanicModal(ModalScreen):
     }
 
     #panic-dialog {
-        width: 60;
         height: auto;
         background: #2e3440;
         border: thick #bf616a; /* Nord Red */
@@ -70,6 +71,11 @@ class PanicModal(ModalScreen):
             with Static(id="panic-actions"):
                 yield Button("FLATTEN & STOP", id="btn-panic-confirm", disabled=True)
                 yield Button("Cancel", id="btn-panic-cancel")
+
+    def on_mount(self) -> None:
+        """Set dynamic width based on terminal size."""
+        width = calculate_modal_width(self.app.size.width, "small")
+        self.query_one("#panic-dialog").styles.width = width
 
     def on_input_changed(self, event: Input.Changed) -> None:
         """Enable confirm button only when input matches."""

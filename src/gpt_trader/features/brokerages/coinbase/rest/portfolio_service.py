@@ -46,6 +46,7 @@ class PortfolioService:
     def list_balances(self) -> list[Balance]:
         """List all balances."""
         balances = []
+        logger.debug("PortfolioService.list_balances: Fetching accounts from Coinbase API")
         try:
             response = self._client.get_accounts()
             if isinstance(response, list):
@@ -100,6 +101,18 @@ class PortfolioService:
                 error_message=str(exc),
                 operation="list_balances",
             )
+
+        # Log final balance parsing summary
+        if balances:
+            logger.debug(
+                f"PortfolioService.list_balances: Successfully parsed {len(balances)} balances"
+            )
+        else:
+            logger.warning(
+                "PortfolioService.list_balances: No balances parsed from API response. "
+                "Check API portfolio selection or account permissions."
+            )
+
         return balances
 
     def get_portfolio_balances(self) -> list[Balance]:

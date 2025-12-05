@@ -1,5 +1,5 @@
 """Subcommand registrations for the bot CLI."""
 
-from . import account, optimize, orders, run, treasury
+from . import account, optimize, orders, report, run, treasury, tui
 
-__all__ = ["account", "optimize", "orders", "run", "treasury"]
+__all__ = ["account", "optimize", "orders", "report", "run", "treasury", "tui"]

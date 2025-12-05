@@ -85,9 +85,7 @@ def execute(args: Namespace) -> int:
 def _run_demo_tui(scenario: str = "mixed") -> int:
     """Run the TUI in demo mode with mock data."""
     try:
-        from gpt_trader.tui.app import TraderApp
-        from gpt_trader.tui.demo import DemoBot
-        from gpt_trader.tui.demo.scenarios import get_scenario
+        from gpt_trader.tui.app import TraderApp, _create_bot_for_mode
     except ImportError:
         logger.error("TUI dependencies not installed. Run 'uv sync' to install textual.")
         return 1
@@ -109,10 +107,9 @@ def _run_demo_tui(scenario: str = "mixed") -> int:
 
     configure_logging(tui_mode=True)
 
-    # Create demo bot with selected scenario
-    data_generator = get_scenario(scenario)
-    demo_bot = DemoBot(data_generator=data_generator)
-    app = TraderApp(demo_bot)
+    # Create demo bot using the shared factory
+    demo_bot = _create_bot_for_mode("demo", demo_scenario=scenario)
+    app = TraderApp(bot=demo_bot, initial_mode="demo", demo_scenario=scenario)
     run_tui_app_with_cleanup(app)
     return 0
 
@@ -139,7 +136,8 @@ def _run_tui(bot: Any) -> int:
 
     configure_logging(tui_mode=True)
 
-    app = TraderApp(bot)
+    # Pass bot with initial_mode set so live warning is shown if applicable
+    app = TraderApp(bot=bot, initial_mode="direct")
     run_tui_app_with_cleanup(app)
     return 0
 

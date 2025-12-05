@@ -2,7 +2,10 @@
 
 from textual.app import ComposeResult
 from textual.containers import Horizontal
+from textual.reactive import reactive
 from textual.widgets import Label, Static
+
+from gpt_trader.tui.widgets.mode_indicator import ModeIndicator
 
 
 class ContextualFooter(Static):
@@ -10,56 +13,133 @@ class ContextualFooter(Static):
     Footer that displays contextual keybindings and hints.
 
     Shows relevant shortcuts based on current UI state and focused widget.
+    Adapts to terminal width using priority-based visibility.
+
+    Priority tiers (P0 highest, P3 lowest):
+        - P0: Essential (data source, start/stop, quit) - always visible
+        - P1: Important (panic, logs, config) - visible at 120+ cols
+        - P2: Helpful (full logs, system) - visible at 140+ cols
+        - P3: Nice-to-have (help) - visible at 160+ cols
     """
 
+    # Responsive design property
+    responsive_state = reactive("standard")
+
     def compose(self) -> ComposeResult:
-        """Compose the footer layout."""
+        """Compose the footer layout with priority classes."""
         with Horizontal(id="contextual-footer"):
-            # Bot control shortcuts
-            with Horizontal(classes="footer-group"):
+            # P0: Data source info (essential, left side)
+            with Horizontal(classes="footer-group footer-group-left p0"):
+                yield Label("", id="data-source-info", classes="footer-data-source")
+
+            yield Label("|", classes="footer-separator p0")
+
+            # P0: Bot control (essential)
+            with Horizontal(classes="footer-group p0"):
                 yield Label("[S]", classes="footer-key")
                 yield Label("Start/Stop", classes="footer-label")
 
-            yield Label("|", classes="footer-separator")
+            yield Label("|", classes="footer-separator p1")
 
-            with Horizontal(classes="footer-group"):
+            # P1: Panic (important)
+            with Horizontal(classes="footer-group p1"):
                 yield Label("[P]", classes="footer-key")
                 yield Label("Panic", classes="footer-label")
 
-            yield Label("|", classes="footer-separator")
+            yield Label("|", classes="footer-separator p1")
 
-            # Navigation shortcuts
-            with Horizontal(classes="footer-group"):
+            # P1: Config (important)
+            with Horizontal(classes="footer-group p1"):
                 yield Label("[C]", classes="footer-key")
                 yield Label("Config", classes="footer-label")
 
-            yield Label("|", classes="footer-separator")
+            yield Label("|", classes="footer-separator p1")
 
-            with Horizontal(classes="footer-group"):
+            # P1: Logs (important)
+            with Horizontal(classes="footer-group p1"):
                 yield Label("[L]", classes="footer-key")
                 yield Label("Logs", classes="footer-label")
 
-            yield Label("|", classes="footer-separator")
+            yield Label("|", classes="footer-separator p2")
 
-            # Tab view shortcuts
-            with Horizontal(classes="footer-group"):
+            # P2: Full Logs (helpful)
+            with Horizontal(classes="footer-group p2"):
                 yield Label("[1]", classes="footer-key")
                 yield Label("Full Logs", classes="footer-label")
 
-            yield Label("|", classes="footer-separator")
+            yield Label("|", classes="footer-separator p2")
 
-            with Horizontal(classes="footer-group"):
+            # P2: System (helpful)
+            with Horizontal(classes="footer-group p2"):
                 yield Label("[2]", classes="footer-key")
                 yield Label("System", classes="footer-label")
 
-            yield Label("|", classes="footer-separator")
+            yield Label("|", classes="footer-separator p3")
 
-            # Utility shortcuts
-            with Horizontal(classes="footer-group"):
+            # P3: Help (nice-to-have)
+            with Horizontal(classes="footer-group p3"):
                 yield Label("[?]", classes="footer-key")
                 yield Label("Help", classes="footer-label")
 
-            # Quit (right-aligned)
-            with Horizontal(classes="footer-group footer-group-right"):
+            # P0: Quit (essential, right-aligned)
+            with Horizontal(classes="footer-group footer-group-right p0"):
                 yield Label("[Q]", classes="footer-key")
                 yield Label("Quit", classes="footer-label")
+
+    def update_data_source_info(self, mode: str, connection_healthy: bool) -> None:
+        """
+        Update data source information in footer.
+
+        Args:
+            mode: Current bot mode (demo, paper, read_only, live)
+            connection_healthy: True if connection is healthy
+        """
+        try:
+            info_label = self.query_one("#data-source-info", Label)
+
+            status_icon = "🟢" if connection_healthy else "🔴"
+            config = ModeIndicator.MODE_CONFIG.get(mode, {})
+            description = config.get("description", "Unknown mode")
+
+            info_label.update(f"{status_icon} {description}")
+        except Exception:
+            # Widget might not be mounted yet
+            pass
+
+    def watch_responsive_state(self, state: str) -> None:
+        """Toggle footer shortcuts based on responsive state.
+
+        Shows/hides shortcuts by priority tier to optimize space usage
+        at different terminal widths.
+
+        Args:
+            state: Responsive state ("compact", "standard", "comfortable", "wide")
+
+        Visibility by state:
+            - compact (100-119): P0 only (data source, start/stop, quit)
+            - standard (120-139): P0 + P1 (add panic, logs, config)
+            - comfortable (140-159): P0 + P1 + P2 (add full logs, system)
+            - wide (160+): P0 + P1 + P2 + P3 (add help)
+        """
+        # Define visibility mapping for each state
+        visibility = {
+            "compact": ["p0"],
+            "standard": ["p0", "p1"],
+            "comfortable": ["p0", "p1", "p2"],
+            "wide": ["p0", "p1", "p2", "p3"],
+        }
+
+        visible_priorities = visibility.get(state, ["p0", "p1"])
+
+        try:
+            # Query all footer groups and separators with priority classes
+            for element in self.query(".footer-group, .footer-separator"):
+                # Get the priority class for this element (p0, p1, p2, or p3)
+                priority_classes = element.classes & {"p0", "p1", "p2", "p3"}
+
+                if priority_classes:
+                    priority = next(iter(priority_classes))
+                    element.display = priority in visible_priorities
+        except Exception:
+            # Widget might not be mounted yet
+            pass

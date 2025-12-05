@@ -233,39 +233,22 @@ class TuiState(Widget):
         )
 
     def _update_strategy_data(self, strat: Any) -> None:  # StrategyStatus from status_reporter
-        """Update strategy data from typed StrategyStatus."""
+        """Update strategy data from typed StrategyStatus with DecisionEntry objects."""
         decisions = {}
 
-        # StrategyStatus stores last_decisions as list[dict]
+        # StrategyStatus stores last_decisions as list[DecisionEntry] (already typed)
         for dec in strat.last_decisions:
-            if not isinstance(dec, dict):
+            # DecisionEntry from StatusReporter has all fields typed
+            if not hasattr(dec, "symbol") or not dec.symbol:
                 continue
 
-            symbol = dec.get("symbol")
-            if not symbol:
-                continue
-
-            # Parse confidence (may be string from JSON)
-            try:
-                conf = float(dec.get("confidence", 0.0))
-            except (ValueError, TypeError):
-                conf = 0.0
-
-            # Parse timestamp (may be string from JSON)
-            ts = dec.get("timestamp", 0.0)
-            if isinstance(ts, str):
-                try:
-                    ts = float(ts)
-                except ValueError:
-                    ts = 0.0
-
-            decisions[symbol] = DecisionData(
-                symbol=symbol,
-                action=dec.get("action", "HOLD"),
-                reason=dec.get("reason", ""),
-                confidence=conf,
-                indicators=dec.get("indicators", {}),
-                timestamp=ts,
+            decisions[dec.symbol] = DecisionData(
+                symbol=dec.symbol,
+                action=dec.action,
+                reason=dec.reason,
+                confidence=dec.confidence,  # Already float from DecisionEntry
+                indicators=dec.indicators,
+                timestamp=dec.timestamp,  # Already float from DecisionEntry
             )
 
         self.strategy_data = StrategyState(

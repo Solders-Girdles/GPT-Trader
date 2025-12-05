@@ -114,6 +114,18 @@ class BalanceEntry:
 
 
 @dataclass
+class DecisionEntry:
+    """Single strategy decision entry with typed fields."""
+
+    symbol: str
+    action: str = "HOLD"
+    reason: str = ""
+    confidence: float = 0.0
+    indicators: dict[str, Any] = field(default_factory=dict)
+    timestamp: float = 0.0
+
+
+@dataclass
 class AccountStatus:
     """Status snapshot of account metrics."""
 
@@ -128,7 +140,7 @@ class StrategyStatus:
     """Status snapshot of strategy engine."""
 
     active_strategies: list[str] = field(default_factory=list)
-    last_decisions: list[dict[str, str]] = field(default_factory=list)
+    last_decisions: list[DecisionEntry] = field(default_factory=list)
 
 
 @dataclass
@@ -642,16 +654,42 @@ class StatusReporter:
     def update_strategy(
         self, active_strategies: list[str], decisions: list[dict[str, Any]]
     ) -> None:
-        """Update strategy status."""
+        """Update strategy status with typed DecisionEntry normalization."""
         self._status.strategy.active_strategies = active_strategies
-        # Keep last 50 decisions
-        # Decisions are dicts: {symbol, action, reason, confidence, timestamp}
-        # We convert to string dicts for JSON safety
-        new_decisions = []
-        for d in decisions:
-            new_decisions.append({k: str(v) for k, v in d.items()})
 
-        self._status.strategy.last_decisions.extend(new_decisions)
+        # Normalize decisions to typed DecisionEntry objects
+        # Keep last 50 decisions
+        normalized_decisions: list[DecisionEntry] = []
+        for d in decisions:
+            # Parse confidence to float
+            try:
+                confidence = float(d.get("confidence", 0.0))
+            except (ValueError, TypeError):
+                confidence = 0.0
+
+            # Parse timestamp to float
+            timestamp = d.get("timestamp", 0.0)
+            if isinstance(timestamp, str):
+                try:
+                    timestamp = float(timestamp)
+                except (ValueError, TypeError):
+                    timestamp = 0.0
+            elif not isinstance(timestamp, (int, float)):
+                timestamp = 0.0
+
+            # Create typed entry
+            normalized_decisions.append(
+                DecisionEntry(
+                    symbol=str(d.get("symbol", "")),
+                    action=str(d.get("action", "HOLD")),
+                    reason=str(d.get("reason", "")),
+                    confidence=confidence,
+                    indicators=d.get("indicators", {}),
+                    timestamp=timestamp,
+                )
+            )
+
+        self._status.strategy.last_decisions.extend(normalized_decisions)
         if len(self._status.strategy.last_decisions) > 50:
             self._status.strategy.last_decisions = self._status.strategy.last_decisions[-50:]
 
@@ -714,5 +752,9 @@ __all__ = [
     "TradeStatus",
     "AccountStatus",
     "BalanceEntry",
+    "DecisionEntry",
+    "StrategyStatus",
     "RiskStatus",
+    "SystemStatus",
+    "HeartbeatStatus",
 ]

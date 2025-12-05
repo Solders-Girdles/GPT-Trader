@@ -5,6 +5,8 @@ from textual.containers import Grid
 from textual.screen import ModalScreen
 from textual.widgets import Button, Input, Label, Static
 
+from gpt_trader.tui.responsive import calculate_modal_width
+
 
 class ConfigModal(ModalScreen):
     """Modal to edit critical configuration."""
@@ -19,7 +21,6 @@ class ConfigModal(ModalScreen):
         grid-gutter: 1 2;
         grid-rows: 1fr 3;
         padding: 0 1;
-        width: 60;
         height: auto;
         border: thick $background 80%;
         background: $surface;
@@ -68,6 +69,11 @@ class ConfigModal(ModalScreen):
             with Static(id="config-actions"):
                 yield Button("Save", variant="primary", id="btn-save")
                 yield Button("Cancel", id="btn-cancel")
+
+    def on_mount(self) -> None:
+        """Set dynamic width based on terminal size."""
+        width = calculate_modal_width(self.app.size.width, "small")
+        self.query_one("#dialog").styles.width = width
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "btn-cancel":

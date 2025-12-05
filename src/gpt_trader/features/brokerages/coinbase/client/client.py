@@ -15,6 +15,9 @@ from gpt_trader.features.brokerages.coinbase.client.portfolio import PortfolioCl
 from gpt_trader.features.brokerages.coinbase.client.websocket_mixin import (
     WebSocketClientMixin,
 )
+from gpt_trader.utilities.logging_patterns import get_logger
+
+logger = get_logger(__name__)
 
 
 class CoinbaseClient(
@@ -89,6 +92,15 @@ class CoinbaseClient(
         """Fetch accounts and convert to domain objects."""
         response = self.get_accounts()
         accounts_data = response.get("accounts", [])
+
+        # Log raw API response characteristics
+        logger.debug(
+            f"CoinbaseClient.list_balances: Raw API returned {len(accounts_data)} accounts"
+        )
+        if not accounts_data and response:
+            logger.warning(
+                f"API returned response but no accounts. Response keys: {list(response.keys())}"
+            )
 
         results = []
         for a in accounts_data:

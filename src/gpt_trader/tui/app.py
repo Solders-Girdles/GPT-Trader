@@ -229,20 +229,18 @@ class TraderApp(App):
         self.push_screen(MainScreen())
         self.log("TUI Started")
 
-        # Connect to StatusReporter observer if available
-        if hasattr(self.bot.engine, "status_reporter"):
-            self.bot.engine.status_reporter.add_observer(self._on_status_update)
-            logger.info("Connected to StatusReporter observer")
-        else:
-            logger.error(
-                "StatusReporter not available - TUI requires StatusReporter for data updates. "
-                "Dashboard will show default/stale data."
+        # Connect to StatusReporter observer (required for TUI)
+        if not hasattr(self.bot.engine, "status_reporter"):
+            logger.critical(
+                "StatusReporter not available - TUI requires StatusReporter for operation"
             )
-            self.notify(
-                "Warning: StatusReporter not available. Dashboard may show stale data.",
-                severity="warning",
-                timeout=10,
+            raise RuntimeError(
+                "TUI requires bot.engine.status_reporter for data updates. "
+                "Ensure the bot engine has StatusReporter properly initialized."
             )
+
+        self.bot.engine.status_reporter.add_observer(self._on_status_update)
+        logger.info("Connected to StatusReporter observer")
 
         # DON'T auto-start the bot - let user press 's' to start when ready
         logger.info("Bot initialized in STOPPED state. Press 's' to start.")

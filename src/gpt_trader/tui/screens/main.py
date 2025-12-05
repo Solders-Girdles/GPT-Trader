@@ -231,6 +231,36 @@ class SystemDetailsScreen(Screen):
         ("q", "dismiss", "Close"),
     ]
 
+    # Reactive state property
+    state = reactive(None)  # Type: TuiState | None
+
+    def watch_state(self, state: TuiState | None) -> None:
+        """React to state changes - update system details widgets."""
+        if state is None:
+            return
+
+        # Update SystemHealthWidget
+        try:
+            from gpt_trader.tui.widgets.system import SystemHealthWidget
+
+            system_widget = self.query_one(SystemHealthWidget)
+            if hasattr(system_widget, "update_system"):
+                system_widget.update_system(state.system_data)
+        except Exception as e:
+            logger.debug(f"Failed to update SystemHealthWidget: {e}")
+
+        # Update AccountWidget
+        try:
+            account_widget = self.query_one(AccountWidget)
+            if hasattr(account_widget, "update_account"):
+                account_widget.update_account(
+                    state.account_data,
+                    portfolio_value=state.position_data.equity,
+                    total_pnl=state.position_data.total_unrealized_pnl,
+                )
+        except Exception as e:
+            logger.debug(f"Failed to update AccountWidget: {e}")
+
     def compose(self) -> ComposeResult:
         from gpt_trader.tui.widgets.system import SystemHealthWidget
 
@@ -242,6 +272,11 @@ class SystemDetailsScreen(Screen):
             )
             yield AccountWidget(id="detailed-account", compact_mode=False, classes="dashboard-item")
         yield Footer()
+
+    def on_mount(self) -> None:
+        """Initialize with current state when mounted."""
+        if hasattr(self.app, "tui_state"):
+            self.state = self.app.tui_state  # type: ignore[attr-defined]
 
     def action_dismiss(self) -> None:
         """Close the system details screen and return to main view."""

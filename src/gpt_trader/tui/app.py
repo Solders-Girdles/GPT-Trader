@@ -234,7 +234,15 @@ class TraderApp(App):
             self.bot.engine.status_reporter.add_observer(self._on_status_update)
             logger.info("Connected to StatusReporter observer")
         else:
-            logger.warning("StatusReporter not available, using polling only")
+            logger.error(
+                "StatusReporter not available - TUI requires StatusReporter for data updates. "
+                "Dashboard will show default/stale data."
+            )
+            self.notify(
+                "Warning: StatusReporter not available. Dashboard may show stale data.",
+                severity="warning",
+                timeout=10,
+            )
 
         # DON'T auto-start the bot - let user press 's' to start when ready
         logger.info("Bot initialized in STOPPED state. Press 's' to start.")
@@ -354,6 +362,15 @@ class TraderApp(App):
         # To keep it simple for this refactor, we will manually update widgets
         # from state in _update_ui, but the source of truth is now self.tui_state
         pass
+
+    def _sync_state_from_bot(self) -> None:
+        """
+        Manually sync state from bot (delegates to UICoordinator).
+
+        Called by BotLifecycleManager on bot start/stop/mode-switch.
+        """
+        if self.ui_coordinator:
+            self.ui_coordinator.sync_state_from_bot()
 
     def _pulse_heartbeat(self) -> None:
         """Smooth heartbeat pulse using sine wave."""

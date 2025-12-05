@@ -65,16 +65,33 @@ class TradeMatcher:
             trade for trade in trades if trade.trade_id not in self._processed_trade_ids
         ]
 
+        # Track which trade IDs had P&L changes (for cache updates)
+        affected_trade_ids: set[str] = set()
+
         # Process only new trades (O(new) instead of O(all))
         for trade in new_trades:
+            # Get snapshot of P&L before matching
+            before_pnl_keys = set(self._pnl_accumulator.keys())
+
+            # Match the trade
             self._match_trade(trade)
             self._processed_trade_ids.add(trade.trade_id)
 
-            # Update display cache for this trade
-            pnl_str = self._get_pnl_display(trade.trade_id)
-            self._pnl_display_cache[trade.trade_id] = pnl_str
+            # Get snapshot of P&L after matching - any new or changed entries were affected
+            after_pnl_keys = set(self._pnl_accumulator.keys())
+            affected_trade_ids.update(after_pnl_keys)
 
-        # Return display map for ALL trades (uses cached values + new calculations)
+            # Also check for changes in existing entries
+            # (when a new trade matches an old one, the old trade's P&L changes)
+            for trade_id in before_pnl_keys:
+                affected_trade_ids.add(trade_id)
+
+        # Update display cache for ALL affected trades (including matched old trades)
+        for trade_id in affected_trade_ids:
+            pnl_str = self._get_pnl_display(trade_id)
+            self._pnl_display_cache[trade_id] = pnl_str
+
+        # Return display map for ALL trades (uses cached values + updated calculations)
         return {
             trade.trade_id: self._pnl_display_cache.get(trade.trade_id, "N/A")
             for trade in trades

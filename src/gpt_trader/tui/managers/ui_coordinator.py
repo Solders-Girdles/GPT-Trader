@@ -97,9 +97,19 @@ class UICoordinator:
         """Update the main screen UI with current state."""
         try:
             from gpt_trader.tui.screens import MainScreen
+            from gpt_trader.tui.screens.main import SystemDetailsScreen
 
             main_screen = self.app.query_one(MainScreen)
             main_screen.update_ui(self.app.tui_state)
+
+            # Propagate state to SystemDetailsScreen if it's showing
+            try:
+                system_details = self.app.query_one(SystemDetailsScreen)
+                system_details.state = self.app.tui_state
+            except Exception:
+                # SystemDetailsScreen not mounted - that's fine
+                pass
+
             # Toggle heartbeat to show dashboard is alive
             self.app._pulse_heartbeat()
             logger.debug("UI updated successfully")

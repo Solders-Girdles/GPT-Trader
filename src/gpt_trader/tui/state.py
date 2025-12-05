@@ -116,10 +116,15 @@ class TuiState(Widget):
 
     def _update_market_data(self, market: Any) -> None:  # MarketStatus from status_reporter
         """Update market data from typed MarketStatus."""
-        import time
-
         # Track update timestamp for connection health monitoring
-        self.last_update_timestamp = time.time()
+        # Use the actual market data timestamp, not receipt time
+        if hasattr(market, "last_price_update") and market.last_price_update:
+            self.last_update_timestamp = market.last_price_update
+        else:
+            # Fallback to current time if no timestamp available
+            import time
+
+            self.last_update_timestamp = time.time()
 
         # Convert prices to Decimal (StatusReporter may provide str or already Decimal)
         prices_decimal = {}

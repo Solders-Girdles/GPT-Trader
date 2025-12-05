@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
 from rich.text import Text
 from textual.app import ComposeResult
@@ -19,6 +22,12 @@ from gpt_trader.tui.types import (
     Position,
     Trade,
 )
+from gpt_trader.utilities.logging_patterns import get_logger
+
+if TYPE_CHECKING:
+    from gpt_trader.tui.state import TuiState
+
+logger = get_logger(__name__, component="tui")
 
 
 class PositionsWidget(Static):
@@ -38,10 +47,18 @@ class PositionsWidget(Static):
     # Reactive state property for automatic updates
     state = reactive(None)  # Type: TuiState | None
 
-    def watch_state(self, state: "TuiState | None") -> None:
+    def watch_state(self, state: TuiState | None) -> None:
         """React to state changes - update positions automatically."""
         if state is None:
             return
+
+        logger.debug(
+            f"[PositionsWidget] State update: "
+            f"positions={len(state.position_data.positions)}, "
+            f"total_pnl={state.position_data.total_unrealized_pnl}, "
+            f"timestamp={state.last_update_timestamp:.2f}"
+        )
+
         self.update_positions(
             state.position_data.positions,
             state.position_data.total_unrealized_pnl,
@@ -58,7 +75,7 @@ class PositionsWidget(Static):
         # Add columns - alignment handled in add_row with Text objects
         table.add_columns("Symbol", "Quantity", "Entry", "Current", "PnL", "%", "Leverage")
 
-    @safe_update
+    @safe_update(notify_user=True, error_tracker=True, severity="warning")
     def update_positions(
         self,
         positions: dict[str, Position],
@@ -73,9 +90,16 @@ class PositionsWidget(Static):
         if not positions:
             table.display = False
             empty_label.display = True
-            empty_label.update(
-                "📊 No open positions\n\n💡 Start the bot to begin trading\nPress [S] to start"
-            )
+
+            # Mode-aware empty state message (single-line format)
+            if self.app and hasattr(self.app, "data_source_mode"):
+                mode = self.app.data_source_mode  # type: ignore[attr-defined]
+                if mode == "read_only":
+                    empty_label.update("📊 No positions • Read-only mode - observing market data")
+                else:
+                    empty_label.update("📊 No positions • Press [S] to start bot")
+            else:
+                empty_label.update("📊 No positions • Press [S] to start bot")
         else:
             table.display = True
             empty_label.display = False
@@ -155,9 +179,7 @@ class OrdersWidget(Static):
         if not orders:
             table.display = False
             empty_label.display = True
-            empty_label.update(
-                "📋 No active orders\n\n💡 Orders will appear here when the bot places trades"
-            )
+            empty_label.update("📋 No orders • Orders appear when bot places trades")
         else:
             table.display = True
             empty_label.display = False
@@ -210,9 +232,7 @@ class TradesWidget(Static):
         if not trades:
             table.display = False
             empty_label.display = True
-            empty_label.update(
-                "📈 No recent trades\n\n💡 Trade history will appear here after execution"
-            )
+            empty_label.update("📈 No trades • Trade history appears after execution")
         else:
             table.display = True
             empty_label.display = False

@@ -135,53 +135,40 @@ Label {
     layout: vertical;
 }
 
-#dash-positions {
+#dash-portfolio {
     height: auto;          /* Shrink to content */
-    max-height: 40%;       /* Cap at 40% to prevent domination */
-    min-height: 5;         /* Minimum 5 lines (header + empty state) */
+    max-height: 50%;       /* Cap at 50% (was 40% + 40% = 80% for two widgets) */
+    min-height: 8;         /* Minimum 8 lines (header + tabs + content) */
 }
 
-#dash-execution {
-    height: auto;          /* Shrink to content */
-    max-height: 40%;       /* Cap at 40% to prevent domination */
-    min-height: 5;         /* Minimum 5 lines (header + tabs + empty) */
-}
-
-/* === Execution Widget (Tabbed Orders/Trades) === */
-
-ExecutionWidget {
-    layout: vertical;
-    height: 1fr;
-    border-top: solid $border-subtle;
-    background: $bg-secondary;
-    padding: 0;
-}
-
-ExecutionWidget TabbedContent {
-    height: 1fr;
-    border: none;
-}
-
-ExecutionWidget TabPane {
-    padding: 0;
-}
-
-/* === Monitoring Row (30% of right column - increased for better log visibility) === */
+/* === Monitoring Row (flex-grow to fill remaining space after portfolio) === */
 
 #monitoring-row {
-    height: 30%;
+    layout: horizontal;  /* Side-by-side: System Health + Logs */
+    height: 1fr;  /* Take all remaining space - expands when portfolio shrinks */
+    min-height: 10;  /* Ensure at least 10 lines visible */
+}
+
+#dash-system-health {
+    width: 40%;
+    height: 1fr;
+    border-right: solid $border-subtle;  /* Visual separator */
 }
 
 #dash-logs {
-    width: 100%;
-    height: 1fr;  /* Take all monitoring row space - maximizes log visibility */
+    width: 60%;
+    height: 1fr;  /* Take monitoring row space */
 }
 
 /* === Dashboard Items === */
 
 .dashboard-item {
     layout: vertical;
-    height: 1fr;
+    /* height controlled by specific ID selectors above */
+    /* NOTE: No height: 1fr here - specific IDs control their own heights */
+    /* Each widget has min-height set to prevent collapse on short terminals: */
+    /*   #dash-portfolio: min-height: 8   (header + tabs + content)       */
+    /*   #monitoring-row: min-height: 10  (log panel expansion)           */
     border: none;                      /* REMOVED: full border */
     border-top: solid $border-subtle;  /* Only top border for separation */
     background: $bg-secondary;
@@ -238,14 +225,14 @@ Footer {
 /* === Widget Headers === */
 
 .header {
-    color: $text-primary;              /* Light warm grey for contrast */
-    text-style: none;                  /* FIXED: changed to 'none' to remove bold */
+    color: #FFFFFF;                    /* CHANGED: Pure white for maximum contrast */
+    text-style: bold;                  /* CHANGED: Bold for emphasis and readability */
     text-align: left;                  /* Left-aligned editorial style */
-    background: $bg-elevated;          /* CHANGED from $accent-muted - subtler */
+    background: $bg-elevated;          /* Elevated surface for separation */
     padding: 0 2;                      /* Compact horizontal padding */
-    border-left: none;                 /* REMOVED: accent left border */
-    border-bottom: none;               /* REMOVED: accent bottom border */
-    height: 1;                         /* CHANGED from auto - single line */
+    border-left: thick $accent;        /* ADDED: Accent left border for visual hierarchy */
+    border-bottom: none;               /* No bottom border */
+    height: 1;                         /* Single line */
     content-align: left middle;        /* Vertically center the text */
 }
 
@@ -391,32 +378,15 @@ ContentSwitcher {
 /* === Empty States === */
 
 .empty-state {
+    height: 1;              /* Single line */
+    border: none;           /* No dashed border */
+    background: transparent;
+    padding: 0 2;
+    margin: 0;
     color: $text-muted;
     text-style: italic;
     text-align: center;
-    padding: $spacing-lg $spacing-md;
-    background: rgba(58, 53, 48, 0.2);
-    border: dashed $border-subtle;
-    margin: $spacing-md;
-    height: auto;
     display: none;  /* Hidden by default */
-}
-
-.empty-state-icon {
-    color: $accent;
-    text-style: bold;
-    margin-bottom: $spacing-xs;
-}
-
-.empty-state-title {
-    color: $text-secondary;
-    text-style: bold;
-}
-
-.empty-state-hint {
-    color: $text-muted;
-    text-style: italic;
-    margin-top: $spacing-xs;
 }
 
 /* === Log Widget === */
@@ -457,7 +427,7 @@ DataTable:focus {
 /* === Status Bar (BotStatusWidget) === */
 
 #bot-status-header {
-    height: 5;                     /* Increased from 3 to 5 for better readability */
+    height: 3;                     /* Compact to maximize space for data panels */
     background: $bg-secondary;
     color: $text-primary;
     border-bottom: solid $accent;   /* CHANGED: double -> solid */
@@ -698,19 +668,6 @@ AccountWidget {
 
 .account-metrics-row {
     margin-bottom: $spacing-sm;
-}
-
-/* === Block Chart Widget === */
-
-BlockChartWidget {
-    /* height controlled by widget DEFAULT_CSS */
-    padding: 0 $spacing-xs;
-    border-top: solid $border-subtle;
-}
-
-.chart-content {
-    height: 3;
-    color: $success;               /* Default to success color */
 }
 
 /* ========================================================================== */

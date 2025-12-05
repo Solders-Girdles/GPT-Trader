@@ -38,13 +38,75 @@ $info: #7FB8D4;            /* CHANGED: Brighter blue-grey (was #6FA8C4) */
 
 /* === Borders === */
 $border-subtle: #3D3833;   /* CHANGED: Match bg-elevated (was #3A3530) */
-$border-emphasis: #544F49; /* CHANGED: More contrast (was #4A453F) */
 
 /* === Spacing Scale === */
 $spacing-xs: 1;            /* Extra small spacing - tight elements */
 $spacing-sm: 2;            /* Small spacing - compact layouts */
 $spacing-md: 3;            /* Medium spacing - standard padding */
 $spacing-lg: 4;            /* Large spacing - generous padding */
+
+/* === Semantic Spacing Tokens (8-cell grid) === */
+$gutter-tight: 1;          /* Column/panel gaps in compact mode */
+$gutter-standard: 2;       /* Default column/panel gutters */
+$gutter-comfortable: 4;    /* Wide mode gutters */
+$content-padding: 2;       /* Padding inside panels/widgets */
+$section-gap: 4;           /* Spacing between major UI sections */
+
+/* === Interactive State Overlays === */
+$overlay-hover: rgba(193, 95, 60, 0.1);    /* 10% accent on hover */
+$overlay-focus: rgba(193, 95, 60, 0.2);    /* 20% accent on focus */
+$overlay-disabled: rgba(58, 53, 48, 0.5);  /* 50% muted for disabled */
+
+/* === Panel Tokens === */
+$panel-bg-default: $bg-secondary;
+$panel-bg-elevated: $bg-elevated;
+$panel-border-default: $border-subtle;
+$panel-border-emphasis: $accent;
+
+/* === Interactive State Tokens === */
+$interactive-default: $bg-elevated;
+$interactive-hover: $accent-muted;
+$interactive-active: $accent;
+$interactive-disabled: $bg-secondary;
+
+/* === Border Style Tokens === */
+$border-default: solid $border-subtle;
+$border-emphasis: thick $accent;
+
+/* ========================================================================== */
+/* FOCUS INDICATORS (Accessibility)                                           */
+/* ========================================================================== */
+
+/* Global focus indicator - bright accent border */
+*:focus {
+    border: thick $accent;
+    border-title-color: $accent;
+}
+
+/* DataTable focus - highlight selected row */
+DataTable:focus {
+    border: thick $accent;
+}
+
+DataTable > .datatable--cursor {
+    background: $overlay-focus;  /* Subtle highlight for cursor row */
+}
+
+DataTable:focus > .datatable--cursor {
+    background: rgba(212, 116, 79, 0.3);  /* Stronger highlight when focused */
+    color: $text-primary;
+}
+
+/* TabbedContent focus - highlight active tab */
+TabbedContent:focus Tab.-active {
+    border: solid $accent;
+    text-style: bold;
+}
+
+/* Input/Select focus - bright border */
+Input:focus, Select:focus {
+    border: thick $accent;
+}
 
 /* ========================================================================== */
 /* LAYOUT PATTERNS                                                            */
@@ -263,7 +325,7 @@ Button {
     min-width: 10;  /* Compact width */
     height: 3;      /* Restored from 1 to 3 for readability */
     margin: 0 $spacing-xs;
-    border: solid $border-emphasis;  /* Restored border for visual separation */
+    border: $border-default;  /* Restored border for visual separation */
     padding: 0 $spacing-md;
     background: $bg-elevated;
     color: $text-primary;
@@ -328,10 +390,23 @@ DataTable {
 
 DataTable > .datatable--header {
     background: $bg-elevated;
-    color: $text-secondary;        /* CHANGED from $accent - less emphasis */
-    text-style: none;              /* FIXED: changed to 'none' to remove bold */
-    padding: $spacing-xs $spacing-md;
-    border-bottom: solid $border-subtle;  /* CHANGED from $accent-muted */
+    color: #FFFFFF;                /* CHANGED: Pure white for maximum contrast */
+    text-style: bold;              /* CHANGED: Bold headers for emphasis */
+    padding: $spacing-xs $content-padding;
+    border-bottom: $border-default;
+}
+
+/* Column separators for better readability */
+/* Note: Textual doesn't support :last-child, so all columns get separators */
+DataTable > .datatable--header-cell {
+    border-right: $border-default;
+}
+
+DataTable > .datatable--cell {
+    border-right: $border-default;
+    padding: 0 $content-padding;
+    overflow: hidden;
+    /* Note: Textual doesn't support text-overflow: ellipsis */
 }
 
 DataTable > .datatable--cursor {
@@ -423,6 +498,11 @@ Log {
 .text-muted { color: $text-muted; }
 
 .bold { text-style: bold; }
+
+/* Numeric alignment for DataTable cells */
+.text-numeric {
+    text-align: right;
+}
 
 /* === Accessibility === */
 

@@ -67,7 +67,10 @@ class PositionsWidget(Static):
 
     def compose(self) -> ComposeResult:
         yield Label("💼 ACTIVE POSITIONS", classes="header")
-        yield DataTable(id="positions-table", zebra_stripes=True)
+        table = DataTable(id="positions-table", zebra_stripes=True)
+        table.can_focus = True
+        table.cursor_type = "row"
+        yield table
         yield Label("", id="positions-empty", classes="empty-state")
 
     def on_mount(self) -> None:
@@ -162,7 +165,10 @@ class OrdersWidget(Static):
     """
 
     def compose(self) -> ComposeResult:
-        yield DataTable(id="orders-table")
+        table = DataTable(id="orders-table", zebra_stripes=True)
+        table.can_focus = True
+        table.cursor_type = "row"
+        yield table
         yield Label("", id="orders-empty", classes="empty-state")
 
     def on_mount(self) -> None:
@@ -213,7 +219,10 @@ class TradesWidget(Static):
     """
 
     def compose(self) -> ComposeResult:
-        yield DataTable(id="trades-table")
+        table = DataTable(id="trades-table", zebra_stripes=True)
+        table.can_focus = True
+        table.cursor_type = "row"
+        yield table
         yield Label("", id="trades-empty", classes="empty-state")
 
     def on_mount(self) -> None:
@@ -257,25 +266,27 @@ class TradesWidget(Static):
                 # Get P&L display value and apply color coding
                 pnl_str = pnl_map.get(trade.trade_id, "N/A")
 
-                if pnl_str == "N/A":
+                # Parse P&L value
+                try:
+                    pnl_value = float(pnl_str) if pnl_str != "N/A" else None
+                except (ValueError, TypeError):
+                    pnl_value = None
+
+                # Apply color based on value
+                if pnl_value is None:
                     pnl_display = Text(pnl_str, style="dim", justify="right")
+                elif pnl_value > 0:
+                    pnl_display = Text.from_markup(
+                        f"[{THEME.colors.success}]{pnl_str}[/{THEME.colors.success}]",
+                        justify="right",
+                    )
+                elif pnl_value < 0:
+                    pnl_display = Text.from_markup(
+                        f"[{THEME.colors.error}]{pnl_str}[/{THEME.colors.error}]", justify="right"
+                    )
                 else:
-                    try:
-                        pnl_value = float(pnl_str)
-                        if pnl_value > 0:
-                            pnl_markup = (
-                                f"[{THEME.colors.success}]{pnl_str}[/{THEME.colors.success}]"
-                            )
-                            pnl_display = Text.from_markup(pnl_markup, justify="right")
-                        elif pnl_value < 0:
-                            pnl_markup = f"[{THEME.colors.error}]{pnl_str}[/{THEME.colors.error}]"
-                            pnl_display = Text.from_markup(pnl_markup, justify="right")
-                        else:
-                            # Zero P&L - neutral white
-                            pnl_display = Text(pnl_str, justify="right")
-                    except ValueError:
-                        # Fallback if parsing fails
-                        pnl_display = Text(pnl_str, style="dim", justify="right")
+                    # Zero P&L - neutral
+                    pnl_display = Text(pnl_str, justify="right")
 
                 # Right-align numeric columns using Text objects
                 table.add_row(

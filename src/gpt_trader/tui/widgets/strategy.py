@@ -50,16 +50,31 @@ class StrategyWidget(Static):
 
     def compose(self) -> ComposeResult:
         yield Label("🎯 STRATEGY DECISIONS", classes="header")
-        yield DataTable(id="strategy-table", zebra_stripes=True)
+        table = DataTable(id="strategy-table", zebra_stripes=True)
+        table.can_focus = True
+        table.cursor_type = "row"
+        yield table
+        yield Label("", id="strategy-empty", classes="empty-state")
 
     def on_mount(self) -> None:
         table = self.query_one(DataTable)
-        table.add_columns("Symbol", "Action", "Conf", "Reason", "Time")
+        table.add_columns("Symbol", "Action", "Confidence", "Reason", "Time")
 
     @safe_update
     def update_strategy(self, data: StrategyState) -> None:
         table = self.query_one(DataTable)
+        empty_label = self.query_one("#strategy-empty", Label)
         table.clear()
+
+        # Handle empty state
+        if not data.last_decisions:
+            table.display = False
+            empty_label.display = True
+            empty_label.update("🎯 No decisions • Waiting for strategy analysis")
+            return
+        else:
+            table.display = True
+            empty_label.display = False
 
         for symbol, decision in data.last_decisions.items():
             action = decision.action.upper()

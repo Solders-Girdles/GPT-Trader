@@ -20,6 +20,14 @@ logger = get_logger(__name__, component="tui")
 class PortfolioWidget(Static):
     """Unified portfolio view with Positions, Orders, and Trades tabs."""
 
+    BINDINGS = [
+        ("j", "next_tab", "Next Tab"),
+        ("k", "previous_tab", "Previous Tab"),
+        ("1", "positions_tab", "Positions"),
+        ("2", "orders_tab", "Orders"),
+        ("3", "trades_tab", "Trades"),
+    ]
+
     # Reactive state property for automatic updates
     state = reactive(None)  # Type: TuiState | None
 
@@ -57,6 +65,31 @@ class PortfolioWidget(Static):
             trades_widget.update_trades(state.trade_data.trades)
         except Exception as e:
             logger.error(f"Failed to update trades in portfolio: {e}")
+
+    def action_next_tab(self) -> None:
+        """Move to next tab."""
+        tabs = self.query_one(TabbedContent)
+        tabs.action_next_tab()
+
+    def action_previous_tab(self) -> None:
+        """Move to previous tab."""
+        tabs = self.query_one(TabbedContent)
+        tabs.action_previous_tab()
+
+    def action_positions_tab(self) -> None:
+        """Jump to Positions tab."""
+        tabs = self.query_one(TabbedContent)
+        tabs.active = "positions-tab"
+
+    def action_orders_tab(self) -> None:
+        """Jump to Orders tab."""
+        tabs = self.query_one(TabbedContent)
+        tabs.active = "orders-tab"
+
+    def action_trades_tab(self) -> None:
+        """Jump to Trades tab."""
+        tabs = self.query_one(TabbedContent)
+        tabs.active = "trades-tab"
 
     def compose(self) -> ComposeResult:
         yield Label("💼 PORTFOLIO", classes="header")

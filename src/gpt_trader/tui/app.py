@@ -17,6 +17,7 @@ from gpt_trader.tui.managers import BotLifecycleManager, UICoordinator
 from gpt_trader.tui.responsive import calculate_responsive_state
 from gpt_trader.tui.screens import FullLogsScreen, MainScreen, SystemDetailsScreen
 from gpt_trader.tui.state import TuiState
+from gpt_trader.tui.theme import ThemeMode, get_theme_manager
 from gpt_trader.tui.widgets import ConfigModal, LiveWarningModal, ModeInfoModal
 from gpt_trader.tui.widgets.error_indicator import ErrorIndicatorWidget
 from gpt_trader.tui.widgets.status import BotStatusWidget
@@ -92,8 +93,10 @@ class TraderApp(App):
         ("m", "show_mode_info", "Mode Info"),
         ("r", "reconnect_data", "Reconnect"),
         ("p", "panic", "PANIC"),
+        ("t", "toggle_theme", "Toggle Theme"),
         ("1", "show_full_logs", "Full Logs"),
         ("2", "show_system_details", "System"),
+        ("?", "show_help", "Help"),
     ]
 
     def __init__(
@@ -121,6 +124,11 @@ class TraderApp(App):
 
         # Initialize error tracker widget (singleton for whole app)
         self.error_tracker: ErrorIndicatorWidget = ErrorIndicatorWidget(max_errors=10)
+
+        # Initialize theme manager
+        self.theme_manager = get_theme_manager()
+        # Load saved preference if it exists
+        self._load_theme_preference()
 
         # Create managers (only after bot is set)
         self.lifecycle_manager: BotLifecycleManager | None = None
@@ -161,14 +169,6 @@ class TraderApp(App):
         """Called when app starts."""
         logger.debug("TraderApp.on_mount() called")
         try:
-            # ATTACH LOG HANDLER FIRST - before any widgets mount
-            logger.debug("About to attach TUI log handler")
-            from gpt_trader.tui.log_manager import attach_tui_log_handler
-
-            attach_tui_log_handler()
-            logger.debug("TUI log handler attached, testing logger")
-            logger.info("TUI log handler attached globally")
-
             logger.info("TUI mounting, initializing components")
 
             # Mode selection flow: if no bot provided, show selection screen
@@ -408,6 +408,45 @@ class TraderApp(App):
         except Exception as e:
             logger.debug(f"Failed to pulse heartbeat: {e}")
 
+    def _load_theme_preference(self) -> None:
+        """Load theme preference from config file."""
+        try:
+            import json
+            from pathlib import Path
+
+            config_file = Path("config/tui_preferences.json")
+            if config_file.exists():
+                with open(config_file) as f:
+                    prefs = json.load(f)
+                    mode = prefs.get("theme", "dark")
+                    self.theme_manager.set_theme(ThemeMode(mode))
+                    logger.info(f"Loaded theme preference: {mode}")
+        except Exception as e:
+            logger.debug(f"Could not load theme preference: {e}")
+
+    def _save_theme_preference(self, mode: ThemeMode) -> None:
+        """Save theme preference to config file."""
+        try:
+            import json
+            from pathlib import Path
+
+            config_file = Path("config/tui_preferences.json")
+            config_file.parent.mkdir(exist_ok=True)
+
+            prefs = {}
+            if config_file.exists():
+                with open(config_file) as f:
+                    prefs = json.load(f)
+
+            prefs["theme"] = mode.value
+
+            with open(config_file, "w") as f:
+                json.dump(prefs, f, indent=2)
+
+            logger.info(f"Saved theme preference: {mode}")
+        except Exception as e:
+            logger.warning(f"Could not save theme preference: {e}")
+
     async def action_toggle_bot(self) -> None:
         """
         Toggle bot running state.
@@ -471,6 +510,17 @@ class TraderApp(App):
             logger.error(f"Failed to show mode info modal: {e}", exc_info=True)
             self.notify(f"Error showing mode info: {e}", severity="error")
 
+    async def action_show_help(self) -> None:
+        """Show comprehensive keyboard shortcut help screen."""
+        try:
+            from gpt_trader.tui.screens.help import HelpScreen
+
+            logger.debug("Opening help screen")
+            self.push_screen(HelpScreen())
+        except Exception as e:
+            logger.error(f"Failed to show help screen: {e}", exc_info=True)
+            self.notify(f"Error showing help: {e}", severity="error")
+
     async def action_reconnect_data(self) -> None:
         """Attempt to reconnect data source."""
         try:
@@ -499,6 +549,66 @@ class TraderApp(App):
         except Exception as e:
             logger.error(f"Failed to reconnect: {e}", exc_info=True)
             self.notify(f"Error reconnecting: {e}", severity="error")
+
+    async def action_panic(self) -> None:
+        """
+        Show panic confirmation modal for emergency stop.
+
+        Opens PanicModal which requires typing 'FLATTEN' to confirm.
+        On confirmation, stops bot and closes all positions immediately.
+        """
+        from gpt_trader.tui.widgets.panic import PanicModal
+
+        def handle_panic_confirm(confirmed: bool) -> None:
+            """Handle panic modal result."""
+            if confirmed:
+                logger.warning("User triggered PANIC - emergency stop initiated")
+                self.notify(
+                    "PANIC INITIATED - Stopping bot and flattening all positions",
+                    title="Emergency Stop",
+                    severity="error",
+                    timeout=30,
+                )
+                # Delegate to lifecycle manager for safe shutdown
+                try:
+                    if self.lifecycle_manager:
+                        self.lifecycle_manager.panic_stop()
+                except Exception as e:
+                    logger.error(f"Panic stop failed: {e}", exc_info=True)
+                    self.notify(
+                        f"PANIC STOP FAILED: {e}",
+                        title="Critical Error",
+                        severity="error",
+                        timeout=60,
+                    )
+            else:
+                logger.info("Panic cancelled by user")
+                self.notify("Panic cancelled", severity="information")
+
+        self.push_screen(PanicModal(), handle_panic_confirm)
+
+    async def action_toggle_theme(self) -> None:
+        """Toggle between dark and light themes."""
+        try:
+            # Toggle theme
+            new_theme = self.theme_manager.toggle_theme()
+
+            # Notify user
+            mode_name = "Light" if new_theme.mode == ThemeMode.LIGHT else "Dark"
+            self.notify(
+                f"Switched to {mode_name} theme (restart to apply)",
+                severity="information",
+                title="Theme",
+            )
+
+            # Save preference
+            self._save_theme_preference(new_theme.mode)
+
+            logger.info(f"Theme preference saved: {new_theme.mode}")
+
+        except Exception as e:
+            logger.error(f"Failed to toggle theme: {e}", exc_info=True)
+            self.notify(f"Theme switch failed: {e}", severity="error")
 
     def on_bot_status_widget_toggle_bot_pressed(
         self, message: BotStatusWidget.ToggleBotPressed

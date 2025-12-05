@@ -1,0 +1,164 @@
+"""Help screen showing comprehensive keyboard shortcut reference."""
+
+from textual.app import ComposeResult
+from textual.containers import Container, VerticalScroll
+from textual.screen import ModalScreen
+from textual.widgets import Label, Static
+
+
+class HelpScreen(ModalScreen):
+    """
+    Comprehensive keyboard shortcut reference overlay.
+
+    Displays all available shortcuts organized by category:
+    - Essential Controls (quit, start/stop)
+    - Navigation & Views (logs, system, config)
+    - Emergency Actions (panic button)
+    - Screen-Specific (full-screen modals)
+    """
+
+    BINDINGS = [
+        ("escape", "dismiss", "Close"),
+        ("q", "dismiss", "Close"),
+        ("?", "dismiss", "Close"),  # Same key that opens help
+    ]
+
+    CSS = """
+    HelpScreen {
+        align: center middle;
+        background: rgba(58, 53, 48, 0.5);  /* overlay-disabled */
+    }
+
+    #help-container {
+        width: auto;
+        max-width: 80;
+        height: auto;
+        max-height: 90%;
+        background: #2A2520;  /* bg-secondary */
+        border: thick #D4744F;  /* accent */
+        padding: 2;
+    }
+
+    .help-title {
+        color: #D4744F;  /* accent */
+        text-style: bold;
+        text-align: center;
+        margin-bottom: 1;
+    }
+
+    .help-category {
+        color: #F0EDE9;  /* text-primary */
+        text-style: bold;
+        margin-top: 1;
+        margin-bottom: 0;
+    }
+
+    .help-shortcut {
+        layout: horizontal;
+        height: auto;
+        margin-left: 2;
+    }
+
+    .help-key {
+        background: #3D3833;  /* bg-elevated */
+        color: #D4744F;  /* accent */
+        text-style: bold;
+        padding: 0 1;
+        min-width: 8;
+    }
+
+    .help-description {
+        color: #B8B5B2;  /* text-secondary */
+        margin-left: 2;
+    }
+
+    .help-footer {
+        color: #7A7672;  /* text-muted */
+        text-style: italic;
+        text-align: center;
+        margin-top: 1;
+    }
+    """
+
+    def compose(self) -> ComposeResult:
+        """Compose help screen with categorized shortcuts."""
+        with Container(id="help-container"):
+            with VerticalScroll():
+                yield Label("⌨ KEYBOARD SHORTCUTS", classes="help-title")
+
+                # Essential Controls
+                yield Label("Essential Controls", classes="help-category")
+                yield self._create_shortcut("Q", "Quit application")
+                yield self._create_shortcut("S", "Start/Stop bot")
+                yield self._create_shortcut("?", "Show this help screen")
+
+                # Navigation & Views
+                yield Label("Navigation & Views", classes="help-category")
+                yield self._create_shortcut("L", "Focus log viewer (scroll/read)")
+                yield self._create_shortcut("1", "Show full logs screen")
+                yield self._create_shortcut("2", "Show system details screen")
+                yield self._create_shortcut("M", "Show mode information")
+
+                # Accessibility
+                yield Label("Accessibility", classes="help-category")
+                yield self._create_shortcut("TAB", "Focus next widget")
+                yield self._create_shortcut("SHIFT+TAB", "Focus previous widget")
+                yield self._create_shortcut("ARROW KEYS", "Navigate tables/lists")
+                yield self._create_shortcut("HOME/END", "Jump to start/end")
+                yield self._create_shortcut("PAGEUP/DN", "Scroll by page")
+                yield self._create_shortcut("J/K", "Navigate Portfolio tabs (when focused)")
+                yield self._create_shortcut("1/2/3", "Jump to Portfolio tab 1/2/3 (when focused)")
+
+                # Configuration & Display
+                yield Label("Configuration & Display", classes="help-category")
+                yield self._create_shortcut("C", "Open configuration modal")
+                yield self._create_shortcut("R", "Reconnect to data source")
+                yield self._create_shortcut("T", "Toggle theme (restart to apply)")
+
+                # Emergency Actions
+                yield Label("Emergency Actions", classes="help-category")
+                yield self._create_shortcut("P", "PANIC - Emergency stop & flatten positions")
+
+                # Modal-Specific
+                yield Label("Modal Controls (when overlay open)", classes="help-category")
+                yield self._create_shortcut("ESC", "Close current modal/overlay")
+                yield self._create_shortcut("Q", "Close current modal/overlay")
+
+                # Mode Selection (startup only)
+                yield Label("Mode Selection (Startup Screen)", classes="help-category")
+                yield self._create_shortcut("1", "Select Demo mode")
+                yield self._create_shortcut("2", "Select Paper Trading mode")
+                yield self._create_shortcut("3", "Select Observation (read-only) mode")
+                yield self._create_shortcut("4", "Select Live Trading mode")
+
+                # Footer
+                yield Label("Press ESC, Q, or ? to close this help screen", classes="help-footer")
+
+    def _create_shortcut(self, key: str, description: str) -> Static:
+        """
+        Create a shortcut display row.
+
+        Args:
+            key: The keyboard key (e.g., "Q", "ESC")
+            description: Description of what the key does
+
+        Returns:
+            Static widget displaying the shortcut
+        """
+        shortcut = Static(classes="help-shortcut")
+
+        # Create inner widgets
+        key_label = Label(f"[{key}]", classes="help-key")
+        desc_label = Label(description, classes="help-description")
+
+        # Compose shortcut layout
+        def compose_shortcut() -> ComposeResult:
+            yield key_label
+            yield desc_label
+
+        shortcut.compose = compose_shortcut
+        return shortcut
+
+    async def action_dismiss(self) -> None:
+        """Close help screen and return to previous screen."""
+        self.dismiss()

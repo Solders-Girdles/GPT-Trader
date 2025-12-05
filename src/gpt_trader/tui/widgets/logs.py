@@ -2,7 +2,8 @@ import logging
 
 from textual.app import ComposeResult
 from textual.containers import Horizontal
-from textual.widgets import Label, Log, Select, Static
+from textual.reactive import reactive
+from textual.widgets import Input, Label, Log, Select, Static
 
 from gpt_trader.utilities.logging_patterns import get_logger
 
@@ -11,6 +12,12 @@ logger = get_logger(__name__, component="tui")
 
 class LogWidget(Static):
     """Displays application logs with optional compact mode."""
+
+    # Reactive counters for log statistics
+    total_count: reactive[int] = reactive(0)
+    error_count: reactive[int] = reactive(0)
+    warning_count: reactive[int] = reactive(0)
+    info_count: reactive[int] = reactive(0)
 
     DEFAULT_CSS = """
     LogWidget {
@@ -35,12 +42,20 @@ class LogWidget(Static):
         height: 1;
         text-align: center;
     }
+
+    .log-statistics {
+        height: 1;
+        text-align: center;
+        color: $text-muted;
+        padding: 0 1;
+    }
     """
 
     def __init__(self, compact_mode: bool = True, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.compact_mode = compact_mode
         self._min_level = logging.INFO  # Default filter level
+        self._logger_filter = ""  # Default: show all loggers
 
     def compose(self) -> ComposeResult:
         # Use max_lines to limit display in compact mode
@@ -50,10 +65,13 @@ class LogWidget(Static):
         log_widget.can_focus = True
         yield log_widget
 
+        # Statistics label (docked to bottom of log area)
+        yield Label("", id="log-statistics", classes="log-statistics")
+
         # Header row yielded AFTER log widget to ensure it paints ON TOP (z-index fix)
         with Horizontal(classes="header-row"):
             yield Label("📋 SYSTEM LOGS", classes="header")
-            yield Select(
+            select = Select(
                 [
                     ("DEBUG", logging.DEBUG),
                     ("INFO", logging.INFO),
@@ -64,6 +82,15 @@ class LogWidget(Static):
                 allow_blank=False,
                 id="log-level-select",
             )
+            select.can_focus = True
+            yield select
+
+            filter_input = Input(
+                placeholder="Filter logger (e.g. 'broker', 'tui')...",
+                id="logger-filter-input",
+            )
+            filter_input.can_focus = True
+            yield filter_input
 
         # Show hint only in compact mode
         if self.compact_mode:
@@ -85,7 +112,10 @@ class LogWidget(Static):
                 f"widget_id={id(log_display)}"
             )
 
-            handler.register_widget(log_display, self._min_level)
+            # Register with counter callback for statistics tracking
+            handler.register_widget(
+                log_display, self._min_level, on_log_callback=self.increment_counter
+            )
 
             logger.debug(
                 f"LogWidget registered successfully: total_widgets={len(handler._widgets)}"
@@ -150,3 +180,69 @@ class LogWidget(Static):
             handler = get_tui_log_handler()
             log_display = self.query_one("#log-stream", Log)
             handler.update_widget_level(log_display, self._min_level)
+
+    def on_input_changed(self, event: Input.Changed) -> None:
+        """Handle logger filter input change."""
+        from gpt_trader.tui.log_manager import get_tui_log_handler
+
+        if event.input.id == "logger-filter-input":
+            self._logger_filter = event.value.lower().strip()
+            # Update handler's logger filter for this widget
+            handler = get_tui_log_handler()
+            log_display = self.query_one("#log-stream", Log)
+            handler.update_widget_logger_filter(log_display, self._logger_filter)
+
+    def increment_counter(self, level: int) -> None:
+        """
+        Increment log counters based on level.
+
+        Args:
+            level: Logging level (logging.ERROR, logging.WARNING, etc.)
+        """
+        self.total_count += 1
+        if level >= logging.ERROR:
+            self.error_count += 1
+        elif level >= logging.WARNING:
+            self.warning_count += 1
+        elif level >= logging.INFO:
+            self.info_count += 1
+
+    def watch_total_count(self) -> None:
+        """Update statistics display when counters change."""
+        self._update_statistics()
+
+    def watch_error_count(self) -> None:
+        """Update statistics display when error count changes."""
+        self._update_statistics()
+
+    def watch_warning_count(self) -> None:
+        """Update statistics display when warning count changes."""
+        self._update_statistics()
+
+    def watch_info_count(self) -> None:
+        """Update statistics display when info count changes."""
+        self._update_statistics()
+
+    def _update_statistics(self) -> None:
+        """Update the statistics label with current counts."""
+        try:
+            from rich.text import Text
+
+            from gpt_trader.tui.theme import THEME
+
+            stats_label = self.query_one("#log-statistics", Label)
+
+            # Build colored statistics text
+            stats = Text("Total: ", style=THEME.colors.text_muted)
+            stats.append(str(self.total_count), style=THEME.colors.text_primary)
+            stats.append(" | Errors: ", style=THEME.colors.text_muted)
+            stats.append(str(self.error_count), style=THEME.colors.error)
+            stats.append(" | Warnings: ", style=THEME.colors.text_muted)
+            stats.append(str(self.warning_count), style=THEME.colors.warning)
+            stats.append(" | Info: ", style=THEME.colors.text_muted)
+            stats.append(str(self.info_count), style=THEME.colors.success)
+
+            stats_label.update(stats)
+        except Exception:
+            # Widget might not be mounted yet
+            pass

@@ -1,98 +1,167 @@
-"""Theme constants for GPT-Trader TUI.
+"""Theme system for GPT-Trader TUI."""
 
-This module defines the Claude Code-inspired color palette and theme configuration
-for the terminal user interface. All UI components should reference these constants
-rather than hardcoding color values.
-"""
+from __future__ import annotations
 
 from dataclasses import dataclass
+from enum import Enum
+
+
+class ThemeMode(str, Enum):
+    """Available theme modes."""
+
+    DARK = "dark"
+    LIGHT = "light"
 
 
 @dataclass(frozen=True)
 class ColorPalette:
-    """Claude Code-inspired color palette.
-
-    Color Philosophy:
-    - Warm, analog aesthetic ("parchment-toned")
-    - High contrast without harshness (WCAG AA compliant)
-    - Editorial quality with thoughtful spacing
-    - Subtle, delightful micro-interactions
-    """
+    """Color palette for TUI themes."""
 
     # Backgrounds
-    background_primary: str = "#1A1815"  # Deep warm brown "coffee stain"
-    background_secondary: str = "#2E2922"  # Slightly lighter warm brown
-    background_elevated: str = "#3A3530"  # Elevated surfaces
+    background_primary: str
+    background_secondary: str
+    background_elevated: str
+    surface: str
 
     # Accents
-    accent_primary: str = "#C15F3C"  # Signature rust-orange
-    accent_secondary: str = "#D17A5A"  # Lighter rust for hover states
-    accent_muted: str = "#8B4428"  # Darker rust for borders
+    accent_primary: str
+    accent_secondary: str
 
     # Text
-    text_primary: str = "#E8E6E3"  # Light warm grey
-    text_secondary: str = "#ABA8A5"  # Muted grey for labels
-    text_muted: str = "#6B6865"  # Very muted grey for hints
+    text_primary: str
+    text_secondary: str
+    text_muted: str
 
     # Semantic
-    success: str = "#7AA874"  # Warm green
-    warning: str = "#D8A657"  # Warm amber
-    error: str = "#D4736E"  # Warm coral-red
-    info: str = "#6FA8C4"  # Warm blue-grey
+    success: str
+    warning: str
+    error: str
+    info: str
+
+    # Interactive states
+    overlay_hover: str
+    overlay_focus: str
+    overlay_disabled: str
 
     # Borders
-    border_subtle: str = "#3A3530"  # Subtle warm border
-    border_emphasis: str = "#4A453F"  # Emphasized border
+    border: str
+    border_muted: str
+
+
+# Dark Theme (Claude Code-inspired warm palette)
+DARK_PALETTE = ColorPalette(
+    # Backgrounds
+    background_primary="#1A1815",  # Deep warm brown
+    background_secondary="#2A2520",  # Lighter warm brown
+    background_elevated="#3D3833",  # Elevated surfaces
+    surface="#2A2520",
+    # Accents
+    accent_primary="#D4744F",  # Rust-orange
+    accent_secondary="#E08A6A",  # Lighter rust
+    # Text
+    text_primary="#F0EDE9",  # High contrast
+    text_secondary="#B8B5B2",  # Medium contrast
+    text_muted="#7A7672",  # Low contrast
+    # Semantic
+    success="#85B77F",  # Warm green
+    warning="#E0B366",  # Warm amber
+    error="#E08580",  # Warm coral-red
+    info="#7FB8D4",  # Cool blue-grey
+    # Interactive
+    overlay_hover="rgba(193, 95, 60, 0.1)",
+    overlay_focus="rgba(193, 95, 60, 0.2)",
+    overlay_disabled="rgba(58, 53, 48, 0.5)",
+    # Borders
+    border="#4A4540",
+    border_muted="#3A3530",
+)
+
+# Light Theme (Claude Code-inspired, inverted)
+LIGHT_PALETTE = ColorPalette(
+    # Backgrounds
+    background_primary="#FAF8F5",  # Warm off-white
+    background_secondary="#F0EDE9",  # Slightly darker
+    background_elevated="#FFFFFF",  # Pure white for elevation
+    surface="#F0EDE9",
+    # Accents
+    accent_primary="#C15F3C",  # Darker rust-orange for contrast
+    accent_secondary="#D4744F",  # Original rust
+    # Text
+    text_primary="#1A1815",  # Dark brown (was bg-primary)
+    text_secondary="#3D3833",  # Medium brown
+    text_muted="#7A7672",  # Muted grey
+    # Semantic
+    success="#4A7D44",  # Darker green for contrast
+    warning="#C89A2E",  # Darker amber
+    error="#C14F4A",  # Darker coral-red
+    info="#4A7D9A",  # Darker blue
+    # Interactive
+    overlay_hover="rgba(193, 95, 60, 0.08)",
+    overlay_focus="rgba(193, 95, 60, 0.15)",
+    overlay_disabled="rgba(122, 118, 114, 0.3)",
+    # Borders
+    border="#D4CFCA",
+    border_muted="#E5E2DE",
+)
 
 
 @dataclass(frozen=True)
 class Theme:
-    """Complete theme configuration for the TUI.
+    """Complete theme configuration."""
 
-    Provides a centralized configuration for colors, typography, spacing,
-    and component dimensions throughout the interface.
-    """
-
+    mode: ThemeMode
     colors: ColorPalette
-
-    # Typography
-    font_size_sm: int = 12
-    font_size_base: int = 14
-    font_size_lg: int = 16
-
-    # Spacing (in terminal cells)
     spacing_xs: int = 1
     spacing_sm: int = 2
     spacing_md: int = 3
     spacing_lg: int = 4
 
-    # Component heights
-    status_bar_height: int = 6
-    footer_height: int = 1
-    header_height: int = 3
+
+class ThemeManager:
+    """Manages theme selection and switching."""
+
+    def __init__(self, initial_mode: ThemeMode = ThemeMode.DARK):
+        self._current_mode = initial_mode
+        self._themes = {
+            ThemeMode.DARK: Theme(mode=ThemeMode.DARK, colors=DARK_PALETTE),
+            ThemeMode.LIGHT: Theme(mode=ThemeMode.LIGHT, colors=LIGHT_PALETTE),
+        }
+
+    @property
+    def current_theme(self) -> Theme:
+        """Get the current active theme."""
+        return self._themes[self._current_mode]
+
+    @property
+    def current_mode(self) -> ThemeMode:
+        """Get the current theme mode."""
+        return self._current_mode
+
+    def toggle_theme(self) -> Theme:
+        """Toggle between dark and light themes."""
+        if self._current_mode == ThemeMode.DARK:
+            self._current_mode = ThemeMode.LIGHT
+        else:
+            self._current_mode = ThemeMode.DARK
+        return self.current_theme
+
+    def set_theme(self, mode: ThemeMode) -> Theme:
+        """Set a specific theme mode."""
+        self._current_mode = mode
+        return self.current_theme
 
 
-# Global theme instance
-THEME: Theme = Theme(colors=ColorPalette())
+# Global theme manager instance
+_theme_manager: ThemeManager | None = None
 
 
-def get_color(semantic_name: str) -> str:
-    """Get color by semantic name.
+def get_theme_manager() -> ThemeManager:
+    """Get or create the global theme manager."""
+    global _theme_manager
+    if _theme_manager is None:
+        _theme_manager = ThemeManager()
+    return _theme_manager
 
-    Args:
-        semantic_name: Name of the color (e.g., 'success', 'error', 'accent_primary')
 
-    Returns:
-        Hex color code
-
-    Raises:
-        AttributeError: If semantic_name doesn't exist in ColorPalette
-
-    Example:
-        >>> get_color('success')
-        '#7AA874'
-        >>> get_color('accent_primary')
-        '#C15F3C'
-    """
-    color: str = getattr(THEME.colors, semantic_name)
-    return color
+# Backward compatibility - keep THEME for existing code
+THEME = Theme(mode=ThemeMode.DARK, colors=DARK_PALETTE)

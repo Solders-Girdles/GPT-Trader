@@ -94,7 +94,11 @@ class MarketWatchWidget(Static):
 
     def compose(self) -> ComposeResult:
         yield Label("📊 MARKET WATCH", classes="header")
-        yield DataTable(id="market-table", zebra_stripes=True)
+        table = DataTable(id="market-table", zebra_stripes=True)
+        table.can_focus = True
+        table.cursor_type = "row"
+        yield table
+        yield Label("", id="market-empty", classes="empty-state")
 
     def on_mount(self) -> None:
         table = self.query_one(DataTable)
@@ -109,7 +113,18 @@ class MarketWatchWidget(Static):
         price_history: dict[str, list[Decimal]] | None = None,
     ) -> None:
         table = self.query_one(DataTable)
+        empty_label = self.query_one("#market-empty", Label)
         table.clear()
+
+        # Handle empty state
+        if not prices:
+            table.display = False
+            empty_label.display = True
+            empty_label.update("📊 No market data • Connecting to price feeds")
+            return
+        else:
+            table.display = True
+            empty_label.display = False
 
         updated_str = "N/A"
         if last_update:

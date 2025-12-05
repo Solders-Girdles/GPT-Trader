@@ -10,13 +10,13 @@ from gpt_trader.tui.widgets import (
     AccountWidget,
     BotStatusWidget,
     ContextualFooter,
-    ExecutionWidget,
     LogWidget,
     MarketWatchWidget,
     ModeIndicator,
     ModeSelector,
-    PositionsWidget,
+    PortfolioWidget,
     StrategyWidget,
+    SystemHealthWidget,
 )
 from gpt_trader.utilities.logging_patterns import get_logger
 
@@ -38,9 +38,7 @@ class MainScreen(Screen):
             return
 
         # Propagate to all widgets that have reactive state
-        for widget in self.query(
-            "PositionsWidget, ExecutionWidget, MarketWatchWidget, StrategyWidget"
-        ):
+        for widget in self.query("PortfolioWidget, MarketWatchWidget, StrategyWidget"):
             if hasattr(widget, "state"):
                 widget.state = state  # type: ignore[attr-defined]
 
@@ -49,6 +47,9 @@ class MainScreen(Screen):
 
         yield BotStatusWidget(id="bot-status-header")
 
+        # Error tracker widget (hidden when no errors)
+        yield self.app.error_tracker  # type: ignore[attr-defined]
+
         # Main Workspace Container - Now horizontal split (30/70)
         with Container(id="main-workspace"):
             # Left Column: Market + Strategy (30% width)
@@ -56,17 +57,16 @@ class MainScreen(Screen):
                 yield MarketWatchWidget(id="dash-market", classes="dashboard-item")
                 yield StrategyWidget(id="dash-strategy", classes="dashboard-item")
 
-            # Right Column: Execution + Monitoring (70% width)
+            # Right Column: Portfolio + Monitoring (70% width)
             with Container(id="execution-monitoring-column"):
-                # Positions (40% of right column = 28% of total screen - LARGEST)
-                yield PositionsWidget(id="dash-positions", classes="dashboard-item")
+                # Portfolio (Positions + Orders + Trades tabbed, 50% of right column)
+                yield PortfolioWidget(id="dash-portfolio", classes="dashboard-item")
 
-                # Execution (Orders + Trades tabbed, 35% combined)
-                yield ExecutionWidget(id="dash-execution", classes="dashboard-item")
-
-                # Monitoring Row (20% of right column)
+                # Monitoring Row (50% of right column) - Health + Logs side-by-side
                 with Container(id="monitoring-row"):
-                    # Logs now get full monitoring row height
+                    yield SystemHealthWidget(
+                        id="dash-system-health", classes="dashboard-item", compact_mode=True
+                    )
                     yield LogWidget(id="dash-logs", classes="dashboard-item compact-logs")
 
         yield ContextualFooter()
@@ -171,17 +171,20 @@ class MainScreen(Screen):
         try:
             workspace = self.query_one("#main-workspace")
 
-            # Use batch update for efficient CSS class changes
-            with self.batch_update():
-                # Remove all responsive state classes
-                workspace.remove_class(
-                    "workspace--compact",
-                    "workspace--standard",
-                    "workspace--comfortable",
-                    "workspace--wide",
-                )
-                # Add new state class
-                workspace.add_class(f"workspace--{state}")
+            # Use batch update on workspace widget for efficient CSS class changes
+            # Screen doesn't have batch_update, but widgets do
+            # Note: Container might not support batch_update in all versions, keeping direct updates for safety
+            # if we see AttributeError: 'Container' object has no attribute 'batch_update'
+
+            # Remove all responsive state classes
+            workspace.remove_class(
+                "workspace--compact",
+                "workspace--standard",
+                "workspace--comfortable",
+                "workspace--wide",
+            )
+            # Add new state class
+            workspace.add_class(f"workspace--{state}")
 
             logger.debug(f"Workspace CSS updated to: workspace--{state}")
 

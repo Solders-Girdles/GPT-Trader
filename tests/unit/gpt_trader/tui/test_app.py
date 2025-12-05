@@ -4,12 +4,23 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from gpt_trader.monitoring.status_reporter import (
+    AccountStatus,
+    BotStatus,
+    EngineStatus,
+    HeartbeatStatus,
+    MarketStatus,
+    PositionStatus,
+    RiskStatus,
+    StrategyStatus,
+    SystemStatus,
+)
 from gpt_trader.tui.app import TraderApp
+from gpt_trader.tui.log_manager import TuiLogHandler
 from gpt_trader.tui.widgets import (
     BlockChartWidget,
     BotStatusWidget,
     MarketWatchWidget,
-    TuiLogHandler,
 )
 
 
@@ -105,13 +116,28 @@ async def test_app_instantiation(mock_bot):
 @pytest.mark.asyncio
 async def test_app_sync_state(mock_bot):
     mock_bot.running = True
-    # Mock engine and status reporter
+    # Mock engine and status reporter with typed BotStatus
     mock_bot.engine.status_reporter.get_status = MagicMock(
-        return_value={"positions": {"equity": "999.00"}}
+        return_value=BotStatus(
+            bot_id="test-bot",
+            timestamp=1600000000.0,
+            timestamp_iso="2020-09-13T12:26:40Z",
+            version="test",
+            engine=EngineStatus(),
+            market=MarketStatus(),
+            positions=PositionStatus(equity=Decimal("999.00")),
+            orders=[],
+            trades=[],
+            account=AccountStatus(),
+            strategy=StrategyStatus(),
+            risk=RiskStatus(),
+            system=SystemStatus(),
+            heartbeat=HeartbeatStatus(),
+        )
     )
 
     app = TraderApp(mock_bot)
     app._sync_state_from_bot()
 
     assert app.tui_state.running is True
-    assert app.tui_state.position_data.equity == "999.00"
+    assert app.tui_state.position_data.equity == Decimal("999.00")

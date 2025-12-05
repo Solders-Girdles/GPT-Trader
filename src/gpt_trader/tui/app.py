@@ -365,12 +365,27 @@ class TraderApp(App):
 
     def _sync_state_from_bot(self) -> None:
         """
-        Manually sync state from bot (delegates to UICoordinator).
+        Manually sync state from bot (delegates to UICoordinator when available).
 
         Called by BotLifecycleManager on bot start/stop/mode-switch.
+        Falls back to direct state update when ui_coordinator is None (e.g., in tests).
         """
         if self.ui_coordinator:
             self.ui_coordinator.sync_state_from_bot()
+        elif self.bot:
+            # Fallback for tests and pre-mount scenarios
+            self.tui_state.running = self.bot.running
+
+            # Access runtime state safely
+            runtime_state = None
+            if hasattr(self.bot, "engine") and hasattr(self.bot.engine, "context"):
+                if hasattr(self.bot.engine.context, "runtime_state"):
+                    runtime_state = self.bot.engine.context.runtime_state
+
+            # Access StatusReporter for typed data
+            if hasattr(self.bot, "engine") and hasattr(self.bot.engine, "status_reporter"):
+                status = self.bot.engine.status_reporter.get_status()
+                self.tui_state.update_from_bot_status(status, runtime_state)
 
     def _pulse_heartbeat(self) -> None:
         """Smooth heartbeat pulse using sine wave."""

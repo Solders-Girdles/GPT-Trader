@@ -20,25 +20,6 @@ logger = get_logger(__name__, component="tui")
 class PortfolioWidget(Static):
     """Unified portfolio view with Positions, Orders, and Trades tabs."""
 
-    DEFAULT_CSS = """
-    PortfolioWidget {
-        layout: vertical;
-        height: 1fr;
-        border-top: solid $border-subtle;
-        background: $bg-secondary;
-        padding: 0;
-    }
-
-    PortfolioWidget TabbedContent {
-        height: 1fr;
-        border: none;
-    }
-
-    PortfolioWidget TabPane {
-        padding: 0;
-    }
-    """
-
     # Reactive state property for automatic updates
     state = reactive(None)  # Type: TuiState | None
 

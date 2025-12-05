@@ -141,6 +141,22 @@ Label {
     min-height: 8;         /* Minimum 8 lines (header + tabs + content) */
 }
 
+/* === Portfolio Widget (Tabbed Layout) === */
+
+PortfolioWidget {
+    layout: vertical;
+    height: 1fr;
+}
+
+PortfolioWidget TabbedContent {
+    height: 1fr;
+    border: none;
+}
+
+PortfolioWidget TabPane {
+    padding: 0;
+}
+
 /* === Monitoring Row (flex-grow to fill remaining space after portfolio) === */
 
 #monitoring-row {

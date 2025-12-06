@@ -1,0 +1,353 @@
+/* ========================================================================== */
+/* STATUS BAR (BotStatusWidget) - Flattened Layout                            */
+/* ========================================================================== */
+
+#bot-status-header {
+    height: 4;
+    background: $bg-secondary;
+    color: $text-primary;
+    border-bottom: solid $accent;
+    padding: 0;
+}
+
+/* Main status bar container - all children are direct */
+#status-bar-container {
+    height: 100%;
+    width: 100%;
+    align-vertical: middle;
+    padding: 0 1;
+}
+
+/* All direct children of status bar - let them size naturally */
+#status-bar-container > * {
+    content-align: center middle;
+}
+
+/* Visual separators between sections */
+.separator {
+    width: 1;
+    color: $border-subtle;
+    margin: 0 1;
+}
+
+/* Hidden class for responsive toggling */
+.hidden {
+    display: none;
+}
+
+/* Mode controls - let them auto-size vertically */
+#mode-indicator {
+    width: auto;
+    margin-right: 1;
+}
+
+#mode-selector {
+    min-width: 34;
+    width: 36;
+}
+
+/* Disabled mode selector - clearer visual feedback */
+#mode-selector Select.-disabled {
+    opacity: 0.6;
+    color: $text-muted;
+    background: $bg-secondary;
+}
+
+/* Loading indicator in mode selector */
+ModeSelector .loading-indicator {
+    color: $accent;
+    text-style: bold;
+    margin-left: 1;
+}
+
+/* Buttons - need height: 3 to display text with borders */
+#start-btn {
+    width: auto;
+    min-width: 8;
+    height: 3;
+    margin: 0 1;
+    background: $success;
+    color: $bg-primary;
+}
+
+#start-btn:hover {
+    background: $success;
+    text-style: bold;
+}
+
+#stop-btn {
+    width: auto;
+    min-width: 8;
+    height: 3;
+    margin: 0 1;
+    background: $error;
+    color: $bg-primary;
+}
+
+#stop-btn:hover {
+    background: $error;
+    text-style: bold;
+}
+
+#start-btn.-disabled,
+#stop-btn.-disabled {
+    opacity: 0.5;
+    background: $bg-elevated;
+    color: $text-muted;
+}
+
+/* Status labels and values */
+.status-label {
+    width: auto;
+    color: $text-secondary;
+    margin-right: 1;
+}
+
+.status-value {
+    width: auto;
+    min-width: 6;
+    color: $text-primary;
+    text-style: bold;
+    margin-right: 1;
+}
+
+/* Specific value widths for alignment */
+#equity-value {
+    min-width: 10;
+}
+
+#pnl-value {
+    min-width: 10;
+}
+
+#uptime-value {
+    min-width: 8;
+}
+
+#margin-value {
+    min-width: 6;
+}
+
+#sys-latency {
+    min-width: 5;
+}
+
+#sys-cpu {
+    min-width: 4;
+}
+
+#sys-rate-limit {
+    min-width: 4;
+}
+
+/* Connection indicator */
+#sys-conn-indicator {
+    width: 2;
+    margin-right: 1;
+}
+
+/* Heartbeat indicator */
+#heartbeat-indicator {
+    width: 2;
+    margin: 0 1;
+}
+
+/* === Contextual Footer === */
+
+ContextualFooter {
+    dock: bottom;
+    height: 2;        /* 1 content + 1 for border */
+    min-height: 2;
+    background: $bg-secondary;
+    border-top: solid $accent;
+}
+
+#contextual-footer {
+    height: 100%;     /* Fill parent */
+    min-height: 1;
+    align-vertical: middle;
+    padding: 0 $spacing-md;
+}
+
+.footer-group {
+    margin-right: $spacing-md;
+    align-vertical: middle;
+}
+
+.footer-group-right {
+    dock: right;
+}
+
+.footer-key {
+    color: $bg-primary;
+    text-style: bold;
+    background: $accent;
+    padding: 0 $spacing-md;
+    margin-right: $spacing-xs;
+}
+
+.footer-label {
+    color: $text-primary;
+    margin-right: $spacing-md;
+}
+
+.footer-separator {
+    color: $border-subtle;
+    margin: 0 $spacing-xs;
+}
+
+/* ========================================================================== */
+/* SLIM STATUS BAR (SlimStatusWidget) - Compact 3-Line Layout                 */
+/* ========================================================================== */
+
+#slim-status {
+    height: 4;         /* 3 content + 1 for border */
+    min-height: 4;
+    layout: vertical;  /* Explicit layout for proper child sizing */
+    background: $bg-secondary;
+    color: $text-primary;
+    border-bottom: solid $accent;
+    padding: 0;
+}
+
+#slim-status-bar {
+    height: 100%;  /* Fill parent, don't use fixed height */
+    width: 100%;
+    align-vertical: middle;
+    padding: 0 1;
+}
+
+#slim-status-bar > * {
+    content-align: center middle;
+}
+
+/* Slim separators */
+.slim-separator {
+    width: 1;
+    color: $border-subtle;
+    margin: 0 1;
+}
+
+/* Status indicator dot */
+.status-indicator {
+    width: 2;
+    text-style: bold;
+}
+
+.status-indicator.status-running {
+    color: $success;
+}
+
+.status-indicator.status-stopped {
+    color: $error;
+}
+
+/* Status text */
+.status-text {
+    width: auto;
+    min-width: 7;
+    text-style: bold;
+}
+
+.status-text.status-running {
+    color: $success;
+}
+
+.status-text.status-stopped {
+    color: $error;
+}
+
+/* Slim typography hierarchy */
+.slim-label {
+    width: auto;
+    color: $text-muted;
+    margin-right: 1;
+}
+
+.slim-value {
+    width: auto;
+    min-width: 6;
+    color: $text-primary;
+    text-style: bold;
+}
+
+.slim-value.pnl-positive {
+    color: $success;
+}
+
+.slim-value.pnl-negative {
+    color: $error;
+}
+
+.slim-value.pnl-neutral {
+    color: $text-primary;
+}
+
+/* Position count */
+.positions-count {
+    width: auto;
+    min-width: 6;
+    color: $text-secondary;
+}
+
+.positions-count.has-positions {
+    color: $accent;
+    text-style: bold;
+}
+
+/* Uptime */
+.uptime {
+    width: auto;
+    min-width: 8;
+    color: $text-secondary;
+}
+
+/* Slim buttons - need height 3 for proper rendering */
+.slim-btn {
+    width: auto;
+    min-width: 8;
+    height: 3;
+    padding: 0 1;
+    margin: 0;
+}
+
+#slim-start-btn {
+    background: $success;
+    color: $bg-primary;
+}
+
+#slim-stop-btn {
+    background: $error;
+    color: $bg-primary;
+}
+
+#slim-start-btn.-disabled,
+#slim-stop-btn.-disabled {
+    opacity: 0.5;
+    background: $bg-elevated;
+    color: $text-muted;
+}
+
+/* Slim mode selector */
+#slim-mode-select {
+    width: auto;
+    min-width: 14;
+    height: 3;
+}
+
+#slim-mode-select Select {
+    height: 3;
+}
+
+/* Error badge */
+.error-badge {
+    background: $error;
+    color: $bg-primary;
+    padding: 0 1;
+    text-style: bold;
+    margin-left: 1;
+}
+
+.error-badge.hidden {
+    display: none;
+}

@@ -1,0 +1,17 @@
+/* ========================================================================== */
+/* PORTFOLIO WIDGET (Tabbed Layout)                                           */
+/* ========================================================================== */
+
+PortfolioWidget {
+    layout: vertical;
+    height: 1fr;
+}
+
+PortfolioWidget TabbedContent {
+    height: 1fr;
+    border: none;
+}
+
+PortfolioWidget TabPane {
+    padding: 0;
+}

@@ -3,6 +3,10 @@ Bot Lifecycle Manager for TUI.
 
 Handles bot creation, starting, stopping, and mode switching operations.
 Extracted from TraderApp to reduce complexity and improve testability.
+
+Supports two modes of operation:
+1. Worker-based (preferred): Uses Textual Workers for better lifecycle management
+2. Legacy task-based: Uses raw asyncio.Task for backward compatibility
 """
 
 from __future__ import annotations
@@ -10,26 +14,41 @@ from __future__ import annotations
 import asyncio
 from typing import TYPE_CHECKING, Any
 
+from textual.worker import Worker, WorkerState
+
 from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:
     from gpt_trader.tui.app import TraderApp
+    from gpt_trader.tui.services.worker_service import WorkerService
 
 logger = get_logger(__name__, component="tui")
 
 
 class BotLifecycleManager:
-    """Manages bot creation, lifecycle operations, and mode switching."""
+    """Manages bot creation, lifecycle operations, and mode switching.
 
-    def __init__(self, app: TraderApp):
+    Supports both Worker-based and legacy task-based bot execution.
+    Worker mode is preferred for better lifecycle management.
+    """
+
+    def __init__(
+        self,
+        app: TraderApp,
+        worker_service: WorkerService | None = None,
+    ):
         """
         Initialize BotLifecycleManager.
 
         Args:
             app: Reference to the TraderApp instance
+            worker_service: Optional WorkerService for Worker-based execution
         """
         self.app = app
+        self.worker_service = worker_service
         self._bot_task: asyncio.Task | None = None
+        self._bot_worker: Worker[None] | None = None
+        self._use_workers = worker_service is not None
 
     def detect_bot_mode(self) -> str:
         """
@@ -60,86 +79,100 @@ class BotLifecycleManager:
         # Default fallback
         return "demo"
 
+    def _is_bot_running_internally(self) -> bool:
+        """Check if bot is running based on internal task/worker state."""
+        if self._use_workers and self._bot_worker:
+            return self._bot_worker.state == WorkerState.RUNNING
+        return self._bot_task is not None and not self._bot_task.done()
+
     async def toggle_bot(self) -> None:
         """Toggle bot running state (start/stop)."""
         try:
-            if self.app.bot.running and self._bot_task:
+            if self.app.bot.running and self._is_bot_running_internally():
                 await self.stop_bot()
             elif not self.app.bot.running:
                 await self.start_bot()
             else:
-                # Edge case: bot says it's running but we don't have task reference
-                logger.warning("Bot state inconsistent: running=True but no task reference")
+                # Edge case: bot says it's running but we don't have task/worker reference
+                logger.warning("Bot state inconsistent: running=True but no task/worker reference")
                 self.app.notify(
                     "Bot state inconsistent, attempting recovery...", severity="warning"
                 )
                 await self.app.bot.stop()
                 self._bot_task = None
+                self._bot_worker = None
 
         except Exception as e:
             logger.error(f"Failed to toggle bot state: {e}", exc_info=True)
             self.app.notify(f"Failed to toggle bot: {e}", severity="error", title="Bot Control")
 
     async def start_bot(self) -> None:
-        """Start the bot."""
+        """Start the bot.
+
+        Uses Worker-based execution if WorkerService is available,
+        otherwise falls back to legacy asyncio.Task.
+        """
         # Disable mode selector before start
         self._set_mode_selector_enabled(False)
 
-        # Notify start
-        self.app.notify("Starting bot...", title="Status")
+        # Log start (notification will show after bot actually starts)
         logger.info("=" * 60)
         logger.info("BOT STARTING - User initiated bot start via TUI")
         logger.info(f"Bot type: {type(self.app.bot).__name__}")
         logger.info(f"Data source mode: {self.app.data_source_mode}")
+        logger.info(f"Execution mode: {'Worker' if self._use_workers else 'Task'}")
         logger.info("=" * 60)
 
-        # Reset trade matcher on bot start (Phase 6 - Incremental P&L)
-        try:
-            from gpt_trader.tui.screens.main import MainScreen
-            from gpt_trader.tui.widgets.positions import TradesWidget
+        # Reset trade matcher on bot start via event (decoupled)
+        from gpt_trader.tui.events import TradeMatcherResetRequested
 
-            main_screen = self.app.query_one(MainScreen)
-            exec_widget = main_screen.query_one("#dash-execution")
-            trades_widget = exec_widget.query_one(TradesWidget)
-            if hasattr(trades_widget, "_trade_matcher"):
-                trades_widget._trade_matcher.reset()
-                logger.info("Reset trade matcher for fresh P&L tracking on bot start")
-        except Exception as e:
-            logger.debug(f"Could not reset trade matcher on start: {e}")
+        self.app.post_message(TradeMatcherResetRequested())
+        logger.info("Posted TradeMatcherResetRequested for fresh P&L tracking on bot start")
 
-        # Store task reference for future cancellation
-        self._bot_task = asyncio.create_task(self.app.bot.run())
+        if self._use_workers and self.worker_service:
+            # Worker-based execution (preferred)
+            self._bot_worker = self.worker_service.run_bot_async()
+            logger.info(f"Bot started via Worker: {self._bot_worker.name}")
 
-        # Add a done callback to log if the task fails
-        def _log_bot_task_done(task: asyncio.Task) -> None:
-            try:
-                if task.cancelled():
-                    logger.warning("Bot task was cancelled")
-                elif task.exception():
-                    logger.error(
-                        f"Bot task failed with exception: {task.exception()}",
-                        exc_info=task.exception(),
-                    )
-                else:
-                    logger.info("Bot task completed normally")
-            except Exception as e:
-                logger.error(f"Error in bot task done callback: {e}")
-
-        self._bot_task.add_done_callback(_log_bot_task_done)
-
-        # Give it a moment to start
-        await asyncio.sleep(0.2)
-
-        # Check if task is still running
-        if self._bot_task.done():
-            logger.error("Bot task completed immediately! This is unexpected.")
-            try:
-                # Try to get the exception if there was one
-                self._bot_task.result()
-            except Exception as e:
-                logger.error(f"Bot task failed on startup: {e}", exc_info=True)
+            # Check worker state immediately (no artificial delay)
+            # Worker state checking is non-blocking
+            if self._bot_worker.state == WorkerState.ERROR:
+                logger.error("Bot worker failed on startup")
+                if self._bot_worker.error:
+                    logger.error(f"Worker error: {self._bot_worker.error}")
+            elif self._bot_worker.state in (WorkerState.RUNNING, WorkerState.PENDING):
+                logger.info("Bot worker started successfully")
         else:
-            logger.info("Bot task is running successfully")
+            # Legacy task-based execution
+            self._bot_task = asyncio.create_task(self.app.bot.run())
+
+            # Add a done callback to log if the task fails
+            def _log_bot_task_done(task: asyncio.Task) -> None:
+                try:
+                    if task.cancelled():
+                        logger.warning("Bot task was cancelled")
+                    elif task.exception():
+                        logger.error(
+                            f"Bot task failed with exception: {task.exception()}",
+                            exc_info=task.exception(),
+                        )
+                    else:
+                        logger.info("Bot task completed normally")
+                except Exception as e:
+                    logger.error(f"Error in bot task done callback: {e}")
+
+            self._bot_task.add_done_callback(_log_bot_task_done)
+
+            # Check task state immediately (no artificial delay)
+            # Task done() check is non-blocking
+            if self._bot_task.done():
+                logger.error("Bot task completed immediately! This is unexpected.")
+                try:
+                    self._bot_task.result()
+                except Exception as e:
+                    logger.error(f"Bot task failed on startup: {e}", exc_info=True)
+            else:
+                logger.info("Bot task started successfully")
 
         # Immediately sync state to UI
         self.app._sync_state_from_bot()
@@ -149,20 +182,26 @@ class BotLifecycleManager:
         logger.info("Bot started successfully via TUI")
 
     async def stop_bot(self) -> None:
-        """Stop the bot."""
-        # Stop the bot with proper task cancellation
-        self.app.notify("Stopping bot...", title="Status")
+        """Stop the bot.
+
+        Handles both Worker-based and legacy task-based execution.
+        """
         logger.info("User initiated bot stop via TUI")
 
-        # Cancel the running task
-        if self._bot_task:
+        if self._use_workers and self._bot_worker:
+            # Worker-based cancellation
+            if self._bot_worker.state == WorkerState.RUNNING:
+                self._bot_worker.cancel()
+                logger.info("Bot worker cancellation requested")
+                # Cancellation is async - no need to wait
+            self._bot_worker = None
+        elif self._bot_task:
+            # Legacy task-based cancellation
             self._bot_task.cancel()
             try:
                 await self._bot_task
             except asyncio.CancelledError:
                 logger.info("Bot task cancelled successfully")
-
-            # Clean up task reference
             self._bot_task = None
 
         # Ensure bot.stop() is called for cleanup
@@ -242,9 +281,16 @@ class BotLifecycleManager:
                 logger.info("User cancelled switch to live mode")
                 return False
 
+        # Show loading indicator
+        self._set_mode_selector_loading(True)
+
         try:
-            # Step 2: Stop any remaining bot tasks
-            if self._bot_task and not self._bot_task.done():
+            # Step 2: Stop any remaining bot tasks/workers
+            if self._use_workers and self._bot_worker:
+                if self._bot_worker.state == WorkerState.RUNNING:
+                    self._bot_worker.cancel()
+                self._bot_worker = None
+            elif self._bot_task and not self._bot_task.done():
                 self._bot_task.cancel()
                 try:
                     await self._bot_task
@@ -285,20 +331,12 @@ class BotLifecycleManager:
             self.app.tui_state = TuiState()
             self.app.tui_state.data_source_mode = self.app.data_source_mode
 
-            # Step 8.5: Reset trade matcher (Phase 6 - Incremental P&L)
+            # Step 8.5: Reset trade matcher via event (decoupled)
             # Clear P&L tracking state when switching modes
-            try:
-                from gpt_trader.tui.screens.main import MainScreen
-                from gpt_trader.tui.widgets.positions import TradesWidget
+            from gpt_trader.tui.events import TradeMatcherResetRequested
 
-                main_screen = self.app.query_one(MainScreen)
-                exec_widget = main_screen.query_one("#dash-execution")
-                trades_widget = exec_widget.query_one(TradesWidget)
-                if hasattr(trades_widget, "_trade_matcher"):
-                    trades_widget._trade_matcher.reset()
-                    logger.info("Reset trade matcher for fresh P&L tracking")
-            except Exception as e:
-                logger.debug(f"Could not reset trade matcher: {e}")
+            self.app.post_message(TradeMatcherResetRequested())
+            logger.info("Posted TradeMatcherResetRequested for fresh P&L tracking on mode switch")
 
             # Step 9: Sync UI immediately with new bot
             self.app._sync_state_from_bot()
@@ -306,6 +344,12 @@ class BotLifecycleManager:
 
             # Step 10: Update mode selector
             self._update_mode_selector(self.app.data_source_mode)
+
+            # Hide loading indicator on success
+            self._set_mode_selector_loading(False)
+
+            # Save mode preference for future launches
+            self.app.mode_service.save_mode_preference(target_mode)
 
             self.app.notify(
                 f"Switched to {target_mode.upper()} mode",
@@ -320,6 +364,9 @@ class BotLifecycleManager:
             return True
 
         except Exception as e:
+            # Hide loading indicator on failure
+            self._set_mode_selector_loading(False)
+
             logger.error(f"Failed to switch modes: {e}", exc_info=True)
             self.app.notify(
                 f"Mode switch failed: {e}",
@@ -417,41 +464,41 @@ class BotLifecycleManager:
         return bool(result)
 
     def _set_mode_selector_enabled(self, enabled: bool) -> None:
-        """Enable or disable the mode selector widget."""
-        try:
-            from gpt_trader.tui.widgets import ModeSelector
+        """Enable or disable the mode selector widget via event."""
+        from gpt_trader.tui.events import ModeSelectorEnabledChanged
 
-            mode_selector = self.app.query_one(ModeSelector)
-            mode_selector.enabled = enabled
-        except Exception:
-            # Mode selector might not be mounted yet
-            pass
+        self.app.post_message(ModeSelectorEnabledChanged(enabled=enabled))
+        logger.debug(f"Posted ModeSelectorEnabledChanged(enabled={enabled})")
 
     def _update_mode_selector(self, mode: str) -> None:
-        """Update the mode selector widget to reflect current mode."""
-        try:
-            from gpt_trader.tui.widgets import ModeSelector
+        """Update the mode selector widget via event."""
+        from gpt_trader.tui.events import ModeSelectorValueChanged
 
-            mode_selector = self.app.query_one(ModeSelector)
-            mode_selector.current_mode = mode
-        except Exception:
-            # Mode selector might not be mounted yet
-            pass
+        self.app.post_message(ModeSelectorValueChanged(mode=mode))
+        logger.debug(f"Posted ModeSelectorValueChanged(mode={mode})")
+
+    def _set_mode_selector_loading(self, loading: bool) -> None:
+        """Show or hide loading indicator on mode selector."""
+        from gpt_trader.tui.events import ModeSelectorLoadingChanged
+
+        self.app.post_message(ModeSelectorLoadingChanged(loading=loading))
+        logger.debug(f"Posted ModeSelectorLoadingChanged(loading={loading})")
 
     def _update_main_screen(self) -> None:
-        """Update the main screen UI."""
-        try:
-            from gpt_trader.tui.screens import MainScreen
+        """Update the main screen UI via event."""
+        from gpt_trader.tui.events import MainScreenRefreshRequested
 
-            main_screen = self.app.query_one(MainScreen)
-            main_screen.update_ui(self.app.tui_state)
-            self.app._pulse_heartbeat()
-            logger.info("UI state synced after bot lifecycle operation")
-        except Exception as e:
-            logger.warning(f"Failed to update main screen: {e}")
+        self.app.post_message(MainScreenRefreshRequested())
+        logger.info("Posted MainScreenRefreshRequested for UI sync")
 
     def cleanup(self) -> None:
-        """Clean up bot tasks on manager destruction."""
-        if self._bot_task and not self._bot_task.done():
+        """Clean up bot tasks/workers on manager destruction."""
+        if self._use_workers and self._bot_worker:
+            if self._bot_worker.state == WorkerState.RUNNING:
+                self._bot_worker.cancel()
+            self._bot_worker = None
+            logger.info("BotLifecycleManager cleaned up bot worker")
+        elif self._bot_task and not self._bot_task.done():
             self._bot_task.cancel()
+            self._bot_task = None
             logger.info("BotLifecycleManager cleaned up bot task")

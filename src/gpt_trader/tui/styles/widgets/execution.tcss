@@ -1,0 +1,12 @@
+/* ========================================================================== */
+/* EXECUTION WIDGET (Strategy View)                                           */
+/* ========================================================================== */
+
+/* Execution widget uses standard dashboard-item styling */
+/* and DataTable styling from components/tables.tcss */
+
+#dash-strategy {
+    height: auto;          /* Shrink to content */
+    max-height: 30%;       /* Cap at 30% to prevent domination */
+    min-height: 5;         /* Minimum 5 lines (header + empty state) */
+}

@@ -118,7 +118,12 @@ class StrategyState:
 
 @dataclass
 class RiskState:
-    """Data structure for risk management information."""
+    """Data structure for risk management information.
+
+    Note: position_leverage field was removed as GPT-Trader focuses on spot trading
+    where per-position leverage is not applicable. For perpetuals/margin trading,
+    this would need to be added back with proper StatusReporter support.
+    """
 
     max_leverage: float = 0.0
     daily_loss_limit_pct: float = 0.0
@@ -126,7 +131,6 @@ class RiskState:
     reduce_only_mode: bool = False
     reduce_only_reason: str = ""
     active_guards: list[str] = field(default_factory=list)
-    position_leverage: dict[str, float] = field(default_factory=dict)  # Per-position leverage
 
 
 @dataclass

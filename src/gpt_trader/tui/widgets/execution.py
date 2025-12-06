@@ -8,7 +8,7 @@ from textual.app import ComposeResult
 from textual.reactive import reactive
 from textual.widgets import Label, Static, TabbedContent, TabPane
 
-from gpt_trader.tui.widgets.positions import OrdersWidget, TradesWidget
+from gpt_trader.tui.widgets.portfolio import OrdersWidget, TradesWidget
 from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:
@@ -36,6 +36,20 @@ class ExecutionWidget(Static):
 
         self.update_orders(state.order_data.orders)
         self.update_trades(state.trade_data.trades)
+
+    def on_mount(self) -> None:
+        """Register with state registry on mount."""
+        if hasattr(self.app, "state_registry"):
+            self.app.state_registry.register(self)
+
+    def on_unmount(self) -> None:
+        """Unregister from state registry on unmount."""
+        if hasattr(self.app, "state_registry"):
+            self.app.state_registry.unregister(self)
+
+    def on_state_updated(self, state: TuiState) -> None:
+        """Called by StateRegistry when state changes."""
+        self.state = state
 
     def compose(self) -> ComposeResult:
         yield Label("📊 EXECUTION", classes="header")

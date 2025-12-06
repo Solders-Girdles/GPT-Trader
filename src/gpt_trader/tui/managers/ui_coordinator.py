@@ -3,18 +3,21 @@ UI Coordinator for TUI.
 
 Handles UI update orchestration from bot status updates via observer callbacks.
 Provides heartbeat animation loop. Extracted from TraderApp to reduce complexity.
+
+Supports optional update throttling for high-frequency updates.
 """
 
 from __future__ import annotations
 
 import asyncio
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from gpt_trader.monitoring.status_reporter import BotStatus
 from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:
     from gpt_trader.tui.app import TraderApp
+    from gpt_trader.tui.services.update_throttler import UpdateThrottler
 
 logger = get_logger(__name__, component="tui")
 
@@ -25,17 +28,31 @@ class UICoordinator:
 
     Data updates are driven by observer callbacks (apply_observer_update).
     Heartbeat loop provides visual animation (no data polling).
+
+    Supports optional update throttling to batch high-frequency updates.
     """
 
-    def __init__(self, app: TraderApp):
+    def __init__(
+        self,
+        app: TraderApp,
+        throttler: UpdateThrottler | None = None,
+    ):
         """
         Initialize UICoordinator.
 
         Args:
             app: Reference to the TraderApp instance
+            throttler: Optional UpdateThrottler for batching updates
         """
         self.app = app
         self._update_task: asyncio.Task | None = None  # Heartbeat task
+        self._throttler = throttler
+        self._use_throttling = throttler is not None
+
+        # Set up throttler callback if provided
+        if self._throttler:
+            self._throttler.set_flush_callback(self._apply_throttled_updates)
+            logger.info("UICoordinator configured with update throttling")
 
     def apply_observer_update(self, status: BotStatus) -> None:
         """
@@ -43,6 +60,26 @@ class UICoordinator:
 
         Called from observer callback on bot status changes. Protected with
         error boundaries to prevent cascade failures.
+
+        When throttling is enabled, updates are queued and batched.
+
+        Args:
+            status: Typed BotStatus snapshot from StatusReporter
+        """
+        # If throttling is enabled, queue the update instead of applying immediately
+        if self._use_throttling and self._throttler:
+            self._throttler.queue_full_status(status)
+            logger.debug("Status update queued for throttled processing")
+            return
+
+        # Apply immediately (no throttling)
+        self._apply_status_update(status)
+
+    def _apply_status_update(self, status: BotStatus) -> None:
+        """
+        Internal method to apply a status update.
+
+        Used both for immediate updates and by the throttler callback.
 
         Args:
             status: Typed BotStatus snapshot from StatusReporter
@@ -85,6 +122,13 @@ class UICoordinator:
             # Update UI (already has some error handling in update_main_screen)
             self.update_main_screen()
 
+            # Check alert rules against new state
+            if hasattr(self.app, "alert_manager"):
+                try:
+                    self.app.alert_manager.check_alerts(self.app.tui_state)
+                except Exception as alert_error:
+                    logger.debug(f"Error checking alerts: {alert_error}")
+
         except Exception as e:
             logger.error(f"Critical error in apply_observer_update: {e}", exc_info=True)
             # Last resort notification
@@ -98,6 +142,24 @@ class UICoordinator:
             except Exception:
                 # Even notification failed - log and continue
                 logger.critical("Cannot notify user of critical error - TUI may be unresponsive")
+
+    def _apply_throttled_updates(self, updates: dict[str, Any]) -> None:
+        """
+        Callback from throttler to apply batched updates.
+
+        Args:
+            updates: Dict of component names to update data
+        """
+        # Check for full_status update (most common case)
+        if "full_status" in updates:
+            status = updates["full_status"]
+            if isinstance(status, BotStatus):
+                self._apply_status_update(status)
+                logger.debug("Applied throttled full status update")
+            return
+
+        # Handle individual component updates if needed in future
+        logger.debug(f"Received {len(updates)} throttled component updates")
 
     def sync_state_from_bot(self) -> None:
         """
@@ -126,8 +188,7 @@ class UICoordinator:
     def update_main_screen(self) -> None:
         """Update the main screen UI with current state."""
         try:
-            from gpt_trader.tui.screens import MainScreen
-            from gpt_trader.tui.screens.main import SystemDetailsScreen
+            from gpt_trader.tui.screens import MainScreen, SystemDetailsScreen
 
             main_screen = self.app.query_one(MainScreen)
             main_screen.update_ui(self.app.tui_state)
@@ -169,28 +230,33 @@ class UICoordinator:
 
     async def _heartbeat_loop(self) -> None:
         """
-        Periodic heartbeat loop (runs every 1 second).
+        Periodic heartbeat loop (runs every 2 seconds).
 
-        Only pulses the heartbeat animation to show the dashboard is alive.
+        Only pulses the heartbeat animation when bot is running to show activity.
         Data updates are handled by the observer callback (no polling needed).
         """
         loop_count = 0
         while True:
             try:
                 loop_count += 1
-                if loop_count % 30 == 0:  # Log every 30 seconds
+                if loop_count % 30 == 0:  # Log every minute
                     logger.debug(f"Heartbeat loop iteration {loop_count}")
 
-                # Only pulse heartbeat - no state sync or UI update
-                self.app._pulse_heartbeat()
+                # Only pulse heartbeat when bot is running
+                if self.app.bot and self.app.bot.running:
+                    self.app._pulse_heartbeat()
 
             except Exception as e:
                 logger.debug(f"Heartbeat pulse error: {e}")
 
-            await asyncio.sleep(1)
+            await asyncio.sleep(2)  # 2 second interval is sufficient for visibility
 
     def cleanup(self) -> None:
-        """Clean up heartbeat tasks on manager destruction."""
+        """Clean up heartbeat tasks and throttler on manager destruction."""
         if self._update_task and not self._update_task.done():
             self._update_task.cancel()
             logger.info("UICoordinator cleaned up heartbeat task")
+
+        if self._throttler:
+            self._throttler.cancel_pending()
+            logger.info("UICoordinator cleaned up throttler")

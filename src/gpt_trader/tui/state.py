@@ -1,5 +1,8 @@
 """
 TUI State Management.
+
+Provides reactive state management for the TUI with validation and
+delta update capabilities to minimize UI flicker and catch data issues.
 """
 
 from __future__ import annotations
@@ -10,7 +13,17 @@ from textual.reactive import reactive
 from textual.widget import Widget
 
 from gpt_trader.monitoring.status_reporter import BotStatus
+from gpt_trader.tui.events import (
+    StateDeltaUpdateApplied,
+    StateValidationFailed,
+    StateValidationPassed,
+)
+from gpt_trader.tui.events import (
+    ValidationError as ValidationErrorEvent,
+)
 from gpt_trader.tui.formatting import safe_decimal
+from gpt_trader.tui.state_management.delta_updater import StateDeltaUpdater
+from gpt_trader.tui.state_management.validators import StateValidator
 from gpt_trader.tui.types import (
     AccountBalance,
     AccountSummary,
@@ -32,9 +45,16 @@ logger = get_logger(__name__, component="tui")
 
 
 class TuiState(Widget):
-    """
-    Reactive state for the TUI.
-    Acts as a ViewModel that the App observes.
+    """Reactive state for the TUI.
+
+    Acts as a ViewModel that the App observes. Includes validation layer
+    and delta update support to minimize UI flicker.
+
+    Attributes:
+        validator: State validation layer for incoming data
+        delta_updater: Delta update calculator for efficient updates
+        validation_enabled: Whether to validate incoming data
+        delta_updates_enabled: Whether to use delta updates (vs full replacement)
     """
 
     # Reactive properties that widgets can watch
@@ -48,6 +68,10 @@ class TuiState(Widget):
     update_interval = reactive(2.0)
     connection_healthy = reactive(True)
 
+    # Validation state tracking
+    validation_error_count = reactive(0)
+    validation_warning_count = reactive(0)
+
     # We use reactive for complex objects too, but need to be careful about mutation
     # For simple updates, replacing the whole object triggers the watcher
     market_data = reactive(MarketState())
@@ -59,8 +83,29 @@ class TuiState(Widget):
     risk_data = reactive(RiskState())
     system_data = reactive(SystemStatus())
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(
+        self,
+        *args: Any,
+        validation_enabled: bool = True,
+        delta_updates_enabled: bool = True,
+        **kwargs: Any,
+    ) -> None:
+        """Initialize TuiState with validation and delta update support.
+
+        Args:
+            validation_enabled: Whether to validate incoming data (default True)
+            delta_updates_enabled: Whether to use delta updates (default True)
+            *args: Positional arguments passed to Widget
+            **kwargs: Keyword arguments passed to Widget
+        """
         super().__init__(*args, **kwargs)
+
+        # Validation and delta update components
+        self.validator = StateValidator()
+        self.delta_updater = StateDeltaUpdater()
+        self.validation_enabled = validation_enabled
+        self.delta_updates_enabled = delta_updates_enabled
+
         # Ensure we have fresh instances for each TuiState
         self.market_data = MarketState()
         self.position_data = PortfolioSummary()
@@ -71,9 +116,13 @@ class TuiState(Widget):
         self.risk_data = RiskState()
         self.system_data = SystemStatus()
 
-    def update_from_bot_status(self, status: BotStatus, runtime_state: Any | None = None) -> None:
-        """
-        Update state from the bot's typed status snapshot.
+    def update_from_bot_status(
+        self,
+        status: BotStatus,
+        runtime_state: Any | None = None,
+        use_delta: bool | None = None,
+    ) -> None:
+        """Update state from the bot's typed status snapshot.
 
         Each component update is isolated to prevent cascade failures.
         If one component fails, others still update successfully.
@@ -81,7 +130,48 @@ class TuiState(Widget):
         Args:
             status: Typed BotStatus snapshot from StatusReporter
             runtime_state: Optional runtime state (engine state, uptime, etc.)
+            use_delta: Whether to use delta updates. If None, uses instance default.
         """
+        # Sync update_interval from reporter's observer_interval for connection health
+        if hasattr(status, "observer_interval") and status.observer_interval > 0:
+            self.update_interval = status.observer_interval
+
+        # Determine if we should use delta updates
+        should_use_delta = use_delta if use_delta is not None else self.delta_updates_enabled
+
+        # Run validation if enabled
+        if self.validation_enabled:
+            validation_result = self.validator.validate_full_state(status)
+
+            # Update validation counts
+            self.validation_error_count = len(validation_result.errors)
+            self.validation_warning_count = len(validation_result.warnings)
+
+            # Post validation events
+            if not validation_result.valid or validation_result.warnings:
+                all_issues = validation_result.errors + validation_result.warnings
+                event_errors = [
+                    ValidationErrorEvent(
+                        field=e.field,
+                        message=e.message,
+                        severity=e.severity,
+                        value=e.value,
+                    )
+                    for e in all_issues
+                ]
+                self.post_message(
+                    StateValidationFailed(errors=event_errors, component="full_state")
+                )
+
+                # Log validation issues
+                for error in validation_result.errors:
+                    logger.warning(f"Validation error: {error.field} - {error.message}")
+
+                # Continue with update despite validation warnings/errors
+                # (data may still be partially usable)
+            else:
+                self.post_message(StateValidationPassed())
+
         # Define update operations with error isolation
         update_operations = [
             ("market", lambda: self._update_market_data(status.market)),
@@ -96,12 +186,23 @@ class TuiState(Widget):
         ]
 
         failed_updates = []
+        successful_updates = []
         for component_name, update_operation in update_operations:
             try:
                 update_operation()
+                successful_updates.append(component_name)
             except Exception as e:
                 logger.error(f"Failed to update {component_name} data: {e}", exc_info=True)
                 failed_updates.append(component_name)
+
+        # Post delta update event
+        if should_use_delta:
+            self.post_message(
+                StateDeltaUpdateApplied(
+                    components_updated=successful_updates,
+                    use_full_update=not should_use_delta,
+                )
+            )
 
         if failed_updates:
             logger.warning(
@@ -275,8 +376,6 @@ class TuiState(Widget):
 
     def _update_risk_data(self, risk: Any) -> None:  # RiskStatus from status_reporter
         """Update risk data from typed RiskStatus."""
-        # Note: RiskStatus doesn't have position_leverage field, but TUI RiskState does
-        # We need to add it to RiskStatus or handle it separately
         self.risk_data = RiskState(
             max_leverage=risk.max_leverage,
             daily_loss_limit_pct=risk.daily_loss_limit_pct,
@@ -284,7 +383,6 @@ class TuiState(Widget):
             reduce_only_mode=risk.reduce_only_mode,
             reduce_only_reason=risk.reduce_only_reason,
             active_guards=risk.active_guards,
-            position_leverage={},  # Will be populated separately if needed
         )
 
     def _update_system_data(self, sys: Any) -> None:  # SystemStatus from status_reporter

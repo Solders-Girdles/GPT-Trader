@@ -18,7 +18,6 @@ from gpt_trader.monitoring.status_reporter import (
 from gpt_trader.tui.app import TraderApp
 from gpt_trader.tui.log_manager import TuiLogHandler
 from gpt_trader.tui.widgets import (
-    BlockChartWidget,
     BotStatusWidget,
     MarketWatchWidget,
 )
@@ -52,36 +51,12 @@ class TestMarketWatchWidget:
         widget.update_prices({"BTC": Decimal("110")}, 1001)
         args, _ = mock_table.add_row.call_args
         # Price should be formatted with commas
-        assert "[#7AA874]" in str(args[1])  # Claude Code success (warm green)
+        assert "[#85B77F]" in str(args[1])  # Theme success (warm green)
 
         # Third update (lower)
         widget.update_prices({"BTC": Decimal("105")}, 1002)
         args, _ = mock_table.add_row.call_args
-        assert "[#D4736E]" in str(args[1])  # Claude Code error (warm coral-red)
-
-
-class TestBlockChartWidget:
-    def test_chart_color_green(self):
-        widget = BlockChartWidget()
-        mock_static = MagicMock()
-        widget.query_one = MagicMock(return_value=mock_static)
-
-        prices = [Decimal("100"), Decimal("110")]
-        widget.update_chart(prices)
-
-        args, _ = mock_static.update.call_args
-        assert "[#7AA874]" in args[0]  # Claude Code success (warm green)
-
-    def test_chart_color_red(self):
-        widget = BlockChartWidget()
-        mock_static = MagicMock()
-        widget.query_one = MagicMock(return_value=mock_static)
-
-        prices = [Decimal("100"), Decimal("90")]
-        widget.update_chart(prices)
-
-        args, _ = mock_static.update.call_args
-        assert "[#D4736E]" in args[0]  # Claude Code error (warm coral-red)
+        assert "[#E08580]" in str(args[1])  # Theme error (warm coral-red)
 
 
 class TestTuiLogHandler:

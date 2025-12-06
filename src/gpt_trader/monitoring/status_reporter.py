@@ -190,6 +190,9 @@ class BotStatus:
     healthy: bool = True
     health_issues: list[str] = field(default_factory=list)
 
+    # Reporter interval for TUI connection health tracking
+    observer_interval: float = 2.0
+
     def __post_init__(self) -> None:
         if not self.timestamp_iso:
             self.timestamp_iso = datetime.utcfromtimestamp(self.timestamp).isoformat() + "Z"
@@ -212,14 +215,19 @@ class StatusReporter:
     Features:
     - Atomic file writes (write to temp, then rename)
     - Observer pattern for event-driven updates
-    - Configurable update interval
+    - Dual-interval design: fast observer updates, slow file writes
     - Includes engine, market, position, risk, and heartbeat status
     - Health summary with issue detection
+
+    The reporter uses two intervals:
+    - observer_interval (default 2s): How often to update in-memory status and notify observers (TUI)
+    - file_write_interval (default 60s): How often to write status to disk
 
     Usage:
         reporter = StatusReporter(
             status_file="/var/run/gpt-trader/status.json",
-            update_interval=10,
+            observer_interval=2,      # Fast updates for TUI
+            file_write_interval=60,   # Slow disk writes
         )
         reporter.add_observer(my_callback)
         await reporter.start()
@@ -230,7 +238,9 @@ class StatusReporter:
     """
 
     status_file: str = "status.json"
-    update_interval: int = 10  # seconds
+    observer_interval: float = 2.0  # seconds - fast loop for TUI observers
+    file_write_interval: float = 60.0  # seconds - slow loop for disk writes
+    update_interval: int = 10  # Deprecated: use file_write_interval instead
     bot_id: str = ""
     enabled: bool = True
 
@@ -238,6 +248,7 @@ class StatusReporter:
     _running: bool = field(default=False, repr=False)
     _task: asyncio.Task[None] | None = field(default=None, repr=False)
     _start_time: float = field(default=0.0, repr=False)
+    _last_file_write: float = field(default=0.0, repr=False)
     _status: BotStatus = field(default_factory=BotStatus, repr=False)
 
     # Observers
@@ -267,7 +278,8 @@ class StatusReporter:
 
         self._running = True
         self._start_time = time.time()
-        self._status = BotStatus(bot_id=self.bot_id)
+        self._last_file_write = 0.0  # Force initial write
+        self._status = BotStatus(bot_id=self.bot_id, observer_interval=self.observer_interval)
 
         # Ensure directory exists
         status_path = Path(self.status_file)
@@ -275,10 +287,13 @@ class StatusReporter:
 
         # Write initial status
         await self._write_status()
+        self._last_file_write = time.time()
 
         self._task = asyncio.create_task(self._report_loop())
         logger.info(
-            f"Status reporter started (file={self.status_file}, interval={self.update_interval}s)"
+            f"Status reporter started (file={self.status_file}, "
+            f"observer_interval={self.observer_interval}s, "
+            f"file_write_interval={self.file_write_interval}s)"
         )
         return self._task
 
@@ -314,11 +329,26 @@ class StatusReporter:
             self._observers.remove(callback)
 
     async def _report_loop(self) -> None:
-        """Main reporting loop."""
+        """Main reporting loop with dual intervals.
+
+        Uses observer_interval for fast in-memory updates and observer notifications.
+        Uses file_write_interval for slow disk writes.
+        """
         while self._running:
             try:
-                await self._write_status()
-                # Notify observers with typed BotStatus
+                # Always update in-memory status
+                self._update_status()
+
+                # Check if it's time to write to disk
+                now = time.time()
+                time_since_last_write = now - self._last_file_write
+                should_write_file = time_since_last_write >= self.file_write_interval
+
+                if should_write_file:
+                    await self._write_status_to_file()
+                    self._last_file_write = now
+
+                # Always notify observers (fast loop)
                 for observer in self._observers:
                     try:
                         # Handle both async and sync observer callbacks
@@ -332,11 +362,16 @@ class StatusReporter:
             except Exception as e:
                 logger.error(f"Status report error: {e}")
 
-            await asyncio.sleep(self.update_interval)
+            # Sleep for the fast observer interval
+            await asyncio.sleep(self.observer_interval)
 
     async def _write_status(self) -> None:
-        """Write current status to file atomically."""
+        """Write current status to file atomically (legacy method for backward compat)."""
         self._update_status()
+        await self._write_status_to_file()
+
+    async def _write_status_to_file(self) -> None:
+        """Write current status to file atomically."""
         status_dict = asdict(self._status)
 
         # Atomic write: write to temp file, then rename
@@ -364,6 +399,7 @@ class StatusReporter:
         self._status.timestamp = now
         self._status.timestamp_iso = datetime.utcfromtimestamp(now).isoformat() + "Z"
         self._status.bot_id = self.bot_id
+        self._status.observer_interval = self.observer_interval
 
         # Engine status
         self._status.engine.running = self._running

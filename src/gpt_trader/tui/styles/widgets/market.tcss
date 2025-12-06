@@ -1,0 +1,10 @@
+/* ========================================================================== */
+/* MARKET WIDGET                                                              */
+/* ========================================================================== */
+
+/* Market widget uses standard dashboard-item styling from layout/workspace.tcss */
+/* and DataTable styling from components/tables.tcss */
+
+#dash-market {
+    height: 1fr;           /* Flex-grow to fill available space */
+}

@@ -218,7 +218,8 @@ uv run python scripts/production_preflight.py --profile canary
 uv run coinbase-trader run --profile dev --dev-fast
 
 # Inspect streaming telemetry via TUI
-uv run coinbase-trader run --profile dev --tui
+uv run gpt-trader tui                  # Mode selector
+uv run gpt-trader run --profile dev --tui  # Attach TUI to dev profile (optional)
 
 # Export Prometheus-compatible metrics
 uv run python scripts/monitoring/export_metrics.py --metrics-file var/data/coinbase_trader/prod/metrics.json

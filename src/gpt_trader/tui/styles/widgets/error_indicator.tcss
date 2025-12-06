@@ -1,0 +1,8 @@
+/* ========================================================================== */
+/* ERROR INDICATOR WIDGET                                                     */
+/* ========================================================================== */
+
+/* Error indicator uses semantic colors from theme/variables.tcss */
+/* Widget-specific styling is handled via DEFAULT_CSS in Python */
+
+/* Error tracking display inherits from status indicators in utilities.tcss */

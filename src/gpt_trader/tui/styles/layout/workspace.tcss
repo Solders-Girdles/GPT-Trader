@@ -1,0 +1,208 @@
+/* ========================================================================== */
+/* MAIN WORKSPACE - LOG-CENTRIC VERTICAL LAYOUT                               */
+/* ========================================================================== */
+
+#main-workspace {
+    layout: vertical;
+    height: 1fr;       /* Fill remaining space beneath headers/footers */
+    min-height: 0;     /* Allow rows inside to shrink on shorter screens */
+}
+
+/* === Strategy Panel (Top) === */
+
+#dash-strategy {
+    height: auto;          /* Shrink to content */
+    min-height: 4;         /* Minimum 4 lines (header + 3 rows) */
+    max-height: 8;         /* Cap at 8 lines to leave room for logs */
+    border-bottom: solid $border-subtle;
+}
+
+.strategy-panel {
+    layout: vertical;
+    background: $bg-secondary;
+    border-left: thick $accent;  /* Visual emphasis */
+}
+
+.strategy-panel .header {
+    background: $accent;
+    color: $bg-primary;
+    text-style: bold;
+}
+
+/* === Logs Panel (Primary View) === */
+
+#dash-logs {
+    width: 100%;
+    height: 1fr;  /* Fill remaining space - primary view */
+    min-height: 10;
+}
+
+.logs-panel {
+    layout: vertical;
+    background: $bg-secondary;
+}
+
+/* ========================================================================== */
+/* LEGACY T-LAYOUT SUPPORT (for backward compatibility)                       */
+/* These styles support the old layout if needed                              */
+/* ========================================================================== */
+
+#content-row {
+    layout: horizontal;
+    height: 3fr;
+    min-height: 12;
+    border-bottom: solid $border-subtle;
+}
+
+#market-strategy-column {
+    width: 35%;
+    height: 100%;
+    layout: vertical;
+    border-right: solid $border-subtle;
+}
+
+#dash-market {
+    height: 1fr;
+}
+
+#portfolio-column {
+    width: 65%;
+    height: 100%;
+    layout: vertical;
+}
+
+#dash-portfolio {
+    height: 1fr;
+    min-height: 12;
+}
+
+#logs-row {
+    layout: vertical;
+    height: 2fr;
+    min-height: 8;
+}
+
+/* ========================================================================== */
+/* RESPONSIVE LAYOUT ADJUSTMENTS                                              */
+/* ========================================================================== */
+
+/* Compact (0-119 cols): Wider left for more ticker visibility */
+.workspace--compact #market-strategy-column {
+    width: 40%;
+}
+
+.workspace--compact #portfolio-column {
+    width: 60%;
+}
+
+.workspace--compact #content-row {
+    height: 11fr;  /* Less vertical space for tables (~55%) */
+}
+
+.workspace--compact #logs-row {
+    height: 9fr;  /* More space for logs (critical for debugging, ~45%) */
+}
+
+/* Standard (120-139 cols): Balanced split */
+.workspace--standard #market-strategy-column {
+    width: 37%;
+}
+
+.workspace--standard #portfolio-column {
+    width: 63%;
+}
+
+.workspace--standard #content-row {
+    height: 29fr;  /* ~58% */
+}
+
+.workspace--standard #logs-row {
+    height: 21fr;  /* ~42% */
+}
+
+/* Comfortable (140-159 cols): Default balanced split */
+.workspace--comfortable #market-strategy-column {
+    width: 35%;
+}
+
+.workspace--comfortable #portfolio-column {
+    width: 65%;
+}
+
+.workspace--comfortable #content-row {
+    height: 3fr;  /* ~60% */
+}
+
+.workspace--comfortable #logs-row {
+    height: 2fr;  /* ~40% */
+}
+
+/* Wide (160+ cols): More space for portfolio tables */
+.workspace--wide #market-strategy-column {
+    width: 30%;
+}
+
+.workspace--wide #portfolio-column {
+    width: 70%;
+}
+
+.workspace--wide #content-row {
+    height: 31fr;  /* ~62% */
+}
+
+.workspace--wide #logs-row {
+    height: 19fr;  /* ~38% */
+}
+
+/* ========================================================================== */
+/* DASHBOARD ITEMS                                                            */
+/* ========================================================================== */
+
+.dashboard-item {
+    layout: vertical;
+    /* height controlled by specific ID selectors above */
+    border: none;                      /* REMOVED: full border */
+    border-top: solid $border-subtle;  /* Only top border for separation */
+    background: $bg-secondary;
+    padding: 0;  /* Remove padding to prevent header clipping */
+    margin: 0;   /* REMOVED: horizontal margin */
+}
+
+.dashboard-item-elevated {
+    background: $bg-elevated;
+}
+
+/* === Full-Width Logs Styling === */
+
+.full-width-logs {
+    /* Expanded log display with horizontal space */
+    /* Note: max_lines is configured in LogWidget Python code, not CSS */
+}
+
+.log-expand-hint {
+    color: $text-muted;
+    text-style: italic;
+    text-align: center;
+    padding: 0 $spacing-xs;
+}
+
+/* === Panel Style === */
+
+.panel {
+    background: $bg-secondary;
+    border: round $border-subtle;
+    padding: $spacing-md;
+    margin: $spacing-xs;
+}
+
+/* === Content Areas === */
+
+ContentSwitcher {
+    background: $bg-primary;
+    height: 1fr;
+}
+
+#dashboard-container, #market-container, #positions-container, #system-container {
+    padding: $spacing-xs;
+    height: 1fr;
+}

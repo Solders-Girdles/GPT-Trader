@@ -1,0 +1,46 @@
+/* ========================================================================== */
+/* FOCUS INDICATORS (Accessibility)                                           */
+/* ========================================================================== */
+
+/* Global focus indicator - bright accent border */
+*:focus {
+    border: thick $accent;
+    border-title-color: $accent;
+}
+
+/* DataTable focus - highlight selected row */
+DataTable:focus {
+    border: thick $accent;
+}
+
+DataTable > .datatable--cursor {
+    background: $overlay-focus;  /* Subtle highlight for cursor row */
+}
+
+DataTable:focus > .datatable--cursor {
+    background: rgba(212, 116, 79, 0.3);  /* Stronger highlight when focused */
+    color: $text-primary;
+}
+
+/* TabbedContent focus - highlight active tab */
+TabbedContent:focus Tab.-active {
+    border: solid $accent;
+    text-style: bold;
+}
+
+/* Input/Select focus - bright border */
+Input:focus, Select:focus {
+    border: thick $accent;
+}
+
+/* === Accessibility === */
+
+/* Focus indicators for keyboard navigation */
+*:focus {
+    border: solid $accent;
+    outline: solid $accent;
+}
+
+DataTable:focus {
+    border: solid $accent;
+}

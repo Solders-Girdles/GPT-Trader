@@ -7,6 +7,18 @@ from gpt_trader.tui.types import AccountBalance, AccountSummary, Order, Trade
 from gpt_trader.tui.widgets import AccountWidget, OrdersWidget, TradesWidget
 
 
+def create_mock_datatable():
+    """Create a properly configured mock DataTable with row-key support."""
+    mock_table = MagicMock(spec=DataTable)
+    # Mock rows as an empty dict-like object
+    mock_table.rows = MagicMock()
+    mock_table.rows.keys.return_value = set()  # No existing rows
+    mock_table.row_count = 0
+    mock_table.columns = MagicMock()
+    mock_table.columns.keys.return_value = []
+    return mock_table
+
+
 class TestAccountWidget:
     def test_update_account(self):
         widget = AccountWidget(compact_mode=False)
@@ -50,8 +62,16 @@ class TestAccountWidget:
 class TestOrdersWidget:
     def test_update_orders(self):
         widget = OrdersWidget()
-        mock_table = MagicMock()
-        widget.query_one = MagicMock(return_value=mock_table)
+        mock_table = create_mock_datatable()
+        mock_label = MagicMock()
+
+        # Mock query_one to return table for DataTable and label for others
+        def query_side_effect(selector, *args, **kwargs):
+            if "#orders-table" in str(selector) or selector == DataTable:
+                return mock_table
+            return mock_label
+
+        widget.query_one = MagicMock(side_effect=query_side_effect)
 
         orders = [
             Order(
@@ -67,26 +87,31 @@ class TestOrdersWidget:
 
         widget.update_orders(orders)
 
-        mock_table.clear.assert_called_once()
+        # With row-key optimization, add_row is called with key parameter
         mock_table.add_row.assert_called_once()
-        args, _ = mock_table.add_row.call_args
+        args, kwargs = mock_table.add_row.call_args
         assert args[0] == "BTC"
         assert "BUY" in str(args[1])
         # Quantity and price are formatted, check string representation
         assert "1" in str(args[2])
         assert "100" in str(args[3])
         assert args[4] == "OPEN"
+        assert kwargs.get("key") == "ord_1"
 
 
 class TestTradesWidget:
     def test_update_trades(self):
         widget = TradesWidget()
-        mock_table = MagicMock()
+        mock_table = create_mock_datatable()
         mock_label = MagicMock()
 
-        # Mock query_one to return table for DataTable and label for Label
-        def query_side_effect(selector, type=None):
-            if "#trades-table" in str(selector):
+        # Mock query_one to return table for DataTable and label for others
+        def query_side_effect(selector, *args, **kwargs):
+            if (
+                "DataTable" in str(selector)
+                or selector == DataTable
+                or "#trades-table" in str(selector)
+            ):
                 return mock_table
             return mock_label
 
@@ -112,11 +137,12 @@ class TestTradesWidget:
 
         widget.update_trades(trades)
 
-        mock_table.clear.assert_called_once()
+        # With row-key optimization, add_row is called with key parameter
         mock_table.add_row.assert_called_once()
-        args, _ = mock_table.add_row.call_args
+        args, kwargs = mock_table.add_row.call_args
         assert args[0] == "ETH"
         assert "SELL" in str(args[1])
         # Quantity and price are formatted, check string representation
         assert "2" in str(args[2])
         assert "2000" in str(args[3]) or "2,000" in str(args[3])
+        assert kwargs.get("key") == "trd_1"

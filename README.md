@@ -19,9 +19,14 @@ uv sync
 # Run (dev profile with mock broker)
 uv run coinbase-trader run --profile dev --dev-fast
 
+# Launch the TUI (mode selector; add --mode demo/paper/live to skip the prompt)
+uv run gpt-trader tui
+
 # Run tests
 uv run pytest tests/unit -q
 ```
+
+Use `uv run gpt-trader tui` instead of `python -m ...` to keep uv-locked dependencies and the CLI's env/logging initialization.
 
 ## Configuration
 

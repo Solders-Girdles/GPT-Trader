@@ -66,6 +66,13 @@ To run the spot trading bot for development, use the `coinbase-trader` command (
 uv run coinbase-trader run --profile dev --dev-fast
 ```
 
+Launch the TUI via the CLI entry point to keep uv-locked deps and env/logging setup consistent:
+
+```bash
+uv run gpt-trader tui               # Mode selector
+uv run gpt-trader tui --mode demo   # Skip selector for demos
+```
+
 ## Development Workflow
 
 Before branching, make sure to:

@@ -1,5 +1,9 @@
 """
 Main TUI Application for GPT-Trader.
+
+This is the primary entry point for the terminal user interface.
+The app coordinates between various services and managers to provide
+a complete trading experience.
 """
 
 from __future__ import annotations
@@ -10,15 +14,26 @@ from typing import TYPE_CHECKING, Any
 
 from textual import events
 from textual.app import App
+from textual.binding import Binding
 from textual.reactive import reactive
 
 from gpt_trader.monitoring.status_reporter import BotStatus
 from gpt_trader.tui.managers import BotLifecycleManager, UICoordinator
-from gpt_trader.tui.responsive import calculate_responsive_state
-from gpt_trader.tui.screens import FullLogsScreen, MainScreen, SystemDetailsScreen
+from gpt_trader.tui.responsive_state import ResponsiveState
+from gpt_trader.tui.screens import DetailsScreen, MainScreen, MarketScreen
+from gpt_trader.tui.services import (
+    ActionDispatcher,
+    AlertManager,
+    ConfigService,
+    ModeService,
+    ResponsiveManager,
+    StateRegistry,
+    ThemeService,
+)
+from gpt_trader.tui.services.mode_service import create_bot_for_mode
+from gpt_trader.tui.services.worker_service import WorkerService
 from gpt_trader.tui.state import TuiState
-from gpt_trader.tui.theme import ThemeMode, get_theme_manager
-from gpt_trader.tui.widgets import ConfigModal, LiveWarningModal, ModeInfoModal
+from gpt_trader.tui.widgets import LiveWarningModal, SlimStatusWidget
 from gpt_trader.tui.widgets.error_indicator import ErrorIndicatorWidget
 from gpt_trader.tui.widgets.status import BotStatusWidget
 from gpt_trader.utilities.logging_patterns import get_logger
@@ -29,52 +44,19 @@ if TYPE_CHECKING:
 logger = get_logger(__name__, component="tui")
 
 
-def _create_bot_for_mode(mode: str, demo_scenario: str = "mixed") -> Any:
-    """
-    Create a bot instance for the specified mode.
-
-    Args:
-        mode: One of "demo", "paper", "read_only", "live"
-        demo_scenario: Scenario to use for demo mode
-
-    Returns:
-        Bot instance (DemoBot or TradingBot)
-    """
-    if mode == "demo":
-        from gpt_trader.tui.demo.demo_bot import DemoBot
-        from gpt_trader.tui.demo.scenarios import get_scenario
-
-        scenario = get_scenario(demo_scenario)
-        return DemoBot(data_generator=scenario)
-    else:
-        from gpt_trader.cli.services import instantiate_bot, load_config_from_yaml
-        from gpt_trader.orchestration.configuration import BotConfig, Profile
-
-        if mode == "paper":
-            try:
-                config = load_config_from_yaml("config/profiles/paper.yaml")
-            except Exception:
-                config = BotConfig.from_profile(profile=Profile.DEMO, mock_broker=False)
-        elif mode == "read_only":
-            try:
-                config = load_config_from_yaml("config/profiles/observe.yaml")
-                config.read_only = True
-            except Exception:
-                config = BotConfig.from_profile(profile=Profile.DEMO, mock_broker=False)
-                config.read_only = True
-        elif mode == "live":
-            try:
-                config = load_config_from_yaml("config/profiles/prod.yaml")
-            except Exception:
-                config = BotConfig.from_profile(profile=Profile.PROD, mock_broker=False)
-        else:
-            raise ValueError(f"Unknown mode: {mode}")
-
-        return instantiate_bot(config)
-
-
 class TraderApp(App):
-    """GPT-Trader Terminal User Interface."""
+    """GPT-Trader Terminal User Interface.
+
+    The main application class that coordinates all TUI components.
+    Uses a service-oriented architecture to separate concerns:
+
+    - ThemeService: Theme management and persistence
+    - ConfigService: Configuration display
+    - ResponsiveManager: Terminal resize handling
+    - ModeService: Bot mode management
+    - BotLifecycleManager: Bot start/stop operations
+    - UICoordinator: UI update loop and state synchronization
+    """
 
     # Use absolute path resolving relative to this file
     from pathlib import Path
@@ -83,20 +65,29 @@ class TraderApp(App):
 
     # Responsive design properties
     terminal_width = reactive(120)
-    responsive_state = reactive("standard")
+    responsive_state = reactive(ResponsiveState.STANDARD)
 
     BINDINGS = [
         ("q", "quit", "Quit"),
         ("s", "toggle_bot", "Start/Stop Bot"),
         ("c", "show_config", "Config"),
         ("l", "focus_logs", "Focus Logs"),
-        ("m", "show_mode_info", "Mode Info"),
+        ("m", "show_market", "Market"),  # Changed from mode_info
+        ("d", "show_details", "Details"),  # New: Details overlay
+        ("i", "show_mode_info", "Mode Info"),  # Moved from 'm' to 'i'
         ("r", "reconnect_data", "Reconnect"),
         ("p", "panic", "PANIC"),
         ("t", "toggle_theme", "Toggle Theme"),
+        ("a", "show_alerts", "Alerts"),
+        ("f", "force_refresh", "Refresh"),
         ("1", "show_full_logs", "Full Logs"),
         ("2", "show_system_details", "System"),
         ("?", "show_help", "Help"),
+        # Log level shortcuts (hidden from footer, shown in help)
+        Binding("ctrl+1", "set_log_level('DEBUG')", "Log: DEBUG", show=False),
+        Binding("ctrl+2", "set_log_level('INFO')", "Log: INFO", show=False),
+        Binding("ctrl+3", "set_log_level('WARNING')", "Log: WARN", show=False),
+        Binding("ctrl+4", "set_log_level('ERROR')", "Log: ERROR", show=False),
     ]
 
     def __init__(
@@ -105,8 +96,7 @@ class TraderApp(App):
         initial_mode: str | None = None,
         demo_scenario: str = "mixed",
     ) -> None:
-        """
-        Initialize the TUI application.
+        """Initialize the TUI application.
 
         Args:
             bot: Optional bot instance (for backward compatibility with run command)
@@ -125,32 +115,40 @@ class TraderApp(App):
         # Initialize error tracker widget (singleton for whole app)
         self.error_tracker: ErrorIndicatorWidget = ErrorIndicatorWidget(max_errors=10)
 
-        # Initialize theme manager
-        self.theme_manager = get_theme_manager()
-        # Load saved preference if it exists
-        self._load_theme_preference()
+        # Initialize services
+        self.theme_service = ThemeService(self)
+        self.config_service = ConfigService(self)
+        self.responsive_manager = ResponsiveManager(self)
+        self.mode_service = ModeService(self, demo_scenario=demo_scenario)
+        self.action_dispatcher = ActionDispatcher(self)
+        self.alert_manager = AlertManager(self)
+        self.state_registry = StateRegistry()
+
+        # Load saved theme preference
+        self.theme_service.load_preference()
 
         # Create managers (only after bot is set)
         self.lifecycle_manager: BotLifecycleManager | None = None
         self.ui_coordinator: UICoordinator | None = None
+        self.worker_service: WorkerService | None = None
 
         # Register signal handlers for graceful shutdown
         signal.signal(signal.SIGINT, self._handle_signal)
         signal.signal(signal.SIGTERM, self._handle_signal)
 
     def _detect_bot_mode(self) -> str:
-        """
-        Detect current bot operating mode.
+        """Detect current bot operating mode.
 
-        Delegates to BotLifecycleManager.
+        Delegates to ModeService or BotLifecycleManager.
         """
+        if self.bot:
+            return self.mode_service.detect_bot_mode(self.bot)
         if self.lifecycle_manager:
             return self.lifecycle_manager.detect_bot_mode()
         return "demo"  # Default fallback
 
     async def _switch_to_mode(self, target_mode: str) -> bool:
-        """
-        Switch to a new bot mode safely.
+        """Switch to a new bot mode safely.
 
         Delegates to BotLifecycleManager.
         """
@@ -171,17 +169,34 @@ class TraderApp(App):
         try:
             logger.info("TUI mounting, initializing components")
 
-            # Mode selection flow: if no bot provided, show selection screen
-            if self.bot is None:
-                from gpt_trader.tui.screens.mode_selection import ModeSelectionScreen
+            # If bot provided directly (e.g., from CLI with --mode), use it
+            if self.bot is not None:
+                await self._initialize_with_bot()
+                return
 
-                logger.info("No bot provided, showing mode selection screen")
-                # Push the selection screen and handle selection via callback
-                self.push_screen(ModeSelectionScreen(), callback=self._handle_mode_selection)
-                return  # Early return - rest happens in callback
+            # Check for saved mode preference (remember last mode)
+            saved_mode = self.mode_service.load_mode_preference()
+            if saved_mode:
+                logger.info(f"Found saved mode preference: {saved_mode}")
 
-            # Direct bot provided - proceed to main screen
-            await self._initialize_with_bot()
+                # Validate credentials for saved non-demo modes
+                if saved_mode != "demo":
+                    # Use callback-based validation flow
+                    self._show_validation_screen(
+                        saved_mode,
+                        lambda ok: self._continue_saved_mode_flow(saved_mode, ok),
+                    )
+                    return
+
+                # Demo mode - proceed directly
+                await self._finish_saved_mode_setup(saved_mode)
+                return
+
+            # No saved mode - show mode selection screen (first launch)
+            from gpt_trader.tui.screens.mode_selection import ModeSelectionScreen
+
+            logger.info("No saved mode, showing mode selection screen")
+            self.push_screen(ModeSelectionScreen(), callback=self._handle_mode_selection)
 
         except Exception as e:
             logger.critical(f"Failed to mount TUI: {e}", exc_info=True)
@@ -195,27 +210,28 @@ class TraderApp(App):
             self.exit()
             return
 
-        # Show live warning before creating bot
-        if selected_mode == "live":
-            should_continue = await self._show_live_mode_warning()
-            if not should_continue:
-                logger.info("User declined to continue in live mode")
-                self.exit()
-                return
+        # Validate credentials for non-demo modes
+        if selected_mode != "demo":
+            # Use callback-based validation flow (can't use await with push_screen_wait here)
+            self._show_validation_screen(
+                selected_mode,
+                lambda ok: self._continue_mode_selection_flow(selected_mode, ok),
+            )
+            return
 
-        # Create bot for selected mode
-        logger.info(f"Creating bot for selected mode: {selected_mode}")
-        self.bot = _create_bot_for_mode(selected_mode, self._demo_scenario)
-
-        # Initialize with the newly created bot
-        await self._initialize_with_bot()
+        # Demo mode - proceed directly without validation
+        await self._finish_mode_selection_setup(selected_mode)
 
     async def _initialize_with_bot(self) -> None:
         """Initialize the TUI with a bot instance."""
+        # Create WorkerService for off-UI-loop bot execution
+        self.worker_service = WorkerService(self)
+
         # Create managers now that bot is available
-        self.lifecycle_manager = BotLifecycleManager(self)
+        # Pass worker_service to ensure bot runs off the UI event loop
+        self.lifecycle_manager = BotLifecycleManager(self, worker_service=self.worker_service)
         self.ui_coordinator = UICoordinator(self)
-        logger.info("Created BotLifecycleManager and UICoordinator")
+        logger.info("Created WorkerService, BotLifecycleManager and UICoordinator")
 
         # Detect and set bot mode
         self.data_source_mode = self._detect_bot_mode()
@@ -260,57 +276,179 @@ class TraderApp(App):
         # Initial UI sync will happen in MainScreen.on_mount() after widgets are ready
         logger.info("TUI mounted successfully")
 
-        # Initialize responsive state based on current terminal width
+        # Initialize responsive state using ResponsiveManager
+        self.responsive_state = self.responsive_manager.initialize(self.size.width)
         self.terminal_width = self.size.width
-        self.responsive_state = calculate_responsive_state(self.size.width)
-        logger.info(
-            f"Initial responsive state: {self.responsive_state} (width: {self.terminal_width})"
+
+    def _show_validation_screen(
+        self,
+        mode: str,
+        on_complete: callable,
+    ) -> None:
+        """Show credential validation screen with callback.
+
+        This method runs validation in a worker and shows results in a modal.
+
+        Args:
+            mode: The trading mode to validate for.
+            on_complete: Callback with signature (should_proceed: bool) -> None
+        """
+        from gpt_trader.tui.screens.api_setup_wizard import APISetupWizardScreen
+        from gpt_trader.tui.screens.credential_validation_screen import (
+            CredentialValidationScreen,
         )
+        from gpt_trader.tui.services.credential_validator import CredentialValidator
+
+        async def do_validation() -> None:
+            logger.info(f"Validating credentials for mode: {mode}")
+            validator = CredentialValidator(self)
+            result = await validator.validate_for_mode(mode)
+
+            # Show validation screen and get result via callback
+            def handle_validation_result(should_proceed: bool | str | None) -> None:
+                if should_proceed == "setup":
+                    # User wants to launch the API key setup wizard
+                    logger.info("User requested API key setup wizard")
+                    self.push_screen(
+                        APISetupWizardScreen(),
+                        callback=lambda wizard_result: self._handle_wizard_result(
+                            mode, wizard_result, on_complete
+                        ),
+                    )
+                elif should_proceed:
+                    logger.info(f"Credential validation passed for {mode} mode")
+                    on_complete(True)
+                else:
+                    logger.info(f"User cancelled credential validation for {mode} mode")
+                    on_complete(False)
+
+            self.push_screen(
+                CredentialValidationScreen(result),
+                callback=handle_validation_result,
+            )
+
+        self.run_worker(do_validation(), exclusive=True)
+
+    def _handle_wizard_result(
+        self,
+        mode: str,
+        wizard_result: str | None,
+        on_complete: callable,
+    ) -> None:
+        """Handle result from the API setup wizard.
+
+        Args:
+            mode: The trading mode being validated.
+            wizard_result: Result from wizard ("verify" or None if cancelled).
+            on_complete: Original callback to invoke after validation.
+        """
+        if wizard_result == "verify":
+            # User completed wizard - re-run validation
+            logger.info(f"Re-validating credentials for {mode} after wizard completion")
+            self._show_validation_screen(mode, on_complete)
+        else:
+            # User cancelled wizard - return to mode selection
+            logger.info("User cancelled setup wizard")
+            on_complete(False)
+
+    def _continue_saved_mode_flow(self, mode: str, validation_ok: bool) -> None:
+        """Continue saved mode flow after credential validation.
+
+        Args:
+            mode: The saved mode being restored.
+            validation_ok: Whether validation passed and user wants to proceed.
+        """
+        if validation_ok:
+            # Validation passed - proceed with saved mode setup
+            asyncio.create_task(self._finish_saved_mode_setup(mode))
+        else:
+            # Validation failed or user cancelled - show mode selection
+            from gpt_trader.tui.screens.mode_selection import ModeSelectionScreen
+
+            logger.info("Saved mode validation failed, showing mode selection")
+            self.push_screen(ModeSelectionScreen(), callback=self._handle_mode_selection)
+
+    async def _finish_saved_mode_setup(self, mode: str) -> None:
+        """Finish setting up a saved mode after validation.
+
+        Args:
+            mode: The validated mode to initialize.
+        """
+        # Show live warning if needed
+        if mode == "live":
+            should_continue = await self.mode_service.show_live_warning()
+            if not should_continue:
+                from gpt_trader.tui.screens.mode_selection import ModeSelectionScreen
+
+                logger.info("User declined live mode, showing mode selection")
+                self.push_screen(ModeSelectionScreen(), callback=self._handle_mode_selection)
+                return
+
+        # Create bot for saved mode
+        logger.info(f"Creating bot for saved mode: {mode}")
+        self.bot = create_bot_for_mode(mode, self._demo_scenario)
+
+        # Initialize with the bot
+        await self._initialize_with_bot()
+
+    def _continue_mode_selection_flow(self, selected_mode: str, validation_ok: bool) -> None:
+        """Continue mode selection flow after credential validation.
+
+        Args:
+            selected_mode: The mode selected by user.
+            validation_ok: Whether validation passed and user wants to proceed.
+        """
+        if validation_ok:
+            # Validation passed - proceed with mode setup
+            asyncio.create_task(self._finish_mode_selection_setup(selected_mode))
+        else:
+            # Validation failed or user cancelled - return to mode selection
+            from gpt_trader.tui.screens.mode_selection import ModeSelectionScreen
+
+            logger.info("Validation failed, returning to mode selection")
+            self.push_screen(ModeSelectionScreen(), callback=self._handle_mode_selection)
+
+    async def _finish_mode_selection_setup(self, selected_mode: str) -> None:
+        """Finish mode selection setup after validation.
+
+        Args:
+            selected_mode: The validated mode to initialize.
+        """
+        # Show live warning before creating bot
+        if selected_mode == "live":
+            should_continue = await self.mode_service.show_live_warning()
+            if not should_continue:
+                logger.info("User declined to continue in live mode")
+                self.exit()
+                return
+
+        # Save mode preference for future launches
+        self.mode_service.save_mode_preference(selected_mode)
+
+        # Create bot for selected mode using ModeService
+        logger.info(f"Creating bot for selected mode: {selected_mode}")
+        self.bot = create_bot_for_mode(selected_mode, self._demo_scenario)
+
+        # Initialize with the newly created bot
+        await self._initialize_with_bot()
 
     def on_resize(self, event: events.Resize) -> None:
         """Handle terminal resize events with throttling.
 
-        Updates responsive state when terminal width changes, with 100ms
-        debouncing to avoid excessive repaints during rapid resizing.
+        Delegates to ResponsiveManager for debounced handling.
         """
-        # Stop any pending resize timer
-        if hasattr(self, "_resize_timer") and self._resize_timer:
-            self._resize_timer.stop()
+        self.responsive_manager.handle_resize(event.size.width)
 
-        # Schedule debounced update (100ms delay)
-        self._resize_timer = self.set_timer(
-            0.1, lambda: self._update_responsive_state(event.size.width)
-        )
-
-    def _update_responsive_state(self, width: int) -> None:
-        """Update responsive state based on new width.
-
-        Args:
-            width: New terminal width in columns
-        """
-        old_state = self.responsive_state
-        new_state = calculate_responsive_state(width)
-
-        self.terminal_width = width
-
-        if new_state != old_state:
-            logger.info(f"Responsive state changed: {old_state} → {new_state} (width: {width})")
-            self.responsive_state = new_state
-
-    def watch_responsive_state(self, state: str) -> None:
+    def watch_responsive_state(self, state: ResponsiveState) -> None:
         """Propagate responsive state changes to child widgets.
 
         Args:
-            state: New responsive state
+            state: ResponsiveState enum value
         """
-        # Propagate to MainScreen if it exists
-        try:
-            main_screen = self.screen
-            if hasattr(main_screen, "responsive_state"):
-                main_screen.responsive_state = state
-        except Exception:
-            # Screen might not be mounted yet
-            pass
+        # Update ResponsiveManager's tracked state
+        self.responsive_manager.current_state = state
+        # Propagate to screen
+        self.responsive_manager.propagate_to_screen()
 
     async def on_unmount(self) -> None:
         """Called when app stops - ensure all cleanup happens."""
@@ -323,6 +461,9 @@ class TraderApp(App):
             detach_tui_log_handler()
             logger.info("TUI log handler detached")
 
+            # Cleanup responsive manager
+            self.responsive_manager.cleanup()
+
             # Cleanup managers (they handle their own task cancellation)
             if self.ui_coordinator:
                 await self.ui_coordinator.stop_update_loop()
@@ -331,6 +472,10 @@ class TraderApp(App):
             if self.lifecycle_manager:
                 self.lifecycle_manager.cleanup()
                 logger.info("BotLifecycleManager cleaned up")
+
+            if self.worker_service:
+                self.worker_service.cleanup()
+                logger.info("WorkerService cleaned up")
 
             # Stop bot if running
             if self.bot and self.bot.running:
@@ -347,8 +492,7 @@ class TraderApp(App):
             logger.error(f"Error during TUI unmount: {e}", exc_info=True)
 
     def _on_status_update(self, status: BotStatus) -> None:
-        """
-        Callback for StatusReporter updates (receives typed BotStatus).
+        """Callback for StatusReporter updates (receives typed BotStatus).
 
         Delegates to UICoordinator via call_from_thread for thread safety.
         """
@@ -362,13 +506,10 @@ class TraderApp(App):
         # This is where we could set up direct bindings if widgets supported it
         # For now, we'll just rely on the update loop pushing data to state,
         # and then we can push state to widgets or have widgets watch state.
-        # To keep it simple for this refactor, we will manually update widgets
-        # from state in _update_ui, but the source of truth is now self.tui_state
         pass
 
     def _sync_state_from_bot(self) -> None:
-        """
-        Manually sync state from bot (delegates to UICoordinator when available).
+        """Manually sync state from bot (delegates to UICoordinator when available).
 
         Called by BotLifecycleManager on bot start/stop/mode-switch.
         Falls back to direct state update when ui_coordinator is None (e.g., in tests).
@@ -396,8 +537,6 @@ class TraderApp(App):
         import time
 
         try:
-            from gpt_trader.tui.widgets.status import BotStatusWidget
-
             status_widget = self.query_one(BotStatusWidget)
 
             # Calculate sine wave: 0.0 to 1.0
@@ -408,213 +547,101 @@ class TraderApp(App):
         except Exception as e:
             logger.debug(f"Failed to pulse heartbeat: {e}")
 
-    def _load_theme_preference(self) -> None:
-        """Load theme preference from config file."""
-        try:
-            import json
-            from pathlib import Path
-
-            config_file = Path("config/tui_preferences.json")
-            if config_file.exists():
-                with open(config_file) as f:
-                    prefs = json.load(f)
-                    mode = prefs.get("theme", "dark")
-                    self.theme_manager.set_theme(ThemeMode(mode))
-                    logger.info(f"Loaded theme preference: {mode}")
-        except Exception as e:
-            logger.debug(f"Could not load theme preference: {e}")
-
-    def _save_theme_preference(self, mode: ThemeMode) -> None:
-        """Save theme preference to config file."""
-        try:
-            import json
-            from pathlib import Path
-
-            config_file = Path("config/tui_preferences.json")
-            config_file.parent.mkdir(exist_ok=True)
-
-            prefs = {}
-            if config_file.exists():
-                with open(config_file) as f:
-                    prefs = json.load(f)
-
-            prefs["theme"] = mode.value
-
-            with open(config_file, "w") as f:
-                json.dump(prefs, f, indent=2)
-
-            logger.info(f"Saved theme preference: {mode}")
-        except Exception as e:
-            logger.warning(f"Could not save theme preference: {e}")
+    # =========================================================================
+    # Action Handlers (delegated to ActionDispatcher)
+    # =========================================================================
 
     async def action_toggle_bot(self) -> None:
-        """
-        Toggle bot running state.
-
-        Delegates to BotLifecycleManager.
-        """
-        if self.lifecycle_manager:
-            await self.lifecycle_manager.toggle_bot()
+        """Toggle bot running state."""
+        await self.action_dispatcher.toggle_bot()
 
     async def action_show_config(self) -> None:
         """Show configuration modal."""
-        try:
-            self.push_screen(ConfigModal(self.bot.config))
-            logger.debug("Config modal opened")
-        except Exception as e:
-            logger.error(f"Failed to show config modal: {e}", exc_info=True)
-            self.notify(f"Error showing config: {e}", severity="error")
+        await self.action_dispatcher.show_config()
 
     async def action_focus_logs(self) -> None:
         """Focus the log widget."""
-        try:
-            # Determine which screen we're on and query appropriate widget
-            if isinstance(self.screen, MainScreen):
-                log_widget = self.query_one("#dash-logs")
-            elif isinstance(self.screen, FullLogsScreen):
-                log_widget = self.query_one("#full-logs")
-            else:
-                # Other screens may not have log widgets
-                self.notify("No log widget on this screen", severity="information")
-                return
+        await self.action_dispatcher.focus_logs()
 
-            log_widget.focus()
-        except Exception as e:
-            logger.warning(f"Failed to focus log widget: {e}")
-            self.notify("Could not focus logs widget", severity="warning")
+    def action_set_log_level(self, level: str) -> None:
+        """Set log level via keyboard shortcut.
+
+        Args:
+            level: Log level name (DEBUG, INFO, WARNING, ERROR)
+        """
+        from gpt_trader.tui.widgets.logs import LogWidget
+
+        level_map = {"DEBUG": 10, "INFO": 20, "WARNING": 30, "ERROR": 40}
+        try:
+            log_widget = self.query_one("#dash-logs", LogWidget)
+            log_widget.set_level(level_map.get(level, 20))
+            self.notify(f"Log level: {level}", timeout=2)
+        except Exception:
+            pass
 
     async def action_show_full_logs(self) -> None:
-        """Show full logs screen (expanded view)."""
-        try:
-            logger.debug("Opening full logs screen")
-            self.push_screen(FullLogsScreen())
-        except Exception as e:
-            logger.error(f"Failed to show full logs screen: {e}", exc_info=True)
-            self.notify(f"Error showing full logs: {e}", severity="error")
+        """Show full logs screen."""
+        await self.action_dispatcher.show_full_logs()
 
     async def action_show_system_details(self) -> None:
-        """Show detailed system metrics screen."""
-        try:
-            logger.debug("Opening system details screen")
-            self.push_screen(SystemDetailsScreen())
-        except Exception as e:
-            logger.error(f"Failed to show system details screen: {e}", exc_info=True)
-            self.notify(f"Error showing system details: {e}", severity="error")
+        """Show system details screen."""
+        await self.action_dispatcher.show_system_details()
 
     async def action_show_mode_info(self) -> None:
-        """Show detailed mode information modal."""
-        try:
-            logger.debug(f"Opening mode info modal for mode: {self.data_source_mode}")
-            self.push_screen(ModeInfoModal(self.data_source_mode))
-        except Exception as e:
-            logger.error(f"Failed to show mode info modal: {e}", exc_info=True)
-            self.notify(f"Error showing mode info: {e}", severity="error")
+        """Show mode information modal."""
+        await self.action_dispatcher.show_mode_info()
+
+    async def action_show_market(self) -> None:
+        """Show market overlay screen."""
+        self.push_screen(MarketScreen())
+
+    async def action_show_details(self) -> None:
+        """Show details overlay screen."""
+        self.push_screen(DetailsScreen())
 
     async def action_show_help(self) -> None:
-        """Show comprehensive keyboard shortcut help screen."""
-        try:
-            from gpt_trader.tui.screens.help import HelpScreen
-
-            logger.debug("Opening help screen")
-            self.push_screen(HelpScreen())
-        except Exception as e:
-            logger.error(f"Failed to show help screen: {e}", exc_info=True)
-            self.notify(f"Error showing help: {e}", severity="error")
+        """Show help screen."""
+        await self.action_dispatcher.show_help()
 
     async def action_reconnect_data(self) -> None:
-        """Attempt to reconnect data source."""
-        try:
-            if self.data_source_mode == "demo":
-                self.notify("Demo mode doesn't require reconnection", severity="information")
-                return
-
-            logger.info("User initiated data source reconnection")
-            self.notify("Reconnecting to Coinbase...", title="Connection")
-
-            # Trigger a status sync (delegated to UICoordinator)
-            if self.ui_coordinator:
-                self.ui_coordinator.sync_state_from_bot()
-            await asyncio.sleep(0.5)
-
-            # Check connection health
-            is_healthy = self.tui_state.check_connection_health()
-            if is_healthy:
-                self.notify("Reconnected successfully", title="Connection", severity="information")
-            else:
-                self.notify(
-                    "Connection may still be stale, please wait...",
-                    title="Connection",
-                    severity="warning",
-                )
-        except Exception as e:
-            logger.error(f"Failed to reconnect: {e}", exc_info=True)
-            self.notify(f"Error reconnecting: {e}", severity="error")
+        """Reconnect data source."""
+        await self.action_dispatcher.reconnect_data()
 
     async def action_panic(self) -> None:
-        """
-        Show panic confirmation modal for emergency stop.
-
-        Opens PanicModal which requires typing 'FLATTEN' to confirm.
-        On confirmation, stops bot and closes all positions immediately.
-        """
-        from gpt_trader.tui.widgets.panic import PanicModal
-
-        def handle_panic_confirm(confirmed: bool) -> None:
-            """Handle panic modal result."""
-            if confirmed:
-                logger.warning("User triggered PANIC - emergency stop initiated")
-                self.notify(
-                    "PANIC INITIATED - Stopping bot and flattening all positions",
-                    title="Emergency Stop",
-                    severity="error",
-                    timeout=30,
-                )
-                # Delegate to lifecycle manager for safe shutdown
-                try:
-                    if self.lifecycle_manager:
-                        self.lifecycle_manager.panic_stop()
-                except Exception as e:
-                    logger.error(f"Panic stop failed: {e}", exc_info=True)
-                    self.notify(
-                        f"PANIC STOP FAILED: {e}",
-                        title="Critical Error",
-                        severity="error",
-                        timeout=60,
-                    )
-            else:
-                logger.info("Panic cancelled by user")
-                self.notify("Panic cancelled", severity="information")
-
-        self.push_screen(PanicModal(), handle_panic_confirm)
+        """Show panic confirmation modal."""
+        await self.action_dispatcher.panic()
 
     async def action_toggle_theme(self) -> None:
-        """Toggle between dark and light themes."""
-        try:
-            # Toggle theme
-            new_theme = self.theme_manager.toggle_theme()
+        """Toggle theme."""
+        await self.action_dispatcher.toggle_theme()
 
-            # Notify user
-            mode_name = "Light" if new_theme.mode == ThemeMode.LIGHT else "Dark"
-            self.notify(
-                f"Switched to {mode_name} theme (restart to apply)",
-                severity="information",
-                title="Theme",
-            )
+    async def action_show_alerts(self) -> None:
+        """Show alert history screen."""
+        await self.action_dispatcher.show_alert_history()
 
-            # Save preference
-            self._save_theme_preference(new_theme.mode)
+    async def action_force_refresh(self) -> None:
+        """Force refresh bot state and UI."""
+        await self.action_dispatcher.force_refresh()
 
-            logger.info(f"Theme preference saved: {new_theme.mode}")
-
-        except Exception as e:
-            logger.error(f"Failed to toggle theme: {e}", exc_info=True)
-            self.notify(f"Theme switch failed: {e}", severity="error")
+    # =========================================================================
+    # Event Handlers
+    # =========================================================================
 
     def on_bot_status_widget_toggle_bot_pressed(
         self, message: BotStatusWidget.ToggleBotPressed
     ) -> None:
         """Handle start/stop button press from BotStatusWidget."""
         asyncio.create_task(self.action_toggle_bot())
+
+    def on_slim_status_widget_toggle_bot_pressed(
+        self, message: SlimStatusWidget.ToggleBotPressed
+    ) -> None:
+        """Handle start/stop button press from SlimStatusWidget."""
+        asyncio.create_task(self.action_toggle_bot())
+
+    def on_slim_status_widget_mode_changed(self, message: SlimStatusWidget.ModeChanged) -> None:
+        """Handle mode change request from SlimStatusWidget."""
+        asyncio.create_task(self._switch_to_mode(message.mode))
 
     def on_mode_selector_mode_changed(self, message: Any) -> None:
         """Handle mode change request from ModeSelector."""
@@ -625,22 +652,4 @@ class TraderApp(App):
 
     async def action_quit(self) -> None:
         """Quit the application."""
-        try:
-            logger.info("User initiated TUI shutdown")
-            if self.bot and self.bot.running:
-                logger.info("Stopping bot before TUI exit")
-
-                # Stop bot via lifecycle manager
-                if self.lifecycle_manager:
-                    await self.lifecycle_manager.stop_bot()
-                else:
-                    # Fallback if manager doesn't exist
-                    await self.bot.stop()
-
-                logger.info("Bot stopped successfully")
-
-            self.exit()
-        except Exception as e:
-            logger.error(f"Error during TUI shutdown: {e}", exc_info=True)
-            # Force exit even if cleanup fails
-            self.exit()
+        await self.action_dispatcher.quit_app()

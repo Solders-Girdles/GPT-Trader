@@ -1,0 +1,105 @@
+/* ========================================================================== */
+/* UTILITY CLASSES                                                            */
+/* ========================================================================== */
+
+/* === Typography Utilities === */
+
+.text-success { color: $success; }
+.text-error { color: $error; }
+.text-warning { color: $warning; }
+.text-info { color: $info; }
+.text-muted { color: $text-muted; }
+
+.bold { text-style: bold; }
+
+/* Numeric alignment for DataTable cells */
+.text-numeric {
+    text-align: right;
+}
+
+/* === Empty States === */
+
+.empty-state {
+    height: 1;              /* Single line */
+    border: none;           /* No dashed border */
+    background: transparent;
+    padding: 0 2;
+    margin: 0;
+    color: $text-muted;
+    text-style: italic;
+    text-align: center;
+    display: none;  /* Hidden by default */
+}
+
+/* === P&L Color Coding === */
+
+.pnl-positive {
+    color: $success;
+}
+
+.pnl-negative {
+    color: $error;
+}
+
+.pnl-neutral {
+    color: $text-secondary;
+}
+
+/* === Status Labels & Values === */
+
+.status-label {
+    color: $text-secondary;
+    text-style: bold;
+    margin-right: $spacing-xs;
+}
+
+.status-value {
+    color: $text-primary;
+    text-style: bold;
+    margin-right: $spacing-md;
+    background: $bg-elevated;
+    padding: 0 $spacing-sm;
+}
+
+.status-running {
+    color: $success;
+    background: rgba(122, 168, 116, 0.2);
+    padding: 0 $spacing-md;
+    border: solid $success;
+}
+
+.status-stopped {
+    color: $error;
+    background: rgba(212, 115, 110, 0.2);
+    padding: 0 $spacing-md;
+    border: solid $error;
+}
+
+/* === Connection Status Indicators === */
+
+.status-connected {
+    color: $success;
+}
+
+.status-disconnected {
+    color: $error;
+}
+
+.status-unknown {
+    color: $warning;
+}
+
+/* === Heartbeat Indicator === */
+
+.heartbeat-pulse {
+    margin-left: $spacing-xs;
+}
+
+.heartbeat-bright {
+    color: $success;
+    text-style: bold;
+}
+
+.heartbeat-dim {
+    color: $text-muted;
+}

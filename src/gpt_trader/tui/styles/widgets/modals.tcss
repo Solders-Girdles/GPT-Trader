@@ -1,0 +1,14 @@
+/* ========================================================================== */
+/* MODALS AND DIALOGS                                                         */
+/* ========================================================================== */
+
+/* Modal containers use standard panel styling from layout/workspace.tcss */
+/* Additional modal-specific overrides can be added here as needed */
+
+/* === Config Modal === */
+
+/* Config modal uses standard panel styles with accent border */
+
+/* === Confirmation Dialogs === */
+
+/* Dialog buttons are styled via components/buttons.tcss */

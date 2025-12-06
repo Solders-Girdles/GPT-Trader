@@ -1,0 +1,53 @@
+/* ========================================================================== */
+/* ACCOUNT WIDGET                                                             */
+/* ========================================================================== */
+
+AccountWidget {
+    layout: vertical;
+    padding: $spacing-xs;
+    /* height controlled by widget DEFAULT_CSS */
+}
+
+.account-metric {
+    background: $bg-elevated;
+    border: solid $border-subtle;
+    padding: $spacing-xs $spacing-md;
+    margin: $spacing-xs;
+    height: auto;
+}
+
+.account-metric-label {
+    color: $text-secondary;
+    text-style: bold;
+}
+
+.account-metric-value {
+    color: $text-primary;
+    text-style: bold;
+    text-align: right;
+}
+
+.portfolio-summary-row {
+    margin-bottom: $spacing-sm;
+}
+
+.portfolio-metric {
+    background: $bg-elevated;
+    border: solid $border-subtle;
+    padding: $spacing-xs $spacing-md;
+    margin: $spacing-xs;
+}
+
+.portfolio-metric-label {
+    color: $text-secondary;
+    text-style: bold;
+}
+
+.portfolio-metric-value {
+    color: $text-primary;
+    text-style: bold;
+}
+
+.account-metrics-row {
+    margin-bottom: $spacing-sm;
+}

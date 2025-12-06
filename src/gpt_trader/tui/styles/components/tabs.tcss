@@ -1,0 +1,21 @@
+/* ========================================================================== */
+/* TABS                                                                       */
+/* ========================================================================== */
+
+Tabs {
+    background: $bg-secondary;
+    color: $text-primary;
+    dock: top;
+    height: 3;
+}
+
+Tab {
+    padding: $spacing-xs $spacing-md;
+}
+
+Tab.-active {
+    background: $bg-elevated;
+    color: $accent;
+    text-style: bold;
+    border-bottom: solid $accent;
+}

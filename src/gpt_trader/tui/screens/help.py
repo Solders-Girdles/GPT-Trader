@@ -109,6 +109,17 @@ class HelpScreen(ModalScreen):
                 yield self._create_shortcut("J/K", "Navigate Portfolio tabs (when focused)")
                 yield self._create_shortcut("1/2/3", "Jump to Portfolio tab 1/2/3 (when focused)")
 
+                # Log Navigation (when log widget focused)
+                yield Label("Log Navigation (when focused)", classes="help-category")
+                yield self._create_shortcut("SPACE/P", "Pause/Resume log streaming")
+                yield self._create_shortcut("F", "Cycle format (compact/verbose/JSON)")
+                yield self._create_shortcut("J/K", "Scroll up/down one line")
+                yield self._create_shortcut("CTRL+D/U", "Scroll half page down/up")
+                yield self._create_shortcut("g/G", "Jump to top/bottom")
+                yield self._create_shortcut("n/N", "Jump to next/previous error")
+                yield self._create_shortcut("T", "Cycle timestamp format")
+                yield self._create_shortcut("S", "Toggle startup section")
+
                 # Configuration & Display
                 yield Label("Configuration & Display", classes="help-category")
                 yield self._create_shortcut("C", "Open configuration modal")

@@ -1,0 +1,61 @@
+/* ========================================================================== */
+/* LOGS WIDGET                                                                */
+/* ========================================================================== */
+
+/* === Log Container === */
+
+#dash-logs {
+    width: 100%;
+    height: 1fr;  /* Fill logs-row */
+}
+
+/* === Compact Log Header === */
+
+LogWidget .log-header {
+    background: $bg-elevated;
+    border-left: thick $accent;
+}
+
+LogWidget .log-title {
+    color: $text-primary;
+}
+
+LogWidget .log-sep {
+    color: $border-subtle;
+}
+
+/* === Inline Statistics === */
+
+LogWidget .stat-error { color: $error; }
+LogWidget .stat-warning { color: $warning; }
+LogWidget .stat-info { color: $success; }
+
+/* === RichLog Display === */
+
+LogWidget RichLog {
+    border: solid $border-subtle;
+    background: $bg-secondary;
+}
+
+/* === Log Component (legacy) === */
+
+Log {
+    background: $bg-secondary;
+    color: $text-primary;
+    border: solid $border-subtle;
+    padding: 0 $spacing-xs;
+}
+
+/* === Full-Width Logs Styling === */
+
+.full-width-logs {
+    /* Expanded log display with horizontal space */
+    /* Note: max_lines is configured in LogWidget Python code, not CSS */
+}
+
+.log-expand-hint {
+    color: $text-muted;
+    text-style: italic;
+    text-align: center;
+    padding: 0 $spacing-xs;
+}

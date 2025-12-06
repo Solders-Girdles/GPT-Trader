@@ -1,0 +1,57 @@
+/* ========================================================================== */
+/* DATATABLE                                                                  */
+/* ========================================================================== */
+
+DataTable {
+    background: $bg-primary;
+    color: $text-primary;
+    border: none;
+    padding: 0 1;                  /* REDUCED from $spacing-md - tighter padding */
+    /* height controlled by individual widgets via DEFAULT_CSS */
+}
+
+DataTable > .datatable--header {
+    background: $bg-elevated;
+    color: #FFFFFF;                /* Pure white for maximum contrast */
+    text-style: bold;              /* Bold headers for emphasis */
+    padding: $spacing-xs $content-padding;
+    border-bottom: $border-default;
+}
+
+/* Column separators for better readability */
+/* Note: Textual doesn't support :last-child, so all columns get separators */
+DataTable > .datatable--header-cell {
+    border-right: $border-default;
+}
+
+DataTable > .datatable--cell {
+    border-right: $border-default;
+    padding: 0 $content-padding;
+    overflow: hidden;
+    /* Note: Textual doesn't support text-overflow: ellipsis */
+}
+
+DataTable > .datatable--cursor {
+    background: $accent-muted;
+    color: $text-primary;
+    text-style: bold;
+}
+
+DataTable > .datatable--odd-row {
+    background: $bg-primary;
+}
+
+DataTable > .datatable--even-row {
+    background: rgba(58, 53, 48, 0.15);  /* 0.15 - more subtle zebra striping */
+}
+
+DataTable:focus > .datatable--cursor {
+    background: $accent;
+    color: $bg-primary;
+    text-style: bold;
+}
+
+/* Row hover effect */
+DataTable > .datatable--hover {
+    background: rgba(193, 95, 60, 0.15);  /* Subtle accent tint on hover */
+}

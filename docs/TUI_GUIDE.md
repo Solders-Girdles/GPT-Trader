@@ -4,16 +4,18 @@ The **Terminal User Interface (TUI)** is the primary monitoring and control inte
 
 ## Getting Started
 
-To launch the TUI, use the `--tui` flag when running the bot:
+Launch via the CLI entry point (preferred for env/logging setup):
 
 ```bash
-uv run coinbase-trader run --tui
+uv run gpt-trader tui                 # Mode selector
+uv run gpt-trader tui --mode demo     # Skip selection with a preset scenario
+uv run gpt-trader tui --mode live     # Uses config/profiles/prod.yaml
 ```
 
-You can also specify a profile:
+Need the trading loop wired to a specific profile? The `run` command remains supported:
 
 ```bash
-uv run coinbase-trader run --profile canary --tui
+uv run gpt-trader run --profile dev --tui
 ```
 
 ## Technical Requirements

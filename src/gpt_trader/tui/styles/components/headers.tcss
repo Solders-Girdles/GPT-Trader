@@ -1,0 +1,121 @@
+/* ========================================================================== */
+/* HEADERS & FOOTERS                                                          */
+/* ========================================================================== */
+
+Header {
+    dock: top;
+    height: 1;
+    background: $bg-secondary;
+    color: $text-primary;
+}
+
+/* Enhanced app header styling */
+Header.app-header {
+    height: 3;
+    background: $bg-elevated;
+    border-bottom: thick $accent;
+    color: $text-primary;
+    text-style: bold;
+    padding: 0 $spacing-md;
+}
+
+/* Compact sub-header for main screen */
+Header.sub-header {
+    dock: top;
+    height: 3;
+    background: $bg-elevated;
+    color: $text-primary;
+    border-bottom: solid $accent;
+    text-style: bold;
+}
+
+Header.sub-header HeaderIcon {
+    width: 5;
+    height: 3;
+    content-align: center middle;
+    color: $accent;
+    background: transparent;
+}
+
+Header.sub-header HeaderTitle {
+    height: 3;
+    color: $text-primary;
+    text-style: bold;
+    content-align: center middle;
+    width: 1fr;
+}
+
+Header.sub-header HeaderClock {
+    dock: right;
+    height: 3;
+    width: 14;
+    min-width: 14;
+    background: $bg-secondary;
+    color: $text-primary;
+    border-left: solid $accent;
+    padding: 0 2;
+    text-style: bold;
+    content-align: center middle;
+}
+
+Header.app-header HeaderIcon {
+    width: 9;
+    height: 3;
+    padding: 0 $spacing-md;
+    content-align: center middle;
+    color: $bg-primary;
+    background: $accent;
+    border: none;
+    text-style: bold;
+}
+
+Header.app-header HeaderIcon:hover {
+    background: $accent-hover;
+    color: $bg-primary;
+}
+
+Header.app-header HeaderTitle {
+    height: 3;
+    color: $text-primary;
+    text-style: bold;
+    content-align: center middle;
+    width: 1fr;
+}
+
+Header.app-header HeaderClock {
+    height: 3;
+    min-width: 12;
+    background: $bg-secondary;
+    color: $text-primary;
+    border-left: thick $accent;
+    padding: 0 $spacing-md;
+    text-style: bold;
+    content-align: center middle;
+}
+
+
+Footer {
+    dock: bottom;
+    height: 1;
+    background: $bg-secondary;
+    color: $text-primary;
+}
+
+/* === Widget Headers === */
+
+.header {
+    color: #FFFFFF;                    /* Pure white for maximum contrast */
+    text-style: bold;                  /* Bold for emphasis and readability */
+    text-align: left;                  /* Left-aligned editorial style */
+    background: $bg-elevated;          /* Elevated surface for separation */
+    padding: 0 2;                      /* Compact horizontal padding */
+    border-left: thick $accent;        /* Accent left border for visual hierarchy */
+    border-bottom: none;               /* No bottom border */
+    height: 1;                         /* Single line */
+    content-align: left middle;        /* Vertically center the text */
+}
+
+.header-icon {
+    color: $accent;
+    margin-right: $spacing-xs;
+}

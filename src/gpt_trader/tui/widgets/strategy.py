@@ -60,21 +60,49 @@ class StrategyWidget(Static):
         table = self.query_one(DataTable)
         table.add_columns("Symbol", "Action", "Confidence", "Reason", "Time")
 
+        # Register with state registry for state updates
+        if hasattr(self.app, "state_registry"):
+            self.app.state_registry.register(self)
+
+    def on_unmount(self) -> None:
+        """Unregister from state registry on unmount."""
+        if hasattr(self.app, "state_registry"):
+            self.app.state_registry.unregister(self)
+
+    def on_state_updated(self, state: TuiState) -> None:
+        """Called by StateRegistry when state changes."""
+        self.state = state
+
     @safe_update
     def update_strategy(self, data: StrategyState) -> None:
         table = self.query_one(DataTable)
         empty_label = self.query_one("#strategy-empty", Label)
-        table.clear()
 
-        # Handle empty state
+        # Handle empty state with actionable hint
         if not data.last_decisions:
+            if table.row_count > 0:
+                table.clear()
             table.display = False
             empty_label.display = True
-            empty_label.update("🎯 No decisions • Waiting for strategy analysis")
+            empty_label.update("No decisions yet • Press [S] to start bot")
             return
         else:
             table.display = True
             empty_label.display = False
+
+        # Get current row keys for delta updates
+        existing_keys = set(table.rows.keys())
+        new_keys = set(data.last_decisions.keys())
+
+        # Remove symbols no longer in decisions
+        for key in existing_keys - new_keys:
+            try:
+                table.remove_row(key)
+            except Exception:
+                pass
+
+        # Get column keys for cell updates
+        columns = list(table.columns.keys()) if table.columns else []
 
         for symbol, decision in data.last_decisions.items():
             action = decision.action.upper()
@@ -96,4 +124,20 @@ class StrategyWidget(Static):
                 color = THEME.colors.warning
 
             formatted_action = f"[{color}]{action}[/{color}]"
-            table.add_row(symbol, formatted_action, confidence, reason, time_str)
+            row_data = (symbol, formatted_action, confidence, reason, time_str)
+
+            if symbol in existing_keys:
+                # Update existing row in-place
+                try:
+                    for col_idx, (col_key, value) in enumerate(zip(columns, row_data)):
+                        table.update_cell(symbol, col_key, value)
+                except Exception:
+                    # Fallback: remove and re-add if update fails
+                    try:
+                        table.remove_row(symbol)
+                    except Exception:
+                        pass
+                    table.add_row(*row_data, key=symbol)
+            else:
+                # Add new decision
+                table.add_row(*row_data, key=symbol)

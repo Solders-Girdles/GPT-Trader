@@ -4,6 +4,8 @@ This module provides utilities for handling different terminal widths,
 including breakpoint calculation and dynamic width sizing.
 """
 
+from gpt_trader.tui.responsive_state import ResponsiveState
+
 
 def calculate_modal_width(terminal_width: int, size: str = "medium") -> int:
     """Calculate modal width based on terminal size.
@@ -44,26 +46,26 @@ def calculate_modal_width(terminal_width: int, size: str = "medium") -> int:
     return max(c["min"], min(c["max"], calculated, max_allowed))
 
 
-def calculate_responsive_state(width: int) -> str:
+def calculate_responsive_state(width: int) -> ResponsiveState:
     """Calculate responsive state based on terminal width.
 
     Args:
         width: Terminal width in columns
 
     Returns:
-        Responsive state: "compact", "standard", "comfortable", or "wide"
+        ResponsiveState enum value
 
     Breakpoints:
-        - compact: 0-119 cols (minimum viable, hide non-essentials)
-        - standard: 120-139 cols (balanced, core metrics visible)
-        - comfortable: 140-159 cols (full experience, all metrics)
-        - wide: 160+ cols (luxurious, expanded labels)
+        - COMPACT: 0-119 cols (minimum viable, hide non-essentials)
+        - STANDARD: 120-139 cols (balanced, core metrics visible)
+        - COMFORTABLE: 140-159 cols (full experience, all metrics)
+        - WIDE: 160+ cols (luxurious, expanded labels)
     """
     if width < 120:
-        return "compact"
+        return ResponsiveState.COMPACT
     elif width < 140:
-        return "standard"
+        return ResponsiveState.STANDARD
     elif width < 160:
-        return "comfortable"
+        return ResponsiveState.COMFORTABLE
     else:
-        return "wide"
+        return ResponsiveState.WIDE

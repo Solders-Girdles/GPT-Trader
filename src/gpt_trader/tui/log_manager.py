@@ -3,25 +3,117 @@
 This module provides a singleton logging handler that distributes logs to all
 active LogWidgets in the TUI. The handler is attached once at app startup and
 shared by all LogWidget instances.
+
+Features:
+- Memory-limited log buffer using deque for automatic cleanup
+- Log history replay when new widgets register
+- Configurable buffer size and replay behavior
 """
 
 from __future__ import annotations
 
+import json
 import logging
+import re
+import threading
+import time
+from collections import deque
 from collections.abc import Callable
-from typing import TYPE_CHECKING
+from dataclasses import dataclass, field
+from typing import TYPE_CHECKING, Any
 
 from rich.text import Text
 
 from gpt_trader.tui.theme import THEME
 
 if TYPE_CHECKING:
-    from textual.widgets import Log
+    from textual.widgets import RichLog
+
+# Memory limits for log buffer
+MAX_LOG_ENTRIES = 1000  # Maximum log entries to keep in memory
+DEFAULT_REPLAY_COUNT = 100  # Default number of logs to replay to new widgets
 
 # Separate logger for TuiLogHandler errors (not attached to TuiLogHandler to avoid recursion)
 _error_logger = logging.getLogger("tui.log_handler.errors")
 _error_logger.propagate = False  # Prevent recursion through root logger's TUI handler
 _error_logger.addHandler(logging.NullHandler())  # Suppress "no handler" warnings
+
+
+# Logger category mappings for structured metadata
+LOGGER_CATEGORIES: dict[str, list[str]] = {
+    "startup": [
+        "app",
+        "tui",
+        "theme_service",
+        "mode_service",
+        "alert_manager",
+        "responsive_manager",
+    ],
+    "trading": ["bot_lifecycle", "trading", "order", "execution", "strategy", "factory"],
+    "risk": ["risk", "position", "portfolio"],
+    "market": ["market", "price", "websocket", "coinbase"],
+    "ui": ["main_screen", "ui_coordinator", "widgets"],
+    "system": ["health", "config", "alert", "notifications"],
+}
+
+# Level icons for compact display
+LEVEL_ICONS: dict[int, str] = {
+    logging.CRITICAL: "✗",
+    logging.ERROR: "✗",
+    logging.WARNING: "⚠",
+    logging.INFO: "✓",
+    logging.DEBUG: "·",
+}
+
+
+def detect_category(logger_name: str) -> str:
+    """Detect log category from logger name.
+
+    Args:
+        logger_name: Full logger name (e.g., 'gpt_trader.tui.managers.bot_lifecycle')
+
+    Returns:
+        Category string (e.g., 'trading', 'startup', 'system')
+    """
+    short_name = logger_name.rsplit(".", 1)[-1].lower()
+    for category, keywords in LOGGER_CATEGORIES.items():
+        if any(keyword in short_name for keyword in keywords):
+            return category
+    return "general"
+
+
+@dataclass
+class LogEntry:
+    """Cached log entry for replay to new widgets.
+
+    Extended with metadata for enhanced debugging and AI parsing:
+    - raw_message: Original unformatted message for search/export
+    - is_json: Whether message contains valid JSON
+    - json_data: Parsed JSON data if applicable
+    - is_multiline: Whether message spans multiple lines
+    - short_logger: Last component of logger name
+    - level_name: Level name string (ERROR, WARNING, INFO, DEBUG)
+    - category: Log category (startup, trading, risk, market, ui, system)
+    - correlation_id: Request correlation ID if available
+    - domain_fields: Symbol, order_id, etc. from context
+    """
+
+    level: int
+    logger_name: str
+    styled_message: Text
+    timestamp: float = field(default_factory=time.time)
+    raw_message: str = ""
+    is_json: bool = False
+    json_data: dict[str, Any] | None = None
+    is_multiline: bool = False
+    # AI-friendly structured fields
+    short_logger: str = ""
+    level_name: str = ""
+    category: str = ""
+    correlation_id: str | None = None
+    domain_fields: dict[str, Any] | None = None
+    # Compact formatted message (without timestamp/logger prefix)
+    compact_message: str = ""
 
 
 class ImprovedExceptionFormatter(logging.Formatter):
@@ -51,75 +143,358 @@ class ImprovedExceptionFormatter(logging.Formatter):
         return base_message
 
 
-class TuiLogHandler(logging.Handler):
-    """Single handler that distributes logs to all active LogWidgets."""
+class CompactTuiFormatter(logging.Formatter):
+    """Compact formatter for TUI with icons and short logger names.
 
-    def __init__(self) -> None:
+    Format: [short_logger] icon message
+
+    Example outputs:
+    - [bot_lifecycle] ✓ Mode switch completed
+    - [factory] ⚠ Failed to create strategy
+    - [tui] ✗ Widget initialization failed
+    """
+
+    def format(self, record: logging.LogRecord) -> str:
+        """Format log record in compact style with icon."""
+        icon = LEVEL_ICONS.get(record.levelno, "·")
+        short_name = record.name.rsplit(".", 1)[-1]
+        message = record.getMessage()
+
+        # Handle exceptions compactly
+        if record.exc_info:
+            exc_type = record.exc_info[0]
+            exc_value = record.exc_info[1]
+            if exc_type and exc_value:
+                message = f"{message} ({exc_type.__name__}: {exc_value})"
+
+        return f"[{short_name}] {icon} {message}"
+
+    def format_with_timestamp(self, record: logging.LogRecord) -> str:
+        """Format log record with timestamp prefix."""
+        timestamp = time.strftime("%H:%M:%S", time.localtime(record.created))
+        compact = self.format(record)
+        return f"{timestamp} {compact}"
+
+
+class TuiLogHandler(logging.Handler):
+    """Single handler that distributes logs to all active LogWidgets.
+
+    Features:
+    - Distributes logs to all registered RichLog widgets
+    - Memory-limited buffer for log history
+    - Replay recent logs when new widgets register
+    """
+
+    # Maximum logs to buffer while widget is paused
+    PAUSE_BUFFER_MAX = 500
+
+    def __init__(
+        self,
+        max_entries: int = MAX_LOG_ENTRIES,
+        replay_count: int = DEFAULT_REPLAY_COUNT,
+    ) -> None:
+        """Initialize the TUI log handler.
+
+        Args:
+            max_entries: Maximum log entries to keep in memory buffer.
+            replay_count: Number of recent logs to replay to new widgets.
+        """
         super().__init__()
-        self._widgets: dict[Log, int] = {}  # widget -> min_level mapping
-        self._callbacks: dict[Log, Callable[[int], None]] = {}  # widget -> callback mapping
-        self._logger_filters: dict[Log, str] = {}  # widget -> logger_filter mapping
-        # Use improved formatter for better exception display
-        formatter = ImprovedExceptionFormatter(
+        self._widgets: dict[RichLog, int] = {}  # widget -> min_level mapping
+        self._callbacks: dict[RichLog, Callable[[int], None]] = {}  # widget -> callback mapping
+        self._logger_filters: dict[RichLog, str] = {}  # widget -> logger_filter mapping
+
+        # Memory-limited log buffer using deque
+        self._log_buffer: deque[LogEntry] = deque(maxlen=max_entries)
+        self._replay_count = replay_count
+
+        # Pause/resume state tracking
+        self._paused_widgets: set[RichLog] = set()
+        self._paused_buffers: dict[RichLog, deque[LogEntry]] = {}
+        self._pause_lock = threading.Lock()
+
+        # Error tracking for jump-to-error navigation
+        self._error_indices: list[int] = []  # Indices of error entries in buffer
+        self._buffer_index = 0  # Current buffer position for error tracking
+
+        # Formatters for different display modes
+        self._verbose_formatter = ImprovedExceptionFormatter(
             "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
             datefmt="%H:%M:%S",
         )
-        self.setFormatter(formatter)
+        self._compact_formatter = CompactTuiFormatter()
+
+        # Default format mode: compact, verbose, or structured
+        self._format_mode = "compact"
+
+        self.setFormatter(self._verbose_formatter)
         self.setLevel(logging.DEBUG)
 
     def register_widget(
         self,
-        widget: Log,
+        widget: RichLog,
         min_level: int = logging.INFO,
         on_log_callback: Callable[[int], None] | None = None,
+        replay_logs: bool = True,
     ) -> None:
         """
-        Register a Log widget to receive logs at or above min_level.
+        Register a RichLog widget to receive logs at or above min_level.
 
         Args:
-            widget: The Log widget to register
+            widget: The RichLog widget to register
             min_level: Minimum log level to display
             on_log_callback: Optional callback called with log level on each log
+            replay_logs: Whether to replay recent logs to this widget
         """
         self._widgets[widget] = min_level
         self._logger_filters[widget] = ""  # Default: show all loggers
         if on_log_callback:
             self._callbacks[widget] = on_log_callback
 
-    def update_widget_level(self, widget: Log, min_level: int) -> None:
+        # Replay recent logs to new widget
+        if replay_logs and self._log_buffer:
+            self._replay_logs_to_widget(widget, min_level)
+
+    def _replay_logs_to_widget(
+        self,
+        widget: RichLog,
+        min_level: int,
+    ) -> None:
+        """Replay recent logs to a newly registered widget.
+
+        Args:
+            widget: The RichLog widget to replay logs to.
+            min_level: Minimum log level to replay.
+        """
+        try:
+            # Get the most recent logs up to replay_count
+            logs_to_replay = list(self._log_buffer)[-self._replay_count :]
+            logger_filter = self._logger_filters.get(widget, "")
+
+            replayed = 0
+            for entry in logs_to_replay:
+                # Check level filter
+                if entry.level < min_level:
+                    continue
+
+                # Check logger filter
+                if logger_filter and logger_filter not in entry.logger_name.lower():
+                    continue
+
+                # Write to widget
+                self._write_to_widget(widget, entry.styled_message)
+                replayed += 1
+
+            if replayed > 0:
+                # Add separator to indicate replayed logs
+                from gpt_trader.tui.theme import THEME
+
+                separator = Text(
+                    f"─── {replayed} previous logs replayed ───", style=THEME.colors.text_muted
+                )
+                widget.write(separator)
+
+        except Exception as e:
+            _error_logger.debug(f"Error replaying logs to widget: {e}")
+
+    def update_widget_level(self, widget: RichLog, min_level: int) -> None:
         """Update the minimum level for a registered widget."""
         if widget in self._widgets:
             self._widgets[widget] = min_level
 
-    def update_widget_logger_filter(self, widget: Log, logger_filter: str) -> None:
+    def update_widget_logger_filter(self, widget: RichLog, logger_filter: str) -> None:
         """Update the logger filter pattern for a registered widget."""
         if widget in self._widgets:
             self._logger_filters[widget] = logger_filter.lower()
 
-    def unregister_widget(self, widget: Log) -> None:
-        """Unregister a Log widget."""
+    def unregister_widget(self, widget: RichLog) -> None:
+        """Unregister a RichLog widget."""
         self._widgets.pop(widget, None)
         self._callbacks.pop(widget, None)
         self._logger_filters.pop(widget, None)
+        # Clean up pause state
+        with self._pause_lock:
+            self._paused_widgets.discard(widget)
+            self._paused_buffers.pop(widget, None)
+
+    def pause_widget(self, widget: RichLog) -> None:
+        """Pause log streaming to widget, buffering incoming logs.
+
+        Args:
+            widget: The RichLog widget to pause.
+        """
+        with self._pause_lock:
+            if widget not in self._paused_widgets:
+                self._paused_widgets.add(widget)
+                self._paused_buffers[widget] = deque(maxlen=self.PAUSE_BUFFER_MAX)
+
+    def resume_widget(self, widget: RichLog) -> None:
+        """Resume log streaming to widget, flushing buffered logs.
+
+        Args:
+            widget: The RichLog widget to resume.
+        """
+        with self._pause_lock:
+            if widget in self._paused_widgets:
+                self._paused_widgets.discard(widget)
+                buffer = self._paused_buffers.pop(widget, deque())
+
+        # Flush buffered logs outside of lock to avoid blocking emit()
+        if buffer:
+            for entry in buffer:
+                self._write_to_widget(widget, entry.styled_message)
+
+    def is_widget_paused(self, widget: RichLog) -> bool:
+        """Check if a widget is currently paused.
+
+        Args:
+            widget: The RichLog widget to check.
+
+        Returns:
+            True if the widget is paused.
+        """
+        return widget in self._paused_widgets
+
+    def get_paused_count(self, widget: RichLog) -> int:
+        """Get count of buffered logs for a paused widget.
+
+        Args:
+            widget: The RichLog widget to check.
+
+        Returns:
+            Number of logs buffered while paused.
+        """
+        with self._pause_lock:
+            return len(self._paused_buffers.get(widget, []))
+
+    def get_error_count(self) -> int:
+        """Get count of error entries in the buffer.
+
+        Returns:
+            Number of error-level log entries.
+        """
+        return len(self._error_indices)
+
+    def get_error_entries(self) -> list[LogEntry]:
+        """Get all error entries from buffer.
+
+        Returns:
+            List of LogEntry objects for error-level logs.
+        """
+        buffer_list = list(self._log_buffer)
+        buffer_len = len(buffer_list)
+        return [buffer_list[i] for i in self._error_indices if i < buffer_len]
+
+    # Pattern to detect JSON objects in log messages
+    _JSON_PATTERN = re.compile(r"\{[^{}]+\}")
+
+    @property
+    def format_mode(self) -> str:
+        """Get current format mode (compact, verbose, or structured)."""
+        return self._format_mode
+
+    @format_mode.setter
+    def format_mode(self, mode: str) -> None:
+        """Set format mode (compact, verbose, or structured)."""
+        if mode in ("compact", "verbose", "structured"):
+            self._format_mode = mode
 
     def emit(self, record: logging.LogRecord) -> None:
         """Emit log to all registered widgets that accept this level."""
-        import threading
-
         try:
-            msg = self.format(record)
+            # Generate both verbose and compact messages
+            verbose_msg = self._verbose_formatter.format(record)
+            compact_msg = self._compact_formatter.format(record)
+
+            # Extract structured metadata
+            short_logger = record.name.rsplit(".", 1)[-1]
+            category = detect_category(record.name)
+
+            # Try to get correlation context if available
+            correlation_id = None
+            domain_fields = None
+            try:
+                from gpt_trader.logging.correlation import get_log_context
+
+                context = get_log_context()
+                if context:
+                    correlation_id = context.get("correlation_id")
+                    domain_fields = {k: v for k, v in context.items() if k != "correlation_id"}
+            except ImportError:
+                pass
+
+            # Detect JSON in message for pretty-printing support
+            is_json = False
+            json_data = None
+            json_match = self._JSON_PATTERN.search(verbose_msg)
+            if json_match:
+                try:
+                    json_data = json.loads(json_match.group())
+                    is_json = True
+                except json.JSONDecodeError:
+                    pass
+
+            # Detect multi-line content (stack traces, large objects)
+            is_multiline = "\n" in verbose_msg or len(verbose_msg) > 200
+
+            # Choose display message based on format mode
+            if self._format_mode == "compact":
+                display_msg = compact_msg
+            elif self._format_mode == "structured":
+                # JSON format for AI agents
+                structured = {
+                    "time": time.strftime("%H:%M:%S", time.localtime(record.created)),
+                    "logger": short_logger,
+                    "level": record.levelname,
+                    "category": category,
+                    "message": record.getMessage(),
+                }
+                if correlation_id:
+                    structured["correlation_id"] = correlation_id
+                if domain_fields:
+                    structured["context"] = domain_fields
+                display_msg = json.dumps(structured)
+            else:  # verbose
+                display_msg = verbose_msg
 
             # Create Rich Text object with style (not markup) to prevent injection
             # Using style= treats msg as literal text, preventing markup in log messages
             # from corrupting coloring or injecting formatting
             if record.levelno >= logging.ERROR:
-                styled_msg = Text(msg, style=THEME.colors.error)  # Warm coral-red
+                styled_msg = Text(display_msg, style=THEME.colors.error)  # Warm coral-red
             elif record.levelno >= logging.WARNING:
-                styled_msg = Text(msg, style=THEME.colors.warning)  # Warm amber
+                styled_msg = Text(display_msg, style=THEME.colors.warning)  # Warm amber
             elif record.levelno >= logging.INFO:
-                styled_msg = Text(msg, style=THEME.colors.success)  # Warm green
+                styled_msg = Text(display_msg, style=THEME.colors.success)  # Warm green
             else:
-                styled_msg = Text(msg, style=THEME.colors.text_muted)  # Muted grey
+                styled_msg = Text(display_msg, style=THEME.colors.text_muted)  # Muted grey
+
+            # Create log entry with enhanced metadata
+            log_entry = LogEntry(
+                level=record.levelno,
+                logger_name=record.name,
+                styled_message=styled_msg,
+                raw_message=verbose_msg,
+                is_json=is_json,
+                json_data=json_data,
+                is_multiline=is_multiline,
+                # AI-friendly fields
+                short_logger=short_logger,
+                level_name=record.levelname,
+                category=category,
+                correlation_id=correlation_id,
+                domain_fields=domain_fields,
+                compact_message=compact_msg,
+            )
+
+            # Track error positions for jump-to-error navigation
+            if record.levelno >= logging.ERROR:
+                self._error_indices.append(self._buffer_index)
+
+            # Store in memory-limited buffer for replay to new widgets
+            # The deque will automatically remove oldest entries when maxlen is reached
+            self._log_buffer.append(log_entry)
+            self._buffer_index += 1
 
             # Check if we're on the main thread
             is_main_thread = threading.current_thread() is threading.main_thread()
@@ -135,6 +510,13 @@ class TuiLogHandler(logging.Handler):
                     # Lifecycle guard: only write to mounted widgets with active app
                     if not widget.is_mounted or not widget.app:
                         continue
+
+                    # Check if widget is paused - buffer the log instead of writing
+                    with self._pause_lock:
+                        if widget in self._paused_widgets:
+                            if widget in self._paused_buffers:
+                                self._paused_buffers[widget].append(log_entry)
+                            continue
 
                     try:
                         if is_main_thread:
@@ -162,17 +544,42 @@ class TuiLogHandler(logging.Handler):
             self.handleError(record)
 
     @staticmethod
-    def _write_to_widget(widget: Log, message: Text) -> None:
-        """Write Rich Text to widget on main thread.
+    def _write_to_widget(widget: RichLog, message: Text) -> None:
+        """Write Rich Text to widget on main thread."""
+        widget.write(message)
 
-        IMPORTANT: We manually add \\n because the formatter doesn't include one.
-        If the formatter is ever changed to add \\n, this will cause double-spacing.
-        See test_formatter_does_not_add_newline() for regression detection.
+    def clear_buffer(self) -> int:
+        """Clear the log buffer.
+
+        Returns:
+            Number of entries cleared.
         """
-        # Log.write() expects strings, not Text objects
-        # Use markup property to get Rich markup string, then add newline
-        # The Log widget's highlight=True will parse the markup for colored output
-        widget.write(message.markup + "\n")
+        count = len(self._log_buffer)
+        self._log_buffer.clear()
+        return count
+
+    @property
+    def buffer_size(self) -> int:
+        """Current number of entries in the buffer."""
+        return len(self._log_buffer)
+
+    @property
+    def buffer_max_size(self) -> int:
+        """Maximum buffer capacity."""
+        return self._log_buffer.maxlen or MAX_LOG_ENTRIES
+
+    def get_buffer_stats(self) -> dict:
+        """Get statistics about the log buffer.
+
+        Returns:
+            Dictionary with buffer statistics.
+        """
+        return {
+            "current_size": self.buffer_size,
+            "max_size": self.buffer_max_size,
+            "replay_count": self._replay_count,
+            "widget_count": len(self._widgets),
+        }
 
 
 # Global singleton instance

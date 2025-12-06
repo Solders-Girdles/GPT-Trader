@@ -1,0 +1,50 @@
+/* ========================================================================== */
+/* ANIMATIONS & TRANSITIONS                                                   */
+/* ========================================================================== */
+
+/* Note: Textual has limited transition support
+ * Animations are handled via Python update intervals
+ */
+
+/* === Loading Spinner === */
+
+/* Note: Unicode Braille spinner is animated via Python interval,
+ * not CSS animations, for reliable terminal rendering.
+ */
+
+LoadingSpinner {
+    width: auto;
+    height: auto;
+    align-horizontal: center;
+    align-vertical: middle;
+}
+
+#spinner-display {
+    color: $accent;
+    text-style: bold;
+    text-align: center;
+}
+
+.loading-spinner {
+    color: $accent;
+    text-style: bold;
+    text-align: center;
+}
+
+.loading-message {
+    color: $text-secondary;
+    text-align: center;
+    margin-top: $spacing-xs;
+}
+
+.loading-container {
+    padding: $spacing-lg;
+    background: rgba(58, 53, 48, 0.2);
+    border: solid $border-subtle;
+    align-horizontal: center;
+    align-vertical: middle;
+}
+
+/* Note: Textual doesn't support @keyframes or @media queries
+ * Advanced animations and media queries must be implemented in Python
+ */

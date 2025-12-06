@@ -57,7 +57,7 @@ its ML workflows.
 
 - Study `docs/ops/operations_runbook.md` and `docs/MONITORING_PLAYBOOK.md` for
   on-call expectations.
-- **Monitoring**: Use the TUI (`--tui`) for real-time monitoring and control.
+- **Monitoring**: Launch via `uv run gpt-trader tui` (add `--mode live/paper/demo` to skip the selector).
 - Manual tooling:
 
   ```bash

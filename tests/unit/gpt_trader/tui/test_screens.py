@@ -4,9 +4,9 @@ from unittest.mock import MagicMock
 from gpt_trader.tui.screens import MainScreen
 from gpt_trader.tui.state import TuiState
 from gpt_trader.tui.widgets import (
-    BotStatusWidget,
     MarketWatchWidget,
     RiskWidget,
+    SlimStatusWidget,
     StrategyWidget,
     SystemHealthWidget,
 )
@@ -14,10 +14,11 @@ from gpt_trader.tui.widgets import (
 
 class TestMainScreen:
     def test_update_ui(self):
+        """Test that update_ui correctly updates SlimStatusWidget and sets screen state."""
         screen = MainScreen()
 
-        # Mock widgets
-        mock_status = MagicMock(spec=BotStatusWidget)
+        # Mock widgets for log-centric layout
+        mock_status = MagicMock(spec=SlimStatusWidget)
         mock_market = MagicMock(spec=MarketWatchWidget)
         mock_strategy = MagicMock(spec=StrategyWidget)
         mock_risk = MagicMock(spec=RiskWidget)
@@ -25,7 +26,7 @@ class TestMainScreen:
 
         # Mock query_one to return specific mocks based on type or ID
         def query_side_effect(arg, *args, **kwargs):
-            if arg == BotStatusWidget:
+            if arg == SlimStatusWidget:
                 return mock_status
             if arg == "#dash-market" or arg == "#market-watch-full":
                 return mock_market
@@ -50,12 +51,12 @@ class TestMainScreen:
         state.system_data.connection_status = "CONNECTED"
 
         # Mock query to return widgets
-        screen.query = MagicMock(return_value=[mock_market, mock_strategy])
+        screen.query = MagicMock(return_value=[mock_strategy])
 
         # Call update_ui
         screen.update_ui(state)
 
-        # Verify BotStatusWidget properties were set directly
+        # Verify SlimStatusWidget properties were set directly
         assert mock_status.running is True
         # equity is set via property assignment (checked via hasattr since it's a mock)
         assert hasattr(mock_status, "equity")
@@ -63,7 +64,6 @@ class TestMainScreen:
         # Verify screen state was set (triggers reactive cascade)
         assert screen.state == state
 
-        # In the real implementation, setting widget.state triggers reactive watchers
-        # For mock widgets, we just verify the screen called query to find them
-        # and would have set their state property
-        screen.query.assert_called()
+        # With StateRegistry pattern, widgets self-register and receive updates
+        # via broadcast when screen.state is set. The test verifies state propagation
+        # by checking screen.state is correctly assigned (done above).

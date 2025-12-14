@@ -66,45 +66,43 @@ Select.-disabled > SelectCurrent {
 }
 
 /* Dropdown overlay - ensure proper layering and visibility */
-SelectOverlay {
-    /* Layer above other content */
+/* NOTE: SelectOverlay is an OptionList (not a container), and Textual defines
+   defaults with `Select > SelectOverlay` selectors. Match that specificity so
+   our styles reliably override the built-ins. */
+Select > SelectOverlay {
+    /* Ensure the dropdown renders above all tiles (fixes clipping). */
+    overlay: screen;
     layer: overlay;
 
     /* Styling */
     background: $bg-elevated;
+    color: $text-primary;
     border: solid $accent;
     padding: 0 1;
 
     /* Sizing */
+    width: auto;
     min-width: 22;
     max-height: 18;
 
-    /* Shadow effect for depth */
-    border-top: none;
-}
-
-/* Individual options in dropdown */
-SelectOverlay > OptionList {
-    background: $bg-elevated;
-    color: $text-primary;
-    padding: 0;
     scrollbar-background: $bg-secondary;
     scrollbar-color: $accent-muted;
 }
 
-SelectOverlay > OptionList > .option-list--option {
+/* Individual options in dropdown */
+Select > SelectOverlay > .option-list--option {
     padding: 0 2;
     background: $bg-elevated;
     color: $text-primary;
 }
 
-SelectOverlay > OptionList > .option-list--option-highlighted {
+Select > SelectOverlay > .option-list--option-highlighted {
     background: $accent-muted;
     color: $text-primary;
     text-style: bold;
 }
 
-SelectOverlay > OptionList > .option-list--option-hover {
+Select > SelectOverlay > .option-list--option-hover {
     background: $overlay-hover;
 }
 

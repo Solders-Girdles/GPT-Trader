@@ -12,6 +12,7 @@ from typing import Any
 from textual.reactive import reactive
 from textual.widget import Widget
 
+from gpt_trader.core.account import CFMBalance
 from gpt_trader.monitoring.status_reporter import BotStatus
 from gpt_trader.tui.events import (
     StateDeltaUpdateApplied,
@@ -33,6 +34,7 @@ from gpt_trader.tui.types import (
     Order,
     PortfolioSummary,
     Position,
+    ResilienceState,
     RiskState,
     StrategyState,
     SystemStatus,
@@ -55,6 +57,7 @@ class TuiState(Widget):
         delta_updater: Delta update calculator for efficient updates
         validation_enabled: Whether to validate incoming data
         delta_updates_enabled: Whether to use delta updates (vs full replacement)
+        _changed_fields: Tracks which fields changed in the last update
     """
 
     # Reactive properties that widgets can watch
@@ -67,6 +70,15 @@ class TuiState(Widget):
     last_update_timestamp = reactive(0.0)
     update_interval = reactive(2.0)
     connection_healthy = reactive(True)
+
+    # Data fetch state (separate from trading state)
+    data_fetching = reactive(False)  # True during active data fetch
+    data_available = reactive(False)  # True after first successful data received
+    last_data_fetch = reactive(0.0)  # Timestamp of last successful fetch
+
+    # Degraded mode tracking (when StatusReporter unavailable)
+    degraded_mode = reactive(False)
+    degraded_reason = reactive("")
 
     # Validation state tracking
     validation_error_count = reactive(0)
@@ -82,6 +94,13 @@ class TuiState(Widget):
     strategy_data = reactive(StrategyState())
     risk_data = reactive(RiskState())
     system_data = reactive(SystemStatus())
+
+    # CFM (Coinbase Financial Markets) futures state
+    cfm_balance: reactive[CFMBalance | None] = reactive(None)
+    has_cfm_access = reactive(False)
+
+    # API resilience metrics
+    resilience_data = reactive(ResilienceState())
 
     def __init__(
         self,
@@ -106,6 +125,9 @@ class TuiState(Widget):
         self.validation_enabled = validation_enabled
         self.delta_updates_enabled = delta_updates_enabled
 
+        # Track which fields changed in the last update (for optimized broadcasts)
+        self._changed_fields: set[str] = set()
+
         # Ensure we have fresh instances for each TuiState
         self.market_data = MarketState()
         self.position_data = PortfolioSummary()
@@ -115,6 +137,7 @@ class TuiState(Widget):
         self.strategy_data = StrategyState()
         self.risk_data = RiskState()
         self.system_data = SystemStatus()
+        self.resilience_data = ResilienceState()
 
     def update_from_bot_status(
         self,
@@ -132,6 +155,15 @@ class TuiState(Widget):
             runtime_state: Optional runtime state (engine state, uptime, etc.)
             use_delta: Whether to use delta updates. If None, uses instance default.
         """
+        # Connection health is based on observer update cadence, not market ticks.
+        # Track the time of the last status snapshot received.
+        try:
+            self.last_update_timestamp = float(getattr(status, "timestamp", 0.0)) or 0.0
+        except Exception:
+            import time
+
+            self.last_update_timestamp = time.time()
+
         # Sync update_interval from reporter's observer_interval for connection health
         if hasattr(status, "observer_interval") and status.observer_interval > 0:
             self.update_interval = status.observer_interval
@@ -172,6 +204,9 @@ class TuiState(Widget):
             else:
                 self.post_message(StateValidationPassed())
 
+        # Clear changed fields tracking for this update cycle
+        self._changed_fields.clear()
+
         # Define update operations with error isolation
         update_operations = [
             ("market", lambda: self._update_market_data(status.market)),
@@ -191,6 +226,8 @@ class TuiState(Widget):
             try:
                 update_operation()
                 successful_updates.append(component_name)
+                # Track which components were successfully updated
+                self._changed_fields.add(component_name)
             except Exception as e:
                 logger.error(f"Failed to update {component_name} data: {e}", exc_info=True)
                 failed_updates.append(component_name)
@@ -220,6 +257,14 @@ class TuiState(Widget):
         if self.data_source_mode == "demo":
             return True  # Demo always healthy
 
+        # When the bot is intentionally stopped (manual start), we don't expect
+        # periodic StatusReporter updates. Treat this as a healthy "stopped" state
+        # so the UI doesn't spam stale warnings while waiting for the user to start.
+        if not self.running and not self.degraded_mode:
+            if not self.connection_healthy:
+                self.connection_healthy = True
+            return True
+
         import time
 
         time_since_update = time.time() - self.last_update_timestamp
@@ -232,36 +277,59 @@ class TuiState(Widget):
 
         return is_healthy
 
+    @property
+    def is_data_stale(self) -> bool:
+        """Check if data is older than staleness threshold (30s).
+
+        Used by widgets to show stale data warnings.
+
+        Returns:
+            True if data hasn't been updated in over 30 seconds.
+        """
+        if not self.data_available or self.last_data_fetch == 0:
+            return False
+        import time
+
+        return (time.time() - self.last_data_fetch) > 30.0
+
+    @staticmethod
+    def _iter_key_values(value: Any) -> Any:
+        """Iterate key/value pairs from dict-like or attribute-like objects.
+
+        Status snapshots are normally typed dataclasses, but tests and some
+        adapters may provide simple objects (e.g., SimpleNamespace).
+        """
+        if not value:
+            return ()
+        if isinstance(value, dict):
+            return value.items()
+        if hasattr(value, "items"):
+            try:
+                return value.items()  # type: ignore[no-any-return]
+            except Exception:
+                pass
+        if hasattr(value, "__dict__"):
+            return getattr(value, "__dict__", {}).items()
+        return ()
+
     def _update_market_data(self, market: Any) -> None:  # MarketStatus from status_reporter
         """Update market data from typed MarketStatus."""
-        # Track update timestamp for connection health monitoring
-        # Use the actual market data timestamp, not receipt time
-        if hasattr(market, "last_price_update") and market.last_price_update:
-            self.last_update_timestamp = market.last_price_update
-        else:
-            # Fallback to current time if no timestamp available
-            import time
-
-            self.last_update_timestamp = time.time()
-
         # Convert prices to Decimal (StatusReporter may provide str or already Decimal)
         prices_decimal = {}
-        if hasattr(market, "last_prices") and market.last_prices:
-            for symbol, price in market.last_prices.items():
-                prices_decimal[symbol] = safe_decimal(price)
+        for symbol, price in self._iter_key_values(getattr(market, "last_prices", None)):
+            prices_decimal[str(symbol)] = safe_decimal(price)
 
         # Convert price history to Decimal
         price_history_converted = {}
-        if hasattr(market, "price_history") and market.price_history:
-            for symbol, history in market.price_history.items():
-                if isinstance(history, list):
-                    price_history_converted[symbol] = [safe_decimal(p) for p in history]
-                else:
-                    price_history_converted[symbol] = history
+        for symbol, history in self._iter_key_values(getattr(market, "price_history", None)):
+            if isinstance(history, list):
+                price_history_converted[str(symbol)] = [safe_decimal(p) for p in history]
+            else:
+                price_history_converted[str(symbol)] = history
 
         self.market_data = MarketState(
             prices=prices_decimal,
-            last_update=market.last_price_update if hasattr(market, "last_price_update") else 0.0,
+            last_update=float(getattr(market, "last_price_update", 0.0) or 0.0),
             price_history=price_history_converted,
         )
 
@@ -271,16 +339,29 @@ class TuiState(Widget):
 
         # PositionStatus has positions dict that contains position data
         # Each position is a dict with keys: quantity, entry_price, unrealized_pnl, mark_price, side
-        for symbol, p_data in pos_data.positions.items():
+        for symbol, p_data in self._iter_key_values(getattr(pos_data, "positions", None)):
+            symbol_str = str(symbol)
             if isinstance(p_data, dict):
-                positions_map[symbol] = Position(
-                    symbol=symbol,
-                    quantity=safe_decimal(p_data.get("quantity", "0")),
-                    entry_price=safe_decimal(p_data.get("entry_price", "0")),
-                    unrealized_pnl=safe_decimal(p_data.get("unrealized_pnl", "0")),
-                    mark_price=safe_decimal(p_data.get("mark_price", "0")),
-                    side=str(p_data.get("side", "")),
-                )
+                quantity = safe_decimal(p_data.get("quantity", "0"))
+                entry_price = safe_decimal(p_data.get("entry_price", "0"))
+                unrealized_pnl = safe_decimal(p_data.get("unrealized_pnl", "0"))
+                mark_price = safe_decimal(p_data.get("mark_price", "0"))
+                side = str(p_data.get("side", ""))
+            else:
+                quantity = safe_decimal(getattr(p_data, "quantity", "0"))
+                entry_price = safe_decimal(getattr(p_data, "entry_price", "0"))
+                unrealized_pnl = safe_decimal(getattr(p_data, "unrealized_pnl", "0"))
+                mark_price = safe_decimal(getattr(p_data, "mark_price", "0"))
+                side = str(getattr(p_data, "side", ""))
+
+            positions_map[symbol_str] = Position(
+                symbol=symbol_str,
+                quantity=quantity,
+                entry_price=entry_price,
+                unrealized_pnl=unrealized_pnl,
+                mark_price=mark_price,
+                side=side,
+            )
 
         self.position_data = PortfolioSummary(
             positions=positions_map,
@@ -377,12 +458,12 @@ class TuiState(Widget):
     def _update_risk_data(self, risk: Any) -> None:  # RiskStatus from status_reporter
         """Update risk data from typed RiskStatus."""
         self.risk_data = RiskState(
-            max_leverage=risk.max_leverage,
-            daily_loss_limit_pct=risk.daily_loss_limit_pct,
-            current_daily_loss_pct=risk.current_daily_loss_pct,
-            reduce_only_mode=risk.reduce_only_mode,
-            reduce_only_reason=risk.reduce_only_reason,
-            active_guards=risk.active_guards,
+            max_leverage=float(getattr(risk, "max_leverage", 0.0) or 0.0),
+            daily_loss_limit_pct=float(getattr(risk, "daily_loss_limit_pct", 0.0) or 0.0),
+            current_daily_loss_pct=float(getattr(risk, "current_daily_loss_pct", 0.0) or 0.0),
+            reduce_only_mode=bool(getattr(risk, "reduce_only_mode", False)),
+            reduce_only_reason=str(getattr(risk, "reduce_only_reason", "") or ""),
+            active_guards=list(getattr(risk, "active_guards", []) or []),
         )
 
     def _update_system_data(self, sys: Any) -> None:  # SystemStatus from status_reporter
@@ -401,3 +482,85 @@ class TuiState(Widget):
             self.uptime = runtime_state.uptime
         if runtime_state and hasattr(runtime_state, "cycle_count"):
             self.cycle_count = runtime_state.cycle_count
+
+    def update_cfm_balance(self, cfm_balance: CFMBalance | None) -> None:
+        """Update CFM futures balance state.
+
+        This method is called separately from the main bot status update
+        since CFM data comes from a different source (PortfolioService).
+
+        Args:
+            cfm_balance: CFMBalance object or None if CFM access unavailable.
+        """
+        self.cfm_balance = cfm_balance
+        self.has_cfm_access = cfm_balance is not None
+        self._changed_fields.add("cfm")
+
+        if cfm_balance:
+            logger.debug(
+                f"[TuiState] CFM balance updated: "
+                f"buying_power={cfm_balance.futures_buying_power}, "
+                f"margin_util={cfm_balance.margin_utilization_pct:.1f}%, "
+                f"liq_buffer={cfm_balance.liquidation_buffer_percentage:.1f}%"
+            )
+
+    def update_resilience_data(self, resilience_status: dict[str, Any]) -> None:
+        """Update API resilience metrics from CoinbaseClient.get_resilience_status().
+
+        This method is called periodically to refresh resilience metrics
+        shown in the System tile.
+
+        Args:
+            resilience_status: Dict with keys: metrics, cache, circuit_breakers, rate_limit_usage
+        """
+        import time
+
+        metrics = resilience_status.get("metrics") or {}
+        cache = resilience_status.get("cache") or {}
+        breakers = resilience_status.get("circuit_breakers") or {}
+
+        # Parse circuit breaker states
+        breaker_states: dict[str, str] = {}
+        for category, status in breakers.items():
+            if isinstance(status, dict):
+                breaker_states[category] = status.get("state", "closed")
+            else:
+                breaker_states[category] = str(status)
+        any_open = any(s == "open" for s in breaker_states.values())
+
+        # Parse rate limit usage (comes as "45%" string)
+        rate_limit_str = resilience_status.get("rate_limit_usage", "0%")
+        try:
+            if isinstance(rate_limit_str, str):
+                rate_limit_pct = float(rate_limit_str.rstrip("%"))
+            else:
+                rate_limit_pct = float(rate_limit_str)
+        except (ValueError, TypeError):
+            rate_limit_pct = 0.0
+
+        self.resilience_data = ResilienceState(
+            latency_p50_ms=float(metrics.get("p50_latency_ms", 0)),
+            latency_p95_ms=float(metrics.get("p95_latency_ms", 0)),
+            avg_latency_ms=float(metrics.get("avg_latency_ms", 0)),
+            error_rate=float(metrics.get("error_rate", 0)),
+            total_requests=int(metrics.get("total_requests", 0)),
+            total_errors=int(metrics.get("total_errors", 0)),
+            rate_limit_hits=int(metrics.get("rate_limit_hits", 0)),
+            rate_limit_usage_pct=rate_limit_pct,
+            cache_hit_rate=float(cache.get("hit_rate", 0)),
+            cache_size=int(cache.get("size", 0)),
+            cache_enabled=bool(cache.get("enabled", False)),
+            circuit_breakers=breaker_states,
+            any_circuit_open=any_open,
+            last_update=time.time(),
+        )
+        self._changed_fields.add("resilience")
+
+    def get_changed_fields(self) -> set[str]:
+        """Get the set of fields that changed in the last update.
+
+        Returns:
+            Set of field names that were updated. Useful for optimized
+            widget notifications where only affected widgets need updating.
+        """
+        return self._changed_fields.copy()

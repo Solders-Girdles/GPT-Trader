@@ -16,17 +16,19 @@ from textual.app import ComposeResult
 from textual.containers import Container
 from textual.reactive import reactive
 from textual.screen import Screen
-from textual.widgets import Footer, Header, TabbedContent, TabPane
+from textual.widgets import TabbedContent, TabPane
 
 from gpt_trader.tui.state import TuiState
 from gpt_trader.tui.widgets import (
     AccountWidget,
+    ContextualFooter,
     OrdersWidget,
     PositionsWidget,
     RiskWidget,
     SystemHealthWidget,
     TradesWidget,
 )
+from gpt_trader.tui.widgets.shell import CommandBar
 from gpt_trader.utilities.logging_patterns import get_logger
 
 logger = get_logger(__name__, component="tui")
@@ -71,7 +73,10 @@ class DetailsScreen(Screen):
         # Update PositionsWidget
         try:
             positions_widget = self.query_one("#details-positions", PositionsWidget)
-            positions_widget.update_positions(state.position_data.positions)
+            positions_widget.update_positions(
+                state.position_data.positions,
+                state.position_data.total_unrealized_pnl,
+            )
         except Exception as e:
             logger.debug(f"Failed to update PositionsWidget: {e}")
 
@@ -119,11 +124,9 @@ class DetailsScreen(Screen):
 
     def compose(self) -> ComposeResult:
         """Compose the details screen with tabbed layout."""
-        yield Header(
-            show_clock=True,
-            classes="app-header secondary-header",
-            icon="*",
-            time_format="%H:%M:%S",
+        yield CommandBar(
+            bot_mode=getattr(self.app, "data_source_mode", "DEMO").upper(),
+            id="header-bar",
         )
 
         with Container(id="details-container"):
@@ -146,13 +149,22 @@ class DetailsScreen(Screen):
                 with TabPane("System", id="system-tab"):
                     yield SystemHealthWidget(id="details-system", compact_mode=False)
 
-        yield Footer()
+        yield ContextualFooter()
 
     def on_mount(self) -> None:
         """Initialize with current state when mounted."""
-        logger.info("DetailsScreen mounted")
+        logger.debug("DetailsScreen mounted")
+        if hasattr(self.app, "state_registry"):
+            self.app.state_registry.register(self)
         if hasattr(self.app, "tui_state"):
             self.state = self.app.tui_state  # type: ignore[attr-defined]
+
+    def on_unmount(self) -> None:
+        if hasattr(self.app, "state_registry"):
+            self.app.state_registry.unregister(self)
+
+    def on_state_updated(self, state: TuiState) -> None:
+        self.state = state
 
     def action_dismiss(self, result: object = None) -> None:
         """Close the details screen and return to main view."""

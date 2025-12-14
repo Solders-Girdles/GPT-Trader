@@ -11,6 +11,7 @@ class ThemeMode(str, Enum):
 
     DARK = "dark"
     LIGHT = "light"
+    HIGH_CONTRAST = "high_contrast"
 
 
 @dataclass(frozen=True)
@@ -48,32 +49,32 @@ class ColorPalette:
     border_muted: str
 
 
-# Dark Theme (Claude Code-inspired warm palette)
+# Dark Theme (Obsidian - FinTech Pro)
 DARK_PALETTE = ColorPalette(
     # Backgrounds
-    background_primary="#1A1815",  # Deep warm brown
-    background_secondary="#2A2520",  # Lighter warm brown
-    background_elevated="#3D3833",  # Elevated surfaces
-    surface="#2A2520",
+    background_primary="#101010",  # Deep Obsidian (Deepest)
+    background_secondary="#1a1a1a",  # Obsidian (Lighter)
+    background_elevated="#252525",  # Obsidian (Elevated)
+    surface="#303030",             # Obsidian (Surface)
     # Accents
-    accent_primary="#D4744F",  # Rust-orange
-    accent_secondary="#E08A6A",  # Lighter rust
+    accent_primary="#007AFF",      # Electric Blue - Primary
+    accent_secondary="#0056b3",    # Deep Blue - Secondary
     # Text
-    text_primary="#F0EDE9",  # High contrast
-    text_secondary="#B8B5B2",  # Medium contrast
-    text_muted="#7A7672",  # Low contrast
+    text_primary="#FFFFFF",        # Pure White (Brightest)
+    text_secondary="#B0B0B0",      # Light Grey (Bright)
+    text_muted="#606060",          # Dark Grey (Muted)
     # Semantic
-    success="#85B77F",  # Warm green
-    warning="#E0B366",  # Warm amber
-    error="#E08580",  # Warm coral-red
-    info="#7FB8D4",  # Cool blue-grey
+    success="#00FF41",             # Neon Green
+    warning="#FFD700",             # Gold
+    error="#FF0033",               # Crimson Red
+    info="#007AFF",                # Electric Blue
     # Interactive
-    overlay_hover="rgba(193, 95, 60, 0.1)",
-    overlay_focus="rgba(193, 95, 60, 0.2)",
-    overlay_disabled="rgba(58, 53, 48, 0.5)",
+    overlay_hover="rgba(255, 255, 255, 0.05)",
+    overlay_focus="rgba(0, 122, 255, 0.2)",
+    overlay_disabled="rgba(0, 0, 0, 0.5)",
     # Borders
-    border="#4A4540",
-    border_muted="#3A3530",
+    border="#333333",              # Dark Grey
+    border_muted="#1a1a1a",        # Obsidian
 )
 
 # Light Theme (Claude Code-inspired, inverted)
@@ -104,6 +105,34 @@ LIGHT_PALETTE = ColorPalette(
     border_muted="#E5E2DE",
 )
 
+# High Contrast Theme (Accessibility-focused, WCAG AAA compliant)
+HIGH_CONTRAST_PALETTE = ColorPalette(
+    # Backgrounds - Pure black for maximum contrast
+    background_primary="#000000",
+    background_secondary="#0a0a0a",
+    background_elevated="#1a1a1a",
+    surface="#2a2a2a",
+    # Accents - Bright cyan for visibility
+    accent_primary="#00AAFF",
+    accent_secondary="#0088DD",
+    # Text - High contrast for readability
+    text_primary="#FFFFFF",  # 21:1 contrast on black
+    text_secondary="#CCCCCC",  # 13:1 contrast on black
+    text_muted="#999999",  # 7:1 contrast on black (WCAG AAA)
+    # Semantic - Enhanced saturation
+    success="#00FF66",
+    warning="#FFCC00",
+    error="#FF3366",
+    info="#00AAFF",
+    # Interactive - Higher opacity for visibility
+    overlay_hover="rgba(255, 255, 255, 0.10)",
+    overlay_focus="rgba(0, 170, 255, 0.30)",
+    overlay_disabled="rgba(0, 0, 0, 0.6)",
+    # Borders - More visible
+    border="#555555",
+    border_muted="#444444",
+)
+
 
 @dataclass(frozen=True)
 class Theme:
@@ -125,6 +154,7 @@ class ThemeManager:
         self._themes = {
             ThemeMode.DARK: Theme(mode=ThemeMode.DARK, colors=DARK_PALETTE),
             ThemeMode.LIGHT: Theme(mode=ThemeMode.LIGHT, colors=LIGHT_PALETTE),
+            ThemeMode.HIGH_CONTRAST: Theme(mode=ThemeMode.HIGH_CONTRAST, colors=HIGH_CONTRAST_PALETTE),
         }
 
     @property
@@ -163,5 +193,28 @@ def get_theme_manager() -> ThemeManager:
     return _theme_manager
 
 
-# Backward compatibility - keep THEME for existing code
-THEME = Theme(mode=ThemeMode.DARK, colors=DARK_PALETTE)
+class ThemeProxy:
+    """Proxy that always reflects the current ThemeManager theme.
+
+    This lets existing code keep using `THEME.colors.*` while ensuring
+    runtime values stay in sync with the saved theme preference.
+    """
+
+    @property
+    def _theme(self) -> Theme:
+        return get_theme_manager().current_theme
+
+    @property
+    def colors(self) -> ColorPalette:
+        return self._theme.colors
+
+    @property
+    def mode(self) -> ThemeMode:
+        return self._theme.mode
+
+    def __getattr__(self, name: str) -> object:
+        return getattr(self._theme, name)
+
+
+# Backward compatibility - keep THEME name for existing imports
+THEME = ThemeProxy()

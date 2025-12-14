@@ -23,63 +23,6 @@ class HelpScreen(ModalScreen):
         ("?", "dismiss", "Close"),  # Same key that opens help
     ]
 
-    CSS = """
-    HelpScreen {
-        align: center middle;
-        background: rgba(58, 53, 48, 0.5);  /* overlay-disabled */
-    }
-
-    #help-container {
-        width: auto;
-        max-width: 80;
-        height: auto;
-        max-height: 90%;
-        background: #2A2520;  /* bg-secondary */
-        border: thick #D4744F;  /* accent */
-        padding: 2;
-    }
-
-    .help-title {
-        color: #D4744F;  /* accent */
-        text-style: bold;
-        text-align: center;
-        margin-bottom: 1;
-    }
-
-    .help-category {
-        color: #F0EDE9;  /* text-primary */
-        text-style: bold;
-        margin-top: 1;
-        margin-bottom: 0;
-    }
-
-    .help-shortcut {
-        layout: horizontal;
-        height: auto;
-        margin-left: 2;
-    }
-
-    .help-key {
-        background: #3D3833;  /* bg-elevated */
-        color: #D4744F;  /* accent */
-        text-style: bold;
-        padding: 0 1;
-        min-width: 8;
-    }
-
-    .help-description {
-        color: #B8B5B2;  /* text-secondary */
-        margin-left: 2;
-    }
-
-    .help-footer {
-        color: #7A7672;  /* text-muted */
-        text-style: italic;
-        text-align: center;
-        margin-top: 1;
-    }
-    """
-
     def compose(self) -> ComposeResult:
         """Compose help screen with categorized shortcuts."""
         with Container(id="help-container"):
@@ -92,12 +35,22 @@ class HelpScreen(ModalScreen):
                 yield self._create_shortcut("S", "Start/Stop bot")
                 yield self._create_shortcut("?", "Show this help screen")
 
+                # Tile Navigation
+                yield Label("Tile Navigation", classes="help-category")
+                yield self._create_shortcut("↑/↓/←/→", "Move focus between tiles")
+                yield self._create_shortcut("ENTER", "Open focused tile details")
+                yield self._create_shortcut("ESC", "Return from detail screen")
+
                 # Navigation & Views
                 yield Label("Navigation & Views", classes="help-category")
+                yield self._create_shortcut("M", "Show market overlay")
+                yield self._create_shortcut("D", "Show details overlay")
+                yield self._create_shortcut("W", "Edit watchlist symbols")
                 yield self._create_shortcut("L", "Focus log viewer (scroll/read)")
                 yield self._create_shortcut("1", "Show full logs screen")
                 yield self._create_shortcut("2", "Show system details screen")
-                yield self._create_shortcut("M", "Show mode information")
+                yield self._create_shortcut("A", "Show alert history")
+                yield self._create_shortcut("I", "Show mode information")
 
                 # Accessibility
                 yield Label("Accessibility", classes="help-category")
@@ -111,20 +64,23 @@ class HelpScreen(ModalScreen):
 
                 # Log Navigation (when log widget focused)
                 yield Label("Log Navigation (when focused)", classes="help-category")
-                yield self._create_shortcut("SPACE/P", "Pause/Resume log streaming")
-                yield self._create_shortcut("F", "Cycle format (compact/verbose/JSON)")
+                yield self._create_shortcut("SPACE", "Pause/Resume log streaming")
+                yield self._create_shortcut("V", "Cycle format (compact/verbose/JSON)")
                 yield self._create_shortcut("J/K", "Scroll up/down one line")
                 yield self._create_shortcut("CTRL+D/U", "Scroll half page down/up")
                 yield self._create_shortcut("g/G", "Jump to top/bottom")
                 yield self._create_shortcut("n/N", "Jump to next/previous error")
-                yield self._create_shortcut("T", "Cycle timestamp format")
-                yield self._create_shortcut("S", "Toggle startup section")
+                yield self._create_shortcut("CTRL+T", "Cycle timestamp format")
+                yield self._create_shortcut("CTRL+S", "Toggle startup section")
 
                 # Configuration & Display
                 yield Label("Configuration & Display", classes="help-category")
                 yield self._create_shortcut("C", "Open configuration modal")
                 yield self._create_shortcut("R", "Reconnect to data source")
-                yield self._create_shortcut("T", "Toggle theme (restart to apply)")
+                yield self._create_shortcut("F", "Force refresh")
+                yield self._create_shortcut("T", "Toggle theme")
+                yield self._create_shortcut("CTRL+K", "Open command palette")
+                yield self._create_shortcut("CTRL+P", "Toggle performance overlay")
 
                 # Emergency Actions
                 yield Label("Emergency Actions", classes="help-category")

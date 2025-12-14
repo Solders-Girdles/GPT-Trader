@@ -17,13 +17,7 @@ from gpt_trader.tui.events import (
 class ModeSelector(Static):
     """Dropdown selector for bot operating mode."""
 
-    DEFAULT_CSS = """
-    ModeSelector .loading-indicator {
-        color: #D4744F;
-        text-style: bold;
-        margin-left: 1;
-    }
-    """
+    # Styles moved to styles/widgets/status_bar.tcss (ModeSelector section)
 
     # Loading spinner frames (Braille dots)
     SPINNER_FRAMES = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]

@@ -10,10 +10,13 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from textual.widgets._select import SelectOverlay
 from tests.unit.gpt_trader.tui.factories import (
     BotStatusFactory,
     TuiStateFactory,
 )
+
+from textual.widgets import Select
 
 from gpt_trader.monitoring.status_reporter import StatusReporter
 from gpt_trader.tui.app import TraderApp
@@ -103,16 +106,16 @@ class TestPortfolioWidgetInteractions:
     """Tests for portfolio widget accessibility via Details overlay."""
 
     @pytest.mark.asyncio
-    async def test_strategy_widget_on_main_screen(self, mock_bot_with_status):
-        """Test that strategy widget is present on main screen (log-centric layout)."""
+    async def test_log_widget_on_main_screen(self, mock_bot_with_status):
+        """Test that log widget is primary on main screen (log-centric layout)."""
         app = TraderApp(bot=mock_bot_with_status)
 
         async with app.run_test() as pilot:
             await pilot.pause()
 
-            # Query for strategy widget (now primary on main screen)
-            strategy = app.query("StrategyWidget")
-            assert len(strategy) > 0, "StrategyWidget should exist on main screen"
+            # Query for log widget (primary view on main screen)
+            logs = app.query("LogWidget")
+            assert len(logs) > 0, "LogWidget should exist on main screen"
 
     @pytest.mark.asyncio
     async def test_portfolio_accessible_via_details(self, mock_bot_with_status):
@@ -178,6 +181,22 @@ class TestLogWidgetInteractions:
 
             # Verify log widget can be queried
             assert app.query("LogWidget") is not None
+
+    @pytest.mark.asyncio
+    async def test_log_level_select_overlay_is_screen_overlay(self, mock_bot_with_status):
+        """Select dropdowns should render on the screen overlay layer (no clipping)."""
+        app = TraderApp(bot=mock_bot_with_status)
+
+        async with app.run_test() as pilot:
+            await pilot.pause()
+
+            select = app.query_one("#log-level-select", Select)
+            select.action_show_overlay()
+            await pilot.pause()
+
+            overlay = app.query_one(SelectOverlay)
+            assert overlay.styles.overlay == "screen"
+            assert overlay.styles.layer == "overlay"
 
 
 class TestFactoryIntegration:

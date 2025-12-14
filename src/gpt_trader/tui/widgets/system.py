@@ -10,41 +10,7 @@ from gpt_trader.tui.types import SystemStatus
 class SystemHealthWidget(Static):
     """Widget to display system health and brokerage connection status."""
 
-    DEFAULT_CSS = """
-    SystemHealthWidget {
-        background: #2A2520;  /* Theme bg-secondary */
-        border: none;
-        height: auto;
-        padding: 1;
-    }
-
-    SystemHealthWidget .value {
-        color: #F0EDE9;  /* Theme text-primary */
-        text-style: bold;
-    }
-
-    .status-connected {
-        color: #85B77F;  /* Theme success */
-    }
-
-    .status-disconnected {
-        color: #E08580;  /* Theme error */
-    }
-
-    .status-unknown {
-        color: #E0B366;  /* Theme warning */
-    }
-
-    .compact-metrics {
-        height: auto;
-        align-vertical: middle;
-    }
-
-    .metric-separator {
-        color: #7A7672;  /* Theme text-muted */
-        margin: 0 1;
-    }
-    """
+    # Styles moved to styles/widgets/system.tcss
 
     system_data = reactive(SystemStatus())
 
@@ -53,7 +19,7 @@ class SystemHealthWidget(Static):
         self.compact_mode = compact_mode
 
     def compose(self) -> ComposeResult:
-        yield Label("⚙️ SYSTEM", classes="header")
+        yield Label("SYSTEM", classes="widget-header")
 
         if self.compact_mode:
             # Compact horizontal layout - all metrics in one row

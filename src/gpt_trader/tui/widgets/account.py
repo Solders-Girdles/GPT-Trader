@@ -1,4 +1,9 @@
+from __future__ import annotations
+
+import time
+from datetime import datetime
 from decimal import Decimal
+from typing import TYPE_CHECKING
 
 from textual.app import ComposeResult
 from textual.containers import Container
@@ -7,49 +12,38 @@ from textual.widgets import DataTable, Label, Static
 from gpt_trader.tui.formatting import format_currency
 from gpt_trader.tui.helpers import safe_update
 from gpt_trader.tui.types import AccountSummary
+from gpt_trader.tui.widgets.tile_states import TileBanner
 from gpt_trader.utilities.logging_patterns import get_logger
+
+if TYPE_CHECKING:
+    from gpt_trader.tui.state import TuiState
 
 logger = get_logger(__name__, component="tui")
 
 
 class AccountWidget(Static):
-    """Widget to display account metrics with optional compact mode."""
+    """Widget to display account metrics with optional compact mode.
 
-    DEFAULT_CSS = """
-    AccountWidget {
-        layout: vertical;
-        height: 1fr;
-    }
-
-    AccountWidget DataTable {
-        height: auto;
-    }
-
-    AccountWidget.compact .balance-details {
-        display: none;  /* Hide balance table in compact mode */
-    }
-
-    AccountWidget.compact .account-metrics-row {
-        display: none;  /* Hide detailed metrics in compact mode */
-    }
-
-    .portfolio-summary {
-        layout: horizontal;
-        align-vertical: middle;
-    }
-
-    .metric-separator {
-        color: $text-muted;  /* UPDATED: Use TCSS variable */
-        margin: 0 1;
-    }
+    Implements StateObserver to receive updates via StateRegistry broadcast.
     """
+
+    # Styles moved to styles/widgets/account.tcss
 
     def __init__(self, compact_mode: bool = True, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.compact_mode = compact_mode
+        self._has_received_update = False
+        self._bot_running = False
+        self._data_source_mode = "demo"
 
     def compose(self) -> ComposeResult:
-        yield Label("💰 ACCOUNT", classes="header")
+        # Header with timestamp
+        with Container(classes="account-header"):
+            yield Label("ACCOUNT", classes="widget-header")
+            yield Label("", id="account-timestamp", classes="timestamp-label")
+
+        # Banner for warnings/errors
+        yield TileBanner(id="account-banner", classes="tile-banner hidden")
 
         if self.compact_mode:
             # Compact horizontal layout - just portfolio value and P&L
@@ -87,10 +81,15 @@ class AccountWidget(Static):
 
             # Balance details (shown only in expanded mode)
             with Container(classes="balance-details"):
-                yield Label("Balances", classes="header")
+                yield Label("BALANCES", classes="widget-header")
                 yield DataTable()
 
     def on_mount(self) -> None:
+        """Register with StateRegistry and set up expanded mode layouts."""
+        # Register with StateRegistry for state updates
+        if hasattr(self.app, "state_registry"):
+            self.app.state_registry.register(self)
+
         # Only set up table and layouts in expanded mode
         if not self.compact_mode:
             try:
@@ -111,6 +110,101 @@ class AccountWidget(Static):
                 account_row.styles.height = "auto"
             except Exception:
                 pass  # Elements don't exist in compact mode
+
+    def on_unmount(self) -> None:
+        """Unregister from StateRegistry on unmount."""
+        if hasattr(self.app, "state_registry"):
+            self.app.state_registry.unregister(self)
+
+    def on_state_updated(self, state: TuiState) -> None:
+        """Handle state updates from StateRegistry broadcast.
+
+        Extracts account data from TuiState and calls update_account().
+        """
+        self._has_received_update = True
+        self._bot_running = bool(getattr(state, "running", False))
+        self._data_source_mode = str(getattr(state, "data_source_mode", "demo") or "demo")
+
+        # Update timestamp
+        self._update_timestamp(state.last_data_fetch or state.last_update_timestamp)
+
+        # Handle degraded mode
+        try:
+            banner = self.query_one("#account-banner", TileBanner)
+            if state.degraded_mode:
+                reason = state.degraded_reason or "Status reporter unavailable"
+                banner.update_banner(f"Degraded: {reason}", severity="warning")
+            elif state.is_data_stale:
+                age = int(time.time() - state.last_data_fetch)
+                banner.update_banner(f"Data stale ({age}s)", severity="warning")
+            else:
+                banner.update_banner("")
+        except Exception as e:
+            logger.debug("Failed to update account banner: %s", e)
+
+        if not state.account_data:
+            return
+
+        # Toggle metrics row visibility based on data availability
+        self._toggle_metrics_row_visibility(state.account_data)
+
+        # Get portfolio value from position_data.equity
+        portfolio_value = state.position_data.equity if state.position_data else Decimal("0")
+
+        # Get total P&L from position_data
+        total_pnl = state.position_data.total_unrealized_pnl if state.position_data else Decimal("0")
+
+        self.update_account(
+            state.account_data,
+            portfolio_value=portfolio_value,
+            total_pnl=total_pnl,
+        )
+
+    def _update_timestamp(self, timestamp: float) -> None:
+        """Update the 'Updated HH:MM:SS' timestamp label."""
+        try:
+            ts_label = self.query_one("#account-timestamp", Label)
+            if timestamp and timestamp > 0:
+                dt = datetime.fromtimestamp(timestamp)
+                ts_label.update(f"Updated {dt.strftime('%H:%M:%S')}")
+            else:
+                ts_label.update("")
+        except Exception as e:
+            logger.debug("Failed to update account timestamp: %s", e)
+
+    def _toggle_metrics_row_visibility(self, data: AccountSummary) -> None:
+        """Show data or contextual messages for Volume/Fee/Tier.
+
+        Instead of hiding the row when data is unavailable, shows "--" and "N/A"
+        placeholders to indicate the row exists but data is not yet available.
+        """
+        if self.compact_mode:
+            return  # Compact mode doesn't show this row
+
+        try:
+            metrics_row = self.query_one(".account-metrics-row", Container)
+            has_data = (
+                data.volume_30d > 0
+                or data.fees_30d > 0
+                or (data.fee_tier and data.fee_tier not in ("-", "", None))
+            )
+
+            if has_data:
+                # Show actual values
+                self.query_one("#acc-volume", Label).update(format_currency(data.volume_30d))
+                self.query_one("#acc-fees", Label).update(format_currency(data.fees_30d))
+                tier_str = str(data.fee_tier) if data.fee_tier else "-"
+                self.query_one("#acc-tier", Label).update(tier_str)
+            else:
+                # Show contextual placeholders instead of hiding
+                self.query_one("#acc-volume", Label).update("[dim]--[/dim]")
+                self.query_one("#acc-fees", Label).update("[dim]--[/dim]")
+                self.query_one("#acc-tier", Label).update("[dim]N/A[/dim]")
+
+            # Always show the row now (remove hidden if previously added)
+            metrics_row.remove_class("hidden")
+        except Exception as e:
+            logger.debug("Failed to update metrics row: %s", e)
 
     @safe_update(notify_user=True, error_tracker=True, severity="warning")
     def update_account(

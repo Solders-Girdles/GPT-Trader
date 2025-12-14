@@ -43,3 +43,9 @@ repos:
         language: python
         pass_filenames: false
         always_run: true
+    -   id: tui-guardrails
+        name: tui-guardrails
+        entry: python scripts/ci/check_tui_guardrails.py
+        language: python
+        pass_filenames: true
+        files: ^src/gpt_trader/tui/.*\.py$

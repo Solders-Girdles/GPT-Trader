@@ -1,0 +1,505 @@
+/* ========================================================================== */
+/* DASHBOARD WIDGETS - Consistent Spacing & Visual Hierarchy                  */
+/* ========================================================================== */
+
+/* === Ticker Row === */
+TickerRow {
+    layout: horizontal;
+    height: 1;
+    width: 100%;
+    margin-bottom: 0;
+    padding: 0 2;
+}
+
+TickerRow .symbol {
+    width: 10;
+    text-style: bold;
+    color: $text-primary;
+}
+
+TickerRow .price {
+    width: 12;
+    content-align: right middle;
+}
+
+TickerRow SparklineWidget {
+    width: 1fr;
+    margin: 0 2;
+}
+
+TickerRow .change {
+    width: 8;
+    content-align: right middle;
+}
+
+/* Ticker row inner container (from MarketPulseWidget) */
+.ticker-row-inner {
+    height: auto;
+    padding: 0 1;
+    margin-top: 1;
+}
+
+.ticker-symbol {
+    width: 8;
+    text-style: bold;
+    color: $text-primary;
+}
+
+.ticker-spark {
+    width: 1fr;
+}
+
+.ticker-price {
+    width: 10;
+    text-align: right;
+    color: $text-primary;
+}
+
+.ticker-change {
+    width: 8;
+    text-align: right;
+}
+
+/* === Market Pulse Widget - Professional Display === */
+MarketPulseWidget {
+    width: 100%;
+    height: 1fr;  /* CRITICAL: Fill parent using fr instead of % */
+    border: none;
+    padding: 0; /* Tile provides padding; avoid double-padding */
+    background: transparent;
+    layout: vertical;
+}
+
+/* Ticker list container - removed, defined in empty state section */
+
+/* Widget Header - NOTE: Use .widget-header from headers.tcss */
+/* This duplicate definition is kept for backwards compatibility but
+   the canonical style is defined in components/headers.tcss */
+
+/* Compact header variant */
+.widget-header-compact {
+    height: 1;
+    padding: 0 1;
+    border-left: none;
+}
+
+/* === Position Card Widget - Professional Card Design === */
+PositionCardWidget {
+    width: 100%;
+    height: 1fr;  /* CRITICAL: Fill parent using fr instead of % */
+    background: transparent; /* Tile provides background */
+    border: none; /* Tile provides border */
+    padding: 0; /* Tile provides padding; avoid shrinking content area */
+    layout: vertical;  /* Allow children to expand */
+    align: center middle;
+}
+
+.pos-header {
+    layout: horizontal;
+    height: 1;
+    width: 100%;
+    margin-bottom: 1;
+}
+
+.pos-symbol {
+    width: 1fr;
+    color: $text-primary;
+    text-style: bold;
+}
+
+.pos-side {
+    width: auto;
+    padding: 0 1;
+    text-style: bold;
+}
+
+.side-long {
+    color: $success;
+    background: $success-muted;
+}
+
+.side-short {
+    color: $error;
+    background: $error-muted;
+}
+
+.pnl-huge {
+    width: 100%;
+    height: 3;
+    content-align: center middle;
+    text-style: bold;
+    color: $text-muted;
+    background: $bg-secondary;
+    border: solid $border-subtle;
+    margin: 1 0;
+}
+
+.pnl-positive { color: $success; border: solid $success; }
+.pnl-negative { color: $error; border: solid $error; }
+
+.pos-details {
+    layout: grid;
+    grid-size: 2;
+    grid-gutter: 1;
+}
+
+/* Position Card active state layout (from PositionCardWidget) */
+.pos-header-row {
+    width: 100%;
+    align: center middle;
+    padding: 1;
+}
+
+.pos-badge {
+    padding: 0 1;
+    text-style: bold;
+    background: $bg-elevated;
+}
+
+.pos-badge.long {
+    background: $success-muted;
+    color: $success;
+}
+
+.pos-badge.short {
+    background: $error-muted;
+    color: $error;
+}
+
+.pnl-hero {
+    text-align: center;
+    padding: 1;
+    width: 100%;
+}
+
+.pos-details-grid {
+    layout: grid;
+    grid-size: 3;
+    grid-columns: 1fr 1fr 1fr;
+    grid-gutter: 1;
+    width: 100%;
+    padding: 0 2;
+}
+
+.detail-item {
+    align: center middle;
+}
+
+.detail-label {
+    color: $text-muted;
+}
+
+.detail-value {
+    text-style: bold;
+    color: $text-primary;
+}
+
+/* === System Monitor Widget - Professional Display === */
+SystemMonitorWidget {
+    width: 100%;
+    height: 1fr;  /* CRITICAL: Fill parent using fr instead of % */
+    padding: 0;  /* Tile provides padding; avoid double-padding */
+    layout: vertical;
+    background: transparent;
+}
+
+.sys-header {
+    height: 2;  /* Increased height for better visibility */
+    text-style: bold;
+    color: $text-primary;
+    background: transparent;
+    padding: 0 $spacing-sm; /* Added padding */
+    border-left: wide $accent; /* Accent border */
+    border-bottom: solid $border-subtle; /* Subtle bottom border */
+    content-align: left middle;
+    margin-bottom: $spacing-xs; /* Spacing after header */
+}
+
+/* System metrics - Professional list layout */
+.sys-row {
+    height: 2;  /* Increased height for better readability */
+    margin-bottom: $spacing-xs; /* Spacing between rows */
+    layout: horizontal;
+    align: left middle;
+    padding: $spacing-xs $spacing-sm; /* Increased padding */
+    background: transparent;
+    border-left: solid transparent; /* Reserve space for hover accent */
+}
+
+.sys-row:hover {
+    background: $bg-elevated; /* Subtle background on hover */
+    border-left: solid $accent-muted; /* Accent border on hover */
+}
+
+.sys-metric-label {
+    color: $text-muted;
+    width: 12; /* Increased width for better alignment */
+    text-align: left;
+}
+
+.sys-metric-value {
+    color: $text-primary;
+    width: 1fr;
+    text-align: right;
+    text-style: bold;
+}
+
+.sys-metric {
+    height: 1;  /* Reduced from 2 to fit more metrics */
+    color: $text-secondary;
+    padding: 0 0;  /* No extra padding - align with progress bars */
+    margin-bottom: 0;
+    background: transparent;
+    border: none;
+    text-align: left;
+}
+
+.sys-metric.good { color: $success; background: transparent; }
+.sys-metric.warning { color: $warning; background: transparent; }
+.sys-metric.bad { color: $error; background: transparent; }
+.sys-metric.stopped { color: $info; background: transparent; }
+
+.sys-metric-value.good { color: $success; }
+.sys-metric-value.warning { color: $warning; }
+.sys-metric-value.bad { color: $error; }
+
+/* Row with inline sparkline */
+.sys-row-with-spark {
+    height: 1;
+    width: 100%;
+    layout: horizontal;
+    align: left middle;
+    padding: 0 1;
+    margin-bottom: 0;
+}
+
+.sys-progress {
+    width: 1fr;
+    height: 1;
+}
+
+.sys-sparkline {
+    width: 10;  /* Fixed width for sparkline */
+    height: 1;
+    margin-left: 1;
+}
+
+.sys-latency-label {
+    width: 1fr;
+    height: 1;
+    color: $text-secondary;
+}
+
+/* Connection status - clean inline */
+.sys-connection {
+    height: 2;
+    padding: 0 1;
+    background: transparent;
+    border: none;
+    margin-top: 1;
+    content-align: left middle;
+}
+
+.sys-connection.connected {
+    color: $success;
+}
+
+.sys-connection.disconnected {
+    color: $error;
+}
+
+/* === Empty State Container - Professional Centered Display === */
+.empty-state-container {
+    layout: vertical;
+    width: 100%;
+    height: 1fr;  /* Fill available space for vertical centering */
+    min-height: 5; /* Guardrail: ensure visibility if fr collapses */
+    padding: $spacing-lg; /* Increased padding */
+    background: transparent;
+    border: none;
+    align: center middle;  /* Center children horizontally and vertically */
+}
+
+/* #ticker-list needs to fill remaining space after header */
+#ticker-list {
+    height: 1fr;  /* Fill remaining space after widget-header */
+    min-height: 6; /* Ensure placeholder visibility */
+    width: 100%;
+    layout: vertical;
+    align: center middle;
+    content-align: center middle;
+}
+
+/* Ensure empty state container fills and centers within ticker-list */
+#ticker-list > .empty-state-container {
+    height: 1fr;
+    width: 100%;
+    align: center middle;
+}
+
+/* Position tile body should fill remaining space under banner */
+#pos-body {
+    height: 1fr;
+    min-height: 6; /* Ensure placeholder visibility */
+    width: 100%;
+    layout: vertical;
+    align: center middle;
+    content-align: center middle;
+}
+
+/* Ensure empty/loading states center within position body */
+#pos-body > .empty-state-container {
+    height: 1fr;
+    width: 100%;
+    align: center middle;
+}
+
+/* Empty state labels - Professional styling */
+.empty-icon {
+    color: $text-muted;
+    text-align: center;
+    width: 100%;
+    height: 3; /* Increased height */
+    content-align: center middle;
+    margin-bottom: $spacing-xs;
+}
+
+.empty-title {
+    color: $text-primary; /* More prominent */
+    text-style: bold;
+    text-align: center;
+    width: 100%;
+    height: 2; /* Increased height */
+    content-align: center middle;
+    margin-bottom: $spacing-xs;
+}
+
+.empty-subtitle {
+    color: $text-secondary; /* More visible */
+    text-align: center;
+    width: 100%;
+    height: 2; /* Increased height */
+    content-align: center middle;
+    padding: 0 $spacing-md; /* Horizontal padding */
+}
+
+/* === Quick Actions - Keyboard hints when stopped === */
+.quick-actions {
+    width: 100%;
+    height: auto;
+    align: center middle;
+    padding: 1;
+    margin-top: 1;
+}
+
+.quick-actions-title {
+    text-style: bold;
+    color: $text-muted;
+    text-align: center;
+    width: 100%;
+    margin-bottom: 1;
+}
+
+.quick-actions-row {
+    width: auto;
+    height: auto;
+    align: center middle;
+}
+
+.action-hint {
+    color: $text-secondary;
+    padding: 0 2;
+}
+
+.action-hint:first-of-type {
+    padding-left: 0;
+}
+
+/* === Market Header with Data State Indicator === */
+.market-header {
+    layout: horizontal;
+    width: 100%;
+    height: auto;
+    padding: 0;
+    margin-bottom: 1;
+}
+
+.market-header .widget-header {
+    width: auto;
+}
+
+.data-state-label {
+    color: $text-muted;
+    width: 1fr;
+    text-align: right;
+    padding-right: 1;
+}
+
+/* === Ticker Spread Column === */
+.ticker-spread {
+    width: 8;
+    text-align: right;
+    color: $text-muted;
+}
+
+/* === No Position Dashboard (Strategy + Portfolio Snapshots) === */
+.no-position-dashboard {
+    width: 100%;
+    height: 1fr;
+    padding: 1;
+    layout: vertical;
+    align: center top;
+}
+
+.no-pos-title {
+    text-style: bold;
+    color: $text-primary;
+    text-align: center;
+    width: 100%;
+    margin-bottom: 0;
+}
+
+.no-pos-subtitle {
+    color: $text-muted;
+    text-align: center;
+    width: 100%;
+    margin-bottom: 1;
+}
+
+.snapshot-section {
+    width: 100%;
+    height: auto;
+    margin-bottom: 1;
+    padding: 1;
+    background: $bg-elevated;
+    border-left: wide $accent-muted;
+}
+
+.snapshot-header {
+    color: $text-muted;
+    text-style: bold;
+    margin-bottom: 1;
+}
+
+.snapshot-row {
+    padding-left: 1;
+    color: $text-primary;
+}
+
+.snapshot-row.muted {
+    color: $text-muted;
+}
+
+/* === Resilience Metrics Section (SystemMonitorWidget) === */
+.resilience-metrics {
+    width: 100%;
+    height: auto;
+    margin-top: 1;
+    padding-top: 1;
+    border-top: solid $border-subtle;
+}
+
+.resilience-metrics .sys-metric {
+    height: 1;
+    padding: 0;
+}

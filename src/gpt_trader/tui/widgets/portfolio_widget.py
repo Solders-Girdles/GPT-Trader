@@ -118,7 +118,7 @@ class PortfolioWidget(Static):
 
     def compose(self) -> ComposeResult:
         """Compose the portfolio widget layout."""
-        yield Label("PORTFOLIO", classes="header")
+        yield Label("PORTFOLIO", classes="widget-header")
         with TabbedContent():
             with TabPane("Positions", id="positions-tab"):
                 yield PositionsWidget(id="portfolio-positions")

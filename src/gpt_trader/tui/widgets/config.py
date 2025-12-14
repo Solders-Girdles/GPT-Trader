@@ -11,42 +11,6 @@ from gpt_trader.tui.responsive import calculate_modal_width
 class ConfigModal(ModalScreen):
     """Modal to edit critical configuration."""
 
-    CSS = """
-    ConfigModal {
-        align: center middle;
-    }
-
-    #dialog {
-        grid-size: 2;
-        grid-gutter: 1 2;
-        grid-rows: 1fr 3;
-        padding: 0 1;
-        height: auto;
-        border: thick $background 80%;
-        background: $surface;
-    }
-
-    .field-label {
-        text-align: right;
-        padding-top: 1;
-    }
-
-    .field-input {
-        width: 100%;
-    }
-
-    #config-actions {
-        column-span: 2;
-        layout: horizontal;
-        align: center middle;
-        margin-top: 2;
-    }
-
-    #btn-save {
-        margin-right: 2;
-    }
-    """
-
     def __init__(self, config: Any) -> None:
         super().__init__()
         self.config = config

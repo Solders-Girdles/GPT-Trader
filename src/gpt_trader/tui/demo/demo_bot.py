@@ -75,13 +75,13 @@ class DemoStatusReporter:
         """Register an observer for status updates."""
         if callback not in self._observers:
             self._observers.append(callback)
-            logger.info(f"Observer added. Total observers: {len(self._observers)}")
+            logger.debug("Observer added. Total observers: %s", len(self._observers))
 
     def remove_observer(self, callback: Callable[[BotStatus], None]) -> None:
         """Unregister an observer."""
         if callback in self._observers:
             self._observers.remove(callback)
-            logger.info(f"Observer removed. Total observers: {len(self._observers)}")
+            logger.debug("Observer removed. Total observers: %s", len(self._observers))
 
     def _dict_to_bot_status(self, data: dict[str, Any]) -> BotStatus:
         """Convert dict data from MockDataGenerator to BotStatus dataclass."""
@@ -281,7 +281,7 @@ class DemoStatusReporter:
         """Start the status reporter loop."""
         self._running = True
         self._task = asyncio.create_task(self._report_loop())
-        logger.info("Demo status reporter started")
+        logger.debug("Demo status reporter started")
         return self._task
 
     async def stop(self) -> None:
@@ -293,7 +293,7 @@ class DemoStatusReporter:
                 await self._task
             except asyncio.CancelledError:
                 pass
-        logger.info("Demo status reporter stopped")
+        logger.debug("Demo status reporter stopped")
 
     async def _report_loop(self) -> None:
         """Main reporting loop that notifies observers."""

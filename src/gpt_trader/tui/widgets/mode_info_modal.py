@@ -13,26 +13,6 @@ class ModeInfoModal(ModalScreen):
 
     BINDINGS = [("escape", "dismiss", "Close")]
 
-    CSS = """
-    ModeInfoModal {
-        align: center middle;
-    }
-
-    #mode-info-modal {
-        height: auto;
-        padding: 2;
-        background: $surface;
-        border: thick $accent;
-    }
-
-    #mode-title {
-        text-align: center;
-        text-style: bold;
-        color: $accent;
-        margin-bottom: 1;
-    }
-    """
-
     def __init__(self, mode: str) -> None:
         """
         Initialize mode info modal.

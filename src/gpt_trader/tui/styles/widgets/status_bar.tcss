@@ -152,61 +152,92 @@ ModeSelector .loading-indicator {
     margin: 0 1;
 }
 
-/* === Contextual Footer === */
+/* ========================================================================== */
+/* CONTEXTUAL FOOTER - Polished Keybinding Display                            */
+/* ========================================================================== */
 
 ContextualFooter {
     dock: bottom;
-    height: 2;        /* 1 content + 1 for border */
-    min-height: 2;
-    background: $bg-secondary;
-    border-top: solid $accent;
+    height: 1;
+    min-height: 1;
+    background: $elevation-2;
+    border-top: solid $border-subtle;
 }
 
 #contextual-footer {
-    height: 100%;     /* Fill parent */
-    min-height: 1;
+    layout: horizontal;
+    height: 100%;
+    width: 100%;
     align-vertical: middle;
-    padding: 0 $spacing-md;
+    padding: 0 1;
 }
 
 .footer-group {
-    margin-right: $spacing-md;
+    layout: horizontal;
+    height: 100%;
+    width: auto;
     align-vertical: middle;
+    margin: 0;
+}
+
+.footer-group-left {
+    margin-left: 0;
 }
 
 .footer-group-right {
     dock: right;
+    margin-right: 0;
 }
 
+/* Key badge - pill style */
 .footer-key {
-    color: $bg-primary;
-    text-style: bold;
+    height: 1;
+    width: auto;
+    color: $elevation-0;
     background: $accent;
-    padding: 0 $spacing-md;
-    margin-right: $spacing-xs;
+    text-style: bold;
+    padding: 0 1;
+    margin-right: 0;
 }
 
+/* Key label with increased spacing */
 .footer-label {
-    color: $text-primary;
-    margin-right: $spacing-md;
+    height: 1;
+    width: auto;
+    color: $text-secondary;
+    margin-right: 2;
+    padding: 0 1;
 }
 
+/* Group separator - more visible */
 .footer-separator {
-    color: $border-subtle;
-    margin: 0 $spacing-xs;
+    height: 1;
+    width: 1;
+    color: $accent-muted;
+    margin: 0 1;
+    padding: 0;
+}
+
+/* Data source badge - prominent */
+.footer-data-source {
+    color: $text-bright;
+    text-style: bold;
+    background: $accent-muted;
+    padding: 0 2;
+    margin-right: 2;
 }
 
 /* ========================================================================== */
-/* SLIM STATUS BAR (SlimStatusWidget) - Compact 3-Line Layout                 */
+/* SLIM STATUS BAR (SlimStatusWidget) - Enhanced Visual Hierarchy             */
 /* ========================================================================== */
 
 #slim-status {
     height: 4;         /* 3 content + 1 for border */
     min-height: 4;
     layout: vertical;  /* Explicit layout for proper child sizing */
-    background: $bg-secondary;
+    background: $bg-elevated;
     color: $text-primary;
-    border-bottom: solid $accent;
+    border-bottom: thick $accent;
     padding: 0;
 }
 
@@ -214,21 +245,21 @@ ContextualFooter {
     height: 100%;  /* Fill parent, don't use fixed height */
     width: 100%;
     align-vertical: middle;
-    padding: 0 1;
+    padding: 0 2;
 }
 
 #slim-status-bar > * {
     content-align: center middle;
 }
 
-/* Slim separators */
+/* === Enhanced Slim Separators === */
 .slim-separator {
     width: 1;
-    color: $border-subtle;
-    margin: 0 1;
+    color: $accent;
+    margin: 0 2;
 }
 
-/* Status indicator dot */
+/* === Status Indicator Group === */
 .status-indicator {
     width: 2;
     text-style: bold;
@@ -242,110 +273,148 @@ ContextualFooter {
     color: $error;
 }
 
-/* Status text */
+/* Status text with solid background pill */
 .status-text {
     width: auto;
-    min-width: 7;
+    min-width: 9;
     text-style: bold;
+    padding: 0 2;
 }
 
 .status-text.status-running {
-    color: $success;
+    color: $bg-primary;
+    background: $success;
 }
 
 .status-text.status-stopped {
-    color: $error;
+    color: $text-bright;
+    background: $error;
 }
 
-/* Slim typography hierarchy */
+/* === Slim Typography Hierarchy === */
 .slim-label {
     width: auto;
     color: $text-muted;
     margin-right: 1;
+    text-style: italic;
 }
 
 .slim-value {
     width: auto;
-    min-width: 6;
-    color: $text-primary;
+    min-width: 9;
+    color: $text-bright;
     text-style: bold;
+    background: $bg-elevated;
+    border-left: tall $accent-muted;
+    padding: 0 2;
 }
 
 .slim-value.pnl-positive {
-    color: $success;
+    color: $bg-primary;
+    background: $success;
 }
 
 .slim-value.pnl-negative {
-    color: $error;
+    color: $text-bright;
+    background: $error;
 }
 
 .slim-value.pnl-neutral {
     color: $text-primary;
+    background: $bg-elevated;
 }
 
-/* Position count */
+/* === Position Count === */
 .positions-count {
     width: auto;
-    min-width: 6;
+    min-width: 7;
     color: $text-secondary;
+    background: $bg-secondary;
+    padding: 0 1;
 }
 
 .positions-count.has-positions {
-    color: $accent;
+    color: $accent-glow;
+    background: $accent-subtle;
     text-style: bold;
 }
 
-/* Uptime */
+/* === Uptime === */
 .uptime {
     width: auto;
-    min-width: 8;
+    min-width: 9;
     color: $text-secondary;
+    background: $bg-secondary;
+    padding: 0 1;
+    text-style: bold;
 }
 
-/* Slim buttons - need height 3 for proper rendering */
+/* === Slim Buttons - Enhanced with accent glow on hover === */
 .slim-btn {
     width: auto;
-    min-width: 8;
+    min-width: 9;
     height: 3;
-    padding: 0 1;
-    margin: 0;
+    padding: 0 2;
+    margin: 0 1;
+    text-style: bold;
 }
 
 #slim-start-btn {
     background: $success;
     color: $bg-primary;
+    border: solid $success;
+}
+
+#slim-start-btn:hover {
+    background: $success;
+    border: solid $success;
+    text-style: bold;
 }
 
 #slim-stop-btn {
     background: $error;
     color: $bg-primary;
+    border: solid $error;
+}
+
+#slim-stop-btn:hover {
+    background: $error;
+    border: solid $error;
+    text-style: bold;
 }
 
 #slim-start-btn.-disabled,
 #slim-stop-btn.-disabled {
-    opacity: 0.5;
-    background: $bg-elevated;
+    opacity: 0.4;
+    background: $bg-secondary;
     color: $text-muted;
+    border: solid $border-subtle;
 }
 
-/* Slim mode selector */
+/* === Slim Mode Selector === */
 #slim-mode-select {
     width: auto;
-    min-width: 14;
+    min-width: 15;
     height: 3;
+    background: $bg-secondary;
+    border: solid $border-accent;
+}
+
+#slim-mode-select:hover {
+    border: solid $accent;
 }
 
 #slim-mode-select Select {
     height: 3;
 }
 
-/* Error badge */
+/* === Error Badge === */
 .error-badge {
     background: $error;
     color: $bg-primary;
-    padding: 0 1;
+    padding: 0 2;
     text-style: bold;
-    margin-left: 1;
+    margin-left: 2;
 }
 
 .error-badge.hidden {

@@ -13,7 +13,8 @@ from textual.app import ComposeResult
 from textual.containers import Container
 from textual.reactive import reactive
 from textual.screen import Screen
-from textual.widgets import Footer, Header
+from gpt_trader.tui.widgets import ContextualFooter
+from gpt_trader.tui.widgets.shell import CommandBar
 
 from gpt_trader.tui.state import TuiState
 from gpt_trader.tui.widgets import MarketWatchWidget
@@ -56,23 +57,30 @@ class MarketScreen(Screen):
 
     def compose(self) -> ComposeResult:
         """Compose the market screen layout."""
-        yield Header(
-            show_clock=True,
-            classes="app-header secondary-header",
-            icon="*",
-            time_format="%H:%M:%S",
+        yield CommandBar(
+            bot_mode=getattr(self.app, "data_source_mode", "DEMO").upper(),
+            id="header-bar",
         )
 
         with Container(id="market-container"):
             yield MarketWatchWidget(id="market-full", classes="dashboard-item")
 
-        yield Footer()
+        yield ContextualFooter()
 
     def on_mount(self) -> None:
         """Initialize with current state when mounted."""
-        logger.info("MarketScreen mounted")
+        logger.debug("MarketScreen mounted")
+        if hasattr(self.app, "state_registry"):
+            self.app.state_registry.register(self)
         if hasattr(self.app, "tui_state"):
             self.state = self.app.tui_state  # type: ignore[attr-defined]
+
+    def on_unmount(self) -> None:
+        if hasattr(self.app, "state_registry"):
+            self.app.state_registry.unregister(self)
+
+    def on_state_updated(self, state: TuiState) -> None:
+        self.state = state
 
     def action_dismiss(self, result: object = None) -> None:
         """Close the market screen and return to main view."""

@@ -1,5 +1,5 @@
 /* ========================================================================== */
-/* HEADERS & FOOTERS                                                          */
+/* HEADERS & FOOTERS - Technical/Clean                                        */
 /* ========================================================================== */
 
 Header {
@@ -9,23 +9,25 @@ Header {
     color: $text-primary;
 }
 
-/* Enhanced app header styling */
+/* App header - Streamlined */
 Header.app-header {
     height: 3;
     background: $bg-elevated;
-    border-bottom: thick $accent;
+    border-bottom: solid $border-emphasis;
     color: $text-primary;
     text-style: bold;
-    padding: 0 $spacing-md;
+    padding: 0 1;
+    layout: horizontal;
+    align-vertical: middle;
 }
 
-/* Compact sub-header for main screen */
+/* Compact sub-header */
 Header.sub-header {
     dock: top;
     height: 3;
     background: $bg-elevated;
     color: $text-primary;
-    border-bottom: solid $accent;
+    border-bottom: solid $border-accent; /* Sharp accent line */
     text-style: bold;
 }
 
@@ -35,11 +37,12 @@ Header.sub-header HeaderIcon {
     content-align: center middle;
     color: $accent;
     background: transparent;
+    text-style: bold;
 }
 
 Header.sub-header HeaderTitle {
     height: 3;
-    color: $text-primary;
+    color: $text-bright;
     text-style: bold;
     content-align: center middle;
     width: 1fr;
@@ -51,32 +54,33 @@ Header.sub-header HeaderClock {
     width: 14;
     min-width: 14;
     background: $bg-secondary;
-    color: $text-primary;
-    border-left: solid $accent;
+    color: $accent;
+    border-left: solid $border-subtle;
     padding: 0 2;
     text-style: bold;
     content-align: center middle;
 }
 
 Header.app-header HeaderIcon {
-    width: 9;
+    width: 14;
     height: 3;
-    padding: 0 $spacing-md;
+    padding: 0 1;
     content-align: center middle;
-    color: $bg-primary;
-    background: $accent;
-    border: none;
+    color: $text-primary;
+    background: $bg-secondary;
+    border-right: solid $border-subtle;
     text-style: bold;
 }
 
 Header.app-header HeaderIcon:hover {
-    background: $accent-hover;
-    color: $bg-primary;
+    background: $bg-highlight;
+    color: $text-bright;
+    border-right: solid $accent; /* Interaction hint */
 }
 
 Header.app-header HeaderTitle {
     height: 3;
-    color: $text-primary;
+    color: $text-bright;
     text-style: bold;
     content-align: center middle;
     width: 1fr;
@@ -85,37 +89,57 @@ Header.app-header HeaderTitle {
 Header.app-header HeaderClock {
     height: 3;
     min-width: 12;
-    background: $bg-secondary;
-    color: $text-primary;
-    border-left: thick $accent;
+    background: transparent;
+    color: $text-secondary;
+    border-left: solid $border-subtle;
     padding: 0 $spacing-md;
-    text-style: bold;
     content-align: center middle;
 }
-
 
 Footer {
     dock: bottom;
     height: 1;
     background: $bg-secondary;
     color: $text-primary;
+    border-top: solid $border-subtle;
 }
 
 /* === Widget Headers === */
 
-.header {
-    color: #FFFFFF;                    /* Pure white for maximum contrast */
-    text-style: bold;                  /* Bold for emphasis and readability */
-    text-align: left;                  /* Left-aligned editorial style */
-    background: $bg-elevated;          /* Elevated surface for separation */
-    padding: 0 2;                      /* Compact horizontal padding */
-    border-left: thick $accent;        /* Accent left border for visual hierarchy */
-    border-bottom: none;               /* No bottom border */
-    height: 1;                         /* Single line */
-    content-align: left middle;        /* Vertically center the text */
+/* Standard widget header - professional and refined */
+.widget-header {
+    color: $text-primary;
+    text-style: bold;
+    text-align: left;
+    background: $bg-elevated;
+    padding: 0 2; /* Increased padding for breathing room */
+    border-left: wide $accent; /* Accent accent line for visual hierarchy */
+    border-bottom: solid $border-emphasis; /* Stronger separator */
+    height: 3; /* More comfortable height */
+    content-align: left middle;
+    margin-bottom: 1; /* Better spacing from content */
+}
+
+/* Screen-level header */
+.screen-header {
+    color: $text-bright;
+    text-style: bold;
+    text-align: center;
+    background: $bg-elevated;
+    padding: 0 2;
+    border-bottom: solid $border-emphasis;
+    height: 3;
+    content-align: center middle;
+    margin-bottom: 1;
+}
+
+/* Accent variant */
+.widget-header-accent {
+    border-left: solid $accent;
+    background: $bg-highlight;
 }
 
 .header-icon {
-    color: $accent;
+    color: $text-muted;
     margin-right: $spacing-xs;
 }

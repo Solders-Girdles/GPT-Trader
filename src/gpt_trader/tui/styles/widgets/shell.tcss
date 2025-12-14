@@ -1,0 +1,58 @@
+/* ========================================================================== */
+/* SHELL COMPONENTS - Command Bar                                             */
+/* ========================================================================== */
+
+CommandBar {
+    layout: horizontal;
+    align-vertical: middle;
+    padding: 0 1;
+}
+
+CommandBar .identity {
+    width: 1fr;
+    content-align: left middle;
+    text-style: bold;
+    color: $accent-bright;
+}
+
+CommandBar .status-area {
+    width: 2fr;
+    content-align: center middle;
+    layout: horizontal;
+    align: center middle;
+}
+
+CommandBar .system-area {
+    width: 1fr;
+    content-align: right middle;
+    layout: horizontal;
+    align: right middle;
+}
+
+/* Mode badges */
+CommandBar .mode-badge {
+    background: $bg-highlight;
+    color: $text-muted;
+    padding: 0 1;
+    margin: 0 1;
+    text-style: bold;
+}
+
+CommandBar .mode-badge.live {
+    background: $error;
+    color: $text-primary;
+}
+
+CommandBar .mode-badge.paper {
+    background: $warning;
+    color: $bg-primary;
+}
+
+CommandBar .status-text {
+    color: $text-muted;
+    margin-right: 1;
+}
+
+CommandBar .clock {
+    color: $accent;
+}

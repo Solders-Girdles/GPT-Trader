@@ -11,9 +11,11 @@ from rich.text import Text
 from textual.app import ComposeResult
 from textual.containers import Container
 from textual.screen import Screen
-from textual.widgets import Button, DataTable, Footer, Header, Label, Static
+from textual.widgets import Button, DataTable, Label, Static
 
 from gpt_trader.utilities.logging_patterns import get_logger
+from gpt_trader.tui.widgets import ContextualFooter
+from gpt_trader.tui.widgets.shell import CommandBar
 
 if TYPE_CHECKING:
     from gpt_trader.tui.services.alert_manager import Alert
@@ -34,52 +36,13 @@ class AlertHistoryScreen(Screen):
         ("r", "reset_cooldowns", "Reset Cooldowns"),
     ]
 
-    DEFAULT_CSS = """
-    AlertHistoryScreen {
-        align: center middle;
-    }
-
-    AlertHistoryScreen > Container {
-        width: 90%;
-        height: 90%;
-        border: thick $accent;
-        background: $surface;
-    }
-
-    AlertHistoryScreen .title {
-        dock: top;
-        text-align: center;
-        text-style: bold;
-        padding: 1;
-        background: $primary;
-        color: $text;
-    }
-
-    AlertHistoryScreen .stats {
-        dock: top;
-        padding: 1 2;
-        background: $surface-darken-1;
-    }
-
-    AlertHistoryScreen DataTable {
-        height: 1fr;
-        margin: 1 2;
-    }
-
-    AlertHistoryScreen .button-bar {
-        dock: bottom;
-        height: 3;
-        align: center middle;
-        padding: 0 2;
-    }
-
-    AlertHistoryScreen Button {
-        margin: 0 1;
-    }
-    """
+    # Styles moved to styles/screens/alert_history.tcss
 
     def compose(self) -> ComposeResult:
-        yield Header()
+        yield CommandBar(
+            bot_mode=getattr(self.app, "data_source_mode", "DEMO").upper(),
+            id="header-bar",
+        )
         with Container():
             yield Label("Alert History", classes="title")
 
@@ -93,7 +56,7 @@ class AlertHistoryScreen(Screen):
                 yield Button("Reset Cooldowns [R]", id="reset-btn", variant="default")
                 yield Button("Close [ESC]", id="close-btn", variant="primary")
 
-        yield Footer()
+        yield ContextualFooter()
 
     def on_mount(self) -> None:
         """Initialize the alert table on mount."""
@@ -110,6 +73,8 @@ class AlertHistoryScreen(Screen):
 
     def _refresh_table(self) -> None:
         """Refresh the alert table from history."""
+        from gpt_trader.tui.theme import THEME
+
         table = self.query_one("#alert-table", DataTable)
         stats_label = self.query_one("#stats-label", Label)
 
@@ -144,11 +109,11 @@ class AlertHistoryScreen(Screen):
             # Color-code severity
             severity_text = Text(alert.severity.value.upper())
             if alert.severity.value == "error":
-                severity_text.stylize("red bold")
+                severity_text.stylize(f"{THEME.colors.error} bold")
             elif alert.severity.value == "warning":
-                severity_text.stylize("yellow")
+                severity_text.stylize(THEME.colors.warning)
             else:
-                severity_text.stylize("blue")
+                severity_text.stylize(THEME.colors.info)
 
             table.add_row(
                 time_str,

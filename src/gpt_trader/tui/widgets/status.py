@@ -4,6 +4,7 @@ from textual.message import Message
 from textual.reactive import reactive
 from textual.widgets import Button, Label, Static
 
+from gpt_trader.tui.events import ResponsiveStateChanged
 from gpt_trader.tui.responsive_state import ResponsiveState
 from gpt_trader.tui.widgets.mode_indicator import ModeIndicator
 from gpt_trader.tui.widgets.mode_selector import ModeSelector
@@ -30,6 +31,10 @@ class BotStatusWidget(Static):
 
     # Responsive design property
     responsive_state = reactive(ResponsiveState.STANDARD)
+
+    def on_responsive_state_changed(self, event: ResponsiveStateChanged) -> None:
+        """Update layout when responsive state changes."""
+        self.responsive_state = event.state
 
     # Cached widget references (populated in on_mount)
     _status_label: Label | None = None

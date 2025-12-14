@@ -15,6 +15,7 @@ from textual.message import Message
 from textual.reactive import reactive
 from textual.widgets import Button, Label, Select, Static
 
+from gpt_trader.tui.events import ResponsiveStateChanged
 from gpt_trader.tui.responsive_state import ResponsiveState
 
 
@@ -30,20 +31,7 @@ class SlimStatusWidget(Static):
     # Use percentage-based sizing for children - height is set via global CSS ID selector
     SCOPED_CSS = False  # Disable scoping to allow nested selectors
 
-    DEFAULT_CSS = """
-    SlimStatusWidget > Horizontal {
-        height: 100%;
-        width: 100%;
-    }
-
-    SlimStatusWidget > Horizontal > Button {
-        height: 100%;
-    }
-
-    SlimStatusWidget > Horizontal > Select {
-        height: 100%;
-    }
-    """
+    # Styles moved to styles/widgets/status_bar.tcss (SlimStatusWidget section)
 
     # Reactive properties
     running = reactive(False)
@@ -56,6 +44,10 @@ class SlimStatusWidget(Static):
 
     # Responsive design property
     responsive_state = reactive(ResponsiveState.STANDARD)
+
+    def on_responsive_state_changed(self, event: ResponsiveStateChanged) -> None:
+        """Update layout when responsive state changes."""
+        self.responsive_state = event.state
 
     # Cached widget references
     _status_indicator: Label | None = None

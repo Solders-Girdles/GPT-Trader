@@ -565,7 +565,7 @@ class TestTuiLogHandler:
 
     def test_compact_formatter_produces_short_output(self):
         """Test that CompactTuiFormatter produces compact output with icons."""
-        from gpt_trader.tui.log_manager import CompactTuiFormatter
+        from gpt_trader.tui.log_manager import CompactTuiFormatter, LEVEL_ICONS
 
         formatter = CompactTuiFormatter()
         record = logging.LogRecord(
@@ -582,22 +582,22 @@ class TestTuiLogHandler:
 
         # Should have short logger name and icon
         assert "[bot_lifecycle]" in formatted
-        assert "✓" in formatted
+        assert LEVEL_ICONS[logging.INFO] in formatted
         assert "Mode switch completed" in formatted
         # Should NOT have full logger path
         assert "gpt_trader.tui.managers" not in formatted
 
     def test_compact_formatter_uses_correct_icons(self):
         """Test that CompactTuiFormatter uses correct icons for each level."""
-        from gpt_trader.tui.log_manager import CompactTuiFormatter
+        from gpt_trader.tui.log_manager import CompactTuiFormatter, LEVEL_ICONS
 
         formatter = CompactTuiFormatter()
 
         levels_and_icons = [
-            (logging.ERROR, "✗"),
-            (logging.WARNING, "⚠"),
-            (logging.INFO, "✓"),
-            (logging.DEBUG, "·"),
+            (logging.ERROR, LEVEL_ICONS[logging.ERROR]),
+            (logging.WARNING, LEVEL_ICONS[logging.WARNING]),
+            (logging.INFO, LEVEL_ICONS[logging.INFO]),
+            (logging.DEBUG, LEVEL_ICONS[logging.DEBUG]),
         ]
 
         for level, expected_icon in levels_and_icons:
@@ -617,19 +617,22 @@ class TestTuiLogHandler:
         """Test that format mode property works correctly."""
         handler = TuiLogHandler()
 
-        # Default should be compact
-        assert handler.format_mode == "compact"
+        # Default should be structured (new default for better readability)
+        assert handler.format_mode == "structured"
 
         # Can set to valid modes
         handler.format_mode = "verbose"
         assert handler.format_mode == "verbose"
 
-        handler.format_mode = "structured"
-        assert handler.format_mode == "structured"
+        handler.format_mode = "compact"
+        assert handler.format_mode == "compact"
+
+        handler.format_mode = "json"
+        assert handler.format_mode == "json"
 
         # Invalid mode should be ignored
         handler.format_mode = "invalid"
-        assert handler.format_mode == "structured"  # Should remain unchanged
+        assert handler.format_mode == "json"  # Should remain unchanged
 
     def test_log_entry_has_structured_fields(self):
         """Test that LogEntry now has AI-friendly structured fields."""
@@ -669,3 +672,131 @@ class TestTuiLogHandler:
         assert detect_category("gpt_trader.features.risk") == "risk"  # Last component is "risk"
         assert detect_category("gpt_trader.features.market_data") == "market"  # Contains "market"
         assert detect_category("gpt_trader.unknown.module") == "general"
+
+    def test_structured_formatter_basic_output(self):
+        """Test that StructuredTuiFormatter produces fixed-column output."""
+        from gpt_trader.tui.log_manager import LEVEL_ICONS, StructuredTuiFormatter
+
+        formatter = StructuredTuiFormatter()
+        record = logging.LogRecord(
+            name="gpt_trader.tui.app",
+            level=logging.INFO,
+            pathname="",
+            lineno=0,
+            msg="Application started",
+            args=(),
+            exc_info=None,
+        )
+
+        formatted = formatter.format(record)
+
+        # Should have timestamp, icon, logger name, and message
+        assert LEVEL_ICONS[logging.INFO] in formatted  # INFO icon
+        assert "app" in formatted  # Short logger name
+        assert "Application started" in formatted
+
+    def test_structured_formatter_abbreviates_loggers(self):
+        """Test that StructuredTuiFormatter abbreviates long logger names."""
+        from gpt_trader.tui.log_manager import _abbreviate_logger
+
+        # Known abbreviations
+        assert _abbreviate_logger("gpt_trader.strategy").strip() == "strat"
+        assert _abbreviate_logger("gpt_trader.portfolio").strip() == "port"
+        assert _abbreviate_logger("gpt_trader.bot_lifecycle").strip() == "bot"
+
+        # Unknown loggers get truncated
+        long_name = "very_long_logger_name"
+        result = _abbreviate_logger(long_name, max_len=10)
+        assert len(result) == 10
+        assert result.endswith("…") or result.strip() == long_name[:10]
+
+    def test_structured_formatter_formats_strategy_debug(self):
+        """Test that strategy debug logs are reformatted for readability."""
+        from gpt_trader.tui.log_manager import StructuredTuiFormatter
+
+        formatter = StructuredTuiFormatter()
+        record = logging.LogRecord(
+            name="gpt_trader.features.strategy",
+            level=logging.INFO,
+            pathname="",
+            lineno=0,
+            msg="Strategy decision debug: symbol=BTC-USD marks=30 short_ma=115.25507938085695 long_ma=113.3961448256771715 bullish=False bearish=False label=neutral force=False",
+            args=(),
+            exc_info=None,
+        )
+
+        formatted = formatter.format(record)
+
+        # Should have condensed format
+        assert "BTC-USD" in formatted
+        assert "NEUTRAL" in formatted
+        # Long decimals should be rounded
+        assert "115.26" in formatted or "115.25" in formatted
+        assert "113.40" in formatted or "113.39" in formatted
+        # Original verbose fields should NOT appear
+        assert "bullish=False" not in formatted
+        assert "bearish=False" not in formatted
+
+    def test_structured_formatter_formats_strategy_decisions_with_reason(self):
+        """Test that actual strategy decision logs show action and reason."""
+        from gpt_trader.tui.log_manager import StructuredTuiFormatter
+
+        formatter = StructuredTuiFormatter()
+        record = logging.LogRecord(
+            name="gpt_trader.features.strategy",
+            level=logging.INFO,
+            pathname="",
+            lineno=0,
+            msg="Strategy Decision for BTC-USD: BUY (momentum crossover)",
+            args=(),
+            exc_info=None,
+        )
+
+        formatted = formatter.format(record)
+
+        # Should have symbol, action, and reason
+        assert "BTC-USD" in formatted
+        assert "BUY" in formatted
+        assert "momentum crossover" in formatted
+
+    def test_structured_formatter_formats_numbers(self):
+        """Test that _format_number rounds long decimals."""
+        from gpt_trader.tui.log_manager import _format_number
+
+        # Long decimals get rounded
+        assert _format_number("115.25507938085695") == "115.26"
+        assert _format_number("0.00012345") == "0.00"
+
+        # Large numbers get comma formatting
+        assert _format_number("98450.50") == "98,450.50"
+
+        # Invalid input returns as-is
+        assert _format_number("not_a_number") == "not_a_number"
+
+    def test_structured_formatter_handles_exceptions(self):
+        """Test that StructuredTuiFormatter handles exception info."""
+        from gpt_trader.tui.log_manager import StructuredTuiFormatter
+
+        formatter = StructuredTuiFormatter()
+
+        try:
+            raise ValueError("Test error message")
+        except ValueError:
+            import sys
+
+            exc_info = sys.exc_info()
+
+        record = logging.LogRecord(
+            name="gpt_trader.tui.app",
+            level=logging.ERROR,
+            pathname="",
+            lineno=0,
+            msg="An error occurred",
+            args=(),
+            exc_info=exc_info,
+        )
+
+        formatted = formatter.format(record)
+
+        assert "ValueError" in formatted
+        assert "Test error" in formatted

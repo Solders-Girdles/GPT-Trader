@@ -302,10 +302,14 @@ class BotLifecycleManager:
             if self.app.bot.running:
                 await self.app.bot.stop()
 
-            # Step 3: Disconnect from old bot's observer
+            # Step 3: Disconnect from old bot's observer (skip for NullStatusReporter)
             if hasattr(self.app.bot.engine, "status_reporter"):
-                self.app.bot.engine.status_reporter.remove_observer(self.app._on_status_update)
-                logger.info("Disconnected from old bot's status reporter")
+                reporter = self.app.bot.engine.status_reporter
+                if not getattr(reporter, "is_null_reporter", False):
+                    reporter.remove_observer(self.app._on_status_update)
+                    logger.info("Disconnected from old bot's status reporter")
+                else:
+                    logger.debug("Skipping observer disconnect for NullStatusReporter")
 
             # Step 4: Create new bot instance
             if target_mode == "demo":
@@ -317,10 +321,20 @@ class BotLifecycleManager:
             old_bot = self.app.bot
             self.app.bot = new_bot
 
-            # Step 6: Connect to new bot's observer
+            # Step 6: Connect to new bot's observer (skip for NullStatusReporter)
             if hasattr(self.app.bot.engine, "status_reporter"):
-                self.app.bot.engine.status_reporter.add_observer(self.app._on_status_update)
-                logger.info("Connected to new bot's status reporter")
+                reporter = self.app.bot.engine.status_reporter
+                if not getattr(reporter, "is_null_reporter", False):
+                    reporter.add_observer(self.app._on_status_update)
+                    logger.info("Connected to new bot's status reporter")
+                    # Exit degraded mode if we were in it
+                    self.app.tui_state.degraded_mode = False
+                    self.app.tui_state.degraded_reason = ""
+                else:
+                    logger.info("NullStatusReporter on new bot - entering degraded mode")
+                    self.app.tui_state.degraded_mode = True
+                    self.app.tui_state.degraded_reason = "StatusReporter not available"
+                    self.app.tui_state.connection_healthy = False
 
             # Step 7: Update TUI state
             self.app.data_source_mode = self.detect_bot_mode()

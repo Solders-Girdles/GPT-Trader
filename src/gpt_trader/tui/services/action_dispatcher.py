@@ -118,17 +118,44 @@ class ActionDispatcher:
             self.app.notify(f"Error showing help: {e}", severity="error")
 
     async def reconnect_data(self) -> None:
-        """Attempt to reconnect data source."""
+        """Start/refresh data feed.
+
+        Context-aware behavior:
+        - If data not yet available: "Starting data feed..."
+        - If data available: "Refreshing data..."
+        - In demo mode: "Demo mode uses simulated data"
+        """
         try:
             if self.app.data_source_mode == "demo":
-                self.app.notify("Demo mode doesn't require reconnection", severity="information")
+                self.app.notify("Demo mode uses simulated data", severity="information")
                 return
 
-            logger.info("User initiated data source reconnection")
+            # Set data_fetching flag for UI feedback
+            self.app.tui_state.data_fetching = True
+
+            # Context-aware notification
+            if not self.app.tui_state.data_available:
+                self.app.notify("Starting data feed...", severity="information")
+                logger.info("User initiated data feed start")
+            else:
+                self.app.notify("Refreshing data...", severity="information")
+                logger.info("User initiated data refresh")
+
+            # Even when STOPPED, fetch a fresh account/market snapshot so the UI
+            # shows balances and baseline market data without running the bot.
+            try:
+                request_bootstrap = getattr(self.app, "request_bootstrap_snapshot", None)
+                if callable(request_bootstrap):
+                    request_bootstrap(force=True)
+            except Exception:
+                pass
 
             # Trigger a status sync (delegated to UICoordinator)
             if self.app.ui_coordinator:
                 self.app.ui_coordinator.sync_state_from_bot()
+
+            # Clear fetching flag
+            self.app.tui_state.data_fetching = False
 
             # Check connection health immediately (no artificial delay)
             is_healthy = self.app.tui_state.check_connection_health()
@@ -143,6 +170,7 @@ class ActionDispatcher:
                     severity="warning",
                 )
         except Exception as e:
+            self.app.tui_state.data_fetching = False
             logger.error(f"Failed to reconnect: {e}", exc_info=True)
             self.app.notify(f"Error reconnecting: {e}", severity="error")
 
@@ -254,3 +282,237 @@ class ActionDispatcher:
             logger.error(f"Error during TUI shutdown: {e}", exc_info=True)
             # Force exit even if cleanup fails
             self.app.exit()
+
+    # =========================================================================
+    # Watchlist Actions
+    # =========================================================================
+
+    async def edit_watchlist(self) -> None:
+        """Open the watchlist editor modal."""
+        from gpt_trader.tui.screens.watchlist_screen import WatchlistScreen
+
+        try:
+            logger.debug("Opening watchlist editor")
+            self.app.push_screen(WatchlistScreen())
+        except Exception as e:
+            logger.error(f"Failed to open watchlist editor: {e}", exc_info=True)
+            self.app.notify(f"Error opening watchlist: {e}", severity="error")
+
+    async def clear_watchlist(self) -> None:
+        """Clear all symbols from the watchlist."""
+        from gpt_trader.tui.services.preferences_service import get_preferences_service
+
+        try:
+            prefs = get_preferences_service()
+            prefs.clear_watchlist()
+            self.app.notify("Watchlist cleared", severity="information")
+            logger.info("User cleared watchlist")
+        except Exception as e:
+            logger.error(f"Failed to clear watchlist: {e}", exc_info=True)
+            self.app.notify(f"Error clearing watchlist: {e}", severity="error")
+
+    # =========================================================================
+    # Operator/Diagnostics Actions
+    # =========================================================================
+
+    async def diagnose_connection(self) -> None:
+        """Run connection diagnostics and display results."""
+        try:
+            logger.info("Running connection diagnostics")
+            self.app.notify("Running diagnostics...", severity="information")
+
+            results = []
+
+            # Check data source mode
+            mode = self.app.data_source_mode
+            results.append(f"Mode: {mode}")
+
+            # Check bot status
+            if self.app.bot:
+                results.append(f"Bot running: {self.app.bot.running}")
+            else:
+                results.append("Bot: Not initialized")
+
+            # Check TUI state health
+            state = self.app.tui_state
+            results.append(f"Data available: {state.data_available}")
+            results.append(f"Connection healthy: {state.check_connection_health()}")
+            results.append(f"Degraded mode: {state.degraded_mode}")
+
+            # Check resilience metrics
+            resilience = state.resilience_data
+            results.append(f"API latency: {resilience.api_latency_ms:.0f}ms")
+            results.append(f"Error rate: {resilience.error_rate_pct:.1f}%")
+            results.append(f"Circuit breakers open: {resilience.circuit_breaker_open_count}")
+
+            # Display results
+            diagnostics_text = "\n".join(results)
+            self.app.notify(
+                diagnostics_text,
+                title="Connection Diagnostics",
+                severity="information",
+                timeout=15,
+            )
+            logger.info(f"Diagnostics complete: {results}")
+        except Exception as e:
+            logger.error(f"Diagnostics failed: {e}", exc_info=True)
+            self.app.notify(f"Diagnostics failed: {e}", severity="error")
+
+    async def export_logs(self) -> None:
+        """Export current logs to a timestamped file."""
+        import time
+        from pathlib import Path
+
+        try:
+            timestamp = time.strftime("%Y%m%d_%H%M%S")
+            export_path = Path(f"logs/tui_export_{timestamp}.log")
+            export_path.parent.mkdir(parents=True, exist_ok=True)
+
+            # Get logs from log manager
+            if hasattr(self.app, "log_manager"):
+                logs = self.app.log_manager.get_recent_logs(limit=1000)
+                with open(export_path, "w") as f:
+                    for log in logs:
+                        f.write(f"{log}\n")
+
+                self.app.notify(
+                    f"Logs exported to {export_path}",
+                    title="Export Complete",
+                    severity="information",
+                )
+                logger.info(f"Exported {len(logs)} log entries to {export_path}")
+            else:
+                self.app.notify("Log manager not available", severity="warning")
+        except Exception as e:
+            logger.error(f"Log export failed: {e}", exc_info=True)
+            self.app.notify(f"Export failed: {e}", severity="error")
+
+    async def export_state(self) -> None:
+        """Export current TuiState as JSON snapshot."""
+        import json
+        import time
+        from pathlib import Path
+
+        try:
+            timestamp = time.strftime("%Y%m%d_%H%M%S")
+            export_path = Path(f"logs/state_snapshot_{timestamp}.json")
+            export_path.parent.mkdir(parents=True, exist_ok=True)
+
+            state = self.app.tui_state
+
+            # Build exportable state dict
+            snapshot = {
+                "timestamp": time.time(),
+                "mode": self.app.data_source_mode,
+                "running": state.running,
+                "data_available": state.data_available,
+                "degraded_mode": state.degraded_mode,
+                "market_data": {
+                    "symbols": list(state.market_data.prices.keys()),
+                    "last_update": state.market_data.last_update,
+                },
+                "position_data": {
+                    "position_count": len(state.position_data.positions),
+                    "equity": str(state.position_data.equity),
+                    "total_pnl": str(state.position_data.total_unrealized_pnl),
+                },
+                "account_data": {
+                    "volume_30d": str(state.account_data.volume_30d),
+                    "fees_30d": str(state.account_data.fees_30d),
+                    "fee_tier": state.account_data.fee_tier,
+                    "balance_count": len(state.account_data.balances),
+                },
+                "resilience_data": {
+                    "api_latency_ms": state.resilience_data.api_latency_ms,
+                    "error_rate_pct": state.resilience_data.error_rate_pct,
+                    "circuit_breaker_open_count": state.resilience_data.circuit_breaker_open_count,
+                },
+            }
+
+            with open(export_path, "w") as f:
+                json.dump(snapshot, f, indent=2)
+
+            self.app.notify(
+                f"State exported to {export_path}",
+                title="Export Complete",
+                severity="information",
+            )
+            logger.info(f"Exported state snapshot to {export_path}")
+        except Exception as e:
+            logger.error(f"State export failed: {e}", exc_info=True)
+            self.app.notify(f"Export failed: {e}", severity="error")
+
+    async def reconnect_websocket(self) -> None:
+        """Force WebSocket reconnection."""
+        try:
+            logger.info("User initiated WebSocket reconnection")
+            self.app.notify("Reconnecting WebSocket...", severity="information")
+
+            # Check if bot has a client with websocket
+            if self.app.bot and hasattr(self.app.bot, "client"):
+                client = self.app.bot.client
+                if hasattr(client, "reconnect_websocket"):
+                    await client.reconnect_websocket()
+                    self.app.notify(
+                        "WebSocket reconnection initiated",
+                        severity="information",
+                    )
+                elif hasattr(client, "ws") and hasattr(client.ws, "reconnect"):
+                    await client.ws.reconnect()
+                    self.app.notify(
+                        "WebSocket reconnection initiated",
+                        severity="information",
+                    )
+                else:
+                    self.app.notify(
+                        "WebSocket reconnect not available for this client",
+                        severity="warning",
+                    )
+            else:
+                self.app.notify("No active client connection", severity="warning")
+        except Exception as e:
+            logger.error(f"WebSocket reconnection failed: {e}", exc_info=True)
+            self.app.notify(f"Reconnection failed: {e}", severity="error")
+
+    async def reset_circuit_breakers(self) -> None:
+        """Reset all circuit breakers to closed state."""
+        try:
+            logger.info("User initiated circuit breaker reset")
+
+            reset_count = 0
+
+            # Check if bot has circuit breakers
+            if self.app.bot and hasattr(self.app.bot, "client"):
+                client = self.app.bot.client
+
+                # Try various circuit breaker locations
+                if hasattr(client, "circuit_breaker"):
+                    client.circuit_breaker.reset()
+                    reset_count += 1
+
+                if hasattr(client, "_circuit_breakers"):
+                    for cb in client._circuit_breakers.values():
+                        cb.reset()
+                        reset_count += 1
+
+            # Also check resilience manager if exists
+            if hasattr(self.app.bot, "resilience_manager"):
+                rm = self.app.bot.resilience_manager
+                if hasattr(rm, "reset_all"):
+                    rm.reset_all()
+                    reset_count += 1
+
+            if reset_count > 0:
+                self.app.notify(
+                    f"Reset {reset_count} circuit breaker(s)",
+                    severity="information",
+                )
+                logger.info(f"Reset {reset_count} circuit breakers")
+            else:
+                self.app.notify(
+                    "No circuit breakers found to reset",
+                    severity="warning",
+                )
+        except Exception as e:
+            logger.error(f"Circuit breaker reset failed: {e}", exc_info=True)
+            self.app.notify(f"Reset failed: {e}", severity="error")

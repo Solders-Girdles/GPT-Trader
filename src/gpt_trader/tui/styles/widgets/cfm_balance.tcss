@@ -1,0 +1,52 @@
+/* ========================================================================== */
+/* CFM BALANCE WIDGET                                                         */
+/* ========================================================================== */
+
+CFMBalanceWidget {
+    layout: vertical;
+    height: auto;
+    padding: 0 1;
+}
+
+CFMBalanceWidget .cfm-header {
+    text-style: bold;
+    color: $text-secondary;
+    margin-bottom: 1;
+}
+
+CFMBalanceWidget .cfm-row {
+    layout: horizontal;
+    height: auto;
+    margin-bottom: 0;
+}
+
+CFMBalanceWidget .cfm-metric {
+    width: 1fr;
+    height: auto;
+}
+
+CFMBalanceWidget .cfm-label {
+    color: $text-muted;
+}
+
+CFMBalanceWidget .cfm-value {
+    color: $text-primary;
+    text-style: bold;
+}
+
+/* Status coloring */
+CFMBalanceWidget .cfm-warning {
+    color: $warning;
+}
+
+CFMBalanceWidget .cfm-danger {
+    color: $error;
+}
+
+CFMBalanceWidget .cfm-ok {
+    color: $success;
+}
+
+CFMBalanceWidget .cfm-hidden {
+    display: none;
+}

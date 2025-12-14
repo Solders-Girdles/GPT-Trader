@@ -57,12 +57,13 @@ LOGGER_CATEGORIES: dict[str, list[str]] = {
 }
 
 # Level icons for compact display
+# Level icons for compact display
 LEVEL_ICONS: dict[int, str] = {
-    logging.CRITICAL: "✗",
-    logging.ERROR: "✗",
+    logging.CRITICAL: "✖",
+    logging.ERROR: "✖",
     logging.WARNING: "⚠",
-    logging.INFO: "✓",
-    logging.DEBUG: "·",
+    logging.INFO: "ℹ",
+    logging.DEBUG: "🐛",
 }
 
 
@@ -176,6 +177,263 @@ class CompactTuiFormatter(logging.Formatter):
         return f"{timestamp} {compact}"
 
 
+# Logger name abbreviations for common long names
+LOGGER_ABBREVIATIONS: dict[str, str] = {
+    "strategy": "strat",
+    "portfolio": "port",
+    "position": "pos",
+    "execution": "exec",
+    "websocket": "ws",
+    "coinbase": "cb",
+    "bot_lifecycle": "bot",
+    "ui_coordinator": "ui",
+    "main_screen": "main",
+    "adjustments": "adj",
+    "validation": "valid",
+}
+
+# Regex patterns for domain-specific log parsing
+
+# Debug format: "Strategy decision debug: symbol=BTC-USD ... short_ma=115.25 long_ma=113.40 ... label=neutral"
+STRATEGY_DEBUG_PATTERN = re.compile(
+    r"Strategy decision.*?symbol=(\S+).*?short_ma=(\d+\.?\d*).*?long_ma=(\d+\.?\d*).*?label=(\w+)"
+)
+
+# Actual decision format: "Strategy Decision for BTC-USD: BUY (momentum crossover)"
+STRATEGY_DECISION_PATTERN = re.compile(
+    r"Strategy Decision for (\S+):\s*(\w+)\s*\(([^)]+)\)"
+)
+
+ORDER_PATTERN = re.compile(r"(Order|order).*?(BUY|SELL|buy|sell).*?(\d+\.?\d*)\s*(\w+-\w+)")
+POSITION_PATTERN = re.compile(r"(Position|position).*?(\w+-\w+).*?(\$?\d+\.?\d*)")
+PRICE_PATTERN = re.compile(r"\$(\d+(?:,\d{3})*(?:\.\d+)?)")
+KEYVALUE_PATTERN = re.compile(r"(\w+)=(\S+)")
+
+
+def _abbreviate_logger(name: str, max_len: int = 10) -> str:
+    """Abbreviate logger name to fit in fixed width.
+
+    Args:
+        name: Full logger name (e.g., 'gpt_trader.features.strategy')
+        max_len: Maximum length for abbreviated name
+
+    Returns:
+        Abbreviated name, right-padded to max_len
+    """
+    short = name.rsplit(".", 1)[-1]
+
+    # Apply known abbreviations
+    abbrev = LOGGER_ABBREVIATIONS.get(short, short)
+
+    # Truncate if still too long
+    if len(abbrev) > max_len:
+        abbrev = abbrev[: max_len - 1] + "…"
+
+    return abbrev.ljust(max_len)
+
+
+def _format_number(value: str, decimals: int = 2) -> str:
+    """Format a numeric string to specified decimal places.
+
+    Args:
+        value: String representation of number
+        decimals: Number of decimal places
+
+    Returns:
+        Formatted number string
+    """
+    try:
+        num = float(value)
+        if num >= 1000:
+            return f"{num:,.{decimals}f}"
+        return f"{num:.{decimals}f}"
+    except (ValueError, TypeError):
+        return value
+
+
+def _extract_key_values(message: str) -> dict[str, str]:
+    """Extract key=value pairs from log message.
+
+    Args:
+        message: Log message string
+
+    Returns:
+        Dictionary of extracted key-value pairs
+    """
+    return dict(KEYVALUE_PATTERN.findall(message))
+
+
+class StructuredTuiFormatter(logging.Formatter):
+    """Structured formatter with fixed columns for easy scanning.
+
+    Layout: TIME ICON LOGGER     | MESSAGE
+            ──── ─── ────────── | ─────────────────────────────
+
+    Features:
+    - Fixed-width columns for visual alignment
+    - Abbreviated logger names (max 10 chars)
+    - Domain-aware message formatting (strategy, orders, positions)
+    - Rounded decimals for readability
+    - Key fields extracted and highlighted
+
+    Example outputs:
+        09:31 ✓ strat      BTC-USD NEUTRAL  MA 115.25/113.40
+        09:31 ⚠ portfolio  Position $0.00 < share $150.00
+        09:31 ✓ exec       BUY 0.05 BTC-USD @ $98,450.00
+    """
+
+    # Column widths
+    TIME_WIDTH = 8  # HH:MM:SS
+    ICON_WIDTH = 2  # Icon + space
+    LOGGER_WIDTH = 10  # Abbreviated logger name
+
+    def format(self, record: logging.LogRecord) -> str:
+        """Format log record with structured columns."""
+        # Time column
+        timestamp = time.strftime("%H:%M:%S", time.localtime(record.created))
+
+        # Icon column
+        icon = LEVEL_ICONS.get(record.levelno, "·")
+
+        # Message - apply domain-specific formatting (check if system log first)
+        message = self._format_message(record)
+        logger_name = record.name.lower()
+        
+        # System/startup logs - use more descriptive logger names
+        system_keywords = [
+            "startup", "initializ", "mount", "ready", "connect", "disconnect",
+            "error", "failed", "critical", "warning", "status", "state",
+            "config", "mode", "credential", "validation", "bot", "engine",
+            "app", "tui", "lifecycle", "coordinator", "service"
+        ]
+        is_system_log = any(keyword in logger_name or keyword in message.lower() for keyword in system_keywords)
+        
+        if is_system_log:
+            # For system logs, use more descriptive logger name (last 2 components)
+            # e.g., "gpt_trader.tui.app" -> "tui.app" instead of just "app"
+            parts = record.name.rsplit(".", 2)
+            if len(parts) >= 2:
+                logger_abbrev = parts[-2] + "." + parts[-1]
+                # Truncate if still too long, but preserve more context
+                if len(logger_abbrev) > self.LOGGER_WIDTH:
+                    logger_abbrev = logger_abbrev[-(self.LOGGER_WIDTH-1):]
+            else:
+                logger_abbrev = _abbreviate_logger(record.name, self.LOGGER_WIDTH)
+        else:
+            # Logger column (abbreviated, fixed width) for non-system logs
+            logger_abbrev = _abbreviate_logger(record.name, self.LOGGER_WIDTH)
+
+        # Handle exceptions
+        if record.exc_info:
+            exc_type = record.exc_info[0]
+            exc_value = record.exc_info[1]
+            if exc_type and exc_value:
+                exc_name = exc_type.__name__
+                # Keep exception message short
+                exc_msg = str(exc_value)[:50]
+                if len(str(exc_value)) > 50:
+                    exc_msg += "…"
+                message = f"{message} [{exc_name}: {exc_msg}]"
+
+        return f"{timestamp} {icon} {logger_abbrev:<{self.LOGGER_WIDTH}} {message}"
+
+    def _format_message(self, record: logging.LogRecord) -> str:
+        """Apply domain-specific formatting to message.
+
+        Args:
+            record: Log record to format
+
+        Returns:
+            Formatted message string
+        """
+        message = record.getMessage()
+        logger_name = record.name.lower()
+
+        # System/startup logs - preserve full context for better debugging
+        # These logs are critical for understanding system state
+        system_keywords = [
+            "startup", "initializ", "mount", "ready", "connect", "disconnect",
+            "error", "failed", "critical", "warning", "status", "state",
+            "config", "mode", "credential", "validation", "bot", "engine"
+        ]
+        is_system_log = any(keyword in logger_name or keyword in message.lower() for keyword in system_keywords)
+        
+        # For system logs, preserve more context - don't condense as aggressively
+        if is_system_log:
+            # Still apply basic formatting but preserve important details
+            # Remove only truly redundant prefixes, keep the message informative
+            prefixes_to_remove = [
+                "Strategy decision debug: ",
+                "Strategy decision: ",
+            ]
+            for prefix in prefixes_to_remove:
+                if message.startswith(prefix):
+                    message = message[len(prefix) :]
+                    break
+            # Return full message for system logs to preserve context
+            return message
+
+        # Strategy decision logs - condense the verbose output
+        if "strategy" in logger_name:
+            # Actual decision format: "Strategy Decision for BTC-USD: BUY (momentum crossover)"
+            decision_match = STRATEGY_DECISION_PATTERN.search(message)
+            if decision_match:
+                symbol, action, reason = decision_match.groups()
+                # Truncate long reasons
+                if len(reason) > 25:
+                    reason = reason[:22] + "..."
+                return f"{symbol:<8} {action.upper():<6} {reason}"
+
+            # Debug format with MA values
+            debug_match = STRATEGY_DEBUG_PATTERN.search(message)
+            if debug_match:
+                symbol, short_ma, long_ma, label = debug_match.groups()
+                short_ma_fmt = _format_number(short_ma)
+                long_ma_fmt = _format_number(long_ma)
+                return f"{symbol:<8} {label.upper():<8} MA {short_ma_fmt}/{long_ma_fmt}"
+
+        # Order logs - extract key info
+        if "order" in logger_name or "execution" in logger_name:
+            match = ORDER_PATTERN.search(message)
+            if match:
+                _, side, quantity, symbol = match.groups()
+                return f"{side.upper()} {quantity} {symbol}"
+
+        # Position logs
+        if "position" in logger_name or "portfolio" in logger_name:
+            # Extract and format dollar amounts
+            message = PRICE_PATTERN.sub(
+                lambda m: f"${_format_number(m.group(1).replace(',', ''))}",
+                message,
+            )
+            # Shorten common prefixes
+            message = message.replace("Position value ", "Pos ")
+            message = message.replace("Kelly position ", "Kelly ")
+            return message
+
+        # Generic key=value formatting - round long decimals
+        # Optimization: only run if '=' is present
+        if "=" in message:
+            kv_pairs = _extract_key_values(message)
+            for key, value in kv_pairs.items():
+                # Round long decimal values
+                if "." in value and len(value.split(".")[-1]) > 4:
+                    formatted = _format_number(value)
+                    message = message.replace(f"{key}={value}", f"{key}={formatted}")
+
+        # Remove redundant prefixes
+        prefixes_to_remove = [
+            "Strategy decision debug: ",
+            "Strategy decision: ",
+        ]
+        for prefix in prefixes_to_remove:
+            if message.startswith(prefix):
+                message = message[len(prefix) :]
+                break
+
+        return message
+
+
 class TuiLogHandler(logging.Handler):
     """Single handler that distributes logs to all active LogWidgets.
 
@@ -203,6 +461,8 @@ class TuiLogHandler(logging.Handler):
         self._widgets: dict[RichLog, int] = {}  # widget -> min_level mapping
         self._callbacks: dict[RichLog, Callable[[int], None]] = {}  # widget -> callback mapping
         self._logger_filters: dict[RichLog, str] = {}  # widget -> logger_filter mapping
+        # Per-widget display preferences
+        self._show_startup: dict[RichLog, bool] = {}  # widget -> show startup INFO logs
 
         # Memory-limited log buffer using deque
         self._log_buffer: deque[LogEntry] = deque(maxlen=max_entries)
@@ -223,9 +483,11 @@ class TuiLogHandler(logging.Handler):
             datefmt="%H:%M:%S",
         )
         self._compact_formatter = CompactTuiFormatter()
+        self._structured_formatter = StructuredTuiFormatter()
 
         # Default format mode: compact, verbose, or structured
-        self._format_mode = "compact"
+        # "structured" is the new default for improved readability
+        self._format_mode = "structured"
 
         self.setFormatter(self._verbose_formatter)
         self.setLevel(logging.DEBUG)
@@ -236,6 +498,8 @@ class TuiLogHandler(logging.Handler):
         min_level: int = logging.INFO,
         on_log_callback: Callable[[int], None] | None = None,
         replay_logs: bool = True,
+        *,
+        show_startup: bool = False,
     ) -> None:
         """
         Register a RichLog widget to receive logs at or above min_level.
@@ -248,12 +512,30 @@ class TuiLogHandler(logging.Handler):
         """
         self._widgets[widget] = min_level
         self._logger_filters[widget] = ""  # Default: show all loggers
+        self._show_startup[widget] = show_startup
         if on_log_callback:
             self._callbacks[widget] = on_log_callback
 
         # Replay recent logs to new widget
         if replay_logs and self._log_buffer:
             self._replay_logs_to_widget(widget, min_level)
+
+    def update_widget_show_startup(self, widget: RichLog, show_startup: bool) -> None:
+        """Update whether a widget should display startup INFO logs."""
+        if widget in self._widgets:
+            self._show_startup[widget] = show_startup
+
+    def refresh_widget(self, widget: RichLog) -> None:
+        """Clear and replay logs for a widget with its current filters."""
+        if widget not in self._widgets:
+            return
+
+        min_level = self._widgets.get(widget, logging.INFO)
+        try:
+            widget.clear()
+        except Exception:
+            return
+        self._replay_logs_to_widget(widget, min_level)
 
     def _replay_logs_to_widget(
         self,
@@ -267,9 +549,18 @@ class TuiLogHandler(logging.Handler):
             min_level: Minimum log level to replay.
         """
         try:
+            # Ensure widget is mounted and has an app before replaying
+            if not hasattr(widget, 'is_mounted') or not widget.is_mounted:
+                # Widget not ready yet, skip replay (will be handled by normal emit flow)
+                return
+            if not hasattr(widget, 'app') or not widget.app:
+                return
+
             # Get the most recent logs up to replay_count
-            logs_to_replay = list(self._log_buffer)[-self._replay_count :]
+            replay_limit = getattr(widget, "max_lines", None) or self._replay_count
+            logs_to_replay = list(self._log_buffer)[-int(replay_limit) :]
             logger_filter = self._logger_filters.get(widget, "")
+            show_startup = self._show_startup.get(widget, False)
 
             replayed = 0
             for entry in logs_to_replay:
@@ -277,22 +568,43 @@ class TuiLogHandler(logging.Handler):
                 if entry.level < min_level:
                     continue
 
+                # Hide startup INFO logs when requested (still show warnings/errors)
+                if not show_startup and entry.category == "startup" and entry.level < logging.WARNING:
+                    continue
+
                 # Check logger filter
                 if logger_filter and logger_filter not in entry.logger_name.lower():
                     continue
 
-                # Write to widget
-                self._write_to_widget(widget, entry.styled_message)
-                replayed += 1
+                # Write to widget - use call_from_thread if not on main thread
+                try:
+                    if threading.current_thread() is threading.main_thread():
+                        self._write_to_widget(widget, entry.styled_message)
+                    else:
+                        # On background thread, schedule on main thread
+                        if hasattr(widget, 'app') and widget.app:
+                            widget.app.call_from_thread(self._write_to_widget, widget, entry.styled_message)
+                    replayed += 1
+                except Exception as e:
+                    # Skip this entry if write fails, continue with others
+                    _error_logger.debug(f"Error replaying log entry to widget: {e}")
+                    continue
 
             if replayed > 0:
-                # Add separator to indicate replayed logs
+                # Add separator to indicate replayed logs with more detail
                 from gpt_trader.tui.theme import THEME
 
-                separator = Text(
-                    f"─── {replayed} previous logs replayed ───", style=THEME.colors.text_muted
-                )
-                widget.write(separator)
+                total_available = len(logs_to_replay)
+                separator_msg = f"─── {replayed} previous logs replayed (from {total_available} available) ───"
+                separator = Text(separator_msg, style=THEME.colors.text_muted)
+                try:
+                    if threading.current_thread() is threading.main_thread():
+                        widget.write(separator)
+                    else:
+                        if hasattr(widget, 'app') and widget.app:
+                            widget.app.call_from_thread(widget.write, separator)
+                except Exception:
+                    pass  # Ignore separator write errors
 
         except Exception as e:
             _error_logger.debug(f"Error replaying logs to widget: {e}")
@@ -312,6 +624,7 @@ class TuiLogHandler(logging.Handler):
         self._widgets.pop(widget, None)
         self._callbacks.pop(widget, None)
         self._logger_filters.pop(widget, None)
+        self._show_startup.pop(widget, None)
         # Clean up pause state
         with self._pause_lock:
             self._paused_widgets.discard(widget)
@@ -395,54 +708,67 @@ class TuiLogHandler(logging.Handler):
 
     @format_mode.setter
     def format_mode(self, mode: str) -> None:
-        """Set format mode (compact, verbose, or structured)."""
-        if mode in ("compact", "verbose", "structured"):
+        """Set format mode (compact, verbose, structured, or json)."""
+        if mode in ("compact", "verbose", "structured", "json"):
             self._format_mode = mode
 
     def emit(self, record: logging.LogRecord) -> None:
-        """Emit log to all registered widgets that accept this level."""
+        """Emit log to all registered widgets that accept this level.
+
+        OPTIMIZATION: Uses lazy formatting - only formats the message style
+        that is actually needed for the current format mode, rather than
+        formatting all 3 styles upfront.
+        """
         try:
-            # Generate both verbose and compact messages
-            verbose_msg = self._verbose_formatter.format(record)
-            compact_msg = self._compact_formatter.format(record)
+            # OPTIMIZATION: Check if ANY widget will receive this log first
+            # This allows early exit before doing any formatting work
+            has_recipient = False
+            for widget, min_level in list(self._widgets.items()):
+                if record.levelno >= min_level:
+                    logger_filter = self._logger_filters.get(widget, "")
+                    if not logger_filter or logger_filter in record.name.lower():
+                        if widget.is_mounted and widget.app:
+                            if (
+                                not self._show_startup.get(widget, False)
+                                and detect_category(record.name) == "startup"
+                                and record.levelno < logging.WARNING
+                            ):
+                                continue
+                            has_recipient = True
+                            break
 
-            # Extract structured metadata
-            short_logger = record.name.rsplit(".", 1)[-1]
-            category = detect_category(record.name)
+            # Early exit if no recipients and buffer is full (oldest will be dropped anyway)
+            if not has_recipient and len(self._log_buffer) >= (self._log_buffer.maxlen or MAX_LOG_ENTRIES):
+                return
 
-            # Try to get correlation context if available
-            correlation_id = None
-            domain_fields = None
-            try:
-                from gpt_trader.logging.correlation import get_log_context
+            # LAZY FORMATTING: Only format the style we need for display
+            # This is a major optimization - previously we formatted all 3 styles
+            # for every log message regardless of which was displayed
+            verbose_msg: str | None = None
+            compact_msg: str | None = None
 
-                context = get_log_context()
-                if context:
-                    correlation_id = context.get("correlation_id")
-                    domain_fields = {k: v for k, v in context.items() if k != "correlation_id"}
-            except ImportError:
-                pass
-
-            # Detect JSON in message for pretty-printing support
-            is_json = False
-            json_data = None
-            json_match = self._JSON_PATTERN.search(verbose_msg)
-            if json_match:
-                try:
-                    json_data = json.loads(json_match.group())
-                    is_json = True
-                except json.JSONDecodeError:
-                    pass
-
-            # Detect multi-line content (stack traces, large objects)
-            is_multiline = "\n" in verbose_msg or len(verbose_msg) > 200
-
-            # Choose display message based on format mode
+            # Format based on current mode (lazy - only format what's needed)
             if self._format_mode == "compact":
+                compact_msg = self._compact_formatter.format(record)
                 display_msg = compact_msg
             elif self._format_mode == "structured":
-                # JSON format for AI agents
-                structured = {
+                display_msg = self._structured_formatter.format(record)
+            elif self._format_mode == "json":
+                # JSON mode needs some fields from record directly
+                short_logger = record.name.rsplit(".", 1)[-1]
+                category = detect_category(record.name)
+                correlation_id = None
+                domain_fields = None
+                try:
+                    from gpt_trader.logging.correlation import get_log_context
+                    context = get_log_context()
+                    if context:
+                        correlation_id = context.get("correlation_id")
+                        domain_fields = {k: v for k, v in context.items() if k != "correlation_id"}
+                except ImportError:
+                    pass
+
+                json_struct = {
                     "time": time.strftime("%H:%M:%S", time.localtime(record.created)),
                     "logger": short_logger,
                     "level": record.levelname,
@@ -450,12 +776,50 @@ class TuiLogHandler(logging.Handler):
                     "message": record.getMessage(),
                 }
                 if correlation_id:
-                    structured["correlation_id"] = correlation_id
+                    json_struct["correlation_id"] = correlation_id
                 if domain_fields:
-                    structured["context"] = domain_fields
-                display_msg = json.dumps(structured)
-            else:  # verbose
+                    json_struct["context"] = domain_fields
+                display_msg = json.dumps(json_struct)
+            else:  # verbose (default)
+                verbose_msg = self._verbose_formatter.format(record)
                 display_msg = verbose_msg
+
+            # Extract structured metadata (only what we need)
+            short_logger = record.name.rsplit(".", 1)[-1]
+            category = detect_category(record.name)
+
+            # Try to get correlation context if available (lazy - only if not already fetched)
+            correlation_id = None
+            domain_fields = None
+            if self._format_mode != "json":  # Already fetched for JSON mode above
+                try:
+                    from gpt_trader.logging.correlation import get_log_context
+                    context = get_log_context()
+                    if context:
+                        correlation_id = context.get("correlation_id")
+                        domain_fields = {k: v for k, v in context.items() if k != "correlation_id"}
+                except ImportError:
+                    pass
+
+            # Lazy: Only get verbose_msg if we need it for JSON detection or raw_message
+            if verbose_msg is None:
+                verbose_msg = self._verbose_formatter.format(record)
+
+            # Detect JSON in message for pretty-printing support
+            is_json = False
+            json_data = None
+            # Optimization: fast check before regex
+            if "{" in verbose_msg:
+                json_match = self._JSON_PATTERN.search(verbose_msg)
+                if json_match:
+                    try:
+                        json_data = json.loads(json_match.group())
+                        is_json = True
+                    except json.JSONDecodeError:
+                        pass
+
+            # Detect multi-line content (stack traces, large objects)
+            is_multiline = "\n" in verbose_msg or len(verbose_msg) > 200
 
             # Create Rich Text object with style (not markup) to prevent injection
             # Using style= treats msg as literal text, preventing markup in log messages
@@ -468,6 +832,10 @@ class TuiLogHandler(logging.Handler):
                 styled_msg = Text(display_msg, style=THEME.colors.success)  # Warm green
             else:
                 styled_msg = Text(display_msg, style=THEME.colors.text_muted)  # Muted grey
+
+            # Lazy: Get compact_msg for LogEntry if we don't have it yet
+            if compact_msg is None:
+                compact_msg = self._compact_formatter.format(record)
 
             # Create log entry with enhanced metadata
             log_entry = LogEntry(
@@ -506,6 +874,14 @@ class TuiLogHandler(logging.Handler):
                     logger_filter = self._logger_filters.get(widget, "")
                     if logger_filter and logger_filter not in record.name.lower():
                         continue  # Skip this log - doesn't match filter
+
+                    # Hide startup INFO logs when requested (still show warnings/errors).
+                    if (
+                        not self._show_startup.get(widget, False)
+                        and category == "startup"
+                        and record.levelno < logging.WARNING
+                    ):
+                        continue
 
                     # Lifecycle guard: only write to mounted widgets with active app
                     if not widget.is_mounted or not widget.app:

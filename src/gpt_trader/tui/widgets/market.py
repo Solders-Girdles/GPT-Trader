@@ -22,17 +22,7 @@ logger = get_logger(__name__, component="tui")
 class MarketWatchWidget(Static):
     """Displays market data."""
 
-    DEFAULT_CSS = """
-    MarketWatchWidget {
-        layout: vertical;
-        height: 1fr;
-    }
-
-    MarketWatchWidget DataTable {
-        height: 1fr;
-        padding: 1 2;
-    }
-    """
+    # Styles moved to styles/widgets/market.tcss
 
     # Reactive state property for automatic updates
     state = reactive(None)  # Type: TuiState | None
@@ -93,7 +83,7 @@ class MarketWatchWidget(Static):
         return "".join(chars)
 
     def compose(self) -> ComposeResult:
-        yield Label("📊 MARKET WATCH", classes="header")
+        yield Label("MARKET WATCH", classes="widget-header")
         table = DataTable(id="market-table", zebra_stripes=True)
         table.can_focus = True
         table.cursor_type = "row"
@@ -134,7 +124,11 @@ class MarketWatchWidget(Static):
                 table.clear()
             table.display = False
             empty_label.display = True
-            empty_label.update("No market data • Press [S] to start bot")
+            mode = getattr(self.state, "data_source_mode", None) if self.state is not None else None
+            hint = "Press [S] to start bot."
+            if mode == "read_only":
+                hint = "Press [S] to start data feed."
+            empty_label.update(f"No market data yet. {hint}")
             return
         else:
             table.display = True

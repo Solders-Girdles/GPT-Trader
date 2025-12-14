@@ -43,57 +43,7 @@ class ErrorIndicatorWidget(Static):
     - Red theme for visibility
     """
 
-    DEFAULT_CSS = """
-    ErrorIndicatorWidget {
-        layout: vertical;
-        height: auto;
-        max-height: 15;
-        min-height: 1;
-        background: #E08580;  /* Theme error background */
-        color: #F0EDE9;  /* Theme primary text */
-        border: thick #D4744F;  /* Theme emphasized border */
-        padding: 0 1;
-    }
-
-    ErrorIndicatorWidget.collapsed {
-        max-height: 1;
-    }
-
-    ErrorIndicatorWidget.hidden {
-        display: none;
-    }
-
-    ErrorIndicatorWidget Horizontal {
-        height: auto;
-        width: 1fr;
-    }
-
-    ErrorIndicatorWidget Vertical {
-        height: auto;
-        width: 1fr;
-    }
-
-    ErrorIndicatorWidget Label {
-        width: 1fr;
-        height: auto;
-    }
-
-    ErrorIndicatorWidget .error-badge {
-        background: #3D3833;  /* Theme elevated bg */
-        color: #F0EDE9;  /* Theme primary text */
-        text-style: bold;
-    }
-
-    ErrorIndicatorWidget .error-detail {
-        color: #B8B4AF;  /* Theme secondary text */
-        height: auto;
-        margin: 0 0 0 2;
-    }
-
-    ErrorIndicatorWidget Button {
-        min-width: 10;
-    }
-    """
+    # Styles moved to styles/widgets/error_indicator.tcss
 
     # Reactive properties
     error_count = reactive(0)
@@ -128,7 +78,9 @@ class ErrorIndicatorWidget(Static):
     def on_mount(self) -> None:
         """Set initial collapsed state."""
         self.add_class("collapsed")
-        self.add_class("hidden")  # Start hidden when no errors
+        # Only hide if we truly have no errors; errors may have been recorded
+        # before this widget was mounted (e.g., during startup).
+        self._update_display()
 
     def add_error(self, widget: str, method: str, error: str) -> None:
         """

@@ -1,0 +1,97 @@
+/* ========================================================================== */
+/* THEME VARIABLES - High Contrast (Accessibility)                            */
+/* ========================================================================== */
+/* WCAG AAA compliant contrast ratios (7:1 for text, 4.5:1 for large text)    */
+/* Designed for users with visual impairments or low-light conditions         */
+/* ========================================================================== */
+
+/* === Backgrounds (Maximum Contrast) === */
+$bg-primary: #000000;      /* Pure Black - Maximum contrast base */
+$bg-secondary: #0a0a0a;    /* Near Black - Panels/containers */
+$bg-elevated: #1a1a1a;     /* Dark Grey - Headers/Cards */
+$bg-highlight: #2a2a2a;    /* Highlight - Hover states/Inputs */
+
+/* === Accents (High Visibility) === */
+$accent: #00AAFF;          /* Bright Cyan Blue - Primary action/Focus */
+$accent-hover: #00CCFF;    /* Brighter Cyan - Hover (more visible) */
+$accent-muted: #444444;    /* Mid Grey - Subtle borders/separators */
+$accent-glow: #00AAFF;     /* Bright Cyan - Glow effects */
+$accent-bright: #0088DD;   /* Medium Blue - Pressed/Active */
+$accent-subtle: rgba(0, 170, 255, 0.15);  /* Visible Blue Tint */
+
+/* === Text Colors (Maximum Readability) === */
+$text-primary: #FFFFFF;    /* Pure White - Primary Data (21:1 on black) */
+$text-secondary: #CCCCCC;  /* Bright Grey - Labels (13:1 on black) */
+$text-muted: #999999;      /* Medium Grey - Disabled/Hints (7:1 on black) */
+$text-bright: #FFFFFF;     /* Pure White - Headers/Emphasis */
+
+/* === Semantic Colors (Enhanced Saturation for Visibility) === */
+$success: #00FF66;         /* Bright Green - Positive PnL/Success */
+$success-muted: rgba(0, 255, 102, 0.15);
+$success-dim: #00AA44;
+$warning: #FFCC00;         /* Bright Yellow - Warnings/Caution */
+$warning-muted: rgba(255, 204, 0, 0.15);
+$warning-dim: #CC9900;
+$error: #FF3366;           /* Bright Red - Negative PnL/Error */
+$error-muted: rgba(255, 51, 102, 0.15);
+$error-dim: #CC0033;
+$info: #00AAFF;            /* Bright Cyan - Info */
+$info-muted: rgba(0, 170, 255, 0.15);
+
+/* === Borders (High Visibility) === */
+$border-subtle: #555555;   /* Visible Grey - Standard borders */
+$border-accent: #00AAFF;   /* Bright Cyan - Active borders */
+$border-emphasis: #777777; /* Bright Grey - Section dividers */
+
+/* === Spacing Scale === */
+$spacing-xs: 1;
+$spacing-sm: 2;
+$spacing-md: 3;
+$spacing-lg: 4;
+
+/* === Semantic Spacing Tokens === */
+$gutter-tight: 1;
+$gutter-standard: 2;
+$gutter-comfortable: 3;
+$content-padding: 2;
+$section-gap: 4;
+
+/* === Panel/Tile Tokens === */
+$tile-padding: 1 2;
+$tile-padding-compact: 1;
+$widget-header-padding: 0 2;
+$widget-content-padding: 1 2;
+
+/* === Elevation System === */
+$elevation-0: $bg-primary;
+$elevation-1: $bg-secondary;
+$elevation-2: $bg-elevated;
+$elevation-3: $bg-highlight;
+
+/* === Tile Border Tokens (Thicker for visibility) === */
+$tile-border-default: solid $border-subtle;
+$tile-border-accent: thick $border-accent;
+$tile-border-highlight: solid $border-emphasis;
+
+/* === Interactive State Overlays (Higher opacity for visibility) === */
+$overlay-hover: rgba(255, 255, 255, 0.10);
+$overlay-focus: rgba(0, 170, 255, 0.30);
+$overlay-disabled: rgba(0, 0, 0, 0.6);
+$overlay-active: rgba(0, 170, 255, 0.20);
+
+/* === Panel Tokens === */
+$panel-bg-default: $bg-secondary;
+$panel-bg-elevated: $bg-elevated;
+$panel-border-default: $border-subtle;
+$panel-border-emphasis: $border-emphasis;
+
+/* === Interactive State Tokens === */
+$interactive-default: $bg-elevated;
+$interactive-hover: $bg-highlight;
+$interactive-active: $accent;
+$interactive-disabled: $bg-secondary;
+
+/* === Border Style Tokens === */
+$border-default: solid $border-subtle;
+$border-emphasis-style: solid $border-emphasis;
+$border-glow: thick $accent-glow;

@@ -1,0 +1,14 @@
+/* ========================================================================== */
+/* STRATEGY WIDGET                                                            */
+/* ========================================================================== */
+
+StrategyWidget {
+    layout: vertical;
+    height: 1fr;
+}
+
+StrategyWidget DataTable {
+    height: 1fr;
+}
+
+/* Empty state styling uses global .empty-state from utilities.tcss */

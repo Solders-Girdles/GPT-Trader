@@ -32,16 +32,7 @@ class OrdersWidget(Static):
     Uses row keys (order_id) for efficient DataTable updates.
     """
 
-    DEFAULT_CSS = """
-    OrdersWidget {
-        layout: vertical;
-        height: 1fr;
-    }
-
-    OrdersWidget DataTable {
-        height: 1fr;
-    }
-    """
+    # Styles moved to styles/widgets/portfolio.tcss
 
     def compose(self) -> ComposeResult:
         """Compose the widget layout."""
@@ -76,7 +67,7 @@ class OrdersWidget(Static):
                 table.clear()
             table.display = False
             empty_label.display = True
-            empty_label.update("No orders - Orders appear when bot places trades")
+            empty_label.update("No orders yet. Orders appear when the bot places trades.")
         else:
             table.display = True
             empty_label.display = False

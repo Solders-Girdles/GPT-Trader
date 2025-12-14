@@ -111,7 +111,7 @@ class TestReconnectData:
         mock_app.data_source_mode = "demo"
         await dispatcher.reconnect_data()
         mock_app.notify.assert_called_once()
-        assert "doesn't require" in mock_app.notify.call_args[0][0]
+        assert "simulated data" in mock_app.notify.call_args[0][0]
 
     @pytest.mark.asyncio
     async def test_syncs_state_in_paper_mode(

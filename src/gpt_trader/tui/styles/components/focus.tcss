@@ -44,3 +44,70 @@ Input:focus, Select:focus {
 DataTable:focus {
     border: solid $accent;
 }
+
+/* ========================================================================== */
+/* TILE FOCUS - 2D Grid Navigation                                            */
+/* ========================================================================== */
+
+/* === Focus Ring for Bento Tiles === */
+
+/* Focused tile - prominent accent border */
+.bento-tile.tile-focused {
+    border: heavy $accent;
+    border-left: wide $accent;
+    background: $elevation-2;
+}
+
+/* Hero tile gets extra emphasis when focused */
+#tile-hero.tile-focused {
+    border: heavy $accent;
+    border-left: wide $accent;
+    background: $elevation-3;
+}
+
+/* === Actions Hint Row === */
+
+/* Container for tile actions - shown at bottom of focused tiles */
+.tile-actions-hint {
+    height: 1;
+    width: 100%;
+    background: $bg-elevated;
+    color: $text-muted;
+    padding: 0 1;
+    layout: horizontal;
+    align: left middle;
+    border-top: solid $border-subtle;
+    display: none;
+}
+
+/* Show actions hint only when tile is focused */
+.bento-tile.tile-focused .tile-actions-hint {
+    display: block;
+}
+
+/* Individual action hint */
+.action-hint {
+    padding: 0 2;
+    height: 1;
+    color: $text-secondary;
+}
+
+/* Action key highlight */
+.action-key {
+    color: $accent;
+    text-style: bold;
+}
+
+/* === Focus Indicator Badge === */
+
+.focus-indicator {
+    background: $accent;
+    color: $bg-primary;
+    padding: 0 1;
+    text-style: bold;
+    display: none;
+}
+
+.bento-tile.tile-focused .focus-indicator {
+    display: block;
+}

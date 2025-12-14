@@ -5,15 +5,29 @@ from textual.containers import Container, Vertical
 from textual.screen import Screen
 from textual.widgets import Button, Footer, Label
 
+from gpt_trader.tui.services.preferences_service import get_preferences_service
 from gpt_trader.utilities.logging_patterns import get_logger
 
 logger = get_logger(__name__, component="tui")
 
+# Mode display names for UI
+MODE_DISPLAY_NAMES = {
+    "demo": "Demo",
+    "paper": "Paper",
+    "read_only": "Observe",
+    "live": "Live",
+}
+
 
 class ModeSelectionScreen(Screen):
-    """Home screen for selecting bot operating mode."""
+    """Home screen for selecting bot operating mode.
+
+    Shows mode options with the last used mode highlighted for quick resume.
+    Press Enter to resume last mode or press 1-4 to select a specific mode.
+    """
 
     BINDINGS = [
+        ("enter", "resume_last", "Resume Last"),
         ("1", "select_demo", "Demo"),
         ("2", "select_paper", "Paper"),
         ("3", "select_observe", "Observe"),
@@ -21,18 +35,55 @@ class ModeSelectionScreen(Screen):
         ("q", "quit", "Quit"),
     ]
 
+    def __init__(self) -> None:
+        """Initialize mode selection screen."""
+        super().__init__()
+        self._last_mode: str | None = None
+
+    def on_mount(self) -> None:
+        """Load last mode preference on mount."""
+        prefs = get_preferences_service()
+        self._last_mode = prefs.get_mode()
+        if self._last_mode:
+            logger.debug("Last used mode: %s", self._last_mode)
+            # Update resume banner visibility
+            try:
+                banner = self.query_one("#resume-banner", Container)
+                banner.display = True
+            except Exception:
+                pass
+
     def compose(self) -> ComposeResult:
         """Compose the mode selection layout."""
         yield Footer()
 
+        # Load last mode for initial compose
+        prefs = get_preferences_service()
+        self._last_mode = prefs.get_mode()
+
         with Container(id="mode-selection-container"):
-            yield Label("🚀 GPT-TRADER TERMINAL", id="selection-title")
-            yield Label("Select your trading mode to continue", id="selection-subtitle")
+            yield Label("GPT-TRADER TERMINAL", id="selection-title")
+
+            # Quick resume banner (shown if last mode exists)
+            with Container(id="resume-banner", classes="resume-banner"):
+                if self._last_mode:
+                    mode_name = MODE_DISPLAY_NAMES.get(self._last_mode, self._last_mode)
+                    yield Label(
+                        f"Press [Enter] to resume {mode_name} mode",
+                        id="resume-hint",
+                        classes="resume-hint",
+                    )
+                else:
+                    yield Label(
+                        "Select your trading mode to continue",
+                        id="resume-hint",
+                        classes="resume-hint",
+                    )
 
             with Vertical():
                 # Demo Mode
                 with Container(classes="mode-option mode-demo"):
-                    yield Label("[1] 🎮 DEMO MODE - Mock Data", classes="mode-option-header")
+                    yield Label("[1] DEMO MODE - Mock Data", classes="mode-option-header")
                     yield Label(
                         "Practice with simulated market data and virtual trading",
                         classes="mode-option-description",
@@ -49,7 +100,7 @@ class ModeSelectionScreen(Screen):
                 # Paper Trading Mode
                 with Container(classes="mode-option mode-paper"):
                     yield Label(
-                        "[2] 📊 PAPER MODE - Real Data, Simulated Trading",
+                        "[2] PAPER MODE - Real Data, Simulated Trading",
                         classes="mode-option-header",
                     )
                     yield Label(
@@ -69,7 +120,7 @@ class ModeSelectionScreen(Screen):
 
                 # Observation Mode
                 with Container(classes="mode-option mode-observe"):
-                    yield Label("[3] 👁 OBSERVE MODE - Read Only", classes="mode-option-header")
+                    yield Label("[3] OBSERVE MODE - Read Only", classes="mode-option-header")
                     yield Label(
                         "Monitor real Coinbase account and positions (no trading)",
                         classes="mode-option-description",
@@ -87,7 +138,7 @@ class ModeSelectionScreen(Screen):
 
                 # Live Trading Mode
                 with Container(classes="mode-option mode-live"):
-                    yield Label("[4] ⚠ LIVE MODE - Real Trading ⚠", classes="mode-option-header")
+                    yield Label("[4] LIVE MODE - Real Trading", classes="mode-option-header")
                     yield Label(
                         "Execute real trades on Coinbase with real money",
                         classes="mode-option-description",
@@ -127,6 +178,20 @@ class ModeSelectionScreen(Screen):
         """Select live trading mode."""
         logger.info("User selected LIVE mode from selection screen")
         self.dismiss("live")
+
+    def action_resume_last(self) -> None:
+        """Resume last used mode.
+
+        If no last mode exists, defaults to demo mode.
+        """
+        if self._last_mode:
+            mode_name = MODE_DISPLAY_NAMES.get(self._last_mode, self._last_mode)
+            logger.info(f"User resumed last mode: {self._last_mode} ({mode_name})")
+            self.dismiss(self._last_mode)
+        else:
+            # No last mode - default to demo
+            logger.info("No last mode found, defaulting to DEMO")
+            self.dismiss("demo")
 
     def action_quit(self) -> None:
         """Quit the application."""

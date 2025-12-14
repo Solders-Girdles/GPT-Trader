@@ -31,6 +31,27 @@ ModeSelectionScreen {
     margin-bottom: 3;
 }
 
+/* Quick resume banner */
+.resume-banner {
+    width: 100%;
+    height: auto;
+    padding: 1 2;
+    margin-bottom: 2;
+    background: $accent-muted;
+    border: solid $accent;
+}
+
+.resume-hint {
+    text-align: center;
+    color: $accent;
+    text-style: bold;
+    width: 100%;
+}
+
+#resume-banner {
+    width: 100%;
+}
+
 .mode-option {
     width: 100%;
     height: auto;

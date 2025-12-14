@@ -17,18 +17,19 @@
     text-align: right;
 }
 
-/* === Empty States === */
+/* === Empty States - Professional Display === */
 
 .empty-state {
-    height: 1;              /* Single line */
-    border: none;           /* No dashed border */
+    height: auto;           /* Allow multi-line content */
+    min-height: 3;          /* Minimum height for visibility */
+    border: none;            /* No border */
     background: transparent;
-    padding: 0 2;
-    margin: 0;
+    padding: $spacing-md $spacing-lg; /* Increased padding */
+    margin: $spacing-md 0;   /* Vertical margin */
     color: $text-muted;
-    text-style: italic;
     text-align: center;
-    display: none;  /* Hidden by default */
+    display: none;           /* Hidden by default */
+    content-align: center middle; /* Center content */
 }
 
 /* === P&L Color Coding === */
@@ -58,7 +59,8 @@
     text-style: bold;
     margin-right: $spacing-md;
     background: $bg-elevated;
-    padding: 0 $spacing-sm;
+    padding: $spacing-xs $spacing-md; /* Increased padding */
+    border-left: solid $accent-muted; /* Subtle accent border */
 }
 
 .status-running {
@@ -102,4 +104,35 @@
 
 .heartbeat-dim {
     color: $text-muted;
+}
+
+/* === Tile Banners (inline per-tile status) === */
+
+.tile-banner {
+    height: 1;
+    width: 100%;
+    padding: 0 $spacing-sm;
+    margin: 0 0 $spacing-xs 0;
+    background: $bg-elevated;
+    border-left: wide $accent-muted;
+    color: $text-secondary;
+    content-align: left middle;
+}
+
+.tile-banner.info {
+    background: $info-muted;
+    border-left: wide $info;
+    color: $info;
+}
+
+.tile-banner.warning {
+    background: $warning-muted;
+    border-left: wide $warning;
+    color: $warning;
+}
+
+.tile-banner.error {
+    background: $error-muted;
+    border-left: wide $error;
+    color: $error;
 }

@@ -5,8 +5,8 @@ from textual.containers import Horizontal
 from textual.reactive import reactive
 from textual.widgets import Label, Static
 
+from gpt_trader.tui.events import ResponsiveStateChanged
 from gpt_trader.tui.responsive_state import ResponsiveState
-from gpt_trader.tui.widgets.mode_indicator import ModeIndicator
 
 
 class ContextualFooter(Static):
@@ -26,15 +26,14 @@ class ContextualFooter(Static):
     # Use percentage-based sizing for children - height is set via global CSS ID selector
     SCOPED_CSS = False  # Disable scoping to allow nested selectors
 
-    DEFAULT_CSS = """
-    ContextualFooter > Horizontal {
-        height: 100%;
-        width: 100%;
-    }
-    """
+    # Styles moved to styles/widgets/status_bar.tcss (ContextualFooter section)
 
     # Responsive design property
     responsive_state = reactive(ResponsiveState.STANDARD)
+
+    def on_responsive_state_changed(self, event: ResponsiveStateChanged) -> None:
+        """Update footer shortcuts when responsive state changes."""
+        self.responsive_state = event.state
 
     def compose(self) -> ComposeResult:
         """Compose the footer layout with priority classes.
@@ -46,12 +45,6 @@ class ContextualFooter(Static):
         - P3: Nice-to-have (help, mode info)
         """
         with Horizontal(id="contextual-footer"):
-            # P0: Data source info (essential, left side)
-            with Horizontal(classes="footer-group footer-group-left p0"):
-                yield Label("", id="data-source-info", classes="footer-data-source")
-
-            yield Label("│", classes="footer-separator p0")
-
             # P0: Bot control (essential)
             with Horizontal(classes="footer-group p0"):
                 yield Label("S", classes="footer-key")
@@ -120,30 +113,17 @@ class ContextualFooter(Static):
                 yield Label("?", classes="footer-key")
                 yield Label("Help", classes="footer-label")
 
+            yield Label("│", classes="footer-separator p3")
+
+            # P3: Theme toggle (nice-to-have)
+            with Horizontal(classes="footer-group p3"):
+                yield Label("T", classes="footer-key")
+                yield Label("Theme", classes="footer-label")
+
             # P0: Quit (essential, right-aligned)
             with Horizontal(classes="footer-group footer-group-right p0"):
                 yield Label("Q", classes="footer-key")
                 yield Label("Quit", classes="footer-label")
-
-    def update_data_source_info(self, mode: str, connection_healthy: bool) -> None:
-        """
-        Update data source information in footer.
-
-        Args:
-            mode: Current bot mode (demo, paper, read_only, live)
-            connection_healthy: True if connection is healthy
-        """
-        try:
-            info_label = self.query_one("#data-source-info", Label)
-
-            status_icon = "🟢" if connection_healthy else "🔴"
-            config = ModeIndicator.MODE_CONFIG.get(mode, {})
-            description = config.get("description", "Unknown mode")
-
-            info_label.update(f"{status_icon} {description}")
-        except Exception:
-            # Widget might not be mounted yet
-            pass
 
     def watch_responsive_state(self, state: ResponsiveState) -> None:
         """Toggle footer shortcuts based on responsive state.

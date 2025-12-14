@@ -21,16 +21,7 @@ logger = get_logger(__name__, component="tui")
 class StrategyWidget(Static):
     """Displays strategy status and decisions."""
 
-    DEFAULT_CSS = """
-    StrategyWidget {
-        layout: vertical;
-        height: 1fr;
-    }
-
-    StrategyWidget DataTable {
-        height: 1fr;
-    }
-    """
+    # Styles moved to styles/widgets/strategy.tcss
 
     # Reactive state property for automatic updates
     state = reactive(None)  # Type: TuiState | None
@@ -49,7 +40,7 @@ class StrategyWidget(Static):
         self.update_strategy(state.strategy_data)
 
     def compose(self) -> ComposeResult:
-        yield Label("🎯 STRATEGY DECISIONS", classes="header")
+        yield Label("STRATEGY DECISIONS", classes="widget-header")
         table = DataTable(id="strategy-table", zebra_stripes=True)
         table.can_focus = True
         table.cursor_type = "row"
@@ -84,7 +75,11 @@ class StrategyWidget(Static):
                 table.clear()
             table.display = False
             empty_label.display = True
-            empty_label.update("No decisions yet • Press [S] to start bot")
+            mode = getattr(self.state, "data_source_mode", None) if self.state is not None else None
+            hint = "Press [S] to start bot."
+            if mode == "read_only":
+                hint = "Press [S] to start data feed."
+            empty_label.update(f"No decisions yet. {hint}")
             return
         else:
             table.display = True

@@ -1,0 +1,105 @@
+/* ========================================================================== */
+/* COMMAND BAR - Clean Professional Header                                    */
+/* ========================================================================== */
+
+CommandBar {
+    dock: top;
+    height: 3;
+    background: $bg-elevated;
+    border-bottom: solid $border-emphasis;
+    layout: horizontal;
+    padding: 0 2;
+}
+
+/* === Identity Section - Subtle branding === */
+.identity-section {
+    width: auto;
+    min-width: 12;
+    height: 3;
+    color: $text-primary;
+    background: $bg-secondary;
+    text-style: bold;
+    content-align: center middle;
+    padding: 0 2;
+    border-right: solid $border-subtle;
+}
+
+/* === Status Section - Center info === */
+.status-section {
+    width: 1fr;
+    height: 100%;
+    content-align: center middle;
+    color: $text-secondary;
+    layout: horizontal;
+}
+
+/* Mode badge styling - refined, less saturated */
+.mode-badge {
+    color: $text-primary;
+    background: $bg-highlight;
+    padding: 0 2;
+    text-style: bold;
+    margin: 0 1;
+}
+
+/* Mode-specific colors - subtle backgrounds */
+.mode-badge.mode-live {
+    background: $error-muted;
+    color: $error;
+}
+
+.mode-badge.mode-paper {
+    background: $warning-muted;
+    color: $warning;
+}
+
+.mode-badge.mode-demo,
+.mode-badge.mode-read_only {
+    background: $info-muted;
+    color: $info;
+}
+
+/* Connection status text */
+.status-text {
+    color: $text-secondary;
+    height: 3;
+    content-align: center middle;
+    margin: 0 1;
+}
+
+.status-text.connected {
+    color: $success;
+}
+
+.status-text.stopped {
+    color: $info;
+}
+
+.status-text.stale {
+    color: $warning;
+}
+
+.status-text.disconnected {
+    color: $error;
+}
+
+/* === System Section - Right side === */
+.system-section {
+    width: auto;
+    height: 100%;
+    border-left: solid $border-subtle;
+    padding-left: 2;
+    layout: horizontal;
+    align-vertical: middle;
+}
+
+.clock {
+    color: $text-muted;
+    margin-left: 1;
+}
+
+.user-badge {
+    color: $text-muted;
+    background: transparent;
+    padding: 0 1;
+}

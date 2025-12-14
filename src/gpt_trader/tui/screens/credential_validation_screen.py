@@ -55,155 +55,6 @@ class CredentialValidationScreen(ModalScreen[bool | str]):
         Binding("escape", "cancel", "Cancel", show=True),
     ]
 
-    CSS = """
-    CredentialValidationScreen {
-        align: center middle;
-        background: rgba(58, 53, 48, 0.8);
-    }
-
-    #validation-container {
-        width: 70;
-        max-width: 90%;
-        height: auto;
-        max-height: 85%;
-        background: #2A2520;
-        border: thick #D4744F;
-        padding: 1 2;
-    }
-
-    .validation-title {
-        text-align: center;
-        text-style: bold;
-        padding: 1;
-        margin-bottom: 1;
-    }
-
-    .validation-title-passed {
-        color: #85B77F;
-        background: #2A3A28;
-    }
-
-    .validation-title-failed {
-        color: #E08580;
-        background: #4C342F;
-    }
-
-    .validation-title-warning {
-        color: #E0B366;
-        background: #4A3D28;
-    }
-
-    #findings-scroll {
-        height: auto;
-        max-height: 20;
-        margin-bottom: 1;
-    }
-
-    .finding-row {
-        height: auto;
-        padding: 0 1;
-        margin-bottom: 0;
-    }
-
-    .finding-icon-success {
-        color: #85B77F;
-        width: 3;
-    }
-
-    .finding-icon-info {
-        color: #7FACD4;
-        width: 3;
-    }
-
-    .finding-icon-warning {
-        color: #E0B366;
-        width: 3;
-    }
-
-    .finding-icon-error {
-        color: #E08580;
-        width: 3;
-    }
-
-    .finding-category {
-        color: #B8B5B2;
-        width: 14;
-    }
-
-    .finding-message {
-        color: #F0EDE9;
-    }
-
-    .finding-details {
-        color: #7A7672;
-        margin-left: 17;
-        text-style: italic;
-    }
-
-    .finding-suggestion {
-        color: #7FACD4;
-        margin-left: 17;
-    }
-
-    .summary-line {
-        text-align: center;
-        padding: 1;
-        margin-top: 1;
-    }
-
-    .summary-success {
-        color: #85B77F;
-    }
-
-    .summary-warning {
-        color: #E0B366;
-    }
-
-    .summary-error {
-        color: #E08580;
-    }
-
-    #button-container {
-        height: auto;
-        align: center middle;
-        margin-top: 1;
-    }
-
-    #button-container Button {
-        margin: 0 1;
-        min-width: 16;
-    }
-
-    #proceed-btn {
-        background: #3D6B35;
-    }
-
-    #proceed-btn:hover {
-        background: #4A8040;
-    }
-
-    #cancel-btn {
-        background: #4C342F;
-    }
-
-    #cancel-btn:hover {
-        background: #5C443F;
-    }
-
-    #setup-btn {
-        background: #3D5B6B;
-    }
-
-    #setup-btn:hover {
-        background: #4A6B7B;
-    }
-
-    .button-disabled {
-        background: #3D3833;
-        color: #7A7672;
-    }
-    """
-
     def __init__(
         self,
         result: CredentialValidationResult,
@@ -241,7 +92,8 @@ class CredentialValidationScreen(ModalScreen[bool | str]):
                 if self.result.valid_for_mode:
                     yield Button("Proceed", id="proceed-btn", variant="success")
                 else:
-                    # Offer setup wizard when validation fails
+                    # Offer retry and setup wizard when validation fails
+                    yield Button("Retry", id="retry-btn", variant="warning")
                     yield Button("Setup API Key", id="setup-btn", variant="primary")
                 yield Button("Cancel", id="cancel-btn", variant="error")
 
@@ -272,19 +124,11 @@ class CredentialValidationScreen(ModalScreen[bool | str]):
         category = CATEGORY_NAMES.get(finding.category, finding.category.value)
 
         # Main row with icon, category, and message
+        severity_class = f"finding-{finding.severity.value}"
         row = Static(
             f"[{icon}] [{category}] {finding.message}",
-            classes="finding-row",
+            classes=f"finding-row {severity_class}",
         )
-        # Apply icon color class based on severity
-        if finding.severity == ValidationSeverity.SUCCESS:
-            row.styles.color = "#85B77F"
-        elif finding.severity == ValidationSeverity.INFO:
-            row.styles.color = "#7FACD4"
-        elif finding.severity == ValidationSeverity.WARNING:
-            row.styles.color = "#E0B366"
-        elif finding.severity == ValidationSeverity.ERROR:
-            row.styles.color = "#E08580"
 
         widgets.append(row)
 
@@ -352,3 +196,6 @@ class CredentialValidationScreen(ModalScreen[bool | str]):
         elif event.button.id == "setup-btn":
             # Signal to launch the setup wizard
             self.dismiss("setup")
+        elif event.button.id == "retry-btn":
+            # Signal to retry validation
+            self.dismiss("retry")

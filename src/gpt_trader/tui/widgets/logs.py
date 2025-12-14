@@ -27,9 +27,8 @@ class LogWidget(Static):
     BINDINGS = [
         # Pause/resume
         Binding("space", "toggle_pause", "Pause/Resume", show=True),
-        Binding("p", "toggle_pause", "Pause", show=False),
         # Format toggle
-        Binding("f", "cycle_format", "Format", show=True),
+        Binding("v", "cycle_format", "Format", show=True),
         # Line navigation
         Binding("j", "scroll_down_line", "Down", show=False),
         Binding("k", "scroll_up_line", "Up", show=False),
@@ -43,9 +42,12 @@ class LogWidget(Static):
         Binding("n", "next_error", "Next Error", show=True),
         Binding("N", "previous_error", "Prev Error", show=False),
         # Timestamp toggle
-        Binding("t", "cycle_timestamp_format", "Timestamps", show=True),
+        Binding("ctrl+t", "cycle_timestamp_format", "Timestamps", show=True),
         # Startup section toggle
-        Binding("s", "toggle_startup_section", "Startup", show=False),
+        Binding("ctrl+s", "toggle_startup_section", "Startup", show=False),
+        # Ergonomics
+        Binding("ctrl+f", "focus_filter", "Filter", show=False),
+        Binding("ctrl+0", "clear_filters", "Clear Filters", show=False),
     ]
 
     # Reactive counters for log statistics
@@ -69,78 +71,13 @@ class LogWidget(Static):
     startup_collapsed: reactive[bool] = reactive(True)
     startup_count: reactive[int] = reactive(0)
 
-    # Use percentage-based child sizing - theme styles in logs.tcss
+    # All styles defined in styles/widgets/logs.tcss for centralized theming
     SCOPED_CSS = False
 
-    DEFAULT_CSS = """
-    LogWidget {
-        layout: vertical;
-        height: 1fr;
-    }
-
-    LogWidget .log-header {
-        height: 1;
-        max-height: 1;
-        align-vertical: middle;
-        padding: 0 1;
-    }
-
-    LogWidget .log-title {
-        width: 5;
-        text-style: bold;
-    }
-
-    LogWidget .log-level-select {
-        width: 12;
-        height: 1;
-        margin: 0 1;
-    }
-
-    LogWidget .log-filter {
-        width: 1fr;
-        min-width: 8;
-        max-width: 25;
-        height: 1;
-    }
-
-    LogWidget .log-sep {
-        width: 1;
-        margin: 0 1;
-    }
-
-    LogWidget .stat {
-        width: auto;
-        min-width: 4;
-        text-style: bold;
-        margin-right: 1;
-    }
-
-    LogWidget .pause-indicator {
-        color: #E0B366;
-        text-style: bold;
-        background: rgba(224, 179, 102, 0.2);
-        padding: 0 1;
-        display: none;
-    }
-
-    LogWidget .pause-indicator.visible {
-        display: block;
-    }
-
-    LogWidget RichLog {
-        height: 1fr;
-        min-height: 5;
-    }
-
-    .log-expand-hint {
-        height: 1;
-        text-align: center;
-    }
-    """
-
-    def __init__(self, compact_mode: bool = False, *args, **kwargs):
+    def __init__(self, compact_mode: bool = False, show_startup: bool = False, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.compact_mode = compact_mode
+        self.startup_collapsed = not show_startup
         self._min_level = logging.INFO  # Default filter level
         self._logger_filter = ""  # Default: show all loggers
         self._current_error_index = -1  # For error navigation
@@ -216,7 +153,10 @@ class LogWidget(Static):
 
             # Register with counter callback for statistics tracking
             handler.register_widget(
-                log_display, self._min_level, on_log_callback=self.increment_counter
+                log_display,
+                self._min_level,
+                on_log_callback=self.increment_counter,
+                show_startup=not self.startup_collapsed,
             )
 
             logger.debug(
@@ -239,20 +179,22 @@ class LogWidget(Static):
     def _write_startup_messages(self) -> None:
         """Write startup messages to verify log widget is working."""
         from rich.text import Text
+        from gpt_trader.tui.theme import THEME
 
         log = self.query_one("#log-stream", RichLog)
-        log.write(Text("✓ Log system initialized", style="#a3be8c"))
-        log.write(Text("Set log level using dropdown above", style="#a3be8c"))
+        success_style = THEME.colors.success
+        log.write(Text("✓ Log system initialized", style=success_style))
+        log.write(Text("Set log level using dropdown above", style=success_style))
 
         # Mode-aware hint message
         if self.app and hasattr(self.app, "data_source_mode"):
             mode = self.app.data_source_mode  # type: ignore[attr-defined]
             if mode == "read_only":
-                log.write(Text("Observing market data (read-only mode)", style="#a3be8c"))
+                log.write(Text("Observing market data (read-only mode)", style=success_style))
             else:
-                log.write(Text("Waiting for bot to start... Press 'S' to begin", style="#a3be8c"))
+                log.write(Text("Waiting for bot to start... Press 'S' to begin", style=success_style))
         else:
-            log.write(Text("Waiting for bot to start... Press 'S' to begin", style="#a3be8c"))
+            log.write(Text("Waiting for bot to start... Press 'S' to begin", style=success_style))
 
     def on_unmount(self) -> None:
         """Unregister from global log handler."""
@@ -295,6 +237,43 @@ class LogWidget(Static):
             handler = get_tui_log_handler()
             log_display = self.query_one("#log-stream", RichLog)
             handler.update_widget_logger_filter(log_display, self._logger_filter)
+
+    def action_focus_filter(self) -> None:
+        """Focus the logger filter input for quick skimming."""
+        try:
+            filter_input = self.query_one("#logger-filter-input", Input)
+            filter_input.focus()
+        except Exception:
+            pass
+
+    def action_clear_filters(self) -> None:
+        """Reset log filters back to default (INFO + no logger filter)."""
+        from gpt_trader.tui.log_manager import get_tui_log_handler
+
+        try:
+            handler = get_tui_log_handler()
+            log_display = self.query_one("#log-stream", RichLog)
+
+            self._min_level = logging.INFO
+            self._logger_filter = ""
+
+            try:
+                self.query_one("#log-level-select", Select).value = logging.INFO
+            except Exception:
+                pass
+
+            try:
+                self.query_one("#logger-filter-input", Input).value = ""
+            except Exception:
+                pass
+
+            handler.update_widget_level(log_display, self._min_level)
+            handler.update_widget_logger_filter(log_display, self._logger_filter)
+            handler.refresh_widget(log_display)
+            log_display.auto_scroll = True
+            self.notify("Log filters cleared", timeout=2)
+        except Exception:
+            pass
 
     def increment_counter(self, level: int) -> None:
         """
@@ -443,40 +422,83 @@ class LogWidget(Static):
     # ==================== Error Navigation Actions ====================
 
     def action_next_error(self) -> None:
-        """Jump to the next error in the log."""
+        """Jump to the next error and focus the log view on it."""
         from gpt_trader.tui.log_manager import get_tui_log_handler
 
         handler = get_tui_log_handler()
-        error_count = handler.get_error_count()
+        error_entries = handler.get_error_entries()
+        error_count = len(error_entries)
 
         if error_count == 0:
             self.notify("No errors in log", timeout=2)
             return
 
         self._current_error_index = (self._current_error_index + 1) % error_count
-        self.notify(f"Error {self._current_error_index + 1}/{error_count}", timeout=2)
+        entry = error_entries[self._current_error_index]
 
-        # Scroll to approximate position based on error index
-        # Since RichLog doesn't expose line positions, scroll proportionally
+        # Narrow the view to the selected error's logger and ERROR level.
+        logger_filter = entry.short_logger or entry.logger_name.rsplit(".", 1)[-1]
+        self._logger_filter = logger_filter.lower()
+        self.set_level(logging.ERROR)
+
+        try:
+            self.query_one("#logger-filter-input", Input).value = logger_filter
+        except Exception:
+            pass
+
         log_display = self.query_one("#log-stream", RichLog)
+        handler.update_widget_logger_filter(log_display, self._logger_filter)
+        handler.refresh_widget(log_display)
         log_display.auto_scroll = False
+        log_display.scroll_end(animate=False)
+
+        summary = (entry.compact_message or entry.raw_message or "").strip().splitlines()[:1]
+        message = summary[0] if summary else "Error"
+        self.notify(
+            f"{logger_filter}: {message}",
+            title=f"Error {self._current_error_index + 1}/{error_count}",
+            severity="error",
+            timeout=6,
+        )
 
     def action_previous_error(self) -> None:
-        """Jump to the previous error in the log."""
+        """Jump to the previous error and focus the log view on it."""
         from gpt_trader.tui.log_manager import get_tui_log_handler
 
         handler = get_tui_log_handler()
-        error_count = handler.get_error_count()
+        error_entries = handler.get_error_entries()
+        error_count = len(error_entries)
 
         if error_count == 0:
             self.notify("No errors in log", timeout=2)
             return
 
         self._current_error_index = (self._current_error_index - 1) % error_count
-        self.notify(f"Error {self._current_error_index + 1}/{error_count}", timeout=2)
+        entry = error_entries[self._current_error_index]
+
+        logger_filter = entry.short_logger or entry.logger_name.rsplit(".", 1)[-1]
+        self._logger_filter = logger_filter.lower()
+        self.set_level(logging.ERROR)
+
+        try:
+            self.query_one("#logger-filter-input", Input).value = logger_filter
+        except Exception:
+            pass
 
         log_display = self.query_one("#log-stream", RichLog)
+        handler.update_widget_logger_filter(log_display, self._logger_filter)
+        handler.refresh_widget(log_display)
         log_display.auto_scroll = False
+        log_display.scroll_end(animate=False)
+
+        summary = (entry.compact_message or entry.raw_message or "").strip().splitlines()[:1]
+        message = summary[0] if summary else "Error"
+        self.notify(
+            f"{logger_filter}: {message}",
+            title=f"Error {self._current_error_index + 1}/{error_count}",
+            severity="error",
+            timeout=6,
+        )
 
     # ==================== Timestamp Actions ====================
 
@@ -549,8 +571,18 @@ class LogWidget(Static):
 
     def action_toggle_startup_section(self) -> None:
         """Toggle startup log section expand/collapse."""
+        from gpt_trader.tui.log_manager import get_tui_log_handler
+
         self.startup_collapsed = not self.startup_collapsed
-        if self.startup_collapsed:
-            self.notify("Startup logs collapsed", timeout=2)
-        else:
-            self.notify("Startup logs expanded", timeout=2)
+        try:
+            handler = get_tui_log_handler()
+            log_display = self.query_one("#log-stream", RichLog)
+            handler.update_widget_show_startup(log_display, not self.startup_collapsed)
+            handler.refresh_widget(log_display)
+        except Exception:
+            pass
+
+        self.notify(
+            "Startup logs collapsed" if self.startup_collapsed else "Startup logs expanded",
+            timeout=2,
+        )

@@ -1,0 +1,95 @@
+/* ========================================================================== */
+/* THEME VARIABLES - Light (Claude Code-inspired)                             */
+/* ========================================================================== */
+
+/* === Backgrounds (Warm Light) === */
+$bg-primary: #FAF8F5;      /* Warm off-white - Main background */
+$bg-secondary: #F0EDE9;    /* Slightly darker panels */
+$bg-elevated: #FFFFFF;     /* Pure white - Headers/Cards */
+$bg-highlight: #E5E2DE;    /* Subtle highlight for hover states */
+
+/* === Accents (Warm Rust) === */
+$accent: #C15F3C;          /* Rust-orange - Primary action/Focus */
+$accent-hover: #D4744F;    /* Lighter rust - Hover */
+$accent-muted: #D4CFCA;    /* Neutral warm grey */
+$accent-glow: #C15F3C;     /* Accent glow */
+$accent-bright: #D4744F;   /* Brighter rust for pressed/active */
+$accent-subtle: rgba(193, 95, 60, 0.1);  /* Subtle rust tint */
+
+/* === Text Colors (Warm Dark) === */
+$text-primary: #1A1815;    /* Deep brown - Primary text */
+$text-secondary: #3D3833;  /* Medium brown - Secondary text */
+$text-muted: #7A7672;      /* Muted grey - Hints/Disabled */
+$text-bright: #1A1815;     /* Bright text for headers */
+
+/* === Semantic Colors (Adjusted for Light BG) === */
+$success: #4A7D44;         /* Dark green */
+$success-muted: rgba(74, 125, 68, 0.12);
+$success-dim: #3F6A3A;
+$warning: #C89A2E;         /* Amber */
+$warning-muted: rgba(200, 154, 46, 0.12);
+$warning-dim: #A67E26;
+$error: #C14F4A;           /* Coral red */
+$error-muted: rgba(193, 79, 74, 0.12);
+$error-dim: #A0433F;
+$info: #4A7D9A;            /* Blue */
+$info-muted: rgba(74, 125, 154, 0.12);
+
+/* === Borders (Warm Neutrals) === */
+$border-subtle: #D4CFCA;
+$border-accent: #C15F3C;
+$border-emphasis: #B8B2AD;
+
+/* === Spacing Scale === */
+$spacing-xs: 1;
+$spacing-sm: 2;
+$spacing-md: 3;
+$spacing-lg: 4;
+
+/* === Semantic Spacing Tokens === */
+$gutter-tight: 1;
+$gutter-standard: 2;
+$gutter-comfortable: 3;
+$content-padding: 2;
+$section-gap: 4;
+
+/* === Panel/Tile Tokens === */
+$tile-padding: 1 2;
+$tile-padding-compact: 1;
+$widget-header-padding: 0 2;
+$widget-content-padding: 1 2;
+
+/* === Elevation System === */
+$elevation-0: $bg-primary;
+$elevation-1: $bg-secondary;
+$elevation-2: $bg-elevated;
+$elevation-3: $bg-highlight;
+
+/* === Tile Border Tokens === */
+$tile-border-default: solid $border-subtle;
+$tile-border-accent: solid $border-accent;
+$tile-border-highlight: solid $border-emphasis;
+
+/* === Interactive State Overlays === */
+$overlay-hover: rgba(193, 95, 60, 0.08);
+$overlay-focus: rgba(193, 95, 60, 0.15);
+$overlay-disabled: rgba(122, 118, 114, 0.3);
+$overlay-active: rgba(193, 95, 60, 0.1);
+
+/* === Panel Tokens === */
+$panel-bg-default: $bg-secondary;
+$panel-bg-elevated: $bg-elevated;
+$panel-border-default: $border-subtle;
+$panel-border-emphasis: $border-emphasis;
+
+/* === Interactive State Tokens === */
+$interactive-default: $bg-elevated;
+$interactive-hover: $bg-highlight;
+$interactive-active: $accent;
+$interactive-disabled: $bg-secondary;
+
+/* === Border Style Tokens === */
+$border-default: solid $border-subtle;
+$border-emphasis-style: solid $border-emphasis;
+$border-glow: solid $accent-glow;
+

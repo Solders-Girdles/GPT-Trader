@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from gpt_trader.tui.events import ThemeChanged
+from gpt_trader.tui.preferences_paths import resolve_preferences_paths
 from gpt_trader.tui.theme import Theme, ThemeMode, get_theme_manager
 from gpt_trader.utilities.logging_patterns import get_logger
 
@@ -19,9 +20,6 @@ if TYPE_CHECKING:
     from textual.app import App
 
 logger = get_logger(__name__, component="tui")
-
-# Default config file path for theme preferences
-DEFAULT_PREFERENCES_PATH = Path("config/tui_preferences.json")
 
 
 class ThemeService:
@@ -49,7 +47,7 @@ class ThemeService:
         """
         self.app = app
         self.theme_manager = get_theme_manager()
-        self.preferences_path = preferences_path or DEFAULT_PREFERENCES_PATH
+        self.preferences_path, self._fallback_path = resolve_preferences_paths(preferences_path)
 
     def load_preference(self) -> ThemeMode:
         """Load theme preference from config file.
@@ -57,17 +55,18 @@ class ThemeService:
         Returns:
             The loaded theme mode, or DARK as default.
         """
-        try:
-            if self.preferences_path.exists():
-                with open(self.preferences_path) as f:
-                    prefs = json.load(f)
-                    mode_str = prefs.get("theme", "dark")
-                    mode = ThemeMode(mode_str)
-                    self.theme_manager.set_theme(mode)
-                    logger.info(f"Loaded theme preference: {mode_str}")
-                    return mode
-        except Exception as e:
-            logger.debug(f"Could not load theme preference: {e}")
+        for path in filter(None, (self.preferences_path, self._fallback_path)):
+            try:
+                if path.exists():
+                    with open(path) as f:
+                        prefs = json.load(f)
+                        mode_str = prefs.get("theme", "dark")
+                        mode = ThemeMode(mode_str)
+                        self.theme_manager.set_theme(mode)
+                        logger.debug("Loaded theme preference: %s (from %s)", mode_str, path)
+                        return mode
+            except Exception as e:
+                logger.debug("Could not load theme preference from %s: %s", path, e)
 
         return ThemeMode.DARK
 
@@ -84,8 +83,13 @@ class ThemeService:
             self.preferences_path.parent.mkdir(parents=True, exist_ok=True)
 
             prefs = {}
-            if self.preferences_path.exists():
-                with open(self.preferences_path) as f:
+            source_path = (
+                self.preferences_path
+                if self.preferences_path.exists()
+                else (self._fallback_path if self._fallback_path and self._fallback_path.exists() else None)
+            )
+            if source_path is not None:
+                with open(source_path) as f:
                     prefs = json.load(f)
 
             prefs["theme"] = mode.value
@@ -93,36 +97,66 @@ class ThemeService:
             with open(self.preferences_path, "w") as f:
                 json.dump(prefs, f, indent=2)
 
-            logger.info(f"Saved theme preference: {mode}")
+            logger.debug("Saved theme preference: %s", mode)
             return True
         except Exception as e:
             logger.warning(f"Could not save theme preference: {e}")
             return False
 
     def toggle_theme(self) -> Theme:
-        """Toggle between dark and light themes.
+        """Cycle through dark, light, and high-contrast themes.
 
         Returns:
-            The new theme after toggling.
+            The new theme after cycling.
         """
-        new_theme = self.theme_manager.toggle_theme()
-        mode_name = "Light" if new_theme.mode == ThemeMode.LIGHT else "Dark"
+        current = self.theme_manager.current_mode
+        # Cycle: DARK -> LIGHT -> HIGH_CONTRAST -> DARK
+        theme_cycle = {
+            ThemeMode.DARK: ThemeMode.LIGHT,
+            ThemeMode.LIGHT: ThemeMode.HIGH_CONTRAST,
+            ThemeMode.HIGH_CONTRAST: ThemeMode.DARK,
+        }
+        new_mode = theme_cycle.get(current, ThemeMode.DARK)
 
-        # Notify user
+        apply_ok = True
+        try:
+            apply_css = getattr(self.app, "apply_theme_css", None)
+            if callable(apply_css):
+                apply_ok = bool(apply_css(new_mode))
+        except Exception as e:
+            apply_ok = False
+            logger.debug("Theme CSS hot-swap failed: %s", e)
+
+        if not apply_ok:
+            self.app.notify(
+                "Theme switch failed (missing CSS). Run `python scripts/build_tui_css.py`.",
+                severity="warning",
+                title="Theme",
+            )
+            return self.theme_manager.current_theme
+
+        mode_names = {
+            ThemeMode.DARK: "Dark",
+            ThemeMode.LIGHT: "Light",
+            ThemeMode.HIGH_CONTRAST: "High Contrast",
+        }
+        mode_name = mode_names.get(new_mode, "Dark")
+        self.theme_manager.set_theme(new_mode)
+        self.save_preference(new_mode)
+
+        try:
+            self.app.post_message(ThemeChanged(theme_mode=new_mode.value))
+        except Exception:
+            pass
+
         self.app.notify(
-            f"Switched to {mode_name} theme (restart to apply)",
+            f"Theme set to {mode_name}",
             severity="information",
             title="Theme",
         )
 
-        # Save preference
-        self.save_preference(new_theme.mode)
-
-        # Post event for interested widgets
-        self.app.post_message(ThemeChanged(theme_mode=new_theme.mode.value))
-
-        logger.info(f"Theme toggled to: {new_theme.mode}")
-        return new_theme
+        logger.debug("Theme preference updated to: %s", new_mode.value)
+        return self.theme_manager.current_theme
 
     @property
     def current_theme(self) -> Theme:

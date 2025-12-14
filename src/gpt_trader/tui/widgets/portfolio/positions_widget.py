@@ -41,16 +41,7 @@ class PositionsWidget(Static):
         state: Reactive TuiState for automatic updates when state changes.
     """
 
-    DEFAULT_CSS = """
-    PositionsWidget {
-        layout: vertical;
-        height: 1fr;
-    }
-
-    PositionsWidget DataTable {
-        height: 1fr;
-    }
-    """
+    # Styles moved to styles/widgets/portfolio.tcss
 
     # Reactive state property for automatic updates
     state = reactive(None)  # Type: TuiState | None
@@ -74,7 +65,7 @@ class PositionsWidget(Static):
 
     def compose(self) -> ComposeResult:
         """Compose the widget layout."""
-        yield Label("ACTIVE POSITIONS", classes="header")
+        yield Label("ACTIVE POSITIONS", classes="widget-header")
         table = DataTable(id="positions-table", zebra_stripes=True)
         table.can_focus = True
         table.cursor_type = "row"
@@ -84,8 +75,11 @@ class PositionsWidget(Static):
     def on_mount(self) -> None:
         """Initialize the positions table with columns."""
         table = self.query_one(DataTable)
-        # Add columns - alignment handled in add_row with Text objects
-        table.add_columns("Symbol", "Quantity", "Entry", "Current", "PnL", "%", "Leverage")
+        # Add columns - includes CFM fields (Type, Side, Liq%)
+        # alignment handled in add_row with Text objects
+        table.add_columns(
+            "Symbol", "Type", "Side", "Qty", "Entry", "Mark", "PnL", "%", "Lev", "Liq%"
+        )
 
         # Register with state registry for state updates
         if hasattr(self.app, "state_registry"):
@@ -131,11 +125,11 @@ class PositionsWidget(Static):
             if self.app and hasattr(self.app, "data_source_mode"):
                 mode = self.app.data_source_mode  # type: ignore[attr-defined]
                 if mode == "read_only":
-                    empty_label.update("No positions - Read-only mode - observing market data")
+                    empty_label.update("No positions yet. Read-only mode is observing market data.")
                 else:
-                    empty_label.update("No positions - Press [S] to start bot")
+                    empty_label.update("No positions yet. Press [S] to start bot.")
             else:
-                empty_label.update("No positions - Press [S] to start bot")
+                empty_label.update("No positions yet. Press [S] to start bot.")
         else:
             table.display = True
             empty_label.display = False
@@ -184,7 +178,7 @@ class PositionsWidget(Static):
             risk_data: Optional leverage data.
 
         Returns:
-            Tuple of formatted cell values.
+            Tuple of formatted cell values for all columns including CFM fields.
         """
         # Calculate P&L percentage
         try:
@@ -196,13 +190,13 @@ class PositionsWidget(Static):
         except (ValueError, ZeroDivisionError):
             pnl_pct_str = "N/A"
 
-        # Get leverage from risk data
-        leverage_val = 1.0
+        # Get leverage - prefer position's leverage, fallback to risk_data
+        leverage_val = float(pos.leverage) if pos.leverage else 1.0
         if risk_data and pos.symbol in risk_data:
             leverage_val = risk_data[pos.symbol]
 
         # Format and color-code leverage
-        leverage_str = f"{leverage_val:.1f}x"
+        leverage_str = f"{leverage_val:.0f}x"
         if leverage_val < 2.0:
             leverage_display = f"[green]{leverage_str}[/green]"
         elif leverage_val < 5.0:
@@ -215,14 +209,42 @@ class PositionsWidget(Static):
             pos.mark_price if pos.mark_price and pos.mark_price != Decimal("0") else pos.entry_price
         )
 
+        # Format product type badge
+        if pos.product_type == "FUTURE":
+            type_display = "[cyan]FUT[/cyan]"
+        else:
+            type_display = "[dim]SPOT[/dim]"
+
+        # Format side badge
+        side = pos.side.upper() if pos.side else "LONG"
+        if side == "LONG":
+            side_display = "[green]LONG[/green]"
+        else:
+            side_display = "[red]SHORT[/red]"
+
+        # Format liquidation buffer percentage
+        if pos.liquidation_buffer_pct is not None:
+            liq_pct = pos.liquidation_buffer_pct
+            if liq_pct < 25:
+                liq_display = f"[red]{liq_pct:.0f}%[/red]"
+            elif liq_pct < 50:
+                liq_display = f"[yellow]{liq_pct:.0f}%[/yellow]"
+            else:
+                liq_display = f"[green]{liq_pct:.0f}%[/green]"
+        else:
+            liq_display = "[dim]—[/dim]"
+
         return (
             pos.symbol,
+            Text.from_markup(type_display, justify="center"),
+            Text.from_markup(side_display, justify="center"),
             Text(format_quantity(pos.quantity), justify="right"),
             Text(format_price(pos.entry_price), justify="right"),
             Text(format_price(current_price), justify="right"),
             Text(format_currency(pos.unrealized_pnl), justify="right"),
             Text(pnl_pct_str, justify="right"),
             Text.from_markup(leverage_display, justify="right"),
+            Text.from_markup(liq_display, justify="right"),
         )
 
     def _update_row_cells(

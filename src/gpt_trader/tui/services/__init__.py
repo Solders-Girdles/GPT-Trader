@@ -10,17 +10,33 @@ Services are initialized by TraderApp and handle specific concerns:
 - ConfigService: Configuration display and management
 - ResponsiveManager: Terminal resize handling and responsive states
 - ModeService: Bot mode creation and switching
+- PreferencesService: Unified user preferences persistence
 - WorkerService: Background worker management for async operations
 - UpdateThrottler: Batches high-frequency updates to reduce UI flicker
 - AlertManager: Monitors bot state and triggers notifications
 - StateRegistry: Broadcast state updates to registered widgets
+- TuiPerformanceService: Performance monitoring and metrics collection
+- FocusManager: 2D tile navigation and focus management
 """
 
 from gpt_trader.tui.services.action_dispatcher import ActionDispatcher
 from gpt_trader.tui.services.alert_manager import AlertManager
+from gpt_trader.tui.services.focus_manager import FocusManager, TileFocusChanged
 from gpt_trader.tui.services.config_service import ConfigService
 from gpt_trader.tui.services.credential_validator import CredentialValidator
 from gpt_trader.tui.services.mode_service import ModeService
+from gpt_trader.tui.services.performance_service import (
+    FrameMetrics,
+    PerformanceSnapshot,
+    TuiPerformanceService,
+    clear_tui_performance_service,
+    get_tui_performance_service,
+    set_tui_performance_service,
+)
+from gpt_trader.tui.services.preferences_service import (
+    PreferencesService,
+    get_preferences_service,
+)
 from gpt_trader.tui.services.responsive_manager import ResponsiveManager
 from gpt_trader.tui.services.state_registry import StateRegistry
 from gpt_trader.tui.services.theme_service import ThemeService
@@ -32,10 +48,20 @@ __all__ = [
     "AlertManager",
     "ConfigService",
     "CredentialValidator",
+    "FocusManager",
+    "FrameMetrics",
     "ModeService",
+    "TileFocusChanged",
+    "PerformanceSnapshot",
+    "PreferencesService",
     "ResponsiveManager",
     "StateRegistry",
     "ThemeService",
+    "TuiPerformanceService",
     "UpdateThrottler",
     "WorkerService",
+    "clear_tui_performance_service",
+    "get_preferences_service",
+    "get_tui_performance_service",
+    "set_tui_performance_service",
 ]

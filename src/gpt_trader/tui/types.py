@@ -10,18 +10,32 @@ class MarketState:
     prices: dict[str, Decimal] = field(default_factory=dict)  # Changed from str to Decimal
     last_update: float = 0.0
     price_history: dict[str, list[Decimal]] = field(default_factory=dict)
+    spreads: dict[str, Decimal] = field(default_factory=dict)  # symbol -> spread %
 
 
 @dataclass
 class Position:
-    """Data structure for a single position."""
+    """Data structure for a single position.
+
+    Supports both spot and derivatives (CFM futures).
+    """
 
     symbol: str
-    quantity: Decimal  # Changed from str to Decimal
-    entry_price: Decimal = Decimal("0")  # Changed from str to Decimal
-    unrealized_pnl: Decimal = Decimal("0")  # Changed from str to Decimal
-    mark_price: Decimal = Decimal("0")  # Changed from str to Decimal
-    side: str = ""
+    quantity: Decimal
+    entry_price: Decimal = Decimal("0")
+    unrealized_pnl: Decimal = Decimal("0")
+    mark_price: Decimal = Decimal("0")
+    side: str = "long"
+    # CFM/derivatives fields
+    leverage: int = 1
+    product_type: str = "SPOT"  # "SPOT" or "FUTURE"
+    liquidation_price: Decimal | None = None
+    liquidation_buffer_pct: float | None = None
+
+    @property
+    def is_futures(self) -> bool:
+        """Check if this is a futures position."""
+        return self.product_type == "FUTURE"
 
 
 @dataclass
@@ -142,3 +156,37 @@ class SystemStatus:
     rate_limit_usage: str = "0%"
     memory_usage: str = "0MB"
     cpu_usage: str = "0%"
+
+
+@dataclass
+class ResilienceState:
+    """API resilience metrics from CoinbaseClient.
+
+    Tracks latency percentiles, error rates, caching statistics,
+    and circuit breaker states for comprehensive API health monitoring.
+    """
+
+    # Latency metrics (milliseconds)
+    latency_p50_ms: float = 0.0
+    latency_p95_ms: float = 0.0
+    avg_latency_ms: float = 0.0
+
+    # Error metrics
+    error_rate: float = 0.0  # 0.0 to 1.0
+    total_requests: int = 0
+    total_errors: int = 0
+
+    # Rate limiting
+    rate_limit_hits: int = 0
+    rate_limit_usage_pct: float = 0.0
+
+    # Cache stats
+    cache_hit_rate: float = 0.0
+    cache_size: int = 0
+    cache_enabled: bool = False
+
+    # Circuit breaker
+    circuit_breakers: dict[str, str] = field(default_factory=dict)  # category -> state
+    any_circuit_open: bool = False
+
+    last_update: float = 0.0

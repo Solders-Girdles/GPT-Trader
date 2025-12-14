@@ -69,14 +69,16 @@ class TestPositionsWidget:
         # With row-key optimization, add_row is called with key=symbol
         mock_table.add_row.assert_called_once()
         args, kwargs = mock_table.add_row.call_args
+        # New column order: Symbol, Type, Side, Qty, Entry, Mark, PnL, %, Lev, Liq%
         assert args[0] == "BTC-USD"
-        # Quantity, Entry, Current, PnL, %, Leverage are now Text objects
-        assert str(args[1]) == "0.5"
-        assert str(args[2]) == "50,000.0000"  # Formatted with commas and 4 decimal places
-        assert str(args[3]) == "50,000.0000"  # Current defaults to entry if mark_price missing
-        assert str(args[4]) == "$100.00"  # P&L formatted as currency with $ sign
+        assert "SPOT" in str(args[1])  # Type column
+        assert "LONG" in str(args[2])  # Side column
+        assert str(args[3]) == "0.5"  # Qty
+        assert str(args[4]) == "50,000.0000"  # Entry with commas and 4 decimal places
+        assert str(args[5]) == "50,000.0000"  # Mark defaults to entry if mark_price missing
+        assert str(args[6]) == "$100.00"  # P&L formatted as currency
         # Leverage check
-        assert "1.0x" in str(args[6])
+        assert "1x" in str(args[8])
         # Verify row key is set
         assert kwargs.get("key") == "BTC-USD"
 

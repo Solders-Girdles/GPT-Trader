@@ -52,11 +52,11 @@ class ExecutionWidget(Static):
         self.state = state
 
     def compose(self) -> ComposeResult:
-        yield Label("📊 EXECUTION", classes="header")
+        yield Label("EXECUTION", classes="widget-header")
         with TabbedContent():
-            with TabPane("📋 Orders", id="orders-tab"):
+            with TabPane("Orders", id="orders-tab"):
                 yield OrdersWidget(id="orders-content")
-            with TabPane("📈 Trades", id="trades-tab"):
+            with TabPane("Trades", id="trades-tab"):
                 yield TradesWidget(id="trades-content")
 
     def update_orders(self, orders: list) -> None:

@@ -17,7 +17,7 @@ class TestConfigService:
 
         assert service.app == mock_app
 
-    @patch("gpt_trader.tui.services.config_service.ConfigModal")
+    @patch("gpt_trader.tui.widgets.config.ConfigModal")
     def test_show_config_modal_pushes_screen(self, mock_modal_class):
         """Test show_config_modal pushes ConfigModal screen."""
         mock_app = MagicMock()
@@ -31,7 +31,7 @@ class TestConfigService:
         mock_modal_class.assert_called_once_with(mock_config)
         mock_app.push_screen.assert_called_once_with(mock_modal)
 
-    @patch("gpt_trader.tui.services.config_service.ConfigModal")
+    @patch("gpt_trader.tui.widgets.config.ConfigModal")
     def test_show_config_modal_handles_error(self, mock_modal_class):
         """Test show_config_modal handles errors gracefully."""
         mock_app = MagicMock()

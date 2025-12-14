@@ -60,7 +60,7 @@ class ResponsiveManager:
         """
         self.current_width = width
         self.current_state = calculate_responsive_state(width)
-        logger.info(f"Initial responsive state: {self.current_state} (width: {width})")
+        logger.debug("Initial responsive state: %s (width: %s)", self.current_state, width)
         return self.current_state
 
     def handle_resize(self, new_width: int) -> None:
@@ -97,7 +97,15 @@ class ResponsiveManager:
 
         if new_state != old_state:
             self.current_state = new_state
-            logger.info(f"Responsive state changed: {old_state} -> {new_state} (width: {width})")
+            logger.debug(
+                "Responsive state changed: %s -> %s (width: %s)", old_state, new_state, width
+            )
+
+            # Brief user feedback when breakpoint changes
+            try:
+                self.app.notify(f"Layout: {new_state.value.title()}", timeout=1)
+            except Exception:
+                pass
 
             # Post event for interested widgets
             self.app.post_message(ResponsiveStateChanged(state=new_state, width=width))

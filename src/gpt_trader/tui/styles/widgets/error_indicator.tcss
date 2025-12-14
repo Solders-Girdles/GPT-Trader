@@ -2,7 +2,54 @@
 /* ERROR INDICATOR WIDGET                                                     */
 /* ========================================================================== */
 
-/* Error indicator uses semantic colors from theme/variables.tcss */
-/* Widget-specific styling is handled via DEFAULT_CSS in Python */
+ErrorIndicatorWidget {
+    dock: top;
+    layout: vertical;
+    height: auto;
+    max-height: 15;
+    min-height: 1;
+    background: $bg-elevated;
+    color: $text-primary;
+    border-left: wide $error;
+    border-bottom: solid $border-subtle;
+    padding: 0 1;
+}
 
-/* Error tracking display inherits from status indicators in utilities.tcss */
+ErrorIndicatorWidget.collapsed {
+    max-height: 1;
+}
+
+ErrorIndicatorWidget.hidden {
+    display: none;
+}
+
+ErrorIndicatorWidget Horizontal {
+    height: auto;
+    width: 1fr;
+}
+
+ErrorIndicatorWidget Vertical {
+    height: auto;
+    width: 1fr;
+}
+
+ErrorIndicatorWidget Label {
+    width: 1fr;
+    height: auto;
+}
+
+ErrorIndicatorWidget .error-badge {
+    background: $error-muted;
+    color: $error;
+    text-style: bold;
+}
+
+ErrorIndicatorWidget .error-detail {
+    color: $text-secondary;
+    height: auto;
+    margin: 0 0 0 2;
+}
+
+ErrorIndicatorWidget Button {
+    min-width: 7;
+}

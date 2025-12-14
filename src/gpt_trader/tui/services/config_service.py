@@ -10,11 +10,11 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from gpt_trader.tui.events import ConfigChanged, ConfigReloadRequested
-from gpt_trader.tui.widgets import ConfigModal
 from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:
     from textual.app import App
+    from gpt_trader.tui.widgets.config import ConfigModal
 
 logger = get_logger(__name__, component="tui")
 
@@ -43,6 +43,9 @@ class ConfigService:
         Args:
             config: The bot configuration object to display.
         """
+        # Import at runtime to avoid circular import
+        from gpt_trader.tui.widgets.config import ConfigModal
+
         try:
             self.app.push_screen(ConfigModal(config))
             logger.debug("Config modal opened")

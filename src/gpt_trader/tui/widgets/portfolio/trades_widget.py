@@ -35,16 +35,7 @@ class TradesWidget(Static):
     buy and sell trades for the same symbol.
     """
 
-    DEFAULT_CSS = """
-    TradesWidget {
-        layout: vertical;
-        height: 1fr;
-    }
-
-    TradesWidget DataTable {
-        height: 1fr;
-    }
-    """
+    # Styles moved to styles/widgets/portfolio.tcss
 
     def compose(self) -> ComposeResult:
         """Compose the widget layout."""
@@ -96,7 +87,7 @@ class TradesWidget(Static):
                 table.clear()
             table.display = False
             empty_label.display = True
-            empty_label.update("No trades - Trade history appears after execution")
+            empty_label.update("No trades yet. Trade history appears after execution.")
         else:
             table.display = True
             empty_label.display = False

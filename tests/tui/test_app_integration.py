@@ -1,4 +1,5 @@
 import pytest
+from decimal import Decimal
 
 
 @pytest.mark.asyncio
@@ -80,7 +81,7 @@ async def test_tui_receives_status_update(mock_app, mock_bot):
         await pilot.pause()
 
         # Check TuiState
-        assert mock_app.tui_state.market_data.prices["BTC-USD"] == "50000"
+        assert mock_app.tui_state.market_data.prices["BTC-USD"] == Decimal("50000")
         assert mock_app.tui_state.risk_data.max_leverage == 5.0
 
 

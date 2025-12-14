@@ -31,6 +31,26 @@ class AlertSeverity(Enum):
     ERROR = "error"
 
 
+class AlertCategory(Enum):
+    """Alert categories aligned with system log levels.
+
+    These categories allow filtering alerts similar to log level filtering:
+    - TRADE: Trade executions, fills, order updates
+    - POSITION: Position opens/closes, P&L milestones
+    - STRATEGY: Strategy signals, decisions, indicator alerts
+    - RISK: Risk warnings, limit breaches, guard activations
+    - SYSTEM: Connection events, rate limits, circuit breakers
+    - ERROR: Errors and exceptions
+    """
+
+    TRADE = "trade"
+    POSITION = "position"
+    STRATEGY = "strategy"
+    RISK = "risk"
+    SYSTEM = "system"
+    ERROR = "error"
+
+
 @dataclass
 class Alert:
     """Represents a triggered alert."""
@@ -39,6 +59,7 @@ class Alert:
     title: str
     message: str
     severity: AlertSeverity
+    category: AlertCategory = AlertCategory.SYSTEM
     timestamp: float = field(default_factory=time.time)
 
 
@@ -51,6 +72,7 @@ class AlertRule:
         title: Alert title shown in notification.
         condition: Function that takes TuiState and returns (triggered, message).
         severity: Alert severity level.
+        category: Alert category for filtering.
         cooldown: Minimum seconds between repeated alerts for this rule.
         enabled: Whether this rule is active.
     """
@@ -59,6 +81,7 @@ class AlertRule:
     title: str
     condition: Callable[[TuiState], tuple[bool, str]]
     severity: AlertSeverity = AlertSeverity.WARNING
+    category: AlertCategory = AlertCategory.SYSTEM
     cooldown: float = 60.0  # Default 1 minute cooldown
     enabled: bool = True
 
@@ -93,7 +116,7 @@ class AlertManager:
     def _register_default_rules(self) -> None:
         """Register built-in alert rules for common trading scenarios."""
 
-        # Connection lost
+        # Connection lost (SYSTEM category)
         self.add_rule(
             AlertRule(
                 rule_id="connection_lost",
@@ -103,22 +126,24 @@ class AlertManager:
                     "Lost connection to exchange. Bot may not receive updates.",
                 ),
                 severity=AlertSeverity.ERROR,
+                category=AlertCategory.SYSTEM,
                 cooldown=30.0,
             )
         )
 
-        # High rate limit usage
+        # High rate limit usage (SYSTEM category)
         self.add_rule(
             AlertRule(
                 rule_id="rate_limit_high",
                 title="Rate Limit Warning",
                 condition=self._check_rate_limit,
                 severity=AlertSeverity.WARNING,
+                category=AlertCategory.SYSTEM,
                 cooldown=120.0,
             )
         )
 
-        # Reduce-only mode activated
+        # Reduce-only mode activated (RISK category)
         self.add_rule(
             AlertRule(
                 rule_id="reduce_only_active",
@@ -128,44 +153,48 @@ class AlertManager:
                     f"Reduce-only mode active: {state.risk_data.reduce_only_reason}",
                 ),
                 severity=AlertSeverity.WARNING,
+                category=AlertCategory.RISK,
                 cooldown=300.0,  # 5 minute cooldown
             )
         )
 
-        # Daily loss limit approaching
+        # Daily loss limit approaching (RISK category)
         self.add_rule(
             AlertRule(
                 rule_id="daily_loss_warning",
                 title="Daily Loss Warning",
                 condition=self._check_daily_loss,
                 severity=AlertSeverity.WARNING,
+                category=AlertCategory.RISK,
                 cooldown=300.0,
             )
         )
 
-        # Large unrealized loss
+        # Large unrealized loss (POSITION category)
         self.add_rule(
             AlertRule(
                 rule_id="large_unrealized_loss",
                 title="Large Unrealized Loss",
                 condition=self._check_unrealized_loss,
                 severity=AlertSeverity.WARNING,
+                category=AlertCategory.POSITION,
                 cooldown=180.0,
             )
         )
 
-        # Bot stopped unexpectedly
+        # Bot stopped unexpectedly (SYSTEM category)
         self.add_rule(
             AlertRule(
                 rule_id="bot_stopped",
                 title="Bot Stopped",
                 condition=self._check_bot_stopped,
                 severity=AlertSeverity.WARNING,
+                category=AlertCategory.SYSTEM,
                 cooldown=60.0,
             )
         )
 
-        logger.info(f"Registered {len(self._rules)} default alert rules")
+        logger.debug("Registered %s default alert rules", len(self._rules))
 
     def _check_rate_limit(self, state: TuiState) -> tuple[bool, str]:
         """Check if rate limit usage is high."""
@@ -266,6 +295,7 @@ class AlertManager:
                         title=rule.title,
                         message=message,
                         severity=rule.severity,
+                        category=rule.category,
                         timestamp=now,
                     )
                     triggered.append(alert)
@@ -303,16 +333,62 @@ class AlertManager:
         if len(self._alert_history) > self.MAX_HISTORY:
             self._alert_history = self._alert_history[-self.MAX_HISTORY :]
 
-    def get_history(self, limit: int = 20) -> list[Alert]:
-        """Get recent alert history.
+    def get_history(
+        self,
+        limit: int = 20,
+        categories: set[AlertCategory] | None = None,
+        min_severity: AlertSeverity | None = None,
+    ) -> list[Alert]:
+        """Get recent alert history with optional filtering.
 
         Args:
             limit: Maximum number of alerts to return.
+            categories: Filter by categories (None = all categories).
+            min_severity: Minimum severity to include (None = all severities).
 
         Returns:
             List of recent alerts, newest first.
         """
-        return list(reversed(self._alert_history[-limit:]))
+        alerts = self._alert_history
+
+        # Filter by category
+        if categories:
+            alerts = [a for a in alerts if a.category in categories]
+
+        # Filter by severity
+        if min_severity:
+            severity_order = {
+                AlertSeverity.INFORMATION: 0,
+                AlertSeverity.WARNING: 1,
+                AlertSeverity.ERROR: 2,
+            }
+            min_level = severity_order.get(min_severity, 0)
+            alerts = [a for a in alerts if severity_order.get(a.severity, 0) >= min_level]
+
+        return list(reversed(alerts[-limit:]))
+
+    def get_history_by_category(self, category: AlertCategory, limit: int = 20) -> list[Alert]:
+        """Get alert history filtered by a single category.
+
+        Args:
+            category: Category to filter by.
+            limit: Maximum number of alerts to return.
+
+        Returns:
+            List of alerts in the specified category, newest first.
+        """
+        return self.get_history(limit=limit, categories={category})
+
+    def get_category_counts(self) -> dict[AlertCategory, int]:
+        """Get count of alerts per category.
+
+        Returns:
+            Dict mapping category to alert count.
+        """
+        counts: dict[AlertCategory, int] = {cat: 0 for cat in AlertCategory}
+        for alert in self._alert_history:
+            counts[alert.category] = counts.get(alert.category, 0) + 1
+        return counts
 
     def clear_history(self) -> None:
         """Clear alert history."""

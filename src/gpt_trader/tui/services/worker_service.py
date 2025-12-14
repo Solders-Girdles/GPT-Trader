@@ -87,8 +87,8 @@ class WorkerService:
             description="Running trading bot",
         )
 
-        # Add completion callback
-        self._bot_worker.add_done_callback(self._on_bot_worker_done)
+        # Worker completion is handled via Textual's Worker.StateChanged message
+        # which the app can listen to via @on(Worker.StateChanged) decorator
 
         logger.info(f"Bot worker created: {self._bot_worker.name}")
         return self._bot_worker

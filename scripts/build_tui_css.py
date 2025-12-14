@@ -13,32 +13,52 @@ Usage:
 from pathlib import Path
 
 # CSS module loading order (dependencies first)
+# NOTE: Theme variables are injected per build (dark/light/high-contrast).
 CSS_MODULE_ORDER = [
-    # 1. Theme variables (must be first - defines all $variables)
-    "theme/variables.tcss",
     # 2. Layout (screen structure)
     "layout/screen.tcss",
     "layout/workspace.tcss",
     # 3. Components (reusable UI elements)
     "components/focus.tcss",
     "components/headers.tcss",
+    "components/command_bar.tcss",
     "components/buttons.tcss",
     "components/tables.tcss",
     "components/tabs.tcss",
     "components/select.tcss",
     "components/utilities.tcss",
     "components/animations.tcss",
+    # P3: Interaction states and polish
+    "components/interaction_states.tcss",
+    "components/polish.tcss",
+    "components/accessibility.tcss",
     # 4. Widgets (specific widget styles)
+    "widgets/primitives.tcss",
     "widgets/status_bar.tcss",
     "widgets/account.tcss",
     "widgets/portfolio.tcss",
     "widgets/market.tcss",
     "widgets/logs.tcss",
+    "widgets/dashboard.tcss",
     "widgets/modals.tcss",
     "widgets/execution.tcss",
     "widgets/error_indicator.tcss",
+    "widgets/cfm_balance.tcss",
+    "widgets/system.tcss",
+    "widgets/risk.tcss",
+    "widgets/strategy.tcss",
+    "widgets/validation.tcss",
+    "widgets/shell.tcss",
+    "widgets/performance.tcss",
     # 5. Screens (screen-specific overrides)
     "screens/mode_selection.tcss",
+    "screens/alert_history.tcss",
+    "screens/help.tcss",
+    "screens/credential_validation.tcss",
+    "screens/api_setup_wizard.tcss",
+    # NOTE: main_screen.tcss removed - it defined a conflicting 3-column grid
+    # that overwrote the 4x4 Bento grid from workspace.tcss. The tile spans
+    # in workspace.tcss are designed for the 4x4 grid.
 ]
 
 # Header for generated file
@@ -81,7 +101,11 @@ def get_section_header(module_path: str) -> str:
 """
 
 
-def build_css(styles_dir: Path, output_file: Path) -> tuple[int, int, list[str]]:
+def build_css(
+    styles_dir: Path,
+    output_file: Path,
+    theme_module: str = "theme/variables.tcss",
+) -> tuple[int, int, list[str]]:
     """Concatenate CSS modules into single output file.
 
     Returns:
@@ -92,7 +116,10 @@ def build_css(styles_dir: Path, output_file: Path) -> tuple[int, int, list[str]]
     missing_modules: list[str] = []
     output_parts: list[str] = [GENERATED_HEADER]
 
-    for module_path in CSS_MODULE_ORDER:
+    # Inject theme module first
+    module_order = [theme_module] + CSS_MODULE_ORDER
+
+    for module_path in module_order:
         full_path = styles_dir / module_path
 
         if not full_path.exists():
@@ -123,7 +150,9 @@ def main() -> int:
     project_root = script_dir.parent
 
     styles_dir = project_root / "src" / "gpt_trader" / "tui" / "styles"
-    output_file = styles_dir / "main.tcss"
+    dark_output = styles_dir / "main.tcss"
+    light_output = styles_dir / "main_light.tcss"
+    high_contrast_output = styles_dir / "main_high_contrast.tcss"
 
     if not styles_dir.exists():
         print(f"Error: Styles directory not found: {styles_dir}")
@@ -132,15 +161,37 @@ def main() -> int:
     print(f"Building TUI CSS from modules in {styles_dir}")
     print("-" * 60)
 
-    modules_found, total_lines, missing = build_css(styles_dir, output_file)
+    # Build dark theme (default)
+    dark_found, dark_lines, dark_missing = build_css(
+        styles_dir, dark_output, theme_module="theme/variables.tcss"
+    )
 
-    print(f"Modules processed: {modules_found}/{len(CSS_MODULE_ORDER)}")
-    print(f"Total lines: {total_lines}")
-    print(f"Output: {output_file}")
+    # Build light theme
+    light_found, light_lines, light_missing = build_css(
+        styles_dir, light_output, theme_module="theme/variables_light.tcss"
+    )
 
-    if missing:
-        print(f"\nWarning: {len(missing)} modules not found (will be skipped):")
-        for m in missing:
+    # Build high-contrast theme (accessibility)
+    hc_found, hc_lines, hc_missing = build_css(
+        styles_dir, high_contrast_output, theme_module="theme/variables_high_contrast.tcss"
+    )
+
+    print(f"Dark modules processed: {dark_found}/{len(CSS_MODULE_ORDER) + 1}")
+    print(f"Dark total lines: {dark_lines}")
+    print(f"Dark output: {dark_output}")
+
+    print(f"\nLight modules processed: {light_found}/{len(CSS_MODULE_ORDER) + 1}")
+    print(f"Light total lines: {light_lines}")
+    print(f"Light output: {light_output}")
+
+    print(f"\nHigh-contrast modules processed: {hc_found}/{len(CSS_MODULE_ORDER) + 1}")
+    print(f"High-contrast total lines: {hc_lines}")
+    print(f"High-contrast output: {high_contrast_output}")
+
+    all_missing = sorted(set(dark_missing + light_missing + hc_missing))
+    if all_missing:
+        print(f"\nWarning: {len(all_missing)} modules not found (will be skipped):")
+        for m in all_missing:
             print(f"  - {m}")
 
     print("-" * 60)

@@ -12,3 +12,137 @@
 /* === Confirmation Dialogs === */
 
 /* Dialog buttons are styled via components/buttons.tcss */
+
+ModeInfoModal {
+    align: center middle;
+    background: $overlay-disabled;
+}
+
+ModeInfoModal #mode-info-modal {
+    height: auto;
+    padding: $spacing-md;
+    background: $bg-secondary;
+    border: thick $accent;
+}
+
+ModeInfoModal #mode-title {
+    text-align: center;
+    text-style: bold;
+    color: $accent;
+    margin-bottom: $spacing-xs;
+}
+
+LiveWarningModal {
+    align: center middle;
+    background: $overlay-disabled;
+}
+
+LiveWarningModal #live-warning-modal {
+    height: auto;
+    padding: $spacing-md;
+    background: $bg-secondary;
+    border: thick $error;
+}
+
+LiveWarningModal #warning-title {
+    text-align: center;
+    text-style: bold;
+    color: $error;
+    margin-bottom: $spacing-xs;
+}
+
+LiveWarningModal #risk-warning {
+    text-align: center;
+    text-style: bold;
+    color: $error;
+}
+
+LiveWarningModal #warning-buttons {
+    layout: horizontal;
+    align: center middle;
+    margin-top: $spacing-xs;
+    height: 3;
+}
+
+ConfigModal {
+    align: center middle;
+    background: $overlay-disabled;
+}
+
+ConfigModal #dialog {
+    grid-size: 2;
+    grid-gutter: 1 2;
+    grid-rows: 1fr 3;
+    padding: 0 $spacing-xs;
+    height: auto;
+    border: thick $border-subtle;
+    background: $bg-secondary;
+}
+
+ConfigModal .field-label {
+    text-align: right;
+    padding-top: $spacing-xs;
+    color: $text-secondary;
+}
+
+ConfigModal .field-input {
+    width: 100%;
+}
+
+ConfigModal #config-actions {
+    column-span: 2;
+    layout: horizontal;
+    align: center middle;
+    margin-top: $spacing-sm;
+}
+
+ConfigModal #btn-save {
+    margin-right: $spacing-sm;
+}
+
+PanicModal {
+    align: center middle;
+    background: $overlay-disabled;
+}
+
+PanicModal #panic-dialog {
+    height: auto;
+    background: $bg-secondary;
+    border: thick $error;
+    padding: $spacing-md;
+}
+
+PanicModal #panic-title {
+    color: $error;
+    text-style: bold;
+    text-align: center;
+    width: 100%;
+    margin-bottom: $spacing-xs;
+}
+
+PanicModal #panic-message {
+    color: $text-primary;
+    text-align: center;
+    margin-bottom: $spacing-sm;
+}
+
+PanicModal #panic-input {
+    margin-bottom: $spacing-sm;
+    border: solid $error;
+}
+
+PanicModal #panic-actions {
+    layout: horizontal;
+    align: center middle;
+    height: 3;
+}
+
+PanicModal #btn-panic-confirm {
+    background: $error;
+    color: $text-primary;
+    margin-right: $spacing-sm;
+}
+
+PanicModal #btn-panic-cancel {
+    background: $bg-elevated;
+}

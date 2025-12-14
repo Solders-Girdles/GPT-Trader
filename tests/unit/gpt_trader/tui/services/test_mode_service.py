@@ -8,6 +8,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from gpt_trader.config import path_registry
 from gpt_trader.tui.services.mode_service import ModeService, create_bot_for_mode
 
 
@@ -257,4 +258,4 @@ class TestModePreferencePersistence:
         mock_app = MagicMock()
         service = ModeService(mock_app)
 
-        assert service.preferences_path == Path("config/tui_preferences.json")
+        assert service.preferences_path == (path_registry.RUNTIME_DATA_DIR / "tui_preferences.json")

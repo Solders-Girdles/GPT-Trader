@@ -16,40 +16,6 @@ class LiveWarningModal(ModalScreen):
         ("q", "quit_app", "Quit"),
     ]
 
-    CSS = """
-    LiveWarningModal {
-        align: center middle;
-        background: rgba(46, 52, 64, 0.8);
-    }
-
-    #live-warning-modal {
-        height: auto;
-        padding: 2;
-        background: $surface;
-        border: thick $error;
-    }
-
-    #warning-title {
-        text-align: center;
-        text-style: bold;
-        color: $error;
-        margin-bottom: 1;
-    }
-
-    #risk-warning {
-        text-align: center;
-        text-style: bold;
-        color: $error;
-    }
-
-    #warning-buttons {
-        layout: horizontal;
-        align: center middle;
-        margin-top: 1;
-        height: 3;
-    }
-    """
-
     def compose(self) -> ComposeResult:
         """Compose warning layout."""
         with Container(id="live-warning-modal"):

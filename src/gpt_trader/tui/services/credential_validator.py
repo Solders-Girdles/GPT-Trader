@@ -14,6 +14,7 @@ import time
 from typing import TYPE_CHECKING, Any
 from urllib.error import HTTPError, URLError
 
+from gpt_trader.features.brokerages.coinbase.credentials import resolve_coinbase_credentials
 from gpt_trader.preflight.validation_result import (
     CredentialValidationResult,
     PermissionDetails,
@@ -91,6 +92,22 @@ class CredentialValidator:
         self._client: Any = None
         self._auth: Any = None
 
+    def compute_credential_fingerprint(self) -> str | None:
+        """Generate fingerprint from API key for cache comparison.
+
+        Creates a safe fingerprint using first 8 and last 8 chars of the API key.
+        This allows detecting credential changes without storing the full key.
+
+        Returns:
+            Fingerprint string, or None if no API key is configured.
+        """
+        creds = resolve_coinbase_credentials()
+        api_key = creds.key_name if creds else ""
+        if not api_key or len(api_key) < 16:
+            return None
+        # Use first 8 + last 8 chars as fingerprint (safe, doesn't expose full key)
+        return f"{api_key[:8]}...{api_key[-8:]}"
+
     async def validate_for_mode(
         self,
         mode: str,
@@ -110,7 +127,7 @@ class CredentialValidator:
         result = CredentialValidationResult(mode=mode)
         requirements = MODE_REQUIREMENTS.get(mode, MODE_REQUIREMENTS["demo"])
 
-        logger.info(f"Validating credentials for mode: {mode}")
+        logger.debug("Validating credentials for mode: %s", mode)
 
         # Step 1: Check if mode requires credentials at all
         if not requirements["requires_credentials"]:
@@ -120,7 +137,7 @@ class CredentialValidator:
                 f"{mode.upper()} mode does not require API credentials",
                 requirements["description"],
             )
-            logger.info(f"Mode {mode} skips credential validation")
+            logger.debug("Mode %s skips credential validation", mode)
             return result
 
         # Step 2: Validate key format (no network)
@@ -235,10 +252,23 @@ class CredentialValidator:
         Checks environment variables and validates the format of the API key
         and private key, providing specific guidance based on detected key type.
         """
-        api_key = os.getenv("COINBASE_PROD_CDP_API_KEY") or os.getenv("COINBASE_CDP_API_KEY")
-        private_key = os.getenv("COINBASE_PROD_CDP_PRIVATE_KEY") or os.getenv(
-            "COINBASE_CDP_PRIVATE_KEY"
-        )
+        resolved = resolve_coinbase_credentials()
+        if resolved:
+            api_key = resolved.key_name
+            private_key = resolved.private_key
+        else:
+            api_key = (
+                os.getenv("COINBASE_PROD_CDP_API_KEY")
+                or os.getenv("COINBASE_CDP_API_KEY")
+                or os.getenv("COINBASE_API_KEY_NAME")
+                or ""
+            )
+            private_key = (
+                os.getenv("COINBASE_PROD_CDP_PRIVATE_KEY")
+                or os.getenv("COINBASE_CDP_PRIVATE_KEY")
+                or os.getenv("COINBASE_PRIVATE_KEY")
+                or ""
+            )
 
         # Check if any credentials are configured
         if not api_key and not private_key:
@@ -246,11 +276,23 @@ class CredentialValidator:
             result.add_error(
                 ValidationCategory.KEY_FORMAT,
                 "No API credentials configured",
-                suggestion="Set COINBASE_CDP_API_KEY and COINBASE_CDP_PRIVATE_KEY environment variables",
+                suggestion="Set COINBASE_CDP_API_KEY and COINBASE_CDP_PRIVATE_KEY, or COINBASE_CREDENTIALS_FILE",
             )
             return
 
         result.credentials_configured = True
+        if resolved:
+            result.add_info(
+                ValidationCategory.KEY_FORMAT,
+                "Credential source detected",
+                details=resolved.source,
+            )
+            for warning in resolved.warnings:
+                result.add_warning(
+                    ValidationCategory.KEY_FORMAT,
+                    "Credential configuration warning",
+                    details=warning,
+                )
 
         # Detect key type for better diagnostics
         key_info = self._detect_key_type(api_key or "", private_key or "")
@@ -335,10 +377,9 @@ class CredentialValidator:
         Attempts to generate a JWT token and make a test API call,
         retrying on transient network errors.
         """
-        api_key = os.getenv("COINBASE_PROD_CDP_API_KEY") or os.getenv("COINBASE_CDP_API_KEY")
-        private_key = os.getenv("COINBASE_PROD_CDP_PRIVATE_KEY") or os.getenv(
-            "COINBASE_CDP_PRIVATE_KEY"
-        )
+        creds = resolve_coinbase_credentials()
+        api_key = creds.key_name if creds else ""
+        private_key = creds.private_key if creds else ""
 
         if not api_key or not private_key:
             return

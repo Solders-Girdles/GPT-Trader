@@ -21,66 +21,99 @@
 /* ---------------------------------------------------------------------------- */
 
 /* ========================================================================== */
-/* THEME VARIABLES - Claude Code Palette                                     */
+/* THEME VARIABLES - Obsidian (FinTech Pro)                                   */
 /* ========================================================================== */
 
-/* === Backgrounds === */
-$bg-primary: #1A1815;      /* Deep warm brown "coffee stain" - main background */
-$bg-secondary: #2A2520;    /* Lighter warm brown - containers */
-$bg-elevated: #3D3833;     /* Elevated surfaces */
+/* === Backgrounds (Deep Neutral) === */
+$bg-primary: #101010;      /* Deep Black - Main background */
+$bg-secondary: #1a1a1a;    /* Dark Grey - Panels/containers */
+$bg-elevated: #252525;     /* Lighter Grey - Headers/Cards */
+$bg-highlight: #303030;    /* Highlight - Hover states/Inputs */
 
-/* === Accents === */
-$accent: #D4744F;          /* Brighter rust-orange */
-$accent-hover: #E08A6A;    /* Lighter rust - hover states */
-$accent-muted: #9B5338;    /* Darker rust */
+/* === Accents (High Contrast/Saturation) === */
+$accent: #007AFF;          /* Electric Blue - Primary action/Focus */
+$accent-hover: #0066CC;    /* Darker Electric Blue - Hover */
+$accent-muted: #333333;    /* Neutral Grey - Subtle borders/separators */
+$accent-glow: #007AFF;     /* Electric Blue - Glow effects */
+$accent-bright: #0056b3;   /* Deep Blue - Pressed/Active */
+$accent-subtle: rgba(0, 122, 255, 0.1);  /* Subtle Blue Tint */
 
-/* === Text Colors === */
-$text-primary: #F0EDE9;    /* High brightness for readability */
-$text-secondary: #B8B5B2;  /* Increased contrast */
-$text-muted: #7A7672;      /* Slightly lighter muted text */
+/* === Text Colors (High Contrast) === */
+$text-primary: #FFFFFF;    /* Pure White - Primary Data */
+$text-secondary: #B0B0B0;  /* Light Grey - Labels/Secondary Info */
+$text-muted: #606060;      /* Dark Grey - Disabled/Hints */
+$text-bright: #FFFFFF;     /* Pure White - Headers/Emphasis */
 
-/* === Semantic Colors === */
-$success: #85B77F;         /* Brighter green */
-$warning: #E0B366;         /* More vibrant amber */
-$error: #E08580;           /* Brighter coral-red */
-$info: #7FB8D4;            /* Brighter blue-grey */
+/* === Semantic Colors (Neon/Sharp) === */
+$success: #00FF41;         /* Neon Green - Positive PnL/Success */
+$success-muted: rgba(0, 255, 65, 0.1);
+$success-dim: #008f24;
+$warning: #FFD700;         /* Gold - Warnings/Caution */
+$warning-muted: rgba(255, 215, 0, 0.1);
+$warning-dim: #b39700;
+$error: #FF0033;           /* Crimson Red - Negative PnL/Error */
+$error-muted: rgba(255, 0, 51, 0.1);
+$error-dim: #b30024;
+$info: #007AFF;            /* Electric Blue - Info */
+$info-muted: rgba(0, 122, 255, 0.1);
 
-/* === Borders === */
-$border-subtle: #3D3833;   /* Match bg-elevated */
+/* === Borders (Technical/Sharp) === */
+$border-subtle: #333333;   /* Dark Grey - Standard borders */
+$border-accent: #007AFF;   /* Electric Blue - Active borders */
+$border-emphasis: #505050; /* Mid Grey - Section dividers */
 
 /* === Spacing Scale === */
-$spacing-xs: 1;            /* Extra small spacing - tight elements */
-$spacing-sm: 2;            /* Small spacing - compact layouts */
-$spacing-md: 3;            /* Medium spacing - standard padding */
-$spacing-lg: 4;            /* Large spacing - generous padding */
+$spacing-xs: 1;
+$spacing-sm: 2;
+$spacing-md: 3;
+$spacing-lg: 4;
 
-/* === Semantic Spacing Tokens (8-cell grid) === */
-$gutter-tight: 1;          /* Column/panel gaps in compact mode */
-$gutter-standard: 2;       /* Default column/panel gutters */
-$gutter-comfortable: 4;    /* Wide mode gutters */
-$content-padding: 2;       /* Padding inside panels/widgets */
-$section-gap: 4;           /* Spacing between major UI sections */
+/* === Semantic Spacing Tokens === */
+$gutter-tight: 1;
+$gutter-standard: 2;
+$gutter-comfortable: 3;
+$content-padding: 2;
+$section-gap: 4;
+
+/* === Panel/Tile Tokens === */
+$tile-padding: 1 2;
+$tile-padding-compact: 1;
+$widget-header-padding: 0 2;
+$widget-content-padding: 1 2;
+
+/* === Elevation System === */
+$elevation-0: $bg-primary;
+$elevation-1: $bg-secondary;
+$elevation-2: $bg-elevated;
+$elevation-3: $bg-highlight;
+
+/* === Tile Border Tokens === */
+$tile-border-default: solid $border-subtle;
+$tile-border-accent: solid $border-accent;
+$tile-border-highlight: solid $border-emphasis;
 
 /* === Interactive State Overlays === */
-$overlay-hover: rgba(193, 95, 60, 0.1);    /* 10% accent on hover */
-$overlay-focus: rgba(193, 95, 60, 0.2);    /* 20% accent on focus */
-$overlay-disabled: rgba(58, 53, 48, 0.5);  /* 50% muted for disabled */
+$overlay-hover: rgba(255, 255, 255, 0.05);
+$overlay-focus: rgba(0, 122, 255, 0.2);
+$overlay-disabled: rgba(0, 0, 0, 0.5);
+$overlay-active: rgba(0, 122, 255, 0.1);
 
 /* === Panel Tokens === */
 $panel-bg-default: $bg-secondary;
 $panel-bg-elevated: $bg-elevated;
 $panel-border-default: $border-subtle;
-$panel-border-emphasis: $accent;
+$panel-border-emphasis: $border-emphasis;
 
 /* === Interactive State Tokens === */
 $interactive-default: $bg-elevated;
-$interactive-hover: $accent-muted;
+$interactive-hover: $bg-highlight;
 $interactive-active: $accent;
 $interactive-disabled: $bg-secondary;
 
 /* === Border Style Tokens === */
 $border-default: solid $border-subtle;
-$border-emphasis: thick $accent;
+$border-emphasis-style: solid $border-emphasis;
+$border-glow: solid $accent-glow;
 
 
 /* ---------------------------------------------------------------------------- */
@@ -109,212 +142,166 @@ Label {
 /* ---------------------------------------------------------------------------- */
 
 /* ========================================================================== */
-/* MAIN WORKSPACE - LOG-CENTRIC VERTICAL LAYOUT                               */
+/* MAIN WORKSPACE - BENTO GRID LAYOUT                                         */
+/* High-Fidelity Dashboard                                                    */
 /* ========================================================================== */
 
 #main-workspace {
     layout: vertical;
-    height: 1fr;       /* Fill remaining space beneath headers/footers */
-    min-height: 0;     /* Allow rows inside to shrink on shorter screens */
+    height: 1fr;
+    background: $bg-primary;
 }
 
-/* === Strategy Panel (Top) === */
-
-#dash-strategy {
-    height: auto;          /* Shrink to content */
-    min-height: 4;         /* Minimum 4 lines (header + 3 rows) */
-    max-height: 8;         /* Cap at 8 lines to leave room for logs */
-    border-bottom: solid $border-subtle;
+/* === Top Header === */
+#header-bar {
+    height: 3; /* Fixed height for header */
+    dock: top;
+    background: $elevation-2;
+    border-bottom: solid $border-emphasis;  /* Refined: solid instead of double */
 }
 
-.strategy-panel {
-    layout: vertical;
-    background: $bg-secondary;
-    border-left: thick $accent;  /* Visual emphasis */
+/* === Bento Grid System === */
+
+/* === Bento Grid System === */
+
+#bento-grid {
+    layout: grid;
+    height: 1fr; /* CRITICAL: Ensure grid fills available space */
+    grid-size: 4 4; /* 4 columns, 4 rows */
+    
+    /* 
+       Grid Template:
+       Row 1: Hero (2col), Account (2col)
+       Row 2: Market (3col), System (1col)
+       Row 3+4: Logs (4col)
+    */
+    grid-columns: 1fr 1fr 1fr 1fr;
+    grid-rows: 2fr 2fr 1fr 1fr;  /* More space for top tiles */
+    
+    grid-gutter: 2;        /* Increased: more breathing room */
+    padding: 1 2;          /* Uniform padding */
+    background: $bg-primary;
 }
 
-.strategy-panel .header {
-    background: $accent;
-    color: $bg-primary;
-    text-style: bold;
+/* --- Area Definitions --- */
+
+/* Hero: Active Position (Top Left) - Primary emphasis */
+#tile-hero {
+    column-span: 2;
+    background: $elevation-2;
+    border: solid $border-accent;  /* Refined: subtle but present */
+    border-title-color: $accent;
 }
 
-/* === Logs Panel (Primary View) === */
+/* Account: (Top Right) - Standard elevation */
+#tile-account {
+    column-span: 2;
+    background: $elevation-1;
+    border: solid $border-subtle;  /* Refined: simpler border */
+}
 
+/* Market Pulse: (Middle Left/Center) - Standard elevation */
+#tile-market {
+    column-span: 3;
+    background: $elevation-1;
+    border: solid $border-subtle;
+}
+
+/* System Monitor: (Middle Right) - Standard elevation */
+#tile-system {
+    column-span: 1;
+    background: $elevation-1;
+    border: solid $border-subtle;
+}
+
+/* Logs: (Bottom, spans all) - Base elevation with accent top */
+#tile-logs {
+    column-span: 4;
+    row-span: 2;
+    background: $elevation-0;
+    border: solid $border-subtle;
+    border-top: solid $border-accent;  /* Refined: subtle separator */
+}
+
+
+/* === Bento Tile Styling - Professional Elevation === */
+.bento-tile {
+    padding: $tile-padding;
+    height: 100%;  /* CRITICAL: Ensure tiles fill their grid cells */
+    layout: vertical;  /* Allow children to expand */
+    background: $elevation-1; /* Default elevation */
+}
+
+/* Focused tile state - enhanced visibility */
+.bento-tile:focus-within {
+    border: thick $accent;
+    background: $elevation-2;
+    border-left: wide $accent; /* Accent border on focus */
+}
+
+/* === Widget Specific Overrides within Tiles === */
+
+/* Log Widget adjustments */
 #dash-logs {
-    width: 100%;
-    height: 1fr;  /* Fill remaining space - primary view */
-    min-height: 10;
+    background: $bg-primary;
+    border: none; /* Tile has the border */
 }
 
 .logs-panel {
-    layout: vertical;
-    background: $bg-secondary;
+    background: transparent;
+    border: none;
+}
+
+/* Hero Widget Styling */
+#dash-position {
+    align: center middle;
+}
+
+/* Account Widget Styling */
+#dash-account {
+    padding: 0 1;
 }
 
 /* ========================================================================== */
-/* LEGACY T-LAYOUT SUPPORT (for backward compatibility)                       */
-/* These styles support the old layout if needed                              */
+/* RESPONSIVE VARIANTS                                                         */
+/* Applied via JavaScript class toggling based on ResponsiveState             */
 /* ========================================================================== */
 
-#content-row {
-    layout: horizontal;
-    height: 3fr;
-    min-height: 12;
-    border-bottom: solid $border-subtle;
+/* === Compact Mode (<120 cols) === */
+/* Tighter spacing, reduced gutter */
+#bento-grid.compact {
+    grid-gutter: 1;
+    padding: 0 1;
+    grid-rows: 2fr 2fr 1fr 1fr;
 }
 
-#market-strategy-column {
-    width: 35%;
-    height: 100%;
-    layout: vertical;
-    border-right: solid $border-subtle;
+/* === Standard Mode (120-139 cols) === */
+/* Default styles above, no additional class needed */
+#bento-grid.standard {
+    /* Uses base #bento-grid styles */
 }
 
-#dash-market {
-    height: 1fr;
+/* === Comfortable Mode (140-159 cols) === */
+/* More breathing room */
+#bento-grid.comfortable {
+    grid-gutter: 3;
+    padding: 1 3;
 }
 
-#portfolio-column {
-    width: 65%;
-    height: 100%;
-    layout: vertical;
+/* === Wide Mode (160+ cols) === */
+/* Luxurious spacing, taller hero */
+#bento-grid.wide {
+    grid-gutter: 4;
+    padding: 2 4;
+    grid-rows: 2fr 2fr 1fr 1fr;
 }
 
-#dash-portfolio {
-    height: 1fr;
-    min-height: 12;
-}
-
-#logs-row {
-    layout: vertical;
-    height: 2fr;
-    min-height: 8;
-}
-
-/* ========================================================================== */
-/* RESPONSIVE LAYOUT ADJUSTMENTS                                              */
-/* ========================================================================== */
-
-/* Compact (0-119 cols): Wider left for more ticker visibility */
-.workspace--compact #market-strategy-column {
-    width: 40%;
-}
-
-.workspace--compact #portfolio-column {
-    width: 60%;
-}
-
-.workspace--compact #content-row {
-    height: 11fr;  /* Less vertical space for tables (~55%) */
-}
-
-.workspace--compact #logs-row {
-    height: 9fr;  /* More space for logs (critical for debugging, ~45%) */
-}
-
-/* Standard (120-139 cols): Balanced split */
-.workspace--standard #market-strategy-column {
-    width: 37%;
-}
-
-.workspace--standard #portfolio-column {
-    width: 63%;
-}
-
-.workspace--standard #content-row {
-    height: 29fr;  /* ~58% */
-}
-
-.workspace--standard #logs-row {
-    height: 21fr;  /* ~42% */
-}
-
-/* Comfortable (140-159 cols): Default balanced split */
-.workspace--comfortable #market-strategy-column {
-    width: 35%;
-}
-
-.workspace--comfortable #portfolio-column {
-    width: 65%;
-}
-
-.workspace--comfortable #content-row {
-    height: 3fr;  /* ~60% */
-}
-
-.workspace--comfortable #logs-row {
-    height: 2fr;  /* ~40% */
-}
-
-/* Wide (160+ cols): More space for portfolio tables */
-.workspace--wide #market-strategy-column {
-    width: 30%;
-}
-
-.workspace--wide #portfolio-column {
-    width: 70%;
-}
-
-.workspace--wide #content-row {
-    height: 31fr;  /* ~62% */
-}
-
-.workspace--wide #logs-row {
-    height: 19fr;  /* ~38% */
-}
-
-/* ========================================================================== */
-/* DASHBOARD ITEMS                                                            */
-/* ========================================================================== */
-
-.dashboard-item {
-    layout: vertical;
-    /* height controlled by specific ID selectors above */
-    border: none;                      /* REMOVED: full border */
-    border-top: solid $border-subtle;  /* Only top border for separation */
-    background: $bg-secondary;
-    padding: 0;  /* Remove padding to prevent header clipping */
-    margin: 0;   /* REMOVED: horizontal margin */
-}
-
-.dashboard-item-elevated {
-    background: $bg-elevated;
-}
-
-/* === Full-Width Logs Styling === */
-
-.full-width-logs {
-    /* Expanded log display with horizontal space */
-    /* Note: max_lines is configured in LogWidget Python code, not CSS */
-}
-
-.log-expand-hint {
-    color: $text-muted;
-    text-style: italic;
-    text-align: center;
-    padding: 0 $spacing-xs;
-}
-
-/* === Panel Style === */
-
-.panel {
-    background: $bg-secondary;
-    border: round $border-subtle;
-    padding: $spacing-md;
-    margin: $spacing-xs;
-}
-
-/* === Content Areas === */
-
-ContentSwitcher {
-    background: $bg-primary;
-    height: 1fr;
-}
-
-#dashboard-container, #market-container, #positions-container, #system-container {
-    padding: $spacing-xs;
-    height: 1fr;
+/* === Hover States for Bento Tiles === */
+/* Professional hover effect */
+.bento-tile:hover {
+    border: solid $accent-muted;
+    background: $elevation-2; /* Slight elevation on hover */
+    border-left: solid $accent-muted; /* Subtle accent on hover */
 }
 
 
@@ -370,6 +357,73 @@ DataTable:focus {
     border: solid $accent;
 }
 
+/* ========================================================================== */
+/* TILE FOCUS - 2D Grid Navigation                                            */
+/* ========================================================================== */
+
+/* === Focus Ring for Bento Tiles === */
+
+/* Focused tile - prominent accent border */
+.bento-tile.tile-focused {
+    border: heavy $accent;
+    border-left: wide $accent;
+    background: $elevation-2;
+}
+
+/* Hero tile gets extra emphasis when focused */
+#tile-hero.tile-focused {
+    border: heavy $accent;
+    border-left: wide $accent;
+    background: $elevation-3;
+}
+
+/* === Actions Hint Row === */
+
+/* Container for tile actions - shown at bottom of focused tiles */
+.tile-actions-hint {
+    height: 1;
+    width: 100%;
+    background: $bg-elevated;
+    color: $text-muted;
+    padding: 0 1;
+    layout: horizontal;
+    align: left middle;
+    border-top: solid $border-subtle;
+    display: none;
+}
+
+/* Show actions hint only when tile is focused */
+.bento-tile.tile-focused .tile-actions-hint {
+    display: block;
+}
+
+/* Individual action hint */
+.action-hint {
+    padding: 0 2;
+    height: 1;
+    color: $text-secondary;
+}
+
+/* Action key highlight */
+.action-key {
+    color: $accent;
+    text-style: bold;
+}
+
+/* === Focus Indicator Badge === */
+
+.focus-indicator {
+    background: $accent;
+    color: $bg-primary;
+    padding: 0 1;
+    text-style: bold;
+    display: none;
+}
+
+.bento-tile.tile-focused .focus-indicator {
+    display: block;
+}
+
 
 /* ---------------------------------------------------------------------------- */
 /* COMPONENTS: Headers                                                        */
@@ -377,7 +431,7 @@ DataTable:focus {
 /* ---------------------------------------------------------------------------- */
 
 /* ========================================================================== */
-/* HEADERS & FOOTERS                                                          */
+/* HEADERS & FOOTERS - Technical/Clean                                        */
 /* ========================================================================== */
 
 Header {
@@ -387,23 +441,25 @@ Header {
     color: $text-primary;
 }
 
-/* Enhanced app header styling */
+/* App header - Streamlined */
 Header.app-header {
     height: 3;
     background: $bg-elevated;
-    border-bottom: thick $accent;
+    border-bottom: solid $border-emphasis;
     color: $text-primary;
     text-style: bold;
-    padding: 0 $spacing-md;
+    padding: 0 1;
+    layout: horizontal;
+    align-vertical: middle;
 }
 
-/* Compact sub-header for main screen */
+/* Compact sub-header */
 Header.sub-header {
     dock: top;
     height: 3;
     background: $bg-elevated;
     color: $text-primary;
-    border-bottom: solid $accent;
+    border-bottom: solid $border-accent; /* Sharp accent line */
     text-style: bold;
 }
 
@@ -413,11 +469,12 @@ Header.sub-header HeaderIcon {
     content-align: center middle;
     color: $accent;
     background: transparent;
+    text-style: bold;
 }
 
 Header.sub-header HeaderTitle {
     height: 3;
-    color: $text-primary;
+    color: $text-bright;
     text-style: bold;
     content-align: center middle;
     width: 1fr;
@@ -429,32 +486,33 @@ Header.sub-header HeaderClock {
     width: 14;
     min-width: 14;
     background: $bg-secondary;
-    color: $text-primary;
-    border-left: solid $accent;
+    color: $accent;
+    border-left: solid $border-subtle;
     padding: 0 2;
     text-style: bold;
     content-align: center middle;
 }
 
 Header.app-header HeaderIcon {
-    width: 9;
+    width: 14;
     height: 3;
-    padding: 0 $spacing-md;
+    padding: 0 1;
     content-align: center middle;
-    color: $bg-primary;
-    background: $accent;
-    border: none;
+    color: $text-primary;
+    background: $bg-secondary;
+    border-right: solid $border-subtle;
     text-style: bold;
 }
 
 Header.app-header HeaderIcon:hover {
-    background: $accent-hover;
-    color: $bg-primary;
+    background: $bg-highlight;
+    color: $text-bright;
+    border-right: solid $accent; /* Interaction hint */
 }
 
 Header.app-header HeaderTitle {
     height: 3;
-    color: $text-primary;
+    color: $text-bright;
     text-style: bold;
     content-align: center middle;
     width: 1fr;
@@ -463,39 +521,171 @@ Header.app-header HeaderTitle {
 Header.app-header HeaderClock {
     height: 3;
     min-width: 12;
-    background: $bg-secondary;
-    color: $text-primary;
-    border-left: thick $accent;
+    background: transparent;
+    color: $text-secondary;
+    border-left: solid $border-subtle;
     padding: 0 $spacing-md;
-    text-style: bold;
     content-align: center middle;
 }
-
 
 Footer {
     dock: bottom;
     height: 1;
     background: $bg-secondary;
     color: $text-primary;
+    border-top: solid $border-subtle;
 }
 
 /* === Widget Headers === */
 
-.header {
-    color: #FFFFFF;                    /* Pure white for maximum contrast */
-    text-style: bold;                  /* Bold for emphasis and readability */
-    text-align: left;                  /* Left-aligned editorial style */
-    background: $bg-elevated;          /* Elevated surface for separation */
-    padding: 0 2;                      /* Compact horizontal padding */
-    border-left: thick $accent;        /* Accent left border for visual hierarchy */
-    border-bottom: none;               /* No bottom border */
-    height: 1;                         /* Single line */
-    content-align: left middle;        /* Vertically center the text */
+/* Standard widget header - professional and refined */
+.widget-header {
+    color: $text-primary;
+    text-style: bold;
+    text-align: left;
+    background: $bg-elevated;
+    padding: 0 2; /* Increased padding for breathing room */
+    border-left: wide $accent; /* Accent accent line for visual hierarchy */
+    border-bottom: solid $border-emphasis; /* Stronger separator */
+    height: 3; /* More comfortable height */
+    content-align: left middle;
+    margin-bottom: 1; /* Better spacing from content */
+}
+
+/* Screen-level header */
+.screen-header {
+    color: $text-bright;
+    text-style: bold;
+    text-align: center;
+    background: $bg-elevated;
+    padding: 0 2;
+    border-bottom: solid $border-emphasis;
+    height: 3;
+    content-align: center middle;
+    margin-bottom: 1;
+}
+
+/* Accent variant */
+.widget-header-accent {
+    border-left: solid $accent;
+    background: $bg-highlight;
 }
 
 .header-icon {
-    color: $accent;
+    color: $text-muted;
     margin-right: $spacing-xs;
+}
+
+
+/* ---------------------------------------------------------------------------- */
+/* COMPONENTS: Command Bar                                                    */
+/* Source: styles/components/command_bar.tcss                                  */
+/* ---------------------------------------------------------------------------- */
+
+/* ========================================================================== */
+/* COMMAND BAR - Clean Professional Header                                    */
+/* ========================================================================== */
+
+CommandBar {
+    dock: top;
+    height: 3;
+    background: $bg-elevated;
+    border-bottom: solid $border-emphasis;
+    layout: horizontal;
+    padding: 0 2;
+}
+
+/* === Identity Section - Subtle branding === */
+.identity-section {
+    width: auto;
+    min-width: 12;
+    height: 3;
+    color: $text-primary;
+    background: $bg-secondary;
+    text-style: bold;
+    content-align: center middle;
+    padding: 0 2;
+    border-right: solid $border-subtle;
+}
+
+/* === Status Section - Center info === */
+.status-section {
+    width: 1fr;
+    height: 100%;
+    content-align: center middle;
+    color: $text-secondary;
+    layout: horizontal;
+}
+
+/* Mode badge styling - refined, less saturated */
+.mode-badge {
+    color: $text-primary;
+    background: $bg-highlight;
+    padding: 0 2;
+    text-style: bold;
+    margin: 0 1;
+}
+
+/* Mode-specific colors - subtle backgrounds */
+.mode-badge.mode-live {
+    background: $error-muted;
+    color: $error;
+}
+
+.mode-badge.mode-paper {
+    background: $warning-muted;
+    color: $warning;
+}
+
+.mode-badge.mode-demo,
+.mode-badge.mode-read_only {
+    background: $info-muted;
+    color: $info;
+}
+
+/* Connection status text */
+.status-text {
+    color: $text-secondary;
+    height: 3;
+    content-align: center middle;
+    margin: 0 1;
+}
+
+.status-text.connected {
+    color: $success;
+}
+
+.status-text.stopped {
+    color: $info;
+}
+
+.status-text.stale {
+    color: $warning;
+}
+
+.status-text.disconnected {
+    color: $error;
+}
+
+/* === System Section - Right side === */
+.system-section {
+    width: auto;
+    height: 100%;
+    border-left: solid $border-subtle;
+    padding-left: 2;
+    layout: horizontal;
+    align-vertical: middle;
+}
+
+.clock {
+    color: $text-muted;
+    margin-left: 1;
+}
+
+.user-badge {
+    color: $text-muted;
+    background: transparent;
+    padding: 0 1;
 }
 
 
@@ -579,42 +769,42 @@ Button.-disabled {
 /* ---------------------------------------------------------------------------- */
 
 /* ========================================================================== */
-/* DATATABLE                                                                  */
+/* DATATABLE - Professional/Refined Look                                      */
 /* ========================================================================== */
 
 DataTable {
     background: $bg-primary;
     color: $text-primary;
     border: none;
-    padding: 0 1;                  /* REDUCED from $spacing-md - tighter padding */
-    /* height controlled by individual widgets via DEFAULT_CSS */
+    padding: 1 2; /* Increased padding for better spacing */
 }
 
 DataTable > .datatable--header {
     background: $bg-elevated;
-    color: #FFFFFF;                /* Pure white for maximum contrast */
-    text-style: bold;              /* Bold headers for emphasis */
-    padding: $spacing-xs $content-padding;
-    border-bottom: $border-default;
+    color: $text-bright;           /* Pure white */
+    text-style: bold;
+    padding: $spacing-sm $content-padding; /* Increased vertical padding */
+    border-bottom: solid $border-emphasis; /* Stronger separator */
 }
 
-/* Column separators for better readability */
-/* Note: Textual doesn't support :last-child, so all columns get separators */
+/* Refined column separators */
 DataTable > .datatable--header-cell {
-    border-right: $border-default;
+    border-right: solid $border-subtle;
+    padding-right: $spacing-md; /* Extra spacing after header text */
 }
 
 DataTable > .datatable--cell {
-    border-right: $border-default;
-    padding: 0 $content-padding;
+    border-right: solid $border-subtle;
+    padding: $spacing-xs $content-padding; /* Increased vertical padding */
     overflow: hidden;
-    /* Note: Textual doesn't support text-overflow: ellipsis */
 }
 
 DataTable > .datatable--cursor {
-    background: $accent-muted;
+    background: $accent-subtle;
     color: $text-primary;
     text-style: bold;
+    border-left: wide $accent; /* Accent border on left */
+    border-right: wide $accent; /* Accent border on right */
 }
 
 DataTable > .datatable--odd-row {
@@ -622,18 +812,21 @@ DataTable > .datatable--odd-row {
 }
 
 DataTable > .datatable--even-row {
-    background: rgba(58, 53, 48, 0.15);  /* 0.15 - more subtle zebra striping */
+    background: rgba(255, 255, 255, 0.02);  /* Subtle zebra stripe */
 }
 
 DataTable:focus > .datatable--cursor {
     background: $accent;
-    color: $bg-primary;
+    color: #FFFFFF;
     text-style: bold;
+    border-left: wide $accent;
+    border-right: wide $accent;
 }
 
-/* Row hover effect */
+/* Enhanced row hover effect */
 DataTable > .datatable--hover {
-    background: rgba(193, 95, 60, 0.15);  /* Subtle accent tint on hover */
+    background: $bg-highlight;
+    border-left: solid $accent-muted; /* Subtle left border on hover */
 }
 
 
@@ -643,7 +836,7 @@ DataTable > .datatable--hover {
 /* ---------------------------------------------------------------------------- */
 
 /* ========================================================================== */
-/* TABS                                                                       */
+/* TABS - Professional Styling                                               */
 /* ========================================================================== */
 
 Tabs {
@@ -651,17 +844,20 @@ Tabs {
     color: $text-primary;
     dock: top;
     height: 3;
+    border-bottom: solid $border-subtle; /* Subtle bottom border */
 }
 
 Tab {
     padding: $spacing-xs $spacing-md;
+    margin-right: $spacing-xs; /* Spacing between tabs */
 }
 
 Tab.-active {
     background: $bg-elevated;
     color: $accent;
     text-style: bold;
-    border-bottom: solid $accent;
+    border-bottom: wide $accent; /* Wider accent border for active tab */
+    border-top: solid $accent-muted; /* Subtle top border */
 }
 
 
@@ -738,45 +934,43 @@ Select.-disabled > SelectCurrent {
 }
 
 /* Dropdown overlay - ensure proper layering and visibility */
-SelectOverlay {
-    /* Layer above other content */
+/* NOTE: SelectOverlay is an OptionList (not a container), and Textual defines
+   defaults with `Select > SelectOverlay` selectors. Match that specificity so
+   our styles reliably override the built-ins. */
+Select > SelectOverlay {
+    /* Ensure the dropdown renders above all tiles (fixes clipping). */
+    overlay: screen;
     layer: overlay;
 
     /* Styling */
     background: $bg-elevated;
+    color: $text-primary;
     border: solid $accent;
     padding: 0 1;
 
     /* Sizing */
+    width: auto;
     min-width: 22;
     max-height: 18;
 
-    /* Shadow effect for depth */
-    border-top: none;
-}
-
-/* Individual options in dropdown */
-SelectOverlay > OptionList {
-    background: $bg-elevated;
-    color: $text-primary;
-    padding: 0;
     scrollbar-background: $bg-secondary;
     scrollbar-color: $accent-muted;
 }
 
-SelectOverlay > OptionList > .option-list--option {
+/* Individual options in dropdown */
+Select > SelectOverlay > .option-list--option {
     padding: 0 2;
     background: $bg-elevated;
     color: $text-primary;
 }
 
-SelectOverlay > OptionList > .option-list--option-highlighted {
+Select > SelectOverlay > .option-list--option-highlighted {
     background: $accent-muted;
     color: $text-primary;
     text-style: bold;
 }
 
-SelectOverlay > OptionList > .option-list--option-hover {
+Select > SelectOverlay > .option-list--option-hover {
     background: $overlay-hover;
 }
 
@@ -841,18 +1035,19 @@ SelectOverlay > OptionList > .option-list--option-hover {
     text-align: right;
 }
 
-/* === Empty States === */
+/* === Empty States - Professional Display === */
 
 .empty-state {
-    height: 1;              /* Single line */
-    border: none;           /* No dashed border */
+    height: auto;           /* Allow multi-line content */
+    min-height: 3;          /* Minimum height for visibility */
+    border: none;            /* No border */
     background: transparent;
-    padding: 0 2;
-    margin: 0;
+    padding: $spacing-md $spacing-lg; /* Increased padding */
+    margin: $spacing-md 0;   /* Vertical margin */
     color: $text-muted;
-    text-style: italic;
     text-align: center;
-    display: none;  /* Hidden by default */
+    display: none;           /* Hidden by default */
+    content-align: center middle; /* Center content */
 }
 
 /* === P&L Color Coding === */
@@ -882,7 +1077,8 @@ SelectOverlay > OptionList > .option-list--option-hover {
     text-style: bold;
     margin-right: $spacing-md;
     background: $bg-elevated;
-    padding: 0 $spacing-sm;
+    padding: $spacing-xs $spacing-md; /* Increased padding */
+    border-left: solid $accent-muted; /* Subtle accent border */
 }
 
 .status-running {
@@ -926,6 +1122,37 @@ SelectOverlay > OptionList > .option-list--option-hover {
 
 .heartbeat-dim {
     color: $text-muted;
+}
+
+/* === Tile Banners (inline per-tile status) === */
+
+.tile-banner {
+    height: 1;
+    width: 100%;
+    padding: 0 $spacing-sm;
+    margin: 0 0 $spacing-xs 0;
+    background: $bg-elevated;
+    border-left: wide $accent-muted;
+    color: $text-secondary;
+    content-align: left middle;
+}
+
+.tile-banner.info {
+    background: $info-muted;
+    border-left: wide $info;
+    color: $info;
+}
+
+.tile-banner.warning {
+    background: $warning-muted;
+    border-left: wide $warning;
+    color: $warning;
+}
+
+.tile-banner.error {
+    background: $error-muted;
+    border-left: wide $error;
+    color: $error;
 }
 
 
@@ -984,6 +1211,919 @@ LoadingSpinner {
 /* Note: Textual doesn't support @keyframes or @media queries
  * Advanced animations and media queries must be implemented in Python
  */
+
+
+/* ---------------------------------------------------------------------------- */
+/* COMPONENTS: Interaction States                                             */
+/* Source: styles/components/interaction_states.tcss                           */
+/* ---------------------------------------------------------------------------- */
+
+/* ========================================================================== */
+/* P3: UNIFIED INTERACTION STATES                                              */
+/* Consistent hover/focus/disabled/active styles across all interactive elements */
+/* ========================================================================== */
+
+/* === Interaction Timing Tokens === */
+/* Note: Textual has limited transition support, but we define conceptual values */
+$transition-fast: 100ms;
+$transition-normal: 200ms;
+$transition-slow: 300ms;
+
+/* === Universal Focus Ring === */
+/* Standardized focus indicator for accessibility */
+*:focus {
+    outline: none;  /* Remove default outline */
+    border: solid $accent;
+}
+
+/* === Button Interaction States === */
+
+Button {
+    border: solid $border-subtle;
+    background: $bg-elevated;
+    color: $text-primary;
+}
+
+Button:hover {
+    background: $bg-highlight;
+    border: solid $accent-muted;
+}
+
+Button:focus {
+    border: solid $accent;
+    background: $accent-subtle;
+}
+
+Button.-disabled {
+    opacity: 0.4;
+    color: $text-muted;
+    background: $bg-secondary;
+    border: solid $border-subtle;
+}
+
+/* Primary variant */
+Button.-primary {
+    background: $accent;
+    color: $bg-primary;
+    border: solid $accent;
+}
+
+Button.-primary:hover {
+    background: $accent-hover;
+    border: solid $accent-hover;
+}
+
+Button.-primary:focus {
+    background: $accent-bright;
+    border: thick $accent;
+}
+
+Button.-primary.-disabled {
+    background: $accent-muted;
+    color: $text-muted;
+    border: solid $accent-muted;
+}
+
+/* Success variant */
+Button.-success, #start-btn, #slim-start-btn {
+    background: $success-dim;
+    color: $text-primary;
+    border: solid $success-dim;
+}
+
+Button.-success:hover, #start-btn:hover, #slim-start-btn:hover {
+    background: $success;
+    color: $bg-primary;
+    border: solid $success;
+}
+
+Button.-success:focus, #start-btn:focus, #slim-start-btn:focus {
+    background: $success;
+    border: thick $success;
+}
+
+/* Error/Danger variant */
+Button.-error, Button.-danger, #stop-btn, #slim-stop-btn {
+    background: $error-dim;
+    color: $text-primary;
+    border: solid $error-dim;
+}
+
+Button.-error:hover, Button.-danger:hover, #stop-btn:hover, #slim-stop-btn:hover {
+    background: $error;
+    color: $bg-primary;
+    border: solid $error;
+}
+
+Button.-error:focus, Button.-danger:focus, #stop-btn:focus, #slim-stop-btn:focus {
+    background: $error;
+    border: thick $error;
+}
+
+/* === Input Interaction States === */
+
+Input {
+    background: $bg-elevated;
+    border: solid $border-subtle;
+    color: $text-primary;
+}
+
+Input:hover {
+    border: solid $accent-muted;
+}
+
+Input:focus {
+    border: solid $accent;
+    background: $bg-highlight;
+}
+
+Input.-disabled {
+    opacity: 0.5;
+    background: $bg-secondary;
+    color: $text-muted;
+}
+
+Input.-invalid {
+    border: solid $error;
+}
+
+/* === Select/Dropdown Interaction States === */
+
+Select {
+    background: $bg-elevated;
+    border: solid $border-subtle;
+    color: $text-primary;
+}
+
+Select:hover {
+    border: solid $accent-muted;
+}
+
+Select:focus {
+    border: solid $accent;
+}
+
+Select.-disabled {
+    opacity: 0.5;
+    background: $bg-secondary;
+    color: $text-muted;
+}
+
+/* === DataTable Interaction States === */
+
+DataTable {
+    border: none;
+    background: $bg-primary;
+}
+
+DataTable:focus {
+    border: solid $accent;
+}
+
+/* Row hover - subtle highlight */
+DataTable > .datatable--hover {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+/* Cursor/selected row */
+DataTable > .datatable--cursor {
+    background: $accent-subtle;
+    border-left: wide $accent-muted;
+}
+
+DataTable:focus > .datatable--cursor {
+    background: $overlay-focus;
+    border-left: wide $accent;
+}
+
+/* === Tab Interaction States === */
+
+Tab {
+    background: transparent;
+    color: $text-secondary;
+    border-bottom: solid transparent;
+}
+
+Tab:hover {
+    background: $bg-elevated;
+    color: $text-primary;
+}
+
+Tab.-active {
+    background: $bg-elevated;
+    color: $accent;
+    border-bottom: wide $accent;
+}
+
+Tab:focus {
+    border: solid $accent;
+}
+
+/* === ListItem Interaction States === */
+
+ListItem {
+    background: transparent;
+}
+
+ListItem:hover {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+ListItem.-selected {
+    background: $accent-subtle;
+}
+
+ListItem:focus {
+    border-left: wide $accent;
+}
+
+/* === Tile/Card Interaction States === */
+/* For bento grid tiles and card-like containers */
+
+.bento-tile {
+    border: solid $border-subtle;
+    background: $elevation-1;
+}
+
+.bento-tile:hover {
+    border: solid $accent-muted;
+    background: $elevation-2;
+}
+
+.bento-tile:focus-within,
+.bento-tile.tile-focused {
+    border: solid $accent;
+    background: $elevation-2;
+}
+
+/* === Option/Choice Interaction States === */
+/* For mode selection, settings options, etc. */
+
+.option-card {
+    border: solid $border-subtle;
+    background: $bg-elevated;
+}
+
+.option-card:hover {
+    border: solid $accent-muted;
+    background: $bg-highlight;
+}
+
+.option-card:focus,
+.option-card.-selected {
+    border: solid $accent;
+    background: $accent-subtle;
+}
+
+/* === Link-like Text Interaction === */
+
+.interactive-text {
+    color: $accent;
+}
+
+.interactive-text:hover {
+    color: $accent-hover;
+    text-style: underline;
+}
+
+/* === Disabled State Overlay === */
+/* Universal disabled appearance */
+
+.disabled,
+*.-disabled {
+    opacity: 0.4;
+    color: $text-muted;
+}
+
+
+/* ---------------------------------------------------------------------------- */
+/* COMPONENTS: Polish                                                         */
+/* Source: styles/components/polish.tcss                                       */
+/* ---------------------------------------------------------------------------- */
+
+/* ========================================================================== */
+/* P3: VISUAL POLISH - Reduce Boxiness & Micro-interactions                    */
+/* ========================================================================== */
+
+/* === Refined Border Tokens === */
+/* Lighter, more subtle borders throughout */
+$border-hairline: #2a2a2a;  /* Very subtle divider */
+$border-light: #333333;     /* Default subtle border */
+$border-medium: #444444;    /* Slightly more visible */
+
+/* === Skeleton Loading Placeholders === */
+/* Note: Textual doesn't support linear-gradient, using solid background */
+
+.skeleton {
+    background: $bg-elevated;
+    color: transparent;
+}
+
+.skeleton-text {
+    height: 1;
+    background: $bg-elevated;
+    color: transparent;
+    width: 60%;
+}
+
+.skeleton-value {
+    height: 1;
+    background: $bg-elevated;
+    color: transparent;
+    width: 40%;
+}
+
+.skeleton-line {
+    height: 1;
+    background: $bg-secondary;
+    margin-bottom: 1;
+}
+
+/* === Loading Indicator === */
+
+.loading-dots {
+    color: $accent;
+    text-style: bold;
+}
+
+.loading-spinner {
+    color: $accent;
+}
+
+/* === Value Change Highlights === */
+/* Applied via Python widget logic */
+
+.value-changed-up {
+    color: $success;
+    text-style: bold;
+    background: $success-muted;
+}
+
+.value-changed-down {
+    color: $error;
+    text-style: bold;
+    background: $error-muted;
+}
+
+.value-flash {
+    /* Brief highlight then fade - handled in Python */
+    background: $accent-subtle;
+}
+
+/* === Last Updated Chips === */
+/* Stable width to prevent jitter */
+
+.timestamp-chip {
+    width: auto;
+    min-width: 12;  /* Fixed minimum to prevent jitter */
+    height: 1;
+    padding: 0 1;
+    color: $text-muted;
+    background: $bg-elevated;
+    text-align: right;
+}
+
+.timestamp-chip.stale {
+    color: $warning;
+    background: $warning-muted;
+}
+
+.timestamp-chip.fresh {
+    color: $success;
+}
+
+.last-updated {
+    min-width: 8;  /* Stable width */
+    color: $text-muted;
+    text-align: right;
+}
+
+/* === Inline Banners (Toast-like notifications within tiles) === */
+
+.inline-banner {
+    height: auto;
+    min-height: 1;
+    width: 100%;
+    padding: 0 1;
+    margin: 0;
+    background: $bg-elevated;
+    border-left: wide $accent-muted;
+    color: $text-secondary;
+}
+
+.inline-banner.info {
+    background: rgba(0, 122, 255, 0.05);
+    border-left: wide $info;
+    color: $info;
+}
+
+.inline-banner.success {
+    background: rgba(0, 255, 65, 0.05);
+    border-left: wide $success;
+    color: $success;
+}
+
+.inline-banner.warning {
+    background: rgba(255, 215, 0, 0.05);
+    border-left: wide $warning;
+    color: $warning;
+}
+
+.inline-banner.error {
+    background: rgba(255, 0, 51, 0.05);
+    border-left: wide $error;
+    color: $error;
+}
+
+/* === Refined Headers === */
+/* Less heavy, more subtle hierarchy */
+
+.header-refined {
+    color: $text-primary;
+    text-style: bold;
+    background: transparent;
+    padding: 0 1;
+    border-left: wide $accent;  /* Accent indicator only */
+    border-bottom: none;  /* Remove heavy bottom border */
+    height: 2;
+    margin-bottom: 1;
+}
+
+.header-subtle {
+    color: $text-secondary;
+    background: transparent;
+    padding: 0 1;
+    border-bottom: solid $border-hairline;
+    height: 1;
+    margin-bottom: 1;
+}
+
+/* === Badge Styling === */
+/* Consistent badge/pill appearance */
+
+.badge {
+    padding: 0 1;
+    height: 1;
+    background: $bg-elevated;
+    color: $text-primary;
+    text-style: bold;
+}
+
+.badge-primary {
+    background: $accent;
+    color: $bg-primary;
+}
+
+.badge-success {
+    background: $success-muted;
+    color: $success;
+    border-left: thick $success;
+}
+
+.badge-warning {
+    background: $warning-muted;
+    color: $warning;
+    border-left: thick $warning;
+}
+
+.badge-error {
+    background: $error-muted;
+    color: $error;
+    border-left: thick $error;
+}
+
+.badge-info {
+    background: $info-muted;
+    color: $info;
+    border-left: thick $info;
+}
+
+.badge-muted {
+    background: $bg-secondary;
+    color: $text-muted;
+}
+
+/* === Refined Dividers === */
+
+.divider {
+    height: 1;
+    background: $border-hairline;
+    margin: 1 0;
+}
+
+.divider-vertical {
+    width: 1;
+    background: $border-hairline;
+    margin: 0 1;
+}
+
+.divider-accent {
+    background: $accent-muted;
+}
+
+/* === Card/Panel Refinements === */
+/* Less boxy appearance */
+
+.card {
+    background: $bg-secondary;
+    border: solid $border-light;
+    padding: 1;
+}
+
+.card-elevated {
+    background: $bg-elevated;
+    border: solid $border-medium;
+}
+
+.card-flat {
+    background: transparent;
+    border: none;
+    border-bottom: solid $border-hairline;
+}
+
+/* === Metric Display === */
+/* Clean, aligned metric presentation */
+
+.metric {
+    layout: vertical;
+    height: auto;
+    padding: 0;
+}
+
+.metric-label {
+    color: $text-muted;
+    height: 1;
+}
+
+.metric-value {
+    color: $text-primary;
+    text-style: bold;
+    height: 1;
+}
+
+.metric-inline {
+    layout: horizontal;
+    height: 1;
+}
+
+.metric-inline .metric-label {
+    width: auto;
+    margin-right: 1;
+}
+
+.metric-inline .metric-value {
+    width: auto;
+}
+
+/* === Progress Indicator Polish === */
+
+ProgressBar {
+    height: 1;
+    background: $bg-secondary;
+    border: none;
+}
+
+ProgressBar > .bar--bar {
+    background: $accent;
+}
+
+ProgressBar.success > .bar--bar {
+    background: $success;
+}
+
+ProgressBar.warning > .bar--bar {
+    background: $warning;
+}
+
+ProgressBar.error > .bar--bar {
+    background: $error;
+}
+
+/* === Tooltip-style Help Text === */
+
+.help-text {
+    color: $text-muted;
+    text-style: italic;
+    height: 1;
+}
+
+/* === Empty State Polish === */
+
+.empty-state {
+    padding: 2;
+    color: $text-muted;
+    text-align: center;
+}
+
+.empty-state-icon {
+    color: $text-muted;
+    margin-bottom: 1;
+}
+
+.empty-state-title {
+    color: $text-secondary;
+    text-style: bold;
+    margin-bottom: 0;
+}
+
+.empty-state-subtitle {
+    color: $text-muted;
+}
+
+/* === Refined Table Styling === */
+/* Less heavy borders, cleaner look */
+
+DataTable {
+    padding: 0;
+}
+
+DataTable > .datatable--header {
+    background: $bg-elevated;
+    border-bottom: solid $border-light;
+    padding: 0 1;
+}
+
+DataTable > .datatable--header-cell {
+    border-right: none;  /* Remove vertical separators in header */
+}
+
+DataTable > .datatable--cell {
+    border-right: none;  /* Remove vertical separators */
+    padding: 0 1;
+}
+
+/* === Compact Mode Adjustments === */
+
+.compact .header-refined {
+    height: 1;
+    padding: 0;
+}
+
+.compact .metric {
+    padding: 0;
+}
+
+.compact .card {
+    padding: 0;
+}
+
+
+/* ---------------------------------------------------------------------------- */
+/* COMPONENTS: Accessibility                                                  */
+/* Source: styles/components/accessibility.tcss                                */
+/* ---------------------------------------------------------------------------- */
+
+/* ========================================================================== */
+/* P3: ACCESSIBILITY - Focus Order & Keyboard Navigation                       */
+/* ========================================================================== */
+
+/* === Focus Ring Visibility === */
+/* Ensure focus is always visible for keyboard navigation */
+
+*:focus {
+    border: solid $accent;
+}
+
+/* Enhanced focus for primary interactive elements */
+Button:focus,
+Input:focus,
+Select:focus {
+    border: thick $accent;
+}
+
+/* DataTable focus - clear cursor visibility */
+DataTable:focus {
+    border: solid $accent;
+}
+
+DataTable:focus > .datatable--cursor {
+    background: $overlay-focus;
+    border-left: wide $accent;
+    color: $text-primary;
+}
+
+/* === Tab Order Hints === */
+/* Visual indicators for keyboard navigation sequence */
+
+.tab-hint {
+    color: $accent;
+    text-style: bold;
+    margin-right: 1;
+}
+
+/* === Skip Links === */
+/* For keyboard navigation - use class-based targeting */
+
+.skip-link {
+    color: $accent;
+    background: $bg-secondary;
+    padding: 1;
+    border: solid $accent;
+}
+
+/* === ARIA State Class Equivalents === */
+/* Since Textual doesn't support attribute selectors, use classes */
+
+.state-selected {
+    background: $accent-subtle;
+    border-left: wide $accent;
+}
+
+.state-expanded {
+    border-bottom: none;
+}
+
+.state-disabled {
+    opacity: 0.4;
+    color: $text-muted;
+}
+
+.state-invalid {
+    border: solid $error;
+}
+
+/* === Contrast Improvements === */
+/* Ensure text meets WCAG AA contrast requirements */
+
+/* Primary text on dark backgrounds: >= 4.5:1 */
+.text-primary {
+    color: #FFFFFF;
+}
+
+/* Secondary text: >= 4.5:1 */
+.text-secondary {
+    color: #B0B0B0;
+}
+
+/* Muted text (decorative): >= 3:1 minimum */
+.text-muted {
+    color: #808080;
+}
+
+/* Error text: High contrast */
+.text-error {
+    color: #FF4444;
+}
+
+/* Success text: Adjusted for contrast */
+.text-success {
+    color: #00CC33;
+}
+
+/* Warning text: Adjusted for contrast */
+.text-warning {
+    color: #FFD700;
+}
+
+/* === Motion Reduction === */
+/* Note: Textual doesn't support prefers-reduced-motion */
+
+.reduced-motion {
+    /* Static styles - no animations */
+}
+
+/* === Focus Trap Indicators === */
+/* Visual feedback when in modal/dialog */
+
+.focus-trapped {
+    border: thick $accent;
+}
+
+/* === Screen Reader Only === */
+/* Visually hidden but accessible to screen readers */
+
+.sr-only {
+    display: none;
+}
+
+/* === High Contrast Mode Classes === */
+/* Applied when high contrast theme is active */
+
+.high-contrast-focus {
+    border: thick $text-primary;
+    background: $bg-primary;
+}
+
+.high-contrast-text {
+    color: #A0A0A0;
+}
+
+/* === Keyboard Navigation Indicators === */
+
+.keyboard-focused {
+    border: thick $accent;
+}
+
+.mouse-focused {
+    border: solid $accent-muted;
+}
+
+/* === Action Hint Accessibility === */
+/* Make keyboard shortcuts visible */
+
+.action-hint {
+    padding: 0 1;
+    color: $text-muted;
+}
+
+.action-key {
+    color: $accent;
+    background: $bg-elevated;
+    padding: 0 1;
+    text-style: bold;
+}
+
+/* === Form Field Labels === */
+/* Ensure labels are clearly associated */
+
+.field-label {
+    color: $text-secondary;
+    margin-bottom: 0;
+}
+
+.field-label-required {
+    color: $text-secondary;
+    margin-bottom: 0;
+}
+
+/* === Error Messages === */
+/* Clear, visible error feedback */
+
+.field-error {
+    color: $error;
+    background: $error-muted;
+    padding: 0 1;
+    margin-top: 0;
+}
+
+/* === Loading State Announcements === */
+
+.loading-announcement {
+    color: $accent;
+    text-style: bold;
+}
+
+/* === Status Announcements === */
+/* For live region updates */
+
+.status-live {
+    color: $text-primary;
+}
+
+.status-polite {
+    color: $text-secondary;
+}
+
+.status-assertive {
+    color: $warning;
+    text-style: bold;
+}
+
+
+/* ---------------------------------------------------------------------------- */
+/* WIDGETS: Primitives                                                        */
+/* Source: styles/widgets/primitives.tcss                                      */
+/* ---------------------------------------------------------------------------- */
+
+/* Sparkline Widget */
+SparklineWidget {
+    width: 1fr;
+    height: 1;
+    background: transparent;
+    color: $accent;
+}
+
+/* Progress Bar Widget */
+ProgressBarWidget {
+    width: 100%;
+    height: 1;
+    color: $text-muted;
+}
+
+/* Status Badge Widget */
+StatusBadgeWidget {
+    width: auto;
+    height: 1;
+    padding: 0 1;
+    background: $bg-elevated;
+    color: $text-primary;
+    text-style: bold;
+}
+
+.badge-live {
+    color: $success;
+    border-left: thick $success;
+}
+
+.badge-stopped {
+    color: $error;
+    border-left: thick $error;
+}
+
+.badge-syncing {
+    color: $warning;
+    border-left: thick $warning;
+}
 
 
 /* ---------------------------------------------------------------------------- */
@@ -1145,61 +2285,92 @@ ModeSelector .loading-indicator {
     margin: 0 1;
 }
 
-/* === Contextual Footer === */
+/* ========================================================================== */
+/* CONTEXTUAL FOOTER - Polished Keybinding Display                            */
+/* ========================================================================== */
 
 ContextualFooter {
     dock: bottom;
-    height: 2;        /* 1 content + 1 for border */
-    min-height: 2;
-    background: $bg-secondary;
-    border-top: solid $accent;
+    height: 1;
+    min-height: 1;
+    background: $elevation-2;
+    border-top: solid $border-subtle;
 }
 
 #contextual-footer {
-    height: 100%;     /* Fill parent */
-    min-height: 1;
+    layout: horizontal;
+    height: 100%;
+    width: 100%;
     align-vertical: middle;
-    padding: 0 $spacing-md;
+    padding: 0 1;
 }
 
 .footer-group {
-    margin-right: $spacing-md;
+    layout: horizontal;
+    height: 100%;
+    width: auto;
     align-vertical: middle;
+    margin: 0;
+}
+
+.footer-group-left {
+    margin-left: 0;
 }
 
 .footer-group-right {
     dock: right;
+    margin-right: 0;
 }
 
+/* Key badge - pill style */
 .footer-key {
-    color: $bg-primary;
-    text-style: bold;
+    height: 1;
+    width: auto;
+    color: $elevation-0;
     background: $accent;
-    padding: 0 $spacing-md;
-    margin-right: $spacing-xs;
+    text-style: bold;
+    padding: 0 1;
+    margin-right: 0;
 }
 
+/* Key label with increased spacing */
 .footer-label {
-    color: $text-primary;
-    margin-right: $spacing-md;
+    height: 1;
+    width: auto;
+    color: $text-secondary;
+    margin-right: 2;
+    padding: 0 1;
 }
 
+/* Group separator - more visible */
 .footer-separator {
-    color: $border-subtle;
-    margin: 0 $spacing-xs;
+    height: 1;
+    width: 1;
+    color: $accent-muted;
+    margin: 0 1;
+    padding: 0;
+}
+
+/* Data source badge - prominent */
+.footer-data-source {
+    color: $text-bright;
+    text-style: bold;
+    background: $accent-muted;
+    padding: 0 2;
+    margin-right: 2;
 }
 
 /* ========================================================================== */
-/* SLIM STATUS BAR (SlimStatusWidget) - Compact 3-Line Layout                 */
+/* SLIM STATUS BAR (SlimStatusWidget) - Enhanced Visual Hierarchy             */
 /* ========================================================================== */
 
 #slim-status {
     height: 4;         /* 3 content + 1 for border */
     min-height: 4;
     layout: vertical;  /* Explicit layout for proper child sizing */
-    background: $bg-secondary;
+    background: $bg-elevated;
     color: $text-primary;
-    border-bottom: solid $accent;
+    border-bottom: thick $accent;
     padding: 0;
 }
 
@@ -1207,21 +2378,21 @@ ContextualFooter {
     height: 100%;  /* Fill parent, don't use fixed height */
     width: 100%;
     align-vertical: middle;
-    padding: 0 1;
+    padding: 0 2;
 }
 
 #slim-status-bar > * {
     content-align: center middle;
 }
 
-/* Slim separators */
+/* === Enhanced Slim Separators === */
 .slim-separator {
     width: 1;
-    color: $border-subtle;
-    margin: 0 1;
+    color: $accent;
+    margin: 0 2;
 }
 
-/* Status indicator dot */
+/* === Status Indicator Group === */
 .status-indicator {
     width: 2;
     text-style: bold;
@@ -1235,110 +2406,148 @@ ContextualFooter {
     color: $error;
 }
 
-/* Status text */
+/* Status text with solid background pill */
 .status-text {
     width: auto;
-    min-width: 7;
+    min-width: 9;
     text-style: bold;
+    padding: 0 2;
 }
 
 .status-text.status-running {
-    color: $success;
+    color: $bg-primary;
+    background: $success;
 }
 
 .status-text.status-stopped {
-    color: $error;
+    color: $text-bright;
+    background: $error;
 }
 
-/* Slim typography hierarchy */
+/* === Slim Typography Hierarchy === */
 .slim-label {
     width: auto;
     color: $text-muted;
     margin-right: 1;
+    text-style: italic;
 }
 
 .slim-value {
     width: auto;
-    min-width: 6;
-    color: $text-primary;
+    min-width: 9;
+    color: $text-bright;
     text-style: bold;
+    background: $bg-elevated;
+    border-left: tall $accent-muted;
+    padding: 0 2;
 }
 
 .slim-value.pnl-positive {
-    color: $success;
+    color: $bg-primary;
+    background: $success;
 }
 
 .slim-value.pnl-negative {
-    color: $error;
+    color: $text-bright;
+    background: $error;
 }
 
 .slim-value.pnl-neutral {
     color: $text-primary;
+    background: $bg-elevated;
 }
 
-/* Position count */
+/* === Position Count === */
 .positions-count {
     width: auto;
-    min-width: 6;
+    min-width: 7;
     color: $text-secondary;
+    background: $bg-secondary;
+    padding: 0 1;
 }
 
 .positions-count.has-positions {
-    color: $accent;
+    color: $accent-glow;
+    background: $accent-subtle;
     text-style: bold;
 }
 
-/* Uptime */
+/* === Uptime === */
 .uptime {
     width: auto;
-    min-width: 8;
+    min-width: 9;
     color: $text-secondary;
+    background: $bg-secondary;
+    padding: 0 1;
+    text-style: bold;
 }
 
-/* Slim buttons - need height 3 for proper rendering */
+/* === Slim Buttons - Enhanced with accent glow on hover === */
 .slim-btn {
     width: auto;
-    min-width: 8;
+    min-width: 9;
     height: 3;
-    padding: 0 1;
-    margin: 0;
+    padding: 0 2;
+    margin: 0 1;
+    text-style: bold;
 }
 
 #slim-start-btn {
     background: $success;
     color: $bg-primary;
+    border: solid $success;
+}
+
+#slim-start-btn:hover {
+    background: $success;
+    border: solid $success;
+    text-style: bold;
 }
 
 #slim-stop-btn {
     background: $error;
     color: $bg-primary;
+    border: solid $error;
+}
+
+#slim-stop-btn:hover {
+    background: $error;
+    border: solid $error;
+    text-style: bold;
 }
 
 #slim-start-btn.-disabled,
 #slim-stop-btn.-disabled {
-    opacity: 0.5;
-    background: $bg-elevated;
+    opacity: 0.4;
+    background: $bg-secondary;
     color: $text-muted;
+    border: solid $border-subtle;
 }
 
-/* Slim mode selector */
+/* === Slim Mode Selector === */
 #slim-mode-select {
     width: auto;
-    min-width: 14;
+    min-width: 15;
     height: 3;
+    background: $bg-secondary;
+    border: solid $border-accent;
+}
+
+#slim-mode-select:hover {
+    border: solid $accent;
 }
 
 #slim-mode-select Select {
     height: 3;
 }
 
-/* Error badge */
+/* === Error Badge === */
 .error-badge {
     background: $error;
     color: $bg-primary;
-    padding: 0 1;
+    padding: 0 2;
     text-style: bold;
-    margin-left: 1;
+    margin-left: 2;
 }
 
 .error-badge.hidden {
@@ -1352,26 +2561,82 @@ ContextualFooter {
 /* ---------------------------------------------------------------------------- */
 
 /* ========================================================================== */
-/* ACCOUNT WIDGET                                                             */
+/* ACCOUNT WIDGET - Professional & Refined                                    */
 /* ========================================================================== */
 
 AccountWidget {
     layout: vertical;
-    padding: $spacing-xs;
-    /* height controlled by widget DEFAULT_CSS */
+    height: 1fr;
+    padding: $spacing-md $spacing-lg; /* Increased padding for breathing room */
+    background: $bg-secondary;
 }
 
-.account-metric {
-    background: $bg-elevated;
-    border: solid $border-subtle;
-    padding: $spacing-xs $spacing-md;
-    margin: $spacing-xs;
+AccountWidget DataTable {
     height: auto;
 }
 
+/* Compact mode: hide detailed sections */
+AccountWidget.compact .balance-details {
+    display: none;
+}
+
+AccountWidget.compact .account-metrics-row {
+    display: none;
+}
+
+/* Compact mode horizontal summary */
+.portfolio-summary {
+    layout: horizontal;
+    align-vertical: middle;
+}
+
+.metric-separator {
+    color: $text-muted;
+    margin: 0 1;
+}
+
+/* Account header container - horizontal layout with title and timestamp */
+.account-header {
+    layout: horizontal;
+    width: 100%;
+    height: auto;
+    align: left middle;
+}
+
+/* Account header - uses global .widget-header style from headers.tcss */
+/* Widget-specific overrides can be added here if needed */
+AccountWidget .widget-header {
+    /* Inherits from .widget-header in headers.tcss */
+    width: auto;
+}
+
+/* Timestamp label in header */
+.timestamp-label {
+    color: $text-muted;
+    margin-left: 1;
+    width: 1fr;
+    text-align: right;
+}
+
+.account-metric {
+    width: 1fr;
+    min-width: 10;
+    height: auto;
+    min-height: 3;                     /* Slightly taller */
+    background: transparent;           /* Clean: no background */
+    border: none;
+    border-bottom: solid $border-subtle;  /* Separator instead of box */
+    padding: 1 0;                      /* Vertical padding only */
+    margin: 0;
+}
+
+.account-metric:last-of-type {
+    border-bottom: none;               /* No border on last item */
+}
+
 .account-metric-label {
-    color: $text-secondary;
-    text-style: bold;
+    color: $text-muted;                /* Muted label */
+    margin-bottom: 0;
 }
 
 .account-metric-value {
@@ -1381,28 +2646,83 @@ AccountWidget {
 }
 
 .portfolio-summary-row {
-    margin-bottom: $spacing-sm;
+    layout: horizontal;
+    height: auto;
+    min-height: 4;
+    width: 100%;
+    margin-bottom: 1;
+    padding: 0;
 }
 
 .portfolio-metric {
+    width: 1fr;
+    min-width: 12;
+    height: auto;
+    min-height: 4; /* Increased height for better visual weight */
     background: $bg-elevated;
     border: solid $border-subtle;
-    padding: $spacing-xs $spacing-md;
-    margin: $spacing-xs;
+    border-left: wide $accent-muted; /* Subtle accent border */
+    padding: $spacing-sm $spacing-md; /* Increased padding */
+    margin: 0 1 0 0;
+}
+
+.portfolio-metric:last-of-type {
+    margin-right: 0;
 }
 
 .portfolio-metric-label {
-    color: $text-secondary;
-    text-style: bold;
+    color: $text-muted;
+    height: 1;
 }
 
 .portfolio-metric-value {
     color: $text-primary;
     text-style: bold;
+    height: 1;
 }
 
 .account-metrics-row {
-    margin-bottom: $spacing-sm;
+    layout: horizontal;
+    height: auto;
+    min-height: 3;
+    width: 100%;
+    margin-bottom: 1;
+    padding: 0;
+}
+
+/* Secondary metrics row - Volume, Fees, Fee Tier */
+.account-metrics-row .portfolio-metric {
+    background: transparent;
+    border: none;
+    border-bottom: solid $border-subtle;
+    padding: 1 1;
+    margin: 0;
+}
+
+.balance-details {
+    height: 1fr;
+    width: 100%;
+    margin-top: 1;
+}
+
+/* Balances sub-header - uses global .widget-header style */
+.balance-details .widget-header {
+    color: $text-secondary;  /* Override: slightly muted for sub-header */
+    margin-bottom: 0;        /* Override: tighter spacing in details */
+}
+
+/* ========================================================================== */
+/* RESPONSIVE VARIANTS                                                         */
+/* Hide detailed elements in compact mode via parent grid class                */
+/* ========================================================================== */
+
+/* Compact mode: hide secondary metrics and balance details */
+#bento-grid.compact .account-metrics-row {
+    display: none;
+}
+
+#bento-grid.compact .balance-details {
+    display: none;
 }
 
 
@@ -1412,21 +2732,62 @@ AccountWidget {
 /* ---------------------------------------------------------------------------- */
 
 /* ========================================================================== */
-/* PORTFOLIO WIDGET (Tabbed Layout)                                           */
+/* PORTFOLIO WIDGET (Tabbed Layout) - Professional                           */
 /* ========================================================================== */
 
 PortfolioWidget {
     layout: vertical;
     height: 1fr;
+    padding: 0 $spacing-md; /* Consistent horizontal padding */
 }
 
 PortfolioWidget TabbedContent {
     height: 1fr;
     border: none;
+    padding-top: $spacing-sm; /* Space between header and tabs */
 }
 
 PortfolioWidget TabPane {
-    padding: 0;
+    padding: $spacing-sm $spacing-md; /* Increased padding for content */
+}
+
+/* ========================================================================== */
+/* POSITIONS WIDGET                                                           */
+/* ========================================================================== */
+
+PositionsWidget {
+    layout: vertical;
+    height: 1fr;
+}
+
+PositionsWidget DataTable {
+    height: 1fr;
+}
+
+/* ========================================================================== */
+/* ORDERS WIDGET                                                              */
+/* ========================================================================== */
+
+OrdersWidget {
+    layout: vertical;
+    height: 1fr;
+}
+
+OrdersWidget DataTable {
+    height: 1fr;
+}
+
+/* ========================================================================== */
+/* TRADES WIDGET                                                              */
+/* ========================================================================== */
+
+TradesWidget {
+    layout: vertical;
+    height: 1fr;
+}
+
+TradesWidget DataTable {
+    height: 1fr;
 }
 
 
@@ -1436,8 +2797,19 @@ PortfolioWidget TabPane {
 /* ---------------------------------------------------------------------------- */
 
 /* ========================================================================== */
-/* MARKET WIDGET                                                              */
+/* MARKET WIDGET - Professional Display                                       */
 /* ========================================================================== */
+
+MarketWatchWidget {
+    layout: vertical;
+    height: 1fr;
+    padding: 0 $spacing-md; /* Consistent horizontal padding */
+}
+
+MarketWatchWidget DataTable {
+    height: 1fr;
+    padding: $spacing-sm $spacing-md; /* Increased padding for readability */
+}
 
 /* Market widget uses standard dashboard-item styling from layout/workspace.tcss */
 /* and DataTable styling from components/tables.tcss */
@@ -1447,14 +2819,13 @@ PortfolioWidget TabPane {
 }
 
 
-
 /* ---------------------------------------------------------------------------- */
 /* WIDGETS: Logs                                                              */
 /* Source: styles/widgets/logs.tcss                                            */
 /* ---------------------------------------------------------------------------- */
 
 /* ========================================================================== */
-/* LOGS WIDGET                                                                */
+/* LOGS WIDGET - Enhanced Styling                                             */
 /* ========================================================================== */
 
 /* === Log Container === */
@@ -1462,34 +2833,97 @@ PortfolioWidget TabPane {
 #dash-logs {
     width: 100%;
     height: 1fr;  /* Fill logs-row */
+    background: $bg-primary;
 }
 
-/* === Compact Log Header === */
+/* === Log Header - Professional & Refined === */
 
 LogWidget .log-header {
+    layout: horizontal;
+    height: 3;
     background: $bg-elevated;
-    border-left: thick $accent;
+    border-left: wide $accent; /* Accent border for visual hierarchy */
+    border-bottom: solid $border-emphasis; /* Stronger separator */
+    padding: 0 $spacing-md; /* Increased padding */
+    align: left middle;
 }
 
 LogWidget .log-title {
+    height: 3;
+    width: auto;
+    min-width: 5;
     color: $text-primary;
+    text-style: bold;
+    background: transparent;
+    border: none;
+    padding: 0 $spacing-sm; /* Increased padding */
+    content-align: left middle;
+}
+
+LogWidget .log-level-select {
+    height: 3;
+    width: 12;
+    margin: 0 1;
+}
+
+LogWidget .log-filter {
+    height: 3;
+    width: 16;
+    min-width: 10;
+    max-width: 20;
 }
 
 LogWidget .log-sep {
     color: $border-subtle;
+    height: 3;
+    width: 1;
+    content-align: center middle;
+    margin: 0 2;
 }
 
-/* === Inline Statistics === */
+/* === Inline Statistics - Grouped with subtle background === */
 
-LogWidget .stat-error { color: $error; }
-LogWidget .stat-warning { color: $warning; }
-LogWidget .stat-info { color: $success; }
+LogWidget .stat {
+    height: 3;
+    min-width: 4;
+    padding: 0 1;
+    margin: 0;
+    content-align: center middle;
+    text-style: bold;
+    background: $bg-secondary;
+}
 
-/* === RichLog Display === */
+LogWidget .stat-error {
+    color: $error;
+    padding: 0 1;
+}
+
+LogWidget .stat-warning {
+    color: $warning;
+    padding: 0 1;
+}
+
+LogWidget .stat-info {
+    color: $success;
+    padding: 0 1;
+}
+
+/* === RichLog Display - Enhanced === */
+
+LogWidget {
+    background: $bg-secondary;
+}
+
+/* Embedded look: minimal borders/headers */
+LogWidget .log-header {
+    background: $bg-elevated;
+    border-bottom: solid $border-subtle;
+    color: $text-secondary;
+}
 
 LogWidget RichLog {
-    border: solid $border-subtle;
     background: $bg-secondary;
+    color: $text-primary;
 }
 
 /* === Log Component (legacy) === */
@@ -1498,6 +2932,7 @@ Log {
     background: $bg-secondary;
     color: $text-primary;
     border: solid $border-subtle;
+    border-left: thick $accent-muted;
     padding: 0 $spacing-xs;
 }
 
@@ -1513,8 +2948,542 @@ Log {
     text-style: italic;
     text-align: center;
     padding: 0 $spacing-xs;
+    background: $bg-elevated;
 }
 
+/* === Pause Indicator - Subtle === */
+
+LogWidget .pause-indicator {
+    color: $warning-dim;               /* Refined: desaturated */
+    background: $warning-muted;
+    text-style: bold;
+    padding: 0 1;
+    margin-left: 1;
+    display: none;
+}
+
+LogWidget .pause-indicator.visible {
+    display: block;
+}
+
+/* === RichLog Layout === */
+
+LogWidget RichLog {
+    height: 1fr;
+    min-height: 5;
+}
+
+
+/* ---------------------------------------------------------------------------- */
+/* WIDGETS: Dashboard                                                         */
+/* Source: styles/widgets/dashboard.tcss                                       */
+/* ---------------------------------------------------------------------------- */
+
+/* ========================================================================== */
+/* DASHBOARD WIDGETS - Consistent Spacing & Visual Hierarchy                  */
+/* ========================================================================== */
+
+/* === Ticker Row === */
+TickerRow {
+    layout: horizontal;
+    height: 1;
+    width: 100%;
+    margin-bottom: 0;
+    padding: 0 2;
+}
+
+TickerRow .symbol {
+    width: 10;
+    text-style: bold;
+    color: $text-primary;
+}
+
+TickerRow .price {
+    width: 12;
+    content-align: right middle;
+}
+
+TickerRow SparklineWidget {
+    width: 1fr;
+    margin: 0 2;
+}
+
+TickerRow .change {
+    width: 8;
+    content-align: right middle;
+}
+
+/* Ticker row inner container (from MarketPulseWidget) */
+.ticker-row-inner {
+    height: auto;
+    padding: 0 1;
+    margin-top: 1;
+}
+
+.ticker-symbol {
+    width: 8;
+    text-style: bold;
+    color: $text-primary;
+}
+
+.ticker-spark {
+    width: 1fr;
+}
+
+.ticker-price {
+    width: 10;
+    text-align: right;
+    color: $text-primary;
+}
+
+.ticker-change {
+    width: 8;
+    text-align: right;
+}
+
+/* === Market Pulse Widget - Professional Display === */
+MarketPulseWidget {
+    width: 100%;
+    height: 1fr;  /* CRITICAL: Fill parent using fr instead of % */
+    border: none;
+    padding: 0; /* Tile provides padding; avoid double-padding */
+    background: transparent;
+    layout: vertical;
+}
+
+/* Ticker list container - removed, defined in empty state section */
+
+/* Widget Header - NOTE: Use .widget-header from headers.tcss */
+/* This duplicate definition is kept for backwards compatibility but
+   the canonical style is defined in components/headers.tcss */
+
+/* Compact header variant */
+.widget-header-compact {
+    height: 1;
+    padding: 0 1;
+    border-left: none;
+}
+
+/* === Position Card Widget - Professional Card Design === */
+PositionCardWidget {
+    width: 100%;
+    height: 1fr;  /* CRITICAL: Fill parent using fr instead of % */
+    background: transparent; /* Tile provides background */
+    border: none; /* Tile provides border */
+    padding: 0; /* Tile provides padding; avoid shrinking content area */
+    layout: vertical;  /* Allow children to expand */
+    align: center middle;
+}
+
+.pos-header {
+    layout: horizontal;
+    height: 1;
+    width: 100%;
+    margin-bottom: 1;
+}
+
+.pos-symbol {
+    width: 1fr;
+    color: $text-primary;
+    text-style: bold;
+}
+
+.pos-side {
+    width: auto;
+    padding: 0 1;
+    text-style: bold;
+}
+
+.side-long {
+    color: $success;
+    background: $success-muted;
+}
+
+.side-short {
+    color: $error;
+    background: $error-muted;
+}
+
+.pnl-huge {
+    width: 100%;
+    height: 3;
+    content-align: center middle;
+    text-style: bold;
+    color: $text-muted;
+    background: $bg-secondary;
+    border: solid $border-subtle;
+    margin: 1 0;
+}
+
+.pnl-positive { color: $success; border: solid $success; }
+.pnl-negative { color: $error; border: solid $error; }
+
+.pos-details {
+    layout: grid;
+    grid-size: 2;
+    grid-gutter: 1;
+}
+
+/* Position Card active state layout (from PositionCardWidget) */
+.pos-header-row {
+    width: 100%;
+    align: center middle;
+    padding: 1;
+}
+
+.pos-badge {
+    padding: 0 1;
+    text-style: bold;
+    background: $bg-elevated;
+}
+
+.pos-badge.long {
+    background: $success-muted;
+    color: $success;
+}
+
+.pos-badge.short {
+    background: $error-muted;
+    color: $error;
+}
+
+.pnl-hero {
+    text-align: center;
+    padding: 1;
+    width: 100%;
+}
+
+.pos-details-grid {
+    layout: grid;
+    grid-size: 3;
+    grid-columns: 1fr 1fr 1fr;
+    grid-gutter: 1;
+    width: 100%;
+    padding: 0 2;
+}
+
+.detail-item {
+    align: center middle;
+}
+
+.detail-label {
+    color: $text-muted;
+}
+
+.detail-value {
+    text-style: bold;
+    color: $text-primary;
+}
+
+/* === System Monitor Widget - Professional Display === */
+SystemMonitorWidget {
+    width: 100%;
+    height: 1fr;  /* CRITICAL: Fill parent using fr instead of % */
+    padding: 0;  /* Tile provides padding; avoid double-padding */
+    layout: vertical;
+    background: transparent;
+}
+
+.sys-header {
+    height: 2;  /* Increased height for better visibility */
+    text-style: bold;
+    color: $text-primary;
+    background: transparent;
+    padding: 0 $spacing-sm; /* Added padding */
+    border-left: wide $accent; /* Accent border */
+    border-bottom: solid $border-subtle; /* Subtle bottom border */
+    content-align: left middle;
+    margin-bottom: $spacing-xs; /* Spacing after header */
+}
+
+/* System metrics - Professional list layout */
+.sys-row {
+    height: 2;  /* Increased height for better readability */
+    margin-bottom: $spacing-xs; /* Spacing between rows */
+    layout: horizontal;
+    align: left middle;
+    padding: $spacing-xs $spacing-sm; /* Increased padding */
+    background: transparent;
+    border-left: solid transparent; /* Reserve space for hover accent */
+}
+
+.sys-row:hover {
+    background: $bg-elevated; /* Subtle background on hover */
+    border-left: solid $accent-muted; /* Accent border on hover */
+}
+
+.sys-metric-label {
+    color: $text-muted;
+    width: 12; /* Increased width for better alignment */
+    text-align: left;
+}
+
+.sys-metric-value {
+    color: $text-primary;
+    width: 1fr;
+    text-align: right;
+    text-style: bold;
+}
+
+.sys-metric {
+    height: 1;  /* Reduced from 2 to fit more metrics */
+    color: $text-secondary;
+    padding: 0 0;  /* No extra padding - align with progress bars */
+    margin-bottom: 0;
+    background: transparent;
+    border: none;
+    text-align: left;
+}
+
+.sys-metric.good { color: $success; background: transparent; }
+.sys-metric.warning { color: $warning; background: transparent; }
+.sys-metric.bad { color: $error; background: transparent; }
+.sys-metric.stopped { color: $info; background: transparent; }
+
+.sys-metric-value.good { color: $success; }
+.sys-metric-value.warning { color: $warning; }
+.sys-metric-value.bad { color: $error; }
+
+/* Row with inline sparkline */
+.sys-row-with-spark {
+    height: 1;
+    width: 100%;
+    layout: horizontal;
+    align: left middle;
+    padding: 0 1;
+    margin-bottom: 0;
+}
+
+.sys-progress {
+    width: 1fr;
+    height: 1;
+}
+
+.sys-sparkline {
+    width: 10;  /* Fixed width for sparkline */
+    height: 1;
+    margin-left: 1;
+}
+
+.sys-latency-label {
+    width: 1fr;
+    height: 1;
+    color: $text-secondary;
+}
+
+/* Connection status - clean inline */
+.sys-connection {
+    height: 2;
+    padding: 0 1;
+    background: transparent;
+    border: none;
+    margin-top: 1;
+    content-align: left middle;
+}
+
+.sys-connection.connected {
+    color: $success;
+}
+
+.sys-connection.disconnected {
+    color: $error;
+}
+
+/* === Empty State Container - Professional Centered Display === */
+.empty-state-container {
+    layout: vertical;
+    width: 100%;
+    height: 1fr;  /* Fill available space for vertical centering */
+    min-height: 5; /* Guardrail: ensure visibility if fr collapses */
+    padding: $spacing-lg; /* Increased padding */
+    background: transparent;
+    border: none;
+    align: center middle;  /* Center children horizontally and vertically */
+}
+
+/* #ticker-list needs to fill remaining space after header */
+#ticker-list {
+    height: 1fr;  /* Fill remaining space after widget-header */
+    min-height: 6; /* Ensure placeholder visibility */
+    width: 100%;
+    layout: vertical;
+    align: center middle;
+    content-align: center middle;
+}
+
+/* Ensure empty state container fills and centers within ticker-list */
+#ticker-list > .empty-state-container {
+    height: 1fr;
+    width: 100%;
+    align: center middle;
+}
+
+/* Position tile body should fill remaining space under banner */
+#pos-body {
+    height: 1fr;
+    min-height: 6; /* Ensure placeholder visibility */
+    width: 100%;
+    layout: vertical;
+    align: center middle;
+    content-align: center middle;
+}
+
+/* Ensure empty/loading states center within position body */
+#pos-body > .empty-state-container {
+    height: 1fr;
+    width: 100%;
+    align: center middle;
+}
+
+/* Empty state labels - Professional styling */
+.empty-icon {
+    color: $text-muted;
+    text-align: center;
+    width: 100%;
+    height: 3; /* Increased height */
+    content-align: center middle;
+    margin-bottom: $spacing-xs;
+}
+
+.empty-title {
+    color: $text-primary; /* More prominent */
+    text-style: bold;
+    text-align: center;
+    width: 100%;
+    height: 2; /* Increased height */
+    content-align: center middle;
+    margin-bottom: $spacing-xs;
+}
+
+.empty-subtitle {
+    color: $text-secondary; /* More visible */
+    text-align: center;
+    width: 100%;
+    height: 2; /* Increased height */
+    content-align: center middle;
+    padding: 0 $spacing-md; /* Horizontal padding */
+}
+
+/* === Quick Actions - Keyboard hints when stopped === */
+.quick-actions {
+    width: 100%;
+    height: auto;
+    align: center middle;
+    padding: 1;
+    margin-top: 1;
+}
+
+.quick-actions-title {
+    text-style: bold;
+    color: $text-muted;
+    text-align: center;
+    width: 100%;
+    margin-bottom: 1;
+}
+
+.quick-actions-row {
+    width: auto;
+    height: auto;
+    align: center middle;
+}
+
+.action-hint {
+    color: $text-secondary;
+    padding: 0 2;
+}
+
+.action-hint:first-of-type {
+    padding-left: 0;
+}
+
+/* === Market Header with Data State Indicator === */
+.market-header {
+    layout: horizontal;
+    width: 100%;
+    height: auto;
+    padding: 0;
+    margin-bottom: 1;
+}
+
+.market-header .widget-header {
+    width: auto;
+}
+
+.data-state-label {
+    color: $text-muted;
+    width: 1fr;
+    text-align: right;
+    padding-right: 1;
+}
+
+/* === Ticker Spread Column === */
+.ticker-spread {
+    width: 8;
+    text-align: right;
+    color: $text-muted;
+}
+
+/* === No Position Dashboard (Strategy + Portfolio Snapshots) === */
+.no-position-dashboard {
+    width: 100%;
+    height: 1fr;
+    padding: 1;
+    layout: vertical;
+    align: center top;
+}
+
+.no-pos-title {
+    text-style: bold;
+    color: $text-primary;
+    text-align: center;
+    width: 100%;
+    margin-bottom: 0;
+}
+
+.no-pos-subtitle {
+    color: $text-muted;
+    text-align: center;
+    width: 100%;
+    margin-bottom: 1;
+}
+
+.snapshot-section {
+    width: 100%;
+    height: auto;
+    margin-bottom: 1;
+    padding: 1;
+    background: $bg-elevated;
+    border-left: wide $accent-muted;
+}
+
+.snapshot-header {
+    color: $text-muted;
+    text-style: bold;
+    margin-bottom: 1;
+}
+
+.snapshot-row {
+    padding-left: 1;
+    color: $text-primary;
+}
+
+.snapshot-row.muted {
+    color: $text-muted;
+}
+
+/* === Resilience Metrics Section (SystemMonitorWidget) === */
+.resilience-metrics {
+    width: 100%;
+    height: auto;
+    margin-top: 1;
+    padding-top: 1;
+    border-top: solid $border-subtle;
+}
+
+.resilience-metrics .sys-metric {
+    height: 1;
+    padding: 0;
+}
 
 
 /* ---------------------------------------------------------------------------- */
@@ -1537,6 +3506,139 @@ Log {
 
 /* Dialog buttons are styled via components/buttons.tcss */
 
+ModeInfoModal {
+    align: center middle;
+    background: $overlay-disabled;
+}
+
+ModeInfoModal #mode-info-modal {
+    height: auto;
+    padding: $spacing-md;
+    background: $bg-secondary;
+    border: thick $accent;
+}
+
+ModeInfoModal #mode-title {
+    text-align: center;
+    text-style: bold;
+    color: $accent;
+    margin-bottom: $spacing-xs;
+}
+
+LiveWarningModal {
+    align: center middle;
+    background: $overlay-disabled;
+}
+
+LiveWarningModal #live-warning-modal {
+    height: auto;
+    padding: $spacing-md;
+    background: $bg-secondary;
+    border: thick $error;
+}
+
+LiveWarningModal #warning-title {
+    text-align: center;
+    text-style: bold;
+    color: $error;
+    margin-bottom: $spacing-xs;
+}
+
+LiveWarningModal #risk-warning {
+    text-align: center;
+    text-style: bold;
+    color: $error;
+}
+
+LiveWarningModal #warning-buttons {
+    layout: horizontal;
+    align: center middle;
+    margin-top: $spacing-xs;
+    height: 3;
+}
+
+ConfigModal {
+    align: center middle;
+    background: $overlay-disabled;
+}
+
+ConfigModal #dialog {
+    grid-size: 2;
+    grid-gutter: 1 2;
+    grid-rows: 1fr 3;
+    padding: 0 $spacing-xs;
+    height: auto;
+    border: thick $border-subtle;
+    background: $bg-secondary;
+}
+
+ConfigModal .field-label {
+    text-align: right;
+    padding-top: $spacing-xs;
+    color: $text-secondary;
+}
+
+ConfigModal .field-input {
+    width: 100%;
+}
+
+ConfigModal #config-actions {
+    column-span: 2;
+    layout: horizontal;
+    align: center middle;
+    margin-top: $spacing-sm;
+}
+
+ConfigModal #btn-save {
+    margin-right: $spacing-sm;
+}
+
+PanicModal {
+    align: center middle;
+    background: $overlay-disabled;
+}
+
+PanicModal #panic-dialog {
+    height: auto;
+    background: $bg-secondary;
+    border: thick $error;
+    padding: $spacing-md;
+}
+
+PanicModal #panic-title {
+    color: $error;
+    text-style: bold;
+    text-align: center;
+    width: 100%;
+    margin-bottom: $spacing-xs;
+}
+
+PanicModal #panic-message {
+    color: $text-primary;
+    text-align: center;
+    margin-bottom: $spacing-sm;
+}
+
+PanicModal #panic-input {
+    margin-bottom: $spacing-sm;
+    border: solid $error;
+}
+
+PanicModal #panic-actions {
+    layout: horizontal;
+    align: center middle;
+    height: 3;
+}
+
+PanicModal #btn-panic-confirm {
+    background: $error;
+    color: $text-primary;
+    margin-right: $spacing-sm;
+}
+
+PanicModal #btn-panic-cancel {
+    background: $bg-elevated;
+}
 
 
 /* ---------------------------------------------------------------------------- */
@@ -1558,7 +3660,6 @@ Log {
 }
 
 
-
 /* ---------------------------------------------------------------------------- */
 /* WIDGETS: Error Indicator                                                   */
 /* Source: styles/widgets/error_indicator.tcss                                 */
@@ -1568,11 +3669,469 @@ Log {
 /* ERROR INDICATOR WIDGET                                                     */
 /* ========================================================================== */
 
-/* Error indicator uses semantic colors from theme/variables.tcss */
-/* Widget-specific styling is handled via DEFAULT_CSS in Python */
+ErrorIndicatorWidget {
+    dock: top;
+    layout: vertical;
+    height: auto;
+    max-height: 15;
+    min-height: 1;
+    background: $bg-elevated;
+    color: $text-primary;
+    border-left: wide $error;
+    border-bottom: solid $border-subtle;
+    padding: 0 1;
+}
 
-/* Error tracking display inherits from status indicators in utilities.tcss */
+ErrorIndicatorWidget.collapsed {
+    max-height: 1;
+}
 
+ErrorIndicatorWidget.hidden {
+    display: none;
+}
+
+ErrorIndicatorWidget Horizontal {
+    height: auto;
+    width: 1fr;
+}
+
+ErrorIndicatorWidget Vertical {
+    height: auto;
+    width: 1fr;
+}
+
+ErrorIndicatorWidget Label {
+    width: 1fr;
+    height: auto;
+}
+
+ErrorIndicatorWidget .error-badge {
+    background: $error-muted;
+    color: $error;
+    text-style: bold;
+}
+
+ErrorIndicatorWidget .error-detail {
+    color: $text-secondary;
+    height: auto;
+    margin: 0 0 0 2;
+}
+
+ErrorIndicatorWidget Button {
+    min-width: 7;
+}
+
+
+/* ---------------------------------------------------------------------------- */
+/* WIDGETS: Cfm Balance                                                       */
+/* Source: styles/widgets/cfm_balance.tcss                                     */
+/* ---------------------------------------------------------------------------- */
+
+/* ========================================================================== */
+/* CFM BALANCE WIDGET                                                         */
+/* ========================================================================== */
+
+CFMBalanceWidget {
+    layout: vertical;
+    height: auto;
+    padding: 0 1;
+}
+
+CFMBalanceWidget .cfm-header {
+    text-style: bold;
+    color: $text-secondary;
+    margin-bottom: 1;
+}
+
+CFMBalanceWidget .cfm-row {
+    layout: horizontal;
+    height: auto;
+    margin-bottom: 0;
+}
+
+CFMBalanceWidget .cfm-metric {
+    width: 1fr;
+    height: auto;
+}
+
+CFMBalanceWidget .cfm-label {
+    color: $text-muted;
+}
+
+CFMBalanceWidget .cfm-value {
+    color: $text-primary;
+    text-style: bold;
+}
+
+/* Status coloring */
+CFMBalanceWidget .cfm-warning {
+    color: $warning;
+}
+
+CFMBalanceWidget .cfm-danger {
+    color: $error;
+}
+
+CFMBalanceWidget .cfm-ok {
+    color: $success;
+}
+
+CFMBalanceWidget .cfm-hidden {
+    display: none;
+}
+
+
+/* ---------------------------------------------------------------------------- */
+/* WIDGETS: System                                                            */
+/* Source: styles/widgets/system.tcss                                          */
+/* ---------------------------------------------------------------------------- */
+
+/* ========================================================================== */
+/* SYSTEM HEALTH WIDGET - Professional Display                                 */
+/* ========================================================================== */
+
+SystemHealthWidget {
+    background: $bg-secondary;
+    border: none;
+    height: auto;
+    padding: $spacing-sm $spacing-md; /* Increased padding */
+}
+
+SystemHealthWidget .value {
+    color: $text-primary;
+    text-style: bold;
+    padding: 0 $spacing-xs; /* Subtle horizontal padding */
+}
+
+/* Connection status indicators */
+.status-connected {
+    color: $success;
+}
+
+.status-disconnected {
+    color: $error;
+}
+
+.status-unknown {
+    color: $warning;
+}
+
+/* Compact layout mode */
+SystemHealthWidget .compact-metrics {
+    height: auto;
+    align-vertical: middle;
+}
+
+SystemHealthWidget .metric-separator {
+    color: $text-muted;
+    margin: 0 1;
+}
+
+/* Full layout mode */
+SystemHealthWidget .metric-row {
+    layout: horizontal;
+    height: auto;
+    margin-bottom: 0;
+}
+
+SystemHealthWidget .label {
+    width: 12; /* Increased width for better alignment */
+    color: $text-muted;
+}
+
+
+/* ---------------------------------------------------------------------------- */
+/* WIDGETS: Risk                                                              */
+/* Source: styles/widgets/risk.tcss                                            */
+/* ---------------------------------------------------------------------------- */
+
+/* ========================================================================== */
+/* RISK WIDGET - Professional Display                                          */
+/* ========================================================================== */
+
+RiskWidget {
+    layout: vertical;
+    height: auto;
+    padding: $spacing-sm $spacing-md; /* Increased padding */
+}
+
+RiskWidget .risk-section {
+    margin-bottom: $spacing-md; /* Increased spacing between sections */
+}
+
+RiskWidget ProgressBar {
+    margin: 0 1;
+}
+
+/* Risk labels and values */
+RiskWidget .risk-label {
+    color: $text-muted;
+    margin-bottom: $spacing-xs; /* Spacing before value */
+}
+
+RiskWidget .risk-value {
+    color: $text-primary;
+    text-style: bold;
+    padding: $spacing-xs $spacing-sm; /* Subtle padding */
+    background: $bg-elevated; /* Subtle background for values */
+    border-left: solid $accent-muted; /* Accent border */
+}
+
+/* Risk status indicators */
+RiskWidget .risk-status-low {
+    color: $success;
+}
+
+RiskWidget .risk-status-medium {
+    color: $warning;
+}
+
+RiskWidget .risk-status-high {
+    color: $error;
+}
+
+/* Risk grid layout */
+RiskWidget .risk-grid {
+    layout: grid;
+    grid-size: 2;
+    grid-gutter: $spacing-md; /* Increased gutter for better spacing */
+    padding: $spacing-sm 0; /* Vertical padding */
+}
+
+
+/* ---------------------------------------------------------------------------- */
+/* WIDGETS: Strategy                                                          */
+/* Source: styles/widgets/strategy.tcss                                        */
+/* ---------------------------------------------------------------------------- */
+
+/* ========================================================================== */
+/* STRATEGY WIDGET                                                            */
+/* ========================================================================== */
+
+StrategyWidget {
+    layout: vertical;
+    height: 1fr;
+}
+
+StrategyWidget DataTable {
+    height: 1fr;
+}
+
+/* Empty state styling uses global .empty-state from utilities.tcss */
+
+
+/* ---------------------------------------------------------------------------- */
+/* WIDGETS: Validation                                                        */
+/* Source: styles/widgets/validation.tcss                                      */
+/* ---------------------------------------------------------------------------- */
+
+/* ========================================================================== */
+/* VALIDATION INDICATOR WIDGET                                                */
+/* ========================================================================== */
+
+ValidationIndicatorWidget {
+    height: auto;
+    min-height: 1;
+    max-height: 3;
+    padding: 0 1;
+}
+
+ValidationIndicatorWidget.hidden {
+    display: none;
+}
+
+ValidationIndicatorWidget.has-errors {
+    background: $error-muted;
+    color: $error;
+}
+
+ValidationIndicatorWidget.has-warnings {
+    background: $warning-muted;
+    color: $warning;
+}
+
+ValidationIndicatorWidget.valid {
+    background: $success-muted;
+    color: $success;
+}
+
+
+/* ---------------------------------------------------------------------------- */
+/* WIDGETS: Shell                                                             */
+/* Source: styles/widgets/shell.tcss                                           */
+/* ---------------------------------------------------------------------------- */
+
+/* ========================================================================== */
+/* SHELL COMPONENTS - Command Bar                                             */
+/* ========================================================================== */
+
+CommandBar {
+    layout: horizontal;
+    align-vertical: middle;
+    padding: 0 1;
+}
+
+CommandBar .identity {
+    width: 1fr;
+    content-align: left middle;
+    text-style: bold;
+    color: $accent-bright;
+}
+
+CommandBar .status-area {
+    width: 2fr;
+    content-align: center middle;
+    layout: horizontal;
+    align: center middle;
+}
+
+CommandBar .system-area {
+    width: 1fr;
+    content-align: right middle;
+    layout: horizontal;
+    align: right middle;
+}
+
+/* Mode badges */
+CommandBar .mode-badge {
+    background: $bg-highlight;
+    color: $text-muted;
+    padding: 0 1;
+    margin: 0 1;
+    text-style: bold;
+}
+
+CommandBar .mode-badge.live {
+    background: $error;
+    color: $text-primary;
+}
+
+CommandBar .mode-badge.paper {
+    background: $warning;
+    color: $bg-primary;
+}
+
+CommandBar .status-text {
+    color: $text-muted;
+    margin-right: 1;
+}
+
+CommandBar .clock {
+    color: $accent;
+}
+
+
+/* ---------------------------------------------------------------------------- */
+/* WIDGETS: Performance                                                       */
+/* Source: styles/widgets/performance.tcss                                     */
+/* ---------------------------------------------------------------------------- */
+
+/* Performance Dashboard Widget Styles
+ *
+ * Styling for the TUI performance monitoring widget.
+ * Uses Nord-Vibrant color palette for consistency.
+ */
+
+PerformanceDashboardWidget {
+    layout: vertical;
+    height: auto;
+    min-height: 8;
+    padding: 1;
+    border: solid $border;
+    background: $bg-secondary;
+}
+
+PerformanceDashboardWidget .perf-header {
+    text-style: bold;
+    color: $text-primary;
+    margin-bottom: 1;
+}
+
+PerformanceDashboardWidget .perf-row {
+    layout: horizontal;
+    height: 1;
+}
+
+PerformanceDashboardWidget .perf-label {
+    width: 12;
+    color: $text-muted;
+}
+
+PerformanceDashboardWidget .perf-value {
+    width: auto;
+    text-style: bold;
+    color: $text-primary;
+}
+
+/* Budget target hints */
+PerformanceDashboardWidget .perf-target {
+    width: auto;
+    color: $text-muted;
+    margin-left: 1;
+}
+
+/* Budget summary row */
+PerformanceDashboardWidget .budget-summary {
+    margin-bottom: 1;
+    border-bottom: solid $border-subtle;
+    padding-bottom: 1;
+}
+
+/* Performance status indicators */
+PerformanceDashboardWidget .perf-value.good {
+    color: $success;
+}
+
+PerformanceDashboardWidget .perf-value.warning {
+    color: $warning;
+}
+
+PerformanceDashboardWidget .perf-value.bad {
+    color: $error;
+}
+
+/* Slow operations section */
+PerformanceDashboardWidget .slow-ops-header {
+    margin-top: 1;
+    color: $text-muted;
+    text-style: italic;
+}
+
+PerformanceDashboardWidget .slow-op {
+    color: $warning;
+    padding-left: 2;
+}
+
+PerformanceDashboardWidget .text-muted {
+    color: $text-muted;
+}
+
+/* Performance screen modal */
+PerformanceScreen {
+    align: center middle;
+}
+
+PerformanceScreen #perf-modal {
+    width: 60;
+    height: auto;
+    max-height: 30;
+    background: $bg-secondary;
+    border: solid $border;
+    padding: 1 2;
+}
+
+PerformanceScreen .perf-title {
+    text-style: bold;
+    text-align: center;
+    color: $text-primary;
+    margin-bottom: 1;
+}
+
+PerformanceScreen .perf-footer {
+    margin-top: 1;
+    text-align: center;
+    color: $text-muted;
+}
 
 
 /* ---------------------------------------------------------------------------- */
@@ -1611,6 +4170,27 @@ ModeSelectionScreen {
     color: $text-secondary;
     width: 100%;
     margin-bottom: 3;
+}
+
+/* Quick resume banner */
+.resume-banner {
+    width: 100%;
+    height: auto;
+    padding: 1 2;
+    margin-bottom: 2;
+    background: $accent-muted;
+    border: solid $accent;
+}
+
+.resume-hint {
+    text-align: center;
+    color: $accent;
+    text-style: bold;
+    width: 100%;
+}
+
+#resume-banner {
+    width: 100%;
 }
 
 .mode-option {
@@ -1658,3 +4238,375 @@ ModeSelectionScreen {
     width: 100%;
     margin-top: 2;
 }
+
+
+/* ---------------------------------------------------------------------------- */
+/* SCREENS: Alert History                                                     */
+/* Source: styles/screens/alert_history.tcss                                   */
+/* ---------------------------------------------------------------------------- */
+
+/* ========================================================================== */
+/* ALERT HISTORY SCREEN                                                       */
+/* ========================================================================== */
+
+AlertHistoryScreen {
+    align: center middle;
+}
+
+AlertHistoryScreen > Container {
+    width: 90%;
+    height: 90%;
+    border: thick $accent;
+    background: $bg-secondary;
+}
+
+AlertHistoryScreen .title {
+    dock: top;
+    text-align: center;
+    text-style: bold;
+    padding: 1;
+    background: $bg-elevated;
+    color: $text-primary;
+}
+
+AlertHistoryScreen .stats {
+    dock: top;
+    padding: 1 2;
+    background: $bg-highlight;
+}
+
+AlertHistoryScreen DataTable {
+    height: 1fr;
+    margin: 1 2;
+}
+
+AlertHistoryScreen .button-bar {
+    dock: bottom;
+    height: 3;
+    align: center middle;
+    padding: 0 2;
+}
+
+AlertHistoryScreen Button {
+    margin: 0 1;
+}
+
+
+/* ---------------------------------------------------------------------------- */
+/* SCREENS: Help                                                              */
+/* Source: styles/screens/help.tcss                                            */
+/* ---------------------------------------------------------------------------- */
+
+/* ========================================================================== */
+/* HELP SCREEN                                                                */
+/* ========================================================================== */
+
+HelpScreen {
+    align: center middle;
+    background: $overlay-disabled;
+}
+
+HelpScreen #help-container {
+    width: auto;
+    max-width: 80;
+    height: auto;
+    max-height: 90%;
+    background: $bg-secondary;
+    border: thick $accent;
+    padding: $spacing-md;
+}
+
+HelpScreen .help-title {
+    color: $accent;
+    text-style: bold;
+    text-align: center;
+    margin-bottom: $spacing-xs;
+}
+
+HelpScreen .help-category {
+    color: $text-primary;
+    text-style: bold;
+    margin-top: $spacing-xs;
+    margin-bottom: 0;
+}
+
+HelpScreen .help-shortcut {
+    layout: horizontal;
+    height: auto;
+    margin-left: $spacing-sm;
+}
+
+HelpScreen .help-key {
+    background: $bg-elevated;
+    color: $accent;
+    text-style: bold;
+    padding: 0 $spacing-xs;
+    min-width: 8;
+}
+
+HelpScreen .help-description {
+    color: $text-secondary;
+    margin-left: $spacing-sm;
+}
+
+HelpScreen .help-footer {
+    color: $text-muted;
+    text-style: italic;
+    text-align: center;
+    margin-top: $spacing-xs;
+}
+
+
+
+/* ---------------------------------------------------------------------------- */
+/* SCREENS: Credential Validation                                             */
+/* Source: styles/screens/credential_validation.tcss                           */
+/* ---------------------------------------------------------------------------- */
+
+/* ========================================================================== */
+/* CREDENTIAL VALIDATION SCREEN                                               */
+/* ========================================================================== */
+
+CredentialValidationScreen {
+    align: center middle;
+    background: $overlay-disabled;
+}
+
+CredentialValidationScreen #validation-container {
+    width: 70;
+    max-width: 90%;
+    height: auto;
+    max-height: 85%;
+    background: $bg-secondary;
+    border: thick $accent;
+    padding: 1 2;
+}
+
+CredentialValidationScreen .validation-title {
+    text-align: center;
+    text-style: bold;
+    padding: $spacing-xs;
+    margin-bottom: $spacing-xs;
+}
+
+CredentialValidationScreen .validation-title-passed {
+    color: $success;
+    background: $success-muted;
+}
+
+CredentialValidationScreen .validation-title-failed {
+    color: $error;
+    background: $error-muted;
+}
+
+CredentialValidationScreen .validation-title-warning {
+    color: $warning;
+    background: $warning-muted;
+}
+
+CredentialValidationScreen #findings-scroll {
+    height: auto;
+    max-height: 20;
+    margin-bottom: $spacing-xs;
+}
+
+CredentialValidationScreen .finding-row {
+    height: auto;
+    padding: 0 $spacing-xs;
+    margin-bottom: 0;
+}
+
+CredentialValidationScreen .finding-row.finding-success {
+    color: $success;
+}
+
+CredentialValidationScreen .finding-row.finding-info {
+    color: $info;
+}
+
+CredentialValidationScreen .finding-row.finding-warning {
+    color: $warning;
+}
+
+CredentialValidationScreen .finding-row.finding-error {
+    color: $error;
+}
+
+CredentialValidationScreen .finding-details {
+    color: $text-muted;
+    margin-left: 4;
+    text-style: italic;
+}
+
+CredentialValidationScreen .finding-suggestion {
+    color: $info;
+    margin-left: 4;
+}
+
+CredentialValidationScreen .summary-line {
+    text-align: center;
+    padding: $spacing-xs;
+    margin-top: $spacing-xs;
+}
+
+CredentialValidationScreen .summary-success {
+    color: $success;
+}
+
+CredentialValidationScreen .summary-warning {
+    color: $warning;
+}
+
+CredentialValidationScreen .summary-error {
+    color: $error;
+}
+
+CredentialValidationScreen #button-container {
+    height: auto;
+    align: center middle;
+    margin-top: $spacing-xs;
+}
+
+CredentialValidationScreen #button-container Button {
+    margin: 0 $spacing-xs;
+    min-width: 16;
+}
+
+CredentialValidationScreen #proceed-btn {
+    background: $success-dim;
+}
+
+CredentialValidationScreen #proceed-btn:hover {
+    background: $success;
+}
+
+CredentialValidationScreen #cancel-btn {
+    background: $error-dim;
+}
+
+CredentialValidationScreen #cancel-btn:hover {
+    background: $error;
+}
+
+CredentialValidationScreen #setup-btn {
+    background: $accent-bright;
+}
+
+CredentialValidationScreen #setup-btn:hover {
+    background: $accent-hover;
+}
+
+CredentialValidationScreen #retry-btn {
+    background: $warning-dim;
+}
+
+CredentialValidationScreen #retry-btn:hover {
+    background: $warning;
+}
+
+
+
+/* ---------------------------------------------------------------------------- */
+/* SCREENS: Api Setup Wizard                                                  */
+/* Source: styles/screens/api_setup_wizard.tcss                                */
+/* ---------------------------------------------------------------------------- */
+
+/* ========================================================================== */
+/* API SETUP WIZARD SCREEN                                                    */
+/* ========================================================================== */
+
+APISetupWizardScreen {
+    align: center middle;
+    background: $overlay-disabled;
+}
+
+APISetupWizardScreen #wizard-container {
+    width: 75;
+    max-width: 90%;
+    height: auto;
+    max-height: 85%;
+    background: $bg-secondary;
+    border: thick $accent;
+    padding: 1 2;
+}
+
+APISetupWizardScreen .wizard-header {
+    height: auto;
+    padding: $spacing-xs;
+    margin-bottom: $spacing-xs;
+}
+
+APISetupWizardScreen .wizard-step-indicator {
+    color: $text-muted;
+    text-align: right;
+}
+
+APISetupWizardScreen .wizard-title {
+    color: $accent;
+    text-style: bold;
+    text-align: center;
+}
+
+APISetupWizardScreen #wizard-content {
+    height: auto;
+    max-height: 20;
+    padding: $spacing-xs;
+    margin-bottom: $spacing-xs;
+}
+
+APISetupWizardScreen .wizard-text {
+    color: $text-primary;
+    margin-bottom: 0;
+}
+
+APISetupWizardScreen .wizard-url {
+    color: $info;
+    text-style: bold;
+}
+
+APISetupWizardScreen .wizard-important {
+    color: $warning;
+    text-style: bold;
+}
+
+APISetupWizardScreen .wizard-code {
+    color: $success;
+    background: $bg-primary;
+}
+
+APISetupWizardScreen #wizard-buttons {
+    height: auto;
+    align: center middle;
+    margin-top: $spacing-xs;
+}
+
+APISetupWizardScreen #wizard-buttons Button {
+    margin: 0 $spacing-xs;
+    min-width: 12;
+}
+
+APISetupWizardScreen #back-btn {
+    background: $bg-elevated;
+}
+
+APISetupWizardScreen #back-btn:hover {
+    background: $bg-highlight;
+}
+
+APISetupWizardScreen #next-btn {
+    background: $success-dim;
+}
+
+APISetupWizardScreen #next-btn:hover {
+    background: $success;
+}
+
+APISetupWizardScreen #cancel-btn {
+    background: $error-dim;
+}
+
+APISetupWizardScreen #cancel-btn:hover {
+    background: $error;
+}
+
+

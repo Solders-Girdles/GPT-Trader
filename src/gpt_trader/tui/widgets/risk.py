@@ -20,35 +20,10 @@ class RiskWidget(Static):
     - Active risk guards display
     """
 
-    DEFAULT_CSS = """
-    RiskWidget {
-        layout: vertical;
-        height: auto;
-    }
-
-    RiskWidget .risk-section {
-        margin-bottom: 1;
-    }
-
-    RiskWidget ProgressBar {
-        margin: 0 1;
-    }
-
-    RiskWidget .risk-status-low {
-        color: $success;
-    }
-
-    RiskWidget .risk-status-medium {
-        color: $warning;
-    }
-
-    RiskWidget .risk-status-high {
-        color: $error;
-    }
-    """
+    # Styles moved to styles/widgets/risk.tcss
 
     def compose(self) -> ComposeResult:
-        yield Label("RISK MANAGEMENT", classes="header")
+        yield Label("RISK MANAGEMENT", classes="widget-header")
 
         with Vertical(classes="risk-section"):
             # Daily Loss Progress

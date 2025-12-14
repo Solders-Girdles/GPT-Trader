@@ -9,55 +9,6 @@ from gpt_trader.tui.responsive import calculate_modal_width
 class PanicModal(ModalScreen):
     """Modal for emergency panic button confirmation."""
 
-    CSS = """
-    PanicModal {
-        align: center middle;
-        background: rgba(58, 53, 48, 0.5);  /* Theme overlay-disabled */
-    }
-
-    #panic-dialog {
-        height: auto;
-        background: #2A2520;  /* Theme bg-secondary */
-        border: thick #E08580;  /* Theme error */
-        padding: 2;
-    }
-
-    #panic-title {
-        color: #E08580;  /* Theme error */
-        text-style: bold;
-        text-align: center;
-        width: 100%;
-        margin-bottom: 1;
-    }
-
-    #panic-message {
-        color: #F0EDE9;  /* Theme text-primary */
-        text-align: center;
-        margin-bottom: 2;
-    }
-
-    #panic-input {
-        margin-bottom: 2;
-        border: solid #E08580;  /* Theme error */
-    }
-
-    #panic-actions {
-        layout: horizontal;
-        align: center middle;
-        height: 3;
-    }
-
-    #btn-panic-confirm {
-        background: #E08580;  /* Theme error */
-        color: #F0EDE9;  /* Theme text-primary */
-        margin-right: 2;
-    }
-
-    #btn-panic-cancel {
-        background: #3D3833;  /* Theme bg-elevated */
-    }
-    """
-
     def compose(self) -> ComposeResult:
         with Vertical(id="panic-dialog"):
             yield Label("⚠️ EMERGENCY STOP ⚠️", id="panic-title")

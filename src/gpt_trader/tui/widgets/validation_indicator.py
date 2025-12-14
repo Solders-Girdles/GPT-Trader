@@ -33,33 +33,7 @@ class ValidationIndicatorWidget(Static):
         last_update_time: Timestamp of last validation event
     """
 
-    DEFAULT_CSS = """
-    ValidationIndicatorWidget {
-        height: auto;
-        min-height: 1;
-        max-height: 3;
-        padding: 0 1;
-    }
-
-    ValidationIndicatorWidget.hidden {
-        display: none;
-    }
-
-    ValidationIndicatorWidget.has-errors {
-        background: $error-darken-2;
-        color: $error;
-    }
-
-    ValidationIndicatorWidget.has-warnings {
-        background: $warning-darken-2;
-        color: $warning;
-    }
-
-    ValidationIndicatorWidget.valid {
-        background: $success-darken-3;
-        color: $success;
-    }
-    """
+    # Styles moved to styles/widgets/validation.tcss
 
     error_count = reactive(0)
     warning_count = reactive(0)

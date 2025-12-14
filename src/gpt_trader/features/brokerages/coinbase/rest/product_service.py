@@ -133,14 +133,67 @@ class ProductService:
             return []
 
     def get_perpetuals(self) -> list[Product]:
-        """List perpetual products."""
+        """List perpetual products (INTX)."""
         products = self.list_products()
         return [p for p in products if p.market_type == "PERPETUAL"]
 
     def get_futures(self) -> list[Product]:
-        """List futures products."""
+        """List futures products (includes CFM)."""
         products = self.list_products()
         return [p for p in products if p.market_type == "FUTURE"]
+
+    def get_cfm_products(self) -> list[Product]:
+        """List CFM (Coinbase Financial Markets) futures products.
+
+        CFM futures are US-regulated futures with expiration dates.
+        They use FUTURE market type and have expiry dates set.
+
+        Returns:
+            List of CFM futures products.
+        """
+        products = self.list_products()
+        return [
+            p for p in products
+            if p.market_type == "FUTURE" and p.expiry is not None
+        ]
+
+    def get_spot_products(self) -> list[Product]:
+        """List spot products.
+
+        Returns:
+            List of spot trading products.
+        """
+        products = self.list_products()
+        return [p for p in products if p.market_type == "SPOT"]
+
+    def get_tradeable_products(self, modes: list[str]) -> list[Product]:
+        """Get products filtered by trading modes.
+
+        Supports hybrid mode by combining products from multiple markets.
+
+        Args:
+            modes: List of trading modes - "spot", "cfm", or both for hybrid.
+
+        Returns:
+            List of products matching the specified trading modes.
+        """
+        products: list[Product] = []
+
+        if "spot" in modes:
+            products.extend(self.get_spot_products())
+
+        if "cfm" in modes:
+            products.extend(self.get_cfm_products())
+
+        # Remove duplicates while preserving order
+        seen = set()
+        unique_products = []
+        for p in products:
+            if p.symbol not in seen:
+                seen.add(p.symbol)
+                unique_products.append(p)
+
+        return unique_products
 
     # =========================================================================
     # BrokerProtocol / ExtendedBrokerProtocol methods

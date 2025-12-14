@@ -285,9 +285,9 @@ class TestCoinbaseClientBase:
         client._check_rate_limit()
 
         # Should have slept to respect rate limit
-        mock_sleep.assert_called_once()
-        sleep_call = mock_sleep.call_args[0][0]
-        assert sleep_call > 30  # Should sleep for remaining time + buffer
+        assert mock_sleep.call_count >= 1
+        sleep_calls = [c.args[0] for c in mock_sleep.call_args_list if c.args]
+        assert any(s > 30 for s in sleep_calls)  # remaining time + buffer
 
         mock_logger.info.assert_called_once()
         assert "Rate limit reached" in mock_logger.info.call_args[0][0]

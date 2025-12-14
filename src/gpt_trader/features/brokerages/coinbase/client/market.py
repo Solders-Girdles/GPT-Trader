@@ -111,10 +111,31 @@ class MarketDataClientMixin(CoinbaseClientProtocol):
         return self._request("GET", path)
 
     def get_market_product_candles(
-        self: CoinbaseClientProtocol, product_id: str, granularity: str, limit: int = 200
+        self: CoinbaseClientProtocol,
+        product_id: str,
+        granularity: str,
+        limit: int = 200,
+        *,
+        start: datetime | None = None,
+        end: datetime | None = None,
     ) -> dict[str, Any]:
         path = self._get_endpoint_path("public_candles", product_id=product_id)
-        return self._request("GET", f"{path}?granularity={granularity}&limit={limit}")
+        params: dict[str, Any] = {
+            "granularity": granularity,
+            "limit": limit,
+        }
+
+        def _format(dt: datetime) -> str:
+            ts = dt if dt.tzinfo else dt.replace(tzinfo=UTC)
+            return ts.astimezone(UTC).isoformat().replace("+00:00", "Z")
+
+        if start is not None:
+            params["start"] = _format(start)
+        if end is not None:
+            params["end"] = _format(end)
+
+        final_path = self._build_path_with_params(path, params)
+        return self._request("GET", final_path)
 
     def get_market_product_book(
         self: CoinbaseClientProtocol, product_id: str, level: int = 2

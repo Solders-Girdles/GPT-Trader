@@ -22,11 +22,13 @@ except ImportError:
     websocket = None  # type: ignore[assignment]
 
 from gpt_trader.config.constants import (
+    MAX_WS_RECONNECT_ATTEMPTS,
     MAX_WS_RECONNECT_DELAY_SECONDS,
     WS_JOIN_TIMEOUT,
     WS_RECONNECT_BACKOFF_MULTIPLIER,
     WS_RECONNECT_DELAY,
 )
+from gpt_trader.features.brokerages.coinbase.client.constants import WS_BASE_URL
 from gpt_trader.features.brokerages.coinbase.ws_events import EventDispatcher
 from gpt_trader.utilities.logging_patterns import get_logger
 
@@ -86,11 +88,14 @@ class CoinbaseWebSocket:
     Thread Safety:
         Connection state is protected by a lock to prevent race conditions
         when connect() or disconnect() are called from multiple threads.
+
+    Resource Management:
+        Call close() or use as context manager to ensure clean thread shutdown.
     """
 
     def __init__(
         self,
-        url: str = "wss://advanced-trade-ws.coinbase.com",
+        url: str = WS_BASE_URL,
         api_key: str | None = None,
         private_key: str | None = None,
         on_message: Callable[[dict], None] | None = None,
@@ -105,11 +110,13 @@ class CoinbaseWebSocket:
         self.wst: threading.Thread | None = None
         self._running = threading.Event()  # Thread-safe running flag
         self._state_lock = threading.Lock()  # Protects connection state changes
+        self._shutdown = threading.Event()  # Signals permanent shutdown
         self.subscriptions: list[dict] = []
         self._transport: Any = None
         self._sequence_guard = SequenceGuard()
         self._reconnect_delay: float = float(WS_RECONNECT_DELAY)
         self._reconnect_count = 0
+        self._closed = False
 
     @property
     def running(self) -> bool:
@@ -143,12 +150,66 @@ class CoinbaseWebSocket:
             logger.info("WebSocket thread started")
 
     def disconnect(self) -> None:
+        """Disconnect the WebSocket but allow reconnection."""
         with self._state_lock:
             self._running.clear()
             if self.ws:
-                self.ws.close()
-            if self.wst:
+                try:
+                    self.ws.close()
+                except Exception as e:
+                    logger.debug(f"Error closing WebSocket: {e}")
+            if self.wst and self.wst.is_alive():
                 self.wst.join(timeout=WS_JOIN_TIMEOUT)
+                if self.wst.is_alive():
+                    logger.warning("WebSocket thread did not terminate within timeout")
+
+    def close(self) -> None:
+        """Permanently close the WebSocket and release all resources.
+
+        Unlike disconnect(), this prevents reconnection and ensures
+        complete cleanup of background threads.
+        """
+        with self._state_lock:
+            if self._closed:
+                return
+            self._closed = True
+            self._shutdown.set()
+            self._running.clear()
+
+        # Close WebSocket outside lock to avoid deadlock
+        if self.ws:
+            try:
+                self.ws.close()
+            except Exception as e:
+                logger.debug(f"Error closing WebSocket: {e}")
+            self.ws = None
+
+        # Wait for thread with timeout
+        if self.wst and self.wst.is_alive():
+            self.wst.join(timeout=WS_JOIN_TIMEOUT)
+            if self.wst.is_alive():
+                logger.warning("WebSocket thread did not terminate within timeout")
+        self.wst = None
+
+        # Clear references
+        self._transport = None
+        self.subscriptions.clear()
+        logger.debug("WebSocket closed and resources released")
+
+    def __enter__(self) -> "CoinbaseWebSocket":
+        """Context manager entry."""
+        return self
+
+    def __exit__(self, *args: Any) -> None:
+        """Context manager exit - ensures cleanup."""
+        self.close()
+
+    def __del__(self) -> None:
+        """Destructor - ensures cleanup on garbage collection."""
+        try:
+            self.close()
+        except Exception:
+            pass  # Suppress errors during interpreter shutdown
 
     def subscribe(self, product_ids: list[str], channels: list[str]) -> None:
         """Subscribe to channels for products."""
@@ -253,11 +314,26 @@ class CoinbaseWebSocket:
             message=close_msg,
         )
 
+        # Check if permanent shutdown was requested
+        if self._shutdown.is_set():
+            logger.debug("WebSocket shutdown requested, not reconnecting")
+            return
+
         # Check running state thread-safely
         if self._running.is_set():
             # Update reconnect state under lock
             with self._state_lock:
                 self._reconnect_count += 1
+
+                # Check reconnection limit (0 = unlimited)
+                if MAX_WS_RECONNECT_ATTEMPTS > 0 and self._reconnect_count > MAX_WS_RECONNECT_ATTEMPTS:
+                    logger.error(
+                        "Maximum reconnection attempts reached",
+                        max_attempts=MAX_WS_RECONNECT_ATTEMPTS,
+                    )
+                    self._running.clear()
+                    return
+
                 delay = min(self._reconnect_delay, MAX_WS_RECONNECT_DELAY_SECONDS)
                 self._reconnect_delay = min(
                     self._reconnect_delay * WS_RECONNECT_BACKOFF_MULTIPLIER,
@@ -270,10 +346,14 @@ class CoinbaseWebSocket:
                 "Attempting reconnect",
                 delay_seconds=delay,
                 attempt=self._reconnect_count,
+                max_attempts=MAX_WS_RECONNECT_ATTEMPTS if MAX_WS_RECONNECT_ATTEMPTS > 0 else "unlimited",
             )
 
             time.sleep(delay)
-            self.connect()
+
+            # Double-check shutdown wasn't requested during sleep
+            if not self._shutdown.is_set():
+                self.connect()
 
 
 __all__ = ["CoinbaseWebSocket", "EventDispatcher", "SequenceGuard"]

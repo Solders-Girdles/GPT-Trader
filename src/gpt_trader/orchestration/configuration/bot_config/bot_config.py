@@ -139,6 +139,14 @@ class BotConfig:
     coinbase_intx_portfolio_uuid: str | None = None
     broker_hint: str | None = None
 
+    # CFM (Coinbase Financial Markets) Futures Settings
+    # trading_modes: Which markets to trade in - "spot", "cfm", or both for hybrid
+    trading_modes: list[str] = field(default_factory=lambda: ["spot"])
+    cfm_enabled: bool = False  # Explicit CFM futures flag
+    cfm_max_leverage: int = 5  # Maximum leverage for CFM positions
+    cfm_symbols: list[str] = field(default_factory=list)  # CFM-specific symbols
+    cfm_margin_window: str = "STANDARD"  # STANDARD, INTRADAY_STANDARD, INTRADAY_PLUS
+
     # Perps / Futures Specifics
     perps_enable_streaming: bool = False
     perps_stream_level: int = 1
@@ -166,6 +174,21 @@ class BotConfig:
         if update is None:
             return replace(self)
         return replace(self, **update)
+
+    @property
+    def is_hybrid_mode(self) -> bool:
+        """Check if trading in hybrid mode (both spot and CFM)."""
+        return "spot" in self.trading_modes and "cfm" in self.trading_modes
+
+    @property
+    def is_cfm_only(self) -> bool:
+        """Check if trading CFM futures only (no spot)."""
+        return "cfm" in self.trading_modes and "spot" not in self.trading_modes
+
+    @property
+    def is_spot_only(self) -> bool:
+        """Check if trading spot only (no CFM)."""
+        return "spot" in self.trading_modes and "cfm" not in self.trading_modes
 
     @classmethod
     def from_profile(
@@ -241,6 +264,12 @@ class BotConfig:
             coinbase_api_mode=os.getenv("COINBASE_API_MODE", "advanced"),
             coinbase_intx_portfolio_uuid=os.getenv("COINBASE_INTX_PORTFOLIO_UUID"),
             broker_hint=os.getenv("BROKER"),
+            # CFM settings
+            trading_modes=parse_list_env("TRADING_MODES", str, default=["spot"]),
+            cfm_enabled=parse_bool_env("CFM_ENABLED", default=False),
+            cfm_max_leverage=parse_int_env("CFM_MAX_LEVERAGE", 5) or 5,
+            cfm_symbols=parse_list_env("CFM_SYMBOLS", str, default=[]),
+            cfm_margin_window=os.getenv("CFM_MARGIN_WINDOW", "STANDARD"),
             perps_enable_streaming=parse_bool_env("PERPS_ENABLE_STREAMING", default=False),
             perps_stream_level=parse_int_env("PERPS_STREAM_LEVEL", 1) or 1,
             perps_paper_trading=parse_bool_env("PERPS_PAPER", default=False),

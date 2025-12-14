@@ -463,34 +463,122 @@ class TradingEngine(BaseEngine):
             else:
                 logger.warning("Received empty balance list from broker - check API configuration")
 
-            collateral = Decimal("0")
+            cash_collateral = Decimal("0")
+            converted_collateral = Decimal("0")
             usd_usdc_found = []
             other_assets_found = []
+            priced_assets: list[str] = []
+            unpriced_assets: list[str] = []
+
+            quote = str(
+                getattr(self.context.config, "coinbase_default_quote", None) or "USD"
+            ).upper()
+            # Treat stable USD quotes as 1:1 for valuation display.
+            stable_quotes = {"USD", "USDC"}
+            use_total_balance = bool(getattr(self.context.config, "read_only", False))
+
+            valuation_quotes: list[str] = [quote]
+            if quote in stable_quotes:
+                for stable in ("USD", "USDC"):
+                    if stable not in valuation_quotes:
+                        valuation_quotes.append(stable)
+            else:
+                # Fall back to USD/USDC if the configured quote isn't available for a token.
+                for stable in ("USD", "USDC"):
+                    if stable not in valuation_quotes:
+                        valuation_quotes.append(stable)
 
             for balance in balances:
                 logger.debug(
                     f"Balance: {balance.asset} = {balance.available} available, {balance.total} total"
                 )
-                if balance.asset in ("USD", "USDC"):
-                    collateral += balance.available
-                    if balance.available > 0:
-                        usd_usdc_found.append(f"{balance.asset}=${balance.available}")
+                asset = str(balance.asset or "").upper()
+                amount = balance.total if use_total_balance else balance.available
+
+                if asset in ("USD", "USDC"):
+                    cash_collateral += amount
+                    if amount > 0:
+                        usd_usdc_found.append(f"{asset}=${amount}")
+                    continue
+
+                if balance.total > 0:
+                    other_assets_found.append(f"{asset}={balance.total}")
+
+                if amount <= 0:
+                    continue
+
+                if asset == quote:
+                    cash_collateral += amount
+                    priced_assets.append(f"{asset}=${amount}")
+                    continue
+
+                if asset in stable_quotes and quote in stable_quotes:
+                    cash_collateral += amount
+                    priced_assets.append(f"{asset}≈${amount}")
+                    continue
+
+                last_price: Decimal | None = None
+                used_pair: str | None = None
+
+                for q in valuation_quotes:
+                    product_id = f"{asset}-{q}"
+                    history = self.price_history.get(product_id)
+                    if history:
+                        last_price = history[-1]
+                    else:
+                        last_price = None
+
+                    try:
+                        if last_price is None:
+                            ticker = await asyncio.to_thread(
+                                self.context.broker.get_ticker, product_id
+                            )
+                            last_price = Decimal(str(ticker.get("price", 0)))
+                        if last_price and last_price > 0:
+                            used_pair = product_id
+                            break
+                    except Exception as exc:
+                        logger.debug(
+                            "Unable to value %s via %s: %s",
+                            asset,
+                            product_id,
+                            exc,
+                        )
+                        continue
+
+                if last_price and last_price > 0 and used_pair:
+                    usd_value = amount * last_price
+                    converted_collateral += usd_value
+                    priced_assets.append(
+                        f"{asset}={amount} @ {used_pair}≈{usd_value.quantize(Decimal('0.01'))}"
+                    )
                 else:
-                    if balance.total > 0:
-                        other_assets_found.append(f"{balance.asset}={balance.total}")
+                    unpriced_assets.append(asset)
+
+            collateral = cash_collateral + converted_collateral
 
             # Log USD/USDC result with context
-            logger.info(f"USD/USDC collateral: ${collateral}")
+            cash_label = "Total cash holdings" if use_total_balance else "Available cash collateral"
+            logger.info("%s (%s): $%s", cash_label, quote, cash_collateral.quantize(Decimal("0.01")))
             if usd_usdc_found:
                 logger.info(f"USD/USDC assets counted: {', '.join(usd_usdc_found)}")
             else:
-                logger.warning("No USD/USDC balances found for collateral calculation")
+                collateral_scope = "total holdings" if use_total_balance else "available collateral"
+                logger.warning(
+                    "No USD/USDC balances found in %s; valuing non-USD assets using %s tickers",
+                    collateral_scope,
+                    quote,
+                )
                 if other_assets_found:
-                    logger.warning(
-                        f"Found other assets not counted in equity: {', '.join(other_assets_found)}. "
-                        "Note: Current equity calculation only includes USD/USDC. "
-                        "Crypto assets (BTC, ETH, etc.) are not converted to USD value."
-                    )
+                    logger.info("Non-USD assets detected: %s", ", ".join(other_assets_found))
+            if priced_assets:
+                logger.info("Included non-USD assets in equity: %s", "; ".join(priced_assets))
+            if unpriced_assets:
+                logger.warning(
+                    "Could not value these assets in %s: %s",
+                    quote,
+                    ", ".join(sorted(set(unpriced_assets))),
+                )
 
             # Add unrealized PnL from open positions
             unrealized_pnl = sum(

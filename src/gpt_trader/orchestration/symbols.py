@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 if TYPE_CHECKING:  # pragma: no cover - import for type checking only
     from gpt_trader.orchestration.configuration import BotConfig, Profile
@@ -16,6 +16,17 @@ logger = get_logger(__name__, component="symbols")
 
 PERPS_ALLOWLIST = frozenset({"BTC-PERP", "ETH-PERP", "SOL-PERP", "XRP-PERP"})
 US_FUTURES_ALLOWLIST = frozenset({"BTC-FUTURES", "ETH-FUTURES", "SOL-FUTURES", "XRP-FUTURES"})
+
+# CFM (Coinbase Financial Markets) symbol mapping
+# Maps base asset to active CFM contract symbol
+# Note: These need to be updated when contracts roll/expire
+CFM_SYMBOL_MAPPING: dict[str, str] = {
+    "BTC": "BTC-20DEC30-CDE",
+    "ETH": "ETH-20DEC30-CDE",
+    "SOL": "SLP-20DEC30-CDE",  # Note: SOL uses SLP contract code
+}
+
+TradingMode = Literal["spot", "cfm"]
 
 
 @dataclass(frozen=True)
@@ -193,3 +204,162 @@ def normalize_symbols(
         logger.log(record.level, record.message, *record.args)
 
     return normalized, allow_derivatives
+
+
+# =============================================================================
+# CFM (Coinbase Financial Markets) Symbol Helpers
+# =============================================================================
+
+
+def cfm_enabled(config: BotConfig) -> bool:
+    """Check if CFM futures trading is enabled.
+
+    Args:
+        config: Bot configuration.
+
+    Returns:
+        True if CFM is enabled via config flag or trading modes.
+    """
+    if config.cfm_enabled:
+        return True
+    if "cfm" in config.trading_modes:
+        return True
+    return False
+
+
+def get_cfm_symbol(base_or_spot: str) -> str | None:
+    """Map a base asset or spot symbol to its active CFM contract.
+
+    Args:
+        base_or_spot: Base asset (e.g., "BTC") or spot symbol (e.g., "BTC-USD").
+
+    Returns:
+        CFM contract symbol (e.g., "BTC-20DEC30-CDE") or None if not mapped.
+
+    Examples:
+        >>> get_cfm_symbol("BTC")
+        'BTC-20DEC30-CDE'
+        >>> get_cfm_symbol("BTC-USD")
+        'BTC-20DEC30-CDE'
+        >>> get_cfm_symbol("DOGE")
+        None
+    """
+    # Extract base asset from spot symbol if needed
+    base = base_or_spot.upper().split("-")[0]
+    return CFM_SYMBOL_MAPPING.get(base)
+
+
+def get_spot_symbol(cfm_or_base: str, quote: str = "USD") -> str:
+    """Map a CFM symbol or base asset to its spot equivalent.
+
+    Args:
+        cfm_or_base: CFM contract symbol (e.g., "BTC-20DEC30-CDE") or base asset.
+        quote: Quote currency (default: "USD").
+
+    Returns:
+        Spot symbol (e.g., "BTC-USD").
+
+    Examples:
+        >>> get_spot_symbol("BTC-20DEC30-CDE")
+        'BTC-USD'
+        >>> get_spot_symbol("BTC")
+        'BTC-USD'
+    """
+    # CFM symbols have format: BASE-EXPIRY-CODE (e.g., BTC-20DEC30-CDE)
+    # Extract base asset
+    parts = cfm_or_base.upper().split("-")
+    base = parts[0]
+
+    # Handle SOL special case (SLP contract code)
+    if base == "SLP":
+        base = "SOL"
+
+    return f"{base}-{quote}"
+
+
+def normalize_symbol_for_mode(
+    symbol: str,
+    mode: TradingMode,
+    quote: str = "USD",
+) -> str:
+    """Normalize a symbol for the specified trading mode.
+
+    Converts between spot and CFM symbols as needed.
+
+    Args:
+        symbol: Input symbol (spot or CFM format).
+        mode: Target trading mode ("spot" or "cfm").
+        quote: Quote currency for spot symbols (default: "USD").
+
+    Returns:
+        Symbol normalized for the target mode.
+
+    Examples:
+        >>> normalize_symbol_for_mode("BTC-USD", "cfm")
+        'BTC-20DEC30-CDE'
+        >>> normalize_symbol_for_mode("BTC-20DEC30-CDE", "spot")
+        'BTC-USD'
+    """
+    symbol = symbol.upper()
+
+    if mode == "spot":
+        # Convert CFM symbol to spot
+        return get_spot_symbol(symbol, quote)
+    elif mode == "cfm":
+        # Convert spot symbol to CFM
+        cfm_symbol = get_cfm_symbol(symbol)
+        if cfm_symbol:
+            return cfm_symbol
+        # If no mapping exists, return original
+        logger.warning(
+            f"No CFM mapping for symbol {symbol}, using original"
+        )
+        return symbol
+    else:
+        return symbol
+
+
+def get_symbol_pairs_for_hybrid(
+    symbols: Sequence[str],
+    quote: str = "USD",
+) -> dict[str, dict[str, str]]:
+    """Get spot/CFM symbol pairs for hybrid trading.
+
+    Maps base assets to their corresponding spot and CFM symbols.
+
+    Args:
+        symbols: List of symbols (can be spot or CFM format).
+        quote: Quote currency (default: "USD").
+
+    Returns:
+        Dictionary mapping base asset to {spot: symbol, cfm: symbol}.
+
+    Example:
+        >>> get_symbol_pairs_for_hybrid(["BTC-USD", "ETH-USD"])
+        {
+            'BTC': {'spot': 'BTC-USD', 'cfm': 'BTC-20DEC30-CDE'},
+            'ETH': {'spot': 'ETH-USD', 'cfm': 'ETH-20DEC30-CDE'},
+        }
+    """
+    pairs: dict[str, dict[str, str]] = {}
+
+    for symbol in symbols:
+        symbol = symbol.upper()
+        base = symbol.split("-")[0]
+
+        # Handle SLP special case
+        if base == "SLP":
+            base = "SOL"
+
+        if base in pairs:
+            continue
+
+        spot = f"{base}-{quote}"
+        cfm = CFM_SYMBOL_MAPPING.get(base)
+
+        pairs[base] = {
+            "spot": spot,
+            "cfm": cfm if cfm else spot,  # Fallback to spot if no CFM mapping
+        }
+
+    return pairs

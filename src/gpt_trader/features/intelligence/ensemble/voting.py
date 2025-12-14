@@ -60,7 +60,7 @@ class VotingMechanism(ABC):
 
         if method not in mechanisms:
             raise ValueError(
-                f"Unknown voting method: {method!r}. " f"Valid options: {list(mechanisms.keys())}"
+                f"Unknown voting method: {method!r}. Valid options: {list(mechanisms.keys())}"
             )
 
         return mechanisms[method]()

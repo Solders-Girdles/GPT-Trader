@@ -167,6 +167,18 @@ ALLOWLIST = {
     "tests/unit/gpt_trader/features/strategy_dev/monitor/test_metrics.py",
     "tests/unit/gpt_trader/features/strategy_dev/monitor/test_alerts.py",
     "tests/unit/gpt_trader/features/strategy_dev/lab/test_experiment.py",
+    "tests/unit/gpt_trader/tui/test_log_manager.py",  # comprehensive TUI log handler coverage including threading, markup handling, and error scenarios
+    # TUI Phase 3.5 comprehensive test suites
+    "tests/unit/gpt_trader/tui/services/test_action_dispatcher.py",  # action dispatcher routing and handler coverage
+    "tests/unit/gpt_trader/tui/test_widget_interactions.py",  # widget interaction and integration scenarios
+    "tests/unit/gpt_trader/tui/state_management/test_validators.py",  # state validator permutation matrix
+    "tests/unit/gpt_trader/tui/mixins/test_event_handlers.py",  # mixin event handler coverage across components
+    "tests/unit/gpt_trader/tui/services/test_credential_validator.py",  # credential validation flow comprehensive coverage
+    "tests/unit/gpt_trader/tui/test_screen_flows.py",  # screen navigation and lifecycle scenarios
+    "tests/unit/gpt_trader/tui/state_management/test_delta_updater.py",  # delta state update comprehensive scenarios
+    "tests/unit/gpt_trader/tui/test_events.py",  # custom event type coverage and dispatch patterns
+    "tests/unit/gpt_trader/tui/services/test_mode_service.py",  # mode service state transitions
+    "tests/unit/gpt_trader/tui/widgets/test_positions.py",  # positions widget comprehensive scenarios
 }
 
 SLEEP_ALLOWLIST = {

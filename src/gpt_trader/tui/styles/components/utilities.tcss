@@ -1,0 +1,138 @@
+/* ========================================================================== */
+/* UTILITY CLASSES                                                            */
+/* ========================================================================== */
+
+/* === Typography Utilities === */
+
+.text-success { color: $success; }
+.text-error { color: $error; }
+.text-warning { color: $warning; }
+.text-info { color: $info; }
+.text-muted { color: $text-muted; }
+
+.bold { text-style: bold; }
+
+/* Numeric alignment for DataTable cells */
+.text-numeric {
+    text-align: right;
+}
+
+/* === Empty States - Professional Display === */
+
+.empty-state {
+    height: auto;           /* Allow multi-line content */
+    min-height: 3;          /* Minimum height for visibility */
+    border: none;            /* No border */
+    background: transparent;
+    padding: $spacing-md $spacing-lg; /* Increased padding */
+    margin: $spacing-md 0;   /* Vertical margin */
+    color: $text-muted;
+    text-align: center;
+    display: none;           /* Hidden by default */
+    content-align: center middle; /* Center content */
+}
+
+/* === P&L Color Coding === */
+
+.pnl-positive {
+    color: $success;
+}
+
+.pnl-negative {
+    color: $error;
+}
+
+.pnl-neutral {
+    color: $text-secondary;
+}
+
+/* === Status Labels & Values === */
+
+.status-label {
+    color: $text-secondary;
+    text-style: bold;
+    margin-right: $spacing-xs;
+}
+
+.status-value {
+    color: $text-primary;
+    text-style: bold;
+    margin-right: $spacing-md;
+    background: $bg-elevated;
+    padding: $spacing-xs $spacing-md; /* Increased padding */
+    border-left: solid $accent-muted; /* Subtle accent border */
+}
+
+.status-running {
+    color: $success;
+    background: rgba(122, 168, 116, 0.2);
+    padding: 0 $spacing-md;
+    border: solid $success;
+}
+
+.status-stopped {
+    color: $error;
+    background: rgba(212, 115, 110, 0.2);
+    padding: 0 $spacing-md;
+    border: solid $error;
+}
+
+/* === Connection Status Indicators === */
+
+.status-connected {
+    color: $success;
+}
+
+.status-disconnected {
+    color: $error;
+}
+
+.status-unknown {
+    color: $warning;
+}
+
+/* === Heartbeat Indicator === */
+
+.heartbeat-pulse {
+    margin-left: $spacing-xs;
+}
+
+.heartbeat-bright {
+    color: $success;
+    text-style: bold;
+}
+
+.heartbeat-dim {
+    color: $text-muted;
+}
+
+/* === Tile Banners (inline per-tile status) === */
+
+.tile-banner {
+    height: 1;
+    width: 100%;
+    padding: 0 $spacing-sm;
+    margin: 0 0 $spacing-xs 0;
+    background: $bg-elevated;
+    border-left: wide $accent-muted;
+    color: $text-secondary;
+    content-align: left middle;
+}
+
+.tile-banner.info {
+    background: $info-muted;
+    border-left: wide $info;
+    color: $info;
+}
+
+.tile-banner.warning {
+    background: $warning-muted;
+    border-left: wide $warning;
+    color: $warning;
+}
+
+.tile-banner.error {
+    background: $error-muted;
+    border-left: wide $error;
+    color: $error;
+}

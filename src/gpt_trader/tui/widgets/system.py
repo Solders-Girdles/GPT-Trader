@@ -10,73 +10,50 @@ from gpt_trader.tui.types import SystemStatus
 class SystemHealthWidget(Static):
     """Widget to display system health and brokerage connection status."""
 
-    DEFAULT_CSS = """
-    SystemHealthWidget {
-        background: #2E2922;  /* bg-secondary */
-        border: solid #3A3530; /* border-subtle */
-        height: auto;
-        padding: 1;
-    }
-
-    SystemHealthWidget .header {
-        text-style: bold;
-        color: #C15F3C; /* accent */
-        margin-bottom: 1;
-    }
-
-    SystemHealthWidget .metric-row {
-        height: 1;
-        margin-bottom: 0;
-    }
-
-    SystemHealthWidget .label {
-        color: #ABA8A5; /* text-secondary */
-        width: 15;
-    }
-
-    SystemHealthWidget .value {
-        color: #E8E6E3; /* text-primary */
-        text-style: bold;
-    }
-
-    .status-connected {
-        color: #7AA874; /* success */
-    }
-
-    .status-disconnected {
-        color: #D4736E; /* error */
-    }
-
-    .status-unknown {
-        color: #D8A657; /* warning */
-    }
-    """
+    # Styles moved to styles/widgets/system.tcss
 
     system_data = reactive(SystemStatus())
 
+    def __init__(self, compact_mode: bool = True, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.compact_mode = compact_mode
+
     def compose(self) -> ComposeResult:
-        yield Label("⚙️ SYSTEM HEALTH", classes="header")
+        yield Label("SYSTEM", classes="widget-header")
 
-        with Vertical():
-            with Horizontal(classes="metric-row"):
-                yield Label("Connection:", classes="label")
+        if self.compact_mode:
+            # Compact horizontal layout - all metrics in one row
+            with Horizontal(classes="compact-metrics"):
+                yield Label("●", id="conn-indicator", classes="status-unknown")
                 yield Label("UNKNOWN", id="connection-status", classes="value status-unknown")
-
-            with Horizontal(classes="metric-row"):
-                yield Label("Latency:", classes="label")
+                yield Label("|", classes="metric-separator")
                 yield Label("0ms", id="latency", classes="value")
+                yield Label("|", classes="metric-separator")
+                yield Label("Rate: 0%", id="rate-limit", classes="value")
+                yield Label("|", classes="metric-separator")
+                yield Label("CPU: 0%", id="cpu", classes="value")
+        else:
+            # Full vertical layout (existing implementation)
+            with Vertical():
+                with Horizontal(classes="metric-row"):
+                    yield Label("Connection:", classes="label")
+                    yield Label("UNKNOWN", id="connection-status", classes="value status-unknown")
 
-            with Horizontal(classes="metric-row"):
-                yield Label("Rate Limit:", classes="label")
-                yield Label("0%", id="rate-limit", classes="value")
+                with Horizontal(classes="metric-row"):
+                    yield Label("Latency:", classes="label")
+                    yield Label("0ms", id="latency", classes="value")
 
-            with Horizontal(classes="metric-row"):
-                yield Label("Memory:", classes="label")
-                yield Label("0MB", id="memory", classes="value")
+                with Horizontal(classes="metric-row"):
+                    yield Label("Rate Limit:", classes="label")
+                    yield Label("0%", id="rate-limit", classes="value")
 
-            with Horizontal(classes="metric-row"):
-                yield Label("CPU:", classes="label")
-                yield Label("0%", id="cpu", classes="value")
+                with Horizontal(classes="metric-row"):
+                    yield Label("Memory:", classes="label")
+                    yield Label("0MB", id="memory", classes="value")
+
+                with Horizontal(classes="metric-row"):
+                    yield Label("CPU:", classes="label")
+                    yield Label("0%", id="cpu", classes="value")
 
     @safe_update
     def update_system(self, data: SystemStatus) -> None:
@@ -98,8 +75,32 @@ class SystemHealthWidget(Static):
         else:
             conn_label.add_class("status-unknown")
 
+        # Update connection indicator (only in compact mode)
+        if self.compact_mode:
+            try:
+                conn_indicator = self.query_one("#conn-indicator", Label)
+                conn_indicator.remove_class("status-connected")
+                conn_indicator.remove_class("status-disconnected")
+                conn_indicator.remove_class("status-unknown")
+
+                if data.connection_status == "CONNECTED":
+                    conn_indicator.add_class("status-connected")
+                elif data.connection_status == "DISCONNECTED":
+                    conn_indicator.add_class("status-disconnected")
+                else:
+                    conn_indicator.add_class("status-unknown")
+            except Exception:
+                pass  # Indicator doesn't exist in expanded mode
+
         # Update Metrics
         self.query_one("#latency", Label).update(f"{data.api_latency:.0f}ms")
-        self.query_one("#rate-limit", Label).update(data.rate_limit_usage)
-        self.query_one("#memory", Label).update(data.memory_usage)
-        self.query_one("#cpu", Label).update(data.cpu_usage)
+
+        if self.compact_mode:
+            # Compact mode shows labels inline with values
+            self.query_one("#rate-limit", Label).update(f"Rate: {data.rate_limit_usage}")
+            self.query_one("#cpu", Label).update(f"CPU: {data.cpu_usage}")
+        else:
+            # Expanded mode shows just values (labels are separate)
+            self.query_one("#rate-limit", Label).update(data.rate_limit_usage)
+            self.query_one("#memory", Label).update(data.memory_usage)
+            self.query_one("#cpu", Label).update(data.cpu_usage)

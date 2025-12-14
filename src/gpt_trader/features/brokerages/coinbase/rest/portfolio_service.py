@@ -4,13 +4,17 @@ This service handles balance and position management with explicit
 dependencies injected via constructor, replacing the PortfolioRestMixin.
 
 Implements the PositionProvider protocol for use by OrderService.
+Supports unified portfolio view across spot and CFM futures.
 """
 
 from __future__ import annotations
 
+from datetime import datetime
 from decimal import Decimal
 from typing import Any, cast
 
+from gpt_trader.core.account import CFMBalance, UnifiedBalance
+from gpt_trader.core.account import Position as CorePosition
 from gpt_trader.features.brokerages.coinbase.client import CoinbaseClient
 from gpt_trader.features.brokerages.coinbase.endpoints import CoinbaseEndpoints
 from gpt_trader.features.brokerages.coinbase.models import to_position
@@ -46,6 +50,7 @@ class PortfolioService:
     def list_balances(self) -> list[Balance]:
         """List all balances."""
         balances = []
+        logger.debug("PortfolioService.list_balances: Fetching accounts from Coinbase API")
         try:
             response = self._client.get_accounts()
             if isinstance(response, list):
@@ -100,6 +105,18 @@ class PortfolioService:
                 error_message=str(exc),
                 operation="list_balances",
             )
+
+        # Log final balance parsing summary
+        if balances:
+            logger.debug(
+                f"PortfolioService.list_balances: Successfully parsed {len(balances)} balances"
+            )
+        else:
+            logger.warning(
+                "PortfolioService.list_balances: No balances parsed from API response. "
+                "Check API portfolio selection or account permissions."
+            )
+
         return balances
 
     def get_portfolio_balances(self) -> list[Balance]:
@@ -377,3 +394,196 @@ class PortfolioService:
             }
         )
         return cast(dict[str, Any], response)
+
+    # -------------------------------------------------------------------------
+    # Unified Portfolio Methods (Spot + CFM)
+    # -------------------------------------------------------------------------
+
+    def has_cfm_access(self) -> bool:
+        """Check if CFM futures access is available."""
+        if not self._endpoints.supports_derivatives():
+            return False
+        try:
+            response = self._client.cfm_balance_summary()
+            return "balance_summary" in response
+        except Exception:
+            return False
+
+    def list_cfm_positions(self) -> list[CorePosition]:
+        """List CFM futures positions as core Position objects."""
+        if not self._endpoints.supports_derivatives():
+            return []
+
+        try:
+            response = self._client.cfm_positions()
+            positions = []
+
+            for p in response.get("positions", []):
+                # Parse expiration time
+                expiry = None
+                if p.get("expiration_time"):
+                    try:
+                        expiry = datetime.fromisoformat(
+                            p["expiration_time"].replace("Z", "+00:00")
+                        )
+                    except (ValueError, TypeError):
+                        pass
+
+                pos = CorePosition(
+                    symbol=p.get("product_id", ""),
+                    quantity=Decimal(str(p.get("number_of_contracts", "0"))),
+                    entry_price=Decimal(str(p.get("avg_entry_price", "0"))),
+                    mark_price=Decimal(str(p.get("current_price", "0"))),
+                    unrealized_pnl=Decimal(str(p.get("unrealized_pnl", "0"))),
+                    realized_pnl=Decimal(str(p.get("daily_realized_pnl", "0"))),
+                    side=p.get("side", "LONG").lower(),
+                    leverage=None,  # CFM doesn't expose per-position leverage
+                    liquidation_price=None,  # Would need separate calculation
+                    product_type="FUTURE",
+                    contract_expiry=expiry,
+                )
+                positions.append(pos)
+
+            return positions
+        except Exception as exc:
+            logger.error(
+                "Failed to list CFM positions",
+                error_type=type(exc).__name__,
+                error_message=str(exc),
+                operation="list_cfm_positions",
+            )
+            return []
+
+    def list_spot_positions_as_core(self) -> list[CorePosition]:
+        """List spot positions as core Position objects.
+
+        Note: Spot positions are derived from non-zero balances.
+        """
+        positions = []
+        try:
+            balances = self.list_balances()
+            for bal in balances:
+                if bal.asset == "USD" or bal.total == 0:
+                    continue
+                # Spot "positions" are just holdings - no entry price tracking
+                # Mark price would need to be fetched separately
+                positions.append(
+                    CorePosition(
+                        symbol=f"{bal.asset}-USD",
+                        quantity=bal.total,
+                        entry_price=Decimal("0"),  # Unknown for spot
+                        mark_price=Decimal("0"),  # Would need price fetch
+                        unrealized_pnl=Decimal("0"),
+                        realized_pnl=Decimal("0"),
+                        side="long",
+                        leverage=1,
+                        product_type="SPOT",
+                    )
+                )
+        except Exception as exc:
+            logger.error(
+                "Failed to list spot positions",
+                error_type=type(exc).__name__,
+                error_message=str(exc),
+                operation="list_spot_positions_as_core",
+            )
+        return positions
+
+    def list_all_positions(self) -> list[CorePosition]:
+        """List all positions across spot and CFM.
+
+        Returns unified list of CorePosition objects with product_type
+        indicating whether each is SPOT or FUTURE.
+        """
+        positions: list[CorePosition] = []
+
+        # Add spot positions (from balances)
+        positions.extend(self.list_spot_positions_as_core())
+
+        # Add CFM positions if available
+        if self._endpoints.supports_derivatives():
+            positions.extend(self.list_cfm_positions())
+
+        logger.debug(
+            "Listed all positions",
+            spot_count=len([p for p in positions if p.product_type == "SPOT"]),
+            cfm_count=len([p for p in positions if p.product_type == "FUTURE"]),
+        )
+
+        return positions
+
+    def get_cfm_balance(self) -> CFMBalance | None:
+        """Get CFM balance as a structured CFMBalance object."""
+        if not self._endpoints.supports_derivatives():
+            return None
+
+        try:
+            response = self._client.cfm_balance_summary()
+            summary = response.get("balance_summary", {})
+
+            if not summary:
+                return None
+
+            def get_value(field: str) -> Decimal:
+                """Extract decimal value from nested dict or direct value."""
+                val = summary.get(field, {})
+                if isinstance(val, dict):
+                    return Decimal(str(val.get("value", "0")))
+                return Decimal(str(val or "0"))
+
+            return CFMBalance(
+                futures_buying_power=get_value("futures_buying_power"),
+                total_usd_balance=get_value("total_usd_balance"),
+                available_margin=get_value("available_margin"),
+                initial_margin=get_value("initial_margin"),
+                unrealized_pnl=get_value("unrealized_pnl"),
+                daily_realized_pnl=get_value("daily_realized_pnl"),
+                liquidation_threshold=get_value("liquidation_threshold"),
+                liquidation_buffer_amount=get_value("liquidation_buffer_amount"),
+                liquidation_buffer_percentage=float(
+                    summary.get("liquidation_buffer_percentage", "0")
+                ),
+            )
+        except Exception as exc:
+            logger.error(
+                "Failed to get CFM balance",
+                error_type=type(exc).__name__,
+                error_message=str(exc),
+                operation="get_cfm_balance",
+            )
+            return None
+
+    def get_unified_balance(self) -> UnifiedBalance:
+        """Get combined balance across spot and CFM.
+
+        Returns UnifiedBalance with totals from both trading venues.
+        """
+        # Get spot balance (USD available)
+        spot_balance = Decimal("0")
+        try:
+            balances = self.list_balances()
+            for bal in balances:
+                if bal.asset == "USD":
+                    spot_balance = bal.available
+                    break
+        except Exception:
+            pass
+
+        # Get CFM balance
+        cfm_balance = Decimal("0")
+        cfm_available_margin = Decimal("0")
+        cfm_buying_power = Decimal("0")
+
+        cfm = self.get_cfm_balance()
+        if cfm:
+            cfm_balance = cfm.total_usd_balance
+            cfm_available_margin = cfm.available_margin
+            cfm_buying_power = cfm.futures_buying_power
+
+        return UnifiedBalance(
+            spot_balance=spot_balance,
+            cfm_balance=cfm_balance,
+            cfm_available_margin=cfm_available_margin,
+            cfm_buying_power=cfm_buying_power,
+            total_equity=spot_balance + cfm_balance,
+        )

@@ -1,0 +1,52 @@
+/* ========================================================================== */
+/* SYSTEM HEALTH WIDGET - Professional Display                                 */
+/* ========================================================================== */
+
+SystemHealthWidget {
+    background: $bg-secondary;
+    border: none;
+    height: auto;
+    padding: $spacing-sm $spacing-md; /* Increased padding */
+}
+
+SystemHealthWidget .value {
+    color: $text-primary;
+    text-style: bold;
+    padding: 0 $spacing-xs; /* Subtle horizontal padding */
+}
+
+/* Connection status indicators */
+.status-connected {
+    color: $success;
+}
+
+.status-disconnected {
+    color: $error;
+}
+
+.status-unknown {
+    color: $warning;
+}
+
+/* Compact layout mode */
+SystemHealthWidget .compact-metrics {
+    height: auto;
+    align-vertical: middle;
+}
+
+SystemHealthWidget .metric-separator {
+    color: $text-muted;
+    margin: 0 1;
+}
+
+/* Full layout mode */
+SystemHealthWidget .metric-row {
+    layout: horizontal;
+    height: auto;
+    margin-bottom: 0;
+}
+
+SystemHealthWidget .label {
+    width: 12; /* Increased width for better alignment */
+    color: $text-muted;
+}

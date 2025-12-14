@@ -77,7 +77,7 @@ def engine(context, mock_strategy):
 
 @pytest.mark.asyncio
 async def test_fetch_total_equity_success(engine):
-    """Test successful equity fetch summing USD and USDC collateral."""
+    """Test successful equity fetch including non-USD assets valued in USD."""
     engine.context.broker.list_balances.return_value = [
         Balance(asset="USD", total=Decimal("1000"), available=Decimal("800")),
         Balance(asset="USDC", total=Decimal("500"), available=Decimal("200")),
@@ -87,7 +87,7 @@ async def test_fetch_total_equity_success(engine):
     positions = {}
 
     equity = await engine._fetch_total_equity(positions)
-    assert equity == Decimal("1000")  # 800 + 200
+    assert equity == Decimal("51000")  # 800 + 200 + (1 BTC @ 50,000)
 
 
 @pytest.mark.asyncio

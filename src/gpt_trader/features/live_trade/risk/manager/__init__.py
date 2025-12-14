@@ -1,5 +1,5 @@
 """
-Live risk management for perpetuals trading.
+Live risk management for perpetuals and CFM futures trading.
 
 This module provides the LiveRiskManager class which enforces:
 - Maximum leverage limits (global and per-symbol)
@@ -9,6 +9,7 @@ This module provides the LiveRiskManager class which enforces:
 - Volatility circuit breakers
 - Mark price staleness detection
 - Liquidation buffer monitoring
+- CFM-specific exposure and margin tracking
 """
 
 from __future__ import annotations
@@ -16,10 +17,11 @@ from __future__ import annotations
 import time
 from collections import defaultdict
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
-from typing import TYPE_CHECKING, Any
+from enum import Enum
+from typing import TYPE_CHECKING, Any, Literal
 
 if TYPE_CHECKING:
     from gpt_trader.orchestration.configuration.risk import RiskConfig
@@ -30,6 +32,34 @@ class ValidationError(Exception):
     """Raised when a trade fails risk validation checks."""
 
     pass
+
+
+class RiskWarningLevel(Enum):
+    """Severity levels for risk warnings."""
+
+    INFO = "INFO"
+    WARNING = "WARNING"
+    CRITICAL = "CRITICAL"
+
+
+@dataclass
+class RiskWarning:
+    """A risk warning generated during checks."""
+
+    level: RiskWarningLevel
+    message: str
+    action: str = ""  # Suggested action: REDUCE_POSITION, CLOSE_POSITION, etc.
+    symbol: str = ""
+    details: dict[str, Any] = field(default_factory=dict)
+
+    def to_payload(self) -> dict[str, Any]:
+        return {
+            "level": self.level.value,
+            "message": self.message,
+            "action": self.action,
+            "symbol": self.symbol,
+            "details": self.details,
+        }
 
 
 @dataclass
@@ -48,11 +78,47 @@ class VolatilityCheckOutcome:
         }
 
 
+@dataclass
+class ExposureState:
+    """Tracks exposure across spot and CFM markets."""
+
+    spot_exposure: Decimal = field(default_factory=lambda: Decimal("0"))
+    cfm_exposure: Decimal = field(default_factory=lambda: Decimal("0"))
+    cfm_margin_used: Decimal = field(default_factory=lambda: Decimal("0"))
+    cfm_available_margin: Decimal = field(default_factory=lambda: Decimal("0"))
+    cfm_buying_power: Decimal = field(default_factory=lambda: Decimal("0"))
+
+    @property
+    def total_exposure(self) -> Decimal:
+        """Total notional exposure across all markets."""
+        return self.spot_exposure + self.cfm_exposure
+
+    @property
+    def cfm_margin_utilization(self) -> Decimal:
+        """Percentage of CFM margin currently used."""
+        if self.cfm_available_margin + self.cfm_margin_used == 0:
+            return Decimal("0")
+        total_margin = self.cfm_available_margin + self.cfm_margin_used
+        return self.cfm_margin_used / total_margin
+
+    def to_payload(self) -> dict[str, Any]:
+        return {
+            "spot_exposure": str(self.spot_exposure),
+            "cfm_exposure": str(self.cfm_exposure),
+            "cfm_margin_used": str(self.cfm_margin_used),
+            "cfm_available_margin": str(self.cfm_available_margin),
+            "cfm_buying_power": str(self.cfm_buying_power),
+            "total_exposure": str(self.total_exposure),
+            "cfm_margin_utilization": str(self.cfm_margin_utilization),
+        }
+
+
 class LiveRiskManager:
-    """Manages risk controls for live perpetuals trading.
+    """Manages risk controls for live perpetuals and CFM futures trading.
 
     Enforces leverage limits, daily loss limits, exposure caps, and circuit breakers.
     Integrates with EventStore for metrics/alerting.
+    Supports unified risk tracking across spot and CFM markets.
     """
 
     def __init__(
@@ -81,6 +147,12 @@ class LiveRiskManager:
         self._start_of_day_equity: Decimal | None = None
         # Allows time mocking for tests; defaults to real datetime.utcnow
         self._now_provider: Callable[[], datetime] = datetime.utcnow
+
+        # CFM-specific tracking
+        self._exposure_state = ExposureState()
+        self._cfm_reduce_only_mode: bool = False
+        self._cfm_reduce_only_reason: str = ""
+        self._risk_warnings: list[RiskWarning] = []
 
         # Load persisted state if available
         if self.state_file:
@@ -444,4 +516,275 @@ class LiveRiskManager:
         self._daily_pnl_triggered = False
         self._reduce_only_mode = False
         self._reduce_only_reason = ""
+        self._cfm_reduce_only_mode = False
+        self._cfm_reduce_only_reason = ""
+        self._risk_warnings.clear()
         self._save_state()
+
+    # =========================================================================
+    # CFM-Specific Risk Management
+    # =========================================================================
+
+    def update_exposure(
+        self,
+        positions: list[Any],
+        cfm_balance: Any | None = None,
+    ) -> ExposureState:
+        """Update exposure tracking from all positions.
+
+        Args:
+            positions: List of Position objects with product_type attribute.
+            cfm_balance: Optional CFMBalance object with margin info.
+
+        Returns:
+            Updated ExposureState.
+        """
+        spot_exposure = Decimal("0")
+        cfm_exposure = Decimal("0")
+
+        for position in positions:
+            # Handle both object and dict access
+            if isinstance(position, dict):
+                quantity = Decimal(str(position.get("quantity", 0)))
+                mark_price = Decimal(
+                    str(position.get("mark_price") or position.get("mark", 0))
+                )
+                product_type = position.get("product_type", "SPOT")
+                leverage = int(position.get("leverage", 1))
+            else:
+                quantity = Decimal(str(getattr(position, "quantity", 0)))
+                mark_price = Decimal(
+                    str(getattr(position, "mark_price", None) or getattr(position, "mark", 0))
+                )
+                product_type = getattr(position, "product_type", "SPOT")
+                leverage = int(getattr(position, "leverage", 1))
+
+            notional = abs(quantity * mark_price)
+
+            if product_type in ("SPOT",):
+                spot_exposure += notional
+            elif product_type in ("FUTURE", "PERPETUAL"):
+                # For futures, track leveraged exposure
+                cfm_exposure += notional * leverage
+
+        self._exposure_state.spot_exposure = spot_exposure
+        self._exposure_state.cfm_exposure = cfm_exposure
+
+        # Update CFM margin info if available
+        if cfm_balance is not None:
+            if isinstance(cfm_balance, dict):
+                self._exposure_state.cfm_margin_used = Decimal(
+                    str(cfm_balance.get("margin_used") or cfm_balance.get("initial_margin", 0))
+                )
+                self._exposure_state.cfm_available_margin = Decimal(
+                    str(cfm_balance.get("available_margin", 0))
+                )
+                self._exposure_state.cfm_buying_power = Decimal(
+                    str(cfm_balance.get("futures_buying_power", 0))
+                )
+            else:
+                self._exposure_state.cfm_margin_used = Decimal(
+                    str(
+                        getattr(cfm_balance, "margin_used", None)
+                        or getattr(cfm_balance, "initial_margin", 0)
+                    )
+                )
+                self._exposure_state.cfm_available_margin = Decimal(
+                    str(getattr(cfm_balance, "available_margin", 0))
+                )
+                self._exposure_state.cfm_buying_power = Decimal(
+                    str(getattr(cfm_balance, "futures_buying_power", 0))
+                )
+
+        return self._exposure_state
+
+    def get_exposure_state(self) -> ExposureState:
+        """Get current exposure state."""
+        return self._exposure_state
+
+    def get_total_exposure(self) -> Decimal:
+        """Get total exposure across spot and CFM markets."""
+        return self._exposure_state.total_exposure
+
+    def check_cfm_liquidation_buffer(
+        self,
+        cfm_balance: Any,
+        positions: list[Any] | None = None,
+    ) -> list[RiskWarning]:
+        """Check liquidation buffer for CFM positions.
+
+        Args:
+            cfm_balance: CFMBalance object with liquidation buffer info.
+            positions: Optional list of CFM positions for per-position checks.
+
+        Returns:
+            List of RiskWarning objects if buffer is low.
+        """
+        warnings: list[RiskWarning] = []
+
+        if cfm_balance is None:
+            return warnings
+
+        # Get buffer percentage from CFM balance
+        if isinstance(cfm_balance, dict):
+            buffer_pct = cfm_balance.get("liquidation_buffer_percentage")
+            if buffer_pct is None:
+                # Calculate from available margin and total equity
+                total_equity = Decimal(str(cfm_balance.get("total_usd_balance", 0)))
+                maintenance_margin = Decimal(str(cfm_balance.get("maintenance_margin", 0)))
+                if total_equity > 0 and maintenance_margin > 0:
+                    buffer_pct = float((total_equity - maintenance_margin) / total_equity)
+        else:
+            buffer_pct = getattr(cfm_balance, "liquidation_buffer_percentage", None)
+            if buffer_pct is None:
+                total_equity = Decimal(str(getattr(cfm_balance, "total_usd_balance", 0)))
+                maintenance_margin = Decimal(str(getattr(cfm_balance, "maintenance_margin", 0)))
+                if total_equity > 0 and maintenance_margin > 0:
+                    buffer_pct = float((total_equity - maintenance_margin) / total_equity)
+
+        if buffer_pct is None:
+            return warnings
+
+        buffer_pct = float(buffer_pct)
+
+        # Get CFM-specific buffer threshold from config
+        min_buffer = 0.15  # Default 15%
+        if self.config:
+            min_buffer = getattr(self.config, "cfm_min_liquidation_buffer_pct", min_buffer)
+
+        # Check buffer levels
+        if buffer_pct < min_buffer:
+            severity = (
+                RiskWarningLevel.CRITICAL
+                if buffer_pct < min_buffer * 0.5
+                else RiskWarningLevel.WARNING
+            )
+            warning = RiskWarning(
+                level=severity,
+                message=f"CFM liquidation buffer at {buffer_pct:.1%} (min: {min_buffer:.0%})",
+                action="REDUCE_POSITION",
+                details={
+                    "buffer_pct": buffer_pct,
+                    "min_buffer_pct": min_buffer,
+                },
+            )
+            warnings.append(warning)
+
+            # Enter CFM reduce-only mode if critical
+            if severity == RiskWarningLevel.CRITICAL:
+                self._cfm_reduce_only_mode = True
+                self._cfm_reduce_only_reason = f"liquidation_buffer_{buffer_pct:.1%}"
+
+        # Store warnings for monitoring
+        self._risk_warnings.extend(warnings)
+
+        return warnings
+
+    def check_cfm_exposure_limits(
+        self,
+        equity: Decimal,
+    ) -> list[RiskWarning]:
+        """Check if CFM exposure exceeds configured limits.
+
+        Args:
+            equity: Total account equity.
+
+        Returns:
+            List of RiskWarning objects if limits exceeded.
+        """
+        warnings: list[RiskWarning] = []
+
+        if equity <= 0:
+            return warnings
+
+        cfm_exposure = self._exposure_state.cfm_exposure
+        exposure_pct = cfm_exposure / equity
+
+        # Get CFM-specific exposure limit from config
+        max_cfm_exposure_pct = 0.8  # Default 80%
+        if self.config:
+            max_cfm_exposure_pct = getattr(
+                self.config, "cfm_max_exposure_pct", max_cfm_exposure_pct
+            )
+
+        if exposure_pct > Decimal(str(max_cfm_exposure_pct)):
+            warning = RiskWarning(
+                level=RiskWarningLevel.WARNING,
+                message=f"CFM exposure at {float(exposure_pct):.1%} exceeds limit {max_cfm_exposure_pct:.0%}",
+                action="REDUCE_POSITION",
+                details={
+                    "cfm_exposure": str(cfm_exposure),
+                    "exposure_pct": str(exposure_pct),
+                    "max_exposure_pct": max_cfm_exposure_pct,
+                },
+            )
+            warnings.append(warning)
+            self._risk_warnings.append(warning)
+
+        return warnings
+
+    def validate_cfm_leverage(
+        self,
+        symbol: str,
+        requested_leverage: int,
+    ) -> None:
+        """Validate that requested leverage is within CFM limits.
+
+        Args:
+            symbol: Trading symbol.
+            requested_leverage: Requested leverage multiplier.
+
+        Raises:
+            ValidationError: If leverage exceeds limits.
+        """
+        max_leverage = 5  # Default
+        if self.config:
+            max_leverage = getattr(self.config, "cfm_max_leverage", max_leverage)
+
+        if requested_leverage > max_leverage:
+            raise ValidationError(
+                f"Requested leverage {requested_leverage}x exceeds CFM limit {max_leverage}x"
+            )
+
+        # Check per-symbol leverage caps if configured
+        if self.config:
+            is_daytime = self._is_daytime()
+            symbol_cap = self._get_symbol_leverage_cap(symbol, is_daytime)
+            if symbol_cap is not None and requested_leverage > symbol_cap:
+                time_period = "day" if is_daytime else "night"
+                raise ValidationError(
+                    f"Requested leverage {requested_leverage}x exceeds {symbol} "
+                    f"cap of {symbol_cap}x ({time_period})"
+                )
+
+    def is_cfm_reduce_only_mode(self) -> bool:
+        """Check if CFM reduce-only mode is active."""
+        return self._cfm_reduce_only_mode
+
+    def set_cfm_reduce_only_mode(self, value: bool, reason: str = "") -> None:
+        """Set CFM-specific reduce-only mode."""
+        self._cfm_reduce_only_mode = value
+        self._cfm_reduce_only_reason = reason
+        self._save_state()
+
+    def get_risk_warnings(self) -> list[RiskWarning]:
+        """Get all current risk warnings."""
+        return self._risk_warnings.copy()
+
+    def clear_risk_warnings(self) -> None:
+        """Clear all risk warnings."""
+        self._risk_warnings.clear()
+
+    def get_cfm_risk_summary(self) -> dict[str, Any]:
+        """Get a summary of CFM-specific risk state.
+
+        Returns:
+            Dictionary with CFM risk metrics.
+        """
+        return {
+            "exposure": self._exposure_state.to_payload(),
+            "reduce_only_mode": self._cfm_reduce_only_mode,
+            "reduce_only_reason": self._cfm_reduce_only_reason,
+            "warnings_count": len(self._risk_warnings),
+            "warnings": [w.to_payload() for w in self._risk_warnings[-10:]],
+        }

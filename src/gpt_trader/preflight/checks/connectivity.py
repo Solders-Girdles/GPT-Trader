@@ -110,25 +110,38 @@ def check_key_permissions(checker: PreflightCheck) -> bool:
     can_view = bool(permissions.get("can_view"))
     portfolio_type = str(permissions.get("portfolio_type") or "").upper()
     portfolio_uuid = permissions.get("portfolio_uuid")
+    derivatives_enabled = os.getenv("COINBASE_ENABLE_DERIVATIVES") == "1"
 
     all_good = True
 
-    if can_trade and can_view:
-        checker.log_success("API key has trade + view permissions")
+    # View permission is always required
+    if can_view:
+        checker.log_success("API key has view permission")
     else:
-        if not can_trade:
-            checker.log_error("API key missing trade permission (can_trade=False)")
+        checker.log_error("API key missing portfolio view permission (can_view=False)")
+        all_good = False
+
+    # Trade permission is only required when derivatives are enabled (live trading)
+    if can_trade:
+        checker.log_success("API key has trade permission")
+    else:
+        if derivatives_enabled:
+            checker.log_error(
+                "API key missing trade permission (can_trade=False) - "
+                "required when COINBASE_ENABLE_DERIVATIVES=1"
+            )
             all_good = False
-        if not can_view:
-            checker.log_error("API key missing portfolio view permission (can_view=False)")
-            all_good = False
+        else:
+            checker.log_info(
+                "API key is view-only (can_trade=False) - "
+                "sufficient for observation and paper trading"
+            )
 
     if portfolio_uuid:
         checker.log_info(f"Portfolio UUID detected: {portfolio_uuid}")
     else:
         checker.log_warning("Portfolio UUID not returned; verify CDP key portfolio access")
 
-    derivatives_enabled = os.getenv("COINBASE_ENABLE_DERIVATIVES") == "1"
     if derivatives_enabled:
         if portfolio_type == "INTX":
             checker.log_success("INTX portfolio detected (derivatives can execute)")

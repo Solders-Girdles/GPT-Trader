@@ -1,0 +1,45 @@
+/* ========================================================================== */
+/* ALERT HISTORY SCREEN                                                       */
+/* ========================================================================== */
+
+AlertHistoryScreen {
+    align: center middle;
+}
+
+AlertHistoryScreen > Container {
+    width: 90%;
+    height: 90%;
+    border: thick $accent;
+    background: $bg-secondary;
+}
+
+AlertHistoryScreen .title {
+    dock: top;
+    text-align: center;
+    text-style: bold;
+    padding: 1;
+    background: $bg-elevated;
+    color: $text-primary;
+}
+
+AlertHistoryScreen .stats {
+    dock: top;
+    padding: 1 2;
+    background: $bg-highlight;
+}
+
+AlertHistoryScreen DataTable {
+    height: 1fr;
+    margin: 1 2;
+}
+
+AlertHistoryScreen .button-bar {
+    dock: bottom;
+    height: 3;
+    align: center middle;
+    padding: 0 2;
+}
+
+AlertHistoryScreen Button {
+    margin: 0 1;
+}

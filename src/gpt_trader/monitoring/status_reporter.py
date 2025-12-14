@@ -10,13 +10,16 @@ from __future__ import annotations
 import asyncio
 import json
 import os
+import random
 import tempfile
 import time
+from collections import deque
+from collections.abc import Callable
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable
+from typing import TYPE_CHECKING, Any
 
 from gpt_trader.utilities.logging_patterns import get_logger
 
@@ -44,8 +47,9 @@ class MarketStatus:
     """Status snapshot of market data."""
 
     symbols: list[str] = field(default_factory=list)
-    last_prices: dict[str, str] = field(default_factory=dict)
+    last_prices: dict[str, Decimal] = field(default_factory=dict)
     last_price_update: float | None = None
+    price_history: dict[str, list[Decimal]] = field(default_factory=dict)
 
 
 @dataclass
@@ -54,8 +58,9 @@ class PositionStatus:
 
     count: int = 0
     symbols: list[str] = field(default_factory=list)
-    total_unrealized_pnl: str = "0"
-    equity: str = "0.00"
+    total_unrealized_pnl: Decimal = Decimal("0")
+    equity: Decimal = Decimal("0")
+    positions: dict[str, dict[str, Any]] = field(default_factory=dict)
 
 
 @dataclass
@@ -76,34 +81,58 @@ class OrderStatus:
     order_id: str
     symbol: str
     side: str
-    quantity: str
-    price: str | None
+    quantity: Decimal
+    price: Decimal | None
     status: str
-    type: str = "MARKET"
+    order_type: str = "MARKET"
     time_in_force: str = "GTC"
-    timestamp: float = 0.0
+    creation_time: float = 0.0
 
 
 @dataclass
 class TradeStatus:
     """Status snapshot of a recent trade."""
 
+    trade_id: str
     symbol: str
     side: str
-    quantity: str
-    price: str
-    timestamp: float
-    order_id: str | None = None
+    quantity: Decimal
+    price: Decimal
+    time: str
+    order_id: str
+    fee: Decimal = Decimal("0")
+
+
+@dataclass
+class BalanceEntry:
+    """Single balance entry with Decimal amounts."""
+
+    asset: str
+    total: Decimal
+    available: Decimal
+    hold: Decimal = Decimal("0")
+
+
+@dataclass
+class DecisionEntry:
+    """Single strategy decision entry with typed fields."""
+
+    symbol: str
+    action: str = "HOLD"
+    reason: str = ""
+    confidence: float = 0.0
+    indicators: dict[str, Any] = field(default_factory=dict)
+    timestamp: float = 0.0
 
 
 @dataclass
 class AccountStatus:
     """Status snapshot of account metrics."""
 
-    volume_30d: str = "0.00"
-    fees_30d: str = "0.00"
+    volume_30d: Decimal = Decimal("0")
+    fees_30d: Decimal = Decimal("0")
     fee_tier: str = ""
-    balances: list[dict[str, str]] = field(default_factory=list)
+    balances: list[BalanceEntry] = field(default_factory=list)
 
 
 @dataclass
@@ -111,7 +140,7 @@ class StrategyStatus:
     """Status snapshot of strategy engine."""
 
     active_strategies: list[str] = field(default_factory=list)
-    last_decisions: list[dict[str, str]] = field(default_factory=list)
+    last_decisions: list[DecisionEntry] = field(default_factory=list)
 
 
 @dataclass
@@ -161,6 +190,9 @@ class BotStatus:
     healthy: bool = True
     health_issues: list[str] = field(default_factory=list)
 
+    # Reporter interval for TUI connection health tracking
+    observer_interval: float = 2.0
+
     def __post_init__(self) -> None:
         if not self.timestamp_iso:
             self.timestamp_iso = datetime.utcfromtimestamp(self.timestamp).isoformat() + "Z"
@@ -183,14 +215,19 @@ class StatusReporter:
     Features:
     - Atomic file writes (write to temp, then rename)
     - Observer pattern for event-driven updates
-    - Configurable update interval
+    - Dual-interval design: fast observer updates, slow file writes
     - Includes engine, market, position, risk, and heartbeat status
     - Health summary with issue detection
+
+    The reporter uses two intervals:
+    - observer_interval (default 2s): How often to update in-memory status and notify observers (TUI)
+    - file_write_interval (default 60s): How often to write status to disk
 
     Usage:
         reporter = StatusReporter(
             status_file="/var/run/gpt-trader/status.json",
-            update_interval=10,
+            observer_interval=2,      # Fast updates for TUI
+            file_write_interval=60,   # Slow disk writes
         )
         reporter.add_observer(my_callback)
         await reporter.start()
@@ -201,7 +238,9 @@ class StatusReporter:
     """
 
     status_file: str = "status.json"
-    update_interval: int = 10  # seconds
+    observer_interval: float = 2.0  # seconds - fast loop for TUI observers
+    file_write_interval: float = 60.0  # seconds - slow loop for disk writes
+    update_interval: int = 10  # Deprecated: use file_write_interval instead
     bot_id: str = ""
     enabled: bool = True
 
@@ -209,10 +248,11 @@ class StatusReporter:
     _running: bool = field(default=False, repr=False)
     _task: asyncio.Task[None] | None = field(default=None, repr=False)
     _start_time: float = field(default=0.0, repr=False)
+    _last_file_write: float = field(default=0.0, repr=False)
     _status: BotStatus = field(default_factory=BotStatus, repr=False)
 
     # Observers
-    _observers: list[Callable[[dict[str, Any]], None]] = field(default_factory=list, repr=False)
+    _observers: list[Callable[[BotStatus], None]] = field(default_factory=list, repr=False)
 
     # Mutable status tracking
     _cycle_count: int = field(default=0, repr=False)
@@ -221,6 +261,7 @@ class StatusReporter:
     _last_error_time: float | None = field(default=None, repr=False)
     _last_prices: dict[str, Decimal] = field(default_factory=dict, repr=False)
     _last_price_update: float | None = field(default=None, repr=False)
+    _price_history: dict[str, deque[Decimal]] = field(default_factory=dict, repr=False)
     _positions: dict[str, Any] = field(default_factory=dict, repr=False)
     _equity: Decimal = field(default=Decimal("0"), repr=False)
     _heartbeat_service: HeartbeatService | None = field(default=None, repr=False)
@@ -237,7 +278,8 @@ class StatusReporter:
 
         self._running = True
         self._start_time = time.time()
-        self._status = BotStatus(bot_id=self.bot_id)
+        self._last_file_write = 0.0  # Force initial write
+        self._status = BotStatus(bot_id=self.bot_id, observer_interval=self.observer_interval)
 
         # Ensure directory exists
         status_path = Path(self.status_file)
@@ -245,10 +287,13 @@ class StatusReporter:
 
         # Write initial status
         await self._write_status()
+        self._last_file_write = time.time()
 
         self._task = asyncio.create_task(self._report_loop())
         logger.info(
-            f"Status reporter started (file={self.status_file}, interval={self.update_interval}s)"
+            f"Status reporter started (file={self.status_file}, "
+            f"observer_interval={self.observer_interval}s, "
+            f"file_write_interval={self.file_write_interval}s)"
         )
         return self._task
 
@@ -270,46 +315,63 @@ class StatusReporter:
         await self._write_status()
         logger.info("Status reporter stopped")
 
-    def add_observer(self, callback: Callable[[dict[str, Any]], None]) -> None:
+    def add_observer(self, callback: Callable[[BotStatus], None]) -> None:
         """
         Add an observer callback that receives status updates.
-        The callback receives a dictionary of the full status.
+
+        The callback receives a BotStatus dataclass with the full typed status.
         """
         self._observers.append(callback)
 
-    def remove_observer(self, callback: Callable[[dict[str, Any]], None]) -> None:
+    def remove_observer(self, callback: Callable[[BotStatus], None]) -> None:
         """Remove an observer callback."""
         if callback in self._observers:
             self._observers.remove(callback)
 
     async def _report_loop(self) -> None:
-        """Main reporting loop."""
+        """Main reporting loop with dual intervals.
+
+        Uses observer_interval for fast in-memory updates and observer notifications.
+        Uses file_write_interval for slow disk writes.
+        """
         while self._running:
             try:
-                await self._write_status()
-                # Notify observers
-                status_dict = asdict(self._status)
+                # Always update in-memory status
+                self._update_status()
+
+                # Check if it's time to write to disk
+                now = time.time()
+                time_since_last_write = now - self._last_file_write
+                should_write_file = time_since_last_write >= self.file_write_interval
+
+                if should_write_file:
+                    await self._write_status_to_file()
+                    self._last_file_write = now
+
+                # Always notify observers (fast loop)
                 for observer in self._observers:
                     try:
-                        # If callback is a coroutine, we should await it?
-                        # For simplicity, we assume sync callbacks or handle async appropriately if needed.
-                        # But Textual callbacks are often async or schedule updates.
-                        # Let's check if it's awaitable.
+                        # Handle both async and sync observer callbacks
                         if asyncio.iscoroutinefunction(observer):
-                            await observer(status_dict)
+                            await observer(self._status)
                         else:
-                            observer(status_dict)
+                            observer(self._status)
                     except Exception as obs_e:
                         logger.error(f"Observer error: {obs_e}")
 
             except Exception as e:
                 logger.error(f"Status report error: {e}")
 
-            await asyncio.sleep(self.update_interval)
+            # Sleep for the fast observer interval
+            await asyncio.sleep(self.observer_interval)
 
     async def _write_status(self) -> None:
-        """Write current status to file atomically."""
+        """Write current status to file atomically (legacy method for backward compat)."""
         self._update_status()
+        await self._write_status_to_file()
+
+    async def _write_status_to_file(self) -> None:
+        """Write current status to file atomically."""
         status_dict = asdict(self._status)
 
         # Atomic write: write to temp file, then rename
@@ -337,6 +399,7 @@ class StatusReporter:
         self._status.timestamp = now
         self._status.timestamp_iso = datetime.utcfromtimestamp(now).isoformat() + "Z"
         self._status.bot_id = self.bot_id
+        self._status.observer_interval = self.observer_interval
 
         # Engine status
         self._status.engine.running = self._running
@@ -346,20 +409,27 @@ class StatusReporter:
         self._status.engine.last_error = self._last_error
         self._status.engine.last_error_time = self._last_error_time
 
-        # Market status
-        self._status.market.last_prices = {k: str(v) for k, v in self._last_prices.items()}
+        # Market status - keep Decimal types
+        self._status.market.last_prices = dict(self._last_prices)
         self._status.market.last_price_update = self._last_price_update
         self._status.market.symbols = list(self._last_prices.keys())
+        self._status.market.price_history = {
+            symbol: list(prices) for symbol, prices in self._price_history.items()
+        }
 
-        # Position status
+        # Position status - keep Decimal types
         self._status.positions.count = len(self._positions)
         self._status.positions.symbols = list(self._positions.keys())
         total_pnl = sum(
             (p.get("unrealized_pnl", Decimal("0")) for p in self._positions.values()),
             Decimal("0"),
         )
-        self._status.positions.total_unrealized_pnl = str(total_pnl)
-        self._status.positions.equity = str(self._equity)
+        self._status.positions.total_unrealized_pnl = total_pnl
+        self._status.positions.equity = self._equity
+        # Include actual position details (keep Decimal for numeric values)
+        self._status.positions.positions = {
+            symbol: dict(pos) for symbol, pos in self._positions.items()
+        }
 
         # Heartbeat status
         if self._heartbeat_service:
@@ -419,13 +489,49 @@ class StatusReporter:
         self._last_error_time = time.time()
 
     def update_price(self, symbol: str, price: Decimal) -> None:
-        """Update the last known price for a symbol."""
+        """Update the last known price for a symbol and maintain price history."""
         self._last_prices[symbol] = price
         self._last_price_update = time.time()
 
+        # Maintain price history (last 100 prices per symbol)
+        if symbol not in self._price_history:
+            self._price_history[symbol] = deque(maxlen=100)
+        self._price_history[symbol].append(price)
+
     def update_positions(self, positions: dict[str, Any]) -> None:
-        """Update the current positions."""
-        self._positions = positions
+        """
+        Update the current positions with Decimal coercion.
+
+        Args:
+            positions: Dict of symbol -> position data (may contain string numerics)
+        """
+        # Normalize positions to ensure Decimal types
+        normalized_positions = {}
+        for symbol, pos_data in positions.items():
+            if not isinstance(pos_data, dict):
+                continue
+
+            normalized_pos = {}
+            for key, value in pos_data.items():
+                # Coerce numeric fields to Decimal
+                if key in (
+                    "quantity",
+                    "mark_price",
+                    "entry_price",
+                    "unrealized_pnl",
+                    "realized_pnl",
+                ):
+                    try:
+                        normalized_pos[key] = Decimal(str(value)) if value else Decimal("0")
+                    except (ValueError, InvalidOperation):
+                        normalized_pos[key] = Decimal("0")
+                else:
+                    # Keep non-numeric fields as-is (e.g., side)
+                    normalized_pos[key] = value
+
+            normalized_positions[symbol] = normalized_pos
+
+        self._positions = normalized_positions
 
     def update_equity(self, equity: Decimal) -> None:
         """Update the current equity."""
@@ -454,35 +560,73 @@ class StatusReporter:
                 order_type = "STOP_LIMIT"
                 tif = "GTC"
 
+            # Parse quantity
+            quantity_raw = o.get("size") or o.get("order_configuration", {}).get(
+                "market_market_ioc", {}
+            ).get("base_size", "0")
+            try:
+                quantity = Decimal(str(quantity_raw)) if quantity_raw else Decimal("0")
+            except Exception:
+                quantity = Decimal("0")
+
+            # Parse price
+            price_raw = o.get("price")
+            try:
+                price = Decimal(str(price_raw)) if price_raw else None
+            except Exception:
+                price = None
+
             order_statuses.append(
                 OrderStatus(
                     order_id=o.get("order_id", ""),
                     symbol=o.get("product_id", ""),
                     side=o.get("side", ""),
-                    quantity=str(
-                        o.get("size", "0")
-                        or o.get("order_configuration", {})
-                        .get("market_market_ioc", {})
-                        .get("base_size", "0")
-                    ),
-                    price=str(o.get("price")) if o.get("price") else None,
+                    quantity=quantity,
+                    price=price,
                     status=o.get("status", "UNKNOWN"),
-                    type=order_type,
+                    order_type=order_type,
                     time_in_force=tif,
-                    timestamp=time.time(),  # Or parse creation_time
+                    creation_time=time.time(),  # Or parse creation_time
                 )
             )
         self._status.orders = order_statuses
 
     def add_trade(self, trade: dict[str, Any]) -> None:
         """Add a recent trade."""
+        # Generate unique trade_id
+        trade_id = (
+            trade.get("trade_id") or f"trade_{int(time.time() * 1000)}_{random.randint(1000, 9999)}"
+        )
+
+        # Convert timestamp to ISO string
+        timestamp = trade.get("timestamp", time.time())
+        time_str = datetime.utcfromtimestamp(timestamp).isoformat() + "Z"
+
+        # Parse numeric fields to Decimal
+        try:
+            quantity = Decimal(str(trade.get("quantity", "0")))
+        except Exception:
+            quantity = Decimal("0")
+
+        try:
+            price = Decimal(str(trade.get("price", "0")))
+        except Exception:
+            price = Decimal("0")
+
+        try:
+            fee = Decimal(str(trade.get("fee", "0")))
+        except Exception:
+            fee = Decimal("0")
+
         new_trade = TradeStatus(
+            trade_id=trade_id,
             symbol=trade.get("symbol", ""),
             side=trade.get("side", ""),
-            quantity=str(trade.get("quantity", "0")),
-            price=str(trade.get("price", "0")),
-            timestamp=time.time(),
-            order_id=trade.get("order_id"),
+            quantity=quantity,
+            price=price,
+            time=time_str,
+            order_id=str(trade.get("order_id") or ""),
+            fee=fee,
         )
         # Prepend and keep last 50
         self._status.trades.insert(0, new_trade)
@@ -490,26 +634,55 @@ class StatusReporter:
             self._status.trades.pop()
 
     def update_account(self, balances: list[Any], summary: dict[str, Any]) -> None:
-        """Update account metrics."""
-        # Format balances
-        bal_list = []
+        """Update account metrics with Decimal coercion."""
+        # Format balances with Decimal types
+        bal_list: list[BalanceEntry] = []
         for b in balances:
             # Handle object or dict
             if hasattr(b, "asset"):
                 asset = b.asset
-                total = str(b.total)
-                avail = str(b.available)
+                total_val = b.total
+                avail_val = b.available
+                hold_val = getattr(b, "hold", Decimal("0"))
             else:
                 asset = b.get("currency", "")
-                total = str(b.get("balance", "0"))
-                avail = str(b.get("available", "0"))
+                total_val = b.get("balance", "0")
+                avail_val = b.get("available", "0")
+                hold_val = b.get("hold", "0")
 
-            if Decimal(total) > 0:
-                bal_list.append({"asset": asset, "total": total, "available": avail})
+            # Convert to Decimal
+            try:
+                total = Decimal(str(total_val))
+            except (ValueError, InvalidOperation):
+                total = Decimal("0")
+
+            try:
+                avail = Decimal(str(avail_val))
+            except (ValueError, InvalidOperation):
+                avail = Decimal("0")
+
+            try:
+                hold = Decimal(str(hold_val))
+            except (ValueError, InvalidOperation):
+                hold = Decimal("0")
+
+            if total > 0:
+                bal_list.append(BalanceEntry(asset=asset, total=total, available=avail, hold=hold))
+
+        # Parse numeric fields to Decimal
+        try:
+            volume_30d = Decimal(str(summary.get("total_volume_30d", "0")))
+        except Exception:
+            volume_30d = Decimal("0")
+
+        try:
+            fees_30d = Decimal(str(summary.get("total_fees_30d", "0")))
+        except Exception:
+            fees_30d = Decimal("0")
 
         self._status.account = AccountStatus(
-            volume_30d=str(summary.get("total_volume_30d", "0.00")),
-            fees_30d=str(summary.get("total_fees_30d", "0.00")),
+            volume_30d=volume_30d,
+            fees_30d=fees_30d,
             fee_tier=str(summary.get("fee_tier", {}).get("pricing_tier", "Unknown")),
             balances=bal_list,
         )
@@ -517,16 +690,42 @@ class StatusReporter:
     def update_strategy(
         self, active_strategies: list[str], decisions: list[dict[str, Any]]
     ) -> None:
-        """Update strategy status."""
+        """Update strategy status with typed DecisionEntry normalization."""
         self._status.strategy.active_strategies = active_strategies
-        # Keep last 50 decisions
-        # Decisions are dicts: {symbol, action, reason, confidence, timestamp}
-        # We convert to string dicts for JSON safety
-        new_decisions = []
-        for d in decisions:
-            new_decisions.append({k: str(v) for k, v in d.items()})
 
-        self._status.strategy.last_decisions.extend(new_decisions)
+        # Normalize decisions to typed DecisionEntry objects
+        # Keep last 50 decisions
+        normalized_decisions: list[DecisionEntry] = []
+        for d in decisions:
+            # Parse confidence to float
+            try:
+                confidence = float(d.get("confidence", 0.0))
+            except (ValueError, TypeError):
+                confidence = 0.0
+
+            # Parse timestamp to float
+            timestamp = d.get("timestamp", 0.0)
+            if isinstance(timestamp, str):
+                try:
+                    timestamp = float(timestamp)
+                except (ValueError, TypeError):
+                    timestamp = 0.0
+            elif not isinstance(timestamp, (int, float)):
+                timestamp = 0.0
+
+            # Create typed entry
+            normalized_decisions.append(
+                DecisionEntry(
+                    symbol=str(d.get("symbol", "")),
+                    action=str(d.get("action", "HOLD")),
+                    reason=str(d.get("reason", "")),
+                    confidence=confidence,
+                    indicators=d.get("indicators", {}),
+                    timestamp=timestamp,
+                )
+            )
+
+        self._status.strategy.last_decisions.extend(normalized_decisions)
         if len(self._status.strategy.last_decisions) > 50:
             self._status.strategy.last_decisions = self._status.strategy.last_decisions[-50:]
 
@@ -558,8 +757,23 @@ class StatusReporter:
         self._status.system.memory_usage = memory
         self._status.system.cpu_usage = cpu
 
-    def get_status(self) -> dict[str, Any]:
-        """Get current status as a dictionary."""
+    def get_status(self) -> BotStatus:
+        """
+        Get current status as a BotStatus dataclass.
+
+        Returns:
+            BotStatus: Typed status snapshot (BotStatusSnapshot contract)
+        """
+        self._update_status()
+        return self._status
+
+    def get_status_dict(self) -> dict[str, Any]:
+        """
+        Get current status as a dictionary (backward compatibility).
+
+        Deprecated: Use get_status() for typed access.
+        This method will be removed after TUI migration is complete.
+        """
         self._update_status()
         return asdict(self._status)
 
@@ -573,5 +787,10 @@ __all__ = [
     "OrderStatus",
     "TradeStatus",
     "AccountStatus",
+    "BalanceEntry",
+    "DecisionEntry",
+    "StrategyStatus",
     "RiskStatus",
+    "SystemStatus",
+    "HeartbeatStatus",
 ]

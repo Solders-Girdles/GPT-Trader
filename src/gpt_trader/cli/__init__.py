@@ -22,12 +22,22 @@ load_dotenv()
 configure_logging(tui_mode=False)  # CLI mode: enable console output
 logger = get_logger(__name__, component="cli")
 
-from gpt_trader.cli.commands import account, optimize, orders, report, run, treasury  # noqa: E402
+# fmt: off
+from gpt_trader.cli.commands import (  # noqa: E402
+    account,
+    optimize,
+    orders,
+    report,
+    run,
+    treasury,
+    tui,
+)
 
+# fmt: on
 from . import services as _cli_services  # noqa: E402, F401
 from .response import CliErrorCode, CliResponse, format_response  # noqa: E402
 
-COMMAND_NAMES = {"run", "account", "orders", "treasury", "report", "optimize"}
+COMMAND_NAMES = {"run", "account", "orders", "treasury", "report", "optimize", "tui"}
 __all__ = ["main"]
 
 
@@ -147,6 +157,7 @@ def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Coinbase Trading Bot")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
+    tui.register(subparsers)
     run.register(subparsers)
     account.register(subparsers)
     orders.register(subparsers)

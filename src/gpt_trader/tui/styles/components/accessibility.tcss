@@ -1,0 +1,205 @@
+/* ========================================================================== */
+/* P3: ACCESSIBILITY - Focus Order & Keyboard Navigation                       */
+/* ========================================================================== */
+
+/* === Focus Ring Visibility === */
+/* Ensure focus is always visible for keyboard navigation */
+
+*:focus {
+    border: solid $accent;
+}
+
+/* Enhanced focus for primary interactive elements */
+Button:focus,
+Input:focus,
+Select:focus {
+    border: thick $accent;
+}
+
+/* DataTable focus - clear cursor visibility */
+DataTable:focus {
+    border: solid $accent;
+}
+
+DataTable:focus > .datatable--cursor {
+    background: $overlay-focus;
+    border-left: wide $accent;
+    color: $text-primary;
+}
+
+/* === Tab Order Hints === */
+/* Visual indicators for keyboard navigation sequence */
+
+.tab-hint {
+    color: $accent;
+    text-style: bold;
+    margin-right: 1;
+}
+
+/* === Skip Links === */
+/* For keyboard navigation - use class-based targeting */
+
+.skip-link {
+    color: $accent;
+    background: $bg-secondary;
+    padding: 1;
+    border: solid $accent;
+}
+
+/* === ARIA State Class Equivalents === */
+/* Since Textual doesn't support attribute selectors, use classes */
+
+.state-selected {
+    background: $accent-subtle;
+    border-left: wide $accent;
+}
+
+.state-expanded {
+    border-bottom: none;
+}
+
+.state-disabled {
+    opacity: 0.4;
+    color: $text-muted;
+}
+
+.state-invalid {
+    border: solid $error;
+}
+
+/* === Contrast Improvements === */
+/* Ensure text meets WCAG AA contrast requirements */
+
+/* Primary text on dark backgrounds: >= 4.5:1 */
+.text-primary {
+    color: #FFFFFF;
+}
+
+/* Secondary text: >= 4.5:1 */
+.text-secondary {
+    color: #B0B0B0;
+}
+
+/* Muted text (decorative): >= 3:1 minimum */
+.text-muted {
+    color: #808080;
+}
+
+/* Error text: High contrast */
+.text-error {
+    color: #FF4444;
+}
+
+/* Success text: Adjusted for contrast */
+.text-success {
+    color: #00CC33;
+}
+
+/* Warning text: Adjusted for contrast */
+.text-warning {
+    color: #FFD700;
+}
+
+/* === Motion Reduction === */
+/* Note: Textual doesn't support prefers-reduced-motion */
+
+.reduced-motion {
+    /* Static styles - no animations */
+}
+
+/* === Focus Trap Indicators === */
+/* Visual feedback when in modal/dialog */
+
+.focus-trapped {
+    border: thick $accent;
+}
+
+/* === Screen Reader Only === */
+/* Visually hidden but accessible to screen readers */
+
+.sr-only {
+    display: none;
+}
+
+/* === High Contrast Mode Classes === */
+/* Applied when high contrast theme is active */
+
+.high-contrast-focus {
+    border: thick $text-primary;
+    background: $bg-primary;
+}
+
+.high-contrast-text {
+    color: #A0A0A0;
+}
+
+/* === Keyboard Navigation Indicators === */
+
+.keyboard-focused {
+    border: thick $accent;
+}
+
+.mouse-focused {
+    border: solid $accent-muted;
+}
+
+/* === Action Hint Accessibility === */
+/* Make keyboard shortcuts visible */
+
+.action-hint {
+    padding: 0 1;
+    color: $text-muted;
+}
+
+.action-key {
+    color: $accent;
+    background: $bg-elevated;
+    padding: 0 1;
+    text-style: bold;
+}
+
+/* === Form Field Labels === */
+/* Ensure labels are clearly associated */
+
+.field-label {
+    color: $text-secondary;
+    margin-bottom: 0;
+}
+
+.field-label-required {
+    color: $text-secondary;
+    margin-bottom: 0;
+}
+
+/* === Error Messages === */
+/* Clear, visible error feedback */
+
+.field-error {
+    color: $error;
+    background: $error-muted;
+    padding: 0 1;
+    margin-top: 0;
+}
+
+/* === Loading State Announcements === */
+
+.loading-announcement {
+    color: $accent;
+    text-style: bold;
+}
+
+/* === Status Announcements === */
+/* For live region updates */
+
+.status-live {
+    color: $text-primary;
+}
+
+.status-polite {
+    color: $text-secondary;
+}
+
+.status-assertive {
+    color: $warning;
+    text-style: bold;
+}

@@ -1,0 +1,52 @@
+/* ========================================================================== */
+/* RISK WIDGET - Professional Display                                          */
+/* ========================================================================== */
+
+RiskWidget {
+    layout: vertical;
+    height: auto;
+    padding: $spacing-sm $spacing-md; /* Increased padding */
+}
+
+RiskWidget .risk-section {
+    margin-bottom: $spacing-md; /* Increased spacing between sections */
+}
+
+RiskWidget ProgressBar {
+    margin: 0 1;
+}
+
+/* Risk labels and values */
+RiskWidget .risk-label {
+    color: $text-muted;
+    margin-bottom: $spacing-xs; /* Spacing before value */
+}
+
+RiskWidget .risk-value {
+    color: $text-primary;
+    text-style: bold;
+    padding: $spacing-xs $spacing-sm; /* Subtle padding */
+    background: $bg-elevated; /* Subtle background for values */
+    border-left: solid $accent-muted; /* Accent border */
+}
+
+/* Risk status indicators */
+RiskWidget .risk-status-low {
+    color: $success;
+}
+
+RiskWidget .risk-status-medium {
+    color: $warning;
+}
+
+RiskWidget .risk-status-high {
+    color: $error;
+}
+
+/* Risk grid layout */
+RiskWidget .risk-grid {
+    layout: grid;
+    grid-size: 2;
+    grid-gutter: $spacing-md; /* Increased gutter for better spacing */
+    padding: $spacing-sm 0; /* Vertical padding */
+}

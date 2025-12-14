@@ -8,7 +8,7 @@ from gpt_trader.tui.widgets.system import SystemHealthWidget
 
 class SystemHealthTestApp(App):
     def compose(self) -> ComposeResult:
-        yield SystemHealthWidget()
+        yield SystemHealthWidget(compact_mode=False)
 
 
 class TestSystemHealthWidget:
@@ -39,7 +39,9 @@ class TestSystemHealthWidget:
             assert app.query_one("#connection-status", Label).renderable == "CONNECTED"
             assert app.query_one("#connection-status", Label).has_class("status-connected")
             assert app.query_one("#latency", Label).renderable == "123ms"
-            assert app.query_one("#rate-limit", Label).renderable == "15%"
+            assert (
+                app.query_one("#rate-limit", Label).renderable == "15%"
+            )  # No prefix in non-compact mode
             assert app.query_one("#memory", Label).renderable == "42MB"
             assert app.query_one("#cpu", Label).renderable == "5%"
 

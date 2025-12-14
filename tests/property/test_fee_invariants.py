@@ -280,9 +280,9 @@ def test_rate_percentage_conversion(
 
     expected_pct = rate_bps / Decimal("100")
 
-    assert rate_pct == expected_pct, (
-        f"Rate PCT {rate_pct} doesn't match expected {expected_pct} " f"(rate_bps={rate_bps})"
-    )
+    assert (
+        rate_pct == expected_pct
+    ), f"Rate PCT {rate_pct} doesn't match expected {expected_pct} (rate_bps={rate_bps})"
 
 
 @seed(3008)

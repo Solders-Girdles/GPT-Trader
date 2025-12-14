@@ -1,0 +1,94 @@
+/* ========================================================================== */
+/* THEME VARIABLES - Obsidian (FinTech Pro)                                   */
+/* ========================================================================== */
+
+/* === Backgrounds (Deep Neutral) === */
+$bg-primary: #101010;      /* Deep Black - Main background */
+$bg-secondary: #1a1a1a;    /* Dark Grey - Panels/containers */
+$bg-elevated: #252525;     /* Lighter Grey - Headers/Cards */
+$bg-highlight: #303030;    /* Highlight - Hover states/Inputs */
+
+/* === Accents (High Contrast/Saturation) === */
+$accent: #007AFF;          /* Electric Blue - Primary action/Focus */
+$accent-hover: #0066CC;    /* Darker Electric Blue - Hover */
+$accent-muted: #333333;    /* Neutral Grey - Subtle borders/separators */
+$accent-glow: #007AFF;     /* Electric Blue - Glow effects */
+$accent-bright: #0056b3;   /* Deep Blue - Pressed/Active */
+$accent-subtle: rgba(0, 122, 255, 0.1);  /* Subtle Blue Tint */
+
+/* === Text Colors (High Contrast) === */
+$text-primary: #FFFFFF;    /* Pure White - Primary Data */
+$text-secondary: #B0B0B0;  /* Light Grey - Labels/Secondary Info */
+$text-muted: #606060;      /* Dark Grey - Disabled/Hints */
+$text-bright: #FFFFFF;     /* Pure White - Headers/Emphasis */
+
+/* === Semantic Colors (Neon/Sharp) === */
+$success: #00FF41;         /* Neon Green - Positive PnL/Success */
+$success-muted: rgba(0, 255, 65, 0.1);
+$success-dim: #008f24;
+$warning: #FFD700;         /* Gold - Warnings/Caution */
+$warning-muted: rgba(255, 215, 0, 0.1);
+$warning-dim: #b39700;
+$error: #FF0033;           /* Crimson Red - Negative PnL/Error */
+$error-muted: rgba(255, 0, 51, 0.1);
+$error-dim: #b30024;
+$info: #007AFF;            /* Electric Blue - Info */
+$info-muted: rgba(0, 122, 255, 0.1);
+
+/* === Borders (Technical/Sharp) === */
+$border-subtle: #333333;   /* Dark Grey - Standard borders */
+$border-accent: #007AFF;   /* Electric Blue - Active borders */
+$border-emphasis: #505050; /* Mid Grey - Section dividers */
+
+/* === Spacing Scale === */
+$spacing-xs: 1;
+$spacing-sm: 2;
+$spacing-md: 3;
+$spacing-lg: 4;
+
+/* === Semantic Spacing Tokens === */
+$gutter-tight: 1;
+$gutter-standard: 2;
+$gutter-comfortable: 3;
+$content-padding: 2;
+$section-gap: 4;
+
+/* === Panel/Tile Tokens === */
+$tile-padding: 1 2;
+$tile-padding-compact: 1;
+$widget-header-padding: 0 2;
+$widget-content-padding: 1 2;
+
+/* === Elevation System === */
+$elevation-0: $bg-primary;
+$elevation-1: $bg-secondary;
+$elevation-2: $bg-elevated;
+$elevation-3: $bg-highlight;
+
+/* === Tile Border Tokens === */
+$tile-border-default: solid $border-subtle;
+$tile-border-accent: solid $border-accent;
+$tile-border-highlight: solid $border-emphasis;
+
+/* === Interactive State Overlays === */
+$overlay-hover: rgba(255, 255, 255, 0.05);
+$overlay-focus: rgba(0, 122, 255, 0.2);
+$overlay-disabled: rgba(0, 0, 0, 0.5);
+$overlay-active: rgba(0, 122, 255, 0.1);
+
+/* === Panel Tokens === */
+$panel-bg-default: $bg-secondary;
+$panel-bg-elevated: $bg-elevated;
+$panel-border-default: $border-subtle;
+$panel-border-emphasis: $border-emphasis;
+
+/* === Interactive State Tokens === */
+$interactive-default: $bg-elevated;
+$interactive-hover: $bg-highlight;
+$interactive-active: $accent;
+$interactive-disabled: $bg-secondary;
+
+/* === Border Style Tokens === */
+$border-default: solid $border-subtle;
+$border-emphasis-style: solid $border-emphasis;
+$border-glow: solid $accent-glow;

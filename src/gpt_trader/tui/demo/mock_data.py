@@ -42,6 +42,23 @@ class MockDataGenerator:
             if symbol not in self.price_history:
                 self.price_history[symbol] = [self.base_prices[symbol]]
 
+        # Initialize with some starting positions for demo
+        if not self.positions:
+            self.positions = {
+                "BTC-USD": {
+                    "symbol": "BTC-USD",
+                    "quantity": 0.25,
+                    "side": "LONG",
+                    "entry_price": self.base_prices["BTC-USD"] * 0.98,  # Entry 2% lower
+                },
+                "ETH-USD": {
+                    "symbol": "ETH-USD",
+                    "quantity": 3.5,
+                    "side": "LONG",
+                    "entry_price": self.base_prices["ETH-USD"] * 1.01,  # Entry 1% higher
+                },
+            }
+
     def update_prices(self) -> dict[str, str]:
         """Generate new price updates with realistic random walk."""
         prices = {}
@@ -229,7 +246,7 @@ class MockDataGenerator:
             "quantity": f"{quantity:.4f}",
             "price": f"{price:.2f}",
             "order_id": order_id,
-            "time": datetime.now().isoformat(),
+            "time": datetime.now().isoformat() + "Z",  # ISO format with UTC marker
             "fee": f"{price * quantity * 0.006:.2f}",  # 0.6% fee
         }
         self.trades.append(trade)

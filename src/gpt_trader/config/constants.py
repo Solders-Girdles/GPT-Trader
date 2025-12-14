@@ -40,6 +40,19 @@ WS_RECONNECT_DELAY: int = int(os.getenv("GPT_TRADER_WS_RECONNECT_DELAY", "5"))
 # WebSocket thread join timeout in seconds
 WS_JOIN_TIMEOUT: float = float(os.getenv("GPT_TRADER_WS_JOIN_TIMEOUT", "2.0"))
 
+# Maximum WebSocket reconnection delay (cap for exponential backoff)
+MAX_WS_RECONNECT_DELAY_SECONDS: float = float(
+    os.getenv("GPT_TRADER_MAX_WS_RECONNECT_DELAY", "60.0")
+)
+
+# WebSocket reconnection backoff multiplier
+WS_RECONNECT_BACKOFF_MULTIPLIER: float = float(
+    os.getenv("GPT_TRADER_WS_RECONNECT_BACKOFF", "1.5")
+)
+
+# Maximum WebSocket reconnection attempts before giving up (0 = unlimited)
+MAX_WS_RECONNECT_ATTEMPTS: int = int(os.getenv("GPT_TRADER_MAX_WS_RECONNECT_ATTEMPTS", "50"))
+
 # =============================================================================
 # Security / Validation Configuration
 # =============================================================================
@@ -124,3 +137,31 @@ DEFAULT_VOLATILITY_WINDOW_PERIODS: int = int(os.getenv("GPT_TRADER_VOLATILITY_WI
 
 # Minimum volatility window threshold
 MIN_VOLATILITY_WINDOW_THRESHOLD: int = int(os.getenv("GPT_TRADER_MIN_VOLATILITY_WINDOW", "5"))
+
+# =============================================================================
+# API Resilience Feature Flags
+# =============================================================================
+
+# Response caching - reduces API calls for stable data
+CACHE_ENABLED: bool = os.getenv("GPT_TRADER_CACHE_ENABLED", "true").lower() == "true"
+CACHE_DEFAULT_TTL: float = float(os.getenv("GPT_TRADER_CACHE_TTL", "30.0"))
+CACHE_MAX_SIZE: int = int(os.getenv("GPT_TRADER_CACHE_MAX_SIZE", "1000"))
+
+# Circuit breaker - prevents hammering failing endpoints
+CIRCUIT_BREAKER_ENABLED: bool = os.getenv("GPT_TRADER_CIRCUIT_BREAKER_ENABLED", "true").lower() == "true"
+CIRCUIT_FAILURE_THRESHOLD: int = int(os.getenv("GPT_TRADER_CIRCUIT_FAILURE_THRESHOLD", "5"))
+CIRCUIT_RECOVERY_TIMEOUT: float = float(os.getenv("GPT_TRADER_CIRCUIT_RECOVERY_TIMEOUT", "30.0"))
+CIRCUIT_SUCCESS_THRESHOLD: int = int(os.getenv("GPT_TRADER_CIRCUIT_SUCCESS_THRESHOLD", "2"))
+
+# API metrics collection - tracks latency and error rates
+METRICS_ENABLED: bool = os.getenv("GPT_TRADER_METRICS_ENABLED", "true").lower() == "true"
+METRICS_HISTORY_SIZE: int = int(os.getenv("GPT_TRADER_METRICS_HISTORY", "100"))
+
+# Request priority - prioritizes critical requests under rate limit pressure
+PRIORITY_ENABLED: bool = os.getenv("GPT_TRADER_PRIORITY_ENABLED", "true").lower() == "true"
+PRIORITY_THRESHOLD_HIGH: float = float(os.getenv("GPT_TRADER_PRIORITY_THRESHOLD_HIGH", "0.70"))
+PRIORITY_THRESHOLD_CRITICAL: float = float(os.getenv("GPT_TRADER_PRIORITY_THRESHOLD_CRITICAL", "0.85"))
+
+# Adaptive throttling - proactive pacing instead of reactive blocking
+ADAPTIVE_THROTTLE_ENABLED: bool = os.getenv("GPT_TRADER_ADAPTIVE_THROTTLE", "true").lower() == "true"
+THROTTLE_TARGET_UTILIZATION: float = float(os.getenv("GPT_TRADER_THROTTLE_TARGET", "0.7"))

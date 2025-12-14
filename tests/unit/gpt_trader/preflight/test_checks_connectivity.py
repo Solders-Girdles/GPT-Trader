@@ -245,10 +245,11 @@ class TestCheckKeyPermissions:
             result = check_key_permissions(checker)
 
         assert result is True
-        assert any("trade + view permissions" in s for s in checker.successes)
+        assert any("view permission" in s for s in checker.successes)
+        assert any("trade permission" in s for s in checker.successes)
 
-    def test_fails_without_trade_permission(self) -> None:
-        """Should fail when key lacks trade permission."""
+    def test_fails_without_trade_permission_when_derivatives_enabled(self) -> None:
+        """Should fail when key lacks trade permission and derivatives are enabled."""
         checker = PreflightCheck(profile="prod")
 
         mock_client = MagicMock()
@@ -256,9 +257,13 @@ class TestCheckKeyPermissions:
         mock_client.get_key_permissions.return_value = {
             "can_trade": False,
             "can_view": True,
+            "portfolio_type": "INTX",
         }
 
-        env = {"COINBASE_PREFLIGHT_FORCE_REMOTE": "1"}
+        env = {
+            "COINBASE_PREFLIGHT_FORCE_REMOTE": "1",
+            "COINBASE_ENABLE_DERIVATIVES": "1",
+        }
         with (
             patch.dict(os.environ, env, clear=True),
             patch.object(checker, "_build_cdp_client", return_value=(mock_client, mock_auth)),
@@ -288,6 +293,36 @@ class TestCheckKeyPermissions:
 
         assert result is False
         assert any("missing portfolio view permission" in e for e in checker.errors)
+
+    def test_passes_with_view_only_key_when_derivatives_disabled(
+        self, capsys: pytest.CaptureFixture
+    ) -> None:
+        """Should pass with view-only key when derivatives are not enabled."""
+        checker = PreflightCheck(profile="prod", verbose=True)
+
+        mock_client = MagicMock()
+        mock_auth = MagicMock()
+        mock_client.get_key_permissions.return_value = {
+            "can_trade": False,
+            "can_view": True,
+            "portfolio_uuid": "uuid-123",
+        }
+
+        env = {
+            "COINBASE_PREFLIGHT_FORCE_REMOTE": "1",
+            "COINBASE_ENABLE_DERIVATIVES": "0",
+        }
+        with (
+            patch.dict(os.environ, env, clear=True),
+            patch.object(checker, "_build_cdp_client", return_value=(mock_client, mock_auth)),
+        ):
+            result = check_key_permissions(checker)
+
+        assert result is True
+        assert any("view permission" in s for s in checker.successes)
+        # Trade permission missing is logged as info, not error
+        captured = capsys.readouterr()
+        assert "view-only" in captured.out
 
     def test_warns_when_portfolio_uuid_missing(self) -> None:
         """Should warn when portfolio UUID is not returned."""
@@ -468,8 +503,8 @@ class TestCheckKeyPermissions:
             result = check_key_permissions(checker)
 
         assert result is False
-        # Empty response leads to missing permissions errors
-        assert any("missing trade permission" in e for e in checker.errors)
+        # Empty response leads to missing view permission error
+        assert any("missing portfolio view permission" in e for e in checker.errors)
 
     def test_prints_section_header(self, capsys: pytest.CaptureFixture) -> None:
         """Should print section header."""

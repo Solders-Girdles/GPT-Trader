@@ -1,0 +1,143 @@
+/* ========================================================================== */
+/* SELECT DROPDOWN STYLING                                                    */
+/* ========================================================================== */
+
+/* Base Select widget styling */
+Select {
+    width: auto;
+    min-width: 20;
+    height: 3;
+    background: $bg-elevated;
+    color: $text-primary;
+    border: solid $border-subtle;
+    padding: 0;
+    content-align: left middle;
+}
+
+Select:hover {
+    border: solid $accent;
+}
+
+Select:focus {
+    border: thick $accent;
+    background: $bg-elevated;
+}
+
+/* Select current value display */
+Select > SelectCurrent {
+    height: 100%;
+    min-height: 3;
+    background: $bg-elevated;
+    color: $text-primary;
+    border: solid $border-subtle;
+    padding: 0 1;
+    content-align: left middle;
+    text-style: bold;
+}
+
+/* Ensure label/arrow are visible in collapsed state */
+Select > SelectCurrent > Static#label {
+    width: 1fr;
+    min-width: 12;
+    height: 100%;
+    color: $text-primary;
+    background: transparent;
+    content-align: left middle;
+    text-style: bold;
+    opacity: 1;
+    display: block;
+    padding: 0 1;
+}
+
+Select > SelectCurrent.-has-value Static#label {
+    color: $text-primary;
+}
+
+Select > SelectCurrent > .arrow {
+    color: $text-primary;
+    padding-left: 1;
+    opacity: 1;
+}
+
+Select.-disabled > SelectCurrent {
+    color: $text-muted;
+    border: solid $border-subtle;
+    background: $bg-elevated;
+}
+
+/* Dropdown overlay - ensure proper layering and visibility */
+/* NOTE: SelectOverlay is an OptionList (not a container), and Textual defines
+   defaults with `Select > SelectOverlay` selectors. Match that specificity so
+   our styles reliably override the built-ins. */
+Select > SelectOverlay {
+    /* Ensure the dropdown renders above all tiles (fixes clipping). */
+    overlay: screen;
+    layer: overlay;
+
+    /* Styling */
+    background: $bg-elevated;
+    color: $text-primary;
+    border: solid $accent;
+    padding: 0 1;
+
+    /* Sizing */
+    width: auto;
+    min-width: 22;
+    max-height: 18;
+
+    scrollbar-background: $bg-secondary;
+    scrollbar-color: $accent-muted;
+}
+
+/* Individual options in dropdown */
+Select > SelectOverlay > .option-list--option {
+    padding: 0 2;
+    background: $bg-elevated;
+    color: $text-primary;
+}
+
+Select > SelectOverlay > .option-list--option-highlighted {
+    background: $accent-muted;
+    color: $text-primary;
+    text-style: bold;
+}
+
+Select > SelectOverlay > .option-list--option-hover {
+    background: $overlay-hover;
+}
+
+/* Mode selector specific sizing */
+#mode-selector Select {
+    min-width: 28;
+    width: 30;
+}
+
+#mode-selector SelectCurrent {
+    background: $bg-elevated;
+    border: solid $border-subtle;
+    color: $text-primary;
+}
+
+#mode-selector SelectOverlay {
+    min-width: 30;
+    width: 32;
+    max-height: 18;
+}
+
+/* Log level selector sizing to prevent truncation */
+#log-level-select {
+    min-width: 14;
+    width: 16;
+}
+
+#log-level-select SelectCurrent {
+    background: $bg-elevated;
+    border: solid $border-subtle;
+    color: $text-primary;
+}
+
+#log-level-select SelectOverlay {
+    min-width: 16;
+    width: 18;
+    max-height: 12;
+}

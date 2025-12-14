@@ -1,0 +1,13 @@
+/* ========================================================================== */
+/* SCREEN & GLOBAL LAYOUT                                                     */
+/* ========================================================================== */
+
+Screen {
+    layout: vertical;
+    background: $bg-primary;
+    color: $text-primary;
+}
+
+Label {
+    color: $text-primary;
+}

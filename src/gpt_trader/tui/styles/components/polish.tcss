@@ -1,0 +1,365 @@
+/* ========================================================================== */
+/* P3: VISUAL POLISH - Reduce Boxiness & Micro-interactions                    */
+/* ========================================================================== */
+
+/* === Refined Border Tokens === */
+/* Lighter, more subtle borders throughout */
+$border-hairline: #2a2a2a;  /* Very subtle divider */
+$border-light: #333333;     /* Default subtle border */
+$border-medium: #444444;    /* Slightly more visible */
+
+/* === Skeleton Loading Placeholders === */
+/* Note: Textual doesn't support linear-gradient, using solid background */
+
+.skeleton {
+    background: $bg-elevated;
+    color: transparent;
+}
+
+.skeleton-text {
+    height: 1;
+    background: $bg-elevated;
+    color: transparent;
+    width: 60%;
+}
+
+.skeleton-value {
+    height: 1;
+    background: $bg-elevated;
+    color: transparent;
+    width: 40%;
+}
+
+.skeleton-line {
+    height: 1;
+    background: $bg-secondary;
+    margin-bottom: 1;
+}
+
+/* === Loading Indicator === */
+
+.loading-dots {
+    color: $accent;
+    text-style: bold;
+}
+
+.loading-spinner {
+    color: $accent;
+}
+
+/* === Value Change Highlights === */
+/* Applied via Python widget logic */
+
+.value-changed-up {
+    color: $success;
+    text-style: bold;
+    background: $success-muted;
+}
+
+.value-changed-down {
+    color: $error;
+    text-style: bold;
+    background: $error-muted;
+}
+
+.value-flash {
+    /* Brief highlight then fade - handled in Python */
+    background: $accent-subtle;
+}
+
+/* === Last Updated Chips === */
+/* Stable width to prevent jitter */
+
+.timestamp-chip {
+    width: auto;
+    min-width: 12;  /* Fixed minimum to prevent jitter */
+    height: 1;
+    padding: 0 1;
+    color: $text-muted;
+    background: $bg-elevated;
+    text-align: right;
+}
+
+.timestamp-chip.stale {
+    color: $warning;
+    background: $warning-muted;
+}
+
+.timestamp-chip.fresh {
+    color: $success;
+}
+
+.last-updated {
+    min-width: 8;  /* Stable width */
+    color: $text-muted;
+    text-align: right;
+}
+
+/* === Inline Banners (Toast-like notifications within tiles) === */
+
+.inline-banner {
+    height: auto;
+    min-height: 1;
+    width: 100%;
+    padding: 0 1;
+    margin: 0;
+    background: $bg-elevated;
+    border-left: wide $accent-muted;
+    color: $text-secondary;
+}
+
+.inline-banner.info {
+    background: rgba(0, 122, 255, 0.05);
+    border-left: wide $info;
+    color: $info;
+}
+
+.inline-banner.success {
+    background: rgba(0, 255, 65, 0.05);
+    border-left: wide $success;
+    color: $success;
+}
+
+.inline-banner.warning {
+    background: rgba(255, 215, 0, 0.05);
+    border-left: wide $warning;
+    color: $warning;
+}
+
+.inline-banner.error {
+    background: rgba(255, 0, 51, 0.05);
+    border-left: wide $error;
+    color: $error;
+}
+
+/* === Refined Headers === */
+/* Less heavy, more subtle hierarchy */
+
+.header-refined {
+    color: $text-primary;
+    text-style: bold;
+    background: transparent;
+    padding: 0 1;
+    border-left: wide $accent;  /* Accent indicator only */
+    border-bottom: none;  /* Remove heavy bottom border */
+    height: 2;
+    margin-bottom: 1;
+}
+
+.header-subtle {
+    color: $text-secondary;
+    background: transparent;
+    padding: 0 1;
+    border-bottom: solid $border-hairline;
+    height: 1;
+    margin-bottom: 1;
+}
+
+/* === Badge Styling === */
+/* Consistent badge/pill appearance */
+
+.badge {
+    padding: 0 1;
+    height: 1;
+    background: $bg-elevated;
+    color: $text-primary;
+    text-style: bold;
+}
+
+.badge-primary {
+    background: $accent;
+    color: $bg-primary;
+}
+
+.badge-success {
+    background: $success-muted;
+    color: $success;
+    border-left: thick $success;
+}
+
+.badge-warning {
+    background: $warning-muted;
+    color: $warning;
+    border-left: thick $warning;
+}
+
+.badge-error {
+    background: $error-muted;
+    color: $error;
+    border-left: thick $error;
+}
+
+.badge-info {
+    background: $info-muted;
+    color: $info;
+    border-left: thick $info;
+}
+
+.badge-muted {
+    background: $bg-secondary;
+    color: $text-muted;
+}
+
+/* === Refined Dividers === */
+
+.divider {
+    height: 1;
+    background: $border-hairline;
+    margin: 1 0;
+}
+
+.divider-vertical {
+    width: 1;
+    background: $border-hairline;
+    margin: 0 1;
+}
+
+.divider-accent {
+    background: $accent-muted;
+}
+
+/* === Card/Panel Refinements === */
+/* Less boxy appearance */
+
+.card {
+    background: $bg-secondary;
+    border: solid $border-light;
+    padding: 1;
+}
+
+.card-elevated {
+    background: $bg-elevated;
+    border: solid $border-medium;
+}
+
+.card-flat {
+    background: transparent;
+    border: none;
+    border-bottom: solid $border-hairline;
+}
+
+/* === Metric Display === */
+/* Clean, aligned metric presentation */
+
+.metric {
+    layout: vertical;
+    height: auto;
+    padding: 0;
+}
+
+.metric-label {
+    color: $text-muted;
+    height: 1;
+}
+
+.metric-value {
+    color: $text-primary;
+    text-style: bold;
+    height: 1;
+}
+
+.metric-inline {
+    layout: horizontal;
+    height: 1;
+}
+
+.metric-inline .metric-label {
+    width: auto;
+    margin-right: 1;
+}
+
+.metric-inline .metric-value {
+    width: auto;
+}
+
+/* === Progress Indicator Polish === */
+
+ProgressBar {
+    height: 1;
+    background: $bg-secondary;
+    border: none;
+}
+
+ProgressBar > .bar--bar {
+    background: $accent;
+}
+
+ProgressBar.success > .bar--bar {
+    background: $success;
+}
+
+ProgressBar.warning > .bar--bar {
+    background: $warning;
+}
+
+ProgressBar.error > .bar--bar {
+    background: $error;
+}
+
+/* === Tooltip-style Help Text === */
+
+.help-text {
+    color: $text-muted;
+    text-style: italic;
+    height: 1;
+}
+
+/* === Empty State Polish === */
+
+.empty-state {
+    padding: 2;
+    color: $text-muted;
+    text-align: center;
+}
+
+.empty-state-icon {
+    color: $text-muted;
+    margin-bottom: 1;
+}
+
+.empty-state-title {
+    color: $text-secondary;
+    text-style: bold;
+    margin-bottom: 0;
+}
+
+.empty-state-subtitle {
+    color: $text-muted;
+}
+
+/* === Refined Table Styling === */
+/* Less heavy borders, cleaner look */
+
+DataTable {
+    padding: 0;
+}
+
+DataTable > .datatable--header {
+    background: $bg-elevated;
+    border-bottom: solid $border-light;
+    padding: 0 1;
+}
+
+DataTable > .datatable--header-cell {
+    border-right: none;  /* Remove vertical separators in header */
+}
+
+DataTable > .datatable--cell {
+    border-right: none;  /* Remove vertical separators */
+    padding: 0 1;
+}
+
+/* === Compact Mode Adjustments === */
+
+.compact .header-refined {
+    height: 1;
+    padding: 0;
+}
+
+.compact .metric {
+    padding: 0;
+}
+
+.compact .card {
+    padding: 0;
+}

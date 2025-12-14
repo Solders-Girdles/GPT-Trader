@@ -1,0 +1,164 @@
+/* ========================================================================== */
+/* ACCOUNT WIDGET - Professional & Refined                                    */
+/* ========================================================================== */
+
+AccountWidget {
+    layout: vertical;
+    height: 1fr;
+    padding: $spacing-md $spacing-lg; /* Increased padding for breathing room */
+    background: $bg-secondary;
+}
+
+AccountWidget DataTable {
+    height: auto;
+}
+
+/* Compact mode: hide detailed sections */
+AccountWidget.compact .balance-details {
+    display: none;
+}
+
+AccountWidget.compact .account-metrics-row {
+    display: none;
+}
+
+/* Compact mode horizontal summary */
+.portfolio-summary {
+    layout: horizontal;
+    align-vertical: middle;
+}
+
+.metric-separator {
+    color: $text-muted;
+    margin: 0 1;
+}
+
+/* Account header container - horizontal layout with title and timestamp */
+.account-header {
+    layout: horizontal;
+    width: 100%;
+    height: auto;
+    align: left middle;
+}
+
+/* Account header - uses global .widget-header style from headers.tcss */
+/* Widget-specific overrides can be added here if needed */
+AccountWidget .widget-header {
+    /* Inherits from .widget-header in headers.tcss */
+    width: auto;
+}
+
+/* Timestamp label in header */
+.timestamp-label {
+    color: $text-muted;
+    margin-left: 1;
+    width: 1fr;
+    text-align: right;
+}
+
+.account-metric {
+    width: 1fr;
+    min-width: 10;
+    height: auto;
+    min-height: 3;                     /* Slightly taller */
+    background: transparent;           /* Clean: no background */
+    border: none;
+    border-bottom: solid $border-subtle;  /* Separator instead of box */
+    padding: 1 0;                      /* Vertical padding only */
+    margin: 0;
+}
+
+.account-metric:last-of-type {
+    border-bottom: none;               /* No border on last item */
+}
+
+.account-metric-label {
+    color: $text-muted;                /* Muted label */
+    margin-bottom: 0;
+}
+
+.account-metric-value {
+    color: $text-primary;
+    text-style: bold;
+    text-align: right;
+}
+
+.portfolio-summary-row {
+    layout: horizontal;
+    height: auto;
+    min-height: 4;
+    width: 100%;
+    margin-bottom: 1;
+    padding: 0;
+}
+
+.portfolio-metric {
+    width: 1fr;
+    min-width: 12;
+    height: auto;
+    min-height: 4; /* Increased height for better visual weight */
+    background: $bg-elevated;
+    border: solid $border-subtle;
+    border-left: wide $accent-muted; /* Subtle accent border */
+    padding: $spacing-sm $spacing-md; /* Increased padding */
+    margin: 0 1 0 0;
+}
+
+.portfolio-metric:last-of-type {
+    margin-right: 0;
+}
+
+.portfolio-metric-label {
+    color: $text-muted;
+    height: 1;
+}
+
+.portfolio-metric-value {
+    color: $text-primary;
+    text-style: bold;
+    height: 1;
+}
+
+.account-metrics-row {
+    layout: horizontal;
+    height: auto;
+    min-height: 3;
+    width: 100%;
+    margin-bottom: 1;
+    padding: 0;
+}
+
+/* Secondary metrics row - Volume, Fees, Fee Tier */
+.account-metrics-row .portfolio-metric {
+    background: transparent;
+    border: none;
+    border-bottom: solid $border-subtle;
+    padding: 1 1;
+    margin: 0;
+}
+
+.balance-details {
+    height: 1fr;
+    width: 100%;
+    margin-top: 1;
+}
+
+/* Balances sub-header - uses global .widget-header style */
+.balance-details .widget-header {
+    color: $text-secondary;  /* Override: slightly muted for sub-header */
+    margin-bottom: 0;        /* Override: tighter spacing in details */
+}
+
+/* ========================================================================== */
+/* RESPONSIVE VARIANTS                                                         */
+/* Hide detailed elements in compact mode via parent grid class                */
+/* ========================================================================== */
+
+/* Compact mode: hide secondary metrics and balance details */
+#bento-grid.compact .account-metrics-row {
+    display: none;
+}
+
+#bento-grid.compact .balance-details {
+    display: none;
+}

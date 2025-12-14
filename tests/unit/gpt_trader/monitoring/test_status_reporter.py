@@ -47,7 +47,7 @@ class TestBotStatusDataclass:
         status = PositionStatus()
         assert status.count == 0
         assert status.symbols == []
-        assert status.total_unrealized_pnl == "0"
+        assert status.total_unrealized_pnl == Decimal("0")
 
 
 class TestStatusReporterInit:
@@ -227,8 +227,8 @@ class TestStatusReporterHealth:
 
             try:
                 status = reporter.get_status()
-                assert status["healthy"] is True
-                assert status["health_issues"] == []
+                assert status.healthy is True
+                assert status.health_issues == []
             finally:
                 await reporter.stop()
 
@@ -241,8 +241,8 @@ class TestStatusReporterHealth:
         reporter.update_price("BTC-USD", Decimal("50000"))
 
         status = reporter.get_status()
-        assert status["healthy"] is False
-        assert any("Recent error" in issue for issue in status["health_issues"])
+        assert status.healthy is False
+        assert any("Recent error" in issue for issue in status.health_issues)
 
     def test_unhealthy_stale_prices(self) -> None:
         reporter = StatusReporter()
@@ -254,8 +254,8 @@ class TestStatusReporterHealth:
         reporter._last_price_update = time.time() - 300  # 5 minutes ago
 
         status = reporter.get_status()
-        assert status["healthy"] is False
-        assert any("Stale prices" in issue for issue in status["health_issues"])
+        assert status.healthy is False
+        assert any("Stale prices" in issue for issue in status.health_issues)
 
 
 class TestStatusReporterFileOutput:
@@ -268,14 +268,16 @@ class TestStatusReporterFileOutput:
             reporter = StatusReporter(
                 status_file=str(status_file),
                 bot_id="test-bot",
+                observer_interval=0.05,
+                file_write_interval=0.05,
             )
 
             await reporter.start()
             reporter.update_price("BTC-USD", Decimal("50000.123"))
             reporter.record_cycle()
 
-            # Wait for write
-            await asyncio.sleep(0.1)
+            # Wait for file write cycle
+            await asyncio.sleep(0.15)
 
             try:
                 with open(status_file) as f:
@@ -291,13 +293,18 @@ class TestStatusReporterFileOutput:
     async def test_handles_decimal_serialization(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             status_file = Path(tmpdir) / "status.json"
-            reporter = StatusReporter(status_file=str(status_file))
+            reporter = StatusReporter(
+                status_file=str(status_file),
+                observer_interval=0.05,
+                file_write_interval=0.05,
+            )
 
             await reporter.start()
             reporter.update_price("BTC-USD", Decimal("50000.12345678"))
             reporter.update_positions({"BTC-PERP": {"unrealized_pnl": Decimal("123.456")}})
 
-            await asyncio.sleep(0.1)
+            # Wait for file write cycle
+            await asyncio.sleep(0.15)
 
             try:
                 with open(status_file) as f:
@@ -315,16 +322,17 @@ class TestStatusReporterFileOutput:
             status_file = Path(tmpdir) / "status.json"
             reporter = StatusReporter(
                 status_file=str(status_file),
-                update_interval=0.05,
+                observer_interval=0.02,
+                file_write_interval=0.02,
             )
 
             await reporter.start()
 
             try:
-                # Rapid updates
+                # Rapid updates - each cycle triggers observer + file write
                 for i in range(10):
                     reporter.record_cycle()
-                    await asyncio.sleep(0.02)
+                    await asyncio.sleep(0.03)
 
                 # File should always be valid JSON
                 with open(status_file) as f:
@@ -344,7 +352,8 @@ class TestStatusReporterIntegration:
             reporter = StatusReporter(
                 status_file=str(status_file),
                 bot_id="integration-test",
-                update_interval=0.1,
+                observer_interval=0.05,
+                file_write_interval=0.05,
             )
 
             # Start
@@ -358,6 +367,7 @@ class TestStatusReporterIntegration:
                 {"BTC-PERP": {"quantity": Decimal("1"), "unrealized_pnl": Decimal("50")}}
             )
 
+            # Wait for file write cycle
             await asyncio.sleep(0.15)
 
             # Verify status

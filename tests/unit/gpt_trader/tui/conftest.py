@@ -1,6 +1,22 @@
+"""
+TUI Test Configuration.
+
+Provides fixtures for TUI testing including mock bots, pilot apps, and factories.
+"""
+
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+
+# Re-export factories for convenient importing
+from tests.unit.gpt_trader.tui.factories import (
+    BotStatusFactory,
+    MarketDataFactory,
+    OrderFactory,
+    PositionFactory,
+    TradeFactory,
+    TuiStateFactory,
+)
 
 from gpt_trader.monitoring.status_reporter import StatusReporter
 from gpt_trader.tui.app import TraderApp
@@ -32,3 +48,62 @@ def mock_app(mock_bot):
     Creates a TraderApp instance with a mock bot.
     """
     return TraderApp(bot=mock_bot)
+
+
+@pytest.fixture
+async def pilot_app(mock_bot):
+    """
+    Creates a TraderApp with Pilot for interactive testing.
+
+    Use this fixture to test keyboard interactions, widget updates,
+    and screen navigation flows.
+
+    Usage:
+        async def test_start_stop(pilot_app):
+            pilot, app = pilot_app
+            await pilot.press("s")  # Press 's' to start bot
+            await pilot.pause()     # Wait for UI updates
+            assert app.tui_state.running is True
+
+    Yields:
+        tuple[Pilot, TraderApp]: The pilot instance and app for testing
+    """
+    app = TraderApp(bot=mock_bot)
+    async with app.run_test() as pilot:
+        yield pilot, app
+
+
+@pytest.fixture
+def bot_status_factory():
+    """Provides access to BotStatusFactory for creating test BotStatus objects."""
+    return BotStatusFactory
+
+
+@pytest.fixture
+def tui_state_factory():
+    """Provides access to TuiStateFactory for creating test TuiState objects."""
+    return TuiStateFactory
+
+
+@pytest.fixture
+def market_data_factory():
+    """Provides access to MarketDataFactory for creating test market data."""
+    return MarketDataFactory
+
+
+@pytest.fixture
+def position_factory():
+    """Provides access to PositionFactory for creating test positions."""
+    return PositionFactory
+
+
+@pytest.fixture
+def order_factory():
+    """Provides access to OrderFactory for creating test orders."""
+    return OrderFactory
+
+
+@pytest.fixture
+def trade_factory():
+    """Provides access to TradeFactory for creating test trades."""
+    return TradeFactory

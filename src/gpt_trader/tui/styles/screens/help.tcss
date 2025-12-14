@@ -1,0 +1,59 @@
+/* ========================================================================== */
+/* HELP SCREEN                                                                */
+/* ========================================================================== */
+
+HelpScreen {
+    align: center middle;
+    background: $overlay-disabled;
+}
+
+HelpScreen #help-container {
+    width: auto;
+    max-width: 80;
+    height: auto;
+    max-height: 90%;
+    background: $bg-secondary;
+    border: thick $accent;
+    padding: $spacing-md;
+}
+
+HelpScreen .help-title {
+    color: $accent;
+    text-style: bold;
+    text-align: center;
+    margin-bottom: $spacing-xs;
+}
+
+HelpScreen .help-category {
+    color: $text-primary;
+    text-style: bold;
+    margin-top: $spacing-xs;
+    margin-bottom: 0;
+}
+
+HelpScreen .help-shortcut {
+    layout: horizontal;
+    height: auto;
+    margin-left: $spacing-sm;
+}
+
+HelpScreen .help-key {
+    background: $bg-elevated;
+    color: $accent;
+    text-style: bold;
+    padding: 0 $spacing-xs;
+    min-width: 8;
+}
+
+HelpScreen .help-description {
+    color: $text-secondary;
+    margin-left: $spacing-sm;
+}
+
+HelpScreen .help-footer {
+    color: $text-muted;
+    text-style: italic;
+    text-align: center;
+    margin-top: $spacing-xs;
+}
+

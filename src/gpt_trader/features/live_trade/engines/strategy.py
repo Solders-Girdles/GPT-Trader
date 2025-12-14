@@ -271,27 +271,39 @@ class TradingEngine(BaseEngine):
         assert self.context.broker is not None, "Broker not initialized"
         self._cycle_count += 1
 
+        logger.info(f"=== CYCLE {self._cycle_count} START ===")
+
         # Report system status at start of cycle
         self._report_system_status()
 
         # 1. Fetch positions first (needed for equity calculation)
+        logger.info("Step 1: Fetching positions...")
         positions = await self._fetch_positions()
         self._current_positions = positions
+        logger.info(f"Fetched {len(positions)} positions")
 
-        # Update status reporter with positions
-        self._status_reporter.update_positions(self._positions_to_risk_format(positions))
+        # Update status reporter with positions (complete data for TUI)
+        self._status_reporter.update_positions(self._positions_to_status_format(positions))
 
         # 1b. Audit open orders (Reconciliation)
         await self._audit_orders()
 
         # 2. Calculate total equity including unrealized PnL
+        logger.info("Step 2: Calculating total equity...")
         equity = await self._fetch_total_equity(positions)
         if equity is None:
-            logger.warning("Failed to fetch equity, skipping cycle")
+            logger.error(
+                "Failed to fetch equity - cannot continue cycle. "
+                "Check logs above for balance fetch errors."
+            )
+            # Update status reporter with error state
+            self._status_reporter.record_error("Failed to fetch equity")
             return
 
+        logger.info(f"Successfully calculated equity: ${equity}")
         # Update status reporter with equity
         self._status_reporter.update_equity(equity)
+        logger.info("Equity updated in status reporter")
 
         # Track daily PnL for risk management
         if self.context.risk_manager:
@@ -429,19 +441,181 @@ class TradingEngine(BaseEngine):
         assert self.context.broker is not None
         try:
             balances = await asyncio.to_thread(self.context.broker.list_balances)
-            collateral = Decimal("0")
+
+            # Log summary of all assets returned (before filtering)
+            if balances:
+                all_assets = [b.asset for b in balances]
+                non_zero_assets = [(b.asset, b.available, b.total) for b in balances if b.total > 0]
+
+                logger.info(f"Fetched {len(balances)} balances from broker")
+                logger.info(
+                    f"All assets in response: {', '.join(all_assets) if all_assets else 'NONE'}"
+                )
+
+                if non_zero_assets:
+                    logger.info(f"Assets with non-zero balances: {len(non_zero_assets)}")
+                    for asset, avail, total in non_zero_assets:
+                        logger.info(f"  {asset}: available={avail}, total={total}")
+                else:
+                    logger.warning(
+                        "All balances are zero - this may indicate an API permission or portfolio scoping issue"
+                    )
+            else:
+                logger.warning("Received empty balance list from broker - check API configuration")
+
+            cash_collateral = Decimal("0")
+            converted_collateral = Decimal("0")
+            usd_usdc_found = []
+            other_assets_found = []
+            priced_assets: list[str] = []
+            unpriced_assets: list[str] = []
+
+            quote = str(
+                getattr(self.context.config, "coinbase_default_quote", None) or "USD"
+            ).upper()
+            # Treat stable USD quotes as 1:1 for valuation display.
+            stable_quotes = {"USD", "USDC"}
+            use_total_balance = bool(getattr(self.context.config, "read_only", False))
+
+            valuation_quotes: list[str] = [quote]
+            if quote in stable_quotes:
+                for stable in ("USD", "USDC"):
+                    if stable not in valuation_quotes:
+                        valuation_quotes.append(stable)
+            else:
+                # Fall back to USD/USDC if the configured quote isn't available for a token.
+                for stable in ("USD", "USDC"):
+                    if stable not in valuation_quotes:
+                        valuation_quotes.append(stable)
+
             for balance in balances:
-                if balance.asset in ("USD", "USDC"):
-                    collateral += balance.available
+                logger.debug(
+                    f"Balance: {balance.asset} = {balance.available} available, {balance.total} total"
+                )
+                asset = str(balance.asset or "").upper()
+                amount = balance.total if use_total_balance else balance.available
+
+                if asset in ("USD", "USDC"):
+                    cash_collateral += amount
+                    if amount > 0:
+                        usd_usdc_found.append(f"{asset}=${amount}")
+                    continue
+
+                if balance.total > 0:
+                    other_assets_found.append(f"{asset}={balance.total}")
+
+                if amount <= 0:
+                    continue
+
+                if asset == quote:
+                    cash_collateral += amount
+                    priced_assets.append(f"{asset}=${amount}")
+                    continue
+
+                if asset in stable_quotes and quote in stable_quotes:
+                    cash_collateral += amount
+                    priced_assets.append(f"{asset}≈${amount}")
+                    continue
+
+                last_price: Decimal | None = None
+                used_pair: str | None = None
+
+                for q in valuation_quotes:
+                    product_id = f"{asset}-{q}"
+                    history = self.price_history.get(product_id)
+                    if history:
+                        last_price = history[-1]
+                    else:
+                        last_price = None
+
+                    try:
+                        if last_price is None:
+                            ticker = await asyncio.to_thread(
+                                self.context.broker.get_ticker, product_id
+                            )
+                            last_price = Decimal(str(ticker.get("price", 0)))
+                        if last_price and last_price > 0:
+                            used_pair = product_id
+                            break
+                    except Exception as exc:
+                        logger.debug(
+                            "Unable to value %s via %s: %s",
+                            asset,
+                            product_id,
+                            exc,
+                        )
+                        continue
+
+                if last_price and last_price > 0 and used_pair:
+                    usd_value = amount * last_price
+                    converted_collateral += usd_value
+                    priced_assets.append(
+                        f"{asset}={amount} @ {used_pair}≈{usd_value.quantize(Decimal('0.01'))}"
+                    )
+                else:
+                    unpriced_assets.append(asset)
+
+            collateral = cash_collateral + converted_collateral
+
+            # Log USD/USDC result with context
+            cash_label = "Total cash holdings" if use_total_balance else "Available cash collateral"
+            logger.info("%s (%s): $%s", cash_label, quote, cash_collateral.quantize(Decimal("0.01")))
+            if usd_usdc_found:
+                logger.info(f"USD/USDC assets counted: {', '.join(usd_usdc_found)}")
+            else:
+                collateral_scope = "total holdings" if use_total_balance else "available collateral"
+                logger.warning(
+                    "No USD/USDC balances found in %s; valuing non-USD assets using %s tickers",
+                    collateral_scope,
+                    quote,
+                )
+                if other_assets_found:
+                    logger.info("Non-USD assets detected: %s", ", ".join(other_assets_found))
+            if priced_assets:
+                logger.info("Included non-USD assets in equity: %s", "; ".join(priced_assets))
+            if unpriced_assets:
+                logger.warning(
+                    "Could not value these assets in %s: %s",
+                    quote,
+                    ", ".join(sorted(set(unpriced_assets))),
+                )
 
             # Add unrealized PnL from open positions
             unrealized_pnl = sum(
                 (p.unrealized_pnl for p in positions.values()),
                 Decimal("0"),
             )
-            return collateral + unrealized_pnl
+            logger.info(f"Unrealized PnL: ${unrealized_pnl}")
+
+            total_equity = collateral + unrealized_pnl
+            logger.info(
+                f"Total equity calculated: ${total_equity} (collateral=${collateral} + unrealized_pnl=${unrealized_pnl})"
+            )
+
+            # Add diagnostic warning if equity is zero
+            if total_equity == 0:
+                logger.warning(
+                    "Total equity is $0.00. This typically means: "
+                    "1) No USD/USDC in account (only crypto assets), "
+                    "2) Wrong portfolio selected (check portfolio_uuid), "
+                    "3) API permission issue, or "
+                    "4) No funds in account"
+                )
+
+            return total_equity
         except Exception as e:
-            logger.error(f"Failed to fetch balances: {e}")
+            logger.error(
+                f"Failed to fetch balances: {e}",
+                error_type=type(e).__name__,
+                operation="fetch_total_equity",
+                exc_info=True,
+            )
+            logger.error(
+                "Unable to calculate equity. Check: "
+                "1) Network connectivity, "
+                "2) API credentials validity, "
+                "3) Broker service health"
+            )
             return None
 
     async def _fetch_positions(self) -> dict[str, Position]:
@@ -493,6 +667,22 @@ class TradingEngine(BaseEngine):
             symbol: {
                 "quantity": pos.quantity,
                 "mark": pos.mark_price,
+            }
+            for symbol, pos in positions.items()
+        }
+
+    def _positions_to_status_format(
+        self, positions: dict[str, Position]
+    ) -> dict[str, dict[str, Any]]:
+        """Convert Position objects to dict format for StatusReporter with complete TUI data."""
+        return {
+            symbol: {
+                "quantity": str(pos.quantity),
+                "mark_price": str(pos.mark_price),
+                "entry_price": str(pos.entry_price),
+                "unrealized_pnl": str(pos.unrealized_pnl),
+                "realized_pnl": str(pos.realized_pnl),
+                "side": pos.side,
             }
             for symbol, pos in positions.items()
         }

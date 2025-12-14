@@ -1,0 +1,67 @@
+/* ========================================================================== */
+/* BUTTONS                                                                    */
+/* ========================================================================== */
+
+Button {
+    min-width: 10;  /* Compact width */
+    height: 3;      /* Restored from 1 to 3 for readability */
+    margin: 0 $spacing-xs;
+    border: $border-default;  /* Restored border for visual separation */
+    padding: 0 $spacing-md;
+    background: $bg-elevated;
+    color: $text-primary;
+    text-style: bold;
+}
+
+Button:hover {
+    border: solid $accent;  /* Restored border for hover state */
+    background: $accent-muted;
+    color: $text-primary;
+}
+
+Button:focus {
+    border: solid $accent;  /* Restored border for focus state */
+    background: $accent;
+    color: $bg-primary;
+}
+
+Button.-disabled {
+    opacity: 0.5;
+    color: $text-muted;
+    border: solid $border-subtle;
+}
+
+/* === Control Buttons (Start/Stop) === */
+
+#start-btn {
+    background: $success;
+    color: $bg-primary;
+    border-left: wide $success;
+}
+
+#start-btn:hover {
+    background: $success;
+    color: $bg-primary;
+    border: solid $success;
+    text-style: bold;
+}
+
+#stop-btn {
+    background: $error;
+    color: $bg-primary;
+    border-left: wide $error;
+}
+
+#stop-btn:hover {
+    background: $error;
+    color: $bg-primary;
+    border: solid $error;
+    text-style: bold;
+}
+
+/* === Button Group === */
+
+.button-group {
+    align-vertical: middle;
+    height: 100%;
+}

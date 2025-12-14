@@ -1,0 +1,106 @@
+/* Performance Dashboard Widget Styles
+ *
+ * Styling for the TUI performance monitoring widget.
+ * Uses Nord-Vibrant color palette for consistency.
+ */
+
+PerformanceDashboardWidget {
+    layout: vertical;
+    height: auto;
+    min-height: 8;
+    padding: 1;
+    border: solid $border;
+    background: $bg-secondary;
+}
+
+PerformanceDashboardWidget .perf-header {
+    text-style: bold;
+    color: $text-primary;
+    margin-bottom: 1;
+}
+
+PerformanceDashboardWidget .perf-row {
+    layout: horizontal;
+    height: 1;
+}
+
+PerformanceDashboardWidget .perf-label {
+    width: 12;
+    color: $text-muted;
+}
+
+PerformanceDashboardWidget .perf-value {
+    width: auto;
+    text-style: bold;
+    color: $text-primary;
+}
+
+/* Budget target hints */
+PerformanceDashboardWidget .perf-target {
+    width: auto;
+    color: $text-muted;
+    margin-left: 1;
+}
+
+/* Budget summary row */
+PerformanceDashboardWidget .budget-summary {
+    margin-bottom: 1;
+    border-bottom: solid $border-subtle;
+    padding-bottom: 1;
+}
+
+/* Performance status indicators */
+PerformanceDashboardWidget .perf-value.good {
+    color: $success;
+}
+
+PerformanceDashboardWidget .perf-value.warning {
+    color: $warning;
+}
+
+PerformanceDashboardWidget .perf-value.bad {
+    color: $error;
+}
+
+/* Slow operations section */
+PerformanceDashboardWidget .slow-ops-header {
+    margin-top: 1;
+    color: $text-muted;
+    text-style: italic;
+}
+
+PerformanceDashboardWidget .slow-op {
+    color: $warning;
+    padding-left: 2;
+}
+
+PerformanceDashboardWidget .text-muted {
+    color: $text-muted;
+}
+
+/* Performance screen modal */
+PerformanceScreen {
+    align: center middle;
+}
+
+PerformanceScreen #perf-modal {
+    width: 60;
+    height: auto;
+    max-height: 30;
+    background: $bg-secondary;
+    border: solid $border;
+    padding: 1 2;
+}
+
+PerformanceScreen .perf-title {
+    text-style: bold;
+    text-align: center;
+    color: $text-primary;
+    margin-bottom: 1;
+}
+
+PerformanceScreen .perf-footer {
+    margin-top: 1;
+    text-align: center;
+    color: $text-muted;
+}

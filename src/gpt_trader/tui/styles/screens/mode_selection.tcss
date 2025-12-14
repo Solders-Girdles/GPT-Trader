@@ -1,0 +1,99 @@
+/* ========================================================================== */
+/* MODE SELECTION SCREEN                                                      */
+/* ========================================================================== */
+
+ModeSelectionScreen {
+    align: center middle;
+    background: $bg-primary;
+}
+
+#mode-selection-container {
+    width: 80;
+    height: auto;
+    background: $bg-secondary;
+    border: solid $accent;
+    padding: 2;
+    align: center middle;
+}
+
+#selection-title {
+    text-align: center;
+    text-style: bold;
+    color: $accent;
+    width: 100%;
+    margin-bottom: 2;
+}
+
+#selection-subtitle {
+    text-align: center;
+    color: $text-secondary;
+    width: 100%;
+    margin-bottom: 3;
+}
+
+/* Quick resume banner */
+.resume-banner {
+    width: 100%;
+    height: auto;
+    padding: 1 2;
+    margin-bottom: 2;
+    background: $accent-muted;
+    border: solid $accent;
+}
+
+.resume-hint {
+    text-align: center;
+    color: $accent;
+    text-style: bold;
+    width: 100%;
+}
+
+#resume-banner {
+    width: 100%;
+}
+
+.mode-option {
+    width: 100%;
+    height: auto;
+    background: $bg-elevated;
+    border: solid $border-subtle;
+    padding: 1 2;
+    margin: 1 0;
+}
+
+.mode-option:hover {
+    border: solid $accent;
+    background: $accent-muted;
+}
+
+.mode-option-header {
+    text-style: bold;
+    color: $text-primary;
+    margin-bottom: 1;
+}
+
+.mode-option-description {
+    color: $text-secondary;
+    margin-left: 2;
+}
+
+.mode-demo {
+    border-left: wide $info;
+}
+
+.mode-paper {
+    border-left: wide $success;
+}
+
+.mode-observe {
+    border-left: wide $warning;
+}
+
+.mode-live {
+    border-left: wide $error;
+}
+
+#quit-button {
+    width: 100%;
+    margin-top: 2;
+}

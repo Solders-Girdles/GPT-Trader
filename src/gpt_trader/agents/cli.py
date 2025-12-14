@@ -9,6 +9,7 @@ Usage:
     uv run agent-impact --from-git
     uv run agent-map --component-summary
 """
+
 from __future__ import annotations
 
 import subprocess

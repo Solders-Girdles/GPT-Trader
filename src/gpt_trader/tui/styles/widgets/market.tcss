@@ -1,0 +1,21 @@
+/* ========================================================================== */
+/* MARKET WIDGET - Professional Display                                       */
+/* ========================================================================== */
+
+MarketWatchWidget {
+    layout: vertical;
+    height: 1fr;
+    padding: 0 $spacing-md; /* Consistent horizontal padding */
+}
+
+MarketWatchWidget DataTable {
+    height: 1fr;
+    padding: $spacing-sm $spacing-md; /* Increased padding for readability */
+}
+
+/* Market widget uses standard dashboard-item styling from layout/workspace.tcss */
+/* and DataTable styling from components/tables.tcss */
+
+#dash-market {
+    height: 1fr;           /* Flex-grow to fill available space */
+}

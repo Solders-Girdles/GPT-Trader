@@ -1,0 +1,60 @@
+/* ========================================================================== */
+/* DATATABLE - Professional/Refined Look                                      */
+/* ========================================================================== */
+
+DataTable {
+    background: $bg-primary;
+    color: $text-primary;
+    border: none;
+    padding: 1 2; /* Increased padding for better spacing */
+}
+
+DataTable > .datatable--header {
+    background: $bg-elevated;
+    color: $text-bright;           /* Pure white */
+    text-style: bold;
+    padding: $spacing-sm $content-padding; /* Increased vertical padding */
+    border-bottom: solid $border-emphasis; /* Stronger separator */
+}
+
+/* Refined column separators */
+DataTable > .datatable--header-cell {
+    border-right: solid $border-subtle;
+    padding-right: $spacing-md; /* Extra spacing after header text */
+}
+
+DataTable > .datatable--cell {
+    border-right: solid $border-subtle;
+    padding: $spacing-xs $content-padding; /* Increased vertical padding */
+    overflow: hidden;
+}
+
+DataTable > .datatable--cursor {
+    background: $accent-subtle;
+    color: $text-primary;
+    text-style: bold;
+    border-left: wide $accent; /* Accent border on left */
+    border-right: wide $accent; /* Accent border on right */
+}
+
+DataTable > .datatable--odd-row {
+    background: $bg-primary;
+}
+
+DataTable > .datatable--even-row {
+    background: rgba(255, 255, 255, 0.02);  /* Subtle zebra stripe */
+}
+
+DataTable:focus > .datatable--cursor {
+    background: $accent;
+    color: #FFFFFF;
+    text-style: bold;
+    border-left: wide $accent;
+    border-right: wide $accent;
+}
+
+/* Enhanced row hover effect */
+DataTable > .datatable--hover {
+    background: $bg-highlight;
+    border-left: solid $accent-muted; /* Subtle left border on hover */
+}

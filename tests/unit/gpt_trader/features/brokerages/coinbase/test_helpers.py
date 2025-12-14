@@ -320,7 +320,8 @@ MARKET_DATA_ENDPOINT_CASES = [
             "method": "get_ticker",
             "args": ("BTC-USD",),
             "expected_method": "GET",
-            "expected_path": "/api/v3/brokerage/products/BTC-USD/ticker",
+            # CoinbaseClient.get_ticker prefers public market endpoints for resilience
+            "expected_path": "/api/v3/brokerage/market/products/BTC-USD/ticker",
             "expected_query": {},
             "response": {"price": "123"},
             "expected_result": {"price": "123"},
@@ -340,7 +341,8 @@ MARKET_DATA_ENDPOINT_CASES = [
                 "end": datetime(2024, 1, 2, 0, 0, 0),
             },
             "expected_method": "GET",
-            "expected_path": "/api/v3/brokerage/products/ETH-USD/candles",
+            # CoinbaseClient.get_candles prefers public market endpoints for resilience
+            "expected_path": "/api/v3/brokerage/market/products/ETH-USD/candles",
             "expected_query": {
                 "granularity": ["1H"],
                 "limit": ["500"],

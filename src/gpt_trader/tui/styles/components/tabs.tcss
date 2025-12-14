@@ -1,0 +1,24 @@
+/* ========================================================================== */
+/* TABS - Professional Styling                                               */
+/* ========================================================================== */
+
+Tabs {
+    background: $bg-secondary;
+    color: $text-primary;
+    dock: top;
+    height: 3;
+    border-bottom: solid $border-subtle; /* Subtle bottom border */
+}
+
+Tab {
+    padding: $spacing-xs $spacing-md;
+    margin-right: $spacing-xs; /* Spacing between tabs */
+}
+
+Tab.-active {
+    background: $bg-elevated;
+    color: $accent;
+    text-style: bold;
+    border-bottom: wide $accent; /* Wider accent border for active tab */
+    border-top: solid $accent-muted; /* Subtle top border */
+}

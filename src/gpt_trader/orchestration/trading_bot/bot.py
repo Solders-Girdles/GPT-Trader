@@ -79,9 +79,14 @@ class TradingBot:
 
     async def run(self, single_cycle: bool = False) -> None:
         self.running = True
-        logger.info(f"TradingBot starting with symbols: {self.config.symbols}")
+        logger.info("=" * 60)
+        logger.info(f"TradingBot.run() called - Starting with symbols: {self.config.symbols}")
+        logger.info(f"Interval: {self.config.interval}s")
+        logger.info(f"Read-only mode: {getattr(self.config, 'read_only', False)}")
+        logger.info("=" * 60)
 
         tasks = await self.engine.start_background_tasks()
+        logger.info(f"Started {len(tasks)} background tasks")
 
         try:
             if single_cycle:
@@ -90,12 +95,15 @@ class TradingBot:
                 await self.engine.shutdown()
             else:
                 # Keep alive until tasks complete (which is never, unless error or shutdown)
+                logger.info("Bot entering main loop (gathering background tasks)")
                 await asyncio.gather(*tasks)
         except asyncio.CancelledError:
-            logger.info("Bot stopped.")
+            logger.info("Bot stopped (CancelledError caught).")
         finally:
+            logger.info("Bot shutting down...")
             await self.engine.shutdown()
             self.running = False
+            logger.info("Bot shutdown complete.")
 
     async def stop(self) -> None:
         self.running = False

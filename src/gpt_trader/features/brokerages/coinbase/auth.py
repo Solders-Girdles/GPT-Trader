@@ -7,6 +7,7 @@ import secrets
 import time
 from dataclasses import dataclass
 from typing import Any
+from urllib.parse import urlparse
 
 import jwt
 
@@ -38,7 +39,9 @@ class CDPJWTAuth(CoinbaseAuth):
 
     def generate_jwt(self, method: str, path: str) -> str:
         """Generate a JWT token for the given HTTP method and path."""
-        request_path = path if path.startswith("/") else f"/{path}"
+        parsed = urlparse(path)
+        request_path = parsed.path or path
+        request_path = request_path if request_path.startswith("/") else f"/{request_path}"
         uri = f"{method} api.coinbase.com{request_path}"
 
         current_time = int(time.time())
@@ -70,7 +73,9 @@ class SimpleAuth(CoinbaseAuth):
         return key.replace("\\n", "\n")
 
     def generate_jwt(self, method: str, path: str) -> str:
-        request_path = path if path.startswith("/") else f"/{path}"
+        parsed = urlparse(path)
+        request_path = parsed.path or path
+        request_path = request_path if request_path.startswith("/") else f"/{request_path}"
         uri = f"{method} api.coinbase.com{request_path}"
 
         current_time = int(time.time())

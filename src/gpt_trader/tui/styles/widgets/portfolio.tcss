@@ -1,0 +1,58 @@
+/* ========================================================================== */
+/* PORTFOLIO WIDGET (Tabbed Layout) - Professional                           */
+/* ========================================================================== */
+
+PortfolioWidget {
+    layout: vertical;
+    height: 1fr;
+    padding: 0 $spacing-md; /* Consistent horizontal padding */
+}
+
+PortfolioWidget TabbedContent {
+    height: 1fr;
+    border: none;
+    padding-top: $spacing-sm; /* Space between header and tabs */
+}
+
+PortfolioWidget TabPane {
+    padding: $spacing-sm $spacing-md; /* Increased padding for content */
+}
+
+/* ========================================================================== */
+/* POSITIONS WIDGET                                                           */
+/* ========================================================================== */
+
+PositionsWidget {
+    layout: vertical;
+    height: 1fr;
+}
+
+PositionsWidget DataTable {
+    height: 1fr;
+}
+
+/* ========================================================================== */
+/* ORDERS WIDGET                                                              */
+/* ========================================================================== */
+
+OrdersWidget {
+    layout: vertical;
+    height: 1fr;
+}
+
+OrdersWidget DataTable {
+    height: 1fr;
+}
+
+/* ========================================================================== */
+/* TRADES WIDGET                                                              */
+/* ========================================================================== */
+
+TradesWidget {
+    layout: vertical;
+    height: 1fr;
+}
+
+TradesWidget DataTable {
+    height: 1fr;
+}

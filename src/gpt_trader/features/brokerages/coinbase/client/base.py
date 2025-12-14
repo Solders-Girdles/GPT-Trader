@@ -5,20 +5,47 @@ Handles HTTP requests with basic retries.
 
 import json
 import random
+import threading
 import time
 from typing import Any, cast
 
 import requests
 
 from gpt_trader.config.constants import (
+    ADAPTIVE_THROTTLE_ENABLED,
+    CACHE_DEFAULT_TTL,
+    CACHE_ENABLED,
+    CACHE_MAX_SIZE,
+    CIRCUIT_BREAKER_ENABLED,
+    CIRCUIT_FAILURE_THRESHOLD,
+    CIRCUIT_RECOVERY_TIMEOUT,
+    CIRCUIT_SUCCESS_THRESHOLD,
     DEFAULT_HTTP_TIMEOUT,
     DEFAULT_RATE_LIMIT_PER_MINUTE,
     MAX_HTTP_RETRIES,
+    METRICS_ENABLED,
+    METRICS_HISTORY_SIZE,
+    PRIORITY_ENABLED,
+    PRIORITY_THRESHOLD_CRITICAL,
+    PRIORITY_THRESHOLD_HIGH,
     RATE_LIMIT_WARNING_THRESHOLD,
     RATE_LIMIT_WINDOW_SECONDS,
     RETRY_BACKOFF_MULTIPLIER,
     RETRY_BASE_DELAY,
+    THROTTLE_TARGET_UTILIZATION,
 )
+from gpt_trader.features.brokerages.coinbase.client.constants import (
+    BASE_URL,
+    DEFAULT_API_VERSION,
+    ENDPOINT_MAP,
+)
+from gpt_trader.features.brokerages.coinbase.client.circuit_breaker import (
+    CircuitBreakerRegistry,
+    CircuitOpenError,
+)
+from gpt_trader.features.brokerages.coinbase.client.metrics import APIMetricsCollector
+from gpt_trader.features.brokerages.coinbase.client.priority import PriorityManager, RequestDeferredError
+from gpt_trader.features.brokerages.coinbase.client.response_cache import ResponseCache
 from gpt_trader.features.brokerages.coinbase.errors import InvalidRequestError, map_http_error
 from gpt_trader.utilities.logging_patterns import get_correlation_id, get_logger
 
@@ -35,11 +62,11 @@ logger = get_logger(__name__, component="coinbase_client")
 class CoinbaseClientBase:
     def __init__(
         self,
-        base_url: str = "https://api.coinbase.com",
+        base_url: str = BASE_URL,
         auth: Any | None = None,
         api_mode: str = "advanced",
         timeout: int | None = None,
-        api_version: str = "2024-10-24",
+        api_version: str = DEFAULT_API_VERSION,
         rate_limit_per_minute: int | None = None,
         enable_throttle: bool = True,
         enable_keep_alive: bool = True,
@@ -66,76 +93,55 @@ class CoinbaseClientBase:
         self.session = requests.Session()
         self._transport: Any | None = None  # For testing
         self._request_times: list[float] = []
+        self._rate_limit_lock = threading.Lock()  # Thread-safe rate limiting
+
+        # API resilience components (feature-flagged)
+        self._response_cache: ResponseCache | None = None
+        if CACHE_ENABLED:
+            self._response_cache = ResponseCache(
+                default_ttl=CACHE_DEFAULT_TTL,
+                max_size=CACHE_MAX_SIZE,
+            )
+
+        self._circuit_breaker: CircuitBreakerRegistry | None = None
+        if CIRCUIT_BREAKER_ENABLED:
+            self._circuit_breaker = CircuitBreakerRegistry(
+                default_failure_threshold=CIRCUIT_FAILURE_THRESHOLD,
+                default_recovery_timeout=CIRCUIT_RECOVERY_TIMEOUT,
+                default_success_threshold=CIRCUIT_SUCCESS_THRESHOLD,
+            )
+
+        self._metrics: APIMetricsCollector | None = None
+        if METRICS_ENABLED:
+            self._metrics = APIMetricsCollector(max_history=METRICS_HISTORY_SIZE)
+
+        self._priority_manager: PriorityManager | None = None
+        if PRIORITY_ENABLED:
+            self._priority_manager = PriorityManager(
+                threshold_high=PRIORITY_THRESHOLD_HIGH,
+                threshold_critical=PRIORITY_THRESHOLD_CRITICAL,
+            )
+
+        self._adaptive_throttle_enabled = ADAPTIVE_THROTTLE_ENABLED
+        self._throttle_target = THROTTLE_TARGET_UTILIZATION
 
     def set_transport_for_testing(self, transport: Any) -> None:
         self._transport = transport
 
     def _get_endpoint_path(self, endpoint_name: str, **kwargs: str) -> str:
-        # Simplified map - in real usage we might want a full map or just pass paths directly
-        # For now, we rely on the mixins passing known paths.
-        # But wait, the mixins (e.g. market.py) use _get_endpoint_path("ticker").
-        # I need to keep the map or change the mixins.
-        # Changing mixins is a lot of work. Keeping the map is safer for now.
+        """
+        Resolve endpoint name to full path using centralized ENDPOINT_MAP.
 
-        ENDPOINT_MAP = {
-            "advanced": {
-                "products": "/api/v3/brokerage/products",
-                "product": "/api/v3/brokerage/products/{product_id}",
-                "ticker": "/api/v3/brokerage/products/{product_id}/ticker",
-                "candles": "/api/v3/brokerage/products/{product_id}/candles",
-                "order_book": "/api/v3/brokerage/product_book",
-                "public_products": "/api/v3/brokerage/market/products",
-                "public_product": "/api/v3/brokerage/market/products/{product_id}",
-                "public_ticker": "/api/v3/brokerage/market/products/{product_id}/ticker",
-                "public_candles": "/api/v3/brokerage/market/products/{product_id}/candles",
-                "best_bid_ask": "/api/v3/brokerage/best_bid_ask",
-                "accounts": "/api/v3/brokerage/accounts",
-                "account": "/api/v3/brokerage/accounts/{account_uuid}",
-                "orders": "/api/v3/brokerage/orders",
-                "order": "/api/v3/brokerage/orders/historical/{order_id}",
-                "orders_historical": "/api/v3/brokerage/orders/historical",
-                "orders_batch_cancel": "/api/v3/brokerage/orders/batch_cancel",
-                "order_preview": "/api/v3/brokerage/orders/preview",
-                "order_edit": "/api/v3/brokerage/orders/edit",
-                "close_position": "/api/v3/brokerage/orders/close_position",
-                "fills": "/api/v3/brokerage/orders/historical/fills",
-                "time": "/api/v3/brokerage/time",
-                "key_permissions": "/api/v3/brokerage/key_permissions",
-                # INTX Endpoints
-                "intx_portfolio": "/api/v3/brokerage/intx/portfolio/{portfolio_uuid}",
-                "intx_allocate": "/api/v3/brokerage/intx/allocate",
-                "intx_balances": "/api/v3/brokerage/intx/balances/{portfolio_uuid}",
-                "intx_positions": "/api/v3/brokerage/intx/positions/{portfolio_uuid}",
-                "intx_position": "/api/v3/brokerage/intx/positions/{portfolio_uuid}/{symbol}",
-                "intx_multi_asset_collateral": "/api/v3/brokerage/intx/multi_asset_collateral",
-                "portfolios": "/api/v3/brokerage/portfolios",
-                "portfolio": "/api/v3/brokerage/portfolios/{portfolio_uuid}",
-                "fees": "/api/v3/brokerage/fees",
-                "limits": "/api/v3/brokerage/limits",
-                "payment_methods": "/api/v3/brokerage/payment_methods",
-                "payment_method": "/api/v3/brokerage/payment_methods/{payment_method_id}",
-                "convert_trade": "/api/v3/brokerage/convert/trade/{trade_id}",
-                "convert_quote": "/api/v3/brokerage/convert/quote",
-                # CFM Endpoints
-                "cfm_balance_summary": "/api/v3/brokerage/cfm/balance_summary",
-                "cfm_positions": "/api/v3/brokerage/cfm/positions",
-                "cfm_position": "/api/v3/brokerage/cfm/positions/{product_id}",
-                "cfm_intraday_current_margin_window": "/api/v3/brokerage/cfm/intraday/current_margin_window",  # Corrected
-                "cfm_intraday_margin_setting": "/api/v3/brokerage/cfm/intraday/margin_setting",  # Corrected
-                "cfm_sweeps": "/api/v3/brokerage/cfm/sweeps",
-                "cfm_schedule_sweep": "/api/v3/brokerage/cfm/sweeps/schedule",  # Added
-                # Portfolio endpoints
-                "portfolio_breakdown": "/api/v3/brokerage/portfolios/{portfolio_uuid}/breakdown",
-                "move_funds": "/api/v3/brokerage/portfolios/move_funds",  # Corrected
-            },
-            "exchange": {
-                "products": "/products",
-                "product": "/products/{product_id}",
-                "accounts": "/accounts",
-                "order_book": "/products/{product_id}/book",
-            },
-        }
+        Args:
+            endpoint_name: Key from ENDPOINT_MAP (e.g., "products", "cfm_positions")
+            **kwargs: Path parameters to substitute (e.g., product_id="BTC-USD")
 
+        Returns:
+            Fully resolved endpoint path.
+
+        Raises:
+            InvalidRequestError: If endpoint not found or API mode invalid.
+        """
         if self.api_mode not in ENDPOINT_MAP:
             raise InvalidRequestError(f"Unknown API mode: {self.api_mode}")
 
@@ -243,35 +249,93 @@ class CoinbaseClientBase:
         if not self.enable_throttle:
             return
 
-        now = time.time()
-        # Remove requests older than 1 minute
-        self._request_times = [
-            t for t in self._request_times if now - t < RATE_LIMIT_WINDOW_SECONDS
-        ]
-
-        if len(self._request_times) >= self.rate_limit_per_minute:
-            logger.info(
-                f"Rate limit reached ({len(self._request_times)}/{self.rate_limit_per_minute}). throttling..."
-            )
-            sleep_time = RATE_LIMIT_WINDOW_SECONDS - (now - self._request_times[0]) + 1
-            if sleep_time > 0:
-                time.sleep(sleep_time)
-            # After sleep, we can proceed (or check again, but simple sleep is ok)
-            # Clean up again
+        with self._rate_limit_lock:
             now = time.time()
+            # Remove requests older than 1 minute
             self._request_times = [
                 t for t in self._request_times if now - t < RATE_LIMIT_WINDOW_SECONDS
             ]
-        elif len(self._request_times) >= self.rate_limit_per_minute * RATE_LIMIT_WARNING_THRESHOLD:
-            logger.warning(
-                "Approaching rate limit: %d/%d requests in last minute",
-                len(self._request_times),
-                self.rate_limit_per_minute,
-            )
 
-        self._request_times.append(now)
+            current_usage = len(self._request_times) / self.rate_limit_per_minute
+
+            # Adaptive throttling: proactive pacing before hitting limit
+            if self._adaptive_throttle_enabled and current_usage >= self._throttle_target:
+                # Calculate proportional delay to smooth out request rate
+                overage = current_usage - self._throttle_target
+                delay = min(overage * 0.5, 1.0)  # Cap at 1 second
+                if delay > 0.01:  # Only sleep if meaningful
+                    self._rate_limit_lock.release()
+                    try:
+                        time.sleep(delay)
+                    finally:
+                        self._rate_limit_lock.acquire()
+                    # Refresh after sleep
+                    now = time.time()
+                    self._request_times = [
+                        t for t in self._request_times if now - t < RATE_LIMIT_WINDOW_SECONDS
+                    ]
+
+            if len(self._request_times) >= self.rate_limit_per_minute:
+                logger.info(
+                    f"Rate limit reached ({len(self._request_times)}/{self.rate_limit_per_minute}). throttling..."
+                )
+                sleep_time = RATE_LIMIT_WINDOW_SECONDS - (now - self._request_times[0]) + 1
+                if sleep_time > 0:
+                    # Release lock while sleeping to avoid blocking other threads
+                    self._rate_limit_lock.release()
+                    try:
+                        time.sleep(sleep_time)
+                    finally:
+                        self._rate_limit_lock.acquire()
+                # After sleep, clean up again
+                now = time.time()
+                self._request_times = [
+                    t for t in self._request_times if now - t < RATE_LIMIT_WINDOW_SECONDS
+                ]
+            elif len(self._request_times) >= self.rate_limit_per_minute * RATE_LIMIT_WARNING_THRESHOLD:
+                logger.warning(
+                    "Approaching rate limit: %d/%d requests in last minute",
+                    len(self._request_times),
+                    self.rate_limit_per_minute,
+                )
+
+            self._request_times.append(now)
+
+    def get_rate_limit_usage(self) -> float:
+        """Return current rate limit usage as a fraction (0.0 to 1.0+)."""
+        with self._rate_limit_lock:
+            now = time.time()
+            active_requests = sum(
+                1 for t in self._request_times if now - t < RATE_LIMIT_WINDOW_SECONDS
+            )
+            return active_requests / self.rate_limit_per_minute if self.rate_limit_per_minute > 0 else 0.0
 
     def _request(self, method: str, path: str, payload: dict | None = None) -> dict:
+        start_time = time.perf_counter()
+        is_error = False
+        is_rate_limited = False
+
+        # Check priority before proceeding (only block lower priority under pressure)
+        if self._priority_manager:
+            usage = self.get_rate_limit_usage()
+            if not self._priority_manager.should_allow(path, usage):
+                raise RequestDeferredError(path, self._priority_manager.get_priority(path), usage)
+
+        # Check circuit breaker
+        if self._circuit_breaker and not self._circuit_breaker.can_proceed(path):
+            breaker = self._circuit_breaker.get_breaker(path)
+            status = breaker.get_status()
+            raise CircuitOpenError(
+                self._circuit_breaker._categorize_endpoint(path),
+                status.get("time_until_half_open", 0),
+            )
+
+        # Check cache for GET requests
+        if method == "GET" and self._response_cache:
+            cached = self._response_cache.get(path)
+            if cached is not None:
+                return cached
+
         self._check_rate_limit()
         url = self._make_url(path)
         headers = {
@@ -280,8 +344,17 @@ class CoinbaseClientBase:
             "CB-VERSION": self.api_version,
         }
 
+        normalized_path = self._normalize_path(path)
+        normalized_path = normalized_path.split("?", 1)[0]
+        if normalized_path and not normalized_path.startswith("/"):
+            normalized_path = "/" + normalized_path
+        is_public_market = (
+            self.api_mode == "advanced"
+            and normalized_path.startswith("/api/v3/brokerage/market/")
+        )
+
         # Sign request if auth is available
-        if self.auth:
+        if self.auth and not is_public_market:
             # Check if auth has .get_headers (SimpleAuth) or .sign (Legacy)
             if hasattr(self.auth, "get_headers"):
                 # SimpleAuth expects (method, path)
@@ -290,6 +363,9 @@ class CoinbaseClientBase:
                 # normalize path for signing if it's a full url (though _request takes path usually)
                 if path.startswith("http"):
                     auth_path = "/" + path.split("/", 3)[-1]
+                # Coinbase CDP JWT signing uses the path component (no query string).
+                if "?" in auth_path:
+                    auth_path = auth_path.split("?", 1)[0]
 
                 if payload:
                     headers.update(self.auth.get_headers(method, auth_path, payload))
@@ -328,6 +404,7 @@ class CoinbaseClientBase:
                     resp = perform_request()
 
                     if resp.status_code == 429:
+                        is_rate_limited = True
                         try:
                             retry_after = float(resp.headers.get("retry-after", 1))
                         except ValueError:
@@ -338,6 +415,7 @@ class CoinbaseClientBase:
                         continue
 
                     if 500 <= resp.status_code < 600:
+                        is_error = True
                         if attempt < max_retries:
                             # Exponential backoff with jitter and cap
                             base_delay = RETRY_BASE_DELAY * (RETRY_BACKOFF_MULTIPLIER**attempt)
@@ -347,6 +425,7 @@ class CoinbaseClientBase:
                             continue
 
                     if 400 <= resp.status_code < 500:
+                        is_error = True
                         # Map 400s to specific errors
                         try:
                             data = resp.json()
@@ -362,14 +441,36 @@ class CoinbaseClientBase:
 
                     resp.raise_for_status()
 
+                    # Success - record in circuit breaker
+                    if self._circuit_breaker:
+                        self._circuit_breaker.record_success(path)
+
                     if resp.content:
                         try:
-                            return cast(dict[Any, Any], resp.json())
+                            result = cast(dict[Any, Any], resp.json())
                         except ValueError:
-                            return {"raw": resp.text}
-                    return {}
+                            result = {"raw": resp.text}
+                    else:
+                        result = {}
+
+                    # Cache successful GET responses
+                    if method == "GET" and self._response_cache:
+                        self._response_cache.set(path, result)
+
+                    # Invalidate cache on mutations
+                    if method in ("POST", "DELETE") and self._response_cache:
+                        # Invalidate related endpoints
+                        if "order" in path.lower():
+                            self._response_cache.invalidate("**/orders*")
+                            self._response_cache.invalidate("**/fills*")
+                        elif "account" in path.lower() or "position" in path.lower():
+                            self._response_cache.invalidate("**/accounts*")
+                            self._response_cache.invalidate("**/positions*")
+
+                    return result
 
                 except requests.exceptions.HTTPError as e:
+                    is_error = True
                     # Catch HTTPError from raise_for_status (e.g. 500s)
                     try:
                         data = e.response.json()
@@ -381,6 +482,7 @@ class CoinbaseClientBase:
                     raise map_http_error(e.response.status_code, code, msg)
 
                 except (requests.ConnectionError, requests.Timeout, ConnectionError):
+                    is_error = True
                     if attempt < max_retries:
                         # Exponential backoff with jitter and cap
                         base_delay = RETRY_BASE_DELAY * (RETRY_BACKOFF_MULTIPLIER**attempt)
@@ -397,14 +499,88 @@ class CoinbaseClientBase:
             return {}
 
         except Exception as e:
-            # Catch other errors during request performance (like map_http_error raises)
-            raise e
-
-        except Exception as e:
-            logger.error(f"Request failed: {method} {url} - {e}")
-            if hasattr(e, "response") and e.response is not None:
-                logger.error(f"Response: {e.response.text}")
+            is_error = True
+            # Record failure in circuit breaker
+            if self._circuit_breaker:
+                self._circuit_breaker.record_failure(path, e)
             raise
+
+        finally:
+            # Record metrics
+            if self._metrics:
+                latency_ms = (time.perf_counter() - start_time) * 1000
+                self._metrics.record_request(
+                    path, latency_ms, error=is_error, rate_limited=is_rate_limited
+                )
+
+    # === API Resilience Status Methods ===
+
+    def get_api_metrics(self) -> dict[str, Any] | None:
+        """Get API metrics summary for monitoring."""
+        if self._metrics:
+            return self._metrics.get_summary()
+        return None
+
+    def get_circuit_breaker_status(self) -> dict[str, Any] | None:
+        """Get circuit breaker status for all endpoint categories."""
+        if self._circuit_breaker:
+            return self._circuit_breaker.get_all_status()
+        return None
+
+    def get_cache_stats(self) -> dict[str, Any] | None:
+        """Get response cache statistics."""
+        if self._response_cache:
+            return self._response_cache.get_stats()
+        return None
+
+    def get_priority_stats(self) -> dict[str, Any] | None:
+        """Get request priority enforcement statistics."""
+        if self._priority_manager:
+            return self._priority_manager.get_stats()
+        return None
+
+    def get_resilience_status(self) -> dict[str, Any]:
+        """Get comprehensive API resilience status for monitoring.
+
+        Returns a dict suitable for status reporting with all resilience
+        component states.
+        """
+        return {
+            "rate_limit_usage": self.get_rate_limit_usage(),
+            "metrics": self.get_api_metrics(),
+            "circuit_breakers": self.get_circuit_breaker_status(),
+            "cache": self.get_cache_stats(),
+            "priority": self.get_priority_stats(),
+            "adaptive_throttle_enabled": self._adaptive_throttle_enabled,
+        }
+
+    def close(self) -> None:
+        """Close the HTTP session and release resources.
+
+        Should be called when the client is no longer needed to prevent
+        connection pool accumulation across multiple client instances.
+        """
+        if self.session:
+            try:
+                self.session.close()
+                logger.debug("HTTP session closed")
+            except Exception as e:
+                logger.warning(f"Error closing HTTP session: {e}")
+
+    def __enter__(self) -> "CoinbaseClientBase":
+        """Context manager entry."""
+        return self
+
+    def __exit__(self, *args: Any) -> None:
+        """Context manager exit - ensures session cleanup."""
+        self.close()
+
+    def __del__(self) -> None:
+        """Destructor - ensures session cleanup on garbage collection."""
+        try:
+            self.close()
+        except Exception:
+            pass  # Suppress errors during interpreter shutdown
 
     # Helper aliases used by mixins
     def get(self, path: str, params: dict[str, Any] | None = None) -> Any:

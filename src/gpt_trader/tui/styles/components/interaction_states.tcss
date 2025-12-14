@@ -1,0 +1,276 @@
+/* ========================================================================== */
+/* P3: UNIFIED INTERACTION STATES                                              */
+/* Consistent hover/focus/disabled/active styles across all interactive elements */
+/* ========================================================================== */
+
+/* === Interaction Timing Tokens === */
+/* Note: Textual has limited transition support, but we define conceptual values */
+$transition-fast: 100ms;
+$transition-normal: 200ms;
+$transition-slow: 300ms;
+
+/* === Universal Focus Ring === */
+/* Standardized focus indicator for accessibility */
+*:focus {
+    outline: none;  /* Remove default outline */
+    border: solid $accent;
+}
+
+/* === Button Interaction States === */
+
+Button {
+    border: solid $border-subtle;
+    background: $bg-elevated;
+    color: $text-primary;
+}
+
+Button:hover {
+    background: $bg-highlight;
+    border: solid $accent-muted;
+}
+
+Button:focus {
+    border: solid $accent;
+    background: $accent-subtle;
+}
+
+Button.-disabled {
+    opacity: 0.4;
+    color: $text-muted;
+    background: $bg-secondary;
+    border: solid $border-subtle;
+}
+
+/* Primary variant */
+Button.-primary {
+    background: $accent;
+    color: $bg-primary;
+    border: solid $accent;
+}
+
+Button.-primary:hover {
+    background: $accent-hover;
+    border: solid $accent-hover;
+}
+
+Button.-primary:focus {
+    background: $accent-bright;
+    border: thick $accent;
+}
+
+Button.-primary.-disabled {
+    background: $accent-muted;
+    color: $text-muted;
+    border: solid $accent-muted;
+}
+
+/* Success variant */
+Button.-success, #start-btn, #slim-start-btn {
+    background: $success-dim;
+    color: $text-primary;
+    border: solid $success-dim;
+}
+
+Button.-success:hover, #start-btn:hover, #slim-start-btn:hover {
+    background: $success;
+    color: $bg-primary;
+    border: solid $success;
+}
+
+Button.-success:focus, #start-btn:focus, #slim-start-btn:focus {
+    background: $success;
+    border: thick $success;
+}
+
+/* Error/Danger variant */
+Button.-error, Button.-danger, #stop-btn, #slim-stop-btn {
+    background: $error-dim;
+    color: $text-primary;
+    border: solid $error-dim;
+}
+
+Button.-error:hover, Button.-danger:hover, #stop-btn:hover, #slim-stop-btn:hover {
+    background: $error;
+    color: $bg-primary;
+    border: solid $error;
+}
+
+Button.-error:focus, Button.-danger:focus, #stop-btn:focus, #slim-stop-btn:focus {
+    background: $error;
+    border: thick $error;
+}
+
+/* === Input Interaction States === */
+
+Input {
+    background: $bg-elevated;
+    border: solid $border-subtle;
+    color: $text-primary;
+}
+
+Input:hover {
+    border: solid $accent-muted;
+}
+
+Input:focus {
+    border: solid $accent;
+    background: $bg-highlight;
+}
+
+Input.-disabled {
+    opacity: 0.5;
+    background: $bg-secondary;
+    color: $text-muted;
+}
+
+Input.-invalid {
+    border: solid $error;
+}
+
+/* === Select/Dropdown Interaction States === */
+
+Select {
+    background: $bg-elevated;
+    border: solid $border-subtle;
+    color: $text-primary;
+}
+
+Select:hover {
+    border: solid $accent-muted;
+}
+
+Select:focus {
+    border: solid $accent;
+}
+
+Select.-disabled {
+    opacity: 0.5;
+    background: $bg-secondary;
+    color: $text-muted;
+}
+
+/* === DataTable Interaction States === */
+
+DataTable {
+    border: none;
+    background: $bg-primary;
+}
+
+DataTable:focus {
+    border: solid $accent;
+}
+
+/* Row hover - subtle highlight */
+DataTable > .datatable--hover {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+/* Cursor/selected row */
+DataTable > .datatable--cursor {
+    background: $accent-subtle;
+    border-left: wide $accent-muted;
+}
+
+DataTable:focus > .datatable--cursor {
+    background: $overlay-focus;
+    border-left: wide $accent;
+}
+
+/* === Tab Interaction States === */
+
+Tab {
+    background: transparent;
+    color: $text-secondary;
+    border-bottom: solid transparent;
+}
+
+Tab:hover {
+    background: $bg-elevated;
+    color: $text-primary;
+}
+
+Tab.-active {
+    background: $bg-elevated;
+    color: $accent;
+    border-bottom: wide $accent;
+}
+
+Tab:focus {
+    border: solid $accent;
+}
+
+/* === ListItem Interaction States === */
+
+ListItem {
+    background: transparent;
+}
+
+ListItem:hover {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+ListItem.-selected {
+    background: $accent-subtle;
+}
+
+ListItem:focus {
+    border-left: wide $accent;
+}
+
+/* === Tile/Card Interaction States === */
+/* For bento grid tiles and card-like containers */
+
+.bento-tile {
+    border: solid $border-subtle;
+    background: $elevation-1;
+}
+
+.bento-tile:hover {
+    border: solid $accent-muted;
+    background: $elevation-2;
+}
+
+.bento-tile:focus-within,
+.bento-tile.tile-focused {
+    border: solid $accent;
+    background: $elevation-2;
+}
+
+/* === Option/Choice Interaction States === */
+/* For mode selection, settings options, etc. */
+
+.option-card {
+    border: solid $border-subtle;
+    background: $bg-elevated;
+}
+
+.option-card:hover {
+    border: solid $accent-muted;
+    background: $bg-highlight;
+}
+
+.option-card:focus,
+.option-card.-selected {
+    border: solid $accent;
+    background: $accent-subtle;
+}
+
+/* === Link-like Text Interaction === */
+
+.interactive-text {
+    color: $accent;
+}
+
+.interactive-text:hover {
+    color: $accent-hover;
+    text-style: underline;
+}
+
+/* === Disabled State Overlay === */
+/* Universal disabled appearance */
+
+.disabled,
+*.-disabled {
+    opacity: 0.4;
+    color: $text-muted;
+}

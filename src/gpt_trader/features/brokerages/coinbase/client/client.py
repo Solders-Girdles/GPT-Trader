@@ -3,6 +3,7 @@ Unified Coinbase Client.
 Combines all mixins into a single simple client class.
 """
 
+from datetime import datetime
 from decimal import Decimal
 from typing import Any
 
@@ -15,6 +16,15 @@ from gpt_trader.features.brokerages.coinbase.client.portfolio import PortfolioCl
 from gpt_trader.features.brokerages.coinbase.client.websocket_mixin import (
     WebSocketClientMixin,
 )
+from gpt_trader.features.brokerages.coinbase.errors import (
+    AuthError,
+    InvalidRequestError,
+    NotFoundError,
+    PermissionDeniedError,
+)
+from gpt_trader.utilities.logging_patterns import get_logger
+
+logger = get_logger(__name__)
 
 
 class CoinbaseClient(
@@ -59,9 +69,36 @@ class CoinbaseClient(
             )
         return results
 
+    def _warn_public_market_fallback(self, operation: str, error: Exception) -> None:
+        if getattr(self, "_public_market_fallback_warned", False):
+            return
+        self._public_market_fallback_warned = True
+        logger.warning(
+            "Market data request unauthorized (%s). Falling back to public market endpoints. "
+            "If you expected authenticated access, verify Coinbase API credentials/permissions. "
+            "Error: %s",
+            operation,
+            error,
+        )
+
     def get_ticker(self, product_id: str) -> dict[str, Any]:
         """Fetch ticker and normalize response to standard format."""
-        response = super().get_ticker(product_id)
+        try:
+            # Prefer public market endpoints in Advanced Trade mode to keep market data
+            # flowing even when account credentials are misconfigured.
+            if self.api_mode == "advanced":
+                try:
+                    response = super().get_market_product_ticker(product_id)
+                except (NotFoundError, InvalidRequestError):
+                    # Some products may not be available via public endpoints.
+                    response = super().get_ticker(product_id)
+            else:
+                response = super().get_ticker(product_id)
+        except (AuthError, PermissionDeniedError) as e:
+            if self.api_mode != "advanced":
+                raise
+            self._warn_public_market_fallback("ticker", e)
+            response = super().get_market_product_ticker(product_id)
 
         # Normalize price
         price = response.get("price")
@@ -85,10 +122,67 @@ class CoinbaseClient(
             **response,
         }
 
+    def get_candles(
+        self,
+        product_id: str,
+        granularity: str,
+        limit: int = 300,
+        *,
+        start: datetime | None = None,
+        end: datetime | None = None,
+    ) -> dict[str, Any]:
+        """Fetch historical candles, falling back to public endpoints when unauthenticated."""
+        try:
+            if self.api_mode == "advanced":
+                try:
+                    return super().get_market_product_candles(
+                        product_id,
+                        granularity,
+                        limit,
+                        start=start,
+                        end=end,
+                    )
+                except (NotFoundError, InvalidRequestError):
+                    return super().get_candles(
+                        product_id,
+                        granularity,
+                        limit,
+                        start=start,
+                        end=end,
+                    )
+
+            return super().get_candles(
+                product_id,
+                granularity,
+                limit,
+                start=start,
+                end=end,
+            )
+        except (AuthError, PermissionDeniedError) as e:
+            if self.api_mode != "advanced":
+                raise
+            self._warn_public_market_fallback("candles", e)
+            return super().get_market_product_candles(
+                product_id,
+                granularity,
+                limit,
+                start=start,
+                end=end,
+            )
+
     def list_balances(self) -> list[Balance]:
         """Fetch accounts and convert to domain objects."""
         response = self.get_accounts()
         accounts_data = response.get("accounts", [])
+
+        # Log raw API response characteristics
+        logger.debug(
+            f"CoinbaseClient.list_balances: Raw API returned {len(accounts_data)} accounts"
+        )
+        if not accounts_data and response:
+            logger.warning(
+                f"API returned response but no accounts. Response keys: {list(response.keys())}"
+            )
 
         results = []
         for a in accounts_data:

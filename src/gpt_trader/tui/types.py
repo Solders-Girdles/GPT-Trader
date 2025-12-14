@@ -7,21 +7,35 @@ from typing import Any
 class MarketState:
     """Data structure for market information."""
 
-    prices: dict[str, str] = field(default_factory=dict)
+    prices: dict[str, Decimal] = field(default_factory=dict)  # Changed from str to Decimal
     last_update: float = 0.0
     price_history: dict[str, list[Decimal]] = field(default_factory=dict)
+    spreads: dict[str, Decimal] = field(default_factory=dict)  # symbol -> spread %
 
 
 @dataclass
 class Position:
-    """Data structure for a single position."""
+    """Data structure for a single position.
+
+    Supports both spot and derivatives (CFM futures).
+    """
 
     symbol: str
-    quantity: str
-    entry_price: str = "N/A"
-    unrealized_pnl: str = "0.00"
-    mark_price: str = "0.00"
-    side: str = ""
+    quantity: Decimal
+    entry_price: Decimal = Decimal("0")
+    unrealized_pnl: Decimal = Decimal("0")
+    mark_price: Decimal = Decimal("0")
+    side: str = "long"
+    # CFM/derivatives fields
+    leverage: int = 1
+    product_type: str = "SPOT"  # "SPOT" or "FUTURE"
+    liquidation_price: Decimal | None = None
+    liquidation_buffer_pct: float | None = None
+
+    @property
+    def is_futures(self) -> bool:
+        """Check if this is a futures position."""
+        return self.product_type == "FUTURE"
 
 
 @dataclass
@@ -29,8 +43,8 @@ class PortfolioSummary:
     """Data structure for position information."""
 
     positions: dict[str, Position] = field(default_factory=dict)
-    total_unrealized_pnl: str = "0.00"
-    equity: str = "0.00"
+    total_unrealized_pnl: Decimal = Decimal("0")  # Changed from str to Decimal
+    equity: Decimal = Decimal("0")  # Changed from str to Decimal
 
 
 @dataclass
@@ -40,8 +54,8 @@ class Order:
     order_id: str
     symbol: str
     side: str
-    quantity: str
-    price: str
+    quantity: Decimal  # Changed from str to Decimal
+    price: Decimal  # Changed from str to Decimal
     status: str
     type: str = "UNKNOWN"
     time_in_force: str = "UNKNOWN"
@@ -62,11 +76,11 @@ class Trade:
     trade_id: str
     symbol: str
     side: str
-    quantity: str
-    price: str
+    quantity: Decimal  # Changed from str to Decimal
+    price: Decimal  # Changed from str to Decimal
     order_id: str
     time: str
-    fee: str = "0.00"
+    fee: Decimal = Decimal("0")  # Changed from str to Decimal
 
 
 @dataclass
@@ -81,17 +95,17 @@ class AccountBalance:
     """Data structure for a single asset balance."""
 
     asset: str
-    total: str
-    available: str
-    hold: str = "0.00"
+    total: Decimal  # Changed from str to Decimal
+    available: Decimal  # Changed from str to Decimal
+    hold: Decimal = Decimal("0")  # Changed from str to Decimal
 
 
 @dataclass
 class AccountSummary:
     """Data structure for account metrics."""
 
-    volume_30d: str = "0.00"
-    fees_30d: str = "0.00"
+    volume_30d: Decimal = Decimal("0")  # Changed from str to Decimal
+    fees_30d: Decimal = Decimal("0")  # Changed from str to Decimal
     fee_tier: str = ""
     balances: list[AccountBalance] = field(default_factory=list)
 
@@ -118,7 +132,12 @@ class StrategyState:
 
 @dataclass
 class RiskState:
-    """Data structure for risk management information."""
+    """Data structure for risk management information.
+
+    Note: position_leverage field was removed as GPT-Trader focuses on spot trading
+    where per-position leverage is not applicable. For perpetuals/margin trading,
+    this would need to be added back with proper StatusReporter support.
+    """
 
     max_leverage: float = 0.0
     daily_loss_limit_pct: float = 0.0
@@ -137,3 +156,37 @@ class SystemStatus:
     rate_limit_usage: str = "0%"
     memory_usage: str = "0MB"
     cpu_usage: str = "0%"
+
+
+@dataclass
+class ResilienceState:
+    """API resilience metrics from CoinbaseClient.
+
+    Tracks latency percentiles, error rates, caching statistics,
+    and circuit breaker states for comprehensive API health monitoring.
+    """
+
+    # Latency metrics (milliseconds)
+    latency_p50_ms: float = 0.0
+    latency_p95_ms: float = 0.0
+    avg_latency_ms: float = 0.0
+
+    # Error metrics
+    error_rate: float = 0.0  # 0.0 to 1.0
+    total_requests: int = 0
+    total_errors: int = 0
+
+    # Rate limiting
+    rate_limit_hits: int = 0
+    rate_limit_usage_pct: float = 0.0
+
+    # Cache stats
+    cache_hit_rate: float = 0.0
+    cache_size: int = 0
+    cache_enabled: bool = False
+
+    # Circuit breaker
+    circuit_breakers: dict[str, str] = field(default_factory=dict)  # category -> state
+    any_circuit_open: bool = False
+
+    last_update: float = 0.0

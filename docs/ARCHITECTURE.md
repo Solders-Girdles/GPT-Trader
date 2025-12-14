@@ -20,17 +20,22 @@ roadmap: See docs/TUI_ROADMAP.md for TUI phases
 
 ## Current State
 
-GPT-Trader V2 is a production-ready Coinbase **spot** trading system that retains future-ready perpetuals logic. Perps execution remains disabled in live environments until Coinbase grants INTX access, but the architecture keeps those paths compiled and testable.
+GPT-Trader V2 is a production-ready Coinbase trading system supporting **spot** and **CFM futures** trading. INTX perpetuals code paths remain compiled and testable but require international account access.
 
-> 📘 **Trust reminder:** Confirm this document’s details against `docs/agents/Document_Verification_Matrix.md` before acting on them.
+> 📘 **Trust reminder:** Confirm this document's details against `docs/agents/Document_Verification_Matrix.md` before acting on them.
 
 ## Trading Capabilities Matrix
 
 | Environment | Products | Authentication | API Version | WebSocket | Use Case |
 |------------|----------|----------------|-------------|-----------|----------|
-| **Production (default)** | Spot (BTC-USD, ETH-USD, …) | HMAC | Advanced v3 | Real-time | Live trading |
-| **Production (perps)** | Perpetuals (INTX-gated) | CDP (JWT) + `COINBASE_ENABLE_DERIVATIVES=1` | Advanced v3 | Real-time | Future activation |
-| **Sandbox** | Not used (API diverges) | — | — | — | Paper/mock via `PERPS_PAPER=1` |
+| **Production (spot)** | Spot (BTC-USD, ETH-USD, …) | HMAC or CDP | Advanced v3 | Real-time | Live spot trading |
+| **Production (CFM)** | US Futures (BTC, ETH, SOL, etc.) | CDP (JWT) | Advanced v3 | Real-time | Regulated US futures |
+| **Production (INTX)** | Perpetuals (international) | CDP (JWT) + `COINBASE_ENABLE_DERIVATIVES=1` | Advanced v3 | Real-time | Requires INTX account |
+| **Paper** | All products | — | — | — | Simulated via `PERPS_PAPER=1` |
+
+### Derivatives Access Summary
+- **CFM (Coinbase Financial Markets)**: US-regulated futures with expiration dates. Endpoints: `cfm_balance_summary`, `cfm_positions`, `cfm_sweeps`, margin settings.
+- **INTX (International Exchange)**: Perpetual futures for non-US users. Endpoints implemented but gated by account access.
 
 ## Component Architecture
 
@@ -200,12 +205,60 @@ The system now uses a **Signal Ensemble** approach to combine multiple trading s
 - **Location**: `src/gpt_trader/features/strategy/ensemble/`
 - **Status**: Implemented and integrated into `StrategyEngine`.
 
+#### TUI Architecture (`gpt_trader/tui/`)
+
+The Terminal User Interface is built on [Textual](https://textual.textualize.io/) and uses a modular CSS system.
+
+**CSS System**
+
+The TUI uses a concatenated CSS approach due to Textual not supporting `@import`:
+
+- **Source modules**: `styles/theme/`, `styles/layout/`, `styles/components/`, `styles/widgets/`, `styles/screens/`
+- **Build script**: `scripts/build_tui_css.py` concatenates modules in dependency order
+- **Generated file**: `styles/main.tcss` (~2,200 lines) - DO NOT EDIT DIRECTLY
+
+**Critical Design Constraints**
+
+1. **Single Grid Definition**: The main layout grid (`#bento-grid`) must be defined in exactly one place (`layout/workspace.tcss`). Multiple grid definitions cause unpredictable tile spanning behavior.
+
+2. **DEFAULT_CSS Cannot Use Variables**: Widget-level `DEFAULT_CSS` strings in Python files do NOT have access to TCSS variables (`$bg-primary`, `$accent`, etc.). Use hardcoded hex values with comments referencing the variable name:
+   ```python
+   DEFAULT_CSS = """
+   MyWidget {
+       background: #3B4252;  /* $bg-secondary */
+       color: #ECEFF4;       /* $text-primary */
+   }
+   """
+   ```
+
+3. **Namespaced Class Names**: Use widget-specific class names to prevent style bleed:
+   - `.widget-header` for widget headers (defined in `headers.tcss`)
+   - `.screen-header` for screen-level headers
+   - Avoid generic names like `.header`, `.value`, `.row`
+
+4. **SCOPED_CSS Pattern**: Widgets that need global style access set `SCOPED_CSS = False`. Document the reason:
+   ```python
+   SCOPED_CSS = False  # Uses global styles from dashboard.tcss
+   ```
+
+**State Management**
+
+- `StateRegistry` broadcasts `TuiState` to registered widgets via `on_state_updated()`
+- Widgets implement `StateObserver` protocol for automatic state updates
+- Delta tracking (`_changed_fields`) identifies which state components changed
+
+**Rebuilding CSS**
+
+After editing any `.tcss` module file:
+```bash
+python scripts/build_tui_css.py
+```
 
 ### Derivatives Gate
 
-Perpetual futures remain behind `COINBASE_ENABLE_DERIVATIVES` and Coinbase INTX
-credentials. The code paths stay compiled, but runtime flags default to spot-only
-behaviour until the derivatives gate opens.
+**CFM Futures** (US-regulated): Available now. No special gate required - use CDP authentication and CFM endpoints (`cfm_balance_summary`, `cfm_positions`, etc.).
+
+**INTX Perpetuals**: Remain behind `COINBASE_ENABLE_DERIVATIVES` flag and require international INTX account access. Code paths stay compiled for future use.
 
 ### Feature Slice Reference
 

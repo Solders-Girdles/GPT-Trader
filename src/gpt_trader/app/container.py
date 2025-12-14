@@ -1,12 +1,10 @@
 from __future__ import annotations
 
-import json
-import os
-from pathlib import Path
 from typing import TYPE_CHECKING, cast
 
 from gpt_trader.features.brokerages.coinbase.auth import SimpleAuth
 from gpt_trader.features.brokerages.coinbase.client.client import CoinbaseClient
+from gpt_trader.features.brokerages.coinbase.credentials import resolve_coinbase_credentials
 from gpt_trader.features.brokerages.coinbase.market_data_service import MarketDataService
 from gpt_trader.features.brokerages.coinbase.utilities import ProductCatalog
 from gpt_trader.orchestration.config_controller import ConfigController
@@ -17,11 +15,15 @@ from gpt_trader.orchestration.runtime_paths import RuntimePaths, resolve_runtime
 from gpt_trader.orchestration.service_registry import ServiceRegistry
 from gpt_trader.persistence.event_store import EventStore
 from gpt_trader.persistence.orders_store import OrdersStore
+from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:
     from gpt_trader.features.live_trade.risk.manager import LiveRiskManager
     from gpt_trader.monitoring.notifications.service import NotificationService
     from gpt_trader.orchestration.trading_bot.bot import TradingBot
+
+
+logger = get_logger(__name__, component="container")
 
 
 def create_brokerage(
@@ -41,35 +43,19 @@ def create_brokerage(
 
         return DeterministicBroker(), event_store, market_data, product_catalog
 
-    api_key_name = None
-    private_key = None
-
-    # Check for credentials file first
-    creds_file = os.getenv("COINBASE_CREDENTIALS_FILE")
-    if creds_file:
-        path = Path(creds_file)
-        if path.exists():
-            try:
-                with open(path) as f:
-                    data = json.load(f)
-                    api_key_name = data.get("name")
-                    private_key = data.get("privateKey")
-            except Exception as e:
-                raise ValueError(f"Failed to read credentials file {creds_file}: {e}")
-
-    # Fallback to direct env vars
-    if not api_key_name:
-        api_key_name = os.getenv("COINBASE_API_KEY_NAME") or os.getenv("COINBASE_CDP_API_KEY")
-    if not private_key:
-        private_key = os.getenv("COINBASE_PRIVATE_KEY") or os.getenv("COINBASE_CDP_PRIVATE_KEY")
-
-    if not api_key_name or not private_key:
+    creds = resolve_coinbase_credentials()
+    if not creds:
         raise ValueError(
             "Coinbase Credentials not found. Set COINBASE_CREDENTIALS_FILE to a JSON key file, "
-            "or set COINBASE_API_KEY_NAME and COINBASE_PRIVATE_KEY environment variables."
+            "or set COINBASE_CDP_API_KEY + COINBASE_CDP_PRIVATE_KEY "
+            "(legacy: COINBASE_API_KEY_NAME + COINBASE_PRIVATE_KEY)."
         )
 
-    auth_client = SimpleAuth(key_name=api_key_name, private_key=private_key)
+    for warning in creds.warnings:
+        logger.warning("Coinbase credential configuration: %s", warning)
+    logger.info("Using Coinbase credentials from %s (%s)", creds.source, creds.masked_key_name)
+
+    auth_client = SimpleAuth(key_name=creds.key_name, private_key=creds.private_key)
 
     broker = CoinbaseClient(
         auth=auth_client,

@@ -18,6 +18,7 @@ def add_output_options(parser: ArgumentParser, include_quiet: bool = True) -> No
     """
     parser.add_argument(
         "--format",
+        "--output-format",
         dest="output_format",
         type=str,
         choices=OUTPUT_FORMAT_CHOICES,

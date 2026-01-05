@@ -206,7 +206,7 @@ class AlertManager:
             )
         )
 
-        # Rejected/failed orders (TRADE category)
+        # Rejected/failed orders (TRADE category) - true errors only
         self.add_rule(
             AlertRule(
                 rule_id="failed_orders",
@@ -215,6 +215,18 @@ class AlertManager:
                 severity=AlertSeverity.ERROR,
                 category=AlertCategory.TRADE,
                 cooldown=30.0,
+            )
+        )
+
+        # Expired orders (TRADE category) - warning level, may indicate stale strategy
+        self.add_rule(
+            AlertRule(
+                rule_id="expired_orders",
+                title="Order Expired",
+                condition=self._check_expired_orders,
+                severity=AlertSeverity.WARNING,
+                category=AlertCategory.TRADE,
+                cooldown=60.0,  # 1 minute cooldown
             )
         )
 
@@ -290,17 +302,39 @@ class AlertManager:
         return False, ""
 
     def _check_failed_orders(self, state: TuiState) -> tuple[bool, str]:
-        """Check for rejected or failed orders."""
-        failed_statuses = {"REJECTED", "FAILED", "EXPIRED", "CANCELLED"}
+        """Check for rejected or failed orders.
+
+        Only alerts on true failures (REJECTED, FAILED) - not CANCELLED
+        (user-initiated) or EXPIRED (handled by separate expiration rule).
+        """
+        # Only alert on true failures, not user-initiated cancellations
+        error_statuses = {"REJECTED", "FAILED"}
 
         failed_orders = [
-            order for order in state.order_data.orders if order.status.upper() in failed_statuses
+            order for order in state.order_data.orders if order.status.upper() in error_statuses
         ]
 
         if failed_orders:
-            # Report first failed order found
             order = failed_orders[0]
             return True, f"Order for {order.symbol} {order.status.lower()}."
+
+        return False, ""
+
+    def _check_expired_orders(self, state: TuiState) -> tuple[bool, str]:
+        """Check for expired orders (time-based, not user-initiated).
+
+        Order expiration may indicate stale limit prices or strategy issues.
+        """
+        expired_orders = [
+            order for order in state.order_data.orders if order.status.upper() == "EXPIRED"
+        ]
+
+        if expired_orders:
+            order = expired_orders[0]
+            count = len(expired_orders)
+            if count == 1:
+                return True, f"Order for {order.symbol} expired."
+            return True, f"{count} orders expired."
 
         return False, ""
 

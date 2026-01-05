@@ -39,13 +39,7 @@ jobs:
         run: uv run black --check .
 
       - name: Check TUI CSS is up to date
-        run: |
-          python scripts/build_tui_css.py
-          if [ -n "$(git diff --name-only src/gpt_trader/tui/styles/main.tcss)" ]; then
-            echo "Error: TUI CSS is out of date. Run 'python scripts/build_tui_css.py' and commit changes."
-            git diff src/gpt_trader/tui/styles/main.tcss
-            exit 1
-          fi
+        run: python scripts/ci/check_tui_css_up_to_date.py
 
   typecheck:
     name: Type Check

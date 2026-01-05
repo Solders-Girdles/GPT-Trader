@@ -101,6 +101,7 @@ class WebSocketClientMixin:
         symbols: list[str],
         level: int = 1,
         stop_event: threading.Event | None = None,
+        include_trades: bool = False,
     ) -> Iterator[dict]:
         """
         Stream orderbook updates for the given symbols.
@@ -109,12 +110,15 @@ class WebSocketClientMixin:
             symbols: List of product IDs to subscribe to (e.g., ["BTC-USD", "ETH-USD"]).
             level: Orderbook depth level (1 for top-of-book, 2 for full depth).
             stop_event: Optional threading.Event to signal stream termination.
+            include_trades: If True, also subscribe to market_trades channel for
+                volume analysis and trade flow data.
 
         Yields:
-            Orderbook update messages as dicts.
+            Orderbook update messages as dicts. If include_trades=True, also yields
+            market trade messages.
 
         Example:
-            >>> for msg in client.stream_orderbook(["BTC-USD"], level=2):
+            >>> for msg in client.stream_orderbook(["BTC-USD"], level=2, include_trades=True):
             ...     print(msg["type"], msg.get("product_id"))
         """
         websocket = self._get_websocket()
@@ -126,11 +130,17 @@ class WebSocketClientMixin:
         # level2 provides full orderbook, ticker provides best bid/ask
         channel = "level2" if level >= 2 else "ticker"
 
+        # Build channel list
+        channels = [channel]
+        if include_trades:
+            channels.append("market_trades")
+
         logger.info(
             "Starting orderbook stream",
             symbols=symbols,
             level=level,
-            channel=channel,
+            channels=channels,
+            include_trades=include_trades,
         )
 
         self._stream_active = True
@@ -138,7 +148,7 @@ class WebSocketClientMixin:
         try:
             # Connect and subscribe
             websocket.connect()
-            websocket.subscribe(symbols, [channel])
+            websocket.subscribe(symbols, channels)
 
             # Yield messages
             yield from self._stream_messages(stop_event)

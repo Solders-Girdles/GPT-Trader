@@ -68,19 +68,42 @@ class DepthSnapshot:
         Args:
             levels: List of (price, size, side) tuples
         """
-        self.bids = []
-        self.asks = []
+        self.bids: list[tuple[Decimal, Decimal]] = []
+        self.asks: list[tuple[Decimal, Decimal]] = []
 
         # Sort levels into bids and asks
         for price, size, side in levels:
             if side.lower() in ("buy", "bid"):
                 self.bids.append((price, size))
-            elif side.lower() in ("sell", "ask"):
+            elif side.lower() in ("sell", "ask", "offer"):
                 self.asks.append((price, size))
 
         # Sort bids descending, asks ascending
         self.bids.sort(key=lambda x: x[0], reverse=True)
         self.asks.sort(key=lambda x: x[0])
+
+    @classmethod
+    def from_orderbook_update(cls, event: Any) -> DepthSnapshot:
+        """
+        Create snapshot from WebSocket OrderbookUpdate event.
+
+        Args:
+            event: OrderbookUpdate dataclass with bids and asks attributes
+
+        Returns:
+            DepthSnapshot instance
+        """
+        levels: list[tuple[Decimal, Decimal, str]] = []
+
+        # Process bids (list of (price, size) tuples)
+        for price, size in getattr(event, "bids", []):
+            levels.append((Decimal(str(price)), Decimal(str(size)), "bid"))
+
+        # Process asks (list of (price, size) tuples)
+        for price, size in getattr(event, "asks", []):
+            levels.append((Decimal(str(price)), Decimal(str(size)), "offer"))
+
+        return cls(levels)
 
     @property
     def mid(self) -> Decimal | None:
